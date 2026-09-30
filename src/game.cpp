@@ -2774,7 +2774,7 @@ void applySavedGameHeader(const SavedGameHeader& saved)
     // edx`, then `mov ecx,[gpGame]` again for mapHeader, again for
     // setup, again for campaign, again for the filename. Do not cache
     // what retail reloads.
-    g_game->m_gameVersion = saved.m_gameVersion;
+    g_game->setGameVersion(saved.m_gameVersion);
     g_game->m_mapHeader = saved.m_mapHeader;
     g_game->m_setup = saved.m_mapSetup;
     g_inCampaign = saved.m_campaignGame;
@@ -3373,7 +3373,7 @@ void SavedGameHeader::reset()
         strcpy(m_id, "H3SVG");
 
     m_version = 42;
-    m_gameVersion = g_game->m_gameVersion;
+    m_gameVersion = g_game->getGameVersion();
 
     m_campaign = g_game->m_campaign;
 

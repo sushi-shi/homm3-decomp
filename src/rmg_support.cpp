@@ -169,9 +169,9 @@ VA(0x0055EDC0, 0x36)
 MAC_ADDRESS(0x253ae0, 0x54) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +4
 void TRmgLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
-    rmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
-    snapshot.m_flipX = tile.m_flipX;
-    snapshot.m_flipY = tile.m_flipY;
+    rmgTerrainTile snapshot(tile.m_terrain, tile.getFrame());
+    snapshot.setFlipX(tile.getFlipX());
+    snapshot.setFlipY(tile.getFlipY());
     m_adapter->setTile(point, snapshot);
 }
 
@@ -232,9 +232,9 @@ TRmgLinePatternTable* TRmgRoadLinePainter::getPattern(int)
 MAC_ADDRESS(0x253fc8, 0x54)
 void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
-    rmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
-    snapshot.m_flipX = tile.m_flipX;
-    snapshot.m_flipY = tile.m_flipY;
+    rmgTerrainTile snapshot(tile.m_terrain, tile.getFrame());
+    snapshot.setFlipX(tile.getFlipX());
+    snapshot.setFlipY(tile.getFlipY());
     m_adapter->setTile(point, snapshot);
 }
 
@@ -319,8 +319,8 @@ void TRmgBoundaryVertex::initialize()
     m_next = this;
     m_previous = this;
     m_positionComputed = 0;
-    m_position.m_x = -1;
-    m_position.m_y = -1;
+    m_position.setX(-1);
+    m_position.setY(-1);
 }
 
 // The retained paired constructor expands this ordinary twin constructor
@@ -464,8 +464,8 @@ static int isRmgCounterClockwise(TPoint first, TPoint second, TPoint third)
 
 static int isRmgPointRightOfEdge(TPoint point, TRmgBoundaryVertex* edge)
 {
-    TRmgBoundaryVertex* twin = edge->m_twin;
-    return isRmgCounterClockwise(edge->m_sitePosition, point, twin->m_sitePosition);
+    TRmgBoundaryVertex* twin = edge->getTwin();
+    return isRmgCounterClockwise(edge->getSitePosition(), point, twin->getSitePosition());
 }
 
 VA(0x005FD6B0, 0xD7)
@@ -475,26 +475,26 @@ TRmgBoundaryVertex* TRmgVoronoi::locate(TPoint point)
     TRmgBoundaryVertex* edge = m_root;
     for (;;) {
         {
-            TPoint origin = edge->m_sitePosition;
+            TPoint origin = edge->getSitePosition();
             if (point == origin)
                 break;
         }
         {
-            TPoint destination = edge->m_twin->m_sitePosition;
+            TPoint destination = edge->getTwin()->getSitePosition();
             if (point == destination) {
-                edge = edge->m_twin;
+                edge = edge->getTwin();
                 break;
             }
         }
         if (isRmgPointRightOfEdge(point, edge)) {
-            edge = edge->m_twin;
+            edge = edge->getTwin();
         } else {
-            TRmgBoundaryVertex* next = edge->m_next;
+            TRmgBoundaryVertex* next = edge->getNext();
             if (!isRmgPointRightOfEdge(point, next)) {
                 edge = next;
                 continue;
             }
-            TRmgBoundaryVertex* previous = edge->m_twin->m_previous->m_twin;
+            TRmgBoundaryVertex* previous = edge->getTwin()->getPrevious()->getTwin();
             if (isRmgPointRightOfEdge(point, previous))
                 break;
             edge = previous;
@@ -508,15 +508,15 @@ TRmgBoundaryVertex* TRmgVoronoi::locate(TPoint point)
 MAC_ADDRESS(0x25c204, 0xb0)
 static void flipRmgEdge(TRmgBoundaryVertex* edge)
 {
-    TRmgBoundaryVertex* previous = edge->m_previous;
-    TRmgBoundaryVertex* twinPrevious = edge->m_twin->m_previous;
+    TRmgBoundaryVertex* previous = edge->getPrevious();
+    TRmgBoundaryVertex* twinPrevious = edge->getTwin()->getPrevious();
     edge->detach();
-    edge->m_zone = previous->m_twin->m_zone;
-    edge->m_sitePosition = previous->m_twin->m_sitePosition;
-    edge->m_twin->m_zone = twinPrevious->m_twin->m_zone;
-    edge->m_twin->m_sitePosition = twinPrevious->m_twin->m_sitePosition;
-    edge->splice(previous->m_twin->m_previous);
-    edge->m_twin->splice(twinPrevious->m_twin->m_previous);
+    edge->setZone(previous->getTwin()->getZone());
+    edge->setSitePosition(previous->getTwin()->getSitePosition());
+    edge->getTwin()->setZone(twinPrevious->getTwin()->getZone());
+    edge->getTwin()->setSitePosition(twinPrevious->getTwin()->getSitePosition());
+    edge->splice(previous->getTwin()->getPrevious());
+    edge->getTwin()->splice(twinPrevious->getTwin()->getPrevious());
 }
 
 // Provisional segment predicate, Graphics Gems IV's OnEdge: retail snapshots
@@ -541,11 +541,11 @@ static unsigned char isRmgPointOnSegment(TPoint point, TRmgBoundaryVertex* edge)
     int edgeDistance = getRmgSquaredDistance(edge->getSitePosition(), opposite);
     if (firstDistance > edgeDistance || secondDistance > edgeDistance)
         return 0;
-    const TPoint& origin = edge->m_sitePosition;
-    int dx = opposite.m_x - origin.m_x;
-    int dy = opposite.m_y - origin.m_y;
-    int c = -(dy * origin.m_x - dx * origin.m_y);
-    return dy * point.m_x - dx * point.m_y + c == 0;
+    const TPoint& origin = edge->getSitePosition();
+    int dx = opposite.getX() - origin.getX();
+    int dy = opposite.getY() - origin.getY();
+    int c = -(dy * origin.getX() - dx * origin.getY());
+    return dy * point.getX() - dx * point.getY() + c == 0;
 }
 
 // Provisional geometric predicate: retail snapshots three points before
@@ -563,10 +563,10 @@ static unsigned char isRmgPointInsideCircle(TPoint first, TPoint second,
     int secondArea = getRmgPointOrientation(first, third, point);
     int thirdArea = getRmgPointOrientation(first, second, point);
     int pointArea = getRmgPointOrientation(first, second, third);
-    __int64 determinant = static_cast<__int64>(third.m_x * third.m_x + third.m_y * third.m_y) * thirdArea
-        - static_cast<__int64>(second.m_x * second.m_x + second.m_y * second.m_y) * secondArea
-        + static_cast<__int64>(first.m_x * first.m_x + first.m_y * first.m_y) * firstArea
-        - static_cast<__int64>(point.m_x * point.m_x + point.m_y * point.m_y) * pointArea;
+    __int64 determinant = static_cast<__int64>(third.getX() * third.getX() + third.getY() * third.getY()) * thirdArea
+        - static_cast<__int64>(second.getX() * second.getX() + second.getY() * second.getY()) * secondArea
+        + static_cast<__int64>(first.getX() * first.getX() + first.getY() * first.getY()) * firstArea
+        - static_cast<__int64>(point.getX() * point.getX() + point.getY() * point.getY()) * pointArea;
     return determinant > 0;
 }
 
@@ -617,8 +617,8 @@ VA(0x005FDAE0, 0x2B)
 MAC_ADDRESS(0x25c2b4, 0x50) // anchor-callee 0x5fd937/0x5fd97e; Complete-only
 int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
 {
-    return (second.m_x - first.m_x) * (third.m_y - first.m_y)
-        - (second.m_y - first.m_y) * (third.m_x - first.m_x);
+    return (second.getX() - first.getX()) * (third.getY() - first.getY())
+        - (second.getY() - first.getY()) * (third.getX() - first.getX());
 }
 
 // The subdivision constructor retains seven single-edge insertions at

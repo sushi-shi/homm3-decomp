@@ -633,6 +633,7 @@ public:
     char m_paddingBeforeCells[0x2];
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
+    // Before normalization (Dreamcast): cell.
     hexcell m_cells[187];  // +0x1c4, ends 0x5394
     // PlaceAllObstacles shifts one by this dword while field_53c0 is -1;
     // it is the current combat terrain selector for the catalogue mask.
@@ -750,6 +751,7 @@ public:
     // writer and the chain-lightning writer both use it.
     // Original ShowMassSpell's AAY11BE@_N parameter proves bool [2][20];
     // every source caller supplies this member, whose stores are 0 or 1.
+    // Before normalization (Dreamcast): ArmyEffected.
     bool m_effected[2][20];  // +0x547c
     // Per-side "this side is played by the computer" latch: ai_tactical
     // crosses it with gpGame's own AI flag before scaling a shooter's
@@ -858,7 +860,9 @@ public:
     // should_attack_now (0x436c60) forms armies[actingSide][actingSlot]
     // with the flattened index actingSide*21 + actingSlot and then
     // excludes that stack from both of its censuses. Names provisional.
+    // Before normalization (Dreamcast): currArmyGroup.
     int m_actingSide;  // +0x132b8
+    // Before normalization (Dreamcast): currArmyIndex.
     int m_actingSlot;  // +0x132bc
     // The side whose stack is acting: get_hex_attack_value (0x436180)
     // rejects a neighbour whose combatSide equals it. Name provisional.
@@ -1017,7 +1021,6 @@ public:
 private:
     TArcher m_archers[3];  // +0x13d78; armySlot at +0x20
 
-public:
     // "Move order is reversed for this combat": find_move_order
     // (0x41f179) reads it through the gpCombatManager GLOBAL - not
     // through its own `this` - and, when it is set, keys every stack
@@ -1029,6 +1032,8 @@ public:
     // tower defenders. DamageWall reads one selected slot when the
     // corresponding target falls and marks that stack removed.
     unsigned char m_inSecondPhase;  // +0x13de4
+
+public:
     // Dreamcast in_second_phase is a byte followed by OriginalAttackSkill;
     // retail preserves this three-byte alignment gap before the stat snapshot.
     char m_paddingBeforeOriginalAttackSkill[0x3];
@@ -1063,7 +1068,11 @@ public:
     // field_13fe4 rows were the same array seen through their one
     // decoded writer, and DamageWall now spells them wallStrength[17]
     // / [16] / [15] at byte-identical offsets.
+
+private:
     int m_wallStrength[18];  // +0x13f60
+
+public:
     // One dword per wall id (5..14 used): 1 while strength remains, 0 when
     // the segment reaches zero. Same 18 extent, same reason.
     int m_wallStanding[18];  // +0x13fa8

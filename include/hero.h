@@ -103,8 +103,11 @@ enum EHeroBackpackLimit {
 // +0x07, one byte earlier than the naturally aligned Dreamcast build.
 struct type_obscuring_object {
 public:
+    // Before normalization (Dreamcast): mapX.
     short m_x;  // +0x00 (DC mapX)
+    // Before normalization (Dreamcast): mapY.
     short m_y;  // +0x02 (DC mapY)
+    // Before normalization (Dreamcast): mapZ.
     short m_z;  // +0x04 (DC mapZ)
 
 private:
@@ -113,9 +116,11 @@ private:
 
 public:
     char m_paddingBeforeObscuredType;
-    TAdventureObjectType m_obscuredType;  // +0x0c (DC type)
 
 private:
+    // Before normalization (Dreamcast): type.
+    TAdventureObjectType m_obscuredType;  // +0x0c (DC type)
+
     unsigned char m_wasTrigger;  // +0x10
 
 public:
@@ -249,6 +254,7 @@ SIZE(boat, 0x28);
 
 struct type_artifact {
 public:
+    // Before normalization (Dreamcast): type.
     TArtifact m_artifactId;
     int m_extra;
 
@@ -423,6 +429,7 @@ public:
     // Owning player. SIGNED char: town::View widens it with
     // `movsx edx, byte [gpGame + 1170*id + 0x21642]` before comparing
     // it against the acting-player id. Name provisional.
+    // Before normalization (Dreamcast): playerOwner.
     signed char m_owner;  // +0x22
     // +0x23. HeroFn_004D8B30 copies exactly thirteen bytes of the setup
     // record's name here; SetRolloverText passes this band to sprintf.
@@ -438,7 +445,9 @@ public:
     // two leading coordinates are dwords - their four-byte spacing
     // proves the stored type, and BuildPath's own load widths are
     // narrowed only by the destination bitfields.
+    // Before normalization (Dreamcast): targetX.
     int m_pathTargetX;  // +0x35
+    // Before normalization (Dreamcast): targetY.
     int m_pathTargetY;  // +0x39
     // +0x3d..+0x42, three SHORTS - narrowed 2026-08-20 out of the old
     // `int pathTargetZ; char pad_041[2];` by hero::save (0x4d80c0),
@@ -451,6 +460,7 @@ public:
     // searchArray::BuildPath (0x56a0d0) takes `mov dl, byte [eax+0x3d]`
     // on BOTH sides because type_point's z is a four-bit bitfield.
     // The two trailing shorts have no other reader; ORDINAL PLACEHOLDERS.
+    // Before normalization (Dreamcast): targetZ.
     short m_pathTargetZ;  // +0x3d
     // +0x3f, DC-attested (`hero,66,T_SHORT,last_magic_school_level`,
     // retail +0x3f under the same -5 repack). hero::CheckLevel writes the
@@ -499,6 +509,7 @@ public:
     // the <= 0 arm with `jg`, and divides it by 100 with the signed
     // 0x51eb851f reciprocal - an unsigned field would use the unsigned
     // magic instead. Name provisional.
+    // Before normalization (Dreamcast): currMobility.
     int m_movePoints;  // +0x4d
     int m_experience;  // +0x51 (DC name; retail packed)
     // +0x55, a SHORT the five specialty factor getters (0x4e42b0,
@@ -554,13 +565,16 @@ public:
     // walking from 0xad) - exactly armyGroup's 56-byte layout, and
     // AI_approximate_strength (0x427657) hands `hero + 0x91` straight
     // to armyGroup::get_AI_value as a this pointer.
+    // Before normalization (Dreamcast): heroArmy.
     armyGroup m_army;
+    // Before normalization (Dreamcast): SSLevel.
     signed char m_skillLevel[28];  // +0xc9
     // Acquisition-order band, 28 entries at +0xe5, read UNSIGNED
     // (TakeSS's renumbering sweep compares with `jbe`, not `jle`).
     // GetNthSS scans it for order iWhich+1 and returns the slot index;
     // GiveSS writes skillCount+1 into the newly-learned slot and TakeSS
     // decrements every entry above the vacated one before zeroing it.
+    // Before normalization (Dreamcast): SSOrder.
     unsigned char m_skillOrder[28];  // +0xe5
     // Number of secondary skills known. A full DWORD: GiveSS's cap test
     // is `cmp dword [this+0x101],8` and both trio bodies increment /
@@ -646,10 +660,11 @@ private:
     // both the offset and the SIGNED char width. Name provisional.
     signed char m_backpackCount;  // +0x3d4
 
-public:
     // Per-hero sex copied from THeroTraits during initialize. The retail
     // build added this four-byte field ahead of the custom-name state.
     int m_sex;  // +0x3d5 (DC trait name)
+
+public:
     unsigned char m_hasCustomName;  // +0x3d9
     // Dinkumware std::string object, not merely its internal +4 pointer.
     // hero::initialize assigns the shared empty string through the normal
@@ -694,11 +709,12 @@ private:
     // and by 0x4e6120, which adds artifact bonuses into the same band.
     signed char m_stats[4];  // +0x476
 
-public:
     // +0x47a. AI_value_of_combat (0x42730f) reads this as a float,
     // widens it to double and uses it as the attacking side's combat
     // modifier. The role remains provisional, so keep the ordinal name.
     float m_aggression;
+
+public:
     // 0x4d85f0, retail's own default constructor. The base and the four
     // members that carry constructors run first (type_obscuring_object,
     // army, TownSpecialGrantedMask, equipped/backpack, customName), then
@@ -1269,6 +1285,11 @@ public:
     void placeInMap(int playerId, type_point point, unsigned char resetFlags);
     int load(TAbstractFile* infile, int saveVersion);
     int save(TAbstractFile* outfile);
+
+    // Accessor boundary inferred from the existing property interface and
+    // external field operations; these additional names are project names.
+    int getSex() const { return m_sex; }
+    void setSex(int value) { m_sex = value; }
 };
 // sizeof(hero) == 1170 (0x492), byte-proven THREE independent ways:
 //   - the save walk at 0x4be841 runs `lea edi,[gpGame+0x21620]` and

@@ -244,6 +244,17 @@ the final implementation still requires retail verification.
 
 ## Helper boundaries and inlining
 
+Accessor recovery also recovers the owner's data boundary. Follow the
+[accessor guidelines](docs/reconstruction/accessor-guidelines.md): established
+accessor-backed state is non-public by default when its original access is
+unknown, private unless a derived implementation needs protected access.
+Preserve positive native public declarations as explicit exceptions. Review
+the actual backing state rather than every object traversed by a getter.
+Use the canonical operation at unrelated call sites and introduce missing
+accessors as those operations are recovered. Keep original types, data order,
+constness and mutation semantics; do not expose mutable scalar references or
+add unsupported friends merely to bypass the interface.
+
 Use the [helper-placement skill](.agents/skills/helper-placement/SKILL.md) when
 Mac body order or VC6 cross-TU expansion may locate a recovered helper body.
 Mac xrefs identify callers but do not decide header versus source placement.

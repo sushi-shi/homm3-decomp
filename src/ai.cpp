@@ -1807,7 +1807,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     memset(enemyAttacks, 0, sizeof(enemyAttacks));
 
     markFirewalls(currentArmy, enemyAttacks, estimate);
-    if (g_game->m_gameVersion >= 2)
+    if (g_game->getGameVersion() >= 2)
         markMoat(currentArmy, enemyAttacks, estimate);
     if (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[ourGroup])
         markEnemyAttacks(currentArmy, enemyAttacks, markedEnemies,

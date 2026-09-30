@@ -26,9 +26,13 @@ inline TPoint operator+(const TPoint& point, const TPoint& offset)
 // Prior provisional class role: TRmgTerrainTile.
 struct rmgTerrainTile {
     int m_terrain;
+
+private:
     int m_frame;
     unsigned char m_flipX;
     unsigned char m_flipY;
+
+public:
     // +0x0a..0x0b are natural alignment padding, not source members.
     // Painter copies at 0x55edc0 and 0x55f350 transfer the two dwords and
     // only these two flip bytes; an explicit padding array makes copies
@@ -55,6 +59,12 @@ struct rmgTerrainTile {
         m_flipY = other.m_flipY;
         return *this;
     }
+
+    // Accessor boundary inferred from the existing property interface and
+    // external field operations; these additional names are project names.
+    void setFrame(int value) { m_frame = value; }
+    void setFlipX(unsigned char value) { m_flipX = value; }
+    void setFlipY(unsigned char value) { m_flipY = value; }
 };
 
 struct TRmgTerrainFlip {
@@ -77,11 +87,14 @@ enum TRmgTerrainNeighbourKind {
 // retail cluster. Its constructor clears only the validity bit; the upper
 // two bits survive every fill from the map adapter.
 struct TRmgPackedTerrainCell {
+private:
     unsigned short m_initialized : 1;
     unsigned short m_terrain : 4;
     unsigned short m_frame : 7;
     unsigned short m_flipX : 1;
     unsigned short m_flipY : 1;
+
+public:
     unsigned short m_unknown14 : 2;
 
     TRmgPackedTerrainCell() : m_initialized(0) {}
@@ -94,9 +107,9 @@ struct TRmgPackedTerrainCell {
     {
         rmgTerrainTile tile;
         tile.m_terrain = getTerrain();
-        tile.m_frame = getFrame();
-        tile.m_flipX = getFlipX();
-        tile.m_flipY = getFlipY();
+        tile.setFrame(getFrame());
+        tile.setFlipX(getFlipX());
+        tile.setFlipY(getFlipY());
         return tile;
     }
     inline void setInitialized() { m_initialized = 1; }
@@ -104,6 +117,11 @@ struct TRmgPackedTerrainCell {
     inline void setFrame(int value) { m_frame = value; }
     inline void setFlipX(unsigned char value) { m_flipX = value; }
     inline void setFlipY(unsigned char value) { m_flipY = value; }
+
+    // Accessor boundary inferred from the existing property interface and
+    // external field operations; these additional names are project names.
+    unsigned short getInitialized() const { return m_initialized; }
+    void setInitialized(unsigned short value) { m_initialized = value; }
 };
 
 // Vtable 0x642c98 fixes these six slots. Only the three methods used by the
@@ -178,9 +196,12 @@ class TRmgPatternTerrainRule : public TRmgTerrainRule {
 public:
     int m_defaultFrame;                         // +0x08
     unsigned int m_entryCount;                  // +0x0c
+
+private:
     const TRmgTerrainPatternEntry* m_entries;   // +0x10
     TRmgTerrainPatternRange m_ranges[58];        // +0x14
 
+public:
     TRmgPatternTerrainRule(unsigned char blendsWithOtherTerrain,
         unsigned char allowsSeparatedNeighbours, int defaultFrame,
         unsigned int entryCount, const TRmgTerrainPatternEntry* entries);
@@ -238,15 +259,23 @@ enum TRmgTerrainTransitionCase {
 // point sets followed by the packed-cell vector.
 // Prior provisional class role: TRmgTerrainPainter.
 class rmgTerrainPainter {
-public:
+private:
     TRmgMapInterface* m_adapter;                // +0x00
+
     int m_paintTerrain;                               // +0x04
+
     int m_transitionStrength;                         // +0x08
+
     TRmgGridPoint m_size;                             // +0x0c
+
+public:
     std::set<TRmgGridPoint> m_primaryPoints;            // +0x14
     std::set<TRmgGridPoint> m_secondaryPoints;          // +0x24
+
+private:
     std::vector<TRmgPackedTerrainCell> m_packedCells;   // +0x34
 
+public:
     rmgTerrainPainter(
         TRmgMapInterface* newAdapter,
         int newParameterA,

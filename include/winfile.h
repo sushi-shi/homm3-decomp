@@ -47,6 +47,7 @@ class File {
 public:
     // Dreamcast m_hFile: void* (HANDLE), retail +4. The zero-handle
     // guards in winfile.cpp reuse EAX without an integer alias.
+    // Before normalization (Dreamcast): m_hFile.
     void* m_file;
 
     File();

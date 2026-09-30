@@ -1221,7 +1221,7 @@ int oldmain()
                 campaignBrief.load();
                 g_game->m_campaign.applyBriefingChoice(briefingChoice);
                 int playerPos =
-                    campaignBrief.m_scenarios[currentMap]
+                    campaignBrief.getScenario(currentMap)
                         ->getStartOptions()->getPlayer(briefingChoice);
                 g_game->m_players[playerPos].m_isHuman = 1;
                 g_game->m_players[playerPos].m_isLocal = 1;
@@ -1246,7 +1246,7 @@ int oldmain()
                 incProgressBar(1);
                 g_game->setupFirstPlayer();
                 g_game->newMap(g_game->m_setup.m_path, g_game->m_setup.m_filename,
-                               g_startingHeroOverrides, g_game->m_gameVersion);
+                               g_startingHeroOverrides, g_game->getGameVersion());
             }
             incProgressBar(1);
             incProgressBar(1);
@@ -1278,7 +1278,7 @@ int oldmain()
             g_soundManager->stopAllSamples(1);
 
             if (g_inCampaign
-                && g_game->m_campaign.m_mapScores[g_game->m_campaign.m_currentMap]
+                && g_game->m_campaign.getScenarioInfo(g_game->m_campaign.m_currentMap)
                        .m_completed) {
                 g_progressCount = 20;
                 showProgressBar();

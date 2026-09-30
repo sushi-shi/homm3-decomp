@@ -832,6 +832,7 @@ public:
     int m_lastTerrain;
     // +0x5c. Both GetCell overloads dereference this NewfullMap record:
     // cellData at +0xd0 and Size at +0xd4.
+    // Before normalization (Dreamcast): map.
     NewfullMap* m_fullMap;
     // Retail tile-set rows. Dreamcast supplies the surviving names and
     // extents; the retail Draw* passes prove every offset reached here.
@@ -862,6 +863,7 @@ public:
     CSprite* m_movingObjectSprite;  // +0xe0, transient object draw override
     // +0xe4. The five-argument UpdateRadar overload forwards this packed
     // point by value as the origin argument of the six-argument overload.
+    // Before normalization (Dreamcast): map_origin.
     type_point m_radarOrigin;
     type_point m_lastMapHover;  // +0xe8
     int m_lastHoverX;  // +0xec

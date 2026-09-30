@@ -108,11 +108,12 @@ private:
     unsigned char m_limitReached;
     pathCell* m_cellData;
 
-public:
     // Dreamcast fieldlist: valid_rectangle at +0x28. Init fills the bounds;
     // the constructor leaves them uninitialized. Preserve the aggregate so
     // setRectangle keeps its original one-statement assignment.
     tagRECT m_validRectangle;
+
+public:
     searchArray();
     ~searchArray();
     void close();

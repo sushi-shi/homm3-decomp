@@ -109,9 +109,13 @@ public:
     // Original Dreamcast type_AI_combat_parameters::rounds_left; retail field role agrees.
     long m_roundsLeft;  // +0x1c  1..7, from the 0x63b798 ladder
     // Original Dreamcast type_AI_combat_parameters::our_group; retail field role agrees.
+
+protected:
     long m_ourGroup;  // +0x20
     // Original Dreamcast type_AI_combat_parameters::enemy_group; retail field role agrees.
     long m_enemyGroup;  // +0x24
+
+public:
     type_AI_combat_parameters(const combatManager* combat, long side);
     long getExchangeEffect(const army& currentArmy, const army& enemy,
                              long distance) const;
@@ -164,8 +168,9 @@ protected:
     long m_bestValue;  // +0x1c
     long m_bestHex;  // +0x20
 
-public:
     long m_bestAttackTime;  // +0x24
+
+public:
     const type_AI_combat_parameters* m_data;  // +0x28
 
     type_AI_attack_hex_chooser(const army* attacker, const army* defender,

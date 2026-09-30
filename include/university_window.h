@@ -20,10 +20,11 @@ class type_university_window;
 // both the class identity and the source-level constructor/handle_click
 // boundaries even though Complete inlines the constructor into this TU.
 class type_university_skill_button : public iconWidget {
-public:
+private:
     unsigned char m_click;       // +0x48
     TSecondarySkill m_skill;     // +0x4c
 
+public:
     type_university_skill_button(long x, long y, long width, long height,
                                  long newId, const char* image,
                                  TSecondarySkill newSkill);

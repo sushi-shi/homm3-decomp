@@ -84,7 +84,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.reserve(125);
 
     const char* background =
-        g_game->m_gameVersion == GAME_VERSION_SOD ? "trade2.pcx" : "trade.pcx";
+        g_game->getGameVersion() == GAME_VERSION_SOD ? "trade2.pcx" : "trade.pcx";
     m_widgets.push_back(new bitmapBorder(
         0, 0, m_width, m_height, 0, background, 0x800));
 
@@ -382,7 +382,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.push_back(new iconWidget(
         0x113, 0x1cd, 0x2c, 0x2c, 0xa7, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (g_game->m_gameVersion == GAME_VERSION_SOD) {
+    if (g_game->getGameVersion() == GAME_VERSION_SOD) {
         m_widgets.push_back(new iconWidget(
             0x2e, 0x1bd, 0x2c, 0x2c, 0xa8, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
@@ -442,7 +442,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.push_back(new iconWidget(
         0x2c3, 0x1cd, 0x2c, 0x2c, 0xba, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (g_game->m_gameVersion == GAME_VERSION_SOD) {
+    if (g_game->getGameVersion() == GAME_VERSION_SOD) {
         m_widgets.push_back(new iconWidget(
             0x1de, 0x1bd, 0x2c, 0x2c, 0xbb, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
@@ -502,7 +502,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.push_back(new iconWidget(
         0x113, 0x1cd, 0x2c, 0x2c, 0x2c, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (g_game->m_gameVersion == GAME_VERSION_SOD) {
+    if (g_game->getGameVersion() == GAME_VERSION_SOD) {
         m_widgets.push_back(new iconWidget(
             0x2e, 0x1bd, 0x2c, 0x2c, 0x2d, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
@@ -562,7 +562,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.push_back(new iconWidget(
         0x2c3, 0x1cd, 0x2c, 0x2c, 0x3f, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (g_game->m_gameVersion == GAME_VERSION_SOD) {
+    if (g_game->getGameVersion() == GAME_VERSION_SOD) {
         m_widgets.push_back(new iconWidget(
             0x1de, 0x1bd, 0x2c, 0x2c, 0x40, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
@@ -1332,7 +1332,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
                 normalDialog((*g_generalText)[GENERAL_TEXT_ITEM_CANNOT_BE_TRADED], 4, -1, 28,
                              -1, 0, -1, 0, -1, 0, -1, 0);
             } else {
-                if (g_game->m_gameVersion >= 2) {
+                if (g_game->getGameVersion() >= 2) {
                     int targetCombo =
                         g_artifactTraits[oldArtifact.m_artifactId].m_targetCombo;
                     if (g_artifactTraits[oldArtifact.m_artifactId].m_comboType
@@ -1405,7 +1405,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 
     if (oldArtifact.m_artifactId == ARTIFACT_NONE) {
         ourHero->equipArtifact(g_heroScreenDraggedArtifact, slot);
-        if (g_game->m_gameVersion >= 2)
+        if (g_game->getGameVersion() >= 2)
             ourHero->heroFn004DC100(slot);
         g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
         this->update();
@@ -1414,7 +1414,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
     } else if (canModHero(side)) {
         ourHero->removeArtifact(slot);
         ourHero->equipArtifact(g_heroScreenDraggedArtifact, slot);
-        if (g_game->m_gameVersion >= 2)
+        if (g_game->getGameVersion() >= 2)
             ourHero->heroFn004DC100(slot);
         g_heroScreenDraggedArtifact = oldArtifact;
         this->update();

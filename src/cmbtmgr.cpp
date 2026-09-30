@@ -837,7 +837,7 @@ void combatManager::loadIcons()
         TWallTraits* traits = s_wallTraits[m_defendingTown->m_type];
         for (int wall = 0; wall < 18; wall++) {
             for (int icon = 0; icon < 5; icon++) {
-                if ((g_game->m_gameVersion >= 2
+                if ((g_game->getGameVersion() >= 2
                         || m_defendingTown->m_type != TOWN_STRONGHOLD
                         || wall != WALL_TRAITS_ROW_MOAT)
                         && traits[wall].m_filenames[icon] != 0)
@@ -1117,13 +1117,13 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
             m_fortificationLevel = COMBAT_FORTIFICATION_CITADEL;
             m_moatOn = rightTown->m_type != TOWN_TOWER
                          && (rightTown->m_type != TOWN_STRONGHOLD
-                             || g_game->m_gameVersion >= 2);
+                             || g_game->getGameVersion() >= 2);
             m_moatIsWide = rightTown->m_type == TOWN_FORTRESS;
         } else if (rightTown->hasBuilding(CASTLE_CASTLE_ID, false)) {
             m_fortificationLevel = COMBAT_FORTIFICATION_CASTLE;
             m_moatOn = rightTown->m_type != TOWN_TOWER
                          && (rightTown->m_type != TOWN_STRONGHOLD
-                             || g_game->m_gameVersion >= 2);
+                             || g_game->getGameVersion() >= 2);
             m_moatIsWide = rightTown->m_type == TOWN_FORTRESS;
         } else {
             m_fortificationLevel = COMBAT_FORTIFICATION_NONE;
@@ -2293,7 +2293,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             if (overlap)
                 continue;
 
-            if (g_game->m_gameVersion < 2 && m_fortificationLevel >= 2
+            if (g_game->getGameVersion() < 2 && m_fortificationLevel >= 2
                     && m_defendingTown->m_type == TOWN_STRONGHOLD) {
                 int wallColumn = g_castleWallColumns[row];
                 if (wallColumn == COMBAT_HEX_GATE)
@@ -2386,7 +2386,7 @@ void combatManager::setupAndLoadObstacles()
                 int hex = g_moatHexes[row];
 
                 long damage;
-                if (g_game->m_gameVersion >= 2) {
+                if (g_game->getGameVersion() >= 2) {
                     damage = g_moatDamage[TOWN_TOWER];
                     if (m_heroes[1]) {
                         long cast = computeSpellDamage(
@@ -2424,7 +2424,7 @@ void combatManager::setupAndLoadObstacles()
             }
         }
 
-        if (g_game->m_gameVersion >= 2)
+        if (g_game->getGameVersion() >= 2)
             return;
         if (m_defendingTown->m_type != TOWN_STRONGHOLD)
             return;
@@ -4002,7 +4002,7 @@ MAC_ADDRESS(0x076598, 0x144)
 unsigned char combatManager::unnamed469e50(
     int hex, army* stack, unsigned char playSound)
 {
-    if (g_game->m_gameVersion >= 2 && stack->m_numTroops && isInMoat(hex, 0)) {
+    if (g_game->getGameVersion() >= 2 && stack->m_numTroops && isInMoat(hex, 0)) {
         if (playSound)
             stack->stopSample(army::WALK_SAMPLE);
 

@@ -2765,7 +2765,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
             if (rightMouse) {
-                if (g_game->m_gameVersion >= 2) {
+                if (g_game->getGameVersion() >= 2) {
                     // Retail +0x95d..+0x963 loads both indices before the test.
                     const TArtifactTraits& traits =
                         g_artifactTraits[oldArtifact.m_artifactId];
@@ -2830,7 +2830,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
         if (oldArtifact.m_artifactId == ARTIFACT_NONE) {
             g_currentHero->equipArtifact(
                 g_heroScreenDraggedArtifact, slot);
-            if (g_game->m_gameVersion >= 2)
+            if (g_game->getGameVersion() >= 2)
                 g_currentHero->heroFn004DC100(slot);
             g_currentHero->updateStats();
             g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
@@ -2842,7 +2842,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
             g_currentHero->removeArtifact(slot);
             g_currentHero->equipArtifact(
                 g_heroScreenDraggedArtifact, slot);
-            if (g_game->m_gameVersion >= 2)
+            if (g_game->getGameVersion() >= 2)
                 g_currentHero->heroFn004DC100(slot);
             g_currentHero->updateStats();
             g_heroScreenDraggedArtifact = oldArtifact;
@@ -3956,7 +3956,7 @@ THeroScreenWindow::THeroScreenWindow()
     m_field64 = m_widgets.back();
 
     const char* background =
-        g_game->m_gameVersion >= 2 ? "heroscr4.pcx" : "heroscr3.pcx";
+        g_game->getGameVersion() >= 2 ? "heroscr4.pcx" : "heroscr3.pcx";
     m_widgets.push_back(new bitmapBorder(
         0, 0, m_width, m_height, 0, background, 0x800));
     m_widgets.push_back(new textWidget(
@@ -4207,7 +4207,7 @@ THeroScreenWindow::THeroScreenWindow()
     m_widgets.push_back(new iconWidget(
         0x221, 0x12f, 0x2c, 0x2c, 0x26, "artifact.def",
         0, 0, 0, 0, 0x10));
-    if (g_game->m_gameVersion >= 2)
+    if (g_game->getGameVersion() >= 2)
         m_widgets.push_back(new iconWidget(
             0x13c, 0x11f, 0x2c, 0x2c, 0x27, "artifact.def",
             0, 0, 0, 0, 0x10));
@@ -4265,7 +4265,7 @@ THeroScreenWindow::THeroScreenWindow()
     m_widgets.push_back(new iconWidget(
         0x221, 0x12f, 0x2c, 0x2c, 0x13, "artifact.def",
         0, 0, 0, 0, 0x10));
-    if (g_game->m_gameVersion >= 2)
+    if (g_game->getGameVersion() >= 2)
         m_widgets.push_back(new iconWidget(
             0x13c, 0x11f, 0x2c, 0x2c, 0x14, "artifact.def",
             0, 0, 0, 0, 0x10));
@@ -4940,7 +4940,7 @@ VA(0x004e2550, 0x2EC)
 MAC_ADDRESS(0x1031d0, 0x308)  // retail-only, hero member, ret 8
 unsigned char hero::heroFn004E2550(long artifact, long slot)
 {
-    if (g_game->m_gameVersion < 2 && slot == EQUIPPED_SLOT_SOD_MISC)
+    if (g_game->getGameVersion() < 2 && slot == EQUIPPED_SLOT_SOD_MISC)
         return 0;
 
     long remaining = 1;
@@ -5399,7 +5399,7 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
     unsigned char placed;
     if (equipArtifact(artifact, -1)) {
         placed = 1;
-        if (g_game->m_gameVersion >= 2) {
+        if (g_game->getGameVersion() >= 2) {
             int targetCombo =
                 g_artifactTraits[artifact.m_artifactId].m_targetCombo;
             if (targetCombo != -1 && m_owner >= 0 && m_owner < 8) {

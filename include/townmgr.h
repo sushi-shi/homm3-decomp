@@ -780,6 +780,7 @@ public:
         return s_townNativeTerrains[type + 1];
     }
 
+    // Before normalization (Dreamcast): currTown.
     town* m_townToView;  // +0x38
     // +0x3c: the panorama background, a bitmapBorder16 -
     // UpdateTownInfo builds it with `new bitmapBorder16(0, 0, 800,

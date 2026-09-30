@@ -212,7 +212,7 @@ type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* n
             break;
         case CURSED_GROUND:
             m_terrain = MAGIC_TERRAIN_CURSED_GROUND;
-            if (g_game->m_gameVersion >= 2)
+            if (g_game->getGameVersion() >= 2)
                 break;
         case GARRISON:
             m_canCastSpells = 0;

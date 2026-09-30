@@ -2364,7 +2364,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
         // (0x30354..0x30390) has no game-version arm and re-expands
         // getAlignment instead: a platform/edition difference, Mac 22.10%.
         int minimumMorale;
-        if (g_game->m_gameVersion == 0
+        if (g_game->getGameVersion() == 0
             && isBaseElemental(type)) {
             minimumMorale = 1;
         } else {

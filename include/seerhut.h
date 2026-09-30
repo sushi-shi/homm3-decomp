@@ -30,7 +30,11 @@ class TAbstractFile;
 class TQuestGuard {
 public:
     type_quest* m_quest;
+
+private:
     unsigned char m_visitedPlayers;
+
+public:
     // readObject (0x502e00) retains constructor 0x572b50 on its quest-guard
     // local. This Complete-only class has no DC inline declaration; keep
     // one ordinary constructor definition in seerhut.cpp.
@@ -94,6 +98,8 @@ public:
         ePriSkillPower = 2,
         ePriSkillKnowledge = 3
     };
+
+private:
     int m_rewardType;
     union {
         char m_payload[8];
@@ -123,11 +129,27 @@ public:
             signed int : 16;
         } m_creature;
     } m_value;
+
+public:
     TSeerReward() : m_rewardType(0) {}
     int getValue(const hero* currentHero);
     void giveReward(hero* currentHero, bool humanPlayer);
     int getRewardExtra(const hero* thisHero);
     int getRewardType();
+    // Project accessor names inferred from the reward tag/payload interface.
+    int getRewardKind() const { return m_rewardType; }
+    void setRewardKind(int type) { m_rewardType = type; }
+    void setScalarValue(int value) { m_value.m_dwords[0] = value; }
+    void setBonus(int value) { m_value.m_signedLow.m_bonus = value; }
+    void setResourceType(int type) { m_value.m_resource.m_resourceType = type; }
+    void setResourceQuantity(int quantity) { m_value.m_resource.m_quantity = quantity; }
+    void setPrimarySkillType(int type) { m_value.m_primarySkill.m_skillType = type; }
+    void setPrimarySkillBonus(int bonus) { m_value.m_primarySkill.m_bonus = bonus; }
+    void setSecondarySkillType(int type) { m_value.m_secondarySkill.m_skillType = type; }
+    void setSecondarySkillBonus(int bonus) { m_value.m_secondarySkill.m_bonus = bonus; }
+    void setCreatureType(int type) { m_value.m_creature.m_creatureType = type; }
+    void setCreatureCount(int count) { m_value.m_creature.m_count = count; }
+
 };
 SIZE(TSeerReward, 0xc);
 

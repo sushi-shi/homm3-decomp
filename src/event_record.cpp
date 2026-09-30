@@ -176,7 +176,7 @@ DC_ADDRESS(0x08c91c, 0xce)
 MAC_ADDRESS(0x0bf424, 0x15c)
 void type_record_move_hero::replay(unsigned char draw)
 {
-    setPlayer(m_playerId);
+    setPlayer(getPlayerId());
 
     if (g_currentPlayer->m_currHeroId != m_currentHero->m_id
         || !g_advManager->m_curHeroMobile) {
@@ -248,7 +248,7 @@ DC_ADDRESS(0x08caf0, 0x3c)
 MAC_ADDRESS(0x0bf718, 0x60)
 void type_record_teleport::replay(unsigned char draw)
 {
-    setPlayer(m_playerId);
+    setPlayer(getPlayerId());
 
     g_advManager->teleportTo(m_currentHero, m_destination, 0, 0, draw, 1);
 }
@@ -760,7 +760,7 @@ DC_ADDRESS(0x08d5f0, 0x96)
 MAC_ADDRESS(0x0c0cd8, 0x130)
 void type_record_hide_hero::replay(unsigned char draw)
 {
-    setPlayer(m_playerId);
+    setPlayer(getPlayerId());
 
     if (!m_townGarrison) {
         if (g_netLocalGamePos == m_prevOwner) {
@@ -859,7 +859,7 @@ DC_ADDRESS(0x08d8b4, 0x140)
 MAC_ADDRESS(0x0c117c, 0x178)
 void type_record_show_hero::replay(unsigned char draw)
 {
-    setPlayer(m_playerId);
+    setPlayer(getPlayerId());
 
     m_currentHero->m_x = m_location.m_x;
     m_currentHero->m_y = m_location.m_y;

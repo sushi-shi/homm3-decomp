@@ -42,7 +42,11 @@ public:
     // combat_message and handle_widget_hover both follow this pointer to
     // textEntryWidget::bHasFocus at +0x6d. The constructor initially nulls
     // it; the concrete object is the combat chat editor.
+
+private:
     textEntryWidget* m_chatEdit;
+
+public:
     // DrawChatText and DrawFrame both load the same pointer at retail +0x50;
     // its DC counterpart is likewise the combat chat text widget.
     textWidget* m_chatWidget;
@@ -53,7 +57,11 @@ public:
     int m_combatMessageCount;
     int m_combatMessageStart;
     unsigned long m_combatMessageTime;
+
+private:
     type_combat_sub_window* m_controlSubWindow;
+
+public:
     TCombatHeroSubWindow* m_heroSubWindows[2];
     TCombatCreatureSubWindow* m_creatureSubWindows[4];
 
@@ -76,6 +84,10 @@ public:
     void drawChatText(unsigned char update);
     void drawChatEdit(unsigned char update);
     void onChatActivate(unsigned char active);
+
+    // Accessor boundary inferred from the existing property interface and
+    // external field operations; these additional names are project names.
+    type_combat_sub_window* getControlSubWindow() const { return m_controlSubWindow; }
 };
 SIZE(TCombatWindow, 0x8c);
 

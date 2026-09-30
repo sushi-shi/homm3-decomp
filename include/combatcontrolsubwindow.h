@@ -100,8 +100,11 @@ public:
     iconWidget* m_moraleIcon;
     iconWidget* m_luckIcon;
     textWidget* m_manaText;
+
+private:
     bool m_shown;
 
+public:
     TCombatHeroSubWindow(int x, int y, int w, int h, heroWindow* parent);
     virtual ~TCombatHeroSubWindow();
     void update(const hero& info, const hero* otherHero,
@@ -132,7 +135,11 @@ public:
     textWidget* m_countText;             // +0x54, full-stat arm only
     iconWidget* m_spellIcons[3];         // +0x58
     textWidget* m_spellText;             // +0x64
+
+private:
     bool m_shown;
+
+public:
     // Retail shown is a byte at +0x68; viewLevel is an int at +0x6c.
     // These three bytes align the integer.
     char m_paddingBeforeViewLevel[3];

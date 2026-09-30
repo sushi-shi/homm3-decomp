@@ -293,6 +293,8 @@ public:
     // pointer triple at +0x10/+0x14/+0x18. Preserve the native container.
     std::vector<SHeaderRequest> m_requests;
     unsigned long m_lastSendTime;   // +0x1c, Tick's 75-tick throttle
+
+private:
     unsigned char m_finished;       // +0x20, Tick-loop delete gate
 };
 
@@ -311,12 +313,13 @@ public:
 // WindowHandler every pump. Tick is defined out of class in the TU
 // (retail keeps an out-of-line copy and expands it into WindowHandler).
 class CNewPlayerUpdateMan {
-public:
     // Dreamcast's destructor calls CNewPlayerUpdateProc's scalar deleting
     // destructor, fixing the source element type. Complete's retail-only
     // t_map_list_update still converts to this immediate base.
+private:
     CNewPlayerUpdateProc* m_procs[8];
 
+public:
     ~CNewPlayerUpdateMan();
 
     CNewPlayerUpdateMan();
@@ -1195,12 +1198,12 @@ unsigned char CNetPlayerHandler::setNextPlayer(int pos)
 
     if (player) {
         start = player->m_color + 1;
-        player->m_playerPos = -1;
+        player->setPlayerPos(-1);
     }
 
     if (pos == m_playerPos) {
         if (m_assignedPos != -1) {
-            player->m_playerPos = m_assignedPos;
+            player->setPlayerPos(m_assignedPos);
             m_assignedPos = -1;
         }
     } else {
@@ -1210,17 +1213,17 @@ unsigned char CNetPlayerHandler::setNextPlayer(int pos)
     }
 
     if (start >= MAX_PLAYERS) {
-        player->m_playerPos = -1;
+        player->setPlayerPos(-1);
         return 1;
     }
 
     int i = start;
     while (i < MAX_PLAYERS) {
         if (m_humanPlayers[i].isHuman()) {
-            m_assignedPos = m_humanPlayers[i].m_playerPos;
-            m_humanPlayers[i].m_playerPos = pos;
-            m_humanPlayers[i].m_heroIndex = -1;
-            m_humanPlayers[i].m_townIndex = -1;
+            m_assignedPos = m_humanPlayers[i].getPlayerPos();
+            m_humanPlayers[i].setPlayerPos(pos);
+            m_humanPlayers[i].setHeroIndex(-1);
+            m_humanPlayers[i].setTownIndex(-1);
             return 1;
         }
         ++i;
@@ -1234,7 +1237,7 @@ MAC_ADDRESS(0x16ef34, 0x38)
 CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayerInPos(int pos)
 {
     for (int i = 0; i < MAX_PLAYERS; ++i)
-        if (m_humanPlayers[i].m_playerPos == pos)
+        if (m_humanPlayers[i].getPlayerPos() == pos)
             return &m_humanPlayers[i];
     return 0;
 }
@@ -1297,7 +1300,7 @@ int CNetPlayerHandler::getGamePos(unsigned long dpid)
     int netPos = getNetPos(dpid);
     if (netPos == -1)
         return -1;
-    return m_humanPlayers[netPos].m_playerPos;
+    return m_humanPlayers[netPos].getPlayerPos();
 }
 
 // Original: CNetPlayerHandler::PlayerExists; singleselectionwindow.cpp:1148
@@ -1331,8 +1334,8 @@ unsigned char CNetPlayerHandler::isFaceTaken(int face, int exclude)
     for (int i = 0; i < MAX_PLAYERS; ++i) {
         if (i != exclude) {
             CNetPlayerHandlerPlayer* player = getPlayerInPos(i);
-            if (player && player->m_heroIndex != -1 &&
-                player->m_availableHeroes[player->m_heroIndex] == face)
+            if (player && player->getHeroIndex() != -1 &&
+                player->m_availableHeroes[player->getHeroIndex()] == face)
                 return 1;
         }
     }
@@ -1358,7 +1361,7 @@ unsigned char CNetPlayerHandler::setComputer(int pos)
 {
     CNetPlayerHandlerPlayer* player = getPlayerInPos(pos);
     if (player)
-        player->m_playerPos = -1;
+        player->setPlayerPos(-1);
     return 1;
 }
 
@@ -1370,7 +1373,7 @@ MAC_ADDRESS(0x16f240, 0x58)
 int CNetPlayerHandler::getUnassignedPlayerPos()
 {
     for (int i = 0; i < MAX_PLAYERS; ++i) {
-        if (m_humanPlayers[i].isHuman() && m_humanPlayers[i].m_playerPos == -1)
+        if (m_humanPlayers[i].isHuman() && m_humanPlayers[i].getPlayerPos() == -1)
             return i;
     }
     return -1;
@@ -1387,7 +1390,7 @@ int CNetPlayerHandler::getPlayerCount(unsigned char assignedOnly)
     for (int i = 0; i < MAX_PLAYERS; ++i) {
         if (m_humanPlayers[i].isHuman()) {
             if (assignedOnly) {
-                if (m_humanPlayers[i].m_playerPos != -1)
+                if (m_humanPlayers[i].getPlayerPos() != -1)
                     ++count;
             } else {
                 ++count;
@@ -1403,7 +1406,7 @@ void t_map_list_update::go()
 {
     TSingleSelectionWindow* win = g_singleSelectionWindow;
     CTransferHeaderInfoInitMsg msg(
-        win->m_transferHeaders.size());
+        win->getTransferHeaderCount());
     transmitRemoteDataDPID(&msg, m_dpid, false, true);
 }
 
@@ -1482,18 +1485,18 @@ void t_map_list_update::tick()
     if (GameTime::elapsedSince(m_lastSendTime) < 75)
         return;
 
-    if (m_nextHeader < g_singleSelectionWindow->m_transferHeaders.size()) {
+    if (m_nextHeader < g_singleSelectionWindow->getTransferHeaderCount()) {
         for (int k = 0; k < 5; ++k) {
             CMapFileNameMsg msg(
                 1, m_nextHeader,
-                g_singleSelectionWindow->m_transferHeaders[m_nextHeader].m_setup.m_filename,
-                g_singleSelectionWindow->m_transferHeaders[m_nextHeader].m_setup.m_alignment,
-                g_singleSelectionWindow->m_transferHeaders[m_nextHeader].m_fileTime);
+                g_singleSelectionWindow->getTransferHeader(m_nextHeader).m_setup.m_filename,
+                g_singleSelectionWindow->getTransferHeader(m_nextHeader).m_setup.m_alignment,
+                g_singleSelectionWindow->getTransferHeader(m_nextHeader).m_fileTime);
             transmitRemoteDataDPID(&msg, m_dpid, true, false);
             ++m_nextHeader;
             if (m_requests.size() > 0)
                 handleRequests();
-            if (m_nextHeader >= g_singleSelectionWindow->m_transferHeaders.size()) {
+            if (m_nextHeader >= g_singleSelectionWindow->getTransferHeaderCount()) {
                 requestConfirmation();
                 break;
             }
@@ -1516,9 +1519,9 @@ inline void CNewPlayerUpdateProc::handleRequests()
     for (int i = 0; i < count; ++i) {
         GameSelectionHeadersStruct* row;
         if (m_requests[i].m_flag)
-            row = &g_singleSelectionWindow->m_transferHeaders[m_requests[i].m_number];
+            row = &g_singleSelectionWindow->getTransferHeader(m_requests[i].m_number);
         else
-            row = &g_singleSelectionWindow->m_headersA[m_requests[i].m_number];
+            row = &g_singleSelectionWindow->getHeader(m_requests[i].m_number);
         CGameHeaderInfoMsg msg(m_requests[i].m_flag,
                                m_requests[i].m_number, row);
         msg.remoteFn00512C80(m_dpid, 1, 1);
@@ -1564,7 +1567,7 @@ void CNewPlayerUpdateProc::go()
 {
     CGameHeaderInfoInitMsgEx initMsg(
         g_singleSelectionWindow->m_gameVersion,
-        g_singleSelectionWindow->m_headersA.size(),
+        g_singleSelectionWindow->getHeaderCount(),
         g_singleSelectionWindow->m_loadMode);
     transmitRemoteDataDPID(&initMsg, m_dpid, false, true);
 }
@@ -1590,26 +1593,26 @@ void CNewPlayerUpdateProc::tick()
     if (GameTime::elapsedSince(m_lastSendTime) < 75)
         return;
 
-    if (m_nextHeader < g_singleSelectionWindow->m_headersA.size()) {
+    if (m_nextHeader < g_singleSelectionWindow->getHeaderCount()) {
         for (int i = 0; i < 5; ++i) {
             if (g_singleSelectionWindow->m_loadMode) {
                 CGameHeaderInfoMsg msg(
                     0, m_nextHeader,
-                    &g_singleSelectionWindow->m_headersA[m_nextHeader]);
+                    &g_singleSelectionWindow->getHeader(m_nextHeader));
                 msg.remoteFn00512C80(m_dpid, 1, 1);
             } else {
                 CMapFileNameMsg msg(
                     0, m_nextHeader,
-                    g_singleSelectionWindow->m_headersA[m_nextHeader].m_setup.m_filename,
-                    g_singleSelectionWindow->m_headersA[m_nextHeader].m_setup.m_alignment,
-                    g_singleSelectionWindow->m_headersA[m_nextHeader].m_fileTime);
+                    g_singleSelectionWindow->getHeader(m_nextHeader).m_setup.m_filename,
+                    g_singleSelectionWindow->getHeader(m_nextHeader).m_setup.m_alignment,
+                    g_singleSelectionWindow->getHeader(m_nextHeader).m_fileTime);
                 transmitRemoteDataDPID(&msg, m_dpid, true, false);
             }
 
             ++m_nextHeader;
             if (m_requests.size() > 0)
                 handleRequests();
-            if (m_nextHeader >= g_singleSelectionWindow->m_headersA.size()) {
+            if (m_nextHeader >= g_singleSelectionWindow->getHeaderCount()) {
                 requestConfirmation();
                 break;
             }
@@ -1729,9 +1732,10 @@ public:
 class CChatWidget : public textWidget {
 public:
     class CChatSave : public Bitmap16Bit {
-    public:
+    private:
         unsigned char m_saved;  // +0x38
 
+    public:
         // DC1618 constructs the base; DC1621 assigns the flag in the body.
         // Retail's expansion likewise writes the derived vptr before saved.
         DC_ADDRESS(0x148bec, 0x64)
@@ -3311,10 +3315,10 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
     applyHeaderToGame(&m_localHeader);
 
     for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
-        m_players.m_humanPlayers[j].m_heroIndex = -1;
-        m_players.m_humanPlayers[j].m_townIndex = -1;
-        m_players.m_computerPlayers[j].m_heroIndex = -1;
-        m_players.m_computerPlayers[j].m_townIndex = -1;
+        m_players.getHumanPlayer(j)->setHeroIndex(-1);
+        m_players.getHumanPlayer(j)->setTownIndex(-1);
+        m_players.getCompPlayerInPos(j)->setHeroIndex(-1);
+        m_players.getCompPlayerInPos(j)->setTownIndex(-1);
     }
     setHumanSlot();
     makeHeroFilter();
@@ -3518,8 +3522,8 @@ void TSingleSelectionWindow::setupAdvancedOptions()
 
     if (m_mapChanged) {
         for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-            m_players.m_humanPlayers[i].resetAdvancedOptions();
-            m_players.m_computerPlayers[i].resetAdvancedOptions();
+            m_players.getHumanPlayer(i)->resetAdvancedOptions();
+            m_players.getCompPlayerInPos(i)->resetAdvancedOptions();
         }
         setHumanSlot();
         m_mapChanged = 0;
@@ -3810,14 +3814,14 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
                 break;
 
             unsigned char noHero =
-                player->m_heroIndex == -1
+                player->getHeroIndex() == -1
                 && !hasRandomHero(gamePos)
                 && !hasNonRandomHero(gamePos);
             if (noHero)
                 break;
 
             int displayFace = getDisplayFace(gamePos);
-            if (player->m_heroIndex == -1 && displayFace == -1) {
+            if (player->getHeroIndex() == -1 && displayFace == -1) {
                 CBonusDlg dlg(!m_saveMode && !m_loadMode);
                 dlg.createWin((*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_HERO_CAPTION], m_randomHeroBmp,
                               (*g_generalText)[GENERAL_TEXT_RANDOM_HERO],
@@ -4732,7 +4736,7 @@ void TSingleSelectionWindow::setHumanSlot()
     updateGameVars();
     mp = &g_game->m_mapHeader;
     for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-        m_players.m_humanPlayers[i].m_playerPos = -1;
+        m_players.getHumanPlayer(i)->setPlayerPos(-1);
         if (m_loadMode && g_game->m_playerDisabled[i])
             mp->m_playerSlotAttributes[i].m_canBeHuman = 0;
     }
@@ -4745,7 +4749,7 @@ void TSingleSelectionWindow::setHumanSlot()
                     int freePlayer = m_players.getUnassignedPlayerPos();
                     if (freePlayer == -1)
                         break;
-                    m_players.m_humanPlayers[freePlayer].m_playerPos = i;
+                    m_players.getHumanPlayer(freePlayer)->setPlayerPos(i);
                 }
             }
             for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
@@ -4754,7 +4758,7 @@ void TSingleSelectionWindow::setHumanSlot()
                     int freePlayer = m_players.getUnassignedPlayerPos();
                     if (freePlayer == -1)
                         return;
-                    m_players.m_humanPlayers[freePlayer].m_playerPos = i;
+                    m_players.getHumanPlayer(freePlayer)->setPlayerPos(i);
                 }
             }
         } else {
@@ -4764,7 +4768,7 @@ void TSingleSelectionWindow::setHumanSlot()
                     int freePlayer = m_players.getUnassignedPlayerPos();
                     if (freePlayer == -1)
                         return;
-                    m_players.m_humanPlayers[freePlayer].m_playerPos = i;
+                    m_players.getHumanPlayer(freePlayer)->setPlayerPos(i);
                 }
             }
         }
@@ -4788,12 +4792,11 @@ void TSingleSelectionWindow::setHumanSlot()
                 player = getThisPlayer();
                 if (player) {
                     if (m_randomMapSelected) {
-                        player->m_playerPos = x;
-                        player->m_townIndex = m_localHeader.m_setup.m_alignment[x];
+                        player->setPlayerPos(x);
+                        player->setTownIndex(m_localHeader.m_setup.m_alignment[x]);
                     } else {
-                        player->m_playerPos = x;
-                        player->m_townIndex =
-                            m_selectionHeaders[m_currentMap].m_setup.m_alignment[x];
+                        player->setPlayerPos(x);
+                        player->setTownIndex(m_selectionHeaders[m_currentMap].m_setup.m_alignment[x]);
                     }
                 }
             }
@@ -4808,7 +4811,7 @@ void TSingleSelectionWindow::setHumanSlot()
                 CNetPlayerHandlerPlayer* player;
                 player = getThisPlayer();
                 if (player)
-                    player->m_playerPos = x;
+                    player->setPlayerPos(x);
             }
             return;
         }
@@ -4823,14 +4826,14 @@ void TSingleSelectionWindow::setHumanSlot()
                 CNetPlayerHandlerPlayer* player;
                 player = getThisPlayer();
                 if (player)
-                    player->m_playerPos = x;
+                    player->setPlayerPos(x);
             }
             return;
         }
     }
     player = getThisPlayer();
     if (player)
-        player->m_playerPos = -1;
+        player->setPlayerPos(-1);
 }
 
 // Dreamcast preserves this helper. Complete expands it into the six sort
@@ -4953,7 +4956,7 @@ void TSingleSelectionWindow::updateAllyEnemyFlags(bool update)
         player = getThisPlayer();
         if (!player)
             return;
-        playerPos = player->m_playerPos;
+        playerPos = player->getPlayerPos();
     }
 
     widget* flag;
@@ -5063,10 +5066,10 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
         }
         updateGameVars();
         for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-            m_players.m_humanPlayers[i].m_heroIndex = -1;
-            m_players.m_humanPlayers[i].m_townIndex = -1;
-            m_players.m_computerPlayers[i].m_heroIndex = -1;
-            m_players.m_computerPlayers[i].m_townIndex = -1;
+            m_players.getHumanPlayer(i)->setHeroIndex(-1);
+            m_players.getHumanPlayer(i)->setTownIndex(-1);
+            m_players.getCompPlayerInPos(i)->setHeroIndex(-1);
+            m_players.getCompPlayerInPos(i)->setTownIndex(-1);
         }
         setHumanSlot();
         makeHeroFilter();
@@ -5346,7 +5349,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
                 player = m_players.getCompPlayerInPos(i);
             if (player->isHuman())
                 request.m_isHumanSeat[i] = 1;
-            request.m_townType[i] = player->m_townIndex;
+            request.m_townType[i] = player->getTownIndex();
         }
 
         std::string path(DATA_COMPGEN(0x006837d4, randomMapsPrefix,
@@ -5573,18 +5576,18 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         if (!thisPlayer)
             thisPlayer = m_players.getCompPlayerInPos(i);
         if (thisPlayer) {
-            thisPlayer->m_heroIndex = -1;
+            thisPlayer->setHeroIndex(-1);
             TTownType townType = getDisplayTown(i);
             unsigned short legal = static_cast<unsigned short>(
                 g_game->m_mapHeader.m_playerSlotAttributes[i].m_legalAlignments);
             if (!m_commonGameVersion)
                 legal &= ~0x100;
             townType = pickPrevAlignment(legal, townType);
-            thisPlayer->m_townIndex = townType;
+            thisPlayer->setTownIndex(townType);
             CTownUpdateMsg netMsg(i, townType);
             transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
             updateTown(i,
-                       static_cast<TTownType>(thisPlayer->m_townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+                       static_cast<TTownType>(thisPlayer->getTownIndex()) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
                        0);
         }
         break;
@@ -5602,18 +5605,18 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         if (!thisPlayer)
             thisPlayer = m_players.getCompPlayerInPos(i);
         if (thisPlayer) {
-            thisPlayer->m_heroIndex = -1;
+            thisPlayer->setHeroIndex(-1);
             TTownType townType = getDisplayTown(i);
             unsigned short legal = static_cast<unsigned short>(
                 g_game->m_mapHeader.m_playerSlotAttributes[i].m_legalAlignments);
             if (!m_commonGameVersion)
                 legal &= ~0x100;
             townType = pickNextAlignment(legal, townType);
-            thisPlayer->m_townIndex = townType;
+            thisPlayer->setTownIndex(townType);
             CTownUpdateMsg netMsg(i, townType);
             transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
             updateTown(i,
-                       static_cast<TTownType>(thisPlayer->m_townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+                       static_cast<TTownType>(thisPlayer->getTownIndex()) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
                        0);
         }
         break;
@@ -5637,7 +5640,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
             if (thisPlayer) {
                 getHeroFace(-1, thisPlayer);
                 CRequestHeroFaceReplyMsg netMsg(
-                    thisPlayer->m_playerPos, thisPlayer->m_heroIndex);
+                    thisPlayer->getPlayerPos(), thisPlayer->getHeroIndex());
                 transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
                 drawHeroAdvancedOption(clickPos, 1, -1);
             }
@@ -5662,7 +5665,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
             if (thisPlayer) {
                 getHeroFace(1, thisPlayer);
                 CRequestHeroFaceReplyMsg netMsg(
-                    thisPlayer->m_playerPos, thisPlayer->m_heroIndex);
+                    thisPlayer->getPlayerPos(), thisPlayer->getHeroIndex());
                 transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
                 drawHeroAdvancedOption(clickPos, 1, -1);
             }
@@ -5962,7 +5965,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
             thisPlayer = m_players.getCompPlayerInPos(i);
         if (thisPlayer) {
             unsigned char noHero = 0;
-            if (thisPlayer->m_heroIndex == -1 && !hasRandomHero(i)
+            if (thisPlayer->getHeroIndex() == -1 && !hasRandomHero(i)
                     && !hasNonRandomHero(i))
                 noHero = 1;
             --thisPlayer->m_startBonusIndex;
@@ -5994,7 +5997,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
             thisPlayer = m_players.getCompPlayerInPos(i);
         if (thisPlayer) {
             unsigned char noHero = 0;
-            if (thisPlayer->m_heroIndex == -1 && !hasRandomHero(i)
+            if (thisPlayer->getHeroIndex() == -1 && !hasRandomHero(i)
                     && !hasNonRandomHero(i))
                 noHero = 1;
             thisPlayer->m_startBonusIndex =
@@ -6123,7 +6126,7 @@ int TSingleSelectionWindow::exitDialog(message& msg)
         if (player)
             g_logFile.log(DATA_COMPGEN(0x00683828, exitLobbySelfLog,
                             "THis player is at [%d]"),
-                        player->m_playerPos);
+                        player->getPlayerPos());
         else
             g_logFile.log(DATA_COMPGEN(0x0068380c, exitLobbyNoSelfLog,
                             "This player was not found"));
@@ -6343,7 +6346,7 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
         g_numHumanPlayers = 0;
         CNetPlayerHandlerPlayer* player = getThisPlayer();
         if (player) {
-            g_localGamePos = player->m_playerPos;
+            g_localGamePos = player->getPlayerPos();
             g_game->m_players[g_localGamePos].m_isHuman = 1;
             g_game->m_players[g_localGamePos].m_isLocal = 1;
             g_numHumanPlayers = 1;
@@ -6363,8 +6366,8 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
                 g_game->m_setup.m_startingBonus[i] =
                     static_cast<signed char>(player->m_startBonusIndex);
                 g_game->m_setup.m_startingHero[i] = -1;
-                if (player->m_townIndex != -1)
-                    g_game->m_setup.m_alignment[i] = player->m_townIndex;
+                if (player->getTownIndex() != -1)
+                    g_game->m_setup.m_alignment[i] = player->getTownIndex();
                 else if (player->isHuman())
                     g_game->m_setup.m_alignment[i] =
                         m_currentHeader->m_setup.m_alignment[i];
@@ -6439,7 +6442,7 @@ bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
         break;
     case RS_GAME_TRANSMIT_INIT: {
         m_receivedMaps = 1;
-        if (getThisPlayer() && getThisPlayer()->m_playerPos == -1) {
+        if (getThisPlayer() && getThisPlayer()->getPlayerPos() == -1) {
             destroyMsg(netMsg);
             remoteCleanup();
             cancel = true;
@@ -6861,8 +6864,8 @@ MAC_ADDRESS(0x181bac, 0xc4)
 unsigned char TSingleSelectionWindow::sendPlayerPositions(
     unsigned long dpidTo)
 {
-    CUpdatePlayerPosMsg msg(m_players.m_humanPlayers,
-                            m_players.m_computerPlayers);
+    CUpdatePlayerPosMsg msg(m_players.getHumanPlayer(0),
+                            m_players.getCompPlayerInPos(0));
     transmitRemoteDataDPID(&msg, dpidTo, true, true);
     return 1;
 }
@@ -7056,7 +7059,7 @@ bool TSingleSelectionWindow::assignPlayerToOpenHumanSlot(unsigned long dpid)
             continue;
         if (m_loadMode && g_game->m_playerDisabled[pos])
             continue;
-        player->m_playerPos = pos;
+        player->setPlayerPos(pos);
         return true;
     }
     return false;
@@ -7332,7 +7335,7 @@ DC_ADDRESS(0x141824, 0x146)
 MAC_ADDRESS(0x182a20, 0x118)
 void TSingleSelectionWindow::getHeroFace(int which, CNetPlayerHandlerPlayer* player)
 {
-    int currFace = player->m_heroIndex;
+    int currFace = player->getHeroIndex();
     if (player->m_availableHeroesCount == 0)
         return;
     if (which < 0) {
@@ -7362,7 +7365,7 @@ void TSingleSelectionWindow::getHeroFace(int which, CNetPlayerHandlerPlayer* pla
                      player->m_availableHeroes[currFace],
                      m_players.getGamePos(player->m_dpid)));
     }
-    player->m_heroIndex = currFace;
+    player->setHeroIndex(currFace);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7298
@@ -7378,10 +7381,10 @@ void TSingleSelectionWindow::onRequestHeroFaceMsg(
     CNetPlayerHandlerPlayer* player = m_players.getPlayer(netMsg->m_dpidFrom);
     if (!player)
         return;
-    if (player->m_playerPos == -1)
+    if (player->getPlayerPos() == -1)
         return;
     getHeroFace(msg->m_which, player);
-    CRequestHeroFaceReplyMsg reply(player->m_playerPos, player->m_heroIndex);
+    CRequestHeroFaceReplyMsg reply(player->getPlayerPos(), player->getHeroIndex());
     transmitRemoteDataDPID(&reply, NET_BROADCAST_DPID, false, true);
     onRequestHeroFaceReplyMsg(&reply, inPopup);
 }
@@ -7401,7 +7404,7 @@ CNetPlayerHandlerPlayer* TSingleSelectionWindow::getThisPlayer()
 {
     CNetPlayerHandlerPlayer* player;
     if (g_mpNetProtocol == MP_HOTSEAT)
-        return &m_players.m_humanPlayers[0];
+        return m_players.getHumanPlayer(0);
     player = m_players.getPlayer(g_thisNetPlayerInfo.m_dpid);
     return player;
 }
@@ -7415,7 +7418,7 @@ void TSingleSelectionWindow::onRequestHeroFaceReplyMsg(CNetMsg* netMsg, bool inP
         static_cast<CRequestHeroFaceReplyMsg*>(netMsg);
     CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(msg->m_pos);
     if (p) {
-        p->m_heroIndex = msg->m_face;
+        p->setHeroIndex(msg->m_face);
         if (!inPopup) {
             drawWindow(0, 0xffff0001, 0xffff);
             this->update();
@@ -7460,10 +7463,10 @@ unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
     setCurrentMap(0, 0);
     m_fileSlider->setResolution(m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
     for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-        if (m_players.m_humanPlayers[i].isHuman()
-                && m_players.m_humanPlayers[i].m_dpid
+        if (m_players.getHumanPlayer(i)->isHuman()
+                && m_players.getHumanPlayer(i)->m_dpid
                        != g_thisNetPlayerInfo.m_dpid)
-            m_newPlayerUpdateMan->newPlayer(m_players.m_humanPlayers[i].m_dpid);
+            m_newPlayerUpdateMan->newPlayer(m_players.getHumanPlayer(i)->m_dpid);
     }
     // DC line 7408 names this helper. Complete expands it here while retaining
     // the exact body at 0x57fb90; the nested showWidget/size calls then select
@@ -7514,7 +7517,7 @@ void TSingleSelectionWindow::onNameClick(int pos)
         return;
     setFocus(-1);
     CNetPlayerHandlerPlayer* player = getThisPlayer();
-    if (player->m_playerPos != pos)
+    if (player->getPlayerPos() != pos)
         return;
 
     textWidget* w = static_cast<textWidget*>(getWidget(pos + 353));
@@ -7566,19 +7569,19 @@ void TSingleSelectionWindow::onPlayerPosClick(int pos)
         setFocus(-1);
         CNetPlayerHandlerPlayer* player = getThisPlayer();
         if (mp->m_playerSlotAttributes[pos].m_canBeHuman
-                && player->m_playerPos != pos) {
-            if (player->m_playerPos != -1) {
+                && player->getPlayerPos() != pos) {
+            if (player->getPlayerPos() != -1) {
                 button* b = static_cast<button*>(
-                    getWidget(player->m_playerPos + 263));
+                    getWidget(player->getPlayerPos() + 263));
                 b->sendMessage(
                     widget::WIDGET_CLEAR_STATUS,
                     widget::WIDGET_HIGHLIGHTED);
             }
-            setup->m_playerPos[player->m_playerPos] = setup->m_playerPos[pos];
+            setup->m_playerPos[player->getPlayerPos()] = setup->m_playerPos[pos];
             setup->m_playerPos[pos] = pos;
-            player->m_playerPos = pos;
-            player->m_heroIndex = -1;
-            player->m_townIndex = -1;
+            player->setPlayerPos(pos);
+            player->setHeroIndex(-1);
+            player->setTownIndex(-1);
             makeHeroFilter();
         }
     }
@@ -7597,7 +7600,7 @@ void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
     updateNameLists();
     int i;
     for (i = 0; i < 8; ++i)
-        m_players.m_humanPlayers[i].m_playerPos = -1;
+        m_players.getHumanPlayer(i)->setPlayerPos(-1);
     CUpdatePlayerPosMsg* msg = static_cast<CUpdatePlayerPosMsg*>(netMsg);
     for (i = 0; i < 8; ++i) {
         CNetPlayerHandlerPlayer* rec = &msg->m_netPlayer[i];
@@ -7612,14 +7615,13 @@ void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
                 *p = *rec;
         }
     }
-    memcpy(m_players.m_computerPlayers, msg->m_compPlayer,
-           sizeof(m_players.m_computerPlayers));
+    m_players.copyComputerPlayers(msg->m_compPlayer);
     for (i = 0; i < 8; ++i) {
         CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(i);
         if (!p)
             p = m_players.getCompPlayerInPos(i);
         if (p) {
-            getWidget(p->m_playerPos + 207)->sendMessage(
+            getWidget(p->getPlayerPos() + 207)->sendMessage(
                 widget::WIDGET_SET_TEXT, int(g_handiText[p->m_handicap]));
         }
     }
@@ -7639,8 +7641,8 @@ void TSingleSelectionWindow::checkFaces()
     // DC 7673 gates the player; 7675 separately tests the occupied face.
     for (int i = 7; i >= 0; --i) {
         CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(i);
-        if (p && p->m_heroIndex != -1) {
-            if (m_players.isFaceTaken(p->m_availableHeroes[p->m_heroIndex], i))
+        if (p && p->getHeroIndex() != -1) {
+            if (m_players.isFaceTaken(p->m_availableHeroes[p->getHeroIndex()], i))
                 getHeroFace(1, p);
         }
     }
@@ -7652,10 +7654,10 @@ MAC_ADDRESS(0x1835d8, 0xc0)
 void TSingleSelectionWindow::sendPlayerFaces()
 {
     for (int i = 1; i < 8; ++i) {
-        CNetPlayerHandlerPlayer* player = &m_players.m_humanPlayers[i];
-        if (player->isHuman() && player->m_playerPos != -1) {
-            CRequestHeroFaceReplyMsg msg(player->m_playerPos,
-                                         player->m_heroIndex);
+        CNetPlayerHandlerPlayer* player = m_players.getHumanPlayer(i);
+        if (player->isHuman() && player->getPlayerPos() != -1) {
+            CRequestHeroFaceReplyMsg msg(player->getPlayerPos(),
+                                         player->getHeroIndex());
             transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
         }
     }
@@ -7758,7 +7760,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
     }
 
     CNetPlayerHandlerPlayer* player = getThisPlayer();
-    if (!m_loadMode && player->m_playerPos == -1) {
+    if (!m_loadMode && player->getPlayerPos() == -1) {
         normalDialog((*g_generalText)[GENERAL_TEXT_MULTIPLAYER_POSITION_REQUIRED], 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return 0;
@@ -7825,12 +7827,12 @@ unsigned char TSingleSelectionWindow::beginSavedGame()
 
     if (!isMultiPlayer()) {
         CNetPlayerHandlerPlayer* player = m_players.getPlayer(1);
-        player->m_playerPos = g_netLocalGamePos;
+        player->setPlayerPos(g_netLocalGamePos);
     }
 
     if (!isMultiPlayer()) {
         CNetPlayerHandlerPlayer* player = m_players.getPlayer(1);
-        player->m_playerPos = g_netLocalGamePos;
+        player->setPlayerPos(g_netLocalGamePos);
     }
 
     updatePlayerPositions(0);
@@ -7881,10 +7883,10 @@ bool TSingleSelectionWindow::beginNewGame()
     strcpy(g_mapName, g_game->m_setup.m_filename);
     memset(g_startingHeroOverrides, -1, sizeof(g_startingHeroOverrides));
     for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-        CNetPlayerHandlerPlayer* player = &m_players.m_humanPlayers[i];
-        if (player->m_playerPos != -1 && player->m_heroIndex != -1)
-            g_startingHeroOverrides[player->m_playerPos] =
-                player->m_availableHeroes[player->m_heroIndex];
+        CNetPlayerHandlerPlayer* player = m_players.getHumanPlayer(i);
+        if (player->getPlayerPos() != -1 && player->getHeroIndex() != -1)
+            g_startingHeroOverrides[player->getPlayerPos()] =
+                player->m_availableHeroes[player->getHeroIndex()];
     }
     g_game->newMap(g_game->m_setup.m_path, g_mapName, g_startingHeroOverrides,
                    gameVersionClass);
@@ -7931,16 +7933,16 @@ void TSingleSelectionWindow::updateNameLists()
 
     names[0] = 0;
     for (i = 0; i < 4; ++i) {
-        if (m_players.m_humanPlayers[i].isHuman()) {
-            sprintf(line, "%s\n", m_players.m_humanPlayers[i].m_name);
+        if (m_players.getHumanPlayer(i)->isHuman()) {
+            sprintf(line, "%s\n", m_players.getHumanPlayer(i)->m_name);
             strcat(names, line);
         }
     }
     m_nameList1->setText(names);
     names[0] = 0;
     for (i = 4; i < 8; ++i) {
-        if (m_players.m_humanPlayers[i].isHuman()) {
-            sprintf(line, "%s\n", m_players.m_humanPlayers[i].m_name);
+        if (m_players.getHumanPlayer(i)->isHuman()) {
+            sprintf(line, "%s\n", m_players.getHumanPlayer(i)->m_name);
             strcat(names, line);
         }
     }
@@ -8014,8 +8016,8 @@ void TSingleSelectionWindow::updateTown(
     if (!p)
         p = m_players.getCompPlayerInPos(pos);
     if (p) {
-        p->m_townIndex = town;
-        p->m_heroIndex = -1;
+        p->setTownIndex(town);
+        p->setHeroIndex(-1);
         makeHeroFilter();
         checkFaces();
         if (!inPopup)
@@ -8108,9 +8110,9 @@ int TSingleSelectionWindow::getDisplayFace(int gamePos)
             return slotAtt->m_nonRandomHeroCustomPortrait;
         heroId = g_game->m_setup.m_startingHero[gamePos];
     } else if (slotAtt->m_generateHero || slotAtt->m_hasRandomHero) {
-        if (player->m_heroIndex == -1)
+        if (player->getHeroIndex() == -1)
             return -1;
-        heroId = player->m_availableHeroes[player->m_heroIndex];
+        heroId = player->m_availableHeroes[player->getHeroIndex()];
     } else {
         if (slotAtt->m_nonRandomHeroCustomPortrait != -1)
             return slotAtt->m_nonRandomHeroCustomPortrait;
@@ -8143,13 +8145,13 @@ inline int TSingleSelectionWindow::getHeroInPos(int gamePos)
     CMapHeaderData::TPlayerSlotAttributes* slotAtt =
         &g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
     if (slotAtt->m_generateHero || slotAtt->m_hasRandomHero) {
-        if (player->m_heroIndex == -1)
+        if (player->getHeroIndex() == -1)
             return -1;
-        return player->m_availableHeroes[player->m_heroIndex];
+        return player->m_availableHeroes[player->getHeroIndex()];
     }
     if (slotAtt->m_nonRandomHeroId != -1)
         return slotAtt->m_nonRandomHeroId;
-    return player->m_availableHeroes[player->m_heroIndex];
+    return player->m_availableHeroes[player->getHeroIndex()];
 }
 
 // The selected seat's town. Dreamcast falls back to pick_alignment when a
@@ -8170,7 +8172,7 @@ TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
     CMapHeaderData::TPlayerSlotAttributes* slotAtt =
         &g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
     if (slotAtt->m_hasRandomAlignment || hasMultipleTowns(gamePos))
-        return static_cast<TTownType>(player->m_townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+        return static_cast<TTownType>(player->getTownIndex()) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
     return pickAlignment(
         static_cast<unsigned short>(slotAtt->m_legalAlignments), 1);
 }
@@ -8827,9 +8829,9 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
                 if (!player)
                     player = m_players.getCompPlayerInPos(pos);
                 if (player && getDisplayTown(pos) == TOWN_CONFLUX) {
-                    player->m_townIndex = eTownNeutral;
+                    player->setTownIndex(eTownNeutral);
                     // Mac 0:0x1863d8 passes the stored town, not a literal.
-                    updateTown(pos, H3_ENUM_DECODE(TTownType, player->m_townIndex), 0);
+                    updateTown(pos, H3_ENUM_DECODE(TTownType, player->getTownIndex()), 0);
                 }
             }
         }
@@ -8850,7 +8852,7 @@ MAC_ADDRESS(0x186448, 0xe0)
 int TSingleSelectionWindow::getCommonGameVersion()
 {
     std::bitset<4> features = ~std::bitset<4>();
-    CNetPlayerHandlerPlayer* player = m_players.m_humanPlayers;
+    CNetPlayerHandlerPlayer* player = m_players.getHumanPlayer(0);
     { for (int i = CNetPlayerHandler::MAX_PLAYERS; i != 0; i--, player++) {
             if (player->m_dpid)
                 features &= g_gameContextFeatures[player->m_version];

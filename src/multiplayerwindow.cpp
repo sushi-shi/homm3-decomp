@@ -136,10 +136,11 @@ DATA(0x00681628) static unsigned char g_sessionKeepAlive = 1;
 // Different constructor expansion in CMPInputDlg and CHotSeatDlg does not
 // establish different base classes; keep the common base and its real calls.
 class CMPEdit : public textEntryWidget {
-public:
+private:
     CMPEdit* m_nextEdit;   // +0x70
     CMPEdit* m_prevEdit;   // +0x74
 
+public:
     CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
             const char* fontName, font::TColor color, unsigned justification,
             const char* backgroundIcon, int backgroundFrame, int id,

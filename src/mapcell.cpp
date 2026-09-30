@@ -570,7 +570,6 @@ void NewfullMap::init(int size, unsigned char twoLayers)
 
     close();
 
-
     int cellCount = (twoLayers != 0) + 1;
     cellCount *= m_size;
     cellCount *= m_size;
@@ -2902,7 +2901,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             int legalAlignments = 0xff;
             if ((g_videoGameState == 1
                  || g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
-                && g_game->m_gameVersion >= 1)
+                && g_game->getGameVersion() >= 1)
                 legalAlignments = 0x1ff;
             tempTown.m_townType = pickAlignment(legalAlignments, 0);
         }

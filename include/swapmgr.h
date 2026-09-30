@@ -234,7 +234,11 @@ class swapManager : public baseManager {
 public:
     TSwapWindow* m_parent;     // +0x38
     Bitmap816* m_border;       // +0x3c
+
+private:
     hero* m_heroes[2];         // +0x40 / +0x44
+
+public:
     // Two-stage army selection. swapMons 0x5b0da0 indexes the source and
     // destination heroes and their respective army slots with these four
     // words, then combines or swaps the stacks. Role-derived names.

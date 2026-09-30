@@ -108,7 +108,7 @@ void TCampaignBrief::select(int which)
         }
         broadcastMessage(msg);
 
-        if (!m_campaign->m_scenarios[which]->getStartOptionCount()) {
+        if (!m_campaign->getScenario(which)->getStartOptionCount()) {
             widget* ok = getWidget(DIALOG_RETURN_OK);
             if (ok)
                 ok->enable(1);
@@ -244,7 +244,7 @@ void TCampaignBrief::updateAllyEnemyFlags()
 {
     int briefingChoice = g_game->m_campaign.m_briefingChoice;
     ScenarioStruct* scenario =
-        m_campaign->m_scenarios[m_selectedScenario];
+        m_campaign->getScenario(m_selectedScenario);
     g_campaignBriefPlayerSlot =
         scenario->getStartOptions()->getPlayer(briefingChoice);
     int enemyFlag = 0;
@@ -412,7 +412,7 @@ MAC_ADDRESS(0x0650a4, 0x2f0)  // Select callee, dc-order-map after AddBonusIcons
 void TCampaignBrief::updateBonusIcons()
 {
     int selectedScenario = m_selectedScenario;
-    ScenarioStruct* scenario = m_campaign->m_scenarios[selectedScenario];
+    ScenarioStruct* scenario = m_campaign->getScenario(selectedScenario);
     int i;
 
     if (scenario->getStartOptionCount() == TCampaignStartOption::CHOICE_COUNT_PAIR) {
@@ -581,7 +581,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
         for (int i = 0;
              i < m_campaign->getScenarioCount(); ++i) {
             CampaignScenarioPreview preview;
-            ScenarioStruct* scenario = m_campaign->m_scenarios[i];
+            ScenarioStruct* scenario = m_campaign->getScenario(i);
             g_game->m_setup.m_fileInitialized = 0;
             if (scenario->hasMap()) {
                 m_campaign->loadScenario(i, &mapHeader);
@@ -610,12 +610,12 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
          regionIndex < mapTraits.m_numRegions; ++regionIndex) {
         const TCampaignMapTraits::TRegionTraits& region =
             mapTraits.m_regionTraits[regionIndex];
-        ScenarioStruct* scenario = m_campaign->m_scenarios[regionIndex];
+        ScenarioStruct* scenario = m_campaign->getScenario(regionIndex);
         if (scenario->hasMap()) {
             // BOUND BY `const int&`: retail re-reads the scenario's colour
             // at each of the three image-name subscripts.  88.3754 -> 89.0593.
             const int& color = scenario->m_regionColor;
-            if (g_game->m_campaign.m_mapScores[regionIndex].m_completed) {
+            if (g_game->m_campaign.getScenarioInfo(regionIndex).m_completed) {
                 widgets.push_back(new bitmapBorder(
                                 region.m_offsetX, region.m_offsetY, 20, 20,
                                 MAP_CONQUERED_1_ID + regionIndex,
@@ -774,8 +774,8 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
     for (int drawIndex = 0;
          drawIndex < m_campaign->getScenarioCount();
          ++drawIndex) {
-        if (m_campaign->m_scenarios[drawIndex]->hasMap()) {
-            if (g_game->m_campaign.m_mapScores[drawIndex].m_completed) {
+        if (m_campaign->getScenario(drawIndex)->hasMap()) {
+            if (g_game->m_campaign.getScenarioInfo(drawIndex).m_completed) {
                 w = getWidget(MAP_CONQUERED_1_ID + drawIndex);
                 mx = w->getRealWidth();
                 w->m_width = mx;
@@ -1051,7 +1051,7 @@ static int campaignBriefHandler(message& msg)
                         // spending or 7 fewer caller IL units are still
                         // missing. Copy-initialization stays until then.
                         std::string text =
-                            brief->m_campaign->m_scenarios[helpID]
+                            brief->m_campaign->getScenario(helpID)
                                 ->getRegionDescription();
                         normalDialog(text.c_str(), 4, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
@@ -1203,7 +1203,7 @@ static int campaignBriefHandler(message& msg)
         memset(g_newMapStartingBonus, 3, sizeof(g_newMapStartingBonus));
         incProgressBar(1);
 
-        int gamePos = brief->m_campaign->m_scenarios[selected]
+        int gamePos = brief->m_campaign->getScenario(selected)
                           ->getStartOptions()->getPlayer(choice);
         strcpy(g_game->m_players[gamePos].m_name, g_config.m_networkDefaultName);
         g_localGamePos = gamePos;
