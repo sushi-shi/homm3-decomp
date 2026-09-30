@@ -1888,9 +1888,9 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // all calls to the single-swing helper remain inside army. Mac forwards
 // CheckSpecialAttack's byte result, replacing it with true for fresh blind.
 // The owning-side accessor restores the first retail address calculation
-// (Windows 99.9040 -> 99.9232). Remaining differences are address-register
-// choices in the other two MarkCreatureEffect expansions and the reload
-// order after DoMultiHeadAttack.
+// (Windows 99.9040 -> 99.9232). The integrated declaration context also
+// restores the reload order after DoMultiHeadAttack (99.9616%). Remaining
+// differences are address-register choices in two MarkCreatureEffect expansions.
 
 VA(0x00441610, 0x6A0) MAC_ADDRESS(0x04d288, 0x638)  // corroborates, dc 0x46bec
 bool army::doAttack(army* armyToAttack, int direction)

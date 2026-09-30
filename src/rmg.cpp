@@ -2890,14 +2890,14 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
 // vector helper bodies while preserving the earlier constructor expansions.
 // The indexed-lookup control over-inlines single-insert (99.7862%); persistent
 // subtype cursors load end() eagerly, and an outer nonempty guard changes
-// retail's CFG. Combined lifetime/range families recover this exact body;
+// retail's CFG. Before enum recovery, combined lifetime/range families matched;
 // these bytes do not prove unique original syntax. See docs/vc6/source-families.md.
 // Mac 0x234998/0x2349a4 use separate object/terrain enum-vector families,
 // distinct from the subtype integer/POD vector at 0x2348e4. The object list
 // indexes the adventure-object traits/prototypes, establishing its domain.
 // Restoring both domains leaves one inline decision: placement-rule push_back
-// expands single-insert into count-insert, adding one push (Windows 99.6314%,
-// with the two new enum insert names awaiting folded-target refresh).
+// expands single-insert into count-insert, adding one push (Windows 99.6314%
+// after folded-target refresh).
 VA(0x00536560, 0x5F2) MAC_ADDRESS(0x23486c, 0x6a0) // anchor-string rand_trn.txt; thiscall, ret 0; retail-only
 void TRmgGeneratorBase::readObjectPlacementRules()
 {
