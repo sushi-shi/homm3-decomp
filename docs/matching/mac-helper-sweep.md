@@ -779,3 +779,108 @@ at `0xda3ac`. Windows explicitly checks that result at `0x4c3cac` and returns
 loss reader and writer check the time-limit transfer in Mac too. This batch
 found no additional missing game helper or source call; resolving the virtual
 stream sites does not establish whole-corpus body-review completion.
+
+### Shared packed-bit writer in saved-map headers
+
+Reviewing the complete `NewSMapHeader::read`, `save`, `load`, `get` and
+`readString` Mac bodies exposed a missing call in `save`. Its final player
+availability loop was a scalar accumulator in the recovered source. Mac
+`0xdbe4c..0xdbeb0` instead clears a one-byte array, tests eight bits, indexes
+the byte with `i >> 3`, sets `1 << (i & 7)` and writes the packed byte.
+Windows `0x4c544d..0x4c5497` retains the same indexed packing.
+
+This is the eight-bit expansion of the existing random-map
+`encodePackedBits`/`writePackedBits` operation (for example, the 70-bit Mac
+expansion at `0x24f810..0x24f890`). Both canonical templates now live in
+`packed_bits.h`, beside the readers, and `NewSMapHeader::save` calls the
+writer. The RMG calls are preserved. Cross-TU expansion
+supports a shared header; the original names and filename remain unknown.
+The initial VC6 check moves this caller from 95.4451% to 88.34%; that measured
+difference does not justify restoring the scalar approximation.
+
+The other 83 queued sites in these five bodies are represented. Stream
+receivers, transfer sizes, version guards and short-read/write checks were
+reviewed individually. Placeholder clearing is the trivial four-byte vector
+clear at `0x68f40`; hero setup clearing uses `0x68f78`, whose recursive
+`0x68688` destroys each node's string and frees the node. The three MSL
+replacement calls pass the erase arguments to `0x1c910`. The zero fill in
+`readString` owns exactly `length + 1` allocated bytes before the payload read.
+
+Mac `get` chains four terminating copies into `:path:filename`, with the
+colon and `rb` mode proved by PEF TOC data. Windows constructs the existing
+`std::string(path)`, backslash and filename sequence before `TGzFile`.
+Finally, DC's rejected-version text lookup at `0xaf6e6` uses index 431,
+matching the Mac caller and existing `getText` expression.
+
+The same review found the twelve-bit expansions in `playerData::load`
+(`0xccce0..0xccd60`) and `save` (`0xcd1f0..0xcd258`). Both now use the shared
+packed-bit helpers. Loading retains its version-37 guard and returned bitset
+copy; writing retains the unchecked two-byte transfer. The canonical encoder
+uses `fill_n`, preserving Mac's repeated const-zero loads without introducing
+the CRT call observed with `memset`. Windows `playerData::load` remains exact;
+`playerData::save` improves from 99.9557% to all 874 bytes exact. RMG's source
+MAX remains held; its current emitted comparison moves from 96.3419% to
+94.1690% after the shared encoder change.
+
+### Remaining player, pool and rumour stream operations
+
+The map-player slot reader and three hero-ID readers account for twenty
+additional sites. Native slot reads preserve the RoE/AB branches, the unused
+post-AB byte, the little-endian hero count and the unused string local before
+vector resize. Its vector clear at `0x68ed0` destroys each eight-byte record's
+string and resets the size. The byte hero readers map `0xff` to `-1` before
+their map/save-version remaps; the signed-short reader has no byte-sentinel
+test. Those distinctions already exist in the canonical source helpers.
+
+The generator pair, ten sign/mine/garrison/boat/obelisk pool serializers and
+four string/rumour serializers account for another 83 sites. Each native
+transfer was checked for receiver, size, consumer and error guard. The mine
+loader's legacy signed type/count arm already initializes/adds guards, while
+newer saves retain the army loader. Garrison removable-troop flags retain
+their version gate and unchecked scalar transfer. Boat serializers keep the
+following boat load/save call and its failure guard. The rumour-state buffer
+transfers 256 bytes but deliberately checks only for four in both native
+directions, as the recovered source does. The remaining 36 scalar/buffer
+sites in player load/save likewise already preserve their transfers and guards.
+
+Refreshing the graph also surfaced twelve indirect source paths that needed
+site-level reconciliation. Prayer's target-time call belongs to the
+no-argument `getAITargetTime` wrapper, not its separate speed-value calculation.
+The button timer belongs to `elapsedSince`, not `select`. Campaign and high-score
+message calls belong to the local `show`, `hide` and `setVisible` operations,
+with command/mask pairs `5/6`, `6/6`, `5/4` and `6/4`; reaching the same callee
+through a later window update did not establish those operations.
+
+The refreshed RMG body scan still reports 201 Clang diagnostics involving
+legacy VC6 local lookup and reference rules. The unchanged parent source and
+header reproduce the same diagnostics. Ownership parsing reports no gaps,
+but these body-analysis gaps remain explicit; this batch does not certify
+complete RMG body coverage.
+
+The full checkpoint passed with 1,530 Mac comparisons preserved, no unresolved
+link symbols, and no source ownership or inventory violations. Player load
+and save are both exact. The header writer's 95.4451% historical peak remains
+recorded beside its new 88.3414% current score; RMG's unchanged-source current
+score is 94.1690%. Shared-header collateral also moved `giveArtifact` from
+95.4049% to 95.3158% and `transmitSaveGame` from 97.4264% to 97.4042%; their
+previous MAX values remain recorded.
+
+### Text access and additional fixed stream bands
+
+Thirteen DC text-call sites were checked against their literal indices,
+branches and consumers. Player name initialization/comparison use 469;
+save-name exclusions use 77 and 109; the seven special-rumour branches use
+209–212, 264, 265 and 213. These already retain their `getText` calls.
+`setupOrigData` uses 12 for its initial filename copy. DC repeats that copy
+through `gpGame` at `0xaa0ac`; the complete Windows `0x4bf1a0+0x183` and Mac
+`0xd47e4+0x3fc` bodies instead have only the initial bounded copy and explicit
+terminator. The older second reset is a version difference, documented beside
+the owning source, rather than a missing Windows call.
+
+Twelve further Mac calls in black-market and creature-bank serialization
+already preserve their stream operations. Black markets stage a signed-byte
+count, transfer `count * 0x1c` contiguous bytes and test unsigned short counts.
+The creature-bank reader checks equality for its `0x38`, `0x1c`, four-byte and
+one-byte fixed bands; the writer deliberately ignores all four counts. Both
+then call their existing artifact-vector helper. These call-site dispositions
+do not certify complete body review of their callers.

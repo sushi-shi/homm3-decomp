@@ -1440,14 +1440,10 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
         return -1;
     m_placementHelpEnabled = flag != 0;
 
-    if (saveVersion >= 37) {
-        unsigned char bits[2];
-        std::bitset<12> combos;
-        infile->read(bits, sizeof(bits));
-        for (unsigned int bit = 0; bit < 12; bit++)
-            combos[bit] = (bits[bit >> 3] & (1 << (bit & 7))) != 0;
-        m_assembledCombinations = combos;
-    }
+    // Mac 0xccce0..0xccd60 retains the reader's local bitset, packed buffer
+    // and returned-value copy. Sharing the canonical reader stays byte-exact.
+    if (saveVersion >= 37)
+        m_assembledCombinations = readPackedBits<12>(infile);
     return 0;
 }
 
@@ -1465,11 +1461,13 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 // paired operations preserve all scalar writers and the bitset test helper.
 // Declare the bit counter in its loop after the fill: VC6 then retains the
 // native bitset bounds check and reproduces the scalar-buffer homes. The
-// remaining 99.9557% residual is the x/uintBuffer stack-home permutation;
-// all 49 blocks and 22 calls agree. Outer local-order controls are object-identical.
+// earlier 99.9557% residual was the x/uintBuffer stack-home permutation;
+// all 49 blocks and 22 calls agreed. Outer local-order controls were object-identical.
 // With fill_n and the loop-local bit counter, direct member.test(bit) still
 // changes the packed-bit update from retail's eight instructions to eleven
-// (98.21%). The const pointer retains that expansion; all 22 calls agree.
+// (98.21%). The const pointer retained that expansion. Restoring the shared
+// writePackedBits -> encodePackedBits call removes the remaining difference:
+// all 874 Windows bytes now match, with the fill_n operation kept canonical.
 VA(0x004ba670, 0x36A)
 DC_ADDRESS(0x0a55a8, 0x3f0)
 MAC_ADDRESS(0x0ccd7c, 0x4fc)  // anchor-global
@@ -1579,15 +1577,8 @@ int playerData::save(TAbstractFile* outfile)
     if (count < sizeof(unsigned char))
         return -1;
 
-    // Mac passes the bitset and index directly to test; no mutable proxy.
-    unsigned char bits[2];
-    const std::bitset<12>* combinations = &m_assembledCombinations;
-    std::fill_n(bits, sizeof(bits), 0);
-    for (unsigned int bit = 0; bit < 12; bit++) {
-        if (combinations->test(bit))
-            bits[bit >> 3] |= 1 << (bit & 7);
-    }
-    outfile->write(bits, sizeof(bits));
+    // Mac passes the bitset and index directly to test in the shared encoder.
+    writePackedBits(outfile, m_assembledCombinations);
     return 0;
 }
 
@@ -3520,6 +3511,9 @@ unsigned char game::saveGame(const char* filename, unsigned char determineSuffix
     }
 }
 
+// DC game.cpp:3838 repeats the new-game filename copy through gpGame
+// after clearing spell allocation. Complete Windows 0x4bf1a0 and Mac
+// 0xd47e4 instead have only the initial bounded copy and explicit terminator.
 VA(0x004bf1a0, 0x183)
 DC_ADDRESS(0x0a9e88, 0x246)
 MAC_ADDRESS(0x0d47e4, 0x3fc)
@@ -6319,7 +6313,7 @@ void game::applyMapHeaderAvailability()
 // adds eleven CFG blocks.  Retail also packs the final availability byte as
 // a one-byte array; spelling that literally reproduces its index arithmetic
 // but changes the later bitset range-throw phase and falls to 80.44%.  The
-// scalar spelling below is the measured whole-function plateau.  Reusing the
+// scalar spelling was the measured whole-function plateau. Reusing the
 // saved name length, rather than calling length() again, is likewise
 // codegen-significant: the second inline candidate moves the throw phase and
 // falls to 79.19%.
@@ -6332,6 +6326,10 @@ void game::applyMapHeaderAvailability()
 // alignment and name length as owned values, which keep writeValue; the
 // setup key and portrait reuse enumBuffer like the other enum writes
 // (95.51%; writeValue<char> for those two gives 78.12%).
+// The final packed-byte loop is now the shared writePackedBits call, proved
+// by Mac 0xdbe4c..0xdbeb0 and Windows 0x4c544d..0x4c5497. Preserve its array
+// indexing and nested encoder through the observed VC6 dip (95.45 -> 88.34%);
+// the earlier scalar accumulator hid this cross-TU source operation.
 VA(0x004c4f10, 0x71D)
 DC_ADDRESS(0x0b0188, 0x5cc)
 MAC_ADDRESS(0x0db804, 0x6f0)  // game::Save caller + DC identity + stream-write order
@@ -6472,12 +6470,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
         writeValue<int>(outfile, LITTLE_ENDIAN_LONG(count));
         outfile->write(it->second.m_name.c_str(), count);
 
-        ucharBuffer = 0;
-        for (i = 0; i < 8; ++i) {
-            if (it->second.m_players.test(i))
-                ucharBuffer |= 1 << i;
-        }
-        outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+        writePackedBits(outfile, it->second.m_players);
     }
 
     return 0;

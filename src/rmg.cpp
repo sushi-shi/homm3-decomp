@@ -30,6 +30,7 @@
 #include "rmg.h"
 
 #include "abstractfile.h"
+#include "packed_bits.h"
 #include "advmgr_objects.h"
 #include "armygrp.h"
 #include "artifact.h"
@@ -9728,28 +9729,6 @@ unsigned char type_random_map_generator::generate()
     createRoads();
     createRivers();
     return 1;
-}
-
-// Scalar output uses the canonical writeValue in abstractfile.h. The packed-
-// bit encoder and writer separate conversion from stream I/O, mirroring the
-// existing readers. These Complete-only boundaries/names are inferred from
-// repeated header expansions; no retained standalone bodies are claimed.
-template <size_t N>
-void encodePackedBits(const std::bitset<N>& bits, unsigned char* packed)
-{
-    memset(packed, 0, (N + 7) / 8);
-    for (unsigned int index = 0; index < N; ++index) {
-        if (bits.test(index))
-            packed[index >> 3] |= 1 << (index & 7);
-    }
-}
-
-template <size_t N>
-int writePackedBits(TAbstractFile* outfile, const std::bitset<N>& bits)
-{
-    unsigned char packed[(N + 7) / 8];
-    encodePackedBits(bits, packed);
-    return outfile->write(packed, sizeof(packed));
 }
 
 // Length-prefixed text retains the caller-owned string/buffer lifetime and
