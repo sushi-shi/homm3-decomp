@@ -1468,7 +1468,7 @@ drawing	?spellEffect@combatManager@@QAEXHHH_N@Z	100.0000	100.0000	100.0000	0x96a
 drawing	?spellEffect@combatManager@@QAEXHPAVarmy@@H_N@Z	100.0000	100.0000	100.0000	0x96840	tokens1:1c9bbf9bc056
 drawing	?updateCombatArea@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x93780	tokens1:a5bce575ad68
 drawing	?updateGrid@combatManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x93930	tokens1:2adbd221043a
-drawing	?updateMouseGrid@combatManager@@QAEXHAAV?$vector@JV?$allocator@J@std@@@std@@E@Z	96.3415	96.3415	100.0000	0x93ea0	tokens1:b08731687741
+drawing	?updateMouseGrid@combatManager@@QAEXHAAV?$vector@JV?$allocator@J@std@@@std@@E@Z	96.3415	96.3415	100.0000	0x93ea0	tokens1:0be70c3adeb4
 drawing	?updateMouseGrid@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x94390	tokens1:c89f7e107edc
 drawing	__h3cg$drawing$static_dtor$oldHexes	100.0000	100.0000	100.0000	0x94370	-
 dxplay	??0CDPlayLobby@@QAE@XZ	100.0000	100.0000	100.0000	0x98870	tokens1:194ce54e4405
@@ -1698,7 +1698,7 @@ events	?doEventRefugeeCamp@advManager@@AAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000
 events	?doEventResource@advManager@@AAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4be0	tokens1:94a116ee66a0
 events	?doEventScholar@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4dc0	tokens1:13eeaf7a3a4a
 events	?doEventSeaChest@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa5030	tokens1:27752de9a551
-events	?doEventShipyard@advManager@@AAEXPAVNewmapCell@@Utype_point@@E@Z	85.4808	85.4808	91.9303	0x9e2e0	tokens1:f40ddf9caa7a
+events	?doEventShipyard@advManager@@AAEXPAVNewmapCell@@Utype_point@@E@Z	90.8885	90.8885	91.9303	0x9e2e0	tokens1:ed4ca4a05061
 events	?doEventShrine@advManager@@AAEXPAVhero@@PAVNewmapCell@@PBDW4GlobalInfoFlags@@_N@Z	89.6531	89.6531	89.6701	0xa5610	tokens1:4ecda292904c
 events	?doEventSiren@advManager@@AAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa5980	tokens1:45039b2a385d
 events	?doEventSkeleton@advManager@@AAEXPAVhero@@PAUExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa5480	tokens1:86c7059c633e
@@ -2061,7 +2061,7 @@ game	?perWeek@game@@QAEXXZ	94.1719	94.1719	99.8370	0xc8780	tokens1:c9626b695129
 game	?processOnMapHeroes@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcae10	tokens1:c7c5111c9b3c
 game	?processOnMapTowns@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcaa70	tokens1:753faa84817b
 game	?processRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0	tokens1:5315678f9f97
-game	?randomizeEvents@game@@QAEXXZ	89.6121	89.6121	89.6121	0xc0cc0	tokens1:69ffe5183c61
+game	?randomizeEvents@game@@QAEXXZ	89.5668	89.5668	89.6121	0xc0cc0	tokens1:0820ed66d73c
 game	?randomizeHolyGrail@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0870	tokens1:2e45d059a363
 game	?randomizeUniversity@game@@AAEXPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xc06f0	tokens1:c24257370ff1
 game	?read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	92.6234	92.6234	95.2598	0xc4390	tokens1:fff03321e61e
@@ -4258,7 +4258,7 @@ spells	?modifySpellDamage@combatManager@@QBEJJHPBVhero@@0PBVarmy@@E@Z	100.0000	1
 spells	?modifySpellDamageForSpells@combatManager@@QBEJJHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x1a7bb0	tokens1:ee1d500e3dec
 spells	?removeCorpse@combatManager@@QAEXAAVhexcell@@JJ@Z	100.0000	100.0000	100.0000	0x1a7320	tokens1:bce2a644841e
 spells	?resetBoltAngle@combatManager@@QAEXPAUSBolt@@@Z	98.5146	98.5146	98.5146	0x1a5260	tokens1:42833e30fc11
-spells	?resurrect@combatManager@@QAEXPAVarmy@@JE@Z	96.7846	96.7846	96.7846	0x1a7560	tokens1:0ca448b020a1
+spells	?resurrect@combatManager@@QAEXPAVarmy@@J_N@Z	96.7846	96.7846	96.7846	0x1a7560	tokens1:382a0de7f89c
 spells	?setMassSpellInfluence@combatManager@@QAEXPBVhero@@HJJJJ@Z	100.0000	100.0000	100.0000	0x1a66d0	tokens1:5732a289a1ad
 spells	?showMassSpell@combatManager@@QAEXAAY11BE@EHE@Z	96.3708	96.3708	96.3708	0x1a67c0	tokens1:252934eac320
 spells	?showSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	98.7576	98.7576	100.0000	0x1a8950	tokens1:478c6031c182
@@ -4489,7 +4489,7 @@ townmgr	??_GTTownScreenWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c58b0	-
 townmgr	??_Gtype_garrison_base_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d0550	-
 townmgr	??_Gtype_monster_join_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d0d60	-
 townmgr	?buildObj@townManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d6a80	tokens1:62214b1b77fe
-townmgr	?buyBuild@townManager@@QAEHHHH@Z	94.9306	94.9683	95.1207	0x1d5f30	tokens1:b262bcda16fc
+townmgr	?buyBuild@townManager@@QAEHHHH@Z	99.9819	99.9819	99.9819	0x1d5f30	tokens1:73fe756e1363
 townmgr	?close@TTavernWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x1d7e70	tokens1:c95abb3e8542
 townmgr	?close@townManager@@UAEXXZ	100.0000	100.0000	100.0000	0x1c71b0	tokens1:9a8240cc0a46
 townmgr	?cycleOutline@townManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x1d6910	tokens1:3f2fe2cbdb86
