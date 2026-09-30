@@ -1359,11 +1359,11 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
                         return;
                     }
 
-                    ourHero->viewArtifact(&oldArtifact, rightClick);
+                    ourHero->viewArtifact(oldArtifact, rightClick);
                     return;
                 }
 
-                ourHero->viewArtifact(&oldArtifact, rightClick);
+                ourHero->viewArtifact(oldArtifact, rightClick);
             }
             return;
         }
@@ -1437,7 +1437,7 @@ void swapManager::handleBackpackClick(long side, long id, unsigned char rightCli
     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId != ARTIFACT_NONE && canModHero(side)) {
             if (rightClick) {
-                ourHero->viewArtifact(&oldArtifact, rightClick);
+                ourHero->viewArtifact(oldArtifact, rightClick);
                 return;
             }
             g_heroScreenDraggedArtifact = oldArtifact;

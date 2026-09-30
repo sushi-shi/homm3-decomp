@@ -1683,16 +1683,16 @@ void hero::viewStat(int whichStat, int isQuickView)
 VA(0x004d9a00, 0x128)
 DC_ADDRESS(0x0cc75c, 0xa2)
 MAC_ADDRESS(0x0f59c8, 0x124)
-void hero::viewArtifact(const type_artifact* artifact, int isQuickView)
+void hero::viewArtifact(const type_artifact& artifact, int isQuickView)
 {
-    if (artifact->m_artifactId == ARTIFACT_SPELL_SCROLL) {
-        normalDialog(artifact->getDescription().c_str(),
+    if (artifact.m_artifactId == ARTIFACT_SPELL_SCROLL) {
+        normalDialog(artifact.getDescription().c_str(),
                      isQuickView ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                  : hero::PRIMARY_STAT_DIALOG_TYPE,
-                     -1, PRIMARY_STAT_DIALOG_Y, 9, artifact->m_extra,
+                     -1, PRIMARY_STAT_DIALOG_Y, 9, artifact.m_extra,
                      -1, 0, -1, 0, -1, 0);
     } else {
-        normalDialog(artifact->getDescription().c_str(),
+        normalDialog(artifact.getDescription().c_str(),
                      isQuickView ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                  : hero::PRIMARY_STAT_DIALOG_TYPE,
                      -1, PRIMARY_STAT_DIALOG_Y, -1, 0, -1, 0, -1, 0,
@@ -2809,9 +2809,9 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                             return;
                         }
                     }
-                    g_currentHero->viewArtifact(&oldArtifact, rightMouse);
+                    g_currentHero->viewArtifact(oldArtifact, rightMouse);
                 } else {
-                    g_currentHero->viewArtifact(&oldArtifact, rightMouse);
+                    g_currentHero->viewArtifact(oldArtifact, rightMouse);
                 }
             } else if (slot == hero::EQUIPPED_SLOT_SPELLBOOK) {
                 TSpellbookWindow spellBookWindow(
@@ -3365,7 +3365,7 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
             return;
 
         if (rightMouse) {
-            g_currentHero->viewArtifact(&oldArtifact, rightMouse);
+            g_currentHero->viewArtifact(oldArtifact, rightMouse);
             return;
         }
 
