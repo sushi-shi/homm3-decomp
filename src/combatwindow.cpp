@@ -98,7 +98,8 @@ CCombatChatEdit::CCombatChatEdit(
 VA(0x004721d0, 0x42A)
 DC_ADDRESS(0x069850, 0x2dc)
 MAC_ADDRESS(0x08008c, 0x52c)
-TCombatWindow::TCombatWindow(unsigned char doPlacement)
+// Original ??0TCombatWindow@@QAA@_N@Z proves the placement flag is bool.
+TCombatWindow::TCombatWindow(bool doPlacement)
     : heroWindow(0, 0, 800, 600, 1)
 {
     g_combatWindow = this;

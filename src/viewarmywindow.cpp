@@ -188,7 +188,7 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
                    == g_combatManager->m_currentSide
             && thisArmy->m_creatureType == CREATURE_FAERIE_DRAGON
             && stackTraits->m_hasSpell > 0
-            && !g_combatManager->m_creaturePlacement) {
+            && !g_combatManager->m_inPlacementPhase) {
         m_widgets.push_back(new bitmapBorder(
             74, 236, 48, 34, -1,
             "Box46x32.pcx",  // pooled with create_upgrade_widget's 0x68c664

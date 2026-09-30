@@ -94,7 +94,7 @@ bool army::validFlight(int destIndex, bool literalTest) const
 
     if (literalTest || m_side == -1 || m_slot == -1) {
         if (combatManager::getDistance(m_gridIndex, destIndex) > getSpeed()
-                && !g_combatManager->m_creaturePlacement)
+                && !g_combatManager->m_inPlacementPhase)
             return 0;
         if (!canFit(destIndex, 0, 0))
             return 0;

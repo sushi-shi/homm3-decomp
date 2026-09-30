@@ -725,7 +725,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
 {
     if (!currentArmy->getSpellTime(72) && currentArmy->getSpeed()) {
         g_searchArray->findCombatPath(currentArmy, m_currentSide, targetHex,
-                                      m_creaturePlacement, 0x7f, -1);
+                                      m_inPlacementPhase, 0x7f, -1);
         if (static_cast<long>(g_searchArray->getPathSteps()) > 0) {
             m_nextAction = 2;
             long moveLeft = currentArmy->getSpeed();
@@ -740,9 +740,9 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
             bestDanger = 0;
             startDanger = 0;
             m_nextActionGridIndex = hex;
-            if (m_creaturePlacement)
+            if (m_inPlacementPhase)
                 moveLeft = pathIndex + 1;
-            if (m_creaturePlacement || isInSecondPhase())
+            if (m_inPlacementPhase || isInSecondPhase())
                 considerWaiting = 0;
             if (g_game->m_setup.m_difficulty < 2 && !m_sideIsAi[currentArmy->m_combatSide])
                 considerWaiting = 0;
@@ -776,7 +776,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                                     && enemyAttacks != 0)
                                 || (enemyAttacks[hex] >= bestDanger
                                     && enemyAttacks[secondHex] >= bestDanger)) {
-                            if (!m_creaturePlacement
+                            if (!m_inPlacementPhase
                                     || !isOutsidePlacementBoundry(
                                             currentArmy->m_combatSide, hex)) {
                                 m_nextActionGridIndex = hex;
@@ -1214,7 +1214,7 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
         const pathCell* path = currentSearchArray->getHex(hex);
         if (!path->m_visited)
             continue;
-        long travelTime = m_creaturePlacement
+        long travelTime = m_inPlacementPhase
                 ? 1
                 : currentSearchArray->getTravelTime(currentArmy, hex);
         long hexesCovered;
@@ -1273,7 +1273,7 @@ unsigned char combatManager::attemptShooterDefense(const army* currentArmy, sear
         if (!chooseDefenseHex(currentArmy, client, &hex, &openHexes,
                                 currentSearchArray))
             continue;
-        long time = m_creaturePlacement
+        long time = m_inPlacementPhase
                 ? 1
                 : currentSearchArray->getTravelTime(currentArmy, hex);
         long value = client->getTotalCombatValue(estimate->m_lowestAttack,
@@ -1632,7 +1632,7 @@ DC_ADDRESS(0x026464, 0x96)
 MAC_ADDRESS(0x023278, 0x148)
 unsigned char combatManager::chooseSpellAction(const army* currentArmy, long* bestValue, type_AI_combat_parameters* estimate)
 {
-    if (m_creaturePlacement)
+    if (m_inPlacementPhase)
         return 0;
     if (!canCastSpells(estimate->getGroup(), 0))
         return 0;
@@ -1832,7 +1832,7 @@ bool combatManager::chooseMeleeTarget(const army* currentArmy, bool teleport, lo
         g_searchArray->markTeleport(currentArmy, ourGroup);
     else
         g_searchArray->seedCombatPosition(currentArmy, ourGroup, budget,
-                                          m_creaturePlacement, -1);
+                                          m_inPlacementPhase, -1);
     unsigned char stayingInCastle = shouldStayInCastle(&estimate);
 
     for (long i = 0; i < m_numArmies[enemyGroup]; i++) {
@@ -1943,7 +1943,7 @@ bool combatManager::chooseMeleeTarget(const army* currentArmy, bool teleport, lo
         m_nextAction = 3;
         return 1;
     }
-    if (!estimate.m_simulated && !m_creaturePlacement
+    if (!estimate.m_simulated && !m_inPlacementPhase
             && chooseSpellAction(currentArmy, &actionValue, &estimate))
         return 1;
     if (bestIsBlockingAction) {
@@ -2000,7 +2000,7 @@ bool combatManager::chooseMeleeTarget(const army* currentArmy, bool teleport, lo
     }
 
     actionValue = bestValue;
-    if (bestTime <= 1 && !m_creaturePlacement) {
+    if (bestTime <= 1 && !m_inPlacementPhase) {
         m_nextActionExtra = bestHex;
         m_nextAction = 6;
         m_nextActionGridIndex = bestTarget->m_gridIndex;
@@ -2056,7 +2056,7 @@ void combatManager::placeShooter(const army* currentArmy)
     bestHex = currentArmy->m_gridIndex;
     bestOpenHexes = 100;
     g_searchArray->seedCombatPosition(currentArmy, m_currentSide, 127,
-                                      m_creaturePlacement, -1);
+                                      m_inPlacementPhase, -1);
     for (newHex = 0; newHex < COMBAT_GRID_CELLS; newHex++) {
         if (!validHex(newHex) || isOutsidePlacementBoundry(m_currentSide, newHex))
             continue;
@@ -2136,7 +2136,7 @@ void combatManager::doCompAI(int whichGroup)
         action = 3;
     m_nextAction = 3;
     if (action == 1) {
-        if (m_creaturePlacement)
+        if (m_inPlacementPhase)
             placeShooter(currentArmy);
         else
             chooseShooterAction(currentArmy, 0, m_currentSide);
@@ -2170,7 +2170,7 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
     long hex = target->m_gridIndex;
     if (inInvisibleColumn(hex) && target->is(creatureDoubleWide))
         hex = target->getSecondGridIndex();
-    g_searchArray->findCombatPath(currentArmy, -1, hex, m_creaturePlacement,
+    g_searchArray->findCombatPath(currentArmy, -1, hex, m_inPlacementPhase,
                                   127, -1);
     if (g_searchArray->getPathSteps() == 0) {
         m_nextAction = 12;
@@ -2441,10 +2441,10 @@ void combatManager::findAITargets(long ourGroup, const army* currentArmy,
         if (!shooter) {
             if (meleeOnly)
                 currentSearchArray->seedCombatPosition(
-                    ours, ourGroup, ours->getSpeed(), m_creaturePlacement, -1);
+                    ours, ourGroup, ours->getSpeed(), m_inPlacementPhase, -1);
             else
                 currentSearchArray->seedCombatPosition(
-                    ours, ourGroup, 0x7f, m_creaturePlacement, -1);
+                    ours, ourGroup, 0x7f, m_inPlacementPhase, -1);
         }
 
         theirs = m_armies[enemyGroup];
@@ -2484,7 +2484,7 @@ unsigned char combatManager::doSpellAI()
     m_nextAction = 0;
     if (m_spellsCast[m_currentSide])
         return 0;
-    if (m_creaturePlacement)
+    if (m_inPlacementPhase)
         return 0;
     if (getCurrentArmy()->is(creatureSiegeWeapon))
         return 0;

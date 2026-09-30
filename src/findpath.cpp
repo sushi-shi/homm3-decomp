@@ -885,7 +885,7 @@ unsigned char searchArray::validMoveAdjacent(const army* currentArmy,
 VA(0x004b2da0, 0x24B)
 DC_ADDRESS(0x0a03fc, 0x232)
 MAC_ADDRESS(0x0c64ac, 0x2c0)  // anchor-global
-void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, long limit, unsigned char inPlacementPhase, long baseSpeed)
+void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, long limit, bool inPlacementPhase, long baseSpeed)
 {
     if (m_cellData == 0)
         init();
@@ -1184,10 +1184,10 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 VA(0x004b3400, 0x787)
 DC_ADDRESS(0x0a0b18, 0x43a)
 MAC_ADDRESS(0x0c6e78, 0x720)  // anchor-global
-unsigned char searchArray::findCombatPath(const army* currentArmy,
-                                          long currentGroup, long destination,
-                                          unsigned char inPlacementPhase,
-                                          long limit, long baseSpeed)
+bool searchArray::findCombatPath(const army* currentArmy,
+                                 long currentGroup, long destination,
+                                 bool inPlacementPhase,
+                                 long limit, long baseSpeed)
 {
     if (currentArmy == 0)
         return 0;

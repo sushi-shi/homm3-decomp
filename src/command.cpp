@@ -279,9 +279,9 @@ void combatManager::doAnimations()
 MAC_ADDRESS(0x082384, 0x78)
 void combatManager::finishCreaturePlacement()
 {
-    if (!m_creaturePlacement)
+    if (!m_inPlacementPhase)
         return;
-    m_creaturePlacement = 0;
+    m_inPlacementPhase = 0;
     m_actingSide = 1;
     m_actingSlot = 0;
     m_turnNumber = 0;
@@ -321,7 +321,7 @@ int combatManager::main(message& msg)
         }
     }
 
-    if (!m_creaturePlacement && m_nextAction == 0 && m_thisNetHasControl) {
+    if (!m_inPlacementPhase && m_nextAction == 0 && m_thisNetHasControl) {
         automaticTurn = automateFirstAidTent();
 
         // Mac accumulates the tower result before calling the catapult.
@@ -765,7 +765,7 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
     switch (currentArmy->m_creatureType) {
     case CREATURE_BALLISTA:
     case CREATURE_ARROW_TOWER:
-        if (m_creaturePlacement)
+        if (m_inPlacementPhase)
             return 0;
         if (m_autoCombatOn && g_config.m_combatBallista)
             return 1;
@@ -777,7 +777,7 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
             return 1;
         break;
     case CREATURE_CATAPULT:
-        if (m_creaturePlacement)
+        if (m_inPlacementPhase)
             return 0;
         if (m_autoCombatOn && g_config.m_combatCatapult)
             return 1;
@@ -787,7 +787,7 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
             return 1;
         break;
     case CREATURE_FIRST_AID_TENT:
-        if (m_creaturePlacement)
+        if (m_inPlacementPhase)
             return 0;
         if (m_autoCombatOn && g_config.m_combatFirstAidTent)
             return 1;
@@ -1144,7 +1144,7 @@ int combatManager::processCombatMsg(message& msg)
             break;
 
         case KEYCODE_F:
-            if (m_creaturePlacement)
+            if (m_inPlacementPhase)
                 break;
             if ((m_autoCombatOn || g_goSolo)
                     && isComputerAction())
@@ -1162,7 +1162,7 @@ int combatManager::processCombatMsg(message& msg)
             break;
 
         case KEYCODE_T:
-            if (m_creaturePlacement)
+            if (m_inPlacementPhase)
                 break;
             m_combatWindow->m_heroSubWindows[0]->unShow();
             m_combatWindow->m_heroSubWindows[1]->unShow();
@@ -1207,7 +1207,7 @@ MAC_ADDRESS(0x083e10, 0x274)  // unique retail body + order-map
 void combatManager::resetRound()
 {
     m_turnNumber++;
-    if (m_creaturePlacement && isComputerAction()
+    if (m_inPlacementPhase && isComputerAction()
             && (!m_anyActionTaken || m_turnNumber >= 3)) {
         finishCreaturePlacement();
 
@@ -1259,7 +1259,7 @@ void combatManager::resetRound()
         }
     }
 
-    if (!m_creaturePlacement
+    if (!m_inPlacementPhase
             && !isQuickCombat()) {
         m_combatWindow->combatMessage(
             (*g_generalText)[GENERAL_TEXT_COMBAT_ROUND], 1, 0);
@@ -1461,7 +1461,7 @@ int combatManager::getCommand(int newIndex)
     if (m_fortificationLevel >= COMBAT_FORTIFICATION_CASTLE
             && newIndex == COMBAT_HEX_UPPER_TOWER) {
         if (currentArmy->is(creatureCatapult) && m_currentSide == 0
-                && !m_creaturePlacement
+                && !m_inPlacementPhase
                 && validWallTarget(WALL_TARGET_0)) {
             currentArmy->m_slot = newIndex;
             currentArmy->m_side = -1;
@@ -1473,7 +1473,7 @@ int combatManager::getCommand(int newIndex)
     if (m_fortificationLevel >= COMBAT_FORTIFICATION_CITADEL
             && newIndex == COMBAT_HEX_KEEP) {
         if (currentArmy->is(creatureCatapult) && m_currentSide == 0
-                && !m_creaturePlacement
+                && !m_inPlacementPhase
                 && validWallTarget(WALL_TARGET_7)) {
             currentArmy->m_slot = newIndex;
             currentArmy->m_side = -1;
@@ -1495,7 +1495,7 @@ int combatManager::getCommand(int newIndex)
         army* target = cell->getArmy();
         targetSide = target->getOwningSide();
 
-        if (m_creaturePlacement)
+        if (m_inPlacementPhase)
             return COMBAT_COMMAND_VIEW_ARMY;
         if (target == currentArmy)
             return COMBAT_COMMAND_VIEW_ARMY;
@@ -1536,7 +1536,7 @@ int combatManager::getCommand(int newIndex)
     if (currentArmy->is(creatureCatapult)
             && m_fortificationLevel > COMBAT_FORTIFICATION_NONE
             && m_currentSide == 0
-            && !m_creaturePlacement) {
+            && !m_inPlacementPhase) {
         // The counter is TWallTargetId-typed rather than a long with a
         // cast at the call: the value IS a wall-target id everywhere it
         // is used, both as wallTargets' subscript and as
@@ -1555,15 +1555,15 @@ int combatManager::getCommand(int newIndex)
         }
     }
 
-    if (!m_creaturePlacement && currentArmy->canCastResurrect(newIndex))
+    if (!m_inPlacementPhase && currentArmy->canCastResurrect(newIndex))
         return COMBAT_COMMAND_CREATURE_SPELL;
 
-    if (!m_creaturePlacement
+    if (!m_inPlacementPhase
             || !isOutsidePlacementBoundry(currentArmy->getOwningSide(),
                                              newIndex)) {
         g_searchArray->seedCombatPosition(currentArmy, m_currentSide,
                                           currentArmy->m_monInfo.m_speed,
-                                          m_creaturePlacement, -1);
+                                          m_inPlacementPhase, -1);
         if (m_cells[newIndex].m_validMove || m_cells[newIndex].m_frontMove)
             return (currentArmy->is(creatureFlyingArmy)) ? COMBAT_COMMAND_FLY
                                             : COMBAT_COMMAND_WALK;
@@ -1670,7 +1670,7 @@ void combatManager::doCommand(int command)
         break;
 
     case COMBAT_COMMAND_SPELL_BOOK:
-        if (m_creaturePlacement)
+        if (m_inPlacementPhase)
             break;
         {
             int spell = viewSpells();
@@ -2195,7 +2195,7 @@ void combatManager::checkGetAIMove()
             && g_game->isHuman(m_playerIds[m_currentSide]))
         isHuman = 1;
 
-    if (!m_creaturePlacement && aiCheckRetreat()) {
+    if (!m_inPlacementPhase && aiCheckRetreat()) {
         unsigned char proceed = 1;
         if (isHuman) {
             if (m_autoRetreatOn) {
@@ -2338,7 +2338,7 @@ void combatManager::getControl()
                 m_combatWindow->widgetClearStatus(
                     0x7d4, 0x1000);
 
-            if (m_creaturePlacement) {
+            if (m_inPlacementPhase) {
                 m_combatWindow->widgetClearStatus(
                     0x8fc, 0x1000);
                 m_combatWindow->widgetClearStatus(
@@ -2352,21 +2352,21 @@ void combatManager::getControl()
                 if ((!m_spellsCast[m_currentSide] || m_debugNoSpellLimit)
                         && m_heroes[m_currentSide]
                         && m_heroes[m_currentSide]->isWieldingArtifact(zero)
-                        && !m_creaturePlacement)
+                        && !m_inPlacementPhase)
                     m_combatWindow->widgetClearStatus(
                         0x7d8, 0x1000);
                 else
                     m_combatWindow->widgetSetStatus(
                         0x7d8, 0x1000);
 
-                if (isInSecondPhase() || m_creaturePlacement)
+                if (isInSecondPhase() || m_inPlacementPhase)
                     m_combatWindow->widgetSetStatus(
                         0x7d9, 0x1000);
                 else
                     m_combatWindow->widgetClearStatus(
                         0x7d9, 0x1000);
 
-                if (m_creaturePlacement)
+                if (m_inPlacementPhase)
                     m_combatWindow->widgetSetStatus(
                         0x7d9, 0x1000);
                 else
@@ -2660,7 +2660,7 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
     case g_combatActionDefend:
         if (!currentArmy->is(creatureDone | creatureDefending)) {
             currentArmy->m_monInfo.m_attributes |= creatureDone;
-            if (!m_creaturePlacement && !currentArmy->is(creatureSiegeWeapon)) {
+            if (!m_inPlacementPhase && !currentArmy->is(creatureSiegeWeapon)) {
                 std::string message;
                 currentArmy->m_monInfo.m_attributes |= creatureDefending;
                 currentArmy->m_defendBonus = max(
@@ -2687,7 +2687,7 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
 
     case g_combatActionWait: {
         currentArmy->m_monInfo.m_attributes |= creatureWaiting;
-        if (!m_creaturePlacement) {
+        if (!m_inPlacementPhase) {
             std::string message;
             if (currentArmy->m_numTroops == 1)
                 message = formatString((*g_generalText)[GENERAL_TEXT_COMBAT_WAIT_ONE_FORMAT],

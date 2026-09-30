@@ -70,7 +70,7 @@ public:
     void scrollRollover(long delta);
     static int scrollUp(message& msg);
     static int scrollDown(message& msg);
-    TCombatWindow(unsigned char doPlacement);
+    TCombatWindow(bool doPlacement);
     void endPlacementPhase();
     void combatMessage(const char* newText, bool keep,
                         bool priority);

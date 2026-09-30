@@ -707,10 +707,10 @@ int combatManager::open(int newPriority)
         ? m_heroes[1]->getSecondarySkill(eSecSkillBattleTactics) : 0;
     int tacticsSide = rightTactics > leftTactics;
     m_placementBoundaryDepth = leftTactics - rightTactics;
-    m_creaturePlacement = m_placementBoundaryDepth != 0 && !m_isSurrounded;
-    if (m_creaturePlacement && !isQuickCombat() && m_sideIsAi[tacticsSide]
+    m_inPlacementPhase = m_placementBoundaryDepth != 0 && !m_isSurrounded;
+    if (m_inPlacementPhase && !isQuickCombat() && m_sideIsAi[tacticsSide]
             && !(m_heroes[tacticsSide]->m_formation & 2))
-        m_creaturePlacement = 0;
+        m_inPlacementPhase = 0;
 
     m_turnNumber = 0;
     m_currentSide = 1;
@@ -722,7 +722,7 @@ int combatManager::open(int newPriority)
     if (isQuickCombat()) {
         m_combatWindow = 0;
     } else {
-        m_combatWindow = new TCombatWindow(m_creaturePlacement);
+        m_combatWindow = new TCombatWindow(m_inPlacementPhase);
         if (!m_combatWindow)
             memError();
         g_windowManager->addWindow(m_combatWindow, -1, 1);
@@ -730,7 +730,7 @@ int combatManager::open(int newPriority)
 
     updateArmyLuckAndMorale();
     m_inSecondPhase = 0;
-    if (m_creaturePlacement && !isQuickCombat()) {
+    if (m_inPlacementPhase && !isQuickCombat()) {
         m_currentSide = m_placementBoundaryDepth <= 0;
         if (!g_game->isLocalHuman(m_playerIds[m_currentSide])) {
             m_combatWindow->widgetSetStatus(
@@ -775,7 +775,7 @@ int combatManager::open(int newPriority)
     strcpy(m_mgrName,
            DATA_COMPGEN(0x0066fecc, combatManagerName, "combatManager"));
 
-    if (m_creaturePlacement
+    if (m_inPlacementPhase
             && g_game->isLocalHuman(m_playerIds[m_currentSide])
             && g_game->m_players[m_playerIds[m_currentSide]]
                    .m_placementHelpEnabled
@@ -1586,7 +1586,7 @@ void combatManager::checkApplyGoodMorale(int group, int index)
     if (index < 0)
         return;
     army* stack = &m_armies[group][index];
-    if (m_creaturePlacement)
+    if (m_inPlacementPhase)
         return;
     if (stack->is(creatureDefending))
         return;
@@ -1740,11 +1740,11 @@ bool combatManager::nextArmy(bool checkingForBadMorale)
                         continue;
                     if (stack->m_resetThisRound && stack->isIncapacitated())
                         continue;
-                    if (m_creaturePlacement) {
+                    if (m_inPlacementPhase) {
                         if (!stack->m_monInfo.m_speed)
                             continue;
                     }
-                    if (m_creaturePlacement) {
+                    if (m_inPlacementPhase) {
                         if (m_placementBoundaryDepth > 0 && side != 0)
                             continue;
                         if (m_placementBoundaryDepth < 0 && side != 1)
@@ -1752,7 +1752,7 @@ bool combatManager::nextArmy(bool checkingForBadMorale)
                     }
                     if (stack->m_creatureType == CREATURE_AMMO_CART)
                         continue;
-                    if (m_creaturePlacement && stack->is(creatureSiegeWeapon))
+                    if (m_inPlacementPhase && stack->is(creatureSiegeWeapon))
                         continue;
                     if (best && unnamed464f50(best, stack))
                         continue;
@@ -1765,7 +1765,7 @@ bool combatManager::nextArmy(bool checkingForBadMorale)
                 // Mac 0x70d50..0x70d90 expands this inline predicate.
                 if (best->isIncapacitated())
                     continue;
-                if (checkingForBadMorale && !m_creaturePlacement
+                if (checkingForBadMorale && !m_inPlacementPhase
                     && !m_inSecondPhase) {
                     if (checkApplyBadMorale(best->getOwningSide(), best->m_bitIndex))
                         continue;
@@ -1844,7 +1844,7 @@ void combatManager::setNextArmy(int group, int index)
     m_actingSide = group;
     m_actingSlot = index;
     m_currentSide = stack->getControllingSide();
-    if (!m_creaturePlacement) {
+    if (!m_inPlacementPhase) {
         if (m_artifactCast[m_currentSide]) {
             hero* castingHero = m_heroes[m_currentSide];
             if (castingHero) {

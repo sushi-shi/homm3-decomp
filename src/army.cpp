@@ -2199,7 +2199,7 @@ bool army::walkTo(int destIndex, bool restoreFacing)
     removeBinding();
     bool succeeded = true;
     long stop;
-    if (!g_combatManager->m_creaturePlacement) {
+    if (!g_combatManager->m_inPlacementPhase) {
         stop = g_searchArray->getPathSteps() - getSpeed();
         if (stop < 0)
             stop = 0;
@@ -4672,7 +4672,7 @@ void army::newTurn()
         m_monInfo.m_defenseSkill -= m_defendBonus;
         m_monInfo.m_attributes &= ~creatureDefending;
     }
-    if (g_combatManager->m_creaturePlacement != 0)
+    if (g_combatManager->m_inPlacementPhase != 0)
         return;
     if (m_topCreatureDamage > 0) {
         // Mac 0x53458..0x53474 loads/null-checks the owner once, then
@@ -4745,7 +4745,7 @@ void army::resetRound()
     m_resetThisRound = 0;
     setRetaliationCount();
 
-    if (g_combatManager->m_creaturePlacement)
+    if (g_combatManager->m_inPlacementPhase)
         return;
 
     decrementSpellRounds();

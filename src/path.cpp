@@ -17,7 +17,7 @@ int army::findPath(int fpTargetCellIndex, int maxMoves,
     if (!combatManager::validHex(fpTargetCellIndex))
         return 0;
     int moves;
-    if (!g_combatManager->m_creaturePlacement && !moveUnlimited)
+    if (!g_combatManager->m_inPlacementPhase && !moveUnlimited)
         moves = getSpeed();
     else
         moves = 99;
@@ -26,7 +26,7 @@ int army::findPath(int fpTargetCellIndex, int maxMoves,
         moves = 0;
     int group = getControllingSide();
     return g_searchArray->findCombatPath(this, group, fpTargetCellIndex,
-        g_combatManager->m_creaturePlacement, moves, -1);
+        g_combatManager->m_inPlacementPhase, moves, -1);
 }
 
 VA(0x00523a70, 0xA8)

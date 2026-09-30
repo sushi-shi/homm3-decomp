@@ -988,10 +988,11 @@ public:
     // Complete uses Dinkumware: allocator at +0,
     // pointers at +4/+8/+0xc; TObstacle remains a 0x18-byte value.
     std::vector<TObstacle> m_obstacles;  // +0x13d58
-    // Placement-phase latch: FindPath/ValidPath forward it into
-    // FindCombatPath's in_placement_phase and lift the speed limit
-    // to 99 while it is set. Name provisional.
-    unsigned char m_creaturePlacement;  // +0x13d68
+    // Original: public InPlacementPhase. Bool is inferred from its 0/1
+    // stores and retail FindPath's direct byte forwarding at 0x523a46
+    // into the DC-public-proven bool FindCombatPath argument, without
+    // normalization. Open also forwards it to the proven bool window ctor.
+    bool m_inPlacementPhase;  // +0x13d68
     // Dreamcast InPlacementPhase is a byte followed by turn_number;
     // retail preserves the three-byte integer-alignment gap at +0x13d69.
     char m_paddingBeforeTurnNumber[0x3];

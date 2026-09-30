@@ -650,7 +650,7 @@ void combatManager::setupGridForArmy(const army* thisArmy)
     if (thisArmy->m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
         return;
     // DC 0x842c8 and retail +0x26 test gConfig+0x6c, the shade preference.
-    if (!g_config.m_combatShadeLevel && !m_creaturePlacement)
+    if (!g_config.m_combatShadeLevel && !m_inPlacementPhase)
         return;
 
     thisArmy->getAttackMask(thisArmy->m_gridIndex, 2, -1);
@@ -658,7 +658,7 @@ void combatManager::setupGridForArmy(const army* thisArmy)
 
     int side = thisArmy->getControllingSide();
     g_searchArray->seedCombatPosition(thisArmy, side, thisArmy->getSpeed(),
-                                      m_creaturePlacement, -1);
+                                      m_inPlacementPhase, -1);
 
     for (int i = 0; i < COMBAT_GRID_CELLS; i++) {
         if (i == thisArmy->m_gridIndex) {
@@ -698,7 +698,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
     if (postGridIsClean)
         g_combatGridPosted = 0;
 
-    if (!g_config.m_combatShadeLevel && !m_creaturePlacement
+    if (!g_config.m_combatShadeLevel && !m_inPlacementPhase
             && !g_config.m_showCombatGrid && !m_debugShowBlockedHexes)
         return 0;
 
@@ -715,7 +715,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
         }
     }
 
-    if (g_config.m_combatShadeLevel || m_creaturePlacement) {
+    if (g_config.m_combatShadeLevel || m_inPlacementPhase) {
         unsigned char newGrid = 0;
         unsigned char oldGrid = 0;
         unsigned char changed = 0;
