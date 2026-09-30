@@ -56,7 +56,7 @@ void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point, int fiz
 
 // E:\gamedcs\events.cpp:317
 // RETAIL_LOCATED(0x0049e2e0, 0x38B)  // located @stub (promoted to active VA), dc 0x903b4
-void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned char human_player)
+void advManager::doEventShipyard(NewmapCell* cell, type_point point, bool human_player)
 {
     // @stub
 }
@@ -608,7 +608,9 @@ void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point,
     g_colorCyclingEnabled = savedFlag;
 }
 
-// E:\gamedcs\events.cpp:317.
+// E:\gamedcs\events.cpp:317. Native public
+// ?DoEventShipyard@advManager@@AAAXPAVNewmapCell@@Utype_point@@_N@Z
+// proves bool humanPlayer despite the lowered unsigned-byte formal record.
 // DC 320 reads the signed shipyard owner byte directly, and 330 reads
 // the unsigned boat-coordinate bytes for type_point's constructor.
 // Mac 0xa95b8..0xa95c0 and 0xa961c..0xa9648 retain those field accesses.
@@ -623,7 +625,7 @@ void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point,
 VA(0x0049e2e0, 0x38B)
 DC_ADDRESS(0x0903b4, 0x2a4)
 MAC_ADDRESS(0x0a9580, 0x400)  // dc-bracket forced, ret 0xc=p4
-void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned char humanPlayer)
+void advManager::doEventShipyard(NewmapCell* cell, type_point point, bool humanPlayer)
 {
     mobilizeCurrHero(0, 0, 1);
 
