@@ -6126,6 +6126,9 @@ void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpda
 // call (+0x210c jmp +0x212a) while every other visit pair keeps two calls.
 // A ternary argument there gives 93.32 and at ARENA 95.64 (it only removes
 // a call retail keeps); both rejected, the if/else pairs stay (2026-09-29).
+// Mac visited-bitmap arms repeatedly extract five bits then extsh, the
+// getItemId short-return operation (e.g. 15528..15538, 15678..15688).
+// Spring 15788 and garden 15ad8..15adc expand their fullness getters.
 VA(0x004137c0, 0x25A0)
 DC_ADDRESS(0x015fdc, 0x2c50)
 MAC_ADDRESS(0x0145e8, 0x1fe0)  // linkorder
@@ -6218,7 +6221,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
                     if (currHero) {
-                        testFlag = 1UL << (testCell->m_extraInfo & 0x1f);
+                        testFlag = 1UL << testCell->getItemId();
                         visited = testFlag & currHero->m_arenaFlags;
                         if (visited)
                             sprintf(tempText, visitFormat,
@@ -6339,7 +6342,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 if (testCell->m_isTrigger) {
                     if (currHero) {
                         visited = (g_currentPlayer->m_deadGuyFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6361,7 +6364,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_defenseTowerFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6476,7 +6479,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_gardenOfRevelationFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6528,7 +6531,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 if (testCell->m_isTrigger) {
                     if (currHero) {
                         visited = g_currentPlayer->m_leanToFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f));
+                            & (1UL << testCell->getItemId());
                         if (visited)
                             sprintf(tempText, leanToFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6550,7 +6553,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_libraryFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6584,7 +6587,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_magicSchoolFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6606,7 +6609,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = ((g_currentPlayer->m_magicSpringFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f))) && !((testCell->m_extraInfo >> 6) & 1));
+                            & (1UL << testCell->getItemId())) && !testCell->magicSpringIsFull());
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6649,7 +6652,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_mercCampFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6688,8 +6691,8 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
                     visited = (g_currentPlayer->m_mysticalGardenFlags
-                        & (1UL << (testCell->m_extraInfo & 0x1f)))
-                        && !((testCell->m_extraInfo >> 10) & 1);
+                        & (1UL << testCell->getItemId()))
+                        && !testCell->gardenIsFull();
                     if (visited)
                         sprintf(tempText, visitFormat,
                                 g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6745,7 +6748,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_powerSchoolFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6864,7 +6867,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_trainingGroundsFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6904,7 +6907,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_warSchoolFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
