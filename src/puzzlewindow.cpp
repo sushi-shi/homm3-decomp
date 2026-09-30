@@ -285,7 +285,7 @@ struct type_AI_puzzle_tile {
 
     type_AI_puzzle_tile();
     type_AI_puzzle_tile(NewmapCell* cell, type_point point);
-    unsigned char operator==(const type_AI_puzzle_tile& arg) const;
+    bool operator==(const type_AI_puzzle_tile& arg) const;
 };
 SIZE(type_AI_puzzle_tile, 0x10);
 
@@ -347,7 +347,9 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 // has_grail and visible are deliberately NOT compared.
 DC_ADDRESS(0x1156bc, 0xc0)
 MAC_ADDRESS(0x147d08, 0x178)
-unsigned char type_AI_puzzle_tile::operator==(
+// Original DC public ??8type_AI_puzzle_tile@@QBA_NABU0@@Z proves the
+// const bool predicate and const-reference operand, despite byte lowering.
+bool type_AI_puzzle_tile::operator==(
     const type_AI_puzzle_tile& arg) const
 {
     return m_objectType == arg.m_objectType
