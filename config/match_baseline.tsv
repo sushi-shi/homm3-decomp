@@ -107,7 +107,7 @@ advmgr	?drawRiver@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11b80	tok
 advmgr	?drawRoad@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11d60	tokens1:9e801879380c
 advmgr	?drawRolloverText@advManager@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xb0e0	tokens1:ceafc1610243
 advmgr	?drawShroud@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x12220	tokens1:d39e3c501f98
-advmgr	?drawUnderlay@advManager@@QAEXHHHHH@Z	95.2382	95.2382	95.2382	0x12470	tokens1:c96a2e321471
+advmgr	?drawUnderlay@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x12470	tokens1:1b7314116a3a
 advmgr	?enableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a3a0	tokens1:d2ed635b8896
 advmgr	?exitDialog@CAdvPopup@@MAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1b190	tokens1:640041183b3c
 advmgr	?findAdjacentMonster@advManager@@QAEEUtype_point@@PAU2@0@Z	100.0000	100.0000	100.0000	0x1a460	tokens1:cedfc279ffa3
@@ -1942,7 +1942,7 @@ game	?checkForTownEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcda10	tokens1:
 game	?claimGarrison@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xc6960	tokens1:a92398f830d9
 game	?claimGenerator@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xc67b0	tokens1:90c6d9ad6f52
 game	?claimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0xc66e0	tokens1:0e2eeac903a1
-game	?claimShipyard@game@@QAEXUtype_point@@H@Z	72.1173	72.1173	100.0000	0xc6a30	tokens1:5cdd2ab9fbeb
+game	?claimShipyard@game@@QAEXUtype_point@@H@Z	72.1173	72.1173	100.0000	0xc6a30	tokens1:a2e3f2876906
 game	?claimTown@game@@QAEXHHEE@Z	100.0000	100.0000	100.0000	0xc61e0	tokens1:7d14d6697448
 game	?clearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170	tokens1:4fa25910cb8b
 game	?computeDailyGold@game@@QAEHHE@Z	100.0000	100.0000	100.0000	0xc7930	tokens1:9fd2973abed4

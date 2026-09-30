@@ -6860,6 +6860,9 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
 // the structural residual unchanged (25/29 blocks, same five call sites; the
 // vector insert target is the native folded point/pointer alias). Preserve
 // operator== rather than the historical flattened comparison.
+// DC 7473/7475/7481/7498 reads and writes the cell's shipyard owner directly.
+// Use its inherited union member, without a cast-through-void pointer alias;
+// this restores the native access model at the same Windows matching score.
 VA(0x004c6a30, 0x21F)
 DC_ADDRESS(0x0b1a50, 0x23c)
 MAC_ADDRESS(0x0dd08c, 0x298)
@@ -6874,12 +6877,9 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
         thisHero->restoreCell();
     }
 
-    ShipyardInfo* shipyardInfo =
-        static_cast<ShipyardInfo*>(
-            static_cast<void*>(&cell->m_extraInfo));
-    if (shipyardInfo->m_owner != newPlayerOwner) {
-        if (shipyardInfo->m_owner >= 0) {
-            playerData* currentPlayer = &m_players[shipyardInfo->m_owner];
+    if (cell->m_shipyardInfo.m_owner != newPlayerOwner) {
+        if (cell->m_shipyardInfo.m_owner >= 0) {
+            playerData* currentPlayer = &m_players[cell->m_shipyardInfo.m_owner];
             long i = 0;
             while (i < currentPlayer->m_shipyards.size()) {
                 if (currentPlayer->m_shipyards[i] == location)
@@ -6897,7 +6897,7 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
             m_players[newPlayerOwner].m_shipyards.push_back(location);
         }
 
-        shipyardInfo->m_owner = newPlayerOwner;
+        cell->m_shipyardInfo.m_owner = newPlayerOwner;
         CMCClaimShipYard change(location, newPlayerOwner);
         sendMapChange(&change);
     }
