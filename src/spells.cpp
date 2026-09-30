@@ -4702,6 +4702,14 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
 // DC lines 5189, 5202 and 5288 retain the bitmap Grab/Draw and sprite
 // bitmap-forwarding overloads. Restoring all three canonical calls is
 // Windows byte-flat at 86.9157%; their bitmap accessors remain nested.
+// DC 5270/5271 acquires long destX/destY before the six sprite dimension
+// calls in the SLimitData constructor. Restore those direct arguments,
+// rather than caching width/height before the coordinates: Windows rises
+// 83.7388 -> 87.0197%. DC also records both FRAME_PERIOD locals as const
+// int; those types and the subtract-half/add-size endpoint order are flat.
+// All 46 blocks agree in flow and all 25 branches agree. The remaining
+// 236 masked rows are mainly register homes/scheduling; the one reported
+// call mismatch is the already-correlated Random/SRandom retail fold.
 VA(0x005a7c80, 0x408)
 DC_ADDRESS(0x156ec4, 0x490)
 MAC_ADDRESS(0x1991d0, 0x688)  // order-map+arity
@@ -4712,7 +4720,7 @@ void combatManager::earthquake(int level)
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
         g_mouseManager->hidePointer();
         m_saveScreenPostGrid->grab(g_windowManager->m_screenBitmap, 0, 0);
-        long shakeDelay = static_cast<long>(
+        const int shakeDelay = static_cast<int>(
             g_combatSpeedFactors[g_config.m_combatSpeed] * 15.0f);
         int pass = 3;
         do {
@@ -4761,7 +4769,7 @@ void combatManager::earthquake(int level)
 
     if (drawn != 0
         && !static_cast<const combatManager*>(this)->isQuickCombat()) {
-        long frameDelay = static_cast<long>(
+        const int frameDelay = static_cast<int>(
             g_combatSpeedFactors[g_config.m_combatSpeed] * 15.0f);
         CSprite* blast = ResourceManager::getSprite("SGEXPL.DEF");
         launchSample("WallHit.82m", -1, 3);
@@ -4771,16 +4779,14 @@ void combatManager::earthquake(int level)
             for (int i = 0; i < WALL_TARGET_COUNT; i++) {
                 if (counts[i] == 0)
                     continue;
-                int w = blast->getWidth();
-                int h = blast->getHeight();
-                int x = s_wallTargets[i].m_hitX;
-                int y = s_wallTargets[i].m_hitY;
-                int left = x - w / 2;
-                int right = x + (w - w / 2) - 1;
-                int top = y - h / 2;
-                int bottom = y + (h - h / 2) - 1;
+                long x = s_wallTargets[i].m_hitX;
+                long y = s_wallTargets[i].m_hitY;
                 TDrawbridgeBounds* bounds = &m_drawbridgeBounds;
-                *bounds = TDrawbridgeBounds(left, top, right, bottom);
+                *bounds = TDrawbridgeBounds(
+                    x - blast->getWidth() / 2,
+                    y - blast->getHeight() / 2,
+                    x - blast->getWidth() / 2 + blast->getWidth() - 1,
+                    y - blast->getHeight() / 2 + blast->getHeight() - 1);
                 bounds->clip(g_combatDrawLimits);
                 if (frame == g_earthquakeImpactFrame) {
                     damageWall(H3_ENUM_DECODE(TWallTargetId, i), counts[i]);
