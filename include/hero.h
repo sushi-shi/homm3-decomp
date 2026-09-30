@@ -1271,7 +1271,7 @@ public:
     // ORDINAL PLACEHOLDER.
     void heroFn004DC100(long slot);
     boat* findSummonableBoat() const;
-    void placeInMap(int playerId, type_point point, unsigned char resetFlags);
+    void placeInMap(int playerId, type_point point, bool resetFlags);
     int load(TAbstractFile* infile, int saveVersion);
     int save(TAbstractFile* outfile);
 };

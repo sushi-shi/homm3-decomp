@@ -653,7 +653,8 @@ void hero::hire(int playerId, type_point point)
 VA(0x004d7900, 0x11B)
 DC_ADDRESS(0x0caedc, 0xbc)
 MAC_ADDRESS(0x0f2928, 0x18c)
-void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
+// Original public ?PlaceInMap@hero@@QAAXHUtype_point@@_N@Z proves bool resetFlags.
+void hero::placeInMap(int playerId, type_point point, bool resetFlags)
 {
     playerData* player = &g_game->m_players[playerId];
     g_game->recordShowHero(this, static_cast<signed char>(playerId),
