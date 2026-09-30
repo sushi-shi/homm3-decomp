@@ -2192,6 +2192,10 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 // bitset<8>::reference layout stages the pool pointer and index before test;
 // restoring operator[] at both sites raises Mac to 539/1932 (27.90%) while
 // the focused VC6 build stays 98.98% with the same exact CFG and call order.
+// Mac 0xce654..0xce6b8 directly loads the product version, then tests
+// video state, alignment and the two Conflux counts in this order. A named
+// version snapshot and a separately nested version guard are VC6-flat;
+// why-reg v2 also leaves the six scratch-register rows unchanged.
 VA(0x004bb5e0, 0x282)
 DC_ADDRESS(0x0a6cd4, 0x2fe)
 MAC_ADDRESS(0x0ce398, 0x78c)  // anchor-global
