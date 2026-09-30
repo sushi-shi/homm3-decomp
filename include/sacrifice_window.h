@@ -192,11 +192,13 @@ public:
     // 0x563150. Bodies still deferred.
     virtual ~type_sacrifice_window();
 
-    void artifactClick(long slot, unsigned char rightClick);
-    void backpackClick(long slot, unsigned char rightClick);
-    void creatureClick(long slot, unsigned char rightClick,
-                        unsigned char leftPane);
-    void offeringClick(long slot, unsigned char rightClick);
+    // Original artifact_click/backpack_click/offering_click/creature_click
+    // publics prove _N flags; artifact_click also proves TArtifactSlot.
+    void artifactClick(TArtifactSlot slot, bool rightClick);
+    void backpackClick(long slot, bool rightClick);
+    void creatureClick(long slot, bool rightClick,
+                        bool leftPane);
+    void offeringClick(long slot, bool rightClick);
 
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
     virtual void doModal(bool fadeIn);                        // slot 6
@@ -207,18 +209,20 @@ private:
     bool addArtifact(type_artifact artifact, TArtifactSlot source);
     void clear();
     void createArtifactWidgets(long& widgetId, int curPlayer);
+    // Original create_creature_icons ends in _N: bool left_pane.
     long createCreatureIcons(
         long iconX, long iconY, long columns, long rows,
         long itemNumber, long& widgetId, iconWidget** iconWidgets,
         iconWidget** selectionWidgets, textWidget** textWidgets,
-        unsigned char leftPane);
+        bool leftPane);
     void createCreatureWidgets(long& widgetId, int curPlayer);
     void emptyBackpack();
     static int emptyBackpack(message& msg);
     long getMaxAmount(long slot) const;
-    void pickUpArtifact(type_artifact artifact, long slot,
-                          unsigned char newArtifact);
-    void putDownArtifact(unsigned char changeExperience);
+    // Original pick_up_artifact/put_down_artifact encode enum slot and _N.
+    void pickUpArtifact(type_artifact artifact, TArtifactSlot slot,
+                          bool newArtifact);
+    void putDownArtifact(bool changeExperience);
     void returnArtifact(const type_artifact_offering& artifact);
     void setArtifactMode();
     void setCreatureMode();
@@ -228,7 +232,7 @@ private:
     void updateAllSlots();
     void updateArtifactOffering(long slot);
     void updateCreatureOffering(type_creature_offering& creature);
-    void updateSlot(long slot);
+    void updateSlot(TArtifactSlot slot);
     static int allArtifacts(message& msg);
     static int allCreatures(message& msg);
     static void creatureSliderChange(int state, heroWindow* parentWindow);
@@ -314,11 +318,14 @@ SIZE(type_artifact_offering_widget, 0x4c);
 class type_army_slot_widget : public iconWidget {
 public:
     long m_slot;
-    unsigned char m_leftPane;
+    // Infer the bool field domain from its sole native bool constructor
+    // writer and bool creatureClick consumer; one-byte layout is unchanged.
+    bool m_leftPane;
 
+    // Original constructor ends in PBD_N, proving bool newLeftPane.
     type_army_slot_widget(long newX, long newY, long newW, long newH,
                           long newSlot, long newId, const char* image,
-                          unsigned char newLeftPane);
+                          bool newLeftPane);
 
     virtual bool handleClick(bool downClick,
                                        bool rightClick);

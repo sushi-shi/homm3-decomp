@@ -159,7 +159,7 @@ bool type_doll_slot_widget::handleClick(
 {
     if (downClick) {
         static_cast<type_sacrifice_window*>(m_parentWindow)->artifactClick(
-            m_slot, rightClick);
+            static_cast<TArtifactSlot>(m_slot), rightClick);
         return 1;
     }
     return 0;
@@ -231,7 +231,7 @@ DC_ADDRESS(0x1240ec, 0x80)
 MAC_ADDRESS(0x1555f8, 0x7c)
 type_army_slot_widget::type_army_slot_widget(
     long newX, long newY, long newW, long newH, long newSlot,
-    long newId, const char* image, unsigned char newLeftPane)
+    long newId, const char* image, bool newLeftPane)
     : iconWidget(newX, newY, newW, newH, newId, image,
                  0, 0, 0, 0, 16)
 {
@@ -630,7 +630,7 @@ long type_sacrifice_window::createCreatureIcons(
     long iconX, long iconY, long columns, long rows, long itemNumber,
     long& widgetId, iconWidget** iconWidgets,
     iconWidget** selectionWidgets, textWidget** textWidgets,
-    unsigned char leftPane)
+    bool leftPane)
 {
     long count = 0;
     long textX = iconX - 4;
@@ -740,11 +740,11 @@ void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact)
 VA(0x00562840, 0x166)
 DC_ADDRESS(0x125b3c, 0xf6)
 MAC_ADDRESS(0x159248, 0x144)
-void type_sacrifice_window::updateSlot(long slot)
+// Original update_slot public encodes W4TArtifactSlot. The enum formal
+// goes directly to the canonical getter; no memcpy enum carrier is needed.
+void type_sacrifice_window::updateSlot(TArtifactSlot slot)
 {
-    TArtifactSlot artifactSlot;
-    memcpy(&artifactSlot, &slot, sizeof artifactSlot);
-    type_artifact artifact = m_currentHero->getArtifact(artifactSlot);
+    type_artifact artifact = m_currentHero->getArtifact(slot);
 
     if (m_holdingArtifact.m_artifactId != ARTIFACT_NONE
         && m_currentHero->heroFn004E2840(
@@ -773,7 +773,7 @@ void type_sacrifice_window::updateAllSlots()
 {
     long slotCount = g_game->m_gameVersion >= 2 ? 19 : 18;
     for (long slot = 0; slot < slotCount; ++slot)
-        updateSlot(slot);
+        updateSlot(static_cast<TArtifactSlot>(slot));
 }
 
 VA(0x00562a20, 0x24e)
@@ -977,9 +977,9 @@ void type_sacrifice_window::setCreatureMode()
 DC_ADDRESS(0x1261e4, 0x70)
 MAC_ADDRESS(0x159bb0, 0xc4)
 void type_sacrifice_window::pickUpArtifact(
-    type_artifact artifact, long slot, unsigned char newArtifact)
+    type_artifact artifact, TArtifactSlot slot, bool newArtifact)
 {
-    m_holdingArtifact.set(artifact, TArtifactSlot(slot), m_currentHero);
+    m_holdingArtifact.set(artifact, slot, m_currentHero);
     if (newArtifact) {
         m_totalExperience += m_holdingArtifact.m_value;
         updateExperience();
@@ -999,7 +999,7 @@ void type_sacrifice_window::pickUpArtifact(
 DC_ADDRESS(0x126254, 0x90)
 MAC_ADDRESS(0x159c74, 0xa4)
 void type_sacrifice_window::putDownArtifact(
-    unsigned char changeExperience)
+    bool changeExperience)
 {
     if (changeExperience) {
         m_totalExperience -= m_holdingArtifact.m_value;
@@ -1017,7 +1017,7 @@ VA(0x005632a0, 0x417)
 DC_ADDRESS(0x1262e4, 0x13a)
 MAC_ADDRESS(0x159d18, 0x1d4)
 void type_sacrifice_window::artifactClick(
-    long slot, unsigned char rightClick)
+    TArtifactSlot slot, bool rightClick)
 {
     type_artifact oldArtifact = m_currentHero->getArtifact(TArtifactSlot(slot));
 
@@ -1092,7 +1092,7 @@ VA(0x005636c0, 0x31a)
 DC_ADDRESS(0x1264dc, 0xdc)
 MAC_ADDRESS(0x159fa4, 0x13c)  // widget call edge + dc name/order
 void type_sacrifice_window::backpackClick(
-    long slot, unsigned char rightClick)
+    long slot, bool rightClick)
 {
     type_artifact oldArtifact = m_currentHero->getBackpack(slot);
 
@@ -1104,7 +1104,7 @@ void type_sacrifice_window::backpackClick(
             } else {
                 m_currentHero->removeBackpackArtifact(slot);
                 updateBackpack();
-                pickUpArtifact(oldArtifact, 19, 1);
+                pickUpArtifact(oldArtifact, TArtifactSlot(SACRIFICE_BACKPACK_SOURCE_SLOT), 1);
             }
         }
     } else if (!rightClick) {
@@ -1140,7 +1140,7 @@ VA(0x00563a80, 0x31b)
 DC_ADDRESS(0x126640, 0xdc)
 MAC_ADDRESS(0x15a120, 0x118)
 void type_sacrifice_window::offeringClick(
-    long slot, unsigned char rightClick)
+    long slot, bool rightClick)
 {
     type_artifact_offering oldArtifact = m_artifactOfferings[slot];
 
@@ -1153,7 +1153,7 @@ void type_sacrifice_window::offeringClick(
                 m_artifactOfferings[slot].m_artifactId = ARTIFACT_NONE;
                 updateArtifactOffering(slot);
                 pickUpArtifact(
-                    oldArtifact, oldArtifact.m_source, 0);
+                    oldArtifact, static_cast<TArtifactSlot>(oldArtifact.m_source), 0);
             }
         }
     } else if (!rightClick) {
@@ -1161,7 +1161,7 @@ void type_sacrifice_window::offeringClick(
         updateArtifactOffering(slot);
         putDownArtifact(0);
         if (oldArtifact.m_artifactId != ARTIFACT_NONE)
-            pickUpArtifact(oldArtifact, oldArtifact.m_source, 0);
+            pickUpArtifact(oldArtifact, static_cast<TArtifactSlot>(oldArtifact.m_source), 0);
     }
 }
 
@@ -1331,7 +1331,7 @@ int type_sacrifice_window::allArtifacts(message& msg)
                 if (!window->addArtifact(artifact, TArtifactSlot(slot)))
                     break;
                 window->m_currentHero->removeArtifact(slot);
-                window->updateSlot(slot);
+                window->updateSlot(static_cast<TArtifactSlot>(slot));
             }
         }
         window->emptyBackpack();
@@ -1635,7 +1635,7 @@ VA(0x00564fe0, 0x394)
 DC_ADDRESS(0x1270f0, 0x29e)
 MAC_ADDRESS(0x15b2a4, 0x374)
 void type_sacrifice_window::creatureClick(
-    long slot, unsigned char rightClick, unsigned char leftPane)
+    long slot, bool rightClick, bool leftPane)
 {
     if (rightClick || slot == m_currentCreature.m_group || slot < 0) {
         if (slot < 0)
