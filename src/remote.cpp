@@ -3026,7 +3026,7 @@ CNetMsgHandlerPause::~CNetMsgHandlerPause()
 VA(0x00557f80, 0x31)
 DC_ADDRESS(0x11f4d0, 0x16)
 MAC_ADDRESS(0x215d0c, 0x34)
-CHourGlass::CHourGlass(unsigned char thread)
+CHourGlass::CHourGlass(bool thread)
     : m_thread(thread)
 {
     start();

@@ -433,7 +433,8 @@ extern unsigned char g_weMoved;
 // Dreamcast supplies the class and member names.
 class CHourGlass {
 public:
-    CHourGlass(unsigned char thread);
+    // Native constructor public: QAA@_N@Z (DC file 0x610863).
+    CHourGlass(bool thread);
     ~CHourGlass();
     void start();
     void stop();
