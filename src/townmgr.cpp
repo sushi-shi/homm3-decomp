@@ -7944,7 +7944,10 @@ DC_ADDRESS(0x17fd08, 0x4fa)
 MAC_ADDRESS(0x1e1580, 0x6c4)  // anchor-bracket + arity + townManager thiscall
 // Mac 0x1e1804..0x1e1828 and 0x1e18b8..0x1e18dc expand the plural
 // GetArmyName path. The eleven stat broadcasts at 0x1e1970..0x1e1c2c
-// pass g_text directly in r7 to the four-int overload (0x20b4ac); only
+// pass g_text directly in r7 to the four-int overload (0x20b4ac). The
+// dwelling tests at 0x1e1730..0x1e177c and 0x1e1a50..0x1e1aa0 expand
+// HasBuilding's active-mask path, including its byte-bool conversion; keep
+// that outer helper and its nested getBuildingMask call. Only
 // the palette/name messages above use the caller-owned message reference.
 void townManager::setupWell(TCastleWindow* wellWin)
 {
@@ -7977,8 +7980,8 @@ void townManager::setupWell(TCastleWindow* wellWin)
         msg.m_codeY = i + 9;
         msg.m_extraText = g_text;
         wellWin->broadcastMessage(msg);
-        if (m_townToView->getBuildingMask()
-            & g_bitNumber[DWELLING_0_ID + m_currentDwellingIdOff[i]]) {
+        if (m_townToView->hasBuilding(
+                DWELLING_0_ID + m_currentDwellingIdOff[i], true)) {
             sprintf(g_text, "%s %d", g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
                     m_townToView->m_population[m_currentDwellingIdOff[i]]);
             msg.m_codeY = i + 0x21;
@@ -8035,8 +8038,8 @@ void townManager::setupWell(TCastleWindow* wellWin)
         sprintf(g_text, "%d", monInfo.m_speed);
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
                                   i + 0x79, reinterpret_cast<int>(g_text));
-        if (m_townToView->getBuildingMask()
-            & g_bitNumber[DWELLING_0_ID + m_currentDwellingIdOff[i]]) {
+        if (m_townToView->hasBuilding(
+                DWELLING_0_ID + m_currentDwellingIdOff[i], true)) {
             int growth = m_townToView->getGrowthRate(m_currentDwellingIdOff[i]);
             sprintf(g_text, "%d", growth);
             wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
