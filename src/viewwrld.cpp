@@ -45,10 +45,10 @@
 // this file had no reader for until now.
 DATA(0x0068c6bc) int g_viewWorldScale = 11;
 DATA(0x006aab68)
-static unsigned char g_viewMines;
+static bool g_viewMines;
 DATA(0x006aab78) bool g_vwTerrains;
 DATA(0x006aab79)
-static unsigned char g_viewResources;
+static bool g_viewResources;
 // The half-extents init derives from the two viewable dimensions and the
 // three view-world readers below consume. Only viewwrld.obj references
 // either address (four dir32 sites each: init writes both, and
@@ -61,19 +61,19 @@ DATA(0x006aab80)
 static int g_viewHalfWidth;
 DATA(0x006aab84) int g_scaleLine[32];
 DATA(0x006aac08)
-static unsigned char g_viewArtifacts;
+static bool g_viewArtifacts;
 // Original DC name: eVWLevel. Unreferenced by retail and Dreamcast code; the
 // Dreamcast public sits between iVWArtifacts and iVWTowns at the same offsets
 // as these two retail flags.
 DATA(0x006aac10) TSkillMastery g_vwLevel;
 DATA(0x006aac14)
-static unsigned char g_viewTowns;
+static bool g_viewTowns;
 DATA(0x006aac18) int g_vwCenterOffsetW;
 DATA(0x006aac1c) int g_vwCenterOffsetH;
 DATA(0x006aac20) CSprite* g_csVwIcons;
 DATA(0x006aac28) Bitmap16Bit* g_memoryBuffer;
 DATA(0x006aac30)
-static unsigned char g_viewHeroes;
+static bool g_viewHeroes;
 
 // E:\gamedcs\viewwrld.cpp:100
 // The magic-number float-to-int conversion. Retail emits NO body for it:
