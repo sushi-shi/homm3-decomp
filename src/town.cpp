@@ -16,6 +16,7 @@
 #include "kb.h"
 #include "mapcell.h"
 #include "misc.h"
+#include "packed_bits.h"
 #include "philai.h"
 #include "resourcemanager.h"
 #include "terrain.h"
@@ -213,6 +214,8 @@ const int g_townNameFixedLength = 13;
 // drops caller cb 988 -> 978; /Ob2 budget 1956 then leaves _Grow's max_size
 // 39 < 41 and keeps it out of line (97.32%). Retail's caller is >= 986 cb.
 // DC locals: char_buffer, uchar_buffer, and inBuf[70].
+// Mac 0x1b2158..0x1b21bc expands the shared decoder into m_spells;
+// retain the guarded 70-byte transfer before decoding its 70 bits.
 VA(0x005bcd60, 0x586)
 DC_ADDRESS(0x165628, 0x360)
 MAC_ADDRESS(0x1b1c9c, 0x5f4)  // carcass promotion; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
@@ -298,10 +301,7 @@ int town::load(TAbstractFile* infile, int saveVersion)
 
     if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
         return -1;
-    for (int spell = 0; spell < 70; ++spell) {
-        m_spells[spell] =
-            (inBuf[spell / 8] & (1 << (spell % 8))) != 0;
-    }
+    decodePackedBits(inBuf, m_spells);
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
@@ -322,6 +322,8 @@ int town::load(TAbstractFile* infile, int saveVersion)
 // load above. It always writes the modern length-prefixed name, it packs
 // field_38/field_34/field_33 back into one byte, and it re-packs the
 // bitset<70> into 70 bytes of which only the first nine carry bits.
+// Mac 0x1b2714..0x1b27a8 clears the entire buffer before encoding;
+// encodePackedBits retains that padded extent through its buffer type.
 // Residual (99.8370%): the frame, 0x48 against retail's 0x50, and it is one
 // recycled-home decision. Retail puts the BYTE `char_buffer` in the first
 // parameter's padding byte [ebp+0xb] and gives the name-length dword its own
@@ -423,11 +425,7 @@ int town::save(TAbstractFile* outfile)
         < sizeof(m_mageGuildSpells))
         return -1;
 
-    memset(spellBuf, 0, sizeof(spellBuf));
-    for (int spell = 0; spell < 70; ++spell) {
-        if (m_spells[spell])
-            spellBuf[spell / 8] |= 1 << (spell % 8);
-    }
+    encodePackedBits(m_spells, spellBuf);
     if (outfile->write(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
 

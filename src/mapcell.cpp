@@ -18,6 +18,7 @@
 #include "kbwin.h"
 #include "misc.h"
 #include "newgame.h"
+#include "packed_bits.h"
 #include "resourcemanager.h"
 #include "smackmgr.h"
 
@@ -2770,7 +2771,8 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // byte/short/value temporaries - regresses to 94.9926%; the x86 block locals
 // below are retained.
 // Mac 0x124674 and 0x12470c construct bitset reference proxies before the
-// retained assignments at 0x1246b4 and 0x12474c.
+// retained assignments at 0x1246b4 and 0x12474c. Both are expanded
+// decodePackedBits operations; keep the version-specific buffer reads.
 // Map scalars are little endian: native 0x124330 decodes the identifier,
 // 0x124468 the troop count, and 0x124798 the event count. Windows retail
 // reads each scalar through the direct virtual read: the readValue and
@@ -2854,16 +2856,12 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         memset(spellBuf, 0, sizeof(spellBuf));
     } else {
         infile->read(spellBuf, sizeof(spellBuf));
-        for (x = 0; x < 70; ++x)
-            tempTown.m_fixedSpells[x] =
-                (spellBuf[x / 8] & (1 << (x % 8))) != 0;
+        decodePackedBits(spellBuf, tempTown.m_fixedSpells);
     }
 
     if (infile->read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
-    for (x = 0; x < 70; ++x)
-        tempTown.m_spells[x] =
-            (spellBuf[x / 8] & (1 << (x % 8))) != 0;
+    decodePackedBits(spellBuf, tempTown.m_spells);
 
     if (infile->read(&numTownEvents, sizeof(numTownEvents))
         < sizeof(numTownEvents))
@@ -2978,6 +2976,10 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 
 // Mac 0x124b00..0x125360 retains the scalar reads in separate staging
 // locations. Its artifact, sex and spell-byte loads explicitly sign-extend.
+// Mac 0x124b0c/0x124ba8/0x124c04/0x124c9c/0x124e40 decode the
+// five dword reads with lwbrx. Troop and artifact IDs/counts similarly use
+// lhbrx at 0x124f18/0x125028/0x125064/0x1250dc; all nine reads discard
+// the transfer count, as readLittleEndianValue<T> does.
 VA(0x005021c0, 0x835)
 DC_ADDRESS(0x0f0df4, 0x726)
 MAC_ADDRESS(0x124a84, 0x998)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject
@@ -3009,7 +3011,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         identifier = 0;
     } else {
-        intBuffer = readValue<int>(infile);
+        intBuffer = readLittleEndianValue<int>(infile);
         identifier = intBuffer;
     }
 
@@ -3024,7 +3026,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     charBuffer = readValue<signed char>(infile);
     customName = charBuffer != 0;
     if (customName) {
-        intBuffer = readValue<int>(infile);
+        intBuffer = readLittleEndianValue<int>(infile);
         infile->read(tempText, intBuffer);
         tempText[intBuffer] = 0;
     }
@@ -3036,7 +3038,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     unsigned char customExperience;
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA
         || mapVersion == MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        intBuffer = readValue<int>(infile);
+        intBuffer = readLittleEndianValue<int>(infile);
         experience = intBuffer;
         if (experience != 0 && (!g_inCampaign || experience >= 40))
             customExperience = 1;
@@ -3047,7 +3049,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         experienceFlag = readValue<signed char>(infile);
         customExperience = experienceFlag != 0;
         if (customExperience) {
-            experience = readValue<int>(infile);
+            experience = readLittleEndianValue<int>(infile);
             if (g_inCampaign && experience < 40)
                 customExperience = 0;
         } else {
@@ -3108,7 +3110,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     charBuffer = readValue<signed char>(infile);
     if (charBuffer) {
         heroData->m_customSecondarySkills = 1;
-        intBuffer = readValue<int>(infile);
+        intBuffer = readLittleEndianValue<int>(infile);
         heroData->m_numSecondarySkills = intBuffer;
         for (x = 0; x < heroData->m_numSecondarySkills; ++x) {
             charBuffer = readValue<signed char>(infile);
@@ -3125,7 +3127,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             heroData->m_armies[x] =
                 readMapCreatureId(infile, mapVersion);
 
-            shortBuffer = readValue<short>(infile);
+            shortBuffer = readLittleEndianValue<short>(infile);
             heroData->m_numTroops[x] = shortBuffer;
         }
     }
@@ -3146,14 +3148,14 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 charBuffer = readValue<signed char>(infile);
                 intBuffer = charBuffer;
             } else {
-                shortBuffer = readValue<short>(infile);
+                shortBuffer = readLittleEndianValue<short>(infile);
                 intBuffer = shortBuffer;
             }
             heroData->m_artifacts[x].m_artifactId =
                 H3_ENUM_DECODE(TArtifact, intBuffer);
         }
 
-        shortBuffer = readValue<short>(infile);
+        shortBuffer = readLittleEndianValue<short>(infile);
         heroData->m_numInBackpack = static_cast<unsigned char>(shortBuffer);
         for (x = 0; x < heroData->m_numInBackpack; ++x) {
             if (g_game->m_mapHeader.m_version
@@ -3161,7 +3163,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 charBuffer = readValue<signed char>(infile);
                 intBuffer = charBuffer;
             } else {
-                shortBuffer = readValue<short>(infile);
+                shortBuffer = readLittleEndianValue<short>(infile);
                 intBuffer = shortBuffer;
             }
             heroData->m_backpack[x].m_artifactId =
@@ -3203,10 +3205,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 heroData->m_customSpells = 1;
                 unsigned char spellMask[9];
                 infile->read(spellMask, sizeof(spellMask));
-                for (int spell = 0; spell < 70; ++spell) {
-                    heroData->m_spells[spell] =
-                        (spellMask[spell / 8] & (1 << (spell % 8))) != 0;
-                }
+                // Mac 0x1252c8..0x125314 decodes into the existing member.
+                decodePackedBits(spellMask, heroData->m_spells);
             }
 
             charBuffer = readValue<signed char>(infile);
@@ -3827,6 +3827,9 @@ int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
 // There is no bzero call in this reader; preserve aggregate initialization.
 // Mac 0x1264f4, 0x126838 and 0x1268cc decode the three four-byte file
 // scalars after their complete-read guards; use the shared endian reader.
+// Mac expands four 48-bit decoders at 0x1265d8, 0x126664, 0x1266d4
+// and 0x126760. Draw/shadow bytes come from the resource; passable/trigger
+// bytes come from the map stream. Preserve those distinct read paths.
 VA(0x00503780, 0x4C0)
 DC_ADDRESS(0x0f1cd8, 0x5f2)
 MAC_ADDRESS(0x126478, 0x528)  // order-map: calls _strrev + sprintf + PointToSpriteResource 0x55cf50 x2 + the 0x55d0d0 resource reader x4 (DC call counts match exactly); called by readMapObjects
@@ -3838,7 +3841,6 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     int count;
     char byteValue;
     unsigned char packed[6];
-    int i;
 
     count = readLittleEndianValue(infile, value);
     if (count < sizeof(value))
@@ -3871,32 +3873,20 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     tempObjectType.m_height = byteValue;
 
     ResourceManager::readFromBitmapResource(maskFile, packed, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_drawCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodePackedBits(packed, tempObjectType.m_drawCells);
 
     count = infile->read(packed, sizeof(packed));
     if (count < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_passableCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodePackedBits(packed, tempObjectType.m_passableCells);
 
     ResourceManager::readFromBitmapResource(maskFile, packed, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_shadowCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodePackedBits(packed, tempObjectType.m_shadowCells);
 
     count = infile->read(packed, sizeof(packed));
     if (count < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_triggerCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodePackedBits(packed, tempObjectType.m_triggerCells);
 
     char dummy[2];
     count = infile->read(dummy, sizeof(dummy));
@@ -3950,6 +3940,8 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
 
 // The final Write returns 1, not 0, on success - the sbb/and/inc tail is a
 // `? -1 : 1` ternary, not the `? -1 : 0` every other serializer here ends on.
+// Mac 0x126a34..0x126c74 expands the shared encoder four times, clearing
+// six bytes before each 48-bit mask and checking each following write.
 VA(0x00503c40, 0x2B9)
 DC_ADDRESS(0x0f22cc, 0x4b6)
 MAC_ADDRESS(0x1269a0, 0x3a0)
@@ -3966,37 +3958,20 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
         return -1;
 
     unsigned char packed[6];
-    int i;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_drawCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
+    encodePackedBits(tempObjectType->m_drawCells, packed);
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_passableCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
+    encodePackedBits(tempObjectType->m_passableCells, packed);
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_shadowCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
+    encodePackedBits(tempObjectType->m_shadowCells, packed);
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_triggerCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
+    encodePackedBits(tempObjectType->m_triggerCells, packed);
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
@@ -4015,6 +3990,8 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
 // The trailing byte is normalized (`test al,al / setne`), not copied, so it
 // is a bool crossing where width and height are plain assignments.  And
 // like Save, this returns 1 on success rather than 0.
+// Mac 0x126de0..0x126ff8 repeats four guarded six-byte reads followed by
+// the same 48-bit decoder; the reused packed buffer stays caller-owned.
 VA(0x00503f00, 0x35D)
 DC_ADDRESS(0x0f2784, 0x3fa)
 MAC_ADDRESS(0x126d40, 0x380)
@@ -4032,35 +4009,22 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
     tempObjectType->m_height = value;
 
     unsigned char packed[6];
-    int i;
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_drawCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodePackedBits(packed, tempObjectType->m_drawCells);
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_passableCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodePackedBits(packed, tempObjectType->m_passableCells);
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_shadowCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodePackedBits(packed, tempObjectType->m_shadowCells);
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_triggerCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodePackedBits(packed, tempObjectType->m_triggerCells);
 
     unsigned short typeValue;
     if (readValue(infile, typeValue) < sizeof(typeValue))

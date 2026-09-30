@@ -10173,15 +10173,16 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
     }
 }
 
+// Mac 0x24f9ac, 0x24fc50 and 0x24fc70 byte-swap the name length,
+// object type and subtype before their unchecked four-byte writes.
 VA(0x0054AE30, 0x2C5)
 MAC_ADDRESS(0x24f980, 0x398)
 void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* prototype)
 {
-    unsigned char terrainMask[2];
     int nameLength = prototype->getImageName().size();
     {
         int length = nameLength;
-        outfile->write(&length, sizeof(length));
+        writeLittleEndianValue(outfile, length);
     }
     outfile->write(prototype->getImageName().c_str(), nameLength);
     int x;
@@ -10210,29 +10211,17 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
             }
         outfile->write(mask, sizeof(mask));
     }
-    {
-        terrainMask[0] = 0;
-        terrainMask[1] = 0;
-        for (int terrain = 0; terrain < 10; ++terrain)
-            if (prototype->m_terrainMask.test(terrain))
-                terrainMask[terrain / 8] |= 1 << (terrain % 8);
-        outfile->write(terrainMask, sizeof(terrainMask));
-    }
-    {
-        terrainMask[0] = 0;
-        terrainMask[1] = 0;
-        for (int terrain = 0; terrain < 10; ++terrain)
-            if (prototype->m_recommendedTerrainMask.test(terrain))
-                terrainMask[terrain / 8] |= 1 << (terrain % 8);
-        outfile->write(terrainMask, sizeof(terrainMask));
-    }
+    // Mac 0x24fb44..0x24fc44 expands the same two-byte encoder/writer
+    // for both ten-bit terrain masks.
+    writePackedBits(outfile, prototype->m_terrainMask);
+    writePackedBits(outfile, prototype->m_recommendedTerrainMask);
     {
         int value = prototype->getObjectType();
-        outfile->write(&value, sizeof(value));
+        writeLittleEndianValue(outfile, value);
     }
     {
         int value = prototype->getSubtype();
-        outfile->write(&value, sizeof(value));
+        writeLittleEndianValue(outfile, value);
     }
     {
         char value = prototype->m_slotCategory;

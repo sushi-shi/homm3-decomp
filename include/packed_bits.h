@@ -7,11 +7,13 @@
 
 // Decode into an existing mask; the stream reader below owns its returned
 // value and packed buffer. Both loops are expanded in the Mac callers.
+// Mac object masks (0x126e08 and 0x126a64) use signed divide/remainder,
+// as does Windows loadObjectType. Keep the signed index in both helpers.
 template <size_t N>
 void decodePackedBits(const unsigned char* packed, std::bitset<N>& result)
 {
-    for (unsigned int index = 0; index < N; ++index) {
-        result[index] = (packed[index >> 3] & (1 << (index & 7))) != 0;
+    for (int index = 0; index < N; ++index) {
+        result[index] = (packed[index / 8] & (1 << (index % 8))) != 0;
     }
 }
 
@@ -26,7 +28,7 @@ std::bitset<N> readPackedBits(TAbstractFile* infile)
 {
     std::bitset<N> result;
     unsigned char packed[(N + 7) / 8];
-    infile->read(packed, sizeof(packed));
+    readValue(infile, packed);
     decodePackedBits(packed, result);
     return result;
 }
@@ -38,13 +40,15 @@ std::bitset<N> readPackedBits(TAbstractFile* infile)
 // template body; its original name and header are unknown. playerData::save
 // expands the same writer at Mac 0xcd1f0..0xcd258; fill_n retains its repeated
 // const-zero loads without the extra CRT call introduced by memset.
-template <size_t N>
-void encodePackedBits(const std::bitset<N>& bits, unsigned char* packed)
+// Clear the caller's complete buffer: town saves reserve 70 bytes for 70
+// bits (Mac 0x1b2714..0x1b27a8), including 61 trailing zero bytes.
+template <size_t N, class Buffer>
+void encodePackedBits(const std::bitset<N>& bits, Buffer& packed)
 {
-    std::fill_n(packed, (N + 7) / 8, 0);
-    for (unsigned int index = 0; index < N; ++index) {
+    std::fill_n(packed, sizeof(packed), 0);
+    for (int index = 0; index < N; ++index) {
         if (bits.test(index))
-            packed[index >> 3] |= 1 << (index & 7);
+            packed[index / 8] |= 1 << (index % 8);
     }
 }
 

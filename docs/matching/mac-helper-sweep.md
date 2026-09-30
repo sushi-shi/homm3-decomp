@@ -43,7 +43,7 @@ restoration pass.
 
 ## Whole-corpus review
 
-The working inventory covers 139 game translation units, 5,549 canonical source
+The working inventory covers 139 game translation units, 5,550 canonical source
 definitions, 9,684 DC procedure records and 6,921 known Mac function spans.
 Native call destinations without a recorded extent are also retained as leads.
 These are coverage totals, **not a claim that every semantic review is closed**.
@@ -884,3 +884,139 @@ The creature-bank reader checks equality for its `0x38`, `0x1c`, four-byte and
 one-byte fixed bands; the writer deliberately ignores all four counts. Both
 then call their existing artifact-vector helper. These call-site dispositions
 do not certify complete body review of their callers.
+
+### Further packed-mask expansions
+
+Reviewing the bodies beyond their already-accounted stream calls exposed six
+more missing shared calls. `game::load` now uses `readPackedBits<8>` for each
+hero's player mask: Mac `0xd1210..0xd129c` constructs the local mask, reads one
+byte, decodes it and copies the returned temporary before member assignment.
+`game::save` uses `writePackedBits` for the corresponding expansion at
+`0xd32fc..0xd3368`. The shared reader also delegates its array read to
+`readValue`, preserving the existing lower-level source path.
+
+`readMapHeroSetups` now uses `decodePackedBits` for the nine-byte spell mask
+at Mac `0xd9234..0xd9290`. This writes the existing member, without adding a
+new bitset or returned temporary. The other sixteen stream sites in its full
+`0xd8ec0+0x460` body already use their value or little-endian helpers. The
+signed sex sentinel, signed artifact IDs, narrowed backpack count, complete
+artifact assignments and returned name string were checked individually.
+
+`hero::save` now shares the 48-bit writer expanded at `0xf3d84..0xf3e08`.
+Its native zero fill repeatedly reads a constant before each byte store.
+`writeRmgObjectPrototype` shares the two ten-bit terrain writers expanded at
+`0x24fb44..0x24fc44`. Their retained callees `0x1c82c` and `0x12b128` are
+bounded bitset tests, confirmed from their complete bodies. The separate
+coordinate-mask loops remain a distinct lead because they traverse reversed
+coordinates through the existing object predicates.
+
+Eight additional town/vector stream sites were inspected. Town helpers
+transfer an unsigned-byte count, loop over the live vector size, and propagate
+the negative element result. Point/university vector writers transfer a
+signed-short count and a contiguous four-/sixteen-byte element payload;
+creature-bank object vectors retain their element load/save calls and bool
+failure checks. Their source operations are already present.
+
+The subsequent town/mapcell pass below restores their mask operations while
+retaining town's padded 70-byte save format. This does not close the complete
+helper family or the whole-function review.
+
+The initial targeted VC6 check preserved `hero::save` at 100% and raised
+`NewSMapHeader::read` from 92.62% to 94.14%. Keeping the shared operations
+moves `game::load` from 100% to 93.60%, `game::save` from 92.80% to 86.38%,
+`readMapHeroSetups` from 100% to 88.79%, and `writeRmgObjectPrototype` from
+100% to 85.27%. These are measured code-generation differences, not reasons
+to paste the helper bodies back into their callers.
+
+
+### Town and map-object mask operations
+
+Seventeen more source calls now share the existing packed-bit helpers: town
+load/save, the map town's two spell masks, the map hero's spell mask, four
+object-definition mask decoders, four saved-object mask decoders and four
+saved-object mask encoders. Mac retains the same bounded bitset operations:
+48-bit set/test at `0xe98b8`/`0x1c82c`, and 70-bit set/test at
+`0xe9a84`/`0xe99a0`. Their complete native bodies were inspected separately
+from their callers.
+
+The object-definition reader keeps its two input sources: draw/shadow masks
+come from resources; passable/trigger masks come from the map stream. All four
+are six-byte buffers decoded into existing members. The saved-object pair
+retains its checked six-byte transfers and caller-owned reused buffer. The
+map-town reader keeps the RoE branch that clears nine bytes and skips the
+fixed-spell decoder, the unchecked newer fixed-spell read, and the checked
+ordinary spell read. Map-hero custom spells retain their unchecked nine-byte
+read and existing destination member.
+
+Town uses 70 serialized bytes for 70 bits, not nine bytes. Native
+`0x1b271c` clears the entire buffer before the checked write at `0x1b2794`;
+61 trailing bytes remain zero. The canonical encoder now deduces the complete
+buffer type and clears `sizeof(packed)`. This preserves both padded and compact
+callers. VC6 rejects direct array-extent template deduction with C2265/C2783;
+deducing `Buffer&`, as the existing value reader does, compiles on both
+compilers. A runtime size parameter also compiled but made the native buffer
+extent opaque within the emitted encoder.
+
+The same review restored nine `readLittleEndianValue` calls in
+`readHeroData`: identifier, name length, both experience arms, secondary-skill
+count, troop count, equipped/backpack artifact IDs and backpack count. Native
+`lwbrx`/`lhbrx` operations immediately follow the unchecked reads. The returned
+value helper preserves that unchecked contract, the signed short values and
+the subsequent byte narrowing of the backpack count. Three RMG prototype
+writes now use `writeLittleEndianValue` for name length, object type and
+subtype; Mac stores each through `stwbrx` before its unchecked four-byte write.
+
+The RMG coordinate-mask loops already call `isPassableCell`/`isTriggerCell`
+through `getBitPos`. Native reverses both coordinates and serializes bit
+positions zero through 47. Those predicate calls remain; replacing their
+complete path with a direct field mask would discard supported helpers.
+The missing-object-mask warning likewise already has its source call:
+`MessageBoxA` maps through the ordinary platform boundary to the Mac dialog
+at `0x20f0b0`, whose complete body constructs resource 1001 and passes the
+message and title to the shared display routine.
+
+Site-level review also checked town's remaining 51 non-mask transfers, ten
+object load/save scalar transfers, the map-town scalar/flag/event reads, the
+hero-map stream bands and the RMG prototype's remaining transfers. Buffer
+widths, sign extension, version branches and deliberately ignored counts were
+checked individually. These dispositions do not certify complete caller-body
+review.
+
+### Current validation debt
+
+The previous full checkpoint fixed an incorrect generated constructor claim:
+Windows `0x4c3090` takes a string directly, while `0x4044e0` copies the string
+at `logic_error+0xc`. `CLASS_NONCOPY_CTOR` prevents the former address from
+binding to the latter when only the copy constructor is emitted. Three game
+library enrollments now retain raw generated claims because their bodies no
+longer emit. That checkpoint linked without unresolved symbols and passed
+source ownership/inventory checks, but failed Mac preservation for the RMG
+prototype writer; it was not a green checkpoint.
+
+The current six-TU fast check compiles successfully. The canonical loops now
+retain signed division/remainder, as Mac `0x126e08`/`0x126a64`, Windows
+`loadObjectType` and the DC signed loop local support. Map-town read is 85.80%,
+map-hero read 90.93%, object-definition read 70.88%, saved-object write 94.42%
+and saved-object read 65.62%. Town load/save are both 99.87%, the RMG prototype
+writer is 90.28%, and `readMapHeroSetups` is 96.20%. These are projected
+matching scores, not a full checkpoint. Hero's unchanged-source MAX remains
+held, but its emitted comparison moves from 100% to 98.10%; its native encoder
+uses unsigned shifts, a caller-shape distinction still to resolve. In particular, Windows `loadObjectType` still expands the shared
+decoder, but retains four `bitset<48>::set` calls where retail expands those
+bodies and retains `_Xran`; equal aggregate call counts hide that difference.
+
+Three previously available Mac comparisons are now unavailable: the RMG
+prototype writer and town load/save retain unpaired helper calls. The other
+available comparisons in the targeted report have no score drops. No invented
+Mac address, forced inline qualifier or preservation waiver was added. These
+availability failures remain explicit comparison gaps. The current workflow
+checkpoints the targeted Windows measurements without requiring a full build;
+no successful full Mac-preservation checkpoint is claimed. The refreshed source scan finds 5,550 canonical definitions
+and no ownership gaps; RMG still has its 201 pre-existing Clang body-analysis
+diagnostics, which remain explicit coverage gaps.
+
+The working inventory now has 6,043 open native call-site leads and 1,953
+explicit operation-site notes. There are also three source-body mapping gaps
+in unpaired template members (`bitset_iterator` default construction and
+addition, and `TRmgCoordinatePoint::operator+=`). Neither those gaps nor the
+359 functions without native pairing are treated as completed body reviews.

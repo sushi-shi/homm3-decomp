@@ -2914,14 +2914,9 @@ int game::load(TAbstractFile* infile)
 
     if (saved.m_version >= 31) {
         for (i = 0; i < HERO_COUNT; ++i) {
-            // readPackedBits<8> (a returned bitset temporary) keeps
-            // decodePackedBits out of line here; retail expands its
-            // bitset::reference loop in place.
-            std::bitset<8> poolMap;
-            unsigned char poolBits[1];
-            readValue(infile, poolBits);
-            decodePackedBits(poolBits, poolMap);
-            m_heroPoolMap[i] = poolMap;
+            // Mac 0xd1210..0xd129c retains the local bitset, one-byte
+            // read/decode and returned temporary before member assignment.
+            m_heroPoolMap[i] = readPackedBits<8>(infile);
         }
     }
 
@@ -3219,20 +3214,10 @@ int game::save(TAbstractFile* outfile)
     }
 
     // Complete's packed hero-player masks have no DC loop counterpart.
-    // Retail retains bitset<8>::test. Reading through const operator[]
-    // preserves that boundary without a pin (59.5944% for the whole save);
-    // direct test(), including on a const reference, expands it (57.4921%).
-    for (i = 0; i < HERO_COUNT; ++i) {
-        const std::bitset<8>& players = m_heroPoolMap[i];
-        unsigned char poolBits[1];
-        poolBits[0] = 0;
-        unsigned int player;
-        for (player = 0; player < 8; ++player) {
-            if (players[player])
-                poolBits[player >> 3] |= 1 << (player & 7);
-        }
-        outfile->write(poolBits, sizeof(poolBits));
-    }
+    // Mac 0xd32fc..0xd3368 expands the shared encoder and unchecked writer:
+    // zero the byte array, test eight bits and OR through index >> 3.
+    for (i = 0; i < HERO_COUNT; ++i)
+        writePackedBits(outfile, m_heroPoolMap[i]);
 
     // The twelve guarded scalar writes. Retail carries FOUR temps for
     // them, not one: a char reused across writes 1-2 and 7-9, an unsigned
@@ -5337,7 +5322,9 @@ bool game::loadMap(TAbstractFile* mapFile)
 // assigns the complete returned string. No Dreamcast counterpart is known
 // for this Complete-only reader. Mac uses lwbrx for experience/skill count
 // and lhbrx plus extsh for artifact IDs/backpack count; retain those scalar
-// reader semantics through the shared little-endian helper. Windows is exact.
+// reader semantics through the shared little-endian helper. The spell mask
+// expands decodePackedBits directly into the existing member (Mac 0xd9244);
+// unlike the returned-mask readers, it does not construct a new bitset.
 VA(0x004c2ce0, 0x3A8)
 MAC_ADDRESS(0x0d8ec0, 0x460)  // sole caller LoadMap + HeroExtra field-offset walk
 void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
@@ -5398,10 +5385,7 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
             heroRecord->m_customSpells = 1;
             unsigned char spellMask[9];
             mapFile->read(spellMask, sizeof(spellMask));
-            for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-                heroRecord->m_spells[spell] =
-                    (spellMask[spell / 8] & (1 << (spell % 8))) != 0;
-            }
+            decodePackedBits(spellMask, heroRecord->m_spells);
         }
 
         if (readValue<char>(mapFile)) {
@@ -10549,10 +10533,11 @@ MAC_COMPGEN_ADDRESS(0x0f0ef8, 0x74, IMPLICIT_DTOR, TPickRandomTownName)
 VA_COMPGEN(0x004cbcf0, 0x4B, IMPLICIT_DTOR, CGameTransferDlg)
 MAC_COMPGEN_ADDRESS(0x0e3134, 0x7c, IMPLICIT_DTOR, CGameTransferDlg)
 
-// InitNewGame's exception path retains Dinkumware's string-taking
-// std::logic_error constructor. The late STL anchor emits the identical named
-// public until that large caller is reconstructed.
-VA_COMPGEN(0x004c3090, 0x162, CLASS_CTOR, logic_error)
+// Retail takes the string argument directly at 0x4c30c3 before copying it
+// into this+0xc. The copy constructor at 0x4044e0 first skips the argument's
+// exception base (argument+0xc); it must not inherit this address if changes
+// to helper expansion stop emitting the string-taking constructor here.
+VA_COMPGEN(0x004c3090, 0x162, CLASS_NONCOPY_CTOR, logic_error)
 
 VA_COMPGEN(0x004cef80, 0x12, BITSET_SUBSCRIPT, Bitset145)
 
