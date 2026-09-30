@@ -714,6 +714,9 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
     // order remains. Six cursor increment orders emit identical bytes.
     // All six row-pointer declaration orders, with either column scope,
     // produce only the current object or a lower-scoring register variant.
+    // DC 1389..1394 reads the old/new red, green, then blue channels;
+    // 1396..1402 interpolates and combines them in that order. Restoring
+    // this RGB spelling also aligns all 17 retail references (99.91%).
     const int defaultFadeTime = 33;
     if (g_completeDrawEnabled) {
         if (startX < 0) {
@@ -756,22 +759,22 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                     const unsigned short* s = target.m_pixels;
                     const unsigned short* od = source.m_pixels;
                     for (int col = 0; col < width; col++) {
-                        int fromBlue = *od & Bitmap16Bit::s_blueMask;
-                        int toBlue = *s & Bitmap16Bit::s_blueMask;
-                        int fromGreen = *od & Bitmap16Bit::s_greenMask;
-                        int toGreen = *s & Bitmap16Bit::s_greenMask;
                         int fromRed = *od & Bitmap16Bit::s_redMask;
                         int toRed = *s & Bitmap16Bit::s_redMask;
-                        const int outBlue =
-                            ((toBlue - fromBlue) * alpha >> 16) + fromBlue;
-                        const int outGreen =
-                            ((toGreen - fromGreen) * alpha >> 16) + fromGreen;
+                        int fromGreen = *od & Bitmap16Bit::s_greenMask;
+                        int toGreen = *s & Bitmap16Bit::s_greenMask;
+                        int fromBlue = *od & Bitmap16Bit::s_blueMask;
+                        int toBlue = *s & Bitmap16Bit::s_blueMask;
                         const int outRed =
                             ((toRed - fromRed) * alpha >> 16) + fromRed;
+                        const int outGreen =
+                            ((toGreen - fromGreen) * alpha >> 16) + fromGreen;
+                        const int outBlue =
+                            ((toBlue - fromBlue) * alpha >> 16) + fromBlue;
                         *d = static_cast<unsigned short>(
-                            (outBlue & Bitmap16Bit::s_blueMask)
+                            (outRed & Bitmap16Bit::s_redMask)
                             | (outGreen & Bitmap16Bit::s_greenMask)
-                            | (outRed & Bitmap16Bit::s_redMask));
+                            | (outBlue & Bitmap16Bit::s_blueMask));
                         d++;
                         s++;
                         od++;
