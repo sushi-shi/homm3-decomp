@@ -7661,6 +7661,11 @@ void game::setRecruits()
 // aliases scored 96.9467%; the canonical model scores 94.1719%. The native
 // loop spelling, obscuringHero initialization and helper body placement are
 // byte-flat for that boundary. Historical 99.8370% is a TU-context lead.
+// The three scalar creature assignments use ordinary expression statements:
+// their standalone scopes came from 8c6106f8e0's conversion-helper cleanup,
+// not a recovered lifetime. DC 8416/8425..8430 and Mac df6a4/df704..df724
+// show scalar assignments within the existing arms. Removing that scaffolding
+// leaves the current Windows comparison at 94.12%.
 VA(0x004c8780, 0x7B7)
 DC_ADDRESS(0x0b41e0, 0x5d8)
 MAC_ADDRESS(0x0df4d8, 0x6bc)  // PerDay/PerMonth bracket + dc lines/callees
@@ -7718,21 +7723,15 @@ void game::perWeek()
             }
         }
         g_weekTypeExtra = align;
-        {
-            bonusCreature = TCreatureType(align);
-        }
+        bonusCreature = TCreatureType(align);
     }
 
     for (i = 0; i < m_towns.size(); ++i) {
         if (m_towns[i].m_type == TOWN_INFERNO
             && m_towns[i].hasBuilding(HOLY_GRAIL_ID, false)) {
             g_weekType = g_weekTypeInfernoGrail;
-            {
-                bonusCreature = TCreatureType(g_creatureImpId);
-            }
-            {
-                alternateBonus = TCreatureType(g_creatureFamiliarId);
-            }
+            bonusCreature = TCreatureType(g_creatureImpId);
+            alternateBonus = TCreatureType(g_creatureFamiliarId);
             bonusAmount = g_creatureTypeTraits[g_creatureImpId].m_growthRate;
             g_weekTypeExtra = g_creatureImpId;
             break;
