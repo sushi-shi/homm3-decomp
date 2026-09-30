@@ -672,14 +672,14 @@ unsigned char type_random_map::isPlacementBlocked(
         for (unsigned int x = 0; x < prototype.getWidth(); ++x, --nearby.m_x) {
             TRmgGridPoint maskPoint(x, y);
             TRmgMapItem* item = getMapItem(nearby);
-            if (prototype.m_triggerMask.test(CObjectType::getBitPos(maskPoint.m_x, maskPoint.m_y))) {
+            if (prototype.isTriggerCell(maskPoint.m_x, maskPoint.m_y)) {
                 if (!item->isPassableLand()
                     || item->isRoadEntrance() || item->m_zoneState.m_zone != zoneIndex)
                     return 1;
                 if (rejectBorder && item->hasBorderObject())
                     return 1;
             }
-            if (!prototype.m_passableMask.test(CObjectType::getBitPos(maskPoint.m_x, maskPoint.m_y))) {
+            if (!prototype.isPassableCell(maskPoint.m_x, maskPoint.m_y)) {
                 if (!item->isPassableLand()
                     || item->isRoadEntrance() || item->m_zoneState.m_zone != zoneIndex)
                     return 1;
@@ -835,14 +835,14 @@ void type_random_map::addObject(type_object& object, TRmgMapPosition position)
                 continue;
             TRmgGridPoint maskPoint(x, y);
             TRmgMapItem* item = getMapItem(nearby);
-            if (prototype.m_triggerMask.test(CObjectType::getBitPos(maskPoint.m_x, maskPoint.m_y))) {
+            if (prototype.isTriggerCell(maskPoint.m_x, maskPoint.m_y)) {
                 item->m_tileData.m_roadEntrance = 1;
                 if (!item->m_connection.m_present) {
                     item->m_tileData.m_borderObject = 0;
                     item->m_tileData.m_subterraneanGate = 1;
                 }
                 item->m_objects.push_back(&object);
-            } else if (!prototype.m_passableMask.test(CObjectType::getBitPos(maskPoint.m_x, maskPoint.m_y))) {
+            } else if (!prototype.isPassableCell(maskPoint.m_x, maskPoint.m_y)) {
                 item->m_tileData.m_roadPassable = 0;
                 item->m_objects.push_back(&object);
             }
@@ -1310,7 +1310,7 @@ void TRmgObjectPropertiesRef::buildOutline()
     position.m_y = 0;
     position.m_x = 0;
     while (static_cast<unsigned int>(-position.m_x) < m_prototype->getWidth()) {
-        if (!m_prototype->m_passableMask.test(CObjectType::getBitPos(-position.m_x, 0)) || m_prototype->m_triggerMask.test(CObjectType::getBitPos(-position.m_x, 0)))
+        if (!m_prototype->isPassableCell(-position.m_x, 0) || m_prototype->isTriggerCell(-position.m_x, 0))
             break;
         --position.m_x;
     }
@@ -1329,7 +1329,7 @@ void TRmgObjectPropertiesRef::buildOutline()
             if (nearby.m_x > 0 || static_cast<unsigned int>(-nearby.m_x) >= m_prototype->getWidth()
                 || nearby.m_y > 0 || static_cast<unsigned int>(-nearby.m_y) >= m_prototype->getHeight())
                 break;
-            if (m_prototype->m_passableMask.test(CObjectType::getBitPos(-nearby.m_x, -nearby.m_y)) && !m_prototype->m_triggerMask.test(CObjectType::getBitPos(-nearby.m_x, -nearby.m_y)))
+            if (m_prototype->isPassableCell(-nearby.m_x, -nearby.m_y) && !m_prototype->isTriggerCell(-nearby.m_x, -nearby.m_y))
                 break;
         } while (++attempts < 4);
         position = position + TRmgVector(g_rmgDirections[direction].m_x, g_rmgDirections[direction].m_y);
@@ -1347,20 +1347,18 @@ void TRmgObjectPropertiesRef::buildOverlapPriorities()
         int priority = !m_prototype->m_isUnderlay;
         unsigned int y = 0;
         for (;;) {
-            if (m_prototype->m_imageInfo.m_drawMask.test(CObjectType::getBitPos(x, y)))
+            if (m_prototype->isDrawCell(x, y))
                 m_overlapPriorities[x][y] = priority;
             if (++y >= m_prototype->getHeight())
                 break;
             if (!m_prototype->m_isUnderlay) {
-                if (m_prototype->m_passableMask.test(CObjectType::getBitPos(x, y))) {
-                    if (x > 0 && !m_prototype->m_passableMask.test(
-                            CObjectType::getBitPos(x - 1, y)))
+                if (m_prototype->isPassableCell(x, y)) {
+                    if (x > 0 && !m_prototype->isPassableCell(x - 1, y))
                         priority = m_overlapPriorities[x - 1][y];
                     else
                         ++priority;
                 } else {
-                    if (m_prototype->m_passableMask.test(
-                            CObjectType::getBitPos(x, y - 1)))
+                    if (m_prototype->isPassableCell(x, y - 1))
                         priority = 1;
                     else
                         ++priority;
@@ -3040,11 +3038,10 @@ int TRmgGeneratorBase::scoreObjectPlacement(
             int x = position.m_x - column;
             if (x < 0 || x >= m_map.m_mapWidth)
                 continue;
-            if (!prototype->m_imageInfo.m_drawMask[
-                    CObjectType::getBitPos(column, row)])
+            if (!prototype->isDrawCell(column, row))
                 continue;
             marks[column + 1][row + 1] |= RMG_PLACEMENT_OVERLAP;
-            if (!prototype->m_passableMask[CObjectType::getBitPos(column, row)]) {
+            if (!prototype->isPassableCell(column, row)) {
                 marks[column + 1][row + 1] |= RMG_PLACEMENT_BLOCKED;
                 TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
                 if (!prototype->m_terrainMask[item->m_tile.m_landType])
@@ -3226,8 +3223,8 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
                     candidatePosition.m_y < bounds.m_maximumY; ++candidatePosition.m_y) {
                     for (candidatePosition.m_x = bounds.m_minimumX;
                         candidatePosition.m_x < bounds.m_maximumX; ++candidatePosition.m_x) {
-                        if (prototype->m_passableMask[CObjectType::getBitPos(
-                                candidatePosition.m_x - position.m_x, candidatePosition.m_y - position.m_y)])
+                        if (prototype->isPassableCell(
+                                candidatePosition.m_x - position.m_x, candidatePosition.m_y - position.m_y))
                             continue;
                         int score = scoreObjectPlacement(properties, candidatePosition);
                         if (score > 0) {
@@ -8126,8 +8123,8 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
             int occupied = 0;
             for (unsigned int x = 0; x < prototype->getWidth(); ++x) {
                 for (unsigned int y = 0; y < prototype->getHeight(); ++y) {
-                    if (!prototype->m_passableMask[CObjectType::getBitPos(x, y)]
-                        || prototype->m_triggerMask[CObjectType::getBitPos(x, y)])
+                    if (!prototype->isPassableCell(x, y)
+                        || prototype->isTriggerCell(x, y))
                         ++occupied;
                 }
             }
@@ -9299,8 +9296,8 @@ void type_random_map_generator::markRiverObjectTargets()
                 offsetX = prototype->m_triggerCell.m_x;
                 offsetY = prototype->m_triggerCell.m_y;
             } else {
-                offsetX = static_cast<unsigned int>(prototype->m_imageInfo.m_objectSize.m_x) / 2;
-                offsetY = static_cast<unsigned int>(prototype->m_imageInfo.m_objectSize.m_y) / 2;
+                offsetX = static_cast<unsigned int>(prototype->getWidth()) / 2;
+                offsetY = static_cast<unsigned int>(prototype->getHeight()) / 2;
             }
             position.m_x -= offsetX;
             position.m_y -= offsetY;
@@ -9909,7 +9906,7 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
         int bit = 0;
         for (y = 6; y--;)
             for (x = 7; x >= 0; --x) {
-                if (prototype->m_passableMask.test(CObjectType::getBitPos(x, y)))
+                if (prototype->isPassableCell(x, y))
                     mask[bit / 8] |= 1 << (bit % 8);
                 ++bit;
             }
@@ -9921,7 +9918,7 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
         int bit = 0;
         for (y = 6; y--;)
             for (x = 7; x >= 0; --x) {
-                if (prototype->m_triggerMask.test(CObjectType::getBitPos(x, y)))
+                if (prototype->isTriggerCell(x, y))
                     mask[bit / 8] |= 1 << (bit % 8);
                 ++bit;
             }
@@ -10287,8 +10284,8 @@ void type_random_map_generator::removeObject(type_object* object)
             mapPosition.m_x = position.m_x - cell.m_x;
             if (mapPosition.m_x < 0 || mapPosition.m_x >= m_map.m_mapWidth)
                 continue;
-            if (!prototype->m_passableMask.test(CObjectType::getBitPos(cell.m_x, cell.m_y))
-                || prototype->m_triggerMask.test(CObjectType::getBitPos(cell.m_x, cell.m_y))) {
+            if (!prototype->isPassableCell(cell.m_x, cell.m_y)
+                || prototype->isTriggerCell(cell.m_x, cell.m_y)) {
                 TRmgMapItem* item = m_map.getMapItem(mapPosition);
                 std::vector<type_object*>::iterator entry = std::find(item->m_objects.begin(), item->m_objects.end(), object);
                 if (entry) {

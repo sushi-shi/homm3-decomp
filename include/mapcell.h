@@ -932,10 +932,11 @@ public:
     // byte-proves objectType at 0x38 - retail inserted one 4-byte member
     // the DC record does not have, and this is it.
 
-    // The mask's MEANING is unproven and its name is deliberately ordinal:
-    // no serializer in this compiland reads or writes it, readObjectType
-    // included.
-    std::bitset<10> m_mask34;
+    // Complete conversion copies TObjectType's recommended-terrain mask
+    // here (Mac 0x128d44..0x128d6c). setObjectType uses it to choose a
+    // terrain-appropriate template. Map serialization omits this cache.
+    // Original member spelling is unknown.
+    std::bitset<10> m_recommendedTerrainMask;
     // loadObjectType stores one full dword at +0x38. A scalar preserves
     // that field and its single generated copy; no alternative view exists.
     TAdventureObjectType m_objectType;

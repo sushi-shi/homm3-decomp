@@ -4609,7 +4609,7 @@ CObjectType* NewfullMap::findObjectType(int objectType, int extra)
 
 // 0x505f20 (game::InsertObject's helper, declared game.h:466) reverse-scans
 // objectTypeIndex[objectType] for the record matching `objectIndex` (its
-// .extra) and, when terrain != -1, applicable to `terrain` (its mask_34 bit).
+// .extra) and, when terrain != -1, recommended for `terrain` (its mask bit).
 // If the matched record has no resolved objectTypes index yet (field_42 < 0),
 // it appends a copy to objectTypes and its sprite to sprites and records the
 // new index, then writes the resolved index into object->typeIndex.
@@ -4629,7 +4629,7 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
         if (m_objectTypeIndex[objectType][i].m_extra == objectIndex) {
             if (terrain == -1)
                 break;
-            if (m_objectTypeIndex[objectType][i].m_mask34[terrain])
+            if (m_objectTypeIndex[objectType][i].m_recommendedTerrainMask[terrain])
                 break;
         }
     }
@@ -4677,6 +4677,11 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // more candidates after each test) and the terrain loop still calls
 // test<10> (52 < 58) and expands set<10> (155), the reverse of retail
 // (44.72%). Not adopted.
+// Canonical const cell queries now own each source mask lookup and its
+// coordinate mapping. Together they raise this constructor to 54.94%; the
+// retained bitset test/set decisions remain unfinished. The template's
+// mask storage is private, shared readers use these queries, and its
+// existing setters retain ownership of mask updates and invariants.
 VA(0x00506080, 0x1D4) MAC_ADDRESS(0x128be8, 0x1c4)  // sole caller NewfullMapFn_00505DA0 + advmgr_objects.h address, retail-only
 CObjectType::CObjectType(TObjectType* source)
 {
@@ -4687,10 +4692,10 @@ CObjectType::CObjectType(TObjectType* source)
     for (unsigned y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
             unsigned pos = getBitPos(x, y);
-            m_drawCells[pos] = source->m_imageInfo.m_drawMask.test(pos);
-            m_passableCells[pos] = source->m_passableMask.test(pos);
-            m_shadowCells[pos] = source->m_imageInfo.m_shadowMask.test(pos);
-            m_triggerCells[pos] = source->m_triggerMask.test(pos);
+            m_drawCells[pos] = source->isDrawCell(x, y);
+            m_passableCells[pos] = source->isPassableCell(x, y);
+            m_shadowCells[pos] = source->isShadowCell(x, y);
+            m_triggerCells[pos] = source->isTriggerCell(x, y);
         }
     }
 
@@ -4698,7 +4703,7 @@ CObjectType::CObjectType(TObjectType* source)
     // bitset<10> calls either way; keep the project terrain accessor
     // (46.72%; the direct subscript reaches 61.04%).
     for (int terrain = 0; terrain < 10; terrain++)
-        m_mask34[terrain] = source->isRecommendedTerrain(terrain);
+        m_recommendedTerrainMask[terrain] = source->isRecommendedTerrain(terrain);
 
     m_objectType = source->m_objectType;
     m_extra = source->m_subtype;
