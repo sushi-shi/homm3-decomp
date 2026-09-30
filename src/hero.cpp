@@ -5094,15 +5094,17 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
 // liftable block and no DC-named helper has no dose to give.
 VA(0x004e2840, 0x1B5)
 MAC_ADDRESS(0x1034d8, 0x124)  // retail-only, hero member, ret 8; size absorbs the
+// Mac 0x1034d8..0x103da8 expands the canonical reference readers before
+// copying/testing records. Keep that read boundary; mutations stay owned here.
 unsigned char hero::heroFn004E2840(long artifact, long slot)
 {
     if (!artifactAllowedInSlot(TArtifact(artifact), TArtifactSlot(slot)))
         return 0;
 
-    if (m_equipped[slot].m_artifactId == ARTIFACT_NONE)
+    if (getArtifact(TArtifactSlot(slot)).m_artifactId == ARTIFACT_NONE)
         return heroFn004E2550(artifact, slot);
 
-    type_artifact displaced = m_equipped[slot];
+    type_artifact displaced = getArtifact(TArtifactSlot(slot));
     removeArtifact(slot);
     unsigned char accepted;
     try {
@@ -5144,7 +5146,7 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
     m_equipped[slot].m_extra = artifact.m_extra;
 
     if (artifact.m_artifactId == ARTIFACT_TITANS_THUNDER
-        && m_equipped[17].m_artifactId == ARTIFACT_NONE) {
+        && getArtifact(eArtifactSlotSpellbook).m_artifactId == ARTIFACT_NONE) {
         type_artifact spellbook(ARTIFACT_SPELLBOOK);
         equipArtifact(spellbook, 17);
     }
@@ -5211,7 +5213,7 @@ DC_ADDRESS(0x0d3ad0, 0xa2)
 MAC_ADDRESS(0x103854, 0x200)  // anchor-bracket
 void hero::removeArtifact(long slot)
 {
-    type_artifact artifact = m_equipped[slot];
+    type_artifact artifact = getArtifact(TArtifactSlot(slot));
     if (artifact.m_artifactId == ARTIFACT_NONE)
         return;
 
@@ -5255,11 +5257,11 @@ DC_ADDRESS(0x0d3b74, 0x76)
 MAC_ADDRESS(0x103a54, 0xb0)
 void hero::removeBackpackArtifact(short slot)
 {
-    if (m_backpack[slot].m_artifactId == -1)
+    if (getBackpack(slot).m_artifactId == -1)
         return;
     long last = getLastBackpackIndex();
     while (slot < last) {
-        m_backpack[slot] = m_backpack[slot + 1];
+        m_backpack[slot] = getBackpack(slot + 1);
         slot++;
     }
     m_backpack[slot].m_artifactId = ARTIFACT_NONE;
@@ -5276,13 +5278,13 @@ unsigned char hero::removeArtifact(TArtifact artifact)
     long last = getLastBackpackIndex();
     short slot;
     for (slot = 0; slot <= last; slot++) {
-        if (m_backpack[slot].m_artifactId == artifact) {
+        if (getBackpack(slot).m_artifactId == artifact) {
             removeBackpackArtifact(slot);
             return 1;
         }
     }
     for (slot = 0; slot < 19; slot++) {
-        if (m_equipped[slot].m_artifactId == artifact) {
+        if (getArtifact(TArtifactSlot(slot)).m_artifactId == artifact) {
             removeArtifact(slot);
             return 1;
         }
@@ -5319,14 +5321,14 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
         return 0;
     if (slot < 0) {
         for (slot = 0; slot < 64; slot++) {
-            if (m_backpack[slot].m_artifactId == -1)
+            if (getBackpack(slot).m_artifactId == -1)
                 break;
         }
     }
-    if (m_backpack[slot].m_artifactId != -1) {
+    if (getBackpack(slot).m_artifactId != -1) {
         long last = getLastBackpackIndex();
         for (long i = last; i >= slot; i--)
-            m_backpack[i + 1] = m_backpack[i];
+            m_backpack[i + 1] = getBackpack(i);
     }
     m_backpack[slot] = artifact;
     m_backpackCount++;
