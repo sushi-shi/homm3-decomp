@@ -741,8 +741,8 @@ public:
                     static_cast<unsigned char>(0));
     }
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
-    long getEquippedArtifacts(unsigned char countWarMachines) const;
-    long getNumberInBackpack(unsigned char countWarMachines) const;
+    long getEquippedArtifacts(bool countWarMachines) const;
+    long getNumberInBackpack(bool countWarMachines) const;
     // 0x4d9330 - sets both per-spell byte tables for one spell.
     void addSpell(int whichSpell);
 

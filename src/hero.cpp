@@ -1244,10 +1244,12 @@ unsigned char hero::belongsToHuman() const
 // Mac 0xf4c28/0xf4ca4 and the following artifact scans expand the
 // eight-byte record-reference accessors. Keep the canonical Hero.h:965/970
 // getArtifact/getBackpack paths instead of direct array reads.
+// DC public ?get_equipped_artifacts@hero@@QBAJ_N@Z independently
+// proves the same bool countWarMachines contract as the backpack reader.
 VA(0x004d9070, 0x45)
 DC_ADDRESS(0x0cc0e4, 0x52)
 MAC_ADDRESS(0x0f4c1c, 0x68)
-long hero::getEquippedArtifacts(unsigned char countWarMachines) const
+long hero::getEquippedArtifacts(bool countWarMachines) const
 {
     long count = 0;
     for (int slot = 0; slot < 19; slot++) {
@@ -1260,10 +1262,12 @@ long hero::getEquippedArtifacts(unsigned char countWarMachines) const
     return count;
 }
 
+// DC public ?get_number_in_backpack@hero@@QBAJ_N@Z proves bool;
+// the dossier primitive is its lowered byte representation.
 VA(0x004d90c0, 0x4A)
 DC_ADDRESS(0x0cc138, 0x78)
 MAC_ADDRESS(0x0f4c84, 0x6c)
-long hero::getNumberInBackpack(unsigned char countWarMachines) const
+long hero::getNumberInBackpack(bool countWarMachines) const
 {
     long count = 0;
     if (countWarMachines)
