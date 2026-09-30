@@ -330,7 +330,7 @@ const int g_shrineLevelOne = 1;
 const int g_shrineLevelTwo = 2;
 const int g_shrineLevelThree = 3;
 const unsigned char g_whirlpoolTriggerXOffset = 2;
-const unsigned char g_whirlpoolTriggerYOffset = 0x10;
+const unsigned char g_whirlpoolTriggerYOffset = 1;
 
 const int g_productionArtifactCrystal = 0x6d;
 const int g_productionArtifactGems = 0x6e;
@@ -5036,11 +5036,11 @@ void game::randomizeEvents()
 
                 case SHIPYARD:
                     {
-                        newOwner =
-                            static_cast<signed char>(tempCell->m_extraInfo);
-                        if (newOwner != -1) {
-                            tempCell->m_extraInfo =
-                                (tempCell->m_extraInfo & 0xffffff00) | 0xff;
+                        // DC 5497/5501/5502 tests the owner before saving it
+                        // and resetting that field. Mac 0xd7f08..0xd7f20 agrees.
+                        if (tempCell->m_shipyardInfo.m_owner != -1) {
+                            newOwner = tempCell->m_shipyardInfo.m_owner;
+                            tempCell->m_shipyardInfo.m_owner = -1;
                             claimShipyard(type_point(x, y, z), newOwner);
                         }
                     }
@@ -5097,19 +5097,16 @@ void game::randomizeEvents()
 
                 case WHIRLPOOL:
                     thisObj = &tempCell->m_objects[0];
-                    if ((thisObj->m_offsets & 0xf)
-                            == g_whirlpoolTriggerXOffset
-                        && (thisObj->m_offsets & 0xf0)
-                            == g_whirlpoolTriggerYOffset) {
+                    // DC 5567/5573 and Mac 0xd8034..0xd8098 use the
+                    // signed cell coordinates, including the (2, 1) trigger.
+                    if (thisObj->m_cellX == g_whirlpoolTriggerXOffset
+                        && thisObj->m_cellY == g_whirlpoolTriggerYOffset) {
                         tempCell->m_extraInfo = numWhirlpool++;
                     }
                     else {
-                        int xOffset = static_cast<signed char>(
-                            thisObj->m_offsets << 4) >> 4;
-                        int yOffset =
-                            static_cast<signed char>(thisObj->m_offsets) >> 4;
                         tempCell->m_extraInfo = m_worldMap.cell(
-                            x + xOffset - 2, y + yOffset - 1, z)->m_extraInfo;
+                            x + thisObj->m_cellX - 2,
+                            y + thisObj->m_cellY - 1, z)->m_extraInfo;
                     }
                     // DC game.cpp:5575 constructs the point and calls
                     // vector::push_back on the same source line.
