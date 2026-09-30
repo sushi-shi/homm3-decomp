@@ -4118,6 +4118,10 @@ void army::attackWall(TWallTargetId wall,
 // why-reg --model finds the EBX/EDI permutation in the initial saved-register
 // definitions, involving this and an expression value: a front-end handle-state
 // residual rather than a movable named-local declaration. Keep the proven ABI.
+// DC army.cpp:4731 guards the sample; 4732 calls ResourceManager::Dispose
+// (sample*) at 0x1225c0. Keep both that guard and its named source call.
+// Mac 0x525b4..0x525cc expands its null guard and resource virtual disposal;
+// retain the canonical wrapper instead of repeating that body in this caller.
 VA(0x00445fd0, 0x526)
 DC_ADDRESS(0x04aacc, 0x5a4)
 MAC_ADDRESS(0x051fa4, 0x64c)  // anchor-callee
@@ -4239,7 +4243,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     g_soundManager->waitSample(shootMemSample, -1);
     g_soundManager->waitSample(wallMemSample, -1);
     if (wallSample)
-        wallSample->dispose();
+        ResourceManager::dispose(wallSample);
     cancelSpellType(ARMY_CANCEL_SPELLS_AFTER_ATTACK);
 }
 
