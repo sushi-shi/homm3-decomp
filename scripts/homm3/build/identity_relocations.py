@@ -166,7 +166,10 @@ def canonicalize(base_payload: bytes, target_payload: bytes,
                                      True))
             continue
         mine = resolve_name(bsym.name, symbol_rvas, identities, unit)
-        theirs = resolve_name(tsym.name, symbol_rvas, identities)
+        # A delinked unit can name its own admitted literal copy through the
+        # emitted COFF name while symbol_rvas names the DATA_COMPGEN owner.
+        # The generated unit-copy proof applies to both sides of this pair.
+        theirs = resolve_name(tsym.name, symbol_rvas, identities, unit)
         if mine is None or theirs is None:
             continue
         bdata = base.section_bytes(base.sections[brel.section - 1])
