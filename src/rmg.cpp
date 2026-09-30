@@ -581,10 +581,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
     int zone = seed->m_zoneState.m_zone;
     positions.push_back(position);
     costs.push_back(0);
-    seed->m_movement.m_cost = 0;
-    seed->m_previousTile.m_x = -1;
-    seed->m_previousTile.m_y = -1;
-    seed->m_previousTile.m_z = -1;
+    seed->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
     while (positions.size()) {
         TRmgMapPosition currentPosition = positions.back();
         int queuedCost = costs.back();
@@ -609,7 +606,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
                 continue;
             TRmgMapItem* next = getMapItem(nextPosition);
             if (next->m_zoneState.m_zone < 0 || !next->m_tileData.m_roadPassable
-                || next->m_tile.m_landType == eTerrainRock)
+                || next->getLandType() == eTerrainRock)
                 continue;
             if (next->isRoadEntrance()) {
                 int objectType = next->m_objects[0]->m_properties->m_prototype->getObjectType();
@@ -631,12 +628,12 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
             } else {
                 if (currentZone != zone)
                     continue;
-                if (next->m_tile.m_landType == eTerrainWater)
+                if (next->getLandType() == eTerrainWater)
                     nextCost = currentCost + 10;
                 if (next->m_movement.m_cost <= nextCost)
                     continue;
                 if (!currentCost && next->hasSubterraneanGate()
-                    && (next->m_tile.m_landType != eTerrainWater || waterZone))
+                    && (next->getLandType() != eTerrainWater || waterZone))
                     nextCost = 0;
                 next->setMovementCost(nextCost, currentPosition);
             }
@@ -7208,7 +7205,7 @@ void type_random_map_generator::decorateUnderground()
     for (scan.m_y = 0; scan.m_y < m_map.m_mapHeight; ++scan.m_y) {
         for (scan.m_x = 0; scan.m_x < m_map.m_mapWidth; ++scan.m_x, ++item) {
             if (!item->hasSubterraneanGate() && item->m_tileData.m_roadPassable
-                && item->m_tile.m_landType != eTerrainRock && !item->isRoadEntrance())
+                && item->getLandType() != eTerrainRock && !item->isRoadEntrance())
                 brush.paintRectangle(scan.m_x, scan.m_y, 1, 1);
         }
     }
@@ -7228,7 +7225,7 @@ void type_random_map_generator::decorateUnderground()
         for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
             for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
                 TRmgMapItem* item = m_map.getMapItem(x, y, 1);
-                if (item->m_tile.m_landType == eTerrainRock
+                if (item->getLandType() == eTerrainRock
                     && item->m_zoneState.m_zone == zone
                     && (item->hasSubterraneanGate() || item->m_objects.size())) {
                     if (terrain != currentTerrain) {
@@ -7557,7 +7554,7 @@ void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, level);
             if (item->m_zoneState.m_zone == zoneIndex
-                && item->m_tile.m_landType != eTerrainWater) {
+                && item->getLandType() != eTerrainWater) {
                 TRmgMapPosition previous;
                 previous.m_x = -1;
                 previous.m_y = -1;
@@ -7578,10 +7575,7 @@ void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
     first.m_y = zone->m_entrances[0].m_y;
     first.m_z = level;
     TRmgMapItem* item = m_map.getMapItem(first.m_x, first.m_y, first.m_z);
-    item->m_movement.m_cost = 0;
-    item->m_previousTile.m_x = -1;
-    item->m_previousTile.m_y = -1;
-    item->m_previousTile.m_z = -1;
+    item->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
     m_map.floodConnectionCosts(first, 0);
     for (int entrance = 1; entrance < static_cast<int>(zone->m_entrances.size()); ++entrance) {
         TPoint from = zone->m_entrances[entrance];
@@ -9023,9 +9017,9 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
                 continue;
 
             TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
-            if (nextMapItem->m_tile.m_landType == eTerrainWater
+            if (nextMapItem->getLandType() == eTerrainWater
                 || !nextMapItem->m_tileData.m_roadPassable
-                || nextMapItem->m_tile.m_landType == eTerrainRock)
+                || nextMapItem->getLandType() == eTerrainRock)
                 continue;
 
             unsigned char nextRoadEntrance =
@@ -9185,7 +9179,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
     unsigned char sourceIsSnow;
     int riverType;
-    if (mapItem->m_tile.m_landType == eTerrainSnow) {
+    if (mapItem->getLandType() == eTerrainSnow) {
         sourceIsSnow = 1;
         riverType = 2;
     } else {
@@ -9206,9 +9200,9 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
                 || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.getHeight())
                 continue;
             mapItem = m_map.getMapItem(nextPosition.m_x, nextPosition.m_y, nextPosition.m_z);
-            if (mapItem->m_tile.m_landType == eTerrainWater
-                || mapItem->m_tile.m_landType == eTerrainRock
-                || (mapItem->m_tile.m_landType == eTerrainSnow) != sourceIsSnow)
+            if (mapItem->getLandType() == eTerrainWater
+                || mapItem->getLandType() == eTerrainRock
+                || (mapItem->getLandType() == eTerrainSnow) != sourceIsSnow)
                 continue;
             int nextCost = positionCost + (rand() & 31) + 1;
             if (mapItem->m_tile.m_roadType)
@@ -9343,12 +9337,11 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     openPositions.push_back(source);
     openCosts.push_back(0);
     mapItem = m_map.getMapItem(source);
-    mapItem->m_movement.m_cost = 0;
-    mapItem->m_previousTile = emptyPosition;
+    mapItem->setMovementCost(0, emptyPosition);
 
     unsigned char sourceIsSnow;
     int riverType;
-    if (mapItem->m_tile.m_landType == eTerrainSnow) {
+    if (mapItem->getLandType() == eTerrainSnow) {
         sourceIsSnow = 1;
         riverType = 2;
     } else {
@@ -9360,15 +9353,13 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     openPositions.push_back(source);
     openCosts.push_back(0);
     mapItem = m_map.getMapItem(source);
-    mapItem->m_movement.m_cost = 0;
-    mapItem->m_previousTile = emptyPosition;
+    mapItem->setMovementCost(0, emptyPosition);
 
     ++source.m_x;
     openPositions.push_back(source);
     openCosts.push_back(0);
     mapItem = m_map.getMapItem(source);
-    mapItem->m_movement.m_cost = 0;
-    mapItem->m_previousTile = emptyPosition;
+    mapItem->setMovementCost(0, emptyPosition);
 
     TRmgMapPosition position;
     TRmgMapPosition nextPosition;
@@ -9389,10 +9380,10 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
                 continue;
 
             mapItem = m_map.getMapItem(nextPosition);
-            if (mapItem->m_tile.m_landType == eTerrainWater
-                || mapItem->m_tile.m_landType == eTerrainRock
+            if (mapItem->getLandType() == eTerrainWater
+                || mapItem->getLandType() == eTerrainRock
                 || mapItem->isImpassable()
-                || (mapItem->m_tile.m_landType == eTerrainSnow) != sourceIsSnow)
+                || (mapItem->getLandType() == eTerrainSnow) != sourceIsSnow)
                 continue;
 
             int nextCost = positionCost + (rand() & 31) + 1;
@@ -9454,7 +9445,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
         int deltaIndex = sourceIsSnow
             ? g_snowRiverDeltaIndex[direction]
             : g_landRiverDeltaIndex[direction];
-        int landType = mapItem->m_tile.m_landType;
+        int landType = mapItem->getLandType();
         int prototypeIndex = 0;
         for (; prototypeIndex < m_objectPrototypes[TERRAIN_RIVER_DELTA].size();
              ++prototypeIndex) {
