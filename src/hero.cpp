@@ -1015,7 +1015,9 @@ void hero::initialize(short index)
                 static_cast<float>(random(100, 125));
 
     m_equipped[16].m_artifactId = ARTIFACT_CATAPULT;
-    MEMSET(m_army.m_armies, CREATURE_NONE, sizeof(m_army.m_armies), i);
+    // Mac 0xf4398..0xf43b8 retains the short-indexed empty-creature loop;
+    // use the native enum slot view without clearing troop quantities.
+    MEMSET(m_army.m_armyTypes, CREATURE_NONE, sizeof(m_army.m_armyTypes), i);
     m_pathTargetY = -1;
     m_pathTargetX = -1;
     m_level = 1;
