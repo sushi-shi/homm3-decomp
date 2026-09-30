@@ -3724,6 +3724,10 @@ void game::giveTroopsToNeutralTowns()
 // Removing the duplicate caller guard and named staging local is byte-flat.
 // The direct-owner hero predicate gives 96.1648%, with all 167 blocks aligned
 // and 103 branches agreeing; packed-point homes are the first residual.
+// DC 4116/4118/4122/4124 and 4189/4191/4195/4197 record the mirrored
+// invalid/valid assignment arms and one common break in each hero loop.
+// Mac d559c/d55ac and d5928/d5938 join those assignments. Restoring that
+// natural completion structure is byte-flat in the corrected predicate model.
 // Original DC public ?ValidateVictoryLossConditions@game@@QAAX_N@Z proves
 // checkMapLocations is bool; CodeView's byte primitive is its lowered form.
 VA(0x004bf780, 0x6E2)
@@ -3789,9 +3793,9 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
             if (vcheroLoc == poolheroLoc) {
                 if (isHumanTeam(m_heroes[i].m_owner)) {
                     victory.m_type = -1;
-                    break;
+                } else {
+                    victory.m_heroId = i;
                 }
-                victory.m_heroId = i;
                 break;
             }
         }
@@ -3832,13 +3836,11 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
                     if (isHumanTeam(team))
                         ++numHumanTeams;
                 }
-                if (numHumanTeams <= 1) {
-                    if (!isComputerTeam(getTeam(m_heroes[i].m_owner))) {
-                        loss.m_heroId = i;
-                        break;
-                    }
-                }
-                loss.m_type = -1;
+                if (numHumanTeams > 1
+                    || isComputerTeam(getTeam(m_heroes[i].m_owner)))
+                    loss.m_type = -1;
+                else
+                    loss.m_heroId = i;
                 break;
             }
         }
