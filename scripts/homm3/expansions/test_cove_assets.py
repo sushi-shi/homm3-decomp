@@ -4,7 +4,7 @@ import unittest
 
 from PIL import Image
 
-from .cove_assets import extend_def, pcx
+from .cove_assets import adventure_mask, extend_def, pcx
 
 
 def frame_directory(data):
@@ -15,6 +15,14 @@ def frame_directory(data):
 
 
 class NativeAssetsTest(unittest.TestCase):
+    def test_adventure_masks_cover_monsters_and_towns(self):
+        for width, height, expected in (
+            (96, 64, bytes.fromhex('030200000000e0e000000000e0e0')),
+            (192, 192, bytes.fromhex('0606fcfcfcfcfcfcfcfcfcfcfcfc')),
+        ):
+            with self.subTest(width=width, height=height):
+                self.assertEqual(adventure_mask(struct.pack('<4I', 67, width, height, 1)), expected)
+
     def setUp(self):
         self.palette = bytes(range(256)) * 3
         self.picture = Image.new('P', (2, 3), 17)

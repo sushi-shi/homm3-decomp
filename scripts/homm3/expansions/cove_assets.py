@@ -109,6 +109,20 @@ def interface_def(images):
     return extend_def(empty, images, "hallcove")
 
 
+def adventure_mask(sprite):
+    """Native MSK draw/shadow coverage, aligned to the lower-right map cell.
+
+    As in Complete's town masks, cover the sprite's full rectangle. Passability
+    and visitable cells remain separate in objects.txt and serialized H3M.
+    """
+    _, width, height, _ = struct.unpack_from('<4I', sprite)
+    columns, rows = (width + 31) // 32, (height + 31) // 32
+    if not 1 <= columns <= 8 or not 1 <= rows <= 6:
+        raise ValueError('Adventure sprite exceeds the native 8 by 6 mask')
+    bits = bytes(6 - rows) + bytes([(255 << (8 - columns)) & 255]) * rows
+    return bytes([columns, rows]) + bits + bits
+
+
 def package(upstream, base_data, output):
     from PIL import Image
     data = json.loads((ROOT / 'extensions/cove/definition.json').read_text())
@@ -167,6 +181,13 @@ def package(upstream, base_data, output):
     for animation in animations:
         file = source(animation)
         resources[file.name.lower()] = file.read_bytes()
+    map_animations = [v['graphics']['map'] for v in data['creatures'].values()]
+    map_animations += [v['animation'] for v in data['town']['mapObject']['templates'].values()]
+    for hero_class in data['heroClasses'].values():
+        map_animations += [v['animation'] for v in hero_class['mapObject']['templates'].values()]
+    for animation in map_animations:
+        file = source(animation)
+        resources[file.with_suffix('.msk').name.lower()] = adventure_mask(file.read_bytes())
     for creature in [data['cannon'], *data['creatures'].values()]:
         missile = creature['graphics'].get('missile', {}).get('projectile')
         if missile:
