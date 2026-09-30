@@ -759,13 +759,13 @@ public:
     long getAIValue() const;
     int getCreatureTotal() const;
     int getCreatureTotal(TCreatureType monType) const;
-    unsigned char isMember(TCreatureType monType) const;
+    bool isMember(TCreatureType monType) const;
     int canJoin(int monType) const;
-    unsigned char hasAllUndead() const;
+    bool hasAllUndead() const;
     // Dreamcast armygrp.cpp:668. Complete retains the same source helper at
     // its morale consumers; VC6 /Ob2 expands the loop and /OPT:REF removes
     // the unreferenced out-of-line copy from retail.
-    unsigned char hasSomeUndead() const;
+    bool hasSomeUndead() const;
     unsigned char merge(armyGroup* ag);
     void mergeArmies(armyGroup& source);
     void splitArmy(int srcIndex, armyGroup* ag, int destIndex,
@@ -786,13 +786,16 @@ public:
                   bool onCursedGround,
                   unsigned char groupAlignments,
                   bool applyLimits) const;
+    // Native GetArmyMorale/GetArmyLuck publics end _N2: applyLimits is
+    // bool. Complete widens the old cursed flag to terrain mode and adds
+    // the independent grouping byte to GetArmyMorale.
     int getArmyMorale(int index, const class hero* ownerHero,
                       const class town* ownerTown, int mode,
                       unsigned char arg5,
-                      unsigned char applyLimits) const;
+                      bool applyLimits) const;
     int getArmyLuck(int index, const class hero* ownerHero,
                     const class town* ownerTown, int mode,
-                    unsigned char applyLimits) const;
+                    bool applyLimits) const;
     // The older DC description publics also use _N for cursed ground.
     // Complete replaces it with the multi-valued magicTerrain argument.
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >

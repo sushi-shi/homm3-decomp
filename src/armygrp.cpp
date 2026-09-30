@@ -621,10 +621,11 @@ void armyGroup::initialize()
     memset(m_numTroops, 0, sizeof(m_numTroops));
 }
 
+// Original public ?HasAllUndead@armyGroup@@QBA_NXZ proves const bool.
 VA(0x0044ab20, 0x3A)
 DC_ADDRESS(0x04eb50, 0x36)
 MAC_ADDRESS(0x05814c, 0x48)
-unsigned char armyGroup::hasAllUndead() const
+bool armyGroup::hasAllUndead() const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
@@ -641,7 +642,8 @@ unsigned char armyGroup::hasAllUndead() const
 // image gap contains Dismiss rather than this body.
 DC_ADDRESS(0x04eb88, 0x36)
 MAC_ADDRESS(0x058194, 0x48)
-unsigned char armyGroup::hasSomeUndead() const
+// Original public ?HasSomeUndead@armyGroup@@QBA_NXZ proves const bool.
+bool armyGroup::hasSomeUndead() const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
@@ -664,7 +666,8 @@ void armyGroup::dismiss(int whichIndex)
 VA(0x0044ab80, 0x21)
 DC_ADDRESS(0x04ebd0, 0x20)
 MAC_ADDRESS(0x0581f8, 0x94)
-unsigned char armyGroup::isMember(TCreatureType monType) const
+// Original public ?IsMember@armyGroup@@QBA_NW4TCreatureType@@@Z proves bool.
+bool armyGroup::isMember(TCreatureType monType) const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == monType)
@@ -929,7 +932,7 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
 VA(0x0044b100, 0x1C9)
 DC_ADDRESS(0x04f160, 0xac)
 MAC_ADDRESS(0x058b60, 0x270)
-int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, unsigned char applyLimits) const
+int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, bool applyLimits) const
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
@@ -1020,7 +1023,7 @@ int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero*
 VA(0x0044b3c0, 0xED)
 DC_ADDRESS(0x04f2e8, 0x3e)
 MAC_ADDRESS(0x058f48, 0x178)
-int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char applyLimits) const
+int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, bool applyLimits) const
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
