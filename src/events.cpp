@@ -2193,9 +2193,10 @@ void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
 // DC 1979-2019 builds the message with operator+=.
 // DC's local records retain enum SpellID vectors and loop variable; use the
 // canonical ESpellId domain through their comparator and sort instantiations.
-// Residual: the final taught-message += retains string::append
-// where retail expands it. Both builds destroy formatString's temporary at
-// the end of that expression; extending its lifetime lacks source evidence.
+// Residual: the initial max operand temporaries occupy opposite stack homes,
+// and the frame/string-operation layout differs. Named string calls agree,
+// including the expanded final taught-message append. Both builds destroy
+// formatString's temporary at expression end; do not extend its lifetime.
 VA(0x004a2940, 0x85C)
 DC_ADDRESS(0x093464, 0x556)
 MAC_ADDRESS(0x0ae320, 0x6dc)  // anchor-callee from do_event_hero + full retail semantics
