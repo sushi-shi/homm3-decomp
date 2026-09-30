@@ -10,7 +10,7 @@
 #include "quest.h"
 
 // E:\gamedcs\seerhut.cpp:50
-unsigned char initializeSeerHutText();
+bool initializeSeerHutText();
 
 class hero;
 class NewmapCell;

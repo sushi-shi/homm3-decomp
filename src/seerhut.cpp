@@ -106,10 +106,12 @@ std::string formatString(const char* format, ...);
 // ResourceManager's canonical inline helper restores that decision and makes
 // the Windows body exact without changing the seven retained calls.
 // E:\gamedcs\seerhut.cpp:50
+// Original public ?InitializeSeerHutText@@YA_NXZ proves a bool result;
+// CodeView's lowered primitive 0x20 displays it as unsigned char.
 VA(0x0056c3e0, 0x183)
 DC_ADDRESS(0x12cd28, 0x35c)
 MAC_ADDRESS(0x2545ec, 0x124)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
-unsigned char initializeSeerHutText()
+bool initializeSeerHutText()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00683214, seerHutSpreadsheetName, "seerhut.txt"));
