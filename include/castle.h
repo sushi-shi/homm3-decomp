@@ -31,8 +31,8 @@ int canBuy(const town* currTown, int buildingId);
 // Retail extends the Dreamcast hall-screen table with Conflux while
 // preserving the original 18-byte row width. SetupCastle copies one row
 // into its working order and advances entries along their upgrade chains.
-extern const unsigned char g_townSpecStructScreen[9][18];
-extern const unsigned char g_numOfTownSpecStrScreen[9];
+extern unsigned char g_townSpecStructScreen[9][18];
+extern unsigned char g_numOfTownSpecStrScreen[9];
 
 // The four parallel widget bands driven by SetupCastle. Values are the
 // Complete message operands; the names are reconstructed from their roles.

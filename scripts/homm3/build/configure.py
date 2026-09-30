@@ -135,6 +135,7 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
                 "cl",
                 inputs=unit["source"],
                 implicit=["scripts/homm3/core/cc_wrap.py", "scripts/homm3/core/project.py",
+                          "scripts/homm3/core/compile_receipt.py",
                           "config/units.toml", "config/project.toml"],
                 variables={
                     "flags": " ".join(profiles[unit["flags"]]),
@@ -216,6 +217,7 @@ def write_objdiff(build: dict, units: list[dict]) -> None:
         "$schema": "https://raw.githubusercontent.com/encounter/objdiff/main/config.schema.json",
         "build_base": False,
         "build_target": False,
+        "options": {"functionRelocDiffs": "all"},
         "watch_patterns": ["*.obj"],
         "units": entries,
     }, indent=2) + "\n")

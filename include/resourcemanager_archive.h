@@ -14,11 +14,15 @@ struct SoundHeaderStruct;
 struct TResourceArchiveList {
 public:
     int m_count;
-    int* m_indices;
+    const int* m_indices;
 };
 
 struct TResourceArchiveContext {
 public:
+    TResourceArchiveContext(int spriteCount, const int* sprites,
+                            int bitmapCount, const int* bitmaps,
+                            int soundCount, const int* sounds);
+
     TResourceArchiveList m_sprites;
     TResourceArchiveList m_bitmaps;
     TResourceArchiveList m_sounds;
@@ -43,6 +47,8 @@ extern TResourceArchiveContext g_resourceArchiveContexts[4];
 // its count, and the Windows file handle used for the positioned read.
 struct TSoundHeaderDescriptor {
 public:
+    TSoundHeaderDescriptor(SoundHeaderStruct** sounds, int* count, HANDLE* file);
+
     SoundHeaderStruct** m_sounds;
     int* m_count;
     HANDLE* m_file;

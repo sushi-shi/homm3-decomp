@@ -21,6 +21,7 @@ class NormalizeUnitTest(unittest.TestCase):
         self.enterContext(patch.object(normalize_objs, "retail_image_base", return_value=0x400000))
         self.dir = tempfile.TemporaryDirectory()
         root = Path(self.dir.name)
+        self.enterContext(patch.object(normalize_objs, 'DATA_MANIFEST', root / 'data.tsv'))
         self.enterContext(patch.object(normalize_objs, "FUNCLETS", root / "funclets.tsv"))
         self.enterContext(patch.object(normalize_objs, "FUNCTIONS", root / "functions.tsv"))
         self.objdiff = root / "objdiff"

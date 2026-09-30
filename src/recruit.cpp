@@ -90,25 +90,15 @@ void recruitSliderCallback(int state, heroWindow* parentWindow)
 // variable one-to-four creature cards and a final AddWidget registration
 // pass. The resource columns shift right 24 pixels when no alternate
 // resource exists; retail spells that branchlessly in edi.
-// Residual (99.01%): all 185 semantic blocks and all 89 branches, including
-// every symbolic branch target, agree. Retail keeps the incremented
-// altResource value in EDI through its 0/24 selection; this compile creates
-// the same value through EAX and moves it to EDI, after which only C1/C2
-// register/EH-slot scheduling differs. Measured source forms: direct ternary
-// 97.19%, default-then-if 98.71% with an extra branch, boolean multiply
-// 98.83%, zero-test ternary 97.45%, and reusing or pre-initializing the
-// parameter/local 97.38/97.45%. `homm3 vc6 why-reg --model` sees 407
-// register-visible slots; its only legal first-created parameter alias is
-// copy-propagated and flat, classifying the rest as front-end handle state.
-// [polish 16] Two more measured and rejected, and they bound the shape from
-// both sides: the declaration form is inert - hoisting the initialiser to
-// first use (`int resource_shift = altResource ? 0 : 0x18;` with no separate
-// declaration) is byte-flat at 99.0102 to the digit - and the interleave is
-// NOT source-movable: retail's `mov eax,[esi+4]` sits above the neg/sbb
-// chain, but writing the selection AFTER `Widgets.reserve(49)` to produce
-// that order costs 4.82 (94.1908, four size-only blocks). The `and al,-0x18`
-// is a CONSEQUENCE of landing in EAX, not a cause - VC6 has no 8-bit form
-// for EDI - so nothing at this site can move the allocation. WALL.
+// DC line 193 has no shift local: it overwrites the altResource parameter
+// with the 0/24 selection (Locals: none; r10 reused). Writing that
+// parameter reuse as `altResource != -1 ? 0 : 0x18` reproduces retail's
+// inc/neg/sbb selection in EDI and its interleaved vector load
+// (99.01 -> 99.23; the remaining rows are the ICF-folded _Ufill twin name).
+// Measured on the same parameter reuse: `== -1 ? 0x18 : 0` and the if/else
+// 97.08%, `(altResource + 1) ? 0 : 0x18` and a pre-increment 97.35%. The
+// older separate-local forms (ternary, default-then-if, boolean multiply)
+// all stayed at or below 99.01%.
 // DC lines 207/215/218/224 name the four TTextResource::operator[] calls
 // below; restoring that canonical wrapper is VC6 byte-flat at 99.01016%.
 VA(0x0054e850, 0x1295) MAC_ADDRESS(0x14d310, 0x186c)  // unique x86/DC structure + constructor call, dc 0x118bb4
@@ -116,9 +106,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
                                recruitUnit* recruitInfo)
     : heroWindow(x2, y2, 0x1e5, 0x18b, 0x12)
 {
-    int resourceShift;
-    ++altResource;
-    resourceShift = altResource ? 0 : 0x18;
+    altResource = (altResource != -1) ? 0 : 0x18;
 
     m_widgets.reserve(49);
     m_widgets.push_back(new bitmapBorder(0, 0, 0x1e5, 0x18b, 0,
@@ -144,14 +132,14 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         font::PRIMARY, 0x1f4,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new iconWidget(resourceShift + 0x4a, 0xf3,
+    m_widgets.push_back(new iconWidget(altResource + 0x4a, 0xf3,
         0x20, 0x20, 0x1f8,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
     m_widgets.push_back(new iconWidget(0x7a, 0xf3, 0x20, 0x20, 0x1fc,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new textWidget(resourceShift + 0x42, 0x117,
+    m_widgets.push_back(new textWidget(altResource + 0x42, 0x117,
         0x30, 0x11,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
@@ -195,14 +183,14 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x20f,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new iconWidget(resourceShift + 0x14c, 0xf3,
+    m_widgets.push_back(new iconWidget(altResource + 0x14c, 0xf3,
         0x20, 0x20, 0x210,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
     m_widgets.push_back(new iconWidget(0x17c, 0xf3, 0x20, 0x20, 0x211,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new textWidget(resourceShift + 0x144, 0x117,
+    m_widgets.push_back(new textWidget(altResource + 0x144, 0x117,
         0x30, 0x11,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
@@ -300,8 +288,8 @@ TRecruitWindow::~TRecruitWindow()
 // E:\gamedcs\recruit.cpp:302
 // Retail's Complete-only elemental-card rule is the four-compare chain at
 // 0x54fbd5: when the campaign/version flag is zero, the four base elementals
-// use background index -1 (the deliberately biased akCreatureBackgrounds
-// base). `name_y` is genuinely unused here; the constructor uses it for the
+// have alignment -1 and select the neutral background at table index zero.
+// `name_y` is genuinely unused here; the constructor uses it for the
 // adjacent name widgets after calling this helper.
 // Residual (93.6325%): blocks B0..B24, including all three allocations and
 // constructor calls, are instruction-for-instruction exact. The only delta is
@@ -321,7 +309,7 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
 {
     m_widgets.push_back(new bitmapBorder(startX, startY, 100, 130,
         slot + 0x21e,
-        g_creatureBackgrounds[g_game->getAlignment(creature)],
+        g_creatureBackgroundNames[g_game->getAlignment(creature) + 1],
         0x800));
 
     m_creatureWidgets[slot] = new iconWidget(startX, startY, 100, 130,
@@ -760,6 +748,12 @@ int finishRecruitUnit(message& msg)
 // second slot; VC6 currently reuses one for all four. DC and the bounded Mac
 // counterpart each retain four distinct shadowed locals, so this does not
 // justify a synthetic Windows-only object or scope.
+// The timeout and remote-abort checks share one abortDialog flag and one
+// exitRecruitUnit call. DC 707/723 and Mac 0x14fb94/0x14fc10 show two helper
+// calls, but retail Windows jumps from the timeout test forward into the
+// single tail after the network check; two `return exitRecruitUnit(msg)`
+// sites leave VC6 with two tails (95.74%), the shared flag 99.89% (the
+// explicit four stores instead of the helper call are byte-identical).
 // The admitted Mac Main pair is currently unavailable: CodeWarrior emits an
 // anonymous 16-byte zero template for DC's const monType[4] array that Mac
 // retail never loads; Main also expands setRolloverText in the candidate while
@@ -767,18 +761,20 @@ int finishRecruitUnit(message& msg)
 VA(0x00550940, 0xA08) MAC_ADDRESS(0x14fb54, 0xb8c)  // anchor-callee + switch-table bracket, dc 0x11a30c
 int recruitUnit::main(message& msg)
 {
-    if (g_turnDuration.isExpired())
-        return exitRecruitUnit(msg);
+    unsigned char abortDialog = g_turnDuration.isExpired();
 
-    if (g_remoteOn) {
+    if (!abortDialog && g_remoteOn) {
         unsigned char msgReceived = 0;
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {
             handler->checkHandleNet(1, &msgReceived);
             if (msgReceived && handler->getAbortPopupMsg())
-                return exitRecruitUnit(msg);
+                abortDialog = 1;
         }
     }
+
+    if (abortDialog)
+        return exitRecruitUnit(msg);
 
     long elapsed = GameTime::get()
                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
@@ -1213,7 +1209,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
 
     recruitWindow->addWidget(new bitmapBorder(30, 44, 100, 130, 0x21e,
-        g_creatureBackgrounds[g_game->getAlignment(monType)],
+        g_creatureBackgroundNames[g_game->getAlignment(monType) + 1],
         0x800), -1);
     recruitWindow->addWidget(new iconWidget(30, 44, 100, 130, 0x216,
         g_creatureTypeTraits[monType].m_spriteName,

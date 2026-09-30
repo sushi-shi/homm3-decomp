@@ -191,11 +191,10 @@ extern int g_skipDigitalDriverOpen;
 
 // Retail PC Miles initialization state used only by Open. The three .data
 // configuration dwords begin at 0x684aa8; the 16-byte PCM descriptor is at
-// 0x69fe80; and the successful sample-handle count occupies 0x684ae0.
+// 0x69fe80. The successful handle count updates the final channel range.
 extern int g_soundSampleRate;
 extern int g_soundBitsPerSample;
 extern int g_soundOutputChannels;
-extern int g_soundMaxSamples;
 extern PCMWAVEFORMAT g_soundWaveFormat;
 
 // Retail .bss 0x69fe78: the Miles stream handle. Named from the import
@@ -255,7 +254,7 @@ void __cdecl processStopAndPlayMP3(void* arglist);
 // "Underground"). The folded base retail encodes is 0x684ae0 = the
 // array minus the two-dword bias, which is why the delinker invented a
 // data symbol there.
-extern const char* const g_terrainMusic[9];
+extern const char* g_terrainMusic[9];
 
 // Retail .data 0x678330: terrain -> music id, the nine bytes
 // {8,7,3,4,5,9,10,6,2} read straight from the image. SetMusicVolume

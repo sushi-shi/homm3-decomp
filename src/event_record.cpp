@@ -1193,10 +1193,10 @@ void game::playRecordedEvents()
     size = m_eventRecords.size();
     unsigned char interrupted = 0;
     message msg;
-    int savedWalkSpeed = g_config.m_computerWalkSpeed;
+    int savedWalkSpeed = g_config.m_walkSpeed[0];
     unsigned char savedSuppress = g_config.m_blackoutComputer != 0;
-    if (g_config.m_computerWalkSpeed > 4)
-        g_config.m_computerWalkSpeed = 4;
+    if (g_config.m_walkSpeed[0] > 4)
+        g_config.m_walkSpeed[0] = 4;
     g_config.m_blackoutComputer = 0;
 
     for (int j = 0; j < size; ++j) {
@@ -1225,7 +1225,7 @@ void game::playRecordedEvents()
     if (currTown != 0)
         g_advManager->setTownContext(currTown->m_id, 0, 1);
 
-    g_config.m_computerWalkSpeed = savedWalkSpeed;
+    g_config.m_walkSpeed[0] = savedWalkSpeed;
     g_config.m_blackoutComputer = savedSuppress;
     g_advManager->completeDraw(0);
     g_advManager->updateScreen(0, 0);

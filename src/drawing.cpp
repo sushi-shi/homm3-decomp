@@ -28,9 +28,15 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// DC declares CombatAreaLimits_Visible as a const SLimitData class static.
+// Retail CRT 0x602110 constructs the full 800x600 viewport; no other reviewed
+// retail reference survives to this object.
+DATA(0x006aad00) const SLimitData combatManager::s_visibleCombatAreaLimits(0, 0, 799, 599);
+
 // DC attests combatManager::CombatAreaLimits; the retail address and all four
 // dword lanes are proven by ResetLimitCreature and thirteen other readers.
-DATA(0x006aace8) TDrawbridgeBounds g_combatAreaLimits;
+// CRT 0x602140 initializes an empty accumulation rectangle: (799,599)..(0,0).
+DATA(0x006aace8) TDrawbridgeBounds g_combatAreaLimits(799, 599, 0, 0);
 
 // UpdateGrid's private "the grid bitmap has been posted" latch. It is
 // cleared when the caller says the clean battlefield was reposted and set
@@ -627,7 +633,8 @@ void combatManager::setupGridForArmy(const army* thisArmy)
         return;
     if (thisArmy->m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
         return;
-    if (!g_config.m_showCombatGrid && !m_creaturePlacement)
+    // DC 0x842c8 and retail +0x26 test gConfig+0x6c, the shade preference.
+    if (!g_config.m_combatShadeLevel && !m_creaturePlacement)
         return;
 
     thisArmy->getAttackMask(thisArmy->m_gridIndex, 2, -1);

@@ -1,4 +1,5 @@
 #include "va.h"
+#include "text.h"
 
 #include "adventureoptionswindow.h"
 
@@ -16,7 +17,6 @@
 // DC public gAdventureOptionsHelp; retail consumers prove seven THelpText
 // rows at 0x6a6530 (the sixth row is unused by this dialog's ID mapping).
 // Do not conflate it with Dreamcast's separate gAdventureWindowHelp table.
-DATA(0x006a6530) extern THelpText g_adventureOptionsHelp[7];
 
 // File-static hover latch: the retail initializer at 0x65f46c is -1 and the
 // handler is its only image-wide reader/writer.
@@ -157,7 +157,7 @@ int TAdventureOptionsWindow::windowHandler(message& msg)
             || msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
             int helpID = convertID2HelpID(msg.m_codeY);
             if (helpID != -1)
-                normalDialog(g_adventureOptionsHelp[helpID].m_text,
+                normalDialog(g_adventureOptionsHelp[helpID].m_rclick,
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
     } else if (msg.m_id == MESSAGE_WIDGET) {

@@ -49,7 +49,7 @@ enum EAreaAttackCreature {
     CREATURE_MARKSMAN = 0x3,
     CREATURE_MONK = 0x8,
     CREATURE_ZEALOT = 0x9,
-    CREATURE_WOOD_ELF = 0x12,
+    // CREATURE_WOOD_ELF is shared with hero specialties in TCreatureType.
     CREATURE_GRAND_ELF = 0x13,
     CREATURE_MASTER_GREMLIN = 0x1d,
     CREATURE_TITAN = 0x29,

@@ -179,7 +179,7 @@ def load_data(root: Path) -> list[DataPair]:
             head = declaration.split("=", 1)[0].rstrip("; \n\t")
             match = re.fullmatch(
                 r'\s*(?:(?:extern|static)\s+)?(?:(?:const|volatile|unsigned|signed|long|short)\s+)*'
-                + _STORAGE_TYPE + r'(?:\s+|\s*\*\s*(?:const\s+)?)'
+                + _STORAGE_TYPE + r'(?:\s+|\s*\*\s*(?:const\s+)?|\s*&\s*)'
                 r'(?:(?P<plain>\w+(?:::\w+)*)|\(\s*&\s*(?P<reference>\w+)\s*\))'
                 r'\s*(?:\[[^\[\];]*\]\s*)*', head, re.DOTALL)
             name = (match.group("plain") or match.group("reference")) if match else None

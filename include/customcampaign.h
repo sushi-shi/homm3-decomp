@@ -474,7 +474,7 @@ enum ECampaignStartOptionType {
 // when the town is set (41 rows a town). Neither table is claimed yet, so
 // the outer bound is left open rather than invented.
 extern const char* g_campaignBuildingIconNames[][44];
-extern const int g_eventBuildingIds[][41];
+extern int g_eventBuildingIds[][41];
 
 // The two mixed resource selectors a resource bonus can carry beside the
 // seven EGameResource rows, byte-read off the ten-entry jump tables the

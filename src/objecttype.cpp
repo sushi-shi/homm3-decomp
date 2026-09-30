@@ -5,6 +5,23 @@
 // registry here; the registry's tree nodes hold a VC6 std::string at +0x0c.
 #include "va.h"
 
+// Retail CRT slots 607/608 (0x516590/0x5165c0) construct <iostream>'s two
+// header statics, _Ios_init at 0x69cb59 and _Wios_init at 0x69cb58, and
+// register their destructors; this compiland included the header.
+// Its facet-id initializer 0x51b830 also guards num_put (0x6aba98) before
+// num_get (0x6aba7c); no recovered code here instantiates num_put, so that
+// 121-byte body stays unmatched. VC6 orders those guards by instantiation:
+// any arithmetic insertion into an ostream parsed before the first
+// arithmetic extraction - even inside an unreferenced inline function that
+// emits no code - reproduces retail's ctype<unsigned short>, num_put,
+// num_get, numpunct body exactly. Retail keeps no ostream code in this
+// compiland, so that insertion was dead code the linker removed; its
+// content is unknown and is not invented here.
+// Open question (for the user): whether a hypothesised dead writer, such as
+// an unreferenced operator<< for TObjectType placed before operator>>, may
+// be admitted on this evidence alone. Until then 0x51b830 and its CRT slot
+// stay unverified.
+#include <iostream>
 #include <map>
 #include <stdlib.h>
 #include <string>
@@ -137,6 +154,10 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType);
 MAC_ADDRESS(0x223798, 0x78)
 static TObjectImageNameTable& getObjectImageNames()
 {
+    // Inlined into both callers: bit 0 of 0x69cb64 guards the table and
+    // its destructor callback 0x514050 is registered with _atexit.
+    DATA_COMPGEN_GUARD(0x0069cb64, imageNamesGuard, imageNames)
+    DATA(0x0069cb80)
     static TObjectImageNameTable imageNames;
     return imageNames;
 }
@@ -407,16 +428,16 @@ TObjectType& TObjectType::setImageName(
         imageCache.push_back(TImageInfo(emptySize));
         TImageInfo* record = &imageCache[oldCount];
 
+        // Retail keeps the suffix as .rdata array storage (0x640280), while
+        // "default.msk" below remains a pooled .data literal.
+        DATA(0x00640280) static const char maskExtension[] = ".msk";
         std::basic_string<char, std::char_traits<char>,
                           std::allocator<char> > maskName(name);
         std::string::size_type dot = maskName.rfind('.');
         if (dot != std::string::npos) {
-            maskName.replace(dot, maskName.size() - dot,
-                             DATA_COMPGEN(0x00640280, objectMaskExtension,
-                                          ".msk"));
+            maskName.replace(dot, maskName.size() - dot, maskExtension);
         } else {
-            maskName += DATA_COMPGEN(0x00640280, objectMaskExtension,
-                                     ".msk");
+            maskName += maskExtension;
         }
 
         LODFile* maskFile =
@@ -458,6 +479,9 @@ VA(0x00514960, 0xAD) MAC_ADDRESS(0x223dcc, 0x80)
 const std::basic_string<char, std::char_traits<char>, std::allocator<char> >&
 TObjectType::getImageName()
 {
+    // Bit 0 of 0x69cb70 guards the empty string; 0x514a10 releases it.
+    DATA_COMPGEN_GUARD(0x0069cb70, emptyImageNameGuard, emptyImageName)
+    DATA(0x0069cb48)
     static std::string emptyImageName;
     TObjectImageNameTable& imageNames = getObjectImageNames();
 
@@ -878,6 +902,14 @@ VA_COMPGEN(0x00404640, 0x1D, EXCEPTION_DORAISE, logic_error)
 VA_COMPGEN(0x00404660, 0x21, SCALAR_DELETING_DTOR, logic_error)
 VA_COMPGEN(0x00404690, 0x4B, IMPLICIT_DTOR, logic_error)
 VA_COMPGEN(0x004046e0, 0x1D, EXCEPTION_DORAISE, out_of_range)
+
+// Retail 0x4b6be3 stores runtime_error's vptr (0x645640); its COL names
+// .?AVruntime_error@std@@. The ordinary SDK destructor emitted here agrees
+// instruction-for-instruction, including delete and exception::~exception.
+// The former game.cpp out_of_range claim was a mnemonic-only pairing:
+// out_of_range's emitted destructor instead installs logic_error's vptr and
+// is identical to the 0x404690 body above. No authored helper is removed.
+VA_COMPGEN(0x004b6be0, 0x4B, IMPLICIT_DTOR, runtime_error)
 
 // The old count-insert claim at 0x46aeb0 named TImageInfo only because
 // its trivial 24-byte record produced the same generic vector code. Retail

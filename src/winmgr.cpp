@@ -964,10 +964,10 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
     for (int shift = 0; shift < 3; shift++) {
         unsigned long nextFadeTime = GameTime::get() + fadePeriod;
         unsigned long time1 = GameTime::get();
-        unsigned char* sourceBytes = static_cast<unsigned char*>(
-            static_cast<void*>(bmpFadeSource.getMap(0, 0)));
         unsigned char* destinationBytes = static_cast<unsigned char*>(
             static_cast<void*>(m_screenBitmap->getMap(0, 0)));
+        unsigned char* sourceBytes = static_cast<unsigned char*>(
+            static_cast<void*>(bmpFadeSource.getMap(0, 0)));
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
             const unsigned int* src = static_cast<const unsigned int*>(
                 static_cast<void*>(sourceBytes));
@@ -978,11 +978,12 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
                 unsigned long blue = (r & redMask2) >> shift;
                 unsigned long green = (r & greenMask2) >> shift;
                 unsigned long red = (r & blueMask2) >> shift;
-                dst[x] = (red & blueMask2) | (green & greenMask2)
+                *dst = (red & blueMask2) | (green & greenMask2)
                     | (blue & redMask2);
+                dst++;
             }
-            sourceBytes += bmpFadeSource.getPitch();
             destinationBytes += m_screenBitmap->getPitch();
+            sourceBytes += bmpFadeSource.getPitch();
         }
         blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
                                 WINDOW_SCREEN_HEIGHT);
@@ -1007,6 +1008,17 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 // half-brightness frame and the full-brightness image is restored by
 // the Draw below rather than by a pass of its own.
 
+// Dreamcast rows 1957/1958 (FadeToBlack 1804/1805) take the screen map for
+// dst before the fade copy's map for src, store with `*dst = ...` and
+// `dst++` on separate rows (1973/1974), and advance dst's row before src's
+// on row 1977 (1824). Both fades follow that order (fadeToBlack 90.58 ->
+// 91.15, fadeFromBlack 90.85 -> 93.21). Retail's inner loop still keeps src
+// as its one pointer induction variable and stores through
+// [dst - src + src_next - 4]; this body keeps a separate dst pointer.
+// Probes (2026-09-29): in the old src-first order *dst/dst++ and swapped
+// declarations alone were byte-flat; src[x] with dst[x] or *dst++ merges the
+// pointers but makes dst the primary one (88.63/89.35%; 87.72% in the
+// Dreamcast order).
 VA(0x006032e0, 0x1E5) MAC_ADDRESS(0x20ea78, 0x26c)  // anchor-caller, dc 0x19c3b8
 void heroWindowManager::fadeFromBlack(int speed)
 {
@@ -1021,10 +1033,10 @@ void heroWindowManager::fadeFromBlack(int speed)
     for (int shift = 2; shift > 0; shift--) {
         unsigned long deadline = GameTime::get() + fadePeriod;
         unsigned long started = GameTime::get();
-        unsigned char* sourceBytes = static_cast<unsigned char*>(
-            static_cast<void*>(fadeFrom.getMap(0, 0)));
         unsigned char* destinationBytes = static_cast<unsigned char*>(
             static_cast<void*>(m_screenBitmap->getMap(0, 0)));
+        unsigned char* sourceBytes = static_cast<unsigned char*>(
+            static_cast<void*>(fadeFrom.getMap(0, 0)));
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
             const unsigned int* src = static_cast<const unsigned int*>(
                 static_cast<void*>(sourceBytes));
@@ -1035,11 +1047,12 @@ void heroWindowManager::fadeFromBlack(int speed)
                 unsigned long blue = (pair & maskRed) >> shift;
                 unsigned long green = (pair & maskGreen) >> shift;
                 unsigned long red = (pair & maskBlue) >> shift;
-                dst[x] = (red & maskBlue) | (green & maskGreen)
+                *dst = (red & maskBlue) | (green & maskGreen)
                     | (blue & maskRed);
+                dst++;
             }
-            sourceBytes += fadeFrom.getPitch();
             destinationBytes += m_screenBitmap->getPitch();
+            sourceBytes += fadeFrom.getPitch();
         }
         blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
                                 WINDOW_SCREEN_HEIGHT);

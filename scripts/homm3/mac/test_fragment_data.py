@@ -41,6 +41,48 @@ evidence = "Complete reviewed static-member initializer and consumer."
             self.assertEqual(pair.definition, "")
             self.assertTrue(pair.declaration_only)
 
+    def test_external_scalar_reference_uses_storage_without_copying_initializer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
+            (root / "src").mkdir()
+            owner = root / "src/owner.cpp"
+            manifest = root / "config/mac/data.toml"
+            body = f'''[[data]]
+retail_va = 0x00400100
+source = "src/owner.cpp"
+mac_section = 1
+mac_offset = 0x40
+mac_size = 4
+sha256 = "{sha256(bytes(4)).hexdigest()}"
+evidence = "Reviewed reference storage and its retained consumer."
+'''
+            manifest.write_text(body + 'declaration_only = true\n')
+            for declaration, expected in (
+                ("int& context = backing;", "extern int& context;"),
+                ("const int & context = backing;", "extern const int & context;"),
+                ("extern int& context;", "extern int& context;"),
+            ):
+                with self.subTest(declaration=declaration):
+                    owner.write_text("DATA(0x00400100) " + declaration)
+                    pair, = load_data(root)
+                    self.assertEqual(pair.name, "context")
+                    self.assertEqual(pair.mac_symbol, "context")
+                    self.assertEqual(pair.definition, expected)
+                    self.assertTrue(pair.declaration_only)
+                    self.assertFalse(pair.read_only)
+            for declaration in ("int&& context = backing;", "int& context();"):
+                with self.subTest(declaration=declaration):
+                    owner.write_text("DATA(0x00400100) " + declaration)
+                    with self.assertRaisesRegex(SourceError, "unsupported Mac data definition"):
+                        load_data(root)
+            # Address binding does not establish an initializer byte match.
+            owner.write_text("DATA(0x00400100) int& context = backing;")
+            manifest.write_text(body)
+            with self.assertRaisesRegex(SourceError, "unsupported Mac data definition"):
+                load_data(root)
+
     def test_registered_file_scope_const_table_and_duplicate_rejection(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

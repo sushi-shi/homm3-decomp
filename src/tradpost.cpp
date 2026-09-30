@@ -1231,17 +1231,6 @@ TSellCreatureWindow::~TSellCreatureWindow()
 // Both are also the two rows the Dreamcast source order puts immediately
 // before DoMarket.
 
-// The marketplace dialogs' per-widget rollover/right-click help pairs, loaded
-// from text resources when a window is built. Only the rollover (.text) side is
-// read by SetRolloverText; the .rclick side (the odd 4-byte cells retail keeps
-// between them) is the 8-byte stride byte-proven by the widget ids' fixed
-// element offsets. tradpost-private (no other unit references this band).
-DATA(0x006a53a8) static THelpText g_giveHelpText[5];
-DATA(0x006a5868) static THelpText g_marketHelpText[6];
-DATA(0x006a6c50) static THelpText g_sellArtHelpText[5];
-DATA(0x006a7da8) static THelpText g_buyArtHelpText[5];
-DATA(0x006a7e98) static THelpText g_sellCreaHelpText[5];
-
 DATA(0x006aaa70) static unsigned char g_backpackStart;
 
 // The marketplace artifact list borrows either game::m_marketArtifacts or a
@@ -1288,18 +1277,22 @@ DATA(0x006aaaa0) static int g_marketWindowY;
 // coordinates it stamps on each populated creature widget (WIDGET_SET_Y) and
 // the char* caption it copies into the left-column label. Referenced only by
 // TSellCreatureWindow::Update; names provisional, addresses byte-proven.
-// Complete's seven initialized row positions agree on both architectures.
-DATA(0x0068c4c0) static int g_creatureRowY[7] = {
-    191, 191, 191, 289, 289, 289, 387
+// Complete's eight initialized positions agree on both architectures
+// (Windows 0x68c4c0, Mac 1+0x58400): seven army rows, then 518, the Y of
+// this window's bottom text widget (textWidget at y 518 in its constructor).
+DATA(0x0068c4c0) static int g_creatureRowY[8] = {
+    191, 191, 191, 289, 289, 289, 387, 518
 };
 // 0x6a54ec aliases g_specialBuildingNames[6][4], not independent storage.
 
 // The resource-column row Y coordinates the Trade/Give/Buy Updates stamp on
 // each value widget (WIDGET_SET_Y). Provisional name.
-// Both retail tables contain 230,230,230,309,309,309,388; the Mac
-// resource-column loop loads them from section 1+0x583e0.
-DATA(0x0068c4a0) static int g_resourceValueWidgetY[7] = {
-    230, 230, 230, 309, 309, 309, 388
+// Both retail tables contain 230,230,230,309,309,309,388,497; the Mac
+// resource-column loop loads them from section 1+0x583e0. Both images
+// place g_creatureRowY exactly 32 bytes later, and the eighth word, 497, is
+// the Y of the constructors' bottom text widgets (textWidget at y 497).
+DATA(0x0068c4a0) static int g_resourceValueWidgetY[8] = {
+    230, 230, 230, 309, 309, 309, 388, 497
 };
 // The former subtitle cell at 0x6a542c is g_specialBuildingNames[2][0]:
 // 0x6a53d4 + 22*sizeof(char*). Both retail builds use that table entry;
@@ -2816,21 +2809,24 @@ void TBuyArtifactWindow::computeTradeRatios(int inLeftResource,
     }
 }
 
+// DC gives the market value its own row (2240, with the __utos conversion)
+// before the division row 2241. The artifact reads and the clamp have one
+// scope per body (a braced body has two), so they stay unbraced.
 VA(0x005ecdc0, 0xbb) MAC_ADDRESS(0x1f845c, 0x118)  // dc 0x18afd4
 void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
 {
     type_artifact artifact;
-    if (inLeftResource < 18) {
+    if (inLeftResource < 18)
         artifact = g_marketHero->getArtifact(TArtifactSlot(inLeftResource));
-    }
     else
         artifact = g_marketHero->getBackpack(inLeftResource - 18);
 
     float leftValue =
         static_cast<float>(g_artifactTraits[artifact.m_artifactId].m_cost)
         * g_artifactPurchaseEfficency[g_marketCount];
-    float result =
-        leftValue / static_cast<float>(getMarketValue(EGameResource(inRightResource)));
+    float marketValue =
+        static_cast<float>(getMarketValue(EGameResource(inRightResource)));
+    float result = leftValue / marketValue;
     if (result < 1.0f)
         result = 1.0f;
 
@@ -3092,11 +3088,11 @@ VA(0x005ed3a0, 0x1a2) MAC_ADDRESS(0x1f8dac, 0x1a4)  // dc 0x18b7c4
 void TTradeResourceWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
-    case MARKET_LEFT_PANEL_ID:  strcpy(g_text, g_marketHelpText[0].m_text); break;
-    case MARKET_RIGHT_PANEL_ID: strcpy(g_text, g_marketHelpText[1].m_text); break;
-    case MARKET_LEFT_LABEL_ID:  strcpy(g_text, g_marketHelpText[2].m_text); break;
-    case MARKET_RIGHT_LABEL_ID: strcpy(g_text, g_marketHelpText[3].m_text); break;
-    case MARKET_TITLE_ID:       strcpy(g_text, g_marketHelpText[4].m_text); break;
+    case MARKET_LEFT_PANEL_ID:  strcpy(g_text, g_resourceWindowHelp[0].m_text); break;
+    case MARKET_RIGHT_PANEL_ID: strcpy(g_text, g_resourceWindowHelp[1].m_text); break;
+    case MARKET_LEFT_LABEL_ID:  strcpy(g_text, g_resourceWindowHelp[2].m_text); break;
+    case MARKET_RIGHT_LABEL_ID: strcpy(g_text, g_resourceWindowHelp[3].m_text); break;
+    case MARKET_TITLE_ID:       strcpy(g_text, g_resourceWindowHelp[4].m_text); break;
     case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
     case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
     case MARKET_SELL_CRYSTAL_ID: case MARKET_SELL_GEMS_ID:
@@ -3109,7 +3105,7 @@ void TTradeResourceWindow::setRolloverText(int codeY)
     case MARKET_BUY_GOLD_ID:
         strcpy(g_text, g_resourceNames[codeY - MARKET_BUY_WOOD_ID]);
         break;
-    case MARKET_COMMAND_ID: strcpy(g_text, g_marketHelpText[5].m_text); break;
+    case MARKET_COMMAND_ID: strcpy(g_text, g_resourceWindowHelp[5].m_text); break;
     default: strcpy(g_text, ""); break;
     }
     message update;
@@ -3249,10 +3245,10 @@ VA(0x005ed850, 0x190) MAC_ADDRESS(0x1f9264, 0x1b8)  // dc 0x18bb40
 void TGiveResourceWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
-    case MARKET_LEFT_PANEL_ID:  strcpy(g_text, g_giveHelpText[0].m_text); break;
-    case MARKET_RIGHT_PANEL_ID: strcpy(g_text, g_giveHelpText[1].m_text); break;
-    case MARKET_LEFT_COUNT_ID:  strcpy(g_text, g_giveHelpText[2].m_text); break;
-    case MARKET_RIGHT_LABEL_ID: strcpy(g_text, g_giveHelpText[3].m_text); break;
+    case MARKET_LEFT_PANEL_ID:  strcpy(g_text, g_giveResourceWindowHelp[0].m_text); break;
+    case MARKET_RIGHT_PANEL_ID: strcpy(g_text, g_giveResourceWindowHelp[1].m_text); break;
+    case MARKET_LEFT_COUNT_ID:  strcpy(g_text, g_giveResourceWindowHelp[2].m_text); break;
+    case MARKET_RIGHT_LABEL_ID: strcpy(g_text, g_giveResourceWindowHelp[3].m_text); break;
     case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
     case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
     case MARKET_SELL_CRYSTAL_ID: case MARKET_SELL_GEMS_ID:
@@ -3266,7 +3262,7 @@ void TGiveResourceWindow::setRolloverText(int codeY)
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_PLAYER_FORMAT],
                 g_colors[m_slotPlayerColor[codeY - GIVE_RECIPIENT_SLOT_0_ID]]);
         break;
-    case MARKET_COMMAND_ID: strcpy(g_text, g_giveHelpText[4].m_text); break;
+    case MARKET_COMMAND_ID: strcpy(g_text, g_giveResourceWindowHelp[4].m_text); break;
     default: strcpy(g_text, ""); break;
     }
     message update;
@@ -3403,10 +3399,10 @@ VA(0x005eddd0, 0x188) MAC_ADDRESS(0x1f9728, 0x1b4)  // dc 0x18bee8
 void TBuyArtifactWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
-    case MARKET_LEFT_PANEL_ID:      strcpy(g_text, g_buyArtHelpText[0].m_text); break;
-    case MARKET_LEFT_COUNT_ID:      strcpy(g_text, g_buyArtHelpText[1].m_text); break;
-    case MARKET_LEFT_LABEL_ID:      strcpy(g_text, g_buyArtHelpText[2].m_text); break;
-    case MARKET_BUY_RIGHT_LABEL_ID: strcpy(g_text, g_buyArtHelpText[3].m_text); break;
+    case MARKET_LEFT_PANEL_ID:      strcpy(g_text, g_buyArtifactWindowHelp[0].m_text); break;
+    case MARKET_LEFT_COUNT_ID:      strcpy(g_text, g_buyArtifactWindowHelp[1].m_text); break;
+    case MARKET_LEFT_LABEL_ID:      strcpy(g_text, g_buyArtifactWindowHelp[2].m_text); break;
+    case MARKET_BUY_RIGHT_LABEL_ID: strcpy(g_text, g_buyArtifactWindowHelp[3].m_text); break;
     case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
     case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
     case MARKET_SELL_CRYSTAL_ID: case MARKET_SELL_GEMS_ID:
@@ -3425,7 +3421,7 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
             strcpy(g_text, g_artifactTraits[art].m_name);
         break;
     }
-    case MARKET_COMMAND_ID: strcpy(g_text, g_buyArtHelpText[4].m_text); break;
+    case MARKET_COMMAND_ID: strcpy(g_text, g_buyArtifactWindowHelp[4].m_text); break;
     default: strcpy(g_text, ""); break;
     }
     message update;
@@ -3622,11 +3618,11 @@ VA(0x005ee6c0, 0x1cf) MAC_ADDRESS(0x1f9ce8, 0x210)  // dc 0x18c378
 void TSellArtifactWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
-    case MARKET_LEFT_PANEL_ID: strcpy(g_text, g_sellArtHelpText[0].m_text); break;
-    case MARKET_LEFT_COUNT_ID: strcpy(g_text, g_sellArtHelpText[1].m_text); break;
-    case MARKET_LEFT_LABEL_ID: strcpy(g_text, g_sellArtHelpText[2].m_text); break;
-    case MARKET_RIGHT_LABEL_ID: strcpy(g_text, g_sellArtHelpText[3].m_text); break;
-    case MARKET_COMMAND_ID: strcpy(g_text, g_sellArtHelpText[4].m_text); break;
+    case MARKET_LEFT_PANEL_ID: strcpy(g_text, g_sellArtifactWindowHelp[0].m_text); break;
+    case MARKET_LEFT_COUNT_ID: strcpy(g_text, g_sellArtifactWindowHelp[1].m_text); break;
+    case MARKET_LEFT_LABEL_ID: strcpy(g_text, g_sellArtifactWindowHelp[2].m_text); break;
+    case MARKET_RIGHT_LABEL_ID: strcpy(g_text, g_sellArtifactWindowHelp[3].m_text); break;
+    case MARKET_COMMAND_ID: strcpy(g_text, g_sellArtifactWindowHelp[4].m_text); break;
     case MARKET_BUY_WOOD_ID: case MARKET_BUY_MERCURY_ID:
     case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:
     case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
@@ -3800,19 +3796,19 @@ void TSellCreatureWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case MARKET_LEFT_PANEL_ID:
-        strcpy(g_text, g_sellCreaHelpText[0].m_text);
+        strcpy(g_text, g_sellCreatureWindowHelp[0].m_text);
         break;
     case MARKET_RIGHT_PANEL_ID:
-        strcpy(g_text, g_sellCreaHelpText[1].m_text);
+        strcpy(g_text, g_sellCreatureWindowHelp[1].m_text);
         break;
     case MARKET_LEFT_COUNT_ID:
-        strcpy(g_text, g_sellCreaHelpText[2].m_text);
+        strcpy(g_text, g_sellCreatureWindowHelp[2].m_text);
         break;
     case MARKET_LEFT_LABEL_ID:
-        strcpy(g_text, g_sellCreaHelpText[3].m_text);
+        strcpy(g_text, g_sellCreatureWindowHelp[3].m_text);
         break;
     case MARKET_COMMAND_ID:
-        strcpy(g_text, g_sellCreaHelpText[4].m_text);
+        strcpy(g_text, g_sellCreatureWindowHelp[4].m_text);
         break;
     case MARKET_BUY_WOOD_ID: case MARKET_BUY_MERCURY_ID:
     case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:

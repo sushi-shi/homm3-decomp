@@ -2241,15 +2241,20 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     alignment = normalizeAlignment(alignment);
 
     if (m_alignments[alignment + 1] == 0 && m_army->getNumArmies() > 0) {
-        // Mac 0x30354 expands getAlignment again for this threshold.
-        // Mac 0x30380..0x30390 assigns the two threshold values in separate
-        // branches. This spelling improves Windows 80.3322% -> 82.4178%
-        // while preserving the second getAlignment and morale helper calls.
+        // Complete gives the base elementals the lower threshold in a
+        // version-0 game before the Necropolis test (Windows 94.24%;
+        // the Mac-only getAlignment spelling scored 82.42%). The Mac body
+        // (0x30354..0x30390) has no game-version arm and re-expands
+        // getAlignment instead: a platform/edition difference, Mac 22.10%.
         int minimumMorale;
-        if (g_game->getAlignment(type) == TOWN_NECROPOLIS)
-            minimumMorale = 2;
-        else
+        if (g_game->m_gameVersion == 0
+            && isBaseElemental(type)) {
             minimumMorale = 1;
+        } else {
+            minimumMorale = 2;
+            if (traits->m_townType != TOWN_NECROPOLIS)
+                minimumMorale = 1;
+        }
 
         if (m_army->getMorale(0, 0, 0, 0, 0,
                            m_hasAngelicAlliance, 0)
@@ -3353,18 +3358,23 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
 // Complete expands both into separate point temporaries at entry. DC's
 // GetNumMapLevels product at line 3054 has no retained retail use, so the
 // indexed distance map keeps only its single-level stride.
+// DC 0x32a84 reads the hero through get_location for the danger query and
+// the seed (lines 3060/3078), constructs the friend's cell point from its
+// coordinates (3102), and fills the function-scope point field by field
+// from the path target and then the position (3109..3115). Accessor
+// getTarget()/getLocation() for the friend cost Windows 91.17 -> 83.69%;
+// the DC form reaches 92.35%. Residual: whole-body EBX/EDI role swap for
+// currentHero (why-reg: only a synthetic zero-local carrier moves it).
 VA(0x0042f570, 0x40e) MAC_ADDRESS(0x03180c, 0x4b4)  // anchor-callee + arity, dc 0x32a84
 long markDestinations(hero* currentHero, long maxDistance,
                        searchArray* currentSearchArray,
                        unsigned short* friendlyDistances,
                        type_search_type searchType)
 {
-    int mapCells = g_mapHeight * g_mapWidth;
+    int mapCells = g_mapWidth * g_mapHeight;
     searchArray friendlySearch;
     long movePoints = currentHero->m_movePoints;
     long heroDanger;
-    // DC records point and map_cell at function scope. Reuse the point
-    // for the friend's target and fallback; these lifetimes are VC6-flat.
     type_point point;
     NewmapCell* targetCell;
     heroDanger = currentSearchArray->getDangerValue(
@@ -3380,15 +3390,19 @@ long markDestinations(hero* currentHero, long maxDistance,
         hero* friendly = g_game->getHero(g_currentPlayer->m_heroes[i]);
         if (friendly == currentHero)
             continue;
-        type_point friendPoint = friendly->getLocation();
+        type_point friendPoint(friendly->m_x, friendly->m_y, friendly->m_z);
         pathCell* friendCell = currentSearchArray->getCell(friendPoint, 0);
         if (!friendCell->m_visited)
             continue;
 
-        point = friendly->getTarget();
+        point.m_x = friendly->m_pathTargetX;
+        point.m_y = friendly->m_pathTargetY;
+        point.m_z = friendly->m_pathTargetZ;
         unsigned short extraCost;
         if (!point.isValid()) {
-            point = friendly->getLocation();
+            point.m_x = friendly->m_x;
+            point.m_y = friendly->m_y;
+            point.m_z = friendly->m_z;
             extraCost = 0;
         } else {
             extraCost = friendly->m_targetDistance;
@@ -3682,7 +3696,7 @@ static unsigned char checkMoveSpell(hero* currentHero,
 }
 
 // E:\gamedcs\ai_player.cpp:4000
-DATA(0x00660500) static const long g_constThresholds[6] = {
+DATA(0x00660500) static long g_constThresholds[6] = {
     1000, 150, 100, 75, 50, 25
 };
 
@@ -5377,14 +5391,18 @@ static void initializeArtifactEffects();
 type_AI_initializer::type_AI_initializer()
 {
     // Original: const_one_use_events.
-    static const int g_constOneUseEvents[] = {
+    DATA(0x00660540)
+    static int g_constOneUseEvents[] = {
         5, 6, 9, 10, 12, 13, 16, 22, 24, 29, 37, 39,
         42, 48, 53, 54, 55, 57, 58, 59, 60, 62, 63, 79,
         80, 81, 82, 84, 85, 86, 93, 99, 101, 105, 108, 109,
         112, 0
     };
-    // Original: const_visibility_values; alternating event/value pairs.
-    static const int g_constVisibilityValues[] = {
+    // Original: const_visibility_values; alternating event/value pairs,
+    // ended by a (0, 0) pair: Windows and the Mac data section both store
+    // the second zero directly after the first, before the next object.
+    DATA(0x006605d8)
+    static int g_constVisibilityValues[] = {
         2, 1, 4, 100, 5, 200, 6, 400, 8, 100, 10, 500,
         11, 1, 12, 10, 13, 1000, 14, 1, 15, 1, 16, 10,
         17, 10, 20, 10, 22, 1, 23, 100, 24, 10, 25, 10,
@@ -5397,7 +5415,7 @@ type_AI_initializer::type_AI_initializer()
         86, 10, 88, 10, 89, 10, 90, 10, 93, 10, 94, 10,
         96, 1, 98, 200, 100, 50, 101, 20, 102, 100, 104, 50,
         105, 1, 106, 1, 107, 50, 108, 10, 109, 10, 110, 1,
-        111, 50, 112, 10, 113, 50, 0
+        111, 50, 112, 10, 113, 50, 0, 0
     };
     memset(g_oneUseEvents, 0, sizeof(g_oneUseEvents));
     for (int event = 0; g_constOneUseEvents[event]; ++event)

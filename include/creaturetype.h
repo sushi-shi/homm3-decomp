@@ -12,14 +12,17 @@ const int g_creatureTypeLast = 0x96;
 // E:\gamedcs\CreatureType.h:296. Complete retains the army.obj copy;
 // events.cpp also expands this at monsters_flee/join/sell_out, passing a
 // literal count so each singular/plural selection folds at its call site.
+// DC 299..307 keeps the else arm (row 303 is its own jump); the guard-return
+// spelling costs /Ob2 more and pushed getArmyHelpText's appends out of line.
 VA(0x00440100, 0x3E)  // two-register /Gr ABI + trait lookup, dc 0x1ef94
 inline const char* getArmyName(int type, int count)
 {
     if (type < 0 || type > g_creatureTypeLast) {
         return DATA_COMPGEN(0x00691210, emptyCreatureName, "");
+    } else {
+        return count == 1 ? g_creatureTypeTraits[type].m_name
+                          : g_creatureTypeTraits[type].m_pluralName;
     }
-    return count == 1 ? g_creatureTypeTraits[type].m_name
-                      : g_creatureTypeTraits[type].m_pluralName;
 }
 
 // Windows combatMonsterEvent retains four equality arms for this predicate.

@@ -28,7 +28,7 @@ from homm3.retail_labels import Claim
 FRAGMENTS = common.HOMM3_DIR / "build/gen/claims"
 
 HEADER = ["rva", "size", "name", "kind", "channel", "raw", "dtor",
-          "ckind", "owner"]
+          "ckind", "owner", "type", "defined", "source", "internal"]
 
 
 def fragment_path(unit: str, directory: Path = FRAGMENTS) -> Path:
@@ -44,7 +44,9 @@ def unit_claims(unit: str, directory: Path = FRAGMENTS) -> list[Claim]:
     for r in raw:
         size = int(r["size"], 16) if r["size"].strip() else None
         meta = {"raw": r["raw"], "dtor": r["dtor"] == "1",
-                "ckind": r["ckind"], "owner": r["owner"]}
+                "ckind": r["ckind"], "owner": r["owner"],
+                "type": r.get("type", ""), "defined": r.get("defined", ""),
+                "source": r.get("source", ""), "internal": r.get("internal", "")}
         out.append(Claim(int(r["rva"], 16), r["name"], r["kind"],
                          r["channel"], size, unit, meta))
     return out

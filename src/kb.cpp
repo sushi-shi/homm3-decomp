@@ -63,7 +63,7 @@
 #include "winmgr.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x0067f558) const float g_mapScoreDifficultyFactor[5] = { 0.800000011920929f, 1.0f, 1.2999999523162842f, 1.600000023841858f, 2.0f };
+DATA(0x0067f558) float g_mapScoreDifficultyFactor[5] = { 0.800000011920929f, 1.0f, 1.2999999523162842f, 1.600000023841858f, 2.0f };
 
 // Original gText is 768 bytes in DC; retail's next datum starts at +0x300.
 DATA(0x006973d8) char g_text[768];
@@ -72,6 +72,9 @@ DATA(0x00698998) unsigned long g_timers[10];
 DATA(0x006985a8) CTimer g_globalTimer(0);
 DATA(0x006972b8) int g_gameOver;
 DATA(0x006783d0) unsigned char g_foregroundApp = 1;
+// Original DC name: giMapSizes; the S/M/L/XL map widths, byte for byte the
+// Dreamcast object. No Windows code reads it.
+DATA(0x006783dc) unsigned char g_mapSizes[4] = { 36, 72, 108, 144 };
 // Original DC name: giLimitPlayer; InterpretCommandLine initializes the AI player filter.
 DATA(0x006994f0) int g_limitPlayer;
 // Original DC name: gbCheatMenus; the /NWCGRAIL command-line switch.
@@ -94,6 +97,43 @@ DATA(0x00698a08) font* g_smallFont;
 DATA(0x00698a0c) font* g_mediumFont;
 DATA(0x00698a10) font* g_bigFont;
 DATA(0x00698a14) font* g_calligraphicFont;
+
+// Unreferenced globals of the retail game-globals .bss run (0x6972ec..
+// 0x698a3c and 0x699250..0x69961b, each bounded by one TU's ten terrain-mask
+// statics). Neither retail nor Dreamcast code reads them. Each identity is
+// Dreamcast's public symbol at the same offset from both proven neighbours,
+// whose distance matches in both images; the int types are the decorated
+// names' own. Character arrays take the slot both images share; VC6 places
+// the next object on 4 bytes, so three fewer elements would fit (seven for
+// gcTCPName before the 8-aligned g_config; DC's gcTCPAddress is char[21]).
+// gLastFilename's 351 is proven: the byte flag at 0x6985a3 follows at once.
+// Original DC name: cOverrideMIDIDriver.
+DATA(0x006972f0) char g_overrideMidiDriver[16];
+// Original DC name: bSaveMusicPosition.
+DATA(0x00697300) unsigned char g_saveMusicPosition[60];
+// Original DC name: hMainWindow (void*).
+DATA(0x0069733c) void* g_mainWindow;
+// Original DC name: gcBotViewText.
+DATA(0x00697340) char g_botViewText[152];
+// Original DC name: bMusicIsLooping.
+DATA(0x00698404) unsigned char g_musicIsLooping[60];
+// Original DC name: gLastFilename.
+DATA(0x00698444) char g_lastFilename[351];
+// Original DC name: cOverrideDigitalDriver; the byte before it is padding
+// after g_regAppPath's 351 bytes.
+DATA(0x00698724) char g_overrideDigitalDriver[16];
+// Original DC name: gcTCPName.
+DATA(0x00698740) char g_tcpName[24];
+// Original DC name: gbRemoteGameOpen.
+DATA(0x00698830) int g_remoteGameOpen;
+// Original DC names: glBottomRefresh, gbBothMachinesWin95, gbGotFirstHeartbeat.
+DATA(0x006989d8) int g_bottomRefresh;
+DATA(0x006989dc) int g_bothMachinesWin95;
+DATA(0x006989e0) int g_gotFirstHeartbeat;
+// Original DC name: gbLeaveNetBoxAlone.
+DATA(0x00698a30) int g_leaveNetBoxAlone;
+// Original DC name: gLowPageScreenSelector.
+DATA(0x00699264) int g_lowPageScreenSelector;
 
 // Manager pointer slots written by InitMainClasses, in its retail call
 // order. Every slot is in the PE zero-fill tail; shutdown owns deletion.
@@ -340,8 +380,9 @@ static int checkMem();
 // claim that an unconditional retail back edge proved source goto was
 // too strong. Changing these headers to conventional for-tests, including
 // the earlier found-result variant, scores 94.2515%.
-// The remaining retail guard is an unconditional jump over the CD scans;
-// the current source retains its meaningful g_cdDriveNumber predicate.
+// Complete patches the guard to an unconditional jump over the CD scans
+// (0x4ed9df). Preserve setupCDDrive's no-CD-required result while retaining
+// the legacy scan for actual CD modes, as in the startup fix from #78.
 // Checking each scan's exhaustion independently instead of taking its found
 // exit scores 99.0000% for the first scan, 92.4123% for the fallback, and
 // 91.8275% together, versus 99.5994%. Both must skip the version fallback
@@ -395,7 +436,8 @@ int earlySetup()
     if (!loadSoundHeaders())
         shutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
             "Unable to initialize resources - possible disk problem."));
-    if (g_cdDriveNumber) {
+    if (g_cdDriveNumber &&
+        g_cdDriveNumber != CD_DRIVE_NUMBER_NO_CD_REQUIRED) {
         int i;
 
         bool found = 0;

@@ -560,7 +560,7 @@ extern int g_tcpHostStatus;
 bool testIfLobbyLaunched();
 // Dreamcast publishes the owning remote.obj buffer and Complete's tutorial
 // setup copies its selected filename here before loading the map header.
-extern char g_mapName[260];
+extern char g_mapName[256];
 
 // Retail 0x69954c: enabled by network initialization, cleared on shutdown;
 // gates message transmission and prevents pausing for window deactivation.

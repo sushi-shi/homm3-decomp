@@ -229,3 +229,29 @@ decode-state and allocation-success declarations while preserving runtime
 initialization order. All 64 sources emit the same 78.4456% object. Two prior
 60-state crosses likewise show that parameter/status/consumed ownership and a
 meaningful reuse of status as the consumed-byte count are byte-flat.
+
+## Linked data of unlinked Victor code
+
+Retail keeps the data of Victor objects whose functions it drops: the JPEG,
+TIFF, TGA, CCITT and colour-reduction tables between the DirectPlay GUIDs and
+zlib in `.rdata` (0x643e38-0x644450), `.data` (0x68d278-0x68d77c) and `.bss`
+(0x6aad24-0x6ab15c). No linked code reads them apart from the two bit masks,
+the PCX palette and scratch rows, and the lock cleanups. `src/victor.cpp`
+declares the tables whose extents their content fixes: the ITU T.81 Annex K
+quantization and Huffman tables, the zigzag and coefficient-offset
+permutations, the 6x6x6 colour-cube, dither, `/51` and `%51` tables, the
+T.4 code tables, the TIFF 6.0 IFD image and header fields, the TGA footer
+signature, the eight module locks and the cleanup-pointer table. All names
+are invented.
+
+Every Victor `.rdata` object starts 8-byte aligned, which VC6 does not
+reproduce for byte arrays; the zero bytes before those starts remain
+unclaimed. So do the unnamed statics between the locks and the
+unstructured `.data` words.
+
+The cleanup table points at nine bodies that `src/victor.cpp` claims:
+`victorReleaseNothing`, a bare `ret` at 0x603b10, and `victorReleaseLock0`..
+`7`, eight 31-byte `if (m_initialized) { DeleteCriticalSection(&m_section);
+m_initialized = 0; }` cleanups at 0x604620-0x604700, one per `VictorLock` in
+address order. With the bodies claimed the table's raw initializer
+comparison resolves every pointer.

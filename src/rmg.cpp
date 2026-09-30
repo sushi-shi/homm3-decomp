@@ -11,6 +11,7 @@
 #include "va.h"
 #include "includes.h"
 #include "bitset_iterator.h"
+#include "homm3_minmax.h"
 
 #include <algorithm>
 #include <bitset>
@@ -2684,8 +2685,8 @@ unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
     TRmgZoneBounds bounds;
     bounds.m_minimumX = prototype->getWidth() + 2;
     bounds.m_minimumY = prototype->getHeight() + 2;
-    bounds.m_maximumX = m_map.m_mapWidth - 3;
-    bounds.m_maximumY = m_map.m_mapHeight - 3;
+    bounds.m_maximumX = m_map.getWidth() - 3;
+    bounds.m_maximumY = m_map.getHeight() - 3;
     TObjectType::TPoint triggerCell = prototype->m_triggerCell;
     TPoint trigger(triggerCell.m_x, triggerCell.m_y);
     std::vector<TRmgMapPosition> candidates;
@@ -3476,7 +3477,7 @@ void type_random_map_generator::loadTemplates()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00682804, rmgTemplatesFilename, "rmg.txt"));
-    int mapSize = m_map.m_mapWidth * m_map.m_mapHeight * m_map.m_numberLevels / 1296;
+    int mapSize = m_map.getWidth() * m_map.getHeight() * m_map.m_numberLevels / 1296;
     int row = 3;
     if (m_waterContent == RMG_WATER_ISLANDS)
         mapSize = max(mapSize / 2, 1);
@@ -4571,8 +4572,10 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
     TRmgVector delta(center.m_x - point.m_x, center.m_y - point.m_y);
     int length = delta.length();
     if (length > 0) {
-        long displacement = max(4, length / 4);
-        displacement = min(displacement, length / 2);
+        // Both clamps bind long references (retail's two-temporary
+        // selector shape); the by-value int helpers score 75.89%.
+        long displacement = std::max<long>(4, length / 4);
+        displacement = std::min<long>(displacement, length / 2);
         delta = delta * displacement / length;
         point += delta;
     }
@@ -4582,8 +4585,8 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
         delta = TRmgVector(center.m_x - point.m_x, center.m_y - point.m_y);
         length = delta.length();
         if (length > 0) {
-            long displacement = max(4, length / 4);
-            displacement = min(displacement, length / 2);
+            long displacement = std::max<long>(4, length / 4);
+            displacement = std::min<long>(displacement, length / 2);
             delta = delta * displacement / length;
             point += delta;
         }
@@ -4596,8 +4599,24 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
 // Retail starts at the zone center, or clips it toward the interior ring
 // site with the largest edge clearance. A vector of three-coordinate seeds
 // then drives a scanline fill of cells whose signed zone byte is -1.
-// Residual (90.0984%): 18 seed/pop/insertion forms favor erasing the consumed
-// one-element range (89.9385% versus pop_back's 53.5287%). Keeping the upper
+// Mac 0x23ef84..0x23efb8 copies back() and decrements the vector size with
+// no erase call, the inline MSL pop_back; keep that call. Map extents come
+// from type_random_map's inline getWidth()/getHeight() accessors. Under /Ob2
+// they raise the caller cb (907 -> 931, budget 1814 -> 1862) while each
+// inlined accessor (cb 24) stays below the budget-subtraction threshold. With
+// direct m_mapWidth/m_mapHeight fields the final lower-span push_back's
+// insert(n) is rejected at 464 < 469 and every insertion stays a call
+// (53.60%); with the accessors it expands with retail's nested
+// _Ucopy/_Ufill/size calls (89.59%, retail's 20-call stream). Still open:
+// erase's copy is expanded (budget 67 >= 46, 1514/11 candidates); retail
+// calls it, which needs about three more cheap candidates after pop_back.
+// Probes (lane A r4): accessors in only the scanline tail score the same;
+// !pending.empty() is flat.
+// Controls: the single-position erase(end() - 1) that pop_back wraps gives
+// 89.43% with the direct fields (its one fewer inline level); back(), [size() - 1] and
+// *(end() - 1) tops and size()/empty()/size() > 0 loop tests are flat.
+// Earlier matching found 18 seed/pop/insertion forms favoring erasing the
+// consumed one-element range (89.9385% versus pop_back's 53.5287%). Keeping the upper
 // and lower span seeds at function scope reaches 90.0984%; nine bounds/span
 // lifetime forms find no further gain, with no other RMG score changes.
 // Assign the initial position from the shared owned-result getter; direct
@@ -4618,8 +4637,8 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex*
     position = zone->getLevelPosition();
     TRmgMapPosition upper;
     TRmgMapPosition lower;
-    if (position.m_x < 0 || position.m_x >= m_map.m_mapWidth
-        || position.m_y < 0 || position.m_y >= m_map.m_mapHeight) {
+    if (position.m_x < 0 || position.m_x >= m_map.getWidth()
+        || position.m_y < 0 || position.m_y >= m_map.getHeight()) {
         int bestClearance = 0;
         TPoint best;
         best.m_x = -1;
@@ -4627,11 +4646,11 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex*
         do {
             edge = edge->m_next;
             TPoint point = edge->m_twin->m_sitePosition;
-            if (point.m_x >= 1 && point.m_x < m_map.m_mapWidth - 1
-                && point.m_y >= 1 && point.m_y < m_map.m_mapHeight - 1) {
+            if (point.m_x >= 1 && point.m_x < m_map.getWidth() - 1
+                && point.m_y >= 1 && point.m_y < m_map.getHeight() - 1) {
                 int clearance = min(min(min(point.m_x,
-                    m_map.m_mapWidth - point.m_x - 1), point.m_y),
-                    m_map.m_mapHeight - point.m_y - 1);
+                    m_map.getWidth() - point.m_x - 1), point.m_y),
+                    m_map.getHeight() - point.m_y - 1);
                 if (clearance > bestClearance) {
                     bestClearance = clearance;
                     best = point;
@@ -4640,7 +4659,7 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex*
         } while (edge != first);
         if (best.m_x < 0)
             return;
-        TRmgZoneBounds bounds = {0, 0, m_map.m_mapWidth, m_map.m_mapHeight};
+        TRmgZoneBounds bounds = {0, 0, m_map.getWidth(), m_map.getHeight()};
         TPoint clipped = clipRmgBoundaryPoint(bounds,
             TPoint(position.m_x, position.m_y), best);
         position.m_x = clipped.m_x;
@@ -4657,12 +4676,12 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex*
             --item;
             --position.m_x;
         }
-        while (position.m_x < m_map.m_mapWidth && item->m_zoneState.m_zone == -1) {
+        while (position.m_x < m_map.getWidth() && item->m_zoneState.m_zone == -1) {
             item->m_zoneState.m_zone = zoneIndex;
             if (m_waterContent != RMG_WATER_ISLANDS || position.m_z == 1)
                 item->m_tileData.m_zoneBoundary = 1;
             if (position.m_y > 0) {
-                if ((item - m_map.m_mapWidth)->m_zoneState.m_zone == -1) {
+                if ((item - m_map.getWidth())->m_zoneState.m_zone == -1) {
                     if (!upperSpan) {
                         upper = position;
                         --upper.m_y;
@@ -4673,8 +4692,8 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex*
                     pending.push_back(upper);
                 }
             }
-            if (position.m_y < m_map.m_mapHeight - 1) {
-                if ((item + m_map.m_mapWidth)->m_zoneState.m_zone == -1) {
+            if (position.m_y < m_map.getHeight() - 1) {
+                if ((item + m_map.getWidth())->m_zoneState.m_zone == -1) {
                     if (!lowerSpan) {
                         lower = position;
                         ++lower.m_y;
@@ -5005,17 +5024,17 @@ void type_random_map_generator::paintZoneTerrain()
         if (m_waterContent == RMG_WATER_ISLANDS && zone->getLevelPosition().m_z == 0)
             insetIslandZone(zone);
     }
-    if (m_map.m_numberLevels > 1) {
+    if (m_map.getNumberLevels() > 1) {
         type_random_map levelMap(m_map.getMapItem(0, 0, 1),
-            m_map.m_mapWidth, m_map.m_mapHeight);
+            m_map.getWidth(), m_map.getHeight());
         TRmgTerrainBrush brush(&levelMap, eTerrainRock, 4);
-        brush.paintRectangle(0, 0, m_map.m_mapWidth, m_map.m_mapHeight);
+        brush.paintRectangle(0, 0, m_map.getWidth(), m_map.getHeight());
         if (m_progress)
             m_progress->advance(12500);
     }
     {
         TRmgTerrainBrush brush(&m_map, eTerrainWater, 4);
-        brush.paintRectangle(0, 0, m_map.m_mapWidth, m_map.m_mapHeight);
+        brush.paintRectangle(0, 0, m_map.getWidth(), m_map.getHeight());
     }
     int progressSteps = 15800 / m_zones.size();
     for (zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
@@ -5024,7 +5043,7 @@ void type_random_map_generator::paintZoneTerrain()
         TRmgMapPosition position = zone->getLevelPosition();
         if (zone->getTerrain() != eTerrainWater) {
             type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
-                m_map.m_mapWidth, m_map.m_mapHeight);
+                m_map.getWidth(), m_map.getHeight());
             TRmgTerrainBrush brush(&levelMap, zone->getTerrain(), 4);
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
                 for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
@@ -5250,8 +5269,8 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
             next.m_x = position.m_x + offset.m_x;
             next.m_y = position.m_y + offset.m_y;
             next.m_z = position.m_z;
-            if (next.m_x < 0 || next.m_x >= m_map.m_mapWidth
-                || next.m_y < 0 || next.m_y >= m_map.m_mapHeight)
+            if (next.m_x < 0 || next.m_x >= m_map.getWidth()
+                || next.m_y < 0 || next.m_y >= m_map.getHeight())
                 continue;
             TRmgMapItem* item = m_map.getMapItem(next);
             if (item->m_zoneState.m_zone != zoneIndex)
@@ -5310,8 +5329,8 @@ void type_random_map_generator::prepareWaterZoneConnections(TRmgZone* zone)
     TRmgZoneBounds surrounding;
     surrounding.m_minimumX = max(bounds.m_minimumX - 1, 0);
     surrounding.m_minimumY = max(bounds.m_minimumY - 1, 0);
-    surrounding.m_maximumX = min(bounds.m_maximumX + 1, m_map.m_mapWidth);
-    surrounding.m_maximumY = min(bounds.m_maximumY + 1, m_map.m_mapHeight);
+    surrounding.m_maximumX = min(bounds.m_maximumX + 1, m_map.getWidth());
+    surrounding.m_maximumY = min(bounds.m_maximumY + 1, m_map.getHeight());
     for (position.m_y = surrounding.m_minimumY; position.m_y < surrounding.m_maximumY; ++position.m_y) {
         for (position.m_x = surrounding.m_minimumX; position.m_x < surrounding.m_maximumX; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position);
@@ -5321,8 +5340,8 @@ void type_random_map_generator::prepareWaterZoneConnections(TRmgZone* zone)
     }
     bounds.m_minimumX = max(bounds.m_minimumX, 3);
     bounds.m_minimumY = max(bounds.m_minimumY, 3);
-    bounds.m_maximumX = min(bounds.m_maximumX, m_map.m_mapWidth - 4);
-    bounds.m_maximumY = min(bounds.m_maximumY, m_map.m_mapHeight - 4);
+    bounds.m_maximumX = min(bounds.m_maximumX, m_map.getWidth() - 4);
+    bounds.m_maximumY = min(bounds.m_maximumY, m_map.getHeight() - 4);
     while (1) {
         std::vector<TRmgMapPosition> candidates;
         for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
@@ -5342,8 +5361,8 @@ void type_random_map_generator::prepareWaterZoneConnections(TRmgZone* zone)
         TRmgZoneBounds island;
         island.m_minimumX = max(position.m_x - radius, 0);
         island.m_minimumY = max(position.m_y - radius, 0);
-        island.m_maximumX = min(position.m_x + radius, m_map.m_mapWidth);
-        island.m_maximumY = min(position.m_y + radius, m_map.m_mapHeight);
+        island.m_maximumX = min(position.m_x + radius, m_map.getWidth());
+        island.m_maximumY = min(position.m_y + radius, m_map.getHeight());
         createWaterZoneIsland(island, position.m_z);
         floodWaterZoneDistances(position, zoneIndex);
     }
@@ -5591,6 +5610,9 @@ void type_random_map_generator::repairWaterZoneBorders()
 // A joint zone-count reference-accessor control changes registration, removal
 // and treasure-limit reads together. Both reproduced states give identical
 // caller bytes and equivalent EH/relocations; that lvalue boundary is neutral.
+// The neighbor step keeps the canonical position-plus-direction operator
+// recovered with the Mac-supported helpers (#111): 67.86%, against 71.57%
+// for the field-wise step.
 VA(0x005402A0, 0x32A) MAC_ADDRESS(0x24260c, 0x434) // anchor-vtable + generator/map layouts; retail-only
 void type_random_map_generator::addObject(type_object* object, TRmgMapPosition position)
 {
@@ -6206,37 +6228,34 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
     return terrain != eTerrainWater;
 }
 
-// The three water scans share the copied origin plus a by-value offset.
-// Native 0x2445b0 copies both inputs before writing the returned coordinate.
-// Keep this inner operation beneath the retained floodShipyardWater helper.
+// canPlaceShipyard's water scans share the copied origin plus a by-value
+// offset through this forwarder.
 static TRmgMapPosition getRmgShipyardWaterPosition(TRmgMapPosition shipyardPosition,
     int waterOffset)
 {
     return shipyardPosition + g_rmgShipyardWaterOffsets[waterOffset];
 }
 
-static bool findRmgShipyardWater(type_random_map* map,
-    TRmgMapPosition shipyardPosition, TRmgMapPosition& waterPosition)
-{
-    int waterOffset = 0;
-    for (; waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT; ++waterOffset) {
-        waterPosition = getRmgShipyardWaterPosition(shipyardPosition, waterOffset);
-        if (waterPosition.m_x >= 0 && waterPosition.m_x < map->getWidth()
-            && map->getMapItem(waterPosition)->getLandType() == eTerrainWater)
-            break;
-    }
-    return waterOffset != RMG_SHIPYARD_WATER_OFFSET_COUNT;
-}
-
 // Native 0x24457c owns the shipyard's water scan and successful flood.
-// Both retained callers pass the generator and the shipyard object. Their
-// remaining Windows differences are nested coordinate/lookup expansions;
-// keep this boundary while recovering those calls (connectZones 95.2240%).
+// Both retained callers pass the generator and the shipyard object. The scan
+// sits in this body and adds the offset directly: Windows expands the
+// position addition two levels below connectZones and createShipyardConnection
+// (retaining only the three-coordinate constructor). A separate find helper,
+// or the getRmgShipyardWaterPosition forwarder, pushes that addition a level
+// deeper and keeps it out of line (connectZones 95.22%, createShipyard 89.03%).
 MAC_ADDRESS(0x24457c, 0x130)
 void type_random_map_generator::floodShipyardWater(type_object* shipyard)
 {
+    TRmgMapPosition shipyardPosition = shipyard->getPosition();
     TRmgMapPosition waterPosition;
-    if (findRmgShipyardWater(&m_map, shipyard->getPosition(), waterPosition))
+    int waterOffset = 0;
+    for (; waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT; ++waterOffset) {
+        waterPosition = shipyardPosition + g_rmgShipyardWaterOffsets[waterOffset];
+        if (waterPosition.m_x >= 0 && waterPosition.m_x < m_map.getWidth()
+            && m_map.getMapItem(waterPosition)->getLandType() == eTerrainWater)
+            break;
+    }
+    if (waterOffset != RMG_SHIPYARD_WATER_OFFSET_COUNT)
         floodConnectionRegion(waterPosition);
 }
 
@@ -8777,8 +8796,8 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
         while (direction--) {
             TRmgMapPosition nextPosition = position + g_rmgDirections[direction];
 
-            if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.m_mapWidth
-                || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.m_mapHeight)
+            if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.getWidth()
+                || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.getHeight())
                 continue;
 
             TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
@@ -8958,8 +8977,8 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
         int positionCost = mapItem->m_movement.m_cost;
         for (int direction = 0; direction < 8; direction += 2) {
             nextPosition = position + g_rmgDirections[direction];
-            if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.m_mapWidth
-                || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.m_mapHeight)
+            if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.getWidth()
+                || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.getHeight())
                 continue;
             mapItem = m_map.getMapItem(nextPosition.m_x, nextPosition.m_y, nextPosition.m_z);
             if (mapItem->m_tile.m_landType == eTerrainWater
@@ -8982,7 +9001,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     if (!mapItem->hasRiver())
         return;
     type_random_map levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
-        m_map.m_mapWidth, m_map.m_mapHeight);
+        m_map.getWidth(), m_map.getHeight());
     TRmgMapAdapter mapAdapter(&levelMap);
     TRmgRiverPainter riverPainter(
         &mapAdapter, riverType, TRmgGridPoint(nextPosition.m_x, nextPosition.m_y));
@@ -9189,6 +9208,13 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
                 break;
         }
 
+        // Construction guard byte 0x69d59c; the four offsets at 0x69ce28 are
+        // indexed by eight here. The guarded initializer registers
+        // atexit(0x549790), the table's empty cleanup (a bare `ret`) right
+        // after this function in rmg's contribution.
+        DATA_COMPGEN_GUARD(0x0069d59c, riverDeltaOffsetsGuard, deltaOffsets)
+        VA_COMPGEN(0x00549790, 0x1, STATIC_DTOR, deltaOffsets)
+        DATA(0x0069ce28)
         static TRmgRiverDeltaOffset deltaOffsets[4] = {
             TRmgRiverDeltaOffset(4, 1),
             TRmgRiverDeltaOffset(1, 4),
@@ -10066,6 +10092,14 @@ static const int g_rmgQuestArtifactClass = 2;
 // construction/destruction and failure-path map accessor still expand
 // differently. The writable caller remains exact; all controls change only
 // this worker among other RMG functions.
+// Mac 0x2507c4/0x2507dc retains TRmgTreasureGroup::addObject and
+// markPlacementOutline calls; both stay (71.41% with the bodies pasted in,
+// 64.41% through the helpers). The group map's extents come through its
+// inline getWidth()/getHeight() accessors, like the prototype's: two more
+// depth-1 candidates after the group constructor split its /Ob2 budget
+// (1379 - 161) / 13, so the second member-vector constructor stays a call
+// as in retail (76.44%). Still open: retail also calls the failure path's
+// getMapItem and the success group's type_object* vector destructor.
 VA(0x0054B490, 0x42E) MAC_ADDRESS(0x250588, 0x360) // anchor-caller + artifact/group/generator fields; retail-only
 unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
 {
@@ -10103,8 +10137,8 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
     TRmgTreasureGroup group(16, 16);
     TObjectType* prototype = seerHut->m_properties->m_prototype;
     TRmgMapPosition position;
-    position.m_x = (group.m_map.m_mapWidth + static_cast<unsigned>(prototype->getWidth())) / 2;
-    position.m_y = (group.m_map.m_mapHeight + static_cast<unsigned>(prototype->getHeight())) / 2;
+    position.m_x = (group.m_map.getWidth() + static_cast<unsigned>(prototype->getWidth())) / 2;
+    position.m_y = (group.m_map.getHeight() + static_cast<unsigned>(prototype->getHeight())) / 2;
     position.m_z = 0;
     type_object* questObject = seerHut;
     group.addObject(questObject, position);
@@ -10446,8 +10480,5 @@ TPoint operator+(TPoint point, TRmgVector offset)
 VA(0x005FDD40, 0x20)
 TRmgVector operator-(TPoint left, TPoint right)
 {
-    TRmgVector result;
-    result.m_x = left.m_x - right.m_x;
-    result.m_y = left.m_y - right.m_y;
-    return result;
+    return TRmgVector(left.m_x - right.m_x, left.m_y - right.m_y);
 }

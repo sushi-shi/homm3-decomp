@@ -28,11 +28,11 @@ DATA(0x006989d4) int g_fullScreenChangesDisabled;
 // and read back by the two six-byte accessors below. Descriptive names from
 // those API queries; the original storage names are not recovered.
 DATA(0x0068c870)
-static int g_desktopBitsPerPixel;
+static int g_desktopBitsPerPixel = 16;
 DATA(0x0068c874)
-static int g_desktopWidth;
+static int g_desktopWidth = 800;
 DATA(0x0068c878)
-static int g_desktopHeight;
+static int g_desktopHeight = 600;
 
 // DirectDraw's lifecycle cells. The primary/back surfaces are public because
 // the blitters consume them; the DirectDraw and clipper interfaces remain

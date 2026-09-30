@@ -56,7 +56,7 @@
  *                                  name is a stable semantic identifier,
  *                                  never a compiler counter
  *   DATA_COMPGEN_GUARD(addr, name, owner)
- *                                  compiler-emitted static-init guard word
+ *                                  VC6 compiler-emitted local-static guard byte
  *   HOMM3_RELEASE_VERIFY(expr)      release-form invariant carrier; the
  *                                  expression is evaluated, like VERIFY, and
  *                                  must be supported by source-shape evidence

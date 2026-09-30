@@ -3,6 +3,7 @@
 #define HOMM3_INCLUDES_H
 
 #include "DC_precompiledheaders.h"
+#include "va.h"
 
 #ifdef min
 #undef min
@@ -87,6 +88,8 @@ public:
 // game.obj emits the Dreamcast copies but does not own their source bodies.
 class TPickRandomTownName : public TPickANumber {
 public:
+    // game.cpp's array initializer takes this constructor's address.
+    VA(0x004caa10, 0x10)
     TPickRandomTownName() : TPickANumber(0, 15) {}
     // E:\gamedcs\includes.h:178, dc 0xbc7ec
     void reset()

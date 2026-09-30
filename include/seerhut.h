@@ -19,7 +19,7 @@ struct type_point;
 // Complete's seer-hut name table replaced Dreamcast's const-char pointer
 // array with Dinkumware strings; TSeerHut::GetName keeps the shared header
 // accessor boundary over the revised storage.
-extern std::vector<std::string>* g_seerHutNamesPointer;
+extern std::vector<std::string>& g_seerHutNameList;
 
 #pragma pack(push, 1)
 
@@ -212,7 +212,7 @@ public:
     // NameIndex load, 16-byte vector stride and inlined c_str() fallback.
     const char* getName() const
     {
-        return (*g_seerHutNamesPointer)[m_nameIndex].c_str();
+        return g_seerHutNameList[m_nameIndex].c_str();
     }
 
     // DC GetQuestArtifactName (SeerHut.h:123, 0x20260) looked up the one

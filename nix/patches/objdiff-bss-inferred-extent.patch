@@ -1,0 +1,21 @@
+--- a/objdiff-core/src/diff/data.rs
++++ b/objdiff-core/src/diff/data.rs
+@@ -18,7 +18,17 @@
+ ) -> Result<(SymbolDiff, SymbolDiff)> {
+     let left_symbol = &left_obj.symbols[left_symbol_ref];
+     let right_symbol = &right_obj.symbols[right_symbol_ref];
+-    let percent = if left_symbol.size == right_symbol.size { 100.0 } else { 50.0 };
++    // A BSS symbol has no bytes, so its size is the entire comparison - but several
++    // formats encode no symbol size at all (COFF states one only for a COMMON symbol,
++    // whose Value IS its size), and `infer_symbol_sizes` then synthesises one from the
++    // distance to the next symbol. That span is the object PLUS whatever padding its
++    // allocator chose to leave after it, so when BOTH sides are inferred the difference
++    // measures two allocators rather than two programs. Compare sizes only when at
++    // least one side actually states one; an unpaired symbol is still a mismatch.
++    let both_inferred = left_symbol.flags.contains(SymbolFlag::SizeInferred)
++        && right_symbol.flags.contains(SymbolFlag::SizeInferred);
++    let percent =
++        if both_inferred || left_symbol.size == right_symbol.size { 100.0 } else { 50.0 };
+     Ok((
+         SymbolDiff {
+             target_symbol: Some(right_symbol_ref),

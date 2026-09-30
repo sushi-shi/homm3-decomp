@@ -6,6 +6,7 @@
 # date: 2026-08-04
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 # `.CRT$XCU` initializer bodies in slot (link) order.
+# Slot "-" denotes a reviewed atexit cleanup, not an entry in the CRT table.
 rva	slot
 0x1000	0
 0x1060	1
@@ -399,6 +400,7 @@ rva	slot
 0xb5020	389
 0xb6190	390
 0xb61b0	391
+0xb61e0	-
 0xb8000	392
 0xb8040	393
 0xb80a0	394
@@ -1152,3 +1154,111 @@ rva	slot
 0x20dd7e	1142
 0x213ea9	1143
 0x216c61	1144
+# Reviewed atexit callbacks: entire source-emitted body, named references and
+# relocation sites agree; roots below register these addresses with _atexit.
+# ai_player: registration in CRT root 0x432460; 23 exact bytes.
+0x32490	-
+# creature_bank: registration in CRT root 0x47aa80; 23 exact bytes.
+0x7aab0	-
+# remote: registration in CRT root 0x5521c0; 27 exact bytes.
+0x152240	-
+# resourcemanager: registration in CRT root 0x559230; 69 exact bytes.
+0x159260	-
+# resourcemanager: registration in CRT root 0x559400; 10 exact bytes.
+0x159430	-
+# seerhuttext: registration in CRT root 0x56bd90; 23 exact bytes.
+0x16bdc0	-
+# seerhuttext: registration in CRT root 0x56c030; 23 exact bytes.
+0x16c060	-
+# seerhuttext: registration in CRT root 0x56c080; 109 exact bytes.
+0x16c0b0	-
+# wingraph: registration in CRT root 0x5ffdf0; 10 exact bytes.
+0x1ffe10	-
+# Filter/rule callbacks: each emitted ten-byte body loads its named DATA
+# object and tail-calls the source base destructor; the registering root
+# also compares in full. These records introduce no independent game targets.
+# objecttype: CRT registration 0x514280.
+0x1142f0	-
+# objecttype: CRT registration 0x514300.
+0x114320	-
+# objecttype: CRT registration 0x514330.
+0x114350	-
+# objecttype: CRT registration 0x514360.
+0x114380	-
+# objecttype: CRT registration 0x514390.
+0x1143b0	-
+# objecttype: CRT registration 0x5143c0.
+0x1143e0	-
+# objecttype: CRT registration 0x5143f0.
+0x114410	-
+# objecttype: CRT registration 0x514420.
+0x114440	-
+# objecttype: CRT registration 0x514450.
+0x114470	-
+# objecttype: CRT registration 0x514480.
+0x1144a0	-
+# objecttype: CRT registration 0x5144f0.
+0x114540	-
+# objecttype: CRT registration 0x514550.
+0x114570	-
+# objecttype: CRT registration 0x514580.
+0x1145a0	-
+# objecttype: CRT registration 0x5145b0.
+0x1145d0	-
+# objecttype: CRT registration 0x5145e0.
+0x114600	-
+# rmg_terrain: CRT registration 0x5b3b60.
+0x1b3b90	-
+# rmg_terrain: CRT registration 0x5b3ba0.
+0x1b3bd0	-
+# rmg_terrain: CRT registration 0x5b3be0.
+0x1b3c10	-
+# rmg_terrain: CRT registration 0x5b3c20.
+0x1b3c50	-
+# rmg_terrain: CRT registration 0x5b3c60.
+0x1b3c90	-
+# rmg_terrain: CRT registration 0x5b3ca0.
+0x1b3cd0	-
+# rmg_terrain: CRT registration 0x5b3ce0.
+0x1b3d10	-
+# rmg_terrain: CRT registration 0x5b3d20.
+0x1b3d50	-
+# rmg_terrain: CRT registration 0x5b3d60.
+0x1b3d90	-
+# rmg_terrain: CRT registration 0x5b3da0.
+0x1b3dc0	-
+# Source-emitted array cleanup registrations: complete bodies and named
+# element constructors/destructors agree, including each element stride.
+# game: CRT registration 0x4ca9e0, nine TPickRandomTownName elements.
+0xcaa20	-
+# resourcemanager: CRT registration 0x559150, eight TResourceLODSlot elements.
+0x159200	-
+# Local-static atexit callbacks: a claimed parent registers each address
+# with _atexit; local_cleanups pairs the site with the parent's current
+# object and compares the complete emitted body and its callees.
+# armygrp: armyGrpFn0044A460 registers the bitset's empty destructor.
+0x4a4c0	-
+# creaturetype: initializeCreatureTypeTraits, three TAutoStrPtr arrays.
+0x7b7c0	-
+0x7b7e0	-
+0x7b800	-
+# herodefs: hero, hero-class and secondary-skill TAutoStrPtr arrays.
+0xe6ce0	-
+0xe6d00	-
+0xe6d20	-
+0xe6d40	-
+# objecttype: setImageName and getImageName statics.
+0x114050	-
+0x114a10	-
+# objecttype: ctype<char>::_Term, registered by the retained constructor.
+0x116060	-
+# objecttype: <iostream>'s _Ios_init/_Wios_init destructors, registered by
+# CRT roots 0x516590/0x5165c0.
+0x1165b0	-
+0x1165e0	-
+# rmg: createRiver's static table.
+0x149790	-
+# rmg_terrain: selectTerrainTransition and the two diagonal offset tables.
+0x1b45e0	-
+0x1b6df0	-
+0x1b6fc0	-

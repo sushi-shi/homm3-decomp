@@ -29,13 +29,9 @@ DATA(0x00643b80) static const POINT g_buttonPositions[4] = {
     {54, 234}, {158, 234}, {261, 234}, {365, 234}
 };
 
-// DC public gUniversityWindowHelp is the two-row cancel/accept help table.
-// Retail reads its four pointers consecutively at 0x6a7dd8..0x6a7de4.
-DATA(0x006a7dd8) THelpText g_universityWindowHelp[2];
-
-// Source-owned format selected by the constructor for the university's
-// right-click description. The pointer is zero-fill storage until that setup.
-DATA(0x006a7dec) static const char* g_universitySkillHelpFormat;
+// initializeHelpText fills four gUniversityWindowHelp rows at 0x6a7dd8.
+// Buttons consume rows 0/1; the skill description uses row 2's right-click
+// format (0x6a7dec).
 
 // E:\gamedcs\university_window.cpp:50. The two-store latch setter, and it
 // belongs in this TU rather than the carcass: retail EXPANDS it at its one
@@ -501,7 +497,7 @@ int type_university_window::purchaseClick(message& msg)
         int skill = window->m_selectedSkill.m_skill;
         const char* skillName = g_sSkillTraits[skill].m_name;
         result = formatString(
-            g_universitySkillHelpFormat, g_secondarySkillLevels[0],
+            g_universityWindowHelp[2].m_rclick, g_secondarySkillLevels[0],
             skillName, 2000);
         normalDialog(result.c_str(), 4, -1, -1,
                      20, skill * 3 + 3, -1, 0, -1, 0, -1, 0);

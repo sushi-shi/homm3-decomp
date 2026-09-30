@@ -1,0 +1,373 @@
+--- a/src/data_manifest.rs
++++ b/src/data_manifest.rs
+@@ -13,6 +13,8 @@
+
+ const HEADER: &[u8] =
+     b"object\trva\tsize\tstorage\talignment\tsection_ordinal\tsection_offset\tscope";
++
++const GRUNTZ_HEADER: &[u8] = b"name\tobject\trva\tsize\tstorage\talignment\tsection_ordinal\tsection_offset\tscope\tprovenance";
+
+ #[derive(Clone, Copy, Debug)]
+ struct ManifestRow<'a> {
+@@ -113,6 +115,7 @@
+         let mut definitions = Vec::new();
+         let mut rvas = HashSet::new();
+         let mut saw_header = false;
++        let mut named = false;
+
+         let (_, lines) = all_consuming(manifest_lines)
+             .parse(bytes)
+@@ -124,17 +127,18 @@
+                 continue;
+             }
+             if !saw_header {
+-                if line != HEADER {
++                if line != HEADER && line != GRUNTZ_HEADER {
+                     anyhow::bail!(
+                         "{}:{}: invalid data manifest header",
+                         path.display(),
+                         line_number
+                     );
+                 }
++                named = line == GRUNTZ_HEADER;
+                 saw_header = true;
+                 continue;
+             }
+-            if line == HEADER {
++            if line == HEADER || line == GRUNTZ_HEADER {
+                 anyhow::bail!(
+                     "{}:{}: duplicate data manifest header",
+                     path.display(),
+@@ -142,13 +146,23 @@
+                 );
+             }
+
+-            let (_, row) = all_consuming(manifest_row).parse(line).map_err(|_| {
+-                anyhow::anyhow!(
+-                    "{}:{}: expected exactly eight tab-separated columns",
+-                    path.display(),
+-                    line_number
+-                )
+-            })?;
++            let (row, explicit_name) = if named {
++                let fields: Vec<&[u8]> = line.split(|b| *b == b'\t').collect();
++                if fields.len() != 10 {
++                    anyhow::bail!("{}:{}: expected ten Gruntz manifest columns", path.display(), line_number);
++                }
++                validate_text(path, line_number, "name", fields[0])?;
++                validate_text(path, line_number, "provenance", fields[9])?;
++                if fields[0].is_empty() { anyhow::bail!("empty data identity"); }
++                (ManifestRow { object: fields[1], rva: fields[2], size: fields[3],
++                    storage: fields[4], alignment: fields[5], section_ordinal: fields[6],
++                    section_offset: fields[7], scope: fields[8] }, Some(fields[0]))
++            } else {
++                let (_, row) = all_consuming(manifest_row).parse(line).map_err(|_| {
++                    anyhow::anyhow!("{}:{}: expected exactly eight manifest columns", path.display(), line_number)
++                })?;
++                (row, None)
++            };
+             validate_text(path, line_number, "object", row.object)?;
+             if row.object.is_empty() {
+                 anyhow::bail!(
+@@ -248,11 +262,14 @@
+                     String::from_utf8_lossy(value)
+                 ),
+             };
+-            if !rvas.insert(rva) {
++            if !rvas.insert((rva, if named { object.clone() } else { String::new() })) {
+                 anyhow::bail!("{}:{}: duplicate data RVA", path.display(), line_number);
+             }
+
+-            let symbol_name = match storage {
++            let symbol_name = if let Some(name) = explicit_name {
++                let name: &'static [u8] = name.to_vec().leak();
++                RawString::from(name)
++            } else { match storage {
+                 DataStorage::Data | DataStorage::Bss => {
+                     symbols.statics.get(&rva).map(|symbol| symbol.name)
+                 }
+@@ -268,7 +285,7 @@
+                     path.display(),
+                     line_number
+                 )
+-            })?;
++            })? };
+
+             let object: &'static [u8] = object.into_bytes().leak();
+             definitions.push(DataDefinition {
+@@ -289,7 +306,15 @@
+
+         definitions.sort_unstable_by_key(|definition| definition.rva);
+         for pair in definitions.windows(2) {
+-            if pair[0].rva.checked_add(pair[0].size).unwrap() > pair[1].rva {
++            let same_fold = pair[0].rva == pair[1].rva
++                && pair[0].size == pair[1].size
++                && pair[0].symbol_name == pair[1].symbol_name
++                && pair[0].storage == pair[1].storage
++                && pair[0].alignment == pair[1].alignment
++                && pair[0].scope == pair[1].scope
++                && pair[0].object != pair[1].object
++                && pair[0].scope == DataScope::External;
++            if pair[0].rva.checked_add(pair[0].size).unwrap() > pair[1].rva && !same_fold {
+                 anyhow::bail!("overlapping data manifest definitions");
+             }
+         }
+@@ -609,4 +634,18 @@
+         assert_eq!(emission[0].symbol_name.as_bytes(), b"later");
+         assert_eq!(emission[1].symbol_name.as_bytes(), b"table");
+     }
+-}
++    #[test]
++    fn accepts_named_gruntz_folded_definitions() {
++        let text = format!("{}\n_shared\tone.c\t0x100\t4\tdata\t4\t1\t0\texternal\treviewed\n_shared\ttwo.c\t0x100\t4\tdata\t4\t1\t0\texternal\treviewed\n", std::str::from_utf8(GRUNTZ_HEADER).unwrap());
++        let parsed = parse(&text).unwrap();
++        assert_eq!(parsed.definitions().len(), 2);
++        assert_eq!(parsed.definitions()[0].symbol_name.as_bytes(), b"_shared");
++    }
++
++    #[test]
++    fn rejects_distinct_names_for_overlapping_gruntz_definitions() {
++        let text = format!("{}\n_one\tone.c\t0x100\t4\tdata\t4\t1\t0\texternal\treviewed\n_two\ttwo.c\t0x100\t4\tdata\t4\t1\t0\texternal\treviewed\n", std::str::from_utf8(GRUNTZ_HEADER).unwrap());
++        assert!(parse(&text).err().unwrap().to_string().contains("overlapping"));
++    }
++
++}
+--- a/src/data_section_manifest.rs
++++ b/src/data_section_manifest.rs
+@@ -9,6 +9,8 @@
+ use std::path::Path;
+
+ const HEADER: &[u8] = b"object\tordinal\tname\trva\tsize\talignment\tcharacteristics\tchecksum\tcomdat_selection\tassociative_ordinal\tstorage";
++
++const GRUNTZ_HEADER: &[u8] = b"object\tordinal\tname\trva\tsize\talignment\tcharacteristics\tcomdat_selection\tassociative_ordinal\tstorage\tprovenance";
+
+ #[derive(Clone, Copy, Debug)]
+ struct ManifestRow<'a> {
+@@ -132,6 +134,7 @@
+         let mut sections = Vec::new();
+         let mut ordinals = HashSet::new();
+         let mut saw_header = false;
++        let mut gruntz = false;
+
+         for (line_index, line) in lines.into_iter().enumerate() {
+             let line_number = line_index + 1;
+@@ -139,13 +142,14 @@
+                 continue;
+             }
+             if !saw_header {
+-                if line != HEADER {
++                if line != HEADER && line != GRUNTZ_HEADER {
+                     anyhow::bail!(
+                         "{}:{}: invalid data section manifest header",
+                         path.display(),
+                         line_number
+                     );
+                 }
++                gruntz = line == GRUNTZ_HEADER;
+                 saw_header = true;
+                 continue;
+             }
+@@ -156,7 +160,17 @@
+                     line_number
+                 );
+             }
+-            let (_, row) = all_consuming(manifest_row).parse(line).map_err(|_| {
++            let converted;
++            let parsed_line = if gruntz {
++                let fields: Vec<&[u8]> = line.split(|b| *b == b'\t').collect();
++                if fields.len() != 11 { anyhow::bail!("expected eleven Gruntz section columns"); }
++                let mut native = fields[..7].to_vec();
++                native.push(b"0");
++                native.extend_from_slice(&fields[7..10]);
++                converted = native.join(&b'\t');
++                converted.as_slice()
++            } else { line };
++            let (_, row) = all_consuming(manifest_row).parse(parsed_line).map_err(|_| {
+                 anyhow::anyhow!(
+                     "{}:{}: expected exactly eleven tab-separated columns",
+                     path.display(),
+@@ -263,22 +277,26 @@
+                     line_number
+                 );
+             }
++
+             if let Some(storage) = storage {
++                let group = row.name.split(|byte| *byte == b'$').next().unwrap();
+                 let (name_matches, required, forbidden) = match storage {
+                     SectionStorage::Data => (
+-                        row.name == b".data" || row.name.starts_with(b".CRT$"),
++                        group == b".data" || row.name.starts_with(b".CRT$"),
+                         object::pe::IMAGE_SCN_CNT_INITIALIZED_DATA
+                             | object::pe::IMAGE_SCN_MEM_WRITE,
+                         object::pe::IMAGE_SCN_CNT_UNINITIALIZED_DATA,
+                     ),
+                     SectionStorage::Rdata => (
+-                        row.name == b".rdata",
++                        group == b".rdata" || group == b".xdata",
+                         object::pe::IMAGE_SCN_CNT_INITIALIZED_DATA,
+                         object::pe::IMAGE_SCN_CNT_UNINITIALIZED_DATA
+-                            | object::pe::IMAGE_SCN_MEM_WRITE,
++                            | object::pe::IMAGE_SCN_MEM_WRITE
++                            | object::pe::IMAGE_SCN_CNT_CODE
++                            | object::pe::IMAGE_SCN_MEM_EXECUTE,
+                     ),
+                     SectionStorage::Bss => (
+-                        row.name == b".bss",
++                        group == b".bss",
+                         object::pe::IMAGE_SCN_CNT_UNINITIALIZED_DATA
+                             | object::pe::IMAGE_SCN_MEM_WRITE,
+                         object::pe::IMAGE_SCN_CNT_INITIALIZED_DATA,
+@@ -533,6 +551,23 @@
+     }
+
+     #[test]
++    fn accepts_readonly_exception_comdats_and_rejects_writable_or_code_sections() {
++        let row = "a.c\t1\t.xdata$x\t0x100\t28\t8\t0x40401040\t0\t2\t-\trdata\n";
++        let manifest = parse(row).unwrap();
++        assert_eq!(manifest.sections()[0].name, b".xdata$x");
++        assert_eq!(manifest.sections()[0].storage, Some(SectionStorage::Rdata));
++        for characteristics in ["0xc0401040", "0x60401040", "0x40401060"] {
++            assert!(parse(&row.replace("0x40401040", characteristics)).is_err());
++        }
++        assert!(parse(&row.replace(".xdata$x", ".unknown$x")).is_err());
++        let gruntz = concat!(
++            "object\tordinal\tname\trva\tsize\talignment\tcharacteristics\tcomdat_selection\tassociative_ordinal\tstorage\tprovenance\n",
++            "a.c\t1\t.xdata$x\t0x100\t28\t8\t0x40401040\t2\t-\trdata\texception\n",
++        );
++        assert!(DataSectionManifest::parse(gruntz.as_bytes(), Path::new("test.tsv")).is_ok());
++    }
++
++    #[test]
+     fn accepts_crlf_and_missing_final_line_ending() {
+         let text = format!(
+             "{}a.c\t1\t.data\t0x100\t4\t4\t0xc0300040\t0\t0\t-\tdata",
+--- a/src/object_files.rs
++++ b/src/object_files.rs
+@@ -19,7 +19,7 @@
+ use pdb2::{FallibleIterator, RawString};
+
+ use object::write::SymbolId;
+-use object::{SectionFlags, SectionKind};
++use object::{ComdatKind, SectionFlags, SectionKind};
+
+ pub struct ObjectFiles<'a> {
+     pub objects: HashMap<&'a [u8], ObjectFile>,
+@@ -35,6 +35,8 @@
+     topology_sections: Vec<EmittedTopologySection>,
+     definition_ranges: Vec<Vec<(usize, usize)>>,
+     reviewed_section_checksums: Vec<([u8; 8], u32)>,
++    data_comdats: Vec<(usize, object::write::SectionId, ComdatSelection)>,
++    comdat_leaders: HashMap<usize, (u64, SymbolId)>,
+ }
+
+ #[derive(Clone, Copy)]
+@@ -265,7 +267,7 @@
+         let base_len = base.as_os_str().as_encoded_bytes().len();
+         let mut path = base.to_path_buf();
+
+-        for (prefix, object_file) in self.objects {
++        for (prefix, mut object_file) in self.objects {
+             path.as_mut_os_string().truncate(base_len);
+
+             let prefix = prefix
+@@ -280,6 +282,7 @@
+             path.as_mut_os_string().push(".obj");
+
+             std::fs::create_dir_all(path.parent().unwrap())?;
++            object_file.finish_data_comdats()?;
+             let mut bytes = object_file.object.write()?;
+             apply_reviewed_section_checksums(&mut bytes, &object_file.reviewed_section_checksums)?;
+             std::fs::write(&path, bytes)?;
+@@ -346,6 +349,8 @@
+             topology_sections: Vec::new(),
+             definition_ranges: Vec::new(),
+             reviewed_section_checksums: Vec::new(),
++            data_comdats: Vec::new(),
++            comdat_leaders: HashMap::new(),
+         }
+     }
+
+@@ -369,6 +374,7 @@
+         let mut bss_section_id = None;
+         let mut text_section_id = None;
+         let mut reviewed_section_checksums = Vec::with_capacity(sections.len());
++        let mut data_comdats = Vec::new();
+
+         for section in sections {
+             let kind = match section.storage {
+@@ -438,21 +444,19 @@
+                 size: section.size,
+             });
+
+-            if section.comdat_selection != ComdatSelection::None {
+-                anyhow::bail!(
+-                    "candidate data COMDAT section {} is not yet emitted",
+-                    section.ordinal
+-                );
++            let ordinary = section.comdat_selection == ComdatSelection::None;
++            if !ordinary {
++                data_comdats.push((section.ordinal, id, section.comdat_selection));
+             }
+
+             match section.storage {
+-                Some(SectionStorage::Data) if data_section_id.is_none() => {
++                Some(SectionStorage::Data) if ordinary && data_section_id.is_none() => {
+                     data_section_id = Some(id)
+                 }
+-                Some(SectionStorage::Rdata) if rdata_section_id.is_none() => {
++                Some(SectionStorage::Rdata) if ordinary && rdata_section_id.is_none() => {
+                     rdata_section_id = Some(id)
+                 }
+-                Some(SectionStorage::Bss) if bss_section_id.is_none() => bss_section_id = Some(id),
++                Some(SectionStorage::Bss) if ordinary && bss_section_id.is_none() => bss_section_id = Some(id),
+                 None if section.name == b".text" && text_section_id.is_none() => {
+                     text_section_id = Some(id)
+                 }
+@@ -474,6 +478,8 @@
+             topology_sections,
+             definition_ranges: vec![Vec::new(); sections.len()],
+             reviewed_section_checksums,
++            data_comdats,
++            comdat_leaders: HashMap::new(),
+         })
+     }
+ }
+@@ -1025,7 +1031,7 @@
+                 definition.symbol_name
+             );
+         }
+-        self.object.add_symbol(object::write::Symbol {
++        let symbol = self.object.add_symbol(object::write::Symbol {
+             name: definition.symbol_name.as_bytes().to_vec(),
+             value: offset.offset,
+             size: definition.size.to_u64(),
+@@ -1038,6 +1044,30 @@
+             section: object::write::SymbolSection::Section(offset.section_id),
+             flags: object::SymbolFlags::None,
+         });
++        if let Some(ordinal) = definition.section_ordinal {
++            if definition.scope == DataScope::External {
++                let leader = self.comdat_leaders.entry(ordinal).or_insert((offset.offset, symbol));
++                if offset.offset < leader.0 { *leader = (offset.offset, symbol); }
++            }
++        }
++        Ok(())
++    }
++
++    fn finish_data_comdats(&mut self) -> anyhow::Result<()> {
++        for (ordinal, section, selection) in std::mem::take(&mut self.data_comdats) {
++            let (_, leader) = self.comdat_leaders.get(&ordinal).copied().ok_or_else(||
++                anyhow::anyhow!("candidate data COMDAT section {ordinal} has no external leader"))?;
++            let kind = match selection {
++                ComdatSelection::NoDuplicates => ComdatKind::NoDuplicates,
++                ComdatSelection::Any => ComdatKind::Any,
++                ComdatSelection::SameSize => ComdatKind::SameSize,
++                ComdatSelection::ExactMatch => ComdatKind::ExactMatch,
++                ComdatSelection::Largest => ComdatKind::Largest,
++                ComdatSelection::Newest => ComdatKind::Newest,
++                _ => anyhow::bail!("unsupported data COMDAT selection in section {ordinal}"),
++            };
++            self.object.add_comdat(object::write::Comdat { kind, symbol: leader, sections: vec![section] });
++        }
+         Ok(())
+     }

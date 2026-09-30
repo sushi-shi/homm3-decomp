@@ -82,6 +82,32 @@ int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
 DATA(0x0069cca4) static unsigned char g_mainLoopInitFlags;
 DATA(0x0069ccac) static unsigned long g_lastFrameRateTimer;
 
+// Unrecovered, and not this compiland's: retail CRT root 0x52bda0
+// default-constructs a 16-byte object at 0x69ccd8 (allocator byte, then
+// three zeroed words) and registers cleanup 0x52bdd0, which deletes the
+// first word and zeroes all three. That cleanup is a vector's, not a
+// string's (VC6's string _Tidy tests the reference count first), and VC6
+// emits it without a frame only for an internal-linkage `static
+// std::vector<T>` of a trivially destructible T; an external vector keeps a
+// frame. Each game compiland here is laid out as its terrain.h cinit block,
+// its own code, then its template tail and locale-id guard: path's block
+// 0x5236c0 precedes 0x5239d0 and its guard is 0x523ee0, philAI's block
+// 0x523f00 precedes 0x5242d0 and its guard 0x52bd30 is followed by its
+// sort helper 0x52bd50 (called at 0x527005), and puzzlewindow's block
+// 0x52be10 precedes 0x52c1e0. The root, its cleanup and guard 0x52bdf0 are
+// therefore one further compiland between philai and puzzlewindow, with no
+// terrain.h block, no .data or .rdata (philAI's 0x681878 abuts
+// puzzlewindow's 0x681880) and only this object in .bss (philAI's statics
+// end at 0x69ccd7; puzzlewindow's masks start at 0x69cce8). All its code was
+// dead-stripped. `#include <string>` with `#include <vector>` (vector alone
+// emits no guard) and `static std::vector<int> v;` reproduce the root,
+// cleanup, guard and both .CRT$XCU slots byte for byte, and so does any
+// trivially destructible element type. No retail code reads the object,
+// Dreamcast's only compiland in that link slot is playvideo.obj (a WinCE
+// video DLL loader with no vector), and Mac's bare-vector global
+// registrations belong to mapcell, drawing and the seer-hut text, so the
+// element type and compiland name are unknown and are not invented here.
+
 // Dreamcast names this shared cursor-suppression flag bSpecialHideCursor.
 // Its retail cell immediately follows the nine-row town hierarchy table; this
 // is its sole retail code reference, so this TU owns the public definition.
@@ -720,9 +746,11 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
 // precedes GetTown and agrees with retail's char-to-short-to-int conversion.
 // Mac0x1409c4 adds the accessor's int result directly; an extra short
 // temporary inserts a narrowing instruction absent from that native loop.
-// Current VC6 removes the first expanded getHero sentinel check, which
-// Windows retains. Five narrowed-ID lifetimes produce three objects with
-// no gain; equivalent shared-accessor returns do not restore that branch.
+// The movable-hero scan indexes m_heroes directly; only the garrison scan
+// goes through getHero. Routing the first lookup through the accessor made
+// VC6 fold its expanded sentinel check away (Windows 88.04%, doAI 82.80%,
+// Mac 23.30%); the direct subscript closes both Windows bodies and lifts
+// Mac to 53.96%. A short skillValue temporary is Windows-flat and costs Mac.
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 {
     hero* currentHero;
@@ -734,7 +762,7 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 
     for (short heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
         short heroId = player->m_heroes[heroIndex];
-        currentHero = g_game->getHero(heroId);
+        currentHero = &g_game->m_heroes[heroId];
         if (currentHero->m_movePoints > 0 && !currentHero->m_isSleeping) {
             if (selectedHero)
                 *isLastHero = 0;
@@ -918,7 +946,8 @@ long type_spellvalue::getValueOfIncrease(long baseValue,
 
 // Original: ComputeUpgradeValue; philai.cpp:1833, dc 0x1102e4.
 // Complete expands this ordinary static helper into valueOfStables with the
-// Cavalier/Champion pair. The existing destination stack halves the award.
+// Cavalier/Champion pair. An existing destination stack scales the award
+// by 1.2 (retail valueOfStables +0xba multiplies by the double at 0x63ac20).
 MAC_ADDRESS(0x141e50, 0xc4)
 static int computeUpgradeValue(hero* currentHero, int sourceType, int destType)
 {
@@ -928,7 +957,7 @@ static int computeUpgradeValue(hero* currentHero, int sourceType, int destType)
     int value = (g_creatureTypeTraits[destType].m_aiValue
                  - g_creatureTypeTraits[sourceType].m_aiValue) * number;
     if (currentHero->creatureTypeCount(destType) != 0)
-        value = static_cast<int>(value * 0.5);
+        value = static_cast<int>(value * 1.2);
     return value;
 }
 
@@ -2250,7 +2279,7 @@ static void moveHero(hero* currentHero, long* dangerZones,
             g_advManager->demobilizeCurrHero(0, 1);
             g_advManager->setHeroContext(currentHero->m_id, 1, 0, 1);
             memset(dangerZones, 0,
-                   g_mapHeight * g_mapWidth * g_game->getNumMapLevels()
+                   g_mapWidth * g_mapHeight * g_game->getNumMapLevels()
                        * sizeof(long));
             if (g_game->m_setup.m_difficulty > 0
                 || g_game->isHumanAlly(g_netLocalGamePos))

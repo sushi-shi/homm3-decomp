@@ -622,15 +622,17 @@ enum ERmgGuardConstants {
     RMG_GUARD_DISPOSITION = 3
 };
 
-// The function-local river-delta table has a non-trivial empty destructor:
-// retail registers its cleanup thunk when CreateRiver first reaches the
-// table.  The type is shared here so the table has one canonical shape.
+// CreateRiver's function-local river-delta table. Retail registers the
+// bare-`ret` callback 0x549790 with _atexit when it first reaches the table.
+// VC6 registers exactly that empty callback for a function-local static
+// array of a class with a constructor and no destructor; a user-declared
+// empty destructor instead registers a callback that runs the eh vector
+// destructor iterator over the four elements.
 struct TRmgRiverDeltaOffset {
     int m_x;
     int m_y;
 
     TRmgRiverDeltaOffset(int newX, int newY) : m_x(newX), m_y(newY) {}
-    ~TRmgRiverDeltaOffset() {}
 };
 
 class type_object;
@@ -1365,7 +1367,7 @@ struct TRmgLinePainterTile;
 // dimensions at +4/+8 (0x4fa45b/0x4fa45f and 0x4fa122/0x4fa16a).
 // This common abstract prefix is a retail-derived source model; the original
 // Complete-only interface spelling is unknown. It has no virtual destructor
-// slot: only the final river/road painters append slot 6.
+// slot: the two painters below append slot 6 as a pure destructor.
 class TRmgLinePainterInterface {
 public:
     TRmgGridPoint m_size;
@@ -1422,7 +1424,11 @@ public:
         : TRmgLinePainterInterface(newAdapter->getSize()), m_adapter(newAdapter)
     {
     }
-    ~TRmgLinePainter() {}
+    // Retail's table 0x641174 has seven slots and the seventh is _purecall,
+    // where the river painter's 0x641190 has its deleting destructor: the
+    // destructor is pure here, as TRmgTerrainRule's is. Its empty body is
+    // still expanded in ~TRmgRiverPainter (vptr store at 0x55eda0).
+    virtual ~TRmgLinePainter() = 0;
 
     virtual TRmgLinePatternTable* getPattern(int value);
     virtual void setTile(
@@ -1435,6 +1441,8 @@ public:
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile);
     virtual int getLand(const TRmgGridPoint& point);
 };
+
+inline TRmgLinePainter::~TRmgLinePainter() {}
 
 // The retained walk at 0x4fa2b0 builds two three-dword records, selects them
 // by distance, then updates their coordinate and step through those pointers.
@@ -1496,7 +1504,9 @@ public:
         : TRmgLinePainterInterface(newAdapter->getSize()), m_adapter(newAdapter)
     {
     }
-    ~TRmgRoadLinePainter() {}
+    // Table 0x6411f0's seventh slot is _purecall as well (0x64120c has
+    // ??_GTRmgRoadPainter there).
+    virtual ~TRmgRoadLinePainter() = 0;
 
     virtual TRmgLinePatternTable* getPattern(int value);
     virtual void setTile(
@@ -1506,6 +1516,8 @@ public:
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile);
     virtual int getLand(const TRmgGridPoint& point);
 };
+
+inline TRmgRoadLinePainter::~TRmgRoadLinePainter() {}
 
 class TRmgRoadPainter : public TRmgRoadLinePainter, public TRmgLineWalker {
 public:

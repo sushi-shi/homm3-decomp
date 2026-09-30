@@ -1001,6 +1001,9 @@ def _summary_lines(facts: dict) -> tuple[list[str], bool, str]:
         note = f" ({div['note']})" if div.get("note") and div["kind"] == "reloc-target" else ""
         lines.append(f"  first block   B{div['block']} {baddr}/{taddr}  {div['kind']}{at}{note}")
     lines.append(f"  first source  {source}")
+    if facts.get("pending_eh"):
+        lines.append(f"  EH records    {facts['pending_eh']} byte(s) verify when this "
+                     f"function becomes exact")
     agree = (census["same"] and br_ok and calls["agree"] and relocs["agree"]
              and asm["equal"] and (div is None or div["cosmetic"]))
     if not calls["agree"]:
@@ -1019,6 +1022,18 @@ def _summary_lines(facts: dict) -> tuple[list[str], bool, str]:
     lines.append(f"  next: homm3 sema diff 0x{rva:08x} {nxt}" if nxt
                  else "  next: (nothing - all views agree)")
     return lines, agree, nxt
+
+
+def _pending_eh_bytes(name, unit) -> int:
+    """EH-record bytes the last byte accounting holds for this function."""
+    import json
+    from homm3.core.paths import BUILD
+    try:
+        held = json.loads((BUILD / "gen/pending_function_records.json").read_text())
+    except (OSError, ValueError):
+        return 0
+    row = held.get(name) or {}
+    return row.get("bytes", 0) if row.get("unit", unit) in ("", unit) else 0
 
 
 def _summary_facts(ctx, base_text, target_text, rva, name, unit, ordinal,
@@ -1062,7 +1077,8 @@ def _summary_facts(ctx, base_text, target_text, rva, name, unit, ordinal,
     facts = {"rva": rva, "name": name, "unit": unit, "pct": pct, "census": census,
              "branches": branches, "calls": calls, "relocs": relocs, "asm": asm,
              "divergence": div, "source": source, "source_loaded": source_loaded,
-             "why_bytes": why_bytes, "source_details": source_details}
+             "why_bytes": why_bytes, "source_details": source_details,
+             "pending_eh": _pending_eh_bytes(name, unit)}
     _lines, agree, nxt = _summary_lines(facts)
     facts.update(agree=agree, next_view=nxt, ordinal=ordinal, va=rva + ctx.image.image_base)
     return facts

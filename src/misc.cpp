@@ -106,12 +106,12 @@ void checkConfigFile()
     if (g_config.m_windowScrollSpeed < 0 ||
             g_config.m_windowScrollSpeed > 2)
         g_config.m_windowScrollSpeed = 1;
-    if (g_config.m_computerWalkSpeed < 2 ||
-            g_config.m_computerWalkSpeed > 5)
-        g_config.m_computerWalkSpeed = 3;
-    if (g_config.m_walkSpeed <= 0 ||
-            g_config.m_walkSpeed > 4)
-        g_config.m_walkSpeed = 2;
+    if (g_config.m_walkSpeed[0] < 2 ||
+            g_config.m_walkSpeed[0] > 5)
+        g_config.m_walkSpeed[0] = 3;
+    if (g_config.m_walkSpeed[1] <= 0 ||
+            g_config.m_walkSpeed[1] > 4)
+        g_config.m_walkSpeed[1] = 2;
     if (g_config.m_musicVolume < 0 ||
             g_config.m_musicVolume > 9)
         g_config.m_musicVolume = 5;
@@ -149,8 +149,8 @@ static void setDefaultSystemOptions()
     g_config.m_videoSubtitles = 1;
     g_config.m_townOutlines = 1;
     g_config.m_windowScrollSpeed = 1;
-    g_config.m_computerWalkSpeed = 3;
-    g_config.m_walkSpeed = 2;
+    g_config.m_walkSpeed[0] = 3;
+    g_config.m_walkSpeed[1] = 2;
 }
 
 // E:\gamedcs\misc.cpp:403
@@ -455,10 +455,10 @@ void readPrefsFromRegistry()
                 &g_config.m_lastSoundVolume)), &cbData);
         RegQueryValueExA(key, g_prefWalkSpeed, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_config.m_walkSpeed)), &cbData);
+                &g_config.m_walkSpeed[1])), &cbData);
         RegQueryValueExA(key, g_prefComputerWalkSpeed, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_config.m_computerWalkSpeed)), &cbData);
+                &g_config.m_walkSpeed[0])), &cbData);
         RegQueryValueExA(key, g_prefShowRoute, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_showRoute)), &cbData);
@@ -610,10 +610,10 @@ void writePrefsToRegistry()
                 &g_config.m_lastSoundVolume)), 4);
         RegSetValueExA(key, g_prefWalkSpeed, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_config.m_walkSpeed)), 4);
+                &g_config.m_walkSpeed[1])), 4);
         RegSetValueExA(key, g_prefComputerWalkSpeed, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_config.m_computerWalkSpeed)), 4);
+                &g_config.m_walkSpeed[0])), 4);
         RegSetValueExA(key, g_prefShowRoute, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
                 &g_config.m_showRoute)), 4);
@@ -715,13 +715,14 @@ void writePrefs()
 }
 
 // DC IsCDDrive (misc.cpp:603, 0xfe060) accepts every drive; its
-// caller SetupCDDrive returns a fixed 7 as well. Complete 0x50c1c0
-// retains that fixed result, so no drive-enumeration/classification
-// expression survives in this pinned executable. See config/source/dc_only.tsv.
+// caller SetupCDDrive returns a fixed 7 as well. The pinned Complete entry
+// at 0x50c1c0 is patched to that result. The overwritten prologue's tail and
+// unreachable drive-enumeration/MCI code remain through 0x50c599; they are
+// not part of this six-byte source match. See config/source/dc_only.tsv.
 VA(0x0050c1c0, 0x6) MAC_ADDRESS(0x13137c, 0x114)  // dc 0xfe064
 int setupCDDrive()
 {
-    return 7;
+    return CD_DRIVE_NUMBER_NO_CD_REQUIRED;
 }
 
 VA(0x0050c5a0, 0x49)  // dc 0xfe068
@@ -737,19 +738,13 @@ long fileSize(char* filename)
     return size;
 }
 
-// Retail's only three references to this scratch are format_string's
-// vsprintf destination, strlen source and copy source.  Its 512-byte extent
-// is bounded exactly by the next referenced bss cell at 0x6998cc.
-DATA(0x006996cc)
-static char g_formatStringBuffer[512];
-
 // The seed SRand records before handing it to the CRT. Retail .data
 // 0x67fb94, and the store below is its ONLY reference in the whole
 // image (one row in config/retail/reloc-evidence.tsv), so nothing
 // attests an original name or linkage. The descriptive name follows the
 // stored seed; storage stays private to the only TU that touches it.
 DATA(0x0067fb94)
-static int g_randomSeed;
+static int g_randomSeed = 0x08156a03;
 
 VA(0x0050c5f0, 0xE) MAC_ADDRESS(0x131490, 0x24)  // dc 0xfe0b8
 void sRand(int seed)
@@ -782,11 +777,16 @@ int sRandom(int lower, int upper)
 VA(0x0050c600, 0xDD) MAC_ADDRESS(0x131520, 0x70)  // dc 0xfe10c
 std::string formatString(const char* format, ...)
 {
+    // Dreamcast CodeView types format_string's function static `buffer` as
+    // char[512]. Retail's only three references to it are the vsprintf
+    // destination, the strlen source and the copy source.
+    DATA(0x006996cc)
+    static char buffer[512];
     va_list arguments;
     va_start(arguments, format);
-    vsprintf(g_formatStringBuffer, format, arguments);
+    vsprintf(buffer, format, arguments);
     va_end(arguments);
-    return std::string(g_formatStringBuffer);
+    return std::string(buffer);
 }
 
 // Both native constructors pass high-low+1 directly to vector<bool>;

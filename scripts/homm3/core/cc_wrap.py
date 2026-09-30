@@ -25,28 +25,52 @@ from homm3.core.common import HOMM3_DIR
 
 _INC_RE = re.compile(r'^[ \t]*#[ \t]*include[ \t]*[<"]([^>"]+)[>"]', re.M)
 
-def scan_header_deps(src, *inc_roots):
+def _include_file(root, name):
+    path = root / name
+    if path.is_file():
+        return path
+    # The original SDK uses uppercase filenames; Wine resolves them without
+    # regard to case. Dependency receipts must include those same headers.
+    path = root
+    for part in name.replace('\\', '/').split('/'):
+        if not path.is_dir():
+            return None
+        path = next((p for p in path.iterdir() if p.name.lower() == part.lower()), None)
+        if path is None:
+            return None
+    return path if path.is_file() else None
+
+def scan_header_deps(src, *inc_roots, cache=None):
     """Recover header dependencies independently of compiler diagnostic output: recursively resolve
     every `#include` against the search roots (+ each file's own dir for "quoted"
     includes) and return the in-tree headers reached. System headers (<string.h> etc.) don't
     resolve under any root and are skipped — they never change. Over-approximates (ignores
     #if), which is SAFE for a depfile: worst case an extra rebuild, never a stale obj.
     The roots are the same list cc_wrap puts on INCLUDE minus the toolchain, in the
-    same order, so <zlib.h> resolves here exactly as it does for CL."""
+    same order, so <zlib.h> resolves here exactly as it does for CL.
+    A caller may share a cache within one read pass; discard it before the next
+    pass. Source comparison callers independently validate content receipts."""
     src = Path(src).resolve(); inc_roots = [Path(r) for r in inc_roots]
+    cache = {} if cache is None else cache
     seen = set(); stack = [src]
     while stack:
         f = stack.pop()
         if f in seen:
             continue
         seen.add(f)
-        try:
-            text = f.read_text(errors="replace")
-        except OSError:
-            continue
-        for inc in _INC_RE.findall(text):
-            for cand in [f.parent / inc] + [r / inc for r in inc_roots]:
-                if cand.is_file():
+        key = ('includes', f)
+        if key not in cache:
+            try:
+                cache[key] = _INC_RE.findall(f.read_text(errors="replace"))
+            except OSError:
+                continue
+        for inc in cache[key]:
+            for root in [f.parent, *inc_roots]:
+                key = ('resolve', root, inc)
+                if key not in cache:
+                    cache[key] = _include_file(root, inc)
+                cand = cache[key]
+                if cand is not None:
                     stack.append(cand.resolve()); break
     return sorted(str(p) for p in seen if p != src)
 
@@ -132,6 +156,14 @@ def main():
     project_includes = Project(HOMM3_DIR).includes
     incs = [msvc / "include", *(p for p in project_includes if p.is_dir())]
     os.environ["INCLUDE"] = ";".join(winepath_w(p) for p in incs)
+    from homm3.core import compile_receipt
+    inputs = compile_receipt.snapshot([
+        src, *scan_header_deps(src, *incs),
+        *[p for p in (msvc / 'bin').iterdir()
+          if p.is_file() and p.suffix.lower() in ('.exe', '.dll')],
+        HOMM3_DIR / 'config/units.toml', HOMM3_DIR / 'config/project.toml',
+        Path(__file__), Path(compile_receipt.__file__),
+    ])
     output, rc, produced = _compile_staged(
         out, lambda staged: ["wine", str(cl), *flags,
                              f"/Fo{winepath_w(staged)}", winepath_w(src)])
@@ -141,6 +173,10 @@ def main():
         sys.stderr.write(f"[cc_wrap] full diagnostics: {diagnostic_log}\n")
         sys.stderr.write(f"[cc_wrap] FAILED {src.name} -> {out}\n" + "\n".join(output.strip().splitlines()[-15:]) + "\n")
         sys.exit(rc or 1)
+    try:
+        compile_receipt.publish(out, inputs, flags)
+    except (OSError, ValueError) as error:
+        die(str(error))
     # Emit a conservative depfile so Ninja recompiles on local-header edits.
     deps = scan_header_deps(src, *project_includes)
     dep_list = " ".join(d.replace(" ", "\\ ") for d in deps)

@@ -24,7 +24,7 @@
 #include "winmgr.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x006701a8) const char* const g_combatResultMusic[6] = { "win battle", "losecombat", "defend castle", "retreat battle", "surrender battle", "losecastle" };
+DATA(0x006701a8) const char* g_combatResultMusic[6] = { "win battle", "losecombat", "defend castle", "retreat battle", "surrender battle", "losecastle" };
 
 DATA(0x00695014) int g_combatResult;
 

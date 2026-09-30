@@ -32,6 +32,9 @@ SIZE(TIPv4SocketAddress, 0x10);
 
 // The private edit hierarchy is defined in multiplayerwindow.cpp.
 class CHotSeatEdit;
+class bitmapBorder;
+class button;
+class slider;
 
 // DC derives CHotSeatDlg from CHeroWindowEx and places its `edit` run at
 // +0x4c, followed by m_rollover at +0x6c. Retail's independently proven
@@ -93,11 +96,11 @@ SIZE(CHeroSessions, 0x14);
 // The 14-slot vtable 0x6400a0 overrides slot 0 (sdd/dtor), 9 (WindowHandler),
 // 12 (OnWidgetDeselect), 13 (GetRolloverWidget).
 
-// The DC types of the widget members are bitmapBorder* (splash), button*
-// (the ten screen buttons), slider* (gameSlider) and textWidget* (the three
-// headers); they are modelled as their widget/textWidget base here because
-// every reconstructed body reaches them only through widget::send_message /
-// textWidget::Text, and narrowing the include set avoids the declarator wall.
+// The widget members keep their DC types: bitmapBorder* (splash), button*
+// (the ten screen buttons), slider* (gameSlider), textEntryWidget* (player
+// name) and textWidget* (headers). Retail's constructor converts each derived
+// pointer into a widget* temporary for push_back, which a base-typed member
+// cannot reproduce (83.92% -> 99.95%).
 class TMultiPlayerWindow : public CHeroWindowEx {
 public:
     enum EWidgetId {
@@ -127,9 +130,9 @@ public:
     unsigned long m_sessTimer;  // +0x64
     unsigned long m_sessionRefreshTimeout;  // +0x68
     char m_localIpAddress[80];  // +0x6c
-    textWidget* m_playerName;  // +0xbc (DC textEntryWidget*)
+    textEntryWidget* m_playerName;  // +0xbc
     unsigned char m_hostJoinScreen;  // +0xc0
-    widget* m_splash;  // +0xc4 (DC bitmapBorder*)
+    bitmapBorder* m_splash;  // +0xc4
 
     TMultiPlayerWindow();
     virtual ~TMultiPlayerWindow();
@@ -165,17 +168,17 @@ public:
     }
 
 private:
-    widget* m_hotSeat;  // +0xc8 (DC button*)
-    widget* m_ipx;  // +0xcc
-    widget* m_tcp;  // +0xd0
-    widget* m_modem;  // +0xd4
-    widget* m_direct;  // +0xd8
-    widget* m_online;  // +0xdc
-    widget* m_host;  // +0xe0
-    widget* m_join;  // +0xe4
-    widget* m_search;  // +0xe8
-    widget* m_cancel;  // +0xec
-    widget* m_gameSlider;  // +0xf0 (DC slider*)
+    button* m_hotSeat;  // +0xc8
+    button* m_ipx;  // +0xcc
+    button* m_tcp;  // +0xd0
+    button* m_modem;  // +0xd4
+    button* m_direct;  // +0xd8
+    button* m_online;  // +0xdc
+    button* m_host;  // +0xe0
+    button* m_join;  // +0xe4
+    button* m_search;  // +0xe8
+    button* m_cancel;  // +0xec
+    slider* m_gameSlider;  // +0xf0
     textWidget* m_sessNameHeader;  // +0xf4
     textWidget* m_userNameHeader;  // +0xf8
     textWidget* m_rolloverWidget;  // +0xfc

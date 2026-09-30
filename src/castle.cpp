@@ -17,7 +17,7 @@
 #include "winmgr.h"
 
 // Retail table initializers, in the layouts used by their named consumers.
-DATA(0x0066cf98) const unsigned char g_townSpecStructScreen[9][18] = {
+DATA(0x0066cf98) unsigned char g_townSpecStructScreen[9][18] = {
     { 30, 31, 32, 33, 34, 35, 36, 0, 5, 6, 14, 7, 10, 16, 18, 21, 0, 0 },
     { 30, 31, 32, 33, 34, 35, 36, 0, 5, 14, 7, 10, 16, 18, 24, 22, 17, 0 },
     { 30, 31, 32, 33, 34, 35, 36, 0, 5, 22, 14, 7, 10, 16, 18, 21, 23, 17 },
@@ -28,7 +28,7 @@ DATA(0x0066cf98) const unsigned char g_townSpecStructScreen[9][18] = {
     { 30, 31, 32, 33, 34, 35, 36, 0, 5, 6, 14, 7, 10, 16, 18, 21, 17, 0 },
     { 30, 31, 32, 33, 34, 35, 36, 0, 5, 6, 14, 7, 10, 16, 18, 17, 21, 0 }
 };
-DATA(0x0066d03c) const unsigned char g_numOfTownSpecStrScreen[9] = { 16, 17, 18, 18, 18, 18, 18, 17, 17 };
+DATA(0x0066d03c) unsigned char g_numOfTownSpecStrScreen[9] = { 16, 17, 18, 18, 18, 18, 18, 17, 17 };
 
 // File-local working state used by the hall page. All later references in
 // this function are relocations to these two bases plus source-array

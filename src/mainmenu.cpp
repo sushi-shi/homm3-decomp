@@ -7,6 +7,7 @@
 //   contribution is fully accounted for and its non-COMDAT globals would have to
 //   sit in this run -> DC-port-only class; recorded unlocated, not forced.
 #include "va.h"
+#include "text.h"
 
 // DC S_LPROC32: TU-local. Declared before the header so the friend binds to it.
 class message;
@@ -42,10 +43,6 @@ DATA(0x0067fa64) static unsigned char g_checkDiskSpace = 1;
 // SetupCDDrive's result is stored by kb.obj's startup path and consumed here
 // to select the localized missing-CD wording. No public DC name survives.
 
-
-// DC public gMainMenuHelp; InitializeHelpText fills the same five retail
-// THelpText rows at this address.
-DATA(0x006a6c24) extern THelpText g_mainMenuHelp[5];
 
 DATA(0x0063ff28)
 static const TMainMenuButtonRect g_mainMenuButtonRects[5] = {
@@ -185,7 +182,7 @@ static int mainMenuHandler(message& msg)
             default: helpID = -1; break;
             }
             if (helpID >= 0 && !g_lobbyLaunched)
-                normalDialog(g_mainMenuHelp[helpID].m_text, 4, -1, -1,
+                normalDialog(g_mainMenuHelp[helpID].m_rclick, 4, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
         }
     } else if (msg.m_id == MESSAGE_WIDGET) {

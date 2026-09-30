@@ -160,16 +160,24 @@ TCombatOptionsWindow::TCombatOptionsWindow()
             memError();
     }
 
+    // As in systemoptionswindow.cpp, DC calls send_message directly for the
+    // slider highlight (set_visible is always an out-of-line call there),
+    // and retail pushes the constants before getWidget: 84.58 -> 99.95,
+    // and the handler's matching arms 96.92 -> 100.
     for (int music = MUSIC_VOLUME_0_ID; music <= MUSIC_VOLUME_9_ID; ++music)
-        getWidget(music)->setVisible(0);
-    getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->setVisible(1);
+        getWidget(music)->sendMessage(
+            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+    getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
+        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
     getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
 
     for (int effects = EFFECTS_VOLUME_0_ID; effects <= EFFECTS_VOLUME_9_ID;
          ++effects)
-        getWidget(effects)->setVisible(0);
-    getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->setVisible(1);
+        getWidget(effects)->sendMessage(
+            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+    getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
+        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
     getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
 
@@ -341,8 +349,6 @@ void TCombatOptionsWindow::highlightMouseShadow()
 // recovered dispatcher falls to 77.2424%; the per-arm error exits are retained.
 // Older flattened-dispatch measurements above do not describe this source.
 VA(0x0046f7b0, 0x72A) MAC_ADDRESS(0x07d680, 0x6f4)  // DoModal address-take + complete message CFG, dc 0x67b7c
-// A named music widget before setVisible(0) is Windows byte-flat at 96.9432%:
-// VC6 still pushes the visible value after getWidget, unlike retail.
 int combatOptionsWindowHandler(message& msg)
 {
     unsigned char exitFlag = 0;
@@ -445,9 +451,11 @@ int combatOptionsWindowHandler(message& msg)
                     g_config.m_musicVolume = id - TCombatOptionsWindow::MUSIC_VOLUME_0_ID;
                     for (int music = TCombatOptionsWindow::MUSIC_VOLUME_0_ID;
                          music <= TCombatOptionsWindow::MUSIC_VOLUME_9_ID; ++music)
-                        g_combatOptionsWindow->getWidget(music)->setVisible(0);
+                        g_combatOptionsWindow->getWidget(music)->sendMessage(
+                            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
                     g_combatOptionsWindow->getWidget(g_config.m_musicVolume
-                            + TCombatOptionsWindow::MUSIC_VOLUME_0_ID)->setVisible(1);
+                            + TCombatOptionsWindow::MUSIC_VOLUME_0_ID)->sendMessage(
+                        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
                     g_combatOptionsWindow->getWidget(g_config.m_musicVolume
                             + TCombatOptionsWindow::MUSIC_VOLUME_0_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
@@ -479,9 +487,11 @@ int combatOptionsWindowHandler(message& msg)
                     for (int effects = TCombatOptionsWindow::EFFECTS_VOLUME_0_ID;
                          effects <= TCombatOptionsWindow::EFFECTS_VOLUME_9_ID;
                          ++effects)
-                        g_combatOptionsWindow->getWidget(effects)->setVisible(0);
+                        g_combatOptionsWindow->getWidget(effects)->sendMessage(
+                            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
                     g_combatOptionsWindow->getWidget(g_config.m_soundVolume
-                            + TCombatOptionsWindow::EFFECTS_VOLUME_0_ID)->setVisible(1);
+                            + TCombatOptionsWindow::EFFECTS_VOLUME_0_ID)->sendMessage(
+                        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
                     g_combatOptionsWindow->getWidget(g_config.m_soundVolume
                             + TCombatOptionsWindow::EFFECTS_VOLUME_0_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);

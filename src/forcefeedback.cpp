@@ -97,6 +97,11 @@ public:
 // `_Nilrefs` statics live at 0x696d8c/0x696d90.
 DATA(0x00696d60)
 std::map<CImmEnclosure*, RECT> g_immEffectEntries;
+
+// The global's registered cleanup at 0x4b61e0 tail-calls this actual map
+// destructor. Its range erase, node release and shared nil teardown match
+// the ordinary SDK instantiation; no separate hand-written body is needed.
+VA_COMPGEN(0x004b61f0, 0x6e, IMPLICIT_DTOR, map)
 DATA(0x00696d70) POINT g_immWindowOrigin;
 DATA(0x00696d7c) HWND g_immWindow;
 DATA(0x00696d80) CImmDevice* g_immDevice;
@@ -123,10 +128,12 @@ t_initializer::t_initializer(void* instance, void* hwnd)
     if (!mouse->Initialize(instance, hwnd, 4))
         throw t_initialize_failure();
 
+    // One .rdata array (0x63e600) serves all three loads of the project.
+    DATA(0x0063e600) static const char shadowProjectName[] = "H3Shad.ifr";
     std::auto_ptr<char> project;
     try {
         std::filebuf file;
-        if (file.open((std::string("data\\") + "H3Shad.ifr").c_str(),
+        if (file.open((std::string("data\\") + shadowProjectName).c_str(),
                       std::ios_base::in | std::ios_base::binary) == 0)
             throw t_initialize_failure();
         int size = file.pubseekoff(0, std::ios_base::end);
@@ -134,10 +141,10 @@ t_initializer::t_initializer(void* instance, void* hwnd)
         project = std::auto_ptr<char>(new char[size]);
         file.sgetn(project.get(), size);
     } catch (t_initialize_failure) {
-        LODFile* resource = ResourceManager::pointToBitmapResource("H3Shad.ifr");
+        LODFile* resource = ResourceManager::pointToBitmapResource(shadowProjectName);
         if (resource == 0)
             throw t_initialize_failure();
-        int size = ResourceManager::getBitmapResourceSize("H3Shad.ifr");
+        int size = ResourceManager::getBitmapResourceSize(shadowProjectName);
         project = std::auto_ptr<char>(new char[size]);
         ResourceManager::readFromBitmapResource(resource, project.get(), size);
     }

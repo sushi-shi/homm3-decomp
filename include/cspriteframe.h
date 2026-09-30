@@ -13,7 +13,8 @@ class TPalette16;
 // The blend masks live at retail .bss 0x6968a4 and 0x6968aa. Dreamcast
 // CodeView proves their public static-member ownership, names, and older
 // unsigned-short view. Complete preserves word writes and a word div4mask,
-// while selected div2mask operations provably read a dword.
+// while selected div2mask expressions use wider loads whose high bits
+// are discarded. The next byte, 0x6968a6, is the separate RLE run code.
 
 // Dreamcast CodeView enum 0x1772. Retail GetSprite passes the on-disk value
 // through both CSpriteFrame constructor overloads, proving the same 32-bit
@@ -24,14 +25,6 @@ enum TEncodingMethod {
     eEncodeTilesetRLE = 2,
     eEncodeAdvObjRLE = 3,
     kNumEncodingMethods = 4
-};
-
-// Complete writes div2mask as a word but selected blend paths read a dword
-// and retain only its low half. The union makes both retail widths explicit
-// without introducing cast debt into the source tree.
-union TBlendMask {
-    unsigned short m_word;
-    unsigned int m_dword;
 };
 
 // General-RLE control values consumed by the specialized frame renderers.
@@ -87,7 +80,7 @@ public:
     unsigned char getPixel(int x, int y) const;
     int crop();
     void encode(TEncodingMethod method);
-    static TBlendMask s_div2mask;
+    static unsigned short s_div2mask;
     static unsigned short s_div4mask;
 
 private:

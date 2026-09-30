@@ -11,18 +11,18 @@ retail_va = 0x0068c4a0
 source = "src/tradpost.cpp"
 mac_section = 1
 mac_offset = 0x583e0
-mac_size = 28
-sha256 = "45a7b14aafdbc7ce1ab5f5c8c159953f7ab65c1909e67c43699a101b48c31113"
-evidence = "The full seven-int resource value-widget Y table matches Windows initialized data at 0x68c4a0 and Mac data 1+0x583e0: 230,230,230,309,309,309,388. Native TBuyArtifactWindow::update loads TOC 1+0x33d8 into r28 at 0x1f6b8c and indexed entry at 0x1f70b0 before the WIDGET_SET_Y broadcast at 0x1f70b8. Candidate source owns the same initialized payload."
+mac_size = 32
+sha256 = "e243a9090b52bac5b28e8a3b1b6b0f4dac291a863f981ef2dac28a1d3b12ad76"
+evidence = "The full eight-int resource value-widget Y table matches Windows initialized data at 0x68c4a0 and Mac data 1+0x583e0: 230,230,230,309,309,309,388,497; 497 is the Y of the constructors' bottom text widgets. Native TBuyArtifactWindow::update loads TOC 1+0x33d8 into r28 at 0x1f6b8c and indexed entry at 0x1f70b0 before the WIDGET_SET_Y broadcast at 0x1f70b8. Candidate source owns the same initialized payload."
 
 [[data]]
 retail_va = 0x0068c4c0
 source = "src/tradpost.cpp"
 mac_section = 1
 mac_offset = 0x58400
-mac_size = 28
-sha256 = "4d387946917e8e5a9d2751835b4a3a85c4c3be6dba188ed25b1e27d40de1cd91"
-evidence = "The initialized seven-int creature quantity-widget Y table agrees at Windows 0x68c4c0 and Mac 1+0x58400: 191,191,191,289,289,289,387. Native TSellCreatureWindow::update retains resource-row base 1+0x583e0 in r28 at 0x1f7984; its creature WIDGET_SET_Y arm adds index*4 at 0x1f7f74 and loads +0x20 at 0x1f7f78 before broadcast. This explicitly proves the adjacent second table rather than admitting a payload-only guess."
+mac_size = 32
+sha256 = "7dc2e06c803c91dd42bf17a8a52f03cfb42a73acf2d6928696bfac2c23322720"
+evidence = "The initialized eight-int creature quantity-widget Y table agrees at Windows 0x68c4c0 and Mac 1+0x58400: 191,191,191,289,289,289,387,518; 518 is the Y of the sell-creature window's bottom text widget. Native TSellCreatureWindow::update retains resource-row base 1+0x583e0 in r28 at 0x1f7984; its creature WIDGET_SET_Y arm adds index*4 at 0x1f7f74 and loads +0x20 at 0x1f7f78 before broadcast. This explicitly proves the adjacent second table rather than admitting a payload-only guess."
 
 [[data]]
 retail_va = 0x6aaa90

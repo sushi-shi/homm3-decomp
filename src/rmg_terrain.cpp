@@ -506,6 +506,10 @@ VA(0x005B3E80, 0x75F) MAC_ADDRESS(0x2552e8, 0x980)  // fastcall call at 0x5b5f5b
 int __fastcall selectTerrainTransition(
     const int* neighbours, TRmgTerrainFlip* flip)
 {
+    // Retail construction guard byte 0x6a52a1 (tested and set in this body).
+    DATA_COMPGEN_GUARD(0x006a52a1, terrainFlipsGuard, flips)
+    // atexit(0x5b45e0): the table's empty cleanup, right after this function.
+    VA_COMPGEN(0x005b45e0, 0x1, STATIC_DTOR, flips)
     DATA(0x006A52B8)
     static TRmgTerrainFlip flips[4] = {
         makeTerrainFlip(0, 0), makeTerrainFlip(0, 1),
@@ -1430,15 +1434,20 @@ VA(0x005B6BA0, 0x24C) MAC_ADDRESS(0x258f18, 0x360)
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
+    // Retail construction guard byte 0x6a52a0 (tested and set in this body).
+    DATA_COMPGEN_GUARD(0x006a52a0, firstDiagonalOffsetsGuard, firstDiagonalOffsets)
+    // The guarded initializer registers atexit(0x5b6df0), this table's empty
+    // cleanup, placed right after this function.
+    VA_COMPGEN(0x005b6df0, 0x1, STATIC_DTOR, firstDiagonalOffsets)
     DATA(0x006A5260)
-    static TPoint offsets[4][2] = {
+    static TPoint firstDiagonalOffsets[4][2] = {
         { TPoint(-1, 1), TPoint(1, -1) },
         { TPoint(1, 1), TPoint(-1, -1) },
         { TPoint(-1, -1), TPoint(1, 1) },
         { TPoint(1, -1), TPoint(-1, 1) }
     };
     int terrain = getTerrain(point);
-    const TPoint* pair = offsets[(flip.m_flipY << 1) | flip.m_flipX];
+    const TPoint* pair = firstDiagonalOffsets[(flip.m_flipY << 1) | flip.m_flipX];
     TRmgGridPoint nearby(
         tLimit(
             0, static_cast<int>(point.getX()) + pair[0].getX(), static_cast<int>(getWidth()) - 1),
@@ -1457,12 +1466,16 @@ VA(0x005B6E00, 0x1B3) MAC_ADDRESS(0x259278, 0x288)
 unsigned char rmgTerrainPainter::checkSecondDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
+    // Retail construction guard byte 0x6a3d64 (tested and set in this body).
+    DATA_COMPGEN_GUARD(0x006a3d64, secondDiagonalOffsetsGuard, secondDiagonalOffsets)
+    // atexit(0x5b6fc0): the table's empty cleanup, right after this function.
+    VA_COMPGEN(0x005b6fc0, 0x1, STATIC_DTOR, secondDiagonalOffsets)
     DATA(0x006A3D68)
-    static TPoint offsets[4] = {
+    static TPoint secondDiagonalOffsets[4] = {
         TPoint(2, 2), TPoint(-2, 2), TPoint(2, -2), TPoint(-2, -2)
     };
     int terrain = getTerrain(point);
-    const TPoint& offset = offsets[(flip.m_flipY << 1) | flip.m_flipX];
+    const TPoint& offset = secondDiagonalOffsets[(flip.m_flipY << 1) | flip.m_flipX];
     TRmgGridPoint nearby(
         tLimit(0, static_cast<int>(point.getX()) + offset.getX(), static_cast<int>(getWidth()) - 1), point.getY());
     if (getTerrain(nearby) != terrain)
@@ -1735,35 +1748,51 @@ static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] = {
     {0, 0}, {0, 0}, {0, 0},
 };
 
+// Retail's nine atexit callbacks load the matching rule into ecx and tail-call
+// TRmgTerrainRule::~TRmgTerrainRule (0x005B3850). VC6 emits the same callbacks
+// through the implicit derived destructor, whose bytes and vtable relocation
+// are identical to the retained base destructor (LINK folds the two bodies).
 DATA(0x006A48D0)
 static TRmgPatternTerrainRule g_rmgDirtRule(1, 1, 50, 46, g_rmgDirtPatternEntries);
 VA_COMPGEN(0x005B3B60, 0x23, STATIC_CTOR, g_rmgDirtRule)
+VA_COMPGEN(0x005B3B90, 0x0A, STATIC_DTOR, g_rmgDirtRule)
 DATA(0x006A44F8)
 static TRmgPatternTerrainRule g_rmgSandRule(0, 1, 70, 24, g_rmgSandPatternEntries);
 VA_COMPGEN(0x005B3BA0, 0x23, STATIC_CTOR, g_rmgSandRule)
+VA_COMPGEN(0x005B3BD0, 0x0A, STATIC_DTOR, g_rmgSandRule)
 DATA(0x006A3D88)
 static TRmgPatternTerrainRule g_rmgGrassRule(1, 1, 50, 79, g_rmgLandPatternEntries);
 VA_COMPGEN(0x005B3BE0, 0x23, STATIC_CTOR, g_rmgGrassRule)
+VA_COMPGEN(0x005B3C10, 0x0A, STATIC_DTOR, g_rmgGrassRule)
 DATA(0x006A3F70)
 static TRmgPatternTerrainRule g_rmgSnowRule(1, 1, 80, 79, g_rmgLandPatternEntries);
 VA_COMPGEN(0x005B3C20, 0x23, STATIC_CTOR, g_rmgSnowRule)
+VA_COMPGEN(0x005B3C50, 0x0A, STATIC_DTOR, g_rmgSnowRule)
 DATA(0x006A46E0)
 static TRmgPatternTerrainRule g_rmgSwampRule(1, 1, 80, 79, g_rmgLandPatternEntries);
 VA_COMPGEN(0x005B3C60, 0x23, STATIC_CTOR, g_rmgSwampRule)
+VA_COMPGEN(0x005B3C90, 0x0A, STATIC_DTOR, g_rmgSwampRule)
 DATA(0x006A4AB8)
 static TRmgPatternTerrainRule g_rmgRoughRule(1, 1, 80, 79, g_rmgLandPatternEntries);
 VA_COMPGEN(0x005B3CA0, 0x23, STATIC_CTOR, g_rmgRoughRule)
+VA_COMPGEN(0x005B3CD0, 0x0A, STATIC_DTOR, g_rmgRoughRule)
 DATA(0x006A5070)
 static TRmgPatternTerrainRule g_rmgSubterraneanRule(1, 1, 60, 79, g_rmgLandPatternEntries);
 VA_COMPGEN(0x005B3CE0, 0x23, STATIC_CTOR, g_rmgSubterraneanRule)
+VA_COMPGEN(0x005B3D10, 0x0A, STATIC_DTOR, g_rmgSubterraneanRule)
 DATA(0x006A4E88)
 static TRmgPatternTerrainRule g_rmgLavaRule(1, 1, 80, 79, g_rmgLandPatternEntries);
 VA_COMPGEN(0x005B3D20, 0x23, STATIC_CTOR, g_rmgLavaRule)
+VA_COMPGEN(0x005B3D50, 0x0A, STATIC_DTOR, g_rmgLavaRule)
 DATA(0x006A4CA0)
 static TRmgPatternTerrainRule g_rmgWaterRule(0, 0, 0, 33, g_rmgWaterPatternEntries);
 VA_COMPGEN(0x005B3D60, 0x23, STATIC_CTOR, g_rmgWaterRule)
+VA_COMPGEN(0x005B3D90, 0x0A, STATIC_DTOR, g_rmgWaterRule)
 DATA(0x006A48C8)
 static TRmgTableTerrainRule g_rmgRockRule;
+// Same owner/atexit and folded base-destructor proof as the pattern rules.
+VA_COMPGEN(0x005B3DA0, 0x16, STATIC_CTOR, g_rmgRockRule)
+VA_COMPGEN(0x005B3DC0, 0x0A, STATIC_DTOR, g_rmgRockRule)
 
 DATA(0x00642BD8)
 TRmgTerrainRule* const g_rmgTerrainRules[10] = {

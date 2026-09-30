@@ -28,6 +28,11 @@ def _run(*command: str) -> int:
     return subprocess.run(list(command), cwd=ROOT).returncode
 
 
+def _link() -> int:
+    return _run(sys.executable, "-m", "homm3.build.link", "--out",
+                "build/exe/HEROES3.candidate.EXE")
+
+
 def main(argv=None) -> int:
     argv = list(argv or [])
     fast = "--fast" in argv
@@ -106,7 +111,11 @@ def main(argv=None) -> int:
     # Run every independent evidence/source gate, even after one fails.
     # Report unavailable evidence as fatal; dependent checks cannot certify it.
     # These gates, not a local objdiff maximum, decide admissibility.
-    failed = mac_failed
+    # Per-TU comparisons cannot detect duplicate definitions or unresolved
+    # references in the complete game. Keep independent evidence gates
+    # running after a link failure so the checkpoint remains diagnosable.
+    link_failed = _link() != 0
+    failed = mac_failed or link_failed
 
     # banked_rows runs alongside cmd_check, not inside it: the ratchet
     # compares the rows that ARE in the baseline, this one asks whether a
@@ -148,8 +157,19 @@ def main(argv=None) -> int:
 
     # Scores describe the completed compile/delink, including when an
     # independent source gate fails. Keep README consistent with the ledger.
+    data_accounting = None
     try:
-        status.write_readme(report)
+        from homm3.verify.byte_accounting import report as account_bytes
+        data_accounting = account_bytes()
+        totals = data_accounting['totals']['file']
+        print(f"[data-coverage] {totals.get('missing', 0):,} unclaimed file bytes; "
+              f"{totals.get('overlap', 0):,} overlapping bytes; "
+              "worklist in build/gen/data_coverage.json")
+    except (ValueError, OSError) as exc:
+        print(f"[data-coverage] unavailable: {exc}")
+        failed = True
+    try:
+        status.write_readme(report, data_accounting=data_accounting)
     except Exception as exc:  # the score block must never fail a build
         print(f"[build] README block skipped: {exc}")
 

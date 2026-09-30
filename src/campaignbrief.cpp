@@ -20,6 +20,7 @@ static int campaignBriefHandler(message& msg);
 #include "multiplayerwindow.h"
 #include "palette.h"
 #include "soundmgr.h"
+#include "text.h"
 #include "textresource.h"
 #include "textscroller.h"
 #include "textwdgt.h"
@@ -42,19 +43,18 @@ DATA(0x00694de0) static unsigned char g_campaignBriefReady;
 // next-frame deadline beside the ready latch; Dreamcast proves the same
 // six/125 sequence and the GameTime helper boundary independently.
 DATA(0x00694dec) static int g_campaignBriefFlashLeft;
+// Original DC names: lastIzHoverID and lastIMHoverID, campaignbrief.obj's two
+// hover statics (-1 in both builds), in Dreamcast's order. No Windows code
+// reads them; retail keeps them directly before this TU's difficulty-arrow
+// sprite name (0x660e1c).
+DATA(0x00660e14) static int g_lastIzHoverId = -1;
+DATA(0x00660e18) static int g_lastImHoverId = -1;
 DATA(0x00694db0) static unsigned long g_campaignBriefFlashTime;
-
-// Dreamcast publishes the semantic table name. Complete's right-click path
-// independently fixes its THelpText stride and first-pointer use at this
-// address.
-DATA(0x006a59cc) extern THelpText g_campaignBriefHelp[];
 
 void backupGameHeaders(game* dest, game* src);
 
-// Complete's five campaign-difficulty buttons take paired rollover/right-
-// click strings from this contiguous table. Retail fixes the five-row extent
-// by advancing from 0x006a6cb8 to 0x006a6ce0 in AddBonusIcons.
-DATA(0x006a6cb8) static THelpText g_campaignDifficultyHelp[5];
+// AddBonusIcons uses rows 7..11 of g_singleSelectionHelp (0x6a6cb8).
+// initializeHelpText fills that shared table at 0x6a6c80.
 
 // Complete-only arrow callbacks. AddBonusIcons takes 0x457f70 for the
 // left arrow and 0x457fc0 for the right; each responds to left release.
@@ -194,8 +194,8 @@ void TCampaignBrief::setupCurrentTerritory()
     if (g_campaignBriefViewFromGame) {
         m_selectedScenario = g_game->m_campaign.m_currentMap;
     } else {
-        for (unsigned int selectedIndex = 0;
-             selectedIndex < static_cast<int>(m_scenarios.size());
+        for (int selectedIndex = 0;
+             selectedIndex < m_campaign->getScenarioCount();
              ++selectedIndex) {
             if (m_scenarios[selectedIndex].m_available) {
                 m_selectedScenario = selectedIndex;
@@ -348,8 +348,8 @@ void TCampaignBrief::addBonusIcons()
 
     for (i = 0; i < 5; ++i) {
         m_difficultyButtons[i]->setHelpText(
-            g_campaignDifficultyHelp[i].m_text,
-            g_campaignDifficultyHelp[i].m_rclick, 0);
+            g_singleSelectionHelp[i + 7].m_text,
+            g_singleSelectionHelp[i + 7].m_rclick, 0);
         m_difficultyButtons[i]->hide();
         m_widgets.push_back(m_difficultyButtons[i]);
     }
@@ -483,10 +483,13 @@ void TCampaignBrief::updateDifficultyButtons()
 // Older insert(end(), value) experiments changed VC6's inline depth, but
 // did not establish original source spelling. Keep ordinary push_back
 // appends, as in the DC widget-construction sequence.
-// LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): four of this
-// body's nine zero-initialised `for` counters are `unsigned int`, not `int`.
-// They only pay TOGETHER - 89.0593 / 90.0586 / 90.1377 / 90.9771 / 91.1880 as
-// they accumulate - and the fifth through ninth all fall back.
+// Loop-counter signedness follows each retail compare: the preview append,
+// territory scan, flag and button loops test with jge/jl, and only the
+// availability copy against m_scenarios.size() is unsigned. Mac's expanded
+// setupCurrentTerritory bounds its scan by the campaign's signed scenario
+// count, as clearSelected does. Retail copies the availability byte without
+// a bool normalization and sign-extends the region colour. Together these
+// raise the constructor from 90.39% to 92.71%.
 // Current residual (85.29%): setupCurrentTerritory expands, but nested STL
 // construction, string assignment and widget-insert boundaries still differ.
 // Keep the ordinary helper and its source calls while resolving those sites.
@@ -549,7 +552,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
         CampaignScenarioPreview preview;
         static_cast<NewSMapHeader&>(preview) = g_game->m_mapHeader;
         preview.m_gameSetup = g_game->m_setup;
-        for (unsigned int i = 0;
+        for (int i = 0;
              i < static_cast<int>(m_campaign->m_scenarios.size()); ++i) {
             m_scenarios.push_back(preview);
         }
@@ -597,7 +600,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                                 region.m_offsetX, region.m_offsetY, 20, 20,
                                 MAP_CONQUERED_1_ID + regionIndex,
                                 region.m_conqueredImageName[color], 0x800));
-                m_scenarios[regionIndex].m_available = false;
+                m_scenarios[regionIndex].m_available = 0;
             }
             if (m_scenarios[regionIndex].m_available) {
                 widgets.push_back(new bitmapBorder(
@@ -610,7 +613,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                                 region.m_selectedImageName[color], 0x800));
             }
         } else {
-            m_scenarios[regionIndex].m_available = false;
+            m_scenarios[regionIndex].m_available = 0;
         }
     }
 
@@ -702,7 +705,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     font::WHITE, 100, 6, 0, 8));
 
-    for (unsigned int flagIndex = 0; flagIndex < 8; ++flagIndex) {
+    for (int flagIndex = 0; flagIndex < 8; ++flagIndex) {
         w = new iconWidget(
             526 + flagIndex * 15, 406, 15, 20,
             ALLY_FLAG1_ID + flagIndex,
@@ -740,15 +743,11 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
     m_campaign->startMusic();
 
     if (viewFromGame) {
-        for (unsigned int buttonIndex = 0; buttonIndex < 3; ++buttonIndex) {
+        for (int buttonIndex = 0; buttonIndex < 3; ++buttonIndex) {
             w = getWidget(232 + buttonIndex);
-            if (w) {
-                w->sendMessage(
-                    buttonIndex == g_game->m_campaign.m_briefingChoice
-                        ? widget::WIDGET_SET_STATUS
-                        : widget::WIDGET_CLEAR_STATUS,
-                    widget::WIDGET_DRAWN);
-            }
+            // DC 970 calls widget::set_visible here.
+            if (w)
+                w->setVisible(buttonIndex == g_game->m_campaign.m_briefingChoice);
         }
     }
 
@@ -1003,13 +1002,25 @@ static int campaignBriefHandler(message& msg)
                 int helpID = brief->convertID2HelpID(id);
                 if (helpID >= 0) {
                     if (helpID < 100) {
+                        // Retail FuncInfo 0x64a5e0 states 0/1 (strings at
+                        // ebp-0x38/-0x48, the second nested in the first)
+                        // and Mac's 264(SP)-inside-992(SP) string chain both
+                        // prove a default-constructed text assigned from the
+                        // returned temporary (retail 0x45b46a..0x45b4a6 calls
+                        // assign(str, 0, npos) at 0x404860). That form
+                        // reproduces all ten retail EH states but falls to
+                        // 82.12%: VC6 admits the three-argument assign (cb
+                        // 307) at depth-3 budget 308 (2468 / 8 remaining),
+                        // which retail refuses, so 13 more units of earlier
+                        // spending or 7 fewer caller IL units are still
+                        // missing. Copy-initialization stays until then.
                         std::string text =
                             brief->m_campaign->m_scenarios[helpID]
                                 ->getRegionDescription();
                         normalDialog(text.c_str(), 4, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                     } else {
-                        normalDialog(g_campaignBriefHelp[helpID].m_text,
+                        normalDialog(g_campaignBriefHelp[helpID].m_rclick,
                                      4, -1, -1, -1, 0, -1, 0,
                                      -1, 0, -1, 0);
                     }
@@ -1252,18 +1263,3 @@ VA_COMPGEN(0x0045dea0, 0x1D, TREE_BUYNODE, type_map_hero_info)
 // pointer arguments, `ret 0xc`).
 VA_COMPGEN(0x0045d230, 0x38, VECTOR_UCOPY, type_map_hero_identity)
 
-// CodeView and the delinked Windows retail object place this ordinary body in
-// campaignbrief.cpp. The Mac linker places its counterpart at 0:0x96a68 near
-// customcampaign code; its offset does not determine source TU ownership.
-VA(0x004886a0, 0x132) MAC_ADDRESS(0x096a68, 0x94)
-TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
-{
-    clearScenarios();
-}
-
-// This delete loop naturally retains ScenarioStruct's compiler-generated
-// deleting wrapper. Retail CampaignHeaderStruct::load and selectCampaign
-// call the shared 0x488eb0 copy. All 33 bytes and both calls agree: the
-// ordinary destructor stays at 0x485fe0 in customcampaign, then flags&1
-// gates operator delete. Move only the enrollment from the inlining consumer.
-VA_COMPGEN(0x00488eb0, 0x21, SCALAR_DELETING_DTOR, ScenarioStruct)

@@ -1788,8 +1788,8 @@ inline bool army::isInAreaHighlight() const
 // to say where. Sliced by army::get_clockwise / get_counter_clockwise,
 // whose only located expansion is get_multi_head_directions
 // (0x448ab0). Names are bootstrap inventions - no roster attests them.
-extern const long g_wideDirectionRingIndex[8];
-extern const long g_wideDirectionRingOrder[8];
+extern long g_wideDirectionRingIndex[8];
+extern long g_wideDirectionRingOrder[8];
 
 // The five globals a walk publishes for the redraw, and their NAMES ARE
 // THE DREAMCAST LITERAL POOL'S - army::Walk's own SH4 body (dc 0x45254)

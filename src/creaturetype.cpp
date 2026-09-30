@@ -315,6 +315,9 @@ public:
     // E:\gamedcs\creaturetype.cpp:399, dc 0x71eec
     TAutoStrPtr() : m_string(0) {}
     // E:\gamedcs\creaturetype.cpp:402, dc 0x71ef4
+    // Retail keeps this COMDAT at 0x47b7b0, directly after
+    // initializeCreatureTypeTraits; identical private copies fold to it.
+    VA(0x0047b7b0, 0xA)
     ~TAutoStrPtr() { delete[] m_string; }
     // E:\gamedcs\creaturetype.cpp:404, dc 0x71f0c
     void set(char* value) { m_string = value; }

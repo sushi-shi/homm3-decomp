@@ -18,7 +18,8 @@ verbatim from the pre-port build.labels monolith:
 
   * authority order per rva, first writer wins: src claims > zlib-map >
     runtime-map > working-label (functions); reloc-alias > vtable census >
-    IAT slots > reloc-target dense names (data);
+    IAT slots > runtime-data library symbols > reloc-target dense names
+    (data);
   * the scan-order dedup of label-grade names replays over the fragments'
     RAW declarator spellings, then joined base-obj spellings take over;
     a second global pass suffixes remaining label-grade collisions and
@@ -40,6 +41,10 @@ import re
 import sys
 from pathlib import Path
 from dataclasses import dataclass, field
+from typing import NamedTuple
+
+from homm3.core.tsv import write as write_tsv
+from homm3.core.paths import BUILD
 
 from homm3.build.canonicalize_data_symbols import normalize_anon_ns_name
 from homm3.core import common
@@ -66,6 +71,165 @@ VOLATILE_E_RE = re.compile(r"^_?\$E[0-9]+$")
 #: values. This module never sees the values, so it may not DECIDE
 #: agreement - it only acts on a fact extraction has already established.
 POOLED_CHANNELS = ("src-DATA_COMPGEN", "src-DATA_COMPGEN_GUARD")
+
+BINDINGS = BUILD / "gen/bindings.tsv"
+VIOLATIONS = BUILD / "gen/violations.tsv"
+
+
+class Binding(NamedTuple):
+    rva: int
+    size: int
+    kind: str
+    space: str
+    name: str
+    unit: str
+    channel: str
+    aliases: tuple
+    also: tuple = ()
+
+
+class Model(NamedTuple):
+    functions: list[Binding]
+    data: list[Binding]
+    violations: list[str]
+
+    def claimed(self, kind=None):
+        rows = (self.functions if kind == 'func' else self.data if kind == 'data'
+                else self.functions + self.data)
+        return [b for b in rows if b.channel]
+
+
+def unmaterialized(claims):
+    """Source functions no claiming object emits; absence is a coverage gap."""
+    from collections import Counter, defaultdict
+    from homm3.core.coff import Coff
+    from homm3.core.msvc_names import mask
+    groups, objects = defaultdict(list), {}
+    for c in claims:
+        if c.kind == 'func':
+            groups[(c.rva, mask(c.name))].append(c)
+    counts = Counter(rva for rva, name in groups)
+    multiple = {rva for rva, count in counts.items() if count > 1}
+    absent = []
+    for (rva, name), rows in groups.items():
+        if rva in multiple:
+            continue
+        verdicts = []
+        for row in rows:
+            if row.unit not in objects:
+                path = BUILD / 'objdiff/base' / f'{row.unit}.obj'
+                objects[row.unit] = ({mask(n) for n in Coff(path).code_names()}
+                                     if path.is_file() else None)
+            emitted = objects[row.unit]
+            verdicts.append(None if emitted is None else name in emitted)
+        if None not in verdicts and not any(verdicts):
+            absent.append(rows[0])
+    return absent
+
+
+def resolve(rows=None) -> Model:
+    """The Gruntz Binding model, fed by HoMM3's admitted inventories.
+
+    HoMM3 has exact function spans but no complete independent data-boundary
+    census. Unsized relocation targets therefore stay zero-extent unclaimed
+    anchors. They must never consume the gap to the next pointer or label.
+    Source data obtains its size from the annotated declaration under VC6's
+    ABI; the gap and access checks adjudicate incomplete source extents.
+    """
+    from homm3.core.pe import image
+    from homm3.core import msvc_names
+    rows = _collect_inventory()[0] if rows is None else rows
+    regions = image().data_regions()
+    vtable_extents = {r["rva"]: r["count"] * 4 for r in censuses.vtables()}
+    claims = {}
+    for claim in fragments.all_claims():
+        claims.setdefault((claim.kind, claim.rva), []).append(claim)
+    internal_rvas = {c.rva for cs in claims.values() for c in cs
+                     if c.meta.get('internal') == '1'}
+    channels = {'src-VA': 'src', 'src-VA+ir': 'src', 'src-VA+base': 'src',
+                'src-VA_COMPGEN': 'src_compgen', 'zlib-map': 'functions_zlib',
+                'zlib-data-map': 'data_zlib',
+                'runtime-map': 'functions_static_libs', 'src-DATA': 'src',
+                'src-DATA_COMPGEN': 'src_data_compgen',
+                'src-DATA_COMPGEN_GUARD': 'data_compgen',
+                'vtable': 'data_vtables', 'vtable-name': 'data_vtables',
+                'vtable-pairing': 'data_vtables'}
+    functions, data, violations = [], [], []
+    for rva, row in sorted(rows.items()):
+        source = claims.get((row['kind'], rva), [])
+        channel = channels.get(row['provenance'], '')
+        size = int(row['size'] or 0)
+        name = row['name'] if channel else ''
+        if row['kind'] == 'func':
+            functions.append(Binding(rva, size, '', 'text', name, row['unit'],
+                                     channel, tuple(source[1:])))
+            continue
+        kind = 'vtable' if channel == 'data_vtables' else ''
+        if channel == 'data_vtables':
+            size = vtable_extents.get(rva, 0)
+        if row['provenance'] == 'src-DATA':
+            sized = [c for c in source if c.size and c.meta.get('type')]
+            if not sized:
+                violations.append(f'DATA {row["name"]} at {rva:#x} has no typed extent')
+                channel, size = '', 0
+            elif not any(c.meta.get('defined') == '1' for c in sized):
+                violations.append(f'DATA {row["name"]} at {rva:#x} is extern-only')
+                channel = ''
+            else:
+                winner = next(c for c in sized if c.meta.get('defined') == '1')
+                name, size = data_spelling(winner.name, winner.unit), winner.size
+        if not size:
+            channel = ''
+        space = next((key for key, (lo, hi) in regions.items() if lo <= rva < hi), '')
+        if name:
+            name = msvc_names.mask(name)
+        data.append(Binding(rva, size, kind, space, name if channel else '',
+                            row['unit'], channel, tuple(source[1:])))
+    # Keep TU-local families distinct at separate retail addresses. This is
+    # Gruntz's discriminator, not a source alias or extra allocation.
+    from collections import Counter
+    duplicates = Counter(b.name for b in data if b.name)
+    result = []
+    for b in data:
+        if b.name and duplicates[b.name] > 1:
+            distinct = msvc_names.discriminate(b.name, b.rva, internal=b.rva in internal_rvas)
+            if distinct:
+                b = b._replace(name=distinct)
+            else:
+                violations.append(f'data identity {b.name} binds multiple retail addresses')
+        result.append(b)
+    model = Model(functions, result, violations)
+    from homm3.core.project import Project
+    from homm3.verify.source_static_data import recover as recover_statics
+    project = Project(common.HOMM3_DIR)
+    static_data = recover_statics(model, project, BUILD / 'objdiff/base')
+    if static_data:
+        data_by_address = {b.rva: b for b in model.data}
+        data_by_address.update((b.rva, b) for b in static_data)
+        model = model._replace(data=[data_by_address[rva] for rva in sorted(data_by_address)])
+    from homm3.verify.source_function_aliases import recover
+    from collections import defaultdict
+    aliases = defaultdict(list)
+    for alias in recover(model, project, BUILD / 'objdiff/base'):
+        aliases[alias.rva].append(alias)
+    return model._replace(functions=[
+        b._replace(aliases=b.aliases + tuple(aliases[b.rva]))
+        if b.rva in aliases else b for b in functions])
+
+
+def serialize(model: Model):
+    """Gruntz's canonical bindings/violations tables, write-if-changed."""
+    header = ['rva', 'size', 'kind', 'space', 'name', 'unit', 'channel',
+              'also_units', 'aliases']
+    rows = [[f'0x{b.rva:08x}', f'0x{b.size:x}', b.kind, b.space, b.name,
+             b.unit, b.channel, ';'.join(b.also),
+             ';'.join(f'{a.channel}|{a.name}|0x{a.size or 0:x}|{a.unit}'
+                      for a in b.aliases)] for b in model.functions + model.data]
+    changed = write_tsv(BINDINGS, ['# GENERATED by homm3.model - resolved claim set.'],
+                        header, rows)
+    write_tsv(VIOLATIONS, ['# GENERATED by homm3.model.'],
+              ['violation'], [[v] for v in model.violations])
+    return changed
 
 
 def choose_carrier(rva: int, emitters: set[str], banked: dict[int, str],
@@ -193,6 +357,39 @@ def _write_compgen(src_claims) -> None:
                              c.meta["owner"], f"0x{c.size:x}"])
 
 
+_EMITTED: dict[str, set[str]] = {}
+
+
+def data_spelling(name: str, unit: str) -> str:
+    """The owning object's emitted spelling of a clang-typed DATA name.
+
+    Clang and VC6 spell anonymous namespaces and local-static scopes
+    differently; `vc6_data_name` bridges only a unique, otherwise identical
+    emitted name of the declaring unit. Anything else keeps clang's name."""
+    if "?A0x" not in name and not msvc_names_scope(name):
+        return name
+    if unit not in _EMITTED:
+        from homm3.core.coff import Coff
+        path = BUILD / "objdiff/base" / f"{unit}.obj"
+        try:
+            _EMITTED[unit] = Coff(path).all_names()
+        except (OSError, ValueError):
+            _EMITTED[unit] = set()
+    bridged = labels_source.vc6_data_name(name, _EMITTED[unit], unit)
+    if bridged is None:
+        return name
+    # Keep the join spelling of a local-static scope (`mask`); only the
+    # anonymous-namespace identity comes from the emitted name.
+    from homm3.core import msvc_names
+    return normalize_anon_ns_name(
+        msvc_names.LOCAL_STATIC_SCOPE.sub(msvc_names.CANONICAL_SCOPE, bridged), unit)
+
+
+def msvc_names_scope(name: str) -> bool:
+    from homm3.core import msvc_names
+    return bool(msvc_names.LOCAL_STATIC_SCOPE.search(name))
+
+
 def _upgrade_dense_data_alias(row: dict, claim) -> dict:
     """Let a reviewed owner replace only a source DATA dense placeholder.
 
@@ -215,7 +412,7 @@ def _upgrade_dense_data_alias(row: dict, claim) -> dict:
     return upgraded
 
 
-def generate() -> Path:
+def _collect_inventory():
     functions = {r["rva"]: r["size"] for r in censuses.functions()}
 
     rows = {}       # rva -> row dict (first writer wins per authority order)
@@ -250,6 +447,9 @@ def generate() -> Path:
         seen_names.add(name)
         if c.channel in ("src-VA+ir", "src-VA+base"):
             name = c.name
+        elif (c.channel == "src-DATA" and c.meta.get("type")
+                and c.meta.get('defined') == '1'):
+            name = data_spelling(c.name, c.unit)
         if c.channel in POOLED_CHANNELS:
             if c.rva in pooled:
                 continue        # one pooled datum, many claiming TUs
@@ -261,7 +461,7 @@ def generate() -> Path:
     # so the delinked objects pair 1:1 against our compiled base objs
     # (inflate.c.obj vs base/inflate.obj)
     for c in providers.zlib_map():
-        put(c.rva, c.name, c.unit, c.size, "func", c.channel)
+        put(c.rva, c.name, c.unit, c.size, c.kind, c.channel)
 
     # 3. runtime map (sizes from the universe)
     for c in providers.runtime_map():
@@ -298,7 +498,10 @@ def generate() -> Path:
         if r["rva"] in rows:
             continue  # a src claim owns the address
         cls = r["class"] or None
-        name = f"??_7{cls}@@6B@" if cls else f"vtbl_{r['rva']:x}"
+        # A dllimport class's locally emitted table is `??_S` (VC6's local
+        # vftable); its census row spells the complete symbol.
+        name = (cls if cls and cls.startswith("??_") else
+                f"??_7{cls}@@6B@" if cls else f"vtbl_{r['rva']:x}")
         put(r["rva"], name, "", r["count"] * 4, "data",
             "vtable-name" if cls else "vtable")
 
@@ -307,12 +510,36 @@ def generate() -> Path:
     for c in iat.claims(Path(info["path"]), project.toolchain / "lib"):
         put(c.rva, c.name, "", c.size, "data", c.channel)
 
+    # Relocation pairings: generated identities of unclaimed data owners,
+    # read off instruction-identical candidate/retail function pairs
+    # (homm3.delink.reloc_pairing). They name addresses only: an admitted
+    # owner is a zero-sized anchor, or the identity of a census vtable.
+    from homm3.delink import reloc_pairing
+    pairing_state = reloc_pairing.data_pairings(src_claims, functions, rows)
+    for pairing in pairing_state.pairings:
+        if pairing.kind != "data" or pairing.verdict != "admitted":
+            continue
+        row = rows.get(pairing.owner)
+        if row is None:
+            put(pairing.owner, pairing.symbol, "", "", "data", "reloc-pairing")
+        elif row["provenance"] == "vtable":
+            row.update(name=pairing.symbol, provenance="vtable-pairing")
+        else:
+            row.update(name=pairing.symbol, unit="", kind="data",
+                       provenance="reloc-pairing")
+
     # dense naming for every absolute-relocation target, required because
     # vostok panics on an .rdata target below every named constant and
     # skips targets outside known symbol sizes
+    # Reviewed library data placements name the objects game code references
+    # (DirectPlay GUIDs, LIBCPMT statics); they replace only dense names.
+    library_data = {c.rva: c.name for c in providers.runtime_data_symbols()}
     skipped_targets = 0
     for target in providers.reloc_targets():
         if target in rows:
+            continue
+        if target in library_data:
+            put(target, library_data[target], "", "", "data", "runtime-data")
             continue
         if rdata.rva <= target < rdata.rva + rdata.mapped:
             put(target, f"const_{target:x}", "", "", "data", "reloc-target")
@@ -345,10 +572,16 @@ def generate() -> Path:
     # global name uniqueness: label-grade names (declarator/working) take
     # an rva suffix on collision; a colliding PROVEN symbol is a defect
     from collections import Counter
+    internal_rvas = {c.rva for c in fragments.all_claims() if c.meta.get("internal") == "1"}
     counts = Counter(r["name"] for r in rows.values())
     seen = set()
     for rva in sorted(rows):
         r = rows[rva]
+        if counts[r['name']] > 1 and r['provenance'] == 'src-DATA':
+            from homm3.core.msvc_names import discriminate
+            distinct = discriminate(r['name'], rva, internal=rva in internal_rvas)
+            if distinct:
+                r['name'] = distinct
         if counts[r["name"]] > 1 and r["name"] in seen:
             if r["provenance"] not in ("src-VA", "working-label"):
                 common.die(f"duplicate proven name {r['name']!r} at "
@@ -363,6 +596,18 @@ def generate() -> Path:
         common.die(f"{len(missing)} functions uncovered - first "
                    f"0x{min(missing):x}")
 
+    return rows, skipped_targets
+
+
+def generate() -> Path:
+    rows, skipped_targets = _collect_inventory()
+    model = resolve(rows)
+    serialize(model)
+    from homm3.delink import reloc_pairing
+    reloc_pairing.write_outputs(model)
+    for binding in model.data:
+        if binding.name:
+            rows[binding.rva].update(name=binding.name, size=binding.size)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     with OUT.open("w", newline="") as fh:
         fh.write("# GENERATED: python3 -m homm3.model - the "
