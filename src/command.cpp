@@ -49,7 +49,8 @@ static const int g_combatActionFirstAid = 11;
 // E:\gamedcs\command.cpp:63
 // Dreamcast CodeView names this private nullary member and its two static
 // TWallTargetId arrays. Retail fixes the Complete-build fourth tower target,
-// the x86 unsigned-char return ABI, and every branch below. The first scan
+// and every branch below. Original automate_catapult@@AAA_NXZ proves bool;
+// AL alone does not distinguish bool from uchar. The first scan
 // rejects a siege with no live target. Trained Ballistics then aims at the
 // keep when the action is automatic; otherwise a basic catapult chooses a
 // random weakest wall, while the remaining cases prefer surviving towers.
@@ -80,12 +81,17 @@ static const int g_combatActionFirstAid = 11;
 // Full native comparison now matches all 1016 Mac bytes: name the controller,
 // keep the typed mastery and signed four-wall count, and reuse one index
 // across the wall-array scans. Windows remains 98.6842%; every helper stays.
-// A temporary bool return on validWallTarget is byte-flat in this caller
-// and Mac; keep its CodeView-proven unsigned-char boundary unchanged.
+// Restoring validWallTarget bool is byte-flat in this caller and Mac.
+// Original valid_wall_target@@QAA_NW4TWallTargetId@@@Z proves bool;
+// lowered CodeView byte primitives are not independent uchar evidence.
+// The coherent bool automation chain leaves the emitted catapult (688B),
+// first-aid (416B), wall predicate (80B), and main (1456B) bytes unchanged.
+// Catapult therefore retains its 98.6842% residual; renamed call/data symbols
+// require target rebinding before scoring these source interfaces.
 VA(0x00473c00, 0x29F)
 DC_ADDRESS(0x06af98, 0x194)
 MAC_ADDRESS(0x081d04, 0x3f8)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map
-unsigned char combatManager::automateCatapult()
+bool combatManager::automateCatapult()
 {
     DATA(0x0063d54c) static const TWallTargetId walls[4] = {
         WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
@@ -182,6 +188,7 @@ issueCatapultOrder:
     return 1;
 }
 
+// Original automate_first_aid_tent@@AAA_NXZ proves bool.
 // E:\gamedcs\command.cpp:193. The DC signature and sole local identify
 // the current-stack scan; retail fixes the target filters and command tuple.
 // The final two stores follow DC's separate statement groups: select and store
@@ -194,7 +201,7 @@ issueCatapultOrder:
 VA(0x00473ea0, 0x196)
 DC_ADDRESS(0x06b12c, 0x13c)
 MAC_ADDRESS(0x0820fc, 0x1b8)  // anchor-callee: Main's other automate callee (no-Random sibling) + order-map
-unsigned char combatManager::automateFirstAidTent()
+bool combatManager::automateFirstAidTent()
 {
     const army* currentArmy = getCurrentArmy();
     int side = currentArmy->getControllingSide();
@@ -289,7 +296,9 @@ int combatManager::main(message& msg)
     int result = 1;
     doAnimations();
 
-    unsigned char automaticTurn = 0;
+    // Complete tower and this accumulator share the logical domain of the
+    // original-public bool first-aid and catapult interfaces.
+    bool automaticTurn = false;
     if (!isQuickCombat()
             && m_thisNetHasControl && (m_autoCombatOn || g_goSolo)) {
         if (isComputerAction()) {
@@ -1335,7 +1344,7 @@ unsigned char combatManager::isOutsidePlacementBoundry(int group, int index)
 VA(0x00476440, 0x50)
 DC_ADDRESS(0x06d548, 0x42)
 MAC_ADDRESS(0x0844b0, 0x84)
-unsigned char combatManager::validWallTarget(TWallTargetId wall)
+bool combatManager::validWallTarget(TWallTargetId wall)
 {
     if ((wall == WALL_TARGET_0 || wall == WALL_TARGET_6)
         && m_fortificationLevel < COMBAT_FORTIFICATION_CASTLE)
@@ -2106,6 +2115,8 @@ void combatManager::turnOffHighlighter(unsigned char drawIt)
         drawFrame(1, 1, 0, 0, 1, 0);
 }
 
+// Complete-only bool is inferred from exclusively 0/1 returns and the
+// sole logical main accumulator; no original tower public survives.
 // Complete Mac retains this tower-turn helper at code 0:8627c. Its sole
 // caller is main, where Windows expands the decision between first aid and
 // catapult automation. An ordinary definition leaves an extra VC6 call;
@@ -2116,7 +2127,7 @@ void combatManager::turnOffHighlighter(unsigned char drawIt)
 // Mac places this body between turnOffHighlighter and checkGetAIMove;
 // restoring that source order is byte-flat in both compiler controls.
 MAC_ADDRESS(0x08627c, 0x10c)
-inline unsigned char combatManager::automateTower()
+inline bool combatManager::automateTower()
 {
     if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
         return 0;

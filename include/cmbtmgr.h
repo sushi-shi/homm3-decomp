@@ -1454,7 +1454,7 @@ public:
                          searchArray* currentSearchArray);
     unsigned char isValidTeleport(const army* thisArmy, long newHex);
     void simulateCombat(long side, unsigned char simulated);  // 0x422a40
-    unsigned char validWallTarget(TWallTargetId wall);  // 0x476440
+    bool validWallTarget(TWallTargetId wall);  // 0x476440
     void doCompAI(int whichGroup);  // 0x4221f0
     // command.cpp calls this ai.obj leaf from CheckGetAIMove.
     unsigned char doSpellAI();  // 0x422da0
@@ -1473,7 +1473,7 @@ public:
     unsigned char isOutsidePlacementBoundry(int group, int index);
 
 private:
-    unsigned char automateCatapult();  // 0x473c00
+    bool automateCatapult();  // 0x473c00
     unsigned char attemptShooterDefense(
         const army* currentArmy, searchArray* currentSearchArray,
         const type_AI_combat_parameters* estimate);  // 0x420760
@@ -1924,8 +1924,8 @@ private:
     std::string getTowerString(TWallSection wall, long archers,
                                  long skill) const;
     void autoResolveCombat();
-    unsigned char automateFirstAidTent();
-    unsigned char automateTower();
+    bool automateFirstAidTent();
+    bool automateTower();
     void processFirstAid(army* currentArmy);
     unsigned char processMoveThenAttack(message& msg);
 };
