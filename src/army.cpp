@@ -113,6 +113,7 @@ army::~army()
 // increments the Griffin allowance; VC6 folds the known initial value to 2.
 DC_ADDRESS(0x0437ac, 0x84)
 MAC_ADDRESS(0x048e5c, 0x68)
+// Mac 0x48e90 expands the COUNTERSTRIKE duration getter at +0x280.
 void army::setRetaliationCount()
 {
     m_retaliationCount = 1;
@@ -120,7 +121,7 @@ void army::setRetaliationCount()
         m_retaliationCount++;
     if (m_creatureType == ARMY_CREATURE_ROYAL_GRIFFIN)
         m_retaliationCount = 5000;
-    if (m_spellInfluence[SPELL_COUNTERSTRIKE])
+    if (getSpellTime(SPELL_COUNTERSTRIKE))
         m_retaliationCount += m_counterstrokeBonus;
     if (is(creatureSiegeWeapon))
         m_retaliationCount = 0;
@@ -512,6 +513,7 @@ void army::loadResources()
 VA(0x0043df20, 0xDD)
 DC_ADDRESS(0x044318, 0x9c)
 MAC_ADDRESS(0x049b90, 0x150)
+// Mac 0x49c2c/0x49c40 expand the two luck spell-duration getters.
 void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                    const town* ownerTown, const hero* otherHero,
                    const armyGroup* otherGroup, int magicTerrain)
@@ -526,9 +528,9 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
             value = ownerGroup->getLuck(
                 ownerHero, ownerTown, otherHero, otherGroup, 0, 0);
         }
-        if (m_spellInfluence[51])
+        if (getSpellTime(51))
             value += m_luckBonus;
-        if (m_spellInfluence[52])
+        if (getSpellTime(52))
             value -= m_luckPenalty;
 
         if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
@@ -560,6 +562,7 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
 VA(0x0043e000, 0x139)
 DC_ADDRESS(0x0443b4, 0xf4)
 MAC_ADDRESS(0x049ce0, 0x1f4)
+// Mac 0x49d48/0x49d5c expand the two morale spell-duration getters.
 void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                      const town* ownerTown, const hero* otherHero,
                      const armyGroup* otherGroup, int magicTerrain,
@@ -572,9 +575,9 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                 ownerHero, ownerTown, otherHero, otherGroup, 0,
                 groupAlignments, 0);
         }
-        if (m_spellInfluence[49])
+        if (getSpellTime(49))
             value += m_moraleBonus;
-        if (m_spellInfluence[50])
+        if (getSpellTime(50))
             value -= m_moralePenalty;
 
         if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
@@ -888,6 +891,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
 // its spell table grew from DC's 80 entries to 81.
 DC_ADDRESS(0x044d50, 0xc2)
 MAC_ADDRESS(0x04a6e4, 0xcc)
+// Mac 0x4a720 expands getSpellTime(i) before reading the karma table.
 double army::computeKarma() const
 {
     if (m_numSpellInfluences == 0)
@@ -895,7 +899,7 @@ double army::computeKarma() const
     long sum = 0;
     long absSum = 0;
     for (long i = 0; i < 81; i++) {
-        if (m_spellInfluence[i] != 0) {
+        if (getSpellTime(i) != 0) {
             sum += g_spellTraits[i].m_karma;
             absSum += abs(g_spellTraits[i].m_karma);
         }
@@ -4683,6 +4687,7 @@ void army::newTurn()
 VA(0x00447120, 0x20A)
 DC_ADDRESS(0x04bc84, 0xfa)
 MAC_ADDRESS(0x05369c, 0x15c)
+// Mac 0x53700 expands the POISON duration getter at +0x2b4.
 void army::resetRound()
 {
     if (m_numTroops <= 0)
@@ -4697,7 +4702,7 @@ void army::resetRound()
 
     decrementSpellRounds();
 
-    if (m_spellInfluence[SPELL_POISON] > 0) {
+    if (getSpellTime(SPELL_POISON) > 0) {
         int oldHitPoints = m_monInfo.m_hitPoints;
         double factor = cppMax<double>(m_poisonPenalty - 0.1f, 0.5);
         m_poisonPenalty = static_cast<float>(factor);
@@ -5247,10 +5252,11 @@ void army::castSpell(long hex)
 
 VA(0x004487f0, 0x43)
 MAC_ADDRESS(0x054de4, 0x5c)
+// Mac 0x54de4 expands the MAGIC_MIRROR duration getter at +0x228.
 int army::getMirrorEffect() const
 {
     int effect = 0;
-    if (m_spellInfluence[36] > 0)
+    if (getSpellTime(36) > 0)
         effect = m_backlashChance;
     if (m_creatureType == CREATURE_FAERIE_DRAGON) {
         const SSpellTraits* mirrorTraits =
@@ -5329,10 +5335,11 @@ VA_COMPGEN(0x00448d30, 0x36, VECTOR_ERASE, army)
 VA(0x00448cd0, 0x4B)
 DC_ADDRESS(0x04c918, 0x50)
 MAC_ADDRESS(0x055028, 0x6c)
+// Mac 0x55028 expands the SLOW duration getter at +0x270.
 int army::getSpeed() const
 {
     int speed = m_monInfo.m_speed;
-    if (m_spellInfluence[54]) {
+    if (getSpellTime(54)) {
         if (is(creatureSiegeWeapon))
             return 0;
         speed = static_cast<long>(speed * m_slowFactor);
