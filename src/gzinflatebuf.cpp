@@ -344,8 +344,10 @@ int TGzInflateBuf::underflow()
              + GZ_WINDOW_SIZE - m_stream.avail_out);
     m_stream.next_out = m_outBuffer;
     m_stream.avail_out = GZ_WINDOW_SIZE;
+    // Mac 0x221970..0x221974 loads the get pointer then widens its byte
+    // unsigned, the same canonical traits conversion used by getByte.
     if (egptr() > eback())
-        return static_cast<unsigned char>(*gptr());
+        return traits_type::to_int_type(*gptr());
     return -1;
 }
 
