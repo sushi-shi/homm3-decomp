@@ -725,8 +725,8 @@ private:
 public:
     // Retail level-update messages carry the raw four-byte skill band,
     // including values outside GetPrimarySkill's clamped gameplay range.
-    // Bulk-copy boundary names provisional; bodies precede their callers.
-    void copyPrimarySkills(signed char* stats) const;
+    // Raw-view/bulk-set names provisional; bodies precede their callers.
+    signed char* getRawPrimarySkills();
     void setPrimarySkills(const signed char* stats);
     unsigned char hasArtifact(int whichArtifact) const;
     unsigned char hasSecondarySkill(int whichSkill);

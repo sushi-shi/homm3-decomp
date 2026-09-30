@@ -36,12 +36,13 @@
 #include "university_window.h"
 #include "winmgr.h"
 
-// Complete sends the raw primary-skill bytes in DoCombat's level update;
-// getPrimarySkill would clamp them. This accessor is a provisional Windows
-// boundary carried from the target branch, with no known DC declaration.
-void hero::copyPrimarySkills(signed char* stats) const
+// DC 6569 passes the private stats band's address to the level-update ctor;
+// Mac bbfa0 likewise supplies hero+0x46a directly to its second BlockMoveData.
+// Preserve that raw view without a caller copy or exposing the private field.
+// The original accessor name is unknown; this sole-TU body precedes its caller.
+signed char* hero::getRawPrimarySkills()
 {
-    memcpy(stats, m_stats, sizeof(m_stats));
+    return m_stats;
 }
 
 #if 0  // @carcass
@@ -6113,13 +6114,13 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // retained HeroLoses calls. GetArmyName(1/2), Game::get_cell and text operator[]
 // raise that unpinned model from 93.9236 to 95.6386; DC's sText[256] and SRandom
 // give 95.6234. The old pinned implementation was 97.9862, not an unpinned peak.
-// Remaining calls: town cleanup uses _Tidy instead of delete; CNetMsg's ctor
-// remains out of line; the final CTurnDurationPause destructor also remains
-// a call. CCombatInitMsg's destructor now correctly stays out of line.
+// Town cleanup still retains _Tidy where retail expands it; CNetMsg's ctor
+// remains out of line. The final CTurnDurationPause destructor now expands
+// as retail does. CCombatInitMsg's destructor correctly stays out of line.
 // DC uses DestroyMsg for its pointer payload; Complete's independently proven
 // CWaitForRemoteBattleDlg owns the payload by value, so no DestroyMsg is added.
-// Logical bool/byte replay spellings are byte-flat. A direct stats argument
-// does not compile: the DC member records independently prove stats private.
+// Logical bool/byte replay spellings are byte-flat. The raw stats accessor
+// preserves the independently proven private member and direct-address payload.
 // Pause-guard source tests (header declaration versus CPP-owned in-class or
 // ordinary out-of-class bodies) are flat at 95.6234 and keep its dtor exact.
 // DC netmsg.h:488..494 confirms CHeroLevelUpdateMsg's two memcpy calls, not
@@ -6128,6 +6129,16 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // the copies is flat. DC's scheduled store alone does not settle the spelling.
 // Windows retail has no separate draw arm after quick combat: the winner
 // selects the defeated hero directly (Mac 0xbaf6c's draw check scores 92.78%).
+// DC 6326..6356 and Mac baf54..bafe0 first select a winner and then the
+// defeated hero around that older draw arm. They do not discriminate a
+// two-stage Complete spelling from the equivalent combined assignments
+// below once the draw arm is removed. Both staged variants retain the
+// pause destructor where retail expands it (94.98/95.34% with the bool AI
+// contract); preserve the existing model and the independently proven locals.
+// Recover the direct raw-stats pointer payload through its private accessor;
+// the provisional four-byte caller copy had no native counterpart. This
+// owning source edit currently measures 96.68795%, with the AI bool target
+// relocation rename still pending the collective refresh.
 VA(0x004ad470, 0x1531)
 DC_ADDRESS(0x09b970, 0x9ec)
 MAC_ADDRESS(0x0bad6c, 0x1770)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique)
@@ -6269,10 +6280,9 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
             && g_combatManager->m_winner == 1) {
             if (g_game->isLocalHuman(rightHero->m_owner)) {
                 rightHero->checkLevel();
-                signed char stats[4];
-                rightHero->copyPrimarySkills(stats);
                 CHeroLevelUpdateMsg msg(rightHero->m_id, rightHero->m_skillCount,
-                                        rightHero->m_skillLevel, stats);
+                                        rightHero->m_skillLevel,
+                                        rightHero->getRawPrimarySkills());
                 transmitRemoteData(&msg, g_netLocalGamePos, 0, 1);
             } else {
                 CLevelPickWaitDlg dlg2;
