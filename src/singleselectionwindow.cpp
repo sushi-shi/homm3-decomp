@@ -6645,7 +6645,7 @@ void TSingleSelectionWindow::onPingMsg(CNetMsg* netMsg)
 VA(0x00589510, 0xA3)
 DC_ADDRESS(0x140450, 0xb8)
 MAC_ADDRESS(0x1808a0, 0x8c)
-void TSingleSelectionWindow::onPingResponseMsg(CNetMsg* netMsg, unsigned char inPopup)
+void TSingleSelectionWindow::onPingResponseMsg(CNetMsg* netMsg, bool inPopup)
 {
     CPingResponseMsg* msg = static_cast<CPingResponseMsg*>(netMsg);
     char text[0x100];
@@ -6657,7 +6657,7 @@ void TSingleSelectionWindow::onPingResponseMsg(CNetMsg* netMsg, unsigned char in
 VA(0x005895C0, 0x14F)
 DC_ADDRESS(0x140588, 0x82)
 MAC_ADDRESS(0x180a58, 0x14c)
-unsigned char TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost)
+bool TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost)
 {
     unsigned char missing = 0;
     unsigned int i;
@@ -6696,7 +6696,7 @@ unsigned char TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost
 VA(0x00589710, 0x40F)
 DC_ADDRESS(0x140664, 0xa)
 MAC_ADDRESS(0x180c24, 0x668)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg
-unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
+bool TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
 {
     if (m_headersA.size() == 0)
         return 1;
@@ -6858,7 +6858,7 @@ bool TSingleSelectionWindow::onNewMapHeaderInfo(CNetMsg* netMsg)
 // E:\gamedcs\singleselectionwindow.cpp:6980
 DC_ADDRESS(0x140d74, 0x48)
 MAC_ADDRESS(0x181bac, 0xc4)
-unsigned char TSingleSelectionWindow::sendPlayerPositions(
+bool TSingleSelectionWindow::sendPlayerPositions(
     unsigned long dpidTo)
 {
     CUpdatePlayerPosMsg msg(m_players.m_humanPlayers,
@@ -6937,7 +6937,7 @@ void TSingleSelectionWindow::onNameSlider(int newIndex)
 VA(0x00589b20, 0x13C)
 DC_ADDRESS(0x1406ec, 0x1ac)
 MAC_ADDRESS(0x1812dc, 0x168)
-unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
+bool TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
 {
     CGameTransmitInitMsg* msg =
         static_cast<CGameTransmitInitMsg*>(netMsg);
@@ -6984,7 +6984,7 @@ unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
 VA(0x00589C60, 0xCE)
 DC_ADDRESS(0x140898, 0x13a)
 MAC_ADDRESS(0x181444, 0x108)
-unsigned char TSingleSelectionWindow::onNewSetupInfoMsg(CNetMsg* netMsg)
+bool TSingleSelectionWindow::onNewSetupInfoMsg(CNetMsg* netMsg)
 {
     CNewSetupInfoMsg* msg = static_cast<CNewSetupInfoMsg*>(netMsg);
     g_game->m_setup = msg->m_setup;
@@ -7007,7 +7007,7 @@ unsigned char TSingleSelectionWindow::onNewSetupInfoMsg(CNetMsg* netMsg)
 VA(0x00589D30, 0x265)
 DC_ADDRESS(0x1409d4, 0xa0)
 MAC_ADDRESS(0x18154c, 0x148)
-unsigned char TSingleSelectionWindow::isVersionCompatible(const char* otherVersion)
+bool TSingleSelectionWindow::isVersionCompatible(const char* otherVersion)
 {
     if (_strcmpi(m_gameVersion,
                  DATA_COMPGEN(0x00683900, defaultRemoteVersion, "1.0"))
@@ -7078,7 +7078,7 @@ bool TSingleSelectionWindow::assignPlayerToOpenHumanSlot(unsigned long dpid)
 VA(0x00589FA0, 0x2D9)
 DC_ADDRESS(0x140a74, 0x214)
 MAC_ADDRESS(0x181694, 0x268)  // anchor-callee RS_NEW_PLAYER arm; owns the 'OnNewPlayerMsg %d' log line, size 1.37x
-unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
+bool TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
 {
     CNewPlayerMsg* msg = static_cast<CNewPlayerMsg*>(netMsg);
     g_logFile.log(DATA_COMPGEN(0x0068392c, onNewPlayerLog,
@@ -7154,7 +7154,7 @@ VA_COMPGEN(0x0058A300, 0x13F, IMPLICIT_DTOR, CNewMapHeaderInfoMsg)
 VA(0x0058A440, 0x33E)
 DC_ADDRESS(0x140f24, 0x1f8)
 MAC_ADDRESS(0x181d80, 0x14c)
-unsigned char TSingleSelectionWindow::onGameHeaderInfoInitMsg(CNetMsg* netMsg)
+bool TSingleSelectionWindow::onGameHeaderInfoInitMsg(CNetMsg* netMsg)
 {
     CGameHeaderInfoInitMsgEx* msg =
         static_cast<CGameHeaderInfoInitMsgEx*>(netMsg);
@@ -7200,7 +7200,7 @@ void TSingleSelectionWindow::onGameHeaderInfoInitMsgEx(CNetMsg* netMsg)
 VA(0x0058AA40, 0x3AE)
 DC_ADDRESS(0x14111c, 0x1e0)
 MAC_ADDRESS(0x181f64, 0x590)
-unsigned char TSingleSelectionWindow::onGameHeaderInfoMsg(CNetMsg* netMsg)
+bool TSingleSelectionWindow::onGameHeaderInfoMsg(CNetMsg* netMsg)
 {
     CGameHeaderInfoMsg msg;
     msg.remoteFn00512E00(netMsg);
@@ -7445,7 +7445,7 @@ void TSingleSelectionWindow::onSetAGRMsg(
 VA(0x0058B120, 0x3E8)
 DC_ADDRESS(0x141b98, 0x1c4)
 MAC_ADDRESS(0x182d78, 0x218)
-unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
+bool TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
 {
     g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
     displayChat();
@@ -8546,7 +8546,7 @@ inline int TSingleSelectionWindow::calcPosition(int playerPos)
 VA(0x0058DF50, 0x57)
 DC_ADDRESS(0x1450a8, 0x76)
 MAC_ADDRESS(0x185d14, 0x98)
-unsigned char TSingleSelectionWindow::onBadVersionMsg(CNetMsg* netMsg)
+bool TSingleSelectionWindow::onBadVersionMsg(CNetMsg* netMsg)
 {
     CBadVersionMsg* msg = static_cast<CBadVersionMsg*>(netMsg);
     remoteCleanup();

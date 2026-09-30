@@ -692,7 +692,12 @@ public:
     const char* getMapName(int which);
     const char* getFileName(int which);
     void drawBasicMapInfo();
-    unsigned char onGameTransmitInitMsg(CNetMsg* netMsg);
+    // Native DC public names prove _N returns for this network callback
+    // family: OnGameTransmitInitMsg, OnNewSetupInfoMsg, OnNewPlayerMsg,
+    // OnGameHeaderInfoInitMsg, OnGameHeaderInfoMsg, OnSetAsHostMsg,
+    // OnBadVersionMsg, OnMapFileNameMsg and CheckMissingHeaders. Their
+    // primitive 0x20 formal records are lowered bool storage.
+    bool onGameTransmitInitMsg(CNetMsg* netMsg);
     void updateFilterWidgets();
     void refreshFilterWidgets();
     void openRandomMapOptions();
@@ -722,7 +727,8 @@ public:
     void updateNames();
     unsigned char highlightFile(char* filename);
     void onNameClick(int pos);
-    unsigned char isVersionCompatible(const char* otherVersion);
+    // Native ?IsVersionCompatible@TSingleSelectionWindow@@QAA_NPBD@Z.
+    bool isVersionCompatible(const char* otherVersion);
     // Complete-only random-map helpers at 0x5879a0 and 0x5860e0. Their
     // provisional role names describe the byte-decoded caller contract.
     unsigned char generateRandomMap(const char* name);
@@ -730,23 +736,23 @@ public:
     void drawHeroAdvancedOption(int playerPos, unsigned char update,
                                 int position);
     void onDeleteFile();
-    unsigned char onNewSetupInfoMsg(CNetMsg* netMsg);
+    bool onNewSetupInfoMsg(CNetMsg* netMsg);
     bool assignPlayerToOpenHumanSlot(unsigned long dpid);
-    unsigned char onNewPlayerMsg(CNetMsg* netMsg);
+    bool onNewPlayerMsg(CNetMsg* netMsg);
     // DC ordinary OnPlayerDroppedMsg, line 6937; QAA_N return.
     bool onPlayerDroppedMsg(CNetMsg* netMsg);
     // DC ordinary OnNewMapHeaderInfo, source line 6968; QAA_N return.
     bool onNewMapHeaderInfo(CNetMsg* netMsg);
-    unsigned char onGameHeaderInfoInitMsg(CNetMsg* netMsg);
+    bool onGameHeaderInfoInitMsg(CNetMsg* netMsg);
     void onGameHeaderInfoInitMsgEx(CNetMsg* netMsg);
     void makeHeroFilter();
     void sortMaps(int how, unsigned char sendSortMsg,
                   unsigned char update);
-    unsigned char onSetAsHostMsg(CNetMsg* netMsg);
-    unsigned char onGameHeaderInfoMsg(CNetMsg* netMsg);
+    bool onSetAsHostMsg(CNetMsg* netMsg);
+    bool onGameHeaderInfoMsg(CNetMsg* netMsg);
     bool onGameHeaderInfoEndMsg(CNetMsg* netMsg);
     bool onScrollMsg(CNetMsg* netMsg);
-    unsigned char onBadVersionMsg(CNetMsg* netMsg);
+    bool onBadVersionMsg(CNetMsg* netMsg);
     void setFilter(int size);
     void sendChat(unsigned long dpid, const char* chat);
     void receiveChat(unsigned long dpid, char* chat,
@@ -757,18 +763,19 @@ public:
     void onRequestHeroFaceReplyMsg(CNetMsg* netMsg,
                                    bool inPopup);
     void onPingMsg(CNetMsg* netMsg);
-    void onPingResponseMsg(CNetMsg* netMsg, unsigned char inPopup);
+    // Native ?OnPingResponseMsg@TSingleSelectionWindow@@QAAXPAVCNetMsg@@_N@Z.
+    void onPingResponseMsg(CNetMsg* netMsg, bool inPopup);
     void getHeroFace(int which, CNetPlayerHandlerPlayer* player);
     void onSetAGRMsg(CNetMsg* netMsg, bool inPopup);
     void onNewHostMsg(CNetMsg* netMsg);
     void onUpdatePlayerPosMsg(CNetMsg* netMsg);
     void checkFaces();
     // Always returns 1 (retail sets al on every exit); DC agrees.
-    unsigned char onMapFileNameMsg(CNetMsg* netMsg);
+    bool onMapFileNameMsg(CNetMsg* netMsg);
     bool onHeaderConfirmMsg(CNetMsg* netMsg);
     bool onReqHeaderConfirmMsg(CNetMsg* netMsg);
     bool onMapHeaderRequestMsg(CNetMsg* netMsg);
-    unsigned char checkMissingHeaders(unsigned long dpidHost);
+    bool checkMissingHeaders(unsigned long dpidHost);
     void turnOffScenarioOptions();
     void turnOffAdvancedOptions();
     bool onClickMsg(CNetMsg* netMsg);
@@ -813,7 +820,8 @@ public:
     // player slots from field_18A0, redraws, and broadcasts the resulting
     // setup. The role name remains provisional until its body is claimed.
     void rebuildFilteredPlayerSetup();
-    unsigned char sendPlayerPositions(unsigned long dpidTo);
+    // Native ?SendPlayerPositions@TSingleSelectionWindow@@QAA_NK@Z.
+    bool sendPlayerPositions(unsigned long dpidTo);
     unsigned char sendSetupInfo(unsigned long dpid);
     bool isHost();
     void sendPlayerFaces();
