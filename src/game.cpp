@@ -6910,9 +6910,11 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
 VA(0x004c6c50, 0x2EB)
 DC_ADDRESS(0x0b1c8c, 0x28e)
 MAC_ADDRESS(0x0dd324, 0x3e8)
+// Original DC public ?ViewArmy@game@@QAAXAAVarmyGroup@@HPBVhero@@PBVtown@@HH_N3@Z
+// proves both flag parameters are bool despite lowered byte CodeView records.
 void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                     const town* thisTown, int x, int y,
-                    unsigned char showDismiss, unsigned char isQuickView)
+                    bool showDismiss, bool isQuickView)
 {
     TCreatureType armyType = group.m_armyTypes[iarmy];
     const int numTroops = group.m_numTroops[iarmy];
