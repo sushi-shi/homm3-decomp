@@ -2981,7 +2981,11 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // and backpack artifact enums within each format arm, without an intBuffer
 // join. Recovering those stores raises Windows 93.9180% -> 96.86389%; both
 // artifact loops now match. The remaining 94-block/49-call body differs in
-// starting-hero argument scheduling and the later sex/spell byte promotion.
+// starting-hero argument scheduling. Native Mac 0x1251cc..0x1251dc
+// widens the sex byte before its sentinel test/store, and 0x125210..0x125268
+// retains the widened spell value across the bitset temporary. Reusing the
+// existing intBuffer for those consumers reproduces both Windows regions:
+// 96.86389% -> 98.68750%, with 93/94 blocks exact and 49/49 calls.
 VA(0x005021c0, 0x835)
 DC_ADDRESS(0x0f0df4, 0x726)
 MAC_ADDRESS(0x124a84, 0x998)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject
@@ -3191,16 +3195,18 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         }
 
         charBuffer = readValue<char>(infile);
-        if (charBuffer != -1)
-            heroData->m_sex = charBuffer;
+        intBuffer = charBuffer;
+        if (intBuffer != -1)
+            heroData->m_sex = intBuffer;
 
         if (g_game->m_mapHeader.m_version == MAP_FORMAT_ARMAGEDDONS_BLADE) {
             charBuffer = readValue<char>(infile);
-            if (charBuffer != -2) {
+            intBuffer = charBuffer;
+            if (intBuffer != -2) {
                 heroData->m_customSpells = 1;
                 heroData->m_spells = std::bitset<70>();
-                if (charBuffer != -1)
-                    heroData->m_spells[charBuffer] = 1;
+                if (intBuffer != -1)
+                    heroData->m_spells[intBuffer] = 1;
             }
         } else {
             charBuffer = readValue<char>(infile);
