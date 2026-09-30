@@ -420,18 +420,14 @@ float type_AI_player::getAttackBonus(short player)
 // seven doubles are mirrored into playerData before the six-resource
 // running total is divided by five.
 
-// Residual (97.4340%): the algorithm, calls, loops, floating-point flow,
-// and persistent fields agree. Two levers closed the old 86.38 plateau
-// (2026-08-20): the top-three cost loop copies its creature record BY VALUE
-// (retail's three-dword copy with spilled value/amount reads `type` once,
-// precomputes the traits row, strength-reduces both walks and counts DOWN
-// `mov edx,7 / dec/jne`; the const-reference re-read `type` per iteration
-// and pinned an indexed up-count, +7.03), and the /Ob2 numerator device
-// below the average loop (+4.03, see its comment). Remaining delta:
-// ECX/EDX and EBX/EDI transpositions in the trading-value loop and the
-// amount-word read (`movsx esi, cx` from the register copy vs our
-// `movsx esi, word ptr [ecx+8]` from the source) - register-homing family;
-// the creation-order probes measured against it are in the device note.
+// Keep the top-three creature copy by value: retail's three-dword copy
+// reads the type once and uses a seven-resource decrementing cost walk;
+// Mac 0x2b7f8..0x2b874 independently preserves that copy and loop guards.
+// With the canonical resource getter, the current residual is an outer
+// std::_Sort expansion: VC6 retains it, while retail expands it and keeps
+// its two recursive calls. The refreshed trace gives the nested _Sort
+// cost 172 against budget 164. Aggregate call counts mislabel this as
+// over-inlining; preserve the named recursive frontier and getter path.
 VA(0x00428740, 0x68E)
 DC_ADDRESS(0x02e188, 0x64e)
 MAC_ADDRESS(0x02b43c, 0x704)  // linkorder
