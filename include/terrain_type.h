@@ -6,6 +6,7 @@
 // {Dirt=0, Sand=1, Grass=2, Snow=3, Swamp=4, Rough=5,
 // Subterranean=6, Lava=7, Water=8, Rock=9}.
 enum TTerrainType {
+    TERRAIN_ANY_LAND = -2,
     TERRAIN_NONE = -1,
     eTerrainDirt = 0,
     eTerrainSand = 1,

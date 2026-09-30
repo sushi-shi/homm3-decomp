@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include "army.h"
+#include "cove.h"
 
 #include "ai.h"
 #include "armygrp.h"
@@ -251,8 +252,9 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
         owner->heroFn004E6120(type, traits);
     if (g_combatManager->m_magicTerrain
             != COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS
-        && townManager::getNativeTerrain(m_monInfo.m_townType)
-               == g_combatManager->m_terrainType)
+        && (townManager::getNativeTerrain(m_monInfo.m_townType)
+               == g_combatManager->m_terrainType
+            || (m_monInfo.m_townType == TOWN_COVE && cove::hasLodestar())))
         m_onNativeTerrain = 1;
     else
         m_onNativeTerrain = 0;
@@ -336,7 +338,7 @@ void army::loadResources()
         m_armySample[WALK_SAMPLE] = 0;
     }
 
-    if (m_creatureType == CREATURE_BALLISTA)
+    if (m_creatureType == CREATURE_BALLISTA || m_creatureType == CREATURE_CANNON)
         sprintf(g_text, DATA_COMPGEN(0x00660a04, shotSampleFormat,
                                     "%sshot.82M"),
                 m_monInfo.m_samplePrefix);
@@ -388,7 +390,9 @@ void army::loadResources()
     if (m_creatureType == CREATURE_VAMPIRE
         || m_creatureType == CREATURE_VAMPIRE_LORD
         || m_creatureType == CREATURE_DEVIL
-        || m_creatureType == CREATURE_ARCH_DEVIL) {
+        || m_creatureType == CREATURE_ARCH_DEVIL
+        || m_creatureType == CREATURE_NYMPH
+        || m_creatureType == CREATURE_OCEANID) {
         sprintf(g_text, DATA_COMPGEN(0x006609c8, ext1SampleFormat,
                                     "%sext1.82M"),
                 m_monInfo.m_samplePrefix);
@@ -474,6 +478,18 @@ void army::loadResources()
         case CREATURE_LIZARD_WARRIOR:
             missileName = DATA_COMPGEN(0x00660938, lizardMissileName,
                                        "pplizax.def");
+            break;
+        case CREATURE_PIRATE:
+        case CREATURE_CORSAIR:
+        case CREATURE_SEA_DOG:
+            missileName = "PPIRATE.def";
+            break;
+        case CREATURE_SEA_WITCH:
+        case CREATURE_SORCERESS:
+            missileName = "PSORC.def";
+            break;
+        case CREATURE_CANNON:
+            missileName = "SMCANX.def";
             break;
         case CREATURE_BALLISTA:
             missileName = DATA_COMPGEN(0x0066092c, ballistaMissileName,
@@ -1443,10 +1459,49 @@ void army::rangeAttack(army* armyToAttack)
         g_combatManager->powEffect(eSpellEffectNone, 0);
         g_combatManager->damageMessage(getName(), m_numTroops, damage,
                                         armyToAttack, killed);
+        applyRangedSpecial(armyToAttack);
         if (static_cast<const combatManager*>(g_combatManager)
                 ->isQuickCombat())
             return;
         waitSample(SHOOT_SAMPLE);
+    }
+}
+
+// Cove's ranged abilities run once per resolved volley, including quick combat.
+void army::applyRangedSpecial(army* target)
+{
+    if (m_numTroops <= 0 || target->m_numTroops <= 0)
+        return;
+    if (m_creatureType == CREATURE_SEA_WITCH
+        || m_creatureType == CREATURE_SORCERESS) {
+        SpellID spell = target->m_spellInfluence[SPELL_WEAKNESS]
+            ? SPELL_DISRUPTING_RAY : SPELL_WEAKNESS;
+        if (g_combatManager->spellCastWorks(spell, getControllingSide(),
+                                           target, 1, 1)) {
+            g_combatManager->castSpell(spell, target->m_gridIndex, 1, -1,
+                m_creatureType == CREATURE_SORCERESS ? eMasteryAdvanced : eMasteryBasic, 3);
+        }
+    } else if (m_creatureType == CREATURE_SEA_DOG) {
+        int hex = is(creatureDoubleWide) ? getSecondGridIndex() : m_gridIndex;
+        if (g_combatManager->shotIsThroughWall(this, hex, target->m_gridIndex))
+            return;
+        int chance = g_combatManager->shotIsNotOptimal(this, target) ? 2 : 3;
+        int hits = 0;
+        for (int i = 0; i < m_numTroops; ++i) {
+            if (sRandom(1, 100) <= chance)
+                ++hits;
+        }
+        int killed = min(hits, (m_numTroops * chance + 99) / 100);
+        killed = min(killed, target->m_numTroops);
+        if (killed > 0) {
+            if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()) {
+                std::string text = formatString("Accurate shot kills %d %s.",
+                                                killed, target->getName(killed));
+                g_combatManager->m_combatWindow->combatMessage(text.c_str(), 1, 0);
+            }
+            target->damage(target->m_monInfo.m_hitPoints * killed - target->m_topCreatureDamage);
+            g_combatManager->powEffect(eSpellEffectNone, 1);
+        }
     }
 }
 
@@ -1646,6 +1701,8 @@ bool army::checkSpecialAttack(army* target)
         if (target->m_numTroops > 0 && target->m_monInfo.m_defenseSkill > 0)
             target->m_postPowSpellToCast = SPELL_ACID_BREATH_DEFENSE;
         return 0;
+    case CREATURE_SEA_SERPENT:
+    case CREATURE_HASPID:
     case CREATURE_WYVERN_MONARCH:
         if (target->is(creatureAlive) && sRandom(1, 100) <= 30
             && target->m_numTroops > 0
@@ -2084,6 +2141,7 @@ void army::doAttack(int direction)
         armyToAttack->m_residualBlindness = 1;
     if (armyToAttack->getSpellTime(74))
         armyToAttack->m_residualParalyze = 1;
+    long targetTroopsBeforeAttack = armyToAttack->m_numTroops;
     bool killed = doAttack(armyToAttack, direction);
     m_joustBonus = 0;
     if (armyToAttack->m_numTroops > 0
@@ -2097,7 +2155,10 @@ void army::doAttack(int direction)
     }
     armyToAttack->m_residualBlindness = 0;
     armyToAttack->m_residualParalyze = 0;
-    if (is(creatureTwoAttacks) && armyToAttack->m_numTroops > 0 && !is(creatureShootingArmy)
+    if ((is(creatureTwoAttacks)
+         || (m_creatureType == CREATURE_AYSSID
+             && armyToAttack->m_numTroops < targetTroopsBeforeAttack))
+        && armyToAttack->m_numTroops > 0 && !is(creatureShootingArmy)
         && !isIncapacitated() && m_numTroops > 0) {
         GameTime::delay(static_cast<int>(
             g_combatSpeedFactors[g_config.m_combatSpeed] * 150.0f));
@@ -2287,8 +2348,14 @@ long army::getAdjustedAttack(const army* enemy,
         }
     }
     if (m_spellInfluence[56])
-        return static_cast<long>(
+        attack = static_cast<long>(
             getAdjustedDefense(enemy, 0) * m_frenzyFactor + attack);
+    if (enemy) {
+        if (enemy->m_creatureType == CREATURE_NIX)
+            attack = attack * 70 / 100;
+        else if (enemy->m_creatureType == CREATURE_NIX_WARRIOR)
+            attack = attack * 40 / 100;
+    }
     return attack;
 }
 
@@ -2465,6 +2532,7 @@ MAC_ADDRESS(0x04e840, 0x118)
 bool army::canShoot(const army* excluded) const
 {
     if (m_creatureType == ARMY_CREATURE_BALLISTA
+        || m_creatureType == CREATURE_CANNON
         || m_creatureType == ARMY_CREATURE_ARROW_TOWER)
         return 1;
     if (!is(creatureShootingArmy) || m_monInfo.m_numShots <= 0)
@@ -2666,7 +2734,7 @@ int army::computeBaseDamage(unsigned char simulateOnly) const
 
     int low;
     int high;
-    if (m_creatureType == ARMY_CREATURE_BALLISTA) {
+    if (m_creatureType == ARMY_CREATURE_BALLISTA || m_creatureType == CREATURE_CANNON) {
         const hero* shooter = getController();
         low = (shooter->getPrimarySkill(0) + 1) * m_monInfo.m_damageLowBound;
         high = (shooter->getPrimarySkill(0) + 1) * m_monInfo.m_damageHighBound;
@@ -2711,6 +2779,13 @@ int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
         && defender->m_creatureType != 0 && defender->m_creatureType != 1) {
         bonus = static_cast<long>(static_cast<double>(baseDamage)
                                   * distance * 0.05);
+    }
+    if (m_creatureType == CREATURE_HASPID && m_numTroops > 0) {
+        double health = getTotalHitPoints(0);
+        double wounds = (double(m_origNumTroops + 1) * m_monInfo.m_hitPoints)
+                      / (health + m_monInfo.m_hitPoints) - 1.0;
+        if (wounds > 0.0)
+            bonus += static_cast<int>(baseDamage * sqrt(wounds));
     }
     if (m_luckStatus > 0)
         bonus += baseDamage;
@@ -2817,6 +2892,7 @@ int army::computeAttackerDamageBonuses(int baseDamage,
     int result = computeAttackerBonus(baseDamage, isShooting, defender,
                                         simulateOnly == 0, distance);
     switch (m_creatureType) {
+    case CREATURE_CANNON:
     case ARMY_CREATURE_BALLISTA: {
         hero* controlling = getController();
         long mastery =
@@ -3245,16 +3321,21 @@ void army::processDeath(int fadeElementals)
             }
         }
         if (m_mirrorSourceIndex != -1) {
-            army* mirror =
-                &g_combatManager->m_armies[m_combatSide][m_mirrorSourceIndex];
-            if (mirror->m_mirrorDestIndex == m_bitIndex)
-                mirror->m_mirrorDestIndex = -1;
+            army* source = &g_combatManager->m_armies[m_combatSide][m_mirrorSourceIndex];
+            source->m_mirrorDestIndex = -1;
+            for (int i = 0; i < g_combatManager->m_numArmies[m_combatSide]; ++i) {
+                army* sibling = &g_combatManager->m_armies[m_combatSide][i];
+                if (sibling->m_numTroops > 0 && sibling->m_mirrorSourceIndex == m_mirrorSourceIndex)
+                    source->m_mirrorDestIndex = sibling->m_bitIndex;
+            }
         }
-        if (m_mirrorDestIndex != -1) {
-            army* clone =
-                &g_combatManager->m_armies[m_combatSide][m_mirrorDestIndex];
-            clone->m_numTroops = 0;
-            clone->processDeath(fadeElementals);
+        // A hero specialty can make two mirrors of the same source stack.
+        for (int i = 0; i < g_combatManager->m_numArmies[m_combatSide]; ++i) {
+            army* clone = &g_combatManager->m_armies[m_combatSide][i];
+            if (clone->m_numTroops > 0 && clone->m_mirrorSourceIndex == m_bitIndex) {
+                clone->m_numTroops = 0;
+                clone->processDeath(fadeElementals);
+            }
         }
     }
 }
@@ -3817,7 +3898,8 @@ unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
     g_combatManager->turnOffHighlighter(1);
     g_combatManager->markMovingArmy(this);
     unsigned char moved;
-    if (is(creatureFlyingArmy)) {
+    if (is(creatureFlyingArmy) && m_creatureType != CREATURE_NYMPH
+        && m_creatureType != CREATURE_OCEANID) {
         m_pathTarget = hex;
         moved = validFlight(hex, 0);
         if (moved) {
@@ -3825,7 +3907,9 @@ unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
             moved = 1;
         }
     } else if (m_creatureType == CREATURE_DEVIL
-               || m_creatureType == CREATURE_ARCH_DEVIL) {
+               || m_creatureType == CREATURE_ARCH_DEVIL
+               || m_creatureType == CREATURE_NYMPH
+               || m_creatureType == CREATURE_OCEANID) {
         m_pathTarget = hex;
         moved = validFlight(hex, 0);
         if (moved) {

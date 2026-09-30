@@ -132,6 +132,7 @@
         ps.pyghidra
         ps.libclang
         ps.capstone
+        ps.pillow
       ]);
 
       objdiffShimHook = ''

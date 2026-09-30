@@ -1,3 +1,4 @@
+#include "cove.h"
 #include "text.h"
 #include "va.h"
 #include "includes.h"
@@ -35,10 +36,10 @@
 // Retail stores the neutral entry at 0x68290c; callers fold alignment + 1
 // into the indexed address 0x682910. Mac createPortraitWidget (0x201300)
 // likewise loads table[alignment + 1], retaining the four-byte displacement.
-DATA(0x0068290c) const char* g_creatureBackgroundNames[10] = {
+DATA(0x0068290c) const char* g_creatureBackgroundNames[HOMM3_TOWN_COUNT + 1] = {
     "CrBkgNeu.pcx", "CrBkgCas.pcx", "CrBkgRam.pcx", "CrBkgTow.pcx",
     "CrBkgInf.pcx", "CrBkgNec.pcx", "CrBkgDun.pcx", "CrBkgStr.pcx",
-    "CrBkgFor.pcx", "CrBkgEle.pcx"
+    "CrBkgFor.pcx", "CrBkgEle.pcx", "CrBkgCov.pcx"
 };
 
 DATA(0x00693878)
@@ -534,6 +535,8 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
                     || spell == SPELL_TITANS_LIGHTNING_BOLT)
                     return 0.0f;
                 break;
+            case CREATURE_NYMPH:
+            case CREATURE_OCEANID:
             case CREATURE_WATER_ELEMENTAL:
             case CREATURE_ICE_ELEMENTAL:
                 if (spell == SPELL_ICE_BOLT || spell == SPELL_FROST_RING)
@@ -686,7 +689,7 @@ DC_ADDRESS(0x04ebf0, 0xa6)
 MAC_ADDRESS(0x05828c, 0x17c)
 int armyGroup::getAlignments(unsigned char* alignments) const
 {
-    unsigned char local[10];
+    unsigned char local[HOMM3_TOWN_COUNT + 1];
     if (!alignments)
         alignments = local;
     std::fill_n(alignments, sizeof(local), 0);
@@ -701,7 +704,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
         alignments[alignment + 1]++;
     }
     int count = 0;
-    for (int j = 0; j < 10; ++j) {
+    for (int j = 0; j < HOMM3_TOWN_COUNT + 1; ++j) {
         if (alignments[j] > 0)
             ++count;
     }
@@ -890,11 +893,11 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
     int morale = 0;
     if (ownerHero)
         morale = ownerHero->getMorale(otherHero, 0, 0);
-    unsigned char alignments[10];
+    unsigned char alignments[HOMM3_TOWN_COUNT + 1];
     int numAlignments = getAlignments(alignments);
     if (groupAlignments) {
         int grouped = 0;
-        for (int a = -1; a < 9; ++a) {
+        for (int a = -1; a < HOMM3_TOWN_COUNT; ++a) {
             if (alignments[a + 1] > 0 && a != -1) {
                 if (armyGrpFn0044A460().test(a))
                     ++grouped;
@@ -953,6 +956,7 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
             case TOWN_STRONGHOLD:
             case TOWN_FORTRESS:
             case TOWN_CONFLUX:
+            case TOWN_COVE:
                 continue;
             }
         } while (0);
@@ -974,6 +978,7 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
             case TOWN_STRONGHOLD:
             case TOWN_FORTRESS:
             case TOWN_CONFLUX:
+            case TOWN_COVE:
                 continue;
             }
         }
@@ -1039,6 +1044,7 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
             case TOWN_STRONGHOLD:
             case TOWN_FORTRESS:
             case TOWN_CONFLUX:
+            case TOWN_COVE:
                 luck += 2;
                 break;
             default:
@@ -1273,6 +1279,7 @@ std::string armyGroup::getMoraleDescription(
             case TOWN_STRONGHOLD:
             case TOWN_FORTRESS:
             case TOWN_CONFLUX:
+            case TOWN_COVE:
                 goto moraleTerrainDone;
             }
             goto moraleTerrainDone;
@@ -1300,6 +1307,7 @@ std::string armyGroup::getMoraleDescription(
             case TOWN_STRONGHOLD:
             case TOWN_FORTRESS:
             case TOWN_CONFLUX:
+            case TOWN_COVE:
                 goto moraleTerrainDone;
             }
             goto moraleTerrainDone;
@@ -1319,11 +1327,11 @@ std::string armyGroup::getMoraleDescription(
         ;
     }
 
-    unsigned char alignments[10];
+    unsigned char alignments[HOMM3_TOWN_COUNT + 1];
     int numAlignments = getAlignments(alignments);
     if (groupAlignments) {
         int grouped = 0;
-        for (int alignment = -1; alignment < 9; ++alignment) {
+        for (int alignment = -1; alignment < HOMM3_TOWN_COUNT; ++alignment) {
             if (alignments[alignment + 1] > 0 && alignment != -1) {
                 if (armyGrpFn0044A460().test(alignment))
                     ++grouped;
@@ -1499,6 +1507,7 @@ std::string armyGroup::getLuckDescription(
         case TOWN_STRONGHOLD:
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
+            case TOWN_COVE:
             luck -= 2;
             result += g_luckInfo[24];
             break;
@@ -1548,10 +1557,16 @@ MAC_ADDRESS(0x05a1f0, 0x90)
 TTerrainType armyGroup::getNativeTerrain() const
 {
     TTerrainType native = TERRAIN_NONE;
+    bool allLand = false;
+    bool lodestar = cove::hasLodestar();
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
         int alignment = g_game->getAlignment(m_armies[i]);
+        if (alignment == TOWN_COVE && lodestar) {
+            allLand = true;
+            continue;
+        }
         TTerrainType terrain = townManager::getNativeTerrain(alignment);
         if (native != TERRAIN_NONE) {
             if (terrain != native)
@@ -1559,7 +1574,7 @@ TTerrainType armyGroup::getNativeTerrain() const
         } else
             native = terrain;
     }
-    return native;
+    return native == TERRAIN_NONE && allLand ? TERRAIN_ANY_LAND : native;
 }
 
 // COMDAT pairing: bitset<9>::reference::operator=, agreement 0.922; the

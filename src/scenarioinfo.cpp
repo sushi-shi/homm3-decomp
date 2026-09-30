@@ -411,7 +411,7 @@ void CScenarioPlayerInfoWidget::draw() const
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     }
 
-    m_townSprite->draw(0, m_townType * 2 + 2, 0, 0,
+    m_townSprite->draw(0, (m_townType == TOWN_COVE ? 39 : m_townType * 2 + 2), 0, 0,
                      m_townSprite->getWidth(), m_townSprite->getHeight(),
                      g_windowManager->m_screenBitmap,
                      windowX + 173, windowY + m_playerPosition * 50 + 124,
@@ -605,7 +605,7 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
         if (townType != -1) {
             CTownDlg dlg(0);
             dlg.createWin(
-                m_townPix, townType * 2 + 2,
+                m_townPix, (townType == TOWN_COVE ? 39 : townType * 2 + 2),
                 static_cast<TTownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             dlg.doModal(0);
         }

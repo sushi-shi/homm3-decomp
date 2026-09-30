@@ -109,9 +109,9 @@ DATA(0x006779e4) const char* g_holeSpriteFilenames[10] = {
     "avlhold0.def", "avlhlds0.def", "avlholg0.def", "avlhlsn0.def",
     "avlhols0.def", "avlholr0.def", "avlholx0.def", "avlholl0.def", "", ""
 };
-DATA(0x00677a0c) const char* g_townVillageObjectDefs[9] = { "AVCcast0.def", "AVCramp0.def", "AVCtowr0.def", "AVCinft0.def", "AVCnecr0.def", "AVCdung0.def", "AVCstro0.def", "AVCftrt0.def", "AVChfor0.def" };
-DATA(0x00677a30) const char* g_townFortObjectDefs[9] = { "AVCcasx0.def", "AVCramx0.def", "AVCtowx0.def", "AVCinfx0.def", "AVCnecx0.def", "AVCdunx0.def", "AVCstrx0.def", "AVCftrx0.def", "AVChforx.def" };
-DATA(0x00677a54) const char* g_townCapitolObjectDefs[9] = { "AVCcasz0.def", "AVCramz0.def", "AVCtowz0.def", "AVCinfz0.def", "AVCnecz0.def", "AVCdunz0.def", "AVCstrz0.def", "AVCforz0.def", "AVChforz.def" };
+DATA(0x00677a0c) const char* g_townVillageObjectDefs[HOMM3_TOWN_COUNT] = { "AVCcast0.def", "AVCramp0.def", "AVCtowr0.def", "AVCinft0.def", "AVCnecr0.def", "AVCdung0.def", "AVCstro0.def", "AVCftrt0.def", "AVChfor0.def" , "AVCCOVE0.def" };
+DATA(0x00677a30) const char* g_townFortObjectDefs[HOMM3_TOWN_COUNT] = { "AVCcasx0.def", "AVCramx0.def", "AVCtowx0.def", "AVCinfx0.def", "AVCnecx0.def", "AVCdunx0.def", "AVCstrx0.def", "AVCftrx0.def", "AVChforx.def" , "AVCcovf0.def" };
+DATA(0x00677a54) const char* g_townCapitolObjectDefs[HOMM3_TOWN_COUNT] = { "AVCcasz0.def", "AVCramz0.def", "AVCtowz0.def", "AVCinfz0.def", "AVCnecz0.def", "AVCdunz0.def", "AVCstrz0.def", "AVCforz0.def", "AVChforz.def" , "AVCcovz0.def" };
 DATA(0x00677978) int g_mineProduction[7] = { 2, 1, 2, 1, 1, 1, 1000 };
 DATA(0x006779b0) int g_neutralTownLevelWeights[6] = { 2, 3, 4, 5, 4, 3 };
 // Retail newMap copies this independent seven-resource tutorial row.
@@ -1685,7 +1685,7 @@ DC_ADDRESS(0x0a5bf4, 0x56)
 MAC_ADDRESS(0x0cd544, 0x7c)
 int game::loadHeroPool(TAbstractFile* infile, int saveVersion)
 {
-    int heroCount = HERO_COUNT;
+    int heroCount = saveVersion >= HOMM3_SAVE_VERSION ? HERO_COUNT : g_mapHeaderHeroCount;
     if (saveVersion < g_saveVersionCompleteHeroRoster)
         heroCount = g_mapHeaderLegacyHeroCount;
     for (int x = 0; x < heroCount; ++x) {
@@ -2146,6 +2146,10 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
         heroClass1 = classBeastmaster;
         heroClass2 = classWitch;
         break;
+    case TOWN_COVE:
+        heroClass1 = classCaptain;
+        heroClass2 = classNavigator;
+        break;
     case TOWN_CONFLUX:
         heroClass1 = classPlanesWalker;
         heroClass2 = classElementalist;
@@ -2202,10 +2206,10 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     THeroClass heroClass;
     long totalCount;
     long choice = 0;
-    long counts[18];
+    long counts[HOMM3_HERO_CLASS_COUNT];
     // CodeView records THeroID; Complete retains the same signed domain.
     HeroId heroId;
-    long weights[18];
+    long weights[HOMM3_HERO_CLASS_COUNT];
     long alignedCount;
 
     totalCount = 0;
@@ -2220,10 +2224,12 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     for (heroClass = classKnight; heroClass < kNumHeroClasses;
          heroClass = THeroClass(heroClass + 1)) {
         weights[heroClass] =
-            g_heroClasses[heroClass].m_foundInTownType[alignment];
+            alignment >= 0 ? g_heroClasses[heroClass].m_foundInTownType[alignment] : 1;
     }
 
     for (heroId = HeroId(0); heroId < HERO_COUNT; heroId = HeroId(heroId + 1)) {
+        if (heroId >= 156 && heroId < 163)
+            continue;
         if (m_heroAvailability[heroId] == -1
             && (playerPos == -1 || m_heroPoolMap[heroId][playerPos])) {
             totalCount++;
@@ -2291,6 +2297,8 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
 
     choice = random(1, counts[heroClass]);
     for (heroId = HeroId(0); heroId < HERO_COUNT; heroId = HeroId(heroId + 1)) {
+        if (heroId >= 156 && heroId < 163)
+            continue;
         if (m_heroAvailability[heroId] == -1
             && (playerPos == -1 || m_heroPoolMap[heroId][playerPos])
             && m_heroes[heroId].m_heroClass == heroClass
@@ -2800,7 +2808,7 @@ SavedGameHeader::SavedGameHeader()
 {
     memset(m_id, 0, sizeof(m_id));
     strcpy(m_id, "H3SVG");
-    m_version = 42;
+    m_version = HOMM3_SAVE_VERSION;
 }
 
 // Original: game::Load; game.cpp:3026 Complete loads a
@@ -2846,8 +2854,8 @@ int game::load(TAbstractFile* infile)
     }
 
     if (saved.m_version >= 34) {
-        infile->read(m_artifactDisabled, sizeof(m_artifactDisabled));
-        infile->read(m_artifactUsed, sizeof(m_artifactUsed));
+        infile->read(m_artifactDisabled, saved.m_version >= HOMM3_SAVE_VERSION ? ARTIFACT_COUNT : 144);
+        infile->read(m_artifactUsed, saved.m_version >= HOMM3_SAVE_VERSION ? ARTIFACT_COUNT : 144);
     } else if (saved.m_version >= 25) {
         infile->read(m_artifactDisabled, 0x81);
         infile->read(m_artifactUsed, 0x81);
@@ -2901,33 +2909,18 @@ int game::load(TAbstractFile* infile)
             return -1;
     }
 
-    // THE AVAILABILITY READ IS AN IF/ELSE ON THE VERSION, NOT ONE READ OF
-    // `heroCount`. Retail re-tests `saved.version >= 25` here and emits two
-    // separate guarded reads with the literals 0x9c and 0x80 - two
-    // teardowns, not one - and the 0x40 fill lives inside the SHORT arm
-    // rather than behind an `if (heroCount < HERO_COUNT)`.
-    if (saved.m_version >= 25) {
-        if (infile->read(m_heroAvailability, sizeof(m_heroAvailability))
-            < sizeof(m_heroAvailability))
-            return -1;
-    } else {
-        if (infile->read(m_heroAvailability,
-                         g_mapHeaderLegacyHeroCount * sizeof(m_heroAvailability[0]))
-            < g_mapHeaderLegacyHeroCount * sizeof(m_heroAvailability[0]))
-            return -1;
-        std::fill(m_heroAvailability + g_mapHeaderLegacyHeroCount,
-                  m_heroAvailability + HERO_COUNT,
-                  static_cast<char>(hero::HERO_AVAILABILITY_TAVERN_POOL));
-    }
-
+    int savedHeroCount = saved.m_version >= HOMM3_SAVE_VERSION ? HERO_COUNT
+        : saved.m_version >= 25 ? g_mapHeaderHeroCount : g_mapHeaderLegacyHeroCount;
+    if (infile->read(m_heroAvailability, savedHeroCount) < savedHeroCount)
+        return -1;
+    std::fill(m_heroAvailability + savedHeroCount, m_heroAvailability + HERO_COUNT,
+              static_cast<char>(hero::HERO_AVAILABILITY_TAVERN_POOL));
     if (saved.m_version >= 31) {
-        for (i = 0; i < HERO_COUNT; ++i) {
-            // readPackedBits<8> (a returned bitset temporary) keeps
-            // decodePackedBits out of line here; retail expands its
-            // bitset::reference loop in place.
+        for (i = 0; i < savedHeroCount; ++i) {
             std::bitset<8> poolMap;
             unsigned char poolBits[1];
-            readValue(infile, poolBits);
+            if (readValue(infile, poolBits) < sizeof(poolBits))
+                return -1;
             decodePackedBits(poolBits, poolMap);
             m_heroPoolMap[i] = poolMap;
         }
@@ -3373,7 +3366,7 @@ void SavedGameHeader::reset()
     else
         strcpy(m_id, "H3SVG");
 
-    m_version = 42;
+    m_version = HOMM3_SAVE_VERSION;
     m_gameVersion = g_game->m_gameVersion;
 
     m_campaign = g_game->m_campaign;
@@ -3546,6 +3539,7 @@ void game::setupOrigData()
     advManager* manager = g_advManager;
     manager->m_curHeroMobile = 0;
     MEMSET(m_heroAvailability, -1, sizeof(m_heroAvailability), i);
+    std::fill(m_heroAvailability + 156, m_heroAvailability + 163, char(0x40));
 
     std::bitset<8> allPlayers = ~std::bitset<8>();
     for (i = 0; i < HERO_COUNT; ++i)
@@ -3634,8 +3628,7 @@ void game::giveTroopsToNeutralTown(int townId)
     armyGroup& townArmy = currentTown->getArmy();
     TCreatureType creature;
     TCreatureType upgradedCreature;
-    TCreatureType upgradedValue = (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
-        townType * TOWN_DWELLING_SLOTS + monsterLevel];
+    TCreatureType upgradedValue = currentTown->getDwellingCreature(monsterLevel + TOWN_DWELLING_COUNT);
     creature = g_townDwellingCreatures[
         townType * TOWN_DWELLING_SLOTS + monsterLevel];
     upgradedCreature = upgradedValue;
@@ -5354,7 +5347,7 @@ VA(0x004c2ce0, 0x3A8)
 MAC_ADDRESS(0x0d8ec0, 0x460)  // sole caller LoadMap + HeroExtra field-offset walk
 void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
 {
-    for (int heroId = 0; heroId < HERO_COUNT; ++heroId) {
+    for (int heroId = 0; heroId < g_mapHeaderHeroCount; ++heroId) {
         HeroExtra* heroRecord = &m_heroSetup[heroId];
 
         if (!readValue<char>(mapFile))
@@ -5988,7 +5981,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
 
     m_hasRandomAlignment = readValue<signed char>(infile) != 0;
     if (m_hasRandomAlignment)
-        m_legalAlignments |= 0x100;
+        m_legalAlignments |= 0x100 | (1 << TOWN_COVE);
     if (!g_gameContextFeatures[g_videoGameState][1])
         m_legalAlignments &= 0xfeff;
 
@@ -6223,7 +6216,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                 availableHeroesMask, 0),
             bitset_iterator<g_mapHeaderLegacyHeroCount>(
                 availableHeroesMask, g_mapHeaderLegacyHeroCount),
-            bitset_iterator<g_mapHeaderHeroCount>(m_availableHeroes, 0));
+            bitset_iterator<HOMM3_HERO_COUNT>(m_availableHeroes, 0));
 
         if (!g_inCampaign) {
             for (int i = g_mapHeaderCompleteLegacyHeroFirst;
@@ -6233,8 +6226,13 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     } else {
         std::bitset<g_mapHeaderHeroCount> availableHeroesMask =
             readPackedBits<g_mapHeaderHeroCount>(infile);
-        m_availableHeroes = availableHeroesMask;
+        m_availableHeroes.reset();
+        for (int heroId = 0; heroId < g_mapHeaderHeroCount; ++heroId)
+            m_availableHeroes[heroId] = availableHeroesMask[heroId];
     }
+
+    for (int coveHero = 163; coveHero < HOMM3_HERO_COUNT; ++coveHero)
+        m_availableHeroes[coveHero] = !g_heroTraits[coveHero].m_availability.m_special;
 
     m_placeholders.clear();
     if (m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
@@ -6951,6 +6949,11 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                 break;
         }
     }
+
+    if (thisTown && thisTown->m_type == TOWN_COVE
+        && thisTown->hasBuilding(GUNPOWDER_WAREHOUSE_ID, true)
+        && (armyType == CREATURE_PIRATE || armyType == CREATURE_CORSAIR))
+        upgradeToType = CREATURE_SEA_DOG;
 
     if (thisHero) {
         const THeroSpecificAbility& ability =
@@ -8231,8 +8234,10 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
 
     i = 1;
     if (random(1, 100) <= 88 && traits->m_secondStack != -1) {
-        if (traits->m_secondStack == CREATURE_BALLISTA) {
-            type_artifact artifact(ARTIFACT_BALLISTA);
+        if (traits->m_secondStack == CREATURE_BALLISTA
+            || traits->m_secondStack == CREATURE_CANNON) {
+            type_artifact artifact(traits->m_secondStack == CREATURE_CANNON
+                ? ARTIFACT_CANNON : ARTIFACT_BALLISTA);
             m_heroes[hero].giveArtifact(artifact, 0, 0);
         } else if (traits->m_secondStack == CREATURE_FIRST_AID_TENT) {
             type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
@@ -8798,7 +8803,7 @@ void game::setupTowns()
 // TPickRandomTownName objects and its element wrapper proves [0, 15].
 DATA(0x006971a0)
 // Previous project spelling: gRandomTownNames.
-static TPickRandomTownName g_randomTownNames[9];
+static TPickRandomTownName g_randomTownNames[HOMM3_TOWN_COUNT];
 
 // E:\gamedcs\game.cpp:9803
 // Mac retains this helper at 0:0xe1f18; VC6 expands its call in
@@ -8809,7 +8814,7 @@ const char* getRandomTownName(int townType)
 {
     int name = g_randomTownNames[townType].pick();
     while (name == -1) {
-        townType = random(0, 8);
+        townType = random(0, HOMM3_TOWN_COUNT - 1);
         name = g_randomTownNames[townType].pick();
     }
     return g_townNames[townType][name];
@@ -8821,7 +8826,7 @@ DC_ADDRESS(0x0b69b8, 0x3a)
 MAC_ADDRESS(0x0e1f98, 0x8c)
 void resetRandomTownNames()
 {
-    for (int i = 0; i < 9; ++i)
+    for (int i = 0; i < HOMM3_TOWN_COUNT; ++i)
         g_randomTownNames[i].reset();
 }
 
@@ -9801,6 +9806,9 @@ int game::getNumThievesGuilds(int whichPlayer)
     for (int i = 0; i < m_players[whichPlayer].m_numTowns; i++) {
         const game& gameState = *g_game;
         const town* currentTown = gameState.getTown(m_players[whichPlayer].m_townIds[i]);
+        if (currentTown->m_type == TOWN_COVE
+            && currentTown->hasBuilding(EXTRA_1_ID, true))
+            count += 2;
         if (currentTown->hasBuilding(TAVERN_ID, false) ||
             (currentTown->m_type == TOWN_CASTLE &&
              currentTown->hasBuilding(EXTRA_1_ID, false))) {
@@ -10328,6 +10336,7 @@ game::game()
     m_week = 0;
     m_month = 0;
     std::fill_n(m_heroAvailability, sizeof(m_heroAvailability), -1);
+    std::fill(m_heroAvailability + 156, m_heroAvailability + 163, char(0x40));
 
     std::bitset<8> allPlayers = ~std::bitset<8>();
     std::fill_n(m_heroPoolMap, static_cast<int>(HERO_COUNT), allPlayers);

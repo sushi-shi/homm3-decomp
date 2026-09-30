@@ -82,6 +82,8 @@
 #ifndef HOMM3_VA_H
 #define HOMM3_VA_H
 
+#include "content_counts.h"
+
 // The source inventory selects VC6 project branches but still needs these
 // annotations. HOMM3_SOURCE_OWNERSHIP is set only by that analysis tool.
 #if defined(__clang__) || defined(HOMM3_SOURCE_OWNERSHIP)

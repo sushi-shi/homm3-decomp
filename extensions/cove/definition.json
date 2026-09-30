@@ -1,0 +1,4080 @@
+{
+  "provenance": {
+    "repository": "https://github.com/vcmi-mods/horn-of-the-abyss",
+    "commit": "40b6b9f317e40c3e928cf1add0bb11fcc9556a4d",
+    "authors": "HotA Crew; VCMI port by VCMI Team, edeksumo, avatar, Loki Laufeyjarson, Ben, Karyoplasma",
+    "license": "CC-BY-SA-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "changes": "Selected faction, roster, creature definitions and town buildings; removed JSON comments and reformatted. No binary assets included.",
+    "sha256": {
+      "mods/cove/Content/config/hota/cove/faction.json": "749a555b38a524a186c46c902b7e1feba14258946908fe4a707eeb70c4d587d4",
+      "mods/cove/Content/config/hota/cove/town/town.json": "c7d5b86bbaa888af4d24107f15868e9999165861bb63602f4c14ea2409812cf0",
+      "mods/cove/Content/config/hota/cove/town/buildings.json": "146580189c7f3757552c497ce54a6feb4a4f408332efaaa0039f84dc59d5b209",
+      "mods/cove/Content/config/hota/cove/creatures/nymph.json": "269da53ed7c54d4f7d595fe9291a91c08a6b7aa1b3d120f1f7bafd7c45a4c278",
+      "mods/cove/Content/config/hota/cove/creatures/oceanid.json": "0a5e29d466e65c9de838c02bd889960a80878673f51a46604745572496aa2097",
+      "mods/cove/Content/config/hota/cove/creatures/crewmate.json": "cd3660460fdd6746dcde9380e6cf40b86fc5dd4bd90ccaf0cfc74f24c138c46b",
+      "mods/cove/Content/config/hota/cove/creatures/seaman.json": "9dcf6ca86353e941f7278f7d2183788cab51595c8657c81d3cef18c810099e99",
+      "mods/cove/Content/config/hota/cove/creatures/pirate.json": "021b2b09f4600b42434a3d05ae5025f7890feb342c79cdf3cf397e2058620a43",
+      "mods/cove/Content/config/hota/cove/creatures/corsair.json": "b7dda46d9294529facf97d10a772eae9c942895f4d1f25e215e77346e08bf70a",
+      "mods/cove/Content/config/hota/cove/creatures/seadog.json": "24e75932b53fbaa599efa026b9670c7d063a61046677839f8d26db699afe76af",
+      "mods/cove/Content/config/hota/cove/creatures/stormbird.json": "fdafb5715bf2935823f2ba93b83d65aff9c2df41cfb8b1207626b206176fcf87",
+      "mods/cove/Content/config/hota/cove/creatures/ayssid.json": "da28d7f826c5c06013e9bead3a777782407cc54f39ae2e01add37912bcec4026",
+      "mods/cove/Content/config/hota/cove/creatures/seaWitch.json": "75e259cfa067067e39d748120cdbb8461a8a5cc3f1c079529674500eea57979e",
+      "mods/cove/Content/config/hota/cove/creatures/sorceress.json": "c8b7da0e1493d28302716ac71937412ad181c2c6fe5ae8f99a4a51449c91b9a8",
+      "mods/cove/Content/config/hota/cove/creatures/nix.json": "f9801cdfdd18452c97450ee5b97e0b3ceb058c80a6b3b3634f8059455577c2bc",
+      "mods/cove/Content/config/hota/cove/creatures/nixWarrior.json": "9e94a78f7facd412db9124646d082bf88e9b2c5869c8818bf07de2f9b7c7ef3a",
+      "mods/cove/Content/config/hota/cove/creatures/seaserpent.json": "46307af0e5feb898d21a6ae565cbf36c8786241f405b952b4b0ab967e7faa6c5",
+      "mods/cove/Content/config/hota/cove/creatures/haspid.json": "ed90b5d4d7bc3e453f43a06a8ff13216f879b6519dbdcda47c3c4f016c37d598",
+      "mods/cannon/Content/config/hotaCannon/cannonCreature.json": "2d0ef9558168bee388826571ca607a05f6bdf51e257e7633f13ec5b0d396cd5b",
+      "mods/cove/Content/config/hota/cove/heroes/anabel.json": "999b0dce2fdaf6890060642a6feaaf4aaa891aace3110a22de6add74c16dbeff",
+      "mods/cove/Content/config/hota/cove/heroes/andal.json": "6325dcd4e532c1cef1ed42242b4fcad405cc35097419c2dca60379ba9b9b1091",
+      "mods/cove/Content/config/hota/cove/heroes/astra.json": "4b29994df32dc26a2fa410a12a3fb08325e1a5211727af30024ff08f730ade6c",
+      "mods/cove/Content/config/hota/cove/heroes/balfour.json": "e71405c3102a5c1eb1ae4e8a5edec33b18094d8d76d667792116fe3d01458cab",
+      "mods/cove/Content/config/hota/cove/heroes/bidley.json": "c7d84ba6ad51b12f24bd634d0146ce9d7227654c97bbb567e82d97546aec2ad2",
+      "mods/cove/Content/config/hota/cove/heroes/casmetra.json": "bf9b65876d1cfec1afdb1bacdab98460f7270302c5a141f19817f5390e3ad2b9",
+      "mods/cove/Content/config/hota/cove/heroes/cassiopeia.json": "0d4e64587388f5e20d5345ad60e9a7c721df3f6505c1e1a8764a40df9638d56a",
+      "mods/cove/Content/config/hota/cove/heroes/corkes.json": "39a26bd12b84ef4ab7d33d4c40a92901880f46ad857204f23bd6fb8e16831949",
+      "mods/cove/Content/config/hota/cove/heroes/dargem.json": "4f80305cf283eab9c037e6fc94ca48e538e9356bb063db5caec168c54ed8d21e",
+      "mods/cove/Content/config/hota/cove/heroes/derek.json": "04b623999039bb8304eb312f0335d30b32cc63f167b21fc460c141448c3d56e6",
+      "mods/cove/Content/config/hota/cove/heroes/elmore.json": "b2aa32ec0b5ecefada24cea0a4a7ee0d8c16a27adb617680b1440041746a9d4d",
+      "mods/cove/Content/config/hota/cove/heroes/eovacius.json": "971c40db9a7a8ff402c8a7598b825d737232929fd2c87ac5c9ffbe177cc72f4a",
+      "mods/cove/Content/config/hota/cove/heroes/illor.json": "24fce61e45868036202ca024bbfc3ef0863c7cf93a8aeadb292293be44fa82cb",
+      "mods/cove/Content/config/hota/cove/heroes/jeremy.json": "07ecb801220d8b6d56213e2919200849edf0f5325bbaaa74f53938c669156632",
+      "mods/cove/Content/config/hota/cove/heroes/leena.json": "9c4c8343389aedaf22f770a33b5457e5eed5c59bfe3a63464bf18aed215f0d5c",
+      "mods/cove/Content/config/hota/cove/heroes/manfred.json": "f6186947d98857da8280d8f25e572c69ecd61273b6383814d3b11709a0d89dd4",
+      "mods/cove/Content/config/hota/cove/heroes/miriam.json": "79b41d57f6c751306dddba2ce4b74f812d8c074d7fb598fc32c0df354d9d917c",
+      "mods/cove/Content/config/hota/cove/heroes/spint.json": "e01af0655165cd8ab988b5af8de8f55ce35c502cd809c5c7fe4f8bede0916998",
+      "mods/cove/Content/config/hota/cove/heroes/tark.json": "e64d4feecc978356d44c41176568b3489088b77c55e529423bea7b29f6137f4f",
+      "mods/cove/Content/config/hota/cove/heroes/zilare.json": "e0babaec0074d8cbdf90f62e3a590b05b38b662eeb729dc3839abcf6624e137a",
+      "mods/cove/Content/config/hota/cove/heroClasses/captain.json": "cda83d5e94b475e42c49803822b1291ffd7eea53ce033c754e057631ab840b50",
+      "mods/cove/Content/config/hota/cove/heroClasses/navigator.json": "4b64dc1badeb1de59fa67a9f48480acb66c5c8c96a77157798a82df4d6d9f673",
+      "mods/cove/Content/config/hota/cove/town/structures.json": "7c3b90099db8b5b3a39f368fcb91c1bb20f5bebbf7602ff0fe4d9e77e448d37b",
+      "mods/cove/Content/config/hota/cove/town/siege.json": "21781fea2c3a8568cd85c4061075e17ccf69ef772bf0961f1f3e20440f9d55ab"
+    }
+  },
+  "faction": {
+    "name": "Cove",
+    "alignment": "neutral",
+    "nativeTerrain": "swamp",
+    "boat": "boatCove",
+    "creatureBackground": {
+      "120px": "hota/cove/creaturebg120px",
+      "130px": "hota/cove/creaturebg130px"
+    }
+  },
+  "town": {
+    "primaryResource": "sulfur",
+    "moatAbility": "coveMoat",
+    "defaultTavern": 5,
+    "townBackground": "hota/cove/town/background",
+    "hallBackground": "TPTHBKDG",
+    "guildBackground": "TPMAGE.png",
+    "guildWindow": "hota/cove/town/mageguild",
+    "buildingsIcons": "hota/cove/town/townhall",
+    "musicTheme": [
+      "music/factions/CoveTown"
+    ],
+    "tavernVideo": "tvrncove.BIK",
+    "creatures": [
+      [
+        "nymph",
+        "oceanid"
+      ],
+      [
+        "crewmate",
+        "seaman"
+      ],
+      [
+        "pirate",
+        "corsair",
+        "seadog"
+      ],
+      [
+        "stormbird",
+        "ayssid"
+      ],
+      [
+        "seaWitch",
+        "sorceress"
+      ],
+      [
+        "nix",
+        "nixWarrior"
+      ],
+      [
+        "seaserpent",
+        "haspid"
+      ]
+    ],
+    "hallSlots": [
+      [
+        [
+          "villageHall",
+          "townHall",
+          "cityHall",
+          "capitol"
+        ],
+        [
+          "fort",
+          "citadel",
+          "castle"
+        ],
+        [
+          "tavern"
+        ],
+        [
+          "blacksmith"
+        ]
+      ],
+      [
+        [
+          "marketplace",
+          "resourceSilo"
+        ],
+        [
+          "mageGuild1",
+          "mageGuild2",
+          "mageGuild3",
+          "mageGuild4"
+        ],
+        [
+          "special3"
+        ],
+        [
+          "shipyard"
+        ]
+      ],
+      [
+        [
+          "horde1",
+          "horde1Upgr"
+        ],
+        [
+          "special4"
+        ],
+        [
+          "horde2",
+          "horde2Upgr"
+        ]
+      ],
+      [
+        [
+          "dwellingLvl1",
+          "dwellingUpLvl1"
+        ],
+        [
+          "dwellingLvl2",
+          "dwellingUpLvl2"
+        ],
+        [
+          "dwellingLvl3",
+          "dwellingUpLvl3",
+          "dwellingUp2Lvl3"
+        ],
+        [
+          "dwellingLvl4",
+          "dwellingUpLvl4"
+        ]
+      ],
+      [
+        [
+          "dwellingLvl5",
+          "dwellingUpLvl5"
+        ],
+        [
+          "dwellingLvl6",
+          "dwellingUpLvl6"
+        ],
+        [
+          "dwellingLvl7",
+          "dwellingUpLvl7"
+        ]
+      ]
+    ],
+    "horde": [
+      1,
+      3
+    ],
+    "icons": {
+      "fort": {
+        "built": {
+          "large": "hota/cove/town/icons/fortbuildedlarge.png",
+          "small": "hota/cove/town/icons/fortbuildedsmall.png"
+        },
+        "normal": {
+          "large": "hota/cove/town/icons/fortlarge.png",
+          "small": "hota/cove/town/icons/fortsmall.png"
+        }
+      },
+      "village": {
+        "built": {
+          "large": "hota/cove/town/icons/hallbuildedlarge.png",
+          "small": "hota/cove/town/icons/hallbuildedsmall.png"
+        },
+        "normal": {
+          "large": "hota/cove/town/icons/halllarge.png",
+          "small": "hota/cove/town/icons/hallsmall.png"
+        }
+      }
+    },
+    "mapObject": {
+      "filters": {
+        "citadel": [
+          "allOf",
+          [
+            "citadel"
+          ],
+          [
+            "noneOf",
+            [
+              "castle"
+            ]
+          ]
+        ],
+        "castle": [
+          "allOf",
+          [
+            "castle"
+          ],
+          [
+            "noneOf",
+            [
+              "capitol"
+            ]
+          ]
+        ]
+      },
+      "templates": {
+        "village": {
+          "animation": "hota/cove/town/adventureMap/AVCCOVE0.def"
+        },
+        "fort": {
+          "animation": "hota/cove/town/adventureMap/AVCcovf0.def"
+        },
+        "citadel": {
+          "animation": "hota/cove/town/adventureMap/AVCcovc0.def"
+        },
+        "castle": {
+          "animation": "hota/cove/town/adventureMap/AVCCOVX0.def"
+        },
+        "capitol": {
+          "animation": "hota/cove/town/adventureMap/AVCcovz0.def"
+        }
+      }
+    },
+    "mageGuild": 4,
+    "guildSpells": {
+      "airShield": 2,
+      "antiMagic": 10,
+      "berserk": 5,
+      "bless": 10,
+      "bloodlust": 5,
+      "chainLightning": 10,
+      "clone": 10,
+      "counterstrike": 5,
+      "cure": 5,
+      "destroyUndead": 2,
+      "disguise": 2,
+      "dispel": 10,
+      "disruptingRay": 4,
+      "earthquake": 8,
+      "fireShield": 5,
+      "fireWall": 4,
+      "fireball": 2,
+      "forceField": 4,
+      "forgetfulness": 8,
+      "fortune": 4,
+      "frenzy": 5,
+      "frostRing": 30,
+      "haste": 10,
+      "hypnotize": 4,
+      "iceBolt": 50,
+      "inferno": 5,
+      "landMine": 4,
+      "lightningBolt": 4,
+      "magicArrow": 30,
+      "meteorShower": 10,
+      "mirth": 8,
+      "misfortune": 4,
+      "prayer": 10,
+      "precision": 4,
+      "protectAir": 2,
+      "protectEarth": 4,
+      "protectFire": 3,
+      "protectWater": 3,
+      "quicksand": 4,
+      "removeObstacle": 4,
+      "resurrection": 5,
+      "scuttleBoat": 8,
+      "shield": 3,
+      "slayer": 5,
+      "slow": 5,
+      "sorrow": 5,
+      "stoneSkin": 5,
+      "summonBoat": 5,
+      "teleport": 10,
+      "townPortal": 10,
+      "viewAir": 3,
+      "viewEarth": 3,
+      "visions": 2,
+      "waterWalk": 10,
+      "weakness": 8
+    },
+    "names": [
+      "Tartaglia",
+      "Lewindale",
+      "Port Evendore",
+      "Rotunda",
+      "Watergate",
+      "Brown's Bay",
+      "Nithenes",
+      "Downhaven",
+      "Lakenshire",
+      "Noral",
+      "Westland Pier",
+      "Walendale",
+      "Port Crowland",
+      "Jordanhall",
+      "Sleepy Creek",
+      "Hitchgrove"
+    ]
+  },
+  "buildings": {
+    "villageHall": {
+      "name": "Village Hall",
+      "description": "The Village Hall allows you to purchase town structures and earns your kingdom 500 gold per day."
+    },
+    "townHall": {
+      "name": "Town Hall",
+      "description": "The Town Hall allows you to purchase town structures and earns your kingdom 1000 gold per day.",
+      "cost": {
+        "gold": 2500
+      }
+    },
+    "cityHall": {
+      "name": "City Hall",
+      "description": "The City Hall allows you to purchase town structures and earns your kingdom 2000 gold per day.",
+      "cost": {
+        "gold": 5000
+      }
+    },
+    "capitol": {
+      "name": "Capitol",
+      "description": "The Capitol earns your kingdom 4000 gold per day.",
+      "cost": {
+        "gold": 10000
+      }
+    },
+    "fort": {
+      "name": "Fort",
+      "description": "The Fort provides your town with defensive walls.",
+      "cost": {
+        "gold": 5000,
+        "wood": 20,
+        "ore": 20
+      }
+    },
+    "citadel": {
+      "name": "Citadel",
+      "description": "Including a 50% increase to base creature growth, the Citadel adds a keep, and other terrain obstacles, to a town's defenses.",
+      "cost": {
+        "gold": 2500,
+        "ore": 5
+      }
+    },
+    "castle": {
+      "name": "Castle",
+      "description": "The Castle adds two arrow towers, fortifies your town's defenses, and doubles base creature growth.",
+      "cost": {
+        "gold": 5000,
+        "wood": 10,
+        "ore": 10
+      }
+    },
+    "tavern": {
+      "name": "Tavern",
+      "description": "The Tavern allows hiring heroes, hearing the latest gossip and visiting the Thieves' Guild. It also increases morale for troops defending the city.",
+      "cost": {
+        "gold": 500,
+        "wood": 5
+      }
+    },
+    "blacksmith": {
+      "name": "Blacksmith",
+      "description": "The Blacksmith provides your armies with Cannons.",
+      "cost": {
+        "gold": 1000,
+        "wood": 5
+      },
+      "warMachine": "cannon"
+    },
+    "marketplace": {
+      "name": "Marketplace",
+      "description": "With the Marketplace, you can buy and sell resources (exchange rates increase with each Marketplace you own).",
+      "cost": {
+        "gold": 500,
+        "wood": 5
+      }
+    },
+    "resourceSilo": {
+      "name": "Resource Silo",
+      "description": "The Resource Silo provides you with an additional +1 sulfur each day.",
+      "cost": {
+        "gold": 5000,
+        "ore": 5
+      },
+      "produce": {
+        "sulfur": 1
+      }
+    },
+    "shipyard": {
+      "name": "Shipyard",
+      "description": "The Shipyard allows you to purchase ships.",
+      "cost": {
+        "gold": 2000,
+        "wood": 20
+      }
+    },
+    "ship": {
+      "name": "Shipyard",
+      "description": "The Shipyard allows you to purchase ships.",
+      "cost": null
+    },
+    "special3": {
+      "name": "Thieves' Guild",
+      "description": "The Thieves' Guild reveals additional information about the foes in the tavern.",
+      "cost": {
+        "gold": 500,
+        "wood": 5
+      },
+      "bonuses": [
+        {
+          "propagator": "PLAYER",
+          "type": "THIEVES_GUILD_ACCESS",
+          "val": 2
+        }
+      ],
+      "requires": [
+        "tavern"
+      ]
+    },
+    "special4": {
+      "name": "Grotto",
+      "description": "The Grotto allows you to sacrifice creatures or artifacts in exchange for experience.",
+      "cost": {
+        "gold": 7500,
+        "wood": 15,
+        "ore": 15
+      },
+      "marketModes": [
+        "creature-experience",
+        "artifact-experience"
+      ],
+      "requires": [
+        "marketplace"
+      ]
+    },
+    "horde1": {
+      "name": "Pub",
+      "description": "The Pub increases Crew Mates production by 4 per week.",
+      "cost": {
+        "gold": 1000
+      },
+      "upgrades": "dwellingLvl2"
+    },
+    "horde1Upgr": {
+      "name": "Pub",
+      "description": "The Pub increases Seamen production by 4 per week.",
+      "cost": {
+        "gold": 1000
+      },
+      "upgrades": "dwellingUpLvl2",
+      "requires": [
+        "horde1"
+      ]
+    },
+    "horde2": {
+      "name": "Roost",
+      "description": "The Roost increases Stormbirds production by 3 per week.",
+      "cost": {
+        "gold": 1000
+      },
+      "upgrades": "dwellingLvl4"
+    },
+    "horde2Upgr": {
+      "name": "Roost",
+      "description": "The Roost increases Ayssids production by 3 per week.",
+      "cost": {
+        "gold": 1000
+      },
+      "upgrades": "dwellingUpLvl4",
+      "requires": [
+        "horde2"
+      ]
+    },
+    "grail": {
+      "name": "Lodestar",
+      "description": "The presence of the Lodestar increases weekly creature generation by 50% and provides your kingdom with an additional 5000 gold each day, also making any land native to the creatures of the Cove.",
+      "bonuses": [
+        {
+          "type": "TERRAIN_NATIVE",
+          "propagator": "GLOBAL_EFFECT",
+          "limiters": [
+            {
+              "type": "FACTION_LIMITER",
+              "faction": "cove"
+            }
+          ]
+        }
+      ]
+    },
+    "mageGuild1": {
+      "name": "Mage Guild Level 1",
+      "description": "Entering the Mage Guild will allow a visiting hero to learn the spells kept within.",
+      "cost": {
+        "gold": 2000,
+        "wood": 5,
+        "ore": 5
+      }
+    },
+    "mageGuild2": {
+      "name": "Mage Guild Level 2",
+      "description": "Entering the Mage Guild will allow a visiting hero to learn the spells kept within.",
+      "cost": {
+        "gold": 1000,
+        "wood": 5,
+        "ore": 5,
+        "mercury": 4,
+        "sulfur": 4,
+        "crystal": 4,
+        "gems": 4
+      }
+    },
+    "mageGuild3": {
+      "name": "Mage Guild Level 3",
+      "description": "Entering the Mage Guild will allow a visiting hero to learn the spells kept within.",
+      "cost": {
+        "gold": 1000,
+        "wood": 5,
+        "ore": 5,
+        "mercury": 6,
+        "sulfur": 6,
+        "crystal": 6,
+        "gems": 6
+      }
+    },
+    "mageGuild4": {
+      "name": "Mage Guild Level 4",
+      "description": "Entering the Mage Guild will allow a visiting hero to learn the spells kept within.",
+      "cost": {
+        "gold": 1000,
+        "wood": 5,
+        "ore": 5,
+        "mercury": 8,
+        "sulfur": 8,
+        "crystal": 8,
+        "gems": 8
+      }
+    },
+    "dwellingLvl1": {
+      "name": "Nymph Waterfall",
+      "description": "The Nymph Waterfall allows you to recruit Nymphs.",
+      "cost": {
+        "gold": 300,
+        "wood": 5,
+        "ore": 5
+      },
+      "requires": [
+        "fort"
+      ]
+    },
+    "dwellingLvl2": {
+      "name": "Shack",
+      "description": "The Shack allows you to recruit Crew Mates.",
+      "cost": {
+        "gold": 1000,
+        "wood": 10
+      },
+      "requires": [
+        "dwellingLvl1"
+      ]
+    },
+    "dwellingLvl3": {
+      "name": "Frigate",
+      "description": "The Frigate allows you to recruit Pirates.",
+      "cost": {
+        "gold": 1000,
+        "wood": 10
+      },
+      "requires": [
+        "allOf",
+        [
+          "blacksmith"
+        ],
+        [
+          "dwellingLvl2"
+        ]
+      ]
+    },
+    "dwellingLvl4": {
+      "name": "Nest",
+      "description": "The Nest allows you to recruit Stormbirds.",
+      "cost": {
+        "gold": 2000,
+        "ore": 5,
+        "crystal": 2,
+        "gems": 2
+      },
+      "requires": [
+        "dwellingLvl2"
+      ]
+    },
+    "dwellingLvl5": {
+      "name": "Tower of the Seas",
+      "description": "The Tower of the Seas allows you to recruit Sea Witches.",
+      "cost": {
+        "gold": 3000,
+        "wood": 5,
+        "ore": 5,
+        "crystal": 5
+      },
+      "requires": [
+        "allOf",
+        [
+          "mageGuild1"
+        ],
+        [
+          "dwellingLvl2"
+        ]
+      ]
+    },
+    "dwellingLvl6": {
+      "name": "Nix Fort",
+      "description": "The Nix Fort allows you to recruit Nix.",
+      "cost": {
+        "gold": 4000,
+        "wood": 5,
+        "ore": 10
+      },
+      "requires": [
+        "dwellingLvl4"
+      ]
+    },
+    "dwellingLvl7": {
+      "name": "Maelstrom",
+      "description": "The Maelstrom allows you to recruit Sea Serpents.",
+      "cost": {
+        "gold": 15000,
+        "wood": 15,
+        "ore": 15,
+        "sulfur": 10
+      },
+      "requires": [
+        "allOf",
+        [
+          "dwellingLvl5"
+        ],
+        [
+          "dwellingLvl6"
+        ]
+      ]
+    },
+    "dwellingUpLvl1": {
+      "name": "Upg. Nymph Waterfall",
+      "description": "The Upg. Nymph Waterfall allows you to recruit Oceanids.",
+      "cost": {
+        "gold": 1000
+      },
+      "upgrades": "dwellingLvl1"
+    },
+    "dwellingUpLvl2": {
+      "name": "Upg. Shack",
+      "description": "The Upg. Shack allows you to recruit Seamen.",
+      "cost": {
+        "gold": 1000,
+        "wood": 5
+      },
+      "upgrades": "dwellingLvl2"
+    },
+    "dwellingUpLvl3": {
+      "name": "Upg. Frigate",
+      "description": "The Upg. Frigate allows you to recruit Corsairs.",
+      "cost": {
+        "gold": 1500,
+        "wood": 5
+      },
+      "upgrades": "dwellingLvl3"
+    },
+    "dwellingUpLvl4": {
+      "name": "Upg. Nest",
+      "description": "The Upg. Nest allows you to recruit Ayssids.",
+      "cost": {
+        "gold": 1500,
+        "crystal": 2,
+        "gems": 2
+      },
+      "upgrades": "dwellingLvl4"
+    },
+    "dwellingUpLvl5": {
+      "name": "Upg. Tower of the Seas",
+      "description": "The Upg. Tower of the Seas allows you to recruit Sorceresses.",
+      "cost": {
+        "gold": 2000,
+        "crystal": 5
+      },
+      "requires": [
+        "mageGuild2"
+      ],
+      "upgrades": "dwellingLvl5"
+    },
+    "dwellingUpLvl6": {
+      "name": "Upg. Nix Fort",
+      "description": "The Upg. Nix Fort allows you to recruit Nix Warriors.",
+      "cost": {
+        "gold": 3000,
+        "wood": 5,
+        "ore": 5,
+        "sulfur": 5
+      },
+      "upgrades": "dwellingLvl6"
+    },
+    "dwellingUpLvl7": {
+      "name": "Upg. Maelstrom",
+      "description": "The Upg. Maelstrom allows you to recruit Haspids.",
+      "cost": {
+        "gold": 15000,
+        "wood": 15,
+        "ore": 15,
+        "sulfur": 20
+      },
+      "requires": [
+        "mageGuild2"
+      ],
+      "upgrades": "dwellingLvl7"
+    },
+    "dwellingUp2Lvl3": {
+      "name": "Gunpowder Warehouse",
+      "description": "The Gunpowder Warehouse allows you to recruit Sea Dogs.",
+      "cost": {
+        "gold": 3000,
+        "wood": 5,
+        "ore": 5,
+        "mercury": 5,
+        "sulfur": 5,
+        "crystal": 5,
+        "gems": 5
+      },
+      "upgrades": "dwellingUpLvl3"
+    }
+  },
+  "creatures": {
+    "nymph": {
+      "name": {
+        "singular": "Nymph",
+        "plural": "Nymphs"
+      },
+      "faction": "cove",
+      "level": 1,
+      "upgrades": [
+        "oceanid"
+      ],
+      "cost": {
+        "gold": 35
+      },
+      "speed": 6,
+      "hitPoints": 4,
+      "attack": 5,
+      "defense": 2,
+      "damage": {
+        "min": 1,
+        "max": 2
+      },
+      "fightValue": 52,
+      "aiValue": 57,
+      "growth": 16,
+      "advMapAmount": {
+        "min": 20,
+        "max": 50
+      },
+      "abilities": {
+        "teleports": {
+          "type": "FLYING",
+          "subtype": "movementTeleporting"
+        },
+        "iceBoltImmunity": {
+          "type": "SPELL_IMMUNITY",
+          "subtype": "spell.iceBolt"
+        },
+        "frostRingImmunity": {
+          "type": "SPELL_IMMUNITY",
+          "subtype": "spell.frostRing"
+        }
+      },
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/nymph.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/nymph.png",
+        "map": "hota/cove/creatures/adventureMap/AVWNIMPH.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/CNIMPH.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 1
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat306",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat307"
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/nymph/NIMPATTK.wav",
+        "defend": "hota/cove/creatures/nymph/NIMPDFND.wav",
+        "killed": "hota/cove/creatures/nymph/NIMPKILL.wav",
+        "move": "hota/cove/creatures/nymph/NIMPMOVE.wav",
+        "startMoving": "hota/cove/creatures/nymph/NIMPEXT1.wav",
+        "endMoving": "hota/cove/creatures/nymph/NIMPEXT2.wav",
+        "wince": "hota/cove/creatures/nymph/NIMPWNCE.wav"
+      }
+    },
+    "oceanid": {
+      "name": {
+        "singular": "Oceanid",
+        "plural": "Oceanids"
+      },
+      "faction": "cove",
+      "level": 1,
+      "cost": {
+        "gold": 45
+      },
+      "speed": 8,
+      "hitPoints": 4,
+      "attack": 6,
+      "defense": 2,
+      "damage": {
+        "min": 1,
+        "max": 3
+      },
+      "fightValue": 60,
+      "aiValue": 75,
+      "growth": 16,
+      "advMapAmount": {
+        "min": 20,
+        "max": 30
+      },
+      "abilities": {
+        "teleports": {
+          "type": "FLYING",
+          "subtype": "movementTeleporting"
+        },
+        "iceBoltImmunity": {
+          "type": "SPELL_IMMUNITY",
+          "subtype": "spell.iceBolt"
+        },
+        "frostRingImmunity": {
+          "type": "SPELL_IMMUNITY",
+          "subtype": "spell.frostRing"
+        }
+      },
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/oceanid.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/oceanid.png",
+        "map": "hota/cove/creatures/adventureMap/AVWOCEAN.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/COCEANID.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 1
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat308",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat309"
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/nymph/NIMPATTK.wav",
+        "defend": "hota/cove/creatures/nymph/NIMPDFND.wav",
+        "killed": "hota/cove/creatures/nymph/NIMPKILL.wav",
+        "move": "hota/cove/creatures/nymph/NIMPMOVE.wav",
+        "startMoving": "hota/cove/creatures/nymph/NIMPEXT1.wav",
+        "endMoving": "hota/cove/creatures/nymph/NIMPEXT2.wav",
+        "wince": "hota/cove/creatures/nymph/NIMPWNCE.wav"
+      }
+    },
+    "crewmate": {
+      "name": {
+        "singular": "Crew Mate",
+        "plural": "Crew Mates"
+      },
+      "faction": "cove",
+      "level": 2,
+      "upgrades": [
+        "seaman"
+      ],
+      "cost": {
+        "gold": 110
+      },
+      "speed": 5,
+      "hitPoints": 15,
+      "attack": 7,
+      "defense": 4,
+      "damage": {
+        "min": 2,
+        "max": 4
+      },
+      "fightValue": 155,
+      "aiValue": 155,
+      "advMapAmount": {
+        "min": 16,
+        "max": 30
+      },
+      "growth": 9,
+      "horde": 4,
+      "hasDoubleWeek": true,
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/crewmate.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/crewmate.png",
+        "map": "hota/cove/creatures/adventureMap/AVWSEADG.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/CSEADOG.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 0.87
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat310",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat311"
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/crewmate/SAYLATTK.wav",
+        "defend": "hota/cove/creatures/crewmate/SAYLDFND.wav",
+        "killed": "hota/cove/creatures/crewmate/SAYLKILL.wav",
+        "move": "hota/cove/creatures/crewmate/SAYLMOVE.wav",
+        "wince": "hota/cove/creatures/crewmate/SAYLWNCE.wav"
+      }
+    },
+    "seaman": {
+      "name": {
+        "singular": "Seaman",
+        "plural": "Seamen"
+      },
+      "faction": "cove",
+      "level": 2,
+      "cost": {
+        "gold": 140
+      },
+      "speed": 6,
+      "hitPoints": 15,
+      "attack": 8,
+      "defense": 6,
+      "damage": {
+        "min": 3,
+        "max": 4
+      },
+      "fightValue": 174,
+      "aiValue": 174,
+      "growth": 9,
+      "horde": 4,
+      "advMapAmount": {
+        "min": 16,
+        "max": 25
+      },
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/seaman.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/seaman.png",
+        "map": "hota/cove/creatures/adventureMap/AVWSWASH.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/CSWASH.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 0.87
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat312",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat313"
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/crewmate/SAYLATTK.wav",
+        "defend": "hota/cove/creatures/crewmate/SAYLDFND.wav",
+        "killed": "hota/cove/creatures/crewmate/SAYLKILL.wav",
+        "move": "hota/cove/creatures/crewmate/SAYLMOVE.wav",
+        "wince": "hota/cove/creatures/crewmate/SAYLWNCE.wav"
+      }
+    },
+    "pirate": {
+      "name": {
+        "singular": "Pirate",
+        "plural": "Pirates"
+      },
+      "faction": "cove",
+      "level": 3,
+      "upgrades": [
+        "corsair"
+      ],
+      "cost": {
+        "gold": 225
+      },
+      "speed": 6,
+      "hitPoints": 15,
+      "attack": 8,
+      "defense": 6,
+      "damage": {
+        "min": 3,
+        "max": 7
+      },
+      "fightValue": 306,
+      "aiValue": 299,
+      "shots": 4,
+      "growth": 7,
+      "advMapAmount": {
+        "min": 12,
+        "max": 25
+      },
+      "abilities": {
+        "shooter": {
+          "type": "SHOOTER"
+        },
+        "noMeleePenalty": {
+          "type": "NO_MELEE_PENALTY"
+        }
+      },
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/pirate.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/pirate.png",
+        "map": "hota/cove/creatures/adventureMap/AVWPIRAT.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/CPIRATE.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 0.9
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat314",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat315",
+        "missile": {
+          "projectile": "hota/creatures/battle/projectiles/PPIRATE.def",
+          "attackClimaxFrame": 6,
+          "frameAngles": [
+            90,
+            72,
+            45,
+            27,
+            0,
+            -27,
+            -45,
+            -72,
+            -90
+          ],
+          "offset": {
+            "upperX": 38,
+            "upperY": -93,
+            "middleX": 45,
+            "middleY": -64,
+            "lowerX": 21,
+            "lowerY": -35
+          }
+        }
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/pirate/PIRTATTK.wav",
+        "defend": "hota/cove/creatures/pirate/PIRTDFND.wav",
+        "killed": "hota/cove/creatures/pirate/PIRTKILL.wav",
+        "move": "hota/cove/creatures/pirate/PIRTMOVE.wav",
+        "shoot": "hota/cove/creatures/pirate/PIRTSHOT.wav",
+        "wince": "hota/cove/creatures/pirate/PIRTWNCE.wav"
+      }
+    },
+    "corsair": {
+      "name": {
+        "singular": "Corsair",
+        "plural": "Corsairs"
+      },
+      "faction": "cove",
+      "level": 3,
+      "upgrades": [
+        "seadog"
+      ],
+      "cost": {
+        "gold": 275
+      },
+      "speed": 7,
+      "hitPoints": 15,
+      "shots": 4,
+      "attack": 10,
+      "defense": 8,
+      "damage": {
+        "min": 3,
+        "max": 7
+      },
+      "fightValue": 344,
+      "aiValue": 336,
+      "growth": 7,
+      "advMapAmount": {
+        "min": 12,
+        "max": 20
+      },
+      "abilities": {
+        "shooter": {
+          "type": "SHOOTER"
+        },
+        "noMeleePenalty": {
+          "type": "NO_MELEE_PENALTY"
+        },
+        "noRetaliation": {
+          "type": "BLOCKS_RETALIATION"
+        }
+      },
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/corsair.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/corsair.png",
+        "map": "hota/cove/creatures/adventureMap/AVWCORSA.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/CCORSAIR.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 0.9
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat316",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat317",
+        "missile": {
+          "projectile": "hota/creatures/battle/projectiles/PPIRATE.def",
+          "attackClimaxFrame": 6,
+          "frameAngles": [
+            90,
+            72,
+            45,
+            27,
+            0,
+            -27,
+            -45,
+            -72,
+            -90
+          ],
+          "offset": {
+            "upperX": 38,
+            "upperY": -93,
+            "middleX": 45,
+            "middleY": -64,
+            "lowerX": 21,
+            "lowerY": -35
+          }
+        }
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/pirate/PIRTATTK.wav",
+        "defend": "hota/cove/creatures/pirate/PIRTDFND.wav",
+        "killed": "hota/cove/creatures/pirate/PIRTKILL.wav",
+        "move": "hota/cove/creatures/pirate/PIRTMOVE.wav",
+        "shoot": "hota/cove/creatures/pirate/PIRTSHOT.wav",
+        "wince": "hota/cove/creatures/pirate/PIRTWNCE.wav"
+      }
+    },
+    "seadog": {
+      "name": {
+        "singular": "Sea Dog",
+        "plural": "Sea Dogs"
+      },
+      "faction": "cove",
+      "level": 3,
+      "cost": {
+        "gold": 375
+      },
+      "speed": 8,
+      "hitPoints": 15,
+      "attack": 12,
+      "defense": 11,
+      "damage": {
+        "min": 3,
+        "max": 7
+      },
+      "fightValue": 379,
+      "aiValue": 370,
+      "shots": 12,
+      "growth": 7,
+      "advMapAmount": {
+        "min": 12,
+        "max": 18
+      },
+      "abilities": {
+        "shooter": {
+          "type": "SHOOTER"
+        },
+        "noMeleePenalty": {
+          "type": "NO_MELEE_PENALTY"
+        },
+        "noRetaliation": {
+          "type": "BLOCKS_RETALIATION"
+        },
+        "accurateShotFullRange": {
+          "type": "DEATH_STARE",
+          "subtype": "deathStareNoRangePenalty",
+          "val": 3,
+          "addInfo": "spell.accurateShot"
+        },
+        "accurateShotHalfRange": {
+          "type": "DEATH_STARE",
+          "subtype": "deathStareRangePenalty",
+          "val": 2,
+          "addInfo": "spell.accurateShot"
+        }
+      },
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/seadog.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/seadog.png",
+        "map": "hota/cove/creatures/adventureMap/AVWPR3UP.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/CPR3UP.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 0.9
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat302",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat303",
+        "missile": {
+          "projectile": "hota/creatures/battle/projectiles/PPIRATE.def",
+          "attackClimaxFrame": 6,
+          "frameAngles": [
+            90,
+            72,
+            45,
+            27,
+            0,
+            -27,
+            -45,
+            -72,
+            -90
+          ],
+          "offset": {
+            "upperX": 38,
+            "upperY": -93,
+            "middleX": 45,
+            "middleY": -64,
+            "lowerX": 21,
+            "lowerY": -35
+          }
+        }
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/pirate/PIRTATTK.wav",
+        "defend": "hota/cove/creatures/pirate/PIRTDFND.wav",
+        "killed": "hota/cove/creatures/pirate/PIRTKILL.wav",
+        "move": "hota/cove/creatures/pirate/PIRTMOVE.wav",
+        "shoot": "hota/cove/creatures/pirate/PIRTSHOT.wav",
+        "wince": "hota/cove/creatures/pirate/PIRTWNCE.wav"
+      }
+    },
+    "stormbird": {
+      "name": {
+        "singular": "Stormbird",
+        "plural": "Stormbirds"
+      },
+      "faction": "cove",
+      "level": 4,
+      "upgrades": [
+        "ayssid"
+      ],
+      "cost": {
+        "gold": 275
+      },
+      "speed": 9,
+      "hitPoints": 30,
+      "attack": 10,
+      "defense": 8,
+      "damage": {
+        "min": 6,
+        "max": 9
+      },
+      "fightValue": 386,
+      "aiValue": 502,
+      "doubleWide": true,
+      "hasDoubleWeek": true,
+      "growth": 4,
+      "horde": 3,
+      "advMapAmount": {
+        "min": 10,
+        "max": 20
+      },
+      "abilities": {
+        "canFly": {
+          "type": "FLYING"
+        }
+      },
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/stormbird.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/stormbird.png",
+        "map": "hota/cove/creatures/adventureMap/AVWASSUP.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/CASSID.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 0.72
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat318",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat319"
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/stormbird/ASSIATTK.wav",
+        "defend": "hota/cove/creatures/stormbird/ASSIDFND.wav",
+        "killed": "hota/cove/creatures/stormbird/ASSIKILL.wav",
+        "move": "hota/cove/creatures/stormbird/ASSIMOVE.wav",
+        "wince": "hota/cove/creatures/stormbird/ASSIWNCE.wav"
+      }
+    },
+    "ayssid": {
+      "name": {
+        "singular": "Ayssid",
+        "plural": "Ayssids"
+      },
+      "faction": "cove",
+      "level": 4,
+      "cost": {
+        "gold": 325
+      },
+      "speed": 11,
+      "hitPoints": 30,
+      "attack": 11,
+      "defense": 8,
+      "damage": {
+        "min": 6,
+        "max": 10
+      },
+      "aiValue": 645,
+      "fightValue": 478,
+      "doubleWide": true,
+      "growth": 4,
+      "horde": 3,
+      "advMapAmount": {
+        "min": 10,
+        "max": 16
+      },
+      "abilities": {
+        "canFly": {
+          "type": "FLYING"
+        },
+        "doubleAttack": {
+          "type": "FEROCITY",
+          "val": 1
+        }
+      },
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/ayssid.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/ayssid.png",
+        "map": "hota/cove/creatures/adventureMap/AVWASSID.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/CASSIDUP.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 0.72
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat320",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat321"
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/stormbird/ASSIATTK.wav",
+        "defend": "hota/cove/creatures/stormbird/ASSIDFND.wav",
+        "killed": "hota/cove/creatures/stormbird/ASSIKILL.wav",
+        "move": "hota/cove/creatures/stormbird/ASSIMOVE.wav",
+        "wince": "hota/cove/creatures/stormbird/ASSIWNCE.wav"
+      }
+    },
+    "seaWitch": {
+      "name": {
+        "singular": "Sea Witch",
+        "plural": "Sea Witches"
+      },
+      "faction": "cove",
+      "level": 5,
+      "upgrades": [
+        "sorceress"
+      ],
+      "cost": {
+        "gold": 515
+      },
+      "speed": 6,
+      "hitPoints": 35,
+      "attack": 12,
+      "defense": 7,
+      "damage": {
+        "min": 10,
+        "max": 14
+      },
+      "fightValue": 608,
+      "aiValue": 790,
+      "shots": 12,
+      "growth": 3,
+      "advMapAmount": {
+        "min": 8,
+        "max": 16
+      },
+      "abilities": {
+        "shooter": {
+          "type": "SHOOTER"
+        },
+        "castsWeakness": {
+          "type": "SPELL_AFTER_ATTACK",
+          "subtype": "spell.weakness",
+          "val": 100,
+          "addInfo": [
+            1,
+            1,
+            0
+          ]
+        },
+        "castsDisruptingRay": {
+          "type": "SPELL_AFTER_ATTACK",
+          "subtype": "spell.disruptingRay",
+          "val": 100,
+          "addInfo": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/seaWitch.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/seaWitch.png",
+        "map": "hota/cove/creatures/adventureMap/AVWPRIES.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/CPRIEST.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 1
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat322",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat323",
+        "missile": {
+          "projectile": "hota/cove/creatures/battle/projectile/PSORC.def",
+          "attackClimaxFrame": 9,
+          "frameAngles": [
+            90,
+            72,
+            45,
+            27,
+            0,
+            -27,
+            -45,
+            -72,
+            -90
+          ],
+          "offset": {
+            "upperX": 41,
+            "upperY": -72,
+            "middleX": 54,
+            "middleY": -75,
+            "lowerX": 29,
+            "lowerY": -14
+          }
+        }
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/seaWitch/SORCATTK.wav",
+        "defend": "hota/cove/creatures/seaWitch/SORCDFND.wav",
+        "killed": "hota/cove/creatures/seaWitch/SORCKILL.wav",
+        "move": "hota/cove/creatures/seaWitch/SORCMOVE.wav",
+        "shoot": "hota/cove/creatures/seaWitch/SORCSHOT.wav",
+        "wince": "hota/cove/creatures/seaWitch/SORCWNCE.wav"
+      }
+    },
+    "sorceress": {
+      "name": {
+        "singular": "Sorceress",
+        "plural": "Sorceresses"
+      },
+      "faction": "cove",
+      "level": 5,
+      "cost": {
+        "gold": 565
+      },
+      "speed": 7,
+      "hitPoints": 35,
+      "attack": 12,
+      "defense": 9,
+      "damage": {
+        "min": 10,
+        "max": 16
+      },
+      "fightValue": 655,
+      "aiValue": 852,
+      "shots": 12,
+      "growth": 3,
+      "advMapAmount": {
+        "min": 8,
+        "max": 12
+      },
+      "abilities": {
+        "shooter": {
+          "type": "SHOOTER"
+        },
+        "castsWeakness": {
+          "type": "SPELL_AFTER_ATTACK",
+          "subtype": "spell.weakness",
+          "val": 100,
+          "addInfo": [
+            2,
+            1,
+            0
+          ]
+        },
+        "castsDisruptingRay": {
+          "type": "SPELL_AFTER_ATTACK",
+          "subtype": "spell.disruptingRay",
+          "val": 100,
+          "addInfo": [
+            2,
+            1,
+            1
+          ]
+        }
+      },
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/sorceress.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/sorceress.png",
+        "map": "hota/cove/creatures/adventureMap/AVWSORCS.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/CSORCSS.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 1
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat324",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat325",
+        "missile": {
+          "projectile": "hota/cove/creatures/battle/projectile/PSORC.def",
+          "attackClimaxFrame": 8,
+          "frameAngles": [
+            90,
+            72,
+            45,
+            27,
+            0,
+            -27,
+            -45,
+            -72,
+            -90
+          ],
+          "offset": {
+            "upperX": 41,
+            "upperY": -72,
+            "middleX": 54,
+            "middleY": -75,
+            "lowerX": 29,
+            "lowerY": -14
+          }
+        }
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/seaWitch/SORCATTK.wav",
+        "defend": "hota/cove/creatures/seaWitch/SORCDFND.wav",
+        "killed": "hota/cove/creatures/seaWitch/SORCKILL.wav",
+        "move": "hota/cove/creatures/seaWitch/SORCMOVE.wav",
+        "shoot": "hota/cove/creatures/seaWitch/SORCSHOT.wav",
+        "wince": "hota/cove/creatures/seaWitch/SORCWNCE.wav"
+      }
+    },
+    "nix": {
+      "name": {
+        "singular": "Nix",
+        "plural": "Nix"
+      },
+      "faction": "cove",
+      "level": 6,
+      "upgrades": [
+        "nixWarrior"
+      ],
+      "cost": {
+        "gold": 1000
+      },
+      "speed": 6,
+      "hitPoints": 80,
+      "attack": 13,
+      "defense": 16,
+      "damage": {
+        "min": 18,
+        "max": 22
+      },
+      "fightValue": 1415,
+      "aiValue": 1415,
+      "growth": 2,
+      "advMapAmount": {
+        "min": 5,
+        "max": 12
+      },
+      "abilities": {
+        "shield": {
+          "type": "ENEMY_ATTACK_REDUCTION",
+          "val": 30
+        }
+      },
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/nix.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/nix.png",
+        "map": "hota/cove/creatures/adventureMap/AVWNIX.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/CNIX.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 1.07
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat326",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat327"
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/nix/NIXXATTK.wav",
+        "defend": "hota/cove/creatures/nix/NIXXDFND.wav",
+        "killed": "hota/cove/creatures/nix/NIXXKILL.wav",
+        "move": "hota/cove/creatures/nix/NIXXMOVE.wav",
+        "wince": "hota/cove/creatures/nix/NIXXWNCE.wav"
+      }
+    },
+    "nixWarrior": {
+      "name": {
+        "singular": "Nix Warrior",
+        "plural": "Nix Warriors"
+      },
+      "faction": "cove",
+      "level": 6,
+      "cost": {
+        "gold": 1300
+      },
+      "speed": 7,
+      "hitPoints": 90,
+      "attack": 14,
+      "defense": 17,
+      "damage": {
+        "min": 18,
+        "max": 22
+      },
+      "fightValue": 1485,
+      "aiValue": 1719,
+      "growth": 2,
+      "advMapAmount": {
+        "min": 5,
+        "max": 10
+      },
+      "abilities": {
+        "shield": {
+          "type": "ENEMY_ATTACK_REDUCTION",
+          "val": 60
+        }
+      },
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/nixWarrior.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/nixWarrior.png",
+        "map": "hota/cove/creatures/adventureMap/AVWNIXUP.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/CNIXWARR.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 1.07
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat328",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat329"
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/nix/NIXXATTK.wav",
+        "defend": "hota/cove/creatures/nix/NIXXDFND.wav",
+        "killed": "hota/cove/creatures/nix/NIXXKILL.wav",
+        "move": "hota/cove/creatures/nix/NIXXMOVE.wav",
+        "wince": "hota/cove/creatures/nix/NIXXWNCE.wav"
+      }
+    },
+    "seaserpent": {
+      "name": {
+        "singular": "Sea Serpent",
+        "plural": "Sea Serpents"
+      },
+      "faction": "cove",
+      "level": 7,
+      "upgrades": [
+        "haspid"
+      ],
+      "cost": {
+        "gold": 2200,
+        "sulfur": 1
+      },
+      "speed": 9,
+      "hitPoints": 180,
+      "attack": 22,
+      "defense": 16,
+      "damage": {
+        "max": 55,
+        "min": 30
+      },
+      "fightValue": 3162,
+      "aiValue": 3953,
+      "doubleWide": true,
+      "growth": 1,
+      "advMapAmount": {
+        "max": 10,
+        "min": 4
+      },
+      "abilities": {
+        "poisonous": {
+          "type": "SPELL_AFTER_ATTACK",
+          "subtype": "spell.poison",
+          "val": 30,
+          "addInfo": [
+            0,
+            2
+          ]
+        },
+        "KING_1": {
+          "type": "KING",
+          "val": 0
+        },
+        "dragonSkeleton": {
+          "type": "SKELETON_TRANSFORMER_TARGET",
+          "subtype": "boneDragon"
+        }
+      },
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/seaserpent.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/seaserpent.png",
+        "map": "hota/cove/creatures/adventureMap/AVWSERPE.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/cserpent.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 0.95
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat330",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat331"
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/seaserpent/ASPIATTK.wav",
+        "defend": "hota/cove/creatures/seaserpent/ASPIDFND.wav",
+        "killed": "hota/cove/creatures/seaserpent/ASPIKILL.wav",
+        "move": "hota/cove/creatures/seaserpent/ASPIMOVE.wav",
+        "wince": "hota/cove/creatures/seaserpent/ASPIWNCE.wav"
+      }
+    },
+    "haspid": {
+      "name": {
+        "plural": "Haspids",
+        "singular": "Haspid"
+      },
+      "faction": "cove",
+      "level": 7,
+      "cost": {
+        "gold": 4000,
+        "sulfur": 2
+      },
+      "speed": 12,
+      "hitPoints": 300,
+      "attack": 29,
+      "defense": 20,
+      "damage": {
+        "max": 55,
+        "min": 30
+      },
+      "fightValue": 5554,
+      "aiValue": 7220,
+      "doubleWide": true,
+      "growth": 1,
+      "advMapAmount": {
+        "max": 8,
+        "min": 3
+      },
+      "abilities": {
+        "revenger": {
+          "type": "REVENGE"
+        },
+        "poisonous": {
+          "type": "SPELL_AFTER_ATTACK",
+          "subtype": "spell.poison",
+          "val": 30,
+          "addInfo": [
+            0,
+            2
+          ]
+        },
+        "KING_1": {
+          "type": "KING",
+          "val": 0
+        },
+        "dragonSkeleton": {
+          "type": "SKELETON_TRANSFORMER_TARGET",
+          "subtype": "boneDragon"
+        }
+      },
+      "graphics": {
+        "iconLarge": "hota/cove/creatures/iconsLarge/haspid.png",
+        "iconSmall": "hota/cove/creatures/iconsSmall/haspid.png",
+        "map": "hota/cove/creatures/adventureMap/AVWHASPI.def",
+        "mapMask": [
+          "VVV",
+          "VAV"
+        ],
+        "animation": "hota/cove/creatures/battle/chaspid.def",
+        "animationTime": {
+          "attack": 1,
+          "idle": 10,
+          "walk": 0.95
+        },
+        "timeBetweenFidgets": 1,
+        "mapAttackFromRight": "hota/cove/creatures/AVWattak/AvWat332",
+        "mapAttackFromLeft": "hota/cove/creatures/AVWattak/AvWat333"
+      },
+      "sound": {
+        "attack": "hota/cove/creatures/seaserpent/ASPIATTK.wav",
+        "defend": "hota/cove/creatures/seaserpent/ASPIDFND.wav",
+        "killed": "hota/cove/creatures/seaserpent/ASPIKILL.wav",
+        "move": "hota/cove/creatures/seaserpent/ASPIMOVE.wav",
+        "wince": "hota/cove/creatures/seaserpent/ASPIWNCE.wav"
+      },
+      "stackExperience": [
+        {
+          "bonus": {
+            "type": "HP_REGENERATION"
+          },
+          "values": [
+            15,
+            30,
+            45,
+            60,
+            75,
+            90,
+            105,
+            120,
+            135,
+            150
+          ]
+        },
+        {
+          "bonus": {
+            "type": "JOUSTING"
+          },
+          "values": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true,
+            true
+          ]
+        }
+      ]
+    }
+  },
+  "cannon": {
+    "name": {
+      "plural": "Cannons",
+      "singular": "Cannon"
+    },
+    "faction": "neutral",
+    "level": 6,
+    "aiValue": 1637,
+    "special": true,
+    "attack": 20,
+    "cost": {
+      "gold": 4000
+    },
+    "damage": {
+      "max": 7,
+      "min": 4
+    },
+    "defense": 10,
+    "fightValue": 1360,
+    "graphics": {
+      "animation": "hota/battle/SMCANNON.def",
+      "iconSmall": "hota/iconsSmall/cannonCreature.png",
+      "iconLarge": "hota/iconslarge/cannonCreature.png",
+      "map": "hota/map/cannonMap.def",
+      "timeBetweenFidgets": 1,
+      "animationTime": {
+        "walk": 1.0,
+        "idle": 10.0,
+        "attack": 0.5
+      },
+      "missile": {
+        "projectile": "hota/battle/SMCANX.def",
+        "attackClimaxFrame": 4,
+        "offset": {
+          "upperX": 44,
+          "upperY": -63,
+          "middleX": 79,
+          "middleY": -55,
+          "lowerX": 27,
+          "lowerY": -46
+        },
+        "frameAngles": [
+          90,
+          72,
+          45,
+          27,
+          0,
+          -27,
+          -45,
+          -72,
+          -90
+        ]
+      }
+    },
+    "doubleWide": true,
+    "growth": 0,
+    "hitPoints": 250,
+    "shots": 8,
+    "sound": {
+      "killed": "hota/cannon/CANNKILL.wav",
+      "shoot": "hota/cannon/CANNSHOT.wav",
+      "wince": "hota/cannon/CANNWNCE.wav"
+    },
+    "speed": 0,
+    "abilities": {
+      "warMachine": {
+        "type": "SIEGE_WEAPON"
+      },
+      "shooter": {
+        "type": "SHOOTER"
+      },
+      "canShootWalls": {
+        "type": "CATAPULT",
+        "subtype": "cannonSiegeShot"
+      },
+      "noRetaliation": {
+        "type": "NO_RETALIATION"
+      },
+      "blocksRangedRetaliation": {
+        "type": "BLOCKS_RANGED_RETALIATION",
+        "hidden": true
+      },
+      "cpuControlledCannon": {
+        "hidden": true,
+        "type": "CPU_CONTROLLED"
+      }
+    },
+    "stackExperience": [
+      {
+        "bonus": {
+          "type": "PRIMARY_SKILL",
+          "subtype": "attack"
+        },
+        "values": [
+          1,
+          1,
+          2,
+          3,
+          4,
+          5,
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      {
+        "bonus": {
+          "type": "PRIMARY_SKILL",
+          "subtype": "defence"
+        },
+        "values": [
+          1,
+          2,
+          3,
+          3,
+          4,
+          5,
+          6,
+          6,
+          7,
+          8
+        ]
+      },
+      {
+        "bonus": {
+          "type": "CREATURE_DAMAGE",
+          "subtype": "creatureDamageMax"
+        },
+        "values": [
+          1,
+          2,
+          2,
+          3,
+          4,
+          4,
+          5,
+          6,
+          7,
+          7
+        ]
+      },
+      {
+        "bonus": {
+          "type": "CREATURE_DAMAGE",
+          "subtype": "creatureDamageMin"
+        },
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          3,
+          4,
+          5,
+          6,
+          6,
+          7
+        ]
+      },
+      {
+        "bonus": {
+          "type": "STACK_HEALTH",
+          "valueType": "PERCENT_TO_BASE"
+        },
+        "values": [
+          5,
+          10,
+          15,
+          20,
+          25,
+          30,
+          35,
+          40,
+          45,
+          50
+        ]
+      }
+    ]
+  },
+  "heroes": {
+    "07anabel": {
+      "class": "captain",
+      "female": true,
+      "images": {
+        "large": "hota/cove/heroes/anabel/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/anabel/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/anabel/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/anabel/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "offence",
+          "level": "basic"
+        },
+        {
+          "skill": "archery",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "creature": "hota.cove:pirate"
+      },
+      "texts": {
+        "name": "Anabel",
+        "biography": "To anger the daughter of Earless Nylse means to sign a death pact. Every pirate understands that there is no woman more deadly and insidious than Anabel. Her father was one of the cruelest corsairs, and his daughter follows his steps. Her grace and skill encourages men to fight at their limits.",
+        "specialty": {
+          "name": "Pirates",
+          "description": "Increases the Speed of any Pirates, Corsairs or Sea Dogs by 1 and their Attack and Defense skills by 5% for every 3 levels (rounded up).",
+          "tooltip": "Creature Bonus: Pirates"
+        }
+      }
+    },
+    "15andal": {
+      "class": "navigator",
+      "images": {
+        "large": "hota/cove/heroes/andal/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/andal/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/andal/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/andal/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "wisdom",
+          "level": "basic"
+        },
+        {
+          "skill": "pathfinding",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "bonuses": {
+          "gold": {
+            "type": "GENERATE_RESOURCE",
+            "subtype": "resource.crystal",
+            "val": 1
+          }
+        }
+      },
+      "spellbook": [
+        "slow"
+      ],
+      "texts": {
+        "name": "Andal",
+        "biography": "While being an experienced pirate, Andal did not always consider himself as a mage or a rogue. He was an ordinary merchant until bankrupting and getting too many debts one day. He started searching for a way to get fast and easy money. After leaving his home, he shortly returned as a known smuggler. He usually trades gems and mountain crystals. It is a mystery where he gets them from, however.",
+        "specialty": {
+          "name": "+1 Crystal",
+          "description": "Increases kingdom's crystal production by 1 per day.",
+          "tooltip": "Resource Bonus: +1 Crystal"
+        }
+      }
+    },
+    "18astra": {
+      "class": "navigator",
+      "female": true,
+      "images": {
+        "large": "hota/cove/heroes/astra/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/astra/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/astra/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/astra/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "wisdom",
+          "level": "basic"
+        },
+        {
+          "skill": "luck",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "bonuses": {
+          "frostRing": {
+            "type": "SPECIAL_SPELL_LEV",
+            "subtype": "spell.cure",
+            "val": 3,
+            "updater": "TIMES_HERO_LEVEL"
+          }
+        }
+      },
+      "spellbook": [
+        "cure"
+      ],
+      "texts": {
+        "name": "Astra",
+        "biography": "There is little known about Astra's past, and she does not hurry to tell much. The only detail known is that she visited almost every corner of the world in order to master the Water Magic. She fulfilled her wish of mastering this school after joining the Sea Priestesses.",
+        "specialty": {
+          "name": "Cure",
+          "description": "Casts Cure with effect increased by 3% for every N hero levels, where N is the level of the targeted creature.",
+          "tooltip": "Spell Bonus: Cure"
+        }
+      }
+    },
+    "balfour": {
+      "class": "navigator",
+      "special": true,
+      "images": {
+        "large": "hota/cove/heroes/balfour/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/balfour/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/balfour/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/balfour/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "wisdom",
+          "level": "basic"
+        },
+        {
+          "skill": "resistance",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "bonuses": {
+          "forgetfulness": {
+            "type": "SPELL_DURATION",
+            "subtype": "spell.forgetfulness",
+            "updater": {
+              "type": "GROWS_WITH_LEVEL",
+              "valPer20": 8,
+              "stepSize": 2
+            }
+          }
+        }
+      },
+      "spellbook": [
+        "forgetfulness"
+      ],
+      "texts": {
+        "name": "Balfour",
+        "biography": "Black Balfour is a powerful pirate leader who loves to collect treasures from all over the world, but in fact he has no interest in appreciating treasures. To be honest, he is an uncouth and all-around nasty character.",
+        "specialty": {
+          "name": "Forgetfulness",
+          "description": "Casts Forgetfulness with double duration.",
+          "tooltip": "Spell Bonus: Forgetfulness"
+        }
+      }
+    },
+    "10bidley": {
+      "class": "captain",
+      "special": true,
+      "army": [
+        {
+          "creature": "seadog",
+          "min": 1,
+          "max": 3
+        },
+        {
+          "creature": "corsair",
+          "min": 4,
+          "max": 7
+        },
+        {
+          "creature": "seadog",
+          "min": 1,
+          "max": 3
+        }
+      ],
+      "images": {
+        "large": "hota/cove/heroes/bidley/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/bidley/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/bidley/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/bidley/icons/specialtySmall.png"
+      },
+      "skills": [
+        {
+          "skill": "offence",
+          "level": "advanced"
+        }
+      ],
+      "specialty": {
+        "base": {
+          "type": "SPECIAL_UPGRADE",
+          "addInfo": "creature.seadog"
+        },
+        "bonuses": {
+          "pirate2seadog": {
+            "subtype": "creature.pirate"
+          },
+          "corsair2seadog": {
+            "subtype": "creature.corsair"
+          }
+        }
+      },
+      "texts": {
+        "name": "Bidley",
+        "biography": "Bidley is one of the most successful pirates operating near Erathia shores. He is ready to accept any challenge and is able to emerge unscathed from any situation. It seems like he has a rival in every world's corner, but he is always able to escape the trouble. Apart from being an excellent warrior, having artisan skills in both pistol and sabre wielding, he also trains his crew personally.",
+        "specialty": {
+          "name": "Sea Dogs",
+          "description": "Can upgrade Pirates or Corsairs to Sea Dogs.",
+          "tooltip": "Creature Bonus: Sea Dogs"
+        }
+      }
+    },
+    "12casmetra": {
+      "class": "navigator",
+      "female": true,
+      "images": {
+        "large": "hota/cove/heroes/casmetra/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/casmetra/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/casmetra/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/casmetra/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "wisdom",
+          "level": "basic"
+        },
+        {
+          "skill": "waterMagic",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "creature": "hota.cove:seaWitch"
+      },
+      "spellbook": [
+        "dispel"
+      ],
+      "texts": {
+        "name": "Casmetra",
+        "biography": "The leader of the mysterious priestesses' cult that worships the sea has stepped out from the shadows not so long ago. Nobody knows whom this woman was and where did she came from.  However, everyone who met Casmetra mentions her beauty and her power in magic. Many believed that she joined the pirates in pursuit of her own goals. However, with years to pass the priestesses and the corsairs became closest allies.",
+        "specialty": {
+          "name": "Sea Witches",
+          "description": "Increases the Speed of any Sea Witches or Sorceresses by 1 and their Attack and Defense skills by 5% for every 5 levels (rounded up).",
+          "tooltip": "Creature Bonus: Sea Witches"
+        }
+      }
+    },
+    "08cassiopeia": {
+      "class": "captain",
+      "female": true,
+      "images": {
+        "large": "hota/cove/heroes/cassiopeia/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/cassiopeia/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/cassiopeia/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/cassiopeia/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        }
+      ],
+      "skills": [
+        {
+          "skill": "offence",
+          "level": "basic"
+        },
+        {
+          "skill": "tactics",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "creature": "hota.cove:nymph"
+      },
+      "texts": {
+        "name": "Cassiopeia",
+        "biography": "It is said that Cassiopeia was the lover of some Regnan mage, and fell victim to one of his unsuccessful experiments.  It is unknown if it is truly possible to turn an alive soul into a nymph. All that is known is that other nymphs accept Cassiopeia for more than an equal kind. They gladly follow her into the battle.",
+        "specialty": {
+          "name": "Nymphs",
+          "description": "Increases the Speed of any Nymphs or Oceanids by 1 and their Attack and Defense skills by 5% for every level (rounded up).",
+          "tooltip": "Creature Bonus: Nymphs"
+        }
+      }
+    },
+    "01corkes": {
+      "class": "captain",
+      "images": {
+        "large": "hota/cove/heroes/corkes/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/corkes/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/corkes/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/corkes/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "offence",
+          "level": "basic"
+        },
+        {
+          "skill": "pathfinding",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "secondary": "offence"
+      },
+      "texts": {
+        "name": "Corkes",
+        "biography": "Not many wish to get into Corkes' enemy list.  This quick-tempered pirate is one of the most experienced and cruel sea dogs. Many merchants know that it is better to submit the goods willingly than to start a suicidal battle with him.  He is easily distinguishable by the eye patch that he never takes off.",
+        "specialty": {
+          "name": "Offense",
+          "description": "Receives a 5% per level bonus to Offense skill percentage.",
+          "tooltip": "Secondary Skill Bonus: Offense"
+        }
+      }
+    },
+    "19dargem": {
+      "class": "navigator",
+      "images": {
+        "large": "hota/cove/heroes/dargem/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/dargem/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/dargem/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/dargem/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "wisdom",
+          "level": "basic"
+        },
+        {
+          "skill": "tactics",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "bonuses": {
+          "airShield": {
+            "type": "SPECIAL_PECULIAR_ENCHANT",
+            "subtype": "spell.airShield",
+            "addInfo": 0
+          }
+        }
+      },
+      "spellbook": [
+        "airShield"
+      ],
+      "texts": {
+        "name": "Dargem",
+        "biography": "Dargem's past is quite legendary. They say that he alone captured a fort; the defenders' arrows simply could not reach him. Little is known of the time Dargem spent in the dungeons of Nighon as an apprentice warlock, but it's obvious that underworld magic is his ace. Barraging his ship with cannonballs and arrows is a notorious waste of time.",
+        "specialty": {
+          "name": "Air Shield",
+          "description": "Casts Air Shield with effect increased by 3% for every N hero levels, where N is the level of the targeted creature.",
+          "tooltip": "Spell Bonus: Air Shield"
+        }
+      }
+    },
+    "05derek": {
+      "class": "captain",
+      "onlyOnMapWithoutWater": true,
+      "images": {
+        "large": "hota/cove/heroes/derek/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/derek/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/derek/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/derek/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        }
+      ],
+      "skills": [
+        {
+          "skill": "offence",
+          "level": "basic"
+        },
+        {
+          "skill": "leadership",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "creature": "hota.cove:crewmate"
+      },
+      "texts": {
+        "name": "Derek",
+        "biography": "Derek was one of the slaves on the galleys. He started the riot once with other captives, and after killing the owners, captured the ship. Since then, Derek and his crew joined the Regna pirates. He is different from other captains in his will to work with other crewmen. He also never inflicts physical punishment.",
+        "specialty": {
+          "name": "Crew Mates",
+          "description": "Increases the Speed of any Crew Mates or Seamen by 1 and their Attack and Defense skills by 5% for every 2 levels (rounded up).",
+          "tooltip": "Creature Bonus: Crew Mates"
+        }
+      }
+    },
+    "04elmore": {
+      "class": "captain",
+      "onlyOnWaterMap": true,
+      "images": {
+        "large": "hota/cove/heroes/elmore/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/elmore/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/elmore/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/elmore/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "navigation",
+          "level": "advanced"
+        }
+      ],
+      "specialty": {
+        "bonuses": {
+          "navigationSpecialty": {
+            "type": "MOVEMENT",
+            "subtype": "heroMovementSea",
+            "updater": {
+              "type": "GROWS_WITH_LEVEL",
+              "valPer20": 1500,
+              "stepSize": 1
+            },
+            "limiters": {
+              "type": "HAS_ANOTHER_BONUS_LIMITER",
+              "bonusSourceType": "SECONDARY_SKILL",
+              "bonusSourceID": "navigation"
+            }
+          }
+        }
+      },
+      "texts": {
+        "name": "Elmore",
+        "biography": "Since young age Elmore has dreamt about becoming a great sailor. Spending years far from the shore, he has put a lot of effort to make his dream come true. Many pirate captains are famous for their skill of navigation, but Elmore is capable of true magic even onboard the poorest junk.",
+        "specialty": {
+          "name": "Navigation",
+          "description": "In the presence of Navigation skill hero receives a bonus of 5% extra movement points at sea per level.",
+          "tooltip": "Secondary Skill Bonus: Navigation"
+        }
+      }
+    },
+    "13eovacius": {
+      "class": "navigator",
+      "images": {
+        "large": "hota/cove/heroes/eovacius/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/eovacius/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/eovacius/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/eovacius/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "wisdom",
+          "level": "basic"
+        },
+        {
+          "skill": "intelligence",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "bonuses": {
+          "clone": {
+            "type": "SPELL",
+            "subtype": "spell.specialClone"
+          }
+        }
+      },
+      "spellbook": [
+        "clone"
+      ],
+      "texts": {
+        "name": "Eovacius",
+        "biography": "Eovacius never learnt magic. All his magical talent was inborn. He was raised in a maritime city where he used his talent to steal on the markets. He became a prosperous and influential man until he got too many annoying and powerful rivals in the government. After that the natural born mage left his homeland and chose the life of a pirate.",
+        "specialty": {
+          "name": "Clone",
+          "description": "Each battle the first cast of Clone spell summons 2 clones of the target unit.",
+          "tooltip": "Spell Bonus: Clone"
+        }
+      }
+    },
+    "03illor": {
+      "class": "captain",
+      "images": {
+        "large": "hota/cove/heroes/illor/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/illor/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/illor/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/illor/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "stormbird",
+          "min": 3,
+          "max": 5
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "armorer",
+          "level": "basic"
+        },
+        {
+          "skill": "tactics",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "creature": "hota.cove:stormbird"
+      },
+      "texts": {
+        "name": "Illor",
+        "biography": "Illor fled AvLee after his kin could no more bear his stuck-up demeanor. Sky high self-esteem led him to obsession with aerial creatures. He found himself a captain of a pirate ship, but his attitude got old among the crew quickly. Marooned on an island which giant flying beasts made their nesting place, Illor ended up making sky dwellers tame after a few years.",
+        "specialty": {
+          "name": "Stormbirds",
+          "description": "Increases the Speed of any Stormbirds or Ayssids by 1 and their Attack and Defense skills by 5% for every 4 levels (rounded up).",
+          "tooltip": "Creature Bonus: Stormbirds"
+        }
+      }
+    },
+    "02jeremy": {
+      "class": "captain",
+      "images": {
+        "large": "hota/cove/heroes/jeremy/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/jeremy/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/jeremy/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/jeremy/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "cannon",
+          "min": 1,
+          "max": 1
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "offence",
+          "level": "basic"
+        },
+        {
+          "skill": "artillery",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "creature": "hota.cannon:cannon",
+        "creatureLevel": 6
+      },
+      "texts": {
+        "name": "Jeremy",
+        "biography": "Brother of legendary Bidley. Not as harsh and lucky, Jeremy loves fun, brewages and beautiful women. He has a thing for weapons, and collects all the newest inventions. A shot thunder is more pleasing for him than any music. Crewmen say that he is able to kill a gull a hundred feet away from a cannon.",
+        "specialty": {
+          "name": "Cannon",
+          "description": "Increases the Attack and Defense skills of any Cannon by 5% for every 6 levels (rounded up).",
+          "tooltip": "Artillery Bonus: Cannon"
+        }
+      }
+    },
+    "06leena": {
+      "class": "captain",
+      "female": true,
+      "images": {
+        "large": "hota/cove/heroes/leena/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/leena/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/leena/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/leena/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "estates",
+          "level": "basic"
+        },
+        {
+          "skill": "pathfinding",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "bonuses": {
+          "gold": {
+            "type": "GENERATE_RESOURCE",
+            "subtype": "resource.gold",
+            "val": 350
+          }
+        }
+      },
+      "texts": {
+        "name": "Leena",
+        "biography": "Leena was a daughter of a noble from one of the maritime cities of Erathia. Having a wild spirit since childhood, she escaped on a stolen family caravel when her father attempted to marry her off. Surprisingly, she was able to find common language with the pirates of Regna. She is probably valued for her spirit and numerous connections on the land that she uses to operate her smuggling.",
+        "specialty": {
+          "name": "+350 Gold",
+          "description": "Increases kingdom's income by 350 gold per day.",
+          "tooltip": "Resource Bonus: +350 gold"
+        }
+      }
+    },
+    "16manfred": {
+      "class": "navigator",
+      "images": {
+        "large": "hota/cove/heroes/manfred/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/manfred/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/manfred/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/manfred/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "wisdom",
+          "level": "basic"
+        },
+        {
+          "skill": "fireMagic",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "bonuses": {
+          "fireball": {
+            "type": "SPECIAL_SPELL_LEV",
+            "subtype": "spell.fireball",
+            "val": 3,
+            "updater": "TIMES_HERO_LEVEL"
+          }
+        }
+      },
+      "spellbook": [
+        "fireball"
+      ],
+      "texts": {
+        "name": "Manfred",
+        "biography": "Even the most vicious pirate hunters stay away from this outlander. Nobody knows where Manfred came, but it is known that he can wage fire on galleons with a single hand swing. Pirates dislike Manfred for his horrible accent and his not any less horrible character; however they respect him as a mercenary battle mage.",
+        "specialty": {
+          "name": "Fireball",
+          "description": "Casts Fireball with Damage increased by 3% for every N hero levels, where N is the level of the targeted creature.",
+          "tooltip": "Spell Bonus: Fireball"
+        }
+      }
+    },
+    "09miriam": {
+      "class": "captain",
+      "female": true,
+      "images": {
+        "large": "hota/cove/heroes/miriam/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/miriam/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/miriam/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/miriam/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "logistics",
+          "level": "basic"
+        },
+        {
+          "skill": "scouting",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "bonuses": {
+          "sight": {
+            "type": "SIGHT_RADIUS",
+            "valueType": "BASE_NUMBER",
+            "val": 0,
+            "updater": {
+              "type": "GROWS_WITH_LEVEL",
+              "valPer20": 20,
+              "stepSize": 6
+            }
+          }
+        }
+      },
+      "texts": {
+        "name": "Miriam",
+        "biography": "This girl has a dark past. Once a ranger, she could see the enemies and obstacles to the farthest distance away. After a disagreement with the \"colleagues\" she joined the pirates. She got a \"Sharp-eye\" nickname amongst the bandits.",
+        "specialty": {
+          "name": "Scouting",
+          "description": "Increases Scouting radius by 1 for every 6 levels.",
+          "tooltip": "Secondary Skill Bonus: Scouting"
+        }
+      }
+    },
+    "14spint": {
+      "class": "navigator",
+      "images": {
+        "large": "hota/cove/heroes/spint/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/spint/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/spint/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/spint/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "wisdom",
+          "level": "basic"
+        },
+        {
+          "skill": "sorcery",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "secondary": "sorcery"
+      },
+      "spellbook": [
+        "bless"
+      ],
+      "texts": {
+        "name": "Spint",
+        "biography": "Spint once was a very talented apprentice mage learning at the academy in Bracada. He was caught by the Krewlod barbarians and sold as a slave on galley. The galley captain noticed his magical power and offered him a boatswain position. Now Spint is a captain himself. He sinks the ships near the shores of Krewlod and enjoys his new life.",
+        "specialty": {
+          "name": "Sorcery",
+          "description": "Receives a 5% per level bonus to Sorcery skill percentage.",
+          "tooltip": "Secondary Skill Bonus: Sorcery"
+        }
+      }
+    },
+    "11tark": {
+      "class": "captain",
+      "special": true,
+      "images": {
+        "large": "hota/cove/heroes/tark/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/tark/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/tark/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/tark/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nix",
+          "min": 1,
+          "max": 1
+        },
+        {
+          "creature": "nix",
+          "min": 1,
+          "max": 1
+        },
+        {
+          "creature": "nix",
+          "min": 1,
+          "max": 1
+        }
+      ],
+      "skills": [
+        {
+          "skill": "offence",
+          "level": "basic"
+        },
+        {
+          "skill": "armorer",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "creature": "hota.cove:nix"
+      },
+      "texts": {
+        "name": "Tark",
+        "biography": "He is a king of a half-legendary sea kin that was counted extinct. Tark realized that in order for his people to return he has to get help from powerful allies. Pirates became his new brothers in arms. As all nix, he is a powerful warrior, able to fight on land and sea. Other nix praise him and hold as a great example.",
+        "specialty": {
+          "name": "Nix",
+          "description": "Increases the Speed of any Nix or Nix Warriors by 1 and their Attack and Defense skills by 5% for every 6 levels (rounded up).",
+          "tooltip": "Creature Bonus: Nix"
+        }
+      }
+    },
+    "17zilare": {
+      "class": "navigator",
+      "images": {
+        "large": "hota/cove/heroes/zilare/icons/portraitLarge.png",
+        "small": "hota/cove/heroes/zilare/icons/portraitSmall.png",
+        "specialtyLarge": "hota/cove/heroes/zilare/icons/specialtyLarge.png",
+        "specialtySmall": "hota/cove/heroes/zilare/icons/specialtySmall.png"
+      },
+      "army": [
+        {
+          "creature": "nymph",
+          "min": 15,
+          "max": 25
+        },
+        {
+          "creature": "crewmate",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "creature": "pirate",
+          "min": 4,
+          "max": 7
+        }
+      ],
+      "skills": [
+        {
+          "skill": "wisdom",
+          "level": "basic"
+        },
+        {
+          "skill": "resistance",
+          "level": "basic"
+        }
+      ],
+      "specialty": {
+        "bonuses": {
+          "forgetfulness": {
+            "type": "SPELL_DURATION",
+            "subtype": "spell.forgetfulness",
+            "updater": {
+              "type": "GROWS_WITH_LEVEL",
+              "valPer20": 8,
+              "stepSize": 2
+            }
+          }
+        }
+      },
+      "spellbook": [
+        "forgetfulness"
+      ],
+      "texts": {
+        "name": "Zilare",
+        "biography": "Zilare was a library keeper in Erathia, having dedicated his life to browsing through old archives. However, he couldn't always keep things together in his head. Fired over supposed stealing a rare book, he became a cook on a pirate ship. Later life led Zilare to developing arcane powers. He learned to control the memory of allies and enemies alike.",
+        "specialty": {
+          "name": "Forgetfulness",
+          "description": "Casts Forgetfulness with double duration.",
+          "tooltip": "Spell Bonus: Forgetfulness"
+        }
+      }
+    }
+  },
+  "heroClasses": {
+    "captain": {
+      "name": "Captain",
+      "faction": "cove",
+      "affinity": "might",
+      "defaultTavern": 5,
+      "commander": "blackbeard",
+      "animation": {
+        "battle": {
+          "female": "hota/cove/heroClasses/captain/battle/CH18.DEF",
+          "male": "hota/cove/heroClasses/captain/battle/CH18B.DEF"
+        }
+      },
+      "mapObject": {
+        "filters": {
+          "male": {
+            "male": true
+          },
+          "female": {
+            "female": true
+          }
+        },
+        "templates": {
+          "female": {
+            "animation": "hota/cove/heroClasses/captain/adventureMap/AH18_.def",
+            "editorAnimation": "hota/cove/heroClasses/captain/adventureMap/AH18_e.def"
+          },
+          "male": {
+            "animation": "hota/cove/heroClasses/captain/adventureMap/AH18b_.def",
+            "editorAnimation": "hota/cove/heroClasses/captain/adventureMap/AH18b_E.def"
+          }
+        }
+      },
+      "primarySkills": {
+        "attack": 3,
+        "defence": 0,
+        "spellpower": 2,
+        "knowledge": 1
+      },
+      "secondarySkills": {
+        "airMagic": 3,
+        "archery": 9,
+        "armorer": 2,
+        "artillery": 5,
+        "ballistics": 5,
+        "diplomacy": 5,
+        "eagleEye": 4,
+        "earthMagic": 4,
+        "estates": 4,
+        "fireMagic": 2,
+        "firstAid": 2,
+        "intelligence": 3,
+        "leadership": 6,
+        "learning": 2,
+        "logistics": 6,
+        "luck": 7,
+        "mysticism": 1,
+        "navigation": 6,
+        "necromancy": 0,
+        "offence": 9,
+        "pathfinding": 8,
+        "resistance": 3,
+        "scholar": 1,
+        "scouting": 4,
+        "sorcery": 2,
+        "tactics": 6,
+        "waterMagic": 2,
+        "wisdom": 1
+      },
+      "lowLevelChance": {
+        "attack": 45,
+        "defence": 25,
+        "spellpower": 20,
+        "knowledge": 10
+      },
+      "highLevelChance": {
+        "attack": 30,
+        "defence": 30,
+        "spellpower": 20,
+        "knowledge": 20
+      },
+      "tavern": {
+        "castle": 2,
+        "conflux": 5,
+        "cove": 6,
+        "dungeon": 5,
+        "fortress": 6,
+        "inferno": 6,
+        "necropolis": 5,
+        "rampart": 6,
+        "stronghold": 6,
+        "tower": 6
+      }
+    },
+    "navigator": {
+      "name": "Navigator",
+      "faction": "cove",
+      "affinity": "magic",
+      "defaultTavern": 5,
+      "commander": "blackbeard",
+      "animation": {
+        "battle": {
+          "female": "hota/cove/heroClasses/navigator/battle/CH19B",
+          "male": "hota/cove/heroClasses/navigator/battle/CH19"
+        }
+      },
+      "mapObject": {
+        "filters": {
+          "male": {
+            "male": true
+          },
+          "female": {
+            "female": true
+          }
+        },
+        "templates": {
+          "female": {
+            "animation": "hota/cove/heroClasses/navigator/adventureMap/AH19B_.def",
+            "editorAnimation": "hota/cove/heroClasses/navigator/adventureMap/AH19B_e.def"
+          },
+          "male": {
+            "animation": "hota/cove/heroClasses/navigator/adventureMap/AH19_.def",
+            "editorAnimation": "hota/cove/heroClasses/navigator/adventureMap/AH19_E.def"
+          }
+        }
+      },
+      "primarySkills": {
+        "attack": 2,
+        "defence": 0,
+        "spellpower": 1,
+        "knowledge": 2
+      },
+      "secondarySkills": {
+        "airMagic": 6,
+        "archery": 6,
+        "armorer": 1,
+        "artillery": 1,
+        "ballistics": 2,
+        "diplomacy": 2,
+        "eagleEye": 2,
+        "earthMagic": 5,
+        "estates": 2,
+        "fireMagic": 2,
+        "firstAid": 4,
+        "intelligence": 8,
+        "leadership": 2,
+        "learning": 4,
+        "logistics": 3,
+        "luck": 4,
+        "mysticism": 3,
+        "navigation": 6,
+        "necromancy": 0,
+        "offence": 4,
+        "pathfinding": 6,
+        "resistance": 5,
+        "scholar": 5,
+        "scouting": 2,
+        "sorcery": 6,
+        "tactics": 4,
+        "waterMagic": 9,
+        "wisdom": 8
+      },
+      "lowLevelChance": {
+        "attack": 15,
+        "defence": 10,
+        "spellpower": 40,
+        "knowledge": 35
+      },
+      "highLevelChance": {
+        "attack": 30,
+        "defence": 20,
+        "spellpower": 20,
+        "knowledge": 30
+      },
+      "tavern": {
+        "castle": 4,
+        "conflux": 6,
+        "cove": 6,
+        "dungeon": 5,
+        "fortress": 6,
+        "inferno": 6,
+        "necropolis": 5,
+        "rampart": 6,
+        "stronghold": 6,
+        "tower": 6
+      }
+    }
+  },
+  "structures": {
+    "villageHall": {
+      "animation": "hota/cove/town/buildings/TBCVHALL",
+      "area": "hota/cove/town/area/TBCVHALL",
+      "border": "hota/cove/town/border/TBCVHALL",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvhall",
+      "x": 0,
+      "y": 176,
+      "z": 1
+    },
+    "townHall": {
+      "animation": "hota/cove/town/buildings/TBCVHAL2",
+      "area": "hota/cove/town/area/TBCVHAL2",
+      "border": "hota/cove/town/border/TBCVHAL2",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvhal2",
+      "x": 0,
+      "y": 176,
+      "z": 1
+    },
+    "cityHall": {
+      "animation": "hota/cove/town/buildings/TBCVHAL3",
+      "area": "hota/cove/town/area/TBCVHAL3",
+      "border": "hota/cove/town/border/TBCVHAL3",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvhal3",
+      "x": 0,
+      "y": 148,
+      "z": 1
+    },
+    "capitol": {
+      "animation": "hota/cove/town/buildings/TBCVHAL4",
+      "area": "hota/cove/town/area/TBCVHAL4",
+      "border": "hota/cove/town/border/TBCVHAL4",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvhal4",
+      "x": 0,
+      "y": 85,
+      "z": 1
+    },
+    "fort": {
+      "animation": "hota/cove/town/buildings/TBCVCSTL",
+      "area": "hota/cove/town/area/TBCVCSTL",
+      "border": "hota/cove/town/border/TBCVCSTL",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvcstl",
+      "x": 438,
+      "y": 109,
+      "z": 2
+    },
+    "citadel": {
+      "animation": "hota/cove/town/buildings/TBCVCAS2",
+      "area": "hota/cove/town/area/TBCVCAS2",
+      "border": "hota/cove/town/border/TBCVCAS2",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvcas2",
+      "x": 438,
+      "y": 109,
+      "z": 2
+    },
+    "castle": {
+      "animation": "hota/cove/town/buildings/TBCVCAS3",
+      "area": "hota/cove/town/area/TBCVCAS3",
+      "border": "hota/cove/town/border/TBCVCAS3",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvcas3",
+      "x": 438,
+      "y": 109,
+      "z": 2
+    },
+    "tavern": {
+      "animation": "hota/cove/town/buildings/TBCVTAVE",
+      "area": "hota/cove/town/area/TBCVTAVE",
+      "border": "hota/cove/town/border/TBCVTAVE",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCVTAVE",
+      "x": 12,
+      "y": 247,
+      "z": 2
+    },
+    "blacksmith": {
+      "animation": "hota/cove/town/buildings/TBCVSMTH",
+      "area": "hota/cove/town/area/TBCVSMTH",
+      "border": "hota/cove/town/border/TBCVSMTH",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvsmth",
+      "x": 608,
+      "y": 274
+    },
+    "marketplace": {
+      "animation": "hota/cove/town/buildings/TBCVMARK",
+      "area": "hota/cove/town/area/TBCVMARK",
+      "border": "hota/cove/town/border/TBCVMARK",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvmark",
+      "x": 157,
+      "y": 289,
+      "z": 3
+    },
+    "resourceSilo": {
+      "animation": "hota/cove/town/buildings/TBCVSMRK",
+      "area": "hota/cove/town/area/TBCVSMRK",
+      "border": "hota/cove/town/border/TBCVSMRK",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvsmrk",
+      "x": 320,
+      "y": 346,
+      "z": 4
+    },
+    "shipyard": {
+      "animation": "hota/cove/town/buildings/TBCVDOCK",
+      "area": "hota/cove/town/area/TBCVDOCK",
+      "border": "hota/cove/town/border/TBCVDOCK",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCVDOCK",
+      "x": 436,
+      "y": 164,
+      "z": 1
+    },
+    "ship": {
+      "animation": "hota/cove/town/buildings/TBCVBOAT",
+      "area": "hota/cove/town/area/TBCVBOAT",
+      "border": "hota/cove/town/border/TBCVBOAT",
+      "hidden": true,
+      "x": 436,
+      "y": 164,
+      "z": 1
+    },
+    "special3": {
+      "animation": "hota/cove/town/buildings/TBCVTHGD",
+      "area": "hota/cove/town/area/TBCVTHGD",
+      "border": "hota/cove/town/border/TBCVTHGD",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvTHGD",
+      "x": 0,
+      "y": 87
+    },
+    "special4": {
+      "animation": "hota/cove/town/buildings/TBCVGROT",
+      "area": "hota/cove/town/area/TBCVGROT",
+      "border": "hota/cove/town/border/TBCVGROT",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvgrot",
+      "x": 236,
+      "y": 147,
+      "z": -1
+    },
+    "horde1": {
+      "animation": "hota/cove/town/buildings/TBCVSA1P",
+      "area": "hota/cove/town/area/TBCVSA1P",
+      "border": "hota/cove/town/border/TBCVSA1P",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvsa1p",
+      "hidden": true,
+      "x": 84,
+      "y": 65
+    },
+    "horde1Upgr": {
+      "animation": "hota/cove/town/buildings/TBCVSA2P",
+      "area": "hota/cove/town/area/TBCVSA2P",
+      "border": "hota/cove/town/border/TBCVSA2P",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvsa1p",
+      "builds": "horde1",
+      "hidden": true,
+      "x": 84,
+      "y": 33
+    },
+    "horde2": {
+      "animation": "hota/cove/town/buildings/TBCVAS1P",
+      "area": "hota/cove/town/area/TBCVAS1P",
+      "border": "hota/cove/town/border/TBCVAS1P",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvas1p",
+      "hidden": true,
+      "x": 674,
+      "y": 43
+    },
+    "horde2Upgr": {
+      "animation": "hota/cove/town/buildings/TBCVAS2P",
+      "area": "hota/cove/town/area/TBCVAS2P",
+      "border": "hota/cove/town/border/TBCVAS2P",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvas1p",
+      "builds": "horde2",
+      "hidden": true,
+      "x": 674,
+      "y": 12
+    },
+    "grail": {
+      "animation": "hota/cove/town/buildings/TBCVGRAL",
+      "area": "hota/cove/town/area/TBCVGRAL",
+      "border": "hota/cove/town/border/TBCVGRAL",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvgral",
+      "x": 0,
+      "y": 0,
+      "z": -1
+    },
+    "animatedWater": {
+      "animation": "hota/cove/town/buildings/TBCVWHTR",
+      "x": 0,
+      "y": 211,
+      "z": -2
+    },
+    "mageGuild1": {
+      "animation": "hota/cove/town/buildings/TBCVGMG1",
+      "area": "hota/cove/town/area/TBCVGMG1",
+      "border": "hota/cove/town/border/TBCVGMG1",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvgmg1",
+      "x": 337,
+      "y": 110,
+      "z": 1
+    },
+    "mageGuild2": {
+      "animation": "hota/cove/town/buildings/TBCVGMG2",
+      "area": "hota/cove/town/area/TBCVGMG2",
+      "border": "hota/cove/town/border/TBCVGMG2",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvgmg2",
+      "x": 319,
+      "y": 85,
+      "z": 1
+    },
+    "mageGuild3": {
+      "animation": "hota/cove/town/buildings/TBCVGMG3",
+      "area": "hota/cove/town/area/TBCVGMG3",
+      "border": "hota/cove/town/border/TBCVGMG3",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvgmg3",
+      "x": 300,
+      "y": 61,
+      "z": 1
+    },
+    "mageGuild4": {
+      "animation": "hota/cove/town/buildings/TBCVGMG4",
+      "area": "hota/cove/town/area/TBCVGMG4",
+      "border": "hota/cove/town/border/TBCVGMG4",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvgmg4",
+      "x": 281,
+      "y": 39,
+      "z": 1
+    },
+    "dwellingLvl1": {
+      "animation": "hota/cove/town/buildings/TBCVNMP1",
+      "area": "hota/cove/town/area/TBCVNMP1",
+      "border": "hota/cove/town/border/TBCVNMP1",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvNMP1",
+      "x": 282,
+      "y": 106,
+      "z": 2
+    },
+    "dwellingLvl2": {
+      "animation": "hota/cove/town/buildings/TBCVSAY1",
+      "area": "hota/cove/town/area/TBCVSAY1",
+      "border": "hota/cove/town/border/TBCVSAY1",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvsay1",
+      "x": 84,
+      "y": 65
+    },
+    "dwellingLvl3": {
+      "animation": "hota/cove/town/buildings/TBCVPIR1",
+      "area": "hota/cove/town/area/TBCVPIR1",
+      "border": "hota/cove/town/border/TBCVPIR1",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvPIR1",
+      "x": 588,
+      "y": 191,
+      "z": 3
+    },
+    "dwellingLvl4": {
+      "animation": "hota/cove/town/buildings/TBCVASS1",
+      "area": "hota/cove/town/area/TBCVASS1",
+      "border": "hota/cove/town/border/TBCVASS1",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvASS1",
+      "x": 696,
+      "y": 43
+    },
+    "dwellingLvl5": {
+      "animation": "hota/cove/town/buildings/TBCVSOR1",
+      "area": "hota/cove/town/area/TBCVSOR1",
+      "border": "hota/cove/town/border/TBCVSOR1",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvSOR1",
+      "x": 370,
+      "y": 38
+    },
+    "dwellingLvl6": {
+      "animation": "hota/cove/town/buildings/TBCVNIX1",
+      "area": "hota/cove/town/area/TBCVNIX1",
+      "border": "hota/cove/town/border/TBCVNIX1",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvnix1",
+      "x": 663,
+      "y": 149,
+      "z": 1
+    },
+    "dwellingLvl7": {
+      "animation": "hota/cove/town/buildings/TBCVWHR1",
+      "area": "hota/cove/town/area/TBCVWHR1",
+      "border": "hota/cove/town/border/TBCVWHR1",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvwhr1",
+      "x": 303,
+      "y": 248,
+      "z": 3
+    },
+    "dwellingUpLvl1": {
+      "animation": "hota/cove/town/buildings/TBCVNMP2",
+      "area": "hota/cove/town/area/TBCVNMP2",
+      "border": "hota/cove/town/border/TBCVNMP2",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvNMP2",
+      "x": 254,
+      "y": 42,
+      "z": 2
+    },
+    "dwellingUpLvl2": {
+      "animation": "hota/cove/town/buildings/TBCVSAY2",
+      "area": "hota/cove/town/area/TBCVSAY2",
+      "border": "hota/cove/town/border/TBCVSAY2",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvsay2",
+      "x": 84,
+      "y": 33
+    },
+    "dwellingUpLvl3": {
+      "animation": "hota/cove/town/buildings/TBCVPIR2",
+      "area": "hota/cove/town/area/TBCVPIR2",
+      "border": "hota/cove/town/border/TBCVPIR2",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvPIR2",
+      "x": 588,
+      "y": 64,
+      "z": 3
+    },
+    "dwellingUpLvl4": {
+      "animation": "hota/cove/town/buildings/TBCVASS2",
+      "area": "hota/cove/town/area/TBCVASS2",
+      "border": "hota/cove/town/border/TBCVASS2",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvass2",
+      "x": 696,
+      "y": 12
+    },
+    "dwellingUpLvl5": {
+      "animation": "hota/cove/town/buildings/TBCVSOR2",
+      "area": "hota/cove/town/area/TBCVSOR2",
+      "border": "hota/cove/town/border/TBCVSOR2",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvSOR2",
+      "x": 370,
+      "y": 0
+    },
+    "dwellingUpLvl6": {
+      "animation": "hota/cove/town/buildings/TBCVNIX2",
+      "area": "hota/cove/town/area/TBCVNIX2",
+      "border": "hota/cove/town/border/TBCVNIX2",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvnix2",
+      "x": 663,
+      "y": 98,
+      "z": 1
+    },
+    "dwellingUpLvl7": {
+      "animation": "hota/cove/town/buildings/TBCVWHR2",
+      "area": "hota/cove/town/area/TBCVWHR2",
+      "border": "hota/cove/town/border/TBCVWHR2",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvwhr2",
+      "x": 291,
+      "y": 236,
+      "z": 3
+    },
+    "dwellingUp2Lvl3": {
+      "animation": "hota/cove/town/buildings/TBCVPGR3",
+      "area": "hota/cove/town/area/TBCVPGR3",
+      "border": "hota/cove/town/border/TBCVPGR3",
+      "campaignBonus": "hota/cove/town/icons/campaignBonuses/BoCvPGR3",
+      "x": 588,
+      "y": 64,
+      "z": 3
+    }
+  },
+  "siege": {
+    "shooter": "corsair",
+    "imagePrefix": "hota/cove/town/siege/SGCV",
+    "towerIconSmall": "hota/cove/town/icons/arrowtowerssmall",
+    "towerIconLarge": "hota/cove/town/icons/arrowtowerslarge",
+    "gate": {
+      "arch": {
+        "x": 477,
+        "y": 228
+      },
+      "gate": {
+        "x": 433,
+        "y": 284
+      }
+    },
+    "moat": {
+      "bank": {
+        "x": 414,
+        "y": 79
+      },
+      "moat": {
+        "x": 434,
+        "y": 99
+      }
+    },
+    "static": {
+      "background": {
+        "x": 582,
+        "y": 48
+      },
+      "bottom": {
+        "x": 521,
+        "y": 356
+      },
+      "top": {
+        "x": 491,
+        "y": 112
+      }
+    },
+    "towers": {
+      "bottom": {
+        "battlement": {
+          "x": 630,
+          "y": 516
+        },
+        "creature": {
+          "x": 395,
+          "y": 310
+        },
+        "tower": {
+          "x": 630,
+          "y": 516
+        }
+      },
+      "keep": {
+        "battlement": {
+          "x": 727,
+          "y": 180
+        },
+        "creature": {
+          "x": 518,
+          "y": -20
+        },
+        "tower": {
+          "x": 727,
+          "y": 180
+        }
+      },
+      "top": {
+        "battlement": {
+          "x": 575,
+          "y": 35
+        },
+        "creature": {
+          "x": 340,
+          "y": -165
+        },
+        "tower": {
+          "x": 575,
+          "y": 35
+        }
+      }
+    },
+    "walls": {
+      "bottom": {
+        "x": 542,
+        "y": 401
+      },
+      "bottomMid": {
+        "x": 491,
+        "y": 321
+      },
+      "upper": {
+        "x": 532,
+        "y": 72
+      },
+      "upperMid": {
+        "x": 481,
+        "y": 149
+      }
+    }
+  },
+  "puzzleMap": {
+    "prefix": "hota/cove/puzzleMap/",
+    "pieces": [
+      {
+        "index": 46,
+        "x": 7,
+        "y": 8
+      },
+      {
+        "index": 10,
+        "x": 123,
+        "y": 8
+      },
+      {
+        "index": 16,
+        "x": 302,
+        "y": 17
+      },
+      {
+        "index": 27,
+        "x": 390,
+        "y": 24
+      },
+      {
+        "index": 28,
+        "x": 416,
+        "y": 41
+      },
+      {
+        "index": 17,
+        "x": 435,
+        "y": 8
+      },
+      {
+        "index": 19,
+        "x": 495,
+        "y": 39
+      },
+      {
+        "index": 2,
+        "x": 558,
+        "y": 38
+      },
+      {
+        "index": 6,
+        "x": 7,
+        "y": 43
+      },
+      {
+        "index": 25,
+        "x": 23,
+        "y": 78
+      },
+      {
+        "index": 26,
+        "x": 33,
+        "y": 118
+      },
+      {
+        "index": 41,
+        "x": 110,
+        "y": 65
+      },
+      {
+        "index": 33,
+        "x": 239,
+        "y": 74
+      },
+      {
+        "index": 29,
+        "x": 320,
+        "y": 102
+      },
+      {
+        "index": 30,
+        "x": 400,
+        "y": 104
+      },
+      {
+        "index": 21,
+        "x": 448,
+        "y": 116
+      },
+      {
+        "index": 18,
+        "x": 519,
+        "y": 116
+      },
+      {
+        "index": 13,
+        "x": 495,
+        "y": 135
+      },
+      {
+        "index": 7,
+        "x": 7,
+        "y": 170
+      },
+      {
+        "index": 36,
+        "x": 111,
+        "y": 218
+      },
+      {
+        "index": 31,
+        "x": 189,
+        "y": 134
+      },
+      {
+        "index": 45,
+        "x": 258,
+        "y": 176
+      },
+      {
+        "index": 38,
+        "x": 391,
+        "y": 164
+      },
+      {
+        "index": 11,
+        "x": 533,
+        "y": 209
+      },
+      {
+        "index": 1,
+        "x": 7,
+        "y": 320
+      },
+      {
+        "index": 14,
+        "x": 7,
+        "y": 288
+      },
+      {
+        "index": 24,
+        "x": 98,
+        "y": 284
+      },
+      {
+        "index": 43,
+        "x": 225,
+        "y": 212
+      },
+      {
+        "index": 48,
+        "x": 300,
+        "y": 249
+      },
+      {
+        "index": 40,
+        "x": 366,
+        "y": 270
+      },
+      {
+        "index": 3,
+        "x": 467,
+        "y": 279
+      },
+      {
+        "index": 20,
+        "x": 7,
+        "y": 413
+      },
+      {
+        "index": 22,
+        "x": 63,
+        "y": 393
+      },
+      {
+        "index": 4,
+        "x": 122,
+        "y": 403
+      },
+      {
+        "index": 35,
+        "x": 124,
+        "y": 326
+      },
+      {
+        "index": 42,
+        "x": 227,
+        "y": 321
+      },
+      {
+        "index": 32,
+        "x": 285,
+        "y": 345
+      },
+      {
+        "index": 44,
+        "x": 218,
+        "y": 409
+      },
+      {
+        "index": 39,
+        "x": 352,
+        "y": 323
+      },
+      {
+        "index": 12,
+        "x": 392,
+        "y": 356
+      },
+      {
+        "index": 37,
+        "x": 380,
+        "y": 300
+      },
+      {
+        "index": 15,
+        "x": 7,
+        "y": 451
+      },
+      {
+        "index": 5,
+        "x": 7,
+        "y": 514
+      },
+      {
+        "index": 47,
+        "x": 59,
+        "y": 473
+      },
+      {
+        "index": 9,
+        "x": 315,
+        "y": 474
+      },
+      {
+        "index": 23,
+        "x": 348,
+        "y": 409
+      },
+      {
+        "index": 8,
+        "x": 514,
+        "y": 362
+      },
+      {
+        "index": 34,
+        "x": 78,
+        "y": 162
+      }
+    ]
+  }
+}

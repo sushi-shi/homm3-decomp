@@ -616,7 +616,7 @@ DATA(0x0065f55c) const char* g_groundTilesetNames[10] = { "dirttl.def", "sandtl.
 // loaders walk from entry 1 (0x65f588..0x65f598, 0x65f59c..0x65f5a8).
 DATA(0x0065f584) const char* g_riverTilesetNames[5] = { "", "clrrvr.def", "icyrvr.def", "mudrvr.def", "lavrvr.def" };
 DATA(0x0065f598) const char* g_roadTilesetNames[4] = { "", "dirtrd.def", "gravrd.def", "cobbrd.def" };
-DATA(0x0065f5a8) const char* g_cursorIconNames[18] = { "ah00_.def", "ah01_.def", "ah02_.def", "ah03_.def", "ah04_.def", "ah05_.def", "ah06_.def", "ah07_.def", "ah08_.def", "ah09_.def", "ah10_.def", "ah11_.def", "ah12_.def", "ah13_.def", "ah14_.def", "ah15_.def", "ah16_.def", "ah17_.def" };
+DATA(0x0065f5a8) const char* g_cursorIconNames[HOMM3_HERO_CLASS_COUNT] = { "ah00_.def", "ah01_.def", "ah02_.def", "ah03_.def", "ah04_.def", "ah05_.def", "ah06_.def", "ah07_.def", "ah08_.def", "ah09_.def", "ah10_.def", "ah11_.def", "ah12_.def", "ah13_.def", "ah14_.def", "ah15_.def", "ah16_.def", "ah17_.def", "AH18_.def", "AH19_.def" };
 DATA(0x0065f5f0) const char* g_flagIconNames[8] = { "af00.def", "af01.def", "af02.def", "af03.def", "af04.def", "af05.def", "af06.def", "af07.def" };
 DATA(0x0065f610) const char* g_boatFlagIconNames[3][8] = {
     { "abf01l.def", "abf01g.def", "abf01r.def", "abf01d.def", "abf01b.def", "abf01p.def", "abf01w.def", "abf01k.def" },
@@ -734,7 +734,7 @@ int advManager::open(int newPriority)
     m_cloudIcons =
         ResourceManager::getSprite(DATA_COMPGEN(0x006602bc, cloudIconsName, "tshre.def"));
     incProgressBar(1);
-    for (i = 0; i < 18; i++) {
+    for (i = 0; i < HOMM3_HERO_CLASS_COUNT; i++) {
         m_cursorIcons[i] = ResourceManager::getSprite(g_cursorIconNames[i]);
         if (i == CURSOR_ICON_TICK)
             incProgressBar(1);
@@ -881,7 +881,7 @@ void advManager::close()
         m_radarIcons = 0;
         ResourceManager::dispose(m_cloudIcons);
         m_cloudIcons = 0;
-        for (i = 0; i < 18; i++) {
+        for (i = 0; i < HOMM3_HERO_CLASS_COUNT; i++) {
             ResourceManager::dispose(m_cursorIcons[i]);
             m_cursorIcons[i] = 0;
         }

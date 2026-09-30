@@ -129,7 +129,7 @@ extern const TCombinationArtifact g_combinationArtifactTable[12];
 // Preserve that reference-to-array interface with the Complete-era bounds.
 // The combination table is Complete-only; its inferred pointer interface is
 // independent of the two DC declarations. artifact.cpp owns all three tables.
-extern const TArtifactTraits (&g_artifactTraits)[144];
+extern const TArtifactTraits (&g_artifactTraits)[ARTIFACT_COUNT];
 extern const TCombinationArtifact* g_combinationArtifacts;
 extern const TArtifactSlotTraits (&g_artifactSlotTraits)[19];
 

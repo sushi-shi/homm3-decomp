@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "advmgr_objects.h"
+#include "artifact_type.h"
 #include "terrain_type.h"
 
 class TAbstractFile;
@@ -443,7 +444,7 @@ struct TRmgTownSlot {
     int m_parameters0020[8];
     // Template column 22: preserve zone alignment for neutral towns.
     unsigned char m_neutralTownsMatchZone; // +0x40, provisional retail role
-    unsigned char m_allowedTowns[9];    // +0x41
+    unsigned char m_allowedTowns[HOMM3_TOWN_COUNT];    // +0x41
     int m_parameters004c[7];
     int m_parameters0068[7];
     // template byte to prefer the aligned town's native terrain table.
@@ -453,7 +454,7 @@ struct TRmgTownSlot {
     int m_monsterStrength;              // +0x90
     // Template column 56: restrict guards to the zone's town alignment.
     unsigned char m_guardsMatchZone;    // +0x94, provisional retail role
-    unsigned char m_allowedMonsters[10]; // +0x95
+    unsigned char m_allowedMonsters[HOMM3_TOWN_COUNT + 1]; // +0x95
     TRmgTreasureRange m_treasure[3];     // +0xa0
     std::vector<TRmgZoneConnection> m_connections; // +0xc4
 
@@ -615,7 +616,7 @@ enum ERmgConnectionConstants {
 // creature array. Its RoE exclusion starts at 118 even though evaluation
 // stops before 117; keep that observed boundary distinct.
 enum ERmgGuardConstants {
-    RMG_GUARD_CREATURE_COUNT = 145,
+    RMG_GUARD_CREATURE_COUNT = HOMM3_CREATURE_COUNT,
     RMG_GUARD_ROE_CREATURE_LIMIT = 117,
     RMG_GUARD_ROE_EXCLUDED_FIRST = 118,
     RMG_GUARD_MAXIMUM_COUNT = 100,
@@ -1815,12 +1816,12 @@ public:
     // 0x549bae clears nine alignment counts; 0x549be0..0x549c05 counts
     // active zones both by their alignment (+4) and in the total.
     int m_activeZoneCount;                             // +0x0f60
-    int m_activeZoneCountsByAlignment[9];              // +0x0f64
-    unsigned char m_disabledHeroes[156];               // +0x0f88
+    int m_activeZoneCountsByAlignment[HOMM3_TOWN_COUNT];              // +0x0f64
+    unsigned char m_disabledHeroes[HOMM3_HERO_COUNT];               // +0x0f88
     // Role-derived names; original spellings unknown. Replaces opaque1024.
     // Ctor 0x537cc6 clears 144 bytes. Quest selection 0x54b490 excludes
     // marked artifacts; successful placement 0x54b813 marks the chosen ID.
-    unsigned char m_usedQuestArtifacts[144];           // +0x1024
+    unsigned char m_usedQuestArtifacts[ARTIFACT_COUNT];           // +0x1024
     // 0x54b4f1 latches this when fewer than 20 eligible artifacts remain;
     // seer-hut value paths 0x534b0c/0x534c9c reject further candidates.
     unsigned char m_questArtifactPoolLow;              // +0x10b4
@@ -2036,7 +2037,7 @@ SIZE(TRmgRoadLinePainter, 0x10);
 SIZE(TRmgLineWalker, 0x10);
 SIZE(TRmgRiverPainter, 0x20);
 SIZE(TRmgRoadPainter, 0x20);
-SIZE(type_random_map_generator, 0x14e0);
+SIZE(type_random_map_generator, 0x1500);
 
 // Retail 0x6824e0 is indexed by the creature-traits level dword before
 // type_black_box_creature_def divides by that creature's AI value.

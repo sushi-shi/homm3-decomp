@@ -197,7 +197,7 @@ static const int g_spellGivingArtifacts[9] = {
 // becomes a compact slot-class index; its old constructor is not a Windows
 // source claim. The two recipe/mask cinits below are separate table owners.
 DATA(0x006939f8)
-static TArtifactTraits g_artifactTraitsStorage[144];
+static TArtifactTraits g_artifactTraitsStorage[ARTIFACT_COUNT];
 
 DATA(0x00694bf8)
 static TArtifactSlotTraits g_artifactSlotTraitsStorage[19];
@@ -317,7 +317,7 @@ DATA(0x00660b64)
 const TArtifactSlotTraits (&g_artifactSlotTraits)[19] = g_artifactSlotTraitsStorage;
 
 DATA(0x00660b68)
-const TArtifactTraits (&g_artifactTraits)[144] = g_artifactTraitsStorage;
+const TArtifactTraits (&g_artifactTraits)[ARTIFACT_COUNT] = g_artifactTraitsStorage;
 
 DATA(0x00660b6c)
 const TCombinationArtifact* g_combinationArtifacts = g_combinationArtifactTable;
@@ -505,6 +505,13 @@ bool initializeArtifactTraitsTable()
             g_artifactSlotTraitsStorage[slot].m_type = mask;
         }
     }
+    g_artifactTraitsStorage[ARTIFACT_CANNON] = g_artifactTraitsStorage[ARTIFACT_BALLISTA];
+    TArtifactTraits& cannon = g_artifactTraitsStorage[ARTIFACT_CANNON];
+    cannon.m_name = "Cannon";
+    cannon.m_description = "The Cannon occupies the Ballista slot and attacks enemy troops with cannonballs.";
+    cannon.m_cost = 4000;
+    cannon.m_comboType = -1;
+    cannon.m_targetCombo = -1;
     return 1;
 }
 

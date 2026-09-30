@@ -60,7 +60,7 @@ struct TPuzzleCoordinates {
     short m_x[48];
     short m_y[48];
 };
-extern TPuzzleCoordinates g_puzzleCoordinates[9];
+extern TPuzzleCoordinates g_puzzleCoordinates[HOMM3_TOWN_COUNT];
 extern const char* g_puzzleFilePrefixes[];
 // 0x6822c8: five doubles - 1.1, 0.5, 0.25, 0.0, 0.0 - read from the
 // image, indexed by SGameSetupOptions::difficulty and compared against

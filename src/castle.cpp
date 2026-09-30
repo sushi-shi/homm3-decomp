@@ -1,4 +1,5 @@
 #include "va.h"
+#include "cove.h"
 #include "text.h"
 
 #include <stdio.h>
@@ -17,7 +18,7 @@
 #include "winmgr.h"
 
 // Retail table initializers, in the layouts used by their named consumers.
-DATA(0x0066cf98) unsigned char g_townSpecStructScreen[9][18] = {
+DATA(0x0066cf98) unsigned char g_townSpecStructScreen[HOMM3_TOWN_COUNT][18] = {
     { 30, 31, 32, 33, 34, 35, 36, 0, 5, 6, 14, 7, 10, 16, 18, 21, 0, 0 },
     { 30, 31, 32, 33, 34, 35, 36, 0, 5, 14, 7, 10, 16, 18, 24, 22, 17, 0 },
     { 30, 31, 32, 33, 34, 35, 36, 0, 5, 22, 14, 7, 10, 16, 18, 21, 23, 17 },
@@ -27,8 +28,10 @@ DATA(0x0066cf98) unsigned char g_townSpecStructScreen[9][18] = {
     { 30, 31, 32, 33, 34, 35, 36, 0, 5, 14, 7, 10, 16, 18, 21, 22, 23, 17 },
     { 30, 31, 32, 33, 34, 35, 36, 0, 5, 6, 14, 7, 10, 16, 18, 21, 17, 0 },
     { 30, 31, 32, 33, 34, 35, 36, 0, 5, 6, 14, 7, 10, 16, 18, 17, 21, 0 }
+,
+    { 30, 31, 32, 33, 34, 35, 36, 0, 5, 6, 14, 7, 10, 16, 18, 22, 23, 24 }
 };
-DATA(0x0066d03c) unsigned char g_numOfTownSpecStrScreen[9] = { 16, 17, 18, 18, 18, 18, 18, 17, 17 };
+DATA(0x0066d03c) unsigned char g_numOfTownSpecStrScreen[HOMM3_TOWN_COUNT] = { 16, 17, 18, 18, 18, 18, 18, 17, 17 , 18 };
 
 // File-local working state used by the hall page. All later references in
 // this function are relocations to these two bases plus source-array
@@ -53,6 +56,8 @@ DC_ADDRESS(0x05c1d8, 0x4e)
 MAC_ADDRESS(0x06c9b0, 0x70)
 const char* getBuildingName(int townType, int buildingId)
 {
+    if (townType == TOWN_COVE)
+        return cove::buildingName(buildingId);
     if (buildingId < BUILDING_ID_TOWN_FIRST) {
         if (buildingId == BUILDING_ID_DWELLING)
             return g_specialBuildingNames[townType][10];
@@ -101,6 +106,10 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
         if (g_castleBuildOrder[i] >= DWELLING_0_ID) {
             if (m_townToView->hasBuilding(g_castleBuildOrder[i], true))
                 g_castleBuildOrder[i] += TOWN_DWELLING_COUNT;
+            if (m_townToView->m_type == TOWN_COVE
+                && g_castleBuildOrder[i] == DWELLING_2_UPG_ID
+                && m_townToView->hasBuilding(DWELLING_2_UPG_ID, true))
+                g_castleBuildOrder[i] = GUNPOWDER_WAREHOUSE_ID;
         } else {
             switch (g_castleBuildOrder[i]) {
             case CASTLE_FORT_ID:
@@ -140,7 +149,8 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
                     // DC lines 398..401 retain this as an if/else pair. VC6
                     // folds that source shape to the retail setne/add sequence;
                     // spelling the arithmetic directly narrows the add to DL.
-                    if (m_townToView->m_type == TOWN_CASTLE) {
+                    if (m_townToView->m_type == TOWN_CASTLE
+                        || m_townToView->m_type == TOWN_COVE) {
                         g_castleBuildOrder[i] = MAGE_GUILD4_ID;
                     } else {
                         g_castleBuildOrder[i] = MAGE_GUILD5_ID;
@@ -212,6 +222,13 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
     case TOWN_CONFLUX:
         if (m_townToView->hasBuilding(DWELLING_0_UPG_ID, true))
             g_castleBuildOrder[14] = HORDE_UPG_ID;
+        break;
+
+    case TOWN_COVE:
+        if (m_townToView->hasBuilding(DWELLING_1_UPG_ID, true))
+            g_castleBuildOrder[14] = HORDE_UPG_ID;
+        if (m_townToView->hasBuilding(DWELLING_3_UPG_ID, true))
+            g_castleBuildOrder[17] = HORDE_2_UPG_ID;
         break;
     }
 
@@ -362,6 +379,7 @@ int THallWindow::windowHandler(message& msg)
             case DWELLING_3_UPG_ID:
             case DWELLING_4_UPG_ID:
             case DWELLING_5_UPG_ID:
+            case GUNPOWDER_WAREHOUSE_ID:
             case DWELLING_6_UPG_ID:
                 if (g_game->townAlreadyBuiltOn(g_townManager->m_townToView->m_id)) {
                     // Dreamcast castle.cpp:654 names TTextResource::operator[].
@@ -491,6 +509,7 @@ int THallWindow::windowHandler(message& msg)
             case DWELLING_3_UPG_ID:
             case DWELLING_4_UPG_ID:
             case DWELLING_5_UPG_ID:
+            case GUNPOWDER_WAREHOUSE_ID:
             case DWELLING_6_UPG_ID: {
                 int i;
                 for (i = 0; i < g_townManager->m_townObjectCount; ++i) {

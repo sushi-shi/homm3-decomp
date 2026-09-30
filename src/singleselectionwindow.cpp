@@ -380,6 +380,7 @@ const char* getResourceBonusCaption(int townType)
     case TOWN_INFERNO:
     case TOWN_CONFLUX:
         return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_INFERNO_CAPTION);
+    case TOWN_COVE:
     case TOWN_DUNGEON:
         return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_CAPTION);
     default:
@@ -401,6 +402,7 @@ const char* getResourceBonusDescription(int townType)
     case TOWN_INFERNO:
     case TOWN_CONFLUX:
         return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_INFERNO_DESCRIPTION);
+    case TOWN_COVE:
     case TOWN_DUNGEON:
         return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_DESCRIPTION);
     default:
@@ -2456,10 +2458,10 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_lossIcon = ResourceManager::getSprite("scnrloss.def");
     m_townPix = ResourceManager::getSprite("itpa.def");
     m_heroSpecificAbility = ResourceManager::getSprite("un44.def");
-    for (i = 0; i < 163; ++i)
+    for (i = 0; i < HOMM3_HERO_TRAIT_COUNT; ++i)
         m_heroPix[i] = ResourceManager::getBitmap816(
             g_heroTraits[i].m_smallPortraitName);
-    m_heroPix[163] = ResourceManager::getBitmap816("hpsrand.pcx");
+    m_heroPix[HOMM3_HERO_TRAIT_COUNT] = ResourceManager::getBitmap816("hpsrand.pcx");
     m_resource = ResourceManager::getSprite("ScnrStar.def");
 
     const char* colorChars = "rbygopts";
@@ -3284,7 +3286,7 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
 
     for (int i = 0; i < 8; ++i) {
         header.m_teamInfo[i] = static_cast<signed char>(i);
-        header.m_playerSlotAttributes[i].m_legalAlignments = 0x1ff;
+        header.m_playerSlotAttributes[i].m_legalAlignments = (1 << TOWN_TYPE_COUNT) - 1;
         header.m_playerSlotAttributes[i].m_canBeHuman =
             i < header.m_maxNumHumanPlayers;
         header.m_playerSlotAttributes[i].m_hasRandomAlignment = 1;
@@ -3868,7 +3870,7 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
             dlg.doModal(0);
         } else {
             CTownDlg dlg(!m_saveMode && !m_loadMode);
-            dlg.createWin(m_townPix, townType * 2 + 2,
+            dlg.createWin(m_townPix, (townType == TOWN_COVE ? 39 : townType * 2 + 2),
                           static_cast<TTownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             dlg.doModal(0);
         }
@@ -4314,6 +4316,10 @@ void TSingleSelectionWindow::makeHeroFilter()
             heroClass1 = classBeastmaster;
             heroClass2 = classWitch;
             break;
+        case TOWN_COVE:
+            heroClass1 = classCaptain;
+            heroClass2 = classNavigator;
+            break;
         case TOWN_CONFLUX:
             heroClass1 = classPlanesWalker;
             heroClass2 = classElementalist;
@@ -4328,7 +4334,7 @@ void TSingleSelectionWindow::makeHeroFilter()
             break;
         }
         player->m_availableHeroesCount = 0;
-        for (heroId = 0; heroId < 156; ++heroId) {
+        for (heroId = 0; heroId < HOMM3_HERO_COUNT; ++heroId) {
             if (g_game->m_heroAvailability[heroId] != -1)
                 continue;
             if (g_heroTraits[heroId].m_heroClass != heroClass1
@@ -5416,7 +5422,7 @@ TTownType pickPrevAlignment(int legalAlignments, TTownType type)
     do {
         type = static_cast<TTownType>(type - 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
         if (type < -1)
-            type = TOWN_CONFLUX;
+            type = TOWN_COVE;
         else if (type == -1)
             break;
     } while (!(legalAlignments & (1 << type)));
@@ -5430,7 +5436,7 @@ TTownType pickNextAlignment(int legalAlignments, TTownType type)
 {
     do {
         type = static_cast<TTownType>(type + 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-        if (type >= TOWN_CONFLUX + 1)
+        if (type >= TOWN_TYPE_COUNT)
             type = static_cast<TTownType>(-1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
     } while (type != -1 && !(legalAlignments & (1 << type)));
     return type;
@@ -8324,7 +8330,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         p = m_players.getCompPlayerInPos(playerPos);
     if (m_loadMode != 0) {
         int townType = g_game->m_setup.m_alignment[playerPos];
-        m_townPix->draw(0, townType * 2 + 2, 0, 0, m_townPix->getWidth(),
+        m_townPix->draw(0, (townType == TOWN_COVE ? 39 : townType * 2 + 2), 0, 0, m_townPix->getWidth(),
                         m_townPix->getHeight(), g_windowManager->m_screenBitmap,
                         176, position * 50 + 130, 0, 1);
         g_tinyFont->drawBoundedString(townManager::getTownTypeName(townType),
@@ -8397,7 +8403,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
         } else {
-            m_townPix->draw(0, town * 2 + 2, 0, 0, m_townPix->getWidth(),
+            m_townPix->draw(0, (town == TOWN_COVE ? 39 : town * 2 + 2), 0, 0, m_townPix->getWidth(),
                 m_townPix->getHeight(), g_windowManager->m_screenBitmap, 176,
                 position * 50 + 130, 0, 1);
             g_tinyFont->drawBoundedString(townManager::getTownTypeName(town),
@@ -8715,7 +8721,7 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
     }
 
     ResourceManager::dispose(m_resource);
-    for (i = 0; i < 164; ++i) {
+    for (i = 0; i < HOMM3_HERO_TRAIT_COUNT + 1; ++i) {
         if (m_heroPix[i])
             ResourceManager::dispose(m_heroPix[i]);
     }

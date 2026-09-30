@@ -44,7 +44,9 @@ enum THeroClass {
     classWitch = 15,
     classPlanesWalker = 16,
     classElementalist = 17,
-    kNumHeroClasses = 18
+    classCaptain = 18,
+    classNavigator = 19,
+    kNumHeroClasses = HOMM3_HERO_CLASS_COUNT
 };
 
 // Dreamcast names the hero-ID domain THeroID; Complete uses 156 hero slots.
@@ -1355,10 +1357,9 @@ public:
     signed char m_gainPrimarySkillChance[4];  // +0x10
     signed char m_gainPrimarySkillChance10P[4];  // +0x14
     signed char m_gainSecondarySkillChance[28];  // +0x18
-    signed char m_foundInTownType[9];  // +0x34
-    // Complete expands foundInTownType to nine bytes at +0x34.
-    // NH3API confirms the three trailing alignment bytes and 0x40-byte PC stride.
-    char m_paddingAfterTownChances[3];
+    signed char m_foundInTownType[HOMM3_TOWN_COUNT];  // +0x34
+    // Cove uses one byte of Complete's three-byte tail padding.
+    char m_paddingAfterTownChances[2];
 };
 SIZE(THeroClassTraits, 0x40);
 
@@ -1377,8 +1378,8 @@ public:
 };
 SIZE(type_movement_constants, 0x78);
 extern type_movement_constants g_moveConstants;
-extern THeroClassTraits g_heroClassTraits[18];
-extern const THeroClassTraits (&g_heroClasses)[18];
+extern THeroClassTraits g_heroClassTraits[HOMM3_HERO_CLASS_COUNT];
+extern const THeroClassTraits (&g_heroClasses)[HOMM3_HERO_CLASS_COUNT];
 
 // Retail .data 0x67dce8 (reloc-evidence datum; read by strip::DrawOwner
 // as pointer+index). The IDA-lineage mangling
@@ -1387,8 +1388,8 @@ extern const THeroClassTraits (&g_heroClasses)[18];
 // Seven additional portrait records follow at 0x67d5e0, ending at 0x67d864
 // before the aligned class table at 0x67d868. The complete array has 163 rows;
 // the reference cell points to 0x679dd0.
-extern THeroTraits g_heroTraitsStorage[163];
-extern const THeroTraits (&g_heroTraits)[163];
+extern THeroTraits g_heroTraitsStorage[HOMM3_HERO_TRAIT_COUNT];
+extern const THeroTraits (&g_heroTraits)[HOMM3_HERO_TRAIT_COUNT];
 
 // E:\gamedcs\hero.cpp:267
 std::bitset<70> markArtifactSpells(int artifactId);

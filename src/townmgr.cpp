@@ -1,6 +1,7 @@
 #include "prefs.h"
 #include "text.h"
 #include "va.h"
+#include "cove.h"
 #include "includes.h"
 
 #include <stdio.h>
@@ -45,8 +46,19 @@
 #include "winmgr.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x0068a38c) const char* g_townObjectNames[396] = { "TOCsMag1", "TOCsMag2", "TOCsM301", "TOCsM401", "", "TOCsTav1", "TOCsDkNN", "TOCsCas1", "TOCsCas2", "TOCsCas3", "TOCsH101", "TOCsH201", "TOCsH301", "TOCsH401", "TOCsMrk1", "TOCsMrk2", "TOCsBlak", "TOCsLt01", "TOCsGr1H", "TOCsGr2H", "TOCsDkNS", "TOCsCavM", "TOCsTav2", "", "", "", "TOCsHoly", "", "", "", "TOCsPik1", "TOCsCrs1", "TOCsGr1N", "TOCsSwd1", "TOCsMon1", "TOCsCav1", "TOCsAng1", "TOCsPik2", "TOCsCrs2", "TOCsGr2N", "TOCsSwd2", "TOCsMon2", "TOCsCav2", "TOCsAng2", "TOrmag1", "TOrmag2", "TOrmag3", "TOrmag4", "TOrmag5", "TOrtav", "", "TOrcas1", "TOrcas2", "TOrcas3", "TOrhal1", "TOrhal2", "TOrhal3", "TOrhal4", "TOrmrk1", "TOrmrk2", "TOraid", "TOrgar1a", "TOrdwf1h", "TOrdwf2h", "", "TOrgar2a", "TOrdwft", "", "TOrtre1h", "TOrtre2h", "TOrholy", "", "", "", "TOrcen1a", "TOrdwf1", "TOrelf1", "TOrpeg1a", "TOrtre1", "TOruni1", "TOrdr1aa", "TOrcen2a", "TOrdwf2", "TOrelf2", "TOrpeg2a", "TOrtre2", "TOruni2", "TOrdr2aa", "TOTGld1", "TOTGld2", "TOTGld3", "TOTGld4", "TOTGld5", "TOTTav", "", "TOTCas1", "TOtcas2", "TOTCas3", "TOTHal1", "TOTHal2", "TOTHal3", "TOTHal4", "TOTMrk", "TOTMrkS", "TOTBlkA", "TOTMrkA", "TOTGar1H", "TOTGar2H", "", "TOTCasW", "TOTGldL", "TOTGldW", "", "", "TOTHolyA", "", "", "", "TOTGrm1A", "TOTGar1", "TOTGol1A", "TOTMag1", "TOTGen1", "TOTNag1", "TOTTit1", "TOTGrm2A", "TOTGar2", "TOTGol2A", "TOTMag2", "TOTGen2", "TOTNag2", "TOTTit2", "TOimag1a", "TOimag2a", "TOimag3a", "TOimag4a", "TOimag5a", "TOitav", "", "TOicas1a", "TOicas2a", "TOicas3a", "TOihal1", "TOihal2", "TOihal3", "TOihal4", "TOimar1", "TOimar2", "TOiblka", "", "TOimp1ha", "TOimp2ha", "", "TOicab1a", "TOicasga", "TOipain", "TOihnd1h", "TOihnd2h", "TOiholy", "", "", "", "TOimp1a", "TOigog1a", "TOihnd1", "TOidmn1", "TOipit1", "TOiefr1", "TOidvl1", "TOimp2a", "TOigog2a", "TOihnd2", "TOidmn2", "TOipit2", "TOiefr2", "TOidvl2", "TONMag1", "TONMag2", "TONMag3", "TONMag4", "TONMag5", "TONTav", "TONshpNa", "TONCas1", "TONCas2", "TONCas3", "TONHal1", "TONHal2", "TONHal3", "TONHal4", "TONMrk1", "TOnmrk2", "TONsmita", "TOnshrda", "TONSke1H", "TONSke2H", "TONshpBa", "TOnnecra", "TONSkelT", "", "", "", "TONholya", "", "", "", "TONSkel1", "TONzomb1", "TONwigh1", "TONVam1", "TONLich1", "TONBkn1", "TONBon1", "TONSkel2", "TONzomb2", "TONwigh2", "TONVam2", "TONLich2", "TOnbkn2", "TONBon2", "TODmag1", "TODmag2", "TODmag3", "TODmag4", "TODmag5", "TODtav", "", "TODcas1", "TODcas2", "TODcas3", "TODhall1", "TODhall2", "TODhall3", "TODhall4", "TODmark", "TODsilo", "TODsmith", "TODart", "TODtr1Ha", "TODtr2Ha", "", "TODvor1a", "TODportA", "TODacad", "", "", "TODHoly", "", "", "", "TODtrg1a", "TODhar1", "TODbeh1a", "TODMed1", "TODmin1", "TODman1", "TODdra1a", "TODtrg2a", "TODhar2", "TODbeh2a", "TODMed2", "TODmin2", "TODman2", "TODdra2a", "TOSMag1", "TOSMag2", "TOSMag3", "", "", "TOSTav", "", "TOSCa1", "TOSCa2", "TOSCa3", "TOSHal1a", "TOSHal2a", "TOSHal3a", "TOSHal4a", "TOSMrk1", "TOSMrk2", "TOSBlk1", "TOSCa1Ea", "TOSGob1H", "TOSGob2H", "", "TOSMrk1C", "TOSBlk2", "TOSVah", "", "", "TOSHolya", "", "", "", "TOSGob1", "TOSWol1", "TOSOrc1", "TOSOgr1", "TOSRoc1", "TOSCyc1", "TOSBeh1a", "TOSGob2", "TOSWol2", "TOSOrc2", "TOSOgr2", "TOSRoc2", "TOSCyc2a", "TOSBeh2a", "TOFMag1A", "TOFMag2A", "TOFMag3A", "", "", "TOFTavA", "TOFDck2", "TOFCas1", "TOFCas2", "TOFCas3", "TOFHal1", "TOFHal2", "TOFHal3", "TOFHal4", "TOFMrkAA", "TOFMrk2A", "TOFAidA", "TOFCage", "TOFGnl1H", "TOFGnl2H", "TOFDck1", "TOFCasD", "TOFCasA", "", "", "", "TOFHlyAA", "", "", "", "TOFGnl1", "TOFLiz1", "TOFFly1a", "TOFBas1", "TOFGor1", "TOFWyv1", "TOFHyd1A", "TOFGnl2", "TOFLiz2", "TOFFly2a", "TOFBas2", "TOFGor2", "TOFWyv2", "TOFHyd2A", "TOElmage", "TOElmag2", "TOElmag3", "TOElmag4", "TOElmag5", "TOElTvrn", "ToElDock", "TOElCstl", "TOElcas2", "TOElcas3", "TOElhall", "TOElhal2", "TOElhal3", "ToElhal4", "ToElmark", "ToElsilo", "ToElBlak", "ToElSpec", "ToElHrd1", "ToElHrd2", "ToElBoat", "ToElExt6", "", "", "", "", "ToElHoly", "", "", "", "ToElDw_0", "ToElDw_1", "ToElDw_2", "ToElDw_3", "ToElDw_4", "ToElDw_5", "ToElDw_6", "ToElUp_0", "ToElUp_1", "ToElUp_2", "ToElUp_3", "ToElUp_4", "ToElUp_5", "ToElUp_6" };
-DATA(0x0068a9bc) short g_townObjectPositions[396][3] = {
+DATA(0x0068a38c) const char* g_townObjectNames[HOMM3_TOWN_COUNT * HOMM3_BUILDING_COUNT] = {
+    "TOCsMag1", "TOCsMag2", "TOCsM301", "TOCsM401", "", "TOCsTav1", "TOCsDkNN", "TOCsCas1", "TOCsCas2", "TOCsCas3", "TOCsH101", "TOCsH201", "TOCsH301", "TOCsH401", "TOCsMrk1", "TOCsMrk2", "TOCsBlak", "TOCsLt01", "TOCsGr1H", "TOCsGr2H", "TOCsDkNS", "TOCsCavM", "TOCsTav2", "", "", "", "TOCsHoly", "", "", "", "TOCsPik1", "TOCsCrs1", "TOCsGr1N", "TOCsSwd1", "TOCsMon1", "TOCsCav1", "TOCsAng1", "TOCsPik2", "TOCsCrs2", "TOCsGr2N", "TOCsSwd2", "TOCsMon2", "TOCsCav2", "TOCsAng2", "",
+    "TOrmag1", "TOrmag2", "TOrmag3", "TOrmag4", "TOrmag5", "TOrtav", "", "TOrcas1", "TOrcas2", "TOrcas3", "TOrhal1", "TOrhal2", "TOrhal3", "TOrhal4", "TOrmrk1", "TOrmrk2", "TOraid", "TOrgar1a", "TOrdwf1h", "TOrdwf2h", "", "TOrgar2a", "TOrdwft", "", "TOrtre1h", "TOrtre2h", "TOrholy", "", "", "", "TOrcen1a", "TOrdwf1", "TOrelf1", "TOrpeg1a", "TOrtre1", "TOruni1", "TOrdr1aa", "TOrcen2a", "TOrdwf2", "TOrelf2", "TOrpeg2a", "TOrtre2", "TOruni2", "TOrdr2aa", "",
+    "TOTGld1", "TOTGld2", "TOTGld3", "TOTGld4", "TOTGld5", "TOTTav", "", "TOTCas1", "TOtcas2", "TOTCas3", "TOTHal1", "TOTHal2", "TOTHal3", "TOTHal4", "TOTMrk", "TOTMrkS", "TOTBlkA", "TOTMrkA", "TOTGar1H", "TOTGar2H", "", "TOTCasW", "TOTGldL", "TOTGldW", "", "", "TOTHolyA", "", "", "", "TOTGrm1A", "TOTGar1", "TOTGol1A", "TOTMag1", "TOTGen1", "TOTNag1", "TOTTit1", "TOTGrm2A", "TOTGar2", "TOTGol2A", "TOTMag2", "TOTGen2", "TOTNag2", "TOTTit2", "",
+    "TOimag1a", "TOimag2a", "TOimag3a", "TOimag4a", "TOimag5a", "TOitav", "", "TOicas1a", "TOicas2a", "TOicas3a", "TOihal1", "TOihal2", "TOihal3", "TOihal4", "TOimar1", "TOimar2", "TOiblka", "", "TOimp1ha", "TOimp2ha", "", "TOicab1a", "TOicasga", "TOipain", "TOihnd1h", "TOihnd2h", "TOiholy", "", "", "", "TOimp1a", "TOigog1a", "TOihnd1", "TOidmn1", "TOipit1", "TOiefr1", "TOidvl1", "TOimp2a", "TOigog2a", "TOihnd2", "TOidmn2", "TOipit2", "TOiefr2", "TOidvl2", "",
+    "TONMag1", "TONMag2", "TONMag3", "TONMag4", "TONMag5", "TONTav", "TONshpNa", "TONCas1", "TONCas2", "TONCas3", "TONHal1", "TONHal2", "TONHal3", "TONHal4", "TONMrk1", "TOnmrk2", "TONsmita", "TOnshrda", "TONSke1H", "TONSke2H", "TONshpBa", "TOnnecra", "TONSkelT", "", "", "", "TONholya", "", "", "", "TONSkel1", "TONzomb1", "TONwigh1", "TONVam1", "TONLich1", "TONBkn1", "TONBon1", "TONSkel2", "TONzomb2", "TONwigh2", "TONVam2", "TONLich2", "TOnbkn2", "TONBon2", "",
+    "TODmag1", "TODmag2", "TODmag3", "TODmag4", "TODmag5", "TODtav", "", "TODcas1", "TODcas2", "TODcas3", "TODhall1", "TODhall2", "TODhall3", "TODhall4", "TODmark", "TODsilo", "TODsmith", "TODart", "TODtr1Ha", "TODtr2Ha", "", "TODvor1a", "TODportA", "TODacad", "", "", "TODHoly", "", "", "", "TODtrg1a", "TODhar1", "TODbeh1a", "TODMed1", "TODmin1", "TODman1", "TODdra1a", "TODtrg2a", "TODhar2", "TODbeh2a", "TODMed2", "TODmin2", "TODman2", "TODdra2a", "",
+    "TOSMag1", "TOSMag2", "TOSMag3", "", "", "TOSTav", "", "TOSCa1", "TOSCa2", "TOSCa3", "TOSHal1a", "TOSHal2a", "TOSHal3a", "TOSHal4a", "TOSMrk1", "TOSMrk2", "TOSBlk1", "TOSCa1Ea", "TOSGob1H", "TOSGob2H", "", "TOSMrk1C", "TOSBlk2", "TOSVah", "", "", "TOSHolya", "", "", "", "TOSGob1", "TOSWol1", "TOSOrc1", "TOSOgr1", "TOSRoc1", "TOSCyc1", "TOSBeh1a", "TOSGob2", "TOSWol2", "TOSOrc2", "TOSOgr2", "TOSRoc2", "TOSCyc2a", "TOSBeh2a", "",
+    "TOFMag1A", "TOFMag2A", "TOFMag3A", "", "", "TOFTavA", "TOFDck2", "TOFCas1", "TOFCas2", "TOFCas3", "TOFHal1", "TOFHal2", "TOFHal3", "TOFHal4", "TOFMrkAA", "TOFMrk2A", "TOFAidA", "TOFCage", "TOFGnl1H", "TOFGnl2H", "TOFDck1", "TOFCasD", "TOFCasA", "", "", "", "TOFHlyAA", "", "", "", "TOFGnl1", "TOFLiz1", "TOFFly1a", "TOFBas1", "TOFGor1", "TOFWyv1", "TOFHyd1A", "TOFGnl2", "TOFLiz2", "TOFFly2a", "TOFBas2", "TOFGor2", "TOFWyv2", "TOFHyd2A", "",
+    "TOElmage", "TOElmag2", "TOElmag3", "TOElmag4", "TOElmag5", "TOElTvrn", "ToElDock", "TOElCstl", "TOElcas2", "TOElcas3", "TOElhall", "TOElhal2", "TOElhal3", "ToElhal4", "ToElmark", "ToElsilo", "ToElBlak", "ToElSpec", "ToElHrd1", "ToElHrd2", "ToElBoat", "ToElExt6", "", "", "", "", "ToElHoly", "", "", "", "ToElDw_0", "ToElDw_1", "ToElDw_2", "ToElDw_3", "ToElDw_4", "ToElDw_5", "ToElDw_6", "ToElUp_0", "ToElUp_1", "ToElUp_2", "ToElUp_3", "ToElUp_4", "ToElUp_5", "ToElUp_6", "",
+    "TOCV00", "TOCV01", "TOCV02", "TOCV03", "", "TOCV05", "TOCV06", "TOCV07", "TOCV08", "TOCV09", "TOCV10", "TOCV11", "TOCV12", "TOCV13", "TOCV14", "TOCV15", "TOCV16", "", "TOCV18", "TOCV19", "TOCV20", "", "TOCV22", "TOCV23", "TOCV24", "TOCV25", "TOCV26", "", "", "", "TOCV30", "TOCV31", "TOCV32", "TOCV33", "TOCV34", "TOCV35", "TOCV36", "TOCV37", "TOCV38", "TOCV39", "TOCV40", "TOCV41", "TOCV42", "TOCV43", "TOCV44"
+};
+DATA(0x0068a9bc) short g_townObjectPositions[HOMM3_TOWN_COUNT * HOMM3_BUILDING_COUNT][3] = {
     { 0, 707, 166 },
     { 0, 707, 135 },
     { 11, 704, 107 },
@@ -91,6 +103,7 @@ DATA(0x0068a9bc) short g_townObjectPositions[396][3] = {
     { 0, 563, 173 },
     { 10, 160, 190 },
     { 0, 303, 0 },
+    { 0, 0, 0 },
     { 0, 454, 200 },
     { 0, 438, 178 },
     { 0, 418, 153 },
@@ -135,6 +148,7 @@ DATA(0x0068a9bc) short g_townObjectPositions[396][3] = {
     { 0, 63, 146 },
     { 0, 362, 90 },
     { 39, 502, 5 },
+    { 0, 0, 0 },
     { 0, 597, 82 },
     { 0, 593, 65 },
     { 0, 593, 48 },
@@ -179,6 +193,7 @@ DATA(0x0068a9bc) short g_townObjectPositions[396][3] = {
     { 0, 511, 8 },
     { 0, 681, 157 },
     { 0, 75, 91 },
+    { 0, 0, 0 },
     { 10, 667, 127 },
     { 10, 667, 101 },
     { 10, 667, 83 },
@@ -223,6 +238,7 @@ DATA(0x0068a9bc) short g_townObjectPositions[396][3] = {
     { 0, 359, 244 },
     { 0, 220, 282 },
     { 0, 420, 105 },
+    { 0, 0, 0 },
     { 0, 341, 116 },
     { 0, 341, 97 },
     { 0, 341, 78 },
@@ -267,6 +283,7 @@ DATA(0x0068a9bc) short g_townObjectPositions[396][3] = {
     { 0, 222, 171 },
     { 0, 0, 30 },
     { 0, 662, 23 },
+    { 0, 0, 0 },
     { 0, 164, 119 },
     { 0, 164, 97 },
     { 0, 164, 77 },
@@ -311,6 +328,7 @@ DATA(0x0068a9bc) short g_townObjectPositions[396][3] = {
     { 0, 519, 172 },
     { 0, 270, 253 },
     { 10, 550, 0 },
+    { 0, 0, 0 },
     { 0, 473, 67 },
     { 0, 474, 37 },
     { 0, 473, 1 },
@@ -355,6 +373,7 @@ DATA(0x0068a9bc) short g_townObjectPositions[396][3] = {
     { 0, 129, 15 },
     { 10, 616, 93 },
     { 10, 604, 0 },
+    { 0, 0, 0 },
     { 0, 0, 200 },
     { 0, 0, 177 },
     { 21, 0, 135 },
@@ -399,6 +418,7 @@ DATA(0x0068a9bc) short g_townObjectPositions[396][3] = {
     { 0, 15, 69 },
     { 0, 0, 4 },
     { 20, 587, 263 },
+    { 0, 0, 0 },
     { 0, 206, 58 },
     { 0, 206, 58 },
     { 0, 206, 58 },
@@ -442,18 +462,64 @@ DATA(0x0068a9bc) short g_townObjectPositions[396][3] = {
     { 0, 108, 131 },
     { 0, 264, 168 },
     { 0, 394, 283 },
-    { 10, 43, 0 }
+    { 10, 43, 0 },
+    { 0, 0, 0 },
+    { 0, 337, 110 },
+    { 0, 319, 85 },
+    { 0, 300, 61 },
+    { 0, 281, 39 },
+    { 0, 0, 0 },
+    { 0, 12, 247 },
+    { 0, 436, 164 },
+    { 0, 438, 109 },
+    { 0, 438, 109 },
+    { 0, 438, 109 },
+    { 0, 0, 176 },
+    { 0, 0, 176 },
+    { 0, 0, 148 },
+    { 0, 0, 85 },
+    { 0, 157, 289 },
+    { 0, 320, 346 },
+    { 0, 608, 274 },
+    { 0, 0, 0 },
+    { 0, 84, 65 },
+    { 0, 84, 33 },
+    { 0, 436, 164 },
+    { 0, 0, 0 },
+    { 0, 0, 87 },
+    { 0, 236, 147 },
+    { 0, 674, 43 },
+    { 0, 674, 12 },
+    { 0, 0, 0 },
+    { 0, 0, 0 },
+    { 0, 0, 0 },
+    { 0, 0, 0 },
+    { 0, 282, 106 },
+    { 0, 84, 65 },
+    { 0, 588, 191 },
+    { 0, 696, 43 },
+    { 0, 370, 38 },
+    { 0, 663, 149 },
+    { 0, 303, 248 },
+    { 0, 254, 42 },
+    { 0, 84, 33 },
+    { 0, 588, 64 },
+    { 0, 696, 12 },
+    { 0, 370, 0 },
+    { 0, 663, 98 },
+    { 0, 291, 236 },
+    { 0, 588, 64 }
 };
 
 // Retail initial data; dimensions follow the typed table consumers.
-DATA(0x00642eb4) const signed char g_townBuildOrder[9][44] = {
+DATA(0x00642eb4) const signed char g_townBuildOrder[HOMM3_TOWN_COUNT][HOMM3_BUILDING_COUNT] = {
     {
     26, 23, 7, 8, 9, 0, 1, 2,
     3, 14, 15, 36, 43, 30, 37, 31,
     38, 32, 39, 18, 19, 33, 40, 21,
     35, 42, 6, 20, 34, 41, 17, 10,
     11, 12, 13, 5, 16, 22, -1, -1,
-    -1, -1, -1, -1
+    -1, -1, -1, -1, -1
 },
     {
     7, 8, 9, 36, 43, 26, 16, 32,
@@ -461,7 +527,7 @@ DATA(0x00642eb4) const signed char g_townBuildOrder[9][44] = {
     19, 22, 34, 41, 24, 25, 0, 1,
     2, 3, 4, 10, 11, 12, 13, 28,
     5, 30, 37, 23, 27, 29, 14, 15,
-    17, 21, -1, -1
+    17, 21, -1, -1, -1
 },
     {
     7, 8, 9, 26, 30, 37, 31, 38,
@@ -469,7 +535,7 @@ DATA(0x00642eb4) const signed char g_townBuildOrder[9][44] = {
     41, 0, 1, 2, 3, 4, 22, 33,
     40, 23, 35, 42, 10, 11, 12, 13,
     16, 5, 14, 15, 17, -1, -1, -1,
-    -1, -1, -1, -1
+    -1, -1, -1, -1, -1
 },
     {
     26, 10, 11, 12, 13, 32, 24, 39,
@@ -477,7 +543,7 @@ DATA(0x00642eb4) const signed char g_townBuildOrder[9][44] = {
     23, 21, 7, 8, 9, 22, 33, 40,
     34, 41, 31, 38, 35, 42, 5, 14,
     15, 30, 18, 37, 19, 16, -1, -1,
-    -1, -1, -1, -1
+    -1, -1, -1, -1, -1
 },
     {
     35, 42, 21, 0, 1, 2, 3, 4,
@@ -485,7 +551,7 @@ DATA(0x00642eb4) const signed char g_townBuildOrder[9][44] = {
     12, 13, 26, 15, 14, 5, 33, 40,
     34, 41, 31, 38, 30, 18, 37, 19,
     22, 6, 20, 29, 28, 16, 27, 23,
-    32, 39, -1, -1
+    32, 39, -1, -1, -1
 },
     {
     35, 42, 33, 40, 41, 7, 8, 9,
@@ -493,7 +559,7 @@ DATA(0x00642eb4) const signed char g_townBuildOrder[9][44] = {
     2, 3, 4, 21, 10, 11, 12, 13,
     36, 43, 32, 39, 30, 18, 37, 19,
     31, 38, 22, 23, 26, -1, -1, -1,
-    -1, -1, -1, -1
+    -1, -1, -1, -1, -1
 },
     {
     34, 41, 36, 43, 35, 42, 27, 23,
@@ -501,7 +567,7 @@ DATA(0x00642eb4) const signed char g_townBuildOrder[9][44] = {
     11, 12, 13, 33, 40, 30, 37, 18,
     19, 32, 39, 31, 38, 14, 15, 21,
     5, 16, 22, 26, -1, -1, -1, -1,
-    -1, -1, -1, -1
+    -1, -1, -1, -1, -1
 },
     {
     23, 22, 7, 8, 9, 21, 16, 15,
@@ -509,7 +575,7 @@ DATA(0x00642eb4) const signed char g_townBuildOrder[9][44] = {
     1, 2, 32, 39, 35, 42, 17, 31,
     38, 10, 11, 12, 13, 33, 40, 5,
     26, 36, 43, 6, 20, -1, -1, -1,
-    -1, -1, -1, -1
+    -1, -1, -1, -1, -1
 },
     {
     22, 7, 8, 9, 36, 43, 31, 38,
@@ -517,18 +583,19 @@ DATA(0x00642eb4) const signed char g_townBuildOrder[9][44] = {
     33, 40, 16, 5, 15, 21, 0, 1,
     2, 3, 4, 32, 39, 14, 17, 10,
     11, 12, 13, 29, 35, 42, 30, 37,
-    18, 19, -1, -1
-}
+    18, 19, -1, -1, -1
+},
+    {23, 26, 16, 22, 18, 19, 24, 25, 31, 33, 34, 38, 40, 41, 10, 11, 12, 13, 6, 20, 0, 1, 2, 3, 35, 42, 7, 8, 9, 5, 30, 37, 14, 32, 36, 39, 43, 44, 15, -1, -1, -1, -1, -1, -1}
 };
-DATA(0x00643040) const char* const g_townBackgroundPrefix[9] = { "TBCs", "TBRm", "TBTw", "TBIn", "TBNc", "TBDn", "TBSt", "TBFr", "TBEl" };
-DATA(0x00643064) const char* const g_townBuildingSprites[9][44] = {
+DATA(0x00643040) const char* const g_townBackgroundPrefix[HOMM3_TOWN_COUNT] = { "TBCs", "TBRm", "TBTw", "TBIn", "TBNc", "TBDn", "TBSt", "TBFr", "TBEl" , "TBCV" };
+DATA(0x00643064) const char* const g_townBuildingSprites[HOMM3_TOWN_COUNT][HOMM3_BUILDING_COUNT] = {
     {
     "TBCsmage", "TBCsmag2", "TBCsmag3", "TBCsmag4", "TBCsmag5", "TBCstvrn", "TBCsdock", "TBCscstl",
     "TBCscas2", "TBCscas3", "TBCshall", "TBCshal2", "TBCshal3", "TBCshal4", "TBCsmark", "TBCssilo",
     "TBCsblak", "TBCsspec", "TBCshrd1", "TBCshrd2", "TBCsboat", "TBCsext0", "TBCsext1", "TBCsext2",
     "TBCshrd3", "TBCshrd4", "TBCsholy", "TBCsext3", "TBCsext4", "TBCsext5", "TBCsdw_0", "TBCsdw_1",
     "TBCsdw_2", "TBCsdw_3", "TBCsdw_4", "TBCsdw_5", "TBCsdw_6", "TBCsup_0", "TBCsup_1", "TBCsup_2",
-    "TBCsup_3", "TBCsup_4", "TBCsup_5", "TBCsup_6"
+    "TBCsup_3", "TBCsup_4", "TBCsup_5", "TBCsup_6", ""
 },
     {
     "TBRmmage", "TBRmmag2", "TBRmmag3", "TBRmmag4", "TBRmmag5", "TBRmtvrn", "TBRmdock", "TBRmcstl",
@@ -536,7 +603,7 @@ DATA(0x00643064) const char* const g_townBuildingSprites[9][44] = {
     "TBRmblak", "TBRmspec", "TBRmhrd1", "TBRmhrd2", "TBRmboat", "TBRmext0", "TBRmext1", "TBRmext2",
     "TBRmhrd3", "TBRmhrd4", "TBRmholy", "TBRmext3", "TBRmext4", "TBRmext5", "TBRmdw_0", "TBRmdw_1",
     "TBRmdw_2", "TBRmdw_3", "TBRmdw_4", "TBRmdw_5", "TBRmdw_6", "TBRmup_0", "TBRmup_1", "TBRmup_2",
-    "TBRmup_3", "TBRmup_4", "TBRmup_5", "TBRmup_6"
+    "TBRmup_3", "TBRmup_4", "TBRmup_5", "TBRmup_6", ""
 },
     {
     "TBTwmage", "TBTwmag2", "TBTwmag3", "TBTwmag4", "TBTwmag5", "TBTwtvrn", "TBTwdock", "TBTwcstl",
@@ -544,7 +611,7 @@ DATA(0x00643064) const char* const g_townBuildingSprites[9][44] = {
     "TBTwblak", "TBTwspec", "TBTwhrd1", "TBTwhrd2", "TBTwboat", "TBTwext0", "TBTwext1", "TBTwext2",
     "TBTwhrd3", "TBTwhrd4", "TBTwholy", "TBTwext3", "TBTwext4", "TBTwext5", "TBTwdw_0", "TBTwdw_1",
     "TBTwdw_2", "TBTwdw_3", "TBTwdw_4", "TBTwdw_5", "TBTwdw_6", "TBTwup_0", "TBTwup_1", "TBTwup_2",
-    "TBTwup_3", "TBTwup_4", "TBTwup_5", "TBTwup_6"
+    "TBTwup_3", "TBTwup_4", "TBTwup_5", "TBTwup_6", ""
 },
     {
     "TBInmage", "TBInmag2", "TBInmag3", "TBInmag4", "TBInmag5", "TBIntvrn", "TBIndock", "TBIncstl",
@@ -552,7 +619,7 @@ DATA(0x00643064) const char* const g_townBuildingSprites[9][44] = {
     "TBInblak", "TBInspec", "TBInhrd1", "TBInhrd2", "TBInboat", "TBInext0", "TBInext1", "TBInext2",
     "TBInhrd3", "TBInhrd4", "TBInholy", "TBInext3", "TBInext4", "TBInext5", "TBIndw_0", "TBIndw_1",
     "TBIndw_2", "TBIndw_3", "TBIndw_4", "TBIndw_5", "TBIndw_6", "TBInup_0", "TBInup_1", "TBInup_2",
-    "TBInup_3", "TBInup_4", "TBInup_5", "TBInup_6"
+    "TBInup_3", "TBInup_4", "TBInup_5", "TBInup_6", ""
 },
     {
     "TBNcmage", "TBNcmag2", "TBNcmag3", "TBNcmag4", "TBNcmag5", "TBNctvrn", "TBNcdock", "TBNccstl",
@@ -560,7 +627,7 @@ DATA(0x00643064) const char* const g_townBuildingSprites[9][44] = {
     "TBNcblak", "TBNcspec", "TBNchrd1", "TBNchrd2", "TBNcboat", "TBNcext0", "TBNcext1", "TBNcext2",
     "TBNchrd3", "TBNchrd4", "TBNcholy", "TBNcext3", "TBNcext4", "TBNcext5", "TBNcdw_0", "TBNcdw_1",
     "TBNcdw_2", "TBNcdw_3", "TBNcdw_4", "TBNcdw_5", "TBNcdw_6", "TBNcup_0", "TBNcup_1", "TBNcup_2",
-    "TBNcup_3", "TBNcup_4", "TBNcup_5", "TBNcup_6"
+    "TBNcup_3", "TBNcup_4", "TBNcup_5", "TBNcup_6", ""
 },
     {
     "TBDnmage", "TBDnmag2", "TBDnmag3", "TBDnmag4", "TBDnmag5", "TBDntvrn", "TBDndock", "TBDncstl",
@@ -568,7 +635,7 @@ DATA(0x00643064) const char* const g_townBuildingSprites[9][44] = {
     "TBDnblak", "TBDnspec", "TBDnhrd1", "TBDnhrd2", "TBDnboat", "TBDnext0", "TBDnext1", "TBDnext2",
     "TBDnhrd3", "TBDnhrd4", "TBDnholy", "TBDnext3", "TBDnext4", "TBDnext5", "TBDndw_0", "TBDndw_1",
     "TBDndw_2", "TBDndw_3", "TBDndw_4", "TBDndw_5", "TBDndw_6", "TBDnup_0", "TBDnup_1", "TBDnup_2",
-    "TBDnup_3", "TBDnup_4", "TBDnup_5", "TBDnup_6"
+    "TBDnup_3", "TBDnup_4", "TBDnup_5", "TBDnup_6", ""
 },
     {
     "TBStmage", "TBStmag2", "TBStmag3", "TBStmag4", "TBStmag5", "TBSttvrn", "TBStdock", "TBStcstl",
@@ -576,7 +643,7 @@ DATA(0x00643064) const char* const g_townBuildingSprites[9][44] = {
     "TBStblak", "TBStspec", "TBSthrd1", "TBSthrd2", "TBStboat", "TBStext0", "TBStext1", "TBStext2",
     "TBSthrd3", "TBSthrd4", "TBStholy", "TBStext3", "TBStext4", "TBStext5", "TBStdw_0", "TBStdw_1",
     "TBStdw_2", "TBStdw_3", "TBStdw_4", "TBStdw_5", "TBStdw_6", "TBStup_0", "TBStup_1", "TBStup_2",
-    "TBStup_3", "TBStup_4", "TBStup_5", "TBStup_6"
+    "TBStup_3", "TBStup_4", "TBStup_5", "TBStup_6", ""
 },
     {
     "TBFrmage", "TBFrmag2", "TBFrmag3", "TBFrmag4", "TBFrmag5", "TBFrtvrn", "TBFrdock", "TBFrcstl",
@@ -584,7 +651,7 @@ DATA(0x00643064) const char* const g_townBuildingSprites[9][44] = {
     "TBFrblak", "TBFrspec", "TBFrhrd1", "TBFrhrd2", "TBFrboat", "TBFrext0", "TBFrext1", "TBFrext2",
     "TBFrhrd3", "TBFrhrd4", "TBFrholy", "TBFrext3", "TBFrext4", "TBFrext5", "TBFrdw_0", "TBFrdw_1",
     "TBFrdw_3", "TBFrdw_4", "TBFrdw_2", "TBFrdw_5", "TBFrdw_6", "TBFrup_0", "TBFrup_1", "TBFrup_3",
-    "TBFrup_4", "TBFrup_2", "TBFrup_5", "TBFrup_6"
+    "TBFrup_4", "TBFrup_2", "TBFrup_5", "TBFrup_6", ""
 },
     {
     "TbElmage", "TbElmag2", "TbElmag3", "TbElmag4", "TbElmag5", "TbElTvrn", "TbElDock", "TbElCstl",
@@ -592,10 +659,11 @@ DATA(0x00643064) const char* const g_townBuildingSprites[9][44] = {
     "TbElBlak", "TbElSpec", "TbElHrd1", "TbElHrd2", "TbElBoat", "TbElExt6", "TbElExt5", "TbElExt1",
     "", "", "TbElHoly", "TbElExt2", "TbElExt3", "TbElExt4", "TbElDw_0", "TbElDw_1",
     "TbElDw_2", "TbElDw_3", "TbElDw_4", "TbElDw_5", "TbElDw_6", "TbElUp_0", "TbElUp_1", "TbElUp_2",
-    "TbElUp_3", "TbElUp_4", "TbElUp_5", "TbElUp_6"
-}
+    "TbElUp_3", "TbElUp_4", "TbElUp_5", "TbElUp_6", ""
+},
+    {"TBCVGMG1", "TBCVGMG2", "TBCVGMG3", "TBCVGMG4", "", "TBCVTAVE", "TBCVDOCK", "TBCVCSTL", "TBCVCAS2", "TBCVCAS3", "TBCVHALL", "TBCVHAL2", "TBCVHAL3", "TBCVHAL4", "TBCVMARK", "TBCVSMRK", "TBCVSMTH", "", "TBCVSA1P", "TBCVSA2P", "TBCVBOAT", "", "TBCVTHGD", "TBCVGROT", "TBCVAS1P", "TBCVAS2P", "TBCVGRAL", "", "", "", "TBCVNMP1", "TBCVSAY1", "TBCVPIR1", "TBCVASS1", "TBCVSOR1", "TBCVNIX1", "TBCVWHR1", "TBCVNMP2", "TBCVSAY2", "TBCVPIR2", "TBCVASS2", "TBCVSOR2", "TBCVNIX2", "TBCVWHR2", "TBCVPGR3"}
 };
-DATA(0x006436bc) const char* const g_townMusic[9] = { "CstleTown", "Rampart", "TowerTown", "InfernoTown", "necroTown", "dungeon", "StrongHold", "FortressTown", "ElemTown" };
+DATA(0x006436bc) const char* const g_townMusic[HOMM3_TOWN_COUNT] = { "CstleTown", "Rampart", "TowerTown", "InfernoTown", "necroTown", "dungeon", "StrongHold", "FortressTown", "ElemTown" , "CoveTown" };
 
 // Retail scalar state; startup initial values come from the pinned image.
 // Original DC name: castleOpen; DoTavern brackets the modal window lifetime.
@@ -619,10 +687,11 @@ void sortStats(long* value, signed char* index);
 
 // Original: townManager::TownNativeTerrains. Complete's full table is
 // {-1,2,2,3,7,0,6,5,4,2}; GetNativeTerrain biases town type -1 by one.
-DATA(0x00643694) const TTerrainType townManager::s_townNativeTerrains[10] = {
+DATA(0x00643694) const TTerrainType townManager::s_townNativeTerrains[HOMM3_TOWN_COUNT + 1] = {
     TERRAIN_NONE, eTerrainGrass, eTerrainGrass, eTerrainSnow, eTerrainLava,
     eTerrainDirt, eTerrainSubterranean, eTerrainRough, eTerrainSwamp,
-    eTerrainGrass
+    eTerrainGrass,
+    eTerrainSwamp
 };
 
 // Shared state of the tavern chooser. DoTavern selects a recruit into the
@@ -649,11 +718,11 @@ DATA(0x006436e0) static const int g_resourceIconPos[8][2] = {
 // publishes the shared name townBuildingSpriteNames; retail's two local
 // readers plus type_dialog_icon::set in kb.obj prove townmgr.obj ownership
 // and cross-TU linkage.
-DATA(0x0067f578) const char* g_townBuildingSpriteNames[9] = {
+DATA(0x0067f578) const char* g_townBuildingSpriteNames[HOMM3_TOWN_COUNT] = {
     "HALLCSTL.def", "HALLRAMP.def", "HALLtowr.def", "HALLINFR.def",
     "HALLNECR.def", "HALLDUNG.def", "HALLSTRN.def", "HALLFORT.def",
     "HALLelem.def"
-};
+, "hallcove.def" };
 
 // The fort page's creature-slot background per town type, with a
 // NEUTRAL row in front: TCastleWindow indexes it with `type + 1`, and
@@ -661,30 +730,30 @@ DATA(0x0067f578) const char* g_townBuildingSpriteNames[9] = {
 // which is what proves the extra leading element rather than a
 // nine-long table read one short. Ten pointers close exactly on
 // gMageGuildDefNames below. Both references are this compiland's.
-DATA(0x0068a2f4) static const char* g_townCastleDefNames[10] = {
+DATA(0x0068a2f4) static const char* g_townCastleDefNames[HOMM3_TOWN_COUNT + 1] = {
     "TPCasNeu.pcx", "TPCasCas.pcx", "TPCasRam.pcx", "TPCasTow.pcx",
     "TPCasInf.pcx", "TPCasNec.pcx", "TPCasDun.pcx", "TPCasStr.pcx",
     "TPCasFor.pcx", "TPCasEle.pcx"
-};
+, "TPCasCv.pcx" };
 
 // The mage guild background for each town type, indexed by town::type.
 // The table's ONE image-wide reference is the load inside
 // TMageGuildWindow's constructor, so this compiland owns it.
-DATA(0x0068a31c) static const char* g_mageGuildDefNames[9] = {
+DATA(0x0068a31c) static const char* g_mageGuildDefNames[HOMM3_TOWN_COUNT] = {
     "TPMageCs.pcx", "TPMageRm.pcx", "TPMageTw.pcx", "TPMageIn.pcx",
     "TPMageNc.pcx", "TPMageDn.pcx", "TPMageSt.pcx", "TPMageFr.pcx",
     "TPMageEl.pcx"
-};
+, "TPMageCv.pcx" };
 
 // The nine boat pictures the shipyard dialog shows, indexed by town
 // type; the five towns with no boat of their own share the empty
 // rollover string. The table's ONE image-wide reference is the load
 // inside TShipWindow's constructor, so this compiland owns it.
-DATA(0x0068a340) static const char* g_boatDefNames[9] = {
+DATA(0x0068a340) static const char* g_boatDefNames[HOMM3_TOWN_COUNT] = {
     "AB02_.def",       "", "",
     "", "AB01_.def",       "",
     "", "AB03_.def",       "AB01_.def"
-};
+, "AB02_" };
 
 // The war machine each town's blacksmith sells, as a creature type
 // (146 Ballista, 147 First Aid Tent, 148 Ammo Cart), and the artifact
@@ -699,16 +768,16 @@ DATA(0x0068a340) static const char* g_boatDefNames[9] = {
 // SetRightClickText 0x5d1aa0 copies both dwords of a row into an 8-byte
 // local and calls type_artifact::get_description on it, which is the
 // artifact record's own member. The pair spelling was a placeholder.
-DATA(0x00642e90) static const int g_blacksmithMachines[9] = {
-    146, 147, 148, 148, 147, 146, 148, 147, 146
+DATA(0x00642e90) static const int g_blacksmithMachines[HOMM3_TOWN_COUNT] = {
+    146, 147, 148, 148, 147, 146, 148, 147, 146, CREATURE_CANNON
 };
 // Original: blacksmithArtifactType (const type_artifact[] in Dreamcast).
 // Retail CRT initializer 0x5c2e20 constructs these nine records, in town
 // order, with the ordinary artifact constructor's -1 extra field.
-DATA(0x006aa9f8) const type_artifact g_blacksmithArtifacts[9] = {
+DATA(0x006aa9f8) const type_artifact g_blacksmithArtifacts[HOMM3_TOWN_COUNT] = {
     ARTIFACT_BALLISTA, ARTIFACT_FIRST_AID_TENT, ARTIFACT_AMMO_CART,
     ARTIFACT_AMMO_CART, ARTIFACT_FIRST_AID_TENT, ARTIFACT_BALLISTA,
-    ARTIFACT_AMMO_CART, ARTIFACT_FIRST_AID_TENT, ARTIFACT_BALLISTA
+    ARTIFACT_AMMO_CART, ARTIFACT_FIRST_AID_TENT, ARTIFACT_BALLISTA, ARTIFACT_CANNON
 };
 
 void setWinText(heroWindow* win, int which);
@@ -856,7 +925,8 @@ DATA(0x0068a364) unsigned char g_hordeDwellingSlot[TOWN_TYPE_COUNT][2] = {
     { 0, 7 },
     { 0, 7 },
     { 0, 7 },
-    { 0, 7 }
+    { 0, 7 },
+    { 1, 8 }
 };
 // SetupThievesGuild's two name tables, on the rollover pool's
 // standing (readers only, no writer in the admitted surface):
@@ -872,7 +942,8 @@ DATA(0x0068a378) unsigned char g_horde2DwellingSlot[TOWN_TYPE_COUNT][2] = {
     { 0, 0 },
     { 0, 0 },
     { 0, 0 },
-    { 0, 0 }
+    { 0, 0 },
+    { 3, 10 }
 };
 DATA(0x0068a2d4) const char* g_playerFlagSprites[8] = { "PRRed.pcx", "PRBlue.pcx", "PRTan.pcx", "PRGreen.pcx", "PROrange.pcx", "PRPurple.pcx", "PRTeal.pcx", "PRRose.pcx" };
 // adventuremapwindow.obj owns this eight-byte rollover/right-click record;
@@ -1567,8 +1638,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
             if (currTown->hasBuilding(DWELLING_0_UPG_ID + i, true))
                 slot = i + TOWN_DWELLING_COUNT;
 
-            creature = g_townDwellingCreatures[
-                currTown->m_type * (2 * TOWN_DWELLING_COUNT) + slot];
+            creature = currTown->getDwellingCreature(slot);
             long growth = g_creatureTypeTraits[creature].m_growthRate;
             offsetToMon = currTown->getGrowthRate(slot) - growth;
             const char* name = getArmyName(creature, 1);
@@ -2086,10 +2156,7 @@ void townManager::setupTown(unsigned char fade)
         else
             m_currentDwellingIdOff[slot] = slot;
         m_monPix[slot] = ResourceManager::getSprite(
-            g_creatureTypeTraits[g_townDwellingCreatures
-                                     [m_townToView->m_type * 2
-                                          * TOWN_DWELLING_COUNT
-                                      + m_currentDwellingIdOff[slot]]]
+            g_creatureTypeTraits[m_townToView->getDwellingCreature(m_currentDwellingIdOff[slot])]
                 .m_spriteName);
     }
 
@@ -2301,7 +2368,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
     if (m_srcStrip == m_destStrip && m_srcIndex == m_destIndex) {
         int id = m_srcStrip->m_group->m_armies[m_srcIndex];
         const char* name;
-        if (id >= 0 && id <= 150)
+        if (id >= 0 && id < HOMM3_CREATURE_COUNT)
             name = g_creatureTypeTraits[id].m_pluralName;
         else
             name = "";
@@ -2321,7 +2388,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
     if (anchorId == selId && selOwner == m_destStrip->m_owner) {
         if (splitEnabled) {
             const char* name;
-            if (selId >= 0 && selId <= 150)
+            if (selId >= 0 && selId < HOMM3_CREATURE_COUNT)
                 name = g_creatureTypeTraits[selId].m_name;
             else
                 name = "";
@@ -2334,7 +2401,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
             return;
         }
         const char* name;
-        if (selId >= 0 && selId <= 150)
+        if (selId >= 0 && selId < HOMM3_CREATURE_COUNT)
             name = g_creatureTypeTraits[selId].m_name;
         else
             name = "";
@@ -2346,7 +2413,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
     if (splitEnabled) {
         if (anchorId == -1) {
             const char* name;
-            if (selId >= 0 && selId <= 150)
+            if (selId >= 0 && selId < HOMM3_CREATURE_COUNT)
                 name = g_creatureTypeTraits[selId].m_name;
             else
                 name = "";
@@ -2361,7 +2428,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
                 return;
             }
             const char* name;
-            if (selId >= 0 && selId <= 150)
+            if (selId >= 0 && selId < HOMM3_CREATURE_COUNT)
                 name = g_creatureTypeTraits[selId].m_pluralName;
             else
                 name = "";
@@ -2376,12 +2443,12 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
         return;
     }
     const char* nameAnchor;
-    if (anchorId >= 0 && anchorId <= 150)
+    if (anchorId >= 0 && anchorId < HOMM3_CREATURE_COUNT)
         nameAnchor = g_creatureTypeTraits[anchorId].m_pluralName;
     else
         nameAnchor = "";
     const char* nameSel;
-    if (selId >= 0 && selId <= 150)
+    if (selId >= 0 && selId < HOMM3_CREATURE_COUNT)
         nameSel = g_creatureTypeTraits[selId].m_pluralName;
     else
         nameSel = "";
@@ -2415,10 +2482,10 @@ MAC_ADDRESS(0x1bfbd0, 0x9e0)  // order-map + anchor-callee(SetHeroCommand 0x5c72
 void townManager::setCommandAndText(message* msg)
 {
     int code = msg->m_codeY;
-    if (code >= 0 && code <= DWELLING_6_UPG_ID
+    if (code >= 0 && code < MAX_BUILDING_TYPE
         && (code = static_cast<TTownScreenWindow*>(m_townWindow)
                        ->m_zBuffer[msg->m_mouseY * 800 + msg->m_mouseX] - 1) >= 0
-        && code <= DWELLING_6_UPG_ID) {
+        && code < MAX_BUILDING_TYPE) {
         g_outlinedTownObjectId = code;
         playImmEffect(DATA_COMPGEN(0x0068c210, guiPopEffectName, "GuiPop"), 1);
     } else {
@@ -2575,9 +2642,10 @@ void townManager::setCommandAndText(message* msg)
     case DWELLING_3_UPG_ID:
     case DWELLING_4_UPG_ID:
     case DWELLING_5_UPG_ID:
+    case GUNPOWDER_WAREHOUSE_ID:
     case DWELLING_6_UPG_ID: {
-        TCreatureType creature = g_townDwellingCreatures[
-            m_townToView->m_type * TOWN_DWELLING_SLOTS + code - DWELLING_0_ID];
+        int slot = code == GUNPOWDER_WAREHOUSE_ID ? 9 : code - DWELLING_0_ID;
+        TCreatureType creature = m_townToView->getDwellingCreature(slot);
         sprintf(m_statusText, g_townCommand[21], getArmyName(creature, 2));
         break;
     }
@@ -3049,7 +3117,7 @@ THallWindow::THallWindow(int which)
     ResourceManager::delSprFromCache();  // DC townmgr.cpp:4303
     const int slotX[7] = { 34, 131, 228, 325, 422, 519, 616 };
     const int slotY[5] = { 37, 141, 245, 349, 453 };
-    const int hallX[9][18] = {
+    const int hallX[HOMM3_TOWN_COUNT][18] = {
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 4, 2, 0, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 1, 2, 0, 6, 5, 3, 1, 5, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 2, 4, 4, 0, 2, 0, 6, 5, 3, 6, 1 },
@@ -3059,8 +3127,10 @@ THallWindow::THallWindow(int which)
         { 0, 2, 4, 6, 1, 3, 5, 2, 4, 0, 2, 0, 6, 5, 1, 3, 4, 6 },
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0 }
+    ,
+        { 0, 2, 4, 6, 1, 3, 5, 2, 4, 6, 0, 2, 0, 6, 5, 4, 3, 1 }
     };
-    const int hallY[9][18] = {
+    const int hallY[HOMM3_TOWN_COUNT][18] = {
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 0, 0 },
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 0, 0, 0, 2, 2, 2, 1, 0 },
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 1, 2 },
@@ -3070,6 +3140,8 @@ THallWindow::THallWindow(int which)
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 0, 0, 0, 2, 2, 2, 1, 1 },
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 2, 0 },
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 2, 0 }
+    ,
+        { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 1, 2, 2 }
     };
 
     int i;
@@ -3126,6 +3198,24 @@ THallWindow::THallWindow(int which)
             m_widgets.push_back(new iconWidget(
                 slotX[hallX[which][i]], slotY[hallY[which][i]], 150, 70,
                 700 + i, "halltowr.def", 0, 0, 0, 0, 0x10));
+            m_widgets.push_back(new iconWidget(
+                slotX[hallX[which][i]] + 135, slotY[hallY[which][i]] + 54, 16, 16,
+                800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
+        }
+        break;
+    case TOWN_COVE:
+        m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+                                          "TPTHBkDG.pcx", 0x800));
+        for (i = 0; i < 18; i++) {
+            m_widgets.push_back(new iconWidget(
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
+                400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
+            m_widgets.push_back(new textWidget(
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17, 0,
+                "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
+            m_widgets.push_back(new iconWidget(
+                slotX[hallX[which][i]], slotY[hallY[which][i]], 150, 70,
+                700 + i, "hallcove.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new iconWidget(
                 slotX[hallX[which][i]] + 135, slotY[hallY[which][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
@@ -4654,7 +4744,9 @@ char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includ
     char buffer[400];
     int type = thisTown->m_type;
 
-    if (buildingId < SPECIAL_BUILDING_ID) {
+    if (type == TOWN_COVE) {
+        strcpy(buffer, cove::buildingDescription(buildingId));
+    } else if (buildingId < SPECIAL_BUILDING_ID) {
         if (buildingId == BLACKSMITH_ID)
             strcpy(buffer, g_buildingInfoNeutral[type + 19]);
         else if (buildingId == MARKETPLACE_SILO_ID)
@@ -4705,7 +4797,7 @@ void townManager::showBuildingInfo(int buildingId, unsigned char rightClick)
 {
     std::string info(getBuildingInfo(m_townToView, buildingId, 1, 1));
     normalDialog(info.c_str(), rightClick ? 4 : 1, -1, -1,
-                 m_townToView->m_type + 0x16, buildingId,
+                 townBuildingResource(m_townToView->m_type), buildingId,
                  -1, 0, -1, 0, -1, 0);
 }
 
@@ -4941,14 +5033,14 @@ int townManager::main(message& msg)
     if (build != -1) {
         g_pendingTownBuild = -1;
         if (build == TTownScreenWindow::TOWN_CHEAT_BUILD_ALL) {
-            for (build = 0; build < 0x2c; build++) {
+            for (build = 0; build < MAX_BUILDING_TYPE; build++) {
                 if ((g_townEligibleBuildMask[m_townToView->m_type]
-                     & (1 << build))
+                     & (__int64(1) << build))
                     || build == TTownScreenWindow::TOWN_CHEAT_BUILD_EXTRA)
                     buildObj(build);
             }
         } else if ((g_townEligibleBuildMask[m_townToView->m_type]
-                    & (1 << build))
+                    & (__int64(1) << build))
                    || build == TTownScreenWindow::TOWN_CHEAT_BUILD_EXTRA) {
             buildObj(build);
         }
@@ -4970,9 +5062,11 @@ int townManager::main(message& msg)
         case widget::WIDGET_SELECT:
         case widget::WIDGET_RIGHT_SELECT: {
             int code = msg.m_codeY;
-            if (code >= 0 && code <= DWELLING_6_UPG_ID)
+            if (code >= 0 && code < MAX_BUILDING_TYPE)
                 code = static_cast<TTownScreenWindow*>(m_townWindow)
                            ->m_zBuffer[msg.m_mouseY * 800 + msg.m_mouseX] - 1;
+            if (code == GUNPOWDER_WAREHOUSE_ID)
+                code = DWELLING_2_UPG_ID;
             switch (code) {
             case DWELLING_0_ID:
             case DWELLING_1_ID:
@@ -5155,7 +5249,7 @@ int townManager::main(message& msg)
                     sprintf(text,
                             getBuildingInfo(m_townToView, MARKETPLACE_SILO_ID,
                                             1, 1));
-                    normalDialog(text, 1, -1, -1, m_townToView->m_type + 0x16,
+                    normalDialog(text, 1, -1, -1, townBuildingResource(m_townToView->m_type),
                                  MARKETPLACE_SILO_ID, -1, 0, -1, 0, -1, 0);
                 }
                 break;
@@ -5193,6 +5287,7 @@ int townManager::main(message& msg)
                 else {
                     switch (m_townToView->m_type) {
                     case TOWN_CASTLE:
+                    case TOWN_COVE:
                         doTownTavern();
                         redrawTownScreen();
                         break;
@@ -5220,13 +5315,29 @@ int townManager::main(message& msg)
                                getBuildingInfo(m_townToView, EXTRA_1_ID,
                                                1, 1));
                         normalDialog(text, 1, -1, -1,
-                                     m_townToView->m_type + 0x16, EXTRA_1_ID,
+                                     townBuildingResource(m_townToView->m_type), EXTRA_1_ID,
                                      -1, 0, -1, 0, -1, 0);
                         break;
                     }
                 }
                 break;
             case EXTRA_2_ID:
+                if (m_townToView->m_type == TOWN_COVE) {
+                    if (rclick)
+                        goto building_popup;
+                    int heroId = m_townToView->m_visitingHeroId;
+                    if (heroId == -1)
+                        heroId = m_townToView->m_garrisonHeroId;
+                    if (heroId != -1) {
+                        type_sacrifice_window grotto(g_game->getHero(heroId),
+                                                    g_game->getLocalPlayerGamePos());
+                        grotto.allowAllOfferings();
+                        grotto.centerWindow(-1, -1);
+                        grotto.doModal(0);
+                        resetStrips();
+                    }
+                    break;
+                }
                 switch (m_townToView->m_type) {
                 case TOWN_TOWER:
                 case TOWN_INFERNO:
@@ -5239,7 +5350,7 @@ int townManager::main(message& msg)
                                getBuildingInfo(m_townToView, EXTRA_2_ID,
                                                1, 1));
                         normalDialog(text, 1, -1, -1,
-                                     m_townToView->m_type + 0x16, EXTRA_2_ID,
+                                     townBuildingResource(m_townToView->m_type), EXTRA_2_ID,
                                      -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -5258,7 +5369,7 @@ int townManager::main(message& msg)
                     strcpy(text,
                            getBuildingInfo(m_townToView, SPECIAL_BUILDING_ID,
                                            1, 1));
-                    normalDialog(text, 1, -1, -1, m_townToView->m_type + 0x16,
+                    normalDialog(text, 1, -1, -1, townBuildingResource(m_townToView->m_type),
                                  SPECIAL_BUILDING_ID, -1, 0, -1, 0, -1, 0);
                 }
                 break;
@@ -5266,11 +5377,11 @@ int townManager::main(message& msg)
                 if (rclick) {
 building_popup:
                     strcpy(text, getBuildingInfo(m_townToView, code, 1, 1));
-                    normalDialog(text, 4, -1, -1, m_townToView->m_type + 0x16,
+                    normalDialog(text, 4, -1, -1, townBuildingResource(m_townToView->m_type),
                                  code, -1, 0, -1, 0, -1, 0);
                 } else {
                     strcpy(text, getBuildingInfo(m_townToView, code, 1, 1));
-                    normalDialog(text, 1, -1, -1, m_townToView->m_type + 0x16,
+                    normalDialog(text, 1, -1, -1, townBuildingResource(m_townToView->m_type),
                                  code, -1, 0, -1, 0, -1, 0);
                 }
                 break;
@@ -5376,7 +5487,7 @@ building_popup:
                         building = HALL_CAPITOL_ID;
                     strcpy(text,
                            getBuildingInfo(m_townToView, building, 1, 1));
-                    normalDialog(text, 4, -1, -1, m_townToView->m_type + 0x16,
+                    normalDialog(text, 4, -1, -1, townBuildingResource(m_townToView->m_type),
                                  building, -1, 0, -1, 0, -1, 0);
                 }
                 break;
@@ -5386,7 +5497,7 @@ building_popup:
                         strcpy(text, getBuildingInfo(m_townToView,
                                                      CASTLE_FORT_ID, 1, 1));
                         normalDialog(text, 4, -1, -1,
-                                     m_townToView->m_type + 0x16,
+                                     townBuildingResource(m_townToView->m_type),
                                      CASTLE_FORT_ID, -1, 0, -1, 0, -1, 0);
                     } else if (m_townToView->hasBuilding(CASTLE_CITADEL_ID,
                                                        false)) {
@@ -5394,7 +5505,7 @@ building_popup:
                                getBuildingInfo(m_townToView,
                                                CASTLE_CITADEL_ID, 1, 1));
                         normalDialog(text, 4, -1, -1,
-                                     m_townToView->m_type + 0x16,
+                                     townBuildingResource(m_townToView->m_type),
                                      CASTLE_CITADEL_ID, -1, 0, -1, 0,
                                      -1, 0);
                     } else if (m_townToView->hasBuilding(CASTLE_CASTLE_ID,
@@ -5403,7 +5514,7 @@ building_popup:
                                getBuildingInfo(m_townToView,
                                                CASTLE_CASTLE_ID, 1, 1));
                         normalDialog(text, 4, -1, -1,
-                                     m_townToView->m_type + 0x16,
+                                     townBuildingResource(m_townToView->m_type),
                                      CASTLE_CASTLE_ID, -1, 0, -1, 0,
                                      -1, 0);
                     }
@@ -8039,7 +8150,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
             g_townDwellingCreatures[m_townToView->m_type * TOWN_DWELLING_SLOTS
                                    + m_currentDwellingIdOff[i]];
         const char* creatureName;
-        if (rowCreature >= 0 && rowCreature <= 150)
+        if (rowCreature >= 0 && rowCreature < HOMM3_CREATURE_COUNT)
             creatureName = g_creatureTypeTraits[rowCreature].m_pluralName;
         else
             creatureName = "";
@@ -8058,7 +8169,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         msg.m_codeY = 0x20;
         const char* summonName;
         if (g_townManager->m_townToView->m_summoningType >= 0
-            && g_townManager->m_townToView->m_summoningType <= 150)
+            && g_townManager->m_townToView->m_summoningType < HOMM3_CREATURE_COUNT)
             summonName =
                 g_creatureTypeTraits[g_townManager->m_townToView->m_summoningType].m_pluralName;
         else

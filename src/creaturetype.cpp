@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "creaturetype.h"
+#include "cove.h"
 
 #include "resourcemanager.h"
 #include "textresource.h"
@@ -14,7 +15,7 @@ namespace {
 // Original akCreatureTypeTraits references these 150 writable rows. Retail
 // initializers retain sprite/sample names and flags before crtraits.txt loads.
 DATA(0x006703b8)
-TCreatureTypeTraits g_creatureTypeTraitsStorage[150] = {
+TCreatureTypeTraits g_creatureTypeTraitsStorage[HOMM3_CREATURE_COUNT] = {
     { 0, 0, "pike", "cpkman.def", 0x10, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0, 0, "halb", "chalbd.def", 0x10, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0, 1, "lcrs", "clcbow.def", 0x14, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -170,7 +171,7 @@ TCreatureTypeTraits g_creatureTypeTraitsStorage[150] = {
 }
 
 DATA(0x006747b0)
-const TCreatureTypeTraits (&g_creatureTypeTraits)[150] = g_creatureTypeTraitsStorage;
+const TCreatureTypeTraits (&g_creatureTypeTraits)[HOMM3_CREATURE_COUNT] = g_creatureTypeTraitsStorage;
 
 void initializeCreatureTypeTraits(int id,
     const std::vector<char*, std::allocator<char*> >& values);
@@ -181,6 +182,8 @@ void initializeCreatureTypeTraits(int id,
 MAC_ADDRESS(0x0888d0, 0x70)
 static int getCreatureDwellingIndex(TCreatureType type)
 {
+    if (type == CREATURE_SEA_DOG)
+        return 9;
     const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
     int townType = traits.m_townType;
     if (townType == -1)
@@ -209,7 +212,8 @@ DC_ADDRESS(0x071934, 0x12)
 MAC_ADDRESS(0x08897c, 0x24)
 unsigned char isSiegeWeapon(TCreatureType creature)
 {
-    if (creature >= CREATURE_CATAPULT && creature <= CREATURE_AMMO_CART)
+    if (creature == CREATURE_CANNON
+        || (creature >= CREATURE_CATAPULT && creature <= CREATURE_AMMO_CART))
         return 1;
     return 0;
 }
@@ -219,6 +223,8 @@ DC_ADDRESS(0x071948, 0x20)
 MAC_ADDRESS(0x0889a0, 0x6c)
 TCreatureType upgradedCreatureType(TCreatureType type)
 {
+    if (cove::findCreature(type))
+        return cove::upgradeCreature(type);
     int creatureIndex = getCreatureDwellingIndex(type);
     if (creatureIndex < 0 || creatureIndex >= 7)
         return CREATURE_NONE;
@@ -230,6 +236,8 @@ VA(0x0047B220, 0x6D)
 MAC_ADDRESS(0x088a0c, 0x64)
 TCreatureType downgradedCreatureType(TCreatureType type)
 {
+    if (cove::findCreature(type))
+        return cove::downgradeCreature(type);
     int creatureIndex = getCreatureDwellingIndex(type);
     if (creatureIndex < 7)
         return CREATURE_NONE;
@@ -301,6 +309,7 @@ unsigned char initializeCreatureTypeTraitsTable()
             initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
     }
     traitsSheet->dispose();
+    cove::initializeCreatureTraits(g_creatureTypeTraitsStorage);
     return 1;
 }
 
@@ -347,14 +356,14 @@ void initializeCreatureTypeTraits(int id,
     DATA_COMPGEN_GUARD(0x00696640, creatureTypeStringsGuard,
                        creatureTypeNames)
     DATA(0x006963e8)
-    static TAutoStrPtr creatureTypeNames[150];
+    static TAutoStrPtr creatureTypeNames[HOMM3_CREATURE_COUNT];
 
     creatureTypeNames[id].set(new char[strlen(values[0]) + 1]);
     strcpy(creatureTypeNames[id].get(), values[0]);
     traits.m_name = creatureTypeNames[id].get();
 
     DATA(0x00696644)
-    static TAutoStrPtr creatureTypePluralNames[150];
+    static TAutoStrPtr creatureTypePluralNames[HOMM3_CREATURE_COUNT];
 
     creatureTypePluralNames[id].set(new char[strlen(values[1]) + 1]);
     strcpy(creatureTypePluralNames[id].get(), values[1]);
@@ -383,7 +392,7 @@ void initializeCreatureTypeTraits(int id,
     traits.m_wanderingHigh = atoi(values[22]);
 
     DATA(0x00696190)
-    static TAutoStrPtr creatureTypeAbilities[150];
+    static TAutoStrPtr creatureTypeAbilities[HOMM3_CREATURE_COUNT];
 
     creatureTypeAbilities[id].set(new char[strlen(values[23]) + 1]);
     strcpy(creatureTypeAbilities[id].get(), values[23]);

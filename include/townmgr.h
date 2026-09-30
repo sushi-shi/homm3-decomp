@@ -166,18 +166,18 @@ enum ETownCommand {
 // gTownBuildOrder: `movsx esi,byte [i + type*44 + 0x642eb4]` - a signed
 // char [9][44] of type_building_id values in PANORAMA DRAW ORDER, each
 // row closed by -1 (Castle's is 26,23,7,8,9,0,... then six -1s).
-extern const signed char g_townBuildOrder[9][44];
+extern const signed char g_townBuildOrder[HOMM3_TOWN_COUNT][HOMM3_BUILDING_COUNT];
 // gTownBackgroundPrefix: the "%sBack.pcx" stem, one per faction -
 // TBCs, TBRm, TBTw, TBIn, TBNc, TBDn, TBSt, TBFr, TBEl.
-extern const char* const g_townBackgroundPrefix[9];
+extern const char* const g_townBackgroundPrefix[HOMM3_TOWN_COUNT];
 // gTownBuildingSprites: `[objId + type*44]` scaled by four - a
 // char*[9][44] of the .def stem per faction and building (Castle's row
 // starts TBCsmage, TBCsmag2, TBCsmag3, TBCsmag4, TBCsmag5, TBCstvrn).
-extern const char* const g_townBuildingSprites[9][44];
+extern const char* const g_townBuildingSprites[HOMM3_TOWN_COUNT][HOMM3_BUILDING_COUNT];
 // gTownMusic: the town page's MP3 per faction - CstleTown, Rampart,
 // TowerTown, InfernoTown, necroTown, dungeon, StrongHold,
 // FortressTown, ElemTown.
-extern const char* const g_townMusic[9];
+extern const char* const g_townMusic[HOMM3_TOWN_COUNT];
 
 // The compiland's dialog family. Every one of these classes is fixed by
 // a vtable of its own, each the slot-0 owner of one 33-byte scalar
@@ -752,7 +752,7 @@ class CTownNetMsgHandler;
 // unattested run at +0x144 stays an opaque pad. The three virtuals are
 // the three slots of vtable 0x643720.
 // Shared table owned by text.cpp; also exposed to town value accessors.
-extern const char* g_townTypeNames[10];
+extern const char* g_townTypeNames[HOMM3_TOWN_COUNT + 1];
 
 class townManager : public baseManager {
 public:
@@ -764,7 +764,7 @@ public:
 
     // Original: townManager::TownNativeTerrains; ten entries including
     // the neutral town type -1. Complete retains the table at 0x643694.
-    static const TTerrainType s_townNativeTerrains[10];
+    static const TTerrainType s_townNativeTerrains[HOMM3_TOWN_COUNT + 1];
 
     // Original: townManager::GetTownTypeName; TownMgr.h:738
     DC_ADDRESS(0x020280, 0x18)
@@ -803,7 +803,7 @@ public:
     // walks exactly this many, unhooks each one's widget at +0x2c from
     // the town window and frees the object - which is ~townObject
     // inlined, so the array is townObject* and the count is its own.
-    townObject* m_townObjects[44];
+    townObject* m_townObjects[HOMM3_BUILDING_COUNT];
     int m_townObjectCount;  // +0x10c
     int m_loadedTownType;  // +0x110  ctor -1
     int m_saveWin;  // +0x114

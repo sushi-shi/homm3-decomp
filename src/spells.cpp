@@ -798,6 +798,9 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         monsterPower = m_spellPower[m_currentSide];
         if (traits->m_flags & 4)
             monsterPower += castingHero->getSpellDurationBonus();
+        const THeroSpecificAbility& specialty = g_heroSpecificAbilities[castingHero->m_id];
+        if (specialty.m_type == eHeroAbilityDoubleDuration && specialty.m_subject == spellId)
+            monsterPower *= 2;
     }
 
     // Dreamcast line 721 has the original `!bIsMonsterSpell` hero arm.
@@ -1595,6 +1598,11 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // helper boundary; Complete likewise emits one out-of-line call.
     case SPELL_CLONE:
         mirrorImage(target->m_gridIndex, mastery);
+        if (!isMonsterSpell && !m_doubleCloneUsed[m_currentSide]
+            && g_heroSpecificAbilities[castingHero->m_id].m_type == eHeroAbilityDoubleClone) {
+            m_doubleCloneUsed[m_currentSide] = true;
+            mirrorImage(target->m_gridIndex, mastery);
+        }
         break;
 
     // Dreamcast spells.cpp:1668..1681 has one source arm per elemental,

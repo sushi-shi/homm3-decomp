@@ -4075,8 +4075,9 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
     case RES_BUILDING_TT_6:
     case RES_BUILDING_TT_7:
     case RES_BUILDING_TT_8:
-        m_spriteName = g_townBuildingSpriteNames[m_resource - RES_BUILDING_TT_0];
-        m_text = getBuildingName(m_resource - RES_BUILDING_TT_0, m_qualifier);
+    case RES_BUILDING_COVE:
+        m_spriteName = g_townBuildingSpriteNames[m_resource == RES_BUILDING_COVE ? TOWN_COVE : m_resource - RES_BUILDING_TT_0];
+        m_text = getBuildingName(m_resource == RES_BUILDING_COVE ? TOWN_COVE : m_resource - RES_BUILDING_TT_0, m_qualifier);
         m_spriteFrameIndex = m_qualifier;
         break;
 

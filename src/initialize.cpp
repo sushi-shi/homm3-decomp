@@ -1,4 +1,5 @@
 #include "va.h"
+#include "cove.h"
 
 #include <string.h>
 
@@ -283,5 +284,6 @@ void initializeGameData()
 {
     createBuildingMasks();
     createIncludedMasks();
+    cove::initializeBuildingMasks();
     town::initializeHordes();
 }

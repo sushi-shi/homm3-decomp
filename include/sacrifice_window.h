@@ -156,6 +156,11 @@ class type_sacrifice_window : public CAdvPopup {
 public:
     type_sacrifice_window(hero* newHero, int curPlayer);
 
+    void allowAllOfferings() {
+        m_canSacrificeArtifacts = 1;
+        m_canSacrificeCreatures = 1;
+    }
+
 private:
     hero* m_currentHero;
     type_artifact_offering m_holdingArtifact;  // +0x64

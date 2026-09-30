@@ -233,7 +233,7 @@ static const int g_snowRiverDeltaIndex[4] = {7, 5, 4, 6};
 DATA(0x00682450)
 int g_rmgTerrainTownChoices[9][4] = {
     {0, 1, 4, -1}, {6, -1, 0, 0}, {0, 1, -1, 0},
-    {2, -1, 0, 0}, {7, 4, -1, 0}, {6, 8, -1, 0},
+    {2, -1, 0, 0}, {7, 4, 9, -1}, {6, 8, -1, 0},
     {5, 3, 4, -1}, {3, -1, 0, 0}, {-1, 0, 0, 0}
 };
 
@@ -242,9 +242,9 @@ int g_rmgTerrainTownChoices[9][4] = {
 // RMG table, not armygrp's native-terrain table at 0x643698. Role-derived
 // name: no Dreamcast RMG compiland or original global spelling exists.
 DATA(0x006408C8)
-static const int g_rmgTownNativeTerrains[9] = {
+static const int g_rmgTownNativeTerrains[HOMM3_TOWN_COUNT] = {
     eTerrainGrass, eTerrainGrass, eTerrainSnow, eTerrainLava, eTerrainDirt,
-    eTerrainDirt, eTerrainRough, eTerrainSwamp, eTerrainGrass
+    eTerrainDirt, eTerrainRough, eTerrainSwamp, eTerrainGrass, eTerrainSwamp
 };
 
 // Thirty-two radial directions used by the placement and boundary passes.
@@ -290,7 +290,7 @@ static const char* g_rmgPlayerNames[8] = {
 };
 
 DATA(0x0068272C)
-static const char* g_rmgTownNames[9] = {
+static const char* g_rmgTownNames[HOMM3_TOWN_COUNT] = {
     DATA_COMPGEN(0x0068279C, rmgTownCastle, "castle"),
     DATA_COMPGEN(0x00682794, rmgTownRampart, "rampart"),
     DATA_COMPGEN(0x0068278C, rmgTownTower, "tower"),
@@ -300,6 +300,7 @@ static const char* g_rmgTownNames[9] = {
     DATA_COMPGEN(0x00682764, rmgTownStronghold, "stronghold"),
     DATA_COMPGEN(0x00682758, rmgTownFortress, "fortress"),
     DATA_COMPGEN(0x00682750, rmgTownConflux, "conflux")
+, "Cove"
 };
 
 // ReadRmgTemplateZones repeatedly tests a nullable field for a nonempty,
@@ -1188,14 +1189,14 @@ MAC_ADDRESS(0x22f6c8, 0xb4)
 int TRmgTownSlot::selectAllowedTown()
 {
     int available = 0;
-    for (int town = 0; town < 9; ++town) {
+    for (int town = 0; town < HOMM3_TOWN_COUNT; ++town) {
         if (m_allowedTowns[town])
             ++available;
     }
     if (!available)
         return -1;
     int selected = rand() % available;
-    for (town = 0; town < 9; ++town) {
+    for (town = 0; town < HOMM3_TOWN_COUNT; ++town) {
         if (m_allowedTowns[town] && --selected < 0)
             return town;
     }
@@ -3492,8 +3493,8 @@ type_random_map_generator::type_random_map_generator(
         memset(m_disabledHeroes, 0, sizeof(m_disabledHeroes));
         memset(m_objectCountByType, 0, sizeof(m_objectCountByType));
         initializeObjectGenerators();
-        for (int hero = 0; hero < 156; ++hero) {
-            if (g_heroTraits[hero].m_availability.m_special)
+        for (int hero = 0; hero < HOMM3_HERO_COUNT; ++hero) {
+            if ((hero >= 156 && hero < 163) || g_heroTraits[hero].m_availability.m_special)
                 m_disabledHeroes[hero] = 1;
             else if (m_mapVersion >= 1) {
                 if (!g_heroTraits[hero].m_availability.m_availableInExpansion)
@@ -3702,6 +3703,8 @@ void readRmgTemplateZones(
                     else
                         slot->m_allowedTowns[townCount] = 0;
                 }
+                slot->m_allowedTowns[TOWN_COVE] = mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE
+                    && slot->m_allowedTowns[TOWN_FORTRESS];
                 for (int mine = 0; mine < 7; ++mine)
                     slot->m_parameters004c[mine] = atoi(values[32 + mine]);
                 for (int resource = 0; resource < 7; ++resource)
@@ -3727,6 +3730,7 @@ void readRmgTemplateZones(
                 for (int monster = 0; monster < 10; ++monster)
                     slot->m_allowedMonsters[monster] =
                         isRmgTemplateFieldSet(values[57 + monster]);
+                slot->m_allowedMonsters[TOWN_COVE + 1] = slot->m_allowedMonsters[TOWN_FORTRESS + 1];
                 if (mapVersion < RMG_MAP_ARMAGEDDONS_BLADE)
                     slot->m_allowedMonsters[8] = 0;
                 for (int treasure = 0; treasure < 3; ++treasure) {
@@ -6013,7 +6017,7 @@ VA(0x00540B20, 0x240)
 MAC_ADDRESS(0x243208, 0x290) // anchor-callee 0x54203b; thiscall, ret 8; retail-only
 type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
 {
-    unsigned char allowed[10];
+    unsigned char allowed[HOMM3_TOWN_COUNT + 1];
     if (zone->m_slot->m_guardsMatchZone && zone->m_alignment != -1) {
         memset(allowed, 0, sizeof(allowed));
         allowed[zone->m_alignment + 1] = 1;
@@ -6024,7 +6028,9 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
     memset(prototypeIndices, -1, sizeof(prototypeIndices));
     for (unsigned int index = 0; index < m_objectPrototypes[MONSTER].size(); ++index) {
         TRmgObjectPropertiesRef* properties = m_objectPrototypes[MONSTER][index];
-        prototypeIndices[properties->m_prototype->getSubtype()] = index;
+        int subtype = properties->m_prototype->getSubtype();
+        if (subtype >= 0 && subtype < RMG_GUARD_CREATURE_COUNT)
+            prototypeIndices[subtype] = index;
     }
     int eligibleCount = 0;
     int creature = RMG_GUARD_CREATURE_COUNT;
@@ -6034,7 +6040,9 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
     }
     for (--creature; creature >= 0; --creature) {
         const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
-        if ((traits.m_wanderingHigh + traits.m_wanderingLow) / 2 * traits.m_aiValue <= value
+        if (prototypeIndices[creature] >= 0
+            && !(traits.m_attributes & creatureSiegeWeapon)
+            && (traits.m_wanderingHigh + traits.m_wanderingLow) / 2 * traits.m_aiValue <= value
             && value <= traits.m_aiValue * RMG_GUARD_MAXIMUM_COUNT
             && traits.m_level >= 0 && allowed[traits.m_townType + 1]) {
             ++eligibleCount;
@@ -9978,6 +9986,9 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         std::bitset<28> disabledSkills;
         writePackedBits(outfile, disabledSkills);
 
+        // H3M is still the Complete format: 156 customization flags, even
+        // though the running game has additional Cove heroes. Writing the
+        // runtime count shifts the terrain and every subsequent map record.
         for (int hero = 0; hero < 156; ++hero) {
             char byteBuffer = 0;
             outfile->write(&byteBuffer, sizeof(byteBuffer));

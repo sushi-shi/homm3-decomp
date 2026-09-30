@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "monframeinfo.h"
+#include "cove.h"
 
 #include "resourcemanager.h"
 #include "textresource.h"
@@ -17,7 +18,7 @@ static void initializeCreatureAnimationTraits(int id,
 // Extent proof: bss 0x6998e0 up to mousemgr.cpp's timer latches at
 // 0x69ca18 is exactly 150 * 0x54.
 DATA(0x006998e0)
-static SMonFrameInfo g_monFrameInfoTable[150];
+static SMonFrameInfo g_monFrameInfoTable[HOMM3_CREATURE_COUNT];
 
 // Dreamcast public ?gMonFrameInfo@@3AAY0HK@$$CBUSMonFrameInfo@@A - the
 // const-reference view the rest of the game reads. Retail keeps it as
@@ -25,7 +26,7 @@ static SMonFrameInfo g_monFrameInfoTable[150];
 // "cranim.txt" literal (monframeinfo.obj's whole .data contribution).
 // The DC bound is 122 (RoE-era roster); retail's extent proves 150.
 DATA(0x0067ff24)
-const SMonFrameInfo (&g_monFrameInfo)[150] = g_monFrameInfoTable;
+const SMonFrameInfo (&g_monFrameInfo)[HOMM3_CREATURE_COUNT] = g_monFrameInfoTable;
 
 VA(0x0050c810, 0x1E9)
 DC_ADDRESS(0x0fe598, 0x1cc)
@@ -114,6 +115,7 @@ unsigned char initializeCreatureAnimationTraitsTable()
         ++row;
     } }
     sheet->dispose();
+    cove::initializeAnimationTraits(g_monFrameInfoTable);
     return 1;
 }
 

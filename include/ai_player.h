@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "ai_creature_value.h"
+#include "artifact_type.h"
 #include "armygrp.h"
 #include "netmsg.h"
 #include "turn_update_msg.h"
@@ -166,7 +167,7 @@ protected:
     unsigned char m_hasAngelicAlliance;
     short m_morale;
     short m_alignmentCount;
-    unsigned char m_alignments[10];
+    unsigned char m_alignments[HOMM3_TOWN_COUNT + 1];
     long m_armyValueIncrease;
     short m_improvement;
     int normalizeAlignment(int alignment) const;
@@ -195,7 +196,7 @@ public:
     DC_ADDRESS(0x114bd8, 0x4)
     long getArmyIncrease() const { return m_armyValueIncrease; }
 };
-SIZE(type_AI_creature_swapper, 0x20);
+SIZE(type_AI_creature_swapper, 0x24);
 
 class type_AI_creature_purchaser : public type_AI_creature_swapper {
 public:
@@ -230,7 +231,7 @@ public:
     DC_ADDRESS(0x037e20, 0x6)
     void setSubtractMode(unsigned char arg) { m_subtractCostMode = arg; }
 };
-SIZE(type_AI_creature_purchaser, 0x3c);
+SIZE(type_AI_creature_purchaser, 0x40);
 
 void aiConsolidateArmy(armyGroup& currentArmy);
 // 0x42d8e0 - do_swap's tail call (0x42c485), also reached from
@@ -304,7 +305,7 @@ public:
 
 // Dreamcast names this table `const_artifact_effects`; retail indexes the
 // 144 vector objects directly with a 16-byte stride.
-extern std::vector<type_artifact_effect*> g_constArtifactEffects[144];
+extern std::vector<type_artifact_effect*> g_constArtifactEffects[ARTIFACT_COUNT];
 
 // Complete's 0x63ac7c sentinel stream selects the concrete effect class
 // created for each artifact. The numeric order is retail's jump table at

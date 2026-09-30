@@ -958,6 +958,7 @@ private:
                      const type_ballistics_traits& ballistics);
 
     void animateMissile(army* armyToAttack);
+    void applyRangedSpecial(army* target);
     void doFireShield(long damage);
     void doPostAttack(army* target, int attackDamage, int killedCount,
                         int totalLife);
@@ -1074,6 +1075,7 @@ private:
     // 0x43f2c0, EH-bearing carcass in army.cpp; declared because the
     // volley worker above calls it once per shot.
     void animateMissile(army* armyToAttack);
+    void applyRangedSpecial(army* target);
     unsigned char checkObstacleAttacks(unsigned char is_walking);
     // 0x440500, reconstructed in army.cpp: the attacker's on-attack
     // debuff roll (bind/blind/disease/curse/age/stone/poison/acid/
@@ -1768,7 +1770,8 @@ inline bool army::isIncapacitated() const
 DC_ADDRESS(0x027dd8, 0x44)
 inline bool army::canRetaliate(const army& attacker) const
     {
-        return !attacker.is(creatureFreeAttack) && !m_spellInfluence[70]
+        return m_creatureType != CREATURE_CANNON
+               && !attacker.is(creatureFreeAttack) && !m_spellInfluence[70]
                && m_retaliationCount > 0;
     }
 

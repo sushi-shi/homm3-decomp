@@ -187,7 +187,8 @@ int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
     long cost;
     if (road != 0 && endRoad != 0)
         cost = g_terrainCost[g_roadCostRow[road]][pathfinding];
-    else if (terrain == nativeTerrain && special != CURSED_GROUND)
+    else if ((terrain == nativeTerrain || nativeTerrain == TERRAIN_ANY_LAND)
+             && special != CURSED_GROUND)
         cost = 100;
     else
         cost = g_terrainCost[terrain][pathfinding];

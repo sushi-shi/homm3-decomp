@@ -89,7 +89,7 @@ DATA(0x0063d1dc) const int g_combatDeployGroupedSlots[7][7] = {
     { 0, 1, 2, 4, 5, 6, 0 },
     { 0, 1, 2, 3, 4, 5, 6 }
 };
-DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[18] = {
+DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[HOMM3_HERO_CLASS_COUNT] = {
     { "CH00.DEF", 92, 67, 5 },
     { "CH01.DEF", 94, 54, 5 },
     { "CH02.DEF", 102, 62, 5 },
@@ -107,9 +107,11 @@ DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[18] = {
     { "CH014.DEF", 99, 58, 5 },
     { "CH015.DEF", 95, 52, 5 },
     { "CH16.DEF", 99, 58, 5 },
-    { "CH17.DEF", 95, 52, 5 }
+    { "CH17.DEF", 95, 52, 5 },
+    { "CH18.DEF", 99, 58, 5 },
+    { "CH19.DEF", 95, 52, 5 }
 };
-DATA(0x0063cf88) const TSiegeArcherInfo g_siegeArcherInfo[9] = {
+DATA(0x0063cf88) const TSiegeArcherInfo g_siegeArcherInfo[HOMM3_TOWN_COUNT] = {
     { 2, { { 780, 238 }, { 648, 566 }, { 596, 80 } }, "plcbowx.def" },
     { 18, { { 786, 240 }, { 625, 563 }, { 595, 81 } }, "pelfx.def" },
     { 34, { { 753, 251 }, { 609, 578 }, { 600, 92 } }, "pmagex.def" },
@@ -118,7 +120,8 @@ DATA(0x0063cf88) const TSiegeArcherInfo g_siegeArcherInfo[9] = {
     { 76, { { 785, 217 }, { 625, 560 }, { 596, 80 } }, "pmedusx.def" },
     { 88, { { 785, 222 }, { 615, 557 }, { 596, 80 } }, "porchx.def" },
     { 100, { { 795, 230 }, { 626, 575 }, { 580, 85 } }, "pplizax.def" },
-    { 127, { { 783, 225 }, { 636, 575 }, { 595, 105 } }, "cprgtix.def" }
+    { 127, { { 783, 225 }, { 636, 575 }, { 595, 105 } }, "cprgtix.def" },
+    { CREATURE_CORSAIR, { { 778, 222 }, { 655, 552 }, { 600, 77 } }, "PPIRATE.def" }
 };
 DATA(0x00641e08) const TSpellEffectTraits g_spellEffectTraits[83] = {
     { "C10spW.def", "Prayer", 256 },
@@ -350,7 +353,7 @@ DATA(0x0063bec0) const combatManager::SElevationOverlay combatManager::s_elevati
 // Original DC name: akWallTraits.
 // LoadIcons computes 0x66d848 + town * 648; LoadWallTraitsTable writes
 // name/hitpoints at row + 0x1c/+0x20. Each 36-byte record starts with x/y.
-DATA(0x0066d848) combatManager::TWallTraits combatManager::s_wallTraits[9][18] = {
+DATA(0x0066d848) combatManager::TWallTraits combatManager::s_wallTraits[HOMM3_TOWN_COUNT][18] = {
     { // Castle
         { 400, 276, -1, 0, { "SgCsDrw3.pcx", "SgCsDrw2.pcx", "SgCsDrw1.pcx", 0, 0 }, 0, 0, 0 },
         { 400, 276, -1, 0, { 0, "SgCsDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
@@ -530,6 +533,26 @@ DATA(0x0066d848) combatManager::TWallTraits combatManager::s_wallTraits[9][18] =
         { 736, 159, 135, 0, { 0, "SgElManC.pcx", 0, 0, 0 }, 0, 0, 0 },
         { 608, 505, 251, 0, { 0, "SgElTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
         { 576, 28, 255, 0, { 0, "SgElTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+    },
+    { // Cove
+        { 433, 284, -1, 0, { "SGCVDrw3.pcx", "SGCVDrw2.pcx", "SGCVDrw1.pcx", 0, 0 }, 0, 0, 0 },
+        { 433, 284, -1, 0, { 0, "SGCVDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 434, 99, -1, 0, { "SGCVMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 414, 79, -1, 0, { "SGCVMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 582, 48, -1, 0, { "SGCVTpWl.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 575, 35, 255, 0, { "SGCVTw22.pcx", "SGCVTw21.pcx", "SGCVTw21.pcx", "SGCVTw21.pcx", "SGCVTw21.pcx" }, 0, 0, 0 },
+        { 532, 72, 45, 0, { 0, "SGCVWa62.pcx", "SGCVWa61.pcx", "SGCVWa61.pcx", "SGCVWa61.pcx" }, 0, 0, 0 },
+        { 491, 112, 62, 0, { "SGCVWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 481, 149, 78, 0, { 0, "SGCVWa42.pcx", "SGCVWa41.pcx", "SGCVWa41.pcx", "SGCVWa41.pcx" }, 0, 0, 0 },
+        { 477, 228, 112, 0, { "SGCVArch.pcx", "SGCVArch.pcx", "SGCVArch.pcx", "SGCVArch.pcx", "SGCVArch.pcx" }, 0, 0, 0 },
+        { 491, 321, 130, 0, { 0, "SGCVWa32.pcx", "SGCVWa31.pcx", "SGCVWa31.pcx", "SGCVWa31.pcx" }, 0, 0, 0 },
+        { 521, 356, 165, 0, { "SGCVWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 542, 401, 182, 0, { 0, "SGCVWa12.pcx", "SGCVWa11.pcx", "SGCVWa11.pcx", "SGCVWa11.pcx" }, 0, 0, 0 },
+        { 630, 516, 251, 0, { "SGCVTw12.pcx", "SGCVTw11.pcx", "SGCVTw11.pcx", "SGCVTw11.pcx", "SGCVTw11.pcx" }, 0, 0, 0 },
+        { 727, 180, 135, 0, { "SGCVMan2.pcx", "SGCVMan1.pcx", "SGCVMan1.pcx", "SGCVMan1.pcx", "SGCVMan1.pcx" }, 0, 0, 0 },
+        { 727, 180, 135, 0, { 0, "SGCVManC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 630, 516, 251, 0, { 0, "SGCVTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 575, 35, 255, 0, { 0, "SGCVTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
     }
 };
 DATA(0x0063be60) const combatManager::TWallTarget combatManager::s_wallTargets[8] = {
@@ -554,7 +577,7 @@ DATA(0x00694ef0) const SLimitData combatManager::s_rightHeroLimits(741, 16, 799,
 DATA(0x00694f08) const SLimitData combatManager::s_leftHeroLimits(0, 16, 57, 127);
 
 // Retail initial data; dimensions follow the typed table consumers.
-DATA(0x0063d2a0) const char* const g_townCombatBackgrounds[9] = { "SgCsBack.pcx", "SgRmBack.pcx", "SgTwBack.pcx", "SgInBack.pcx", "SgNcBack.pcx", "SgDnBack.pcx", "SgStBack.pcx", "SgFrBack.pcx", "SgElBack.pcx" };
+DATA(0x0063d2a0) const char* const g_townCombatBackgrounds[HOMM3_TOWN_COUNT] = { "SgCsBack.pcx", "SgRmBack.pcx", "SgTwBack.pcx", "SgInBack.pcx", "SgNcBack.pcx", "SgDnBack.pcx", "SgStBack.pcx", "SgFrBack.pcx", "SgElBack.pcx" , "SGCVBack.pcx" };
 DATA(0x0063d2c8) const char* const g_magicTerrainCombatBackgrounds[10] = {
     0, "CmBkMag.pcx", "CmBkCur.pcx", "CmBkHG.pcx", "CmBkEF.pcx", "CmBkCF.pcx", "CmBkLP.pcx", "CmBkFF.pcx",
     "CmBkRK.pcx", "CmBkMC.pcx"
@@ -574,7 +597,7 @@ DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[10][3] = {
     { 0, 0, 0 },
     { 0, 0, 0 }
 };
-DATA(0x0063bd18) const int g_moatDamage[9] = { 70, 70, 150, 90, 70, 90, 70, 90, 70 };
+DATA(0x0063bd18) const int g_moatDamage[HOMM3_TOWN_COUNT] = { 70, 70, 150, 90, 70, 90, 70, 90, 70 , 90 };
 DATA(0x0063abe0) const long g_castleWallGateTargets[5] = { 6, 8, 9, 10, 12 };
 
 DATA(0x0066d840) int g_combatSeed = 1;
@@ -647,6 +670,10 @@ unsigned char combatManager::loadWallTraitsTable()
                 static_cast<short>(atoi(values[1]));
             row++;
         }
+    }
+    for (int part = 0; part < 18; ++part) {
+        s_wallTraits[TOWN_COVE][part].m_name = s_wallTraits[TOWN_CASTLE][part].m_name;
+        s_wallTraits[TOWN_COVE][part].m_hitpoints = s_wallTraits[TOWN_CASTLE][part].m_hitpoints;
     }
     return 1;
 }
@@ -991,9 +1018,11 @@ void combatManager::loadArmies(unsigned char isSurrounded)
                 m_armies[0][placed].loadResources();
                 placed++;
             }
-            if (combatHero->isWieldingArtifact(ARTIFACT_BALLISTA)) {
+            if (combatHero->isWieldingArtifact(ARTIFACT_BALLISTA)
+                || combatHero->isWieldingArtifact(ARTIFACT_CANNON)) {
                 if (!m_fortificationLevel || side != 1) {
-                    m_armies[side][placed].init(CREATURE_BALLISTA, 1,
+                    m_armies[side][placed].init(
+                        combatHero->isWieldingArtifact(ARTIFACT_CANNON) ? CREATURE_CANNON : CREATURE_BALLISTA, 1,
                                               combatHero, side, placed,
                                               side ? 0x43 : 0x33, -1);
                     m_armies[side][placed].loadResources();
@@ -1106,6 +1135,7 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
         }
         m_artifactCast[side] = 1;
         m_spellsCast[side] = 0;
+        m_doubleCloneUsed[side] = false;
         m_turnSinceLastEnchanter[side] = 30000;
     }
     if (rightTown) {
@@ -4108,6 +4138,7 @@ void combatManager::lootDeadHero(int side,
             || artifact.m_artifactId == ARTIFACT_SPELLBOOK
             || artifact.m_artifactId == ARTIFACT_CATAPULT
             || artifact.m_artifactId == ARTIFACT_BALLISTA
+            || artifact.m_artifactId == ARTIFACT_CANNON
             || artifact.m_artifactId == ARTIFACT_AMMO_CART
             || artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
             continue;
@@ -4123,6 +4154,7 @@ void combatManager::lootDeadHero(int side,
             || artifact.m_artifactId == ARTIFACT_SPELLBOOK
             || artifact.m_artifactId == ARTIFACT_CATAPULT
             || artifact.m_artifactId == ARTIFACT_BALLISTA
+            || artifact.m_artifactId == ARTIFACT_CANNON
             || artifact.m_artifactId == ARTIFACT_AMMO_CART
             || artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
             continue;
