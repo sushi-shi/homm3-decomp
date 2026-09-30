@@ -404,10 +404,12 @@ unsigned char NewmapCell::cellIsTrigger() const
     return m_isTrigger;
 }
 
+// Original DC public is_diggable@NewmapCell@@QBA_NXZ proves a const
+// bool predicate; the CodeView unsigned-byte display is lowered bool.
 VA(0x004fccf0, 0xD0)
 DC_ADDRESS(0x0ec254, 0xd0)
 MAC_ADDRESS(0x11e514, 0xe4)
-unsigned char NewmapCell::isDiggable() const
+bool NewmapCell::isDiggable() const
 {
     if (m_groundSet == eTerrainWater || m_groundSet == eTerrainRock)
         return 0;
