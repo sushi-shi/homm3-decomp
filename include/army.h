@@ -989,7 +989,7 @@ private:
 
     int findPath(int fpTargetCellIndex, int maxMoves,
                  unsigned char bMoveUnlimited, unsigned char bLiteralTarget);
-    unsigned char validPath(int destIndex, bool bLiteralTest);
+    unsigned char validPath(int destIndex, unsigned char bLiteralTest);
     // Both const (?GetAttackMask@army@@QBAIHHH@Z,
     // ?ValidAttack@army@@QBAHHHHHPAH@Z); neither body writes through
     // `this` and both drive GetAdjacentCellIndex, already const.
