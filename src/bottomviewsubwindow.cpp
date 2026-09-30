@@ -834,17 +834,12 @@ TBottomViewTown::~TBottomViewTown()
 // because a probe is a score, not a reconstruction - the DC line table
 // then named the statement that carries the sites honestly.
 
-// The remaining 1.48 is a SECOND, independent divergence: our CL CSEs
-// the constant zero into ESI across the whole prologue (`xor esi,esi`,
-// then `cmp eax,esi` for the new-null test, `push esi` twice for the
-// backdrop's x/y, four `mov [ebp-N],esi` for counts[]) where retail
-// rematerialises it after the bitmapBorder call (`test eax,eax`,
-// `push 0x0` twice, `xor eax,eax` / `xor ecx,ecx`). TBottomViewTown has
-// the SAME divergence with the sides reversed - retail CSEs there and
-// we do not - so it is not a spelling of this body. The counts[] store
-// order is downstream of it and byte-invariant under every init form
-// tried: four statements, a chained assignment, an aggregate
-// initializer and a hand-written 3/0/1/2 order all give the same bytes.
+// DC line 524 calls _memset on the int[4] town_count local; Mac
+// 0x6151c..0x61540 clears the same 16 bytes through bzero. Preserve that
+// bulk-clear operation. VC6 expands memset into the retail zero
+// rematerialization and store order, closing 98.5176% to 100%. Two source
+// states emitted two objects and both reproduced. The earlier manual
+// initialization forms missed this library boundary.
 VA(0x00452b80, 0x620)
 DC_ADDRESS(0x0563b8, 0x4c8)
 MAC_ADDRESS(0x061434, 0x8a4)  // anchor-vtable 0x63bb3c + advManager::UpdBottomViewKingdom
@@ -860,10 +855,7 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
         0, 0, 176, 166, id++, "AdStatin.pcx", 0x800));
 
     int townCount[4];
-    townCount[0] = 0;
-    townCount[1] = 0;
-    townCount[2] = 0;
-    townCount[3] = 0;
+    memset(townCount, 0, sizeof(townCount));
 
     for (i = 0; i < g_currentPlayer->m_numTowns; i++) {
         town* which = g_game->getTown(g_currentPlayer->m_townIds[i]);
