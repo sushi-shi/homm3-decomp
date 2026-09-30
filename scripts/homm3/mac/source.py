@@ -199,11 +199,12 @@ def load_data(root: Path) -> list[DataPair]:
                 if constructed:
                     # This binds zero storage, not the runtime constructor's
                     # result. Keep the authored constructor and its arguments.
-                    # Admit only a scalar with literal integer arguments;
+                    # Admit only a scalar with literal integer arguments,
+                    # including a const out-of-class static member definition;
                     # expressions, references and function declarators need
                     # a separate reviewed contract.
                     match = re.fullmatch(
-                        r'\s*\w+(?:::\w+)*(?:\s+)(\w+)\s*'
+                        r'\s*(?:const\s+)?\w+(?:::\w+)*(?:\s+)(\w+(?:::\w+)*)\s*'
                         r'\(\s*[+-]?(?:0[xX][0-9a-fA-F]+|[0-9]+)'
                         r'(?:\s*,\s*[+-]?(?:0[xX][0-9a-fA-F]+|[0-9]+))*\s*\)\s*;',
                         declaration, re.DOTALL)
@@ -329,4 +330,3 @@ def _function_end(text: str, brace: int) -> int:
             state = "code"
         index += 1
     raise SourceError("unterminated function body")
-

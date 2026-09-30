@@ -13,6 +13,7 @@ evidence = "Mac shootMissile at code0+0x7465c loads TOC1+0x86c, whose loader poi
 [[data]]
 retail_va = 0x006aace8
 source = "src/drawing.cpp"
+mac_symbol = "s_combatAreaLimits__13combatManager"
 same_tu_definition = true
 same_tu_external = true
 same_tu_constructed = true
