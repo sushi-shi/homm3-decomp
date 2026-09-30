@@ -2108,11 +2108,14 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
 
     {
         unsigned char flags = readValue<unsigned char>(infile);
-        m_retainXp = flags & 1;
-        m_retainPskills = (flags >> 1) & 1;
-        m_retainSskills = (flags >> 2) & 1;
-        m_retainSpellbook = (flags >> 3) & 1;
-        m_retainArtifacts = (flags >> 4) & 1;
+        // Mac 0x96308..0x96370 masks each bit in its original position and
+        // normalizes the result before the five bool stores. VC6 folds these
+        // truth tests to retail's shifts/masks; Windows remains 84.44137%.
+        m_retainXp = (flags & 1) != 0;
+        m_retainPskills = (flags & 2) != 0;
+        m_retainSskills = (flags & 4) != 0;
+        m_retainSpellbook = (flags & 8) != 0;
+        m_retainArtifacts = (flags & 16) != 0;
     }
 
     m_crossoverCreatures = readPackedBits<g_crossoverCreatureBits>(infile);
