@@ -762,7 +762,11 @@ public:
                        long* fireDamage) const;
     void adjustHitpoints();
     unsigned char attackHex(int hex, unsigned char restoreFacing);
-    unsigned char doAttack(army* armyToAttack, int direction);
+private:
+    // Original public ?do_attack@army@@AAA_NPAV1@H@Z: private bool.
+    // Keep this overload in its attested LF_FIELDLIST position.
+    bool doAttack(army* armyToAttack, int direction);
+public:
     void doAttack(int direction);
 
     // LF_FIELDLIST 0x205b entries 115..227. Overloads share one roster
@@ -784,7 +788,7 @@ public:
     void castResurrect(long hex);
     void castDemonicResurrect(long hex);
     void castFaerieDragonSpell(long hex);
-    unsigned char checkSpecialAttack(army* target);
+    bool checkSpecialAttack(army* target);
     void castSpell(long hex);
     // Complete retains this ordinary destructor in Army code at 0x43d400,
     // immediately after army(). Its body owns the member cleanup; callers
@@ -1071,7 +1075,7 @@ private:
     // 0x440500, reconstructed in army.cpp: the attacker's on-attack
     // debuff roll (bind/blind/disease/curse/age/stone/poison/acid/
     // paralyze); returns 1 for the three incapacitators.
-    unsigned char checkSpecialAttack(army* target);
+    bool checkSpecialAttack(army* target);
     // 0x440bc0, EH-bearing carcass in army.cpp; declared for
     // do_attack's kill-accounting tail.
     void doPostAttack(army* target, int iDamage, int iKilled,

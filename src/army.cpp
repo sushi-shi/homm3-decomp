@@ -834,9 +834,14 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
                 powY = midY() - g_combatManager->m_powSprite->getHeight() / 2;
                 break;
             default:
-                // Faithful artifact: the fallback aims BOTH coordinates
-                // at the recycled x slot (retail reads [ebp+8] twice -
-                // the second read is not y).
+                // Retail reads the recycled flags slot [ebp+8] for BOTH
+                // coordinates here. Mac 0x4a570 and DC 0x44d0c bypass all
+                // coordinate assignments for modes outside 0..3. The
+                // table's modes 4/15 serve hex, projectile and tiled effects;
+                // known army-target callers use 0..3, but the generic army
+                // effect API has no placement guard. Keep the retail fallback
+                // until its source contract is resolved; the other platforms'
+                // unassigned coordinates do not establish Windows behavior.
                 powX = x;
                 powY = x;
                 break;
@@ -1526,13 +1531,17 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
 // apply. Returns 1 only for the three incapacitators - blind, stone,
 // paralyze - which is what suppresses the retaliation.
 
+// Original public ?check_special_attack@army@@QAA_NPAV1@@Z proves bool.
+// Retail and Mac return 0/1; doAttack forwards this result to its public
+// direction wrapper, where it suppresses retaliation.
+//
 // The dendroid arm is TWO add_item calls (the static above, inlined
 // whole with its std::find and its push_back's insert COMDAT), the
 // first one guarded: an already-bound target returns without
 // re-raising the pending spell or the mirror link.
 
 VA(0x00440500, 0x4B4) MAC_ADDRESS(0x04c16c, 0x440)  // dc 0x461a0
-unsigned char army::checkSpecialAttack(army* target)
+bool army::checkSpecialAttack(army* target)
 {
     switch (m_creatureType) {
     case CREATURE_GHOST_DRAGON:
@@ -1869,25 +1878,18 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // the blow incapacitated the defender (the special's own answer, or a
 // fresh full blind).
 
-// GetName expands at the two damage_message sites and stays a call at
-// the sprintf. Dreamcast records the three MarkCreatureEffect source calls
-// without intervening get_owning_side calls; passing each army's combatSide
-// and bitIndex members directly restores all three retail expansions.
+// Dreamcast records the three MarkCreatureEffect source calls; the
+// canonical helper is retained at each site and expands in retail.
 
-// SPELLING LEDGER (0 -> 88.11 -> 93.99 -> 95.52 -> 98.59 -> 99.9616 -> 99.9962):
-// the two over-inlines take statement-scoped depth(0) pins with the call
-// hoisted to a local (striking_side, creature_name); the berserk criteria is
-// an IF/ELSE around two GetAttackMask calls, not a ternary. Naming the two
-// ComputeBaseDamage results and the adjacent hex fixes VC6's nested-argument
-// evaluation order. The DC prototype and retail's destination slots prove
-// do_multi_head_attack's fourth output is fire_shield_damage, not total_life.
-// A nested shield-charge scope gives retail's dead [ebp+8] parameter home;
-// spelling the null arm explicitly gives its fall-through and zero register.
-// The remaining instruction delta is the EDI/EBX reload order after
-// do_multi_head_attack; all 106 blocks, 58 branches and 31 calls agree.
+// Original public ?do_attack@army@@AAA_NPAV1@H@Z proves this overload is
+// private and returns bool. The direction overload is the public entry;
+// all calls to the single-swing helper remain inside army. Mac forwards
+// CheckSpecialAttack's byte result, replacing it with true for fresh blind.
+// The remaining Windows differences are scratch-register choices in three
+// MarkCreatureEffect expansions and the reload order after DoMultiHeadAttack.
 
 VA(0x00441610, 0x6A0) MAC_ADDRESS(0x04d288, 0x638)  // corroborates, dc 0x46bec
-unsigned char army::doAttack(army* armyToAttack, int direction)
+bool army::doAttack(army* armyToAttack, int direction)
 {
     unsigned attackMask;
     army* behind = 0;
@@ -1979,7 +1981,7 @@ unsigned char army::doAttack(army* armyToAttack, int direction)
     } else {
         m_showAttackFrameType = cs_attack_r;
     }
-    unsigned char special = checkSpecialAttack(armyToAttack);
+    bool special = checkSpecialAttack(armyToAttack);
     g_combatManager->powEffect(-1, 0);
     if (!is(creatureMultiHeaded)) {
         if (behind && behind->m_creatureType != armyToAttack->m_creatureType)
@@ -2029,7 +2031,7 @@ void army::doAttack(int direction)
         armyToAttack->m_residualBlindness = 1;
     if (armyToAttack->getSpellTime(74))
         armyToAttack->m_residualParalyze = 1;
-    unsigned char killed = doAttack(armyToAttack, direction);
+    bool killed = doAttack(armyToAttack, direction);
     m_joustBonus = 0;
     if (armyToAttack->m_numTroops > 0
         && armyToAttack->canRetaliate(*this) && !killed) {
