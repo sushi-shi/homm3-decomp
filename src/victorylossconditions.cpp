@@ -6,7 +6,9 @@
 
 #include "game.h"
 
-VA(0x005f15a0, 0x63) MAC_ADDRESS(0x1fd30c, 0xc0)  // dc 0x18fdc4
+VA(0x005f15a0, 0x63)
+DC_ADDRESS(0x18fdc4, 0x34)
+MAC_ADDRESS(0x1fd30c, 0xc0)
 int VictoryConditionStruct::appliesToPlayer(long playerId) const
 {
     if (!m_appliesToComputer) {
@@ -49,7 +51,9 @@ static const int g_angelicAllianceSecondMap = 9;
 // (cost 58) only 30, so it stays a call where retail expands it and stores
 // out_of_range's vptr after logic_error's ctor; about 28 more depth-1
 // budget is missing and no evidenced statement supplies it.
-VA(0x005f1610, 0x4FE) MAC_ADDRESS(0x1fd3cc, 0x44c)  // dc 0x18fdf8
+VA(0x005f1610, 0x4FE)
+DC_ADDRESS(0x18fdf8, 0x9e)
+MAC_ADDRESS(0x1fd3cc, 0x44c)
 unsigned char VictoryConditionStruct::checkForArtifactWin()
 {
     SCampaign& campaign = g_game->m_campaign;
@@ -143,7 +147,9 @@ unsigned char VictoryConditionStruct::checkForArtifactWin()
     return 0;
 }
 
-VA(0x005f1b10, 0x169) MAC_ADDRESS(0x1fd818, 0x1e4)  // dc 0x18fe98
+VA(0x005f1b10, 0x169)
+DC_ADDRESS(0x18fe98, 0xea)
+MAC_ADDRESS(0x1fd818, 0x1e4)
 unsigned char VictoryConditionStruct::checkForTotalCreatures()
 {
     if (m_type == VICTORY_CONDITION_TOTAL_CREATURES) {
@@ -169,7 +175,9 @@ unsigned char VictoryConditionStruct::checkForTotalCreatures()
     return 0;
 }
 
-VA(0x005f1c80, 0xB9) MAC_ADDRESS(0x1fd9fc, 0x130)  // dc 0x18ff84
+VA(0x005f1c80, 0xB9)
+DC_ADDRESS(0x18ff84, 0xb4)
+MAC_ADDRESS(0x1fd9fc, 0x130)
 unsigned char VictoryConditionStruct::checkForTotalResources()
 {
     if (m_type == VICTORY_CONDITION_TOTAL_RESOURCES
@@ -186,7 +194,9 @@ unsigned char VictoryConditionStruct::checkForTotalResources()
     return 0;
 }
 
-VA(0x005f1d40, 0x1A4) MAC_ADDRESS(0x1fdb2c, 0x298)  // dc 0x190038
+VA(0x005f1d40, 0x1A4)
+DC_ADDRESS(0x190038, 0xec)
+MAC_ADDRESS(0x1fdb2c, 0x298)
 unsigned char VictoryConditionStruct::checkForUpgradedTown()
 {
     if (m_type != VICTORY_CONDITION_UPGRADE_TOWN
@@ -232,7 +242,9 @@ unsigned char VictoryConditionStruct::checkForUpgradedTown()
     return 0;
 }
 
-VA(0x005f1ef0, 0x203) MAC_ADDRESS(0x1fddc4, 0x2d0)  // dc 0x190124
+VA(0x005f1ef0, 0x203)
+DC_ADDRESS(0x190124, 0x120)
+MAC_ADDRESS(0x1fddc4, 0x2d0)
 unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
 {
     if (m_type != VICTORY_CONDITION_BUILD_GRAIL
@@ -269,7 +281,9 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
     }
 }
 
-VA(0x005f2100, 0x53) MAC_ADDRESS(0x1fe094, 0x90)  // dc 0x190244
+VA(0x005f2100, 0x53)
+DC_ADDRESS(0x190244, 0x80)
+MAC_ADDRESS(0x1fe094, 0x90)
 bool VictoryConditionStruct::checkForHeroDefeatWin(
     const int winningPlayer, const hero* loser)
 {
@@ -285,7 +299,9 @@ bool VictoryConditionStruct::checkForHeroDefeatWin(
     return false;
 }
 
-VA(0x005f2160, 0xFD) MAC_ADDRESS(0x1fe124, 0x184)  // dc 0x1902c4
+VA(0x005f2160, 0xFD)
+DC_ADDRESS(0x1902c4, 0x7a)
+MAC_ADDRESS(0x1fe124, 0x184)
 unsigned char VictoryConditionStruct::isGrailTarget(town* thisTown)
 {
     type_point anyTownLoc(-1, -1, -1);
@@ -294,8 +310,9 @@ unsigned char VictoryConditionStruct::isGrailTarget(town* thisTown)
     return isGrailTarget(thisTownLoc, grailTownLoc, anyTownLoc);
 }
 
-
-VA(0x005f2260, 0x34) MAC_ADDRESS(0x1fe2a8, 0x6c)  // dc 0x190340
+VA(0x005f2260, 0x34)
+DC_ADDRESS(0x190340, 0x3a)
+MAC_ADDRESS(0x1fe2a8, 0x6c)
 bool VictoryConditionStruct::isTownCaptureTarget(town* thisTown)
 {
     if (m_type != VICTORY_CONDITION_CAPTURE_TOWN)
@@ -306,7 +323,9 @@ bool VictoryConditionStruct::isTownCaptureTarget(town* thisTown)
     return true;
 }
 
-VA(0x005f22a0, 0xE6) MAC_ADDRESS(0x1fe314, 0x154)  // dc 0x19037c
+VA(0x005f22a0, 0xE6)
+DC_ADDRESS(0x19037c, 0x8e)
+MAC_ADDRESS(0x1fe314, 0x154)
 unsigned char VictoryConditionStruct::checkForTownCaptureWin()
 {
     if (m_type != VICTORY_CONDITION_CAPTURE_TOWN
@@ -327,7 +346,9 @@ unsigned char VictoryConditionStruct::checkForTownCaptureWin()
     return 1;
 }
 
-VA(0x005f2390, 0x267) MAC_ADDRESS(0x1fe468, 0x3a8)  // dc 0x19040c
+VA(0x005f2390, 0x267)
+DC_ADDRESS(0x19040c, 0x7a)
+MAC_ADDRESS(0x1fe468, 0x3a8)
 bool VictoryConditionStruct::checkForDefeatedMonsterWin(
     const hero* thisHero, const type_point monsterLoc)
 {
@@ -360,7 +381,9 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
     return 0;
 }
 
-VA(0x005f2600, 0x117) MAC_ADDRESS(0x1fe810, 0x194)  // dc 0x190488
+VA(0x005f2600, 0x117)
+DC_ADDRESS(0x190488, 0xb0)
+MAC_ADDRESS(0x1fe810, 0x194)
 unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
 {
     if (m_type != VICTORY_CONDITION_FLAG_ALL_GENERATORS
@@ -381,7 +404,9 @@ unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
     return 1;
 }
 
-VA(0x005f2720, 0xEB) MAC_ADDRESS(0x1fe9a4, 0x190)  // dc 0x190538
+VA(0x005f2720, 0xEB)
+DC_ADDRESS(0x190538, 0xe6)
+MAC_ADDRESS(0x1fe9a4, 0x190)
 unsigned char VictoryConditionStruct::checkForFlaggedMineWin()
 {
     if (m_type != VICTORY_CONDITION_FLAG_ALL_MINES
@@ -402,7 +427,8 @@ unsigned char VictoryConditionStruct::checkForFlaggedMineWin()
     return 1;
 }
 
-VA(0x005f2810, 0x45) MAC_ADDRESS(0x1feb34, 0x6c)  // hd-crossbuild
+VA(0x005f2810, 0x45)
+MAC_ADDRESS(0x1feb34, 0x6c)  // hd-crossbuild
 unsigned char VictoryConditionStruct::checkForTimeSurvival()
 {
     if (m_type == VICTORY_CONDITION_SURVIVE_TIME) {
@@ -417,7 +443,9 @@ unsigned char VictoryConditionStruct::checkForTimeSurvival()
 
 // DC lines448..458 retain the positive point-match scope. Complete retail
 // needs the same scope to place the common failure epilogue after success.
-VA(0x005f2860, 0x1DE) MAC_ADDRESS(0x1feba0, 0x2bc)  // dc 0x190620
+VA(0x005f2860, 0x1DE)
+DC_ADDRESS(0x190620, 0xb2)
+MAC_ADDRESS(0x1feba0, 0x2bc)
 unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
     const hero* thisHero, const type_point townLoc)
 {
@@ -517,7 +545,7 @@ static const int g_lossPortrait146 = 0x92;
 // Retail +0x1b0 loads the combination-artifact table before initializing the
 // loop index and keeps the components reference across hasArtifact calls.
 // Re-subscripting the global on every iteration incorrectly reloads the table.
-// DC 0x1906d4 proves the const hero parameter, but its older campaign-3-only
+// DC proves the const hero parameter, but its older campaign-3-only
 // implementation writes the loss state here. Complete performs those writes
 // in the following helper; do not import the older stores or entry type guard.
 // Controls: deleting only the duplicate tail 10.6676%; early guard with byte
@@ -545,7 +573,9 @@ static const int g_lossPortrait146 = 0x92;
 // index reproduces those homes. The full source model raises Mac to 55.6973%
 // (previous recorded peak 51.2799%); Windows 81.15% vs 82.02% is recovery debt.
 // E:\gamedcs\victorylossconditions.cpp:463
-VA(0x005f2a40, 0x3C8) MAC_ADDRESS(0x1fee5c, 0x448)  // anchor-global, dc 0x1906d4
+VA(0x005f2a40, 0x3C8)
+DC_ADDRESS(0x1906d4, 0x78)
+MAC_ADDRESS(0x1fee5c, 0x448)  // anchor-global
 unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
 {
     if (g_inCampaign) {
@@ -664,7 +694,8 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
     return defeated;
 }
 
-VA(0x005f2e10, 0x2F) MAC_ADDRESS(0x1ff2a4, 0x60)
+VA(0x005f2e10, 0x2F)
+MAC_ADDRESS(0x1ff2a4, 0x60)
 unsigned char LossConditionStruct::heroKilled(const hero* loser)
 {
     if (checkForDefeatedHeroLoss(loser)) {
@@ -681,7 +712,9 @@ unsigned char LossConditionStruct::heroKilled(const hero* loser)
 // location local delays field extraction; an explicit result assignment
 // adds another copy. Windows stays 99.8429% with only the two stack homes
 // exchanged; keep the canonical constructor, getLocation and operator==.
-VA(0x005f2e40, 0xD9) MAC_ADDRESS(0x1ff304, 0x140)  // dc 0x19074c
+VA(0x005f2e40, 0xD9)
+DC_ADDRESS(0x19074c, 0x70)
+MAC_ADDRESS(0x1ff304, 0x140)
 unsigned char LossConditionStruct::checkForDefeatedTownLoss(
     const int oldOwner, const town* lostTown)
 {
@@ -697,7 +730,9 @@ unsigned char LossConditionStruct::checkForDefeatedTownLoss(
     return 0;
 }
 
-VA(0x005f2f20, 0x50) MAC_ADDRESS(0x1ff444, 0x78)  // dc 0x1907bc
+VA(0x005f2f20, 0x50)
+DC_ADDRESS(0x1907bc, 0xa0)
+MAC_ADDRESS(0x1ff444, 0x78)
 unsigned char LossConditionStruct::checkForTimeLimitExpired()
 {
     if (m_type == LOSS_CONDITION_TIME_LIMIT) {

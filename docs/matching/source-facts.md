@@ -1,5 +1,51 @@
 # Reviewing Dreamcast source facts
 
+## Dreamcast procedure addresses
+
+`DC_ADDRESS(offset, size)` on a function definition owns its Dreamcast
+procedure identity. Both values come from the pinned executable's embedded
+NB11 procedure record: the offset is relative to `.text`, and the size is
+the SH4 body extent. Neither value is a Windows VA. For example:
+
+```cpp
+DC_ADDRESS(0x041e5c, 0x78)
+MAC_ADDRESS(0x0459a4, 0xb0)
+void type_AI_spellcaster::considerSummon(type_spell_choice& choice) const
+```
+
+Use `VA(...)`, `DC_ADDRESS(...)`, `MAC_ADDRESS(...)` order, one macro per
+line, omitting platforms without a claim. Leave a blank line before the
+block's evidence comments, or before its first macro if there are no comments.
+Keep the comments directly attached to the block and omit addresses already
+recorded by its macros. Header helpers without Windows or Mac claims use the same
+macro. Repeat it for distinct retained emissions of one template body. Under
+VC6 and CodeWarrior it expands to nothing; Clang exposes the claim to the
+source inventory. Address annotations do not change function score hashes.
+
+`homm3 source-inventory` checks each claim against the raw symbols, including
+entry address, extent, function identity, and the inventory's typed overload
+mapping. Duplicate owners, malformed macros, and claims without an active
+authored definition are errors. Reviewed platform interfaces still require
+the original name; a changed signature cannot claim an unrelated procedure.
+Original-name comments remain evidence for deliberate semantic renames,
+while source paths and caller/line observations can remain explanatory prose.
+DC addresses in comments no longer supply browsing links.
+
+The migration census additionally fails on every matched procedure without a
+claim, including extra template emissions:
+
+```sh
+homm3 source-inventory --require-dc-addresses
+```
+
+This census was made green during migration and is opt-in afterward; normal
+build gates retain symbol verification. Run it again when new functions are
+recovered. The ordinary inventory still requires every DC procedure and game
+definition to be matched or have an explicit reviewed disposition. Inlined
+source-row evidence and declaration-only identities have no standalone body
+extent and retain their distinct `@dc-inline-origin` / `@dc-declaration-only`
+annotations; they must not invent a `DC_ADDRESS`.
+
 ## Retail body coverage is not method completeness
 
 Matching progress counts inventoried retail function bodies. Identical COMDAT

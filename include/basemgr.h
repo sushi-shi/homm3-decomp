@@ -28,7 +28,8 @@ public:
     char m_mgrName[32];
     int m_status;
 
-    // Original: baseManager::SetStatus; basemgr.h:41, dc 0x15efd0.
+    // Original: baseManager::SetStatus; basemgr.h:41
+    DC_ADDRESS(0x15efd0, 0x4)
     void setStatus(short newStatus) { m_status = newStatus; }
 
     baseManager();

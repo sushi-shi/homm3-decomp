@@ -17,31 +17,35 @@
 // Unqualified min/max also reach std's templates (VC6's library has none).
 using namespace std;
 
-// E:\gamedcs\includes.h:97, dc 0x1ef28. The wrapper owns argument
+// E:\gamedcs\includes.h:97 The wrapper owns argument
 // copies, then dereferences the selector's returned argument address.
+DC_ADDRESS(0x01ef28, 0x34)
 inline int max(int left, int right)
 {
     return cppMax(left, right);
 }
 
-// E:\gamedcs\includes.h:114, dc 0x2da4.
+// E:\gamedcs\includes.h:114
+DC_ADDRESS(0x002da4, 0x28)
 inline int min(int left, int right)
 {
     return cppMin(left, right);
 }
 
-// Original: min; includes.h:117, dc 0x4c9c0.
+// Original: min; includes.h:117
+DC_ADDRESS(0x04c9c0, 0x2c)
 inline double min(double left, double right)
 {
     return cppMin(left, right);
 }
 
-// E:\gamedcs\includes.h:124, dc 0x20d2c. CodeView types all three
+// E:\gamedcs\includes.h:124 CodeView types all three
 // parameters and the return as const references. The retained retail body and
 // ordinary limit expansions use maximum < value for the upper clamp. Retail
 // expands this helper through the by-value limit wrapper in the adventure and
 // small-window TUs.
 template <class T>
+DC_ADDRESS(0x020d2c, 0x38)
 inline const T& tLimit(const T& minimum, const T& value,
                        const T& maximum)
 {
@@ -53,7 +57,9 @@ inline const T& tLimit(const T& minimum, const T& value,
         return value;
     }
 }
+
 // E:\gamedcs\includes.h:134
+DC_ADDRESS(0x01ef5c, 0x38)
 inline int limit(int minimum, int value, int maximum)
 {
     return tLimit(minimum, value, maximum);
@@ -74,7 +80,9 @@ public:
     int m_numbersLeft;
     std::vector<bool> m_available;
     TPickANumber(int lowBound, int high);
-    // Original: TPickANumber::IsAvailable; includes.h:166, dc 0xfe374.
+
+    // Original: TPickANumber::IsAvailable; includes.h:166
+    DC_ADDRESS(0x0fe374, 0x24)
     unsigned char isAvailable(int number) const
     {
         return m_available[number - m_low];
@@ -88,10 +96,14 @@ public:
 // game.obj emits the Dreamcast copies but does not own their source bodies.
 class TPickRandomTownName : public TPickANumber {
 public:
+
     // game.cpp's array initializer takes this constructor's address.
     VA(0x004caa10, 0x10)
+    DC_ADDRESS(0x0bc7c8, 0x24)
     TPickRandomTownName() : TPickANumber(0, 15) {}
-    // E:\gamedcs\includes.h:178, dc 0xbc7ec
+
+    // E:\gamedcs\includes.h:178
+    DC_ADDRESS(0x0bc7ec, 0x7c)
     void reset()
     {
         for (int i = 0; i < m_available.size(); ++i)

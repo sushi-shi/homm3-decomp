@@ -51,9 +51,19 @@ inner loop. Normally supply the active TU so shared-header edits rebuild only
 that TU during iteration. It reports the selected TU's per-function projected
 MAX movements without banking them; unchanged-source CUR dips stay silent.
 That TU's Mac pairs are scored from its full-TU CodeWarrior object in the
-same loop. Run `homm3 build` for the final checkpoint: it rebuilds affected
-TUs, refreshes retail targets through delinking, scores every Mac pair, and
-runs the gates.
+same loop.
+
+For ordinary matching, improve the current Windows game function using native
+evidence, run the targeted build, regenerate README with
+`homm3 status summary --write-readme`, then commit and push. This applies to workers too.
+Do not run routine full builds, tests, standalone validation checks or broad
+accounting passes. Inspect evidence and compiler differences as needed to solve
+the current function; do not turn the diagnostic commands below into a checklist.
+Keep canonical helpers and natural C++ throughout the matching loop.
+Workers use separate worktrees and return their commits for integration; the
+coordinator regenerates the combined README and pushes to the default branch.
+A full `homm3 build` is available when explicitly requested for a broader
+checkpoint; it is not a prerequisite for publishing a matching improvement.
 
 ## Byte-matching evidence: DC source layout as well as statements
 
@@ -166,9 +176,9 @@ helpers, and scopes through temporary score dips, including header/TU collateral
 measure that collateral and keep prior peaks in max/history. Score dips are
 observational, not build failures. `homm3 status check` reports source-edit
 MAX drops as RESET when CUR held against the banked snapshot, CHANGED-CUR
-when it moved, or MISSING when the body vanished. Compare a rebased lane with
-main using `homm3 status check --baseline-ref REF`; the full build banks its
-local ledger automatically, so the explicit ref remains useful afterward.
+when it moved, or MISSING when the body vanished. For a specifically requested
+baseline investigation, `homm3 status check --baseline-ref REF` compares a lane
+with main; this is not a routine matching or integration step.
 `homm3 status merge-baseline` merges a conflicted ledger three ways during
 rebase; review its result before staging. The invariant is CUR <= MAX <= HIST:
 MAX is monotone for an unchanged function hash, a proven edit resets MAX to
@@ -179,13 +189,14 @@ all-time peak. Tooling prioritizes MAX; HIST is a lead for recovering lost peaks
 
 The routine matching loop is evidence, C++, VC6 and retail comparison. Do not
 create or run a per-function mock behavior suite as a matching requirement.
-Use a temporary behavioral check only for a concrete unresolved semantic
-question; agreement with a mock is not proof of a retail match.
+Resolve semantic questions using native evidence and the targeted compiler
+comparison; agreement with a mock is not proof of a retail match.
 
 Keep regression tests for tooling contracts such as cache freshness, symbol and
 relocation pairing, score accounting, source ownership and search rendering.
-Run relevant tests when changing that tooling. Build gates and the search
-driver's baseline/reproduction controls remain part of normal matching.
+Tooling tests belong to separately scoped tooling work, not ordinary function
+matching. Preserve the search driver's built-in baseline/reproduction controls
+when using it; do not add standalone validation passes to the matching loop.
 
 Keep one-off search manifests, generators, snapshots and diagnostic fixtures in
 ignored `build/`, alongside the JSON source-family results. Prefer JSON axes and

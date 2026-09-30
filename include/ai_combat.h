@@ -84,6 +84,8 @@ public:
     void castResurrection(type_spell_choice& choice,
                            const hero* castingHero);
     long takeDamage(long damage);
+
+    DC_ADDRESS(0x02c698, 0xa)
     bool operator<(const type_monster_data& arg) const
     {
         return m_value < arg.m_value;
@@ -232,21 +234,25 @@ protected:
 };
 
 // Getter body order recorded at ai_combat.h:245, 250, 255 and 260.
+DC_ADDRESS(0x02c6a4, 0x4)
 inline long type_AI_combat_data::getMana() const
 {
     return m_mana;
 }
 
+DC_ADDRESS(0x02c6a8, 0x4)
 inline armyGroup* type_AI_combat_data::getArmy() const
 {
     return m_currentArmy;
 }
 
+DC_ADDRESS(0x02c6ac, 0x4)
 inline long type_AI_combat_data::getTotal() const
 {
     return m_totalCombatValue;
 }
 
+DC_ADDRESS(0x02c6b0, 0x4)
 inline hero* type_AI_combat_data::getHero() const
 {
     return m_currentHero;

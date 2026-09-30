@@ -84,7 +84,7 @@ static unsigned char g_viewHeroes;
 // are read as a float. Retail materialises those bits on the stack and loads
 // the float before adding the double argument. A named double temporary gives
 // init's inlined copy the retail stack layout and exact VC6 bytes.
-
+DC_ADDRESS(0x192ee8, 0x62)
 static long ftol(double d)
 {
     const unsigned long magic = 0x59c00000;
@@ -120,7 +120,9 @@ static long ftol(double d)
 // assignments and early return (89.00%). Clipping the offset-adjusted x/y
 // parameters and drawing from saved copies instead drops to 84.93%; retail
 // compares the clipped copies (ECX/EAX) where VC6 here compares the originals.
-VA(0x005f73b0, 0x14D) MAC_ADDRESS(0x202fa4, 0x1ac)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x192f4c
+VA(0x005f73b0, 0x14D)
+DC_ADDRESS(0x192f4c, 0x140)
+MAC_ADDRESS(0x202fa4, 0x1ac)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket
 void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int y, int z)
 {
     int offset = (32.0f - g_viewWorldScaleFloat) / 2.0f;
@@ -166,6 +168,7 @@ void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
     }
 }
 
+DC_ADDRESS(0x1968d0, 0x148)
 inline void vwClipScaleToScreenBuffer(int destX, int destY)
 {
     if (destX + g_viewWorldScale < 8 || destX >= 600)
@@ -218,6 +221,7 @@ inline void vwClipScaleToScreenBuffer(int destX, int destY)
 // This is the caller-facing half of the same source boundary. Retail expands
 // it into VWDrawAdvObj, including the nested clipped helper above; keeping the
 // real helpers visible lets VC6 make that decision without a synthetic gate.
+DC_ADDRESS(0x196a18, 0x100)
 inline void vwScaleToScreenBuffer(int destX, int destY)
 {
     if (destX < 8 || destX + g_viewWorldScale >= 600
@@ -253,7 +257,9 @@ inline void vwScaleToScreenBuffer(int destX, int destY)
 // 2026-09-29: getMap through reinterpret_cast costs 43 (floor-gated),
 // isValidSeq without `!= 0` costs 41; both byte-flat here. An if/return
 // getNumFrames is worse (93.30%).
-VA(0x005f7500, 0x3F7) MAC_ADDRESS(0x203150, 0x530)  // dc 0x19308c
+VA(0x005f7500, 0x3F7)
+DC_ADDRESS(0x19308c, 0x34c)
+MAC_ADDRESS(0x203150, 0x530)
 void advManager::vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
     hero* currHero = g_game->getHero(heroParts.m_id);
@@ -313,7 +319,9 @@ void advManager::vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int 
     }
 }
 
-VA(0x005f7900, 0x3F7) MAC_ADDRESS(0x203680, 0x530)  // dc 0x1933d8
+VA(0x005f7900, 0x3F7)
+DC_ADDRESS(0x1933d8, 0x34c)
+MAC_ADDRESS(0x203680, 0x530)
 void advManager::vwDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
     hero* currHero = g_game->getHero(heroParts.m_id);
@@ -373,7 +381,9 @@ void advManager::vwDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX
     }
 }
 
-VA(0x005f7d00, 0x1E1) MAC_ADDRESS(0x203bb0, 0x298)  // dc 0x193724
+VA(0x005f7d00, 0x1E1)
+DC_ADDRESS(0x193724, 0x1a8)
+MAC_ADDRESS(0x203bb0, 0x298)
 void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
     boat* currBoat = g_game->getBoat(boatParts.m_id);
@@ -401,7 +411,9 @@ void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int 
         currBoat->getHflip());
 }
 
-VA(0x005f7ef0, 0x1E1) MAC_ADDRESS(0x203e48, 0x298)  // dc 0x1938cc
+VA(0x005f7ef0, 0x1E1)
+DC_ADDRESS(0x1938cc, 0x1a8)
+MAC_ADDRESS(0x203e48, 0x298)
 void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
     boat* currBoat = g_game->getBoat(boatParts.m_id);
@@ -431,7 +443,9 @@ void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX
 
 // The dispatch is a jump table, so the emitted arm order IS the source case
 // order.
-VA(0x005f80e0, 0x1F6) MAC_ADDRESS(0x2040e0, 0x27c)  // dc 0x193a74
+VA(0x005f80e0, 0x1F6)
+DC_ADDRESS(0x193a74, 0x200)
+MAC_ADDRESS(0x2040e0, 0x27c)
 void advManager::vwDrawSymbols(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
@@ -486,7 +500,9 @@ void advManager::vwDrawSymbols(int srcX, int srcY, int z, int destX, int destY)
 // and statement order. Complete's retail body independently corroborates the
 // same six-layer object walk, separate hero/boat part scopes, flagged-object
 // path, cursor cases, and final scaled-buffer helper expansion.
-VA(0x005f82e0, 0x8F1) MAC_ADDRESS(0x20435c, 0x9bc)  // link order + signature/callee/CFG corroboration, dc 0x193c74
+VA(0x005f82e0, 0x8F1)
+DC_ADDRESS(0x193c74, 0x778)
+MAC_ADDRESS(0x20435c, 0x9bc)  // link order + signature/callee/CFG corroboration
 void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
@@ -726,7 +742,9 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 // local. Measured worse: caching GetMap(0,0) in a local across the row loop
 // (unit 96.76 -> 95.77 - retail reloads it), and dropping the clamp upper
 // bounds (this body +1.36, unit -2.03).
-VA(0x005f8be0, 0x636) MAC_ADDRESS(0x204ea0, 0x5e4)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer), dc 0x1943ec
+VA(0x005f8be0, 0x636)
+DC_ADDRESS(0x1943ec, 0x462)
+MAC_ADDRESS(0x204ea0, 0x5e4)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer)
 void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
@@ -830,7 +848,9 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
 // disjunction, the RiverSet test through the bitfield unit, the scaled origin
 // pair, the inlined clear of the scratch buffer and the DrawTile through
 // riverTileset. advmgr.cpp's full-size DrawRiver is the unscaled twin.
-VA(0x005f9220, 0x38A) MAC_ADDRESS(0x205484, 0x2cc)  // exhaustive dc-order-map + VWCompleteDraw call order (2nd layer), dc 0x194850
+VA(0x005f9220, 0x38A)
+DC_ADDRESS(0x194850, 0x17c)
+MAC_ADDRESS(0x205484, 0x2cc)  // exhaustive dc-order-map + VWCompleteDraw call order (2nd layer)
 void advManager::vwDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
@@ -874,7 +894,9 @@ void advManager::vwDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 // helpers is byte-flat, while why-reg's six guided local/declaration probes
 // are all worse. Keep the canonical shared helpers and their exact retained
 // clipped body rather than forcing this caller's register assignment.
-VA(0x005f95b0, 0x38B) MAC_ADDRESS(0x205750, 0x2cc)  // exhaustive dc-order-map + VWCompleteDraw call order (3rd layer), dc 0x1949cc
+VA(0x005f95b0, 0x38B)
+DC_ADDRESS(0x1949cc, 0x17c)
+MAC_ADDRESS(0x205750, 0x2cc)  // exhaustive dc-order-map + VWCompleteDraw call order (3rd layer)
 void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
@@ -918,7 +940,9 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 // retail keeps this no-draw-first order. DC 1045's bCloudFlip store before
 // baseX/baseY is +0.04 only. Retail's frame is 0x10 against our 0xc: hflip
 // and lookup get real locals where this body reuses the parameter homes.
-VA(0x005f9940, 0x44A) MAC_ADDRESS(0x205a1c, 0x4dc)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48
+VA(0x005f9940, 0x44A)
+DC_ADDRESS(0x194b48, 0x284)
+MAC_ADDRESS(0x205a1c, 0x4dc)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer)
 void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth)
@@ -980,10 +1004,13 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
     vwScaleToScreenBuffer(baseX, baseY + 8);
 }
 
-VA(0x005f9d90, 0x13C) MAC_ADDRESS(0x204d18, 0x188)  // dc 0x1968d0
+VA(0x005f9d90, 0x13C)
+MAC_ADDRESS(0x204d18, 0x188)
 void vwClipScaleToScreenBuffer(int destX, int destY);
 
-VA(0x005f9ed0, 0x310) MAC_ADDRESS(0x205ef8, 0x370)  // dc 0x194dcc
+VA(0x005f9ed0, 0x310)
+DC_ADDRESS(0x194dcc, 0x1e2)
+MAC_ADDRESS(0x205ef8, 0x370)
 void advManager::vwDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
@@ -1033,7 +1060,9 @@ void advManager::vwDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
         vwScaleToScreenBuffer(baseX, baseY + 8);
 }
 
-VA(0x005fa1e0, 0x41F) MAC_ADDRESS(0x206268, 0x574)  // dc 0x194fb0
+VA(0x005fa1e0, 0x41F)
+DC_ADDRESS(0x194fb0, 0x308)
+MAC_ADDRESS(0x206268, 0x574)
 void advManager::vwDrawGround(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
@@ -1120,7 +1149,9 @@ void advManager::vwDrawGround(int srcX, int srcY, int z, int destX, int destY)
 // than it recovers push_back. The lever this body wants is the numerator from
 // the other side (SHRINK the caller), and the Dreamcast roster names no helper
 // to lift these blocks into, so it is out of reach without invented source.
-VA(0x005fa600, 0x1726) MAC_ADDRESS(0x2067dc, 0x2594)  // caller stack extent + vtable 0x643c54, dc 0x1952b8
+VA(0x005fa600, 0x1726)
+DC_ADDRESS(0x1952b8, 0x80c)
+MAC_ADDRESS(0x2067dc, 0x2594)  // caller stack extent + vtable 0x643c54
 TViewWorldWindow::TViewWorldWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
@@ -1292,7 +1323,9 @@ TViewWorldWindow::TViewWorldWindow()
 
 VA_COMPGEN(0x005fbd30, 0x21, SCALAR_DELETING_DTOR, TViewWorldWindow)
 
-VA(0x005fbd60, 0x86) MAC_ADDRESS(0x208d70, 0xe8)  // dc 0x195ac4
+VA(0x005fbd60, 0x86)
+DC_ADDRESS(0x195ac4, 0x84)
+MAC_ADDRESS(0x208d70, 0xe8)
 TViewWorldWindow::~TViewWorldWindow()
 {
     delete g_memoryBuffer;
@@ -1314,7 +1347,8 @@ static const int g_levelButtonClick = 13;
 // modifier) only: swap which of the two level buttons is pressed, redraw
 // the released one, repaint the world and the radar, and flip the
 // whole screen.
-VA(0x005fbdf0, 0xC6) MAC_ADDRESS(0x208e58, 0xe4)
+VA(0x005fbdf0, 0xC6)
+MAC_ADDRESS(0x208e58, 0xe4)
 int viewWorldSurfaceHandler(message& msg)
 {
     if (msg.m_codeX != g_levelButtonClick
@@ -1334,7 +1368,8 @@ int viewWorldSurfaceHandler(message& msg)
 
 // Complete-only address-taken callback. The constructor passes this entry to
 // the iAm010 underground button; the body sets origin.z and redraws the map.
-VA(0x005fbec0, 0xD0) MAC_ADDRESS(0x208f3c, 0xe4)
+VA(0x005fbec0, 0xD0)
+MAC_ADDRESS(0x208f3c, 0xe4)
 int viewWorldUndergroundHandler(message& msg)
 {
     if (msg.m_codeX != g_levelButtonClick
@@ -1352,7 +1387,9 @@ int viewWorldUndergroundHandler(message& msg)
     return 1;
 }
 
-VA(0x005fbf90, 0x2A3) MAC_ADDRESS(0x209020, 0x27c)  // dc 0x195b48
+VA(0x005fbf90, 0x2A3)
+DC_ADDRESS(0x195b48, 0x1e6)
+MAC_ADDRESS(0x209020, 0x27c)
 void advManager::viewWorld(int whatToDraw, TSkillMastery level)
 {
     g_inViewWorld = 1;
@@ -1437,7 +1474,9 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
 // The inlined ftol helper's double temporary occupies retail [ebp-8], with
 // skipLevel at [ebp-0xc] and its magic constant at [ebp-0x10]. The earlier
 // union spelling allocated four extra bytes and held this body at 98.8939%.
-VA(0x005fc240, 0x274) MAC_ADDRESS(0x20929c, 0x514)  // anchor-caller ViewWorld, anchor-callee UpdateRadar, dc 0x195d30
+VA(0x005fc240, 0x274)
+DC_ADDRESS(0x195d30, 0x2ca)
+MAC_ADDRESS(0x20929c, 0x514)  // anchor-caller ViewWorld, anchor-callee UpdateRadar
 void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
 {
     int i;
@@ -1489,11 +1528,12 @@ void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
     }
 }
 
-// E:\gamedcs\viewwrld.cpp:1549, dc 0x195ffc. This ordinary method's
+// E:\gamedcs\viewwrld.cpp:1549 This ordinary method's
 // only source operation is the five-argument adventure repaint. Complete
 // expands this method at some call sites; the Mac build retains six calls
 // across the level callbacks, viewWorld, updateViewWorld, updateRadar and
 // the puzzle path in the window handler.
+DC_ADDRESS(0x195ffc, 0x42)
 MAC_ADDRESS(0x2097b0, 0x58)
 void TViewWorldWindow::drawWindow()
 {
@@ -1501,7 +1541,9 @@ void TViewWorldWindow::drawWindow()
                                 m_viewableWidth, m_viewableHeight);
 }
 
-VA(0x005fc4c0, 0x2E0) MAC_ADDRESS(0x209808, 0x2b8)  // dc 0x196040
+VA(0x005fc4c0, 0x2E0)
+DC_ADDRESS(0x196040, 0x1e8)
+MAC_ADDRESS(0x209808, 0x2b8)
 void advManager::vwCompleteDraw(int startX, int startY, int z, int drawwidth,
                                 int drawheight)
 {
@@ -1546,7 +1588,9 @@ void advManager::vwCompleteDraw(int startX, int startY, int z, int drawwidth,
     drawAdventureMapGems();
 }
 
-VA(0x005fc7a0, 0x147) MAC_ADDRESS(0x209ac0, 0x178)  // dc 0x196228
+VA(0x005fc7a0, 0x147)
+DC_ADDRESS(0x196228, 0xd4)
+MAC_ADDRESS(0x209ac0, 0x178)
 void TViewWorldWindow::updateViewWorld(message* msg)
 {
     message msg2;
@@ -1574,7 +1618,9 @@ void TViewWorldWindow::updateViewWorld(message* msg)
     g_windowManager->updateScreen(0, 0, 800, 600);
 }
 
-VA(0x005fc8f0, 0x213) MAC_ADDRESS(0x209c38, 0x2a8)  // dc 0x1962fc
+VA(0x005fc8f0, 0x213)
+DC_ADDRESS(0x1962fc, 0x1e0)
+MAC_ADDRESS(0x209c38, 0x2a8)
 void TViewWorldWindow::updateRadar(int mrx, int mry, float radarDivisor)
 {
     widget* radar = g_advManager->m_advWindow->m_radarWidget;
@@ -1617,7 +1663,9 @@ void TViewWorldWindow::updateRadar(int mrx, int mry, float radarDivisor)
 // statements, which is why retail duplicates only the dialogReturn store.
 // The radar drag is a pump: hold the button, keep the LAST mouse-move
 // seen, and re-centre once per outer pass until the button comes up.
-VA(0x005fcb10, 0x37F) MAC_ADDRESS(0x209ee0, 0x464)  // vtable slot 9 + anchor-callee update_view_world/update_radar, dc 0x1964dc
+VA(0x005fcb10, 0x37F)
+DC_ADDRESS(0x1964dc, 0x3f4)
+MAC_ADDRESS(0x209ee0, 0x464)  // vtable slot 9 + anchor-callee update_view_world/update_radar
 int TViewWorldWindow::windowHandler(message& msg)
 {
     message rMsg;

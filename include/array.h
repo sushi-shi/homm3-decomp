@@ -32,6 +32,11 @@
 template<class T>
 class CAutoArray {
 public:
+
+    DC_ADDRESS(0x08c118, 0x30)
+    DC_ADDRESS(0x103054, 0x30)
+    DC_ADDRESS(0x11ff34, 0x30)
+    DC_ADDRESS(0x149674, 0x54)
     CAutoArray()
     {
         m_step = 25;
@@ -47,11 +52,21 @@ public:
     // retail's virtual Get(i) dispatch: in a destructor VC6 assumes the
     // exact type and devirtualizes, but inside the inlined Destroy - an
     // ordinary member - Get stays a vtable call.
+    DC_ADDRESS(0x08c148, 0x38)
+    DC_ADDRESS(0x103084, 0x38)
+    DC_ADDRESS(0x11ff64, 0x38)
+    DC_ADDRESS(0x1496c8, 0x50)
     virtual ~CAutoArray()
     {
         destroy(1);
     }
 
+    DC_ADDRESS(0x08bfac, 0x64)
+    DC_ADDRESS(0x08c010, 0x58)
+    DC_ADDRESS(0x08c068, 0x58)
+    DC_ADDRESS(0x08c0c0, 0x58)
+    DC_ADDRESS(0x08c180, 0x64)
+    DC_ADDRESS(0x149718, 0x88)
     void destroy(unsigned char deleteData = 1)
     {
         for (unsigned long i = 0; i < m_size; ++i) {
@@ -75,6 +90,10 @@ public:
     // an element loop cannot produce) sharing the `if (pArray)` guard with
     // the delete, and the tail stores through the VIRTUAL Put - `call
     // [vfptr+0xc]`, slot 3 - after the count has already been bumped.
+    DC_ADDRESS(0x08c1e4, 0x68)
+    DC_ADDRESS(0x1030bc, 0x68)
+    DC_ADDRESS(0x11ff9c, 0x68)
+    DC_ADDRESS(0x1497a0, 0xb0)
     virtual unsigned char add(T* element)
     {
         if (m_allocSize <= m_size) {
@@ -90,6 +109,10 @@ public:
         return put(m_size - 1, element);
     }
 
+    DC_ADDRESS(0x08c24c, 0x14)
+    DC_ADDRESS(0x103124, 0x14)
+    DC_ADDRESS(0x120004, 0x14)
+    DC_ADDRESS(0x149850, 0x26)
     virtual T* get(unsigned long elementNbr)
     {
         if (elementNbr >= m_size)
@@ -97,6 +120,10 @@ public:
         return m_array[elementNbr];
     }
 
+    DC_ADDRESS(0x08c260, 0x16)
+    DC_ADDRESS(0x103138, 0x16)
+    DC_ADDRESS(0x120018, 0x16)
+    DC_ADDRESS(0x149878, 0x2a)
     virtual unsigned char put(unsigned long elementNbr, T* element)
     {
         if (elementNbr >= m_size)
@@ -105,8 +132,12 @@ public:
         return 1;
     }
 
-    // Original: CAutoArray::Delete; array.h:113, dc 0x103150.
+    // Original: CAutoArray::Delete; array.h:113
     // The semantic suffix avoids the C++ keyword delete after case normalization.
+    DC_ADDRESS(0x08c278, 0x3a)
+    DC_ADDRESS(0x103150, 0x3a)
+    DC_ADDRESS(0x120030, 0x3a)
+    DC_ADDRESS(0x1498a4, 0x64)
     virtual unsigned char deleteElement(unsigned long elementNbr)
     {
         if (elementNbr >= m_size)
@@ -117,6 +148,10 @@ public:
         return 1;
     }
 
+    DC_ADDRESS(0x08c2b4, 0x6e)
+    DC_ADDRESS(0x10318c, 0x6e)
+    DC_ADDRESS(0x12006c, 0x6e)
+    DC_ADDRESS(0x149908, 0xa2)
     virtual unsigned char insert(unsigned long nextElementNbr, T* element)
     {
         if (nextElementNbr >= m_size)
@@ -129,6 +164,10 @@ public:
         return 1;
     }
 
+    DC_ADDRESS(0x08c324, 0x4)
+    DC_ADDRESS(0x1031fc, 0x4)
+    DC_ADDRESS(0x1200dc, 0x4)
+    DC_ADDRESS(0x1499ac, 0xc)
     virtual unsigned long getCount() { return m_size; }
 
 protected:

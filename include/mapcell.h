@@ -1,6 +1,8 @@
 #ifndef HOMM3_MAPCELL_H
 #define HOMM3_MAPCELL_H
 
+#include "va.h"
+
 #include <string>
 #include <vector>
 
@@ -807,7 +809,9 @@ public:
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
     unsigned char m_hasCustomGuardians;
     armyGroup m_guardians;
-    // E:\gamedcs\MapCell.h:333, dc 0xf4790
+
+    // E:\gamedcs\MapCell.h:333
+    DC_ADDRESS(0x0f4790, 0x3c)
     TreasureData() : m_hasCustomGuardians(0) {}
 };
 SIZE(TreasureData, 0x4c);
@@ -848,7 +852,8 @@ public:
     // loadBlackBoxList's resize temp proves the constructor: after the
     // TreasureData base and the three vectors have run their own, the only
     // remaining store is a zero into +0x4c.
-    // E:\gamedcs\MapCell.h:364, dc 0xf47cc
+    // E:\gamedcs\MapCell.h:364
+    DC_ADDRESS(0x0f47cc, 0xf0)
     BlackBoxData() : m_hasCustomTreasure(0) {}
 
     // Implicit destructor; CodeView dc 0xf4bfc compgenx.
@@ -890,11 +895,13 @@ public:
     signed char m_townNum;
     __int64 m_buildBuildings;
     unsigned short m_generatorBonuses[7];
+
     // MapCell.h:400 in the DC roster - a header-inline default constructor.
     // loadTownEventList's resize temp proves its whole body: after the base
     // string is tidied it zeroes the eight bytes of BuildBuildings and
     // nothing else, TownNum and the generator band staying uninitialized.
-    // E:\gamedcs\MapCell.h:400, dc 0xf48d8
+    // E:\gamedcs\MapCell.h:400
+    DC_ADDRESS(0x0f48d8, 0x30)
     TTownEvent() { m_buildBuildings = 0; }
     // Complete forwards the additional version argument to the base reader.
     int read(TAbstractFile* infile, int mapVersion);
@@ -914,9 +921,11 @@ public:
     // this written empty default for the existing resize temporaries.
     // DC class 0x309b has only generated default/copy constructors (0x103).
     CObjectType() {}
+
     // Dreamcast retains an out-of-line copy, while Complete
     // expands this header helper at the view-world draw-cell test.
-    // E:\gamedcs\MapCell.h:565, dc 0x1f958
+    // E:\gamedcs\MapCell.h:565
+    DC_ADDRESS(0x01f958, 0x1a)
     MAC_ADDRESS(0x127c38, 0x14)
     static unsigned getBitPos(unsigned x, unsigned y)
     {
@@ -991,16 +1000,20 @@ public:
     type_point getTrigger() const;
     CObjectType* getObjectTypePtr() const;
     TAdventureObjectType getType() const;
-    // Original: CObject::CObject; MapCell.h:587, dc 0xf4944.
+
+    // Original: CObject::CObject; MapCell.h:587
     // loadMapObjects' vector resize expands the distinct default ctor;
     // the recorded overload is not a five-argument ctor with defaults.
+    DC_ADDRESS(0x0f4944, 0x60)
     CObject() : m_x(0xff), m_y(0xff), m_z(0xff), m_typeIndex(0xffff)
     {
         m_extraInfo = 0xffffffff;
         m_animationOffset = static_cast<unsigned char>(random(0, 255));
     }
-    // Original: CObject::CObject; MapCell.h:595, dc 0xbc868.
+
+    // Original: CObject::CObject; MapCell.h:595
     // game::InsertObject expands this coordinate/type/extra-info overload.
+    DC_ADDRESS(0x0bc868, 0x74)
     CObject(unsigned char newX, unsigned char newY, unsigned char newZ,
             unsigned short newType, unsigned long newExtraInfo)
     {
@@ -1164,10 +1177,12 @@ public:
 
     // The retained vector-construction callback belongs to this header body;
     // mapcell.obj is its retail emission site, after NewfullMap::Init.
-    // E:\gamedcs\MapCell.h:685, dc 0xf49a4
+    // E:\gamedcs\MapCell.h:685
     // Mac NewfullMap::init passes this retained constructor through the
     // array-construction callback at 0x11f28c.
-    VA(0x004fd650, 0x3E) MAC_ADDRESS(0x11f354, 0x80)  // dc 0xf49a4
+    VA(0x004fd650, 0x3E)
+    DC_ADDRESS(0x0f49a4, 0xac)
+    MAC_ADDRESS(0x11f354, 0x80)
     NewmapCell()
     {
         m_groundSet = 0;
@@ -1220,7 +1235,9 @@ public:
     // DC type 0x30cb records public TArtifact Artifact. The map and save
     // formats encode different widths; decode those at the stream boundary.
     TArtifact m_artifact;
-    // E:\gamedcs\MapCell.h:735, dc 0xf4a50
+
+    // E:\gamedcs\MapCell.h:735
+    DC_ADDRESS(0x0f4a50, 0x28)
     MonsterData() { m_artifact = ARTIFACT_NONE; }
 };
 SIZE(MonsterData, 0x30);
@@ -1467,7 +1484,7 @@ public:
 
 // Canonical inline definitions in Dreamcast MapCell.h source-line order.
 
-// MapCell.h:769 in the DC roster (dc 0x2e48), i.e. a header inline of
+// MapCell.h:769 in the DC roster, i.e. a header inline of
 // this class - and retail keeps no out-of-line row for it either.
 // advManager::ProcessDeSelect's elevation-toggle arm expands it in
 // place: `movzx edx,[gpGame+0x1fc48] / inc edx / cmp edx,1 / jle`, the
@@ -1475,28 +1492,32 @@ public:
 // compilation personalities whose call sites prove the expansion
 // (victorylossconditions' z bound in CheckForDefeatedMonsterWin is
 // the same movzx/inc shape, 2026-08-20).
+DC_ADDRESS(0x002e48, 0xa)
 inline int NewfullMap::getNumLevels() { return m_hasTwoLevels + 1; }
 
 // Const route lookup retains the recovered helper and level arithmetic.
-// E:\gamedcs\MapCell.h:847, dc 0xbc8dc
+// E:\gamedcs\MapCell.h:847
+DC_ADDRESS(0x0bc8dc, 0x52)
 inline const NewmapCell* NewfullMap::zCell(int x, int y, int z) const
 {
     return m_cellData + x + y * m_size + z * m_size * m_size;
 }
 
-// MapCell.h:850, dc 0x1f974. This worker reproduces all 49 retail bytes
+// MapCell.h:850. This worker reproduces all 49 retail bytes
 // at 0x408770, including the boat callers' retained zero-coordinate lookup.
 // The former scalar-cell claim incorrectly distinguished 49 x86 bytes from
 // 82 SH4 bytes and alleged a zCell bounds test absent on both platforms.
 // Identical folded bodies cannot prove a unique original retail symbol;
 // this annotation owns the emitted canonical worker, not a renamed wrapper.
-VA(0x00408770, 0x31)  // exact body + anchor-callees, dc 0x1f974
+VA(0x00408770, 0x31)  // exact body + anchor-callees
+DC_ADDRESS(0x01f974, 0x52)
 inline NewmapCell* NewfullMap::zCell(int x, int y, int z)
 {
     return m_cellData + x + y * m_size + z * m_size * m_size;
 }
 
-// E:\gamedcs\MapCell.h:889, dc 0xbc930
+// E:\gamedcs\MapCell.h:889
+DC_ADDRESS(0x0bc930, 0x2c)
 inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
 {
     return zCell(x, y, z);
@@ -1512,11 +1533,13 @@ inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
 // a release VERIFY. Removing the inferred storage check preserves this
 // helper chain and restores the boat callers' retail expansion decisions;
 // the retained 49-byte arithmetic body is owned by zCell above.
+DC_ADDRESS(0x01f9c8, 0x2c)
 inline NewmapCell* NewfullMap::cell(int x, int y, int z)
 {
     return zCell(x, y, z);
 }
 
+DC_ADDRESS(0x01f9f4, 0x4c)
 inline NewmapCell* NewfullMap::cell(type_point point)
 {
     return zCell(point.m_x, point.m_y, point.m_z);
@@ -1525,7 +1548,8 @@ inline NewmapCell* NewfullMap::cell(type_point point)
 // public decoration is `?PlayerKnowsCell@ExtraInfoUnion@@QBA_NF@Z`),
 
 // The visited-player mask is eight bits at +5.
-VA(0x00529690, 0x33)  // hd-crossbuild + anchor-callee x3, dc 0x1fa40
+VA(0x00529690, 0x33)  // hd-crossbuild + anchor-callee x3
+DC_ADDRESS(0x01fa40, 0x40)
 inline bool ExtraInfoUnion::playerKnowsCell(short player) const
 {
     if (player < 0 || player >= 8)
@@ -1539,49 +1563,60 @@ inline bool ExtraInfoUnion::playerKnowsCell(short player) const
 // DoWanderingMonsterResult (0x4a7740) also calls this inherited accessor.
 // A direct monster-info bitfield test folded to test eax,0x80000000;
 // the value-returning helper preserved retail's shr/test of the top bit.
+DC_ADDRESS(0x09c778, 0x8)
 inline bool ExtraInfoUnion::isCustomized() const { return m_artifactInfo.m_custom != 0; }
 
+DC_ADDRESS(0x09c780, 0xa)
 inline TCreatureType ExtraInfoUnion::getArtifactDefender() const
 {
     return H3_ENUM_DECODE(TCreatureType, m_artifactInfo.m_guard);
 }
 
+DC_ADDRESS(0x09c78c, 0xc)
 inline ArtifactPrices ExtraInfoUnion::getArtifactPrice() const
 {
     return H3_ENUM_DECODE(ArtifactPrices, m_artifactInfo.m_price);
 }
 
+DC_ADDRESS(0x09c798, 0xa)
 inline enum EGameResource ExtraInfoUnion::getArtifactResourceCost() const
 {
     return m_artifactInfo.m_resourcePrice;
 }
 
+DC_ADDRESS(0x09c7a4, 0x10)
 inline bool ExtraInfoUnion::isDefendedArtifact() const
 {
     return m_artifactInfo.m_price == const_artifact_defended;
 }
 
-// MapCell.h:959/964, dc 0x9c7b4 / 0x9c7c0. DoEventCampfire (0x4a1120)
+// DC MapCell.h:959/964. DoEventCampfire (0x4a1120)
 // proves the short size truncation and unsigned resource lane. The DC public
 // ?GetCampfireResource@ExtraInfoUnion@@QBA?AW4EGameResource@@XZ returns the
 // enum; its conversion is what takes doEventCampfire past the /Ob2 save cliff.
+DC_ADDRESS(0x09c7b4, 0xa)
 inline short ExtraInfoUnion::getCampfireSize() const { return m_campfireInfo.m_size; }
 
+DC_ADDRESS(0x09c7c0, 0x6)
 inline enum EGameResource ExtraInfoUnion::getCampfireResource() const
 {
     return EGameResource(m_campfireInfo.m_resource);
 }
 
+DC_ADDRESS(0x0bc95c, 0x16)
 inline void ExtraInfoUnion::clearVisitedBits() { m_cellVisitedInfo.m_visited = 0; }
 
-// Original: ExtraInfoUnion::get_custom_index; MapCell.h:974, dc 0x9c7c8.
+// Original: ExtraInfoUnion::get_custom_index; MapCell.h:974
 // Complete narrows MonsterInfo::index from DC's 12 bits to eight; retail
 // MonstersGiveReward (0x4a6b30) and DoWanderingMonsterResult (0x4a7740)
 // both extract that eight-bit field before indexing the custom list.
+DC_ADDRESS(0x09c7c8, 0xc)
 inline short ExtraInfoUnion::getCustomIndex() const { return m_monsterInfo.m_index; }
 
+DC_ADDRESS(0x01fa80, 0x12)
 inline short ExtraInfoUnion::getItemId() const { return m_skeletonInfo.m_id; }
 
+DC_ADDRESS(0x09c7d4, 0x32)
 inline void ExtraInfoUnion::setLeanTo(short id, short amount, int resource)
 {
     m_leanToInfo.m_id = id;
@@ -1596,8 +1631,10 @@ inline void ExtraInfoUnion::setLeanTo(short id, short amount, int resource)
 // EGameResource; the field stays an unsigned bitfield (an enum bitfield
 // sign-extends under VC6) and the accessor converts it to the DC return
 // type. The id has no DC accessor and is read off the arm directly.
+DC_ADDRESS(0x09c808, 0xc)
 inline short ExtraInfoUnion::getLeanToAmount() const { return m_leanToInfo.m_amount; }
 
+DC_ADDRESS(0x09c814, 0xa)
 inline EGameResource ExtraInfoUnion::getLeanToResource() const
 {
     return EGameResource(m_leanToInfo.m_resource);
@@ -1607,12 +1644,15 @@ inline EGameResource ExtraInfoUnion::getLeanToResource() const
 // new state rather than clearing unconditionally, which is what the
 // DC decoration `void (unsigned char)` says and what makes the
 // drink-it write a plain bit clear at the one site that passes 0.
+DC_ADDRESS(0x09c820, 0xa)
 inline unsigned char ExtraInfoUnion::magicSpringIsFull() const { return m_magicSpringInfo.m_full; }
 
+DC_ADDRESS(0x09c82c, 0x14)
 inline void ExtraInfoUnion::fillMagicSpring(unsigned char full) { m_magicSpringInfo.m_full = full; }
 
 // DC MapCell.h:1012..1015 records the resource store followed by the full
 // flag store, and game::PerWeek calls this canonical helper.
+DC_ADDRESS(0x0bc974, 0x3a)
 inline void ExtraInfoUnion::fillGarden(enum EGameResource resource)
 {
     m_gardenInfo.m_resource = resource;
@@ -1623,14 +1663,17 @@ inline void ExtraInfoUnion::fillGarden(enum EGameResource resource)
 // is `unsigned char () const` and its `(value >> 10) & 1` shape is
 // what retail inlines; a direct bitfield test would fold to a byte
 // `test` on cell+1 instead.
+DC_ADDRESS(0x09c840, 0xa)
 inline unsigned char ExtraInfoUnion::gardenIsFull() const { return m_gardenInfo.m_full; }
 
+DC_ADDRESS(0x09c84c, 0xc)
 inline enum EGameResource ExtraInfoUnion::getGardenResource() const
 {
     return H3_ENUM_DECODE(EGameResource, m_gardenInfo.m_resource);
 }
 
-// Original SetGarden, MapCell.h:1028..1032, dc 0xbc9b0.
+// Original SetGarden, MapCell.h:1028..1032.
+DC_ADDRESS(0x0bc9b0, 0x54)
 inline void ExtraInfoUnion::setGarden(short id, EGameResource resource)
 {
     m_gardenInfo.m_id = id;
@@ -1638,23 +1681,28 @@ inline void ExtraInfoUnion::setGarden(short id, EGameResource resource)
     m_gardenInfo.m_full = 1;
 }
 
+DC_ADDRESS(0x09c858, 0xc)
 inline void ExtraInfoUnion::setGardenEmpty() { m_gardenInfo.m_full = 0; }
 
-// Original SetMagicSpring, MapCell.h:1040..1043, dc 0xbca04.
+// Original SetMagicSpring, MapCell.h:1040..1043.
+DC_ADDRESS(0x0bca04, 0x48)
 inline void ExtraInfoUnion::setMagicSpring(short id, unsigned char full)
 {
     m_magicSpringInfo.m_id = id;
     m_magicSpringInfo.m_full = full;
 }
 
-// MapCell.h:1046/1051, dc 0x9c864 / 0x9c870. do_event_pyramid
+// DC MapCell.h:1046/1051. do_event_pyramid
 // (0x4a4230) proves the signed spell lane and bit-zero guarded flag.
+DC_ADDRESS(0x09c864, 0xa)
 inline int ExtraInfoUnion::getPyramidSpell() const { return m_pyramidInfo.m_spell; }
 
+DC_ADDRESS(0x09c870, 0x6)
 inline bool ExtraInfoUnion::pyramidIsGuarded() const { return m_pyramidInfo.m_guarded; }
 
-// E:\gamedcs\MapCell.h:1056, dc 0x9c878
+// E:\gamedcs\MapCell.h:1056
 VA(0x004c2330, 0x27)
+DC_ADDRESS(0x09c878, 0x20)
 inline void ExtraInfoUnion::setPyramid(bool guards, int newSpell)
 {
     m_pyramidInfo.m_guarded = guards;
@@ -1662,27 +1710,32 @@ inline void ExtraInfoUnion::setPyramid(bool guards, int newSpell)
 }
 
 // All four scholar reward fields are signed.
+DC_ADDRESS(0x09c898, 0xc)
 inline ScholarAwards ExtraInfoUnion::getScholarAward() const
 {
     return ScholarAwards(m_scholarInfo.m_award);
 }
 
+DC_ADDRESS(0x09c8a4, 0xc)
 inline TPrimarySkill ExtraInfoUnion::getScholarPrimarySkill() const
 {
     return TPrimarySkill(m_scholarInfo.m_primary);
 }
 
+DC_ADDRESS(0x09c8b0, 0xc)
 inline TSecondarySkill ExtraInfoUnion::getScholarSecondarySkill() const
 {
     return TSecondarySkill(m_scholarInfo.m_secondary);
 }
 
+DC_ADDRESS(0x09c8bc, 0xc)
 inline SpellID ExtraInfoUnion::getScholarSpell() const
 {
     return SpellID(m_scholarInfo.m_spell);
 }
 
-// E:\gamedcs\MapCell.h:1089, dc 0xbca4c
+// E:\gamedcs\MapCell.h:1089
+DC_ADDRESS(0x0bca4c, 0x7c)
 inline void ExtraInfoUnion::setScholar(ScholarAwards award, TPrimarySkill primary,
                                       TSecondarySkill secondary, SpellID spell)
 {
@@ -1711,10 +1764,13 @@ inline void ExtraInfoUnion::setScholar(ScholarAwards award, TPrimarySkill primar
 // measured against the retail bytes and exactly one is exact - short
 // getter, int setter parameter (100.0, against 99.53 / 99.49 / 90.96),
 // so the width is byte-determined, not a guess.
+DC_ADDRESS(0x09c8c8, 0xe)
 inline bool ExtraInfoUnion::skeletonHasTreasure() const { return m_skeletonInfo.m_hasTreasure; }
 
+DC_ADDRESS(0x09c8d8, 0xc)
 inline int ExtraInfoUnion::getSkeletonArtifact() const { return m_skeletonInfo.m_artifact; }
 
+DC_ADDRESS(0x09c8e4, 0x32)
 inline void ExtraInfoUnion::setSkeleton(int id, bool hasTreasure, short artifact)
 {
     m_skeletonInfo.m_id = id;
@@ -1722,15 +1778,18 @@ inline void ExtraInfoUnion::setSkeleton(int id, bool hasTreasure, short artifact
     m_skeletonInfo.m_hasTreasure = hasTreasure;
 }
 
-// MapCell.h:1111/1116, dc 0x9c918 / 0x9c924. The original return domains
+// DC MapCell.h:1111/1116. The original return domains
 // are SeaChestRewardTypes / TArtifact; retain the existing int-wide reads.
+DC_ADDRESS(0x09c918, 0xc)
 inline int ExtraInfoUnion::getSeaChestReward() const { return m_seaChestInfo.m_reward; }
 
+DC_ADDRESS(0x09c924, 0xa)
 inline TArtifact ExtraInfoUnion::getSeaChestArtifact() const
 {
     return TArtifact(m_seaChestInfo.m_artifact);
 }
 
+DC_ADDRESS(0x01fa94, 0x14)
 inline SpellID ExtraInfoUnion::getShrineSpell() const
 {
     return m_shrineInfo.m_spell;
@@ -1738,34 +1797,43 @@ inline SpellID ExtraInfoUnion::getShrineSpell() const
 
 // The artifact is signed; the gold amount is truncated to a short after
 // multiplying the stored count by 500.
+DC_ADDRESS(0x09c930, 0x4)
 inline TArtifact ExtraInfoUnion::getTreasureArtifact() const
 {
     return TArtifact(m_treasureInfo.m_artifact);
 }
 
+DC_ADDRESS(0x09c934, 0x14)
 inline short ExtraInfoUnion::getTreasureSize() const { return m_treasureInfo.m_gold * 500; }
 
+DC_ADDRESS(0x09c948, 0x8)
 inline bool ExtraInfoUnion::treasureIsArtifact() const { return m_treasureInfo.m_hasArtifact; }
 
 // `?GetTreePrice@ExtraInfoUnion@@QBA?AW4WiseTreePrices@@XZ`, named by
 // the Dreamcast line table over DoEventTreeOfKnowledge (dc 0x964c4)
 // and spelled `int` until WiseTreePrices (advmgr.h) is visible here.
+DC_ADDRESS(0x01faa8, 0x12)
 inline int ExtraInfoUnion::getTreePrice() const { return m_treeInfo.m_price; }
 
+DC_ADDRESS(0x09c950, 0xc)
 inline void ExtraInfoUnion::emptyWagon() { m_wagonInfo.m_full = 0; }
 
+DC_ADDRESS(0x09c95c, 0x8)
 inline short ExtraInfoUnion::getWagonAmount() const { return m_wagonInfo.m_resourceAmount; }
 
+DC_ADDRESS(0x09c964, 0xa)
 inline TArtifact ExtraInfoUnion::getWagonArtifact() const
 {
     return TArtifact(m_wagonInfo.m_artifact);
 }
 
+DC_ADDRESS(0x09c970, 0xc)
 inline enum EGameResource ExtraInfoUnion::getWagonResource() const
 {
     return H3_ENUM_DECODE(EGameResource, m_wagonInfo.m_resource);
 }
 
+DC_ADDRESS(0x09c97c, 0xa)
 inline bool ExtraInfoUnion::wagonHasArtifact() const { return m_wagonInfo.m_hasArtifact; }
 
 // The wagon's six MapCell.h accessors, all six named and decorated by
@@ -1775,14 +1843,16 @@ inline bool ExtraInfoUnion::wagonHasArtifact() const { return m_wagonInfo.m_hasA
 // GetWagonResource `?AW4EGameResource`, GetWagonAmount `F` (short,
 // which is what makes the payout argument a `movsx ecx,di`) and
 // EmptyWagon `void ()`. GetWagonArtifact returns its DC TArtifact.
+DC_ADDRESS(0x09c988, 0xe)
 inline bool ExtraInfoUnion::wagonIsFull() const { return m_wagonInfo.m_full; }
 
 // DC 1177..1181 writes resource, amount, full, has_artifact, visited_bits.
 // The Complete masks prove the corresponding five fields. With the shrine
 // bitset default-constructed and unpinned, RandomizeEvents retains this call
 // and the 0x4c2360 body matches exactly.
-// E:\gamedcs\MapCell.h:1176, dc 0xbcac8
+// E:\gamedcs\MapCell.h:1176
 VA(0x004c2360, 0x27)
+DC_ADDRESS(0x0bcac8, 0x74)
 inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
 {
     m_wagonInfo.m_resource = resource;
@@ -1796,8 +1866,9 @@ inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
 // Mac randomizeWagon 0xd67f4..0xd6820 expands the same four field stores.
 // These named stores retain the exact 0x4c2390 body; the packed-mask
 // spelling made VC6 expand every use and omit the standalone helper.
-// E:\gamedcs\MapCell.h:1185, dc 0xbcb3c
+// E:\gamedcs\MapCell.h:1185
 VA(0x004c2390, 0x21)
+DC_ADDRESS(0x0bcb3c, 0x58)
 inline void ExtraInfoUnion::setWagon(int artifact)
 {
     m_wagonInfo.m_artifact = artifact;
@@ -1806,18 +1877,22 @@ inline void ExtraInfoUnion::setWagon(int artifact)
     m_wagonInfo.m_visitedBits = 0;
 }
 
+DC_ADDRESS(0x09c998, 0xa)
 inline void ExtraInfoUnion::emptyTomb() { m_tombInfo.m_hasArtifact = 0; }
 
+DC_ADDRESS(0x09c9a4, 0xa)
 inline TArtifact ExtraInfoUnion::getTombArtifact() const
 {
     return TArtifact(m_tombInfo.m_artifact);
 }
 
+DC_ADDRESS(0x09c9b0, 0x6)
 inline unsigned char ExtraInfoUnion::tombIsFull() const { return m_tombInfo.m_hasArtifact; }
 
 // DC 1209..1211 writes artifact, fullness, visit bits. Complete widens
 // the artifact to ten bits; RandomizeEvents expands all three stores.
-// E:\gamedcs\MapCell.h:1208, dc 0xbcb94
+// E:\gamedcs\MapCell.h:1208
+DC_ADDRESS(0x0bcb94, 0x48)
 inline void ExtraInfoUnion::setTomb(TArtifact artifact)
 {
     m_tombInfo.m_artifact = artifact;
@@ -1836,32 +1911,39 @@ inline void ExtraInfoUnion::setTomb(TArtifact artifact)
 //   * set_windmill writes BOTH fields, which is why the payout tail
 //     is a single `and eax,0xfffe1ff0 / xor eax,edi` on the dword
 //     instead of two read-modify-writes.
+DC_ADDRESS(0x01fabc, 0x1a)
 inline short ExtraInfoUnion::getWheelGold() const { return m_waterWheelInfo.m_gold * 500; }
 
+DC_ADDRESS(0x09c9b8, 0x2c)
 inline void ExtraInfoUnion::setWheelGold(short amount) { m_waterWheelInfo.m_gold = amount / 500; }
 
+DC_ADDRESS(0x01fad8, 0x16)
 inline short ExtraInfoUnion::getWindmillAmount() const { return m_windmillInfo.m_amount; }
 
+DC_ADDRESS(0x09c9e4, 0xc)
 inline enum EGameResource ExtraInfoUnion::getWindmillResource() const
 {
     return H3_ENUM_DECODE(EGameResource, m_windmillInfo.m_resource);
 }
 
+DC_ADDRESS(0x09c9f0, 0x24)
 inline void ExtraInfoUnion::setWindmill(enum EGameResource resource, short amount)
 {
     m_windmillInfo.m_resource = resource;
     m_windmillInfo.m_amount = amount;
 }
 
+DC_ADDRESS(0x01faf0, 0x14)
 inline TSecondarySkill ExtraInfoUnion::getWitchSkill() const
 {
     return TSecondarySkill(m_witchHutInfo.m_skill);
 }
 
-// E:\gamedcs\MapCell.h:1251, dc 0xbcbdc
+// E:\gamedcs\MapCell.h:1251
 // DC lines 1252/1253 assign the typed skill, then clear visits. Retail folds
 // those field stores into the combined 0xfff0001f mask; retain the source fields.
 VA(0x004c23c0, 0x1c)
+DC_ADDRESS(0x0bcbdc, 0x3c)
 inline void ExtraInfoUnion::setWitchSkill(TSecondarySkill skill)
 {
     m_witchHutInfo.m_skill = skill;
@@ -1874,6 +1956,7 @@ inline void ExtraInfoUnion::setWitchSkill(TSecondarySkill skill)
 // cross into the enum domain explicitly. Dreamcast masks the older
 // seven-bit object index; Complete's inlined artifact readers load the
 // full signed word, proving that the later accessor preserves it.
+DC_ADDRESS(0x09ca14, 0x8)
 inline TArtifact NewmapCell::getArtifactIndex() const
 {
     // The packed signed ordinal crosses the enum boundary in this source
@@ -1881,8 +1964,9 @@ inline TArtifact NewmapCell::getArtifactIndex() const
     return TArtifact(m_objectIndex);
 }
 
-// E:\gamedcs\MapCell.h:1269 (dc 0xf4a78). Dreamcast retains an out-of-line
+// E:\gamedcs\MapCell.h:1269 (). Dreamcast retains an out-of-line
 // copy, while retail /Ob2 expands this header helper at its callers.
+DC_ADDRESS(0x0f4a78, 0x24)
 inline TAdventureObjectType CObject::getType() const
 {
     return getObjectTypePtr()->m_objectType;

@@ -101,7 +101,9 @@ DATA(0x00687f58) const SSpellTraits (&g_spellTraits)[81] = g_spellTraitsImp;
 static void initializeSpellTraits(
     int id, const std::vector<char*, std::allocator<char*> >& resource);
 
-VA(0x0059e060, 0x30) MAC_ADDRESS(0x18e73c, 0x7c)  // dc 0x14e278
+VA(0x0059e060, 0x30)
+DC_ADDRESS(0x14e278, 0x50)
+MAC_ADDRESS(0x18e73c, 0x7c)
 unsigned char spellTargetsASingleArmy(int spell, int sslevel)
 {
     unsigned int flags = g_spellTraits[spell].m_flags;
@@ -115,7 +117,9 @@ unsigned char spellTargetsASingleArmy(int spell, int sslevel)
     return result;
 }
 
-VA(0x0059e090, 0xB7) MAC_ADDRESS(0x18e7b8, 0x13c)  // dc 0x14e2c8
+VA(0x0059e090, 0xB7)
+DC_ADDRESS(0x14e2c8, 0xd4)
+MAC_ADDRESS(0x18e7b8, 0x13c)
 unsigned char initializeSpellTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
@@ -159,13 +163,21 @@ namespace {
 // CodeView field pStr; each loader owns its own private string class.
 class TAutoStrPtr {
 public:
-    // E:\gamedcs\spelldefs.cpp:320, dc 0x14e78c
+
+    // E:\gamedcs\spelldefs.cpp:320
+    DC_ADDRESS(0x14e78c, 0x8)
     TAutoStrPtr() : m_string(0) {}
-    // E:\gamedcs\spelldefs.cpp:321, dc 0x14e794
+
+    // E:\gamedcs\spelldefs.cpp:321
+    DC_ADDRESS(0x14e794, 0x18)
     ~TAutoStrPtr() { delete[] m_string; }
-    // E:\gamedcs\spelldefs.cpp:323, dc 0x14e7ac
+
+    // E:\gamedcs\spelldefs.cpp:323
+    DC_ADDRESS(0x14e7ac, 0x4)
     void set(char* value) { m_string = value; }
-    // E:\gamedcs\spelldefs.cpp:325, dc 0x14e7b0
+
+    // E:\gamedcs\spelldefs.cpp:325
+    DC_ADDRESS(0x14e7b0, 0x4)
     char* get() const { return m_string; }
 
 private:
@@ -174,7 +186,9 @@ private:
 
 }
 
-VA(0x0059e150, 0x35F) MAC_ADDRESS(0x18e8f4, 0x3a4)  // dc 0x14e39c
+VA(0x0059e150, 0x35F)
+DC_ADDRESS(0x14e39c, 0x362)
+MAC_ADDRESS(0x18e8f4, 0x3a4)
 static void initializeSpellTraits(
     int id, const std::vector<char*, std::allocator<char*> >& resource)
 {
@@ -243,5 +257,7 @@ static void initializeSpellTraits(
 }
 
 VA_COMPGEN(0x0059e4b0, 0x17, STATIC_DTOR, spellDescriptions)
+
 VA_COMPGEN(0x0059e4d0, 0x14, STATIC_DTOR, abbreviatedSpellNames)
+
 VA_COMPGEN(0x0059e4f0, 0x14, STATIC_DTOR, spellNames)

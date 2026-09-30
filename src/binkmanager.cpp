@@ -49,6 +49,7 @@ BinkManager::BinkManagerStruct BinkManager::g_playingBink;
 // Keep the active empty definition as the canonical positive DC source body;
 // Complete can fold or discard it because no Windows caller survives.
 // E:\gamedcs\binkmanager.cpp:123
+DC_ADDRESS(0x050a80, 0x4)
 void BinkManager::setPixelFormat(unsigned long redMask, unsigned long greenMask,
                                  unsigned long blueMask)
 {
@@ -59,7 +60,9 @@ void BinkManager::setPixelFormat(unsigned long redMask, unsigned long greenMask,
 // HANDLE in place of a file name.
 // Retail retains four serviceSounds calls. The Windows body is source-local
 // to soundmgr.cpp; its platform evidence comment explains that visibility.
-VA(0x0044d5a0, 0x283) MAC_ADDRESS(0x25d430, 0x27c)  // dc 0x50a7c
+VA(0x0044d5a0, 0x283)
+DC_ADDRESS(0x050a7c, 0x4)
+MAC_ADDRESS(0x25d430, 0x27c)
 HBINK BinkManager::getBinkFilePtr(char* filename, int binkOptions)
 {
     char name[40];
@@ -115,7 +118,9 @@ HBINK BinkManager::getBinkFilePtr(char* filename, int binkOptions)
     return 0;
 }
 
-VA(0x0044D830, 0x1A3) MAC_ADDRESS(0x25d6ac, 0x19c)  // dc 0x50a84
+VA(0x0044D830, 0x1A3)
+DC_ADDRESS(0x050a84, 0x4)
+MAC_ADDRESS(0x25d6ac, 0x19c)
 void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
                    bool useDirtyRects)
 {
@@ -166,7 +171,9 @@ void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
 // smackmgr.cpp's VideoDrawCurrentFrame uses this namespace-qualified call.
 // Mac 25d8b4/25d90c retain a copy in each selected-track branch; Windows
 // 44da47 shares the copy tail. Keep both source calls and their own handles.
-VA(0x0044d9e0, 0x6E) MAC_ADDRESS(0x25d848, 0xe8)  // dc 0x50a88
+VA(0x0044d9e0, 0x6E)
+DC_ADDRESS(0x050a88, 0x4)
+MAC_ADDRESS(0x25d848, 0xe8)
 void BinkManager::drawCurrentBinkFrame()
 {
     if (g_playingBink.m_bink && g_playingBinkActive) {
@@ -182,7 +189,9 @@ void BinkManager::drawCurrentBinkFrame()
     }
 }
 
-VA(0x0044da50, 0x4D) MAC_ADDRESS(0x25d930, 0x78)  // dc 0x50a8c
+VA(0x0044da50, 0x4D)
+DC_ADDRESS(0x050a8c, 0x4)
+MAC_ADDRESS(0x25d930, 0x78)
 void BinkManager::restartBink()
 {
     if (g_playingBink.m_bink) {
@@ -197,8 +206,10 @@ void BinkManager::restartBink()
 // real dirty-state byte before testing it. BinkWait precedes the store and
 // paused frames remain dirty. This recovers the retail shared exit layout;
 // separate true/false stores, readiness scopes and terminal guards did not.
-// E:\gamedcs\binkmanager.cpp:252, dc 0x50a90
-VA(0x0044DAA0, 0x21A) MAC_ADDRESS(0x25d9a8, 0x278)  // dc-order-map + caller (smackmgr VideoNextFrame), dc 0x50a90
+// E:\gamedcs\binkmanager.cpp:252
+VA(0x0044DAA0, 0x21A)
+DC_ADDRESS(0x050a90, 0x4)
+MAC_ADDRESS(0x25d9a8, 0x278)  // dc-order-map + caller (smackmgr VideoNextFrame)
 void BinkManager::nextBinkFrame()
 {
     HBINK video = g_playingBink.m_bink;
@@ -248,8 +259,10 @@ void BinkManager::nextBinkFrame()
         videoDrawRects();
 }
 
-// E:\gamedcs\binkmanager.cpp:345 (dc 0x50a94) - namespace-qualified entry
-VA(0x0044dcc0, 0x60) MAC_ADDRESS(0x25dc20, 0x9c)  // dc 0x50a94
+// E:\gamedcs\binkmanager.cpp:345 () - namespace-qualified entry
+VA(0x0044dcc0, 0x60)
+DC_ADDRESS(0x050a94, 0x4)
+MAC_ADDRESS(0x25dc20, 0x9c)
 void BinkManager::closeBink()
 {
     if (g_playingBink.m_bink) {
@@ -267,7 +280,7 @@ void BinkManager::closeBink()
     g_needsUpdate = 0;
 }
 
-// E:\gamedcs\binkmanager.cpp:376, dc 0x50a98 is a platform stub.
+// E:\gamedcs\binkmanager.cpp:376 is a platform stub.
 // Retail matches with the canonical playingBINK aggregate and ushort screen
 // pointer. Enable sound before capturing dimensions, then publish centered
 // coordinates before saving the redraw position. Fragmented globals reached
@@ -277,7 +290,9 @@ namespace BinkManager {
 static unsigned char playBinkCore(int id, int x, int y, int w, int h);
 }
 
-VA(0x0044DD20, 0x227) MAC_ADDRESS(0x25dcbc, 0x50)  // dc-order-map + caller (smackmgr VideoPlay), dc 0x50a98
+VA(0x0044DD20, 0x227)
+DC_ADDRESS(0x050a98, 0x4)
+MAC_ADDRESS(0x25dcbc, 0x50)  // dc-order-map + caller (smackmgr VideoPlay)
 int BinkManager::playBink(int id, int x, int y, int w, int h)
 {
     g_soundManager->m_playSounds = 1;
@@ -289,6 +304,7 @@ int BinkManager::playBink(int id, int x, int y, int w, int h)
 
 // Mac 0:0x25dd0c retains the modal loop separately from playBink's state wrapper.
 namespace BinkManager {
+
 MAC_ADDRESS(0x25dd0c, 0x240)
 static unsigned char playBinkCore(int id, int x, int y, int w, int h)
 {

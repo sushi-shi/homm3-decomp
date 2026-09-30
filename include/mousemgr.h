@@ -1,6 +1,8 @@
 #ifndef HOMM3_MOUSEMGR_H
 #define HOMM3_MOUSEMGR_H
 
+#include "va.h"
+
 #include "platform.h"
 
 #include "basemgr.h"
@@ -73,28 +75,40 @@ public:
     void mouseCoords(int& x, int& y);
     void update(bool forceIt);
     void checkUpdate();
+
     // E:\gamedcs\MouseMgr.h:210/215. Dreamcast emits these header helpers
     // in kb.obj/adventuremapwindow.obj; Complete folds both into direct loads.
     // DC MouseMgr.h:189-200 (Enable/Disable) returns DisableCount without
     // mutating it in this build. SetPointer discards both results.
+    DC_ADDRESS(0x01f0d0, 0xe)
     int enable() { return m_disableCount; }
+
+    DC_ADDRESS(0x01f0e0, 0xe)
     int disable() { return m_disableCount; }
 
 private:
-    // DC MouseMgr.h:204/205, dc 0xff774: header-inline busy test.
+
+    // DC MouseMgr.h:204/205: header-inline busy test.
+    DC_ADDRESS(0x0ff774, 0xc)
     bool isBusy() const { return m_busy != 0; }
 
 public:
+
+    DC_ADDRESS(0x01f0f0, 0xe)
     int getFrame() const
     {
         return m_frame;
     }
+
+    DC_ADDRESS(0x0e6eb4, 0x6)
     EPointerSet getSet() const
     {
         return m_set;
     }
+
     // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
     // source helper while Complete's /Ob2 lowers it to the field_68 test.
+DC_ADDRESS(0x038064, 0xa)
 unsigned char isVis() const { return m_hideCount == 0; }
 
 private:

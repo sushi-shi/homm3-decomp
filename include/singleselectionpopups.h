@@ -1,6 +1,8 @@
 #ifndef HOMM3_SINGLESELECTIONPOPUPS_H
 #define HOMM3_SINGLESELECTIONPOPUPS_H
 
+#include "va.h"
+
 #include "dialogbox.h"
 #include "kbwin.h"
 #include "includes.h"
@@ -59,20 +61,25 @@ class CSingleSelPopup : public TDialogBox {
 public:
     unsigned char m_gameMode;
 
+    DC_ADDRESS(0x12eeac, 0x48)
     CSingleSelPopup(int type, unsigned char newGameMode)
         : TDialogBox(type)
     {
         m_gameMode = newGameMode;
     }
+
     // Inlined into every CreateWin: push the widget onto the window's vector
-    // and register it with priority -1 (dc 0x12eef4).
+    // and register it with priority -1.
+    DC_ADDRESS(0x12eef4, 0x34)
     void add(widget* w)
     {
         m_widgets.push_back(w);
         addWidget(w, -1);
     }
 
-    VA(0x00575430, 0x8f) MAC_ADDRESS(0x160ca4, 0x68)  // dc 0x12ef28
+    VA(0x00575430, 0x8f)
+    DC_ADDRESS(0x12ef28, 0x98)
+    MAC_ADDRESS(0x160ca4, 0x68)
     virtual int handleMessage(message& msg)
     {
         if (msg.m_id != MESSAGE_RIGHT_BUTTON_UP) {
@@ -89,8 +96,10 @@ public:
         }
         return exitDialog(msg);
     }
-    // Original: CSingleSelPopup::ExitDialog; singleselectionpopups.h:75, dc 0x12efc0.
+
+    // Original: CSingleSelPopup::ExitDialog; singleselectionpopups.h:75
     // handleMessage0x575430 expands both exits with this message rewrite.
+    DC_ADDRESS(0x12efc0, 0x1c)
     int exitDialog(message& msg)
     {
         msg.m_id = MESSAGE_WIDGET;
@@ -112,9 +121,13 @@ class CHotspotWidget : public widget {
 public:
     CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId);
     virtual int main(message& msg);  // slot 2, retail 0x575290
-    // Original: CHotspotWidget::zBufferDraw; singleselectionpopups.h:120, dc 0x12f010.
+
+    // Original: CHotspotWidget::zBufferDraw; singleselectionpopups.h:120
+    DC_ADDRESS(0x12f010, 0x4)
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const {}
-    // Original: CHotspotWidget::Draw; singleselectionpopups.h:121, dc 0x12f014.
+
+    // Original: CHotspotWidget::Draw; singleselectionpopups.h:121
+    DC_ADDRESS(0x12f014, 0x4)
     virtual void draw() const {}
 };
 
@@ -179,10 +192,12 @@ public:
     TRandomMapProgress(int totalSteps);
     virtual ~TRandomMapProgress();
     virtual void setTotal(int totalSteps);
+
     // The retained vtable body and GenerateRandomMap's expanded final step
     // share this operation. Header visibility is inferred from retail; this
     // Complete-only class has no Dreamcast source-location evidence.
-    VA(0x00577320, 0x31) MAC_ADDRESS(0x16dba8, 0x58)
+    VA(0x00577320, 0x31)
+    MAC_ADDRESS(0x16dba8, 0x58)
     virtual void advance(int amount)
     {
         m_done = min(m_done + amount, m_steps);

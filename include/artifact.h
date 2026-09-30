@@ -133,7 +133,7 @@ extern const TArtifactTraits (&g_artifactTraits)[144];
 extern const TCombinationArtifact* g_combinationArtifacts;
 extern const TArtifactSlotTraits (&g_artifactSlotTraits)[19];
 
-// Original: artifactAllowedInSlot; artifact.h:229, dc 0x37d88.
+// Original: artifactAllowedInSlot; artifact.h:229
 // DC233 indexes the artifact's bitset18 with operator[]. Complete replaces
 // that inline mask with a slot-class index into bitset19; the primitive
 // survives as the initial mask test in hero::heroFn004E2840 (0x4e2840).
@@ -141,6 +141,7 @@ extern const TArtifactSlotTraits (&g_artifactSlotTraits)[19];
 // Retain the const mask reference: it preserves the retail exception-path
 // value lifetime. Direct nested indexing expands _Eos instead of retaining
 // its call (92.66% caller); this canonical reference form matches100%.
+DC_ADDRESS(0x037d88, 0x2c)
 inline unsigned char artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slot)
 {
     const std::bitset<19>& allowable =

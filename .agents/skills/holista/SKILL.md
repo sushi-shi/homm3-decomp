@@ -87,12 +87,14 @@ Compiler-context changes can lower CUR while MAX holds; these are not lost
 matches or grounds for rejection. Keep CUR for codegen diagnosis and reproduction,
 and omit held-MAX CUR dips from progress reports. Report collateral only when
 MAX falls or a concrete correctness/build failure requires action.
-Do not generate a per-function mock test suite as part of the handoff. A temporary
-behavioral check is useful only for a specific unresolved semantic question.
+Do not generate a per-function mock test suite as part of the handoff. Resolve
+semantic questions with native evidence and targeted compiler comparisons.
 Keep candidate files and diagnostics under ignored `build/`; commit supported
-source and concise findings. Run relevant tooling tests when changing tools.
+source and concise findings.
 
-Finalize through the required full build and evidence gates. Keep unresolved
+Finalize with the targeted TU build, regenerate README, and commit for publishing
+under the user's existing authorization. No routine full builds, tests or extra
+validation checks are required from either worker. Keep unresolved
 work explicit rather than promising that unrelated edits will repair it.
 Plausibility guides reconstruction; retail bytes decide exactness, and exactness
 does not prove the original source spelling.

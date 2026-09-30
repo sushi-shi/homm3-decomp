@@ -17,13 +17,14 @@ inside the build shell. The shell can inherit paths to the main checkout;
 changing cwd alone does not select the worktree. Keep build outputs separate
 between workers and do not edit inputs another worker is compiling.
 
-Start from the existing retail targets and checkpoint; establish one full
-`homm3 build` if they are missing or stale. Use `homm3 build --fast <TU>` for
+Start from the existing retail targets and checkpoint. Use `homm3 build --fast <TU>` for
 routine iterations: it compiles and compares the selected Windows TU and
 admitted Mac counterparts, then reports per-function projected MAX movement
 without banking the ledger. After source, header, profile, claim or merge
-changes, refresh the affected TU before reusing its score. Run the full build
-for final integration and gates. Inspect a failing command's actual cause.
+changes, refresh the affected TU before reusing its score. Inspect a failing
+command's actual cause and repair only the inputs needed for that build.
+Routine matching needs no full build, tests or standalone validation checks.
+Workers follow this same focused workflow in their separate worktrees.
 
 ## Evidence and reconstruction
 
@@ -94,11 +95,10 @@ not adopt candidates or update the score ledger.
 ## Validation and completion
 
 The normal loop is evidence → C++ → VC6 → retail comparison. Do not write or run
-per-function mock behavior suites as a routine matching step. Use a small,
-temporary behavioral check only to resolve a concrete uncertainty that the
-available evidence leaves open; it cannot prove a retail match. Run relevant
-tooling regression tests when changing tooling. Preserve build gates and search
-reproduction checks; those protect the measurement itself.
+per-function mock behavior suites as a routine matching step. Resolve concrete
+uncertainties with native evidence and targeted compiler comparisons. Tooling
+tests belong to separately scoped tooling work. Preserve the search driver's
+built-in reproduction controls when using it.
 
 Optimize and report MAX, not CUR. Use the generated ledger's
 `CUR <= MAX <= HIST` semantics: MAX describes the current implementation's best
@@ -108,8 +108,9 @@ dip with held MAX is not a lost match, a regression, or a reason to reject a
 candidate. Rank searches by projected MAX from the ledger's source-hash rules;
 use CUR only to diagnose emitted code and verify reproduction. Check actual
 MAX changes before claiming collateral losses, including for shared helpers.
-Before integrating a lane, compare its compiled report with main's committed
-ledger using `homm3 status check --baseline-ref REF`. RESET means the edited
+For a specifically requested baseline investigation, compare its compiled report
+with main's ledger using `homm3 status check --baseline-ref REF`; do not run this
+as a routine integration step. RESET means the edited
 source left banked CUR unchanged while resetting MAX; CHANGED-CUR means emitted
 bytes moved and need review. Both remain observational. If a rebase conflicts
 in `config/match_baseline.tsv`, run `homm3 status merge-baseline`, inspect its
@@ -120,7 +121,10 @@ may temporarily lower scores: investigate its concrete predictions rather than
 rejecting it solely on a percentage. Revise models that contradict proven
 behavior, ABI, layout or source facts.
 
-Finish an adopted change with full `homm3 build` and the relevant evidence review.
+Finish an adopted change with `homm3 build --fast <TU>`, regenerate README with
+`homm3 status summary --write-readme`, then commit and push under the user's existing
+branch authorization. Workers return their commits for coordinated integration
+and publishing. Do not require a full build or extra checks before handoff.
 Report the target's result and remaining differences. Mention collateral only
 when MAX falls or a concrete correctness/build failure requires action; omit
 unchanged exact counts and unrelated CUR dips while MAX holds. Keep concise

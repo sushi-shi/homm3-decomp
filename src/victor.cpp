@@ -488,6 +488,7 @@ int __stdcall victorValidateBitmap(imgdes* image)
         status = 0;
     return status;
 }
+
 // Both the allocation worker and loadpcx use this grayscale initialization.
 // Retail writes red, green, blue, reserved in that order and expands the
 // palette-upload helper, discarding its status but preserving GDI cleanup.

@@ -65,6 +65,7 @@ class Definition:
     # Clang-resolved declarator types for linkage identity only. Keep the
     # authored spellings above for source facts and Dreamcast comparison.
     canonical_argument_types: tuple[str, ...] = ()
+    dc_addresses: tuple[tuple[int, int], ...] = ()
 
 
 def definition_owner(definition: Definition) -> str:
@@ -276,15 +277,27 @@ class LineIndex:
             self.starts.append(offset)
             offset += len(line)
         self.prefixes = {}
+        # Treat wrapped DC_ADDRESS lines as one prefix item. Preserve its
+        # exact length for instance_annotations' backwards character walk.
+        self.wrapped_dc = {}
+        from homm3.analysis.dc_claims import claims
+        for claim in claims(raw):
+            first = bisect_left(self.starts, raw.rfind('\n', 0, claim.start) + 1)
+            last = bisect_left(self.starts, raw.rfind('\n', 0, claim.end - 1) + 1)
+            if last > first:
+                self.wrapped_dc[last] = first
 
     def preceding(self, start):
         beginning = self.raw.rfind('\n', 0, start) + 1
-        for index in range(bisect_left(self.starts, beginning) - 1, -1, -1):
-            yield self.lines[index]
+        index = bisect_left(self.starts, beginning) - 1
+        while index >= 0:
+            first = self.wrapped_dc.get(index, index)
+            yield ''.join(self.lines[first:index + 1])
+            index = first - 1
 
 
 # Standalone Mac address lines sit between a definition and its comments.
-MAC_ANNOTATION_PREFIXES = ('MAC_ADDRESS(', 'MAC_COMPGEN_ADDRESS(')
+MAC_ANNOTATION_PREFIXES = ('MAC_ADDRESS(', 'MAC_COMPGEN_ADDRESS(', 'DC_ADDRESS(')
 
 
 def attached_prefix(raw: str | LineIndex, start: int) -> list[str]:
@@ -311,12 +324,13 @@ def origin_hint(raw: str | LineIndex, start: int) -> tuple[str, int, str]:
     origin_file, origin_line, dc_offset = '', 0, ''
     for line in prefix:
         renamed = re.fullmatch(
-            r"//\s+Original:\s+[^;]+;\s+([^;,]+\.(?:cpp|h)):(\d+),\s+dc\s+(0x[0-9a-fA-F]+)\.?(?:\s.*)?",
+            r"//\s+Original:\s+[^;]+;\s+([^;,]+\.(?:cpp|h)):(\d+)(?:,\s+dc\s+(0x[0-9a-fA-F]+))?\.?(?:\s.*)?",
             line.strip())
         if renamed:
             origin_file = source_file(renamed.group(1))
             origin_line = int(renamed.group(2))
-            dc_offset = hex(int(renamed.group(3), 16))
+            if renamed.group(3):
+                dc_offset = hex(int(renamed.group(3), 16))
         m = re.match(r"//\s+([A-Za-z]:\\.+?\.(?:cpp|h)):(\d+)(?:[.,\s]|$)", line.strip())
         if m:
             origin_file, origin_line = source_file(m.group(1)), int(m.group(2))
@@ -330,7 +344,7 @@ def original_name_hint(raw: str | LineIndex, start: int) -> str:
     """Only an explicit Original: comment authorizes a semantic rename."""
     names = [match.group(1).strip() for line in attached_prefix(raw, start)
              if (match := re.fullmatch(
-                 r"//\s+Original:\s+([^;]+);\s+[^;,]+\.(?:cpp|h):\d+,\s+dc\s+0x[0-9a-fA-F]+\.?(?:\s.*)?",
+                r"//\s+Original:\s+([^;]+);\s+[^;,]+\.(?:cpp|h):\d+(?:,\s+dc\s+0x[0-9a-fA-F]+)?\.?(?:\s.*)?",
                  line.strip()))]
     return names[-1] if names else ''
 
@@ -759,6 +773,19 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None, fragment_map=None
                    if (m := re.fullmatch(r'va:(0[xX][0-9a-fA-F]+) size:.*', a))]
             macs = [(int(m.group(1), 16), int(m.group(2), 0)) for a in attrs
                     if (m := re.fullmatch(r'mac:(0[xX][0-9a-fA-F]+) size:(0[xX][0-9a-fA-F]+|\d+)', a))]
+            dcs = []
+            for attr in attrs:
+                if not attr.startswith('dc:'):
+                    continue
+                match = re.fullmatch(r'dc:(0[xX][0-9a-fA-F]+) size:(0[xX][0-9a-fA-F]+|\d+)', attr)
+                if not match:
+                    errors.append(f'DC_ADDRESS {relative}:{loc.line}: malformed annotation {attr!r}')
+                else:
+                    dcs.append((int(match[1], 16), int(match[2], 0)))
+            origin_file, origin_line, old_dc = origin_hint(
+                line_indexes[relative], char_offset(cursor.location.offset))
+            if dcs and old_dc and int(old_dc, 16) not in {offset for offset, _ in dcs}:
+                errors.append(f'DC_ADDRESS {relative}:{loc.line}: legacy comment {old_dc} disagrees with annotation')
             member = cursor.kind in {k.CXX_METHOD, k.CONSTRUCTOR, k.DESTRUCTOR,
                                      k.CONVERSION_FUNCTION}
             if cursor.kind == k.CXX_METHOD and cursor.is_static_method():
@@ -795,7 +822,7 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None, fragment_map=None
                 member, bool(is_inlined(cursor)),
                 instances[0][0] if instances else (vas[0] if len(vas) == 1 else None),
                 declaration_name(cursor),
-                *origin_hint(line_indexes[relative], char_offset(cursor.location.offset)),
+                origin_file, origin_line, hex(dcs[0][0]) if dcs else old_dc,
                 tuple(c.type.spelling for c in cursor.get_children() if c.kind == k.PARM_DECL),
                 cursor.is_const_method() if cursor.kind in {k.CXX_METHOD, k.CONVERSION_FUNCTION} else False,
                 class_offset, cursor.type.is_function_variadic(),
@@ -812,6 +839,7 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None, fragment_map=None
                           and cursor.storage_class == cindex.StorageClass.STATIC),
                 mac_offset=macs[0][0] if len(macs) == 1 else None,
                 mac_size=macs[0][1] if len(macs) == 1 else None,
+                dc_addresses=tuple(dcs),
                 canonical_argument_types=tuple(
                     c.type.get_canonical().spelling
                     for c in cursor.get_children() if c.kind == k.PARM_DECL)))

@@ -132,7 +132,7 @@ ADDR_ARG_RE = re.compile(r"0x[0-9a-fA-F]+$")
 SIZE_ARG_RE = re.compile(r"0x[0-9a-fA-F]+$|\d+$")
 IDENT_ARG_RE = re.compile(r"[A-Za-z_]\w*$")
 ANNOTATION_RE = re.compile(
-    r"^\s*(?:VA|VA_COMPGEN|DATA|MAC_ADDRESS|MAC_COMPGEN_ADDRESS)\s*\(")
+    r"^\s*(?:VA|VA_COMPGEN|DATA|DC_ADDRESS|MAC_ADDRESS|MAC_COMPGEN_ADDRESS)\s*\(")
 DECLARATOR_RE = re.compile(r"([~\w:]+(?:<[^<>()]*>)?)\s*\(")
 # Deliberately bounded comparison-operator spellings. Generic C++ declarator
 # parsing is still outside this scanner's contract, but operator==/operator!=
@@ -741,6 +741,8 @@ def scan_file(path, functions: set[int],
     continuation = set()
     for start, _macro, end, _arity, _proto, _args, _raw in found:
         continuation.update(range(line_of(start) + 1, line_of(end) + 1))
+    for match in re.finditer(r'\bDC_ADDRESS\s*\([^)]*\)', text):
+        continuation.update(range(line_of(match.start()) + 1, line_of(match.end() - 1) + 1))
 
     rows = []
     coalesced: dict[tuple, tuple] = {}     # (macro, rva) -> (payload, where)

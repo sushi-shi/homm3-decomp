@@ -895,10 +895,14 @@ public:
     TTextResource(const char* name, int size, const char* data);
     virtual ~TTextResource();
     virtual unsigned int getSize() const;
+
     // E:\gamedcs\TextResource.h:66
-    VA(0x005cc8d0, 0x10)  // anchor-callee THallWindow ctor + /Gy COMDAT, dc 0x2d74
+    VA(0x005cc8d0, 0x10)  // anchor-callee THallWindow ctor + /Gy COMDAT
+    DC_ADDRESS(0x002d74, 0x18)
     const char* getText(int r) const { return m_text[r]; }
+
     // E:\gamedcs\TextResource.h:73
+    DC_ADDRESS(0x002d8c, 0x18)
     const char* operator[](int i) const { return getText(i); }
 
 private:
@@ -925,15 +929,23 @@ public:
     TSpreadsheetResource(const char* name, int size, const char* data);
     virtual ~TSpreadsheetResource();
     virtual unsigned int getSize() const;
+
+    DC_ADDRESS(0x05088c, 0x18)
     int getNumberOfRows() const { return m_spreadsheet.size(); }
-    // Original: TSpreadsheetResource::GetNumberOfColumns; TextResource.h:113, dc 0x162910.
+
+    // Original: TSpreadsheetResource::GetNumberOfColumns; TextResource.h:113
+    DC_ADDRESS(0x162910, 0x24)
     int getNumberOfColumns(int row) const { return m_spreadsheet[row]->size(); }
-    // DC TextResource.h:120/124 (text.obj:0x162934) returns const char* and
+
+    // DC TextResource.h:120/124 (text.obj) returns const char* and
     // indexes the row and cell vectors directly. High-score defaults call
     // this accessor; their char* table entries require the explicit cast.
+    DC_ADDRESS(0x162934, 0x28)
     const char* getSpreadsheet(int r, int c) const {
         return (*m_spreadsheet[r])[c];
     }
+
+    DC_ADDRESS(0x0508a4, 0x18)
     const TStringVector& getRow(int r) const { return *m_spreadsheet[r]; }
 
 private:

@@ -164,7 +164,8 @@ def validate_dc_roster(origins, symbols):
     return errors
 
 
-def audit(root=common.HOMM3_DIR, *, modules=(), jobs=4, fresh=False, origins=None):
+def audit(root=common.HOMM3_DIR, *, modules=(), jobs=4, fresh=False, origins=None,
+          require_dc_addresses=False):
     project = Project(root)
     definitions, errors, _ = ownership.collect(root, jobs, fresh)
     collection_errors = set(errors)
@@ -186,6 +187,10 @@ def audit(root=common.HOMM3_DIR, *, modules=(), jobs=4, fresh=False, origins=Non
                               order_placements=order_placements,
                               symbols=symbols if any(d.inline_origin for d in definitions) else None)
     errors.extend(failures)
+    from homm3.match import dc_addresses
+    errors.extend(dc_addresses.validate(definitions, origins, rows, symbols,
+                                       require_complete=require_dc_addresses))
+    errors.extend(dc_addresses.validate_source_sites(root, definitions))
     if modules:
         selected = {module_name(m) for m in modules}
         known = {row['module'] for row in rows}
@@ -236,8 +241,11 @@ def main(argv=None):
     parser.add_argument('--tsv', type=Path, help='write the complete comparison, including matched rows')
     parser.add_argument('--fresh', action='store_true')
     parser.add_argument('--jobs', type=int, default=4)
+    parser.add_argument('--require-dc-addresses', action='store_true',
+                        help='migration census: fail if a matched DC procedure lacks DC_ADDRESS')
     args = parser.parse_args(argv)
-    result = audit(modules=args.module, jobs=args.jobs, fresh=args.fresh)
+    result = audit(modules=args.module, jobs=args.jobs, fresh=args.fresh,
+                   require_dc_addresses=args.require_dc_addresses)
     if args.tsv:
         write_tsv(args.tsv, result['rows'])
     if args.json:

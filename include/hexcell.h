@@ -108,13 +108,16 @@ public:
     // const enemy_is_adjacent could not compile without it.
     army* getArmy() const;
     army* getDeadArmy(int i) const;
+
     // DC HexCell.h:85. The Complete UpdateGrid caller expands the returned
     // four-word rectangle and SLimitData::Include into one union loop.
+    DC_ADDRESS(0x087300, 0x44)
     SLimitData limits() const
     {
         return SLimitData(m_hexUlx, m_hexUly, m_hexBrx, m_fullHexBry);
     }
-    // The DC roster's hexcell::HasArmy (HexCell.h:90, dc 0x4cc68) - a
+
+    // The DC roster's hexcell::HasArmy (HexCell.h:90) - a
     // class-body inline on that build too, and retail carries no
     // out-of-line copy anywhere - the /Ob2 inline-away case.
     // army::ProcessDeath (0x444120) is the decoded consumer: the guard
@@ -122,6 +125,7 @@ public:
     // itself load-bearing for ProcessDeath's inline budget (a free
     // candidate site in C2's sites-remaining divisor - measured there).
     // The DC const-this record also permits DoorCanBeLowered to call it.
+    DC_ADDRESS(0x04cc68, 0xa)
     unsigned char hasArmy() const
     {
         return m_armySide >= 0;

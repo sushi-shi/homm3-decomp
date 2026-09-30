@@ -3,6 +3,8 @@
 #ifndef HOMM3_SLIDER_H
 #define HOMM3_SLIDER_H
 
+#include "va.h"
+
 #include "widget.h"
 
 class Bitmap816;
@@ -81,6 +83,7 @@ public:
     // widget::Close (0x5bc690); no independent source body is claimable.
     virtual void close();
 
+    DC_ADDRESS(0x1285a8, 0x8)
     int getMaximum() const { return m_numStates; }
     // No procedure/source location or active caller is known;
     // retain the API without borrowing get_maximum's body position.

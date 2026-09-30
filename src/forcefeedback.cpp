@@ -162,7 +162,9 @@ t_initializer::t_initializer(void* instance, void* hwnd)
 // the client-side `??_G` for the dllimported CImmMouse - slot 0 of the
 // vftable at 0x63e618, the same shape as CImmEnclosure's at 0x4b6c30.
 VA_COMPGEN(0x004b66d0, 0x21, SCALAR_DELETING_DTOR, t_initialize_failure)
+
 VA_COMPGEN(0x004b6700, 0x22, SCALAR_DELETING_DTOR, CImmMouse)
+
 VA_COMPGEN(0x004b6730, 0x157, IMPLICIT_COPY_CTOR, t_initialize_failure)
 
 // InitImmMouse: once-guarded `static <ImmWrapper> obj(hInst, hwnd)`
@@ -245,6 +247,7 @@ force_feedback::t_enclosure::t_enclosure(const RECT* rect, long a,
 }
 
 VA_COMPGEN(0x004b6c30, 0x22, SCALAR_DELETING_DTOR, CImmEnclosure)
+
 VA_COMPGEN(0x004b6c60, 0x157, IMPLICIT_COPY_CTOR, t_create_failure)
 
 // The holder TAdventureMapWindow owns at +0x9c. `operator new(8)` for the
@@ -283,7 +286,9 @@ void TImmMouseEffect::stop()
 // teardown reach, and all three sizes are exactly the ones the
 // claimed below in this same compiland.
 VA_COMPGEN(0x004b6f60, 0xBE, CLASS_CTOR, map)
+
 VA_COMPGEN(0x004b7020, 0x13, IMPLICIT_DTOR, CImmEnclosure_auto_ptr)
+
 // ...and the other two of the four, both proven by the callee each one
 // reaches: 0x4b7040 falls straight through to the free `operator delete`
 // (the char instantiation - no element destructor to run), while 0x4b7050
@@ -292,7 +297,9 @@ VA_COMPGEN(0x004b7020, 0x13, IMPLICIT_DTOR, CImmEnclosure_auto_ptr)
 // their 16- and 33-byte extents match the two base COMDATs exactly, which
 // is the same answer the length fallback would give.
 VA_COMPGEN(0x004b7040, 0x10, IMPLICIT_DTOR, char_auto_ptr)
+
 VA_COMPGEN(0x004b7050, 0x21, IMPLICIT_DTOR, CImmProject_auto_ptr)
+
 // COMDAT pairing: basic_filebuf<char>::close, the one <fstream> member of
 // this TU with no claim key until now. t_initializer's constructor reads
 // H3Shad.ifr through an ifstream, and 0x4b7400 is the `close` that ends it:
@@ -303,9 +310,13 @@ VA_COMPGEN(0x004b7050, 0x21, IMPLICIT_DTOR, CImmProject_auto_ptr)
 // object's own `?close@?$basic_filebuf@D...` COMDAT, which nothing else in
 // the unit resembles.
 VA_COMPGEN(0x004b7400, 0x9C, FILEBUF_CLOSE, char)
+
 VA_COMPGEN(0x004b70e0, 0x115, TREE_INSERT, CImmEnclosure)
+
 VA_COMPGEN(0x004b7a50, 0x2F9, TREE_NODE_INSERT, CImmEnclosure)
+
 VA_COMPGEN(0x004b7db0, 0xB3, TREE_CONST_ITERATOR_DEC, CImmEnclosure)
+
 // COMDAT pairing: std::_Construct for the map's 20-byte
 // pair<CImmEnclosure* const, tagRECT>. `_Tree::_Insert` (0x4b7a50) is its
 // only caller, the five-dword `rep movsd` fixes the element width, and the
@@ -322,6 +333,7 @@ VA_COMPGEN(0x004b7fe0, 0x14, STD_CONSTRUCT, CImmEnclosure_pair)
 // independently: resourcemanager's TCacheMapKey tree, the other pointer-keyed
 // map in the tree, carries this same pair at 0x50F and 0x121.
 VA_COMPGEN(0x004b7200, 0x121, TREE_ERASE_RANGE, CImmEnclosure)
+
 VA_COMPGEN(0x004b74a0, 0x50F, TREE_ERASE_ITERATOR, CImmEnclosure)
 
 // COMDAT pairing: the rest of map<CImmEnclosure*, RECT>'s out-of-line tree
@@ -335,10 +347,14 @@ VA_COMPGEN(0x004b74a0, 0x50F, TREE_ERASE_ITERATOR, CImmEnclosure)
 // at 0x4b79b0, while 0x4b7e70 is called straight from the destructor, which
 // is where upper_bound is expanded. _Erase is erase(iterator, iterator)'s
 // whole-tree arm.
-
 VA_COMPGEN(0x004b73e0, 0x19, TREE_ITERATOR_EQUAL, CImmEnclosure)
+
 VA_COMPGEN(0x004b79b0, 0x17, TREE_LOWER_BOUND, CImmEnclosure)
+
 VA_COMPGEN(0x004b79d0, 0x7E, TREE_ERASE, CImmEnclosure)
+
 VA_COMPGEN(0x004b7d50, 0x49, TREE_LBOUND, CImmEnclosure)
+
 VA_COMPGEN(0x004b7da0, 0xE, TREE_CONST_ITERATOR_CTOR, CImmEnclosure)
+
 VA_COMPGEN(0x004b7e70, 0x49, TREE_UBOUND, CImmEnclosure)

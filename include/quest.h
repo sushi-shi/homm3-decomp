@@ -222,6 +222,7 @@ public:
         // plus the _Ptr member, with no quest_type() in the address.
         QUEST_TEXT_TIME_LIMIT = 51
     };
+
     // Complete's shared row selector survives at 0x52e6b0. The quest-log
     // caller retains it while the adventure-window predicates expand it.
     // Header ownership is inferred from that cross-TU use; Complete added
@@ -256,6 +257,7 @@ public:
 
     std::string getProposalDialogText();
     std::string getProgressDialogText();
+
     // The exact HD structural twin maps this accessor to retail 0x45bad0;
     // its body copies the base's +0x28 completionText member.
     MAC_ADDRESS(0x169418, 0x24)

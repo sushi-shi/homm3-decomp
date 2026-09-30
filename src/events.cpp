@@ -229,7 +229,7 @@ unsigned char advManager::monstersSellOut(hero* current_hero, NewmapCell* cell, 
     // @stub
 }
 
-// E:\gamedcs\events.cpp:3805, dc 0x97144
+// E:\gamedcs\events.cpp:3805
 int advManager::getLikeModifier(hero* current_hero, TCreatureType creature)
 {
     // @stub
@@ -544,7 +544,9 @@ DATA(0x00696a2c) static const char* g_artifactEventText[144];
 DATA(0x00696c70) static TTextResource* g_artifactEventTextResource;
 DATA(0x00696c74) static const char* g_randomSignText[25];
 
-VA(0x0049e0e0, 0x15) MAC_ADDRESS(0x0a9368, 0x48)  // dc 0x9028c
+VA(0x0049e0e0, 0x15)
+DC_ADDRESS(0x09028c, 0x24)
+MAC_ADDRESS(0x0a9368, 0x48)
 bool initializeAdventureEventText()
 {
     g_adventureEventText = ResourceManager::getText(
@@ -554,7 +556,9 @@ bool initializeAdventureEventText()
     return true;
 }
 
-VA(0x0049e100, 0x33) MAC_ADDRESS(0x0a93b0, 0xa0)  // dc 0x902b0
+VA(0x0049e100, 0x33)
+DC_ADDRESS(0x0902b0, 0x4a)
+MAC_ADDRESS(0x0a93b0, 0xa0)
 bool initializeArtifactEventText()
 {
     g_artifactEventTextResource = ResourceManager::getText(
@@ -566,7 +570,9 @@ bool initializeArtifactEventText()
     return true;
 }
 
-VA(0x0049e140, 0x30) MAC_ADDRESS(0x0a9450, 0xa0)  // dc 0x902fc
+VA(0x0049e140, 0x30)
+DC_ADDRESS(0x0902fc, 0x4a)
+MAC_ADDRESS(0x0a9450, 0xa0)
 bool initializeRandomSignText()
 {
     g_randomSignTextResource = ResourceManager::getText(
@@ -581,7 +587,9 @@ bool initializeRandomSignText()
 // The flash itself is FizzleCenter (0x4acbb0) inlined, exactly as in
 // HeroLoses: the callee's own body is at the far end of this file and is
 // emitted anyway, but /Ob2 expands it at both sites.
-VA(0x0049e170, 0x16E) MAC_ADDRESS(0x0a94f0, 0x90)  // dc 0x90348
+VA(0x0049e170, 0x16E)
+DC_ADDRESS(0x090348, 0x6a)
+MAC_ADDRESS(0x0a94f0, 0x90)
 void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point,
                                 int fizzleSound)
 {
@@ -606,7 +614,9 @@ void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point,
 // short stores are close but order the packing differently. The 3-arg
 // type_point constructor measured WORSE (85.51). A packed-bitfield store
 // ordering wall.
-VA(0x0049e2e0, 0x38B) MAC_ADDRESS(0x0a9580, 0x400)  // dc-bracket forced, ret 0xc=p4, dc 0x903b4
+VA(0x0049e2e0, 0x38B)
+DC_ADDRESS(0x0903b4, 0x2a4)
+MAC_ADDRESS(0x0a9580, 0x400)  // dc-bracket forced, ret 0xc=p4
 void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned char humanPlayer)
 {
     mobilizeCurrHero(0, 0, 1);
@@ -664,7 +674,9 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
     }
 }
 
-VA(0x0049e670, 0x15C) MAC_ADDRESS(0x0a9980, 0x104)  // dc 0x90658
+VA(0x0049e670, 0x15C)
+DC_ADDRESS(0x090658, 0x66)
+MAC_ADDRESS(0x0a9980, 0x104)
 void advManager::doEventAnchor(hero* currentHero, bool humanPlayer)
 {
     if (currentHero->m_flags & 0x40000) {
@@ -704,14 +716,17 @@ void advManager::doEventAnchor(hero* currentHero, bool humanPlayer)
 // the first two rows in the file, because "arena" is the first adventure
 // object alphabetically. That is the strongest single check on the
 // ordering this enum rests on.
-// Original: advManager::EventSound; events.cpp:412, dc 0x906c0.
+// Original: advManager::EventSound; events.cpp:412
+DC_ADDRESS(0x0906c0, 0x16)
 MAC_ADDRESS(0x0a9a84, 0x2c)
 void advManager::eventSound(NewmapCell* cell)
 {
     eventSound(cell->m_type, cell->m_extraInfo);
 }
 
-VA(0x0049e7d0, 0x118) MAC_ADDRESS(0x0a9ab0, 0x1cc)  // dc 0x906d8
+VA(0x0049e7d0, 0x118)
+DC_ADDRESS(0x0906d8, 0x13c)
+MAC_ADDRESS(0x0a9ab0, 0x1cc)
 void advManager::doEventArena(hero* currentHero, NewmapCell* cell,
                               bool humanPlayer)
 {
@@ -752,8 +767,9 @@ long aiValueOfEvent(const hero* currentHero, type_point point);
 // It takes the POINT, not the cell, and re-fetches through GetCell -
 // which is what its `push point / call GetCell` opening says and what
 // makes it usable from an arm that has already lost the cell pointer.
-
-VA(0x0049e8f0, 0x146) MAC_ADDRESS(0x0a9c7c, 0xac)  // dc 0x90814
+VA(0x0049e8f0, 0x146)
+DC_ADDRESS(0x090814, 0x64)
+MAC_ADDRESS(0x0a9c7c, 0xac)
 void advManager::giveArtifact(hero* currentHero, type_point point,
                               bool humanPlayer)
 {
@@ -773,6 +789,7 @@ void advManager::giveArtifact(hero* currentHero, type_point point,
 // short `artifact` local and statement order: line 501 loads the artifact
 // inside the human-player block, which makes doEventArtifact exact. Mac doEventArtifact retains
 // a call to it at 0:0xa9d28; VC6 auto-inlines it into the free arm.
+DC_ADDRESS(0x090878, 0x62)
 MAC_ADDRESS(0x0a9d28, 0xa4)
 void advManager::doEventFreeArtifact(hero* currentHero,
                                             NewmapCell* cell,
@@ -787,7 +804,9 @@ void advManager::doEventFreeArtifact(hero* currentHero,
     giveArtifact(currentHero, point, humanPlayer);
 }
 
-VA(0x0049ea40, 0x304) MAC_ADDRESS(0x0a9dcc, 0x290)  // dc 0x908dc
+VA(0x0049ea40, 0x304)
+DC_ADDRESS(0x0908dc, 0x1fc)
+MAC_ADDRESS(0x0a9dcc, 0x290)
 void advManager::fightForArtifact(hero* currentHero, NewmapCell* cell,
                                   type_point point, bool humanPlayer)
 {
@@ -829,7 +848,9 @@ void advManager::fightForArtifact(hero* currentHero, NewmapCell* cell,
     giveArtifact(currentHero, point, humanPlayer);
 }
 
-VA(0x0049ed50, 0x2E8) MAC_ADDRESS(0x0aa05c, 0x260)  // dc 0x90ad8
+VA(0x0049ed50, 0x2E8)
+DC_ADDRESS(0x090ad8, 0x180)
+MAC_ADDRESS(0x0aa05c, 0x260)
 void advManager::payForArtifact(hero* currentHero, NewmapCell* cell,
                                 type_point point, const char* dialogText,
                                 short goldCost, short resourceCost,
@@ -875,7 +896,9 @@ void advManager::payForArtifact(hero* currentHero, NewmapCell* cell,
     giveArtifact(currentHero, point, humanPlayer);
 }
 
-VA(0x0049f040, 0x23) MAC_ADDRESS(0x0aa36c, 0x20)  // decorated identity + event-pool index arithmetic
+VA(0x0049f040, 0x23)
+DC_ADDRESS(0x090d10, 0x24)
+MAC_ADDRESS(0x0aa36c, 0x20)  // decorated identity + event-pool index arithmetic
 TreasureData* advManager::getTreasureData(NewmapCell* cell) const
 {
     return &m_fullMap->m_customTreasure[(cell->m_extraInfo >> 19) & 0xfff];
@@ -898,7 +921,9 @@ TreasureData* advManager::getTreasureData(NewmapCell* cell) const
 // Negative control: spelling DC's unsigned-char human_player literally changes
 // the x86 decorated identity; retail's `_N` suffix proves this parameter is bool.
 // Splitting artifactId's declaration from its accessor assignment is byte-flat.
-VA(0x0049f070, 0x765) MAC_ADDRESS(0x0aa38c, 0x590)  // dc-bracket forced, ret 0x10=p5, dc 0x90d34
+VA(0x0049f070, 0x765)
+DC_ADDRESS(0x090d34, 0x3ce)
+MAC_ADDRESS(0x0aa38c, 0x590)  // dc-bracket forced, ret 0x10=p5
 void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
                                   type_point point, bool humanPlayer)
 {
@@ -985,6 +1010,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
 // twice. VC6 auto-inlines the ordinary helper at both retail call sites.
 // Its success arm calls DoEventFreeArtifact and its refusal names a short
 // artifact; retail's skill-success dialogs read g_artifactEventText.
+DC_ADDRESS(0x090c58, 0xb8)
 MAC_ADDRESS(0x0aa2bc, 0xb0)
 void advManager::doArtifactSkillRequirement(
     hero* currentHero, NewmapCell* cell, type_point point,
@@ -1015,7 +1041,9 @@ void advManager::doArtifactSkillRequirement(
 // exactly the retail call decisions. MAX before this reconstruction: 78.1174.
 // Early returns versus full/partial nested dispatch reproduce three objects
 // with no MAX gain; branch nesting alone does not merge the skill-success tail.
-VA(0x0049f7e0, 0x2A4) MAC_ADDRESS(0x0aa91c, 0x260)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5, dc 0x91104
+VA(0x0049f7e0, 0x2A4)
+DC_ADDRESS(0x091104, 0x1b8)
+MAC_ADDRESS(0x0aa91c, 0x260)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5
 void advManager::doEventArtifact(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
@@ -1078,10 +1106,12 @@ void aiJoinDecision(hero* currentHero, TCreatureType creature,
                       short amount);
 void doMonsterJoinDialog(hero* inHero, armyGroup* monsters, int flag);
 
-// DC 0x912bc/0x91308/0x9138c and Mac 0xaab7c/0xaabf8/0xaac80
+// DC and Mac
 // place showRewards before addReward and giveBlackBoxReward. Restoring
 // that ordinary body order is byte-flat; selective nested expansion remains open.
-VA(0x004a0b00, 0x112) MAC_ADDRESS(0x0aab7c, 0x7c)  // dc 0x912bc
+VA(0x004a0b00, 0x112)
+DC_ADDRESS(0x0912bc, 0x4a)
+MAC_ADDRESS(0x0aab7c, 0x7c)
 static void showRewards(std::string& text,
                   std::vector<type_dialog_resource>& rewards,
                   long threshold)
@@ -1093,10 +1123,11 @@ static void showRewards(std::string& text,
     }
 }
 
-// DC events.cpp:838-846, dc 0x91308: ordinary static add_reward owns
+// DC events.cpp:838-846: ordinary static add_reward owns
 // push_back, the empty-text assignment, and show_rewards(..., 8).
 // Retail expands this helper and push_back while retaining insert calls.
 // Moving the flush into callers loses the nested inlining context.
+DC_ADDRESS(0x091308, 0x84)
 MAC_ADDRESS(0x0aabf8, 0x88)
 static void addReward(std::string& text, const std::string& alternate,
                       std::vector<type_dialog_resource>& rewards,
@@ -1117,7 +1148,9 @@ static void addReward(std::string& text, const std::string& alternate,
 // Removing throwaway enum-conversion aliases is byte-flat. Four expression
 // states reproduce four objects; the direct string assignment below restores
 // the native lifetime. Remaining vector/string inline decisions are unresolved.
-VA(0x0049fa90, 0x106B) MAC_ADDRESS(0x0aac80, 0xab0)  // dc-bracket forced, ret 0x18=p7 + format_string reward text, dc 0x9138c
+VA(0x0049fa90, 0x106B)
+DC_ADDRESS(0x09138c, 0x870)
+MAC_ADDRESS(0x0aac80, 0xab0)  // dc-bracket forced, ret 0x18=p7 + format_string reward text
 unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     NewmapCell* cell, type_point point, unsigned char humanPlayer,
     BlackBoxData* blackBox)
@@ -1344,7 +1377,9 @@ VA_COMPGEN(0x0054c120, 0x43, VECTOR_CLEAR, type_dialog_resource)
 
 VA_COMPGEN(0x005b8cc0, 0x0f, STD_CONSTRUCT, type_dialog_resource)
 
-VA(0x004a0c20, 0x23) MAC_ADDRESS(0x0ab730, 0x1c)  // decorated identity + event-pool index arithmetic
+VA(0x004a0c20, 0x23)
+DC_ADDRESS(0x091bfc, 0x1c)
+MAC_ADDRESS(0x0ab730, 0x1c)  // decorated identity + event-pool index arithmetic
 BlackBoxData* advManager::getBlackBox(const ExtraInfoUnion* cell) const
 {
     unsigned index = cell->m_value & 0x3ff;
@@ -1354,7 +1389,9 @@ BlackBoxData* advManager::getBlackBox(const ExtraInfoUnion* cell) const
 // The BlackBox pointer is HOMED on the frame because the guardians test
 // walks a working copy of it forward to the armyGroup at +0x14 and the
 // reward call needs the original back.
-VA(0x004a0c50, 0x277) MAC_ADDRESS(0x0ab74c, 0x268)  // dc 0x91c18
+VA(0x004a0c50, 0x277)
+DC_ADDRESS(0x091c18, 0x1a0)
+MAC_ADDRESS(0x0ab74c, 0x268)
 void advManager::doEventBlackBox(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
@@ -1392,7 +1429,9 @@ void advManager::doEventBlackBox(hero* currentHero, NewmapCell* cell,
     eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
-VA(0x004a0ed0, 0x13D) MAC_ADDRESS(0x0ab9b4, 0x1f0)  // dc 0x91db8
+VA(0x004a0ed0, 0x13D)
+DC_ADDRESS(0x091db8, 0x18c)
+MAC_ADDRESS(0x0ab9b4, 0x1f0)
 void advManager::handleMapEvent(hero* currentHero, NewmapCell* cell,
                                 type_point point, bool humanPlayer)
 {
@@ -1437,7 +1476,9 @@ void advManager::handleMapEvent(hero* currentHero, NewmapCell* cell,
 // GetMobility(1) and the remainder is scaled by the old ratio with a
 // signed `imul`/`cdq`/`idiv`. Without the Admiral's Hat (artifact 0x88)
 // the remainder is simply zeroed - boarding costs the rest of the turn.
-VA(0x004a1010, 0x10D) MAC_ADDRESS(0x0abba4, 0x148)  // dc 0x91f44
+VA(0x004a1010, 0x10D)
+DC_ADDRESS(0x091f44, 0xa6)
+MAC_ADDRESS(0x0abba4, 0x148)
 void advManager::doEventBoat(hero* currentHero, NewmapCell* cell)
 {
     boat* heroBoat = g_game->getBoat(cell->m_extraInfo);
@@ -1481,7 +1522,9 @@ void advManager::doEventBoat(hero* currentHero, NewmapCell* cell)
 
 // DC 1361 gives the dialog one if-body scope (unbraced); 1369 has two
 // coincident scopes, so only the closing setEnvironmentOrigin is braced.
-VA(0x004a1120, 0x1C4) MAC_ADDRESS(0x0ac3dc, 0x124)  // dc 0x922e8
+VA(0x004a1120, 0x1C4)
+DC_ADDRESS(0x0922e8, 0xc6)
+MAC_ADDRESS(0x0ac3dc, 0x124)
 void advManager::doEventCampfire(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
@@ -1501,7 +1544,9 @@ void advManager::doEventCampfire(hero* currentHero, NewmapCell* cell,
     }
 }
 
-VA(0x004a12f0, 0x1B3) MAC_ADDRESS(0x0ac500, 0x324)  // dc 0x923b0
+VA(0x004a12f0, 0x1B3)
+DC_ADDRESS(0x0923b0, 0x190)
+MAC_ADDRESS(0x0ac500, 0x324)
 void advManager::doEventIdol(hero* currentHero, NewmapCell* cell,
                              bool humanPlayer)
 {
@@ -1535,7 +1580,9 @@ void advManager::doEventIdol(hero* currentHero, NewmapCell* cell,
     }
 }
 
-VA(0x004a14b0, 0xEC) MAC_ADDRESS(0x0ac824, 0x154)  // dc 0x92540
+VA(0x004a14b0, 0xEC)
+DC_ADDRESS(0x092540, 0xba)
+MAC_ADDRESS(0x0ac824, 0x154)
 void advManager::doEventCoverOfDarkness(NewmapCell* cell, type_point point,
                                         bool humanPlayer)
 {
@@ -1553,7 +1600,9 @@ void advManager::doEventCoverOfDarkness(NewmapCell* cell, type_point point,
     updateScreen(0, 0);
 }
 
-VA(0x004a15a0, 0x301) MAC_ADDRESS(0x0ac978, 0x274)  // dc 0x925fc
+VA(0x004a15a0, 0x301)
+DC_ADDRESS(0x0925fc, 0x218)
+MAC_ADDRESS(0x0ac978, 0x274)
 void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
                                      type_point point, bool humanPlayer)
 {
@@ -1611,7 +1660,9 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
 // Naming the HasCreatures result (94.82%) or the guards reference (90.78%)
 // worsens VC6; naming getOwner scores 99.07%, and a typed generator pointer
 // is byte-flat. Keep the canonical calls and current reference lifetime.
-VA(0x004a18b0, 0x79A) MAC_ADDRESS(0x0acbec, 0x7c8)  // dc-bracket forced, ret 0x10=p5, dc 0x92814
+VA(0x004a18b0, 0x79A)
+DC_ADDRESS(0x092814, 0x52a)
+MAC_ADDRESS(0x0acbec, 0x7c8)  // dc-bracket forced, ret 0x10=p5
 void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                                           type_point point, bool humanPlayer)
 {
@@ -1732,7 +1783,9 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
 // 0x92d40/0x93368/0x941c8/0x946b4 end in PAVNewmapCell@@_N@Z. Their
 // unsigned-char CodeView formal records are lowered bool representations,
 // not evidence for changing the source interface or steering the inliner.
-VA(0x004a2050, 0xE4) MAC_ADDRESS(0x0ad3b4, 0x224)  // dc 0x92d40
+VA(0x004a2050, 0xE4)
+DC_ADDRESS(0x092d40, 0xac)
+MAC_ADDRESS(0x0ad3b4, 0x224)
 void advManager::doEventDefenseTower(hero* currentHero, NewmapCell* cell,
                                      bool humanPlayer)
 {
@@ -1751,7 +1804,9 @@ void advManager::doEventDefenseTower(hero* currentHero, NewmapCell* cell,
     }
 }
 
-VA(0x004a2140, 0xE8) MAC_ADDRESS(0x0ad5d8, 0x18c)  // dc 0x92dec
+VA(0x004a2140, 0xE8)
+DC_ADDRESS(0x092dec, 0x11a)
+MAC_ADDRESS(0x0ad5d8, 0x18c)
 void advManager::doEventDragonCity(hero* currentHero, NewmapCell* cell,
                                       type_point point, bool humanPlayer)
 {
@@ -1777,7 +1832,9 @@ void advManager::doEventDragonCity(hero* currentHero, NewmapCell* cell,
                       humanPlayer);
 }
 
-VA(0x004a2230, 0x250) MAC_ADDRESS(0x0ad964, 0x234)  // dc 0x92fa8
+VA(0x004a2230, 0x250)
+DC_ADDRESS(0x092fa8, 0x184)
+MAC_ADDRESS(0x0ad964, 0x234)
 void advManager::doEventFlotsam(hero* currentHero, NewmapCell* cell,
                                 type_point point, bool humanPlayer)
 {
@@ -1817,7 +1874,9 @@ void advManager::doEventFlotsam(hero* currentHero, NewmapCell* cell,
 // UNCONDITIONAL jmp that skips a test is a source `goto` (one call site);
 // a TWO-WAY branch inside one argument list with everything else shared
 // is two call sites.
-VA(0x004a2480, 0x16C) MAC_ADDRESS(0x0adb98, 0x318)  // dc 0x9312c
+VA(0x004a2480, 0x16C)
+DC_ADDRESS(0x09312c, 0x16a)
+MAC_ADDRESS(0x0adb98, 0x318)
 void advManager::doEventFountain(hero* currentHero, ExtraInfoUnion* cell,
                                  bool humanPlayer)
 {
@@ -1858,7 +1917,9 @@ void advManager::doEventFountain(hero* currentHero, ExtraInfoUnion* cell,
     currentHero->m_luckBonus += cell->m_fountainInfo.m_luck;
 }
 
-VA(0x004a25f0, 0x113) MAC_ADDRESS(0x0adeb0, 0x24c)  // dc 0x93298
+VA(0x004a25f0, 0x113)
+DC_ADDRESS(0x093298, 0xce)
+MAC_ADDRESS(0x0adeb0, 0x24c)
 void advManager::doEventFountainOfYouth(hero* currentHero, NewmapCell* cell,
                                         bool humanPlayer)
 {
@@ -1881,7 +1942,9 @@ void advManager::doEventFountainOfYouth(hero* currentHero, NewmapCell* cell,
         m_advWindow->updateHeroLocators(-1, 1, 1);
 }
 
-VA(0x004a2710, 0xE4) MAC_ADDRESS(0x0ae0fc, 0x224)  // dc 0x93368
+VA(0x004a2710, 0xE4)
+DC_ADDRESS(0x093368, 0xfc)
+MAC_ADDRESS(0x0ae0fc, 0x224)
 void advManager::doEventGarden(hero* currentHero, NewmapCell* cell,
                                bool humanPlayer)
 {
@@ -1904,6 +1967,7 @@ void advManager::doEventGarden(hero* currentHero, NewmapCell* cell,
 // retains their bodies as direct calls; retail VC6 expands them in dispatchEvent.
 // The Mac calls do not settle their inline qualifiers, so the existing VC6
 // source declarations stay in place while the newly found gate is separate.
+DC_ADDRESS(0x091fec, 0xf4)
 MAC_ADDRESS(0x0abcec, 0x138)
 inline void advManager::doEventBorderGuard(type_point point, NewmapCell* cell,
                                            unsigned char humanPlayer)
@@ -1943,6 +2007,7 @@ void advManager::doEventBorderGate(type_point, NewmapCell* cell,
     }
 }
 
+DC_ADDRESS(0x0920e0, 0xa6)
 MAC_ADDRESS(0x0abec0, 0x130)
 inline void advManager::doEventBorderTent(NewmapCell* cell,
                                           unsigned char humanPlayer)
@@ -1962,6 +2027,7 @@ inline void advManager::doEventBorderTent(NewmapCell* cell,
     }
 }
 
+DC_ADDRESS(0x092188, 0x96)
 MAC_ADDRESS(0x0abff0, 0x1f0)
 inline void advManager::doEventBouy(hero* currentHero, NewmapCell* cell,
                                     unsigned char humanPlayer)
@@ -1982,6 +2048,7 @@ inline void advManager::doEventBouy(hero* currentHero, NewmapCell* cell,
     }
 }
 
+DC_ADDRESS(0x092220, 0xc8)
 MAC_ADDRESS(0x0ac1e0, 0x1fc)
 inline void advManager::doEventCloverField(hero* currentHero,
                                            NewmapCell* cell,
@@ -2004,6 +2071,7 @@ inline void advManager::doEventCloverField(hero* currentHero,
     }
 }
 
+DC_ADDRESS(0x092f08, 0x9e)
 MAC_ADDRESS(0x0ad764, 0x200)
 inline void advManager::doEventFaerieRing(hero* currentHero,
                                           NewmapCell* cell,
@@ -2025,7 +2093,8 @@ inline void advManager::doEventFaerieRing(hero* currentHero,
     }
 }
 
-VA(0x004b0000, 0x8A)  // retained comparator; dc 0x9cdc0 proves const.
+VA(0x004b0000, 0x8A)  // retained comparator;  proves const.
+DC_ADDRESS(0x09cdc0, 0x48)
 inline unsigned char spell_level_order::operator()(SpellID first,
                                                     SpellID second) const
 {
@@ -2056,7 +2125,9 @@ void aiFriendlyHeroMeeting(hero* currentHero, hero* otherHero);
 // 16-bit unit and both are extracted out of the SAME dword load, which
 // is why the second half of the point is read at +0x12 rather than the
 // field being addressed on its own.
-VA(0x004a2800, 0x13F) MAC_ADDRESS(0x0aeab8, 0x1c0)  // dc 0x939bc
+VA(0x004a2800, 0x13F)
+DC_ADDRESS(0x0939bc, 0x15a)
+MAC_ADDRESS(0x0aeab8, 0x1c0)
 void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
                                type_point point, bool humanPlayer)
 {
@@ -2099,7 +2170,9 @@ void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
 // Residual 91.3003%: the final taught-message += retains string::append
 // where retail expands it. Both builds destroy formatString's temporary at
 // the end of that expression; extending its lifetime lacks source evidence.
-VA(0x004a2940, 0x85C) MAC_ADDRESS(0x0ae320, 0x6dc)  // anchor-callee from do_event_hero + full retail semantics, dc 0x93464
+VA(0x004a2940, 0x85C)
+DC_ADDRESS(0x093464, 0x556)
+MAC_ADDRESS(0x0ae320, 0x6dc)  // anchor-callee from do_event_hero + full retail semantics
 static void exchangeSpells(hero* firstHero, hero* secondHero)
 {
     const int magicScholarLevel = max(
@@ -2214,8 +2287,9 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
 // GetLeanToAmount is decorated `short`, and that width is the whole
 // reason the emptiness test is a sixteen-bit `test si,si` and the dialog
 // argument a `movsx`: an int-wide read would not truncate.
-
-VA(0x004a31a0, 0xDF) MAC_ADDRESS(0x0aec78, 0x170)  // dc 0x93b18
+VA(0x004a31a0, 0xDF)
+DC_ADDRESS(0x093b18, 0xde)
+MAC_ADDRESS(0x0aec78, 0x170)
 void advManager::doEventLeanTo(hero* currentHero, ExtraInfoUnion* cell,
                                bool humanPlayer)
 {
@@ -2238,7 +2312,9 @@ void advManager::doEventLeanTo(hero* currentHero, ExtraInfoUnion* cell,
     }
 }
 
-VA(0x004a3280, 0x15C) MAC_ADDRESS(0x0aede8, 0x2ac)  // dc 0x93bf8
+VA(0x004a3280, 0x15C)
+DC_ADDRESS(0x093bf8, 0x13a)
+MAC_ADDRESS(0x0aede8, 0x2ac)
 void advManager::doEventLibrary(hero* currentHero, NewmapCell* cell,
                                 bool humanPlayer)
 {
@@ -2274,7 +2350,9 @@ TPrimarySkill aiChooseMagicSkill(hero* currentHero);
 // `game* g = gpGame;` is spelled out for the war school's reason: it is
 // what puts the player position first in the SIB of the inlined
 // teamInfo[playerNum] load (`[pos + gpGame]`).
-VA(0x004a33e0, 0x1AD) MAC_ADDRESS(0x0af1a8, 0x330)  // dc 0x93db0
+VA(0x004a33e0, 0x1AD)
+DC_ADDRESS(0x093db0, 0x1bc)
+MAC_ADDRESS(0x0af1a8, 0x330)
 void advManager::doEventMagicSchool(hero* currentHero, NewmapCell* cell,
                                     type_point point, bool humanPlayer)
 {
@@ -2321,7 +2399,9 @@ void advManager::doEventMagicSchool(hero* currentHero, NewmapCell* cell,
     g_currentPlayer->m_resources[GOLD] -= 1000;
 }
 
-VA(0x004a3590, 0x19C) MAC_ADDRESS(0x0af4d8, 0x330)  // dc 0x93f6c
+VA(0x004a3590, 0x19C)
+DC_ADDRESS(0x093f6c, 0x11c)
+MAC_ADDRESS(0x0af4d8, 0x330)
 void advManager::doEventMagicSpring(hero* currentHero, ExtraInfoUnion* cell,
                                     bool humanPlayer)
 {
@@ -2355,7 +2435,9 @@ void advManager::doEventMagicSpring(hero* currentHero, ExtraInfoUnion* cell,
     updBottomView(1, 1, 1);
 }
 
-VA(0x004a3730, 0x17E) MAC_ADDRESS(0x0af808, 0x304)  // dc 0x94088
+VA(0x004a3730, 0x17E)
+DC_ADDRESS(0x094088, 0x140)
+MAC_ADDRESS(0x0af808, 0x304)
 void advManager::doEventMagicWell(hero* currentHero, ExtraInfoUnion* cell,
                                   bool humanPlayer)
 {
@@ -2386,7 +2468,9 @@ void advManager::doEventMagicWell(hero* currentHero, ExtraInfoUnion* cell,
     updBottomView(1, 1, 1);
 }
 
-VA(0x004a38b0, 0xE4) MAC_ADDRESS(0x0afb0c, 0x224)  // dc 0x941c8
+VA(0x004a38b0, 0xE4)
+DC_ADDRESS(0x0941c8, 0xac)
+MAC_ADDRESS(0x0afb0c, 0x224)
 void advManager::doEventMercenaryCamp(hero* currentHero, NewmapCell* cell,
                                       bool humanPlayer)
 {
@@ -2407,7 +2491,9 @@ void advManager::doEventMercenaryCamp(hero* currentHero, NewmapCell* cell,
 
 void doMonsterJoinDialog(hero* inHero, armyGroup* monsters, int flag);
 
-VA(0x004a39a0, 0x21D) MAC_ADDRESS(0x0aff30, 0x368)  // dc 0x94314
+VA(0x004a39a0, 0x21D)
+DC_ADDRESS(0x094314, 0x1c0)
+MAC_ADDRESS(0x0aff30, 0x368)
 void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
                              type_point point, bool human)
 {
@@ -2465,7 +2551,9 @@ void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
     g_game->claimMine(cell->m_extraInfo, g_netLocalGamePos, const_normal_action);
 }
 
-VA(0x004a3bc0, 0xDC) MAC_ADDRESS(0x0b0298, 0x168)  // dc 0x944d4
+VA(0x004a3bc0, 0xDC)
+DC_ADDRESS(0x0944d4, 0xc8)
+MAC_ADDRESS(0x0b0298, 0x168)
 void advManager::doEventMysticalGarden(hero* currentHero, ExtraInfoUnion* cell,
                                        bool humanPlayer)
 {
@@ -2490,7 +2578,9 @@ void advManager::doEventMysticalGarden(hero* currentHero, ExtraInfoUnion* cell,
     cell->setGardenEmpty();
 }
 
-VA(0x004a3ca0, 0x11C) MAC_ADDRESS(0x0b0400, 0x24c)  // dc 0x9459c
+VA(0x004a3ca0, 0x11C)
+DC_ADDRESS(0x09459c, 0x116)
+MAC_ADDRESS(0x0b0400, 0x24c)
 void advManager::doEventOasis(hero* currentHero, NewmapCell* cell,
                               bool humanPlayer)
 {
@@ -2513,7 +2603,9 @@ void advManager::doEventOasis(hero* currentHero, NewmapCell* cell,
         m_advWindow->updateHeroLocators(-1, 1, 1);
 }
 
-VA(0x004a3dc0, 0xE4) MAC_ADDRESS(0x0b064c, 0x224)  // dc 0x946b4
+VA(0x004a3dc0, 0xE4)
+DC_ADDRESS(0x0946b4, 0xac)
+MAC_ADDRESS(0x0b064c, 0x224)
 void advManager::doEventPowerSchool(hero* currentHero, NewmapCell* cell,
                                     bool humanPlayer)
 {
@@ -2532,7 +2624,9 @@ void advManager::doEventPowerSchool(hero* currentHero, NewmapCell* cell,
     }
 }
 
-VA(0x004a3eb0, 0x376) MAC_ADDRESS(0x0b0870, 0x348)  // dc 0x94760
+VA(0x004a3eb0, 0x376)
+DC_ADDRESS(0x094760, 0x280)
+MAC_ADDRESS(0x0b0870, 0x348)
 void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
                                type_point point, bool humanPlayer)
 {
@@ -2600,7 +2694,9 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
 // The spell is written back BEFORE the hero is asked whether he can carry
 // it: set_pyramid clears the guarded bit and re-stamps the same spell in
 // one masked read-modify-write, and every later arm reads the local copy.
-VA(0x004a4230, 0x28A) MAC_ADDRESS(0x0b0bb8, 0x368)  // dc 0x949e0
+VA(0x004a4230, 0x28A)
+DC_ADDRESS(0x0949e0, 0x2ac)
+MAC_ADDRESS(0x0b0bb8, 0x368)
 void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
                                   type_point point, bool humanPlayer)
 {
@@ -2665,7 +2761,9 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
 
 // The visit bit is materialised into a register at the top and reused for
 // the write-back, which is what one named mask expression produces.
-VA(0x004a44c0, 0x136) MAC_ADDRESS(0x0b0f20, 0x280)  // dc 0x94c8c
+VA(0x004a44c0, 0x136)
+DC_ADDRESS(0x094c8c, 0xf6)
+MAC_ADDRESS(0x0b0f20, 0x280)
 void advManager::doEventRallyFlag(hero* currentHero, NewmapCell* cell,
                                   bool humanPlayer)
 {
@@ -2693,7 +2791,9 @@ void advManager::doEventRallyFlag(hero* currentHero, NewmapCell* cell,
 
 void aiRecruitRefugees(hero* currentHero, TCreatureType type, short* number);
 
-VA(0x004a4600, 0x17C) MAC_ADDRESS(0x0b11a0, 0x194)  // dc 0x94d84
+VA(0x004a4600, 0x17C)
+DC_ADDRESS(0x094d84, 0x11e)
+MAC_ADDRESS(0x0b11a0, 0x194)
 void advManager::doEventRefugeeCamp(hero* currentHero, NewmapCell* cell,
                                     bool humanPlayer)
 {
@@ -2721,7 +2821,9 @@ void advManager::doEventRefugeeCamp(hero* currentHero, NewmapCell* cell,
         TCreatureType(cell->m_objectIndex), cell->m_extraInfo);
 }
 
-VA(0x004a4780, 0x45D) MAC_ADDRESS(0x0b1334, 0x300)  // dc 0x94ea4
+VA(0x004a4780, 0x45D)
+DC_ADDRESS(0x094ea4, 0x288)
+MAC_ADDRESS(0x0b1334, 0x300)
 void advManager::doCustomResource(NewmapCell* cell, hero* currentHero,
                                   type_point point, bool humanPlayer)
 {
@@ -2781,7 +2883,9 @@ void advManager::doCustomResource(NewmapCell* cell, hero* currentHero,
 
 // EraseAndFizzle is inlined here exactly as in the campfire, and runs
 // whether or not anyone was watching.
-VA(0x004a4be0, 0x1D9) MAC_ADDRESS(0x0b1634, 0x128)  // dc 0x9512c
+VA(0x004a4be0, 0x1D9)
+DC_ADDRESS(0x09512c, 0xc6)
+MAC_ADDRESS(0x0b1634, 0x128)
 void advManager::doEventResource(NewmapCell* cell, hero* currentHero,
                                  type_point point, bool humanPlayer)
 {
@@ -2815,8 +2919,9 @@ void advManager::doEventResource(NewmapCell* cell, hero* currentHero,
 // secondary-skill arm's picture EXTRA is an icon index computed from the
 // skill and the level it just reached, which is why the mastery byte is
 // read back after GiveSS rather than before it.
-
-VA(0x004a4dc0, 0x263) MAC_ADDRESS(0x0b175c, 0x238)  // dc 0x951f4
+VA(0x004a4dc0, 0x263)
+DC_ADDRESS(0x0951f4, 0x1d8)
+MAC_ADDRESS(0x0b175c, 0x238)
 void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
                                 type_point point, bool humanPlayer)
 {
@@ -2862,7 +2967,9 @@ void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
     eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
-VA(0x004a5030, 0x26E) MAC_ADDRESS(0x0b1994, 0x228)  // dc 0x953cc
+VA(0x004a5030, 0x26E)
+DC_ADDRESS(0x0953cc, 0x198)
+MAC_ADDRESS(0x0b1994, 0x228)
 void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
@@ -2904,7 +3011,9 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
     eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
-VA(0x004a52a0, 0x1DE) MAC_ADDRESS(0x0b1bbc, 0x174)  // dc 0x95564
+VA(0x004a52a0, 0x1DE)
+DC_ADDRESS(0x095564, 0xea)
+MAC_ADDRESS(0x0b1bbc, 0x174)
 void advManager::doEventSurvivor(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
@@ -2934,7 +3043,9 @@ void advManager::doEventSurvivor(hero* currentHero, NewmapCell* cell,
 // artifact arm joins an advevent.txt fragment to the artifact name with
 // "%s %s" - two different resources in one body, which is what makes the
 // two text pointers different globals.
-VA(0x004a5480, 0x187) MAC_ADDRESS(0x0b1d30, 0x244)  // dc 0x95650
+VA(0x004a5480, 0x187)
+DC_ADDRESS(0x095650, 0x1ac)
+MAC_ADDRESS(0x0b1d30, 0x244)
 void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
                                  bool humanPlayer)
 {
@@ -2984,7 +3095,9 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
 // be a shared-header change risking every SetInfoFlag consumer. The
 // remainder is human_player homing (retail reloads the stack byte) and an
 // esi/edi swap.
-VA(0x004a5610, 0x346) MAC_ADDRESS(0x0b1f74, 0x3fc)  // DC identity + unique call/CFG stream, dc 0x957fc
+VA(0x004a5610, 0x346)
+DC_ADDRESS(0x0957fc, 0x236)
+MAC_ADDRESS(0x0b1f74, 0x3fc)  // DC identity + unique call/CFG stream
 void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
                                const char* prompt, GlobalInfoFlags type,
                                bool humanPlayer)
@@ -3035,7 +3148,9 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
 
 int aiVisitSirens(const hero* currentHero, armyGroup& army);
 
-VA(0x004a5980, 0x100) MAC_ADDRESS(0x0b2370, 0x18c)  // dc 0x95a34
+VA(0x004a5980, 0x100)
+DC_ADDRESS(0x095a34, 0x11e)
+MAC_ADDRESS(0x0b2370, 0x18c)
 void advManager::doEventSiren(hero* currentHero, NewmapCell* cell,
                               bool humanPlayer)
 {
@@ -3064,7 +3179,9 @@ void advManager::doEventSiren(hero* currentHero, NewmapCell* cell,
 }
 
 // E:\gamedcs\events.cpp:3133
-VA(0x004a5a80, 0x41E) MAC_ADDRESS(0x0b24fc, 0x328)  // dc-bracket forced, ret 0x10=p5, dc 0x95b54
+VA(0x004a5a80, 0x41E)
+DC_ADDRESS(0x095b54, 0x2c0)
+MAC_ADDRESS(0x0b24fc, 0x328)  // dc-bracket forced, ret 0x10=p5
 void advManager::doCustomSpellScroll(hero* currentHero, NewmapCell* cell,
                                      type_point point, bool humanPlayer)
 {
@@ -3120,7 +3237,9 @@ void advManager::doCustomSpellScroll(hero* currentHero, NewmapCell* cell,
     eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
-VA(0x004a5ea0, 0x1F9) MAC_ADDRESS(0x0b2824, 0x190)  // dc 0x95e14
+VA(0x004a5ea0, 0x1F9)
+DC_ADDRESS(0x095e14, 0x102)
+MAC_ADDRESS(0x0b2824, 0x190)
 void advManager::doEventSpellScroll(hero* currentHero, NewmapCell* cell,
                                     type_point point, bool humanPlayer)
 {
@@ -3152,7 +3271,9 @@ void advManager::doEventSpellScroll(hero* currentHero, NewmapCell* cell,
     eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
-VA(0x004a60a0, 0x160) MAC_ADDRESS(0x0b29b4, 0x23c)  // dc 0x95f18
+VA(0x004a60a0, 0x160)
+DC_ADDRESS(0x095f18, 0x194)
+MAC_ADDRESS(0x0b29b4, 0x23c)
 void advManager::doEventStables(hero* currentHero, NewmapCell* cell,
                                 bool humanPlayer)
 {
@@ -3196,7 +3317,9 @@ void advManager::doEventStables(hero* currentHero, NewmapCell* cell,
     }
 }
 
-VA(0x004a6200, 0x12C) MAC_ADDRESS(0x0b2bf0, 0x280)  // dc 0x960ac
+VA(0x004a6200, 0x12C)
+DC_ADDRESS(0x0960ac, 0x12e)
+MAC_ADDRESS(0x0b2bf0, 0x280)
 void advManager::doEventTemple(hero* currentHero, NewmapCell* cell,
                                bool humanPlayer)
 {
@@ -3224,7 +3347,9 @@ void advManager::doEventTemple(hero* currentHero, NewmapCell* cell,
     }
 }
 
-VA(0x004a6330, 0x106) MAC_ADDRESS(0x0b2e70, 0x274)  // dc 0x961dc
+VA(0x004a6330, 0x106)
+DC_ADDRESS(0x0961dc, 0x100)
+MAC_ADDRESS(0x0b2e70, 0x274)
 void advManager::doEventTrainingGrounds(hero* currentHero, NewmapCell* cell,
                                         bool humanPlayer)
 {
@@ -3262,7 +3387,9 @@ unsigned char aiChooseResourceOrExperience(const hero* currentHero,
 // treasure chest and the campfire-style pickups.
 // Mac b31cc..b3208 selects the human or AI choice before one giveResource
 // call at b321c or one giveExperience call at b3234.
-VA(0x004a6440, 0xD8) MAC_ADDRESS(0x0b30e4, 0x174)  // dc-bracket forced, ret 0xc=p4, dc 0x962dc
+VA(0x004a6440, 0xD8)
+DC_ADDRESS(0x0962dc, 0xfc)
+MAC_ADDRESS(0x0b30e4, 0x174)  // dc-bracket forced, ret 0xc=p4
 void advManager::doTreasureDialog(hero* currentHero, int amount,
                                   bool humanPlayer)
 {
@@ -3291,7 +3418,9 @@ void advManager::doTreasureDialog(hero* currentHero, int amount,
 // The chest is the only object in this file that ends with CheckLevel -
 // DoTreasureDialog can pay experience instead of gold, so the hero may
 // have levelled by the time the fizzle is over.
-VA(0x004a6520, 0x1ED) MAC_ADDRESS(0x0b3258, 0x164)  // dc 0x963d8
+VA(0x004a6520, 0x1ED)
+DC_ADDRESS(0x0963d8, 0xea)
+MAC_ADDRESS(0x0b3258, 0x164)
 void advManager::doEventTreasure(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
@@ -3323,7 +3452,9 @@ void advManager::doEventTreasure(hero* currentHero, NewmapCell* cell,
 // frame slot - and read back for the write-back after the award, which is
 // what one named local produces where two `1 << id` expressions would have
 // been recomputed.
-VA(0x004a6710, 0x29D) MAC_ADDRESS(0x0b33bc, 0x480)  // dc 0x964c4
+VA(0x004a6710, 0x29D)
+DC_ADDRESS(0x0964c4, 0x2be)
+MAC_ADDRESS(0x0b33bc, 0x480)
 void advManager::doEventTreeOfKnowledge(hero* currentHero,
                                         ExtraInfoUnion* cell,
                                         bool humanPlayer)
@@ -3390,7 +3521,9 @@ void advManager::doEventTreeOfKnowledge(hero* currentHero,
     currentHero->checkLevel();
 }
 
-VA(0x004a69b0, 0x178) MAC_ADDRESS(0x0b383c, 0x204)  // dc 0x96784
+VA(0x004a69b0, 0x178)
+DC_ADDRESS(0x096784, 0x210)
+MAC_ADDRESS(0x0b383c, 0x204)
 void advManager::doEventWagon(hero* currentHero, ExtraInfoUnion* cell,
                               bool humanPlayer)
 {
@@ -3432,7 +3565,9 @@ TCreatureType upgradedCreatureType(TCreatureType type);
 TCreatureType downgradedCreatureType(TCreatureType type);
 int isBaseCreature(TCreatureType type);
 
-VA(0x004a6b30, 0x12A) MAC_ADDRESS(0x0b3a40, 0x1d8)  // dc 0x96994
+VA(0x004a6b30, 0x12A)
+DC_ADDRESS(0x096994, 0x180)
+MAC_ADDRESS(0x0b3a40, 0x1d8)
 void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
                                       bool humanPlayer)
 {
@@ -3480,8 +3615,9 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
 // around the block rather than as an early return, which is why the two
 // restores appear ONCE here where EraseAndFizzle's own body carries three
 // copies of them.
-
-VA(0x004a6c60, 0x188) MAC_ADDRESS(0x0b3c18, 0x10c)  // dc 0x96b14
+VA(0x004a6c60, 0x188)
+DC_ADDRESS(0x096b14, 0x104)
+MAC_ADDRESS(0x0b3c18, 0x10c)
 void advManager::monstersFight(hero* currentHero, NewmapCell* cell,
                                 type_point point, bool humanPlayer)
 {
@@ -3520,7 +3656,9 @@ void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
 // The two monsters_fight calls are separate sites with their own
 // epilogues - the human arm forwards `human_player` and the AI arm the
 // literal false, which is what keeps them from tail-merging.
-VA(0x004a6df0, 0x20B) MAC_ADDRESS(0x0b3d24, 0x18c)  // dc 0x96c18
+VA(0x004a6df0, 0x20B)
+DC_ADDRESS(0x096c18, 0x13c)
+MAC_ADDRESS(0x0b3d24, 0x18c)
 void advManager::monstersFlee(hero* currentHero, NewmapCell* cell,
                                type_point point, bool humanPlayer)
 {
@@ -3555,7 +3693,9 @@ void advManager::monstersFlee(hero* currentHero, NewmapCell* cell,
 // the hero's army, and report the overflow when they do not fit - the
 // human through townmgr's dialog, the AI through its own appraisal.
 // monsters_give_reward then runs whatever happened to the army.
-VA(0x004a7000, 0x248) MAC_ADDRESS(0x0b3eb0, 0x1fc)  // dc 0x96d54
+VA(0x004a7000, 0x248)
+DC_ADDRESS(0x096d54, 0x198)
+MAC_ADDRESS(0x0b3eb0, 0x1fc)
 bool advManager::monstersJoin(hero* currentHero, NewmapCell* cell,
                                type_point point, bool wantToFight,
                                bool humanPlayer)
@@ -3600,8 +3740,9 @@ bool advManager::monstersJoin(hero* currentHero, NewmapCell* cell,
 // gold) tail is formatted into a 300-byte local and appended, which is
 // what the 0x13c frame is for. Both forms carry the price as an
 // iResType1 GOLD picture on the dialog.
-
-VA(0x004a7250, 0x36F) MAC_ADDRESS(0x0b40ac, 0x330)  // dc 0x96eec
+VA(0x004a7250, 0x36F)
+DC_ADDRESS(0x096eec, 0x258)
+MAC_ADDRESS(0x0b40ac, 0x330)
 bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
                                    type_point point, bool wantToFight,
                                    bool humanPlayer)
@@ -3663,7 +3804,9 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
 // The Armageddon's Blade content switch is shared with getAlignment. The
 // upgrade path below still tests base elementals separately because the four
 // base elementals have no upgrade in the older game version.
-VA(0x004a75c0, 0xFD) MAC_ADDRESS(0x0b43dc, 0x154)  // dc 0x97144
+VA(0x004a75c0, 0xFD)
+DC_ADDRESS(0x097144, 0xe4)
+MAC_ADDRESS(0x0b43dc, 0x154)
 int advManager::getLikeModifier(hero* currentHero, TCreatureType creature)
 {
     int kinCount = 0;
@@ -3692,7 +3835,9 @@ int advManager::getLikeModifier(hero* currentHero, TCreatureType creature)
     return kinCount > armyCount ? 2 : 1;
 }
 
-VA(0x004a76c0, 0x75) MAC_ADDRESS(0x0b4530, 0x70)  // dc 0x97228
+VA(0x004a76c0, 0x75)
+DC_ADDRESS(0x097228, 0x13c)
+MAC_ADDRESS(0x0b4530, 0x70)
 int advManager::getForceModifier(float strengthRatio)
 {
     if (strengthRatio >= 7.0)
@@ -3712,7 +3857,9 @@ long aiApproximateStrength(const hero* currentHero);
 // The Easy-difficulty bonus is the reason `setup.difficulty` is read at
 // all: on difficulty 0 a HUMAN player's diplomacy counts one grade
 // higher, capped at expert.
-VA(0x004a7740, 0x27E) MAC_ADDRESS(0x0b45a0, 0x2e4)  // dc 0x97364
+VA(0x004a7740, 0x27E)
+DC_ADDRESS(0x097364, 0x23c)
+MAC_ADDRESS(0x0b45a0, 0x2e4)
 void advManager::doWanderingMonsterResult(NewmapCell* cell,
                                           hero* currentHero, type_point point,
                                           bool humanPlayer)
@@ -3776,7 +3923,9 @@ void advManager::doWanderingMonsterResult(NewmapCell* cell,
         monstersFlee(currentHero, cell, point, humanPlayer);
 }
 
-VA(0x004a79c0, 0x79) MAC_ADDRESS(0x0b4884, 0xd0)  // dc 0x975a0
+VA(0x004a79c0, 0x79)
+DC_ADDRESS(0x0975a0, 0x88)
+MAC_ADDRESS(0x0b4884, 0xd0)
 void advManager::doEventWanderingMonster(NewmapCell* cell, hero* currentHero,
                                          type_point point, bool humanPlayer)
 {
@@ -3796,7 +3945,9 @@ void advManager::doEventWanderingMonster(NewmapCell* cell, hero* currentHero,
 // untouched and unpaid. The AI instead asks whether 1000 gold is worth
 // one level's experience increment, and then trains whichever of its two
 // clamped skills is lower - ties go to Attack.
-VA(0x004a7a40, 0x1EA) MAC_ADDRESS(0x0b4954, 0x39c)  // dc 0x97628
+VA(0x004a7a40, 0x1EA)
+DC_ADDRESS(0x097628, 0x224)
+MAC_ADDRESS(0x0b4954, 0x39c)
 void advManager::doEventWarSchool(hero* currentHero, ExtraInfoUnion* cell,
                                   bool humanPlayer)
 {
@@ -3850,8 +4001,9 @@ void advManager::doEventWarSchool(hero* currentHero, ExtraInfoUnion* cell,
 // the eight-bit visited lane) and tombs it could not carry the artifact
 // out of (a full 64-slot backpack). The human arm asks instead, and reads
 // the answer back out of heroWindowManager::dialogReturn.
-
-VA(0x004a7c30, 0x1A1) MAC_ADDRESS(0x0b4cf0, 0x274)  // dc 0x9784c
+VA(0x004a7c30, 0x1A1)
+DC_ADDRESS(0x09784c, 0x250)
+MAC_ADDRESS(0x0b4cf0, 0x274)
 void advManager::doEventWarriorTomb(hero* currentHero, ExtraInfoUnion* cell,
                                        bool humanPlayer)
 {
@@ -3895,7 +4047,9 @@ void advManager::doEventWarriorTomb(hero* currentHero, ExtraInfoUnion* cell,
     }
 }
 
-VA(0x004a7de0, 0xB1) MAC_ADDRESS(0x0b4f64, 0x128)  // dc 0x97a9c
+VA(0x004a7de0, 0xB1)
+DC_ADDRESS(0x097a9c, 0xde)
+MAC_ADDRESS(0x0b4f64, 0x128)
 void advManager::doEventWaterWheel(hero* currentHero, ExtraInfoUnion* cell,
                                       bool humanPlayer)
 {
@@ -3918,7 +4072,9 @@ void advManager::doEventWaterWheel(hero* currentHero, ExtraInfoUnion* cell,
 // The eight-iteration teamInfo scan in the middle is game::SetInfoFlag
 // (Game.h:917) inlined; the flag index 27 is WateringHoleInfo, which is
 // what fixes the +0x4e35f byte as globalInfoFlags[27].
-VA(0x004a7ea0, 0x111) MAC_ADDRESS(0x0b508c, 0x24c)  // dc 0x97b7c
+VA(0x004a7ea0, 0x111)
+DC_ADDRESS(0x097b7c, 0x130)
+MAC_ADDRESS(0x0b508c, 0x24c)
 void advManager::doEventWateringHole(hero* currentHero, NewmapCell* cell,
                                         bool humanPlayer)
 {
@@ -3941,7 +4097,9 @@ void advManager::doEventWateringHole(hero* currentHero, NewmapCell* cell,
         m_advWindow->updateHeroLocators(-1, 1, 1);
 }
 
-VA(0x004a7fc0, 0xBD) MAC_ADDRESS(0x0b52d8, 0x140)  // dc 0x97cac
+VA(0x004a7fc0, 0xBD)
+DC_ADDRESS(0x097cac, 0x11a)
+MAC_ADDRESS(0x0b52d8, 0x140)
 void advManager::doEventWindmill(hero* currentHero, ExtraInfoUnion* cell,
                                    bool humanPlayer)
 {
@@ -3962,7 +4120,9 @@ void advManager::doEventWindmill(hero* currentHero, ExtraInfoUnion* cell,
     }
 }
 
-VA(0x004a8080, 0x1A5) MAC_ADDRESS(0x0b5418, 0x334)  // dc 0x97dc8
+VA(0x004a8080, 0x1A5)
+DC_ADDRESS(0x097dc8, 0x1da)
+MAC_ADDRESS(0x0b5418, 0x334)
 void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
                                     bool humanPlayer)
 {
@@ -4018,7 +4178,9 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
     return;
 }
 
-VA(0x004a8230, 0x154) MAC_ADDRESS(0x0b574c, 0x1a8)  // dc 0x97fa4
+VA(0x004a8230, 0x154)
+DC_ADDRESS(0x097fa4, 0x142)
+MAC_ADDRESS(0x0b574c, 0x1a8)
 void advManager::doEventLithOneWay(hero* currentHero, NewmapCell* cell,
                                        bool humanPlayer)
 {
@@ -4046,7 +4208,9 @@ void advManager::doEventLithOneWay(hero* currentHero, NewmapCell* cell,
                0, 1, 0);
 }
 
-VA(0x004a8390, 0x155) MAC_ADDRESS(0x0b58f4, 0x1b0)  // dc 0x980e8
+VA(0x004a8390, 0x155)
+DC_ADDRESS(0x0980e8, 0x102)
+MAC_ADDRESS(0x0b58f4, 0x1b0)
 void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
                                        bool humanPlayer)
 {
@@ -4073,6 +4237,7 @@ void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
 
 // NewmapCell now has its CodeView-proven ExtraInfoUnion base. Event
 // handlers take that base directly; the old cellExtra cast wrapper is gone.
+DC_ADDRESS(0x093d34, 0x7a)
 MAC_ADDRESS(0x0af094, 0x114)
 inline void advManager::doEventLighthouse(NewmapCell* cell,
                                           unsigned char humanPlayer)
@@ -4088,6 +4253,7 @@ inline void advManager::doEventLighthouse(NewmapCell* cell,
     }
 }
 
+DC_ADDRESS(0x094274, 0x9e)
 MAC_ADDRESS(0x0afd30, 0x200)
 inline void advManager::doEventMermaid(hero* currentHero, NewmapCell* cell,
                                        unsigned char humanPlayer)
@@ -4108,6 +4274,7 @@ inline void advManager::doEventMermaid(hero* currentHero, NewmapCell* cell,
     }
 }
 
+DC_ADDRESS(0x0981ec, 0x60)
 MAC_ADDRESS(0x0b5aa4, 0x80)
 inline void advManager::doEventWhirlpool(hero* currentHero,
                                            NewmapCell* cell,
@@ -4158,7 +4325,9 @@ inline void advManager::doEventWhirlpool(hero* currentHero,
 // and early-return controls are superseded. Residual 99.997%: in the faerie
 // ring arm retail loads the nested getTeam byte as [ecx+eax] while the loop
 // keeps [eax+ecx]; the identical mermaid arm matches the base form.
-VA(0x004a84f0, 0x2542) MAC_ADDRESS(0x0b5b24, 0x1f6c)  // anchor-callee cell->type jump table + ret 0x10=p5 (note above), dc 0x9824c
+VA(0x004a84f0, 0x2542)
+DC_ADDRESS(0x09824c, 0x1870)
+MAC_ADDRESS(0x0b5b24, 0x1f6c)  // anchor-callee cell->type jump table + ret 0x10=p5 (note above)
 void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point point, bool humanPlayer)
 {
     int eventType = cell->m_type;
@@ -4759,9 +4928,12 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
     }
 }
 
-VA_COMPGEN(0x004aaa40, 0x5C, IMPLICIT_DTOR, type_university_window) MAC_COMPGEN_ADDRESS(0x0b7a90, 0x98, IMPLICIT_DTOR, type_university_window)  // dc 0x9ce08
+VA_COMPGEN(0x004aaa40, 0x5C, IMPLICIT_DTOR, type_university_window)
+MAC_COMPGEN_ADDRESS(0x0b7a90, 0x98, IMPLICIT_DTOR, type_university_window)  // dc 0x9ce08
 
-VA(0x004aaaa0, 0x110) MAC_ADDRESS(0x0b7b28, 0x194)  // dc 0x99abc
+VA(0x004aaaa0, 0x110)
+DC_ADDRESS(0x099abc, 0xf0)
+MAC_ADDRESS(0x0b7b28, 0x194)
 void advManager::doEvent(NewmapCell* eventCell, type_point point)
 {
     hero* currentHero = g_game->getCurrHero();
@@ -4799,8 +4971,9 @@ void advManager::doEvent(NewmapCell* eventCell, type_point point)
 // final SetEnvironmentOrigin re-centres on the radar origin offset by the
 // adventure viewport's own (9, 8) - the same pair type_cell_adjuster
 // carries as MOBILE_HERO_CELL_X/Y.
-
-VA(0x004aabb0, 0x239) MAC_ADDRESS(0x0b7cbc, 0x230)  // dc 0x99bac
+VA(0x004aabb0, 0x239)
+DC_ADDRESS(0x099bac, 0x1ea)
+MAC_ADDRESS(0x0b7cbc, 0x230)
 void advManager::eraseObj(NewmapCell* thisCell, type_point point,
                           unsigned char record)
 {
@@ -4846,7 +5019,9 @@ void advManager::eraseObj(NewmapCell* thisCell, type_point point,
     setEnvironmentOrigin(getMapCenter(), 1);
 }
 
-VA(0x004aadf0, 0x1DC) MAC_ADDRESS(0x0b7eec, 0x164)  // dc 0x99d98
+VA(0x004aadf0, 0x1DC)
+DC_ADDRESS(0x099d98, 0x118)
+MAC_ADDRESS(0x0b7eec, 0x164)
 void advManager::heroSwap(hero* leftHero, hero* rightHero)
 {
     swapManager* manager = new swapManager(leftHero, rightHero);
@@ -4867,7 +5042,9 @@ void advManager::heroSwap(hero* leftHero, hero* rightHero)
     redrawAdvScreen(1, 0);
 }
 
-VA(0x004aafd0, 0x431) MAC_ADDRESS(0x0b80c4, 0x4e4)  // dc 0x99eb0
+VA(0x004aafd0, 0x431)
+DC_ADDRESS(0x099eb0, 0x3d8)
+MAC_ADDRESS(0x0b80c4, 0x4e4)
 void advManager::townEvent(NewmapCell* cell, type_point point,
                            unsigned char humanPlayer)
 {
@@ -4968,7 +5145,9 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
 // DC events.cpp:5397 retains game::GetMine. Naming its result in the mine
 // arm keeps that source call and gives VC6 the retail 52-block, 29-call body.
 // Mac's paired comparison is currently unscored (unbound TOC literal @6813).
-VA(0x004ab410, 0x632) MAC_ADDRESS(0x0b85a8, 0x36c)  // dc 0x9a288
+VA(0x004ab410, 0x632)
+DC_ADDRESS(0x09a288, 0x2a0)
+MAC_ADDRESS(0x0b85a8, 0x36c)
 void advManager::eventSound(int eventID, int extraInfo)
 {
     std::string sampleName;
@@ -5115,8 +5294,9 @@ void advManager::eventSound(int eventID, int extraInfo)
         launchSample(sampleName.c_str(), -1, 3);
 }
 
-// Original: advManager::RecruitEvent; events.cpp:5568, dc 0x9a528.
+// Original: advManager::RecruitEvent; events.cpp:5568
 // The ordinary helper is expanded into Complete's refugee-camp handler.
+DC_ADDRESS(0x09a528, 0x86)
 MAC_ADDRESS(0x0b8914, 0xa8)
 short advManager::recruitEvent(hero* who, TCreatureType creature, short available)
 {
@@ -5131,7 +5311,9 @@ short advManager::recruitEvent(hero* who, TCreatureType creature, short availabl
     return available;
 }
 
-VA(0x004aba50, 0x361) MAC_ADDRESS(0x0b89bc, 0x2ec)  // dc 0x9a5b0
+VA(0x004aba50, 0x361)
+DC_ADDRESS(0x09a5b0, 0x2e6)
+MAC_ADDRESS(0x0b89bc, 0x2ec)
 void advManager::generatorEvent(hero* who, NewmapCell* eventCell, type_point point)
 {
     int id = g_game->getGeneratorId(point.m_x, point.m_y, point.m_z);
@@ -5200,7 +5382,9 @@ void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
 // its _Xlen/_Grow/_Eos chain. A four-state family of resource declaration
 // order and independent artifact/list counters passed both controls and
 // reproduced two distinct objects without score movement; keep this form.
-VA(0x004abdc0, 0x6D0) MAC_ADDRESS(0x0b8ca8, 0x618)  // anchor-callee ExtraInfoUnion::get_creature_bank, ret 0x14=p6, dc 0x9a898
+VA(0x004abdc0, 0x6D0)
+DC_ADDRESS(0x09a898, 0x532)
+MAC_ADDRESS(0x0b8ca8, 0x618)  // anchor-callee ExtraInfoUnion::get_creature_bank, ret 0x14=p6
 int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_point point, unsigned char humanPlayer)
 {
     type_creature_bank& bank = cell->getCreatureBank();
@@ -5321,7 +5505,9 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
     return 1;
 }
 
-VA(0x004ac490, 0xEE) MAC_ADDRESS(0x0b9324, 0x15c)  // dc 0x9adcc
+VA(0x004ac490, 0xEE)
+DC_ADDRESS(0x09adcc, 0x166)
+MAC_ADDRESS(0x0b9324, 0x15c)
 void advManager::doEventUndeadLair(hero* currentHero, NewmapCell* cell, const char* questionText, const char* emptyText, const char* rewardText, unsigned long visitedFlag, type_point point)
 {
     unsigned char humanPlayer = currentHero->belongsToHuman();
@@ -5351,7 +5537,9 @@ void advManager::doEventUndeadLair(hero* currentHero, NewmapCell* cell, const ch
 }
 
 // E:\gamedcs\events.cpp:5851.
-VA(0x004ac580, 0x3A7) MAC_ADDRESS(0x0b9480, 0xb98)  // dc-bracket forced, ret 0x2c=p12 (unique), dc 0x9af34
+VA(0x004ac580, 0x3A7)
+DC_ADDRESS(0x09af34, 0x480)
+MAC_ADDRESS(0x0b9480, 0xb98)  // dc-bracket forced, ret 0x2c=p12 (unique)
 int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMons,
                                    NewmapCell* eventCell, type_point point,
                                    TCreatureType monType2, int numMons2,
@@ -5540,7 +5728,9 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
 // external linkage, but this is its only call site, so /Ob2 expands it
 // here as well. That is also why the gCompleteDrawEnabled gate and the
 // sound switch appear inside this body rather than behind a call.
-VA(0x004ac930, 0x163) MAC_ADDRESS(0x0ba018, 0xd8)  // dc 0x9b3b4
+VA(0x004ac930, 0x163)
+DC_ADDRESS(0x09b3b4, 0x94)
+MAC_ADDRESS(0x0ba018, 0xd8)
 void advManager::heroLoses(hero* who, int vanishSound)
 {
     if (!who)
@@ -5561,7 +5751,9 @@ void advManager::heroLoses(hero* who, int vanishSound)
     }
 }
 
-VA(0x004acaa0, 0x106) MAC_ADDRESS(0x0ba0f0, 0x16c)  // dc 0x9b448
+VA(0x004acaa0, 0x106)
+DC_ADDRESS(0x09b448, 0x11a)
+MAC_ADDRESS(0x0ba0f0, 0x16c)
 void advManager::doWhirlpool(hero* who)
 {
     if (!g_game->isHuman(who->m_owner)
@@ -5593,7 +5785,9 @@ void advManager::doWhirlpool(hero* who)
                  -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
-VA(0x004acbb0, 0xE4) MAC_ADDRESS(0x0ba25c, 0x10c)  // dc 0x9b564
+VA(0x004acbb0, 0xE4)
+DC_ADDRESS(0x09b564, 0x10c)
+MAC_ADDRESS(0x0ba25c, 0x10c)
 void advManager::fizzleCenter(int whichSound)
 {
     if (!g_completeDrawEnabled)
@@ -5619,7 +5813,9 @@ void advManager::fizzleCenter(int whichSound)
     g_mouseManager->showPointer(false);
 }
 
-VA(0x004acca0, 0xC3) MAC_ADDRESS(0x0ba368, 0x134)  // dc 0x9b670
+VA(0x004acca0, 0xC3)
+DC_ADDRESS(0x09b670, 0x118)
+MAC_ADDRESS(0x0ba368, 0x134)
 void advManager::doAIEvent(NewmapCell* cell, hero* currentHero, type_point point)
 {
     if (point.m_x == currentHero->m_pathTargetX
@@ -5638,7 +5834,9 @@ void advManager::doAIEvent(NewmapCell* cell, hero* currentHero, type_point point
         checkEndGame(0);
 }
 
-VA(0x004acd70, 0x365) MAC_ADDRESS(0x0ba49c, 0x330)  // dc 0x9b788
+VA(0x004acd70, 0x365)
+DC_ADDRESS(0x09b788, 0x1e8)
+MAC_ADDRESS(0x0ba49c, 0x330)
 int advManager::doNetCombat(CNetMsg* netMsg)
 {
     hero* leftHero = 0;
@@ -5766,7 +5964,8 @@ const int g_netCombatSaveVersion = 42;
 // scores unchanged. None recovers the overlapping dead parameter home.
 // Mac 0xba8b4/0xbab44 stages each scalar independently; retain those
 // helper lifetimes in both serializers instead of shared scratch variables.
-VA(0x004ad1f0, 0x148) MAC_ADDRESS(0x0ba8b4, 0x290)  // anchor-vtable 0x63e508 slot 0; anchor-callee town::load + hero::load, retail-only
+VA(0x004ad1f0, 0x148)
+MAC_ADDRESS(0x0ba8b4, 0x290)  // anchor-vtable 0x63e508 slot 0; anchor-callee town::load + hero::load, retail-only
 unsigned char CCombatInitMsg::read(TAbstractFile* infile)
 {
     infile->read(&m_point, sizeof(m_point));
@@ -5793,7 +5992,8 @@ unsigned char CCombatInitMsg::read(TAbstractFile* infile)
 // The mirror. `write` is const across this whole message family - it is
 // the base class's virtual - while every sub-object's own save() is not,
 // so the five member calls share one mutable alias.
-VA(0x004ad340, 0x126) MAC_ADDRESS(0x0bab44, 0x228)  // anchor-vtable 0x63e508 slot 1; anchor-callee town::save + hero::save, retail-only
+VA(0x004ad340, 0x126)
+MAC_ADDRESS(0x0bab44, 0x228)  // anchor-vtable 0x63e508 slot 1; anchor-callee town::save + hero::save, retail-only
 unsigned char CCombatInitMsg::write(TAbstractFile* outfile) const
 {
     CCombatInitMsg* record = const_cast<CCombatInitMsg*>(this);
@@ -5819,14 +6019,15 @@ unsigned char CCombatInitMsg::write(TAbstractFile* outfile) const
     return 1;
 }
 
-// E:\gamedcs\events.cpp:6248/6261 (dc 0x9ce40 / 0x9ceb0) - the RAII pause
+// E:\gamedcs\events.cpp:6248/6261 ( / 0x9ceb0) - the RAII pause
 // DoCombat holds across a whole battle; the class shape lives in
 // events.h, the two bodies are this TU's own (their DC line numbers are
 // events.cpp's). Retail inlines both at DoCombat's entry and at each of
 // its two returns: Pause() plus the solo-seat marking on the way in;
 // Resume() plus the seat clearing - gated on this machine still being
 // the solo seat - on the way out.
-// E:\gamedcs\events.cpp:6248, dc 0x9ce40.
+// E:\gamedcs\events.cpp:6248
+DC_ADDRESS(0x09ce40, 0x70)
 inline CTurnDurationPause::CTurnDurationPause()
 {
     g_turnDuration.pause();
@@ -5836,9 +6037,11 @@ inline CTurnDurationPause::CTurnDurationPause()
     }
 }
 
-// E:\gamedcs\events.cpp:6261, dc 0x9ceb0.
+// E:\gamedcs\events.cpp:6261
 // This is a written destructor; its retail copy belongs to this body.
-VA(0x004ae9b0, 0x50) MAC_ADDRESS(0x0bc600, 0xc0)
+VA(0x004ae9b0, 0x50)
+DC_ADDRESS(0x09ceb0, 0x74)
+MAC_ADDRESS(0x0bc600, 0xc0)
 inline CTurnDurationPause::~CTurnDurationPause()
 {
     g_turnDuration.resume();
@@ -5888,7 +6091,9 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // the copies is flat. DC's scheduled store alone does not settle the spelling.
 // Windows retail has no separate draw arm after quick combat: the winner
 // selects the defeated hero directly (Mac 0xbaf6c's draw check scores 92.78%).
-VA(0x004ad470, 0x1531) MAC_ADDRESS(0x0bad6c, 0x1770)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique), dc 0x9b970
+VA(0x004ad470, 0x1531)
+DC_ADDRESS(0x09b970, 0x9ec)
+MAC_ADDRESS(0x0bad6c, 0x1770)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique)
 int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int seed, unsigned char finishHeroes, unsigned char alternateLayout)
 {
     int leftPlayer = leftHero ? leftHero->m_owner : -1;
@@ -6137,7 +6342,9 @@ combatFinished:
     return g_combatManager->m_winner;
 }
 
-VA(0x004aeb50, 0x390) MAC_ADDRESS(0x0bc6c0, 0xc54)  // dc 0x9c35c
+VA(0x004aeb50, 0x390)
+DC_ADDRESS(0x09c35c, 0x1f8)
+MAC_ADDRESS(0x0bc6c0, 0xc54)
 void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int seed, int toWhoNetPos, int winner, unsigned char retreatWin, unsigned char combatSurrender)
 {
     CCombatInitMsg combatInitMsg;
@@ -6179,7 +6386,9 @@ void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* l
         shutDown(0);
 }
 
-VA(0x004aeee0, 0x3DF) MAC_ADDRESS(0x0bd314, 0xbe4)  // dc 0x9c554
+VA(0x004aeee0, 0x3DF)
+DC_ADDRESS(0x09c554, 0x224)
+MAC_ADDRESS(0x0bd314, 0xbe4)
 void advManager::receiveHeroTownData(CCombatInitMsg* combatInitMsg, int* fromWho, type_point& point, hero** leftHero, armyGroup** leftArmyGroup, int* rightPlayer, town** rightTown, hero** rightHero, armyGroup** rightArmyGroup, int* seed, signed char* winner, unsigned char* retreatWin, unsigned char* combatSurrender)
 {
     *leftHero = 0;
@@ -6270,10 +6479,12 @@ VA_COMPGEN(0x004b0400, 0x123, STD_UNGUARDED_PARTITION, int_spell_level_order)
 VA_COMPGEN(0x004b0350, 0xAB, STD_UNGUARDED_INSERT, int_spell_level_order)
 
 // COMDAT pairing: ccombatinitmsg::1CCombatInitMsg, mnemonic agreement 0.938.
-VA_COMPGEN(0x004ad130, 0xB4, IMPLICIT_DTOR, ccombatinitmsg) MAC_COMPGEN_ADDRESS(0x0ba7cc, 0x90, IMPLICIT_DTOR, ccombatinitmsg)
+VA_COMPGEN(0x004ad130, 0xB4, IMPLICIT_DTOR, ccombatinitmsg)
+MAC_COMPGEN_ADDRESS(0x0ba7cc, 0x90, IMPLICIT_DTOR, ccombatinitmsg)
 
 // COMDAT pairing: clevelpickwaitdlg::1CLevelPickWaitDlg, mnemonic agreement 0.902.
-VA_COMPGEN(0x004aeb00, 0x4B, IMPLICIT_DTOR, clevelpickwaitdlg) MAC_COMPGEN_ADDRESS(0x0bc4dc, 0x6c, IMPLICIT_DTOR, clevelpickwaitdlg)
+VA_COMPGEN(0x004aeb00, 0x4B, IMPLICIT_DTOR, clevelpickwaitdlg)
+MAC_COMPGEN_ADDRESS(0x0bc4dc, 0x6c, IMPLICIT_DTOR, clevelpickwaitdlg)
 
 // COMDAT pairing: vector<std::string>::insert(pos, n, val), agreement 0.985.
 // Its single-element sibling and retained cleanup/copy/fill chain are now
@@ -6293,6 +6504,8 @@ VA_COMPGEN(0x0054cba0, 0x1C5, VECTOR_INSERT, type_dialog_resource)
 
 // COMDAT pairing: town's implicit destructor, agreement 1.000 at an exactly
 // equal 74-byte extent.
-VA_COMPGEN(0x004ad0e0, 0x4A, IMPLICIT_DTOR, town) MAC_COMPGEN_ADDRESS(0x0ba85c, 0x58, IMPLICIT_DTOR, town)
+VA_COMPGEN(0x004ad0e0, 0x4A, IMPLICIT_DTOR, town)
+MAC_COMPGEN_ADDRESS(0x0ba85c, 0x58, IMPLICIT_DTOR, town)
 
-VA_COMPGEN(0x004aea00, 0xFD, IMPLICIT_DTOR, CWaitForRemoteBattleDlg) MAC_COMPGEN_ADDRESS(0x0bc548, 0xb8, IMPLICIT_DTOR, CWaitForRemoteBattleDlg)
+VA_COMPGEN(0x004aea00, 0xFD, IMPLICIT_DTOR, CWaitForRemoteBattleDlg)
+MAC_COMPGEN_ADDRESS(0x0bc548, 0xb8, IMPLICIT_DTOR, CWaitForRemoteBattleDlg)

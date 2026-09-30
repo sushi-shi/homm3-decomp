@@ -2,6 +2,8 @@
 #ifndef HOMM3_AI_CREATURE_VALUE_H
 #define HOMM3_AI_CREATURE_VALUE_H
 
+#include "va.h"
+
 #include "armygrp.h"
 
 // Dreamcast records this exact 12-byte sort key; retail calculate_reserve
@@ -13,10 +15,14 @@ public:
     TCreatureType m_type;
     long m_value;
     short m_amount;
+
+    DC_ADDRESS(0x037e28, 0xa)
     bool operator<(const type_creature_value& arg) const
     {
         return m_value < arg.m_value;
     }
+
+    DC_ADDRESS(0x037e34, 0xa)
     bool operator>(const type_creature_value& arg) const
     {
         return m_value > arg.m_value;

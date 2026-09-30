@@ -29,9 +29,12 @@ class CTextEntrySave : public Bitmap16Bit {
 public:
     unsigned char m_saved;  // Original project spelling: bSaved; retail +0x38.
 
-    // E:\gamedcs\textntry.cpp:38 (dc 0x16370c)
+    // E:\gamedcs\textntry.cpp:38 ()
+    DC_ADDRESS(0x16370c, 0x44)
     CTextEntrySave(int w, int h) : Bitmap16Bit(w, h) { m_saved = 0; }
-    // E:\gamedcs\textntry.cpp:44, dc 0x163750
+
+    // E:\gamedcs\textntry.cpp:44
+    DC_ADDRESS(0x163750, 0x2c)
     void save(int saveX, int saveY)
     {
         m_saved = 1;
@@ -40,11 +43,14 @@ public:
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getPitch());
     }
-    // E:\gamedcs\textntry.cpp:50, dc 0x16377c
+
+    // E:\gamedcs\textntry.cpp:50
+    DC_ADDRESS(0x16377c, 0xa)
     unsigned char isSaved() { return m_saved; }
 };
 
-// Original: textEntryWidget::textEntryWidget; textntry.cpp:60, dc 0x16298c.
+// Original: textEntryWidget::textEntryWidget; textntry.cpp:60
+DC_ADDRESS(0x16298c, 0x5c)
 textEntryWidget::textEntryWidget() : textWidget()
 {
     m_cursorIndex = 0;
@@ -60,7 +66,9 @@ textEntryWidget::textEntryWidget() : textWidget()
     m_saveBack = 0;
 }
 
-VA(0x005ba920, 0x1B5) MAC_ADDRESS(0x1af7b0, 0x174)  // dc 0x1629e8
+VA(0x005ba920, 0x1B5)
+DC_ADDRESS(0x1629e8, 0x10e)
+MAC_ADDRESS(0x1af7b0, 0x174)
 textEntryWidget::textEntryWidget(int x, int y, int w, int h, int textSize,
     const char* text, const char* fontName, font::TColor color,
     unsigned justification, const char* backgroundIcon, int backgroundFrame,
@@ -98,7 +106,9 @@ textEntryWidget::textEntryWidget(int x, int y, int w, int h, int textSize,
 
 VA_COMPGEN(0x005ba8f0, 0x21, SCALAR_DELETING_DTOR, textEntryWidget)
 
-VA(0x005baae0, 0x62) MAC_ADDRESS(0x1af924, 0xa0)  // dc 0x162af8
+VA(0x005baae0, 0x62)
+DC_ADDRESS(0x162af8, 0x58)
+MAC_ADDRESS(0x1af924, 0xa0)
 textEntryWidget::~textEntryWidget()
 {
     if (m_textBack)
@@ -110,7 +120,9 @@ textEntryWidget::~textEntryWidget()
 // DC SetFocus publics independently encode bool for this base and both
 // CMPEdit/CHighScoreEdit overrides. Keep m_hasFocus's separate byte storage;
 // retail copies the argument byte directly and preserves virtual slot 14.
-VA(0x005bab50, 0x49) MAC_ADDRESS(0x1afa24, 0x7c)  // dc 0x162b50
+VA(0x005bab50, 0x49)
+DC_ADDRESS(0x162b50, 0x6c)
+MAC_ADDRESS(0x1afa24, 0x7c)
 void textEntryWidget::setFocus(bool state)
 {
     m_hasFocus = state;
@@ -121,7 +133,9 @@ void textEntryWidget::setFocus(bool state)
     }
 }
 
-VA(0x005baba0, 0xA4) MAC_ADDRESS(0x1afaa0, 0xa4)  // dc 0x162bbc
+VA(0x005baba0, 0xA4)
+DC_ADDRESS(0x162bbc, 0x6e)
+MAC_ADDRESS(0x1afaa0, 0xa4)
 char textEntryWidget::getCharPressed(message* msg)
 {
     char pressed = 0;
@@ -207,7 +221,9 @@ char textEntryWidget::getCharPressed(message* msg)
 // Original DC name: gbTextEntryEscaped; OnKeyPress clears it after editing.
 DATA(0x00697780) int g_textEntryEscaped;
 
-VA(0x005bac50, 0x4FD) MAC_ADDRESS(0x1afb44, 0x38c)  // dc 0x162c2c
+VA(0x005bac50, 0x4FD)
+DC_ADDRESS(0x162c2c, 0x2fe)
+MAC_ADDRESS(0x1afb44, 0x38c)
 int textEntryWidget::onKeyPress(message* msg)
 {
     if (!m_hasFocus)
@@ -299,7 +315,9 @@ int textEntryWidget::onKeyPress(message* msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-VA(0x005bb150, 0x2A6) MAC_ADDRESS(0x1afed0, 0x328)  // dc 0x162f2c
+VA(0x005bb150, 0x2A6)
+DC_ADDRESS(0x162f2c, 0x222)
+MAC_ADDRESS(0x1afed0, 0x328)
 int textEntryWidget::main(message& msg)
 {
     if (m_sleepCount > 0)
@@ -387,7 +405,9 @@ int textEntryWidget::main(message& msg)
     return widget::main(msg);
 }
 
-VA(0x005bb400, 0x254) MAC_ADDRESS(0x1b01f8, 0x318)  // dc 0x163150
+VA(0x005bb400, 0x254)
+DC_ADDRESS(0x163150, 0x288)
+MAC_ADDRESS(0x1b01f8, 0x318)
 void textEntryWidget::draw() const
 {
     if (!(m_status & WIDGET_DRAWN))
@@ -438,7 +458,9 @@ void textEntryWidget::draw() const
     }
 }
 
-VA(0x005bb660, 0x2E7) MAC_ADDRESS(0x1b0510, 0x230)  // dc 0x1633d8
+VA(0x005bb660, 0x2E7)
+DC_ADDRESS(0x1633d8, 0x202)
+MAC_ADDRESS(0x1b0510, 0x230)
 void textEntryWidget::setupDisplayString(char* core, unsigned short inCursorIndex)
 {
     if (GameTime::isPast(g_timers[0])) {
@@ -473,14 +495,18 @@ void textEntryWidget::setupDisplayString(char* core, unsigned short inCursorInde
     }
 }
 
-VA(0x005bb950, 0xD0) MAC_ADDRESS(0x1b0740, 0x58)  // dc 0x1635dc
+VA(0x005bb950, 0xD0)
+DC_ADDRESS(0x1635dc, 0x24)
+MAC_ADDRESS(0x1b0740, 0x58)
 void textEntryWidget::setText(const char* newText)
 {
     m_text = newText;
     m_cursorIndex = static_cast<unsigned short>(m_text.size());
 }
 
-VA(0x005bba20, 0x22) MAC_ADDRESS(0x1b0798, 0x38)  // dc 0x163600
+VA(0x005bba20, 0x22)
+DC_ADDRESS(0x163600, 0x1e)
+MAC_ADDRESS(0x1b0798, 0x38)
 unsigned char textEntryWidget::ignoreKey(message* msg)
 {
     switch (msg->m_codeX) {
@@ -492,26 +518,34 @@ unsigned char textEntryWidget::ignoreKey(message* msg)
     return 0;
 }
 
-VA(0x005bba50, 0x8) MAC_ADDRESS(0x1b07d0, 0x30)  // dc 0x163620
+VA(0x005bba50, 0x8)
+DC_ADDRESS(0x163620, 0x16)
+MAC_ADDRESS(0x1b07d0, 0x30)
 void textEntryWidget::onSetFocus()
 {
     setFocus(1);
 }
 
-VA(0x005bba60, 0x8) MAC_ADDRESS(0x1b0800, 0x30)  // dc 0x163638
+VA(0x005bba60, 0x8)
+DC_ADDRESS(0x163638, 0x16)
+MAC_ADDRESS(0x1b0800, 0x30)
 void textEntryWidget::onKillFocus()
 {
     setFocus(0);
 }
 
-VA(0x005bba70, 0x44) MAC_ADDRESS(0x1b0830, 0x70)  // dc 0x163650
+VA(0x005bba70, 0x44)
+DC_ADDRESS(0x163650, 0x2a)
+MAC_ADDRESS(0x1b0830, 0x70)
 void textEntryWidget::saveBackground() const
 {
     if (m_saveBack)
         m_saveBack->save(m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y);
 }
 
-VA(0x005bbac0, 0x82) MAC_ADDRESS(0x1b08a0, 0x8c)  // dc 0x16367c
+VA(0x005bbac0, 0x82)
+DC_ADDRESS(0x16367c, 0x90)
+MAC_ADDRESS(0x1b08a0, 0x8c)
 void textEntryWidget::setAutoDraw(unsigned char b)
 {
     m_autoDraw = b;

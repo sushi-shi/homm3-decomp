@@ -12,6 +12,7 @@
 
 #include "exceptions.h"
 #include "tiles.h"
+
 // Vtable 0x642cb0 slot 2 shares the false/ret-4 body at 0x5543f0.
 MAC_ADDRESS(0x259d44, 0x8)
 unsigned char TRmgTableTerrainRule::isSpecialFrame(int) { return 0; }
@@ -84,7 +85,8 @@ int selectRmgLinePattern(
     return pattern;
 }
 
-VA(0x004F9F00, 0x146) MAC_ADDRESS(0x22273c, 0x168) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
+VA(0x004F9F00, 0x146)
+MAC_ADDRESS(0x22273c, 0x168) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
     TRmgLinePainterTile tile = painter->at(point);
@@ -139,7 +141,8 @@ int TRmgLinePainterInterface::getNeighbourLand(const TRmgGridPoint& point, unsig
     return at(nearby).getLand();
 }
 
-VA(0x004FA080, 0x1FB) MAC_ADDRESS(0x2228b8, 0x388) // anchor-callee 0x4fa42c; fastcall, no stack args
+VA(0x004FA080, 0x1FB)
+MAC_ADDRESS(0x2228b8, 0x388) // anchor-callee 0x4fa42c; fastcall, no stack args
 void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRectangle& rectangle)
 {
     TRmgGridPoint point;
@@ -192,7 +195,8 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
     }
 }
 
-VA(0x004FA280, 0x30) MAC_ADDRESS(0x222c40, 0x4c) // anchor-caller 0x55ee50/0x55f3b0; thiscall ret 0xc
+VA(0x004FA280, 0x30)
+MAC_ADDRESS(0x222c40, 0x4c) // anchor-caller 0x55ee50/0x55f3b0; thiscall ret 0xc
 TRmgLineWalker::TRmgLineWalker(
     TRmgLinePainterInterface* newPainter,
     int newRiverType,
@@ -202,7 +206,8 @@ TRmgLineWalker::TRmgLineWalker(
     paintPoint(m_position);
 }
 
-VA(0x004FA2B0, 0x110) MAC_ADDRESS(0x222c8c, 0x190) // anchor-caller 0x548040 and createRiver; thiscall ret 4
+VA(0x004FA2B0, 0x110)
+MAC_ADDRESS(0x222c8c, 0x190) // anchor-caller 0x548040 and createRiver; thiscall ret 4
 void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
 {
     TRmgLineWalkAxis x(destination.m_x, m_position.m_x);
@@ -233,7 +238,8 @@ void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
     m_position = destination;
 }
 
-VA(0x004FA3C0, 0x156) MAC_ADDRESS(0x222e1c, 0x18c) // anchor-caller 0x4fa280/0x4fa2b0; thiscall, ret 4
+VA(0x004FA3C0, 0x156)
+MAC_ADDRESS(0x222e1c, 0x18c) // anchor-caller 0x4fa280/0x4fa2b0; thiscall, ret 4
 void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 {
     TRmgLinePainterTile tile(m_painter, point);
@@ -268,7 +274,8 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 
 template<class Coordinate>
 // VA instance: TRmgCoordinatePoint<unsigned int>::TRmgCoordinatePoint(const TPoint&)
-VA(0x004FA520, 0x16) MAC_ADDRESS(0x2228a4, 0x14) // anchor-callee 0x4f9f77; thiscall, ret 4
+VA(0x004FA520, 0x16)
+MAC_ADDRESS(0x2228a4, 0x14) // anchor-callee 0x4f9f77; thiscall, ret 4
 TRmgCoordinatePoint<Coordinate>::TRmgCoordinatePoint(const TPoint& point)
     : m_x(point.m_x), m_y(point.m_y)
 {
@@ -282,7 +289,8 @@ TPoint& TPoint::operator+=(const TPoint& offset)
     return *this;
 }
 
-VA(0x005B3780, 0xB3) MAC_ADDRESS(0x254be0, 0xf4)
+VA(0x005B3780, 0xB3)
+MAC_ADDRESS(0x254be0, 0xf4)
 TRmgPatternTerrainRule::TRmgPatternTerrainRule(
     unsigned char blendsWithOtherTerrain, unsigned char allowsSeparatedNeighbours,
     int defaultFrame, unsigned int entryCount, const TRmgTerrainPatternEntry* entries)
@@ -307,20 +315,23 @@ TRmgPatternTerrainRule::TRmgPatternTerrainRule(
 
 // Vtable 0x642c98 slot 1 tests the count for pattern value 1. The constructor
 // at 0x5b3780 builds that range at +0x1c/+0x20 from its supplied entry array.
-VA(0x005B3840, 0x0C) MAC_ADDRESS(0x259dac, 0x14)  // Complete-only pattern terrain rule
+VA(0x005B3840, 0x0C)
+MAC_ADDRESS(0x259dac, 0x14)  // Complete-only pattern terrain rule
 unsigned char TRmgPatternTerrainRule::hasEntries()
 {
     return 0 < m_ranges[1].m_count;
 }
 
-VA(0x005B3850, 0x07) MAC_ADDRESS(0x254b98, 0x48)  // terrain-rule deleting destructors; Complete-only
+VA(0x005B3850, 0x07)
+MAC_ADDRESS(0x254b98, 0x48)  // terrain-rule deleting destructors; Complete-only
 TRmgTerrainRule::~TRmgTerrainRule()
 {
 }
 
 // Vtable 0x642c98 slot 2 reads the byte at +4 in an eight-byte source entry.
 // Constructor 0x5b3780 retains the entry pointer at +0x10 (0x5b37a2).
-VA(0x005B3860, 0x11) MAC_ADDRESS(0x254ce4, 0x14)  // Complete-only pattern terrain rule
+VA(0x005B3860, 0x11)
+MAC_ADDRESS(0x254ce4, 0x14)  // Complete-only pattern terrain rule
 unsigned char TRmgPatternTerrainRule::isSpecialFrame(int frame)
 {
     return m_entries[frame].m_special;
@@ -328,7 +339,8 @@ unsigned char TRmgPatternTerrainRule::isSpecialFrame(int frame)
 
 // Each source entry is two dwords. Vtable 0x642c98 slot 3 returns
 // the first dword of the requested entry through the pointer at +0x10.
-VA(0x005B3880, 0x10) MAC_ADDRESS(0x254cf8, 0x10)  // Complete-only pattern terrain rule
+VA(0x005B3880, 0x10)
+MAC_ADDRESS(0x254cf8, 0x10)  // Complete-only pattern terrain rule
 int TRmgPatternTerrainRule::getEntry(int index)
 {
     return m_entries[index].m_frame;
@@ -337,7 +349,8 @@ int TRmgPatternTerrainRule::getEntry(int index)
 // The base-frame selector keeps a zero-tagged old entry. Otherwise it picks
 // the secondary range with the rule's strength-scaled percentage, falling
 // back to the primary range, then chooses uniformly within that range.
-VA(0x005B3890, 0x58) MAC_ADDRESS(0x254d08, 0xc8)
+VA(0x005B3890, 0x58)
+MAC_ADDRESS(0x254d08, 0xc8)
 int TRmgPatternTerrainRule::selectBaseFrame(int value, int oldFrame)
 {
     if (oldFrame == -1 || m_entries[oldFrame].m_frame != 0) {
@@ -360,7 +373,8 @@ int TRmgPatternTerrainRule::selectBaseFrame(int value, int oldFrame)
 // Transition ranges are stored as two first/count pairs per transition.
 // This selector uses the first pair and preserves an old frame whose entry
 // already names the requested transition; the requested flip is copied out.
-VA(0x005B38F0, 0x41) MAC_ADDRESS(0x254dd0, 0x88)
+VA(0x005B38F0, 0x41)
+MAC_ADDRESS(0x254dd0, 0x88)
 int TRmgPatternTerrainRule::selectTransitionFrame(
     int transition,
     TRmgTerrainFlip requestedFlip,
@@ -378,7 +392,8 @@ int TRmgPatternTerrainRule::selectTransitionFrame(
 DATA(0x006A4158)
 TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 
-VA(0x005B3940, 0xC5) MAC_ADDRESS(0x254e58, 0xe4)
+VA(0x005B3940, 0xC5)
+MAC_ADDRESS(0x254e58, 0xe4)
 TRmgTerrainPatternTable::TRmgTerrainPatternTable()
 {
     int frame = g_rmgTerrainPatterns[0].m_frame;
@@ -400,12 +415,14 @@ TRmgTerrainPatternTable::TRmgTerrainPatternTable()
     }
 }
 
-VA(0x005B3A20, 0x11) MAC_ADDRESS(0x254f4c, 0x20)  // Complete-only table terrain rule
+VA(0x005B3A20, 0x11)
+MAC_ADDRESS(0x254f4c, 0x20)  // Complete-only table terrain rule
 TRmgTableTerrainRule::TRmgTableTerrainRule()
 {
 }
 
-VA(0x005B3A40, 0x03) MAC_ADDRESS(0x254f6c, 0x8)
+VA(0x005B3A40, 0x03)
+MAC_ADDRESS(0x254f6c, 0x8)
 unsigned char TRmgTableTerrainRule::hasEntries()
 {
     return 0;
@@ -418,13 +435,15 @@ unsigned char TRmgTableTerrainRule::hasEntries()
 // 0x5b3a56 calls the retained base, then bit 0 selects scalar deletion.
 VA_COMPGEN(0x005B3A50, 0x21, SCALAR_DELETING_DTOR, TRmgTableTerrainRule)
 
-VA(0x005B3A80, 0x11) MAC_ADDRESS(0x254f74, 0x10)
+VA(0x005B3A80, 0x11)
+MAC_ADDRESS(0x254f74, 0x10)
 int TRmgTableTerrainRule::getEntry(int index)
 {
     return g_rmgTerrainPatterns[index].m_frame;
 }
 
-VA(0x005B3AA0, 0x31) MAC_ADDRESS(0x254f84, 0x94)  // vtable 0x642cb0 slot 4; Complete-only table rule
+VA(0x005B3AA0, 0x31)
+MAC_ADDRESS(0x254f84, 0x94)  // vtable 0x642cb0 slot 4; Complete-only table rule
 int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
 {
     if (oldFrame == -1
@@ -435,7 +454,8 @@ int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
     return oldFrame;
 }
 
-VA(0x005B3AE0, 0x74) MAC_ADDRESS(0x255018, 0xd8)
+VA(0x005B3AE0, 0x74)
+MAC_ADDRESS(0x255018, 0xd8)
 int TRmgTableTerrainRule::selectTransitionFrame(
     int transition, TRmgTerrainFlip requestedFlip,
     TRmgTerrainFlip& selectedFlip, int oldFrame)
@@ -475,7 +495,8 @@ static TRmgTerrainFlip makeTerrainFlip(unsigned char x, unsigned char y)
     return TRmgTerrainFlip(x, y);
 }
 
-VA(0x005B3DD0, 0x6F) MAC_ADDRESS(0x2551b4, 0xd0)
+VA(0x005B3DD0, 0x6F)
+MAC_ADDRESS(0x2551b4, 0xd0)
 void rmgTerrainPainter::initializePackedCell(
     const TRmgGridPoint& point, unsigned int index)
 {
@@ -488,7 +509,8 @@ void rmgTerrainPainter::initializePackedCell(
     packed.m_initialized = 1;
 }
 
-VA(0x005B3E40, 0x38) MAC_ADDRESS(0x255284, 0x64)
+VA(0x005B3E40, 0x38)
+MAC_ADDRESS(0x255284, 0x64)
 int __fastcall getRmgTerrainNeighbourKind(int terrain, int neighbourTerrain)
 {
     if (terrain == neighbourTerrain || terrain == eTerrainSand)
@@ -502,12 +524,14 @@ int __fastcall getRmgTerrainNeighbourKind(int terrain, int neighbourTerrain)
     return RMG_NEIGHBOUR_HARD_EDGE;
 }
 
-VA(0x005B3E80, 0x75F) MAC_ADDRESS(0x2552e8, 0x980)  // fastcall call at 0x5b5f5b; retail-only
+VA(0x005B3E80, 0x75F)
+MAC_ADDRESS(0x2552e8, 0x980)  // fastcall call at 0x5b5f5b; retail-only
 int __fastcall selectTerrainTransition(
     const int* neighbours, TRmgTerrainFlip* flip)
 {
     // Retail construction guard byte 0x6a52a1 (tested and set in this body).
     DATA_COMPGEN_GUARD(0x006a52a1, terrainFlipsGuard, flips)
+
     // atexit(0x5b45e0): the table's empty cleanup, right after this function.
     VA_COMPGEN(0x005b45e0, 0x1, STATIC_DTOR, flips)
     DATA(0x006A52B8)
@@ -705,7 +729,8 @@ int __fastcall selectTerrainTransition(
 // inline budget and leaves the shrinking size() call retained (93.0418%).
 // No separate
 // convenience helper or artificial caller scope is needed.
-VA(0x005B45F0, 0x26D) MAC_ADDRESS(0x255c68, 0xbc)
+VA(0x005B45F0, 0x26D)
+MAC_ADDRESS(0x255c68, 0xbc)
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
     : m_adapter(newAdapter), m_paintTerrain(terrain), m_transitionStrength(strength)
@@ -814,7 +839,8 @@ unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
     return 1;
 }
 
-VA(0x005B4960, 0x1B2) MAC_ADDRESS(0x255ef0, 0x11c)
+VA(0x005B4960, 0x1B2)
+MAC_ADDRESS(0x255ef0, 0x11c)
 void rmgTerrainPainter::paintRectangle(
     unsigned int x, unsigned int y,
     unsigned int rectangleWidth, unsigned int rectangleHeight)
@@ -833,7 +859,8 @@ void rmgTerrainPainter::paintRectangle(
     }
 }
 
-VA(0x005B4B20, 0x5CB) MAC_ADDRESS(0x256014, 0x580) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
+VA(0x005B4B20, 0x5CB)
+MAC_ADDRESS(0x256014, 0x580) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
     {
@@ -904,7 +931,8 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
         queueOtherTerrainNeighbours(point);
 }
 
-VA(0x005B50F0, 0x34E) MAC_ADDRESS(0x2565ac, 0x638) // anchor-callee 0x5b4c72, 0x5b50dd; thiscall, ret 4
+VA(0x005B50F0, 0x34E)
+MAC_ADDRESS(0x2565ac, 0x638) // anchor-callee 0x5b4c72, 0x5b50dd; thiscall, ret 4
 void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
 {
     if (point.getY() > 0
@@ -1040,7 +1068,8 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // coordinate accessors in both gap predicates, reaches 99.1821%. All 1576
 // bytes align except an ESI/EDI permutation; frame, scalar copies and all
 // 46 calls agree. The accessor refers to the painter member, not a temporary.
-VA(0x005B5440, 0x628) MAC_ADDRESS(0x256be4, 0x630) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
+VA(0x005B5440, 0x628)
+MAC_ADDRESS(0x256be4, 0x630) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
     if (isVerticalGap(point)) {
@@ -1126,7 +1155,8 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
     }
 }
 
-VA(0x005B5A70, 0x8A7) MAC_ADDRESS(0x257214, 0xd54)
+VA(0x005B5A70, 0x8A7)
+MAC_ADDRESS(0x257214, 0xd54)
 void rmgTerrainPainter::paintTransitions()
 {
     std::vector<unsigned char> edgeCounts(getWidth() * getHeight());
@@ -1253,7 +1283,8 @@ void rmgTerrainPainter::paintTransitions()
     }
 }
 
-VA(0x005B6320, 0x107) MAC_ADDRESS(0x25803c, 0x160)
+VA(0x005B6320, 0x107)
+MAC_ADDRESS(0x25803c, 0x160)
 unsigned char rmgTerrainPainter::isHorizontalGap(
     const TRmgGridPoint& point, int terrain)
 {
@@ -1262,7 +1293,8 @@ unsigned char rmgTerrainPainter::isHorizontalGap(
         && getTerrain(TRmgGridPoint(point.getX() + 1, point.getY())) != terrain;
 }
 
-VA(0x005B6430, 0x106) MAC_ADDRESS(0x25819c, 0x160)
+VA(0x005B6430, 0x106)
+MAC_ADDRESS(0x25819c, 0x160)
 unsigned char rmgTerrainPainter::isVerticalGap(
     const TRmgGridPoint& point, int terrain)
 {
@@ -1290,7 +1322,8 @@ unsigned char rmgTerrainPainter::isVerticalGap(
 // initializing the two corner values recovers the remaining register homes
 // and retail's 0x30 frame: all 714 bytes match. The mask oracle preserves
 // ordered, short-circuited queries in 185,856 states; five controls fail.
-VA(0x005B6540, 0x2CA) MAC_ADDRESS(0x2582fc, 0x4f8) // anchor-callee 0x5b58f8, 0x5b681e; retail-only
+VA(0x005B6540, 0x2CA)
+MAC_ADDRESS(0x2582fc, 0x4f8) // anchor-callee 0x5b58f8, 0x5b681e; retail-only
 void rmgTerrainPainter::buildMatchingNeighbourMask(
     const TRmgGridPoint& point, unsigned char* matches)
 {
@@ -1331,7 +1364,8 @@ void rmgTerrainPainter::buildMatchingNeighbourMask(
         && getTerrain(TRmgGridPoint(high.getX(), high.getY())) == terrain;
 }
 
-VA(0x005B6810, 0x84) MAC_ADDRESS(0x2587f4, 0xd0)
+VA(0x005B6810, 0x84)
+MAC_ADDRESS(0x2587f4, 0xd0)
 unsigned char rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
 {
     unsigned char matches[TILE_DIR_COUNT];
@@ -1364,7 +1398,8 @@ noSeparation:
     return 1;
 }
 
-VA(0x005B68A0, 0x2FF) MAC_ADDRESS(0x258aa0, 0x478)
+VA(0x005B68A0, 0x2FF)
+MAC_ADDRESS(0x258aa0, 0x478)
 void rmgTerrainPainter::buildNeighbourKinds(
     const TRmgGridPoint& point, int* neighbours)
 {
@@ -1430,12 +1465,14 @@ void rmgTerrainPainter::buildNeighbourKinds(
 // helper and several Dreamcast-proven limit callers, so keep the shared helper
 // canonical and recover the caller-specific compiler state separately.
 // Min/max compositions do not recover these bodies.
-VA(0x005B6BA0, 0x24C) MAC_ADDRESS(0x258f18, 0x360)
+VA(0x005B6BA0, 0x24C)
+MAC_ADDRESS(0x258f18, 0x360)
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
     // Retail construction guard byte 0x6a52a0 (tested and set in this body).
     DATA_COMPGEN_GUARD(0x006a52a0, firstDiagonalOffsetsGuard, firstDiagonalOffsets)
+
     // The guarded initializer registers atexit(0x5b6df0), this table's empty
     // cleanup, placed right after this function.
     VA_COMPGEN(0x005b6df0, 0x1, STATIC_DTOR, firstDiagonalOffsets)
@@ -1462,12 +1499,14 @@ unsigned char rmgTerrainPainter::checkFirstDiagonal(
     return getTerrain(nearby) == terrain;
 }
 
-VA(0x005B6E00, 0x1B3) MAC_ADDRESS(0x259278, 0x288)
+VA(0x005B6E00, 0x1B3)
+MAC_ADDRESS(0x259278, 0x288)
 unsigned char rmgTerrainPainter::checkSecondDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
     // Retail construction guard byte 0x6a3d64 (tested and set in this body).
     DATA_COMPGEN_GUARD(0x006a3d64, secondDiagonalOffsetsGuard, secondDiagonalOffsets)
+
     // atexit(0x5b6fc0): the table's empty cleanup, right after this function.
     VA_COMPGEN(0x005b6fc0, 0x1, STATIC_DTOR, secondDiagonalOffsets)
     DATA(0x006A3D68)
@@ -1487,7 +1526,8 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
     return getPackedCell(nearby)->getTerrain() != terrain;
 }
 
-VA(0x005B6FD0, 0x271) MAC_ADDRESS(0x259500, 0x444)
+VA(0x005B6FD0, 0x271)
+MAC_ADDRESS(0x259500, 0x444)
 int rmgTerrainPainter::getTransitionStrength(
     const TRmgGridPoint& point, int terrain)
 {
@@ -1569,7 +1609,8 @@ int rmgTerrainPainter::changeTerrain(int terrain, int strength)
     return previous;
 }
 
-VA(0x005B7250, 0x9A) MAC_ADDRESS(0x2599f8, 0xac) // anchor-callee 0x54017e; allocation and throw RTTI
+VA(0x005B7250, 0x9A)
+MAC_ADDRESS(0x2599f8, 0xac) // anchor-callee 0x54017e; allocation and throw RTTI
 TRmgTerrainBrush::TRmgTerrainBrush(
     TRmgMapInterface* map, int terrain, int strength)
     : m_painter(new rmgTerrainPainter(map, terrain, strength))
@@ -1578,18 +1619,21 @@ TRmgTerrainBrush::TRmgTerrainBrush(
         throw TAllocationFailure();
 }
 
-VA(0x005B72F0, 0x225) MAC_ADDRESS(0x259aa4, 0xc8) // anchor-callee 0x540207; auto_ptr ownership cleanup
+VA(0x005B72F0, 0x225)
+MAC_ADDRESS(0x259aa4, 0xc8) // anchor-callee 0x540207; auto_ptr ownership cleanup
 TRmgTerrainBrush::~TRmgTerrainBrush()
 {
 }
 
-VA(0x005B7520, 0x16A) MAC_ADDRESS(0x259c9c, 0x24)
+VA(0x005B7520, 0x16A)
+MAC_ADDRESS(0x259c9c, 0x24)
 void TRmgTerrainBrush::changeTerrain(int terrain, int strength)
 {
     m_painter->changeTerrain(terrain, strength);
 }
 
-VA(0x005B7690, 0x1F) MAC_ADDRESS(0x259cc0, 0x24) // anchor-callee 0x5401e9; four unsigned rectangle args
+VA(0x005B7690, 0x1F)
+MAC_ADDRESS(0x259cc0, 0x24) // anchor-callee 0x5401e9; four unsigned rectangle args
 void TRmgTerrainBrush::paintRectangle(
     unsigned int x, unsigned int y,
     unsigned int rectangleWidth, unsigned int rectangleHeight)
@@ -1602,7 +1646,8 @@ void TRmgTerrainBrush::paintRectangle(
 // destructor call, and scalar delete exactly identify this specialization.
 VA_COMPGEN(0x005B76D0, 0x20, IMPLICIT_DTOR, rmgTerrainPainter_auto_ptr)
 
-VA(0x005B76F0, 0x209) MAC_ADDRESS(0x259be4, 0xb8) // anchor-callee 0x5b76e0; retained painter destructor
+VA(0x005B76F0, 0x209)
+MAC_ADDRESS(0x259be4, 0xb8) // anchor-callee 0x5b76e0; retained painter destructor
 rmgTerrainPainter::~rmgTerrainPainter()
 {
     finish();
@@ -1620,8 +1665,11 @@ rmgTerrainPainter::~rmgTerrainPainter()
 // The generic coordinate owner defers its ordinary template comparator and
 // reproduces all 342 bytes, including the lock unwind, without altering STL.
 VA_COMPGEN(0x005B7CD0, 0x156, TREE_INSERT, TRmgCoordinatePoint_unsigned_int)
+
 VA_COMPGEN(0x005B8670, 0xA8, TREE_INIT, TRmgCoordinatePoint_unsigned_int)
+
 VA_COMPGEN(0x005B8720, 0x2FE, TREE_NODE_INSERT, TRmgCoordinatePoint_unsigned_int)
+
 // Public insert's predecessor test calls this node walk; its color field
 // at +0x14 and nil references identify the same terrain point-set instance.
 // The naturally emitted body matches all 179 bytes.
@@ -1637,7 +1685,9 @@ VA_COMPGEN(0x005B7F60, 0x59, TREE_ERASE_KEY, TRmgCoordinatePoint_unsigned_int)
 // All 289/1295/126 bytes match respectively. The retained _Lockit destructor
 // at 0x60b634 releases the CRT lock through LeaveCriticalSection.
 VA_COMPGEN(0x005B7E30, 0x121, TREE_ERASE_RANGE, TRmgCoordinatePoint_unsigned_int)
+
 VA_COMPGEN(0x005B8090, 0x50F, TREE_ERASE_ITERATOR, TRmgCoordinatePoint_unsigned_int)
+
 VA_COMPGEN(0x005B85F0, 0x7E, TREE_ERASE, TRmgCoordinatePoint_unsigned_int)
 
 // Both erase overloads and the admitted distance loop retain this successor
@@ -1659,12 +1709,15 @@ VA_COMPGEN(0x005B8060, 0x24, VECTOR_UFILL, unsigned_char)
 // PaintPoint and TRmgTerrainBrush::changeTerrain retain this one-dword
 // iterator wrapper around the tree's raw-node lower bound.
 VA_COMPGEN(0x005B85A0, 0x17, TREE_LOWER_BOUND, TRmgCoordinatePoint_unsigned_int)
+
 // PaintPoint retains the two-bound wrapper returning its iterator pair.
 VA_COMPGEN(0x005B85C0, 0x2C, TREE_EQUAL_RANGE, TRmgCoordinatePoint_unsigned_int)
+
 VA_COMPGEN(0x005B8A20, 0x17, TREE_UPPER_BOUND, TRmgCoordinatePoint_unsigned_int)
 
 // The retained public wrappers above delegate to these raw-node searches.
 VA_COMPGEN(0x005B8A40, 0x59, TREE_LBOUND, TRmgCoordinatePoint_unsigned_int)
+
 VA_COMPGEN(0x005B8B60, 0x59, TREE_UBOUND, TRmgCoordinatePoint_unsigned_int)
 
 VA_COMPGEN(0x005B4860, 0x6E, IMPLICIT_DTOR, set)
@@ -1674,6 +1727,7 @@ VA_COMPGEN(0x005B4860, 0x6E, IMPLICIT_DTOR, set)
 // increments the caller's count directly; the unused tag argument accounts
 // for the tagged body's missing self-store.
 VA_COMPGEN(0x005B8C70, 0x2B, STD_DISTANCE, TRmgCoordinatePoint_unsigned_int)
+
 VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgCoordinatePoint_unsigned_int)
 
 template<class Coordinate>
@@ -1754,44 +1808,64 @@ static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] = {
 // are identical to the retained base destructor (LINK folds the two bodies).
 DATA(0x006A48D0)
 static TRmgPatternTerrainRule g_rmgDirtRule(1, 1, 50, 46, g_rmgDirtPatternEntries);
+
 VA_COMPGEN(0x005B3B60, 0x23, STATIC_CTOR, g_rmgDirtRule)
+
 VA_COMPGEN(0x005B3B90, 0x0A, STATIC_DTOR, g_rmgDirtRule)
 DATA(0x006A44F8)
 static TRmgPatternTerrainRule g_rmgSandRule(0, 1, 70, 24, g_rmgSandPatternEntries);
+
 VA_COMPGEN(0x005B3BA0, 0x23, STATIC_CTOR, g_rmgSandRule)
+
 VA_COMPGEN(0x005B3BD0, 0x0A, STATIC_DTOR, g_rmgSandRule)
 DATA(0x006A3D88)
 static TRmgPatternTerrainRule g_rmgGrassRule(1, 1, 50, 79, g_rmgLandPatternEntries);
+
 VA_COMPGEN(0x005B3BE0, 0x23, STATIC_CTOR, g_rmgGrassRule)
+
 VA_COMPGEN(0x005B3C10, 0x0A, STATIC_DTOR, g_rmgGrassRule)
 DATA(0x006A3F70)
 static TRmgPatternTerrainRule g_rmgSnowRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+
 VA_COMPGEN(0x005B3C20, 0x23, STATIC_CTOR, g_rmgSnowRule)
+
 VA_COMPGEN(0x005B3C50, 0x0A, STATIC_DTOR, g_rmgSnowRule)
 DATA(0x006A46E0)
 static TRmgPatternTerrainRule g_rmgSwampRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+
 VA_COMPGEN(0x005B3C60, 0x23, STATIC_CTOR, g_rmgSwampRule)
+
 VA_COMPGEN(0x005B3C90, 0x0A, STATIC_DTOR, g_rmgSwampRule)
 DATA(0x006A4AB8)
 static TRmgPatternTerrainRule g_rmgRoughRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+
 VA_COMPGEN(0x005B3CA0, 0x23, STATIC_CTOR, g_rmgRoughRule)
+
 VA_COMPGEN(0x005B3CD0, 0x0A, STATIC_DTOR, g_rmgRoughRule)
 DATA(0x006A5070)
 static TRmgPatternTerrainRule g_rmgSubterraneanRule(1, 1, 60, 79, g_rmgLandPatternEntries);
+
 VA_COMPGEN(0x005B3CE0, 0x23, STATIC_CTOR, g_rmgSubterraneanRule)
+
 VA_COMPGEN(0x005B3D10, 0x0A, STATIC_DTOR, g_rmgSubterraneanRule)
 DATA(0x006A4E88)
 static TRmgPatternTerrainRule g_rmgLavaRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+
 VA_COMPGEN(0x005B3D20, 0x23, STATIC_CTOR, g_rmgLavaRule)
+
 VA_COMPGEN(0x005B3D50, 0x0A, STATIC_DTOR, g_rmgLavaRule)
 DATA(0x006A4CA0)
 static TRmgPatternTerrainRule g_rmgWaterRule(0, 0, 0, 33, g_rmgWaterPatternEntries);
+
 VA_COMPGEN(0x005B3D60, 0x23, STATIC_CTOR, g_rmgWaterRule)
+
 VA_COMPGEN(0x005B3D90, 0x0A, STATIC_DTOR, g_rmgWaterRule)
 DATA(0x006A48C8)
 static TRmgTableTerrainRule g_rmgRockRule;
+
 // Same owner/atexit and folded base-destructor proof as the pattern rules.
 VA_COMPGEN(0x005B3DA0, 0x16, STATIC_CTOR, g_rmgRockRule)
+
 VA_COMPGEN(0x005B3DC0, 0x0A, STATIC_DTOR, g_rmgRockRule)
 
 DATA(0x00642BD8)

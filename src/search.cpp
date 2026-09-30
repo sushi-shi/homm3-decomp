@@ -26,7 +26,9 @@
 // vector::erase expansion inside clearPath, not a reason to flatten it.
 // Earlier result-reference and 24 local-order probes did not recover retail's
 // retained vector base; four current initialization phases give three objects.
-VA(0x0056a0d0, 0x282) MAC_ADDRESS(0x161498, 0x41c)  // anchor-global, dc 0x12b2e0
+VA(0x0056a0d0, 0x282)
+DC_ADDRESS(0x12b2e0, 0x110)
+MAC_ADDRESS(0x161498, 0x41c)  // anchor-global
 int searchArray::buildPath(const hero* currentHero, long limit)
 {
     type_point source = currentHero->getLocation();
@@ -91,7 +93,9 @@ int aiResourceCost(const playerData* player, const int* resources);
 // restores the full nine-block retail shape without a point-wrapper copy.
 // DC search.cpp:113 proves the pathCell reference; retail uses the
 // same cell address and the body requires its referent.
-VA(0x0056a360, 0x9E) MAC_ADDRESS(0x1618b4, 0xe4)  // exhaustive search.obj order-map, dc 0x12b3f0
+VA(0x0056a360, 0x9E)
+DC_ADDRESS(0x12b3f0, 0xb6)
+MAC_ADDRESS(0x1618b4, 0xe4)  // exhaustive search.obj order-map
 unsigned char checkAdjacentMonster(const hero* currentHero,
                                      pathCell& entryPoint,
                                      type_search_type searchType)
@@ -129,7 +133,9 @@ unsigned char checkAdjacentMonster(const hero* currentHero,
 // Native Mac 0x161a1c goes directly to the for-loop test; there is no
 // separate count guard outside it. Restore DC's post-count monster lifetime
 // and let the loop own its bounds test: the retained Windows body is exact.
-VA(0x0056a400, 0x32F) MAC_ADDRESS(0x161998, 0x3e4)  // exhaustive search.obj order-map, dc 0x12b4a8
+VA(0x0056a400, 0x32F)
+DC_ADDRESS(0x12b4a8, 0x34c)
+MAC_ADDRESS(0x161998, 0x3e4)  // exhaustive search.obj order-map
 void searchArray::enterLith(const hero* currentHero,
                              const std::vector<type_point>& list,
                              long cellType, long excluded,
@@ -194,7 +200,9 @@ void searchArray::enterLith(const hero* currentHero,
 
 // DC search.cpp:244 proves the pathCell reference; retail uses the
 // same cell address and the body requires its referent.
-VA(0x0056a730, 0x111) MAC_ADDRESS(0x161d7c, 0x1b8)  // dc 0x12b7f4
+VA(0x0056a730, 0x111)
+DC_ADDRESS(0x12b7f4, 0x10c)
+MAC_ADDRESS(0x161d7c, 0x1b8)
 void searchArray::enterGate(const pathCell& cell, const NewmapCell* mapCell,
                              long limit)
 {
@@ -213,8 +221,9 @@ void searchArray::enterGate(const pathCell& cell, const NewmapCell* mapCell,
     }
 }
 
-// Original: searchArray::board_boat; search.cpp:264, dc 0x12b900.
+// Original: searchArray::board_boat; search.cpp:264
 // Complete expands this ordinary helper in enterTrigger's boat arm.
+DC_ADDRESS(0x12b900, 0x88)
 MAC_ADDRESS(0x161f34, 0xf8)
 void searchArray::boardBoat(const hero* currentHero, pathCell& cell)
 {
@@ -228,7 +237,6 @@ void searchArray::boardBoat(const hero* currentHero, pathCell& cell)
     getCell(cell.m_point, !cell.m_canStop)->m_inBoat = 1;
 }
 
-
 // E:\gamedcs\search.cpp:283
 // Castle Gate travel between the player's Inferno towns. The AI search
 // counts how many gates the treasury can still afford (capped at two:
@@ -238,7 +246,9 @@ void searchArray::boardBoat(const hero* currentHero, pathCell& cell)
 // gates first, and its destination loop loads each town ID once.
 // DC records const pathCell&; restoring the reference keeps Windows bytes
 // unchanged. The remaining extra slot belongs to the location return value.
-VA(0x0056a850, 0x27E) MAC_ADDRESS(0x16202c, 0x35c)  // exhaustive search.obj order-map, dc 0x12b988
+VA(0x0056a850, 0x27E)
+DC_ADDRESS(0x12b988, 0x240)
+MAC_ADDRESS(0x16202c, 0x35c)  // exhaustive search.obj order-map
 void searchArray::enterTown(const hero* currentHero, long startTown,
                              const pathCell& currentPathCell, long limit,
                              type_search_type searchType)
@@ -296,7 +306,9 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
     }
 }
 
-VA(0x0056aad0, 0x68) MAC_ADDRESS(0x162388, 0x104)  // dc 0x12bbc8
+VA(0x0056aad0, 0x68)
+DC_ADDRESS(0x12bbc8, 0x74)
+MAC_ADDRESS(0x162388, 0x104)
 unsigned char searchArray::enterHostileTrigger(const hero* currentHero,
                                               pathCell& cell)
 {
@@ -336,7 +348,9 @@ unsigned char searchArray::enterHostileTrigger(const hero* currentHero,
 // worsens distance 55 to 66 and supplies no supported source recovery.
 // DC search.cpp:393 proves the pathCell reference; retail uses the
 // same cell address and the body requires its referent.
-VA(0x0056ab40, 0x50C) MAC_ADDRESS(0x16248c, 0x560)  // exhaustive search.obj order-map, dc 0x12bc3c
+VA(0x0056ab40, 0x50C)
+DC_ADDRESS(0x12bc3c, 0x29e)
+MAC_ADDRESS(0x16248c, 0x560)  // exhaustive search.obj order-map
 unsigned char searchArray::enterTrigger(const hero* currentHero,
                                          pathCell& cell, long limit,
                                          type_search_type searchType)
@@ -444,6 +458,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
 // SeedPosition calls it. Complete's VC6 expands the same source boundary at
 // the only retail call site; keep the helper ordinary and available before
 // the caller so the compiler makes that decision naturally.
+DC_ADDRESS(0x12bedc, 0x104)
 MAC_ADDRESS(0x1629ec, 0x22c)
 static unsigned char checkSummonBoat(const hero* currentHero)
 {
@@ -472,7 +487,9 @@ static unsigned char checkSummonBoat(const hero* currentHero)
 // same cell address and the body requires its referent.
 // getManaCost/getPlayer/getSpellLevel have recovered const contracts;
 // preserve those calls directly through currentHero without a mutable facade.
-VA(0x0056b050, 0x3E7) MAC_ADDRESS(0x162c18, 0x45c)  // dc 0x12bfe0
+VA(0x0056b050, 0x3E7)
+DC_ADDRESS(0x12bfe0, 0x38c)
+MAC_ADDRESS(0x162c18, 0x45c)
 void searchArray::checkTownPortal(const hero* currentHero,
                                     const pathCell& startCell,
                                     long maxMobility)
@@ -556,7 +573,9 @@ void searchArray::enterStartTrigger(const hero* currentHero,
 }
 
 // E:\gamedcs\search.cpp:621
-VA(0x0056b440, 0x8EC) MAC_ADDRESS(0x1631a0, 0xbac)  // exhaustive search.obj order-map, dc 0x12c36c
+VA(0x0056b440, 0x8EC)
+DC_ADDRESS(0x12c36c, 0x728)
+MAC_ADDRESS(0x1631a0, 0xbac)  // exhaustive search.obj order-map
 void searchArray::seedPosition(hero* currentHero, type_point start,
                                type_point target, int maxMobility,
                                unsigned char isBoat,

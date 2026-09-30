@@ -10,8 +10,9 @@ build directory separate. Preserve source-supported helper and layout changes
 through incidental CUR dips; inspect the actual authored source and target bytes
 when a lane reports a loss.
 
-Before accepting a lane's generated score ledger, compare its fresh compiled
-report with the parent branch's committed ledger:
+Use the lane's targeted build results for routine integration. For a specifically
+requested baseline investigation, this command compares its compiled report
+with the parent branch's committed ledger:
 
 ```sh
 homm3 status check --baseline-ref <parent-ref>
@@ -31,9 +32,9 @@ function, especially differing source hashes or RVAs, before staging. The
 command refuses conflicting retail RVA bindings. Do not take either whole
 ledger side.
 
-Run the full `homm3 build` on the resolved tree and review its Mac and source
-gates. The build banks the local ledger automatically; repeat the explicit
-`--baseline-ref` comparison when the parent comparison still matters. Review
-the generated README score block: its table is MAX, and its footer reports
-CUR/MAX/HIST. Keep user-approved branch and PR actions within their existing
-authorization.
+After resolving source conflicts, use `homm3 build --fast <TU>` for the affected
+function's TU when its compiled result needs refreshing. Regenerate README with
+`homm3 status summary --write-readme`, then commit and push under the user's existing
+authorization. Do not run routine full builds, tests or standalone validation
+checks. README's table is MAX and its footer reports CUR/MAX/HIST. Workers return
+their commits for coordinated integration and publishing.

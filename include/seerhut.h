@@ -9,7 +9,7 @@
 
 #include "quest.h"
 
-// E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
+// E:\gamedcs\seerhut.cpp:50
 unsigned char initializeSeerHutText();
 
 class hero;
@@ -168,8 +168,11 @@ public:
     // Complete retains this byte through save/load even
     // though completion behavior now belongs to the quest object.
     unsigned char m_completedByPlayer;
-    // E:\gamedcs\SeerHut.h:108, dc 0xf4b38
-    VA(0x00573580, 0x13) MAC_ADDRESS(0x169ac4, 0x48)
+
+    // E:\gamedcs\SeerHut.h:108
+    VA(0x00573580, 0x13)
+    DC_ADDRESS(0x0f4b38, 0x2a)
+    MAC_ADDRESS(0x169ac4, 0x48)
     TSeerHut()
     {
         m_quest = 0;
@@ -191,10 +194,12 @@ public:
     std::string seerHutFn005741B0(int player) const;
     std::string seerHutFn005743E0(int player) const;
     std::string getSeerLogText();
+
     // Dreamcast names QuestActiveforPlayer as a const byte-returning header
-    // predicate (SeerHut.h:112, dc 0x3250). Complete adds the live quest and
+    // predicate (SeerHut.h:112). Complete adds the live quest and
     // quest-log text tests; both retail consumers reload the quest after
     // the visit test because the virtual text access can change the hut.
+    DC_ADDRESS(0x003250, 0x22)
     unsigned char questActiveforPlayer(
         const unsigned char playerNum) const
     {
@@ -203,13 +208,17 @@ public:
             && playerHasInfo(playerNum)
             && m_quest;
     }
-    // Original: TSeerHut::PlayerHasInfo; SeerHut.h:117, dc 0x2021c
+
+    // Original: TSeerHut::PlayerHasInfo; SeerHut.h:117
+    DC_ADDRESS(0x02021c, 0x26)
     unsigned char playerHasInfo(const unsigned char playerNum) const
     {
         return (m_visitedPlayers & (1 << playerNum)) != 0;
     }
-    // E:\gamedcs\seerhut.h:121, dc 0x20244. Retail corroborates the signed
+
+    // E:\gamedcs\seerhut.h:121 Retail corroborates the signed
     // NameIndex load, 16-byte vector stride and inlined c_str() fallback.
+    DC_ADDRESS(0x020244, 0x1c)
     const char* getName() const
     {
         return g_seerHutNameList[m_nameIndex].c_str();
