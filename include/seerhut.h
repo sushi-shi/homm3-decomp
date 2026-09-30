@@ -45,7 +45,9 @@ public:
     // Complete retains the Dreamcast TSeerHut predicate on its quest-guard
     // record. DoQuestLog proves that its final two tests are the
     // visited-player bit followed by a fresh quest-pointer read.
-    unsigned char questActiveforPlayer(
+    // Its bool interface follows that native predicate; this Complete-only
+    // class has no independent Dreamcast public name.
+    bool questActiveforPlayer(
         const unsigned char playerNum) const
     {
         return m_quest
@@ -56,7 +58,7 @@ public:
     // Complete's guard uses the same packed visit mask and byte argument as
     // TSeerHut::PlayerHasInfo (DC seerhut.h:117). The quick-info/rollover
     // pair and enterTrigger expand this predicate over the guard's +4 byte.
-    unsigned char playerHasInfo(const unsigned char playerNum) const
+    bool playerHasInfo(const unsigned char playerNum) const
     {
         return (m_visitedPlayers & (1 << playerNum)) != 0;
     }
@@ -196,12 +198,13 @@ public:
     std::string seerHutFn005743E0(int player) const;
     std::string getSeerLogText();
 
-    // Dreamcast names QuestActiveforPlayer as a const byte-returning header
-    // predicate (SeerHut.h:112). Complete adds the live quest and
+    // Native DC ?QuestActiveforPlayer@TSeerHut@@QBA_NE@Z proves a const
+    // bool-returning predicate with a byte argument (SeerHut.h:112).
+    // Complete adds the live quest and
     // quest-log text tests; both retail consumers reload the quest after
     // the visit test because the virtual text access can change the hut.
     DC_ADDRESS(0x003250, 0x22)
-    unsigned char questActiveforPlayer(
+    bool questActiveforPlayer(
         const unsigned char playerNum) const
     {
         return m_quest
@@ -210,9 +213,10 @@ public:
             && m_quest;
     }
 
-    // Original: TSeerHut::PlayerHasInfo; SeerHut.h:117
+    // Original: TSeerHut::PlayerHasInfo; SeerHut.h:117.
+    // Native DC ?PlayerHasInfo@TSeerHut@@QBA_NE@Z proves bool return.
     DC_ADDRESS(0x02021c, 0x26)
-    unsigned char playerHasInfo(const unsigned char playerNum) const
+    bool playerHasInfo(const unsigned char playerNum) const
     {
         return (m_visitedPlayers & (1 << playerNum)) != 0;
     }
