@@ -3719,6 +3719,9 @@ void game::giveTroopsToNeutralTowns()
 // and retail 4bf978..4bf9bb compare that owner against teamInfo entries.
 // An extra GetTeam lookup changes the operation and adds two CFG blocks.
 // Keep it only in the town predicates, where native actually maps the owner.
+// DC 4158 immediately passes GetTeam's return to IsHumanTeam; the negative
+// team guard belongs inside the canonical predicate, as at Mac d56c0.
+// Removing the duplicate caller guard and named staging local is byte-flat.
 // The direct-owner hero predicate gives 96.1648%, with all 167 blocks aligned
 // and 103 branches agreeing; packed-point homes are the first residual.
 // Original DC public ?ValidateVictoryLossConditions@game@@QAAX_N@Z proves
@@ -3813,8 +3816,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
     if (victory.m_type == VICTORY_CONDITION_CAPTURE_TOWN) {
         town* thisTown = getTown(getTownId(
             victory.m_townX, victory.m_townY, victory.m_townZ));
-        int team = getTeam(thisTown->m_owner);
-        if (team >= 0 && isHumanTeam(team))
+        if (isHumanTeam(getTeam(thisTown->m_owner)))
             victory.m_type = -1;
     }
 
