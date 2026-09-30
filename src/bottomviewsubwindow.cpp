@@ -24,15 +24,15 @@
 // helpers into the timer subtraction, status messages, and text-table loads.
 
 // THE LOCAL NAMES BELOW ARE DREAMCAST CODEVIEW, NOT INVENTION. The DC
-// build's S_REGREL32 records for this compiland name four of them and
+// build's S_REGREL32 records for this compiland identify examples and
 // give their types: TBottomViewKingdom's `town_count` (LF_ARRAY of
 // T_INT4, length 16 - so `int[4]`, which also confirms the array's
 // width) and `text` (std::string); TBottomViewTown's `town_size_name`
 // (std::string); TBottomViewResourceMessage's parameter `res` and its
 // `char str[20]`. The DC list is INCOMPLETE - TBottomViewHero's record
-// names no stack local at all although its source plainly has a
-// std::string in the army loop - so its silence is not evidence of
-// absence, only its entries are evidence of presence.
+// now records the std::string `quantity_text` in the army loop. Other
+// optimized locals can still be absent; only recorded entries provide
+// positive evidence of their declarations.
 
 // THE INCLUDE SET IS NOT THE WALL IN THIS TU - measured, not assumed.
 // The four constructors below formerly plateaued on inline-depth divergence, and
@@ -478,7 +478,9 @@ static int g_heroArmyCoords[7][2] = {
 // canonical body is class-visible in armygrp.h. No explicit inline qualifier
 // is proven; keep the call and the ordinary member definition.
 // Focused Complete build: 95.87521 -> 96.94359; the count call now expands.
-// Remaining named under-inline boundary is the quantity string's _Tidy;
+// Remaining named under-inline boundary is the quantity string's default
+// constructor -> _Tidy(false), not cleanup: C2 cost 152 exceeds its child
+// budget 141; all three string destructors expand their _Tidy operations.
 // earlier differences include GetCurrHero arm order and skill-loop IV choice.
 VA(0x00451ab0, 0x68A)
 DC_ADDRESS(0x0558a8, 0x54c)
@@ -518,8 +520,8 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
     if (who->m_army.getNumArmies() > 0) {
         int id = 0x7db;
         for (int j = 0; j < 7; j++) {
-            int type = who->m_army.m_armies[j];
-            if (type != -1) {
+            TCreatureType type = who->m_army.m_armyTypes[j];
+            if (type != CREATURE_NONE) {
                 m_widgets.push_back(new iconWidget(g_heroArmyCoords[j][0],
                     g_heroArmyCoords[j][1], 32, 32, id++, "cprsmall.def",
                     type + 2, 0, 0, 0, 0x10));
