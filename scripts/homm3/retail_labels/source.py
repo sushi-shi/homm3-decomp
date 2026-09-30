@@ -439,7 +439,7 @@ CHAR_STREAM_MEMBER_KINDS = (
 COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STATIC_CTOR", "SCALAR_DELETING_DTOR",
                  "VECTOR_DELETING_DTOR", "DEFAULT_CTOR_CLOSURE",
-                 "VECTOR_DTOR", "VECTOR_SIZE",
+                 "VECTOR_DTOR", "VECTOR_SIZE", "VECTOR_BEGIN", "VECTOR_END",
                  "VECTOR_CAPACITY",
                  "VECTOR_CONSTRUCTOR_ITERATOR",
                  "VECTOR_RESIZE", "VECTOR_INSERT", "VECTOR_INSERT_SINGLE",
@@ -1397,6 +1397,12 @@ def _demangle_key(mangled: str):
         return "vector_constructor_iterator"
     if mangled.startswith("?size@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_size"
+    # The mutable, parameterless iterator getters return a raw pointer in
+    # VC6's vector. Keep const overloads and other container families apart.
+    if (vector_owner and re.search(r"@std@@QAEP[AB].+XZ$", mangled)):
+        for member in ("begin", "end"):
+            if mangled.startswith(f"?{member}@?$vector@"):
+                return f"{vector_owner}@vector_{member}"
     if mangled.startswith("?capacity@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_capacity"
     if mangled.startswith("?clear@?$vector@") and vector_owner:
@@ -2401,6 +2407,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         simple = next(
             (kind for kind in ("vector_clear", "vector_push_back",
+                               "vector_begin", "vector_end",
                                "exception_doraise",
                                "functor_call", "deque_iterator_add_assign",
                                "deque_const_iterator_add")

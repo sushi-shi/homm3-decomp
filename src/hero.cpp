@@ -6311,17 +6311,12 @@ bool std::bitset<144>::any() const
     // @stub - <bitset>'s own definition; see h3_stl_comdat_anchor
 }
 
-VA(0x004e64e0, 0x4)  // stl-comdat, retail-only
-int* std::vector<int>::begin()
-{
-    // @stub - <vector>'s own definition; see h3_stl_comdat_anchor
-}
-
-VA(0x004e64f0, 0x4)  // stl-comdat, retail-only
-int* std::vector<int>::end()
-{
-    // @stub - <vector>'s own definition; see h3_stl_comdat_anchor
-}
+// THeroScreenWindow's constructor calls the widget vector's begin/end;
+// retail relocation sites are 0x4e1317/0x4e1321. The native COMDATs and bodies are
+// respectively 8b4104c3 / 8b4108c3 (mov eax,[ecx+4/8]; ret). The former
+// vector<int> placeholders had no emitted owner in this TU.
+VA_COMPGEN(0x004e64e0, 0x4, VECTOR_BEGIN, widget)
+VA_COMPGEN(0x004e64f0, 0x4, VECTOR_END, widget)
 
 // std::vector<T*>::push_back(T* const&) - 434 B, `ret 4`: one ICF-folded
 // body for every pointer-element vector. hero.obj emits it for the hero
