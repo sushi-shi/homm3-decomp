@@ -2364,7 +2364,9 @@ int __fastcall game::loadString(TAbstractFile* infile, std::string& s)
     int count;
     short length;
 
-    count = infile->read(&length, sizeof(length));
+    // Mac 0xcec70 checks the scalar count before decoding the short at
+    // 0xcec84; the canonical reader preserves that caller slot and guard.
+    count = readLittleEndianValue(infile, length);
     if (count < sizeof(length))
         return -1;
 
