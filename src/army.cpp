@@ -289,6 +289,10 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
 VA(0x0043d8b0, 0x135)
 DC_ADDRESS(0x043d9c, 0xe4)
 // Mac 0x49330/0x49388 expand getOwningSide before both cell side stores.
+// DC records hexcell& back_cell. Restoring that reference is byte-flat;
+// implicit byte-field conversions also leave the two full-word getter loads
+// where retail narrows them. Complete/Mac addAura precedes retaliation setup,
+// unlike the older DC order.
 MAC_ADDRESS(0x0492e0, 0x13c)
 void army::init(int armyId, int newNumTroops, const hero* owner, int side,
                 int inIndex, int gridIndex, int origPos)
@@ -301,11 +305,11 @@ void army::init(int armyId, int newNumTroops, const hero* owner, int side,
         cell->m_armySlot = static_cast<signed char>(m_bitIndex);
         cell->m_partOfDouble = -1;
         if (is(creatureDoubleWide)) {
-            hexcell* second =
-                &g_combatManager->m_cells[m_gridIndex + offsetToFront(-1)];
-            second->m_armySide = static_cast<signed char>(getOwningSide());
-            second->m_armySlot = static_cast<signed char>(m_bitIndex);
-            second->m_partOfDouble = m_facing != 0;
+            hexcell& backCell =
+                g_combatManager->m_cells[m_gridIndex + offsetToFront(-1)];
+            backCell.m_armySide = static_cast<signed char>(getOwningSide());
+            backCell.m_armySlot = static_cast<signed char>(m_bitIndex);
+            backCell.m_partOfDouble = m_facing != 0;
             cell->m_partOfDouble = m_facing == 0;
         }
         addAura();
