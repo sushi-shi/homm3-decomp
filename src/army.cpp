@@ -1961,6 +1961,10 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // (Windows 99.9040 -> 99.9232). The integrated declaration context also
 // restores the reload order after DoMultiHeadAttack (99.9616%). Remaining
 // differences are address-register choices in two MarkCreatureEffect expansions.
+// The canonical conditional controlling-side return closes getUnitCombatValue
+// while moving this caller to 99.9232%: the same two address decompositions
+// remain, plus the ordering of independent EDI/EBX loads after the hydra call.
+// No helper, branch or source-lifetime discrepancy supports a caller rewrite.
 VA(0x00441610, 0x6A0)
 DC_ADDRESS(0x046bec, 0x3c2)
 MAC_ADDRESS(0x04d288, 0x638)  // corroborates
@@ -4804,6 +4808,10 @@ static const int g_faerieDragonSpells[] = {
     -1,
 };
 
+// With the canonical conditional controlling-side return, all 29 blocks and
+// helper boundaries remain aligned. The 99.9248% residual is one commutative
+// sideIsAi load address: [EAX + ECX] versus retail [ECX + EAX]. Preserve the
+// recovered getter instead of manufacturing an alternate indexing spelling.
 VA(0x00447510, 0x1A8)
 MAC_ADDRESS(0x053a3c, 0x18c)
 void army::faerieDragonSpell()
