@@ -3927,7 +3927,8 @@ bool army::simpleMove(int hex, bool restoreFacing)
 VA(0x00445a60, 0x26D)
 DC_ADDRESS(0x04a7ac, 0x10a)
 MAC_ADDRESS(0x051ad4, 0x1b4)
-unsigned char army::attackHex(int hex, unsigned char restoreFacing)
+// Original ?attack_hex@army@@QAA_NH_N@Z proves result and facing flag.
+bool army::attackHex(int hex, bool restoreFacing)
 {
     m_side = -1;
     m_slot = -1;
@@ -3947,7 +3948,7 @@ unsigned char army::attackHex(int hex, unsigned char restoreFacing)
     } else {
         int direction = getAttackDirection(target);
         if (direction >= 0) {
-            unsigned char turned;
+            bool turned;
             if (needToTurn(direction)) {
                 setupAnimation();
                 turn(1);

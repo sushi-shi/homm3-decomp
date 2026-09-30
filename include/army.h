@@ -761,7 +761,7 @@ public:
                        bool simulated, long distance,
                        long* fireDamage) const;
     void adjustHitpoints();
-    unsigned char attackHex(int hex, unsigned char restoreFacing);
+    bool attackHex(int hex, bool restoreFacing);
 private:
     // Original public ?do_attack@army@@AAA_NPAV1@H@Z: private bool.
     // Keep this overload in its attested LF_FIELDLIST position.
