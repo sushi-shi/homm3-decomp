@@ -3847,6 +3847,12 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 // DC 4595 reads the level-change guard's hero through GetHero(player's
 // current id), not GetCurrHero; restoring it gives 87.38 -> 88.60. Mac
 // calls getCurrHero there (a platform difference).
+// DC 4645 passes the returned get_location point directly to equality, with
+// the last-hover point as its receiver (r4), and the returned point as r5.
+// Mac e9f8..eab8 builds that one returned point before comparing it. Recover
+// the full expression rather than a named default-constructed point plus
+// assignment: Windows 84.93229 -> 88.08 with current retail labels. The native
+// cursor-enum and const pathCell pointer locals are independently byte-flat.
 // Mac e7ac..e810 expands the current-hero ID before both hover guards;
 // preserve getCurrHeroId while keeping Windows separate GetHero lookup.
 VA(0x0040e360, 0x918)
@@ -3922,9 +3928,7 @@ int advManager::processHover(int mouseX, int mouseY)
         } else {
 
         hero* currHero = g_game->getCurrHero();
-        type_point heroPoint;
-        heroPoint = currHero->getLocation();
-        if (heroPoint == m_lastMapHover) {
+        if (m_lastMapHover == currHero->getLocation()) {
             g_mouseManager->setPointer(2, mouseManager::ADVENTURE_SET);
             m_advCommand = 2;
             return 1;
@@ -3975,10 +3979,10 @@ int advManager::processHover(int mouseX, int mouseY)
         }
 
         seedTo(m_lastMapHover);
-        pathCell* currentPathCell = g_searchArray->getCell(m_lastMapHover, 0);
+        const pathCell* currentPathCell = g_searchArray->getCell(m_lastMapHover, 0);
         int turns;
         int mouseOffset = 0;
-        int newCursor;
+        type_adventure_cursor newCursor;
         if (currentPathCell->m_visited) {
             if (currentPathCell->m_cost <= currHero->m_movePoints) {
                 turns = 0;
@@ -3994,29 +3998,29 @@ int advManager::processHover(int mouseX, int mouseY)
             switch (currCell->m_type) {
             case BOAT:
                 if (m_cursorType != CURSOR_TYPE_8) {
-                    newCursor = 6;
+                    newCursor = ADV_BOAT_POINTER;
                     m_advCommand = 1;
                 } else {
-                    newCursor = 0;
+                    newCursor = ADV_ARROW_POINTER;
                     m_advCommand = -1;
                 }
                 break;
             case ANCHOR_POINT:
                 if (m_cursorType == CURSOR_TYPE_8)
-                    newCursor = 7;
+                    newCursor = ADV_ANCHOR_POINTER;
                 else
                     newCursor = getNormalCursor(currCell);
                 break;
             case MONSTER:
-                newCursor = 5;
+                newCursor = ADV_SWORD_POINTER;
                 break;
             case HERO: {
                 hero* mapHero = g_game->getHero(currCell->m_extraInfo);
                 if (g_game->onSameTeam(mapHero->m_owner, g_netLocalGamePos)) {
-                    newCursor = 8;
+                    newCursor = ADV_EXCHANGE_POINTER;
                     m_advCommand = 1;
                 } else {
-                    newCursor = 5;
+                    newCursor = ADV_SWORD_POINTER;
                 }
                 break;
             }
@@ -4028,7 +4032,7 @@ int advManager::processHover(int mouseX, int mouseY)
                 if (currCell->m_isTrigger
                     && !g_game->onSameTeam(currentTown->m_owner, g_netLocalGamePos)
                     && currentTown->hasGarrison())
-                    newCursor = 5;
+                    newCursor = ADV_SWORD_POINTER;
                 else
                     newCursor = getNormalCursor(currCell);
                 break;
@@ -4038,14 +4042,12 @@ int advManager::processHover(int mouseX, int mouseY)
                 break;
             }
         } else {
-            newCursor = 0;
+            newCursor = ADV_ARROW_POINTER;
         }
 
-        newCursor += (m_cursorType == CURSOR_TYPE_8
-                       && newCursor == ADV_BOAT_EVENT_POINTER)
-                          ? turns
-                          : mouseOffset;
-        g_mouseManager->setPointer(newCursor,
+        g_mouseManager->setPointer(newCursor +
+            ((m_cursorType == CURSOR_TYPE_8
+              && newCursor == ADV_BOAT_EVENT_POINTER) ? turns : mouseOffset),
                                    mouseManager::ADVENTURE_SET);
         return 1;
         }
