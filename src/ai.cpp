@@ -1792,12 +1792,14 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 VA(0x00421680, 0x8F9)
 DC_ADDRESS(0x0266d4, 0x80c)
 MAC_ADDRESS(0x023724, 0xbb0)  // linkorder
-unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned char teleport, long* actionValue, type_AI_combat_parameters* estimate)
+// Original DC public encodes private bool, bool teleport, and two references:
+// ?choose_melee_target@combatManager@@AAA_NPBVarmy@@_NAAJAAVtype_AI_combat_parameters@@@Z
+bool combatManager::chooseMeleeTarget(const army* currentArmy, bool teleport, long& actionValue, type_AI_combat_parameters& estimate)
 {
     long enemyAttacks[COMBAT_GRID_CELLS];
 
-    long ourGroup = estimate->getGroup();
-    long enemyGroup = estimate->getEnemyGroup();
+    long ourGroup = estimate.getGroup();
+    long enemyGroup = estimate.getEnemyGroup();
     army* bestTarget = 0;
     long bestValue = 0;
     long bestTime = 0;
@@ -1808,15 +1810,15 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     long budget = 127;
     memset(enemyAttacks, 0, sizeof(enemyAttacks));
 
-    markFirewalls(currentArmy, enemyAttacks, estimate);
+    markFirewalls(currentArmy, enemyAttacks, &estimate);
     if (g_game->m_gameVersion >= 2)
-        markMoat(currentArmy, enemyAttacks, estimate);
+        markMoat(currentArmy, enemyAttacks, &estimate);
     if (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[ourGroup])
         markEnemyAttacks(currentArmy, enemyAttacks, markedEnemies,
-                           *estimate);
+                           estimate);
     if (g_game->m_setup.m_difficulty >= 2 || m_sideIsAi[ourGroup])
         markFriendlyArmies(currentArmy, enemyAttacks, markedEnemies,
-                             *estimate);
+                             estimate);
 
     if (currentArmy->isIncapacitated())
         budget = 0;
@@ -1825,7 +1827,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     else
         g_searchArray->seedCombatPosition(currentArmy, ourGroup, budget,
                                           m_creaturePlacement, -1);
-    unsigned char stayingInCastle = shouldStayInCastle(estimate);
+    unsigned char stayingInCastle = shouldStayInCastle(&estimate);
 
     for (long i = 0; i < m_numArmies[enemyGroup]; i++) {
         army* enemy = &m_armies[enemyGroup][i];
@@ -1833,7 +1835,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
             continue;
         if (enemy->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
-        if (estimate->m_simulated && enemy->getTotalHitPoints(1) == 0)
+        if (estimate.m_simulated && enemy->getTotalHitPoints(1) == 0)
             continue;
         if (currentArmy->getSpeed() == 0 || currentArmy->getSpellTime(72)) {
             const pathCell* stand = g_searchArray->getHex(enemy->m_gridIndex);
@@ -1853,11 +1855,11 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                 && !enemy->is(creatureMultiHeaded)) {
             const pathCell* reach = g_searchArray->getHex(enemy->m_gridIndex);
             if (reach->m_cost <= currentArmy->getSpeed())
-                change = getAttackChange(currentArmy, enemy, *estimate);
+                change = getAttackChange(currentArmy, enemy, estimate);
         }
 
         type_AI_attack_hex_chooser chooser(currentArmy, enemy, enemyAttacks,
-                                           g_searchArray, estimate);
+                                           g_searchArray, &estimate);
         if (!chooser.findAttackHex())
             continue;
         if (!currentArmy->cannotAttack()) {
@@ -1866,7 +1868,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                 const pathCell* attackCell = g_searchArray->getHex(chooser.getBestHex());
                 distance = attackCell->m_cost;
             }
-            change += estimate->getSimpleAttackEffect(*(currentArmy), *(enemy), 0, distance);
+            change += estimate.getSimpleAttackEffect(*(currentArmy), *(enemy), 0, distance);
         }
 
         if (chooser.getHexValue() <= 0 || currentArmy->is(creatureSummoned)
@@ -1878,7 +1880,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                 isBlockingAction = 1;
                 change = chooser.getHexValue();
             }
-        } else if (change < 0 && hasRangedAdvantage(*estimate)) {
+        } else if (change < 0 && hasRangedAdvantage(estimate)) {
             change = chooser.getHexValue();
             isBlockingAction = 1;
         } else {
@@ -1924,9 +1926,9 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
         bestValue = score / bestTime;
     }
 
-    *actionValue = max(bestValue, bestHexValue);
+    actionValue = max(bestValue, bestHexValue);
     if (teleport) {
-        if (bestTarget != 0 && *actionValue >= 0) {
+        if (bestTarget != 0 && actionValue >= 0) {
             m_nextAction = 6;
             m_nextActionExtra = bestHex;
             m_nextActionGridIndex = bestTarget->m_gridIndex;
@@ -1935,15 +1937,15 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
         m_nextAction = 3;
         return 1;
     }
-    if (!estimate->m_simulated && !m_creaturePlacement
-            && chooseSpellAction(currentArmy, actionValue, estimate))
+    if (!estimate.m_simulated && !m_creaturePlacement
+            && chooseSpellAction(currentArmy, &actionValue, &estimate))
         return 1;
     if (bestIsBlockingAction) {
-        *actionValue = bestHexValue;
+        actionValue = bestHexValue;
         if (bestHex == currentArmy->m_gridIndex)
             return 0;
         moveToward(currentArmy, bestHex, enemyAttacks,
-                    static_cast<unsigned char>(!estimate->m_simulated
+                    static_cast<unsigned char>(!estimate.m_simulated
                                                && bestTime > 1));
         return 1;
     }
@@ -1975,23 +1977,23 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
             || (bestValue < 0 && bestValue < bestHexValue
                 && !currentArmy->is(creatureSummoned)
                 && (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[ourGroup])
-                && hasRangedAdvantage(*estimate))) {
-        *actionValue = 0;
-        if (!estimate->m_simulated
+                && hasRangedAdvantage(estimate))) {
+        actionValue = 0;
+        if (!estimate.m_simulated
                 && getAreaEffect(enemyGroup, currentArmy,
                                    markedEnemies,
-                                   *estimate) == 0
-                && attemptShooterDefense(currentArmy, g_searchArray, estimate))
+                                   estimate) == 0
+                && attemptShooterDefense(currentArmy, g_searchArray, &estimate))
             return 1;
         if (bestTarget == 0) {
-            if (!estimate->m_simulated
+            if (!estimate.m_simulated
                     && chooseToRun(currentArmy, enemyAttacks, g_searchArray))
                 return 1;
             return 0;
         }
     }
 
-    *actionValue = bestValue;
+    actionValue = bestValue;
     if (bestTime <= 1 && !m_creaturePlacement) {
         m_nextActionExtra = bestHex;
         m_nextAction = 6;
@@ -2003,7 +2005,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     // Retail merges an integer 0/1 argument before this retained call.
     // Byte and bool carriers change the expansion decision elsewhere in
     // this body; the ordinary int closes Windows without removing helpers.
-    int shouldMoveToward = !estimate->m_simulated && bestTime > 1;
+    int shouldMoveToward = !estimate.m_simulated && bestTime > 1;
     moveToward(currentArmy, bestHex, enemyAttacks,
                shouldMoveToward);
     return 1;
@@ -2020,7 +2022,7 @@ long combatManager::chooseMeleeAction(const army* currentArmy, bool teleport, bo
     findMoveOrder(0);
     findAITargets(side, currentArmy, 1, &data, 0);
     long actionValue = 0;
-    if (chooseMeleeTarget(currentArmy, teleport, &actionValue, &data))
+    if (chooseMeleeTarget(currentArmy, teleport, actionValue, data))
         return actionValue;
     if (!simulated && chooseSpellAction(currentArmy, &actionValue, &data))
         return actionValue;

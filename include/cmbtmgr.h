@@ -1394,10 +1394,10 @@ private:
     unsigned char chooseCreatureSpell(const army* currentArmy,
                                         long& bestValue,
                                         type_AI_combat_parameters& estimate);  // 0x420d20
-    unsigned char chooseMeleeTarget(const army* currentArmy,
-                                      unsigned char teleport,
-                                      long* actionValue,
-                                      type_AI_combat_parameters* estimate);  // 0x421680
+    bool chooseMeleeTarget(const army* currentArmy,
+                           bool teleport,
+                           long& actionValue,
+                           type_AI_combat_parameters& estimate);  // 0x421680
     unsigned char chooseResurrectAction(
         const army* currentArmy, long& bestValue,
         type_AI_combat_parameters& estimate);  // 0x421000
