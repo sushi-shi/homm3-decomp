@@ -3204,8 +3204,8 @@ std::string hero::getMoraleDescription() const
 // hero::GetLuck's own arm, which calls it.
 
 // DC hero.cpp:3028 and :3149 name the text and town helpers. Preserve both.
-// The mist rung uses append(const char*); its explicit strlen/append expansion
-// scored 79.96%. The ordinary overload restores Windows exact bytes.
+// DC's original character-pointer operator+= public also owns the mist rung;
+// Mac expands its append operation. Keep that source boundary consistently.
 VA(0x004dcac0, 0x7E0)
 DC_ADDRESS(0x0ce648, 0x3f2)
 MAC_ADDRESS(0x0f8ea8, 0x5d4)  // anchor-caller (armyGroup::get_luck_description)
@@ -3280,7 +3280,7 @@ std::string hero::getLuckDescription() const
         luck++;
     }
     if (m_flags & 0x10000) {
-        result.append(g_luckInfo[14]);
+        result += g_luckInfo[14];
         luck++;
     }
 
