@@ -335,11 +335,13 @@ void CHotSeatDlg::updateOK()
 
 // Original: DeleteTempSaveGame; multiplayerwindow.cpp:872, dc 0xffb40.
 // DC builds the same RMT path but elides deletion; Complete calls DeleteFileA.
+// DC spells the comparison strnicmp; Windows calls LIBCMT's _strnicmp at
+// 0x6260c0. Preserve that external ABI spelling in the expanded constructor.
 MAC_ADDRESS(0x219e54, 0x94)
 void deleteTempSaveGame(const char* filename)
 {
     char buffer[450];
-    if (!strnicmp(filename, "RMT", 3)) {
+    if (!_strnicmp(filename, "RMT", 3)) {
         sprintf(buffer, "%s%s", ".\\DATA\\", filename);
         DeleteFileA(buffer);
     }
@@ -388,7 +390,11 @@ int CHotSeatEdit::onKeyPress(message* msg)
 // DC's derived member types make each push_back convert through a widget*
 // temporary, as retail does, and DC 938..940 guards the host button's push
 // like the hot-seat one. Together they raise this constructor from 83.92% to
-// 99.95%; the remaining differences are ICF-folded STL helper names.
+// 99.95%; proven STL fold identities and the native CRT comparison spelling
+// in deleteTempSaveGame close the remaining relocation differences.
+// Complete's three final registrations load +0xbc, +0xf4, then +0xf8 at
+// constructor +0x64f/+0x669/+0x683: player edit before the two headers.
+// Keep that retail widget order instead of the older DC header-first run.
 // DC multiplayerwindow.cpp:926/927 looks up the session and user headers.
 // Complete's existing getText helper is byte-flat under VC6 here.
 VA(0x0050e050, 0xCFC) MAC_ADDRESS(0x219ee8, 0xc3c)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims, dc 0xffb70
@@ -448,9 +454,9 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_widgets.push_back(m_join);
     m_widgets.push_back(m_search);
     m_widgets.push_back(m_cancel);
+    m_widgets.push_back(m_playerName);
     m_widgets.push_back(m_sessNameHeader);
     m_widgets.push_back(m_userNameHeader);
-    m_widgets.push_back(m_playerName);
 
     m_rolloverWidget = new textWidget(8, 465, 438, 18, 0, "smalfont.fnt",
                                     font::PRIMARY, 123, 1, 32, 8);

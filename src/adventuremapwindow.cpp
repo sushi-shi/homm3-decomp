@@ -550,15 +550,15 @@ void checkAdvCheatCode(std::string& chatString)
         cheatUsed = true;
         if (!currentHero->hasArtifact(ARTIFACT_AMMO_CART)) {
             type_artifact artifact(ARTIFACT_AMMO_CART);
-            currentHero->giveArtifact(&artifact, 0, 0);
+            currentHero->giveArtifact(artifact, 0, 0);
         }
         if (!currentHero->hasArtifact(ARTIFACT_BALLISTA)) {
             type_artifact artifact(ARTIFACT_BALLISTA);
-            currentHero->giveArtifact(&artifact, 0, 0);
+            currentHero->giveArtifact(artifact, 0, 0);
         }
         if (!currentHero->hasArtifact(ARTIFACT_FIRST_AID_TENT)) {
             type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
-            currentHero->giveArtifact(&artifact, 0, 0);
+            currentHero->giveArtifact(artifact, 0, 0);
         }
     } else if (code.compare(neoCode)
                && currentHero) {
@@ -619,7 +619,7 @@ void checkAdvCheatCode(std::string& chatString)
         currentHero->m_mana = 999;
         if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
             type_artifact spellbook(ARTIFACT_SPELLBOOK);
-            currentHero->giveArtifact(&spellbook, 1, 1);
+            currentHero->giveArtifact(spellbook, 1, 1);
         }
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++)
             currentHero->addSpell(spell);
@@ -637,13 +637,11 @@ void checkAdvCheatCode(std::string& chatString)
     }
 
     if (cheatUsed) {
-        // DC line 211 calls TTextResource::operator[] here. This canonical
-        // access is VC6 byte-flat while the string assignment remains the
-        // retail inliner difference.
+        // DC line211 calls TTextResource::operator[] here. Keep its canonical
+        // getText path together with the shared cheat marker: that boundary
+        // restores the retail string-assignment expansion in both handlers.
         chatString = (*g_generalText)[GENERAL_TEXT_CHEATER];
-        g_game->m_isCheater = 1;
-        if (g_inCampaign)
-            g_game->m_campaign.m_isCheater = 1;
+        markGameAsCheated();
     }
 }
 

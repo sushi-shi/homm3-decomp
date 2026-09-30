@@ -834,9 +834,14 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
                 powY = midY() - g_combatManager->m_powSprite->getHeight() / 2;
                 break;
             default:
-                // Faithful artifact: the fallback aims BOTH coordinates
-                // at the recycled x slot (retail reads [ebp+8] twice -
-                // the second read is not y).
+                // Retail reads the recycled flags slot [ebp+8] for BOTH
+                // coordinates here. Mac 0x4a570 and DC 0x44d0c bypass all
+                // coordinate assignments for modes outside 0..3. The
+                // table's modes 4/15 serve hex, projectile and tiled effects;
+                // known army-target callers use 0..3, but the generic army
+                // effect API has no placement guard. Keep the retail fallback
+                // until its source contract is resolved; the other platforms'
+                // unassigned coordinates do not establish Windows behavior.
                 powX = x;
                 powY = x;
                 break;
@@ -1526,13 +1531,17 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
 // apply. Returns 1 only for the three incapacitators - blind, stone,
 // paralyze - which is what suppresses the retaliation.
 
+// Original public ?check_special_attack@army@@QAA_NPAV1@@Z proves bool.
+// Retail and Mac return 0/1; doAttack forwards this result to its public
+// direction wrapper, where it suppresses retaliation.
+//
 // The dendroid arm is TWO add_item calls (the static above, inlined
 // whole with its std::find and its push_back's insert COMDAT), the
 // first one guarded: an already-bound target returns without
 // re-raising the pending spell or the mirror link.
 
 VA(0x00440500, 0x4B4) MAC_ADDRESS(0x04c16c, 0x440)  // dc 0x461a0
-unsigned char army::checkSpecialAttack(army* target)
+bool army::checkSpecialAttack(army* target)
 {
     switch (m_creatureType) {
     case CREATURE_GHOST_DRAGON:
@@ -1818,7 +1827,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                                                 getControllingSide(),
                                                 target, 1, 1))
                 g_combatManager->castSpell(SPELL_DISPEL_HELPFUL,
-                                           target->m_gridIndex, 1, -1, 0,
+                                           target->m_gridIndex, 1, -1, eMasteryNone,
                                            3);
             if (m_creatureType == CREATURE_DRAGON_FLY
                 && target->getSpellTime(SPELL_WEAKNESS) == 0) {
@@ -1827,7 +1836,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                         1, 1))
                     g_combatManager->castSpell(SPELL_WEAKNESS,
                                                target->m_gridIndex, 1, -1,
-                                               2, 3);
+                                               eMasteryAdvanced, 3);
             }
         }
         break;
@@ -1869,25 +1878,22 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // the blow incapacitated the defender (the special's own answer, or a
 // fresh full blind).
 
-// GetName expands at the two damage_message sites and stays a call at
-// the sprintf. Dreamcast records the three MarkCreatureEffect source calls
-// without intervening get_owning_side calls; passing each army's combatSide
-// and bitIndex members directly restores all three retail expansions.
+// Dreamcast records the three MarkCreatureEffect source calls; the
+// canonical helper is retained at each site and expands in retail. Mac
+// 0x4d3e8 expands the same owning-side accessor for this stack as for
+// the target and the stack behind it; keep that accessor at all three sites.
 
-// SPELLING LEDGER (0 -> 88.11 -> 93.99 -> 95.52 -> 98.59 -> 99.9616 -> 99.9962):
-// the two over-inlines take statement-scoped depth(0) pins with the call
-// hoisted to a local (striking_side, creature_name); the berserk criteria is
-// an IF/ELSE around two GetAttackMask calls, not a ternary. Naming the two
-// ComputeBaseDamage results and the adjacent hex fixes VC6's nested-argument
-// evaluation order. The DC prototype and retail's destination slots prove
-// do_multi_head_attack's fourth output is fire_shield_damage, not total_life.
-// A nested shield-charge scope gives retail's dead [ebp+8] parameter home;
-// spelling the null arm explicitly gives its fall-through and zero register.
-// The remaining instruction delta is the EDI/EBX reload order after
-// do_multi_head_attack; all 106 blocks, 58 branches and 31 calls agree.
+// Original public ?do_attack@army@@AAA_NPAV1@H@Z proves this overload is
+// private and returns bool. The direction overload is the public entry;
+// all calls to the single-swing helper remain inside army. Mac forwards
+// CheckSpecialAttack's byte result, replacing it with true for fresh blind.
+// The owning-side accessor restores the first retail address calculation
+// (Windows 99.9040 -> 99.9232). The integrated declaration context also
+// restores the reload order after DoMultiHeadAttack (99.9616%). Remaining
+// differences are address-register choices in two MarkCreatureEffect expansions.
 
 VA(0x00441610, 0x6A0) MAC_ADDRESS(0x04d288, 0x638)  // corroborates, dc 0x46bec
-unsigned char army::doAttack(army* armyToAttack, int direction)
+bool army::doAttack(army* armyToAttack, int direction)
 {
     unsigned attackMask;
     army* behind = 0;
@@ -1921,7 +1927,7 @@ unsigned char army::doAttack(army* armyToAttack, int direction)
         }
     }
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
+    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
     checkLuck();
     int damage = 0;
     int killed = 0;
@@ -1979,7 +1985,7 @@ unsigned char army::doAttack(army* armyToAttack, int direction)
     } else {
         m_showAttackFrameType = cs_attack_r;
     }
-    unsigned char special = checkSpecialAttack(armyToAttack);
+    bool special = checkSpecialAttack(armyToAttack);
     g_combatManager->powEffect(-1, 0);
     if (!is(creatureMultiHeaded)) {
         if (behind && behind->m_creatureType != armyToAttack->m_creatureType)
@@ -2029,7 +2035,7 @@ void army::doAttack(int direction)
         armyToAttack->m_residualBlindness = 1;
     if (armyToAttack->getSpellTime(74))
         armyToAttack->m_residualParalyze = 1;
-    unsigned char killed = doAttack(armyToAttack, direction);
+    bool killed = doAttack(armyToAttack, direction);
     m_joustBonus = 0;
     if (armyToAttack->m_numTroops > 0
         && armyToAttack->canRetaliate(*this) && !killed) {
@@ -2374,8 +2380,15 @@ unsigned char army::isEnemy(const army* arg) const
 
 // Mac retains this ordinary body at 0x4e840 between isEnemy and
 // enemyIsAdjacent; its cross-TU callers retain the same helper boundary.
+// DC public ?can_shoot@army@@QBA_NPBV1@@Z proves a native bool result.
+// DC line 2797 is a combined predicate; Complete adds the controller
+// artifact exemption before adjacency. Mac 0x4e8d0..0x4e940 retains the
+// intermediate boolean tests before the final forgetfulness condition.
+// A named result with guarded assignments leaves getControllingSide called
+// inside spellIsValidOnTarget's Bloodlust arm. The combined predicate lets
+// that nested helper expand as in retail; canShoot itself remains exact.
 VA(0x004428f0, 0xF6) MAC_ADDRESS(0x04e840, 0x118)  // dc 0x47c04
-unsigned char army::canShoot(const army* excluded) const
+bool army::canShoot(const army* excluded) const
 {
     if (m_creatureType == ARMY_CREATURE_BALLISTA
         || m_creatureType == ARMY_CREATURE_ARROW_TOWER)
@@ -2383,13 +2396,9 @@ unsigned char army::canShoot(const army* excluded) const
     if (!is(creatureShootingArmy) || m_monInfo.m_numShots <= 0)
         return 0;
     hero* controller = getController();
-    int canShoot = 1;
-    if (!controller
-        || !controller->isWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER)) {
-        if (enemyIsAdjacent(excluded))
-            canShoot = 0;
-    }
-    return canShoot
+    return ((controller
+             && controller->isWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER))
+            || !enemyIsAdjacent(excluded))
            && (m_spellInfluence[61] == 0 || m_forgetfulnessLevel < 2);
 }
 
@@ -2494,21 +2503,6 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
 // hitPoints`, which folds the wounded top creature back in as a
 // fraction. Both quotients divide the per-unit value, so the division
 // is written last in both arms.
-
-// WHY THE PRAGMA, AND WHY THIS BODY IS NOT CLAIMED. VC6 emits
-// can_shoot's out-of-line copy only when the TU holds a call it
-// declines to expand; retail's army.obj holds two, inside
-// spell_is_valid_on_target (0x447a80), a body this TU does not have.
-// `#pragma inline_depth(0)` here supplies one in its place, which is
-// what banks can_shoot at 92.0000 - but it also compiles THIS body in
-// its 49.64 call-form instead of the 81.97 expanded form retail has,
-// so it must not be claimed while the pragma stands. Everything from
-// the get_unit_combat_value call to the end - both floating-point
-// tails, the argument-slot homing, the /Op fild round trips - is
-// byte-identical in BOTH forms, so the body itself is right and only
-// the inliner stands between it and exact. Full matrix in can_shoot's
-// note above. RETIRING 0x447a80's reconstruction retires the pragma
-// and makes 0x442e60 claimable in the same change.
 
 VA(0x00442e60, 0x169) MAC_ADDRESS(0x04ecf8, 0x12c)  // dc 0x48168
 long army::getTotalCombatValue(long lowestAttack, long lowestDefense) const
@@ -3949,41 +3943,17 @@ void army::attackWall(TWallTargetId wall,
 // straight pair iMissileOffset[2]/[3], the aimed shot re-reads
 // [2*pose]/[2*pose+1] with the chosen pose.
 
-// SPELLINGS THE BYTES FORCED, each measured:
-//   - dy is declared AFTER the abs-of-dx branch (81.42 -> 86.67):
-//     startY must stay live across the jns or C2 folds it away.
-//   - both name ternaries are spelled `levelsDestroyed == 0 ?
-//     <miss form> : <hit form>` - the miss operand loads first and the
-//     je jumps the hit overwrite, retail's exact arm order.
-//   - the bounds stores and the clamp chain each go through their own
-//     block-scoped TDrawbridgeBounds& (87.47 -> 89.70): longhand
-//     spellings reload gpCombatManager after every aliasing store,
-//     where retail materialises each group's base exactly once.
-
-//   - the explosion bounds are computed BEFORE any of them is stored,
-//     and `bottom` is computed before `right` (89.6998 -> 91.4600).
-//     Retail's sequence is halfWidth / x / halfHeight / y / Height -
-//     halfHeight + targetY - 1 / Width - halfWidth + targetX - 1 and only
-//     then the four stores; with the last two written inline in the store
-//     statements VC6 interleaves compute and store and homes nothing.
-//     A note here recorded "precomputing right/bottom as named locals
-//     (89.47)" as rejected - it is the right edit in the wrong ORDER;
-//     `right` before `bottom` is what loses.
-
-// Residual (91.46%): the register-homing family. Retail's frame is
-// 0x34 with x/y/halfWidth homed in fresh bottom slots (-0x34/-0x30/
-// -0x14) and targetX carried to the explosion block in EBX; ours is now
-// 0x24 and still reloads three of them. Branch sequences AGREE (25/25).
-// DC type/source audit (2026-08-21): its `destX`, `destY` and `numFrames`
-// locals are `const int`, while `startY` is plain `int`. Restoring those
-// types and spelling numFrames as the required conditional initializer are
-// byte-flat at 91.460045%. Conventional release VERIFY is also byte-flat,
-// both for the wall-id domain at entry and `explosion != 0` immediately
-// before the bounds expressions. Neither source class creates retail's four
-// extra frame slots; the residual remains allocator state.
-// DC army.cpp:4715 retains the bitmap-forwarding CSprite::Draw overload.
-// Its canonical call is Windows byte-flat at 89.908%; keep the nested
-// bitmap accessors inside that wrapper, as in animateMissile.
+// DC's destX, destY and numFrames are const int; startY is plain int.
+// The abs-of-dx branch precedes dy's declaration. Both sample-name
+// ternaries load the miss operand before conditionally choosing the hit.
+// Cached-coordinate and scoped-bounds probes reached 91.46%; adding a
+// wall-domain or nonnull-explosion VERIFY was byte-flat in that model.
+// DC line 4699 instead records the direct rectangle constructor below.
+// Its repeated getters and ordinary temporary recover 96.0460% while
+// preserving all 53 block flows. The residual includes an EBX/EDI role
+// swap and one extra instruction in the sprite draw/update block.
+// DC army.cpp:4715 retains the bitmap-forwarding CSprite::Draw overload;
+// preserve its nested bitmap accessors, as in animateMissile.
 VA(0x00445fd0, 0x526) MAC_ADDRESS(0x051fa4, 0x64c)  // anchor-callee, dc 0x4aacc
 void army::attackWall(TWallTargetId wall, long levelsDestroyed)
 {
@@ -4071,19 +4041,14 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         levelsDestroyed == 0
             ? DATA_COMPGEN(0x00660a6c, rockSpriteName, "CSGRCK.DEF")
             : DATA_COMPGEN(0x00660a60, explosionSpriteName, "SGEXPL.DEF"));
-    long halfWidth = explosion->getWidth() / 2;
-    long x = targetX - halfWidth;
-    long halfHeight = explosion->getHeight() / 2;
-    long y = targetY - halfHeight;
-    // Mac 0x52378/0x5237c adds full dimensions to the computed origin.
-    long bottom = y + explosion->getHeight() - 1;
-    long right = x + explosion->getWidth() - 1;
-    {
-        TDrawbridgeBounds& bounds = g_combatManager->m_drawbridgeBounds;
-        // Mac 0x52374 builds the four-word rectangle on the stack and
-        // copies it into the manager bounds before clipping.
-        bounds = TDrawbridgeBounds(x, y, right, bottom);
-    }
+    // DC army.cpp:4699 calls each sprite dimension getter three times
+    // while forming the constructor arguments. Mac 0x52348..0x523b0
+    // expands them and copies the four-word temporary into the bounds.
+    g_combatManager->m_drawbridgeBounds = TDrawbridgeBounds(
+        targetX - explosion->getWidth() / 2,
+        targetY - explosion->getHeight() / 2,
+        targetX - explosion->getWidth() / 2 + explosion->getWidth() - 1,
+        targetY - explosion->getHeight() / 2 + explosion->getHeight() - 1);
     g_combatManager->m_drawbridgeBounds.clip(g_combatDrawLimits);
 
     for (long frame = 0; frame < explosion->getNumFrames(0); frame++) {
@@ -4635,13 +4600,15 @@ void army::faerieDragonSpell()
     }
 }
 
-// Mac retains a byte result for each target-dependent spell case: initialize
-// it from target presence, then assign the retained helper result directly.
-// The shared result reproduces the complete 824-byte Mac body. Windows still
-// retains six validSpellTargetArmy calls where retail merges them to one;
-// recover that shared tail while preserving the helpers and byte result.
+// DC public ?can_cast_spell@army@@QBA_NJ@Z proves native bool despite
+// the lowered T_UCHAR debug record. Keep ValidSpellTargetArmy's bool result.
+// Mac forwards that result after materializing target presence: spelling
+// `target != 0` avoids the extra byte narrowing from implicit pointer-to-bool.
+// This gives the exact 824-byte Mac body and VC6's shared validation tail.
+// VC6 result-form probes: named bool 76.10%, named byte 70.55%, conditional
+// return 79.67%; the explicit comparison with short-circuit AND is 100%.
 VA(0x004476c0, 0x3BA) MAC_ADDRESS(0x053bc8, 0x338)  // dc 0x4beec
-unsigned char army::canCastSpell(long hex) const
+bool army::canCastSpell(long hex) const
 {
     if (m_monInfo.m_hasSpell == 0)
         return 0;
@@ -4650,7 +4617,6 @@ unsigned char army::canCastSpell(long hex) const
     if (!combatManager::validHex(hex))
         return 0;
     army* target = g_combatManager->m_cells[hex].getArmy();
-    unsigned char canCast;
     switch (m_creatureType) {
     case CREATURE_ARCHANGEL:
     case ARMY_CREATURE_PIT_LORD:
@@ -4658,43 +4624,29 @@ unsigned char army::canCastSpell(long hex) const
     case CREATURE_MASTER_GENIE:
         return target && getValidCaliphSpells(target) > 0;
     case CREATURE_FAERIE_DRAGON:
-        canCast = target != 0;
-        if (canCast)
-            canCast = g_combatManager->validSpellTargetArmy(
+        return target != 0
+            && g_combatManager->validSpellTargetArmy(
                 m_faerieDragonSpell, getControllingSide(), target, 1, 1);
-        return canCast;
     case CREATURE_STORM_ELEMENTAL:
-        canCast = target != 0;
-        if (canCast)
-            canCast = g_combatManager->validSpellTargetArmy(
+        return target != 0
+            && g_combatManager->validSpellTargetArmy(
                 SPELL_PROTECTION_FROM_AIR, getControllingSide(), target, 1, 1);
-        return canCast;
     case CREATURE_ICE_ELEMENTAL:
-        canCast = target != 0;
-        if (canCast)
-            canCast = g_combatManager->validSpellTargetArmy(
-                SPELL_PROTECTION_FROM_WATER, getControllingSide(), target,
-                1, 1);
-        return canCast;
+        return target != 0
+            && g_combatManager->validSpellTargetArmy(
+                SPELL_PROTECTION_FROM_WATER, getControllingSide(), target, 1, 1);
     case CREATURE_ENERGY_ELEMENTAL:
-        canCast = target != 0;
-        if (canCast)
-            canCast = g_combatManager->validSpellTargetArmy(
+        return target != 0
+            && g_combatManager->validSpellTargetArmy(
                 SPELL_PROTECTION_FROM_FIRE, getControllingSide(), target, 1, 1);
-        return canCast;
     case CREATURE_MAGMA_ELEMENTAL:
-        canCast = target != 0;
-        if (canCast)
-            canCast = g_combatManager->validSpellTargetArmy(
-                SPELL_PROTECTION_FROM_EARTH, getControllingSide(), target,
-                1, 1);
-        return canCast;
+        return target != 0
+            && g_combatManager->validSpellTargetArmy(
+                SPELL_PROTECTION_FROM_EARTH, getControllingSide(), target, 1, 1);
     case CREATURE_OGRE_MAGE:
-        canCast = target != 0;
-        if (canCast)
-            canCast = g_combatManager->validSpellTargetArmy(
+        return target != 0
+            && g_combatManager->validSpellTargetArmy(
                 SPELL_BLOODLUST, getControllingSide(), target, 1, 1);
-        return canCast;
     }
     return 0;
 }
@@ -4733,7 +4685,7 @@ void army::castDemonicResurrect(long hex)
 // static helpers in its broader spell-validity worker, preserving the
 // CannotAttack and CanShoot boundaries inside the two capability scans.
 MAC_ADDRESS(0x054034, 0x134)
-static unsigned char groupHasMelee(long group)
+static bool groupHasMelee(long group)
 {
     long i = g_combatManager->m_numArmies[group];
     while (i-- > 0) {
@@ -4746,7 +4698,7 @@ static unsigned char groupHasMelee(long group)
 
 // Original: group_has_shooters; army.cpp:5451, dc 0x4c154.
 MAC_ADDRESS(0x054168, 0x134)
-static unsigned char groupHasShooters(long group)
+static bool groupHasShooters(long group)
 {
     long i = g_combatManager->m_numArmies[group];
     while (i-- > 0) {
@@ -4759,7 +4711,7 @@ static unsigned char groupHasShooters(long group)
 
 // Original: group_has_dragons; army.cpp:5469, dc 0x4c1b8.
 MAC_ADDRESS(0x05429c, 0x54)
-static unsigned char groupHasDragons(long group)
+static bool groupHasDragons(long group)
 {
     long i = g_combatManager->m_numArmies[group];
     while (i-- > 0) {
@@ -4777,7 +4729,7 @@ static unsigned char groupHasDragons(long group)
 // former statement-scoped inline-depth pins on pasted loop bodies.
 VA(0x00447a80, 0x429) MAC_ADDRESS(0x0542f0, 0x17c)  // anchor-callee (four call sites, one of them the
                        // tail-jump from 0x447eb0), retail-only slot
-unsigned char spellIsValidOnTarget(int spell, const army* target)
+bool spellIsValidOnTarget(int spell, const army* target)
 {
     if (target->getSpellTime(spell))
         return 0;
@@ -4819,7 +4771,7 @@ unsigned char spellIsValidOnTarget(int spell, const army* target)
 // Mac retains this helper at 0x5446c, between spellIsValidOnTarget and
 // isValidCaliphSpell, and the Enchanter calls it twice. Its name is inferred.
 MAC_ADDRESS(0x05446c, 0xac)
-static unsigned char enchanterSpellHasTarget(int spell)
+static bool enchanterSpellHasTarget(int spell)
 {
     long side = g_combatManager->m_currentSide;
     if (g_spellTraits[spell].m_karma < 0)
@@ -4833,8 +4785,11 @@ static unsigned char enchanterSpellHasTarget(int spell)
     return 0;
 }
 
+// DC public ?is_valid_caliph_spell@@YA_NW4SpellID@@PBVarmy@@@Z proves bool.
+// Mac 0x54548 forwards the worker result unchanged; the worker likewise
+// forwards the group predicates and canShoot without a truth conversion.
 VA(0x00447eb0, 0x21) MAC_ADDRESS(0x054518, 0x44)  // dc 0x4c210
-unsigned char isValidCaliphSpell(SpellID spell, const army* target)
+bool isValidCaliphSpell(SpellID spell, const army* target)
 {
     if (!(g_spellTraits[spell].m_flags & 0x800))
         return 0;
@@ -4872,10 +4827,8 @@ void army::castCaliphSpell(long hex)
     for (spell = 10; spell < 70; spell++) {
         if (isValidCaliphSpell(spell, target)) {
             if (--pick == 0) {
-                // mastery 2 is ADVANCED on ai_tactical.h's
-                // TSkillMastery ladder, spelled as a literal because
-                // that header is not in this TU's closure.
-                g_combatManager->castSpell(spell, hex, 1, -1, 2, 6);
+                // This creature cast uses advanced mastery (2).
+                g_combatManager->castSpell(spell, hex, 1, -1, eMasteryAdvanced, 6);
                 return;
             }
         }
@@ -4888,7 +4841,7 @@ MAC_ADDRESS(0x05469c, 0x64)
 void army::castFaerieDragonSpell(long hex)
 {
     if (combatManager::validHex(hex))
-        g_combatManager->castSpell(m_faerieDragonSpell, hex, 1, -1, 2,
+        g_combatManager->castSpell(m_faerieDragonSpell, hex, 1, -1, eMasteryAdvanced,
                                    m_numTroops * 5);
 }
 
@@ -4958,7 +4911,7 @@ unsigned char army::unnamed447fe0()
         playSample(SHOOT_SAMPLE);
         g_combatManager->powEffect(-1, 1);
     }
-    g_combatManager->castSpell(spell, -1, 1, -1, 3, 3);
+    g_combatManager->castSpell(spell, -1, 1, -1, eMasteryExpert, 3);
     return 1;
 }
 
@@ -5034,22 +4987,22 @@ void army::castSpell(long hex)
         break;
     case CREATURE_STORM_ELEMENTAL:
         g_combatManager->castSpell(SPELL_PROTECTION_FROM_AIR, hex, 1, -1,
-                                   2, 6);
+                                   eMasteryAdvanced, 6);
         break;
     case CREATURE_ICE_ELEMENTAL:
         g_combatManager->castSpell(SPELL_PROTECTION_FROM_WATER, hex, 1, -1,
-                                   2, 6);
+                                   eMasteryAdvanced, 6);
         break;
     case CREATURE_ENERGY_ELEMENTAL:
         g_combatManager->castSpell(SPELL_PROTECTION_FROM_FIRE, hex, 1, -1,
-                                   2, 6);
+                                   eMasteryAdvanced, 6);
         break;
     case CREATURE_MAGMA_ELEMENTAL:
         g_combatManager->castSpell(SPELL_PROTECTION_FROM_EARTH, hex, 1, -1,
-                                   2, 6);
+                                   eMasteryAdvanced, 6);
         break;
     case CREATURE_OGRE_MAGE:
-        g_combatManager->castSpell(SPELL_BLOODLUST, hex, 1, -1, 2, 6);
+        g_combatManager->castSpell(SPELL_BLOODLUST, hex, 1, -1, eMasteryAdvanced, 6);
         break;
     }
     waitSample(SHOOT_SAMPLE);

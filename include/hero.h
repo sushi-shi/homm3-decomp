@@ -852,7 +852,7 @@ public:
     void removeArtifact(long slot);
     // 0x004e2a00 - equips an artifact record into an ordinal slot;
     // negative slot selects the first legal position.
-    unsigned char equipArtifact(const type_artifact* artifact, long slot);
+    bool equipArtifact(const type_artifact& artifact, long slot);
     // 0x004dc070 - disassembles the combination artifact in one equipped
     // slot, then equips each component into its first legal position.
     void heroFn004DC070(long slot);
@@ -877,9 +877,9 @@ public:
     // 0x004e2f90 - inserts an artifact into the backpack, shifting the
     // tail up when the requested slot is occupied. `slot` < 0 means
     // "first free".
-    unsigned char addToBackpack(const type_artifact* artifact, long slot);
+    bool addToBackpack(const type_artifact& artifact, long slot);
     std::string getBackpackError(TArtifact artifact) const;
-    unsigned char giveArtifact(const type_artifact* artifact,
+    unsigned char giveArtifact(const type_artifact& artifact,
                                unsigned char announce,
                                unsigned char checkEnd);
     const char* heroFn004D8F70();

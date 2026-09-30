@@ -928,13 +928,13 @@ int recruitUnit::main(message& msg)
                     for (int i = 0; i < m_numberToBuy; i++) {
                         if (m_monsterType == CREATURE_BALLISTA) {
                             type_artifact artifact(ARTIFACT_BALLISTA);
-                            m_thisHero->giveArtifact(&artifact, 1, 1);
+                            m_thisHero->giveArtifact(artifact, 1, 1);
                         } else if (m_monsterType == CREATURE_FIRST_AID_TENT) {
                             type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
-                            m_thisHero->giveArtifact(&artifact, 1, 1);
+                            m_thisHero->giveArtifact(artifact, 1, 1);
                         } else if (m_monsterType == CREATURE_AMMO_CART) {
                             type_artifact artifact(ARTIFACT_AMMO_CART);
-                            m_thisHero->giveArtifact(&artifact, 1, 1);
+                            m_thisHero->giveArtifact(artifact, 1, 1);
                         }
                     }
                 } else if (m_currArmyGroup->canJoin(m_monsterType)) {

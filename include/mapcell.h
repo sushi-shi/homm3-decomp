@@ -805,6 +805,11 @@ SIZE(SecondarySkillData, 8);
 
 class BlackBoxData : public TreasureData {
 public:
+    // DC types 0x2f4a/0x63be name TSpellList and public Spells as a vector
+    // of enum SpellID. ESpellId owns that domain; the legacy SpellID alias
+    // is int and would select a different vector specialization.
+    typedef std::vector<ESpellId> TSpellList;
+
     unsigned char m_hasCustomTreasure;  // +0x4c
     int m_experienceBonus;  // +0x50
     int m_manaBonus;  // +0x54
@@ -816,7 +821,7 @@ public:
     // CodeView preserves vector<TArtifact> and vector<SpellID>.
     // loadBlackBox widens the serialized identifiers at the read boundary.
     std::vector<TArtifact> m_artifacts;  // +0x8c
-    std::vector<SpellID> m_spells;  // +0x9c
+    TSpellList m_spells;  // +0x9c
     armyGroup m_creatures;  // +0xac
 
     // loadBlackBoxList's resize temp proves the constructor: after the
@@ -896,7 +901,9 @@ public:
     {
         return 47 - y * 8 - x;
     }
-    CObjectType(TObjectType* source);  // 0x506080
+    // The table loader converts an existing record; no nullable source is
+    // used. Const-reference ownership is inferred; DC lacks this overload.
+    CObjectType(const TObjectType& source);  // 0x506080
     // The DC field list names every member of this record - ImageName,
     // Width, Height, then the FOUR 48-cell masks PlacementMask,
     // PassableMask, ShadowMask, TriggerMask, then Type/Extra/IsUnderlay -
@@ -927,10 +934,11 @@ public:
     // byte-proves objectType at 0x38 - retail inserted one 4-byte member
     // the DC record does not have, and this is it.
 
-    // The mask's MEANING is unproven and its name is deliberately ordinal:
-    // no serializer in this compiland reads or writes it, readObjectType
-    // included.
-    std::bitset<10> m_mask34;
+    // Complete conversion copies TObjectType's recommended-terrain mask
+    // here (Mac 0x128d44..0x128d6c). setObjectType uses it to choose a
+    // terrain-appropriate template. Map serialization omits this cache.
+    // Original member spelling is unknown.
+    std::bitset<10> m_recommendedTerrainMask;
     // loadObjectType stores one full dword at +0x38. A scalar preserves
     // that field and its single generated copy; no alternative view exists.
     TAdventureObjectType m_objectType;
@@ -1188,12 +1196,9 @@ class MonsterData {
 public:
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
     int m_resQty[7];
-    // Spelled int, not TArtifact, for the reason armyGroup::armies is
-    // spelled int: readMonsterData deserializes it from a one- or two-byte
-    // stream field and saveMonsterData narrows it back to a byte, so an
-    // enum here would put a cast on every crossing.  ARTIFACT_NONE still
-    // assigns.  The Dreamcast declarator's enum is preserved in the name.
-    int m_artifact;
+    // DC type 0x30cb records public TArtifact Artifact. The map and save
+    // formats encode different widths; decode those at the stream boundary.
+    TArtifact m_artifact;
     // E:\gamedcs\MapCell.h:735, dc 0xf4a50
     MonsterData() { m_artifact = ARTIFACT_NONE; }
 };
@@ -1342,7 +1347,7 @@ private:
 
 public:
     int loadBlackBoxList(TAbstractFile* infile, int saveVersion);
-    int loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+    int loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
                      int saveVersion);
     int loadMonsterList(TAbstractFile* infile);
     int loadSeerList(TAbstractFile* infile, int saveVersion);

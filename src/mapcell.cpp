@@ -1434,15 +1434,19 @@ int NewfullMap::loadTreasureList(TAbstractFile* infile)
 // CodeView proves this NewfullMap member. Complete expands the retained
 // callers; emission does not turn the source member into a file-static helper.
 // The record is a reference in the CodeView formal argument list.
+// DC stores both loadString and read results in count; the first result is
+// intentionally overwritten before the scalar read guard.
 MAC_ADDRESS(0x1212ac, 0xa0)
 int NewfullMap::loadTreasureData(TAbstractFile* infile, TreasureData& thisTreasure)
 {
-    game::loadString(infile, thisTreasure.m_message);
+    int count;
+    char charBuffer;
 
-    signed char value;
-    if (readValue(infile, value) < sizeof(value))
+    count = game::loadString(infile, thisTreasure.m_message);
+    count = readValue(infile, charBuffer);
+    if (count < sizeof(charBuffer))
         return -1;
-    thisTreasure.m_hasCustomGuardians = value != 0;
+    thisTreasure.m_hasCustomGuardians = charBuffer != 0;
     if (thisTreasure.m_hasCustomGuardians)
         thisTreasure.m_guardians.load(infile);
     return 0;
@@ -1727,13 +1731,15 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     if (count == 0) {
         // Dreamcast mapcell.cpp:1655 calls vector<SpellID>::clear here,
         // just as the two preceding empty-list arms do.
+        // Mac clear 0xbed64 is also called by the scholar spell-vector
+        // destructor 0xbe748; resize 0x128e9c is the same enum family.
         thisBox->m_spells.clear();
     } else {
         thisBox->m_spells.resize(count);
         for (i = 0; i < count; ++i) {
             if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisBox->m_spells[i] = value;
+            thisBox->m_spells[i] = H3_ENUM_DECODE(ESpellId, value);
         }
     }
 
@@ -1903,7 +1909,7 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 
     m_blackBoxes.resize(count);
     for (unsigned int i = 0; i < m_blackBoxes.size(); ++i) {
-        if (loadBlackBox(infile, &m_blackBoxes[i], saveVersion) < 0)
+        if (loadBlackBox(infile, m_blackBoxes[i], saveVersion) < 0)
             return -1;
     }
     return 0;
@@ -1920,107 +1926,127 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 
 // The three lists do not read alike, and the asymmetry is retail's:
 // secondary skills and spells come in as SIGNED bytes through checked
-// reads, while each artifact is an UNCHECKED one-byte read into a dword
-// local that is then masked - the same asymmetric artifact crossing
-// loadMonsterList has.
+// reads, while each artifact is an UNCHECKED unsigned byte. Mac 0x122a38
+// reads its separate +0x5c byte slot and uses lbz. VC6 widens this byte-local
+// access to a dword load and and 0xff, as retail does; those instructions
+// do not require an int local. The byte spelling retains Windows 91.4115%.
 
-// Native Mac reuses scalar homes +0x60/+0x5d across the resource and skill
-// reads; DC records one int_buffer and char_buffer. Sharing those readers
-// and the existing index raises Windows MAX 91.44 -> 96.15.
-// Routing all checked reads through the reference reader instead drops
-// this caller to 83.64% by changing nested vector expansion; retain its
-// shared scalar homes while investigating that remaining library boundary.
+// DC 0xef158 records the BlackBoxData reference and function-scope
+// int_buffer, short_buffer, char_buffer, count (read status), number (list
+// length), and x. Its stores distinguish status from the list length;
+// preserve those owners even where VC6 optimizes their assignments away.
+// Native Mac reuses scalar homes +0x60/+0x5d across resources and skills.
+// The Complete-only creature reader owns the versioned unchecked read;
+// keep that canonical helper rather than the older DC checked-byte tail.
+// Finite ownership/enum probes retained the same 91.41% residual; the DC
+// declaration-order variant is byte-flat. Secondary-skill resize expands
+// erase into copy/_Destroy where retail retains erase. Routing every read
+// through readValue lowers the caller to 83.58% through vector inlining.
 VA(0x00500430, 0x478) MAC_ADDRESS(0x122720, 0x49c)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
-int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
                              int saveVersion)
 {
-    signed char value;
-    int count;
-    int i;
-
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
-        return -1;
-    thisBox->m_hasCustomTreasure = value != 0;
-    if (thisBox->m_hasCustomTreasure) {
-        if (loadTreasureData(infile, *thisBox) != 0)
-            return -1;
-    }
-
+    char charBuffer;
+    short shortBuffer;
     int intBuffer;
-    if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
-        return -1;
-    thisBox->m_experienceBonus = intBuffer;
-    if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
-        return -1;
-    thisBox->m_manaBonus = intBuffer;
+    int count;
+    long number;
+    int x;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
-    thisBox->m_moraleBonus = value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
-        return -1;
-    thisBox->m_luckBonus = value;
-
-    for (i = 0; i < 7; ++i) {
-        if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
+    thisBox.m_hasCustomTreasure = charBuffer != 0;
+    if (thisBox.m_hasCustomTreasure) {
+        if (loadTreasureData(infile, thisBox) != 0)
             return -1;
-        thisBox->m_resQty[i] = intBuffer;
-    }
-    for (i = 0; i < 4; ++i) {
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
-            return -1;
-        thisBox->m_primarySkillBonus[i] = value;
     }
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&intBuffer, sizeof(intBuffer));
+    if (count < sizeof(intBuffer))
         return -1;
-    count = value;
-    thisBox->m_secondarySkills.resize(count);
-    for (i = 0; i < count; ++i) {
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
+    thisBox.m_experienceBonus = intBuffer;
+    count = infile->read(&intBuffer, sizeof(intBuffer));
+    if (count < sizeof(intBuffer))
+        return -1;
+    thisBox.m_manaBonus = intBuffer;
+
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
+        return -1;
+    thisBox.m_moraleBonus = charBuffer;
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
+        return -1;
+    thisBox.m_luckBonus = charBuffer;
+
+    for (x = 0; x < 7; ++x) {
+        count = infile->read(&intBuffer, sizeof(intBuffer));
+        if (count < sizeof(intBuffer))
+            return -1;
+        thisBox.m_resQty[x] = intBuffer;
+    }
+    for (x = 0; x < 4; ++x) {
+        count = infile->read(&charBuffer, sizeof(charBuffer));
+        if (count < sizeof(charBuffer))
+            return -1;
+        thisBox.m_primarySkillBonus[x] = charBuffer;
+    }
+
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
+        return -1;
+    number = charBuffer;
+    thisBox.m_secondarySkills.resize(number);
+    for (x = 0; x < number; ++x) {
+        count = infile->read(&charBuffer, sizeof(charBuffer));
+        if (count < sizeof(charBuffer))
             return -1;
         // Mac 0x12298c..0x1229d8 stores enum words directly after each read.
-        int skillType = value;
-        thisBox->m_secondarySkills[i].m_type =
-            H3_ENUM_DECODE(TSecondarySkill, skillType);
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
+        thisBox.m_secondarySkills[x].m_type =
+            H3_ENUM_DECODE(TSecondarySkill, charBuffer);
+        count = infile->read(&charBuffer, sizeof(charBuffer));
+        if (count < sizeof(charBuffer))
             return -1;
-        int skillLevel = value;
-        thisBox->m_secondarySkills[i].m_level =
-            H3_ENUM_DECODE(TSkillMastery, skillLevel);
+        thisBox.m_secondarySkills[x].m_level =
+            H3_ENUM_DECODE(TSkillMastery, charBuffer);
     }
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
-    count = value;
-    thisBox->m_artifacts.resize(count);
-    for (i = 0; i < count; ++i) {
-        int artifact;
-        infile->read(&artifact, sizeof(unsigned char));
-        thisBox->m_artifacts[i] = TArtifact(artifact & 0xff);
+    number = charBuffer;
+    thisBox.m_artifacts.resize(number);
+    for (x = 0; x < number; ++x) {
+        unsigned char artifact;
+        infile->read(&artifact, sizeof(artifact));
+        thisBox.m_artifacts[x] = TArtifact(artifact);
     }
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
-    count = value;
-    thisBox->m_spells.resize(count);
-    for (i = 0; i < count; ++i) {
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
+    number = charBuffer;
+    thisBox.m_spells.resize(number);
+    for (x = 0; x < number; ++x) {
+        count = infile->read(&charBuffer, sizeof(charBuffer));
+        if (count < sizeof(charBuffer))
             return -1;
-        thisBox->m_spells[i] = value;
+        thisBox.m_spells[x] = H3_ENUM_DECODE(ESpellId, charBuffer);
     }
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
-    count = value;
-    thisBox->m_creatures.initialize();
-    for (i = 0; i < count; ++i) {
-        thisBox->m_creatures.m_armies[i] =
+    number = charBuffer;
+    thisBox.m_creatures.initialize();
+    for (x = 0; x < number; ++x) {
+        thisBox.m_creatures.m_armies[x] =
             readSavedCreatureId(infile, saveVersion);
-        short troops;
-        if (infile->read(&troops, sizeof(troops)) < sizeof(troops))
+        count = infile->read(&shortBuffer, sizeof(shortBuffer));
+        if (count < sizeof(shortBuffer))
             return -1;
-        thisBox->m_creatures.m_numTroops[i] = troops;
+        thisBox.m_creatures.m_numTroops[x] = shortBuffer;
     }
     return 0;
 }
@@ -2085,9 +2111,15 @@ int NewfullMap::readSeerData(TAbstractFile* infile, CObject* seerObject)
 // but a secondary skill or a spell is drawn from a CANDIDATE LIST built on
 // the spot - every skill the scenario has not disabled, or every spell that
 // both belongs to a school and is not disabled - and then indexed by one
-// Random over the list's length.  That list is a std::vector<int> built
-// with push_back, which is why this body carries an EH frame and a vector
-// teardown on both arms.
+// Random over the list's length. Both lists own their vector teardown.
+// Mac retains distinct skill/spell vector families: push_back at 0x12a880
+// versus 0xbe580. The latter is shared with exchangeSpells, whose DC locals
+// prove vector<enum SpellID>. Use the existing ESpellId enum for that domain;
+// the legacy global SpellID alias still denotes int. TSecondarySkill owns
+// the skill candidates. Their enum iterators supply the appended values.
+// Both emitted enum insert bodies reproduce retail 0x54d120, including its
+// new/delete targets; vector<int>::insert instead has its separately
+// admitted identity at 0x404200. The caller's instructions match throughout.
 
 VA(0x00500b30, 0x2AE) MAC_ADDRESS(0x122f6c, 0x318)  // dc 0xefbb8
 int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
@@ -2127,8 +2159,10 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
 
     case const_scholar_secondary_skill:
         if (isRandom) {
-            std::vector<int> candidates;
-            for (int skill = 0; skill < 28; ++skill) {
+            std::vector<TSecondarySkill> candidates;
+            for (TSecondarySkill skill = eSecSkillPathfinding;
+                 skill < kNumSecSkills;
+                 skill = H3_ENUM_DECODE(TSecondarySkill, skill + 1)) {
                 if (!g_game->m_ssDisabled[skill])
                     candidates.push_back(skill);
             }
@@ -2141,8 +2175,10 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
 
     case const_scholar_spell:
         if (isRandom) {
-            std::vector<int> candidates;
-            for (int spell = 0; spell < 70; ++spell) {
+            std::vector<ESpellId> candidates;
+            for (ESpellId spell = SPELL_SUMMON_BOAT;
+                 spell < 70;
+                 spell = H3_ENUM_DECODE(ESpellId, spell + 1)) {
                 if (g_spellTraits[spell].m_schoolBits
                     && !g_game->m_spellDisabledInfo[spell])
                     candidates.push_back(spell);
@@ -2197,6 +2233,9 @@ static int g_shipyardOffsets[12][2] = {
 // gShipyardOffsets order must be water, unblocked, and either non-triggering
 // or a boat. Its coordinates are then copied into the ShipyardInfo overlay of
 // every shipyard cell in the object's three-wide horizontal footprint.
+// Mac 0x123324/0x1233ec/0x1234b8 expands the canonical cell/zCell chain.
+// The middle lookup copies the packed point before unpacking its coordinates,
+// preserving cell(type_point)'s by-value boundary.
 VA(0x00500de0, 0x239) MAC_ADDRESS(0x1232e8, 0x264)
 void NewfullMap::loadShipyards()
 {
@@ -2205,7 +2244,7 @@ void NewfullMap::loadShipyards()
     for (int z = 0; z < getNumLevels(); ++z) {
         for (int y = 0; y < g_mapHeight; ++y) {
             for (int x = 0; x < g_mapWidth; ++x) {
-                NewmapCell* cell = &m_cellData[(z * m_size + y) * m_size + x];
+                NewmapCell* cell = this->cell(x, y, z);
                 if (!cell->m_isTrigger || cell->m_type != SHIPYARD)
                     continue;
 
@@ -2216,8 +2255,7 @@ void NewfullMap::loadShipyards()
                     if (!newPoint.isValid())
                         continue;
 
-                    NewmapCell* boatCell = &m_cellData[
-                        (newPoint.m_z * m_size + newPoint.m_y) * m_size + newPoint.m_x];
+                    NewmapCell* boatCell = this->cell(newPoint);
                     if (boatCell->m_groundSet == eTerrainWater
                         && !boatCell->m_isBlocked
                         && (!boatCell->m_isTrigger
@@ -2225,8 +2263,7 @@ void NewfullMap::loadShipyards()
                         for (int checkX = x - 1; checkX <= x + 1; ++checkX) {
                             if (checkX < 0 || checkX >= g_mapWidth)
                                 continue;
-                            NewmapCell* shipyardCell =
-                                &m_cellData[(z * m_size + y) * m_size + checkX];
+                            NewmapCell* shipyardCell = this->cell(checkX, y, z);
                             if (shipyardCell->m_type != SHIPYARD)
                                 continue;
                             ShipyardInfo* shipyardInfo =
@@ -2481,7 +2518,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
             infile->read(&wide, sizeof(wide));
             artifact = static_cast<short>(LITTLE_ENDIAN_SHORT(wide));
         }
-        tempMonster.m_artifact = artifact;
+        tempMonster.m_artifact = H3_ENUM_DECODE(TArtifact, artifact);
 
         if (customIndex < 4000) {
             m_customMonsterList.push_back(tempMonster);
@@ -2573,7 +2610,7 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
         thisMonster.m_resQty[i] = value;
     }
 
-    thisMonster.m_artifact = readValue<unsigned char>(infile);
+    thisMonster.m_artifact = H3_ENUM_DECODE(TArtifact, readValue<unsigned char>(infile));
     if (thisMonster.m_artifact == (ARTIFACT_NONE & 0xff))
         thisMonster.m_artifact = ARTIFACT_NONE;
     return 0;
@@ -4012,27 +4049,32 @@ void NewfullMap::rebuildObjectTypeIndex()
 // aliasing/induction decisions despite having the same x86 width.
 // Both count reads use int_buffer (sp+0x34), then copy to numObjects (sp+0x3c).
 // count (sp+0x30) owns read lengths and object-reader status; int v (sp+0x2c)
-// scans invalid placements. This ownership and the two braced read guards
-// reproduce retail, including its distinct empty/nonempty vector cleanups.
-// Naming the canonical GetSprite result inside the sprite loop drops Windows
-// from 99.5485% to 98.34%; its direct vector assignment keeps the peak.
+// scans invalid placements. Keep the caller-owned count buffer and status
+// separate, including across the distinct empty/nonempty vector cleanups.
+// Mac's retained scalar decoding requires readLittleEndianValue at both reads.
+// VC6 currently retains the string constructor instead of expanding it to
+// _Tidy, and expands the first CObject-vector size call that retail retains.
+// Keeping the decode helper scores 93.7926%; direct native reads with the
+// same local ownership score 99.4554%. Explicit resize fill temporaries and
+// a native-forwarding helper body do not change this inline residual.
+// Naming the canonical GetSprite result inside the sprite loop also changes
+// the inline context; its direct vector assignment is the supported form.
 VA(0x00504470, 0x5C9) MAC_ADDRESS(0x127278, 0x440)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
 int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 {
-    g_invalidPlacementList.clear();
-
     int intBuffer;
     int numObjects;
     int count;
     int x;
-    count = infile->read(&intBuffer, sizeof(intBuffer));
-    if (count < sizeof(intBuffer)) {
-        return -1;
-    }
 
-    // Both Mac count fields are read through the same caller-owned integer
-    // slot, then byte-reversed before resize. Windows retail reads them
-    // directly (99.84%; the decoding wrapper gives 99.38%).
+    g_invalidPlacementList.clear();
+    count = readLittleEndianValue(infile, intBuffer);
+    if (count < sizeof(intBuffer))
+        return -1;
+
+    // Mac 0x1272bc..0x1272f0 and 0x127540..0x127588 read each count into
+    // the same caller-owned slot and decode it with lwbrx after the guard.
+    // The canonical reader keeps that count/decoding path on both platforms.
     numObjects = intBuffer;
     m_objectTypes.resize(numObjects);
     for (x = 0; x < m_objectTypes.size(); ++x) {
@@ -4064,19 +4106,17 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     }
 
     // DC NewfullMap::Read/Load (mapcell.cpp:640/704) release the sprite list
-    // through ResourceManager::Dispose. With the helper the new budgets cost
-    // read 99.94 -> 96.24 and load 99.91 -> 97.99 (retail keeps one more
-    // string _Tidy and vector size call); kept per the helper rule.
+    // through ResourceManager::Dispose. Mac 0x1274f8..0x12752c retains the
+    // nested virtual sprite-disposal call; keep the canonical wrapper here.
     for (x = 0; x < oldSprites.size(); ++x)
         ResourceManager::dispose(oldSprites[x]);
     oldSprites.clear();
 
     incProgressBar(1);
 
-    count = infile->read(&intBuffer, sizeof(intBuffer));
-    if (count < sizeof(intBuffer)) {
+    count = readLittleEndianValue(infile, intBuffer);
+    if (count < sizeof(intBuffer))
         return -1;
-    }
 
     numObjects = intBuffer;
     m_objects.resize(numObjects);
@@ -4144,21 +4184,25 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
 
 // Neither list read has the `count == 0 -> clear()` arm readTimedEventList
 // needs: both go straight into resize, which is loadBlackBox's shape.
-// DC mapcell.cpp:3974 names the shared loop counter `int x`; restoring that
-// signed local closes Complete's final error-cleanup block (61/61 CFG blocks).
+// DC mapcell.cpp:3974 names distinct int_buffer, count and x locals at
+// sp+0x20, sp+0x10 and sp+0x14. The status stores at 0xf31a8 and 0xf3202
+// precede their guards; Complete uses readValue over TAbstractFile here.
+// Keeping the read buffer separate from the status restores all 61 CFG blocks.
 
 VA(0x00504b70, 0x4E9) MAC_ADDRESS(0x1277f0, 0x2a8)  // dc 0xf318c
 int NewfullMap::loadMapObjects(TAbstractFile* infile)
 {
+    int intBuffer;
     int count;
-    if (readValue(infile, count) < sizeof(count))
+    int x;
+    count = readValue(infile, intBuffer);
+    if (count < sizeof(intBuffer))
         return -1;
 
-    m_objectTypes.resize(count);
-
-    int x;
+    m_objectTypes.resize(intBuffer);
     for (x = 0; x < m_objectTypes.size(); ++x) {
-        if (loadObjectType(infile, &m_objectTypes[x]) < 0)
+        count = loadObjectType(infile, &m_objectTypes[x]);
+        if (count < 0)
             return -1;
     }
 
@@ -4186,12 +4230,14 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
 
     incProgressBar(1);
 
-    if (readValue(infile, count) < sizeof(count))
+    count = readValue(infile, intBuffer);
+    if (count < sizeof(intBuffer))
         return -1;
 
-    m_objects.resize(count);
+    m_objects.resize(intBuffer);
     for (x = 0; x < m_objects.size(); ++x) {
-        if (loadObject(infile, &m_objects[x]) < 0)
+        count = loadObject(infile, &m_objects[x]);
+        if (count < 0)
             return -1;
         m_objects[x].m_animationOffset = static_cast<unsigned char>(random(0, 255));
     }
@@ -4544,9 +4590,9 @@ void NewfullMap::loadObjectTypeTemplates()
 
     for (unsigned int i = 0; i < objectTypeTable.m_objectTypes.size(); ++i) {
         TAdventureObjectType objectType =
-            objectTypeTable.m_objectTypes[i].m_objectType;
+            objectTypeTable.m_objectTypes[i].getObjectType();
         m_objectTypeIndex[objectType].push_back(
-            CObjectType(&objectTypeTable.m_objectTypes[i]));
+            CObjectType(objectTypeTable.m_objectTypes[i]));
     }
 }
 
@@ -4563,7 +4609,7 @@ CObjectType* NewfullMap::findObjectType(int objectType, int extra)
 
 // 0x505f20 (game::InsertObject's helper, declared game.h:466) reverse-scans
 // objectTypeIndex[objectType] for the record matching `objectIndex` (its
-// .extra) and, when terrain != -1, applicable to `terrain` (its mask_34 bit).
+// .extra) and, when terrain != -1, recommended for `terrain` (its mask bit).
 // If the matched record has no resolved objectTypes index yet (field_42 < 0),
 // it appends a copy to objectTypes and its sprite to sprites and records the
 // new index, then writes the resolved index into object->typeIndex.
@@ -4583,7 +4629,7 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
         if (m_objectTypeIndex[objectType][i].m_extra == objectIndex) {
             if (terrain == -1)
                 break;
-            if (m_objectTypeIndex[objectType][i].m_mask34[terrain])
+            if (m_objectTypeIndex[objectType][i].m_recommendedTerrainMask[terrain])
                 break;
         }
     }
@@ -4615,7 +4661,7 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // Controls: equivalent reversed-grid getBitPos arithmetic and signed/long
 // position locals produced no constructor gain across nine source states.
 // DC CObjectType fieldlist 0x309c (class 0x309b) declares only the generated
-// default/copy constructors (attributes 0x103), with no TObjectType* overload.
+// default/copy constructors (attributes 0x103), with no editor-template overload.
 // Lane A r4: retail CALLS bitset<48>::test for the draw and passable cells
 // and expands it (with _Xran) for shadow and trigger; set is always called.
 // Caller cb 454 floors the /Ob2 budget at 1000, so a direct depth-1 test
@@ -4631,32 +4677,38 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // more candidates after each test) and the terrain loop still calls
 // test<10> (52 < 58) and expands set<10> (155), the reverse of retail
 // (44.72%). Not adopted.
+// Canonical const cell queries now own each source mask lookup and its
+// coordinate mapping. Metadata queries and the const source contract recover
+// the retail test/set call decisions for all five masks (85.2364%). Control
+// flow agrees; remaining differences are register homes and spills. Template
+// mask and metadata storage is private; existing setters own their updates.
+// Const-reference input is inferred from the sole caller converting an
+// existing table record, with no writes or nullable-source path.
 VA(0x00506080, 0x1D4) MAC_ADDRESS(0x128be8, 0x1c4)  // sole caller NewfullMapFn_00505DA0 + advmgr_objects.h address, retail-only
-CObjectType::CObjectType(TObjectType* source)
+CObjectType::CObjectType(const TObjectType& source)
 {
-    m_imageName = source->getImageName();
-    m_width = source->getWidth();
-    m_height = source->getHeight();
+    m_imageName = source.getImageName();
+    m_width = source.getWidth();
+    m_height = source.getHeight();
 
     for (unsigned y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
             unsigned pos = getBitPos(x, y);
-            m_drawCells[pos] = source->m_imageInfo.m_drawMask.test(pos);
-            m_passableCells[pos] = source->m_passableMask.test(pos);
-            m_shadowCells[pos] = source->m_imageInfo.m_shadowMask.test(pos);
-            m_triggerCells[pos] = source->m_triggerMask.test(pos);
+            m_drawCells[pos] = source.isDrawCell(x, y);
+            m_passableCells[pos] = source.isPassableCell(x, y);
+            m_shadowCells[pos] = source.isShadowCell(x, y);
+            m_triggerCells[pos] = source.isTriggerCell(x, y);
         }
     }
 
-    // Mac 0x128d4c..0x128d6c tests and sets each bit through the same
-    // bitset<10> calls either way; keep the project terrain accessor
-    // (46.72%; the direct subscript reaches 61.04%).
+    // Mac 0x128d4c..0x128d6c tests and sets each terrain bit. The const
+    // source selects the read-only terrain query, without a mutable proxy.
     for (int terrain = 0; terrain < 10; terrain++)
-        m_mask34[terrain] = source->isRecommendedTerrain(terrain);
+        m_recommendedTerrainMask[terrain] = source.isRecommendedTerrain(terrain);
 
-    m_objectType = source->m_objectType;
-    m_extra = source->m_subtype;
-    m_suppressDraw = source->m_isUnderlay;
+    m_objectType = source.getObjectType();
+    m_extra = source.getSubtype();
+    m_suppressDraw = source.isUnderlay();
 }
 
 VA_COMPGEN(0x00506260, 0x38, VECTOR_DTOR, CObjectType)
@@ -4720,7 +4772,7 @@ VA_COMPGEN(0x0050a700, 0x17A, IMPLICIT_COPY_ASSIGN, TTimedEvent)
 VA_COMPGEN(0x0050a880, 0x1A2, IMPLICIT_COPY_ASSIGN, TTownEvent)
 VA_COMPGEN(0x0050aa30, 0x1CD, IMPLICIT_COPY_ASSIGN, TownExtra)
 // vector<TArtifact>::operator= is the first emitted owner of the body also
-// called through the byte-identical vector<int> specialization.
+// called through the byte-identical spell-vector specialization.
 VA_COMPGEN(0x0050ac00, 0x188, VECTOR_COPY_ASSIGN, TArtifact)
 VA_COMPGEN(0x0050ad90, 0x13, VECTOR_CAPACITY, SecondarySkillData)
 VA_COMPGEN(0x0050adb0, 0x2B, STD_COPY, SecondarySkillData)

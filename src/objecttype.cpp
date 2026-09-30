@@ -477,7 +477,7 @@ TObjectType& TObjectType::setImageName(
 
 VA(0x00514960, 0xAD) MAC_ADDRESS(0x223dcc, 0x80)
 const std::basic_string<char, std::char_traits<char>, std::allocator<char> >&
-TObjectType::getImageName()
+TObjectType::getImageName() const
 {
     // Bit 0 of 0x69cb70 guards the empty string; 0x514a10 releases it.
     DATA_COMPGEN_GUARD(0x0069cb70, emptyImageNameGuard, emptyImageName)
@@ -498,7 +498,7 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
     if (m_hasTrigger) {
         for (int y = 0;; ++y) {
             for (unsigned x = 0; x < 8; ++x) {
-                if (m_triggerMask[CObjectType::getBitPos(x, y)]) {
+                if (isTriggerCell(x, y)) {
                     m_triggerCell.m_x = x;
                     m_triggerCell.m_y = y;
                     return *this;
@@ -761,6 +761,12 @@ VA_COMPGEN(0x00515ca0, 0x27A, ISTREAM_IPFX, char)
 
 // COMDAT pairing: basic_ios<char>::setstate, agreement 1.000.
 VA_COMPGEN(0x00515f20, 0x26, BASIC_IOS_SETSTATE, char)
+
+// ctype<char>'s SDK cleanup, registered with atexit by its constructor and
+// the expanded constructor in use_facet. Both retail operands name 0x516060;
+// its 13-byte body loads _Cltab at 0x6ab1c4 and calls free at 0x6195e0.
+// The ordinary full-TU object emits the identical body and relocations.
+VA_COMPGEN(0x00516060, 0x0D, CTYPE_TERM, char)
 
 // COMDAT pairing: ctype<char>'s four case-conversion virtuals. The two
 // scalar bodies are byte-identical and so are the two range bodies; the CRT

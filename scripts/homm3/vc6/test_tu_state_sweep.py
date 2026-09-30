@@ -1,19 +1,82 @@
 from __future__ import annotations
 
 import unittest
+import json
 import tempfile
 import shutil
 import subprocess
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from homm3.match.status import MatchRow
 from homm3.vc6.tu_state_sweep import (
     _files_digest, _initial_include_insertion, _project_header_pool, affected_by_unit,
-    bank_rows, insertion_for, insert_variant, make_variants,
+    bank_rows, insertion_for, insert_variant, make_variants, _report_scores,
+    _normalized_pair,
 )
 
 
 class TuStateSweepTests(unittest.TestCase):
+    def test_candidate_first_pass_includes_compiler_data_claims(self):
+        from homm3.vc6 import tu_state_sweep as sweep
+
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = Path(tmp) / "data.tsv"
+            manifest.write_text(
+                "object\tname\tsection_ordinal\tsection_offset\tsize\tstorage\tscope\tprovenance\n"
+                "example.c\tsemantic-data\t2\t0x10\t4\tdata\tlocal\tsource-DATA_COMPGEN:test\n")
+            expected = sweep.canon.load_compgen_data_claims(manifest, "example")
+            with patch.object(sweep.normalize, "DATA_MANIFEST", manifest), \
+                 patch.object(sweep, "_claims", return_value=((), frozenset())), \
+                 patch.object(sweep.normalize, "data_names_for_unit", return_value={}), \
+                 patch.object(sweep.canon, "canonicalize_coff",
+                              return_value=SimpleNamespace(data=b"normalized")) as canonicalize:
+                self.assertEqual(sweep._first_pass("example", b"raw"), b"normalized")
+                canonicalize.assert_called_once_with(
+                    b"raw", (), expected, compgen_accounted=frozenset(),
+                    unit="example", data_names={})
+
+    def test_candidate_uses_complete_shared_pair_pipeline(self):
+        from homm3.vc6 import tu_state_sweep as sweep
+
+        plan = SimpleNamespace(unit="example", target_first=b"retail-first")
+        with patch.object(sweep, "_first_pass", return_value=b"candidate-first"), \
+             patch.object(sweep.normalize, "_retail_symbol_rvas", return_value={}), \
+             patch.object(sweep.normalize, "retail_image_base", return_value=0x400000), \
+             patch.object(sweep.normalize, "canonicalize_pair",
+                          return_value=(b"paired-base", b"paired-target", {})) as paired:
+            self.assertEqual(_normalized_pair(plan, b"raw-candidate"),
+                             (b"paired-base", b"paired-target"))
+            paired.assert_called_once_with(b"candidate-first", b"retail-first",
+                                           "example", {}, image_base=0x400000)
+
+    def test_candidate_report_uses_full_build_relocation_mode(self):
+        from homm3.build import configure
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            live = root / "build/objdiff"
+            live.mkdir(parents=True)
+            with patch.object(configure, "ROOT", root):
+                configure.write_objdiff({}, [{"unit": "example"}])
+            live_options = json.loads((live / "objdiff.json").read_text())["options"]
+            candidate = root / "candidate"
+            candidate.mkdir()
+            plan = SimpleNamespace(unit="example", scored=(("example", "body"),))
+
+            def report(command, **kwargs):
+                config = json.loads((candidate / "objdiff.json").read_text())
+                self.assertEqual(config.get("options"), live_options)
+                (candidate / "report.json").write_text(json.dumps({"units": [{
+                    "functions": [{"name": "body", "fuzzy_match_percent": 98.0}]
+                }]}))
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with patch("homm3.vc6.tu_state_sweep.subprocess.run", side_effect=report):
+                self.assertEqual(_report_scores(plan, b"base", b"target", candidate),
+                                 {"body": 98.0})
+
     def test_groups_every_numeric_max_below_hist(self):
         rows = {
             ("a", "low"): MatchRow(80, 90, 100),

@@ -112,6 +112,14 @@
                  anyhow::bail!("overlapping data manifest definitions");
              }
          }
+@@ -298,7 +323,6 @@
+     }
+
+-    #[cfg(test)]
+     pub fn definitions(&self) -> &[DataDefinition] {
+         &self.definitions
+     }
+
 @@ -609,4 +634,18 @@
          assert_eq!(emission[0].symbol_name.as_bytes(), b"later");
          assert_eq!(emission[1].symbol_name.as_bytes(), b"table");
@@ -341,7 +349,7 @@
              name: definition.symbol_name.as_bytes().to_vec(),
              value: offset.offset,
              size: definition.size.to_u64(),
-@@ -1038,6 +1044,30 @@
+@@ -1038,5 +1044,29 @@
              section: object::write::SymbolSection::Section(offset.section_id),
              flags: object::SymbolFlags::None,
          });
@@ -371,3 +379,115 @@
 +        }
          Ok(())
      }
+--- a/src/relocs.rs
++++ b/src/relocs.rs
+@@ -137,6 +137,30 @@
+     }
+
+     Ok(Some((alias.addend, alias.owner)))
++}
++
++// An alias selects a source owner, even when the target is a one-past or
++// field-past-end loop bound. If that owner has an admitted definition, reference
++// it rather than fabricating a second four-byte definition under the same name.
++// resolve_manifest_alias already proves the PDB owner and wrapping RVA sum;
++// require the data manifest to agree on both its base address and identity.
++fn alias_data_kind(
++    definitions: &[crate::data_manifest::DataDefinition],
++    owner: RawString<'static>,
++    addend: u32,
++    target_rva: usize,
++    is_static: bool,
++) -> RelocKind<'static> {
++    let owner_rva = (target_rva as u32).wrapping_sub(addend) as usize;
++    if definitions.iter().any(|definition|
++        definition.rva == owner_rva && definition.symbol_name == owner)
++    {
++        RelocKind::ReviewedData { symbol: owner }
++    } else if is_static {
++        RelocKind::ConjuredStatic { symbol: owner, target_rva }
++    } else {
++        RelocKind::ConjuredConstant { symbol: owner, target_rva }
++    }
+ }
+
+ #[derive(Copy, Clone)]
+@@ -220,17 +244,7 @@
+         reloc_rva,
+         target_rva,
+     )? {
+-        let kind = if is_static {
+-            RelocKind::ConjuredStatic {
+-                symbol: owner,
+-                target_rva,
+-            }
+-        } else {
+-            RelocKind::ConjuredConstant {
+-                symbol: owner,
+-                target_rva,
+-            }
+-        };
++        let kind = alias_data_kind(data_manifest.definitions(), owner, addend, target_rva, is_static);
+         return Ok(Some((kind, addend)));
+     }
+
+@@ -725,10 +739,7 @@
+                 coff_data_reloc.copy_from_slice(&addend.to_le_bytes());
+                 relocs_rva.insert(
+                     reloc_rva,
+-                    RelocKind::ConjuredConstant {
+-                        symbol: owner,
+-                        target_rva,
+-                    },
++                    alias_data_kind(data_manifest.definitions(), owner, addend, target_rva, false),
+                 );
+                 return Ok(());
+             }
+@@ -807,10 +818,7 @@
+                 coff_data_reloc.copy_from_slice(&addend.to_le_bytes());
+                 relocs_rva.insert(
+                     reloc_rva,
+-                    RelocKind::ConjuredStatic {
+-                        symbol: owner,
+-                        target_rva,
+-                    },
++                    alias_data_kind(data_manifest.definitions(), owner, addend, target_rva, true),
+                 );
+                 return Ok(());
+             }
+@@ -1101,4 +1109,34 @@
+             .to_string();
+         assert!(error.contains("RVA extent overflows"));
+     }
+-}
++    #[test]
++    fn admitted_alias_owner_is_referenced_for_interior_and_bound_addresses() {
++        use crate::data_manifest::{DataDefinition, DataScope, DataStorage};
++        let owner = RawString::from(&b"table"[..]);
++        for storage in [DataStorage::Data, DataStorage::Rdata, DataStorage::Bss] {
++            let definitions = [DataDefinition {
++                symbol_name: owner, object: b"owner.c", rva: 0x4000, size: 16,
++                storage, alignment: 4, section_ordinal: None, section_offset: None,
++                scope: DataScope::External,
++            }];
++            // Start, interior, one-past, field-past-end and negative offset.
++            for addend in [0u32, 4, 16, 20, (-4i32) as u32] {
++                let target = 0x4000u32.wrapping_add(addend) as usize;
++                for is_static in [false, true] {
++                    assert!(matches!(alias_data_kind(&definitions, owner, addend, target, is_static),
++                        RelocKind::ReviewedData { symbol } if symbol == owner));
++                }
++            }
++            // A coincident name or a containing definition is not enough.
++            assert!(matches!(alias_data_kind(&definitions, owner, 0, 0x4004, true),
++                RelocKind::ConjuredStatic { .. }));
++            assert!(matches!(alias_data_kind(&definitions, RawString::from(&b"other"[..]), 0, 0x4000, false),
++                RelocKind::ConjuredConstant { .. }));
++        }
++        assert!(matches!(alias_data_kind(&[], owner, 4, 0x4004, true),
++            RelocKind::ConjuredStatic { .. }));
++        assert!(matches!(alias_data_kind(&[], owner, 4, 0x4004, false),
++            RelocKind::ConjuredConstant { .. }));
++    }
++
++}

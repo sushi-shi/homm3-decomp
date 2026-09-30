@@ -1507,22 +1507,25 @@ public:
     void demonicResurrection(const army* caster, army* target);
     void removeCorpse(army* corpse);
     void removeCorpse(hexcell* hex, long side, long slot);  // 0x5a7320
-    unsigned char hasValidSpellTarget(SpellID spellId, long mastery,
-                                      long castingSide,
-                                      unsigned char firstTarget,
-                                      long creatureSpell);  // 0x5a40d0
+    // DC public symbols encode firstTarget, redirected and validation results
+    // as native bool (_N); the lowered debug records spell them T_UCHAR.
+    // Keep creatureSpell integral for Complete's artifact caster value 2.
+    bool hasValidSpellTarget(SpellID spellId, TSkillMastery mastery,
+                             long castingSide,
+                             bool firstTarget,
+                             long creatureSpell);  // 0x5a40d0
     // 0x5a39c0 and its 0x5a40d0 driver. HasValidSpellTarget sweeps the
     // 187-cell grid and answers whether ANY cell passes ValidSpellTarget;
     // the two share every parameter but the cell index, which is what
     // fixes the parameter ORDER of the callee from the caller's push
     // sequence. Both parameter lists are the DC roster's
-    // (spells.cpp:2645 / 3078); `mastery` is their TSkillMastery,
-    // spelled long here for the same reason mark_area_effect's is - the
-    // typedef lives in the header that includes this one.
-    unsigned char validSpellTarget(SpellID spellId, long mastery,
-                                   long targetIndex, long castingSide,
-                                   unsigned char firstTarget,
-                                   long creatureSpell);  // 0x5a39c0
+    // (spells.cpp:2645 / 3078); DC spells mastery as TSkillMastery.
+    // Hero getSpellLevel already returns this enum; callers forward it
+    // directly, including eMasteryExpert for the artifact casts.
+    bool validSpellTarget(SpellID spellId, TSkillMastery mastery,
+                          long targetIndex, long castingSide,
+                          bool firstTarget,
+                          long creatureSpell);  // 0x5a39c0
     // 0x5a7560, carcass in spells.cpp; declared here because
     // army::cast_spell's Archangel arm calls it (the carcass stub is a
     // good-enough callee - the reloc pairs).
@@ -1621,7 +1624,7 @@ public:
     // stays spells.obj's to reconstruct.
     void unnamed59FDE0(int x, int y, army* target);
     void spellTargetMessage(SpellID spellId, int targetIndex,
-                            unsigned char firstTarget);  // 0x5a8690
+                            bool firstTarget);  // 0x5a8690
     void doBolt(int handleResets, int sourceX, int sourceY, int destX,
                 int destY, int splitFrequency, int maxSplitLength,
                 int startThickness, int endThickness, int color,
@@ -1653,21 +1656,27 @@ public:
     static long getDistance(tagPOINT start, tagPOINT stop);
     // The integer-hex overload belongs to cmbtmgr.cpp (retail 0x469670).
     static long getDistance(long start, long stop);
-    unsigned char validSpellTargetArmy(SpellID spellId, int castingSide,
-                                       const army* targetArmy,
-                                       unsigned char firstTarget,
-                                       long creatureSpell) const;  // 0x5a3c80
+    // DC ?ValidSpellTargetArmy@combatManager@@QBA_NHHPBVarmy@@_N1@Z
+    // returns native bool; T_UCHAR is its lowered debug representation.
+    // Complete's creatureSpell is an integer: castSpell also forwards the
+    // artifact caster value 2, and spellCastWorkChance distinguishes == 1.
+    bool validSpellTargetArmy(SpellID spellId, int castingSide,
+                              const army* targetArmy,
+                              bool firstTarget,
+                              long creatureSpell) const;  // 0x5a3c80
+    // DC CastSpell declares monster_skill as TSkillMastery. Creature and
+    // artifact callers supply the same mastery domain as hero spell levels.
     void castSpell(SpellID spellId, int targetIndex,
                    int isMonsterSpell, int secondaryIndex,
-                   int monsterSkill, long monsterPower);
+                   TSkillMastery monsterSkill, long monsterPower);
     float spellCastWorkChance(SpellID spell, long side, const army* target,
-                              unsigned char redirected,
-                              unsigned char firstTarget,
+                              bool redirected,
+                              bool firstTarget,
                               long creatureSpell) const;
-    unsigned char spellCastWorks(SpellID spell, long side,
-                                 const army* target,
-                                 unsigned char redirected,
-                                 long creatureSpell) const;  // 0x5a8640
+    bool spellCastWorks(SpellID spell, long side,
+                        const army* target,
+                        bool redirected,
+                        long creatureSpell) const;  // 0x5a8640
     army* findResurrectionTarget(int armyGroup, int targetIndex,
                                    long creatureSpell);
     army* findAnimateDeadTarget(int armyGroup, int targetIndex);
@@ -1680,8 +1689,8 @@ private:
     // Declared beside the leaves it calls rather than at the end of the
     // class because this run of spells.obj leaves is already unconditional.
     army* findSpellTarget(SpellID spell, long side, long hex,
-                            unsigned char firstTarget,
-                            long creatureSpell);  // 0x5a3950
+                          bool firstTarget,
+                          long creatureSpell);  // 0x5a3950
 
 public:
     // WHO cast the spell ShowSpellMessage is about to announce. The DC
@@ -1849,8 +1858,8 @@ public:
                      town* rightTown, hero* rightHero,
                      armyGroup* rightArmyGroup, int x, int y, int seed,
                      unsigned char isSurrounded);
-    // DC ?NextArmy@combatManager@@QAA_N_N@Z - returns and takes _N,
-    unsigned char nextArmy(unsigned char checkingForBadMorale);
+    // Original public ?NextArmy@combatManager@@QAA_N_N@Z: bool result/flag.
+    bool nextArmy(bool checkingForBadMorale);
     void setNextArmy(int group, int index);
 
 private:

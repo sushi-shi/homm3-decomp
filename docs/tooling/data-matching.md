@@ -57,6 +57,12 @@ Vostok consumes `config/retail/relocs.tsv` through its native
 `--reloc-manifest` support. The reviewed alias table retains explicit owner and
 addend evidence. No pointer-shaped integer scan replaces those inputs.
 
+When an alias's owner name and base RVA agree with an admitted data definition,
+Vostok references that definition instead of fabricating a second four-byte
+datum with the same name. The alias retains its proven addend, including
+one-past, field-past-end and negative offsets. These references do not enlarge
+the owner's accounted extent. Unadmitted owners retain the existing fallback.
+
 `homm3.delink.reloc_pairing` generates relocation identities from paired code
 on every model run. A voter is a claimed function whose candidate body equals
 retail apart from relocated operands (same length, masked bytes and absolute
@@ -107,6 +113,16 @@ and named references match a known retail body, and a complete type-identified
 exception record points to it. Source/object receipts are checked again before
 publishing the alias. Ambiguous addresses remain unresolved. These aliases
 share the existing function entry and do not increase the function denominator.
+
+Reviewed anonymous-namespace paths also support exception **identity** proofs.
+Only the owning unit's entry in `config/retail/anon-ns-paths.tsv` may project a
+raw descriptor's encoded path to its retail spelling. The complete projected
+type/exception graph and folded function bodies must still match their bytes,
+named pointers and relocation sites unambiguously. Generated
+`address_identities.tsv` rows allow code references to compare by that proven
+address. They claim no storage: the raw descriptor can have different bytes
+and a different length, and raw exception-data accounting remains unchanged.
+Source, object and namespace-policy content is checked again after the proof.
 
 The CLI and GUI use the same patched objdiff core. `functionRelocDiffs = all`
 checks callee/data identity as well as values; absolute relocation addends also
@@ -313,7 +329,8 @@ format bounds but no pinned library reproduces are `import-structure`, with each
 reason in `data_coverage.json` `linker_structures`. In the pinned image these
 are the vendor DLLs (no pinned import libraries), the hints of every KERNEL32
 and USER32 import (0 in retail), the DLL spelling `KeRNeL32.dll`, and the
-descriptors' TimeDateStamp 0xad2b0000, none of which LINK writes; the
+descriptors' TimeDateStamp 0xad2b0000. These are not reproduced from the pinned
+link inputs; their producer and any shared edit history remain unresolved. The
 unreferenced string `GetSysteminfo` after the last record stays missing.
 
 Game `.CRT$XCU` entries are the words `__initterm` walks between the verified
@@ -572,9 +589,9 @@ the reviewed rows per proof class.
 
 The model and verification implementation was ported from local Gruntz revision
 `fead802f2`. Vostok remains pinned at `1393e24b4804cb357fdac147c68013f0aa5a9d95`;
-its patch adds Gruntz manifest schemas and COMDAT topology, preserving native
-relocation TSV handling. VC6-specific function/EH adapters and content-freshness
-checks remain in the shared comparison pipeline.
+its patch adds Gruntz manifest schemas, COMDAT topology and admitted alias-owner
+references, preserving native relocation TSV handling. VC6-specific function/EH
+adapters and content-freshness checks remain in the shared comparison pipeline.
 
 ## First integrated checkpoint
 

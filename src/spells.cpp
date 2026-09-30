@@ -257,7 +257,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     m_nextActionGridIndex = -1;
     m_nextActionGridIndex2 = -1;
 
-    int mastery = m_heroes[m_currentSide]->getSpellLevel(spellToCast,
+    TSkillMastery mastery = m_heroes[m_currentSide]->getSpellLevel(spellToCast,
                                                         m_magicTerrain);
     switch (spellToCast) {
     case SPELL_QUICKSAND:
@@ -503,9 +503,9 @@ static int updateSpellTarget(long hex)
     hero* castingHero = manager->m_heroes[manager->m_currentSide];
     int creatureSpell = manager->m_nextAction == AI_ORDER_CREATURE_SPELL;
     unsigned int spellFlags = g_spellTraits[spell].m_flags;
-    int mastery;
+    TSkillMastery mastery;
     if (!castingHero)
-        mastery = 0;
+        mastery = eMasteryNone;
     else
         mastery = castingHero->getSpellLevel(spell, manager->m_magicTerrain);
 
@@ -682,7 +682,12 @@ void combatManager::unnamed59FDE0(int x, int y, army* target)
 // merged-return / surviving-copy class docs/vc6 records for the retail CL
 // generation, and it is exactly what hero.cpp's THeroScreenWindow::
 // WindowHandler note calls "which member of the epilogue merge-set C2
-// emits in place".  No source bracketing reaches it.
+// emits in place". Tested scope-only probes did not change that pairing.
+// Named-call review: all 19 source ShowSpellMessage calls survive on Mac.
+// Windows keeps 16 sites versus retail's 17 after merging switch tails; this
+// is not expansion of the 0x999-byte helper. The Mac Bloodlust arm likewise
+// jumps to the mass arm's final DrawFrame at 0x192048. Keep those canonical
+// calls; only the finder calls are confirmed extra expansions in this family.
 // The frame is 0x80 against retail's 0x94.  The 0x14 is a SECOND TObstacle
 // stack slot: retail gives {QUICKSAND, LAND_MINE} [-0x90] and
 // {FORCE_FIELD, FIRE_WALL} [-0x5c], we coalesce all four onto [-0x8c].
@@ -700,7 +705,7 @@ void combatManager::unnamed59FDE0(int x, int y, army* target)
 VA(0x0059fe30, 0x2A4F) MAC_ADDRESS(0x190540, 0x29f4)  // retail largest-unadmitted row, dc 0x14f7dc
 void combatManager::castSpell(SpellID spellId, int targetIndex,
                               int isMonsterSpell,
-                              int secondaryIndex, int monsterSkill,
+                              int secondaryIndex, TSkillMastery monsterSkill,
                               long monsterPower)
 {
     const int otherSide = 1 - m_currentSide;
@@ -709,7 +714,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     hero* const otherHero = m_heroes[otherSide];
     const SSpellTraits* traits = &g_spellTraits[spellId];
 
-    int mastery;
+    TSkillMastery mastery;
     if (!isMonsterSpell) {
         mastery = castingHero->getSpellLevel(spellId, m_magicTerrain);
     } else {
@@ -805,7 +810,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         }
     }
 
-    unsigned char redirected;
+    bool redirected;
     if (secondaryIndex != -1 && spellId != SPELL_TELEPORT
         && spellId != SPELL_SACRIFICE) {
         spellEffect(g_spellTraits[SPELL_MAGIC_MIRROR].m_effect, target, 100,
@@ -824,7 +829,10 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // retail +0x4e2 corroborates the byte lifetime with `setle al; test al`.
     // Keeping the expression fused into this `if` makes VC6 branch directly
     // and pulls the expanded failure helper in front of the spell switch.
-    unsigned char spellWorks;
+    // SpellCastWorks' public _N contract supports the bool result/redirect
+    // locals. Restoring them leaves CUR 92.4343% unchanged; the source edit
+    // resets the older 93.9670% MAX. The two finder calls still expand.
+    bool spellWorks;
     if (isMonsterSpell == SPELL_CASTER_CREATURE || !target)
         spellWorks = 1;
     else
@@ -2255,8 +2263,8 @@ static int handleGetTeleportDestination(message& msg)
 // saved. Neither DC nor Mac shows an accessor or local that supplies the rest.
 VA(0x005a3950, 0x68) MAC_ADDRESS(0x194120, 0xd8)  // dc 0x152dec
 army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
-                                       unsigned char firstTarget,
-                                       long creatureSpell)
+                                     bool firstTarget,
+                                     long creatureSpell)
 {
     if (!validHex(hex))
         return 0;
@@ -2377,12 +2385,15 @@ army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
 // Mac retains findSpellTarget, validSpellTargetArmy and getSpellWallHex in
 // the same order as this source. DC's ValidHex, InInvisibleColumn and GridY
 // audit leads are the lowercase canonical calls in the obstacle arms below.
+// Native bool result/firstTarget contracts preserve CUR 73.6540% and reset
+// the earlier 96.5992% MAX. Explicit target-presence and bool parity-local
+// probes (four source states, one reproduced object) are byte-identical.
 VA(0x005a39c0, 0x2B4) MAC_ADDRESS(0x1941f8, 0x3a4)  // order-map+arity, dc 0x152edc
-unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
-                                              long targetIndex,
-                                              long castingSide,
-                                              unsigned char firstTarget,
-                                              long creatureSpell)
+bool combatManager::validSpellTarget(SpellID spellId, TSkillMastery mastery,
+                                     long targetIndex,
+                                     long castingSide,
+                                     bool firstTarget,
+                                     long creatureSpell)
 {
     if (!validHex(targetIndex))
         return 0;
@@ -2446,11 +2457,11 @@ unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
 }
 
 VA(0x005a3c80, 0x3A) MAC_ADDRESS(0x19459c, 0x3c)  // dc 0x153104
-unsigned char combatManager::validSpellTargetArmy(SpellID spellId,
-                                                  int castingSide,
-                                                  const army* targetArmy,
-                                                  unsigned char firstTarget,
-                                                  long creatureSpell) const
+bool combatManager::validSpellTargetArmy(SpellID spellId,
+                                         int castingSide,
+                                         const army* targetArmy,
+                                         bool firstTarget,
+                                         long creatureSpell) const
 {
     return spellCastWorkChance(spellId, castingSide, targetArmy, 0,
                                firstTarget, creatureSpell) > 0.0;
@@ -2597,10 +2608,10 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
 // CASTER'S OWN stacks: the spell is the one that walks from target to
 // target, so a friendly occupant is not an aim point.
 VA(0x005a40d0, 0x9B) MAC_ADDRESS(0x194a34, 0x114)  // dc 0x153580
-unsigned char combatManager::hasValidSpellTarget(SpellID spellId, long mastery,
-                                                 long castingSide,
-                                                 unsigned char firstTarget,
-                                                 long creatureSpell)
+bool combatManager::hasValidSpellTarget(SpellID spellId, TSkillMastery mastery,
+                                        long castingSide,
+                                        bool firstTarget,
+                                        long creatureSpell)
 {
     for (int hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
         if (inInvisibleColumn(hex))
@@ -4668,8 +4679,8 @@ void combatManager::earthquake(int level)
 VA(0x005a8090, 0x5A4) MAC_ADDRESS(0x199858, 0x5a0)  // dc 0x157354
 float combatManager::spellCastWorkChance(SpellID spell, long side,
                                          const army* target,
-                                         unsigned char redirected,
-                                         unsigned char firstTarget,
+                                         bool redirected,
+                                         bool firstTarget,
                                          long creatureSpell) const
 {
     const hero* const castingHero = m_heroes[side];
@@ -4808,10 +4819,10 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
 }
 
 VA(0x005a8640, 0x49) MAC_ADDRESS(0x199df8, 0x60)  // dc 0x157828
-unsigned char combatManager::spellCastWorks(SpellID spell, long side,
-                                            const army* target,
-                                            unsigned char redirected,
-                                            long creatureSpell) const
+bool combatManager::spellCastWorks(SpellID spell, long side,
+                                   const army* target,
+                                   bool redirected,
+                                   long creatureSpell) const
 {
     return sRandom(1, 100)
         <= static_cast<long>(spellCastWorkChance(
@@ -4827,7 +4838,7 @@ unsigned char combatManager::spellCastWorks(SpellID spell, long side,
 
 VA(0x005a8690, 0x2BD) MAC_ADDRESS(0x199e58, 0x384)  // dc 0x1578b4
 void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
-                                       unsigned char firstTarget)
+                                       bool firstTarget)
 {
     if (static_cast<const combatManager*>(this)->isQuickCombat())
         return;

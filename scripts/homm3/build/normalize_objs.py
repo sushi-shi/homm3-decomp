@@ -1448,6 +1448,50 @@ def _canonicalize_side(side: str, obj: Path, context=None) -> bool:
     return True
 
 
+def canonicalize_pair(base_payload: bytes, target_payload: bytes, unit: str,
+                      symbol_rvas, *, image_base=None, identities=None
+                      ) -> tuple[bytes, bytes, Counter]:
+    """Apply the shared full-build and candidate-search paired passes."""
+    counts: Counter = Counter()
+    padded, count = _retain_matching_target_padding(
+        base_payload, target_payload)
+    counts["retained"] += count
+    paired_base, base_literal_count = \
+        _canonicalize_except_list_literals(
+            padded, target_payload)
+    counts["literal"] += base_literal_count
+    paired_target, literal_count, aggregate_count = \
+        _canonicalize_equivalent_relocations(
+            paired_base, target_payload, symbol_rvas,
+            image_base=retail_image_base() if image_base is None else image_base)
+    counts["literal"] += literal_count
+    counts["aggregate"] += aggregate_count
+    from homm3.build import identity_relocations
+    if identities is None:
+        identities = (identity_relocations.load_identities(ADDRESS_IDENTITIES),
+                      identity_relocations.load_library_names(ADDRESS_IDENTITIES))
+    paired_base, paired_target, icf_count = _canonicalize_icf_aliases(
+        paired_base, paired_target, symbol_rvas, _icf_index(), _retail_twins(),
+        lambda name, rva: identity_relocations.resolve_name(
+            name, symbol_rvas, identities[0], unit) == rva)
+    counts["icf"] += icf_count
+    paired_target, address_count = _canonicalize_equivalent_data_addresses(
+        paired_base, paired_target, symbol_rvas)
+    counts["address"] += address_count
+    paired_base, paired_target, literal_sections = \
+        _canonicalize_zero_literal_sections(paired_base, paired_target)
+    counts["zero_literal"] += literal_sections
+    normalized, rewrites = _canonicalize_matching_eh_handler_owners(
+        paired_base, paired_target, symbol_rvas=symbol_rvas,
+        funclet_owners=_retail_funclet_owners())
+    counts["eh"] += len(rewrites)
+    paired_target, identity_count = identity_relocations.canonicalize(
+        normalized, paired_target, symbol_rvas, identities[0], unit=unit,
+        library_names=identities[1])
+    counts["identity"] += identity_count
+    return normalized, paired_target, counts
+
+
 def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None,
                identities=None) -> Counter:
     """The paired base/target passes for one unit (padding retention,
@@ -1491,48 +1535,11 @@ def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None,
             and not freshness_problems(normalized_target,
                                        required_inputs=target_stamp_inputs, context=context)):
         return counts
-    padded, count = _retain_matching_target_padding(
-        normalized_base.read_bytes(), normalized_target.read_bytes())
-    counts["retained"] += count
-    paired_base, base_literal_count = \
-        _canonicalize_except_list_literals(
-            padded, normalized_target.read_bytes())
-    counts["literal"] += base_literal_count
-    paired_target, literal_count, aggregate_count = \
-        _canonicalize_equivalent_relocations(
-            paired_base, normalized_target.read_bytes(), symbol_rvas,
-            image_base=retail_image_base() if image_base is None else image_base)
-    counts["literal"] += literal_count
-    counts["aggregate"] += aggregate_count
-    from homm3.build import identity_relocations
-    if identities is None:
-        identities = (identity_relocations.load_identities(ADDRESS_IDENTITIES),
-                      identity_relocations.load_library_names(ADDRESS_IDENTITIES))
-    paired_base, paired_target, icf_count = _canonicalize_icf_aliases(
-        paired_base, paired_target, symbol_rvas, _icf_index(), _retail_twins(),
-        lambda name, rva: identity_relocations.resolve_name(
-            name, symbol_rvas, identities[0], rel.stem) == rva)
-    counts["icf"] += icf_count
-    paired_target, address_count = _canonicalize_equivalent_data_addresses(
-        paired_base, paired_target, symbol_rvas)
-    counts["address"] += address_count
-    icf_count += address_count
-    paired_base, paired_target, literal_sections = \
-        _canonicalize_zero_literal_sections(paired_base, paired_target)
-    counts["zero_literal"] += literal_sections
-    icf_count += literal_sections
-    normalized, rewrites = _canonicalize_matching_eh_handler_owners(
-        paired_base, paired_target, symbol_rvas=symbol_rvas,
-        funclet_owners=_retail_funclet_owners())
-    counts["eh"] += len(rewrites)
-    paired_target, identity_count = identity_relocations.canonicalize(
-        normalized, paired_target, symbol_rvas, identities[0], unit=rel.stem,
-        library_names=identities[1])
-    counts["identity"] += identity_count
-    if count or base_literal_count or rewrites or icf_count:
-        normalized_base.write_bytes(normalized)
-    if literal_count or aggregate_count or icf_count or identity_count:
-        normalized_target.write_bytes(paired_target)
+    normalized, paired_target, counts = canonicalize_pair(
+        normalized_base.read_bytes(), normalized_target.read_bytes(), rel.stem,
+        symbol_rvas, image_base=image_base, identities=identities)
+    normalized_base.write_bytes(normalized)
+    normalized_target.write_bytes(paired_target)
     # Padding is a paired normalization decision, so the base copy is
     # stale whenever either raw input changes, even when this run found no
     # suffix to retain.

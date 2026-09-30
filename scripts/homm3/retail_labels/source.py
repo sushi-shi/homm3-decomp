@@ -341,6 +341,7 @@ CHAR_STREAM_MEMBERS = (
     # four and the retail callee (__Tolower / __Toupper) settles which pair
     # is which.
     ("?is@?$ctype@D", None, "ctype_is"),
+    ("?_Term@?$ctype@D@std@@", "KAXXZ", "ctype_term"),
     ("?do_tolower@?$ctype@D", "@MBEDD@Z", "ctype_do_tolower_char"),
     ("?do_tolower@?$ctype@D", "@MBEPBDPADPBD@Z", "ctype_do_tolower_range"),
     ("?do_toupper@?$ctype@D", "@MBEDD@Z", "ctype_do_toupper_char"),
@@ -438,14 +439,14 @@ CHAR_STREAM_MEMBER_KINDS = (
 COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STATIC_CTOR", "SCALAR_DELETING_DTOR",
                  "VECTOR_DELETING_DTOR", "DEFAULT_CTOR_CLOSURE",
-                 "VECTOR_DTOR", "VECTOR_SIZE",
+                 "VECTOR_DTOR", "VECTOR_SIZE", "VECTOR_BEGIN", "VECTOR_END",
                  "VECTOR_CAPACITY",
                  "VECTOR_CONSTRUCTOR_ITERATOR",
                  "VECTOR_RESIZE", "VECTOR_INSERT", "VECTOR_INSERT_SINGLE",
                  "VECTOR_INSERT_COUNT", "VECTOR_ERASE",
                  "VECTOR_DESTROY", "VECTOR_UCOPY", "VECTOR_UFILL",
                  "VECTOR_COPY_ASSIGN", "VECTOR_COPY_CTOR",
-                 "LIST_DTOR", "LIST_INSERT_SINGLE", "LIST_ERASE_ITERATOR",
+                 "LIST_DTOR", "QUEUE_LIST_DTOR", "LIST_INSERT_SINGLE", "LIST_ERASE_ITERATOR",
                  "LIST_ERASE_RANGE", "LIST_BUYNODE",
                  "BITSET_TIDY", "BITSET_CTOR",
                  "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
@@ -1118,6 +1119,15 @@ def _demangle_key(mangled: str):
         r"^\?([A-Za-z_]\w*)@\?1\?\?.+@\$[A-Z]V", mangled)
     if local_static_dtor:
         return f"{local_static_dtor.group(1).lower()}@local_static_dtor"
+    # The queue owns its list member's teardown. Keep that emitted wrapper
+    # distinct from list::~list, even when its expanded instructions agree.
+    # Admit only the evidenced list/default-allocator specialization.
+    queue_list_dtor = re.match(
+        r"^\?\?1\?\$queue@(?P<element>[UV](?P<owner>[A-Za-z_]\w*)@@)"
+        r"V\?\$list@(?P=element)V\?\$allocator@(?P=element)"
+        r"@std@@@std@@@std@@QAE@XZ$", mangled)
+    if queue_list_dtor:
+        return f"{queue_list_dtor.group('owner').lower()}@queue_list_dtor"
     # RMG's branch queue retains ordinary Dinkumware list<TPoint> members.
     # Public erase overloads have the same owner and iterator result: the
     # argument suffix, not size or emission order, distinguishes the range.
@@ -1396,6 +1406,12 @@ def _demangle_key(mangled: str):
         return "vector_constructor_iterator"
     if mangled.startswith("?size@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_size"
+    # The mutable, parameterless iterator getters return a raw pointer in
+    # VC6's vector. Keep const overloads and other container families apart.
+    if (vector_owner and re.search(r"@std@@QAEP[AB].+XZ$", mangled)):
+        for member in ("begin", "end"):
+            if mangled.startswith(f"?{member}@?$vector@"):
+                return f"{vector_owner}@vector_{member}"
     if mangled.startswith("?capacity@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_capacity"
     if mangled.startswith("?clear@?$vector@") and vector_owner:
@@ -2400,6 +2416,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         simple = next(
             (kind for kind in ("vector_clear", "vector_push_back",
+                               "vector_begin", "vector_end",
                                "exception_doraise",
                                "functor_call", "deque_iterator_add_assign",
                                "deque_const_iterator_add")
@@ -2546,7 +2563,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             claim_keys.setdefault(f"{owner}@{algorithm}", []).append(row)
             continue
         list_member = next(
-            (kind for kind in ("list_dtor", "list_insert_single",
+            (kind for kind in ("list_dtor", "queue_list_dtor", "list_insert_single",
                                "list_erase_iterator", "list_erase_range",
                                "list_buynode")
              if f"${kind}$" in row["name"]), None)

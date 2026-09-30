@@ -1,14 +1,15 @@
 """Prove folded function names from ordinary C++ exception emissions.
 
 Identical candidate bodies alone do not identify a retail function. An alias
-also needs a complete exact retail body with named references, and an exact
-type-identified exception record that actually points to that body. The model
+also needs a complete exact retail body with named references, and a complete
+type-identified exception graph that actually points to that body. Reviewed
+namespace projections prove identities only, not descriptor bytes. The model
 keeps the resulting name on its existing function; no extra body is claimed.
 """
 from collections import defaultdict
 
-from homm3.core import compile_receipt, msvc_names
-from homm3.delink import exception_data
+from homm3.core import msvc_names
+from homm3.delink import exception_data, exception_identities
 from homm3.verify.startup_bodies import Candidate, bindings, match
 
 
@@ -79,27 +80,16 @@ def recover(model, project, base_dir):
     if not base_dir.is_dir() or not (project.toolchain / 'bin').is_dir():
         return []
     witnesses = {}
+    policy = exception_identities.policy_snapshot()
     records, _ = exception_data.candidates(project, base_dir, witnesses=witnesses)
-    candidates = {unit: Candidate(obj) for unit, (obj, _) in witnesses.items()}
-    proved = infer(model, records, candidates, retail())
+    candidates = {unit: exception_identities.CandidateNames(Candidate(obj), unit)
+                  for unit, (obj, _) in witnesses.items()}
+    proved = infer(model, exception_identities.project_records(records), candidates, retail())
     if not proved:
         return []
     # Recheck the complete witness set, with new input hashes. A change during
     # comparison cannot publish names from a mixture of old and new objects.
-    inputs = {}
-    for obj, expected in witnesses.values():
-        for path, digest in expected.items():
-            if path in inputs and inputs[path] != digest:
-                return []
-            inputs[path] = digest
-    try:
-        if compile_receipt.snapshot(inputs) != inputs:
-            return []
-        from hashlib import sha256
-        for unit, (obj, _) in witnesses.items():
-            if compile_receipt.digest(base_dir / f'{unit}.obj') != sha256(obj.buf).hexdigest():
-                return []
-    except OSError:
+    if not exception_identities.witnesses_current(witnesses, base_dir, policy):
         return []
     sizes = {b.rva: b.size for b in model.functions}
     return [Claim(rva, name, 'func', 'source-folded-exact', sizes[rva], unit,

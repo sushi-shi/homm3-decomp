@@ -1414,6 +1414,9 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 // native bitset bounds check and reproduces the scalar-buffer homes. The
 // remaining 99.9557% residual is the x/uintBuffer stack-home permutation;
 // all 49 blocks and 22 calls agree. Outer local-order controls are object-identical.
+// With fill_n and the loop-local bit counter, direct member.test(bit) still
+// changes the packed-bit update from retail's eight instructions to eleven
+// (98.21%). The const pointer retains that expansion; all 22 calls agree.
 VA(0x004ba670, 0x36A) MAC_ADDRESS(0x0ccd7c, 0x4fc)  // anchor-global, dc 0xa55a8
 int playerData::save(TAbstractFile* outfile)
 {
@@ -2987,159 +2990,20 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
                : 0;
 }
 
-// E:\gamedcs\game.cpp:3311
-// PARTIAL: retail prefix through the town / hero / hero-pool block and
-// the five type_point pool writes. Still absent after them, in retail's
-// order: twelve guarded scalar writes (0x1f4d4, 0x1f634, then
-// 0x1f690/0x1f692 as shorts and 0x1f694, 0x1f695, 0x1f696, 0x1f698,
-// 0x1f69c as bytes, then 0x1f63e/0x1f640/0x1f642 as shorts), six array
-// writes (0x1f644 asking 0x20 but accepting 8, 0x1f664 0x1c,
-// globalInfoFlags 0x20, borderTentVisitFlags 8, cartographerMask 6,
-// cartographerFlags 3), a four-byte literal zero, a gMapExtra payload
-// of 2*(worldMap.HasTwoLevels+1)*MAP_WIDTH*MAP_HEIGHT bytes, then
-// universities via save_vector<type_university> (0x4d2b20),
-// creatureBanks via save_object_vector (0x4d2b80) and
-// game::save_recorded_events (0x49dc60).
-
-// MEASURED, and the reason they are not written yet: adding them
-// LOWERS the score. 42.23 with the block above; 40.62 with the twelve
-// scalar and six array writes added; 37.18 with the zero and gMapExtra
-// writes on top. The cause is the FRAME, not the statements.
-
-// FIXED 2026-08-20 by BLOCK-SCOPING them. Each guarded write now
-// declares its own buffer inside braces instead of reusing two
-// function-scope variables; that cuts their live ranges to a single
-// statement and lets VC6 colour them where retail put them. The
-// small-slot region went from FOUR slots to TWO, `sub esp` from 0x5b4
-// to 0x5ac, and the census now shows the same [ebp+0x8] / [ebp+0xb]
-// parameter-home pair retail uses. 42.2290 -> 42.3069 on the scoping
-// alone. 0x5ac + the five tail slots = 0x5c0 = retail's frame exactly,
-// so the tail is UNBLOCKED - but it must be spelled with exactly the
-// five temps below and no more, or the frame overshoots again.
-
-// TAIL LANDED 2026-08-20: 42.3069 -> 73.7978. Three things had to be
-// right at once, and each was measured on its own.
-
-// 1. PLACEMENT. The missing block goes before the five type_point pool
-//    writes. Retail's order
-//    is heroPoolMap loop, then the twelve scalars, six arrays, literal
-//    zero and gMapExtra, and only THEN lithPools. Three independent
-//    proofs: linear disassembly order; the EH-state counter running
-//    0x1f..0x48 consecutively over exactly 21 guarded sites, with the
-//    lithPools loop numbered LAST at 0x47/0x48; and the base compile's
-//    own adjacency of heroPoolMap to lithPools. Only universities,
-//    creatureBanks and save_recorded_events append at the end.
-// 2. THE TEMPS. Four scalar temps plus the literal-zero int, declared at
-//    FUNCTION scope, not in a block. Block-scoped they get coalesced
-//    into the parameter home and the frame lands 12 bytes short; hoisted
-//    they take five real slots and `sub esp` reaches retail's 0x5c0 with
-//    the slot map matching offset for offset and use-count for
-//    use-count. The two shorts must be `short`, not `int`: retail loads
-//    16 bits and stores 32, which is VC6's narrow-local/widened-store
-//    idiom, where an int local would sign- or zero-extend on the load.
-// 3. TWO INLINE PINS, and this is the part that is easy to get wrong.
-//    Adding ~600 bytes of correct code RAISES this function's /Ob2
-//    budget (clamp(2*caller_cb,...)), which then pulls in two expansions
-//    retail does not have. Both had to be pinned back out:
-//      * std::bitset<8>::test in the heroPoolMap loop - retail emits
-//        `push edi / call`. Inlined, it drags its _Xran throw path with
-//        it, and a whole std::out_of_range plus its "invalid bitset<N>
-//        position" string lands on the frame: 28 bytes retail has not.
-//        Removing this pin alone costs 73.7978 -> 43.8831.
-//      * the seven save_vector / save_object_vector sites - retail calls
-//        every one. Inlined, each contributes a vector-size shl/sar and
-//        a `setae`. Adding this pin alone gave 37.4763 -> 73.7978.
-//    This is the /Ob2-budget lever running in the direction the module
-//    guide warns about: a local win elsewhere in the body changed the
-//    inline decisions here.
-
-// 80.0926 -> 82.6492, 2026-08-20, with game::Load's `return`-pin lever:
-// `#pragma inline_depth(0)` on a `return` statement reaches the LOCAL'S
-// SCOPE-EXIT DESTRUCTOR. Retail calls ~SavedGameHeader out of line at
-// THREE exits and expands it at only one; the two at the foot of this
-// body - `if (!save_recorded_events(...)) return -1;` and `return 0;` -
-// are the pair retail emits as `lea ecx,[ebp-0x5cc] / call 0x4bdf80`
-// twice over, once behind the `jne` and once on the fall-through.
-
-// 82.6492 -> 85.4129, 2026-08-20. THE MERGED-RETURN CLASS IS SPELLABLE,
-// and the note it replaces was wrong to call it unreachable. The `[ebp-4]`
-// cleanup-site census names it exactly: retail emits 37 numbered sites,
-// we emitted 39, and the two extra are three merges minus one placement
-// difference. A merged site is ONE `return -1` reached by two conditions,
-// and a `goto` to a label inside the surviving arm produces it. Which arm
-// carries the label decides the BLOCK LAYOUT, and both cases occur here:
-//   * generators and towns - "count write guard" + "element save loop
-//     guard". The label goes in the COUNT WRITE's own `if` body and the
-//     loop `goto`s BACKWARD to it. Retail's merged block then lands where
-//     retail puts it (0x10 emitted after 0x12; 0x1a in natural order).
-//     Writing it the other way round - the loop inside an `if` with the
-//     `return -1` in a trailing `else` - merges the site but SINKS the
-//     block to the end of the function and scores 0.02 lower.
-//   * The canonical ObeliskPool helper owns these early returns and preserves
-//     the caller cleanup boundary.
-//   * field_4e3e8 + obeliskFlags - two adjacent guarded writes. Here the
-//     label goes in the SECOND guard and the first `goto`s FORWARD into
-//     it, because retail's teardown is the fall-through successor of the
-//     second test (`jb <teardown>` then `jae <skip>` then the teardown).
-//     That reproduces retail's 0x4efd-0x4f47 instruction for instruction.
-//     An `||` merges the site too, but as a two-jump join that sinks to
-//     the function end; it measured 0.14 HIGHER on its own and 1.34 LOWER
-//     once the tail pin below was narrowed, so the four combinations rank
-//     non-monotonically - measure the pair, not each knob.
-// Worth +1.69 across the three merges.
-
-// THE HERO-POOL BYTE IS AN ARRAY, NOT A SCALAR (+1.10, and it is the
-// exact mirror of game::Load's `poolBits[player >> 3] & (1 << (player &
-// 7))`). Retail's `mov edx,edi / shr edx,3 / lea eax,[ebp+edx+0xb] / or
-// byte ptr [eax],dl` is an INDEXED store: a one-element `unsigned char
-// poolBits[1]` written `poolBits[player >> 3] |= 1 << (player & 7)`.
-// Spelled as a scalar `poolBits |= 1 << player` VC6 keeps it in a real
-// frame slot; spelled as an array, and declared INSIDE the hero loop
-// rather than at function scope, it coalesces the way retail's does.
-
-// 85.4129 -> 89.1864, 2026-08-20 (cold-combatpath lane), two of the three
-// residual items below closed:
-//   * THE FRAME IS RETAIL'S NOW (sub esp,0x5c0 both sides): the two
-//     missing dwords were the five BLOCK-scoped serialization buffers
-//     (four `char char_buffer` blocks and one `short short_buffer`)
-//     sharing slots; promoting them to two more FUNCTION-scope locals
-//     (`char char_buffer; short short_buffer;`) is retail's seven-dword
-//     temp pool exactly (+0.10 alone - the frame is the enabler, not
-//     the win; the doses-combine rule in person).
-//   * THE towns.size() OVER-INLINE IS SPELLABLE, +3.68: a statement pin
-//     covers a whole `for` including its body, but PRAGMA STATE IS
-//     PER-SITE AT COLLECTION - so `i = 0; #pragma inline_depth(0)
-//     while (i < towns.size()) { #pragma inline_depth() <body>; ++i; }`
-//     confines the pin to the loop CONDITION: size() goes out of line
-//     (retail's call) while towns[i].save's receiver subscript stays
-//     inline. New lever: PIN A LOOP CONDITION ALONE by resetting the
-//     pragma as the first body line.
-// Residual (89.1864%): one item, measured and bounded.
-//   * ONE guarded-return teardown still has the wrong destructor shape
-//     (predict-inline: `_Tidy base x35 vs retail x36`).
-//     Retail splits the two pool loops: the lithPools failure expands
-//     ~SavedGameHeader and CALLS `_Tidy` (site 0x48 at 0x556e, falling
-//     through into the shared tail), while the lithExitPools failure
-//     calls ~SavedGameHeader out of line (0x55b6). Taking the lithPools
-//     `return -1` out of the `#pragma inline_depth(0)` block - by landing
-//     save_vector's result in a `lithSaved` local and pinning only that
-//     assignment - reproduces the SPLIT (+0.35, and it is what takes the
-//     site census to 37 = retail's) but VC6 then expands `_Tidy` there
-//     too. `#pragma inline_depth(1)` on that `return` is byte-flat, as
-//     the module guide's bound predicts, so the depth-1 shape retail has
-//     is not spellable. Costs 3 branches (58 against 55).
-//   * one over-inline the pin cannot reach: retail CALLS
-//     vector<town>::size() (0x4cf6c0) in the town loop's CONDITION while
-//     inlining the same size() for the byte count two statements earlier.
-//     A statement pin on the `for` would also de-inline the `towns[i]`
-//     subscript, which retail keeps inline.
-//   * the heroes loop's teardown is emitted after the heroAvailability
-//     write's (0x1e before 0x1c) where retail emits them in order.
-// Lane A r5 (unpinned trace): the first lithPools saveVector (cost 96) gets
-// budget 124 and expands; retail calls all seven and still expands the
-// following ~SavedGameHeader, so retail's budget there is 67..95. Bracing
-// the save helpers' eight guarded returns lowers it only to 108, and an
-// explicit empty ~SavedGameHeader keeps cost 67. Neither was adopted.
+// DC game.cpp:3311 (0xa8cd0) records a distinct int count at sp+0x20 for
+// scalar-write results. Helper-return guards use their own temporary, so keep
+// their canonical calls separate from this status local. Complete moves the
+// older campaign/header prefix into SavedGameHeader.
+// Retail's four narrow scalar staging locals plus zero live at function scope;
+// narrowing their lifetimes changes the frame. The hero-pool membership byte
+// is an indexed one-byte array, local to the hero loop.
+// The scalar write groups own no locals; removing their artificial scopes and
+// testing saveVector directly preserves the natural lifetime of saved.
+// Residual: VC6 expands both pool-loop saveVector calls that retail retains,
+// and the associated failure cleanup differs. Bracing every error return with
+// count restored falls from 92.8015 to 90.7320; moving the shared index to
+// entry and removing the remaining availability-guard braces are byte-flat.
+// Keep the canonical helper calls.
 
 VA(0x004be3f0, 0xAA5) MAC_ADDRESS(0x0d2954, 0x1ba8)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::save(TAbstractFile* outfile)
@@ -3150,15 +3014,14 @@ int game::save(TAbstractFile* outfile)
     short shortValue;
     unsigned short extraShortValue;
     int zero;
+    int count;
     SavedGameHeader saved;
     saved.reset();
     if (saved.save(outfile) < 0)
         return -1;
 
-    {
-        charBuffer = g_grailOwner;
-        outfile->write(&charBuffer, sizeof(charBuffer));
-    }
+    charBuffer = g_grailOwner;
+    outfile->write(&charBuffer, sizeof(charBuffer));
     outfile->write(m_artifactDisabled, sizeof(m_artifactDisabled));
     outfile->write(m_artifactUsed, sizeof(m_artifactUsed));
     outfile->write(m_ssDisabled, sizeof(m_ssDisabled));
@@ -3202,8 +3065,8 @@ int game::save(TAbstractFile* outfile)
     if (saveHeroPool(outfile) < 0)
         return -1;
 
-    if (outfile->write(m_heroAvailability, sizeof(m_heroAvailability)) <
-        sizeof(m_heroAvailability)) {
+    count = outfile->write(m_heroAvailability, sizeof(m_heroAvailability));
+    if (count < sizeof(m_heroAvailability)) {
         return -1;
     }
 
@@ -3232,54 +3095,59 @@ int game::save(TAbstractFile* outfile)
     // (`mov dx, word ptr`) and stores 32 (`mov dword ptr [ebp-N], edx`),
     // which is VC6's narrow-local/widened-store idiom - an int local
     // would sign- or zero-extend on the load instead.
-    {
-        byteValue = m_newCampaignStarted;
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
-        byteValue = m_numPlayers;
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
+    byteValue = m_newCampaignStarted;
+    count = outfile->write(&byteValue, sizeof(byteValue));
+    if (count < sizeof(byteValue))
+        return -1;
+    byteValue = m_numPlayers;
+    count = outfile->write(&byteValue, sizeof(byteValue));
+    if (count < sizeof(byteValue))
+        return -1;
 
-        shortValue = m_ultimateArtifactX;
-        if (outfile->write(&shortValue, sizeof(shortValue)) < sizeof(shortValue))
-            return -1;
-        shortValue = m_ultimateArtifactY;
-        if (outfile->write(&shortValue, sizeof(shortValue)) < sizeof(shortValue))
-            return -1;
+    shortValue = m_ultimateArtifactX;
+    count = outfile->write(&shortValue, sizeof(shortValue));
+    if (count < sizeof(shortValue))
+        return -1;
+    shortValue = m_ultimateArtifactY;
+    count = outfile->write(&shortValue, sizeof(shortValue));
+    if (count < sizeof(shortValue))
+        return -1;
 
-        extraByteValue = m_ultimateArtifactZ;
-        if (outfile->write(&extraByteValue, sizeof(extraByteValue)) <
-            sizeof(extraByteValue))
-            return -1;
-        extraByteValue = m_ultimateRadius;
-        if (outfile->write(&extraByteValue, sizeof(extraByteValue)) <
-            sizeof(extraByteValue))
-            return -1;
+    extraByteValue = m_ultimateArtifactZ;
+    count = outfile->write(&extraByteValue, sizeof(extraByteValue));
+    if (count < sizeof(extraByteValue))
+        return -1;
+    extraByteValue = m_ultimateRadius;
+    count = outfile->write(&extraByteValue, sizeof(extraByteValue));
+    if (count < sizeof(extraByteValue))
+        return -1;
 
-        byteValue = m_ultimateArtifactPresent;
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
-        // f_1f698 is an int member and retail writes only its low byte.
-        byteValue = static_cast<char>(m_gameVersion);
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
-        byteValue = m_isCheater;
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
+    byteValue = m_ultimateArtifactPresent;
+    count = outfile->write(&byteValue, sizeof(byteValue));
+    if (count < sizeof(byteValue))
+        return -1;
+    // f_1f698 is an int member and retail writes only its low byte.
+    byteValue = static_cast<char>(m_gameVersion);
+    count = outfile->write(&byteValue, sizeof(byteValue));
+    if (count < sizeof(byteValue))
+        return -1;
+    byteValue = m_isCheater;
+    count = outfile->write(&byteValue, sizeof(byteValue));
+    if (count < sizeof(byteValue))
+        return -1;
 
-        extraShortValue = m_day;
-        if (outfile->write(&extraShortValue, sizeof(extraShortValue)) <
-            sizeof(extraShortValue))
-            return -1;
-        extraShortValue = m_week;
-        if (outfile->write(&extraShortValue, sizeof(extraShortValue)) <
-            sizeof(extraShortValue))
-            return -1;
-        extraShortValue = m_month;
-        if (outfile->write(&extraShortValue, sizeof(extraShortValue)) <
-            sizeof(extraShortValue))
-            return -1;
-    }
+    extraShortValue = m_day;
+    count = outfile->write(&extraShortValue, sizeof(extraShortValue));
+    if (count < sizeof(extraShortValue))
+        return -1;
+    extraShortValue = m_week;
+    count = outfile->write(&extraShortValue, sizeof(extraShortValue));
+    if (count < sizeof(extraShortValue))
+        return -1;
+    extraShortValue = m_month;
+    count = outfile->write(&extraShortValue, sizeof(extraShortValue));
+    if (count < sizeof(extraShortValue))
+        return -1;
 
     // Six array writes. The first is retail's own inconsistency: it ASKS
     // for sizeof(field_1f644) == 0x20 and accepts 8. The compare is
@@ -3287,26 +3155,28 @@ int game::save(TAbstractFile* outfile)
     // sizeof(borderTentVisitFlags) is the one in scope that equals 8.
     // The original expression is not recoverable from the bytes - only
     // its value and its unsignedness are.
-    if (outfile->write(m_uniqueSystemId, sizeof(m_uniqueSystemId)) <
-        sizeof(m_borderTentVisitFlags))
+    count = outfile->write(m_uniqueSystemId, sizeof(m_uniqueSystemId));
+    if (count < sizeof(m_borderTentVisitFlags))
         return -1;
-    if (outfile->write(m_marketArtifacts, sizeof(m_marketArtifacts)) < sizeof(m_marketArtifacts))
+    count = outfile->write(m_marketArtifacts, sizeof(m_marketArtifacts));
+    if (count < sizeof(m_marketArtifacts))
         return -1;
-    if (outfile->write(m_globalInfoFlags, sizeof(m_globalInfoFlags)) <
-        sizeof(m_globalInfoFlags))
+    count = outfile->write(m_globalInfoFlags, sizeof(m_globalInfoFlags));
+    if (count < sizeof(m_globalInfoFlags))
         return -1;
-    if (outfile->write(m_borderTentVisitFlags, sizeof(m_borderTentVisitFlags)) <
-        sizeof(m_borderTentVisitFlags))
+    count = outfile->write(m_borderTentVisitFlags, sizeof(m_borderTentVisitFlags));
+    if (count < sizeof(m_borderTentVisitFlags))
         return -1;
-    if (outfile->write(m_cartographerMask, sizeof(m_cartographerMask)) <
-        sizeof(m_cartographerMask))
+    count = outfile->write(m_cartographerMask, sizeof(m_cartographerMask));
+    if (count < sizeof(m_cartographerMask))
         return -1;
-    if (outfile->write(m_cartographerFlags, sizeof(m_cartographerFlags)) <
-        sizeof(m_cartographerFlags))
+    count = outfile->write(m_cartographerFlags, sizeof(m_cartographerFlags));
+    if (count < sizeof(m_cartographerFlags))
         return -1;
 
     zero = 0;
-    if (outfile->write(&zero, sizeof(zero)) < sizeof(zero))
+    count = outfile->write(&zero, sizeof(zero));
+    if (count < sizeof(zero))
         return -1;
 
     // The map-extra plane. HasTwoLevels is read through the GLOBAL gpGame,
@@ -3316,15 +3186,13 @@ int game::save(TAbstractFile* outfile)
     unsigned int mapExtraBytes =
         g_game->getNumMapLevels() * g_mapHeight * g_mapWidth *
         sizeof(unsigned short);
-    if (outfile->write(g_mapExtra, mapExtraBytes) < mapExtraBytes)
+    count = outfile->write(g_mapExtra, mapExtraBytes);
+    if (count < mapExtraBytes)
         return -1;
 
-    // The canonical writers now retain the seven retail call boundaries
-    // without compiler-state fences.
+    // Keep the canonical pool writers; retail retains all seven calls.
     for (i = 0; i < 8; ++i) {
-        unsigned char lithSaved;
-        lithSaved = saveVector(outfile, m_lithPools[i]);
-        if (!lithSaved)
+        if (!saveVector(outfile, m_lithPools[i]))
             return -1;
     }
     for (i = 0; i < 8; ++i) {
@@ -3921,7 +3789,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
             campaignHero->removeArtifact(hero::EQUIPPED_SLOT_SPELLBOOK);
         if (m_campaign.m_currentMap == GAME_SCENARIO_2) {
             type_artifact alliance(ARTIFACT_ANGELIC_ALLIANCE);
-            campaignHero->giveArtifact(&alliance, 0, 0);
+            campaignHero->giveArtifact(alliance, 0, 0);
         }
     }
 
@@ -3970,7 +3838,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                 hero* bonusHero = getHero(heroId);
                 if (bonusHero != NULL) {
                     type_artifact artifact(getRandomArtifactId(2));
-                    bonusHero->giveArtifact(&artifact, 1, 1);
+                    bonusHero->giveArtifact(artifact, 1, 1);
                 }
                 break;
             }
@@ -7464,7 +7332,7 @@ void game::setWeeklyRecruits(int playerPos)
         do {
             artifact = newHero->getBackpack(backpackSlot);
             if (artifact.m_artifactId != -1
-                && newHero->equipArtifact(&artifact, -1))
+                && newHero->equipArtifact(artifact, -1))
                 newHero->removeBackpackArtifact(backpackSlot);
         } while (backpackSlot--);
 
@@ -8070,10 +7938,10 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
     if (random(1, 100) <= 88 && traits->m_secondStack != -1) {
         if (traits->m_secondStack == CREATURE_BALLISTA) {
             type_artifact artifact(ARTIFACT_BALLISTA);
-            m_heroes[hero].giveArtifact(&artifact, 0, 0);
+            m_heroes[hero].giveArtifact(artifact, 0, 0);
         } else if (traits->m_secondStack == CREATURE_FIRST_AID_TENT) {
             type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
-            m_heroes[hero].giveArtifact(&artifact, 0, 0);
+            m_heroes[hero].giveArtifact(artifact, 0, 0);
         } else {
             currentArmy->m_armies[i] = traits->m_secondStack;
             currentArmy->m_numTroops[i] = random(traits->m_secondStackLow,

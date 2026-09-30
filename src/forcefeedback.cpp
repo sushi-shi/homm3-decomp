@@ -158,7 +158,7 @@ t_initializer::t_initializer(void* instance, void* hwnd)
 
 // COMDAT pairings the constructor above forces out: the throw type's own
 // scalar deleting destructor and the copy constructor `throw` needs
-// (CatchableType 0x64cc68 names the latter at exactly this address), and
+// (CatchableType 0x64cc18 names the latter at exactly this address), and
 // the client-side `??_G` for the dllimported CImmMouse - slot 0 of the
 // vftable at 0x63e618, the same shape as CImmEnclosure's at 0x4b6c30.
 VA_COMPGEN(0x004b66d0, 0x21, SCALAR_DELETING_DTOR, t_initialize_failure)

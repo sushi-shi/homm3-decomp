@@ -938,6 +938,10 @@ def address_identities(model, state: State | None = None,
     for rva, names in sorted(defined.items()):
         for name in sorted(names):
             rows.append((rva, name, "library", "verified library section", ""))
+    from homm3.core.project import Project
+    from homm3.delink import exception_identities
+    rows.extend(exception_identities.address_identities(
+        model, Project(common.HOMM3_DIR), base_dir, defined))
     if state is None:
         return rows
     for pairing in state.pairings:

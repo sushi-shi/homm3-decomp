@@ -2166,7 +2166,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
             // Mac 0x16a2cc initializes both fields to -1, then replaces the ID.
             type_artifact artifact;
             artifact.m_artifactId = TArtifact(m_value.m_dwords[0]);
-            currentHero->giveArtifact(&artifact, 1, 1);
+            currentHero->giveArtifact(artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
         }
