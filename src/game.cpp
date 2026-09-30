@@ -2996,9 +2996,11 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 // is an indexed one-byte array, local to the hero loop.
 // The scalar write groups own no locals; removing their artificial scopes and
 // testing saveVector directly preserves the natural lifetime of saved.
-// Residual: VC6 expands the first lithPools saveVector where retail calls it,
+// Residual: VC6 expands both pool-loop saveVector calls that retail retains,
 // and the associated failure cleanup differs. Bracing every error return with
-// count restored falls from 92.8015 to 90.7320; keep the canonical helper calls.
+// count restored falls from 92.8015 to 90.7320; moving the shared index to
+// entry and removing the remaining availability-guard braces are byte-flat.
+// Keep the canonical helper calls.
 
 VA(0x004be3f0, 0xAA5) MAC_ADDRESS(0x0d2954, 0x1ba8)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::save(TAbstractFile* outfile)

@@ -4012,27 +4012,32 @@ void NewfullMap::rebuildObjectTypeIndex()
 // aliasing/induction decisions despite having the same x86 width.
 // Both count reads use int_buffer (sp+0x34), then copy to numObjects (sp+0x3c).
 // count (sp+0x30) owns read lengths and object-reader status; int v (sp+0x2c)
-// scans invalid placements. This ownership and the two braced read guards
-// reproduce retail, including its distinct empty/nonempty vector cleanups.
-// Naming the canonical GetSprite result inside the sprite loop drops Windows
-// from 99.5485% to 98.34%; its direct vector assignment keeps the peak.
+// scans invalid placements. Keep the caller-owned count buffer and status
+// separate, including across the distinct empty/nonempty vector cleanups.
+// Mac's retained scalar decoding requires readLittleEndianValue at both reads.
+// VC6 currently retains the string constructor instead of expanding it to
+// _Tidy, and expands the first CObject-vector size call that retail retains.
+// Keeping the decode helper scores 93.7926%; direct native reads with the
+// same local ownership score 99.4554%. Explicit resize fill temporaries and
+// a native-forwarding helper body do not change this inline residual.
+// Naming the canonical GetSprite result inside the sprite loop also changes
+// the inline context; its direct vector assignment is the supported form.
 VA(0x00504470, 0x5C9) MAC_ADDRESS(0x127278, 0x440)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
 int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 {
-    g_invalidPlacementList.clear();
-
     int intBuffer;
     int numObjects;
     int count;
     int x;
-    count = infile->read(&intBuffer, sizeof(intBuffer));
-    if (count < sizeof(intBuffer)) {
-        return -1;
-    }
 
-    // Both Mac count fields are read through the same caller-owned integer
-    // slot, then byte-reversed before resize. Windows retail reads them
-    // directly (99.84%; the decoding wrapper gives 99.38%).
+    g_invalidPlacementList.clear();
+    count = readLittleEndianValue(infile, intBuffer);
+    if (count < sizeof(intBuffer))
+        return -1;
+
+    // Mac 0x1272bc..0x1272f0 and 0x127540..0x127588 read each count into
+    // the same caller-owned slot and decode it with lwbrx after the guard.
+    // The canonical reader keeps that count/decoding path on both platforms.
     numObjects = intBuffer;
     m_objectTypes.resize(numObjects);
     for (x = 0; x < m_objectTypes.size(); ++x) {
@@ -4064,19 +4069,17 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     }
 
     // DC NewfullMap::Read/Load (mapcell.cpp:640/704) release the sprite list
-    // through ResourceManager::Dispose. With the helper the new budgets cost
-    // read 99.94 -> 96.24 and load 99.91 -> 97.99 (retail keeps one more
-    // string _Tidy and vector size call); kept per the helper rule.
+    // through ResourceManager::Dispose. Mac 0x1274f8..0x12752c retains the
+    // nested virtual sprite-disposal call; keep the canonical wrapper here.
     for (x = 0; x < oldSprites.size(); ++x)
         ResourceManager::dispose(oldSprites[x]);
     oldSprites.clear();
 
     incProgressBar(1);
 
-    count = infile->read(&intBuffer, sizeof(intBuffer));
-    if (count < sizeof(intBuffer)) {
+    count = readLittleEndianValue(infile, intBuffer);
+    if (count < sizeof(intBuffer))
         return -1;
-    }
 
     numObjects = intBuffer;
     m_objects.resize(numObjects);
