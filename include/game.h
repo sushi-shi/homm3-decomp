@@ -1653,8 +1653,9 @@ int getTeam(int playerNum) const
 
     // DC-attested inline helper. Retail's shrine consumer proves the signed
     // [0,8) player guard and the byte bitset at +0x4e344.
+    // Original public GetInfoFlag@@QBA_NW4GlobalInfoFlags@@H@Z proves bool.
     DC_ADDRESS(0x01fefc, 0x44)
-    unsigned char getInfoFlag(enum GlobalInfoFlags flag, const int playerNum) const
+    bool getInfoFlag(enum GlobalInfoFlags flag, const int playerNum) const
     {
         if (playerNum < 0 || playerNum >= 8)
             return 0;
