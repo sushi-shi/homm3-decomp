@@ -1457,7 +1457,7 @@ int advManager::processKeyPress(const message& msg, unsigned char& exitFlag, typ
         return 0;
 
     playerData* localPlayer = g_game->getLocalPlayer();
-    unsigned char waitingPlayer = !g_currentPlayer->isLocalHuman();
+    bool waitingPlayer = !g_currentPlayer->isLocalHuman();
     hero* currHero;
     if (localPlayer->m_currHeroId != -1)
         currHero = g_game->getHero(localPlayer->m_currHeroId);
@@ -1797,7 +1797,7 @@ MAC_ADDRESS(0x009c6c, 0x5d4)
 int advManager::processDeSelect(const message& msg, unsigned char& exitFlag, type_point& triggerPoint, NewmapCell*& peventCell)
 {
     playerData* localPlayer = g_game->getLocalPlayer();
-    unsigned char waitingPlayer = !g_currentPlayer->isLocalHuman();
+    bool waitingPlayer = !g_currentPlayer->isLocalHuman();
 
     switch (msg.m_codeY) {
     case TAdventureMapWindow::QUEST_LOG_ID:
@@ -2230,7 +2230,7 @@ void advManager::processMapSelect2(const message& msg, type_point& triggerPoint,
             m_advCommand = ADV_COMMAND_VIEW_HERO;
             doAdvCommand(&triggerPoint);
         } else if (localPlayer == g_game->getHero(id)->m_owner) {
-            unsigned char waiting = !g_currentPlayer->isLocalHuman();
+            bool waiting = !g_currentPlayer->isLocalHuman();
             setHeroContext(id, 0, waiting, 1);
         }
     }
@@ -2240,7 +2240,7 @@ void advManager::processMapSelect2(const message& msg, type_point& triggerPoint,
             eventCell = doAdvCommand(&triggerPoint);
         } else if (id != -1) {
             town* currentTown = g_game->getTown(id);
-            unsigned char waiting = !g_currentPlayer->isLocalHuman();
+            bool waiting = !g_currentPlayer->isLocalHuman();
             if (g_game->onSameTeam(g_curWatchPlayer, currentTown->m_owner)
                 || m_debugViewAll)
                 setTownContext(id, waiting, 1);
