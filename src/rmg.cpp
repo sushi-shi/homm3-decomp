@@ -6639,18 +6639,21 @@ unsigned char type_random_map_generator::createSubterraneanGate(
 // distinct objects without improving MAX; a named maximum-X was byte-flat.
 // Mac's 0x22dfd8 vector initializer is a two-instruction zero store, not a
 // missing game helper. Its canPlaceObject call is already in this source.
+// Mac 0x245670..0x24568c snapshots the bounds, and 0x2456c0..0x2456d4
+// copies the whole position before consuming its level. Preserve the existing
+// getBounds/getLevelPosition path for those aggregate reads.
 VA(0x00542930, 0x1C6) MAC_ADDRESS(0x245624, 0x24c) // anchor-callee 0x540e81; thiscall, ret 8; retail-only
 unsigned char type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* zone)
 {
     TRmgObjectPropertiesRef* properties = object->m_properties;
     TObjectType* prototype = properties->m_prototype;
     std::vector<TRmgMapPosition> candidates;
-    TRmgZoneBounds bounds = zone->m_bounds;
+    TRmgZoneBounds bounds = zone->getBounds();
     int zoneIndex = zone->m_slot->m_zoneIndex;
     bounds.m_minimumY += prototype->getHeight() - 1;
     bounds.m_minimumX += prototype->getWidth() - 1;
     TRmgMapPosition position;
-    position = zone->m_levelPosition;
+    position = zone->getLevelPosition();
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
             if (m_map.getMapItem(position)->m_zoneState.m_zone == zoneIndex
