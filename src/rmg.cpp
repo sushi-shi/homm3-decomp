@@ -2892,6 +2892,10 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
 // subtype cursors load end() eagerly, and an outer nonempty guard changes
 // retail's CFG. Combined lifetime/range families recover this exact body;
 // these bytes do not prove unique original syntax. See docs/vc6/source-families.md.
+// Mac 0x2349a4 uses the terrain enum-vector family shared with water-border
+// repair, distinct from the subtype integer/POD vector at 0x2348e4. Restoring
+// that domain leaves one inline decision: the placement-rule push_back expands
+// single-insert into count-insert, adding one push (Windows 99.6416%).
 VA(0x00536560, 0x5F2) MAC_ADDRESS(0x23486c, 0x6a0) // anchor-string rand_trn.txt; thiscall, ret 0; retail-only
 void TRmgGeneratorBase::readObjectPlacementRules()
 {
@@ -2899,11 +2903,11 @@ void TRmgGeneratorBase::readObjectPlacementRules()
         DATA_COMPGEN(0x006827F4, rmgPlacementRulesFilename, "rand_trn.txt"));
     int row = 3;
     std::vector<int> objectTypes;
-    std::vector<int> terrains;
+    std::vector<TTerrainType> terrains;
     std::vector<int> subtypes;
     int objectType;
     int subtype;
-    int terrain;
+    TTerrainType terrain;
     for (; row < sheet->getNumberOfRows();) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
         if (values[0][0] == ' ' || values[0][0] == 0)
@@ -2912,13 +2916,14 @@ void TRmgGeneratorBase::readObjectPlacementRules()
         rule.m_index = row - 3;
         objectType = atoi(values[3]);
         subtype = atoi(values[4]);
-        terrain = atoi(values[6]);
+        terrain = H3_ENUM_DECODE(TTerrainType, atoi(values[6]));
         objectTypes.push_back(objectType);
         terrains.push_back(terrain);
         subtypes.push_back(subtype);
-        for (terrain = 0; terrain <= eTerrainWater; ++terrain)
+        for (terrain = eTerrainDirt; terrain <= eTerrainWater;
+             terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1))
             rule.m_terrainScores[terrain] = atoi(values[terrain + 7]);
-        for (; terrain < 10; ++terrain)
+        for (; terrain < 10; terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1))
             rule.m_terrainScores[terrain] = RMG_PLACEMENT_INVALID;
         m_placementRules.push_back(rule);
         ++row;
@@ -2962,7 +2967,8 @@ void TRmgGeneratorBase::readObjectPlacementRules()
             TRmgObjectPropertiesRef* properties = m_objectPrototypes[objectType][index];
             TObjectType* prototype = properties->m_prototype;
             properties->m_placementRule = 0;
-            for (terrain = 0; terrain < eTerrainRock; ++terrain) {
+            for (terrain = eTerrainDirt; terrain < eTerrainRock;
+                 terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1)) {
                 if (prototype->m_recommendedTerrainMask[terrain])
                     break;
             }
@@ -5462,15 +5468,21 @@ void type_random_map_generator::expandObstacleClearance()
         m_progress->advance(1600);
 }
 
+// Mac terrain push_back 0x251f80 has only this caller and placement-rule
+// loading. That caller uses a distinct integer/POD vector for subtypes; the
+// terrain vector retains clear 0x252374 with an element-destruction loop.
+// Keep the shared terrain enum domain instead of collapsing it to int.
+// The enum count-insert body matches retail's folded 0x54d120, including
+// both allocation relocations; vector<int>'s separate admitted body is 0x404200.
 VA(0x0053FCB0, 0x5EC) MAC_ADDRESS(0x241e9c, 0x770)
 void type_random_map_generator::repairWaterZoneBorders()
 {
     TRmgMapItem* current = m_map.m_mapItems;
-    int terrain;
+    TTerrainType terrain;
     TRmgMapPosition position;
     TRmgMapPosition nearby;
     std::vector<TRmgMapPosition> positions;
-    std::vector<int> terrains;
+    std::vector<TTerrainType> terrains;
     for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++current) {
@@ -5505,7 +5517,7 @@ void type_random_map_generator::repairWaterZoneBorders()
                                 && item->m_tile.m_landType != eTerrainRock
                                 && !item->hasBorderObject()
                                 && item->m_tileData.m_roadPassable) {
-                                terrain = item->m_tile.m_landType;
+                                terrain = H3_ENUM_DECODE(TTerrainType, item->m_tile.m_landType);
                                 found = 1;
                                 break;
                             }
@@ -5565,7 +5577,7 @@ void type_random_map_generator::repairWaterZoneBorders()
                 m_progress->advance(20);
         }
         if (positions.size()) {
-            int lastTerrain = terrains[0];
+            TTerrainType lastTerrain = terrains[0];
             type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
                 m_map.m_mapWidth, m_map.m_mapHeight);
             TRmgTerrainBrush brush(&levelMap, lastTerrain, 4);
