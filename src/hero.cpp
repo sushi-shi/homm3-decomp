@@ -2115,7 +2115,7 @@ void hero::checkLevel()
                 } else if (skills[1] == eSecSkillNone) {
                     TLevelUpWindow window(
                         this, stat,
-                        skills[0] * 3 + 3 + m_skillLevel[skills[0]], -1);
+                        skills[0] * 3 + 3 + getSecondarySkill(skills[0]), -1);
                     if (g_game->isMultiplayer() &&
                         g_turnDuration.isExpired())
                         g_dialogDeadline = 15000;
@@ -2124,16 +2124,16 @@ void hero::checkLevel()
                 } else {
                     sprintf(text,
                             (*g_generalText)[GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT],
-                            g_secondarySkillLevels[m_skillLevel[skills[0]]],
+                            g_secondarySkillLevels[getSecondarySkill(skills[0])],
                             g_sSkillTraits[skills[0]].m_name,
-                            g_secondarySkillLevels[m_skillLevel[skills[1]]],
+                            g_secondarySkillLevels[getSecondarySkill(skills[1])],
                             g_sSkillTraits[skills[1]].m_name);
                     strcat(g_text, text);
                     {
                         TLevelUpWindow window(
                             this, stat,
-                            skills[0] * 3 + 3 + m_skillLevel[skills[0]],
-                            skills[1] * 3 + 3 + m_skillLevel[skills[1]]);
+                            skills[0] * 3 + 3 + getSecondarySkill(skills[0]),
+                            skills[1] * 3 + 3 + getSecondarySkill(skills[1]));
                         if (g_game->isMultiplayer() &&
                             g_turnDuration.isExpired())
                             g_dialogDeadline = 15000;
@@ -3900,17 +3900,17 @@ int THeroScreenWindow::windowHandler(message& msg)
             if (nth >= g_currentHero->m_skillCount)
                 break;
             int skill = g_currentHero->getNthSS(nth);
-            // Both reads index the byte array directly: the typed
-            // getSecondarySkill facade widens through TSkillMastery and
-            // scores 88.09% against this form's 92.07%.
+            // Mac 0xfa524/0xfa58c expands the signed packed mastery
+            // accessor. GetNthSS's native public returns int; decode that
+            // skill ID at the typed accessor boundary.
             strcpy(g_text,
                    g_sSkillTraits[skill]
-                       .m_levelNames[g_currentHero->m_skillLevel[skill] - 1]);
+                       .m_levelNames[g_currentHero->getSecondarySkill(TSecondarySkill(skill)) - 1]);
             normalDialog(g_text,
                          rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                      : hero::PRIMARY_STAT_DIALOG_TYPE,
                          -1, -1, 0x14,
-                         3 * skill + g_currentHero->m_skillLevel[skill] + 2,
+                         3 * skill + g_currentHero->getSecondarySkill(TSecondarySkill(skill)) + 2,
                          -1, 0, -1, 0, -1, 0);
             break;
         }
