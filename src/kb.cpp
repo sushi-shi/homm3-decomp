@@ -2921,12 +2921,15 @@ int getEnemyCount()
 // An MSL-style begin route in a scratch Mac view inlined all four text lookups,
 // so retain the canonical getText source. The earlier -O1 inline profile
 // also expanded the sender.
+// Original DC ?DisplayLCWinLoss@@YA_NAAULossConditionStruct@@AAH1_N@Z
+// proves bool return and remoteCheck, while gameWon/gameLost remain int&.
+// Both Complete callers pass a logical flag; Mac 0x114ca4..0x114cc4
+// returns the truth of the two integer outputs, preserving this interface.
 VA(0x004f2960, 0x37E)
 DC_ADDRESS(0x0e3558, 0x228)
 MAC_ADDRESS(0x114924, 0x3b8)  // decorated identity (kb.h) + anchor-caller (CheckEndGame)
-unsigned char displayLCWinLoss(LossConditionStruct& lossCondition,
-                               int& gameWon, int& gameLost,
-                               unsigned char remoteCheck)
+bool displayLCWinLoss(LossConditionStruct& lossCondition,
+                      int& gameWon, int& gameLost, bool remoteCheck)
 {
     int localPos = g_game->getLocalPlayerGamePos();
 
@@ -3039,7 +3042,7 @@ void checkEndGame(int forceWin)
     }
     if (!conditionHandled) {
         displayLCWinLoss(g_game->m_mapHeader.m_lossCondition, gameWon,
-                         gameLost, 0);
+                         gameLost, false);
     }
     if (g_game->m_mapHeader.m_victoryCondition.m_type != -1
         && !g_game->m_mapHeader.m_victoryCondition.m_allowNormalVictory)

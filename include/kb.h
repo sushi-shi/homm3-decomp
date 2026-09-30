@@ -284,9 +284,8 @@ int gameUnsaved();                                       // 0x4f4310
 void checkEndGame(int forceWin);                        // 0x4f2ce0
 bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                       int& gameWon, int& gameLost, bool remoteCheck);
-unsigned char displayLCWinLoss(LossConditionStruct& lossCondition,
-                               int& gameWon, int& gameLost,
-                               unsigned char remoteCheck);
+bool displayLCWinLoss(LossConditionStruct& lossCondition,
+                      int& gameWon, int& gameLost, bool remoteCheck);
 // Retail .bss 0x6972b8, an INT that every CheckEndGame caller which then
 // wants to keep touching the adventure UI reads immediately afterwards -
 // 36 image-wide references, the bulk of them inside kb.obj's own band
