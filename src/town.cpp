@@ -1979,7 +1979,7 @@ void town::hire(hero* newHero, long playerId)
 VA(0x005c13b0, 0x83)
 DC_ADDRESS(0x168b54, 0x4c)
 MAC_ADDRESS(0x1b6f1c, 0x88)
-void town::placeInMap(int heroId, long playerId, unsigned char resetFlags)
+void town::placeInMap(int heroId, long playerId, bool resetFlags)
 {
     hero* newHero = g_game->getHero(heroId);
     newHero->placeInMap(playerId, getLocation(), resetFlags);

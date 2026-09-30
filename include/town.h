@@ -515,7 +515,9 @@ public:
     // 0x5be2d0. Removes this town from its owner's roster and marks
     // both this record and gpGame->towns[id] unowned.
     void deallocate();
-    void placeInMap(int heroId, long playerId, unsigned char resetFlags);
+    // Original ?PlaceInMap@town@@QAAXW4THeroID@@J_N@Z proves
+    // the bool flag; Complete retains its independently modeled int heroId.
+    void placeInMap(int heroId, long playerId, bool resetFlags);
     static void initializeHordes();
     static bool initializeBuildingCostsTables();
     const char* getTypeName() const;
