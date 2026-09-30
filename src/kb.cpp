@@ -3620,6 +3620,9 @@ int gameUnsaved()
     return 0;
 }
 
+// These menu cheats perform the same game/campaign marking operation as
+// both chat handlers and the combat cheat worker. Keep their canonical
+// free helper, including its second global load for the campaign store.
 VA(0x004f4350, 0x7F2)  // dc 0xe49b0
 int handleAppSpecificMenuCommands(int idItem)
 {
@@ -3633,9 +3636,7 @@ int handleAppSpecificMenuCommands(int idItem)
         break;
 
     case APP_MENU_FORCE_VICTORY:
-        g_game->m_isCheater = 1;
-        if (g_inCampaign)
-            g_game->m_campaign.m_isCheater = 1;
+        markGameAsCheated();
         checkEndGame(END_GAME_FORCE_VICTORY);
         break;
 
@@ -3644,9 +3645,7 @@ int handleAppSpecificMenuCommands(int idItem)
         break;
 
     case APP_MENU_TOGGLE_VIEW_ALL:
-        g_game->m_isCheater = 1;
-        if (g_inCampaign)
-            g_game->m_campaign.m_isCheater = 1;
+        markGameAsCheated();
         g_advManager->m_debugViewAll = !g_advManager->m_debugViewAll;
         if (g_advManager->m_debugViewAll)
             CheckMenuItem(g_activeMenu, APP_MENU_TOGGLE_VIEW_ALL, MF_CHECKED);
@@ -3655,9 +3654,7 @@ int handleAppSpecificMenuCommands(int idItem)
         break;
 
     case APP_MENU_CHEAT_REVEAL: {
-        g_game->m_isCheater = 1;
-        if (g_inCampaign)
-            g_game->m_campaign.m_isCheater = 1;
+        markGameAsCheated();
         for (int level = 0; level < g_game->getNumMapLevels(); level++) {
             g_game->setVisibility(APP_MENU_REVEAL_COORDINATE,
                                   APP_MENU_REVEAL_COORDINATE, level,
@@ -3672,17 +3669,13 @@ int handleAppSpecificMenuCommands(int idItem)
     }
 
     case APP_MENU_CHEAT_MOVEMENT:
-        g_game->m_isCheater = 1;
-        if (g_inCampaign)
-            g_game->m_campaign.m_isCheater = 1;
+        markGameAsCheated();
         if (currentHero)
             currentHero->m_movePoints = APP_MENU_MOVEMENT_BONUS;
         break;
 
     case APP_MENU_CHEAT_RESOURCES: {
-        g_game->m_isCheater = 1;
-        if (g_inCampaign)
-            g_game->m_campaign.m_isCheater = 1;
+        markGameAsCheated();
         for (int resource = 0; resource < APP_MENU_RESOURCE_COUNT; resource++) {
             g_currentPlayer->m_resources[resource] +=
                 resource == GOLD ? APP_MENU_GOLD_BONUS
@@ -3694,9 +3687,7 @@ int handleAppSpecificMenuCommands(int idItem)
     }
 
     case APP_MENU_COMBAT_ORDINAL_B798:
-        g_game->m_isCheater = 1;
-        if (g_inCampaign)
-            g_game->m_campaign.m_isCheater = 1;
+        markGameAsCheated();
         g_combatManager->m_debugNoSpellLimit = !g_combatManager->m_debugNoSpellLimit;
         if (g_combatManager->m_debugNoSpellLimit)
             CheckMenuItem(g_activeMenu, APP_MENU_COMBAT_ORDINAL_B798, MF_CHECKED);
@@ -3715,9 +3706,7 @@ int handleAppSpecificMenuCommands(int idItem)
         break;
 
     case APP_MENU_COMBAT_ORDINAL_B79B:
-        g_game->m_isCheater = 1;
-        if (g_inCampaign)
-            g_game->m_campaign.m_isCheater = 1;
+        markGameAsCheated();
         g_combatManager->m_debugShowHiddenObjects = !g_combatManager->m_debugShowHiddenObjects;
         if (g_combatManager->m_debugShowHiddenObjects)
             CheckMenuItem(g_activeMenu, APP_MENU_COMBAT_ORDINAL_B79B, MF_CHECKED);
@@ -3727,9 +3716,7 @@ int handleAppSpecificMenuCommands(int idItem)
         break;
 
     case APP_MENU_COMBAT_ORDINAL_B79C:
-        g_game->m_isCheater = 1;
-        if (g_inCampaign)
-            g_game->m_campaign.m_isCheater = 1;
+        markGameAsCheated();
         g_combatManager->m_debugShowBlockedHexes = !g_combatManager->m_debugShowBlockedHexes;
         if (g_combatManager->m_debugShowBlockedHexes)
             CheckMenuItem(g_activeMenu, APP_MENU_COMBAT_ORDINAL_B79C, MF_CHECKED);
@@ -3740,9 +3727,7 @@ int handleAppSpecificMenuCommands(int idItem)
         break;
 
     case APP_MENU_COMBAT_REBUILD_OBSTACLES:
-        g_game->m_isCheater = 1;
-        if (g_inCampaign)
-            g_game->m_campaign.m_isCheater = 1;
+        markGameAsCheated();
         g_combatManager->placeAllObstacles();
         g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
         break;
@@ -3752,9 +3737,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     default:
         if (idItem >= APP_MENU_ARMY_FIRST && idItem < APP_MENU_ARMY_LAST) {
-            g_game->m_isCheater = 1;
-            if (g_inCampaign)
-                g_game->m_campaign.m_isCheater = 1;
+            markGameAsCheated();
             if (g_game->getCurrHeroId() != -1) {
                 g_game->giveArmy(
                                  &g_game->getCurrHero()->m_army,
@@ -3767,9 +3750,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
         if (idItem >= APP_MENU_SECONDARY_FIRST
                 && idItem < APP_MENU_SECONDARY_LAST) {
-            g_game->m_isCheater = 1;
-            if (g_inCampaign)
-                g_game->m_campaign.m_isCheater = 1;
+            markGameAsCheated();
             if (g_combatManager->m_status == baseManager::STATUS_ACTIVE)
                 currentHero = g_combatManager->m_heroes[g_combatManager->m_currentSide];
             if (currentHero) {
@@ -3783,9 +3764,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
         else if (idItem >= APP_MENU_ARTIFACT_FIRST
                 && idItem < APP_MENU_ARTIFACT_LAST) {
-            g_game->m_isCheater = 1;
-            if (g_inCampaign)
-                g_game->m_campaign.m_isCheater = 1;
+            markGameAsCheated();
             type_artifact artifact(
                 TArtifact(idItem - APP_MENU_ARTIFACT_FIRST));
             if (currentHero)
@@ -3798,9 +3777,7 @@ int handleAppSpecificMenuCommands(int idItem)
                 currentHero = g_combatManager->m_heroes[g_combatManager->m_currentSide];
             if (currentHero) {
                 type_artifact artifact(ARTIFACT_NONE);
-                g_game->m_isCheater = 1;
-                if (g_inCampaign)
-                    g_game->m_campaign.m_isCheater = 1;
+                markGameAsCheated();
                 if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
                     artifact.m_artifactId = TArtifact(ARTIFACT_SPELLBOOK);
                     currentHero->giveArtifact(artifact, 1, 1);
