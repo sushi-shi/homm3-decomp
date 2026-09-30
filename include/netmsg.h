@@ -139,10 +139,12 @@ enum EGameTransmitLimits {
 class CNetMsg {
 public:
     int m_from;
-    int m_dpidFrom;
-    int m_subType;
+    // DC CNetMsg 0x1b88/fieldlist 0x3562 preserves the message enum
+    // and unsigned long domains in this twenty-byte wire header.
+    unsigned long m_dpidFrom;
+    eRS_Messages m_subType;
     unsigned long m_size;
-    int m_uncompressedSize;
+    unsigned long m_uncompressedSize;
 
     VA(0x004f2930, 0x23)  // anchor-callee + exact body, retail-only slot
     DC_ADDRESS(0x02018c, 0x2a)

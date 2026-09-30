@@ -6114,9 +6114,10 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // retained HeroLoses calls. GetArmyName(1/2), Game::get_cell and text operator[]
 // raise that unpinned model from 93.9236 to 95.6386; DC's sText[256] and SRandom
 // give 95.6234. The old pinned implementation was 97.9862, not an unpinned peak.
-// Town cleanup still retains _Tidy where retail expands it; CNetMsg's ctor
-// remains out of line. The final CTurnDurationPause destructor now expands
-// as retail does. CCombatInitMsg's destructor correctly stays out of line.
+// Town cleanup still retains _Tidy where retail expands it. Recovering
+// CNetMsg's native enum/unsigned fields admits its nested constructor as
+// retail does, but leaves the final pause-guard destructor out of line.
+// CCombatInitMsg's destructor correctly stays out of line.
 // DC uses DestroyMsg for its pointer payload; Complete's independently proven
 // CWaitForRemoteBattleDlg owns the payload by value, so no DestroyMsg is added.
 // Logical bool/byte replay spellings are byte-flat. DC 6314 initializes
@@ -6140,7 +6141,8 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // contract); preserve the existing model and the independently proven locals.
 // Recover the direct raw-stats pointer payload through the stats accessor;
 // the provisional four-byte caller copy had no native counterpart. This
-// replay-phase recovery measures 96.91178%, with the AI bool target
+// replay-phase recovery measured 96.91178%; the complete native CNetMsg
+// field model measures 96.08229%, with the AI bool target
 // relocation rename still pending the collective refresh.
 VA(0x004ad470, 0x1531)
 DC_ADDRESS(0x09b970, 0x9ec)
