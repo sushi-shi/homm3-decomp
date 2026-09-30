@@ -1795,18 +1795,18 @@ void combatManager::setNextArmy(int group, int index)
                 if (castingHero->isWieldingArtifact(
                         ARTIFACT_ANGELIC_ALLIANCE)) {
                     if (hasValidSpellTarget(SPELL_PRAYER, eMasteryExpert, m_currentSide, 1, 2))
-                        castSpell(SPELL_PRAYER, -1, 2, -1, 3, 10);
+                        castSpell(SPELL_PRAYER, -1, 2, -1, eMasteryExpert, 10);
                 }
                 if (castingHero->isWieldingArtifact(
                         ARTIFACT_ARMOR_OF_THE_DAMNED)) {
                     if (hasValidSpellTarget(SPELL_SLOW, eMasteryExpert, m_currentSide, 1, 2))
-                        castSpell(SPELL_SLOW, -1, 2, -1, 3, 50);
+                        castSpell(SPELL_SLOW, -1, 2, -1, eMasteryExpert, 50);
                     if (hasValidSpellTarget(SPELL_CURSE, eMasteryExpert, m_currentSide, 1, 2))
-                        castSpell(SPELL_CURSE, -1, 2, -1, 3, 50);
+                        castSpell(SPELL_CURSE, -1, 2, -1, eMasteryExpert, 50);
                     if (hasValidSpellTarget(SPELL_WEAKNESS, eMasteryExpert, m_currentSide, 1, 2))
-                        castSpell(SPELL_WEAKNESS, -1, 2, -1, 3, 50);
+                        castSpell(SPELL_WEAKNESS, -1, 2, -1, eMasteryExpert, 50);
                     if (hasValidSpellTarget(SPELL_MISFORTUNE, eMasteryExpert, m_currentSide, 1, 2))
-                        castSpell(SPELL_MISFORTUNE, -1, 2, -1, 3, 50);
+                        castSpell(SPELL_MISFORTUNE, -1, 2, -1, eMasteryExpert, 50);
                 }
             }
             m_artifactCast[m_currentSide] = 0;
@@ -3527,7 +3527,7 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
             if (stack.m_postPowSpellToCast != -1) {
                 if (stack.m_numTroops > 0)
                     castSpell(stack.m_postPowSpellToCast, stack.m_gridIndex,
-                              1, -1, 0, 3);
+                              1, -1, eMasteryNone, 3);
                 stack.m_postPowSpellToCast = -1;
             }
         }

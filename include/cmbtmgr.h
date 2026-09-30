@@ -1664,9 +1664,11 @@ public:
                               const army* targetArmy,
                               bool firstTarget,
                               long creatureSpell) const;  // 0x5a3c80
+    // DC CastSpell declares monster_skill as TSkillMastery. Creature and
+    // artifact callers supply the same mastery domain as hero spell levels.
     void castSpell(SpellID spellId, int targetIndex,
                    int isMonsterSpell, int secondaryIndex,
-                   int monsterSkill, long monsterPower);
+                   TSkillMastery monsterSkill, long monsterPower);
     float spellCastWorkChance(SpellID spell, long side, const army* target,
                               bool redirected,
                               bool firstTarget,

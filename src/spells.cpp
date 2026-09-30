@@ -705,7 +705,7 @@ void combatManager::unnamed59FDE0(int x, int y, army* target)
 VA(0x0059fe30, 0x2A4F) MAC_ADDRESS(0x190540, 0x29f4)  // retail largest-unadmitted row, dc 0x14f7dc
 void combatManager::castSpell(SpellID spellId, int targetIndex,
                               int isMonsterSpell,
-                              int secondaryIndex, int monsterSkill,
+                              int secondaryIndex, TSkillMastery monsterSkill,
                               long monsterPower)
 {
     const int otherSide = 1 - m_currentSide;
@@ -714,7 +714,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     hero* const otherHero = m_heroes[otherSide];
     const SSpellTraits* traits = &g_spellTraits[spellId];
 
-    int mastery;
+    TSkillMastery mastery;
     if (!isMonsterSpell) {
         mastery = castingHero->getSpellLevel(spellId, m_magicTerrain);
     } else {

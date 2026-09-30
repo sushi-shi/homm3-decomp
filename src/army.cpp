@@ -1818,7 +1818,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                                                 getControllingSide(),
                                                 target, 1, 1))
                 g_combatManager->castSpell(SPELL_DISPEL_HELPFUL,
-                                           target->m_gridIndex, 1, -1, 0,
+                                           target->m_gridIndex, 1, -1, eMasteryNone,
                                            3);
             if (m_creatureType == CREATURE_DRAGON_FLY
                 && target->getSpellTime(SPELL_WEAKNESS) == 0) {
@@ -1827,7 +1827,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                         1, 1))
                     g_combatManager->castSpell(SPELL_WEAKNESS,
                                                target->m_gridIndex, 1, -1,
-                                               2, 3);
+                                               eMasteryAdvanced, 3);
             }
         }
         break;
@@ -4859,10 +4859,8 @@ void army::castCaliphSpell(long hex)
     for (spell = 10; spell < 70; spell++) {
         if (isValidCaliphSpell(spell, target)) {
             if (--pick == 0) {
-                // mastery 2 is ADVANCED on ai_tactical.h's
-                // TSkillMastery ladder, spelled as a literal because
-                // that header is not in this TU's closure.
-                g_combatManager->castSpell(spell, hex, 1, -1, 2, 6);
+                // This creature cast uses advanced mastery (2).
+                g_combatManager->castSpell(spell, hex, 1, -1, eMasteryAdvanced, 6);
                 return;
             }
         }
@@ -4875,7 +4873,7 @@ MAC_ADDRESS(0x05469c, 0x64)
 void army::castFaerieDragonSpell(long hex)
 {
     if (combatManager::validHex(hex))
-        g_combatManager->castSpell(m_faerieDragonSpell, hex, 1, -1, 2,
+        g_combatManager->castSpell(m_faerieDragonSpell, hex, 1, -1, eMasteryAdvanced,
                                    m_numTroops * 5);
 }
 
@@ -4945,7 +4943,7 @@ unsigned char army::unnamed447fe0()
         playSample(SHOOT_SAMPLE);
         g_combatManager->powEffect(-1, 1);
     }
-    g_combatManager->castSpell(spell, -1, 1, -1, 3, 3);
+    g_combatManager->castSpell(spell, -1, 1, -1, eMasteryExpert, 3);
     return 1;
 }
 
@@ -5021,22 +5019,22 @@ void army::castSpell(long hex)
         break;
     case CREATURE_STORM_ELEMENTAL:
         g_combatManager->castSpell(SPELL_PROTECTION_FROM_AIR, hex, 1, -1,
-                                   2, 6);
+                                   eMasteryAdvanced, 6);
         break;
     case CREATURE_ICE_ELEMENTAL:
         g_combatManager->castSpell(SPELL_PROTECTION_FROM_WATER, hex, 1, -1,
-                                   2, 6);
+                                   eMasteryAdvanced, 6);
         break;
     case CREATURE_ENERGY_ELEMENTAL:
         g_combatManager->castSpell(SPELL_PROTECTION_FROM_FIRE, hex, 1, -1,
-                                   2, 6);
+                                   eMasteryAdvanced, 6);
         break;
     case CREATURE_MAGMA_ELEMENTAL:
         g_combatManager->castSpell(SPELL_PROTECTION_FROM_EARTH, hex, 1, -1,
-                                   2, 6);
+                                   eMasteryAdvanced, 6);
         break;
     case CREATURE_OGRE_MAGE:
-        g_combatManager->castSpell(SPELL_BLOODLUST, hex, 1, -1, 2, 6);
+        g_combatManager->castSpell(SPELL_BLOODLUST, hex, 1, -1, eMasteryAdvanced, 6);
         break;
     }
     waitSample(SHOOT_SAMPLE);
