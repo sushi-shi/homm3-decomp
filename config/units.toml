@@ -842,3 +842,10 @@ unit = "log"
 source = "src/log.cpp"
 flags = "game_o2_mt_gr_windows"
 compare = false
+
+# Gameplay enhancement; no retail counterpart.
+[[unit]]
+unit = "artifact_inventory"
+source = "src/artifact_inventory.cpp"
+flags = "game_o2_mt_gr_windows"
+compare = false
