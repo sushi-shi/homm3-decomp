@@ -428,6 +428,12 @@ process_action:
 // IsMoat, OffsetToFront, NeedToTurn and swap calls stay canonical.
 // Nesting firstHex assignment in ValidHex is Windows-flat and moves Mac
 // 38.2601 -> 38.0912%; keep the separate assignment and canonical check.
+// DC command.cpp:562 swaps the validity flags through dc0x70c5c. Its
+// original S_PUB32 ?swap@std@@YAXAA_N0@Z proves bool& arguments; CodeView
+// renders the lowered bool locals as unsigned char. Preserve that bool
+// domain and the canonical swap rather than treating byte width as uchar.
+// Targeted VC6 comparison is byte-flat at 91.3686%; the type recovery does
+// not resolve the existing declaration/control-flow residual.
 VA(0x00474690, 0x36B)
 DC_ADDRESS(0x06b66c, 0x410)
 MAC_ADDRESS(0x082810, 0x4a0)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map
@@ -438,13 +444,13 @@ void combatManager::setCombatDirections(int hex)
 
     int oldSide;
     int oldSlot;
-    unsigned char secondIsValid;
+    bool secondIsValid;
     long attackAngle;
     long firstHex;
     int targetIndex;
     int targetGroup;
     army* currentArmy;
-    unsigned char firstIsValid;
+    bool firstIsValid;
     long closest;
     long secondHex;
 
