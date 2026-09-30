@@ -565,8 +565,10 @@ void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex);
 VA(0x0059fb40, 0x182)
 DC_ADDRESS(0x14f51c, 0x18e)
 MAC_ADDRESS(0x190164, 0x1f4)
-unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
-                                            unsigned char isWalking)
+// Original check_landmine public QAA_NJPAVarmy@@_N proves result and
+// walking flag; Complete forwards that flag from the bool obstacle worker.
+bool combatManager::checkLandmine(long hex, army* currentArmy,
+                                      bool isWalking)
 {
     if (!currentArmy->m_numTroops)
         return 0;
@@ -616,8 +618,10 @@ unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
 VA(0x0059fcd0, 0x10E)
 DC_ADDRESS(0x14f6ac, 0x12e)
 MAC_ADDRESS(0x190358, 0x170)
-unsigned char combatManager::checkFireWall(long hex, army* currentArmy,
-                                             unsigned char isWalking)
+// Original check_fire_wall public QAA_NJPAVarmy@@_N proves both
+// boolean domains, matching the landmine predicate in the same chain.
+bool combatManager::checkFireWall(long hex, army* currentArmy,
+                                      bool isWalking)
 {
     if (!currentArmy->m_numTroops)
         return 0;

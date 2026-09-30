@@ -1137,10 +1137,8 @@ public:
     void lootDeadHero(int side,
                       std::vector<type_artifact>& lootedArtifacts);
     void calculateGainedExperience(int side, int* experienceGained);
-    unsigned char checkFireWall(long hex, army* currentArmy,
-                                  unsigned char isWalking);
-    unsigned char checkLandmine(long hex, army* currentArmy,
-                                 unsigned char isWalking);
+    bool checkFireWall(long hex, army* currentArmy, bool isWalking);
+    bool checkLandmine(long hex, army* currentArmy, bool isWalking);
     unsigned char shouldLowerDoor(army* thisArmy, long hex) const;
     int experienceValueOfStack(int whichGroup);
     void makeCreaturesVanish();
