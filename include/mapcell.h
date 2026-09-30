@@ -901,7 +901,9 @@ public:
     {
         return 47 - y * 8 - x;
     }
-    CObjectType(TObjectType* source);  // 0x506080
+    // The table loader converts an existing record; no nullable source is
+    // used. Const-reference ownership is inferred; DC lacks this overload.
+    CObjectType(const TObjectType& source);  // 0x506080
     // The DC field list names every member of this record - ImageName,
     // Width, Height, then the FOUR 48-cell masks PlacementMask,
     // PassableMask, ShadowMask, TriggerMask, then Type/Extra/IsUnderlay -

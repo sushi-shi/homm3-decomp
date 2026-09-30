@@ -477,7 +477,7 @@ TObjectType& TObjectType::setImageName(
 
 VA(0x00514960, 0xAD) MAC_ADDRESS(0x223dcc, 0x80)
 const std::basic_string<char, std::char_traits<char>, std::allocator<char> >&
-TObjectType::getImageName()
+TObjectType::getImageName() const
 {
     // Bit 0 of 0x69cb70 guards the empty string; 0x514a10 releases it.
     DATA_COMPGEN_GUARD(0x0069cb70, emptyImageNameGuard, emptyImageName)

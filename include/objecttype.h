@@ -70,19 +70,24 @@ private:
 public:
     std::bitset<10> m_terrainMask;
     std::bitset<10> m_recommendedTerrainMask;
+private:
     TAdventureObjectType m_objectType;
     int m_subtype;
+public:
     int m_slotCategory;
+private:
     unsigned char m_isUnderlay;
+public:
     unsigned char m_hasTrigger;
     TPoint m_triggerCell;
 private:
     TImageInfo m_imageInfo;
 public:
-    // is defined in the Complete .msk/objects compiland in the
-    // of range). The ROLE is proven by its conversion-constructor caller - the result is what
+    // The image-name registry lookup reads this record's image number;
+    // lazy registry/empty-string initialization does not modify the record.
+    // Constness is inferred from that ownership, not surviving DC types.
     const std::basic_string<char, std::char_traits<char>,
-                            std::allocator<char> >& getImageName();
+                            std::allocator<char> >& getImageName() const;
     // CObjectType's conversion loads each dimension as a dword before
     // narrowing it to char. Direct field access folds those into byte
     // loads in VC6; ordinary integer accessors retain the observed boundary.
@@ -123,6 +128,12 @@ public:
         return m_recommendedTerrainMask.test(terrain);
     }
     int getHeight() const { return m_imageInfo.m_objectSize.m_y; }
+    // Mac conversion 0x128d7c..0x128d94 reads this metadata after the
+    // masks. These read-only counterparts of the existing fluent setters
+    // have inferred names and boundaries; preserve each stored type.
+    TAdventureObjectType getObjectType() const { return m_objectType; }
+    int getSubtype() const { return m_subtype; }
+    unsigned char isUnderlay() const { return m_isUnderlay; }
     // Retail 0x514610 and 0x514a60, both in the same Complete-only
     // compiland and both returning *this - the per-row `>>` at 0x514b80
     // chains them off each other's result. setImageName resolves the

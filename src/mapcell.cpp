@@ -4590,9 +4590,9 @@ void NewfullMap::loadObjectTypeTemplates()
 
     for (unsigned int i = 0; i < objectTypeTable.m_objectTypes.size(); ++i) {
         TAdventureObjectType objectType =
-            objectTypeTable.m_objectTypes[i].m_objectType;
+            objectTypeTable.m_objectTypes[i].getObjectType();
         m_objectTypeIndex[objectType].push_back(
-            CObjectType(&objectTypeTable.m_objectTypes[i]));
+            CObjectType(objectTypeTable.m_objectTypes[i]));
     }
 }
 
@@ -4661,7 +4661,7 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // Controls: equivalent reversed-grid getBitPos arithmetic and signed/long
 // position locals produced no constructor gain across nine source states.
 // DC CObjectType fieldlist 0x309c (class 0x309b) declares only the generated
-// default/copy constructors (attributes 0x103), with no TObjectType* overload.
+// default/copy constructors (attributes 0x103), with no editor-template overload.
 // Lane A r4: retail CALLS bitset<48>::test for the draw and passable cells
 // and expands it (with _Xran) for shadow and trigger; set is always called.
 // Caller cb 454 floors the /Ob2 budget at 1000, so a direct depth-1 test
@@ -4678,36 +4678,37 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // test<10> (52 < 58) and expands set<10> (155), the reverse of retail
 // (44.72%). Not adopted.
 // Canonical const cell queries now own each source mask lookup and its
-// coordinate mapping. Together they raise this constructor to 54.94%; the
-// retained bitset test/set decisions remain unfinished. The template's
-// mask storage is private, shared readers use these queries, and its
-// existing setters retain ownership of mask updates and invariants.
+// coordinate mapping. Metadata queries and the const source contract recover
+// the retail test/set call decisions for all five masks (85.2364%). Control
+// flow agrees; remaining differences are register homes and spills. Template
+// mask and metadata storage is private; existing setters own their updates.
+// Const-reference input is inferred from the sole caller converting an
+// existing table record, with no writes or nullable-source path.
 VA(0x00506080, 0x1D4) MAC_ADDRESS(0x128be8, 0x1c4)  // sole caller NewfullMapFn_00505DA0 + advmgr_objects.h address, retail-only
-CObjectType::CObjectType(TObjectType* source)
+CObjectType::CObjectType(const TObjectType& source)
 {
-    m_imageName = source->getImageName();
-    m_width = source->getWidth();
-    m_height = source->getHeight();
+    m_imageName = source.getImageName();
+    m_width = source.getWidth();
+    m_height = source.getHeight();
 
     for (unsigned y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
             unsigned pos = getBitPos(x, y);
-            m_drawCells[pos] = source->isDrawCell(x, y);
-            m_passableCells[pos] = source->isPassableCell(x, y);
-            m_shadowCells[pos] = source->isShadowCell(x, y);
-            m_triggerCells[pos] = source->isTriggerCell(x, y);
+            m_drawCells[pos] = source.isDrawCell(x, y);
+            m_passableCells[pos] = source.isPassableCell(x, y);
+            m_shadowCells[pos] = source.isShadowCell(x, y);
+            m_triggerCells[pos] = source.isTriggerCell(x, y);
         }
     }
 
-    // Mac 0x128d4c..0x128d6c tests and sets each bit through the same
-    // bitset<10> calls either way; keep the project terrain accessor
-    // (46.72%; the direct subscript reaches 61.04%).
+    // Mac 0x128d4c..0x128d6c tests and sets each terrain bit. The const
+    // source selects the read-only terrain query, without a mutable proxy.
     for (int terrain = 0; terrain < 10; terrain++)
-        m_recommendedTerrainMask[terrain] = source->isRecommendedTerrain(terrain);
+        m_recommendedTerrainMask[terrain] = source.isRecommendedTerrain(terrain);
 
-    m_objectType = source->m_objectType;
-    m_extra = source->m_subtype;
-    m_suppressDraw = source->m_isUnderlay;
+    m_objectType = source.getObjectType();
+    m_extra = source.getSubtype();
+    m_suppressDraw = source.isUnderlay();
 }
 
 VA_COMPGEN(0x00506260, 0x38, VECTOR_DTOR, CObjectType)
