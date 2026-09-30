@@ -6659,7 +6659,9 @@ DC_ADDRESS(0x140588, 0x82)
 MAC_ADDRESS(0x180a58, 0x14c)
 bool TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost)
 {
-    unsigned char missing = 0;
+    // Native _N return plus retail's unnormalized byte load supports a bool
+    // latch. DC primitive 0x20 alone does not distinguish bool from byte.
+    bool missing = false;
     unsigned int i;
     for (i = 0; i < m_headersA.size(); ++i) {
         if (m_headersA[i].m_setup.m_fileInitialized == 0) {
