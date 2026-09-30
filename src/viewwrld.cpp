@@ -742,6 +742,9 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 // local. Measured worse: caching GetMap(0,0) in a local across the row loop
 // (unit 96.76 -> 95.77 - retail reloads it), and dropping the clamp upper
 // bounds (this body +1.36, unit -2.03).
+// Bool foundHero/foundBoat locals fed by the restored bool scan helper are
+// also byte-flat (89.05%); native local primitive 0x20 does not distinguish
+// their original spelling, and the extra nested GetMap remains.
 VA(0x005f8be0, 0x636)
 DC_ADDRESS(0x1943ec, 0x462)
 MAC_ADDRESS(0x204ea0, 0x5e4)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer)
