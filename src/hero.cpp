@@ -5504,11 +5504,16 @@ void hero::giveResource(int whichRes, int howMuch)
     g_game->isHuman(m_owner);
 }
 
+// Original DC GetLuck/GetMorale publics end QBAHPBV1@_N1@Z: both flags
+// are bool; the debug byte primitives are their lowered representation.
+// Function-scope luck and direct ability-row expressions (four source models,
+// two objects) all reproduce 94.2276%. The remaining call difference is the
+// expanded hasBuilding below versus retail's retained call; keep the helper.
 VA(0x004e36c0, 0x2E8)
 DC_ADDRESS(0x0d4070, 0x18c)
 MAC_ADDRESS(0x10434c, 0x300)
-int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
-                  unsigned char applyLimits) const
+int hero::getLuck(const hero* otherHero, bool onCursedGround,
+                  bool applyLimits) const
 {
     if (!(m_flags & 0x400000)) {
         if (onCursedGround)
@@ -5560,8 +5565,8 @@ int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
 VA(0x004e39b0, 0x2A9)
 DC_ADDRESS(0x0d41fc, 0x194)
 MAC_ADDRESS(0x10464c, 0x2b8)
-int hero::getMorale(const hero* otherHero, unsigned char onCursedGround,
-                    unsigned char applyLimits) const
+int hero::getMorale(const hero* otherHero, bool onCursedGround,
+                    bool applyLimits) const
 {
     int morale;
 

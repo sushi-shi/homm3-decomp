@@ -933,10 +933,10 @@ public:
     // hero.obj OWNS both definitions (0x4dc320 / 0x4dcac0).
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         getMoraleDescription() const;
-    int getLuck(const hero* otherHero, unsigned char onCursedGround,
-                unsigned char applyLimits) const;
-    int getMorale(const hero* otherHero, unsigned char onCursedGround,
-                  unsigned char applyLimits) const;
+    int getLuck(const hero* otherHero, bool onCursedGround,
+                bool applyLimits) const;
+    int getMorale(const hero* otherHero, bool onCursedGround,
+                  bool applyLimits) const;
     int moraleIncreaseValue(int value);
     int luckIncreaseValue(int value);
     int soDGetSeerSkillValue(int skill, int level);
