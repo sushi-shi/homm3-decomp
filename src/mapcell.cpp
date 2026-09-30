@@ -1924,9 +1924,10 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 
 // The three lists do not read alike, and the asymmetry is retail's:
 // secondary skills and spells come in as SIGNED bytes through checked
-// reads, while each artifact is an UNCHECKED one-byte read into a dword
-// local that is then masked - the same asymmetric artifact crossing
-// loadMonsterList has.
+// reads, while each artifact is an UNCHECKED unsigned byte. Mac 0x122a38
+// reads its separate +0x5c byte slot and uses lbz. VC6 widens this byte-local
+// access to a dword load and and 0xff, as retail does; those instructions
+// do not require an int local. The byte spelling retains Windows 91.4115%.
 
 // DC 0xef158 records the BlackBoxData reference and function-scope
 // int_buffer, short_buffer, char_buffer, count (read status), number (list
@@ -2015,9 +2016,9 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
     number = charBuffer;
     thisBox.m_artifacts.resize(number);
     for (x = 0; x < number; ++x) {
-        int artifact;
-        infile->read(&artifact, sizeof(unsigned char));
-        thisBox.m_artifacts[x] = TArtifact(artifact & 0xff);
+        unsigned char artifact;
+        infile->read(&artifact, sizeof(artifact));
+        thisBox.m_artifacts[x] = TArtifact(artifact);
     }
 
     count = infile->read(&charBuffer, sizeof(charBuffer));
