@@ -847,9 +847,14 @@ void combatManager::drawBackground()
 VA(0x00493ea0, 0x4ca)
 DC_ADDRESS(0x0849c4, 0x3d4)
 MAC_ADDRESS(0x0a581c, 0x5d8)
-// At the retained UpdateCombatArea call, passing m_drawbridgeBounds directly
-// or adding a short-lived SLimitData copy leaves Windows at 96.403%; naming
-// width/height inside the canonical helper also leaves the call byte-flat.
+// DC's offset_used[19] has procedure scope (record 12712), alongside
+// SaveExtent and both recorded int locals; no enclosing array block occurs
+// in the lexical records. Keep that lifetime and the ordinary rectangle
+// member calls. Removing the block and provisional extent/global aliases
+// is VC6 byte-flat at 96.3415%. The remaining named difference is the
+// retained UpdateCombatArea call where retail expands UpdateScreen.
+// Passing the bounds directly or naming a short-lived copy/width/height
+// inside the canonical helper did not recover that expansion.
 void combatManager::updateMouseGrid(int newMouseGridIndex,
                                     std::vector<long>& hexes,
                                     unsigned char forceUpdate)
@@ -883,25 +888,23 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
         cell.m_backgroundOffset = -1;
     }
 
-    {
-        unsigned char offsetUsed[19];
-        memset(offsetUsed, 0, sizeof(offsetUsed));
-        int offset = 0;
-        for (i = 0; i < hexes.size(); ++i) {
-            hexcell& cell = m_cells[hexes[i]];
-            while (offsetUsed[offset] && offset < 19)
-                ++offset;
+    unsigned char offsetUsed[19];
+    memset(offsetUsed, 0, sizeof(offsetUsed));
+    int offset = 0;
+    for (i = 0; i < hexes.size(); ++i) {
+        hexcell& cell = m_cells[hexes[i]];
+        while (offsetUsed[offset] && offset < 19)
+            ++offset;
 
-            cell.m_backgroundOffset = offset;
-            offsetUsed[offset] = 1;
-            copyHeight = 52;
-            if (cell.m_hexUly > 504)
-                copyHeight = 556 - cell.m_hexUly;
+        cell.m_backgroundOffset = offset;
+        offsetUsed[offset] = 1;
+        copyHeight = 52;
+        if (cell.m_hexUly > 504)
+            copyHeight = 556 - cell.m_hexUly;
 
-            m_saveScreenPostGrid->draw(
-                cell.m_hexUlx, cell.m_hexUly, 45, copyHeight,
-                m_combatMouseBackground, offset * 45, 0, false);
-        }
+        m_saveScreenPostGrid->draw(
+            cell.m_hexUlx, cell.m_hexUly, 45, copyHeight,
+            m_combatMouseBackground, offset * 45, 0, false);
     }
 
     for (i = 0; i < hexes.size(); ++i) {
@@ -910,35 +913,34 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
                            m_combatShadowBitmap, 0, 0);
     }
 
-    SLimitData& extent = m_drawbridgeBounds;
-    const SLimitData& combatDrawLimits = g_combatDrawLimits;
-    SLimitData saveExtent = extent;
+    SLimitData saveExtent = m_drawbridgeBounds;
     int saveLimitToExtent = m_limitToExtent;
     m_drawbridgeBounds = g_combatAreaLimits;
     m_limitToExtent = 1;
 
     for (i = 0; i < oldHexes.size(); ++i) {
         const hexcell& cell = m_cells[oldHexes[i]];
-        extent.include(SLimitData(cell.m_hexUlx, cell.m_hexUly,
+        m_drawbridgeBounds.include(SLimitData(cell.m_hexUlx, cell.m_hexUly,
                                   cell.m_hexUlx + 44,
                                   cell.m_hexUly + 51));
     }
     for (i = 0; i < hexes.size(); ++i) {
         const hexcell& cell = m_cells[hexes[i]];
-        extent.include(SLimitData(cell.m_hexUlx, cell.m_hexUly,
+        m_drawbridgeBounds.include(SLimitData(cell.m_hexUlx, cell.m_hexUly,
                                   cell.m_hexUlx + 44,
                                   cell.m_hexUly + 51));
     }
 
-    extent.clip(combatDrawLimits);
+    m_drawbridgeBounds.clip(g_combatDrawLimits);
     m_saveScreenPostGrid->draw(
         m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-        extent.width(), extent.height(), g_windowManager->m_screenBitmap,
+        m_drawbridgeBounds.width(), m_drawbridgeBounds.height(),
+        g_windowManager->m_screenBitmap,
         m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY, false);
     drawFrame(0, 0, 0, 0, 1, 0);
-    updateCombatArea(extent);
+    updateCombatArea(m_drawbridgeBounds);
 
-    extent = saveExtent;
+    m_drawbridgeBounds = saveExtent;
     m_limitToExtent = saveLimitToExtent;
     lastMouseGridIndex = newMouseGridIndex;
 
