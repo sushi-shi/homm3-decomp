@@ -18,9 +18,9 @@ the flat asm diff is the opt-in):
               /Z7 source statements; metadata is attached after comparison.
               A compiler-generated body (no /Z7 statements) falls back to
               the block-skeleton diff with a note instead of failing.
-  --calls     the ordered callee sequences, judged like `objdiff-cli diff`
-              (function_reloc_diffs=name_address); an unclaimed retail label
-              is marked, and the ratchet's =none verdict is stated beside it
+  --calls     the ordered callee sequences, comparing kind, symbol and
+              addend under the full build's function_reloc_diffs=all mode;
+              unclaimed retail labels remain annotated differences
   --relocs    the same over every relocation, calls and data
   --summary   one screen: every view's verdict, the first divergence, the
               next view to run
@@ -42,13 +42,10 @@ the last built object instead.
 rc: 0 = the requested VIEW found no difference, 1 = it did, 2 = error.
 The default skeleton compares flow shape + block sizes ONLY - a
 function can differ inside a block (e.g. jb vs jl) and still exit 0
-here; the below-100% hint then points at --branches. Conversely
---verbose/--asm can exit 1 on an objdiff-100% function: the delinked
-target names data relocs synthetically (data_<rva>, or a neighbor
-symbol + addend folded into the instruction immediate), so reloc
-spellings and addend immediates differ across the sides without any
-byte difference in the retail sense. Trust the skeleton + --branches
-pair for control flow, objdiff for the match verdict.
+here; the below-100% hint then points at --branches. Reference views
+compare the normalized relocation identities. A synthetic label alone
+does not establish address equivalence or exempt a difference from the
+full build's score. Trust objdiff for the complete match verdict.
 """
 from __future__ import annotations
 
@@ -59,6 +56,10 @@ from homm3.sema import _asm
 from homm3.sema import source as source_view
 from homm3.sema._common import die
 from homm3.sema.context import get_context
+
+
+# Contract-tested against the generated full-build objdiff configuration.
+REPORT_RELOCATION_MODE = "all"
 
 
 def _hint_branches(ctx, rva: int, name: str, unit: str) -> None:
@@ -507,13 +508,9 @@ def _source_diff_full(base_text: str, target_text: str, source_map,
 
 # --- --calls / --relocs: the ordered reference sequences ---------------------------
 #
-# What objdiff compares, spelled out. `objdiff-cli diff` (the interactive
-# tool) defaults to function_reloc_diffs=name_address: a relocation pair is
-# equal when its kind, symbol name and addend match. `objdiff-cli report
-# generate` (the ratchet) runs at =none and ignores the target entirely,
-# which is why a function calling `exe_fopen` where we call `_fopen` scores
-# 100 there. These views judge like the interactive default and state the
-# report-level verdict next to it. The retail side names an UNCLAIMED
+# The full build enables function_reloc_diffs=all. Reference views compare
+# kind, symbol name and addend on its normalized objects; naming uncertainty
+# remains visible in that verdict. The retail side names an UNCLAIMED
 # callee/global with a carve label (sub_f6570, data_2a5d5c, exe_new) that
 # MSVC can never emit. Source-claimed carcasses also have non-compiler labels;
 # their admission comes from the generated inventory's provenance. Neither
@@ -604,9 +601,10 @@ def _refs_compare(base_refs: list, target_refs: list, *,
     could never match by spelling (source-claimed / unclaimed / local /
     compgen) or None. Admission only annotates the row; it never aliases
     symbols, changes pairing, or suppresses a name/addend difference.
-    agree = no ~/-/+ (objdiff name_address); report_agree = what the
-    ratchet's function_reloc_diffs=none sees: every pair the same kind and
-    nothing one-sided. Pairing is a SequenceMatcher over (class, name)
+    agree = no ~/-/+; report_agree retains that same verdict for the
+    full build's function_reloc_diffs=all mode. Synthetic-label annotations
+    never excuse a name or addend difference. Pairing is a SequenceMatcher
+    over (class, name)
     keys where a name the other side never spells is a wildcard, so one
     retail-inlined call shifts nothing - positional pairing would mislabel
     every later row."""
@@ -662,8 +660,7 @@ def _refs_compare(base_refs: list, target_refs: list, *,
                                if row[0] == "~" and row[3] == category)
     counts["real"] = counts["~"] - counts["synthetic"]
     agree = counts["~"] + counts["-"] + counts["+"] == 0
-    report_agree = (counts["-"] + counts["+"] == 0 and all(
-        cls(row[1][1]) == cls(row[2][1]) for row in rows if row[0] in "=~"))
+    report_agree = agree
     return {"rows": rows, "counts": counts, "agree": agree,
             "report_agree": report_agree}
 
@@ -688,9 +685,8 @@ def _refs_view(base_text: str, target_text: str, rva: int, name: str,
         target_refs = [r for r in target_refs if r[1] in flow]
     what = "call" if calls_only else "reloc"
     out = [f"[{what} diff: BASE (compiled) vs TARGET (retail) @ 0x{rva:08x} {name}]",
-           "[judged like `objdiff-cli diff` (function_reloc_diffs=name_address): "
-           "kind, symbol and addend must match; the ratchet report runs at =none "
-           "and ignores names]"]
+           f"[full-build reference comparison (function_reloc_diffs={REPORT_RELOCATION_MODE}): "
+           "kind, symbol and addend must match; naming annotations do not hide differences]"]
     for side, stop in (("base", bstop), ("target", tstop)):
         if stop is not None:
             out.append(f"[{side} stream truncated at +0x{stop:x} - jump-table "
@@ -740,7 +736,7 @@ def _refs_view(base_text: str, target_text: str, rva: int, name: str,
                f"{c['+']} target-only")
     seq = "CALL SEQUENCES" if calls_only else "REFERENCE SEQUENCES"
     if res["agree"]:
-        out.append(f"  name_address: {seq} AGREE   |   report (none): AGREE - "
+        out.append(f"  references: {seq} AGREE   |   report ({REPORT_RELOCATION_MODE}): AGREE - "
                    "whatever is left is not the reference structure.")
     else:
         report = "AGREE" if res["report_agree"] else "DIFFER"
@@ -758,7 +754,7 @@ def _refs_view(base_text: str, target_text: str, rva: int, name: str,
                      "so check declarations and relocation identities")
         if c["unclaimed"]:
             hint += f"; claim the {c['unclaimed']} unclaimed references to compare them by name"
-        out.append(f"  name_address: {seq} DIFFER   |   report (none): {report} - {hint}.")
+        out.append(f"  references: {seq} DIFFER   |   report ({REPORT_RELOCATION_MODE}): {report} - {hint}.")
     return "\n".join(out) + "\n", res["agree"]
 
 
@@ -769,7 +765,7 @@ _DIVERGENCE_KINDS = (
     "branch target; opcode = different mnemonic; immediate = different literal; "
     "register = different register operands; encoding = same asm, different bytes; "
     "reloc-target = same bytes, a different symbol or addend ('unclaimed' = a retail "
-    "label our side cannot emit, which the ratchet report ignores)]")
+    "label without a proven identity; the full-build report still compares it)]")
 
 
 def _zeroed(raw: bytes, off: int, relocs) -> bytes:
@@ -785,8 +781,9 @@ def _first_divergence(base_text: str, target_text: str, *,
                       claimed_names=frozenset()) -> dict | None:
     """The first place the two sides' BYTES disagree, walking the aligned
     blocks and the aligned instructions inside them; None when nothing
-    differs. A divergence that is only a reloc symbol spelling
-    (``cosmetic``) is reported only when nothing real follows."""
+    differs. A displacement shift to the same target block is deferred
+    until its underlying size change. Relocation names and addends remain
+    differences even when a name is synthetic or source-claimed."""
     import difflib
 
     base_cfg = _asm.cfg_rows(base_text)
@@ -802,7 +799,7 @@ def _first_divergence(base_text: str, target_text: str, *,
                 "relocs": [(k, s, _field(raw, site, off)) for site, k, s in relocs]}
 
     def hit(kind, block, bblock, tblock, brow, trow, prev, note=None):
-        return {"kind": kind, "cosmetic": kind == "reloc-target" and note is not None,
+        return {"kind": kind, "cosmetic": False,
                 "note": note, "block": block,
                 "base_addr": bblock[0] if bblock else None,
                 "target_addr": tblock[0] if tblock else None,
@@ -956,7 +953,7 @@ def _summary_lines(facts: dict) -> tuple[list[str], bool, str]:
     lines = [f"[summary: BASE (compiled) vs TARGET (retail) @ 0x{rva:08x} "
              f"{facts['name']} [{facts['unit']}]]"]
     pct = facts.get("pct")
-    lines.append("  objdiff       " + (f"{pct:.2f}%  (report; function_reloc_diffs=none)"
+    lines.append("  objdiff       " + (f"{pct:.2f}%  (report; function_reloc_diffs={REPORT_RELOCATION_MODE})"
                                        if pct is not None else "n/a (no report entry)"))
     nb, nt = census["blocks"]
     lines.append(f"  skeleton      {'same' if census['same'] else 'DIFFERS':<11} base {nb} vs "

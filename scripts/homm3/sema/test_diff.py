@@ -4,6 +4,10 @@ summary digest (--summary/--why-bytes)."""
 from __future__ import annotations
 
 import unittest
+import json
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
 from types import SimpleNamespace
 
 from homm3.sema import _asm, diff
@@ -77,11 +81,11 @@ class RefsCompareTest(unittest.TestCase):
         self.assertEqual([r[0] for r in rows], ["=", "="])
         self.assertTrue(res["agree"] and res["report_agree"])
 
-    def test_unclaimed_retail_label_differs_but_report_agrees(self):
+    def test_unclaimed_retail_label_differs_in_full_report(self):
         rows, res = self.rows(_calls("?f@@YAXXZ"), _calls("sub_f6570"))
         self.assertEqual(rows, [("~", "?f@@YAXXZ", "sub_f6570", "unclaimed")])
         self.assertFalse(res["agree"])
-        self.assertTrue(res["report_agree"])
+        self.assertFalse(res["report_agree"])
         self.assertEqual((res["counts"]["synthetic"], res["counts"]["real"]), (1, 0))
 
     def test_two_real_names_differ_without_annotation(self):
@@ -108,7 +112,7 @@ class RefsCompareTest(unittest.TestCase):
         res = diff._refs_compare(diff._ref_seq(base)[0], diff._ref_seq(target)[0],
                                  claimed_names=names)
         self.assertFalse(res["agree"])
-        self.assertTrue(res["report_agree"])
+        self.assertFalse(res["report_agree"])
         self.assertEqual(res["counts"]["source-claimed"], 1)
         self.assertEqual(res["counts"]["unclaimed"], 0)
         text, agree = diff._refs_view(base, target, 0x1000, "fn", True,
@@ -158,10 +162,12 @@ class RefsCompareTest(unittest.TestCase):
         target = _listing(("mov eax, dword ptr [0x0]", "a1 00 00 00 00", [(1, "DIR32", "_z_errmsg")]), RET)
         rows, _res = self.rows(base, target)
         self.assertEqual(rows[0][0], "~")
+        self.assertFalse(_res["report_agree"])
         base = _listing(("call 0x5", "e8 00 00 00 00", [(1, "REL32", "?f@@YAXXZ")]), RET)
         target = _listing(("jmp 0x5", "e9 00 00 00 00", [(1, "REL32", "?f@@YAXXZ")]), RET)
         rows, _res = self.rows(base, target)
         self.assertEqual(rows[0][0], "~")
+        self.assertFalse(_res["report_agree"])
 
     def test_indirect_calls_compare_by_displacement(self):
         base = _listing(("call dword ptr [edx + 0xc]", "ff 52 0c"), RET)
@@ -180,7 +186,7 @@ class RefsCompareTest(unittest.TestCase):
         self.assertIn("  #0   +000   =  ?A@@YAXXZ", text)
         self.assertIn("~  ?B@@YAXXZ -> sub_1234  (retail label - unclaimed)", text)
         self.assertIn("1 same, 1 different (1 unclaimed retail labels, 0 real), 0 base-only, 0 target-only", text)
-        self.assertIn("name_address: CALL SEQUENCES DIFFER   |   report (none): AGREE", text)
+        self.assertIn("references: CALL SEQUENCES DIFFER   |   report (all): DIFFER", text)
         text, agree = diff._refs_view(_listing(RET), _listing(RET), 0x1000, "fn", calls_only=False)
         self.assertTrue(agree)
         self.assertIn("no relocations on either side.", text)
@@ -235,18 +241,18 @@ class FirstDivergenceTest(unittest.TestCase):
         div = diff._first_divergence(base, target)
         self.assertEqual(div["kind"], "immediate")
 
-    def test_reloc_target_is_cosmetic_only_for_synthetic_names(self):
+    def test_synthetic_reloc_target_is_a_scored_difference(self):
         real = _listing(("call 0x5", "e8 00 00 00 00", [(1, "REL32", "?f@@YAXXZ")]), RET)
         label = _listing(("call 0x5", "e8 00 00 00 00", [(1, "REL32", "sub_f6570")]), RET)
         other = _listing(("call 0x5", "e8 00 00 00 00", [(1, "REL32", "?g@@YAXXZ")]), RET)
-        self.assertEqual(self.kind(real, label), ("reloc-target", True, "unclaimed"))
+        self.assertEqual(self.kind(real, label), ("reloc-target", False, "unclaimed"))
         self.assertEqual(self.kind(real, other), ("reloc-target", False, None))
-        # a real divergence after a cosmetic one wins
+        # The first scored relocation difference precedes later byte changes.
         base = _listing(("call 0x5", "e8 00 00 00 00", [(1, "REL32", "?f@@YAXXZ")]),
                         ("push 0x4008", "68 08 40 00 00"), RET)
         target = _listing(("call 0x5", "e8 00 00 00 00", [(1, "REL32", "sub_f6570")]),
                           ("push 0x4009", "68 09 40 00 00"), RET)
-        self.assertEqual(self.kind(base, target), ("immediate", False, None))
+        self.assertEqual(self.kind(base, target), ("reloc-target", False, "unclaimed"))
 
     def test_render_shows_both_sides_unmasked(self):
         base = _listing(("mov ecx, esi", "8b ce"), ("push 0x4008", "68 08 40 00 00"), RET)
@@ -258,6 +264,18 @@ class FirstDivergenceTest(unittest.TestCase):
 
 
 class SummaryLinesTest(unittest.TestCase):
+    def test_report_mode_matches_full_build_configuration(self):
+        from homm3.build import configure
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            directory = root / "build/objdiff"
+            directory.mkdir(parents=True)
+            with patch.object(configure, "ROOT", root):
+                configure.write_objdiff({}, [{"unit": "example"}])
+            options = json.loads((directory / "objdiff.json").read_text())["options"]
+            self.assertEqual(diff.REPORT_RELOCATION_MODE, options["functionRelocDiffs"])
+
     def facts(self, **over):
         agree = {"rows": [], "counts": {"=": 1, "~": 0, "-": 0, "+": 0, "synthetic": 0, "real": 0},
                  "agree": True, "report_agree": True}
@@ -279,11 +297,11 @@ class SummaryLinesTest(unittest.TestCase):
         self.assertTrue(agree)
         self.assertIsNone(nxt)
         self.assertIn("  next: (nothing - all views agree)", lines)
-        self.assertIn("  objdiff       100.00%  (report; function_reloc_diffs=none)", lines)
+        self.assertIn("  objdiff       100.00%  (report; function_reloc_diffs=all)", lines)
 
     def test_next_rungs(self):
         differ = {"rows": [], "counts": {"=": 0, "~": 1, "-": 0, "+": 0, "synthetic": 1, "real": 0},
-                  "agree": False, "report_agree": True}
+                  "agree": False, "report_agree": False}
         self.assertEqual(diff._summary_lines(self.facts(calls=differ, relocs=differ))[2], "--calls")
         self.assertEqual(diff._summary_lines(self.facts(
             branches={"status": "flips", "kind": "SIGNEDNESS", "rows": [], "nbr": 1, "nbr_t": 1, "rets": (1, 1)}))[2],
