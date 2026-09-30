@@ -818,7 +818,21 @@ public:
     int add(int armyType, int newNumTroops, int newIndex);
     void dismiss(int whichIndex);
     void swap(int srcIndex, armyGroup* destGroup, int destIndex);
-    int getNumArmies() const;
+    // Older DC armygrp.cpp:804 owns this body; Complete expands the same
+    // seven-slot operation across TUs in TBottomViewHero (0x451ab0).
+    // Keep one class-visible definition and the canonical caller boundary.
+    VA(0x0044acc0, 0x14)
+    DC_ADDRESS(0x04ed28, 0x24)
+    MAC_ADDRESS(0x058528, 0x7c)
+    int getNumArmies() const
+    {
+        int numArmies = 0;
+        for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
+            if (m_armies[i] != CREATURE_NONE)
+                ++numArmies;
+        }
+        return numArmies;
+    }
     static const char* getArmySizeName(int howMany, int nameSet);
 };
 SIZE(armyGroup, 56);

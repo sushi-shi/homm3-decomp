@@ -472,11 +472,14 @@ static int g_heroArmyCoords[7][2] = {
 // index is dead), a spilled difference in `[ebp-0x10]`, and the
 // one-instruction loop header the preheader `jmp`s past. Two lockstep IVs,
 // and VC6 picks the survivor itself; not a guard or return shape.
-// getNumArmies placement: DC armygrp.cpp:804 and Mac order
-// canJoin(0x58408), getNumArmies(0x58528), add(0x585a4) support its ordinary
-// owning source body. The cross-TU count expansion leaves header visibility
-// open; no explicit inline qualifier is proven. Current ordinary call gives
-// 95.87521% versus 97.7573% for the pasted count; keep the supported boundary.
+// getNumArmies placement: older DC armygrp.cpp:804 and Mac order
+// canJoin(0x58408), getNumArmies(0x58528), add(0x585a4) locate the older
+// source body. Complete retail expands that count across TUs here, so its
+// canonical body is class-visible in armygrp.h. No explicit inline qualifier
+// is proven; keep the call and the ordinary member definition.
+// Focused Complete build: 95.87521 -> 96.94359; the count call now expands.
+// Remaining named under-inline boundary is the quantity string's _Tidy;
+// earlier differences include GetCurrHero arm order and skill-loop IV choice.
 VA(0x00451ab0, 0x68A)
 DC_ADDRESS(0x0558a8, 0x54c)
 MAC_ADDRESS(0x05fdd4, 0x9b4)  // anchor-vtable 0x63bb2c + advManager::UpdBottomViewHero

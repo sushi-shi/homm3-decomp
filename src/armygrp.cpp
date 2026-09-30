@@ -742,19 +742,6 @@ long armyGroup::getAIValue() const
     return value;
 }
 
-VA(0x0044acc0, 0x14)
-DC_ADDRESS(0x04ed28, 0x24)
-MAC_ADDRESS(0x058528, 0x7c)
-int armyGroup::getNumArmies() const
-{
-    int numArmies = 0;
-    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
-        if (m_armies[i] != CREATURE_NONE)
-            ++numArmies;
-    }
-    return numArmies;
-}
-
 VA(0x0044ace0, 0x76)
 DC_ADDRESS(0x04ed4c, 0x80)
 MAC_ADDRESS(0x0585a4, 0x16c)
