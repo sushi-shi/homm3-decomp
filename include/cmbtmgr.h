@@ -746,7 +746,9 @@ public:
     //     GetNextChainLightningTarget for the next hop - same indexing.
     // Named generally rather than for chain lightning: the mass-spell
     // writer and the chain-lightning writer both use it.
-    unsigned char m_effected[2][20];  // +0x547c
+    // Original ShowMassSpell's AAY11BE@_N parameter proves bool [2][20];
+    // every source caller supplies this member, whose stores are 0 or 1.
+    bool m_effected[2][20];  // +0x547c
     // Per-side "this side is played by the computer" latch: ai_tactical
     // crosses it with gpGame's own AI flag before scaling a shooter's
     // value (get_ranged_attack_value 0x435cb0, the type_AI_combat_
@@ -1622,7 +1624,7 @@ public:
     //     creature domain.
     //   * Earthquake's `level` indexes akSpellTraits' mastery_bonus row
     //     for the number of wall sections to bring down.
-    void showMassSpell(unsigned char (&effected)[2][20], int spellEffect,
+    void showMassSpell(bool (&effected)[2][20], int spellEffect,
                        bool showWince);  // 0x5a67c0
     void summonElemental(SpellID spell, TCreatureType monType,
                          int spellPower, int level);  // 0x5a7080

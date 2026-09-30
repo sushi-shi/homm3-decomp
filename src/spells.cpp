@@ -4021,11 +4021,12 @@ void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell
 // DC records the non-const array reference. Mac 0x1976f0 reloads
 // m_powSprite after loadSpellEffect; these recoveries leave Windows bytes flat.
 // Original DC ?ShowMassSpell@combatManager@@QAAXAAY11BE@_NH_N@Z
-// proves bool showWince; CodeView's byte primitive is its lowered encoding.
+// proves bool [2][20] and bool showWince; CodeView's byte primitive is their
+// lowered encoding. All callers pass m_effected, preserving its bool domain.
 VA(0x005a67c0, 0x4AC)
 DC_ADDRESS(0x155b28, 0x3e2)
 MAC_ADDRESS(0x1976b8, 0x588)  // order-map+arity
-void combatManager::showMassSpell(unsigned char (&effected)[2][20],
+void combatManager::showMassSpell(bool (&effected)[2][20],
                                   int spellEffect, bool showWince)
 {
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
