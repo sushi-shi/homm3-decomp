@@ -176,7 +176,7 @@ DC_ADDRESS(0x08c91c, 0xce)
 MAC_ADDRESS(0x0bf424, 0x15c)
 void type_record_move_hero::replay(unsigned char draw)
 {
-    setPlayer(m_playerId);
+    setPlayer(getPlayerId());
 
     if (g_currentPlayer->m_currHeroId != m_currentHero->m_id
         || !g_advManager->m_curHeroMobile) {
@@ -248,7 +248,7 @@ DC_ADDRESS(0x08caf0, 0x3c)
 MAC_ADDRESS(0x0bf718, 0x60)
 void type_record_teleport::replay(unsigned char draw)
 {
-    setPlayer(m_playerId);
+    setPlayer(getPlayerId());
 
     g_advManager->teleportTo(m_currentHero, m_destination, 0, 0, draw, 1);
 }
@@ -358,7 +358,7 @@ type_record_claim_town::type_record_claim_town(long id,
 {
     m_id = id;
     m_newOwner = newOwner;
-    m_oldOwner = g_game->m_towns[id].m_owner;
+    m_oldOwner = g_game->getTown(id)->m_owner;
 }
 
 // E:\gamedcs\event_record.cpp:339
@@ -386,9 +386,9 @@ DC_ADDRESS(0x08cdd8, 0x70)
 MAC_ADDRESS(0x0bfc0c, 0xac)
 void type_record_claim_town::replay(unsigned char draw)
 {
-    g_game->m_towns[m_id].m_owner = m_newOwner;
+    g_game->getTown(m_id)->m_owner = m_newOwner;
     if (draw) {
-        town& claimed = g_game->m_towns[m_id];
+        town& claimed = *g_game->getTown(m_id);
         if (getMapExtra(claimed.m_mapX, claimed.m_mapY, claimed.m_mapZ)
             & g_mapVisibilityBit) {
             g_advManager->completeDraw(0);
@@ -402,7 +402,7 @@ DC_ADDRESS(0x08ce48, 0x2a)
 MAC_ADDRESS(0x0bfcb8, 0x28)
 void type_record_claim_town::undo()
 {
-    g_game->m_towns[m_id].m_owner = m_oldOwner;
+    g_game->getTown(m_id)->m_owner = m_oldOwner;
 }
 
 // E:\gamedcs\event_record.cpp:376
@@ -681,7 +681,7 @@ DC_ADDRESS(0x08d46c, 0x42)
 MAC_ADDRESS(0x0c092c, 0xc0)
 void type_record_erase::undo()
 {
-    g_game->m_worldMap.placeObject(m_objectId, 0);
+    g_game->getWorldMapData()->placeObject(m_objectId, 0);
     NewmapCell* cell = g_game->getCell(m_location);
     cell->m_extraInfo = m_extraInfo;
     cell->m_objectIndex = m_objectIndex;
@@ -760,7 +760,7 @@ DC_ADDRESS(0x08d5f0, 0x96)
 MAC_ADDRESS(0x0c0cd8, 0x130)
 void type_record_hide_hero::replay(unsigned char draw)
 {
-    setPlayer(m_playerId);
+    setPlayer(getPlayerId());
 
     if (!m_townGarrison) {
         if (g_netLocalGamePos == m_prevOwner) {
@@ -859,7 +859,7 @@ DC_ADDRESS(0x08d8b4, 0x140)
 MAC_ADDRESS(0x0c117c, 0x178)
 void type_record_show_hero::replay(unsigned char draw)
 {
-    setPlayer(m_playerId);
+    setPlayer(getPlayerId());
 
     m_currentHero->m_x = m_location.m_x;
     m_currentHero->m_y = m_location.m_y;

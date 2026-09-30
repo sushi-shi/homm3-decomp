@@ -306,13 +306,19 @@ SIZE(GameSelectionHeadersStruct, 0xCA4);
 extern int& g_videoGameState;
 
 class CNetPlayerHandlerPlayer : public CNetPlayerInfo {
-public:
+private:
     int m_heroIndex;  // +0x20
     int m_townIndex;  // +0x24
+
+public:
     int m_availableHeroesCount;  // +0x28
     int m_availableHeroes[16];  // +0x2c
     int m_startBonusIndex;  // +0x6c
+
+private:
     int m_playerPos;  // +0x70
+
+public:
     int m_color;  // +0x74
     // A byte in retail: the ctor 0x57c790 stores it with a byte mov and
     // OnUpdatePlayerPosMsg re-reads it movsx.
@@ -367,14 +373,28 @@ public:
         m_playerPos = -1;
         m_heroIndex = -1;
     }
+
+    // Accessor boundary inferred from the existing property interface and
+    // external field operations; these additional names are project names.
+    int getPlayerPos() const { return m_playerPos; }
+    void setPlayerPos(int value) { m_playerPos = value; }
+    int getTownIndex() const { return m_townIndex; }
+    void setTownIndex(int value) { m_townIndex = value; }
+    int getHeroIndex() const { return m_heroIndex; }
+    void setHeroIndex(int value) { m_heroIndex = value; }
 };
 SIZE(CNetPlayerHandlerPlayer, 0x7c);
 
 class CNetPlayerHandler {
 public:
     enum { MAX_PLAYERS = 8 };
+
+private:
     CNetPlayerHandlerPlayer m_humanPlayers[MAX_PLAYERS];  // +0x000
+
     CNetPlayerHandlerPlayer m_computerPlayers[MAX_PLAYERS];  // +0x3e0
+
+public:
     int m_playerPos;  // +0x7c0
     int m_playersCount;  // +0x7c4
     int m_unused;  // +0x7c8
@@ -396,6 +416,16 @@ public:
     unsigned char setComputer(int pos);
     int getUnassignedPlayerPos();
     int getPlayerCount(unsigned char assignedOnly);
+
+    // Accessor boundary inferred from the existing property interface and
+    // external field operations; these additional names are project names.
+    // The index is a network slot; getPlayerInPos searches a game position.
+    CNetPlayerHandlerPlayer* getHumanPlayer(int index) { return &m_humanPlayers[index]; }
+    const CNetPlayerHandlerPlayer* getHumanPlayer(int index) const { return &m_humanPlayers[index]; }
+    void copyComputerPlayers(const CNetPlayerHandlerPlayer* players)
+    {
+        memcpy(m_computerPlayers, players, sizeof(m_computerPlayers));
+    }
 };
 SIZE(CNetPlayerHandler, 0x7d0);
 
@@ -439,11 +469,16 @@ public:
     unsigned long m_clickTime;  // 0x60
     // DC loadMode; Complete's constructor separates load and save modes.
     unsigned char m_loadMode;  // 0x64
+    // Before normalization (Dreamcast): saveGameMode.
     unsigned char m_saveMode;  // 0x65
     // Third mode byte of the run: SortMaps (0x585050) sorts and refills
     // from TransferHeaders when it is set, HeadersA otherwise.
     // SetupScenarioOptions assigns its randomMaps argument to this byte.
+
+private:
     unsigned char m_randomMapMode;  // 0x66
+
+public:
     // The three PC mode bytes end at +0x67; textIndex starts at the
     // next dword boundary, +0x68. This byte aligns the integer.
     char m_paddingBeforeTextIndex;
@@ -543,15 +578,21 @@ public:
     // the transfer path walks it. SortMaps sorts one of the two by
     // m_randomMapMode and refills SelectionHeaders from it through the
     // mapSizeFilter.
+
+private:
     std::vector<GameSelectionHeadersStruct> m_headersA;  // 0x1030
     std::vector<GameSelectionHeadersStruct> m_transferHeaders;  // 0x1040
+
+public:
     std::vector<GameSelectionHeadersStruct> m_selectionHeaders;  // 0x1050
     // The header row of the currently selected map/save;
     // UpdatePlayerPositions reads the per-slot alignments through it.
     GameSelectionHeadersStruct* m_currentHeader;  // 0x1060
-    CNetPlayerHandler m_players;  // 0x1064
 
 private:
+    // Before normalization (Dreamcast): netPlayerHandler.
+    CNetPlayerHandler m_players;  // 0x1064
+
     unsigned char m_receivedMaps;  // 0x1834 (DC receivedMaps)
 
 public:
@@ -824,6 +865,16 @@ public:
 
 private:
     CNetPlayerHandlerPlayer* getThisPlayer();
+
+public:
+    // Accessor boundary inferred from the existing property interface and
+    // external field operations; these additional names are project names.
+    unsigned int getTransferHeaderCount() const { return m_transferHeaders.size(); }
+    GameSelectionHeadersStruct& getTransferHeader(int index) { return m_transferHeaders[index]; }
+    const GameSelectionHeadersStruct& getTransferHeader(int index) const { return m_transferHeaders[index]; }
+    unsigned int getHeaderCount() const { return m_headersA.size(); }
+    GameSelectionHeadersStruct& getHeader(int index) { return m_headersA[index]; }
+    const GameSelectionHeadersStruct& getHeader(int index) const { return m_headersA[index]; }
 };
 SIZE(TSingleSelectionWindow, 0x1970);
 

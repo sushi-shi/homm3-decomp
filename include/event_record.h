@@ -59,6 +59,8 @@ public:
     // E:\gamedcs\event_record.h:64
     DC_ADDRESS(0x08ec5c, 0x4)
     char getPlayerId() const { return m_playerId; }
+
+protected:
     signed char m_playerId;  // +0x04
 };
 
@@ -314,6 +316,7 @@ public:
     DC_ADDRESS(0x08f258, 0x18)
     long getChangeCount() const { return m_changes.size(); }
 
+private:
     std::vector<type_shroud_change> m_changes;  // +0x08 (allocator at +0x08)
 };
 

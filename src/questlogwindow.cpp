@@ -121,12 +121,12 @@ void TQuestLogWindow::updateQuestLocator(int i)
     if (m_firstVisibleQuest + i < m_seerHutLogList.size()) {
         int quest = m_seerHutLogList[m_firstVisibleQuest + i];
 
-        if (quest >= g_game->m_worldMap.m_seerHutList.size())
-            strcpy(g_text, g_game->m_worldMap.m_questGuardList[
-                       quest - g_game->m_worldMap.m_seerHutList.size()]
+        if (quest >= g_game->getWorldMapData()->m_seerHutList.size())
+            strcpy(g_text, g_game->getWorldMapData()->m_questGuardList[
+                       quest - g_game->getWorldMapData()->m_seerHutList.size()]
                        .questGuardFn00572D60().c_str());
         else
-            strcpy(g_text, g_game->m_worldMap.m_seerHutList[quest]
+            strcpy(g_text, g_game->getWorldMapData()->m_seerHutList[quest]
                        .getSeerLogText().c_str());
 
         msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -175,16 +175,16 @@ void doQuestLog(int player)
     if (!g_questLogWindow)
         memError();
 
-    int numberSeerHuts = g_game->m_worldMap.m_seerHutList.size();
+    int numberSeerHuts = g_game->getWorldMapData()->m_seerHutList.size();
     int i;
     for (i = 0; i < numberSeerHuts; ++i) {
-        if (g_game->m_worldMap.m_seerHutList[i]
+        if (g_game->getWorldMapData()->m_seerHutList[i]
                 .questActiveforPlayer(player))
             g_questLogWindow->m_seerHutLogList.push_back(i);
     }
 
-    for (i = 0; i < g_game->m_worldMap.m_questGuardList.size(); ++i) {
-        if (g_game->m_worldMap.m_questGuardList[i]
+    for (i = 0; i < g_game->getWorldMapData()->m_questGuardList.size(); ++i) {
+        if (g_game->getWorldMapData()->m_questGuardList[i]
                 .questActiveforPlayer(player))
             g_questLogWindow->m_seerHutLogList.push_back(numberSeerHuts + i);
     }

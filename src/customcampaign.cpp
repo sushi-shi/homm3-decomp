@@ -731,7 +731,7 @@ void TCampaignSecondarySkillBonus::apply(int whichPlayer) const
         if (target->getSecondarySkill(TSecondarySkill(m_skill)) == 0)
             target->giveSS(m_skill, m_level);
         else
-            target->m_skillLevel[m_skill] = m_level;
+            target->setSecondarySkillLevel(TSecondarySkill(m_skill), TSkillMastery(m_level));
     }
 }
 
@@ -1068,7 +1068,7 @@ hero* TCampaignStartCrossoverOption::getFirstCrossoverHero(
     SCampaign* campaign, int which) const
 {
     std::vector<hero>& pool = campaign->getCrossoverHeroes(
-        campaign->m_mapScores[m_choices[which].m_scenario].m_index);
+        campaign->getScenarioInfo(m_choices[which].m_scenario).m_index);
     return pool.size() != 0 ? &pool[0] : 0;
 }
 
@@ -1106,7 +1106,7 @@ std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
     TCampaignBrief::CampaignHeaderStruct* campaign =
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignRecord);
     SCampaign& currentCampaign = g_game->m_campaign;
-    int slot = currentCampaign.m_mapScores[m_choices[which].m_scenario].m_index;
+    int slot = currentCampaign.getScenarioInfo(m_choices[which].m_scenario).m_index;
     int source = currentCampaign.findLatestCrossoverScenario(slot);
 
     NewSMapHeader mapHeader;
@@ -1159,7 +1159,7 @@ MAC_ADDRESS(0x093bd8, 0x34)
 int TCampaignStartCrossoverOption::slot5(
     const TCampaignBrief::ScenarioStruct* scenario, int which) const
 {
-    return g_game->m_campaign.m_mapScores[m_choices[which].m_scenario].m_index;
+    return g_game->m_campaign.getScenarioInfo(m_choices[which].m_scenario).m_index;
 }
 
 VA(0x004859e0, 0x44)
@@ -1443,8 +1443,8 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         && (currentCampaign->m_currentMap == g_crossoverSplitFirstScenario
             || currentCampaign->m_currentMap
                 == g_crossoverSplitLastScenario)
-        && (currentCampaign->m_mapScores[0].m_completed
-            || currentCampaign->m_mapScores[1].m_completed)) {
+        && (currentCampaign->getScenarioInfo(0).m_completed
+            || currentCampaign->getScenarioInfo(1).m_completed)) {
         m_crossoverCreatures.reset();
     }
 
@@ -1601,7 +1601,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         }
     }
 
-    currentHero->m_sex = sourceHero->m_sex;
+    currentHero->setSex(sourceHero->getSex());
     if (sourceHero->m_hasCustomName) {
         const char* customName = sourceHero->heroFn004D8FB0();
         currentHero->m_hasCustomName = 1;
@@ -1770,11 +1770,11 @@ void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
     int choice = campaign->m_briefingChoice;
     int player = getStartOptions()->getPlayer(choice);
     int slot = getStartOptions()->slot5(this, choice);
-    campaign->m_mapScores[campaign->m_currentMap].m_index = slot;
+    campaign->getScenarioInfo(campaign->m_currentMap).m_index = slot;
 
     std::vector<hero> heroes;
     std::vector<HeroPlaceholderData> placeholders =
-        g_game->m_worldMap.m_heroPlaceholders;
+        g_game->getWorldMapData()->m_heroPlaceholders;
     int triggerX;
     int triggerY;
     if (placeholders.size() == 0)
@@ -2174,7 +2174,7 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     std::streambuf* stream, int option)
 {
     int position = getStartOptions()->getPlayer(option);
-    g_game->m_players[position].m_isHuman = 1;
+    g_game->m_players[position].setHuman(1);
     g_game->m_players[position].m_isLocal = 1;
 
     int playerHeroFaces[8];
@@ -2253,7 +2253,7 @@ void TCampaignBrief::CampaignHeaderStruct::markRequiredCampaignHeroes(
 {
     memset(wanted, 0, game::HERO_COUNT);
     for (unsigned int mapIndex = 0; mapIndex < m_scenarios.size(); ++mapIndex) {
-        if (!g_game->m_campaign.m_mapScores[mapIndex].m_completed)
+        if (!g_game->m_campaign.getScenarioInfo(mapIndex).m_completed)
             m_scenarios[mapIndex]->markCrossoverHeroes(wanted);
     }
 }
@@ -2440,7 +2440,7 @@ bool TCampaignBrief::ScenarioStruct::prerequisitesMet() const
 {
     for (unsigned int i = 0; i < m_prerequisites.size(); ++i)
         if (m_prerequisites[i]
-            && !g_game->m_campaign.m_mapScores[i].m_completed)
+            && !g_game->m_campaign.getScenarioInfo(i).m_completed)
             return false;
     return true;
 }
@@ -2458,7 +2458,7 @@ void TCampaignBrief::CampaignHeaderStruct::getAvailableScenarios(
         available[i] = 1;
         if (!scenario->hasMap()) {
             available[i] = 0;
-            g_game->m_campaign.m_mapScores[i].m_completed = true;
+            g_game->m_campaign.getScenarioInfo(i).m_completed = true;
         } else if (!scenario->prerequisitesMet())
             available[i] = 0;
     }
@@ -2983,7 +2983,7 @@ void SCampaign::pruneCrossoverHeroes(const TCampaignBrief::CampaignHeaderStruct*
              scenarioIndex < header->getScenarioCount();
              ++scenarioIndex) {
             const TCampaignBrief::ScenarioStruct* scenario =
-                header->m_scenarios[scenarioIndex];
+                header->getScenario(scenarioIndex);
             // Mac 0x98a1c tests the caller's size before 0x98a30 calls
             // usesCrossoverPool, whose own 0x96074 guard remains distinct.
             if (!m_mapScores[scenarioIndex].m_completed

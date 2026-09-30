@@ -738,7 +738,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                 moveLeft = pathIndex + 1;
             if (m_creaturePlacement || isInSecondPhase())
                 considerWaiting = 0;
-            if (g_game->m_setup.m_difficulty < 2 && !m_sideIsAi[currentArmy->m_combatSide])
+            if (g_game->m_setup.m_difficulty < 2 && !m_sideIsAi[currentArmy->getOwningSide()])
                 considerWaiting = 0;
             if (enemyAttacks == 0) {
                 considerWaiting = 0;
@@ -772,7 +772,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                                     && enemyAttacks[secondHex] >= bestDanger)) {
                             if (!m_creaturePlacement
                                     || !isOutsidePlacementBoundry(
-                                            currentArmy->m_combatSide, hex)) {
+                                            currentArmy->getOwningSide(), hex)) {
                                 m_nextActionGridIndex = hex;
                                 committed = 1;
                                 if (enemyAttacks != 0) {
@@ -1807,7 +1807,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     memset(enemyAttacks, 0, sizeof(enemyAttacks));
 
     markFirewalls(currentArmy, enemyAttacks, estimate);
-    if (g_game->m_gameVersion >= 2)
+    if (g_game->getGameVersion() >= 2)
         markMoat(currentArmy, enemyAttacks, estimate);
     if (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[ourGroup])
         markEnemyAttacks(currentArmy, enemyAttacks, markedEnemies,

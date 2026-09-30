@@ -958,6 +958,10 @@ public:
     // resource paths.
     // Retained ordinary body: game.cpp, Windows 0x004bada0.
     bool isHuman() const;
+    // Project mutation and raw-byte copy view. isHuman remains the native
+    // normalized predicate; saving/restoring this flag preserves its byte.
+    void setHuman(unsigned char human) { m_isHuman = human; }
+    unsigned char getHumanFlag() const { return m_isHuman; }
     int save(TAbstractFile* outfile);
     // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
     // townManager::SwapHeroes 0x5d5150 calls it on
@@ -1092,7 +1096,11 @@ public:
     char m_paddingAfterUltimateArtifactPresent;
     // Complete product generation at +0x1f698: init assigns gameVersion;
     // applySavedGameHeader restores SavedGameHeader::gameVersion here.
+
+private:
     int m_gameVersion;
+
+public:
     unsigned char m_isCheater;
     // Byte gate town::can_build and get_buildable_mask test before the
     // Castle-Griffin-Tower special case that drops the Blacksmith
@@ -1105,6 +1113,7 @@ public:
     SGameSetupOptions m_setup;  // +0x1f6a0
     NewSMapHeader m_mapHeader;  // +0x1f86c
     NewfullMap m_worldMap;  // +0x1fb70
+    // Before normalization (Dreamcast): player.
     playerData m_players[8];
     // +0x21610. The scenario's town pool, and it is a std::vector, not
     // a bare pointer: game::GetTownId (0x4bb870) reads _First at
@@ -1115,8 +1124,10 @@ public:
     // town::can_build reads gpGame->towns[this->id].field_02 and
     // town::Deallocate writes gpGame->towns[this->id].owner, both with
     // that same 360-byte stride.
+    // Before normalization (Dreamcast): townPool.
     std::vector<town> m_towns;
     enum { HERO_COUNT = 156 };
+    // Before normalization (Dreamcast): heroPool.
     hero m_heroes[HERO_COUNT];
     char m_heroAvailability[0x9c];  // +0x4df18
     // One eight-player eligibility mask per hero. GetStartingHeroId tests
@@ -1125,7 +1136,12 @@ public:
     std::bitset<8> m_heroPoolMap[0x9c];  // +0x4dfb4
     unsigned char m_artifactUsed[0x90];
     unsigned char m_artifactDisabled[0x90];
+
+private:
+    // Before normalization (Dreamcast): InfoFlags.
     unsigned char m_globalInfoFlags[32];
+
+public:
     unsigned char m_borderTentVisitFlags[8];
     unsigned short m_cartographerMask[3];
     unsigned char m_cartographerFlags[3];
@@ -1142,9 +1158,12 @@ public:
     // +0x4e3a0 pair with a 92-byte stride, and GetHeroBoat the
     // +0x4e3bc / +0x4e3c0 pair with a 40-byte one.
     std::vector<Sign> m_signs;  // +0x4e378
+    // Before normalization (Dreamcast): minePool.
     std::vector<mine> m_mines;  // +0x4e388
     std::vector<generator> m_generators;  // +0x4e398
+    // Before normalization (Dreamcast): garrisonPool.
     std::vector<garrison> m_garrisons;  // +0x4e3a8
+    // Before normalization (Dreamcast): boatPool.
     std::vector<boat> m_boats;  // +0x4e3b8
     std::vector<type_university> m_universities;  // +0x4e3c8
     std::vector<type_creature_bank> m_creatureBanks;  // +0x4e3d8
@@ -1184,10 +1203,13 @@ public:
     // bound check. Cell types come from the wrappers: 0x2d for the
     // first array, 0x2c for the second, 0x6f for the whirlpool pool.
     // NAMES ARE PROVISIONAL - nothing attests them.
-    std::vector<type_point> m_lithPools[8];  // +0x4e67c
-    std::vector<type_point> m_lithExitPools[8];  // +0x4e6fc
 
 private:
+    // Before normalization (Dreamcast): two_way_liths.
+    std::vector<type_point> m_lithPools[8];  // +0x4e67c
+    // Before normalization (Dreamcast): lith_exits.
+    std::vector<type_point> m_lithExitPools[8];  // +0x4e6fc
+
     std::vector<type_point> m_whirlpools;  // +0x4e77c
     std::vector<type_point> m_undergroundGateExits;  // +0x4e78c
 
@@ -1778,6 +1800,27 @@ public:
         return &m_boats[which];
     }
 
+    // Project collection operations complement the native indexed getters.
+    // Keep container mutation and the resulting object index with the owner.
+    unsigned int getTownCount() const { return m_towns.size(); }
+    unsigned int getMineCount() const { return m_mines.size(); }
+    unsigned int getGarrisonCount() const { return m_garrisons.size(); }
+    unsigned int getBoatCount() const { return m_boats.size(); }
+    void clearTowns() { m_towns.clear(); }
+    void clearMines() { m_mines.clear(); }
+    void clearGarrisons() { m_garrisons.clear(); }
+    void clearBoats() { m_boats.clear(); }
+    unsigned int addMine(const mine& newMine)
+    {
+        m_mines.push_back(newMine);
+        return m_mines.size() - 1;
+    }
+    unsigned int addGarrison(const garrison& newGarrison)
+    {
+        m_garrisons.push_back(newGarrison);
+        return m_garrisons.size() - 1;
+    }
+
     // The end-turn body, game.obj's own at 0x4c6fe0. Also ORDER-MAPPED: it
     // abuts the claimed TurnOffAIMusic (0x4c6fd0, 0x10 B) exactly, and
     // game::NextPlayer (dc 0xb1fd0) is the very next DC roster row after
@@ -1801,6 +1844,11 @@ public:
     NewmapCell* getCell(type_point point);
     void getLossConditionText(char* text);
     void getVictoryConditionText(char* text);
+
+    // Accessor boundary inferred from the existing property interface and
+    // external field operations; these additional names are project names.
+    int getGameVersion() const { return m_gameVersion; }
+    void setGameVersion(int value) { m_gameVersion = value; }
 };
 
 // The five .def-name tables game::ConvertObject (0x4c9990) rewrites a

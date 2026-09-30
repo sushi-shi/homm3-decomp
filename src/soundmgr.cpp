@@ -73,7 +73,7 @@ void soundManager::setMusicVolume()
                 AIL_set_stream_volume(g_mp3Stream, vol);
             else
                 resumeStream();
-        } else if (g_combatManager->m_status) {
+        } else if (g_combatManager->getStatus()) {
             char name[100];
 
             sprintf(name, DATA_COMPGEN(0x0066fedc, combatMusicFormat,

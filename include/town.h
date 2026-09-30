@@ -236,6 +236,7 @@ public:
     unsigned char m_threateningHeroes;
     // Faction id (armyGroup::GetLuck gates the Fountain of Fortune on
     // type == 1, Rampart).
+    // Before normalization (Dreamcast): townType.
     char m_type;
     // +5..+7, the town's map cell. can_take_town (0x428410) widens all
     // three with movzx from these bytes and packs them into a
@@ -251,11 +252,15 @@ public:
     // is the partner of +8 and not padding. dockSite therefore doubles
     // as the square's x; TOWN_DOCK_SITE_NONE (0xff) in it is the "no
     // dock square" sentinel the CanBuildDock family tests.
+    // Before normalization (Dreamcast): boatX.
     unsigned char m_dockSite;
+    // Before normalization (Dreamcast): boatY.
     unsigned char m_dockSiteY;
+    // Before normalization (Dreamcast): garrisonHero.
     int m_garrisonHeroId;
     // The hero on the town's map tile, -1 for none. HasGarrison
     // short-circuits to "defended" on this one alone.
+    // Before normalization (Dreamcast): occupyingHero.
     int m_visitingHeroId;
     // Mage guild level. SIGNED char, retyped in place 2026-08-20:
     // BuildBuilding re-reads it with movsx at both spell-count loops
@@ -313,9 +318,11 @@ public:
     std::bitset<70> m_spells;
     // The town's own troops (ctor constructs an armyGroup at +0xe0 and
     // then fills the seven type slots with -1).
-    armyGroup m_garrison;
 
 protected:
+    // Before normalization (Dreamcast): town_army.
+    armyGroup m_garrison;
+
     int m_generatorBonus[14];
 
     // DC town class 0x1aa3 (also 0x61b5/0x631f) records these __int64

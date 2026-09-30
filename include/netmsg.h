@@ -434,6 +434,7 @@ SIZE(CGameTransmitEndMsg, 0x28);
 
 class CChatMsg : public CNetMsg {
 public:
+    // Before normalization (Dreamcast): m_sMsg.
     char m_text[128];
 
     DC_ADDRESS(0x11f64c, 0x44)

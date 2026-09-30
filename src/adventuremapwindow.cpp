@@ -1240,16 +1240,16 @@ void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
 
     if (g_game->m_players[player].isLocalHuman()) {
         unsigned i;
-        for (i = 0; i < g_game->m_worldMap.m_seerHutList.size(); i++) {
-            TSeerHut& hut = g_game->m_worldMap.m_seerHutList[i];
+        for (i = 0; i < g_game->getWorldMapData()->m_seerHutList.size(); i++) {
+            TSeerHut& hut = g_game->getWorldMapData()->m_seerHutList[i];
             if (hut.questActiveforPlayer(player)) {
                 enabled = 1;
                 break;
             }
         }
 
-        for (i = 0; i < g_game->m_worldMap.m_questGuardList.size(); i++) {
-            TQuestGuard& guard = g_game->m_worldMap.m_questGuardList[i];
+        for (i = 0; i < g_game->getWorldMapData()->m_questGuardList.size(); i++) {
+            TQuestGuard& guard = g_game->getWorldMapData()->m_questGuardList[i];
             if (guard.questActiveforPlayer(player)) {
                 enabled = 1;
                 break;

@@ -510,10 +510,10 @@ MAC_ADDRESS(0x006890, 0x794)
 void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
 {
     CTradeRequestMsg* msg = static_cast<CTradeRequestMsg*>(netMsg);
-    g_game->m_heroes[msg->m_left.m_id] = msg->m_left;
-    g_game->m_heroes[msg->m_right.m_id] = msg->m_right;
-    g_advManager->heroSwap(&g_game->m_heroes[msg->m_left.m_id],
-                           &g_game->m_heroes[msg->m_right.m_id]);
+    *g_game->getHero(msg->m_left.m_id) = msg->m_left;
+    *g_game->getHero(msg->m_right.m_id) = msg->m_right;
+    g_advManager->heroSwap(g_game->getHero(msg->m_left.m_id),
+                           g_game->getHero(msg->m_right.m_id));
 }
 
 // E:\gamedcs\advmgr.cpp:734
@@ -1042,17 +1042,15 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
     case ADV_COMMAND_MOVE_HERO:
         if (!currHero)
             break;
-        currHero->m_pathTargetX = m_lastMapHover.m_x;
-        currHero->m_pathTargetY = m_lastMapHover.m_y;
-        currHero->m_pathTargetZ = m_lastMapHover.m_z;
+        currHero->setTarget(m_lastMapHover);
         /* FALLS THROUGH into ADV_COMMAND_WALK_ROUTE - retail's own */
 
     case ADV_COMMAND_WALK_ROUTE: {
         if (!currHero)
             break;
-        if (currHero->m_pathTargetX == -1)
+        if (currHero->getTargetX() == -1)
             break;
-        if (currHero->m_pathTargetY == -1)
+        if (currHero->getTargetY() == -1)
             break;
 
         // DC 1286 nests getLocation and GetCell in the terrain sample lookup.
@@ -1131,8 +1129,8 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
             }
         }
         reseed(0, 0);
-        if ((i <= 0 && currHero->m_x == currHero->m_pathTargetX
-             && currHero->m_y == currHero->m_pathTargetY)
+        if ((i <= 0 && currHero->m_x == currHero->getTargetX()
+             && currHero->m_y == currHero->getTargetY())
             || (interrupted && !g_config.m_showRoute) || eventCell) {
             hideRoute(0, 1, 1);
         } else if (m_advCommand == ADV_COMMAND_WALK_ROUTE || g_config.m_showRoute) {
@@ -1279,12 +1277,12 @@ int advManager::main(message& msg)
             || g_game->isLastHuman(g_game->getLocalPlayerGamePos())
             || (g_goSolo && g_netLocalGamePos == g_soloPos))) {
         if (g_goSolo && g_netLocalGamePos == g_soloPos) {
-            g_currentPlayer->m_isHuman = 0;
+            g_currentPlayer->setHuman(0);
             g_currentPlayer->m_isLocal = 0;
         }
         g_philAI->doAI(g_netLocalGamePos);
         if (g_goSolo && g_netLocalGamePos == g_soloPos) {
-            g_currentPlayer->m_isHuman = 1;
+            g_currentPlayer->setHuman(1);
             g_currentPlayer->m_isLocal = 1;
             if (!g_remoteOn)
                 g_mapVisibilityBit = 0xff;
@@ -1665,9 +1663,9 @@ int advManager::processKeyPress(const message& msg, unsigned char& exitFlag, typ
             hideRoute(1, 1, 1);
 
             g_mouseManager->hidePointer();
-            walker->m_pathTargetX = walker->m_x + g_normalDirTable[moveDir].m_x;
-            walker->m_pathTargetY = walker->m_y + g_normalDirTable[moveDir].m_y;
-            walker->m_pathTargetZ = walker->m_z;
+            walker->setTarget(walker->m_x + g_normalDirTable[moveDir].m_x,
+                              walker->m_y + g_normalDirTable[moveDir].m_y,
+                              walker->m_z);
 
             {
             type_point walkTrigger;
@@ -2149,11 +2147,9 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
                 if (!heroMobile
                     || (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS)
                     || (g_config.m_showRoute
-                        && (currHero->m_pathTargetX != m_lastMapHover.m_x
-                            || currHero->m_pathTargetY != m_lastMapHover.m_y))) {
-                    currHero->m_pathTargetX = m_lastMapHover.m_x;
-                    currHero->m_pathTargetY = m_lastMapHover.m_y;
-                    currHero->m_pathTargetZ = m_lastMapHover.m_z;
+                        && (currHero->getTargetX() != m_lastMapHover.m_x
+                            || currHero->getTargetY() != m_lastMapHover.m_y))) {
+                    currHero->setTarget(m_lastMapHover);
                     showRoute(1, 1, 1);
                     return;
                 }
@@ -4529,7 +4525,7 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
     switch (type) {
     case RANDOM_TOWN:
     case TOWN:
-        owner = g_game->m_towns[extraInfo].m_owner;
+        owner = g_game->getTown(extraInfo)->m_owner;
         break;
     case LIGHTHOUSE:
     case MINE:
@@ -5852,8 +5848,8 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger)
                                 colour = g_systemPalette->m_data[64 +
-                                    g_game->m_towns[trigger
-                                        ->getMapExtraInfo()].m_owner];
+                                    g_game->getTown(trigger
+                                        ->getMapExtraInfo())->m_owner];
                         }
                         break;
                     case LIGHTHOUSE:
@@ -7847,7 +7843,7 @@ void advManager::setHeroContext(int heroId, int inMove, bool waitingPlayer, bool
     if (drawChanges && !inMove
         && (m_status == STATUS_ACTIVE || g_currentPlayer->isLocalHuman())) {
         reseed(0, 0);
-        if (curr->m_pathTargetX >= 0) {
+        if (curr->getTargetX() >= 0) {
             type_point routeTarget = curr->getTarget();
             seedTo(routeTarget);
         }
@@ -8355,7 +8351,7 @@ void advManager::showRoute(int updateScreen, int reseed, int changeButton)
         return;
     }
     curr = g_game->getCurrHero();
-    if (curr->m_pathTargetX == -1) {
+    if (curr->getTargetX() == -1) {
         hideRoute(updateScreen, 1, 1);
         return;
     }
@@ -8429,8 +8425,7 @@ void advManager::hideRoute(int updateScreen, int removeTarget,
         int heroId = g_game->getCurrHeroId();
         if (heroId != -1) {
             hero* currentHero = g_game->getCurrHero();
-            currentHero->m_pathTargetX = -1;
-            currentHero->m_pathTargetY = -1;
+            currentHero->clearTarget();
         }
     }
 
@@ -8705,13 +8700,13 @@ void advManager::setInitialMapOrigin()
         if (player->m_numHeroes > 0) {
             // Mac 0x1a174 indexes the hero pool directly; neither target
             // executes getHero's -1 guard in this branch.
-            hero* startHero = &g_game->m_heroes[player->m_heroes[0]];
+            hero* startHero = g_game->getHero(player->m_heroes[0]);
             m_radarOrigin.m_x = startHero->m_x - 9;
             m_radarOrigin.m_y = startHero->m_y - 8;
             m_radarOrigin.m_z = startHero->m_z;
         } else if (player->m_numTowns > 0) {
             // Mac 0x1a1d8 likewise indexes the town pool without a guard.
-            town* startTown = &g_game->m_towns[player->m_townIds[0]];
+            town* startTown = g_game->getTown(player->m_townIds[0]);
             m_radarOrigin.m_x = startTown->m_mapX - 9;
             m_radarOrigin.m_y = startTown->m_mapY - 8;
             m_radarOrigin.m_z = startTown->m_mapZ;
@@ -8796,7 +8791,7 @@ void advManager::startLocalPlayerTurn()
             normalDialogTimeOut(g_generalText->getText(GENERAL_TEXT_PRESS_ESC_TO_CANCEL_SOLO_MODE), 2, 2000, -1, -1,
                                 -1, 0, -1, 0, -1, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE) {
-                g_game->m_players[g_soloPos].m_isHuman = 1;
+                g_game->m_players[g_soloPos].setHuman(1);
                 g_game->m_players[g_soloPos].m_isLocal = 1;
                 g_goSolo = 0;
                 g_mapVisibilityBit = 1 << g_soloPos;
@@ -8927,7 +8922,7 @@ DC_ADDRESS(0x01d9e0, 0x11a)
 MAC_ADDRESS(0x01ac98, 0x11c)
 void advManager::disableButtons()
 {
-    if (g_advManager->m_status != baseManager::STATUS_ACTIVE)
+    if (g_advManager->getStatus() != baseManager::STATUS_ACTIVE)
         return;
     m_advWindow->widgetClearStatus(TAdventureMapWindow::KINGDOM_OVERVIEW_ID,
                                  widget::WIDGET_ACTIVE);
@@ -8964,7 +8959,7 @@ DC_ADDRESS(0x01dafc, 0x128)
 MAC_ADDRESS(0x01adb4, 0x11c)
 void advManager::enableButtons()
 {
-    if (g_advManager->m_status != baseManager::STATUS_ACTIVE)
+    if (g_advManager->getStatus() != baseManager::STATUS_ACTIVE)
         return;
     m_advWindow->widgetSetStatus(TAdventureMapWindow::KINGDOM_OVERVIEW_ID,
                                widget::WIDGET_ACTIVE);

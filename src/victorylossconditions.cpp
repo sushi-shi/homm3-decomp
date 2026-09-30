@@ -420,8 +420,8 @@ unsigned char VictoryConditionStruct::checkForFlaggedMineWin()
     if (!(g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer))
         return 0;
 
-    for (unsigned int i = 0; i < g_game->m_mines.size(); ++i) {
-        int owner = g_game->m_mines[i].m_playerOwner;
+    for (unsigned int i = 0; i < g_game->getMineCount(); ++i) {
+        int owner = g_game->getMine(i)->m_playerOwner;
         if (!g_game->onSameTeam(owner, g_netLocalGamePos))
             return 0;
     }

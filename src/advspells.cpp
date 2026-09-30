@@ -458,8 +458,8 @@ void advManager::townGate(TSkillMastery level)
     }
 
     int numTowns = 0;
-    for (unsigned i = 0; i < g_game->m_towns.size(); i++) {
-        if (g_game->onSameTeam(who->m_owner, g_game->m_towns[i].m_owner))
+    for (unsigned i = 0; i < g_game->getTownCount(); i++) {
+        if (g_game->onSameTeam(who->m_owner, g_game->getTown(i)->m_owner))
             numTowns++;
     }
     if (numTowns == 0) {
@@ -483,8 +483,8 @@ void advManager::townGate(TSkillMastery level)
     int selectedTown;
     if (level >= eMasteryAdvanced) {
         TTownGateWindow tgWindow(1);
-        for (unsigned i = 0; i < g_game->m_towns.size(); i++) {
-            if (g_game->onSameTeam(who->m_owner, g_game->m_towns[i].m_owner)) {
+        for (unsigned i = 0; i < g_game->getTownCount(); i++) {
+            if (g_game->onSameTeam(who->m_owner, g_game->getTown(i)->m_owner)) {
                 if (g_game->getTown(i)->m_visitingHeroId == -1) {
                     tgWindow.addTown(i);
                 }
@@ -496,8 +496,8 @@ void advManager::townGate(TSkillMastery level)
         int closestTown = -1;
         int closestDistance2 = (std::numeric_limits<int>::max)();
         type_point heroLoc = who->getLocation();
-        for (unsigned i = 0; i < g_game->m_towns.size(); i++) {
-            if (g_game->onSameTeam(who->m_owner, g_game->m_towns[i].m_owner)) {
+        for (unsigned i = 0; i < g_game->getTownCount(); i++) {
+            if (g_game->onSameTeam(who->m_owner, g_game->getTown(i)->m_owner)) {
                 type_point townLoc = g_game->getTown(i)->getLocation();
                 if (heroLoc.distanceSquared(townLoc)
                     < closestDistance2) {

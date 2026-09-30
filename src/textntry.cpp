@@ -26,9 +26,10 @@
 // deleting destructor over Bitmap16Bit's two inherited slots.
 
 class CTextEntrySave : public Bitmap16Bit {
-public:
+private:
     unsigned char m_saved;  // Original project spelling: bSaved; retail +0x38.
 
+public:
     // E:\gamedcs\textntry.cpp:38 ()
     DC_ADDRESS(0x16370c, 0x44)
     CTextEntrySave(int w, int h) : Bitmap16Bit(w, h) { m_saved = 0; }

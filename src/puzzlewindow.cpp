@@ -331,7 +331,7 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 
     if (cell->m_objectTypeIndex >= 0) {
         CObject& cellObject =
-            g_game->m_worldMap.m_objects[cell->m_objectTypeIndex];
+            g_game->getWorldMapData()->m_objects[cell->m_objectTypeIndex];
         m_objectType = cellObject.getType();
         m_objectX = cellObject.m_x - point.m_x;
         m_objectY = cellObject.m_y - point.m_y;

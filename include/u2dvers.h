@@ -9,8 +9,10 @@
 // PROVEN retail layout: both ctor and dtor access only the allocation
 // pointer at +0; callers allocate four bytes for the object.
 class TFileVersionInfo {
-public:
+private:
     char* m_data;
+
+public:
     TFileVersionInfo(const char* filename);
     ~TFileVersionInfo();
 

@@ -990,6 +990,7 @@ public:
     unsigned char m_y;
     unsigned char m_z;
     unsigned char m_paddingBeforeTypeId;
+    // Before normalization (Dreamcast): TypeID.
     unsigned short m_typeIndex;
     unsigned char m_animationOffset;
     unsigned char m_paddingAfterFrameOffset;

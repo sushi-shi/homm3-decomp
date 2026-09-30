@@ -899,9 +899,10 @@ DATA(0x00642e70) const int g_resourceHelpIndices[8] = { 19, 20, 21, 22, 23, 24, 
 // the bar through +0xc, which is exactly past CNetMsgHandler's 12-byte
 // base, and the Dreamcast constructor's one parameter is that same bar.
 class CTownNetMsgHandler : public CAdvMgrNetMsgHandler {
-public:
+private:
     TResourceDisplay* m_resourceDisplay;  // DC: pResourceDisplay, +0x0c
 
+public:
     // The only retail construction site (townManager::Open) expands this
     // constructor in place: CAdvMgrNetMsgHandler's constructor remains a
     // call, followed by the derived vptr and resource-display stores.
@@ -8362,8 +8363,8 @@ void getCategoryStats(int whichCat, long* value, signed char* index)
         } else {
             switch (whichCat) {
             case TG_STAT_TOWNS: {
-                for (unsigned int t = 0; t < g_game->m_towns.size(); t++) {
-                    if (g_game->m_towns[t].m_owner == i)
+                for (unsigned int t = 0; t < g_game->getTownCount(); t++) {
+                    if (g_game->getTown(t)->m_owner == i)
                         total++;
                 }
                 value[i] = total;

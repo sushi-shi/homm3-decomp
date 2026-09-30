@@ -165,9 +165,10 @@ extern const type_ballistics_traits (&g_constBallisticsTraits)[4];
 // constructors/destructors must see the complete resource types.
 template<class T>
 class TResourceHandle {
-public:
+private:
     T* m_resource;
 
+public:
     TResourceHandle() { m_resource = 0; }
     TResourceHandle(const TResourceHandle& that)
     {
@@ -281,6 +282,7 @@ public:
     // retail's S_PUB32 mangling for that slot is `W4TCreatureType`. The
     // ELABORATED spelling parses in every include order without armygrp.h
     // being visible, which is why this needs no view macro.
+    // Before normalization (Dreamcast): armyType.
     enum TCreatureType m_creatureType;   // +0x34, DC army::armyType
     // Occupied combat cell. ai_tactical's find_attack_hex (0x436840)
     // feeds it straight into check_adjacent_hexes as the enemy hex,
@@ -416,6 +418,7 @@ public:
     // and why get_owner (0x4426d0) reads this field directly while
     // get_controller (0x442690) flips it. FindPath forwards the flipped
     // value into FindCombatPath.
+    // Before normalization (Dreamcast): group.
     int m_combatSide;               // +0xf4
     // Bit position of this stack in the AI's "already counted" masks:
     // get_hex_attack_value (0x436180) builds 1 << it and folds the bit
@@ -424,6 +427,7 @@ public:
     // it as the occupied hexcell's armySlot, exactly as it stores
     // combatSide (+0xf4) as armySide. Renaming waits on a lane that
     // owns the ai_tactical call sites.
+    // Before normalization (Dreamcast): index.
     int m_bitIndex;                 // +0xf8
 
     // The evidence for each field follows in offset order, as it was
@@ -762,10 +766,12 @@ public:
                        long* fireDamage) const;
     void adjustHitpoints();
     unsigned char attackHex(int hex, unsigned char restoreFacing);
+
 private:
     // Original public ?do_attack@army@@AAA_NPAV1@H@Z: private bool.
     // Keep this overload in its attested LF_FIELDLIST position.
     bool doAttack(army* armyToAttack, int direction);
+
 public:
     void doAttack(int direction);
 
@@ -774,9 +780,11 @@ public:
     // family without changing the attested relative order below.
     void doMultiHeadAttack(unsigned attackMask, int* damage, int* killed,
                               long* fireDamage);
+
 private:
     // Original public ?range_attack@army@@AAAXPAV1@@Z: one private volley.
     void rangeAttack(army* armyToAttack);
+
 public:
     void rangeAttack();
     void attackWall(int targetGridIndex);
@@ -826,6 +834,8 @@ public:
                               bool ranged, long distance) const;
     void getBerserkTargets(std::vector<army*>& armies) const;
     int getOwningSide() const;
+    // Project write counterpart used while initializing a summoned stack.
+    void setOwningSide(int side) { m_combatSide = side; }
     int getControllingSide() const;
     hero* getOwner() const;
     hero* getController() const;

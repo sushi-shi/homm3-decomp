@@ -200,7 +200,7 @@ public:
     MAC_ADDRESS(0x16dba8, 0x58)
     virtual void advance(int amount)
     {
-        m_done = min(m_done + amount, m_steps);
+        m_done = min(m_done + amount, getSteps());
         updateProgressBar();
     }
     // Descriptive name inferred from the retained progress-bar repaint body.

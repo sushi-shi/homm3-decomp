@@ -19,6 +19,7 @@ iterate on a function.
 
 ## Reconstruction
 
+- [Accessors and member visibility](reconstruction/accessor-guidelines.md)
 - [Field layout evidence](reconstruction/field-layouts.md)
 - [Game source models](reconstruction/game-source-models.md), [RMG source models](reconstruction/rmg-source-models.md), [historical match recovery](reconstruction/historical-matches.md)
 - [Address arithmetic](reconstruction/address-arithmetic-audit.md), [owner pointers](reconstruction/owner-pointer-audit.md), [pointer boundaries](reconstruction/pointer-boundary-repairs.md)

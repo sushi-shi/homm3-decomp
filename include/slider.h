@@ -85,9 +85,9 @@ public:
 
     DC_ADDRESS(0x1285a8, 0x8)
     int getMaximum() const { return m_numStates; }
-    // No procedure/source location or active caller is known;
-    // retain the API without borrowing get_maximum's body position.
-    int getState() const;
+    // Project body for the existing query declaration. No independent native
+    // procedure location is claimed for this stored-state read.
+    int getState() const { return m_currentState; }
     int select(message* msg, unsigned char dragging);
     int deselect(message* msg);
     void keyAccel(int x1, int x2, int x3, int x4, int key);

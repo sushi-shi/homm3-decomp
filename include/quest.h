@@ -99,14 +99,23 @@ public:
     // back-fills each one from its own column of the text table when it
     // is empty. Nothing in this file proves WHICH dialog reads which,
     // so the roles are read off that order and not off a body.
+
+protected:
     std::string m_proposalText;    // +0x08
+
     std::string m_progressText;    // +0x18
+
     std::string m_completionText;  // +0x28
+
+public:
     int m_textVariant;
     // NH3API type_quest::limit at +0x3c. Retail hasExpired (0x56ccb0)
     // returns false for a negative limit, otherwise compares it with the current turn.
+
+protected:
     int m_limit;
 
+public:
     type_quest(bool flags);
 
     //   0x64174c 0056cbe0 004ec560 00617d9a 00485d80 00617d9a 00617d9a
@@ -277,8 +286,11 @@ class type_experience_quest : public type_quest {
 public:
     // Retail vtable 0x641788, slot 8: mov eax,1; ret.
     virtual int questType() { return 1; }
+
+private:
     int m_requiredLevel;  // +0x40
 
+public:
     type_experience_quest(bool flags);
 
     virtual unsigned char isSatisfied(hero* currentHero);
@@ -300,8 +312,11 @@ class type_skill_quest : public type_quest {
 public:
     // Retail vtable 0x6417c4, slot 8: mov eax,2; ret.
     virtual int questType() { return 2; }
+
+private:
     signed char m_requiredSkills[4];  // +0x40
 
+public:
     type_skill_quest(bool flags);
 
     std::string skillRequirementText(
@@ -322,7 +337,11 @@ public:
 class type_defeat_hero_quest : public type_quest {
 public:
     int m_mapHero;         // +0x40, the h3m identity slot 12 fills
+
+private:
     int m_defeatedHero;    // +0x44
+
+public:
     int m_satisfiedMask;   // +0x48, one bit per player
 
     type_defeat_hero_quest(bool flags);
@@ -344,7 +363,11 @@ class type_monster_quest : public type_quest {
 public:
     int m_mapMonster;             // +0x40, the h3m identity slot 12 fills
     TQuestPosition m_position;     // +0x44
+
+private:
     int m_monsterId;       // +0x48
+
+public:
     int m_defeatedBy;      // +0x4c, -1 until some player kills it
 
     type_monster_quest(bool flags);
@@ -371,8 +394,11 @@ class type_artifact_quest : public type_quest {
 public:
     // Retail vtable 0x641878, slot 8: mov eax,5; ret.
     virtual int questType() { return 5; }
+
+private:
     std::vector<TArtifact> m_artifacts;  // +0x40
 
+public:
     type_artifact_quest(bool flags);
     type_artifact_quest(TArtifact artifact, int textRow);
 
@@ -402,9 +428,13 @@ class type_creature_quest : public type_quest {
 public:
     // Retail vtable 0x6418b4, slot 8: mov eax,6; ret.
     virtual int questType() { return 6; }
+
+private:
     std::vector<int> m_counts;             // +0x40
+
     std::vector<TCreatureType> m_types;    // +0x50
 
+public:
     type_creature_quest(bool flags);
 
     virtual int getAIValue(int player);
@@ -431,8 +461,11 @@ class type_resource_quest : public type_quest {
 public:
     // Retail vtable 0x6418f0, slot 8: mov eax,7; ret.
     virtual int questType() { return 7; }
+
+private:
     int m_resources[7];  // +0x40
 
+public:
     type_resource_quest(bool flags);
 
     virtual int getAIValue(int player);
@@ -455,9 +488,10 @@ public:
 };
 
 class type_be_hero_quest : public type_quest {
-public:
+private:
     int m_requiredHero;  // +0x40
 
+public:
     type_be_hero_quest(bool flags);
 
     virtual unsigned char isSatisfied(hero* currentHero);
@@ -473,9 +507,10 @@ public:
 };
 
 class type_belong_to_player_quest : public type_quest {
-public:
+private:
     int m_requiredOwner;  // +0x40
 
+public:
     type_belong_to_player_quest(bool flags);
 
     virtual unsigned char isSatisfied(hero* currentHero);

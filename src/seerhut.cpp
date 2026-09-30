@@ -1992,11 +1992,11 @@ inline void TSeerHut::setRandomName(TSeerHut& thisHut)
         nameAvailable[name] = true;
 
     unsigned int hut;
-    for (hut = 0; hut < g_game->m_worldMap.m_seerHutList.size(); ++hut)
-        nameAvailable[g_game->m_worldMap.m_seerHutList[hut].m_nameIndex] = false;
+    for (hut = 0; hut < g_game->getWorldMapData()->m_seerHutList.size(); ++hut)
+        nameAvailable[g_game->getWorldMapData()->m_seerHutList[hut].m_nameIndex] = false;
 
     int pick = rand()
-        % (nameAvailable.size() - g_game->m_worldMap.m_seerHutList.size());
+        % (nameAvailable.size() - g_game->getWorldMapData()->m_seerHutList.size());
     unsigned int chosen;
     for (chosen = 0; chosen < nameAvailable.size(); ++chosen) {
         if (nameAvailable[chosen]) {
@@ -2547,78 +2547,67 @@ void TSeerHut::read(TAbstractFile* infile)
     }
 
     m_completedByPlayer = 0;
-    m_reward.m_rewardType = readValue<unsigned char>(infile);
+    m_reward.setRewardKind(readValue<unsigned char>(infile));
 
-    switch (m_reward.m_rewardType) {
+    switch (m_reward.getRewardKind()) {
     case eRewardExperience: {
-        m_reward.m_value.m_dwords[0] = readLittleEndianValue<int>(infile);
+        m_reward.setScalarValue(readLittleEndianValue<int>(infile));
         break;
     }
 
     case eRewardMana: {
-        m_reward.m_value.m_dwords[0] = readLittleEndianValue<int>(infile);
+        m_reward.setScalarValue(readLittleEndianValue<int>(infile));
         break;
     }
 
     case eRewardMorale: {
-        m_reward.m_value.m_signedLow.m_bonus =
-            readValue<unsigned char>(infile);
+        m_reward.setBonus(readValue<unsigned char>(infile));
         break;
     }
 
     case eRewardLuck: {
-        m_reward.m_value.m_signedLow.m_bonus =
-            readValue<unsigned char>(infile);
+        m_reward.setBonus(readValue<unsigned char>(infile));
         break;
     }
 
     case eRewardResource: {
-        m_reward.m_value.m_resource.m_resourceType =
-            readValue<signed char>(infile);
-        m_reward.m_value.m_resource.m_quantity =
-            readLittleEndianValue<int>(infile);
+        m_reward.setResourceType(readValue<signed char>(infile));
+        m_reward.setResourceQuantity(readLittleEndianValue<int>(infile));
         break;
     }
 
     case eRewardPrimarySkill: {
-        m_reward.m_value.m_primarySkill.m_skillType =
-            readValue<signed char>(infile);
-        m_reward.m_value.m_primarySkill.m_bonus =
-            readValue<unsigned char>(infile);
+        m_reward.setPrimarySkillType(readValue<signed char>(infile));
+        m_reward.setPrimarySkillBonus(readValue<unsigned char>(infile));
         break;
     }
 
     case eRewardSecondarySkill: {
-        m_reward.m_value.m_secondarySkill.m_skillType =
-            readValue<signed char>(infile);
-        m_reward.m_value.m_secondarySkill.m_bonus =
-            readValue<signed char>(infile);
+        m_reward.setSecondarySkillType(readValue<signed char>(infile));
+        m_reward.setSecondarySkillBonus(readValue<signed char>(infile));
         break;
     }
 
     case eRewardArtifact:
         if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            m_reward.m_value.m_dwords[0] = readValue<unsigned char>(infile);
+            m_reward.setScalarValue(readValue<unsigned char>(infile));
         } else {
-            m_reward.m_value.m_dwords[0] = readLittleEndianValue<short>(infile);
+            m_reward.setScalarValue(readLittleEndianValue<short>(infile));
         }
         break;
 
     case eRewardSpell: {
-        m_reward.m_value.m_dwords[0] = readValue<unsigned char>(infile);
+        m_reward.setScalarValue(readValue<unsigned char>(infile));
         break;
     }
 
     case eRewardCreature: {
         if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            m_reward.m_value.m_creature.m_creatureType =
-                readValue<unsigned char>(infile);
+            m_reward.setCreatureType(readValue<unsigned char>(infile));
         } else {
-            m_reward.m_value.m_creature.m_creatureType =
-                readLittleEndianValue<short>(infile);
+            m_reward.setCreatureType(readLittleEndianValue<short>(infile));
         }
-        m_reward.m_value.m_creature.m_count =
-            readLittleEndianValue<unsigned short>(infile);
+        m_reward.setCreatureCount(readLittleEndianValue<unsigned short>(infile));
         break;
     }
     }

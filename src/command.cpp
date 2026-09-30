@@ -900,7 +900,7 @@ int combatManager::processCombatMsg(message& msg)
                     getControl();
                 if (m_autoCombatOn
                         && isComputerAction()) {
-                    m_combatWindow->m_controlSubWindow->disableAllButtons();
+                    m_combatWindow->getControlSubWindow()->disableAllButtons();
                 }
                 break;
 
@@ -2286,11 +2286,11 @@ void combatManager::getControl()
     else
         m_thisNetHasControl = 1;
 
-    if (m_combatWindow && m_combatWindow->m_controlSubWindow) {
+    if (m_combatWindow && m_combatWindow->getControlSubWindow()) {
         if ((m_autoCombatOn != zero || g_goSolo)
                 && isComputerAction()) {
             static_cast<type_combat_sub_window*>(
-                m_combatWindow->m_controlSubWindow)->disableAllButtons();
+                m_combatWindow->getControlSubWindow())->disableAllButtons();
             if (m_autoCombatOn && m_sideIsAi[m_currentSide]) {
                 m_combatWindow->widgetClearStatus(
                     0x7d4, 0x1000);
@@ -2375,7 +2375,7 @@ void combatManager::getControl()
             g_windowManager->updateScreen(zero, 556, 800, 44);
         } else {
             static_cast<type_combat_sub_window*>(
-                m_combatWindow->m_controlSubWindow)->disableAllButtons();
+                m_combatWindow->getControlSubWindow())->disableAllButtons();
         }
     }
 

@@ -4273,7 +4273,7 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
     summoned.m_monInfo = g_creatureTypeTraits[monType];
     int leftColumn = 1;
     int rightColumn = 15;
-    summoned.m_combatSide = m_currentSide;
+    summoned.setOwningSide(m_currentSide);
     summoned.m_bitIndex = -1;
     summoned.m_facing = 1 - m_currentSide;
     int hex = -1;

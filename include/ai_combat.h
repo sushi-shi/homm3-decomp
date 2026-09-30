@@ -132,9 +132,10 @@ protected:
 public:
     unsigned char m_canCastSpells;  // +0x18, natural padding to +0x1c
     // Sum of the units' combat values, rather than their hit points.
-    long m_totalCombatValue;  // +0x1c
 
 protected:
+    long m_totalCombatValue;  // +0x1c
+
     // The attacker's Tactics edge over the defender. A REAL FIELD, not
     // padding: initialize_creatures (0x424120) seeds it with 0, then
     // `movsx edx, byte [my_hero+0xdc]` (secondary-skill slot 19 =
@@ -148,11 +149,9 @@ protected:
     // independently.
     long m_tacticsAdvantage;  // +0x20
 
-public:
     hero* m_currentHero;  // +0x24
     armyGroup* m_currentArmy;  // +0x28
 
-protected:
     hero* m_enemyHero;  // +0x2c
 
 public:

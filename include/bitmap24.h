@@ -14,11 +14,17 @@ class Bitmap16Bit;
 // fixed 0x30-byte object extent, matching the resource-size virtual used by
 // Bitmap16Bit and Bitmap816.
 class Bitmap24Bit : public resource {
-public:
+private:
     unsigned int m_dataSize;
+
+public:
     int m_imageSize;
+
+private:
     int m_width;
     int m_height;
+
+public:
     unsigned char* m_data;
 
     virtual ~Bitmap24Bit();
