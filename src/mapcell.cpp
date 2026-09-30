@@ -2537,33 +2537,19 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 // write back into the object, and the two bytes read just before are
 // discarded padding.
 
-// Residual (96.4729%, nested-inliner wall): retail inlines MonsterData's
-// constructor but leaves its string::_Tidy child out of line.  This VC6
-// invocation expands both.  A declaration-site inline_depth(1) is byte-flat;
-// inline_depth(0) calls the entire MonsterData constructor instead (96.63%,
-// but the wrong retail boundary), while pinning the block's error return
-// regresses to 90.0370.  There is no pragma depth that means "inline the
-// parent, call only its child" at this site, so the canonical constructor is
-// retained.
-// 2026-09-06, polish lane 36 (97.0513 -> 97.1225), the DC LOCAL-SCOPE SWEEP:
-// the Dreamcast block names ONE `char_buffer` (T_UCHAR, sp+0x12) for the three
-// flag bytes this body read into `hasCustomRecord`, `neverFlees` and
-// `noGrowth`; sharing the one local is worth the 0.07 above.  Its `disposition`
-// (T_RCHAR) is this body's `grade` and its `short_buffer` is `quantity`, both
-// already the right signedness.  Still open in that block: the DC also names a
-// single `int_buffer` where this body has `identifier`, `rawIdentifier`,
-// `quantityRead` and `artifact`, and a single `ListSize` for `customIndex`.
-// Hoisting one shared int for the resource and artifact reads regressed to
-// 96.84 by extending its lifetime without shrinking the frame; the
-// `rawIdentifier` split above is banked at +0.58 so a collapse must beat that.
-// Current real C2 trace admits string::_Tidy (cb152, budget212) under the
-// MonsterData/string constructor chain. Body assignment, artifact initializer
-// and explicit message initializer emit one identical mapcell object; retain
-// the canonical constructor while investigating the retained _Tidy boundary.
-// Both Complete builds write MonsterInfo fields and clear bits 27..30
-// after dontGrow. Mac code0+0x123e64..0x123e6c proves the latter store;
-// the Windows mask 0x87fbffff combines it with the dontGrow assignment.
-// Shared typed-field probes preserve Windows 97.3333% and its call structure.
+// DC records one unsigned char_buffer, signed disposition and short_buffer;
+// retain those separate owners and the block-scoped MonsterData constructor.
+// Mac 0x123ba8..0x123bbc and 0x123d18..0x123d24 decode the checked
+// quantity/resource slots through the same scalar-reader operation. Canonical
+// byte readers recover VC6's retained string::_Tidy constructor boundary
+// (98.3846 -> 99.9573); pragma depth and constructor spelling probes did not.
+// Mac 0x123d6c/0x123d9c stores the decoded artifact in each format arm.
+// Keeping those direct source assignments closes the final EAX/ECX difference
+// (99.9573 -> 100%) without a synthetic integer artifact owner.
+// Mac currently retains readLittleEndianValue<short/int> without admitted
+// target identities, so its comparison is unavailable through those helpers.
+// Both Complete builds clear MonsterInfo bits 27..30 after dontGrow;
+// Mac 0x123e64..0x123e6c and Windows mask 0x87fbffff prove that store.
 VA(0x005013b0, 0x3DC)
 DC_ADDRESS(0x0f0390, 0x358)
 MAC_ADDRESS(0x123b10, 0x3dc)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing
@@ -2589,15 +2575,14 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     }
 
     short quantity;
-    if (infile->read(&quantity, sizeof(quantity)) < sizeof(quantity))
+    if (readLittleEndianValue(infile, quantity) < sizeof(quantity))
         return -1;
-    quantity = LITTLE_ENDIAN_SHORT(quantity);
     monsterObject->m_monsterInfo.m_qty = quantity;
 
     // DC records unsigned char_buffer at line 2598, then the signed
     // disposition result separately across the switch arms at 2606..2630.
     unsigned char charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    if (readValue(infile, charBuffer) < sizeof(charBuffer))
         return -1;
 
     // DC and Mac leave disposition untouched for an out-of-range input.
@@ -2625,7 +2610,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     }
     monsterObject->m_monsterInfo.m_disposition = disposition;
 
-    if (infile->read(&charBuffer, sizeof(charBuffer))
+    if (readValue(infile, charBuffer)
         < sizeof(charBuffer))
         return -1;
 
@@ -2634,31 +2619,24 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         MonsterData tempMonster;
         NewSMapHeader::readString(infile, tempMonster.m_message);
 
-        // MEASURED AND REJECTED: `#pragma inline_depth(0)` on this `return`.
-        // predict-inline says retail CALLS basic_string::_Tidy once here and
-        // we expand it, which is game::Load's return-pin shape exactly - but
-        // the local whose scope this exits is BLOCK-scoped, not
-        // function-scoped, and the pin costs 96.4729 -> 90.0370.
         for (int i = 0; i < 7; ++i) {
             int quantityRead;
-            if (infile->read(&quantityRead, sizeof(quantityRead))
+            if (readLittleEndianValue(infile, quantityRead)
                 < sizeof(quantityRead))
                 return -1;
-            quantityRead = LITTLE_ENDIAN_LONG(quantityRead);
             tempMonster.m_resQty[i] = quantityRead;
         }
 
-        int artifact;
         if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
             signed char narrow;
             infile->read(&narrow, sizeof(narrow));
-            artifact = narrow;
+            tempMonster.m_artifact = H3_ENUM_DECODE(TArtifact, narrow);
         } else {
             short wide;
             infile->read(&wide, sizeof(wide));
-            artifact = static_cast<short>(LITTLE_ENDIAN_SHORT(wide));
+            tempMonster.m_artifact = H3_ENUM_DECODE(TArtifact,
+                static_cast<short>(LITTLE_ENDIAN_SHORT(wide)));
         }
-        tempMonster.m_artifact = H3_ENUM_DECODE(TArtifact, artifact);
 
         if (customIndex < 4000) {
             m_customMonsterList.push_back(tempMonster);
@@ -2667,11 +2645,11 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         }
     }
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    if (readValue(infile, charBuffer) < sizeof(charBuffer))
         return -1;
     monsterObject->m_monsterInfo.m_neverFlee = charBuffer & 1;
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    if (readValue(infile, charBuffer) < sizeof(charBuffer))
         return -1;
     // The mask retail computes clears bits 27..30 alongside bit 18, so this
     // write lands on more than the one flag; transcribed as the object does
