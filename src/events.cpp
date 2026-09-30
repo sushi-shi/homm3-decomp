@@ -808,6 +808,12 @@ void advManager::doEventFreeArtifact(hero* currentHero,
     giveArtifact(currentHero, point, humanPlayer);
 }
 
+// DC events.cpp:518 reads the artifact guard-count bitfield into int amount.
+// Its older artifact record has a 15-bit lane; Complete uses the canonical
+// MapArtifactInfo 14-bit lane at 17..30. Mac 0xa9e00..0xa9e0c likewise
+// extracts the count as a field. Direct m_guardQty is byte-flat in Windows;
+// the lane's 99.9794% report differs only at the renamed combatMonsterEvent
+// call binding (+0x15e), with all 21 instruction blocks matching retail.
 VA(0x0049ea40, 0x304)
 DC_ADDRESS(0x0908dc, 0x1fc)
 MAC_ADDRESS(0x0a9dcc, 0x290)
@@ -815,7 +821,7 @@ void advManager::fightForArtifact(hero* currentHero, NewmapCell* cell,
                                   type_point point, bool humanPlayer)
 {
     TCreatureType monsterType = cell->getArtifactDefender();
-    int amount = (cell->m_extraInfo >> 17) & 0x3fff;
+    int amount = cell->m_artifactInfo.m_guardQty;
     short artifact = cell->getArtifactIndex();
 
     if (humanPlayer) {
