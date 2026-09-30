@@ -8320,6 +8320,7 @@ void advManager::insertSound(int x, int y, int z, int soundPriority,
     m_touchedSounds ^= 1 << m_soundArray[best].m_soundId;
 }
 
+// Mac 194c4..194d0 expands game::getCurrHeroId before the route guard.
 VA(0x00418dd0, 0x4DF)
 DC_ADDRESS(0x01c05c, 0x426)
 MAC_ADDRESS(0x019480, 0x3c8)
@@ -8339,7 +8340,7 @@ void advManager::showRoute(int updateScreen, int reseed, int changeButton)
 
     if (!g_currentPlayer->isLocalHuman())
         return;
-    if (g_currentPlayer->m_currHeroId == -1) {
+    if (g_game->getCurrHeroId() == -1) {
         hideRoute(updateScreen, 0, 1);
         return;
     }
@@ -8396,6 +8397,7 @@ void advManager::showRoute(int updateScreen, int reseed, int changeButton)
     }
 }
 
+// Mac 198cc..198d8 expands the same current-hero ID accessor.
 VA(0x00419300, 0x14C)
 DC_ADDRESS(0x01c484, 0xfc)
 MAC_ADDRESS(0x019848, 0x110)
@@ -8414,7 +8416,7 @@ void advManager::hideRoute(int updateScreen, int removeTarget,
     }
 
     if (removeTarget) {
-        int heroId = g_currentPlayer->m_currHeroId;
+        int heroId = g_game->getCurrHeroId();
         if (heroId != -1) {
             hero* currentHero = g_game->getCurrHero();
             currentHero->m_pathTargetX = -1;
@@ -8464,6 +8466,7 @@ void advManager::checkDimNextHeroBut()
 
 // Dreamcast advmgr.cpp:10586 calls game::GetCurrHero; retail expands
 // its null guard and hero array lookup before seedPosition.
+// Mac 19ad0..19adc expands getCurrHeroId before GetCurrHero.
 VA(0x004194a0, 0xC7)
 DC_ADDRESS(0x01c64c, 0x104)
 MAC_ADDRESS(0x019a98, 0x148)
@@ -8472,7 +8475,7 @@ void advManager::seedTo(type_point target)
     if (!g_currentPlayer->isLocalHuman())
         return;
 
-    int heroId = g_currentPlayer->m_currHeroId;
+    int heroId = g_game->getCurrHeroId();
     if (heroId == -1)
         return;
 
