@@ -3988,7 +3988,7 @@ singleselectionwindow	?canChooseTown@TSingleSelectionWindow@@QAEEH@Z	100.0000	10
 singleselectionwindow	?capacity@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x18ebb0	-
 singleselectionwindow	?checkFaces@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18bbc0	tokens1:dda449eb7818
 singleselectionwindow	?checkHandleNet@CSingleSelectionNetMsgHandler@@UAEPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x18e310	tokens1:bf4d410cb308
-singleselectionwindow	?checkMissingHeaders@TSingleSelectionWindow@@QAE_NK@Z	96.9500	96.9500	100.0000	0x1895c0	tokens1:ca74b2753b05
+singleselectionwindow	?checkMissingHeaders@TSingleSelectionWindow@@QAE_NK@Z	100.0000	100.0000	100.0000	0x1895c0	tokens1:98c5c64635e4
 singleselectionwindow	?copy@std@@YIPAUGameSelectionHeadersStruct@@PBU2@0PAU2@@Z	100.0000	100.0000	100.0000	0x18f160	-
 singleselectionwindow	?copy@std@@YIPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@1@PBV21@0PAV21@@Z	100.0000	100.0000	100.0000	0xd2c90	-
 singleselectionwindow	?copy_backward@std@@YIPAUGameSelectionHeadersStruct@@PAU2@00@Z	100.0000	100.0000	100.0000	0x191650	-
