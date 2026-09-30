@@ -2183,9 +2183,12 @@ void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
 // directions under an exclusive spell-ownership if/else and reload the first
 // hero's Scholar level for the dialog icon after swapping heroes.
 // DC calls min at lines 1913/1915 and appends spells with push_back.
-// DC's maximum uses signed-char std::max; retail 0x4a2969..0x4a298b instead
-// selects between promoted four-byte copies, consistent with the existing
-// by-value int max overload. DC 1979-2019 builds the message with operator+=.
+// DC 1900 uses signed-char std::max's operand-reference selector, unlike
+// the by-value includes.h min/max wrappers used at the later sites. Retail
+// 0x4a2969..0x4a298b selects between promoted four-byte copies; retain the
+// Complete mastery domain through the canonical cppMax selector instead of
+// adding wrapper-owned copies. This recovers 91.2712 -> 97.19% Windows.
+// DC 1979-2019 builds the message with operator+=.
 // Residual 91.3003%: the final taught-message += retains string::append
 // where retail expands it. Both builds destroy formatString's temporary at
 // the end of that expression; extending its lifetime lacks source evidence.
@@ -2194,7 +2197,7 @@ DC_ADDRESS(0x093464, 0x556)
 MAC_ADDRESS(0x0ae320, 0x6dc)  // anchor-callee from do_event_hero + full retail semantics
 static void exchangeSpells(hero* firstHero, hero* secondHero)
 {
-    const int magicScholarLevel = max(
+    const int magicScholarLevel = cppMax(
         firstHero->getSecondarySkill(eSecSkillMagicScholar),
         secondHero->getSecondarySkill(eSecSkillMagicScholar));
     std::vector<SpellID> spellsLearned;
