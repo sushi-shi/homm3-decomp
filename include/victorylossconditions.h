@@ -108,7 +108,7 @@ public:
         return 0;
     }
     unsigned char checkForTimeSurvival();
-    unsigned char checkForArtifactWin();
+    bool checkForArtifactWin();
     unsigned char checkForGrailBuildingWin();
 };
 SIZE(VictoryConditionStruct, 0x4C);
@@ -125,16 +125,18 @@ public:
     int m_heroZ;
     int m_heroId;
     short m_numDays;
-    unsigned char m_gameLost;
+    // Bool inferred from the native direct return through the proven bool
+    // town-loss interface; all writers assign zero or one. DC 0x20 is lowered.
+    bool m_gameLost;
     signed char m_playerLoser;
 
     VA(0x0045bac0, 0xE)  // retained retail body; formerly enrolled by CLASS_CTOR
     DC_ADDRESS(0x0bccfc, 0x22)
     LossConditionStruct()
       : m_type(-1), m_gameLost(0), m_playerLoser(-1) {}
-    unsigned char checkForDefeatedHeroLoss(const hero* loser);
+    bool checkForDefeatedHeroLoss(const hero* loser);
     unsigned char heroKilled(const hero* loser);
-    unsigned char checkForDefeatedTownLoss(int oldOwner,
+    bool checkForDefeatedTownLoss(int oldOwner,
                                            const town* lostTown);
     unsigned char checkForTimeLimitExpired();
 };

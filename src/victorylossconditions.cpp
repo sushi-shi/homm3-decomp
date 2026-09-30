@@ -51,10 +51,12 @@ static const int g_angelicAllianceSecondMap = 9;
 // (cost 58) only 30, so it stays a call where retail expands it and stores
 // out_of_range's vptr after logic_error's ctor; about 28 more depth-1
 // budget is missing and no evidenced statement supplies it.
+// Original DC public CheckForArtifactWin@@QAA_NXZ proves a bool result;
+// the dossier's primitive 0x20 display is lowered-byte metadata.
 VA(0x005f1610, 0x4FE)
 DC_ADDRESS(0x18fdf8, 0x9e)
 MAC_ADDRESS(0x1fd3cc, 0x44c)
-unsigned char VictoryConditionStruct::checkForArtifactWin()
+bool VictoryConditionStruct::checkForArtifactWin()
 {
     SCampaign& campaign = g_game->m_campaign;
     if ((campaign.m_currentCampaign == g_armorOfTheDamnedCampaign
@@ -536,8 +538,8 @@ static const int g_lossPortrait146 = 0x92;
 // In campaign mode a per-campaign table of protected heroes (and, in
 // two campaigns, carried quest artifacts) loses the game immediately;
 // outside those arms the ordinary lose-hero condition compares ids.
-// Retail's ordinary tail rejects other loss types, then returns a byte-valued
-// id comparison. Keep that tail once: a named unsigned-char result reproduces
+// Retail's ordinary tail rejects other loss types, then returns an id
+// comparison through al. A historical unsigned-char-result probe reproduced
 // its sete al epilogue without the wider bool-to-int temporary. Together with
 // the early loss-type rejection this improves MAX 75.8636 -> 82.0170
 // (2026-09-07). The older duplicated tail was compensating for the wrong
@@ -572,11 +574,13 @@ static const int g_lossPortrait146 = 0x92;
 // assigns the index to r28 and the component reference to r29; a loop-local
 // index reproduces those homes. The full source model raises Mac to 55.6973%
 // (previous recorded peak 51.2799%); Windows 81.15% vs 82.02% is recovery debt.
+// Original DC public CheckForDefeatedHeroLoss@@QAA_NPBVhero@@@Z proves
+// bool and const hero*. The equality result follows that bool interface.
 // E:\gamedcs\victorylossconditions.cpp:463
 VA(0x005f2a40, 0x3C8)
 DC_ADDRESS(0x1906d4, 0x78)
 MAC_ADDRESS(0x1fee5c, 0x448)  // anchor-global
-unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
+bool LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
 {
     if (g_inCampaign) {
         int map;
@@ -690,7 +694,7 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
     }
     if (m_type != LOSS_CONDITION_LOSE_HERO)
         return 0;
-    unsigned char defeated = loser->m_id == m_heroId;
+    bool defeated = loser->m_id == m_heroId;
     return defeated;
 }
 
@@ -712,10 +716,12 @@ unsigned char LossConditionStruct::heroKilled(const hero* loser)
 // location local delays field extraction; an explicit result assignment
 // adds another copy. Windows stays 99.8429% with only the two stack homes
 // exchanged; keep the canonical constructor, getLocation and operator==.
+// Original DC public CheckForDefeatedTownLoss@@QAA_NHPBVtown@@@Z proves
+// bool and const town*; a displayed primitive 0x20 does not prove byte source.
 VA(0x005f2e40, 0xD9)
 DC_ADDRESS(0x19074c, 0x70)
 MAC_ADDRESS(0x1ff304, 0x140)
-unsigned char LossConditionStruct::checkForDefeatedTownLoss(
+bool LossConditionStruct::checkForDefeatedTownLoss(
     const int oldOwner, const town* lostTown)
 {
     if (m_type != LOSS_CONDITION_LOSE_TOWN)
