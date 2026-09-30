@@ -521,7 +521,9 @@ void heroWindowManager::blitToScreenWithPointer(int x, int y, int w, int h)
 VA(0x00602c50, 0x63)
 DC_ADDRESS(0x19b428, 0x66)
 MAC_ADDRESS(0x20e03c, 0xb4)
-void heroWindowManager::fadeScreen(int inOut, int speed, unsigned char expectFadein)
+// Original DC public FadeScreen@heroWindowManager@@QAAXHH_N@Z proves
+// the forwarded expectFadein flag is bool.
+void heroWindowManager::fadeScreen(int inOut, int speed, bool expectFadein)
 {
     if (inOut == 1) {
         if (expectFadein)
@@ -884,13 +886,15 @@ void heroWindowManager::flash(int startX, int startY, int width, int height,
 }
 
 // Original: heroWindowManager::FadeBlit; winmgr.cpp:1545
+// Original DC public FadeBlit@heroWindowManager@@QAAXHHHHPBVBitmap816@@HH_NHH@Z
+// proves const bitmap input and the bool transparency flag.
 // DC records separate transparent/opaque loops, palette lookup and three
 // component interpolation. Complete's bitmap/palette interfaces retain those
 // operations, but no standalone address is claimed for this older entry point.
 DC_ADDRESS(0x19be28, 0x394)
 void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
                                  const Bitmap816* srcBitmap, int dx, int dy,
-                                 unsigned char transparent, int frames, int period)
+                                 bool transparent, int frames, int period)
 {
     if (dx < 0) {
         sx -= dx;
@@ -991,7 +995,8 @@ void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
 VA(0x006030e0, 0x1F9)
 DC_ADDRESS(0x19c1bc, 0x1fa)
 MAC_ADDRESS(0x20e634, 0x444)  // anchor-caller
-void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
+// Original DC public FadeToBlack@heroWindowManager@@QAAXH_N@Z.
+void heroWindowManager::fadeToBlack(int speed, bool expectFadein)
 {
     const unsigned int redMask2 = (Bitmap16Bit::s_redMask << 16) | Bitmap16Bit::s_redMask;
     const unsigned int greenMask2 = (Bitmap16Bit::s_greenMask << 16) | Bitmap16Bit::s_greenMask;
