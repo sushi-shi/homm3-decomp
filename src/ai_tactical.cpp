@@ -1159,7 +1159,8 @@ long type_AI_spellcaster::getAttackSkillValue(const army* ourArmy, const army* e
         return 0;
     army testArmy = *ourArmy;
     testArmy.m_monInfo.m_attackSkill += bonus;
-    unsigned char ranged = ourArmy->canShoot(0);
+    // Preserve the logical result through getEstimatedDamage's bool interface.
+    bool ranged = ourArmy->canShoot(0);
     double oldDamage = ourArmy->getEstimatedDamage(enemy, 100, ranged, 0);
     double newDamage = testArmy.getEstimatedDamage(enemy, 100, ranged, 0);
     double increase = newDamage / oldDamage;
@@ -1312,7 +1313,7 @@ long type_AI_spellcaster::getDefenseSkillValue(const army* ourArmy, long duratio
         return 0;
     army testArmy = *ourArmy;
     testArmy.m_monInfo.m_defenseSkill += bonus;
-    unsigned char ranged = enemy->canShoot(0);
+    bool ranged = enemy->canShoot(0);
     double oldDamage = enemy->getEstimatedDamage(ourArmy, 100, ranged, 0);
     double newDamage = enemy->getEstimatedDamage(&testArmy, 100, ranged, 0);
     double increase = oldDamage / newDamage;

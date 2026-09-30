@@ -190,7 +190,7 @@ static std::string formatRounded(long amount, long high)
 DC_ADDRESS(0x0833b4, 0x196)
 static std::string getEstimatedDamage(const army* currentArmy,
                                         army* targetArmy,
-                                        unsigned char ranged,
+                                        bool ranged,
                                         long distance)
 {
     long low = currentArmy->m_monInfo.m_damageLowBound * currentArmy->m_numTroops;
@@ -486,9 +486,11 @@ void combatManager::combatMessage(int command)
 
 VA(0x004933d0, 0x27A)
 MAC_ADDRESS(0x0a3d7c, 0x208)
+// The tooltip's callers pass false/true shooting modes; retail forwards that
+// flag unchanged to adjustDamage, whose original DC public proves bool.
 static std::string getEstimatedDamage(const army* currentArmy,
                                         army* targetArmy,
-                                        unsigned char ranged,
+                                        bool ranged,
                                         long distance);
 
 VA(0x00493650, 0xBD)

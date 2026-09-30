@@ -2708,10 +2708,16 @@ int army::computeBaseDamage(unsigned char simulateOnly) const
 
 // Complete separates the numeric damage bonus from the combat message and sound
 // so estimated-damage calculations can reuse it. Dreamcast combines these paths.
+// Its bool flags are inferred from that original bool interface and retail's
+// unchanged flag forwarding from both callers, rather than generated labels.
+// VC6 bool-chain restoration preserves all emitted bytes of this helper,
+// both bonus/reduction helpers, adjustDamage, and getEstimatedDamage. Restoring
+// only the reductions added absent-retail test/setne normalization in the
+// unsigned-char callers; preserve the coherent logical interfaces instead.
 VA(0x00443320, 0x514)
 MAC_ADDRESS(0x04f230, 0x530)
-int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
-                                 army* defender, unsigned char announce,
+int army::computeAttackerBonus(int baseDamage, bool isShooting,
+                                 army* defender, bool announce,
                                  long distance) const
 {
     int bonus = 0;
@@ -2817,10 +2823,13 @@ static const int g_artilleryDoubleChances[4] = { 0, 50, 75, 100 };
 VA(0x00443840, 0x344)
 DC_ADDRESS(0x04868c, 0x582)
 MAC_ADDRESS(0x04f760, 0x358)
+// Original DC public ?ComputeAttackerDamageBonuses@army@@QBAHH_NPAV1@0J@Z
+// proves both flags bool: 0 backreferences the earlier _N parameter. The
+// debug procedure's unsigned-char rendering is a lowered bool representation.
 int army::computeAttackerDamageBonuses(int baseDamage,
-                                       unsigned char isShooting,
+                                       bool isShooting,
                                        army* defender,
-                                       unsigned char simulateOnly,
+                                       bool simulateOnly,
                                        long distance) const
 {
     int result = computeAttackerBonus(baseDamage, isShooting, defender,
@@ -2886,8 +2895,10 @@ inline int army::computeDefenderDamageBonuses(int baseDamage) const
 VA(0x00443b90, 0x1FE)
 DC_ADDRESS(0x048c60, 0x364)
 MAC_ADDRESS(0x04fac0, 0x244)
+// Original DC public ?ComputeAttackerDamageReduction@army@@QBANPBV1@_N@Z
+// proves the shooting parameter bool independently of its lowered debug type.
 double army::computeAttackerDamageReduction(const army* defender,
-                                            unsigned char isShooting) const
+                                            bool isShooting) const
 {
     double reduction = 1.0;
     long attack = getAdjustedAttack(defender, isShooting);
@@ -2933,7 +2944,8 @@ double army::computeAttackerDamageReduction(const army* defender,
 VA(0x00443d90, 0x9C)
 DC_ADDRESS(0x048fc4, 0x12e)
 MAC_ADDRESS(0x04fd04, 0x88)
-double army::computeDefenderDamageReduction(unsigned char isShooting) const
+// Original DC public ?ComputeDefenderDamageReduction@army@@QBAN_N@Z.
+double army::computeDefenderDamageReduction(bool isShooting) const
 {
     double reduction = getDefenseDamageModifier(isShooting);
     if (isShooting) {
@@ -2989,8 +3001,11 @@ double army::computeDefenderDamageReduction(unsigned char isShooting) const
 VA(0x00443e30, 0x101)
 MAC_ADDRESS(0x04fd8c, 0xf4)  // anchor-callee (ai_tactical's two skill-value
                        // functions) + arity ret 0x10, retail-only slot
+// Complete-only bool inference: its two AI callers use canShoot's logical
+// result, and retail forwards the shooting flag unchanged to the independently
+// proven bool reduction helper (no integer-to-bool normalization).
 long army::getEstimatedDamage(const army* target, long amount,
-                                unsigned char ranged, long distance) const
+                                bool ranged, long distance) const
 {
     if (!target)
         return 0;
@@ -3022,8 +3037,10 @@ long army::getEstimatedDamage(const army* target, long amount,
 VA(0x00443f40, 0x14F)
 DC_ADDRESS(0x0490f4, 0x16c)
 MAC_ADDRESS(0x04fe80, 0x134)
-long army::adjustDamage(army* enemy, long baseDamage, unsigned char isShot,
-                         unsigned char simulated, long distance,
+// Original DC public ?adjust_damage@army@@QBAJPAV1@J_N1JPAJ@Z:
+// both flags bool (1 backreferences the earlier _N parameter).
+long army::adjustDamage(army* enemy, long baseDamage, bool isShot,
+                         bool simulated, long distance,
                          long* fireDamage) const
 {
     if (fireDamage)
@@ -3048,10 +3065,11 @@ long army::adjustDamage(army* enemy, long baseDamage, unsigned char isShot,
 }
 
 // E:\gamedcs\army.cpp:3406
+// Original DC public ?DamageEnemy@army@@QAAJPAV1@PAH1_N@Z proves bool.
 DC_ADDRESS(0x049260, 0x68)
 MAC_ADDRESS(0x04ffb4, 0x98)
 inline long army::damageEnemy(army* enemy, int* damageOut, int* killed,
-                              unsigned char isShot)
+                              bool isShot)
 {
     long fireDamage = 0;
     if (!enemy)

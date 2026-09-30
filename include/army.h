@@ -757,8 +757,8 @@ public:
     int flyTo(int destIndex, unsigned char restoreFacing);
     int teleport(int destIndex);
     int teleportTo(int destIndex, unsigned char restoreFacing);
-    long adjustDamage(army* enemy, long baseDamage, unsigned char isShot,
-                       unsigned char simulated, long distance,
+    long adjustDamage(army* enemy, long baseDamage, bool isShot,
+                       bool simulated, long distance,
                        long* fireDamage) const;
     void adjustHitpoints();
     unsigned char attackHex(int hex, unsigned char restoreFacing);
@@ -823,7 +823,7 @@ public:
                             long distance) const;
     double getAverageDamage() const;
     long getEstimatedDamage(const army* target, long amount,
-                              unsigned char ranged, long distance) const;
+                              bool ranged, long distance) const;
     void getBerserkTargets(std::vector<army*>& armies) const;
     int getOwningSide() const;
     int getControllingSide() const;
@@ -867,21 +867,21 @@ public:
                               unsigned char literalTest) const;
     int validRange(int destIndex);
     inline long damageEnemy(army* enemy, int* damageOut, int* killed,
-                            unsigned char isShot);
+                            bool isShot);
     int damage(int damage);
     int computeBaseDamage(unsigned char simulateOnly) const;
     int computeAttackerDamageBonuses(int baseDamage,
-                                     unsigned char isShooting,
+                                     bool isShooting,
                                      army* defender,
-                                     unsigned char simulateOnly,
+                                     bool simulateOnly,
                                      long distance) const;
     inline int computeDefenderDamageBonuses(int baseDamage) const;
     double computeAttackerDamageReduction(const army* defender,
-                                          unsigned char isShooting) const;
+                                          bool isShooting) const;
     double computeDefenderDamageReduction(
-        unsigned char isShooting) const;
-    int computeAttackerBonus(int baseDamage, unsigned char isShooting,
-                               army* defender, unsigned char simulateOnly,
+        bool isShooting) const;
+    int computeAttackerBonus(int baseDamage, bool isShooting,
+                               army* defender, bool simulateOnly,
                                long distance) const;
     void cancelSpellType(int spellType);
     void decrementSpellRounds();
@@ -1374,7 +1374,7 @@ public:
     long getTotalHitPoints(unsigned char simulated) const;   // 0x443080
     inline void checkLuck();
     inline long damageEnemy(army* enemy, int* iDamage, int* iKilled,
-                            unsigned char bIsShot);
+                            bool bIsShot);
     // 0x442590: the stack's defense as the ATTACKER sees it - zero
     // under Frenzy, reduced 40%/80% against a Behemoth / Ancient
     // Behemoth, and 3 lower while either of the stack's hexes stands
@@ -1393,9 +1393,9 @@ public:
     // takes its defender NON-const, the second const, which is the
     // roster's own split and not a transcription slip.
     int computeAttackerDamageBonuses(int base_damage,
-                                     unsigned char is_shooting,
+                                     bool is_shooting,
                                      army* defender,
-                                     unsigned char simulate_only,
+                                     bool simulate_only,
                                      long distance) const;
     // E:\gamedcs\army.cpp:3230
     // The Dreamcast body is the single source statement `return 0;`.
@@ -1403,7 +1403,7 @@ public:
     // erase both this body and its call from adjust_damage.
     inline int computeDefenderDamageBonuses(int base_damage) const;
     double computeAttackerDamageReduction(const army* defender,
-                                          unsigned char is_shooting) const;
+                                          bool is_shooting) const;
     // 0x443320, the retail-only numeric half of the row above: the
     // offense / archery / spell-bonus arithmetic with no combat
     // message and no sound, so that get_estimated_damage (0x443e30)
@@ -1412,8 +1412,8 @@ public:
     // same reason adjust_damage's does - the const caller casts, the
     // declaration does not drop it. Declared, not claimed here;
     // army.cpp owns the body.
-    int computeAttackerBonus(int base_damage, unsigned char is_shooting,
-                               army* defender, unsigned char simulate_only,
+    int computeAttackerBonus(int base_damage, bool is_shooting,
+                               army* defender, bool simulate_only,
                                long distance) const;
     // 0x443160: one swing's RAW damage - the effective creature count,
     // the damage range (hero-attack-scaled for a ballista), then the
@@ -1424,7 +1424,7 @@ public:
     // petrification and hero defense skill put on incoming damage.
     // Const (?ComputeDefenderDamageReduction@army@@QBAN_N@Z), and so is
     // the whole ComputeXxxDamage family beside it in army.cpp.
-    double computeDefenderDamageReduction(unsigned char is_shooting) const;
+    double computeDefenderDamageReduction(bool is_shooting) const;
     // 0x447330: how many creatures a resurrect from THIS stack would
     // restore to `target` - the Archangel rule, or the Pit Lord's
     // raise-Demons rule for every other caster. Const
@@ -1458,7 +1458,7 @@ public:
     // callers, both asking "what would a 100-creature stack of mine do
     // to this target?" - so the name below is a bootstrap invention.
     long getEstimatedDamage(const army* target, long amount,
-                              unsigned char ranged, long distance) const;
+                              bool ranged, long distance) const;
     // 0x445490, claimed in army.cpp. Fills the caller's vector with the
     // stacks a berserked `this` would be allowed to strike; ai_tactical's
     // get_berserk_value (0x43a400) is the located caller and passes a
