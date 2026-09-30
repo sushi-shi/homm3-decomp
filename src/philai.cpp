@@ -3141,7 +3141,9 @@ long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short move
 VA(0x00529f90, 0x72)
 DC_ADDRESS(0x111834, 0xc4)
 MAC_ADDRESS(0x143bf4, 0xc4)
-int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
+// DC records ValueOfMagicSchool as a file-local procedure. Mac retains its
+// canonical body at 0x143bf4 and its sole caller at 0x146580.
+static int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
 {
     if ((1 << cell->m_extraInfo) & currentHero->m_magicSchoolFlags)
         return 0;
@@ -3244,7 +3246,10 @@ int valueOfObelisk(NewmapCell* cell, long playerId)
 VA(0x0052a380, 0x1c)
 DC_ADDRESS(0x111e34, 0x6e)
 MAC_ADDRESS(0x1442f8, 0x28)
-int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell)
+// DC records ValueOfPowerSchool as a file-local procedure; its only authored
+// caller is the event dispatcher (Mac 0x1466b4 -> 0x1442f8). Keep the
+// ordinary body visible before it.
+static int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell)
 {
     if ((1 << cell->m_extraInfo) & currentHero->m_powerSchoolFlags)
         return 0;
