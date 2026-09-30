@@ -246,6 +246,9 @@ static int updateSpellTargetFromMouse()
     return updateSpellTarget(g_combatManager->getGridIndex(x, y));
 }
 
+// DC 201..212 and 217..228 records explicit dialog/action if/else scope
+// pairs for Land Mine and Earthquake. Complete Mac 0x18f8dc..0x18f9a4 keeps
+// both action alternatives. Restoring those scopes is VC6 byte-flat at 90.79%.
 VA(0x0059ec50, 0xAA8)
 DC_ADDRESS(0x14ecbc, 0x85e)
 MAC_ADDRESS(0x18f7ac, 0x9b8)  // retail+dc-shape
@@ -273,20 +276,20 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
         if (m_onNativeTerrain[1 - m_currentSide]) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_NO_VALID_TARGET), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
-            break;
+        } else {
+            m_nextAction = 1;
+            m_nextActionExtra = spellToCast;
         }
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
         break;
 
     case SPELL_EARTHQUAKE:
         if (m_fortificationLevel <= 0) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_EARTHQUAKE_NO_WALLS), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
-            break;
+        } else {
+            m_nextAction = 1;
+            m_nextActionExtra = spellToCast;
         }
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
         break;
 
     case SPELL_MAGIC_ARROW:
