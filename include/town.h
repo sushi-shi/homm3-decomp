@@ -353,7 +353,8 @@ public:
     DC_ADDRESS(0x181404, 0x12)
     long getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
     short getGoldIncome(unsigned char includeSilo) const;
-    int getHorde(long dwelling) const;
+    // Original ?get_horde@town@@QBA?AW4type_building_id@@J@Z proves enum return.
+    type_building_id getHorde(long dwelling) const;
     long getHordeBonus(long dwelling) const;
     long getAssembledLegionBonus(long dwelling) const;
     // 0x5bf900. Per-tier artifact growth contributed by the two heroes
@@ -418,14 +419,17 @@ public:
     void setSummoningGenerator();
     int getPortraitFrame(bool isSmall) const;
     town();
-    unsigned char canBuild(short buildingId) const;
-    unsigned char canEverBuild(int buildingId) const;
+    // Original town publics prove _N returns for can_build, can_ever_build,
+    // buy_building, is_legal_building, is_disabled and InitializeBuildingCostsTables.
+    // Preserve retail parameter ABI: native can_ever_build used an older short.
+    bool canBuild(short buildingId) const;
+    bool canEverBuild(int buildingId) const;
     // 0x5bfe50.
     void changeGeneratorBonus(TCreatureType creature, long change);
     // 0x5be930. Declared for update_shipyard's direct call; the body is
     // still outside the admitted surface.
     type_building_id createBuilding(type_building_id building);
-    unsigned char buyBuilding(type_building_id building);
+    bool buyBuilding(type_building_id building);
     void destroyExtraCapitol();
     void getBuildCost(type_building_id building, int* resources) const;
     short getBuildCost(type_building_id building, EGameResource* types,
@@ -445,9 +449,9 @@ public:
     void increasePopulation(TCreatureType bonusCreature,
                              TCreatureType alternateBonus, long bonusAmount);
     void initialize(const TownExtra* townSetup);
-    unsigned char isLegalBuilding(type_building_id building) const;
+    bool isLegalBuilding(type_building_id building) const;
     void setLegalBuildings(__int64 disabledBuildings);
-    unsigned char isDisabled(type_building_id building) const;
+    bool isDisabled(type_building_id building) const;
     // Dreamcast's LF_FIELDLIST puts these immediately before update_shipyard,
     // in this order. BuildBuilding calls both, and retail inlines both into
     // that owner.
@@ -507,7 +511,7 @@ public:
     void deallocate();
     void placeInMap(int heroId, long playerId, unsigned char resetFlags);
     static void initializeHordes();
-    static unsigned char initializeBuildingCostsTables();
+    static bool initializeBuildingCostsTables();
     const char* getTypeName() const;
     TTerrainType getNativeTerrain() const;
     // The garrisoned hero steps out onto the town tile (0x5be390).
