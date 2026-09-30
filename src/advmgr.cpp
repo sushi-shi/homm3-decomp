@@ -4724,10 +4724,12 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
 // E:\gamedcs\advmgr.cpp:5941
 // DC 6010 and Mac 0x11770..0x117bc use the signed TObjectCell nibble
 // members in getBitPos; each draw arm reads them again. DC 5957/5958
-// and 5965/5966 preserve the clipping updates. DC retains Obj but no
-// cell/map receiver aliases; Mac reloads m_fullMap at 0x118a0/0x11928.
+// and 5965/5966 preserve the clipping updates. DC has no cell/map receiver
+// aliases; Mac reloads m_fullMap at 0x118a0/0x11928. DC 6006/6007 index
+// the initial object lookups separately; Obj is assigned inside the flag
+// arm at 6069 before FindTrigger at 6074, matching Mac 0x11920..0x1193c.
 // Restoring these native expressions and byte-sized foundHero/foundBoat
-// improves 87.7661 -> 97.52%. Keep the canonical helper calls.
+// improves 87.7661 -> 97.83%. Keep the canonical helper calls.
 // Earlier baseX/baseY swaps and both disposable declaration-forest
 // placements did not improve the former cached-receiver implementation.
 VA(0x00410c00, 0x98E)
@@ -4778,10 +4780,10 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 if (objCell->m_layer != row)
                     continue;
 
-                CObject* obj = &m_fullMap->m_objects[objCell->m_objectIndex];
-                CObjectType* objType =
-                    &m_fullMap->m_objectTypes[obj->m_typeIndex];
-                CSprite* sprite = m_fullMap->m_sprites[obj->m_typeIndex];
+                CObjectType* objType = &m_fullMap->m_objectTypes[
+                    m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
+                CSprite* sprite = m_fullMap->m_sprites[
+                    m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
                 if (!objType->m_drawCells[CObjectType::getBitPos(
                         objCell->m_cellX, objCell->m_cellY)]
                     || objType->m_suppressDraw)
@@ -4854,10 +4856,10 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     // DC line 6067 and Mac's call to 0+0x103cc retain
                     // hasFlag here; VC6 expands it without changing bytes.
                     if (hasFlag(objType->m_objectType)) {
+                        CObject* obj = &m_fullMap->m_objects[objCell->m_objectIndex];
                         int triggerX;
                         int triggerY;
-                        m_fullMap->m_objects[objCell->m_objectIndex].findTrigger(
-                            triggerX, triggerY);
+                        obj->findTrigger(triggerX, triggerY);
                         NewmapCell* triggerCell =
                             getCell(type_point(triggerX, triggerY, z));
                         int owner = getFlaggedObjectOwner(triggerCell);
