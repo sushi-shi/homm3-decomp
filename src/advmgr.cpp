@@ -5201,6 +5201,8 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
     }
 }
 
+// DC bitfields 0x3e18..0x3e1b name the river/road flips at positions
+// 2..5. The native DrawTile callers extract those four one-bit fields.
 VA(0x00411b80, 0x1D7)
 DC_ADDRESS(0x013890, 0x1d4)
 MAC_ADDRESS(0x012620, 0x1cc)
@@ -5240,8 +5242,8 @@ void advManager::drawRiver(int srcX, int srcY, int z, int destX, int destY)
     m_riverTileset[thisCell->m_riverSet]->drawTile(
         thisCell->m_riverIndex, tilex, tiley, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8,
-        (thisCell->m_flags0011 >> 2) & 1,
-        (thisCell->m_flags0011 >> 3) & 1);
+        thisCell->m_riverFlippedHorizontal,
+        thisCell->m_riverFlippedVertical);
 }
 
 VA(0x00411d60, 0x1EC)
@@ -5285,8 +5287,8 @@ void advManager::drawRoad(int srcX, int srcY, int z, int destX, int destY)
     m_roadTileset[thisCell->m_roadSet]->drawTile(
         thisCell->m_roadIndex, tilex, tiley, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8,
-        (thisCell->m_flags0011 >> 4) & 1,
-        (thisCell->m_flags0011 >> 5) & 1);
+        thisCell->m_roadFlippedHorizontal,
+        thisCell->m_roadFlippedVertical);
 }
 
 VA(0x00411f50, 0x15F)

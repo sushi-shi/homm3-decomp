@@ -848,6 +848,8 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
 // disjunction, the RiverSet test through the bitfield unit, the scaled origin
 // pair, the inlined clear of the scratch buffer and the DrawTile through
 // riverTileset. advmgr.cpp's full-size DrawRiver is the unscaled twin.
+// The native flip fields (DC 0x3e18..0x3e1b) feed DrawTile directly;
+// Mac 2055e4/205600 and 2058b0/2058cc extract the same river/road bits.
 VA(0x005f9220, 0x38A)
 DC_ADDRESS(0x194850, 0x17c)
 MAC_ADDRESS(0x205484, 0x2cc)  // exhaustive dc-order-map + VWCompleteDraw call order (2nd layer)
@@ -874,8 +876,8 @@ void advManager::vwDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 
     m_riverTileset[thisCell->m_riverSet]->drawTile(
         thisCell->m_riverIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
-        (thisCell->m_flags0011 >> 2) & 1,
-        (thisCell->m_flags0011 >> 3) & 1);
+        thisCell->m_riverFlippedHorizontal,
+        thisCell->m_riverFlippedVertical);
 
     vwScaleToScreenBuffer(baseX, baseY + 8);
 }
@@ -920,8 +922,8 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 
     m_roadTileset[thisCell->m_roadSet]->drawTile(
         thisCell->m_roadIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
-        (thisCell->m_flags0011 >> 4) & 1,
-        (thisCell->m_flags0011 >> 5) & 1);
+        thisCell->m_roadFlippedHorizontal,
+        thisCell->m_roadFlippedVertical);
 
     vwScaleToScreenBuffer(baseX, baseY + 8);
 }
