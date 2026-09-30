@@ -1623,7 +1623,7 @@ public:
     //   * Earthquake's `level` indexes akSpellTraits' mastery_bonus row
     //     for the number of wall sections to bring down.
     void showMassSpell(unsigned char (&effected)[2][20], int spellEffect,
-                       unsigned char showWince);  // 0x5a67c0
+                       bool showWince);  // 0x5a67c0
     void summonElemental(SpellID spell, TCreatureType monType,
                          int spellPower, int level);  // 0x5a7080
     void resetBoltAngle(SBolt* bolt);  // 0x5a5260
