@@ -1339,17 +1339,13 @@ unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
     return 0;
 }
 
-// The four-byte class-name counterpart is uninformative, but the
-// older TAdvMenu::SetSleepImage body at dc 0x2a74 positively calls the two
-// distinct button.h helpers clear_hotkeys and set_hotkey on consecutive source
-// lines.  Keep both canonical wrappers: flattening clear_hotkeys was source
-// false and happened to be byte-identical at the current compiler state.  A
-// 240-trial, 12-family target-local state campaign remained at 86.6667%; the
-// residual is a nested vector<int> inliner decision, not evidence to erase the
-// helper boundary again.
-// Mac 0x3abc..0x3ad4 lazily initializes the previous-image cache to -1,
-// proving function-local static ownership. VC6 constant-initializes the same
-// retail data cell at 0x65f240 without a runtime guard.
+// The older TAdvMenu::SetSleepImage at dc 0x2a74 calls clear_hotkeys and
+// set_hotkey on consecutive button.h source lines. Preserve both wrappers.
+// Mac 0x3abc..0x3ad4 lazily initializes the function-local image cache to -1;
+// VC6 constant-initializes the same retail data cell without a runtime guard.
+// Mac 0x3aec..0x3b04 passes the icon pointer directly to the four-int broadcast
+// overload, whose body owns message construction. A redundant caller message
+// that consumed VC6 inline budget and prevented the third vector::size expansion.
 VA(0x00403cc0, 0x215)
 DC_ADDRESS(0x00118c, 0x4)
 MAC_ADDRESS(0x003aa4, 0xf4)  // anchor-global
@@ -1357,12 +1353,9 @@ void TAdventureMapWindow::setSleepImage(int image)
 {
     DATA(0x0065f240) static int previousImage = -1;
     if (image != previousImage) {
-        message iconMessage;
-        iconMessage.m_extraText = g_aszSleepIcons[image];
-
         previousImage = image;
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
-            SLEEP_ID, iconMessage.m_extra);
+            SLEEP_ID, reinterpret_cast<int>(g_aszSleepIcons[image]));
         broadcastMessage(MESSAGE_WIDGET,
             widget::WIDGET_SET_PLAYER_PALETTE_COLORS, SLEEP_ID,
             g_game->getLocalPlayerGamePos());
