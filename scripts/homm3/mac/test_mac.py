@@ -15,16 +15,55 @@ from homm3.mac.relocations import Address, link_code
 class TestMacTarget(unittest.TestCase):
     def test_generated_copy_assignment_requires_const_reference_to_same_owner(self):
         symbol = ".__as__14CMapHeaderDataFRC14CMapHeaderData"
-        self.assertEqual(pairs.generated_copy_assignment_owner(symbol), "CMapHeaderData")
+        self.assertEqual(pairs.generated_copy_owner(symbol),
+                         ("IMPLICIT_COPY_ASSIGN", "CMapHeaderData"))
         for invalid in (
             ".__as__14CMapHeaderDataF14CMapHeaderData",
             ".__as__14CMapHeaderDataCFRC14CMapHeaderData",
             ".__as__14CMapHeaderDataFRC15SavedGameHeader",
             ".__as__14CMapHeaderDataFRC14CMapHeaderDatai",
-            ".__ct__14CMapHeaderDataFRC14CMapHeaderData",
+            ".__dt__14CMapHeaderDataFRC14CMapHeaderData",
         ):
             with self.subTest(symbol=invalid):
-                self.assertIsNone(pairs.generated_copy_assignment_owner(invalid))
+                self.assertIsNone(pairs.generated_copy_owner(invalid))
+
+    def test_generated_copy_constructor_requires_const_reference_to_same_owner(self):
+        for symbol, owner in (
+            (".__ct__16type_dialog_iconFRC16type_dialog_icon", "type_dialog_icon"),
+            (".__ct__Q23Foo3BarFRCQ23Foo3Bar", "Foo::Bar"),
+        ):
+            self.assertEqual(pairs.generated_copy_owner(symbol), ("IMPLICIT_COPY_CTOR", owner))
+        for invalid in (
+            ".__ct__16type_dialog_iconFv",
+            ".__ct__16type_dialog_iconFR16type_dialog_icon",
+            ".__ct__16type_dialog_iconFRC14CMapHeaderData",
+            ".__ct__16type_dialog_iconFRC16type_dialog_iconi",
+            ".__ct__16type_dialog_iconCFRC16type_dialog_icon",
+            ".__ct__Q23Foo3BarFRCQ23Baz3Bar",
+        ):
+            with self.subTest(symbol=invalid):
+                self.assertIsNone(pairs.generated_copy_owner(invalid))
+
+    def test_generated_copy_constructor_binds_only_its_source_claim(self):
+        from homm3.mac.addresses import Claim
+        ctor = ".__ct__16type_dialog_iconFRC16type_dialog_icon"
+        assignment = ".__as__16type_dialog_iconFRC16type_dialog_icon"
+        claim = Claim("src/kb.cpp", 4627, 0x118134, 0xac,
+                      0x4f6810, ("IMPLICIT_COPY_CTOR", "type_dialog_icon"))
+        with patch.object(pairs.emitted, "object_hunks", return_value={}), \
+             patch.object(pairs.emitted, "claim_bodies", return_value=[]), \
+             patch.object(pairs.emitted, "bind", return_value=[]), \
+             patch.object(pairs, "_universe", return_value={ctor, assignment}):
+            result = pairs.load(Path("."), definitions=[], claims=[claim])
+            self.assertEqual(result.symbols, {ctor: 0x118134})
+            self.assertEqual(result.labels[ctor], "type_dialog_icon::type_dialog_icon")
+            self.assertFalse(result.pairs)
+            self.assertFalse(pairs.load(Path("."), definitions=[], claims=[]).symbols)
+            conflicting = Claim("src/other.cpp", 1, 0x1234, 0xac,
+                                0x123456, claim.compgen)
+            result = pairs.load(Path("."), definitions=[], claims=[claim, conflicting])
+            self.assertNotIn(ctor, result.symbols)
+            self.assertEqual(result.conflicts, (ctor,))
 
     def test_generated_copy_assignment_uses_source_claim_and_preserves_conflicts(self):
         from homm3.mac.addresses import Claim
