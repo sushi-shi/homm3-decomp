@@ -704,3 +704,53 @@ scores (`0x6b5f0`) and assigned hero IDs (`0x682fc`). Caller member offsets
 and element strides identify each operation. The existing `m_campaign`
 assignments own these library calls; adding game wrappers would duplicate
 the represented operation.
+
+### Save-game transfer file and network operations
+
+The full Mac transmit/receive bodies and their remaining 71 queued call
+sites were reviewed against the corresponding Windows operations. The
+three zero fills belong to packet creation, `playerDone[8]` and the
+`blockReceived` allocation; packet creation already owns its fill through
+`CGameTransmitMainMsg::createMsg`.
+
+Mac's file adapter separates path resolution/creation from opening its data
+fork. The complete callees and loader imports identify `FSMakeFSSpec`,
+`FSpCreate`, `ResolveAliasFile`, `FSpOpenDF`, `FSRead`, `FSWrite`, `GetEOF`
+and `FSpDelete`. Original/current/diff-file buffers, counts and failure
+branches match the existing `File` calls. Final transfer input/output uses
+CRT descriptors in Windows (`0x4cb288..0x4cb2d5`,
+`0x4cc664..0x4cc6b9`); the extra Mac adapter destructors run after the
+corresponding handle close. They do not require another Windows owner.
+The receiver's separate Mac path/open failure checks remain a documented
+platform difference from Windows' single `File::open` guard.
+
+Seven Mac idle-service calls walk the application callback list at `+0x1828`;
+three clock-refresh calls use `Microseconds` and update the cached Mac clock.
+The Windows transfer loop entries (`0x4cb448`, `0x4cb563`, `0x4cbf13`)
+retain `pollSound`/`checkDoMain` directly, as the source does. Its post-receive
+file/UI sequence has no corresponding Mac callback-list service.
+
+The three Mac no-op player-destruction calls and DC vtable-slot `+0x20`
+calls correspond to existing `g_dPlay->destroyPlayer` calls, proved at
+Windows `0x4cb970`, `0x4cbaae`, `0x4cc38f`. The subsequent drop handling
+and notification keep their distinct source operations. Seven DC text
+lookups use indices 99, 82, 100, 15, 329, 432 and 471 for the same messages
+and guards as the current `getText` calls; no accessor substitution is needed.
+
+### Resource-cache backend boundaries
+
+The complete Mac cache insert/remove/find bodies at `0x151ff4`, `0x15208c`
+and `0x1520e8` operate on 16,384 eight-byte hash/resource rows. Find compares
+a case-sensitive name hash, then calls `stringsEqual`; insertion finds an
+empty row, while removal searches by resource pointer. Windows instead
+retains the current case-insensitive `TCacheMap` operations: insertion at
+`0x5594df`, lower-bound/comparison in `0x55e330`, and iterator erasure at
+`0x55d17f`. The three source callers already preserve `insert`, `find` and
+`erase`, plus reference-count changes.
+
+Disposal also has a native behavioral distinction: Mac ignores the removal
+result before deleting a zero-reference resource; Windows deletes only after
+a successful tree lookup. The source preserves the Windows guard and virtual
+`delete this` call (`0x55d18a`; Mac's deleting slot is called at `0x154820`).
+The Mac array and its hash/equality helpers must not be inserted into this
+different Windows cache implementation.
