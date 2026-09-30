@@ -2515,7 +2515,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
             infile->read(&wide, sizeof(wide));
             artifact = static_cast<short>(LITTLE_ENDIAN_SHORT(wide));
         }
-        tempMonster.m_artifact = artifact;
+        tempMonster.m_artifact = H3_ENUM_DECODE(TArtifact, artifact);
 
         if (customIndex < 4000) {
             m_customMonsterList.push_back(tempMonster);
@@ -2607,7 +2607,7 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
         thisMonster.m_resQty[i] = value;
     }
 
-    thisMonster.m_artifact = readValue<unsigned char>(infile);
+    thisMonster.m_artifact = H3_ENUM_DECODE(TArtifact, readValue<unsigned char>(infile));
     if (thisMonster.m_artifact == (ARTIFACT_NONE & 0xff))
         thisMonster.m_artifact = ARTIFACT_NONE;
     return 0;

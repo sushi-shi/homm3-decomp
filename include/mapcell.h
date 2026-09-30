@@ -1188,12 +1188,9 @@ class MonsterData {
 public:
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
     int m_resQty[7];
-    // Spelled int, not TArtifact, for the reason armyGroup::armies is
-    // spelled int: readMonsterData deserializes it from a one- or two-byte
-    // stream field and saveMonsterData narrows it back to a byte, so an
-    // enum here would put a cast on every crossing.  ARTIFACT_NONE still
-    // assigns.  The Dreamcast declarator's enum is preserved in the name.
-    int m_artifact;
+    // DC type 0x30cb records public TArtifact Artifact. The map and save
+    // formats encode different widths; decode those at the stream boundary.
+    TArtifact m_artifact;
     // E:\gamedcs\MapCell.h:735, dc 0xf4a50
     MonsterData() { m_artifact = ARTIFACT_NONE; }
 };

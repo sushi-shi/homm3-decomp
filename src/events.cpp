@@ -3451,8 +3451,7 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
             if (humanPlayer)
                 normalDialog("", 1, -1, -1, 8,
                              reward->m_artifact, -1, 0, -1, 0, -1, 0);
-            // The Complete monster reward stores a decoded map ordinal; type_artifact retains its DC TArtifact constructor.
-            type_artifact artifact(static_cast<TArtifact>(reward->m_artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+            type_artifact artifact(reward->m_artifact);
             currentHero->giveArtifact(&artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
