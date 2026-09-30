@@ -380,6 +380,9 @@ void type_sacrifice_window::createArtifactWidgets(
     // default constructor, whose base call supplies TArtifact(-1). Line 444
     // initializes item_count before that constructor.
     type_artifact_offering artifactOffering;
+    // DC line 455 and Mac 156820 reset the empty ID after construction.
+    // Native store retained despite VC6 vector expansion changing 99.9812 -> 97.0555.
+    artifactOffering.m_artifactId = ARTIFACT_NONE;
     textWidget* currentTextWidget;
     for (long j = 0; j < 5; ++j) {
         long itemX = g_rowStart[j][0];
