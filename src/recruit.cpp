@@ -97,13 +97,20 @@ void recruitSliderCallback(int state, heroWindow* parentWindow)
 // with the 0/24 selection (Locals: none; r10 reused). Writing that
 // parameter reuse as `altResource != -1 ? 0 : 0x18` reproduces retail's
 // inc/neg/sbb selection in EDI and its interleaved vector load
-// (99.01 -> 99.23; the remaining rows are the ICF-folded _Ufill twin name).
+// (99.01 -> 99.23 in that source state).
 // Measured on the same parameter reuse: `== -1 ? 0x18 : 0` and the if/else
 // 97.08%, `(altResource + 1) ? 0 : 0x18` and a pre-increment 97.35%. The
 // older separate-local forms (ternary, default-then-if, boolean multiply)
 // all stayed at or below 99.01%.
 // DC lines 207/215/218/224 name the four TTextResource::operator[] calls
 // below; restoring that canonical wrapper is VC6 byte-flat at 99.01016%.
+// DC lines 247/249 implement a four-element clear loop, not four source
+// assignments; Mac 0x14e9c8..0x14e9d4 unrolls it. Recovering that local
+// improves 99.2570% -> 99.9271%, two states/two reproduced objects.
+// All 185 CFG blocks, 161 calls and 203 relocations agree. The remaining
+// immediate differences start with allocation/conversion homes at [ebp+0xc]
+// and [ebp+0x10] versus retail's [ebp+0x8] and [ebp+0xc]. Keep the native
+// loop rather than flattening it to four source stores.
 VA(0x0054e850, 0x1295)
 DC_ADDRESS(0x118bb4, 0xc08)
 MAC_ADDRESS(0x14d310, 0x186c)  // unique x86/DC structure + constructor call
@@ -240,10 +247,8 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         DATA_COMPGEN(0x006829d4, recruitCancelButton, "iCN6432.def"),
         0, 1, 0, 1, 2));
 
-    m_creatureWidgets[0] = 0;
-    m_creatureWidgets[1] = 0;
-    m_creatureWidgets[2] = 0;
-    m_creatureWidgets[3] = 0;
+    for (int i = 0; i < 4; i++)
+        m_creatureWidgets[i] = 0;
 
     if (recruitInfo->m_monType4 != CREATURE_NONE) {
         addCreatureWidgets(0x1c, 0x41, 0xb4,
