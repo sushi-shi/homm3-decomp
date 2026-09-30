@@ -1529,6 +1529,11 @@ static void markValues(long* fullValue, long totalValue,
 // The retained Mac game-call sequence also agrees here (14 calls on each
 // side). Its two differing targets are zero-fill runtime calls (`bzero`
 // versus `memset`), so changing a game helper cannot resolve those sites.
+// DC records build_mask and cost[7] at procedure scope. Retaining those
+// lifetimes is byte-flat at Windows 94.1381% and Mac 17.7083%; moving the
+// player initialization ahead of bestBuilding is also byte-flat, so its
+// recorded acquisition order is retained. The first residual swaps the
+// player/bestBuilding homes, followed by the build-mask temporary homes.
 VA(0x0042ae00, 0x718)
 DC_ADDRESS(0x030d6c, 0x2c2)
 MAC_ADDRESS(0x02ed58, 0x420)  // retail callee set + arity
@@ -1542,12 +1547,14 @@ unsigned char type_AI_player::purchaseBuilding(
     town* bestTown = 0;
     int bestBuilding = MAX_BUILDING_TYPE;
     __int64 requirements;
+    __int64 buildMask;
+    int cost[7];
     playerData* player = &g_game->m_players[m_team];
 
     for (short townIndex = 0; townIndex < player->m_numTowns;
          ++townIndex) {
         town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
-        __int64 buildMask = currentTown->getBuildableMask();
+        buildMask = currentTown->getBuildableMask();
         if (g_game->townAlreadyBuiltOn(currentTown->m_id))
             continue;
 
@@ -1595,7 +1602,6 @@ unsigned char type_AI_player::purchaseBuilding(
     if (!bestTown)
         return 0;
 
-    int cost[7];
     bestTown->getBuildCost(H3_ENUM_DECODE(type_building_id, bestBuilding), cost);
     tradeResources(cost, 1);
     if (g_game->townAlreadyBuiltOn(bestTown->m_id))
