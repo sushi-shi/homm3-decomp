@@ -7251,7 +7251,9 @@ void game::nextPlayer()
 VA(0x004c7930, 0x266)
 DC_ADDRESS(0x0b2ad4, 0x55c)
 MAC_ADDRESS(0x0de078, 0x308)
-int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
+// Original DC public ?ComputeDailyGold@game@@QAAHH_N@Z proves bool includeSilo;
+// the byte primitive in its lowered debug parameter record is not source uchar.
+int game::computeDailyGold(int whichPlayer, bool includeSilo)
 {
     const playerData& p = m_players[whichPlayer];
     int gold = 0;
