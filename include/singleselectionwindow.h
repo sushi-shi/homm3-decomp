@@ -339,7 +339,8 @@ public:
 
     // E:\gamedcs\SingleSelectionWindow.h:122
     DC_ADDRESS(0x1475dc, 0x12)
-    unsigned char isHuman()
+    // Native IsHuman public: QAA_NXZ (DC file 0x5fdce3).
+    bool isHuman()
     {
         if (m_dpid)
             return 1;
@@ -674,7 +675,7 @@ public:
     TSingleSelectionWindow(int gameMode);
     virtual ~TSingleSelectionWindow();
     virtual void doModal(bool fadeIn);
-    void updatePlayerPositions(unsigned char updateCurPlayer);
+    void updatePlayerPositions(bool updateCurPlayer);
     virtual int windowHandler(message& msg);  // slot 9
     void onNameSlider(int newIndex);
     void onChatWindowSlider(int newIndex);
@@ -746,8 +747,7 @@ public:
     bool onGameHeaderInfoInitMsg(CNetMsg* netMsg);
     void onGameHeaderInfoInitMsgEx(CNetMsg* netMsg);
     void makeHeroFilter();
-    void sortMaps(int how, unsigned char sendSortMsg,
-                  unsigned char update);
+    void sortMaps(int how, bool sendSortMsg, bool update);
     bool onSetAsHostMsg(CNetMsg* netMsg);
     bool onGameHeaderInfoMsg(CNetMsg* netMsg);
     bool onGameHeaderInfoEndMsg(CNetMsg* netMsg);

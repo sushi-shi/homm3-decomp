@@ -583,7 +583,9 @@ void getGameVersion(char* version)
 // E:\gamedcs\singleselectionwindow.cpp:382
 DC_ADDRESS(0x12fe84, 0x2c)
 MAC_ADDRESS(0x16e3ac, 0x34)
-inline unsigned char hasNonRandomHero(int gamePos)
+// Original HasNonRandomHero is DC S_LPROC32. Complete internal linkage
+// follows its same-TU ownership; retail does not independently distinguish it.
+static inline unsigned char hasNonRandomHero(int gamePos)
 {
     return g_game->m_mapHeader.m_playerSlotAttributes[gamePos].m_nonRandomHeroId
         != -1;
@@ -592,7 +594,8 @@ inline unsigned char hasNonRandomHero(int gamePos)
 // E:\gamedcs\singleselectionwindow.cpp:390
 DC_ADDRESS(0x12feb0, 0x90)
 MAC_ADDRESS(0x16e3e0, 0x40)
-inline unsigned char hasRandomHero(int gamePos)
+// Original HasRandomHero is DC S_LPROC32, with the same ownership inference.
+static inline unsigned char hasRandomHero(int gamePos)
 {
     CMapHeaderData::TPlayerSlotAttributes& slot =
         g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
@@ -4876,8 +4879,9 @@ inline void TSingleSelectionWindow::onSortMaps(int how)
 VA(0x00585050, 0x2A8)
 DC_ADDRESS(0x13b780, 0x27a)
 MAC_ADDRESS(0x17cea0, 0x338)  // anchor-callee HandleNetMsg's RS_SORT_MAPS arm calls it (how, 1, 1) - the DC 3-arg signature; size 1.07x
-void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
-                                      unsigned char update)
+// Native SortMaps public: QAAXH_N0@Z (DC file 0x5c7ecb).
+void TSingleSelectionWindow::sortMaps(int how, bool sendSortMsg,
+                                      bool update)
 {
     std::vector<GameSelectionHeadersStruct>* src = getSourceHeaders();
     m_currentIndex = 0;
@@ -6305,7 +6309,8 @@ inline int TSingleSelectionWindow::getThisPlayerGamePos()
 VA(0x00588330, 0x462)
 DC_ADDRESS(0x13f770, 0x602)
 MAC_ADDRESS(0x17fba4, 0x44c)
-void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer)
+// Native UpdatePlayerPositions public: QAAX_N@Z (DC file 0x5cf27f).
+void TSingleSelectionWindow::updatePlayerPositions(bool updateCurPlayer)
 {
     g_numHumanPlayers = 0;
     int i;
