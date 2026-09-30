@@ -437,7 +437,7 @@ int earlySetup()
     if (!loadGameData())
         shutDown(DATA_COMPGEN(0x0067f5fc, remoteInitializationFailed,
             "Initialization failed!"));
-    g_game->m_worldMap.loadObjectTypeTemplates();
+    g_game->getWorldMapData()->loadObjectTypeTemplates();
     aiInitialize();
     if (!interpretCommandLine())
         return 1;
@@ -1223,7 +1223,7 @@ int oldmain()
                 int playerPos =
                     campaignBrief.getScenario(currentMap)
                         ->getStartOptions()->getPlayer(briefingChoice);
-                g_game->m_players[playerPos].m_isHuman = 1;
+                g_game->m_players[playerPos].setHuman(1);
                 g_game->m_players[playerPos].m_isLocal = 1;
                 g_localGamePos = playerPos;
                 incProgressBar(1);
@@ -1239,7 +1239,7 @@ int oldmain()
                     }
                     strcpy(g_game->m_players[j].m_name, playerSave[j].m_name);
                     g_game->m_players[j].m_isLocal = playerSave[j].m_isLocal;
-                    g_game->m_players[j].m_isHuman = playerSave[j].m_isHuman;
+                    g_game->m_players[j].setHuman(playerSave[j].getHumanFlag());
                     g_newMapStartingBonus[j] = g_game->m_setup.m_startingBonus[j];
                 }
 
@@ -1511,7 +1511,7 @@ static int doNewGame()
             incProgressBar(1);
 
             g_game->m_players[0].m_isLocal = 1;
-            g_game->m_players[0].m_isHuman = 1;
+            g_game->m_players[0].setHuman(1);
             strcpy(g_game->m_players[0].m_name, g_config.m_networkDefaultName);
 
             for (int i = 0; i < 8; ++i) {
@@ -2211,7 +2211,7 @@ void playerDead(int whichPlayer)
     for (level = 0; level < g_game->getNumMapLevels(); level++) {
         for (y = 0; y < g_mapHeight; y++) {
             for (x = 0; x < g_mapWidth; x++) {
-                NewmapCell* cell = g_game->m_worldMap.cell(x, y, level);
+                NewmapCell* cell = g_game->getWorldMapData()->cell(x, y, level);
 
                 if (cell->m_isTrigger && cell->m_typeValue == SHIPYARD &&
                     cell->m_shipyardInfo.m_owner == whichPlayer) {
@@ -2224,8 +2224,8 @@ void playerDead(int whichPlayer)
         }
     }
 
-    for (i = 0; i < g_game->m_mines.size(); i++) {
-        if (g_game->m_mines[i].m_playerOwner == whichPlayer)
+    for (i = 0; i < g_game->getMineCount(); i++) {
+        if (g_game->getMine(i)->m_playerOwner == whichPlayer)
             g_game->claimMine(i, -1, const_normal_action);
     }
 
@@ -2234,8 +2234,8 @@ void playerDead(int whichPlayer)
             g_game->claimGenerator(i, -1);
     }
 
-    for (i = 0; i < g_game->m_garrisons.size(); i++) {
-        if (g_game->m_garrisons[i].m_playerOwner == whichPlayer)
+    for (i = 0; i < g_game->getGarrisonCount(); i++) {
+        if (g_game->getGarrison(i)->m_playerOwner == whichPlayer)
             g_game->claimGarrison(i, -1);
     }
 
@@ -2286,7 +2286,7 @@ static void checkPlayerLoss()
     tookLocalControl = 0;
     if (g_goSolo && g_netLocalGamePos == g_soloPos
         && !g_game->m_players[g_soloPos].m_isLocal) {
-        g_game->m_players[g_soloPos].m_isHuman = 1;
+        g_game->m_players[g_soloPos].setHuman(1);
         tookLocalControl = 1;
         g_game->m_players[g_soloPos].m_isLocal = 1;
     }
@@ -2337,7 +2337,7 @@ static void checkPlayerLoss()
 
     if (g_goSolo && g_netLocalGamePos == g_soloPos
         && tookLocalControl) {
-        g_game->m_players[g_soloPos].m_isHuman = 0;
+        g_game->m_players[g_soloPos].setHuman(0);
         g_game->m_players[g_soloPos].m_isLocal = 0;
     }
 }
@@ -3038,7 +3038,7 @@ void checkEndGame(int forceWin)
         && !g_currentPlayer->m_isLocal) {
         g_currentPlayer->m_isLocal = 1;
         tookLocalControl = 1;
-        g_currentPlayer->m_isHuman = 1;
+        g_currentPlayer->setHuman(1);
     }
 
     gameWon = 0;
@@ -3104,7 +3104,7 @@ void checkEndGame(int forceWin)
         if (g_goSolo && g_netLocalGamePos == g_soloPos
             && tookLocalControl) {
             g_currentPlayer->m_isLocal = 0;
-            g_currentPlayer->m_isHuman = 0;
+            g_currentPlayer->setHuman(0);
         }
     }
     g_inCheckEndGame = 0;
@@ -3703,11 +3703,11 @@ VA(0x004f4310, 0x35)
 DC_ADDRESS(0x0e45a8, 0x34)
 int gameUnsaved()
 {
-    if (g_advManager && g_advManager->m_status == baseManager::STATUS_ACTIVE)
+    if (g_advManager && g_advManager->getStatus() == baseManager::STATUS_ACTIVE)
         return 1;
-    if (g_combatManager && g_combatManager->m_status == baseManager::STATUS_ACTIVE)
+    if (g_combatManager && g_combatManager->getStatus() == baseManager::STATUS_ACTIVE)
         return 1;
-    if (g_townManager && g_townManager->m_status == baseManager::STATUS_ACTIVE)
+    if (g_townManager && g_townManager->getStatus() == baseManager::STATUS_ACTIVE)
         return 1;
     return 0;
 }
@@ -3844,7 +3844,7 @@ int handleAppSpecificMenuCommands(int idItem)
         if (idItem >= APP_MENU_SECONDARY_FIRST
                 && idItem < APP_MENU_SECONDARY_LAST) {
             markGameAsCheated();
-            if (g_combatManager->m_status == baseManager::STATUS_ACTIVE)
+            if (g_combatManager->getStatus() == baseManager::STATUS_ACTIVE)
                 currentHero = g_combatManager->m_heroes[g_combatManager->m_currentSide];
             if (currentHero) {
                 currentHero->setSS(
@@ -3866,7 +3866,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
         else if (idItem >= APP_MENU_SPELL_ALL
                 && idItem < APP_MENU_SPELL_LAST) {
-            if (g_combatManager->m_status == baseManager::STATUS_ACTIVE)
+            if (g_combatManager->getStatus() == baseManager::STATUS_ACTIVE)
                 currentHero = g_combatManager->m_heroes[g_combatManager->m_currentSide];
             if (currentHero) {
                 type_artifact artifact(ARTIFACT_NONE);

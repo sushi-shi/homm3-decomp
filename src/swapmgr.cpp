@@ -2397,8 +2397,8 @@ MAC_ADDRESS(0x1a91f8, 0x7a0)
 void swapManager::handleHeroUpdateMsg(CNetMsg* netMsg)
 {
     CHeroUpdateMsg* update = static_cast<CHeroUpdateMsg*>(netMsg);
-    g_game->m_heroes[update->m_leftHero.m_id] = update->m_leftHero;
-    g_game->m_heroes[update->m_rightHero.m_id] = update->m_rightHero;
+    *g_game->getHero(update->m_leftHero.m_id) = update->m_leftHero;
+    *g_game->getHero(update->m_rightHero.m_id) = update->m_rightHero;
 
     if (!m_netMsgHandler->isInPopup())
     {

@@ -958,6 +958,10 @@ public:
     // resource paths.
     // Retained ordinary body: game.cpp, Windows 0x004bada0.
     bool isHuman() const;
+    // Project mutation and raw-byte copy view. isHuman remains the native
+    // normalized predicate; saving/restoring this flag preserves its byte.
+    void setHuman(unsigned char human) { m_isHuman = human; }
+    unsigned char getHumanFlag() const { return m_isHuman; }
     int save(TAbstractFile* outfile);
     // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
     // townManager::SwapHeroes 0x5d5150 calls it on
@@ -1794,6 +1798,27 @@ public:
     boat* getBoat(int which)
     {
         return &m_boats[which];
+    }
+
+    // Project collection operations complement the native indexed getters.
+    // Keep container mutation and the resulting object index with the owner.
+    unsigned int getTownCount() const { return m_towns.size(); }
+    unsigned int getMineCount() const { return m_mines.size(); }
+    unsigned int getGarrisonCount() const { return m_garrisons.size(); }
+    unsigned int getBoatCount() const { return m_boats.size(); }
+    void clearTowns() { m_towns.clear(); }
+    void clearMines() { m_mines.clear(); }
+    void clearGarrisons() { m_garrisons.clear(); }
+    void clearBoats() { m_boats.clear(); }
+    unsigned int addMine(const mine& newMine)
+    {
+        m_mines.push_back(newMine);
+        return m_mines.size() - 1;
+    }
+    unsigned int addGarrison(const garrison& newGarrison)
+    {
+        m_garrisons.push_back(newGarrison);
+        return m_garrisons.size() - 1;
     }
 
     // The end-turn body, game.obj's own at 0x4c6fe0. Also ORDER-MAPPED: it

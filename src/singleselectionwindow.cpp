@@ -6254,7 +6254,7 @@ int TSingleSelectionWindow::windowHandler(message& msg)
                 break;
             case KEYCODE_ENTER:
                 if (m_saveMode)
-                    redraw = saveValid(m_saveGameEdit->m_text.c_str());
+                    redraw = saveValid(m_saveGameEdit->getText());
                 break;
             }
         } else if (msg.m_id == MESSAGE_WIDGET) {
@@ -6314,7 +6314,7 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
     int i;
     for (i = 0; i < 8; ++i) {
         g_game->m_players[i].m_isLocal = 0;
-        g_game->m_players[i].m_isHuman = 0;
+        g_game->m_players[i].setHuman(0);
     }
 
     if (isMultiPlayer()) {
@@ -6326,7 +6326,7 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
                 g_game->m_players[i].assignNetInfo(player);
                 if (g_mpNetProtocol == MP_HOTSEAT) {
                     g_game->m_players[i].m_isLocal = 1;
-                    g_game->m_players[i].m_isHuman = 1;
+                    g_game->m_players[i].setHuman(1);
                 }
                 ++g_numHumanPlayers;
             } else {
@@ -6337,7 +6337,7 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
             g_localGamePos = getThisPlayerGamePos();
             if (g_localGamePos != -1) {
                 g_game->m_players[g_localGamePos].m_isLocal = 1;
-                g_game->m_players[g_localGamePos].m_isHuman = 1;
+                g_game->m_players[g_localGamePos].setHuman(1);
             }
             if (isHost() && updateCurPlayer)
                 g_netLocalGamePos = g_localGamePos;
@@ -6347,7 +6347,7 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
         CNetPlayerHandlerPlayer* player = getThisPlayer();
         if (player) {
             g_localGamePos = player->getPlayerPos();
-            g_game->m_players[g_localGamePos].m_isHuman = 1;
+            g_game->m_players[g_localGamePos].setHuman(1);
             g_game->m_players[g_localGamePos].m_isLocal = 1;
             g_numHumanPlayers = 1;
         }
@@ -8198,7 +8198,7 @@ const char* TSingleSelectionWindow::getHeroName(int gamePos)
         if (it != setups.end()
                 && it->second.m_name.size() != 0)
             return it->second.m_name.c_str();
-        return g_game->m_heroes[heroId].m_name;
+        return g_game->getHero(heroId)->m_name;
     }
     int heroId = getHeroInPos(gamePos);
     if (heroId == -1)
@@ -8216,7 +8216,7 @@ const char* TSingleSelectionWindow::getHeroName(int gamePos)
     if (it != setups.end()
             && it->second.m_name.size() != 0)
         return it->second.m_name.c_str();
-    return g_game->m_heroes[heroId].m_name;
+    return g_game->getHero(heroId)->m_name;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8230

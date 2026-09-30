@@ -104,7 +104,7 @@ implementations retain direct access. This does not make every field of every
 class private: native public exceptions and data with no established property
 interface remain outside this inference.
 
-The pass adds **115 method definitions** for missing reads, writes, indexed
+The pass adds **139 method definitions** for missing reads, writes, indexed
 borrowing and owner operations. Examples include coordinate setters, indexed
 campaign/scenario and network-player access, packed map-cell flag operations,
 reward payload setters, and the mouse owner's wait operation. Existing helpers
@@ -113,7 +113,42 @@ network-slot indexing, a rendered widget width is not substituted for stored
 width, and the multi-field movement-cost/predecessor operation is not replaced
 by a scalar setter.
 
-### Verification and limits
+### Caller implementation
+
+The public-storage exceptions still use canonical property operations at
+unrelated call sites. Game-owned world-map and indexed hero, town, mine,
+garrison and boat access goes through the existing getters. Count, append
+and clear operations now live with those collections; each clear retains its
+place in the loader's destruction sequence. The returned append index comes
+from the same owner that inserts the object.
+
+Hero route-target setters own the coordinate group. Full-width coordinate
+getters preserve X/Y sentinel comparisons and temporary save/restore without
+packing through `type_point`; `clearTarget` invalidates X/Y and preserves Z.
+The existing packed `getTarget` and inherited `getLocation` views handle
+map-point consumers. `setSecondarySkillLevel` changes only the mastery byte,
+so AI simulation and replacement of an existing campaign skill do not acquire
+`setSS`/`giveSS` slot-order side effects.
+
+Palette-copy setters preserve resource copy construction and delete-before-copy
+ownership. The loader's named palette helpers delegate to those setters, and
+the existing reference overload shares the canonical pointer-copy operation.
+Manager status uses its native setter and a read counterpart. Player-human
+state keeps the native normalized predicate alongside a byte-preserving copy
+view and setter. Combat owning-side access uses its property interface.
+The existing slider-state query now has a concrete body.
+
+These additions are inferred project interfaces, labelled at their definitions;
+they do not assert new native symbol identities. Positive native-public field
+declarations remain public, and owning implementations can still use their own
+storage. Resource payloads, serialization records and computed properties with
+different semantics are not silently replaced by unrelated getters/setters.
+
+Per the task instruction, this implementation continuation ran no builds,
+tests or validation checks. The observations below belong to commit
+`069a8b3b8` and do not validate the subsequent caller/owner-operation changes.
+
+### Earlier compiler observations
 
 The declaration/body inventory visits all 139 project TUs. The implementation
 has no runtime behavior fixtures: VC6 comparisons and native evidence are the
@@ -159,5 +194,5 @@ Temporary extraction and review artifacts live in ignored
 names and access; this report is a dated investigation, not a second symbol
 ledger. The final declaration review confirms 144 private and 17 protected
 changes, with no unresolved public backing members left in this reviewed set.
-The 115 added definitions exclude the reward-icon helper introduced by the
+The added definitions exclude the reward-icon helper introduced by the
 parent branch during integration.

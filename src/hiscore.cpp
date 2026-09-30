@@ -572,7 +572,7 @@ static const char* highScoreCreatureImageName(int index, int scoreType)
 {
     int score = g_highScoreManager->m_highScores[scoreType][index].m_score;
     int monsterType = highScoreManager::getMonType(score, scoreType);
-    return g_game->m_worldMap.findObjectType(
+    return g_game->getWorldMapData()->findObjectType(
         MONSTER, monsterType)->m_imageName.c_str();
 }
 

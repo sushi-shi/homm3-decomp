@@ -1840,8 +1840,8 @@ TOverviewWindow::TOverviewWindow()
 
     int localPlayer = g_game->getLocalPlayerGamePos();
 
-    for (i = 0; i < g_game->m_mines.size(); ++i) {
-        mine& current = g_game->m_mines[i];
+    for (i = 0; i < g_game->getMineCount(); ++i) {
+        mine& current = *g_game->getMine(i);
         if (current.m_playerOwner != localPlayer)
             continue;
 
@@ -1866,12 +1866,12 @@ TOverviewWindow::TOverviewWindow()
         }
     }
 
-    for (i = 0; i < g_game->m_garrisons.size(); ++i) {
-        garrison& current = g_game->m_garrisons[i];
+    for (i = 0; i < g_game->getGarrisonCount(); ++i) {
+        garrison& current = *g_game->getGarrison(i);
         if (current.m_playerOwner != localPlayer)
             continue;
 
-        NewmapCell* cell = g_game->m_worldMap.cell(
+        NewmapCell* cell = g_game->getWorldMapData()->cell(
             current.m_mapX, current.m_mapY, current.m_mapZ);
         if (cell->m_objectIndex == 0) {
             addFlaggableItem('S');

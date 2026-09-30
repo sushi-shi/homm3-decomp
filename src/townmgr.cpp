@@ -8363,8 +8363,8 @@ void getCategoryStats(int whichCat, long* value, signed char* index)
         } else {
             switch (whichCat) {
             case TG_STAT_TOWNS: {
-                for (unsigned int t = 0; t < g_game->m_towns.size(); t++) {
-                    if (g_game->m_towns[t].m_owner == i)
+                for (unsigned int t = 0; t < g_game->getTownCount(); t++) {
+                    if (g_game->getTown(t)->m_owner == i)
                         total++;
                 }
                 value[i] = total;

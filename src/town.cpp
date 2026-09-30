@@ -760,7 +760,7 @@ void town::deallocate()
         player->m_currTownId = -1;
     player->m_numTowns--;
     g_advManager->m_advWindow->updateTownLocators(0, 1, 1);
-    g_game->m_towns[m_id].m_owner = -1;
+    g_game->getTown(m_id)->m_owner = -1;
     m_owner = -1;
 }
 
@@ -1019,7 +1019,7 @@ void town::destroyExtraCapitol()
                     m_fullBuildingMask &= ~g_bitNumber[HALL_CAPITOL_ID];
 
                     NewmapCell* cell =
-                        g_game->m_worldMap.cell(m_mapX, m_mapY, m_mapZ);
+                        g_game->getWorldMapData()->cell(m_mapX, m_mapY, m_mapZ);
                     g_game->convertObject(cell);
                     break;
                 }
@@ -1079,7 +1079,7 @@ type_building_id town::buildBuilding(int buildingId,
     if ((isCapitol() && !hadCapitol)
         || (isCastle() && !hadFort))
     {
-        g_game->convertObject(g_game->m_worldMap.cell(m_mapX, m_mapY, m_mapZ));
+        g_game->convertObject(g_game->getWorldMapData()->cell(m_mapX, m_mapY, m_mapZ));
     }
     if (g_game->m_mapHeader.m_victoryCondition.checkForUpgradedTown())
         checkEndGame(0);
@@ -1748,7 +1748,7 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y)
             if (y >= 0) {
                 if (y < g_mapHeight) {
 
-                    NewmapCell* cell = g_game->m_worldMap.cell(x, y, currentTown->m_mapZ);
+                    NewmapCell* cell = g_game->getWorldMapData()->cell(x, y, currentTown->m_mapZ);
                     if (cell->m_groundSet == eTerrainWater) {
                         unsigned short flags = cell->m_cellFlags;
                         if (!(flags & 0x100)) {

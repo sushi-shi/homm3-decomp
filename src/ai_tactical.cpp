@@ -500,13 +500,13 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
                                           m_data);
             if (m_enemyArmy->canRetaliate(*m_attackArmy)) {
                 if (m_enemyArmy->is(creatureMultiHeaded))
-                    value -= getMultiHeadBonus(m_enemyArmy->m_combatSide,
+                    value -= getMultiHeadBonus(m_enemyArmy->getOwningSide(),
                                                   m_enemyArmy,
                                                   m_enemyArmy->m_gridIndex,
                                                   m_enemyTroopsLeft,
                                                   m_attackArmy, hex, m_data);
                 if (m_enemyArmy->is(creatureHasExtendedAttack))
-                    value -= getBreathBonus(m_enemyArmy->m_combatSide,
+                    value -= getBreathBonus(m_enemyArmy->getOwningSide(),
                                               m_enemyArmy,
                                               m_enemyArmy->m_gridIndex,
                                               m_enemyTroopsLeft,

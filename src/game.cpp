@@ -7140,7 +7140,7 @@ void game::nextPlayer()
                             -1, -1, -1, 0, -1, 0, -1, -1, 0);
         g_remoteOn = save;
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE) {
-            g_game->m_players[g_soloPos].m_isHuman = 1;
+            g_game->m_players[g_soloPos].setHuman(1);
             g_game->m_players[g_soloPos].m_isLocal = 1;
             g_goSolo = 0;
             g_mapVisibilityBit = 1 << g_soloPos;
@@ -7374,7 +7374,7 @@ void game::resetAllPlayerVisibility()
     for (int z = 0; z < g_game->getNumMapLevels(); ++z) {
         for (int y = 0; y < g_mapHeight; ++y) {
             for (int x = 0; x < g_mapWidth; ++x) {
-                NewmapCell* tempCell = g_game->m_worldMap.cell(x, y, z);
+                NewmapCell* tempCell = g_game->getWorldMapData()->cell(x, y, z);
                 ShipyardInfo* shipyardInfo = static_cast<ShipyardInfo*>(
                     static_cast<void*>(&tempCell->m_extraInfo));
                 if (tempCell->m_isTrigger && tempCell->m_type == SHIPYARD
@@ -8348,7 +8348,7 @@ void game::convertObject(NewmapCell* tempCell)
                         newCell->m_type = type;
                 }
             }
-            g_game->m_worldMap.calculateCellExtra(newCell, 0);
+            g_game->getWorldMapData()->calculateCellExtra(newCell, 0);
         }
     }
 }
@@ -8983,7 +8983,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     g_soundManager->switchAmbientMusic(-1);
     g_soundManager->m_playSounds = changeSounds;
 
-    if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
+    if (g_advManager->getStatus() == baseManager::STATUS_ACTIVE)
         g_advManager->bvMessage(g_generalText->getText(GENERAL_TEXT_SENDING_GAME));
 
     saveGame(g_config.m_scFile, 0, 0, !inGame, 1);
@@ -9287,7 +9287,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     CNetMsgHandlerPause netMsgHandlerPause;
     g_advManager->trimLoopingSounds(4);
 
-    if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
+    if (g_advManager->getStatus() == baseManager::STATUS_ACTIVE)
         g_advManager->bvMessage(g_generalText->getText(GENERAL_TEXT_RECEIVING_GAME));
 
     int lastDataReceiveTime = GameTime::get();
@@ -9600,7 +9600,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     delete[] blockReceived;
     delete[] data;
 
-    if (g_advManager->m_status == baseManager::STATUS_ACTIVE) {
+    if (g_advManager->getStatus() == baseManager::STATUS_ACTIVE) {
         g_advManager->overrideBottomView(
             advManager::BOTTOM_VIEW_DEFAULT, -1);
         g_advManager->updBottomView(1, 1, 1);

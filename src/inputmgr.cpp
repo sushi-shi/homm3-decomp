@@ -21,7 +21,7 @@ int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long
 
     if (g_inputManager == 0)
         return 1;
-    if (g_inputManager->m_status != 1)
+    if (g_inputManager->getStatus() != 1)
         return 1;
     e = &g_inputManager->m_buffer[g_inputManager->m_tail];
     e->m_id = e->m_codeX = e->m_codeY = e->m_mouseX = e->m_mouseY = e->m_qualifier = 0;
@@ -45,7 +45,7 @@ int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long
             g_inputManager->m_head %= 64;
         }
         g_inputManager->m_extendFlag = 0;
-        if (g_windowManager->m_status == 1) {
+        if (g_windowManager->getStatus() == 1) {
             if (g_advManager == 0 || g_advManager->m_advWindow == 0
                 || g_advManager->m_advWindow->m_chatEdit->m_hasFocus == 0) {
                 if (e->m_id == MESSAGE_KEY_DOWN && e->m_codeX == KEYCODE_F1)
@@ -68,7 +68,7 @@ int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long lo
 
     if (g_inputManager == 0)
         return 1;
-    if (g_inputManager->m_status != 1)
+    if (g_inputManager->getStatus() != 1)
         return 1;
     if (g_inputManager->m_bufferBusy != 0)
         return 1;

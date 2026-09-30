@@ -219,9 +219,23 @@ public:
     DC_ADDRESS(0x0744e4, 0x64)
     void setPalette(TPalette16& pal)
     {
+        setPalette(&pal);
+    }
+
+    // Project pointer overloads keep the loader's palette-copy operation
+    // with the owning sprite. Preserve delete-before-copy and resource copy
+    // construction; a raw color-table setter has different input semantics.
+    void setPalette(const TPalette16* pal)
+    {
         if (m_p)
             delete m_p;
-        m_p = new TPalette16(&pal);
+        m_p = new TPalette16(pal);
+    }
+    void setPalette24(const TPalette24* pal)
+    {
+        if (m_p24)
+            delete m_p24;
+        m_p24 = new TPalette24(pal);
     }
     void resetPalette();
     unsigned short* getPalette();

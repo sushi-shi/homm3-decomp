@@ -33,7 +33,7 @@ void ExtraInfoUnion::setCellVisited(short player)
     int team = g_game->getTeam(player);
 
     for (int i = 0; i < 8; ++i) {
-        if (g_game->m_mapHeader.m_teamInfo[i] == team)
+        if (g_game->getTeam(i) == team)
             m_cellVisitedInfo.m_visited |= 1 << i;
     }
 }
@@ -331,7 +331,7 @@ DC_ADDRESS(0x0ebf6c, 0x2c)
 MAC_ADDRESS(0x11e1fc, 0x20)
 CObject* NewmapCell::TObjectCell::getObject() const
 {
-    return &g_game->m_worldMap.m_objects[m_objectIndex];
+    return &g_game->getWorldMapData()->m_objects[m_objectIndex];
 }
 
 VA_COMPGEN(0x004fca60, 0x3E, IMPLICIT_DTOR, TreasureData)
@@ -349,10 +349,10 @@ NewmapCell* NewmapCell::getTriggerCell()
         return 0;
 
     if (m_objectTypeIndex < 0
-        || m_objectTypeIndex >= g_game->m_worldMap.m_objects.size())
+        || m_objectTypeIndex >= g_game->getWorldMapData()->m_objects.size())
         return 0;
 
-    CObject* object = &g_game->m_worldMap.m_objects[m_objectTypeIndex];
+    CObject* object = &g_game->getWorldMapData()->m_objects[m_objectTypeIndex];
     type_point location = object->getTrigger();
 
     if (location.m_x < 0)
@@ -612,13 +612,13 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
     m_timedEventList.clear();
     m_townEventList.clear();
     m_heroPlaceholders.clear();
-    g_game->m_towns.clear();
+    g_game->clearTowns();
     g_game->m_scenarioTowns.clear();
     g_game->m_signs.clear();
-    g_game->m_mines.clear();
+    g_game->clearMines();
     g_game->m_generators.clear();
-    g_game->m_garrisons.clear();
-    g_game->m_boats.clear();
+    g_game->clearGarrisons();
+    g_game->clearBoats();
     g_game->m_blackMarkets.clear();
     g_game->m_universities.clear();
     g_game->m_creatureBanks.clear();
@@ -786,13 +786,13 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
     m_questGuardList.clear();
     m_timedEventList.clear();
     m_townEventList.clear();
-    g_game->m_towns.clear();
+    g_game->clearTowns();
     g_game->m_scenarioTowns.clear();
     g_game->m_signs.clear();
-    g_game->m_mines.clear();
+    g_game->clearMines();
     g_game->m_generators.clear();
-    g_game->m_garrisons.clear();
-    g_game->m_boats.clear();
+    g_game->clearGarrisons();
+    g_game->clearBoats();
     g_game->m_universities.clear();
     g_game->m_creatureBanks.clear();
 
@@ -1270,7 +1270,7 @@ DC_ADDRESS(0x0eda1c, 0x2e)
 MAC_ADDRESS(0x120a98, 0x20)
 CObjectType* CObject::getObjectTypePtr() const
 {
-    return &g_game->m_worldMap.m_objectTypes[m_typeIndex];
+    return &g_game->getWorldMapData()->m_objectTypes[m_typeIndex];
 }
 
 // E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
@@ -2418,8 +2418,7 @@ int NewfullMap::readMineData(TAbstractFile* infile, CObject* mineObject)
     tempMine.m_mapY = static_cast<unsigned char>(y);
     tempMine.m_mapZ = mineObject->m_z;
 
-    g_game->m_mines.push_back(tempMine);
-    mineObject->m_extraInfo = g_game->m_mines.size() - 1;
+    mineObject->m_extraInfo = g_game->addMine(tempMine);
     return 0;
 }
 
@@ -2468,8 +2467,7 @@ int NewfullMap::readAbandonedMineData(TAbstractFile* infile,
     tempMine.m_mapZ = mineObject->m_z;
     tempMine.m_isAbandoned = 1;
 
-    g_game->m_mines.push_back(tempMine);
-    mineObject->m_extraInfo = g_game->m_mines.size() - 1;
+    mineObject->m_extraInfo = g_game->addMine(tempMine);
     return 0;
 }
 
@@ -3280,8 +3278,7 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
     newGarrison.m_mapY = static_cast<unsigned char>(triggerY);
     newGarrison.m_mapZ = garrisonObject->m_z;
 
-    g_game->m_garrisons.push_back(newGarrison);
-    garrisonObject->m_extraInfo = g_game->m_garrisons.size() - 1;
+    garrisonObject->m_extraInfo = g_game->addGarrison(newGarrison);
 
     unsigned char padding[8];
     if (infile->read(padding, sizeof(padding)) < sizeof(padding))
@@ -4477,7 +4474,7 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
                     int objBeingPlacedY = newObject->m_y - y;
                     int objOnMapY = belowObject->m_y - y;
                     int objBeingPlacedHeight = heightMap[objBeingPlacedX][objBeingPlacedY];
-                    NewmapCell* cell = g_game->m_worldMap.cell(
+                    NewmapCell* cell = g_game->getWorldMapData()->cell(
                         x, y, newObject->m_z);
                     std::vector<NewmapCell::TObjectCell>& onMapList = cell->m_objects;
                     const NewmapCell::TObjectCell* scan = onMapList.begin();
@@ -4681,7 +4678,7 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
             if (object->m_y - row < 0 || object->m_y - row >= g_mapHeight)
                 continue;
 
-            NewmapCell* cell = g_game->m_worldMap.cell(
+            NewmapCell* cell = g_game->getWorldMapData()->cell(
                 object->m_x - col, object->m_y - row, object->m_z);
 
             if (objectClass == HOLY_GRAIL || objectClass == HERO

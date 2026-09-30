@@ -594,7 +594,7 @@ static void markShipyards(playerData* player)
         if (currentTown->m_dockSite == town::TOWN_DOCK_SITE_NONE)
             continue;
 
-        NewmapCell* cell = g_game->m_worldMap.cell(
+        NewmapCell* cell = g_game->getWorldMapData()->cell(
             currentTown->m_dockSite, currentTown->m_dockSiteY,
             currentTown->m_mapZ);
         unsigned char canBuildShip = 0;
@@ -622,7 +622,7 @@ static void markShipyards(playerData* player)
         if (info->m_boatX == ShipyardInfo::NO_BOAT)
             continue;
 
-        NewmapCell* boatCell = g_game->m_worldMap.cell(
+        NewmapCell* boatCell = g_game->getWorldMapData()->cell(
             info->m_boatX, info->m_boatY,
             player->m_shipyards[shipyardIndex].m_z);
         boatCell->m_canBuildShip = 1;
@@ -645,7 +645,7 @@ static void clearShipyards(playerData* player)
         town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
         if (currentTown->m_dockSite < town::TOWN_DOCK_SITE_NONE
             && currentTown->m_dockSiteY < town::TOWN_DOCK_SITE_NONE) {
-            NewmapCell* cell = g_game->m_worldMap.cell(
+            NewmapCell* cell = g_game->getWorldMapData()->cell(
                 currentTown->m_dockSite, currentTown->m_dockSiteY,
                 currentTown->m_mapZ);
             cell->m_canBuildShip = 0;
@@ -661,7 +661,7 @@ static void clearShipyards(playerData* player)
         if (info->m_boatX == ShipyardInfo::NO_BOAT)
             continue;
 
-        NewmapCell* boatCell = g_game->m_worldMap.cell(
+        NewmapCell* boatCell = g_game->getWorldMapData()->cell(
             info->m_boatX, info->m_boatY,
             player->m_shipyards[shipyardIndex].m_z);
         boatCell->m_canBuildShip = 0;
@@ -693,14 +693,14 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
     int rv;
 
     long maximumDistance = 32000;
-    if (currentHero->m_pathTargetX < 0)
+    if (currentHero->getTargetX() < 0)
         currentHero->m_targetIsCritical = 0;
     destination.m_point.m_x = -1;
     destination.m_isNearby = 0;
     rawValue = 0;
 
     long maxDistance = 1000;
-    if (currentHero->m_pathTargetX >= 0) {
+    if (currentHero->getTargetX() >= 0) {
         maxDistance = max(
             currentHero->m_movePoints
                 + static_cast<unsigned short>(currentHero->m_targetDistance)
@@ -733,8 +733,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
         incrementHourGlass();
 
     if (destination.m_point.m_x < 0) {
-        currentHero->m_pathTargetX = -1;
-        currentHero->m_pathTargetY = -1;
+        currentHero->clearTarget();
         currentHero->m_isSleeping = 1;
         return;
     }
@@ -775,11 +774,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
 // precedes GetTown and agrees with retail's char-to-short-to-int conversion.
 // Mac0x1409c4 adds the accessor's int result directly; an extra short
 // temporary inserts a narrowing instruction absent from that native loop.
-// The movable-hero scan indexes m_heroes directly; only the garrison scan
-// goes through getHero. Routing the first lookup through the accessor made
-// VC6 fold its expanded sentinel check away (Windows 88.04%, doAI 82.80%,
-// Mac 23.30%); the direct subscript closes both Windows bodies and lifts
-// Mac to 53.96%. A short skillValue temporary is Windows-flat and costs Mac.
+// Both scans use the canonical game-owned hero lookup.
 DC_ADDRESS(0x10eeb0, 0x220)
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 {
@@ -792,7 +787,7 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 
     for (short heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
         short heroId = player->m_heroes[heroIndex];
-        currentHero = &g_game->m_heroes[heroId];
+        currentHero = g_game->getHero(heroId);
         if (currentHero->m_movePoints > 0 && !currentHero->m_isSleeping) {
             if (selectedHero)
                 *isLastHero = 0;
@@ -1636,13 +1631,13 @@ static long getSchoolValue(const hero* ourHero, TSecondarySkill skill)
     signed char level = ourHero->getSecondarySkill(skill);
     int oldLevel = level;
     if (oldLevel == 0)
-        const_cast<hero*>(ourHero)->m_skillLevel[skill] = 3;
+        const_cast<hero*>(ourHero)->setSecondarySkillLevel(skill, TSkillMastery(3));
     else
-        const_cast<hero*>(ourHero)->m_skillLevel[skill] = level + 1;
+        const_cast<hero*>(ourHero)->setSecondarySkillLevel(skill, TSkillMastery(level + 1));
 
     long schoolValue =
         value.getBestSpellValue(SPELL_VALUE_CLASS_MASK) - baseValue;
-    const_cast<hero*>(ourHero)->m_skillLevel[skill] = oldLevel;
+    const_cast<hero*>(ourHero)->setSecondarySkillLevel(skill, TSkillMastery(oldLevel));
     return schoolValue;
 }
 
@@ -3126,7 +3121,7 @@ long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short move
     if (player->m_numTowns == 0)
         townValue += 5000000;
     else
-        townValue += 5000000 / g_game->m_towns.size();
+        townValue += 5000000 / g_game->getTownCount();
 
     LossConditionStruct& loss = g_game->m_mapHeader.m_lossCondition;
     if (loss.m_type == LOSS_CONDITION_LOSE_TOWN
@@ -3187,7 +3182,7 @@ int valueOfMine(const hero* currentHero, NewmapCell* cell)
 
     if (g_game->m_mapHeader.m_victoryCondition.m_type
             == VICTORY_CONDITION_FLAG_ALL_MINES)
-        value += 5000000 / g_game->m_mines.size();
+        value += 5000000 / g_game->getMineCount();
     return value;
 }
 
@@ -3258,7 +3253,7 @@ int valueOfPrison(NewmapCell* cell, playerData* player)
 {
     if (g_currentPlayer->m_numHeroes >= 8)
         return 0;
-    hero& prisoner = g_game->m_heroes[cell->m_extraInfo];
+    hero& prisoner = *g_game->getHero(cell->m_extraInfo);
     long armyValue = prisoner.m_army.getAIValue();
     return static_cast<int>(player->m_ai.m_resourceValue[GOLD] * 2500.0
         + armyValue);
@@ -3539,7 +3534,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
             && victory.m_townZ == currentTown->m_mapZ) {
             value += 5000000;
         } else {
-            value += 5000000 / g_game->m_towns.size();
+            value += 5000000 / g_game->getTownCount();
         }
     }
 
@@ -3569,7 +3564,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
             && victory.m_townZ == currentTown->m_mapZ) {
             value += 5000000;
         } else {
-            value += 5000000 / g_game->m_towns.size();
+            value += 5000000 / g_game->getTownCount();
         }
     }
 
@@ -4061,7 +4056,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case SEA_CHEST:
         return valueOfSeaChest(currentHero, cell);
     case SEER:
-        return g_game->m_worldMap.m_seerHutList[cell->m_extraInfo].getValue(
+        return g_game->getWorldMapData()->m_seerHutList[cell->m_extraInfo].getValue(
             const_cast<hero*>(currentHero));
     case SEPULCHER:
     case SHIPWRECK:

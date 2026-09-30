@@ -280,8 +280,8 @@ DC_ADDRESS(0x02de68, 0x42)
 MAC_ADDRESS(0x02aff8, 0x44)
 void type_town_threat_checker::clearMarks() const
 {
-    for (unsigned int i = 0; i < g_game->m_towns.size(); ++i)
-        g_game->m_towns[i].m_threateningHeroes = 0;
+    for (unsigned int i = 0; i < g_game->getTownCount(); ++i)
+        g_game->getTown(i)->m_threateningHeroes = 0;
 }
 
 VA(0x004282b0, 0x157)
@@ -3314,9 +3314,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
         bestDistance -= currentHero->m_movePoints;
     else
         bestDistance = 0;
-    currentHero->m_pathTargetX = bestPoint.m_point.m_x;
-    currentHero->m_pathTargetY = bestPoint.m_point.m_y;
-    currentHero->m_pathTargetZ = bestPoint.m_point.m_z;
+    currentHero->setTarget(bestPoint.m_point);
     currentHero->m_targetIsCritical = bestPoint.m_isCritical;
     currentHero->m_targetDistance = static_cast<short>(bestDistance);
     delete[] strategicMap;
@@ -3521,13 +3519,9 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
 // Complete expands both into separate point temporaries at entry. DC's
 // GetNumMapLevels product at line 3054 has no retained retail use, so the
 // indexed distance map keeps only its single-level stride.
-// DC reads the hero through get_location for the danger query and
-// the seed (lines 3060/3078), constructs the friend's cell point from its
-// coordinates (3102), and fills the function-scope point field by field
-// from the path target and then the position (3109..3115). Accessor
-// getTarget()/getLocation() for the friend cost Windows 91.17 -> 83.69%;
-// the DC form reaches 92.35%. Residual: whole-body EBX/EDI role swap for
-// currentHero (why-reg: only a synthetic zero-local carrier moves it).
+// DC records the hero location queries and component-wise friend-position
+// copies. Use the canonical owner views for both positions, retaining the
+// invalid-target fallback before assigning the additional search cost.
 VA(0x0042f570, 0x40e)
 DC_ADDRESS(0x032a84, 0x3ac)
 MAC_ADDRESS(0x03180c, 0x4b4)  // anchor-callee + arity
@@ -3555,19 +3549,15 @@ long markDestinations(hero* currentHero, long maxDistance,
         hero* friendly = g_game->getHero(g_currentPlayer->m_heroes[i]);
         if (friendly == currentHero)
             continue;
-        type_point friendPoint(friendly->m_x, friendly->m_y, friendly->m_z);
+        type_point friendPoint = friendly->getLocation();
         pathCell* friendCell = currentSearchArray->getCell(friendPoint, 0);
         if (!friendCell->m_visited)
             continue;
 
-        point.m_x = friendly->m_pathTargetX;
-        point.m_y = friendly->m_pathTargetY;
-        point.m_z = friendly->m_pathTargetZ;
+        point = friendly->getTarget();
         unsigned short extraCost;
         if (!point.isValid()) {
-            point.m_x = friendly->m_x;
-            point.m_y = friendly->m_y;
-            point.m_z = friendly->m_z;
+            point = friendly->getLocation();
             extraCost = 0;
         } else {
             extraCost = friendly->m_targetDistance;
@@ -3672,9 +3662,9 @@ int netValueOfLocation(hero* currentHero, HeroDestination& destination,
         }
     }
 
-    if (destination.m_point.m_x == currentHero->m_pathTargetX
-        && destination.m_point.m_y == currentHero->m_pathTargetY
-        && destination.m_point.m_z == currentHero->m_pathTargetZ) {
+    if (destination.m_point.m_x == currentHero->getTargetX()
+        && destination.m_point.m_y == currentHero->getTargetY()
+        && destination.m_point.m_z == currentHero->getTargetZ()) {
         if (value < 0)
             value = static_cast<float>(value) / 1.5f;
         else
@@ -3759,16 +3749,14 @@ unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
         }
     }
 
-    int savedX = currentHero->m_pathTargetX;
-    int savedY = currentHero->m_pathTargetY;
-    int savedZ = currentHero->m_pathTargetZ;
+    int savedX = currentHero->getTargetX();
+    int savedY = currentHero->getTargetY();
+    int savedZ = currentHero->getTargetZ();
 
     unsigned char retargeted =
         currentPathCell->m_flying && currentPathCell->m_canStop && cell->m_isTrigger;
     if (retargeted) {
-        currentHero->m_pathTargetX = triggerPoint.m_x;
-        currentHero->m_pathTargetY = triggerPoint.m_y;
-        currentHero->m_pathTargetZ = triggerPoint.m_z;
+        currentHero->setTarget(triggerPoint);
     }
 
     int noMove;
@@ -3777,9 +3765,7 @@ unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
         currentPathCell->m_direction, standEnd, triggerPoint, &noMove, 1,
         &foughtBattle, 0);
     if (retargeted) {
-        currentHero->m_pathTargetX = savedX;
-        currentHero->m_pathTargetY = savedY;
-        currentHero->m_pathTargetZ = savedZ;
+        currentHero->setTarget(savedX, savedY, savedZ);
     }
 
     if (currentHero->m_owner != g_netLocalGamePos)
@@ -3823,9 +3809,7 @@ static void buildPath(hero* currentHero, searchArray* currentSearchArray,
             destination.m_point.m_x = currentPathCell->m_lastPoint.m_x;
             destination.m_point.m_y = currentPathCell->m_lastPoint.m_y;
             destination.m_point.m_z = currentPathCell->m_lastPoint.m_z;
-            currentHero->m_pathTargetX = currentPathCell->m_lastPoint.m_x;
-            currentHero->m_pathTargetY = currentPathCell->m_lastPoint.m_y;
-            currentHero->m_pathTargetZ = currentPathCell->m_lastPoint.m_z;
+            currentHero->setTarget(currentPathCell->m_lastPoint);
             return;
         }
         path.push_back(*currentPathCell);

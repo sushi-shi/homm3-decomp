@@ -32,6 +32,9 @@ public:
     DC_ADDRESS(0x15efd0, 0x4)
     void setStatus(short newStatus) { m_status = newStatus; }
 
+    // Project read counterpart to the native status setter.
+    int getStatus() const { return m_status; }
+
     baseManager();
     virtual int open(int) = 0;         // slot 0
     virtual void close() = 0;          // slot 1

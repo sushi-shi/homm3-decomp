@@ -1182,7 +1182,7 @@ void hero::initialize(const HeroExtra* setup)
         if (g_inCampaign
             && g_game->m_campaign.m_currentCampaign == g_startLevelCampaign
             && g_game->m_campaign.m_currentMap == g_startLevelScenario) {
-            int level = g_game->m_heroes[g_startLevelHeroId].m_level
+            int level = g_game->getHero(g_startLevelHeroId)->m_level
                        + g_startLevelBonus;
             amount = getExperience(level);
         }
@@ -1396,7 +1396,7 @@ void hero::useSpell(int cost)
 {
     int remainingMana = max(m_mana - cost, 0);
     m_mana = remainingMana;
-    if (g_advManager->m_status == baseManager::STATUS_ACTIVE &&
+    if (g_advManager->getStatus() == baseManager::STATUS_ACTIVE &&
         g_currentPlayer->isLocalHuman())
         g_advManager->m_advWindow->updateHeroLocator(-1, 1, 1);
 }
@@ -1811,7 +1811,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
         int slot = random(0, 1);
         int other = g_game->m_players[m_owner].m_recruits[slot];
         if (other != -1) {
-            if (g_game->m_heroes[other].m_flags & 0x20000) {
+            if (g_game->getHero(other)->m_flags & 0x20000) {
                 slot = 1 - slot;
                 other = g_game->m_players[m_owner].m_recruits[slot];
             }
@@ -5418,7 +5418,7 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
                             if (g_windowManager->m_dialogReturn ==
                                 DIALOG_RETURN_ACCEPT)
                                 heroFn004DBF30(targetCombo, -1);
-                        } else if (!player.m_isHuman) {
+                        } else if (!player.isHuman()) {
                             // Retail reads the byte; playerData::isHuman is
                             // an out-of-line game.cpp body (called: 94.67%).
                             heroFn004DBF30(targetCombo, -1);
@@ -5510,7 +5510,7 @@ void hero::giveResource(int whichRes, int howMuch)
     }
 
     if (&g_game->m_players[m_owner] == g_currentPlayer
-        && g_advManager->m_status == baseManager::STATUS_ACTIVE)
+        && g_advManager->getStatus() == baseManager::STATUS_ACTIVE)
         g_advManager->m_advWindow->updateResourceDisplay(1, 1);
 
     g_game->isHuman(m_owner);
@@ -5969,9 +5969,9 @@ int hero::getMobility(unsigned char seaMovement) const
         if (isWieldingArtifact(0x7b))
             mobility += g_moveConstants.m_lighthouseBonus;
 
-        for (unsigned int t = 0; t < g_game->m_towns.size(); t++) {
-            if (g_game->m_towns[t].m_type == TOWN_CASTLE &&
-                g_game->m_towns[t].hasBuilding(SPECIAL_BUILDING_ID, false))
+        for (unsigned int t = 0; t < g_game->getTownCount(); t++) {
+            if (g_game->getTown(t)->m_type == TOWN_CASTLE &&
+                g_game->getTown(t)->hasBuilding(SPECIAL_BUILDING_ID, false))
                 mobility += g_moveConstants.m_lighthouseBonus;
         }
 
@@ -6257,8 +6257,8 @@ boat* hero::findSummonableBoat() const
         return result;
 
     int closestDistance = 0;
-    for (boat* candidate = g_game->m_boats.begin();
-         candidate != g_game->m_boats.end(); candidate++) {
+    for (unsigned int i = 0; i < g_game->getBoatCount(); ++i) {
+        boat* candidate = g_game->getBoat(i);
         if (candidate->m_allocated && !candidate->m_occupied
             && (candidate->m_playerOwner == g_netLocalGamePos
                 || candidate->m_playerOwner == -1)) {

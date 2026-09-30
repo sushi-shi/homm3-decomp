@@ -1992,11 +1992,11 @@ inline void TSeerHut::setRandomName(TSeerHut& thisHut)
         nameAvailable[name] = true;
 
     unsigned int hut;
-    for (hut = 0; hut < g_game->m_worldMap.m_seerHutList.size(); ++hut)
-        nameAvailable[g_game->m_worldMap.m_seerHutList[hut].m_nameIndex] = false;
+    for (hut = 0; hut < g_game->getWorldMapData()->m_seerHutList.size(); ++hut)
+        nameAvailable[g_game->getWorldMapData()->m_seerHutList[hut].m_nameIndex] = false;
 
     int pick = rand()
-        % (nameAvailable.size() - g_game->m_worldMap.m_seerHutList.size());
+        % (nameAvailable.size() - g_game->getWorldMapData()->m_seerHutList.size());
     unsigned int chosen;
     for (chosen = 0; chosen < nameAvailable.size(); ++chosen) {
         if (nameAvailable[chosen]) {

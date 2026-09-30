@@ -731,7 +731,7 @@ void TCampaignSecondarySkillBonus::apply(int whichPlayer) const
         if (target->getSecondarySkill(TSecondarySkill(m_skill)) == 0)
             target->giveSS(m_skill, m_level);
         else
-            target->m_skillLevel[m_skill] = m_level;
+            target->setSecondarySkillLevel(TSecondarySkill(m_skill), TSkillMastery(m_level));
     }
 }
 
@@ -1774,7 +1774,7 @@ void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
 
     std::vector<hero> heroes;
     std::vector<HeroPlaceholderData> placeholders =
-        g_game->m_worldMap.m_heroPlaceholders;
+        g_game->getWorldMapData()->m_heroPlaceholders;
     int triggerX;
     int triggerY;
     if (placeholders.size() == 0)
@@ -2174,7 +2174,7 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     std::streambuf* stream, int option)
 {
     int position = getStartOptions()->getPlayer(option);
-    g_game->m_players[position].m_isHuman = 1;
+    g_game->m_players[position].setHuman(1);
     g_game->m_players[position].m_isLocal = 1;
 
     int playerHeroFaces[8];

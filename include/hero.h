@@ -1175,6 +1175,13 @@ public:
         return TSkillMastery(m_skillLevel[skill]);
     }
 
+    // Project operation for temporary mastery evaluation and replacement of
+    // an already-known skill. Unlike setSS/giveSS, it leaves slot order alone.
+    void setSecondarySkillLevel(TSecondarySkill skill, TSkillMastery level)
+    {
+        m_skillLevel[skill] = level;
+    }
+
     // E:\gamedcs\Hero.h:986 SetHeroContext preserves this
     // header-inline helper in source. Retail folds its packed-point
     // construction into SetHeroContext and move_hero, so the canonical
@@ -1183,6 +1190,27 @@ public:
     type_point getTarget() const
     {
         return type_point(m_pathTargetX, m_pathTargetY, m_pathTargetZ);
+    }
+
+    // Project property operations for the stored route target. Keep the
+    // full-width X/Y view for sentinel comparisons and temporary save/restore;
+    // getTarget() is the existing packed map-point view.
+    int getTargetX() const { return m_pathTargetX; }
+    int getTargetY() const { return m_pathTargetY; }
+    short getTargetZ() const { return m_pathTargetZ; }
+    void setTarget(int x, int y, int z)
+    {
+        m_pathTargetX = x;
+        m_pathTargetY = y;
+        m_pathTargetZ = z;
+    }
+    void setTarget(type_point point)
+    {
+        setTarget(point.m_x, point.m_y, point.m_z);
+    }
+    void clearTarget()
+    {
+        m_pathTargetX = m_pathTargetY = -1;
     }
 
     // DC hero.h:991 and the class signature record the const

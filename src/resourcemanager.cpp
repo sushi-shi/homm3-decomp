@@ -1456,18 +1456,14 @@ sample* ResourceManager::getSample(const char* name)
 DC_ADDRESS(0x073b64, 0x48)
 inline void addPal16(CSprite* sprite, const TPalette16* pal)
 {
-    if (sprite->m_p)
-        delete sprite->m_p;
-    sprite->m_p = new TPalette16(pal);
+    sprite->setPalette(pal);
 }
 
 // Original: addPal24; csprite.cpp:986
 DC_ADDRESS(0x073bac, 0x48)
 inline void addPal24(CSprite* sprite, const TPalette24* pal)
 {
-    if (sprite->m_p24)
-        delete sprite->m_p24;
-    sprite->m_p24 = new TPalette24(pal);
+    sprite->setPalette24(pal);
 }
 
 // Dreamcast GetSprite proves GetFromCache, SpriteDefHeader

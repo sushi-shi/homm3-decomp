@@ -834,6 +834,8 @@ public:
                               bool ranged, long distance) const;
     void getBerserkTargets(std::vector<army*>& armies) const;
     int getOwningSide() const;
+    // Project write counterpart used while initializing a summoned stack.
+    void setOwningSide(int side) { m_combatSide = side; }
     int getControllingSide() const;
     hero* getOwner() const;
     hero* getController() const;

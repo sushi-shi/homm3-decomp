@@ -2690,9 +2690,8 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
     updateScreen(0, 0);
     eraseObj(cell, point, 1);
 
-    // Mac 0xb0a30 indexes the hero pool directly; retail has no getHero
-    // sentinel guard at this call site.
-    hero* prisoner = &g_game->m_heroes[heroID];
+    // The prison stores a hero ID; use the game-owned hero lookup.
+    hero* prisoner = g_game->getHero(heroID);
     g_game->recordShowHero(prisoner, currentHero->m_owner, point, 0);
     prisoner->m_owner = currentHero->m_owner;
     g_game->m_heroAvailability[heroID] = currentHero->m_owner;
@@ -3709,7 +3708,7 @@ void advManager::monstersFlee(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    g_game->m_worldMap.notifyMonsterDefeated(point, currentHero->m_owner);
+    g_game->getWorldMapData()->notifyMonsterDefeated(point, currentHero->m_owner);
     eraseAndFizzle(cell, point, FIZZLE_SOUND_KILL_FADE);
     if (g_game->m_mapHeader.m_victoryCondition.checkForDefeatedMonsterWin(
             currentHero, point))
@@ -3747,7 +3746,7 @@ bool advManager::monstersJoin(hero* currentHero, NewmapCell* cell,
         }
     }
 
-    g_game->m_worldMap.notifyMonsterDefeated(point, currentHero->m_owner);
+    g_game->getWorldMapData()->notifyMonsterDefeated(point, currentHero->m_owner);
     if (!currentHero->m_army.add(monType, numMons, -1)) {
         if (humanPlayer)
             doMonsterJoinDialog(currentHero, monType, numMons);
@@ -3810,7 +3809,7 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
         }
     }
 
-    g_game->m_worldMap.notifyMonsterDefeated(point, currentHero->m_owner);
+    g_game->getWorldMapData()->notifyMonsterDefeated(point, currentHero->m_owner);
     g_game->m_players[currentHero->m_owner].m_resources[GOLD] -= cost;
     if (!currentHero->m_army.add(monType, numMons, -1)) {
         if (humanPlayer)
@@ -4572,7 +4571,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             for (int x = 0; x < g_mapWidth; x++) {
                 for (int y = 0; y < g_mapHeight; y++) {
                     NewmapCell* eyeCell =
-                        g_game->m_worldMap.cell(x, y, z);
+                        g_game->getWorldMapData()->cell(x, y, z);
                     if (eyeCell->m_type == EYE_OF_MAGI
                         && eyeCell->m_isTrigger) {
                         g_game->setVisibility(x, y, z, g_netLocalGamePos,
@@ -5846,10 +5845,10 @@ DC_ADDRESS(0x09b670, 0x118)
 MAC_ADDRESS(0x0ba368, 0x134)
 void advManager::doAIEvent(NewmapCell* cell, hero* currentHero, type_point point)
 {
-    if (point.m_x == currentHero->m_pathTargetX
-        && point.m_y == currentHero->m_pathTargetY
-        && point.m_z == currentHero->m_pathTargetZ)
-        currentHero->m_pathTargetX = currentHero->m_pathTargetY = -1;
+    if (point.m_x == currentHero->getTargetX()
+        && point.m_y == currentHero->getTargetY()
+        && point.m_z == currentHero->getTargetZ())
+        currentHero->clearTarget();
 
     currentHero->m_movePoints = max(--currentHero->m_movePoints, 0);
     dispatchEvent(currentHero, cell, point, 0);
@@ -6061,7 +6060,7 @@ inline CTurnDurationPause::CTurnDurationPause()
     g_turnDuration.pause();
     if (g_goSolo) {
         g_game->m_players[g_soloPos].m_isLocal = 1;
-        g_game->m_players[g_soloPos].m_isHuman = 1;
+        g_game->m_players[g_soloPos].setHuman(1);
     }
 }
 
@@ -6075,7 +6074,7 @@ inline CTurnDurationPause::~CTurnDurationPause()
     g_turnDuration.resume();
     if (g_goSolo && g_netLocalGamePos == g_soloPos) {
         g_game->m_players[g_soloPos].m_isLocal = 0;
-        g_game->m_players[g_soloPos].m_isHuman = 0;
+        g_game->m_players[g_soloPos].setHuman(0);
     }
 }
 
@@ -6278,12 +6277,12 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
 combatFinished:
     int winner = g_combatManager->m_winner;
     if (winner != 0)
-        g_game->m_worldMap.notifyHeroDefeated(leftHero->m_id, rightPlayer);
+        g_game->getWorldMapData()->notifyHeroDefeated(leftHero->m_id, rightPlayer);
     if (winner != 1) {
         if (rightHero)
-            g_game->m_worldMap.notifyHeroDefeated(rightHero->m_id, leftPlayer);
+            g_game->getWorldMapData()->notifyHeroDefeated(rightHero->m_id, leftPlayer);
         else
-            g_game->m_worldMap.notifyMonsterDefeated(point, leftPlayer);
+            g_game->getWorldMapData()->notifyMonsterDefeated(point, leftPlayer);
     }
     if (winner == -1) {
         if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(

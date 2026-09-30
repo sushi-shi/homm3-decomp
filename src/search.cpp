@@ -375,7 +375,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
         if (searchType < const_AI_search)
             return 0;
         TQuestGuard* guard =
-            &g_game->m_worldMap.m_questGuardList[mapCell->m_extraInfo];
+            &g_game->getWorldMapData()->m_questGuardList[mapCell->m_extraInfo];
         if (!guard->m_quest || guard->m_quest->hasExpired())
             return 0;
         if (!guard->playerHasInfo(currentHero->m_owner))
