@@ -1698,7 +1698,11 @@ void army::doFireShield(long damageAmount)
     int i;
     army* a;
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
+    // Retail captures the slot before expanding the side getter. This
+    // temporary recovers 99.9324%; the remaining two LEA/store operands
+    // commute the manager/slot bases inside markCreatureEffect.
+    const int bitIndex = m_bitIndex;
+    g_combatManager->markCreatureEffect(getOwningSide(), bitIndex);
     for (side = 0; side < 2; side++) {
         a = &g_combatManager->m_armies[side][0];
         for (i = g_combatManager->m_numArmies[side]; i-- > 0; a++) {
@@ -4640,13 +4644,18 @@ void army::newTurn()
     if (g_combatManager->m_creaturePlacement != 0)
         return;
     if (m_topCreatureDamage > 0) {
+        // Mac 0x53458..0x53474 loads/null-checks the owner once, then
+        // calls isWieldingArtifact with that same pointer. Capture it at
+        // the conditional boundary; the local name is inferred. Windows
+        // improves 96.68 -> 97.27, with all 43 blocks now the same size.
+        hero* owner;
         if (m_creatureType == CREATURE_WIGHT
             || m_creatureType == ARMY_CREATURE_WRAITH
             || m_creatureType == CREATURE_TROLL
             || ((g_creatureTypeTraits[m_creatureType].m_attributes
                  & g_ctaAlive)
-                && getOwner() != 0
-                && getOwner()->isWieldingArtifact(
+                && (owner = getOwner()) != 0
+                && owner->isWieldingArtifact(
                        ARTIFACT_ELIXIR_OF_LIFE))) {
             long heal = m_topCreatureDamage;
             long amount = heal > 50 ? 50 : heal;
