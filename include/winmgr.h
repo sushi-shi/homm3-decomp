@@ -82,7 +82,7 @@ public:
     virtual void close();
     virtual int main(message& msg);
     void addWindow(heroWindow* newWindow, int newPriority,
-                   unsigned char update);
+                   bool update);
     void removeWindow(heroWindow* killWindow);
     int broadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra);
     int doDialog(heroWindow* dialogWindow, TDialogHandler dialogFunction,

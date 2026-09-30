@@ -144,11 +144,14 @@ int heroWindowManager::broadcastMessage(int msgId, int msgCodeX, int msgCodeY, i
     return main(msg);
 }
 
+// Original DC public AddWindow ends PAVheroWindow@@H_N: update is bool.
+// Mac 20d4d8..20d4ec forwards it directly to the virtual window opener;
+// retail likewise forwards the stack argument without byte normalization.
 VA(0x006023b0, 0xE7)
 DC_ADDRESS(0x19aa64, 0x1b0)
 MAC_ADDRESS(0x20d468, 0x154)
 void heroWindowManager::addWindow(heroWindow* newWindow, int newPriority,
-                                  unsigned char update)
+                                  bool update)
 {
     heroWindow* at = m_tailWindow;
 
