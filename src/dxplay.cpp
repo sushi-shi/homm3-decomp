@@ -22,6 +22,33 @@
 #include "dxplay_com.h"
 #include "exceptions.h"
 
+// Project-inferred name operations shared by group creation and the player/
+// group name APIs. These borrow names and preserve the SDK record layout.
+static void initializeDirectPlayName(DPNAME& name, char* shortName, char* longName)
+{
+    name.m_size = sizeof(DPNAME);
+    name.m_flags = 0;
+    name.m_shortNameA = shortName;
+    name.m_longNameA = longName;
+}
+
+static void copyDirectPlayName(const DPNAME& name, char* shortName, int maxShort,
+                               char* longName, int maxLong)
+{
+    if (shortName) {
+        if (name.m_shortNameA)
+            strncpy(shortName, name.m_shortNameA, maxShort);
+        else
+            shortName[0] = 0;
+    }
+    if (longName) {
+        if (name.m_longNameA)
+            strncpy(longName, name.m_longNameA, maxLong);
+        else
+            longName[0] = 0;
+    }
+}
+
 // File-scope DirectPlay enumeration trampolines (defined at the tail of this TU),
 // forward-declared so the Enum* wrappers above them can take their addresses.
 int __stdcall enumAddressCallback(const GUID*, unsigned long, const void*, void*);
@@ -69,14 +96,21 @@ CDPlay::~CDPlay()
         static_cast<IDirectPlay4A*>(m_dp)->Release();
 }
 
-VA(0x00496d30, 0x3A)
-DC_ADDRESS(0x08a11c, 0x4)
-unsigned char CDPlay::init()
+// Project-inferred operation shared by initialization and lobby connection.
+// Keep Release before clearing the pointer, and leave connection flags alone.
+void CDPlay::releaseDirectPlay()
 {
     if (m_dp) {
         static_cast<IDirectPlay4A*>(m_dp)->Release();
         m_dp = 0;
     }
+}
+
+VA(0x00496d30, 0x3A)
+DC_ADDRESS(0x08a11c, 0x4)
+unsigned char CDPlay::init()
+{
+    releaseDirectPlay();
     m_res = CoCreateInstance(CLSID_DirectPlay, 0, CLSCTX_INPROC_SERVER,
         IID_IDirectPlay4A, &m_dp);
     unsigned char ok = m_res >= 0;
@@ -207,10 +241,7 @@ unsigned long CDPlay::createGroup(char* groupName, void* groupData, unsigned lon
         return 0;
     unsigned long flags = 0;
     DPNAME dpName;
-    dpName.m_size = sizeof(DPNAME);
-    dpName.m_flags = 0;
-    dpName.m_shortNameA = groupName;
-    dpName.m_longNameA = groupName;
+    initializeDirectPlayName(dpName, groupName, groupName);
     if (stagingArea)
         flags = 0x800;
     unsigned long idGroup;
@@ -224,10 +255,7 @@ unsigned long CDPlay::createGroupInGroup(unsigned long dpidParent, char* groupNa
 {
     unsigned long flags = 0;
     DPNAME dpName;
-    dpName.m_size = sizeof(DPNAME);
-    dpName.m_flags = 0;
-    dpName.m_shortNameA = groupName;
-    dpName.m_longNameA = groupName;
+    initializeDirectPlayName(dpName, groupName, groupName);
     if (stagingArea)
         flags = 0x800;
     unsigned long idGroup;
@@ -728,10 +756,7 @@ unsigned char CDPlay::setPlayerName(unsigned long playerId, char* shortName, cha
     if (!longValue)
         longValue = shortName;
     DPNAME dpName;
-    dpName.m_size = sizeof(DPNAME);
-    dpName.m_flags = 0;
-    dpName.m_shortNameA = shortName;
-    dpName.m_longNameA = longValue;
+    initializeDirectPlayName(dpName, shortName, longValue);
     m_res = static_cast<IDirectPlay4A*>(m_dp)->SetPlayerName(playerId, &dpName, flags);
     unsigned char ok = m_res >= 0;
     return ok;
@@ -753,18 +778,7 @@ unsigned char CDPlay::getPlayerName(unsigned long playerId, char* shortName, int
     m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerName(playerId, dpName, &size);
     if (m_res < 0)
         return 0;
-    if (shortName) {
-        if (dpName->m_shortNameA)
-            strncpy(shortName, dpName->m_shortNameA, maxShort);
-        else
-            shortName[0] = 0;
-    }
-    if (longName) {
-        if (dpName->m_longNameA)
-            strncpy(longName, dpName->m_longNameA, maxLong);
-        else
-            longName[0] = 0;
-    }
+    copyDirectPlayName(*dpName, shortName, maxShort, longName, maxLong);
     return 1;
 }
 
@@ -812,10 +826,7 @@ unsigned char CDPlay::setGroupName(unsigned long groupId, char* shortName, char*
     if (!longValue)
         longValue = shortName;
     DPNAME dpName;
-    dpName.m_size = sizeof(DPNAME);
-    dpName.m_flags = 0;
-    dpName.m_shortNameA = shortName;
-    dpName.m_longNameA = longValue;
+    initializeDirectPlayName(dpName, shortName, longValue);
     m_res = static_cast<IDirectPlay4A*>(m_dp)->SetGroupName(groupId, &dpName, flags);
     unsigned char ok = m_res >= 0;
     return ok;
@@ -837,18 +848,7 @@ unsigned char CDPlay::getGroupName(unsigned long groupId, char* shortName, int m
     m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupName(groupId, dpName, &size);
     if (m_res < 0)
         return 0;
-    if (shortName) {
-        if (dpName->m_shortNameA)
-            strncpy(shortName, dpName->m_shortNameA, maxShort);
-        else
-            shortName[0] = 0;
-    }
-    if (longName) {
-        if (dpName->m_longNameA)
-            strncpy(longName, dpName->m_longNameA, maxLong);
-        else
-            longName[0] = 0;
-    }
+    copyDirectPlayName(*dpName, shortName, maxShort, longName, maxLong);
     return 1;
 }
 
@@ -989,13 +989,7 @@ VA(0x00498a60, 0x72)
 DC_ADDRESS(0x08b610, 0x4)
 unsigned char CDPlayLobby::init()
 {
-    if (m_dp) {
-        static_cast<IDirectPlay4A*>(m_dp)->Release();
-        m_dp = 0;
-    }
-    m_res = CoCreateInstance(CLSID_DirectPlay, 0, CLSCTX_INPROC_SERVER,
-        IID_IDirectPlay4A, &m_dp);
-    if (m_res < 0)
+    if (!CDPlay::init())
         return 0;
     if (m_lobby) {
         static_cast<IDirectPlayLobby3A*>(m_lobby)->Release();
@@ -1119,10 +1113,7 @@ unsigned char CDPlayLobby::connect()
     else
         m_isHost = 0;
     ::operator delete(conn);
-    if (m_dp) {
-        static_cast<IDirectPlay4A*>(m_dp)->Release();
-        m_dp = 0;
-    }
+    releaseDirectPlay();
     m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->ConnectEx(0, IID_IDirectPlay4A, &m_dp, 0);
     unsigned char ok = m_res >= 0;
     return ok;

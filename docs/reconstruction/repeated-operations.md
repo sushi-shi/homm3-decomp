@@ -803,6 +803,32 @@ Individual effect application and post-battle clearing remain unchanged.
 Names and ordinary source placement are project inferences; no native helper
 address, explicit-inline qualifier or new storage is introduced.
 
+## DirectPlay interface replacement and names
+
+Base initialization and lobby connection now share `releaseDirectPlay()`: release
+an existing interface, then clear its pointer. Lobby initialization calls the
+qualified base `CDPlay::init()` before replacing its lobby interface. A failed
+base initialization still leaves the existing lobby untouched. The protected,
+nonvirtual helper changes no connection flags or virtual slots. Destructors
+retain their release-only operation without pointer clearing.
+
+Four group-creation/name-setting paths share the four-field `DPNAME` setup.
+Names remain borrowed; each setter retains its missing-long-name fallback.
+Player creation remains distinct: it zeroes the record and supplies only the
+short name, leaving the long name null. The external record layout is unchanged.
+
+Player and group name queries share their output-copy operation, preserving
+short-before-long order, optional outputs, `strncpy` bounds and the zero-byte
+write for a null source. No extra terminator or bounds clamp is introduced.
+The two COM queries, HRESULT transitions, size-plus-one allocation and local
+`CDPlayMsg` destruction remain in each caller. These helper names and ordinary
+TU-local/source placement are project inferences, without native address claims
+or invented inline qualifiers.
+
+The nearby data/session/address readers require a separate review: they differ
+in accepted first-query results, zero-size handling and when output sizes become
+visible. Similar allocation tails alone do not justify sharing their protocols.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
