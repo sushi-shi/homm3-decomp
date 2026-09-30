@@ -472,15 +472,18 @@ static int g_heroArmyCoords[7][2] = {
 // index is dead), a spilled difference in `[ebp-0x10]`, and the
 // one-instruction loop header the preheader `jmp`s past. Two lockstep IVs,
 // and VC6 picks the survivor itself; not a guard or return shape.
-// getNumArmies placement: older DC armygrp.cpp:804 and Mac order
-// canJoin(0x58408), getNumArmies(0x58528), add(0x585a4) locate the older
-// source body. Complete retail expands that count across TUs here, so its
-// canonical body is class-visible in armygrp.h. No explicit inline qualifier
-// is proven; keep the call and the ordinary member definition.
-// Focused Complete build: 95.87521 -> 96.94359; the count call now expands.
-// Remaining named under-inline boundary is the quantity string's default
-// constructor -> _Tidy(false), not cleanup: C2 cost 152 exceeds its child
-// budget 141; all three string destructors expand their _Tidy operations.
+// getNumArmies remains a canonical call. Its ordinary armygrp.cpp body
+// follows the older DC owner and Mac source-order evidence; neither that
+// ordering nor 42 retained Mac calls uniquely proves Complete placement.
+// Returning the body from armygrp.h to armygrp.cpp restores eight other
+// Windows callers to exact but moves this constructor 96.9607 -> 95.8752.
+// Retail and Mac still expand its seven-slot count here. Separate original
+// Complete TUs are inferred from older DC/authored units, not proven: keep
+// this expansion as unresolved placement/TU evidence, without a visibility
+// trick or replacing the recovered call with a pasted count loop.
+// The earlier in-class trace also left the quantity string's default
+// constructor -> _Tidy(false) call (cost 152, child budget 141); those figures
+// describe that prior context rather than the ordinary-body model.
 // earlier differences include GetCurrHero arm order and skill-loop IV choice.
 VA(0x00451ab0, 0x68A)
 DC_ADDRESS(0x0558a8, 0x54c)
