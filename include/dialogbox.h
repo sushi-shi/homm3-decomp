@@ -25,7 +25,7 @@ public:
 
     int m_beginId;
     int m_endId;
-    virtual unsigned char setup(int winX, int winY,
+    virtual bool setup(int winX, int winY,
                                 int winWidth, int winHeight);
 };
 SIZE(TDialogBox, 0x54);
@@ -36,7 +36,7 @@ public:
     CTextDialog(unsigned winType);
 
     int exitDialog(message& msg);
-    virtual unsigned char setup(const char* text, font* currentFont);
+    virtual bool setup(const char* text, font* currentFont);
     virtual void updateText(const char* newText);
 
 protected:

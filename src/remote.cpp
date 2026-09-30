@@ -1409,7 +1409,9 @@ CAnimatedDlg::~CAnimatedDlg()
 VA(0x00554b10, 0x20)
 DC_ADDRESS(0x11d290, 0x20)
 MAC_ADDRESS(0x2130b4, 0x28)
-unsigned char CAnimatedDlg::setup(
+// Native public ?Setup@CAnimatedDlg@@UAA_NPBDPAVfont@@0H@Z proves
+// the bool result forwarded from the canonical CTextDialog setup.
+bool CAnimatedDlg::setup(
     const char* text, font* textFont, const char* spriteName, int sequence)
 {
     m_spriteName = spriteName;
