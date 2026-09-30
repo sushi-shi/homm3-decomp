@@ -250,7 +250,7 @@ public:
     DC_ADDRESS(0x074484, 0x60)
     void drawHeroAlpha(int sx, int sy, int sw, int sh, unsigned short* dst,
                        int dx, int dy, int dw, int dh, int dpitch,
-                       TPalette16& pal, unsigned char hflip) const
+                       TPalette16& pal, bool hflip) const
     {
         drawAdvObjWithFlagAlpha(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
                                 pal, 0, hflip);
