@@ -643,3 +643,64 @@ registry and updates the service reference count. Windows owns its transport
 through the DirectPlay interface: `closeSession` calls `Close`, and the
 canonical `CDPlay` destructor calls `Release`. Those platform ownership
 paths are already present; no second Windows transport object is implied.
+
+### Load/save stream operations and older header interfaces
+
+The remaining 56 Mac indirect calls in `game::load` and `game::save` were
+checked by receiver, vtable slot, buffer, byte count and surrounding guards.
+They are the existing abstract-file reads (`+0xc`) and writes (`+0x10`):
+versioned artifact/skill arrays, hero availability and membership masks,
+twelve staged scalars, six fixed arrays, the reserved word and map-extra
+plane. The four byte/word staging locals remain distinct. Both native
+functions request 32 unique-system-ID bytes but accept eight; the source
+preserves that unusual bound. No additional retained game helper was found
+at these virtual stream sites.
+
+DC's `GetSaveGameHeaders` call at `0xa83e4` has an ownership replacement:
+Complete loads a local `SavedGameHeader`, checks it, then calls the existing
+`applySavedGameHeader`. Its `LoadTownPool` call at `0xa8542` is also already
+present; Complete adds the saved version passed to each town reader.
+These are reviewed interface changes, not absent source operations.
+
+Three formerly direct DC operations now belong to the saved snapshot.
+Mac `SavedGameHeader::save` calls map-header save at `0xcfad4` and setup
+save at `0xcfaf0`, preserving their failure checks. `reset` calls
+`playerData::isHuman` for eight players at `0xcf9ec`; `save` writes that
+32-byte flag array at `0xcfbec`. Those native paths verify the existing
+nested source calls corresponding to DC `0xa8d14`, `0xa8d30`, `0xa92a2`.
+
+DC's three `clear_carryover_pool` calls (`0xa8dea`, `0xa8dfa`, `0xa8e12`)
+reset one or both fixed hero pools. The complete callee fills raw hero and
+assignment storage with `-1`, then clears the pool count. Its artifact
+requirement reset at `0xa9074` stores an artifact sentinel and guard byte
+in another retired fixed record. Complete instead collects and prunes
+constructed hero/artifact vectors before `saveGame`, through the existing
+`completeCurrentMap`/`pruneCrossoverHeroes` path. Mac's save prefix proceeds
+through snapshot construction, reset and serialization without those raw
+resets. Neither an extra vector reset nor the removed requirement object is
+supported in the Windows save body.
+
+The full `SGameSetupOptions` save/load bodies and `SavedGameHeader` save/load
+bodies also preserve their remaining 51 virtual stream and cleanup sites.
+Setup serialization deliberately transfers the color array twice; both native
+addresses and the source agree. Its eight hero IDs use the existing scalar
+writer/versioned `loadHeroId` reader. Snapshot scalar reads/writes already
+use the canonical helpers, and the two conditional deleting-destructor sites
+in snapshot load are owned by its `auto_ptr` for internally opened input.
+
+Mac's three filename-copy calls in snapshot load are a platform path detail.
+The complete `0x26ae40` leaf copies through NUL and returns its terminator.
+At `0xcfc80` the return is unused while preserving the original filename;
+`0xcfc8c`/`0xcfc9c` chain the loader-resolved `:games:` prefix and filename
+before constructing the compressed stream. Windows `0x4bc7ab..0x4bc834`
+uses the existing `openedName` assignment, `_chdir("games")`, stream
+construction and `_chdir("..")` sequence instead.
+
+Finally, the 24 vector calls in snapshot reset/application are members of
+implicit campaign assignment, checked in both directions. The data accessors
+return the vector's pointer slot at `+8`; the four complete assignment bodies
+copy/grow/shrink hero pools (`0x6b0b8`), artifact pools (`0x6b354`), scenario
+scores (`0x6b5f0`) and assigned hero IDs (`0x682fc`). Caller member offsets
+and element strides identify each operation. The existing `m_campaign`
+assignments own these library calls; adding game wrappers would duplicate
+the represented operation.
