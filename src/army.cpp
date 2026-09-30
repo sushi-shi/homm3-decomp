@@ -2498,21 +2498,6 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
 // fraction. Both quotients divide the per-unit value, so the division
 // is written last in both arms.
 
-// WHY THE PRAGMA, AND WHY THIS BODY IS NOT CLAIMED. VC6 emits
-// can_shoot's out-of-line copy only when the TU holds a call it
-// declines to expand; retail's army.obj holds two, inside
-// spell_is_valid_on_target (0x447a80), a body this TU does not have.
-// `#pragma inline_depth(0)` here supplies one in its place, which is
-// what banks can_shoot at 92.0000 - but it also compiles THIS body in
-// its 49.64 call-form instead of the 81.97 expanded form retail has,
-// so it must not be claimed while the pragma stands. Everything from
-// the get_unit_combat_value call to the end - both floating-point
-// tails, the argument-slot homing, the /Op fild round trips - is
-// byte-identical in BOTH forms, so the body itself is right and only
-// the inliner stands between it and exact. Full matrix in can_shoot's
-// note above. RETIRING 0x447a80's reconstruction retires the pragma
-// and makes 0x442e60 claimable in the same change.
-
 VA(0x00442e60, 0x169) MAC_ADDRESS(0x04ecf8, 0x12c)  // dc 0x48168
 long army::getTotalCombatValue(long lowestAttack, long lowestDefense) const
 {
@@ -3952,41 +3937,17 @@ void army::attackWall(TWallTargetId wall,
 // straight pair iMissileOffset[2]/[3], the aimed shot re-reads
 // [2*pose]/[2*pose+1] with the chosen pose.
 
-// SPELLINGS THE BYTES FORCED, each measured:
-//   - dy is declared AFTER the abs-of-dx branch (81.42 -> 86.67):
-//     startY must stay live across the jns or C2 folds it away.
-//   - both name ternaries are spelled `levelsDestroyed == 0 ?
-//     <miss form> : <hit form>` - the miss operand loads first and the
-//     je jumps the hit overwrite, retail's exact arm order.
-//   - the bounds stores and the clamp chain each go through their own
-//     block-scoped TDrawbridgeBounds& (87.47 -> 89.70): longhand
-//     spellings reload gpCombatManager after every aliasing store,
-//     where retail materialises each group's base exactly once.
-
-//   - the explosion bounds are computed BEFORE any of them is stored,
-//     and `bottom` is computed before `right` (89.6998 -> 91.4600).
-//     Retail's sequence is halfWidth / x / halfHeight / y / Height -
-//     halfHeight + targetY - 1 / Width - halfWidth + targetX - 1 and only
-//     then the four stores; with the last two written inline in the store
-//     statements VC6 interleaves compute and store and homes nothing.
-//     A note here recorded "precomputing right/bottom as named locals
-//     (89.47)" as rejected - it is the right edit in the wrong ORDER;
-//     `right` before `bottom` is what loses.
-
-// Residual (91.46%): the register-homing family. Retail's frame is
-// 0x34 with x/y/halfWidth homed in fresh bottom slots (-0x34/-0x30/
-// -0x14) and targetX carried to the explosion block in EBX; ours is now
-// 0x24 and still reloads three of them. Branch sequences AGREE (25/25).
-// DC type/source audit (2026-08-21): its `destX`, `destY` and `numFrames`
-// locals are `const int`, while `startY` is plain `int`. Restoring those
-// types and spelling numFrames as the required conditional initializer are
-// byte-flat at 91.460045%. Conventional release VERIFY is also byte-flat,
-// both for the wall-id domain at entry and `explosion != 0` immediately
-// before the bounds expressions. Neither source class creates retail's four
-// extra frame slots; the residual remains allocator state.
-// DC army.cpp:4715 retains the bitmap-forwarding CSprite::Draw overload.
-// Its canonical call is Windows byte-flat at 89.908%; keep the nested
-// bitmap accessors inside that wrapper, as in animateMissile.
+// DC's destX, destY and numFrames are const int; startY is plain int.
+// The abs-of-dx branch precedes dy's declaration. Both sample-name
+// ternaries load the miss operand before conditionally choosing the hit.
+// Cached-coordinate and scoped-bounds probes reached 91.46%; adding a
+// wall-domain or nonnull-explosion VERIFY was byte-flat in that model.
+// DC line 4699 instead records the direct rectangle constructor below.
+// Its repeated getters and ordinary temporary recover 96.0460% while
+// preserving all 53 block flows. The residual includes an EBX/EDI role
+// swap and one extra instruction in the sprite draw/update block.
+// DC army.cpp:4715 retains the bitmap-forwarding CSprite::Draw overload;
+// preserve its nested bitmap accessors, as in animateMissile.
 VA(0x00445fd0, 0x526) MAC_ADDRESS(0x051fa4, 0x64c)  // anchor-callee, dc 0x4aacc
 void army::attackWall(TWallTargetId wall, long levelsDestroyed)
 {
@@ -4074,19 +4035,14 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         levelsDestroyed == 0
             ? DATA_COMPGEN(0x00660a6c, rockSpriteName, "CSGRCK.DEF")
             : DATA_COMPGEN(0x00660a60, explosionSpriteName, "SGEXPL.DEF"));
-    long halfWidth = explosion->getWidth() / 2;
-    long x = targetX - halfWidth;
-    long halfHeight = explosion->getHeight() / 2;
-    long y = targetY - halfHeight;
-    // Mac 0x52378/0x5237c adds full dimensions to the computed origin.
-    long bottom = y + explosion->getHeight() - 1;
-    long right = x + explosion->getWidth() - 1;
-    {
-        TDrawbridgeBounds& bounds = g_combatManager->m_drawbridgeBounds;
-        // Mac 0x52374 builds the four-word rectangle on the stack and
-        // copies it into the manager bounds before clipping.
-        bounds = TDrawbridgeBounds(x, y, right, bottom);
-    }
+    // DC army.cpp:4699 calls each sprite dimension getter three times
+    // while forming the constructor arguments. Mac 0x52348..0x523b0
+    // expands them and copies the four-word temporary into the bounds.
+    g_combatManager->m_drawbridgeBounds = TDrawbridgeBounds(
+        targetX - explosion->getWidth() / 2,
+        targetY - explosion->getHeight() / 2,
+        targetX - explosion->getWidth() / 2 + explosion->getWidth() - 1,
+        targetY - explosion->getHeight() / 2 + explosion->getHeight() - 1);
     g_combatManager->m_drawbridgeBounds.clip(g_combatDrawLimits);
 
     for (long frame = 0; frame < explosion->getNumFrames(0); frame++) {
