@@ -1399,7 +1399,7 @@ private:
 
 public:
     // 0x4bf780 (dc 0xaa7e0).
-    void validateVictoryLossConditions(unsigned char checkMapLocations);
+    void validateVictoryLossConditions(bool checkMapLocations);
     void giveTroopsToNeutralTowns();
     void giveTroopsToNeutralTown(int townId);  // 0x4bf570
     void setupOrigData();

@@ -3712,10 +3712,12 @@ void game::giveTroopsToNeutralTowns()
 // return for valid ownership. This removes both remaining joins at 90.0315%
 // with the full contribution and all relocation names/addends unchanged.
 // The earlier failure scopes used break and do not predict this lowering.
+// Original DC public ?ValidateVictoryLossConditions@game@@QAAX_N@Z proves
+// checkMapLocations is bool; CodeView's byte primitive is its lowered form.
 VA(0x004bf780, 0x6E2)
 DC_ADDRESS(0x0aa7e0, 0x5c4)
 MAC_ADDRESS(0x0d513c, 0x960)  // order-map + whole-function identity
-void game::validateVictoryLossConditions(unsigned char checkMapLocations)
+void game::validateVictoryLossConditions(bool checkMapLocations)
 {
     signed char victoryType = m_mapHeader.m_victoryCondition.m_type;
     if (victoryType == VICTORY_CONDITION_ARTIFACT
