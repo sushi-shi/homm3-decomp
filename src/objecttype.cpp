@@ -762,6 +762,12 @@ VA_COMPGEN(0x00515ca0, 0x27A, ISTREAM_IPFX, char)
 // COMDAT pairing: basic_ios<char>::setstate, agreement 1.000.
 VA_COMPGEN(0x00515f20, 0x26, BASIC_IOS_SETSTATE, char)
 
+// ctype<char>'s SDK cleanup, registered with atexit by its constructor and
+// the expanded constructor in use_facet. Both retail operands name 0x516060;
+// its 13-byte body loads _Cltab at 0x6ab1c4 and calls free at 0x6195e0.
+// The ordinary full-TU object emits the identical body and relocations.
+VA_COMPGEN(0x00516060, 0x0D, CTYPE_TERM, char)
+
 // COMDAT pairing: ctype<char>'s four case-conversion virtuals. The two
 // scalar bodies are byte-identical and so are the two range bodies; the CRT
 // helper each calls is the whole discriminator, and it is unambiguous -

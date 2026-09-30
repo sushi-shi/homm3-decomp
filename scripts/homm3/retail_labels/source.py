@@ -341,6 +341,7 @@ CHAR_STREAM_MEMBERS = (
     # four and the retail callee (__Tolower / __Toupper) settles which pair
     # is which.
     ("?is@?$ctype@D", None, "ctype_is"),
+    ("?_Term@?$ctype@D@std@@", "KAXXZ", "ctype_term"),
     ("?do_tolower@?$ctype@D", "@MBEDD@Z", "ctype_do_tolower_char"),
     ("?do_tolower@?$ctype@D", "@MBEPBDPADPBD@Z", "ctype_do_tolower_range"),
     ("?do_toupper@?$ctype@D", "@MBEDD@Z", "ctype_do_toupper_char"),

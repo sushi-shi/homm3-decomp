@@ -2737,7 +2737,7 @@ newgame	?showScenInfo@game@@QAEXXZ	100.0000	100.0000	100.0000	0x113740	tokens1:0
 objecttype	??0?$basic_istream@DU?$char_traits@D@std@@@std@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@1@_N@Z	100.0000	100.0000	100.0000	0x1151b0	-
 objecttype	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@IDABV?$allocator@D@1@@Z	100.0000	100.0000	100.0000	0x11a120	-
 objecttype	??0?$bitset@$0DA@@std@@QAE@K@Z	100.0000	100.0000	100.0000	0x1154a0	-
-objecttype	??0?$ctype@D@std@@QAE@PBF_NI@Z	99.9383	99.9383	100.0000	0x115f50	-
+objecttype	??0?$ctype@D@std@@QAE@PBF_NI@Z	100.0000	100.0000	100.0000	0x115f50	-
 objecttype	??0?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@QAE@I@Z	100.0000	100.0000	100.0000	0x117d70	-
 objecttype	??0?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@ABH@Z	100.0000	100.0000	100.0000	0x117c30	-
 objecttype	??0?$pair@Viterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@_N@std@@QAE@ABViterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@1@AB_N@Z	100.0000	100.0000	100.0000	0x11b150	-
@@ -2789,6 +2789,7 @@ objecttype	?_Maklocstr@std@@YAPADPBDPAD@Z	100.0000	100.0000	100.0000	0x11b690	-
 objecttype	?_Peek@?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@AAEDXZ	100.0000	100.0000	100.0000	0x11a940	-
 objecttype	?_Save@?$_Tidyfac@V?$ctype@D@std@@@std@@SAPAV?$ctype@D@2@PAV32@@Z	100.0000	100.0000	100.0000	0x11ae50	-
 objecttype	?_Save@?$_Tidyfac@V?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAPAV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@PAV32@@Z	100.0000	100.0000	100.0000	0x11aed0	-
+objecttype	?_Term@?$ctype@D@std@@KAXXZ	100.0000	100.0000	100.0000	0x116060	-
 objecttype	?_Tidy@?$_Tidyfac@V?$ctype@D@std@@@std@@SAXXZ	100.0000	100.0000	100.0000	0x11b0b0	-
 objecttype	?_Tidy@?$_Tidyfac@V?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAXXZ	100.0000	100.0000	100.0000	0x11b170	-
 objecttype	?_Xinv@?$bitset@$08@std@@ABEXXZ	100.0000	100.0000	100.0000	0x117680	-
@@ -2836,7 +2837,7 @@ objecttype	?setstate@?$basic_ios@DU?$char_traits@D@std@@@std@@QAEXH_N@Z	100.0000
 objecttype	?sgetc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHXZ	100.0000	100.0000	100.0000	0x1157b0	-
 objecttype	?size@?$vector@UTImageInfo@TObjectType@@V?$allocator@UTImageInfo@TObjectType@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x117750	-
 objecttype	?size@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x14c910	-
-objecttype	?use_facet@std@@YAABV?$ctype@D@1@ABVlocale@1@PBV21@_N@Z	99.9657	99.9657	100.0000	0x11a990	-
+objecttype	?use_facet@std@@YAABV?$ctype@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	100.0000	100.0000	0x11a990	-
 objecttype	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	100.0000	100.0000	0x11ab90	-
 objnames	??1?$TResourcePtr@VTTextResource@@@@QAE@XZ	100.0000	100.0000	100.0000	0x1bd90	tokens1:7135c54fe758
 objnames	?initializeAdventureObjectNames@@YIXXZ	100.0000	100.0000	100.0000	0x1b500	tokens1:f80f89eb764d
