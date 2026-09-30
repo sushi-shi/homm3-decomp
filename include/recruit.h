@@ -200,7 +200,7 @@ public:
     virtual void close() OVERRIDE;                   // slot 1, 0x5502d0
     virtual int main(message& msg) OVERRIDE;         // slot 2, 0x550940
 
-    void update(unsigned char newMonster, long slot);
+    void update(bool newMonster, long slot);
     void setRolloverText(int codeY);
 };
 SIZE(recruitUnit, 188);

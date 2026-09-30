@@ -533,6 +533,8 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 }
 
 // E:\gamedcs\recruit.cpp:511
+// Original DC public ?Update@recruitUnit@@QAAX_NJ@Z proves bool new_monster;
+// the dossier's unsigned byte is the lowered primitive 0x20, not source type.
 // Windows Update matches all 55 CFG blocks and 29 calls. The remaining
 // products at +0x390/+0x41c load numberToBuy before each per-troop cost,
 // whereas retail loads the cost first. Reversing either source multiplication
@@ -551,7 +553,7 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 VA(0x005503a0, 0x594)
 DC_ADDRESS(0x119dcc, 0x4b4)
 MAC_ADDRESS(0x14f46c, 0x5cc)  // anchor-global
-void recruitUnit::update(unsigned char newMonster, long slot)
+void recruitUnit::update(bool newMonster, long slot)
 {
     message msg;
 
@@ -717,10 +719,11 @@ inline void recruitUnit::setRolloverText(int codeY)
         break;
     }
 
-    message update;
-    update.m_extraText = g_text;
+    // Mac 0x14fab0..0x14fac4 passes g_text directly as the four-int
+    // broadcast payload; the callee owns message construction. DC line 687
+    // also calls that overload, with no recorded caller message operation.
     g_recruitWindow->broadcastMessage(MESSAGE_WIDGET,
-        widget::WIDGET_SET_TEXT, 0x231, update.m_extra);
+        widget::WIDGET_SET_TEXT, 0x231, reinterpret_cast<int>(g_text));
     g_recruitWindow->drawWindow(0, 0x230, 0x231);
     g_windowManager->updateScreen(g_recruitWindow->m_x + 8,
         g_recruitWindow->m_y + 0x172, 0x1d4, 0x12);
