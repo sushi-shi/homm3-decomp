@@ -2539,6 +2539,8 @@ bool combatManager::validSpellTargetArmy(SpellID spellId,
                                firstTarget, creatureSpell) > 0.0;
 }
 
+// DC sole local is const hexcell& tcell (sp+0x18); preserve that cell
+// view through the live-stack and corpse paths, with canonical predicates.
 VA(0x005a3cc0, 0x175)
 DC_ADDRESS(0x153158, 0x1a0)
 MAC_ADDRESS(0x1945d8, 0x1b0)
@@ -2547,9 +2549,9 @@ army* combatManager::findResurrectionTarget(int side, int hex,
 {
     if (!validHex(hex))
         return 0;
-    hexcell* cell = &m_cells[hex];
-    if (cell->hasArmy()) {
-        army* target = cell->getArmy();
+    const hexcell& cell = m_cells[hex];
+    if (cell.hasArmy()) {
+        army* target = cell.getArmy();
         if (target->getOwningSide() != side)
             return 0;
         if (!target->is(creatureAlive))
@@ -2561,25 +2563,25 @@ army* combatManager::findResurrectionTarget(int side, int hex,
             return target;
         return 0;
     }
-    if (cell->m_attributes & hexcell::blocked)
+    if (cell.m_attributes & hexcell::blocked)
         return 0;
-    int i = cell->m_bodiesInHex - 1;
+    int i = cell.m_bodiesInHex - 1;
     if (i < 0)
         return 0;
     do {
-        army* corpse = &m_armies[cell->m_deadArmySide[i]]
-                              [cell->m_deadArmySlot[i]];
-        if (cell->m_deadArmySide[i] != side)
+        army* corpse = &m_armies[cell.m_deadArmySide[i]]
+                              [cell.m_deadArmySlot[i]];
+        if (cell.m_deadArmySide[i] != side)
             continue;
         if (!corpse->is(creatureAlive))
             continue;
-        if (cell->m_deadPartOfDouble[i] == 0) {
+        if (cell.m_deadPartOfDouble[i] == 0) {
             if (m_cells[hex + 1].hasArmy())
                 continue;
             if (m_cells[hex + 1].m_attributes & hexcell::blocked)
                 continue;
         }
-        if (cell->m_deadPartOfDouble[i] == 1) {
+        if (cell.m_deadPartOfDouble[i] == 1) {
             if (m_cells[hex - 1].hasArmy())
                 continue;
             if (m_cells[hex - 1].m_attributes & hexcell::blocked)
