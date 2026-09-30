@@ -6746,7 +6746,7 @@ int TTavernWindow::windowHandler(message& msg)
 VA(0x005d7e20, 0x42)
 DC_ADDRESS(0x17ad3c, 0x3a)
 MAC_ADDRESS(0x1d5c14, 0x84)
-int TTavernWindow::open(int zOrder, unsigned char update)
+int TTavernWindow::open(int zOrder, bool update)
 {
     videoOpen(6, 0x110, 0x68, 0, 0, 1, 1, 1);
     int result = heroWindow::open(zOrder, update);

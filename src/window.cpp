@@ -78,7 +78,9 @@ heroWindow::~heroWindow()
 VA(0x005feae0, 0x17A)
 DC_ADDRESS(0x19721c, 0xc4)
 MAC_ADDRESS(0x20af50, 0x208)
-int heroWindow::open(int newPriority, unsigned char update)
+// The native public records update as bool; forwarding it to drawWindow
+// must not introduce an unsigned-char-to-bool normalization absent in retail.
+int heroWindow::open(int newPriority, bool update)
 {
     if (m_status & WINDOW_STATE_OPEN)
         return 3;

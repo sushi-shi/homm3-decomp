@@ -210,7 +210,7 @@ CAdventurMapChatEdit::CAdventurMapChatEdit(
 
 VA(0x00401400, 0xC5)
 MAC_ADDRESS(0x00026c, 0x20)
-int TAdventureMapWindow::open(int zOrder, unsigned char update)
+int TAdventureMapWindow::open(int zOrder, bool update)
 {
     // Mac's override at 0:0x26c only forwards to heroWindow::open;
     // the immersion mouse-effect lifetime belongs to Windows.

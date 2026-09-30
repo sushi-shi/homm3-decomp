@@ -653,7 +653,7 @@ public:
     void* m_immersion;
     TAdventureMapWindow();
     ~TAdventureMapWindow();
-    virtual int open(int zOrder, unsigned char update);
+    virtual int open(int zOrder, bool update);
     virtual void close(unsigned char update);
     virtual void vslot8(unsigned char on);
     unsigned char processRightSelect(const message* msg);

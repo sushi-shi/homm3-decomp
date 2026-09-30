@@ -397,7 +397,7 @@ TSpellbookWindow::~TSpellbookWindow()
 VA(0x0059c970, 0x1B)
 DC_ADDRESS(0x14c8d4, 0x1a)
 MAC_ADDRESS(0x18c584, 0x34)
-int TSpellbookWindow::open(int newPriority, unsigned char update)
+int TSpellbookWindow::open(int newPriority, bool update)
 {
     return heroWindow::open(newPriority, update) ? 3 : 0;
 }

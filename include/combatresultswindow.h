@@ -15,7 +15,7 @@ public:
         int mySide, int winningSide, bool isSiege,
         int experience);
     virtual ~TCombatResultsWindow();
-    virtual int open(int newPriority, unsigned char update);
+    virtual int open(int newPriority, bool update);
     virtual void close(unsigned char update);
     void doModal();
 

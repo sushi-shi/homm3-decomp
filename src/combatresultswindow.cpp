@@ -422,7 +422,7 @@ TCombatResultsWindow::~TCombatResultsWindow()
 VA(0x00471af0, 0x54)
 DC_ADDRESS(0x069200, 0x44)
 MAC_ADDRESS(0x07fb20, 0x98)
-int TCombatResultsWindow::open(int newPriority, unsigned char update)
+int TCombatResultsWindow::open(int newPriority, bool update)
 {
     int result = heroWindow::open(newPriority, 0);
     drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
