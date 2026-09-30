@@ -2768,27 +2768,25 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // if that slot is playable at all, else the town's own owner, else a roll -
 // widened to nine alignments only when the scenario is expansion-era.
 
-// Residual (95.1600%): the call multisets agree at 24/24 and the control-flow
-// census now agrees at 54 conditional branches and 12 returns.  What remains
-// is placement plus C1 register/stack homing: retail keeps `infile` in ESI and
-// uses EDI for the mask/event loops, while this compile keeps `infile` in EDI
-// and uses ESI for those loops.  Retail also recycles incoming parameter homes
-// for the identifier/alignment scratch values where this compile uses negative
-// locals.
-
-// Dreamcast-local audit (2026-08-21): restoring its declaration order and
-// reusing its sole `char_buffer` for the trailing alignment byte are both
-// byte-flat at 95.1600% and are retained as the stronger source model.  Using
-// that same roster literally for the army-width conversion - shared
-// `char_buffer`/`short_buffer`/`int_buffer` instead of the scoped signed
-// byte/short/value temporaries - regresses to 94.9926%; the x86 block locals
-// below are retained.
-// Mac 0x124674 and 0x12470c construct bitset reference proxies before the
-// retained assignments at 0x1246b4 and 0x12474c.
-// Map scalars are little endian: native 0x124330 decodes the identifier,
-// 0x124468 the troop count, and 0x124798 the event count. Windows retail
-// reads each scalar through the direct virtual read: the readValue and
-// readLittleEndianValue wrappers cost VC6 90.68% against 97.78%.
+// DC records plain char char_buffer and a shared int count read-status
+// owner (2814/2815, 2821/2822). Native Mac 0x124330 decodes the unchecked
+// identifier, 0x124468 the checked troop short, and 0x124798 the event count.
+// Keep those canonical endian operations; native byte/range virtual calls
+// alone do not identify another game helper around the stream interface.
+// The returned identifier reader closes the former eight-byte frame growth
+// and infile ESI/EDI inversion: the current source matches B0..B18 and
+// B20..B44, including the complete first spell traversal.
+// Residual (89.8371%): the troop failure jumps to a later cleanup instead of
+// the first failure, a string::_Tidy child remains called in late cleanup,
+// and the second spell traversal's cold throw code is placed differently.
+// Retail has 102 blocks/12 returns; this source has 103/13. Broad byte/range
+// wrappers reproduce 91.8122%, but native evidence does not identify those
+// extra boundaries. Named status assignments are byte-flat in that family.
+// Mac 0x124674..0x124694 and 0x12470c..0x12472c use signed division/modulo
+// and construct proxies directly on the TownExtra members; no returned mask
+// temporary is present. The unsigned decodePackedBits spelling costs 79.6586%.
+// Hero::load 0xf3428/0xf3438/0xf3470 independently proves that existing
+// decoder's unsigned traversal, so the town's signed caller-owned x remains.
 VA(0x005019f0, 0x7CC)
 DC_ADDRESS(0x0f094c, 0x4a8)
 MAC_ADDRESS(0x124278, 0x700)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing
@@ -2803,7 +2801,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     int x;
     int numTownEvents;
     unsigned char inBuf[6];
-    signed char charBuffer;
+    char charBuffer;
     unsigned char spellBuf[9];
 
     townObject->m_extraInfo = g_game->m_scenarioTowns.size();
@@ -2812,21 +2810,24 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         tempTown.m_objRef = 0;
     } else {
-        infile->read(&intBuffer, sizeof(intBuffer));
-        tempTown.m_objRef = LITTLE_ENDIAN_LONG(intBuffer);
+        intBuffer = readLittleEndianValue<int>(infile);
+        tempTown.m_objRef = intBuffer;
     }
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
     tempTown.m_playerOwner = charBuffer;
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
     tempTown.m_customName = charBuffer;
     if (tempTown.m_customName)
         NewSMapHeader::readString(infile, tempTown.m_name);
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
     tempTown.m_customArmies = charBuffer;
     if (tempTown.m_customArmies) {
@@ -2834,19 +2835,20 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             tempTown.m_townArmy.m_armies[x] =
                 readMapCreatureId(infile, mapVersion);
 
-            if (infile->read(&shortBuffer, sizeof(shortBuffer))
-                < sizeof(shortBuffer))
+            count = readLittleEndianValue(infile, shortBuffer);
+            if (count < sizeof(shortBuffer))
                 return -1;
-            shortBuffer = LITTLE_ENDIAN_SHORT(shortBuffer);
             tempTown.m_townArmy.m_numTroops[x] = shortBuffer;
         }
     }
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
     tempTown.m_isGrouped = charBuffer;
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
     tempTown.m_customBuildings = charBuffer;
 
@@ -2858,8 +2860,8 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             return -1;
         memcpy(&tempTown.m_buildingDisabledMask, inBuf, sizeof(inBuf));
     } else {
-        if (infile->read(&charBuffer, sizeof(charBuffer))
-            < sizeof(charBuffer))
+        count = infile->read(&charBuffer, sizeof(charBuffer));
+        if (count < sizeof(charBuffer))
             return -1;
         tempTown.m_hasFort = charBuffer;
     }
@@ -2879,11 +2881,9 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         tempTown.m_spells[x] =
             (spellBuf[x / 8] & (1 << (x % 8))) != 0;
 
-    if (infile->read(&numTownEvents, sizeof(numTownEvents))
-        < sizeof(numTownEvents))
+    count = readLittleEndianValue(infile, numTownEvents);
+    if (count < sizeof(numTownEvents))
         return -1;
-
-    numTownEvents = LITTLE_ENDIAN_LONG(numTownEvents);
 
     // Native Mac 0x1247a4..0x124804 caches the read count across event calls
     // and increments a separate index; CodeWarrior reproduces that lifetime.
