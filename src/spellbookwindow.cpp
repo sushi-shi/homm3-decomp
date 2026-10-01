@@ -137,8 +137,10 @@ static const char* getLevelString(SpellID spell)
 VA(0x0059baa0, 0x341)
 DC_ADDRESS(0x14bcf4, 0x194)
 MAC_ADDRESS(0x18ae90, 0x21c)  // retail widens DC's magic-plains byte to the Complete magic-terrain field at +0x6c;
+// Native get_spell_description's private AAA public ends PBVhero@@_N@Z:
+// the rollover formal is bool, despite the lowered CodeView byte record.
 std::string TSpellbookWindow::getSpellDescription(
-    SpellID spell, const hero* currentHero, unsigned char rollover)
+    SpellID spell, const hero* currentHero, bool rollover)
 {
     const SSpellTraits* traits = &g_spellTraits[spell];
     std::string result;
