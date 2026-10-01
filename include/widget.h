@@ -125,6 +125,8 @@ public:
     // bodies at 144/147 and 186/187 precede the text/status helpers below.
     virtual ~widget();  // slot 0
     void initialize(int x, int y, int w, int h, int id, int style);
+    // Project-inferred half-open hit test in parent-window coordinates.
+    bool containsPoint(int x, int y) const;
     virtual int open(int newPriority, heroWindow* parent);  // slot 1
     // Non-virtual on DC and in retail: heroWindow::RemoveWidget calls
     // it DIRECTLY (0x5bc690 - a /Gy header-COMDAT the link kept from an
@@ -262,6 +264,9 @@ protected:
     // (?last_hover_widget@widget@@1PAV1@A); retail .bss 0x6aac68,
     // cleared by the dtor when the dying widget is the hoveree.
     static widget* s_lastHoverWidget;
+    // Project-inferred display operations; resolve geometry after virtual draw.
+    void updateScreenRegion() const;
+    void drawAndUpdate() const;
 
 public:
     // Slot 12. The empty body lives in widget.cpp so button's qualified

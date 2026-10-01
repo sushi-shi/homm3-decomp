@@ -106,6 +106,27 @@ void widget::close()
 {
 }
 
+// Project-inferred presentation helpers. Drawing may change the widget or its
+// parent; compute the update rectangle from the current fields afterward.
+void widget::updateScreenRegion() const
+{
+    g_windowManager->updateScreen(
+        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+}
+
+void widget::drawAndUpdate() const
+{
+    draw();
+    updateScreenRegion();
+}
+
+// Project-inferred common hit box. Callers retain coordinate narrowing and
+// their independent active/drawn/disabled policies.
+bool widget::containsPoint(int x, int y) const
+{
+    return x >= m_x && y >= m_y && x < m_x + m_width && y < m_y + m_height;
+}
+
 VA(0x005fe4f0, 0x2C8)
 DC_ADDRESS(0x196cd0, 0x2b8)
 MAC_ADDRESS(0x20a684, 0x388)
@@ -119,8 +140,7 @@ int widget::main(message& msg)
             break;
         short mouseX = msg.m_codeX - m_parentWindow->m_x;
         short mouseY = msg.m_codeY - m_parentWindow->m_y;
-        if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
-            || mouseY >= m_y + m_height)
+        if (!containsPoint(mouseX, mouseY))
             break;
         msg.m_codeY = m_id;
         if (s_lastHoverWidget != this) {
@@ -153,8 +173,7 @@ int widget::main(message& msg)
                 dim();
             }
             if (m_status & WIDGET_UPDATE) {
-                g_windowManager->updateScreen(
-                    m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+                updateScreenRegion();
                 m_status &= ~WIDGET_UPDATE;
             }
             return 1;
@@ -170,8 +189,7 @@ int widget::main(message& msg)
             if (flags & WIDGET_DIMMED)
                 draw();
             if (flags & WIDGET_UPDATE)
-                g_windowManager->updateScreen(
-                    m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+                updateScreenRegion();
             return 1;
         }
         case WIDGET_SET_X:

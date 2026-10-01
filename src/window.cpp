@@ -523,9 +523,7 @@ widget* heroWindow::findWidgetPtr(int mx, int my) const
     my -= m_y;
     for (widget* const* it = m_widgets.end(); it != m_widgets.begin(); --it) {
         widget* found = it[-1];
-        if (mx >= found->m_x && my >= found->m_y
-            && mx < found->m_x + found->m_width
-            && my < found->m_y + found->m_height
+        if (found->containsPoint(mx, my)
             && (found->m_status & widget::WIDGET_ACTIVE)
             && !(found->m_status & widget::WIDGET_DIMMED)
             && !(found->m_status & widget::WIDGET_DIMMED_NODRAW))

@@ -136,8 +136,7 @@ int iconWidget::main(message& msg)
     case MESSAGE_RIGHT_BUTTON_DOWN: {
         short mouseX = msg.m_codeX - m_parentWindow->m_x;
         short mouseY = msg.m_codeY - m_parentWindow->m_y;
-        if (mouseX >= m_x && mouseY >= m_y && mouseX < m_x + m_width
-            && mouseY < m_y + m_height) {
+        if (containsPoint(mouseX, mouseY)) {
             if (handleClick(true, messageId == MESSAGE_RIGHT_BUTTON_DOWN))
                 return 1;
             if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {

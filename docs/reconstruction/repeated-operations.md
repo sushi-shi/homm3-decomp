@@ -1707,6 +1707,43 @@ candidate, and no candidate leaves the prior display snapshots untouched.
 All three helper names and ordinary source placements are project inferences.
 No stored fields, native access declarations or virtual slots change.
 
+## Widget hit boxes, presentation and input transitions
+
+Twelve hit tests now share ordinary `widget::containsPoint()`: the base widget,
+border, icon, text, text-entry, button and slider handlers, plus the window's
+reverse widget lookup. The half-open bounds retain their comparison order and
+signed dimensions. Callers still subtract parent coordinates and narrow to
+short where they did before; window lookup retains int coordinates and its
+subsequent active/dimmed checks. Slider track interiors and drag tolerance have
+different bounds and remain separate.
+
+Ten full-widget screen updates share protected `updateScreenRegion()`. Six are
+nested through `drawAndUpdate()`, used by button/slider selection and deselection,
+text-entry focus and the native chat-edit update wrapper. Virtual drawing still
+precedes fresh geometry and parent reads. Slider keyboard updates remain at their
+original points around timer polling and state notification. Text editing's
+update retains its earlier short coordinate snapshots and is deliberately not
+folded into this fresh-coordinate operation.
+
+Four slider notification sites share private `notifyStateChange()`: both
+keyboard stages, mouse selection and deselection. A changed state is saved
+before virtual `close()`; the callback, current state and parent are read again
+afterward. Timer updates, event pumping, message conversion and modifier state
+remain ordered in their callers.
+
+Left-arrow and backspace share private `textEntryWidget::moveCursorLeft()`,
+including the display-start correction. Both callers retain their nonzero guard,
+and backspace still copies the text first. Rejected-character rollback only
+changes the cursor and remains a distinct partial operation.
+
+Cached Dreamcast widget type 0x170f / fields 0x182d records public short geometry;
+types 0x4804 and 0x61cb agree. Text-entry type 0x1e69 / fields 0x3def records a
+public unsigned-short cursor and signed-short display offset. Slider type
+0x235b / fields 0x235c records public current state and state count, with protected
+old state and callback. These native access distinctions are preserved. The five
+new helper names and ordinary source placements are project inferences; stored
+layout and virtual slots do not change.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

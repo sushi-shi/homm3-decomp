@@ -142,8 +142,7 @@ int textWidget::main(message& msg)
             return 0;
         short mouseX = msg.m_codeX - m_parentWindow->m_x;
         short mouseY = msg.m_codeY - m_parentWindow->m_y;
-        if (mouseX >= m_x && mouseY >= m_y && mouseX < m_x + m_width
-            && mouseY < m_y + m_height) {
+        if (containsPoint(mouseX, mouseY)) {
             if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
                 msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
                 msg.m_codeX = WIDGET_RIGHT_SELECT;

@@ -1112,9 +1112,7 @@ DC_ADDRESS(0x11cbf4, 0x38)
 MAC_ADDRESS(0x2121e0, 0x68)
 void CChatEdit::updateScreen()
 {
-    draw();
-    g_windowManager->updateScreen(
-        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+    drawAndUpdate();
 }
 
 // Mac 0x212430..0x212794 retains each function-key virtual call with

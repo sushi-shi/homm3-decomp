@@ -106,6 +106,9 @@ public:
 
 protected:
     virtual void saveBackground() const;  // slot 18, retail 0x5bba70
+
+private:
+    void moveCursorLeft();
 };
 // No SIZE() assert: the class rides std::string, whose extent differs
 // between the VC6 arm (0x10, giving textWidget 0x50 and this 0x70) and

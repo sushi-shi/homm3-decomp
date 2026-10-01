@@ -223,8 +223,7 @@ int button::main(message& msg)
         short mouseY = msg.m_codeY - m_parentWindow->m_y;
         if (m_status & WIDGET_DIMMED)
             return 0;
-        if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
-            || mouseY >= m_y + m_height)
+        if (!containsPoint(mouseX, mouseY))
             return 0;
         select(msg);
         // Both exits BREAK to one shared selection test and Deselect
@@ -239,8 +238,7 @@ int button::main(message& msg)
             if (msg.m_id == MESSAGE_MOUSE_MOVE) {
                 short moveX = msg.m_codeX - m_parentWindow->m_x;
                 short moveY = msg.m_codeY - m_parentWindow->m_y;
-                if (moveX >= m_x && moveY >= m_y && moveX < m_x + m_width
-                    && moveY < m_y + m_height) {
+                if (containsPoint(moveX, moveY)) {
                     if (!(m_status & WIDGET_SELECTED))
                         select(msg);
                 } else {
@@ -273,8 +271,7 @@ int button::main(message& msg)
             break;
         short rightX = msg.m_codeX - m_parentWindow->m_x;
         short rightY = msg.m_codeY - m_parentWindow->m_y;
-        if (rightX < m_x || rightY < m_y || rightX >= m_x + m_width
-            || rightY >= m_y + m_height)
+        if (!containsPoint(rightX, rightY))
             return 0;
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = widget::WIDGET_RIGHT_SELECT;
@@ -311,8 +308,7 @@ int button::select(message& msg)
         g_soundManager->memorySample(s_clickSample);
         g_soundManager->setPlaybackState(saved);
     }
-    draw();
-    g_windowManager->updateScreen(m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+    drawAndUpdate();
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SELECT;
     msg.m_codeY = m_id;
@@ -330,8 +326,7 @@ int button::deselect(message& msg)
     if (!(m_status & WIDGET_SELECTED))
         return 0;
     m_status &= ~WIDGET_SELECTED;
-    draw();
-    g_windowManager->updateScreen(m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+    drawAndUpdate();
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeY = m_id;
     if (m_endDialog == 1)
