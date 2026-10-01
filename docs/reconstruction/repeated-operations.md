@@ -2465,6 +2465,43 @@ Existing native calls, visibility, member layouts and return interfaces remain
 unchanged. Historical compiler observations predate this extraction; no new
 compiler or behavior validation is claimed.
 
+## Map masks, timed-event flags and loss-condition teams
+
+Twelve existing-mask conversions share decodeMapBits: both town spell masks,
+map hero spells, custom hero setup spells, and four object-cell masks in each
+of the map and saved-object readers. It retains signed int division/modulo,
+ascending bit order and direct mutable bitset proxies, writing exactly 70 or
+48 bits. The original unsigned decodePackedBits has separate native evidence
+and remains unchanged. No returned mask temporary or extra stream read is
+introduced. Each caller retains its packed-buffer lifetime, checked or unchecked
+read, format gates, early failures and resource-file versus map-file source.
+The town's other x-controlled loops remain separate.
+
+Four saved-object conversions share file-static encodeObjectCellMask: zero the
+same six-byte buffer, then accumulate the 48 bitset entries using signed indices
+and direct mutable proxies. Each existing write and short-write guard remains
+in the caller. The separate RMG encoder uses an unsigned traversal and const
+test() API; those source operations are not substituted here. Object mask order
+remains draw, passability, shadow, trigger in all three serializers.
+
+The map and saved timed-event readers share private readHumanApplicability.
+They pass their respective >=28 and >=42 version decisions. The helper reads
+and normalizes one signed byte when present, otherwise assigns one without
+consuming input. It adds no read-status guard and leaves all other record fields,
+first-day adjustment, padding and failure handling in their original readers.
+
+Hero-loss and town-loss validation share private game::countHumanTeams. It calls
+the native isHumanTeam for team identifiers zero through seven and counts each
+successful team once. Hero validation still counts only after finding the hero
+at the configured location; town validation still counts after resolving the
+town. No cached global count or player-count substitute is introduced, and the
+callers retain their different owner checks and condition invalidations.
+
+Names and placements are project inferences. The signed decoder is an ordinary
+header template shared by two TUs; the other three bodies stay in their owner
+sources, with no invented inline qualifier or native identity. No serialized
+width, record layout, virtual interface or field visibility changes.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

@@ -3841,6 +3841,17 @@ void game::giveTroopsToNeutralTowns()
     }
 }
 
+// Project-inferred count over team identifiers, using the native team query.
+int game::countHumanTeams() const
+{
+    int count = 0;
+    for (int team = 0; team < 8; ++team) {
+        if (isHumanTeam(team))
+            ++count;
+    }
+    return count;
+}
+
 // E:\gamedcs\game.cpp:4050
 // Mac 0xd5290..0xd53bc tests each campaign/scenario pair in order and
 // joins them at one disabled-normal-victory store (0xd53c8). Preserve that
@@ -3958,11 +3969,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         for (int i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
             if (lcheroLoc == poolheroLoc) {
-                int numHumanTeams = 0;
-                for (int team = 0; team < 8; ++team) {
-                    if (isHumanTeam(team))
-                        ++numHumanTeams;
-                }
+                int numHumanTeams = countHumanTeams();
                 if (numHumanTeams <= 1) {
                     if (!isComputerTeam(getTeam(m_heroes[i].m_owner))) {
                         loss.m_heroId = i;
@@ -3980,13 +3987,10 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
     if (loss.m_type == LOSS_CONDITION_LOSE_TOWN) {
         town* thisTown = getTown(getTownId(
             loss.m_townX, loss.m_townY, loss.m_townZ));
-        int numHumanTeams = 0;
+        int numHumanTeams;
         int owner;
         int townTeam;
-        for (unsigned int teamCheck = 0; teamCheck < 8; ++teamCheck) {
-            if (isHumanTeam(teamCheck))
-                ++numHumanTeams;
-        }
+        numHumanTeams = countHumanTeams();
         do {
             if (numHumanTeams > 1)
                 continue;
@@ -5501,10 +5505,7 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
             heroRecord->m_customSpells = 1;
             unsigned char spellMask[9];
             mapFile->read(spellMask, sizeof(spellMask));
-            for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-                heroRecord->m_spells[spell] =
-                    (spellMask[spell / 8] & (1 << (spell % 8))) != 0;
-            }
+            decodeMapBits(spellMask, heroRecord->m_spells);
         }
 
         if (readValue<char>(mapFile)) {

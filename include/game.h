@@ -1481,6 +1481,8 @@ private:
     int saveObeliskPool(TAbstractFile* outfile);
     int saveTownPool(TAbstractFile* outfile);
     void resetHolyGrail();
+    // Project-inferred scan shared by hero-loss and town-loss validation.
+    int countHumanTeams() const;
 
 public:
     // 0x4bf780 (dc 0xaa7e0).

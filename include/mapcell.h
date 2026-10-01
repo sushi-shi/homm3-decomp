@@ -889,6 +889,10 @@ public:
     int read(TAbstractFile* infile, int saveVersion);
     int save(TAbstractFile* outfile);
     int load(TAbstractFile* infile, int saveVersion);
+
+private:
+    // Project-inferred optional flag reader; version policy stays in callers.
+    void readHumanApplicability(TAbstractFile* infile, bool hasFlag);
 };
 SIZE(TTimedEvent, 0x34);
 

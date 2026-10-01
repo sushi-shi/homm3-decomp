@@ -9,6 +9,7 @@
 #include "platform.h"
 
 #include "mapcell.h"
+#include "packed_bits.h"
 
 #include "advmgr.h"
 #include "advmgr_objects.h"
@@ -79,6 +80,15 @@ int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
+// Project-inferred optional field operation shared by map and save readers.
+void TTimedEvent::readHumanApplicability(TAbstractFile* infile, bool hasFlag)
+{
+    if (hasFlag)
+        m_applyToHuman = readValue<signed char>(infile) != 0;
+    else
+        m_applyToHuman = 1;
+}
+
 // The timed-event record.  Field order is fixed independently by Save
 // (0x4fc440, exact): message, seven resource deltas, the player mask, the
 // two apply-to flags, then the first-occurrence day and the repeat interval.
@@ -122,11 +132,7 @@ int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
         return -1;
     }
 
-    if (saveVersion >= 28) {
-        m_applyToHuman = readValue<signed char>(infile) != 0;
-    } else {
-        m_applyToHuman = 1;
-    }
+    readHumanApplicability(infile, saveVersion >= 28);
 
     count = infile->read(&m_applyToComputer, sizeof(m_applyToComputer));
     if (count < sizeof(m_applyToComputer)) {
@@ -228,11 +234,7 @@ int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
     if (static_cast<unsigned>(infile->read(&m_playerFlags, 1)) < 1)
         return -1;
 
-    if (saveVersion >= 42) {
-        m_applyToHuman = readValue<signed char>(infile) != 0;
-    } else {
-        m_applyToHuman = 1;
-    }
+    readHumanApplicability(infile, saveVersion >= 42);
 
     if (static_cast<unsigned>(infile->read(&m_applyToComputer, 1)) < 1)
         return -1;
@@ -2785,7 +2787,8 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // and construct proxies directly on the TownExtra members; no returned mask
 // temporary is present. The unsigned decodePackedBits spelling costs 79.6586%.
 // Hero::load 0xf3428/0xf3438/0xf3470 independently proves that existing
-// decoder's unsigned traversal, so the town's signed caller-owned x remains.
+// decoder's unsigned traversal. The town now shares decodeMapBits, which
+// preserves its signed division/modulo and writes directly to the member.
 VA(0x005019f0, 0x7CC)
 DC_ADDRESS(0x0f094c, 0x4a8)
 MAC_ADDRESS(0x124278, 0x700)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing
@@ -2869,16 +2872,12 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         memset(spellBuf, 0, sizeof(spellBuf));
     } else {
         infile->read(spellBuf, sizeof(spellBuf));
-        for (x = 0; x < 70; ++x)
-            tempTown.m_fixedSpells[x] =
-                (spellBuf[x / 8] & (1 << (x % 8))) != 0;
+        decodeMapBits(spellBuf, tempTown.m_fixedSpells);
     }
 
     if (infile->read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
-    for (x = 0; x < 70; ++x)
-        tempTown.m_spells[x] =
-            (spellBuf[x / 8] & (1 << (x % 8))) != 0;
+    decodeMapBits(spellBuf, tempTown.m_spells);
 
     count = readLittleEndianValue(infile, numTownEvents);
     if (count < sizeof(numTownEvents))
@@ -3229,10 +3228,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 heroData->m_customSpells = 1;
                 unsigned char spellMask[9];
                 infile->read(spellMask, sizeof(spellMask));
-                for (int spell = 0; spell < 70; ++spell) {
-                    heroData->m_spells[spell] =
-                        (spellMask[spell / 8] & (1 << (spell % 8))) != 0;
-                }
+                decodeMapBits(spellMask, heroData->m_spells);
             }
 
             charBuffer = readValue<char>(infile);
@@ -3863,7 +3859,6 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     int count;
     char byteValue;
     unsigned char packed[6];
-    int i;
 
     count = readLittleEndianValue(infile, value);
     if (count < sizeof(value))
@@ -3896,32 +3891,20 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     tempObjectType.m_height = byteValue;
 
     ResourceManager::readFromBitmapResource(maskFile, packed, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_drawCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType.m_drawCells);
 
     count = infile->read(packed, sizeof(packed));
     if (count < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_passableCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType.m_passableCells);
 
     ResourceManager::readFromBitmapResource(maskFile, packed, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_shadowCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType.m_shadowCells);
 
     count = infile->read(packed, sizeof(packed));
     if (count < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_triggerCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType.m_triggerCells);
 
     char dummy[2];
     count = infile->read(dummy, sizeof(dummy));
@@ -3973,6 +3956,18 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     return usedDefaultMask ? READ_OBJECT_TYPE_DEFAULT_MASK : 1;
 }
 
+// Project-inferred object-cell mask encoder. This accepts the existing mutable
+// mask so the native subscript/proxy operation is retained rather than test().
+static void encodeObjectCellMask(std::bitset<48>& cells,
+                                  unsigned char (&packed)[6])
+{
+    memset(packed, 0, sizeof(packed));
+    for (int i = 0; i < sizeof(packed) * 8; ++i) {
+        if (cells[i])
+            packed[i / 8] |= 1 << (i % 8);
+    }
+}
+
 // The final Write returns 1, not 0, on success - the sbb/and/inc tail is a
 // `? -1 : 1` ternary, not the `? -1 : 0` every other serializer here ends on.
 VA(0x00503c40, 0x2B9)
@@ -3991,37 +3986,20 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
         return -1;
 
     unsigned char packed[6];
-    int i;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_drawCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
+    encodeObjectCellMask(tempObjectType->m_drawCells, packed);
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_passableCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
+    encodeObjectCellMask(tempObjectType->m_passableCells, packed);
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_shadowCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
+    encodeObjectCellMask(tempObjectType->m_shadowCells, packed);
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_triggerCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
+    encodeObjectCellMask(tempObjectType->m_triggerCells, packed);
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
@@ -4057,35 +4035,22 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
     tempObjectType->m_height = value;
 
     unsigned char packed[6];
-    int i;
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_drawCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType->m_drawCells);
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_passableCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType->m_passableCells);
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_shadowCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType->m_shadowCells);
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_triggerCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType->m_triggerCells);
 
     unsigned short typeValue;
     if (readValue(infile, typeValue) < sizeof(typeValue))
