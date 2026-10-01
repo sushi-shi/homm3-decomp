@@ -899,7 +899,7 @@ const int g_campaignOrdinalLast = 20;
 // and ShowCongrats is defined further down this file; both are declared
 // locally for the same reason.
 void waitForReadyToPlayMsg();
-unsigned char saveGame(unsigned char campaignWinMode);
+bool saveGame(bool campaignWinMode);
 void showCongrats(int hsType);
 
 static int doNewGame();
