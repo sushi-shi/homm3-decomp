@@ -245,7 +245,13 @@ void searchArray::boardBoat(const hero* currentHero, pathCell& cell)
 // A town with a visiting hero cannot receive. Retail's min temporaries put
 // gates first, and its destination loop loads each town ID once.
 // DC records const pathCell&; restoring the reference keeps Windows bytes
-// unchanged. The remaining extra slot belongs to the location return value.
+// unchanged. DC lines 352..354 and Mac 0x1622f0 assign three coordinates,
+// preserving packed point padding. getLocation is an inferred shared helper
+// here, not a retained native call anchor. Its returned value keeps a temporary
+// stack home under VC6: component writes score 83.97% versus the former whole
+// point copy's 92.5194%; three separate selected getter results score 66.01%.
+// Keep the native coordinate operation and one canonical getter value rather
+// than bypassing the helper or inventing a scalar accessor solely for codegen.
 VA(0x0056a850, 0x27E)
 DC_ADDRESS(0x12b988, 0x240)
 MAC_ADDRESS(0x16202c, 0x35c)  // exhaustive search.obj order-map
@@ -298,7 +304,12 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
                 continue;
             newCell.m_barrierValue -= aiResourceCost(player, cost);
         }
-        newCell.m_point = otherTown->getLocation();
+        // Mac 0x1622f0 and retail preserve the other packed point bits;
+        // this is a coordinate update, not a whole-point assignment.
+        const type_point location = otherTown->getLocation();
+        newCell.m_point.m_x = location.m_x;
+        newCell.m_point.m_y = location.m_y;
+        newCell.m_point.m_z = location.m_z;
         newCell.m_castleGate = 1;
         pushPoint(currentPathCell, newCell, 0, 0, limit,
                   newCell.m_barrierValue + barrierValue, newCell.m_monster,
