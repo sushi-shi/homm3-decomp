@@ -522,6 +522,10 @@ void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_
 // 99.00% (from 40.6667%). All 15 named call/jump targets and 16 relocations
 // agree; the remaining 36/35 CFG frontier still starts at vector::size's null
 // branch and register homes. No unrelated inline-budget controls were added.
+// DC line 573 opens the positive-value scope around the switch at 576;
+// those scopes close together at 592. Restore that dispatch enclosure rather
+// than an invented early return. Its focused VC6 comparison is byte-flat at
+// 86.4819%, preserving the canonical helpers and the remaining size() frontier.
 VA(0x00424d20, 0x290)
 DC_ADDRESS(0x02a868, 0xce)
 MAC_ADDRESS(0x027064, 0x12c)
@@ -537,20 +541,20 @@ void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const t
             choice.m_value = value;
         }
     }
-    if (choice.m_value <= 0)
-        return;
-    switch (choice.m_spell) {
-    case SPELL_CHAIN_LIGHTNING:
-        getChainLightningValue(choice, defender, damage);
-        break;
-    case SPELL_FROST_RING:
-    case SPELL_FIREBALL:
-    case SPELL_METEOR_SHOWER:
-        getAreaValue(choice, defender, damage, 1);
-        break;
-    case SPELL_INFERNO:
-        getAreaValue(choice, defender, damage, 2);
-        break;
+    if (choice.m_value > 0) {
+        switch (choice.m_spell) {
+        case SPELL_CHAIN_LIGHTNING:
+            getChainLightningValue(choice, defender, damage);
+            break;
+        case SPELL_FROST_RING:
+        case SPELL_FIREBALL:
+        case SPELL_METEOR_SHOWER:
+            getAreaValue(choice, defender, damage, 1);
+            break;
+        case SPELL_INFERNO:
+            getAreaValue(choice, defender, damage, 2);
+            break;
+        }
     }
 }
 
