@@ -821,7 +821,7 @@ public:
     // generator callee replaces this object's property reference. These
     // mutable operations reject the earlier const receiver placeholder.
     virtual unsigned char isWritable();
-    virtual void write(TAbstractFile* outfile, int version);
+    virtual void write(TAbstractFile* outputFile, int version);
 };
 
 // Provisional Complete-only role: createGuard (0x540b20) allocates 0x2c and
@@ -841,7 +841,7 @@ public:
         m_disposition = RMG_GUARD_DISPOSITION;
         m_objectId = objectId;
     }
-    virtual void write(TAbstractFile* outfile, int version);
+    virtual void write(TAbstractFile* outputFile, int version);
 };
 SIZE(rmgMonsterObject, 0x2c);
 
@@ -861,7 +861,7 @@ public:
         m_townOption = townOption;
         m_objectId = objectId;
     }
-    virtual void write(TAbstractFile* outfile, int version);
+    virtual void write(TAbstractFile* outputFile, int version);
 };
 SIZE(rmgTownObject, 0x28);
 
@@ -873,7 +873,7 @@ class rmgOwnableObject : public type_object {
 public:
     rmgOwnableObject(TRmgObjectPropertiesRef* properties)
         : type_object(properties) {}
-    virtual void write(TAbstractFile* outfile, int version);
+    virtual void write(TAbstractFile* outputFile, int version);
 };
 
 // Artifact factory 0x5341f0 allocates the base 0x1c extent and installs
@@ -882,7 +882,7 @@ public:
 class rmgArtifactObject : public type_object {
 public:
     rmgArtifactObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int version);
+    virtual void write(TAbstractFile* outputFile, int version);
 };
 SIZE(rmgArtifactObject, 0x1c);
 
@@ -893,7 +893,7 @@ SIZE(rmgArtifactObject, 0x1c);
 class rmgResourceObject : public type_object {
 public:
     rmgResourceObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int version);
+    virtual void write(TAbstractFile* outputFile, int version);
 };
 SIZE(rmgResourceObject, 0x1c);
 
@@ -911,7 +911,7 @@ public:
     std::vector<int> m_spells;         // +0x44
 
     rmgBlackBoxObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int version);
+    virtual void write(TAbstractFile* outputFile, int version);
 };
 SIZE(rmgBlackBoxObject, 0x54);
 
@@ -928,7 +928,7 @@ public:
     int m_creatureCount;               // +0x30
 
     rmgSeerHutObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int version);
+    virtual void write(TAbstractFile* outputFile, int version);
 };
 SIZE(rmgSeerHutObject, 0x34);
 
@@ -969,7 +969,7 @@ SIZE(rmgKeyTentObject, 0x24);
 class rmgScholarObject : public type_object {
 public:
     rmgScholarObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int version);
+    virtual void write(TAbstractFile* outputFile, int version);
 };
 SIZE(rmgScholarObject, 0x1c);
 
@@ -977,7 +977,7 @@ SIZE(rmgScholarObject, 0x1c);
 class rmgShrineObject : public type_object {
 public:
     rmgShrineObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int version);
+    virtual void write(TAbstractFile* outputFile, int version);
 };
 SIZE(rmgShrineObject, 0x1c);
 
@@ -990,7 +990,7 @@ class rmgSpellScrollObject : public type_object {
 public:
     int m_spell; // +0x1c, role-derived name
     rmgSpellScrollObject(TRmgObjectPropertiesRef* properties, int spell);
-    virtual void write(TAbstractFile* outfile, int version);
+    virtual void write(TAbstractFile* outputFile, int version);
 };
 SIZE(rmgSpellScrollObject, 0x20);
 
@@ -998,7 +998,7 @@ SIZE(rmgSpellScrollObject, 0x20);
 class rmgWitchHutObject : public type_object {
 public:
     rmgWitchHutObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int version);
+    virtual void write(TAbstractFile* outputFile, int version);
 };
 SIZE(rmgWitchHutObject, 0x1c);
 
@@ -1017,7 +1017,7 @@ public:
         int experience);
 
     virtual void releaseReservation();
-    virtual void write(TAbstractFile* outfile, int version);
+    virtual void write(TAbstractFile* outputFile, int version);
 };
 SIZE(rmgHeroObject, 0x2c);
 
@@ -1032,7 +1032,7 @@ struct TRmgMapItem {
 
     TRmgMapItem();
     void clear();
-    void write(TAbstractFile* outfile);
+    void write(TAbstractFile* outputFile);
     // Retained cell writer 0x546940; four scalar inputs, terrain fields only.
     void setTerrain(int terrain, int frame,
         unsigned char flipX, unsigned char flipY);
@@ -1133,12 +1133,14 @@ struct TRmgMapItem {
 // 0x640a58 (adapter). Their deleting destructors at 0x5361b0/0x537910
 // store those different tables, so matching operation slots do not establish
 // one base identity. The painting coordinates are the unsigned grid type.
+// Scalar terrain slots were provisionally named getLand/getOverlay/setOverlay;
+// their native fields establish getTerrain/getFrame/setFrame.
 class TRmgMapInterface {
 public:
     virtual ~TRmgMapInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
-    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual void setFrame(const TRmgGridPoint& point, int value) = 0;
     // Slot 3 returns its explicit output reference. The adapters consume
     // that returned reference, which distinguishes this from a hidden value
     // result: together the map and both adapter bodies reproduce retail.
@@ -1149,8 +1151,8 @@ public:
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output) = 0;
 #endif
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getLand(const TRmgGridPoint& point) = 0;
-    virtual int getOverlay(const TRmgGridPoint& point) = 0;
+    virtual int getTerrain(const TRmgGridPoint& point) = 0;
+    virtual int getFrame(const TRmgGridPoint& point) = 0;
 };
 
 // Former provisional name: TRmgMapAdapterInterface; this interface paints rivers.
@@ -1159,13 +1161,15 @@ public:
     virtual ~TRmgRiverMapAdapterInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
-    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
     virtual TRmgGridPoint getSize() = 0;
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getLand(const TRmgGridPoint& point) = 0;
-    virtual int getOverlay(const TRmgGridPoint& point) = 0;
+    virtual int getLineType(const TRmgGridPoint& point) = 0;
+    virtual int getTerrain(const TRmgGridPoint& point) = 0;
 };
 
+// Adapter scalar slots name their actual layers: line type and underlying
+// terrain (formerly getLand/getOverlay); setLineType was setOverlay.
 // The road-decoration adapter has the same seven-slot shape but a distinct
 // abstract vtable at 0x640a20. Its concrete subclass writes the packed road
 // fields through the bodies beginning at 0x532360.
@@ -1174,11 +1178,11 @@ public:
     virtual ~TRmgRoadMapAdapterInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
-    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
     virtual TRmgGridPoint getSize() = 0;
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getLand(const TRmgGridPoint& point) = 0;
-    virtual int getOverlay(const TRmgGridPoint& point) = 0;
+    virtual int getLineType(const TRmgGridPoint& point) = 0;
+    virtual int getTerrain(const TRmgGridPoint& point) = 0;
 };
 
 class type_random_map : public TRmgMapInterface {
@@ -1227,15 +1231,15 @@ public:
 
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
+    virtual void setFrame(const TRmgGridPoint& point, int value);
 #if defined(HOMM3_TARGET_MAC)
     virtual TRmgGridPoint getSize();  // Mac 0x22eb84: hidden value result
 #else
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output);
 #endif
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLand(const TRmgGridPoint& point);
-    virtual int getOverlay(const TRmgGridPoint& point);
+    virtual int getTerrain(const TRmgGridPoint& point);
+    virtual int getFrame(const TRmgGridPoint& point);
 
     void clear();
     // Retail insertion supplies pointer prvalues to both STL reference
@@ -1321,11 +1325,11 @@ public:
 
     TRmgRoadMapAdapter(type_random_map* map) : m_map(map) {}
     virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
+    virtual void setLineType(const TRmgGridPoint& point, int value);
     virtual TRmgGridPoint getSize();
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLand(const TRmgGridPoint& point);
-    virtual int getOverlay(const TRmgGridPoint& point);
+    virtual int getLineType(const TRmgGridPoint& point);
+    virtual int getTerrain(const TRmgGridPoint& point);
 };
 
 // Retail retains these support bodies outside CreateRiver while the adapter
@@ -1341,11 +1345,11 @@ public:
 
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
+    virtual void setLineType(const TRmgGridPoint& point, int value);
     virtual TRmgGridPoint getSize();
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLand(const TRmgGridPoint& point);
-    virtual int getOverlay(const TRmgGridPoint& point);
+    virtual int getLineType(const TRmgGridPoint& point);
+    virtual int getTerrain(const TRmgGridPoint& point);
 };
 
 // Cinit 0x55ed70/0x55f2f0 passes a pattern count and a source int array to
@@ -1394,14 +1398,14 @@ public:
     TRmgLinePainterInterface(const TRmgGridPoint& size);
     virtual TRmgLinePatternTable* getPattern(int value) = 0;
     virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
-    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
     // Former canPaint had inverted polarity: nonzero prevents painting.
     virtual int isBlocked(const TRmgGridPoint& point) = 0;
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile) = 0;
-    virtual int getLand(const TRmgGridPoint& point) = 0;
+    virtual int getLineType(const TRmgGridPoint& point) = 0;
 
     TRmgLinePainterTile at(const TRmgGridPoint& point);
-    int getNeighbourLand(const TRmgGridPoint& point, unsigned int direction);
+    int getNeighbourLineType(const TRmgGridPoint& point, unsigned int direction);
 };
 
 // The value returned at 0x4fa050 holds the painter and a copied coordinate.
@@ -1413,11 +1417,11 @@ struct TRmgLinePainterTile {
     TRmgGridPoint m_point;
 
     TRmgLinePainterTile(TRmgLinePainterInterface* painter, const TRmgGridPoint& point);
-    int getLand();
+    int getLineType();
     void getTile(rmgTerrainTile& tile);
     void setTile(const rmgTerrainTile& tile);
     unsigned char isBlocked();
-    void setOverlay(int value);
+    void setLineType(int value);
 };
 SIZE(TRmgLinePainterTile, 0x0c);
 
@@ -1453,13 +1457,13 @@ public:
     virtual TRmgLinePatternTable* getPattern(int value);
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
+    virtual void setLineType(const TRmgGridPoint& point, int value);
     virtual int isBlocked(const TRmgGridPoint& point);
     // Slot 4's caller at 0x4f9fdd pushes output first, then point. The
     // retained wrapper 0x55f350 writes through its second explicit argument;
     // unlike the adapter, this interface does not return a tile by value.
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile);
-    virtual int getLand(const TRmgGridPoint& point);
+    virtual int getLineType(const TRmgGridPoint& point);
 };
 
 inline TRmgLinePainter::~TRmgLinePainter() {}
@@ -1531,10 +1535,10 @@ public:
     virtual TRmgLinePatternTable* getPattern(int value);
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
+    virtual void setLineType(const TRmgGridPoint& point, int value);
     virtual int isBlocked(const TRmgGridPoint& point);
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile);
-    virtual int getLand(const TRmgGridPoint& point);
+    virtual int getLineType(const TRmgGridPoint& point);
 };
 
 inline TRmgRoadLinePainter::~TRmgRoadLinePainter() {}
@@ -1921,7 +1925,7 @@ public:
     void commitTreasureGroup(TRmgTreasureGroup* group, TRmgMapPosition position);
     void decorateUnderground();
     unsigned char generate();
-    unsigned char writeMap(TAbstractFile* outfile);
+    unsigned char writeMap(TAbstractFile* outputFile);
     virtual ~type_random_map_generator();
     virtual void addObject(type_object* object, TRmgMapPosition position);
 
@@ -2028,7 +2032,7 @@ public:
     void markRiverCoastTarget(TRmgMapPosition position, int direction);
     void createRiverToObject(TRmgMapPosition source);
     void createRivers();
-    void writeMapHeader(TAbstractFile* outfile);
+    void writeMapHeader(TAbstractFile* outputFile);
 };
 
 SIZE(TRmgMapPosition, 0x0c);

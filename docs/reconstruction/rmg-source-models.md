@@ -2695,7 +2695,7 @@ The neighbour-offset ownership family (`generate-rmg-line-offset-family.py`,
 context `97e37f40124899d7fae2`) questions the existing ordinary neighbour query's
 provisional direction-index parameter. Retail refresh carries a pointer into
 `g_tileDirections`, and its nested signed addition consumes that offset. There
-is no DC signature or retained retail identity for `getNeighbourLand` itself.
+is no DC signature or retained retail identity for `getNeighbourLineType` itself.
 The four controls cross its unsigned index versus `const TPoint&` offset with
 indexed versus pointer traversal, changing both refresh and Walker::paintPoint
 and the single header declaration together. Original point reads remain live

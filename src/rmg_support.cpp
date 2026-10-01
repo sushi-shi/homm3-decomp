@@ -181,9 +181,9 @@ void TRmgLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& 
 }
 
 MAC_ADDRESS(0x253b34, 0x30)
-void TRmgLinePainter::setOverlay(const TRmgGridPoint& point, int value)
+void TRmgLinePainter::setLineType(const TRmgGridPoint& point, int value)
 {
-    m_adapter->setOverlay(point, value);
+    m_adapter->setLineType(point, value);
 }
 
 MAC_ADDRESS(0x253ba8, 0x88)
@@ -200,7 +200,7 @@ VA(0x0055EE00, 0x28)
 MAC_ADDRESS(0x253b64, 0x44)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
 int TRmgLinePainter::isBlocked(const TRmgGridPoint& point)
 {
-    int terrain = m_adapter->getOverlay(point);
+    int terrain = m_adapter->getTerrain(point);
     if (terrain == eTerrainWater || terrain == eTerrainRock)
         return 1;
     return 0;
@@ -208,15 +208,15 @@ int TRmgLinePainter::isBlocked(const TRmgGridPoint& point)
 
 VA(0x0055EE30, 0x13)
 MAC_ADDRESS(0x253c30, 0x30)
-int TRmgLinePainter::getLand(const TRmgGridPoint& point)
+int TRmgLinePainter::getLineType(const TRmgGridPoint& point)
 {
-    return m_adapter->getLand(point);
+    return m_adapter->getLineType(point);
 }
 
 VA(0x0055EE50, 0x76)
 MAC_ADDRESS(0x253c60, 0x6c)
 TRmgRiverPainter::TRmgRiverPainter(
-    TRmgMapAdapterInterface* newAdapter,
+    TRmgRiverMapAdapterInterface* newAdapter,
     int newRiverType,
     const TRmgGridPoint& newStart)
     : TRmgLinePainter(newAdapter),
@@ -247,7 +247,7 @@ void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTi
 MAC_ADDRESS(0x25404c, 0x44)
 int TRmgRoadLinePainter::isBlocked(const TRmgGridPoint& point)
 {
-    int terrain = m_adapter->getOverlay(point);
+    int terrain = m_adapter->getTerrain(point);
     if (terrain == eTerrainWater || terrain == eTerrainRock)
         return 1;
     return 0;
@@ -255,9 +255,9 @@ int TRmgRoadLinePainter::isBlocked(const TRmgGridPoint& point)
 
 VA(0x0055F330, 0x17)
 MAC_ADDRESS(0x25401c, 0x30)  // vtables 0x641174/0x641190/0x6411f0/0x64120c; Complete-only
-void TRmgRoadLinePainter::setOverlay(const TRmgGridPoint& point, int value)
+void TRmgRoadLinePainter::setLineType(const TRmgGridPoint& point, int value)
 {
-    m_adapter->setOverlay(point, value);
+    m_adapter->setLineType(point, value);
 }
 
 VA(0x0055F350, 0x34)
@@ -269,12 +269,12 @@ void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& ti
 }
 
 // The road hierarchy's parallel vtables 0x6411f0/0x64120c use the same
-// adapter getLand forwarding shape in slot 5.
+// adapter getLineType forwarding shape in slot 5.
 VA(0x0055F390, 0x13)
 MAC_ADDRESS(0x254118, 0x30)  // Complete-only road painter
-int TRmgRoadLinePainter::getLand(const TRmgGridPoint& point)
+int TRmgRoadLinePainter::getLineType(const TRmgGridPoint& point)
 {
-    return m_adapter->getLand(point);
+    return m_adapter->getLineType(point);
 }
 
 // The road builder constructs adapter vtable 0x640a04 at 0x548120 and passes

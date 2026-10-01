@@ -330,9 +330,9 @@ rva	function_count	class
 # ??_7 site paired in order: 0x532350 ??1TRmgRoadMapAdapterInterface@@UAE@XZ; 0x537940 ??_GTRmgRoadMapAdapterInterface@@UAEPAXI@Z
 0x240a20	7	TRmgRoadMapAdapterInterface
 # ??_7 site paired in order: 0x548500 ?createRiverToObject@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z; 0x548df0 ?createRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z
-0x240a3c	7	TRmgMapAdapter
-# ??_7 site paired in order: 0x532510 ??1TRmgMapAdapterInterface@@UAE@XZ; 0x537910 ??_GTRmgMapAdapterInterface@@UAEPAXI@Z (+2 more)
-0x240a58	7	TRmgMapAdapterInterface
+0x240a3c	7	TRmgRiverMapAdapter
+# ??_7 site paired in order: 0x532510 ??1TRmgRiverMapAdapterInterface@@UAE@XZ; 0x537910 ??_GTRmgRiverMapAdapterInterface@@UAEPAXI@Z (+2 more)
+0x240a58	7	TRmgRiverMapAdapterInterface
 # ??_7 site paired in order: 0x5330e0 ??0type_object@@QAE@PAUTRmgObjectPropertiesRef@@@Z; 0x533120 ??_Gtype_object@@UAEPAXI@Z (+30 more)
 0x240a74	4	type_object
 # ??_7 site paired in order: 0x540b20 ?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z
@@ -438,7 +438,7 @@ rva	function_count	class
 # ??_7 site paired in order: 0x55ee50 TRmgRiverPainter ctor; 0x55eda0 ~TRmgRiverPainter.
 # Slot 6 is _purecall: the destructor is pure here (include/rmg.h).
 0x241174	7	TRmgLinePainter
-# ??_7 site paired in order: 0x55ee50 ??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z
+# ??_7 site paired in order: 0x55ee50 ??0TRmgRiverPainter@@QAE@PAVTRmgRiverMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z
 0x241190	7	TRmgRiverPainter
 # ??_7 site paired in order: 0x55f3b0 TRmgRoadPainter ctor; 0x55f460 ~TRmgRoadPainter.
 # Slot 6 is _purecall: the destructor is pure here (include/rmg.h).

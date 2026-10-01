@@ -79,7 +79,7 @@ The sampled request below crashes reproducibly in both implementations. Retail
 `createRiver` follows that predecessor and calls the line walker at `0x5496ef` with
 destination `(0xffffffff, 0xffffffff)`, the unsigned representation of `(-1,-1)`.
 There is no coordinate-validity check in this predecessor loop. The eventual
-fault is the unchecked tile-array read at `TRmgMapAdapter::getLand`, `0x53284f`.
+fault is the unchecked tile-array read at `TRmgRiverMapAdapter::getLineType`, `0x53284f`.
 The captured query is `(0xffffffff, 0xffffff35)` (signed `(-1,-203)`) on a 108×108
 map. A snapshot at the accepted-target branch (`0x549315`) captured target
 `(55,0,0)` with cost `32000` and the invalid predecessor. Two further sampled
@@ -89,7 +89,7 @@ searches had no valid predecessor chain, but drawing proceeded anyway.
 
 The captured retail call chain is `createRiver` → `TRmgLineWalker::drawTo` →
 `paintPoint` → `refreshRmgLinePoint` → `TRmgLinePainter::getLand` →
-`TRmgMapAdapter::getLand`. Candidate faults at the corresponding instruction
+`TRmgRiverMapAdapter::getLineType`. Candidate faults at the corresponding instruction
 with the same coordinates. This is not a candidate-only reconstruction error.
 
 ```json
@@ -143,7 +143,7 @@ These ignored artifacts are session evidence; the requests and retail addresses
 above are the durable reproduction notes.
 
 The later 100,000-case campaign reproduced only these two crash classes: 137
-paired retail/candidate faults in `TRmgMapAdapter::getLand` during river drawing
+paired retail/candidate faults in `TRmgRiverMapAdapter::getLineType` during river drawing
 and 23 paired faults in `createGuard` after the negative zone lookup. Every fault
 repeated at the same corresponding instruction, and the campaign found no
 candidate-only crash or additional crash signature.
@@ -194,7 +194,8 @@ a possible format-string mismatch in the reconstruction.
 
 Length arithmetic already gives an overflowing example: template name `X`,
 seed `1`, width `36`, levels `1`, human count `8`, computer count `0`, water
-`None`, monster strength `3`, second-expansion format, all eight human flags,
+`None`, internal monster strength `3` (request strength `0`), second-expansion
+format, all eight human flags,
 and a fixed town choice for each seat produce 525 text bytes plus the NUL.
 This is a calculation from the retained literals, not an executed map request.
 Long template names can also overflow the initial `sprintf` independently of
@@ -268,6 +269,7 @@ valid, and helps keep a helper extraction from silently changing its behavior.
 | `TRandomMapRequest::generateToFile`, map construction and lookup | Positive supported dimensions/level count; bounded player counts and enum-like request values. The request entry only clamps monster strength and repairs a total player count below two. Signed dimension products and `monsterStrength + 3` can overflow for arbitrary integers. There is no general input-validation layer in these bodies. |
 | `getSerializedMapVersion` | Version is 0, 1, or 2. Another value falls off the C++ nonvoid helper. Native header code for another value uses the then-current output argument value; no portable fallback value is established. |
 | `getMapItem`, terrain cache, line and terrain painting | Coordinates are in the map, flattened multiplication is representable, and paint rectangles fit. Lookup helpers intentionally do not clamp. `paintTransitions` additionally expects width at least two and positive height; width zero underflows its unsigned `width - 1`, and width one reaches column one. |
+| `loadTemplates` | The row-size guard rejects fewer than two fields but subsequently reads `values[2]`; a two-field row can pass it. Preserve this short-row behavior alongside the zone reader's separate bounds issue. |
 | `readRmgTemplateZones` | A row with exactly three entries passes the initial `size() >= 3` test and can read `values[3]` before the later full-row size test. Short/malformed spreadsheet behavior has not been reproduced. |
 | `readObjectPlacementRules` | Rows have the required columns, nonnull field strings, object type in the admitted trait range and terrain in 0..9. Parsed type/terrain values index local two-dimensional tables without range checks. |
 | `loadObjectPrototypes` | Required object families exist. Its monster sort uses unsigned `size() - 1`; empty monsters produce a very long outer loop even though the inner loop is empty. Trait alias rows must also map to valid prototype-table indices. |

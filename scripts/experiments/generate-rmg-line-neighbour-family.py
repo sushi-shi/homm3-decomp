@@ -41,12 +41,12 @@ def lower_forms():
 
 def border_forms():
     tail = "                refreshRmgLinePoint(painter, point);"
-    yield "factory_temporary", "            if (painter->at(point).getLand())\n" + tail
+    yield "factory_temporary", "            if (painter->at(point).getLineType())\n" + tail
     yield "factory_named", ("            TRmgLinePainterTile border = painter->at(point);\n"
-                            "            if (border.getLand())\n" + tail)
-    yield "constructor_temporary", "            if (TRmgLinePainterTile(painter, point).getLand())\n" + tail
+                            "            if (border.getLineType())\n" + tail)
+    yield "constructor_temporary", "            if (TRmgLinePainterTile(painter, point).getLineType())\n" + tail
     yield "constructor_named", ("            TRmgLinePainterTile border(painter, point);\n"
-                                "            if (border.getLand())\n" + tail)
+                                "            if (border.getLineType())\n" + tail)
 
 
 def clear_forms(original):
@@ -68,8 +68,8 @@ def clear_forms(original):
 
 
 def queries(expression):
-    yield "factory", f"matches[direction] = painter->at({expression}).getLand() == riverType;"
-    yield "constructor", f"matches[direction] = TRmgLinePainterTile(painter, {expression}).getLand() == riverType;"
+    yield "factory", f"matches[direction] = painter->at({expression}).getLineType() == lineType;"
+    yield "constructor", f"matches[direction] = TRmgLinePainterTile(painter, {expression}).getLineType() == lineType;"
 
 
 def neighbour_forms():
@@ -79,13 +79,13 @@ def neighbour_forms():
     yield "named_sum", [f"TRmgGridPoint nearby = {sum_value};", dict(queries("nearby"))["factory"]]
     yield "named_sum_reference", [f"const TRmgGridPoint& nearby = {sum_value};", dict(queries("nearby"))["factory"]]
     yield "named_proxy", [f"TRmgLinePainterTile nearby = painter->at({sum_value});",
-                          "matches[direction] = nearby.getLand() == riverType;"]
+                          "matches[direction] = nearby.getLineType() == lineType;"]
     yield "named_sum_factory_named", [f"TRmgGridPoint nearby = {sum_value};",
                                       "TRmgLinePainterTile neighbour = painter->at(nearby);",
-                                      "matches[direction] = neighbour.getLand() == riverType;"]
+                                      "matches[direction] = neighbour.getLineType() == lineType;"]
     yield "named_sum_constructor_named", [f"TRmgGridPoint nearby = {sum_value};",
                                           "TRmgLinePainterTile neighbour(painter, nearby);",
-                                          "matches[direction] = neighbour.getLand() == riverType;"]
+                                          "matches[direction] = neighbour.getLineType() == lineType;"]
     yield "named_sum_constructor_temporary", [f"TRmgGridPoint nearby = {sum_value};",
                                               dict(queries("nearby"))["constructor"]]
     yield "direct_initialized_sum", [f"TRmgGridPoint nearby({sum_value});", dict(queries("nearby"))["factory"]]
@@ -109,7 +109,7 @@ def point_forms(original):
     second = original.index(anchor, first + len(anchor))
     previous = original[first:second]
     original_loop = (anchor + "        if (available[direction])\n"
-                     "            matches[direction] = painter->at(point + g_tileDirections[direction]).getLand() == riverType;\n"
+                     "            matches[direction] = painter->at(point + g_tileDirections[direction]).getLineType() == lineType;\n"
                      "        else\n            matches[direction] = 0;\n    }\n")
     forms = []
     for name, statements in neighbour_forms():

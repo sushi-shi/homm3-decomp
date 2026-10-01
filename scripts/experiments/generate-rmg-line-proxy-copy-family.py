@@ -74,7 +74,7 @@ def make_axes(header, source):
         if body == original:
             continue
         edit = (dict(source=SOURCE, find=original, replace=body) if original else
-                dict(source=SOURCE, insert_before="int TRmgLinePainterTile::getLand()",
+                dict(source=SOURCE, insert_before="int TRmgLinePainterTile::getLineType()",
                      text=body + "\n\n"))
         copies.append(dict(name=name, replace=value_declaration + (copy_declaration if body else ""),
                            extra_edits=[edit]))

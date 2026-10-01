@@ -29,9 +29,9 @@ TRmgLinePainterTile::TRmgLinePainterTile(
 // The 168-case query family tested receiver/coordinate reference bindings,
 // their order, named results and real proxy construction (80 code results).
 // No gain over the direct query: clear 94.5070%, point 79.9380%, refresh 63.9923%.
-int TRmgLinePainterTile::getLand()
+int TRmgLinePainterTile::getLineType()
 {
-    return m_painter->getLand(m_point);
+    return m_painter->getLineType(m_point);
 }
 
 void TRmgLinePainterTile::getTile(rmgTerrainTile& tile)
@@ -52,9 +52,9 @@ unsigned char TRmgLinePainterTile::isBlocked()
     return m_painter->isBlocked(m_point);
 }
 
-void TRmgLinePainterTile::setOverlay(int value)
+void TRmgLinePainterTile::setLineType(int value)
 {
-    m_painter->setOverlay(m_point, value);
+    m_painter->setLineType(m_point, value);
 }
 
 // The size is a grid point: the walker's one-cell rectangle then constructs
@@ -86,7 +86,7 @@ int selectRmgLinePattern(
 }
 
 // Shared cleanup helper: query valid neighbours in direction-table order.
-// getNeighbourLand owns the signed-coordinate conversion and tile proxy.
+// getNeighbourLineType owns the signed-coordinate conversion and tile proxy.
 static inline void buildMatchingLineNeighbourMask(
     TRmgLinePainterInterface* painter, const TRmgGridPoint& point,
     int lineType, unsigned char* matches)
@@ -96,7 +96,7 @@ static inline void buildMatchingLineNeighbourMask(
                            point.m_x, point.m_y, available);
     for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (available[direction])
-            matches[direction] = painter->getNeighbourLand(point, direction) == lineType;
+            matches[direction] = painter->getNeighbourLineType(point, direction) == lineType;
         else
             matches[direction] = 0;
     }
@@ -107,7 +107,7 @@ MAC_ADDRESS(0x22273c, 0x168) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no st
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
     TRmgLinePainterTile tile = painter->at(point);
-    int oldType = tile.getLand();
+    int oldType = tile.getLineType();
     unsigned char matches[TILE_DIR_COUNT];
     buildMatchingLineNeighbourMask(painter, point, oldType, matches);
     TRmgLinePatternTable* table = painter->getPattern(oldType);
@@ -144,10 +144,10 @@ TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
 // object; the proxy constructor copying the point through its fields,
 // accessors, setters or a by-value parameter never helps and the first
 // three cost the rectangle clear, 94.51%).
-int TRmgLinePainterInterface::getNeighbourLand(const TRmgGridPoint& point, unsigned int direction)
+int TRmgLinePainterInterface::getNeighbourLineType(const TRmgGridPoint& point, unsigned int direction)
 {
     TRmgGridPoint nearby = point + g_tileDirections[direction];
-    return at(nearby).getLand();
+    return at(nearby).getLineType();
 }
 
 VA(0x004FA080, 0x1FB)
@@ -160,7 +160,7 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
         for (point.m_x = rectangle.m_origin.m_x;
              point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
             TRmgLinePainterTile tile(painter, point);
-            if (tile.getLand())
+            if (tile.getLineType())
                 tile.setTile(rmgTerrainTile(0, 0));
         }
     }
@@ -171,7 +171,7 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
             ? rectangle.m_origin.m_y + rectangle.m_size.m_y + 1
             : rectangle.m_origin.m_y + rectangle.m_size.m_y;
         for (point.m_y = first; point.m_y < end; ++point.m_y) {
-            if (painter->at(point).getLand())
+            if (painter->at(point).getLineType())
                 refreshRmgLinePoint(painter, point);
         }
     }
@@ -185,7 +185,7 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
             ? rectangle.m_origin.m_y + rectangle.m_size.m_y + 1
             : rectangle.m_origin.m_y + rectangle.m_size.m_y;
         for (point.m_y = first; point.m_y < end; ++point.m_y) {
-            if (painter->at(point).getLand())
+            if (painter->at(point).getLineType())
                 refreshRmgLinePoint(painter, point);
         }
     }
@@ -193,7 +193,7 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
         point.m_y = rectangle.m_origin.m_y - 1;
         for (point.m_x = rectangle.m_origin.m_x;
              point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
-            if (painter->at(point).getLand())
+            if (painter->at(point).getLineType())
                 refreshRmgLinePoint(painter, point);
         }
     }
@@ -201,7 +201,7 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
         point.m_y = rectangle.m_origin.m_y + rectangle.m_size.m_y;
         for (point.m_x = rectangle.m_origin.m_x;
              point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
-            if (painter->at(point).getLand())
+            if (painter->at(point).getLineType())
                 refreshRmgLinePoint(painter, point);
         }
     }
@@ -258,12 +258,12 @@ MAC_ADDRESS(0x222e1c, 0x18c) // anchor-caller 0x4fa280/0x4fa2b0; thiscall, ret 4
 void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 {
     TRmgLinePainterTile tile(m_painter, point);
-    int oldType = tile.getLand();
+    int oldType = tile.getLineType();
     if (oldType == m_lineType || tile.isBlocked())
         return;
     if (oldType)
         clearRmgLineRectangle(m_painter, TRmgGridRectangle(point, TRmgGridPoint(1, 1)));
-    tile.setOverlay(m_lineType);
+    tile.setLineType(m_lineType);
     refreshRmgLinePoint(m_painter, point);
 
     unsigned char matches[TILE_DIR_COUNT];
@@ -1044,10 +1044,9 @@ static inline unsigned int buildTerrainGaps(
     const unsigned char* matches, TRmgTerrainGap* gaps)
 {
     unsigned int firstMatch = 0;
-    while (firstMatch < TILE_DIR_COUNT && !matches[firstMatch])
+    // The caller has established separated matching runs, so a match exists.
+    while (!matches[firstMatch])
         ++firstMatch;
-    if (firstMatch == TILE_DIR_COUNT)
-        return 0;
 
     unsigned int gapCount = 0;
     unsigned int direction = firstMatch;
