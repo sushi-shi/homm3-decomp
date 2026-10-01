@@ -3770,7 +3770,7 @@ void TSingleSelectionWindow::turnOffFilterOptions()
 VA(0x005822d0, 0x868)
 DC_ADDRESS(0x1371fc, 0xb2c)
 MAC_ADDRESS(0x17a05c, 0x844)  // anchor-vtable TSingleSelectionWindow vtbl 0x241cac slot11 (ProcessRightSelect override; cf sibling THeroScreenWindow slot11 ProcessRightSelect@CHeroWindowEx)
-unsigned char TSingleSelectionWindow::processRightSelect(int id)
+bool TSingleSelectionWindow::processRightSelect(int id)
 {
     // File rows consume right clicks without opening a popup. Dreamcast's
     // first two source rows prove this guard precedes the detail dispatch.

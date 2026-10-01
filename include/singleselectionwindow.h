@@ -684,7 +684,7 @@ public:
     void updateAllyEnemyFlags(bool update);
 
 private:
-    virtual unsigned char processRightSelect(int id);  // slot 11
+    virtual bool processRightSelect(int id);  // slot 11
 
 public:
     virtual int exitDialog(message& msg);   // slot 14

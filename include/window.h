@@ -199,7 +199,7 @@ public:
     }
     virtual int windowHandler(message& msg);                            // slot 9
     virtual unsigned char processHover(int mouseX, int mouseY);         // slot 10
-    virtual unsigned char processRightSelect(int id);                   // slot 11
+    virtual bool processRightSelect(int id);                   // slot 11
     void setHelpText(THelpText* helpText, int start, int stop, unsigned char copyText);
 
 protected:

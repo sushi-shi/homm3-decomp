@@ -643,10 +643,13 @@ unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
     return 1;
 }
 
+// Native ProcessRightSelect publics prove bool across this virtual chain:
+// CHeroWindowEx and CScenarioInfoDlg use UAA_NH@Z (public virtual), while
+// TSingleSelectionWindow uses EAA_NH@Z (private virtual). Retain each access.
 VA(0x005ff790, 0x82)
 DC_ADDRESS(0x197e58, 0x5a)
 MAC_ADDRESS(0x20bfe0, 0xb4)
-unsigned char CHeroWindowEx::processRightSelect(int id)
+bool CHeroWindowEx::processRightSelect(int id)
 {
     widget* current = getWidget(id);
     if (!current)

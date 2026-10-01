@@ -40,7 +40,7 @@ public:
     CScenarioInfoDlg();
     virtual ~CScenarioInfoDlg();
     void updateAllyEnemyFlags();
-    virtual unsigned char processRightSelect(int id);
+    virtual bool processRightSelect(int id);
     virtual int onWidgetDeselect(int id, bool& exitFlag);
     void setDifficultyHiLite();
 };
