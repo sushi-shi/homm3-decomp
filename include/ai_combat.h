@@ -80,7 +80,8 @@ public:
     long getResurrectionValue(type_spell_choice& choice,
                                 const hero* castingHero) const;
     // Ordinary TU helper, expanded at both Complete call sites.
-    void castEnchantment(long spellValue, unsigned char increase);
+    // Original ?cast_enchantment@type_monster_data@@QAAXJ_N@Z proves bool.
+    void castEnchantment(long spellValue, bool increase);
     void castResurrection(type_spell_choice& choice,
                            const hero* castingHero);
     long takeDamage(long damage);
@@ -163,7 +164,9 @@ public:
                         double baseModifier, const hero* enemyHero,
                         const town* enemyTown, NewmapCell* mapCell);
     type_AI_combat_data(const type_AI_combat_data& other);
-    void adjustArmy(unsigned char dismissHero);
+    // Original adjust_army@@QAAX_N and get_attack@@IBAJW4type_speed_catagory@@_N
+    // prove bool flags; has_creature@@IBA_NW4TCreatureType proves bool result.
+    void adjustArmy(bool dismissHero);
     void doAftermath(type_AI_combat_data& defender, town* enemyTown);
     void simulateCombat(type_AI_combat_data& defender);
 
@@ -174,8 +177,10 @@ protected:
                               type_AI_combat_data& defender, long damage) const;
     void castDamageSpell(type_spell_choice& choice,
                            type_AI_combat_data& defender) const;
+    // Original cast_enchantment@@IAAXAAUtype_spell_choice@@PBVhero@@_N@Z
+    // keeps bool through the call to type_monster_data::castEnchantment.
     void castEnchantment(type_spell_choice& choice, const hero* castingHero,
-                          unsigned char increase);
+                          bool increase);
     void castEnchantment(type_spell_choice& choice, type_AI_combat_data& defender);
     void castMassDamageSpell(type_spell_choice& choice,
                                 const hero* castingHero);
@@ -204,7 +209,7 @@ public:
 
 protected:
     long getAttack(type_speed_catagory speedLimit,
-                    unsigned char shootersBlocked) const;
+                    bool shootersBlocked) const;
     void getDamageSpellValue(type_spell_choice& choice,
                                 const type_AI_combat_data& defender) const;
     type_speed_catagory getCatagory(TCreatureType creature, long speed) const;
@@ -225,7 +230,7 @@ protected:
     long getNextChainLightningTarget(long excluded,
                                          const type_AI_combat_data& defender,
                                          long start, long damage) const;
-    unsigned char hasCreature(TCreatureType creature) const;
+    bool hasCreature(TCreatureType creature) const;
     long inflictCatagoryDamage(long damage, type_speed_catagory catagory);
     void inflictDamage(long damage, long blockerSpeed);
     long inflictMeleeDamage(long damage, long start, long speedLimit);
