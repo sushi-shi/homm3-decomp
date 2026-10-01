@@ -45,6 +45,8 @@
 
 // Mac 0x22cef0 retains the shared two-point integer distance calculation.
 // Its by-value point arguments are spilled as two adjacent coordinate pairs.
+// Euclidean distance truncated to an integer; keep the integer squares before
+// conversion to double, as in retail, rather than changing rounding/overflow.
 MAC_ADDRESS(0x22cef0, 0x84)
 int getRmgDistance(TPoint first, TPoint second)
 {
@@ -450,6 +452,8 @@ unsigned char type_random_map::hasConnectedOutline(
     const std::vector<TPoint>& outline, TRmgMapPosition position,
     unsigned char allowEntrances, TRmgZone* zone, unsigned char requireGate)
 {
+    // Circular run counting: the repeated first point closes the final run.
+    // Retail requires a nonempty outline; preserve its empty-outline behavior.
     unsigned char blocked = 1;
     unsigned char foundBoundary = 0;
     unsigned char waterZone = zone->m_terrain == eTerrainWater;
@@ -520,6 +524,8 @@ void type_random_map::markCoastalTiles()
 // standalone body.  An ordinary internal helper reproduces that boundary and
 // lets VC6 /Ob2 decide the expansions; Dreamcast has no RMG compiland, so the
 // original spelling and linkage remain provisional.
+// This is lower_bound on descending costs. Equal-cost entries are inserted
+// before older entries, so popping the back processes their ties oldest first.
 // The search uses one top test with two unconditional back edges in retail.
 // VC6 rotates for (;;) and while (first < last) spellings; while (1) keeps
 // this top test and restores that flow in CreateRiver (76.51% -> 79.82%).
@@ -575,6 +581,9 @@ VA(0x00531460, 0x441)
 MAC_ADDRESS(0x22d9ac, 0x5cc)
 void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned char waterZone)
 {
+    // Dijkstra-style minimum-cost-first relaxation, with separate in-zone and
+    // cross-zone distances. Retail applies the zero-cost gate override only
+    // after its improvement test; preserve that ordering and queued-cost read.
     std::vector<int> costs;
     std::vector<TRmgMapPosition> positions;
     TRmgMapItem* seed = getMapItem(position);
@@ -591,7 +600,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
         int currentZone = current->m_zoneState.m_zone;
         int currentCost = currentZone == zone
             ? current->m_movement.m_cost : current->m_movement.m_zonePathCost;
-        int direction = 8;
+        int direction = RMG_DIRECTION_COUNT;
         if (current->isRoadEntrance()) {
             int objectType = current->m_objects[0]->m_properties->m_prototype->getObjectType();
             if (!g_adventureObjectTraits[objectType].m_trait1)
@@ -1137,20 +1146,20 @@ int TRmgMapAdapter::getOverlay(const TRmgGridPoint& point)
 
 VA(0x00532890, 0x104)
 MAC_ADDRESS(0x22f434, 0x1d4)
-void TRmgMapItem::write(TAbstractFile* outfile)
+void TRmgMapItem::write(TAbstractFile* outputFile)
 {
     char land = m_tile.m_landType;
-    outfile->write(&land, sizeof(land));
+    outputFile->write(&land, sizeof(land));
     char value = m_tile.m_terrainFrame;
-    outfile->write(&value, sizeof(value));
+    outputFile->write(&value, sizeof(value));
     value = m_tile.m_riverType;
-    outfile->write(&value, sizeof(value));
+    outputFile->write(&value, sizeof(value));
     value = m_tile.m_riverFrame;
-    outfile->write(&value, sizeof(value));
+    outputFile->write(&value, sizeof(value));
     value = m_tile.m_roadType;
-    outfile->write(&value, sizeof(value));
+    outputFile->write(&value, sizeof(value));
     value = m_tileData.m_roadFrame;
-    outfile->write(&value, sizeof(value));
+    outputFile->write(&value, sizeof(value));
     char flags = 0;
     if (m_tileData.m_terrainFlipX) flags |= 1;
     if (m_tileData.m_terrainFlipY) flags |= 2;
@@ -1160,7 +1169,7 @@ void TRmgMapItem::write(TAbstractFile* outfile)
     if (m_tileData.m_roadFlipY) flags |= 32;
     if (m_tileData.m_coastal) flags |= 64;
     value = flags;
-    outfile->write(&value, sizeof(value));
+    outputFile->write(&value, sizeof(value));
 }
 
 VA_COMPGEN(0x005329A0, 0x32, IMPLICIT_DTOR, TRmgTownSlot)
@@ -1174,16 +1183,16 @@ MAC_COMPGEN_ADDRESS(0x22f660, 0x68, IMPLICIT_DTOR, TRmgTownSlot)
 MAC_ADDRESS(0x22f6c8, 0xb4)
 int TRmgTownSlot::selectAllowedTown()
 {
-    int available = 0;
+    int allowedTownCount = 0;
     for (int town = 0; town < 9; ++town) {
         if (m_allowedTowns[town])
-            ++available;
+            ++allowedTownCount;
     }
-    if (!available)
+    if (!allowedTownCount)
         return -1;
-    int selected = rand() % available;
+    int selectedIndex = rand() % allowedTownCount;
     for (town = 0; town < 9; ++town) {
-        if (m_allowedTowns[town] && --selected < 0)
+        if (m_allowedTowns[town] && --selectedIndex < 0)
             return town;
     }
     return -1;
@@ -1339,6 +1348,8 @@ VA(0x00532C80, 0x1BA)
 MAC_ADDRESS(0x22fe88, 0x208)
 void TRmgObjectPropertiesRef::buildOutline()
 {
+    // Cardinal wall following around the footprint. The world offsets are
+    // nonpositive; their negations, not negative array indices, address masks.
     if (m_outline.size() > 0)
         return;
     TPoint position;
@@ -1513,127 +1524,127 @@ void type_object::clearPlacementMarks()
 
 VA(0x00533170, 0x79)
 MAC_ADDRESS(0x2304c8, 0xfc)
-void type_object::write(TAbstractFile* outfile, int parameter)
+void type_object::write(TAbstractFile* outputFile, int version)
 {
     {
         char byteBuffer = m_position.m_x;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
+        outputFile->write(&byteBuffer, sizeof(byteBuffer));
     }
     {
         char byteBuffer = m_position.m_y;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
+        outputFile->write(&byteBuffer, sizeof(byteBuffer));
     }
     {
         char byteBuffer = m_position.m_z;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
+        outputFile->write(&byteBuffer, sizeof(byteBuffer));
     }
     {
         int intBuffer = m_properties->m_prototypeIndex;
-        outfile->write(&intBuffer, sizeof(intBuffer));
+        outputFile->write(&intBuffer, sizeof(intBuffer));
     }
     char reserved[5];
     memset(reserved, 0, sizeof(reserved));
-    outfile->write(reserved, sizeof(reserved));
+    outputFile->write(reserved, sizeof(reserved));
 }
 
 VA(0x005331F0, 0xFD)
 MAC_ADDRESS(0x23062c, 0x144) // anchor-vtable 0x640a84+0x0c; thiscall, ret 8
-void rmgMonsterObject::write(TAbstractFile* outfile, int version)
+void rmgMonsterObject::write(TAbstractFile* outputFile, int version)
 {
-    type_object::write(outfile, version);
+    type_object::write(outputFile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         int intBuffer = m_objectId;
-        outfile->write(&intBuffer, sizeof(intBuffer));
+        outputFile->write(&intBuffer, sizeof(intBuffer));
     }
     {
         short intBuffer = m_count;
-        outfile->write(&intBuffer, sizeof(short));
+        outputFile->write(&intBuffer, sizeof(short));
     }
     {
         char byteBuffer = m_disposition;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
+        outputFile->write(&byteBuffer, sizeof(byteBuffer));
     }
     {
         char byteBuffer = 0;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
+        outputFile->write(&byteBuffer, sizeof(byteBuffer));
     }
     {
         char byteBuffer = 0;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
+        outputFile->write(&byteBuffer, sizeof(byteBuffer));
     }
     {
         char byteBuffer = 0;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
+        outputFile->write(&byteBuffer, sizeof(byteBuffer));
     }
     {
         int intBuffer = 0;
-        outfile->write(&intBuffer, sizeof(short));
+        outputFile->write(&intBuffer, sizeof(short));
     }
 }
 
 VA(0x005332F0, 0x16A)
 MAC_ADDRESS(0x2307d8, 0x20c)
-void rmgTownObject::write(TAbstractFile* outfile, int version)
+void rmgTownObject::write(TAbstractFile* outputFile, int version)
 {
-    type_object::write(outfile, version);
-    if (version >= 1) {
+    type_object::write(outputFile, version);
+    if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         int value = m_objectId;
-        outfile->write(&value, sizeof(value));
+        outputFile->write(&value, sizeof(value));
     }
     {
         char value = m_player;
-        outfile->write(&value, sizeof(value));
+        outputFile->write(&value, sizeof(value));
     }
     {
         char value = 0;
-        outfile->write(&value, sizeof(value));
+        outputFile->write(&value, sizeof(value));
     }
     {
         char value = 0;
-        outfile->write(&value, sizeof(value));
+        outputFile->write(&value, sizeof(value));
     }
     {
         char value = 0;
-        outfile->write(&value, sizeof(value));
+        outputFile->write(&value, sizeof(value));
     }
     {
         char value = 0;
-        outfile->write(&value, sizeof(value));
+        outputFile->write(&value, sizeof(value));
     }
     {
         char value = m_townOption;
-        outfile->write(&value, sizeof(value));
+        outputFile->write(&value, sizeof(value));
     }
     char spells[9];
     memset(spells, 0, sizeof(spells));
-    if (version >= 1)
-        outfile->write(spells, sizeof(spells));
-    outfile->write(spells, sizeof(spells));
+    if (version >= RMG_MAP_ARMAGEDDONS_BLADE)
+        outputFile->write(spells, sizeof(spells));
+    outputFile->write(spells, sizeof(spells));
     {
         int value = 0;
-        outfile->write(&value, sizeof(value));
+        outputFile->write(&value, sizeof(value));
     }
-    if (version >= 2) {
+    if (version >= RMG_MAP_SHADOW_OF_DEATH) {
         char value = -1;
-        outfile->write(&value, sizeof(value));
+        outputFile->write(&value, sizeof(value));
     }
     char reserved[3];
     memset(reserved, 0, sizeof(reserved));
-    outfile->write(reserved, sizeof(reserved));
+    outputFile->write(reserved, sizeof(reserved));
 }
 
 VA(0x00533460, 0xA0)
 MAC_ADDRESS(0x230a1c, 0x78) // base serialization plus unowned player and reserved bytes
-void rmgOwnableObject::write(TAbstractFile* outfile, int parameter)
+void rmgOwnableObject::write(TAbstractFile* outputFile, int version)
 {
-    type_object::write(outfile, parameter);
+    type_object::write(outputFile, version);
     {
         char player = -1;
-        outfile->write(&player, sizeof(player));
+        outputFile->write(&player, sizeof(player));
     }
     char reserved[3];
     memset(reserved, 0, sizeof(reserved));
-    outfile->write(reserved, sizeof(reserved));
+    outputFile->write(reserved, sizeof(reserved));
 }
 
 // Artifact vtable 0x640ab4 is the only change from the base constructor.
@@ -1649,7 +1660,7 @@ rmgSeerHutObject::rmgSeerHutObject(TRmgObjectPropertiesRef* properties)
 {
     m_experience = 0;
     m_artifact = -1;
-    m_resourceType = 6;
+    m_resourceType = GOLD;
     m_resourceCount = 0;
     m_creatureType = -1;
     m_creatureCount = 0;
@@ -1671,12 +1682,12 @@ rmgKeyTentObject::rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
 
 VA(0x00533500, 0x8A)
 MAC_ADDRESS(0x230acc, 0x50)
-void rmgArtifactObject::write(TAbstractFile* outfile, int parameter)
+void rmgArtifactObject::write(TAbstractFile* outputFile, int version)
 {
-    type_object::write(outfile, parameter);
+    type_object::write(outputFile, version);
     {
         char hasCustomTreasure = 0;
-        outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
+        outputFile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
     }
 }
 
@@ -1684,20 +1695,20 @@ VA_COMPGEN(0x00533590, 0x21, SCALAR_DELETING_DTOR, rmgOwnableObject)
 
 VA(0x005335C0, 0xB2)
 MAC_ADDRESS(0x230bb4, 0x78) // anchor-vtable 0x640ac4 slot 3; thiscall ret 8
-void rmgResourceObject::write(TAbstractFile* outfile, int parameter)
+void rmgResourceObject::write(TAbstractFile* outputFile, int version)
 {
-    type_object::write(outfile, parameter);
+    type_object::write(outputFile, version);
     {
         char hasCustomTreasure = 0;
-        outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
+        outputFile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
     }
     {
         int amount = 0;
-        outfile->write(&amount, sizeof(amount));
+        outputFile->write(&amount, sizeof(amount));
     }
     {
         int reserved = 0;
-        outfile->write(&reserved, sizeof(reserved));
+        outputFile->write(&reserved, sizeof(reserved));
     }
 }
 
@@ -1708,77 +1719,77 @@ MAC_COMPGEN_ADDRESS(0x251488, 0x7c, IMPLICIT_DTOR, rmgBlackBoxObject)
 
 VA(0x005336F0, 0x1E0)
 MAC_ADDRESS(0x230cac, 0x32c)
-void rmgBlackBoxObject::write(TAbstractFile* outfile, int version)
+void rmgBlackBoxObject::write(TAbstractFile* outputFile, int version)
 {
-    type_object::write(outfile, version);
+    type_object::write(outputFile, version);
     {
         char hasCustomTreasure = 0;
-        outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
+        outputFile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
     }
     {
         int experience = m_experience;
-        outfile->write(&experience, sizeof(experience));
+        outputFile->write(&experience, sizeof(experience));
     }
     {
         int mana = 0;
-        outfile->write(&mana, sizeof(mana));
+        outputFile->write(&mana, sizeof(mana));
     }
     {
         char morale = 0;
-        outfile->write(&morale, sizeof(morale));
+        outputFile->write(&morale, sizeof(morale));
     }
     {
         char luck = 0;
-        outfile->write(&luck, sizeof(luck));
+        outputFile->write(&luck, sizeof(luck));
     }
-    outfile->write(m_resources, sizeof(m_resources));
+    outputFile->write(m_resources, sizeof(m_resources));
     {
         int primarySkills = 0;
-        outfile->write(&primarySkills, sizeof(primarySkills));
+        outputFile->write(&primarySkills, sizeof(primarySkills));
     }
     {
         char secondarySkillCount = 0;
-        outfile->write(&secondarySkillCount, sizeof(secondarySkillCount));
+        outputFile->write(&secondarySkillCount, sizeof(secondarySkillCount));
     }
     {
         char artifactCount = 0;
-        outfile->write(&artifactCount, sizeof(artifactCount));
+        outputFile->write(&artifactCount, sizeof(artifactCount));
     }
     {
         char spellCount = m_spells.size();
-        outfile->write(&spellCount, sizeof(spellCount));
+        outputFile->write(&spellCount, sizeof(spellCount));
     }
     for (unsigned int i = 0; i < m_spells.size(); ++i) {
         char spell = m_spells[i];
-        outfile->write(&spell, sizeof(spell));
+        outputFile->write(&spell, sizeof(spell));
     }
     if (m_creatureType == -1) {
         char creatureCount = 0;
-        outfile->write(&creatureCount, sizeof(creatureCount));
+        outputFile->write(&creatureCount, sizeof(creatureCount));
     } else {
         {
             char creatureCount = 1;
-            outfile->write(&creatureCount, sizeof(creatureCount));
+            outputFile->write(&creatureCount, sizeof(creatureCount));
         }
         if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
             short creatureType = m_creatureType;
-            outfile->write(&creatureType, sizeof(creatureType));
+            outputFile->write(&creatureType, sizeof(creatureType));
         } else {
             char creatureType = m_creatureType;
-            outfile->write(&creatureType, sizeof(creatureType));
+            outputFile->write(&creatureType, sizeof(creatureType));
         }
         {
             short creatureCount = m_creatureCount;
-            outfile->write(&creatureCount, sizeof(creatureCount));
+            outputFile->write(&creatureCount, sizeof(creatureCount));
         }
     }
     {
         int reserved = 0;
-        outfile->write(&reserved, sizeof(reserved));
+        outputFile->write(&reserved, sizeof(reserved));
     }
     {
         int reserved = 0;
-        outfile->write(&reserved, sizeof(reserved));
+        outputFile->write(&reserved, sizeof(reserved));
     }
 }
 
@@ -1846,84 +1857,84 @@ unsigned char rmgQuestArtifactObject::isWritable()
 // AB adds the quest kind, artifact count, deadline and three empty strings.
 VA(0x00533A90, 0x1E0)
 MAC_ADDRESS(0x2312d0, 0x31c)
-void rmgSeerHutObject::write(TAbstractFile* outfile, int version)
+void rmgSeerHutObject::write(TAbstractFile* outputFile, int version)
 {
-    type_object::write(outfile, version);
+    type_object::write(outputFile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         {
             char questKind = 5;
-            outfile->write(&questKind, sizeof(questKind));
+            outputFile->write(&questKind, sizeof(questKind));
         }
         {
             char artifactCount = 1;
-            outfile->write(&artifactCount, sizeof(artifactCount));
+            outputFile->write(&artifactCount, sizeof(artifactCount));
         }
         {
             short artifact = m_artifact;
-            outfile->write(&artifact, sizeof(artifact));
+            outputFile->write(&artifact, sizeof(artifact));
         }
         {
             int deadline = -1;
-            outfile->write(&deadline, sizeof(deadline));
+            outputFile->write(&deadline, sizeof(deadline));
         }
         {
             int firstVisitLength = 0;
-            outfile->write(&firstVisitLength, sizeof(firstVisitLength));
+            outputFile->write(&firstVisitLength, sizeof(firstVisitLength));
         }
         {
             int nextVisitLength = 0;
-            outfile->write(&nextVisitLength, sizeof(nextVisitLength));
+            outputFile->write(&nextVisitLength, sizeof(nextVisitLength));
         }
         {
             int completionLength = 0;
-            outfile->write(&completionLength, sizeof(completionLength));
+            outputFile->write(&completionLength, sizeof(completionLength));
         }
     } else {
         char artifact = m_artifact;
-        outfile->write(&artifact, sizeof(artifact));
+        outputFile->write(&artifact, sizeof(artifact));
     }
     if (m_experience > 0) {
         {
             char rewardKind = 1;
-            outfile->write(&rewardKind, sizeof(rewardKind));
+            outputFile->write(&rewardKind, sizeof(rewardKind));
         }
         {
             int experience = m_experience;
-            outfile->write(&experience, sizeof(experience));
+            outputFile->write(&experience, sizeof(experience));
         }
     } else if (m_creatureType != -1) {
         {
             char rewardKind = 10;
-            outfile->write(&rewardKind, sizeof(rewardKind));
+            outputFile->write(&rewardKind, sizeof(rewardKind));
         }
         if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
             short creature = m_creatureType;
-            outfile->write(&creature, sizeof(creature));
+            outputFile->write(&creature, sizeof(creature));
         } else {
             char creature = m_creatureType;
-            outfile->write(&creature, sizeof(creature));
+            outputFile->write(&creature, sizeof(creature));
         }
         {
             short count = m_creatureCount;
-            outfile->write(&count, sizeof(count));
+            outputFile->write(&count, sizeof(count));
         }
     } else {
         {
             char rewardKind = 5;
-            outfile->write(&rewardKind, sizeof(rewardKind));
+            outputFile->write(&rewardKind, sizeof(rewardKind));
         }
         {
             char resourceType = m_resourceType;
-            outfile->write(&resourceType, sizeof(resourceType));
+            outputFile->write(&resourceType, sizeof(resourceType));
         }
         {
             int resourceCount = m_resourceCount;
-            outfile->write(&resourceCount, sizeof(resourceCount));
+            outputFile->write(&resourceCount, sizeof(resourceCount));
         }
     }
     {
         int reserved = 0;
-        outfile->write(&reserved, sizeof(short));
+        outputFile->write(&reserved, sizeof(short));
     }
 }
 
@@ -1950,163 +1961,163 @@ void rmgHeroObject::unknownOperation()
 
 VA(0x00533C80, 0x1E4)
 MAC_ADDRESS(0x23165c, 0x318) // anchor-vtable + ordered versioned H3M writes; ret 8
-void rmgHeroObject::write(TAbstractFile* outfile, int version)
+void rmgHeroObject::write(TAbstractFile* outputFile, int version)
 {
-    type_object::write(outfile, version);
+    type_object::write(outputFile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         int objectId = m_objectId;
-        outfile->write(&objectId, sizeof(objectId));
+        outputFile->write(&objectId, sizeof(objectId));
     }
     {
         char owner = -1;
-        outfile->write(&owner, sizeof(owner));
+        outputFile->write(&owner, sizeof(owner));
     }
     {
         char heroIndex = m_heroIndex;
-        outfile->write(&heroIndex, sizeof(heroIndex));
+        outputFile->write(&heroIndex, sizeof(heroIndex));
     }
     {
         char customName = 0;
-        outfile->write(&customName, sizeof(customName));
+        outputFile->write(&customName, sizeof(customName));
     }
     if (version >= RMG_MAP_SHADOW_OF_DEATH) {
         {
             char customExperience = m_experience != 0;
-            outfile->write(&customExperience, sizeof(customExperience));
+            outputFile->write(&customExperience, sizeof(customExperience));
         }
         if (m_experience != 0) {
             int experience = m_experience;
-            outfile->write(&experience, sizeof(experience));
+            outputFile->write(&experience, sizeof(experience));
         }
     } else {
         int experience = m_experience;
-        outfile->write(&experience, sizeof(experience));
+        outputFile->write(&experience, sizeof(experience));
     }
     {
         char customPortrait = 0;
-        outfile->write(&customPortrait, sizeof(customPortrait));
+        outputFile->write(&customPortrait, sizeof(customPortrait));
     }
     {
         char customSecondarySkills = 0;
-        outfile->write(&customSecondarySkills, sizeof(customSecondarySkills));
+        outputFile->write(&customSecondarySkills, sizeof(customSecondarySkills));
     }
     {
         char customArmies = 0;
-        outfile->write(&customArmies, sizeof(customArmies));
+        outputFile->write(&customArmies, sizeof(customArmies));
     }
     {
         char groupFormation = 0;
-        outfile->write(&groupFormation, sizeof(groupFormation));
+        outputFile->write(&groupFormation, sizeof(groupFormation));
     }
     {
         char customArtifacts = 0;
-        outfile->write(&customArtifacts, sizeof(customArtifacts));
+        outputFile->write(&customArtifacts, sizeof(customArtifacts));
     }
     {
         char patrolRadius = -1;
-        outfile->write(&patrolRadius, sizeof(patrolRadius));
+        outputFile->write(&patrolRadius, sizeof(patrolRadius));
     }
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         {
             char customBiography = 0;
-            outfile->write(&customBiography, sizeof(customBiography));
+            outputFile->write(&customBiography, sizeof(customBiography));
         }
         {
             char sex = -1;
-            outfile->write(&sex, sizeof(sex));
+            outputFile->write(&sex, sizeof(sex));
         }
         if (version >= RMG_MAP_SHADOW_OF_DEATH) {
             {
                 char customSpells = 0;
-                outfile->write(&customSpells, sizeof(customSpells));
+                outputFile->write(&customSpells, sizeof(customSpells));
             }
             {
                 char customPrimarySkills = 0;
-                outfile->write(&customPrimarySkills, sizeof(customPrimarySkills));
+                outputFile->write(&customPrimarySkills, sizeof(customPrimarySkills));
             }
         } else {
             char spell = -2;
-            outfile->write(&spell, sizeof(spell));
+            outputFile->write(&spell, sizeof(spell));
         }
     }
     char reserved[16];
     memset(reserved, 0, sizeof(reserved));
-    outfile->write(reserved, sizeof(reserved));
+    outputFile->write(reserved, sizeof(reserved));
 }
 
 VA(0x00533E70, 0xC3)
 MAC_ADDRESS(0x2319ac, 0xbc) // anchor-vtable + default serialization bytes; ret 8
-void rmgScholarObject::write(TAbstractFile* outfile, int parameter)
+void rmgScholarObject::write(TAbstractFile* outputFile, int version)
 {
-    type_object::write(outfile, parameter);
+    type_object::write(outputFile, version);
     {
         char rewardKind = -1;
-        outfile->write(&rewardKind, sizeof(rewardKind));
+        outputFile->write(&rewardKind, sizeof(rewardKind));
     }
     {
         char rewardValue = 0;
-        outfile->write(&rewardValue, sizeof(rewardValue));
+        outputFile->write(&rewardValue, sizeof(rewardValue));
     }
     {
         int reserved = 0;
-        outfile->write(&reserved, sizeof(reserved));
+        outputFile->write(&reserved, sizeof(reserved));
     }
     {
         int reserved = 0;
-        outfile->write(&reserved, sizeof(short));
+        outputFile->write(&reserved, sizeof(short));
     }
 }
 
 VA(0x00533F40, 0xAF)
 MAC_ADDRESS(0x231aa0, 0x9c) // anchor-vtable + ordered write sizes; ret 8
-void rmgShrineObject::write(TAbstractFile* outfile, int parameter)
+void rmgShrineObject::write(TAbstractFile* outputFile, int version)
 {
-    type_object::write(outfile, parameter);
+    type_object::write(outputFile, version);
     {
         char spell = -1;
-        outfile->write(&spell, sizeof(spell));
+        outputFile->write(&spell, sizeof(spell));
     }
     {
         int reserved = 0;
-        outfile->write(&reserved, sizeof(short));
+        outputFile->write(&reserved, sizeof(short));
     }
     {
         char reservedByte = 0;
-        outfile->write(&reservedByte, sizeof(reservedByte));
+        outputFile->write(&reservedByte, sizeof(reservedByte));
     }
 }
 
 VA(0x00533FF0, 0xC2)
 MAC_ADDRESS(0x231b84, 0xc8)
-void rmgSpellScrollObject::write(TAbstractFile* outfile, int parameter)
+void rmgSpellScrollObject::write(TAbstractFile* outputFile, int version)
 {
-    type_object::write(outfile, parameter);
+    type_object::write(outputFile, version);
     {
         char message = 0;
-        outfile->write(&message, sizeof(message));
+        outputFile->write(&message, sizeof(message));
     }
     {
         char spell = m_spell;
-        outfile->write(&spell, sizeof(spell));
+        outputFile->write(&spell, sizeof(spell));
     }
     {
         int reserved = 0;
-        outfile->write(&reserved, sizeof(short));
+        outputFile->write(&reserved, sizeof(short));
     }
     {
         char reserved = 0;
-        outfile->write(&reserved, sizeof(reserved));
+        outputFile->write(&reserved, sizeof(reserved));
     }
 }
 
 VA(0x005340C0, 0x93)
 MAC_ADDRESS(0x231c84, 0x68) // anchor-vtable + version guard and mask 0xefdf; ret 8
-void rmgWitchHutObject::write(TAbstractFile* outfile, int parameter)
+void rmgWitchHutObject::write(TAbstractFile* outputFile, int version)
 {
-    type_object::write(outfile, parameter);
-    if (parameter >= RMG_MAP_ARMAGEDDONS_BLADE) {
+    type_object::write(outputFile, version);
+    if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         unsigned int allowedSkills = 0xefdf;
-        outfile->write(&allowedSkills, sizeof(allowedSkills));
+        outputFile->write(&allowedSkills, sizeof(allowedSkills));
     }
 }
 
@@ -2150,7 +2161,7 @@ type_object* type_artifact_def::generate(TRmgObjectPropertiesRef* properties,
 VA(0x00534250, 0xB5)
 MAC_ADDRESS(0x231dfc, 0x108)
 type_black_box_creature_def::type_black_box_creature_def(int newCreatureType)
-    : type_treasure_def(6, 0, -1, 3),
+    : type_treasure_def(BLACK_BOX, 0, -1, 3),
       m_creatureType(newCreatureType)
 {
     m_adjustedValue =
@@ -2214,7 +2225,7 @@ type_object* type_black_box_gold_def::generate(TRmgObjectPropertiesRef* properti
     type_random_map_generator*, TRmgZone*)
 {
     rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
-    object->m_resources[6] += m_gold;
+    object->m_resources[GOLD] += m_gold;
     return object;
 }
 
@@ -2254,12 +2265,12 @@ int type_map_dwelling_def::getValue(TRmgZone* zone, type_random_map_generator* g
         return -1;
 
     int value = creature.m_growthRate * creature.m_aiValue;
-    int zoneCount = 0;
+    int alignmentZoneCount = 0;
     if (creature.m_townType != -1)
-        zoneCount = generator->m_activeZoneCountsByAlignment[creature.m_townType];
+        alignmentZoneCount = generator->m_activeZoneCountsByAlignment[creature.m_townType];
     if (generator->m_activeZoneCount > 0)
-        value += zoneCount * value / generator->m_activeZoneCount;
-    return value + creature.m_aiValue * zoneCount / 2;
+        value += alignmentZoneCount * value / generator->m_activeZoneCount;
+    return value + creature.m_aiValue * alignmentZoneCount / 2;
 }
 
 // Resource-definition table 0x640bc4 constructs the base-sized resource
@@ -2321,7 +2332,7 @@ type_object* type_shrine_def::generate(TRmgObjectPropertiesRef* properties,
 VA(0x00534A60, 0x25)
 MAC_ADDRESS(0x232694, 0x48)
 type_witch_hut_def::type_witch_hut_def()
-    : type_treasure_def(0x71, 0, 1500, 80)
+    : type_treasure_def(WITCH_HUT, 0, 1500, 80)
 {
 }
 
@@ -2352,7 +2363,7 @@ type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properti
     type_random_map_generator* generator, TRmgZone*)
 {
     rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
-    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
+    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, RANDOM_ARTIFACT, 0);
     rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
     int count = m_adjustedValue;
     seerHut->m_creatureType = m_creatureType;
@@ -2389,7 +2400,7 @@ type_object* type_quest_experience_def::generate(TRmgObjectPropertiesRef* proper
     type_random_map_generator* generator, TRmgZone*)
 {
     rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
-    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
+    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, RANDOM_ARTIFACT, 0);
     rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
     seerHut->m_experience = m_experience;
     return object;
@@ -2401,10 +2412,10 @@ type_object* type_quest_gold_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
 {
     rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
-    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
+    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, RANDOM_ARTIFACT, 0);
     rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
     int amount = m_gold;
-    seerHut->m_resourceType = 6;
+    seerHut->m_resourceType = GOLD;
     seerHut->m_resourceCount = amount;
     return object;
 }
@@ -2412,9 +2423,18 @@ type_object* type_quest_gold_def::generate(TRmgObjectPropertiesRef* properties,
 VA(0x00534EA0, 0x30)
 MAC_ADDRESS(0x232b28, 0x58)
 type_spell_scroll_def::type_spell_scroll_def(int newSpellLevel, int newValue)
-    : type_treasure_def(0x5d, 0, newValue, 30)
+    : type_treasure_def(SPELL_SCROLL, 0, newValue, 30)
 {
     m_spellLevel = newSpellLevel;
+}
+
+// Both scroll passes use the same eligibility rule. Keep its short-circuit
+// order: excluded spell flag, school membership, then requested level.
+static inline bool isRmgScrollSpell(int spell, int level)
+{
+    return !(g_spellTraits[spell].m_flags & 0x2000)
+        && g_spellTraits[spell].m_schoolBits
+        && g_spellTraits[spell].m_level == level;
 }
 
 VA(0x00534ED0, 0xC3)
@@ -2422,20 +2442,18 @@ MAC_ADDRESS(0x232b80, 0x108)
 type_object* type_spell_scroll_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator*, TRmgZone*)
 {
-    int count = 0;
+    // Count then select the nth eligible spell: one random draw, in spell order.
+    // Retail assumes at least one eligible spell for the configured level.
+    int eligibleSpellCount = 0;
     int spell;
     for (spell = 0; spell < 70; ++spell) {
-        if (!(g_spellTraits[spell].m_flags & 0x2000)
-            && g_spellTraits[spell].m_schoolBits
-            && g_spellTraits[spell].m_level == m_spellLevel)
-            ++count;
+        if (isRmgScrollSpell(spell, m_spellLevel))
+            ++eligibleSpellCount;
     }
-    int selected = rand() % count;
+    int selectedIndex = rand() % eligibleSpellCount;
     for (spell = 0; spell < 70; ++spell) {
-        if (!(g_spellTraits[spell].m_flags & 0x2000)
-            && g_spellTraits[spell].m_schoolBits
-            && g_spellTraits[spell].m_level == m_spellLevel) {
-            if (selected-- <= 0)
+        if (isRmgScrollSpell(spell, m_spellLevel)) {
+            if (selectedIndex-- <= 0)
                 break;
         }
     }
@@ -2561,6 +2579,8 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
     traceOutline();
     // Retail 0x535150 saves the existing object's prototype; 0x535405
     // still reads that last prototype's trigger after inserting the guard.
+    // Preserve that retail quirk: substituting the guard prototype changes
+    // generated maps. This path also assumes the group already owns an object.
     TObjectType* prototype;
     for (unsigned int objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
         type_object* object = m_objects[objectIndex];
@@ -2788,16 +2808,16 @@ unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
         TRmgMapPosition entrance = existing->getPosition();
         entrance -= TPoint(existingPrototype->m_triggerCell.m_x,
             existingPrototype->m_triggerCell.m_y);
-        int end;
-        int first;
+        int endDirection;
+        int firstDirection;
         if (g_adventureObjectTraits[existingPrototype->getObjectType()].m_trait1) {
-            end = 8;
-            first = 0;
+            endDirection = RMG_DIRECTION_COUNT;
+            firstDirection = 0;
         } else {
-            end = 4;
-            first = 1;
+            endDirection = 4;
+            firstDirection = 1;
         }
-        for (int direction = end; direction-- > first; ) {
+        for (int direction = endDirection; direction-- > firstDirection; ) {
             position = entrance + g_rmgDirections[direction] + trigger;
             if (position.m_x >= bounds.m_minimumX && position.m_x < bounds.m_maximumX
                 && position.m_y >= bounds.m_minimumY && position.m_y < bounds.m_maximumY
@@ -2942,11 +2962,11 @@ void TRmgGeneratorBase::loadObjectPrototypes()
     unsigned int index = 0;
     for (; index < m_objectsTxt.m_objectTypes.size(); ++index) {
         int type = m_objectsTxt.m_objectTypes[index].getObjectType();
-        if (m_mapVersion < 2 && type >= 222)
+        if (m_mapVersion < RMG_MAP_SHADOW_OF_DEATH && type >= CLOVER_FIELD_2)
             continue;
-        if (m_mapVersion < 1 && type >= 165)
+        if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE && type >= MAX_EVENT_TYPE)
             continue;
-        if (m_mapVersion < 2 && (type == LITH_TWOWAY || type == LITH_ONEWAY_ENTRANCE || type == LITH_ONEWAY_EXIT)
+        if (m_mapVersion < RMG_MAP_SHADOW_OF_DEATH && (type == LITH_TWOWAY || type == LITH_ONEWAY_ENTRANCE || type == LITH_ONEWAY_EXIT)
             && m_objectsTxt.m_objectTypes[index].getSubtype() >= 3)
             continue;
         if (type < 0 || type >= 232)
@@ -2956,10 +2976,13 @@ void TRmgGeneratorBase::loadObjectPrototypes()
         memcpy(&type, &g_adventureObjectTraits[type].m_nameRow, sizeof(type));
         m_objectPrototypes[type].push_back(properties);
     }
-    for (index = 0; index < m_objectPrototypes[54].size() - 1; ++index) {
-        for (unsigned int second = index + 1; second < m_objectPrototypes[54].size(); ++second) {
-            if (m_objectPrototypes[54][index]->m_prototype->getSubtype() > m_objectPrototypes[54][second]->m_prototype->getSubtype()) {
-                std::swap(m_objectPrototypes[54][index]->m_prototype, m_objectPrototypes[54][second]->m_prototype);
+    // Exchange sort by subtype, swapping prototype pointers within the refs.
+    // Keep its exact swaps and the retail nonempty-monster-list assumption;
+    // replacing the unsigned size()-1 condition would repair retail behavior.
+    for (index = 0; index < m_objectPrototypes[MONSTER].size() - 1; ++index) {
+        for (unsigned int second = index + 1; second < m_objectPrototypes[MONSTER].size(); ++second) {
+            if (m_objectPrototypes[MONSTER][index]->m_prototype->getSubtype() > m_objectPrototypes[MONSTER][second]->m_prototype->getSubtype()) {
+                std::swap(m_objectPrototypes[MONSTER][index]->m_prototype, m_objectPrototypes[MONSTER][second]->m_prototype);
             }
         }
     }
@@ -3198,6 +3221,8 @@ int TRmgGeneratorBase::scoreObjectPlacement(
             if (item->m_tileData.m_roadPassable && item->getLandType() != eTerrainRock)
                 continue;
             int priority;
+            // Only interior cells receive OVERLAP above (column+1, row+1),
+            // so these subtractions cannot underflow for an overlap cell.
             if (mark & RMG_PLACEMENT_OVERLAP)
                 priority = properties->m_overlapPriorities[column - 1][row - 1];
             for (int index = 0; index < static_cast<int>(item->m_objects.size());
@@ -3341,6 +3366,8 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
             }
         }
         if (candidates.size()) {
+            // Roulette-wheel selection over positive placement scores. Keep
+            // candidate traversal and subtraction order for seed identity.
             int selected = rand() % totalWeight;
             unsigned int index;
             for (index = 0; index < candidates.size(); ++index) {
@@ -3482,7 +3509,7 @@ type_random_map_generator::type_random_map_generator(
         for (int hero = 0; hero < 156; ++hero) {
             if (g_heroTraits[hero].m_availability.m_special)
                 m_disabledHeroes[hero] = 1;
-            else if (m_mapVersion >= 1) {
+            else if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
                 if (!g_heroTraits[hero].m_availability.m_availableInExpansion)
                     m_disabledHeroes[hero] = 1;
             } else if (!g_heroTraits[hero].m_availability.m_availableInOriginal)
@@ -3596,6 +3623,8 @@ void type_random_map_generator::loadTemplates()
         mapSize = max(mapSize / 2, 1);
     for (; row < sheet->getNumberOfRows();) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
+        // Retail's guard permits a two-field row even though it reads [2].
+        // Preserve that malformed-template behavior rather than widening it.
         if (values.size() < 2) {
             ++row;
             continue;
