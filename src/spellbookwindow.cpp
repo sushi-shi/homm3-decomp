@@ -596,6 +596,8 @@ DATA(0x00641db8) static const int g_tabToSchool[] = {0, 3, 1, 2, 4};
 // previous, next, cancel), real exit flag, mana-ok SpellMap re-subscript,
 // and rollover cache guard. Named spell and rolloverWidget locals plus
 // canonical previousPage/nextPage calls reproduce the string expansions.
+// Mac 18d068/18d108 expand GetSchool and 18d1ac/18d22c expand
+// GetContextMask in the keyboard arms, like the existing mouse arms.
 // The physical epilogue precedes the rollover code; the full carve and both
 // lookup pools are required because their addends affect the function bytes.
 // Failed controls: dialogReturn-before-id changed the shared exit tail;
@@ -650,7 +652,7 @@ int TSpellbookWindow::windowHandler(message& msg)
             break;
 
         case KEYCODE_KP_8: { // up
-            int schoolPosition = getPositionFromSchool(m_school);
+            int schoolPosition = getPositionFromSchool(getSchool());
             int tab = g_schoolToTab[schoolPosition] - 1;
             if (tab < 0)
                 tab = 4;
@@ -659,7 +661,7 @@ int TSpellbookWindow::windowHandler(message& msg)
         }
 
         case KEYCODE_KP_2: { // down
-            int schoolPosition = getPositionFromSchool(m_school);
+            int schoolPosition = getPositionFromSchool(getSchool());
             int tab = g_schoolToTab[schoolPosition] + 1;
             if (tab >= 5)
                 tab = 0;
@@ -668,7 +670,7 @@ int TSpellbookWindow::windowHandler(message& msg)
         }
 
         case KEYCODE_A: // adventure spells
-            if (m_contextMask != eAdventureContextMask) {
+            if (getContextMask() != eAdventureContextMask) {
                 if (g_config.m_animateSpellBook)
                     videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
                 setContext(eContextAdventure);
@@ -678,7 +680,7 @@ int TSpellbookWindow::windowHandler(message& msg)
             break;
 
         case KEYCODE_C: // combat spells
-            if (m_contextMask != eCombatContextMask) {
+            if (getContextMask() != eCombatContextMask) {
                 if (g_config.m_animateSpellBook)
                     videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
                 setContext(eContextCombat);
