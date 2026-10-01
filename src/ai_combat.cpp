@@ -558,6 +558,9 @@ void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const t
     }
 }
 
+// Mac 0x271fc, 0x272b8 and 0x27378 expand getHero's owner+0x20 read
+// for the casting side in these three helpers, beside the same accessor
+// expansion for the target side. Preserve both canonical accessor paths.
 VA(0x00424fb0, 0x145)
 DC_ADDRESS(0x02a938, 0xb0)
 MAC_ADDRESS(0x027190, 0xc4)
@@ -573,7 +576,7 @@ void type_AI_combat_data::castChainLightning(type_spell_choice& choice, type_AI_
         if (target < 0)
             break;
         long value = targetData.m_creatures[target].getSpellDamage(
-            choice.m_spell, m_currentHero, targetData.getHero(), damage);
+            choice.m_spell, getHero(), targetData.getHero(), damage);
         value = targetData.m_creatures[target].takeDamage(value);
         targetData.m_totalCombatValue -= value;
         excluded |= 1 << target;
@@ -590,7 +593,7 @@ void type_AI_combat_data::castAreaEffect(type_spell_choice& choice, type_AI_comb
         if (abs(targetIndex - defender.m_creatures[i].m_index) != 1)
             continue;
         long value = defender.m_creatures[i].getSpellDamage(
-            choice.m_spell, m_currentHero, defender.getHero(), damage);
+            choice.m_spell, getHero(), defender.getHero(), damage);
         if (value <= 0)
             continue;
         defender.m_totalCombatValue -= defender.m_creatures[i].takeDamage(value);
@@ -607,7 +610,7 @@ void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_com
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     long value = defender.m_creatures[choice.m_target].getSpellDamage(
-        choice.m_spell, m_currentHero, defender.getHero(), damage);
+        choice.m_spell, getHero(), defender.getHero(), damage);
     defender.m_totalCombatValue -= defender.m_creatures[choice.m_target].takeDamage(value);
     // The five-arm jump table at 0x4253cc: 0x13 chains, 0x14/0x15/0x17
     // hit one extra target, 0x16 hits two.
