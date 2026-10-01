@@ -1140,3 +1140,52 @@ reader remains in source. No further Mac comparison availability loss occurs
 in this batch. With these 22 reviewed sites, the working queue has 5,883 open
 native call-site leads and 2,113 explicit operation-site notes. The broader
 all-function review remains incomplete.
+
+### Timed events, town-event arrays and building masks
+
+Mac retains a single 28-byte resource transfer followed by seven dword
+conversions in both `TTimedEvent::read` (`0x11d64c..0x11d6cc`) and `load`
+(`0x11dc2c..0x11dca0`). The writer first copies to a temporary through the
+reviewed BlockMoveData import, converts all seven elements, then issues one
+28-byte write. Windows writes the original member array directly. The new
+ordinary `readLittleEndianValues`, `writeLittleEndianValues` and shared
+conversion body preserve those operations; a short read leaves the partial
+buffer unconverted. These inferred helpers currently live in mapcell because
+only same-TU expansions are established. The source uses memcpy for the
+writer's equivalent temporary copy, without claiming the original API name.
+
+All six timed-event first-day/interval transfers now use the existing scalar
+endian helpers. Map input increments the decoded day; saved input does not.
+Both timed-event list readers also decode their count before resizing. The
+town-event saved payload and its list count remain native order, distinct
+from the timed base payload. Derived town read/save/load deliberately ignore
+their base result, as both native builds show.
+
+`TTownEvent::read` now decodes its seven-short generator band with the shared
+bulk reader. Its six-byte building-mask copy and the built/disabled masks in
+`readTownData` use one `copyLittleEndianMask48` body. Mac zeroes, copies and
+reverses both words; Windows copies six bytes and preserves the upper sixteen
+bits (the event constructor initializes them separately). Town input also
+retains the scalar helpers for its unchecked identifier and checked troop
+and event counts; the earlier wrapper score loss no longer leaves those
+operations pasted into the caller.
+
+This family restores eighteen caller helper uses and adds four canonical
+bodies. Thirty-three new native stream-site dispositions and five updated
+town dispositions record widths, byte order, version gates and ignored
+results. A targeted mapcell AST refresh finds the new bodies and caller uses
+with no diagnostics. Its dependent template calls are still a scanner gap;
+their written bodies were inspected directly. The full inventory/native graph
+has not been regenerated and must not be described as current complete-body
+coverage. The queue has 5,850 open native sites and 2,146 operation notes.
+
+The targeted VC6 and CodeWarrior build succeeds. Timed-event save/load and
+both timed-list readers retain Windows 100%. Timed-event map input is 73.50%
+(previously 100%), and town input is 81.44% (previously 85.7956%); prior peaks
+are retained. The map reader keeps all fourteen retail calls and additionally
+retains string `_Tidy` on one failure path. The unchanged list-writer sources
+also have observed CUR losses: timed-list save 0%, town-list save 43.0408%,
+with their MAX/HIST held at 100%. Both bodies still emit; named call reports
+show VC6 now expands `TTimedEvent::save` where retail retains its call. These
+are compiler differences to resolve with the canonical source calls kept.
+There is no additional Mac comparison availability loss in this batch.

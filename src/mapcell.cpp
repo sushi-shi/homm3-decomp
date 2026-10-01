@@ -45,7 +45,7 @@ MAC_ADDRESS(0x11d534, 0xbc)
 int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
 {
     int count;
-    if (readValue(infile, count) < sizeof(count))
+    if (readLittleEndianValue(infile, count) < sizeof(count))
         return -1;
 
     m_timedEventList.resize(count);
@@ -54,6 +54,48 @@ int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
             return -1;
     }
     return 0;
+}
+
+// Timed-event resources and map town-event bonuses are transferred as one
+// array, then converted element by element. Mac 0x11d670/0x11dc44 unrolls
+// seven dword conversions; 0x11de74 unrolls seven short conversions.
+// These inferred helpers preserve the bulk transfer and its count guard.
+// Only same-TU expansions are known, so keep their ordinary bodies here.
+template <class Buffer>
+static void convertLittleEndianValues(Buffer& values)
+{
+#if defined(__POWERPC__)
+    for (int i = 0; i < sizeof(values) / sizeof(values[0]); ++i) {
+        if (sizeof(values[0]) == sizeof(unsigned short))
+            values[i] = __lhbrx(&values[i], 0);
+        else if (sizeof(values[0]) == sizeof(unsigned long))
+            values[i] = __lwbrx(&values[i], 0);
+    }
+#endif
+}
+
+template <class Buffer>
+static int readLittleEndianValues(TAbstractFile* infile, Buffer& values)
+{
+    int count = readValue(infile, values);
+    if (count >= sizeof(values))
+        convertLittleEndianValues(values);
+    return count;
+}
+
+// Mac 0x11d974 copies the resource array to a temporary via BlockMoveData
+// before conversion. Windows 0x4fc460 writes the original array directly.
+template <class Buffer>
+static int writeLittleEndianValues(TAbstractFile* outfile, const Buffer& values)
+{
+#if defined(__POWERPC__)
+    Buffer encoded;
+    memcpy(encoded, values, sizeof(encoded));
+    convertLittleEndianValues(encoded);
+    return writeScalar(outfile, encoded);
+#else
+    return writeScalar(outfile, values);
+#endif
 }
 
 // The timed-event record.  Field order is fixed independently by Save
@@ -90,7 +132,7 @@ int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
     count = NewSMapHeader::readString(infile, throwAway);
     count = NewSMapHeader::readString(infile, m_message);
 
-    count = infile->read(m_resQty, sizeof(m_resQty));
+    count = readLittleEndianValues(infile, m_resQty);
     if (count < sizeof(m_resQty)) {
         return -1;
     }
@@ -109,12 +151,12 @@ int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
     if (count < sizeof(m_applyToComputer)) {
         return -1;
     }
-    count = infile->read(&m_firstTime, sizeof(m_firstTime));
+    count = readLittleEndianValue(infile, m_firstTime);
     if (count < sizeof(m_firstTime)) {
         return -1;
     }
     ++m_firstTime;
-    count = infile->read(&m_interval, sizeof(m_interval));
+    count = readLittleEndianValue(infile, m_interval);
     if (count < sizeof(m_interval)) {
         return -1;
     }
@@ -160,7 +202,7 @@ int TTimedEvent::save(TAbstractFile* outfile)
 {
     if (game::saveString(outfile, m_message) < 0)
         return -1;
-    if (static_cast<unsigned>(outfile->write(m_resQty, sizeof(m_resQty)))
+    if (static_cast<unsigned>(writeLittleEndianValues(outfile, m_resQty))
         < sizeof(m_resQty))
         return -1;
     if (static_cast<unsigned>(outfile->write(&m_playerFlags, 1)) < 1)
@@ -170,9 +212,9 @@ int TTimedEvent::save(TAbstractFile* outfile)
 
     if (static_cast<unsigned>(outfile->write(&m_applyToComputer, 1)) < 1)
         return -1;
-    if (static_cast<unsigned>(outfile->write(&m_firstTime, 2)) < 2)
+    if (static_cast<unsigned>(writeLittleEndianValue(outfile, m_firstTime)) < 2)
         return -1;
-    return static_cast<unsigned>(outfile->write(&m_interval, 2)) < 2 ? -1 : 0;
+    return static_cast<unsigned>(writeLittleEndianValue(outfile, m_interval)) < 2 ? -1 : 0;
 }
 
 VA(0x004fc500, 0x19A)
@@ -181,7 +223,7 @@ MAC_ADDRESS(0x11db1c, 0xbc)
 int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
 {
     int count;
-    if (readValue(infile, count) < sizeof(count))
+    if (readLittleEndianValue(infile, count) < sizeof(count))
         return -1;
 
     m_timedEventList.resize(count);
@@ -199,7 +241,7 @@ int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
 {
     if (game::loadString(infile, m_message) < 0)
         return -1;
-    if (static_cast<unsigned>(infile->read(m_resQty, sizeof(m_resQty)))
+    if (static_cast<unsigned>(readLittleEndianValues(infile, m_resQty))
         < sizeof(m_resQty))
         return -1;
     if (static_cast<unsigned>(infile->read(&m_playerFlags, 1)) < 1)
@@ -213,9 +255,27 @@ int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
 
     if (static_cast<unsigned>(infile->read(&m_applyToComputer, 1)) < 1)
         return -1;
-    if (static_cast<unsigned>(infile->read(&m_firstTime, 2)) < 2)
+    if (static_cast<unsigned>(readLittleEndianValue(infile, m_firstTime)) < 2)
         return -1;
-    return static_cast<unsigned>(infile->read(&m_interval, 2)) < 2 ? -1 : 0;
+    return static_cast<unsigned>(readLittleEndianValue(infile, m_interval)) < 2 ? -1 : 0;
+}
+
+// Mac 0x11de14 zero-extends six serialized bytes before reversing both
+// words. Windows 0x501f3f copies only those six bytes into an already-zeroed
+// TTownEvent; preserve its upper sixteen bits when copying into a reused one.
+static void copyLittleEndianMask48(__int64& value, const unsigned char* packed)
+{
+#if defined(__POWERPC__)
+    value = 0;
+#endif
+    memcpy(&value, packed, 6);
+#if defined(__POWERPC__)
+    unsigned long* words = reinterpret_cast<unsigned long*>(&value);
+    unsigned long low = __lwbrx(words, 0);
+    unsigned long high = __lwbrx(words, 4);
+    words[0] = high;
+    words[1] = low;
+#endif
 }
 
 // E:\gamedcs\mapcell.cpp:232
@@ -230,10 +290,9 @@ int TTownEvent::read(TAbstractFile* infile, int mapVersion)
 
     if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
         return -1;
-    memcpy(&m_buildBuildings, inBuf, sizeof(inBuf));
+    copyLittleEndianMask48(m_buildBuildings, inBuf);
 
-    if (infile->read(m_generatorBonuses,
-                     sizeof(m_generatorBonuses))
+    if (readLittleEndianValues(infile, m_generatorBonuses)
         < sizeof(m_generatorBonuses))
         return -1;
 
@@ -2776,9 +2835,10 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // retained assignments at 0x1246b4 and 0x12474c. Both are expanded
 // decodePackedBits operations; keep the version-specific buffer reads.
 // Map scalars are little endian: native 0x124330 decodes the identifier,
-// 0x124468 the troop count, and 0x124798 the event count. Windows retail
-// reads each scalar through the direct virtual read: the readValue and
-// readLittleEndianValue wrappers cost VC6 90.68% against 97.78%.
+// 0x124468 the troop count, and 0x124798 the event count. Retain the scalar
+// helper calls despite the earlier 90.68% wrapper probe against 97.78%.
+// Mac 0x124548..0x1245dc also expands the same six-byte building-mask
+// copy/conversion as TTownEvent::read; both masks use that canonical body.
 VA(0x005019f0, 0x7CC)
 DC_ADDRESS(0x0f094c, 0x4a8)
 MAC_ADDRESS(0x124278, 0x700)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing
@@ -2802,8 +2862,8 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         tempTown.m_objRef = 0;
     } else {
-        infile->read(&intBuffer, sizeof(intBuffer));
-        tempTown.m_objRef = LITTLE_ENDIAN_LONG(intBuffer);
+        intBuffer = readLittleEndianValue<int>(infile);
+        tempTown.m_objRef = intBuffer;
     }
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
@@ -2824,10 +2884,9 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             tempTown.m_townArmy.m_armies[x] =
                 readMapCreatureId(infile, mapVersion);
 
-            if (infile->read(&shortBuffer, sizeof(shortBuffer))
+            if (readLittleEndianValue(infile, shortBuffer)
                 < sizeof(shortBuffer))
                 return -1;
-            shortBuffer = LITTLE_ENDIAN_SHORT(shortBuffer);
             tempTown.m_townArmy.m_numTroops[x] = shortBuffer;
         }
     }
@@ -2843,10 +2902,10 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     if (tempTown.m_customBuildings) {
         if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
             return -1;
-        memcpy(&tempTown.m_buildingBuiltMask, inBuf, sizeof(inBuf));
+        copyLittleEndianMask48(tempTown.m_buildingBuiltMask, inBuf);
         if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
             return -1;
-        memcpy(&tempTown.m_buildingDisabledMask, inBuf, sizeof(inBuf));
+        copyLittleEndianMask48(tempTown.m_buildingDisabledMask, inBuf);
     } else {
         if (infile->read(&charBuffer, sizeof(charBuffer))
             < sizeof(charBuffer))
@@ -2865,11 +2924,9 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         return -1;
     decodePackedBits(spellBuf, tempTown.m_spells);
 
-    if (infile->read(&numTownEvents, sizeof(numTownEvents))
+    if (readLittleEndianValue(infile, numTownEvents)
         < sizeof(numTownEvents))
         return -1;
-
-    numTownEvents = LITTLE_ENDIAN_LONG(numTownEvents);
 
     // Native Mac 0x1247a4..0x124804 caches the read count across event calls
     // and increments a separate index; CodeWarrior reproduces that lifetime.
