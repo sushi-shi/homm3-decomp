@@ -122,7 +122,7 @@ public:
     int m_experience;
 
     inline type_black_box_experience_def(int value, int experience)
-        : type_treasure_def(6, 0, value, 20)
+        : type_treasure_def(BLACK_BOX, 0, value, 20)
     {
         this->m_experience = experience;
     }
@@ -136,7 +136,7 @@ public:
     int m_gold;
 
     inline type_black_box_gold_def(int value, int gold)
-        : type_treasure_def(6, 0, value, 5)
+        : type_treasure_def(BLACK_BOX, 0, value, 5)
     {
         this->m_gold = gold;
     }
@@ -153,7 +153,7 @@ public:
 
     inline type_black_box_spells_def(
         int value, int minimumLevel, int maximumLevel, int schoolMask)
-        : type_treasure_def(6, 0, value, 2)
+        : type_treasure_def(BLACK_BOX, 0, value, 2)
     {
         this->m_minimumLevel = minimumLevel;
         this->m_maximumLevel = maximumLevel;
@@ -167,7 +167,7 @@ public:
 class type_key_tent_def : public type_treasure_def {
 public:
     inline type_key_tent_def(int subtype, int value)
-        : type_treasure_def(10, subtype, value, 10)
+        : type_treasure_def(BORDER_TENT, subtype, value, 10)
     {
     }
 
@@ -184,7 +184,7 @@ public:
 class type_dwelling_def : public type_treasure_def {
 public:
     inline type_dwelling_def(int subtype)
-        : type_treasure_def(17, subtype, -1, 40)
+        : type_treasure_def(CREATURE_GENERATOR_1, subtype, -1, 40)
     {
     }
 
@@ -219,7 +219,7 @@ public:
     int m_experience;
 
     inline type_prison_def(int value, int experience)
-        : type_treasure_def(62, 0, value, 30)
+        : type_treasure_def(PRISON, 0, value, 30)
     {
         this->m_experience = experience;
     }
@@ -231,7 +231,7 @@ public:
 class type_scholar_def : public type_treasure_def {
 public:
     inline type_scholar_def()
-        : type_treasure_def(81, 0, 1500, 100)
+        : type_treasure_def(SCHOLAR, 0, 1500, 100)
     {
     }
 
@@ -244,7 +244,7 @@ public:
     inline type_quest_creature_def(int creatureType, int questIndex)
         : type_black_box_creature_def(creatureType)
     {
-        m_objectType = 83;
+        m_objectType = SEER;
         m_subtype = questIndex;
     }
 
@@ -260,7 +260,7 @@ public:
 
     inline type_quest_experience_def(
         int questIndex, int value, int experience)
-        : type_treasure_def(83, questIndex, value, 10)
+        : type_treasure_def(SEER, questIndex, value, 10)
     {
         this->m_experience = experience;
     }
@@ -276,7 +276,7 @@ public:
     int m_gold;
 
     inline type_quest_gold_def(int questIndex, int value, int gold)
-        : type_treasure_def(83, questIndex, value, 10)
+        : type_treasure_def(SEER, questIndex, value, 10)
     {
         this->m_gold = gold;
     }
@@ -1128,6 +1128,18 @@ struct TRmgMapItem {
         m_movement.m_cost = 32000;
         m_previousTile = previous;
     }
+
+    // Shared generation-path state change used by entrance placement and
+    // path carving. Existing connection decoration protects both flags;
+    // this does not change terrain, road passability or placed objects.
+    // Cleanup abstraction; the original helper spelling is unknown.
+    void openPath()
+    {
+        if (!m_connection.m_present) {
+            m_tileData.m_borderObject = 0;
+            m_tileData.m_subterraneanGate = 1;
+        }
+    }
 };
 
 // Retail has distinct seven-slot abstract tables at 0x6409e8 (map) and
@@ -1353,6 +1365,22 @@ public:
     virtual int getTerrain(const TRmgGridPoint& point);
 };
 
+// Canonical unreflected connections selected by selectRmgLinePattern.
+// Reflections supply the other orientations; SOUTH_END also covers an
+// isolated tile. The corner variant requires a matching NE or SW neighbour.
+enum ERmgLinePattern {
+    RMG_LINE_SOUTH_END = 0,
+    RMG_LINE_EAST_END = 1,
+    RMG_LINE_NORTH_SOUTH = 2,
+    RMG_LINE_EAST_WEST = 3,
+    RMG_LINE_EAST_SOUTH_CORNER = 4,
+    RMG_LINE_EAST_SOUTH_CORNER_VARIANT = 5,
+    RMG_LINE_NORTH_EAST_SOUTH = 6,
+    RMG_LINE_EAST_SOUTH_WEST = 7,
+    RMG_LINE_CROSS = 8,
+    RMG_LINE_PATTERN_COUNT = 9
+};
+
 // Cinit 0x55ed70/0x55f2f0 passes a pattern count and a source int array to
 // the retained constructor at 0x4f9be0. That constructor allocates the copied
 // pattern ids, then records the first index and occurrence count for each of
@@ -1368,7 +1396,7 @@ SIZE(TRmgLinePatternRange, 0x8);
 struct TRmgLinePatternTable {
     unsigned int m_patternCount;
     int* m_patterns;
-    TRmgLinePatternRange m_ranges[9];
+    TRmgLinePatternRange m_ranges[RMG_LINE_PATTERN_COUNT];
 
     TRmgLinePatternTable(unsigned int patternCount, const int* patterns);
     ~TRmgLinePatternTable();
@@ -1554,11 +1582,12 @@ public:
     virtual ~TRmgRoadPainter();
 };
 
-// A generated zone owns both its template metadata and the Complete-only
-// connection state.  WriteMapHeader proves the player/town fields through
-// +0x3c; the connection pass independently proves the bounding rectangle and
-// entrance vector at +0x404.  The 0x1c-stride connection vector belongs to
-// the template record reached through `slot`, not to this generated zone.
+// A generated zone borrows its template metadata; TRmgTemplate deletes those
+// records after the generator has destroyed its generated zones. Each generated
+// zone owns its distance, boundary and entrance vectors. WriteMapHeader proves
+// the player/town fields through +0x3c; the connection pass independently proves
+// the bounding rectangle and entrance vector at +0x404. The 0x1c-stride connection
+// vector belongs to m_templateZone, not to this generated zone.
 struct TRmgZone {
     TRmgTemplateZone* m_templateZone;  // +0x00, formerly m_slot
     int m_alignment;                   // +0x04
