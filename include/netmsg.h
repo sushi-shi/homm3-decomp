@@ -310,18 +310,20 @@ SIZE(CCombatInitMsg, 0xb40);
 // roster has not been consulted. Gated to advmgr's view.
 class CGameTransmitInitMsg : public CNetMsg {
 public:
+    // Original ctor KKK_N0 proves both Boolean formals; Boolean member storage
+    // is inferred from its direct stores and the receive caller flag consumption.
     unsigned long m_fileSize;
     unsigned long m_fullGameCrc;
     unsigned long m_thisPlayerDead;
-    unsigned char m_isDiff;
-    unsigned char m_makeOrig;
+    bool m_isDiff;
+    bool m_makeOrig;
 
     DC_ADDRESS(0x0bd0b4, 0x58)
     CGameTransmitInitMsg(unsigned long fileSize,
                          unsigned long fullGameCRC,
                          unsigned long thisPlayerDead,
-                         unsigned char isDiff,
-                         unsigned char makeOrig)
+                         bool isDiff,
+                         bool makeOrig)
         : CNetMsg(RS_GAME_TRANSMIT_INIT, sizeof(CGameTransmitInitMsg)),
           m_fileSize(fileSize),
           m_fullGameCrc(fullGameCRC),

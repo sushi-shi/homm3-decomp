@@ -1363,8 +1363,9 @@ public:
                          unsigned char inGame, unsigned char makeOrig);
     // DC game.cpp:10587 names the received-save body. Retail's transmit-init
     // handlers independently prove the five arguments and 0x4cbd40 entry.
+    // Original ReceiveSaveGame QAAHHHH_N0 proves the final two flags are bool.
     int receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
-                        unsigned char inGame, unsigned char isDiff);
+                        bool inGame, bool isDiff);
     void doNewTurn();
     void showHeroesLogo();
     void setMapSize(int width, int height);  // 0x4ccef0

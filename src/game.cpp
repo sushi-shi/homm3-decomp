@@ -9280,7 +9280,7 @@ VA(0x004cbd40, 0xA83)
 DC_ADDRESS(0x0b85c4, 0xe44)
 MAC_ADDRESS(0x0e31b0, 0xc0c)  // retail body +  source shape
 int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
-                          unsigned char inGame, unsigned char isDiff)
+                          bool inGame, bool isDiff)
 {
     CNetMsgHandlerPause netMsgHandlerPause;
     g_advManager->trimLoopingSounds(4);
