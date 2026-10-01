@@ -155,12 +155,9 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
         214, 263, 64, 30, 0x7801,
         "iCancel.def", 0, 1, 1, 1, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x57100..0x57140 expands the complete canonical registration
+    // operation, including the null-allocation MemError arm.
+    addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x00449df0, 0x21, SCALAR_DELETING_DTOR, TSplitWindow)
