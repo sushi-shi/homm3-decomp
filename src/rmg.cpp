@@ -8257,6 +8257,19 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
     return total;
 }
 
+// Failed placement still owns the group's objects. Release reservations before
+// deleting each object, then clear the non-owning placement state. Successful
+// groups transfer ownership to the generator and must use reset() alone.
+// File-local inline review cleanup; no original helper symbol is claimed.
+static inline void discardRmgTreasureGroup(TRmgTreasureGroup* group)
+{
+    for (unsigned int index = 0; index < group->m_objects.size(); ++index) {
+        group->m_objects[index]->releaseReservation();
+        delete group->m_objects[index];
+    }
+    group->reset();
+}
+
 // Complete-only assembly: reset the reusable group, generate a value in the
 // requested half-open range, then add its scaled guard. A failed guard fit
 // destroys both the group's existing objects and the unaccepted guard.
@@ -8288,11 +8301,7 @@ unsigned char type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
         if (guardValue > 0) {
             type_object* guard = createGuard(guardValue, zone);
             if (guard && !group->addGuard(guard)) {
-                for (unsigned i = 0; i < group->m_objects.size(); ++i) {
-                    group->m_objects[i]->releaseReservation();
-                    delete group->m_objects[i];
-                }
-                group->reset();
+                discardRmgTreasureGroup(group);
                 delete guard;
                 return 0;
             }
@@ -8709,11 +8718,7 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
             if (assembleTreasureGroup(zone, &group, 0, range.m_minimum, range.m_maximum)) {
                 if (placeTreasureGroup(&group, zone, spacing))
                     break;
-                for (int object = 0; object < group.m_objects.size(); ++object) {
-                    group.m_objects[object]->releaseReservation();
-                    delete group.m_objects[object];
-                }
-                group.reset();
+                discardRmgTreasureGroup(&group);
             }
         }
         if (attempt < RMG_TREASURE_ATTEMPTS)
@@ -8722,11 +8727,7 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
             if (assembleTreasureGroup(zone, &group, 1, range.m_minimum, range.m_maximum)) {
                 if (placeTreasureGroup(&group, zone, spacing))
                     break;
-                for (int object = 0; object < group.m_objects.size(); ++object) {
-                    group.m_objects[object]->releaseReservation();
-                    delete group.m_objects[object];
-                }
-                group.reset();
+                discardRmgTreasureGroup(&group);
             }
         }
         if (attempt == RMG_TREASURE_ATTEMPTS)
@@ -9992,19 +9993,11 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
         outfile->write(mask, sizeof(mask));
     }
     {
-        terrainMask[0] = 0;
-        terrainMask[1] = 0;
-        for (int terrain = 0; terrain < 10; ++terrain)
-            if (prototype->m_terrainMask.test(terrain))
-                terrainMask[terrain / 8] |= 1 << (terrain % 8);
+        encodePackedBits(prototype->m_terrainMask, terrainMask);
         outfile->write(terrainMask, sizeof(terrainMask));
     }
     {
-        terrainMask[0] = 0;
-        terrainMask[1] = 0;
-        for (int terrain = 0; terrain < 10; ++terrain)
-            if (prototype->m_recommendedTerrainMask.test(terrain))
-                terrainMask[terrain / 8] |= 1 << (terrain % 8);
+        encodePackedBits(prototype->m_recommendedTerrainMask, terrainMask);
         outfile->write(terrainMask, sizeof(terrainMask));
     }
     {
@@ -10305,11 +10298,7 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
     } else {
         delete guard;
     }
-    for (unsigned int i = 0; i < group.m_objects.size(); ++i) {
-        group.m_objects[i]->releaseReservation();
-        delete group.m_objects[i];
-    }
-    group.reset();
+    discardRmgTreasureGroup(&group);
     m_disabledKeyTents[color] = 0;
     m_nextKeyTentColor = 0;
     while (m_nextKeyTentColor < m_disabledKeyTents.size()
