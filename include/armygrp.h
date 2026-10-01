@@ -831,10 +831,10 @@ SIZE(armyGroup, 56);
 
 // Live prototypes (claimed armygrp.cpp bodies; ai_combat's spell-work
 // chain calls both).
-float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType,
+float getSpellWorkChance(ESpellId spell, TCreatureType targetArmyType,
                             const class hero* const castingHero,
                             const class hero* const targetHero);            // 0x44a4d0
-long modifySpellDamage(long damage, SpellID spell, TCreatureType creature);  // 0x44b4b0
+long modifySpellDamage(long damage, ESpellId spell, TCreatureType creature);  // 0x44b4b0
 
 // --- TSplitWindow ---
 
