@@ -2625,10 +2625,7 @@ void TRmgTreasureGroup::updateBounds()
         for (int x = 0; x < m_map.m_mapWidth; ++x, ++item) {
             if (!item->isPassableLand()
                 || item->isRoadEntrance() || !item->hasPathClearance()) {
-                m_bounds.m_minimumX = min(m_bounds.m_minimumX, x);
-                m_bounds.m_maximumX = max(m_bounds.m_maximumX, x + 1);
-                m_bounds.m_minimumY = min(m_bounds.m_minimumY, y);
-                m_bounds.m_maximumY = max(m_bounds.m_maximumY, y + 1);
+                m_bounds.includeCell(x, y);
             }
         }
     }
@@ -2662,7 +2659,7 @@ void TRmgTreasureGroup::traceOutline()
     for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
         for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y);
-            if (item->isRoadEntrance() || !item->isPassableLand() || !item->hasPathClearance())
+            if (!item->isClearOutlineCell())
                 break;
         }
         if (position.m_x < m_map.m_mapWidth)
@@ -2683,7 +2680,7 @@ void TRmgTreasureGroup::traceOutline()
             if (!m_map.containsXY(nearby))
                 break;
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
-            if (!item->isRoadEntrance() && item->isPassableLand() && item->hasPathClearance())
+            if (item->isClearOutlineCell())
                 break;
         } while (++attempts < 4);
         position = position + TRmgVector(g_rmgDirections[direction].m_x, g_rmgDirections[direction].m_y);
