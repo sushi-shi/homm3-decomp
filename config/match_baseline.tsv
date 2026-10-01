@@ -3355,7 +3355,7 @@ rmg	?createRoads@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x
 rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	95.4884	95.4884	95.4884	0x141ad0	tokens1:a1a5ba2d8162
 rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	85.8107	85.8107	85.8212	0x142080	tokens1:46325cb76346
 rmg	?createTreasureObject@type_random_map_generator@@QAEPAVtype_object@@PAUTRmgZone@@HHPAHEEEUTRmgMapPosition@@@Z	81.6056	81.6056	81.6894	0x146190	tokens1:ad9a2fc6d64d
-rmg	?createWaterZoneIsland@type_random_map_generator@@QAEXABUTRmgZoneBounds@@H@Z	99.3392	99.3392	100.0000	0x13efa0	tokens1:7e9d3c40290f
+rmg	?createWaterZoneIsland@type_random_map_generator@@QAEXABUTRmgZoneBounds@@H@Z	99.9298	99.9298	100.0000	0x13efa0	tokens1:a2be5d858c74
 rmg	?decorateMap@TRmgGeneratorBase@@QAEXXZ	100.0000	100.0000	100.0000	0x137970	tokens1:6a0861317d1d
 rmg	?decorateMapCell@TRmgGeneratorBase@@QAEXUTRmgMapPosition@@H@Z	88.7982	88.7982	88.8458	0x1373a0	tokens1:57c74b19c447
 rmg	?decorateUnderground@type_random_map_generator@@QAEXXZ	86.4771	86.4771	99.7982	0x1439e0	tokens1:18e7e1c5004f
@@ -4814,12 +4814,12 @@ winmgr	?addWindow@heroWindowManager@@QAEXPAVheroWindow@@HE@Z	100.0000	100.0000	1
 winmgr	?broadcastMessage@heroWindowManager@@QAEHHHHH@Z	100.0000	100.0000	100.0000	0x202370	tokens1:bf37f58c6dae
 winmgr	?close@heroWindowManager@@UAEXXZ	100.0000	100.0000	100.0000	0x2022d0	tokens1:17e0f1c39be3
 winmgr	?convertToHover@heroWindowManager@@QAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x202360	tokens1:f1276d189f46
-winmgr	?doDialog@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@ZH@Z	100.0000	100.0000	100.0000	0x202520	tokens1:749dcd930a7e
-winmgr	?doDialogDraw@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@Z2H@Z	100.0000	100.0000	100.0000	0x2027a0	tokens1:b1f11a38d949
-winmgr	?doQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x202a40	tokens1:3a644994fac8
-winmgr	?fadeFromBlack@heroWindowManager@@QAEXH@Z	93.2099	93.2099	93.2099	0x2032e0	tokens1:b2503be3b905
+winmgr	?doDialog@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@ZH@Z	99.9737	100.0000	100.0000	0x202520	tokens1:749dcd930a7e
+winmgr	?doDialogDraw@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@Z2H@Z	99.9745	100.0000	100.0000	0x2027a0	tokens1:b1f11a38d949
+winmgr	?doQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	99.9621	100.0000	100.0000	0x202a40	tokens1:3a644994fac8
+winmgr	?fadeFromBlack@heroWindowManager@@QAEXH@Z	93.2099	93.2099	93.2099	0x2032e0	tokens1:78ceefdb2f99
 winmgr	?fadeScreen@heroWindowManager@@QAEXHH_N@Z	100.0000	100.0000	100.0000	0x202c50	tokens1:a38a4b3a39bc
-winmgr	?fadeToBlack@heroWindowManager@@QAEXH_N@Z	91.1453	91.1453	91.1453	0x2030e0	tokens1:a11be200bab0
+winmgr	?fadeToBlack@heroWindowManager@@QAEXH_N@Z	91.1453	91.1453	91.1453	0x2030e0	tokens1:995463f14eb1
 winmgr	?fizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	99.9137	99.9137	99.9137	0x202dc0	tokens1:65c150028ad3
 winmgr	?main@heroWindowManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x202320	tokens1:0baa2348f7dc
 winmgr	?open@heroWindowManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x2021b0	tokens1:50317853feb2
