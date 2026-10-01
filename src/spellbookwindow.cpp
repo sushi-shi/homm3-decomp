@@ -416,6 +416,9 @@ void TSpellbookWindow::close(unsigned char update)
 VA(0x0059c9a0, 0x691)
 DC_ADDRESS(0x14c904, 0x50c)
 MAC_ADDRESS(0x18c5d8, 0x5c4)
+// Mac 0x18c650/668/67c expands the existing GetSchool/GetContextMask
+// word readers. Their original QBAIXZ publics prove const unsigned results;
+// keep those canonical accessors throughout the page-selection operation.
 void TSpellbookWindow::gotoPage(int page)
 {
     if (page < 0)
@@ -428,11 +431,11 @@ void TSpellbookWindow::gotoPage(int page)
 
     for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
         if (m_hero->spellIsAvailable(spell)
-            && (m_school & g_spellTraits[spell].m_school)
-            && (m_contextMask & g_spellTraits[spell].m_flags)) {
+            && (getSchool() & g_spellTraits[spell].m_school)
+            && (getContextMask() & g_spellTraits[spell].m_flags)) {
             TSpellSchool highestSchool =
                 m_hero->getHighestSchool(g_spellTraits[spell].m_school);
-            TSpellSchool school = m_school;
+            TSpellSchool school = static_cast<TSpellSchool>(getSchool());
             if (school == eSchoolAll)
                 school = highestSchool;
             TSkillMastery mastery = m_hero->getSpellLevel(
@@ -444,13 +447,13 @@ void TSpellbookWindow::gotoPage(int page)
     std::sort(availableSpells.begin(), availableSpells.end());
 
     unsigned spellIndex = page * SPELLS_PER_PAGE;
-    if (page > 0 && m_school != eSchoolAll)
+    if (page > 0 && getSchool() != eSchoolAll)
         spellIndex -= firstSlotAfterHeading;
 
     int widgetIndex;
-    if (page == 0 && m_school != eSchoolAll) {
+    if (page == 0 && getSchool() != eSchoolAll) {
         m_headingWidget->m_status |= widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
-        m_headingWidget->setIconFrame(getPositionFromSchool(m_school));
+        m_headingWidget->setIconFrame(getPositionFromSchool(getSchool()));
 
         m_spellLevelWidgets[0]->m_status &=
             ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
