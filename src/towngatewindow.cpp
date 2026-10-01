@@ -96,13 +96,8 @@ TTownGateWindow::TTownGateWindow(bool adventureSpell)
     m_widgets.push_back(new button(
         228, 402, 64, 30, 0x7801, "iCancel.def", 0, 1, 0, 1, 2));
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x1b833c..0x1b8380 expands the canonical null-checking registration.
+    addWidgetsToMessageStream();
 
     message msg;
     msg.m_id = MESSAGE_WIDGET;

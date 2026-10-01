@@ -173,12 +173,8 @@ THillFortWindow::THillFortWindow()
     upgradeAll->setHotkey(0x1e);
     m_widgets.push_back(upgradeAll);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x1091f8..0x10923c expands the canonical null-checking registration.
+    addWidgetsToMessageStream();
 
     updateHillFort(1);
 }
