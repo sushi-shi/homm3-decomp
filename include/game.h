@@ -1286,9 +1286,10 @@ public:
     void createTownHeroes(int* startingHeroIds);
     int getAlignment(int creature) const;
     void claimShipyard(type_point location, int newPlayerOwner);  // 0x4c6a30
+    // Original ClaimTown QAAXHH_N0 proves both flag formals are bool.
     void claimTown(int townId, int newPlayerOwner,
-                   unsigned char isRemoteMove,
-                   unsigned char checkEndGame);  // 0x4c61e0
+                   bool isRemoteMove,
+                   bool checkEndGame);  // 0x4c61e0
     void claimMine(int mineId, int newPlayerOwner,
                    type_action_type actionType);  // 0x4c66e0
     void claimGenerator(int generatorId, int newPlayerOwner);  // 0x4c67b0
