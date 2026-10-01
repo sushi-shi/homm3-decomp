@@ -6930,7 +6930,8 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                                            * TOWN_DWELLING_COUNT
                                        + i - DWELLING_0_ID]
                     == armyType
-                && thisTown->hasBuilding(town::upgradedDwellingID(i), true)) {
+                && thisTown->hasBuilding(
+                    town::upgradedDwellingID(type_building_id(i)), true)) {
                 upgradeToType = upgradedCreatureType(armyType);
                 break;
             }
@@ -6966,7 +6967,7 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
     }
 
     TViewArmyWindow* viewArmyWindow = new TViewArmyWindow(
-        &group, iarmy, thisHero, thisTown, x, y, upgradeToType, showDismiss,
+        group, iarmy, thisHero, thisTown, x, y, upgradeToType, showDismiss,
         !isQuickView, hasAngelicAlliance);
     if (isQuickView) {
         viewArmyWindow->quickView();
