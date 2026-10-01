@@ -2524,12 +2524,15 @@ void TSeerHut::read(TAbstractFile* infile)
 {
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         int textRow = rand() % 3;
-        signed char charBuffer = readValue<signed char>(infile);
-        if (charBuffer == -1) {
+        // Complete promotes the signed serialized ordinal before the sentinel
+        // guard (Mac 16ab54..16ab88; retail movsx/cmp at +4b). Keep that
+        // value for the artifact constructor rather than a byte local.
+        int artifact = readValue<signed char>(infile);
+        if (artifact == -1) {
             m_quest = 0;
         } else {
             m_quest = new type_artifact_quest(
-                static_cast<TArtifact>(charBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                static_cast<TArtifact>(artifact), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
     } else {
         m_quest = readQuestFromMap(infile, 1);
