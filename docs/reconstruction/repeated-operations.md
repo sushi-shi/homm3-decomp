@@ -1006,6 +1006,33 @@ the public native message fields. The four new methods use project-inferred
 names and ordinary definitions in the input TU, with no added virtual slots,
 storage, native addresses or explicit-inline qualifiers.
 
+## Sound playback state and temporary overrides
+
+Seven temporary playback overrides share `soundManager::enablePlayback()`,
+which returns the previous raw integer state before enabling playback. Button
+feedback, chat audio, both options volume adjustments and save transmission
+retain integer snapshots; the two save-reception scopes retain their existing
+`char` narrowing. Each caller restores its snapshot explicitly through
+`setPlaybackState()` at the original stage. Button sample setup remains inside
+the override, and chat stores its returned sample handle before restoration.
+Global manager lookups after intervening calls remain fresh.
+
+Nine sample/music paths share `isPlaybackAllowed()`, combining the playback
+state with solo mode. Global no-sound suppression, driver availability, volume,
+sample-pointer and channel guards remain in their original short-circuit order.
+Environment-origin updates continue to query only the raw playback state;
+individual sample stop/query operations do not acquire a playback gate. Turn,
+video and shutdown transitions retain their explicit enable/disable sequence
+rather than acquiring a saved-state restoration.
+
+The PC playback field is private and all external reads/writes use its owning
+operations. Its integer storage and position are unchanged. Dreamcast
+`soundManager` type `0x215e` / field list `0x231f` does not supply this PC field;
+its native-public driver, change-sounds, MP3-playing and critical-section fields
+remain public. The four new method names and ordinary sound-TU definitions are
+project inferences, with no claimed native addresses or explicit inline
+qualifiers. Constructor and opening initialization remain owner-local writes.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

@@ -874,10 +874,9 @@ void CChatManager::playChatSample(sample* preferred)
     if (!preferred)
         preferred = m_chatSample;
     if (preferred) {
-        int soundWasEnabled = g_soundManager->m_playSounds;
-        g_soundManager->m_playSounds = 1;
+        int soundWasEnabled = g_soundManager->enablePlayback();
         m_chatMemSample = g_soundManager->memorySample(preferred);
-        g_soundManager->m_playSounds = soundWasEnabled;
+        g_soundManager->setPlaybackState(soundWasEnabled);
     }
 }
 

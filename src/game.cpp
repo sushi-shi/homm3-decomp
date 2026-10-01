@@ -7113,7 +7113,7 @@ MAC_ADDRESS(0x0dd798, 0x30)
 void game::turnOnAIMusic()
 {
     startAITheme();
-    g_soundManager->m_playSounds = 0;
+    g_soundManager->setPlaybackState(0);
 }
 
 VA(0x004c6fd0, 0x10)
@@ -7121,7 +7121,7 @@ DC_ADDRESS(0x0b1fc0, 0x10)
 MAC_ADDRESS(0x0dd7c8, 0x14)
 void game::turnOffAIMusic()
 {
-    g_soundManager->m_playSounds = 1;
+    g_soundManager->setPlaybackState(1);
 }
 
 // E:\gamedcs\game.cpp:7603
@@ -8811,7 +8811,7 @@ void game::waitForPlayer(char* text, int playerId)
     else
         g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, 9999999);
 
-    g_soundManager->m_playSounds = 1;
+    g_soundManager->setPlaybackState(1);
     g_soundManager->stopMP3();
     SAMPLE2 sample2 = loadPlaySample(
         DATA_COMPGEN(0x00677ec8, newWeekSample, "NewWeek.wav"));
@@ -9064,10 +9064,9 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
         CGameTransmitMainMsg::createMsg(GAME_TRANSMIT_PAYLOAD_SIZE);
     unsigned char isDiff = 0;
     unsigned long diffSize = 0;
-    int changeSounds = g_soundManager->m_playSounds;
-    g_soundManager->m_playSounds = 1;
+    int changeSounds = g_soundManager->enablePlayback();
     g_soundManager->switchAmbientMusic(-1);
-    g_soundManager->m_playSounds = changeSounds;
+    g_soundManager->setPlaybackState(changeSounds);
 
     if (g_advManager->getStatus() == baseManager::STATUS_ACTIVE)
         g_advManager->bvMessage(g_generalText->getText(GENERAL_TEXT_SENDING_GAME));
@@ -9378,10 +9377,9 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
 
     int lastDataReceiveTime = GameTime::get();
     int changeSounds = g_soundManager->m_currentTerrainMusic;
-    char soundWasEnabled = g_soundManager->m_playSounds;
-    g_soundManager->m_playSounds = 1;
+    char soundWasEnabled = g_soundManager->enablePlayback();
     g_soundManager->switchAmbientMusic(-1);
-    g_soundManager->m_playSounds = soundWasEnabled;
+    g_soundManager->setPlaybackState(soundWasEnabled);
 
     unsigned char* data = new unsigned char[fileSize];
     CNetMsg* netMsg = 0;
@@ -9693,10 +9691,9 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     }
 
     if (changeSounds != -1) {
-        char restoreSoundWasEnabled = g_soundManager->m_playSounds;
-        g_soundManager->m_playSounds = 1;
+        char restoreSoundWasEnabled = g_soundManager->enablePlayback();
         g_soundManager->switchAmbientMusic(changeSounds);
-        g_soundManager->m_playSounds = restoreSoundWasEnabled;
+        g_soundManager->setPlaybackState(restoreSoundWasEnabled);
     }
 
     if (inGame && m_playerDisabled[g_netLocalGamePos])
@@ -9731,7 +9728,7 @@ void game::doNewTurn()
     checkForTownEvent();
 
     if (g_currentPlayer->isLocalHuman())
-        g_soundManager->m_playSounds = 1;
+        g_soundManager->setPlaybackState(1);
     g_advManager->m_advWindow->updateResourceDisplay(1, 1);
     g_advManager->setInitialMapOrigin();
     g_advManager->redrawAdvScreen(0, 0);

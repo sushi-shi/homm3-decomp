@@ -7441,7 +7441,7 @@ MAC_ADDRESS(0x018a3c, 0x290)
 void advManager::setEnvironmentOrigin(type_point point, int reset)
 {
     const int maxRange = 4;
-    if (!g_soundManager->m_playSounds)
+    if (!g_soundManager->getPlaybackState())
         return;
 
     int i;
@@ -8225,7 +8225,7 @@ void popupPlayerTurnInfo()
     if (!g_currentPlayer->isLocalHuman())
         g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, -1);
 
-    g_soundManager->m_playSounds = 1;
+    g_soundManager->setPlaybackState(1);
     SAMPLE2 sample2 = loadPlaySample("SysMsg.wav");
 
     if (!g_goSolo) {
@@ -8282,7 +8282,7 @@ void advManager::startLocalPlayerTurn()
 
         g_game->cancelComputerScreen();
         g_thisNetGotAdventureControl = 1;
-        g_soundManager->m_playSounds = 0;
+        g_soundManager->setPlaybackState(0);
 
         CTurnUpdateMsg msg(g_game->getLocalPlayerGamePos());
         transmitRemoteData(&msg, 0x7f, 0, 1);
@@ -8295,9 +8295,9 @@ void advManager::startLocalPlayerTurn()
     if ((g_game->m_day != 1
          || (g_game->m_week == 1 && g_game->m_month == 1))
         && g_remoteOn && g_currentPlayer->isLocalHuman()) {
-        g_soundManager->m_playSounds = 1;
+        g_soundManager->setPlaybackState(1);
         startAITheme();
-        g_soundManager->m_playSounds = 0;
+        g_soundManager->setPlaybackState(0);
         g_forceSwitchMusic = GameTime::get();
     }
     g_game->doNewTurn();
@@ -8308,7 +8308,7 @@ void advManager::startLocalPlayerTurn()
 
     g_advManager->forceNewHover();
 
-    g_soundManager->m_playSounds = 1;
+    g_soundManager->setPlaybackState(1);
     if (g_game->m_isCheater && !g_lastCheaterState) {
         g_lastCheaterState = 1;
         sprintf(g_text, DATA_COMPGEN(0x0066040c, turnPopupLineFormat, "%s\n"),

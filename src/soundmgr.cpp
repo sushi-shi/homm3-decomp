@@ -55,6 +55,30 @@ DATA(0x00684ab0) int g_soundOutputChannels = 2;
 DATA(0x0069fe80) PCMWAVEFORMAT g_soundWaveFormat;
 DATA(0x00698a28) int g_skipDigitalDriverOpen;
 
+// Project-inferred shared gate and temporary-override operations. Global
+// no-sound and driver checks remain in the callers at their original stages.
+int soundManager::getPlaybackState() const
+{
+    return m_playSounds;
+}
+
+void soundManager::setPlaybackState(int state)
+{
+    m_playSounds = state;
+}
+
+int soundManager::enablePlayback()
+{
+    int previous = getPlaybackState();
+    setPlaybackState(1);
+    return previous;
+}
+
+bool soundManager::isPlaybackAllowed() const
+{
+    return m_playSounds != 0 || g_goSolo;
+}
+
 VA(0x005994b0, 0x210)
 DC_ADDRESS(0x14b07c, 0xf4)
 MAC_ADDRESS(0x21832c, 0x108)
@@ -277,7 +301,7 @@ MAC_ADDRESS(0x2187f4, 0xf4)
 void soundManager::close()
 {
     if (m_status == STATUS_ACTIVE) {
-        g_soundManager->m_playSounds = 1;
+        g_soundManager->setPlaybackState(1);
         g_goSolo = 0;
         videoShutDown();
 
@@ -319,7 +343,7 @@ void soundManager::resumeSamples()
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_goSolo)
+    if (!isPlaybackAllowed())
         return;
     EnterCriticalSection(&m_sectionSoundCall);
     for (int i = 0; i < m_sampleNum; i++)
@@ -336,7 +360,7 @@ void soundManager::pauseSamples()
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_goSolo)
+    if (!isPlaybackAllowed())
         return;
     EnterCriticalSection(&m_sectionSoundCall);
     for (int i = 0; i < m_sampleNum; i++) {
@@ -365,7 +389,7 @@ void soundManager::stopAllSamples(int stopMusicToo)
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_goSolo)
+    if (!isPlaybackAllowed())
         return;
     memset(g_sampleWasPlaying, 0, sizeof(g_sampleWasPlaying));
     EnterCriticalSection(&m_sectionSoundCall);
@@ -417,7 +441,7 @@ void soundManager::modifySample(ds_memsample* inSample, short functionId, long v
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_goSolo)
+    if (!isPlaybackAllowed())
         return;
     if (!m_samples)
         return;
@@ -482,7 +506,7 @@ void soundManager::adjustSoundVolumes()
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_goSolo)
+    if (!isPlaybackAllowed())
         return;
     for (int i = 1; i < m_sampleNum; i++) {
         ds_memsample* handle = m_sampleHandles[i];
@@ -503,7 +527,7 @@ void soundManager::adjustMusicVolumes()
 {
     if (g_noSound)
         return;
-    if (m_playSounds == 0 && !g_goSolo)
+    if (!isPlaybackAllowed())
         return;
     setMusicVolume();
 }
@@ -522,7 +546,7 @@ DC_ADDRESS(0x14b528, 0x11c)
 MAC_ADDRESS(0x218d54, 0x194)
 ds_memsample* soundManager::memorySample(sample* samplePointer)
 {
-    if (!g_noSound && m_ds && (m_playSounds || g_goSolo) && g_config.m_soundVolume && samplePointer
+    if (!g_noSound && m_ds && isPlaybackAllowed() && g_config.m_soundVolume && samplePointer
         && m_samples && samplePointer->m_memSample.m_memVolume) {
         SoundChannelRange* range = &g_soundChannels[samplePointer->m_memSample.m_memCindex];
         EnterCriticalSection(&m_sectionSoundCall);
@@ -632,7 +656,7 @@ void launchSample(const char* sampleName, int maxTime, int channel)
         return;
     if (!g_soundManager->m_ds)
         return;
-    if (g_soundManager->m_playSounds == 0 && !g_goSolo)
+    if (!g_soundManager->isPlaybackAllowed())
         return;
     if (!g_config.m_soundVolume)
         return;
@@ -842,7 +866,7 @@ void soundManager::startMP3(const char* filename, int loopCount, unsigned char s
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_goSolo)
+    if (!isPlaybackAllowed())
         return;
     if (!g_config.m_musicVolume)
         return;

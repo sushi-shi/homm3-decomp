@@ -1073,7 +1073,7 @@ static unsigned char playSmackerCore(int id, int x, int y, int w, int h);
 MAC_ADDRESS(0x25fcec, 0x54)
 int playSmacker(int id, int x, int y, int w, int h)
 {
-    g_soundManager->m_playSounds = 1;
+    g_soundManager->setPlaybackState(1);
     unsigned char result = playSmackerCore(id, x, y, w, h);
     SmackManager::g_playingSmack.m_paused = 0;
     g_playingSmacker = 0;

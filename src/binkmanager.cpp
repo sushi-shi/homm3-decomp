@@ -295,7 +295,7 @@ DC_ADDRESS(0x050a98, 0x4)
 MAC_ADDRESS(0x25dcbc, 0x50)  // dc-order-map + caller (smackmgr VideoPlay)
 int BinkManager::playBink(int id, int x, int y, int w, int h)
 {
-    g_soundManager->m_playSounds = 1;
+    g_soundManager->setPlaybackState(1);
     unsigned char result = playBinkCore(id, x, y, w, h);
     g_playingBink.m_paused = 0;
     g_playingBinkActive = 0;

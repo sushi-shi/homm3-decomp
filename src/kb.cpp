@@ -1310,7 +1310,7 @@ int oldmain()
 
                 g_turnDuration.start();
                 g_executive->mainLoop();
-                g_soundManager->m_playSounds = 1;
+                g_soundManager->setPlaybackState(1);
                 g_goSolo = 0;
                 g_soundManager->stopAllSamples(1);
                 g_executive->removeManager(g_advManager);

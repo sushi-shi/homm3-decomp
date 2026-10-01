@@ -490,10 +490,9 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         showVolumeLevel(
                             MUSIC_VOLUME_0_ID, MUSIC_VOLUME_9_ID,
                             g_config.m_musicVolume);
-                        save = g_soundManager->m_playSounds;
-                        g_soundManager->m_playSounds = MESSAGE_DISPATCH_CONSUME;
+                        save = g_soundManager->enablePlayback();
                         g_soundManager->adjustMusicVolumes();
-                        g_soundManager->m_playSounds = save;
+                        g_soundManager->setPlaybackState(save);
                         prefsChanged = 1;
                         m_prefsChanged = 1;
                         break;
@@ -523,10 +522,9 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         showVolumeLevel(
                             EFFECTS_VOLUME_0_ID, EFFECTS_VOLUME_9_ID,
                             g_config.m_soundVolume);
-                        save = g_soundManager->m_playSounds;
-                        g_soundManager->m_playSounds = MESSAGE_DISPATCH_CONSUME;
+                        save = g_soundManager->enablePlayback();
                         g_soundManager->adjustSoundVolumes();
-                        g_soundManager->m_playSounds = save;
+                        g_soundManager->setPlaybackState(save);
                         prefsChanged = 1;
                         m_prefsChanged = 1;
                         break;
