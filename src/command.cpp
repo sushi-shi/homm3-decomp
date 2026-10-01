@@ -434,6 +434,12 @@ process_action:
 // domain and the canonical swap rather than treating byte width as uchar.
 // Targeted VC6 comparison is byte-flat at 91.3686%; the type recovery does
 // not resolve the existing declaration/control-flow residual.
+// DC lines 573-580 select the preferred approach by clearing firstIsValid
+// for angles 5/6/0/11, otherwise secondIsValid, before testing firstIsValid.
+// Mac 0x82bac-0x82bdc independently retains the first-flag clear; its dead
+// second-flag clear is optimized away. Preserve this selection phase rather
+// than fusing it into the final condition. Targeted command comparison is
+// byte-flat at 91.3686%, with no other per-function score movement.
 VA(0x00474690, 0x36B)
 DC_ADDRESS(0x06b66c, 0x410)
 MAC_ADDRESS(0x082810, 0x4a0)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map
@@ -522,11 +528,16 @@ void combatManager::setCombatDirections(int hex)
         }
 
         targetGroup = targetIndex >= 2 && targetIndex <= 3 ? 13 : 14;
-        if (firstIsValid && (!secondIsValid
-                || (attackAngle != COMBAT_ATTACK_ANGLE_5
-                    && attackAngle != COMBAT_ATTACK_ANGLE_6
-                    && attackAngle != COMBAT_ATTACK_ANGLE_0
-                    && attackAngle != COMBAT_ATTACK_ANGLE_11))) {
+        if (firstIsValid && secondIsValid) {
+            if (attackAngle == COMBAT_ATTACK_ANGLE_5
+                    || attackAngle == COMBAT_ATTACK_ANGLE_6
+                    || attackAngle == COMBAT_ATTACK_ANGLE_0
+                    || attackAngle == COMBAT_ATTACK_ANGLE_11)
+                firstIsValid = false;
+            else
+                secondIsValid = false;
+        }
+        if (firstIsValid) {
             m_combatDirections[1][attackAngle] = firstHex;
         } else {
             m_combatDirections[1][attackAngle] = secondHex;
