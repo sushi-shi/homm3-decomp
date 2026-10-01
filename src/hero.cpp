@@ -1333,7 +1333,16 @@ unsigned char hero::hasArtifact(int whichArtifact) const
 VA(0x004d91f0, 0x70)
 DC_ADDRESS(0x0cc26c, 0x3c)
 MAC_ADDRESS(0x0f4dfc, 0xc4)
-unsigned char hero::isWieldingArtifact(int whichArtifact) const
+// Original public QBAHH proves int. Complete's full EAX is 0/1 at every
+// return: the slot loop leaves EAX in 0..18 before mov al,1; the book arm
+// zeroes EAX before sete; recursion explicitly returns full-width 0/1.
+// Keep that interface despite the remaining lowering difference: VC6's
+// straightforward int body is 105 bytes versus retail's 112, tests EAX in
+// the added recursion arm, and merges its success with the slot success.
+// Retail tests AL and retains separate mov al,1 / mov eax,1 exits. A byte
+// result formerly matched the body, but is not independently proven by
+// those narrow instructions or by the generated Windows symbol spelling.
+int hero::isWieldingArtifact(int whichArtifact) const
 {
     if (whichArtifact == ARTIFACT_SPELLBOOK) {
         return m_equipped[17].m_artifactId == ARTIFACT_SPELLBOOK;

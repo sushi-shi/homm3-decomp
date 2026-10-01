@@ -917,7 +917,8 @@ public:
     // (?VisitedArena@hero@@QBA_NPBVNewmapCell@@@Z) gives the const and
     bool visitedArena(const NewmapCell* cell) const;
     void setVisitedArena(const NewmapCell* cell);
-    unsigned char isWieldingArtifact(int whichArtifact) const;
+    // Original public ?IsWieldingArtifact@hero@@QBAHH@Z proves const int.
+    int isWieldingArtifact(int whichArtifact) const;
     // 0x004e2dd0 - the by-id overload: finds the artifact in the
     // backpack first, then in the equipped slots, and unequips it.
     unsigned char removeArtifact(TArtifact artifact);
