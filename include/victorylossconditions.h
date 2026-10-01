@@ -121,7 +121,10 @@ public:
 };
 SIZE(VictoryConditionStruct, 0x4C);
 
-class LossConditionStruct {
+// Native LF_STRUCTURE 0x1acf and the original DisplayLCWinLoss/CPlayerLostMsg
+// AAU parameters prove the struct tag. Complete expands the older record's
+// coordinates to ints; retain the independently recovered 0x24-byte layout.
+struct LossConditionStruct {
 public:
     signed char m_type;
     char m_paddingBeforeTownPosition[3];
