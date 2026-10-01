@@ -2107,6 +2107,45 @@ existing accessors/poll/exit helpers remain nested in the source call paths.
 The network flag and other caller-owned locals retain their existing scopes;
 backing field visibility and layout are unchanged.
 
+## File positioning and lightning repaint operations
+
+Four File virtual methods (seekBegin, seekEnd, seekCur and getPosition) share
+private ordinary `seekFrom(distance, origin)`: return zero for a null handle,
+otherwise call SetFilePointer with the original signed distance and origin.
+The helper is nonvirtual, so getPosition does not acquire dispatch through
+seekCur or seek. The two-stage seek remains distinct: it guards once, performs
+its absolute step when required, ignores that result and performs the relative
+step. getLength retains its existing virtual getPosition, seekEnd and seek calls.
+
+File construction now calls the existing native header init operation. Open
+reuses qualified `File::close()` before its existence/read-only handling, so a
+derived override cannot intercept the original release-and-null transition.
+Close still reports whether a handle was present, ignoring CloseHandle's return;
+open still ignores that result. Final destruction only releases its handle and
+does not perform the reusable nulling transition. No virtual slots, signatures,
+field access or layout change. The new seek helper name and source placement are
+project inferences; the reused init and close operations already existed.
+
+Lightning drawing shares file-static `clipBoltCoordinate` across X and Y. The
+operation uses the already-converted pixel coordinate for its two independent
+bounds checks, updating both the pixel and fractional pen only when clipped.
+Both original float-to-long conversions precede either clip, X precedes Y, and
+the maxima remain 799 and 555. Unclipped fractional positions remain intact.
+
+The animator shares file-static `includeBoltInUpdateBounds` across its two
+four-comparison unions around drawBolt. Both calls read the current bolt fields;
+the second remains after pen movement. The caller retains its distinct int
+bottom and long left/top/right locals, sentinel initialization, thickness
+expansion, screen clipping, timing and repaint call. Neither helper adds native
+annotations or changes SBolt storage. Names and ordinary source placement are
+project inferences from the repeated source operations.
+
+The reviewed random-map team branches remain distinct: the computer branch's
+upper-bound assignment uses humanPlayerCount, while the human branch uses its
+own count. LOD buffer cleanup also retains distinct clear and pointAt state
+changes, and memory-file reads clamp where writes grow. Similar-looking tests
+alone do not establish interchangeable operations.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

@@ -3250,6 +3250,19 @@ void combatManager::resetBoltAngle(SBolt* bolt)
     }
 }
 
+// Project-inferred operation: a clipped pixel also resets its fractional pen.
+static void clipBoltCoordinate(float& position, int& pixel, int maximum)
+{
+    if (pixel < 0) {
+        pixel = 0;
+        position = 0;
+    }
+    if (pixel > maximum) {
+        pixel = maximum;
+        position = static_cast<float>(maximum);
+    }
+}
+
 // The two FIVE-row tables are indexed by the DISTANCE FROM THE NEARER
 // EDGE of the drawn span, so row 0 paints both rims and the last row
 // the middle. The FIFTEEN-row one is indexed by the span position
@@ -3302,22 +3315,8 @@ void combatManager::drawBolt(SBolt* bolt, int drawLength)
             cos(static_cast<double>(bolt->m_angle)) + bolt->m_y);
         bolt->m_pixelX = static_cast<long>(bolt->m_x);
         bolt->m_pixelY = static_cast<long>(bolt->m_y);
-        if (bolt->m_pixelX < 0) {
-            bolt->m_pixelX = 0;
-            bolt->m_x = 0;
-        }
-        if (bolt->m_pixelX > 799) {
-            bolt->m_pixelX = 799;
-            bolt->m_x = 799;
-        }
-        if (bolt->m_pixelY < 0) {
-            bolt->m_pixelY = 0;
-            bolt->m_y = 0;
-        }
-        if (bolt->m_pixelY > 555) {
-            bolt->m_pixelY = 555;
-            bolt->m_y = 555;
-        }
+        clipBoltCoordinate(bolt->m_x, bolt->m_pixelX, 799);
+        clipBoltCoordinate(bolt->m_y, bolt->m_pixelY, 555);
 
         x = bolt->m_pixelX;
         y = bolt->m_pixelY;
@@ -3511,6 +3510,20 @@ void combatManager::addBolt(SBolt* bolt, int sourceX, int sourceY,
     resetBoltAngle(bolt);
 }
 
+// Project-inferred union operation, called on both sides of pen movement.
+static void includeBoltInUpdateBounds(const SBolt& bolt, long& left,
+    long& top, long& right, int& bottom)
+{
+    if (bolt.m_pixelX > right)
+        right = bolt.m_pixelX;
+    if (bolt.m_pixelX < left)
+        left = bolt.m_pixelX;
+    if (bolt.m_pixelY > bottom)
+        bottom = bolt.m_pixelY;
+    if (bolt.m_pixelY < top)
+        top = bolt.m_pixelY;
+}
+
 // The bolt ANIMATOR: seed one bolt from the thirteen shape parameters,
 // then repeatedly draw every live bolt, push the union of what moved to
 // the screen, fork the bolts that still have room, and re-aim them all,
@@ -3586,23 +3599,11 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
             // have to enter the union.
             for (i = 0; i < maxBolt; i++) {
                 if (!bolts[i].m_atDestination) {
-                    if (bolts[i].m_pixelX > updBRX)
-                        updBRX = bolts[i].m_pixelX;
-                    if (bolts[i].m_pixelX < updTLX)
-                        updTLX = bolts[i].m_pixelX;
-                    if (bolts[i].m_pixelY > updBRY)
-                        updBRY = bolts[i].m_pixelY;
-                    if (bolts[i].m_pixelY < updTLY)
-                        updTLY = bolts[i].m_pixelY;
+                    includeBoltInUpdateBounds(bolts[i], updTLX, updTLY,
+                                              updBRX, updBRY);
                     drawBolt(&bolts[i], segmentLength);
-                    if (bolts[i].m_pixelX > updBRX)
-                        updBRX = bolts[i].m_pixelX;
-                    if (bolts[i].m_pixelX < updTLX)
-                        updTLX = bolts[i].m_pixelX;
-                    if (bolts[i].m_pixelY > updBRY)
-                        updBRY = bolts[i].m_pixelY;
-                    if (bolts[i].m_pixelY < updTLY)
-                        updTLY = bolts[i].m_pixelY;
+                    includeBoltInUpdateBounds(bolts[i], updTLX, updTLY,
+                                              updBRX, updBRY);
                 }
             }
 
