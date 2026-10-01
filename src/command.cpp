@@ -2051,7 +2051,7 @@ void combatManager::checkChangeSelector()
 VA(0x00477b60, 0xB6)
 DC_ADDRESS(0x06eb18, 0xa4)
 MAC_ADDRESS(0x085e38, 0xf0)
-void combatManager::turnOffSelector(unsigned char drawIt)
+void combatManager::turnOffSelector(bool drawIt)
 {
     if (!m_lastMovedArmy)
         return;

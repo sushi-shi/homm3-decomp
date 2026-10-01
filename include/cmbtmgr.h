@@ -1300,7 +1300,8 @@ public:
     int getSpellWallHex(int baseIndex, int rowOffset, int side);
     void checkChangeSelector();  // 0x477ac0
     void checkChangeHighlighter(int currentIndex);  // 0x478040
-    void turnOffSelector(unsigned char drawIt);
+    // Original ?TurnOffSelector@combatManager@@QAAX_N@Z: bool flag.
+    void turnOffSelector(bool drawIt);
     void turnOffHighlighter(unsigned char restore);  // 0x477e10
     void setCombatGrid(int showEntireGrid, int showMouseHex, int gridLevel,
                        unsigned char drawNow);  // 0x479fc0
