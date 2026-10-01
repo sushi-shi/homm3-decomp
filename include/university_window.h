@@ -29,7 +29,7 @@ public:
                                  TSecondarySkill newSkill);
     virtual bool handleClick(bool downClick,
                                        bool rightClick);
-    void setSkill(TSecondarySkill newSkill, unsigned char newClick);
+    void setSkill(TSecondarySkill newSkill, bool newClick);
 };
 SIZE(type_university_skill_button, 0x50);
 

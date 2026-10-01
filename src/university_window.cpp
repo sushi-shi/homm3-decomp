@@ -37,9 +37,11 @@ DATA(0x00643b80) static const POINT g_buttonPositions[4] = {
 // belongs in this TU rather than the carcass: retail EXPANDS it at its one
 // call site in skill_click (the call census reads `set_skill base x1 vs
 // retail x0`), which /Ob2 can only do from a visible body.
+// Original public ?set_skill@type_university_skill_button@@QAAXW4TSecondarySkill@@_N@Z
+// independently proves the Boolean click parameter.
 DC_ADDRESS(0x18fad8, 0xa)
 void type_university_skill_button::setSkill(TSecondarySkill newSkill,
-                                             unsigned char newClick)
+                                             bool newClick)
 {
     m_skill = newSkill;
     m_click = newClick;
