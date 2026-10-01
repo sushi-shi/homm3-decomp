@@ -38,6 +38,15 @@ CSpriteFrame::CSpriteFrame()
 {
 }
 
+// Project-inferred operation shared by both resource-data constructors.
+void CSpriteFrame::copyMapData(const unsigned char* data, int compressedSize)
+{
+    m_dataSize = compressedSize ? compressedSize : m_imageSize;
+    m_map = new unsigned char[m_dataSize];
+    if (m_map)
+        memcpy(m_map, data, m_dataSize);
+}
+
 VA(0x0047c2b0, 0xa7)
 DC_ADDRESS(0x074664, 0xaa)
 MAC_ADDRESS(0x08b24c, 0xc8)
@@ -48,10 +57,7 @@ CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
       m_imageSize(w * h), m_encodingMethod(encoding), m_width(w), m_height(h),
       m_croppedWidth(w), m_croppedHeight(h), m_croppedX(0), m_croppedY(0), m_pitch(w)
 {
-    m_dataSize = csize ? csize : m_imageSize;
-    m_map = new unsigned char[m_dataSize];
-    if (m_map)
-        memcpy(m_map, data, m_dataSize);
+    copyMapData(data, csize);
 }
 
 VA(0x0047c360, 0xc9)
@@ -66,10 +72,7 @@ CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
       m_croppedWidth(cw), m_croppedHeight(ch), m_croppedX(cx), m_croppedY(cy),
       m_pitch(cw)
 {
-    m_dataSize = csize ? csize : m_imageSize;
-    m_map = new unsigned char[m_dataSize];
-    if (m_map)
-        memcpy(m_map, data, m_dataSize);
+    copyMapData(data, csize);
 }
 
 // Original: CSpriteFrame::CSpriteFrame; cspriteframe.cpp:188
@@ -195,34 +198,22 @@ int CSpriteFrame::importPCXFile(const char* filename)
     return 0;
 }
 
-// Original: CSpriteFrame::importCroppedPCXFile; cspriteframe.cpp:368
-DC_ADDRESS(0x074af4, 0x26a)
-int CSpriteFrame::importCroppedPCXFile(const char* filename)
+// Project-inferred shared crop operation. Keep the four ordered scans and
+// their -1 sentinels, including the original all-transparent-image behavior.
+// Pitch remains unsigned for PCX buffers and signed for the raw frame map.
+template <class TPitch>
+void CSpriteFrame::updateCropBounds(const unsigned char* pixels, TPitch pitch,
+                                    int& leftoff, int& topoff)
 {
-    PcxData pdat;
-    imgdes pcxfile;
-    int error = pcxinfo(filename, &pdat);
-    if (error)
-        return 1;
-
-    m_width = m_croppedWidth = pdat.m_width;
-    m_height = m_croppedHeight = pdat.m_length;
-    m_pitch = pdat.m_width;
-    m_dataSize = m_imageSize = m_width * m_height;
-    allocimage(&pcxfile, pdat.m_width, pdat.m_length,
-               pdat.m_bpPixel * pdat.m_nplanes);
-    loadpcx(filename, &pcxfile);
-    flipimage(&pcxfile, &pcxfile);
-
     int x;
     int y;
-    int leftoff = -1;
+    leftoff = -1;
     int rightoff = -1;
-    int topoff = -1;
+    topoff = -1;
     int bottomoff = -1;
     for (x = 0; x < m_width; ++x) {
         for (y = 0; y < m_height; ++y) {
-            if (pcxfile.m_ibuff[y * pcxfile.m_buffwidth + x]) {
+            if (pixels[y * pitch + x]) {
                 leftoff = x;
                 break;
             }
@@ -232,7 +223,7 @@ int CSpriteFrame::importCroppedPCXFile(const char* filename)
     }
     for (x = 0; x < m_width; ++x) {
         for (y = 0; y < m_height; ++y) {
-            if (pcxfile.m_ibuff[y * pcxfile.m_buffwidth + m_width - x - 1]) {
+            if (pixels[y * pitch + m_width - x - 1]) {
                 rightoff = x;
                 break;
             }
@@ -242,7 +233,7 @@ int CSpriteFrame::importCroppedPCXFile(const char* filename)
     }
     for (y = 0; y < m_height; ++y) {
         for (x = 0; x < m_width; ++x) {
-            if (pcxfile.m_ibuff[y * pcxfile.m_buffwidth + x]) {
+            if (pixels[y * pitch + x]) {
                 topoff = y;
                 break;
             }
@@ -252,7 +243,7 @@ int CSpriteFrame::importCroppedPCXFile(const char* filename)
     }
     for (y = 0; y < m_height; ++y) {
         for (x = 0; x < m_width; ++x) {
-            if (pcxfile.m_ibuff[(m_height - y - 1) * pcxfile.m_buffwidth + x]) {
+            if (pixels[(m_height - y - 1) * pitch + x]) {
                 bottomoff = y;
                 break;
             }
@@ -273,17 +264,51 @@ int CSpriteFrame::importCroppedPCXFile(const char* filename)
     if (bottomoff >= 0)
         m_croppedHeight -= bottomoff;
     m_dataSize = m_croppedWidth * m_croppedHeight;
+}
+
+// Copy into caller-owned storage; allocation, replacement and pitch updates
+// remain with the importer or editor that owns the buffer.
+template <class TPitch>
+void CSpriteFrame::copyCroppedPixels(unsigned char* dest,
+                                     const unsigned char* source,
+                                     TPitch sourcePitch) const
+{
+    for (int y = 0; y < m_croppedHeight; ++y) {
+        memcpy(dest, source, m_croppedWidth);
+        dest += m_croppedWidth;
+        source += sourcePitch;
+    }
+}
+
+// Original: CSpriteFrame::importCroppedPCXFile; cspriteframe.cpp:368
+DC_ADDRESS(0x074af4, 0x26a)
+int CSpriteFrame::importCroppedPCXFile(const char* filename)
+{
+    PcxData pdat;
+    imgdes pcxfile;
+    int error = pcxinfo(filename, &pdat);
+    if (error)
+        return 1;
+
+    m_width = m_croppedWidth = pdat.m_width;
+    m_height = m_croppedHeight = pdat.m_length;
+    m_pitch = pdat.m_width;
+    m_dataSize = m_imageSize = m_width * m_height;
+    allocimage(&pcxfile, pdat.m_width, pdat.m_length,
+               pdat.m_bpPixel * pdat.m_nplanes);
+    loadpcx(filename, &pcxfile);
+    flipimage(&pcxfile, &pcxfile);
+
+    int leftoff;
+    int topoff;
+    updateCropBounds(pcxfile.m_ibuff, pcxfile.m_buffwidth, leftoff, topoff);
     m_map = new unsigned char[m_dataSize];
     if (!m_map)
         return 2;
 
-    unsigned char* dest = m_map;
-    unsigned char* source = pcxfile.m_ibuff + topoff * pcxfile.m_buffwidth + leftoff;
-    for (y = 0; y < m_croppedHeight; ++y) {
-        memcpy(dest, source, m_croppedWidth);
-        dest += m_croppedWidth;
-        source += pcxfile.m_buffwidth;
-    }
+    copyCroppedPixels(m_map,
+        pcxfile.m_ibuff + topoff * pcxfile.m_buffwidth + leftoff,
+        pcxfile.m_buffwidth);
     // DC retains the original PCX width as Pitch even after packing the crop.
     m_pitch = pdat.m_width;
     freeimage(&pcxfile);
@@ -381,75 +406,14 @@ unsigned char CSpriteFrame::getPixel(int x, int y) const
 DC_ADDRESS(0x074ecc, 0x1c6)
 int CSpriteFrame::crop()
 {
-    int x;
-    int y;
-    int leftoff = -1;
-    int rightoff = -1;
-    int topoff = -1;
-    int bottomoff = -1;
-    for (x = 0; x < m_width; ++x) {
-        for (y = 0; y < m_height; ++y) {
-            if (m_map[y * m_width + x]) {
-                leftoff = x;
-                break;
-            }
-        }
-        if (leftoff >= 0)
-            break;
-    }
-    for (x = 0; x < m_width; ++x) {
-        for (y = 0; y < m_height; ++y) {
-            if (m_map[y * m_width + m_width - x - 1]) {
-                rightoff = x;
-                break;
-            }
-        }
-        if (rightoff >= 0)
-            break;
-    }
-    for (y = 0; y < m_height; ++y) {
-        for (x = 0; x < m_width; ++x) {
-            if (m_map[y * m_width + x]) {
-                topoff = y;
-                break;
-            }
-        }
-        if (topoff >= 0)
-            break;
-    }
-    for (y = 0; y < m_height; ++y) {
-        for (x = 0; x < m_width; ++x) {
-            if (m_map[(m_height - y - 1) * m_width + x]) {
-                bottomoff = y;
-                break;
-            }
-        }
-        if (bottomoff >= 0)
-            break;
-    }
-    if (leftoff >= 0) {
-        m_croppedX += leftoff;
-        m_croppedWidth -= leftoff;
-    }
-    if (rightoff >= 0)
-        m_croppedWidth -= rightoff;
-    if (topoff >= 0) {
-        m_croppedY += topoff;
-        m_croppedHeight -= topoff;
-    }
-    if (bottomoff >= 0)
-        m_croppedHeight -= bottomoff;
-    m_dataSize = m_croppedWidth * m_croppedHeight;
+    int leftoff;
+    int topoff;
+    updateCropBounds(m_map, m_width, leftoff, topoff);
     unsigned char* newMap = new unsigned char[m_dataSize];
     if (!newMap)
         return 2;
-    unsigned char* dest = newMap;
-    unsigned char* source = m_map + topoff * m_width + leftoff;
-    for (y = 0; y < m_croppedHeight; ++y) {
-        memcpy(dest, source, m_croppedWidth);
-        dest += m_croppedWidth;
-        source += m_width;
-    }
+    copyCroppedPixels(newMap,
+        m_map + topoff * m_width + leftoff, m_width);
     m_pitch = m_width;
     delete[] m_map;
     m_map = newMap;

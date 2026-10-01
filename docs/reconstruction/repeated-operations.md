@@ -2610,6 +2610,40 @@ Both ordinary file-static bodies and names are project inferences from the
 repeated source operations, without new native identities or inline claims.
 No compilation or behavioral validation was run.
 
+## Text parsing and sprite cropping
+
+Text and spreadsheet construction share countResourceRows, counting only carriage
+returns across the supplied signed byte extent before resizing their respective
+containers. Both also share collapseResourceQuotes after the caller terminates
+its line or cell and advances its parsing cursor. The helper preserves the length
+scan, quote test, left-to-right short-circuit condition, decrement and original
+memcpy operation, including the terminator in its shifted tail. Line trimming,
+quoted-cell delimiters, CRLF advancement and row allocation stay caller-owned.
+
+Both CSpriteFrame resource-data constructors share private copyMapData: select
+the explicit compressed size or existing image size, allocate the byte map and
+copy only if allocation returns non-null. Their distinct dimension, crop and
+pitch initializers remain unchanged.
+
+Cropped PCX import and raw-map crop share private updateCropBounds. It retains
+four ordered scans (left, right, top, bottom), -1 sentinels, early exits, guarded
+origin/extent adjustments and the final data-size multiplication. The PCX stride
+is unsigned while the raw-map stride is signed, so a TU-local member-template
+body preserves both expression types. The all-transparent case retains its
+original sentinels and subsequent source-offset expression; no special-case
+normalization or bounds fix is introduced by this extraction.
+
+Both paths then share copyCroppedPixels with the same typed stride. The importer
+allocates directly into m_map and frees its PCX image only on success; crop keeps
+a separate newMap, leaves the old storage on allocation failure and replaces it
+after copying and updating pitch. Both retain their full-image pitch policy,
+allocation return codes and original data-size update before allocation.
+
+These five names and ordinary source placements are project inferences from
+repeated implementations. Sprite operations are private; data layout, virtual
+interfaces and existing native function boundaries are unchanged. No build,
+test or matching-score investigation was run.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

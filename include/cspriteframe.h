@@ -273,6 +273,14 @@ public:
                                unsigned bmask);
 
 private:
+    // Project-inferred shared storage and cropping operations.
+    void copyMapData(const unsigned char* data, int compressedSize);
+    template <class TPitch>
+    void updateCropBounds(const unsigned char* pixels, TPitch pitch,
+                          int& leftoff, int& topoff);
+    template <class TPitch>
+    void copyCroppedPixels(unsigned char* dest, const unsigned char* source,
+                           TPitch sourcePitch) const;
     int importPCXFile(const char* filename);
     int importCroppedPCXFile(const char* filename);
     void encodeGeneral();
