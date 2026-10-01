@@ -1029,7 +1029,7 @@ void townObject::drawHotspot()
 VA(0x005c2ff0, 0x31F)
 DC_ADDRESS(0x16a2b0, 0x2ea)
 MAC_ADDRESS(0x1b9104, 0x580)  // anchor-global 0x698784 ("Town Outlines") + anchor-callee CSprite::Draw/Bitmap816::Draw
-void townObject::draw(int incFrame, unsigned char drawHotspots)
+void townObject::draw(int incFrame, bool drawHotspots)
 {
     if (m_visible) {
         town* currTown = g_townManager->m_townToView;
@@ -1886,7 +1886,7 @@ void townManager::updateTownInfo()
 // E:\gamedcs\townmgr.cpp:2526
 DC_ADDRESS(0x16b030, 0x52)
 MAC_ADDRESS(0x1bd774, 0x90)
-void TTownScreenWindow::doTownKnob(unsigned char up)
+void TTownScreenWindow::doTownKnob(bool up)
 {
     playerData* player = g_game->getLocalPlayer();
     if (up) {
@@ -4890,7 +4890,7 @@ void townManager::moveHeroToGarrison()
 DC_ADDRESS(0x177044, 0x76)
 MAC_ADDRESS(0x1d25c4, 0xb8)
 void townManager::drawTown(int update, int incFrame,
-                     unsigned char drawHotspots)
+                     bool drawHotspots)
 {
     if (drawHotspots)
         memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,

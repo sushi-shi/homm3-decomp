@@ -132,7 +132,8 @@ public:
     // arity evidence: thiscall plus two pushed 1s.
     void drawOutline();
     void drawHotspot();
-    void draw(int incFrame, unsigned char drawHotspots);
+    // Original DC public ?Draw@townObject@@QAAXH_N@Z proves bool drawHotspots.
+    void draw(int incFrame, bool drawHotspots);
 };
 SIZE(townObject, 0x30);
 
@@ -345,7 +346,8 @@ public:
     TTownScreenWindow();
     virtual ~TTownScreenWindow();
     void updateTownLocators();
-    void doTownKnob(unsigned char up);
+    // Original DC public ?DoTownKnob@TTownScreenWindow@@QAAX_N@Z proves bool up.
+    void doTownKnob(bool up);
     void bonusRightClick(long id);
     // Retail 0x5c5b40 (dc 0x16ad04). The faction-bonus panel of the
     // page's bottom row. townManager::UpdateTownInfo 0x5c66d0 is its
@@ -896,7 +898,8 @@ public:
     void moveHero(town* fromTown, town* toTown);
     void updateTownInfo();
     void moveHeroFromGarrison();
-    void drawTown(int update, int incFrame, unsigned char drawHotspots);
+    // Original DC public ?DrawTown@townManager@@QAAXHH_N@Z proves bool drawHotspots.
+    void drawTown(int update, int incFrame, bool drawHotspots);
     void newStrips();
     void armyCommand(strip* whichStrip, int i, int shift, unsigned char joinDialog);
     void swapHeroes();
