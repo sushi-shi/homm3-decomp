@@ -2771,7 +2771,7 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
     sprintf(text, DATA_COMPGEN(0x00677750, quotedNameFormat, "%s'%s'."),
             g_adventureEventText->getText(ADV_EVENT_TEXT_PYRAMID_SPELL_PREFIX),
             g_spellTraits[spell].m_name);
-    cell->setPyramid(0, spell);
+    cell->setPyramid(0, ESpellId(spell));
 
     if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         if (humanPlayer) {
