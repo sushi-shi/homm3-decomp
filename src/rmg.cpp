@@ -610,8 +610,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
             int nextCost = currentCost + 1;
             TRmgMapPosition nextPosition = currentPosition;
             nextPosition += g_rmgDirections[direction];
-            if (nextPosition.m_x < 0 || nextPosition.m_x >= m_mapWidth
-                || nextPosition.m_y < 0 || nextPosition.m_y >= m_mapHeight)
+            if (!containsXY(nextPosition))
                 continue;
             TRmgMapItem* next = getMapItem(nextPosition);
             if (next->m_zoneState.m_zone < 0 || !next->m_tileData.m_roadPassable
@@ -762,9 +761,8 @@ void type_random_map::markBorderPatch(TRmgMapPosition position)
             TRmgMapItem* nearby = getMapItem(column, row, position.m_z);
             if (!nearby->isRoadEntrance() && nearby->m_tileData.m_roadPassable
                 && nearby->getLandType() != eTerrainRock
-                && nearby->getLandType() != eTerrainWater
-                && !nearby->m_connection.m_present)
-                nearby->m_tileData.m_pathClearance = 0;
+                && nearby->getLandType() != eTerrainWater)
+                nearby->releasePathClearance();
         }
     }
 }
@@ -2388,8 +2386,8 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
                 for (int y = position.m_y - 1; y <= position.m_y + 1; ++y) {
                     TRmgMapItem* nearby = m_map.getMapItem(x, y);
                     if (nearby->isPassableLand()
-                        && !nearby->isRoadEntrance() && !nearby->m_connection.m_present)
-                        nearby->m_tileData.m_pathClearance = 0;
+                        && !nearby->isRoadEntrance())
+                        nearby->releasePathClearance();
                 }
             }
         }
@@ -2434,8 +2432,7 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
         while (count--) {
             TPoint nearby = g_rmgDirections[fanDirection]
                 + TRmgVector(point.m_x, point.m_y);
-            if (nearby.m_x >= 0 && nearby.m_x < m_map.m_mapWidth
-                && nearby.m_y >= 0 && nearby.m_y < m_map.m_mapHeight) {
+            if (m_map.containsXY(nearby)) {
                 TRmgMapItem* next = m_map.getMapItem(nearby.m_x, nearby.m_y);
                 if (!next->hasBorderObject() && !next->hasPathClearance()
                     && next->isPassableLand()) {
@@ -2683,8 +2680,7 @@ void TRmgTreasureGroup::traceOutline()
             direction = (direction - 2) & 7;
             TPoint offset = g_rmgDirections[direction];
             TPoint nearby(position.m_x + offset.m_x, position.m_y + offset.m_y);
-            if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth
-                || nearby.m_y < 0 || nearby.m_y >= m_map.m_mapHeight)
+            if (!m_map.containsXY(nearby))
                 break;
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
             if (!item->isRoadEntrance() && item->isPassableLand() && item->hasPathClearance())
@@ -4052,10 +4048,7 @@ void type_random_map_generator::calculateZoneBounds()
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (item->m_zoneState.m_zone >= 0) {
                     TRmgZone* zone = m_zones[item->m_zoneState.m_zone];
-                    zone->m_bounds.m_minimumX = min(zone->m_bounds.m_minimumX, position.m_x);
-                    zone->m_bounds.m_minimumY = min(zone->m_bounds.m_minimumY, position.m_y);
-                    zone->m_bounds.m_maximumX = max(zone->m_bounds.m_maximumX, position.m_x + 1);
-                    zone->m_bounds.m_maximumY = max(zone->m_bounds.m_maximumY, position.m_y + 1);
+                    zone->m_bounds.includeCell(position.m_x, position.m_y);
                 }
             }
         }
@@ -4479,8 +4472,7 @@ void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
             TPoint offset = g_rmgDirections[direction];
             next += offset;
             next.m_z = position.m_z;
-            if (next.m_x < 0 || next.m_x >= m_map.m_mapWidth
-                || next.m_y < 0 || next.m_y >= m_map.m_mapHeight)
+            if (!m_map.containsXY(next))
                 continue;
             TRmgMapItem* item = m_map.getMapItem(next.m_x, next.m_y, next.m_z);
             if (item->isZoneBoundary() || item->m_zoneState.m_zone != zoneIndex)
@@ -4621,8 +4613,7 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
     position = zone->getLevelPosition();
     TRmgMapPosition upperSeed;
     TRmgMapPosition lowerSeed;
-    if (position.m_x < 0 || position.m_x >= m_map.getWidth()
-        || position.m_y < 0 || position.m_y >= m_map.getHeight()) {
+    if (!m_map.containsXY(position)) {
         int bestClearance = 0;
         TPoint best;
         best.m_x = -1;
@@ -5287,8 +5278,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
             next.m_x = position.m_x + offset.m_x;
             next.m_y = position.m_y + offset.m_y;
             next.m_z = position.m_z;
-            if (next.m_x < 0 || next.m_x >= m_map.getWidth()
-                || next.m_y < 0 || next.m_y >= m_map.getHeight())
+            if (!m_map.containsXY(next))
                 continue;
             TRmgMapItem* item = m_map.getMapItem(next);
             if (item->m_zoneState.m_zone != zoneIndex)
@@ -5466,8 +5456,8 @@ void type_random_map_generator::expandObstacleClearance()
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
-                        if (static_cast<int>(item->m_objects.size()) <= 0 && !item->m_connection.m_present)
-                            item->m_tileData.m_pathClearance = 0;
+                        if (static_cast<int>(item->m_objects.size()) <= 0)
+                            item->releasePathClearance();
                     }
                 }
             }
@@ -5562,9 +5552,8 @@ void type_random_map_generator::repairWaterZoneBorders()
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
-                        if (static_cast<int>(item->m_objects.size()) <= 0
-                            && !item->m_connection.m_present)
-                            item->m_tileData.m_pathClearance = 0;
+                        if (static_cast<int>(item->m_objects.size()) <= 0)
+                            item->releasePathClearance();
                     }
                 }
             }
@@ -5653,8 +5642,7 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
                 if (direction & 1)
                     ++nextCost;
                 TRmgMapPosition nextPosition = currentPosition + g_rmgDirections[direction];
-                if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.m_mapWidth
-                    || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.m_mapHeight)
+                if (!m_map.containsXY(nextPosition))
                     continue;
                 TRmgMapItem* next = m_map.getMapItem(nextPosition);
                 if (nextCost >= next->m_zoneState.m_score)
@@ -5966,8 +5954,7 @@ void type_random_map_generator::markBorderObjectArea(
         }
     }
     TRmgMapPosition previous = m_map.getMapItem(position)->m_previousTile;
-    if (previous.m_x >= 0 && previous.m_x < m_map.m_mapWidth
-        && previous.m_y >= 0 && previous.m_y < m_map.m_mapHeight) {
+    if (m_map.containsXY(previous)) {
         TRmgMapItem* item = m_map.getMapItem(previous);
         item->clearBorderConnection();
     }
@@ -6163,8 +6150,7 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
         openPositions.pop_back();
         for (int direction = 0; direction < 8; direction += 2) {
             TRmgMapPosition nearby = position + g_rmgDirections[direction];
-            if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth
-                || nearby.m_y < 0 || nearby.m_y >= m_map.m_mapHeight)
+            if (!m_map.containsXY(nearby))
                 continue;
             TRmgMapItem* item = m_map.getMapItem(nearby);
             unsigned char visited = item->isConnectionVisited();
@@ -7111,10 +7097,11 @@ TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
 // and forms the map address only for openPathPatch. Owning this ordinary query
 // on the generator reproduces that sequence; a map-owned query forms its
 // receiver too early. The name and source boundary remain provisional.
+// The readability cleanup nests the common planar check; prior scores describe
+// the earlier spelling, while the ordinary generator boundary stays intact.
 bool type_random_map_generator::contains(const TPoint& point) const
 {
-    return point.m_x >= 0 && point.m_x < m_map.getWidth()
-        && point.m_y >= 0 && point.m_y < m_map.getHeight();
+    return m_map.containsXY(point);
 }
 
 // The eight-byte values are coordinate pairs: midpoint and perpendicular
@@ -8409,8 +8396,7 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
             if (destination->getLandType() != eTerrainWater
                 && !source->hasPathClearance() && source->isPassableLand() && !source->isRoadEntrance()
                 && destination->isPassableLand() && !destination->isRoadEntrance()) {
-                if (!destination->m_connection.m_present)
-                    destination->m_tileData.m_pathClearance = 0;
+                destination->releasePathClearance();
                 if (source->hasBorderObject()) {
                     destination->markBorderObject();
                 }
@@ -8530,8 +8516,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
             continue;
         point.m_x += position.m_x;
         point.m_y += position.m_y;
-        if (point.m_x < 0 || point.m_x >= m_map.m_mapWidth
-            || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
+        if (!m_map.containsXY(point))
             continue;
         TRmgMapItem* destination = m_map.getMapItem(point.m_x, point.m_y, position.m_z);
         if ((destination->getLandType() == eTerrainWater) == waterZone
@@ -8793,8 +8778,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
         while (direction--) {
             TRmgMapPosition nextPosition = position + g_rmgDirections[direction];
 
-            if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.getWidth()
-                || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.getHeight())
+            if (!m_map.containsXY(nextPosition))
                 continue;
 
             TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
@@ -8993,8 +8977,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
         int positionCost = mapItem->m_movement.m_cost;
         for (int direction = 0; direction < 8; direction += 2) {
             nextPosition = position + g_rmgDirections[direction];
-            if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.getWidth()
-                || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.getHeight())
+            if (!m_map.containsXY(nextPosition))
                 continue;
             mapItem = m_map.getMapItem(nextPosition.m_x, nextPosition.m_y, nextPosition.m_z);
             if (mapItem->getLandType() == eTerrainWater
@@ -9174,8 +9157,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
         for (direction = 0; direction < 8; direction += 2) {
             nextPosition = position + g_rmgDirections[direction];
 
-            if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.m_mapWidth
-                || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.m_mapHeight)
+            if (!m_map.containsXY(nextPosition))
                 continue;
 
             mapItem = m_map.getMapItem(nextPosition);
@@ -9307,8 +9289,7 @@ void type_random_map_generator::markRiverObjectTargets()
             }
             position.m_x -= offsetX;
             position.m_y -= offsetY;
-            if (position.m_x >= 0 && position.m_x < m_map.m_mapWidth
-                && position.m_y >= 0 && position.m_y < m_map.m_mapHeight)
+            if (m_map.containsXY(position))
             {
                 TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
                 item->m_tileData.m_hasRiver = 1;

@@ -1353,8 +1353,8 @@ public:
     // separate from one-cell margins and retail's permissive river X bound.
     bool containsXY(const TPoint& point) const
     {
-        return point.m_x >= 0 && point.m_x < m_mapWidth
-            && point.m_y >= 0 && point.m_y < m_mapHeight;
+        return point.m_x >= 0 && point.m_x < getWidth()
+            && point.m_y >= 0 && point.m_y < getHeight();
     }
 };
 
