@@ -2058,8 +2058,7 @@ void combatManager::checkChangeSelector()
     m_lastMovedArmy = currentArmy;
     if (!currentArmy->is(creatureImmobilized)
             && currentArmy->m_currFrameType != cs_wait) {
-        currentArmy->m_currFrameType = cs_wait;
-        currentArmy->m_currFrameIndex = 0;
+        currentArmy->startAnimationSequence(cs_wait);
     }
     drawFrame(1, 0, 0, 0, 1, 0);
 }
@@ -2114,14 +2113,7 @@ void combatManager::checkChangeHighlighter(int currentIndex)
     if (currentArmy) {
         m_highlighterIndex = currentArmy->m_gridIndex;
         m_highlighterOn = 1;
-        if (currentArmy->m_stdIcon->isValidSeq(cs_fidget)
-                && currentArmy->m_currFrameType != cs_fidget) {
-            currentArmy->m_currFrameType = cs_fidget;
-            currentArmy->m_currFrameIndex = 0;
-        } else if (currentArmy->m_currFrameType != cs_wait) {
-            currentArmy->m_currFrameType = cs_wait;
-            currentArmy->m_currFrameIndex = 0;
-        }
+        currentArmy->updateHighlightAnimation();
         // Loading the slot before the accessor preserves Complete's argument
         // registers without replacing the owning-side helper with field access.
         int slot = currentArmy->m_bitIndex;
@@ -2783,9 +2775,7 @@ void combatManager::resetCyclingCreatures()
             for (int slot = 0; slot < m_numArmies[side]; slot++) {
                 army* stack = &m_armies[side][slot];
                 if (!stack->is(creatureImmobilized)) {
-                    stack->m_currFrameType = cs_wait;
-                    stack->m_currFrameIndex = 0;
-                    stack->m_lastFidgetTime = GameTime::get();
+                    stack->finishFidgetAnimation();
                 }
             }
         }

@@ -3116,8 +3116,7 @@ void combatManager::armageddon(int level, int power)
                                   currentArmy->m_currFrameType) - 1) {
                             currentArmy->m_currFrameIndex++;
                         } else if (currentArmy->m_currFrameType == cs_wince) {
-                            currentArmy->m_currFrameType = cs_wait;
-                            currentArmy->m_currFrameIndex = 0;
+                            currentArmy->startAnimationSequence(cs_wait);
                         }
                     }
                 } }
@@ -4064,13 +4063,12 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
                     if (stack.m_numTroops <= 0) {
                         if (stack.m_currFrameType == cs_death)
                             continue;
-                        stack.m_currFrameType = cs_death;
+                        stack.startAnimationSequence(cs_death);
                     } else {
                         if (stack.m_currFrameType == cs_wince)
                             continue;
-                        stack.m_currFrameType = cs_wince;
+                        stack.startAnimationSequence(cs_wince);
                     }
-                    stack.m_currFrameIndex = 0;
                 }
             }
         } }
@@ -4085,8 +4083,7 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
                             < stack.m_stdIcon->getNumFrames(sequence) - 1) {
                             stack.m_currFrameIndex++;
                         } else if (sequence == cs_wince) {
-                            stack.m_currFrameType = cs_wait;
-                            stack.m_currFrameIndex = 0;
+                            stack.startAnimationSequence(cs_wait);
                         }
                     }
                     if (m_powSprite
@@ -4480,8 +4477,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
                 if (i < deathFrames) {
                     targetArmy->m_currFrameIndex = deathFrames - i - 1;
                 } else {
-                    targetArmy->m_currFrameType = cs_wait;
-                    targetArmy->m_currFrameIndex = 0;
+                    targetArmy->startAnimationSequence(cs_wait);
                 }
             }
             drawFrame(1, 0, 0, 100, 1, 1);

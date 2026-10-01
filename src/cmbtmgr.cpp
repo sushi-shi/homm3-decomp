@@ -3589,8 +3589,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                                     stack.m_currFrameType) - 1) {
                             stack.m_currFrameIndex++;
                         } else {
-                            stack.m_currFrameType = cs_wait;
-                            stack.m_currFrameIndex = 0;
+                            stack.startAnimationSequence(cs_wait);
                         }
                     }
                     if (stack.m_nextFrameType == -1)
@@ -3626,16 +3625,14 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                             else if (stack.m_nextFrameType == cs_defend)
                                 stack.playSample(army::DEFEND_SAMPLE);
                         }
-                        stack.m_currFrameType = stack.m_nextFrameType;
-                        stack.m_currFrameIndex = 0;
+                        stack.startAnimationSequence(stack.m_nextFrameType);
                     } else if (stack.m_currFrameIndex
                             < stack.m_stdIcon->getNumFrames(
                                 stack.m_currFrameType) - 1) {
                         stack.m_currFrameIndex++;
                     } else if (stack.m_currFrameType != cs_wait
                             && stack.m_currFrameType != cs_death) {
-                        stack.m_currFrameType = cs_wait;
-                        stack.m_currFrameIndex = 0;
+                        stack.startAnimationSequence(cs_wait);
                         stack.m_powSequenceComplete = 1;
                     }
                 }
@@ -3678,8 +3675,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                     } else if (stack.m_currFrameType == cs_death) {
                         continue;
                     } else {
-                        stack.m_currFrameType = cs_wait;
-                        stack.m_currFrameIndex = 0;
+                        stack.startAnimationSequence(cs_wait);
                     }
                     framesChanged = 1;
                 }

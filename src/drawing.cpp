@@ -1964,8 +1964,7 @@ void combatManager::cycleCombatScreen()
 
                 army* stack = &m_armies[side][slot];
                 if (stack->m_currFrameType == cs_wait) {
-                    stack->m_currFrameType = cs_fidget;
-                    stack->m_currFrameIndex = 0;
+                    stack->startAnimationSequence(cs_fidget);
                     continue;
                 }
 
@@ -1974,9 +1973,7 @@ void combatManager::cycleCombatScreen()
                     stack->m_currFrameIndex++;
                 if (stack->m_currFrameIndex
                         >= stack->m_stdIcon->getNumFrames(cs_fidget)) {
-                    stack->m_currFrameType = cs_wait;
-                    stack->m_currFrameIndex = 0;
-                    stack->m_lastFidgetTime = GameTime::get();
+                    stack->finishFidgetAnimation();
                     if (stack->m_monFrameInfo.m_fidgetFrequency > 0) {
                         stack->m_lastFidgetTime = static_cast<unsigned long>(
                             stack->m_lastFidgetTime
@@ -2051,8 +2048,7 @@ void combatManager::spellEffect(int effect, army* targetArmy, int delay,
             drawFrame(1, 0, 0, 100, 1, 1);
             frame++;
         }
-        targetArmy->m_currFrameType = cs_wait;
-        targetArmy->m_currFrameIndex = 0;
+        targetArmy->startAnimationSequence(cs_wait);
         if (frame >= m_powSprite->getNumFrames(cs_walk))
             drawFrame(1, 0, 0, 0, 1, 0);
     }

@@ -1274,6 +1274,42 @@ The four new helpers have project-inferred names and ordinary owner-source
 bodies, without new native-address claims, storage, virtual slots or inline
 qualifiers.
 
+## Army animation transitions
+
+Movement, wall attacks, highlighting, combat drawing and spells now share
+`army::startAnimationSequence()`: select the sequence, then reset its frame
+index to zero. The call replaces paired stores across six translation units,
+including both guarded wince/death branches in `showMassSpell()`. Existing
+sequence guards, frame advancement, terminal death poses, sound calls and
+redraws retain their caller-specific behavior.
+
+`updateHighlightAnimation()` shares the complete conditional from area-effect
+highlighting and pointer highlighting. It first tests whether fidget is valid
+and the stack is not already fidgeting; otherwise a non-waiting stack returns
+to wait. In particular, an already-fidgeting stack returns to wait rather than
+restarting fidget. The two callers retain their different effect-marking order
+and area-effect latch guard.
+
+`finishFidgetAnimation()` shares the wait/frame-zero transition followed by
+`GameTime::get()` in cycling reset and normal fidget completion. It nests the
+sequence helper. Normal completion keeps its subsequent random timer adjustment;
+cycling reset keeps its immobilization guard and separate hero timers.
+
+The remaining separate stores were read in context. Initialization interleaves
+other state; `playAnimation()` accepts a caller-selected starting frame and
+performs setup between sequence selection and its loop; flying and directional
+attacks likewise set the sequence before their frame loops. Armageddon plays
+the sample between sequence selection and frame reset. Single-target spell
+wincing writes frame zero only if its frame loop runs. Those operations retain
+their order and partial-update behavior rather than acquiring an early reset.
+`setupAnimation()` captures the background and draw bounds and remains a
+distinct operation.
+
+Dreamcast army `0x1a95` / field list `0x205b` explicitly declares
+`currFrameType` and `currFrameIndex` public. Their authored types, visibility
+and layout are preserved. The three operation names and ordinary bodies in
+`army.cpp` are project inferences, without new native-address or inline claims.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

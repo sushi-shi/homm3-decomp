@@ -1007,6 +1007,31 @@ void army::removeBinding()
     m_binders.clear();
 }
 
+// Project-inferred operations shared by movement, highlights and spell drawing.
+// Ordinary owner-source bodies; original names and placement are unproven.
+void army::startAnimationSequence(int sequence)
+{
+    m_currFrameType = sequence;
+    m_currFrameIndex = 0;
+}
+
+void army::updateHighlightAnimation()
+{
+    // An already-fidgeting stack falls through to its waiting pose.
+    if (m_stdIcon->isValidSeq(cs_fidget)
+            && m_currFrameType != cs_fidget) {
+        startAnimationSequence(cs_fidget);
+    } else if (m_currFrameType != cs_wait) {
+        startAnimationSequence(cs_wait);
+    }
+}
+
+void army::finishFidgetAnimation()
+{
+    startAnimationSequence(cs_wait);
+    m_lastFidgetTime = GameTime::get();
+}
+
 // Raise or lower the area-effect latch and re-pose the stack. The
 // answer is "did the latch actually change", which is why the
 // no-op arm returns 0 before touching anything else.
@@ -1024,16 +1049,8 @@ unsigned char army::setInsideAreaEffect(unsigned char arg)
         return 0;
     m_isAreaEffectTarget = arg;
     g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
-    if (m_isAreaEffectTarget) {
-        if (m_stdIcon->isValidSeq(cs_fidget)
-            && m_currFrameType != cs_fidget) {
-            m_currFrameType = cs_fidget;
-            m_currFrameIndex = 0;
-        } else if (m_currFrameType != cs_wait) {
-            m_currFrameType = cs_wait;
-            m_currFrameIndex = 0;
-        }
-    }
+    if (m_isAreaEffectTarget)
+        updateHighlightAnimation();
     return 1;
 }
 
@@ -2164,8 +2181,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
         if (g_combatManager->shouldLowerDoor(this, nextCell)) {
             if (!initialWalk) {
                 endWalk();
-                m_currFrameType = cs_wait;
-                m_currFrameIndex = 0;
+                startAnimationSequence(cs_wait);
                 g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
             }
             g_combatManager->lowerDoor();
@@ -2209,8 +2225,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
         if (m_facing != saveFacing && restoreFacing)
             turn(1);
         addAura();
-        m_currFrameType = cs_wait;
-        m_currFrameIndex = 0;
+        startAnimationSequence(cs_wait);
     }
     m_isMoving = 0;
     cancelSpellType(ARMY_CANCEL_SPELLS_AFTER_MOVE);
@@ -4159,8 +4174,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         g_combatManager->drawFrame(1, 1, 0, delay, 1, 1);
     }
 
-    m_currFrameType = cs_wait;
-    m_currFrameIndex = 0;
+    startAnimationSequence(cs_wait);
     g_combatManager->shootBallisticMissile(startX, startY, targetX, targetY,
                                            m_missileIcon);
     ds_memsample* wallMemSample = g_soundManager->memorySample(wallSample);

@@ -911,6 +911,10 @@ public:
     int canFit(int destIndex, int allowShifting,
                int* newDestIndex) const;
     void drawToBuffer(int x, int y, int numBoxOnly);
+    // Project-inferred shared animation transitions; no drawing is performed.
+    void startAnimationSequence(int sequence);
+    void updateHighlightAnimation();
+    void finishFidgetAnimation();
     void playAnimation(int sequence, int nframes, int startFrame);
     void setupAnimation();
     unsigned long strength();

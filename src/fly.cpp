@@ -162,8 +162,7 @@ int army::fly(int destIndex)
         turn = 0;
 
     if (g_combatManager->shouldLowerDoor(this, destIndex)) {
-        m_currFrameType = 2;
-        m_currFrameIndex = 0;
+        startAnimationSequence(cs_wait);
         g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
         g_combatManager->lowerDoor();
     }
