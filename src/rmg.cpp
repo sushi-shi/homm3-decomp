@@ -7584,7 +7584,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     if ((player == -1 && !slot->m_neutralTownsMatchZone) || alignment == -1) {
         alignment = slot->selectAllowedTown();
         if (alignment == -1)
-            alignment = rand() % (8 + (m_mapVersion >= 1));
+            alignment = rand() % (8 + (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE));
     }
     if (!zone->m_active)
         return tryPlacePrimaryTown(zone, alignment, player, townOption);
@@ -8750,30 +8750,15 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
 
             switch (objectType) {
             case LITH_ONEWAY_ENTRANCE:
-            case LITH_ONEWAY_EXIT: {
-                int subtype = prototype->getSubtype();
-                for (int i = 0; i < m_monolithsOneWay.size(); ++i) {
-                    type_object* destination = m_monolithsOneWay[i];
-                    if (destination->m_properties->m_prototype->getSubtype() != subtype)
-                        continue;
-
-                    TRmgMapPosition nextPosition = destination->m_position;
-                    TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
-                    int nextCost = currentCost + 50;
-                    if (nextMapItem->m_movement.m_cost <= nextCost)
-                        continue;
-
-                    nextMapItem->setMovementCost(nextCost, position);
-                    insertRmgWorkItem(
-                        openPositions, openCosts, nextPosition, nextCost);
-                }
-                break;
-            }
-
+            case LITH_ONEWAY_EXIT:
             case LITH_TWOWAY: {
+                // Both families relax matching subtypes in stored order.
+                // Keep the one-way entrance/exit traversal used by retail.
+                const std::vector<type_object*>& destinations = objectType == LITH_TWOWAY
+                    ? m_monolithsTwoWay : m_monolithsOneWay;
                 int subtype = prototype->getSubtype();
-                for (int i = 0; i < m_monolithsTwoWay.size(); ++i) {
-                    type_object* destination = m_monolithsTwoWay[i];
+                for (int monolith = 0; monolith < destinations.size(); ++monolith) {
+                    type_object* destination = destinations[monolith];
                     if (destination->m_properties->m_prototype->getSubtype() != subtype)
                         continue;
 
@@ -9587,7 +9572,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     writeString(outfile, description);
 
     writeValue<char>(outfile, 1);
-    if (m_mapVersion >= 1) {
+    if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
         writeValue<char>(outfile, 0);
     }
 
@@ -9647,11 +9632,11 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
         writeValue<char>(outfile, 0);
 
-        if (m_mapVersion >= 2) {
+        if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
             writeValue<char>(outfile, 0);
         }
 
-        if (m_mapVersion >= 1) {
+        if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
             writeValue<unsigned short>(outfile, legalAlignments[serializedPlayer]);
         } else {
             writeValue<char>(outfile, legalAlignments[serializedPlayer]);
@@ -9670,7 +9655,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
             writeValue<char>(outfile, 1);
 
-            if (m_mapVersion >= 1) {
+            if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
                 writeValue<char>(outfile, 1);
                 writeValue<char>(outfile, -1);
             }
@@ -9683,7 +9668,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         writeValue<char>(outfile, 0);
         writeValue<char>(outfile, -1);
 
-        if (m_mapVersion >= 1) {
+        if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
             writeValue<char>(outfile, 0);
             writeValue<int>(outfile, 0);
         }
@@ -9728,7 +9713,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         outfile->write(teams, sizeof(teams));
     }
 
-    if (m_mapVersion >= 1) {
+    if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
         std::bitset<156> availableHeroes;
         setAvailableRmgHeroes(
             &availableHeroes, m_disabledHeroes, m_disabledHeroes + 156);
@@ -9742,10 +9727,10 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         writePackedBits(outfile, availableHeroes);
     }
 
-    if (m_mapVersion >= 1) {
+    if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
         writeValue<int>(outfile, 0);
     }
-    if (m_mapVersion >= 2) {
+    if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
         writeValue<char>(outfile, 0);
     }
 
@@ -9763,9 +9748,9 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     disabledArtifacts.set(128);
     disabledArtifacts.set(127);
 
-    if (m_mapVersion >= 2) {
+    if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
         writePackedBits(outfile, disabledArtifacts);
-    } else if (m_mapVersion >= 1) {
+    } else if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
         std::bitset<129> legacyDisabledArtifacts;
         std::copy(
             bitset_iterator<144>(disabledArtifacts, 0),
@@ -9775,7 +9760,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         writePackedBits(outfile, legacyDisabledArtifacts);
     }
 
-    if (m_mapVersion >= 2) {
+    if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
         std::bitset<70> disabledSpells;
         writePackedBits(outfile, disabledSpells);
 
@@ -9783,8 +9768,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         writePackedBits(outfile, disabledSkills);
 
         for (int hero = 0; hero < 156; ++hero) {
-            char byteBuffer = 0;
-            outfile->write(&byteBuffer, sizeof(byteBuffer));
+            writeValue<char>(outfile, 0);
         }
     }
 }
@@ -9858,10 +9842,7 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
 {
     TRmgMapPosition position;
     writeMapHeader(outfile);
-    {
-        int reserved = 0;
-        outfile->write(&reserved, sizeof(reserved));
-    }
+    writeValue<int>(outfile, 0);
     TRmgMapItem* item = m_map.m_mapItems;
     for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z)
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y)
@@ -9876,10 +9857,7 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
             if (static_cast<int>(properties->m_refCount) > 0)
                 properties->m_prototypeIndex = prototypeCount++;
         }
-    {
-        int count = prototypeCount;
-        outfile->write(&count, sizeof(count));
-    }
+    writeValue<int>(outfile, prototypeCount);
     writeRmgObjectPrototype(outfile, m_objectPrototypes[RANDOM_MONSTER][0]->m_prototype);
     writeRmgObjectPrototype(outfile, m_objectPrototypes[TERRAIN_HOLE][0]->m_prototype);
     for (int objectType = 0; objectType < 232; ++objectType)
@@ -9888,10 +9866,7 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
             if (static_cast<int>(properties->m_refCount) > 0)
                 writeRmgObjectPrototype(outfile, properties->m_prototype);
         }
-    {
-        int count = m_objects.size();
-        outfile->write(&count, sizeof(count));
-    }
+    writeValue<int>(outfile, m_objects.size());
     for (unsigned int first = 0; first < m_objects.size(); ++first) {
         type_object* object = m_objects[first];
         if (g_adventureObjectTraits[object->m_properties->m_prototype->getObjectType()].m_trait3)
@@ -9904,11 +9879,8 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
     }
     if (m_progress)
         m_progress->advance(2000);
-    {
-        int reserved = 0;
-        unsigned char result = outfile->write(&reserved, sizeof(reserved)) == sizeof(reserved);
-        return result;
-    }
+    unsigned char result = writeValue<int>(outfile, 0) == sizeof(int);
+    return result;
 }
 
 VA(0x0054AE30, 0x2C5)
@@ -9917,10 +9889,7 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
 {
     unsigned char terrainMask[2];
     int nameLength = prototype->getImageName().size();
-    {
-        int length = nameLength;
-        outfile->write(&length, sizeof(length));
-    }
+    writeValue<int>(outfile, nameLength);
     outfile->write(prototype->getImageName().c_str(), nameLength);
     int x;
     int y;
@@ -9956,22 +9925,10 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
         encodePackedBits(prototype->m_recommendedTerrainMask, terrainMask);
         outfile->write(terrainMask, sizeof(terrainMask));
     }
-    {
-        int value = prototype->getObjectType();
-        outfile->write(&value, sizeof(value));
-    }
-    {
-        int value = prototype->getSubtype();
-        outfile->write(&value, sizeof(value));
-    }
-    {
-        char value = prototype->m_slotCategory;
-        outfile->write(&value, sizeof(value));
-    }
-    {
-        char value = prototype->isUnderlay();
-        outfile->write(&value, sizeof(value));
-    }
+    writeValue<int>(outfile, prototype->getObjectType());
+    writeValue<int>(outfile, prototype->getSubtype());
+    writeValue<char>(outfile, prototype->m_slotCategory);
+    writeValue<char>(outfile, prototype->isUnderlay());
     int reserved[4];
     memset(reserved, 0, sizeof(reserved));
     outfile->write(reserved, sizeof(reserved));
@@ -9983,7 +9940,7 @@ int type_random_map_generator::selectPrisonHero()
 {
     int available = 0;
     int hero;
-    for (hero = (m_mapVersion >= 1 ? 145 : 128) - 1; hero >= 0; --hero) {
+    for (hero = (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? 145 : 128) - 1; hero >= 0; --hero) {
         if (!m_disabledHeroes[hero])
             ++available;
     }
@@ -9991,7 +9948,7 @@ int type_random_map_generator::selectPrisonHero()
         return -1;
 
     int selected = rand() % available;
-    for (hero = (m_mapVersion >= 1 ? 145 : 128) - 1; hero >= 0; --hero) {
+    for (hero = (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? 145 : 128) - 1; hero >= 0; --hero) {
         if (!m_disabledHeroes[hero]) {
             --selected;
             if (selected < 0)
@@ -10331,10 +10288,10 @@ TRandomMapRequest::TRandomMapRequest(int width, int height, int levels)
     : m_width(width), m_height(height), m_levels(levels),
       m_humanPlayerCount(2), m_humanTeamCount(2),
       m_computerPlayerCount(0), m_computerTeamCount(8),
-      m_mapVersion(2)
+      m_mapVersion(RMG_MAP_SHADOW_OF_DEATH)
 {
     m_monsterStrength = 0;
-    m_waterContent = 3;
+    m_waterContent = RMG_WATER_RANDOM;
     memset(m_isHumanSeat, 0, sizeof(m_isHumanSeat));
     memset(m_townType, -1, sizeof(m_townType));
 }
