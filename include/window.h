@@ -200,7 +200,7 @@ public:
     virtual int windowHandler(message& msg);                            // slot 9
     virtual unsigned char processHover(int mouseX, int mouseY);         // slot 10
     virtual bool processRightSelect(int id);                   // slot 11
-    void setHelpText(THelpText* helpText, int start, int stop, unsigned char copyText);
+    void setHelpText(THelpText* helpText, int start, int stop, bool copyText);
 
 protected:
     virtual int onWidgetDeselect(int id, bool& exitFlag);  // slot 12

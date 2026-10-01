@@ -155,7 +155,7 @@ public:
     virtual void processHover();  // slot 7
     virtual void dim() const;  // slot 8
     virtual void enable(unsigned char on);  // slot 9
-    void setHelpText(const char* text, const char* rclick, unsigned char copyText);
+    void setHelpText(const char* text, const char* rclick, bool copyText);
     int sendMessage(widget::ECommands command, int extra);
 
     VA(0x00404df0, 0x1)

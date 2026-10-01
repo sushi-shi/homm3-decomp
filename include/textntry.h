@@ -95,7 +95,7 @@ public:
     virtual void setFocus(bool state);
     virtual int onKeyPress(message* msg);
     virtual unsigned char ignoreKey(message* msg);
-    virtual void setAutoDraw(unsigned char b);
+    virtual void setAutoDraw(bool b);
 
 protected:
     virtual void saveBackground() const;  // slot 18, retail 0x5bba70

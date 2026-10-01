@@ -213,10 +213,12 @@ void widget::dim() const
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
 }
 
+// Original ?set_help_text@widget@@QAAXPBD0_N@Z proves bool copyText;
+// the two const char* arguments and stored ownership byte stay unchanged.
 VA(0x005fe840, 0xE9)
 DC_ADDRESS(0x196ffc, 0xaa)
 MAC_ADDRESS(0x20aad4, 0x110)
-void widget::setHelpText(const char* text, const char* rclick, unsigned char copyText)
+void widget::setHelpText(const char* text, const char* rclick, bool copyText)
 {
     if (m_rollOver) {
         if (m_freeText)
