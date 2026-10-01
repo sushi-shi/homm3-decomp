@@ -23,6 +23,10 @@ static long ftol(double d)
 
 VA_COMPGEN(0x0044e020, 0x21, SCALAR_DELETING_DTOR, Bitmap16Bit)
 
+// DC allocation uses BMCreateSurface then virtual Lock (slot +0x64),
+// falling back to the same heap allocation below. Mac 0x5be20/0x5bee4
+// and retail 0x44df70/0x44e050 retain only that heap path. Their class
+// has no surface descriptor/owner; these calls are not expanded helpers.
 VA(0x0044df70, 0xA3)
 DC_ADDRESS(0x050b00, 0x104)
 MAC_ADDRESS(0x05be20, 0xc4)
@@ -188,8 +192,11 @@ void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
 }
 
 // DC bitmap16.cpp:358 supplies the ordinary clear helper called by reference.
-// Complete inlines its scalar resets and borrowed-buffer release; the DC-only
+// Complete inlines its scalar resets and owned-buffer release; the DC-only
 // surface-release arm has no corresponding field or operation in retail.
+// DC 0x511d6/0x511e0 unlocks/releases the surface instead of deleting a
+// heap buffer. Mac 0x5c094 and retail reference 0x44e250 retain only the
+// heap/borrowed-buffer branch, including its null-pointer guard.
 DC_ADDRESS(0x051198, 0x90)
 MAC_ADDRESS(0x05c094, 0x64)
 void Bitmap16Bit::clear()

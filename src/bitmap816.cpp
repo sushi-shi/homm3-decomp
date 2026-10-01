@@ -69,6 +69,10 @@ Bitmap816::Bitmap816(const char* name, const char* path,
     importPCXFile(filename, rbits, rshift, gbits, gshift, bbits, bshift);
 }
 
+// DC 0x53be4/0x53bee unlocks/releases the optional surface; Complete's
+// heap buffer needs only delete[]. DC 0x53c0e/0x53c20 deletes palette
+// pointers, whereas Mac 0x5dbf4/0x5dc00 and retail 0x44fa12/0x44fa1e
+// destroy embedded m_p24/m_p16 automatically after this body.
 VA(0x0044f9d0, 0x70)
 DC_ADDRESS(0x053ba4, 0xb8)
 MAC_ADDRESS(0x05dbb4, 0x88)

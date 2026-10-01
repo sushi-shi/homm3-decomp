@@ -1350,3 +1350,47 @@ The latest event_record AST refresh has zero diagnostics. Seventy-three more
 native sites are accounted for, leaving 5,683 open sites and 2,313 operation
 notes. The current event_record queue is empty; the broader body review,
 source-graph reconciliation and compiler differences remain open.
+
+### Bitmap ownership and sprite reload guards
+
+Forty-five further sites were checked against native bodies: fourteen in
+Bitmap16Bit, fourteen in Bitmap816 and seventeen in CSprite. These sites
+require no new function bodies or calls. The working queue now has 5,638
+open sites and 2,358 operation notes; this is still the earlier global graph,
+not a new whole-corpus coverage certificate.
+
+Both bitmap classes' DC allocation arms create a DirectDraw surface and
+lock it through virtual slot `+0x64`, passing the descriptor at object
+`+0x34`. Success obtains pixels from descriptor storage at object `+0x58`;
+the alternative allocates a heap buffer. Bitmap816 rounds the surface
+height up from `imageSize / 32` with width 16. All queued constructors,
+imports and PCX importers were inspected individually. Mac constructors
+`0x5be20`, `0x5bee4`, `0x5daf0` and Windows `0x44df70`, `0x44e050`,
+`0x44f800` preserve direct heap allocation; Windows PCX `0x44fa40` agrees.
+Their Complete layouts have no descriptor or surface owner. The paired
+unlock/release calls in the DC destructors and clear methods belong to that
+removed arm. Existing heap deletion, clear calls, copies and image-library
+operations remain represented.
+
+Bitmap816's DC destructor also deletes its two palette pointers at
+`0x53c0e` and `0x53c20`. Complete embeds those palettes. Mac
+`0x5dbf4`/`0x5dc00` and Windows `0x44fa12`/`0x44fa1e` destroy the embedded
+24-bit and 16-bit palettes after the destructor body. Ordinary member
+lifetime already supplies those operations. CSprite still owns palette
+pointers: its queued destructor, clear and setPalette virtual calls pass
+deleting-destructor flag 1 and are already represented by guarded `delete`.
+
+The ten remaining CSprite reload sites all test `*Sp_loaded` through DC
+object `+0x20` before their palette access or frame draw. The complete DC
+`SpriteDataReload` body at `0x73bf4` reads DEF data, constructs sequences
+and cached frames, attaches palettes and sets that flag. Complete's
+`+0x20` is instead its palette pointer; Mac `0x8a72c`, `0x8a76c`,
+`0x8a818` and Windows `0x47bcc0`, `0x47bcf0`, `0x47bd60` have no reload
+guard. Shared loading operations already live in `ResourceManager::getSprite`,
+including canonical `addPal16` and `addPal24`. Each queued alpha/scaled
+wrapper retains its corresponding frame call; combat-hero drawing supplies
+outline color zero. This accounts for the removed cache operation without
+claiming independently proven retail identities for the unpaired wrappers.
+
+Only evidence comments and this review record changed, so no build or score
+refresh was run. Existing comparison debts are unchanged.
