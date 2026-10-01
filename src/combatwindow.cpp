@@ -122,13 +122,8 @@ TCombatWindow::TCombatWindow(unsigned char doPlacement)
     m_widgets.push_back(m_chatEdit);
     m_widgets.push_back(m_chatWidget);
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x8037c..3bc expands the complete null-error registration helper.
+    addWidgetsToMessageStream();
 
     if (doPlacement) {
         m_controlSubWindow = new TCombatPlacementSubWindow(this);
