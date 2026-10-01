@@ -326,13 +326,6 @@ TRmgRoadPainter::~TRmgRoadPainter()
 {
 }
 
-// Squared norms in both length and incircle evaluation use signed 32-bit
-// products and addition before their callers widen. Do not move the casts in.
-static inline int getRmgSquaredNorm(int x, int y)
-{
-    return x * x + y * y;
-}
-
 VA(0x005FCEB0, 0x39)
 MAC_ADDRESS(0x25c018, 0x64)
 int TRmgVector::length() const
@@ -388,9 +381,7 @@ MAC_ADDRESS(0x25c184, 0x34) // anchor-callee 0x5fd308; thiscall, ret 4; Complete
 void TRmgHalfEdge::splice(TRmgHalfEdge* other)
 {
     std::swap(m_next->m_previous, other->m_next->m_previous);
-    TRmgHalfEdge* next = m_next;
-    m_next = other->m_next;
-    other->m_next = next;
+    std::swap(m_next, other->m_next);
 }
 
 VA(0x005FCFA0, 0x61)
