@@ -392,7 +392,9 @@ const std::bitset<9>& armyGrpFn0044A460()
 VA(0x0044a4d0, 0x52E)
 DC_ADDRESS(0x04e644, 0x3f2)
 MAC_ADDRESS(0x0579bc, 0x574)  // linkorder
-float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero* const castingHero, const hero* const targetHero)
+// Native public get_spell_work_chance@@YAMW4SpellID@@W4TCreatureType@@
+// QBVhero@@2@Z proves the spell enum and both const pointer parameters.
+float getSpellWorkChance(ESpellId spell, TCreatureType targetArmyType, const hero* const castingHero, const hero* const targetHero)
 {
     float chance;
     const TCreatureTypeTraits* creatureRec = &g_creatureTypeTraits[targetArmyType];
@@ -1061,7 +1063,9 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
 VA(0x0044b4b0, 0x162)
 DC_ADDRESS(0x04f328, 0xa4)
 MAC_ADDRESS(0x0590c0, 0x140)
-long modifySpellDamage(long damage, SpellID spell, TCreatureType creature)
+// Original public modify_spell_damage@@YAJJW4SpellID@@W4TCreatureType@@
+// preserves both enum domains; integer parent APIs adapt at their calls.
+long modifySpellDamage(long damage, ESpellId spell, TCreatureType creature)
 {
     switch (creature) {
     case CREATURE_AIR_ELEMENTAL:
