@@ -1019,6 +1019,8 @@ public:
     // with the caller. Both require an available/occupied slot respectively.
     void addHero(int id);
     void removeHeroAt(int index);
+    // Project-inferred selection/cursor transition when a hero enters garrison.
+    void clearHiddenHeroSelection(const hero& hiddenHero);
     int findTown(int id) const;
     // ?IsHuman@playerData@@QBA_NXZ / ?IsLocalHuman@playerData@@QBA_NXZ
     bool isLocalHuman() const;

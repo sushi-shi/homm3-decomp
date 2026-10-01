@@ -1218,6 +1218,9 @@ private:
                                       unsigned int specialTerrainMask);
     void initializeArcher(TArcher& archer, const TSiegeArcherInfo& info,
                           int position, TArcherLoadState& locals);
+    // Project-inferred moat-ring lookup; failure leaves the output untouched.
+    bool findMoatHex(int hex, const unsigned char* cells,
+                     int gateHex, int* index) const;
     void setupAdjacencyArray();
     void updateArmyGroup(int whichSide);
 

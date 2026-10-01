@@ -1318,6 +1318,16 @@ bool playerData::hasCapitol()
     return false;
 }
 
+// Project-inferred operation shared by garrison entry and town hero exchange.
+void playerData::clearHiddenHeroSelection(const hero& hiddenHero)
+{
+    if (m_currHeroId == hiddenHero.m_id) {
+        m_currHeroId = -1;
+        if (g_netLocalGamePos == hiddenHero.m_owner)
+            g_advManager->clearHeroCursor();
+    }
+}
+
 VA(0x004b9fc0, 0x167)
 DC_ADDRESS(0x0a4ee8, 0x1c2)
 MAC_ADDRESS(0x0cc4fc, 0x1bc)
@@ -1347,12 +1357,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
 
     removeHeroAt(found);
 
-    if (m_currHeroId == ourHero->m_id) {
-        m_currHeroId = -1;
-        if (g_netLocalGamePos == ourHero->m_owner) {
-            g_advManager->clearHeroCursor();
-        }
-    }
+    clearHiddenHeroSelection(*ourHero);
     ourTown->m_garrisonHeroId = ourHero->m_id;
     ourTown->m_visitingHeroId = -1;
     return 1;

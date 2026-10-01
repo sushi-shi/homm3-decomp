@@ -3972,31 +3972,33 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
     m_combatWindow->combatMessage(message.c_str(), 1, 0);
 }
 
+// Project-inferred lookup shared by the ordinary and Fortress moat rings.
+bool combatManager::findMoatHex(int hex, const unsigned char* cells,
+                                int gateHex, int* index) const
+{
+    for (int row = 0; row < 11; row++) {
+        if (cells[row] == hex
+                && (m_drawbridgeState == DRAWBRIDGE_UP || hex != gateHex)) {
+            if (index)
+                *index = row;
+            return true;
+        }
+    }
+    return false;
+}
+
 VA(0x00469dc0, 0x8D)
 DC_ADDRESS(0x06351c, 0x7e)
 MAC_ADDRESS(0x0764c4, 0xd4)
 unsigned char combatManager::isInMoat(int hex, int* index)
 {
     if (m_moatOn) {
-        for (int row = 0; row < 11; row++) {
-            if (g_moatHexes[row] == hex
-                    && (m_drawbridgeState == DRAWBRIDGE_UP
-                        || hex != COMBAT_HEX_GATE_MOAT)) {
-                if (index)
-                    *index = row;
-                return 1;
-            }
-        }
+        if (findMoatHex(hex, g_moatHexes, COMBAT_HEX_GATE_MOAT, index))
+            return 1;
         if (m_defendingTown->m_type == TOWN_FORTRESS) {
-            for (int row = 0; row < 11; row++) {
-                if (g_innerMoatHexes[row] == hex
-                        && (m_drawbridgeState == DRAWBRIDGE_UP
-                            || hex != COMBAT_HEX_OUTER_MOAT)) {
-                    if (index)
-                        *index = row;
-                    return 1;
-                }
-            }
+            if (findMoatHex(hex, g_innerMoatHexes, COMBAT_HEX_OUTER_MOAT,
+                            index))
+                return 1;
         }
     }
     if (index)

@@ -36,6 +36,18 @@
 // That also retires the `Unnamed41e190` ordinal: the IDB prototype
 // carries the DC parameter names verbatim.
 
+// Project-inferred shared discount used by both ballista target passes.
+// Keep the native queries and their short-circuit/repeated-read behavior.
+static long discountDelayedTargetValue(const army* target, long value)
+{
+    if (target->cannotAttack() || !target->getAITarget()
+            || target->getAITargetTime() > 5)
+        value /= 5;
+    else
+        value /= target->getAITargetTime();
+    return value;
+}
+
 // E:\gamedcs\ai.cpp:43
 // The arrow tower's / ballista's target picker. `attack_skill` is a DEAD
 // parameter in retail - nothing reads [ebp+0xc] - and the DC prototype
@@ -61,7 +73,8 @@
 // consistent with DC's r11 across both loops, raises Mac to 97.9873%
 // (925/944); the first scan is exact and the second only differs in its army
 // pointer register. Naming a divided `damage` local
-// lowered Mac to 95.3390% and was removed.
+// lowered Mac to 95.3390% and was removed. These observations predate
+// extraction of the repeated target-delay discount below.
 VA(0x0041e190, 0x2A8)
 DC_ADDRESS(0x023450, 0x2fe)
 MAC_ADDRESS(0x01f2b4, 0x3b0)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets
@@ -91,11 +104,7 @@ int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int av
             value = currentArmy->getLossCombatValue(
                 estimate.m_lowestAttack, estimate.m_lowestDefense, 1, value,
                 estimate.m_killsOnly);
-            if (currentArmy->cannotAttack() || !currentArmy->getAITarget()
-                    || currentArmy->getAITargetTime() > 5)
-                value /= 5;
-            else
-                value /= currentArmy->getAITargetTime();
+            value = discountDelayedTargetValue(currentArmy, value);
             if (value >= bestValue) {
                 result = i;
                 bestValue = value;
@@ -120,11 +129,7 @@ int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int av
 #endif
                 value = currentArmy->getLossCombatValue(
                     estimate.m_lowestAttack, estimate.m_lowestDefense, 1, value, 0);
-                if (currentArmy->cannotAttack() || !currentArmy->getAITarget()
-                        || currentArmy->getAITargetTime() > 5)
-                    value /= 5;
-                else
-                    value /= currentArmy->getAITargetTime();
+                value = discountDelayedTargetValue(currentArmy, value);
                 if (value >= bestValue) {
                     result = i;
                     bestValue = value;

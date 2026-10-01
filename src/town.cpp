@@ -816,12 +816,7 @@ void town::swapHeroes()
 
     g_currentPlayer->removeHeroAt(rosterIndex);
 
-    if (g_currentPlayer->m_currHeroId == visitingHero->m_id) {
-        g_currentPlayer->m_currHeroId = -1;
-        if (g_netLocalGamePos == visitingHero->m_owner) {
-            g_advManager->clearHeroCursor();
-        }
-    }
+    g_currentPlayer->clearHiddenHeroSelection(*visitingHero);
 
     // Dreamcast town.cpp:1143 and Mac retain the ordinary town::PlaceInMap call.
     int player = currentTown->m_owner;

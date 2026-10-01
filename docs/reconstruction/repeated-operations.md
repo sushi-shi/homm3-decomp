@@ -2433,6 +2433,38 @@ entry points and nested helpers remain present; no layout, virtual slot or
 field-visibility change is made. Historical compiler observations in source
 comments do not validate these extractions.
 
+## Target-delay discounts, hidden selection and moat rings
+
+Both ballista target passes share file-static discountDelayedTargetValue.
+The operation divides the candidate's signed long value by five when it cannot
+attack, has no AI target or has target time above five; otherwise it divides by
+a fresh native getAITargetTime call. The short-circuit order and repeated time
+query remain intact, without caching or a new zero-time guard. Damage estimation,
+the Mac/Windows arithmetic difference, loss valuation, kills-only retry gate,
+shared candidate locals and last-wins tie handling remain in the two callers.
+
+Garrison entry and town hero exchange share playerData::clearHiddenHeroSelection.
+Only a matching selected hero is cleared to -1, and only the local owner's
+matching hero clears the adventure cursor through its existing paired reset.
+The hero is passed by reference so its owner is read after selection changes.
+Roster removal, hide-message dispatch, cell restoration and town resident-slot
+updates retain their original caller order. Hero dismissal has different owner
+checks for its two cursor fields; replay has different selection policy. Those
+paths retain their distinct operations.
+
+The two moat rings share private findMoatHex: scan eleven unsigned-byte cells
+in order, accepting a matching hex when the drawbridge is up or it is not that
+ring's gate hex. Success conditionally writes the row output; failure leaves
+it untouched. The native isInMoat entry point retains the moat-enabled guard,
+ordinary-ring precedence, Fortress-only inner ring, and final -1 write after
+all applicable searches fail. No coordinate validation or altered gate rule is
+introduced.
+
+All three helper names and ordinary source placements are project inferences.
+Existing native calls, visibility, member layouts and return interfaces remain
+unchanged. Historical compiler observations predate this extraction; no new
+compiler or behavior validation is claimed.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
