@@ -163,7 +163,9 @@ DATA(0x0069e59c) unsigned long g_spriteMaskGreen;
 // Toggled by the retail adventure-map command that dispatches
 // SaturateGraphics/RemapGraphics; every resource loader consults the byte.
 DATA(0x0069d858) unsigned long g_spriteMaskLast;
-DATA(0x0069e5b0) unsigned char g_graphicsSaturated;
+// Original public SaturatedGraphicsEasterEgg@ResourceManager@@3_NA
+// independently proves bool storage for this palette-transform flag.
+DATA(0x0069e5b0) bool g_graphicsSaturated;
 DATA(0x0069d868) int g_firstMaskShift;
 DATA(0x0069d860) int g_firstMaskBits;
 DATA(0x0069d864) int g_greenMaskShift;
@@ -1303,8 +1305,9 @@ resource* ResourceManager::getFromCache(const char* name)
 
 // Original: ResourceManager::Report; resourcemanager.cpp:2404
 // Optimized release hook: the executable body is only return true.
+// Original Report@ResourceManager@@YA_NPBD@Z proves the bool return.
 DC_ADDRESS(0x1229f8, 0x68)
-unsigned char ResourceManager::report(const char* filename)
+bool ResourceManager::report(const char* filename)
 {
     return 1;
 }

@@ -27,7 +27,7 @@ class TTextResource;
 extern int& g_videoGameState;
 // Claimed by resourcemanager.obj; the adventure-map phisher-price command
 // toggles it before selecting the palette transform.
-extern unsigned char g_graphicsSaturated;  // retail 0x69e5b0
+extern bool g_graphicsSaturated;  // retail 0x69e5b0
 
 namespace ResourceManager {
 // Retail exception type name is ResourceManager::t_open_errors on Windows
@@ -41,7 +41,7 @@ void saturateGraphics();
 bool open(bool openSprites, bool openBitmaps, int* errorCode);
 void close();
 void expunge();
-unsigned char report(const char* filename);
+bool report(const char* filename);
 void setPath(const char* path);
 void setPixelFormat(unsigned long redMask, unsigned long greenMask,
                     unsigned long blueMask);             // 0x55a6b0
