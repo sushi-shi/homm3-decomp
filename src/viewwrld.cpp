@@ -257,6 +257,10 @@ inline void vwScaleToScreenBuffer(int destX, int destY)
 // 2026-09-29: getMap through reinterpret_cast costs 43 (floor-gated),
 // isValidSeq without `!= 0` costs 41; both byte-flat here. An if/return
 // getNumFrames is worse (93.30%).
+// NewmapCell's native LF_BITFIELD positions 0..5 and 9 name the terrain
+// flips and beach border. Mac 0x20321c tests that border before froth;
+// 0x2055e0/0x2055fc extract the river flip bits passed to DrawTile.
+// Preserve those fields in the four part guards and terrain-layer blits.
 VA(0x005f7500, 0x3F7)
 DC_ADDRESS(0x19308c, 0x34c)
 MAC_ADDRESS(0x203150, 0x530)
@@ -271,7 +275,7 @@ void advManager::vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int 
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
         NewmapCell* heroCell = getCell(currHero->getLocation());
 
-        if (!(heroCell->m_flags0011 & 0x200)) {
+        if (!heroCell->m_isBeachBorder) {
             m_boatFrothIcons[currBoat->m_type]->drawHero(
                 currHero->getStandSequence(),
                 m_animCtr
@@ -333,7 +337,7 @@ void advManager::vwDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
         NewmapCell* heroCell = getCell(currHero->getLocation());
 
-        if (!(heroCell->m_flags0011 & 0x200)) {
+        if (!heroCell->m_isBeachBorder) {
             m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
                 currHero->getStandSequence(),
                 m_animCtr
@@ -391,7 +395,7 @@ void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int 
     int boatCellX = part / 3;
     NewmapCell* boatCell = getCell(currBoat->getLocation());
 
-    if (!(boatCell->m_flags0011 & 0x200)) {
+    if (!boatCell->m_isBeachBorder) {
         m_boatFrothIcons[currBoat->m_type]->drawHero(
             currBoat->getStandSequence(),
             m_animCtr
@@ -421,7 +425,7 @@ void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX
     int boatCellX = part / 3;
     NewmapCell* boatCell = getCell(currBoat->getLocation());
 
-    if (!(boatCell->m_flags0011 & 0x200)) {
+    if (!boatCell->m_isBeachBorder) {
         m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
             currBoat->getStandSequence(),
             m_animCtr
@@ -874,8 +878,8 @@ void advManager::vwDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 
     m_riverTileset[thisCell->m_riverSet]->drawTile(
         thisCell->m_riverIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
-        (thisCell->m_flags0011 >> 2) & 1,
-        (thisCell->m_flags0011 >> 3) & 1);
+        thisCell->m_riverFlippedHorizontal,
+        thisCell->m_riverFlippedVertical);
 
     vwScaleToScreenBuffer(baseX, baseY + 8);
 }
@@ -920,8 +924,8 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 
     m_roadTileset[thisCell->m_roadSet]->drawTile(
         thisCell->m_roadIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
-        (thisCell->m_flags0011 >> 4) & 1,
-        (thisCell->m_flags0011 >> 5) & 1);
+        thisCell->m_roadFlippedHorizontal,
+        thisCell->m_roadFlippedVertical);
 
     vwScaleToScreenBuffer(baseX, baseY + 8);
 }
@@ -1119,8 +1123,8 @@ void advManager::vwDrawGround(int srcX, int srcY, int z, int destX, int destY)
 
         m_groundTileset[thisCell->m_groundSet]->drawTile(
             thisCell->m_groundIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
-            thisCell->m_flags0011 & 1,
-            (thisCell->m_flags0011 >> 1) & 1);
+            thisCell->m_groundFlippedHorizontal,
+            thisCell->m_groundFlippedVertical);
 
         vwScaleToScreenBuffer(baseX, baseY + 8);
     }
