@@ -1284,3 +1284,36 @@ the working queue to 5,788 open native sites and 2,208 operation notes. All
 currently queued mapcell sites have dispositions. This does not certify every
 mapcell body or erase the outstanding inlining/comparison debt; the queue is
 still based on the earlier global native graph.
+
+### Event-record scalar transfers and boat occupant IDs
+
+The event base, hero-move, mine-claim and boat-hide serializers now retain
+fourteen more reference scalar-helper uses. Member transfers still use member
+storage; the hero-ID and boat-ID readers keep their local staging. Exact-size
+checks remain exact-size checks. Loads stop on a failed base read, while
+saves ignore the base result; the move/mine writers return only their final
+transfer's Boolean result. Packed source/destination points remain whole-record
+transfers, with no invented endian conversion.
+
+The boat occupancy tail requires four additional endian-helper uses. Mac
+`0xbfef4`/`0xbff20` uses `lhbrx` then signed widening for the two occupant IDs;
+`0xc002c`/`0xc0054` narrows and uses `sthbrx` on output. The previous source
+left these as native-order helpers with an unresolved-conversion comment.
+They now call `readLittleEndianValue<short>` and
+`writeLittleEndianValue<short>`. These transfers remain unchecked, and the
+old-save version gate/defaults remain intact.
+
+All eight native bodies were inspected, accounting for 32 more stream sites.
+The queue now has 5,756 open sites and 2,240 operation notes. Targeted mapcell
+and event_record AST snapshots were refreshed after their edits; the global
+native graph and its broader coverage gaps remain unchanged.
+
+The targeted event_record build succeeds. Seven edited functions remain
+Windows 100%; boat-hide save is 96.7460%, preserving HIST 100%. Its ordered
+six virtual writes and all compared references agree with retail. The
+unchanged boat-show writer also has CUR 94.2254%, with MAX/HIST 100% retained.
+Six Mac comparisons become unavailable because scalar helpers remain as
+unpaired references: base load/save (both previously 100%), move load/save
+(18.9024%/20.6140%) and mine-claim load/save (20.3390%/19.6809%). Boat-hide
+comparisons were already unavailable. The recovered helpers remain while
+these compiler and comparison differences stay open.

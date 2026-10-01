@@ -50,7 +50,7 @@ DC_ADDRESS(0x08c678, 0x1e)
 MAC_ADDRESS(0x0befc0, 0x48)
 unsigned char type_event_record::load(TAbstractFile* infile, int version)
 {
-    return infile->read(&m_playerId, 1) == 1;
+    return readValue(infile, m_playerId) == 1;
 }
 
 VA(0x0049a600, 0x1D)
@@ -58,7 +58,7 @@ DC_ADDRESS(0x08c698, 0x1e)
 MAC_ADDRESS(0x0bf008, 0x48)
 unsigned char type_event_record::save(TAbstractFile* outfile)
 {
-    return outfile->write(&m_playerId, 1) == 1;
+    return writeScalar(outfile, m_playerId) == 1;
 }
 
 // E:\gamedcs\event_record.cpp:65. Ordinary static helper, expanded
@@ -146,10 +146,10 @@ unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
     if (!type_event_record::load(infile, version))
         return 0;
     int heroId;
-    if (infile->read(&heroId, sizeof(heroId)) != sizeof(heroId))
+    if (readValue(infile, heroId) != sizeof(heroId))
         return 0;
     m_currentHero = g_game->getHero(heroId);
-    if (infile->read(&m_direction, 1) != 1)
+    if (readValue(infile, m_direction) != 1)
         return 0;
     if (infile->read(&m_source, sizeof(m_source)) != sizeof(m_source))
         return 0;
@@ -164,8 +164,8 @@ unsigned char type_record_move_hero::save(TAbstractFile* outfile)
 {
     int heroId = m_currentHero->m_id;
     type_event_record::save(outfile);
-    outfile->write(&heroId, sizeof(heroId));
-    outfile->write(&m_direction, 1);
+    writeScalar(outfile, heroId);
+    writeScalar(outfile, m_direction);
     outfile->write(&m_source, sizeof(m_source));
     unsigned char ok = outfile->write(&m_destination, sizeof(m_destination)) == sizeof(m_destination);
     return ok;
@@ -292,11 +292,11 @@ unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
-    if (infile->read(&m_id, sizeof(m_id)) != sizeof(m_id))
+    if (readValue(infile, m_id) != sizeof(m_id))
         return 0;
-    if (infile->read(&m_oldOwner, 1) != 1)
+    if (readValue(infile, m_oldOwner) != 1)
         return 0;
-    unsigned char ok = infile->read(&m_newOwner, 1) == 1;
+    unsigned char ok = readValue(infile, m_newOwner) == 1;
     return ok;
 }
 
@@ -306,9 +306,9 @@ MAC_ADDRESS(0x0bf92c, 0xbc)
 unsigned char type_record_claim_mine::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
-    outfile->write(&m_id, sizeof(m_id));
-    outfile->write(&m_oldOwner, 1);
-    unsigned char ok = outfile->write(&m_newOwner, 1) == 1;
+    writeScalar(outfile, m_id);
+    writeScalar(outfile, m_oldOwner);
+    unsigned char ok = writeScalar(outfile, m_newOwner) == 1;
     return ok;
 }
 
@@ -449,16 +449,16 @@ unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
     if (!type_event_record::load(infile, version))
         return 0;
     signed char boatId;
-    if (infile->read(&boatId, 1) != 1)
+    if (readValue(infile, boatId) != 1)
         return 0;
     if (version >= 0x12 && version != g_saveVersionBoatFieldsAbsent
         && (version <= 0x1e || version >= 0x23)) {
         m_previousOccupied = readValue<char>(infile) != 0;
         m_occupied = readValue<char>(infile) != 0;
-        // Mac stages each short separately, then uses lhbrx; the conversion
-        // remains unresolved in the shared native scalar helper.
-        m_previousOccupyingHero = readValue<short>(infile);
-        m_occupyingHero = readValue<short>(infile);
+        // Mac 0xbfef4/0xbff20 decodes both unchecked short reads with
+        // lhbrx, then sign-extends before storing the int hero IDs.
+        m_previousOccupyingHero = readLittleEndianValue<short>(infile);
+        m_occupyingHero = readLittleEndianValue<short>(infile);
     } else {
         m_previousOccupied = 0;
         m_occupied = 1;
@@ -475,14 +475,14 @@ MAC_ADDRESS(0x0bff70, 0x11c)
 unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
-    if (outfile->write(&m_currentBoat->m_id, 1) != 1)
+    if (writeScalar(outfile, m_currentBoat->m_id) != 1)
         return 0;
     writeValue<unsigned char>(outfile, m_previousOccupied);
     writeValue<unsigned char>(outfile, m_occupied);
-    // Mac uses sthbrx in these scalar expansions; native helper byte order
-    // remains an unresolved comparison difference.
-    writeValue<short>(outfile, m_previousOccupyingHero);
-    writeValue<short>(outfile, m_occupyingHero);
+    // Mac 0xc002c/0xc0054 narrows both hero IDs and uses sthbrx.
+    // Preserve the unchecked little-endian short transfers.
+    writeLittleEndianValue<short>(outfile, m_previousOccupyingHero);
+    writeLittleEndianValue<short>(outfile, m_occupyingHero);
     return 1;
 }
 
