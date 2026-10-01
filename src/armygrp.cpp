@@ -658,7 +658,7 @@ DC_ADDRESS(0x04ebc0, 0x10)
 MAC_ADDRESS(0x0581dc, 0x1c)
 void armyGroup::dismiss(int whichIndex)
 {
-    m_armies[whichIndex] = CREATURE_NONE;
+    m_armyTypes[whichIndex] = CREATURE_NONE;
     m_numTroops[whichIndex] = 0;
 }
 
@@ -1126,16 +1126,16 @@ bool armyGroup::merge(armyGroup* ag)
     armyGroup ag2;
     int i;
     for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
-        ag1.m_armies[i] = m_armies[i];
+        ag1.m_armyTypes[i] = m_armyTypes[i];
         ag1.m_numTroops[i] = m_numTroops[i];
-        ag2.m_armies[i] = ag->m_armies[i];
+        ag2.m_armyTypes[i] = ag->m_armyTypes[i];
         ag2.m_numTroops[i] = ag->m_numTroops[i];
     }
     i = 0;
     while (i < ARMY_GROUP_SLOT_COUNT) {
-        if (ag2.m_armies[i] != CREATURE_NONE && ag2.m_numTroops[i] > 0) {
+        if (ag2.m_armyTypes[i] != CREATURE_NONE && ag2.m_numTroops[i] > 0) {
             int j = 0;
-            while (j < ARMY_GROUP_SLOT_COUNT && ag2.m_armies[i] != ag1.m_armies[j])
+            while (j < ARMY_GROUP_SLOT_COUNT && ag2.m_armyTypes[i] != ag1.m_armyTypes[j])
                 ++j;
             if (j < ARMY_GROUP_SLOT_COUNT) {
                 ag1.m_numTroops[j] += ag2.m_numTroops[i];
@@ -1147,7 +1147,7 @@ bool armyGroup::merge(armyGroup* ag)
                     ++j;
                 if (j < ARMY_GROUP_SLOT_COUNT) {
                     ag1.m_numTroops[j] = ag2.m_numTroops[i];
-                    ag1.m_armies[j] = ag2.m_armies[i];
+                    ag1.m_armyTypes[j] = ag2.m_armyTypes[i];
                     ag2.dismiss(i);
                     ++i;
                 } else {
@@ -1155,7 +1155,7 @@ bool armyGroup::merge(armyGroup* ag)
                     unsigned char progress = 0;
                     while (a < ARMY_GROUP_SLOT_COUNT - 1 && !progress) {
                         int b = a;
-                        while (++b < ARMY_GROUP_SLOT_COUNT && ag1.m_armies[a] != ag1.m_armies[b]) {
+                        while (++b < ARMY_GROUP_SLOT_COUNT && ag1.m_armyTypes[a] != ag1.m_armyTypes[b]) {
                         }
                         if (b < ARMY_GROUP_SLOT_COUNT) {
                             ag1.m_numTroops[a] += ag1.m_numTroops[b];
@@ -1175,9 +1175,9 @@ bool armyGroup::merge(armyGroup* ag)
         }
     }
     for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
-        m_armies[i] = ag1.m_armies[i];
+        m_armyTypes[i] = ag1.m_armyTypes[i];
         m_numTroops[i] = ag1.m_numTroops[i];
-        ag->m_armies[i] = ag2.m_armies[i];
+        ag->m_armyTypes[i] = ag2.m_armyTypes[i];
         ag->m_numTroops[i] = ag2.m_numTroops[i];
     }
     return 1;
