@@ -3901,15 +3901,17 @@ void type_garrison_base_window::showText()
 
 // Original: type_garrison_base_window::ViewArmy; townmgr.cpp:5012
 // Mac 0x1cc8c8/0x1cc90c reads the manager index for the test and call.
-// Direct member expressions also recover the Windows caller block sizes.
+// Mac also reads thisStrip->m_group independently for the troop test at
+// 0x1cc8cc and the view call at 0x1cc908. Keep those two property queries
+// rather than an invented group snapshot; the canonical helper then restores
+// its windowHandler caller from 98.8% to 100% (22 blocks, 10 calls, 23 relocs).
 DC_ADDRESS(0x172ca0, 0x52)
 MAC_ADDRESS(0x1cc8ac, 0x78)
 void type_garrison_base_window::viewArmy()
 {
     strip* thisStrip = g_townManager->m_currStrip;
-    armyGroup* group = thisStrip->m_group;
-    if (group->m_armies[g_townManager->m_currIndex] != -1)
-        g_game->viewArmy(*group, g_townManager->m_currIndex, thisStrip->m_thisHero, 0, 119, 20, 0, 1);
+    if (thisStrip->m_group->m_armies[g_townManager->m_currIndex] != -1)
+        g_game->viewArmy(*thisStrip->m_group, g_townManager->m_currIndex, thisStrip->m_thisHero, 0, 119, 20, 0, 1);
 }
 
 // The garrison dialog's handler. It reads its window out of the MESSAGE
@@ -3931,9 +3933,6 @@ void type_garrison_base_window::viewArmy()
 // latch and repaints BOTH strips with the creature that is being divided.
 
 // E:\gamedcs\townmgr.cpp
-// Residual 98.8%: all 22 block sizes and ten calls agree; register choices
-// in the expanded viewArmy arms still differ. Keep the canonical helper
-// and its direct manager-index expressions.
 // Mac 0x1cc9e8/0x1ccaa0 retain distinct left-select and owner-right-select
 // dispatches. Windows jump tables 0x5d0af0/0x5d0b18 confirm owner 0x7c
 // on right-select and owner/frame ids 0x7b..0x7d on left-select.
