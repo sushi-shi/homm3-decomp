@@ -4748,6 +4748,8 @@ void townManager::doUniversity()
 // strips have their current slot parked at -2, both live strips redraw
 // with nothing divided out, and the four selection members go back to
 // their idle values before the status widget is dimmed.
+// DC 0x174d90 polls sound once more after RedrawTownScreen. Both desktop
+// bodies return immediately after redraw (Windows 0x5d30ac, Mac 0x1cfe20).
 VA(0x005d2f90, 0x132)
 DC_ADDRESS(0x174d1c, 0x84)
 MAC_ADDRESS(0x1cfd64, 0xd4)
@@ -5590,6 +5592,9 @@ building_popup:
     return 1;
 }
 
+// DC 0x176718 sends the strip-selection status through the town window.
+// Mac 0x1d1b84/0x1d1ba0 uses the window-manager broadcast instead, retaining
+// the same clear/set-status commands and widget 154.
 VA(0x005d4c10, 0x53C)
 DC_ADDRESS(0x176634, 0x552)
 MAC_ADDRESS(0x1d1aa4, 0x5d8)
