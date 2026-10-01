@@ -111,10 +111,14 @@ public:
 protected:
     bool buildMarkets(int* supply);
     void calculateReserve();  // 0x429ad0
-    bool canTradeResources(const int* cost, int* supply,
-                             std::vector<long>& tradeQty);
-    bool checkTradeSupply(const int* cost, long number, int* supply,
-                            std::vector<long>& tradeQty);
+    // Original check_trade_supply/can_trade_resources publics use QBH/QAH
+    // adjusted array formals; both helpers operate on seven resource entries.
+    bool canTradeResources(const int cost[NUM_RESOURCES],
+                           int supply[NUM_RESOURCES],
+                           std::vector<long>& tradeQty);
+    bool checkTradeSupply(const int cost[NUM_RESOURCES], long number,
+                          int supply[NUM_RESOURCES],
+                          std::vector<long>& tradeQty);
     void doResourceTrade(int* supply);
     long getTotalValue(long basicValue, int* cost);  // 0x42a150
     // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
