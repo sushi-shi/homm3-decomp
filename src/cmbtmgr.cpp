@@ -3077,6 +3077,11 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
 // 29 branches and 17 named calls align. The first residual is Include's
 // lowering at +0x333, with rectangle scratch/stack differences following.
 // The canonical bitmap, sprite, rectangle and resource calls stay intact.
+// DC 3794 separates the count test from 3796's angle comparison; Mac
+// 0x7429c..0x742ac breaks only when angle exceeds the adjacent average.
+// Keep that inner break, including unordered-angle behavior, as in
+// shootMissile. Its Windows bytes are identical at 94.6967%; all 17 named
+// calls agree and Include remains the first differing operation.
 VA(0x00467db0, 0x46A)
 DC_ADDRESS(0x0619a8, 0x4b8)
 MAC_ADDRESS(0x0740cc, 0x588)
@@ -3123,9 +3128,11 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
                       * 57.2957763671875;
         angle = static_cast<float>(degrees);
         int index = 1;
-        while (index < nsprites
-                && (angles[index - 1] + angles[index]) / 2.0f >= angle)
+        while (index < nsprites) {
+            if ((angles[index - 1] + angles[index]) / 2.0f < angle)
+                break;
             ++index;
+        }
         if (index < nsprites)
             spriteIndex = index - 1;
         else
