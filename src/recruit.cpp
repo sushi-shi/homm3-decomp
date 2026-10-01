@@ -1070,7 +1070,8 @@ void recruitUnit::updateCost()
 VA(0x00551350, 0x101)
 DC_ADDRESS(0x11ad04, 0xae)
 MAC_ADDRESS(0x1507b8, 0xc4)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70
-recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
+// Original DC public ??0recruitUnit@@QAA@PAVarmyGroup@@_N... proves bool.
+recruitUnit::recruitUnit(armyGroup* newGroup, bool groupIsTownGarrison,
     TCreatureType monType1, short* numMon1,
     TCreatureType monType2, short* numMon2,
     TCreatureType monType3, short* numMon3,

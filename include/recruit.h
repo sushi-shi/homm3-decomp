@@ -162,7 +162,7 @@ public:
     // Naturally aligned at +0xa0 between the +0x9c flag and +0xa4 updateNeeded.
     int m_addIndex;
 
-    recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
+    recruitUnit(armyGroup* newGroup, bool groupIsTownGarrison,
         TCreatureType monType1, short* numMon1,
         TCreatureType monType2, short* numMon2,
         TCreatureType monType3, short* numMon3,
