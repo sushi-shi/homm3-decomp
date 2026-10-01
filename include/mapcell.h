@@ -768,7 +768,7 @@ public:
     SpellID getScholarSpell() const;
     void setScholar(ScholarAwards award, TPrimarySkill primary,
                     TSecondarySkill secondary, SpellID spell);
-    SpellID getShrineSpell() const;
+    ESpellId getShrineSpell() const;
     TArtifact getTreasureArtifact() const;
     short getTreasureSize() const;
     bool treasureIsArtifact() const;
@@ -1795,9 +1795,10 @@ inline TArtifact ExtraInfoUnion::getSeaChestArtifact() const
 }
 
 DC_ADDRESS(0x01fa94, 0x14)
-inline SpellID ExtraInfoUnion::getShrineSpell() const
+// Original GetShrineSpell@@QBA?AW4SpellID@@XZ proves the enum result.
+inline ESpellId ExtraInfoUnion::getShrineSpell() const
 {
-    return m_shrineInfo.m_spell;
+    return ESpellId(m_shrineInfo.m_spell);
 }
 
 // The artifact is signed; the gold amount is truncated to a short after

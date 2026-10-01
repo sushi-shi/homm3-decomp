@@ -4209,8 +4209,9 @@ DC_ADDRESS(0x0abd4c, 0x5c)
 MAC_ADDRESS(0x0d66c8, 0x64)
 static void randomizeShrine(NewmapCell* cell, const int level)
 {
-    SpellID spell = cell->getShrineSpell();
-    if (spell == -1) {
+    // DC 0xabd4c records SpellID spell, the enum owned by ESpellId.
+    ESpellId spell = cell->getShrineSpell();
+    if (spell == SPELL_NONE) {
         spell = g_game->getRandomSpell(level);
         cell->m_shrineInfo.m_spell = spell;
     }
