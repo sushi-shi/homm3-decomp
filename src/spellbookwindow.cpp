@@ -179,7 +179,7 @@ MAC_ADDRESS(0x18b0ac, 0x1424)  // anchor-bracket: immediately precedes scalar-de
 TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbookWindow::TSpellContext context, int magicTerrain)
     : CAdvPopup(90, 2, 620, 595, 0x12),
       m_allowedContext(context),
-      m_hero(&h),
+      m_hero(h),
       m_enemyGroup(g),
       m_onMagicPlains(magicTerrain)
 {
@@ -194,7 +194,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
         s_lastPage = -1;
         s_lastSchool = (TSpellSchool)0;
         s_lastContext = eContextInvalid;
-        g_lastSpellbookHeroId = m_hero->m_id;
+        g_lastSpellbookHeroId = m_hero.m_id;
     }
     g_spellbookWindow = this;
 
@@ -314,7 +314,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
 
     sprintf(g_text,
         DATA_COMPGEN(0x00660a1c, spellbookDecimalFormat, "%d"),
-        m_hero->m_mana);
+        m_hero.m_mana);
     m_widgets.push_back(new textWidget(
         417, 405, 36, 45, g_text,
         DATA_COMPGEN(0x0065f2f8, spellbookSmallFont, "smalfont.fnt"),
@@ -430,15 +430,15 @@ void TSpellbookWindow::gotoPage(int page)
     availableSpells.reserve(hero::NUM_SPELLS);
 
     for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-        if (m_hero->spellIsAvailable(spell)
+        if (m_hero.spellIsAvailable(spell)
             && (getSchool() & g_spellTraits[spell].m_school)
             && (getContextMask() & g_spellTraits[spell].m_flags)) {
             TSpellSchool highestSchool =
-                m_hero->getHighestSchool(g_spellTraits[spell].m_school);
+                m_hero.getHighestSchool(g_spellTraits[spell].m_school);
             TSpellSchool school = static_cast<TSpellSchool>(getSchool());
             if (school == eSchoolAll)
                 school = highestSchool;
-            TSkillMastery mastery = m_hero->getSpellLevel(
+            TSkillMastery mastery = m_hero.getSpellLevel(
                 spell, m_onMagicPlains);
             availableSpells.push_back(TSpellbookEntry(spell, school, mastery));
         }
@@ -499,7 +499,7 @@ void TSpellbookWindow::gotoPage(int page)
                     getLevelString(displaySpell),
                     g_abbSecondarySkillLevels[entry.m_mastery - 1],
                     (*g_generalText)[GENERAL_TEXT_SPELL_POINTS_LABEL],
-                    const_cast<hero*>(m_hero)->getManaCost(
+                    const_cast<hero&>(m_hero).getManaCost(
                         displaySpell, m_enemyGroup, m_onMagicPlains));
         } else {
             sprintf(g_text,
@@ -507,13 +507,13 @@ void TSpellbookWindow::gotoPage(int page)
                                  "{%s}\n%s\n%s: %d"),
                     g_spellTraits[displaySpell].m_name,
                     getLevelString(displaySpell), (*g_generalText)[GENERAL_TEXT_SPELL_POINTS_LABEL],
-                    const_cast<hero*>(m_hero)->getManaCost(
+                    const_cast<hero&>(m_hero).getManaCost(
                         displaySpell, m_enemyGroup, m_onMagicPlains));
         }
         m_spellNameWidgets[widgetIndex]->setText(g_text);
 
-        if (const_cast<hero*>(m_hero)->getManaCost(
-                displaySpell, m_enemyGroup, m_onMagicPlains) <= m_hero->m_mana)
+        if (const_cast<hero&>(m_hero).getManaCost(
+                displaySpell, m_enemyGroup, m_onMagicPlains) <= m_hero.m_mana)
             m_spellNameWidgets[widgetIndex]->m_status &= ~widget::WIDGET_DIMMED;
         else
             m_spellNameWidgets[widgetIndex]->m_status |= widget::WIDGET_DIMMED;
@@ -618,7 +618,7 @@ int TSpellbookWindow::windowHandler(message& msg)
             int id = msg.m_codeY;
             if (id >= SPELL_0_ID && id <= SPELL_11_ID) {
                 SpellID spell = m_spellMap[id - SPELL_0_ID];
-                normalDialog(getSpellDescription(spell, m_hero, 0).c_str(),
+                normalDialog(getSpellDescription(spell, &m_hero, 0).c_str(),
                              4, -1, -1,
                              9, spell, -1, 0, -1, 0, -1, 0);
             } else {
@@ -713,20 +713,20 @@ int TSpellbookWindow::windowHandler(message& msg)
                      && getContextMask() == eCombatContextMask)
                     || (m_allowedContext == eContextAdventure
                         && getContextMask() == eAdventureContextMask)) {
-                    int manaCost = const_cast<hero*>(m_hero)->getManaCost(
+                    int manaCost = const_cast<hero&>(m_hero).getManaCost(
                         spell, m_enemyGroup, m_onMagicPlains);
-                    if (manaCost <= m_hero->m_mana) {
+                    if (manaCost <= m_hero.m_mana) {
                         exitFlag = 1;
                         msg.m_codeY = m_spellMap[msg.m_codeY - SPELL_0_ID];
                     } else {
                         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_SPELL_POINTS_INSUFFICIENT_FORMAT],
-                                manaCost, m_hero->m_mana);
+                                manaCost, m_hero.m_mana);
                         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                                      -1, 0, -1, 0);
                     }
                 } else {
                     normalDialog(
-                        getSpellDescription(spell, m_hero, 0).c_str(),
+                        getSpellDescription(spell, &m_hero, 0).c_str(),
                         1, -1, -1, 9, spell, -1, 0,
                         -1, 0, -1, 0);
                 }
@@ -789,7 +789,7 @@ int TSpellbookWindow::windowHandler(message& msg)
                 g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
                 if (id >= SPELL_0_ID && id <= SPELL_11_ID) {
                     SpellID spell = m_spellMap[id - SPELL_0_ID];
-                    rollover = getSpellDescription(spell, m_hero, 1);
+                    rollover = getSpellDescription(spell, &m_hero, 1);
                 } else {
                     int helpId = convertID2HelpID(id);
                     if (helpId >= 0)

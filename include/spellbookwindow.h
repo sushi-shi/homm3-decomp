@@ -165,9 +165,12 @@ public:
 
 private:
     const TSpellContext m_allowedContext;       // +0x60
-    const hero* m_hero;                         // +0x64
-    const armyGroup* m_enemyGroup;              // +0x68
-    int m_onMagicPlains;                        // +0x6c; retail widens DC's byte
+    // Native fields Hero/EnemyGroup/OnMagicPlains are constructor-bound:
+    // const hero&, const armyGroup* const, and const byte-sized terrain.
+    // Complete widens the terrain domain while preserving that lifetime.
+    const hero& m_hero;                         // +0x64
+    const armyGroup* const m_enemyGroup;        // +0x68
+    const int m_onMagicPlains;                  // +0x6c; retail widens DC's byte
     TSpellSchool m_school;                      // +0x70
     unsigned m_contextMask;                     // +0x74
     int m_page;                                 // +0x78
