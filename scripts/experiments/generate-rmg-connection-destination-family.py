@@ -18,8 +18,8 @@ from homm3.core.common import HOMM3_DIR
 from homm3.vc6.source_families import load_manifest
 from experiments._support import generator
 
-SLOT='int TRmgTownSlot::getZoneIndex() const\n{\n    return m_zoneIndex;\n}\n'
-DEST='TRmgTownSlot* TRmgZoneConnection::getDestination() const\n{\n    return m_destination;\n}\n'
+SLOT='int TRmgTemplateZone::getZoneIndex() const\n{\n    return m_zoneIndex;\n}\n'
+DEST='TRmgTemplateZone* TRmgZoneConnection::getDestination() const\n{\n    return m_destination;\n}\n'
 INDEX='int TRmgZoneConnection::getDestinationZoneIndex() const\n{\n    return m_destination->m_zoneIndex;\n}\n'
 MARKER='// Both connection-count passes in FilterZonePositions retain the same\n'
 
@@ -35,14 +35,14 @@ def main():
         expr='slot->m_connections[connection].m_destination->m_zoneIndex'
         replacement=expr
         if accessor in (1,3):slotdecl='    int getZoneIndex() const;\n';definitions+=SLOT+'\n'
-        if accessor in (2,3):edgedecl='    TRmgTownSlot* getDestination() const;\n';definitions+=DEST+'\n'
+        if accessor in (2,3):edgedecl='    TRmgTemplateZone* getDestination() const;\n';definitions+=DEST+'\n'
         if accessor==1:replacement='slot->m_connections[connection].m_destination->getZoneIndex()'
         elif accessor==2:replacement='slot->m_connections[connection].getDestination()->m_zoneIndex'
         elif accessor==3:replacement='slot->m_connections[connection].getDestination()->getZoneIndex()'
         elif accessor==4:
             edgedecl='    int getDestinationZoneIndex() const;\n';definitions=INDEX+'\n';replacement='slot->m_connections[connection].getDestinationZoneIndex()'
         assert body.count(expr)==1;body=body.replace(expr,replacement)
-        for owner,decl in (('TRmgTownSlot',slotdecl),('TRmgZoneConnection',edgedecl)):
+        for owner,decl in (('TRmgTemplateZone',slotdecl),('TRmgZoneConnection',edgedecl)):
             if decl:
                 anchor='struct '+owner+' {\n';assert header.count(anchor)==1
                 edits.append(dict(source='include/rmg.h',find=anchor,replace=anchor+decl))

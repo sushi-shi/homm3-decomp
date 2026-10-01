@@ -27,14 +27,14 @@ def variants(original, snapshots=False):
     prefix = original[:original.index("    int otherSize")]
     for owner, addition, minimum in itertools.product(range(5 if snapshots else 6), range(5), range(2)):
         lines = []
-        other, current = "other->m_slot->m_size", "m_slot->m_size"
+        other, current = "other->m_templateZone->m_size", "m_templateZone->m_size"
         if owner == 4 and not snapshots:
-            lines += ["const TRmgTownSlot* otherSlot = other->m_slot;",
-                      "const TRmgTownSlot* thisSlot = m_slot;"]
+            lines += ["const TRmgTemplateZone* otherSlot = other->m_templateZone;",
+                      "const TRmgTemplateZone* thisSlot = m_templateZone;"]
             other, current = "otherSlot->m_size", "thisSlot->m_size"
         elif owner == 5 and not snapshots:
-            lines += ["const TRmgTownSlot& otherSlot = *other->m_slot;",
-                      "const TRmgTownSlot& thisSlot = *m_slot;"]
+            lines += ["const TRmgTemplateZone& otherSlot = *other->m_templateZone;",
+                      "const TRmgTemplateZone& thisSlot = *m_templateZone;"]
             other, current = "otherSlot.m_size", "thisSlot.m_size"
         ot = "const int&" if owner in (1, 2) else "int"
         ct = "const int&" if owner in (1, 3) else "int"

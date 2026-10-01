@@ -457,7 +457,7 @@ unsigned char type_random_map::hasConnectedOutline(
     unsigned char blocked = 1;
     unsigned char foundBoundary = 0;
     unsigned char waterZone = zone->m_terrain == eTerrainWater;
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     for (unsigned int index = 0; index < outline.size() + 1; ++index) {
         unsigned char previouslyBlocked = blocked;
         TPoint offset(outline[index % outline.size()]);
@@ -788,7 +788,7 @@ unsigned char type_random_map::canPlaceObject(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position, TRmgZone* zone)
 {
     TObjectType& prototype = *properties->m_prototype;
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     if (isPlacementBlocked(properties, position, zoneIndex, 0))
         return 0;
     int objectType = prototype.getObjectType();
@@ -1172,8 +1172,8 @@ void TRmgMapItem::write(TAbstractFile* outputFile)
     outputFile->write(&value, sizeof(value));
 }
 
-VA_COMPGEN(0x005329A0, 0x32, IMPLICIT_DTOR, TRmgTownSlot)
-MAC_COMPGEN_ADDRESS(0x22f660, 0x68, IMPLICIT_DTOR, TRmgTownSlot)
+VA_COMPGEN(0x005329A0, 0x32, IMPLICIT_DTOR, TRmgTemplateZone)
+MAC_COMPGEN_ADDRESS(0x22f660, 0x68, IMPLICIT_DTOR, TRmgTemplateZone)
 
 // Native 0x22f6c8 counts enabled town types and uniformly selects one.
 // It returns -1 for an empty set. Both the zone constructor (0x22f834)
@@ -1181,7 +1181,7 @@ MAC_COMPGEN_ADDRESS(0x22f660, 0x68, IMPLICIT_DTOR, TRmgTownSlot)
 // Windows keeps the constructor exact and improves additional-town placement
 // from 76.6561% to 79.53% with the same helper and random-number consumption.
 MAC_ADDRESS(0x22f6c8, 0xb4)
-int TRmgTownSlot::selectAllowedTown()
+int TRmgTemplateZone::selectAllowedTown()
 {
     int allowedTownCount = 0;
     for (int town = 0; town < 9; ++town) {
@@ -1200,9 +1200,9 @@ int TRmgTownSlot::selectAllowedTown()
 
 VA(0x005329E0, 0xCF)
 MAC_ADDRESS(0x22f7c4, 0xc0) // anchor-callee 0x53e149/0x53e45c; thiscall, ret 4
-TRmgZone::TRmgZone(TRmgTownSlot* newSlot)
+TRmgZone::TRmgZone(TRmgTemplateZone* newSlot)
 {
-    m_slot = newSlot;
+    m_templateZone = newSlot;
     m_alignment = newSlot->selectAllowedTown();
     m_boundaryRoughness = newSlot->m_size;
     m_bounds.m_minimumX = 32000;
@@ -1240,12 +1240,12 @@ VA(0x00532AB0, 0x96)
 MAC_ADDRESS(0x22faa4, 0x130)
 void TRmgZone::chooseTerrain()
 {
-    if (m_slot->m_useNativeTerrain && m_alignment != -1) {
+    if (m_templateZone->m_useNativeTerrain && m_alignment != -1) {
         m_terrain = g_rmgTownNativeTerrains[m_alignment];
     } else {
         int count = 0;
         for (int terrain = 0; terrain < eTerrainWater; ++terrain) {
-            if (m_slot->m_allowedTerrain[terrain]
+            if (m_templateZone->m_allowedTerrain[terrain]
                 && (terrain != eTerrainSubterranean || m_levelPosition.m_z == 1))
                 ++count;
         }
@@ -1255,7 +1255,7 @@ void TRmgZone::chooseTerrain()
             int selected = rand() % count;
             int terrain;
             for (terrain = 0; terrain < eTerrainWater; ++terrain) {
-                if (m_slot->m_allowedTerrain[terrain]
+                if (m_templateZone->m_allowedTerrain[terrain]
                     && (terrain != eTerrainSubterranean || m_levelPosition.m_z == 1)) {
                     if (selected-- <= 0)
                         break;
@@ -1330,8 +1330,8 @@ MAC_ADDRESS(0x22fdc0, 0xc8) // anchor-callee 0x53b4b7/0x53b5ae; thiscall, ret 4
 unsigned char TRmgZone::canConnect(const TRmgZone* other) const
 {
     int distance = getRmgDistance(m_levelPosition, other->m_levelPosition);
-    int thisSize = m_slot->m_size;
-    int otherSize = other->m_slot->m_size;
+    int thisSize = m_templateZone->m_size;
+    int otherSize = other->m_templateZone->m_size;
     int combinedSize = thisSize + otherSize;
     if (other->m_levelPosition.m_z != m_levelPosition.m_z) {
         if (combinedSize < distance)
@@ -1431,7 +1431,7 @@ TRmgTemplate::~TRmgTemplate()
 // field; ret 4 fixes the member's one integer argument.
 VA(0x005330A0, 0x3E)
 MAC_ADDRESS(0x230304, 0x48)
-TRmgTownSlot* TRmgTemplate::findZone(int zoneIndex)
+TRmgTemplateZone* TRmgTemplate::findZone(int zoneIndex)
 {
     for (int zone = 0; zone < m_zones.size(); ++zone) {
         if (m_zones[zone]->m_zoneIndex == zoneIndex)
@@ -2995,8 +2995,8 @@ VA(0x005363B0, 0x1A9)
 MAC_ADDRESS(0x2346a0, 0x18c)
 TRmgGeneratorBase::~TRmgGeneratorBase()
 {
-    for (unsigned int object = 0; object < m_positions.size(); ++object)
-        delete m_positions[object];
+    for (unsigned int object = 0; object < m_objects.size(); ++object)
+        delete m_objects[object];
     for (int type = 0; type < 232; ++type)
         for (unsigned int prototype = 0; prototype < m_objectPrototypes[type].size(); ++prototype)
             delete m_objectPrototypes[type][prototype];
@@ -3274,7 +3274,7 @@ MAC_ADDRESS(0x2358fc, 0xb8)
 void TRmgGeneratorBase::addObject(type_object* object, TRmgMapPosition position)
 {
     m_map.addObject(*object, position);
-    m_positions.push_back(object);
+    m_objects.push_back(object);
 }
 
 // Map-decoration caller 0x537a59 passes a position value and progress share.
@@ -3556,8 +3556,8 @@ static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
             && fields[76][0] != ' ' && fields[77][0]) {
             int firstZone = atoi(fields[76]);
             int secondZone = atoi(fields[77]);
-            TRmgTownSlot* first = mapTemplate->findZone(firstZone);
-            TRmgTownSlot* second = mapTemplate->findZone(secondZone);
+            TRmgTemplateZone* first = mapTemplate->findZone(firstZone);
+            TRmgTemplateZone* second = mapTemplate->findZone(secondZone);
             if (first && second) {
                 TRmgZoneConnection connection;
                 connection.m_destination = second;
@@ -3673,7 +3673,7 @@ void readRmgTemplateZones(
         if (values.size() >= 3 && isRmgTemplateFieldSet(values[3]) &&
             values.size() > 75) {
 
-            TRmgTownSlot* slot = new TRmgTownSlot;
+            TRmgTemplateZone* slot = new TRmgTemplateZone;
             slot->m_zoneIndex = atoi(values[3]);
             slot->m_kind = RMG_TEMPLATE_TREASURE;
             if (isRmgTemplateFieldSet(values[4]))
@@ -3963,7 +3963,7 @@ VA(0x0053AD60, 0x113)
 MAC_ADDRESS(0x23be70, 0x14c) // anchor-callee 0x53e2ea/0x53af04; thiscall, ret 4
 unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
 {
-    TRmgTownSlot* slot = zone->m_slot;
+    TRmgTemplateZone* slot = zone->m_templateZone;
     TRmgMapPosition position = zone->getLevelPosition();
     int size = slot->m_size;
     if ((slot->m_kind == RMG_TEMPLATE_HUMAN ||
@@ -3975,11 +3975,11 @@ unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
     for (int other = 0; other < m_zones.size(); ++other) {
         TRmgZone* otherZone = m_zones[other];
         if (otherZone->getLevelPosition().m_z != position.m_z ||
-            otherZone->m_slot->m_zoneIndex == zoneIndex)
+            otherZone->m_templateZone->m_zoneIndex == zoneIndex)
             continue;
         TRmgMapPosition otherPosition = otherZone->getLevelPosition();
         int distance = getRmgDistance(otherPosition, position);
-        if (10 * distance < 8 * (otherZone->m_slot->m_size + size))
+        if (10 * distance < 8 * (otherZone->m_templateZone->m_size + size))
             return 0;
     }
     return 1;
@@ -4008,7 +4008,7 @@ MAC_ADDRESS(0x23bfbc, 0x28c) // anchor-callee 0x53bab9/0x53bb23; thiscall, ret 0
 void type_random_map_generator::appendZonePositions(TRmgZone* center,
     TRmgZone* zone, std::vector<TRmgMapPosition>& candidates)
 {
-    int radius = center->m_slot->m_size + zone->m_slot->m_size;
+    int radius = center->m_templateZone->m_size + zone->m_templateZone->m_size;
     TRmgMapPosition position = center->getLevelPosition();
     TRmgMapPosition candidate;
     for (int direction = 0; direction < 32; ++direction) {
@@ -4029,9 +4029,9 @@ void type_random_map_generator::appendZonePositions(TRmgZone* center,
     zone->setLevelPosition(candidate);
     if (canPlaceZone(zone))
         candidates.push_back(zone->getLevelPosition());
-    radius = center->m_slot->m_size;
-    if (radius < zone->m_slot->m_size)
-        radius = zone->m_slot->m_size;
+    radius = center->m_templateZone->m_size;
+    if (radius < zone->m_templateZone->m_size)
+        radius = zone->m_templateZone->m_size;
     for (direction = 0; direction < 32; ++direction) {
         const int& y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
         candidate = TRmgMapPosition(
@@ -4065,7 +4065,7 @@ MAC_ADDRESS(0x23c248, 0x9c)
 int type_random_map_generator::countPlacedZoneConnections(TRmgZone* zone) const
 {
     int connectionCount = 0;
-    TRmgTownSlot* slot = zone->m_slot;
+    TRmgTemplateZone* slot = zone->m_templateZone;
     for (int connection = 0; connection < slot->m_connections.size(); ++connection) {
         int destination = slot->m_connections[connection].m_destination->m_zoneIndex;
         if (destination < m_zones.size() && m_zones[destination]->canConnect(zone))
@@ -4086,7 +4086,7 @@ void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimum
     for (int zone = 0; zone < m_zones.size(); ++zone) {
         TRmgMapPosition position;
         position = m_zones[zone]->getLevelPosition();
-        int size = m_zones[zone]->m_slot->m_size;
+        int size = m_zones[zone]->m_templateZone->m_size;
         minimumY = min(minimumY, position.m_y - size);
         minimumX = min(minimumX, position.m_x - size);
         maximumY = max(maximumY, position.m_y + size + 1);
@@ -4227,9 +4227,9 @@ void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
                 candidates.push_back(zone->getLevelPosition());
         }
     } else {
-        TRmgTownSlot* slot = zone->m_slot;
+        TRmgTemplateZone* slot = zone->m_templateZone;
         for (int connection = 0; connection < slot->m_connections.size(); ++connection) {
-            TRmgTownSlot* destination = slot->m_connections[connection].m_destination;
+            TRmgTemplateZone* destination = slot->m_connections[connection].m_destination;
             if (destination->m_zoneIndex < m_zones.size())
                 appendZonePositions(m_zones[destination->m_zoneIndex], zone, candidates);
         }
@@ -4295,7 +4295,7 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     default: mapSize /= 7; break;
     }
     for (slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex) {
-        TRmgTownSlot* slot = mapTemplate->m_zones[slotIndex];
+        TRmgTemplateZone* slot = mapTemplate->m_zones[slotIndex];
         TRmgZone* zone = new TRmgZone(slot);
         if (slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT] + slot->m_townPlacement[RMG_TOWN_PLAYER_OPTION_COUNT] > 0
             && slot->m_playerIndex >= 0
@@ -4320,7 +4320,7 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
         position.m_x = (position.m_x - minimumX) * size / span;
         position.m_y = (position.m_y - minimumY) * size / span;
         m_zones[zoneIndex]->setLevelPosition(position);
-        m_zones[zoneIndex]->m_boundaryRoughness = m_zones[zoneIndex]->m_slot->m_size * size / span;
+        m_zones[zoneIndex]->m_boundaryRoughness = m_zones[zoneIndex]->m_templateZone->m_size * size / span;
         m_zones[zoneIndex]->chooseTerrain();
         m_zones[zoneIndex]->chooseTownType(m_mapVersion >= 0);
     }
@@ -4446,17 +4446,17 @@ void type_random_map_generator::drawStraightZoneBoundary(
 VA(0x0053C390, 0x730)
 MAC_ADDRESS(0x23dd34, 0x614) // caller 0x53e5f4/0x53e602, ret 8; retail-only
 void type_random_map_generator::traceZoneBoundary(
-    TRmgBoundaryVertex* first, unsigned char irregular)
+    TRmgHalfEdge* first, unsigned char irregular)
 {
-    TRmgBoundaryVertex* vertex = first;
+    TRmgHalfEdge* vertex = first;
     TRmgZone* zone = vertex->m_zone;
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     TRmgMapPosition zonePosition = zone->m_levelPosition;
     TRmgZoneBounds bounds;
     bounds.m_maximumY = m_map.m_mapHeight;
     bounds.m_minimumX = bounds.m_minimumY = 0;
     bounds.m_maximumX = m_map.m_mapWidth;
-    TRmgBoundaryVertex* next;
+    TRmgHalfEdge* next;
     TPoint originalFrom;
     TPoint originalTo;
     TPoint from;
@@ -4501,7 +4501,7 @@ void type_random_map_generator::traceZoneBoundary(
         to = clipRmgBoundaryPoint(bounds, originalTo, originalFrom);
         zone->m_boundary.push_back(TPoint(from));
 
-        if (!neighbour || neighbour->m_slot->m_zoneIndex > zoneIndex) {
+        if (!neighbour || neighbour->m_templateZone->m_zoneIndex > zoneIndex) {
             int roughness = zone->m_boundaryRoughness;
             if (neighbour) {
                 int ownRoughness = roughness;
@@ -4665,7 +4665,7 @@ MAC_ADDRESS(0x23e738, 0x1f0)
 void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
 {
     std::vector<TRmgMapPosition> pending;
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     TRmgMapPosition position = zone->getLevelPosition();
     pending.push_back(position);
     while (pending.size()) {
@@ -4710,7 +4710,7 @@ void type_random_map_generator::recenterZone(TRmgZone* zone)
     TRmgZoneBounds bounds = zone->m_bounds;
     TRmgMapPosition position;
     position = zone->getLevelPosition();
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     int cellCount = 0;
     TRmgMapPosition coordinateTotal;
     coordinateTotal.m_x = 0;
@@ -4744,7 +4744,7 @@ VA(0x0053D1C0, 0x1B9)
 MAC_ADDRESS(0x23eaac, 0x2b0) // anchor-callee 0x53e70f; thiscall, ret 4
 void type_random_map_generator::insetIslandZone(TRmgZone* zone)
 {
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     TRmgMapPosition center = zone->getLevelPosition();
     int count = zone->m_boundary.size();
     TPoint point = zone->m_boundary[0];
@@ -4811,9 +4811,9 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
 // behavior sanitizers. That oracle covers filling and flags, not seed clipping.
 VA(0x0053D380, 0x551)
 MAC_ADDRESS(0x23ed74, 0x4a4) // anchor-caller 0x53e050; Complete-only, thiscall ret 8
-void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex* first)
+void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first)
 {
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     std::vector<TRmgMapPosition> pending;
     TRmgMapPosition position;
     position = zone->getLevelPosition();
@@ -4824,7 +4824,7 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex*
         int bestClearance = 0;
         TPoint best;
         best.m_x = -1;
-        TRmgBoundaryVertex* edge = first;
+        TRmgHalfEdge* edge = first;
         do {
             edge = edge->m_next;
             TPoint point = edge->m_twin->m_sitePosition;
@@ -4922,7 +4922,7 @@ void type_random_map_generator::propagateZoneDistances(TRmgZone* zone)
         while (pending.size()) {
             TRmgZone* current = pending.back();
             pending.pop_back();
-            TRmgTownSlot* slot = current->m_slot;
+            TRmgTemplateZone* slot = current->m_templateZone;
             costs.pop_back();
             int distance = current->m_zoneDistances[column] + 1;
             for (unsigned int connection = 0; connection < slot->m_connections.size(); ++connection) {
@@ -4954,8 +4954,8 @@ static void initializeRmgZoneDistances(
         zone->m_zoneDistances.resize(originalZones);
         for (int column = originalZones; column--;)
             zone->m_zoneDistances[column] = 32000;
-        if (zone->m_slot->m_zoneIndex < originalZones)
-            zone->m_zoneDistances[zone->m_slot->m_zoneIndex] = 0;
+        if (zone->m_templateZone->m_zoneIndex < originalZones)
+            zone->m_zoneDistances[zone->m_templateZone->m_zoneIndex] = 0;
     }
 }
 
@@ -4989,12 +4989,12 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
     for (int index = originalZones; index < m_zones.size(); ++index) {
         TRmgZone* zone = m_zones[index];
         TRmgMapPosition position = zone->getLevelPosition();
-        TRmgBoundaryVertex* first = diagram->locate(TPoint(position.m_x, position.m_y));
+        TRmgHalfEdge* first = diagram->locate(TPoint(position.m_x, position.m_y));
         for (int other = index + 1; other < m_zones.size(); ++other) {
             TRmgZone* destination = m_zones[other];
             if (destination->getLevelPosition().m_z != zone->getLevelPosition().m_z)
                 continue;
-            TRmgBoundaryVertex* edge = first;
+            TRmgHalfEdge* edge = first;
             do {
                 edge = edge->m_next;
                 if (edge->m_twin->m_zone == destination)
@@ -5005,14 +5005,14 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             TPoint clipped = clipRmgBoundaryPoint(bounds, edge->m_position, edge->m_previous->m_position);
             if (bounds.contains(clipped)) {
                 TRmgZoneConnection connection;
-                connection.m_destination = destination->m_slot;
+                connection.m_destination = destination->m_templateZone;
                 connection.m_value = 0;
                 connection.m_unguarded = 1;
                 connection.m_placeBorderObjects = 0;
                 connection.m_connected = 1;
-                zone->m_slot->m_connections.push_back(connection);
-                connection.m_destination = zone->m_slot;
-                destination->m_slot->m_connections.push_back(connection);
+                zone->m_templateZone->m_connections.push_back(connection);
+                connection.m_destination = zone->m_templateZone;
+                destination->m_templateZone->m_connections.push_back(connection);
             }
         }
     }
@@ -5023,12 +5023,12 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
     for (index = originalZones; index < m_zones.size(); ++index) {
         TRmgZone* zone = m_zones[index];
         TRmgMapPosition position = zone->getLevelPosition();
-        TRmgBoundaryVertex* first = diagram->locate(TPoint(position.m_x, position.m_y));
+        TRmgHalfEdge* first = diagram->locate(TPoint(position.m_x, position.m_y));
         for (int other = 0; other < originalZones; ++other) {
             TRmgZone* destination = m_zones[other];
             if (destination->getLevelPosition().m_z != zone->getLevelPosition().m_z)
                 continue;
-            TRmgBoundaryVertex* edge = first;
+            TRmgHalfEdge* edge = first;
             do {
                 edge = edge->m_next;
                 if (edge->m_twin->m_zone == destination)
@@ -5045,14 +5045,14 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             if (column < originalZones)
                 continue;
             TRmgZoneConnection connection;
-            connection.m_destination = destination->m_slot;
+            connection.m_destination = destination->m_templateZone;
             connection.m_value = 0;
             connection.m_unguarded = 1;
             connection.m_placeBorderObjects = 0;
             connection.m_connected = 0;
-            zone->m_slot->m_connections.push_back(connection);
-            connection.m_destination = zone->m_slot;
-            destination->m_slot->m_connections.push_back(connection);
+            zone->m_templateZone->m_connections.push_back(connection);
+            connection.m_destination = zone->m_templateZone;
+            destination->m_templateZone->m_connections.push_back(connection);
             propagateZoneDistances(destination);
         }
     }
@@ -5096,7 +5096,7 @@ void type_random_map_generator::buildZoneBoundaries(
     }
     int originalZones = m_zones.size();
     if (level == 1 || m_waterContent != RMG_WATER_NONE) {
-        TRmgTownSlot testSlot;
+        TRmgTemplateZone testSlot;
         testSlot.m_zoneIndex = -1;
         testSlot.m_kind = RMG_TEMPLATE_JUNCTION;
         testSlot.m_size = 0;
@@ -5140,7 +5140,7 @@ void type_random_map_generator::buildZoneBoundaries(
                     // zone-constructor call at 0x53e45c reads them.
                     // Recycled heap contents therefore affect RNG consumption;
                     // the execution oracle supplies allocation contents explicitly.
-                    TRmgTownSlot* slot = new TRmgTownSlot;
+                    TRmgTemplateZone* slot = new TRmgTemplateZone;
                     slot->m_zoneIndex = mapTemplate->m_zones.size();
                     slot->m_size = radius;
                     memset(slot->m_allowedMonsters, 0, sizeof(slot->m_allowedMonsters));
@@ -5181,7 +5181,7 @@ void type_random_map_generator::buildZoneBoundaries(
             TRmgMapPosition position = m_zones[zone]->getLevelPosition();
             query.m_y = position.m_y;
             query.m_x = position.m_x;
-            TRmgBoundaryVertex* first = diagram.locate(query);
+            TRmgHalfEdge* first = diagram.locate(query);
             traceZoneBoundary(first,
                 zone < originalZones && (m_waterContent != RMG_WATER_ISLANDS || level == 1));
         }
@@ -5327,7 +5327,7 @@ VA_COMPGEN(0x0054D9A0, 0x31, VECTOR_UFILL, TRmgNoiseRegion)
 // The inlined search at 0x53fe7a returns an element pointer and its caller
 // then tests that pointer, even on the found arm. Preserve that ordinary
 // helper boundary rather than reducing the search to a boolean.
-TRmgZoneConnection* TRmgTownSlot::findConnection(int destinationZone)
+TRmgZoneConnection* TRmgTemplateZone::findConnection(int destinationZone)
 {
     for (unsigned int connectionIndex = 0; connectionIndex < m_connections.size(); ++connectionIndex) {
         if (m_connections[connectionIndex].m_destination->m_zoneIndex == destinationZone)
@@ -5523,7 +5523,7 @@ void type_random_map_generator::prepareWaterZoneConnections(TRmgZone* zone)
     if (zone->m_terrain != eTerrainWater)
         return;
     TRmgZoneBounds bounds = zone->m_bounds;
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     TRmgMapPosition position;
     position = zone->m_levelPosition;
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
@@ -5619,7 +5619,7 @@ void type_random_map_generator::expandObstacleClearance()
                             if (item->getLandType() == eTerrainWater)
                                 needsClearance = 1;
                         } else if (otherZone != zoneIndex) {
-                            TRmgZoneConnection* connection = zone->m_slot->findConnection(otherZone);
+                            TRmgZoneConnection* connection = zone->m_templateZone->findConnection(otherZone);
                             if (!connection || position.m_z == 1)
                                 needsClearance = 1;
                             if (connection && !connection->m_unguarded)
@@ -5731,7 +5731,7 @@ void type_random_map_generator::repairWaterZoneBorders()
                         } while (1);
                     }
                 }
-                if (!foundLandTerrain || zone->m_slot->findConnection(destinationZone))
+                if (!foundLandTerrain || zone->m_templateZone->findConnection(destinationZone))
                     continue;
 
                 {
@@ -6065,11 +6065,11 @@ MAC_ADDRESS(0x243208, 0x290) // anchor-callee 0x54203b; thiscall, ret 8; retail-
 type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
 {
     unsigned char allowedFactions[10];
-    if (zone->m_slot->m_guardsMatchZone && zone->m_alignment != -1) {
+    if (zone->m_templateZone->m_guardsMatchZone && zone->m_alignment != -1) {
         memset(allowedFactions, 0, sizeof(allowedFactions));
         allowedFactions[zone->m_alignment + 1] = 1;
     } else {
-        memcpy(allowedFactions, zone->m_slot->m_allowedMonsters, sizeof(allowedFactions));
+        memcpy(allowedFactions, zone->m_templateZone->m_allowedMonsters, sizeof(allowedFactions));
     }
     int prototypeIndices[RMG_GUARD_CREATURE_COUNT];
     memset(prototypeIndices, -1, sizeof(prototypeIndices));
@@ -6282,11 +6282,11 @@ unsigned char type_random_map_generator::createGroundConnection(
     std::vector<TRmgMapItem*>* borderItems,
     std::vector<TRmgMapPosition>* borderPositions)
 {
-    TRmgTownSlot* sourceSlot = source->m_slot;
-    TRmgTownSlot* destinationSlot = connection->m_destination;
+    TRmgTemplateZone* sourceSlot = source->m_templateZone;
+    TRmgTemplateZone* destinationSlot = connection->m_destination;
     int sourceZone = sourceSlot->m_zoneIndex;
     TRmgZone* destination = m_zones[destinationSlot->m_zoneIndex];
-    int destinationZone = destination->m_slot->m_zoneIndex;
+    int destinationZone = destination->m_templateZone->m_zoneIndex;
     if (source->getLevelPosition().m_z != destination->getLevelPosition().m_z)
         return 0;
     if (source->m_terrain == eTerrainWater)
@@ -6556,11 +6556,11 @@ MAC_ADDRESS(0x2446ac, 0x55c) // anchor-callee connectZones; thiscall, ret 8; ret
 unsigned char type_random_map_generator::createShipyardConnection(
     TRmgZone* source, TRmgZoneConnection* connection)
 {
-    TRmgTownSlot* sourceSlot = source->m_slot;
+    TRmgTemplateZone* sourceSlot = source->m_templateZone;
     int sourceZone = sourceSlot->m_zoneIndex;
-    TRmgTownSlot* destinationSlot = connection->m_destination;
+    TRmgTemplateZone* destinationSlot = connection->m_destination;
     TRmgZone* destination = m_zones[destinationSlot->m_zoneIndex];
-    int destinationZone = destination->m_slot->m_zoneIndex;
+    int destinationZone = destination->m_templateZone->m_zoneIndex;
     if (source->getLevelPosition().m_z != destination->getLevelPosition().m_z)
         return 0;
 
@@ -6679,8 +6679,8 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     TRmgZone* source, TRmgZoneConnection* connection)
 {
     TRmgZone* destination = m_zones[connection->m_destination->m_zoneIndex];
-    int sourceZone = source->m_slot->m_zoneIndex;
-    int destinationZone = destination->m_slot->m_zoneIndex;
+    int sourceZone = source->m_templateZone->m_zoneIndex;
+    int destinationZone = destination->m_templateZone->m_zoneIndex;
     if (source->getLevelPosition().m_z == destination->getLevelPosition().m_z)
         return 0;
     if (source->m_terrain == eTerrainWater)
@@ -6873,7 +6873,7 @@ unsigned char type_random_map_generator::placeObjectInZone(type_object* object, 
     TObjectType* prototype = properties->m_prototype;
     std::vector<TRmgMapPosition> candidates;
     TRmgZoneBounds bounds = zone->getBounds();
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     bounds.m_minimumY += prototype->getHeight() - 1;
     bounds.m_minimumX += prototype->getWidth() - 1;
     TRmgMapPosition position;
@@ -7119,14 +7119,14 @@ void type_random_map_generator::connectZones()
     std::vector<TRmgMapPosition> connectionPositionsScratch;
 
     TRmgZone* zone;
-    TRmgTownSlot* zoneTemplate;
+    TRmgTemplateZone* zoneTemplate;
     TRmgZone* destination;
     TRmgZoneConnection* oppositeConnection;
     int connectionIndex;
     int zoneIndex;
     for (zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         zone = m_zones[zoneIndex];
-        zoneTemplate = zone->m_slot;
+        zoneTemplate = zone->m_templateZone;
         if (zone->getTerrain() == eTerrainWater)
             continue;
 
@@ -7148,7 +7148,7 @@ void type_random_map_generator::connectZones()
             destination =
                 m_zones[connection->m_destination->m_zoneIndex];
             oppositeConnection =
-                destination->m_slot->findConnection(zoneIndex);
+                destination->m_templateZone->findConnection(zoneIndex);
 
             if (createGroundConnection(
                     zone,
@@ -7177,7 +7177,7 @@ void type_random_map_generator::connectZones()
 
     for (zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         zone = m_zones[zoneIndex];
-        zoneTemplate = zone->m_slot;
+        zoneTemplate = zone->m_templateZone;
         if (zone->getTerrain() == eTerrainWater)
             continue;
 
@@ -7195,8 +7195,8 @@ void type_random_map_generator::connectZones()
              remaining--; ++mapItem)
             mapItem->m_tileData.m_connectionVisited = 0;
 
-        for (int objectIndex = 0; objectIndex < m_positions.size(); ++objectIndex) {
-            type_object* object = m_positions[objectIndex];
+        for (int objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
+            type_object* object = m_objects[objectIndex];
             if (object->m_properties->m_prototype->getObjectType() == SHIPYARD) {
                 position = object->getPosition();
                 if (m_map.getMapItem(position)->m_zoneState.m_zone == zoneIndex) {
@@ -7216,7 +7216,7 @@ void type_random_map_generator::connectZones()
             destination =
                 m_zones[connection->m_destination->m_zoneIndex];
             oppositeConnection =
-                destination->m_slot->findConnection(zoneIndex);
+                destination->m_templateZone->findConnection(zoneIndex);
 
             if (createShipyardConnection(zone, connection)) {
                 connection->setConnected();
@@ -7535,7 +7535,7 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
 {
     std::vector<TPoint> pending;
     TRmgMapPosition position = zone->getLevelPosition();
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     int roughness = zone->m_boundaryRoughness;
     pending.push_back(to);
     while (pending.size() > 0) {
@@ -7613,7 +7613,7 @@ MAC_ADDRESS(0x247d9c, 0x3e0)
 void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
 {
     TRmgZoneBounds bounds = zone->m_bounds;
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     TRmgMapPosition position = zone->getLevelPosition();
     int level = position.m_z;
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
@@ -7696,7 +7696,7 @@ VA(0x00544A50, 0x90)
 MAC_ADDRESS(0x248328, 0xf0)
 void type_random_map_generator::placePrimaryTown(TRmgZone* zone)
 {
-    TRmgTownSlot* slot = zone->m_slot;
+    TRmgTemplateZone* slot = zone->m_templateZone;
     int alignment = zone->m_alignment;
     int player = m_playerIndexMap[slot->m_playerIndex + 1];
     if (slot->m_townPlacement[RMG_TOWN_PLAYER_OPTION_COUNT] > 0
@@ -7744,7 +7744,7 @@ VA(0x00544AE0, 0x2B0)
 MAC_ADDRESS(0x248418, 0x414)
 void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
 {
-    TRmgTownSlot* slot = zone->m_slot;
+    TRmgTemplateZone* slot = zone->m_templateZone;
     int alignment = zone->m_alignment;
     int player = m_playerIndexMap[slot->m_playerIndex + 1];
     unsigned char skipPrimary = 1;
@@ -7843,7 +7843,7 @@ MAC_ADDRESS(0x24882c, 0x5d4)
 unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     int alignment, int player, unsigned char townOption, int spacing)
 {
-    TRmgTownSlot* slot = zone->m_slot;
+    TRmgTemplateZone* slot = zone->m_templateZone;
     if ((player == -1 && !slot->m_neutralTownsMatchZone) || alignment == -1) {
         alignment = slot->selectAllowedTown();
         if (alignment == -1)
@@ -7931,7 +7931,7 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
     if (alignment == -1)
         return 0;
     std::vector<TRmgMapPosition> candidates;
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     TRmgMapPosition position = zone->m_levelPosition;
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[TOWN][alignment];
     TObjectType* prototype = properties->m_prototype;
@@ -7996,7 +7996,7 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
     TRmgZoneBounds bounds = zone->m_bounds;
     int bestBorderCount = 0;
     int bestDistance = 40000;
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     TRmgMapPosition townPosition;
     if (startingMine) {
         townPosition = zone->m_position;
@@ -8077,7 +8077,7 @@ int type_random_map_generator::getMineGuardValue(int resource, const TRmgZone* z
     case GOLD: value = 7000; break;
     default: value = 3500; break;
     }
-    int localStrength = zone->m_slot->m_monsterStrength;
+    int localStrength = zone->m_templateZone->m_monsterStrength;
     if (!localStrength)
         return 0;
     int strength = localStrength + m_monsterStrength - 3;
@@ -8200,7 +8200,7 @@ VA(0x00545E60, 0xFA)
 MAC_ADDRESS(0x249c8c, 0x1c4)
 void type_random_map_generator::placeExtraMines(TRmgZone* zone)
 {
-    TRmgTownSlot* slot = zone->m_slot;
+    TRmgTemplateZone* slot = zone->m_templateZone;
     unsigned char finished[7];
     int totalDensity = 0;
     int densityProduct = 1;
@@ -8241,7 +8241,7 @@ void type_random_map_generator::placeMines()
 {
     for (unsigned int index = 0; index < m_zones.size(); ++index) {
         TRmgZone* zone = m_zones[index];
-        TRmgTownSlot* slot = zone->m_slot;
+        TRmgTemplateZone* slot = zone->m_templateZone;
         for (int resource = 0; resource <= GOLD; ++resource) {
             unsigned char startingMine = 0;
             if ((resource == WOOD || resource == ORE)
@@ -8346,7 +8346,7 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     unsigned char allowTerrainDependent, unsigned char compact,
     TRmgMapPosition position)
 {
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     int totalWeight = 0;
     std::vector<type_treasure_def*> candidates;
     std::vector<TRmgObjectPropertiesRef*> properties;
@@ -8508,8 +8508,8 @@ unsigned char type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
     int totalValue = fillTreasureGroup(zone, group, alternate, value);
     if (!totalValue)
         return 0;
-    if (zone->m_slot->m_monsterStrength) {
-        int strength = zone->m_slot->m_monsterStrength + m_monsterStrength - 3;
+    if (zone->m_templateZone->m_monsterStrength) {
+        int strength = zone->m_templateZone->m_monsterStrength + m_monsterStrength - 3;
         if (strength > 5) strength = 5;
         else if (strength < 0) strength = 0;
         int guardValue = getRmgGuardValue(totalValue, strength);
@@ -8754,7 +8754,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
 {
     TRmgMapPosition workingPosition;
     TRmgZoneBounds bounds = group->m_bounds;
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     for (unsigned int i = 0; i < group->m_objects.size(); ++i) {
         type_object* object = group->m_objects[i];
         workingPosition = object->getPosition();
@@ -8862,7 +8862,7 @@ MAC_ADDRESS(0x24b3d8, 0x310) // anchor-callee 0x5475b2/0x5476aa; thiscall, ret 0
 unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
     TRmgZone* zone, int spacing)
 {
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     std::vector<TRmgMapPosition> candidates;
     TRmgZoneBounds bounds = zone->m_bounds;
     TRmgZoneBounds groupBounds = group->m_bounds;
@@ -8899,7 +8899,7 @@ VA(0x00547360, 0x460)
 MAC_ADDRESS(0x24b6e8, 0x358)
 void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
 {
-    TRmgTownSlot* slot = zone->m_slot;
+    TRmgTemplateZone* slot = zone->m_templateZone;
     TRmgTreasureGroup group(16, 16);
     unsigned char finished[3];
     int totalDensity = 0;
@@ -9571,8 +9571,8 @@ VA(0x005497A0, 0xCE)
 MAC_ADDRESS(0x24dff0, 0x18c)
 void type_random_map_generator::markRiverObjectTargets()
 {
-    for (unsigned int index = 0; index < m_positions.size(); ++index) {
-        type_object* object = m_positions[index];
+    for (unsigned int index = 0; index < m_objects.size(); ++index) {
+        type_object* object = m_objects[index];
         TObjectType* prototype = object->m_properties->m_prototype;
         if (prototype->getObjectType() == TERRAIN_MOUNTAIN
             || prototype->getObjectType() == TERRAIN_LAKE
@@ -9607,8 +9607,8 @@ void type_random_map_generator::createRivers()
 {
     markRiverObjectTargets();
     markRiverTargets();
-    for (unsigned int index = 0; index < m_positions.size(); ++index) {
-        type_object* object = m_positions[index];
+    for (unsigned int index = 0; index < m_objects.size(); ++index) {
+        type_object* object = m_objects[index];
         TObjectType* prototype = object->m_properties->m_prototype;
         if (prototype->getObjectType() == WATER_WHEEL) {
             TObjectType::TPoint trigger = prototype->m_triggerCell;
@@ -9648,7 +9648,7 @@ unsigned char type_random_map_generator::generate()
     int allSlotByte;
     MEMSET(allSlots, 0, sizeof(allSlots), allSlotByte);
     for (unsigned int zone = 0; zone < m_templates[selected]->m_zones.size(); ++zone) {
-        TRmgTownSlot* slot = m_templates[selected]->m_zones[zone];
+        TRmgTemplateZone* slot = m_templates[selected]->m_zones[zone];
         if (slot->m_kind == RMG_TEMPLATE_HUMAN) {
             humanSlots[slot->m_playerIndex] = 1;
             allSlots[slot->m_playerIndex] = 1;
@@ -9689,7 +9689,7 @@ unsigned char type_random_map_generator::generate()
         placeAdditionalTowns(m_zones[zone]);
     prepareZoneConnections();
     for (zone = 0; zone < m_zones.size(); ++zone)
-        if (m_zones[zone]->m_slot->m_kind == RMG_TEMPLATE_JUNCTION
+        if (m_zones[zone]->m_templateZone->m_kind == RMG_TEMPLATE_JUNCTION
             && m_zones[zone]->m_terrain != eTerrainWater)
             prepareJunctionZone(m_zones[zone]);
     placeMines();
@@ -9873,7 +9873,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     int generatedHumanTowns = 0;
     for (unsigned int townIndex = 0; townIndex < m_zones.size(); ++townIndex) {
         TRmgZone* town = m_zones[townIndex];
-        TRmgTownSlot* slot = town->m_slot;
+        TRmgTemplateZone* slot = town->m_templateZone;
         int player = slot->m_playerIndex;
         if (player < 0)
             continue;
@@ -10160,16 +10160,16 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
                 writeRmgObjectPrototype(outfile, properties->m_prototype);
         }
     {
-        int count = m_positions.size();
+        int count = m_objects.size();
         outfile->write(&count, sizeof(count));
     }
-    for (unsigned int first = 0; first < m_positions.size(); ++first) {
-        type_object* object = m_positions[first];
+    for (unsigned int first = 0; first < m_objects.size(); ++first) {
+        type_object* object = m_objects[first];
         if (g_adventureObjectTraits[object->m_properties->m_prototype->getObjectType()].m_trait3)
             object->write(outfile, m_mapVersion);
     }
-    for (unsigned int second = 0; second < m_positions.size(); ++second) {
-        type_object* object = m_positions[second];
+    for (unsigned int second = 0; second < m_objects.size(); ++second) {
+        type_object* object = m_objects[second];
         if (!g_adventureObjectTraits[object->m_properties->m_prototype->getObjectType()].m_trait3)
             object->write(outfile, m_mapVersion);
     }
@@ -10331,7 +10331,7 @@ void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
     while (pending.size()) {
         TRmgZone* current = pending.back();
         pending.pop_back();
-        TRmgTownSlot* slot = current->m_slot;
+        TRmgTemplateZone* slot = current->m_templateZone;
         int distance = current->m_questPlacementScore + 1;
         for (unsigned int connection = 0; connection < slot->m_connections.size(); ++connection) {
             TRmgZone* next = m_zones[slot->m_connections[connection].m_destination->m_zoneIndex];
@@ -10377,7 +10377,7 @@ unsigned char type_random_map_generator::placeQuestGroup(
     }
     for (index = 0; index < m_zones.size(); ++index) {
         candidateZone = m_zones[index];
-        if (candidateZone == origin || candidateZone->m_slot->m_kind == RMG_TEMPLATE_JUNCTION
+        if (candidateZone == origin || candidateZone->m_templateZone->m_kind == RMG_TEMPLATE_JUNCTION
             || candidateZone->m_questPlacementScore > 2000 || candidateZone->m_terrain == eTerrainWater)
             continue;
         unsigned int insertion = 0;
@@ -10561,9 +10561,9 @@ void type_random_map_generator::removeObject(type_object* object)
     TObjectType* prototype = object->m_properties->m_prototype;
     TRmgMapPosition position;
     position = object->m_position;
-    std::vector<type_object*>::iterator found = std::find(m_positions.begin(), m_positions.end(), object);
+    std::vector<type_object*>::iterator found = std::find(m_objects.begin(), m_objects.end(), object);
     if (found) {
-        m_positions.erase(found);
+        m_objects.erase(found);
         --m_objectCountByType[prototype->getObjectType()];
         TAdventureObjectType objectType = prototype->getObjectType();
         TObjectType::TPoint trigger = prototype->m_triggerCell;
@@ -10768,7 +10768,7 @@ MAC_ADDRESS(0x25d144, 0x12c) // anchor-caller 0x53e050; Complete-only, thiscall 
 void TRmgVoronoi::buildVertices()
 {
     for (unsigned int index = 0; index < m_edges.size(); ++index) {
-        TRmgBoundaryVertex* edge = m_edges[index];
+        TRmgHalfEdge* edge = m_edges[index];
         if (edge->getZone() && !edge->isPositionComputed()) {
             TPoint second = edge->getOppositeSitePosition();
             TPoint position = computeRmgCircumcenter(edge->getNext()->getOppositeSitePosition(),

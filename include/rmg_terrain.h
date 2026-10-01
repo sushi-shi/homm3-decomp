@@ -25,6 +25,7 @@ inline TPoint operator+(const TPoint& point, const TPoint& offset)
 // proven roles because the Dreamcast build has no RMG compiland.
 // Prior provisional class role: TRmgTerrainTile.
 struct rmgTerrainTile {
+    // Kind of the adapter-selected layer: terrain, road or river.
     int m_terrain;
     int m_frame;
     unsigned char m_flipX;

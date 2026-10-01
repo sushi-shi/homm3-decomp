@@ -70,7 +70,7 @@ BASELINE = """unsigned char type_random_map_generator::canPlaceTreasureGroup(TRm
     TRmgMapPosition position, TRmgZone* zone)
 {
     TRmgZoneBounds bounds = group->m_bounds;
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     for (unsigned int i = 0; i < group->m_objects.size(); ++i) {
         type_object* object = group->m_objects[i];
         TRmgMapPosition objectPosition = object->getPosition();
@@ -387,7 +387,7 @@ def shared_refinements(text):
             changed = re.sub(r"\bentrance\b", "workingPosition", changed)
         for placement in ("after_zone", "before_bounds"):
             if placement == "after_zone":
-                anchor = "    int zoneIndex = zone->m_slot->m_zoneIndex;\n"
+                anchor = "    int zoneIndex = zone->m_templateZone->m_zoneIndex;\n"
                 replacement = anchor + "    TRmgMapPosition workingPosition;\n"
             else:
                 anchor = "{\n"

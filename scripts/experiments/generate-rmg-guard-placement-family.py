@@ -111,7 +111,7 @@ def placement(original, order, construction, selection, insertion):
     loop = original.index("    for (position.m_y", start)
     checks_end = original.index("    if (!candidates.size())", loop)
     bounds = ("    TRmgZoneBounds bounds = zone->m_bounds;\n"
-              "    int zoneIndex = zone->m_slot->m_zoneIndex;\n")
+              "    int zoneIndex = zone->m_templateZone->m_zoneIndex;\n")
     updates = {
         "x": "    bounds.m_minimumX += prototype->getWidth() - 1;\n",
         "y": "    bounds.m_minimumY += prototype->getHeight() - 1;\n",

@@ -31,7 +31,7 @@ def helpers():
 def forms():
     for capture, accumulator, order in itertools.product(range(5), range(4), range(3)):
         bounds = "    TRmgZoneBounds bounds = zone->m_bounds;\n"
-        index = "    int zoneIndex = zone->m_slot->m_zoneIndex;\n"
+        index = "    int zoneIndex = zone->m_templateZone->m_zoneIndex;\n"
         position = (
             "    TRmgMapPosition position = zone->getLevelPosition();\n",
             "    TRmgMapPosition position(zone->getLevelPosition());\n",
@@ -137,7 +137,7 @@ def entry_binding_axes(source):
     TRmgZoneBounds bounds = zone->m_bounds;
     TRmgMapPosition position;
     position = zone->getLevelPosition();
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     int count = 0;
     TRmgMapPosition total;
     total.m_x = 0;
@@ -147,11 +147,11 @@ def entry_binding_axes(source):
     if prefix != expected:
         raise ValueError("review recenter entry-binding baseline")
     bindings = (
-        "    int zoneIndex = zone->m_slot->m_zoneIndex;\n",
-        "    const int& zoneIndex = zone->m_slot->m_zoneIndex;\n",
-        "    TRmgTownSlot* slot = zone->m_slot;\n    int zoneIndex = slot->m_zoneIndex;\n",
-        "    const TRmgTownSlot& slot = *zone->m_slot;\n    int zoneIndex = slot.m_zoneIndex;\n",
-        "    long zoneIndex = zone->m_slot->m_zoneIndex;\n",
+        "    int zoneIndex = zone->m_templateZone->m_zoneIndex;\n",
+        "    const int& zoneIndex = zone->m_templateZone->m_zoneIndex;\n",
+        "    TRmgTemplateZone* slot = zone->m_templateZone;\n    int zoneIndex = slot->m_zoneIndex;\n",
+        "    const TRmgTemplateZone& slot = *zone->m_templateZone;\n    int zoneIndex = slot.m_zoneIndex;\n",
+        "    long zoneIndex = zone->m_templateZone->m_zoneIndex;\n",
     )
     totals = (
         "    TRmgMapPosition total;\n    total.m_x = 0;\n    total.m_y = 0;\n    total.m_z = position.m_z;\n",

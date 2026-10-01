@@ -14,7 +14,7 @@
 class TAbstractFile;
 class TSpreadsheetResource;
 class type_random_map_generator;
-struct TRmgTownSlot;
+struct TRmgTemplateZone;
 struct TRmgZone;
 struct rmgTerrainTile;
 struct TPoint;
@@ -390,7 +390,7 @@ TRmgMapPosition operator+(TRmgMapPosition position, TPoint offset);
 // the connection pass.  The first pointer identifies the opposite template
 // zone; the three adjacent bytes select guard policy and record completion.
 struct TRmgZoneConnection {
-    TRmgTownSlot* m_destination;             // +0x00
+    TRmgTemplateZone* m_destination;             // +0x00
     int m_value;                             // +0x04
     unsigned char m_unguarded;               // +0x08
     unsigned char m_placeBorderObjects;      // +0x09
@@ -402,7 +402,7 @@ struct TRmgZoneConnection {
     // columns 81..84 into +0x0c/+0x10/+0x14/+0x18. At 0x538307..0x53832b
     // it compares the first pair with humanPlayerCount and the second
     // pair with humanPlayerCount + computerPlayerCount before insertion.
-    // Role-derived names, consistent with the TRmgTownSlot limits below.
+    // Role-derived names, consistent with the TRmgTemplateZone limits below.
     int m_minimumHumanPlayers;               // +0x0c
     int m_maximumHumanPlayers;               // +0x10
     int m_minimumPlayers;                    // +0x14
@@ -446,7 +446,8 @@ enum ERmgTownPlacementParameter {
     RMG_TOWN_NEUTRAL_OPTION_DENSITY = 7
 };
 
-struct TRmgTownSlot {
+// Former TRmgTownSlot: configuration for every template-zone kind, not only towns.
+struct TRmgTemplateZone {
     int m_zoneIndex;                    // +0x00
     int m_kind;                         // +0x04: ERmgTemplateZoneKind
     int m_size;                         // +0x08
@@ -475,19 +476,19 @@ struct TRmgTownSlot {
     int selectAllowedTown();
     TRmgZoneConnection* findConnection(int destinationZone);
 };
-SIZE(TRmgTownSlot, 0xd4);
+SIZE(TRmgTemplateZone, 0xd4);
 
 // The rmg.txt coordinator allocates this 0x38-byte object, assigns its
 // name and size limits, and passes it to the zone reader in edx.
 struct TRmgTemplate {
     std::string m_name;                  // +0x00
-    std::vector<TRmgTownSlot*> m_zones;   // +0x10
+    std::vector<TRmgTemplateZone*> m_zones;   // +0x10
     char m_opaque0020[0x10];
     int m_minimumSize;                  // +0x30
     int m_maximumSize;                  // +0x34
 
     ~TRmgTemplate();
-    TRmgTownSlot* findZone(int zoneIndex);
+    TRmgTemplateZone* findZone(int zoneIndex);
 };
 SIZE(TRmgTemplate, 0x38);
 
@@ -1440,11 +1441,12 @@ SIZE(TRmgGridRectangle, 0x10);
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point);
 void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRectangle& rectangle);
 
-class TRmgLinePainter : public TRmgLinePainterInterface {
+// Former TRmgLinePainter: river-specific implementation of the shared line interface.
+class TRmgRiverLinePainter : public TRmgLinePainterInterface {
 public:
     TRmgRiverMapAdapterInterface* m_adapter;
 
-    inline TRmgLinePainter(TRmgRiverMapAdapterInterface* newAdapter)
+    inline TRmgRiverLinePainter(TRmgRiverMapAdapterInterface* newAdapter)
         : TRmgLinePainterInterface(newAdapter->getSize()), m_adapter(newAdapter)
     {
     }
@@ -1452,7 +1454,7 @@ public:
     // where the river painter's 0x641190 has its deleting destructor: the
     // destructor is pure here, as TRmgTerrainRule's is. Its empty body is
     // still expanded in ~TRmgRiverPainter (vptr store at 0x55eda0).
-    virtual ~TRmgLinePainter() = 0;
+    virtual ~TRmgRiverLinePainter() = 0;
 
     virtual TRmgLinePatternTable* getPattern(int value);
     virtual void setTile(
@@ -1466,7 +1468,7 @@ public:
     virtual int getLineType(const TRmgGridPoint& point);
 };
 
-inline TRmgLinePainter::~TRmgLinePainter() {}
+inline TRmgRiverLinePainter::~TRmgRiverLinePainter() {}
 
 // The retained walk at 0x4fa2b0 builds two three-dword records, selects them
 // by distance, then updates their coordinate and step through those pointers.
@@ -1507,7 +1509,7 @@ public:
     void paintPoint(const TRmgGridPoint& point);
 };
 
-class TRmgRiverPainter : public TRmgLinePainter, public TRmgLineWalker {
+class TRmgRiverPainter : public TRmgRiverLinePainter, public TRmgLineWalker {
 public:
     TRmgRiverPainter(
         TRmgRiverMapAdapterInterface* newAdapter,
@@ -1558,7 +1560,7 @@ public:
 // entrance vector at +0x404.  The 0x1c-stride connection vector belongs to
 // the template record reached through `slot`, not to this generated zone.
 struct TRmgZone {
-    TRmgTownSlot* m_slot;              // +0x00
+    TRmgTemplateZone* m_templateZone;  // +0x00, formerly m_slot
     int m_alignment;                   // +0x04
     // H3API H3RmgZoneGenerator::townType2, INT32 at +08, commit
     // 92255ab18da784a5842ecc2b8bc0ce00e19a0c56. The surrounding town/terrain,
@@ -1597,7 +1599,7 @@ struct TRmgZone {
     std::vector<TPoint> m_boundary;    // +0x3f4: clipped polygon vertices
     std::vector<TPoint> m_entrances;   // +0x404
 
-    TRmgZone(TRmgTownSlot* slot);
+    TRmgZone(TRmgTemplateZone* slot);
     void decrementObjectCount(TAdventureObjectType objectType);
     void chooseTownType(unsigned char expanded);
     void chooseTerrain();
@@ -1616,7 +1618,7 @@ struct TRmgZone {
     // accessor, which is what makes its first counting pass call size().
     int getSize() const
     {
-        return m_slot->m_size;
+        return m_templateZone->m_size;
     }
     unsigned char canConnect(const TRmgZone* other) const;
 };
@@ -1624,19 +1626,20 @@ struct TRmgZone {
 // Partial Voronoi topology recovered from TraceZoneBoundary and its caller
 // at 0x53e050. The twin's owning zone identifies the region across an edge;
 // following next traverses a closed polygon. Names are provisional.
-struct TRmgBoundaryVertex {
+// Former TRmgBoundaryVertex: a half-edge with a cached dual Voronoi vertex.
+struct TRmgHalfEdge {
     // The paired-edge constructor 0x5fcef0
     // copies a by-value point into +0/+4 and its zone into +8.
     // buildVertices 0x5fdb40 subtracts these site coordinates while
     // calculating the boundary point at +0x1c. Role-derived name.
     TPoint m_sitePosition;               // +0x00
     TRmgZone* m_zone;                   // +0x08
-    TRmgBoundaryVertex* m_twin;        // +0x0c
-    TRmgBoundaryVertex* m_next;        // +0x10
+    TRmgHalfEdge* m_twin;        // +0x0c
+    TRmgHalfEdge* m_next;        // +0x10
     // Constructor 0x5fcef0 initializes both
     // ring links to self; splice 0x5fcf60 swaps next->previous together
     // with next, preserving the backward link. Role-derived name.
-    TRmgBoundaryVertex* m_previous;     // +0x14
+    TRmgHalfEdge* m_previous;     // +0x14
     // Constructor clears this byte. buildVertices tests it at 0x5fdb7a,
     // writes the computed point, then sets it on three incident edges at
     // 0x5fdc7d/89/9e. +0x19..1b is natural alignment before the point.
@@ -1646,15 +1649,15 @@ struct TRmgBoundaryVertex {
     // The 0x5fcef0 retained constructor takes two by-value point/zone
     // pairs (ret 0x18), allocating the opposite half-edge at +0x0c.
     // Its expanded twin constructor takes the existing edge pointer.
-    TRmgBoundaryVertex(TPoint sitePosition, TRmgZone* zone,
+    TRmgHalfEdge(TPoint sitePosition, TRmgZone* zone,
         TPoint twinSitePosition, TRmgZone* twinZone);
-    TRmgBoundaryVertex(TPoint sitePosition, TRmgZone* zone,
-        TRmgBoundaryVertex* twin);
+    TRmgHalfEdge(TPoint sitePosition, TRmgZone* zone,
+        TRmgHalfEdge* twin);
     // Role-derived names: 0x5fcf60 exchanges forward/backward ring links;
     // 0x5fcfa0 applies it to each half-edge and its predecessor.
     // Ordinary; both constructors expand it (see rmg_support.cpp).
     void initialize();
-    void splice(TRmgBoundaryVertex* other);
+    void splice(TRmgHalfEdge* other);
     void detach();
     // Quad-edge navigation (Graphics Gems IV Sym/Onext/Oprev/Lnext/Lprev,
     // Org2d/Dest2d): these inline accessors are candidate sites for the
@@ -1663,23 +1666,23 @@ struct TRmgBoundaryVertex {
     // in removeEdge and the fifth createEdge in the diagram constructor.
     // Site positions return by value: addSite's coincidence test loads both
     // coordinates before comparing, as a copied temporary does.
-    TRmgBoundaryVertex* getTwin() const
+    TRmgHalfEdge* getTwin() const
     {
         return m_twin;
     }
-    TRmgBoundaryVertex* getNext() const
+    TRmgHalfEdge* getNext() const
     {
         return m_next;
     }
-    TRmgBoundaryVertex* getPrevious() const
+    TRmgHalfEdge* getPrevious() const
     {
         return m_previous;
     }
-    TRmgBoundaryVertex* getLeftNext() const
+    TRmgHalfEdge* getLeftNext() const
     {
         return m_twin->m_previous;
     }
-    TRmgBoundaryVertex* getLeftPrevious() const
+    TRmgHalfEdge* getLeftPrevious() const
     {
         return m_next->m_twin;
     }
@@ -1713,26 +1716,26 @@ struct TRmgBoundaryVertex {
         m_positionComputed = 1;
     }
 };
-SIZE(TRmgBoundaryVertex, 0x24);
+SIZE(TRmgHalfEdge, 0x24);
 
 // The retained subdivision constructor and destructor own a root edge and
 // a vector of allocated edges. The coordinator inserts zone sites, computes
 // dual vertices, then looks up an edge for each site. All names are provisional.
 class TRmgVoronoi {
 public:
-    TRmgBoundaryVertex* m_root;                 // +0x00
-    std::vector<TRmgBoundaryVertex*> m_edges;  // +0x04
+    TRmgHalfEdge* m_root;                 // +0x00
+    std::vector<TRmgHalfEdge*> m_edges;  // +0x04
 
     TRmgVoronoi();
     ~TRmgVoronoi();
     // Retained 0x5fd390 creates and owns both halves; two point/zone pairs.
-    TRmgBoundaryVertex* createEdge(TPoint first, TRmgZone* firstZone,
+    TRmgHalfEdge* createEdge(TPoint first, TRmgZone* firstZone,
         TPoint second, TRmgZone* secondZone);
-    TRmgBoundaryVertex* connectEdges(TRmgBoundaryVertex* first,
-        TRmgBoundaryVertex* second);
-    void removeEdge(TRmgBoundaryVertex* edge);
+    TRmgHalfEdge* connectEdges(TRmgHalfEdge* first,
+        TRmgHalfEdge* second);
+    void removeEdge(TRmgHalfEdge* edge);
     void addSite(TPoint point, TRmgZone* zone);
-    TRmgBoundaryVertex* locate(TPoint point);
+    TRmgHalfEdge* locate(TPoint point);
     void buildVertices();
 };
 SIZE(TRmgVoronoi, 0x14);
@@ -1783,7 +1786,7 @@ public:
     std::vector<TRmgObjectPropertiesRef*> m_objectPrototypes[232]; // +0x034
     // Terrain-relation records populated by the loader and used by the scorer.
     std::vector<TRmgObjectPlacementRule> m_placementRules; // +0xeb4
-    std::vector<type_object*> m_positions;             // +0xec4
+    std::vector<type_object*> m_objects;               // +0xec4, formerly m_positions
     TProgressSink* m_progress;                          // +0xed4
     TRmgGeneratorBase(int width, int height, int levels,
         TProgressSink* progress, int additionalSteps, int version);
@@ -1948,7 +1951,7 @@ public:
     // Complete-only 0x53d8e0 propagates each signed-short distance column
     // from one zone through the template connection graph.
     void propagateZoneDistances(TRmgZone* zone);
-    void fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex* first);
+    void fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first);
     void joinExtraZones(int originalZones, TRmgVoronoi* diagram);
     int countPlacedZoneConnections(TRmgZone* zone) const;
     void filterZonePositions(
@@ -1957,7 +1960,7 @@ public:
         TPoint from, TPoint to, int zoneIndex, int level, int roughness);
     void drawStraightZoneBoundary(
         TPoint from, TPoint to, int zoneIndex, int level);
-    void traceZoneBoundary(TRmgBoundaryVertex* first, unsigned char irregular);
+    void traceZoneBoundary(TRmgHalfEdge* first, unsigned char irregular);
     unsigned char createGroundConnection(
         TRmgZone* source,
         TRmgZoneConnection* connection,
@@ -2055,7 +2058,7 @@ SIZE(TRmgRiverMapAdapterInterface, 0x04);
 SIZE(TRmgRoadMapAdapterInterface, 0x04);
 SIZE(TRmgRiverMapAdapter, 0x08);
 SIZE(TRmgLinePainterInterface, 0x0c);
-SIZE(TRmgLinePainter, 0x10);
+SIZE(TRmgRiverLinePainter, 0x10);
 SIZE(TRmgRoadLinePainter, 0x10);
 SIZE(TRmgLineWalker, 0x10);
 SIZE(TRmgRiverPainter, 0x20);

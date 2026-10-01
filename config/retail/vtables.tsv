@@ -437,7 +437,7 @@ rva	function_count	class
 0x241134	3	t_stdio_file_adapter@ResourceManager
 # ??_7 site paired in order: 0x55ee50 TRmgRiverPainter ctor; 0x55eda0 ~TRmgRiverPainter.
 # Slot 6 is _purecall: the destructor is pure here (include/rmg.h).
-0x241174	7	TRmgLinePainter
+0x241174	7	TRmgRiverLinePainter
 # ??_7 site paired in order: 0x55ee50 ??0TRmgRiverPainter@@QAE@PAVTRmgRiverMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z
 0x241190	7	TRmgRiverPainter
 # ??_7 site paired in order: 0x55f3b0 TRmgRoadPainter ctor; 0x55f460 ~TRmgRoadPainter.

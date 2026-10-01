@@ -20,7 +20,7 @@ sampled execution comparison proves absence of undefined behavior.
 
 | Area | Review outcome |
 | --- | --- |
-| Map storage, adapters and packed fields | Reviewed ownership, view lifetime, flattening and partial initialization. Named the river adapter and corrected the inverted line-painter blockage query. Scalar accessors now distinguish terrain/frame from line type/underlying terrain. Kept layouts, field widths, virtual ordering and snapshot boundaries. |
+| Map storage, adapters and packed fields | Reviewed ownership, view lifetime, flattening and partial initialization. Named template-zone records, half-edges, owned-object lists, and the river painter/adapter and corrected the inverted line-painter blockage query. Scalar accessors now distinguish terrain/frame from line type/underlying terrain. Kept layouts, field widths, virtual ordering and snapshot boundaries. |
 | Template and object-prototype loading | Named town count/density slots and mine arrays from their consumers. Replaced understood object/version/resource literals with existing constants. Recorded malformed-row and missing-family assumptions without adding validation. |
 | Generated objects and serialization | Named creature reward count, reservation release and request failure causes; clarified writer parameters and format constants. Retained serialization widths, write order, default payloads and ignored-write-result behavior. |
 | Factory selection | Shared the spell-scroll eligibility predicate across counting and selection. Preserved ascending scans, RNG draws, modulo selection and trait dependencies. |

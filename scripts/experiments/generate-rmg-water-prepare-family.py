@@ -40,7 +40,7 @@ def baseline_definition(source):
 
 def variants(original):
     entry = """    TRmgZoneBounds bounds = zone->m_bounds;
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     TRmgMapPosition position = zone->m_levelPosition;"""
     test = """            if (m_map.getMapItem(position)->m_zoneState.m_zone != zoneIndex)
                 floodWaterZoneDistances(position, zoneIndex);"""
@@ -68,8 +68,8 @@ def variants(original):
         if index == 1:
             changed = changed.replace("int zoneIndex =", "const int zoneIndex =")
         elif index == 2:
-            changed = changed.replace("    int zoneIndex = zone->m_slot->m_zoneIndex;\n", "")
-            changed = "    int zoneIndex = zone->m_slot->m_zoneIndex;\n" + changed
+            changed = changed.replace("    int zoneIndex = zone->m_templateZone->m_zoneIndex;\n", "")
+            changed = "    int zoneIndex = zone->m_templateZone->m_zoneIndex;\n" + changed
         yield f"construction_{construction}+index_{index}+binding_{binding}", original.replace(
             entry, changed).replace(test, bindings[binding])
 

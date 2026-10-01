@@ -24,7 +24,7 @@ known issues, not an exhaustive UB audit.
 
 ## Added water-zone town flags: uninitialized heap bytes
 
-- `buildZoneBoundaries` (`0x53e050`) allocates a `TRmgTownSlot` for each added
+- `buildZoneBoundaries` (`0x53e050`) allocates a `TRmgTemplateZone` for each added
   surface water zone. It initializes several fields, but not `m_allowedTowns`
   (nine bytes at `+0x41`). The slot has no scalar-initializing constructor.
 - Its zone-constructor call at `0x53e45c` reaches `TRmgZone::TRmgZone`
@@ -88,7 +88,7 @@ unreached targets `(79,0,0)` and `(38,0,0)` respectively. Their source-to-target
 searches had no valid predecessor chain, but drawing proceeded anyway.
 
 The captured retail call chain is `createRiver` → `TRmgLineWalker::drawTo` →
-`paintPoint` → `refreshRmgLinePoint` → `TRmgLinePainter::getLand` →
+`paintPoint` → `refreshRmgLinePoint` → `TRmgRiverLinePainter::getLand` →
 `TRmgRiverMapAdapter::getLineType`. Candidate faults at the corresponding instruction
 with the same coordinates. This is not a candidate-only reconstruction error.
 
@@ -168,7 +168,7 @@ combined cleanup. Existing campaign results above are historical evidence.
 ### Object removal: failed search is tested against null
 
 `type_random_map_generator::removeObject` (`0x54bc50`) searches both
-`m_positions` and each occupied tile's `m_objects`. Retail tests the returned
+`m_objects` and each occupied tile's `m_objects`. Retail tests the returned
 pointer with `test ecx,ecx` at `0x54bc95` and `test edx,edx` at `0x54be6d`, then
 enters the expanded erase. It does not compare either result with the vector's
 end pointer. The source's `if (found)` and `if (entry)` preserve those tests.

@@ -28,8 +28,8 @@ def options(parent):
         raise ValueError("parent manifest identity changed")
     elites = json.loads((parent / "generation-0001.json").read_text())["elites"]
     result = [dict(name="unchanged", replace=original)]
-    initial = "int radius = center->m_slot->m_size + zone->m_slot->m_size;"
-    maximum = "    radius = center->m_slot->m_size;\n    if (radius < zone->m_slot->m_size)\n        radius = zone->m_slot->m_size;"
+    initial = "int radius = center->m_templateZone->m_size + zone->m_templateZone->m_size;"
+    maximum = "    radius = center->m_templateZone->m_size;\n    if (radius < zone->m_templateZone->m_size)\n        radius = zone->m_templateZone->m_size;"
     for elite in elites:
         repeated = json.loads((parent / "candidates" / elite["id"] / "repeat/result.json").read_text())
         if repeated["scores"] != elite["scores"] or repeated["object_hash"] != elite["object_hash"]:

@@ -70,7 +70,7 @@ def connection_tail():
     for sum_form, difference, comparison in itertools.product(
             ("expression", "this_first", "other_first"),
             ("expression", "named", "compound"), ("expression", "named", "byte")):
-        body = "    int otherSize = other->m_slot->m_size;\n    int thisSize = m_slot->m_size;\n"
+        body = "    int otherSize = other->m_templateZone->m_size;\n    int thisSize = m_templateZone->m_size;\n"
         if sum_form == "expression":
             body += "    int combinedSize = thisSize + otherSize;\n"
         else:

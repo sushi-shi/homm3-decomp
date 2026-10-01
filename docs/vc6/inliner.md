@@ -2039,7 +2039,7 @@ budget, while the EH-bearing constructor budget-tests it.
 
 Byte-identical spellings carry different costs, so bracket a callee from its
 callers' retail decisions and then pick the spelling in the bracket (splice
-above; `TRmgBoundaryVertex` constructors 132..157 and 87..112). Accessors
+above; `TRmgHalfEdge` constructors 132..157 and 87..112). Accessors
 returning `TPoint` by value versus `const TPoint&` also changed addSite's
 coincidence test (both coordinates loaded before the compares) and its
 copies inside the circle test.

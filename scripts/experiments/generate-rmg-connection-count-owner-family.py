@@ -22,13 +22,13 @@ def models(original):
     for slot,owner,receiver in itertools.product(range(3),range(5),range(4)):
         body=original
         if slot:
-            kind='TRmgTownSlot&' if slot==1 else 'const TRmgTownSlot&'
-            body=body.replace('TRmgTownSlot* slot = zone->m_slot;',f'{kind} slot = *zone->m_slot;').replace('slot->','slot.')
+            kind='TRmgTemplateZone&' if slot==1 else 'const TRmgTemplateZone&'
+            body=body.replace('TRmgTemplateZone* slot = zone->m_templateZone;',f'{kind} slot = *zone->m_templateZone;').replace('slot->','slot.')
         spelling='slot->m_connections[connection]' if slot==0 else 'slot.m_connections[connection]'
         original_read=f'int destination = {spelling}.m_destination->m_zoneIndex;'
         lines=[original_read]
         if owner in (1,2):
-            kind='TRmgTownSlot*' if owner==1 else 'const TRmgTownSlot&'
+            kind='TRmgTemplateZone*' if owner==1 else 'const TRmgTemplateZone&'
             expr=spelling+'.m_destination' if owner==1 else '*'+spelling+'.m_destination'
             access='->' if owner==1 else '.'
             lines=[f'{kind} destinationSlot = {expr};',f'int destination = destinationSlot{access}m_zoneIndex;']

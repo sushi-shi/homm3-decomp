@@ -96,7 +96,7 @@ def connected_variants(original):
         raise ValueError("review connected-outline previous-state lifetime")
     # Each initializer reads independent state and there are no intervening calls.
     lines = ["    unsigned char waterZone = zone->m_terrain == eTerrainWater;\n",
-             "    int zoneIndex = zone->m_slot->m_zoneIndex;\n",
+             "    int zoneIndex = zone->m_templateZone->m_zoneIndex;\n",
              "    unsigned char blocked = 1;\n", "    unsigned char foundBoundary = 0;\n"]
     for order in itertools.permutations(range(4)):
         for lifetime in ("iteration", "function"):

@@ -129,7 +129,7 @@ def buffers(body):
     initial = "    int initialReserved = 0;\n    outfile->write(&initialReserved, sizeof(initialReserved));"
     yield "initial_function_scope", replace(body, first, initial)
     counts = body
-    for expression in ("prototypeCount", "m_positions.size()"):
+    for expression in ("prototypeCount", "m_objects.size()"):
         old = "    {\n        int count = " + expression + ";\n        outfile->write(&count, sizeof(count));\n    }"
         name = "prototypeTotal" if expression == "prototypeCount" else "objectTotal"
         counts = replace(counts, old, "    int " + name + " = " + expression + ";\n    outfile->write(&" + name + ", sizeof(" + name + "));")
@@ -137,7 +137,7 @@ def buffers(body):
     yield "all_function_scope", replace(counts, first, initial)
     for early in (False, True):
         shared = replace(body, first, "    wireCount = 0;\n    outfile->write(&wireCount, sizeof(wireCount));")
-        for expression in ("prototypeCount", "m_positions.size()"):
+        for expression in ("prototypeCount", "m_objects.size()"):
             old = "    {\n        int count = " + expression + ";\n        outfile->write(&count, sizeof(count));\n    }"
             shared = replace(shared, old, "    wireCount = " + expression + ";\n    outfile->write(&wireCount, sizeof(wireCount));")
         if early:

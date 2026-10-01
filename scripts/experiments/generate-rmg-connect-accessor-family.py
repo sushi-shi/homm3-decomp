@@ -22,9 +22,9 @@ def variants(original):
     for access, binding, minimum in itertools.product(range(4), range(5), range(3)):
         body = original
         if access & 1:
-            body = body.replace('other->m_slot->m_size', 'other->getSize()')
+            body = body.replace('other->m_templateZone->m_size', 'other->getSize()')
         if access & 2:
-            body = body.replace('m_slot->m_size', 'getSize()') if access & 1 else body.replace('int thisSize = m_slot->m_size;', 'int thisSize = getSize();')
+            body = body.replace('m_templateZone->m_size', 'getSize()') if access & 1 else body.replace('int thisSize = m_templateZone->m_size;', 'int thisSize = getSize();')
         if binding in (1, 3):
             body = body.replace('int otherSize =', 'const int& otherSize =')
         if binding in (2, 3):

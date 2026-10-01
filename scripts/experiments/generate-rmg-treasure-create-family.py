@@ -31,7 +31,7 @@ BASELINE = """type_object* type_random_map_generator::createTreasureObject(TRmgZ
     unsigned char allowTerrainDependent, unsigned char compact,
     TRmgMapPosition position)
 {
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     int totalWeight = 0;
     std::vector<type_treasure_def*> candidates;
     std::vector<TRmgObjectPropertiesRef*> properties;

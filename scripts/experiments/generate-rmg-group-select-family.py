@@ -61,7 +61,7 @@ def helpers():
 BASELINE = """unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
     TRmgZone* zone, int spacing)
 {
-    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     std::vector<TRmgMapPosition> candidates;
     TRmgZoneBounds bounds = zone->m_bounds;
     TRmgZoneBounds groupBounds = group->m_bounds;
@@ -96,7 +96,7 @@ BASELINE = """unsigned char type_random_map_generator::placeTreasureGroup(TRmgTr
 }"""
 
 ENTRY = (
-    "    int zoneIndex = zone->m_slot->m_zoneIndex;\n",
+    "    int zoneIndex = zone->m_templateZone->m_zoneIndex;\n",
     "    std::vector<TRmgMapPosition> candidates;\n",
     "    TRmgZoneBounds bounds = zone->m_bounds;\n",
     "    TRmgZoneBounds groupBounds = group->m_bounds;\n",
