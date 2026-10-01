@@ -1474,6 +1474,17 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
     return getPackedCell(nearby)->getTerrain() != terrain;
 }
 
+// Cardinal special-frame neighbours each halve the transition strength.
+// Share only the query: the caller keeps its west/north/east/south order and
+// the rule pointer captured before any cache fill. The frame is queried only
+// after the terrain agrees, as in each original short-circuited predicate.
+static inline bool hasSpecialTerrainFrameAt(rmgTerrainPainter& painter,
+    const TRmgGridPoint& point, int terrain, TRmgTerrainRule* rule)
+{
+    return painter.getTerrain(point) == terrain
+        && rule->isSpecialFrame(painter.getFrame(point));
+}
+
 VA(0x005B6FD0, 0x271)
 MAC_ADDRESS(0x259500, 0x444)
 int rmgTerrainPainter::getTransitionStrength(
@@ -1484,29 +1495,25 @@ int rmgTerrainPainter::getTransitionStrength(
     if (point.getX() > 0) {
         TRmgGridPoint nearby(point.getX(), point.getY());
         nearby.setX(point.getX() - 1);
-        if (getTerrain(nearby) == terrain
-            && rule->isSpecialFrame(getFrame(nearby)))
+        if (hasSpecialTerrainFrameAt(*this, nearby, terrain, rule))
             strength >>= 1;
     }
     if (point.getY() > 0) {
         TRmgGridPoint nearby(point.getX(), point.getY());
         nearby.setY(point.getY() - 1);
-        if (getTerrain(nearby) == terrain
-            && rule->isSpecialFrame(getFrame(nearby)))
+        if (hasSpecialTerrainFrameAt(*this, nearby, terrain, rule))
             strength >>= 1;
     }
     if (point.getX() < getWidth() - 1) {
         TRmgGridPoint nearby(point.getX(), point.getY());
         nearby.setX(point.getX() + 1);
-        if (getTerrain(nearby) == terrain
-            && rule->isSpecialFrame(getFrame(nearby)))
+        if (hasSpecialTerrainFrameAt(*this, nearby, terrain, rule))
             strength >>= 1;
     }
     if (point.getY() < getHeight() - 1) {
         TRmgGridPoint nearby(point.getX(), point.getY());
         nearby.setY(point.getY() + 1);
-        if (getTerrain(nearby) == terrain
-            && rule->isSpecialFrame(getFrame(nearby)))
+        if (hasSpecialTerrainFrameAt(*this, nearby, terrain, rule))
             strength >>= 1;
     }
     return strength;
