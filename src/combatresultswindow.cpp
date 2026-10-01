@@ -395,12 +395,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     accept->setHotkey(1);
     m_widgets.push_back(accept);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     videoOpen(videoId, 272, 89, 0, 0, 1, 1, 1);
 }

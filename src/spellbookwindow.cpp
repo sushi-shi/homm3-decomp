@@ -337,12 +337,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
     m_spellNameWidgets = static_cast<textWidget**>(static_cast<void*>(
         &m_widgets[spellNameWidgetsIndex]));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     if (context == eContextNeither) {
         if (s_lastContext != eContextInvalid) {

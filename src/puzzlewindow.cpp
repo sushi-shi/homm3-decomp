@@ -158,12 +158,7 @@ TPuzzleWindow::TPuzzleWindow(int puzzlenum)
     accept->setHotkey(1);
     m_widgets.push_back(accept);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     g_soundManager->stopAllSamples(1);
 
@@ -280,8 +275,20 @@ struct type_AI_puzzle_tile {
     type_AI_puzzle_tile();
     type_AI_puzzle_tile(NewmapCell* cell, type_point point);
     unsigned char operator==(const type_AI_puzzle_tile& arg) const;
+
+private:
+    void initializeObjectState(char visible);
 };
 SIZE(type_AI_puzzle_tile, 0x10);
+
+// Project-inferred common constructor prefix; terrain and grail state differ.
+void type_AI_puzzle_tile::initializeObjectState(char visible)
+{
+    m_objectType = 0;
+    m_visible = visible;
+    m_objectX = -1;
+    m_objectY = -1;
+}
 
 // Retail expands these stores in AI_attempt_puzzle_guess's array loop.
 // E:\gamedcs\puzzlewindow.cpp:279 Both DC line281
@@ -292,10 +299,7 @@ DC_ADDRESS(0x1154c4, 0x74)
 MAC_ADDRESS(0x147ab8, 0x70)
 type_AI_puzzle_tile::type_AI_puzzle_tile()
 {
-    m_objectType = 0;
-    m_visible = 0;
-    m_objectX = -1;
-    m_objectY = -1;
+    initializeObjectState(0);
     m_terrain = -1;
     m_river = 0;
     m_road = 0;
@@ -309,10 +313,7 @@ DC_ADDRESS(0x115538, 0x184)
 MAC_ADDRESS(0x147b28, 0x1e0)
 type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 {
-    m_objectType = 0;
-    m_visible = 1;
-    m_objectX = -1;
-    m_objectY = -1;
+    initializeObjectState(1);
 
     m_terrain = cell->m_groundSet;
     m_river = cell->m_riverSet;

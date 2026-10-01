@@ -2463,12 +2463,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         }
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     m_versionIcon = ResourceManager::getSprite("ScSelC.def");
     m_victoryIcon = ResourceManager::getSprite("scnrvict.def");

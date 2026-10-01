@@ -661,13 +661,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     if (m_receiveButton)
         m_widgets.push_back(m_receiveButton);
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA(0x005ae370, 0x1D)
@@ -689,6 +683,18 @@ TSwapWindow::~TSwapWindow()
     deleteWidgetObjects();
 }
 
+// Project-inferred paired visibility operation; keep left-before-right calls.
+void TSwapWindow::showTransferDirection(bool toRight)
+{
+    if (toRight) {
+        m_leftArrow->hide();
+        m_rightArrow->show();
+    } else {
+        m_leftArrow->show();
+        m_rightArrow->hide();
+    }
+}
+
 VA(0x005ae430, 0xCB)
 DC_ADDRESS(0x15c384, 0xec)
 MAC_ADDRESS(0x1a5c4c, 0x12c)
@@ -701,30 +707,12 @@ void TSwapWindow::updateArrows()
 
     if (g_swapManager->m_givingToAlly)
     {
-        if (g_swapManager->isLeftHero())
-        {
-            m_leftArrow->hide();
-            m_rightArrow->show();
-        }
-        else
-        {
-            m_leftArrow->show();
-            m_rightArrow->hide();
-        }
+        showTransferDirection(g_swapManager->isLeftHero() != 0);
         m_receiveButton->enable(1);
     }
     else
     {
-        if (g_swapManager->isLeftHero())
-        {
-            m_leftArrow->show();
-            m_rightArrow->hide();
-        }
-        else
-        {
-            m_leftArrow->hide();
-            m_rightArrow->show();
-        }
+        showTransferDirection(!g_swapManager->isLeftHero());
         m_receiveButton->enable(0);
     }
 }

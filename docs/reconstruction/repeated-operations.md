@@ -1622,6 +1622,59 @@ public. Layout, borrowed pointer ownership and virtual interfaces are unchanged.
 All eight new private helper names and ordinary source bodies are project
 inferences from repeated same-TU operations, not claimed original symbols.
 
+## Remaining window registration copies
+
+Forty-four additional full-vector registration loops now call the existing
+`heroWindow::addWidgetsToMessageStream()` body. The pass covers adventure and
+combat windows, hero/recruit/swap windows, campaign selection and briefing,
+quest/puzzle/spellbook/university/sacrifice windows, main/game-type menus,
+single-selection and options windows, dimension-door/scuttle-boat windows,
+army splitting and all three army-view constructors, combat results, world/town
+views, five trading windows, ten town-screen/building windows, high scores and
+`TDialogBox::setup()`.
+
+Every migrated loop registered non-null entries at priority -1 and reported
+null entries with `memError()`. The existing helper preserves iteration order,
+live end reads and the error path. Qualified base calls reuse that exact body
+without adding virtual dispatch to the former pasted loops; the original
+protected virtual interface and header definition remain unchanged. Empty-range
+while/do-loop spellings in town/game/adventure menus share the same operation.
+Named vector references in army view and campaign briefing still refer to
+`m_widgets` and remain available for the surrounding appends. Registration stays
+after vector construction and before each caller's later text, resource, video,
+subwindow or control setup.
+
+Quick-town's two constructors, quick-hero and level-up instead share ordinary
+protected `addPresentWidgetsToMessageStream()`. Their loops deliberately skip
+null entries without calling `memError()`. This new helper is project-inferred
+and defined once in window.cpp. The existing subwindow helpers retain their
+separate parent ownership, and local-vector append/registration, indexed
+unconditional registration and dynamic widget insertion remain distinct.
+
+## Archive search, trade arrows and puzzle object state
+
+`LODFile::findLinear()` shares the identical short-range scan from both sides of
+`find()`. It searches the original half-open range with case-insensitive name
+comparison, stores the first matching index or -1, and keeps the existing
+midpoint comparison, empty-range handling and recursive long-range branches.
+The private match-index storage, stream cursor and decompression-buffer behavior
+are unchanged.
+
+`TSwapWindow::showTransferDirection()` shares the paired arrow visibility
+operation between giving and receiving modes. Both nullable-arrow guards remain
+in `updateArrows()`. The left arrow is processed first, then the current right
+arrow pointer; the receive button is enabled or disabled afterward. The side
+query still occurs inside the selected mode branch.
+
+Both puzzle-tile constructors share `initializeObjectState(visible)`: object
+type zero, the caller's visibility, then both -1 offsets. The default constructor
+still leaves the grail flag untouched and initializes unknown terrain; the cell
+constructor still reads terrain/river/road/diggability before computing grail
+presence and any object offsets. Signed packed bitfields and default/cell
+visibility values are preserved. Cached Dreamcast type 0x3fbd / field list
+0x3fd9 records these fields as public, so they remain public. All three new
+helper names and ordinary source bodies are project inferences.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

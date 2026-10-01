@@ -276,12 +276,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
                              recruitInfo->m_monType1, 0);
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x0054faf0, 0x21, SCALAR_DELETING_DTOR, TRecruitWindow)

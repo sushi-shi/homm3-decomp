@@ -73,13 +73,7 @@ TQuestLogWindow::TQuestLogWindow()
         324, 470, 32, 32, DIALOG_RETURN_OK, "QLexit.def",
         0, 1, 1, 28, 2));
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA(0x0052e170, 0x3A)

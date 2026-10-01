@@ -142,6 +142,8 @@ protected:
     // clearing the vector or unlinking widgets from the message stream.
     void deleteWidgetObjects();
     void deleteWidgets();
+    // Project-inferred registration for windows that deliberately skip nulls.
+    void addPresentWidgetsToMessageStream();
     // DC window.cpp owns the ordinary body. Complete's overview constructor
     // expands this operation across TUs, requiring header body visibility.
     // Preserve the protected virtual boundary and its null-widget guard.

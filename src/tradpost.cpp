@@ -245,12 +245,7 @@ TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA(0x005e1600, 0x14)
@@ -465,12 +460,7 @@ TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA(0x005e3670, 0x14)
@@ -681,12 +671,7 @@ TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005e5690, 0x21, SCALAR_DELETING_DTOR, TBuyArtifactWindow)
@@ -971,12 +956,7 @@ TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005e7be0, 0x21, SCALAR_DELETING_DTOR, TSellArtifactWindow)
@@ -1196,12 +1176,7 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA(0x005e9c60, 0x14)

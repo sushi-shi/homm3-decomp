@@ -1289,12 +1289,7 @@ TViewWorldWindow::TViewWorldWindow()
     ok->setHotkey(28);
     m_widgets.push_back(ok);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     message msg;
     msg.m_id = MESSAGE_WIDGET;

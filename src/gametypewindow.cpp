@@ -84,15 +84,7 @@ TGameTypeWindow::TGameTypeWindow(unsigned char loadGameMode)
         back.m_x, back.m_y, back.m_width, back.m_height, QUIT_ID,
         "gtback.def", 0, 1, 0, 1, 2));
 
-    widget** first = m_widgets.begin();
-    if (first != m_widgets.end()) {
-        for (widget** it = first; it != m_widgets.end(); ++it) {
-            if (*it)
-                addWidget(*it, -1);
-            else
-                memError();
-        }
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x004d5860, 0x21, SCALAR_DELETING_DTOR, TGameTypeWindow)

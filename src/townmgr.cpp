@@ -1430,14 +1430,7 @@ TTownScreenWindow::TTownScreenWindow()
         m_widgets.push_back(label);
     }
 
-    widget** it = m_widgets.begin();
-    while (it != m_widgets.end()) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-        ++it;
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005c58b0, 0x21, SCALAR_DELETING_DTOR, TTownScreenWindow)
@@ -2836,12 +2829,7 @@ TThievesGuildWindow::TThievesGuildWindow(int numGuilds)
     mageButton->setHotkey(1);
     m_widgets.push_back(mageButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     setWinText(this, 14);
     setupThievesGuild(numGuilds);
@@ -3233,12 +3221,7 @@ THallWindow::THallWindow(int which)
     exitButton->setHotkey(1);
     m_widgets.push_back(exitButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005cc8e0, 0x21, SCALAR_DELETING_DTOR, THallWindow)
@@ -3364,12 +3347,7 @@ TMageGuildWindow::TMageGuildWindow()
     exitButton->setHotkey(1);
     m_widgets.push_back(exitButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005ce120, 0x21, SCALAR_DELETING_DTOR, TMageGuildWindow)
@@ -3714,12 +3692,7 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     message msg;
     msg.m_qualifier = 0;
@@ -4165,12 +4138,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
     m_widgets.push_back(new button(224, 312, 64, 30, CANCEL_BUTTON_ID,
                                  "iCancel.def", 0, 1, 1, 1, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     if (!g_currentPlayer->isLocalHuman())
         getWidget(BUY_BUTTON_ID)->enable(0);
@@ -4402,12 +4370,7 @@ TShipWindow::TShipWindow(int type)
     m_widgets.push_back(new button(224, 312, 64, 30, CANCEL_BUTTON_ID,
                                  "iCancel.def", 0, 1, 1, 1, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     if (!g_currentPlayer->isLocalHuman())
         getWidget(BUY_BUTTON_ID)->enable(0);
@@ -5813,12 +5776,7 @@ TBuyBuildWindow::TBuyBuildWindow(int x2, int y2, int id)
     m_widgets.push_back(new button(290, 446, 64, 30, CANCEL_BUTTON_ID,
                                  "iCancel.def", 0, 1, 1, 1, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     if (g_remoteOn && !g_currentPlayer->isLocalHuman()
         || g_townManager->m_townToView->m_owner != g_netLocalGamePos)
@@ -6463,12 +6421,7 @@ TTavernWindow::TTavernWindow(int x2, int y2)
     m_widgets.push_back(new button(310, 428, 64, 30, CANCEL_BUTTON_ID,
                                  "iCancel.def", 0, 1, 1, 1, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005d7880, 0x21, SCALAR_DELETING_DTOR, TTavernWindow)
@@ -7452,12 +7405,7 @@ TCastleWindow::TCastleWindow()
     exitButton->setHotkey(1);
     m_widgets.push_back(exitButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005dcb50, 0x21, SCALAR_DELETING_DTOR, TCastleWindow)

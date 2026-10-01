@@ -637,12 +637,7 @@ THighScoreWindow::THighScoreWindow()
         m_widgets.push_back(m_creatures[0][i]);
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     m_hiScoreBack[0] = ResourceManager::getBitmap816(
         DATA_COMPGEN(0x0067f504, highScoreBackground0, "hiscore2.pcx"));

@@ -203,12 +203,7 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
             font::WHITE, -1, 0, 0, 8));
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
@@ -320,12 +315,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     m_influence[1] = -1;
     m_influence[2] = -1;
 
-    for (widget** it = widgets.begin(); it != widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     // The upgrade button greys itself out when the player cannot pay.
     if (upgrade != -1) {
@@ -388,12 +378,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     int i;
     MEMSET(m_influence, -1, sizeof(m_influence), i);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA(0x005f45e0, 0xD5)

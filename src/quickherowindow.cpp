@@ -186,10 +186,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
         }
     }
 
-    for (widget** it = widgets.begin(); it != widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
+    addPresentWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x0052f3a0, 0x21, SCALAR_DELETING_DTOR, TQuickHeroWindow)

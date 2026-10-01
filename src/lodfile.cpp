@@ -57,6 +57,18 @@ unsigned char LODFile::exist(const char* itemName)
     return m_matchindex >= 0;
 }
 
+// Project-inferred short-range scan shared by both binary-search branches.
+void LODFile::findLinear(unsigned begin, unsigned end, const char* itemName)
+{
+    for (unsigned index = begin; index < end; ++index) {
+        if (_strcmpi(itemName, m_subindex[index].m_name) == 0) {
+            m_matchindex = index;
+            return;
+        }
+    }
+    m_matchindex = -1;
+}
+
 // Mac retains both recursive calls at 0x11b770 and 0x11b7d8. The Windows
 // retail body at 0x4fa660 carries equivalent loops at the same two branches.
 VA(0x004fa660, 0x113)
@@ -80,13 +92,7 @@ void LODFile::find(unsigned begin, unsigned end, const char* itemName)
             find(begin, begin + half, itemName);
             return;
         } else {
-            for (unsigned i = begin; i < end; i++) {
-                if (_strcmpi(itemName, m_subindex[i].m_name) == 0) {
-                    m_matchindex = i;
-                    return;
-                }
-            }
-            m_matchindex = -1;
+            findLinear(begin, end, itemName);
             return;
         }
     } else {
@@ -94,13 +100,7 @@ void LODFile::find(unsigned begin, unsigned end, const char* itemName)
             find(begin + half, end, itemName);
             return;
         } else {
-            for (unsigned j = begin; j < end; j++) {
-                if (_strcmpi(itemName, m_subindex[j].m_name) == 0) {
-                    m_matchindex = j;
-                    return;
-                }
-            }
-            m_matchindex = -1;
+            findLinear(begin, end, itemName);
             return;
         }
     }

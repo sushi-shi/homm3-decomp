@@ -161,10 +161,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
     accept->enable(firstChoice == -1 || secondChoice == -1);
     m_widgets.push_back(accept);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
+    addPresentWidgetsToMessageStream();
 
     if (g_turnDuration.isOn()
             && g_turnDuration.isClose(15000))

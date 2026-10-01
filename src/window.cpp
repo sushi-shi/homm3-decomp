@@ -584,6 +584,16 @@ int heroWindow::heroWindowHandler(message& msg)
     return msg.m_window->handleMessage(msg);
 }
 
+// Project-inferred registration shared by quick-view and level-up windows.
+// Their existing loops skip missing widgets without reporting an error.
+void heroWindow::addPresentWidgetsToMessageStream()
+{
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+        if (*it)
+            addWidget(*it, -1);
+    }
+}
+
 // Project-inferred common object deletion. Terminal window destructors leave
 // the pointer vector intact until its own destruction. The existing full
 // cleanup operation below additionally clears it after all deletes finish.

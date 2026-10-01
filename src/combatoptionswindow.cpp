@@ -154,12 +154,7 @@ TCombatOptionsWindow::TCombatOptionsWindow()
         61, 154, 168, 24, g_generalText->getText(GENERAL_TEXT_SPELL_BOOK_ANIMATION), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     // As in systemoptionswindow.cpp, DC calls send_message directly for the
     // slider highlight (set_visible is always an out-of-line call there),

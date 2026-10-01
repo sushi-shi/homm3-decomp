@@ -84,12 +84,7 @@ TMainMenu::TMainMenu()
         g_mainMenuButtonRects[4].m_width, g_mainMenuButtonRects[4].m_height,
         QUIT_ID, "mmenuqt.def", 0, 1, 0, 1, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     if (g_lobbyLaunched) {
         if (g_dPlay && g_dPlay->isHost()) {

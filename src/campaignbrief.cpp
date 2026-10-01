@@ -749,13 +749,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
 
     addBonusIcons();
 
-    for (std::vector<widget*>::iterator it = widgets.begin();
-         it != widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     m_oldVolume = g_config.m_musicVolume;
     if (viewFromGame)

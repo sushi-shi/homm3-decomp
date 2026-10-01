@@ -130,12 +130,7 @@ unsigned char TDialogBox::setup(int winX, int winY,
     }
 
     m_endId = id - 1;
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     return 1;
 }

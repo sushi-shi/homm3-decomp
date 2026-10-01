@@ -41,6 +41,9 @@ public:
     TSwapWindow(hero** heroes);
     virtual ~TSwapWindow();
     void updateArrows();
+
+private:
+    void showTransferDirection(bool toRight);
 };
 SIZE(TSwapWindow, 0x64);
 

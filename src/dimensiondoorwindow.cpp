@@ -24,12 +24,7 @@ TDimensionDoorWindow::TDimensionDoorWindow()
     m_widgets.push_back(new border(mapWidget->m_x, mapWidget->m_y,
         mapWidget->m_width, mapWidget->m_height, 0, 1));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x00491860, 0x21, SCALAR_DELETING_DTOR, TDimensionDoorWindow)
@@ -164,12 +159,7 @@ TSkuttleBoatWindow::TSkuttleBoatWindow()
     m_widgets.push_back(new border(mapWidget->m_x, mapWidget->m_y,
         mapWidget->m_width, mapWidget->m_height, 0, 1));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x00491c60, 0x21, SCALAR_DELETING_DTOR, TSkuttleBoatWindow)

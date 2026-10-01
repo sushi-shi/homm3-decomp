@@ -167,10 +167,7 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
         0, 0, 0, 0x10));
 
     initializeArmyDisplay(thisTown->getArmy(), viewLevel);
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
+    addPresentWidgetsToMessageStream();
 }
 
 VA(0x005307d0, 0x145)
@@ -187,10 +184,7 @@ TQuickTownWindow::TQuickTownWindow(const garrison* thisGarrison,
         font::WHITE, NAME_ID, 0, 0, 8));
 
     initializeArmyDisplay(thisGarrison->m_garrisonArmy, viewLevel);
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
+    addPresentWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005307a0, 0x21, SCALAR_DELETING_DTOR, TQuickTownWindow)

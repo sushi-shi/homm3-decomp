@@ -4363,12 +4363,7 @@ THeroScreenWindow::THeroScreenWindow()
         0x21b, 0x1e3, 0x36, 0x20, 0x7e, "hsbtns8.def",
         0, 0x1, 0, 0x30, 0x2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 #if 0  // @carcass

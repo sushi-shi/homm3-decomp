@@ -433,13 +433,7 @@ TAdventureMapWindow::TAdventureMapWindow()
         0, CHAT_EDIT_ID, 0x100, 0, 7, 5);
     m_widgets.push_back(m_chatEdit);
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     m_bottomView = 0;
     m_resourceDisplay = new TResourceDisplay(this, 0);

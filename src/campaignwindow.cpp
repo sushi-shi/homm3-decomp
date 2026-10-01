@@ -266,12 +266,7 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
             campaign - m_firstCampaign + PREVIEW_FIRST_ID, 5, 0, 8));
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     hideText();
 }
