@@ -1189,3 +1189,37 @@ with their MAX/HIST held at 100%. Both bodies still emit; named call reports
 show VC6 now expands `TTimedEvent::save` where retail retains its call. These
 are compiler differences to resolve with the canonical source calls kept.
 There is no additional Mac comparison availability loss in this batch.
+
+### Remaining mine, monster and scholar scalar operations
+
+Generator ownership uses an exact-one-byte count test at Mac `0x120c94`;
+mine ownership uses unsigned at-least-one at `0x12365c`. Both now call the
+reference scalar reader while preserving those distinct guards and their
+separate locals. The abandoned-mine mask remains a one-byte partial read
+into the Windows local, consumed only through its low eight bits; it is not
+silently widened to a four-byte transfer. Its population/ordinal selection,
+trigger lookup and pool insertion already have source counterparts.
+
+Saved monster records use native-order resource dwords. Their writer's local
+resource and artifact transfers now call `writeScalar`, and the list reader's
+signed short count uses `readValue`. The saved artifact reader remains
+unchecked and unsigned, mapping 255 to `ARTIFACT_NONE`; it must not become a
+signed-byte read. Hero placeholders likewise retain unchecked unsigned owner,
+hero and conditional power-rating bytes. Sign input retains its insertion
+before the trailing padding check and its implicit string cleanup.
+
+The scholar reader now uses the reference scalar helper for both signed
+bytes. Its random-candidate vectors, scoped destruction and existing
+`getScholarAward` call account for the remaining native operations. The spell
+vector destructor at `0xbe748` receives a zero delete-object flag; it is not
+an omitted explicit game call. This batch restores seven scalar-helper uses
+and records twenty additional native site dispositions.
+
+The targeted build succeeds with no Windows MAX changes in this scalar
+batch. Mac `saveMonsterData` loses its previously available 68.9815%
+comparison because the emitted body retains an unpaired `writeScalar<int>`
+call at `+0x4c`. The helper remains, with no fabricated address or forced
+inline qualifier. The working queue now has 5,830 open native call-site leads
+and 2,166 operation notes. The latest targeted AST snapshot predates these
+seven scalar substitutions; the four new event helper bodies remain in its
+separate inventory until the next full source-graph reconciliation.

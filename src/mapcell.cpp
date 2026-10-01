@@ -1410,7 +1410,7 @@ int NewfullMap::readGeneratorData(
     signed char owner;
     char padding[3];
 
-    if (infile->read(&owner, 1) != 1)
+    if (readValue(infile, owner) != 1)
         return -1;
     if (static_cast<unsigned>(infile->read(padding, 3)) < 3)
         return -1;
@@ -2284,7 +2284,7 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
 
     signed char value;
     int count;
-    count = infile->read(&value, sizeof(value));
+    count = readValue(infile, value);
     if (count < sizeof(value))
         return -1;
 
@@ -2296,7 +2296,7 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
         scholarInfo->m_award = value;
     }
 
-    count = infile->read(&value, sizeof(value));
+    count = readValue(infile, value);
     if (count < sizeof(value))
         return -1;
 
@@ -2447,7 +2447,7 @@ int NewfullMap::readMineData(TAbstractFile* infile, CObject* mineObject)
     signed char owner;
     char padding[3];
 
-    if (static_cast<unsigned>(infile->read(&owner, 1)) < 1)
+    if (static_cast<unsigned>(readValue(infile, owner)) < 1)
         return -1;
     tempMine.m_playerOwner = owner;
     if (static_cast<unsigned>(infile->read(padding, 3)) < 3)
@@ -2737,7 +2737,7 @@ MAC_ADDRESS(0x124008, 0xc4)
 int NewfullMap::loadMonsterList(TAbstractFile* infile)
 {
     short count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return -1;
 
     m_customMonsterList.resize(count);
@@ -2757,12 +2757,12 @@ int NewfullMap::saveMonsterData(TAbstractFile* outfile, MonsterData* thisMonster
 
     for (int i = 0; i < 7; ++i) {
         int value = thisMonster->m_resQty[i];
-        if (static_cast<unsigned>(outfile->write(&value, 4)) < 4)
+        if (static_cast<unsigned>(writeScalar(outfile, value)) < 4)
             return -1;
     }
 
     unsigned char artifact = static_cast<unsigned char>(thisMonster->m_artifact);
-    return static_cast<unsigned>(outfile->write(&artifact, 1)) < 1 ? -1 : 0;
+    return static_cast<unsigned>(writeScalar(outfile, artifact)) < 1 ? -1 : 0;
 }
 
 // E:\gamedcs\mapcell.cpp:2768
