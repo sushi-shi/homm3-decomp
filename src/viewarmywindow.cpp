@@ -495,8 +495,9 @@ DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 // The selected spell value survives those lookups in DC.
 // Keeping that value snapshot previously gave 92.5744%. The former
 // assign/const-reference spellings reached 100% through different nested
-// append decisions. The luck += still retains append where retail expands
-// it. Exit-flag declaration and upgrade-input lifetime controls are flat;
+// append decisions. The morale += retains append where retail expands it;
+// the later luck += retains append on both sides. Exit-flag declaration
+// and upgrade-input lifetime controls are flat;
 // the source operators and their shared text lifetime stay canonical.
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)
