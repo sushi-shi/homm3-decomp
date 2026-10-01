@@ -73,6 +73,9 @@ void generateUniqueSystemID()
 // Expanding every compound mask into x = x & 1 is byte-flat in both compilers.
 // A shared settings reference is also Windows-flat; its Mac comparison
 // remains unavailable, so the ordinary direct global access is retained.
+// Restoring DC configStruct's windowConfig subrecord and plain-char
+// bFirstInstall preserves the field layout and is Windows-byte-flat at
+// 92.7784%; neither type fact resolves the independent mask scheduling.
 // Mac config storage also differs: First Time is inside it at +0x58,
 // army-info/name/combat-speed are +0x74/+0x94/+0x98 (Win +0x70/+0x90/+0x94).
 // The shared class is kept pending a reviewed platform-layout model.
@@ -101,8 +104,8 @@ void checkConfigFile()
     g_config.m_blackoutComputer &= 1;
     g_firstTimeThrough &= 1;
     g_config.m_firstInstall &= 1;
-    g_config.m_mainGameShowMenu &= 1;
-    g_config.m_mainGameFullScreen &= 1;
+    g_config.m_windowConfig.m_showMenu &= 1;
+    g_config.m_windowConfig.m_fullScreen &= 1;
 
     if (g_config.m_combatArmyInfoLevel < 0 ||
             g_config.m_combatArmyInfoLevel > 2)
@@ -336,14 +339,14 @@ void setGameDefaults()
     g_config.m_lastMusicVolume = 5;
     g_config.m_soundVolume = 5;
     g_config.m_lastSoundVolume = 5;
-    g_config.m_mainGameX = 10;
-    g_config.m_mainGameY = 10;
+    g_config.m_windowConfig.m_x = 10;
+    g_config.m_windowConfig.m_y = 10;
     setDefaultSystemOptions();
     setDefaultCombatOptions();
     g_config.m_autosave = 1;
     g_config.m_blackoutComputer = 0;
-    g_config.m_mainGameShowMenu = 1;
-    g_config.m_mainGameFullScreen = 1;
+    g_config.m_windowConfig.m_showMenu = 1;
+    g_config.m_windowConfig.m_fullScreen = 1;
     g_firstTimeThrough = 1;
     strcpy(g_config.m_networkDefaultName, "Player");
     generateUniqueSystemID();
@@ -558,16 +561,16 @@ void readPrefsFromRegistry()
                 &g_config.m_combatSpeed)), &cbData);
         RegQueryValueExA(key, g_prefMainGameShowMenu, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_config.m_mainGameShowMenu)), &cbData);
+                &g_config.m_windowConfig.m_showMenu)), &cbData);
         RegQueryValueExA(key, g_prefMainGameX, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_config.m_mainGameX)), &cbData);
+                &g_config.m_windowConfig.m_x)), &cbData);
         RegQueryValueExA(key, g_prefMainGameY, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_config.m_mainGameY)), &cbData);
+                &g_config.m_windowConfig.m_y)), &cbData);
         RegQueryValueExA(key, g_prefMainGameFullScreen, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_config.m_mainGameFullScreen)), &cbData);
+                &g_config.m_windowConfig.m_fullScreen)), &cbData);
 
         cbData = 350;
         _getcwd(appPath, sizeof(appPath));
@@ -591,14 +594,14 @@ void readPrefsFromRegistry()
         strcpy(g_regCdRomPath, g_regAppPath);
         RegCloseKey(key);
 
-        if (g_config.m_mainGameX > getDesktopWidth() - 800)
-            g_config.m_mainGameX = getDesktopWidth() - 800;
-        if (g_config.m_mainGameY > getDesktopHeight() - 600)
-            g_config.m_mainGameY = getDesktopHeight() - 600;
-        if (g_config.m_mainGameX < 0)
-            g_config.m_mainGameX = 0;
-        if (g_config.m_mainGameY < 0)
-            g_config.m_mainGameY = 0;
+        if (g_config.m_windowConfig.m_x > getDesktopWidth() - 800)
+            g_config.m_windowConfig.m_x = getDesktopWidth() - 800;
+        if (g_config.m_windowConfig.m_y > getDesktopHeight() - 600)
+            g_config.m_windowConfig.m_y = getDesktopHeight() - 600;
+        if (g_config.m_windowConfig.m_x < 0)
+            g_config.m_windowConfig.m_x = 0;
+        if (g_config.m_windowConfig.m_y < 0)
+            g_config.m_windowConfig.m_y = 0;
 
     }
     checkConfigFile();
@@ -710,16 +713,16 @@ void writePrefsToRegistry()
                 &g_config.m_combatSpeed)), 4);
         RegSetValueExA(key, g_prefMainGameShowMenu, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_config.m_mainGameShowMenu)), 4);
+                &g_config.m_windowConfig.m_showMenu)), 4);
         RegSetValueExA(key, g_prefMainGameX, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_config.m_mainGameX)), 4);
+                &g_config.m_windowConfig.m_x)), 4);
         RegSetValueExA(key, g_prefMainGameY, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_config.m_mainGameY)), 4);
+                &g_config.m_windowConfig.m_y)), 4);
         RegSetValueExA(key, g_prefMainGameFullScreen, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_config.m_mainGameFullScreen)), 4);
+                &g_config.m_windowConfig.m_fullScreen)), 4);
         RegCloseKey(key);
     }
 }
