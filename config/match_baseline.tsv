@@ -739,7 +739,7 @@ bottomviewsubwindow	??0?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@
 bottomviewsubwindow	??0?$numpunct@D@std@@QAE@I@Z	100.0000	100.0000	100.0000	0x55820	-
 bottomviewsubwindow	??0TBottomViewEnemyTurn@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x53250	tokens1:26b5fdc7539a
 bottomviewsubwindow	??0TBottomViewHero@@QAE@PAVheroWindow@@@Z	95.8752	95.8752	97.7675	0x51ab0	tokens1:5e9e0d7041f1
-bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	97.2820	98.5176	98.5213	0x52b80	tokens1:a98b42125081
+bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	98.8553	98.8553	98.8553	0x52b80	tokens1:c123a4bb3beb
 bottomviewsubwindow	??0TBottomViewMessage@@QAE@PAVheroWindow@@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x51820	tokens1:bf1da83bb895
 bottomviewsubwindow	??0TBottomViewNewTurn@@QAE@PAVheroWindow@@@Z	99.9806	100.0000	100.0000	0x50dd0	tokens1:1245c50fac02
 bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x51220	tokens1:adf5affa5312
@@ -2330,7 +2330,7 @@ hillfortwindow	??_GTHillFortWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe7de0
 hillfortwindow	?doModal@THillFortWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xe7e90	tokens1:11bb4094e4ca
 hillfortwindow	?handleClick@THillFortWindow@@AAEXAAVmessage@@@Z	100.0000	100.0000	100.0000	0xe8690	tokens1:ae6aa1a45d81
 hillfortwindow	?hillFortWindowHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xe8850	tokens1:899c27d18302
-hillfortwindow	?recalculate@THillFortWindow@@AAEXE@Z	100.0000	100.0000	100.0000	0xe7eb0	tokens1:8c367fceb6ea
+hillfortwindow	?recalculate@THillFortWindow@@AAEXE@Z	100.0000	100.0000	100.0000	0xe7eb0	tokens1:5b72a03c1b04
 hillfortwindow	?upgradeSlot@THillFortWindow@@AAEXHE@Z	100.0000	100.0000	100.0000	0xe8500	tokens1:d8c2bd1ef2b7
 hiscore	??0CHighScoreEdit@@QAE@HHHHHPAD0W4TColor@font@@W4EJustify@2@0HHHHHH@Z	100.0000	100.0000	100.0000	0xe96a0	tokens1:138d9d063fb3
 hiscore	??0THighScoreWindow@@QAE@XZ	100.0000	100.0000	100.0000	0xe9880	tokens1:9fb7d997aa01
