@@ -936,6 +936,28 @@ void showCredits()
                    g_windowManager->m_screenBitmap, 460, 0, false);
 }
 
+// Project-inferred shared main-loop operations. Keep modal calls and the
+// caller's control-flow/lifetime boundaries; original helper names are unknown.
+static void showPendingHighScores()
+{
+    if (g_showHighScore) {
+        g_showHighScore = 0;
+        g_highScoreManager->viewHiScore();
+    }
+}
+
+static void showCampaignCompletionDialogs()
+{
+    showCongrats(0);
+    showPendingHighScores();
+}
+
+static void prepareCampaignScenarioStart()
+{
+    g_gameOver = 0;
+    g_runStartEventsOnEntry = 1;
+}
+
 // E:\gamedcs\kb.cpp:962. Dreamcast proves the menu/helper boundaries,
 // playerSave lifetime, and TTownType alignment[8]; retail fixes the Complete
 // commands and 0x1c04 extent. Its command table at +0x1bc0 sends NEW_GAME
@@ -1353,11 +1375,7 @@ int oldmain()
                                 DATA_COMPGEN(0x0067f6d8,
                                              oldMainCampaignIntroFrame,
                                              "IntroRim.pcx"));
-                        showCongrats(0);
-                        if (g_showHighScore) {
-                            g_showHighScore = 0;
-                            g_highScoreManager->viewHiScore();
-                        }
+                        showCampaignCompletionDialogs();
                         g_gameOver = 0;
                         g_inCampaign = 0;
                         continue;
@@ -1373,15 +1391,10 @@ int oldmain()
                 if (campaign.campaignComplete()
                     && g_defeatedAllPlayers
                            != g_gameResultCampaignMapScored) {
-                    showCongrats(0);
-                    if (g_showHighScore) {
-                        g_showHighScore = 0;
-                        g_highScoreManager->viewHiScore();
-                    }
+                    showCampaignCompletionDialogs();
                     if (campaign.m_currentCampaign != g_campaignOrdinalLast) {
                         if (doCampaignWindow(false, nextCampaign)) {
-                            g_gameOver = 0;
-                            g_runStartEventsOnEntry = 1;
+                            prepareCampaignScenarioStart();
                             goto runGame;
                         }
                     }
@@ -1397,8 +1410,7 @@ int oldmain()
                 }
 
                 if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL) {
-                    g_gameOver = 0;
-                    g_runStartEventsOnEntry = 1;
+                    prepareCampaignScenarioStart();
                     goto runGame;
                 }
             } else {
@@ -1413,10 +1425,7 @@ int oldmain()
             }
 
             g_gameOver = 0;
-            if (g_showHighScore) {
-                g_showHighScore = 0;
-                g_highScoreManager->viewHiScore();
-            }
+            showPendingHighScores();
         }
 
         if (g_remoteOn)

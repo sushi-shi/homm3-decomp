@@ -1411,6 +1411,30 @@ The junction entrance still uses its explicit `cppMin<long>`/`cppMax<long>`
 path; this pass does not erase that typed-helper path in favor of the new
 integer-coordinate interface.
 
+## Main-loop campaign completion and re-entry
+
+Two campaign-completion branches share `showCampaignCompletionDialogs()`:
+`showCongrats(0)` followed by conditional pending-high-score display. The latter
+also serves the main loop's common completion tail through
+`showPendingHighScores()`. That operation tests the pending flag, clears it,
+then reads the manager pointer and calls the existing `viewHiScore()`.
+`showCongrats()` was read through its score insertion, fade and string cleanup;
+its local lifetime still ends before high-score display. The native view helper
+still owns the modal window. Explicit high-score menu requests retain their
+unconditional display and video pause/resume/restart sequence.
+
+Both campaign re-entry paths share `prepareCampaignScenarioStart()`, which
+clears game-over before setting the start-events latch. Their original conditions
+and jumps to `runGame` remain in the caller, preserving campaign-header and
+briefing-window scope exits. Re-entry still starts with the existing score flag,
+color-cycling and network-control setup. Lobby launch, load-game handling and
+the lone game-over/campaign clears are distinct transitions and retain their
+original writes.
+
+All three helpers are ordinary TU-local project inferences in `kb.cpp`.
+No native addresses, inline qualifiers, new stored state or interface changes
+are introduced.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
