@@ -86,7 +86,7 @@ private:
     // 0x1a93/0x4aff. Bodies and named source-call boundaries remain in the TU.
     void createBackgroundWidget(const hero* thisHero);
     void createNameWidget(const char* name);
-    void createPortraitWidget(const char* spriteName, int townType, int count);
+    void createPortraitWidget(const char* spriteName, TTownType townType, int count);
     void createAttackWidget(int normalAttackSkill, int currentAttackSkill);
     void createDefenseWidget(int normalDefenseSkill, int currentDefenseSkill);
     void createDamageWidget(const TCreatureTypeTraits& traits, const hero* ourHero);

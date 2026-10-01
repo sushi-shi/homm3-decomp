@@ -10,6 +10,7 @@
 #include "spelleffect_type.h"
 #include "struct.h"
 #include "terrain_type.h"
+#include "town_type.h"
 
 namespace std {
 template<class T> class allocator;
@@ -640,7 +641,8 @@ enum EMagicTerrain {
 // AI_value @0x40 from the same bodies; field names are the NH3API
 // roster, which lands exactly on those offsets with cost[7].
 struct TCreatureTypeTraits {
-    int m_townType;
+    // Native record 0x1a9a: townType at +0 uses TTownType (0x1ab5).
+    TTownType m_townType;
     int m_level;
     const char* m_samplePrefix;
     const char* m_spriteName;
