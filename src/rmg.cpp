@@ -2567,6 +2567,10 @@ void TRmgTreasureGroup::addObject(type_object* object, TPoint point)
 // sums at 0x233458/0x23356c use the shared isPassableLand and operator+.
 // Restoring these calls keeps the group insertion helper and reaches
 // 88.2086%; the remaining vector expansion and coordinate homes differ.
+// Mac 0x233088..0x2330b4 materializes the trigger XY point before
+// subtracting X and then Y from the owned position. Preserve the same
+// canonical operator-= path used by the gate/mine placement callers.
+// Fresh Windows 86.5372% -> 87.91%; all 73 branch-flow blocks still agree.
 VA(0x00535110, 0x4AB)
 MAC_ADDRESS(0x233028, 0x6a8) // anchor-callee 0x546843; thiscall, ret 4
 unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
@@ -2579,8 +2583,8 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
         type_object* object = m_objects[objectIndex];
         prototype = object->m_properties->m_prototype;
         TRmgMapPosition entrance = object->getPosition();
-        entrance.m_y -= prototype->m_triggerCell.m_y;
-        entrance.m_x -= prototype->m_triggerCell.m_x;
+        entrance -= TPoint(prototype->m_triggerCell.m_x,
+            prototype->m_triggerCell.m_y);
         unsigned int direction = g_adventureObjectTraits[prototype->getObjectType()].m_trait1
             ? RMG_DIRECTION_COUNT : 5;
         while (direction--) {
