@@ -1372,6 +1372,8 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
         defeatedHero->applyBattleLossTemps();
 }
 
+// Original DC ?AI_quick_combat@@YA_NPAVhero@@0AAVarmyGroup@@PAVtown@@PAVNewmapCell@@@Z
+// proves bool. Complete returns only success/failure; doCombat branches on it.
 // E:\gamedcs\ai_combat.cpp:1511
 // EH-bearing: the two stack-local type_AI_combat_data objects give the
 // function a /GX frame (push -1 / push <ehfuncinfo> / mov eax,fs:[0])
@@ -1379,7 +1381,7 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
 VA(0x004270c0, 0x149)
 DC_ADDRESS(0x02c004, 0x13c)
 MAC_ADDRESS(0x029000, 0x158)  // anchor-global
-unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup& defendingArmy, town* defendingTown, NewmapCell* cell)
+bool aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup& defendingArmy, town* defendingTown, NewmapCell* cell)
 {
     float attackerModifier = random(75, 125) / 100.0f;
     float defenderModifier = random(75, 125) / 100.0f;
