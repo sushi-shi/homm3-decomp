@@ -770,9 +770,10 @@ public:
     bool hasSomeUndead() const;
     bool merge(armyGroup* ag);
     void mergeArmies(armyGroup& source);
+    // Original public ?SplitArmy@armyGroup@@QAAXHPAV1@H_N1@Z:
+    // both restriction flags are bool despite the lowered byte records.
     void splitArmy(int srcIndex, armyGroup* ag, int destIndex,
-                   unsigned char inSrcRestricted,
-                   unsigned char inDestRestricted);
+                   bool inSrcRestricted, bool inDestRestricted);
     // Original public ?HasCreatures@armyGroup@@QBA_NXZ proves bool.
     bool hasCreatures() const;
     TTerrainType getNativeTerrain() const;

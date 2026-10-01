@@ -178,7 +178,7 @@ TSplitWindow::~TSplitWindow()
 VA(0x00449e90, 0x2EF)
 DC_ADDRESS(0x04e180, 0x206)
 MAC_ADDRESS(0x057204, 0x318)
-void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned char inSrcRestricted, unsigned char inDestRestricted)
+void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, bool inSrcRestricted, bool inDestRestricted)
 {
     g_splitWindow = new TSplitWindow(0xb1, 0x14, m_armyTypes[srcIndex]);
     if (!g_splitWindow)
