@@ -2325,6 +2325,34 @@ unsigned char combatManager::placeObstacle(int obstacleId)
 
 VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 
+// Project-inferred shared choice: magic terrain replaces the normal mask.
+void combatManager::getObstacleTerrainMasks(
+    unsigned int& terrainMask, unsigned int& specialTerrainMask) const
+{
+    terrainMask = 0;
+    specialTerrainMask = 0;
+    if (m_magicTerrain != -1)
+        specialTerrainMask = 1 << m_magicTerrain;
+    else
+        terrainMask = 1 << m_terrainType;
+}
+
+// Project-inferred retry operation. Each rejected pick remains consumed.
+int combatManager::pickObstacleForTerrain(TPickANumber& picker,
+                                          unsigned int terrainMask,
+                                          unsigned int specialTerrainMask)
+{
+    for (;;) {
+        int obstacleId = picker.pick();
+        if (obstacleId < 0)
+            return obstacleId;
+        if ((s_obstacleInfo[obstacleId].m_terrainMask & terrainMask)
+            || (s_obstacleInfo[obstacleId].m_specialTerrainMask
+                & specialTerrainMask))
+            return obstacleId;
+    }
+}
+
 // E:\gamedcs\cmbtmgr.cpp:2859
 // Everything the battlefield carries before the armies land: the wall
 // hitpoint tables, the castle wall's blocked column, a Tower's mined
@@ -2348,6 +2376,7 @@ VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 //     Mac 0x72a34 keeps a single Pick call in the inner retry loop.
 //     The guarded retry preserves that call in CodeWarrior while VC6 rotates
 //     it into the retail initial/retry sites; a do/while misses the rotation.
+// These observations predate sharing the mask selection and retry operation.
 VA(0x00466290, 0x607)
 DC_ADDRESS(0x060538, 0x3e2)
 MAC_ADDRESS(0x0722b8, 0x818)  // anchor-callee
@@ -2454,12 +2483,9 @@ void combatManager::setupAndLoadObstacles()
     else
         budget = sRandom(5, 12);
 
-    unsigned int terrainMask = 0;
-    unsigned int specialTerrainMask = 0;
-    if (m_magicTerrain != -1)
-        specialTerrainMask = 1 << m_magicTerrain;
-    else
-        terrainMask = 1 << m_terrainType;
+    unsigned int terrainMask;
+    unsigned int specialTerrainMask;
+    getObstacleTerrainMasks(terrainMask, specialTerrainMask);
 
     if ((m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL
                 || m_defendingTown->m_type != TOWN_STRONGHOLD)
@@ -2469,16 +2495,8 @@ void combatManager::setupAndLoadObstacles()
     int placed = 0;
     TPickANumber obstaclePicker(0, 90);
     while (placed < budget) {
-        int obstacleId;
-        for (;;) {
-            obstacleId = obstaclePicker.pick();
-            if (obstacleId < 0)
-                break;
-            if ((s_obstacleInfo[obstacleId].m_terrainMask & terrainMask)
-                || (s_obstacleInfo[obstacleId].m_specialTerrainMask
-                    & specialTerrainMask))
-                break;
-        }
+        int obstacleId = pickObstacleForTerrain(
+            obstaclePicker, terrainMask, specialTerrainMask);
         if (obstacleId < 0)
             break;
         if (placeObstacle(obstacleId))
@@ -2534,23 +2552,14 @@ VA(0x00466a70, 0xBD)
 DC_ADDRESS(0x060a70, 0xb0)
 void combatManager::placeAllObstacles()
 {
-    unsigned int terrainMask = 0;
-    unsigned int specialTerrainMask = 0;
-    if (m_magicTerrain != -1)
-        specialTerrainMask = 1 << m_magicTerrain;
-    else
-        terrainMask = 1 << m_terrainType;
+    unsigned int terrainMask;
+    unsigned int specialTerrainMask;
+    getObstacleTerrainMasks(terrainMask, specialTerrainMask);
 
     TPickANumber picker(0, 90);
     for (;;) {
-        int obstacleId;
-        do {
-            obstacleId = picker.pick();
-            if (obstacleId < 0)
-                break;
-        } while (!(s_obstacleInfo[obstacleId].m_terrainMask & terrainMask)
-                 && !(s_obstacleInfo[obstacleId].m_specialTerrainMask
-                      & specialTerrainMask));
+        int obstacleId = pickObstacleForTerrain(
+            picker, terrainMask, specialTerrainMask);
         if (obstacleId < 0)
             break;
         placeObstacle(obstacleId);
@@ -2582,6 +2591,24 @@ void combatManager::removeObstacle(int index)
     obstacle->m_sprite = 0;
 }
 
+// Project-inferred complete archer-row initialization. The shared raw-resource
+// staging record stays in InitializeArchers across all three row operations.
+void combatManager::initializeArcher(TArcher& archer,
+                                      const TSiegeArcherInfo& info,
+                                      int position, TArcherLoadState& locals)
+{
+    archer.m_creatureType = info.m_creatureType;
+    locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
+    archer.m_sprite = locals.m_sprite;
+    locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
+    archer.m_shadowSprite = locals.m_sprite;
+    archer.m_x = info.m_positions[position].m_x;
+    archer.m_y = info.m_positions[position].m_y;
+    archer.m_facing = 0;
+    archer.m_sequence = 2;
+    archer.m_frame = 0;
+}
+
 VA(0x00466c50, 0x1A1)
 DC_ADDRESS(0x060c0c, 0xd4)
 MAC_ADDRESS(0x072e88, 0x234)
@@ -2597,41 +2624,23 @@ void combatManager::initializeArchers()
     locals.m_spriteName =
         g_creatureTypeTraits[info.m_creatureType].m_spriteName;
 
-    archer->m_creatureType = info.m_creatureType;
-    locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    archer->m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    archer->m_shadowSprite = locals.m_sprite;
-    archer->m_x = info.m_positions[0].m_x;
-    archer->m_y = info.m_positions[0].m_y;
-    archer->m_facing = 0;
-    archer->m_sequence = 2;
-    archer->m_frame = 0;
+    initializeArcher(*archer, info, 0, locals);
 
     if (m_fortificationLevel != COMBAT_FORTIFICATION_CASTLE)
         return;
 
-    m_archers[1].m_creatureType = info.m_creatureType;
-    locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    m_archers[1].m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    m_archers[1].m_shadowSprite = locals.m_sprite;
-    m_archers[1].m_x = info.m_positions[1].m_x;
-    m_archers[1].m_y = info.m_positions[1].m_y;
-    m_archers[1].m_facing = 0;
-    m_archers[1].m_sequence = 2;
-    m_archers[1].m_frame = 0;
+    initializeArcher(m_archers[1], info, 1, locals);
 
-    m_archers[2].m_creatureType = info.m_creatureType;
-    locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    m_archers[2].m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    m_archers[2].m_shadowSprite = locals.m_sprite;
-    m_archers[2].m_x = info.m_positions[2].m_x;
-    m_archers[2].m_y = info.m_positions[2].m_y;
-    m_archers[2].m_facing = 0;
-    m_archers[2].m_sequence = 2;
-    m_archers[2].m_frame = 0;
+    initializeArcher(m_archers[2], info, 2, locals);
+}
+
+// Project-inferred death operation shared by ordinary and mass-spell damage.
+// Resolve the side's hero only after ProcessDeath and the native Is query.
+void combatManager::processArmyDeath(army& stack, int side)
+{
+    stack.processDeath(0);
+    if (stack.is(creatureSiegeWeapon))
+        m_heroes[side]->destroySiegeWeaponArtifact(stack.m_creatureType);
 }
 
 // Project-inferred queue operations shared by PowEffect, ResetRound,
@@ -3692,10 +3701,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
         for (slot = 0; slot < m_numArmies[side]; slot++) {
             army& stack = m_armies[side][slot];
             if (stack.m_allUnitsKilled) {
-                stack.processDeath(0);
-                if (stack.is(creatureSiegeWeapon))
-                    m_heroes[side]->destroySiegeWeaponArtifact(
-                        stack.m_creatureType);
+                processArmyDeath(stack, side);
             }
         }
     }

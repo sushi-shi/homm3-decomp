@@ -22,6 +22,7 @@ class heroWindow;
 class iconWidget;
 class textWidget;
 class TCombatWindow;
+class TPickANumber;
 class NewmapCell;
 class searchArray;
 class town;
@@ -1209,6 +1210,14 @@ public:
     void placeAllObstacles();
 
 private:
+    // Project-inferred shared obstacle selection and archer initialization.
+    void getObstacleTerrainMasks(unsigned int& terrainMask,
+                                 unsigned int& specialTerrainMask) const;
+    static int pickObstacleForTerrain(TPickANumber& picker,
+                                      unsigned int terrainMask,
+                                      unsigned int specialTerrainMask);
+    void initializeArcher(TArcher& archer, const TSiegeArcherInfo& info,
+                          int position, TArcherLoadState& locals);
     void setupAdjacencyArray();
     void updateArmyGroup(int whichSide);
 
@@ -1973,6 +1982,9 @@ public:
     void combatMessage(int command);
 
 private:
+    // Project-inferred nested death cleanup; selection remains caller-owned.
+    void processArmyDeath(army& stack, int side);
+    void processSpellDeaths(const bool (&effected)[2][20]);
     // Project operations shared by round, damage and mass-spell completion.
     // Consuming the marked stacks does not clear this queue; the next batch
     // explicitly resets it, as in the original callers.

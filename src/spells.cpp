@@ -2532,6 +2532,26 @@ bool combatManager::validSpellTargetArmy(SpellID spellId,
                                firstTarget, creatureSpell) > 0.0;
 }
 
+// Project-inferred cleanup shared by Armageddon and mass-spell presentation.
+// Keep the affected row live throughout ProcessDeath and its nested callbacks.
+void combatManager::processSpellDeaths(const bool (&effected)[2][20])
+{
+    clearVanishingCreatures();
+    unsigned char anyDied = 0;
+    for (int side = 0; side < 2; side++) {
+        for (int i = 0; i < m_numArmies[side]; i++) {
+            army& stack = m_armies[side][i];
+            if (effected[side][i] && stack.m_numTroops == 0) {
+                processArmyDeath(stack, side);
+                anyDied = 1;
+            }
+        }
+    }
+    if (anyDied)
+        drawFrame(1, 0, 0, 0, 1, 0);
+    makeCreaturesVanishIfNeeded();
+}
+
 // Project-inferred presentation reset. Eligibility and damage state stay intact.
 void combatManager::clearArmySpellOverlays()
 {
@@ -3007,8 +3027,8 @@ void combatManager::areaEffect(long targetCell, SpellID spellType,
 // animation, advance those animations in the frame loop, clear their
 // effect flags, then process the dead stacks. One function-local `i` is
 // reused by the original sweeps; that gives all five retail loops the
-// same [ebp-8] counter home. The overlay-only reset is now shared below;
-// the compiler observations here predate that extraction.
+// same [ebp-8] counter home. The overlay reset and death cleanup are now
+// shared operations; the compiler observations here predate their extraction.
 
 // THE DAMAGE IS ComputeSpellDamage (0x5a7890) EXPANDED, not called -
 // its `mastery_bonus[level] + power_factor * power` body appears twice,
@@ -3133,31 +3153,7 @@ void combatManager::armageddon(int level, int power)
 
     clearArmySpellOverlays();
 
-    clearVanishingCreatures();
-    unsigned char deaths = 0;
-    { for (int side = 0; side < 2; side++) {
-        { for (i = 0; i < m_numArmies[side]; i++) {
-            army* currentArmy = &m_armies[side][i];
-            if (m_effected[side][i] && currentArmy->m_numTroops == 0) {
-                currentArmy->processDeath(0);
-                // Bit 6 of creatureId is the siege-weapon marker, so a
-                // catapult or tent killed here also loses the artifact
-                // its owner was carrying it as. SPELLED THROUGH army::Is
-                // (+0.57, 88.15 -> 88.72): the accessor truncates the
-                // shifted word to a byte before the caller's mask, which
-                // is what stops VC6 folding the test back into a
-                // `test dword ptr [mem], imm` on the member - the same
-                // lever that closed SpellCastWorkChance's register wall.
-                if (currentArmy->is(creatureSiegeWeapon))
-                    m_heroes[side]->destroySiegeWeaponArtifact(
-                        currentArmy->m_creatureType);
-                deaths = 1;
-            }
-        } }
-    } }
-    if (deaths)
-        drawFrame(1, 0, 0, 0, 1, 0);
-    makeCreaturesVanishIfNeeded();
+    processSpellDeaths(m_effected);
     if (damageDone
         && !static_cast<const combatManager*>(this)->isQuickCombat()) {
         long totalDamage = computeSpellDamage(
@@ -4078,23 +4074,7 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
         clearArmySpellOverlays();
     }
 
-    clearVanishingCreatures();
-    unsigned char anyDied = 0;
-    for (int side = 0; side < 2; side++) {
-        for (int i = 0; i < m_numArmies[side]; i++) {
-            army& stack = m_armies[side][i];
-            if (effected[side][i] && stack.m_numTroops == 0) {
-                stack.processDeath(0);
-                if (stack.is(creatureSiegeWeapon))
-                    m_heroes[side]->destroySiegeWeaponArtifact(
-                        stack.m_creatureType);
-                anyDied = 1;
-            }
-        }
-    }
-    if (anyDied)
-        drawFrame(1, 0, 0, 0, 1, 0);
-    makeCreaturesVanishIfNeeded();
+    processSpellDeaths(effected);
     checkRebirth();
 }
 

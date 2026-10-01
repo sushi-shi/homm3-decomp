@@ -2393,6 +2393,46 @@ All four new helper names and ordinary source placements are project inferences.
 No native identity, explicit inline qualifier or virtual boundary is invented;
 existing fields, layout and native entry points are unchanged.
 
+## Death cleanup, siege archers and obstacle selection
+
+Armageddon and mass-spell presentation share processSpellDeaths: reset the
+vanish queue, scan both army sides for affected stacks with exactly zero
+remaining troops, process each death, redraw if any qualified, then consume
+the vanish queue through its existing guarded helper. The supplied bool[2][20]
+row is referenced throughout the scan, without a snapshot or changed extent.
+Army counts are reread as before. Armageddon retains its damage announcement
+before rebirth; mass-spell presentation retains its immediate rebirth call.
+Their overlay reset and quick-combat guards remain outside this operation.
+
+The nested processArmyDeath is also used by PowEffect: call native ProcessDeath
+with zero, then query the siege-weapon flag and remove the corresponding hero
+artifact when set. The hero is selected from the caller's side only after death
+processing; no controlling-side substitution or early hero snapshot is added.
+PowEffect retains its all-units-killed latch predicate, whereas spell cleanup
+uses the supplied affected row plus troop count. Cheat-driven deaths and clone
+recursion remain direct native calls because they do not remove an artifact.
+
+Three siege-archer rows share initializeArcher, retaining creature type, sprite
+load/handle assignment, shadow load/handle assignment, coordinates, facing zero,
+sequence two and frame zero in that order. The raw-pointer staging record and
+sprite-name lookup stay in initializeArchers across all three calls. The initial
+whole-array memset, citadel gate and castle-only second/third rows are unchanged;
+army-slot assignment and later resource teardown are separate operations.
+
+Normal obstacle setup and placeAllObstacles share getObstacleTerrainMasks:
+zero both masks, then select magic terrain when its index is not -1, otherwise
+normal terrain. They also share pickObstacleForTerrain, consuming picker results
+until a terrain-compatible ordinary obstacle or the original negative result
+is reached. Normal-mask matching short-circuits special-mask matching. Both
+caller-owned no-repeat pickers retain their lifetime and 0..90 domain. Budget
+updates, random draws for large obstacles and placement failure policies stay
+in the callers; large overlays use a different table/domain and remain separate.
+
+These five names and ordinary source placements are project inferences. Native
+entry points and nested helpers remain present; no layout, virtual slot or
+field-visibility change is made. Historical compiler observations in source
+comments do not validate these extractions.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
