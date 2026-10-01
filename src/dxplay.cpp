@@ -791,15 +791,19 @@ unsigned char CDPlay::setGroupData(unsigned long groupId, void* data, unsigned l
     return ok;
 }
 
-VA(0x004983f0, 0xB1)
-DC_ADDRESS(0x08b1e0, 0xa4)
-void* CDPlay::getGroupData(unsigned long groupId, unsigned long* pdwSize, unsigned long flags)
+// Project-inferred shared two-query protocol. Re-read the COM interface for
+// the second call and publish size only on the original successful exits.
+void* CDPlay::getPlayerOrGroupData(EDPlayerType type, unsigned long id,
+                                  unsigned long* pdwSize, unsigned long flags)
 {
     void* buf = 0;
     unsigned long dataSize = 0;
     if (pdwSize)
         dataSize = *pdwSize;
-    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupData(groupId, 0, &dataSize, flags);
+    if (type == DPPLAYERTYPE_GROUP)
+        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupData(id, 0, &dataSize, flags);
+    else
+        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerData(id, 0, &dataSize, flags);
     if (m_res < 0) {
         if (m_res != DPERR_BUFFERTOOSMALL)
             return 0;
@@ -807,7 +811,10 @@ void* CDPlay::getGroupData(unsigned long groupId, unsigned long* pdwSize, unsign
         if (dataSize == 0)
             return 0;
         buf = ::operator new(dataSize);
-        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupData(groupId, buf, &dataSize, flags);
+        if (type == DPPLAYERTYPE_GROUP)
+            m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupData(id, buf, &dataSize, flags);
+        else
+            m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerData(id, buf, &dataSize, flags);
         if (m_res < 0) {
             ::operator delete(buf);
             return 0;
@@ -816,6 +823,13 @@ void* CDPlay::getGroupData(unsigned long groupId, unsigned long* pdwSize, unsign
     if (pdwSize)
         *pdwSize = dataSize;
     return buf;
+}
+
+VA(0x004983f0, 0xB1)
+DC_ADDRESS(0x08b1e0, 0xa4)
+void* CDPlay::getGroupData(unsigned long groupId, unsigned long* pdwSize, unsigned long flags)
+{
+    return getPlayerOrGroupData(DPPLAYERTYPE_GROUP, groupId, pdwSize, flags);
 }
 
 VA(0x004984b0, 0x4D)
@@ -865,27 +879,7 @@ VA(0x00498650, 0xB1)
 DC_ADDRESS(0x08b3ec, 0xa8)
 void* CDPlay::getPlayerData(unsigned long playerId, unsigned long* pdwSize, unsigned long flags)
 {
-    void* buf = 0;
-    unsigned long dataSize = 0;
-    if (pdwSize)
-        dataSize = *pdwSize;
-    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerData(playerId, 0, &dataSize, flags);
-    if (m_res < 0) {
-        if (m_res != DPERR_BUFFERTOOSMALL)
-            return 0;
-        m_res = 0;
-        if (dataSize == 0)
-            return 0;
-        buf = ::operator new(dataSize);
-        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerData(playerId, buf, &dataSize, flags);
-        if (m_res < 0) {
-            ::operator delete(buf);
-            return 0;
-        }
-    }
-    if (pdwSize)
-        *pdwSize = dataSize;
-    return buf;
+    return getPlayerOrGroupData(DPPLAYERTYPE_PLAYER, playerId, pdwSize, flags);
 }
 
 VA(0x00498710, 0x8C)

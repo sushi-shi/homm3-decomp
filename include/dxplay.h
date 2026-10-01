@@ -630,6 +630,11 @@ protected:
     // 84/85/86. Retail retains the same bytes and 0x58-byte size;
     // this last byte aligns the complete object.
     char m_tailPadding;
+
+private:
+    // Project-inferred shared allocation protocol behind the native readers.
+    void* getPlayerOrGroupData(EDPlayerType type, unsigned long id,
+                              unsigned long* size, unsigned long flags);
 };
 SIZE(CDPlay, 0x58);
 

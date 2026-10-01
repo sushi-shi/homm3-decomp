@@ -1083,8 +1083,8 @@ source placement are project inferences.
 Player/group data readers, player-address queries and lobby-settings probes
 retain their separate protocols: their accepted first results, output-size
 updates and allocation ownership differ from compound-address construction.
-The player/group data pair remains a lead for its own shared protocol, rather
-than being routed through this factory operation.
+The player/group data pair now uses its own shared protocol, described below,
+rather than being routed through this factory operation.
 
 ## DirectPlay borrowed address-element setup
 
@@ -1173,6 +1173,34 @@ it does not acquire the shared state write before each close. Track-transition
 and playback-completion resets also retain their own sequences. New helpers are
 ordinary namespace functions with project-inferred names, preserving the native
 aggregate, globals and SDK boundary without new storage or inline claims.
+
+## DirectPlay data retrieval and player-slot setup
+
+The native virtual `getGroupData()` and `getPlayerData()` boundaries delegate to
+private `getPlayerOrGroupData()`, using the existing player/group discriminator
+to select the corresponding COM method at both query stages. It retains the
+optional input size, initial null-buffer query, buffer-too-small-only allocation
+path and raw `operator new` / failure `operator delete` ownership. An initial
+successful query still returns null while publishing the reported size; a
+buffer-too-small result clears the stored error before the zero-size early exit.
+Other first-call failures and second-call failures return without updating the
+caller's size. The second call reads the current COM interface again.
+
+New-game and load-game selection share private `setupPlayerSlots()`. Network
+hosts add the local record; clients preserve original-game setup, chat hiding,
+announcement transmission, enumeration and the per-player version-buffer guard.
+The announcement remains alive through enumeration, and each `auto_ptr<int>`
+version remains alive through that player's slot update with scalar deletion.
+Hot-seat preserves its per-seat temporary records, local identity writes and
+manager deletion/nulling; ordinary local play retains its configured name.
+
+Each mode still sets duration before player initialization and reevaluates host
+status afterward. Header discovery, the distinct new/load filenames, map
+selection and load-only slider disabling remain in the callers. Save mode still
+skips both setup paths. Both new methods are project-inferred ordinary bodies;
+existing virtual slots, native interfaces, field visibility and storage remain
+unchanged. Address, name, lobby-settings and compound-address readers retain
+their distinct allocation/error protocols.
 
 ## Validation provenance
 

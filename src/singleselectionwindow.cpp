@@ -3030,14 +3030,11 @@ void TSingleSelectionWindow::updateFilterWidgets()
         widgetSetStatus(m_randomMapOptions[7] + 0x14b, 0x10);
 }
 
+// Project-inferred shared player initialization. Keep the announcement alive
+// through enumeration, and each version buffer through its player-slot update.
 // The version-data guards use std::auto_ptr<int>, which performs scalar deletion.
-VA(0x0057F330, 0x3E3)
-DC_ADDRESS(0x13575c, 0x348)
-MAC_ADDRESS(0x17778c, 0x344)
-void TSingleSelectionWindow::setupLoadGameMode()
+void TSingleSelectionWindow::setupPlayerSlots()
 {
-    m_durationIndex = g_game->m_setup.m_turnDuration;
-
     if (g_remoteOn) {
         getWidget(105)->hide();
         if (isHost()) {
@@ -3079,6 +3076,16 @@ void TSingleSelectionWindow::setupLoadGameMode()
         g_thisNetPlayerInfo.m_version = g_videoGameState;
         setNewPlayerSlot(&g_thisNetPlayerInfo);
     }
+}
+
+VA(0x0057F330, 0x3E3)
+DC_ADDRESS(0x13575c, 0x348)
+MAC_ADDRESS(0x17778c, 0x344)
+void TSingleSelectionWindow::setupLoadGameMode()
+{
+    m_durationIndex = g_game->m_setup.m_turnDuration;
+
+    setupPlayerSlots();
 
     if (isHost()) {
         getHeaders(&m_headersA);
@@ -3100,47 +3107,7 @@ void TSingleSelectionWindow::setupNewGameMode()
     g_game->m_setup.m_turnDuration = 10;
     m_durationIndex = 10;
 
-    if (g_remoteOn) {
-        getWidget(105)->hide();
-        if (isHost()) {
-            setNewPlayerSlot(&g_thisNetPlayerInfo);
-        } else {
-            g_game->setupOrigData();
-            m_scenarioOptionsStarted = 1;
-            if (m_chatShowing)
-                getWidget(179)->hide();
-
-            CNewPlayerMsg msg(&g_thisNetPlayerInfo, m_gameVersion);
-            transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
-
-            CAutoArray<CDPlayPlayer> playerArray;
-            g_dPlay->enumPlayers(&playerArray, 0, 0);
-            for (int i = 0; i < playerArray.getCount(); ++i) {
-                CDPlayPlayer* curr = playerArray.get(i);
-                std::auto_ptr<int> version(static_cast<int*>(
-                    g_dPlay->getPlayerData(curr->getId(), 0, 0)));
-                if (!version.get())
-                    continue;
-                CNetPlayerInfo player(curr->getName(), curr->getId());
-                setNewPlayerSlot(&player);
-            }
-        }
-    } else if (g_mpNetProtocol == MP_HOTSEAT) {
-        for (int i = 0; i < g_hotSeatMan->m_playerCount; ++i) {
-            CNetPlayerInfo player(g_hotSeatMan->getName(i), i + 1);
-            setNewPlayerSlot(&player);
-        }
-        g_thisNetPlayerInfo.m_dpid = 1;
-        strcpy(g_thisNetPlayerInfo.m_name, g_game->m_players[0].m_name);
-        g_thisNetPlayerInfo.m_version = g_videoGameState;
-        delete g_hotSeatMan;
-        g_hotSeatMan = 0;
-    } else {
-        g_thisNetPlayerInfo.m_dpid = 1;
-        strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
-        g_thisNetPlayerInfo.m_version = g_videoGameState;
-        setNewPlayerSlot(&g_thisNetPlayerInfo);
-    }
+    setupPlayerSlots();
 
     if (isHost()) {
         getHeaders(&m_headersA);

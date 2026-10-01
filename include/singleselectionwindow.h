@@ -873,6 +873,8 @@ public:
 
 private:
     CNetPlayerHandlerPlayer* getThisPlayer();
+    // Project-inferred player initialization shared by new/load modes.
+    void setupPlayerSlots();
 
 public:
     // Accessor boundary inferred from the existing property interface and
