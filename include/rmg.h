@@ -1140,6 +1140,17 @@ struct TRmgMapItem {
             m_tileData.m_subterraneanGate = 1;
         }
     }
+
+    // Mark generation-border state without replacing existing connection
+    // decoration. This schedules border filling; it does not place an object.
+    // Cleanup abstraction paired with openPath(), preserving store order.
+    void markBorderObject()
+    {
+        if (!m_connection.m_present) {
+            m_tileData.m_subterraneanGate = 0;
+            m_tileData.m_borderObject = 1;
+        }
+    }
 };
 
 // Retail has distinct seven-slot abstract tables at 0x6409e8 (map) and
