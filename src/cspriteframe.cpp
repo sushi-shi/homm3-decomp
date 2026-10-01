@@ -431,6 +431,52 @@ void CSpriteFrame::encode(TEncodingMethod method)
     }
 }
 
+// Project-inferred common sizing pass for general and tileset RLE.
+// Keep the post-tested row walk and run-limit split used by both encoders.
+unsigned int CSpriteFrame::countRleDataSize(unsigned int rowOffsetSize,
+    unsigned char controlLimit, unsigned char literalCode,
+    unsigned int runLimit, unsigned int controlSize) const
+{
+    unsigned int newDataSize = m_croppedHeight * rowOffsetSize;
+    unsigned int linesToGo = m_croppedHeight;
+    const unsigned char* source = m_map;
+    do {
+        unsigned char code = source[0] < controlLimit ? source[0] : literalCode;
+        newDataSize += controlSize;
+        unsigned int run = 0;
+        int x = 1;
+        bool opaque = code == literalCode;
+        while (1) {
+            ++run;
+            if (opaque)
+                ++newDataSize;
+            if (x >= m_croppedWidth)
+                break;
+            unsigned char nextCode =
+                source[x] < controlLimit ? source[x] : literalCode;
+            if (nextCode != code || run == runLimit) {
+                newDataSize += controlSize;
+                code = nextCode;
+                run = 0;
+                opaque = code == literalCode;
+            }
+            ++x;
+        }
+        source += m_croppedWidth;
+    } while (--linesToGo);
+    return newDataSize;
+}
+
+// Project-inferred encoded-data transition. Callers retain their distinct
+// old-buffer deletion policies and any following crop-geometry updates.
+void CSpriteFrame::setEncodedData(unsigned char* data, unsigned int size,
+                                 TEncodingMethod method)
+{
+    m_map = data;
+    m_dataSize = size;
+    m_encodingMethod = method;
+}
+
 // Original: CSpriteFrame::EncodeGeneral; cspriteframe.cpp:791
 DC_ADDRESS(0x0750d8, 0x1b2)
 void CSpriteFrame::encodeGeneral()
@@ -438,38 +484,14 @@ void CSpriteFrame::encodeGeneral()
     static const unsigned char opaqueRunCode = g_generalRleOpaqueRunCode;
     // DC's cspriteframe.cpp:47 initializer is max<unsigned char>() + 1.
     static const unsigned int maxRunLength = 256;
-    unsigned int newDataSize = m_croppedHeight * sizeof(unsigned int);
-    unsigned int linesToGo = m_croppedHeight;
-    unsigned char* source = m_map;
-    do {
-        unsigned char code = source[0] < 10 ? source[0] : opaqueRunCode;
-        newDataSize += 2;
-        unsigned int run = 0;
-        int x = 1;
-        bool opaque = code == opaqueRunCode;
-        while (1) {
-            ++run;
-            if (opaque)
-                ++newDataSize;
-            if (x >= m_croppedWidth)
-                break;
-            unsigned char nextCode = source[x] < 10 ? source[x] : opaqueRunCode;
-            if (nextCode != code || run == maxRunLength) {
-                newDataSize += 2;
-                code = nextCode;
-                run = 0;
-                opaque = code == opaqueRunCode;
-            }
-            ++x;
-        }
-        source += m_croppedWidth;
-    } while (--linesToGo);
+    unsigned int newDataSize = countRleDataSize(
+        sizeof(unsigned int), 10, opaqueRunCode, maxRunLength, 2);
 
     unsigned char* newMap = new unsigned char[newDataSize];
     unsigned int* lineOffset = static_cast<unsigned int*>(static_cast<void*>(newMap));
-    linesToGo = m_croppedHeight;
+    unsigned int linesToGo = m_croppedHeight;
     unsigned int offset = m_croppedHeight * sizeof(unsigned int);
-    source = m_map;
+    unsigned char* source = m_map;
     do {
         *lineOffset++ = offset;
         unsigned char code = source[0] < 10 ? source[0] : opaqueRunCode;
@@ -497,9 +519,7 @@ void CSpriteFrame::encodeGeneral()
         source += m_croppedWidth;
     } while (--linesToGo);
     delete[] m_map;
-    m_map = newMap;
-    m_dataSize = newDataSize;
-    m_encodingMethod = eEncodeGeneralRLE;
+    setEncodedData(newMap, newDataSize, eEncodeGeneralRLE);
 }
 
 // Original: CSpriteFrame::EncodeTileset; cspriteframe.cpp:894
@@ -514,38 +534,15 @@ void CSpriteFrame::encodeTileset()
         }
     }
     if (hasControlPixels) {
-        unsigned int linesToGo = m_croppedHeight;
-        unsigned int newDataSize = m_croppedHeight * sizeof(unsigned short);
-        unsigned char* source = m_map;
-        do {
-            unsigned char code = source[0] < 5 ? source[0] : ePackedRleLiteral;
-            ++newDataSize;
-            unsigned int run = 0;
-            int x = 1;
-            bool opaque = code == ePackedRleLiteral;
-            while (1) {
-                ++run;
-                if (opaque)
-                    ++newDataSize;
-                if (x >= m_croppedWidth)
-                    break;
-                unsigned char nextCode = source[x] < 5 ? source[x] : ePackedRleLiteral;
-                if (nextCode != code || run == ePackedRleMaxRunLength) {
-                    ++newDataSize;
-                    code = nextCode;
-                    run = 0;
-                    opaque = code == ePackedRleLiteral;
-                }
-                ++x;
-            }
-            source += m_croppedWidth;
-        } while (--linesToGo);
+        unsigned int newDataSize = countRleDataSize(
+            sizeof(unsigned short), 5, ePackedRleLiteral,
+            ePackedRleMaxRunLength, 1);
 
         unsigned char* newMap = new unsigned char[newDataSize];
         unsigned short* lineOffset = static_cast<unsigned short*>(static_cast<void*>(newMap));
-        linesToGo = m_croppedHeight;
+        unsigned int linesToGo = m_croppedHeight;
         unsigned short offset = static_cast<unsigned short>(m_croppedHeight * sizeof(unsigned short));
-        source = m_map;
+        unsigned char* source = m_map;
         do {
             *lineOffset++ = offset;
             unsigned char code = source[0] < 5 ? source[0] : ePackedRleLiteral;
@@ -577,9 +574,7 @@ void CSpriteFrame::encodeTileset()
             source += m_croppedWidth;
         } while (--linesToGo);
         delete[] m_map;
-        m_map = newMap;
-        m_dataSize = newDataSize;
-        m_encodingMethod = eEncodeTilesetRLE;
+        setEncodedData(newMap, newDataSize, eEncodeTilesetRLE);
     }
 }
 
@@ -744,9 +739,7 @@ void CSpriteFrame::encodeAdvObj()
         source += oldWidth;
     } while (--linesToGo);
     // Unlike the other two encoders, DC 1256 replaces the map without deleting it.
-    m_map = newMap;
-    m_dataSize = newDataSize;
-    m_encodingMethod = eEncodeAdvObjRLE;
+    setEncodedData(newMap, newDataSize, eEncodeAdvObjRLE);
     m_croppedX = newCroppedX;
     m_croppedWidth = newCroppedWidth;
 }

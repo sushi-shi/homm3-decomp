@@ -2644,6 +2644,38 @@ repeated implementations. Sprite operations are private; data layout, virtual
 interfaces and existing native function boundaries are unchanged. No build,
 test or matching-score investigation was run.
 
+## Sprite encoding and loose-resource sizing
+
+General and tileset encoders share private countRleDataSize. Each supplies its
+row-offset width, control threshold, literal code, maximum run length and
+control-record size. The common pass retains the post-tested row loop, initial
+control record, literal-byte counting, width exit before next-pixel access,
+code-change/run-limit splitting, run reset and source-row advancement. General
+RLE keeps its two-byte records and 256-pixel limit; tileset keeps its one-byte
+records and 32-pixel limit. The tileset control-pixel pre-scan still gates the
+entire encoding path. Output writing and its distinct word/dword offsets remain
+in the native encoders; no empty-image guard or run normalization is added.
+
+All three encoders share private setEncodedData, storing the map, byte size and
+encoding in that order. General and tileset callers still delete the old map
+first. Adventure-object encoding retains the explicitly documented omission of
+that deletion and updates its cropped X/width afterward. Crop-only replacement
+remains separate because it does not change the encoding and sets data size at
+a different point.
+
+Four loose-resource paths (font, text, spreadsheet and sample) share file-static
+getResourceFileSize: seek to end, convert ftell to signed int, rewind to the
+start, return the size. It stays inside each caller's original try scope;
+stream-adapter and temporary-buffer lifetimes, fclose handling and read/allocation
+operations remain in the callers. No error checking is added to the original
+unchecked seek/tell sequence. The separate filename-taking fileSize API keeps
+its long result, open mode and fileError/close behavior.
+
+These three ordinary helper identities are project inferences. Sprite members
+are private, with no field-layout or virtual-interface changes. Existing native
+encoder and loader identities remain on their original entry points. No builds,
+tests or matching-score investigations were run.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

@@ -283,6 +283,11 @@ private:
                            TPitch sourcePitch) const;
     int importPCXFile(const char* filename);
     int importCroppedPCXFile(const char* filename);
+    unsigned int countRleDataSize(unsigned int rowOffsetSize,
+        unsigned char controlLimit, unsigned char literalCode,
+        unsigned int runLimit, unsigned int controlSize) const;
+    void setEncodedData(unsigned char* data, unsigned int size,
+                        TEncodingMethod method);
     void encodeGeneral();
     void encodeTileset();
     void encodeAdvObj();

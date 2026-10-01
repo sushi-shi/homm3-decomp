@@ -1016,14 +1016,25 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
     return result.release();
 }
 
+// Project-inferred shared loose-resource operation. Preserve the unchecked
+// seek/tell/rewind sequence and the loaders' signed int size conversion.
+static int getResourceFileSize(FILE* file)
+{
+    fseek(file, 0, SEEK_END);
+    int size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    return size;
+}
+
 // Mac 0:0x1538a8..0x153944 is this named loader's archive-only port: the
 // font getter calls it at 0x15396c, and it calls findBitmapResource for
 // name/default.fnt before getItemIndex(name) and Mac loadFontData at 0x153560.
 // The latter reads through the same 8-byte LOD stream adapter and performs
 // endian conversion of the font records. Complete also opens loose FILE
 // resources and uses its separate Windows loadFontData body at 0x55b750. Two
-// ordinary source calls to findBitmapResource auto-inline in VC6 and close
-// this 0x229-byte Windows body exactly, preserving all 18 ordered calls.
+// ordinary source calls to findBitmapResource auto-inlined in the prior exact
+// reconstruction of this 0x229-byte body with 18 ordered calls. The shared
+// fallback and file-size operations have not been compiled or measured.
 VA(0x0055b8d0, 0x229)
 MAC_ADDRESS(0x1538a8, 0x9c)
 font* ResourceManager::loadFont(const char* name)
@@ -1032,9 +1043,7 @@ font* ResourceManager::loadFont(const char* name)
 
     if (file) {
         try {
-            fseek(file, 0, SEEK_END);
-            int fileSize = ftell(file);
-            fseek(file, 0, SEEK_SET);
+            int fileSize = getResourceFileSize(file);
 
             t_stdio_file_adapter stream(file);
             TAbstractFile* streamInterface = &stream;
@@ -1102,9 +1111,7 @@ TTextResource* ResourceManager::loadText(const char* name)
 
     if (file) {
         try {
-            fseek(file, 0, SEEK_END);
-            int fileSize = ftell(file);
-            fseek(file, 0, SEEK_SET);
+            int fileSize = getResourceFileSize(file);
 
             TTextResource* result;
             {
@@ -1171,9 +1178,7 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
 
     if (file) {
         try {
-            fseek(file, 0, SEEK_END);
-            int fileSize = ftell(file);
-            fseek(file, 0, SEEK_SET);
+            int fileSize = getResourceFileSize(file);
 
             TSpreadsheetResource* result;
             {
@@ -1355,9 +1360,7 @@ sample* ResourceManager::loadSample(const char* name)
         sample* result;
         try {
             {
-                fseek(file, 0, SEEK_END);
-                int size = ftell(file);
-                fseek(file, 0, SEEK_SET);
+                int size = getResourceFileSize(file);
                 std::auto_ptr<char> data(new char[size]);
                 fread(data.get(), size, 1, file);
                 result = new sample(name, data.get(), size, 0, 127, 1);
