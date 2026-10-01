@@ -15,12 +15,12 @@ SERVICES = {
     '??0TGzFile@@QAE@PBD0@Z', '??1TGzFile@@UAE@XZ',
     '??0TRuntimeError@@QAE@PBD@Z',
     '?buildTileNeighbourMask@@YIXHHHHPAE@Z',
-    '?getImageName@TObjectType@@QAEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ',
+    '?getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ',
     '?getSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@Z',
     '?load@TObjectTypeTable@@QAEXPAD@Z',
 }
 DATA_SERVICES = {
-    'g_adventureObjectLandBlocked', 'g_artifactTraits',
+    'g_adventureObjectTraits', 'g_allocationFailureText', 'g_artifactTraits',
     'g_creatureGenerator1Types', 'g_creatureTypeTraits', 'g_heroTraits',
     'g_spellTraits', 'g_tileDirections',
 }
@@ -33,10 +33,9 @@ RUNTIME = {
     '___CxxFrameHandler', '__chkstk', '__ftol', '__purecall', '_atexit',
     '_atoi', '_memmove', '_rand', '_sprintf', '_sqrt', '_srand', '_time', '_tolower',
 }
-ALIASES = {
-    '??1_Lockit@std@@QAE@XZ': 'exe_scoped_lock_exe_scoped_lock',
-    '__purecall': 'exe_purecall',
-}
+# Runtime rows are now labelled with their pinned library symbols
+# (ca16ae0d7), so no inventory aliases are needed.
+ALIASES: dict[str, str] = {}
 
 
 def data_addresses(root: Path) -> dict[str, int]:
