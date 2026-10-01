@@ -10169,7 +10169,7 @@ void game::checkForTownEvent()
 VA(0x004cdb80, 0x231)
 DC_ADDRESS(0x0bb0e4, 0x2fc)
 MAC_ADDRESS(0x0e52e0, 0x2cc)
-unsigned char game::getRandomLith(const std::vector<type_point>& points,
+bool game::getRandomLith(const std::vector<type_point>& points,
                                     type_point& result, long cellType,
                                     long excluded) const
 {
@@ -10224,7 +10224,7 @@ unsigned char game::getRandomLith(const std::vector<type_point>& points,
 VA(0x004cddc0, 0x22)
 DC_ADDRESS(0x0bb3e0, 0x3c)
 MAC_ADDRESS(0x0e55ac, 0x38)
-unsigned char game::getRandomLithExit(long color, type_point& result) const
+bool game::getRandomLithExit(long color, type_point& result) const
 {
     return getRandomLith(getLithExits(color), result, 0x2c, -1);
 }
@@ -10232,7 +10232,7 @@ unsigned char game::getRandomLithExit(long color, type_point& result) const
 VA(0x004cddf0, 0x24)
 DC_ADDRESS(0x0bb41c, 0x3e)
 MAC_ADDRESS(0x0e55e4, 0x3c)
-unsigned char game::getRandomLith(long color, long excluded, type_point& result) const
+bool game::getRandomLith(long color, long excluded, type_point& result) const
 {
     return getRandomLith(getLiths(color), result, 0x2d, excluded);
 }
@@ -10240,7 +10240,7 @@ unsigned char game::getRandomLith(long color, long excluded, type_point& result)
 VA(0x004cde20, 0x1D)
 DC_ADDRESS(0x0bb45c, 0x32)
 MAC_ADDRESS(0x0e5620, 0x30)
-unsigned char game::getRandomWhirlpool(long excluded, type_point& result) const
+bool game::getRandomWhirlpool(long excluded, type_point& result) const
 {
     return getRandomLith(getWhirlpools(), result, 0x6f, excluded);
 }

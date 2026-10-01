@@ -1310,13 +1310,20 @@ public:
     // event_record.obj owns 0x49d6c0's body.
     void clearEventRecords(char playerId);
     type_point getUndergroundGateExit(const NewmapCell* cell) const;
-    unsigned char getRandomLithExit(long color, type_point& result) const;
-    unsigned char getRandomLith(const std::vector<type_point>& points,
+    // Original get_random_lith_exit/get_random_lith/get_random_whirlpool
+    // publics prove QBA_N: public const bool. The vector overload is
+    // ABA_N: private const bool, called only by these member wrappers.
+    bool getRandomLithExit(long color, type_point& result) const;
+    bool getRandomLith(long color, long excluded,
+                                  type_point& result) const;
+    bool getRandomWhirlpool(long excluded, type_point& result) const;
+
+private:
+    bool getRandomLith(const std::vector<type_point>& points,
                                   type_point& result, long cellType,
                                   long excluded) const;  // 0x4cdb80
-    unsigned char getRandomLith(long color, long excluded,
-                                  type_point& result) const;
-    unsigned char getRandomWhirlpool(long excluded, type_point& result) const;
+
+public:
     // event_record.cpp:1061 in the DC roster (dc 0x8e0b8). advManager::
     // EraseObj is its caller and pins the retail row: a 0x18-byte record
     // built with `new`, two vtable stores and the cell's +0x00/+0x22/+0x24
