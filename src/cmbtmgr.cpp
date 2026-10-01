@@ -2879,7 +2879,8 @@ bool combatManager::shotIsNotOptimal(const army* attacker, const army* defender)
 VA(0x00467840, 0x1B6)
 DC_ADDRESS(0x061318, 0x1d8)
 MAC_ADDRESS(0x0739c0, 0x284)
-unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
+// Original DC InLineOfSight mangles its result as _N (bool).
+bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 {
     if (!m_fortificationLevel)
         return 1;
@@ -3904,7 +3905,8 @@ unsigned char combatManager::doorCanBeLowered() const
 VA(0x00469a10, 0x80)
 DC_ADDRESS(0x0632c4, 0x98)
 MAC_ADDRESS(0x07618c, 0x78)
-unsigned char combatManager::hexIsBlocked(int index) const
+// Original DC HexIsBlocked mangles its result as _N (bool).
+bool combatManager::hexIsBlocked(int index) const
 {
     if (m_fortificationLevel > 0
             && (index == COMBAT_HEX_GATE || index == COMBAT_HEX_GATE_MOAT)) {
@@ -3969,7 +3971,8 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
 VA(0x00469dc0, 0x8D)
 DC_ADDRESS(0x06351c, 0x7e)
 MAC_ADDRESS(0x0764c4, 0xd4)
-unsigned char combatManager::isInMoat(int hex, int* index)
+// Original DC IsInMoat mangles its result as _N (bool).
+bool combatManager::isInMoat(int hex, int* index)
 {
     if (m_moatOn) {
         for (int row = 0; row < 11; row++) {

@@ -1165,9 +1165,9 @@ public:
                                    const army* defender) const;
     unsigned char shotIsThroughWall(const army* shooter, int sourceIndex,
                                     int destIndex) const;
-    unsigned char inLineOfSight(int sourceIndex, int destIndex) const;
-    unsigned char hexIsBlocked(int index) const;
-    unsigned char isInMoat(int hex, int* index);
+    bool inLineOfSight(int sourceIndex, int destIndex) const;
+    bool hexIsBlocked(int index) const;
+    bool isInMoat(int hex, int* index);
 
 private:
     void loadIcons();
