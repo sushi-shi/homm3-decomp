@@ -2444,12 +2444,8 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         }
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x17519c..0x1751e4 expands the canonical registration operation.
+    addWidgetsToMessageStream();
 
     m_versionIcon = ResourceManager::getSprite("ScSelC.def");
     m_victoryIcon = ResourceManager::getSprite("scnrvict.def");

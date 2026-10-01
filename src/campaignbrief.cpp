@@ -749,13 +749,8 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
 
     addBonusIcons();
 
-    for (std::vector<widget*>::iterator it = widgets.begin();
-         it != widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x66dd0..0x66e14 expands the canonical registration operation.
+    addWidgetsToMessageStream();
 
     m_oldVolume = g_config.m_musicVolume;
     if (viewFromGame)

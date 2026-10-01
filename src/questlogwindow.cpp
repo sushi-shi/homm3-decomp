@@ -73,13 +73,8 @@ TQuestLogWindow::TQuestLogWindow()
         324, 470, 32, 32, DIALOG_RETURN_OK, "QLexit.def",
         0, 1, 1, 28, 2));
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x149f98..0x149fd8 expands the canonical registration operation.
+    addWidgetsToMessageStream();
 }
 
 VA(0x0052e170, 0x3A)
