@@ -1543,10 +1543,10 @@ CHeroUpdateMsg::~CHeroUpdateMsg()
 // Complete shares the right experience/mana sprintf tail, whereas Mac keeps
 // all four experience/mana sprintf sites. Complete also shares the expired
 // return with the final ExitSwapManager tail; DC explicitly returns at 1245.
-// Mac 0x1a809c/0x1a8338 and retail cache each hero level before
-// getExperience, then pass that same value to sprintf. Two case-owned level
-// locals recover the natural common exits and format tail: 86.81 -> 98.32
-// before refreshing the private Boolean helper labels; no exit goto is needed.
+// Mac 0x1a809c/0x1a8338 and retail preserve each level across
+// getExperience. Case-owned level snapshots recover the natural shared
+// exits and format tail. Mac 0x1a7fa4 (left count) precedes 0x1a7fd8
+// (right icon), as retail does; retain that complete guarded case order.
 VA(0x005afdf0, 0xABB)
 DC_ADDRESS(0x15d4ac, 0x986)
 MAC_ADDRESS(0x1a7954, 0xdc0)  // full retail dispatcher + DC dossier
@@ -1793,23 +1793,6 @@ int swapManager::main(message& msg)
                     }
                     break;
 
-                case kSwapRolloverRightArmy0:
-                case kSwapRolloverRightArmy1:
-                case kSwapRolloverRightArmy2:
-                case kSwapRolloverRightArmy3:
-                case kSwapRolloverRightArmy4:
-                case kSwapRolloverRightArmy5:
-                case kSwapRolloverRightArmy6:
-                    if (g_heroScreenDraggedArtifact.m_artifactId
-                        == ARTIFACT_NONE)
-                    {
-                        handleMonster(
-                            1, msg.m_codeY - kSwapRolloverRightArmy0,
-                            rightMouse, shift);
-                        sendHeroUpdate();
-                    }
-                    break;
-
                 case kSwapRolloverLeftArmyCount0:
                 case kSwapRolloverLeftArmyCount1:
                 case kSwapRolloverLeftArmyCount2:
@@ -1823,6 +1806,23 @@ int swapManager::main(message& msg)
                         handleMonster(
                             0, msg.m_codeY - kSwapRolloverLeftArmyCount0,
                                       rightMouse, shift);
+                        sendHeroUpdate();
+                    }
+                    break;
+
+                case kSwapRolloverRightArmy0:
+                case kSwapRolloverRightArmy1:
+                case kSwapRolloverRightArmy2:
+                case kSwapRolloverRightArmy3:
+                case kSwapRolloverRightArmy4:
+                case kSwapRolloverRightArmy5:
+                case kSwapRolloverRightArmy6:
+                    if (g_heroScreenDraggedArtifact.m_artifactId
+                        == ARTIFACT_NONE)
+                    {
+                        handleMonster(
+                            1, msg.m_codeY - kSwapRolloverRightArmy0,
+                            rightMouse, shift);
                         sendHeroUpdate();
                     }
                     break;
