@@ -4628,6 +4628,14 @@ void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
     }
 }
 
+// Mac 0x23e80c..0x23e844 copies the full position and XY offset into
+// separate parameter homes before writing a distinct translated result:
+// preserve the same free operator+ boundary recovered in the water flood.
+// The full result copy at 0x23e878..0x23e898 belongs to getMapItem(position).
+// Complete helper model: Windows 100% -> 77.1119%; seed erasure now expands
+// std::copy which retail retains, with four extra CFG blocks. No other
+// Windows function changes at this checkpoint; keep this source fact apart
+// from matching gains rather than restoring partial field-wise translation.
 VA(0x0053CF50, 0x177)
 MAC_ADDRESS(0x23e738, 0x1f0)
 void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
@@ -4640,16 +4648,12 @@ void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
         position = pending.back();
         pending.pop_back();
         for (int direction = 0; direction < 8; direction += 2) {
-            TRmgMapPosition next;
-            next.m_x = position.m_x;
-            next.m_y = position.m_y;
             TPoint offset = g_rmgDirections[direction];
-            next += offset;
-            next.m_z = position.m_z;
+            TRmgMapPosition next = position + offset;
             if (next.m_x < 0 || next.m_x >= m_map.m_mapWidth
                 || next.m_y < 0 || next.m_y >= m_map.m_mapHeight)
                 continue;
-            TRmgMapItem* item = m_map.getMapItem(next.m_x, next.m_y, next.m_z);
+            TRmgMapItem* item = m_map.getMapItem(next);
             if (item->isZoneBoundary() || item->m_zoneState.m_zone != zoneIndex)
                 continue;
             item->m_tileData.m_zoneBoundary = 1;
