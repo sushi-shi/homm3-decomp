@@ -664,6 +664,15 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
     }
 }
 
+// Trigger and blocked-footprint cells share these placement vetoes. Keep
+// their ordered land, entrance and zone queries; each caller still applies
+// its own border or water policy after this common check.
+static inline bool isRmgFootprintCellBlocked(TRmgMapItem* item, int zoneIndex)
+{
+    return !item->isPassableLand() || item->isRoadEntrance()
+        || item->m_zoneState.m_zone != zoneIndex;
+}
+
 // Retail checks trigger and blocked-mask cells separately, even when both
 // select the same tile. Only the trigger arm observes rejectBorder. The
 // category-zero water rule belongs to the blocked-mask arm, not the whole
@@ -696,15 +705,13 @@ unsigned char type_random_map::isPlacementBlocked(
             TRmgGridPoint maskPoint(x, y);
             TRmgMapItem* item = getMapItem(nearby);
             if (prototype.isTriggerCell(maskPoint.m_x, maskPoint.m_y)) {
-                if (!item->isPassableLand()
-                    || item->isRoadEntrance() || item->m_zoneState.m_zone != zoneIndex)
+                if (isRmgFootprintCellBlocked(item, zoneIndex))
                     return 1;
                 if (rejectBorder && item->hasBorderObject())
                     return 1;
             }
             if (!prototype.isPassableCell(maskPoint.m_x, maskPoint.m_y)) {
-                if (!item->isPassableLand()
-                    || item->isRoadEntrance() || item->m_zoneState.m_zone != zoneIndex)
+                if (isRmgFootprintCellBlocked(item, zoneIndex))
                     return 1;
                 if (item->getLandType() == eTerrainWater) {
                     if (prototype.m_slotCategory != TObjectType::SLOT_CATEGORY_0
@@ -2111,13 +2118,35 @@ type_object* type_witch_hut_def::generate(TRmgObjectPropertiesRef* properties,
     return new rmgWitchHutObject(properties);
 }
 
+// All artifact-quest rewards require the currently selected hut prototype
+// and a sufficient artifact pool. Preserve prototype-before-pool evaluation;
+// creature rewards apply their separate alignment/value rule afterward.
+static inline bool canUseRmgSeerHutPrototype(
+    const type_random_map_generator* generator, int prototypeIndex)
+{
+    return generator->m_nextSeerHutPrototypeIndex == prototypeIndex
+        && !generator->m_questArtifactPoolLow;
+}
+
+// Pair an already allocated reward hut with a selected random-artifact
+// prototype and its owning quest wrapper. The three reward factories retain
+// their hut allocation before this operation and their payload writes after it.
+// Keeping the hut pointer at the caller also preserves the existing behavior
+// if wrapper allocation returns null; no new result dereference is introduced.
+static inline rmgQuestArtifactObject* createRmgQuestArtifactForHut(
+    type_random_map_generator* generator, rmgSeerHutObject* seerHut,
+    type_treasure_def* definition)
+{
+    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(
+        eTerrainDirt, RANDOM_ARTIFACT, 0);
+    return new rmgQuestArtifactObject(artifact, generator, seerHut, definition);
+}
+
 VA(0x00534AF0, 0x9E)
 MAC_ADDRESS(0x23277c, 0x68)
 int type_quest_creature_def::getValue(TRmgZone* zone, type_random_map_generator* generator)
 {
-    if (generator->m_nextSeerHutPrototypeIndex != m_subtype)
-        return -1;
-    if (generator->m_questArtifactPoolLow)
+    if (!canUseRmgSeerHutPrototype(generator, m_subtype))
         return -1;
     int value = type_black_box_creature_def::getValue(zone, generator);
     return (2 * value - 4000) / 3;
@@ -2129,8 +2158,7 @@ type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properti
     type_random_map_generator* generator, TRmgZone*)
 {
     rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
-    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, RANDOM_ARTIFACT, 0);
-    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    rmgQuestArtifactObject* object = createRmgQuestArtifactForHut(generator, seerHut, this);
     int count = m_creatureCount;
     seerHut->m_creatureType = m_creatureType;
     seerHut->m_creatureCount = count;
@@ -2144,18 +2172,14 @@ VA(0x00534C80, 0x34)
 MAC_ADDRESS(0x232900, 0x34)
 int type_quest_experience_def::getValue(TRmgZone*, type_random_map_generator* generator)
 {
-    if (generator->m_nextSeerHutPrototypeIndex != m_subtype)
-        return -1;
-    if (generator->m_questArtifactPoolLow)
+    if (!canUseRmgSeerHutPrototype(generator, m_subtype))
         return -1;
     return m_value;
 }
 
 int type_quest_gold_def::getValue(TRmgZone*, type_random_map_generator* generator)
 {
-    if (generator->m_nextSeerHutPrototypeIndex != m_subtype)
-        return -1;
-    if (generator->m_questArtifactPoolLow)
+    if (!canUseRmgSeerHutPrototype(generator, m_subtype))
         return -1;
     return m_value;
 }
@@ -2166,8 +2190,7 @@ type_object* type_quest_experience_def::generate(TRmgObjectPropertiesRef* proper
     type_random_map_generator* generator, TRmgZone*)
 {
     rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
-    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, RANDOM_ARTIFACT, 0);
-    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    rmgQuestArtifactObject* object = createRmgQuestArtifactForHut(generator, seerHut, this);
     seerHut->m_experience = m_experience;
     return object;
 }
@@ -2178,8 +2201,7 @@ type_object* type_quest_gold_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
 {
     rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
-    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, RANDOM_ARTIFACT, 0);
-    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    rmgQuestArtifactObject* object = createRmgQuestArtifactForHut(generator, seerHut, this);
     int amount = m_gold;
     seerHut->m_resourceType = GOLD;
     seerHut->m_resourceCount = amount;
