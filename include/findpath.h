@@ -392,7 +392,8 @@ extern tilePoint g_normalDirTable[8];
 // roster's search.cpp:113 row - the free three-argument predicate that
 // immediately follows BuildPath in both link orders, 182 DC bytes against
 // retail's 158.
-unsigned char checkAdjacentMonster(const hero* currentHero,
+// Original public 0x13c3f0 proves bool; retain the Windows TU calling convention.
+bool checkAdjacentMonster(const hero* currentHero,
                                      pathCell& entryPoint,
                                      type_search_type searchType);
 int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,

@@ -96,7 +96,7 @@ int aiResourceCost(const playerData* player, const int* resources);
 VA(0x0056a360, 0x9E)
 DC_ADDRESS(0x12b3f0, 0xb6)
 MAC_ADDRESS(0x1618b4, 0xe4)  // exhaustive search.obj order-map
-unsigned char checkAdjacentMonster(const hero* currentHero,
+bool checkAdjacentMonster(const hero* currentHero,
                                      pathCell& entryPoint,
                                      type_search_type searchType)
 {
