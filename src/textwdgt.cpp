@@ -76,13 +76,14 @@ textWidget::~textWidget()
 }
 
 // Original: textWidget::initialize; textwdgt.cpp:102
+// Original initialize public ends I_N, proving the bool focusable formal.
 // Complete has no widget::focusable member; the remaining fields and calls
 // are shared with the retained parameterized constructor.
 DC_ADDRESS(0x164d68, 0x6c)
 void textWidget::initialize(int x, int y, int w, int h, int id, int style,
                              const char* text, const char* fontName,
                              font::TColor color, unsigned int justify,
-                             unsigned char focusable)
+                             bool focusable)
 {
     widget::initialize(x, y, w, h, id, style);
     m_font = ResourceManager::getFont(fontName);

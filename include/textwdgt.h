@@ -25,12 +25,13 @@ public:
     textWidget(int x, int y, int w, int h, const char* text,
                const char* fontName, font::TColor color, int id,
                unsigned justify, int backColor, int style);
+    // Older original public HIHH_N: Complete drops the final bool flag.
     textWidget(int x, int y, int w, int h, const char* text,
                const char* fontName, font::TColor color, int id,
-               unsigned justify, int backColor, unsigned char focusable);
+               unsigned justify, int backColor, int style, bool focusable);
     void initialize(int x, int y, int w, int h, int id, int style,
                     const char* text, const char* fontName, font::TColor color,
-                    unsigned int justify, unsigned char focusable);
+                    unsigned int justify, bool focusable);
     virtual ~textWidget();  // retail 0x5bc3b0
     virtual int main(message& msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
