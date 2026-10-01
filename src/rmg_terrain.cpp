@@ -150,6 +150,15 @@ int TRmgLinePainterInterface::getNeighbourLineType(const TRmgGridPoint& point, u
     return at(nearby).getLineType();
 }
 
+// Rectangle borders share the same conditional refresh. Keep the query here:
+// even a border cell with no line is visited, but it consumes no frame draw.
+static inline void refreshExistingRmgLinePoint(
+    TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
+{
+    if (painter->at(point).getLineType())
+        refreshRmgLinePoint(painter, point);
+}
+
 VA(0x004FA080, 0x1FB)
 MAC_ADDRESS(0x2228b8, 0x388) // anchor-callee 0x4fa42c; fastcall, no stack args
 void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRectangle& rectangle)
@@ -171,8 +180,7 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
             ? rectangle.m_origin.m_y + rectangle.m_size.m_y + 1
             : rectangle.m_origin.m_y + rectangle.m_size.m_y;
         for (point.m_y = first; point.m_y < end; ++point.m_y) {
-            if (painter->at(point).getLineType())
-                refreshRmgLinePoint(painter, point);
+            refreshExistingRmgLinePoint(painter, point);
         }
     }
     if (rectangle.m_origin.m_x + rectangle.m_size.m_x < painter->m_size.m_x) {
@@ -185,24 +193,21 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
             ? rectangle.m_origin.m_y + rectangle.m_size.m_y + 1
             : rectangle.m_origin.m_y + rectangle.m_size.m_y;
         for (point.m_y = first; point.m_y < end; ++point.m_y) {
-            if (painter->at(point).getLineType())
-                refreshRmgLinePoint(painter, point);
+            refreshExistingRmgLinePoint(painter, point);
         }
     }
     if (rectangle.m_origin.m_y > 0) {
         point.m_y = rectangle.m_origin.m_y - 1;
         for (point.m_x = rectangle.m_origin.m_x;
              point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
-            if (painter->at(point).getLineType())
-                refreshRmgLinePoint(painter, point);
+            refreshExistingRmgLinePoint(painter, point);
         }
     }
     if (rectangle.m_origin.m_y + rectangle.m_size.m_y < painter->m_size.m_y) {
         point.m_y = rectangle.m_origin.m_y + rectangle.m_size.m_y;
         for (point.m_x = rectangle.m_origin.m_x;
              point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
-            if (painter->at(point).getLineType())
-                refreshRmgLinePoint(painter, point);
+            refreshExistingRmgLinePoint(painter, point);
         }
     }
 }
@@ -949,6 +954,18 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
         queueOtherTerrainNeighbours(point);
 }
 
+// Diagonal neighbours enter the secondary worklist only for terrain rules
+// that require connected neighbours. Cardinal neighbours use a different,
+// priority-ordered test in queueOtherTerrainNeighbours below.
+static inline void queueOtherTerrainDiagonalNeighbour(
+    rmgTerrainPainter& painter, const TRmgGridPoint& neighbour)
+{
+    int terrain = painter.getTerrain(neighbour);
+    if (terrain != painter.m_paintTerrain
+        && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
+        painter.m_secondaryPoints.insert(neighbour);
+}
+
 VA(0x005B50F0, 0x34E)
 MAC_ADDRESS(0x2565ac, 0x638) // anchor-callee 0x5b4c72, 0x5b50dd; thiscall, ret 4
 void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
@@ -971,31 +988,19 @@ void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
     }
     if (point.getX() > 0 && point.getY() > 0) {
         TRmgGridPoint nearby(point.getX() - 1, point.getY() - 1);
-        int terrain = getTerrain(nearby);
-        if (terrain != m_paintTerrain
-            && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
-            m_secondaryPoints.insert(nearby);
+        queueOtherTerrainDiagonalNeighbour(*this, nearby);
     }
     if (point.getX() < getWidth() - 1 && point.getY() > 0) {
         TRmgGridPoint nearby(point.getX() + 1, point.getY() - 1);
-        int terrain = getTerrain(nearby);
-        if (terrain != m_paintTerrain
-            && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
-            m_secondaryPoints.insert(nearby);
+        queueOtherTerrainDiagonalNeighbour(*this, nearby);
     }
     if (point.getX() > 0 && point.getY() < getHeight() - 1) {
         TRmgGridPoint nearby(point.getX() - 1, point.getY() + 1);
-        int terrain = getTerrain(nearby);
-        if (terrain != m_paintTerrain
-            && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
-            m_secondaryPoints.insert(nearby);
+        queueOtherTerrainDiagonalNeighbour(*this, nearby);
     }
     if (point.getX() < getWidth() - 1 && point.getY() < getHeight() - 1) {
         TRmgGridPoint nearby(point.getX() + 1, point.getY() + 1);
-        int terrain = getTerrain(nearby);
-        if (terrain != m_paintTerrain
-            && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
-            m_secondaryPoints.insert(nearby);
+        queueOtherTerrainDiagonalNeighbour(*this, nearby);
     }
 }
 

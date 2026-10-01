@@ -66,8 +66,9 @@ struct TRmgTerrainFlip {
     TRmgTerrainFlip(unsigned char x, unsigned char y) : m_flipX(x), m_flipY(y) {}
 };
 
-// BuildNeighbourKinds (0x5b68a0) returns zero for no edge, one when both
-// terrain rules permit blending, and two for the remaining terrain changes.
+// BuildNeighbourKinds (0x5b68a0) returns zero for equal terrain or a sand
+// centre, and also for a dirt centre when both rules permit blending. Other
+// mutually blending pairs produce one; remaining terrain changes produce two.
 enum TRmgTerrainNeighbourKind {
     RMG_NEIGHBOUR_NO_EDGE = 0,
     RMG_NEIGHBOUR_BLEND_EDGE = 1,
