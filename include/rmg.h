@@ -728,7 +728,10 @@ struct TRmgGroundTileData {
     unsigned m_connectionVisited : 1;
     unsigned m_roadPassable : 1;
     unsigned m_borderObject : 1;
-    unsigned m_subterraneanGate : 1;
+    // Former m_subterraneanGate: generation path clearance, not gate-object
+    // presence. clear() sets bit 27 for every tile; openPath() restores it,
+    // and scoreObjectPlacement rejects an obstacle footprint on a set bit.
+    unsigned m_pathClearance : 1;
     unsigned m_zoneBoundary : 1;
     // and 0x532769..0x532780 set bit 29 from a nonzero river kind. This is
     // river presence, not the separate routing target at bit 30.
@@ -1061,13 +1064,13 @@ struct TRmgMapItem {
         return m_tileData.m_roadEntrance;
     }
 
-    // ScoreObjectPlacement reads bit 27 with shr/test dl, whereas its
-    // direct roadPassable condition tests the containing dword. The
-    // provisional byte accessor reproduces that truncation; a direct
+    // Former hasSubterraneanGate. ScoreObjectPlacement reads bit 27 with
+    // shr/test dl; its direct roadPassable condition tests the containing dword.
+    // The provisional byte accessor reproduces that truncation; a direct
     // bitfield condition instead folds to test dword ptr [item+0x28],imm.
-    unsigned char hasSubterraneanGate() const
+    unsigned char hasPathClearance() const
     {
-        return m_tileData.m_subterraneanGate;
+        return m_tileData.m_pathClearance;
     }
 
     // Native Mac group callers expand this byte-valued predicate. The
@@ -1137,7 +1140,7 @@ struct TRmgMapItem {
     {
         if (!m_connection.m_present) {
             m_tileData.m_borderObject = 0;
-            m_tileData.m_subterraneanGate = 1;
+            m_tileData.m_pathClearance = 1;
         }
     }
 
@@ -1147,7 +1150,7 @@ struct TRmgMapItem {
     void markBorderObject()
     {
         if (!m_connection.m_present) {
-            m_tileData.m_subterraneanGate = 0;
+            m_tileData.m_pathClearance = 0;
             m_tileData.m_borderObject = 1;
         }
     }
