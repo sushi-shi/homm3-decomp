@@ -36,14 +36,18 @@ TRmgLinePatternTable::TRmgLinePatternTable(unsigned int patternCount, const int*
         m_ranges[value].m_firstIndex = 0;
         m_ranges[value].m_valueCount = 0;
     }
-    int previous = m_patterns[0];
-    ++m_ranges[previous].m_valueCount;
+    // Retail requires a nonempty array of ids in [0, 8], with all frames
+    // for each id contiguous. It neither validates those preconditions nor
+    // handles a repeated run: a later run replaces the first index while
+    // the count still includes earlier runs. Both shipped tables obey them.
+    int previousPattern = m_patterns[0];
+    ++m_ranges[previousPattern].m_valueCount;
     for (unsigned int index = 1; index < m_patternCount; ++index) {
-        if (m_patterns[index] != previous) {
-            previous = m_patterns[index];
-            m_ranges[previous].m_firstIndex = index;
+        if (m_patterns[index] != previousPattern) {
+            previousPattern = m_patterns[index];
+            m_ranges[previousPattern].m_firstIndex = index;
         }
-        ++m_ranges[previous].m_valueCount;
+        ++m_ranges[previousPattern].m_valueCount;
     }
 }
 
@@ -116,8 +120,9 @@ void selectRmgLinePattern(
     for (unsigned int reflection = 0; reflection < 4; ++reflection) {
         const int* order = g_rmgLineReflectedNeighbours
             [g_rmgLineReflections[reflection][0]][g_rmgLineReflections[reflection][1]];
-        if (neighbours[order[2]] && neighbours[order[4]]) {
-            if (hasCornerVariant && (neighbours[order[1]] || neighbours[order[5]]))
+        if (neighbours[order[TILE_DIR_EAST]] && neighbours[order[TILE_DIR_SOUTH]]) {
+            if (hasCornerVariant && (neighbours[order[TILE_DIR_NORTHEAST]]
+                || neighbours[order[TILE_DIR_SOUTHWEST]]))
                 pattern = 5;
             else
                 pattern = 4;
@@ -189,13 +194,14 @@ void TRmgLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
 }
 
 // Slot 3 of all four river/road painter vtables forwards to the adapter's
-// overlay query and accepts exactly the two retained paintable values.
+// terrain query: water and rock prevent painting. The earlier provisional
+// name canPaint inverted this meaning; the integer return ABI is unchanged.
 VA(0x0055EE00, 0x28)
 MAC_ADDRESS(0x253b64, 0x44)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
-int TRmgLinePainter::canPaint(const TRmgGridPoint& point)
+int TRmgLinePainter::isBlocked(const TRmgGridPoint& point)
 {
-    int overlay = m_adapter->getOverlay(point);
-    if (overlay == eTerrainWater || overlay == eTerrainRock)
+    int terrain = m_adapter->getOverlay(point);
+    if (terrain == eTerrainWater || terrain == eTerrainRock)
         return 1;
     return 0;
 }
@@ -239,10 +245,10 @@ void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTi
 }
 
 MAC_ADDRESS(0x25404c, 0x44)
-int TRmgRoadLinePainter::canPaint(const TRmgGridPoint& point)
+int TRmgRoadLinePainter::isBlocked(const TRmgGridPoint& point)
 {
-    int overlay = m_adapter->getOverlay(point);
-    if (overlay == eTerrainWater || overlay == eTerrainRock)
+    int terrain = m_adapter->getOverlay(point);
+    if (terrain == eTerrainWater || terrain == eTerrainRock)
         return 1;
     return 0;
 }
@@ -303,6 +309,8 @@ VA(0x005FCEB0, 0x39)
 MAC_ADDRESS(0x25c018, 0x64)
 int TRmgVector::length() const
 {
+    // Preserve retail's 32-bit squared norm before conversion and truncated
+    // square root. Widening the products would change overflow behavior.
     return static_cast<int>(sqrt(static_cast<double>(m_x * m_x + m_y * m_y)));
 }
 
@@ -435,6 +443,8 @@ void TRmgVoronoi::removeEdge(TRmgBoundaryVertex* edge)
     unsigned int index = 0;
     while (index < m_edges.size() && m_edges[index] != edge)
         ++index;
+    // Both halves must belong to m_edges. Retail does not handle a failed
+    // search: it would erase end(). Keep that ownership precondition.
     m_edges.erase(m_edges.begin() + index);
     TRmgBoundaryVertex* twin = edge->getTwin();
     index = 0;
@@ -472,6 +482,9 @@ VA(0x005FD6B0, 0xD7)
 MAC_ADDRESS(0x25c9c8, 0x124) // anchor-callers 0x53dad0/0x53e050/0x5fd790; ret 8
 TRmgBoundaryVertex* TRmgVoronoi::locate(TPoint point)
 {
+    // Walking point location in the incremental Delaunay triangulation.
+    // Retail has no iteration limit or outside-domain fallback; retain the
+    // non-strict side tests (see the provenance document's hull discussion).
     TRmgBoundaryVertex* edge = m_root;
     for (;;) {
         {
@@ -494,10 +507,10 @@ TRmgBoundaryVertex* TRmgVoronoi::locate(TPoint point)
                 edge = next;
                 continue;
             }
-            TRmgBoundaryVertex* previous = edge->m_twin->m_previous->m_twin;
-            if (isRmgPointRightOfEdge(point, previous))
+            TRmgBoundaryVertex* destinationPrevious = edge->m_twin->m_previous->m_twin;
+            if (isRmgPointRightOfEdge(point, destinationPrevious))
                 break;
-            edge = previous;
+            edge = destinationPrevious;
         }
     }
     return edge;
@@ -536,19 +549,21 @@ static void flipRmgEdge(TRmgBoundaryVertex* edge)
 static unsigned char isRmgPointOnSegment(TPoint point, TRmgBoundaryVertex* edge)
 {
     TPoint opposite = edge->getOppositeSitePosition();
-    int firstDistance = getRmgSquaredDistance(point, edge->getSitePosition());
-    int secondDistance = getRmgSquaredDistance(point, opposite);
-    int edgeDistance = getRmgSquaredDistance(edge->getSitePosition(), opposite);
-    if (firstDistance > edgeDistance || secondDistance > edgeDistance)
+    int distanceToOriginSquared = getRmgSquaredDistance(point, edge->getSitePosition());
+    int distanceToDestinationSquared = getRmgSquaredDistance(point, opposite);
+    int edgeLengthSquared = getRmgSquaredDistance(edge->getSitePosition(), opposite);
+    if (distanceToOriginSquared > edgeLengthSquared
+        || distanceToDestinationSquared > edgeLengthSquared)
         return 0;
     const TPoint& origin = edge->m_sitePosition;
-    int dx = opposite.m_x - origin.m_x;
-    int dy = opposite.m_y - origin.m_y;
-    int c = -(dy * origin.m_x - dx * origin.m_y);
-    return dy * point.m_x - dx * point.m_y + c == 0;
+    int deltaX = opposite.m_x - origin.m_x;
+    int deltaY = opposite.m_y - origin.m_y;
+    int lineConstant = -(deltaY * origin.m_x - deltaX * origin.m_y);
+    return deltaY * point.m_x - deltaX * point.m_y + lineConstant == 0;
 }
 
-// Provisional geometric predicate: retail snapshots three points before
+// Incircle predicate for a counterclockwise triangle; zero (cocircular)
+// does not request an edge flip. Retail snapshots three points before
 // four orientation calls and a signed 64-bit circumcircle determinant.
 // Sixty determinant-expression forms tested named versus embedded area
 // calls, equivalent sum groupings, x/y square order, which product operand
@@ -556,9 +571,12 @@ static unsigned char isRmgPointOnSegment(TPoint point, TRmgBoundaryVertex* edge)
 // unchanged 45.4167% caller score; none recovers the missing orientation
 // calls. Preserve the actual by-value point and signed-product boundaries.
 MAC_ADDRESS(0x25cb80, 0x1c4)
-static unsigned char isRmgPointInsideCircle(TPoint first, TPoint second,
+static unsigned char isRmgPointInsideCircumcircle(TPoint first, TPoint second,
     TPoint third, TPoint point)
 {
+    // Squared norms and orientations stay signed 32-bit before the final
+    // 64-bit products. Preserve this retail overflow limitation; casting
+    // coordinates before multiplication would change the algorithm's result.
     int firstArea = getRmgPointOrientation(second, third, point);
     int secondArea = getRmgPointOrientation(first, third, point);
     int thirdArea = getRmgPointOrientation(first, second, point);
@@ -574,6 +592,9 @@ VA(0x005FD790, 0x348)
 MAC_ADDRESS(0x25cd44, 0x218) // anchor-caller 0x53e050; Complete-only, thiscall ret 0xc
 void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 {
+    // Incremental Delaunay insertion: locate, split an existing edge when
+    // necessary, build a triangle fan, then legalize it by local edge flips.
+    // The Voronoi diagram is the dual built later by buildVertices().
     TRmgBoundaryVertex* edge = locate(point);
     {
         TPoint origin = edge->getSitePosition();
@@ -589,18 +610,18 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
         edge = edge->getPrevious();
         removeEdge(edge->getNext());
     }
-    TRmgBoundaryVertex* base = createEdge(edge->getSitePosition(), edge->getZone(), point, zone);
-    base->splice(edge);
-    m_root = base;
+    TRmgBoundaryVertex* fanBase = createEdge(edge->getSitePosition(), edge->getZone(), point, zone);
+    fanBase->splice(edge);
+    m_root = fanBase;
     do {
-        base = connectEdges(edge, base->getTwin());
-        edge = base->getPrevious();
+        fanBase = connectEdges(edge, fanBase->getTwin());
+        edge = fanBase->getPrevious();
     } while (edge->getTwin()->getPrevious() != m_root);
 
     for (;;) {
         TRmgBoundaryVertex* previous = edge->getPrevious();
         if (isRmgPointRightOfEdge(previous->getTwin()->getSitePosition(), edge)) {
-            if (isRmgPointInsideCircle(edge->getSitePosition(),
+            if (isRmgPointInsideCircumcircle(edge->getSitePosition(),
                     previous->getTwin()->getSitePosition(), edge->getOppositeSitePosition(), point)) {
                 flipRmgEdge(edge);
                 edge = edge->getPrevious();
@@ -617,6 +638,8 @@ VA(0x005FDAE0, 0x2B)
 MAC_ADDRESS(0x25c2b4, 0x50) // anchor-callee 0x5fd937/0x5fd97e; Complete-only
 int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
 {
+    // Signed twice-area: positive means counterclockwise in the coordinate
+    // system used by the subdivision. Keep retail's 32-bit arithmetic.
     return (second.m_x - first.m_x) * (third.m_y - first.m_y)
         - (second.m_y - first.m_y) * (third.m_x - first.m_x);
 }

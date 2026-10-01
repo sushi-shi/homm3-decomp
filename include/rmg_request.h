@@ -7,12 +7,13 @@ class TAbstractFile;
 
 // The generator's result code (retail 0x54c090's return, dispatched through
 // GenerateRandomMap's four-entry jump table). Zero is success; each failure
-// rung selects one general-text row. Ordinal names - no symbol survives.
+// selects one general-text row. Names describe the failure sites in
+// generate/generateToFile; original Complete-only spellings are unavailable.
 enum ERandomMapResult {
     RANDOM_MAP_OK = 0,
-    RANDOM_MAP_FAILED_1 = 1,
-    RANDOM_MAP_FAILED_2 = 2,
-    RANDOM_MAP_FAILED_3 = 3
+    RANDOM_MAP_OPEN_FAILED = 1,
+    RANDOM_MAP_WRITE_FAILED = 2,
+    RANDOM_MAP_GENERATION_FAILED = 3
 };
 
 // The Complete-only random-map request record GenerateRandomMap fills and
@@ -20,8 +21,8 @@ enum ERandomMapResult {
 // the constructor at 0x54bf00 (`ret 0xc`, so three stack arguments) and by
 // the window's own field stores; the constructor's own defaults are
 // field_34 = 2, field_38 = 2, field_3C = 0, field_40 = 8, field_44 = 3,
-// field_48 = 0 and mapVersion = 2. Named where the caller contract proves a
-// role, ORDINAL otherwise - no symbol survives for this type. It is shared
+// field_48 = 0 and mapVersion = 2. Names describe roles proven by the caller
+// contract; no original symbol survives for this type. It is shared
 // through this header for the selection window and the RMG implementation.
 class TRandomMapRequest {
 public:
@@ -38,19 +39,19 @@ public:
     // +44 becomes +10b8 (waterContent), and clamp(+48+3,1,5) becomes
     // +10bc (monsterStrength). Generator consumers corroborate these roles.
     // Semantic names follow the generator; original request names unknown.
-    int m_humanPlayerCount;                   // +0x34
-    int m_humanTeamCount;                   // +0x38
-    int m_computerPlayerCount;                   // +0x3c
-    int m_computerTeamCount;                   // +0x40
-    int m_waterContent;                   // +0x44
-    int m_monsterStrength;                   // +0x48
+    int m_humanPlayerCount;           // +0x34
+    int m_humanTeamCount;             // +0x38
+    int m_computerPlayerCount;        // +0x3c
+    int m_computerTeamCount;          // +0x40
+    int m_waterContent;               // +0x44
+    int m_monsterStrength;            // +0x48
     // 0/1/2 - the map-format class the running game context implies (the
     // same ordinals EGameVersion carries).
     int m_mapVersion;                 // +0x4c
 
     TRandomMapRequest(int width, int height, int levels);
     int generate(const char* fileName, void* progress);
-    int generateToFile(TAbstractFile* outfile, void* progress);
+    int generateToFile(TAbstractFile* outputFile, void* progress);
 };
 SIZE(TRandomMapRequest, 0x50);
 
