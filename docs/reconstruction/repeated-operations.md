@@ -1466,6 +1466,40 @@ The coast query and cost operation have project-inferred names and ordinary
 owner-source bodies, without native-address, explicit-inline, field-layout or
 virtual-interface changes.
 
+## RMG failed-group disposal, retries and monolith traversal
+
+Four failed-treasure-group paths now share `TRmgTreasureGroup::discard()`:
+failed guard assembly, normal and alternate placement attempts, and failed key
+tent placement. It walks the live object vector in order, calls the existing
+virtual `unknownOperation()` rollback hook, reloads the slot for deletion, and
+then invokes the canonical `reset()`. The base rollback is empty; the hero
+override releases its reservation. Object destruction still owns property
+reference release and any derived payload cleanup. The helper adds neither a
+cached object pointer across the callback nor an early container clear.
+
+The non-owning `reset()` remains unchanged for construction, reuse and successful
+ownership transfer. Failed guard assembly deletes the unaccepted guard after
+discard; key-tent cleanup retains its separate guard deletion and subsequent
+color release. No destructor acquires blanket deletion of group entries.
+
+Private `tryPlaceTreasureRange()` shares the complete normal/alternate retry
+loop. Both calls use the same caller-owned group and live range reference,
+reading minimum/maximum on every attempt. A successful placement returns before
+discard; failed assembly does not acquire an additional cleanup; failed placement
+after assembly calls `discard()`. The normal pass still precedes the alternate
+pass, each keeps its own `RMG_TREASURE_ATTEMPTS` limit, and only exhaustion of
+both passes finishes the selected density band. Group/map/vector lifetimes
+remain in `placeZoneTreasures()`.
+
+The one-way entrance/exit and two-way monolith cases in `buildRoadCostMap()`
+now select their existing destination vector by reference and share the traversal.
+Subtype lookup remains before traversal; size and entries remain live per
+iteration. The same-subtype filter, position getter, cost-plus-50 comparison,
+by-value predecessor setter and ordered work-list insertion remain together.
+Underground gates retain their separate level flip and cost-plus-one operation.
+The two new helper names and ordinary source placements are project inferences;
+virtual slots, native entry points and stored layouts are unchanged.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

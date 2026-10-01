@@ -1421,6 +1421,8 @@ struct TRmgTreasureGroup {
         reset();
     }
     void reset();
+    // Project-inferred failure cleanup: rollback/delete objects, then reset.
+    void discard();
     void markPlacementOutline();
     unsigned char addGuard(type_object* guard);
     unsigned char canFitObject(TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
@@ -2194,6 +2196,10 @@ public:
     void writeMapHeader(TAbstractFile* outfile);
 
 private:
+    // Project-inferred shared normal/alternate treasure retry operation.
+    bool tryPlaceTreasureRange(TRmgZone* zone, TRmgTreasureGroup& group,
+                               unsigned char alternate,
+                               const TRmgTreasureRange& range, int spacing);
     // Project-inferred coast-scan range, with retail's inclusive right edge.
     bool isRiverCoastPointInRange(const TPoint& point) const;
 };

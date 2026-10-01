@@ -2529,6 +2529,17 @@ void TRmgTreasureGroup::reset()
     }
 }
 
+// Project-inferred failed-group cleanup. Keep the live size and reload the
+// slot after its virtual rollback hook before deleting the object.
+void TRmgTreasureGroup::discard()
+{
+    for (unsigned int i = 0; i < m_objects.size(); ++i) {
+        m_objects[i]->unknownOperation();
+        delete m_objects[i];
+    }
+    reset();
+}
+
 // Native 0x232fc4 marks the group ready and flags every surface-outline cell.
 // Its retained callers are assembleTreasureGroup, placeQuestArtifact and
 // placeKeyTentGuard; Windows expands the same shared loop in those callers.
@@ -8280,11 +8291,7 @@ unsigned char type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
         if (guardValue > 0) {
             type_object* guard = createGuard(guardValue, zone);
             if (guard && !group->addGuard(guard)) {
-                for (unsigned i = 0; i < group->m_objects.size(); ++i) {
-                    group->m_objects[i]->unknownOperation();
-                    delete group->m_objects[i];
-                }
-                group->reset();
+                group->discard();
                 delete guard;
                 return 0;
             }
@@ -8672,6 +8679,23 @@ unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* g
     return 1;
 }
 
+// Project-inferred shared retry operation. The caller owns the reusable group;
+// discard only an assembled group whose placement failed.
+bool type_random_map_generator::tryPlaceTreasureRange(TRmgZone* zone,
+    TRmgTreasureGroup& group, unsigned char alternate,
+    const TRmgTreasureRange& range, int spacing)
+{
+    for (int attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
+        if (assembleTreasureGroup(zone, &group, alternate,
+                                  range.m_minimum, range.m_maximum)) {
+            if (placeTreasureGroup(&group, zone, spacing))
+                return true;
+            group.discard();
+        }
+    }
+    return false;
+}
+
 VA(0x00547360, 0x460)
 MAC_ADDRESS(0x24b6e8, 0x358)
 void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
@@ -8716,32 +8740,9 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
             break;
         count[selected] += step[selected];
         TRmgTreasureRange& range = slot->m_treasure[selected];
-        int attempt;
-        for (attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
-            if (assembleTreasureGroup(zone, &group, 0, range.m_minimum, range.m_maximum)) {
-                if (placeTreasureGroup(&group, zone, spacing))
-                    break;
-                for (int object = 0; object < group.m_objects.size(); ++object) {
-                    group.m_objects[object]->unknownOperation();
-                    delete group.m_objects[object];
-                }
-                group.reset();
-            }
-        }
-        if (attempt < RMG_TREASURE_ATTEMPTS)
+        if (tryPlaceTreasureRange(zone, group, 0, range, spacing))
             continue;
-        for (attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
-            if (assembleTreasureGroup(zone, &group, 1, range.m_minimum, range.m_maximum)) {
-                if (placeTreasureGroup(&group, zone, spacing))
-                    break;
-                for (int object = 0; object < group.m_objects.size(); ++object) {
-                    group.m_objects[object]->unknownOperation();
-                    delete group.m_objects[object];
-                }
-                group.reset();
-            }
-        }
-        if (attempt == RMG_TREASURE_ATTEMPTS)
+        if (!tryPlaceTreasureRange(zone, group, 1, range, spacing))
             finished[selected] = 1;
     }
 }
@@ -8803,30 +8804,13 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
 
             switch (objectType) {
             case LITH_ONEWAY_ENTRANCE:
-            case LITH_ONEWAY_EXIT: {
-                int subtype = properties->getSubtype();
-                for (int i = 0; i < m_monolithsOneWay.size(); ++i) {
-                    type_object* destination = m_monolithsOneWay[i];
-                    if (destination->m_properties->m_prototype->getSubtype() != subtype)
-                        continue;
-
-                    TRmgMapPosition nextPosition = destination->getPosition();
-                    TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
-                    int nextCost = positionCost + 50;
-                    if (nextMapItem->getMovementCost() <= nextCost)
-                        continue;
-
-                    nextMapItem->setMovementCost(nextCost, position);
-                    insertRmgWorkItem(
-                        openPositions, openCosts, nextPosition, nextCost);
-                }
-                break;
-            }
-
+            case LITH_ONEWAY_EXIT:
             case LITH_TWOWAY: {
                 int subtype = properties->getSubtype();
-                for (int i = 0; i < m_monolithsTwoWay.size(); ++i) {
-                    type_object* destination = m_monolithsTwoWay[i];
+                std::vector<type_object*>& destinations = objectType == LITH_TWOWAY
+                    ? m_monolithsTwoWay : m_monolithsOneWay;
+                for (int i = 0; i < destinations.size(); ++i) {
+                    type_object* destination = destinations[i];
                     if (destination->m_properties->m_prototype->getSubtype() != subtype)
                         continue;
 
@@ -10288,11 +10272,7 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
     } else {
         delete guard;
     }
-    for (unsigned int i = 0; i < group.m_objects.size(); ++i) {
-        group.m_objects[i]->unknownOperation();
-        delete group.m_objects[i];
-    }
-    group.reset();
+    group.discard();
     m_disabledKeyTents[color] = 0;
     m_nextKeyTentColor = 0;
     while (m_nextKeyTentColor < m_disabledKeyTents.size()
