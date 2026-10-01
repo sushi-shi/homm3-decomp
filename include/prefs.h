@@ -50,7 +50,8 @@ struct configStruct {
     char m_dosDigitalDriver[13];    // +0x74
     char m_dosMidiDriver[13];       // +0x81
     char m_dontTryRedbook;          // +0x8e
-    unsigned char m_firstInstall;      // +0x8f  boolean checked/defaulted here
+    // DC configStruct::bFirstInstall (+0x8f) is primitive 0x70, plain char.
+    char m_firstInstall;            // +0x8f  masked to one bit by checkConfigFile
     char m_name[4];                 // +0x90  "Unique System ID"
     int m_combatSpeed;              // +0x94  "Combat Speed"
     char m_rcFile[13];              // +0x98  "RMT%sRC.BIN" destination
