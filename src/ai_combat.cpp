@@ -647,6 +647,10 @@ bool type_AI_combat_data::hasCreature(TCreatureType creature) const
 // Mac 0x27500/0x27624 expands the target-side getHero read in the two
 // mass-damage loops; 0x27560/0x27568 expands the same caster accessor in
 // the paired valuation helper. Keep the shared getter at all four sites.
+// The scalar helper remains 100%; these canonical calls change castSpell's
+// nested expansion from 99.9023% to 93.9453% in the measured Windows context.
+// The other 65 emitted code sections remain identical. Preserve the native
+// accessor paths while recovering that caller's remaining helper boundaries.
 VA(0x004253e0, 0x12F)
 DC_ADDRESS(0x02ab88, 0x90)
 MAC_ADDRESS(0x027498, 0xa0)
