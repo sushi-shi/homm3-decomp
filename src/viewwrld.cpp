@@ -7,6 +7,7 @@
 #include "viewwrld.h"
 
 #include "advmgr.h"
+#include "map_display.h"
 #include "bitmap16.h"
 #include "border.h"
 #include "button.h"
@@ -113,13 +114,15 @@ static long ftol(double d)
 // instructions at -O3.
 // Its left clip computes width as 32 - tilex, while Windows retail emits
 // baseX + 24. Substituting the former here changed Windows control flow and
-// lowered its byte match, so the retail expression remains below.
+// lowered its byte match in the earlier caller-spelling investigation.
 // DC 119/120 and 127/128 apply the clipped amount to the zeroed/full tile
 // fields (tilex += 8 - x; tilew -= 8 - x) and 145/146 guard the draw with a
 // positive tilew/tileh block; both forms are byte-identical to the direct
 // assignments and early return (89.00%). Clipping the offset-adjusted x/y
 // parameters and drawing from saved copies instead drops to 84.93%; retail
 // compares the clipped copies (ECX/EAX) where VC6 here compares the originals.
+// The shared project clipping operation now owns the rectangle updates;
+// drawX/drawY remain separate and still supply the final draw destination.
 VA(0x005f73b0, 0x14D)
 DC_ADDRESS(0x192f4c, 0x140)
 MAC_ADDRESS(0x202fa4, 0x1ac)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket
@@ -136,20 +139,7 @@ void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
     int baseX = drawX;
     int baseY = drawY;
 
-    if (baseX < 8) {
-        tilex += 8 - baseX;
-        tilew -= 8 - baseX;
-        baseX = 8;
-    }
-    if (baseY < 0) {
-        tiley -= baseY;
-        tileh += baseY;
-        baseY = 0;
-    }
-    if (baseX + tilew > 600)
-        tilew = 600 - baseX;
-    if (baseY + tileh > 544)
-        tileh = 544 - baseY;
+    clipAdventureTile(baseX, baseY, tilex, tiley, tilew, tileh);
     if (tilew > 0 && tileh > 0) {
         int owner = -1;
         if (thisCell->m_type == HERO)
@@ -267,7 +257,7 @@ void advManager::vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int 
     int heroCellY = part % 3;
     int heroCellX = part / 3;
 
-    if (currHero->m_flags & 0x40000) {
+    if (currHero->isOnBoat()) {
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
         NewmapCell* heroCell = getCell(currHero->getLocation());
 
@@ -329,7 +319,7 @@ void advManager::vwDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX
     int heroCellY = part % 3;
     int heroCellX = part / 3;
 
-    if (currHero->m_flags & 0x40000) {
+    if (currHero->isOnBoat()) {
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
         NewmapCell* heroCell = getCell(currHero->getLocation());
 
@@ -1300,12 +1290,7 @@ TViewWorldWindow::TViewWorldWindow()
     ok->setHotkey(28);
     m_widgets.push_back(ok);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -1337,10 +1322,7 @@ TViewWorldWindow::~TViewWorldWindow()
     delete g_memoryBuffer;
     g_csVwIcons->dispose();
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // The type_func_button click code both callbacks answer, the same 13
@@ -1692,7 +1674,7 @@ int TViewWorldWindow::windowHandler(message& msg)
         case KEYCODE_ESCAPE:
         case KEYCODE_ENTER:
             g_windowManager->m_dialogReturn = msg.m_codeY;
-            msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+            msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
             return MESSAGE_DISPATCH_FORWARD;
         }
     } else if (msg.m_id == MESSAGE_WIDGET) {
@@ -1702,20 +1684,7 @@ int TViewWorldWindow::windowHandler(message& msg)
                 break;
             if (m_viewableWidth == g_mapWidth && m_viewableHeight == g_mapHeight)
                 break;
-            switch (g_mapHeight) {
-            case MAP_DIMENSION_SMALL:
-                radarDivisor = 4.0f;
-                break;
-            case MAP_DIMENSION_MEDIUM:
-                radarDivisor = 2.0f;
-                break;
-            case MAP_DIMENSION_LARGE:
-                radarDivisor = 1.3333f;
-                break;
-            default:
-                radarDivisor = 1.0f;
-                break;
-            }
+            radarDivisor = getRadarInputScale(g_mapHeight);
             updateRadar(msg.m_mouseX, msg.m_mouseY, radarDivisor);
             do {
                 process1WindowsMessage();
@@ -1763,7 +1732,7 @@ int TViewWorldWindow::windowHandler(message& msg)
                 return MESSAGE_DISPATCH_CONSUME;
             case ACCEPT_ID:
                 g_windowManager->m_dialogReturn = msg.m_codeY;
-                msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+                msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
                 return MESSAGE_DISPATCH_FORWARD;
             }
             break;

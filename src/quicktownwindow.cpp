@@ -167,10 +167,7 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
         0, 0, 0, 0x10));
 
     initializeArmyDisplay(thisTown->getArmy(), viewLevel);
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
+    addPresentWidgetsToMessageStream();
 }
 
 VA(0x005307d0, 0x145)
@@ -187,10 +184,7 @@ TQuickTownWindow::TQuickTownWindow(const garrison* thisGarrison,
         font::WHITE, NAME_ID, 0, 0, 8));
 
     initializeArmyDisplay(thisGarrison->m_garrisonArmy, viewLevel);
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
+    addPresentWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005307a0, 0x21, SCALAR_DELETING_DTOR, TQuickTownWindow)
@@ -200,10 +194,7 @@ DC_ADDRESS(0x1184c4, 0xa0)
 MAC_ADDRESS(0x14cae0, 0xac)
 TQuickTownWindow::~TQuickTownWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // Retail +0x1de and +0x272 push "tiny.fnt" (0x660cb4) for the quantities.
@@ -263,10 +254,7 @@ DC_ADDRESS(0x118794, 0x64)
 MAC_ADDRESS(0x14cecc, 0xe4)
 void TQuickTownWindow::center(long newX, long newY)
 {
-    m_x = limit(m_width / 2, newX,
-              WINDOW_SCREEN_WIDTH - m_width / 2 - 1) - m_width / 2;
-    m_y = limit(m_height / 2, newY,
-              WINDOW_SCREEN_HEIGHT - m_height / 2 - 1) - m_height / 2;
+    centerQuickView(newX, newY);
 }
 
 VA(0x00530d30, 0xD)

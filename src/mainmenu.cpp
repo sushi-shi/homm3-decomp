@@ -84,12 +84,7 @@ TMainMenu::TMainMenu()
         g_mainMenuButtonRects[4].m_width, g_mainMenuButtonRects[4].m_height,
         QUIT_ID, "mmenuqt.def", 0, 1, 0, 1, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     if (g_lobbyLaunched) {
         if (g_dPlay && g_dPlay->isHost()) {
@@ -109,10 +104,7 @@ MAC_ADDRESS(0x11cbc4, 0xb4)
 TMainMenu::~TMainMenu()
 {
     g_mainMenu = 0;
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x004fb6e0, 0x2C)
@@ -255,8 +247,6 @@ static int mainMenuHandler(message& msg)
         }
     }
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
+    msg.setDialogEnd(widget::WIDGET_END_DIALOG);
     return MESSAGE_DISPATCH_FORWARD;
 }

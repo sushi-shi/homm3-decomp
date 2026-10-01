@@ -637,6 +637,15 @@ CNetMsgHandler* CDPlayHeroes::getNetMsgHandler()
     return m_netMsgHandler;
 }
 
+// Project-inferred optional-handler update. Preserve the native accessor and
+// the captured handler; callers own remote/transport and player guards.
+void CDPlayHeroes::setHandlerPopupState(unsigned char inPopup)
+{
+    CNetMsgHandler* handler = getNetMsgHandler();
+    if (handler)
+        handler->setInPopup(inPopup);
+}
+
 // Original: CChatManager::CChatManager; remote.cpp:804
 // Retail initializer 0x5521c0 constructs g_chatMan with 20 lines. It adds
 // the Miles handle at +0x28 between isSysMsg and the five sample stores.
@@ -703,6 +712,15 @@ void CChatManager::shutDown()
     }
 }
 
+// Project-inferred queue removal shared by capacity eviction and expiration.
+// Both callers establish that a message exists; neither clears its text here.
+void CChatManager::discardOldestChat()
+{
+    m_msgArray[m_currMsg].m_killTime = 0;
+    m_currMsg = getNextMsgNbr(m_currMsg);
+    --m_msgCount;
+}
+
 VA(0x00553840, 0x11B)
 DC_ADDRESS(0x11c3a8, 0x104)
 MAC_ADDRESS(0x211584, 0x148)
@@ -717,11 +735,8 @@ void CChatManager::addChat(const char* format, ...)
     if (m_position == m_msgCount - 1)
         atNewestMessage = true;
 
-    if (m_msgCount >= 20) {
-        m_msgArray[m_currMsg].m_killTime = 0;
-        m_currMsg = (m_currMsg + 1) % m_maxLines;
-        --m_msgCount;
-    }
+    if (m_msgCount >= 20)
+        discardOldestChat();
 
     int msgNbr = getNextFreeMsgNbr();
     strncpy(m_msgArray[msgNbr].m_text, chatText, 127);
@@ -736,6 +751,16 @@ void CChatManager::addChat(const char* format, ...)
         // Mac 0:0x2116a8 passes null to the retained sound helper.
         playChatSample(0);
     }
+}
+
+// Project-inferred system-message insertion. Preserve AddChat's format
+// interpretation and clear the flag only after it returns. Player join/drop
+// announcements retain the flag through sound playback and remain distinct.
+void CChatManager::addSystemChat(const char* format)
+{
+    m_isSysMsg = 1;
+    addChat(format);
+    m_isSysMsg = 0;
 }
 
 // E:\gamedcs\remote.cpp:904
@@ -776,9 +801,7 @@ void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
             DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
             (*g_generalText)[GENERAL_TEXT_TURN_DURATION_PREFIX],
             chatText);
-        m_isSysMsg = 1;
-        addChat(finalText);
-        m_isSysMsg = 0;
+        addSystemChat(finalText);
     }
 
     playChatSample(m_turnDurSample);
@@ -800,9 +823,7 @@ void __cdecl CChatManager::systemMsg(const char* format, ...)
         g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
-    m_isSysMsg = 1;
-    addChat(finalText);
-    m_isSysMsg = 0;
+    addSystemChat(finalText);
     playChatSample(m_sysMsgSample);
 }
 
@@ -862,10 +883,9 @@ void CChatManager::playChatSample(sample* preferred)
     if (!preferred)
         preferred = m_chatSample;
     if (preferred) {
-        int soundWasEnabled = g_soundManager->m_playSounds;
-        g_soundManager->m_playSounds = 1;
+        int soundWasEnabled = g_soundManager->enablePlayback();
         m_chatMemSample = g_soundManager->memorySample(preferred);
-        g_soundManager->m_playSounds = soundWasEnabled;
+        g_soundManager->setPlaybackState(soundWasEnabled);
     }
 }
 
@@ -931,9 +951,7 @@ void CChatManager::killOldChat()
         unsigned long killTime = m_msgArray[m_currMsg].m_killTime;
         if (static_cast<unsigned long>(GameTime::elapsedSince(killTime))
                 > 20000) {
-            m_msgArray[m_currMsg].m_killTime = 0;
-            m_currMsg = getNextMsgNbr(m_currMsg);
-            --m_msgCount;
+            discardOldestChat();
             m_changed = 1;
             m_chatKilled = 1;
 
@@ -1103,9 +1121,7 @@ DC_ADDRESS(0x11cbf4, 0x38)
 MAC_ADDRESS(0x2121e0, 0x68)
 void CChatEdit::updateScreen()
 {
-    draw();
-    g_windowManager->updateScreen(
-        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+    drawAndUpdate();
 }
 
 // Mac 0x212430..0x212794 retains each function-key virtual call with
@@ -2056,11 +2072,7 @@ void updateCurrentPlayers()
             && isValidHuman(playerArray, g_game->m_players[i].m_dpid))
             continue;
 
-        g_game->m_players[i].m_dpid = 0;
-        g_game->m_players[i].setHuman(0);
-        g_game->m_players[i].m_isLocal = 0;
-        strcpy(g_game->m_players[i].m_name,
-               g_generalText->getText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
+        g_game->m_players[i].clearNetInfo();
     }
 
     g_numHumanPlayers = playerArray.getCount();
@@ -2682,6 +2694,14 @@ CNetMsgHandler::CNetMsgHandler()
 {
     m_inPopup = 0;
     m_abortPopupMsg = 0;
+}
+
+// Project-inferred popup polling operation. Both calls retain virtual dispatch
+// on this same handler even if processing installs another active handler.
+bool CNetMsgHandler::pollPopupAbort(unsigned char& msgReceived)
+{
+    checkHandleNet(1, &msgReceived);
+    return msgReceived && getAbortPopupMsg();
 }
 
 // Complete's CNetMsgHandler::`scalar deleting destructor', slot 0 of

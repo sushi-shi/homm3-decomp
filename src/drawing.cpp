@@ -1837,6 +1837,20 @@ void combatManager::computeExtent(const CSprite* sprite, int sequence,
         m_drawbridgeBounds.include(*limits);
 }
 
+// Project-inferred shared state operations; drawing and timer updates remain
+// with the callers. Original helper names and source placement are unproven.
+void combatManager::startHeroAnimationSequence(int side, int sequence)
+{
+    m_cmbtHeroFrameType[side] = sequence;
+    m_cmbtHeroFrameIndex[side] = 0;
+}
+
+void combatManager::clearPendingHeroReactions(int side)
+{
+    m_playYeah[side] = 0;
+    m_playDoh[side] = 0;
+}
+
 VA(0x004960d0, 0x76a)
 DC_ADDRESS(0x0867bc, 0x6e2)
 MAC_ADDRESS(0x0a83a8, 0x8ec)
@@ -1916,8 +1930,7 @@ void combatManager::cycleCombatScreen()
                    && !m_dohPlayedThisRound[side] && m_playDoh[side]) {
             int player = m_playerIds[m_currentSide];
             if (player != -1 && g_game->isLocalHuman(player)) {
-                m_playYeah[side] = 0;
-                m_playDoh[side] = 0;
+                clearPendingHeroReactions(side);
                 m_dohPlayedThisRound[side] = 1;
                 if (m_creatureSprites[side]->getNumFrames(
                         COMBAT_HERO_FRAME_EVENT_2) > 0) {
@@ -1926,15 +1939,13 @@ void combatManager::cycleCombatScreen()
                     m_heroEffect[side] = 1;
                 }
             } else {
-                m_playYeah[side] = 0;
-                m_playDoh[side] = 0;
+                clearPendingHeroReactions(side);
             }
         } else if (m_cmbtHeroFrameType[side] == COMBAT_HERO_FRAME_IDLE
                    && !m_yeahPlayedThisRound[side] && m_playYeah[side]) {
             int player = m_playerIds[m_currentSide];
             if (player != -1 && g_game->isLocalHuman(player)) {
-                m_playYeah[side] = 0;
-                m_playDoh[side] = 0;
+                clearPendingHeroReactions(side);
                 m_yeahPlayedThisRound[side] = 1;
                 if (m_creatureSprites[side]->getNumFrames(
                         COMBAT_HERO_FRAME_EVENT_3) > 0) {
@@ -1943,8 +1954,7 @@ void combatManager::cycleCombatScreen()
                         COMBAT_HERO_FRAME_EVENT_3;
                 }
             } else {
-                m_playYeah[side] = 0;
-                m_playDoh[side] = 0;
+                clearPendingHeroReactions(side);
             }
         } else if (m_cmbtHeroFrameType[side] == COMBAT_HERO_FRAME_IDLE
                    && GameTime::elapsedSince(
@@ -1964,8 +1974,7 @@ void combatManager::cycleCombatScreen()
 
                 army* stack = &m_armies[side][slot];
                 if (stack->m_currFrameType == cs_wait) {
-                    stack->m_currFrameType = cs_fidget;
-                    stack->m_currFrameIndex = 0;
+                    stack->startAnimationSequence(cs_fidget);
                     continue;
                 }
 
@@ -1974,9 +1983,7 @@ void combatManager::cycleCombatScreen()
                     stack->m_currFrameIndex++;
                 if (stack->m_currFrameIndex
                         >= stack->m_stdIcon->getNumFrames(cs_fidget)) {
-                    stack->m_currFrameType = cs_wait;
-                    stack->m_currFrameIndex = 0;
-                    stack->m_lastFidgetTime = GameTime::get();
+                    stack->finishFidgetAnimation();
                     if (stack->m_monFrameInfo.m_fidgetFrequency > 0) {
                         stack->m_lastFidgetTime = static_cast<unsigned long>(
                             stack->m_lastFidgetTime
@@ -1993,15 +2000,13 @@ void combatManager::cycleCombatScreen()
         if (!m_heroEffect[side])
             continue;
         if (nextCmbtHeroFrameType[side] != -1) {
-            m_cmbtHeroFrameType[side] = nextCmbtHeroFrameType[side];
-            m_cmbtHeroFrameIndex[side] = 0;
+            startHeroAnimationSequence(side, nextCmbtHeroFrameType[side]);
         } else {
             m_cmbtHeroFrameIndex[side]++;
             if (m_cmbtHeroFrameIndex[side]
                     >= m_creatureSprites[side]->getNumFrames(
                            m_cmbtHeroFrameType[side])) {
-                m_cmbtHeroFrameType[side] = COMBAT_HERO_FRAME_IDLE;
-                m_cmbtHeroFrameIndex[side] = 0;
+                startHeroAnimationSequence(side, COMBAT_HERO_FRAME_IDLE);
                 m_cmbtHeroLastFidgetTime[side] = GameTime::get();
             }
         }
@@ -2051,8 +2056,7 @@ void combatManager::spellEffect(int effect, army* targetArmy, int delay,
             drawFrame(1, 0, 0, 100, 1, 1);
             frame++;
         }
-        targetArmy->m_currFrameType = cs_wait;
-        targetArmy->m_currFrameIndex = 0;
+        targetArmy->startAnimationSequence(cs_wait);
         if (frame >= m_powSprite->getNumFrames(cs_walk))
             drawFrame(1, 0, 0, 0, 1, 0);
     }

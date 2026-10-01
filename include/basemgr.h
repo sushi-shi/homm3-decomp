@@ -35,6 +35,9 @@ public:
     // Project read counterpart to the native status setter.
     int getStatus() const { return m_status; }
 
+    // Project-inferred reset after executive has unlinked this manager.
+    void clearLinks();
+
     baseManager();
     virtual int open(int) = 0;         // slot 0
     virtual void close() = 0;          // slot 1

@@ -136,19 +136,9 @@ public:
     void giveReward(hero* currentHero, bool humanPlayer);
     int getRewardExtra(const hero* thisHero);
     int getRewardType();
-    // Project accessor names inferred from the reward tag/payload interface.
-    int getRewardKind() const { return m_rewardType; }
-    void setRewardKind(int type) { m_rewardType = type; }
-    void setScalarValue(int value) { m_value.m_dwords[0] = value; }
-    void setBonus(int value) { m_value.m_signedLow.m_bonus = value; }
-    void setResourceType(int type) { m_value.m_resource.m_resourceType = type; }
-    void setResourceQuantity(int quantity) { m_value.m_resource.m_quantity = quantity; }
-    void setPrimarySkillType(int type) { m_value.m_primarySkill.m_skillType = type; }
-    void setPrimarySkillBonus(int bonus) { m_value.m_primarySkill.m_bonus = bonus; }
-    void setSecondarySkillType(int type) { m_value.m_secondarySkill.m_skillType = type; }
-    void setSecondarySkillBonus(int bonus) { m_value.m_secondarySkill.m_bonus = bonus; }
-    void setCreatureType(int type) { m_value.m_creature.m_creatureType = type; }
-    void setCreatureCount(int count) { m_value.m_creature.m_count = count; }
+    // Project boundary for the map-format tag and its selected payload.
+    // Savegame loading still transfers the complete packed record.
+    void readFromMap(TAbstractFile* infile, int mapVersion);
 
 };
 SIZE(TSeerReward, 0xc);
@@ -177,6 +167,9 @@ private:
     // application. Complete revises both models and shares the accepted human
     // reward tail with the AI arm, superseding this older event boundary.
     void doCompletionDialog(hero* currentHero, bool humanPlayer);
+    // Project-inferred payment/reward/clear operation shared by both
+    // completion paths; ordinary source placement is provisional.
+    void completeQuest(hero* currentHero, bool humanPlayer);
     // Dreamcast proves this nested no-local switch helper as the first call
     // made by DoCompletionDialog. Complete owns the operation on TSeerReward;
     // this older boundary forwards to that canonical helper.

@@ -46,6 +46,91 @@ static const int g_combatActionAttackWall = 9;
 static const int g_combatActionCastCreatureSpell = 10;
 static const int g_combatActionFirstAid = 11;
 
+// Project-inferred action operations shared by UI, automation and AI.
+// A targeted order retains the secondary spell target. Complete tuple writes
+// also occur when receiving an action or restoring a simulation snapshot.
+void combatManager::prepareAction(int action, int extra)
+{
+    m_nextAction = action;
+    m_nextActionExtra = extra;
+}
+
+void combatManager::setTargetAction(int action, int extra, int targetHex)
+{
+    prepareAction(action, extra);
+    m_nextActionGridIndex = targetHex;
+}
+
+void combatManager::setPendingAction(int action, int extra, int targetHex,
+                                     int secondTargetHex)
+{
+    setTargetAction(action, extra, targetHex);
+    m_nextActionGridIndex2 = secondTargetHex;
+}
+
+int combatManager::getPendingActionCode() const
+{
+    return m_nextAction;
+}
+
+int combatManager::getPendingActionExtra() const
+{
+    return m_nextActionExtra;
+}
+
+int combatManager::getPendingActionTarget() const
+{
+    return m_nextActionGridIndex;
+}
+
+void combatManager::selectActionTarget(int targetHex)
+{
+    m_nextActionGridIndex = targetHex;
+}
+
+void combatManager::selectSecondaryActionTarget(int targetHex)
+{
+    m_nextActionGridIndex2 = targetHex;
+}
+
+void combatManager::cancelPendingAction()
+{
+    m_nextAction = 0;
+}
+
+void combatManager::queueShot(int targetHex)
+{
+    m_nextAction = AI_ORDER_SHOOT;
+    m_nextActionGridIndex = targetHex;
+}
+
+// Project-inferred partial orders. Defense changes only the opcode; a
+// creature spell changes opcode then primary target, preserving other payload.
+void combatManager::queueDefend()
+{
+    m_nextAction = g_combatActionDefend;
+}
+
+void combatManager::queueCreatureSpell(int targetHex)
+{
+    m_nextAction = g_combatActionCastCreatureSpell;
+    m_nextActionGridIndex = targetHex;
+}
+
+// Manual creature casting uses the native picker, then converts only a
+// confirmed hero-spell order. Cancellation and other orders remain intact.
+void combatManager::initiateCreatureSpell(SpellID spell)
+{
+    initiateSpell(spell, 1);
+    if (m_nextAction == g_combatActionCastHeroSpell)
+        m_nextAction = g_combatActionCastCreatureSpell;
+}
+
+void combatManager::skipArmyAction()
+{
+    m_nextAction = AI_ORDER_NONE;
+}
+
 // E:\gamedcs\command.cpp:63
 // Dreamcast CodeView names this private nullary member and its two static
 // TWallTargetId arrays. Retail fixes the Complete-build fourth tower target,
@@ -182,9 +267,7 @@ bool combatManager::automateCatapult()
 
 
 issueCatapultOrder:
-    m_nextAction = 9;
-    m_nextActionGridIndex = s_wallTargets[target].m_targetHex;
-    m_nextActionExtra = -1;
+    setTargetAction(9, -1, s_wallTargets[target].m_targetHex);
     return 1;
 }
 
@@ -230,7 +313,7 @@ bool combatManager::automateFirstAidTent()
     }
 
     if (bestIndex < 0) {
-        m_nextAction = 3;
+        queueDefend();
         return 1;
     }
 
@@ -240,9 +323,7 @@ bool combatManager::automateFirstAidTent()
             return 0;
     }
 
-    m_nextAction = 11;
-    m_nextActionGridIndex = m_armies[side][bestIndex].m_gridIndex;
-    m_nextActionExtra = -1;
+    setTargetAction(11, -1, m_armies[side][bestIndex].m_gridIndex);
     return 1;
 }
 
@@ -346,10 +427,10 @@ int combatManager::main(message& msg)
             case RS_COMBAT_MAIN: {
                 CCombatMainMsg* combatMsg =
                     static_cast<CCombatMainMsg*>(netMsg);
-                m_nextAction = combatMsg->m_nextAction;
-                m_nextActionExtra = combatMsg->m_nextActionExtra;
-                m_nextActionGridIndex = combatMsg->m_nextActionGridIndex;
-                m_nextActionGridIndex2 = combatMsg->m_nextActionGridIndex2;
+                setPendingAction(combatMsg->m_nextAction,
+                                 combatMsg->m_nextActionExtra,
+                                 combatMsg->m_nextActionGridIndex,
+                                 combatMsg->m_nextActionGridIndex2);
                 g_logFile.log(
                     DATA_COMPGEN(0x00670218, receivedCombatActionLog,
                                  "Received action [%d]--> [%d,%d,%d]"),
@@ -457,8 +538,7 @@ void combatManager::setCombatDirections(int hex)
     currentArmy = getCurrentArmy();
     oldSide = currentArmy->m_side;
     oldSlot = currentArmy->m_slot;
-    currentArmy->m_side = -1;
-    currentArmy->m_slot = -1;
+    currentArmy->clearAttackTarget();
 
     g_searchArray->seedCombatPosition(currentArmy, m_currentSide,
                                      currentArmy->getSpeed(), 0, -1);
@@ -554,8 +634,7 @@ void combatManager::setCombatDirections(int hex)
         }
     }
 
-    currentArmy->m_side = oldSide;
-    currentArmy->m_slot = oldSlot;
+    currentArmy->setAttackTarget(oldSide, oldSlot);
 }
 
 VA_COMPGEN(0x0047a670, 0x11, TREE_BEGIN, int_set)
@@ -806,6 +885,28 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
     return player == -1 || !g_game->isHuman(player);
 }
 
+// Project-inferred invalidation of the displayed command for a selected cell.
+// The -1 cell means no selection; -99 is outside the command domain and forces
+// the next ordinary hover command to publish its message again.
+void combatManager::invalidateCommandForCell(int cell)
+{
+    m_lastCellIndex = cell;
+    m_lastCommand = -99;
+}
+
+// Project-inferred full information-panel dismissal. Keep each native
+// unShow call and the hero-then-creature order. Resolve m_combatWindow at each
+// stage, as the input/action callers did across background restoration.
+void combatManager::hideInfoSubWindows()
+{
+    m_combatWindow->getHeroSubWindow(0)->unShow();
+    m_combatWindow->getHeroSubWindow(1)->unShow();
+    m_combatWindow->getCreatureSubWindow(0)->unShow();
+    m_combatWindow->getCreatureSubWindow(1)->unShow();
+    m_combatWindow->getCreatureSubWindow(2)->unShow();
+    m_combatWindow->getCreatureSubWindow(3)->unShow();
+}
+
 // E:\gamedcs\command.cpp:1001. The retail identity is closed by the
 // command.obj order slot immediately after is_computer_action, both direct
 // calls from Main, the reference-parameter decorated ABI, and the obstacle
@@ -878,12 +979,7 @@ int combatManager::processCombatMsg(message& msg)
         switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
             if (m_thisNetHasControl && msg.m_codeY >= 0 && msg.m_codeY <= 1) {
-                m_combatWindow->getHeroSubWindow(0)->unShow();
-                m_combatWindow->getHeroSubWindow(1)->unShow();
-                m_combatWindow->getCreatureSubWindow(0)->unShow();
-                m_combatWindow->getCreatureSubWindow(1)->unShow();
-                m_combatWindow->getCreatureSubWindow(2)->unShow();
-                m_combatWindow->getCreatureSubWindow(3)->unShow();
+                hideInfoSubWindows();
                 drawFrame(1, 0, 0, 0, 1, 0);
                 doCommand(m_combatCommand);
             }
@@ -905,7 +1001,7 @@ int combatManager::processCombatMsg(message& msg)
                 break;
 
             case TCombatWindow::COMBAT_RIGHT_COMMAND_2_ID:
-                m_nextAction = 3;
+                queueDefend();
                 break;
 
             case TCombatWindow::COMBAT_LEFT_COMMAND_2_ID:
@@ -940,8 +1036,7 @@ int combatManager::processCombatMsg(message& msg)
                                      1, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                     } else {
-                        m_nextAction = 5;
-                        m_nextActionExtra = g_surrenderCost;
+                        prepareAction(g_combatActionSurrender, g_surrenderCost);
                     }
                 }
                 resetMouse();
@@ -986,16 +1081,10 @@ int combatManager::processCombatMsg(message& msg)
         if (!inCombatArea(mouseX, mouseY)) {
             turnOffHighlighter(1);
 
-            m_combatWindow->getHeroSubWindow(0)->unShow();
-            m_combatWindow->getHeroSubWindow(1)->unShow();
-            m_combatWindow->getCreatureSubWindow(0)->unShow();
-            m_combatWindow->getCreatureSubWindow(1)->unShow();
-            m_combatWindow->getCreatureSubWindow(2)->unShow();
-            m_combatWindow->getCreatureSubWindow(3)->unShow();
+            hideInfoSubWindows();
             g_windowManager->convertToHover(msg);
             g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
-            m_lastCellIndex = -1;
-            m_lastCommand = -99;
+            invalidateCommandForCell(-1);
             return MESSAGE_DISPATCH_CONSUME;
         }
 
@@ -1009,12 +1098,7 @@ int combatManager::processCombatMsg(message& msg)
                                                         gridIndex);
         } else {
             if (gridIndex != m_lastCellIndex) {
-                m_combatWindow->getHeroSubWindow(0)->unShow();
-                m_combatWindow->getHeroSubWindow(1)->unShow();
-                m_combatWindow->getCreatureSubWindow(0)->unShow();
-                m_combatWindow->getCreatureSubWindow(1)->unShow();
-                m_combatWindow->getCreatureSubWindow(2)->unShow();
-                m_combatWindow->getCreatureSubWindow(3)->unShow();
+                hideInfoSubWindows();
 
                 if (gridIndex == COMBAT_HEX_DEFENDER_HERO) {
                     if (m_heroes[1] && g_config.m_combatArmyInfoLevel) {
@@ -1081,8 +1165,7 @@ int combatManager::processCombatMsg(message& msg)
             if (gridIndex != m_lastCellIndex)
                 checkChangeHighlighter(gridIndex);
 
-            m_lastCellIndex = gridIndex;
-            m_lastCommand = -99;
+            invalidateCommandForCell(gridIndex);
             // DC 0x6c878 and Mac 0x83ac0 pass the just-stored member.
             m_combatCommand = getCommand(m_lastCellIndex);
             m_lastAttackCursor = 6;
@@ -1150,9 +1233,7 @@ int combatManager::processCombatMsg(message& msg)
                 army* currentArmy = getCurrentArmy();
                 if (currentArmy->m_creatureType == CREATURE_FAERIE_DRAGON
                         && currentArmy->m_monInfo.m_hasSpell) {
-                    initiateSpell(currentArmy->m_faerieDragonSpell, 1);
-                    if (m_nextAction == 1)
-                        m_nextAction = 10;
+                    initiateCreatureSpell(currentArmy->m_faerieDragonSpell);
                 }
             }
             break;
@@ -1160,12 +1241,7 @@ int combatManager::processCombatMsg(message& msg)
         case KEYCODE_T:
             if (m_creaturePlacement)
                 break;
-            m_combatWindow->getHeroSubWindow(0)->unShow();
-            m_combatWindow->getHeroSubWindow(1)->unShow();
-            m_combatWindow->getCreatureSubWindow(0)->unShow();
-            m_combatWindow->getCreatureSubWindow(1)->unShow();
-            m_combatWindow->getCreatureSubWindow(2)->unShow();
-            m_combatWindow->getCreatureSubWindow(3)->unShow();
+            hideInfoSubWindows();
             g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
             viewArmy(getCurrentArmy(), 0);
             resetMouse();
@@ -1220,8 +1296,7 @@ void combatManager::resetRound()
 
     m_anyActionTaken = 0;
     m_inSecondPhase = 0;
-    memset(m_creatureIsDead, 0, sizeof(m_creatureIsDead));
-    m_someCreaturesVanish = 0;
+    clearVanishingCreatures();
     m_castleAttackDone = 0;
 
     for (int side = 0; side < 2; side++) {
@@ -1240,8 +1315,7 @@ void combatManager::resetRound()
         }
     }
 
-    if (m_someCreaturesVanish)
-        makeCreaturesVanish();
+    makeCreaturesVanishIfNeeded();
 
     for (TObstacle* obstacle = m_obstacles.begin();
             obstacle != m_obstacles.end(); ++obstacle) {
@@ -1459,8 +1533,7 @@ int combatManager::getCommand(int newIndex)
         if (currentArmy->is(creatureCatapult) && m_currentSide == 0
                 && !m_creaturePlacement
                 && validWallTarget(WALL_TARGET_0)) {
-            currentArmy->m_slot = newIndex;
-            currentArmy->m_side = -1;
+            currentArmy->setWallAttackTarget(newIndex);
             return COMBAT_COMMAND_BOMBARD_WALL;
         }
         return COMBAT_COMMAND_VIEW_TOWERS;
@@ -1471,8 +1544,7 @@ int combatManager::getCommand(int newIndex)
         if (currentArmy->is(creatureCatapult) && m_currentSide == 0
                 && !m_creaturePlacement
                 && validWallTarget(WALL_TARGET_7)) {
-            currentArmy->m_slot = newIndex;
-            currentArmy->m_side = -1;
+            currentArmy->setWallAttackTarget(newIndex);
             return COMBAT_COMMAND_BOMBARD_WALL;
         }
         return COMBAT_COMMAND_VIEW_TOWERS;
@@ -1481,8 +1553,7 @@ int combatManager::getCommand(int newIndex)
     if (!validHex(newIndex) || inInvisibleColumn(newIndex))
         return COMBAT_COMMAND_NONE;
 
-    currentArmy->m_side = -1;
-    currentArmy->m_slot = -1;
+    currentArmy->clearAttackTarget();
     hexcell* cell = &m_cells[newIndex];
 
     if (cell->hasArmy()
@@ -1508,8 +1579,7 @@ int combatManager::getCommand(int newIndex)
         if (targetSide == m_currentSide)
             return COMBAT_COMMAND_VIEW_ARMY;
 
-        currentArmy->m_side = cell->m_armySide;
-        currentArmy->m_slot = cell->m_armySlot;
+        currentArmy->setAttackTarget(cell->m_armySide, cell->m_armySlot);
 
         if (currentArmy->canShoot(0)) {
             if (currentArmy->m_creatureType == CREATURE_ARROW_TOWER)
@@ -1524,8 +1594,7 @@ int combatManager::getCommand(int newIndex)
             return currentArmy->m_creatureType == CREATURE_BALLISTA
                 ? COMBAT_COMMAND_SHOOT : COMBAT_COMMAND_ATTACK;
 
-        currentArmy->m_side = -1;
-        currentArmy->m_slot = -1;
+        currentArmy->clearAttackTarget();
         return COMBAT_COMMAND_NONE;
     }
 
@@ -1542,8 +1611,7 @@ int combatManager::getCommand(int newIndex)
                 wall = TWallTargetId(wall + 1)) {
             if (newIndex == s_wallTargets[wall].m_targetHex) {
                 if (validWallTarget(wall)) {
-                    currentArmy->m_slot = newIndex;
-                    currentArmy->m_side = -1;
+                    currentArmy->setWallAttackTarget(newIndex);
                     return COMBAT_COMMAND_BOMBARD_WALL;
                 }
                 break;
@@ -1623,12 +1691,10 @@ int combatManager::rightClick(int newIndex)
     return 0;
 }
 
-// THE FIVE ORDER CASES all write the same (what, where, how) triple -
-// field_3c the order code, field_44 the target hex and field_40 the
-// companion hex - and only the melee case has a real second hex
-// (field_132d8); the rest park -1 there. Case 1/2's extra arm is the
-// wide-stack shift: when the destination cell's field_4b marks it as a
-// tail hex, the anchor moves one column against the stack's facing.
+// Targeted commands write an opcode, target hex and extra payload together.
+// Melee puts its movement hex in extra; the other targeted commands use -1.
+// These orders retain the separate secondary spell target. For a wide stack,
+// a destination marked as a tail hex shifts the anchor against its facing.
 VA(0x00476bd0, 0x402)
 DC_ADDRESS(0x06db78, 0x2aa)
 MAC_ADDRESS(0x084cd8, 0x308)
@@ -1638,31 +1704,25 @@ void combatManager::doCommand(int command)
 
     switch (command) {
     case COMBAT_COMMAND_WALK:
-    case COMBAT_COMMAND_FLY:
-        m_nextAction = 2;
-        m_nextActionGridIndex = m_lastCellIndex;
+    case COMBAT_COMMAND_FLY: {
+        int targetHex = m_lastCellIndex;
         if (currentArmy->is(creatureDoubleWide) && m_cells[m_lastCellIndex].m_frontMove)
-            m_nextActionGridIndex = m_lastCellIndex - currentArmy->offsetToFront(-1);
-        m_nextActionExtra = -1;
+            targetHex = m_lastCellIndex - currentArmy->offsetToFront(-1);
+        setTargetAction(2, -1, targetHex);
         break;
+    }
 
     case COMBAT_COMMAND_SHOOT:
     case COMBAT_COMMAND_SHOOT_PENALTY:
-        m_nextAction = 7;
-        m_nextActionGridIndex = m_lastCellIndex;
-        m_nextActionExtra = -1;
+        setTargetAction(7, -1, m_lastCellIndex);
         break;
 
     case COMBAT_COMMAND_CREATURE_SPELL:
-        m_nextAction = 10;
-        m_nextActionGridIndex = m_lastCellIndex;
-        m_nextActionExtra = -1;
+        setTargetAction(10, -1, m_lastCellIndex);
         break;
 
     case COMBAT_COMMAND_ATTACK:
-        m_nextActionGridIndex = m_lastCellIndex;
-        m_nextAction = 6;
-        m_nextActionExtra = m_lastMoveToIndex;
+        setTargetAction(6, m_lastMoveToIndex, m_lastCellIndex);
         break;
 
     case COMBAT_COMMAND_SPELL_BOOK:
@@ -1678,12 +1738,7 @@ void combatManager::doCommand(int command)
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             }
-            m_combatWindow->getHeroSubWindow(0)->unShow();
-            m_combatWindow->getHeroSubWindow(1)->unShow();
-            m_combatWindow->getCreatureSubWindow(0)->unShow();
-            m_combatWindow->getCreatureSubWindow(1)->unShow();
-            m_combatWindow->getCreatureSubWindow(2)->unShow();
-            m_combatWindow->getCreatureSubWindow(3)->unShow();
+            hideInfoSubWindows();
             g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
             initiateSpell(spell, 0);
             resetMouse();
@@ -1705,15 +1760,11 @@ void combatManager::doCommand(int command)
         break;
 
     case COMBAT_COMMAND_BOMBARD_WALL:
-        m_nextAction = 9;
-        m_nextActionGridIndex = m_lastCellIndex;
-        m_nextActionExtra = -1;
+        setTargetAction(9, -1, m_lastCellIndex);
         break;
 
     case COMBAT_COMMAND_FIRST_AID:
-        m_nextAction = 11;
-        m_nextActionGridIndex = m_lastCellIndex;
-        m_nextActionExtra = -1;
+        setTargetAction(11, -1, m_lastCellIndex);
         break;
     }
 }
@@ -2027,8 +2078,7 @@ void combatManager::checkChangeSelector()
     m_lastMovedArmy = currentArmy;
     if (!currentArmy->is(creatureImmobilized)
             && currentArmy->m_currFrameType != cs_wait) {
-        currentArmy->m_currFrameType = cs_wait;
-        currentArmy->m_currFrameIndex = 0;
+        currentArmy->startAnimationSequence(cs_wait);
     }
     drawFrame(1, 0, 0, 0, 1, 0);
 }
@@ -2077,21 +2127,13 @@ void combatManager::checkChangeHighlighter(int currentIndex)
         if (m_cells[m_highlighterIndex].hasArmy())
             markCreatureEffect(m_cells[m_highlighterIndex].m_armySide,
                                m_cells[m_highlighterIndex].m_armySlot);
-        m_highlighterOn = 0;
-        m_highlighterIndex = -1;
+        turnOffHighlighter(0);
     }
 
     if (currentArmy) {
         m_highlighterIndex = currentArmy->m_gridIndex;
         m_highlighterOn = 1;
-        if (currentArmy->m_stdIcon->isValidSeq(cs_fidget)
-                && currentArmy->m_currFrameType != cs_fidget) {
-            currentArmy->m_currFrameType = cs_fidget;
-            currentArmy->m_currFrameIndex = 0;
-        } else if (currentArmy->m_currFrameType != cs_wait) {
-            currentArmy->m_currFrameType = cs_wait;
-            currentArmy->m_currFrameIndex = 0;
-        }
+        currentArmy->updateHighlightAnimation();
         // Loading the slot before the accessor preserves Complete's argument
         // registers without replacing the owning-side helper with field access.
         int slot = currentArmy->m_bitIndex;
@@ -2236,8 +2278,7 @@ void combatManager::checkGetAIMove()
                                      -1, 0, -1, 0);
                         if (g_windowManager->m_dialogReturn
                                 == DIALOG_RETURN_ACCEPT) {
-                            m_nextAction = 5;
-                            m_nextActionExtra = g_surrenderCost;
+                            prepareAction(g_combatActionSurrender, g_surrenderCost);
                             return;
                         }
                     }
@@ -2258,8 +2299,7 @@ DC_ADDRESS(0x06f198, 0x45c)
 MAC_ADDRESS(0x08674c, 0x5ac)  // exhaustive command order-map + body
 void combatManager::getControl()
 {
-    m_lastCellIndex = -1;
-    m_lastCommand = -99;
+    invalidateCommandForCell(-1);
 
     if (!m_autoCombatOn && !g_goSolo)
         g_inputManager->flush();
@@ -2511,12 +2551,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
 {
     if (!isQuickCombat()) {
         m_combatWindow->clearCombatMessages();
-        m_combatWindow->getHeroSubWindow(0)->unShow();
-        m_combatWindow->getHeroSubWindow(1)->unShow();
-        m_combatWindow->getCreatureSubWindow(0)->unShow();
-        m_combatWindow->getCreatureSubWindow(1)->unShow();
-        m_combatWindow->getCreatureSubWindow(2)->unShow();
-        m_combatWindow->getCreatureSubWindow(3)->unShow();
+        hideInfoSubWindows();
     }
 
     g_processingCombatAction = 1;
@@ -2760,9 +2795,7 @@ void combatManager::resetCyclingCreatures()
             for (int slot = 0; slot < m_numArmies[side]; slot++) {
                 army* stack = &m_armies[side][slot];
                 if (!stack->is(creatureImmobilized)) {
-                    stack->m_currFrameType = cs_wait;
-                    stack->m_currFrameIndex = 0;
-                    stack->m_lastFidgetTime = GameTime::get();
+                    stack->finishFidgetAnimation();
                 }
             }
         }

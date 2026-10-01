@@ -9,6 +9,7 @@
 #include "platform.h"
 
 #include "mapcell.h"
+#include "packed_bits.h"
 
 #include "advmgr.h"
 #include "advmgr_objects.h"
@@ -20,6 +21,30 @@
 #include "newgame.h"
 #include "resourcemanager.h"
 #include "smackmgr.h"
+
+// Project-inferred bank-state operations; native field list 0x2d40 proves
+// the packed fields public. Ordinary owner-TU placement is provisional.
+bool ExtraInfoUnion::creatureBankIsEmpty() const
+{
+    return m_creatureBankInfo.m_empty != 0;
+}
+
+void ExtraInfoUnion::setCreatureBankEmpty(bool empty)
+{
+    m_creatureBankInfo.m_empty = empty;
+}
+
+// Project-inferred fountain operation shared by initial map randomization and
+// weekly refresh. One roll chooses -1, 1, 2 or 3; preserve all adjacent packed
+// bits. Ordinary owner-TU placement is provisional, without a native claim.
+void ExtraInfoUnion::randomizeFountainLuck()
+{
+    int luckBonus = random(0, 3);
+    if (luckBonus == 0)
+        m_fountainInfo.m_luck = -1;
+    else
+        m_fountainInfo.m_luck = luckBonus;
+}
 
 VA(0x004fbf90, 0x61)
 DC_ADDRESS(0x0eb6a4, 0x98)
@@ -53,6 +78,15 @@ int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
             return -1;
     }
     return 0;
+}
+
+// Project-inferred optional field operation shared by map and save readers.
+void TTimedEvent::readHumanApplicability(TAbstractFile* infile, bool hasFlag)
+{
+    if (hasFlag)
+        m_applyToHuman = readValue<signed char>(infile) != 0;
+    else
+        m_applyToHuman = 1;
 }
 
 // The timed-event record.  Field order is fixed independently by Save
@@ -98,11 +132,7 @@ int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
         return -1;
     }
 
-    if (saveVersion >= 28) {
-        m_applyToHuman = readValue<signed char>(infile) != 0;
-    } else {
-        m_applyToHuman = 1;
-    }
+    readHumanApplicability(infile, saveVersion >= 28);
 
     count = infile->read(&m_applyToComputer, sizeof(m_applyToComputer));
     if (count < sizeof(m_applyToComputer)) {
@@ -204,11 +234,7 @@ int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
     if (static_cast<unsigned>(infile->read(&m_playerFlags, 1)) < 1)
         return -1;
 
-    if (saveVersion >= 42) {
-        m_applyToHuman = readValue<signed char>(infile) != 0;
-    } else {
-        m_applyToHuman = 1;
-    }
+    readHumanApplicability(infile, saveVersion >= 42);
 
     if (static_cast<unsigned>(infile->read(&m_applyToComputer, 1)) < 1)
         return -1;
@@ -951,8 +977,7 @@ int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
             thisCell->m_isBlocked = 0;
             thisCell->m_passable = 1;
             if (thisCell->m_groundSet == eTerrainRock) {
-                thisCell->m_passable = 0;
-                thisCell->m_isBlocked = 1;
+                thisCell->blockMovement();
             }
 
             if (thisCell->m_groundSet == eTerrainWater
@@ -2761,7 +2786,8 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // and construct proxies directly on the TownExtra members; no returned mask
 // temporary is present. The unsigned decodePackedBits spelling costs 79.6586%.
 // Hero::load 0xf3428/0xf3438/0xf3470 independently proves that existing
-// decoder's unsigned traversal, so the town's signed caller-owned x remains.
+// decoder's unsigned traversal. The town now shares decodeMapBits, which
+// preserves its signed division/modulo and writes directly to the member.
 VA(0x005019f0, 0x7CC)
 DC_ADDRESS(0x0f094c, 0x4a8)
 MAC_ADDRESS(0x124278, 0x700)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing
@@ -2845,16 +2871,12 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         memset(spellBuf, 0, sizeof(spellBuf));
     } else {
         infile->read(spellBuf, sizeof(spellBuf));
-        for (x = 0; x < 70; ++x)
-            tempTown.m_fixedSpells[x] =
-                (spellBuf[x / 8] & (1 << (x % 8))) != 0;
+        decodeMapBits(spellBuf, tempTown.m_fixedSpells);
     }
 
     if (infile->read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
-    for (x = 0; x < 70; ++x)
-        tempTown.m_spells[x] =
-            (spellBuf[x / 8] & (1 << (x % 8))) != 0;
+    decodeMapBits(spellBuf, tempTown.m_spells);
 
     count = readLittleEndianValue(infile, numTownEvents);
     if (count < sizeof(numTownEvents))
@@ -3205,10 +3227,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 heroData->m_customSpells = 1;
                 unsigned char spellMask[9];
                 infile->read(spellMask, sizeof(spellMask));
-                for (int spell = 0; spell < 70; ++spell) {
-                    heroData->m_spells[spell] =
-                        (spellMask[spell / 8] & (1 << (spell % 8))) != 0;
-                }
+                decodeMapBits(spellMask, heroData->m_spells);
             }
 
             charBuffer = readValue<char>(infile);
@@ -3839,7 +3858,6 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     int count;
     char byteValue;
     unsigned char packed[6];
-    int i;
 
     count = readLittleEndianValue(infile, value);
     if (count < sizeof(value))
@@ -3872,32 +3890,20 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     tempObjectType.m_height = byteValue;
 
     ResourceManager::readFromBitmapResource(maskFile, packed, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_drawCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType.m_drawCells);
 
     count = infile->read(packed, sizeof(packed));
     if (count < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_passableCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType.m_passableCells);
 
     ResourceManager::readFromBitmapResource(maskFile, packed, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_shadowCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType.m_shadowCells);
 
     count = infile->read(packed, sizeof(packed));
     if (count < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_triggerCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType.m_triggerCells);
 
     char dummy[2];
     count = infile->read(dummy, sizeof(dummy));
@@ -3949,6 +3955,18 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     return usedDefaultMask ? READ_OBJECT_TYPE_DEFAULT_MASK : 1;
 }
 
+// Project-inferred object-cell mask encoder. This accepts the existing mutable
+// mask so the native subscript/proxy operation is retained rather than test().
+static void encodeObjectCellMask(std::bitset<48>& cells,
+                                  unsigned char (&packed)[6])
+{
+    memset(packed, 0, sizeof(packed));
+    for (int i = 0; i < sizeof(packed) * 8; ++i) {
+        if (cells[i])
+            packed[i / 8] |= 1 << (i % 8);
+    }
+}
+
 // The final Write returns 1, not 0, on success - the sbb/and/inc tail is a
 // `? -1 : 1` ternary, not the `? -1 : 0` every other serializer here ends on.
 VA(0x00503c40, 0x2B9)
@@ -3967,37 +3985,20 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
         return -1;
 
     unsigned char packed[6];
-    int i;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_drawCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
+    encodeObjectCellMask(tempObjectType->m_drawCells, packed);
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_passableCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
+    encodeObjectCellMask(tempObjectType->m_passableCells, packed);
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_shadowCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
+    encodeObjectCellMask(tempObjectType->m_shadowCells, packed);
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_triggerCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
+    encodeObjectCellMask(tempObjectType->m_triggerCells, packed);
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
@@ -4033,35 +4034,22 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
     tempObjectType->m_height = value;
 
     unsigned char packed[6];
-    int i;
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_drawCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType->m_drawCells);
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_passableCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType->m_passableCells);
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_shadowCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType->m_shadowCells);
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_triggerCells[i] =
-            (packed[i / 8] & (1 << (i % 8))) != 0;
-    }
+    decodeMapBits(packed, tempObjectType->m_triggerCells);
 
     unsigned short typeValue;
     if (readValue(infile, typeValue) < sizeof(typeValue))
@@ -4169,6 +4157,35 @@ void NewfullMap::rebuildObjectTypeIndex()
     }
 }
 
+// Project-inferred reload phases shared by map and saved-object loading.
+// The old-reference vector stays alive in the caller through its later reads.
+void NewfullMap::copySpriteReferences(std::vector<CSprite*>& oldSprites) const
+{
+    oldSprites.resize(m_sprites.size());
+    for (int x = 0; x < m_sprites.size(); ++x)
+        oldSprites[x] = m_sprites[x];
+}
+
+void NewfullMap::reloadObjectSprites(std::vector<CSprite*>& oldSprites,
+                                     size_t count)
+{
+    int x;
+    m_sprites.resize(count);
+    for (x = 0; x < m_objectTypes.size(); ++x) {
+        m_sprites[x] =
+            ResourceManager::getSprite(m_objectTypes[x].m_imageName.c_str());
+        if (x == m_objectTypes.size() / 3)
+            incProgressBar(1);
+        if (x == m_objectTypes.size() / 3 * 2)
+            incProgressBar(1);
+    }
+
+    // DC Read/Load and Mac 0x1274f8..0x12752c retain this disposal path.
+    for (x = 0; x < oldSprites.size(); ++x)
+        ResourceManager::dispose(oldSprites[x]);
+    oldSprites.clear();
+}
+
 // E:\gamedcs\mapcell.cpp:3838
 // DC's long i (sp+0x18) belongs to the preceding hero-reset loop, absent in
 // Complete. These three loading loops use int x (sp+0x1c); push_back at
@@ -4187,6 +4204,7 @@ void NewfullMap::rebuildObjectTypeIndex()
 // a native-forwarding helper body do not change this inline residual.
 // Naming the canonical GetSprite result inside the sprite loop also changes
 // the inline context; its direct vector assignment is the supported form.
+// These compiler observations predate extraction of the shared reload phases.
 VA(0x00504470, 0x5C9)
 DC_ADDRESS(0x0f2c20, 0x3f6)
 MAC_ADDRESS(0x127278, 0x440)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing
@@ -4221,26 +4239,8 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     incProgressBar(1);
 
     std::vector<CSprite*> oldSprites;
-    oldSprites.resize(m_sprites.size());
-    for (x = 0; x < m_sprites.size(); ++x)
-        oldSprites[x] = m_sprites[x];
-
-    m_sprites.resize(numObjects);
-    for (x = 0; x < m_objectTypes.size(); ++x) {
-        m_sprites[x] =
-            ResourceManager::getSprite(m_objectTypes[x].m_imageName.c_str());
-        if (x == m_objectTypes.size() / 3)
-            incProgressBar(1);
-        if (x == m_objectTypes.size() / 3 * 2)
-            incProgressBar(1);
-    }
-
-    // DC NewfullMap::Read/Load (mapcell.cpp:640/704) release the sprite list
-    // through ResourceManager::Dispose. Mac 0x1274f8..0x12752c retains the
-    // nested virtual sprite-disposal call; keep the canonical wrapper here.
-    for (x = 0; x < oldSprites.size(); ++x)
-        ResourceManager::dispose(oldSprites[x]);
-    oldSprites.clear();
+    copySpriteReferences(oldSprites);
+    reloadObjectSprites(oldSprites, numObjects);
 
     incProgressBar(1);
 
@@ -4343,23 +4343,8 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
     rebuildObjectTypeIndex();
 
     std::vector<CSprite*> oldSprites;
-    oldSprites.resize(m_sprites.size());
-    for (x = 0; x < m_sprites.size(); ++x)
-        oldSprites[x] = m_sprites[x];
-
-    m_sprites.resize(m_objectTypes.size());
-    for (x = 0; x < m_objectTypes.size(); ++x) {
-        m_sprites[x] =
-            ResourceManager::getSprite(m_objectTypes[x].m_imageName.c_str());
-        if (x == m_objectTypes.size() / 3)
-            incProgressBar(1);
-        if (x == m_objectTypes.size() / 3 * 2)
-            incProgressBar(1);
-    }
-
-    for (x = 0; x < oldSprites.size(); ++x)
-        ResourceManager::dispose(oldSprites[x]);
-    oldSprites.clear();
+    copySpriteReferences(oldSprites);
+    reloadObjectSprites(oldSprites, m_objectTypes.size());
 
     incProgressBar(1);
 
@@ -4419,6 +4404,15 @@ void NewfullMap::generateHeightMap(const CObject* object,
     }
 }
 
+// Project-inferred bounds of an object's lower-right-anchored footprint.
+void NewfullMap::getObjectBounds(const CObject& object, tagRECT& bounds) const
+{
+    bounds.left = object.m_x - m_objectTypes[object.m_typeIndex].m_width + 1;
+    bounds.top = object.m_y - m_objectTypes[object.m_typeIndex].m_height + 1;
+    bounds.right = object.m_x + 1;
+    bounds.bottom = object.m_y + 1;
+}
+
 VA(0x00505230, 0x3D9)
 DC_ADDRESS(0x0f36b0, 0x372)
 MAC_ADDRESS(0x127c4c, 0x320)
@@ -4443,18 +4437,10 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
             CObject* belowObject = &m_objects[nextCellObjInfo.m_objectIndex];
 
             RECT newRect;
-            newRect.left = newObject->m_x - m_objectTypes[newObject->m_typeIndex].m_width + 1;
-            newRect.top = newObject->m_y - m_objectTypes[newObject->m_typeIndex].m_height + 1;
-            newRect.right = newObject->m_x + 1;
-            newRect.bottom = newObject->m_y + 1;
+            getObjectBounds(*newObject, newRect);
 
             RECT belowRect;
-            belowRect.left = belowObject->m_x
-                - m_objectTypes[belowObject->m_typeIndex].m_width + 1;
-            belowRect.top = belowObject->m_y
-                - m_objectTypes[belowObject->m_typeIndex].m_height + 1;
-            belowRect.right = belowObject->m_x + 1;
-            belowRect.bottom = belowObject->m_y + 1;
+            getObjectBounds(*belowObject, belowRect);
 
             RECT overlap;
             unsigned char intersects = IntersectRect(&overlap, &newRect, &belowRect) != 0;
@@ -4497,6 +4483,33 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
     }
 
     objectList.insert(position, *objectCell);
+}
+
+// Project-inferred paired transition shared by rock loading and object blocking.
+void NewmapCell::blockMovement()
+{
+    m_passable = 0;
+    m_isBlocked = 1;
+}
+
+// Project-inferred identity assignment shared by non-trigger classification.
+void NewmapCell::setObjectIdentity(unsigned short index, const CObject& object,
+                                    const CObjectType& type,
+                                    unsigned char copyExtra)
+{
+    m_objectTypeIndex = index;
+    m_typeValue = type.m_objectType;
+    m_objectIndex = static_cast<short>(type.m_extra);
+    if (copyExtra)
+        m_extraInfo = object.m_extraInfo;
+}
+
+void NewmapCell::setBlockingObject(unsigned short index, const CObject& object,
+                                    const CObjectType& type,
+                                    unsigned char copyExtra)
+{
+    setObjectIdentity(index, object, type, copyExtra);
+    blockMovement();
 }
 
 // DC record 0x30b7 declares four-bit char CellX at bit 0 and CellY
@@ -4562,13 +4575,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
             int col = it->m_cellX;
             if (!objectType->m_passableCells.test(
                     CObjectType::getBitPos(col, row))) {
-                thisCell->m_objectTypeIndex = it->m_objectIndex;
-                thisCell->m_typeValue = objectType->m_objectType;
-                thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
-                if (setExtraInfo)
-                    thisCell->m_extraInfo = object->m_extraInfo;
-                thisCell->m_passable = 0;
-                thisCell->m_isBlocked = 1;
+                thisCell->setBlockingObject(it->m_objectIndex, *object,
+                                            *objectType, setExtraInfo);
                 return;
             }
         }
@@ -4582,13 +4590,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
         int col = it->m_cellX;
         if (!objectType->m_passableCells.test(
                 CObjectType::getBitPos(col, row))) {
-            thisCell->m_objectTypeIndex = it->m_objectIndex;
-            thisCell->m_typeValue = objectType->m_objectType;
-            thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
-            if (setExtraInfo)
-                thisCell->m_extraInfo = object->m_extraInfo;
-            thisCell->m_passable = 0;
-            thisCell->m_isBlocked = 1;
+            thisCell->setBlockingObject(it->m_objectIndex, *object,
+                                        *objectType, setExtraInfo);
             return;
         }
     }
@@ -4598,11 +4601,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
         CObject* object = &m_objects[it->m_objectIndex];
         CObjectType* objectType = &m_objectTypes[object->m_typeIndex];
         if (objectType->m_objectType == TERRAIN_HOLE) {
-            thisCell->m_objectTypeIndex = it->m_objectIndex;
-            thisCell->m_typeValue = objectType->m_objectType;
-            thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
-            if (setExtraInfo)
-                thisCell->m_extraInfo = object->m_extraInfo;
+            thisCell->setObjectIdentity(it->m_objectIndex, *object,
+                                        *objectType, setExtraInfo);
             return;
         }
     }

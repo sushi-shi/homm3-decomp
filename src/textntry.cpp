@@ -128,9 +128,7 @@ void textEntryWidget::setFocus(bool state)
 {
     m_hasFocus = state;
     if (m_autoDraw) {
-        draw();
-        g_windowManager->updateScreen(m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
-            m_width, m_height);
+        drawAndUpdate();
     }
 }
 
@@ -222,6 +220,15 @@ char textEntryWidget::getCharPressed(message* msg)
 // Original DC name: gbTextEntryEscaped; OnKeyPress clears it after editing.
 DATA(0x00697780) int g_textEntryEscaped;
 
+// Project-inferred caret/scroll transition shared by left-arrow and backspace.
+// Both callers establish that the cursor is nonzero before entering.
+void textEntryWidget::moveCursorLeft()
+{
+    --m_cursorIndex;
+    if (m_cursorIndex < m_displayStart)
+        m_displayStart = m_cursorIndex;
+}
+
 VA(0x005bac50, 0x4FD)
 DC_ADDRESS(0x162c2c, 0x2fe)
 MAC_ADDRESS(0x1afb44, 0x38c)
@@ -261,9 +268,7 @@ int textEntryWidget::onKeyPress(message* msg)
 
         case KEYCODE_KP_4:
             if (m_cursorIndex > 0) {
-                m_cursorIndex--;
-                if (m_cursorIndex < m_displayStart)
-                    m_displayStart = m_cursorIndex;
+                moveCursorLeft();
             }
             break;
 
@@ -278,9 +283,7 @@ int textEntryWidget::onKeyPress(message* msg)
                 if (m_cursorIndex > 0) {
                     strcpy(temp, &core[m_cursorIndex]);
                     strcpy(&core[m_cursorIndex - 1], temp);
-                    m_cursorIndex--;
-                    if (m_cursorIndex < m_displayStart)
-                        m_displayStart = m_cursorIndex;
+                    moveCursorLeft();
                 }
             } else if (strlen(core) + 1 < m_maxLength && msg->m_codeX) {
                 strcpy(save, core);
@@ -310,9 +313,7 @@ int textEntryWidget::onKeyPress(message* msg)
         g_windowManager->updateScreen(xLoc, yLoc, m_width, m_height);
     }
     g_textEntryEscaped = 0;
-    msg->m_id = MESSAGE_WIDGET;
-    msg->m_codeX = WIDGET_SELECT;
-    msg->m_codeY = m_id;
+    msg->setWidgetCommand(WIDGET_SELECT, m_id);
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -347,21 +348,15 @@ int textEntryWidget::main(message& msg)
                 short hitX = msg.m_codeX - m_parentWindow->m_x;
                 short hitY = msg.m_codeY - m_parentWindow->m_y;
                 if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
-                    if (hitX >= m_x && hitY >= m_y && hitX < m_x + m_width
-                        && hitY < m_y + m_height) {
-                        msg.m_id = MESSAGE_WIDGET;
-                        msg.m_codeX = WIDGET_RIGHT_SELECT;
-                        msg.m_codeY = m_id;
+                    if (containsPoint(hitX, hitY)) {
+                        msg.setWidgetCommand(WIDGET_RIGHT_SELECT, m_id);
                         msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
                         return MESSAGE_DISPATCH_FORWARD;
                     }
-                } else if (hitX >= m_x && hitY >= m_y && hitX < m_x + m_width
-                    && hitY < m_y + m_height) {
+                } else if (containsPoint(hitX, hitY)) {
                     if (!m_hasFocus && m_parentWindow)
                         m_parentWindow->setFocus(m_id);
-                    msg.m_id = MESSAGE_WIDGET;
-                    msg.m_codeX = WIDGET_SELECT;
-                    msg.m_codeY = m_id;
+                    msg.setWidgetCommand(WIDGET_SELECT, m_id);
                     return MESSAGE_DISPATCH_FORWARD;
                 }
             }

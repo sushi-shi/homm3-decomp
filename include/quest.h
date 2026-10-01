@@ -465,6 +465,10 @@ public:
 private:
     int m_resources[7];  // +0x40
 
+    // Project-inferred shared list construction; callers own scratch lifetimes.
+    void appendRequirements(std::vector<std::string>& requirements,
+                            std::string& requirement);
+
 public:
     type_resource_quest(bool flags);
 

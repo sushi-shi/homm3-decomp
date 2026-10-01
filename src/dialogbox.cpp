@@ -36,10 +36,7 @@ DC_ADDRESS(0x0817f8, 0x62)
 MAC_ADDRESS(0x0a15c0, 0xac)
 TDialogBox::~TDialogBox()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x0048ff00, 0x833)
@@ -133,12 +130,7 @@ unsigned char TDialogBox::setup(int winX, int winY,
     }
 
     m_endId = id - 1;
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     return 1;
 }
@@ -185,8 +177,7 @@ unsigned char CTextDialog::setup(const char* text, font* currentFont)
     m_textWidget = new textWidget(
         20, 40, winWidth - 40, winHeight - 40,
         text, currentFont->getName(), font::PRIMARY, -1, 1, 0, 8);
-    m_widgets.push_back(m_textWidget);
-    addWidget(m_textWidget, -1);
+    addOwnedWidget(m_textWidget);
     return 1;
 }
 
@@ -215,10 +206,7 @@ DC_ADDRESS(0x081f98, 0x16)
 MAC_ADDRESS(0x0a2344, 0x2c)
 int CTextDialog::exitDialog(message& msg)
 {
-    msg.m_id = MESSAGE_WIDGET;
-    g_windowManager->m_dialogReturn = msg.m_codeY;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
+    g_windowManager->finishDialog(msg, msg.m_codeY);
     return MESSAGE_DISPATCH_FORWARD;
 }
 

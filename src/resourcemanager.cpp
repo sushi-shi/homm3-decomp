@@ -456,7 +456,7 @@ static bool openArchiveResource(int archiveIndex)
 }
 
 // Mac retains the archive searches at 0:0x1522ec and 0:0x152374.
-// Resource loaders call them directly; the public pointTo* wrappers near
+// Resource loaders reuse them; the public pointTo* wrappers near
 // the end of this file remain separate calls at 0:0x154660 and 0:0x154680.
 // Both bind the selected context row (Mac 0:0x1523a0 forms base + state*0x18;
 // retail inlined bitmap searches keep a dead lea of that row, not +8).
@@ -495,6 +495,24 @@ static LODFile* findBitmapResource(const char* name)
         file = &g_resourceLodSlots[*archive].m_file;
     }
 
+    return file;
+}
+
+// Project-inferred operation shared by the five bitmap-archive loaders.
+// Keep the native lookup on both paths and report each missing name before
+// proceeding. Fallback arrays remain owned by their individual loaders.
+static LODFile* findBitmapResourceOrDefault(const char* name,
+                                           const char* fallbackName,
+                                           const char* caller,
+                                           int resourceType)
+{
+    LODFile* file = findBitmapResource(name);
+    if (!file) {
+        reportMissingTypedResource(caller, resourceType, name);
+        file = findBitmapResource(fallbackName);
+        if (!file)
+            reportMissingTypedResource(caller, resourceType, fallbackName);
+    }
     return file;
 }
 
@@ -617,6 +635,22 @@ void ResourceManager::setPath(const char* path)
 #endif
 }
 
+// Project-inferred channel-mask decomposition shared by red, green and blue.
+// Width is the span after trailing zeros, not the population count of the mask.
+static void getChannelMaskLayout(unsigned long mask, int& shift, int& bits)
+{
+    shift = 0;
+    while (!(mask & 1) && mask) {
+        mask >>= 1;
+        ++shift;
+    }
+    bits = 0;
+    while (mask) {
+        ++bits;
+        mask >>= 1;
+    }
+}
+
 VA(0x0055a6b0, 0xEF)
 DC_ADDRESS(0x1218c4, 0x168)
 MAC_ADDRESS(0x152c38, 0x16c)
@@ -631,38 +665,11 @@ void ResourceManager::setPixelFormat(unsigned long redMask,
     g_spriteMaskGreen = greenMask;
     g_spriteMaskLast = blueMask;
 
-    g_firstMaskShift = 0;
-    while (!(redMask & 1) && redMask) {
-        redMask >>= 1;
-        ++g_firstMaskShift;
-    }
-    g_firstMaskBits = 0;
-    while (redMask) {
-        ++g_firstMaskBits;
-        redMask >>= 1;
-    }
+    getChannelMaskLayout(redMask, g_firstMaskShift, g_firstMaskBits);
 
-    g_greenMaskShift = 0;
-    while (!(greenMask & 1) && greenMask) {
-        greenMask >>= 1;
-        ++g_greenMaskShift;
-    }
-    g_greenMaskBits = 0;
-    while (greenMask) {
-        ++g_greenMaskBits;
-        greenMask >>= 1;
-    }
+    getChannelMaskLayout(greenMask, g_greenMaskShift, g_greenMaskBits);
 
-    g_lastMaskShift = 0;
-    while (!(blueMask & 1) && blueMask) {
-        blueMask >>= 1;
-        ++g_lastMaskShift;
-    }
-    g_lastMaskBits = 0;
-    while (blueMask) {
-        ++g_lastMaskBits;
-        blueMask >>= 1;
-    }
+    getChannelMaskLayout(blueMask, g_lastMaskShift, g_lastMaskBits);
 }
 
 VA_COMPGEN(0x0055a7a0, 0x21, SCALAR_DELETING_DTOR,
@@ -670,13 +677,23 @@ VA_COMPGEN(0x0055a7a0, 0x21, SCALAR_DELETING_DTOR,
 VA_COMPGEN(0x0055a7d0, 0x21, SCALAR_DELETING_DTOR,
            t_lod_file_adapter)
 
+// Project-inferred saturation policy shared by loaded bitmaps and palettes.
+// Keep the pointer dereference inside the original saturation gate.
+template <class T>
+static void adjustLoadedResourceSaturation(T* value)
+{
+    if (g_graphicsSaturated)
+        value->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+}
+
 // Mac 0:0x152df8..0x152fc8 calls the retained findBitmapResource helper
-// for name and default.pcx. The same two ordinary source calls auto-inline in
-// Complete. Dreamcast names the anonymous bmpHeader local but cannot fix its
-// scope; retail keeps its stack home live across the loose FILE branch. Its
-// function-scope declaration prevents that branch's cache insertion pair from
-// reusing the header slot and matches all 0x41f retail bytes, 34 CFG blocks,
-// and 32 ordered calls. Moving result before the cache lookup was byte-flat.
+// for name and default.pcx, now nested in findBitmapResourceOrDefault.
+// The same two ordinary source calls auto-inline in Complete. Dreamcast names
+// the anonymous bmpHeader local but cannot fix its scope; retail keeps its stack
+// home live across the loose FILE branch. Its function-scope declaration keeps
+// that branch's cache insertion pair from reusing the header slot. The previous
+// reconstruction matched all 0x41f retail bytes, 34 CFG blocks and 32 ordered
+// calls; the shared fallback operation has not been compiled or measured.
 VA(0x0055a800, 0x41F)
 DC_ADDRESS(0x121ac8, 0x194)
 MAC_ADDRESS(0x152df8, 0x1d0)  // bitmapBorder::SetImage loader;
@@ -707,28 +724,16 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
     }
 
     {
-        LODFile* lodFile = findBitmapResource(name);
-
-        if (!lodFile) {
-            reportMissingTypedResource(
-                DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
-                             "GetBitmap816"),
-                RESOURCE_TYPE_BITMAP, name);
-
-            // Each loader owns its fallback name as .rdata array storage:
-            // retail keeps two separate "default.pal" copies (0x6410b8,
-            // 0x6410c4) beside the pooled .data error-context literals.
-            DATA(0x0064108c) static const char fallbackName[] = "default.pcx";
-            lodFile = findBitmapResource(fallbackName);
-
-            if (!lodFile) {
-                reportMissingTypedResource(
-                    DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
-                                 "GetBitmap816"),
-                    RESOURCE_TYPE_BITMAP, fallbackName);
-                return 0;
-            }
-        }
+        // Each loader owns its fallback array, including the two
+        // distinct retail copies of "default.pal".
+        DATA(0x0064108c) static const char fallbackName[] = "default.pcx";
+        LODFile* lodFile = findBitmapResourceOrDefault(
+            name, fallbackName,
+            DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
+                         "GetBitmap816"),
+            RESOURCE_TYPE_BITMAP);
+        if (!lodFile)
+            return 0;
 
         {
             lodFile->read(&bmpHeader, sizeof(bmpHeader));
@@ -738,8 +743,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
 
             TPalette24 palette24;
             lodFile->read(palette24.m_palette, sizeof(palette24.m_palette));
-            if (g_graphicsSaturated)
-                palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+            adjustLoadedResourceSaturation(&palette24);
 
             TPalette16 palette16(
                 palette24,
@@ -775,11 +779,23 @@ bool ResourceManager::TCacheMapKey::operator<(const TCacheMapKey& other) const
     return _stricmp(m_name, other.m_name) < 0;
 }
 
+// Project-inferred conversion shared by loose-file and archive loading.
+// The caller keeps ownership of the source and any archive buffer.
+static Bitmap16Bit* convertLoadedBitmap24(const char* name, Bitmap24Bit* source)
+{
+    adjustLoadedResourceSaturation(source);
+
+    Bitmap16Bit* result = new Bitmap16Bit(
+        name, source->getWidth(), source->getHeight());
+    source->draw(0, 0, source->getWidth(), source->getHeight(),
+                 result, 0, 0);
+    return result;
+}
+
 VA(0x0055ac40, 0x388)
 MAC_ADDRESS(0x152fc8, 0x1b4)
 Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 {
-    Bitmap16Bit* result = 0;
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
 
     if (file) {
@@ -787,34 +803,16 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 
         std::auto_ptr<Bitmap24Bit> source(
             new Bitmap24Bit(name, g_resourcePath.c_str()));
-        if (g_graphicsSaturated)
-            source->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
-
-        result = new Bitmap16Bit(
-            name, source->getWidth(), source->getHeight());
-        source->draw(0, 0, source->getWidth(), source->getHeight(),
-                     result, 0, 0);
-        return result;
+        return convertLoadedBitmap24(name, source.get());
     } else {
-        LODFile* lodFile = findBitmapResource(name);
-
-        if (!lodFile) {
-            reportMissingTypedResource(
-                DATA_COMPGEN(0x00683040, loadBitmap16ErrorContext,
-                             "GetBitmap16"),
-                RESOURCE_TYPE_BITMAP16, name);
-
-            DATA(0x006410a8) static const char fallbackName[] = "dfault24.pcx";
-            lodFile = findBitmapResource(fallbackName);
-
-            if (!lodFile) {
-                reportMissingTypedResource(
-                    DATA_COMPGEN(0x00683040, loadBitmap16ErrorContext,
-                                 "GetBitmap16"),
-                    RESOURCE_TYPE_BITMAP16, fallbackName);
-                return 0;
-            }
-        }
+        DATA(0x006410a8) static const char fallbackName[] = "dfault24.pcx";
+        LODFile* lodFile = findBitmapResourceOrDefault(
+            name, fallbackName,
+            DATA_COMPGEN(0x00683040, loadBitmap16ErrorContext,
+                         "GetBitmap16"),
+            RESOURCE_TYPE_BITMAP16);
+        if (!lodFile)
+            return 0;
 
         TBitmapResourceHeader header;
         lodFile->read(&header, sizeof(header));
@@ -824,14 +822,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 
         std::auto_ptr<Bitmap24Bit> source(new Bitmap24Bit(
             name, header.m_width, header.m_height, data.get(), header.m_dataSize));
-        if (g_graphicsSaturated)
-            source->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
-
-        result = new Bitmap16Bit(
-            name, source->getWidth(), source->getHeight());
-        source->draw(0, 0, source->getWidth(), source->getHeight(),
-                     result, 0, 0);
-        return result;
+        return convertLoadedBitmap24(name, source.get());
     }
 }
 
@@ -855,6 +846,15 @@ Bitmap16Bit* ResourceManager::getBitmap16(const char* name)
     return loaded;
 }
 
+// Project-inferred record read shared by the 16- and 24-bit palette loaders.
+// The callers retain their buffers and palette construction lifetimes.
+static void readPaletteRecord(TAbstractFile* stream, char (&header)[24],
+                              TRGBA (&data)[256])
+{
+    stream->read(header, sizeof(header));
+    stream->read(data, sizeof(data));
+}
+
 // Mac 0:0x153258 retains the reader immediately before loadPalette. It owns
 // the two stream reads, palette temporary, saturation and conversion; Complete
 // expands the same work in both its loose-file and archive paths. The helper
@@ -865,11 +865,9 @@ TPalette16* ResourceManager::loadPaletteData(const char* name,
 {
     char header[24];
     TRGBA paletteData[256];
-    stream->read(header, sizeof(header));
-    stream->read(paletteData, sizeof(paletteData));
+    readPaletteRecord(stream, header, paletteData);
     TPalette24 palette24(paletteData);
-    if (g_graphicsSaturated)
-        palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+    adjustLoadedResourceSaturation(&palette24);
     return new TPalette16(name, palette24,
         g_firstMaskBits, g_firstMaskShift,
         g_greenMaskBits, g_greenMaskShift,
@@ -897,25 +895,14 @@ TPalette16* ResourceManager::loadPalette(const char* name)
         }
     }
 
-    LODFile* lodFile = findBitmapResource(name);
-
-    if (!lodFile) {
-        reportMissingTypedResource(
-            DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
-                         "GetPalette"),
-            RESOURCE_TYPE_PALETTE, name);
-
-        DATA(0x006410b8) static const char fallbackName[] = "default.pal";
-        lodFile = findBitmapResource(fallbackName);
-
-        if (!lodFile) {
-            reportMissingTypedResource(
-                DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
-                             "GetPalette"),
-                RESOURCE_TYPE_PALETTE, fallbackName);
-            return 0;
-        }
-    }
+    DATA(0x006410b8) static const char fallbackName[] = "default.pal";
+    LODFile* lodFile = findBitmapResourceOrDefault(
+        name, fallbackName,
+        DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
+                     "GetPalette"),
+        RESOURCE_TYPE_PALETTE);
+    if (!lodFile)
+        return 0;
 
     t_lod_file_adapter stream(lodFile);
     TAbstractFile* streamInterface = &stream;
@@ -948,12 +935,10 @@ TPalette24* ResourceManager::loadPalette24Data(const char* name,
 {
     char header[24];
     TRGBA rgba[256];
-    stream->read(header, sizeof(header));
-    stream->read(rgba, sizeof(rgba));
+    readPaletteRecord(stream, header, rgba);
 
     TPalette24* result = new TPalette24(rgba);
-    if (g_graphicsSaturated)
-        result->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+    adjustLoadedResourceSaturation(result);
     return result;
 }
 
@@ -988,24 +973,14 @@ TPalette24* ResourceManager::getPalette24(const char* name)
         }
     }
 
-    LODFile* lodFile = findBitmapResource(name);
-
-    if (!lodFile) {
-        reportMissingTypedResource(
-            DATA_COMPGEN(0x0068304c, loadPaletteErrorContext, "GetPalette"),
-            RESOURCE_TYPE_PALETTE, name);
-
-        DATA(0x006410c4) static const char fallbackName[] = "default.pal";
-        lodFile = findBitmapResource(fallbackName);
-
-        if (!lodFile) {
-            reportMissingTypedResource(
-                DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
-                             "GetPalette"),
-                RESOURCE_TYPE_PALETTE, fallbackName);
-            return 0;
-        }
-    }
+    DATA(0x006410c4) static const char fallbackName[] = "default.pal";
+    LODFile* lodFile = findBitmapResourceOrDefault(
+        name, fallbackName,
+        DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
+                     "GetPalette"),
+        RESOURCE_TYPE_PALETTE);
+    if (!lodFile)
+        return 0;
 
     // Complete routes Dreamcast's two direct LODFile::read calls through the
     // exact t_lod_file_adapter::Read receiver. Retail proves the vtable owner
@@ -1053,14 +1028,25 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
     return result.release();
 }
 
+// Project-inferred shared loose-resource operation. Preserve the unchecked
+// seek/tell/rewind sequence and the loaders' signed int size conversion.
+static int getResourceFileSize(FILE* file)
+{
+    fseek(file, 0, SEEK_END);
+    int size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    return size;
+}
+
 // Mac 0:0x1538a8..0x153944 is this named loader's archive-only port: the
 // font getter calls it at 0x15396c, and it calls findBitmapResource for
 // name/default.fnt before getItemIndex(name) and Mac loadFontData at 0x153560.
 // The latter reads through the same 8-byte LOD stream adapter and performs
 // endian conversion of the font records. Complete also opens loose FILE
 // resources and uses its separate Windows loadFontData body at 0x55b750. Two
-// ordinary source calls to findBitmapResource auto-inline in VC6 and close
-// this 0x229-byte Windows body exactly, preserving all 18 ordered calls.
+// ordinary source calls to findBitmapResource auto-inlined in the prior exact
+// reconstruction of this 0x229-byte body with 18 ordered calls. The shared
+// fallback and file-size operations have not been compiled or measured.
 VA(0x0055b8d0, 0x229)
 MAC_ADDRESS(0x1538a8, 0x9c)
 font* ResourceManager::loadFont(const char* name)
@@ -1069,9 +1055,7 @@ font* ResourceManager::loadFont(const char* name)
 
     if (file) {
         try {
-            fseek(file, 0, SEEK_END);
-            int fileSize = ftell(file);
-            fseek(file, 0, SEEK_SET);
+            int fileSize = getResourceFileSize(file);
 
             t_stdio_file_adapter stream(file);
             TAbstractFile* streamInterface = &stream;
@@ -1086,23 +1070,14 @@ font* ResourceManager::loadFont(const char* name)
         }
     }
 
-    LODFile* lodFile = findBitmapResource(name);
-
-    if (!lodFile) {
-        reportMissingTypedResource(
-            DATA_COMPGEN(0x00683058, loadFontErrorContext, "GetFont"),
-            RESOURCE_TYPE_FONT, name);
-
-        DATA(0x006410d0) static const char fallbackName[] = "default.fnt";
-        lodFile = findBitmapResource(fallbackName);
-
-        if (!lodFile) {
-            reportMissingTypedResource(
-                DATA_COMPGEN(0x00683058, loadFontErrorContext, "GetFont"),
-                RESOURCE_TYPE_FONT, fallbackName);
-            return 0;
-        }
-    }
+    DATA(0x006410d0) static const char fallbackName[] = "default.fnt";
+    LODFile* lodFile = findBitmapResourceOrDefault(
+        name, fallbackName,
+        DATA_COMPGEN(0x00683058, loadFontErrorContext,
+                     "GetFont"),
+        RESOURCE_TYPE_FONT);
+    if (!lodFile)
+        return 0;
 
     int fileSize = lodFile->getItemIndex(name)->m_size;
     t_lod_file_adapter stream(lodFile);
@@ -1148,9 +1123,7 @@ TTextResource* ResourceManager::loadText(const char* name)
 
     if (file) {
         try {
-            fseek(file, 0, SEEK_END);
-            int fileSize = ftell(file);
-            fseek(file, 0, SEEK_SET);
+            int fileSize = getResourceFileSize(file);
 
             TTextResource* result;
             {
@@ -1217,9 +1190,7 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
 
     if (file) {
         try {
-            fseek(file, 0, SEEK_END);
-            int fileSize = ftell(file);
-            fseek(file, 0, SEEK_SET);
+            int fileSize = getResourceFileSize(file);
 
             TSpreadsheetResource* result;
             {
@@ -1401,9 +1372,7 @@ sample* ResourceManager::loadSample(const char* name)
         sample* result;
         try {
             {
-                fseek(file, 0, SEEK_END);
-                int size = ftell(file);
-                fseek(file, 0, SEEK_SET);
+                int size = getResourceFileSize(file);
                 std::auto_ptr<char> data(new char[size]);
                 fread(data.get(), size, 1, file);
                 result = new sample(name, data.get(), size, 0, 127, 1);
@@ -1647,8 +1616,7 @@ CSprite* ResourceManager::getSprite(const char* name)
     delete[] sequences;
 
     TPalette24 palette24(sdef.m_palette);
-    if (g_graphicsSaturated)
-        palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+    adjustLoadedResourceSaturation(&palette24);
 
     TPalette16 palette16(
         palette24,

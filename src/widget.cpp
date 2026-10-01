@@ -10,6 +10,31 @@
 #include "window.h"
 #include "winmgr.h"
 
+// Project-inferred widget protocol operation. Keep the caller's existing
+// modifiers, mouse coordinates, payload and window, including borrowed text.
+void message::setWidgetCommand(int command, int widgetId)
+{
+    m_id = MESSAGE_WIDGET;
+    m_codeX = command;
+    m_codeY = widgetId;
+}
+
+// Project-inferred initialization operations. Neither releases owned text nor
+// removes a live widget from its window; they only initialize these fields.
+void widget::initializeLinks()
+{
+    m_parentWindow = 0;
+    m_prevWidget = 0;
+    m_nextWidget = 0;
+}
+
+void widget::initializeHelpText()
+{
+    m_rollOver = 0;
+    m_rightClick = 0;
+    m_freeText = 0;
+}
+
 VA(0x005fe340, 0x62)
 DC_ADDRESS(0x196b4c, 0x88)
 MAC_ADDRESS(0x20a504, 0x54)
@@ -21,15 +46,11 @@ widget::widget(short widgetX, short widgetY, short widgetWidth, short widgetHeig
     m_width = widgetWidth;
     m_height = widgetHeight;
     m_id = widgetId;
-    m_parentWindow = 0;
-    m_prevWidget = 0;
-    m_nextWidget = 0;
+    initializeLinks();
     m_status = WIDGET_ACTIVE | WIDGET_DRAWN;
     m_priority = -1;
     m_style = widgetStyle;
-    m_rollOver = 0;
-    m_rightClick = 0;
-    m_freeText = 0;
+    initializeHelpText();
 }
 
 VA_COMPGEN(0x005fe3b0, 0x5C, SCALAR_DELETING_DTOR, widget)
@@ -40,9 +61,7 @@ MAC_ADDRESS(0x20a558, 0x28)
 widget::widget()
     : m_sleepCount(0)
 {
-    m_rollOver = 0;
-    m_rightClick = 0;
-    m_freeText = 0;
+    initializeHelpText();
     m_status = WIDGET_ACTIVE | WIDGET_DRAWN;
 }
 
@@ -52,7 +71,7 @@ MAC_ADDRESS(0x20a580, 0x98)
 widget::~widget()
 {
     if (s_lastHoverWidget == this)
-        s_lastHoverWidget = 0;
+        clearHoverWidget();
     if (m_freeText) {
         if (m_rightClick)
             delete[] m_rightClick;
@@ -66,9 +85,7 @@ DC_ADDRESS(0x196c6c, 0x50)
 MAC_ADDRESS(0x20a618, 0x54)
 void widget::initialize(int x, int y, int w, int h, int id, int style)
 {
-    m_parentWindow = 0;
-    m_prevWidget = 0;
-    m_nextWidget = 0;
+    initializeLinks();
     m_x = x;
     m_y = y;
     m_width = w;
@@ -98,6 +115,40 @@ void widget::close()
 {
 }
 
+// Project-inferred presentation helpers. Drawing may change the widget or its
+// parent; compute the update rectangle from the current fields afterward.
+void widget::updateScreenRegion() const
+{
+    g_windowManager->updateScreen(
+        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+}
+
+void widget::drawAndUpdate() const
+{
+    draw();
+    updateScreenRegion();
+}
+
+// Project-inferred common hit box. Callers retain coordinate narrowing and
+// their independent active/drawn/disabled policies.
+bool widget::containsPoint(int x, int y) const
+{
+    return x >= m_x && y >= m_y && x < m_x + m_width && y < m_y + m_height;
+}
+
+// Project-inferred mouse-down preparation. Callers retain their hook order
+// and only convert the message id after any hook has accepted the click.
+void widget::prepareMouseSelection(message& msg)
+{
+    if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
+        msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
+        msg.m_codeX = WIDGET_RIGHT_SELECT;
+    } else {
+        m_status |= WIDGET_SELECTED;
+        msg.m_codeX = WIDGET_SELECT;
+    }
+}
+
 VA(0x005fe4f0, 0x2C8)
 DC_ADDRESS(0x196cd0, 0x2b8)
 MAC_ADDRESS(0x20a684, 0x388)
@@ -111,8 +162,7 @@ int widget::main(message& msg)
             break;
         short mouseX = msg.m_codeX - m_parentWindow->m_x;
         short mouseY = msg.m_codeY - m_parentWindow->m_y;
-        if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
-            || mouseY >= m_y + m_height)
+        if (!containsPoint(mouseX, mouseY))
             break;
         msg.m_codeY = m_id;
         if (s_lastHoverWidget != this) {
@@ -145,8 +195,7 @@ int widget::main(message& msg)
                 dim();
             }
             if (m_status & WIDGET_UPDATE) {
-                g_windowManager->updateScreen(
-                    m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+                updateScreenRegion();
                 m_status &= ~WIDGET_UPDATE;
             }
             return 1;
@@ -162,8 +211,7 @@ int widget::main(message& msg)
             if (flags & WIDGET_DIMMED)
                 draw();
             if (flags & WIDGET_UPDATE)
-                g_windowManager->updateScreen(
-                    m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+                updateScreenRegion();
             return 1;
         }
         case WIDGET_SET_X:
@@ -187,18 +235,23 @@ int widget::main(message& msg)
     return 0;
 }
 
+// Project-inferred paired flag change. Preserve all other status bits and
+// short storage; callers own any later draw and screen update.
+void widget::setActiveAndDrawn(bool on)
+{
+    if (on)
+        m_status |= WIDGET_ACTIVE | WIDGET_DRAWN;
+    else
+        m_status &= ~(WIDGET_ACTIVE | WIDGET_DRAWN);
+}
+
 VA(0x005fe7c0, 0x40)
 DC_ADDRESS(0x196f88, 0x40)
 MAC_ADDRESS(0x20aa0c, 0x74)
 int widget::sendMessage(widget::ECommands command, int extra)
 {
     message msg;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = command;
-    msg.m_codeY = m_id;
+    msg.setWidgetCommand(command, m_id);
     msg.m_extra = extra;
     msg.m_window = m_parentWindow;
     return main(msg);
@@ -213,31 +266,36 @@ void widget::dim() const
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
 }
 
+// Project-inferred per-string replacement steps. Borrowed text is detached
+// without deletion; callers change the ownership flag only after both releases.
+void widget::releaseHelpText(char*& text)
+{
+    if (text) {
+        if (m_freeText)
+            delete[] text;
+        text = 0;
+    }
+}
+
+void widget::copyHelpText(char*& destination, const char* source)
+{
+    if (source) {
+        destination = new char[strlen(source) + 1];
+        strcpy(destination, source);
+    }
+}
+
 VA(0x005fe840, 0xE9)
 DC_ADDRESS(0x196ffc, 0xaa)
 MAC_ADDRESS(0x20aad4, 0x110)
 void widget::setHelpText(const char* text, const char* rclick, unsigned char copyText)
 {
-    if (m_rollOver) {
-        if (m_freeText)
-            delete[] m_rollOver;
-        m_rollOver = 0;
-    }
-    if (m_rightClick) {
-        if (m_freeText)
-            delete[] m_rightClick;
-        m_rightClick = 0;
-    }
+    releaseHelpText(m_rollOver);
+    releaseHelpText(m_rightClick);
     if (copyText) {
         m_freeText = 1;
-        if (text) {
-            m_rollOver = new char[strlen(text) + 1];
-            strcpy(m_rollOver, text);
-        }
-        if (rclick) {
-            m_rightClick = new char[strlen(rclick) + 1];
-            strcpy(m_rightClick, rclick);
-        }
+        copyHelpText(m_rollOver, text);
+        copyHelpText(m_rightClick, rclick);
     } else {
         m_freeText = 0;
         m_rollOver = const_cast<char*>(text);

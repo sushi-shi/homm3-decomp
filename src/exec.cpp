@@ -13,6 +13,22 @@
 #include "window.h"
 #include "winmgr.h"
 
+// Project-inferred shared operation. Keep the text lookup after a failed add;
+// shutDown may return when shutdown is already in progress.
+void executive::addManagerOrShutDown(baseManager* newManager)
+{
+    if (addManager(newManager, -1))
+        shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
+}
+
+// Project-inferred resume shared by normal return and exception unwinding.
+// Redraw/menu restoration belongs only to the successful caller path.
+static void resumeAdventureManager()
+{
+    g_advManager->setStatus(baseManager::STATUS_ACTIVE);
+    g_advManager->m_advWindow->sleepAllWidgets(0);
+}
+
 VA(0x004b0900, 0x10)
 DC_ADDRESS(0x09e510, 0xe)
 MAC_ADDRESS(0x0c3910, 0x18)
@@ -81,14 +97,10 @@ int executive::doDialog(baseManager* newDialog)
         savedNext[count] = m->m_nextManager;
         m = m->m_nextManager;
     }
-    if (addManager(newDialog, -1))
-        shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
-    if (dialogExec.addManager(g_mouseManager, -1))
-        shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
-    if (dialogExec.addManager(g_windowManager, -1))
-        shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
-    if (dialogExec.addManager(newDialog, -1))
-        shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
+    addManagerOrShutDown(newDialog);
+    dialogExec.addManagerOrShutDown(g_mouseManager);
+    dialogExec.addManagerOrShutDown(g_windowManager);
+    dialogExec.addManagerOrShutDown(newDialog);
     dialogExec.mainLoop();
     removeManager(newDialog);
     for (i = 0; i < count; i++) {
@@ -155,8 +167,7 @@ void executive::removeManager(baseManager* killManager)
             m_headManager = killManager->m_nextManager;
             m_headManager->m_prevManager = 0;
         }
-        killManager->m_prevManager = 0;
-        killManager->m_nextManager = 0;
+        killManager->clearLinks();
         return;
     }
     prev->m_nextManager = killManager->m_nextManager;
@@ -164,8 +175,7 @@ void executive::removeManager(baseManager* killManager)
         m_tailManager = prev;
     else
         prev->m_nextManager->m_prevManager = prev;
-    killManager->m_prevManager = 0;
-    killManager->m_nextManager = 0;
+    killManager->clearLinks();
 }
 
 VA(0x004b0c70, 0x1D0)
@@ -184,8 +194,7 @@ void executive::callManager(baseManager* newManager)
             removeManager(m_currentManager);
         }
         try {
-            if (addManager(newManager, -1))
-                shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
+            addManagerOrShutDown(newManager);
             try {
                 mainLoop();
             } catch (...) {
@@ -195,17 +204,14 @@ void executive::callManager(baseManager* newManager)
             removeManager(newManager);
         } catch (...) {
             if (saved == g_advManager) {
-                g_advManager->setStatus(1);
-                g_advManager->m_advWindow->sleepAllWidgets(0);
+                resumeAdventureManager();
             } else {
-                if (addManager(saved, -1))
-                    shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
+                addManagerOrShutDown(saved);
             }
             throw;
         }
         if (saved == g_advManager) {
-            g_advManager->setStatus(1);
-            g_advManager->m_advWindow->sleepAllWidgets(0);
+            resumeAdventureManager();
             g_advManager->redrawAdvScreen(1, 0);
             kbChangeMenu(g_dfltMenu);
             g_advManager->forceNewHover();
@@ -214,8 +220,7 @@ void executive::callManager(baseManager* newManager)
             if (g_windowManager->m_isWaitingForFadeIn)
                 g_windowManager->fadeScreen(0, 4, 0);
         } else {
-            if (addManager(saved, -1))
-                shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
+            addManagerOrShutDown(saved);
         }
     } catch (...) {
         m_currentManager = saved;

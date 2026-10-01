@@ -389,12 +389,10 @@ void videoPause()
     if (SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2)
         SmackManager::g_playingSmack.m_paused = 1;
     if (BinkManager::g_playingBink.m_bink) {
-        BinkManager::g_playingBink.m_paused = 1;
-        BinkPause(BinkManager::g_playingBink.m_bink, 1);
+        BinkManager::setTrackPaused(BinkManager::g_playingBink.m_bink, 1);
     }
     if (BinkManager::g_playingBink.m_bink2) {
-        BinkManager::g_playingBink.m_paused = 1;
-        BinkPause(BinkManager::g_playingBink.m_bink2, 1);
+        BinkManager::setTrackPaused(BinkManager::g_playingBink.m_bink2, 1);
     }
     videoSoundOnOff(0);
 }
@@ -412,12 +410,10 @@ void videoResume()
     if (SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2)
         SmackManager::g_playingSmack.m_paused = 0;
     if (BinkManager::g_playingBink.m_bink) {
-        BinkManager::g_playingBink.m_paused = 0;
-        BinkPause(BinkManager::g_playingBink.m_bink, 0);
+        BinkManager::setTrackPaused(BinkManager::g_playingBink.m_bink, 0);
     }
     if (BinkManager::g_playingBink.m_bink2) {
-        BinkManager::g_playingBink.m_paused = 0;
-        BinkPause(BinkManager::g_playingBink.m_bink2, 0);
+        BinkManager::setTrackPaused(BinkManager::g_playingBink.m_bink2, 0);
     }
     videoSoundOnOff(1);
 }
@@ -665,6 +661,36 @@ std::string getDriveArchivePath()
     return path;
 }
 
+// Project-inferred archive directory operations. Keep references to the
+// published handle/count/pointer cells and the caller's read-count storage.
+template <class Header>
+static void readArchiveHeaders(HANDLE& file, int& count, Header*& headers,
+                               DWORD& bytesRead)
+{
+    ReadFile(file, &count, 4, &bytesRead, 0);
+    headers = new Header[count + 2];
+    ReadFile(file, headers, static_cast<int>(sizeof(Header)) * count,
+             &bytesRead, 0);
+}
+
+template <class Header>
+static void clearArchiveHeaders(Header*& headers)
+{
+    if (headers) {
+        delete[] headers;
+        headers = 0;
+    }
+}
+
+static void closeSoundArchive(HANDLE& file, SoundHeaderStruct*& headers)
+{
+    if (file != INVALID_HANDLE_VALUE) {
+        CloseHandle(file);
+        file = INVALID_HANDLE_VALUE;
+    }
+    clearArchiveHeaders(headers);
+}
+
 VA(0x00598210, 0x223)
 DC_ADDRESS(0x14ac68, 0x4)
 MAC_ADDRESS(0x25ed6c, 0x2c4)
@@ -676,9 +702,7 @@ unsigned char loadAnimHeaders()
         FILE_SHARE_READ, 0, OPEN_EXISTING,
         FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
     if (g_videoFile3 != INVALID_HANDLE_VALUE) {
-        ReadFile(g_videoFile3, &g_videoCount3, 4, &nread, 0);
-        g_videoHeader3 = new VideoHeaderStruct[g_videoCount3 + 2];
-        ReadFile(g_videoFile3, g_videoHeader3, 44 * g_videoCount3, &nread, 0);
+        readArchiveHeaders(g_videoFile3, g_videoCount3, g_videoHeader3, nread);
     } else {
         g_videoFile3 = 0;
     }
@@ -693,9 +717,7 @@ unsigned char loadAnimHeaders()
                 g_generalText->getText(GENERAL_TEXT_VIDEO_FILE_ERROR), 0);
             return 0;
         }
-        ReadFile(g_videoFile1, &g_videoCount1, 4, &nread, 0);
-        g_videoHeader1 = new VideoHeaderStruct[g_videoCount1 + 2];
-        ReadFile(g_videoFile1, g_videoHeader1, 44 * g_videoCount1, &nread, 0);
+        readArchiveHeaders(g_videoFile1, g_videoCount1, g_videoHeader1, nread);
     }
 
     g_videoFile2 = CreateFileA("data\\Video.vid", GENERIC_READ, FILE_SHARE_READ,
@@ -705,9 +727,7 @@ unsigned char loadAnimHeaders()
             g_generalText->getText(GENERAL_TEXT_VIDEO_FILE_ERROR), 0);
         return 0;
     }
-    ReadFile(g_videoFile2, &g_videoCount2, 4, &nread, 0);
-    g_videoHeader2 = new VideoHeaderStruct[g_videoCount2 + 2];
-    ReadFile(g_videoFile2, g_videoHeader2, 44 * g_videoCount2, &nread, 0);
+    readArchiveHeaders(g_videoFile2, g_videoCount2, g_videoHeader2, nread);
     return 1;
 }
 
@@ -716,18 +736,9 @@ DC_ADDRESS(0x14ac6c, 0x32)
 MAC_ADDRESS(0x25f030, 0x88)
 void deleteAnimHeaders()
 {
-    if (g_videoHeader3) {
-        delete[] g_videoHeader3;
-        g_videoHeader3 = 0;
-    }
-    if (g_videoHeader2) {
-        delete[] g_videoHeader2;
-        g_videoHeader2 = 0;
-    }
-    if (g_videoHeader1) {
-        delete[] g_videoHeader1;
-        g_videoHeader1 = 0;
-    }
+    clearArchiveHeaders(g_videoHeader3);
+    clearArchiveHeaders(g_videoHeader2);
+    clearArchiveHeaders(g_videoHeader1);
 }
 
 VA(0x005984a0, 0x240)
@@ -745,9 +756,8 @@ unsigned char loadSoundHeaders()
             g_generalText->getText(GENERAL_TEXT_SOUND_FILE_ERROR), 0);
         return 0;
     }
-    ReadFile(g_soundFile, &g_soundCount, 4, &nread, 0);
-    g_soundHeader = new SoundHeaderStruct[g_soundCount + 2];
-    ReadFile(g_soundFile, g_soundHeader, 48 * g_soundCount, &nread, 0);
+    readArchiveHeaders(g_soundFile, g_soundCount,
+                       g_soundHeader, nread);
 
     if (g_videoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
         || g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
@@ -759,9 +769,8 @@ unsigned char loadSoundHeaders()
                 g_generalText->getText(GENERAL_TEXT_SOUND_FILE_ERROR), 0);
             return 0;
         }
-        ReadFile(g_soundFileCd, &g_soundCountCd, 4, &nread, 0);
-        g_soundHeaderCd = new SoundHeaderStruct[g_soundCountCd + 2];
-        ReadFile(g_soundFileCd, g_soundHeaderCd, 48 * g_soundCountCd, &nread, 0);
+        readArchiveHeaders(g_soundFileCd, g_soundCountCd,
+                           g_soundHeaderCd, nread);
     }
 
     strcpy(path, getDriveArchivePath().c_str());
@@ -770,10 +779,8 @@ unsigned char loadSoundHeaders()
     g_soundFileCampaign = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0,
         OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
     if (g_soundFileCampaign != INVALID_HANDLE_VALUE) {
-        ReadFile(g_soundFileCampaign, &g_soundCountCampaign, 4, &nread, 0);
-        g_soundHeaderCampaign = new SoundHeaderStruct[g_soundCountCampaign + 2];
-        ReadFile(g_soundFileCampaign, g_soundHeaderCampaign,
-            48 * g_soundCountCampaign, &nread, 0);
+        readArchiveHeaders(g_soundFileCampaign, g_soundCountCampaign,
+                           g_soundHeaderCampaign, nread);
     }
     return 1;
 }
@@ -783,30 +790,9 @@ DC_ADDRESS(0x14acc8, 0x5a)
 MAC_ADDRESS(0x25f3d4, 0xa0)
 void deleteSoundHeaders()
 {
-    if (g_soundFile != INVALID_HANDLE_VALUE) {
-        CloseHandle(g_soundFile);
-        g_soundFile = INVALID_HANDLE_VALUE;
-    }
-    if (g_soundHeader) {
-        delete[] g_soundHeader;
-        g_soundHeader = 0;
-    }
-    if (g_soundFileCd != INVALID_HANDLE_VALUE) {
-        CloseHandle(g_soundFileCd);
-        g_soundFileCd = INVALID_HANDLE_VALUE;
-    }
-    if (g_soundHeaderCd) {
-        delete[] g_soundHeaderCd;
-        g_soundHeaderCd = 0;
-    }
-    if (g_soundFileCampaign != INVALID_HANDLE_VALUE) {
-        CloseHandle(g_soundFileCampaign);
-        g_soundFileCampaign = INVALID_HANDLE_VALUE;
-    }
-    if (g_soundHeaderCampaign) {
-        delete[] g_soundHeaderCampaign;
-        g_soundHeaderCampaign = 0;
-    }
+    closeSoundArchive(g_soundFile, g_soundHeader);
+    closeSoundArchive(g_soundFileCd, g_soundHeaderCd);
+    closeSoundArchive(g_soundFileCampaign, g_soundHeaderCampaign);
 }
 
 VA(0x00598790, 0x2AB)
@@ -1073,7 +1059,7 @@ static unsigned char playSmackerCore(int id, int x, int y, int w, int h);
 MAC_ADDRESS(0x25fcec, 0x54)
 int playSmacker(int id, int x, int y, int w, int h)
 {
-    g_soundManager->m_playSounds = 1;
+    g_soundManager->setPlaybackState(1);
     unsigned char result = playSmackerCore(id, x, y, w, h);
     SmackManager::g_playingSmack.m_paused = 0;
     g_playingSmacker = 0;

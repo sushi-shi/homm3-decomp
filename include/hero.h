@@ -11,6 +11,7 @@
 #include "artifact.h"
 #include "herospec.h"
 #include "mapcell.h"
+#include "primaryskill.h"
 #include "spellschool.h"
 
 // hero.obj's four primary-stat descriptions.  Dreamcast supplies the name
@@ -171,6 +172,9 @@ public:
     {
         return type_point(m_x, m_y, m_z);
     }
+    // Project-inferred coordinate update only; callers own cell restoration.
+    // Native mapX/mapY/mapZ are public short members in Dreamcast CodeView.
+    void setLocation(const type_point& point);
     bool load(void* infile);
 
     // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
@@ -584,9 +588,8 @@ public:
     // +0x105, the hero's flag word. Read as a full DWORD and tested
     // bitwise: hero::GetMobility() (0x4e4d90) hands bit 18 (0x40000)
     // to the sea-movement overload, and hero::can_land (0x4e5ce0)
-    // tests the same 0x40000 for "aboard a boat". Name provisional -
-    // no DC symbol covers the word; the extent and the read are
-    // byte-proven.
+    // tests the same 0x40000 for "aboard a boat". Before normalization
+    // (Dreamcast): flags, explicitly public in the native type record.
     unsigned int m_flags;  // +0x105
     float m_turnExperienceToRvRatio;  // +0x109 (DC name)
     signed char m_dWalkSpellsCast;  // +0x10d (DC name)
@@ -646,13 +649,12 @@ public:
 private:
     type_artifact m_equipped[19];
 
-public:
     // One byte per artifact slot class. remove_artifact decrements the
     // component's class after dismantling a combination artifact, except
     // for the first component occupying the assembled artifact's class.
+    // Project-inferred private boundary: UI asks whether a slot is reserved.
     unsigned char m_artifactSlotCounts[15];  // +0x1c5
 
-private:
     type_artifact m_backpack[64];
     // +0x3d4, a cached backpack count. hero::get_number_in_backpack
     // (0x4d90c0) returns it with `movsx eax, byte [ecx+0x3d4]` on its
@@ -745,6 +747,11 @@ public:
     void copyPrimarySkills(signed char* stats) const;
     void setPrimarySkills(const signed char* stats);
     unsigned char hasArtifact(int whichArtifact) const;
+    // Project-inferred possession query for a nonempty combination mask.
+    // Includes backpack contents; assembly's equipped-only predicate differs.
+    bool hasCombinationComponents(const std::bitset<144>& components) const;
+    // Project-inferred reservation rule shared by hero and swap displays.
+    bool isArtifactSlotReserved(TArtifactSlot slot) const;
     unsigned char hasSecondarySkill(int whichSkill);
     // 0x4d9330 - sets both per-spell byte tables for one spell.
     // Native hero initialization and campaign carry-over both expand these
@@ -763,6 +770,9 @@ public:
     void addSpell(int whichSpell);
 
 private:
+    // Project-inferred equip/remove operations; direction is +1 or -1.
+    void adjustArtifactPrimarySkills(int artifact, int direction);
+    bool adjustCombinationBonuses(int artifact, int direction);
     // 0x4d95d0 - rebuilds available_spells after artifact changes.
     void updateSpellList();
 
@@ -835,6 +845,20 @@ public:
     long getNavigationFactor() const;
     int getMobility(unsigned char seaMovement) const;
     int getMobility() const;
+    // Project-inferred complete refresh and paired reward operations.
+    // Native maxMobility/currMobility remain public.
+    void refreshMovement();
+    void addMovementBonus(int bonus);
+    bool grantStablesMovement();
+    // Project-inferred boat-state interface; the native flag word is public.
+    bool isOnBoat() const;
+    void setOnBoat(bool onBoat);
+    // Charge boarding/landing movement. False means unlimited movement
+    // bypassed the charge; callers refresh the locator only for true.
+    bool applyBoatMovementCost(unsigned char seaMovement);
+    // Project-inferred shared Town Portal movement charge (not mana).
+    int getTownPortalMovementCost() const;
+    int getMinimumTerrainCost(const NewmapCell* cell, int pointsLeft) const;
     // 0x4e5960 - the four primary skills, each clamped to 0..99, with
     // slots 2 and 3 floored at 1.
     short getPrimarySkillTotal() const;
@@ -843,6 +867,10 @@ public:
     void fly(int level);
     // 0x4e5dd0 - one-argument setter for waterWalkLevel.
     void walkOnWater(int level);
+    // Project-inferred resets. Boarding retains non-movement spells and the
+    // Dimension Door count; day rollover/initialization reset all five lanes.
+    void clearMovementSpells();
+    void resetAdventureSpells();
     // 0x4e5e10 - tests whether a packed map point is inside Visions range.
     unsigned char isInIdentifyRange(const type_point* location) const;
 
@@ -904,6 +932,11 @@ public:
     // 0x004d92d0 - spends mana and refreshes the local adventure hero
     // locators while that manager is active.
     void useSpell(int cost);
+    // Project-inferred cost lookup followed by the native charge operation.
+    void spendSpellMana(SpellID whichSpell);
+    // Project-inferred resource operations; native mana remains public.
+    void resetManaToMaximum();
+    void raiseManaTo(int minimum);
     // 0x004d7890 - consumes this hero from one player's tavern offers,
     // charges the standard gold cost and places the hero on the map.
     void hire(int playerId, type_point point);
@@ -930,6 +963,35 @@ public:
     // (?VisitedArena@hero@@QBA_NPBVNewmapCell@@@Z) gives the const and
     bool visitedArena(const NewmapCell* cell) const;
     void setVisitedArena(const NewmapCell* cell);
+    // Project-inferred interface for the four permanent +1 skill sites.
+    // Their native visit masks remain public; site IDs belong to each mask.
+    bool visitedPrimarySkillSite(TPrimarySkill skill, int siteId) const;
+    void markPrimarySkillSiteVisited(TPrimarySkill skill, int siteId);
+    // Project-inferred mask-taking interfaces. Callers own site-ID decoding
+    // and whether a mask is cached across dialogs or recomputed afterward.
+    // Native public storage retains its original layout and serialization.
+    bool hasTrainingGroundVisit(unsigned long visitMask) const;
+    void markTrainingGroundVisited(unsigned long visitMask);
+    bool hasLibraryVisit(unsigned long visitMask) const;
+    void markLibraryVisited(unsigned long visitMask);
+    bool hasTreeOfKnowledgeVisit(unsigned long visitMask) const;
+    void markTreeOfKnowledgeVisited(unsigned long visitMask);
+    bool hasMagicSchoolVisit(unsigned long visitMask) const;
+    void markMagicSchoolVisited(unsigned long visitMask);
+    bool hasWarSchoolVisit(unsigned long visitMask) const;
+    void markWarSchoolVisited(unsigned long visitMask);
+    bool hasArenaVisit(unsigned long visitMask) const;
+    // Project-inferred event/AI predicates for effects cleared after battle.
+    // These do not query permanent site visits or movement affordability.
+    bool hasFountainEffect() const;
+    bool hasIdolEffect() const;
+    bool hasTempleEffect() const;
+    // Project-inferred sums used by map help and the Boolean predicates.
+    unsigned int getFountainEffectFlags() const;
+    unsigned int getIdolEffectFlags() const;
+    unsigned int getTempleEffectFlags() const;
+    // Library admission counts two effective levels per Diplomacy rank.
+    bool meetsLibraryLevelRequirement() const;
     unsigned char isWieldingArtifact(int whichArtifact) const;
     // 0x004e2dd0 - the by-id overload: finds the artifact in the
     // backpack first, then in the equipped slots, and unequips it.
@@ -997,7 +1059,7 @@ public:
     DC_ADDRESS(0x01fbdc, 0x98)
     unsigned char isFlying(unsigned char checkTerrain) const
     {
-        return !(m_flags & 0x40000)
+        return !isOnBoat()
             && (m_flightLevel != -1 || isWieldingArtifact(0x48))
             && (!checkTerrain || !canLand());
     }
@@ -1005,7 +1067,7 @@ public:
     DC_ADDRESS(0x01fc74, 0x98)
     unsigned char canWalkOnWater(unsigned char checkTerrain) const
     {
-        return !(m_flags & 0x40000)
+        return !isOnBoat()
             && (m_waterWalkLevel != -1 || isWieldingArtifact(0x5a))
             && (!checkTerrain || !canLand());
     }
@@ -1175,8 +1237,9 @@ public:
         return TSkillMastery(m_skillLevel[skill]);
     }
 
-    // Project operation for temporary mastery evaluation and replacement of
-    // an already-known skill. Unlike setSS/giveSS, it leaves slot order alone.
+    // Project operation for temporary AI evaluation and campaign replacement
+    // of a known skill. Unlike setSS/giveSS, it never acquires/removes a slot
+    // or changes the acquired-skill count, including when the byte is zero.
     void setSecondarySkillLevel(TSecondarySkill skill, TSkillMastery level)
     {
         m_skillLevel[skill] = level;

@@ -210,6 +210,15 @@ int mouseManager::main(message& msg)
     return 0;
 }
 
+// Project-inferred cleanup shared by the negative/unchanged-frame exits.
+// The caller still owns its lock; successful updates enable before drawing.
+void mouseManager::finishPointerWithoutRedraw()
+{
+    m_busy--;
+    enable();
+    g_mouseSetPointerBusy = 0;
+}
+
 VA(0x0050cca0, 0xE0)
 DC_ADDRESS(0x0feb1c, 0x136)
 MAC_ADDRESS(0x216fc0, 0x160)
@@ -233,15 +242,11 @@ void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
         m_frame = -1;
     }
     if (newFrame < 0) {
-        m_busy--;
-        enable();
-        g_mouseSetPointerBusy = 0;
+        finishPointerWithoutRedraw();
         return;
     }
     if (newFrame == m_frame) {
-        m_busy--;
-        enable();
-        g_mouseSetPointerBusy = 0;
+        finishPointerWithoutRedraw();
         return;
     }
     loadFrame(m_set == SPELL_SET ? 0 : newFrame);
@@ -249,6 +254,41 @@ void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
     update(1);
     m_busy--;
     g_mouseSetPointerBusy = 0;
+}
+
+// Project-inferred drawing operations. Descriptors and rectangles stay in
+// their caller's native scope; none of these helpers changes surface ownership.
+static void getPrimarySurfaceDescription(DDSURFACEDESC& description)
+{
+    memset(&description, 0, sizeof(description));
+    description.dwSize = sizeof(description);
+    g_ddsPrimary->GetSurfaceDesc(&description);
+}
+
+static void clipMouseRectToSurface(RECT& rect, const DDSURFACEDESC& surface)
+{
+    if (rect.left < 0)
+        rect.left = 0;
+    if (rect.right > static_cast<long>(surface.dwWidth))
+        rect.right = surface.dwWidth;
+    if (rect.top < 0)
+        rect.top = 0;
+    if (rect.bottom > static_cast<long>(surface.dwHeight))
+        rect.bottom = surface.dwHeight;
+}
+
+static void setLocalMouseRect(RECT& local, const RECT& bounds)
+{
+    local.left = 0;
+    local.top = 0;
+    local.right = bounds.right - bounds.left;
+    local.bottom = bounds.bottom - bounds.top;
+}
+
+void mouseManager::finishUpdate()
+{
+    g_mouseInUpdate = 0;
+    m_busy--;
 }
 
 // E:\gamedcs\mousemgr.cpp:526
@@ -296,8 +336,7 @@ void mouseManager::update(bool forceIt)
                 == m_currentX - g_mouseHotSpots[m_set][m_frame].x
             && m_imageY
                 == m_currentY - g_mouseHotSpots[m_set][m_frame].y) {
-        g_mouseInUpdate = 0;
-        m_busy--;
+        finishUpdate();
         return;
     }
 
@@ -332,17 +371,8 @@ void mouseManager::update(bool forceIt)
 
         // Complete uses the v1 descriptor.
         DDSURFACEDESC surfaceDesc;
-        memset(&surfaceDesc, 0, sizeof(surfaceDesc));
-        surfaceDesc.dwSize = sizeof(surfaceDesc);
-        g_ddsPrimary->GetSurfaceDesc(&surfaceDesc);
-        if (frontRect.left < 0)
-            frontRect.left = 0;
-        if (frontRect.right > static_cast<long>(surfaceDesc.dwWidth))
-            frontRect.right = surfaceDesc.dwWidth;
-        if (frontRect.top < 0)
-            frontRect.top = 0;
-        if (frontRect.bottom > static_cast<long>(surfaceDesc.dwHeight))
-            frontRect.bottom = surfaceDesc.dwHeight;
+        getPrimarySurfaceDescription(surfaceDesc);
+        clipMouseRectToSurface(frontRect, surfaceDesc);
 
         newRect = frontRect;
         OffsetRect(&newRect, -windowOrigin.x, -windowOrigin.y);
@@ -351,22 +381,12 @@ void mouseManager::update(bool forceIt)
             m_imageX + windowOrigin.x, m_imageY + windowOrigin.y);
 
         OffsetRect(&m_savedRect, windowOrigin.x, windowOrigin.y);
-        if (m_savedRect.left < 0)
-            m_savedRect.left = 0;
-        if (m_savedRect.right > static_cast<long>(surfaceDesc.dwWidth))
-            m_savedRect.right = surfaceDesc.dwWidth;
-        if (m_savedRect.top < 0)
-            m_savedRect.top = 0;
-        if (m_savedRect.bottom > static_cast<long>(surfaceDesc.dwHeight))
-            m_savedRect.bottom = surfaceDesc.dwHeight;
+        clipMouseRectToSurface(m_savedRect, surfaceDesc);
         restoreUnderlying(g_ddsPrimary,
             m_savedRect);
 
         RECT copyRect;
-        copyRect.left = 0;
-        copyRect.top = 0;
-        copyRect.right = newRect.right - newRect.left;
-        copyRect.bottom = newRect.bottom - newRect.top;
+        setLocalMouseRect(copyRect, newRect);
         ddBlit(g_ddsMouseSaveSurface, copyRect,
             g_ddsMouseScratchSurface, copyRect, DDBLT_WAIT);
         m_savedRect = newRect;
@@ -382,27 +402,15 @@ void mouseManager::update(bool forceIt)
 
         // Complete uses the v1 descriptor.
         DDSURFACEDESC surfaceDesc;
-        memset(&surfaceDesc, 0, sizeof(surfaceDesc));
-        surfaceDesc.dwSize = sizeof(surfaceDesc);
-        g_ddsPrimary->GetSurfaceDesc(&surfaceDesc);
-        if (frontWorkRect.left < 0)
-            frontWorkRect.left = 0;
-        if (frontWorkRect.right > static_cast<long>(surfaceDesc.dwWidth))
-            frontWorkRect.right = surfaceDesc.dwWidth;
-        if (frontWorkRect.top < 0)
-            frontWorkRect.top = 0;
-        if (frontWorkRect.bottom > static_cast<long>(surfaceDesc.dwHeight))
-            frontWorkRect.bottom = surfaceDesc.dwHeight;
+        getPrimarySurfaceDescription(surfaceDesc);
+        clipMouseRectToSurface(frontWorkRect, surfaceDesc);
 
         RECT workRect;
         workRect = frontWorkRect;
         OffsetRect(&workRect, -windowOrigin.x, -windowOrigin.y);
 
         RECT dstRect;
-        dstRect.left = 0;
-        dstRect.top = 0;
-        dstRect.right = frontWorkRect.right - frontWorkRect.left;
-        dstRect.bottom = frontWorkRect.bottom - frontWorkRect.top;
+        setLocalMouseRect(dstRect, frontWorkRect);
         ddBlit(g_ddsMouseScratchSurface, dstRect,
             g_ddsPrimary,
             frontWorkRect, DDBLT_WAIT);
@@ -430,17 +438,13 @@ void mouseManager::update(bool forceIt)
             m_imageY - workRect.top);
 
         RECT srcRect;
-        srcRect.left = 0;
-        srcRect.top = 0;
-        srcRect.right = frontWorkRect.right - frontWorkRect.left;
-        srcRect.bottom = frontWorkRect.bottom - frontWorkRect.top;
+        setLocalMouseRect(srcRect, frontWorkRect);
         ddBlit(
             g_ddsPrimary,
             frontWorkRect, g_ddsMouseScratchSurface, srcRect, DDBLT_WAIT);
     }
 
-    g_mouseInUpdate = 0;
-    m_busy--;
+    finishUpdate();
 }
 
 VA(0x0050d500, 0x3F)
@@ -469,8 +473,8 @@ void mouseManager::saveAndDraw(
     const RECT& dstRect, int x, int y)
 {
     if (!IsRectEmpty(&dstRect)) {
-        RECT saveRect = {0, 0, dstRect.right - dstRect.left,
-                         dstRect.bottom - dstRect.top};
+        RECT saveRect;
+        setLocalMouseRect(saveRect, dstRect);
         RECT sourceRect = saveRect;
         OffsetRect(&sourceRect, dstRect.left - x, dstRect.top - y);
         ddBlit(saveSurface, saveRect, dstSurface, dstRect, DDBLT_WAIT);
@@ -489,10 +493,7 @@ void mouseManager::restoreUnderlying(
 {
     if (!IsRectEmpty(&dstRect)) {
         RECT sourceRect;
-        sourceRect.left = 0;
-        sourceRect.top = 0;
-        sourceRect.right = dstRect.right - dstRect.left;
-        sourceRect.bottom = dstRect.bottom - dstRect.top;
+        setLocalMouseRect(sourceRect, dstRect);
         ddBlit(surface, dstRect, g_ddsMouseSaveSurface, sourceRect,
             DDBLT_WAIT);
     }

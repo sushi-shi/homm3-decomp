@@ -25,9 +25,8 @@ inline TPoint operator+(const TPoint& point, const TPoint& offset)
 // proven roles because the Dreamcast build has no RMG compiland.
 // Prior provisional class role: TRmgTerrainTile.
 struct rmgTerrainTile {
-    int m_terrain;
-
 private:
+    int m_terrain;
     int m_frame;
     unsigned char m_flipX;
     unsigned char m_flipY;
@@ -41,9 +40,13 @@ public:
     rmgTerrainTile() {}
     rmgTerrainTile(int newTerrain, int newFrame)
         : m_terrain(newTerrain), m_frame(newFrame), m_flipX(0), m_flipY(0) {}
+    // Project value boundary shared by the terrain, road and river adapters.
+    rmgTerrainTile(int terrain, int frame, unsigned char flipX, unsigned char flipY)
+        : m_terrain(terrain), m_frame(frame), m_flipX(flipX), m_flipY(flipY) {}
     // Frame and flip accessors: the line refresh compares the current tile
     // through them so its neighbour helper keeps retail's three retained
-    // calls (2026-09-12); the painters' own copies still use the fields.
+    // calls (2026-09-12). The terrain query is a project counterpart.
+    int getTerrain() const { return m_terrain; }
     int getFrame() const { return m_frame; }
     unsigned char getFlipX() const { return m_flipX; }
     unsigned char getFlipY() const { return m_flipY; }
@@ -60,11 +63,14 @@ public:
         return *this;
     }
 
-    // Accessor boundary inferred from the existing property interface and
-    // external field operations; these additional names are project names.
-    void setFrame(int value) { m_frame = value; }
-    void setFlipX(unsigned char value) { m_flipX = value; }
-    void setFlipY(unsigned char value) { m_flipY = value; }
+    // Line and transition painters choose a frame together with its flips;
+    // the terrain kind survives that appearance change. Project name.
+    void setFrameAndFlips(int frame, unsigned char flipX, unsigned char flipY)
+    {
+        m_frame = frame;
+        m_flipX = flipX;
+        m_flipY = flipY;
+    }
 };
 
 struct TRmgTerrainFlip {
@@ -105,12 +111,18 @@ public:
     inline unsigned char getFlipY() const { return m_flipY; }
     inline rmgTerrainTile getTile() const
     {
-        rmgTerrainTile tile;
-        tile.m_terrain = getTerrain();
-        tile.setFrame(getFrame());
-        tile.setFlipX(getFlipX());
-        tile.setFlipY(getFlipY());
+        rmgTerrainTile tile(getTerrain(), getFrame(), getFlipX(), getFlipY());
         return tile;
+    }
+    // Both adapter reads and painter writes copy the same tile payload.
+    // Validity is separate: those callers establish it in different orders.
+    // Project name; upper reserved bits are left alone by the field setters.
+    void setTile(const rmgTerrainTile& tile)
+    {
+        setTerrain(tile.getTerrain());
+        setFrame(tile.getFrame());
+        setFlipX(tile.getFlipX());
+        setFlipY(tile.getFlipY());
     }
     inline void setInitialized() { m_initialized = 1; }
     inline void setTerrain(int value) { m_terrain = value; }
@@ -121,7 +133,6 @@ public:
     // Accessor boundary inferred from the existing property interface and
     // external field operations; these additional names are project names.
     unsigned short getInitialized() const { return m_initialized; }
-    void setInitialized(unsigned short value) { m_initialized = value; }
 };
 
 // Vtable 0x642c98 fixes these six slots. Only the three methods used by the

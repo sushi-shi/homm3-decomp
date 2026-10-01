@@ -203,12 +203,7 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
             font::WHITE, -1, 0, 0, 8));
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
@@ -320,12 +315,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     m_influence[1] = -1;
     m_influence[2] = -1;
 
-    for (widget** it = widgets.begin(); it != widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     // The upgrade button greys itself out when the player cannot pay.
     if (upgrade != -1) {
@@ -388,12 +378,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     int i;
     MEMSET(m_influence, -1, sizeof(m_influence), i);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA(0x005f45e0, 0xD5)
@@ -401,10 +386,7 @@ DC_ADDRESS(0x191660, 0x72)
 MAC_ADDRESS(0x200534, 0xc4)
 TViewArmyWindow::~TViewArmyWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x005f46c0, 0x12C)
@@ -443,6 +425,21 @@ int TViewArmyWindow::convertID2HelpID(int id) const
     case OK_ID: return 15;
     default: return -1;
     }
+}
+
+// Project-inferred complete preview lifetime shared by three click handlers.
+// Keep construction at the native provisional coordinates before centering;
+// both native view methods and destruction complete before the caller resumes.
+// Ordinary owner-TU placement is provisional, without a native address claim.
+void TViewArmyWindow::showCenteredCreature(int armyType, bool quickView)
+{
+    TViewArmyWindow window(armyType, 0x77, 0x20,
+                          static_cast<unsigned char>(!quickView));
+    window.centerWindow(-1, -1);
+    if (quickView)
+        window.quickView();
+    else
+        window.doModal();
 }
 
 // Original: TViewArmyWindow::QuickView; viewarmywindow.cpp:366
@@ -648,10 +645,7 @@ int TViewArmyWindow::windowHandler(message& msg)
     }
 
     if (exitFlag) {
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = msg.m_codeY;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, msg.m_codeY);
         return MESSAGE_DISPATCH_FORWARD;
     }
 
@@ -680,9 +674,7 @@ int viewArmyCastSpellHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_DESELECT
             && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
-        msg.m_codeY = TViewArmyWindow::OK_ID;
+        msg.setDialogEnd(TViewArmyWindow::OK_ID);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;

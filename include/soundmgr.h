@@ -125,7 +125,12 @@ public:
     // +80 with MOVSX byte and later restores it through switchAmbientMusic.
     // Keep the retail signed-byte width: NH3API's int32 declaration differs.
     signed char m_currentTerrainMusic;
+
+private:
+    // PC playback gate; retain its raw int value across temporary overrides.
     int m_playSounds;
+
+public:
     int m_changeSounds;
     unsigned char m_mp3Playing;
     CRITICAL_SECTION m_sectionSoundCall;
@@ -174,6 +179,19 @@ public:
     void setMusicVolume();                              // 0x5994b0
     int convertVolume(int volumeValue, int volumeType);  // 0x5996c0
     void threadStopMP3();                               // 0x59b080
+
+    // Project-inferred playback state operations. The predicate includes solo
+    // mode; the raw getter/setter and saved value do not normalize the state.
+    int getPlaybackState() const;
+    void setPlaybackState(int state);
+    int enablePlayback();
+    bool isPlaybackAllowed() const;
+
+private:
+    // Project-inferred gates for paths that require the digital driver.
+    bool canUseDigitalSound() const;
+    bool canPlayDigitalSound() const;
+    void endAllSamples();
 };
 
 // Retail .bss 0x699290: non-zero suppresses every sound path (a

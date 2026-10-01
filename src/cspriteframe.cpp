@@ -38,6 +38,15 @@ CSpriteFrame::CSpriteFrame()
 {
 }
 
+// Project-inferred operation shared by both resource-data constructors.
+void CSpriteFrame::copyMapData(const unsigned char* data, int compressedSize)
+{
+    m_dataSize = compressedSize ? compressedSize : m_imageSize;
+    m_map = new unsigned char[m_dataSize];
+    if (m_map)
+        memcpy(m_map, data, m_dataSize);
+}
+
 VA(0x0047c2b0, 0xa7)
 DC_ADDRESS(0x074664, 0xaa)
 MAC_ADDRESS(0x08b24c, 0xc8)
@@ -48,10 +57,7 @@ CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
       m_imageSize(w * h), m_encodingMethod(encoding), m_width(w), m_height(h),
       m_croppedWidth(w), m_croppedHeight(h), m_croppedX(0), m_croppedY(0), m_pitch(w)
 {
-    m_dataSize = csize ? csize : m_imageSize;
-    m_map = new unsigned char[m_dataSize];
-    if (m_map)
-        memcpy(m_map, data, m_dataSize);
+    copyMapData(data, csize);
 }
 
 VA(0x0047c360, 0xc9)
@@ -66,10 +72,7 @@ CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
       m_croppedWidth(cw), m_croppedHeight(ch), m_croppedX(cx), m_croppedY(cy),
       m_pitch(cw)
 {
-    m_dataSize = csize ? csize : m_imageSize;
-    m_map = new unsigned char[m_dataSize];
-    if (m_map)
-        memcpy(m_map, data, m_dataSize);
+    copyMapData(data, csize);
 }
 
 // Original: CSpriteFrame::CSpriteFrame; cspriteframe.cpp:188
@@ -195,34 +198,22 @@ int CSpriteFrame::importPCXFile(const char* filename)
     return 0;
 }
 
-// Original: CSpriteFrame::importCroppedPCXFile; cspriteframe.cpp:368
-DC_ADDRESS(0x074af4, 0x26a)
-int CSpriteFrame::importCroppedPCXFile(const char* filename)
+// Project-inferred shared crop operation. Keep the four ordered scans and
+// their -1 sentinels, including the original all-transparent-image behavior.
+// Pitch remains unsigned for PCX buffers and signed for the raw frame map.
+template <class TPitch>
+void CSpriteFrame::updateCropBounds(const unsigned char* pixels, TPitch pitch,
+                                    int& leftoff, int& topoff)
 {
-    PcxData pdat;
-    imgdes pcxfile;
-    int error = pcxinfo(filename, &pdat);
-    if (error)
-        return 1;
-
-    m_width = m_croppedWidth = pdat.m_width;
-    m_height = m_croppedHeight = pdat.m_length;
-    m_pitch = pdat.m_width;
-    m_dataSize = m_imageSize = m_width * m_height;
-    allocimage(&pcxfile, pdat.m_width, pdat.m_length,
-               pdat.m_bpPixel * pdat.m_nplanes);
-    loadpcx(filename, &pcxfile);
-    flipimage(&pcxfile, &pcxfile);
-
     int x;
     int y;
-    int leftoff = -1;
+    leftoff = -1;
     int rightoff = -1;
-    int topoff = -1;
+    topoff = -1;
     int bottomoff = -1;
     for (x = 0; x < m_width; ++x) {
         for (y = 0; y < m_height; ++y) {
-            if (pcxfile.m_ibuff[y * pcxfile.m_buffwidth + x]) {
+            if (pixels[y * pitch + x]) {
                 leftoff = x;
                 break;
             }
@@ -232,7 +223,7 @@ int CSpriteFrame::importCroppedPCXFile(const char* filename)
     }
     for (x = 0; x < m_width; ++x) {
         for (y = 0; y < m_height; ++y) {
-            if (pcxfile.m_ibuff[y * pcxfile.m_buffwidth + m_width - x - 1]) {
+            if (pixels[y * pitch + m_width - x - 1]) {
                 rightoff = x;
                 break;
             }
@@ -242,7 +233,7 @@ int CSpriteFrame::importCroppedPCXFile(const char* filename)
     }
     for (y = 0; y < m_height; ++y) {
         for (x = 0; x < m_width; ++x) {
-            if (pcxfile.m_ibuff[y * pcxfile.m_buffwidth + x]) {
+            if (pixels[y * pitch + x]) {
                 topoff = y;
                 break;
             }
@@ -252,7 +243,7 @@ int CSpriteFrame::importCroppedPCXFile(const char* filename)
     }
     for (y = 0; y < m_height; ++y) {
         for (x = 0; x < m_width; ++x) {
-            if (pcxfile.m_ibuff[(m_height - y - 1) * pcxfile.m_buffwidth + x]) {
+            if (pixels[(m_height - y - 1) * pitch + x]) {
                 bottomoff = y;
                 break;
             }
@@ -273,17 +264,51 @@ int CSpriteFrame::importCroppedPCXFile(const char* filename)
     if (bottomoff >= 0)
         m_croppedHeight -= bottomoff;
     m_dataSize = m_croppedWidth * m_croppedHeight;
+}
+
+// Copy into caller-owned storage; allocation, replacement and pitch updates
+// remain with the importer or editor that owns the buffer.
+template <class TPitch>
+void CSpriteFrame::copyCroppedPixels(unsigned char* dest,
+                                     const unsigned char* source,
+                                     TPitch sourcePitch) const
+{
+    for (int y = 0; y < m_croppedHeight; ++y) {
+        memcpy(dest, source, m_croppedWidth);
+        dest += m_croppedWidth;
+        source += sourcePitch;
+    }
+}
+
+// Original: CSpriteFrame::importCroppedPCXFile; cspriteframe.cpp:368
+DC_ADDRESS(0x074af4, 0x26a)
+int CSpriteFrame::importCroppedPCXFile(const char* filename)
+{
+    PcxData pdat;
+    imgdes pcxfile;
+    int error = pcxinfo(filename, &pdat);
+    if (error)
+        return 1;
+
+    m_width = m_croppedWidth = pdat.m_width;
+    m_height = m_croppedHeight = pdat.m_length;
+    m_pitch = pdat.m_width;
+    m_dataSize = m_imageSize = m_width * m_height;
+    allocimage(&pcxfile, pdat.m_width, pdat.m_length,
+               pdat.m_bpPixel * pdat.m_nplanes);
+    loadpcx(filename, &pcxfile);
+    flipimage(&pcxfile, &pcxfile);
+
+    int leftoff;
+    int topoff;
+    updateCropBounds(pcxfile.m_ibuff, pcxfile.m_buffwidth, leftoff, topoff);
     m_map = new unsigned char[m_dataSize];
     if (!m_map)
         return 2;
 
-    unsigned char* dest = m_map;
-    unsigned char* source = pcxfile.m_ibuff + topoff * pcxfile.m_buffwidth + leftoff;
-    for (y = 0; y < m_croppedHeight; ++y) {
-        memcpy(dest, source, m_croppedWidth);
-        dest += m_croppedWidth;
-        source += pcxfile.m_buffwidth;
-    }
+    copyCroppedPixels(m_map,
+        pcxfile.m_ibuff + topoff * pcxfile.m_buffwidth + leftoff,
+        pcxfile.m_buffwidth);
     // DC retains the original PCX width as Pitch even after packing the crop.
     m_pitch = pdat.m_width;
     freeimage(&pcxfile);
@@ -381,75 +406,14 @@ unsigned char CSpriteFrame::getPixel(int x, int y) const
 DC_ADDRESS(0x074ecc, 0x1c6)
 int CSpriteFrame::crop()
 {
-    int x;
-    int y;
-    int leftoff = -1;
-    int rightoff = -1;
-    int topoff = -1;
-    int bottomoff = -1;
-    for (x = 0; x < m_width; ++x) {
-        for (y = 0; y < m_height; ++y) {
-            if (m_map[y * m_width + x]) {
-                leftoff = x;
-                break;
-            }
-        }
-        if (leftoff >= 0)
-            break;
-    }
-    for (x = 0; x < m_width; ++x) {
-        for (y = 0; y < m_height; ++y) {
-            if (m_map[y * m_width + m_width - x - 1]) {
-                rightoff = x;
-                break;
-            }
-        }
-        if (rightoff >= 0)
-            break;
-    }
-    for (y = 0; y < m_height; ++y) {
-        for (x = 0; x < m_width; ++x) {
-            if (m_map[y * m_width + x]) {
-                topoff = y;
-                break;
-            }
-        }
-        if (topoff >= 0)
-            break;
-    }
-    for (y = 0; y < m_height; ++y) {
-        for (x = 0; x < m_width; ++x) {
-            if (m_map[(m_height - y - 1) * m_width + x]) {
-                bottomoff = y;
-                break;
-            }
-        }
-        if (bottomoff >= 0)
-            break;
-    }
-    if (leftoff >= 0) {
-        m_croppedX += leftoff;
-        m_croppedWidth -= leftoff;
-    }
-    if (rightoff >= 0)
-        m_croppedWidth -= rightoff;
-    if (topoff >= 0) {
-        m_croppedY += topoff;
-        m_croppedHeight -= topoff;
-    }
-    if (bottomoff >= 0)
-        m_croppedHeight -= bottomoff;
-    m_dataSize = m_croppedWidth * m_croppedHeight;
+    int leftoff;
+    int topoff;
+    updateCropBounds(m_map, m_width, leftoff, topoff);
     unsigned char* newMap = new unsigned char[m_dataSize];
     if (!newMap)
         return 2;
-    unsigned char* dest = newMap;
-    unsigned char* source = m_map + topoff * m_width + leftoff;
-    for (y = 0; y < m_croppedHeight; ++y) {
-        memcpy(dest, source, m_croppedWidth);
-        dest += m_croppedWidth;
-        source += m_width;
-    }
+    copyCroppedPixels(newMap,
+        m_map + topoff * m_width + leftoff, m_width);
     m_pitch = m_width;
     delete[] m_map;
     m_map = newMap;
@@ -467,6 +431,52 @@ void CSpriteFrame::encode(TEncodingMethod method)
     }
 }
 
+// Project-inferred common sizing pass for general and tileset RLE.
+// Keep the post-tested row walk and run-limit split used by both encoders.
+unsigned int CSpriteFrame::countRleDataSize(unsigned int rowOffsetSize,
+    unsigned char controlLimit, unsigned char literalCode,
+    unsigned int runLimit, unsigned int controlSize) const
+{
+    unsigned int newDataSize = m_croppedHeight * rowOffsetSize;
+    unsigned int linesToGo = m_croppedHeight;
+    const unsigned char* source = m_map;
+    do {
+        unsigned char code = source[0] < controlLimit ? source[0] : literalCode;
+        newDataSize += controlSize;
+        unsigned int run = 0;
+        int x = 1;
+        bool opaque = code == literalCode;
+        while (1) {
+            ++run;
+            if (opaque)
+                ++newDataSize;
+            if (x >= m_croppedWidth)
+                break;
+            unsigned char nextCode =
+                source[x] < controlLimit ? source[x] : literalCode;
+            if (nextCode != code || run == runLimit) {
+                newDataSize += controlSize;
+                code = nextCode;
+                run = 0;
+                opaque = code == literalCode;
+            }
+            ++x;
+        }
+        source += m_croppedWidth;
+    } while (--linesToGo);
+    return newDataSize;
+}
+
+// Project-inferred encoded-data transition. Callers retain their distinct
+// old-buffer deletion policies and any following crop-geometry updates.
+void CSpriteFrame::setEncodedData(unsigned char* data, unsigned int size,
+                                 TEncodingMethod method)
+{
+    m_map = data;
+    m_dataSize = size;
+    m_encodingMethod = method;
+}
+
 // Original: CSpriteFrame::EncodeGeneral; cspriteframe.cpp:791
 DC_ADDRESS(0x0750d8, 0x1b2)
 void CSpriteFrame::encodeGeneral()
@@ -474,38 +484,14 @@ void CSpriteFrame::encodeGeneral()
     static const unsigned char opaqueRunCode = g_generalRleOpaqueRunCode;
     // DC's cspriteframe.cpp:47 initializer is max<unsigned char>() + 1.
     static const unsigned int maxRunLength = 256;
-    unsigned int newDataSize = m_croppedHeight * sizeof(unsigned int);
-    unsigned int linesToGo = m_croppedHeight;
-    unsigned char* source = m_map;
-    do {
-        unsigned char code = source[0] < 10 ? source[0] : opaqueRunCode;
-        newDataSize += 2;
-        unsigned int run = 0;
-        int x = 1;
-        bool opaque = code == opaqueRunCode;
-        while (1) {
-            ++run;
-            if (opaque)
-                ++newDataSize;
-            if (x >= m_croppedWidth)
-                break;
-            unsigned char nextCode = source[x] < 10 ? source[x] : opaqueRunCode;
-            if (nextCode != code || run == maxRunLength) {
-                newDataSize += 2;
-                code = nextCode;
-                run = 0;
-                opaque = code == opaqueRunCode;
-            }
-            ++x;
-        }
-        source += m_croppedWidth;
-    } while (--linesToGo);
+    unsigned int newDataSize = countRleDataSize(
+        sizeof(unsigned int), 10, opaqueRunCode, maxRunLength, 2);
 
     unsigned char* newMap = new unsigned char[newDataSize];
     unsigned int* lineOffset = static_cast<unsigned int*>(static_cast<void*>(newMap));
-    linesToGo = m_croppedHeight;
+    unsigned int linesToGo = m_croppedHeight;
     unsigned int offset = m_croppedHeight * sizeof(unsigned int);
-    source = m_map;
+    unsigned char* source = m_map;
     do {
         *lineOffset++ = offset;
         unsigned char code = source[0] < 10 ? source[0] : opaqueRunCode;
@@ -533,9 +519,7 @@ void CSpriteFrame::encodeGeneral()
         source += m_croppedWidth;
     } while (--linesToGo);
     delete[] m_map;
-    m_map = newMap;
-    m_dataSize = newDataSize;
-    m_encodingMethod = eEncodeGeneralRLE;
+    setEncodedData(newMap, newDataSize, eEncodeGeneralRLE);
 }
 
 // Original: CSpriteFrame::EncodeTileset; cspriteframe.cpp:894
@@ -550,38 +534,15 @@ void CSpriteFrame::encodeTileset()
         }
     }
     if (hasControlPixels) {
-        unsigned int linesToGo = m_croppedHeight;
-        unsigned int newDataSize = m_croppedHeight * sizeof(unsigned short);
-        unsigned char* source = m_map;
-        do {
-            unsigned char code = source[0] < 5 ? source[0] : ePackedRleLiteral;
-            ++newDataSize;
-            unsigned int run = 0;
-            int x = 1;
-            bool opaque = code == ePackedRleLiteral;
-            while (1) {
-                ++run;
-                if (opaque)
-                    ++newDataSize;
-                if (x >= m_croppedWidth)
-                    break;
-                unsigned char nextCode = source[x] < 5 ? source[x] : ePackedRleLiteral;
-                if (nextCode != code || run == ePackedRleMaxRunLength) {
-                    ++newDataSize;
-                    code = nextCode;
-                    run = 0;
-                    opaque = code == ePackedRleLiteral;
-                }
-                ++x;
-            }
-            source += m_croppedWidth;
-        } while (--linesToGo);
+        unsigned int newDataSize = countRleDataSize(
+            sizeof(unsigned short), 5, ePackedRleLiteral,
+            ePackedRleMaxRunLength, 1);
 
         unsigned char* newMap = new unsigned char[newDataSize];
         unsigned short* lineOffset = static_cast<unsigned short*>(static_cast<void*>(newMap));
-        linesToGo = m_croppedHeight;
+        unsigned int linesToGo = m_croppedHeight;
         unsigned short offset = static_cast<unsigned short>(m_croppedHeight * sizeof(unsigned short));
-        source = m_map;
+        unsigned char* source = m_map;
         do {
             *lineOffset++ = offset;
             unsigned char code = source[0] < 5 ? source[0] : ePackedRleLiteral;
@@ -613,9 +574,7 @@ void CSpriteFrame::encodeTileset()
             source += m_croppedWidth;
         } while (--linesToGo);
         delete[] m_map;
-        m_map = newMap;
-        m_dataSize = newDataSize;
-        m_encodingMethod = eEncodeTilesetRLE;
+        setEncodedData(newMap, newDataSize, eEncodeTilesetRLE);
     }
 }
 
@@ -780,9 +739,7 @@ void CSpriteFrame::encodeAdvObj()
         source += oldWidth;
     } while (--linesToGo);
     // Unlike the other two encoders, DC 1256 replaces the map without deleting it.
-    m_map = newMap;
-    m_dataSize = newDataSize;
-    m_encodingMethod = eEncodeAdvObjRLE;
+    setEncodedData(newMap, newDataSize, eEncodeAdvObjRLE);
     m_croppedX = newCroppedX;
     m_croppedWidth = newCroppedWidth;
 }

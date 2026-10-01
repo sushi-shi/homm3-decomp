@@ -146,13 +146,7 @@ TCombatWindow::TCombatWindow(unsigned char doPlacement)
     m_widgets.push_back(m_chatEdit);
     m_widgets.push_back(m_chatWidget);
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     if (doPlacement) {
         m_controlSubWindow = new TCombatPlacementSubWindow(this);
@@ -249,15 +243,22 @@ VA_COMPGEN(0x00472890, 0x05, IMPLICIT_DTOR, CCombatChatEdit)
 // Vtable 0x63d528 slot 0.
 VA_COMPGEN(0x004728a0, 0x21, SCALAR_DELETING_DTOR, TCombatWindow)
 
-VA(0x004728d0, 0x2A)
-DC_ADDRESS(0x069b2c, 0x40)
-MAC_ADDRESS(0x08063c, 0x6c)
-void TCombatWindow::close(unsigned char update)
+// Project-inferred live-window teardown shared by close and the transition
+// out of placement. The destructor's terminal delete remains separate.
+void TCombatWindow::clearControlSubWindow()
 {
     if (m_controlSubWindow) {
         delete m_controlSubWindow;
         m_controlSubWindow = 0;
     }
+}
+
+VA(0x004728d0, 0x2A)
+DC_ADDRESS(0x069b2c, 0x40)
+MAC_ADDRESS(0x08063c, 0x6c)
+void TCombatWindow::close(unsigned char update)
+{
+    clearControlSubWindow();
     heroWindow::close(update);
 }
 
@@ -269,9 +270,7 @@ TCombatWindow::~TCombatWindow()
     if (m_controlSubWindow)
         delete m_controlSubWindow;
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it)
-        delete *it;
+    deleteWidgetObjects();
 
     for (unsigned int i = 0; i < m_combatMessages.size(); ++i)
         delete m_combatMessages[i];
@@ -498,10 +497,7 @@ DC_ADDRESS(0x06a200, 0x62)
 MAC_ADDRESS(0x081148, 0xc0)
 void TCombatWindow::endPlacementPhase()
 {
-    if (m_controlSubWindow) {
-        delete m_controlSubWindow;
-        m_controlSubWindow = 0;
-    }
+    clearControlSubWindow();
     m_controlSubWindow = new TCombatControlSubWindow(this);
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     g_windowManager->updateScreen(

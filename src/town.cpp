@@ -529,10 +529,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_CASTLE && hasBuilding(EXTRA_0_ID, false)
-        && !(townHero->m_flags & 2)) {
-        townHero->m_flags |= 2;
-        townHero->m_maxMovePoints += g_stablesMovementBonus;
-        townHero->m_movePoints += g_stablesMovementBonus;
+        && townHero->grantStablesMovement()) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog((*g_generalText)[GENERAL_TEXT_STABLES_VISIT], // Stables
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -712,6 +709,13 @@ void town::giveSpells(hero* forceHero) const
     }
 }
 
+// Project-inferred paired exit state for both town-view return paths.
+static void finishTownView()
+{
+    g_adventureGraphicsPreserveMode = 0;
+    g_townViewActive = 0;
+}
+
 VA(0x005be210, 0xC0)
 DC_ADDRESS(0x166688, 0x98)
 MAC_ADDRESS(0x1b3664, 0x104)
@@ -733,13 +737,11 @@ void town::view(int alreadyFaded)
         hero* visitingHero = g_game->getHero(heroId);
         if (visitingHero->m_owner == g_curWatchPlayer) {
             g_advManager->setHeroContext(visitingHero->m_id, 0, 0, 1);
-            g_adventureGraphicsPreserveMode = 0;
-            g_townViewActive = 0;
+            finishTownView();
             return;
         }
     }
-    g_adventureGraphicsPreserveMode = 0;
-    g_townViewActive = 0;
+    finishTownView();
 }
 
 VA(0x005be2d0, 0xB3)
@@ -817,18 +819,9 @@ void town::swapHeroes()
     CMCHideHero hideHero(visitingHero->m_id);
     sendMapChange(&hideHero);
 
-    for (int i = rosterIndex; i < g_currentPlayer->m_numHeroes - 1; ++i)
-        g_currentPlayer->m_heroes[i] = g_currentPlayer->m_heroes[i + 1];
-    --g_currentPlayer->m_numHeroes;
-    g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] = -1;
+    g_currentPlayer->removeHeroAt(rosterIndex);
 
-    if (g_currentPlayer->m_currHeroId == visitingHero->m_id) {
-        g_currentPlayer->m_currHeroId = -1;
-        if (g_netLocalGamePos == visitingHero->m_owner) {
-            g_advManager->m_drawCursor = 0;
-            g_advManager->m_curHeroMobile = 0;
-        }
-    }
+    g_currentPlayer->clearHiddenHeroSelection(*visitingHero);
 
     // Dreamcast town.cpp:1143 and Mac retain the ordinary town::PlaceInMap call.
     int player = currentTown->m_owner;
@@ -1147,8 +1140,7 @@ bool town::buyBuilding(type_building_id building)
         if (player->m_resources[resource] < costs[resource])
             return 0;
     }
-    for (int paid = 0; paid < NUM_RESOURCES; paid++)
-        player->m_resources[paid] -= costs[paid];
+    player->payResourceCost(costs);
     buildBuilding(building, 1, 1);
     return 1;
 }
@@ -1701,8 +1693,7 @@ static void initializeArmy(town* currentTown, const TownExtra* townSetup)
         }
     } else {
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
-            currentTown->getArmy().m_armies[slot] = -1;
-            currentTown->getArmy().m_numTroops[slot] = 0;
+            currentTown->getArmy().dismiss(slot);
         }
         if (currentTown->m_owner < 0) {
             for (int tier = 0; tier < 4; tier++) {

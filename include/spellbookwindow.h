@@ -193,6 +193,14 @@ private:
     static int getPositionFromSchool(unsigned schoolMask);
     static TSpellSchool getSchoolFromPosition(int position);
     void displayNewSchool(int position);
+    // Project-inferred display transitions. Constructors still restore the
+    // saved context/page without animation or an immediate window redraw.
+    void animatePageTurn(bool forward);
+    void turnPage(bool forward);
+    void displayNewContext(TSpellContext context);
+    // Project-inferred empty row: hide both icons, empty the caption and
+    // invalidate its spell mapping, retaining other widget state.
+    void clearSpellSlot(int slot);
 };
 SIZE(TSpellbookWindow, 0xcc);
 SIZE(TSpellbookWindow::TSpellbookEntry, 0x0c);

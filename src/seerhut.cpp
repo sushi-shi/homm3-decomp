@@ -126,7 +126,7 @@ unsigned char initializeSeerHutText()
 
     for (int row = 50; row < sheet->getNumberOfRows(); ++row) {
         const char* name = sheet->getRow(row)[0];
-        if (!name[0] || name[0] == ' ')
+        if (!isResourceFieldSet(name))
             continue;
         g_seerHutNames.push_back(name);
     }
@@ -1397,12 +1397,11 @@ int type_resource_quest::getAIValue(int player)
     return aiResourceCost(player, m_resources);
 }
 
-VA(0x00571580, 0x15A)
-MAC_ADDRESS(0x167e5c, 0xe0)
-std::string type_resource_quest::getRequirementText()
+// Project-inferred shared positive-resource list. Keep both caller-owned
+// objects alive through joining and, for default text, dialog-text assignment.
+void type_resource_quest::appendRequirements(
+    std::vector<std::string>& requirements, std::string& requirement)
 {
-    std::vector<std::string> requirements;
-    std::string requirement;
     for (int i = 0; i <= 6; i++) {
         if (m_resources[i] > 0) {
             requirement = formatString(
@@ -1411,6 +1410,15 @@ std::string type_resource_quest::getRequirementText()
             requirements.push_back(requirement);
         }
     }
+}
+
+VA(0x00571580, 0x15A)
+MAC_ADDRESS(0x167e5c, 0xe0)
+std::string type_resource_quest::getRequirementText()
+{
+    std::vector<std::string> requirements;
+    std::string requirement;
+    appendRequirements(requirements, requirement);
     return joinTextList(requirements);
 }
 
@@ -1446,12 +1454,7 @@ VA(0x00571800, 0x3D)
 MAC_ADDRESS(0x1680f4, 0x94)  // anchor-vtable
 void type_resource_quest::takePayment(hero* currentHero)
 {
-    int* questResource = m_resources;
-    long* playerResource = g_game->m_players[currentHero->m_owner].m_resources;
-    int count = 7;
-    do {
-        *playerResource++ -= *questResource++;
-    } while (--count);
+    g_game->m_players[currentHero->m_owner].payResourceCost(m_resources);
 }
 
 VA(0x00571840, 0x29D)
@@ -1545,14 +1548,7 @@ void type_resource_quest::setDefaultText()
     std::vector<std::string> requirements;
     std::string requirement;
     const TSeerHutQuestText& texts = questTexts();
-    for (int i = 0; i <= 6; i++) {
-        if (m_resources[i] > 0) {
-            requirement = formatString(
-                DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
-                m_resources[i], g_resourceNames[i]);
-            requirements.push_back(requirement);
-        }
-    }
+    appendRequirements(requirements, requirement);
     requirement = joinTextList(requirements);
     if (m_proposalText.length() == 0)
         m_proposalText = formatString(texts.m_text0.c_str(),
@@ -2082,9 +2078,7 @@ void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
         } else if (getValue(currentHero) <= 0)
             return;
 
-        m_quest->takePayment(currentHero);
-        m_reward.giveReward(currentHero, humanPlayer);
-        m_quest = 0;
+        completeQuest(currentHero, humanPlayer);
         return;
     }
 }
@@ -2124,10 +2118,18 @@ void TSeerHut::doCompletionDialog(
 
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT
         || g_windowManager->m_dialogReturn == DIALOG_RETURN_CHOICE_1) {
-        m_quest->takePayment(currentHero);
-        m_reward.giveReward(currentHero, humanPlayer);
-        m_quest = 0;
+        completeQuest(currentHero, humanPlayer);
     }
+}
+
+// Project-inferred common completion tail. Keep payment before reward delivery
+// and clear the quest only afterward, without deleting it or resetting the
+// serialized visit/completion bytes. No native helper identity is claimed.
+void TSeerHut::completeQuest(hero* currentHero, bool humanPlayer)
+{
+    m_quest->takePayment(currentHero);
+    m_reward.giveReward(currentHero, humanPlayer);
+    m_quest = 0;
 }
 
 // Dreamcast owns this older private boundary on the hut. Complete moves the
@@ -2529,6 +2531,77 @@ static type_quest* readQuestFromMap(TAbstractFile* infile,
     return quest;
 }
 
+// Project owner operation: keep sequential stream reads and their exact
+// signed/packed destinations together. Unknown tags leave payload bytes alone;
+// the enclosing hut still consumes the two reserved bytes after this record.
+void TSeerReward::readFromMap(TAbstractFile* infile, int mapVersion)
+{
+    m_rewardType = readValue<unsigned char>(infile);
+
+    switch (m_rewardType) {
+    case eRewardExperience: {
+        m_value.m_dwords[0] = readLittleEndianValue<int>(infile);
+        break;
+    }
+
+    case eRewardMana: {
+        m_value.m_dwords[0] = readLittleEndianValue<int>(infile);
+        break;
+    }
+
+    case eRewardMorale: {
+        m_value.m_signedLow.m_bonus = readValue<unsigned char>(infile);
+        break;
+    }
+
+    case eRewardLuck: {
+        m_value.m_signedLow.m_bonus = readValue<unsigned char>(infile);
+        break;
+    }
+
+    case eRewardResource: {
+        m_value.m_resource.m_resourceType = readValue<signed char>(infile);
+        m_value.m_resource.m_quantity = readLittleEndianValue<int>(infile);
+        break;
+    }
+
+    case eRewardPrimarySkill: {
+        m_value.m_primarySkill.m_skillType = readValue<signed char>(infile);
+        m_value.m_primarySkill.m_bonus = readValue<unsigned char>(infile);
+        break;
+    }
+
+    case eRewardSecondarySkill: {
+        m_value.m_secondarySkill.m_skillType = readValue<signed char>(infile);
+        m_value.m_secondarySkill.m_bonus = readValue<signed char>(infile);
+        break;
+    }
+
+    case eRewardArtifact:
+        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            m_value.m_dwords[0] = readValue<unsigned char>(infile);
+        } else {
+            m_value.m_dwords[0] = readLittleEndianValue<short>(infile);
+        }
+        break;
+
+    case eRewardSpell: {
+        m_value.m_dwords[0] = readValue<unsigned char>(infile);
+        break;
+    }
+
+    case eRewardCreature: {
+        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            m_value.m_creature.m_creatureType = readValue<unsigned char>(infile);
+        } else {
+            m_value.m_creature.m_creatureType = readLittleEndianValue<short>(infile);
+        }
+        m_value.m_creature.m_count = readLittleEndianValue<unsigned short>(infile);
+        break;
+    }
+    }
+}
+
 VA(0x00574610, 0x480)
 MAC_ADDRESS(0x16aae8, 0x534)  // anchor-caller readObject SEER arm; bracket seerhut..singleselectionpopups
 void TSeerHut::read(TAbstractFile* infile)
@@ -2547,70 +2620,7 @@ void TSeerHut::read(TAbstractFile* infile)
     }
 
     m_completedByPlayer = 0;
-    m_reward.setRewardKind(readValue<unsigned char>(infile));
-
-    switch (m_reward.getRewardKind()) {
-    case eRewardExperience: {
-        m_reward.setScalarValue(readLittleEndianValue<int>(infile));
-        break;
-    }
-
-    case eRewardMana: {
-        m_reward.setScalarValue(readLittleEndianValue<int>(infile));
-        break;
-    }
-
-    case eRewardMorale: {
-        m_reward.setBonus(readValue<unsigned char>(infile));
-        break;
-    }
-
-    case eRewardLuck: {
-        m_reward.setBonus(readValue<unsigned char>(infile));
-        break;
-    }
-
-    case eRewardResource: {
-        m_reward.setResourceType(readValue<signed char>(infile));
-        m_reward.setResourceQuantity(readLittleEndianValue<int>(infile));
-        break;
-    }
-
-    case eRewardPrimarySkill: {
-        m_reward.setPrimarySkillType(readValue<signed char>(infile));
-        m_reward.setPrimarySkillBonus(readValue<unsigned char>(infile));
-        break;
-    }
-
-    case eRewardSecondarySkill: {
-        m_reward.setSecondarySkillType(readValue<signed char>(infile));
-        m_reward.setSecondarySkillBonus(readValue<signed char>(infile));
-        break;
-    }
-
-    case eRewardArtifact:
-        if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            m_reward.setScalarValue(readValue<unsigned char>(infile));
-        } else {
-            m_reward.setScalarValue(readLittleEndianValue<short>(infile));
-        }
-        break;
-
-    case eRewardSpell: {
-        m_reward.setScalarValue(readValue<unsigned char>(infile));
-        break;
-    }
-
-    case eRewardCreature: {
-        if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            m_reward.setCreatureType(readValue<unsigned char>(infile));
-        } else {
-            m_reward.setCreatureType(readLittleEndianValue<short>(infile));
-        }
-        m_reward.setCreatureCount(readLittleEndianValue<unsigned short>(infile));
-        break;
-    }
-    }
+    m_reward.readFromMap(infile, g_game->m_mapHeader.m_version);
 
     readValue<short>(infile);  // reserved bytes
 

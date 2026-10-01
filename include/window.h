@@ -93,6 +93,8 @@ class heroWindow {
 public:
     heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType);
     void centerWindow(int centerX, int centerY);
+    // Project-inferred coordinate-only centering used by quick previews.
+    void centerQuickView(int centerX, int centerY);
     void moveWindow(int deltaX, int deltaY);
     void enableAllWidgets(unsigned char enable);
     void removeAndDeleteWidget(int id);
@@ -100,9 +102,16 @@ public:
     int broadcastMessage(int id, int codeX, int codeY, int extra);
     int widgetSetStatus(int id, int status);
     int widgetClearStatus(int id, int status);
+    // Project-inferred display operations shared by option-control rows.
+    // Preserve message dispatch (including drawing) rather than raw bit writes.
+    void setExclusiveWidgetStatus(int firstId, int lastId, int selectedId,
+                                  int status);
+    void showVolumeLevel(int firstId, int lastId, int level);
     widget* findWidgetPtr(int mx, int my) const;
     int findWidget(int mx, int my) const;
     void addWidget(widget* newWidget, int newPriority);
+    // Project-inferred append followed by immediate default-priority registration.
+    void addOwnedWidget(widget* newWidget);
     void removeWidget(widget* killWidget);
     widget* getWidget(int id);
     void setFocus(int id);
@@ -131,7 +140,12 @@ public:
     virtual void doModal(bool fadeIn);
 
 protected:
+    // Project-inferred terminal cleanup. Delete the objects in order without
+    // clearing the vector or unlinking widgets from the message stream.
+    void deleteWidgetObjects();
     void deleteWidgets();
+    // Project-inferred registration for windows that deliberately skip nulls.
+    void addPresentWidgetsToMessageStream();
     // DC window.cpp owns the ordinary body. Complete's overview constructor
     // expands this operation across TUs, requiring header body visibility.
     // Preserve the protected virtual boundary and its null-widget guard.

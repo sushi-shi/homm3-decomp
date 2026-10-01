@@ -79,16 +79,7 @@ TAdventureOptionsWindow::TAdventureOptionsWindow()
         ADVENTURE_OPTION_ROLLOVER_ID, 5, 0, 8);
     m_widgets.push_back(m_rolloverWidget);
 
-    widget** first = m_widgets.begin();
-    if (first != m_widgets.end()) {
-        widget** it = m_widgets.begin();
-        do {
-            if (*it)
-                addWidget(*it, -1);
-            else
-                memError();
-        } while (++it != m_widgets.end());
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     if (g_game->getCurrHeroId() == -1) {
         widget* dig = getWidget(DIG_ID);
@@ -110,10 +101,7 @@ DC_ADDRESS(0x00514c, 0x62)
 MAC_ADDRESS(0x00587c, 0xac)
 TAdventureOptionsWindow::~TAdventureOptionsWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // E:\gamedcs\adventureoptionswindow.cpp:112
@@ -191,10 +179,7 @@ int TAdventureOptionsWindow::windowHandler(message& msg)
     }
 
     if (closeDialog) {
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = msg.m_codeY;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, msg.m_codeY);
         return MESSAGE_DISPATCH_FORWARD;
     }
 

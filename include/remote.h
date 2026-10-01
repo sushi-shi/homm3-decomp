@@ -124,6 +124,8 @@ public:
     bool sendIt(CNetMsg* msg, unsigned long dpidTo, bool guaranteed);
     void setNetMsgHandler(CNetMsgHandler* netMsgHandler);
     CNetMsgHandler* getNetMsgHandler();
+    // Project-inferred guarded update of the currently installed handler.
+    void setHandlerPopupState(unsigned char inPopup);
     void handlePlayerDrop(unsigned long dpid);
     void handleHostXFer();
     void handleNewPlayer(unsigned long dpid, char* name, void* data, unsigned long size);
@@ -266,6 +268,11 @@ protected:
     void killOldChat();
     void updateNewChat();
     void updateWidgetText(int numLines, textWidget* widget);
+
+private:
+    // Project-inferred operations; callers retain expiration/display policy.
+    void discardOldestChat();
+    void addSystemChat(const char* format);
 };
 SIZE(CChatManager::CChatStr, 0x88);
 SIZE(CChatManager, 0x44);
@@ -478,6 +485,9 @@ SIZE(CMessageKill, 0x4);
 class CNetMsgHandler {
 public:
     CNetMsgHandler();
+    // Project-inferred poll plus received-message-gated abort query.
+    // Keep caller-owned flag storage for virtual overrides that leave it alone.
+    bool pollPopupAbort(unsigned char& msgReceived);
     virtual ~CNetMsgHandler();  // slot 0
     virtual CNetMsg* checkHandleNet(unsigned char inPopup,
                                     unsigned char* msgReceived);  // slot 1

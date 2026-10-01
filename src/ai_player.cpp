@@ -267,7 +267,7 @@ void type_town_threat_checker::checkTowns()
                 enemyHero->m_bounty = 0;
                 g_searchArray->seedPosition(
                     enemyHero, start, target, mobility,
-                    (enemyHero->m_flags >> 18) & 1,
+                    enemyHero->isOnBoat(),
                     const_AI_enemy_search, mobility, 0);
                 markTowns(enemyHero, g_searchArray);
             }
@@ -1917,8 +1917,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
         int* cost =
             currentTown->getBuildCostArray(bestBuilding);
         currentTown->buildBuilding(bestBuilding, 1, 1);
-        for (int resource = 0; resource < 7; ++resource)
-            player->m_resources[resource] -= cost[resource];
+        player->payResourceCost(cost);
         purchaser.set(currentTown);
         purchaser.doPurchase(&currentHero->m_army, morale,
                               &currentTown->getArmy(), player->m_resources,
@@ -2702,9 +2701,7 @@ void aiConsolidateArmy(armyGroup& currentArmy)
                 duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT;
                 ++duplicate) {
                 if (currentArmy.m_armyTypes[duplicate] == type) {
-                    currentArmy.m_numTroops[first] +=
-                        currentArmy.m_numTroops[duplicate];
-                    currentArmy.dismiss(duplicate);
+                    currentArmy.mergeStack(duplicate, &currentArmy, first);
                 }
             }
         }
@@ -2917,7 +2914,7 @@ static void markDangerZones(const hero* ourHero, hero* enemyHero,
         type_point target(-1, -1, -1);
         g_searchArray->seedPosition(
             enemyHero, start, target, mobility,
-            (enemyHero->m_flags >> 18) & 1,
+            enemyHero->isOnBoat(),
             const_AI_enemy_search, mobility, 0);
 
         for (long visitedIndex =
@@ -2977,9 +2974,7 @@ static void checkHolyGrail(
     playerData* player = &g_game->m_players[currentHero->m_owner];
     if (player->m_puzzleGuess.m_x >= 0) {
         HeroDestination point;
-        point.m_point.m_x = player->m_puzzleGuess.m_x;
-        point.m_point.m_y = player->m_puzzleGuess.m_y;
-        point.m_point.m_z = player->m_puzzleGuess.m_z;
+        point.m_point.copyCoordinatesFrom(player->m_puzzleGuess);
         point.m_isCritical = 0;
         pathCell* guessCell = currentSearchArray->getCell(point.m_point, 0);
         if (guessCell->m_visited) {
@@ -3445,9 +3440,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
             point.m_isCritical = 1;
         }
 
-        point.m_point.m_x = cell->m_point.m_x;
-        point.m_point.m_y = cell->m_point.m_y;
-        point.m_point.m_z = cell->m_point.m_z;
+        point.m_point.copyCoordinatesFrom(cell->m_point);
         point.m_moveCost = cell->m_cost;
         if (point.m_point == currentHero->getLocation())
             continue;
@@ -3542,7 +3535,7 @@ long markDestinations(hero* currentHero, long maxDistance,
     currentSearchArray->seedPosition(currentHero, currentHero->getLocation(),
                                type_point(-1, -1, -1),
                                maxDistance,
-                               (currentHero->m_flags >> 18) & 1, searchType,
+                               currentHero->isOnBoat(), searchType,
                                movePoints, 0);
 
     for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i) {
@@ -3733,7 +3726,7 @@ unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
     triggerPoint = currentPathCell->m_point;
     NewmapCell* cell = g_game->getCell(triggerPoint);
 
-    if (currentPathCell->m_inBoat && !(currentHero->m_flags & 0x40000)) {
+    if (currentPathCell->m_inBoat && !currentHero->isOnBoat()) {
         if (!(cell->m_type == BOAT && cell->m_isTrigger)) {
             g_advManager->stopCursor(1);
             if (currentHero->canSummonBoat()) {
@@ -3806,14 +3799,20 @@ static void buildPath(hero* currentHero, searchArray* currentSearchArray,
             && (abs(currentPathCell->m_point.m_x - currentPathCell->m_lastPoint.m_x) > 1
                 || abs(currentPathCell->m_point.m_y - currentPathCell->m_lastPoint.m_y) > 1
                 || currentPathCell->m_point.m_z != currentPathCell->m_lastPoint.m_z)) {
-            destination.m_point.m_x = currentPathCell->m_lastPoint.m_x;
-            destination.m_point.m_y = currentPathCell->m_lastPoint.m_y;
-            destination.m_point.m_z = currentPathCell->m_lastPoint.m_z;
+            destination.m_point.copyCoordinatesFrom(currentPathCell->m_lastPoint);
             currentHero->setTarget(currentPathCell->m_lastPoint);
             return;
         }
         path.push_back(*currentPathCell);
     }
+}
+
+// Project-inferred failure transition shared by movement-spell checks.
+// A later blocked step retains the hero's remaining movement.
+static void stopMovementAtPathStart(hero* currentHero, long step)
+{
+    if (step == 0)
+        currentHero->m_movePoints = 0;
 }
 
 DC_ADDRESS(0x034508, 0x126)
@@ -3829,8 +3828,7 @@ static unsigned char checkMoveSpell(hero* currentHero,
     }
 
     if (i == path.size()) {
-        if (step == 0)
-            currentHero->m_movePoints = 0;
+        stopMovementAtPathStart(currentHero, step);
         return 0;
     }
 
@@ -3839,8 +3837,7 @@ static unsigned char checkMoveSpell(hero* currentHero,
         moveCost -= path[step - 1].m_cost;
 
     if (currentHero->m_movePoints < moveCost) {
-        if (step == 0)
-            currentHero->m_movePoints = 0;
+        stopMovementAtPathStart(currentHero, step);
         return 0;
     }
 
@@ -3893,8 +3890,7 @@ static unsigned char attemptTeleport(hero* currentHero,
     if (currentHero->m_dWalkSpellsCast
         >= g_spellTraits[SPELL_DIMENSION_DOOR].m_masteryBonus[mastery]) {
         if (path[step].m_dimensionDoor) {
-            if (step == 0)
-                currentHero->m_movePoints = 0;
+            stopMovementAtPathStart(currentHero, step);
             return 1;
         }
         return 0;
@@ -3918,7 +3914,7 @@ static unsigned char attemptTeleport(hero* currentHero,
     if (atManaSource && castsRemaining > 1)
         threshold = 200;
 
-    inBoat = (currentHero->m_flags & 0x40000) != 0;
+    inBoat = currentHero->isOnBoat();
     // Dreamcast decrements this index in get_location's call delay slot. Its
     // placement immediately before that call also reproduces retail VC6's
     // interleaved lifetime; moving it after the call falls to 96.3350%.
@@ -4089,11 +4085,8 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
                                      0, 1, 0);
             currentHero->useSpell(
                 currentHero->getManaCost(SPELL_TOWN_PORTAL));
-            if (currentHero->getSpellLevel(SPELL_TOWN_PORTAL)
-                == eMasteryExpert)
-                currentHero->m_movePoints -= 200;
-            else
-                currentHero->m_movePoints -= 300;
+            int movementCost = currentHero->getTownPortalMovementCost();
+            currentHero->m_movePoints -= movementCost;
             if (currentHero->m_movePoints < 0)
                 currentHero->m_movePoints = 0;
             return;
@@ -4253,12 +4246,11 @@ void aiBuildShip(const hero* ourHero, long x, long y, long z)
         return;
     }
 
-    if (player->m_resources[WOOD] < 10 || player->m_resources[GOLD] < 1000)
+    if (!player->canAffordBoat())
         return;
     if (g_game->createBoat(x, y, z, ourHero->m_owner, 0, 1) == -1)
         return;
-    player->m_resources[GOLD] -= 1000;
-    player->m_resources[WOOD] -= 10;
+    player->payBoatCost();
 }
 
 VA(0x00431160, 0x1f3)
@@ -4279,8 +4271,7 @@ long aiGetShipCost(const hero* ourHero, type_point point)
         shipyardTown->getBuildCost(DOCK_ID, cost);
     }
 
-    cost[WOOD] += 10;
-    cost[GOLD] += 1000;
+    addBoatCost(cost);
     return -aiResourceCost(player, cost);
 }
 

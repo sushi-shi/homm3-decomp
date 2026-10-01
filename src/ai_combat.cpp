@@ -552,6 +552,15 @@ void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const t
     }
 }
 
+// Project-inferred spell-damage operation: account for the creature's capped
+// loss in the side total and return that loss to callers with a running value.
+long type_AI_combat_data::takeCreatureDamage(unsigned int index, long damage)
+{
+    long value = m_creatures[index].takeDamage(damage);
+    m_totalCombatValue -= value;
+    return value;
+}
+
 VA(0x00424fb0, 0x145)
 DC_ADDRESS(0x02a938, 0xb0)
 MAC_ADDRESS(0x027190, 0xc4)
@@ -568,8 +577,7 @@ void type_AI_combat_data::castChainLightning(type_spell_choice& choice, type_AI_
             break;
         long value = targetData.m_creatures[target].getSpellDamage(
             choice.m_spell, m_currentHero, targetData.getHero(), damage);
-        value = targetData.m_creatures[target].takeDamage(value);
-        targetData.m_totalCombatValue -= value;
+        value = targetData.takeCreatureDamage(target, value);
         excluded |= 1 << target;
     }
 }
@@ -587,7 +595,7 @@ void type_AI_combat_data::castAreaEffect(type_spell_choice& choice, type_AI_comb
             choice.m_spell, m_currentHero, defender.getHero(), damage);
         if (value <= 0)
             continue;
-        defender.m_totalCombatValue -= defender.m_creatures[i].takeDamage(value);
+        defender.takeCreatureDamage(i, value);
         if (--extraTargets == 0)
             break;
     }
@@ -602,7 +610,7 @@ void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_com
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     long value = defender.m_creatures[choice.m_target].getSpellDamage(
         choice.m_spell, m_currentHero, defender.getHero(), damage);
-    defender.m_totalCombatValue -= defender.m_creatures[choice.m_target].takeDamage(value);
+    defender.takeCreatureDamage(choice.m_target, value);
     // The five-arm jump table at 0x4253cc: 0x13 chains, 0x14/0x15/0x17
     // hit one extra target, 0x16 hits two.
     switch (choice.m_spell) {
@@ -690,8 +698,7 @@ void type_AI_combat_data::castMassDamageSpell(
     for (long i = m_creatures.size(); i-- > 0; ) {
         value += m_creatures[i].getSpellDamage(
             choice.m_spell, castingHero, m_currentHero, damage);
-        value = m_creatures[i].takeDamage(value);
-        m_totalCombatValue -= value;
+        value = takeCreatureDamage(i, value);
     }
 }
 
@@ -1072,6 +1079,15 @@ long type_AI_combat_data::getFinalMeleeValue() const
     return value;
 }
 
+// Project-inferred exchange shared by ranged and melee rounds. Both attack
+// values have already been calculated; receiving damage cannot reprice them.
+void type_AI_combat_data::exchangeDamage(type_AI_combat_data& defender,
+    long ourAttack, long theirAttack, long blockerSpeed)
+{
+    inflictDamage(theirAttack, blockerSpeed);
+    defender.inflictDamage(ourAttack, 0);
+}
+
 // E:\gamedcs\ai_combat.cpp:1224
 // Retail inlines every use; these statements are reconstructed from the
 // repeated retail expansions. The Dreamcast contributes only the helper's
@@ -1083,8 +1099,7 @@ void type_AI_combat_data::doRangedCombat(
 {
     long ourAttack = getAttack(const_ranged, 0);
     long theirAttack = defender.getAttack(const_ranged, 0);
-    inflictDamage(theirAttack, 0);
-    defender.inflictDamage(ourAttack, 0);
+    exchangeDamage(defender, ourAttack, theirAttack, 0);
 }
 
 // E:\gamedcs\ai_combat.cpp:1240
@@ -1097,8 +1112,7 @@ void type_AI_combat_data::doMeleeCombat(
 {
     long ourAttack = getAttack(attackerSpeed, 0);
     long theirAttack = defender.getAttack(const_slow, 1);
-    inflictDamage(theirAttack, attackerSpeed);
-    defender.inflictDamage(ourAttack, 0);
+    exchangeDamage(defender, ourAttack, theirAttack, attackerSpeed);
 }
 
 // E:\gamedcs\ai_combat.cpp:1255
@@ -1110,8 +1124,7 @@ void type_AI_combat_data::doMeleeCombat(
 {
     long ourAttack = getAttack(const_slow, 1);
     long theirAttack = defender.getAttack(const_slow, 1);
-    inflictDamage(theirAttack, 0);
-    defender.inflictDamage(ourAttack, 0);
+    exchangeDamage(defender, ourAttack, theirAttack, 0);
 }
 
 // DC class 0x5a07's constructor method list 0x5a0f gives the copy constructor
@@ -1158,6 +1171,14 @@ void type_AI_combat_data::doGeneralMelee(type_AI_combat_data& defender)
     }
 }
 
+// Project-inferred ordered round gate. Do not query the opponent once this
+// side is depleted; each round rereads both native totals as needed.
+bool type_AI_combat_data::canContinueCombat(
+    const type_AI_combat_data& enemy) const
+{
+    return getTotal() > 0 && enemy.getTotal() > 0;
+}
+
 VA(0x004267c0, 0x3FD)
 DC_ADDRESS(0x02bad8, 0x168)
 MAC_ADDRESS(0x0287ac, 0x2d0)
@@ -1188,9 +1209,7 @@ bool type_AI_combat_data::chooseMelee(
 
         long round;
         for (round = currentRound; round < meleeRound; round++) {
-            if (localData.getTotal() <= 0)
-                break;
-            if (localEnemy.getTotal() <= 0)
+            if (!localData.canContinueCombat(localEnemy))
                 break;
             localData.castSpells(
                 localEnemy, (type_speed_catagory)round);
@@ -1198,9 +1217,7 @@ bool type_AI_combat_data::chooseMelee(
         }
 
         for (round = meleeRound; round < const_slow; round++) {
-            if (localData.getTotal() <= 0)
-                break;
-            if (localEnemy.getTotal() <= 0)
+            if (!localData.canContinueCombat(localEnemy))
                 break;
             localData.castSpells(
                 localEnemy, (type_speed_catagory)round);
@@ -1226,9 +1243,7 @@ MAC_ADDRESS(0x028afc, 0xf4)
 void type_AI_combat_data::simulateCombat(type_AI_combat_data& defender)
 {
     for (long round = 1; round < 4; round++) {
-        if (getTotal() <= 0)
-            break;
-        if (defender.getTotal() <= 0)
+        if (!canContinueCombat(defender))
             break;
         unsigned char weMelee = chooseMelee(
             defender, (type_speed_catagory)round);

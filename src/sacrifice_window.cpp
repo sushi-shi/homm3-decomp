@@ -302,12 +302,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
     m_canSacrificeCreatures = townType > TOWN_TOWER;
     m_totalExperience = 0;
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 // These labels use the public text subscript, retaining its getText call.
@@ -935,6 +930,23 @@ void type_sacrifice_window::updateCreatureOffering(
     }
 }
 
+// Project-inferred display operations shared by creature-mode initialization
+// and completed sacrifice. Preserve the native update helper and the
+// source-frame-before-offering-frame hide order; no native identity claimed.
+void type_sacrifice_window::updateUnselectedCreatureOffering(
+    type_creature_offering& creature)
+{
+    updateCreatureOffering(creature);
+    creature.m_sourceSelectionFrame->setVisible(0);
+    creature.m_offeringSelectionFrame->setVisible(0);
+}
+
+void type_sacrifice_window::clearCurrentCreature()
+{
+    m_currentCreature.m_group = -1;
+    updateCreatureOffering(m_currentCreature);
+}
+
 VA(0x00563150, 0x141)
 DC_ADDRESS(0x126064, 0x180)
 MAC_ADDRESS(0x1599bc, 0x1f4)
@@ -949,13 +961,10 @@ void type_sacrifice_window::setCreatureMode()
     for (long group = 0; group < 7; ++group) {
         m_creatureOfferings[group].m_amount = 0;
         m_creatureOfferings[group].m_group = group;
-        updateCreatureOffering(m_creatureOfferings[group]);
-        m_creatureOfferings[group].m_sourceSelectionFrame->setVisible(0);
-        m_creatureOfferings[group].m_offeringSelectionFrame->setVisible(0);
+        updateUnselectedCreatureOffering(m_creatureOfferings[group]);
     }
 
-    m_currentCreature.m_group = -1;
-    updateCreatureOffering(m_currentCreature);
+    clearCurrentCreature();
     m_sacrificingArtifacts = 0;
     m_maxCreaturesButton->enable(0);
     m_creatureSlider->enable(0);
@@ -1378,13 +1387,10 @@ int type_sacrifice_window::sacrifice(message& msg)
                 if (army->m_numTroops[group] <= 0)
                     army->dismiss(group);
                 window->m_creatureOfferings[group].m_amount = 0;
-                window->updateCreatureOffering(
+                window->updateUnselectedCreatureOffering(
                     window->m_creatureOfferings[group]);
-                window->m_creatureOfferings[group].m_sourceSelectionFrame->setVisible(0);
-                window->m_creatureOfferings[group].m_offeringSelectionFrame->setVisible(0);
             }
-            window->m_currentCreature.m_group = -1;
-            window->updateCreatureOffering(window->m_currentCreature);
+            window->clearCurrentCreature();
             window->m_creatureNameWidget->setVisible(0);
             window->m_allCreaturesButton->enable(
                 army->getCreatureTotal() > 1);
@@ -1491,10 +1497,7 @@ int type_sacrifice_window::exitClick(message& msg)
         type_sacrifice_window* window =
             static_cast<type_sacrifice_window*>(msg.m_window);
         window->clear();
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = 0;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, 0);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
@@ -1654,14 +1657,7 @@ void type_sacrifice_window::creatureClick(
         if (leftPane)
             amount = m_currentHero->m_army.m_numTroops[slot] - amount;
         if (creatureType != CREATURE_NONE && amount > 0) {
-            TViewArmyWindow viewArmyWindow(
-                creatureType, 0x77, 0x20,
-                static_cast<unsigned char>(!rightClick));
-            viewArmyWindow.centerWindow(-1, -1);
-            if (rightClick)
-                viewArmyWindow.quickView();
-            else
-                viewArmyWindow.doModal();
+            TViewArmyWindow::showCenteredCreature(creatureType, rightClick != 0);
         }
     } else {
         if (m_currentCreature.m_group >= 0) {
@@ -1761,10 +1757,7 @@ MAC_ADDRESS(0x15b7c8, 0x70)  // anchor-vtable slot 14
 int type_sacrifice_window::exitDialog(message& msg)
 {
     type_artifact_offering* artifact = &m_holdingArtifact;
-    msg.m_id = MESSAGE_WIDGET;
-    g_windowManager->m_dialogReturn = 0;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
+    g_windowManager->finishDialog(msg, 0);
 
     if (artifact->m_artifactId != -1) {
         returnArtifact(*artifact);
@@ -1813,6 +1806,15 @@ type_transformer_slot::type_transformer_slot(
 // 0x5654f0 - so neither row is an /OPT:ICF fold.
 VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 
+// Project helper for the selection pair only. In creatureClick the old
+// indices remain live through both updates, after the border was hidden;
+// unselect() therefore cannot replace the entire intervening sequence.
+void type_skeleton_window::clearCreatureSelection()
+{
+    m_selectedGroup = -1;
+    m_selectedIndex = -1;
+}
+
 // DC proves push_back; its text subscripts forward to getText. At 98.3508%,
 // the final rollover append's growth path retains an extra vector::size.
 // Removing the vector alias or binding its pointer argument locally does
@@ -1827,8 +1829,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     m_selectedCreatures.initialize();
     m_armies[0] = newArmy;
     m_armies[1] = &m_selectedCreatures;
-    m_selectedGroup = -1;
-    m_selectedIndex = -1;
+    clearCreatureSelection();
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 600, 485, widgetId++, "SkTrnBk.pcx", 0x800);
@@ -1921,8 +1922,7 @@ void type_skeleton_window::unselect()
     if (m_selectedGroup < 0)
         return;
     m_selectBorder[m_selectedGroup][m_selectedIndex]->setVisible(0);
-    m_selectedGroup = -1;
-    m_selectedIndex = -1;
+    clearCreatureSelection();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2157
@@ -2014,14 +2014,7 @@ void type_skeleton_window::creatureClick(
     if (rightClick
         || (slot == m_selectedIndex && side == m_selectedGroup)) {
         if (creatureType != CREATURE_NONE) {
-            TViewArmyWindow viewArmyWindow(
-                creatureType, 0x77, 0x20,
-                static_cast<unsigned char>(!rightClick));
-            viewArmyWindow.centerWindow(-1, -1);
-            if (rightClick)
-                viewArmyWindow.quickView();
-            else
-                viewArmyWindow.doModal();
+            TViewArmyWindow::showCenteredCreature(creatureType, rightClick != 0);
         }
     } else if (m_selectedGroup < 0) {
         m_selectedIndex = slot;
@@ -2050,8 +2043,7 @@ void type_skeleton_window::creatureClick(
         update(m_selectedGroup, m_selectedIndex);
 
         widget::clearHoverWidget();
-        m_selectedGroup = -1;
-        m_selectedIndex = -1;
+        clearCreatureSelection();
 
         updateButtons();
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -2080,9 +2072,7 @@ int type_skeleton_window::windowHandler(message& msg)
 DC_ADDRESS(0x128080, 0x16)
 int type_skeleton_window::exitDialog(message& msg)
 {
-    msg.m_id = MESSAGE_WIDGET;
-    g_windowManager->m_dialogReturn = 0;
-    msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+    g_windowManager->finishDialog(msg, 0);
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -2211,10 +2201,7 @@ int type_skeleton_window::exitClick(message& msg)
         type_skeleton_window* window =
             static_cast<type_skeleton_window*>(msg.m_window);
         moveAllArmies(window->m_armies[1], window->m_armies[0]);
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = 0;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, 0);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;

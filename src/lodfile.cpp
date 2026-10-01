@@ -18,6 +18,16 @@ void LODFile::clear()
     }
 }
 
+// Project-inferred lookup shared by stream and directory-entry access.
+// A closed archive leaves the previous match index untouched.
+bool LODFile::findOpenEntry(const char* itemName)
+{
+    if (!m_opened)
+        return false;
+    find(0, m_numEntries, itemName);
+    return m_matchindex >= 0;
+}
+
 // E:\gamedcs\lodfile.cpp:72
 // DC's getDataPtr is an ordinary helper called at pointAt line 431.
 // The PC expansion seeks the archive stream before returning its handle.
@@ -25,15 +35,11 @@ DC_ADDRESS(0x0e9100, 0x54)
 MAC_ADDRESS(0x11b5f4, 0x8c)
 void* LODFile::getDataPtr(const char* itemName)
 {
-    if (!m_opened)
+    if (!findOpenEntry(itemName))
         return 0;
-    find(0, m_numEntries, itemName);
-    if (m_matchindex >= 0) {
-        fseek(m_fileptr, m_subindex[m_matchindex].m_offset, SEEK_SET);
-        m_dataItemIndex = m_matchindex;
-        return m_fileptr;
-    }
-    return 0;
+    fseek(m_fileptr, m_subindex[m_matchindex].m_offset, SEEK_SET);
+    m_dataItemIndex = m_matchindex;
+    return m_fileptr;
 }
 
 VA(0x004fa610, 0x45)
@@ -41,11 +47,8 @@ DC_ADDRESS(0x0e9154, 0x42)
 MAC_ADDRESS(0x11b680, 0x70)
 LODEntry* LODFile::getItemIndex(const char* itemName)
 {
-    if (m_opened) {
-        find(0, m_numEntries, itemName);
-        if (m_matchindex >= 0)
-            return &m_subindex[m_matchindex];
-    }
+    if (findOpenEntry(itemName))
+        return &m_subindex[m_matchindex];
     return 0;
 }
 
@@ -55,6 +58,18 @@ unsigned char LODFile::exist(const char* itemName)
 {
     find(0, m_numEntries, itemName);
     return m_matchindex >= 0;
+}
+
+// Project-inferred short-range scan shared by both binary-search branches.
+void LODFile::findLinear(unsigned begin, unsigned end, const char* itemName)
+{
+    for (unsigned index = begin; index < end; ++index) {
+        if (_strcmpi(itemName, m_subindex[index].m_name) == 0) {
+            m_matchindex = index;
+            return;
+        }
+    }
+    m_matchindex = -1;
 }
 
 // Mac retains both recursive calls at 0x11b770 and 0x11b7d8. The Windows
@@ -80,13 +95,7 @@ void LODFile::find(unsigned begin, unsigned end, const char* itemName)
             find(begin, begin + half, itemName);
             return;
         } else {
-            for (unsigned i = begin; i < end; i++) {
-                if (_strcmpi(itemName, m_subindex[i].m_name) == 0) {
-                    m_matchindex = i;
-                    return;
-                }
-            }
-            m_matchindex = -1;
+            findLinear(begin, end, itemName);
             return;
         }
     } else {
@@ -94,13 +103,7 @@ void LODFile::find(unsigned begin, unsigned end, const char* itemName)
             find(begin + half, end, itemName);
             return;
         } else {
-            for (unsigned j = begin; j < end; j++) {
-                if (_strcmpi(itemName, m_subindex[j].m_name) == 0) {
-                    m_matchindex = j;
-                    return;
-                }
-            }
-            m_matchindex = -1;
+            findLinear(begin, end, itemName);
             return;
         }
     }

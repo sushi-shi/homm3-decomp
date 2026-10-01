@@ -256,17 +256,13 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     if (spellToCast == -1)
         return;
 
-    m_nextAction = 0;
-    m_nextActionExtra = -1;
-    m_nextActionGridIndex = -1;
-    m_nextActionGridIndex2 = -1;
+    setPendingAction(0, -1, -1, -1);
 
     TSkillMastery mastery = m_heroes[m_currentSide]->getSpellLevel(spellToCast,
                                                         m_magicTerrain);
     switch (spellToCast) {
     case SPELL_QUICKSAND:
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         break;
 
     case SPELL_LAND_MINE:
@@ -275,8 +271,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                          -1, 0, -1, 0, -1, 0);
             break;
         }
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         break;
 
     case SPELL_EARTHQUAKE:
@@ -285,8 +280,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                          -1, 0, -1, 0, -1, 0);
             break;
         }
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         break;
 
     case SPELL_MAGIC_ARROW:
@@ -337,9 +331,9 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
             break;
         }
 
-        m_nextAction = creatureSpell == 1 ? AI_ORDER_CREATURE_SPELL
-                                      : AI_ORDER_CAST_SPELL;
-        m_nextActionExtra = spellToCast;
+        prepareAction(creatureSpell == 1 ? AI_ORDER_CREATURE_SPELL
+                                         : AI_ORDER_CAST_SPELL,
+                      spellToCast);
         if (spellTargetsASingleArmy(spellToCast, mastery)) {
             updateSpellTargetFromMouse();
             g_windowManager->doDialog(0, handleCastSpell, 0);
@@ -373,9 +367,9 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     case SPELL_METEOR_SHOWER:
     case SPELL_BERSERK: {
         int shadeLevel = g_config.m_combatShadeLevel;
-        m_nextAction = creatureSpell == 1 ? AI_ORDER_CREATURE_SPELL
-                                      : AI_ORDER_CAST_SPELL;
-        m_nextActionExtra = spellToCast;
+        prepareAction(creatureSpell == 1 ? AI_ORDER_CREATURE_SPELL
+                                         : AI_ORDER_CAST_SPELL,
+                      spellToCast);
         if (shadeLevel && g_config.m_showCombatMouseHex)
             setCombatGrid(g_config.m_showCombatGrid, 1, 0, 1);
         updateSpellTargetFromMouse();
@@ -389,8 +383,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     case SPELL_FORCE_FIELD:
     case SPELL_FIRE_WALL: {
         int shadeLevel = g_config.m_combatShadeLevel;
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         if (shadeLevel && g_config.m_showCombatMouseHex)
             setCombatGrid(g_config.m_showCombatGrid, 1, 0, 1);
         g_windowManager->doDialog(0, handleCastWallSpell, 0);
@@ -407,8 +400,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                          -1, 0, -1, 0, -1, 0);
             return;
         }
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         g_windowManager->doDialog(0, handleCastTeleport, 0);
         if (!m_nextAction)
             break;
@@ -427,8 +419,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                          -1, 0, -1, 0, -1, 0);
             return;
         }
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         g_windowManager->doDialog(0, handleSacrificeBeneficiary, 0);
         if (!m_nextAction)
             break;
@@ -441,8 +432,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                          -1, 0, -1, 0, -1, 0);
             return;
         }
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         g_windowManager->doDialog(0, handleCastSpell, 0);
         break;
 
@@ -458,8 +448,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                          -1, 0, -1, 0, -1, 0);
             return;
         }
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         g_windowManager->doDialog(0, handleCastSpell, 0);
         break;
 
@@ -469,8 +458,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     case SPELL_SUMMON_AIR_ELEMENTAL: {
         int side = m_currentSide;
         if (ableToSummonElemental(spellToCast, side)) {
-            m_nextAction = 1;
-            m_nextActionExtra = spellToCast;
+            prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
             break;
         }
         hero* castingHero = m_heroes[side];
@@ -490,23 +478,45 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
 }
 
+// Project-inferred shared refusal display. Resolve globals at each operation,
+// and look up the prompt only after restoring the ordinary combat pointer.
+static void showInvalidSpellTarget(SpellID spell, EGeneralTextIndex prompt, long hex)
+{
+    g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
+    g_combatManager->displayFailureReason(
+        spell, g_generalText->getText(prompt), hex);
+    g_combatManager->turnOffHighlighter(1);
+}
+
+// Project-inferred first-target presentation shared by the ordinary, wall,
+// sacrifice-beneficiary and teleport-source pickers. Resolve the global
+// manager again after each operation and retain caller-specific highlighting.
+static void showValidSpellTarget(SpellID spell, long hex, bool highlight)
+{
+    g_mouseManager->setPointer(spell + 1, mouseManager::SPELL_SET);
+    g_combatManager->spellTargetMessage(spell, hex, 1);
+    if (highlight)
+        g_combatManager->checkChangeHighlighter(hex);
+}
+
 // Complete factors the live rollover update out of InitiateSpell and the
 // dialog handler. There is no Dreamcast counterpart, so the name is
 // behaviour-derived; the retained body and its three callers prove the
 // boundary and fastcall argument placement. Mac's lightly optimized body
 // confirms that an out-of-range hex still reaches validSpellTarget: the
 // inInvisibleColumn helper rejects invalid indices without blocking that call.
-// Keeping the spell and casting hero locals ahead of creatureSpell gives VC6
-// retail's prologue register assignment; Windows bytes are exact.
+// Keeping the spell and casting hero locals ahead of creatureSpell gave VC6
+// retail's prologue register assignment in the prior exact reconstruction.
+// The shared presentation operation below has not been compiled or measured.
 VA(0x0059f700, 0x192)
 MAC_ADDRESS(0x18f538, 0x22c)  // retail-only factored helper
 static int updateSpellTarget(long hex)
 {
     combatManager* manager = g_combatManager;
     unsigned char markArea = 0;
-    SpellID spell = manager->m_nextActionExtra;
+    SpellID spell = manager->getPendingActionExtra();
     hero* castingHero = manager->m_heroes[manager->m_currentSide];
-    int creatureSpell = manager->m_nextAction == AI_ORDER_CREATURE_SPELL;
+    int creatureSpell = manager->getPendingActionCode() == AI_ORDER_CREATURE_SPELL;
     unsigned int spellFlags = g_spellTraits[spell].m_flags;
     TSkillMastery mastery;
     if (!castingHero)
@@ -528,16 +538,10 @@ static int updateSpellTarget(long hex)
                 || g_combatManager->m_cells[hex].getArmy()->getOwningSide()
                     != g_combatManager->m_currentSide)) {
         result = hex;
-        g_mouseManager->setPointer(spell + 1, mouseManager::SPELL_SET);
-        g_combatManager->spellTargetMessage(spell, hex, 1);
-        if (!markArea)
-            g_combatManager->checkChangeHighlighter(hex);
+        showValidSpellTarget(spell, hex, !markArea);
     } else {
         result = -1;
-        g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
-        g_combatManager->displayFailureReason(
-            spell, g_generalText->getText(GENERAL_TEXT_SELECT_SPELL_TARGET), hex);
-        g_combatManager->turnOffHighlighter(1);
+        showInvalidSpellTarget(spell, GENERAL_TEXT_SELECT_SPELL_TARGET, hex);
     }
     if (markArea)
         markAreaHighlights(
@@ -1679,10 +1683,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     for (int side = 0; side < 2; ++side) {
         for (int index = 0; index < m_numArmies[side]; ++index) {
             army* currentArmy = &m_armies[side][index];
-            currentArmy->m_someUnitsDamaged = 0;
-            currentArmy->m_drawPriority = 4;
-            currentArmy->m_showAttackFrames = 0;
-            currentArmy->m_numTroopsToShowOverride = -1;
+            currentArmy->resetDamageDisplay();
         }
     }
 
@@ -1699,8 +1700,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             m_cmbtHeroFrameIndex[m_currentSide] = frame;
             drawFrame(1, 0, 0, 100, 1, 1);
         }
-        m_cmbtHeroFrameType[m_currentSide] = 0;
-        m_cmbtHeroFrameIndex[m_currentSide] = 0;
+        startHeroAnimationSequence(m_currentSide, COMBAT_HERO_FRAME_IDLE);
         drawFrame(1, 0, 0, 0, 1, 0);
     }
     checkChangeSelector();
@@ -1828,6 +1828,14 @@ static long g_sacrificeBeneficiaryLastIndex = -1;
 DATA(0x006a3cd4)
 static unsigned char g_sacrificeBeneficiaryValidTarget;
 
+// Project-inferred phase completion shared by confirmation and cancellation.
+static void finishSacrificeBeneficiarySelection(message& msg)
+{
+    g_sacrificeBeneficiaryLastIndex = -1;
+    g_sacrificeBeneficiaryValidTarget = 0;
+    msg.setDialogEnd();
+}
+
 VA(0x005a2d00, 0x184)
 DC_ADDRESS(0x151e94, 0x1c6)
 MAC_ADDRESS(0x1932a8, 0x238)
@@ -1847,37 +1855,26 @@ int handleSacrificeBeneficiary(message& msg)
                                               g_combatManager->m_currentSide,
                                               1, 0)) {
             g_sacrificeBeneficiaryValidTarget = 1;
-            g_mouseManager->setPointer(SPELL_SACRIFICE + 1,
-                                       mouseManager::SPELL_SET);
-            g_combatManager->spellTargetMessage(SPELL_SACRIFICE, hex, 1);
-            g_combatManager->checkChangeHighlighter(hex);
+            showValidSpellTarget(SPELL_SACRIFICE, hex, true);
         } else {
             g_sacrificeBeneficiaryValidTarget = 0;
-            g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
-            g_combatManager->displayFailureReason(
-                SPELL_SACRIFICE, (*g_generalText)[GENERAL_TEXT_CHOOSE_RESURRECTION_TARGET], hex);
-            g_combatManager->turnOffHighlighter(1);
+            showInvalidSpellTarget(
+                SPELL_SACRIFICE, GENERAL_TEXT_CHOOSE_RESURRECTION_TARGET, hex);
         }
         break;
     }
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (!g_sacrificeBeneficiaryValidTarget)
             break;
-        g_combatManager->m_nextActionGridIndex = g_sacrificeBeneficiaryLastIndex;
-        g_sacrificeBeneficiaryLastIndex = -1;
-        g_sacrificeBeneficiaryValidTarget = 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        g_combatManager->selectActionTarget(g_sacrificeBeneficiaryLastIndex);
+        finishSacrificeBeneficiarySelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
-        g_combatManager->m_nextAction = 0;
-        g_sacrificeBeneficiaryLastIndex = -1;
-        g_sacrificeBeneficiaryValidTarget = 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        g_combatManager->cancelPendingAction();
+        finishSacrificeBeneficiarySelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -1887,6 +1884,14 @@ DATA(0x00688320)
 static long g_sacrificeLastIndex = -1;
 DATA(0x006a3cd8)
 static int g_sacrificeIndexIsValid;
+
+// Project-inferred completion of the second, sacrificed-stack selection phase.
+static void finishSacrificeSelection(message& msg)
+{
+    g_sacrificeLastIndex = -1;
+    g_sacrificeIndexIsValid = 0;
+    msg.setDialogEnd();
+}
 
 VA(0x005a2e90, 0x1D4)
 DC_ADDRESS(0x15205c, 0x1e2)
@@ -1907,7 +1912,7 @@ int handleCastSacrifice(message& msg)
                                               g_combatManager->m_currentSide,
                                               0, 0)
             && g_combatManager->m_cells[hex].getArmy()
-                != g_combatManager->m_cells[g_combatManager->m_nextActionGridIndex]
+                != g_combatManager->m_cells[g_combatManager->getPendingActionTarget()]
                        .getArmy()) {
             g_sacrificeIndexIsValid = 1;
             g_mouseManager->setPointer(0x12, mouseManager::COMBAT_SET);
@@ -1915,31 +1920,23 @@ int handleCastSacrifice(message& msg)
             g_combatManager->checkChangeHighlighter(hex);
         } else {
             g_sacrificeIndexIsValid = 0;
-            g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
-            g_combatManager->displayFailureReason(
-                SPELL_SACRIFICE, (*g_generalText)[GENERAL_TEXT_CHOOSE_SACRIFICE_TARGET], hex);
-            g_combatManager->turnOffHighlighter(1);
+            showInvalidSpellTarget(
+                SPELL_SACRIFICE, GENERAL_TEXT_CHOOSE_SACRIFICE_TARGET, hex);
         }
         break;
     }
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (!g_sacrificeIndexIsValid)
             break;
-        g_combatManager->m_nextActionGridIndex2 = g_sacrificeLastIndex;
-        g_sacrificeLastIndex = -1;
-        g_sacrificeIndexIsValid = 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        g_combatManager->selectSecondaryActionTarget(g_sacrificeLastIndex);
+        finishSacrificeSelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
-        g_combatManager->m_nextAction = 0;
-        g_sacrificeLastIndex = -1;
-        g_sacrificeIndexIsValid = 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        g_combatManager->cancelPendingAction();
+        finishSacrificeSelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -2029,6 +2026,20 @@ static void clearAreaHighlights()
     }
 }
 
+// Project-inferred single-click completion. The two-click phases keep their
+// reset between the action update and dialog completion instead.
+static void confirmSpellSelection(message& msg, long targetHex)
+{
+    g_combatManager->selectActionTarget(targetHex);
+    msg.setDialogEnd();
+}
+
+static void cancelSpellSelection(message& msg)
+{
+    g_combatManager->cancelPendingAction();
+    msg.setDialogEnd();
+}
+
 DATA(0x00688324)
 static long g_castSpellIndexToCastOn = -1;
 
@@ -2050,9 +2061,7 @@ int handleCastSpell(message& msg)
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (g_castSpellIndexToCastOn == -1)
             break;
-        g_combatManager->m_nextActionGridIndex = g_castSpellIndexToCastOn;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        confirmSpellSelection(msg, g_castSpellIndexToCastOn);
         clearAreaHighlights();
         g_castSpellIndexToCastOn = -1;
         return MESSAGE_DISPATCH_FORWARD;
@@ -2060,9 +2069,7 @@ int handleCastSpell(message& msg)
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
-        g_combatManager->m_nextAction = 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        cancelSpellSelection(msg);
         g_castSpellIndexToCastOn = -1;
         clearAreaHighlights();
         return MESSAGE_DISPATCH_FORWARD;
@@ -2108,7 +2115,7 @@ int handleCastWallSpell(message& msg)
 {
     hero* castingHero =
         g_combatManager->m_heroes[g_combatManager->m_currentSide];
-    SpellID spell = static_cast<SpellID>(g_combatManager->m_nextActionExtra) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+    SpellID spell = static_cast<SpellID>(g_combatManager->getPendingActionExtra()) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
     g_combatManager->doAnimations();
     switch (msg.m_id) {
     case MESSAGE_MOUSE_MOVE: {
@@ -2123,8 +2130,7 @@ int handleCastWallSpell(message& msg)
                                               g_combatManager->m_currentSide,
                                               1, 0)) {
             g_castWallIndexToCastOn = hex;
-            g_mouseManager->setPointer(spell + 1, mouseManager::SPELL_SET);
-            g_combatManager->spellTargetMessage(spell, hex, 1);
+            showValidSpellTarget(spell, hex, false);
             if (g_config.m_showCombatMouseHex
                 && spell != SPELL_FORCE_FIELD) {
                 std::vector<long> hexes;
@@ -2147,17 +2153,13 @@ int handleCastWallSpell(message& msg)
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (g_castWallIndexToCastOn == -1)
             break;
-        g_combatManager->m_nextActionGridIndex = g_castWallIndexToCastOn;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        confirmSpellSelection(msg, g_castWallIndexToCastOn);
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
-        g_combatManager->m_nextAction = 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        cancelSpellSelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -2167,6 +2169,14 @@ DATA(0x0068832c)
 static long g_castTeleportArmyHex = -1;
 DATA(0x00688330)
 static long g_castTeleportPreviousHex = -1;
+
+// Project-inferred first-phase completion: reset hover/selection, then end dialog.
+static void finishTeleportSourceSelection(message& msg)
+{
+    g_castTeleportPreviousHex = -1;
+    g_castTeleportArmyHex = -1;
+    msg.setDialogEnd();
+}
 
 VA(0x005a3570, 0x184)
 DC_ADDRESS(0x152a14, 0x166)
@@ -2186,16 +2196,11 @@ int handleCastTeleport(message& msg)
                                               g_combatManager->m_magicTerrain),
                 hex, g_combatManager->m_currentSide, 1, 0)) {
             g_castTeleportArmyHex = hex;
-            g_mouseManager->setPointer(SPELL_TELEPORT + 1,
-                                       mouseManager::SPELL_SET);
-            g_combatManager->spellTargetMessage(SPELL_TELEPORT, hex, 1);
-            g_combatManager->checkChangeHighlighter(hex);
+            showValidSpellTarget(SPELL_TELEPORT, hex, true);
         } else {
             g_castTeleportArmyHex = -1;
-            g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
-            g_combatManager->displayFailureReason(
-                SPELL_TELEPORT, (*g_generalText)[GENERAL_TEXT_SELECT_SPELL_TARGET], hex);
-            g_combatManager->turnOffHighlighter(1);
+            showInvalidSpellTarget(
+                SPELL_TELEPORT, GENERAL_TEXT_SELECT_SPELL_TARGET, hex);
         }
         g_castTeleportPreviousHex = hex;
         break;
@@ -2203,21 +2208,15 @@ int handleCastTeleport(message& msg)
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (g_castTeleportArmyHex == -1)
             break;
-        g_combatManager->m_nextActionGridIndex = g_castTeleportArmyHex;
-        g_castTeleportPreviousHex = -1;
-        g_castTeleportArmyHex = -1;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        g_combatManager->selectActionTarget(g_castTeleportArmyHex);
+        finishTeleportSourceSelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
-        g_combatManager->m_nextAction = 0;
-        g_castTeleportPreviousHex = -1;
-        g_castTeleportArmyHex = -1;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        g_combatManager->cancelPendingAction();
+        finishTeleportSourceSelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -2251,6 +2250,14 @@ unsigned char combatManager::isValidTeleport(const army* thisArmy, long newHex)
     return 1;
 }
 
+// Project-inferred second-phase completion with its independent hover cache.
+static void finishTeleportDestinationSelection(message& msg)
+{
+    g_teleportHoverHex = -1;
+    g_teleportDestinationHex = -1;
+    msg.setDialogEnd();
+}
+
 // combatManager::field_44 already holds the hex the first click picked,
 // so the cell pointer here is the SOURCE stack; `hex` is the candidate
 // landing under the cursor.
@@ -2264,7 +2271,7 @@ static int handleGetTeleportDestination(message& msg)
         long hex = g_combatManager->getGridIndex(msg.m_codeX, msg.m_codeY);
         if (hex == g_teleportHoverHex)
             break;
-        long sourceHex = g_combatManager->m_nextActionGridIndex;
+        long sourceHex = g_combatManager->getPendingActionTarget();
         const hexcell* sourceCell = &g_combatManager->m_cells[sourceHex];
         if (!g_combatManager->validHex(sourceHex))
             break;
@@ -2285,11 +2292,8 @@ static int handleGetTeleportDestination(message& msg)
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (g_teleportDestinationHex == -1)
             break;
-        g_combatManager->m_nextActionGridIndex2 = g_teleportDestinationHex;
-        g_teleportHoverHex = -1;
-        g_teleportDestinationHex = -1;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        g_combatManager->selectSecondaryActionTarget(g_teleportDestinationHex);
+        finishTeleportDestinationSelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         // The ESC scancode in the codeX domain, the same value
@@ -2298,11 +2302,8 @@ static int handleGetTeleportDestination(message& msg)
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
-        g_combatManager->m_nextAction = 0;
-        g_teleportHoverHex = -1;
-        g_teleportDestinationHex = -1;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        g_combatManager->cancelPendingAction();
+        finishTeleportDestinationSelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -2539,6 +2540,55 @@ bool combatManager::validSpellTargetArmy(SpellID spellId,
                                firstTarget, creatureSpell) > 0.0;
 }
 
+// Project-inferred cleanup shared by Armageddon and mass-spell presentation.
+// Keep the affected row live throughout ProcessDeath and its nested callbacks.
+void combatManager::processSpellDeaths(const bool (&effected)[2][20])
+{
+    clearVanishingCreatures();
+    unsigned char anyDied = 0;
+    for (int side = 0; side < 2; side++) {
+        for (int i = 0; i < m_numArmies[side]; i++) {
+            army& stack = m_armies[side][i];
+            if (effected[side][i] && stack.m_numTroops == 0) {
+                processArmyDeath(stack, side);
+                anyDied = 1;
+            }
+        }
+    }
+    if (anyDied)
+        drawFrame(1, 0, 0, 0, 1, 0);
+    makeCreaturesVanishIfNeeded();
+}
+
+// Project-inferred presentation reset. Eligibility and damage state stay intact.
+void combatManager::clearArmySpellOverlays()
+{
+    for (int side = 0; side < 2; side++) {
+        for (int i = 0; i < m_numArmies[side]; i++)
+            m_armies[side][i].m_showPowEffect = 0;
+    }
+}
+
+// Project-inferred operation shared by the three corpse-target searches.
+// The selected hex is checked by each caller; this checks its possible mate.
+bool combatManager::isCorpseFootprintFree(
+    const hexcell& cell, int bodyIndex, int hex) const
+{
+    if (cell.m_deadPartOfDouble[bodyIndex] == 0) {
+        if (m_cells[hex + 1].hasArmy())
+            return false;
+        if (m_cells[hex + 1].m_attributes & hexcell::blocked)
+            return false;
+    }
+    if (cell.m_deadPartOfDouble[bodyIndex] == 1) {
+        if (m_cells[hex - 1].hasArmy())
+            return false;
+        if (m_cells[hex - 1].m_attributes & hexcell::blocked)
+            return false;
+    }
+    return true;
+}
+
 // DC sole local is const hexcell& tcell (sp+0x18); preserve that cell
 // view through the live-stack and corpse paths, with canonical predicates.
 VA(0x005a3cc0, 0x175)
@@ -2556,7 +2606,7 @@ army* combatManager::findResurrectionTarget(int side, int hex,
             return 0;
         if (!target->is(creatureAlive))
             return 0;
-        if (target->m_numTroops >= target->m_origNumTroops)
+        if (!target->hasLostTroops())
             return 0;
         if (validSpellTargetArmy(SPELL_RESURRECTION, side, target, 1,
                                  creatureSpell))
@@ -2575,18 +2625,8 @@ army* combatManager::findResurrectionTarget(int side, int hex,
             continue;
         if (!corpse->is(creatureAlive))
             continue;
-        if (cell.m_deadPartOfDouble[i] == 0) {
-            if (m_cells[hex + 1].hasArmy())
-                continue;
-            if (m_cells[hex + 1].m_attributes & hexcell::blocked)
-                continue;
-        }
-        if (cell.m_deadPartOfDouble[i] == 1) {
-            if (m_cells[hex - 1].hasArmy())
-                continue;
-            if (m_cells[hex - 1].m_attributes & hexcell::blocked)
-                continue;
-        }
+        if (!isCorpseFootprintFree(cell, i, hex))
+            continue;
         if (validSpellTargetArmy(SPELL_RESURRECTION, side, corpse, 1,
                                  creatureSpell))
             return corpse;
@@ -2617,18 +2657,8 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
             continue;
         if (!(m_armies[deadSide][deadSlot].is(creatureAlive)))
             continue;
-        if (cell->m_deadPartOfDouble[i] == 0) {
-            if (m_cells[hex + 1].hasArmy())
-                continue;
-            if (m_cells[hex + 1].m_attributes & hexcell::blocked)
-                continue;
-        }
-        if (cell->m_deadPartOfDouble[i] == 1) {
-            if (m_cells[hex - 1].hasArmy())
-                continue;
-            if (m_cells[hex - 1].m_attributes & hexcell::blocked)
-                continue;
-        }
+        if (!isCorpseFootprintFree(*cell, i, hex))
+            continue;
         return &m_armies[deadSide][deadSlot];
     }
     return 0;
@@ -2648,7 +2678,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
             return 0;
         if (!target->is(creatureUndead))
             return 0;
-        if (target->m_numTroops >= target->m_origNumTroops)
+        if (!target->hasLostTroops())
             return 0;
         if (validSpellTargetArmy(SPELL_ANIMATE_DEAD, side, target, 1, 0))
             return target;
@@ -2666,18 +2696,8 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
             continue;
         if (!corpse->is(creatureUndead))
             continue;
-        if (cell->m_deadPartOfDouble[i] == 0) {
-            if (m_cells[hex + 1].hasArmy())
-                continue;
-            if (m_cells[hex + 1].m_attributes & hexcell::blocked)
-                continue;
-        }
-        if (cell->m_deadPartOfDouble[i] == 1) {
-            if (m_cells[hex - 1].hasArmy())
-                continue;
-            if (m_cells[hex - 1].m_attributes & hexcell::blocked)
-                continue;
-        }
+        if (!isCorpseFootprintFree(*cell, i, hex))
+            continue;
         if (validSpellTargetArmy(SPELL_ANIMATE_DEAD, side, corpse, 1, 0))
             return corpse;
     } while (--i >= 0);
@@ -3014,8 +3034,9 @@ void combatManager::areaEffect(long targetCell, SpellID spellType,
 // merged here: roll+damage, then set up each hit stack's wince/death
 // animation, advance those animations in the frame loop, clear their
 // effect flags, then process the dead stacks. One function-local `i` is
-// reused by every sweep; that is what gives all five retail loops the
-// same [ebp-8] counter home.
+// reused by the original sweeps; that gives all five retail loops the
+// same [ebp-8] counter home. The overlay reset and death cleanup are now
+// shared operations; the compiler observations here predate their extraction.
 
 // THE DAMAGE IS ComputeSpellDamage (0x5a7890) EXPANDED, not called -
 // its `mastery_bonus[level] + power_factor * power` body appears twice,
@@ -3114,17 +3135,7 @@ void combatManager::armageddon(int level, int power)
                 { for (i = 0; i < m_numArmies[side]; i++) {
                     army* currentArmy = &m_armies[side][i];
                     if (m_effected[side][i]) {
-                        // A wincing stack falls back to cs_wait once its
-                        // sequence runs out; a dying one holds its last
-                        // frame, which is why only cs_wince is reset.
-                        if (currentArmy->m_currFrameIndex
-                            < currentArmy->m_stdIcon->getNumFrames(
-                                  currentArmy->m_currFrameType) - 1) {
-                            currentArmy->m_currFrameIndex++;
-                        } else if (currentArmy->m_currFrameType == cs_wince) {
-                            currentArmy->m_currFrameType = cs_wait;
-                            currentArmy->m_currFrameIndex = 0;
-                        }
+                        currentArmy->advanceSpellReactionAnimation();
                     }
                 } }
             } }
@@ -3148,38 +3159,9 @@ void combatManager::armageddon(int level, int power)
         } }
     }
 
-    { for (int side = 0; side < 2; side++) {
-        { for (i = 0; i < m_numArmies[side]; i++)
-            m_armies[side][i].m_showPowEffect = 0; }
-    } }
+    clearArmySpellOverlays();
 
-    memset(m_creatureIsDead, 0, sizeof(m_creatureIsDead));
-    m_someCreaturesVanish = 0;
-    unsigned char deaths = 0;
-    { for (int side = 0; side < 2; side++) {
-        { for (i = 0; i < m_numArmies[side]; i++) {
-            army* currentArmy = &m_armies[side][i];
-            if (m_effected[side][i] && currentArmy->m_numTroops == 0) {
-                currentArmy->processDeath(0);
-                // Bit 6 of creatureId is the siege-weapon marker, so a
-                // catapult or tent killed here also loses the artifact
-                // its owner was carrying it as. SPELLED THROUGH army::Is
-                // (+0.57, 88.15 -> 88.72): the accessor truncates the
-                // shifted word to a byte before the caller's mask, which
-                // is what stops VC6 folding the test back into a
-                // `test dword ptr [mem], imm` on the member - the same
-                // lever that closed SpellCastWorkChance's register wall.
-                if (currentArmy->is(creatureSiegeWeapon))
-                    m_heroes[side]->destroySiegeWeaponArtifact(
-                        currentArmy->m_creatureType);
-                deaths = 1;
-            }
-        } }
-    } }
-    if (deaths)
-        drawFrame(1, 0, 0, 0, 1, 0);
-    if (m_someCreaturesVanish)
-        makeCreaturesVanish();
+    processSpellDeaths(m_effected);
     if (damageDone
         && !static_cast<const combatManager*>(this)->isQuickCombat()) {
         long totalDamage = computeSpellDamage(
@@ -3269,6 +3251,19 @@ void combatManager::resetBoltAngle(SBolt* bolt)
     }
 }
 
+// Project-inferred operation: a clipped pixel also resets its fractional pen.
+static void clipBoltCoordinate(float& position, int& pixel, int maximum)
+{
+    if (pixel < 0) {
+        pixel = 0;
+        position = 0;
+    }
+    if (pixel > maximum) {
+        pixel = maximum;
+        position = static_cast<float>(maximum);
+    }
+}
+
 // The two FIVE-row tables are indexed by the DISTANCE FROM THE NEARER
 // EDGE of the drawn span, so row 0 paints both rims and the last row
 // the middle. The FIFTEEN-row one is indexed by the span position
@@ -3321,22 +3316,8 @@ void combatManager::drawBolt(SBolt* bolt, int drawLength)
             cos(static_cast<double>(bolt->m_angle)) + bolt->m_y);
         bolt->m_pixelX = static_cast<long>(bolt->m_x);
         bolt->m_pixelY = static_cast<long>(bolt->m_y);
-        if (bolt->m_pixelX < 0) {
-            bolt->m_pixelX = 0;
-            bolt->m_x = 0;
-        }
-        if (bolt->m_pixelX > 799) {
-            bolt->m_pixelX = 799;
-            bolt->m_x = 799;
-        }
-        if (bolt->m_pixelY < 0) {
-            bolt->m_pixelY = 0;
-            bolt->m_y = 0;
-        }
-        if (bolt->m_pixelY > 555) {
-            bolt->m_pixelY = 555;
-            bolt->m_y = 555;
-        }
+        clipBoltCoordinate(bolt->m_x, bolt->m_pixelX, 799);
+        clipBoltCoordinate(bolt->m_y, bolt->m_pixelY, 555);
 
         x = bolt->m_pixelX;
         y = bolt->m_pixelY;
@@ -3530,6 +3511,20 @@ void combatManager::addBolt(SBolt* bolt, int sourceX, int sourceY,
     resetBoltAngle(bolt);
 }
 
+// Project-inferred union operation, called on both sides of pen movement.
+static void includeBoltInUpdateBounds(const SBolt& bolt, long& left,
+    long& top, long& right, int& bottom)
+{
+    if (bolt.m_pixelX > right)
+        right = bolt.m_pixelX;
+    if (bolt.m_pixelX < left)
+        left = bolt.m_pixelX;
+    if (bolt.m_pixelY > bottom)
+        bottom = bolt.m_pixelY;
+    if (bolt.m_pixelY < top)
+        top = bolt.m_pixelY;
+}
+
 // The bolt ANIMATOR: seed one bolt from the thirteen shape parameters,
 // then repeatedly draw every live bolt, push the union of what moved to
 // the screen, fork the bolts that still have room, and re-aim them all,
@@ -3605,23 +3600,11 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
             // have to enter the union.
             for (i = 0; i < maxBolt; i++) {
                 if (!bolts[i].m_atDestination) {
-                    if (bolts[i].m_pixelX > updBRX)
-                        updBRX = bolts[i].m_pixelX;
-                    if (bolts[i].m_pixelX < updTLX)
-                        updTLX = bolts[i].m_pixelX;
-                    if (bolts[i].m_pixelY > updBRY)
-                        updBRY = bolts[i].m_pixelY;
-                    if (bolts[i].m_pixelY < updTLY)
-                        updTLY = bolts[i].m_pixelY;
+                    includeBoltInUpdateBounds(bolts[i], updTLX, updTLY,
+                                              updBRX, updBRY);
                     drawBolt(&bolts[i], segmentLength);
-                    if (bolts[i].m_pixelX > updBRX)
-                        updBRX = bolts[i].m_pixelX;
-                    if (bolts[i].m_pixelX < updTLX)
-                        updTLX = bolts[i].m_pixelX;
-                    if (bolts[i].m_pixelY > updBRY)
-                        updBRY = bolts[i].m_pixelY;
-                    if (bolts[i].m_pixelY < updTLY)
-                        updTLY = bolts[i].m_pixelY;
+                    includeBoltInUpdateBounds(bolts[i], updTLX, updTLY,
+                                              updBRX, updBRY);
                 }
             }
 
@@ -4072,13 +4055,12 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
                     if (stack.m_numTroops <= 0) {
                         if (stack.m_currFrameType == cs_death)
                             continue;
-                        stack.m_currFrameType = cs_death;
+                        stack.startAnimationSequence(cs_death);
                     } else {
                         if (stack.m_currFrameType == cs_wince)
                             continue;
-                        stack.m_currFrameType = cs_wince;
+                        stack.startAnimationSequence(cs_wince);
                     }
-                    stack.m_currFrameIndex = 0;
                 }
             }
         } }
@@ -4088,14 +4070,7 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
                 for (int i = 0; i < m_numArmies[side]; i++) {
                     army& stack = m_armies[side][i];
                     if (showWince && effected[side][i]) {
-                        int sequence = stack.m_currFrameType;
-                        if (stack.m_currFrameIndex
-                            < stack.m_stdIcon->getNumFrames(sequence) - 1) {
-                            stack.m_currFrameIndex++;
-                        } else if (sequence == cs_wince) {
-                            stack.m_currFrameType = cs_wait;
-                            stack.m_currFrameIndex = 0;
-                        }
+                        stack.advanceSpellReactionAnimation();
                     }
                     if (m_powSprite
                         && frame + 1 < m_powSprite->getNumFrames(cs_walk))
@@ -4104,31 +4079,10 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
             } }
             drawFrame(1, 0, 0, 100, 1, 1);
         } }
-        { for (int side = 0; side < 2; side++) {
-            for (int i = 0; i < m_numArmies[side]; i++)
-                m_armies[side][i].m_showPowEffect = 0;
-        } }
+        clearArmySpellOverlays();
     }
 
-    memset(m_creatureIsDead, 0, sizeof(m_creatureIsDead));
-    m_someCreaturesVanish = 0;
-    unsigned char anyDied = 0;
-    for (int side = 0; side < 2; side++) {
-        for (int i = 0; i < m_numArmies[side]; i++) {
-            army& stack = m_armies[side][i];
-            if (effected[side][i] && stack.m_numTroops == 0) {
-                stack.processDeath(0);
-                if (stack.is(creatureSiegeWeapon))
-                    m_heroes[side]->destroySiegeWeaponArtifact(
-                        stack.m_creatureType);
-                anyDied = 1;
-            }
-        }
-    }
-    if (anyDied)
-        drawFrame(1, 0, 0, 0, 1, 0);
-    if (m_someCreaturesVanish)
-        makeCreaturesVanish();
+    processSpellDeaths(effected);
     checkRebirth();
 }
 
@@ -4352,6 +4306,18 @@ void combatManager::removeCorpse(army* corpse)
                     corpse->getOwningSide(), corpse->m_bitIndex);
 }
 
+// Project-inferred shared message; preserve the separate native format branches.
+void combatManager::showResurrectionMessage(const army* target, long raised)
+{
+    if (raised != 1)
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
+                target->getName(raised));
+    else
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
+                target->getName(raised));
+    m_combatWindow->combatMessage(g_text, 1, 0);
+}
+
 // The Pit Lord's raise: the corpse leaves the grid and a fresh Demon
 // stack takes its cell. DC records the SAMPLE2 local as sound. Native quick
 // combat skips its initialization; a zero-initialized ternary adds absent
@@ -4382,13 +4348,7 @@ void combatManager::demonicResurrection(const army* caster, army* target)
     if (!isQuickCombat()) {
         updateGrid(0, 1);
         drawFrame(1, 0, 0, 0, 1, 0);
-        if (raised != 1)
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
-                    demons->getName(raised));
-        else
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
-                    demons->getName(raised));
-        m_combatWindow->combatMessage(g_text, 1, 0);
+        showResurrectionMessage(demons, raised);
         waitEndSample(sound, -1);
     }
 }
@@ -4468,13 +4428,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
 
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
         long raised = targetArmy->m_numTroops - oldCount;
-        if (raised != 1)
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
-                    targetArmy->getName(raised));
-        else
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
-                    targetArmy->getName(raised));
-        m_combatWindow->combatMessage(g_text, 1, 0);
+        showResurrectionMessage(targetArmy, raised);
 
         int effect = g_spellTraits[SPELL_RESURRECTION].m_effect;
         loadSpellEffect(effect);
@@ -4490,8 +4444,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
                 if (i < deathFrames) {
                     targetArmy->m_currFrameIndex = deathFrames - i - 1;
                 } else {
-                    targetArmy->m_currFrameType = cs_wait;
-                    targetArmy->m_currFrameIndex = 0;
+                    targetArmy->startAnimationSequence(cs_wait);
                 }
             }
             drawFrame(1, 0, 0, 100, 1, 1);
@@ -4952,7 +4905,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
                                                      target->m_monInfo.m_level,
                                                      value);
         }
-        if (target->m_numTroops >= target->m_origNumTroops
+        if (!target->hasLostTroops()
             || target->m_monInfo.m_hitPoints > value)
             return 0.0f;
         break;
@@ -4963,7 +4916,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
         if (target->is(creatureSummoned))
             return 0.0f;
         if (firstTarget) {
-            if (target->m_numTroops >= target->m_origNumTroops)
+            if (!target->hasLostTroops())
                 return 0.0f;
         } else if (target->is(creatureUndead) || target->m_numTroops <= 0) {
             return 0.0f;

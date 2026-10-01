@@ -21,6 +21,16 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// Project-inferred ordered transition for tutorial-disabled checkboxes.
+// Each command retains its own widget lookup and native message dispatch.
+void TSystemOptionsWindow::disableTutorialOption(int id)
+{
+    getWidget(id)->sendMessage(widget::WIDGET_SET_ICON_FRAME, 0);
+    getWidget(id)->sendMessage(
+        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
+    getWidget(id)->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE);
+}
+
 // The shared Help.txt table is owned and filled by text.cpp.
 // Retail reads column 1 (right-click), four bytes after each row base.
 
@@ -171,47 +181,26 @@ TSystemOptionsWindow::TSystemOptionsWindow()
 
     // DC121 initializes the pointer iterator from begin, checks end at
     // each iteration, then DC123..126 register the widget or call MemError.
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     // DC 130..136 send the status bits directly: the Dreamcast compiler
     // never expands widget::set_visible (all 51 DC uses call dc 0x56df8) and
     // none comes from this compiland. Retail pushes both constants ahead of
     // each getWidget call, as a direct send does; the setVisible spelling
     // pushed after it (76.55 -> 98.31).
-    for (int music = MUSIC_VOLUME_0_ID; music <= MUSIC_VOLUME_9_ID; ++music)
-        getWidget(music)->sendMessage(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-    getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
-        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-    getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
-        widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
+    showVolumeLevel(
+        MUSIC_VOLUME_0_ID, MUSIC_VOLUME_9_ID,
+        g_config.m_musicVolume);
 
-    for (int effects = EFFECTS_VOLUME_0_ID; effects <= EFFECTS_VOLUME_9_ID;
-         ++effects)
-        getWidget(effects)->sendMessage(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-    getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
-        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-    getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
-        widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
+    showVolumeLevel(
+        EFFECTS_VOLUME_0_ID, EFFECTS_VOLUME_9_ID,
+        g_config.m_soundVolume);
 
-    for (int walk = HERO_SPEED_WALK_ID; walk <= HERO_SPEED_JUMP_ID; ++walk)
-        getWidget(walk)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_DIMMED_NODRAW);
-    getWidget(g_config.m_walkSpeed[1] + MUSIC_TYPE_MIDI_ID)->sendMessage(
-        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
+    setExclusiveWidgetStatus(HERO_SPEED_WALK_ID, HERO_SPEED_JUMP_ID,
+        g_config.m_walkSpeed[1] + MUSIC_TYPE_MIDI_ID, widget::WIDGET_DIMMED_NODRAW);
 
-    for (int ai = AI_SPEED_CANTER_ID; ai <= AI_SPEED_NONE_ID; ++ai)
-        getWidget(ai)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_DIMMED_NODRAW);
-    getWidget(g_config.m_walkSpeed[0]
-            + HERO_SPEED_GALLOP_ID)->sendMessage(
-        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
+    setExclusiveWidgetStatus(AI_SPEED_CANTER_ID, AI_SPEED_NONE_ID,
+        g_config.m_walkSpeed[0] + HERO_SPEED_GALLOP_ID, widget::WIDGET_DIMMED_NODRAW);
 
     getWidget(SHOW_PATH_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
         g_config.m_showRoute);
@@ -222,18 +211,8 @@ TSystemOptionsWindow::TSystemOptionsWindow()
         getWidget(QUICK_COMBAT_ID)->sendMessage(
             widget::WIDGET_SET_ICON_FRAME, g_config.m_quickCombat);
     } else {
-        getWidget(MOVE_REMINDER_ID)->sendMessage(
-            widget::WIDGET_SET_ICON_FRAME, 0);
-        getWidget(MOVE_REMINDER_ID)->sendMessage(
-            widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
-        getWidget(MOVE_REMINDER_ID)->sendMessage(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE);
-        getWidget(QUICK_COMBAT_ID)->sendMessage(
-            widget::WIDGET_SET_ICON_FRAME, 0);
-        getWidget(QUICK_COMBAT_ID)->sendMessage(
-            widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
-        getWidget(QUICK_COMBAT_ID)->sendMessage(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE);
+        disableTutorialOption(MOVE_REMINDER_ID);
+        disableTutorialOption(QUICK_COMBAT_ID);
     }
 
     getWidget(VIDEO_SUBTITLES_ID)->sendMessage(
@@ -243,19 +222,11 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     getWidget(ANIMATE_SPELLBOOK_ID)->sendMessage(
         widget::WIDGET_SET_ICON_FRAME, g_config.m_animateSpellBook);
 
-    for (int scroll = WINDOW_SCROLL_SLOW; scroll <= WINDOW_SCROLL_FAST;
-         ++scroll)
-        getWidget(scroll)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_DIMMED_NODRAW);
-    getWidget(g_config.m_windowScrollSpeed
-            + WINDOW_SCROLL_SLOW)->sendMessage(
-        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
+    setExclusiveWidgetStatus(WINDOW_SCROLL_SLOW, WINDOW_SCROLL_FAST,
+        g_config.m_windowScrollSpeed + WINDOW_SCROLL_SLOW, widget::WIDGET_DIMMED_NODRAW);
 
-    for (int video = VIDEO_QUALITY_LOW; video <= VIDEO_QUALITY_HIGH; ++video)
-        getWidget(video)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_DIMMED_NODRAW);
-    getWidget(g_config.m_binkVideo + VIDEO_QUALITY_LOW)->sendMessage(
-        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
+    setExclusiveWidgetStatus(VIDEO_QUALITY_LOW, VIDEO_QUALITY_HIGH,
+        g_config.m_binkVideo + VIDEO_QUALITY_LOW, widget::WIDGET_DIMMED_NODRAW);
 
     updateSystemOptions(1);
 }
@@ -267,10 +238,7 @@ DC_ADDRESS(0x160634, 0x62)
 MAC_ADDRESS(0x1ac820, 0xac)
 TSystemOptionsWindow::~TSystemOptionsWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:205
@@ -447,12 +415,8 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                     case VIDEO_QUALITY_HIGH:
                     {
                         g_config.m_binkVideo = id - VIDEO_QUALITY_LOW;
-                        for (int i = VIDEO_QUALITY_LOW; i <= VIDEO_QUALITY_HIGH; ++i)
-                            getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                                      widget::WIDGET_DIMMED);
-                        getWidget(g_config.m_binkVideo + VIDEO_QUALITY_LOW)
-                            ->sendMessage(widget::WIDGET_SET_STATUS,
-                                          widget::WIDGET_DIMMED);
+                        setExclusiveWidgetStatus(VIDEO_QUALITY_LOW, VIDEO_QUALITY_HIGH,
+                            g_config.m_binkVideo + VIDEO_QUALITY_LOW, widget::WIDGET_DIMMED);
                         prefsChanged = 1;
                         m_prefsChanged = 1;
                         break;
@@ -463,13 +427,8 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                     case WINDOW_SCROLL_FAST:
                     {
                         g_config.m_windowScrollSpeed = id - WINDOW_SCROLL_SLOW;
-                        for (int i = WINDOW_SCROLL_SLOW; i <= WINDOW_SCROLL_FAST; ++i)
-                            getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                                      widget::WIDGET_DIMMED);
-                        getWidget(g_config.m_windowScrollSpeed +
-                                  WINDOW_SCROLL_SLOW)
-                            ->sendMessage(widget::WIDGET_SET_STATUS,
-                                          widget::WIDGET_DIMMED);
+                        setExclusiveWidgetStatus(WINDOW_SCROLL_SLOW, WINDOW_SCROLL_FAST,
+                            g_config.m_windowScrollSpeed + WINDOW_SCROLL_SLOW, widget::WIDGET_DIMMED);
                         prefsChanged = 1;
                         m_prefsChanged = 1;
                         break;
@@ -481,12 +440,8 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                     case HERO_SPEED_JUMP_ID:
                     {
                         g_config.m_walkSpeed[1] = id - MUSIC_TYPE_MIDI_ID;
-                        for (int i = HERO_SPEED_WALK_ID; i <= HERO_SPEED_JUMP_ID; ++i)
-                            getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                                      widget::WIDGET_DIMMED);
-                        getWidget(g_config.m_walkSpeed[1] + MUSIC_TYPE_MIDI_ID)
-                            ->sendMessage(widget::WIDGET_SET_STATUS,
-                                          widget::WIDGET_DIMMED);
+                        setExclusiveWidgetStatus(HERO_SPEED_WALK_ID, HERO_SPEED_JUMP_ID,
+                            g_config.m_walkSpeed[1] + MUSIC_TYPE_MIDI_ID, widget::WIDGET_DIMMED);
                         prefsChanged = 1;
                         m_prefsChanged = 1;
                         break;
@@ -501,13 +456,8 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         g_config.m_blackoutComputer =
                             g_config.m_walkSpeed[0] ==
                             AI_SPEED_BLACKOUT_VALUE;
-                        for (int i = AI_SPEED_CANTER_ID; i <= AI_SPEED_NONE_ID; ++i)
-                            getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                                      widget::WIDGET_DIMMED);
-                        getWidget(g_config.m_walkSpeed[0] +
-                                  HERO_SPEED_GALLOP_ID)
-                            ->sendMessage(widget::WIDGET_SET_STATUS,
-                                          widget::WIDGET_DIMMED);
+                        setExclusiveWidgetStatus(AI_SPEED_CANTER_ID, AI_SPEED_NONE_ID,
+                            g_config.m_walkSpeed[0] + HERO_SPEED_GALLOP_ID, widget::WIDGET_DIMMED);
                         prefsChanged = 1;
                         m_prefsChanged = 1;
                         break;
@@ -532,18 +482,12 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                             return MESSAGE_DISPATCH_CONSUME;
                         }
                         g_config.m_musicVolume = id - MUSIC_VOLUME_0_ID;
-                        for (int i = MUSIC_VOLUME_0_ID; i <= MUSIC_VOLUME_9_ID; ++i)
-                            getWidget(i)->sendMessage(
-                                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-                        getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)
-                            ->sendMessage(
-                                widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-                        getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)
-                            ->sendMessage(widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
-                        save = g_soundManager->m_playSounds;
-                        g_soundManager->m_playSounds = MESSAGE_DISPATCH_CONSUME;
+                        showVolumeLevel(
+                            MUSIC_VOLUME_0_ID, MUSIC_VOLUME_9_ID,
+                            g_config.m_musicVolume);
+                        save = g_soundManager->enablePlayback();
                         g_soundManager->adjustMusicVolumes();
-                        g_soundManager->m_playSounds = save;
+                        g_soundManager->setPlaybackState(save);
                         prefsChanged = 1;
                         m_prefsChanged = 1;
                         break;
@@ -570,18 +514,12 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         }
                         g_config.m_soundVolume = id - EFFECTS_VOLUME_0_ID;
                         g_config.m_lastSoundVolume = g_config.m_soundVolume;
-                        for (int i = EFFECTS_VOLUME_0_ID; i <= EFFECTS_VOLUME_9_ID; ++i)
-                            getWidget(i)->sendMessage(
-                                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-                        getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)
-                            ->sendMessage(
-                                widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-                        getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)
-                            ->sendMessage(widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
-                        save = g_soundManager->m_playSounds;
-                        g_soundManager->m_playSounds = MESSAGE_DISPATCH_CONSUME;
+                        showVolumeLevel(
+                            EFFECTS_VOLUME_0_ID, EFFECTS_VOLUME_9_ID,
+                            g_config.m_soundVolume);
+                        save = g_soundManager->enablePlayback();
                         g_soundManager->adjustSoundVolumes();
-                        g_soundManager->m_playSounds = save;
+                        g_soundManager->setPlaybackState(save);
                         prefsChanged = 1;
                         m_prefsChanged = 1;
                         break;
@@ -653,10 +591,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
     if (exitFlag)
     {
         int command = msg.m_codeY;
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = command;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, command);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

@@ -207,9 +207,7 @@ void type_record_move_hero::undo()
     unsigned char wasOnMap = m_currentHero->isOnMap();
     m_currentHero->restoreCell();
     m_currentHero->m_facing = m_restoreFlag;
-    m_currentHero->m_x = m_source.m_x;
-    m_currentHero->m_y = m_source.m_y;
-    m_currentHero->m_z = m_source.m_z;
+    m_currentHero->setLocation(m_source);
     if (wasOnMap)
         m_currentHero->obscureCell();
 }
@@ -573,9 +571,7 @@ MAC_ADDRESS(0x0c03c4, 0xf8)
 void type_record_show_boat::replay(unsigned char draw)
 {
     m_currentBoat->m_occupied = m_occupied;
-    m_currentBoat->m_x = m_location.m_x;
-    m_currentBoat->m_y = m_location.m_y;
-    m_currentBoat->m_z = m_location.m_z;
+    m_currentBoat->setLocation(m_location);
     m_currentBoat->obscureCell();
     if (draw && (getMapExtra(m_location.m_x, m_location.m_y, m_location.m_z)
                  & g_mapVisibilityBit)) {
@@ -591,9 +587,7 @@ void type_record_show_boat::undo()
 {
     m_currentBoat->m_occupied = m_previousOccupied;
     m_currentBoat->restoreCell();
-    m_currentBoat->m_x = m_previousLocation.m_x;
-    m_currentBoat->m_y = m_previousLocation.m_y;
-    m_currentBoat->m_z = m_previousLocation.m_z;
+    m_currentBoat->setLocation(m_previousLocation);
 }
 
 // DC cpp:533 defaults m_location before the line-534 assignment. Spelling
@@ -775,8 +769,7 @@ void type_record_hide_hero::replay(unsigned char draw)
 
     m_currentHero->m_owner = m_newOwner;
     if (g_netLocalGamePos == m_prevOwner && !m_townGarrison) {
-        g_advManager->m_drawCursor = 0;
-        g_advManager->m_curHeroMobile = 0;
+        g_advManager->clearHeroCursor();
     }
     if (draw) {
         g_advManager->completeDraw(0);
@@ -801,7 +794,7 @@ inline type_record_show_hero::type_record_show_hero(hero* who, char newOwner,
                                                     unsigned char onBoat)
     : type_record_hide_hero(who, newOwner, 0)
 {
-    m_previousBoat = (who->m_flags >> 18) & 1;
+    m_previousBoat = who->isOnBoat();
     m_onBoat = onBoat;
     m_previousLocation = who->getLocation();
     m_location = location;
@@ -861,15 +854,10 @@ void type_record_show_hero::replay(unsigned char draw)
 {
     setPlayer(getPlayerId());
 
-    m_currentHero->m_x = m_location.m_x;
-    m_currentHero->m_y = m_location.m_y;
-    m_currentHero->m_z = m_location.m_z;
+    m_currentHero->setLocation(m_location);
     m_currentHero->obscureCell();
     m_currentHero->m_owner = m_newOwner;
-    if (m_onBoat)
-        m_currentHero->m_flags |= 0x40000;
-    else
-        m_currentHero->m_flags &= ~0x40000;
+    m_currentHero->setOnBoat(m_onBoat != 0);
 
     if (draw && (getMapExtra(m_location.m_x, m_location.m_y, m_location.m_z)
                  & g_mapVisibilityBit)) {
@@ -889,17 +877,11 @@ void type_record_show_hero::undo()
 {
     m_currentHero->restoreCell();
     if (g_netLocalGamePos == m_newOwner) {
-        g_advManager->m_drawCursor = 0;
-        g_advManager->m_curHeroMobile = 0;
+        g_advManager->clearHeroCursor();
     }
     m_currentHero->m_owner = m_prevOwner;
-    m_currentHero->m_x = m_previousLocation.m_x;
-    m_currentHero->m_y = m_previousLocation.m_y;
-    m_currentHero->m_z = m_previousLocation.m_z;
-    if (m_previousBoat)
-        m_currentHero->m_flags |= 0x40000;
-    else
-        m_currentHero->m_flags &= ~0x40000;
+    m_currentHero->setLocation(m_previousLocation);
+    m_currentHero->setOnBoat(m_previousBoat != 0);
 }
 
 // E:\gamedcs\event_record.cpp:842

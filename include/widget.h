@@ -125,6 +125,8 @@ public:
     // bodies at 144/147 and 186/187 precede the text/status helpers below.
     virtual ~widget();  // slot 0
     void initialize(int x, int y, int w, int h, int id, int style);
+    // Project-inferred half-open hit test in parent-window coordinates.
+    bool containsPoint(int x, int y) const;
     virtual int open(int newPriority, heroWindow* parent);  // slot 1
     // Non-virtual on DC and in retail: heroWindow::RemoveWidget calls
     // it DIRECTLY (0x5bc690 - a /Gy header-COMDAT the link kept from an
@@ -202,6 +204,10 @@ public:
         }
     }
 
+    // Project-inferred state-only operation used while assembling a redraw.
+    // Unlike show/hide, this does not dispatch messages or draw/update pixels.
+    void setActiveAndDrawn(bool on);
+
     // Dreamcast header inlines used by mode-switch paths.
     DC_ADDRESS(0x05abf4, 0x24)
     void hide()
@@ -258,11 +264,24 @@ protected:
     // (?last_hover_widget@widget@@1PAV1@A); retail .bss 0x6aac68,
     // cleared by the dtor when the dying widget is the hoveree.
     static widget* s_lastHoverWidget;
+    // Project-inferred display operations; resolve geometry after virtual draw.
+    void updateScreenRegion() const;
+    void drawAndUpdate() const;
+    // Prepare left/right selection without changing the input message id.
+    void prepareMouseSelection(message& msg);
 
 public:
     // Slot 12. The empty body lives in widget.cpp so button's qualified
     // base call stays out of line. Retail ICF folds it to 0x485d80.
     virtual void onSleepChange(int on);  // slot 12
+
+private:
+    // Project-inferred shared initialization, without release or unlink work.
+    void initializeLinks();
+    void initializeHelpText();
+    // Project-inferred per-string transitions used by setHelpText.
+    void releaseHelpText(char*& text);
+    static void copyHelpText(char*& destination, const char* source);
 };
 SIZE(widget, 48);
 

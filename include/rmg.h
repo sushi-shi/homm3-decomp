@@ -92,9 +92,11 @@ public:
 };
 
 class type_spell_scroll_def : public type_treasure_def {
-public:
+private:
     int m_spellLevel;
+    bool canChooseSpell(int spell) const;
 
+public:
     type_spell_scroll_def(int spellLevel, int value);
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
@@ -847,11 +849,18 @@ public:
     void setAdjacentToCandidate(unsigned char value) { m_adjacentToCandidate = value; }
     unsigned char getBlockedByCandidate() const { return m_blockedByCandidate; }
     void setBlockedByCandidate(unsigned char value) { m_blockedByCandidate = value; }
-    void setOverlapsCandidate(unsigned char value) { m_overlapsCandidate = value; }
     unsigned char getCandidateCovers() const { return m_candidateCovers; }
-    void setCandidateCovers(unsigned char value) { m_candidateCovers = value; }
     unsigned char getCandidateBehind() const { return m_candidateBehind; }
-    void setCandidateBehind(unsigned char value) { m_candidateBehind = value; }
+    // Project operation for one overlapping cell. Relations accumulate:
+    // another cell may already have marked the opposite depth relation.
+    void markCandidateOverlap(bool covers)
+    {
+        if (covers)
+            m_candidateCovers = 1;
+        else
+            m_candidateBehind = 1;
+        m_overlapsCandidate = 1;
+    }
     void setPosition(const TRmgMapPosition& value) { m_position = value; }
 };
 
@@ -975,6 +984,10 @@ public:
     rmgQuestArtifactObject(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, rmgSeerHutObject* seerHut,
         type_treasure_def* definition);
+    // Project-inferred factory; the wrapper takes ownership of the pending hut.
+    static rmgQuestArtifactObject* createForSeerHut(
+        type_random_map_generator* generator, rmgSeerHutObject* seerHut,
+        type_treasure_def* definition);
     virtual ~rmgQuestArtifactObject();
     virtual unsigned char isWritable();
 };
@@ -1066,15 +1079,36 @@ private:
     TRmgGroundTile m_tile;                  // +0x24
     TRmgGroundTileData m_tileData;          // +0x28
 
-public:
     TRmgConnectionDecoration m_connection;  // +0x2c
 
+public:
     TRmgMapItem();
     void clear();
     void write(TAbstractFile* outfile);
+    // Project-inferred ordered update shared by connection-search passes.
+    void setConnectionPathState(unsigned int cost, unsigned int direction,
+                                int connectionZone);
+    int calculateRiverStepCost(int precedingCost) const;
+
+    // Project-inferred cell operations from repeated path/border transitions.
+    // Ordinary edits retain cells with a connection decoration; installing or
+    // removing that decoration owns the ordered flag transition as well.
+    void openPath();
+    void markBorder();
+    // Partial edits: closing retains border, clearing border retains gate.
+    void closePath();
+    void clearBorder();
+    void setConnectionDecoration(int direction);
+    void clearConnectionDecoration();
+    unsigned int hasConnectionDecoration() const { return m_connection.m_present; }
+    unsigned int getConnectionDecorationDirection() const { return m_connection.m_direction; }
+
     // Retained cell writer 0x546940; four scalar inputs, terrain fields only.
     void setTerrain(int terrain, int frame,
         unsigned char flipX, unsigned char flipY);
+    // Project counterparts for the road/river adapter's complete tile write.
+    void setRoad(int type, int frame, unsigned char flipX, unsigned char flipY);
+    void setRiver(int type, int frame, unsigned char flipX, unsigned char flipY);
 
     // CreateRiver's predicate reads shift the high tile bits and test a
     // byte result. These queries recover that boundary; direct field tests
@@ -1193,13 +1227,6 @@ public:
     void setBorderObject(unsigned int value) { m_tileData.m_borderObject = value; }
     void setSubterraneanGate(unsigned int value) { m_tileData.m_subterraneanGate = value; }
     void setRoadEntrance(unsigned int value) { m_tileData.m_roadEntrance = value; }
-    void setTerrainFlipX(unsigned int value) { m_tileData.m_terrainFlipX = value; }
-    void setTerrainFlipY(unsigned int value) { m_tileData.m_terrainFlipY = value; }
-    void setRoadFrame(unsigned int value) { m_tileData.m_roadFrame = value; }
-    void setRoadFlipX(unsigned int value) { m_tileData.m_roadFlipX = value; }
-    void setRoadFlipY(unsigned int value) { m_tileData.m_roadFlipY = value; }
-    void setRiverFlipX(unsigned int value) { m_tileData.m_riverFlipX = value; }
-    void setRiverFlipY(unsigned int value) { m_tileData.m_riverFlipY = value; }
     void setHasRiver(unsigned int value) { m_tileData.m_hasRiver = value; }
     void setImpassable(unsigned int value) { m_tileData.m_impassable = value; }
     void setRiverTarget(unsigned int value) { m_tileData.m_riverTarget = value; }
@@ -1207,11 +1234,14 @@ public:
     void setZoneBoundary(unsigned int value) { m_tileData.m_zoneBoundary = value; }
     void setConnectionVisited(unsigned int value) { m_tileData.m_connectionVisited = value; }
     void setBlockedDirections(unsigned int value) { m_tileData.m_blockedDirections = value; }
-    void setLandType(int value) { m_tile.m_landType = value; }
     void setTerrainFrame(int value) { m_tile.m_terrainFrame = value; }
     void setRoadType(int value) { m_tile.m_roadType = value; }
-    void setRiverType(int value) { m_tile.m_riverType = value; }
-    void setRiverFrame(int value) { m_tile.m_riverFrame = value; }
+    // Overlay changes retain the frame/flips but update river presence too.
+    void setRiverType(int value)
+    {
+        m_tile.m_riverType = value;
+        setHasRiver(value != 0);
+    }
     void setMovementCost(unsigned int value) { m_movement.m_cost = value; }
     void setZonePathCost(unsigned int value) { m_movement.m_zonePathCost = value; }
 };
@@ -1336,6 +1366,9 @@ public:
     int getWidth() const { return m_mapWidth; }
     int getHeight() const { return m_mapHeight; }
     int getNumberLevels() const { return m_numberLevels; }
+    // Project-inferred half-open rectangle clipping shared by map scans.
+    TRmgZoneBounds getClippedBounds(int minimumX, int minimumY,
+                                    int maximumX, int maximumY) const;
 
     TRmgMapItem* getMapItem(int x, int y);
     inline TRmgMapItem* getMapItem(int x, int y, int z)
@@ -1394,6 +1427,8 @@ struct TRmgTreasureGroup {
         reset();
     }
     void reset();
+    // Project-inferred failure cleanup: rollback/delete objects, then reset.
+    void discard();
     void markPlacementOutline();
     unsigned char addGuard(type_object* guard);
     unsigned char canFitObject(TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
@@ -1958,6 +1993,8 @@ public:
     int m_humanTeamCount;                              // +0x0f4c
     int m_computerPlayerCount;                         // +0x0f50
     int m_computerTeamCount;                           // +0x0f54
+
+private:
     // Role-derived names; original spellings unknown. Replaces opaque0f58.
     // 0x54b834 advances +0xf58 modulo objectPrototypes[83].size();
     // seer-hut value paths 0x534af0/0x534c80 require this prototype index.
@@ -1968,11 +2005,15 @@ public:
     // first value comes from the caller's stack. Preserve that behavior;
     // execution comparisons must supply identical initial stack contents.
     int m_nextKeyTentColor;                            // +0x0f5c
+
+public:
     // 0x549bae clears nine alignment counts; 0x549be0..0x549c05 counts
     // active zones both by their alignment (+4) and in the total.
     int m_activeZoneCount;                             // +0x0f60
     int m_activeZoneCountsByAlignment[9];              // +0x0f64
     unsigned char m_disabledHeroes[156];               // +0x0f88
+
+private:
     // Role-derived names; original spellings unknown. Replaces opaque1024.
     // Ctor 0x537cc6 clears 144 bytes. Quest selection 0x54b490 excludes
     // marked artifacts; successful placement 0x54b813 marks the chosen ID.
@@ -1981,6 +2022,8 @@ public:
     // seer-hut value paths 0x534b0c/0x534c9c reject further candidates.
     unsigned char m_questArtifactPoolLow;              // +0x10b4
     // +0x10b5..0x10b7: implicit alignment before the next int.
+
+public:
     int m_waterContent;                                // +0x10b8
     int m_monsterStrength;                             // +0x10bc
     // Retail ctor 0x537b10 initializes a Dinkumware string at +0x10c0.
@@ -1996,7 +2039,11 @@ public:
     std::vector<TRmgTemplate*> m_templates;            // +0x10d0
     std::vector<TRmgZone*> m_zones;                    // +0x10e0
     std::vector<type_treasure_def*> m_objectGenerators; // +0x10f0
+
+private:
     std::vector<unsigned char> m_disabledKeyTents;     // +0x1100
+
+public:
     int m_objectCountByType[232];                      // +0x1110
     std::vector<TRmgMapPosition> m_roadTargets;        // +0x14b0
     std::vector<type_object*> m_monolithsOneWay;       // +0x14c0
@@ -2010,6 +2057,9 @@ public:
     void loadTemplates();
     // Role-derived from generation coordinator 0x549b30 and placement 0x545250.
     void placeMines();
+    // Project-inferred queries for generator-owned key-tent/quest selection.
+    int getNextKeyTentColor() const;
+    bool canGenerateQuest(int subtype) const;
     // Provisional roles from the Complete-only connection coordinator.
     void prepareZoneConnections();
     void expandObstacleClearance();
@@ -2150,6 +2200,8 @@ public:
     // guarded treasure group; 0x54bc50 removes the old object's map marks,
     // counts and list entry without deleting the object itself.
     unsigned char placeKeyTentGuard(type_object* object, int maxValue);
+    // Project-inferred fallback shared by key-tent and quest-artifact placement.
+    void replaceObjectWithTreasure(type_object* object, int value);
     void setHumanPlayer(int seat);
     void setTownChoice(int seat, int town);
     void removeObject(type_object* object);
@@ -2165,6 +2217,17 @@ public:
     void createRiverToObject(TRmgMapPosition source);
     void createRivers();
     void writeMapHeader(TAbstractFile* outfile);
+
+private:
+    void setKeyTentDisabled(int color, unsigned char disabled);
+    bool isQuestArtifactAvailable(int artifact) const;
+    unsigned int findObjectPrototypeIndex(int objectType, int subtype) const;
+    // Project-inferred shared normal/alternate treasure retry operation.
+    bool tryPlaceTreasureRange(TRmgZone* zone, TRmgTreasureGroup& group,
+                               unsigned char alternate,
+                               const TRmgTreasureRange& range, int spacing);
+    // Project-inferred coast-scan range, with retail's inclusive right edge.
+    bool isRiverCoastPointInRange(const TPoint& point) const;
 };
 
 SIZE(TRmgMapPosition, 0x0c);

@@ -852,8 +852,7 @@ void combatManager::loadIcons()
     }
 
     for (int side = 0; side < 2; side++) {
-        m_cmbtHeroFrameType[side] = 0;
-        m_cmbtHeroFrameIndex[side] = 0;
+        startHeroAnimationSequence(side, COMBAT_HERO_FRAME_IDLE);
         if (m_heroes[side]) {
             m_creatureSprites[side] = ResourceManager::getSprite(
                 g_combatHeroSprites[
@@ -1247,8 +1246,7 @@ void combatManager::initNonVisualVars()
     m_nextAction = 0;
     m_summonedElemental[0] = -1;
     m_summonedElemental[1] = -1;
-    m_lastCellIndex = -1;
-    m_lastCommand = -99;
+    invalidateCommandForCell(-1);
     m_currentSide = 1;
     m_actingSide = 1;
     m_actingSlot = 0;
@@ -1334,8 +1332,7 @@ MAC_ADDRESS(0x06fad4, 0x128)
 void combatManager::updateArmyGroup(int whichSide)
 {
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
-        m_armyGroups[whichSide]->m_armies[slot] = CREATURE_NONE;
-        m_armyGroups[whichSide]->m_numTroops[slot] = 0;
+        m_armyGroups[whichSide]->dismiss(slot);
     }
 
     for (int index = 0; index < m_numArmies[whichSide]; index++) {
@@ -1382,11 +1379,8 @@ void combatManager::generateMap()
             cell->m_hexBrx = static_cast<short>(cell->m_hexUlx + 44);
             cell->m_hexBry = static_cast<short>(cell->m_hexUly + 42);
             cell->m_fullHexBry = static_cast<short>(cell->m_hexUly + 52);
-            cell->m_armySide = -1;
-            cell->m_armySlot = -1;
-            cell->m_partOfDouble = -1;
-            cell->m_obstacleIndex = -1;
-            cell->m_attributes = 0;
+            cell->resetArmy();
+            cell->resetObstacle();
             cell->m_bodiesInHex = 0;
             cell->m_backgroundOffset = -1;
             cell->m_mouseShaded = 0;
@@ -1406,8 +1400,8 @@ void combatManager::determineCombatTerrain()
     int terrain;
     if (m_defendingTown) {
         terrain = m_defendingTown->getNativeTerrain();
-    } else if ((m_heroes[0] && (m_heroes[0]->m_flags & 0x40000))
-            || (m_heroes[1] && (m_heroes[1]->m_flags & 0x40000))
+    } else if ((m_heroes[0] && m_heroes[0]->isOnBoat())
+            || (m_heroes[1] && m_heroes[1]->isOnBoat())
             || (m_combatCell->getMapObject() == SHIPWRECK
                 && m_combatCell->m_isTrigger)
             || (m_combatCell->getMapObject() == DERELICT_SHIP
@@ -2251,6 +2245,17 @@ void combatManager::resetHitByCreature()
     }
 }
 
+// Project-inferred footprint mapping shared by placement tests, attachment
+// and removal. Callers retain their cached origin-row parity.
+int combatManager::getObstacleFootprintHex(int baseHex, int offset,
+                                           unsigned char baseRowIsOdd) const
+{
+    int cellIndex = offset + baseHex;
+    if (baseRowIsOdd && !rowIsOdd(gridY(cellIndex)))
+        --cellIndex;
+    return cellIndex;
+}
+
 // DC cmbtmgr.cpp:2797 records two GridX calls on the combined rejection row.
 // Keep both calls: caching the column over-inlines the early-return cleanup
 // (94.7277%); the combined guard restores all retail instructions. Refreshing
@@ -2280,9 +2285,8 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             const unsigned char baseRowIsOdd = rowIsOdd(row);
             unsigned char overlap = 0;
             for (int i = 0; i < shape->m_extraHexCount; i++) {
-                int cellIndex = shape->m_extraHexOffsets[i] + hex;
-                if (baseRowIsOdd && !rowIsOdd(gridY(cellIndex)))
-                    cellIndex--;
+                int cellIndex = getObstacleFootprintHex(
+                    hex, shape->m_extraHexOffsets[i], baseRowIsOdd);
                 int cellColumn = gridX(cellIndex);
                 if (cellColumn <= 2 || cellColumn >= 14
                         || (m_cells[cellIndex].m_attributes & hexcell::obstacleMask)) {
@@ -2321,6 +2325,34 @@ unsigned char combatManager::placeObstacle(int obstacleId)
 
 VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 
+// Project-inferred shared choice: magic terrain replaces the normal mask.
+void combatManager::getObstacleTerrainMasks(
+    unsigned int& terrainMask, unsigned int& specialTerrainMask) const
+{
+    terrainMask = 0;
+    specialTerrainMask = 0;
+    if (m_magicTerrain != -1)
+        specialTerrainMask = 1 << m_magicTerrain;
+    else
+        terrainMask = 1 << m_terrainType;
+}
+
+// Project-inferred retry operation. Each rejected pick remains consumed.
+int combatManager::pickObstacleForTerrain(TPickANumber& picker,
+                                          unsigned int terrainMask,
+                                          unsigned int specialTerrainMask)
+{
+    for (;;) {
+        int obstacleId = picker.pick();
+        if (obstacleId < 0)
+            return obstacleId;
+        if ((s_obstacleInfo[obstacleId].m_terrainMask & terrainMask)
+            || (s_obstacleInfo[obstacleId].m_specialTerrainMask
+                & specialTerrainMask))
+            return obstacleId;
+    }
+}
+
 // E:\gamedcs\cmbtmgr.cpp:2859
 // Everything the battlefield carries before the armies land: the wall
 // hitpoint tables, the castle wall's blocked column, a Tower's mined
@@ -2344,6 +2376,7 @@ VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 //     Mac 0x72a34 keeps a single Pick call in the inner retry loop.
 //     The guarded retry preserves that call in CodeWarrior while VC6 rotates
 //     it into the retail initial/retry sites; a do/while misses the rotation.
+// These observations predate sharing the mask selection and retry operation.
 VA(0x00466290, 0x607)
 DC_ADDRESS(0x060538, 0x3e2)
 MAC_ADDRESS(0x0722b8, 0x818)  // anchor-callee
@@ -2435,8 +2468,8 @@ void combatManager::setupAndLoadObstacles()
     // Two boats meeting at sea: the hulls block thirty-two hexes and
     // nothing else is placed at all.
     if (m_terrainType == eTerrainWater
-            && m_heroes[0] && (m_heroes[0]->m_flags & 0x40000)
-            && m_heroes[1] && (m_heroes[1]->m_flags & 0x40000)) {
+            && m_heroes[0] && m_heroes[0]->isOnBoat()
+            && m_heroes[1] && m_heroes[1]->isOnBoat()) {
         for (const int* hex = g_boatBlockedHexes;
                 hex < g_boatBlockedHexes + 32; hex++)
             m_cells[*hex].m_attributes |= hexcell::blocked;
@@ -2450,12 +2483,9 @@ void combatManager::setupAndLoadObstacles()
     else
         budget = sRandom(5, 12);
 
-    unsigned int terrainMask = 0;
-    unsigned int specialTerrainMask = 0;
-    if (m_magicTerrain != -1)
-        specialTerrainMask = 1 << m_magicTerrain;
-    else
-        terrainMask = 1 << m_terrainType;
+    unsigned int terrainMask;
+    unsigned int specialTerrainMask;
+    getObstacleTerrainMasks(terrainMask, specialTerrainMask);
 
     if ((m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL
                 || m_defendingTown->m_type != TOWN_STRONGHOLD)
@@ -2465,16 +2495,8 @@ void combatManager::setupAndLoadObstacles()
     int placed = 0;
     TPickANumber obstaclePicker(0, 90);
     while (placed < budget) {
-        int obstacleId;
-        for (;;) {
-            obstacleId = obstaclePicker.pick();
-            if (obstacleId < 0)
-                break;
-            if ((s_obstacleInfo[obstacleId].m_terrainMask & terrainMask)
-                || (s_obstacleInfo[obstacleId].m_specialTerrainMask
-                    & specialTerrainMask))
-                break;
-        }
+        int obstacleId = pickObstacleForTerrain(
+            obstaclePicker, terrainMask, specialTerrainMask);
         if (obstacleId < 0)
             break;
         if (placeObstacle(obstacleId))
@@ -2518,39 +2540,26 @@ void combatManager::placeObstacle(const combatManager::TObstacle& obstacle, int 
     const TObstacleInfo* const info = obstacle.m_shape;
     bool oddRow = rowIsOdd(gridY(hex));
     for (int i = 0; i < info->m_extraHexCount; i++) {
-        int cellIndex = info->m_extraHexOffsets[i] + hex;
-        if (oddRow && !rowIsOdd(gridY(cellIndex)))
-            cellIndex--;
+        int cellIndex = getObstacleFootprintHex(hex, info->m_extraHexOffsets[i], oddRow);
         hexcell& cell = m_cells[cellIndex];
-        cell.m_attributes |= attributes;
-        cell.m_obstacleIndex = id;
+        cell.setObstacle(id, attributes);
     }
     hexcell& anchor = m_cells[hex];
-    anchor.m_attributes |= hexcell::obstacleOrigin;
-    anchor.m_obstacleIndex = id;
+    anchor.setObstacle(id, hexcell::obstacleOrigin);
 }
 
 VA(0x00466a70, 0xBD)
 DC_ADDRESS(0x060a70, 0xb0)
 void combatManager::placeAllObstacles()
 {
-    unsigned int terrainMask = 0;
-    unsigned int specialTerrainMask = 0;
-    if (m_magicTerrain != -1)
-        specialTerrainMask = 1 << m_magicTerrain;
-    else
-        terrainMask = 1 << m_terrainType;
+    unsigned int terrainMask;
+    unsigned int specialTerrainMask;
+    getObstacleTerrainMasks(terrainMask, specialTerrainMask);
 
     TPickANumber picker(0, 90);
     for (;;) {
-        int obstacleId;
-        do {
-            obstacleId = picker.pick();
-            if (obstacleId < 0)
-                break;
-        } while (!(s_obstacleInfo[obstacleId].m_terrainMask & terrainMask)
-                 && !(s_obstacleInfo[obstacleId].m_specialTerrainMask
-                      & specialTerrainMask));
+        int obstacleId = pickObstacleForTerrain(
+            picker, terrainMask, specialTerrainMask);
         if (obstacleId < 0)
             break;
         placeObstacle(obstacleId);
@@ -2571,18 +2580,33 @@ void combatManager::removeObstacle(int index)
     // Mac 0x72d9c/0x72de8 expands gridY and rowIsOdd at both checks.
     unsigned char oddRow = rowIsOdd(gridY(obstacle->m_hex));
     for (int i = 0; i < shape->m_extraHexCount; i++) {
-        int cellIndex = shape->m_extraHexOffsets[i] + obstacle->m_hex;
-        if (oddRow && !rowIsOdd(gridY(cellIndex)))
-            cellIndex--;
+        int cellIndex = getObstacleFootprintHex(
+            obstacle->m_hex, shape->m_extraHexOffsets[i], oddRow);
         hexcell& cell = m_cells[cellIndex];
-        cell.m_attributes &= ~hexcell::obstacleMask;
-        cell.m_obstacleIndex = -1;
+        cell.clearObstacle(hexcell::obstacleMask);
     }
     hexcell& anchor = m_cells[obstacle->m_hex];
-    anchor.m_attributes &= ~hexcell::obstacleOrigin;
-    anchor.m_obstacleIndex = -1;
+    anchor.clearObstacle(hexcell::obstacleOrigin);
     ResourceManager::dispose(obstacle->m_sprite);
     obstacle->m_sprite = 0;
+}
+
+// Project-inferred complete archer-row initialization. The shared raw-resource
+// staging record stays in InitializeArchers across all three row operations.
+void combatManager::initializeArcher(TArcher& archer,
+                                      const TSiegeArcherInfo& info,
+                                      int position, TArcherLoadState& locals)
+{
+    archer.m_creatureType = info.m_creatureType;
+    locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
+    archer.m_sprite = locals.m_sprite;
+    locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
+    archer.m_shadowSprite = locals.m_sprite;
+    archer.m_x = info.m_positions[position].m_x;
+    archer.m_y = info.m_positions[position].m_y;
+    archer.m_facing = 0;
+    archer.m_sequence = 2;
+    archer.m_frame = 0;
 }
 
 VA(0x00466c50, 0x1A1)
@@ -2600,41 +2624,45 @@ void combatManager::initializeArchers()
     locals.m_spriteName =
         g_creatureTypeTraits[info.m_creatureType].m_spriteName;
 
-    archer->m_creatureType = info.m_creatureType;
-    locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    archer->m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    archer->m_shadowSprite = locals.m_sprite;
-    archer->m_x = info.m_positions[0].m_x;
-    archer->m_y = info.m_positions[0].m_y;
-    archer->m_facing = 0;
-    archer->m_sequence = 2;
-    archer->m_frame = 0;
+    initializeArcher(*archer, info, 0, locals);
 
     if (m_fortificationLevel != COMBAT_FORTIFICATION_CASTLE)
         return;
 
-    m_archers[1].m_creatureType = info.m_creatureType;
-    locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    m_archers[1].m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    m_archers[1].m_shadowSprite = locals.m_sprite;
-    m_archers[1].m_x = info.m_positions[1].m_x;
-    m_archers[1].m_y = info.m_positions[1].m_y;
-    m_archers[1].m_facing = 0;
-    m_archers[1].m_sequence = 2;
-    m_archers[1].m_frame = 0;
+    initializeArcher(m_archers[1], info, 1, locals);
 
-    m_archers[2].m_creatureType = info.m_creatureType;
-    locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    m_archers[2].m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    m_archers[2].m_shadowSprite = locals.m_sprite;
-    m_archers[2].m_x = info.m_positions[2].m_x;
-    m_archers[2].m_y = info.m_positions[2].m_y;
-    m_archers[2].m_facing = 0;
-    m_archers[2].m_sequence = 2;
-    m_archers[2].m_frame = 0;
+    initializeArcher(m_archers[2], info, 2, locals);
+}
+
+// Project-inferred death operation shared by ordinary and mass-spell damage.
+// Resolve the side's hero only after ProcessDeath and the native Is query.
+void combatManager::processArmyDeath(army& stack, int side)
+{
+    stack.processDeath(0);
+    if (stack.is(creatureSiegeWeapon))
+        m_heroes[side]->destroySiegeWeaponArtifact(stack.m_creatureType);
+}
+
+// Project-inferred queue operations shared by PowEffect, ResetRound,
+// Armageddon and ShowMassSpell. Keep the retail 2x20 marker extent even
+// though the army storage has 21 entries per side. These ordinary bodies
+// have provisional owner-TU placement and no claimed native helper identity.
+void combatManager::clearVanishingCreatures()
+{
+    memset(m_creatureIsDead, 0, sizeof(m_creatureIsDead));
+    m_someCreaturesVanish = 0;
+}
+
+void combatManager::markCreatureForVanish(int side, int index)
+{
+    m_creatureIsDead[side][index] = 1;
+    m_someCreaturesVanish = 1;
+}
+
+void combatManager::makeCreaturesVanishIfNeeded()
+{
+    if (m_someCreaturesVanish)
+        makeCreaturesVanish();
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3299
@@ -2690,11 +2718,9 @@ void combatManager::makeCreaturesVanish()
             if (!m_creatureIsDead[side][index])
                 continue;
             const army& stack = m_armies[side][index];
-            m_cells[stack.m_gridIndex].m_armySide = -1;
-            m_cells[stack.m_gridIndex].m_armySlot = -1;
+            m_cells[stack.m_gridIndex].clearArmy();
             if (stack.is(creatureDoubleWide)) {
-                m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySide = -1;
-                m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySlot = -1;
+                m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].clearArmy();
             }
         }
     }
@@ -3324,14 +3350,10 @@ DC_ADDRESS(0x062358, 0x74)
 MAC_ADDRESS(0x074c94, 0x7c)
 void combatManager::removeArmyFromGrid(const army& a)
 {
-    m_cells[a.m_gridIndex].m_armySlot = -1;
-    m_cells[a.m_gridIndex].m_armySide = -1;
-    m_cells[a.m_gridIndex].m_partOfDouble = -1;
+    m_cells[a.m_gridIndex].resetArmy();
     if (a.is(creatureDoubleWide)) {
         int hex = a.m_gridIndex + a.offsetToFront(-1);
-        m_cells[hex].m_armySlot = -1;
-        m_cells[hex].m_armySide = -1;
-        m_cells[hex].m_partOfDouble = -1;
+        m_cells[hex].resetArmy();
     }
 }
 
@@ -3350,16 +3372,13 @@ DC_ADDRESS(0x0623cc, 0xac)
 MAC_ADDRESS(0x074d10, 0xbc)
 void combatManager::placeArmyInGrid(const army& a, int hex)
 {
-    m_cells[hex].m_armySide = static_cast<signed char>(a.getOwningSide());
-    m_cells[hex].m_armySlot = static_cast<signed char>(a.m_bitIndex);
-    m_cells[hex].m_partOfDouble = -1;
+    m_cells[hex].setArmy(a.getOwningSide(), a.m_bitIndex, -1);
     if (a.is(creatureDoubleWide)) {
         m_cells[hex].m_partOfDouble = a.m_facing == 0 ? 1 : 0;
         int owningSide = a.getOwningSide();
         int second = hex + a.offsetToFront(-1);
-        m_cells[second].m_armySide = static_cast<signed char>(owningSide);
-        m_cells[second].m_armySlot = static_cast<signed char>(a.m_bitIndex);
-        m_cells[second].m_partOfDouble = a.m_facing != 0 ? 1 : 0;
+        m_cells[second].setArmy(owningSide, a.m_bitIndex,
+                              a.m_facing != 0 ? 1 : 0);
     }
 }
 
@@ -3391,9 +3410,7 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
         } else {
             view->doModal();
             if (g_windowManager->m_dialogReturn == TViewArmyWindow::OK_ID) {
-                initiateSpell(thisArmy->m_faerieDragonSpell, 1);
-                if (m_nextAction == 1)
-                    m_nextAction = 10;
+                initiateCreatureSpell(thisArmy->m_faerieDragonSpell);
             }
         }
         delete view;
@@ -3578,8 +3595,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                                     stack.m_currFrameType) - 1) {
                             stack.m_currFrameIndex++;
                         } else {
-                            stack.m_currFrameType = cs_wait;
-                            stack.m_currFrameIndex = 0;
+                            stack.startAnimationSequence(cs_wait);
                         }
                     }
                     if (stack.m_nextFrameType == -1)
@@ -3615,16 +3631,14 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                             else if (stack.m_nextFrameType == cs_defend)
                                 stack.playSample(army::DEFEND_SAMPLE);
                         }
-                        stack.m_currFrameType = stack.m_nextFrameType;
-                        stack.m_currFrameIndex = 0;
+                        stack.startAnimationSequence(stack.m_nextFrameType);
                     } else if (stack.m_currFrameIndex
                             < stack.m_stdIcon->getNumFrames(
                                 stack.m_currFrameType) - 1) {
                         stack.m_currFrameIndex++;
                     } else if (stack.m_currFrameType != cs_wait
                             && stack.m_currFrameType != cs_death) {
-                        stack.m_currFrameType = cs_wait;
-                        stack.m_currFrameIndex = 0;
+                        stack.startAnimationSequence(cs_wait);
                         stack.m_powSequenceComplete = 1;
                     }
                 }
@@ -3667,8 +3681,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                     } else if (stack.m_currFrameType == cs_death) {
                         continue;
                     } else {
-                        stack.m_currFrameType = cs_wait;
-                        stack.m_currFrameIndex = 0;
+                        stack.startAnimationSequence(cs_wait);
                     }
                     framesChanged = 1;
                 }
@@ -3681,30 +3694,22 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
             this->resetLimitCreature();
     }
 
-    memset(m_creatureIsDead, 0, sizeof(m_creatureIsDead));
-    m_someCreaturesVanish = 0;
+    clearVanishingCreatures();
     for (side = 0; side < 2; side++) {
         for (slot = 0; slot < m_numArmies[side]; slot++) {
             army& stack = m_armies[side][slot];
             if (stack.m_allUnitsKilled) {
-                stack.processDeath(0);
-                if (stack.is(creatureSiegeWeapon))
-                    m_heroes[side]->destroySiegeWeaponArtifact(
-                        stack.m_creatureType);
+                processArmyDeath(stack, side);
             }
         }
     }
-    if (m_someCreaturesVanish)
-        makeCreaturesVanish();
+    makeCreaturesVanishIfNeeded();
 
     for (side = 0; side < 2; side++) {
         for (slot = 0; slot < m_numArmies[side]; slot++) {
             army& stack = m_armies[side][slot];
             stack.m_showPowEffect = 0;
-            stack.m_someUnitsDamaged = 0;
-            stack.m_drawPriority = 4;
-            stack.m_showAttackFrames = 0;
-            stack.m_numTroopsToShowOverride = -1;
+            stack.resetDamageDisplay();
         }
     }
     drawFrame(1, 0, 0, 0, 1, 0);
@@ -3965,31 +3970,33 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
     m_combatWindow->combatMessage(message.c_str(), 1, 0);
 }
 
+// Project-inferred lookup shared by the ordinary and Fortress moat rings.
+bool combatManager::findMoatHex(int hex, const unsigned char* cells,
+                                int gateHex, int* index) const
+{
+    for (int row = 0; row < 11; row++) {
+        if (cells[row] == hex
+                && (m_drawbridgeState == DRAWBRIDGE_UP || hex != gateHex)) {
+            if (index)
+                *index = row;
+            return true;
+        }
+    }
+    return false;
+}
+
 VA(0x00469dc0, 0x8D)
 DC_ADDRESS(0x06351c, 0x7e)
 MAC_ADDRESS(0x0764c4, 0xd4)
 unsigned char combatManager::isInMoat(int hex, int* index)
 {
     if (m_moatOn) {
-        for (int row = 0; row < 11; row++) {
-            if (g_moatHexes[row] == hex
-                    && (m_drawbridgeState == DRAWBRIDGE_UP
-                        || hex != COMBAT_HEX_GATE_MOAT)) {
-                if (index)
-                    *index = row;
-                return 1;
-            }
-        }
+        if (findMoatHex(hex, g_moatHexes, COMBAT_HEX_GATE_MOAT, index))
+            return 1;
         if (m_defendingTown->m_type == TOWN_FORTRESS) {
-            for (int row = 0; row < 11; row++) {
-                if (g_innerMoatHexes[row] == hex
-                        && (m_drawbridgeState == DRAWBRIDGE_UP
-                            || hex != COMBAT_HEX_OUTER_MOAT)) {
-                    if (index)
-                        *index = row;
-                    return 1;
-                }
-            }
+            if (findMoatHex(hex, g_innerMoatHexes, COMBAT_HEX_OUTER_MOAT,
+                            index))
+                return 1;
         }
     }
     if (index)

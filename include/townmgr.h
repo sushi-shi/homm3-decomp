@@ -406,6 +406,11 @@ public:
     // Retail 0x5c9710 (dc 0x16e2f4). The page's rollover line.
     void setRolloverText(int codeY);
     virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5c9930
+
+private:
+    void addHeroPrimarySkill(hero* bestHero, int skill, int column, int widgetId);
+    void considerStrongestCreature(const armyGroup& group, int slot, int column,
+                                   int& bestCreature, int& bestValue);
 };
 
 // The town hall page: one background per town type over a grid of
@@ -757,6 +762,11 @@ extern const char* g_townTypeNames[10];
 class townManager : public baseManager {
 public:
 
+    // Project-inferred hover cache operations; ID-only invalidation retains
+    // the modifier cache used by the town screen and fort page.
+    bool updateHover(int widgetId, int qualifier);
+    void invalidateHover();
+
     // Original: townManager::SetTown; TownMgr.h:686
     // town::view0x5be210 expands the assignment to Complete's +0x38 field.
     DC_ADDRESS(0x168e24, 0x6)
@@ -846,6 +856,7 @@ public:
     // shift, less the four bytes retail dropped with townMenu). The
     // fort page's WindowHandler 0x5dcf80 is the reader: it refreshes
     // the rollover line only when the pair actually changes.
+    // Native field list 0x719f proves both cache fields public.
     int m_lastHover;  // +0x194  ctor -1
     int m_lastQualifier;  // +0x198  ctor -1
     // Dreamcast command at +0x1a8 maps to PC +0x19c; Main and the
@@ -911,6 +922,10 @@ public:
     // at +0x1c4/+0x1c8.
     unsigned char m_currentDwellingIdOff[7];
     void resetStrips();
+    // Project-inferred state operations; selection drawing stays with callers.
+    void clearStripSelection();
+    void setCurrentStrip(strip* whichStrip, int index);
+    void setDestinationStrip(strip* whichStrip, int index);
     void setCommandAndText(message* msg);
     void showText();
     void setArmyCommand(int splitEnabled, unsigned char joinDialog);
@@ -956,6 +971,8 @@ private:
     void doHall();
     void selectArmy(strip* fromStrip, long slot, unsigned char isOwnerCell);
     void showBuildingInfo(int buildingId, unsigned char rightClick);
+    void deleteStrips();
+    void rebuildStrips();
 
 public:
     // Retail 0x5d2da0, retail-only - the Dreamcast townmgr roster runs
@@ -973,6 +990,10 @@ public:
 
 private:
     void handleHallClick();
+    void showHallPopup();
+    void clearPopupBank();
+    void initializeDialogPointers();
+    void clearTownGraphicSlots();
 };
 
 extern townManager* g_townManager;

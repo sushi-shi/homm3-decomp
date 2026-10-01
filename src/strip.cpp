@@ -95,10 +95,6 @@ MAC_ADDRESS(0x19b19c, 0xa8)
 void strip::drawNumber(int i)
 {
     message msg;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     if (m_pos == 0)
@@ -187,10 +183,6 @@ MAC_ADDRESS(0x19b490, 0x13c)
 void strip::drawMonster(int i, int frame)
 {
     message msg;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
     if (m_pos == 0)
         msg.m_codeY = i + 101;
@@ -231,10 +223,6 @@ MAC_ADDRESS(0x19b5cc, 0xac)
 void strip::drawSelector(int i)
 {
     message msg;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
     if (m_pos == 0) {
         if (i == 0)

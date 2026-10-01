@@ -186,10 +186,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
         }
     }
 
-    for (widget** it = widgets.begin(); it != widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
+    addPresentWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x0052f3a0, 0x21, SCALAR_DELETING_DTOR, TQuickHeroWindow)
@@ -199,10 +196,7 @@ DC_ADDRESS(0x1177b4, 0x62)
 MAC_ADDRESS(0x14b424, 0xac)
 TQuickHeroWindow::~TQuickHeroWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA_COMPGEN(0x0052f440, 0x47, BASIC_IOS_INIT, char)
@@ -215,6 +209,14 @@ MAC_ADDRESS(0x14b4d0, 0x2c)
 void TQuickHeroWindow::quickWindowWait()
 {
     g_windowManager->doQuickView(this);
+}
+
+// Project-inferred shared placement. Callers retain their window lifetime.
+void TQuickHeroWindow::quickWindowWaitAt(int x, int y)
+{
+    m_x = x;
+    m_y = y;
+    quickWindowWait();
 }
 
 // E:\gamedcs\quickherowindow.cpp:209

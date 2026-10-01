@@ -661,13 +661,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     if (m_receiveButton)
         m_widgets.push_back(m_receiveButton);
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA(0x005ae370, 0x1D)
@@ -686,9 +680,18 @@ DC_ADDRESS(0x15c320, 0x62)
 MAC_ADDRESS(0x1a5b9c, 0xb0)
 TSwapWindow::~TSwapWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
+    deleteWidgetObjects();
+}
+
+// Project-inferred paired visibility operation; keep left-before-right calls.
+void TSwapWindow::showTransferDirection(bool toRight)
+{
+    if (toRight) {
+        m_leftArrow->hide();
+        m_rightArrow->show();
+    } else {
+        m_leftArrow->show();
+        m_rightArrow->hide();
     }
 }
 
@@ -704,30 +707,12 @@ void TSwapWindow::updateArrows()
 
     if (g_swapManager->m_givingToAlly)
     {
-        if (g_swapManager->isLeftHero())
-        {
-            m_leftArrow->hide();
-            m_rightArrow->show();
-        }
-        else
-        {
-            m_leftArrow->show();
-            m_rightArrow->hide();
-        }
+        showTransferDirection(g_swapManager->isLeftHero() != 0);
         m_receiveButton->enable(1);
     }
     else
     {
-        if (g_swapManager->isLeftHero())
-        {
-            m_leftArrow->show();
-            m_rightArrow->hide();
-        }
-        else
-        {
-            m_leftArrow->hide();
-            m_rightArrow->show();
-        }
+        showTransferDirection(!g_swapManager->isLeftHero());
         m_receiveButton->enable(0);
     }
 }
@@ -750,6 +735,17 @@ public:
 };
 SIZE(CSwapMgrNetMsgHandler, 0x10);
 
+// Project helper: construction and reset share the empty selection, while
+// reset alone clears split mode and sends updates to the existing window.
+void swapManager::clearArmySelection()
+{
+    m_sourceHeroIndex = -1;
+    m_destinationHeroIndex = -1;
+    m_armySelectionPending = -1;
+    m_sourceArmySlot = -1;
+    m_destinationArmySlot = -1;
+}
+
 VA(0x005ae500, 0xA9)
 DC_ADDRESS(0x15c470, 0xc4)
 MAC_ADDRESS(0x1a5d78, 0x13c)
@@ -759,11 +755,7 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
     m_heroes[1] = rightHero;
     m_parent = 0;
     m_border = 0;
-    m_sourceHeroIndex = -1;
-    m_destinationHeroIndex = -1;
-    m_armySelectionPending = -1;
-    m_sourceArmySlot = -1;
-    m_destinationArmySlot = -1;
+    clearArmySelection();
     m_givingToAlly = 1;
     m_humanPlayerTrade = 0;
     if (g_remoteOn
@@ -788,7 +780,7 @@ void swapManager::reset()
 {
     message msg;
 
-    m_sourceHeroIndex = m_destinationHeroIndex = m_armySelectionPending = m_sourceArmySlot = m_destinationArmySlot = -1;
+    clearArmySelection();
     g_splitArmyMode = 0;
 
     msg.m_id = MESSAGE_WIDGET;
@@ -854,9 +846,7 @@ int swapManager::open(int newPriority)
     reset();
 
     message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = 13;
-    msg.m_codeY = 0;
+    msg.setWidgetCommand(13, 0);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     m_parent->broadcastMessage(msg);
 
@@ -1114,29 +1104,8 @@ MAC_ADDRESS(0x1a6aa0, 0x17c)
 void swapManager::updateSlot(int hero, TArtifactSlot slot)
 {
     int artifact = m_heroes[hero]->getArtifact(TArtifactSlot(slot)).m_artifactId;
-    if (artifact == ARTIFACT_NONE)
-    {
-        int type = g_artifactSlotTraits[slot].m_type;
-        unsigned int remaining = m_heroes[hero]->m_artifactSlotCounts[type];
-        if (remaining > 0)
-        {
-            const std::bitset<19>& slots = g_artifactSlotMasks[type];
-            for (int i = kNumArtifactSlots + 1; ; )
-            {
-                --i;
-                if (!slots.test(i))
-                    continue;
-                if (i == slot)
-                {
-                    artifact = 0x91;
-                    break;
-                }
-                if (m_heroes[hero]->getArtifact(TArtifactSlot(i)).m_artifactId == ARTIFACT_NONE
-                    && --remaining == 0)
-                    break;
-            }
-        }
-    }
+    if (artifact == ARTIFACT_NONE && m_heroes[hero]->isArtifactSlotReserved(slot))
+        artifact = 0x91;
 
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE
         && m_heroes[hero]->heroFn004E2840(
@@ -2036,9 +2005,8 @@ int swapManager::main(message& msg)
 
         case MESSAGE_MOUSE_MOVE:
             g_windowManager->convertToHover(msg);
-            if (msg.m_codeY == g_windowManager->m_lastHover)
+            if (!g_windowManager->updateHover(msg.m_codeY))
                 return MESSAGE_DISPATCH_CONSUME;
-            g_windowManager->m_lastHover = msg.m_codeY;
             setRolloverText(msg.m_codeY);
             break;
         }
@@ -2293,9 +2261,7 @@ void swapManager::swapMons()
     if (destination->m_armies[m_destinationArmySlot] == source->m_armies[m_sourceArmySlot]) {
         if (source->getNumArmies() == 1)
             return;
-        destination->m_numTroops[m_destinationArmySlot] += source->m_numTroops[m_sourceArmySlot];
-        source->m_armies[m_sourceArmySlot] = CREATURE_NONE;
-        source->m_numTroops[m_sourceArmySlot] = 0;
+        source->mergeStack(m_sourceArmySlot, destination, m_destinationArmySlot);
         return;
     }
 

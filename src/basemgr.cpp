@@ -5,6 +5,13 @@
 
 #include "basemgr.h"
 
+// Project-inferred operation; does not update neighbors or close the manager.
+void baseManager::clearLinks()
+{
+    m_prevManager = 0;
+    m_nextManager = 0;
+}
+
 // #include "basemgr.h"
 VA(0x0044d530, 0x45)
 DC_ADDRESS(0x050a28, 0x54)

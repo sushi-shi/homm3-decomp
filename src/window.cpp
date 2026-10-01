@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "window.h"
+#include "includes.h"
 
 #include "bitmap16.h"
 #include "kb.h"
@@ -140,6 +141,14 @@ int heroWindow::handleMessage(message& msg)
 DC_ADDRESS(0x197320, 0x4)
 void heroWindow::handleWidgetHover(widget* current)
 {
+}
+
+// Project-inferred dynamic insertion. Ownership is recorded before opening the
+// widget; keep it in the vector even if addWidget's virtual open rejects it.
+void heroWindow::addOwnedWidget(widget* newWidget)
+{
+    m_widgets.push_back(newWidget);
+    addWidget(m_widgets.back(), -1);
 }
 
 VA(0x005fecb0, 0xA5)
@@ -291,6 +300,26 @@ int heroWindow::widgetClearStatus(int id, int status)
                             id, status);
 }
 
+// Project-inferred row operation. Every member receives the clear before the
+// selected member receives the set; callers retain their DRAWN/DIMMED choice.
+void heroWindow::setExclusiveWidgetStatus(int firstId, int lastId,
+                                          int selectedId, int status)
+{
+    for (int id = firstId; id <= lastId; ++id)
+        getWidget(id)->sendMessage(widget::WIDGET_CLEAR_STATUS, status);
+    getWidget(selectedId)->sendMessage(widget::WIDGET_SET_STATUS, status);
+}
+
+// Project-inferred volume display, shared by construction and user changes.
+// The syslb.def row uses the level both as the selected offset and its frame.
+// Audio adjustment and preference persistence remain with the callers.
+void heroWindow::showVolumeLevel(int firstId, int lastId, int level)
+{
+    setExclusiveWidgetStatus(firstId, lastId, firstId + level,
+                            widget::WIDGET_DRAWN);
+    getWidget(firstId + level)->sendMessage(widget::WIDGET_SET_ICON_FRAME, level);
+}
+
 VA(0x005feff0, 0x22)
 DC_ADDRESS(0x1975a8, 0x30)
 MAC_ADDRESS(0x20b564, 0x28)
@@ -311,12 +340,6 @@ MAC_ADDRESS(0x20b58c, 0x144)
 void heroWindow::drawWindow(unsigned char update, int lowID, int highID)
 {
     message msg;
-    msg.m_codeY = 0;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_DRAW;
     widget* current = m_headWidget;
@@ -464,6 +487,16 @@ void heroWindow::centerWindow(int centerX, int centerY)
     }
 }
 
+// Project-inferred shared quick-preview clamp. Keep the half-size arithmetic
+// and final-pixel boundary; centerWindow has different positioning semantics.
+void heroWindow::centerQuickView(int centerX, int centerY)
+{
+    m_x = limit(m_width / 2, centerX,
+                WINDOW_SCREEN_WIDTH - 1 - m_width / 2) - m_width / 2;
+    m_y = limit(m_height / 2, centerY,
+                WINDOW_SCREEN_HEIGHT - 1 - m_height / 2) - m_height / 2;
+}
+
 VA(0x005ff3b0, 0x23)
 DC_ADDRESS(0x197ad0, 0x1c)
 MAC_ADDRESS(0x20ba20, 0x34)
@@ -484,9 +517,7 @@ widget* heroWindow::findWidgetPtr(int mx, int my) const
     my -= m_y;
     for (widget* const* it = m_widgets.end(); it != m_widgets.begin(); --it) {
         widget* found = it[-1];
-        if (mx >= found->m_x && my >= found->m_y
-            && mx < found->m_x + found->m_width
-            && my < found->m_y + found->m_height
+        if (found->containsPoint(mx, my)
             && (found->m_status & widget::WIDGET_ACTIVE)
             && !(found->m_status & widget::WIDGET_DIMMED)
             && !(found->m_status & widget::WIDGET_DIMMED_NODRAW))
@@ -553,15 +584,33 @@ int heroWindow::heroWindowHandler(message& msg)
     return msg.m_window->handleMessage(msg);
 }
 
-VA(0x005ff510, 0x60)
-DC_ADDRESS(0x197c8c, 0x48)
-MAC_ADDRESS(0x20bc50, 0x7c)
-void heroWindow::deleteWidgets()
+// Project-inferred registration shared by quick-view and level-up windows.
+// Their existing loops skip missing widgets without reporting an error.
+void heroWindow::addPresentWidgetsToMessageStream()
+{
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+        if (*it)
+            addWidget(*it, -1);
+    }
+}
+
+// Project-inferred common object deletion. Terminal window destructors leave
+// the pointer vector intact until its own destruction. The existing full
+// cleanup operation below additionally clears it after all deletes finish.
+void heroWindow::deleteWidgetObjects()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
+}
+
+VA(0x005ff510, 0x60)
+DC_ADDRESS(0x197c8c, 0x48)
+MAC_ADDRESS(0x20bc50, 0x7c)
+void heroWindow::deleteWidgets()
+{
+    deleteWidgetObjects();
     m_widgets.clear();
 }
 
@@ -674,9 +723,7 @@ int CHeroWindowEx::windowHandler(message& msg)
         return 0;
     }
     if (exitFlag) {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.setDialogEnd(widget::WIDGET_END_DIALOG);
         return 2;
     }
     return 0;
@@ -773,19 +820,9 @@ MAC_ADDRESS(0x20c424, 0xa0)
 void setWinText(heroWindow* win, int winId)
 {
     message msg;
-    msg.m_id = 0;
-    msg.m_codeX = 0;
-    msg.m_codeY = 0;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
     for (unsigned i = 0; i < 37; ++i) {
         if (g_winSetup[i].m_windowId == winId) {
-            msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_SET_TEXT;
-            msg.m_codeY = g_winSetup[i].m_widgetId;
+            msg.setWidgetCommand(widget::WIDGET_SET_TEXT, g_winSetup[i].m_widgetId);
             msg.m_extraText = g_winSetup[i].m_text;
             win->broadcastMessage(msg);
         }

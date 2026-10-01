@@ -295,9 +295,7 @@ static int customCampaignBeginHandler(message& msg)
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
         if (static_cast<TCustomCampaignWindow*>(msg.m_window)
                 ->acceptSelection()) {
-            msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeY = 1;
-            msg.m_codeX = 10;
+            msg.setDialogEnd(1);
             return MESSAGE_DISPATCH_FORWARD;
         }
     }
@@ -309,9 +307,7 @@ MAC_ADDRESS(0x21fca8, 0x40)
 static int customCampaignBackHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = 0;
-        msg.m_codeX = 10;
+        msg.setDialogEnd(0);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

@@ -276,12 +276,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
                              recruitInfo->m_monType1, 0);
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x0054faf0, 0x21, SCALAR_DELETING_DTOR, TRecruitWindow)
@@ -291,10 +286,7 @@ DC_ADDRESS(0x1197bc, 0x62)
 MAC_ADDRESS(0x14eb7c, 0xac)
 TRecruitWindow::~TRecruitWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // E:\gamedcs\recruit.cpp:302
@@ -335,6 +327,14 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
         102, 132, slot + 0x21a, g_systemPalette->m_data[31], 0x400));
 }
 
+// Project-inferred pair shared by opening and remote-player updates.
+// Re-read the window after the first virtual enable call.
+void recruitUnit::disablePurchaseButtons()
+{
+    g_recruitWindow->m_acceptButton->enable(0);
+    g_recruitWindow->m_maximumButton->enable(0);
+}
+
 VA(0x0054fea0, 0x42E)
 DC_ADDRESS(0x11994c, 0x398)
 MAC_ADDRESS(0x14eec8, 0x438)
@@ -352,9 +352,7 @@ int recruitUnit::open(int newPriority)
     m_totalGold = 0;
     m_totalResources = 0;
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = 0;
+    msg.setWidgetCommand(widget::WIDGET_SET_PLAYER_PALETTE_COLORS, 0);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     g_recruitWindow->broadcastMessage(msg);
 
@@ -365,60 +363,42 @@ int recruitUnit::open(int newPriority)
         creatureName = "";
     sprintf(g_text, "%s %s",
         (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE], creatureName);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x226;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x226);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
     sprintf(g_text, "%d", m_goldPerTroop);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x200;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x200);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
     if (m_altResource != -1) {
         sprintf(g_text, "%d", m_resourcesPerTroop);
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_TEXT;
-        msg.m_codeY = 0x204;
+        msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x204);
         msg.m_extraText = g_text;
         g_recruitWindow->broadcastMessage(msg);
 
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-        msg.m_codeY = 0x1fc;
+        msg.setWidgetCommand(widget::WIDGET_SET_ICON_FRAME, 0x1fc);
         msg.m_extra = m_altResource;
         g_recruitWindow->broadcastMessage(msg);
 
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-        msg.m_codeY = 0x211;
+        msg.setWidgetCommand(widget::WIDGET_SET_ICON_FRAME, 0x211);
         msg.m_extra = m_altResource;
         g_recruitWindow->broadcastMessage(msg);
     } else {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.m_codeY = 0x1fc;
+        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, 0x1fc);
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         g_recruitWindow->broadcastMessage(msg);
 
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.m_codeY = 0x211;
+        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, 0x211);
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         g_recruitWindow->broadcastMessage(msg);
 
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.m_codeY = 0x204;
+        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, 0x204);
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         g_recruitWindow->broadcastMessage(msg);
 
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.m_codeY = 0x213;
+        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, 0x213);
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         g_recruitWindow->broadcastMessage(msg);
     }
@@ -442,8 +422,7 @@ int recruitUnit::open(int newPriority)
 
     getMonsterCost(m_monsterType, resCost);
     if (*m_numAvail == 0 || g_currentPlayer->m_resources[6] < resCost[6]) {
-        g_recruitWindow->m_acceptButton->enable(0);
-        g_recruitWindow->m_maximumButton->enable(0);
+        disablePurchaseButtons();
     }
 
     g_recruitSavedMenu = g_currMenu;
@@ -456,8 +435,7 @@ int recruitUnit::open(int newPriority)
         DATA_COMPGEN(0x00682a18, recruitManagerName, "recruitManager"));
 
     if (g_remoteOn && !g_currentPlayer->isLocalHuman()) {
-        g_recruitWindow->m_acceptButton->enable(0);
-        g_recruitWindow->m_maximumButton->enable(0);
+        disablePurchaseButtons();
     }
     return 0;
 }
@@ -565,9 +543,7 @@ void recruitUnit::update(bool newMonster, long slot)
     sprintf(g_text, "%s %s",
         (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
         getArmyName(m_monsterType, 2));
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x226;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x226);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
@@ -581,9 +557,7 @@ void recruitUnit::update(bool newMonster, long slot)
     } else {
         sprintf(g_text, "%d", *m_numAvail - m_numberToBuy);
     }
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x209;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x209);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
@@ -610,8 +584,7 @@ void recruitUnit::update(bool newMonster, long slot)
     // network-game flag. Renaming a 275-reference global is the
     // owning lane's call, so the call site keeps the declared name.
     if (g_remoteOn && !g_currentPlayer->isLocalHuman()) {
-        g_recruitWindow->m_acceptButton->enable(0);
-        g_recruitWindow->m_maximumButton->enable(0);
+        disablePurchaseButtons();
         g_recruitWindow->m_quantitySlider->enable(0);
     } else {
         g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0 && m_maxAvail > 0 && !m_viewOnly);
@@ -625,24 +598,18 @@ void recruitUnit::update(bool newMonster, long slot)
     }
 
     sprintf(g_text, "%d", m_numberToBuy);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = RECRUIT_QUANTITY_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, RECRUIT_QUANTITY_ID);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
     m_totalGold = m_numberToBuy * m_goldPerTroop;
     sprintf(g_text, "%d", m_totalGold);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x212;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x212);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
     sprintf(g_text, "%d", m_goldPerTroop);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x200;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x200);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
@@ -650,46 +617,32 @@ void recruitUnit::update(bool newMonster, long slot)
         m_resourcesPerTroop = 0;
     m_totalResources = m_numberToBuy * m_resourcesPerTroop;
     sprintf(g_text, "%d", m_totalResources);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x213;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x213);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
     sprintf(g_text, "%d", m_resourcesPerTroop);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x204;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x204);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
-    msg.m_codeY = RECRUIT_CREATURE_0_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_COLOR, RECRUIT_CREATURE_0_ID);
     msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
-    msg.m_codeY = RECRUIT_CREATURE_1_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_COLOR, RECRUIT_CREATURE_1_ID);
     msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
-    msg.m_codeY = RECRUIT_CREATURE_2_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_COLOR, RECRUIT_CREATURE_2_ID);
     msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
-    msg.m_codeY = RECRUIT_CREATURE_3_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_COLOR, RECRUIT_CREATURE_3_ID);
     msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
-    msg.m_codeY = m_selectedPosition + RECRUIT_CREATURE_0_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_COLOR, m_selectedPosition + RECRUIT_CREATURE_0_ID);
     msg.m_extra = g_systemPalette->m_data[36];
     g_recruitWindow->broadcastMessage(msg);
 }
@@ -749,6 +702,43 @@ int finishRecruitUnit(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
+// Project-inferred quantity/display boundary. Slider state must be written
+// before enabling the accept button; reread both the window and quantity after
+// the virtual setter. This does not recompute costs or draw the window.
+// The slider callback and cancellation deliberately do not set slider state.
+void recruitUnit::updatePurchaseQuantityControls()
+{
+    g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
+    g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
+}
+
+void recruitUnit::setPurchaseQuantity(int quantity)
+{
+    m_numberToBuy = quantity;
+    updatePurchaseQuantityControls();
+}
+
+// All four cards share this transition or the same scoped creature preview.
+// Keep the existing update's availability/cost work and destroy the preview
+// before Main's common redraw. Ordinary owner-TU placement is provisional;
+// no native helper identity or explicit inline declaration is claimed.
+void recruitUnit::handleCreatureClick(TCreatureType creature, int slot,
+                                     bool quickView)
+{
+    if (m_selectedPosition != slot && !quickView) {
+        m_selectedPosition = slot;
+        m_monsterType = creature;
+        setPurchaseQuantity(0);
+        update(1, slot);
+    } else {
+        TViewArmyWindow viewArmyWindow(creature, 0x77, 0x20, !quickView);
+        if (quickView)
+            viewArmyWindow.quickView();
+        else
+            viewArmyWindow.doModal();
+    }
+}
+
 // E:\gamedcs\recruit.cpp:704
 // The message command map is fixed by the retail switch tables: 0x20e is the
 // typed quantity, 0x214 the maximum button, 0x21a..0x21d the four creature
@@ -797,8 +787,7 @@ int recruitUnit::main(message& msg)
         unsigned char msgReceived = 0;
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {
-            handler->checkHandleNet(1, &msgReceived);
-            if (msgReceived && handler->getAbortPopupMsg())
+            if (handler->pollPopupAbort(msgReceived))
                 abortDialog = 1;
         }
     }
@@ -846,81 +835,24 @@ int recruitUnit::main(message& msg)
                     m_numberToBuy = 0;
                 if (m_numberToBuy > m_maxAvail)
                     m_numberToBuy = m_maxAvail;
-                g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
-                g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
+                updatePurchaseQuantityControls();
                 update(0, -1);
                 break;
 
             case RECRUIT_CREATURE_0_ID:
-                if (m_selectedPosition != RECRUIT_SLOT_0 && !exitFlag) {
-                    m_selectedPosition = RECRUIT_SLOT_0;
-                    m_monsterType = m_monType1;
-                    m_numberToBuy = 0;
-                    g_recruitWindow->m_quantitySlider->setState(0);
-                    g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                    update(1, 0);
-                } else {
-                    TViewArmyWindow viewArmyWindow(
-                        m_monType1, 0x77, 0x20, !exitFlag);
-                    if (exitFlag)
-                        viewArmyWindow.quickView();
-                    else
-                        viewArmyWindow.doModal();
-                }
+                handleCreatureClick(m_monType1, RECRUIT_SLOT_0, exitFlag != 0);
                 break;
 
             case RECRUIT_CREATURE_1_ID:
-                if (m_selectedPosition != RECRUIT_SLOT_1 && !exitFlag) {
-                    m_selectedPosition = RECRUIT_SLOT_1;
-                    m_monsterType = m_monType2;
-                    m_numberToBuy = 0;
-                    g_recruitWindow->m_quantitySlider->setState(0);
-                    g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                    update(1, 1);
-                } else {
-                    TViewArmyWindow viewArmyWindow(
-                        m_monType2, 0x77, 0x20, !exitFlag);
-                    if (exitFlag)
-                        viewArmyWindow.quickView();
-                    else
-                        viewArmyWindow.doModal();
-                }
+                handleCreatureClick(m_monType2, RECRUIT_SLOT_1, exitFlag != 0);
                 break;
 
             case RECRUIT_CREATURE_2_ID:
-                if (m_selectedPosition != RECRUIT_SLOT_2 && !exitFlag) {
-                    m_selectedPosition = RECRUIT_SLOT_2;
-                    m_monsterType = m_monType3;
-                    m_numberToBuy = 0;
-                    g_recruitWindow->m_quantitySlider->setState(0);
-                    g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                    update(1, 2);
-                } else {
-                    TViewArmyWindow viewArmyWindow(
-                        m_monType3, 0x77, 0x20, !exitFlag);
-                    if (exitFlag)
-                        viewArmyWindow.quickView();
-                    else
-                        viewArmyWindow.doModal();
-                }
+                handleCreatureClick(m_monType3, RECRUIT_SLOT_2, exitFlag != 0);
                 break;
 
             case RECRUIT_CREATURE_3_ID:
-                if (m_selectedPosition != RECRUIT_SLOT_3 && !exitFlag) {
-                    m_selectedPosition = RECRUIT_SLOT_3;
-                    m_monsterType = m_monType4;
-                    m_numberToBuy = 0;
-                    g_recruitWindow->m_quantitySlider->setState(0);
-                    g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                    update(1, 3);
-                } else {
-                    TViewArmyWindow viewArmyWindow(
-                        m_monType4, 0x77, 0x20, !exitFlag);
-                    if (exitFlag)
-                        viewArmyWindow.quickView();
-                    else
-                        viewArmyWindow.doModal();
-                }
+                handleCreatureClick(m_monType4, RECRUIT_SLOT_3, exitFlag != 0);
                 break;
             }
             g_recruitWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
@@ -932,9 +864,7 @@ int recruitUnit::main(message& msg)
             case RECRUIT_MAXIMUM_ID:
                 if (exitFlag)
                     break;
-                m_numberToBuy = m_maxAvail;
-                g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
-                g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
+                setPurchaseQuantity(m_maxAvail);
                 update(0, -1);
                 g_recruitWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                             WINDOW_ALL_WIDGETS_HIGH);
@@ -989,9 +919,7 @@ int recruitUnit::main(message& msg)
                     g_currentPlayer->m_resources[m_altResource] -=
                         m_resourcesPerTroop * m_numberToBuy;
                 *m_numAvail -= static_cast<short>(m_numberToBuy);
-                m_numberToBuy = 0;
-                g_recruitWindow->m_quantitySlider->setState(0);
-                g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
+                setPurchaseQuantity(0);
 
                 if (m_monType2 == CREATURE_NONE
                     || m_type == RECRUIT_SOURCE_TOWN)
@@ -1017,8 +945,7 @@ int recruitUnit::main(message& msg)
 
     case MESSAGE_MOUSE_MOVE:
         g_windowManager->convertToHover(msg);
-        if (msg.m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg.m_codeY;
+        if (g_windowManager->updateHover(msg.m_codeY)) {
             setRolloverText(msg.m_codeY);
         }
         break;
@@ -1055,6 +982,40 @@ void recruitUnit::updateCost()
     }
 }
 
+// Project-inferred constructor operations. Retain the original store order,
+// borrowed count pointers and timer write before the native cost calculation.
+void recruitUnit::initializeNonTownSource()
+{
+    m_type = RECRUIT_SOURCE_NONE;
+    m_viewOnly = 0;
+    m_inTownMainScreen = 0;
+}
+
+void recruitUnit::initializeCreatureChoices(
+    TCreatureType monType1, short* numMon1,
+    TCreatureType monType2, short* numMon2,
+    TCreatureType monType3, short* numMon3,
+    TCreatureType monType4, short* numMon4)
+{
+    m_monsterType = monType1;
+    m_numAvail = numMon1;
+    m_selectedPosition = 0;
+    m_monType1 = monType1;
+    m_monType2 = monType2;
+    m_monType3 = monType3;
+    m_monType4 = monType4;
+    m_available[0] = numMon1;
+    m_available[1] = numMon2;
+    m_available[2] = numMon3;
+    m_available[3] = numMon4;
+}
+
+void recruitUnit::prepareInitialCost()
+{
+    g_timers[0] = GameTime::get() + 100;
+    updateCost();
+}
+
 // E:\gamedcs\recruit.cpp:1120
 // `ret 0x28` = 40 argument bytes = the ten Dreamcast parameters, and
 // each one lands on the field the DC roster names: [ebp+8] -> +0x98,
@@ -1074,25 +1035,13 @@ recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
     TCreatureType monType3, short* numMon3,
     TCreatureType monType4, short* numMon4)
 {
-    m_type = -1;
-    m_viewOnly = 0;
-    m_inTownMainScreen = 0;
+    initializeNonTownSource();
     m_thisHero = 0;
     m_currArmyGroup = newGroup;
     m_currArmyGroupIsTownGarrison = groupIsTownGarrison;
-    m_monsterType = monType1;
-    m_numAvail = numMon1;
-    m_selectedPosition = 0;
-    m_monType1 = monType1;
-    m_monType2 = monType2;
-    m_monType3 = monType3;
-    m_monType4 = monType4;
-    m_available[0] = numMon1;
-    m_available[1] = numMon2;
-    m_available[2] = numMon3;
-    m_available[3] = numMon4;
-    g_timers[0] = GameTime::get() + 100;
-    updateCost();
+    initializeCreatureChoices(monType1, numMon1, monType2, numMon2,
+                              monType3, numMon3, monType4, numMon4);
+    prepareInitialCost();
 }
 
 // E:\gamedcs\recruit.cpp:1158
@@ -1112,25 +1061,13 @@ recruitUnit::recruitUnit(hero* thisHero,
 {
     // DC lines 1159..1179 and Mac 0:0x1508c4..0x15090c put the source
     // fields in this order after baseManager construction.
-    m_type = -1;
-    m_viewOnly = 0;
-    m_inTownMainScreen = 0;
+    initializeNonTownSource();
     m_thisHero = thisHero;
     m_currArmyGroup = 0;
     m_currArmyGroupIsTownGarrison = 0;
-    m_monsterType = monType1;
-    m_numAvail = numMon1;
-    m_selectedPosition = 0;
-    m_monType1 = monType1;
-    m_monType2 = monType2;
-    m_monType3 = monType3;
-    m_monType4 = monType4;
-    m_available[0] = numMon1;
-    m_available[1] = numMon2;
-    m_available[2] = numMon3;
-    m_available[3] = numMon4;
-    g_timers[0] = GameTime::get() + 100;
-    updateCost();
+    initializeCreatureChoices(monType1, numMon1, monType2, numMon2,
+                              monType3, numMon3, monType4, numMon4);
+    prepareInitialCost();
 }
 
 VA(0x00551560, 0x14B)
@@ -1161,8 +1098,7 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
                                           + newDwellingIndex - TOWN_DWELLING_COUNT];
         m_available[1] = m_numAvail;
     }
-    g_timers[0] = GameTime::get() + 100;
-    updateCost();
+    prepareInitialCost();
 }
 
 // E:\gamedcs\recruit.cpp:1219. Dreamcast and Mac retain this constructor;
@@ -1183,10 +1119,7 @@ DC_ADDRESS(0x11af98, 0x62)
 MAC_ADDRESS(0x150ac4, 0xac)
 TRecruitQuickWindow::~TRecruitQuickWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x00551750, 0x24)
@@ -1240,9 +1173,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
                 "crtoinfo.pcx"),
             0x800), -1);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = 0;
+    msg.setWidgetCommand(widget::WIDGET_SET_PLAYER_PALETTE_COLORS, 0);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     recruitWindow->broadcastMessage(msg);
 
@@ -1296,9 +1227,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
     sprintf(g_text,
         DATA_COMPGEN(0x00660a1c, quickRecruitDecimalFormat, "%d"),
         cost[6]);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x200;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x200);
     msg.m_extraText = g_text;
     recruitWindow->broadcastMessage(msg);
 
@@ -1306,27 +1235,19 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
         sprintf(g_text,
             DATA_COMPGEN(0x00660a1c, quickRecruitDecimalFormat, "%d"),
             resourcesPerTroop);
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_TEXT;
-        msg.m_codeY = 0x204;
+        msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x204);
         msg.m_extraText = g_text;
         recruitWindow->broadcastMessage(msg);
 
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-        msg.m_codeY = 0x1fc;
+        msg.setWidgetCommand(widget::WIDGET_SET_ICON_FRAME, 0x1fc);
         msg.m_extra = altResource;
         recruitWindow->broadcastMessage(msg);
     } else {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.m_codeY = 0x1fc;
+        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, 0x1fc);
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         recruitWindow->broadcastMessage(msg);
 
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.m_codeY = 0x204;
+        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, 0x204);
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         recruitWindow->broadcastMessage(msg);
     }

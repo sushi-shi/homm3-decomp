@@ -22,6 +22,33 @@
 #include "dxplay_com.h"
 #include "exceptions.h"
 
+// Project-inferred name operations shared by group creation and the player/
+// group name APIs. These borrow names and preserve the SDK record layout.
+static void initializeDirectPlayName(DPNAME& name, char* shortName, char* longName)
+{
+    name.m_size = sizeof(DPNAME);
+    name.m_flags = 0;
+    name.m_shortNameA = shortName;
+    name.m_longNameA = longName;
+}
+
+static void copyDirectPlayName(const DPNAME& name, char* shortName, int maxShort,
+                               char* longName, int maxLong)
+{
+    if (shortName) {
+        if (name.m_shortNameA)
+            strncpy(shortName, name.m_shortNameA, maxShort);
+        else
+            shortName[0] = 0;
+    }
+    if (longName) {
+        if (name.m_longNameA)
+            strncpy(longName, name.m_longNameA, maxLong);
+        else
+            longName[0] = 0;
+    }
+}
+
 // File-scope DirectPlay enumeration trampolines (defined at the tail of this TU),
 // forward-declared so the Enum* wrappers above them can take their addresses.
 int __stdcall enumAddressCallback(const GUID*, unsigned long, const void*, void*);
@@ -69,14 +96,21 @@ CDPlay::~CDPlay()
         static_cast<IDirectPlay4A*>(m_dp)->Release();
 }
 
-VA(0x00496d30, 0x3A)
-DC_ADDRESS(0x08a11c, 0x4)
-unsigned char CDPlay::init()
+// Project-inferred operation shared by initialization and lobby connection.
+// Keep Release before clearing the pointer, and leave connection flags alone.
+void CDPlay::releaseDirectPlay()
 {
     if (m_dp) {
         static_cast<IDirectPlay4A*>(m_dp)->Release();
         m_dp = 0;
     }
+}
+
+VA(0x00496d30, 0x3A)
+DC_ADDRESS(0x08a11c, 0x4)
+unsigned char CDPlay::init()
+{
+    releaseDirectPlay();
     m_res = CoCreateInstance(CLSID_DirectPlay, 0, CLSCTX_INPROC_SERVER,
         IID_IDirectPlay4A, &m_dp);
     unsigned char ok = m_res >= 0;
@@ -207,10 +241,7 @@ unsigned long CDPlay::createGroup(char* groupName, void* groupData, unsigned lon
         return 0;
     unsigned long flags = 0;
     DPNAME dpName;
-    dpName.m_size = sizeof(DPNAME);
-    dpName.m_flags = 0;
-    dpName.m_shortNameA = groupName;
-    dpName.m_longNameA = groupName;
+    initializeDirectPlayName(dpName, groupName, groupName);
     if (stagingArea)
         flags = 0x800;
     unsigned long idGroup;
@@ -224,10 +255,7 @@ unsigned long CDPlay::createGroupInGroup(unsigned long dpidParent, char* groupNa
 {
     unsigned long flags = 0;
     DPNAME dpName;
-    dpName.m_size = sizeof(DPNAME);
-    dpName.m_flags = 0;
-    dpName.m_shortNameA = groupName;
-    dpName.m_longNameA = groupName;
+    initializeDirectPlayName(dpName, groupName, groupName);
     if (stagingArea)
         flags = 0x800;
     unsigned long idGroup;
@@ -728,44 +756,44 @@ unsigned char CDPlay::setPlayerName(unsigned long playerId, char* shortName, cha
     if (!longValue)
         longValue = shortName;
     DPNAME dpName;
-    dpName.m_size = sizeof(DPNAME);
-    dpName.m_flags = 0;
-    dpName.m_shortNameA = shortName;
-    dpName.m_longNameA = longValue;
+    initializeDirectPlayName(dpName, shortName, longValue);
     m_res = static_cast<IDirectPlay4A*>(m_dp)->SetPlayerName(playerId, &dpName, flags);
     unsigned char ok = m_res >= 0;
     return ok;
+}
+
+// Project-inferred shared name-query protocol. Keep the message owner alive
+// through copying and retain fresh COM-interface reads for both queries.
+unsigned char CDPlay::getPlayerOrGroupName(EDPlayerType type, unsigned long id,
+                                           char* shortName, int maxShort,
+                                           char* longName, int maxLong)
+{
+    CDPlayMsg name;
+    unsigned long size = 0;
+    if (type == DPPLAYERTYPE_GROUP)
+        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupName(id, 0, &size);
+    else
+        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerName(id, 0, &size);
+    if (m_res != DPERR_BUFFERTOOSMALL)
+        return 0;
+    name.allocSize(size + 1);
+    DPNAME* dpName = static_cast<DPNAME*>(static_cast<void*>(name.m_data));
+    if (type == DPPLAYERTYPE_GROUP)
+        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupName(id, dpName, &size);
+    else
+        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerName(id, dpName, &size);
+    if (m_res < 0)
+        return 0;
+    copyDirectPlayName(*dpName, shortName, maxShort, longName, maxLong);
+    return 1;
 }
 
 VA(0x004982a0, 0x115)
 DC_ADDRESS(0x08b0d8, 0xd8)
 unsigned char CDPlay::getPlayerName(unsigned long playerId, char* shortName, int maxShort, char* longName, int maxLong)
 {
-    CDPlayMsg name;
-    unsigned long size = 0;
-    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerName(playerId, 0, &size);
-    if (m_res != DPERR_BUFFERTOOSMALL)
-        return 0;
-    unsigned long allocSize = size + 1;
-    name.m_data = new unsigned char[allocSize];
-    name.m_dataSize = allocSize;
-    DPNAME* dpName = static_cast<DPNAME*>(static_cast<void*>(name.m_data));
-    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerName(playerId, dpName, &size);
-    if (m_res < 0)
-        return 0;
-    if (shortName) {
-        if (dpName->m_shortNameA)
-            strncpy(shortName, dpName->m_shortNameA, maxShort);
-        else
-            shortName[0] = 0;
-    }
-    if (longName) {
-        if (dpName->m_longNameA)
-            strncpy(longName, dpName->m_longNameA, maxLong);
-        else
-            longName[0] = 0;
-    }
-    return 1;
+    return getPlayerOrGroupName(DPPLAYERTYPE_PLAYER, playerId,
+                                shortName, maxShort, longName, maxLong);
 }
 
 VA(0x004983c0, 0x2C)
@@ -777,15 +805,19 @@ unsigned char CDPlay::setGroupData(unsigned long groupId, void* data, unsigned l
     return ok;
 }
 
-VA(0x004983f0, 0xB1)
-DC_ADDRESS(0x08b1e0, 0xa4)
-void* CDPlay::getGroupData(unsigned long groupId, unsigned long* pdwSize, unsigned long flags)
+// Project-inferred shared two-query protocol. Re-read the COM interface for
+// the second call and publish size only on the original successful exits.
+void* CDPlay::getPlayerOrGroupData(EDPlayerType type, unsigned long id,
+                                  unsigned long* pdwSize, unsigned long flags)
 {
     void* buf = 0;
     unsigned long dataSize = 0;
     if (pdwSize)
         dataSize = *pdwSize;
-    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupData(groupId, 0, &dataSize, flags);
+    if (type == DPPLAYERTYPE_GROUP)
+        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupData(id, 0, &dataSize, flags);
+    else
+        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerData(id, 0, &dataSize, flags);
     if (m_res < 0) {
         if (m_res != DPERR_BUFFERTOOSMALL)
             return 0;
@@ -793,7 +825,10 @@ void* CDPlay::getGroupData(unsigned long groupId, unsigned long* pdwSize, unsign
         if (dataSize == 0)
             return 0;
         buf = ::operator new(dataSize);
-        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupData(groupId, buf, &dataSize, flags);
+        if (type == DPPLAYERTYPE_GROUP)
+            m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupData(id, buf, &dataSize, flags);
+        else
+            m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerData(id, buf, &dataSize, flags);
         if (m_res < 0) {
             ::operator delete(buf);
             return 0;
@@ -804,6 +839,13 @@ void* CDPlay::getGroupData(unsigned long groupId, unsigned long* pdwSize, unsign
     return buf;
 }
 
+VA(0x004983f0, 0xB1)
+DC_ADDRESS(0x08b1e0, 0xa4)
+void* CDPlay::getGroupData(unsigned long groupId, unsigned long* pdwSize, unsigned long flags)
+{
+    return getPlayerOrGroupData(DPPLAYERTYPE_GROUP, groupId, pdwSize, flags);
+}
+
 VA(0x004984b0, 0x4D)
 DC_ADDRESS(0x08b284, 0x40)
 unsigned char CDPlay::setGroupName(unsigned long groupId, char* shortName, char* longName, unsigned long flags)
@@ -812,10 +854,7 @@ unsigned char CDPlay::setGroupName(unsigned long groupId, char* shortName, char*
     if (!longValue)
         longValue = shortName;
     DPNAME dpName;
-    dpName.m_size = sizeof(DPNAME);
-    dpName.m_flags = 0;
-    dpName.m_shortNameA = shortName;
-    dpName.m_longNameA = longValue;
+    initializeDirectPlayName(dpName, shortName, longValue);
     m_res = static_cast<IDirectPlay4A*>(m_dp)->SetGroupName(groupId, &dpName, flags);
     unsigned char ok = m_res >= 0;
     return ok;
@@ -825,31 +864,8 @@ VA(0x00498500, 0x115)
 DC_ADDRESS(0x08b2c4, 0xf6)
 unsigned char CDPlay::getGroupName(unsigned long groupId, char* shortName, int maxShort, char* longName, int maxLong)
 {
-    CDPlayMsg name;
-    unsigned long size = 0;
-    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupName(groupId, 0, &size);
-    if (m_res != DPERR_BUFFERTOOSMALL)
-        return 0;
-    unsigned long allocSize = size + 1;
-    name.m_data = new unsigned char[allocSize];
-    name.m_dataSize = allocSize;
-    DPNAME* dpName = static_cast<DPNAME*>(static_cast<void*>(name.m_data));
-    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupName(groupId, dpName, &size);
-    if (m_res < 0)
-        return 0;
-    if (shortName) {
-        if (dpName->m_shortNameA)
-            strncpy(shortName, dpName->m_shortNameA, maxShort);
-        else
-            shortName[0] = 0;
-    }
-    if (longName) {
-        if (dpName->m_longNameA)
-            strncpy(longName, dpName->m_longNameA, maxLong);
-        else
-            longName[0] = 0;
-    }
-    return 1;
+    return getPlayerOrGroupName(DPPLAYERTYPE_GROUP, groupId,
+                                shortName, maxShort, longName, maxLong);
 }
 
 VA(0x00498620, 0x2C)
@@ -865,27 +881,7 @@ VA(0x00498650, 0xB1)
 DC_ADDRESS(0x08b3ec, 0xa8)
 void* CDPlay::getPlayerData(unsigned long playerId, unsigned long* pdwSize, unsigned long flags)
 {
-    void* buf = 0;
-    unsigned long dataSize = 0;
-    if (pdwSize)
-        dataSize = *pdwSize;
-    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerData(playerId, 0, &dataSize, flags);
-    if (m_res < 0) {
-        if (m_res != DPERR_BUFFERTOOSMALL)
-            return 0;
-        m_res = 0;
-        if (dataSize == 0)
-            return 0;
-        buf = ::operator new(dataSize);
-        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerData(playerId, buf, &dataSize, flags);
-        if (m_res < 0) {
-            ::operator delete(buf);
-            return 0;
-        }
-    }
-    if (pdwSize)
-        *pdwSize = dataSize;
-    return buf;
+    return getPlayerOrGroupData(DPPLAYERTYPE_PLAYER, playerId, pdwSize, flags);
 }
 
 VA(0x00498710, 0x8C)
@@ -989,13 +985,7 @@ VA(0x00498a60, 0x72)
 DC_ADDRESS(0x08b610, 0x4)
 unsigned char CDPlayLobby::init()
 {
-    if (m_dp) {
-        static_cast<IDirectPlay4A*>(m_dp)->Release();
-        m_dp = 0;
-    }
-    m_res = CoCreateInstance(CLSID_DirectPlay, 0, CLSCTX_INPROC_SERVER,
-        IID_IDirectPlay4A, &m_dp);
-    if (m_res < 0)
+    if (!CDPlay::init())
         return 0;
     if (m_lobby) {
         static_cast<IDirectPlayLobby3A*>(m_lobby)->Release();
@@ -1119,10 +1109,7 @@ unsigned char CDPlayLobby::connect()
     else
         m_isHost = 0;
     ::operator delete(conn);
-    if (m_dp) {
-        static_cast<IDirectPlay4A*>(m_dp)->Release();
-        m_dp = 0;
-    }
+    releaseDirectPlay();
     m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->ConnectEx(0, IID_IDirectPlay4A, &m_dp, 0);
     unsigned char ok = m_res >= 0;
     return ok;
@@ -1182,36 +1169,37 @@ unsigned char CDPlayLobby::receiveLobbyMsg(unsigned long appId, CDPlayMsg* msg)
     return 1;
 }
 
-VA(0x00498d80, 0x3C9)
-DC_ADDRESS(0x08b950, 0x4)
-CDPlayConnection* CDPlayLobby::createTCPIPConnection(
-    char* ipAddress, char* name, CDPlayConnection* append)
+// Project-inferred borrowed address-record setup. The SDK record stays a
+// plain value; the factory or enumeration container owns the pointed-to data.
+static void initializeDirectPlayAddressElement(DPCOMPOUNDADDRESSELEMENT& element,
+                                              const GUID& type,
+                                              unsigned long size,
+                                              const void* data)
 {
-    DPCOMPOUNDADDRESSELEMENT elements[10];
-    unsigned long addressSize = 0;
-    CAutoArray<CDPlayAddressElement> addresses;
-    unsigned long count = 0;
-    if (append) {
-        if (!enumAddress(append->m_connection, append->m_size, &addresses))
-            return 0;
-        while (count < addresses.getCount()) {
-            CDPlayAddressElement* element = addresses.get(count);
-            elements[count].m_guidDataType = element->m_guid;
-            elements[count].m_dataSize = element->m_dataSize;
-            elements[count].m_data = element->m_data;
-            ++count;
-        }
-    }
-    elements[count].m_guidDataType = DPAID_ServiceProvider;
-    elements[count].m_dataSize = sizeof(GUID);
-    elements[count].m_data = &DPSPGUID_TCPIP;
-    ++count;
-    if (ipAddress) {
-        elements[count].m_guidDataType = DPAID_INet;
-        elements[count].m_dataSize = strlen(ipAddress) + 1;
-        elements[count].m_data = ipAddress;
+    element.m_guidDataType = type;
+    element.m_dataSize = size;
+    element.m_data = data;
+}
+
+static void copyDirectPlayAddressElements(DPCOMPOUNDADDRESSELEMENT* elements,
+                                         CAutoArray<CDPlayAddressElement>& addresses,
+                                         unsigned long& count)
+{
+    while (count < addresses.getCount()) {
+        CDPlayAddressElement* element = addresses.get(count);
+        initializeDirectPlayAddressElement(elements[count], element->m_guid,
+                                           element->m_dataSize, element->m_data);
         ++count;
     }
+}
+
+// Project-inferred common tail of the four transport factories. Borrowed
+// element data stays alive in each caller until the connection copy is made.
+CDPlayConnection* CDPlayLobby::createConnectionFromElements(
+    const DPCOMPOUNDADDRESSELEMENT* elements, unsigned long count,
+    const GUID* provider, char* name)
+{
+    unsigned long addressSize = 0;
     m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(
         elements, count, 0, &addressSize);
     if (m_res != DPERR_BUFFERTOOSMALL)
@@ -1224,9 +1212,33 @@ CDPlayConnection* CDPlayLobby::createTCPIPConnection(
         return 0;
     }
     CDPlayConnection* connection = new CDPlayConnection(
-        &DPSPGUID_TCPIP, addressSize, address, name);
+        provider, addressSize, address, name);
     ::operator delete(address);
     return connection;
+}
+
+VA(0x00498d80, 0x3C9)
+DC_ADDRESS(0x08b950, 0x4)
+CDPlayConnection* CDPlayLobby::createTCPIPConnection(
+    char* ipAddress, char* name, CDPlayConnection* append)
+{
+    DPCOMPOUNDADDRESSELEMENT elements[10];
+    CAutoArray<CDPlayAddressElement> addresses;
+    unsigned long count = 0;
+    if (append) {
+        if (!enumAddress(append->m_connection, append->m_size, &addresses))
+            return 0;
+        copyDirectPlayAddressElements(elements, addresses, count);
+    }
+    initializeDirectPlayAddressElement(elements[count], DPAID_ServiceProvider,
+                                       sizeof(GUID), &DPSPGUID_TCPIP);
+    ++count;
+    if (ipAddress) {
+        initializeDirectPlayAddressElement(elements[count], DPAID_INet,
+                                           strlen(ipAddress) + 1, ipAddress);
+        ++count;
+    }
+    return createConnectionFromElements(elements, count, &DPSPGUID_TCPIP, name);
 }
 
 VA(0x00499150, 0x356)
@@ -1234,36 +1246,17 @@ DC_ADDRESS(0x08b954, 0x4)
 CDPlayConnection* CDPlayLobby::createIPXConnection(char* name, CDPlayConnection* connAppend)
 {
     DPCOMPOUNDADDRESSELEMENT elements[10];
-    unsigned long addressSize = 0;
     unsigned long count = 0;
     CAutoArray<CDPlayAddressElement> addresses;
     if (connAppend) {
         if (!enumAddress(connAppend->m_connection, connAppend->m_size, &addresses))
             return 0;
-        while (count < addresses.getCount()) {
-            CDPlayAddressElement* elem = addresses.get(count);
-            elements[count].m_guidDataType = elem->m_guid;
-            elements[count].m_dataSize = elem->m_dataSize;
-            elements[count].m_data = elem->m_data;
-            ++count;
-        }
+        copyDirectPlayAddressElements(elements, addresses, count);
     }
-    elements[count].m_guidDataType = DPAID_ServiceProvider;
-    elements[count].m_dataSize = sizeof(GUID);
-    elements[count].m_data = &DPSPGUID_IPX;
+    initializeDirectPlayAddressElement(elements[count], DPAID_ServiceProvider,
+                                       sizeof(GUID), &DPSPGUID_IPX);
     ++count;
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(elements, count, 0, &addressSize);
-    if (m_res != DPERR_BUFFERTOOSMALL)
-        return 0;
-    void* address = ::operator new(addressSize);
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(elements, count, address, &addressSize);
-    if (m_res < 0) {
-        ::operator delete(address);
-        return 0;
-    }
-    CDPlayConnection* conn = new CDPlayConnection(&DPSPGUID_IPX, addressSize, address, name);
-    ::operator delete(address);
-    return conn;
+    return createConnectionFromElements(elements, count, &DPSPGUID_IPX, name);
 }
 
 VA(0x004994b0, 0x24E)
@@ -1271,35 +1264,20 @@ DC_ADDRESS(0x08b958, 0x4)
 CDPlayConnection* CDPlayLobby::createModemConnection(char* name, char* phoneNbr, char* modemString)
 {
     DPCOMPOUNDADDRESSELEMENT elements[10];
-    unsigned long addressSize = 0;
-    elements[0].m_guidDataType = DPAID_ServiceProvider;
-    elements[0].m_dataSize = sizeof(GUID);
-    elements[0].m_data = &DPSPGUID_MODEM;
+    initializeDirectPlayAddressElement(elements[0], DPAID_ServiceProvider,
+                                       sizeof(GUID), &DPSPGUID_MODEM);
     unsigned long count = 1;
     if (modemString) {
-        elements[1].m_guidDataType = DPAID_Modem;
-        elements[1].m_dataSize = strlen(modemString) + 1;
-        elements[1].m_data = modemString;
+        initializeDirectPlayAddressElement(elements[1], DPAID_Modem,
+                                           strlen(modemString) + 1, modemString);
         count = 2;
     }
     if (phoneNbr) {
-        elements[count].m_guidDataType = DPAID_Phone;
-        elements[count].m_dataSize = strlen(phoneNbr) + 1;
-        elements[count].m_data = phoneNbr;
+        initializeDirectPlayAddressElement(elements[count], DPAID_Phone,
+                                           strlen(phoneNbr) + 1, phoneNbr);
         ++count;
     }
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(elements, count, 0, &addressSize);
-    if (m_res != DPERR_BUFFERTOOSMALL)
-        return 0;
-    void* address = ::operator new(addressSize);
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(elements, count, address, &addressSize);
-    if (m_res < 0) {
-        ::operator delete(address);
-        return 0;
-    }
-    CDPlayConnection* conn = new CDPlayConnection(&DPSPGUID_MODEM, addressSize, address, name);
-    ::operator delete(address);
-    return conn;
+    return createConnectionFromElements(elements, count, &DPSPGUID_MODEM, name);
 }
 
 VA(0x00499700, 0x1F4)
@@ -1307,29 +1285,15 @@ DC_ADDRESS(0x08b95c, 0x4)
 CDPlayConnection* CDPlayLobby::createSerialConnection(char* name, _DPCOMPORTADDRESS* comPortInfo)
 {
     DPCOMPOUNDADDRESSELEMENT elements[10];
-    unsigned long addressSize = 0;
-    elements[0].m_guidDataType = DPAID_ServiceProvider;
-    elements[0].m_dataSize = sizeof(GUID);
-    elements[0].m_data = &DPSPGUID_SERIAL;
+    initializeDirectPlayAddressElement(elements[0], DPAID_ServiceProvider,
+                                       sizeof(GUID), &DPSPGUID_SERIAL);
     unsigned long count = 1;
     if (comPortInfo) {
-        elements[1].m_guidDataType = DPAID_ComPort;
-        elements[1].m_dataSize = 0x14;
-        elements[1].m_data = comPortInfo;
+        initializeDirectPlayAddressElement(elements[1], DPAID_ComPort,
+                                           0x14, comPortInfo);
         count = 2;
     }
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(elements, count, 0, &addressSize);
-    if (m_res != DPERR_BUFFERTOOSMALL)
-        return 0;
-    void* address = ::operator new(addressSize);
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(elements, count, address, &addressSize);
-    if (m_res < 0) {
-        ::operator delete(address);
-        return 0;
-    }
-    CDPlayConnection* conn = new CDPlayConnection(&DPSPGUID_SERIAL, addressSize, address, name);
-    ::operator delete(address);
-    return conn;
+    return createConnectionFromElements(elements, count, &DPSPGUID_SERIAL, name);
 }
 
 // Original: CDPlayLobby::HandleSystemLobbyMsg; dxplay.cpp:1802

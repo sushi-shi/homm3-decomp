@@ -17,6 +17,117 @@
 #include "window.h"
 #include "wingraph.h"
 
+// Project-inferred clipping for the fixed-size fade/capture surface. Unlike
+// updateScreen, a negative origin also trims the extent. FadeBlit separately
+// adjusts source coordinates and uses the bitmap's dimensions.
+static bool clipScreenEffectRect(int& x, int& y, int& width, int& height)
+{
+    if (x < 0) {
+        width += x;
+        x = 0;
+    }
+    if (y < 0) {
+        height += y;
+        y = 0;
+    }
+    if (x + width > WINDOW_SCREEN_WIDTH)
+        width = WINDOW_SCREEN_WIDTH - x;
+    if (y + height > WINDOW_SCREEN_HEIGHT)
+        height = WINDOW_SCREEN_HEIGHT - y;
+    return width > 0 && height > 0;
+}
+
+// Project-inferred 16.16 blend shared by direct and palette-expanded pixels.
+// Keep signed int channel differences/products, arithmetic shifts and the
+// runtime masks; callers own transparency, frame factors and row traversal.
+static unsigned short blendScreenPixel(unsigned short from, unsigned short to,
+                                       int factor)
+{
+    const int fromBlue = from & Bitmap16Bit::s_blueMask;
+    const int toBlue = to & Bitmap16Bit::s_blueMask;
+    const int fromGreen = from & Bitmap16Bit::s_greenMask;
+    const int toGreen = to & Bitmap16Bit::s_greenMask;
+    const int fromRed = from & Bitmap16Bit::s_redMask;
+    const int toRed = to & Bitmap16Bit::s_redMask;
+    const int blue = ((toBlue - fromBlue) * factor >> 16) + fromBlue;
+    const int green = ((toGreen - fromGreen) * factor >> 16) + fromGreen;
+    const int red = ((toRed - fromRed) * factor >> 16) + fromRed;
+    return static_cast<unsigned short>(
+        (blue & Bitmap16Bit::s_blueMask)
+        | (green & Bitmap16Bit::s_greenMask)
+        | (red & Bitmap16Bit::s_redMask));
+}
+
+// Project-inferred packed-pixel dimming shared by fade-out and fade-in.
+// Each mask covers two pixels; remasking after the unsigned shift prevents
+// bits crossing component boundaries. Mask snapshots stay in the callers.
+static unsigned int darkenScreenPixelPair(unsigned int pixels,
+                                         unsigned int redMask,
+                                         unsigned int greenMask,
+                                         unsigned int blueMask, int shift)
+{
+    unsigned long blue = (pixels & redMask) >> shift;
+    unsigned long green = (pixels & greenMask) >> shift;
+    unsigned long red = (pixels & blueMask) >> shift;
+    return (red & blueMask) | (green & greenMask) | (blue & redMask);
+}
+
+// Project-inferred message operations shared by modal callbacks and widgets.
+// Native fields remain public; these methods name protocol transitions rather
+// than imposing one meaning on the fields used by every input event.
+void message::setDialogEnd()
+{
+    m_id = MESSAGE_WIDGET;
+    m_codeX = widget::WIDGET_END_DIALOG;
+}
+
+void message::setDialogEndCodes(int result)
+{
+    m_codeY = result;
+    m_codeX = widget::WIDGET_END_DIALOG;
+}
+
+void message::setDialogEnd(int result)
+{
+    m_id = MESSAGE_WIDGET;
+    setDialogEndCodes(result);
+}
+
+// Project-inferred complete callback transition. doDialog's callback arm ends
+// without copying codeY, unlike its widget-broadcast arm. Preserve the saved
+// manager result separately from the conventional END_DIALOG payload.
+void heroWindowManager::finishDialog(message& msg, int result)
+{
+    msg.m_id = MESSAGE_WIDGET;
+    m_dialogReturn = result;
+    msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
+}
+
+// Project-inferred cache transition shared by dialog rollover handlers.
+// convertToHover dispatches through windows first; keep that outside this
+// operation so each caller resolves the manager again after dispatch.
+// Ordinary source placement is provisional; no native identity is claimed.
+bool heroWindowManager::updateHover(int widgetId)
+{
+    if (m_lastHover == widgetId)
+        return false;
+    m_lastHover = widgetId;
+    return true;
+}
+
+void heroWindowManager::invalidateHover()
+{
+    m_lastHover = -1;
+}
+
+// Modifier-key changes need both cache invalidation and a queued mouse move.
+// Plain dialog/widget invalidation must not enqueue another event.
+void heroWindowManager::refreshHover()
+{
+    invalidateHover();
+    g_inputManager->forceMouseMove();
+}
+
 // DC gbInDialog and gbSendMouseMoveMessages; the nest counter is retail-only.
 DATA(0x006989cc) int g_inDialog;
 DATA(0x00698a1c) int g_sendMouseMoveMessages;
@@ -40,7 +151,7 @@ heroWindowManager::heroWindowManager()
     m_screenBitmap = 0;
     m_colorCyclingOn = 0;
     m_bmpFizzleSource = 0;
-    m_lastHover = -1;
+    invalidateHover();
     m_dialogReturn = -1;
     m_isWaitingForFadeIn = 0;
 }
@@ -133,10 +244,6 @@ int heroWindowManager::broadcastMessage(int msgId, int msgCodeX, int msgCodeY, i
 {
     message msg;
 
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_window = 0;
     msg.m_id = msgId;
     msg.m_codeX = msgCodeX;
     msg.m_codeY = msgCodeY;
@@ -245,7 +352,7 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
         try {
             sleepAllWindows(1);
             try {
-                m_lastHover = -1;
+                invalidateHover();
                 if (dialogWindow)
                     addWindow(dialogWindow, -1, 1);
                 try {
@@ -342,7 +449,7 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
         try {
             sleepAllWindows(1);
             try {
-                m_lastHover = -1;
+                invalidateHover();
                 if (dialogWindow)
                     addWindow(dialogWindow, -1, 1);
                 try {
@@ -558,19 +665,7 @@ void heroWindowManager::saveFizzleSource(int startX, int startY, int width, int 
 {
     if (!g_completeDrawEnabled)
         return;
-    if (startX < 0) {
-        width += startX;
-        startX = 0;
-    }
-    if (startY < 0) {
-        height += startY;
-        startY = 0;
-    }
-    if (startX + width > WINDOW_SCREEN_WIDTH)
-        width = WINDOW_SCREEN_WIDTH - startX;
-    if (startY + height > WINDOW_SCREEN_HEIGHT)
-        height = WINDOW_SCREEN_HEIGHT - startY;
-    if (width <= 0 || height <= 0)
+    if (!clipScreenEffectRect(startX, startY, width, height))
         return;
     if (m_bmpFizzleSource)
         delete m_bmpFizzleSource;
@@ -585,20 +680,7 @@ void heroWindowManager::saveFizzleSourceX(int startX, int startY, int width,
                                           int height)
 {
     if (g_completeDrawEnabled) {
-        if (startX < 0) {
-            width += startX;
-            startX = 0;
-        }
-        if (startY < 0) {
-            height += startY;
-            startY = 0;
-        }
-        if (startX + width > 800)
-            width = 800 - startX;
-        if (startY + height > 600)
-            height = 600 - startY;
-
-        if (width > 0 && height > 0) {
+        if (clipScreenEffectRect(startX, startY, width, height)) {
             delete m_bmpFizzleSource;
             m_bmpFizzleSource = new Bitmap16Bit(width, height);
             m_bmpFizzleSource->grab(g_windowManager->m_screenBitmap->getMap(0, 0),
@@ -620,19 +702,7 @@ void heroWindowManager::fizzleForward(int startX, int startY, int width,
     const int defaultFadeTime = 10;
     if (!g_completeDrawEnabled)
         return;
-    if (startX < 0) {
-        width += startX;
-        startX = 0;
-    }
-    if (startY < 0) {
-        height += startY;
-        startY = 0;
-    }
-    if (startX + width > WINDOW_SCREEN_WIDTH)
-        width = WINDOW_SCREEN_WIDTH - startX;
-    if (startY + height > WINDOW_SCREEN_HEIGHT)
-        height = WINDOW_SCREEN_HEIGHT - startY;
-    if (width <= 0 || height <= 0)
+    if (!clipScreenEffectRect(startX, startY, width, height))
         return;
     int savedColorCycling = m_colorCyclingOn;
     m_colorCyclingOn = 0;
@@ -654,16 +724,7 @@ void heroWindowManager::fizzleForward(int startX, int startY, int width,
             const unsigned short* s = source.m_pixels;
             const unsigned short* od = oldDestination.m_pixels;
             for (int x = 0; x < width; ++x) {
-                const int oldRed = *od & Bitmap16Bit::s_blueMask;
-                const int red = *s & Bitmap16Bit::s_blueMask;
-                const int oldGreen = *od & Bitmap16Bit::s_greenMask;
-                const int green = *s & Bitmap16Bit::s_greenMask;
-                const int oldBlue = *od & Bitmap16Bit::s_redMask;
-                const int blue = *s & Bitmap16Bit::s_redMask;
-                *d = static_cast<unsigned short>(
-                    ((((red - oldRed) * factor >> 16) + oldRed) & Bitmap16Bit::s_blueMask)
-                    | ((((green - oldGreen) * factor >> 16) + oldGreen) & Bitmap16Bit::s_greenMask)
-                    | ((((blue - oldBlue) * factor >> 16) + oldBlue) & Bitmap16Bit::s_redMask));
+                *d = blendScreenPixel(*od, *s, factor);
                 ++d;
                 ++s;
                 ++od;
@@ -713,20 +774,7 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
     // produce only the current object or a lower-scoring register variant.
     const int defaultFadeTime = 33;
     if (g_completeDrawEnabled) {
-        if (startX < 0) {
-            width += startX;
-            startX = 0;
-        }
-        if (startY < 0) {
-            height += startY;
-            startY = 0;
-        }
-        if (startX + width > 800)
-            width = 800 - startX;
-        if (startY + height > 600)
-            height = 600 - startY;
-
-        if (width > 0 && height > 0) {
+        if (clipScreenEffectRect(startX, startY, width, height)) {
             int savedColorCycling = m_colorCyclingOn;
             m_colorCyclingOn = 0;
             if (fadeTime == -1)
@@ -753,22 +801,7 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                     const unsigned short* s = target.m_pixels;
                     const unsigned short* od = source.m_pixels;
                     for (int col = 0; col < width; col++) {
-                        int fromBlue = *od & Bitmap16Bit::s_blueMask;
-                        int toBlue = *s & Bitmap16Bit::s_blueMask;
-                        int fromGreen = *od & Bitmap16Bit::s_greenMask;
-                        int toGreen = *s & Bitmap16Bit::s_greenMask;
-                        int fromRed = *od & Bitmap16Bit::s_redMask;
-                        int toRed = *s & Bitmap16Bit::s_redMask;
-                        const int outBlue =
-                            ((toBlue - fromBlue) * alpha >> 16) + fromBlue;
-                        const int outGreen =
-                            ((toGreen - fromGreen) * alpha >> 16) + fromGreen;
-                        const int outRed =
-                            ((toRed - fromRed) * alpha >> 16) + fromRed;
-                        *d = static_cast<unsigned short>(
-                            (outBlue & Bitmap16Bit::s_blueMask)
-                            | (outGreen & Bitmap16Bit::s_greenMask)
-                            | (outRed & Bitmap16Bit::s_redMask));
+                        *d = blendScreenPixel(*od, *s, alpha);
                         d++;
                         s++;
                         od++;
@@ -845,19 +878,7 @@ void heroWindowManager::flash(int startX, int startY, int width, int height,
     const int defaultFadeTime = 10;
     if (!g_completeDrawEnabled)
         return;
-    if (startX < 0) {
-        width += startX;
-        startX = 0;
-    }
-    if (startY < 0) {
-        height += startY;
-        startY = 0;
-    }
-    if (startX + width > WINDOW_SCREEN_WIDTH)
-        width = WINDOW_SCREEN_WIDTH - startX;
-    if (startY + height > WINDOW_SCREEN_HEIGHT)
-        height = WINDOW_SCREEN_HEIGHT - startY;
-    if (width <= 0 || height <= 0)
+    if (!clipScreenEffectRect(startX, startY, width, height))
         return;
     int savedColorCycling = m_colorCyclingOn;
     m_colorCyclingOn = 0;
@@ -926,16 +947,7 @@ void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
                 for (int x = 0; x < sw; ++x) {
                     if (*s) {
                         unsigned short color = sourcePalette[*s];
-                        const int oldRed = *od & Bitmap16Bit::s_blueMask;
-                        const int red = color & Bitmap16Bit::s_blueMask;
-                        const int oldGreen = *od & Bitmap16Bit::s_greenMask;
-                        const int green = color & Bitmap16Bit::s_greenMask;
-                        const int oldBlue = *od & Bitmap16Bit::s_redMask;
-                        const int blue = color & Bitmap16Bit::s_redMask;
-                        *d = static_cast<unsigned short>(
-                            ((((red - oldRed) * factor >> 16) + oldRed) & Bitmap16Bit::s_blueMask)
-                            | ((((green - oldGreen) * factor >> 16) + oldGreen) & Bitmap16Bit::s_greenMask)
-                            | ((((blue - oldBlue) * factor >> 16) + oldBlue) & Bitmap16Bit::s_redMask));
+                        *d = blendScreenPixel(*od, color, factor);
                     }
                     ++d;
                     ++s;
@@ -952,16 +964,7 @@ void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
                 const unsigned short* od = oldDestination.m_pixels;
                 for (int x = 0; x < sw; ++x) {
                     unsigned short color = sourcePalette[*s];
-                    const int oldRed = *od & Bitmap16Bit::s_blueMask;
-                    const int red = color & Bitmap16Bit::s_blueMask;
-                    const int oldGreen = *od & Bitmap16Bit::s_greenMask;
-                    const int green = color & Bitmap16Bit::s_greenMask;
-                    const int oldBlue = *od & Bitmap16Bit::s_redMask;
-                    const int blue = color & Bitmap16Bit::s_redMask;
-                    *d = static_cast<unsigned short>(
-                        ((((red - oldRed) * factor >> 16) + oldRed) & Bitmap16Bit::s_blueMask)
-                        | ((((green - oldGreen) * factor >> 16) + oldGreen) & Bitmap16Bit::s_greenMask)
-                        | ((((blue - oldBlue) * factor >> 16) + oldBlue) & Bitmap16Bit::s_redMask));
+                    *d = blendScreenPixel(*od, color, factor);
                     ++d;
                     ++s;
                     ++od;
@@ -1017,11 +1020,8 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
                 static_cast<void*>(destinationBytes));
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
                 const unsigned int r = *src++;
-                unsigned long blue = (r & redMask2) >> shift;
-                unsigned long green = (r & greenMask2) >> shift;
-                unsigned long red = (r & blueMask2) >> shift;
-                *dst = (red & blueMask2) | (green & greenMask2)
-                    | (blue & redMask2);
+                *dst = darkenScreenPixelPair(r, redMask2, greenMask2,
+                                             blueMask2, shift);
                 dst++;
             }
             destinationBytes += m_screenBitmap->getPitch();
@@ -1088,11 +1088,8 @@ void heroWindowManager::fadeFromBlack(int speed)
                 static_cast<void*>(destinationBytes));
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
                 unsigned long pair = *src++;
-                unsigned long blue = (pair & maskRed) >> shift;
-                unsigned long green = (pair & maskGreen) >> shift;
-                unsigned long red = (pair & maskBlue) >> shift;
-                *dst = (red & maskBlue) | (green & maskGreen)
-                    | (blue & maskRed);
+                *dst = darkenScreenPixelPair(pair, maskRed, maskGreen,
+                                             maskBlue, shift);
                 dst++;
             }
             destinationBytes += m_screenBitmap->getPitch();

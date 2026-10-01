@@ -1608,9 +1608,8 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         currentHero->m_customName = customName;
     }
 
-    currentHero->m_mana = static_cast<short>(currentHero->getMaxMana());
-    currentHero->m_maxMovePoints = currentHero->m_movePoints
-        = currentHero->getMobility();
+    currentHero->resetManaToMaximum();
+    currentHero->refreshMovement();
 
     type_point heroLocation = currentHero->getLocation();
     --heroLocation.m_x;
@@ -1620,9 +1619,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
             --currentHero->m_x;
     }
 
-    g_game->m_players[currentHero->m_owner].m_heroes[
-        g_game->m_players[currentHero->m_owner].m_numHeroes] = currentHero->m_id;
-    ++g_game->m_players[currentHero->m_owner].m_numHeroes;
+    g_game->m_players[currentHero->m_owner].addHero(currentHero->m_id);
     currentHero->obscureCell();
     g_game->m_heroAvailability[currentHero->m_id] = currentHero->m_owner;
     g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
@@ -1687,8 +1684,7 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
     currentHero->m_z = object->m_z;
     currentHero->m_owner = static_cast<signed char>(placeholder->m_owner);
     g_game->setRandomHeroArmies(currentHero->m_id, 0, 0);
-    currentHero->m_maxMovePoints = currentHero->m_movePoints
-        = currentHero->getMobility();
+    currentHero->refreshMovement();
 
     type_point heroLocation = currentHero->getLocation();
     --heroLocation.m_x;
@@ -1698,9 +1694,7 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
             --currentHero->m_x;
     }
 
-    g_game->m_players[currentHero->m_owner].m_heroes[
-        g_game->m_players[currentHero->m_owner].m_numHeroes] = currentHero->m_id;
-    ++g_game->m_players[currentHero->m_owner].m_numHeroes;
+    g_game->m_players[currentHero->m_owner].addHero(currentHero->m_id);
     currentHero->obscureCell();
     g_game->m_heroAvailability[currentHero->m_id] = currentHero->m_owner;
     g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
@@ -2174,8 +2168,7 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     std::streambuf* stream, int option)
 {
     int position = getStartOptions()->getPlayer(option);
-    g_game->m_players[position].setHuman(1);
-    g_game->m_players[position].m_isLocal = 1;
+    g_game->m_players[position].setLocalHuman();
 
     int playerHeroFaces[8];
     int i;
@@ -2734,26 +2727,11 @@ void CampaignScenarioInfo::read(TAbstractFile* infile)
 MAC_ADDRESS(0x097f74, 0xf0)
 void CampaignScenarioInfo::write(TAbstractFile* outfile) const
 {
-    {
-        char flag = m_completed;
-        outfile->write(&flag, sizeof(flag));
-    }
-    {
-        int intBuffer = m_days;
-        outfile->write(&intBuffer, sizeof(intBuffer));
-    }
-    {
-        int intBuffer = m_score;
-        outfile->write(&intBuffer, sizeof(intBuffer));
-    }
-    {
-        char flag = m_completeOrder;
-        outfile->write(&flag, sizeof(flag));
-    }
-    {
-        char flag = m_index;
-        outfile->write(&flag, sizeof(flag));
-    }
+    writeValue<char>(outfile, m_completed);
+    writeValue<int>(outfile, m_days);
+    writeValue<int>(outfile, m_score);
+    writeValue<char>(outfile, m_completeOrder);
+    writeValue<char>(outfile, m_index);
 }
 
 // Complete retains this constructor in all three cross-TU callers:
@@ -3273,6 +3251,7 @@ MAC_COMPGEN_ADDRESS(0x09959c, 0x70, CLASS_CTOR, LegacyCampaignHero)
 // uses [ebp-1] while outfile is live there. Both artifact fields share one
 // short buffer; retail's word loads prove narrowing before the writes.
 
+// Historical measurements before the broader scalar-writer reuse below.
 // 2026-09-07: score reference alone 88.0368%, pool references alone 85.4136%,
 // both 99.6062% (from 78.8074% MAX). Per-write scalar scopes with short word
 // buffers reach 99.9518%; sharing the artifact word reaches 99.9632%; one
@@ -3292,46 +3271,19 @@ void SCampaign::save(TAbstractFile* outfile)
 {
     unsigned int index;
 
-    {
-        char charBuffer = m_isCheater;
-        outfile->write(&charBuffer, sizeof(charBuffer));
-    }
-    {
-        char flag = m_secretActive;
-        outfile->write(&flag, sizeof(flag));
-    }
-    {
-        char flag = m_currentMap;
-        outfile->write(&flag, sizeof(flag));
-    }
-    {
-        char flag = m_currentCampaign;
-        outfile->write(&flag, sizeof(flag));
-    }
-    {
-        char flag = m_numMapRegions;
-        outfile->write(&flag, sizeof(flag));
-    }
-    {
-        char flag = m_crossoverArrayIndex;
-        outfile->write(&flag, sizeof(flag));
-    }
-    {
-        char flag = m_briefingChoice;
-        outfile->write(&flag, sizeof(flag));
-    }
+    writeValue<char>(outfile, m_isCheater);
+    writeValue<char>(outfile, m_secretActive);
+    writeValue<char>(outfile, m_currentMap);
+    writeValue<char>(outfile, m_currentCampaign);
+    writeValue<char>(outfile, m_numMapRegions);
+    writeValue<char>(outfile, m_crossoverArrayIndex);
+    writeValue<char>(outfile, m_briefingChoice);
 
-    {
-        int intBuffer = m_campaignFilename.length();
-        outfile->write(&intBuffer, sizeof(intBuffer));
-    }
+    writeValue<int>(outfile, m_campaignFilename.length());
     outfile->write(m_campaignFilename.c_str(), m_campaignFilename.length());
     outfile->write(m_campaignCompleted, sizeof(m_campaignCompleted));
 
-    {
-        char flag = m_mapScores.size();
-        outfile->write(&flag, sizeof(flag));
-    }
+    writeValue<char>(outfile, m_mapScores.size());
     {
         for (index = 0; index < m_mapScores.size();
              ++index) {
@@ -3339,17 +3291,11 @@ void SCampaign::save(TAbstractFile* outfile)
         }
     }
 
-    {
-        char flag = m_carryOverHeroes.size();
-        outfile->write(&flag, sizeof(flag));
-    }
+    writeValue<char>(outfile, m_carryOverHeroes.size());
     {
         for (index = 0; index < m_carryOverHeroes.size(); ++index) {
             std::vector<hero>& heroPool = getCrossoverHeroes(index);
-            {
-                char flag = heroPool.size();
-                outfile->write(&flag, sizeof(flag));
-            }
+            writeValue<char>(outfile, heroPool.size());
 
             for (unsigned int whichHero = 0;
                  whichHero < heroPool.size(); ++whichHero)
@@ -3369,17 +3315,12 @@ void SCampaign::save(TAbstractFile* outfile)
         }
     }
 
-    {
-        char flag = m_assignedCarryover.size();
-        outfile->write(&flag, sizeof(flag));
-    }
+    writeValue<char>(outfile, m_assignedCarryover.size());
     {
         for (index = 0; index < m_assignedCarryover.size();
              ++index) {
-            {
-                short word = static_cast<short>(m_assignedCarryover[index]);
-                outfile->write(&word, sizeof(word));
-            }
+            writeValue<short>(
+                outfile, static_cast<short>(m_assignedCarryover[index]));
         }
     }
 }

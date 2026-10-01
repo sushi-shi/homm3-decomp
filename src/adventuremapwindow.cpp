@@ -433,13 +433,7 @@ TAdventureMapWindow::TAdventureMapWindow()
         0, CHAT_EDIT_ID, 0x100, 0, 7, 5);
     m_widgets.push_back(m_chatEdit);
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     m_bottomView = 0;
     m_resourceDisplay = new TResourceDisplay(this, 0);
@@ -583,9 +577,7 @@ void checkAdvCheatCode(std::string& chatString)
                && currentHero) {
         cheatUsed = true;
         currentHero->m_flags |= 0x01000000;
-        int mobility = currentHero->getMobility();
-        currentHero->m_movePoints = mobility;
-        currentHero->m_maxMovePoints = mobility;
+        currentHero->refreshMovement();
     } else if (code.compare(morpheusCode)
                && currentHero) {
         cheatUsed = true;
@@ -788,6 +780,20 @@ int TAdventureMapWindow::convertID2HelpID(int id) const
 DATA(0x0065f228)
 static int g_lastAdventureHover = -1;
 
+// Project-inferred row mapping shared by hover and both click handlers.
+// The caller's dispatch proves which band is accepted; retain its separate
+// bounds/roster policy. No scrolling or player lookup belongs to this mapping.
+int TAdventureMapWindow::getHeroLocatorSlot(int widgetId)
+{
+    if (widgetId >= HERO_0_ID && widgetId <= HERO_4_ID)
+        return widgetId - HERO_0_ID;
+    if (widgetId >= HERO_MOVEMENT_0_ID && widgetId <= HERO_MOVEMENT_4_ID)
+        return widgetId - HERO_MOVEMENT_0_ID;
+    if (widgetId >= HERO_MANA_0_ID && widgetId <= HERO_MANA_4_ID)
+        return widgetId - HERO_MANA_0_ID;
+    return widgetId - HERO_LOCATOR_0_ID;
+}
+
 // The two input handlers are identity/arity claims while their decoded
 // bodies remain on the dependency frontier documented in the carcass above.
 VA(0x00402e70, 0x195)
@@ -808,9 +814,7 @@ unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
     case HERO_LOCATOR_2_ID:
     case HERO_LOCATOR_3_ID:
     case HERO_LOCATOR_4_ID: {
-        int slot = msg->m_codeY - HERO_0_ID;
-        if (msg->m_codeY >= HERO_LOCATOR_0_ID)
-            slot = msg->m_codeY - HERO_LOCATOR_0_ID;
+        int slot = getHeroLocatorSlot(msg->m_codeY);
 
         widget* portrait = getWidget(msg->m_codeY);
         if (!portrait)
@@ -900,21 +904,8 @@ unsigned char TAdventureMapWindow::processHover(int hx, int hy)
             case HERO_MANA_3_ID:
             case HERO_MANA_4_ID:
 hero_rollover: {
-                int heroID;
-                if (hoverID >= HERO_0_ID && hoverID <= HERO_4_ID)
-                    heroID = player->m_heroes[
-                        m_topHero + hoverID - HERO_0_ID];
-                else if (hoverID >= HERO_MOVEMENT_0_ID
-                         && hoverID <= HERO_MOVEMENT_4_ID)
-                    heroID = player->m_heroes[
-                        m_topHero + hoverID - HERO_MOVEMENT_0_ID];
-                else if (hoverID >= HERO_MANA_0_ID
-                         && hoverID <= HERO_MANA_4_ID)
-                    heroID = player->m_heroes[
-                        m_topHero + hoverID - HERO_MANA_0_ID];
-                else
-                    heroID = player->m_heroes[
-                        m_topHero + hoverID - HERO_LOCATOR_0_ID];
+                int heroID = player->m_heroes[
+                    m_topHero + getHeroLocatorSlot(hoverID)];
 
                 if (heroID == -1)
                     break;
@@ -999,6 +990,56 @@ void TAdventureMapWindow::doTownKnob(unsigned char up)
     updateTownLocators(-1, 1, 1);
 }
 
+// Project-inferred common scroll rule: leave a visible or absent selection
+// alone, otherwise clamp its proposed top to the last full page and to zero.
+void TAdventureMapWindow::scrollLocatorIntoView(
+    int& top, int selection, int count, int visibleCount)
+{
+    if (selection >= 0 && (selection < top || selection >= top + visibleCount)) {
+        if (selection > count - visibleCount)
+            selection = count - visibleCount;
+        if (selection < 0)
+            selection = 0;
+        top = selection;
+    }
+}
+
+// Project-inferred shared redraws. The player reference is the caller's
+// earlier snapshot; drawing must not silently select a different player.
+void TAdventureMapWindow::drawSelectedHeroLocator(const playerData& player)
+{
+    for (int i = 0; i < NUM_HERO_BUTTONS; i++) {
+        int heroId = player.m_heroes[m_topHero + i];
+        if (heroId != -1 && !g_completeDrawAllCells
+            && heroId == player.m_currHeroId) {
+            m_heroLocators[i]->setVisible(1);
+            m_heroLocators[i]->setImage("hpsyyy.pcx");
+            m_heroLocators[i]->draw();
+            break;
+        }
+    }
+}
+
+void TAdventureMapWindow::drawTownLocatorHighlight(int which, unsigned char update)
+{
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+                     TOWN_0_ID + which, 1);
+    drawWindow(update, TOWN_0_ID + which, TOWN_0_ID + which);
+}
+
+void TAdventureMapWindow::drawSelectedTownLocator(
+    const playerData& player, unsigned char update)
+{
+    for (int i = 0; i < NUM_TOWN_BUTTONS; i++) {
+        int townId = player.m_townIds[m_topTown + i];
+        if (townId != -1 && !g_completeDrawAllCells
+            && townId == player.m_currTownId) {
+            drawTownLocatorHighlight(i, update);
+            break;
+        }
+    }
+}
+
 VA(0x004032e0, 0x134)
 DC_ADDRESS(0x0010e4, 0x4)
 MAC_ADDRESS(0x002b44, 0x204)
@@ -1009,13 +1050,7 @@ void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
     if (!player->isHuman())
         return;
 
-    if (top >= 0 && (top < m_topHero || top >= m_topHero + NUM_HERO_BUTTONS)) {
-        if (top > player->m_numHeroes - NUM_HERO_BUTTONS)
-            top = player->m_numHeroes - NUM_HERO_BUTTONS;
-        if (top < 0)
-            top = 0;
-        m_topHero = top;
-    }
+    scrollLocatorIntoView(m_topHero, top, player->m_numHeroes, NUM_HERO_BUTTONS);
 
     int i;
     for (i = 0; i < NUM_HERO_BUTTONS; i++)
@@ -1034,16 +1069,7 @@ void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
     if (drawWin) {
         drawWindow(0, 0xffff0001, 0xffff);
 
-        for (i = 0; i < NUM_HERO_BUTTONS; i++) {
-            int heroId = player->m_heroes[m_topHero + i];
-            if (heroId != -1 && !g_completeDrawAllCells
-                && heroId == player->m_currHeroId) {
-                m_heroLocators[i]->setVisible(1);
-                m_heroLocators[i]->setImage("hpsyyy.pcx");
-                m_heroLocators[i]->draw();
-                break;
-            }
-        }
+        drawSelectedHeroLocator(*player);
     }
 
     if (update)
@@ -1060,13 +1086,7 @@ void TAdventureMapWindow::updateTownLocators(int top, unsigned char drawWin,
     if (!player->isHuman())
         return;
 
-    if (top >= 0 && (top < m_topTown || top >= m_topTown + NUM_TOWN_BUTTONS)) {
-        if (top > player->m_numTowns - NUM_TOWN_BUTTONS)
-            top = player->m_numTowns - NUM_TOWN_BUTTONS;
-        if (top < 0)
-            top = 0;
-        m_topTown = top;
-    }
+    scrollLocatorIntoView(m_topTown, top, player->m_numTowns, NUM_TOWN_BUTTONS);
 
     int i;
     for (i = 0; i < NUM_TOWN_BUTTONS; i++)
@@ -1085,16 +1105,7 @@ void TAdventureMapWindow::updateTownLocators(int top, unsigned char drawWin,
     if (drawWin) {
         drawWindow(0, 0xffff0001, 0xffff);
 
-        for (i = 0; i < NUM_TOWN_BUTTONS; i++) {
-            int townId = player->m_townIds[m_topTown + i];
-            if (townId != -1 && !g_completeDrawAllCells
-                && townId == player->m_currTownId) {
-                broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
-                                 TOWN_0_ID + i, 1);
-                drawWindow(0, TOWN_0_ID + i, TOWN_0_ID + i);
-                break;
-            }
-        }
+        drawSelectedTownLocator(*player, 0);
     }
 
     if (update)
@@ -1187,9 +1198,7 @@ void TAdventureMapWindow::updateTownLocator(int which, unsigned char drawWinSect
         drawWindow(0, TOWN_0_ID + which, TOWN_0_ID + which);
         if (which < player->m_numTowns && !g_completeDrawAllCells
             && townId == player->m_currTownId) {
-            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
-                             TOWN_0_ID + which, 1);
-            drawWindow(0, TOWN_0_ID + which, TOWN_0_ID + which);
+            drawTownLocatorHighlight(which, 0);
         }
         if (update)
             g_windowManager->updateScreen(0x2eb, 32 * which + 0xd4, 0x30, 0x20);
@@ -1204,30 +1213,12 @@ void TAdventureMapWindow::highlightLocators(unsigned char update)
     playerData* player = g_game->getLocalPlayer();
 
     int i;
-    for (i = 0; i < NUM_TOWN_BUTTONS; i++) {
-        int townId = player->m_townIds[m_topTown + i];
-        if (townId != -1 && !g_completeDrawAllCells
-            && townId == player->m_currTownId) {
-            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
-                             TOWN_0_ID + i, 1);
-            drawWindow(update, TOWN_0_ID + i, TOWN_0_ID + i);
-            break;
-        }
-    }
+    drawSelectedTownLocator(*player, update);
 
     for (i = 0; i < NUM_HERO_BUTTONS; i++)
         m_heroLocators[i]->setVisible(0);
 
-    for (i = 0; i < NUM_HERO_BUTTONS; i++) {
-        int heroId = player->m_heroes[m_topHero + i];
-        if (heroId != -1 && !g_completeDrawAllCells
-            && heroId == player->m_currHeroId) {
-            m_heroLocators[i]->setVisible(1);
-            m_heroLocators[i]->setImage("hpsyyy.pcx");
-            m_heroLocators[i]->draw();
-            break;
-        }
-    }
+    drawSelectedHeroLocator(*player);
 }
 
 VA(0x004039b0, 0x1EA)
@@ -1315,6 +1306,18 @@ static const int g_aiSleepHotkeys[2] = { 44, 17 };
 DATA(0x0065f238)
 static const char* g_aszSleepIcons[2] = { "iam005.def", "iam011.def" };
 
+// Project-inferred shared button refresh. Resolve the local player after the
+// image message, as both callers did; keep all four widget dispatch stages.
+void TAdventureMapWindow::showButtonImage(int id, const char* image)
+{
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
+                     id, reinterpret_cast<int>(image));
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
+                     id, g_game->getLocalPlayerGamePos());
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_DRAW, id, 0);
+    widgetSetStatus(id, widget::WIDGET_UPDATE);
+}
+
 VA(0x00403c40, 0x78)
 DC_ADDRESS(0x001188, 0x4)
 MAC_ADDRESS(0x0039d8, 0xcc)
@@ -1325,13 +1328,7 @@ unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
     DATA(0x0065f234) static int previousLevel = -1;
     if (level != previousLevel) {
         previousLevel = level;
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
-            ELEVATION_TOGGLE_ID, reinterpret_cast<int>(g_aszElevationIcons[level]));
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
-            ELEVATION_TOGGLE_ID, g_game->getLocalPlayerGamePos());
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_DRAW,
-            ELEVATION_TOGGLE_ID, 0);
-        widgetSetStatus(ELEVATION_TOGGLE_ID, widget::WIDGET_UPDATE);
+        showButtonImage(ELEVATION_TOGGLE_ID, g_aszElevationIcons[level]);
         return 1;
     }
     return 0;
@@ -1352,13 +1349,7 @@ void TAdventureMapWindow::setSleepImage(int image)
     DATA(0x0065f240) static int previousImage = -1;
     if (image != previousImage) {
         previousImage = image;
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
-            SLEEP_ID, reinterpret_cast<int>(g_aszSleepIcons[image]));
-        broadcastMessage(MESSAGE_WIDGET,
-            widget::WIDGET_SET_PLAYER_PALETTE_COLORS, SLEEP_ID,
-            g_game->getLocalPlayerGamePos());
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_DRAW, SLEEP_ID, 0);
-        widgetSetStatus(SLEEP_ID, widget::WIDGET_UPDATE);
+        showButtonImage(SLEEP_ID, g_aszSleepIcons[image]);
 
         button* sleepButton = static_cast<button*>(getWidget(SLEEP_ID));
         sleepButton->clearHotkeys();

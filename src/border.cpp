@@ -73,15 +73,8 @@ int border::main(message& msg)
             case MESSAGE_RIGHT_BUTTON_DOWN: {
                 short mouseX = msg.m_codeX - m_parentWindow->m_x;
                 short mouseY = msg.m_codeY - m_parentWindow->m_y;
-                if (mouseX >= m_x && mouseY >= m_y && mouseX < m_x + m_width
-                    && mouseY < m_y + m_height) {
-                    if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
-                        msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
-                        msg.m_codeX = WIDGET_RIGHT_SELECT;
-                    } else {
-                        m_status |= WIDGET_SELECTED;
-                        msg.m_codeX = WIDGET_SELECT;
-                    }
+                if (containsPoint(mouseX, mouseY)) {
+                    prepareMouseSelection(msg);
                     if (handleClick(1, msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN))
                         return 1;
                     msg.m_id = MESSAGE_WIDGET;
@@ -100,9 +93,7 @@ int border::main(message& msg)
                     m_status &= ~WIDGET_SELECTED;
                     if (handleClick(0, msg.m_id == MESSAGE_RIGHT_BUTTON_UP))
                         return 1;
-                    msg.m_id = MESSAGE_WIDGET;
-                    msg.m_codeX = WIDGET_DESELECT;
-                    msg.m_codeY = m_id;
+                    msg.setWidgetCommand(WIDGET_DESELECT, m_id);
                     return 2;
                 }
                 return 0;

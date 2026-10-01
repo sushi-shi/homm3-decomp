@@ -63,6 +63,10 @@ namespace BinkManager {
     void restartBink();
     void nextBinkFrame();
     void closeBink();
+    // Project-inferred state operations shared by previews and video controls.
+    void setTrackPaused(HBINK track, int paused);
+    void savePlaybackState(BinkManagerStruct& state);
+    void restorePlaybackState(const BinkManagerStruct& state);
     int playBink(int id, int x, int y, int w, int h);
 } // namespace BinkManager
 SIZE(BinkManager::BinkManagerStruct, 48);

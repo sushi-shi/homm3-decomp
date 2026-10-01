@@ -936,6 +936,28 @@ void showCredits()
                    g_windowManager->m_screenBitmap, 460, 0, false);
 }
 
+// Project-inferred shared main-loop operations. Keep modal calls and the
+// caller's control-flow/lifetime boundaries; original helper names are unknown.
+static void showPendingHighScores()
+{
+    if (g_showHighScore) {
+        g_showHighScore = 0;
+        g_highScoreManager->viewHiScore();
+    }
+}
+
+static void showCampaignCompletionDialogs()
+{
+    showCongrats(0);
+    showPendingHighScores();
+}
+
+static void prepareCampaignScenarioStart()
+{
+    g_gameOver = 0;
+    g_runStartEventsOnEntry = 1;
+}
+
 // E:\gamedcs\kb.cpp:962. Dreamcast proves the menu/helper boundaries,
 // playerSave lifetime, and TTownType alignment[8]; retail fixes the Complete
 // commands and 0x1c04 extent. Its command table at +0x1bc0 sends NEW_GAME
@@ -1223,8 +1245,7 @@ int oldmain()
                 int playerPos =
                     campaignBrief.getScenario(currentMap)
                         ->getStartOptions()->getPlayer(briefingChoice);
-                g_game->m_players[playerPos].setHuman(1);
-                g_game->m_players[playerPos].m_isLocal = 1;
+                g_game->m_players[playerPos].setLocalHuman();
                 g_localGamePos = playerPos;
                 incProgressBar(1);
                 g_game->setupFirstPlayer();
@@ -1238,8 +1259,7 @@ int oldmain()
                         g_startingHeroOverrides[j] = g_game->m_setup.m_startingHero[j];
                     }
                     strcpy(g_game->m_players[j].m_name, playerSave[j].m_name);
-                    g_game->m_players[j].m_isLocal = playerSave[j].m_isLocal;
-                    g_game->m_players[j].setHuman(playerSave[j].getHumanFlag());
+                    g_game->m_players[j].copyControlFrom(playerSave[j]);
                     g_newMapStartingBonus[j] = g_game->m_setup.m_startingBonus[j];
                 }
 
@@ -1287,8 +1307,7 @@ int oldmain()
                 campaignScored = 1;
             } else {
 
-                if (g_executive->addManager(g_advManager, -1))
-                    shutDown((*g_generalText)[GENERAL_TEXT_ADD_MANAGER_ERROR]);
+                g_executive->addManagerOrShutDown(g_advManager);
                 unloadProgressBar();
 
                 if (g_remoteOn) {
@@ -1312,7 +1331,7 @@ int oldmain()
 
                 g_turnDuration.start();
                 g_executive->mainLoop();
-                g_soundManager->m_playSounds = 1;
+                g_soundManager->setPlaybackState(1);
                 g_goSolo = 0;
                 g_soundManager->stopAllSamples(1);
                 g_executive->removeManager(g_advManager);
@@ -1356,11 +1375,7 @@ int oldmain()
                                 DATA_COMPGEN(0x0067f6d8,
                                              oldMainCampaignIntroFrame,
                                              "IntroRim.pcx"));
-                        showCongrats(0);
-                        if (g_showHighScore) {
-                            g_showHighScore = 0;
-                            g_highScoreManager->viewHiScore();
-                        }
+                        showCampaignCompletionDialogs();
                         g_gameOver = 0;
                         g_inCampaign = 0;
                         continue;
@@ -1376,15 +1391,10 @@ int oldmain()
                 if (campaign.campaignComplete()
                     && g_defeatedAllPlayers
                            != g_gameResultCampaignMapScored) {
-                    showCongrats(0);
-                    if (g_showHighScore) {
-                        g_showHighScore = 0;
-                        g_highScoreManager->viewHiScore();
-                    }
+                    showCampaignCompletionDialogs();
                     if (campaign.m_currentCampaign != g_campaignOrdinalLast) {
                         if (doCampaignWindow(false, nextCampaign)) {
-                            g_gameOver = 0;
-                            g_runStartEventsOnEntry = 1;
+                            prepareCampaignScenarioStart();
                             goto runGame;
                         }
                     }
@@ -1400,8 +1410,7 @@ int oldmain()
                 }
 
                 if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL) {
-                    g_gameOver = 0;
-                    g_runStartEventsOnEntry = 1;
+                    prepareCampaignScenarioStart();
                     goto runGame;
                 }
             } else {
@@ -1416,10 +1425,7 @@ int oldmain()
             }
 
             g_gameOver = 0;
-            if (g_showHighScore) {
-                g_showHighScore = 0;
-                g_highScoreManager->viewHiScore();
-            }
+            showPendingHighScores();
         }
 
         if (g_remoteOn)
@@ -1510,8 +1516,7 @@ static int doNewGame()
             g_game->resetGame(0, 0, 0);
             incProgressBar(1);
 
-            g_game->m_players[0].m_isLocal = 1;
-            g_game->m_players[0].setHuman(1);
+            g_game->m_players[0].setLocalHuman();
             strcpy(g_game->m_players[0].m_name, g_config.m_networkDefaultName);
 
             for (int i = 0; i < 8; ++i) {
@@ -1949,10 +1954,19 @@ static int exitNormalDialog(message& msg)
         g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         break;
     }
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeY = 10;
-    msg.m_codeX = 10;
+    msg.setDialogEnd(widget::WIDGET_END_DIALOG);
     return MESSAGE_DISPATCH_FORWARD;
+}
+
+// Project-inferred grace-period transition shared by turn expiry and network
+// aborts. Keep both time queries: the stored value uses the later reading.
+static bool deferNormalDialogExit()
+{
+    if (GameTime::elapsedSince(g_normalDialogStart) < 15000) {
+        g_dialogDeadline = 15000 - GameTime::elapsedSince(g_normalDialogStart);
+        return true;
+    }
+    return false;
 }
 
 VA(0x004f08d0, 0x20C)
@@ -1963,9 +1977,7 @@ int normalDialogHandler(message& msg)
     if (g_advManager && g_advManager->m_advWindow)
         g_advManager->m_advWindow->animateBottomView(1);
     if (!g_dialogDeadline && g_turnDuration.isExpired()) {
-        if (GameTime::elapsedSince(g_normalDialogStart) < 15000)
-            g_dialogDeadline = 15000 - GameTime::elapsedSince(g_normalDialogStart);
-        else
+        if (!deferNormalDialogExit())
             return exitNormalDialog(msg);
     }
     if (g_remoteOn && !g_dialogDeadline) {
@@ -1973,12 +1985,8 @@ int normalDialogHandler(message& msg)
         if (g_dPlay) {
             CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
             if (handler) {
-                handler->checkHandleNet(1, &msgReceived);
-                if (msgReceived && handler->getAbortPopupMsg()) {
-                    if (GameTime::elapsedSince(g_normalDialogStart) < 15000)
-                        g_dialogDeadline =
-                            15000 - GameTime::elapsedSince(g_normalDialogStart);
-                    else
+                if (handler->pollPopupAbort(msgReceived)) {
+                    if (!deferNormalDialogExit())
                         return exitNormalDialog(msg);
                 }
             }
@@ -2118,10 +2126,7 @@ MAC_ADDRESS(0x112404, 0x25c)
 int eventWindowHandler(message& msg)
 {
     if (g_dialogDeadline && GameTime::isPast(g_dialogDeadline)) {
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = DIALOG_RETURN_TIMEOUT;
-        msg.m_codeY = 10;
-        msg.m_codeX = 10;
+        g_windowManager->finishDialog(msg, DIALOG_RETURN_TIMEOUT);
         g_dialogDeadline = 0;
         return MESSAGE_DISPATCH_FORWARD;
     }
@@ -2165,8 +2170,7 @@ int eventWindowHandler(message& msg)
             } else {
                 g_windowManager->m_dialogReturn = msg.m_codeY;
             }
-            msg.m_codeY = 10;
-            msg.m_codeX = 10;
+            msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
             g_dialogDeadline = 0;
             return MESSAGE_DISPATCH_FORWARD;
         }
@@ -2175,8 +2179,7 @@ int eventWindowHandler(message& msg)
         case DIALOG_RETURN_ACCEPT:
         case DIALOG_RETURN_DECLINE:
             g_windowManager->m_dialogReturn = msg.m_codeY;
-            msg.m_codeY = 10;
-            msg.m_codeX = 10;
+            msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
             g_dialogDeadline = 0;
             return MESSAGE_DISPATCH_FORWARD;
         }
@@ -2286,9 +2289,8 @@ static void checkPlayerLoss()
     tookLocalControl = 0;
     if (g_goSolo && g_netLocalGamePos == g_soloPos
         && !g_game->m_players[g_soloPos].m_isLocal) {
-        g_game->m_players[g_soloPos].setHuman(1);
+        g_game->m_players[g_soloPos].setLocalHuman();
         tookLocalControl = 1;
-        g_game->m_players[g_soloPos].m_isLocal = 1;
     }
 
     for (int i = 0; i < g_gamePlayerCount; i++) {
@@ -2337,8 +2339,7 @@ static void checkPlayerLoss()
 
     if (g_goSolo && g_netLocalGamePos == g_soloPos
         && tookLocalControl) {
-        g_game->m_players[g_soloPos].setHuman(0);
-        g_game->m_players[g_soloPos].m_isLocal = 0;
+        g_game->m_players[g_soloPos].setComputer();
     }
 }
 
@@ -3036,9 +3037,8 @@ void checkEndGame(int forceWin)
     tookLocalControl = 0;
     if (g_goSolo && g_netLocalGamePos == g_soloPos
         && !g_currentPlayer->m_isLocal) {
-        g_currentPlayer->m_isLocal = 1;
+        g_currentPlayer->setLocalHuman();
         tookLocalControl = 1;
-        g_currentPlayer->setHuman(1);
     }
 
     gameWon = 0;
@@ -3103,8 +3103,7 @@ void checkEndGame(int forceWin)
     if (!g_gameOver) {
         if (g_goSolo && g_netLocalGamePos == g_soloPos
             && tookLocalControl) {
-            g_currentPlayer->m_isLocal = 0;
-            g_currentPlayer->setHuman(0);
+            g_currentPlayer->setComputer();
         }
     }
     g_inCheckEndGame = 0;
@@ -3755,9 +3754,7 @@ int handleAppSpecificMenuCommands(int idItem)
         }
         if (currentHero)
             g_advManager->reseed(0, 0);
-        g_advManager->updateRadar(1, 1, 0, 0, 0);
-        g_advManager->completeDraw(0);
-        g_advManager->updateScreen(0, 0);
+        refreshAdventureRadarAndMap();
         break;
     }
 
@@ -3984,8 +3981,7 @@ void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
                          i++) {
                         hero* currentHero = &g_game->m_heroes
                             [g_game->m_players[g_netLocalGamePos].m_heroes[i]];
-                        currentHero->m_maxMovePoints = currentHero->m_movePoints =
-                            currentHero->getMobility();
+                        currentHero->refreshMovement();
                     }
                     for (i = 0; i < 2; i++) {
                         if (g_game->m_players[g_netLocalGamePos].m_recruits[i]
@@ -3993,8 +3989,7 @@ void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
                             hero* currentHero = g_game->getHero(
                                 g_game->m_players[g_netLocalGamePos]
                                     .m_recruits[i]);
-                            currentHero->m_maxMovePoints = currentHero->m_movePoints =
-                                currentHero->getMobility();
+                            currentHero->refreshMovement();
                         }
                     }
                     for (i = 0;
@@ -4005,8 +4000,7 @@ void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
                         if (currentTown->m_garrisonHeroId >= 0) {
                             hero* currentHero =
                                 g_game->getHero(currentTown->m_garrisonHeroId);
-                            currentHero->m_maxMovePoints = currentHero->m_movePoints =
-                                currentHero->getMobility();
+                            currentHero->refreshMovement();
                             currentHero->m_isSleeping = 0;
                         }
                     }
@@ -4941,9 +4935,7 @@ static int waitHandler(message& msg)
             && msg.m_codeY <= DIALOG_RETURN_OK) {
         g_waitDialogActive = 0;
         g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.setDialogEnd(widget::WIDGET_END_DIALOG);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

@@ -9,6 +9,7 @@ static int campaignBriefHandler(message& msg);
 #include "game.h"
 
 #include "advmgr.h"
+#include "map_display.h"
 #include "border.h"
 #include "button.h"
 #include "campaignmap.h"
@@ -89,23 +90,7 @@ void TCampaignBrief::select(int which)
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeY = WHICHMAP_ID;
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-        switch (m_scenarios[which].m_size) {
-        case MAP_SIZE_SMALL:
-            msg.m_extra = 0;
-            break;
-        case MAP_SIZE_MEDIUM:
-            msg.m_extra = 1;
-            break;
-        case MAP_SIZE_LARGE:
-            msg.m_extra = 2;
-            break;
-        case MAP_SIZE_EXTRA_LARGE:
-            msg.m_extra = 3;
-            break;
-        default:
-            msg.m_extra = 4;
-            break;
-        }
+        msg.m_extra = getMapSizeIconFrame(m_scenarios[which].m_size);
         broadcastMessage(msg);
 
         if (!m_campaign->getScenario(which)->getStartOptionCount()) {
@@ -120,15 +105,14 @@ void TCampaignBrief::select(int which)
     }
 }
 
-// Retail-only: codeX at +4, qualifier at +0xc, owning window at +0x1c.
-VA(0x00457f70, 0x49)
-MAC_ADDRESS(0x064274, 0x94)
-static int decreaseCampaignDifficulty(message& msg)
+// Project-inferred shared callback operation. Cache the message's owner before
+// changing the stored difficulty; retain the original guard and redraw order.
+static int changeCampaignDifficulty(message& msg, int change)
 {
     if (msg.m_codeX == widget::WIDGET_DESELECT
             && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         TCampaignBrief* window = static_cast<TCampaignBrief*>(msg.m_window);
-        --g_game->m_setup.m_difficulty;
+        g_game->m_setup.m_difficulty += change;
         window->updateDifficultyButtons();
         window->drawWindow(1, 0xffff0001, 0xffff);
         return MESSAGE_DISPATCH_CONSUME;
@@ -137,19 +121,19 @@ static int decreaseCampaignDifficulty(message& msg)
 }
 
 // Retail-only: codeX at +4, qualifier at +0xc, owning window at +0x1c.
+VA(0x00457f70, 0x49)
+MAC_ADDRESS(0x064274, 0x94)
+static int decreaseCampaignDifficulty(message& msg)
+{
+    return changeCampaignDifficulty(msg, -1);
+}
+
+// Retail-only: codeX at +4, qualifier at +0xc, owning window at +0x1c.
 VA(0x00457fc0, 0x49)
 MAC_ADDRESS(0x064308, 0x94)
 static int increaseCampaignDifficulty(message& msg)
 {
-    if (msg.m_codeX == widget::WIDGET_DESELECT
-            && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        TCampaignBrief* window = static_cast<TCampaignBrief*>(msg.m_window);
-        ++g_game->m_setup.m_difficulty;
-        window->updateDifficultyButtons();
-        window->drawWindow(1, 0xffff0001, 0xffff);
-        return MESSAGE_DISPATCH_CONSUME;
-    }
-    return 0;
+    return changeCampaignDifficulty(msg, 1);
 }
 
 VA_COMPGEN(0x00457cb0, 0x2B8, IMPLICIT_COPY_ASSIGN, CMapHeaderData)
@@ -169,9 +153,7 @@ MAC_ADDRESS(0x06439c, 0xb0)
 void TCampaignBrief::resetMapAndDescription(int which)
 {
     message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = MAP_NAME_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, MAP_NAME_ID);
     msg.m_extraText = m_scenarios[which].m_mapName.c_str();
     broadcastMessage(msg);
     m_scroller->setText(m_scenarios[which].m_mapDescription.c_str());
@@ -749,13 +731,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
 
     addBonusIcons();
 
-    for (std::vector<widget*>::iterator it = widgets.begin();
-         it != widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     m_oldVolume = g_config.m_musicVolume;
     if (viewFromGame)
@@ -921,10 +897,7 @@ TCampaignBrief::~TCampaignBrief()
     if (m_zBuffer)
         delete[] m_zBuffer;
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // Dreamcast proves this ordinary private helper and its four source-level
@@ -1217,10 +1190,7 @@ static int campaignBriefHandler(message& msg)
     }
 
     if (exitFlag) {
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = msg.m_codeY;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, msg.m_codeY);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

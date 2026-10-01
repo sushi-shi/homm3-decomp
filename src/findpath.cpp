@@ -31,6 +31,14 @@ DATA(0x00678150) tilePoint g_normalDirTable[8] = {
 // not otherwise depend on the ai_player class declarations.
 long aiGetShipCost(const hero* ourHero, type_point point);
 
+// Project-inferred named-coordinate copy shared by path cells and AI targets.
+void type_point::copyCoordinatesFrom(const type_point& point)
+{
+    m_x = point.m_x;
+    m_y = point.m_y;
+    m_z = point.m_z;
+}
+
 VA(0x004b1330, 0x3B)
 DC_ADDRESS(0x09ed40, 0x48)
 bool type_point::isValid() const
@@ -106,7 +114,7 @@ MAC_ADDRESS(0x0c48e0, 0x198)
 void searchArray::clear(long flyLevel, long startZ, long stopZ)
 {
     m_queue.clear();
-    m_result.clear();
+    clearPath();
     m_visitedPoints.clear();
 
     long width = m_validRectangle.right - m_validRectangle.left;
@@ -250,7 +258,7 @@ int getTerrainCost(hero* currentHero, type_point start, int direction, int moveL
         flying = 3;
     if (currentHero->isWieldingArtifact(0x5a))
         waterWalking = 3;
-    if (currentHero->m_flags & 0x40000)
+    if (currentHero->isOnBoat())
         waterWalking = flying = -1;
     long mastery = currentHero->getSecondarySkill(eSecSkillPathfinding);
     return calcTerrainCost(from, direction, moveLeft, mastery,
@@ -1216,7 +1224,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
     // empty constructor before both vector clears. Restoring that lifetime
     // is byte-flat at 87.9780 but preserves the positive source evidence.
     pathCell pc;
-    m_result.clear();
+    clearPath();
     // The BFS queue NAMED AS A REFERENCE: 87.6468 -> 87.9780.
     std::vector<pathCell>& rQueue = m_queue;
     rQueue.clear();

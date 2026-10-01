@@ -96,24 +96,14 @@ TTownGateWindow::TTownGateWindow(bool adventureSpell)
     m_widgets.push_back(new button(
         228, 402, 64, 30, 0x7801, "iCancel.def", 0, 1, 0, 1, 2));
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = 0;
+    msg.setWidgetCommand(widget::WIDGET_SET_PLAYER_PALETTE_COLORS, 0);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     broadcastMessage(msg);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-    msg.m_codeY = SELECTOR_ID;
+    msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, SELECTOR_ID);
     msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
     broadcastMessage(msg);
 
@@ -127,10 +117,7 @@ DC_ADDRESS(0x169824, 0x6a)
 MAC_ADDRESS(0x1b8544, 0xc8)
 TTownGateWindow::~TTownGateWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x005c2400, 0x1AF)
@@ -196,9 +183,7 @@ MAC_ADDRESS(0x1b88bc, 0xc0)
 void TTownGateWindow::updateTownLocators()
 {
     message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-    msg.m_codeY = SELECTOR_ID;
+    msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, SELECTOR_ID);
     msg.m_extra = widget::WIDGET_DRAWN;
     broadcastMessage(msg);
 
@@ -214,9 +199,7 @@ MAC_ADDRESS(0x1b897c, 0xac)
 void TTownGateWindow::doModal()
 {
     message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
-    msg.m_codeY = SLIDER_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_SLIDER_RESOLUTION, SLIDER_ID);
     msg.m_extra = m_towns.size() - (NUM_TOWN_ENTRIES - 1);
     broadcastMessage(msg);
 
@@ -267,12 +250,12 @@ int TTownGateWindow::windowHandler(message& msg)
             switch (msg.m_codeY) {
             case DIALOG_RETURN_CANCEL:
                 g_windowManager->m_dialogReturn = -1;
-                msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+                msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
                 return MESSAGE_DISPATCH_FORWARD;
             case DIALOG_RETURN_OK:
                 g_windowManager->m_dialogReturn =
                     g_townGateWindow->m_towns[g_townGateWindow->m_selectedTown];
-                msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+                msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
                 return MESSAGE_DISPATCH_FORWARD;
             default:
                 return MESSAGE_DISPATCH_CONSUME;

@@ -659,8 +659,7 @@ unsigned char initializeCampaignMapTraitsTable()
     for (campaign = 0; campaign < 21; ++campaign) {
         if (g_campaignMapTraits[campaign].m_numRegions > 0) {
             const char* source = textResource->getText(textLine);
-            unsigned length = strlen(source) + 1;
-            memcpy(destination, source, length);
+            unsigned length = copyResourceString(destination, source);
             g_campaignMapTraitsImp[campaign].m_name = destination;
             destination += length;
             ++textLine;
@@ -676,8 +675,7 @@ unsigned char initializeCampaignMapTraitsTable()
                  region < g_campaignMapTraits[campaign].m_numRegions;
                  ++region) {
                 const char* source = textResource->getText(textLine);
-                unsigned length = strlen(source) + 1;
-                memcpy(destination, source, length);
+                unsigned length = copyResourceString(destination, source);
                 g_campaignRegionTraits[campaign][region].m_name = destination;
                 destination += length;
                 ++textLine;

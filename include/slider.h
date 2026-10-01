@@ -95,6 +95,11 @@ public:
 protected:
     void initialize(const char* resourceName);
     void setKnob(int inX);
+
+private:
+    void notifyStateChange();
+    void stepState(int direction);
+    void stepFromArrow(int click);
 };
 SIZE(slider, 0x68);
 

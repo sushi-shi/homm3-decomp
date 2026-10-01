@@ -102,10 +102,7 @@ public:
     DC_ADDRESS(0x12efc0, 0x1c)
     int exitDialog(message& msg)
     {
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = msg.m_codeY;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, msg.m_codeY);
         return 2;
     }
 

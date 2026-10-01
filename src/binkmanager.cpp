@@ -42,6 +42,24 @@ static int g_binkSound;
 DATA(0x00694cb0)
 BinkManager::BinkManagerStruct BinkManager::g_playingBink;
 
+// Project-inferred shared operations. Track guards and pause nesting belong
+// to callers; snapshots retain all twelve words without transferring handles.
+void BinkManager::setTrackPaused(HBINK track, int paused)
+{
+    g_playingBink.m_paused = paused;
+    BinkPause(track, paused);
+}
+
+void BinkManager::savePlaybackState(BinkManagerStruct& state)
+{
+    memcpy(&state, &g_playingBink, sizeof(g_playingBink));
+}
+
+void BinkManager::restorePlaybackState(const BinkManagerStruct& state)
+{
+    memcpy(&g_playingBink, &state, sizeof(g_playingBink));
+}
+
 // DC SetPixelFormat(ulong, ulong, ulong), binkmanager.cpp:123, is a
 // four-byte no-op. No retail body is identified. Windows selects Bink's
 // format with BinkDDSurfaceType in openBink and videoRealignBuffers;
@@ -168,6 +186,31 @@ void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
     g_playingBinkActive = 1;
 }
 
+namespace BinkManager {
+
+// Project-inferred frame operations. Reference the selected handle slot so
+// each SDK call observes the same fresh handle read as the original sequence.
+static void copyTrackFrame(HBINK const& track)
+{
+    BinkCopyToBuffer(track, g_playingBink.m_screen, g_playingBink.m_pitch,
+        g_playingBink.m_height, 0, 0, g_surfaceType);
+}
+
+static void decodeTrackFrame(HBINK const& track)
+{
+    BinkDoFrame(track);
+    copyTrackFrame(track);
+}
+
+static void drawCurrentTrackFrame(HBINK const& track)
+{
+    if (track->FrameNum == 1)
+        BinkDoFrame(track);
+    copyTrackFrame(track);
+}
+
+} // namespace BinkManager
+
 // smackmgr.cpp's VideoDrawCurrentFrame uses this namespace-qualified call.
 // Mac 25d8b4/25d90c retain a copy in each selected-track branch; Windows
 // 44da47 shares the copy tail. Keep both source calls and their own handles.
@@ -177,15 +220,9 @@ MAC_ADDRESS(0x25d848, 0xe8)
 void BinkManager::drawCurrentBinkFrame()
 {
     if (g_playingBink.m_bink && g_playingBinkActive) {
-        if (g_playingBink.m_bink->FrameNum == 1)
-            BinkDoFrame(g_playingBink.m_bink);
-        BinkCopyToBuffer(g_playingBink.m_bink, g_playingBink.m_screen,
-            g_playingBink.m_pitch, g_playingBink.m_height, 0, 0, g_surfaceType);
+        drawCurrentTrackFrame(g_playingBink.m_bink);
     } else if (g_playingBink.m_bink2 && g_playingBinkActive) {
-        if (g_playingBink.m_bink2->FrameNum == 1)
-            BinkDoFrame(g_playingBink.m_bink2);
-        BinkCopyToBuffer(g_playingBink.m_bink2, g_playingBink.m_screen,
-            g_playingBink.m_pitch, g_playingBink.m_height, 0, 0, g_surfaceType);
+        drawCurrentTrackFrame(g_playingBink.m_bink2);
     }
 }
 
@@ -196,9 +233,7 @@ void BinkManager::restartBink()
 {
     if (g_playingBink.m_bink) {
         BinkGoto(g_playingBink.m_bink, 1, 1);
-        BinkDoFrame(g_playingBink.m_bink);
-        BinkCopyToBuffer(g_playingBink.m_bink, g_playingBink.m_screen, g_playingBink.m_pitch, g_playingBink.m_height,
-                          0, 0, g_surfaceType);
+        decodeTrackFrame(g_playingBink.m_bink);
     }
 }
 
@@ -221,9 +256,7 @@ void BinkManager::nextBinkFrame()
     if (g_playingBink.m_paused)
         return;
 
-    BinkDoFrame(video);
-    BinkCopyToBuffer(video, g_playingBink.m_screen, g_playingBink.m_pitch, g_playingBink.m_height, 0, 0,
-                      g_surfaceType);
+    decodeTrackFrame(video);
 
     if (video->FrameNum == video->Frames) {
         if (g_playingBink.m_loop) {
@@ -235,9 +268,7 @@ void BinkManager::nextBinkFrame()
                 g_playingBink.m_bink = 0;
                 video = g_playingBink.m_bink2;
                 if (g_videoDescriptors[g_playingBink.m_id].m_fadeInSecondTrack) {
-                    BinkDoFrame(video);
-                    BinkCopyToBuffer(video, g_playingBink.m_screen, g_playingBink.m_pitch,
-                                      g_playingBink.m_height, 0, 0, g_surfaceType);
+                    decodeTrackFrame(video);
                     g_windowManager->fadeScreen(0, 4, 0);
                 }
             } else {
@@ -259,20 +290,27 @@ void BinkManager::nextBinkFrame()
         videoDrawRects();
 }
 
+namespace BinkManager {
+
+// Project-inferred guarded closure. Playback-state resets belong to the owner.
+static void closeTrack(HBINK const& track)
+{
+    if (track) {
+        BinkPause(track, 1);
+        BinkClose(track);
+    }
+}
+
+} // namespace BinkManager
+
 // E:\gamedcs\binkmanager.cpp:345 () - namespace-qualified entry
 VA(0x0044dcc0, 0x60)
 DC_ADDRESS(0x050a94, 0x4)
 MAC_ADDRESS(0x25dc20, 0x9c)
 void BinkManager::closeBink()
 {
-    if (g_playingBink.m_bink) {
-        BinkPause(g_playingBink.m_bink, 1);
-        BinkClose(g_playingBink.m_bink);
-    }
-    if (g_playingBink.m_bink2) {
-        BinkPause(g_playingBink.m_bink2, 1);
-        BinkClose(g_playingBink.m_bink2);
-    }
+    closeTrack(g_playingBink.m_bink);
+    closeTrack(g_playingBink.m_bink2);
     g_playingBink.m_bink2 = 0;
     g_playingBink.m_bink = 0;
     g_playingBink.m_paused = 0;
@@ -295,7 +333,7 @@ DC_ADDRESS(0x050a98, 0x4)
 MAC_ADDRESS(0x25dcbc, 0x50)  // dc-order-map + caller (smackmgr VideoPlay)
 int BinkManager::playBink(int id, int x, int y, int w, int h)
 {
-    g_soundManager->m_playSounds = 1;
+    g_soundManager->setPlaybackState(1);
     unsigned char result = playBinkCore(id, x, y, w, h);
     g_playingBink.m_paused = 0;
     g_playingBinkActive = 0;

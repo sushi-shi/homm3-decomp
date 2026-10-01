@@ -34,6 +34,36 @@ slider::slider() : widget(0, 0, 0, 0, 0, 0)
     m_lastFocus = -1;
 }
 
+// Project-inferred notification shared by keyboard and mouse transitions.
+// Commit before virtual close; re-read callback, state and parent afterward.
+void slider::notifyStateChange()
+{
+    if (m_oldState != m_currentState) {
+        m_oldState = m_currentState;
+        close();
+        if (m_sliderFunction)
+            m_sliderFunction(m_currentState, m_parentWindow);
+    }
+}
+
+// Project-inferred one-step transition. Unlike setState, this leaves the
+// notification baseline alone and relies on the caller's range guards.
+void slider::stepState(int direction)
+{
+    m_currentState += direction;
+    m_knobPos = m_knobRange * m_currentState / (m_numStates - 1) + m_knobStart;
+}
+
+// Project-inferred shared arrow-release operation, in the selected axis's
+// local coordinates. The far arrow deliberately uses a strict comparison.
+void slider::stepFromArrow(int click)
+{
+    if (click < m_knobStart && m_currentState > 0)
+        stepState(-1);
+    else if (click > m_length - m_knobStart && m_currentState < m_numStates - 1)
+        stepState(1);
+}
+
 VA(0x00596050, 0x7D)
 DC_ADDRESS(0x149a48, 0xa0)
 MAC_ADDRESS(0x1892ac, 0xb4)
@@ -146,16 +176,10 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
         g_windowManager->m_screenBitmap,
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y + m_knobPos,
         0);
-    g_windowManager->updateScreen(
-        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+    updateScreenRegion();
     g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT] = GameTime::get() + 60;
 
-    if (m_oldState != m_currentState) {
-        m_oldState = m_currentState;
-        close();
-        if (m_sliderFunction)
-            m_sliderFunction(m_currentState, m_parentWindow);
-    }
+    notifyStateChange();
 
     switch (key) {
     case KEYCODE_KP_9:
@@ -165,12 +189,10 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
         setState(m_currentState + m_pageSize);
         break;
     case KEYCODE_KP_8:
-        --m_currentState;
-        m_knobPos = m_knobRange * m_currentState / (m_numStates - 1) + m_knobStart;
+        stepState(-1);
         break;
     case KEYCODE_KP_2:
-        ++m_currentState;
-        m_knobPos = m_knobRange * m_currentState / (m_numStates - 1) + m_knobStart;
+        stepState(1);
         break;
     }
 
@@ -182,15 +204,9 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
         process1WindowsMessage();
         repeatTime = g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT];
     }
-    g_windowManager->updateScreen(
-        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+    updateScreenRegion();
 
-    if (m_oldState != m_currentState) {
-        m_oldState = m_currentState;
-        close();
-        if (m_sliderFunction)
-            m_sliderFunction(m_currentState, m_parentWindow);
-    }
+    notifyStateChange();
 }
 
 VA(0x005964E0, 0x4A0)
@@ -251,8 +267,7 @@ int slider::main(message& msg)
         m_clickY = msg.m_codeY - m_parentWindow->m_y;
         if (m_status & WIDGET_DIMMED)
             return 0;
-        if (m_clickX < m_x || m_clickY < m_y || m_clickX >= m_x + m_width
-            || m_clickY >= m_y + m_height)
+        if (!containsPoint(m_clickX, m_clickY))
             return 0;
 
         select(&msg, 0);
@@ -312,12 +327,9 @@ int slider::main(message& msg)
             break;
         m_clickX = msg.m_codeX - m_parentWindow->m_x;
         m_clickY = msg.m_codeY - m_parentWindow->m_y;
-        if (m_clickX < m_x || m_clickY < m_y || m_clickX >= m_x + m_width
-            || m_clickY >= m_y + m_height)
+        if (!containsPoint(m_clickX, m_clickY))
             return 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = WIDGET_RIGHT_SELECT;
-        msg.m_codeY = m_id;
+        msg.setWidgetCommand(WIDGET_RIGHT_SELECT, m_id);
         msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
         return 2;
 
@@ -384,21 +396,12 @@ int slider::select(message* msg, unsigned char dragging)
         }
     }
 
-    draw();
-    g_windowManager->updateScreen(
-        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
-    msg->m_id = MESSAGE_WIDGET;
-    msg->m_codeX = WIDGET_SELECT;
-    msg->m_codeY = m_id;
+    drawAndUpdate();
+    msg->setWidgetCommand(WIDGET_SELECT, m_id);
     g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT] = GameTime::get() + 60;
     g_leftRightSave = msg->m_qualifier & MESSAGE_MODIFIER_MASK;
 
-    if (m_oldState != m_currentState) {
-        m_oldState = m_currentState;
-        close();
-        if (m_sliderFunction)
-            m_sliderFunction(m_currentState, m_parentWindow);
-    }
+    notifyStateChange();
     return 2;
 }
 
@@ -411,45 +414,19 @@ int slider::deselect(message* msg)
         return 0;
     m_status &= ~WIDGET_SELECTED;
 
-    if (m_width > m_height) {
-        if (m_clickX - m_x < m_knobStart && m_currentState > 0) {
-            --m_currentState;
-            m_knobPos = m_knobRange * m_currentState / (m_numStates - 1)
-                + m_knobStart;
-        } else if (m_clickX - m_x > m_length - m_knobStart
-            && m_currentState < m_numStates - 1) {
-            ++m_currentState;
-            m_knobPos = m_knobRange * m_currentState / (m_numStates - 1)
-                + m_knobStart;
-        }
-    } else {
-        if (m_clickY - m_y < m_knobStart && m_currentState > 0) {
-            --m_currentState;
-            m_knobPos = m_knobRange * m_currentState / (m_numStates - 1)
-                + m_knobStart;
-        } else if (m_clickY - m_y > m_length - m_knobStart
-            && m_currentState < m_numStates - 1) {
-            ++m_currentState;
-            m_knobPos = m_knobRange * m_currentState / (m_numStates - 1)
-                + m_knobStart;
-        }
-    }
+    if (m_width > m_height)
+        stepFromArrow(m_clickX - m_x);
+    else
+        stepFromArrow(m_clickY - m_y);
 
-    draw();
-    g_windowManager->updateScreen(
-        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+    drawAndUpdate();
     msg->m_id = MESSAGE_WIDGET;
     msg->m_codeY = m_id;
     msg->m_codeX = WIDGET_DESELECT;
     msg->m_qualifier = g_leftRightSave;
     g_leftRightSave = 0;
 
-    if (m_oldState != m_currentState) {
-        m_oldState = m_currentState;
-        close();
-        if (m_sliderFunction)
-            m_sliderFunction(m_currentState, m_parentWindow);
-    }
+    notifyStateChange();
     return 2;
 }
 

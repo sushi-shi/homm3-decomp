@@ -36,6 +36,38 @@
 // That also retires the `Unnamed41e190` ordinal: the IDB prototype
 // carries the DC parameter names verbatim.
 
+// Project-inferred shared discount used by both ballista target passes.
+// Keep the native queries and their short-circuit/repeated-read behavior.
+static long discountDelayedTargetValue(const army* target, long value)
+{
+    if (target->cannotAttack() || !target->getAITarget()
+            || target->getAITargetTime() > 5)
+        value /= 5;
+    else
+        value /= target->getAITargetTime();
+    return value;
+}
+
+// Project-inferred full valuation shared by both ballista passes. Read the
+// estimate's kills-only flag after damage reduction; the fallback forces zero.
+static long getBallistaTargetValue(const army* target, int averageDamage,
+    const type_AI_combat_parameters& estimate, bool useEstimatePolicy)
+{
+    long value;
+#ifdef HOMM3_TARGET_MAC
+    value = static_cast<long>(
+        averageDamage / target->computeDefenderDamageReduction(1));
+#else
+    double damage = averageDamage;
+    value = static_cast<long>(
+        damage * target->computeDefenderDamageReduction(1));
+#endif
+    value = target->getLossCombatValue(
+        estimate.m_lowestAttack, estimate.m_lowestDefense, 1, value,
+        useEstimatePolicy ? estimate.m_killsOnly : 0);
+    return discountDelayedTargetValue(target, value);
+}
+
 // E:\gamedcs\ai.cpp:43
 // The arrow tower's / ballista's target picker. `attack_skill` is a DEAD
 // parameter in retail - nothing reads [ebp+0xc] - and the DC prototype
@@ -61,7 +93,8 @@
 // consistent with DC's r11 across both loops, raises Mac to 97.9873%
 // (925/944); the first scan is exact and the second only differs in its army
 // pointer register. Naming a divided `damage` local
-// lowered Mac to 95.3390% and was removed.
+// lowered Mac to 95.3390% and was removed. These observations predate
+// extraction of the shared target valuation and nested delay discount.
 VA(0x0041e190, 0x2A8)
 DC_ADDRESS(0x023450, 0x2fe)
 MAC_ADDRESS(0x01f2b4, 0x3b0)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets
@@ -70,7 +103,6 @@ int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int av
     long bestValue = 0;
     long result = -1;
     type_AI_combat_parameters estimate(this, 1 - targetGroup);
-    double damage;
     long value;
 
     findAITargets(targetGroup, 0, 0, &estimate, 0);
@@ -80,22 +112,8 @@ int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int av
             army* currentArmy = &m_armies[targetGroup][i];
             if (currentArmy->is(creatureImmobilized))
                 continue;
-#ifdef HOMM3_TARGET_MAC
-            value = static_cast<long>(
-                averageDamage / currentArmy->computeDefenderDamageReduction(1));
-#else
-            damage = averageDamage;
-            value = static_cast<long>(
-                damage * currentArmy->computeDefenderDamageReduction(1));
-#endif
-            value = currentArmy->getLossCombatValue(
-                estimate.m_lowestAttack, estimate.m_lowestDefense, 1, value,
-                estimate.m_killsOnly);
-            if (currentArmy->cannotAttack() || !currentArmy->getAITarget()
-                    || currentArmy->getAITargetTime() > 5)
-                value /= 5;
-            else
-                value /= currentArmy->getAITargetTime();
+            value = getBallistaTargetValue(
+                currentArmy, averageDamage, estimate, true);
             if (value >= bestValue) {
                 result = i;
                 bestValue = value;
@@ -110,21 +128,8 @@ int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int av
                 army* currentArmy = &m_armies[targetGroup][i];
                 if (currentArmy->is(creatureImmobilized))
                     continue;
-#ifdef HOMM3_TARGET_MAC
-                value = static_cast<long>(
-                    averageDamage / currentArmy->computeDefenderDamageReduction(1));
-#else
-                damage = averageDamage;
-                value = static_cast<long>(
-                    damage * currentArmy->computeDefenderDamageReduction(1));
-#endif
-                value = currentArmy->getLossCombatValue(
-                    estimate.m_lowestAttack, estimate.m_lowestDefense, 1, value, 0);
-                if (currentArmy->cannotAttack() || !currentArmy->getAITarget()
-                        || currentArmy->getAITargetTime() > 5)
-                    value /= 5;
-                else
-                    value /= currentArmy->getAITargetTime();
+                value = getBallistaTargetValue(
+                    currentArmy, averageDamage, estimate, false);
                 if (value >= bestValue) {
                     result = i;
                     bestValue = value;
@@ -535,9 +540,7 @@ unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type
         if (strength == weakest && --choice == 0)
             break;
     }
-    m_nextAction = 9;
-    m_nextActionGridIndex = s_wallTargets[walls[target]].m_targetHex;
-    m_nextActionExtra = -1;
+    setTargetAction(9, -1, s_wallTargets[walls[target]].m_targetHex);
     return 1;
 }
 
@@ -556,15 +559,14 @@ void combatManager::chooseShooterAction(const army* currentArmy, bool simulated,
             && chooseCyclopsAction(bestValue, side, data))
         return;
     if (actionValue < 0) {
-        m_nextAction = 3;
+        queueDefend();
         return;
     }
     if (data.m_killsOnly && !bestValue) {
         data.m_killsOnly = 0;
         actionValue = chooseShooterTarget(currentArmy, data, bestValue);
     }
-    m_nextAction = 7;
-    m_nextActionGridIndex = actionValue;
+    queueShot(actionValue);
 }
 
 // E:\gamedcs\ai.cpp:597 - combatManager::find_move_order's std::sort
@@ -1288,7 +1290,7 @@ unsigned char combatManager::attemptShooterDefense(const army* currentArmy, sear
     if (bestClient == 0)
         return 0;
     if (hex == currentArmy->m_gridIndex) {
-        m_nextAction = 3;
+        queueDefend();
         return 1;
     }
     moveToward(currentArmy, bestHex, 0, 0);
@@ -1481,8 +1483,7 @@ unsigned char combatManager::chooseCreatureSpell(const army* currentArmy, long& 
     }
     if (bestHex < 0)
         return 0;
-    m_nextAction = 10;
-    m_nextActionGridIndex = bestHex;
+    queueCreatureSpell(bestHex);
     return 1;
 }
 
@@ -1521,8 +1522,7 @@ bool combatManager::sodChooseFaerieDragonSpell(
     }
     if (bestHex < 0)
         return 0;
-    m_nextAction = 10;
-    m_nextActionGridIndex = bestHex;
+    queueCreatureSpell(bestHex);
     return 1;
 }
 
@@ -1604,9 +1604,7 @@ unsigned char combatManager::chooseResurrectAction(const army* currentArmy, long
                                            estimate.m_lowestDefense,
                                            target->canShoot(0), 0)
                                        * size);
-        if (estimate.m_awakeFriendlyValue > estimate.m_awakeEnemyValue
-                && estimate.m_roundsLeft <= 1)
-            value += value;
+        value = estimate.getRestorationPriorityValue(value);
         if (value > bestValue) {
             bestValue = value;
             bestTargetHex = hex;
@@ -1925,12 +1923,10 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     *actionValue = max(bestValue, bestHexValue);
     if (teleport) {
         if (bestTarget != 0 && *actionValue >= 0) {
-            m_nextAction = 6;
-            m_nextActionExtra = bestHex;
-            m_nextActionGridIndex = bestTarget->m_gridIndex;
+            setTargetAction(6, bestHex, bestTarget->m_gridIndex);
             return 1;
         }
-        m_nextAction = 3;
+        queueDefend();
         return 1;
     }
     if (!estimate->m_simulated && !m_creaturePlacement
@@ -1965,7 +1961,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                 moveToward(currentArmy, hex, enemyAttacks, 0);
                 return 1;
             }
-            m_nextAction = 3;
+            queueDefend();
             return 1;
         }
     }
@@ -1991,9 +1987,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
 
     *actionValue = bestValue;
     if (bestTime <= 1 && !m_creaturePlacement) {
-        m_nextActionExtra = bestHex;
-        m_nextAction = 6;
-        m_nextActionGridIndex = bestTarget->m_gridIndex;
+        setTargetAction(6, bestHex, bestTarget->m_gridIndex);
         return 1;
     }
     if (bestHex == currentArmy->m_gridIndex)
@@ -2026,7 +2020,7 @@ long combatManager::chooseMeleeAction(const army* currentArmy, bool teleport, bo
         m_nextAction = 8;
         return 0;
     }
-    m_nextAction = 3;
+    queueDefend();
     return 0;
 }
 
@@ -2114,8 +2108,7 @@ void combatManager::doCompAI(int whichGroup)
     m_lastMovedArmy = 0;
     turnOffHighlighter(1);
     army* currentArmy = getCurrentArmy();
-    currentArmy->m_side = -1;
-    currentArmy->m_slot = -1;
+    currentArmy->clearAttackTarget();
     long action;
     if (currentArmy->canShoot(0)
             || currentArmy->m_creatureType == CREATURE_BALLISTA)
@@ -2124,7 +2117,7 @@ void combatManager::doCompAI(int whichGroup)
         action = 2;
     else
         action = 3;
-    m_nextAction = 3;
+    queueDefend();
     if (action == 1) {
         if (m_creaturePlacement)
             placeShooter(currentArmy);
@@ -2155,8 +2148,7 @@ DC_ADDRESS(0x027200, 0x116)
 MAC_ADDRESS(0x0246f4, 0x1f0)
 void combatManager::berserkAttack(army* currentArmy, const army* target)
 {
-    currentArmy->m_side = target->getOwningSide();
-    currentArmy->m_slot = target->m_bitIndex;
+    currentArmy->setAttackTarget(target->getOwningSide(), target->m_bitIndex);
     long hex = target->m_gridIndex;
     if (inInvisibleColumn(hex) && target->is(creatureDoubleWide))
         hex = target->getSecondGridIndex();
@@ -2167,9 +2159,7 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
         return;
     }
     if (g_searchArray->getPathSteps() == 1) {
-        m_nextAction = 6;
-        m_nextActionExtra = currentArmy->m_gridIndex;
-        m_nextActionGridIndex = target->m_gridIndex;
+        setTargetAction(6, currentArmy->m_gridIndex, target->m_gridIndex);
         if (target->getOwningSide() == currentArmy->getOwningSide())
             m_playDoh[target->getOwningSide()] = 1;
         return;
@@ -2177,14 +2167,11 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
     long step = g_searchArray->getStepCell(1)->m_point.m_x;
     const pathCell* cell = g_searchArray->getHex(target->m_gridIndex);
     if (cell->m_cost > currentArmy->getSpeed()) {
-        currentArmy->m_side = -1;
-        currentArmy->m_slot = -1;
+        currentArmy->clearAttackTarget();
         moveToward(currentArmy, step, 0, 0);
         return;
     }
-    m_nextAction = 6;
-    m_nextActionExtra = step;
-    m_nextActionGridIndex = target->m_gridIndex;
+    setTargetAction(6, step, target->m_gridIndex);
     if (target->getOwningSide() == currentArmy->getOwningSide())
         m_playDoh[target->getOwningSide()] = 1;
 }
@@ -2372,10 +2359,7 @@ void combatManager::simulateCombat(long ourGroup, unsigned char checkingSurrende
     if (checkingSurrender)
         simulateActions(order, stoppedAt, 1 - ourGroup);
 
-    m_nextAction = saved3c;
-    m_nextActionExtra = saved40;
-    m_nextActionGridIndex = saved44;
-    m_nextActionGridIndex2 = saved48;
+    setPendingAction(saved3c, saved40, saved44, saved48);
 }
 
 // E:\gamedcs\ai.cpp:2608..2693: separate outer/inner pointer

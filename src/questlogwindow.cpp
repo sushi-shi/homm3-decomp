@@ -73,13 +73,7 @@ TQuestLogWindow::TQuestLogWindow()
         324, 470, 32, 32, DIALOG_RETURN_OK, "QLexit.def",
         0, 1, 1, 28, 2));
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA(0x0052e170, 0x3A)
@@ -100,10 +94,7 @@ DC_ADDRESS(0x116b6c, 0x6a)
 MAC_ADDRESS(0x149ff8, 0xc8)
 TQuestLogWindow::~TQuestLogWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // It refreshes ONE row of the log. The row index is
@@ -189,9 +180,7 @@ void doQuestLog(int player)
             g_questLogWindow->m_seerHutLogList.push_back(numberSeerHuts + i);
     }
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
-    msg.m_codeY = 17;
+    msg.setWidgetCommand(widget::WIDGET_SET_SLIDER_RESOLUTION, 17);
     msg.m_extra = g_questLogWindow->m_seerHutLogList.size() - 15;
     g_questLogWindow->broadcastMessage(msg);
 

@@ -84,15 +84,7 @@ TGameTypeWindow::TGameTypeWindow(unsigned char loadGameMode)
         back.m_x, back.m_y, back.m_width, back.m_height, QUIT_ID,
         "gtback.def", 0, 1, 0, 1, 2));
 
-    widget** first = m_widgets.begin();
-    if (first != m_widgets.end()) {
-        for (widget** it = first; it != m_widgets.end(); ++it) {
-            if (*it)
-                addWidget(*it, -1);
-            else
-                memError();
-        }
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x004d5860, 0x21, SCALAR_DELETING_DTOR, TGameTypeWindow)
@@ -102,10 +94,7 @@ DC_ADDRESS(0x0c9490, 0x68)
 MAC_ADDRESS(0x0f1534, 0xb4)
 TGameTypeWindow::~TGameTypeWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
     g_gameTypeWindow = 0;
 }
 
@@ -205,10 +194,7 @@ int gameTypeWindowHandler(message& msg)
     }
 
     if (exitFlag) {
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = msg.m_codeY;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, msg.m_codeY);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

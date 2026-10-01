@@ -16,6 +16,7 @@ class CDPlayMsg;
 class CDPlaySession;
 template<class T> class CAutoArray;
 struct DPCAPS;
+struct DPCOMPOUNDADDRESSELEMENT;
 struct DPLCONNECTION;
 struct DPNAME;
 struct DPSESSIONDESC2;
@@ -599,6 +600,9 @@ public:
     char m_caps[0x28];  // +0x04
 
 protected:
+    // Project-inferred shared replacement step; destruction only releases.
+    void releaseDirectPlay();
+
     void* m_dp;  // +0x2c
     GUID m_guid;  // +0x30
     // The DirectPlay enum trampolines are file-scope callbacks that forward to
@@ -626,6 +630,15 @@ protected:
     // 84/85/86. Retail retains the same bytes and 0x58-byte size;
     // this last byte aligns the complete object.
     char m_tailPadding;
+
+private:
+    // Project-inferred shared name protocol behind the native virtual readers.
+    unsigned char getPlayerOrGroupName(EDPlayerType type, unsigned long id,
+                                       char* shortName, int maxShort,
+                                       char* longName, int maxLong);
+    // Project-inferred shared allocation protocol behind the native readers.
+    void* getPlayerOrGroupData(EDPlayerType type, unsigned long id,
+                              unsigned long* size, unsigned long flags);
 };
 SIZE(CDPlay, 0x58);
 
@@ -694,6 +707,12 @@ protected:
     // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
     virtual unsigned char addAddressEnum(
         const GUID* type, unsigned long size, const void* data);
+
+private:
+    // Project-inferred compound-address packing and owned connection copy.
+    CDPlayConnection* createConnectionFromElements(
+        const DPCOMPOUNDADDRESSELEMENT* elements, unsigned long count,
+        const GUID* provider, char* name);
 };
 SIZE(CDPlayLobby, 0x60);
 

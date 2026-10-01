@@ -89,9 +89,7 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
     message msg;
 
     g_castleWindow = inCasWin;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = 0;
+    msg.setWidgetCommand(widget::WIDGET_SET_PLAYER_PALETTE_COLORS, 0);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     g_castleWindow->broadcastMessage(msg);
 
@@ -429,9 +427,7 @@ int THallWindow::windowHandler(message& msg)
                 break;
             }
 
-            msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_SET_TEXT;
-            msg.m_codeY = CASTLE_ROLLOVER_TEXT_ID;
+            msg.setWidgetCommand(widget::WIDGET_SET_TEXT, CASTLE_ROLLOVER_TEXT_ID);
             msg.m_extraText = g_text;
             g_townManager->m_hallWindow->broadcastMessage(msg);
             g_townManager->m_hallWindow->drawWindow(
@@ -551,7 +547,7 @@ int THallWindow::windowHandler(message& msg)
     }
 
     if (closeRequested) {
-        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

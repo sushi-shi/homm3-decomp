@@ -85,6 +85,19 @@ DATA(0x00640300) static const int g_overviewHelpIds[8] = {
     19, 20, 21, 22, 23, 24, 18, 25
 };
 
+// Project-inferred replacement operation for the overview's typed slots.
+// Bind the table itself: removeWidget calls virtual close, so the subsequent
+// delete and clear must reread a dynamic table that callback may replace.
+template <class Slots>
+static void clearOverviewWidget(Slots& slots, int index)
+{
+    if (slots[index]) {
+        g_overWin->removeWidget(slots[index]);
+        delete slots[index];
+        slots[index] = 0;
+    }
+}
+
 long getLastBackpackIndex(long heroNumber);
 void updateBackpack(int slot);
 
@@ -154,39 +167,19 @@ void game::setupDynamicStuff(int update, int forceUpdate)
     for (row = 0; row < 4; row++) {
         for (item = 0; item < 70; item++) {
             int slot = row * 70 + item;
-            if (g_textWidgetDynamic[slot]) {
-                g_overWin->removeWidget(g_textWidgetDynamic[slot]);
-                delete g_textWidgetDynamic[slot];
-                g_textWidgetDynamic[slot] = 0;
-            }
-            if (g_iconWidgetDynamic[slot]) {
-                g_overWin->removeWidget(g_iconWidgetDynamic[slot]);
-                delete g_iconWidgetDynamic[slot];
-                g_iconWidgetDynamic[slot] = 0;
-            }
-            if (g_bitmapBorderDynamic[slot]) {
-                g_overWin->removeWidget(g_bitmapBorderDynamic[slot]);
-                delete g_bitmapBorderDynamic[slot];
-                g_bitmapBorderDynamic[slot] = 0;
-            }
+            clearOverviewWidget(g_textWidgetDynamic, slot);
+            clearOverviewWidget(g_iconWidgetDynamic, slot);
+            clearOverviewWidget(g_bitmapBorderDynamic, slot);
         }
 
         for (item = 0; item < 2; item++) {
             int slot = row * 2 + item;
-            if (g_buttonDynamic[slot]) {
-                g_overWin->removeWidget(g_buttonDynamic[slot]);
-                delete g_buttonDynamic[slot];
-                g_buttonDynamic[slot] = 0;
-            }
+            clearOverviewWidget(g_buttonDynamic, slot);
         }
 
         for (item = 0; item < 3; item++) {
             int slot = row * 3 + item;
-            if (g_textButtonDynamic[slot]) {
-                g_overWin->removeWidget(g_textButtonDynamic[slot]);
-                delete g_textButtonDynamic[slot];
-                g_textButtonDynamic[slot] = 0;
-            }
+            clearOverviewWidget(g_textButtonDynamic, slot);
         }
     }
 
@@ -734,9 +727,8 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
                     if (artifact.m_artifactId == ARTIFACT_NONE) {
                         message msg;
-                        msg.m_id = MESSAGE_WIDGET;
-                        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-                        msg.m_codeY = rowWidgetId + item + 119;
+                        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS,
+                                             rowWidgetId + item + 119);
                         msg.m_extra = widget::WIDGET_DRAWN;
                         g_overWin->broadcastMessage(msg);
                     }
@@ -822,15 +814,10 @@ void game::setupNewOverviewType(int whichType, bool update)
         g_overviewSlider->setResolution(1);
     }
 
-    // Dreamcast constructs this message after the slider branch. Complete
-    // overwrites all eight fields before the first use, so that lifetime also
-    // lets VC6 remove the constructor's zero stores.
+    // Dreamcast constructs this message after the slider branch. Keep that
+    // lifetime and let the native constructor supply its unchanged zero fields.
     message msg;
     msg.m_codeY = 195 + (g_overviewType != 1);
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
     msg.m_extra = 8;
@@ -849,11 +836,7 @@ void game::setupNewOverviewType(int whichType, bool update)
     };
 
     for (int title = 0; title < 3; title++) {
-        if (g_textWidgetTitle[title]) {
-            g_overWin->removeWidget(g_textWidgetTitle[title]);
-            delete g_textWidgetTitle[title];
-            g_textWidgetTitle[title] = 0;
-        }
+        clearOverviewWidget(g_textWidgetTitle, title);
     }
 
     if (g_overviewType == 0) {
@@ -1895,10 +1878,7 @@ DC_ADDRESS(0x108f74, 0x68)
 MAC_ADDRESS(0x139e00, 0xe4)
 TOverviewWindow::~TOverviewWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // Mac retains this method at code 0:139ee4 and the constructor calls it
@@ -1952,9 +1932,7 @@ MAC_ADDRESS(0x139f84, 0x94)
 void TOverviewWindow::updateRollover(char* text)
 {
     message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 37;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 37);
     msg.m_extraText = text;
     g_overWin->broadcastMessage(msg);
 
@@ -2679,9 +2657,8 @@ int TOverviewWindow::windowHandler(message& msg)
 
     if (msg.m_id == MESSAGE_MOUSE_MOVE) {
         g_windowManager->convertToHover(msg);
-        if (g_windowManager->m_lastHover == msg.m_codeY)
+        if (!g_windowManager->updateHover(msg.m_codeY))
             return MESSAGE_DISPATCH_CONSUME;
-        g_windowManager->m_lastHover = msg.m_codeY;
         doRollover(msg.m_codeY);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -2718,8 +2695,7 @@ int TOverviewWindow::windowHandler(message& msg)
     }
 
     if (res == 1) {
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

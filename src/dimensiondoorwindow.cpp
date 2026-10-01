@@ -24,12 +24,7 @@ TDimensionDoorWindow::TDimensionDoorWindow()
     m_widgets.push_back(new border(mapWidget->m_x, mapWidget->m_y,
         mapWidget->m_width, mapWidget->m_height, 0, 1));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x00491860, 0x21, SCALAR_DELETING_DTOR, TDimensionDoorWindow)
@@ -39,10 +34,7 @@ DC_ADDRESS(0x082938, 0x68)
 MAC_ADDRESS(0x0a2cf4, 0xac)
 TDimensionDoorWindow::~TDimensionDoorWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // The two handlers are one shape as well - a base forward, an animation
@@ -116,8 +108,7 @@ int TDimensionDoorWindow::windowHandler(message& msg)
                 break;
             if (g_windowManager->m_dialogReturn != 1)
                 break;
-            msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+            msg.setDialogEnd(widget::WIDGET_END_DIALOG);
             return MESSAGE_DISPATCH_FORWARD;
         case widget::WIDGET_DESELECT:
             if (msg.m_codeY == DIALOG_RETURN_CANCEL) {
@@ -135,8 +126,7 @@ int TDimensionDoorWindow::windowHandler(message& msg)
         break;
     }
     if (exitFlag) {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.setDialogEnd(widget::WIDGET_END_DIALOG);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -152,8 +142,7 @@ DC_ADDRESS(0x082b84, 0x16)
 MAC_ADDRESS(0x0a300c, 0x2c)  // vtable slot 14 + source order
 int TDimensionDoorWindow::exitDialog(message& msg)
 {
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = msg.m_codeY = 10;
+    msg.setDialogEnd(widget::WIDGET_END_DIALOG);
     g_windowManager->m_dialogReturn = 0;
     return MESSAGE_DISPATCH_FORWARD;
 }
@@ -170,12 +159,7 @@ TSkuttleBoatWindow::TSkuttleBoatWindow()
     m_widgets.push_back(new border(mapWidget->m_x, mapWidget->m_y,
         mapWidget->m_width, mapWidget->m_height, 0, 1));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x00491c60, 0x21, SCALAR_DELETING_DTOR, TSkuttleBoatWindow)
@@ -185,10 +169,7 @@ DC_ADDRESS(0x082cb0, 0x62)
 MAC_ADDRESS(0x0a3198, 0xac)
 TSkuttleBoatWindow::~TSkuttleBoatWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:280
@@ -255,8 +236,7 @@ int TSkuttleBoatWindow::windowHandler(message& msg)
                 break;
             if (g_windowManager->m_dialogReturn != 1)
                 break;
-            msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+            msg.setDialogEnd(widget::WIDGET_END_DIALOG);
             return MESSAGE_DISPATCH_FORWARD;
         case widget::WIDGET_RIGHT_SELECT:
             if (msg.m_codeY == 0) {
@@ -268,8 +248,7 @@ int TSkuttleBoatWindow::windowHandler(message& msg)
         break;
     }
     if (exitFlag) {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.setDialogEnd(widget::WIDGET_END_DIALOG);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -281,8 +260,7 @@ DC_ADDRESS(0x082ed0, 0x1c)
 MAC_ADDRESS(0x0a348c, 0x2c)  // vtable slot 14 + source order
 int TSkuttleBoatWindow::exitDialog(message& msg)
 {
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = msg.m_codeY = 10;
+    msg.setDialogEnd(widget::WIDGET_END_DIALOG);
     g_windowManager->m_dialogReturn = 0;
     return MESSAGE_DISPATCH_FORWARD;
 }

@@ -1456,8 +1456,7 @@ unsigned char TMultiPlayerWindow::onTCP()
             textWidget* ipWidget = new textWidget(
                 0, 16, m_width, 50, 0, "bigfont.fnt", font::PRIMARY,
                 IP_ADDRESS_ID, 1, 0, 8);
-            m_widgets.push_back(ipWidget);
-            addWidget(ipWidget, -1);
+            addOwnedWidget(ipWidget);
             sprintf(addressText, g_generalText->getText(GENERAL_TEXT_IP_ADDRESS_FORMAT), ipAddress);
             ipWidget->setText(addressText);
         }

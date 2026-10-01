@@ -329,9 +329,20 @@ public:
     DC_ADDRESS(0x071f10, 0x4)
     char* get() const { return m_string; }
 
+    // Project-inferred allocation/copy used to initialize owned table text.
+    void copyText(const char* source);
+
 private:
     char* m_string;
 };
+
+// Keep the native Set/Get operations and store ownership before copying.
+// Like the existing initialization sequence, this does not release an old value.
+void TAutoStrPtr::copyText(const char* source)
+{
+    set(new char[strlen(source) + 1]);
+    strcpy(get(), source);
+}
 
 }
 
@@ -349,15 +360,13 @@ void initializeCreatureTypeTraits(int id,
     DATA(0x006963e8)
     static TAutoStrPtr creatureTypeNames[150];
 
-    creatureTypeNames[id].set(new char[strlen(values[0]) + 1]);
-    strcpy(creatureTypeNames[id].get(), values[0]);
+    creatureTypeNames[id].copyText(values[0]);
     traits.m_name = creatureTypeNames[id].get();
 
     DATA(0x00696644)
     static TAutoStrPtr creatureTypePluralNames[150];
 
-    creatureTypePluralNames[id].set(new char[strlen(values[1]) + 1]);
-    strcpy(creatureTypePluralNames[id].get(), values[1]);
+    creatureTypePluralNames[id].copyText(values[1]);
     traits.m_pluralName = creatureTypePluralNames[id].get();
 
     traits.m_cost[0] = atoi(values[2]);
@@ -385,7 +394,6 @@ void initializeCreatureTypeTraits(int id,
     DATA(0x00696190)
     static TAutoStrPtr creatureTypeAbilities[150];
 
-    creatureTypeAbilities[id].set(new char[strlen(values[23]) + 1]);
-    strcpy(creatureTypeAbilities[id].get(), values[23]);
+    creatureTypeAbilities[id].copyText(values[23]);
     traits.m_specialAbility = creatureTypeAbilities[id].get();
 }

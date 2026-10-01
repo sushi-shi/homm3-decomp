@@ -22,6 +22,7 @@ class heroWindow;
 class iconWidget;
 class textWidget;
 class TCombatWindow;
+class TPickANumber;
 class NewmapCell;
 class searchArray;
 class town;
@@ -604,6 +605,9 @@ public:
     // ORDINALS: no DC layout exists for combatManager at all (the
     // Dreamcast dump carries no fieldlist for it) and no string or
     // roster entry reaches either slot.
+private:
+    // Project-inferred boundary for the pending-action protocol. Original
+    // field access is unknown; preserve the four existing slots in place.
     int m_nextAction;  // +0x3c
     // The order's FIRST hex slot. berserk_attack (0x4222c0) writes the
     // acting stack's own gridIndex here when the target is already
@@ -619,6 +623,7 @@ public:
     // choice's own field_18 here, all three behind field_3c = 1.
     // Address ordinal for the same reason its neighbours are.
     int m_nextActionGridIndex2;  // +0x48
+public:
     // Two 187-byte per-hex rows, both cleared by Open (0x462a20) with
     // `mov ecx,0x2e / xor eax,eax / rep stosd / stosw / stosb` - 0x2e
     // dwords plus a word plus a byte is exactly COMBAT_GRID_CELLS, and
@@ -947,6 +952,8 @@ public:
     // the walk steps the byte arrays by 20 and the army index by 21 in
     // the same loop, and ResetLimitCreature memsets exactly 2x20 at
     // +0x14000.
+    // Original: bCreatureVanish. DC combatManager 0x1ed7 / field list
+    // 0x4429 explicitly makes this array and bSomeCreaturesVanish public.
     unsigned char m_creatureIsDead[2][20];  // +0x13438
     // Sliced in place off PowEffect, which zeroes it beside field_13438
     // and then asks it, after the death sweep, whether MakeCreaturesVanish
@@ -1154,6 +1161,8 @@ public:
     unsigned char shouldLowerDoor(army* thisArmy, long hex) const;
     int experienceValueOfStack(int whichGroup);
     void makeCreaturesVanish();
+    // Project operation: mark the owner-side slot and publish pending work.
+    void markCreatureForVanish(int side, int index);
     void raiseDoor();
     void testRaiseDoor();
     void lowerDoor();
@@ -1201,6 +1210,17 @@ public:
     void placeAllObstacles();
 
 private:
+    // Project-inferred shared obstacle selection and archer initialization.
+    void getObstacleTerrainMasks(unsigned int& terrainMask,
+                                 unsigned int& specialTerrainMask) const;
+    static int pickObstacleForTerrain(TPickANumber& picker,
+                                      unsigned int terrainMask,
+                                      unsigned int specialTerrainMask);
+    void initializeArcher(TArcher& archer, const TSiegeArcherInfo& info,
+                          int position, TArcherLoadState& locals);
+    // Project-inferred moat-ring lookup; failure leaves the output untouched.
+    bool findMoatHex(int hex, const unsigned char* cells,
+                     int gateHex, int* index) const;
     void setupAdjacencyArray();
     void updateArmyGroup(int whichSide);
 
@@ -1295,6 +1315,12 @@ public:
     int drawCreatureAndHeroSubwindows();
 
 private:
+    // Project-inferred state operations shared by combat animation callers.
+    void startHeroAnimationSequence(int side, int sequence);
+    void clearPendingHeroReactions(int side);
+    // Project-inferred obstacle geometry shared by placement and removal.
+    int getObstacleFootprintHex(int baseHex, int offset,
+                                unsigned char baseRowIsOdd) const;
     void computeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,
                        bool saveBiggestExtent);
@@ -1483,6 +1509,15 @@ public:
 
 private:
     bool automateCatapult();  // 0x473c00
+    // Project-inferred action preparation retains both target hexes until
+    // the UI picker or a complete order supplies them.
+    void prepareAction(int action, int extra);
+    // Targeted command tuple; secondary spell target survives.
+    void setTargetAction(int action, int extra, int targetHex);
+    // Project-inferred defense and creature-spell order operations.
+    void queueDefend();
+    void queueCreatureSpell(int targetHex);
+    void initiateCreatureSpell(SpellID spell);
     unsigned char attemptShooterDefense(
         const army* currentArmy, searchArray* currentSearchArray,
         const type_AI_combat_parameters* estimate);  // 0x420760
@@ -1519,6 +1554,20 @@ public:
     // "what would clicking this hex do", DoCommand performs it.
     int getCommand(int newIndex);
     void doCommand(int command);
+    // Complete tuple for network reception, spell selection and snapshots.
+    void setPendingAction(int action, int extra, int targetHex,
+                          int secondTargetHex);
+    int getPendingActionCode() const;
+    int getPendingActionExtra() const;
+    int getPendingActionTarget() const;
+    // Interactive spell picking updates one target at a time. Cancellation
+    // invalidates only the opcode; the selected payload/hexes survive.
+    void selectActionTarget(int targetHex);
+    void selectSecondaryActionTarget(int targetHex);
+    void cancelPendingAction();
+    // AI/berserk shots retain the existing extra/secondary payload.
+    void queueShot(int targetHex);
+    void skipArmyAction();
     int rightClick(int newIndex);  // 0x4769c0
     // 0x59e900, spells.obj. LOCATED 2026-08-13 from DoCommand's
     // spell-book case, which calls it with `this` only, compares the
@@ -1724,6 +1773,11 @@ private:
     army* findSpellTarget(ESpellId spell, long side, long hex,
                           bool firstTarget,
                           long creatureSpell);  // 0x5a3950
+    // Project-inferred check of a corpse's possible second occupied hex.
+    bool isCorpseFootprintFree(const hexcell& cell, int bodyIndex, int hex) const;
+    // Project-inferred presentation operations shared by spell callers.
+    void clearArmySpellOverlays();
+    void showResurrectionMessage(const army* target, long raised);
 
 public:
     // WHO cast the spell ShowSpellMessage is about to announce. The DC
@@ -1897,6 +1951,11 @@ private:
     void loadArmies(unsigned char isSurrounded);
     void checkNativeTerrain();
     void combineGroups(armyGroup* src, armyGroup* dest);
+    // Project-inferred ordered dismissal shared by input/action transitions.
+    void hideInfoSubWindows();
+    // Project-inferred cell selection plus displayed-command invalidation.
+    // Does not compute a command, update a cursor or force a mouse event.
+    void invalidateCommandForCell(int cell);
 
 public:
     static float computeDamageModifier(int attack, int defense);
@@ -1930,6 +1989,14 @@ public:
     void combatMessage(int command);
 
 private:
+    // Project-inferred nested death cleanup; selection remains caller-owned.
+    void processArmyDeath(army& stack, int side);
+    void processSpellDeaths(const bool (&effected)[2][20]);
+    // Project operations shared by round, damage and mass-spell completion.
+    // Consuming the marked stacks does not clear this queue; the next batch
+    // explicitly resets it, as in the original callers.
+    void clearVanishingCreatures();
+    void makeCreaturesVanishIfNeeded();
     std::string getTowerString(TWallSection wall, long archers,
                                  long skill) const;
     void autoResolveCombat();

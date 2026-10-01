@@ -16,7 +16,7 @@
 
 #include "advmgr.h"
 #include "advmgr_objects.h"
-#include "creature_bank_types.h"
+#include "creature_bank.h"
 #include "creaturetype.h"
 #include "creaturetype_fwd.h"
 #include "customcampaign.h"
@@ -42,6 +42,9 @@ enum EDayOfWeek {
 
 int __fastcall readHeroId(TAbstractFile* infile, int mapVersion);
 int __fastcall loadHeroId(TAbstractFile* infile, int saveVersion);
+
+// Project-inferred addition to an existing AI dock/boat cost estimate.
+void addBoatCost(int* cost);
 
 // The map record GetWorldMapData hands out. Its first 0xd0 bytes are the
 // scenario's object/event vectors (13 of them at VC6's 16-byte
@@ -430,8 +433,7 @@ public:
             m_generateHero = 0;
             m_hasRandomHero = 0;
             m_nonRandomHeroId = -1;
-            m_nonRandomHeroCustomPortrait = -1;
-            m_nonRandomHeroCustomName[0] = 0;
+            clearHeroCustomization();
             m_defaultPlaceholders = 0;
         }
 
@@ -440,6 +442,8 @@ public:
         // keeps the equivalent logic in the parent reader, so the role name
         // is provisional.
         void readMapPlayerSlot(TAbstractFile* infile, int mapVersion);
+        // Project-inferred empty customization; retain hero ID and name tail.
+        void clearHeroCustomization();
     };
     int m_version;
     unsigned char m_isPlayable;
@@ -477,6 +481,19 @@ public:
     // bitset). Modelled on NewSMapHeader instead, the map's ctor call
     // lands in game::game and shifts every construction after it.
     std::map<int, type_map_hero_info> m_heroPlayerSetups;
+
+    // Project-inferred selection operation: disable both special types while
+    // retaining their payload and any result state in the copied header.
+    void disableSpecialConditions();
+
+protected:
+    // Project-inferred census shared by the derived map/save readers and ctor.
+    // Counts remain native-public; each reader owns its read/failure ordering.
+    void clearPlayerCounts();
+    void countPlayerSlot(const TPlayerSlotAttributes& slot);
+    // Project-inferred team payload read or individual-team initialization.
+    // The caller has already read and stored m_numTeams.
+    bool readTeamAssignments(TAbstractFile* infile);
 };
 SIZE(CMapHeaderData, 0x2d0);
 SIZE(CMapHeaderData::TPlayerSlotAttributes, 0x44);
@@ -518,9 +535,7 @@ public:
     {
         m_version = 0;
         m_difficulty = 0;
-        m_numPlayers = 0;
-        m_minNumHumanPlayers = 0;
-        m_maxNumHumanPlayers = 0;
+        clearPlayerCounts();
         m_lastTownNameAssigned = 0;
         m_mapHasNotBeenSaved = 0;
         m_mapName = "";
@@ -629,6 +644,11 @@ public:
     inline void setOwner(long owner);
     void updateBonus();
     void grow(int unusedArg);
+
+private:
+    // Project-inferred shared reset and inverse town-bonus operations.
+    void clearCreatureSlots();
+    void adjustTownBonuses(long change);
 };
 SIZE(generator, 0x5c);
 
@@ -958,10 +978,25 @@ public:
     // resource paths.
     // Retained ordinary body: game.cpp, Windows 0x004bada0.
     bool isHuman() const;
-    // Project mutation and raw-byte copy view. isHuman remains the native
-    // normalized predicate; saving/restoring this flag preserves its byte.
-    void setHuman(unsigned char human) { m_isHuman = human; }
-    unsigned char getHumanFlag() const { return m_isHuman; }
+    // Project names for the paired control transitions used by setup and
+    // solo play. Neither operation discards the player's name or network ID;
+    // disconnecting a player is the separate clearNetInfo operation.
+    void setLocalHuman()
+    {
+        m_isHuman = 1;
+        m_isLocal = 1;
+    }
+    void setComputer()
+    {
+        m_isHuman = 0;
+        m_isLocal = 0;
+    }
+    // Restart restores control bytes without restoring the old connection.
+    void copyControlFrom(const playerData& other)
+    {
+        m_isLocal = other.m_isLocal;
+        m_isHuman = other.m_isHuman;
+    }
     int save(TAbstractFile* outfile);
     // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
     // townManager::SwapHeroes 0x5d5150 calls it on
@@ -973,11 +1008,19 @@ public:
     // precedent), and townmgr.cpp is the only live consumer.
     unsigned char addGarrisonHero(town* ourTown);
     int buildingsOwned(int townType, int buildingId, int mageLevel);
+    // Project-inferred first-match query for morale/luck and their tooltips.
+    bool hasGrailTown(TTownType townType) const;
     bool hasMobileHero();
     int nextHero();
     int nextTown();
     int numOfGivenArtifact(int artifact) const;
     int findHero(int id) const;
+    // Project-inferred roster operations; map placement and selection stay
+    // with the caller. Both require an available/occupied slot respectively.
+    void addHero(int id);
+    void removeHeroAt(int index);
+    // Project-inferred selection/cursor transition when a hero enters garrison.
+    void clearHiddenHeroSelection(const hero& hiddenHero);
     int findTown(int id) const;
     // ?IsHuman@playerData@@QBA_NXZ / ?IsLocalHuman@playerData@@QBA_NXZ
     bool isLocalHuman() const;
@@ -986,6 +1029,25 @@ public:
     void assignNetInfo(CNetPlayerInfo* netPlayerInfo);
     void getNetInfo(CNetPlayerInfo* netPlayerInfo);
     void clearNetInfo();
+    // Project-inferred visit-mask operations. Cell-ID decoding, reward
+    // handling and refill/fullness checks remain with each caller.
+    bool hasSkeletonVisit(unsigned long visitMask) const;
+    void markSkeletonVisited(unsigned long visitMask);
+    bool hasLeanToVisit(unsigned long visitMask) const;
+    void markLeanToVisited(unsigned long visitMask);
+    bool hasMagicSpringVisit(unsigned long visitMask) const;
+    void markMagicSpringVisited(unsigned long visitMask);
+    bool hasMysticalGardenVisit(unsigned long visitMask) const;
+    void markMysticalGardenVisited(unsigned long visitMask);
+    // Project-inferred complete seven-resource payment. Callers retain
+    // affordability checks and purchase/build ordering; negative costs are
+    // not clamped. Native resource storage remains public (DC 0x1c50).
+    void payResourceCost(const int* cost);
+    void payResourceCost(const long* cost);
+    // Boat payment remains separate from creation, which is also used by
+    // map loading, replay and spells. Neither operation builds a boat.
+    bool canAffordBoat() const;
+    void payBoatCost();
     // 0x4b9f40 (claimed in src/game.cpp). town::can_build,
     // can_ever_build and get_buildable_mask all call it on
     // gpGame->players[town->owner] to veto a second Capitol.
@@ -1418,6 +1480,9 @@ private:
     int loadObeliskPool(TAbstractFile* infile);
     int saveObeliskPool(TAbstractFile* outfile);
     int saveTownPool(TAbstractFile* outfile);
+    void resetHolyGrail();
+    // Project-inferred scan shared by hero-loss and town-loss validation.
+    int countHumanTeams() const;
 
 public:
     // 0x4bf780 (dc 0xaa7e0).
@@ -1444,6 +1509,8 @@ private:
     // private access flag is DC-only: retail decorates both as public QAEX.
     void matchUndergroundGates();
     void randomizeUniversity(NewmapCell* cell);
+    // Project-inferred map-cell/pool operation shared by five bank kinds.
+    void addCreatureBank(NewmapCell* cell, type_creature_bank_type type);
 
 public:
     void setRecruits();
@@ -1922,6 +1989,8 @@ extern int g_grailOwner;
 // gUnnamed69950c's precedent rather than inventing a role name.
 extern unsigned char g_normalVictory;
 extern int g_startingHeroOverrides[8];
+// Project-inferred reset of the complete per-player override array.
+void clearStartingHeroOverrides();
 // Dreamcast public `iCurHourGlassPhase`; game.cpp owns the retail word and
 // philAI::DoAI advances it as computer heroes are processed.
 extern int g_curHourGlassPhase;

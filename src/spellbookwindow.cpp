@@ -337,12 +337,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
     m_spellNameWidgets = static_cast<textWidget**>(static_cast<void*>(
         &m_widgets[spellNameWidgetsIndex]));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 
     if (context == eContextNeither) {
         if (s_lastContext != eContextInvalid) {
@@ -388,10 +383,7 @@ MAC_ADDRESS(0x18c4d0, 0xb4)
 TSpellbookWindow::~TSpellbookWindow()
 {
     g_spellbookWindow = 0;
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x0059c970, 0x1B)
@@ -408,6 +400,18 @@ MAC_ADDRESS(0x18c5b8, 0x20)
 void TSpellbookWindow::close(unsigned char update)
 {
     heroWindow::close(update);
+}
+
+// Project-inferred shared row clear. The heading occupies two ordinary
+// slots, and trailing unused slots perform exactly the same transition.
+// Caption status and cached icon frames survive; only the spell ID is invalid.
+void TSpellbookWindow::clearSpellSlot(int slot)
+{
+    m_spellLevelWidgets[slot]->setActiveAndDrawn(false);
+    m_spellIconWidgets[slot]->setActiveAndDrawn(false);
+    m_spellNameWidgets[slot]->setText(
+        DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, ""));
+    m_spellMap[slot] = -1;
 }
 
 // DC uses push_back for the available-spell entry. Restoring that wrapper
@@ -451,28 +455,14 @@ void TSpellbookWindow::gotoPage(int page)
 
     int widgetIndex;
     if (page == 0 && m_school != eSchoolAll) {
-        m_headingWidget->m_status |= widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        m_headingWidget->setActiveAndDrawn(true);
         m_headingWidget->setIconFrame(getPositionFromSchool(m_school));
 
-        m_spellLevelWidgets[0]->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        m_spellIconWidgets[0]->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        m_spellNameWidgets[0]->setText(
-            DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, ""));
-        m_spellMap[0] = -1;
-
-        m_spellLevelWidgets[1]->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        m_spellIconWidgets[1]->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        m_spellNameWidgets[1]->setText(
-            DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, ""));
-        m_spellMap[1] = -1;
+        clearSpellSlot(0);
+        clearSpellSlot(1);
         widgetIndex = firstSlotAfterHeading;
     } else {
-        m_headingWidget->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_headingWidget->setActiveAndDrawn(false);
         widgetIndex = 0;
     }
 
@@ -480,14 +470,12 @@ void TSpellbookWindow::gotoPage(int page)
          ++widgetIndex, ++spellIndex) {
         const TSpellbookEntry& entry = availableSpells[spellIndex];
         SpellID displaySpell = entry.m_id;
-        m_spellLevelWidgets[widgetIndex]->m_status |=
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        m_spellLevelWidgets[widgetIndex]->setActiveAndDrawn(true);
         m_spellLevelWidgets[widgetIndex]->setSprite(
             g_levelSprites[getPositionFromSchool(entry.m_school)]);
         m_spellLevelWidgets[widgetIndex]->setIconFrame(entry.m_mastery);
 
-        m_spellIconWidgets[widgetIndex]->m_status |=
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        m_spellIconWidgets[widgetIndex]->setActiveAndDrawn(true);
         m_spellIconWidgets[widgetIndex]->setIconFrame(displaySpell);
 
         if (entry.m_mastery > 0) {
@@ -521,31 +509,56 @@ void TSpellbookWindow::gotoPage(int page)
     }
 
     for (; widgetIndex < SPELLS_PER_PAGE; ++widgetIndex) {
-        m_spellLevelWidgets[widgetIndex]->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        m_spellIconWidgets[widgetIndex]->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        m_spellNameWidgets[widgetIndex]->setText(
-            DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, ""));
-        m_spellMap[widgetIndex] = -1;
+        clearSpellSlot(widgetIndex);
     }
 
     m_page = page;
     s_lastPage = page;
 
     if (page > 0)
-        m_previousPageWidget->m_status |=
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        m_previousPageWidget->setActiveAndDrawn(true);
     else
-        m_previousPageWidget->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_previousPageWidget->setActiveAndDrawn(false);
 
     if (spellIndex < availableSpells.size())
-        m_nextPageWidget->m_status |=
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        m_nextPageWidget->setActiveAndDrawn(true);
     else
-        m_nextPageWidget->m_status &=
-            ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_nextPageWidget->setActiveAndDrawn(false);
+}
+
+// Project-inferred animation stage shared by context, school and page
+// changes. Keep it before the existing setters/navigation and final redraw.
+void TSpellbookWindow::animatePageTurn(bool forward)
+{
+    if (g_config.m_animateSpellBook)
+        videoPlay(forward ? 0x25 : 0x24, m_x + 13, m_y + 14, -1, -1);
+}
+
+// Project-inferred explicit page turn. Keyboard handlers retain their active
+// arrow guard; widget-selection handlers still request the turn directly.
+void TSpellbookWindow::turnPage(bool forward)
+{
+    animatePageTurn(forward);
+    if (forward)
+        nextPage();
+    else
+        previousPage();
+    drawWindow(1, -65535, 65535);
+}
+
+// Project-inferred context transition for the two selectable spell lists.
+// Keep an unchanged context inert and retain setContext's remembered value.
+void TSpellbookWindow::displayNewContext(TSpellContext context)
+{
+    unsigned mask = context == eContextAdventure
+        ? eAdventureContextMask : eCombatContextMask;
+    if (getContextMask() == mask)
+        return;
+
+    animatePageTurn(context == eContextAdventure);
+    setContext(context);
+    gotoPage(0);
+    drawWindow(1, -65535, 65535);
 }
 
 DC_ADDRESS(0x14ce10, 0x58)
@@ -555,8 +568,7 @@ void TSpellbookWindow::displayNewSchool(int position)
     if (getSchool() == getSchoolFromPosition(position))
         return;
 
-    if (g_config.m_animateSpellBook)
-        videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
+    animatePageTurn(true);
     setSchool(getSchoolFromPosition(position));
     gotoPage(0);
     m_schoolTabsWidget->setIconFrame(position);
@@ -632,19 +644,13 @@ int TSpellbookWindow::windowHandler(message& msg)
         switch (msg.m_codeX) {
         case KEYCODE_KP_4: // left
             if (m_previousPageWidget->m_status & widget::WIDGET_ACTIVE) {
-                if (g_config.m_animateSpellBook)
-                    videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
-                previousPage();
-                drawWindow(1, -65535, 65535);
+                turnPage(false);
             }
             break;
 
         case KEYCODE_KP_6: // right
             if (m_nextPageWidget->m_status & widget::WIDGET_ACTIVE) {
-                if (g_config.m_animateSpellBook)
-                    videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
-                nextPage();
-                drawWindow(1, -65535, 65535);
+                turnPage(true);
             }
             break;
 
@@ -667,23 +673,11 @@ int TSpellbookWindow::windowHandler(message& msg)
         }
 
         case KEYCODE_A: // adventure spells
-            if (m_contextMask != eAdventureContextMask) {
-                if (g_config.m_animateSpellBook)
-                    videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
-                setContext(eContextAdventure);
-                gotoPage(0);
-                drawWindow(1, -65535, 65535);
-            }
+            displayNewContext(eContextAdventure);
             break;
 
         case KEYCODE_C: // combat spells
-            if (m_contextMask != eCombatContextMask) {
-                if (g_config.m_animateSpellBook)
-                    videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
-                setContext(eContextCombat);
-                gotoPage(0);
-                drawWindow(1, -65535, 65535);
-            }
+            displayNewContext(eContextCombat);
             break;
 
         case KEYCODE_ESCAPE:
@@ -741,37 +735,19 @@ int TSpellbookWindow::windowHandler(message& msg)
                 break;
 
             case COMBAT_SPELLS_ID:
-                if (getContextMask() != eCombatContextMask) {
-                    if (g_config.m_animateSpellBook)
-                        videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
-                    setContext(eContextCombat);
-                    gotoPage(0);
-                    drawWindow(1, -65535, 65535);
-                }
+                displayNewContext(eContextCombat);
                 break;
 
             case ADVENTURE_SPELLS_ID:
-                if (getContextMask() != eAdventureContextMask) {
-                    if (g_config.m_animateSpellBook)
-                        videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
-                    setContext(eContextAdventure);
-                    gotoPage(0);
-                    drawWindow(1, -65535, 65535);
-                }
+                displayNewContext(eContextAdventure);
                 break;
 
             case PREVIOUS_PAGE_ID:
-                if (g_config.m_animateSpellBook)
-                    videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
-                previousPage();
-                drawWindow(1, -65535, 65535);
+                turnPage(false);
                 break;
 
             case NEXT_PAGE_ID:
-                if (g_config.m_animateSpellBook)
-                    videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
-                nextPage();
-                drawWindow(1, -65535, 65535);
+                turnPage(true);
                 break;
 
             case DIALOG_RETURN_CANCEL:
@@ -811,10 +787,7 @@ int TSpellbookWindow::windowHandler(message& msg)
     }
 
     if (exitFlag) {
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = msg.m_codeY;
-        msg.m_codeY = 10;
-        msg.m_codeX = 10;
+        g_windowManager->finishDialog(msg, msg.m_codeY);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

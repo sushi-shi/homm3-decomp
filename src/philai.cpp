@@ -308,9 +308,7 @@ static void upgradeCreatures(hero* currentHero, const town* currentTown)
             if (resource < NUM_RESOURCES)
                 continue;
 
-            for (resource = 0; resource < NUM_RESOURCES; ++resource)
-                g_currentPlayer->m_resources[resource] -=
-                    difference[resource];
+            g_currentPlayer->payResourceCost(difference);
             currentHero->m_army.m_armyTypes[slot] = upgrade;
         }
     }
@@ -513,8 +511,7 @@ static void visitWarFactory(hero* currentHero, TArtifact engine)
     if (valueOfWarFactory(currentHero, engine, 0) > 0) {
         TCreatureType creature = siegeArtifactToCreature(engine);
         const int* costs = g_creatureTypeTraits[creature].m_cost;
-        for (int resource = 0; resource < 7; resource++)
-            g_currentPlayer->m_resources[resource] -= costs[resource];
+        g_currentPlayer->payResourceCost(costs);
 
         type_artifact artifact(engine);
         currentHero->giveArtifact(artifact, 1, 1);
@@ -559,7 +556,28 @@ static unsigned char shouldGarrisonTown(const hero* currentHero,
     return 0;
 }
 
+// Project-inferred shared traversal for the player's adventure shipyards.
+// Town docks have separate affordability/building rules in the callers.
+static void setOwnedShipyardBuildFlags(playerData* player, bool canBuildShip)
+{
+    for (unsigned int shipyardIndex = 0;
+         shipyardIndex < player->m_shipyards.size(); ++shipyardIndex) {
+        type_point shipyardPoint = player->m_shipyards[shipyardIndex];
+        NewmapCell* shipyard = g_game->getCell(shipyardPoint);
+        const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
+            static_cast<const void*>(&shipyard->m_extraInfo));
+        if (info->m_boatX == ShipyardInfo::NO_BOAT)
+            continue;
+
+        NewmapCell* boatCell = g_game->getWorldMapData()->cell(
+            info->m_boatX, info->m_boatY,
+            player->m_shipyards[shipyardIndex].m_z);
+        boatCell->m_canBuildShip = canBuildShip;
+    }
+}
+
 // E:\gamedcs\philai.cpp:833
+// The compiler observations below predate the shared shipyard traversal.
 // Complete expands this helper into MoveHero. The source-real loops and
 // `cost` local are fixed by the Dreamcast line/scope table; the extra dock
 // cost and Dinkumware vector layout are retail facts.
@@ -583,8 +601,7 @@ static void markShipyards(playerData* player)
 {
     int cost[7];
 
-    if (player->m_resources[WOOD] < 10
-        || player->m_resources[GOLD] < 1000)
+    if (!player->canAffordBoat())
         return;
 
     for (int townIndex = 0; townIndex < player->m_numTowns;
@@ -603,8 +620,7 @@ static void markShipyards(playerData* player)
         } else if (currentTown->canBuild(DOCK_ID)) {
             canBuildShip = 1;
             currentTown->getBuildCost(DOCK_ID, cost);
-            cost[WOOD] += 10;
-            cost[GOLD] += 1000;
+            addBoatCost(cost);
             for (int resource = 0; resource < 7; ++resource) {
                 if (player->m_resources[resource] < cost[resource])
                     canBuildShip = 0;
@@ -613,23 +629,11 @@ static void markShipyards(playerData* player)
         cell->m_canBuildShip = canBuildShip;
     }
 
-    for (unsigned int shipyardIndex = 0;
-         shipyardIndex < player->m_shipyards.size(); ++shipyardIndex) {
-        type_point shipyardPoint = player->m_shipyards[shipyardIndex];
-        NewmapCell* shipyard = g_game->getCell(shipyardPoint);
-        const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
-            static_cast<const void*>(&shipyard->m_extraInfo));
-        if (info->m_boatX == ShipyardInfo::NO_BOAT)
-            continue;
-
-        NewmapCell* boatCell = g_game->getWorldMapData()->cell(
-            info->m_boatX, info->m_boatY,
-            player->m_shipyards[shipyardIndex].m_z);
-        boatCell->m_canBuildShip = 1;
-    }
+    setOwnedShipyardBuildFlags(player, true);
 }
 
 // E:\gamedcs\philai.cpp:896
+// The compiler observations below predate the shared shipyard traversal.
 // Complete expands this helper into MoveHero immediately after the second
 // set_danger_zones statement.
 // DC: the 920/921 absent-boat continue closes before the 925/926
@@ -652,20 +656,7 @@ static void clearShipyards(playerData* player)
         }
     }
 
-    for (unsigned int shipyardIndex = 0;
-         shipyardIndex < player->m_shipyards.size(); ++shipyardIndex) {
-        NewmapCell* shipyard = g_game->getCell(
-            player->m_shipyards[shipyardIndex]);
-        const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
-            static_cast<const void*>(&shipyard->m_extraInfo));
-        if (info->m_boatX == ShipyardInfo::NO_BOAT)
-            continue;
-
-        NewmapCell* boatCell = g_game->getWorldMapData()->cell(
-            info->m_boatX, info->m_boatY,
-            player->m_shipyards[shipyardIndex].m_z);
-        boatCell->m_canBuildShip = 0;
-    }
+    setOwnedShipyardBuildFlags(player, false);
 }
 
 // Source-order declarations for helpers whose retained Complete bodies live
@@ -1171,7 +1162,7 @@ static long valueOfBank(const hero* currentHero, NewmapCell* cell)
     ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
         static_cast<void*>(cell));
     type_creature_bank& bank = info->getCreatureBank();
-    if (cell->m_extraInfo & 0x2000000)
+    if (cell->creatureBankIsEmpty())
         return 0;
 
     value = aiValueOfCombat(currentHero, 0, bank.m_guards, 0, cell);
@@ -1212,7 +1203,7 @@ DC_ADDRESS(0x110c58, 0x36)
 MAC_ADDRESS(0x142b14, 0x84)
 int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell)
 {
-    if (currentHero->m_defenseTowerFlags & (1UL << cell->m_extraInfo))
+    if (currentHero->visitedPrimarySkillSite(ePriSkillDefense, cell->m_extraInfo))
         return 0;
     return static_cast<int>(
         currentHero->getExperienceIncrement()
@@ -1256,9 +1247,7 @@ DC_ADDRESS(0x110db4, 0x1d4)
 MAC_ADDRESS(0x142dd8, 0x184)
 inline long valueOfIdol(const hero* currentHero, long moveCost)
 {
-    if (currentHero->m_flags & 0x10)
-        return 0;
-    if (currentHero->m_flags & 0x2000000)
+    if (currentHero->hasIdolEffect())
         return 0;
     if (moveCost > currentHero->m_movePoints)
         return 0;
@@ -1298,7 +1287,7 @@ DC_ADDRESS(0x111004, 0x24)
 MAC_ADDRESS(0x142f84, 0x28)
 int valueOfGarden(const hero* currentHero, NewmapCell* cell)
 {
-    if (currentHero->m_gardenOfRevelationFlags & (1UL << cell->m_extraInfo))
+    if (currentHero->visitedPrimarySkillSite(ePriSkillKnowledge, cell->m_extraInfo))
         return 0;
     return currentHero->getValueOfKnowledge();
 }
@@ -1313,7 +1302,7 @@ inline int valueOfLeanTo(NewmapCell* cell, playerData* player)
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
-    if (player->m_leanToFlags & (1UL << info->getItemId()))
+    if (player->hasLeanToVisit(1UL << info->getItemId()))
         return 0;
     return 3 * player->m_ai.m_averageResourceValue;
 }
@@ -1448,11 +1437,9 @@ DC_ADDRESS(0x11173c, 0x94)
 MAC_ADDRESS(0x143aa4, 0xb0)
 inline int valueOfLibrary(const hero* currentHero, NewmapCell* cell)
 {
-    if (currentHero->m_libraryFlags & (1UL << cell->m_extraInfo))
+    if (currentHero->hasLibraryVisit(1UL << cell->m_extraInfo))
         return 0;
-    if (currentHero->m_level
-            + 2 * currentHero->getSecondarySkill(eSecSkillDiplomacy)
-        < 10)
+    if (!currentHero->meetsLibraryLevelRequirement())
         return 0;
     return 2 * currentHero->getValueOfPower()
         + 2 * currentHero->getValueOfKnowledge()
@@ -1483,7 +1470,7 @@ MAC_ADDRESS(0x143cb8, 0x84)
 inline int valueOfMercenaryCamp(const hero* currentHero,
                                        NewmapCell* cell)
 {
-    if (currentHero->m_mercCampFlags & (1UL << cell->m_extraInfo))
+    if (currentHero->visitedPrimarySkillSite(ePriSkillAttack, cell->m_extraInfo))
         return 0;
     return static_cast<int>(
         currentHero->getExperienceIncrement()
@@ -1528,7 +1515,7 @@ int valueOfSkeleton(const hero* currentHero, NewmapCell* cell)
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
     unsigned long visited = 1UL << info->getItemId();
-    if (g_currentPlayer->m_deadGuyFlags & visited)
+    if (g_currentPlayer->hasSkeletonVisit(visited))
         return 0;
 
     playerData* player = currentHero->getPlayer();
@@ -2269,8 +2256,7 @@ void buySiegeEngine(hero* currentHero, town* currentTown,
         }
     }
 
-    for (int costResource = 0; costResource < 7; ++costResource)
-        g_currentPlayer->m_resources[costResource] -= costs[costResource];
+    g_currentPlayer->payResourceCost(costs);
 
     currentHero->giveArtifact(type_artifact(engine), 1, 1);
 }
@@ -2803,8 +2789,7 @@ void aiVisitHillFort(hero* currentHero)
         }
 
         if (resource > GOLD) {
-            for (resource = 0; resource <= GOLD; resource++)
-                g_currentPlayer->m_resources[resource] -= cost[resource];
+            g_currentPlayer->payResourceCost(cost);
             currentHero->m_army.m_armyTypes[i] = upgrade;
         }
     }
@@ -3138,7 +3123,7 @@ DC_ADDRESS(0x111834, 0xc4)
 MAC_ADDRESS(0x143bf4, 0xc4)
 int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
 {
-    if ((1 << cell->m_extraInfo) & currentHero->m_magicSchoolFlags)
+    if (currentHero->hasMagicSchoolVisit(1 << cell->m_extraInfo))
         return 0;
     playerData* player = currentHero->getPlayer();
     if (player->m_resources[GOLD] < 1000)
@@ -3241,7 +3226,7 @@ DC_ADDRESS(0x111e34, 0x6e)
 MAC_ADDRESS(0x1442f8, 0x28)
 int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell)
 {
-    if ((1 << cell->m_extraInfo) & currentHero->m_powerSchoolFlags)
+    if (currentHero->visitedPrimarySkillSite(ePriSkillPower, cell->m_extraInfo))
         return 0;
     return currentHero->getValueOfPower();
 }
@@ -3740,8 +3725,8 @@ int valueOfTree(const hero* currentHero, NewmapCell* cell)
 {
     ExtraInfoUnion* info =
         static_cast<ExtraInfoUnion*>(static_cast<void*>(cell));
-    if (currentHero->m_treeOfKnowledgeFlags
-            & (1 << (static_cast<unsigned char>(cell->m_extraInfo) & 0x1f)))
+    if (currentHero->hasTreeOfKnowledgeVisit(
+            1 << (static_cast<unsigned char>(cell->m_extraInfo) & 0x1f)))
         return 0;
 
     int increment = currentHero->getExperienceIncrement();
@@ -3794,7 +3779,7 @@ DC_ADDRESS(0x113380, 0x10a)
 MAC_ADDRESS(0x145e0c, 0xb8)
 int valueOfWarSchool(const hero* currentHero, NewmapCell* cell)
 {
-    if ((1 << cell->m_extraInfo) & currentHero->m_warSchoolFlags)
+    if (currentHero->hasWarSchoolVisit(1 << cell->m_extraInfo))
         return 0;
     playerData* player = currentHero->getPlayer();
     if (player->m_resources[GOLD] < 1000)
@@ -3946,13 +3931,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
         return valueOfFlotsam(player);
 
     case FOUNTAIN_OF_FORTUNE:
-        if (currentHero->m_flags & 0x20)
-            return 0;
-        if (currentHero->m_flags & 0x8000000)
-            return 0;
-        if (currentHero->m_flags & 0x10000000)
-            return 0;
-        if (currentHero->m_flags & 0x20000000)
+        if (currentHero->hasFountainEffect())
             return 0;
         if (moveCost > currentHero->m_movePoints)
             return 0;
@@ -4080,9 +4059,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case STABLES:
         return valueOfStables(currentHero, moveCost);
     case TEMPLE:
-        if (currentHero->m_flags & 0x100)
-            return 0;
-        if (currentHero->m_flags & 0x4000000)
+        if (currentHero->hasTempleEffect())
             return 0;
         if (moveCost > currentHero->m_movePoints)
             return 0;
@@ -4095,8 +4072,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case TRAINING_GROUNDS: {
         const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
             static_cast<const void*>(cell));
-        if (currentHero->m_trainingGroundsFlags
-            & (1UL << info->getItemId()))
+        if (currentHero->hasTrainingGroundVisit(1UL << info->getItemId()))
             return 0;
         return static_cast<int>(
             currentHero->m_turnExperienceToRvRatio * 1000.0f);

@@ -41,6 +41,9 @@ public:
     TSwapWindow(hero** heroes);
     virtual ~TSwapWindow();
     void updateArrows();
+
+private:
+    void showTransferDirection(bool toRight);
 };
 SIZE(TSwapWindow, 0x64);
 
@@ -264,6 +267,10 @@ public:
     CNetMsgHandler* m_netMsgHandler;
 
     swapManager(hero* leftHero, hero* rightHero);
+private:
+    // Project state-only reset shared by construction and the UI reset.
+    void clearArmySelection();
+public:
     void reset();
     virtual int open(int newPriority);  // baseManager vtable slot 0
     virtual void close();               // slot 1

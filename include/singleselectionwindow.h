@@ -374,6 +374,14 @@ public:
         m_heroIndex = -1;
     }
 
+    // Project operation used when a map or seat changes. Unlike
+    // resetAdvancedOptions, this retains the assigned player position.
+    void resetTownAndHero()
+    {
+        m_heroIndex = -1;
+        m_townIndex = -1;
+    }
+
     // Accessor boundary inferred from the existing property interface and
     // external field operations; these additional names are project names.
     int getPlayerPos() const { return m_playerPos; }
@@ -426,6 +434,10 @@ public:
     {
         memcpy(m_computerPlayers, players, sizeof(m_computerPlayers));
     }
+
+private:
+    // Project-inferred complete cycle reset; same-position restoration is partial.
+    void beginPlayerCycle(int pos);
 };
 SIZE(CNetPlayerHandler, 0x7d0);
 
@@ -683,6 +695,9 @@ public:
     // game context. Advanced-options open/close shows/hides this same ID;
     // the player-position renderer places town controls in that column.
     int m_townHeadingId;  // +0x189c
+
+private:
+    // Project-owned boundary for the Complete-only random-map state/controls.
     // Eight setup dwords CNewSetupInfoMsg carries behind the
     // SGameSetupOptions copy; the random-map controls read them back out.
     // Role-derived: generateRandomMap (0x5860e0) consumes these eight
@@ -700,6 +715,8 @@ public:
     button* m_filterCountDButtons[8];  // 0x192c, ids 0x13d..0x144
     button* m_filterWaterButtons[4];  // 0x194c, ids 0x146..0x149
     button* m_filterStrengthButtons[4];  // 0x195c, ids 0x14b..0x14e
+
+public:
     // Retail-only tail member (no DC counterpart - DC's roster ends at
     // netMsgHandler): the widget the TurnChat pair shows with widget 105
     // when chat is OFF and hides when it is ON, always addressed
@@ -726,6 +743,9 @@ public:
 
 private:
     virtual unsigned char processRightSelect(int id);  // slot 11
+    // Project-inferred full selection repaint and its chat-refresh prefix.
+    void redrawSelection();
+    void refreshChatAndSelection();
 
 public:
     virtual int exitDialog(message& msg);   // slot 14
@@ -865,6 +885,12 @@ public:
 
 private:
     CNetPlayerHandlerPlayer* getThisPlayer();
+    // Project-inferred player initialization shared by new/load modes.
+    void setupPlayerSlots();
+    // Project-inferred complete random-map control operations.
+    void registerRandomMapButtons(button** buttons, int count);
+    void changeRandomMapOption(int option, int value);
+    void changeRandomMapOptionAndPlayers(int option, int value);
 
 public:
     // Accessor boundary inferred from the existing property interface and

@@ -216,8 +216,7 @@ unsigned char initializeCampaignMusicTable()
     char* destination = campaignMusicTracks.get();
     for (cue = 0; cue < CAMPAIGN_MUSIC_CUE_COUNT; ++cue) {
         const char* source = textResource->getText(cue);
-        unsigned length = strlen(source) + 1;
-        memcpy(destination, source, length);
+        unsigned length = copyResourceString(destination, source);
         g_campaignMusicCues[cue].m_track = destination;
         destination += length;
     }

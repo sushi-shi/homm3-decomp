@@ -767,6 +767,17 @@ public:
     void adjustHitpoints();
     unsigned char attackHex(int hex, unsigned char restoreFacing);
 
+    // Project operations for DC groupToAttack/indexToAttack. These identify
+    // the chosen target, independently of this stack's own side and index.
+    void setAttackTarget(int side, int index)
+    {
+        m_side = side;
+        m_slot = index;
+    }
+    void clearAttackTarget() { setAttackTarget(-1, -1); }
+    // Catapult targets use a hex in the index lane and no army side.
+    void setWallAttackTarget(int hex) { setAttackTarget(-1, hex); }
+
 private:
     // Original public ?do_attack@army@@AAA_NPAV1@H@Z: private bool.
     // Keep this overload in its attested LF_FIELDLIST position.
@@ -900,10 +911,17 @@ public:
     int canFit(int destIndex, int allowShifting,
                int* newDestIndex) const;
     void drawToBuffer(int x, int y, int numBoxOnly);
+    // Project-inferred shared animation transitions; no drawing is performed.
+    void startAnimationSequence(int sequence);
+    void updateHighlightAnimation();
+    void finishFidgetAnimation();
+    void advanceSpellReactionAnimation();
     void playAnimation(int sequence, int nframes, int startFrame);
     void setupAnimation();
     unsigned long strength();
     bool isActive() const;
+    // Project-inferred query shared by resurrection and sacrifice eligibility.
+    bool hasLostTroops() const;
     inline void checkLuck();
     void setSpellInfluence(int spell, int power, int mastery,
                            const hero* castingHero);
@@ -955,6 +973,11 @@ public:
     int getSpeed() const;
 
     int getMirrorEffect() const;
+
+    // Project-inferred shared damage-display operations. The four fields
+    // are public in DC army 0x1a95 / field list 0x205b and stay public.
+    void resetDamageDisplay();
+    int getDisplayedTroopCount() const;
 
     // Complete's NextArmy directly combines the private reset latch with the
     // shared IsIncapacitated helper. The exact retail lowering proves that

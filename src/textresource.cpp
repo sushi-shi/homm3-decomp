@@ -4,6 +4,51 @@
 
 #include "textresource.h"
 
+// Shared by flags, optional names and row delimiters. Nullable formats retain
+// their own pointer guard before this non-null spreadsheet-cell operation.
+bool isResourceFieldSet(const char* value)
+{
+    return value[0] && value[0] != ' ';
+}
+
+// Project-inferred common operation used by pooled table loaders. Preserve
+// one length scan, unsigned byte count and memcpy rather than a second scan.
+unsigned copyResourceString(char* destination, const char* source)
+{
+    unsigned length = strlen(source) + 1;
+    memcpy(destination, source, length);
+    return length;
+}
+
+// Project-inferred parser operations shared by text lines and spreadsheet rows.
+// Count only carriage returns within the supplied byte extent.
+static int countResourceRows(const char* data, int size)
+{
+    int rows = 0;
+    int bytesLeft = size;
+    const char* scan = data;
+    while (bytesLeft > 0) {
+        if (*scan == '\r')
+            ++rows;
+        ++scan;
+        --bytesLeft;
+    }
+    return rows;
+}
+
+static void collapseResourceQuotes(char* text)
+{
+    int length = strlen(text);
+    for (int i = 0; i < length; ++i) {
+        if (text[i] == '"') {
+            while (text[i + 1] == '"' && length > i) {
+                --length;
+                memcpy(text + i + 1, text + i + 2, length - i);
+            }
+        }
+    }
+}
+
 // Original: TTextResource::TTextResource; textresource.cpp:33
 DC_ADDRESS(0x163808, 0x50)
 TTextResource::TTextResource() : resource(0, RESOURCE_TYPE_NONE), m_data(0)
@@ -23,15 +68,7 @@ TTextResource::TTextResource(const char* name, int size, const char* data)
         return;
     memcpy(m_data, data, size);
 
-    int numStrings = 0;
-    int bytesLeft = size;
-    char* scan = m_data;
-    while (bytesLeft > 0) {
-        if (*scan == '\r')
-            ++numStrings;
-        ++scan;
-        --bytesLeft;
-    }
+    int numStrings = countResourceRows(m_data, size);
     m_text.resize(numStrings, 0);
 
     char* next = m_data;
@@ -59,15 +96,7 @@ TTextResource::TTextResource(const char* name, int size, const char* data)
         *end = 0;
         next += 2;
 
-        int length = strlen(*it);
-        for (int i = 0; i < length; ++i) {
-            if ((*it)[i] == '"') {
-                while ((*it)[i + 1] == '"' && length > i) {
-                    --length;
-                    memcpy((*it) + i + 1, (*it) + i + 2, length - i);
-                }
-            }
-        }
+        collapseResourceQuotes(*it);
     }
 }
 
@@ -110,15 +139,7 @@ TSpreadsheetResource::TSpreadsheetResource(const char* name, int size,
         return;
     memcpy(m_data, data, size);
 
-    int numRows = 0;
-    int bytesLeft = size;
-    char* scan = m_data;
-    while (bytesLeft > 0) {
-        if (*scan == '\r')
-            ++numRows;
-        ++scan;
-        --bytesLeft;
-    }
+    int numRows = countResourceRows(m_data, size);
     m_spreadsheet.resize(numRows, 0);
 
     char* next = m_data;
@@ -128,7 +149,7 @@ TSpreadsheetResource::TSpreadsheetResource(const char* name, int size,
         *rowIt = row;
 
         int numColumns = 0;
-        scan = next;
+        char* scan = next;
         while (*scan != '\r') {
             if (*scan == '\t')
                 ++numColumns;
@@ -153,16 +174,7 @@ TSpreadsheetResource::TSpreadsheetResource(const char* name, int size,
             *next = 0;
             ++next;
 
-            int length = strlen(*cell);
-            for (int i = 0; i < length; ++i) {
-                if ((*cell)[i] == '"') {
-                    while ((*cell)[i + 1] == '"' && length > i) {
-                        --length;
-                        memcpy((*cell) + i + 1, (*cell) + i + 2,
-                               length - i);
-                    }
-                }
-            }
+            collapseResourceQuotes(*cell);
         }
         ++next;
     }
