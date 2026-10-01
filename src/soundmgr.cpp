@@ -56,7 +56,7 @@ DATA(0x0069fe80) PCMWAVEFORMAT g_soundWaveFormat;
 DATA(0x00698a28) int g_skipDigitalDriverOpen;
 
 // Project-inferred shared gate and temporary-override operations. Global
-// no-sound and driver checks remain in the callers at their original stages.
+// no-sound and driver checks stay separate from the raw playback state.
 int soundManager::getPlaybackState() const
 {
     return m_playSounds;
@@ -77,6 +77,18 @@ int soundManager::enablePlayback()
 bool soundManager::isPlaybackAllowed() const
 {
     return m_playSounds != 0 || g_goSolo;
+}
+
+// Project-inferred driver gate, independent of playback overrides.
+bool soundManager::canUseDigitalSound() const
+{
+    return !g_noSound && m_ds;
+}
+
+// Preserve the no-sound, driver and playback short-circuit order.
+bool soundManager::canPlayDigitalSound() const
+{
+    return canUseDigitalSound() && isPlaybackAllowed();
 }
 
 VA(0x005994b0, 0x210)
@@ -287,6 +299,13 @@ int soundManager::open(int newPriority)
     return 0;
 }
 
+// Project-inferred sample-bank operation; callers own locks and stop policy.
+void soundManager::endAllSamples()
+{
+    for (int i = 0; i < m_sampleNum; ++i)
+        AIL_end_sample(m_sampleHandles[i]);
+}
+
 VA(0x00599a90, 0xF1)
 DC_ADDRESS(0x14b270, 0x34)
 MAC_ADDRESS(0x2187f4, 0xf4)
@@ -311,8 +330,7 @@ void soundManager::close()
                 AIL_close_stream(g_mp3Stream);
                 g_mp3Stream = 0;
             }
-            for (int i = 0; i < m_sampleNum; ++i)
-                AIL_end_sample(m_sampleHandles[i]);
+            endAllSamples();
             m_samples = 0;
             AIL_serve();
             Sleep(1);
@@ -331,11 +349,7 @@ void soundManager::close()
 VA(0x00599b90, 0xAB)
 void soundManager::resumeSamples()
 {
-    if (g_noSound)
-        return;
-    if (!m_ds)
-        return;
-    if (!isPlaybackAllowed())
+    if (!canPlayDigitalSound())
         return;
     EnterCriticalSection(&m_sectionSoundCall);
     for (int i = 0; i < m_sampleNum; i++)
@@ -348,11 +362,7 @@ void soundManager::resumeSamples()
 VA(0x00599c40, 0x14B)
 void soundManager::pauseSamples()
 {
-    if (g_noSound)
-        return;
-    if (!m_ds)
-        return;
-    if (!isPlaybackAllowed())
+    if (!canPlayDigitalSound())
         return;
     EnterCriticalSection(&m_sectionSoundCall);
     for (int i = 0; i < m_sampleNum; i++) {
@@ -377,16 +387,11 @@ DC_ADDRESS(0x14b2a8, 0x18)
 MAC_ADDRESS(0x2188f0, 0x78)
 void soundManager::stopAllSamples(int stopMusicToo)
 {
-    if (g_noSound)
-        return;
-    if (!m_ds)
-        return;
-    if (!isPlaybackAllowed())
+    if (!canPlayDigitalSound())
         return;
     memset(g_sampleWasPlaying, 0, sizeof(g_sampleWasPlaying));
     EnterCriticalSection(&m_sectionSoundCall);
-    for (int i = 0; i < m_sampleNum; i++)
-        AIL_end_sample(m_sampleHandles[i]);
+    endAllSamples();
     LeaveCriticalSection(&m_sectionSoundCall);
     if (stopMusicToo)
         stopMP3();
@@ -397,9 +402,7 @@ DC_ADDRESS(0x14b2c0, 0x18)
 MAC_ADDRESS(0x218968, 0x50)
 void soundManager::stopSample(ds_memsample* inSample)
 {
-    if (g_noSound)
-        return;
-    if (!m_ds)
+    if (!canUseDigitalSound())
         return;
     if (!inSample)
         return;
@@ -429,11 +432,7 @@ DC_ADDRESS(0x14b37c, 0xb0)
 MAC_ADDRESS(0x218a48, 0x100)
 void soundManager::modifySample(ds_memsample* inSample, short functionId, long value)
 {
-    if (g_noSound)
-        return;
-    if (!m_ds)
-        return;
-    if (!isPlaybackAllowed())
+    if (!canPlayDigitalSound())
         return;
     if (!m_samples)
         return;
@@ -462,15 +461,12 @@ void soundManager::modifySample(ds_memsample* inSample, short functionId, long v
 // every other operation retains the initialized zero result.
 VA(0x0059a030, 0x87)
 MAC_ADDRESS(0x218b48, 0xac)
-// Combining the three early guards is not a callback fix: the retained
-// helper drops from 100% to 70.33%, while waitEndSampleThread stays 92%.
-// Moving its zero-result initialization across the early guards also loses
-// the retained exact body without improving the callback.
+// Earlier combined-guard and moved-result-initialization probes changed
+// code generation. Those observations predate the shared driver gate below;
+// this extraction has not been compiled or measured.
 int soundManager::getSampleInfo(ds_memsample* inSample, short operation)
 {
-    if (g_noSound)
-        return 0;
-    if (!m_ds)
+    if (!canUseDigitalSound())
         return 0;
     if (!inSample)
         return 0;
@@ -494,11 +490,7 @@ DC_ADDRESS(0x14b42c, 0xa8)
 MAC_ADDRESS(0x218bf4, 0xcc)
 void soundManager::adjustSoundVolumes()
 {
-    if (g_noSound)
-        return;
-    if (!m_ds)
-        return;
-    if (!isPlaybackAllowed())
+    if (!canPlayDigitalSound())
         return;
     for (int i = 1; i < m_sampleNum; i++) {
         ds_memsample* handle = m_sampleHandles[i];
@@ -538,7 +530,7 @@ DC_ADDRESS(0x14b528, 0x11c)
 MAC_ADDRESS(0x218d54, 0x194)
 ds_memsample* soundManager::memorySample(sample* samplePointer)
 {
-    if (!g_noSound && m_ds && isPlaybackAllowed() && g_config.m_soundVolume && samplePointer
+    if (canPlayDigitalSound() && g_config.m_soundVolume && samplePointer
         && m_samples && samplePointer->m_memSample.m_memVolume) {
         SoundChannelRange* range = &g_soundChannels[samplePointer->m_memSample.m_memCindex];
         EnterCriticalSection(&m_sectionSoundCall);
@@ -859,11 +851,7 @@ DC_ADDRESS(0x14b924, 0x50)
 MAC_ADDRESS(0x21938c, 0x344)
 void soundManager::startMP3(const char* filename, int loopCount, unsigned char stopSamples)
 {
-    if (g_noSound)
-        return;
-    if (!m_ds)
-        return;
-    if (!isPlaybackAllowed())
+    if (!canPlayDigitalSound())
         return;
     if (!g_config.m_musicVolume)
         return;

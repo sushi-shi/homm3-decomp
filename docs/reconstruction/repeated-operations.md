@@ -2887,6 +2887,43 @@ covering nine call sites. No native identities, inline qualifiers, field-layout
 changes or extra reset semantics are introduced. No builds, tests or
 matching-score investigations were run.
 
+## Digital-sound gates and Bink frame operations
+
+Seven digital playback paths share private canPlayDigitalSound: sample resume,
+pause, stop-all, modification, volume adjustment, allocation/playback and MP3
+start. It nests private canUseDigitalSound before the existing isPlaybackAllowed,
+retaining the no-sound, driver, raw playback-state and solo-mode short-circuit
+order. stopSample and getSampleInfo share only the driver gate and retain their
+subsequent null-handle checks; they do not acquire a playback-policy restriction.
+Music-volume adjustment retains its existing gate without a driver requirement.
+All locks, extra sample/volume guards and result initialization remain at their
+original stages. Earlier compiler observations are not validation of this pass.
+
+Shutdown and stopAllSamples share private endAllSamples, ending every handle in
+index order. Each caller retains its own locks, remembered-playing flags,
+music-stop policy and service/shutdown sequence. The helper does not clear the
+sample count or playback state, and retains fresh count/handle reads per loop.
+
+Bink's two selected-track draw branches share file-static drawCurrentTrackFrame,
+which decodes only frame one before copying. Restart, normal advancement and
+second-track fade-in share decodeTrackFrame for unconditional decode-and-copy.
+Both operations nest copyTrackFrame, preserving the shared destination, pitch,
+height and format reads after decoding. Handle reference parameters preserve
+the original caller's global-slot rereads or local video snapshot across SDK
+calls. Track priority, readiness/paused gates, restart positioning, fades and
+dirty-rectangle publication stay with their callers.
+
+The two closeBink tracks share file-static closeTrack: guard, pause, then close.
+The secondary track is still read after closing the primary. All final handle
+and playback-state stores remain after both closures in their original order;
+closing does not acquire setTrackPaused's extra state write. End-of-primary
+transition retains its distinct service/close/null sequence without a pause.
+
+These seven helper names and ordinary source bodies are project inferences.
+Native public state, layouts, SDK interfaces and virtual slots are unchanged;
+no native identities or inline qualifiers are added. No builds, tests or
+matching-score investigations were run.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

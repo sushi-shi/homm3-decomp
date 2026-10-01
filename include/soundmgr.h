@@ -186,6 +186,12 @@ public:
     void setPlaybackState(int state);
     int enablePlayback();
     bool isPlaybackAllowed() const;
+
+private:
+    // Project-inferred gates for paths that require the digital driver.
+    bool canUseDigitalSound() const;
+    bool canPlayDigitalSound() const;
+    void endAllSamples();
 };
 
 // Retail .bss 0x699290: non-zero suppresses every sound path (a
