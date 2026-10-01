@@ -28,6 +28,7 @@
 #include "monframeinfo.h"
 #include "palette.h"
 #include "path.h"
+#include "platform.h"
 #include "prefs.h"
 #include "resourcemanager.h"
 #include "sample.h"
@@ -200,7 +201,9 @@ void army::initClean()
     }
     m_roundsLeftBeforeVanish = -1;
     m_numSpellInfluences = 0;
-    memset(m_spellInfluence, 0, sizeof(m_spellInfluence));
+    // Mac 0x4907c retains the 0x144-byte clear; Windows 0x43d610
+    // expands the same operation into 0x51 zero dword stores.
+    ZeroMemory(m_spellInfluence, sizeof(m_spellInfluence));
     m_spellInfluenceQueue.clear();
     m_lastFidgetTime = GameTime::get();
     m_stdIcon = 0;
@@ -234,6 +237,10 @@ inline void army::waitSample(army::TSampleID which)
     }
 }
 
+// Older DC performs the hero's trait adjustments here. Mac 0x491d0 and
+// Windows retain heroFn004E6120 instead, which owns the upgrade, speed
+// and hit-point helper calls. Its traits pointer replaces DC's army::Is
+// receiver for the siege-weapon test (Mac 0x107400..0x107410).
 VA(0x0043d730, 0x17D)
 DC_ADDRESS(0x0439b0, 0x3ea)
 MAC_ADDRESS(0x049108, 0x1d8)
@@ -3848,6 +3855,10 @@ unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
 // resolved and rejected if it is missing or is this stack itself, and
 // then the stack either shoots or walks its facing around to a
 // direction that reaches the target.
+// DC 0x4a81e/0x4a834 calls GetAttackMask with criteria 0 and then 1/2,
+// discarding both results before can_shoot. Mac 0x51b90..0x51b94 goes
+// directly from the target store to canShoot; Complete 0x445aef expands
+// that predicate directly. Neither desktop body evaluates those masks.
 VA(0x00445a60, 0x26D)
 DC_ADDRESS(0x04a7ac, 0x10a)
 MAC_ADDRESS(0x051ad4, 0x1b4)

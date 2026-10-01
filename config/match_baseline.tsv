@@ -581,7 +581,7 @@ army	?getTotalHitPoints@army@@QBEJE@Z	100.0000	100.0000	100.0000	0x43080	tokens1
 army	?getUnitCombatValue@army@@QBENJJEPBV1@@Z	93.4194	93.4194	100.0000	0x42a50	tokens1:543e2e322f21
 army	?goBerserk@army@@QAEXXZ	73.9711	100.0000	100.0000	0x456d0	tokens1:9c9cb0a0dbc7
 army	?init@army@@QAEXHHPBVhero@@HHHH@Z	100.0000	100.0000	100.0000	0x3d8b0	tokens1:c2dbe8434e40
-army	?initClean@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3d5c0	tokens1:6acaeb2c4b06
+army	?initClean@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3d5c0	tokens1:23f97b26169a
 army	?initialize@army@@QAEXW4TCreatureType@@JPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x3d730	tokens1:cac92755697c
 army	?isAdjacent@army@@QBEEH@Z	100.0000	100.0000	100.0000	0x466c0	tokens1:2bceb9939791
 army	?isEnemy@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x42880	tokens1:945f070aa6bb
