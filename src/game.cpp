@@ -8967,14 +8967,16 @@ VA(0x004cafd0, 0xD14)
 DC_ADDRESS(0x0b7560, 0x1064)
 MAC_ADDRESS(0x0e2414, 0xd20)  // retail body + typed catch + continuation/tables
 int game::transmitSaveGame(int toWho, int thisPlayerDead,
-                           unsigned char inGame, unsigned char makeOrig)
+                           bool inGame, bool makeOrig)
 {
     CNetMsgHandlerPause netMsgHandlerPause;
     g_advManager->trimLoopingSounds(4);
 
     CGameTransmitMainMsg* gameTransmitMainMsg =
         CGameTransmitMainMsg::createMsg(GAME_TRANSMIT_PAYLOAD_SIZE);
-    unsigned char isDiff = 0;
+    // Inferred bool local: only 0/1 stores; retail forwards directly to the
+    // independently proven Boolean CGameTransmitInitMsg constructor formal.
+    bool isDiff = false;
     unsigned long diffSize = 0;
     int changeSounds = g_soundManager->m_playSounds;
     g_soundManager->m_playSounds = 1;

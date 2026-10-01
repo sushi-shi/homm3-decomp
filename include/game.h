@@ -1360,8 +1360,9 @@ public:
     // Open hands it the formatted turn banner and the acting game position
     // when the protocol is hotseat.
     void waitForPlayer(char* text, int gamePos);  // 0x4ca840
+    // Original TransmitSaveGame QAAHHH_N0 proves both flag formals are bool.
     int transmitSaveGame(int toWho, int thisPlayerDead,
-                         unsigned char inGame, unsigned char makeOrig);
+                         bool inGame, bool makeOrig);
     // DC game.cpp:10587 names the received-save body. Retail's transmit-init
     // handlers independently prove the five arguments and 0x4cbd40 entry.
     // Original ReceiveSaveGame QAAHHHH_N0 proves the final two flags are bool.
