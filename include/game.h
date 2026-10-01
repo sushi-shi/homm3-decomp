@@ -1488,7 +1488,8 @@ public:
     // The random-object pass and the monster roll it drives. Both bodies
     // are claimed in game.cpp.
     TCreatureType getRandomMonster(int minLevel, int maxLevel);  // 0x4c92c0
-    int computeDailyGold(int player, unsigned char includeSilo);
+    // Original ComputeDailyGold public QAAHH_N proves the silo flag is bool.
+    int computeDailyGold(int player, bool includeSilo);
     void cancelComputerScreen();
     void makeTerrainVisible(int whichPlayer, unsigned short visMask);
     // 0x4c9990. town.obj needs this declaration for
