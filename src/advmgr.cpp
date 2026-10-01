@@ -2083,8 +2083,7 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
     if (!point.isValid())
         return;
 
-    m_lastHoverX = m_lastMapHover.m_x - m_radarOrigin.m_x;
-    m_lastHoverY = m_lastMapHover.m_y - m_radarOrigin.m_y;
+    refreshHoverScreenCoordinates();
 
     unsigned char visible =
         (getMapExtra(point)
@@ -2219,8 +2218,7 @@ void advManager::processMapSelect2(const message& msg, type_point& triggerPoint,
     type_point point = m_lastMapHover;
     if (!point.isValid())
         return;
-    m_lastHoverX = m_lastMapHover.m_x - m_radarOrigin.m_x;
-    m_lastHoverY = m_lastMapHover.m_y - m_radarOrigin.m_y;
+    refreshHoverScreenCoordinates();
     unsigned char visible = (getMapExtra(point) & playerBit) != 0;
     NewmapCell* currCell = getCell(point);
     int localPlayer = g_game->getLocalPlayerGamePos();
@@ -3420,6 +3418,41 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
     }
 }
 
+// Project-inferred coordinate refresh shared by both map-selection handlers.
+// Read the current hover point after the caller's validity check.
+void advManager::refreshHoverScreenCoordinates()
+{
+    m_lastHoverX = m_lastMapHover.m_x - m_radarOrigin.m_x;
+    m_lastHoverY = m_lastMapHover.m_y - m_radarOrigin.m_y;
+}
+
+// Project-inferred operations shared by active and waiting hover handling.
+// Preserve the command reset, screen-cell cache and packed map-point stores.
+void advManager::beginMapHover(int x, int y)
+{
+    m_advCommand = -1;
+    m_lastHoverX = x;
+    m_lastHoverY = y;
+    m_lastMapHover.m_x = m_radarOrigin.m_x + x;
+    m_lastMapHover.m_y = m_radarOrigin.m_y + y;
+    m_lastMapHover.m_z = m_radarOrigin.m_z;
+}
+
+void advManager::processOutsideMapHover(int mouseX, int mouseY)
+{
+    if (g_mouseManager->getFrame() < HOVER_SCROLL_POINTER_FIRST
+        || g_mouseManager->getFrame() > HOVER_SCROLL_POINTER_LAST
+        || !mouseInScrollZone())
+        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    m_advWindow->processHover(mouseX, mouseY);
+}
+
+void advManager::clearRejectedHoverPath()
+{
+    g_searchArray->clearPath();
+    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+}
+
 // E:\gamedcs\advmgr.cpp:4385
 // DC records mouseManager::GetFrame in the scroll-zone fallback. Calling its
 // shared inline getter changes VC6's inliner decision at the earlier GetCell:
@@ -3436,12 +3469,7 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
     if (inMapArea(mouseX, mouseY)) {
         int rx = mouseX / 32;
         int ry = mouseY / 32;
-        m_advCommand = -1;
-        m_lastHoverX = rx;
-        m_lastHoverY = ry;
-        m_lastMapHover.m_x = m_radarOrigin.m_x + rx;
-        m_lastMapHover.m_y = m_radarOrigin.m_y + ry;
-        m_lastMapHover.m_z = m_radarOrigin.m_z;
+        beginMapHover(rx, ry);
 
         int thisPlayerBit = 1 << g_game->getLocalPlayerGamePos();
         playerData* thisPlayer = g_game->getLocalPlayer();
@@ -3496,12 +3524,7 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
         return 1;
     }
 
-    if (g_mouseManager->getFrame() < HOVER_SCROLL_POINTER_FIRST
-        || g_mouseManager->getFrame() > HOVER_SCROLL_POINTER_LAST
-        || !mouseInScrollZone())
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-
-    m_advWindow->processHover(mouseX, mouseY);
+    processOutsideMapHover(mouseX, mouseY);
     return 1;
 }
 
@@ -3661,12 +3684,7 @@ int advManager::processHover(int mouseX, int mouseY)
         int rx = mouseX / 32;
         int ry = mouseY / 32;
         if (m_lastHoverX != rx || m_lastHoverY != ry) {
-        m_advCommand = -1;
-        m_lastHoverX = rx;
-        m_lastHoverY = ry;
-        m_lastMapHover.m_x = m_radarOrigin.m_x + rx;
-        m_lastMapHover.m_y = m_radarOrigin.m_y + ry;
-        m_lastMapHover.m_z = m_radarOrigin.m_z;
+        beginMapHover(rx, ry);
 
         if (!m_lastMapHover.isValid()
             || !(getMapExtra(m_lastMapHover) & g_mapVisibilityBit)) {
@@ -3752,8 +3770,7 @@ int advManager::processHover(int mouseX, int mouseY)
                 }
             }
 
-            g_searchArray->clearPath();
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            clearRejectedHoverPath();
             return 1;
         }
 
@@ -3763,14 +3780,12 @@ int advManager::processHover(int mouseX, int mouseY)
                 && (currCell->m_type != HERO || !currCell->m_isTrigger)
                 && (currCell->m_type != BOAT || !currCell->m_isTrigger)
                 && (currCell->m_type != SHIPWRECK || !currCell->m_isTrigger)) {
-                g_searchArray->clearPath();
-                g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+                clearRejectedHoverPath();
                 return 1;
             }
         } else if (currCell->m_groundSet != eTerrainWater
                    && currCell->m_type != ANCHOR_POINT) {
-            g_searchArray->clearPath();
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            clearRejectedHoverPath();
             return 1;
         }
 
@@ -3851,11 +3866,7 @@ int advManager::processHover(int mouseX, int mouseY)
         }
         }
     } else {
-        if (g_mouseManager->getFrame() < HOVER_SCROLL_POINTER_FIRST
-            || g_mouseManager->getFrame() > HOVER_SCROLL_POINTER_LAST
-            || !mouseInScrollZone())
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-        m_advWindow->processHover(mouseX, mouseY);
+        processOutsideMapHover(mouseX, mouseY);
     }
     return 1;
 }

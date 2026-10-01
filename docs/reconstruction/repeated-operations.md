@@ -1583,6 +1583,45 @@ Both helper names and source placement are project inferences from repeated
 flows in the same TU. No native address, explicit inline qualifier, layout or
 virtual slot is introduced.
 
+## Adventure hover and recruitment setup
+
+The active and waiting adventure hover handlers share `beginMapHover()` for
+command invalidation, screen-cell caching and ordered packed map-point writes.
+The active handler still skips unchanged screen cells; waiting hover still
+refreshes every accepted call. Their off-map paths share
+`processOutsideMapHover()`, retaining the short-circuit cursor-frame/scroll-zone
+tests before forwarding the original pixel coordinates to the window. The three
+rejected-path branches share `clearRejectedHoverPath()`: the existing canonical
+path clear runs before a fresh mouse-manager lookup and pointer reset. Each
+caller keeps its original return and guards.
+
+Both map-selection handlers share `refreshHoverScreenCoordinates()` after
+validating their copied point. The helper reads the current hover/origin fields,
+as before. `forceNewHover()` retains its X-only invalidation and local-human
+gate; command completion and scrolling retain their distinct cache writes.
+Cached native types record public `advCommand`, `last_map_hover`, `lastHoverX`
+and `lastHoverY` (Dreamcast `advManager` 0x1a68, field list 0x351c), so their
+visibility stays public.
+
+The army-group and hero recruitment constructors share `initializeNonTownSource()`
+and `initializeCreatureChoices()`. The former sets the existing -1 source tag,
+view-only flag and town-screen flag; the latter initializes the selected creature,
+borrowed availability pointer, selected slot and all four choices/count pointers
+in the original order. The distinct hero/group owner assignments stay between
+these operations. Town recruitment keeps its dwelling and upgraded/base creature
+rules. All three constructors share `prepareInitialCost()`, which writes timer
+zero to the current time plus 100 before calling the existing `updateCost()`.
+It does not initialize quantity, sprite frames or other untouched state.
+
+Three unavailable/remote-player paths share `disablePurchaseButtons()`, preserving
+accept-before-maximum ordering and fresh window reads across the virtual calls.
+The update path still disables the slider afterward; initial accept-only disabling
+and conditional enable predicates remain separate. Dreamcast recruitUnit field
+list 0x5223 records the affected source flags, choice fields and owner pointers as
+public. Layout, borrowed pointer ownership and virtual interfaces are unchanged.
+All eight new private helper names and ordinary source bodies are project
+inferences from repeated same-TU operations, not claimed original symbols.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

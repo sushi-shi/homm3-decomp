@@ -332,6 +332,14 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
         102, 132, slot + 0x21a, g_systemPalette->m_data[31], 0x400));
 }
 
+// Project-inferred pair shared by opening and remote-player updates.
+// Re-read the window after the first virtual enable call.
+void recruitUnit::disablePurchaseButtons()
+{
+    g_recruitWindow->m_acceptButton->enable(0);
+    g_recruitWindow->m_maximumButton->enable(0);
+}
+
 VA(0x0054fea0, 0x42E)
 DC_ADDRESS(0x11994c, 0x398)
 MAC_ADDRESS(0x14eec8, 0x438)
@@ -439,8 +447,7 @@ int recruitUnit::open(int newPriority)
 
     getMonsterCost(m_monsterType, resCost);
     if (*m_numAvail == 0 || g_currentPlayer->m_resources[6] < resCost[6]) {
-        g_recruitWindow->m_acceptButton->enable(0);
-        g_recruitWindow->m_maximumButton->enable(0);
+        disablePurchaseButtons();
     }
 
     g_recruitSavedMenu = g_currMenu;
@@ -453,8 +460,7 @@ int recruitUnit::open(int newPriority)
         DATA_COMPGEN(0x00682a18, recruitManagerName, "recruitManager"));
 
     if (g_remoteOn && !g_currentPlayer->isLocalHuman()) {
-        g_recruitWindow->m_acceptButton->enable(0);
-        g_recruitWindow->m_maximumButton->enable(0);
+        disablePurchaseButtons();
     }
     return 0;
 }
@@ -607,8 +613,7 @@ void recruitUnit::update(bool newMonster, long slot)
     // network-game flag. Renaming a 275-reference global is the
     // owning lane's call, so the call site keeps the declared name.
     if (g_remoteOn && !g_currentPlayer->isLocalHuman()) {
-        g_recruitWindow->m_acceptButton->enable(0);
-        g_recruitWindow->m_maximumButton->enable(0);
+        disablePurchaseButtons();
         g_recruitWindow->m_quantitySlider->enable(0);
     } else {
         g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0 && m_maxAvail > 0 && !m_viewOnly);
@@ -1027,6 +1032,40 @@ void recruitUnit::updateCost()
     }
 }
 
+// Project-inferred constructor operations. Retain the original store order,
+// borrowed count pointers and timer write before the native cost calculation.
+void recruitUnit::initializeNonTownSource()
+{
+    m_type = RECRUIT_SOURCE_NONE;
+    m_viewOnly = 0;
+    m_inTownMainScreen = 0;
+}
+
+void recruitUnit::initializeCreatureChoices(
+    TCreatureType monType1, short* numMon1,
+    TCreatureType monType2, short* numMon2,
+    TCreatureType monType3, short* numMon3,
+    TCreatureType monType4, short* numMon4)
+{
+    m_monsterType = monType1;
+    m_numAvail = numMon1;
+    m_selectedPosition = 0;
+    m_monType1 = monType1;
+    m_monType2 = monType2;
+    m_monType3 = monType3;
+    m_monType4 = monType4;
+    m_available[0] = numMon1;
+    m_available[1] = numMon2;
+    m_available[2] = numMon3;
+    m_available[3] = numMon4;
+}
+
+void recruitUnit::prepareInitialCost()
+{
+    g_timers[0] = GameTime::get() + 100;
+    updateCost();
+}
+
 // E:\gamedcs\recruit.cpp:1120
 // `ret 0x28` = 40 argument bytes = the ten Dreamcast parameters, and
 // each one lands on the field the DC roster names: [ebp+8] -> +0x98,
@@ -1046,25 +1085,13 @@ recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
     TCreatureType monType3, short* numMon3,
     TCreatureType monType4, short* numMon4)
 {
-    m_type = -1;
-    m_viewOnly = 0;
-    m_inTownMainScreen = 0;
+    initializeNonTownSource();
     m_thisHero = 0;
     m_currArmyGroup = newGroup;
     m_currArmyGroupIsTownGarrison = groupIsTownGarrison;
-    m_monsterType = monType1;
-    m_numAvail = numMon1;
-    m_selectedPosition = 0;
-    m_monType1 = monType1;
-    m_monType2 = monType2;
-    m_monType3 = monType3;
-    m_monType4 = monType4;
-    m_available[0] = numMon1;
-    m_available[1] = numMon2;
-    m_available[2] = numMon3;
-    m_available[3] = numMon4;
-    g_timers[0] = GameTime::get() + 100;
-    updateCost();
+    initializeCreatureChoices(monType1, numMon1, monType2, numMon2,
+                              monType3, numMon3, monType4, numMon4);
+    prepareInitialCost();
 }
 
 // E:\gamedcs\recruit.cpp:1158
@@ -1084,25 +1111,13 @@ recruitUnit::recruitUnit(hero* thisHero,
 {
     // DC lines 1159..1179 and Mac 0:0x1508c4..0x15090c put the source
     // fields in this order after baseManager construction.
-    m_type = -1;
-    m_viewOnly = 0;
-    m_inTownMainScreen = 0;
+    initializeNonTownSource();
     m_thisHero = thisHero;
     m_currArmyGroup = 0;
     m_currArmyGroupIsTownGarrison = 0;
-    m_monsterType = monType1;
-    m_numAvail = numMon1;
-    m_selectedPosition = 0;
-    m_monType1 = monType1;
-    m_monType2 = monType2;
-    m_monType3 = monType3;
-    m_monType4 = monType4;
-    m_available[0] = numMon1;
-    m_available[1] = numMon2;
-    m_available[2] = numMon3;
-    m_available[3] = numMon4;
-    g_timers[0] = GameTime::get() + 100;
-    updateCost();
+    initializeCreatureChoices(monType1, numMon1, monType2, numMon2,
+                              monType3, numMon3, monType4, numMon4);
+    prepareInitialCost();
 }
 
 VA(0x00551560, 0x14B)
@@ -1133,8 +1148,7 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
                                           + newDwellingIndex - TOWN_DWELLING_COUNT];
         m_available[1] = m_numAvail;
     }
-    g_timers[0] = GameTime::get() + 100;
-    updateCost();
+    prepareInitialCost();
 }
 
 // E:\gamedcs\recruit.cpp:1219. Dreamcast and Mac retain this constructor;

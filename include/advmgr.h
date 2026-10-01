@@ -1451,6 +1451,11 @@ public:
     unsigned short* getRouteArrayPtr(int x, int y, int z);
 
 private:
+    // Project-inferred repeated hover transitions; native-public fields stay public.
+    void beginMapHover(int x, int y);
+    void refreshHoverScreenCoordinates();
+    void processOutsideMapHover(int mouseX, int mouseY);
+    void clearRejectedHoverPath();
     void garrisonQuickView(int id, int x, int y);
     type_adventure_cursor getGarrisonCursor(NewmapCell* currCell);
     type_adventure_cursor getNormalCursor(NewmapCell* currCell);

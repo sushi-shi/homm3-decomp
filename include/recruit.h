@@ -204,6 +204,15 @@ public:
     void setRolloverText(int codeY);
 
 private:
+    // Project-inferred constructor setup; town choices keep their distinct flow.
+    void initializeNonTownSource();
+    void initializeCreatureChoices(
+        TCreatureType monType1, short* numMon1,
+        TCreatureType monType2, short* numMon2,
+        TCreatureType monType3, short* numMon3,
+        TCreatureType monType4, short* numMon4);
+    void prepareInitialCost();
+    void disablePurchaseButtons();
     // Project-inferred operations shared by the four creature cards and
     // quantity edits. DC recruitUnit 0x3f7f / fields 0x5223 records the
     // selected creature, position and quantity as public; retain that access.
