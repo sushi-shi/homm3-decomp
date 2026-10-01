@@ -12,12 +12,17 @@
 #include "window.h"
 #include "winmgr.h"
 
+// Native SetColor (TextWdgt.h:78) owns the same single color store as
+// these constructors and initialize; Mac 0x1b1530 expands that operation.
+// The canonical calls infer the source boundary, not its original spelling.
+// VC6 retains string::max_size/_Eos in the parameterized constructor after
+// this recovery (100 -> 92.58%); all other scored TU bodies remain exact.
 // Original: textWidget::textWidget; textwdgt.cpp:36
 DC_ADDRESS(0x164c14, 0x6c)
 textWidget::textWidget() : widget(0, 0, 0, 0, 0, 0)
 {
     m_font = 0;
-    m_color = font::PRIMARY;
+    setColor(font::PRIMARY);
     m_backColor = 0;
     m_justify = font::CENTER_JUSTIFIED;
     m_style = 8;
@@ -62,7 +67,7 @@ textWidget::textWidget(int x, int y, int w, int h, const char* text,
     if (text) {
         m_text = text;
     }
-    m_color = color;
+    setColor(color);
     m_backColor = backColor;
     m_justify = justify;
 }
@@ -91,7 +96,7 @@ void textWidget::initialize(int x, int y, int w, int h, int id, int style,
         m_text = text;
     }
     m_justify = justify;
-    m_color = color;
+    setColor(color);
 }
 
 // E:\gamedcs\textwdgt.cpp:120
