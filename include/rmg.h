@@ -92,9 +92,11 @@ public:
 };
 
 class type_spell_scroll_def : public type_treasure_def {
-public:
+private:
     int m_spellLevel;
+    bool canChooseSpell(int spell) const;
 
+public:
     type_spell_scroll_def(int spellLevel, int value);
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
@@ -2213,6 +2215,7 @@ public:
 private:
     void setKeyTentDisabled(int color, unsigned char disabled);
     bool isQuestArtifactAvailable(int artifact) const;
+    unsigned int findObjectPrototypeIndex(int objectType, int subtype) const;
     // Project-inferred shared normal/alternate treasure retry operation.
     bool tryPlaceTreasureRange(TRmgZone* zone, TRmgTreasureGroup& group,
                                unsigned char alternate,

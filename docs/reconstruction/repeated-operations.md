@@ -1534,6 +1534,31 @@ order and stored types are unchanged. Original RMG access control is unavailable
 this visibility and the four ordinary helper names/placements are project
 inferences from their owner operations and callers, not new native source facts.
 
+## RMG prototype lookup and spell-scroll filtering
+
+Four searches share private `findObjectPrototypeIndex()`: border-tent and
+border-guard lookup during border placement, guard lookup during key-tent
+placement, and the selected quest artifact's prototype lookup. It walks the
+existing vector in order, reads its live size and subtype getter, and returns
+the first match or the end index. Each caller keeps its index variable and
+original next operation: distinct -1/zero failures for missing border
+prototypes, zero for a missing key-tent guard, and the existing direct artifact
+indexing. Prototype reference-count replacement remains after that artifact
+lookup. The terrain-aware randomized `selectObjectPrototype()` and mine
+fallback selection remain separate operations.
+
+The spell-scroll definition now shares private `canChooseSpell()` between its
+count and selection passes. It retains flag-mask, nonzero-school and matching-
+level tests in that order. Both loops still scan spell indices 0 through 69,
+with one unchanged random draw between them and the original post-decrement
+selection rule. No cached candidate list or new empty-pool behavior is added.
+The definition's level is private owner state, preserving its stored type and
+position and its constructor assignment.
+
+Both names and ordinary owner-source bodies are project inferences. The new
+visibility does not claim original RMG access control; native entry points and
+virtual slot order are unchanged.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

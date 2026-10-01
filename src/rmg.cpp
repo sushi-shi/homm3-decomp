@@ -2446,6 +2446,14 @@ type_spell_scroll_def::type_spell_scroll_def(int newSpellLevel, int newValue)
     m_spellLevel = newSpellLevel;
 }
 
+// Project-inferred shared filter for the count and selection passes.
+bool type_spell_scroll_def::canChooseSpell(int spell) const
+{
+    return !(g_spellTraits[spell].m_flags & 0x2000)
+        && g_spellTraits[spell].m_schoolBits
+        && g_spellTraits[spell].m_level == m_spellLevel;
+}
+
 VA(0x00534ED0, 0xC3)
 MAC_ADDRESS(0x232b80, 0x108)
 type_object* type_spell_scroll_def::generate(TRmgObjectPropertiesRef* properties,
@@ -2454,16 +2462,12 @@ type_object* type_spell_scroll_def::generate(TRmgObjectPropertiesRef* properties
     int count = 0;
     int spell;
     for (spell = 0; spell < 70; ++spell) {
-        if (!(g_spellTraits[spell].m_flags & 0x2000)
-            && g_spellTraits[spell].m_schoolBits
-            && g_spellTraits[spell].m_level == m_spellLevel)
+        if (canChooseSpell(spell))
             ++count;
     }
     int selected = rand() % count;
     for (spell = 0; spell < 70; ++spell) {
-        if (!(g_spellTraits[spell].m_flags & 0x2000)
-            && g_spellTraits[spell].m_schoolBits
-            && g_spellTraits[spell].m_level == m_spellLevel) {
+        if (canChooseSpell(spell)) {
             if (selected-- <= 0)
                 break;
         }
@@ -5996,6 +6000,18 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
     return new rmgMonsterObject(properties, m_nextObjectId++, count);
 }
 
+// Project-inferred first-match lookup shared by key-tent and artifact paths.
+// Return the live vector's end index on failure; callers retain their policy.
+unsigned int type_random_map_generator::findObjectPrototypeIndex(
+    int objectType, int subtype) const
+{
+    unsigned int index = 0;
+    while (index < m_objectPrototypes[objectType].size()
+            && m_objectPrototypes[objectType][index]->m_prototype->getSubtype() != subtype)
+        ++index;
+    return index;
+}
+
 // Project-inferred key-tent state interface. Keep the availability write
 // before the live scan, and preserve size() as the all-colors-used sentinel.
 int type_random_map_generator::getNextKeyTentColor() const
@@ -6019,20 +6035,12 @@ int type_random_map_generator::placeBorderObject(
     TRmgMapPosition position, int count, TRmgZone* zone)
 {
     int color = getNextKeyTentColor();
-    int index = 0;
-    for (; index < m_objectPrototypes[BORDER_TENT].size(); ++index) {
-        if (m_objectPrototypes[BORDER_TENT][index]->m_prototype->getSubtype() == color)
-            break;
-    }
+    int index = findObjectPrototypeIndex(BORDER_TENT, color);
     if (index == m_objectPrototypes[BORDER_TENT].size())
         return -1;
     TRmgObjectPropertiesRef* tentProperties = m_objectPrototypes[BORDER_TENT][index];
 
-    index = 0;
-    for (; index < m_objectPrototypes[BORDER_GUARD].size(); ++index) {
-        if (m_objectPrototypes[BORDER_GUARD][index]->m_prototype->getSubtype() == color)
-            break;
-    }
+    index = findObjectPrototypeIndex(BORDER_GUARD, color);
     if (index == m_objectPrototypes[BORDER_GUARD].size())
         return 0;
     TRmgObjectPropertiesRef* guardProperties = m_objectPrototypes[BORDER_GUARD][index];
@@ -10203,10 +10211,7 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
         }
     }
     seerHut->m_artifact = artifact;
-    unsigned int prototypeIndex = 0;
-    while (prototypeIndex < m_objectPrototypes[ARTIFACT].size()
-        && m_objectPrototypes[ARTIFACT][prototypeIndex]->m_prototype->getSubtype() != artifact)
-        ++prototypeIndex;
+    unsigned int prototypeIndex = findObjectPrototypeIndex(ARTIFACT, artifact);
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[ARTIFACT][prototypeIndex];
     --object->m_properties->m_refCount;
     object->m_properties = properties;
@@ -10268,10 +10273,7 @@ MAC_ADDRESS(0x2508e8, 0x334) // anchor-callee 0x5338e0; retail-only
 unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, int maxValue)
 {
     int color = object->m_properties->m_prototype->getSubtype();
-    unsigned int index = 0;
-    while (index < m_objectPrototypes[BORDER_GUARD].size()
-        && m_objectPrototypes[BORDER_GUARD][index]->m_prototype->getSubtype() != color)
-        ++index;
+    unsigned int index = findObjectPrototypeIndex(BORDER_GUARD, color);
     if (index == m_objectPrototypes[BORDER_GUARD].size())
         return 0;
     TRmgZone* origin = m_zones[m_map.getMapItem(object->getPosition())->m_zoneState.m_zone];
