@@ -10072,6 +10072,15 @@ unsigned char type_random_map_generator::placeQuestGroup(
 // that same treasure-class bit at 0x54b4db/0x54b536. No separate data body.
 static const int g_rmgQuestArtifactClass = 2;
 
+// Counting and selecting must use the same quest-artifact eligibility rule.
+// Preserve the disabled/used/class short-circuit order and the separate
+// unchecked prototype lookup after selection. This is a cleanup helper.
+static inline bool isRmgQuestArtifact(int artifact, const unsigned char* usedArtifacts)
+{
+    return !g_artifactTraits[artifact].m_disabled && !usedArtifacts[artifact]
+        && (g_artifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass);
+}
+
 // rmgQuestArtifactObject::isWritable calls this member with its wrapper.
 // The pending hut, prototype reference counts, artifact traits at 0x660b68,
 // and generator masks fix ownership and selection semantics. Failure
@@ -10099,8 +10108,7 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
     int available = 0;
     int artifact;
     for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
-        if (!g_artifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
-            && (g_artifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass)) {
+        if (isRmgQuestArtifact(artifact, m_usedQuestArtifacts)) {
             ++available;
         }
     }
@@ -10110,8 +10118,7 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
         return 0;
     int selected = rand() % available;
     for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
-        if (!g_artifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
-            && (g_artifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass)) {
+        if (isRmgQuestArtifact(artifact, m_usedQuestArtifacts)) {
             if (selected-- <= 0)
                 break;
         }
