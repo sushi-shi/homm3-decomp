@@ -7403,6 +7403,24 @@ void type_random_map_generator::placePrimaryTown(TRmgZone* zone)
         tryPlacePrimaryTown(zone, alignment, -1, 0);
 }
 
+// Initialize density-driven categories and accumulate the positive-density
+// sum and product used for spacing and stride sizes. Disabled categories
+// leave both accumulators untouched.
+static inline void initializeRmgDensityCategories(const int* densities,
+    int categoryCount, unsigned char* finished, int& totalDensity, int& densityProduct)
+{
+    for (int category = 0; category < categoryCount; ++category) {
+        int density = densities[category];
+        if (density <= 0) {
+            finished[category] = 1;
+        } else {
+            totalDensity += density;
+            finished[category] = 0;
+            densityProduct *= density;
+        }
+    }
+}
+
 // Stride scheduling chooses the unfinished category with the lowest weighted
 // count. A strict comparison keeps the first category on ties. Callers advance
 // by densityProduct / density, retaining retail's integer product and rounding.
@@ -7478,19 +7496,11 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
         slot->m_townPlacement[RMG_TOWN_NEUTRAL_OPTION_COUNT], slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT] };
     int countSteps[4];
     unsigned char finished[4];
-    for (int category = 0; category < 4; ++category) {
-        if (densities[category] <= 0) {
-            finished[category] = 1;
-        } else {
-            totalDensity += densities[category];
-            finished[category] = 0;
-            densityProduct *= densities[category];
-        }
-    }
+    initializeRmgDensityCategories(densities, 4, finished, totalDensity, densityProduct);
     if (!totalDensity)
         return;
     int spacing = static_cast<int>(sqrt(static_cast<double>(82944 / totalDensity)));
-    for (category = 0; category < 4; ++category) {
+    for (int category = 0; category < 4; ++category) {
         if (densities[category] > 0) {
             countSteps[category] = densityProduct / densities[category];
             weightedCounts[category] *= countSteps[category];
@@ -7891,22 +7901,14 @@ void type_random_map_generator::placeExtraMines(TRmgZone* zone)
     unsigned char finished[7];
     int totalDensity = 0;
     int densityProduct = 1;
-    for (int resource = 0; resource < 7; ++resource) {
-        int density = slot->m_mineDensities[resource];
-        if (density <= 0) {
-            finished[resource] = 1;
-        } else {
-            totalDensity += density;
-            finished[resource] = 0;
-            densityProduct *= density;
-        }
-    }
+    initializeRmgDensityCategories(slot->m_mineDensities, 7,
+        finished, totalDensity, densityProduct);
     if (!totalDensity)
         return;
     int spacing = sqrt(static_cast<double>(82944 / totalDensity));
     int countSteps[7];
     int weightedCounts[7];
-    for (resource = 0; resource < 7; ++resource) {
+    for (int resource = 0; resource < 7; ++resource) {
         if (slot->m_mineDensities[resource] > 0) {
             countSteps[resource] = densityProduct / slot->m_mineDensities[resource];
             weightedCounts[resource] = slot->m_mineCounts[resource] * countSteps[resource];
@@ -8612,6 +8614,24 @@ static inline bool isRmgTreasureBandEnabled(const TRmgTreasureRange& range)
     return range.m_maximum >= 100 && range.m_density > 0;
 }
 
+// Retry one treasure-band shape, releasing each assembled group whose map
+// placement fails. The caller retains the group across ordinary/compact
+// passes and advances the scheduler only after this complete attempt batch.
+static inline unsigned char tryPlaceRmgTreasureBand(
+    type_random_map_generator* generator, TRmgZone* zone, TRmgTreasureGroup* group,
+    unsigned char alternate, const TRmgTreasureRange& range, int spacing)
+{
+    for (int attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
+        if (generator->assembleTreasureGroup(zone, group, alternate,
+                range.m_minimum, range.m_maximum)) {
+            if (generator->placeTreasureGroup(group, zone, spacing))
+                return 1;
+            discardRmgTreasureGroup(group);
+        }
+    }
+    return 0;
+}
+
 VA(0x00547360, 0x460)
 MAC_ADDRESS(0x24b6e8, 0x358)
 void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
@@ -8649,24 +8669,9 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
             break;
         weightedCounts[selected] += countSteps[selected];
         TRmgTreasureRange& range = slot->m_treasure[selected];
-        int attempt;
-        for (attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
-            if (assembleTreasureGroup(zone, &group, 0, range.m_minimum, range.m_maximum)) {
-                if (placeTreasureGroup(&group, zone, spacing))
-                    break;
-                discardRmgTreasureGroup(&group);
-            }
-        }
-        if (attempt < RMG_TREASURE_ATTEMPTS)
+        if (tryPlaceRmgTreasureBand(this, zone, &group, 0, range, spacing))
             continue;
-        for (attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
-            if (assembleTreasureGroup(zone, &group, 1, range.m_minimum, range.m_maximum)) {
-                if (placeTreasureGroup(&group, zone, spacing))
-                    break;
-                discardRmgTreasureGroup(&group);
-            }
-        }
-        if (attempt == RMG_TREASURE_ATTEMPTS)
+        if (!tryPlaceRmgTreasureBand(this, zone, &group, 1, range, spacing))
             finished[selected] = 1;
     }
 }
@@ -9009,6 +9014,28 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     }
 }
 
+// This scan deliberately admits x == width. Preserve the retail river-coast
+// policy separately from containsXY; correcting it would change generation.
+static inline bool isOutsideRmgRiverCoastScan(
+    const TRmgMapPosition& point, const type_random_map& map)
+{
+    return point.m_x < 0 || point.m_x > map.m_mapWidth
+        || point.m_y < 0 || point.m_y >= map.m_mapHeight;
+}
+
+// The dry strip and inland approach share the same coast-scan bounds and
+// water/entrance exclusions. Rock remains admissible, as in retail.
+static inline TRmgMapItem* getRmgDryRiverCoastCell(
+    type_random_map& map, const TRmgMapPosition& point)
+{
+    if (isOutsideRmgRiverCoastScan(point, map))
+        return 0;
+    TRmgMapItem* item = map.getMapItem(point.m_x, point.m_y, point.m_z);
+    if (item->getLandType() == eTerrainWater || item->isRoadEntrance())
+        return 0;
+    return item;
+}
+
 // Retail-only coastal target test: three water cells across the shore,
 // three dry entrance-free cells beside them, then four cells inland.
 // Preserve retail's asymmetric x > width versus y >= height bounds check.
@@ -9030,8 +9057,7 @@ void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, i
     TRmgMapPosition point = position + g_rmgDirections[(direction + 2) & 7];
     TPoint step = g_rmgDirections[(direction - 2) & 7];
     for (int waterCount = 0; waterCount < 3; ++waterCount) {
-        if (point.m_x < 0 || point.m_x > m_map.m_mapWidth
-            || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
+        if (isOutsideRmgRiverCoastScan(point, m_map))
             return;
         if (m_map.getMapItem(point.m_x, point.m_y, point.m_z)->getLandType() != eTerrainWater)
             return;
@@ -9039,11 +9065,7 @@ void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, i
     }
     point = position + g_rmgDirections[(direction + 1) & 7];
     for (int dryCount = 0; dryCount < 3; ++dryCount) {
-        if (point.m_x < 0 || point.m_x > m_map.m_mapWidth
-            || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
-            return;
-        TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
-        if (item->getLandType() == eTerrainWater || item->isRoadEntrance())
+        if (!getRmgDryRiverCoastCell(m_map, point))
             return;
         point += step;
     }
@@ -9051,11 +9073,8 @@ void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, i
     point += g_rmgDirections[direction];
     TRmgMapItem* item;
     for (int inlandCount = 0; inlandCount < 4; ++inlandCount) {
-        if (point.m_x < 0 || point.m_x > m_map.m_mapWidth
-            || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
-            return;
-        item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
-        if (item->getLandType() == eTerrainWater || item->isRoadEntrance())
+        item = getRmgDryRiverCoastCell(m_map, point);
+        if (!item)
             return;
         point += g_rmgDirections[direction];
     }
@@ -10134,9 +10153,7 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
     position = getRmgCenteredGroupObjectPosition(&group, prototype);
     type_object* questObject = seerHut;
     group.addObject(questObject, position);
-    group.updateBounds();
-    group.traceOutline();
-    group.markPlacementOutline();
+    group.preparePlacement();
     if (!placeQuestGroup(&group, origin)) {
         int value = object->m_definition->getValue(origin, this);
         TRmgMapPosition originalPosition = object->m_position;
@@ -10195,9 +10212,7 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
     m_disabledKeyTents[color] = 1;
     refreshNextKeyTentColor();
     if (fillTreasureGroup(origin, &group, 0, maxValue) && group.addGuard(guard)) {
-        group.updateBounds();
-        group.traceOutline();
-        group.markPlacementOutline();
+        group.preparePlacement();
         if (placeQuestGroup(&group, origin))
             return 1;
     } else {
@@ -10373,7 +10388,7 @@ int getRmgSquaredDistance(TPoint first, TPoint second)
 {
     int dy = first.m_y - second.m_y;
     int dx = first.m_x - second.m_x;
-    return dx * dx + dy * dy;
+    return getRmgSquaredNorm(dx, dy);
 }
 
 // Each uncomputed interior half-edge identifies an incident triangle. Retail
