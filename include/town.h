@@ -341,7 +341,7 @@ public:
     // set_bonus_display calls this header helper; retail 0x5c5b40 expands it.
     DC_ADDRESS(0x181404, 0x12)
     long getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
-    short getGoldIncome(unsigned char includeSilo) const;
+    short getGoldIncome(bool includeSilo) const;
     int getHorde(long dwelling) const;
     long getHordeBonus(long dwelling) const;
     long getAssembledLegionBonus(long dwelling) const;

@@ -1194,10 +1194,11 @@ long town::getCastleGrowthBonus(TCreatureType creature) const
 
 // Dreamcast town.cpp:1517 names HasBuilding for the first hall check;
 // all five source checks use the same built/active Town.h accessor.
+// Original ?get_gold_income@town@@QBAF_N@Z proves the Boolean flag.
 VA(0x005bf600, 0xC6)
 DC_ADDRESS(0x167458, 0x7c)
 MAC_ADDRESS(0x1b4cac, 0x130)
-short town::getGoldIncome(unsigned char includeSilo) const
+short town::getGoldIncome(bool includeSilo) const
 {
     short income = 500;
     if (hasBuilding(HALL_TOWN_ID, false))
