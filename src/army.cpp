@@ -1015,6 +1015,16 @@ void army::startAnimationSequence(int sequence)
     m_currFrameIndex = 0;
 }
 
+void army::advanceSpellReactionAnimation()
+{
+    int sequence = m_currFrameType;
+    if (m_currFrameIndex < m_stdIcon->getNumFrames(sequence) - 1) {
+        m_currFrameIndex++;
+    } else if (sequence == cs_wince) {
+        startAnimationSequence(cs_wait);
+    }
+}
+
 void army::updateHighlightAnimation()
 {
     // An already-fidgeting stack falls through to its waiting pose.

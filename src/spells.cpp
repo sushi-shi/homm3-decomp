@@ -1691,8 +1691,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             m_cmbtHeroFrameIndex[m_currentSide] = frame;
             drawFrame(1, 0, 0, 100, 1, 1);
         }
-        m_cmbtHeroFrameType[m_currentSide] = 0;
-        m_cmbtHeroFrameIndex[m_currentSide] = 0;
+        startHeroAnimationSequence(m_currentSide, COMBAT_HERO_FRAME_IDLE);
         drawFrame(1, 0, 0, 0, 1, 0);
     }
     checkChangeSelector();
@@ -3108,16 +3107,7 @@ void combatManager::armageddon(int level, int power)
                 { for (i = 0; i < m_numArmies[side]; i++) {
                     army* currentArmy = &m_armies[side][i];
                     if (m_effected[side][i]) {
-                        // A wincing stack falls back to cs_wait once its
-                        // sequence runs out; a dying one holds its last
-                        // frame, which is why only cs_wince is reset.
-                        if (currentArmy->m_currFrameIndex
-                            < currentArmy->m_stdIcon->getNumFrames(
-                                  currentArmy->m_currFrameType) - 1) {
-                            currentArmy->m_currFrameIndex++;
-                        } else if (currentArmy->m_currFrameType == cs_wince) {
-                            currentArmy->startAnimationSequence(cs_wait);
-                        }
+                        currentArmy->advanceSpellReactionAnimation();
                     }
                 } }
             } }
@@ -4078,13 +4068,7 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
                 for (int i = 0; i < m_numArmies[side]; i++) {
                     army& stack = m_armies[side][i];
                     if (showWince && effected[side][i]) {
-                        int sequence = stack.m_currFrameType;
-                        if (stack.m_currFrameIndex
-                            < stack.m_stdIcon->getNumFrames(sequence) - 1) {
-                            stack.m_currFrameIndex++;
-                        } else if (sequence == cs_wince) {
-                            stack.startAnimationSequence(cs_wait);
-                        }
+                        stack.advanceSpellReactionAnimation();
                     }
                     if (m_powSprite
                         && frame + 1 < m_powSprite->getNumFrames(cs_walk))

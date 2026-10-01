@@ -915,6 +915,7 @@ public:
     void startAnimationSequence(int sequence);
     void updateHighlightAnimation();
     void finishFidgetAnimation();
+    void advanceSpellReactionAnimation();
     void playAnimation(int sequence, int nframes, int startFrame);
     void setupAnimation();
     unsigned long strength();

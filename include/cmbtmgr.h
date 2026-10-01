@@ -1303,6 +1303,9 @@ public:
     int drawCreatureAndHeroSubwindows();
 
 private:
+    // Project-inferred state operations shared by combat animation callers.
+    void startHeroAnimationSequence(int side, int sequence);
+    void clearPendingHeroReactions(int side);
     // Project-inferred obstacle geometry shared by placement and removal.
     int getObstacleFootprintHex(int baseHex, int offset,
                                 unsigned char baseRowIsOdd) const;

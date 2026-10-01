@@ -762,24 +762,38 @@ unsigned char CDPlay::setPlayerName(unsigned long playerId, char* shortName, cha
     return ok;
 }
 
-VA(0x004982a0, 0x115)
-DC_ADDRESS(0x08b0d8, 0xd8)
-unsigned char CDPlay::getPlayerName(unsigned long playerId, char* shortName, int maxShort, char* longName, int maxLong)
+// Project-inferred shared name-query protocol. Keep the message owner alive
+// through copying and retain fresh COM-interface reads for both queries.
+unsigned char CDPlay::getPlayerOrGroupName(EDPlayerType type, unsigned long id,
+                                           char* shortName, int maxShort,
+                                           char* longName, int maxLong)
 {
     CDPlayMsg name;
     unsigned long size = 0;
-    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerName(playerId, 0, &size);
+    if (type == DPPLAYERTYPE_GROUP)
+        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupName(id, 0, &size);
+    else
+        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerName(id, 0, &size);
     if (m_res != DPERR_BUFFERTOOSMALL)
         return 0;
-    unsigned long allocSize = size + 1;
-    name.m_data = new unsigned char[allocSize];
-    name.m_dataSize = allocSize;
+    name.allocSize(size + 1);
     DPNAME* dpName = static_cast<DPNAME*>(static_cast<void*>(name.m_data));
-    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerName(playerId, dpName, &size);
+    if (type == DPPLAYERTYPE_GROUP)
+        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupName(id, dpName, &size);
+    else
+        m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerName(id, dpName, &size);
     if (m_res < 0)
         return 0;
     copyDirectPlayName(*dpName, shortName, maxShort, longName, maxLong);
     return 1;
+}
+
+VA(0x004982a0, 0x115)
+DC_ADDRESS(0x08b0d8, 0xd8)
+unsigned char CDPlay::getPlayerName(unsigned long playerId, char* shortName, int maxShort, char* longName, int maxLong)
+{
+    return getPlayerOrGroupName(DPPLAYERTYPE_PLAYER, playerId,
+                                shortName, maxShort, longName, maxLong);
 }
 
 VA(0x004983c0, 0x2C)
@@ -850,20 +864,8 @@ VA(0x00498500, 0x115)
 DC_ADDRESS(0x08b2c4, 0xf6)
 unsigned char CDPlay::getGroupName(unsigned long groupId, char* shortName, int maxShort, char* longName, int maxLong)
 {
-    CDPlayMsg name;
-    unsigned long size = 0;
-    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupName(groupId, 0, &size);
-    if (m_res != DPERR_BUFFERTOOSMALL)
-        return 0;
-    unsigned long allocSize = size + 1;
-    name.m_data = new unsigned char[allocSize];
-    name.m_dataSize = allocSize;
-    DPNAME* dpName = static_cast<DPNAME*>(static_cast<void*>(name.m_data));
-    m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupName(groupId, dpName, &size);
-    if (m_res < 0)
-        return 0;
-    copyDirectPlayName(*dpName, shortName, maxShort, longName, maxLong);
-    return 1;
+    return getPlayerOrGroupName(DPPLAYERTYPE_GROUP, groupId,
+                                shortName, maxShort, longName, maxLong);
 }
 
 VA(0x00498620, 0x2C)

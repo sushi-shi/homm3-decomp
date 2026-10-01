@@ -852,8 +852,7 @@ void combatManager::loadIcons()
     }
 
     for (int side = 0; side < 2; side++) {
-        m_cmbtHeroFrameType[side] = 0;
-        m_cmbtHeroFrameIndex[side] = 0;
+        startHeroAnimationSequence(side, COMBAT_HERO_FRAME_IDLE);
         if (m_heroes[side]) {
             m_creatureSprites[side] = ResourceManager::getSprite(
                 g_combatHeroSprites[

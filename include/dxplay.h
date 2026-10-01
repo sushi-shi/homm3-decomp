@@ -632,6 +632,10 @@ protected:
     char m_tailPadding;
 
 private:
+    // Project-inferred shared name protocol behind the native virtual readers.
+    unsigned char getPlayerOrGroupName(EDPlayerType type, unsigned long id,
+                                       char* shortName, int maxShort,
+                                       char* longName, int maxLong);
     // Project-inferred shared allocation protocol behind the native readers.
     void* getPlayerOrGroupData(EDPlayerType type, unsigned long id,
                               unsigned long* size, unsigned long flags);

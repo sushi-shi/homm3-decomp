@@ -820,14 +820,16 @@ short name, leaving the long name null. The external record layout is unchanged.
 Player and group name queries share their output-copy operation, preserving
 short-before-long order, optional outputs, `strncpy` bounds and the zero-byte
 write for a null source. No extra terminator or bounds clamp is introduced.
-The two COM queries, HRESULT transitions, size-plus-one allocation and local
-`CDPlayMsg` destruction remain in each caller. These helper names and ordinary
-TU-local/source placement are project inferences, without native address claims
-or invented inline qualifiers.
+The later name-query continuation below also shares their two-query protocol,
+while preserving HRESULT transitions, size-plus-one allocation and local
+`CDPlayMsg` destruction. These helper names and ordinary TU-local/source
+placements are project inferences, without native address claims or invented
+inline qualifiers.
 
-The nearby data/session/address readers require a separate review: they differ
-in accepted first-query results, zero-size handling and when output sizes become
-visible. Similar allocation tails alone do not justify sharing their protocols.
+The nearby data/session/address readers differ in accepted first-query results,
+zero-size handling and when output sizes become visible. The later data-reader
+continuation shares the player/group data protocol separately; similar allocation
+tails alone do not justify merging it with names, sessions or addresses.
 
 ## Chat queue removal and system-message state
 
@@ -1309,6 +1311,45 @@ Dreamcast army `0x1a95` / field list `0x205b` explicitly declares
 `currFrameType` and `currFrameIndex` public. Their authored types, visibility
 and layout are preserved. The three operation names and ordinary bodies in
 `army.cpp` are project inferences, without new native-address or inline claims.
+
+## Spell reaction steps, hero animation and DirectPlay name queries
+
+`army::advanceSpellReactionAnimation()` shares the complete per-stack frame
+step from Armageddon and mass-spell display. It advances while frames remain,
+resets an exhausted wince to wait through `startAnimationSequence()`, and holds
+other exhausted sequences, including death. `CSprite::getNumFrames()` and its
+sequence-validity helper were read: neither modifies the army, so the existing
+cached-sequence form also represents Armageddon's condition. Caller effect
+masks, show-wince guards, frame loops and overlay updates retain their order.
+The different `powEffect()` completion rules remain separate.
+
+Private `combatManager::startHeroAnimationSequence()` shares four hero
+sequence/frame-zero pairs: icon initialization, cast completion, cycling into
+a selected sequence, and cycling back to idle. The latter alone updates its
+fidget timer. Cast startup still selects its sequence before a conditional
+frame loop, without acquiring an unconditional frame-zero write.
+`clearPendingHeroReactions()` shares the four pending-yeah/pending-doh clears
+in the accepted and rejected local-human reaction branches. Played-this-round
+latches, sprite availability and the two branches' different effect/sequence
+store order remain with their callers. Round and initial setup retain their
+different full-reset order. Both new manager operations are private; no stored
+field, virtual slot or layout changes.
+
+Private `CDPlay::getPlayerOrGroupName()` now owns the two name-query flows. Both
+native virtual entry points retain their signatures and call it with the
+existing player/group discriminator. The helper keeps a local `CDPlayMsg`,
+accepts only `DPERR_BUFFERTOOSMALL` from the first query, uses the original
+unsigned size-plus-one allocation, rereads the COM interface for the second
+query, and copies outputs only after success. The native `CDPlayMsg::allocSize()`
+now performs allocation: the newly constructed message has a zero pointer and
+size, so its reuse/delete branches add no behavior, including for a wrapped
+zero allocation size. Destruction still uses the existing message cleanup on
+all exits, after any short/long copy. Name truncation and missing-name handling
+remain in `copyDirectPlayName()` without extra termination or clamping.
+
+The four new helper names and ordinary owner-source placements are project
+inferences. Native APIs and existing nested helpers remain intact; no new
+native-address or explicit-inline claims are made.
 
 ## Validation provenance
 
