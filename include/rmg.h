@@ -325,6 +325,13 @@ struct TRmgVector {
     }
 };
 
+// Shared by distance, length and incircle calculations. Both products and
+// their sum stay signed 32-bit; widening belongs to the individual caller.
+inline int getRmgSquaredNorm(int x, int y)
+{
+    return x * x + y * y;
+}
+
 // Retail's common direction table contains eight consecutive two-dword
 // offsets.  Its cinit at 0x530da0 proves the user-provided constructor while
 // the absence of an atexit registration proves that destruction is trivial.
@@ -1145,6 +1152,16 @@ struct TRmgMapItem {
         m_previousTile = previous;
     }
 
+    // Water-zone spacing tracks a distance and incoming direction together,
+    // clearing connection eligibility whenever that distance is assigned.
+    // Other zone-path resets use different eligibility values.
+    void setWaterZoneDistance(unsigned int cost, int direction)
+    {
+        m_movement.m_zonePathCost = cost;
+        m_tileData.m_connectionDirection = direction;
+        m_zoneState.m_connectionEligibility = 0;
+    }
+
     // Shared generation-path state change used by entrance placement and
     // path carving. Existing connection decoration protects both flags;
     // this does not change terrain, road passability or placed objects.
@@ -1393,6 +1410,14 @@ struct TRmgTreasureGroup {
     void addObject(type_object* object, TPoint point);
     void updateBounds();
     void traceOutline();
+    // Quest and key-guard groups require all three steps before placement.
+    // Recompute the occupied bounds before tracing and marking their outline.
+    void preparePlacement()
+    {
+        updateBounds();
+        traceOutline();
+        markPlacementOutline();
+    }
 };
 SIZE(TRmgTreasureGroup, 0x64);
 
