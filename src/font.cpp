@@ -84,7 +84,7 @@ void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
         return;
     int width = m_fs.m_abc[c].m_abcB;
     int height = m_fs.m_height;
-    unsigned char* src = static_cast<unsigned char*>(m_data) + m_fs.m_offset[c];
+    unsigned char* src = &m_data[m_fs.m_offset[c]];
     unsigned char* dst = static_cast<unsigned char*>(
                              static_cast<void*>(bmp->getMap(0, 0)))
                          + y * bmp->getPitch() + 2 * (x + m_fs.m_abc[c].m_abcA);

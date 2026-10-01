@@ -111,8 +111,8 @@ private:
     // on this+0x103c as a member initializer (unwind state 1, funclet
     // 0x62b4d8 destroys exactly this subobject).
     TPalette16 m_palette;
-    // DC LF_MEMBER `Data`.
-    void* m_data;
+    // DC font record 0x1c90: private unsigned char* Data.
+    unsigned char* m_data;
 
 public:
     // The glyph payload's byte count, byte-proven by GetSize below: the
