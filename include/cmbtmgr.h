@@ -1757,6 +1757,11 @@ private:
     army* findSpellTarget(ESpellId spell, long side, long hex,
                           bool firstTarget,
                           long creatureSpell);  // 0x5a3950
+    // Project-inferred check of a corpse's possible second occupied hex.
+    bool isCorpseFootprintFree(const hexcell& cell, int bodyIndex, int hex) const;
+    // Project-inferred presentation operations shared by spell callers.
+    void clearArmySpellOverlays();
+    void showResurrectionMessage(const army* target, long raised);
 
 public:
     // WHO cast the spell ShowSpellMessage is about to announce. The DC

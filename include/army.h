@@ -920,6 +920,8 @@ public:
     void setupAnimation();
     unsigned long strength();
     bool isActive() const;
+    // Project-inferred query shared by resurrection and sacrifice eligibility.
+    bool hasLostTroops() const;
     inline void checkLuck();
     void setSpellInfluence(int spell, int power, int mastery,
                            const hero* castingHero);

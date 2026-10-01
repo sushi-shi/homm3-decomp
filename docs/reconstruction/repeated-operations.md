@@ -2357,6 +2357,42 @@ handling remains separate. The long step type, guards and result meanings are
 unchanged. These names and ordinary source placements are project inferences,
 with no new native annotations or field-visibility changes.
 
+## Resurrection eligibility, messages and effect overlays
+
+Three corpse searches share private isCorpseFootprintFree: inspect the recorded
+half of a double-wide corpse and reject its other hex if occupied or blocked.
+The two part tests remain independent, with right before left and occupancy
+before obstacle checks. Other part values still need no second-hex test. The
+callers retain selected-hex validation, descending corpse order, owning-side
+and living/undead rules, and their distinct spell-chance policies. No neighbor
+bounds check or global-manager lookup is introduced. The existing getDeadArmy
+is not substituted: it adds a negative-side guard and uses g_combatManager,
+whereas these searches address their own manager's army array.
+
+Four live-target eligibility tests share army::hasLostTroops: the current troop
+count is strictly below the original count. Resurrection, Animate Dead and
+Sacrifice retain their other conditions and short-circuit order. Excess-count
+clamping, casualty arithmetic and hit-point reconstruction are different
+operations and remain in their callers.
+
+Demonic and ordinary resurrection share showResurrectionMessage, retaining
+separate singular/plural sprintf branches followed by combatMessage. The raised
+count remains long; the native creature-name helper still receives that count.
+Quick-combat checks, corpse removal, stack creation, sound waits and animation
+remain caller-owned in their original order. No combined format selection or
+cached name is introduced.
+
+Armageddon and mass-spell presentation share clearArmySpellOverlays, traversing
+both sides and their current army counts to clear only m_showPowEffect.
+Armageddon calls it unconditionally at its original cleanup point; mass-spell
+presentation keeps it inside its graphical branch. Neither damage flags nor
+the effected eligibility matrix are reset here. PowEffect's interleaved
+per-stack overlay/damage reset remains distinct.
+
+All four new helper names and ordinary source placements are project inferences.
+No native identity, explicit inline qualifier or virtual boundary is invented;
+existing fields, layout and native entry points are unchanged.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

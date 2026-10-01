@@ -57,6 +57,12 @@ int army::getDisplayedTroopCount() const
                                           : m_numTroopsToShowOverride;
 }
 
+// Project-inferred casualty predicate; excess troops are not missing troops.
+bool army::hasLostTroops() const
+{
+    return m_numTroops < m_origNumTroops;
+}
+
 // Retail table initializers, in the layouts used by their named consumers.
 DATA(0x00660878) long g_wideDirectionRingIndex[8] = { 0, 1, 2, 4, 5, 6, 7, 3 };
 DATA(0x00660898) long g_wideDirectionRingOrder[8] = { 0, 1, 2, 7, 3, 4, 5, 6 };

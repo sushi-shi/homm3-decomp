@@ -2532,6 +2532,35 @@ bool combatManager::validSpellTargetArmy(SpellID spellId,
                                firstTarget, creatureSpell) > 0.0;
 }
 
+// Project-inferred presentation reset. Eligibility and damage state stay intact.
+void combatManager::clearArmySpellOverlays()
+{
+    for (int side = 0; side < 2; side++) {
+        for (int i = 0; i < m_numArmies[side]; i++)
+            m_armies[side][i].m_showPowEffect = 0;
+    }
+}
+
+// Project-inferred operation shared by the three corpse-target searches.
+// The selected hex is checked by each caller; this checks its possible mate.
+bool combatManager::isCorpseFootprintFree(
+    const hexcell& cell, int bodyIndex, int hex) const
+{
+    if (cell.m_deadPartOfDouble[bodyIndex] == 0) {
+        if (m_cells[hex + 1].hasArmy())
+            return false;
+        if (m_cells[hex + 1].m_attributes & hexcell::blocked)
+            return false;
+    }
+    if (cell.m_deadPartOfDouble[bodyIndex] == 1) {
+        if (m_cells[hex - 1].hasArmy())
+            return false;
+        if (m_cells[hex - 1].m_attributes & hexcell::blocked)
+            return false;
+    }
+    return true;
+}
+
 // DC sole local is const hexcell& tcell (sp+0x18); preserve that cell
 // view through the live-stack and corpse paths, with canonical predicates.
 VA(0x005a3cc0, 0x175)
@@ -2549,7 +2578,7 @@ army* combatManager::findResurrectionTarget(int side, int hex,
             return 0;
         if (!target->is(creatureAlive))
             return 0;
-        if (target->m_numTroops >= target->m_origNumTroops)
+        if (!target->hasLostTroops())
             return 0;
         if (validSpellTargetArmy(SPELL_RESURRECTION, side, target, 1,
                                  creatureSpell))
@@ -2568,18 +2597,8 @@ army* combatManager::findResurrectionTarget(int side, int hex,
             continue;
         if (!corpse->is(creatureAlive))
             continue;
-        if (cell.m_deadPartOfDouble[i] == 0) {
-            if (m_cells[hex + 1].hasArmy())
-                continue;
-            if (m_cells[hex + 1].m_attributes & hexcell::blocked)
-                continue;
-        }
-        if (cell.m_deadPartOfDouble[i] == 1) {
-            if (m_cells[hex - 1].hasArmy())
-                continue;
-            if (m_cells[hex - 1].m_attributes & hexcell::blocked)
-                continue;
-        }
+        if (!isCorpseFootprintFree(cell, i, hex))
+            continue;
         if (validSpellTargetArmy(SPELL_RESURRECTION, side, corpse, 1,
                                  creatureSpell))
             return corpse;
@@ -2610,18 +2629,8 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
             continue;
         if (!(m_armies[deadSide][deadSlot].is(creatureAlive)))
             continue;
-        if (cell->m_deadPartOfDouble[i] == 0) {
-            if (m_cells[hex + 1].hasArmy())
-                continue;
-            if (m_cells[hex + 1].m_attributes & hexcell::blocked)
-                continue;
-        }
-        if (cell->m_deadPartOfDouble[i] == 1) {
-            if (m_cells[hex - 1].hasArmy())
-                continue;
-            if (m_cells[hex - 1].m_attributes & hexcell::blocked)
-                continue;
-        }
+        if (!isCorpseFootprintFree(*cell, i, hex))
+            continue;
         return &m_armies[deadSide][deadSlot];
     }
     return 0;
@@ -2641,7 +2650,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
             return 0;
         if (!target->is(creatureUndead))
             return 0;
-        if (target->m_numTroops >= target->m_origNumTroops)
+        if (!target->hasLostTroops())
             return 0;
         if (validSpellTargetArmy(SPELL_ANIMATE_DEAD, side, target, 1, 0))
             return target;
@@ -2659,18 +2668,8 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
             continue;
         if (!corpse->is(creatureUndead))
             continue;
-        if (cell->m_deadPartOfDouble[i] == 0) {
-            if (m_cells[hex + 1].hasArmy())
-                continue;
-            if (m_cells[hex + 1].m_attributes & hexcell::blocked)
-                continue;
-        }
-        if (cell->m_deadPartOfDouble[i] == 1) {
-            if (m_cells[hex - 1].hasArmy())
-                continue;
-            if (m_cells[hex - 1].m_attributes & hexcell::blocked)
-                continue;
-        }
+        if (!isCorpseFootprintFree(*cell, i, hex))
+            continue;
         if (validSpellTargetArmy(SPELL_ANIMATE_DEAD, side, corpse, 1, 0))
             return corpse;
     } while (--i >= 0);
@@ -3007,8 +3006,9 @@ void combatManager::areaEffect(long targetCell, SpellID spellType,
 // merged here: roll+damage, then set up each hit stack's wince/death
 // animation, advance those animations in the frame loop, clear their
 // effect flags, then process the dead stacks. One function-local `i` is
-// reused by every sweep; that is what gives all five retail loops the
-// same [ebp-8] counter home.
+// reused by the original sweeps; that gives all five retail loops the
+// same [ebp-8] counter home. The overlay-only reset is now shared below;
+// the compiler observations here predate that extraction.
 
 // THE DAMAGE IS ComputeSpellDamage (0x5a7890) EXPANDED, not called -
 // its `mastery_bonus[level] + power_factor * power` body appears twice,
@@ -3131,10 +3131,7 @@ void combatManager::armageddon(int level, int power)
         } }
     }
 
-    { for (int side = 0; side < 2; side++) {
-        { for (i = 0; i < m_numArmies[side]; i++)
-            m_armies[side][i].m_showPowEffect = 0; }
-    } }
+    clearArmySpellOverlays();
 
     clearVanishingCreatures();
     unsigned char deaths = 0;
@@ -4078,10 +4075,7 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
             } }
             drawFrame(1, 0, 0, 100, 1, 1);
         } }
-        { for (int side = 0; side < 2; side++) {
-            for (int i = 0; i < m_numArmies[side]; i++)
-                m_armies[side][i].m_showPowEffect = 0;
-        } }
+        clearArmySpellOverlays();
     }
 
     clearVanishingCreatures();
@@ -4324,6 +4318,18 @@ void combatManager::removeCorpse(army* corpse)
                     corpse->getOwningSide(), corpse->m_bitIndex);
 }
 
+// Project-inferred shared message; preserve the separate native format branches.
+void combatManager::showResurrectionMessage(const army* target, long raised)
+{
+    if (raised != 1)
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
+                target->getName(raised));
+    else
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
+                target->getName(raised));
+    m_combatWindow->combatMessage(g_text, 1, 0);
+}
+
 // The Pit Lord's raise: the corpse leaves the grid and a fresh Demon
 // stack takes its cell. DC records the SAMPLE2 local as sound. Native quick
 // combat skips its initialization; a zero-initialized ternary adds absent
@@ -4354,13 +4360,7 @@ void combatManager::demonicResurrection(const army* caster, army* target)
     if (!isQuickCombat()) {
         updateGrid(0, 1);
         drawFrame(1, 0, 0, 0, 1, 0);
-        if (raised != 1)
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
-                    demons->getName(raised));
-        else
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
-                    demons->getName(raised));
-        m_combatWindow->combatMessage(g_text, 1, 0);
+        showResurrectionMessage(demons, raised);
         waitEndSample(sound, -1);
     }
 }
@@ -4440,13 +4440,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
 
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
         long raised = targetArmy->m_numTroops - oldCount;
-        if (raised != 1)
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
-                    targetArmy->getName(raised));
-        else
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
-                    targetArmy->getName(raised));
-        m_combatWindow->combatMessage(g_text, 1, 0);
+        showResurrectionMessage(targetArmy, raised);
 
         int effect = g_spellTraits[SPELL_RESURRECTION].m_effect;
         loadSpellEffect(effect);
@@ -4923,7 +4917,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
                                                      target->m_monInfo.m_level,
                                                      value);
         }
-        if (target->m_numTroops >= target->m_origNumTroops
+        if (!target->hasLostTroops()
             || target->m_monInfo.m_hitPoints > value)
             return 0.0f;
         break;
@@ -4934,7 +4928,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
         if (target->is(creatureSummoned))
             return 0.0f;
         if (firstTarget) {
-            if (target->m_numTroops >= target->m_origNumTroops)
+            if (!target->hasLostTroops())
                 return 0.0f;
         } else if (target->is(creatureUndead) || target->m_numTroops <= 0) {
             return 0.0f;
