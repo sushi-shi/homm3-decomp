@@ -3410,9 +3410,7 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
         } else {
             view->doModal();
             if (g_windowManager->m_dialogReturn == TViewArmyWindow::OK_ID) {
-                initiateSpell(thisArmy->m_faerieDragonSpell, 1);
-                if (m_nextAction == 1)
-                    m_nextAction = 10;
+                initiateCreatureSpell(thisArmy->m_faerieDragonSpell);
             }
         }
         delete view;

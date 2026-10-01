@@ -2798,6 +2798,37 @@ file-static definitions in spells.cpp. They introduce no native identity or
 inline claim, field/layout changes or added reset semantics. No builds, tests
 or matching-score investigations were run.
 
+## AI valuation and partial combat orders
+
+Both ballista scans share file-static getBallistaTargetValue. It preserves the
+Windows double multiplication and the existing Mac division distinction, then
+calls native getLossCombatValue before the existing discountDelayedTargetValue.
+The first pass reads the estimate's kills-only policy after damage reduction;
+the fallback forces zero without reading that field. The scan's eligibility,
+shared best-value/result state, last-wins ties and retry condition stay in the
+caller. Prior valuation observations are historical, not measurements of this
+new helper.
+
+Eight AI/manual defense paths share private queueDefend. It changes only the
+opcode, preserving the extra argument and both target slots. The surrounding
+returns, turn preparation and first-aid failure behavior remain distinct.
+
+The ordinary creature-spell chooser and Faerie Dragon chooser share private
+queueCreatureSpell, writing the creature-spell opcode before the primary target.
+Resurrection retains its reverse target-before-opcode order. The helper leaves
+extra data and the secondary target intact, matching these partial orders.
+
+Manual Faerie Dragon casting from the keyboard and army preview shares private
+initiateCreatureSpell. It calls native initiateSpell with the creature selector,
+then converts the opcode only when the result is a confirmed hero-spell order.
+Cancellation and other resulting orders remain untouched. Keyboard eligibility,
+modal-result checks and the preview object's lifetime remain in their callers.
+
+All four names and ordinary source placements are project inferences. The order
+helpers live with existing command.cpp operations and use its existing numeric
+constants; no enum-domain, field-layout or virtual-interface changes are added.
+No builds, tests or matching-score investigations were run.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

@@ -1514,6 +1514,10 @@ private:
     void prepareAction(int action, int extra);
     // Targeted command tuple; secondary spell target survives.
     void setTargetAction(int action, int extra, int targetHex);
+    // Project-inferred defense and creature-spell order operations.
+    void queueDefend();
+    void queueCreatureSpell(int targetHex);
+    void initiateCreatureSpell(SpellID spell);
     unsigned char attemptShooterDefense(
         const army* currentArmy, searchArray* currentSearchArray,
         const type_AI_combat_parameters* estimate);  // 0x420760

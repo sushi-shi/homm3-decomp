@@ -104,6 +104,28 @@ void combatManager::queueShot(int targetHex)
     m_nextActionGridIndex = targetHex;
 }
 
+// Project-inferred partial orders. Defense changes only the opcode; a
+// creature spell changes opcode then primary target, preserving other payload.
+void combatManager::queueDefend()
+{
+    m_nextAction = g_combatActionDefend;
+}
+
+void combatManager::queueCreatureSpell(int targetHex)
+{
+    m_nextAction = g_combatActionCastCreatureSpell;
+    m_nextActionGridIndex = targetHex;
+}
+
+// Manual creature casting uses the native picker, then converts only a
+// confirmed hero-spell order. Cancellation and other orders remain intact.
+void combatManager::initiateCreatureSpell(SpellID spell)
+{
+    initiateSpell(spell, 1);
+    if (m_nextAction == g_combatActionCastHeroSpell)
+        m_nextAction = g_combatActionCastCreatureSpell;
+}
+
 void combatManager::skipArmyAction()
 {
     m_nextAction = AI_ORDER_NONE;
@@ -291,7 +313,7 @@ bool combatManager::automateFirstAidTent()
     }
 
     if (bestIndex < 0) {
-        m_nextAction = 3;
+        queueDefend();
         return 1;
     }
 
@@ -979,7 +1001,7 @@ int combatManager::processCombatMsg(message& msg)
                 break;
 
             case TCombatWindow::COMBAT_RIGHT_COMMAND_2_ID:
-                m_nextAction = 3;
+                queueDefend();
                 break;
 
             case TCombatWindow::COMBAT_LEFT_COMMAND_2_ID:
@@ -1211,9 +1233,7 @@ int combatManager::processCombatMsg(message& msg)
                 army* currentArmy = getCurrentArmy();
                 if (currentArmy->m_creatureType == CREATURE_FAERIE_DRAGON
                         && currentArmy->m_monInfo.m_hasSpell) {
-                    initiateSpell(currentArmy->m_faerieDragonSpell, 1);
-                    if (m_nextAction == 1)
-                        m_nextAction = 10;
+                    initiateCreatureSpell(currentArmy->m_faerieDragonSpell);
                 }
             }
             break;
