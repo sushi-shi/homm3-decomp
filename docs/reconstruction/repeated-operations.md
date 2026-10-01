@@ -1060,6 +1060,32 @@ retains its rethrow and outer current-manager restoration. All three helper
 names and ordinary source placements are project inferences, without native
 address or explicit-inline claims.
 
+## DirectPlay compound-address connection creation
+
+TCP/IP, IPX, modem and serial factories share private
+`CDPlayLobby::createConnectionFromElements()`. It queries the address size,
+requires the existing buffer-too-small result, allocates the temporary packed
+address, performs the second COM call, constructs the connection's independent
+copy and releases the temporary. Failure after allocation still frees it and
+returns null. Both COM calls read the owning lobby pointer separately and retain
+their result in the existing error field; zero-size and allocation/constructor
+exception behavior are unchanged.
+
+Each factory retains its element array, optional parameter handling and provider
+identity. TCP/IP and IPX retain their address-enumeration containers through the
+shared operation and destroy them after its return, keeping all borrowed element
+buffers alive while packing and copying. Remote connection initialization still
+owns and deletes the returned connection on either initialization outcome.
+The scalar address-size scratch moves into the common operation; no object
+lifetime, field layout or virtual slot changes. The helper name and ordinary
+source placement are project inferences.
+
+Player/group data readers, player-address queries and lobby-settings probes
+retain their separate protocols: their accepted first results, output-size
+updates and allocation ownership differ from compound-address construction.
+The player/group data pair remains a lead for its own shared protocol, rather
+than being routed through this factory operation.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

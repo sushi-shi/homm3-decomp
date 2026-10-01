@@ -1173,13 +1173,36 @@ unsigned char CDPlayLobby::receiveLobbyMsg(unsigned long appId, CDPlayMsg* msg)
     return 1;
 }
 
+// Project-inferred common tail of the four transport factories. Borrowed
+// element data stays alive in each caller until the connection copy is made.
+CDPlayConnection* CDPlayLobby::createConnectionFromElements(
+    const DPCOMPOUNDADDRESSELEMENT* elements, unsigned long count,
+    const GUID* provider, char* name)
+{
+    unsigned long addressSize = 0;
+    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(
+        elements, count, 0, &addressSize);
+    if (m_res != DPERR_BUFFERTOOSMALL)
+        return 0;
+    void* address = ::operator new(addressSize);
+    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(
+        elements, count, address, &addressSize);
+    if (m_res < 0) {
+        ::operator delete(address);
+        return 0;
+    }
+    CDPlayConnection* connection = new CDPlayConnection(
+        provider, addressSize, address, name);
+    ::operator delete(address);
+    return connection;
+}
+
 VA(0x00498d80, 0x3C9)
 DC_ADDRESS(0x08b950, 0x4)
 CDPlayConnection* CDPlayLobby::createTCPIPConnection(
     char* ipAddress, char* name, CDPlayConnection* append)
 {
     DPCOMPOUNDADDRESSELEMENT elements[10];
-    unsigned long addressSize = 0;
     CAutoArray<CDPlayAddressElement> addresses;
     unsigned long count = 0;
     if (append) {
@@ -1203,21 +1226,7 @@ CDPlayConnection* CDPlayLobby::createTCPIPConnection(
         elements[count].m_data = ipAddress;
         ++count;
     }
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(
-        elements, count, 0, &addressSize);
-    if (m_res != DPERR_BUFFERTOOSMALL)
-        return 0;
-    void* address = ::operator new(addressSize);
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(
-        elements, count, address, &addressSize);
-    if (m_res < 0) {
-        ::operator delete(address);
-        return 0;
-    }
-    CDPlayConnection* connection = new CDPlayConnection(
-        &DPSPGUID_TCPIP, addressSize, address, name);
-    ::operator delete(address);
-    return connection;
+    return createConnectionFromElements(elements, count, &DPSPGUID_TCPIP, name);
 }
 
 VA(0x00499150, 0x356)
@@ -1225,7 +1234,6 @@ DC_ADDRESS(0x08b954, 0x4)
 CDPlayConnection* CDPlayLobby::createIPXConnection(char* name, CDPlayConnection* connAppend)
 {
     DPCOMPOUNDADDRESSELEMENT elements[10];
-    unsigned long addressSize = 0;
     unsigned long count = 0;
     CAutoArray<CDPlayAddressElement> addresses;
     if (connAppend) {
@@ -1243,18 +1251,7 @@ CDPlayConnection* CDPlayLobby::createIPXConnection(char* name, CDPlayConnection*
     elements[count].m_dataSize = sizeof(GUID);
     elements[count].m_data = &DPSPGUID_IPX;
     ++count;
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(elements, count, 0, &addressSize);
-    if (m_res != DPERR_BUFFERTOOSMALL)
-        return 0;
-    void* address = ::operator new(addressSize);
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(elements, count, address, &addressSize);
-    if (m_res < 0) {
-        ::operator delete(address);
-        return 0;
-    }
-    CDPlayConnection* conn = new CDPlayConnection(&DPSPGUID_IPX, addressSize, address, name);
-    ::operator delete(address);
-    return conn;
+    return createConnectionFromElements(elements, count, &DPSPGUID_IPX, name);
 }
 
 VA(0x004994b0, 0x24E)
@@ -1262,7 +1259,6 @@ DC_ADDRESS(0x08b958, 0x4)
 CDPlayConnection* CDPlayLobby::createModemConnection(char* name, char* phoneNbr, char* modemString)
 {
     DPCOMPOUNDADDRESSELEMENT elements[10];
-    unsigned long addressSize = 0;
     elements[0].m_guidDataType = DPAID_ServiceProvider;
     elements[0].m_dataSize = sizeof(GUID);
     elements[0].m_data = &DPSPGUID_MODEM;
@@ -1279,18 +1275,7 @@ CDPlayConnection* CDPlayLobby::createModemConnection(char* name, char* phoneNbr,
         elements[count].m_data = phoneNbr;
         ++count;
     }
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(elements, count, 0, &addressSize);
-    if (m_res != DPERR_BUFFERTOOSMALL)
-        return 0;
-    void* address = ::operator new(addressSize);
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(elements, count, address, &addressSize);
-    if (m_res < 0) {
-        ::operator delete(address);
-        return 0;
-    }
-    CDPlayConnection* conn = new CDPlayConnection(&DPSPGUID_MODEM, addressSize, address, name);
-    ::operator delete(address);
-    return conn;
+    return createConnectionFromElements(elements, count, &DPSPGUID_MODEM, name);
 }
 
 VA(0x00499700, 0x1F4)
@@ -1298,7 +1283,6 @@ DC_ADDRESS(0x08b95c, 0x4)
 CDPlayConnection* CDPlayLobby::createSerialConnection(char* name, _DPCOMPORTADDRESS* comPortInfo)
 {
     DPCOMPOUNDADDRESSELEMENT elements[10];
-    unsigned long addressSize = 0;
     elements[0].m_guidDataType = DPAID_ServiceProvider;
     elements[0].m_dataSize = sizeof(GUID);
     elements[0].m_data = &DPSPGUID_SERIAL;
@@ -1309,18 +1293,7 @@ CDPlayConnection* CDPlayLobby::createSerialConnection(char* name, _DPCOMPORTADDR
         elements[1].m_data = comPortInfo;
         count = 2;
     }
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(elements, count, 0, &addressSize);
-    if (m_res != DPERR_BUFFERTOOSMALL)
-        return 0;
-    void* address = ::operator new(addressSize);
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(elements, count, address, &addressSize);
-    if (m_res < 0) {
-        ::operator delete(address);
-        return 0;
-    }
-    CDPlayConnection* conn = new CDPlayConnection(&DPSPGUID_SERIAL, addressSize, address, name);
-    ::operator delete(address);
-    return conn;
+    return createConnectionFromElements(elements, count, &DPSPGUID_SERIAL, name);
 }
 
 // Original: CDPlayLobby::HandleSystemLobbyMsg; dxplay.cpp:1802

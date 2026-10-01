@@ -16,6 +16,7 @@ class CDPlayMsg;
 class CDPlaySession;
 template<class T> class CAutoArray;
 struct DPCAPS;
+struct DPCOMPOUNDADDRESSELEMENT;
 struct DPLCONNECTION;
 struct DPNAME;
 struct DPSESSIONDESC2;
@@ -697,6 +698,12 @@ protected:
     // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
     virtual unsigned char addAddressEnum(
         const GUID* type, unsigned long size, const void* data);
+
+private:
+    // Project-inferred compound-address packing and owned connection copy.
+    CDPlayConnection* createConnectionFromElements(
+        const DPCOMPOUNDADDRESSELEMENT* elements, unsigned long count,
+        const GUID* provider, char* name);
 };
 SIZE(CDPlayLobby, 0x60);
 
