@@ -695,6 +695,9 @@ public:
     // game context. Advanced-options open/close shows/hides this same ID;
     // the player-position renderer places town controls in that column.
     int m_townHeadingId;  // +0x189c
+
+private:
+    // Project-owned boundary for the Complete-only random-map state/controls.
     // Eight setup dwords CNewSetupInfoMsg carries behind the
     // SGameSetupOptions copy; the random-map controls read them back out.
     // Role-derived: generateRandomMap (0x5860e0) consumes these eight
@@ -712,6 +715,8 @@ public:
     button* m_filterCountDButtons[8];  // 0x192c, ids 0x13d..0x144
     button* m_filterWaterButtons[4];  // 0x194c, ids 0x146..0x149
     button* m_filterStrengthButtons[4];  // 0x195c, ids 0x14b..0x14e
+
+public:
     // Retail-only tail member (no DC counterpart - DC's roster ends at
     // netMsgHandler): the widget the TurnChat pair shows with widget 105
     // when chat is OFF and hides when it is ON, always addressed
@@ -882,6 +887,10 @@ private:
     CNetPlayerHandlerPlayer* getThisPlayer();
     // Project-inferred player initialization shared by new/load modes.
     void setupPlayerSlots();
+    // Project-inferred complete random-map control operations.
+    void registerRandomMapButtons(button** buttons, int count);
+    void changeRandomMapOption(int option, int value);
+    void changeRandomMapOptionAndPlayers(int option, int value);
 
 public:
     // Accessor boundary inferred from the existing property interface and

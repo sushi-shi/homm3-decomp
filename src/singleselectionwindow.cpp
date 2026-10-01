@@ -2775,6 +2775,17 @@ int CSaveGameEdit::onKeyPress(message* msg)
 
 VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 
+// Project-inferred common setup for all six random-map button groups.
+// Reload each array entry for both frame writes and for widget insertion.
+void TSingleSelectionWindow::registerRandomMapButtons(button** buttons, int count)
+{
+    for (int i = 0; i < count; ++i) {
+        buttons[i]->setHighlightFrame(2);
+        buttons[i]->setDisabledFrame(1);
+        m_widgets.push_back(buttons[i]);
+    }
+}
+
 // constructor call at 0x57bad7 and the contiguous filter-widget id families
 // establish its no-argument member boundary. Dreamcast class record 0x246e
 // has neither the eight random-map options nor these button arrays; its
@@ -2840,12 +2851,7 @@ void TSingleSelectionWindow::createFilterWidgets()
         294, 153, 30, 32, 0x126, "RanNum8.def", 0, 1, 0, 0, 2);
     m_filterCountAButtons[8] = new button(
         326, 153, 55, 32, 0x127, "RanRand.def", 0, 1, 0, 0, 2);
-    int i;
-    for (i = 0; i < 9; ++i) {
-        m_filterCountAButtons[i]->setHighlightFrame(2);
-        m_filterCountAButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterCountAButtons[i]);
-    }
+    registerRandomMapButtons(m_filterCountAButtons, 9);
 
     m_widgets.push_back(new textWidget(
         71, 199, 250, 16, g_generalText->getText(GENERAL_TEXT_HUMAN_OR_COMPUTER_TEAMS), "smalfont.fnt",
@@ -2868,11 +2874,7 @@ void TSingleSelectionWindow::createFilterWidgets()
         294, 219, 30, 32, 0x130, "RanNum7.def", 0, 1, 0, 0, 2);
     m_filterCountBButtons[8] = new button(
         326, 219, 55, 32, 0x131, "RanRand.def", 0, 1, 0, 0, 2);
-    for (i = 0; i < 9; ++i) {
-        m_filterCountBButtons[i]->setHighlightFrame(2);
-        m_filterCountBButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterCountBButtons[i]);
-    }
+    registerRandomMapButtons(m_filterCountBButtons, 9);
 
     m_widgets.push_back(new textWidget(
         71, 265, 250, 16, g_generalText->getText(GENERAL_TEXT_COMPUTER_ONLY_PLAYERS), "smalfont.fnt",
@@ -2895,11 +2897,7 @@ void TSingleSelectionWindow::createFilterWidgets()
         294, 285, 30, 32, 0x13a, "RanNum7.def", 0, 1, 0, 0, 2);
     m_filterCountCButtons[8] = new button(
         326, 285, 55, 32, 0x13b, "RanRand.def", 0, 1, 0, 0, 2);
-    for (i = 0; i < 9; ++i) {
-        m_filterCountCButtons[i]->setHighlightFrame(2);
-        m_filterCountCButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterCountCButtons[i]);
-    }
+    registerRandomMapButtons(m_filterCountCButtons, 9);
 
     m_widgets.push_back(new textWidget(
         71, 331, 250, 16, g_generalText->getText(GENERAL_TEXT_COMPUTER_ONLY_TEAMS), "smalfont.fnt",
@@ -2920,11 +2918,7 @@ void TSingleSelectionWindow::createFilterWidgets()
         262, 351, 30, 32, 0x143, "RanNum6.def", 0, 1, 0, 0, 2);
     m_filterCountDButtons[7] = new button(
         326, 351, 55, 32, 0x144, "RanRand.def", 0, 1, 0, 0, 2);
-    for (i = 0; i < 8; ++i) {
-        m_filterCountDButtons[i]->setHighlightFrame(2);
-        m_filterCountDButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterCountDButtons[i]);
-    }
+    registerRandomMapButtons(m_filterCountDButtons, 8);
 
     m_widgets.push_back(new textWidget(
         71, 398, 105, 16, g_generalText->getText(GENERAL_TEXT_WATER_CONTENT), "smalfont.fnt",
@@ -2937,11 +2931,7 @@ void TSingleSelectionWindow::createFilterWidgets()
         240, 419, 83, 32, 0x148, "RanIsld.def", 0, 1, 0, 0, 2);
     m_filterWaterButtons[3] = new button(
         326, 419, 55, 32, 0x149, "RanRand.def", 0, 1, 0, 0, 2);
-    for (i = 0; i < 4; ++i) {
-        m_filterWaterButtons[i]->setHighlightFrame(2);
-        m_filterWaterButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterWaterButtons[i]);
-    }
+    registerRandomMapButtons(m_filterWaterButtons, 4);
 
     m_widgets.push_back(new textWidget(
         71, 465, 105, 16, g_generalText->getText(GENERAL_TEXT_MONSTER_STRENGTH), "smalfont.fnt",
@@ -2954,11 +2944,7 @@ void TSingleSelectionWindow::createFilterWidgets()
         240, 485, 83, 32, 0x14d, "RanStrg.def", 0, 1, 0, 0, 2);
     m_filterStrengthButtons[3] = new button(
         326, 485, 55, 32, 0x14e, "RanRand.def", 0, 1, 0, 0, 2);
-    for (i = 0; i < 4; ++i) {
-        m_filterStrengthButtons[i]->setHighlightFrame(2);
-        m_filterStrengthButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterStrengthButtons[i]);
-    }
+    registerRandomMapButtons(m_filterStrengthButtons, 4);
 
     m_widgets.push_back(new button(
         57, 535, 337, 40, 0x14f, "RanShow.def", 0, 1, 0, 0, 2));
@@ -5333,6 +5319,20 @@ void TSingleSelectionWindow::refreshFilterWidgets()
     redrawSelection();
 }
 
+// Project-inferred option transitions. Player-setup rebuilding is an
+// explicit caller choice: some sentinel options only refresh the controls.
+void TSingleSelectionWindow::changeRandomMapOption(int option, int value)
+{
+    m_randomMapOptions[option] = value;
+    refreshFilterWidgets();
+}
+
+void TSingleSelectionWindow::changeRandomMapOptionAndPlayers(int option, int value)
+{
+    changeRandomMapOption(option, value);
+    rebuildFilteredPlayerSetup();
+}
+
 // Mac 0x17e364/0x17e394 places these ordinary helpers between the
 // selection handlers, although Dreamcast kept them in newgame.cpp.
 // Windows expands both in onWidgetDeselect; retain their TU visibility.
@@ -5642,24 +5642,20 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     }
 
     case SSW_FILTER_MAP_SMALL:
-        m_randomMapOptions[0] = MAP_DIMENSION_SMALL;
-        refreshFilterWidgets();
+        changeRandomMapOption(0, MAP_DIMENSION_SMALL);
         break;
     case SSW_FILTER_MAP_MEDIUM:
-        m_randomMapOptions[0] = MAP_DIMENSION_MEDIUM;
-        refreshFilterWidgets();
+        changeRandomMapOption(0, MAP_DIMENSION_MEDIUM);
         break;
     case SSW_FILTER_MAP_LARGE:
-        m_randomMapOptions[0] = MAP_DIMENSION_LARGE;
-        refreshFilterWidgets();
+        changeRandomMapOption(0, MAP_DIMENSION_LARGE);
         break;
     case SSW_FILTER_MAP_XLARGE:
-        m_randomMapOptions[0] = MAP_DIMENSION_EXTRA_LARGE;
-        refreshFilterWidgets();
+        changeRandomMapOption(0, MAP_DIMENSION_EXTRA_LARGE);
         break;
     case SSW_FILTER_MAP_ALL:
-        m_randomMapOptions[1] = SCENARIO_FILTER_CATEGORY_ANY - m_randomMapOptions[1];
-        refreshFilterWidgets();
+        changeRandomMapOption(
+            1, SCENARIO_FILTER_CATEGORY_ANY - m_randomMapOptions[1]);
         break;
 
     case SSW_FILTER_PLAYERS_FIRST:
@@ -5670,14 +5666,11 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_PLAYERS_FIRST + 5:
     case SSW_FILTER_PLAYERS_FIRST + 6:
     case SSW_FILTER_PLAYERS_LAST:
-        m_randomMapOptions[2] = msg->m_codeY - SSW_FILTER_PLAYERS_FIRST + 1;
-        refreshFilterWidgets();
-        rebuildFilteredPlayerSetup();
+        changeRandomMapOptionAndPlayers(
+            2, msg->m_codeY - SSW_FILTER_PLAYERS_FIRST + 1);
         break;
     case SSW_FILTER_PLAYERS_ANY:
-        m_randomMapOptions[2] = -1;
-        refreshFilterWidgets();
-        rebuildFilteredPlayerSetup();
+        changeRandomMapOptionAndPlayers(2, -1);
         break;
     case SSW_FILTER_HUMANS_FIRST:
     case SSW_FILTER_HUMANS_FIRST + 1:
@@ -5687,13 +5680,11 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_HUMANS_FIRST + 5:
     case SSW_FILTER_HUMANS_FIRST + 6:
     case SSW_FILTER_HUMANS_LAST:
-        m_randomMapOptions[3] = msg->m_codeY - SSW_FILTER_HUMANS_FIRST;
-        refreshFilterWidgets();
-        rebuildFilteredPlayerSetup();
+        changeRandomMapOptionAndPlayers(
+            3, msg->m_codeY - SSW_FILTER_HUMANS_FIRST);
         break;
     case SSW_FILTER_HUMANS_ANY:
-        m_randomMapOptions[3] = -1;
-        refreshFilterWidgets();
+        changeRandomMapOption(3, -1);
         break;
     case SSW_FILTER_TEAMS_FIRST:
     case SSW_FILTER_TEAMS_FIRST + 1:
@@ -5703,14 +5694,11 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_TEAMS_FIRST + 5:
     case SSW_FILTER_TEAMS_FIRST + 6:
     case SSW_FILTER_TEAMS_LAST:
-        m_randomMapOptions[4] = msg->m_codeY - SSW_FILTER_TEAMS_FIRST;
-        refreshFilterWidgets();
-        rebuildFilteredPlayerSetup();
+        changeRandomMapOptionAndPlayers(
+            4, msg->m_codeY - SSW_FILTER_TEAMS_FIRST);
         break;
     case SSW_FILTER_TEAMS_ANY:
-        m_randomMapOptions[4] = -1;
-        refreshFilterWidgets();
-        rebuildFilteredPlayerSetup();
+        changeRandomMapOptionAndPlayers(4, -1);
         break;
     case SSW_FILTER_VERSION_FIRST:
     case SSW_FILTER_VERSION_FIRST + 1:
@@ -5719,29 +5707,24 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_VERSION_FIRST + 4:
     case SSW_FILTER_VERSION_FIRST + 5:
     case SSW_FILTER_VERSION_LAST:
-        m_randomMapOptions[5] = msg->m_codeY - SSW_FILTER_VERSION_FIRST;
-        refreshFilterWidgets();
+        changeRandomMapOption(5, msg->m_codeY - SSW_FILTER_VERSION_FIRST);
         break;
     case SSW_FILTER_VERSION_ANY:
-        m_randomMapOptions[5] = -1;
-        refreshFilterWidgets();
+        changeRandomMapOption(5, -1);
         break;
     case SSW_FILTER_CATEGORY_FIRST:
     case SSW_FILTER_CATEGORY_FIRST + 1:
     case SSW_FILTER_CATEGORY_FIRST + 2:
     case SSW_FILTER_CATEGORY_LAST:
-        m_randomMapOptions[6] = msg->m_codeY - SSW_FILTER_CATEGORY_FIRST;
-        refreshFilterWidgets();
+        changeRandomMapOption(6, msg->m_codeY - SSW_FILTER_CATEGORY_FIRST);
         break;
     case SSW_FILTER_DURATION_FIRST:
     case SSW_FILTER_DURATION_FIRST + 1:
     case SSW_FILTER_DURATION_LAST:
-        m_randomMapOptions[7] = msg->m_codeY - SSW_FILTER_DURATION_FIRST;
-        refreshFilterWidgets();
+        changeRandomMapOption(7, msg->m_codeY - SSW_FILTER_DURATION_FIRST);
         break;
     case SSW_FILTER_DURATION_ANY:
-        m_randomMapOptions[7] = -1;
-        refreshFilterWidgets();
+        changeRandomMapOption(7, -1);
         break;
     case SSW_RANDOM_MAPS:
         openRandomMapOptions();

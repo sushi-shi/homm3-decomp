@@ -2705,6 +2705,35 @@ without new native or inline claims. The adventure-view members are private;
 field layout and existing virtual boundaries are unchanged. No builds, tests
 or matching-score investigations were run.
 
+## Random-map option transitions and button groups
+
+Sixteen random-map control branches share changeRandomMapOption: write the
+selected option and call the native refreshFilterWidgets operation, which keeps
+updateFilterWidgets and redrawSelection on the call path. Five branches use
+changeRandomMapOptionAndPlayers, nesting that operation before the existing
+rebuildFilteredPlayerSetup. Their explicit caller choice preserves the unusual
+human-team distinction: selecting a specific count rebuilds player setup, while
+the -1 random choice only refreshes. Other option-specific sentinel values,
+widget-ID arithmetic, map-size constants and the layer-toggle expression retain
+their original values. Construction and incoming setup messages still perform
+raw initialization/copying without introducing intermediate refreshes.
+
+Six button-array loops share registerRandomMapButtons. For each of the original
+9/9/9/8/4/4 entries, it sets highlight frame 2, sets disabled frame 1, then appends
+the widget. It reloads the array element at each step rather than caching the
+button pointer. Construction of each group, ordering relative to its heading
+and insertion lifetimes stay with createFilterWidgets; the operation adds no
+runtime window registration or null filtering.
+
+The eight-option array and six button-pointer arrays are private to the owning
+window. Their Complete-only fields have no older Dreamcast access declaration;
+all authored uses are inside TSingleSelectionWindow. This is a project-owned
+access boundary, not a claim recovered from generated symbols. Array extents,
+member ordering, network payload copying and virtual entry points are unchanged.
+
+All three helper names and ordinary singleselectionwindow.cpp bodies are project
+inferences. No builds, tests or matching-score investigations were run.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
