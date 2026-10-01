@@ -3311,7 +3311,7 @@ rmg	?_Ucopy@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std
 rmg	?_Ucopy@?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@IAEPAUTRmgObjectPlacementRule@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x14d8b0	-
 rmg	?_Ufill@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@IAEXPAUTRmgNoiseRegion@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d9a0	-
 rmg	?_Ufill@?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@IAEXPAUTRmgObjectPlacementRule@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d8f0	-
-rmg	?addGuard@TRmgTreasureGroup@@QAEEPAVtype_object@@@Z	86.5372	86.5372	89.9329	0x135110	tokens1:aa5b470cf576
+rmg	?addGuard@TRmgTreasureGroup@@QAEEPAVtype_object@@@Z	87.9089	87.9089	89.9329	0x135110	tokens1:6b22c89e54ab
 rmg	?addObject@TRmgGeneratorBase@@UAEXPAVtype_object@@UTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x1371c0	tokens1:17aebe9f573f
 rmg	?addObject@type_random_map@@QAEXAAVtype_object@@UTRmgMapPosition@@@Z	88.3820	88.3820	89.9551	0x131ea0	tokens1:523400d43389
 rmg	?addObject@type_random_map_generator@@UAEXPAVtype_object@@UTRmgMapPosition@@@Z	67.8618	67.8618	71.7054	0x1402a0	tokens1:4a085c545b2c
@@ -3377,7 +3377,7 @@ rmg	?filterZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@AAV?$vector
 rmg	?findZone@TRmgTemplate@@QAEPAUTRmgTownSlot@@H@Z	100.0000	100.0000	100.0000	0x1330a0	tokens1:81f399b75db0
 rmg	?floodConnectionCosts@type_random_map@@QAEXUTRmgMapPosition@@E@Z	83.6236	83.6236	83.6813	0x131460	tokens1:07c594b76c16
 rmg	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x141780	tokens1:1f2ed99d7b18
-rmg	?floodWaterZoneDistances@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	85.1841	85.1841	89.6444	0x13f1a0	tokens1:f955c0e48b47
+rmg	?floodWaterZoneDistances@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	89.0335	89.0335	89.6444	0x13f1a0	tokens1:048fcb6cd035
 rmg	?generate@TRandomMapRequest@@QAEHPBDPAX@Z	100.0000	100.0000	100.0000	0x14c090	tokens1:82d1a84a7ae1
 rmg	?generate@type_artifact_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x1341f0	tokens1:f07f4ffb3bb8
 rmg	?generate@type_black_box_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134380	tokens1:68f879a5c243
