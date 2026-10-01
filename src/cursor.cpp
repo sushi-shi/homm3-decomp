@@ -970,15 +970,16 @@ void advManager::onDeadHero(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1224
-// DC line 1225 and Mac 0x91708..0x91740 acquire the hero before the
-// location/reset stores. The original stub recovery also inserted a pure,
-// discarded getCell lookup beside its now-retired INLINE_GATE/depth pin;
-// no native anchor or runtime purpose supports that extra operation.
+// Older DC line 1225 and Mac 0x91708..0x91740 acquire the hero directly.
+// Complete additionally calls game::getCell at 0x4821e1 before getHero at
+// 0x4821f0; the lookup result is discarded. Preserve this retail operation
+// independently of the removed reconstruction-only inline gates.
 DC_ADDRESS(0x07c51c, 0x66)
 MAC_ADDRESS(0x091708, 0xa0)
 void advManager::onRecruitHero(CMapChange* mapChange)
 {
     CMCRecruitHero* change = static_cast<CMCRecruitHero*>(mapChange);
+    g_game->getCell(change->m_point);
     hero* currentHero = g_game->getHero(change->m_heroId);
     currentHero->m_x = change->m_point.m_x;
     currentHero->m_y = change->m_point.m_y;
