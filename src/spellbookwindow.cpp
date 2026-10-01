@@ -596,6 +596,11 @@ DATA(0x00641db8) static const int g_tabToSchool[] = {0, 3, 1, 2, 4};
 // lookup pools are required because their addends affect the function bytes.
 // Failed controls: dialogReturn-before-id changed the shared exit tail;
 // early return on a rollover cache hit changed the lifetime/return paths.
+// DC 0x14d242..0x14d25e redraws the whole book on mouse movement when
+// gpCombatManager+52 equals 1. Complete 0x59d6c4 instead enters the cached
+// rollover path, drawing only widget 249 at 0x59daa1 and updating its
+// rectangle at 0x59dac8; Mac 0x18d660..0x18d800 does the same. Preserve
+// this later rollover behavior rather than adding the older full redraw.
 VA(0x0059d040, 0xBA0)
 DC_ADDRESS(0x14cecc, 0x3c2)
 MAC_ADDRESS(0x18cdb8, 0xaa0)  // anchor-callee: calls GotoPage/get_spell_description/GetManaCost/SetIconFrame, msg jump-table, ret 4; absorbs inlined DisplayNewSchool+convertID2HelpID;

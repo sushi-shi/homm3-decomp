@@ -1390,6 +1390,10 @@ unsigned char TMultiPlayerWindow::onJoin()
     return 0;
 }
 
+// Mac 0x21c424 enumerates Open Transport interface addresses, then
+// 0x21c45c/0x21c474 append address strings and separators. Complete
+// 0x5112e0 instead uses Winsock and copies the first resolved address at
+// 0x5113a0..0x5113d1. DC 0x101780 is only a return-true stub.
 VA(0x005112e0, 0x101)
 DC_ADDRESS(0x101780, 0x4)
 MAC_ADDRESS(0x21c3e8, 0xc0)

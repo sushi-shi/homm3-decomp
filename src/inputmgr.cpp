@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "inputmgr.h"
+#include "platform.h"
 
 #include "advmgr.h"
 #include "remote.h"
@@ -13,6 +14,10 @@
 #include "textntry.h"
 #include "winmgr.h"
 
+// DC 0xdc904..0xdc974 handles arrow keys through FocusTheWidget,
+// converts them to mouse-move events and calls DSetCursorPos. Complete
+// 0x4ec14b..0x4ec15f only records the key-down scan code before queuing it;
+// this Windows bridge has no corresponding directional-focus operation.
 VA(0x004ec0e0, 0x1AB)
 DC_ADDRESS(0x0dc894, 0x20c)
 int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam)
@@ -151,7 +156,9 @@ DC_ADDRESS(0x0dd9e4, 0x4a)
 MAC_ADDRESS(0x10e10c, 0x78)
 int inputManager::open(int keyboardFilter)
 {
-    memset(m_buffer, 0, sizeof(m_buffer));
+    // Mac 0x10e130 retains the 0x800-byte clear; Complete 0x4ec4e1
+    // expands the same operation into 0x200 zero dword stores.
+    ZeroMemory(m_buffer, sizeof(m_buffer));
     m_tail = 0;
     m_head = 0;
     m_keyboardFilter = keyboardFilter;
