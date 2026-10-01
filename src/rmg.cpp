@@ -3873,6 +3873,21 @@ void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimum
     }
 }
 
+// Square-map extent needed to enclose a candidate zone and the bounds of
+// all other zones. Both ranking and rejection use this same integer measure.
+// Keep the Y-before-X calculations and minimum requested map size.
+static inline int getRmgCandidateMapSize(const TRmgZoneBounds& bounds,
+    const TRmgMapPosition& position, int zoneSize, int mapSize)
+{
+    int minimumY = min(bounds.m_minimumY, position.m_y - zoneSize);
+    int minimumX = min(bounds.m_minimumX, position.m_x - zoneSize);
+    int maximumY = max(bounds.m_maximumY, position.m_y + zoneSize + 1);
+    int maximumX = max(bounds.m_maximumX, position.m_x + zoneSize + 1);
+    int candidateSize = max(mapSize, maximumY - minimumY);
+    candidateSize = max(candidateSize, maximumX - minimumX);
+    return candidateSize;
+}
+
 // Called by the zone-position selector at 0x53bb38 with a generated zone,
 // its vector of 12-byte candidate coordinates and the requested map size.
 // Prefer unused levels, then maximum connections, then the smallest square
@@ -3937,38 +3952,31 @@ void type_random_map_generator::filterZonePositions(
     }
 
     int bestSize = 32000;
-    int minimumY = 0;
-    int minimumX = 0;
-    int maximumY = 0;
-    int maximumX = 0;
+    TRmgZoneBounds bounds;
+    bounds.m_minimumY = 0;
+    bounds.m_minimumX = 0;
+    bounds.m_maximumY = 0;
+    bounds.m_maximumX = 0;
     for (int other = 0; other < m_zones.size(); ++other) {
         if (m_zones[other] != zone) {
             TRmgMapPosition position;
             position = m_zones[other]->getLevelPosition();
             int size = m_zones[other]->getSize();
-            minimumY = min(minimumY, position.m_y - size);
-            minimumX = min(minimumX, position.m_x - size);
-            maximumY = max(maximumY, position.m_y + size + 1);
-            maximumX = max(maximumX, position.m_x + size + 1);
+            bounds.m_minimumY = min(bounds.m_minimumY, position.m_y - size);
+            bounds.m_minimumX = min(bounds.m_minimumX, position.m_x - size);
+            bounds.m_maximumY = max(bounds.m_maximumY, position.m_y + size + 1);
+            bounds.m_maximumX = max(bounds.m_maximumX, position.m_x + size + 1);
         }
     }
     int size = zone->getSize();
     for (candidate = 0; candidate < candidates.size(); ++candidate) {
-        int candidateMinimumY = min(minimumY, candidates[candidate].m_y - size);
-        int candidateMinimumX = min(minimumX, candidates[candidate].m_x - size);
-        int candidateMaximumY = max(maximumY, candidates[candidate].m_y + size + 1);
-        int candidateMaximumX = max(maximumX, candidates[candidate].m_x + size + 1);
-        int candidateSize = max(mapSize, candidateMaximumY - candidateMinimumY);
-        candidateSize = max(candidateSize, candidateMaximumX - candidateMinimumX);
+        int candidateSize = getRmgCandidateMapSize(
+            bounds, candidates[candidate], size, mapSize);
         bestSize = min(bestSize, candidateSize);
     }
     for (candidate = candidates.size() - 1; candidate >= 0; --candidate) {
-        int candidateMinimumY = min(minimumY, candidates[candidate].m_y - size);
-        int candidateMinimumX = min(minimumX, candidates[candidate].m_x - size);
-        int candidateMaximumY = max(maximumY, candidates[candidate].m_y + size + 1);
-        int candidateMaximumX = max(maximumX, candidates[candidate].m_x + size + 1);
-        int candidateSize = max(mapSize, candidateMaximumY - candidateMinimumY);
-        candidateSize = max(candidateSize, candidateMaximumX - candidateMinimumX);
+        int candidateSize = getRmgCandidateMapSize(
+            bounds, candidates[candidate], size, mapSize);
         if (bestSize < candidateSize)
             candidates.erase(candidates.begin() + candidate);
     }
@@ -5026,6 +5034,18 @@ void type_random_map_generator::paintZoneTerrain()
     }
 }
 
+// Cleanup helper for the four ordered subdivision results. Keep the exact
+// inequality tests: this omits collapsed dimensions, not reversed bounds.
+// The source-local inline boundary is a cleanup abstraction, not an original
+// declaration claim.
+static inline void appendRmgNoiseQuadrant(
+    std::vector<TRmgNoiseRegion>& pending, const TRmgNoiseRegion& quadrant)
+{
+    if (quadrant.m_bounds.m_minimumX != quadrant.m_bounds.m_maximumX
+        && quadrant.m_bounds.m_minimumY != quadrant.m_bounds.m_maximumY)
+        pending.push_back(quadrant);
+}
+
 // Four-way random midpoint-displacement subdivision: edge averages and a
 // four-corner center average, with independent displacement at each midpoint.
 // The midpoint-noise generator passes its work vector in ECX, center sample
@@ -5057,9 +5077,7 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     quadrant.m_corners[0] = centerValue;
     quadrant.m_corners[1] = midpoints.m_maxYValue;
     quadrant.m_corners[2] = midpoints.m_maxXValue;
-    if (quadrant.m_bounds.m_minimumX != quadrant.m_bounds.m_maximumX
-        && quadrant.m_bounds.m_minimumY != quadrant.m_bounds.m_maximumY)
-        pending.push_back(quadrant);
+    appendRmgNoiseQuadrant(pending, quadrant);
 
     quadrant = region;
     quadrant.m_bounds.m_minimumX = midpointCoordinates[1];
@@ -5067,9 +5085,7 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     quadrant.m_corners[0] = midpoints.m_minYValue;
     quadrant.m_corners[1] = centerValue;
     quadrant.m_corners[3] = midpoints.m_maxXValue;
-    if (quadrant.m_bounds.m_minimumX != quadrant.m_bounds.m_maximumX
-        && quadrant.m_bounds.m_minimumY != quadrant.m_bounds.m_maximumY)
-        pending.push_back(quadrant);
+    appendRmgNoiseQuadrant(pending, quadrant);
 
     quadrant = region;
     quadrant.m_bounds.m_maximumX = midpointCoordinates[1];
@@ -5077,9 +5093,7 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     quadrant.m_corners[0] = midpoints.m_minXValue;
     quadrant.m_corners[2] = centerValue;
     quadrant.m_corners[3] = midpoints.m_maxYValue;
-    if (quadrant.m_bounds.m_minimumX != quadrant.m_bounds.m_maximumX
-        && quadrant.m_bounds.m_minimumY != quadrant.m_bounds.m_maximumY)
-        pending.push_back(quadrant);
+    appendRmgNoiseQuadrant(pending, quadrant);
 
     quadrant = region;
     quadrant.m_bounds.m_maximumX = midpointCoordinates[1];
@@ -5087,9 +5101,7 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     quadrant.m_corners[1] = midpoints.m_minXValue;
     quadrant.m_corners[2] = midpoints.m_minYValue;
     quadrant.m_corners[3] = centerValue;
-    if (quadrant.m_bounds.m_minimumX != quadrant.m_bounds.m_maximumX
-        && quadrant.m_bounds.m_minimumY != quadrant.m_bounds.m_maximumY)
-        pending.push_back(quadrant);
+    appendRmgNoiseQuadrant(pending, quadrant);
 }
 
 // Retained by the subdivision helper's ordinary vector insertion paths.
@@ -5945,6 +5957,22 @@ int type_random_map_generator::placeBorderObject(
     return color;
 }
 
+// Border-area and subterranean-gate marking share the same empty-cell
+// policy. An existing connection keeps its tile flags but receives the new
+// direction. Monolith marking intentionally has no empty-cell check and
+// must remain separate. This inline helper is a cleanup abstraction.
+static inline void markRmgBorderObjectCell(TRmgMapItem* item, int direction)
+{
+    if (item->m_objects.size() == 0) {
+        if (!item->m_connection.m_present) {
+            item->m_tileData.m_subterraneanGate = 0;
+            item->m_tileData.m_borderObject = 1;
+        }
+        item->m_connection.m_direction = direction;
+        item->m_connection.m_present = 1;
+    }
+}
+
 VA(0x00540FC0, 0x172)
 MAC_ADDRESS(0x243824, 0x2d4) // anchor-callee createGroundConnection; thiscall, ret 0x10
 void type_random_map_generator::markBorderObjectArea(
@@ -5958,14 +5986,7 @@ void type_random_map_generator::markBorderObjectArea(
     for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
         for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
             TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
-            if (item->m_objects.size() == 0) {
-                if (!item->m_connection.m_present) {
-                    item->m_tileData.m_subterraneanGate = 0;
-                    item->m_tileData.m_borderObject = 1;
-                }
-                item->m_connection.m_direction = direction;
-                item->m_connection.m_present = 1;
-            }
+            markRmgBorderObjectCell(item, direction);
         }
     }
     TRmgMapPosition previous = m_map.getMapItem(position)->m_previousTile;
@@ -6568,50 +6589,22 @@ unsigned char type_random_map_generator::createSubterraneanGate(
             --position.m_x;
             guardValue = 0;
             TRmgMapItem* item = m_map.getMapItem(position);
-            if (item->m_objects.size() == 0) {
-                if (!item->m_connection.m_present) {
-                    item->m_tileData.m_subterraneanGate = 0;
-                    item->m_tileData.m_borderObject = 1;
-                }
-                item->m_connection.m_direction = direction;
-                item->m_connection.m_present = 1;
-            }
+            markRmgBorderObjectCell(item, direction);
 
             position.m_x += 2;
             item = m_map.getMapItem(position);
-            if (item->m_objects.size() == 0) {
-                if (!item->m_connection.m_present) {
-                    item->m_tileData.m_subterraneanGate = 0;
-                    item->m_tileData.m_borderObject = 1;
-                }
-                item->m_connection.m_direction = direction;
-                item->m_connection.m_present = 1;
-            }
+            markRmgBorderObjectCell(item, direction);
         }
 
         direction = placeBorderObject(otherPosition, 1, source);
         if (direction >= 0) {
             --otherPosition.m_x;
             TRmgMapItem* item = m_map.getMapItem(otherPosition);
-            if (item->m_objects.size() == 0) {
-                if (!item->m_connection.m_present) {
-                    item->m_tileData.m_subterraneanGate = 0;
-                    item->m_tileData.m_borderObject = 1;
-                }
-                item->m_connection.m_direction = direction;
-                item->m_connection.m_present = 1;
-            }
+            markRmgBorderObjectCell(item, direction);
 
             otherPosition.m_x += 2;
             item = m_map.getMapItem(otherPosition);
-            if (item->m_objects.size() == 0) {
-                if (!item->m_connection.m_present) {
-                    item->m_tileData.m_subterraneanGate = 0;
-                    item->m_tileData.m_borderObject = 1;
-                }
-                item->m_connection.m_direction = direction;
-                item->m_connection.m_present = 1;
-            }
+            markRmgBorderObjectCell(item, direction);
             return 1;
         }
     }
