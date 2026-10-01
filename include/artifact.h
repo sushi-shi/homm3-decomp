@@ -141,8 +141,10 @@ extern const TArtifactSlotTraits (&g_artifactSlotTraits)[19];
 // Retain the const mask reference: it preserves the retail exception-path
 // value lifetime. Direct nested indexing expands _Eos instead of retaining
 // its call (92.66% caller); this canonical reference form matches100%.
+// Original public ?artifactAllowedInSlot@@YA_NW4TArtifact@@W4TArtifactSlot@@@Z
+// independently proves a bool result; preserve the source inline qualifier.
 DC_ADDRESS(0x037d88, 0x2c)
-inline unsigned char artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slot)
+inline bool artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slot)
 {
     const std::bitset<19>& allowable =
         g_artifactSlotMasks[g_artifactTraits[artifact].m_allowableSlotMask];
