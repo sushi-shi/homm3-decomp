@@ -8080,7 +8080,7 @@ TArtifact game::getRandomArtifactId(int artifactClass)
 VA(0x004c95a0, 0x18E)
 DC_ADDRESS(0x0b4e04, 0x19c)
 MAC_ADDRESS(0x0e0610, 0x1e4)
-SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
+ESpellId game::getRandomSpell(const std::bitset<5> spellLevels)
 {
     int availableCount = 0;
     int spell;
@@ -8105,7 +8105,7 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
             }
         }
         m_spellAllocInfo[spell] = 1;
-        return spell;
+        return ESpellId(spell);
     }
 
     ordinal = 0;
@@ -8119,13 +8119,13 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
     }
     if (ordinal > 0)
         return getRandomSpell(spellLevels);
-    return -1;
+    return SPELL_NONE;
 }
 
 // Mac 0:e07f4 constructs the level mask, sets level-1, and calls the
 // bitset overload at 0:e0610. It follows that overload in the same TU.
 MAC_ADDRESS(0x0e07f4, 0x68)
-SpellID game::getRandomSpell(int level)
+ESpellId game::getRandomSpell(int level)
 {
     std::bitset<5> spellLevels;
     spellLevels[level - 1] = true;

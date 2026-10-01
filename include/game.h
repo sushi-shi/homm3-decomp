@@ -1254,8 +1254,10 @@ public:
     playerData* getLocalPlayer();
     int getLastHuman() const;
     int getLocalPlayerGamePos() const;  // 0x4cea20
-    SpellID getRandomSpell(std::bitset<5> spellLevels);  // 0x4c95a0
-    SpellID getRandomSpell(int level);
+    // Original GetRandomSpell@@QAA?AW4SpellID@@H@Z proves an enum result.
+    // Complete's level wrapper forwards its added mask overload unchanged.
+    ESpellId getRandomSpell(std::bitset<5> spellLevels);  // 0x4c95a0
+    ESpellId getRandomSpell(int level);
     // Original GetHeroBoat@@QAAPAVboat@@H_N@Z proves bool occupied.
     boat* getHeroBoat(int id, bool occupied);  // 0x4ce900
     int getHeroId(type_point heroLocation);
