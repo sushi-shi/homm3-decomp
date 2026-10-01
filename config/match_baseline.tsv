@@ -739,11 +739,11 @@ bottomviewsubwindow	??0?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@
 bottomviewsubwindow	??0?$numpunct@D@std@@QAE@I@Z	100.0000	100.0000	100.0000	0x55820	-
 bottomviewsubwindow	??0TBottomViewEnemyTurn@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x53250	tokens1:26b5fdc7539a
 bottomviewsubwindow	??0TBottomViewHero@@QAE@PAVheroWindow@@@Z	95.8752	95.8752	97.7675	0x51ab0	tokens1:5e9e0d7041f1
-bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x52b80	tokens1:45942226cdb7
+bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	98.8553	100.0000	100.0000	0x52b80	tokens1:45942226cdb7
 bottomviewsubwindow	??0TBottomViewMessage@@QAE@PAVheroWindow@@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x51820	tokens1:bf1da83bb895
 bottomviewsubwindow	??0TBottomViewNewTurn@@QAE@PAVheroWindow@@@Z	99.9806	100.0000	100.0000	0x50dd0	tokens1:1245c50fac02
 bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x51220	tokens1:adf5affa5312
-bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	94.7651	94.7651	98.7476	0x521f0	tokens1:7d2ad3a5f9e9
+bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	94.5839	94.7651	98.7476	0x521f0	tokens1:7d2ad3a5f9e9
 bottomviewsubwindow	??0bad_cast@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x53cd0	-
 bottomviewsubwindow	??0bad_cast@std@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x54a10	-
 bottomviewsubwindow	??0ios_base@std@@IAE@XZ	100.0000	100.0000	100.0000	0x515c0	-
@@ -1174,7 +1174,7 @@ cursor	?handleStopOnTrigger@advManager@@AAEPAVNewmapCell@@PAVhero@@PAV2@_N2PAHJJ
 cursor	?moveHero@advManager@@QAEPAVNewmapCell@@H_NAAUtype_point@@PAH020@Z	90.4220	90.4220	90.4498	0x805e0	tokens1:71e3fe7cad37
 cursor	?onHideHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81fd0	tokens1:24db83f3e593
 cursor	?onMoveHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81ed0	tokens1:cd35ccf3e4c9
-cursor	?processMapChangeNew@advManager@@QAEXPAVCMapChange@@@Z	92.6034	92.6034	100.0000	0x82010	tokens1:de740cdf2683
+cursor	?processMapChangeNew@advManager@@QAEXPAVCMapChange@@@Z	91.7220	92.6034	100.0000	0x82010	tokens1:de740cdf2683
 cursor	?sendMapChange@@YIXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x82390	tokens1:ddd4b3bec9f6
 cursor	?stopCursor@advManager@@QAEX_N@Z	100.0000	100.0000	100.0000	0x7f7d0	tokens1:5b41fc8ba9ad
 cursor	?turnTo@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x7ffe0	tokens1:eabd347c7c20
@@ -1735,7 +1735,7 @@ events	?getLikeModifier@advManager@@CIHPAVhero@@W4TCreatureType@@@Z	100.0000	100
 events	?getTeam@game@@QBEHH@Z	100.0000	100.0000	100.0000	0xa5960	tokens1:25f79672aa15
 events	?getTreasureData@advManager@@QBEPAVTreasureData@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9f040	tokens1:2cc899fd5346
 events	?giveArtifact@advManager@@AAEXPAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0x9e8f0	tokens1:fd3e7b0dd8f5
-events	?giveBlackBoxReward@advManager@@AAE_NPBDPAVhero@@PAVNewmapCell@@Utype_point@@_NPAVBlackBoxData@@@Z	95.6184	95.6184	97.9432	0x9fa90	tokens1:5ac3a1e89bce
+events	?giveBlackBoxReward@advManager@@AAE_NPBDPAVhero@@PAVNewmapCell@@Utype_point@@_NPAVBlackBoxData@@@Z	95.6184	95.6184	97.9432	0x9fa90	tokens1:d546f57830aa
 events	?handleMapEvent@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa0ed0	tokens1:749a745645ea
 events	?heroLoses@advManager@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xac930	tokens1:1563d151aed5
 events	?heroSwap@advManager@@QAEXPAVhero@@0@Z	100.0000	100.0000	100.0000	0xaadf0	tokens1:4001de9dbf92
@@ -2225,8 +2225,8 @@ hero	?getLuckDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$al
 hero	?getMagicResistanceFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe46e0	tokens1:5770a5e68925
 hero	?getManaCost@hero@@QBEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240	tokens1:022c28de8cb6
 hero	?getManaFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5380	tokens1:462c7a0e1a4a
-hero	?getMobility@hero@@QBEHE@Z	100.0000	100.0000	100.0000	0xe4990	tokens1:f19516b828e8
 hero	?getMobility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4d90	tokens1:af68624efd12
+hero	?getMobility@hero@@QBEH_N@Z	100.0000	100.0000	100.0000	0xe4990	tokens1:bdeb07c4f019
 hero	?getMobilityFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5330	tokens1:170e6f789ec6
 hero	?getMorale@hero@@QBEHPBV1@_N1@Z	100.0000	100.0000	100.0000	0xe39b0	tokens1:a9380c167e18
 hero	?getMoraleDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	97.9541	100.0000	100.0000	0xdc320	tokens1:93decc1751aa
@@ -2558,7 +2558,7 @@ mapcell	?getObjectTypePtr@CObject@@QBEPAVCObjectType@@XZ	100.0000	100.0000	100.0
 mapcell	?getSpecialTerrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xfce20	tokens1:8eabf957eb85
 mapcell	?getTriggerCell@NewmapCell@@QAEPAV1@XZ	100.0000	100.0000	100.0000	0xfcaa0	tokens1:726522405f1d
 mapcell	?hasTriggerableEvent@NewmapCell@@QBE?B_NXZ	100.0000	100.0000	100.0000	0xfcdc0	tokens1:b6cb4157a11b
-mapcell	?init@NewfullMap@@AAEXHE@Z	100.0000	100.0000	100.0000	0xfd4f0	tokens1:745346b33bd0
+mapcell	?init@NewfullMap@@AAEXH_N@Z	100.0000	100.0000	100.0000	0xfd4f0	tokens1:e42fab1873c0
 mapcell	?insert@?$vector@URandomDwellingData@@V?$allocator@URandomDwellingData@@@std@@@std@@QAEXPAURandomDwellingData@@IABU3@@Z	100.0000	100.0000	100.0000	0x1089e0	-
 mapcell	?insert@?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@@std@@QAEXPAVBlackBoxData@@IABV3@@Z	100.0000	100.0000	100.0000	0x107150	-
 mapcell	?insert@?$vector@VMonsterData@@V?$allocator@VMonsterData@@@std@@@std@@QAEXPAVMonsterData@@IABV3@@Z	100.0000	100.0000	100.0000	0x106d70	-
@@ -2571,7 +2571,7 @@ mapcell	?insert@?$vector@VTownExtra@@V?$allocator@VTownExtra@@@std@@@std@@QAEXPA
 mapcell	?insert@?$vector@VTreasureData@@V?$allocator@VTreasureData@@@std@@@std@@QAEXPAVTreasureData@@IABV3@@Z	100.0000	100.0000	100.0000	0x106980	-
 mapcell	?insert@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEXPAVgenerator@@IABV3@@Z	100.0000	100.0000	100.0000	0x1090b0	-
 mapcell	?isDiggable@NewmapCell@@QBE_NXZ	100.0000	100.0000	100.0000	0xfccf0	tokens1:17e1efd6a689
-mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	100.0000	100.0000	100.0000	0xfdbc0	tokens1:d2f17f0246cb
+mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@H_NH@Z	100.0000	100.0000	100.0000	0xfdbc0	tokens1:50e56f9d16f5
 mapcell	?load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc6a0	tokens1:e790bd274b26
 mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@AAVBlackBoxData@@H@Z	91.4222	91.4222	96.1450	0x100430	tokens1:e00f0e2a90b7
 mapcell	?loadBlackBoxList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x100200	tokens1:7b9c824c4184
@@ -2589,7 +2589,7 @@ mapcell	?loadTreasureList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000
 mapcell	?notifyHeroDefeated@NewfullMap@@QAEXHH@Z	100.0000	100.0000	100.0000	0x105d20	tokens1:26b581bf256a
 mapcell	?notifyMonsterDefeated@NewfullMap@@QAEXUtype_point@@H@Z	100.0000	100.0000	100.0000	0x105d60	tokens1:8354f0cf4f3a
 mapcell	?placeObject@NewfullMap@@QAEHHE@Z	100.0000	100.0000	100.0000	0x105b20	tokens1:96216c08d8e9
-mapcell	?read@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	100.0000	100.0000	100.0000	0xfd690	tokens1:2c8352bfbb41
+mapcell	?read@NewfullMap@@QAEHPAVTAbstractFile@@H_NH@Z	100.0000	100.0000	100.0000	0xfd690	tokens1:8dcd3e25cee3
 mapcell	?read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc1a0	tokens1:7cd1fc9c223b
 mapcell	?readAbandonedMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101130	tokens1:441bf71369f1
 mapcell	?readArtifactData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xff120	tokens1:89fad79c59ee
@@ -2614,7 +2614,7 @@ mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	89.8415	
 mapcell	?readTreasureData@NewfullMap@@QAEHPAVTAbstractFile@@PAVTreasureData@@@Z	100.0000	100.0000	100.0000	0xfee50	tokens1:cf09cc74c67c
 mapcell	?rebuildObjectTypeIndex@NewfullMap@@QAEXXZ	99.8854	99.8854	99.8854	0x1042c0	tokens1:526a3cdef2cc
 mapcell	?resize@?$vector@VTSeerHut@@V?$allocator@VTSeerHut@@@std@@@std@@QAEXIABVTSeerHut@@@Z	100.0000	100.0000	100.0000	0x106390	-
-mapcell	?save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	95.7637	95.7637	95.7637	0xfdf40	tokens1:8d2e3c1e4a94
+mapcell	?save@NewfullMap@@QAEHPAVTAbstractFile@@H_N@Z	95.7637	95.7637	95.7637	0xfdf40	tokens1:ebe340ecd9ea
 mapcell	?save@TTimedEvent@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc440	tokens1:b818ec109289
 mapcell	?saveBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@@Z	100.0000	100.0000	100.0000	0xffea0	tokens1:95bce81a1d5c
 mapcell	?saveMapLayer@NewfullMap@@AAEHPAVTAbstractFile@@HH@Z	100.0000	100.0000	100.0000	0xfe490	tokens1:e9fb1ec34eea
@@ -4067,7 +4067,7 @@ singleselectionwindow	?onUpdatePlayerPosMsg@TSingleSelectionWindow@@QAEXPAVCNetM
 singleselectionwindow	?onWidgetDeselect@TSingleSelectionWindow@@QAEHPAVmessage@@PAEE@Z	100.0000	100.0000	100.0000	0x1865b0	tokens1:f25a39faeb17
 singleselectionwindow	?playerDropped@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189480	tokens1:3a0068339df2
 singleselectionwindow	?processMouse@@YGIPAX@Z	100.0000	100.0000	100.0000	0x177740	tokens1:87a8e8da6103
-singleselectionwindow	?processRightSelect@TSingleSelectionWindow@@EAE_NH@Z	88.8933	88.8933	88.9695	0x1822d0	tokens1:db8ec3ed2a3b
+singleselectionwindow	?processRightSelect@TSingleSelectionWindow@@EAE_NH@Z	88.8933	88.8933	88.9695	0x1822d0	tokens1:83e1fd4b8d07
 singleselectionwindow	?read@CGameHeaderInfoMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177880	tokens1:2133655fd639
 singleselectionwindow	?read@CNewMapHeaderInfoMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177a10	tokens1:da9d90f3b76b
 singleselectionwindow	?rebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	97.6865	97.6865	97.6979	0x180430	tokens1:041125d7a85b
