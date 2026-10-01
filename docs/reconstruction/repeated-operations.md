@@ -1914,8 +1914,61 @@ The three legacy remap occurrences overlap two of the ten byte-decoding callers;
 the two cycle resets are separate occurrences. Native field layout and visibility
 remain unchanged. The no-team loops were also reviewed: both stream readers use
 identity team assignments, while random-map setup interleaves them with slot
-configuration. That related operation remains a follow-up lead rather than a
-claim of completed codebase coverage.
+configuration. The shared reader conditional is now implemented in the next
+section; random-map setup retains its interleaved assignments.
+
+## Screen-effect calculations and team payloads
+
+Five capture/fade paths share file-static `clipScreenEffectRect()` in winmgr.cpp:
+ordinary and X fizzle-source capture, ordinary and X fizzle-forward, and flash.
+The operation trims width for a negative X before clamping X to zero, then does
+the same for Y/height, clips the high edges to 800x600, and reports whether both
+extents are positive. Callers retain their complete-draw gate before clipping
+and their existing early-return or positive-branch shape. Empty rectangles do
+not allocate or release a saved bitmap or alter color-cycling state.
+
+`updateScreen()` has a different low-edge policy: it clamps the origin without
+subtracting from the extent. `fadeBlit()` additionally shifts source coordinates,
+uses live bitmap dimensions, and retains its evidenced width/height asymmetry.
+Neither is converted to the fixed screen-effect clipping helper. Fizzle source
+replacement remains distinct from `releaseFizzleSource()`: replacement retains
+its allocation/draw sequence without introducing an intermediate null store;
+manager close still performs its final teardown without reusable-state resets.
+
+Four pixel-loop bodies share file-static `blendScreenPixel()`: ordinary and X
+fizzle-forward, and transparent/opaque fade-blit. It extracts blue, green and
+red through the existing runtime masks, interpolates each with the signed-int
+16.16 difference/product/shift expression, remasks and joins the components,
+and narrows the result to unsigned short. Palette lookup remains in fade-blit;
+its transparent path still skips source index zero before reading the saved
+pixel. Pointer increments, row-pitch queries, buffer lifetimes, timer reads,
+sound polling and screen updates remain in each native caller. Four frames
+with a 10ms default and eight frames with a 33ms default remain distinct;
+no floating-point blend, clamp, widened product or cached global mask is added.
+
+Fade-to-black and fade-from-black also share their packed two-pixel calculation
+through file-static `darkenScreenPixelPair()`. Their existing mask snapshots
+remain before bitmap capture, and their source locals keep their respective
+unsigned-int/unsigned-long types. The shared operation preserves the unsigned
+shifts, unsigned-long channel intermediates, remasking and final combination.
+Each caller still advances its source before the calculation and destination
+after the store, steps rows through the native pitch accessors, and owns its
+different shift loop, deadline/break handling and final image restoration.
+
+Protected `CMapHeaderData::readTeamAssignments()` shares the complete team-payload
+conditional in the scenario and save readers. Each caller first reads and stores
+the team count, then invokes the operation and returns -1 on its failure. A
+nonzero count consumes the same signed-byte array with the same short-read test,
+including partial writes; zero consumes no payload and sets each of the eight
+players to its own team. No new validation of team IDs or count is introduced.
+Random-map construction still assigns teams between its per-slot changes rather
+than moving those writes across the other initialization operations.
+
+All four names and ordinary source placements are project inferences. The two
+map-reader occurrences, five rectangle operations, four blends and two dimming
+calculations are a further reviewed batch; original native entry points and
+existing helper calls remain represented. No native addresses or inline claims
+are attached to these extractions, and field visibility/layout is unchanged.
 
 ## Validation provenance
 

@@ -5532,6 +5532,21 @@ void CMapHeaderData::countPlayerSlot(const TPlayerSlotAttributes& slot)
         ++m_numPlayers;
 }
 
+// Project-inferred shared team payload operation. A zero team count consumes
+// no payload and gives each player its own team; otherwise preserve the exact
+// short-read check on the signed-byte array and its partial-write behavior.
+bool CMapHeaderData::readTeamAssignments(TAbstractFile* infile)
+{
+    if (m_numTeams) {
+        if (infile->read(m_teamInfo, sizeof(m_teamInfo)) < sizeof(m_teamInfo))
+            return false;
+    } else {
+        for (int i = 0; i < g_mapHeaderPlayerCount; ++i)
+            m_teamInfo[i] = i;
+    }
+    return true;
+}
+
 // Project-inferred pair from random-map setup and unsupported-map display.
 // This disables special conditions without reinitializing their result or
 // payload; the stream readers use each condition's resetForType instead.
@@ -6297,13 +6312,8 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
         return -1;
     m_numTeams = x;
-    if (m_numTeams) {
-        if (infile->read(m_teamInfo, sizeof(m_teamInfo)) < sizeof(m_teamInfo))
-            return -1;
-    } else {
-        for (int i = 0; i < g_mapHeaderPlayerCount; ++i)
-            m_teamInfo[i] = i;
-    }
+    if (!readTeamAssignments(infile))
+        return -1;
 
     if (m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         m_availableHeroes.reset();
@@ -6717,13 +6727,8 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
         return -1;
     m_numTeams = x;
-    if (m_numTeams) {
-        if (infile->read(m_teamInfo, sizeof(m_teamInfo)) < sizeof(m_teamInfo))
-            return -1;
-    } else {
-        for (i = 0; i < 8; ++i)
-            m_teamInfo[i] = i;
-    }
+    if (!readTeamAssignments(infile))
+        return -1;
 
     m_heroPlayerSetups.clear();
     if (saveVersion < g_saveVersionCustomHeroSetups)

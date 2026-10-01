@@ -491,6 +491,9 @@ protected:
     // Counts remain native-public; each reader owns its read/failure ordering.
     void clearPlayerCounts();
     void countPlayerSlot(const TPlayerSlotAttributes& slot);
+    // Project-inferred team payload read or individual-team initialization.
+    // The caller has already read and stored m_numTeams.
+    bool readTeamAssignments(TAbstractFile* infile);
 };
 SIZE(CMapHeaderData, 0x2d0);
 SIZE(CMapHeaderData::TPlayerSlotAttributes, 0x44);
