@@ -681,6 +681,9 @@ int advManager::open(int newPriority)
         if (m_advWindow == 0)
             memError();
     }
+    // DC 0x6c6c..0x6c94 resets both mouse coordinates to 300 and calls
+    // DSetCursorPos before AddWindow. Windows 0x4070c0 and Mac 0x75d0
+    // proceed directly from window creation to AddWindow without that reset.
     g_windowManager->addWindow(m_advWindow, 0, 1);
     if (g_game->getNumMapLevels() < 2)
         m_advWindow->widgetSetStatus(4, 8);
@@ -2657,10 +2660,13 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                 0x00691210, rolloverEmptyText, ""));
         break;
     }
+    // Mac 0xc334..0xc348 matches GetItemId's five-bit extraction and short
+    // conversion before the visit-bit shift. All thirteen ID-indexed arms
+    // share that shape; retain the canonical MapCell.h helper calls.
     case ARENA:
         strcpy(g_text, g_quickViewText[ARENA]);
         if (cell->m_isTrigger && currHero) {
-            visited = (currHero->m_arenaFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+            visited = (currHero->m_arenaFlags & (1UL << cell->getItemId()));
             if (visited)
                 sprintf(tempText, visitedFormat,
                         g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -2776,7 +2782,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case DEAD_GUY:
         strcpy(g_text, g_quickViewText[DEAD_GUY]);
         if (cell->m_isTrigger && currHero) {
-            visited = (player->m_deadGuyFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+            visited = (player->m_deadGuyFlags & (1UL << cell->getItemId()));
             if (visited)
                 sprintf(tempText, visitedFormat,
                         g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -2797,7 +2803,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = (currHero->m_defenseTowerFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
+                    & (1UL << cell->getItemId()));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -2918,7 +2924,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = (currHero->m_gardenOfRevelationFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
+                    & (1UL << cell->getItemId()));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -2968,7 +2974,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case LEAN_TO:
         strcpy(g_text, g_quickViewText[LEAN_TO]);
         if (cell->m_isTrigger && currHero) {
-            visited = (player->m_leanToFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+            visited = (player->m_leanToFlags & (1UL << cell->getItemId()));
             if (visited)
                 sprintf(tempText, visitedFormat,
                         g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -2988,7 +2994,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                 strcat(g_text, tempText);
             }
             if (currHero) {
-                visited = (currHero->m_libraryFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+                visited = (currHero->m_libraryFlags & (1UL << cell->getItemId()));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -3022,7 +3028,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = (currHero->m_magicSchoolFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
+                    & (1UL << cell->getItemId()));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -3033,6 +3039,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
         }
         break;
+    // Mac 0xd218/0xd5ec and QuickInfo 0x15788/0x15adc test the spring
+    // and garden full bits. Keep the MapCell.h queries in both callers.
     case MAGIC_SPRING:
         strcpy(g_text, g_quickViewText[MAGIC_SPRING]);
         if (cell->m_isTrigger) {
@@ -3044,7 +3052,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = ((player->m_magicSpringFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f))) && !((cell->m_extraInfo >> 6) & 1));
+                    & (1UL << cell->getItemId())) && !cell->magicSpringIsFull());
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -3086,7 +3094,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                 strcat(g_text, tempText);
             }
             if (currHero) {
-                visited = (currHero->m_mercCampFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+                visited = (currHero->m_mercCampFlags & (1UL << cell->getItemId()));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -3136,7 +3144,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         strcpy(g_text, g_quickViewText[MYSTICAL_GARDEN]);
         if (cell->m_isTrigger) {
             visited = ((player->m_mysticalGardenFlags
-                & (1UL << (cell->m_extraInfo & 0x1f))) && !((cell->m_extraInfo >> 10) & 1));
+                & (1UL << cell->getItemId())) && !cell->gardenIsFull());
             if (visited)
                 sprintf(tempText, visitedFormat,
                         g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -3191,7 +3199,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = (currHero->m_powerSchoolFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
+                    & (1UL << cell->getItemId()));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -3306,7 +3314,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = (currHero->m_trainingGroundsFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
+                    & (1UL << cell->getItemId()));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -3344,7 +3352,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                 strcat(g_text, tempText);
             }
             if (currHero) {
-                visited = (currHero->m_warSchoolFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+                visited = (currHero->m_warSchoolFlags & (1UL << cell->getItemId()));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6670,7 +6678,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = ((g_currentPlayer->m_magicSpringFlags
-                            & (1UL << testCell->getItemId())) && !((testCell->m_extraInfo >> 6) & 1));
+                            & (1UL << testCell->getItemId())) && !testCell->magicSpringIsFull());
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6753,7 +6761,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 if (testCell->m_isTrigger) {
                     visited = (g_currentPlayer->m_mysticalGardenFlags
                         & (1UL << testCell->getItemId()))
-                        && !((testCell->m_extraInfo >> 10) & 1);
+                        && !testCell->gardenIsFull();
                     if (visited)
                         sprintf(tempText, visitFormat,
                                 g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -9450,8 +9458,9 @@ int CAdvPopup::exitDialog(message& msg)
 
 // E:\gamedcs\advmgr.cpp:11539
 // Dreamcast proves the local inventory and statement order. Retail preserves
-// that control flow but gates the network pump on Complete's bVideoPaused:
-// base handler, expired-turn exit, CheckHandleNet, abort-message exit.
+// the base handler, expired-turn exit, CheckHandleNet and abort-message exit.
+// Windows 0x41b1f2 gates the network pump on g_remoteOn at 0x69954c;
+// the former bVideoPaused label for that address was incorrect.
 VA(0x0041b1c0, 0x87)
 DC_ADDRESS(0x01ecb4, 0xf4)
 MAC_ADDRESS(0x01bf2c, 0x108)  // CAdvPopup vtable 0x63a6a8 slot 9
