@@ -4949,9 +4949,10 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
             int mastery = castingHero->getSpellLevel(spell, m_magicTerrain);
             value = m_spellPower[side] * g_spellTraits[spell].m_powerFactor
                 + g_spellTraits[spell].m_masteryBonus[mastery];
-            value += castingHero->getHeroSpellBonus(spell,
-                                                     target->m_monInfo.m_level,
-                                                     value);
+            // SpellCastWorkChance's original first argument is int; the
+            // hero bonus callee independently requires the SpellID enum.
+            value += castingHero->getHeroSpellBonus(
+                static_cast<ESpellId>(spell), target->m_monInfo.m_level, value);
         }
         if (target->m_numTroops >= target->m_origNumTroops
             || target->m_monInfo.m_hitPoints > value)

@@ -2291,7 +2291,8 @@ long army::getAdjustedAttack(const army* enemy,
             attack += 8;
             if (getController()) {
                 hero* castingHero = getController();
-                attack += castingHero->getHeroSpellBonus(55, m_monInfo.m_level, 8);
+                attack += castingHero->getHeroSpellBonus(
+                    SPELL_SLAYER, m_monInfo.m_level, 8);
             }
         }
     }
@@ -3570,23 +3571,25 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         cancelIndividualSpell(SPELL_BLESS);
         m_curseAmount = amount;
         break;
+    // Native SetSpellInfluence takes an int spell ID; the hero bonus
+    // helper takes SpellID, so dynamic calls cross that enum boundary.
     case SPELL_BLOODLUST:
         m_bloodlustAmount = amount;
         if (castingHero)
             m_bloodlustAmount += castingHero->getHeroSpellBonus(
-                spell, m_monInfo.m_level, amount);
+                static_cast<ESpellId>(spell), m_monInfo.m_level, amount);
         break;
     case SPELL_PRECISION:
         m_precisionAmount = amount;
         if (castingHero)
             m_precisionAmount += castingHero->getHeroSpellBonus(
-                spell, m_monInfo.m_level, amount);
+                static_cast<ESpellId>(spell), m_monInfo.m_level, amount);
         break;
     case SPELL_WEAKNESS:
         m_weaknessPenalty = amount;
         if (castingHero)
             m_weaknessPenalty += castingHero->getHeroSpellBonus(
-                spell, m_monInfo.m_level, amount);
+                static_cast<ESpellId>(spell), m_monInfo.m_level, amount);
         if (m_monInfo.m_attackSkill < m_weaknessPenalty)
             m_weaknessPenalty = m_monInfo.m_attackSkill;
         m_monInfo.m_attackSkill = m_monInfo.m_attackSkill - m_weaknessPenalty;
@@ -3595,14 +3598,14 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         m_toughskinBonus = amount;
         if (castingHero)
             m_toughskinBonus += castingHero->getHeroSpellBonus(
-                spell, m_monInfo.m_level, amount);
+                static_cast<ESpellId>(spell), m_monInfo.m_level, amount);
         m_monInfo.m_defenseSkill = m_monInfo.m_defenseSkill + m_toughskinBonus;
         break;
     case SPELL_PRAYER:
         m_prayerBonus = amount;
         if (castingHero)
             m_prayerBonus += castingHero->getHeroSpellBonus(
-                spell, m_monInfo.m_level, amount);
+                static_cast<ESpellId>(spell), m_monInfo.m_level, amount);
         m_monInfo.m_attackSkill = m_monInfo.m_attackSkill + m_prayerBonus;
         m_monInfo.m_defenseSkill = m_monInfo.m_defenseSkill + m_prayerBonus;
         if (!is(creatureSiegeWeapon))
@@ -3618,7 +3621,7 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         m_luckBonus = amount;
         if (castingHero)
             m_luckBonus += castingHero->getHeroSpellBonus(
-                spell, m_monInfo.m_level, amount);
+                static_cast<ESpellId>(spell), m_monInfo.m_level, amount);
         break;
     case SPELL_MISFORTUNE:
         m_luckPenalty = amount;
@@ -3629,7 +3632,7 @@ void army::setSpellInfluence(int spell, int power, int mastery,
             m_tailwindBonus = amount;
             if (castingHero)
                 m_tailwindBonus += castingHero->getHeroSpellBonus(
-                    spell, m_monInfo.m_level, amount);
+                    static_cast<ESpellId>(spell), m_monInfo.m_level, amount);
             m_monInfo.m_speed = m_monInfo.m_speed + m_tailwindBonus;
             m_monFrameInfo.m_walkCycleTime =
                 static_cast<long>(m_origWalkCycleTime * 0.65);
