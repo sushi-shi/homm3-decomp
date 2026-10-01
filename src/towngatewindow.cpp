@@ -99,15 +99,11 @@ TTownGateWindow::TTownGateWindow(bool adventureSpell)
     heroWindow::addWidgetsToMessageStream();
 
     message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = 0;
+    msg.setWidgetCommand(widget::WIDGET_SET_PLAYER_PALETTE_COLORS, 0);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     broadcastMessage(msg);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-    msg.m_codeY = SELECTOR_ID;
+    msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, SELECTOR_ID);
     msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
     broadcastMessage(msg);
 
@@ -187,9 +183,7 @@ MAC_ADDRESS(0x1b88bc, 0xc0)
 void TTownGateWindow::updateTownLocators()
 {
     message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-    msg.m_codeY = SELECTOR_ID;
+    msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, SELECTOR_ID);
     msg.m_extra = widget::WIDGET_DRAWN;
     broadcastMessage(msg);
 
@@ -205,9 +199,7 @@ MAC_ADDRESS(0x1b897c, 0xac)
 void TTownGateWindow::doModal()
 {
     message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
-    msg.m_codeY = SLIDER_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_SLIDER_RESOLUTION, SLIDER_ID);
     msg.m_extra = m_towns.size() - (NUM_TOWN_ENTRIES - 1);
     broadcastMessage(msg);
 

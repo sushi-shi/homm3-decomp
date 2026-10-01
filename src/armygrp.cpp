@@ -185,9 +185,7 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
         g_splitWindow->m_sourceTroops + g_splitWindow->m_destinationTroops;
 
     message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = 0;
+    msg.setWidgetCommand(widget::WIDGET_SET_PLAYER_PALETTE_COLORS, 0);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     g_splitWindow->broadcastMessage(msg);
 

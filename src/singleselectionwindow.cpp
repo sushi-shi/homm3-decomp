@@ -4977,14 +4977,6 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
     if (map >= static_cast<int>(m_selectionHeaders.size()))
         return;
     message msg;
-    msg.m_id = 0;
-    msg.m_codeX = 0;
-    msg.m_codeY = 0;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
     m_mapChanged = m_currentMap != map || m_saveMode;
     m_currentMap = map;
     if (map == -1 && !m_randomMapSelected) {
@@ -5167,10 +5159,6 @@ void TSingleSelectionWindow::setFilter(int size)
         updateGameVars();
     }
     message msg;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_window = 0;
     msg.m_id = 0x200;
     msg.m_codeY = 189;
     msg.m_codeX = 4;
@@ -5208,10 +5196,6 @@ MAC_ADDRESS(0x17dd94, 0xec)
 void TSingleSelectionWindow::setDifficultyHiLite()
 {
     message select;
-    select.m_qualifier = 0;
-    select.m_mouseX = 0;
-    select.m_mouseY = 0;
-    select.m_window = 0;
     select.m_id = 0x200;
     select.m_codeX = widget::WIDGET_CLEAR_STATUS;
     select.m_extra = widget::WIDGET_HIGHLIGHTED;

@@ -734,9 +734,8 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
                     if (artifact.m_artifactId == ARTIFACT_NONE) {
                         message msg;
-                        msg.m_id = MESSAGE_WIDGET;
-                        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-                        msg.m_codeY = rowWidgetId + item + 119;
+                        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS,
+                                             rowWidgetId + item + 119);
                         msg.m_extra = widget::WIDGET_DRAWN;
                         g_overWin->broadcastMessage(msg);
                     }
@@ -1949,9 +1948,7 @@ MAC_ADDRESS(0x139f84, 0x94)
 void TOverviewWindow::updateRollover(char* text)
 {
     message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 37;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 37);
     msg.m_extraText = text;
     g_overWin->broadcastMessage(msg);
 

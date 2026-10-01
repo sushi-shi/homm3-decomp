@@ -572,9 +572,8 @@ void CScenarioInfoDlg::setDifficultyHiLite()
     for (int i = 107; i <= 111; ++i)
         getWidget(i)->enable(0);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_STATUS;
-    msg.m_codeY = g_game->m_setup.m_difficulty + 107;
+    msg.setWidgetCommand(widget::WIDGET_SET_STATUS,
+                         g_game->m_setup.m_difficulty + 107);
     msg.m_extra = widget::WIDGET_HIGHLIGHTED;
     broadcastMessage(msg);
 }

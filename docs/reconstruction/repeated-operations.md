@@ -1759,13 +1759,18 @@ layout and virtual slots do not change.
 
 ## Widget command messages and slider stepping
 
-Forty three-field command setups now share ordinary
+Ninety-one three-field command setups now share ordinary
 `message::setWidgetCommand(command, widgetId)`. Twelve are widget-side command
 production: base send-message, border/icon/text/hotspot deselection, button and
 slider selection/right-click, and text-entry keyboard/left/right handling.
 Twenty-eight are recruitment broadcasts in `open()`, `update()` and
-`quickViewRecruit()`. The operation writes message id, command and widget id in
-that order. It retains modifier bits, mouse coordinates, payload and window;
+`quickViewRecruit()`. Fifty-one further setups cover hill-fort (16), town pages
+(11), market setup/update (10), town gate (four), overview and castle (two each),
+and quest log, hero swap, campaign briefing, scenario difficulty, army splitting
+and window text setup (one each). Five market setups originally used literal
+0x200 rather than the message-id enumerator. The operation writes message id,
+command and widget id in that order. It retains modifier bits, mouse coordinates,
+payload and window;
 borrowed text assignments and dispatch stay in the callers, and reused messages
 remain the same objects. The existing dialog-end methods and partial command
 updates remain distinct. The native message fields remain public.
@@ -1791,8 +1796,41 @@ resolution changes and initialization retain their distinct semantics.
 
 All four new helper names and ordinary source placements are project inferences.
 No stored layout, public/protected native data distinctions or virtual slots
-change. Additional widget-message producers elsewhere remain leads for subsequent
-flow review; this section records the callers actually migrated.
+change. Partial, reordered and conditionally assembled messages remain separate
+operations; this section records the complete setups actually migrated.
+
+## Message construction, market controls and campaign difficulty
+
+Eighteen message declarations now rely on the existing native default constructor
+instead of repeating all or part of its zero initialization immediately afterward.
+The callers are hill-fort recalculation, base window drawing/text setup, three
+single-selection methods, three army-strip drawing methods, widget send-message,
+and eight town-page methods. The message objects stay in their original scopes;
+no dispatch, callback or other intervening operation moves. Town setup's plain
+`int objToLoad` declaration remains after the message declaration. The existing
+constructor in message_record.h, paired to retail 0x589190 and Dreamcast 0x2d58,
+still initializes all eight Windows fields. Resets after use and ring-buffer
+partial input operations are not replaced with construction.
+
+All fifteen native market status methods remain: on/off/disabled for resource
+trade, gifts, artifact buying, artifact selling and creature selling. Their five
+`setWidgetOn()` bodies share project-inferred `setTradeWidgetOn()`, which invokes
+the existing window status helpers to set ACTIVE|DRAWN and then clear
+DIMMED_NODRAW. Each dispatch still gets a separate locally constructed message,
+and a first dispatch's result does not suppress the second. The five off methods
+reuse `widgetClearStatus()` with all three bits; the five disabled methods reuse
+`widgetSetStatus()` with DIMMED_NODRAW only. Neither operation changes the
+separate WIDGET_DISABLED bit. Original short widget IDs, native method boundaries
+and their callers are retained.
+
+Campaign briefing's two native difficulty callbacks share the complete guarded
+operation `changeCampaignDifficulty(message, change)`. Only deselection without
+the right-button modifier changes the stored signed-char difficulty. The message's
+window is captured before the change; button refresh precedes the full-window
+draw and consume return. Other events return zero. The callbacks still supply
+-1 and +1, and the existing button-visibility policy continues to control the
+available directions; no new clamp is introduced. Both new helper names and
+ordinary same-TU source placements are project inferences.
 
 ## Validation provenance
 

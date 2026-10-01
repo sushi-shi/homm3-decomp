@@ -180,9 +180,7 @@ void doQuestLog(int player)
             g_questLogWindow->m_seerHutLogList.push_back(numberSeerHuts + i);
     }
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
-    msg.m_codeY = 17;
+    msg.setWidgetCommand(widget::WIDGET_SET_SLIDER_RESOLUTION, 17);
     msg.m_extra = g_questLogWindow->m_seerHutLogList.size() - 15;
     g_questLogWindow->broadcastMessage(msg);
 

@@ -1453,13 +1453,6 @@ MAC_ADDRESS(0x1bd494, 0x1c4)
 void TTownScreenWindow::updateTownLocator(int i)
 {
     message msg;
-    msg.m_codeX = 0;
-    msg.m_codeY = 0;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
 
     playerData* player = g_game->getLocalPlayer();
@@ -1813,13 +1806,6 @@ MAC_ADDRESS(0x1be5cc, 0x2bc)
 void townManager::updateTownInfo()
 {
     message msg;
-    msg.m_codeX = 0;
-    msg.m_codeY = 0;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
 
     int frame = 0;
@@ -1961,13 +1947,6 @@ void townManager::setupTown(unsigned char fade)
 {
     message msg;
     int objToLoad;
-    msg.m_codeX = 0;
-    msg.m_codeY = 0;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
 
     g_turnDuration.pause();
@@ -2729,9 +2708,7 @@ MAC_ADDRESS(0x1c078c, 0xd0)
 void townManager::showText()
 {
     message textMessage;
-    textMessage.m_id = MESSAGE_WIDGET;
-    textMessage.m_codeX = widget::WIDGET_SET_TEXT;
-    textMessage.m_codeY = 0x97;
+    textMessage.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x97);
     textMessage.m_extraText = m_statusText;
     m_townWindow->broadcastMessage(textMessage);
     m_townWindow->drawWindow(0, 0x97, 0x97);
@@ -3695,14 +3672,7 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
     heroWindow::addWidgetsToMessageStream();
 
     message msg;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = BACKGROUND_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_PLAYER_PALETTE_COLORS, BACKGROUND_ID);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     broadcastMessage(msg);
 
@@ -3831,9 +3801,7 @@ MAC_ADDRESS(0x1cc7cc, 0xe0)
 void type_garrison_base_window::showText()
 {
     message textMessage;
-    textMessage.m_id = MESSAGE_WIDGET;
-    textMessage.m_codeX = widget::WIDGET_SET_TEXT;
-    textMessage.m_codeY = 0xc9;
+    textMessage.setWidgetCommand(widget::WIDGET_SET_TEXT, 0xc9);
     textMessage.m_extraText = g_townManager->m_statusText;
     broadcastMessage(textMessage);
     drawWindow(0, 0xc8, 0xc9);
@@ -4142,14 +4110,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
     setWinText(this, 25);
 
     message msg;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = 0;
+    msg.setWidgetCommand(widget::WIDGET_SET_PLAYER_PALETTE_COLORS, 0);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     broadcastMessage(msg);
 
@@ -4380,13 +4341,7 @@ TShipWindow::TShipWindow(int type)
         // between them - only codeX and extra are re-stored for the
         // second broadcast.
         message msg;
-        msg.m_qualifier = 0;
-        msg.m_mouseX = 0;
-        msg.m_mouseY = 0;
-        msg.m_window = 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_STATUS;
-        msg.m_codeY = BUY_BUTTON_ID;
+        msg.setWidgetCommand(widget::WIDGET_SET_STATUS, BUY_BUTTON_ID);
         msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
         broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
@@ -5655,14 +5610,7 @@ void townManager::redrawTownScreen()
     drawTown(0, 1, 1);
 
     message msg;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x97;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x97);
     msg.m_extraText = m_statusText;
     m_townWindow->broadcastMessage(msg);
 
@@ -5992,9 +5940,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
         memError();
 
     message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = 1;
+    msg.setWidgetCommand(widget::WIDGET_SET_PLAYER_PALETTE_COLORS, 1);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     window->broadcastMessage(msg);
 
@@ -6315,9 +6261,7 @@ void townManager::setupMage(heroWindow* mageWin)
 {
     message msg;
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = 0;
+    msg.setWidgetCommand(widget::WIDGET_SET_PLAYER_PALETTE_COLORS, 0);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     mageWin->broadcastMessage(msg);
 
@@ -6691,14 +6635,7 @@ unsigned char doTavern()
     setWinText(g_tavernWindow, 0x16);
 
     message msg;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = 0;
+    msg.setWidgetCommand(widget::WIDGET_SET_PLAYER_PALETTE_COLORS, 0);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     g_tavernWindow->broadcastMessage(msg);
 
@@ -7496,9 +7433,7 @@ MAC_ADDRESS(0x1e0bf8, 0xd0)
 void TCastleWindow::showText()
 {
     message textMessage;
-    textMessage.m_id = MESSAGE_WIDGET;
-    textMessage.m_codeX = widget::WIDGET_SET_TEXT;
-    textMessage.m_codeY = 0x8a;
+    textMessage.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x8a);
     textMessage.m_extraText = g_text;
     broadcastMessage(textMessage);
     drawWindow(0, 0x89, 0x8a);
@@ -7828,9 +7763,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
     message msg;
 
     g_castleOpen = 1;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = 0;
+    msg.setWidgetCommand(widget::WIDGET_SET_PLAYER_PALETTE_COLORS, 0);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     wellWin->broadcastMessage(msg);
 

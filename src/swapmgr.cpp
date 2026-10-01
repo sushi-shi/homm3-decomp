@@ -846,9 +846,7 @@ int swapManager::open(int newPriority)
     reset();
 
     message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = 13;
-    msg.m_codeY = 0;
+    msg.setWidgetCommand(13, 0);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     m_parent->broadcastMessage(msg);
 

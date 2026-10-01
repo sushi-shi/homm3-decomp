@@ -1486,9 +1486,7 @@ void doMarket()
             g_tradeWindow = new TTradeResourceWindow(g_marketWindowX, g_marketWindowY);
             if (g_tradeWindow == 0)
                 memError();
-            msg.m_id = 0x200;
-            msg.m_codeX = 13;
-            msg.m_codeY = 0;
+            msg.setWidgetCommand(13, 0);
             msg.m_extra = g_game->getLocalPlayerGamePos();
             g_tradeWindow->broadcastMessage(msg);
             initializeMarketSelection();
@@ -1501,9 +1499,7 @@ void doMarket()
             g_giveWindow = new TGiveResourceWindow(g_marketWindowX, g_marketWindowY);
             if (g_giveWindow == 0)
                 memError();
-            msg.m_id = 0x200;
-            msg.m_codeX = 13;
-            msg.m_codeY = 0;
+            msg.setWidgetCommand(13, 0);
             msg.m_extra = g_game->getLocalPlayerGamePos();
             g_giveWindow->broadcastMessage(msg);
             initializeMarketSelection();
@@ -1524,9 +1520,7 @@ void doMarket()
             g_buyWindow = new TBuyArtifactWindow(g_marketWindowX, g_marketWindowY);
             if (g_buyWindow == 0)
                 memError();
-            msg.m_id = 0x200;
-            msg.m_codeX = 13;
-            msg.m_codeY = 0;
+            msg.setWidgetCommand(13, 0);
             msg.m_extra = g_game->getLocalPlayerGamePos();
             g_buyWindow->broadcastMessage(msg);
             initializeMarketSelection();
@@ -1539,9 +1533,7 @@ void doMarket()
             g_sellArtWindow = new TSellArtifactWindow(g_marketWindowX, g_marketWindowY);
             if (g_sellArtWindow == 0)
                 memError();
-            msg.m_id = 0x200;
-            msg.m_codeX = 13;
-            msg.m_codeY = 0;
+            msg.setWidgetCommand(13, 0);
             msg.m_extra = g_game->getLocalPlayerGamePos();
             g_sellArtWindow->broadcastMessage(msg);
             initializeMarketSelection();
@@ -1554,9 +1546,7 @@ void doMarket()
             g_sellCreatureWindow = new TSellCreatureWindow(g_marketWindowX, g_marketWindowY);
             if (g_sellCreatureWindow == 0)
                 memError();
-            msg.m_id = 0x200;
-            msg.m_codeX = 13;
-            msg.m_codeY = 0;
+            msg.setWidgetCommand(13, 0);
             msg.m_extra = g_game->getLocalPlayerGamePos();
             g_sellCreatureWindow->broadcastMessage(msg);
             initializeMarketSelection();
@@ -1612,6 +1602,15 @@ void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
     msg->m_codeY = i + 0x6b;
 }
 
+// Project-inferred shared operation beneath the five native SetWidgetOn
+// methods. Each native status helper constructs its own message, preserving
+// two dispatches and their order; this is not widget::enable's disabled bit.
+static void setTradeWidgetOn(heroWindow& window, short id)
+{
+    window.widgetSetStatus(id, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    window.widgetClearStatus(id, widget::WIDGET_DIMMED_NODRAW);
+}
+
 // DC SetWidgetOff also clears widget::focusable after GetWidget (e.g.
 // 0x188d00, lines 913-914). Complete removes that field from widget's
 // proved layout; its retained Update bodies only contain the broadcasts.
@@ -1621,8 +1620,7 @@ DC_ADDRESS(0x188cc8, 0x38)
 MAC_ADDRESS(0x1f56f0, 0x60)
 void TTradeResourceWindow::setWidgetOn(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
-    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
+    setTradeWidgetOn(*this, id);
 }
 
 // Original: TTradeResourceWindow::SetWidgetOff; tradpost.cpp:911
@@ -1630,7 +1628,8 @@ DC_ADDRESS(0x188d00, 0x34)
 MAC_ADDRESS(0x1f5750, 0x34)
 void TTradeResourceWindow::setWidgetOff(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
+    widgetClearStatus(id, widget::WIDGET_DIMMED_NODRAW
+                          | widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
 }
 
 // Original: TTradeResourceWindow::SetWidgetDisabled; tradpost.cpp:918
@@ -1638,7 +1637,7 @@ DC_ADDRESS(0x188d34, 0x1c)
 MAC_ADDRESS(0x1f5784, 0x34)
 void TTradeResourceWindow::setWidgetDisabled(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
+    widgetSetStatus(id, widget::WIDGET_DIMMED_NODRAW);
 }
 
 // Original: TGiveResourceWindow::SetWidgetOn; tradpost.cpp:923
@@ -1646,8 +1645,7 @@ DC_ADDRESS(0x188d50, 0x38)
 MAC_ADDRESS(0x1f57b8, 0x60)
 void TGiveResourceWindow::setWidgetOn(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
-    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
+    setTradeWidgetOn(*this, id);
 }
 
 // Original: TGiveResourceWindow::SetWidgetOff; tradpost.cpp:929
@@ -1655,7 +1653,8 @@ DC_ADDRESS(0x188d88, 0x34)
 MAC_ADDRESS(0x1f5818, 0x34)
 void TGiveResourceWindow::setWidgetOff(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
+    widgetClearStatus(id, widget::WIDGET_DIMMED_NODRAW
+                          | widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
 }
 
 // Original: TGiveResourceWindow::SetWidgetDisabled; tradpost.cpp:936
@@ -1663,7 +1662,7 @@ DC_ADDRESS(0x188dbc, 0x1c)
 MAC_ADDRESS(0x1f584c, 0x34)
 void TGiveResourceWindow::setWidgetDisabled(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
+    widgetSetStatus(id, widget::WIDGET_DIMMED_NODRAW);
 }
 
 // Original: TBuyArtifactWindow::SetWidgetOn; tradpost.cpp:941
@@ -1671,8 +1670,7 @@ DC_ADDRESS(0x188dd8, 0x38)
 MAC_ADDRESS(0x1f5880, 0x60)
 void TBuyArtifactWindow::setWidgetOn(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
-    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
+    setTradeWidgetOn(*this, id);
 }
 
 // Original: TBuyArtifactWindow::SetWidgetOff; tradpost.cpp:947
@@ -1680,7 +1678,8 @@ DC_ADDRESS(0x188e10, 0x68)
 MAC_ADDRESS(0x1f58e0, 0x34)
 void TBuyArtifactWindow::setWidgetOff(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
+    widgetClearStatus(id, widget::WIDGET_DIMMED_NODRAW
+                          | widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
 }
 
 // Original: TBuyArtifactWindow::SetWidgetDisabled; tradpost.cpp:954
@@ -1688,7 +1687,7 @@ DC_ADDRESS(0x188e78, 0x1c)
 MAC_ADDRESS(0x1f5914, 0x34)
 void TBuyArtifactWindow::setWidgetDisabled(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
+    widgetSetStatus(id, widget::WIDGET_DIMMED_NODRAW);
 }
 
 // Original: TSellArtifactWindow::SetWidgetOn; tradpost.cpp:959
@@ -1696,8 +1695,7 @@ DC_ADDRESS(0x188e94, 0x38)
 MAC_ADDRESS(0x1f5948, 0x60)
 void TSellArtifactWindow::setWidgetOn(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
-    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
+    setTradeWidgetOn(*this, id);
 }
 
 // Original: TSellArtifactWindow::SetWidgetOff; tradpost.cpp:965
@@ -1705,7 +1703,8 @@ DC_ADDRESS(0x188ecc, 0x34)
 MAC_ADDRESS(0x1f59a8, 0x34)
 void TSellArtifactWindow::setWidgetOff(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
+    widgetClearStatus(id, widget::WIDGET_DIMMED_NODRAW
+                          | widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
 }
 
 // Original: TSellArtifactWindow::SetWidgetDisabled; tradpost.cpp:972
@@ -1713,7 +1712,7 @@ DC_ADDRESS(0x188f00, 0x1c)
 MAC_ADDRESS(0x1f59dc, 0x34)
 void TSellArtifactWindow::setWidgetDisabled(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
+    widgetSetStatus(id, widget::WIDGET_DIMMED_NODRAW);
 }
 
 // Original: TSellCreatureWindow::SetWidgetOn; tradpost.cpp:977
@@ -1721,8 +1720,7 @@ DC_ADDRESS(0x188f1c, 0x38)
 MAC_ADDRESS(0x1f5a10, 0x60)
 void TSellCreatureWindow::setWidgetOn(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 5, id, 6);
-    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
+    setTradeWidgetOn(*this, id);
 }
 
 // Original: TSellCreatureWindow::SetWidgetOff; tradpost.cpp:983
@@ -1730,7 +1728,8 @@ DC_ADDRESS(0x188f54, 0x34)
 MAC_ADDRESS(0x1f5a70, 0x34)
 void TSellCreatureWindow::setWidgetOff(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
+    widgetClearStatus(id, widget::WIDGET_DIMMED_NODRAW
+                          | widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
 }
 
 // Original: TSellCreatureWindow::SetWidgetDisabled; tradpost.cpp:990
@@ -1738,7 +1737,7 @@ DC_ADDRESS(0x188f88, 0x1c)
 MAC_ADDRESS(0x1f5aa4, 0x34)
 void TSellCreatureWindow::setWidgetDisabled(short id)
 {
-    broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
+    widgetSetStatus(id, widget::WIDGET_DIMMED_NODRAW);
 }
 
 // E:\gamedcs\tradpost.cpp:995
@@ -1803,9 +1802,7 @@ void TTradeResourceWindow::update(unsigned char update)
         else
             sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
     }
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 2;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 2);
     msg.m_extraText = g_text;
     broadcastMessage(msg);
 
@@ -1992,9 +1989,7 @@ void TGiveResourceWindow::update(bool update)
             sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_GIVE_INSTRUCTIONS]);
     }
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = 3;
-    msg.m_codeY = 2;
+    msg.setWidgetCommand(3, 2);
     msg.m_extraText = g_text;
     broadcastMessage(msg);
 
@@ -2205,9 +2200,7 @@ void TBuyArtifactWindow::update(unsigned char update)
         else
             sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
     }
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 2;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 2);
     msg.m_extraText = g_text;
     broadcastMessage(msg);
 
@@ -2402,9 +2395,7 @@ void TSellArtifactWindow::update(unsigned char update)
     } else {
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
     }
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 2;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 2);
     msg.m_extraText = g_text;
     broadcastMessage(msg);
 
@@ -2576,9 +2567,7 @@ void TSellCreatureWindow::update(bool update)
             sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
     }
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = 3;
-    msg.m_codeY = 2;
+    msg.setWidgetCommand(3, 2);
     msg.m_extraText = g_text;
     broadcastMessage(msg);
 

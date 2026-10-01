@@ -340,12 +340,6 @@ MAC_ADDRESS(0x20b58c, 0x144)
 void heroWindow::drawWindow(unsigned char update, int lowID, int highID)
 {
     message msg;
-    msg.m_codeY = 0;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_DRAW;
     widget* current = m_headWidget;
@@ -826,19 +820,9 @@ MAC_ADDRESS(0x20c424, 0xa0)
 void setWinText(heroWindow* win, int winId)
 {
     message msg;
-    msg.m_id = 0;
-    msg.m_codeX = 0;
-    msg.m_codeY = 0;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
     for (unsigned i = 0; i < 37; ++i) {
         if (g_winSetup[i].m_windowId == winId) {
-            msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = widget::WIDGET_SET_TEXT;
-            msg.m_codeY = g_winSetup[i].m_widgetId;
+            msg.setWidgetCommand(widget::WIDGET_SET_TEXT, g_winSetup[i].m_widgetId);
             msg.m_extraText = g_winSetup[i].m_text;
             win->broadcastMessage(msg);
         }

@@ -251,9 +251,6 @@ MAC_ADDRESS(0x20aa0c, 0x74)
 int widget::sendMessage(widget::ECommands command, int extra)
 {
     message msg;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
     msg.setWidgetCommand(command, m_id);
     msg.m_extra = extra;
     msg.m_window = m_parentWindow;
