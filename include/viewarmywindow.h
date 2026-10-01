@@ -118,7 +118,8 @@ private:
     unsigned char m_showingOkButton;
     // The three flag bytes leave one byte of natural four-byte alignment
     // before Influence. DC records 14 real members and no padding field.
-    int m_influence[3];
+    // DC Influence: LF_ARRAY 0x2747, three signed SpellID enums (0x1b61).
+    ESpellId m_influence[3];
     int m_duration[3];
     bitmapBackedTextWidget* m_rolloverWidget;
     iconWidget* m_spriteWidget;

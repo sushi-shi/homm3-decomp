@@ -325,9 +325,9 @@ TViewArmyWindow::TViewArmyWindow(const armyGroup& group, int iarmy,
 
     createRolloverWidget();
 
-    m_influence[0] = -1;
-    m_influence[1] = -1;
-    m_influence[2] = -1;
+    m_influence[0] = SPELL_NONE;
+    m_influence[1] = SPELL_NONE;
+    m_influence[2] = SPELL_NONE;
 
     addWidgetsToMessageStream();
 
@@ -390,7 +390,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     createRolloverWidget();
 
     int i;
-    MEMSET(m_influence, -1, sizeof(m_influence), i);
+    MEMSET(m_influence, SPELL_NONE, sizeof(m_influence), i);
 
     addWidgetsToMessageStream();
 }
@@ -607,8 +607,8 @@ int TViewArmyWindow::windowHandler(message& msg)
                 if (helpID >= 0) {
                     if (hoverID >= AFFECTING_SPELLS_0_ID
                         && hoverID <= AFFECTING_SPELLS_2_ID
-                        && m_influence[hoverID - AFFECTING_SPELLS_0_ID] != -1) {
-                        int spell =
+                        && m_influence[hoverID - AFFECTING_SPELLS_0_ID] != SPELL_NONE) {
+                        ESpellId spell =
                             m_influence[hoverID - AFFECTING_SPELLS_0_ID];
                         if (spell == SPELL_BIND)
                             sprintf(g_text,
@@ -978,14 +978,16 @@ void TViewArmyWindow::createSpellInfluenceWidgets(const army* const thisArmy)
 
     for (int xp = 0; xp < NSPELLS; ++xp) {
         if (spell < thisArmy->m_spellInfluenceQueue.size()) {
-            m_influence[xp] = thisArmy->m_spellInfluenceQueue[spell];
+            // Complete still exposes an integer queue at this boundary.
+            m_influence[xp] = static_cast<ESpellId>(
+                thisArmy->m_spellInfluenceQueue[spell]);
             m_duration[xp] = thisArmy->getSpellTime(m_influence[xp]);
             m_widgets.push_back(new iconWidget(
                 x, 186, 48, 36, widgetId,
                 DATA_COMPGEN(0x006700a4, viewArmySpellIcons, "spellint.def"),
                 m_influence[xp] + 1, 0, 0, 0, 0x10));
         } else {
-            m_influence[xp] = -1;
+            m_influence[xp] = SPELL_NONE;
         }
         ++widgetId;
         ++spell;
