@@ -386,6 +386,10 @@ void setDefaultCombatOptions()
 
 // Mac reads a native preferences file: its branches call checkConfigFile
 // twice and setGameDefaults once. Windows uses the registry helper below.
+// Native ReadPrefsFromRegistry is a file-static procedure. Its only Windows
+// caller precedes the definition, preserving the retained retail call.
+static void readPrefsFromRegistry();
+
 VA(0x0050b750, 0x59)
 DC_ADDRESS(0x0fdbd0, 0x7c)
 MAC_ADDRESS(0x1311bc, 0x10c)
@@ -422,7 +426,7 @@ void readPrefs()
 // evidence; do not manufacture dead code to imitate the patch bytes.
 VA(0x0050b7b0, 0x657)  // anchor-callgraph (called by ReadPrefs)
 DC_ADDRESS(0x0fdbc0, 0x10)
-void readPrefsFromRegistry()
+static void readPrefsFromRegistry()
 {
     DWORD cbData;
     HKEY key;
