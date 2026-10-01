@@ -736,6 +736,15 @@ void __cdecl processMP3Stop(void* nothing)
     _endthread();
 }
 
+// Project-inferred terminal operation for an empty queued MP3 request.
+// Both caller exits hold these two locks and have no live owning temporaries.
+static void finishEmptyMP3Request()
+{
+    LeaveCriticalSection(&g_soundManager->m_sectionMp3NameChange);
+    LeaveCriticalSection(&g_soundManager->m_sectionMp3Change);
+    _endthread();
+}
+
 VA(0x0059a840, 0x3BB)
 DC_ADDRESS(0x14b7f4, 0xf4)
 void __cdecl processStopAndPlayMP3(void* arglist)
@@ -744,9 +753,7 @@ void __cdecl processStopAndPlayMP3(void* arglist)
     int volume = g_soundManager->convertVolume(127, VOLUME_TYPE_101);
     EnterCriticalSection(&g_soundManager->m_sectionMp3NameChange);
     if (!g_waitingStream[0]) {
-        LeaveCriticalSection(&g_soundManager->m_sectionMp3NameChange);
-        LeaveCriticalSection(&g_soundManager->m_sectionMp3Change);
-        _endthread();
+        finishEmptyMP3Request();
         return;
     }
     LeaveCriticalSection(&g_soundManager->m_sectionMp3NameChange);
@@ -760,9 +767,7 @@ void __cdecl processStopAndPlayMP3(void* arglist)
 
     EnterCriticalSection(&g_soundManager->m_sectionMp3NameChange);
     if (!g_waitingStream[0]) {
-        LeaveCriticalSection(&g_soundManager->m_sectionMp3NameChange);
-        LeaveCriticalSection(&g_soundManager->m_sectionMp3Change);
-        _endthread();
+        finishEmptyMP3Request();
         return;
     }
 

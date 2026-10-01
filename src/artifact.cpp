@@ -427,14 +427,12 @@ bool initializeArtifactTraitsTable()
                 traitsSheet->getRow(row);
             TArtifactTraits& traits = g_artifactTraitsStorage[row - 2];
             const char* source = values[0];
-            unsigned length = strlen(source) + 1;
-            memcpy(destination, source, length);
+            unsigned length = copyResourceString(destination, source);
             traits.m_name = destination;
             destination += length;
 
             source = values[22];
-            length = strlen(source) + 1;
-            memcpy(destination, source, length);
+            length = copyResourceString(destination, source);
             traits.m_description = destination;
             destination += length;
 
@@ -494,8 +492,7 @@ bool initializeArtifactTraitsTable()
         char* destination = artifactSlotStrings.get();
         for (slot = 0; slot < 19; ++slot) {
             const char* source = slotsSheet->getRow(slot)[0];
-            unsigned length = strlen(source) + 1;
-            memcpy(destination, source, length);
+            unsigned length = copyResourceString(destination, source);
             g_artifactSlotTraitsStorage[slot].m_name = destination;
             destination += length;
 

@@ -1215,6 +1215,33 @@ sample playback's separate zero-volume branch. This is a project-inferred
 consolidation inside the established owner function, without another helper,
 interface change, arithmetic widening or normalization of the stored settings.
 
+## Empty MP3 requests and pooled resource strings
+
+Both empty-request exits in `processStopAndPlayMP3()` share TU-local
+`finishEmptyMP3Request()`: release the name-change lock, release the MP3-change
+lock, then end the thread. The first exit remains before stopping the existing
+stream; the second remains after stopping/closing it and reacquiring the name
+lock. Each caller retains its explicit return. No owning C++ temporaries are
+live at these exits, no destructor-based cleanup is introduced, and each unlock
+still resolves the global manager independently. The successful path and other
+thread exits retain their distinct lock state and cleanup.
+
+Six pooled text-copy sites share `copyResourceString()`: campaign and region
+names, music tracks, artifact names/descriptions and artifact-slot names. It
+scans the source length once, includes the terminator, copies with `memcpy` and
+returns the original unsigned byte count. The callers still assign the table
+pointer before advancing their local cursor, preserving writable versus const
+pointer types and text-line progression. Existing resource getters and the
+native two-parameter `initializeArtifactTraits()` boundary remain in place.
+
+Allocation, sizing passes and resource guards stay with the loaders. Campaign
+map names retain their reassigned static pool; music/artifact loaders retain
+their one-time static allocations. Blank-line/header skips, region counts and
+artifact metadata initialization are unchanged. The new names and ordinary
+source placements are project inferences, with the resource-copy declaration
+shared through the existing text-resource header and one body in its source.
+No new native addresses, inline qualifiers or ownership policies are claimed.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

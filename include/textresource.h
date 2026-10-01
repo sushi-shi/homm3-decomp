@@ -7,6 +7,10 @@
 
 #include "resource.h"
 
+// Project-inferred copy into pre-sized resource storage; returns bytes copied,
+// including the terminator. Table assignment and cursor advancement are caller-owned.
+unsigned copyResourceString(char* destination, const char* source);
+
 // Named indices into genrltxt.txt. Every value is retail-byte-proven by the
 // corresponding TTextResource::Text[index] consumer; names describe those
 // consumers until the original source roster supplies stronger wording.

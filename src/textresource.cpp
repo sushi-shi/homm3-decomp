@@ -4,6 +4,15 @@
 
 #include "textresource.h"
 
+// Project-inferred common operation used by pooled table loaders. Preserve
+// one length scan, unsigned byte count and memcpy rather than a second scan.
+unsigned copyResourceString(char* destination, const char* source)
+{
+    unsigned length = strlen(source) + 1;
+    memcpy(destination, source, length);
+    return length;
+}
+
 // Original: TTextResource::TTextResource; textresource.cpp:33
 DC_ADDRESS(0x163808, 0x50)
 TTextResource::TTextResource() : resource(0, RESOURCE_TYPE_NONE), m_data(0)
