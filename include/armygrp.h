@@ -609,7 +609,7 @@ SIZE(SSpellTraits, 136);
 // end is this pointer cell (0x685450 + 81*136 == 0x687f58).
 extern const SSpellTraits (&g_spellTraits)[81];
 
-unsigned char spellTargetsASingleArmy(int spell, int sslevel);
+bool spellTargetsASingleArmy(int spell, int sslevel);
 
 // The special-ground MODE GetArmyMorale/GetArmyLuck dispatch on (the
 // dword param with sentinels 2..5): cursed ground zeroes the stat,

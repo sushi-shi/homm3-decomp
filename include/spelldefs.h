@@ -29,7 +29,7 @@ enum ESpellTargetFlags {
     SPELL_TARGET_MARK_AREA = 0x280
 };
 
-unsigned char spellTargetsASingleArmy(int spell, int sslevel);
+bool spellTargetsASingleArmy(int spell, int sslevel);
 unsigned char initializeSpellTraitsTable();
 
 // Mutable implementation storage filled from sptraits.txt. The public

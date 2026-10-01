@@ -101,20 +101,21 @@ DATA(0x00687f58) const SSpellTraits (&g_spellTraits)[81] = g_spellTraitsImp;
 static void initializeSpellTraits(
     int id, const std::vector<char*, std::allocator<char*> >& resource);
 
+// Original ?SpellTargetsASingleArmy@@YA_NHH@Z proves bool result
+// and integer parameters; preserve Complete's fastcall boundary.
+// Native line 216 loads flags; line 220 carries the compound predicate.
+// The direct return preserves all 48 retail bytes under the bool contract.
+// Staged int/unsigned results add normalization; a staged bool narrows the
+// return immediates. Those alternatives do not reproduce this body.
 VA(0x0059e060, 0x30)
 DC_ADDRESS(0x14e278, 0x50)
 MAC_ADDRESS(0x18e73c, 0x7c)
-unsigned char spellTargetsASingleArmy(int spell, int sslevel)
+bool spellTargetsASingleArmy(int spell, int sslevel)
 {
     unsigned int flags = g_spellTraits[spell].m_flags;
-    unsigned int result;
-    if ((flags & SPELL_TARGET_ALWAYS_SINGLE)
+    return (flags & SPELL_TARGET_ALWAYS_SINGLE)
         || ((flags & SPELL_TARGET_MASS_AT_EXPERT) && sslevel <= 2)
-        || ((flags & SPELL_TARGET_MASS_AT_ADVANCED) && sslevel <= 1))
-        result = 1;
-    else
-        result = 0;
-    return result;
+        || ((flags & SPELL_TARGET_MASS_AT_ADVANCED) && sslevel <= 1);
 }
 
 VA(0x0059e090, 0xB7)
