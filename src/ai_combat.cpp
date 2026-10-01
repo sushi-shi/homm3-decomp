@@ -739,18 +739,24 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, const h
 VA(0x00425510, 0x382)
 DC_ADDRESS(0x02ad58, 0x108)
 MAC_ADDRESS(0x027720, 0x160)
+// DC 794/803 separates the casting guard from the spell disjunction;
+// 821 owns one mastery/value guard, 825/826 its writes, and 829 the return.
+// Mac 0x277f8..0x27824 has the same guarded writes. Restoring both source
+// boundaries leaves VC6 bytes unchanged; the first monster-value expansion
+// still occurs in the negative-karma arm rather than retail's dispel pass.
 void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI_combat_data& defender) const
 {
-    if (!defender.m_canCastSpells
-        && (choice.m_spell == SPELL_DISPEL
+    if (!defender.m_canCastSpells) {
+        if (choice.m_spell == SPELL_DISPEL
             || choice.m_spell == SPELL_ANTI_MAGIC
             || choice.m_spell == SPELL_PROTECTION_FROM_AIR
             || choice.m_spell == SPELL_PROTECTION_FROM_FIRE
             || choice.m_spell == SPELL_PROTECTION_FROM_WATER
             || choice.m_spell == SPELL_PROTECTION_FROM_EARTH
             || choice.m_spell == SPELL_MAGIC_MIRROR
-            || choice.m_spell == SPELL_CURE))
-        return;
+            || choice.m_spell == SPELL_CURE)
+            return;
+    }
     if (choice.m_spell == SPELL_DISPEL) {
         getEnchantmentValue(choice, getHero());
         if (choice.m_mastery < eMasteryAdvanced)
@@ -759,12 +765,11 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI
         // (0x4256b7) and compares the ourChoice value after the second pass
         type_spell_choice ourChoice = choice;
         defender.getEnchantmentValue(choice, getHero());
-        if (choice.m_mastery != eMasteryAdvanced)
-            return;
-        if (ourChoice.m_value >= choice.m_value)
-            return;
-        choice.m_secondTargetHex = choice.m_target;
-        choice.m_target = -1;
+        if (choice.m_mastery == eMasteryAdvanced
+            && ourChoice.m_value < choice.m_value) {
+            choice.m_secondTargetHex = choice.m_target;
+            choice.m_target = -1;
+        }
         return;
     }
     if (g_spellTraits[choice.m_spell].m_karma > 0)
