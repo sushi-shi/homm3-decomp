@@ -2265,7 +2265,7 @@ void townManager::setHeroCommand()
 VA(0x005c7400, 0x391)
 DC_ADDRESS(0x16c6a8, 0x296)
 MAC_ADDRESS(0x1bf77c, 0x454)
-void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
+void townManager::setArmyCommand(int splitEnabled, bool joinDialog)
 {
     char flag = 0;
     m_command = -1;
@@ -2681,7 +2681,7 @@ VA(0x005c8080, 0x108)
 DC_ADDRESS(0x16d0dc, 0x104)
 MAC_ADDRESS(0x1c05b0, 0x154)
 void townManager::selectArmy(strip* fromStrip, long slot,
-                              unsigned char isOwnerCell)
+                              bool isOwnerCell)
 {
     m_currStrip = fromStrip;
     m_currIndex = slot;
@@ -2717,7 +2717,7 @@ void townManager::selectArmy(strip* fromStrip, long slot,
 DC_ADDRESS(0x16d1e0, 0x5a)
 MAC_ADDRESS(0x1c0704, 0x88)
 void townManager::armyCommand(strip* whichStrip, int i, int shift,
-                              unsigned char joinDialog)
+                              bool joinDialog)
 {
     if (whichStrip->m_group) {
         if (m_srcIndex >= 0 && m_srcStrip->m_owner == g_netLocalGamePos) {

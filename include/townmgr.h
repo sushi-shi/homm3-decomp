@@ -901,7 +901,8 @@ public:
     // Original DC public ?DrawTown@townManager@@QAAXHH_N@Z proves bool drawHotspots.
     void drawTown(int update, int incFrame, bool drawHotspots);
     void newStrips();
-    void armyCommand(strip* whichStrip, int i, int shift, unsigned char joinDialog);
+    // Original ArmyCommand@@QAAXPAVstrip@@HH_N proves Boolean ownership flag.
+    void armyCommand(strip* whichStrip, int i, int shift, bool joinDialog);
     void swapHeroes();
     void moveHeroToGarrison();
     // +0x1cc, seven bytes - the dwelling slot each of the fort page's
@@ -915,7 +916,8 @@ public:
     void resetStrips();
     void setCommandAndText(message& msg);
     void showText();
-    void setArmyCommand(int splitEnabled, unsigned char joinDialog);
+    // Original SetArmyCommand@@QAAXH_N proves Boolean ownership flag.
+    void setArmyCommand(int splitEnabled, bool joinDialog);
     void doCommand(int inCommand, unsigned char isGarrison,
                    type_garrison_base_window* garrisonWindow);
     void cycleOutline(const int objectIndex, const int x, const int y,
@@ -955,7 +957,8 @@ public:
 private:
     void doSkeletonTransformer();
     void doHall();
-    void selectArmy(strip* fromStrip, long slot, unsigned char isOwnerCell);
+    // Original select_army@@AAAXPAVstrip@@J_N proves private bool formal.
+    void selectArmy(strip* fromStrip, long slot, bool isOwnerCell);
     void showBuildingInfo(int buildingId, unsigned char rightClick);
 
 public:
