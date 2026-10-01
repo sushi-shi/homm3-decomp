@@ -1505,13 +1505,13 @@ inline void addPal24(CSprite* sprite, const TPalette24* pal)
 // both still have 73/72 CFG blocks. Prior peaks remain historical controls.
 // The earlier flattened-cache model reached 88.8564% in HIST, but lost the
 // proven shared cache-helper structure and remains only a diagnostic lead.
-// SpriteDataHeader0x55f6's fname is char(*)[13], not a flat char buffer;
-// SpriteDefHeader0x28ae's pal is char[768]. Restore the row allocation and
+// SpriteDataHeader 0x55f6's fname is char(*)[13], not a flat char buffer;
+// SpriteDefHeader 0x28ae's pal is char[768]. Restore the row allocation and
 // ordinal accesses while retaining the palette's proven unsigned-byte API.
-// Mac154348/1543e0 reload fname at each call: a hoisted row cursor loses
-// that source lifetime despite scoring88.80%. The complete indexed record
-// model measures87.6790% against the saved88.9355% control, with all46 calls
-// retained. Only GetSprite changes among235 emitted TU code sections.
+// Mac 0x154348/0x1543e0 reload fname at each call: a hoisted row cursor loses
+// that source lifetime despite scoring 88.80%. The complete indexed record
+// model measures 87.6790% against the saved 88.9355% control, with all 46 calls
+// retained. Only GetSprite changes among 235 emitted TU code sections.
 VA(0x0055c7b0, 0x743)
 DC_ADDRESS(0x122320, 0x112)
 MAC_ADDRESS(0x153fcc, 0x618)  // anchor-caller/body records; wall
@@ -1663,7 +1663,7 @@ CSprite* ResourceManager::getSprite(const char* name)
     delete[] sequences;
 
     // The DEF record owns chars; the native palette constructor consumes
-    // unsigned bytes (??0TPalette24@@QAA@PBE@Z, DC public0x5b145b).
+    // unsigned bytes (??0TPalette24@@QAA@PBE@Z, DC public 0x5b145b).
     TPalette24 palette24(
         reinterpret_cast<const unsigned char*>(sdef.m_palette));
     if (g_graphicsSaturated)

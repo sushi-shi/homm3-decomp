@@ -220,7 +220,7 @@ void LODFile::sort()
 VA(0x004faa70, 0xAB)
 DC_ADDRESS(0x0e9690, 0x4e)
 MAC_ADDRESS(0x11bb74, 0x80)
-// Original public0x593733 ?pointAt@LODFile@@QAA_NPBD@Z proves bool,
+// Original public 0x593733 ?pointAt@LODFile@@QAA_NPBD@Z proves bool,
 // despite byte lowering. Fresh VC6 emits QAE_NPBD rather than QAEEPBD;
 // all17 lodfile and235 resourcemanager code sections remain byte-identical.
 // The owner comparison requires refreshed target labels for the bool name.
