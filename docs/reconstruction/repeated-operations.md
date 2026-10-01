@@ -975,6 +975,37 @@ state. Earlier exits that never acquire the set-pointer guard remain unchanged.
 All three new methods have project-inferred names and ordinary source bodies;
 field visibility, storage and virtual slots are unchanged.
 
+## Input queue commits and partial message resets
+
+Keyboard, mouse and forced-mouse producers share `commitBufferedEvent()` after
+writing the event and querying current modifiers. It advances the tail modulo
+64 and advances the head only when the new tail reaches it, retaining the
+oldest-event discard policy. Callback callers still resolve `g_inputManager`
+after the modifier query, while forced input uses its original receiver.
+Capture/release calls, coordinate decoding, busy-flag handling and keyboard menu
+shortcuts stay in their original positions. Keyboard input does not acquire the
+mouse producer's busy guard.
+
+Opening, active close and flush share private `resetQueueIndices()`, storing
+tail zero before head zero. Opening retains its preceding whole-buffer wipe;
+flush retains its preceding Windows-message pump; close retains its status guard
+and subsequent filter/status changes. `getEvent()` still advances the head,
+whereas `peekEvent()` only normalizes it modulo 64. Both keep their sound poll,
+message copy and conditional ASCII conversion.
+
+The native-event bridges share `message::clearInputFields()`, clearing their six
+input fields in the existing chained-assignment order while retaining extra and
+window. Empty/inactive queue results share `setNoInput()`, clearing id, codeY,
+codeX and qualifier in that order. Their default-constructed local message stays
+in each caller; neither partial reset replaces the complete message constructor.
+Forced mouse movement retains its direct writes without acquiring an extra clear.
+
+Dreamcast inputManager `0x240a` / field list `0x240b` declares the buffer, head,
+tail and busy flag public. Their visibility and types remain unchanged, as do
+the public native message fields. The four new methods use project-inferred
+names and ordinary definitions in the input TU, with no added virtual slots,
+storage, native addresses or explicit-inline qualifiers.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

@@ -32,6 +32,10 @@ public:
     void setDialogEnd(int result);       // widget/end with a codeY result
     void setDialogEndCodes(int result);  // codeY/end only; retain message id
 
+    // Project-inferred input protocol operations, retaining extra/window.
+    void clearInputFields();  // includes mouse coordinates
+    void setNoInput();        // retains mouse coordinates
+
     // DC type 0x1020 proves this overload's declaration, but no body or
     // inline source row has been recovered. Keep the declaration alone;
     // overview's zero-initialization uses the proven default constructor.

@@ -13,6 +13,40 @@
 #include "textntry.h"
 #include "winmgr.h"
 
+// Project-inferred input operations. Ring slots retain their extra/window
+// fields; an empty returned event clears only its id, codes and modifiers.
+void message::clearInputFields()
+{
+    m_id = m_codeX = m_codeY = m_mouseX = m_mouseY = m_qualifier = 0;
+}
+
+void message::setNoInput()
+{
+    m_id = 0;
+    m_codeY = 0;
+    m_codeX = 0;
+    m_qualifier = 0;
+}
+
+// Project-inferred queue commit shared by native and forced input. The event
+// is complete before this advances the tail; overflow discards the oldest slot.
+void inputManager::commitBufferedEvent()
+{
+    m_tail++;
+    m_tail %= 64;
+    if (m_head == m_tail) {
+        m_head++;
+        m_head %= 64;
+    }
+}
+
+// Reset indices only: opening owns the buffer wipe and flushing owns the pump.
+void inputManager::resetQueueIndices()
+{
+    m_tail = 0;
+    m_head = 0;
+}
+
 VA(0x004ec0e0, 0x1AB)
 DC_ADDRESS(0x0dc894, 0x20c)
 int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam)
@@ -24,7 +58,7 @@ int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long
     if (g_inputManager->getStatus() != 1)
         return 1;
     e = &g_inputManager->m_buffer[g_inputManager->m_tail];
-    e->m_id = e->m_codeX = e->m_codeY = e->m_mouseX = e->m_mouseY = e->m_qualifier = 0;
+    e->clearInputFields();
     switch (winMsg) {
     case WM_KEYDOWN:
         e->m_id = MESSAGE_KEY_DOWN;
@@ -38,12 +72,7 @@ int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long
     if (e->m_id != 0) {
         int quals = g_inputManager->getCurrQuals();
         e->m_qualifier = quals;
-        g_inputManager->m_tail++;
-        g_inputManager->m_tail %= 64;
-        if (g_inputManager->m_head == g_inputManager->m_tail) {
-            g_inputManager->m_head++;
-            g_inputManager->m_head %= 64;
-        }
+        g_inputManager->commitBufferedEvent();
         g_inputManager->m_extendFlag = 0;
         if (g_windowManager->getStatus() == 1) {
             if (g_advManager == 0 || g_advManager->m_advWindow == 0
@@ -74,7 +103,7 @@ int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long lo
         return 1;
     g_inputManager->m_bufferBusy = 1;
     e = &g_inputManager->m_buffer[g_inputManager->m_tail];
-    e->m_id = e->m_codeX = e->m_codeY = e->m_mouseX = e->m_mouseY = e->m_qualifier = 0;
+    e->clearInputFields();
     bool hasPosition = true;
     switch (winMsg) {
     case WM_MOUSEMOVE:
@@ -117,12 +146,7 @@ int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long lo
     if (e->m_id != 0) {
         int quals = g_inputManager->getCurrQuals();
         e->m_qualifier = quals;
-        g_inputManager->m_tail++;
-        g_inputManager->m_tail %= 64;
-        if (g_inputManager->m_head == g_inputManager->m_tail) {
-            g_inputManager->m_head++;
-            g_inputManager->m_head %= 64;
-        }
+        g_inputManager->commitBufferedEvent();
     }
     g_inputManager->m_bufferBusy = 0;
     return e->m_id == 0;
@@ -152,8 +176,7 @@ MAC_ADDRESS(0x10e10c, 0x78)
 int inputManager::open(int keyboardFilter)
 {
     memset(m_buffer, 0, sizeof(m_buffer));
-    m_tail = 0;
-    m_head = 0;
+    resetQueueIndices();
     m_keyboardFilter = keyboardFilter;
     makeScanCodeTable();
     m_id = 4;
@@ -170,8 +193,7 @@ void inputManager::close()
 {
     if (m_status != 1)
         return;
-    m_tail = 0;
-    m_head = 0;
+    resetQueueIndices();
     m_keyboardFilter = 0;
     m_status = 0;
 }
@@ -190,11 +212,11 @@ MAC_ADDRESS(0x10e1b0, 0x38)
 void inputManager::flush()
 {
     process1WindowsMessage();
-    m_tail = 0;
-    m_head = 0;
+    resetQueueIndices();
 }
 
-// canonical message clear, and both call the already-claimed
+// GetEvent and PeekEvent poll sound before checking the queue and share the
+// no-input result operation. Only GetEvent consumes the buffered message.
 VA(0x004ec590, 0xAE)
 DC_ADDRESS(0x0dda74, 0x19e)
 MAC_ADDRESS(0x10e1e8, 0x15c)
@@ -209,10 +231,7 @@ message inputManager::getEvent()
         if (msg.m_id == MESSAGE_KEY_DOWN && m_keyCodeType == 0)
             asciiConvert(&msg);
     } else {
-        msg.m_id = 0;
-        msg.m_codeY = 0;
-        msg.m_codeX = 0;
-        msg.m_qualifier = 0;
+        msg.setNoInput();
     }
     return msg;
 }
@@ -231,10 +250,7 @@ message inputManager::peekEvent()
         if (msg.m_id == MESSAGE_KEY_DOWN && m_keyCodeType == 0)
             asciiConvert(&msg);
     } else {
-        msg.m_id = 0;
-        msg.m_codeY = 0;
-        msg.m_codeX = 0;
-        msg.m_qualifier = 0;
+        msg.setNoInput();
     }
     return msg;
 }
@@ -425,8 +441,6 @@ void inputManager::forceMouseMove()
     e->m_mouseY = e->m_codeY;
     quals = getCurrQuals();
     e->m_qualifier = quals;
-    m_tail = (m_tail + 1) % 64;
-    if (m_head == m_tail)
-        m_head = (m_head + 1) % 64;
+    commitBufferedEvent();
     m_bufferBusy = 0;
 }
