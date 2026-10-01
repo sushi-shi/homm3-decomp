@@ -644,6 +644,9 @@ bool type_AI_combat_data::hasCreature(TCreatureType creature) const
     return 0;
 }
 
+// Mac 0x27500/0x27624 expands the target-side getHero read in the two
+// mass-damage loops; 0x27560/0x27568 expands the same caster accessor in
+// the paired valuation helper. Keep the shared getter at all four sites.
 VA(0x004253e0, 0x12F)
 DC_ADDRESS(0x02ab88, 0x90)
 MAC_ADDRESS(0x027498, 0xa0)
@@ -653,7 +656,7 @@ long type_AI_combat_data::getMassDamageValue(type_spell_choice& choice, const he
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     for (long i = m_creatures.size(); i-- > 0; )
-        value += m_creatures[i].getSpellDamage(choice.m_spell, castingHero, m_currentHero, damage);
+        value += m_creatures[i].getSpellDamage(choice.m_spell, castingHero, getHero(), damage);
     return value;
 }
 
@@ -668,8 +671,8 @@ void type_AI_combat_data::getMassDamageValue(
     type_spell_choice& choice,
     type_AI_combat_data& defender) const
 {
-    long ownDamage = getMassDamageValue(choice, m_currentHero);
-    long defenderDamage = defender.getMassDamageValue(choice, m_currentHero);
+    long ownDamage = getMassDamageValue(choice, getHero());
+    long defenderDamage = defender.getMassDamageValue(choice, getHero());
     if (ownDamage < m_totalCombatValue && ownDamage < defenderDamage)
         choice.m_value = defenderDamage - ownDamage;
 }
@@ -698,7 +701,7 @@ void type_AI_combat_data::castMassDamageSpell(
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     for (long i = m_creatures.size(); i-- > 0; ) {
         value += m_creatures[i].getSpellDamage(
-            choice.m_spell, castingHero, m_currentHero, damage);
+            choice.m_spell, castingHero, getHero(), damage);
         value = m_creatures[i].takeDamage(value);
         m_totalCombatValue -= value;
     }
