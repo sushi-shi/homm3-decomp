@@ -5352,6 +5352,12 @@ void __fastcall generateRmgIslandMask(unsigned char* mask, int width, int height
     }
 }
 
+// Mac 0x240c54 initializes the shared point level before painting;
+// 0x240d18..0x240d2c copies that complete point into the map query.
+// Keep its lifetime and canonical by-value lookup instead of reconstructing
+// another position through the scalar overload (99.3392 -> 99.9298%).
+// Residual: height/level multiply operands trade register/memory roles;
+// the retained getMapItem body remains exact and is not changed for this site.
 VA(0x0053EFA0, 0x1F2)
 MAC_ADDRESS(0x240ba8, 0x270)
 void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& bounds, int level)
@@ -5366,6 +5372,7 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
             m_map.m_mapWidth, m_map.m_mapHeight);
         TRmgTerrainBrush brush(&map, terrain, 4);
         generateRmgIslandMask(mask, width, height);
+        point.m_z = level;
         for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
             for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
                 if (mask[(point.m_y - bounds.m_minimumY) * width + point.m_x - bounds.m_minimumX] > 0)
@@ -5373,10 +5380,9 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
             }
         }
     }
-    point.m_z = level;
     for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
         for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
-            TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
+            TRmgMapItem* item = m_map.getMapItem(point);
             if (item->m_tile.m_landType != eTerrainWater && !item->m_connection.m_present) {
                 item->m_tileData.m_subterraneanGate = 0;
                 item->m_tileData.m_borderObject = 1;
