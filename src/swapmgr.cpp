@@ -1540,9 +1540,13 @@ CHeroUpdateMsg::~CHeroUpdateMsg()
 // reach 83.6259%/83.4984%, below 84.0502%. Canonical helper order is retained.
 // Fresh native-call review at 86.81%: the apparent main/$L inliner
 // differences are EH funclet labels. The remaining extra call is sprintf:
-// Complete shares the left/right experience-format tail, whereas Mac keeps
+// Complete shares the right experience/mana sprintf tail, whereas Mac keeps
 // all four experience/mana sprintf sites. Complete also shares the expired
 // return with the final ExitSwapManager tail; DC explicitly returns at 1245.
+// Mac 0x1a809c/0x1a8338 and retail cache each hero level before
+// getExperience, then pass that same value to sprintf. Two case-owned level
+// locals recover the natural common exits and format tail: 86.81 -> 98.32
+// before refreshing the private Boolean helper labels; no exit goto is needed.
 VA(0x005afdf0, 0xABB)
 DC_ADDRESS(0x15d4ac, 0x986)
 MAC_ADDRESS(0x1a7954, 0xdc0)  // full retail dispatcher + DC dossier
@@ -1868,9 +1872,9 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
+                        int level = m_heroes[0]->m_level;
                         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
-                                m_heroes[0]->m_level,
-                                hero::getExperience(m_heroes[0]->m_level + 1),
+                                level, hero::getExperience(level + 1),
                                 m_heroes[0]->m_experience);
                         normalDialog(
                             g_text,
@@ -1939,9 +1943,9 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
+                        int level = m_heroes[1]->m_level;
                         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
-                                m_heroes[1]->m_level,
-                                hero::getExperience(m_heroes[1]->m_level + 1),
+                                level, hero::getExperience(level + 1),
                                 m_heroes[1]->m_experience);
                         normalDialog(
                             g_text,
