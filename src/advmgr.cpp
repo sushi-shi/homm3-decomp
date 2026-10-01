@@ -6123,7 +6123,8 @@ void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpda
 // Complete calls the exact mine/shrine/tree/witch helpers and the distinct
 // quick-info quest/seer builders 0x572e40/0x5743e0. DC's older in-caller mine
 // and seer operations do not replace those retail-proven calls. The current
-// quest temporary's destructor expands naturally as retail does. Remaining
+// quest temporary has its expression-end lifetime; its cleanup expansion
+// still differs from retail after the visitor-ID getter recovery. Remaining
 // differences include GetHero arm layout, the nested cell/zCell decision,
 // and switch-tail scheduling. Compare named sites, not aggregate call counts.
 // ExtraInfoUnion's DC inheritance is represented by NewmapCell's existing

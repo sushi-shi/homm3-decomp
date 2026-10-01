@@ -606,12 +606,15 @@ SIZE(WagonInfo, 4);
 // stores into `and eax,0xfffeffe0 / xor eax,id / or eax,0xffc0`, a mask
 // that spares bit 5 while clearing the id lane and bit 16, and an OR
 // rather than a masked insert because the artifact is set to -1.
+// DC SkeletonInfo record 0x2f8b uses unsigned-int bitfields (0x75)
+// for id, unused and has_treasure. Preserve those unchanged domains;
+// Complete independently widens/signs the artifact lane as described above.
 struct type_skeleton_info {
 public:
-    unsigned long m_id : 5;
-    unsigned long m_unused : 1;
+    unsigned int m_id : 5;
+    unsigned int m_unused : 1;
     signed long m_artifact : 10;
-    unsigned long m_hasTreasure : 1;
+    unsigned int m_hasTreasure : 1;
     unsigned long m_tail : 15;
 };
 SIZE(type_skeleton_info, 4);
