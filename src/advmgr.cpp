@@ -1375,7 +1375,7 @@ int advManager::main(message& msg)
     return result;
 }
 
-unsigned char saveGame(unsigned char campaignWinMode);
+bool saveGame(bool campaignWinMode);
 
 // The exit-command latch DoSystemOptions fills; owner TU unlocated, nearest
 // consumer declares - and that is now ProcessKeyPress below, whose N, L,
@@ -7890,9 +7890,11 @@ void advManager::setHeroContext(int heroId, int inMove, bool waitingPlayer, bool
 VA(0x00418160, 0x270)
 DC_ADDRESS(0x01ae38, 0x32a)
 MAC_ADDRESS(0x0187b4, 0x288)
-unsigned char saveGame(unsigned char campaignWinMode)
+// Original DC public ?SaveGame@@YA_N_N@Z proves both bool domains.
+// The local result follows the 0/1 state and the bool game-save result.
+bool saveGame(bool campaignWinMode)
 {
-    unsigned char result = 0;
+    bool result = false;
     int humanCount = 0;
     if (!campaignWinMode) {
         g_advManager->disableButtons();
@@ -9214,7 +9216,7 @@ void advManager::doAdventureOptions()
         mobilizeCurrHero(0, 0, 1);
 }
 
-unsigned char saveGame(unsigned char campaignWinMode);
+bool saveGame(bool campaignWinMode);
 
 VA(0x0041ac00, 0x1AC)
 DC_ADDRESS(0x01e5e8, 0x284)
