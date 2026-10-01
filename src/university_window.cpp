@@ -283,13 +283,8 @@ type_university_window::type_university_window(
         font::PRIMARY, widgetId, 1, 0, 8);
     m_widgets.push_back(m_rolloverWidget);
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x1fc5b0..0x1fc5f4 expands canonical null-checking registration.
+    addWidgetsToMessageStream();
 }
 
 // Dreamcast preserves this helper as a separate source function. Complete
