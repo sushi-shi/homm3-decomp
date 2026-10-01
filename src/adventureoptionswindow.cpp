@@ -79,16 +79,8 @@ TAdventureOptionsWindow::TAdventureOptionsWindow()
         ADVENTURE_OPTION_ROLLOVER_ID, 5, 0, 8);
     m_widgets.push_back(m_rolloverWidget);
 
-    widget** first = m_widgets.begin();
-    if (first != m_widgets.end()) {
-        widget** it = m_widgets.begin();
-        do {
-            if (*it)
-                addWidget(*it, -1);
-            else
-                memError();
-        } while (++it != m_widgets.end());
-    }
+    // Mac 0x57a0..0x57e0 expands the canonical null-checking registration.
+    addWidgetsToMessageStream();
 
     if (g_game->getCurrHeroId() == -1) {
         widget* dig = getWidget(DIG_ID);
