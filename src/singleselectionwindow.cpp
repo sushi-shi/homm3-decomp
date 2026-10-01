@@ -8023,10 +8023,13 @@ void TSingleSelectionWindow::updateTown(
     }
 }
 
+// Original native publics HasMultipleTowns, CanChooseTown and CanChooseHero
+// all end in @@QAA_NH@Z: public bool results with the existing int position.
+// Their lowered CodeView byte type does not prove an unsigned-char result.
 VA(0x0058CE70, 0x40)
 DC_ADDRESS(0x1431bc, 0x58)
 MAC_ADDRESS(0x1845e4, 0x6c)
-unsigned char TSingleSelectionWindow::hasMultipleTowns(int gamePos)
+bool TSingleSelectionWindow::hasMultipleTowns(int gamePos)
 {
     CMapHeaderData::TPlayerSlotAttributes* slot =
         &g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
@@ -8042,7 +8045,7 @@ unsigned char TSingleSelectionWindow::hasMultipleTowns(int gamePos)
 VA(0x0058CEB0, 0xF7)
 DC_ADDRESS(0x143214, 0x116)
 MAC_ADDRESS(0x184650, 0x14c)
-unsigned char TSingleSelectionWindow::canChooseTown(int gamePos)
+bool TSingleSelectionWindow::canChooseTown(int gamePos)
 {
     if (m_loadMode)
         return 0;
@@ -8067,7 +8070,7 @@ unsigned char TSingleSelectionWindow::canChooseTown(int gamePos)
 VA(0x0058CFB0, 0x129)
 DC_ADDRESS(0x14332c, 0x116)
 MAC_ADDRESS(0x18479c, 0x154)
-unsigned char TSingleSelectionWindow::canChooseHero(int gamePos)
+bool TSingleSelectionWindow::canChooseHero(int gamePos)
 {
     if (m_loadMode)
         return 0;

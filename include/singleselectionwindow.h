@@ -709,9 +709,9 @@ public:
     void setDifficultyHiLite();
     int onWidgetDeselect(message* msg, unsigned char* exitFlag,
                          unsigned char remoteClick);
-    unsigned char canChooseTown(int gamePos);
-    unsigned char canChooseHero(int gamePos);
-    unsigned char hasMultipleTowns(int gamePos);
+    bool canChooseTown(int gamePos);
+    bool canChooseHero(int gamePos);
+    bool hasMultipleTowns(int gamePos);
     int getDisplayFace(int gamePos);
     int getHeroInPos(int gamePos);
     // Dreamcast names the enum return, and Complete's inlined nine-town
