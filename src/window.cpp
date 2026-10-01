@@ -565,19 +565,6 @@ void heroWindow::deleteWidgets()
     m_widgets.clear();
 }
 
-VA(0x005ff570, 0x32)
-DC_ADDRESS(0x197cd4, 0x72)
-MAC_ADDRESS(0x20bccc, 0x74)
-void heroWindow::addWidgetsToMessageStream()
-{
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
-}
-
 // Nested sleeps notify widgets only on the first sleep and final wake.
 VA(0x005ff5b0, 0x33)
 MAC_ADDRESS(0x20bd40, 0x74)  // anchor-callee, callers byte-proven
