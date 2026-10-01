@@ -753,7 +753,7 @@ public:
     void fillGarden(EGameResource resource);
     void setGarden(short id, EGameResource resource);
     void setGardenEmpty();
-    int getPyramidSpell() const;
+    ESpellId getPyramidSpell() const;
     bool pyramidIsGuarded() const;
     short getLeanToAmount() const;
     EGameResource getLeanToResource() const;
@@ -761,7 +761,7 @@ public:
     unsigned char magicSpringIsFull() const;
     void fillMagicSpring(unsigned char full);
     void setMagicSpring(short id, unsigned char full);
-    void setPyramid(bool guards, int newSpell);
+    void setPyramid(bool guards, ESpellId newSpell);
     ScholarAwards getScholarAward() const;
     TPrimarySkill getScholarPrimarySkill() const;
     TSecondarySkill getScholarSecondarySkill() const;
@@ -1700,7 +1700,11 @@ inline void ExtraInfoUnion::setMagicSpring(short id, unsigned char full)
 // DC MapCell.h:1046/1051. do_event_pyramid
 // (0x4a4230) proves the signed spell lane and bit-zero guarded flag.
 DC_ADDRESS(0x09c864, 0xa)
-inline int ExtraInfoUnion::getPyramidSpell() const { return m_pyramidInfo.m_spell; }
+// Original get_pyramid_spell@@QBA?AW4SpellID@@XZ proves the enum result.
+inline ESpellId ExtraInfoUnion::getPyramidSpell() const
+{
+    return ESpellId(m_pyramidInfo.m_spell);
+}
 
 DC_ADDRESS(0x09c870, 0x6)
 inline bool ExtraInfoUnion::pyramidIsGuarded() const { return m_pyramidInfo.m_guarded; }
@@ -1708,7 +1712,8 @@ inline bool ExtraInfoUnion::pyramidIsGuarded() const { return m_pyramidInfo.m_gu
 // E:\gamedcs\MapCell.h:1056
 VA(0x004c2330, 0x27)
 DC_ADDRESS(0x09c878, 0x20)
-inline void ExtraInfoUnion::setPyramid(bool guards, int newSpell)
+// Original set_pyramid@@QAAX_NW4SpellID@@@Z proves both source domains.
+inline void ExtraInfoUnion::setPyramid(bool guards, ESpellId newSpell)
 {
     m_pyramidInfo.m_guarded = guards;
     m_pyramidInfo.m_spell = newSpell;

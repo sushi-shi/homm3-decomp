@@ -4310,7 +4310,8 @@ static void randomizePyramid(NewmapCell* cell)
             possibleSpells.push_back(i);
     }
 
-    SpellID spell = SpellID(
+    // DC 0xabfe8 records the enum SpellID local; Complete adds this pool.
+    ESpellId spell = ESpellId(
         possibleSpells[random(0, possibleSpells.size() - 1)]);
     cell->setPyramid(true, spell);
     cell->clearVisitedBits();
