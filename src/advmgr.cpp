@@ -2072,10 +2072,12 @@ void advManager::processRadarSelect(const message* msg)
 // a byte-lowered waiting local. A bool predicate carrier at the restored
 // bool context boundary, with the pointer's proven cv layers, raises this
 // to 94.3548%. All ordinary call targets agree; DoAdvCommand remains split.
-// The redundant `currHeroId != -1` guard is retail's own: its inlined
-// GetHero re-tests the id off the same flags and leaves a dead
-// `xor ebx,ebx` arm behind. Dropping the guard reproduces that dead block
-// but does not pay (see the four measurements above).
+// DC 2519/2520 initializes curr/mobile, 2521 caches thisPlayer, and
+// 2523/2525 guards then rereads its hero id before GetHero; 2529 tests
+// curr outside that guard. Mac 0xaa64..0xaaa8 preserves the same operation.
+// This complete receiver/initialization phase raises 94.3548 -> 95.4839%;
+// retail and candidate now both retain the nested GetHero sentinel branch.
+// All ordinary callee identities agree; the VIEW_HERO dispatch stays split.
 // DC advmgr.cpp:2434 proves const message&, type_point&, NewmapCell*&.
 // Retail passes the same three addresses; its body requires each referent.
 VA(0x0040a5d0, 0x606)
@@ -2142,35 +2144,37 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
     if (!visible)
         return;
 
-    int currHeroId = g_game->getLocalPlayer()->m_currHeroId;
-    if (currHeroId != -1) {
-        hero* currHero = g_game->getHero(currHeroId);
-        int heroMobile = currHero->isMobile();
-        if (currHero && currHero->m_z == m_lastMapHover.m_z) {
-            if (currHero->m_x == m_lastMapHover.m_x && currHero->m_y == m_lastMapHover.m_y) {
-                m_advCommand = ADV_COMMAND_VIEW_HERO;
-                doAdvCommand(triggerPoint);
-                return;
-            }
-
-            const pathCell* const pathAt =
-                g_searchArray->getCell(m_lastMapHover, 0);
-            if (g_currentPlayer->isLocalHuman() && pathAt && pathAt->m_visited) {
-                if (!heroMobile
-                    || (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS)
-                    || (g_config.m_showRoute
-                        && (currHero->m_pathTargetX != m_lastMapHover.m_x
-                            || currHero->m_pathTargetY != m_lastMapHover.m_y))) {
-                    currHero->m_pathTargetX = m_lastMapHover.m_x;
-                    currHero->m_pathTargetY = m_lastMapHover.m_y;
-                    currHero->m_pathTargetZ = m_lastMapHover.m_z;
-                    showRoute(1, 1, 1);
-                    return;
-                }
-            }
-            peventCell = doAdvCommand(triggerPoint);
+    hero* currHero = 0;
+    int heroMobile = 0;
+    playerData* thisPlayer = g_game->getLocalPlayer();
+    if (thisPlayer->m_currHeroId != -1) {
+        currHero = g_game->getHero(thisPlayer->m_currHeroId);
+        heroMobile = currHero->isMobile();
+    }
+    if (currHero && currHero->m_z == m_lastMapHover.m_z) {
+        if (currHero->m_x == m_lastMapHover.m_x && currHero->m_y == m_lastMapHover.m_y) {
+            m_advCommand = ADV_COMMAND_VIEW_HERO;
+            doAdvCommand(triggerPoint);
             return;
         }
+
+        const pathCell* const pathAt =
+            g_searchArray->getCell(m_lastMapHover, 0);
+        if (g_currentPlayer->isLocalHuman() && pathAt && pathAt->m_visited) {
+            if (!heroMobile
+                || (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS)
+                || (g_config.m_showRoute
+                    && (currHero->m_pathTargetX != m_lastMapHover.m_x
+                        || currHero->m_pathTargetY != m_lastMapHover.m_y))) {
+                currHero->m_pathTargetX = m_lastMapHover.m_x;
+                currHero->m_pathTargetY = m_lastMapHover.m_y;
+                currHero->m_pathTargetZ = m_lastMapHover.m_z;
+                showRoute(1, 1, 1);
+                return;
+            }
+        }
+        peventCell = doAdvCommand(triggerPoint);
+        return;
     }
 
     int myPos = g_game->getLocalPlayerGamePos();
