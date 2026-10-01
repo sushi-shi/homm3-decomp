@@ -128,6 +128,12 @@ DATA(0x00694fbc) static TCombatResultsWindow* g_combatResultsWindow;
 // Native bool is_siege is proved by DC public
 // ??0TCombatResultsWindow@@QAA@PBVhero@@0HH_NH@Z. The formal T_UCHAR
 // record is a lowered storage type; retail also consumes the flag as a byte.
+// DC lines 328-333 and the Mac registration body at 0x20bccc preserve the
+// full nonnull AddWidget(*it,-1)/else MemError operation. Keep the canonical
+// registration call instead of its pasted walk. Targeted Windows comparison
+// moves 99.8607 -> 94.6594%: the helper itself expands, but earlier vector
+// growth sites now make 147 calls versus retail's 154. This source recovery
+// does not justify removing the helper to recover the old nested decisions.
 VA(0x004702d0, 0x176D)
 DC_ADDRESS(0x068364, 0xe34)
 MAC_ADDRESS(0x07df80, 0x1aec)  // CPResult.pcx + vtable/global stores
@@ -395,12 +401,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     accept->setHotkey(1);
     m_widgets.push_back(accept);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    addWidgetsToMessageStream();
 
     videoOpen(videoId, 272, 89, 0, 0, 1, 1, 1);
 }

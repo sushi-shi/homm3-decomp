@@ -86,6 +86,12 @@ const int g_luckHelpIndex = 10;
 // derivation is byte-flat. Dummy size/capacity expressions and dead calls
 // were rejected, as was extracting an unproven action-slot helper (89.30).
 // Keep the canonical helpers and actual string lifetime boundaries.
+// All three constructor tails match the complete registration helper:
+// DC lines 118-123, 236-241 and 307-312 retain AddWidget(*it,-1) and
+// the MemError null arm, matching the Mac helper at 0x20bccc. Use its
+// canonical call rather than duplicating the walk. The group constructor
+// improves 96.6045 -> 98.6832%, with all 52 named calls agreeing (including
+// nested tLimit); the battle/type constructors hold 97.2049%/100%.
 
 // Retail's named call sequence independently fixes controller for the
 // background and damage, owner for morale. The old assignment/pinned
@@ -203,12 +209,7 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
             font::WHITE, -1, 0, 0, 8));
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
@@ -220,10 +221,12 @@ VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 // The garrison/hero-screen popup: one slot of an armyGroup, shown with
 // the owning hero's bonuses folded in and the upgrade/dismiss actions
 // live. Three things separate it from the one-army constructor:
-// A second-pass helper check finds the only unmatched retained call is the
+// An earlier second-pass helper check found the unmatched retained call was the
 // nested tLimit at createLuckWidget; the canonical limit -> tLimit source
 // call already lives in that helper. Naming the getArmyLuck result in this
 // caller is byte-flat, so it does not recover the required inline decision.
+// The canonical registration call above now restores that named boundary;
+// all 52 calls agree at 98.6832%, with the remaining allocation differences open.
 
 //  * the traits row is COPIED BY VALUE onto the frame (`mov ecx,0x1d /
 //    rep movsd`) so hero::HeroFn_004E6120 can fold the hero's own
@@ -320,12 +323,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     m_influence[1] = -1;
     m_influence[2] = -1;
 
-    for (widget** it = widgets.begin(); it != widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    addWidgetsToMessageStream();
 
     // The upgrade button greys itself out when the player cannot pay.
     if (upgrade != -1) {
@@ -388,12 +386,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     int i;
     MEMSET(m_influence, -1, sizeof(m_influence), i);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    addWidgetsToMessageStream();
 }
 
 VA(0x005f45e0, 0xD5)
