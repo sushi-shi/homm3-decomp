@@ -953,6 +953,28 @@ and area-highlight cleanup. The new helper names and ordinary source placement
 are project inferences; no native addresses, inline qualifiers or storage changes
 are introduced.
 
+## Widget initialization and pointer-change exits
+
+The full widget constructor and `initialize()` share the three detached-link
+stores through private `initializeLinks()`. Both constructors share the null
+rollover/right-click pointers and cleared ownership byte through private
+`initializeHelpText()`. Calls remain at their original positions: the full
+constructor sets geometry before links and help state after style, while
+`initialize()` clears links before geometry and retains help state. The default
+constructor still initializes only its original subset. Derived button, border,
+icon and text initialization continue through the existing base initializer.
+Window insertion/removal retains its neighbor-link updates; help replacement
+and destruction retain their different deletion order and ownership handling.
+
+The mouse manager's negative-frame and unchanged-frame exits share private
+`finishPointerWithoutRedraw()`: decrement busy state, call the existing `enable()`
+helper, then clear the set-pointer guard. The caller's critical-section scope
+continues through the helper and unlocks on return. The successful update keeps
+its different sequence of loading, enabling and drawing before lowering busy
+state. Earlier exits that never acquire the set-pointer guard remain unchanged.
+All three new methods have project-inferred names and ordinary source bodies;
+field visibility, storage and virtual slots are unchanged.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

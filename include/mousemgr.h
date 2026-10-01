@@ -145,6 +145,8 @@ public:
 
 private:
     void loadFrame(int newFrame);
+    // Project-inferred cleanup for SetPointer's two no-redraw exits.
+    void finishPointerWithoutRedraw();
 
 public:
     // Accessor boundary inferred from the existing property interface and

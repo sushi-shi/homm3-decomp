@@ -267,6 +267,11 @@ public:
     // Slot 12. The empty body lives in widget.cpp so button's qualified
     // base call stays out of line. Retail ICF folds it to 0x485d80.
     virtual void onSleepChange(int on);  // slot 12
+
+private:
+    // Project-inferred shared initialization, without release or unlink work.
+    void initializeLinks();
+    void initializeHelpText();
 };
 SIZE(widget, 48);
 

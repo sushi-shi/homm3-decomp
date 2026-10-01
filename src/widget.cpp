@@ -10,6 +10,22 @@
 #include "window.h"
 #include "winmgr.h"
 
+// Project-inferred initialization operations. Neither releases owned text nor
+// removes a live widget from its window; they only initialize these fields.
+void widget::initializeLinks()
+{
+    m_parentWindow = 0;
+    m_prevWidget = 0;
+    m_nextWidget = 0;
+}
+
+void widget::initializeHelpText()
+{
+    m_rollOver = 0;
+    m_rightClick = 0;
+    m_freeText = 0;
+}
+
 VA(0x005fe340, 0x62)
 DC_ADDRESS(0x196b4c, 0x88)
 MAC_ADDRESS(0x20a504, 0x54)
@@ -21,15 +37,11 @@ widget::widget(short widgetX, short widgetY, short widgetWidth, short widgetHeig
     m_width = widgetWidth;
     m_height = widgetHeight;
     m_id = widgetId;
-    m_parentWindow = 0;
-    m_prevWidget = 0;
-    m_nextWidget = 0;
+    initializeLinks();
     m_status = WIDGET_ACTIVE | WIDGET_DRAWN;
     m_priority = -1;
     m_style = widgetStyle;
-    m_rollOver = 0;
-    m_rightClick = 0;
-    m_freeText = 0;
+    initializeHelpText();
 }
 
 VA_COMPGEN(0x005fe3b0, 0x5C, SCALAR_DELETING_DTOR, widget)
@@ -40,9 +52,7 @@ MAC_ADDRESS(0x20a558, 0x28)
 widget::widget()
     : m_sleepCount(0)
 {
-    m_rollOver = 0;
-    m_rightClick = 0;
-    m_freeText = 0;
+    initializeHelpText();
     m_status = WIDGET_ACTIVE | WIDGET_DRAWN;
 }
 
@@ -66,9 +76,7 @@ DC_ADDRESS(0x196c6c, 0x50)
 MAC_ADDRESS(0x20a618, 0x54)
 void widget::initialize(int x, int y, int w, int h, int id, int style)
 {
-    m_parentWindow = 0;
-    m_prevWidget = 0;
-    m_nextWidget = 0;
+    initializeLinks();
     m_x = x;
     m_y = y;
     m_width = w;
