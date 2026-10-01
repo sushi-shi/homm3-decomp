@@ -432,6 +432,16 @@ static inline bool matchesTerrainTransition(
         && entry.m_flipX == flipX && entry.m_flipY == flipY;
 }
 
+// Pack the transition and two independent reflection bytes into the table's
+// range key. Construction and selection must use the same nesting and signed
+// arithmetic; the admitted bytes are 0/1, but this is not a bitwise mask.
+static inline TRmgTerrainPatternRange& getTerrainTransitionRange(
+    TRmgTerrainPatternTable& table, int transition,
+    unsigned char flipX, unsigned char flipY)
+{
+    return table.m_ranges[(transition * 2 + flipX) * 2 + flipY];
+}
+
 DATA(0x006A4158)
 TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 
@@ -443,14 +453,14 @@ TRmgTerrainPatternTable::TRmgTerrainPatternTable()
     unsigned char flipX = g_rmgTerrainPatterns[0].m_flipX;
     unsigned char flipY = g_rmgTerrainPatterns[0].m_flipY;
     TRmgTerrainPatternRange* range =
-        &m_ranges[(transition * 2 + flipX) * 2 + flipY];
+        &getTerrainTransitionRange(*this, transition, flipX, flipY);
     ++range->m_count;
     for (unsigned int index = 1; index < 48; ++index) {
         if (!matchesTerrainTransition(g_rmgTerrainPatterns[index], transition, flipX, flipY)) {
             transition = g_rmgTerrainPatterns[index].m_transition;
             flipX = g_rmgTerrainPatterns[index].m_flipX;
             flipY = g_rmgTerrainPatterns[index].m_flipY;
-            range = &m_ranges[(transition * 2 + flipX) * 2 + flipY];
+            range = &getTerrainTransitionRange(*this, transition, flipX, flipY);
             range->m_firstIndex = index;
         }
         ++range->m_count;
@@ -503,8 +513,8 @@ int TRmgTableTerrainRule::selectTransitionFrame(
     if (oldFrame == -1
         || !matchesTerrainTransition(g_rmgTerrainPatterns[oldFrame], transition,
                                      requestedFlip.m_flipX, requestedFlip.m_flipY)) {
-        TRmgTerrainPatternRange& range = g_rmgTerrainPatternRanges.m_ranges[
-            (transition * 2 + requestedFlip.m_flipX) * 2 + requestedFlip.m_flipY];
+        TRmgTerrainPatternRange& range = getTerrainTransitionRange(
+            g_rmgTerrainPatternRanges, transition, requestedFlip.m_flipX, requestedFlip.m_flipY);
         oldFrame = selectTerrainRangeFrame(range);
     }
     selectedFlip = TRmgTerrainFlip(0, 0);
@@ -594,6 +604,20 @@ static inline bool hasOppositeTerrainDiagonalEdges(const int* neighbours,
 {
     return neighbours[order[TILE_DIR_NORTHWEST]] == northwestKind
         && neighbours[order[TILE_DIR_SOUTHEAST]] == southeastKind;
+}
+
+static inline bool hasEastSouthwestTerrainEdges(const int* neighbours,
+    const int* order, int eastKind, int southwestKind)
+{
+    return neighbours[order[TILE_DIR_EAST]] == eastKind
+        && neighbours[order[TILE_DIR_SOUTHWEST]] == southwestKind;
+}
+
+static inline bool hasSouthNortheastTerrainEdges(const int* neighbours,
+    const int* order, int southKind, int northeastKind)
+{
+    return neighbours[order[TILE_DIR_SOUTH]] == southKind
+        && neighbours[order[TILE_DIR_NORTHEAST]] == northeastKind;
 }
 
 // Priority-ordered terrain pattern classification under four reflections.
@@ -697,23 +721,23 @@ int __fastcall selectTerrainTransition(
     for (reflection = 0; reflection < 4; ++reflection) {
         const int* order = g_rmgReflectedNeighbours
             [flips[reflection].m_flipX][flips[reflection].m_flipY];
-        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+        if (hasEastSouthwestTerrainEdges(neighbours, order,
+                RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_HARD_EDGE)) {
             *flip = flips[reflection];
             return 17;
         }
-        if (neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+        if (hasSouthNortheastTerrainEdges(neighbours, order,
+                RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_HARD_EDGE)) {
             *flip = flips[reflection];
             return 18;
         }
-        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_HARD_EDGE &&
-            neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+        if (hasEastSouthwestTerrainEdges(neighbours, order,
+                RMG_NEIGHBOUR_HARD_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
             *flip = flips[reflection];
             return 21;
         }
-        if (neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_HARD_EDGE &&
-            neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+        if (hasSouthNortheastTerrainEdges(neighbours, order,
+                RMG_NEIGHBOUR_HARD_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
             *flip = flips[reflection];
             return 22;
         }
@@ -1093,6 +1117,29 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
         return hasSeparatedNeighbours(point);
 }
 
+// Fill one side of an axis gap. Prefer the negative side unless it needs no
+// repair and the positive side either needs repair or avoids a perpendicular
+// gap in the paint terrain. Preserve the negative/positive query order and
+// only examine perpendicular gaps when the repair checks leave a tie.
+static inline void repairTerrainGap(rmgTerrainPainter& painter,
+    const TRmgGridPoint& negative, const TRmgGridPoint& positive,
+    TRmgTerrainGapAxis axis)
+{
+    bool fillPositive = false;
+    if (!painter.needsTerrainRepair(negative)) {
+        if (painter.needsTerrainRepair(positive)) {
+            fillPositive = true;
+        } else if (axis == RMG_VERTICAL_GAP) {
+            fillPositive = painter.isHorizontalGap(negative, painter.getPaintTerrain())
+                && !painter.isHorizontalGap(positive, painter.getPaintTerrain());
+        } else {
+            fillPositive = painter.isVerticalGap(negative, painter.getPaintTerrain())
+                && !painter.isVerticalGap(positive, painter.getPaintTerrain());
+        }
+    }
+    painter.paintPoint(fillPositive ? positive : negative);
+}
+
 // Repair one-cell gaps, then greedily fill the lightest neighbour-ring gaps
 // until only one remains. Stable first-minimum selection preserves the retail
 // tie order. Painting order matters because each repair updates the worklists.
@@ -1104,26 +1151,12 @@ MAC_ADDRESS(0x256be4, 0x630) // anchor-callee 0x5b7358; thiscall, ret 4; retail-
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
     if (isVerticalGap(point)) {
-        if (!needsTerrainRepair(TRmgGridPoint(point.m_x, point.m_y - 1)) &&
-            (needsTerrainRepair(TRmgGridPoint(point.m_x, point.m_y + 1)) ||
-             (isHorizontalGap(TRmgGridPoint(point.m_x, point.m_y - 1),
-                              getPaintTerrain()) &&
-              !isHorizontalGap(TRmgGridPoint(point.m_x, point.m_y + 1),
-                               getPaintTerrain()))))
-            paintPoint(TRmgGridPoint(point.m_x, point.m_y + 1));
-        else
-            paintPoint(TRmgGridPoint(point.m_x, point.m_y - 1));
+        repairTerrainGap(*this, TRmgGridPoint(point.m_x, point.m_y - 1),
+            TRmgGridPoint(point.m_x, point.m_y + 1), RMG_VERTICAL_GAP);
     }
     if (isHorizontalGap(point)) {
-        if (!needsTerrainRepair(TRmgGridPoint(point.m_x - 1, point.m_y)) &&
-            (needsTerrainRepair(TRmgGridPoint(point.m_x + 1, point.m_y)) ||
-             (isVerticalGap(TRmgGridPoint(point.m_x - 1, point.m_y),
-                            getPaintTerrain()) &&
-              !isVerticalGap(TRmgGridPoint(point.m_x + 1, point.m_y),
-                             getPaintTerrain()))))
-            paintPoint(TRmgGridPoint(point.m_x + 1, point.m_y));
-        else
-            paintPoint(TRmgGridPoint(point.m_x - 1, point.m_y));
+        repairTerrainGap(*this, TRmgGridPoint(point.m_x - 1, point.m_y),
+            TRmgGridPoint(point.m_x + 1, point.m_y), RMG_HORIZONTAL_GAP);
     }
 
     if (!g_rmgTerrainRules[getPaintTerrain()]->m_allowsSeparatedNeighbours &&
@@ -1191,6 +1224,14 @@ static inline void countTerrainBoundary(
         ++edgeCounts[point.getY() * painter.getWidth() + point.getX()];
         ++edgeCounts[neighbour.getY() * painter.getWidth() + neighbour.getX()];
     }
+}
+
+// Terrain frames are reusable only when both sprite reflections also match.
+// Keep frame/X/Y short-circuit order; callers retain their distinct write order.
+static inline bool matchesTerrainAppearance(const rmgTerrainTile& tile,
+    int frame, unsigned char flipX, unsigned char flipY)
+{
+    return tile.m_frame == frame && tile.m_flipX == flipX && tile.m_flipY == flipY;
 }
 
 VA(0x005B5A70, 0x8A7)
@@ -1274,8 +1315,7 @@ void rmgTerrainPainter::paintTransitions()
                     newFrame = selectBaseFrame(point, tile.m_terrain, tile.m_frame);
                 }
 
-                if (tile.m_frame != newFrame || tile.m_flipX != flip.m_flipX
-                    || tile.m_flipY != flip.m_flipY) {
+                if (!matchesTerrainAppearance(tile, newFrame, flip.m_flipX, flip.m_flipY)) {
                     tile.m_flipX = flip.m_flipX;
                     tile.m_flipY = flip.m_flipY;
                     tile.m_frame = newFrame;
@@ -1285,7 +1325,7 @@ void rmgTerrainPainter::paintTransitions()
                 rmgTerrainTile tile = getPackedCell(point)->getTile();
 
                 int newFrame = selectBaseFrame(point, tile.m_terrain, tile.m_frame);
-                if (tile.m_frame != newFrame || tile.m_flipX || tile.m_flipY) {
+                if (!matchesTerrainAppearance(tile, newFrame, 0, 0)) {
                     tile.m_frame = newFrame;
                     tile.m_flipX = 0;
                     tile.m_flipY = 0;
