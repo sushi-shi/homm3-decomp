@@ -124,10 +124,10 @@ public:
     // Retail's base vtable at 0x642c80 has six _purecall slots. The pure
     // destructor still has its ordinary out-of-line body at 0x5b3850.
     virtual ~TRmgTerrainRule() = 0;
-    virtual unsigned char hasEntries() = 0;
+    virtual unsigned char hasSpecialBaseFrames() = 0;
     virtual unsigned char isSpecialFrame(int frame) = 0;
-    virtual int getEntry(int index) = 0;
-    virtual int selectBaseFrame(int value, int oldFrame) = 0;
+    virtual int getTransition(int frame) = 0;
+    virtual int selectBaseFrame(int strength, int oldFrame) = 0;
     virtual int selectTransitionFrame(
         int transition,
         TRmgTerrainFlip requestedFlip,
@@ -143,8 +143,9 @@ struct TRmgTerrainPatternRange {
     TRmgTerrainPatternRange() : m_firstIndex(0), m_count(0) {}
 };
 
+// Each frame maps to a transition id and a special-base-frame flag.
 struct TRmgTerrainPatternEntry {
-    int m_frame;
+    int m_transition;
     unsigned char m_special;
     char m_padding[3];
 };
@@ -153,7 +154,7 @@ struct TRmgTerrainPatternEntry {
 // Unlike the pattern rule's special-frame flag, +4/+5 here are the two
 // transition flips (selector 0x5b3ae0 and range constructor 0x5b3940).
 struct TRmgTerrainTransitionEntry {
-    int m_frame;
+    int m_transition;
     unsigned char m_flipX;
     unsigned char m_flipY;
 };
@@ -176,21 +177,21 @@ extern TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 // original Complete-only class name is unavailable.
 class TRmgPatternTerrainRule : public TRmgTerrainRule {
 public:
-    int m_defaultFrame;                         // +0x08
+    int m_specialFrameChance;                   // +0x08: percentage at strength 8
     unsigned int m_entryCount;                  // +0x0c
-    const TRmgTerrainPatternEntry* m_entries;   // +0x10
+    const TRmgTerrainPatternEntry* m_entries;    // +0x10
     TRmgTerrainPatternRange m_ranges[58];        // +0x14
 
     TRmgPatternTerrainRule(unsigned char blendsWithOtherTerrain,
-        unsigned char allowsSeparatedNeighbours, int defaultFrame,
+        unsigned char allowsSeparatedNeighbours, int specialFrameChance,
         unsigned int entryCount, const TRmgTerrainPatternEntry* entries);
 
     // Implicit destruction shares the base's retained cleanup at 0x5b3850;
     // both concrete rule vtables use the deleting wrapper at 0x5b3a50.
-    virtual unsigned char hasEntries();
+    virtual unsigned char hasSpecialBaseFrames();
     virtual unsigned char isSpecialFrame(int frame);
-    virtual int getEntry(int index);
-    virtual int selectBaseFrame(int value, int oldFrame);
+    virtual int getTransition(int frame);
+    virtual int selectBaseFrame(int strength, int oldFrame);
     virtual int selectTransitionFrame(
         int transition,
         TRmgTerrainFlip requestedFlip,
@@ -205,10 +206,10 @@ public:
 class TRmgTableTerrainRule : public TRmgTerrainRule {
 public:
     TRmgTableTerrainRule();
-    virtual unsigned char hasEntries();
+    virtual unsigned char hasSpecialBaseFrames();
     virtual unsigned char isSpecialFrame(int frame);
-    virtual int getEntry(int index);
-    virtual int selectBaseFrame(int value, int oldFrame);
+    virtual int getTransition(int frame);
+    virtual int selectBaseFrame(int strength, int oldFrame);
     virtual int selectTransitionFrame(
         int transition,
         TRmgTerrainFlip requestedFlip,
@@ -227,10 +228,10 @@ struct TRmgTerrainGap {
 };
 
 enum TRmgTerrainTransitionCase {
-    RMG_TERRAIN_FIRST_DIAGONAL_LOW = 2,
-    RMG_TERRAIN_SECOND_DIAGONAL_LOW = 5,
-    RMG_TERRAIN_FIRST_DIAGONAL_HIGH = 8,
-    RMG_TERRAIN_SECOND_DIAGONAL_HIGH = 11
+    RMG_TERRAIN_FIRST_DIAGONAL_BLEND = 2,
+    RMG_TERRAIN_SECOND_DIAGONAL_BLEND = 5,
+    RMG_TERRAIN_FIRST_DIAGONAL_HARD = 8,
+    RMG_TERRAIN_SECOND_DIAGONAL_HARD = 11
 };
 
 // Provisional role name. Allocation at 0x5b7250 proves the 0x44-byte object;
@@ -249,8 +250,8 @@ public:
 
     rmgTerrainPainter(
         TRmgMapInterface* newAdapter,
-        int newParameterA,
-        int newTransitionStrength);
+        int terrain,
+        int strength);
     ~rmgTerrainPainter();
 
     void finish();

@@ -46,10 +46,10 @@ void TRmgLinePainterTile::setTile(const rmgTerrainTile& tile)
 
 // The point walker tests AL after slot 3 (0x4fa400..0x4fa405). Keep that
 // low-byte gate while preserving the retained virtual's integer-return ABI.
-// Its provisional canPaint name is inverted here: nonzero prevents painting.
+// Nonzero blocks painting on water and rock.
 unsigned char TRmgLinePainterTile::isBlocked()
 {
-    return m_painter->canPaint(m_point);
+    return m_painter->isBlocked(m_point);
 }
 
 void TRmgLinePainterTile::setOverlay(int value)
@@ -85,22 +85,31 @@ int selectRmgLinePattern(
     return pattern;
 }
 
+// Shared cleanup helper: query valid neighbours in direction-table order.
+// getNeighbourLand owns the signed-coordinate conversion and tile proxy.
+static inline void buildMatchingLineNeighbourMask(
+    TRmgLinePainterInterface* painter, const TRmgGridPoint& point,
+    int lineType, unsigned char* matches)
+{
+    unsigned char available[TILE_DIR_COUNT];
+    buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
+                           point.m_x, point.m_y, available);
+    for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
+        if (available[direction])
+            matches[direction] = painter->getNeighbourLand(point, direction) == lineType;
+        else
+            matches[direction] = 0;
+    }
+}
+
 VA(0x004F9F00, 0x146)
 MAC_ADDRESS(0x22273c, 0x168) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
     TRmgLinePainterTile tile = painter->at(point);
     int oldType = tile.getLand();
-    unsigned char available[TILE_DIR_COUNT];
-    buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
-                           point.m_x, point.m_y, available);
     unsigned char matches[TILE_DIR_COUNT];
-    for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
-        if (available[direction])
-            matches[direction] = painter->getNeighbourLand(point, direction) == oldType;
-        else
-            matches[direction] = 0;
-    }
+    buildMatchingLineNeighbourMask(painter, point, oldType, matches);
     TRmgLinePatternTable* table = painter->getPattern(oldType);
     unsigned char flipX, flipY;
     int selected = selectRmgLinePattern(matches, table, flipX, flipY);
@@ -169,6 +178,9 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
     if (rectangle.m_origin.m_x + rectangle.m_size.m_x < painter->m_size.m_x) {
         point.m_x = rectangle.m_origin.m_x + rectangle.m_size.m_x;
         unsigned int first = rectangle.m_origin.m_y > 0 ? rectangle.m_origin.m_y - 1 : 0;
+        // Preserve retail's asymmetric right-edge limit: unlike the left
+        // edge, a rectangle ending on the penultimate row excludes the last
+        // row here. Normalizing these bounds would change refreshed tiles.
         unsigned int end = rectangle.m_origin.m_y + rectangle.m_size.m_y < painter->m_size.m_y - 1
             ? rectangle.m_origin.m_y + rectangle.m_size.m_y + 1
             : rectangle.m_origin.m_y + rectangle.m_size.m_y;
@@ -199,13 +211,16 @@ VA(0x004FA280, 0x30)
 MAC_ADDRESS(0x222c40, 0x4c) // anchor-caller 0x55ee50/0x55f3b0; thiscall ret 0xc
 TRmgLineWalker::TRmgLineWalker(
     TRmgLinePainterInterface* newPainter,
-    int newRiverType,
+    int newLineType,
     const TRmgGridPoint& start)
-    : m_painter(newPainter), m_riverType(newRiverType), m_position(start)
+    : m_painter(newPainter), m_lineType(newLineType), m_position(start)
 {
     paintPoint(m_position);
 }
 
+// Integer error-accumulation line rasterization (a four-connected Bresenham
+// variant). Walk destination-to-start and paint the intermediate cell before
+// each minor-axis step, preserving river connectivity and visit order.
 VA(0x004FA2B0, 0x110)
 MAC_ADDRESS(0x222c8c, 0x190) // anchor-caller 0x548040 and createRiver; thiscall ret 4
 void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
@@ -244,29 +259,16 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 {
     TRmgLinePainterTile tile(m_painter, point);
     int oldType = tile.getLand();
-    if (oldType == m_riverType || tile.isBlocked())
+    if (oldType == m_lineType || tile.isBlocked())
         return;
     if (oldType)
         clearRmgLineRectangle(m_painter, TRmgGridRectangle(point, TRmgGridPoint(1, 1)));
-    tile.setOverlay(m_riverType);
+    tile.setOverlay(m_lineType);
     refreshRmgLinePoint(m_painter, point);
 
-    int riverType = m_riverType;
     unsigned char matches[TILE_DIR_COUNT];
-    unsigned int direction;
-    {
-        TRmgLinePainterInterface* painter = m_painter;
-        unsigned char available[TILE_DIR_COUNT];
-        buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
-                               point.m_x, point.m_y, available);
-        for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
-            if (available[direction])
-                matches[direction] = painter->getNeighbourLand(point, direction) == riverType;
-            else
-                matches[direction] = 0;
-        }
-    }
-    for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
+    buildMatchingLineNeighbourMask(m_painter, point, m_lineType, matches);
+    for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (matches[direction])
             refreshRmgLinePoint(m_painter, point + g_tileDirections[direction]);
     }
@@ -293,31 +295,31 @@ VA(0x005B3780, 0xB3)
 MAC_ADDRESS(0x254be0, 0xf4)
 TRmgPatternTerrainRule::TRmgPatternTerrainRule(
     unsigned char blendsWithOtherTerrain, unsigned char allowsSeparatedNeighbours,
-    int defaultFrame, unsigned int entryCount, const TRmgTerrainPatternEntry* entries)
+    int specialFrameChance, unsigned int entryCount, const TRmgTerrainPatternEntry* entries)
     : TRmgTerrainRule(blendsWithOtherTerrain, allowsSeparatedNeighbours),
-      m_defaultFrame(defaultFrame), m_entryCount(entryCount), m_entries(entries)
+      m_specialFrameChance(specialFrameChance), m_entryCount(entryCount), m_entries(entries)
 {
-    int frame = m_entries[0].m_frame;
+    int transition = m_entries[0].m_transition;
     unsigned char special = m_entries[0].m_special;
-    int range = frame * 2 + special;
+    int range = transition * 2 + special;
     ++m_ranges[range].m_count;
     for (unsigned int index = 1; index < m_entryCount; ++index) {
         const TRmgTerrainPatternEntry& entry = m_entries[index];
-        if (entry.m_frame != frame || entry.m_special != special) {
-            frame = entry.m_frame;
+        if (entry.m_transition != transition || entry.m_special != special) {
+            transition = entry.m_transition;
             special = entry.m_special;
-            range = frame * 2 + special;
+            range = transition * 2 + special;
             m_ranges[range].m_firstIndex = index;
         }
         ++m_ranges[range].m_count;
     }
 }
 
-// Vtable 0x642c98 slot 1 tests the count for pattern value 1. The constructor
+// Vtable 0x642c98 slot 1 tests the special base-frame range (key 1). The constructor
 // at 0x5b3780 builds that range at +0x1c/+0x20 from its supplied entry array.
 VA(0x005B3840, 0x0C)
 MAC_ADDRESS(0x259dac, 0x14)  // Complete-only pattern terrain rule
-unsigned char TRmgPatternTerrainRule::hasEntries()
+unsigned char TRmgPatternTerrainRule::hasSpecialBaseFrames()
 {
     return 0 < m_ranges[1].m_count;
 }
@@ -341,23 +343,31 @@ unsigned char TRmgPatternTerrainRule::isSpecialFrame(int frame)
 // the first dword of the requested entry through the pointer at +0x10.
 VA(0x005B3880, 0x10)
 MAC_ADDRESS(0x254cf8, 0x10)  // Complete-only pattern terrain rule
-int TRmgPatternTerrainRule::getEntry(int index)
+int TRmgPatternTerrainRule::getTransition(int frame)
 {
-    return m_entries[index].m_frame;
+    return m_entries[frame].m_transition;
+}
+
+// Cleanup helper shared by both rule implementations. Keep retail's modulo
+// selection, including its RNG consumption and bias; all selected ranges
+// are nonempty in the admitted terrain tables.
+static inline int selectTerrainRangeFrame(const TRmgTerrainPatternRange& range)
+{
+    return rand() % range.m_count + range.m_firstIndex;
 }
 
 // The base-frame selector keeps a zero-tagged old entry. Otherwise it picks
 // the secondary range with the rule's strength-scaled percentage, falling
-// back to the primary range, then chooses uniformly within that range.
+// back to the primary range, then uses the retail modulo draw within it.
 VA(0x005B3890, 0x58)
 MAC_ADDRESS(0x254d08, 0xc8)
-int TRmgPatternTerrainRule::selectBaseFrame(int value, int oldFrame)
+int TRmgPatternTerrainRule::selectBaseFrame(int strength, int oldFrame)
 {
-    if (oldFrame == -1 || m_entries[oldFrame].m_frame != 0) {
+    if (oldFrame == -1 || m_entries[oldFrame].m_transition != 0) {
         TRmgTerrainPatternRange* range;
         if (m_ranges[1].m_count > 0) {
             unsigned int chance =
-                static_cast<unsigned int>(m_defaultFrame * value) / 8;
+                static_cast<unsigned int>(m_specialFrameChance * strength) / 8;
             if (static_cast<unsigned int>(rand() % 100) < chance)
                 range = &m_ranges[1];
             else
@@ -365,7 +375,7 @@ int TRmgPatternTerrainRule::selectBaseFrame(int value, int oldFrame)
         } else {
             range = &m_ranges[0];
         }
-        oldFrame = rand() % range->m_count + range->m_firstIndex;
+        oldFrame = selectTerrainRangeFrame(*range);
     }
     return oldFrame;
 }
@@ -381,9 +391,9 @@ int TRmgPatternTerrainRule::selectTransitionFrame(
     TRmgTerrainFlip& selectedFlip,
     int oldFrame)
 {
-    if (oldFrame == -1 || m_entries[oldFrame].m_frame != transition) {
+    if (oldFrame == -1 || m_entries[oldFrame].m_transition != transition) {
         TRmgTerrainPatternRange& range = m_ranges[transition * 2];
-        oldFrame = rand() % range.m_count + range.m_firstIndex;
+        oldFrame = selectTerrainRangeFrame(range);
     }
     selectedFlip = requestedFlip;
     return oldFrame;
@@ -396,19 +406,20 @@ VA(0x005B3940, 0xC5)
 MAC_ADDRESS(0x254e58, 0xe4)
 TRmgTerrainPatternTable::TRmgTerrainPatternTable()
 {
-    int frame = g_rmgTerrainPatterns[0].m_frame;
+    int transition = g_rmgTerrainPatterns[0].m_transition;
     unsigned char flipX = g_rmgTerrainPatterns[0].m_flipX;
     unsigned char flipY = g_rmgTerrainPatterns[0].m_flipY;
     TRmgTerrainPatternRange* range =
-        &m_ranges[(frame * 2 + flipX) * 2 + flipY];
+        &m_ranges[(transition * 2 + flipX) * 2 + flipY];
     ++range->m_count;
     for (unsigned int index = 1; index < 48; ++index) {
-        if (g_rmgTerrainPatterns[index].m_frame != frame || g_rmgTerrainPatterns[index].m_flipX != flipX
+        if (g_rmgTerrainPatterns[index].m_transition != transition
+            || g_rmgTerrainPatterns[index].m_flipX != flipX
             || g_rmgTerrainPatterns[index].m_flipY != flipY) {
-            frame = g_rmgTerrainPatterns[index].m_frame;
+            transition = g_rmgTerrainPatterns[index].m_transition;
             flipX = g_rmgTerrainPatterns[index].m_flipX;
             flipY = g_rmgTerrainPatterns[index].m_flipY;
-            range = &m_ranges[(frame * 2 + flipX) * 2 + flipY];
+            range = &m_ranges[(transition * 2 + flipX) * 2 + flipY];
             range->m_firstIndex = index;
         }
         ++range->m_count;
@@ -423,7 +434,7 @@ TRmgTableTerrainRule::TRmgTableTerrainRule()
 
 VA(0x005B3A40, 0x03)
 MAC_ADDRESS(0x254f6c, 0x8)
-unsigned char TRmgTableTerrainRule::hasEntries()
+unsigned char TRmgTableTerrainRule::hasSpecialBaseFrames()
 {
     return 0;
 }
@@ -437,9 +448,9 @@ VA_COMPGEN(0x005B3A50, 0x21, SCALAR_DELETING_DTOR, TRmgTableTerrainRule)
 
 VA(0x005B3A80, 0x11)
 MAC_ADDRESS(0x254f74, 0x10)
-int TRmgTableTerrainRule::getEntry(int index)
+int TRmgTableTerrainRule::getTransition(int frame)
 {
-    return g_rmgTerrainPatterns[index].m_frame;
+    return g_rmgTerrainPatterns[frame].m_transition;
 }
 
 VA(0x005B3AA0, 0x31)
@@ -447,9 +458,8 @@ MAC_ADDRESS(0x254f84, 0x94)  // vtable 0x642cb0 slot 4; Complete-only table rule
 int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
 {
     if (oldFrame == -1
-        || g_rmgTerrainPatterns[oldFrame].m_frame != 0) {
-        oldFrame = rand() % g_rmgTerrainPatternRanges.m_ranges[0].m_count
-            + g_rmgTerrainPatternRanges.m_ranges[0].m_firstIndex;
+        || g_rmgTerrainPatterns[oldFrame].m_transition != 0) {
+        oldFrame = selectTerrainRangeFrame(g_rmgTerrainPatternRanges.m_ranges[0]);
     }
     return oldFrame;
 }
@@ -461,18 +471,18 @@ int TRmgTableTerrainRule::selectTransitionFrame(
     TRmgTerrainFlip& selectedFlip, int oldFrame)
 {
     if (oldFrame == -1
-        || g_rmgTerrainPatterns[oldFrame].m_frame != transition
+        || g_rmgTerrainPatterns[oldFrame].m_transition != transition
         || g_rmgTerrainPatterns[oldFrame].m_flipX != requestedFlip.m_flipX
         || g_rmgTerrainPatterns[oldFrame].m_flipY != requestedFlip.m_flipY) {
         TRmgTerrainPatternRange& range = g_rmgTerrainPatternRanges.m_ranges[
             (transition * 2 + requestedFlip.m_flipX) * 2 + requestedFlip.m_flipY];
-        oldFrame = rand() % range.m_count + range.m_firstIndex;
+        oldFrame = selectTerrainRangeFrame(range);
     }
     selectedFlip = TRmgTerrainFlip(0, 0);
     return oldFrame;
 }
 
-// by the call at 0x5b5f5b. All selector names are provisional retail roles.
+// Called at 0x5b5f5b. All selector names are provisional retail roles.
 int __fastcall selectTerrainTransition(
     const int* neighbours, TRmgTerrainFlip* flip);
 
@@ -524,6 +534,9 @@ int __fastcall getRmgTerrainNeighbourKind(int terrain, int neighbourTerrain)
     return RMG_NEIGHBOUR_HARD_EDGE;
 }
 
+// Priority-ordered terrain pattern classification under four reflections.
+// Each pass considers one pattern family; combining the passes into a single
+// reflection loop would change which overlapping pattern wins.
 VA(0x005B3E80, 0x75F)
 MAC_ADDRESS(0x2552e8, 0x980)  // fastcall call at 0x5b5f5b; retail-only
 int __fastcall selectTerrainTransition(
@@ -539,180 +552,190 @@ int __fastcall selectTerrainTransition(
         makeTerrainFlip(0, 0), makeTerrainFlip(0, 1),
         makeTerrainFlip(1, 0), makeTerrainFlip(1, 1)
     };
-    unsigned int i;
-    for (i = 0; i < 4; ++i) {
-        const int* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            if (neighbours[order[1]] == RMG_NEIGHBOUR_HARD_EDGE &&
-                neighbours[order[5]] == RMG_NEIGHBOUR_HARD_EDGE) {
-                *flip = flips[i];
+    unsigned int reflection;
+    for (reflection = 0; reflection < 4; ++reflection) {
+        const int* order = g_rmgReflectedNeighbours
+            [flips[reflection].m_flipX][flips[reflection].m_flipY];
+        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            if (neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE &&
+                neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+                *flip = flips[reflection];
                 return 28;
             }
-            if (neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
-                *flip = flips[i];
+            if (neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+                *flip = flips[reflection];
                 return 27;
             }
         }
     }
-    for (i = 0; i < 4; ++i) {
-        const int* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[0]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[6]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            if (neighbours[order[3]] != RMG_NEIGHBOUR_NO_EDGE) {
-                *flip = flips[i];
-                return neighbours[order[3]] == RMG_NEIGHBOUR_BLEND_EDGE ? 23 : 25;
+    for (reflection = 0; reflection < 4; ++reflection) {
+        const int* order = g_rmgReflectedNeighbours
+            [flips[reflection].m_flipX][flips[reflection].m_flipY];
+        if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            if (neighbours[order[TILE_DIR_SOUTHEAST]] != RMG_NEIGHBOUR_NO_EDGE) {
+                *flip = flips[reflection];
+                return neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE ? 23 : 25;
             }
-        } else if (neighbours[order[0]] == RMG_NEIGHBOUR_HARD_EDGE &&
-                   neighbours[order[6]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            if (neighbours[order[3]] != RMG_NEIGHBOUR_NO_EDGE) {
-                *flip = flips[i];
-                return neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE ? 24 : 26;
+        } else if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_HARD_EDGE &&
+                   neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            if (neighbours[order[TILE_DIR_SOUTHEAST]] != RMG_NEIGHBOUR_NO_EDGE) {
+                *flip = flips[reflection];
+                return neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE ? 24 : 26;
             }
         }
     }
-    for (i = 0; i < 4; ++i) {
-        const int* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[2]] == RMG_NEIGHBOUR_HARD_EDGE &&
-            neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            if (neighbours[order[5]] != RMG_NEIGHBOUR_HARD_EDGE) {
-                *flip = flips[i];
+    for (reflection = 0; reflection < 4; ++reflection) {
+        const int* order = g_rmgReflectedNeighbours
+            [flips[reflection].m_flipX][flips[reflection].m_flipY];
+        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            if (neighbours[order[TILE_DIR_SOUTHWEST]] != RMG_NEIGHBOUR_HARD_EDGE) {
+                *flip = flips[reflection];
                 return 21;
             } else {
-                *flip = makeTerrainFlip(!flips[i].m_flipX, !flips[i].m_flipY);
+                *flip = makeTerrainFlip(!flips[reflection].m_flipX, !flips[reflection].m_flipY);
                 return 8;
             }
         }
-        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[4]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            if (neighbours[order[1]] != RMG_NEIGHBOUR_HARD_EDGE) {
-                *flip = flips[i];
+        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            if (neighbours[order[TILE_DIR_NORTHEAST]] != RMG_NEIGHBOUR_HARD_EDGE) {
+                *flip = flips[reflection];
                 return 22;
             } else {
-                *flip = makeTerrainFlip(!flips[i].m_flipX, !flips[i].m_flipY);
+                *flip = makeTerrainFlip(!flips[reflection].m_flipX, !flips[reflection].m_flipY);
                 return 8;
             }
         }
     }
-    for (i = 0; i < 4; ++i) {
-        const int* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            *flip = flips[i];
-            if (neighbours[order[5]] == RMG_NEIGHBOUR_HARD_EDGE)
+    for (reflection = 0; reflection < 4; ++reflection) {
+        const int* order = g_rmgReflectedNeighbours
+            [flips[reflection].m_flipX][flips[reflection].m_flipY];
+        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[reflection];
+            if (neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE)
                 return 17;
-            if (neighbours[order[1]] == RMG_NEIGHBOUR_HARD_EDGE)
+            if (neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE)
                 return 18;
         }
     }
-    for (i = 0; i < 4; ++i) {
-        const int* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[0]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[6]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            *flip = flips[i];
+    for (reflection = 0; reflection < 4; ++reflection) {
+        const int* order = g_rmgReflectedNeighbours
+            [flips[reflection].m_flipX][flips[reflection].m_flipY];
+        if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[reflection];
             return 2;
         }
-        if (neighbours[order[0]] == RMG_NEIGHBOUR_HARD_EDGE &&
-            neighbours[order[6]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[i];
+        if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[reflection];
             return 8;
         }
     }
-    for (i = 0; i < 4; ++i) {
-        const int* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[5]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[i];
+    for (reflection = 0; reflection < 4; ++reflection) {
+        const int* order = g_rmgReflectedNeighbours
+            [flips[reflection].m_flipX][flips[reflection].m_flipY];
+        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[reflection];
             return 17;
         }
-        if (neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[1]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[i];
+        if (neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[reflection];
             return 18;
         }
-        if (neighbours[order[2]] == RMG_NEIGHBOUR_HARD_EDGE &&
-            neighbours[order[5]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            *flip = flips[i];
+        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[reflection];
             return 21;
         }
-        if (neighbours[order[4]] == RMG_NEIGHBOUR_HARD_EDGE &&
-            neighbours[order[1]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            *flip = flips[i];
+        if (neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[reflection];
             return 22;
         }
-        if ((neighbours[order[6]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-             neighbours[order[1]] == RMG_NEIGHBOUR_BLEND_EDGE) ||
-            (neighbours[order[0]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-             neighbours[order[5]] == RMG_NEIGHBOUR_BLEND_EDGE)) {
-            *flip = flips[i];
+        if ((neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+             neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE) ||
+            (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+             neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_BLEND_EDGE)) {
+            *flip = flips[reflection];
             return 2;
         }
-        if ((neighbours[order[6]] == RMG_NEIGHBOUR_HARD_EDGE &&
-             neighbours[order[1]] == RMG_NEIGHBOUR_HARD_EDGE) ||
-            (neighbours[order[0]] == RMG_NEIGHBOUR_HARD_EDGE &&
-             neighbours[order[5]] == RMG_NEIGHBOUR_HARD_EDGE)) {
-            *flip = flips[i];
+        if ((neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_HARD_EDGE &&
+             neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) ||
+            (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_HARD_EDGE &&
+             neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE)) {
+            *flip = flips[reflection];
             return 8;
         }
     }
-    for (i = 0; i < 4; ++i) {
-        const int* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[i];
+    for (reflection = 0; reflection < 4; ++reflection) {
+        const int* order = g_rmgReflectedNeighbours
+            [flips[reflection].m_flipX][flips[reflection].m_flipY];
+        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[reflection];
             return 19;
         }
-        if (neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[i];
+        if (neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[reflection];
             return 20;
         }
     }
-    for (i = 0; i < 4; ++i) {
-        const int* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[0]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            *flip = flips[i];
+    for (reflection = 0; reflection < 4; ++reflection) {
+        const int* order = g_rmgReflectedNeighbours
+            [flips[reflection].m_flipX][flips[reflection].m_flipY];
+        if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[reflection];
             return 4;
         }
-        if (neighbours[order[0]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[i];
+        if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[reflection];
             return 10;
         }
-        if (neighbours[order[6]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            *flip = flips[i];
+        if (neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[reflection];
             return 3;
         }
-        if (neighbours[order[6]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[i];
+        if (neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[reflection];
             return 9;
         }
     }
-    for (i = 0; i < 4; ++i) {
-        const int* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[7]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[3]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            *flip = flips[i];
+    for (reflection = 0; reflection < 4; ++reflection) {
+        const int* order = g_rmgReflectedNeighbours
+            [flips[reflection].m_flipX][flips[reflection].m_flipY];
+        if (neighbours[order[TILE_DIR_NORTHWEST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[reflection];
             return 14;
         }
-        if (neighbours[order[7]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[i];
+        if (neighbours[order[TILE_DIR_NORTHWEST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[reflection];
             return 15;
         }
-        if (neighbours[order[7]] == RMG_NEIGHBOUR_HARD_EDGE &&
-            neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[i];
+        if (neighbours[order[TILE_DIR_NORTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[reflection];
             return 16;
         }
     }
-    for (i = 0; i < 4; ++i) {
-        const int* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[3]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            *flip = flips[i];
+    for (reflection = 0; reflection < 4; ++reflection) {
+        const int* order = g_rmgReflectedNeighbours
+            [flips[reflection].m_flipX][flips[reflection].m_flipY];
+        if (neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[reflection];
             return 5;
         }
-        if (neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[i];
+        if (neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[reflection];
             return 11;
         }
     }
@@ -806,9 +829,7 @@ void rmgTerrainPainter::setTile(
     packed.setFlipY(tile.m_flipY);
 }
 
-// The base-tile block of paintPoint as paintRectangle's own helper: its one
-// site is what paintRectangle's terrain test needs (see there), while
-// paintPoint expands the same three operations from its own block.
+// Shared base-tile operation for rectangle painting and individual repairs.
 void rmgTerrainPainter::paintBaseTile(const TRmgGridPoint& point)
 {
     int frame = selectBaseFrame(point, m_paintTerrain, -1);
@@ -863,10 +884,7 @@ VA(0x005B4B20, 0x5CB)
 MAC_ADDRESS(0x256014, 0x580) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
-    {
-        int frame = selectBaseFrame(point, m_paintTerrain, -1);
-        setTile(point, rmgTerrainTile(m_paintTerrain, frame));
-    }
+    paintBaseTile(point);
 
     if (m_secondaryPoints.find(point) != m_secondaryPoints.end())
         m_secondaryPoints.erase(point);
@@ -935,6 +953,8 @@ VA(0x005B50F0, 0x34E)
 MAC_ADDRESS(0x2565ac, 0x638) // anchor-callee 0x5b4c72, 0x5b50dd; thiscall, ret 4
 void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
 {
+    // Retail queues at most one neighbour on each cardinal axis, preferring
+    // north over south and west over east. Keep the else-if priority.
     if (point.getY() > 0
         && getTerrain(TRmgGridPoint(point.getX(), point.getY() - 1)) != m_paintTerrain) {
         m_secondaryPoints.insert(TRmgGridPoint(point.getX(), point.getY() - 1));
@@ -1016,58 +1036,47 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
         return hasSeparatedNeighbours(point);
 }
 
-// Repair a one-cell terrain gap, then merge all but the largest remaining
-// gap in the neighbour ring. Cardinal directions have weight two and
-// diagonals weight one. The worklist at 0x5b72f0 passes its first primary
-// point to this method; PaintPoint consumes the resulting repairs.
-// Separate paint statements let the preceding predicate temporaries expire:
-// retail reuses EBP-0x10 at +0x32 and +0xbd. Together with canonical dimension
-// and paint-terrain accessors, this raises MAX 82.8347 -> 89.7150%. At that
-// checkpoint all cache reads retained getPackedCell, but two vertical-gap
-// second-coordinate constructors over-inlined. Retail retains copied x at +0x5bb.
-// Controls: separate statements alone 80.9056%; dimensions alone 84.5649%;
-// together 89.5970%. A positive-guard rewrite is byte-identical; a byte choice
-// local introduces extra result/branch code (87.1956%). Explicit helper edge
-// returns do not restore the missing constructors (89.3019%). Returning a
-// named point after += is byte-flat; copy-constructing it changes the load
-// order (89.8583% scratch) but still omits retail's copied-x store. Retain the
-// coordinate construction supported by paintPoint's separate retail evidence.
-// The neighbour-ring scan uses an explicit while(1) header and a word-sized
-// diagonal local: retail +0x4de has a single advance/test header and +0x511
-// copies the full direction before masking its low bit. This raises 90.0961%
-// to 91.3390% and restores the complete retail CFG, without TU collateral.
-// Sixty outer-loop/receiver/width controls and six inner-loop forms over the
-// ten best parents retain the original inner do loop. A top-tested for(;;),
-// explicit header label, do(1), or assignment-condition while still rotates
-// the outer test; reference/pointer gap receivers also lose code agreement.
-// Retail +0x52d leaves both loops directly. A compound inner do condition
-// followed by another test duplicates this comparison and rotates the exit.
-// At 91.3390%, the only remaining call-sequence difference is the coordinate
-// constructor in the final vertical-gap expansion (retail +0x449); the other
-// 45 calls agree. The paired gap-point lifetime controls below do not fix it.
-// Coordinate-assigned operator+ temporaries reach 92.3508% with all exact
-// siblings intact, but keep that same missing constructor and lower both
-// terrain paintPoint and line refresh. This is not a resolved call boundary.
-// Goto audit: the outer cycle exit is a byte-neutral break. Replacing the
-// inner exit with break plus an outer equality test loses 5.9713 points;
-// a bottom-tested outer cycle loses 6.6914. The multi-level exit remains.
-// Inner break followed by the outer cycle-completion test scores 85.3676%
-// versus 91.3389%; it preserves gap construction but changes the loop CFG.
-// A cycle-complete result with either a loop-head test or bottom break
-// scores 86.0995% or 86.1619% for bool/byte/int, below 91.3389%.
-// At the current 93.6307%, all 46 calls and the complete CFG agree. The
-// 16 coordinate-accessor forms preserve those calls and all sibling scores.
-// Value accessors for the unchanged coordinate restore retail's fresh scalar
-// copy and terrain reload, but retain the reversed ESI/EDI roles and change
-// scheduling (85.9764..93.6307%). The lifetime mechanism is insufficient alone.
-// Query-result widths, owned scalar results, shared gap counters, workspace
-// lifetimes and gap-record construction/compaction leave 93.6307% unchanged.
-// Passive C2 tracing reproduces the whole object and observes 227 temporary
-// bindings; it does not identify the cause of the painter/point allocation.
-// Returning configured terrain by const reference, together with value
-// coordinate accessors in both gap predicates, reaches 99.1821%. All 1576
-// bytes align except an ESI/EDI permutation; frame, scalar copies and all
-// 46 calls agree. The accessor refers to the painter member, not a temporary.
+// Run-length encode the nonmatching portions of an eight-neighbour ring.
+// Start after the first matching cell so wrapped gaps remain one run.
+// Cardinal cells weigh two, diagonals one; at most four gaps can exist.
+// This cleanup helper returns directly when either scan completes the ring.
+static inline unsigned int buildTerrainGaps(
+    const unsigned char* matches, TRmgTerrainGap* gaps)
+{
+    unsigned int firstMatch = 0;
+    while (firstMatch < TILE_DIR_COUNT && !matches[firstMatch])
+        ++firstMatch;
+    if (firstMatch == TILE_DIR_COUNT)
+        return 0;
+
+    unsigned int gapCount = 0;
+    unsigned int direction = firstMatch;
+    for (;;) {
+        direction = (direction + 1) % TILE_DIR_COUNT;
+        if (direction == firstMatch)
+            return gapCount;
+        if (!matches[direction]) {
+            TRmgTerrainGap& gap = gaps[gapCount++];
+            gap.m_weight = 0;
+            gap.m_start = direction;
+            gap.m_length = 0;
+            do {
+                gap.m_weight += (direction & 1) ? 1 : 2;
+                ++gap.m_length;
+                direction = (direction + 1) % TILE_DIR_COUNT;
+                if (direction == firstMatch)
+                    return gapCount;
+            } while (!matches[direction]);
+        }
+    }
+}
+
+// Repair one-cell gaps, then greedily fill the lightest neighbour-ring gaps
+// until only one remains. Stable first-minimum selection preserves the retail
+// tie order. Painting order matters because each repair updates the worklists.
+// Prior matching probes reached 99.1821% with identical CFG and call sequence;
+// the remaining difference was an ESI/EDI permutation. This cleanup restores
+// structured control flow rather than the old multi-level goto spelling.
 VA(0x005B5440, 0x628)
 MAC_ADDRESS(0x256be4, 0x630) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
@@ -1100,58 +1109,43 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
         unsigned char matches[TILE_DIR_COUNT];
         buildMatchingNeighbourMask(point, matches);
         TRmgTerrainGap gaps[TILE_DIR_COUNT / 2];
-        unsigned int gapCount = 0;
-        unsigned int first = 0;
-        while (!matches[first])
-            ++first;
-
-        unsigned int direction = first;
-        while (1) {
-            direction = (direction + 1) % TILE_DIR_COUNT;
-            if (direction == first)
-                break;
-            if (!matches[direction]) {
-                unsigned int currentGap = gapCount++;
-                gaps[currentGap].m_weight = 0;
-                gaps[currentGap].m_start = direction;
-                gaps[currentGap].m_length = 0;
-                do {
-                    unsigned int diagonal = direction & 1;
-                    gaps[currentGap].m_weight += diagonal ? 1 : 2;
-                    ++gaps[currentGap].m_length;
-                    direction = (direction + 1) % TILE_DIR_COUNT;
-                    if (direction == first)
-                        goto gapsBuilt;
-                } while (!matches[direction]);
-            }
-        }
-
-    gapsBuilt:
+        unsigned int gapCount = buildTerrainGaps(matches, gaps);
         unsigned char neighbourExists[TILE_DIR_COUNT];
         buildTileNeighbourMask(getWidth(), getHeight(), point.m_x, point.m_y,
                                neighbourExists);
         do {
             unsigned int smallest = 0;
             unsigned int smallestWeight = gaps[0].m_weight;
-            {
-                for (unsigned int gap = 1; gap < gapCount; ++gap) {
-                    if (gaps[gap].m_weight < smallestWeight) {
-                        smallest = gap;
-                        smallestWeight = gaps[gap].m_weight;
-                    }
+            for (unsigned int gap = 1; gap < gapCount; ++gap) {
+                if (gaps[gap].m_weight < smallestWeight) {
+                    smallest = gap;
+                    smallestWeight = gaps[gap].m_weight;
                 }
             }
             unsigned int end =
                 (gaps[smallest].m_start + gaps[smallest].m_length) % TILE_DIR_COUNT;
-            for (direction = gaps[smallest].m_start; direction != end;
+            for (unsigned int direction = gaps[smallest].m_start; direction != end;
                  direction = (direction + 1) % TILE_DIR_COUNT) {
                 if (neighbourExists[direction])
                     paintPoint(point + g_tileDirections[direction]);
             }
             --gapCount;
-            for (unsigned int gap = smallest; gap < gapCount; ++gap)
-                gaps[gap] = gaps[gap + 1];
+            for (unsigned int remainingGap = smallest; remainingGap < gapCount; ++remainingGap)
+                gaps[remainingGap] = gaps[remainingGap + 1];
         } while (gapCount > 1);
+    }
+}
+
+// Count each undirected terrain boundary once, adding it to both endpoints.
+// The caller retains the retail row-major east/south-diagonal visitation order.
+static inline void countTerrainBoundary(
+    rmgTerrainPainter& painter, const TRmgGridPoint& point,
+    const TRmgGridPoint& neighbour, int terrain,
+    std::vector<unsigned char>& edgeCounts)
+{
+    if (painter.getTerrain(neighbour) != terrain) {
+        ++edgeCounts[point.getY() * painter.getWidth() + point.getX()];
+        ++edgeCounts[neighbour.getY() * painter.getWidth() + neighbour.getX()];
     }
 }
 
@@ -1159,70 +1153,45 @@ VA(0x005B5A70, 0x8A7)
 MAC_ADDRESS(0x257214, 0xd54)
 void rmgTerrainPainter::paintTransitions()
 {
+    // RMG maps have at least two rows and columns. The retail border scan
+    // assumes those dimensions when it reads column 1 and subtracts one.
     std::vector<unsigned char> edgeCounts(getWidth() * getHeight());
     TRmgGridPoint point;
 
     for (point.setY(0); point.m_y < getHeight() - 1; point.setY(point.getY() + 1)) {
         int terrain = getTerrain(TRmgGridPoint(0, point.m_y));
 
-        if (getTerrain(TRmgGridPoint(1, point.m_y)) != terrain) {
-            ++edgeCounts[point.getY() * getWidth()];
-            ++edgeCounts[point.getY() * getWidth() + 1];
-        }
-        if (getTerrain(TRmgGridPoint(1, point.m_y + 1)) != terrain) {
-            ++edgeCounts[point.getY() * getWidth()];
-            ++edgeCounts[(point.getY() + 1) * getWidth() + 1];
-        }
-        if (getTerrain(TRmgGridPoint(0, point.m_y + 1)) != terrain) {
-            ++edgeCounts[point.getY() * getWidth()];
-            ++edgeCounts[(point.getY() + 1) * getWidth()];
-        }
+        countTerrainBoundary(*this, TRmgGridPoint(0, point.m_y),
+            TRmgGridPoint(1, point.m_y), terrain, edgeCounts);
+        countTerrainBoundary(*this, TRmgGridPoint(0, point.m_y),
+            TRmgGridPoint(1, point.m_y + 1), terrain, edgeCounts);
+        countTerrainBoundary(*this, TRmgGridPoint(0, point.m_y),
+            TRmgGridPoint(0, point.m_y + 1), terrain, edgeCounts);
 
         for (point.setX(1); point.m_x < getWidth() - 1; point.setX(point.getX() + 1)) {
             terrain = getTerrain(point);
 
             TRmgGridPoint east(point.getX() + 1, point.getY());
-            if (getTerrain(east) != terrain) {
-                ++edgeCounts[point.getY() * getWidth() + point.getX()];
-                ++edgeCounts[point.getY() * getWidth() + point.getX() + 1];
-            }
+            countTerrainBoundary(*this, point, east, terrain, edgeCounts);
             TRmgGridPoint southEast(point.getX() + 1, point.getY() + 1);
-            if (getTerrain(southEast) != terrain) {
-                ++edgeCounts[point.getY() * getWidth() + point.getX()];
-                ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX() + 1];
-            }
+            countTerrainBoundary(*this, point, southEast, terrain, edgeCounts);
             TRmgGridPoint south(point.getX(), point.getY() + 1);
-            if (getTerrain(south) != terrain) {
-                ++edgeCounts[point.getY() * getWidth() + point.getX()];
-                ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX()];
-            }
+            countTerrainBoundary(*this, point, south, terrain, edgeCounts);
             TRmgGridPoint southWest(point.getX() - 1, point.getY() + 1);
-            if (getTerrain(southWest) != terrain) {
-                ++edgeCounts[point.getY() * getWidth() + point.getX()];
-                ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX() - 1];
-            }
+            countTerrainBoundary(*this, point, southWest, terrain, edgeCounts);
         }
 
         terrain = getTerrain(point);
         TRmgGridPoint south(point.getX(), point.getY() + 1);
-        if (getTerrain(south) != terrain) {
-            ++edgeCounts[point.getY() * getWidth() + point.getX()];
-            ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX()];
-        }
+        countTerrainBoundary(*this, point, south, terrain, edgeCounts);
         TRmgGridPoint southWest(point.getX() - 1, point.getY() + 1);
-        if (getTerrain(southWest) != terrain) {
-            ++edgeCounts[point.getY() * getWidth() + point.getX()];
-            ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX() - 1];
-        }
+        countTerrainBoundary(*this, point, southWest, terrain, edgeCounts);
     }
 
     for (point.setX(0); point.m_x < getWidth() - 1; point.setX(point.getX() + 1)) {
         int terrain = getTerrain(point);
         TRmgGridPoint east(point.getX() + 1, point.getY());
-        if (getTerrain(east) != terrain) {
-            ++edgeCounts[point.getY() * getWidth() + point.getX()];
-            ++edgeCounts[point.getY() * getWidth() + point.getX() + 1];
-        }
+        countTerrainBoundary(*this, point, east, terrain, edgeCounts);
     }
 
     for (point.setY(0); point.m_y < getHeight(); point.setY(point.getY() + 1)) {
@@ -1230,22 +1199,22 @@ void rmgTerrainPainter::paintTransitions()
             unsigned int index = point.getY() * getWidth() + point.getX();
 
             if (edgeCounts[index] > 0) {
-                int neighbours[8];
+                int neighbours[TILE_DIR_COUNT];
                 buildNeighbourKinds(point, neighbours);
 
                 int transition;
                 TRmgTerrainFlip flip;
                 transition = selectTerrainTransition(neighbours, &flip);
-                if (transition == RMG_TERRAIN_FIRST_DIAGONAL_LOW) {
+                if (transition == RMG_TERRAIN_FIRST_DIAGONAL_BLEND) {
                     if (checkFirstDiagonal(point, flip))
                         transition = 6;
-                } else if (transition == RMG_TERRAIN_FIRST_DIAGONAL_HIGH) {
+                } else if (transition == RMG_TERRAIN_FIRST_DIAGONAL_HARD) {
                     if (checkFirstDiagonal(point, flip))
                         transition = 12;
-                } else if (transition == RMG_TERRAIN_SECOND_DIAGONAL_LOW) {
+                } else if (transition == RMG_TERRAIN_SECOND_DIAGONAL_BLEND) {
                     if (checkSecondDiagonal(point, flip))
                         transition = 7;
-                } else if (transition == RMG_TERRAIN_SECOND_DIAGONAL_HIGH) {
+                } else if (transition == RMG_TERRAIN_SECOND_DIAGONAL_HARD) {
                     if (checkSecondDiagonal(point, flip))
                         transition = 13;
                 }
@@ -1332,38 +1301,40 @@ void rmgTerrainPainter::buildMatchingNeighbourMask(
     unsigned int south = point.m_y < m_size.m_y - 1 ? point.m_y + 1 : point.m_y;
     unsigned int west = point.m_x > 0 ? point.m_x - 1 : point.m_x;
     unsigned int east = point.m_x < m_size.m_x - 1 ? point.m_x + 1 : point.m_x;
-    TRmgGridPoint low = TRmgGridPoint(west, north);
-    TRmgGridPoint high = TRmgGridPoint(east, south);
+    TRmgGridPoint northWest = TRmgGridPoint(west, north);
+    TRmgGridPoint southEast = TRmgGridPoint(east, south);
 
     {
         TRmgGridPoint nearby;
         nearby.setX(point.m_x);
-        nearby.setY(low.getY());
+        nearby.setY(northWest.getY());
         matches[TILE_DIR_NORTH] = getTerrain(nearby) == terrain;
         nearby.setX(point.m_x);
-        nearby.setY(high.getY());
+        nearby.setY(southEast.getY());
         matches[TILE_DIR_SOUTH] = getTerrain(nearby) == terrain;
-        nearby.setX(low.getX());
+        nearby.setX(northWest.getX());
         nearby.setY(point.m_y);
         matches[TILE_DIR_WEST] = getTerrain(nearby) == terrain;
-        nearby.setX(high.getX());
+        nearby.setX(southEast.getX());
         nearby.setY(point.m_y);
         matches[TILE_DIR_EAST] = getTerrain(nearby) == terrain;
     }
     matches[TILE_DIR_NORTHWEST] =
         (matches[TILE_DIR_NORTH] || matches[TILE_DIR_WEST])
-        && getTerrain(TRmgGridPoint(low.getX(), low.getY())) == terrain;
+        && getTerrain(TRmgGridPoint(northWest.getX(), northWest.getY())) == terrain;
     matches[TILE_DIR_NORTHEAST] =
         (matches[TILE_DIR_NORTH] || matches[TILE_DIR_EAST])
-        && getTerrain(TRmgGridPoint(high.getX(), low.getY())) == terrain;
+        && getTerrain(TRmgGridPoint(southEast.getX(), northWest.getY())) == terrain;
     matches[TILE_DIR_SOUTHWEST] =
         (matches[TILE_DIR_SOUTH] || matches[TILE_DIR_WEST])
-        && getTerrain(TRmgGridPoint(low.getX(), high.getY())) == terrain;
+        && getTerrain(TRmgGridPoint(northWest.getX(), southEast.getY())) == terrain;
     matches[TILE_DIR_SOUTHEAST] =
         (matches[TILE_DIR_SOUTH] || matches[TILE_DIR_EAST])
-        && getTerrain(TRmgGridPoint(high.getX(), high.getY())) == terrain;
+        && getTerrain(TRmgGridPoint(southEast.getX(), southEast.getY())) == terrain;
 }
 
+// Scan cyclic runs: after the first matching run and its following gap,
+// another matching cell proves that the centre's neighbours are separated.
 VA(0x005B6810, 0x84)
 MAC_ADDRESS(0x2587f4, 0xd0)
 unsigned char rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
@@ -1380,22 +1351,27 @@ unsigned char rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& poi
     direction = first;
     do {
         direction = (direction + 1) % TILE_DIR_COUNT;
-        if (direction == first) {
-noSeparation:
+        if (direction == first)
             return 0;
-        }
     } while (!matches[direction]);
     do {
         direction = (direction + 1) % TILE_DIR_COUNT;
         if (direction == first)
-            goto noSeparation;
+            return 0;
     } while (matches[direction]);
     while (!matches[direction]) {
         direction = (direction + 1) % TILE_DIR_COUNT;
         if (direction == first)
-            goto noSeparation;
+            return 0;
     }
     return 1;
+}
+
+static inline int getTerrainNeighbourKindAt(
+    rmgTerrainPainter& painter, const TRmgGridPoint& neighbour, int terrain)
+{
+    int neighbourTerrain = painter.getTerrain(neighbour);
+    return getRmgTerrainNeighbourKind(terrain, neighbourTerrain);
 }
 
 VA(0x005B68A0, 0x2FF)
@@ -1409,54 +1385,22 @@ void rmgTerrainPainter::buildNeighbourKinds(
     unsigned int west = point.m_x > 0 ? point.m_x - 1 : point.m_x;
     unsigned int east = point.m_x < m_size.m_x - 1 ? point.m_x + 1 : point.m_x;
 
-    {
-        TRmgGridPoint nearby(point.m_x, north);
-        int nearbyTerrain = getTerrain(nearby);
-        neighbours[TILE_DIR_NORTH] = getRmgTerrainNeighbourKind(
-            terrain, nearbyTerrain);
-    }
-    {
-        TRmgGridPoint nearby(point.m_x, south);
-        int nearbyTerrain = getTerrain(nearby);
-        neighbours[TILE_DIR_SOUTH] = getRmgTerrainNeighbourKind(
-            terrain, nearbyTerrain);
-    }
-    {
-        TRmgGridPoint nearby(west, point.m_y);
-        int nearbyTerrain = getTerrain(nearby);
-        neighbours[TILE_DIR_WEST] = getRmgTerrainNeighbourKind(
-            terrain, nearbyTerrain);
-    }
-    {
-        TRmgGridPoint nearby(east, point.m_y);
-        int nearbyTerrain = getTerrain(nearby);
-        neighbours[TILE_DIR_EAST] = getRmgTerrainNeighbourKind(
-            terrain, nearbyTerrain);
-    }
-    {
-        TRmgGridPoint nearby(west, north);
-        int nearbyTerrain = getTerrain(nearby);
-        neighbours[TILE_DIR_NORTHWEST] = getRmgTerrainNeighbourKind(
-            terrain, nearbyTerrain);
-    }
-    {
-        TRmgGridPoint nearby(east, north);
-        int nearbyTerrain = getTerrain(nearby);
-        neighbours[TILE_DIR_NORTHEAST] = getRmgTerrainNeighbourKind(
-            terrain, nearbyTerrain);
-    }
-    {
-        TRmgGridPoint nearby(west, south);
-        int nearbyTerrain = getTerrain(nearby);
-        neighbours[TILE_DIR_SOUTHWEST] = getRmgTerrainNeighbourKind(
-            terrain, nearbyTerrain);
-    }
-    {
-        TRmgGridPoint nearby(east, south);
-        int nearbyTerrain = getTerrain(nearby);
-        neighbours[TILE_DIR_SOUTHEAST] = getRmgTerrainNeighbourKind(
-            terrain, nearbyTerrain);
-    }
+    neighbours[TILE_DIR_NORTH] = getTerrainNeighbourKindAt(
+        *this, TRmgGridPoint(point.m_x, north), terrain);
+    neighbours[TILE_DIR_SOUTH] = getTerrainNeighbourKindAt(
+        *this, TRmgGridPoint(point.m_x, south), terrain);
+    neighbours[TILE_DIR_WEST] = getTerrainNeighbourKindAt(
+        *this, TRmgGridPoint(west, point.m_y), terrain);
+    neighbours[TILE_DIR_EAST] = getTerrainNeighbourKindAt(
+        *this, TRmgGridPoint(east, point.m_y), terrain);
+    neighbours[TILE_DIR_NORTHWEST] = getTerrainNeighbourKindAt(
+        *this, TRmgGridPoint(west, north), terrain);
+    neighbours[TILE_DIR_NORTHEAST] = getTerrainNeighbourKindAt(
+        *this, TRmgGridPoint(east, north), terrain);
+    neighbours[TILE_DIR_SOUTHWEST] = getTerrainNeighbourKindAt(
+        *this, TRmgGridPoint(west, south), terrain);
+    neighbours[TILE_DIR_SOUTHEAST] = getTerrainNeighbourKindAt(
+        *this, TRmgGridPoint(east, south), terrain);
 }
 
 // These Complete-only diagonal callers retain the opposite upper-clamp
