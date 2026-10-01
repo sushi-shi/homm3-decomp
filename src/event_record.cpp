@@ -82,7 +82,7 @@ static void setPlayer(char newPlayer)
 // Retail base vtable slot4 folds to the empty ret4 body at0x485d80.
 DC_ADDRESS(0x08c708, 0x4)
 MAC_ADDRESS(0x0bf0f8, 0x4)
-void type_event_record::replay(unsigned char draw)
+void type_event_record::replay(bool draw)
 {
 }
 
@@ -174,7 +174,7 @@ unsigned char type_record_move_hero::save(TAbstractFile* outfile)
 VA(0x0049a7c0, 0x144)
 DC_ADDRESS(0x08c91c, 0xce)
 MAC_ADDRESS(0x0bf424, 0x15c)
-void type_record_move_hero::replay(unsigned char draw)
+void type_record_move_hero::replay(bool draw)
 {
     setPlayer(m_playerId);
 
@@ -246,7 +246,7 @@ type_event_record_type type_record_teleport::getType() const
 VA(0x0049a9c0, 0x7B)
 DC_ADDRESS(0x08caf0, 0x3c)
 MAC_ADDRESS(0x0bf718, 0x60)
-void type_record_teleport::replay(unsigned char draw)
+void type_record_teleport::replay(bool draw)
 {
     setPlayer(m_playerId);
 
@@ -315,7 +315,7 @@ unsigned char type_record_claim_mine::save(TAbstractFile* outfile)
 VA(0x0049ab40, 0x74)
 DC_ADDRESS(0x08cc6c, 0x6c)
 MAC_ADDRESS(0x0bf9e8, 0xc4)
-void type_record_claim_mine::replay(unsigned char draw)
+void type_record_claim_mine::replay(bool draw)
 {
     g_game->claimMine(m_id, m_newOwner, const_recorded_action);
     if (draw) {
@@ -384,7 +384,7 @@ type_event_record* type_record_claim_town::create()
 VA(0x0049ac20, 0x7E)
 DC_ADDRESS(0x08cdd8, 0x70)
 MAC_ADDRESS(0x0bfc0c, 0xac)
-void type_record_claim_town::replay(unsigned char draw)
+void type_record_claim_town::replay(bool draw)
 {
     g_game->m_towns[m_id].m_owner = m_newOwner;
     if (draw) {
@@ -489,7 +489,7 @@ unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
 VA(0x0049ae80, 0x44)
 DC_ADDRESS(0x08cf64, 0x2e)
 MAC_ADDRESS(0x0c008c, 0x78)
-void type_record_hide_boat::replay(unsigned char draw)
+void type_record_hide_boat::replay(bool draw)
 {
     m_currentBoat->m_occupied = m_occupied;
     m_currentBoat->m_occupyingHero = m_occupyingHero;
@@ -570,7 +570,7 @@ unsigned char type_record_show_boat::save(TAbstractFile* outfile)
 VA(0x0049b040, 0xB5)
 DC_ADDRESS(0x08d14c, 0x8a)
 MAC_ADDRESS(0x0c03c4, 0xf8)
-void type_record_show_boat::replay(unsigned char draw)
+void type_record_show_boat::replay(bool draw)
 {
     m_currentBoat->m_occupied = m_occupied;
     m_currentBoat->m_x = m_location.m_x;
@@ -663,7 +663,7 @@ unsigned char type_record_erase::save(TAbstractFile* outfile)
 VA(0x0049b280, 0xEA)
 DC_ADDRESS(0x08d3c8, 0xa4)
 MAC_ADDRESS(0x0c07e8, 0x144)
-void type_record_erase::replay(unsigned char draw)
+void type_record_erase::replay(bool draw)
 {
     NewmapCell* cell = g_game->getCell(m_location);
     g_advManager->mobilizeCurrHero(1, 0, draw);
@@ -758,7 +758,7 @@ unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
 VA(0x0049b570, 0x102)
 DC_ADDRESS(0x08d5f0, 0x96)
 MAC_ADDRESS(0x0c0cd8, 0x130)
-void type_record_hide_hero::replay(unsigned char draw)
+void type_record_hide_hero::replay(bool draw)
 {
     setPlayer(m_playerId);
 
@@ -857,7 +857,7 @@ unsigned char type_record_show_hero::save(TAbstractFile* outfile)
 VA(0x0049b800, 0x15E)
 DC_ADDRESS(0x08d8b4, 0x140)
 MAC_ADDRESS(0x0c117c, 0x178)
-void type_record_show_hero::replay(unsigned char draw)
+void type_record_show_hero::replay(bool draw)
 {
     setPlayer(m_playerId);
 
@@ -950,7 +950,7 @@ unsigned char type_record_player_death::save(TAbstractFile* outfile)
 VA(0x0049bab0, 0x11A)
 DC_ADDRESS(0x08db94, 0x8a)
 MAC_ADDRESS(0x0c153c, 0xf4)
-void type_record_player_death::replay(unsigned char draw)
+void type_record_player_death::replay(bool draw)
 {
     if (draw) {
         std::string text;
@@ -1059,7 +1059,7 @@ void type_record_shroud::addChange(int x, int y, int z,
 VA(0x0049be60, 0xBA)
 DC_ADDRESS(0x08de70, 0xf0)
 MAC_ADDRESS(0x0c1900, 0xe4)
-void type_record_shroud::replay(unsigned char draw)
+void type_record_shroud::replay(bool draw)
 {
     unsigned char changed = 0;
     int i = m_changes.size();
@@ -1374,7 +1374,8 @@ void game::playRecordedEvents()
     g_config.m_blackoutComputer = 0;
 
     for (int j = 0; j < size; ++j) {
-        unsigned char draw = !interrupted
+        // Boolean carrier for the independently proven virtual replay(bool).
+        bool draw = !interrupted
             && m_eventRecords[j]->getPlayerId() != savedPlayer;
         m_eventRecords[j]->replay(draw);
 
