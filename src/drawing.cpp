@@ -855,10 +855,16 @@ MAC_ADDRESS(0x0a581c, 0x5d8)
 // SaveExtent and both recorded int locals; no enclosing array block occurs
 // in the lexical records. Keep that lifetime and the ordinary rectangle
 // member calls. Removing the block and provisional extent/global aliases
-// is VC6 byte-flat at 96.3415%. The remaining named difference is the
-// retained UpdateCombatArea call where retail expands UpdateScreen.
-// Passing the bounds directly or naming a short-lived copy/width/height
-// inside the canonical helper did not recover that expansion.
+// is VC6 byte-flat at 96.3415%. The current 66/66-block comparison expands
+// UpdateCombatArea to UpdateScreen in both bodies. Its first difference is
+// the by-value rectangle's eager scalar captures, versus retail's interleaved
+// dimension loads; the following extent restores use different scratch slots.
+// The only named mismatch is the folded no-op vector _Destroy alias, not a
+// missing game operation. Passing the bounds directly or naming a short-lived
+// copy/width/height inside the canonical helper did not resolve the lowering.
+// A bool offsetUsed[19] control is byte-identical at 96.3415%; native T_UCHAR
+// and the exclusively 0/1 stores cannot distinguish that local source type.
+// Keep the existing byte array rather than claiming an unproved bool domain.
 void combatManager::updateMouseGrid(int newMouseGridIndex,
                                     std::vector<long>& hexes,
                                     unsigned char forceUpdate)
