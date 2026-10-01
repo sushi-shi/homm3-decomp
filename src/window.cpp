@@ -143,6 +143,14 @@ void heroWindow::handleWidgetHover(widget* current)
 {
 }
 
+// Project-inferred dynamic insertion. Ownership is recorded before opening the
+// widget; keep it in the vector even if addWidget's virtual open rejects it.
+void heroWindow::addOwnedWidget(widget* newWidget)
+{
+    m_widgets.push_back(newWidget);
+    addWidget(m_widgets.back(), -1);
+}
+
 VA(0x005fecb0, 0xA5)
 DC_ADDRESS(0x197324, 0x8e)
 MAC_ADDRESS(0x20b1dc, 0x124)

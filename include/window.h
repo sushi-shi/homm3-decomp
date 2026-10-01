@@ -142,6 +142,8 @@ protected:
     // clearing the vector or unlinking widgets from the message stream.
     void deleteWidgetObjects();
     void deleteWidgets();
+    // Project-inferred append followed by immediate default-priority registration.
+    void addOwnedWidget(widget* newWidget);
     // Project-inferred registration for windows that deliberately skip nulls.
     void addPresentWidgetsToMessageStream();
     // DC window.cpp owns the ordinary body. Complete's overview constructor

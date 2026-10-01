@@ -1675,6 +1675,38 @@ visibility values are preserved. Cached Dreamcast type 0x3fbd / field list
 0x3fd9 records these fields as public, so they remain public. All three new
 helper names and ordinary source bodies are project inferences.
 
+## Dynamic widget ownership and thieves' guild rows
+
+Seventeen original append/register sites now share protected
+`heroWindow::addOwnedWidget()`: quick-creature information (three), monster-join
+and garrison additions (three), thieves' guild dynamic rows (nine), multiplayer
+IP text and text-dialog setup. It records the pointer in the owned vector before
+passing the vector's last entry to the existing `addWidget()` at priority -1.
+Registration still opens the widget and links it through the native operation;
+a rejected open still leaves ownership recorded, and no new null or allocation
+failure policy is introduced. Allocations, retained widget handles, title-string
+lifetimes, formatting and conditional insertion remain with the callers. Base
+registration is unchanged; combat subwindow additions have a separate parent
+owner and are not routed through this window helper.
+
+The guild's four primary-skill cells share `addHeroPrimarySkill()`, preserving
+skill order, the existing getter, formatting before construction and immediate
+owned registration. Their y positions are the existing eleven-pixel progression
+from 0x18c; the four caller-supplied widget-ID bands remain distinct.
+
+The town and hero army passes share `considerStrongestCreature()` for each slot.
+It requires a nonempty type and positive count, compares the existing AI value
+strictly against the current best, then stores creature/value, copies the whole
+army for later preview and saves the slot. The caller retains town-before-hero
+traversal, signed indices, seven-slot loops and -1/zero initial best values.
+Town candidates still resolve their army through the existing garrison-aware
+`getArmy()` for each slot. Its body only selects the town or garrison-hero army;
+no state change is moved across the selection. Equal values keep the first
+candidate, and no candidate leaves the prior display snapshots untouched.
+
+All three helper names and ordinary source placements are project inferences.
+No stored fields, native access declarations or virtual slots change.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

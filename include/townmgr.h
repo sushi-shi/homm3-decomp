@@ -406,6 +406,11 @@ public:
     // Retail 0x5c9710 (dc 0x16e2f4). The page's rollover line.
     void setRolloverText(int codeY);
     virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5c9930
+
+private:
+    void addHeroPrimarySkill(hero* bestHero, int skill, int column, int widgetId);
+    void considerStrongestCreature(const armyGroup& group, int slot, int column,
+                                   int& bestCreature, int& bestValue);
 };
 
 // The town hall page: one background per town type over a grid of

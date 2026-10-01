@@ -4017,8 +4017,7 @@ type_monster_join_window::type_monster_join_window(hero* inHero,
     widget* newWidget = new textWidget(0, 20, m_width, 30, title.c_str(),
                                        "medfont.fnt", font::HEADING,
                                        203, 1, 0, 8);
-    m_widgets.push_back(newWidget);
-    addWidget(newWidget, -1);
+    addOwnedWidget(newWidget);
 }
 
 VA_COMPGEN(0x005d0d60, 0x21, SCALAR_DELETING_DTOR, type_monster_join_window)
@@ -4038,13 +4037,11 @@ TGarrisonWindow::TGarrisonWindow(hero* inHero, int garrisonOwner,
                                        g_generalText->getText(GENERAL_TEXT_TOWN_GARRISON),
                                        "bigfont.fnt", font::HEADING,
                                        203, 1, 0, 8);
-    m_widgets.push_back(newWidget);
-    addWidget(newWidget, -1);
+    addOwnedWidget(newWidget);
 
     newWidget = new iconWidget(190, 50, 128, 64, 202, "AVCgar10.def",
                                0, 0, 0, 0, 0x10);
-    m_widgets.push_back(newWidget);
-    addWidget(newWidget, -1);
+    addOwnedWidget(newWidget);
 }
 
 VA_COMPGEN(0x005d1090, 0x21, SCALAR_DELETING_DTOR, TGarrisonWindow)
@@ -7951,6 +7948,34 @@ void townManager::setupWell(TCastleWindow* wellWin)
     }
 }
 
+// Project-inferred primary-skill cell shared by the four guild display rows.
+void TThievesGuildWindow::addHeroPrimarySkill(
+    hero* bestHero, int skill, int column, int widgetId)
+{
+    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+            bestHero->getPrimarySkill(skill));
+    addOwnedWidget(new textWidget(
+        66 * column + 0x102, 0x18c + 11 * skill, 0x35, 0x14, g_text,
+        DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
+        font::PRIMARY, widgetId, 2, 0, 8));
+}
+
+// Project-inferred selection shared by town and hero army scans. Strictly
+// greater value preserves the first occupied slot encountered on ties.
+void TThievesGuildWindow::considerStrongestCreature(
+    const armyGroup& group, int slot, int column,
+    int& bestCreature, int& bestValue)
+{
+    if (group.m_armies[slot] != -1
+        && group.m_numTroops[slot] > 0
+        && g_creatureTypeTraits[group.m_armies[slot]].m_aiValue > bestValue) {
+        bestCreature = group.m_armies[slot];
+        bestValue = g_creatureTypeTraits[group.m_armies[slot]].m_aiValue;
+        g_creatureArmies[column] = group;
+        g_creatureWidgetMap1[column] = slot;
+    }
+}
+
 // The scoreboard builder: per category a rank row of player flags
 // (ties grouped side by side out of the two [8][8] layout tables the
 // head spells member by member), then per alive player the crest
@@ -8061,13 +8086,12 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
             }
             int x = 0x103 + 66 * rankColumn;
             for (int m = start; m <= last; m++) {
-                m_widgets.push_back(new iconWidget(
+                addOwnedWidget(new iconWidget(
                     flagX[group - 1][m - start] + x,
                     flagY[group - 1][m - start] + 32 * category + 0x28,
                     0xf, 0x14, -1,
                     DATA_COMPGEN(0x00660d18, itgFlagsSprite, "itgflags.def"),
                     index[m], 0, 0, 0, 0x10));
-                addWidget(m_widgets.back(), -1);
             }
             last++;
             start = last;
@@ -8107,63 +8131,33 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
             }
             if (bestHero) {
                 g_heroWidgetMap[column] = bestHero->m_id;
-                m_widgets.push_back(new bitmapBorder(
+                addOwnedWidget(new bitmapBorder(
                     66 * column + 0x104, 0x168, 0x30, 0x20,
                     column + HERO_P0,
                     g_heroTraits[bestHero->m_portrait].m_smallPortraitName,
                     0x800));
-                addWidget(m_widgets.back(), -1);
             }
             if (thievesGuilds >= 2) {
                 if (bestHero) {
-                    m_widgets.push_back(new textWidget(
+                    addOwnedWidget(new textWidget(
                         66 * column + 0x102, 0x18c, 0x35, 0x2c,
                         g_generalText->getText(GENERAL_TEXT_PRIMARY_SKILL_ABBREVIATIONS),
                         DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
                         font::PRIMARY, -1, 0, 0, 8));
-                    addWidget(m_widgets.back(), -1);
 
-                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                            bestHero->getPrimarySkill(0));
-                    m_widgets.push_back(new textWidget(
-                        66 * column + 0x102, 0x18c, 0x35, 0x14, g_text,
-                        DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
-                        font::PRIMARY, column + RANK_A0, 2, 0, 8));
-                    addWidget(m_widgets.back(), -1);
-
-                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                            bestHero->getPrimarySkill(1));
-                    m_widgets.push_back(new textWidget(
-                        66 * column + 0x102, 0x197, 0x35, 0x14, g_text,
-                        DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
-                        font::PRIMARY, column + RANK_B0, 2, 0, 8));
-                    addWidget(m_widgets.back(), -1);
-
-                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                            bestHero->getPrimarySkill(2));
-                    m_widgets.push_back(new textWidget(
-                        66 * column + 0x102, 0x1a2, 0x35, 0x14, g_text,
-                        DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
-                        font::PRIMARY, column + RANK_C0, 2, 0, 8));
-                    addWidget(m_widgets.back(), -1);
-
-                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                            bestHero->getPrimarySkill(3));
-                    m_widgets.push_back(new textWidget(
-                        66 * column + 0x102, 0x1ad, 0x35, 0x14, g_text,
-                        DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
-                        font::PRIMARY, column + 30, 2, 0, 8));
-                    addWidget(m_widgets.back(), -1);
+                    addHeroPrimarySkill(bestHero, 0, column, column + RANK_A0);
+                    addHeroPrimarySkill(bestHero, 1, column, column + RANK_B0);
+                    addHeroPrimarySkill(bestHero, 2, column, column + RANK_C0);
+                    addHeroPrimarySkill(bestHero, 3, column, column + 30);
                 }
                 if (thievesGuilds >= 3) {
                     strcpy(g_text,
                            g_personality[g_game->m_players[who].m_personality]);
-                    m_widgets.push_back(new textWidget(
+                    addOwnedWidget(new textWidget(
                         66 * column + 0xfb, 0x1c4, 0x42, 0x14, g_text,
                         DATA_COMPGEN(0x0065f2f8, combatChatSmallFont,
                                      "smalfont.fnt"),
                         font::PRIMARY, -1, 1, 0, 8));
-                    addWidget(m_widgets.back(), -1);
                     if (thievesGuilds >= 4) {
                         bestCreature = -1;
                         bestValue = 0;
@@ -8171,44 +8165,25 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                             int id = g_game->m_players[who].m_townIds[k];
                             town* t = g_game->getTown(id);
                             for (slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
-                                if (t->getArmy().m_armies[slot] != -1
-                                    && t->getArmy().m_numTroops[slot] > 0
-                                    && g_creatureTypeTraits[t->getArmy().m_armies[slot]]
-                                               .m_aiValue
-                                           > bestValue) {
-                                    bestCreature = t->getArmy().m_armies[slot];
-                                    bestValue = g_creatureTypeTraits[
-                                        t->getArmy().m_armies[slot]].m_aiValue;
-                                    g_creatureArmies[column] = t->getArmy();
-                                    g_creatureWidgetMap1[column] = slot;
-                                }
+                                considerStrongestCreature(t->getArmy(), slot, column,
+                                                          bestCreature, bestValue);
                             }
                         }
                         for (k = 0; k < g_game->m_players[who].m_numHeroes; k++) {
                             int id = g_game->m_players[who].m_heroes[k];
                             hero* h = g_game->getHero(id);
                             for (slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
-                                if (h->m_army.m_armies[slot] != -1
-                                    && h->m_army.m_numTroops[slot] > 0
-                                    && g_creatureTypeTraits[h->m_army.m_armies[slot]]
-                                               .m_aiValue
-                                           > bestValue) {
-                                    bestCreature = h->m_army.m_armies[slot];
-                                    bestValue = g_creatureTypeTraits[
-                                        h->m_army.m_armies[slot]].m_aiValue;
-                                    g_creatureArmies[column] = h->m_army;
-                                    g_creatureWidgetMap1[column] = slot;
-                                }
+                                considerStrongestCreature(h->m_army, slot, column,
+                                                          bestCreature, bestValue);
                             }
                         }
                         if (bestCreature != -1) {
-                            m_widgets.push_back(new iconWidget(
+                            addOwnedWidget(new iconWidget(
                                 66 * column + 0xff, 0x1de, 0x3a, 0x40,
                                 column + CREATURE_P0,
                                 DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                                              "twcrport.def"),
                                 bestCreature + 2, 2, 0, 0, 0x11));
-                            addWidget(m_widgets.back(), -1);
                         }
                     }
                 }
