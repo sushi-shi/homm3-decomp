@@ -256,7 +256,8 @@ private:
     void clear(long flyLevel, long startZ, long stopZ);
     void enterGate(const pathCell& cell, const NewmapCell* mapCell,
                     long limit);
-    unsigned char enterHostileTrigger(const hero* currentHero,
+    // Native public 0x13cbc8: private bool predicate (AAA_N).
+    bool enterHostileTrigger(const hero* currentHero,
                                      pathCell& cell);
     // search.obj 0x56a400 / 0x56a730, the lith-family and underground
     // gate seeders; both parameter lists are the DC roster's
@@ -268,7 +269,8 @@ private:
     void enterTown(const hero* currentHero, long startTown,
                     const pathCell& currentPathCell, long limit,
                     type_search_type searchType);
-    unsigned char enterTrigger(const hero* currentHero, pathCell& cell,
+    // Native public 0x13cc3c: private bool predicate (AAA_N).
+    bool enterTrigger(const hero* currentHero, pathCell& cell,
                                 long limit, type_search_type searchType);
     // 0x4b1460 / 0x4b1500. Init frees whatever Close would have freed
     // and then re-allocates both maps; SeedCombatPosition calls it

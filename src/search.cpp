@@ -320,7 +320,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
 VA(0x0056aad0, 0x68)
 DC_ADDRESS(0x12bbc8, 0x74)
 MAC_ADDRESS(0x162388, 0x104)
-unsigned char searchArray::enterHostileTrigger(const hero* currentHero,
+bool searchArray::enterHostileTrigger(const hero* currentHero,
                                               pathCell& cell)
 {
     if (cell.m_point != cell.m_monster) {
@@ -362,7 +362,7 @@ unsigned char searchArray::enterHostileTrigger(const hero* currentHero,
 VA(0x0056ab40, 0x50C)
 DC_ADDRESS(0x12bc3c, 0x29e)
 MAC_ADDRESS(0x16248c, 0x560)  // exhaustive search.obj order-map
-unsigned char searchArray::enterTrigger(const hero* currentHero,
+bool searchArray::enterTrigger(const hero* currentHero,
                                          pathCell& cell, long limit,
                                          type_search_type searchType)
 {
@@ -376,7 +376,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
         if (searchType < const_AI_search)
             return 0;
     case BORDER_GATE: {
-        unsigned char visited =
+        bool visited =
             (g_game->m_borderTentVisitFlags[mapCell->m_objectIndex]
              & g_curPlayerBit)
             != 0;
