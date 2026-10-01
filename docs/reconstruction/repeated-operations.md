@@ -2583,6 +2583,33 @@ without native annotations or explicit inline claims. Fields, palette extents
 and virtual interfaces are unchanged. Source arithmetic is preserved, but no
 new compiled floating-point or matching result is claimed.
 
+## Resource fallback and bitmap conversion
+
+Five bitmap-archive loading paths share findBitmapResourceOrDefault: look up
+its requested name, report a miss, look up the fallback, then report a second
+miss if necessary. Both searches still use the native findBitmapResource
+operation, so the fallback search reads the current archive context after the
+first diagnostic. Each loader retains its resource-type/context arguments and
+its own annotated static fallback array, including the two distinct default.pal
+copies. Loose-file probes precede this operation, and callers still return zero
+before reading an unavailable archive.
+
+The font loader retains its original-name getItemIndex query after fallback
+selection. Text/spreadsheet loaders without fallback and the sound loader's
+different lookup/reporting protocol remain separate operations. Resource naming,
+cache insertion and stream adapters are unchanged.
+
+Both loadBitmap16 branches share convertLoadedBitmap24: optionally adjust the
+24-bit source's HSV values, allocate the 16-bit destination from its dimensions,
+then draw the entire source into it. Geometry is still read again for drawing;
+no allocation guard or ownership transfer is added. The caller-owned auto_ptr
+and archive byte buffer keep their original destruction order on return and
+exception. Source construction remains specific to loose-file or archive input.
+
+Both ordinary file-static bodies and names are project inferences from the
+repeated source operations, without new native identities or inline claims.
+No compilation or behavioral validation was run.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
