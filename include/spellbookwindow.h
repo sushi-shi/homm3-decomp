@@ -145,7 +145,8 @@ public:
         return m_contextMask;
     }
     void gotoPage(int page);
-    int getPage();
+    // Native TSpellbookWindow records declare public GetPage() const.
+    int getPage() const;
 
     // E:\gamedcs\SpellbookWindow.h:258
     DC_ADDRESS(0x14d36c, 0x1c)
