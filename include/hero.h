@@ -856,6 +856,8 @@ public:
     // Charge boarding/landing movement. False means unlimited movement
     // bypassed the charge; callers refresh the locator only for true.
     bool applyBoatMovementCost(unsigned char seaMovement);
+    // Project-inferred shared Town Portal movement charge (not mana).
+    int getTownPortalMovementCost() const;
     int getMinimumTerrainCost(const NewmapCell* cell, int pointsLeft) const;
     // 0x4e5960 - the four primary skills, each clamped to 0..99, with
     // slots 2 and 3 floored at 1.

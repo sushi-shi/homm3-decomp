@@ -31,6 +31,14 @@ DATA(0x00678150) tilePoint g_normalDirTable[8] = {
 // not otherwise depend on the ai_player class declarations.
 long aiGetShipCost(const hero* ourHero, type_point point);
 
+// Project-inferred named-coordinate copy shared by path cells and AI targets.
+void type_point::copyCoordinatesFrom(const type_point& point)
+{
+    m_x = point.m_x;
+    m_y = point.m_y;
+    m_z = point.m_z;
+}
+
 VA(0x004b1330, 0x3B)
 DC_ADDRESS(0x09ed40, 0x48)
 bool type_point::isValid() const

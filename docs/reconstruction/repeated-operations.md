@@ -2323,6 +2323,40 @@ Generic broadcasts retain the supplied message ID rather than acquiring a
 widget-only envelope. Payload writes, loops and dispatch order are unchanged.
 No reset is added to an already-used message.
 
+## Packed path coordinates and movement-spell rules
+
+Seven named-coordinate copies share ordinary
+`type_point::copyCoordinatesFrom(const type_point&)`: four pathfinding callers
+(lith exit, underground-gate exit, Town Portal destination and fresh search
+seed) and three AI callers (Grail guess, destination evaluation and a flying
+path's revised endpoint). The body retains X/Y/Z field assignments, rather
+than replacing them with whole-object assignment that also copies packed
+storage outside the named coordinates. The original point and path-cell
+lifetimes, predecessor metadata, cost changes, trigger handling and pushPoint
+calls stay in their callers. Existing whole-object copies and neighbor-offset
+calculations are distinct. The name and findpath.cpp placement alongside
+isValid are project inferences; no original spelling or inline qualifier is
+claimed.
+
+Path estimation and AI Town Portal execution share
+`hero::getTownPortalMovementCost() const`: call the native getSpellLevel and
+return 200 for exactly expert, otherwise 300. Estimation still queries it once
+before iterating destinations. Execution still teleports, charges mana, queries
+the movement cost, subtracts it and clamps movement to zero. The local cost
+keeps the skill query ahead of the movement read. Town choice, spell
+availability, mastery limits and mana cost remain separate. No extra backing
+field or virtual slot is introduced.
+
+Three movement-spell failure paths share file-static stopMovementAtPathStart:
+only step zero clears the hero's movement points. checkMoveSpell uses it when
+no stopping cell exists or the required movement exceeds the available amount;
+those paths still return zero. The Dimension Door cast-limit branch in
+attemptTeleport uses the same operation before its existing return-one result.
+Later failed steps retain movement, and unconditional empty-path/exhaustion
+handling remains separate. The long step type, guards and result meanings are
+unchanged. These names and ordinary source placements are project inferences,
+with no new native annotations or field-visibility changes.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

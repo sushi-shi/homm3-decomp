@@ -45,6 +45,8 @@ public:
     }
     // DC S_PUB32 ?is_valid@type_point@@QBA_NXZ proves a const bool member.
     bool isValid() const;
+    // Project-inferred field copy; retain destination padding bits.
+    void copyCoordinatesFrom(const type_point& point);
 
     // Dreamcast S_PUB32 is ??8type_point@@QBA_NABU0@@Z: bool return,
     // const member, const-reference operand.

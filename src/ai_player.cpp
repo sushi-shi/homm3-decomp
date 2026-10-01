@@ -2974,9 +2974,7 @@ static void checkHolyGrail(
     playerData* player = &g_game->m_players[currentHero->m_owner];
     if (player->m_puzzleGuess.m_x >= 0) {
         HeroDestination point;
-        point.m_point.m_x = player->m_puzzleGuess.m_x;
-        point.m_point.m_y = player->m_puzzleGuess.m_y;
-        point.m_point.m_z = player->m_puzzleGuess.m_z;
+        point.m_point.copyCoordinatesFrom(player->m_puzzleGuess);
         point.m_isCritical = 0;
         pathCell* guessCell = currentSearchArray->getCell(point.m_point, 0);
         if (guessCell->m_visited) {
@@ -3442,9 +3440,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
             point.m_isCritical = 1;
         }
 
-        point.m_point.m_x = cell->m_point.m_x;
-        point.m_point.m_y = cell->m_point.m_y;
-        point.m_point.m_z = cell->m_point.m_z;
+        point.m_point.copyCoordinatesFrom(cell->m_point);
         point.m_moveCost = cell->m_cost;
         if (point.m_point == currentHero->getLocation())
             continue;
@@ -3803,14 +3799,20 @@ static void buildPath(hero* currentHero, searchArray* currentSearchArray,
             && (abs(currentPathCell->m_point.m_x - currentPathCell->m_lastPoint.m_x) > 1
                 || abs(currentPathCell->m_point.m_y - currentPathCell->m_lastPoint.m_y) > 1
                 || currentPathCell->m_point.m_z != currentPathCell->m_lastPoint.m_z)) {
-            destination.m_point.m_x = currentPathCell->m_lastPoint.m_x;
-            destination.m_point.m_y = currentPathCell->m_lastPoint.m_y;
-            destination.m_point.m_z = currentPathCell->m_lastPoint.m_z;
+            destination.m_point.copyCoordinatesFrom(currentPathCell->m_lastPoint);
             currentHero->setTarget(currentPathCell->m_lastPoint);
             return;
         }
         path.push_back(*currentPathCell);
     }
+}
+
+// Project-inferred failure transition shared by movement-spell checks.
+// A later blocked step retains the hero's remaining movement.
+static void stopMovementAtPathStart(hero* currentHero, long step)
+{
+    if (step == 0)
+        currentHero->m_movePoints = 0;
 }
 
 DC_ADDRESS(0x034508, 0x126)
@@ -3826,8 +3828,7 @@ static unsigned char checkMoveSpell(hero* currentHero,
     }
 
     if (i == path.size()) {
-        if (step == 0)
-            currentHero->m_movePoints = 0;
+        stopMovementAtPathStart(currentHero, step);
         return 0;
     }
 
@@ -3836,8 +3837,7 @@ static unsigned char checkMoveSpell(hero* currentHero,
         moveCost -= path[step - 1].m_cost;
 
     if (currentHero->m_movePoints < moveCost) {
-        if (step == 0)
-            currentHero->m_movePoints = 0;
+        stopMovementAtPathStart(currentHero, step);
         return 0;
     }
 
@@ -3890,8 +3890,7 @@ static unsigned char attemptTeleport(hero* currentHero,
     if (currentHero->m_dWalkSpellsCast
         >= g_spellTraits[SPELL_DIMENSION_DOOR].m_masteryBonus[mastery]) {
         if (path[step].m_dimensionDoor) {
-            if (step == 0)
-                currentHero->m_movePoints = 0;
+            stopMovementAtPathStart(currentHero, step);
             return 1;
         }
         return 0;
@@ -4086,11 +4085,8 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
                                      0, 1, 0);
             currentHero->useSpell(
                 currentHero->getManaCost(SPELL_TOWN_PORTAL));
-            if (currentHero->getSpellLevel(SPELL_TOWN_PORTAL)
-                == eMasteryExpert)
-                currentHero->m_movePoints -= 200;
-            else
-                currentHero->m_movePoints -= 300;
+            int movementCost = currentHero->getTownPortalMovementCost();
+            currentHero->m_movePoints -= movementCost;
             if (currentHero->m_movePoints < 0)
                 currentHero->m_movePoints = 0;
             return;

@@ -6544,6 +6544,12 @@ bool hero::applyBoatMovementCost(unsigned char seaMovement)
     return true;
 }
 
+// Project-inferred rule shared by path estimation and AI spell execution.
+int hero::getTownPortalMovementCost() const
+{
+    return getSpellLevel(SPELL_TOWN_PORTAL) == eMasteryExpert ? 200 : 300;
+}
+
 // DC hero.cpp:6356 names get_location and game::get_cell; VC6 expands both.
 VA(0x004e5ce0, 0xE7)
 DC_ADDRESS(0x0d5548, 0x70)

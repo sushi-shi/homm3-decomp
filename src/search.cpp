@@ -181,9 +181,7 @@ void searchArray::enterLith(const hero* currentHero,
         if (searchType >= const_AI_search && cellType != LITH_TWOWAY)
             g_advManager->findAdjacentMonster(exitPoint, &monster,
                                               entryPoint.m_monster);
-        exitCell.m_point.m_x = exitPoint.m_x;
-        exitCell.m_point.m_y = exitPoint.m_y;
-        exitCell.m_point.m_z = exitPoint.m_z;
+        exitCell.m_point.copyCoordinatesFrom(exitPoint);
         if (cellType == WHIRLPOOL) {
             barrierValue -= 500;
             exitCell.m_adjustedCost =
@@ -212,9 +210,7 @@ void searchArray::enterGate(const pathCell& cell, const NewmapCell* mapCell,
         pathCell exitCell = cell;
         // DC search.cpp:251 names game::get_cell; Mac and VC6 expand it.
         NewmapCell* exitMapCell = g_game->getCell(exitPoint);
-        exitCell.m_point.m_x = exitPoint.m_x;
-        exitCell.m_point.m_y = exitPoint.m_y;
-        exitCell.m_point.m_z = exitPoint.m_z;
+        exitCell.m_point.copyCoordinatesFrom(exitPoint);
         pushPoint(cell, exitCell, cell.m_direction, 0, limit,
                   cell.m_barrierValue, cell.m_monster,
                   exitMapCell->m_type == HERO);
@@ -531,14 +527,11 @@ void searchArray::checkTownPortal(const hero* currentHero,
         destinations.push_back(closestTown->getLocation());
     }
     pathCell newCell;
-    int cost = currentHero->getSpellLevel(SPELL_TOWN_PORTAL) == eMasteryExpert
-        ? 200 : 300;
+    int cost = currentHero->getTownPortalMovementCost();
     for (unsigned int destinationIndex = 0;
          destinationIndex < destinations.size(); destinationIndex++) {
         newCell = startCell;
-        newCell.m_point.m_x = destinations[destinationIndex].m_x;
-        newCell.m_point.m_y = destinations[destinationIndex].m_y;
-        newCell.m_point.m_z = destinations[destinationIndex].m_z;
+        newCell.m_point.copyCoordinatesFrom(destinations[destinationIndex]);
         newCell.m_townPortal = 1;
         int distance = abs(newCell.m_point.m_z - startCell.m_point.m_z)
                 * (g_mapWidth + g_mapHeight) / 2
@@ -677,9 +670,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
     pathCell cell;
 
     if (!seedContinuation) {
-        cell.m_point.m_x = start.m_x;
-        cell.m_point.m_y = start.m_y;
-        cell.m_point.m_z = start.m_z;
+        cell.m_point.copyCoordinatesFrom(start);
         cell.m_inBoat = isBoat;
         cell.m_cost = 0;
         cell.m_dangerValue = 0;
