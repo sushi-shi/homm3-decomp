@@ -584,6 +584,19 @@ struct TRmgZoneBounds {
         return point.m_x >= m_minimumX && point.m_x < m_maximumX &&
             point.m_y >= m_minimumY && point.m_y < m_maximumY;
     }
+
+    // Extend half-open bounds to include one unit cell. Both callers pass
+    // coordinate values independent of these four fields; their different
+    // field-store orders have no effect on the accumulated rectangle.
+    void includeCell(int x, int y)
+    {
+        m_minimumX = x < m_minimumX ? x : m_minimumX;
+        m_minimumY = y < m_minimumY ? y : m_minimumY;
+        int maximumX = x + 1;
+        int maximumY = y + 1;
+        m_maximumX = maximumX > m_maximumX ? maximumX : m_maximumX;
+        m_maximumY = maximumY > m_maximumY ? maximumY : m_maximumY;
+    }
 };
 
 TPoint clipRmgBoundaryPoint(
@@ -1154,6 +1167,39 @@ struct TRmgMapItem {
             m_tileData.m_borderObject = 1;
         }
     }
+
+    // Removing a border connection also opens its cell. Keep the connection
+    // reset before openPath(), whose existing-connection guard then permits it.
+    void clearBorderConnection()
+    {
+        m_connection.m_present = 0;
+        m_connection.m_direction = 0;
+        openPath();
+    }
+
+    // An existing connection keeps its tile flags but receives the new border
+    // direction. Empty-cell requirements belong to the placement caller.
+    void markBorderConnection(int direction)
+    {
+        markBorderObject();
+        m_connection.m_direction = direction;
+        m_connection.m_present = 1;
+    }
+
+    // The group outline follows cells outside entrances and occupied terrain
+    // that retain generation path clearance. Water policy stays with callers.
+    unsigned char isClearOutlineCell() const
+    {
+        return !isRoadEntrance() && isPassableLand() && hasPathClearance();
+    }
+
+    // Permit obstacle placement in this clearance cell unless an existing
+    // connection protects it. Border-marking state is deliberately retained.
+    void releasePathClearance()
+    {
+        if (!m_connection.m_present)
+            m_tileData.m_pathClearance = 0;
+    }
 };
 
 // Retail has distinct seven-slot abstract tables at 0x6409e8 (map) and
@@ -1302,6 +1348,14 @@ public:
         TRmgObjectPropertiesRef* properties,
         TRmgMapPosition position,
         TRmgZone* zone);
+
+    // Bounds of one map plane; the caller owns level validation. Keep this
+    // separate from one-cell margins and retail's permissive river X bound.
+    bool containsXY(const TPoint& point) const
+    {
+        return point.m_x >= 0 && point.m_x < m_mapWidth
+            && point.m_y >= 0 && point.m_y < m_mapHeight;
+    }
 };
 
 // Complete's treasure retries construct an owned map at +0, then bounds,
