@@ -105,7 +105,9 @@ public:
     bool isGrailTarget(town* thisTown);
     // Shared comparison expanded in Mac 0x1fdf0c and retained 0x1fe124.
     // Callers own the point lifetimes; no instance state is needed here.
-    static unsigned char isGrailTarget(const type_point& thisTownLoc,
+    // Its bool result is inferred from the predicate and native bool caller;
+    // a byte result adds truth normalization absent from the retail caller.
+    static bool isGrailTarget(const type_point& thisTownLoc,
                                        const type_point& grailTownLoc,
                                        const type_point& anyTownLoc)
     {

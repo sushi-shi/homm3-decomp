@@ -623,6 +623,10 @@ void type_sacrifice_window::createCreatureWidgets(
     m_creatureWidgets.push_back(m_artifactsButton);
 }
 
+// DC records row/count/column before the traversal scopes, as in the sibling
+// skeleton helper. Keep ordinary traversal locals outside the for headers:
+// VC6 then retains the final push_back growth-path size() call, matching retail
+// at 100% with the native bool interfaces and bool pane field preserved.
 VA(0x00561f70, 0x427)
 DC_ADDRESS(0x1255cc, 0x258)
 MAC_ADDRESS(0x1588f0, 0x46c)
@@ -632,12 +636,14 @@ long type_sacrifice_window::createCreatureIcons(
     iconWidget** selectionWidgets, textWidget** textWidgets,
     bool leftPane)
 {
+    long row;
     long count = 0;
+    long column;
     long textX = iconX - 4;
     long textY = iconY + 68;
 
-    for (long row = 0; row < rows; ++row) {
-        for (long column = 0; column < columns; ++column) {
+    for (row = 0; row < rows; ++row) {
+        for (column = 0; column < columns; ++column) {
             textWidgets[count] = new textWidget(
                 textX, textY, 66, 16, "",
                 "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);

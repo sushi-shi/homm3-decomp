@@ -6,25 +6,16 @@
 
 #include "game.h"
 
+// DC line 26 names GetTeam and IsHumanTeam; Mac 0x1fd338..0x1fd3a8
+// expands the same guarded scan. Keep both canonical calls: VC6 reproduces
+// retail's full-register truth values with the native bool interface.
 VA(0x005f15a0, 0x63)
 DC_ADDRESS(0x18fdc4, 0x34)
 MAC_ADDRESS(0x1fd30c, 0xc0)
 bool VictoryConditionStruct::appliesToPlayer(long playerId) const
 {
-    if (!m_appliesToComputer) {
-        int team = g_game->getTeam(playerId);
-        if (team >= 0) {
-            int player = 0;
-            signed char* teams = g_game->m_mapHeader.m_teamInfo;
-            for (; player < 8; ++player) {
-                if (teams[player] == team
-                    && g_game->isHuman(player))
-                    return 1;
-            }
-        }
-        return 0;
-    }
-    return 1;
+    return m_appliesToComputer
+        || g_game->isHumanTeam(g_game->getTeam(playerId));
 }
 
 // The two campaign runs whose special victory assembles a combination
