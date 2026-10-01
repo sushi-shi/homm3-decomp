@@ -1087,3 +1087,29 @@ not a successful Mac-preservation checkpoint. No address or inline qualifier
 was invented to conceal it. The working review now has 5,939 open native
 call-site leads and 2,057 explicit operation-site notes; the source graph is
 still the earlier checkpoint and does not certify current complete bodies.
+
+### Layer records and witch-hut mask
+
+The complete Mac layer bodies at `0x11fd20`, `0x1200b4` and `0x1206c0`
+already retain the cell lookup, scalar transfers and saved-cell upgrade path
+in our source. Their 33 stream sites now have individual dispositions. Map
+input has seven checked bytes per cell, with its seventh byte unpacked into
+flags and derived terrain state. Saved layers use native-order scalar fields,
+including their object vectors; they must not be changed to map-file endian
+reads. The per-element vector transfers now call the existing reference
+`writeScalar`/`readValue`, preserving their actual element address and live
+vector-size loop. Neither transfer is a bulk range operation.
+
+The witch-hut reader's newer-format arm performs an unchecked dword read
+followed by `lwbrx` at Mac `0x125814`. It now calls the canonical endian
+reader, while the RoE arm keeps its constant mask without consuming input.
+
+This batch restores three helper uses and reviews 34 native call-site leads.
+The targeted build succeeds; `saveMapLayer` stays at 100%, and `loadMapLayer`
+moves from 100% to 94.8593%, with HIST preserved. The named call comparison
+shows all thirteen stream calls and `upgradeCellExtraInfo` still represented;
+the candidate now retains vector `copy` and `_Destroy` where retail expands
+them. The helper is kept while that compiler difference remains open. No
+additional Mac comparison availability loss occurs in this batch. The working
+review has 5,905 open native call-site leads and 2,091 explicit operation-site
+notes; these counts do not establish complete body coverage.

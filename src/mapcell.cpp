@@ -1070,7 +1070,7 @@ int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
                 return -1;
 
             for (int x = 0; x < thisCell->m_objects.size(); ++x) {
-                count = outfile->write(&thisCell->m_objects[x], sizeof(int));
+                count = writeScalar(outfile, thisCell->m_objects[x]);
                 if (count < sizeof(int))
                     return -1;
             }
@@ -1263,8 +1263,7 @@ int NewfullMap::loadMapLayer(TAbstractFile* infile, int size, int layer,
             thisCell->m_objects.resize(count);
 
             for (unsigned int i = 0; i < thisCell->m_objects.size(); ++i) {
-                if (infile->read(&thisCell->m_objects[i],
-                                 sizeof(thisCell->m_objects[i]))
+                if (readValue(infile, thisCell->m_objects[i])
                     < sizeof(thisCell->m_objects[i]))
                     return -1;
             }
@@ -3370,13 +3369,15 @@ void NewfullMap::readQuestGuardData(TAbstractFile* infile, CObject* tempObject)
     }
 }
 
+// The newer map's skill mask is an unchecked little-endian dword:
+// Mac 0x125808 reads it and 0x125814 decodes it before the object store.
 MAC_ADDRESS(0x1257bc, 0x74)
 static void readWitchHutData(TAbstractFile* infile, CObject* tempObject)
 {
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         tempObject->m_extraInfo = 0xefbf;
     } else {
-        tempObject->m_extraInfo = readValue<int>(infile);
+        tempObject->m_extraInfo = readLittleEndianValue<int>(infile);
     }
 }
 

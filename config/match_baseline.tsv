@@ -2575,7 +2575,7 @@ mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	96.4373	96.4373	96.4526	0x
 mapcell	?load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc6a0	tokens1:e790bd274b26
 mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@AAVBlackBoxData@@H@Z	91.4222	91.4222	96.1450	0x100430	tokens1:e00f0e2a90b7
 mapcell	?loadBlackBoxList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x100200	tokens1:7b9c824c4184
-mapcell	?loadMapLayer@NewfullMap@@AAEHPAVTAbstractFile@@HHH@Z	100.0000	100.0000	100.0000	0xfe920	tokens1:052c29434fa5
+mapcell	?loadMapLayer@NewfullMap@@AAEHPAVTAbstractFile@@HHH@Z	94.8593	94.8593	100.0000	0xfe920	tokens1:0db85739c8f8
 mapcell	?loadMapObjects@NewfullMap@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x104b70	tokens1:bf6cb7802d57
 mapcell	?loadMonsterList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x101790	tokens1:9f8cb46fc947
 mapcell	?loadObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x1036d0	tokens1:6fe8bb305dcf
@@ -2617,7 +2617,7 @@ mapcell	?resize@?$vector@VTSeerHut@@V?$allocator@VTSeerHut@@@std@@@std@@QAEXIABV
 mapcell	?save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	95.7637	95.7637	95.7637	0xfdf40	tokens1:8d2e3c1e4a94
 mapcell	?save@TTimedEvent@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc440	tokens1:b818ec109289
 mapcell	?saveBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@@Z	100.0000	100.0000	100.0000	0xffea0	tokens1:c39aaa4cea90
-mapcell	?saveMapLayer@NewfullMap@@AAEHPAVTAbstractFile@@HH@Z	100.0000	100.0000	100.0000	0xfe490	tokens1:e9fb1ec34eea
+mapcell	?saveMapLayer@NewfullMap@@AAEHPAVTAbstractFile@@HH@Z	100.0000	100.0000	100.0000	0xfe490	tokens1:d1df8e41364a
 mapcell	?saveMapObjects@NewfullMap@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x104a40	tokens1:eeb8c8b3ed71
 mapcell	?saveMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVMonsterData@@@Z	100.0000	100.0000	100.0000	0x101980	tokens1:29f50c4cc41d
 mapcell	?saveObject@NewfullMap@@QAEHPAVTAbstractFile@@AAVCObject@@@Z	100.0000	100.0000	100.0000	0x103640	tokens1:4e188315d7c6
