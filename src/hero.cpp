@@ -1132,9 +1132,9 @@ void hero::initialize(const HeroExtra* setup)
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             m_army.m_numTroops[i] = setup->m_numTroops[i];
             if (m_army.m_numTroops[i] > 0)
-                m_army.m_armies[i] = setup->m_armies[i];
+                m_army.m_armyTypes[i] = setup->m_armies[i];
             else
-                m_army.m_armies[i] = CREATURE_NONE;
+                m_army.m_armyTypes[i] = CREATURE_NONE;
         }
     }
 
