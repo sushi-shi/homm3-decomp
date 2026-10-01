@@ -297,7 +297,8 @@ public:
     armyGroup m_garrison;
 
 protected:
-    int m_generatorBonus[14];
+    // Native town record: long generator_bonus[14].
+    long m_generatorBonus[14];
 
 public:
     // Three 64-bit building bitfields, all read as pairs of dwords by
