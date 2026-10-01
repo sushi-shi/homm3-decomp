@@ -6,6 +6,7 @@
 #include "scenarioinfo.h"
 
 #include "advmgr.h"
+#include "map_display.h"
 #include "bitmap816.h"
 #include "border.h"
 #include "button.h"
@@ -357,14 +358,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     addWidgetsToMessageStream();
     updateAllyEnemyFlags();
 
-    int mapSizeFrame;
-    switch (g_game->m_mapHeader.m_size) {
-    case MAP_DIMENSION_SMALL:       mapSizeFrame = 0; break;
-    case MAP_DIMENSION_MEDIUM:      mapSizeFrame = 1; break;
-    case MAP_DIMENSION_LARGE:       mapSizeFrame = 2; break;
-    case MAP_DIMENSION_EXTRA_LARGE: mapSizeFrame = 3; break;
-    default:  mapSizeFrame = 4; break;
-    }
+    int mapSizeFrame = getMapSizeIconFrame(g_game->m_mapHeader.m_size);
     mapSizeIcon->setIconFrame(mapSizeFrame);
 
     // SOURCE-SHAPE RATCHET: Dreamcast scenarioinfo.cpp:661 retains this

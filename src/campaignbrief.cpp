@@ -9,6 +9,7 @@ static int campaignBriefHandler(message& msg);
 #include "game.h"
 
 #include "advmgr.h"
+#include "map_display.h"
 #include "border.h"
 #include "button.h"
 #include "campaignmap.h"
@@ -89,23 +90,7 @@ void TCampaignBrief::select(int which)
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeY = WHICHMAP_ID;
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-        switch (m_scenarios[which].m_size) {
-        case MAP_SIZE_SMALL:
-            msg.m_extra = 0;
-            break;
-        case MAP_SIZE_MEDIUM:
-            msg.m_extra = 1;
-            break;
-        case MAP_SIZE_LARGE:
-            msg.m_extra = 2;
-            break;
-        case MAP_SIZE_EXTRA_LARGE:
-            msg.m_extra = 3;
-            break;
-        default:
-            msg.m_extra = 4;
-            break;
-        }
+        msg.m_extra = getMapSizeIconFrame(m_scenarios[which].m_size);
         broadcastMessage(msg);
 
         if (!m_campaign->getScenario(which)->getStartOptionCount()) {

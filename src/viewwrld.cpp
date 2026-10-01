@@ -7,6 +7,7 @@
 #include "viewwrld.h"
 
 #include "advmgr.h"
+#include "map_display.h"
 #include "bitmap16.h"
 #include "border.h"
 #include "button.h"
@@ -1683,20 +1684,7 @@ int TViewWorldWindow::windowHandler(message& msg)
                 break;
             if (m_viewableWidth == g_mapWidth && m_viewableHeight == g_mapHeight)
                 break;
-            switch (g_mapHeight) {
-            case MAP_DIMENSION_SMALL:
-                radarDivisor = 4.0f;
-                break;
-            case MAP_DIMENSION_MEDIUM:
-                radarDivisor = 2.0f;
-                break;
-            case MAP_DIMENSION_LARGE:
-                radarDivisor = 1.3333f;
-                break;
-            default:
-                radarDivisor = 1.0f;
-                break;
-            }
+            radarDivisor = getRadarInputScale(g_mapHeight);
             updateRadar(msg.m_mouseX, msg.m_mouseY, radarDivisor);
             do {
                 process1WindowsMessage();

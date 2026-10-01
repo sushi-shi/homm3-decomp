@@ -1451,6 +1451,8 @@ public:
     unsigned short* getRouteArrayPtr(int x, int y, int z);
 
 private:
+    // Project-inferred ordered repaint for scrolling and radar dragging.
+    void refreshRadarAndMap();
     // Project-inferred repeated hover transitions; native-public fields stay public.
     void beginMapHover(int x, int y);
     void refreshHoverScreenCoordinates();
@@ -1530,6 +1532,8 @@ inline int getMapExtra(type_point point)
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
 DATA(0x00699268)
 extern advManager* g_advManager;
+// Project-inferred repaint that rereads the active manager at each step.
+void refreshAdventureRadarAndMap();
 extern int g_thisNetGotAdventureControl;
 
 // Two town.obj-owned globals advManager::Close reads. town::View holds the

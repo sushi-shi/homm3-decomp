@@ -13,6 +13,7 @@
 #include "singleselectionwindow.h"
 
 #include "advmgr.h"
+#include "map_display.h"
 #include "armygrp.h"
 #include "bitmap816.h"
 #include "border.h"
@@ -51,6 +52,19 @@
 #include "textwdgt.h"
 #include "u2dvers.h"
 #include "winmgr.h"
+
+// Project-inferred lookup shared by map selection, filtering and scenario
+// displays. Unknown dimensions (including the all-sizes filter) use frame 4.
+int getMapSizeIconFrame(int size)
+{
+    switch (size) {
+    case MAP_DIMENSION_SMALL:       return 0;
+    case MAP_DIMENSION_MEDIUM:      return 1;
+    case MAP_DIMENSION_LARGE:       return 2;
+    case MAP_DIMENSION_EXTRA_LARGE: return 3;
+    default:                      return 4;
+    }
+}
 
 // Mutable path buffer passed to strcpy, strcat and strtok. The next
 // buffer starts 260 bytes later; alignment leaves a 257..260-byte bound.
@@ -4985,23 +4999,7 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
             msg.m_id = 0x200;
             msg.m_codeY = 189;
             msg.m_codeX = 4;
-            switch (g_game->m_mapHeader.m_size) {
-            case MAP_DIMENSION_SMALL:
-                msg.m_extra = 0;
-                break;
-            case MAP_DIMENSION_MEDIUM:
-                msg.m_extra = 1;
-                break;
-            case MAP_DIMENSION_LARGE:
-                msg.m_extra = 2;
-                break;
-            case MAP_DIMENSION_EXTRA_LARGE:
-                msg.m_extra = 3;
-                break;
-            default:
-                msg.m_extra = 4;
-                break;
-            }
+            msg.m_extra = getMapSizeIconFrame(g_game->m_mapHeader.m_size);
             broadcastMessage(msg);
             m_descriptionWidget->setText(g_game->m_mapHeader.m_mapDescription.c_str());
         } else {
@@ -5043,23 +5041,7 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
         msg.m_id = 0x200;
         msg.m_codeY = 189;
         msg.m_codeX = 4;
-        switch (m_currentHeader->m_header.m_size) {
-        case MAP_DIMENSION_SMALL:
-            msg.m_extra = 0;
-            break;
-        case MAP_DIMENSION_MEDIUM:
-            msg.m_extra = 1;
-            break;
-        case MAP_DIMENSION_LARGE:
-            msg.m_extra = 2;
-            break;
-        case MAP_DIMENSION_EXTRA_LARGE:
-            msg.m_extra = 3;
-            break;
-        default:
-            msg.m_extra = 4;
-            break;
-        }
+        msg.m_extra = getMapSizeIconFrame(m_currentHeader->m_header.m_size);
         broadcastMessage(msg);
         if (isHost())
             updateAllyEnemyFlags(update);
@@ -5162,23 +5144,7 @@ void TSingleSelectionWindow::setFilter(int size)
     msg.m_id = 0x200;
     msg.m_codeY = 189;
     msg.m_codeX = 4;
-    switch (m_mapSizeFilter) {
-    case MAP_DIMENSION_SMALL:
-        msg.m_extra = 0;
-        break;
-    case MAP_DIMENSION_MEDIUM:
-        msg.m_extra = 1;
-        break;
-    case MAP_DIMENSION_LARGE:
-        msg.m_extra = 2;
-        break;
-    case MAP_DIMENSION_EXTRA_LARGE:
-        msg.m_extra = 3;
-        break;
-    default:
-        msg.m_extra = 4;
-        break;
-    }
+    msg.m_extra = getMapSizeIconFrame(m_mapSizeFilter);
     broadcastMessage(msg);
     m_fileSlider->setResolution(m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
     setCurrentMap(m_selectionHeaders.size() > 0 ? 0 : -1, 0);

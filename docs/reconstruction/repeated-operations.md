@@ -1832,6 +1832,45 @@ draw and consume return. Other events return zero. The callbacks still supply
 available directions; no new clamp is introduced. Both new helper names and
 ordinary same-TU source placements are project inferences.
 
+## Map-size display and radar refresh operations
+
+Five map-size icon switches share `getMapSizeIconFrame(size)`: campaign scenario
+selection, scenario information, both save/current-header branches of single-map
+selection, and the size filter. Dimensions 36/72/108/144 select frames 0/1/2/3;
+every other value selects frame 4, including the all-sizes filter. Each message
+keeps its existing id/target/command assignment order, scope and broadcast. The
+scenario-info caller keeps its local frame and direct icon setter. The helper's
+ordinary body is in singleselectionwindow.cpp, which owns three callers; the
+small map_display.h header declares it without importing the selection class.
+The separate filter-button switch has no default selection and remains distinct.
+
+Adventure radar selection and the world-view radar handler share
+`getRadarInputScale(mapHeight)`. It preserves the literal 4.0f/2.0f/1.3333f/1.0f
+mapping, including the default, and each caller still captures the value once
+before its drag loop. Adventure radar drawing's large-map scale is 1.33f, not
+1.3333f; rendering and row-stride switches retain their different constants and
+sampling behavior. Input coordinates, conversion order, existing asymmetric
+bounds and event-pump lifetimes stay in their callers. The ordinary input lookup
+body belongs to advmgr.cpp and is declared in map_display.h.
+
+Three origin-change paths share private `advManager::refreshRadarAndMap()`:
+initial radar selection, subsequent drag movement, and screen scrolling. It
+calls existing `updateRadar(1, 1, 0, 0, 0)`, `completeDraw(0)` and
+`updateScreen(0, 0)` in order on the same receiver. Two visibility-message paths
+and the reveal menu command share the separate free
+`refreshAdventureRadarAndMap()`, preserving their fresh `g_advManager` read at
+each of those three steps. Keeping these receiver policies separate avoids
+silently caching the active manager across drawing calls. The broader native
+`redrawAdvScreen()` paints other controls and calls radar drawing in another
+order with different arguments; it is not a replacement for this operation.
+
+All four helper names and ordinary source placements are project inferences
+from repeated authored operations, not newly established original interfaces.
+No native addresses or inline qualifiers are assigned to them. Existing native
+drawing calls remain nested in the shared operations; no storage or virtual
+layout changes. These thirteen migrated occurrences are a reviewed batch, not
+a claim that the whole-codebase search is complete.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

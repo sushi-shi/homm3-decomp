@@ -3749,9 +3749,7 @@ int handleAppSpecificMenuCommands(int idItem)
         }
         if (currentHero)
             g_advManager->reseed(0, 0);
-        g_advManager->updateRadar(1, 1, 0, 0, 0);
-        g_advManager->completeDraw(0);
-        g_advManager->updateScreen(0, 0);
+        refreshAdventureRadarAndMap();
         break;
     }
 

@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "advmgr.h"
+#include "map_display.h"
 #include "philai.h"
 
 #include "adventureoptionswindow.h"
@@ -54,6 +55,36 @@
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"
+
+// Project-inferred full radar/map repaint after an origin change. Keep the
+// native drawing helpers and their arguments in their original order.
+void advManager::refreshRadarAndMap()
+{
+    updateRadar(1, 1, 0, 0, 0);
+    completeDraw(0);
+    updateScreen(0, 0);
+}
+
+// Visibility and cheat callers reread the active manager between each step.
+// Do not capture that global in the receiver of the member operation above.
+void refreshAdventureRadarAndMap()
+{
+    g_advManager->updateRadar(1, 1, 0, 0, 0);
+    g_advManager->completeDraw(0);
+    g_advManager->updateScreen(0, 0);
+}
+
+// Project-inferred input lookup. Rendering has a distinct 1.33f large-map
+// scale; keep the input literal and its rounding rather than deriving a ratio.
+float getRadarInputScale(int mapHeight)
+{
+    switch (mapHeight) {
+    case MAP_DIMENSION_SMALL:  return 4.0f;
+    case MAP_DIMENSION_MEDIUM: return 2.0f;
+    case MAP_DIMENSION_LARGE:  return 1.3333f;
+    default:                  return 1.0f;
+    }
+}
 
 // DC name: suffix (char[20] in the Dreamcast build). Retail saveGame passes
 // 0x691268 to sprintf/strcat, and this TU's verified terrain-mask initializers
@@ -357,9 +388,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         g_game->setVisibility(msg->m_point.m_x, msg->m_point.m_y,
                               msg->m_point.m_z, msg->m_playerPos,
                               msg->m_range, 0);
-        g_advManager->updateRadar(1, 1, 0, 0, 0);
-        g_advManager->completeDraw(0);
-        g_advManager->updateScreen(0, 0);
+        refreshAdventureRadarAndMap();
         break;
     }
     case RS_RESET_VISIBILITY: {
@@ -367,9 +396,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         g_game->setVisibility(msg->m_point.m_x, msg->m_point.m_y,
                               msg->m_point.m_z, msg->m_playerPos,
                               msg->m_range, 0);
-        g_advManager->updateRadar(1, 1, 0, 0, 0);
-        g_advManager->completeDraw(0);
-        g_advManager->updateScreen(0, 0);
+        refreshAdventureRadarAndMap();
         break;
     }
     case RS_COMBAT_TYPE: {
@@ -1955,20 +1982,7 @@ void advManager::processRadarSelect(const message* msg)
     demobilizeCurrHero(0, 1);
 
     float radarScale;
-    switch (g_mapHeight) {
-    case MAP_DIMENSION_SMALL:
-        radarScale = 4.0f;
-        break;
-    case MAP_DIMENSION_MEDIUM:
-        radarScale = 2.0f;
-        break;
-    case MAP_DIMENSION_LARGE:
-        radarScale = 1.3333f;
-        break;
-    default:
-        radarScale = 1.0f;
-        break;
-    }
+    radarScale = getRadarInputScale(g_mapHeight);
 
     int mapY = static_cast<int>(
         (msg->m_mouseY - m_advWindow->m_radarWidget->m_y) / radarScale);
@@ -1986,9 +2000,7 @@ void advManager::processRadarSelect(const message* msg)
     if (m_radarOrigin.m_y > g_mapHeight - 9)
         m_radarOrigin.m_y = g_mapHeight - 9;
 
-    updateRadar(1, 1, 0, 0, 0);
-    completeDraw(0);
-    updateScreen(0, 0);
+    refreshRadarAndMap();
 
     message dragMsg;
     message event;
@@ -2032,9 +2044,7 @@ void advManager::processRadarSelect(const message* msg)
             m_radarOrigin.m_x = dragX - 9;
             m_radarOrigin.m_y = dragY - 8;
 
-            updateRadar(1, 1, 0, 0, 0);
-            completeDraw(0);
-            updateScreen(0, 0);
+            refreshRadarAndMap();
             dragMsg.m_id = 0;
         }
     } while (event.m_id != MESSAGE_LEFT_BUTTON_UP);
@@ -8066,11 +8076,9 @@ void advManager::screenScroll(int dir, int changeMouse)
         demobilizeCurrHero(0, 0);
         m_radarOrigin.m_x = x;
         m_radarOrigin.m_y = y;
-        // Dreamcast and Mac retain these three helper calls. Complete VC6
-        // expands them here, preserving the retail nine-call sequence.
-        updateRadar(1, 1, 0, 0, 0);
-        completeDraw(0);
-        updateScreen(0, 0);
+        // Dreamcast and Mac retain the three drawing calls now nested in
+        // refreshRadarAndMap; this wrapper is project-inferred.
+        refreshRadarAndMap();
     }
 }
 
