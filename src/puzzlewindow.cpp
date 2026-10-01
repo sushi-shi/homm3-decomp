@@ -590,6 +590,11 @@ static long checkMatch(long player, long firstX, long firstY,
 // differences are four size-only blocks with matching branch/call structure.
 // Whole-board references, long census counters and uncast RECT bounds retain
 // Windows 95.1081%; Mac reference selectors remain a non-exact source lead.
+// DC586/587/590 have separate rejection scopes before the tie phase at593;
+// Mac0x148874..0x14888c likewise rejects zero/below-best/below-half scores
+// before incrementing ties. Keep those scan-advance guards as separate phases.
+// VC6 folds this recovery to the preceding object: all48 emitted TU code
+// sections agree, including the retained95.1081% matcher/frame residual.
 VA(0x0052cf10, 0x5B4)
 DC_ADDRESS(0x115be8, 0x37c)
 MAC_ADDRESS(0x148488, 0x574)  // anchor-caller AI_attempt_puzzle_guess +0x39d
@@ -651,16 +656,20 @@ static type_point matchPuzzle(long player, type_AI_puzzle_tile (&puzzleMap)[19][
             for (point.m_x = rect.left; point.m_x < rect.right; ++point.m_x) {
                 int count =
                     checkMatch(player, firstX, firstY, point, puzzleMap);
-                if (count != 0 && count >= best && count * 2 >= best) {
-                    ++ties;
-                    if (count > best) {
-                        if (count > best * 2)
-                            ties = 1;
-                        best = count;
-                        result.m_x = point.m_x - firstX + 9;
-                        result.m_y = point.m_y - firstY + 8;
-                        result.m_z = point.m_z;
-                    }
+                if (count == 0)
+                    continue;
+                if (count < best)
+                    continue;
+                if (count * 2 < best)
+                    continue;
+                ++ties;
+                if (count > best) {
+                    if (count > best * 2)
+                        ties = 1;
+                    best = count;
+                    result.m_x = point.m_x - firstX + 9;
+                    result.m_y = point.m_y - firstY + 8;
+                    result.m_z = point.m_z;
                 }
             }
         }
