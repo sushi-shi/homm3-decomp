@@ -841,10 +841,12 @@ public:
     unsigned char m_hasCustomTreasure;  // +0x4c
     int m_experienceBonus;  // +0x50
     int m_manaBonus;  // +0x54
-    signed char m_moraleBonus;  // +0x58
-    signed char m_luckBonus;  // +0x59
+    // DC full record 0x2f4a preserves plain char (0x70), including the
+    // four-element primary bonus array; these are not signed-char fields.
+    char m_moraleBonus;  // +0x58
+    char m_luckBonus;  // +0x59
     int m_resQty[7];  // +0x5c
-    signed char m_primarySkillBonus[4];  // +0x78
+    char m_primarySkillBonus[4];  // +0x78
     std::vector<SecondarySkillData> m_secondarySkills;  // +0x7c
     // CodeView preserves vector<TArtifact> and vector<SpellID>.
     // loadBlackBox widens the serialized identifiers at the read boundary.
