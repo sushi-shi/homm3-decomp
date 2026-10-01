@@ -9196,8 +9196,13 @@ void type_random_map_generator::createRoads()
 // Recovering all four queries and that seed setter raises fresh Windows
 // 57.5459% -> 79.4612%. Earlier isolated invalid-position controls favored
 // flattened fields, but omitted this complete native helper model. Current
-// frame 0xa8 differs from retail 0xb4; reset/cleanup expansions and the
-// duplicate exit remain unresolved. Keep the canonical helper calls.
+// reset/cleanup expansions and the duplicate exit remain unresolved.
+// Keep the canonical helper calls.
+// Mac 0x24ccd4..0x24ccf4 transfers the winning next position into the
+// current-position homes used by the map view and painter at 0x24cd28.
+// Preserve that phase assignment rather than consuming the next value
+// directly. This source-ownership model gives Windows 74.7647% versus
+// 79.4612% without the assignment; the remaining cleanup frontier is open.
 VA(0x00548500, 0x533)
 MAC_ADDRESS(0x24c8ac, 0x588)
 void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
@@ -9251,11 +9256,12 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     }
     if (!mapItem->hasRiver())
         return;
-    type_random_map levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
+    position = nextPosition;
+    type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
         m_map.getWidth(), m_map.getHeight());
     TRmgMapAdapter mapAdapter(&levelMap);
     TRmgRiverPainter riverPainter(
-        &mapAdapter, riverType, TRmgGridPoint(nextPosition.m_x, nextPosition.m_y));
+        &mapAdapter, riverType, TRmgGridPoint(position.m_x, position.m_y));
     while (mapItem->m_movement.m_cost > 0) {
         position = mapItem->m_previousTile;
         mapItem = m_map.getMapItem(position);
