@@ -1353,7 +1353,9 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     // 1069/1078/1081/1086 read that carrier. Reusing it here preserves the
     // native model and improves the full Windows caller 95.28% -> 95.62%.
     for (int p = 0; p < 7; p++) {
-        int type = newCreatures.m_armies[p];
+        // Read the native creature enum view and pass it directly to the
+        // typed AI boundary; legacy Add/GetArmyName accept its int value.
+        TCreatureType type = newCreatures.m_armyTypes[p];
         amount = newCreatures.m_numTroops[p];
         if (type == CREATURE_NONE)
             continue;
@@ -1374,7 +1376,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         } else if (humanPlayer) {
             joinDialogNeeded = 1;
         } else {
-            aiJoinDecision(currentHero, TCreatureType(type), amount);
+            aiJoinDecision(currentHero, type, amount);
         }
         rewardGiven = 1;
     }
