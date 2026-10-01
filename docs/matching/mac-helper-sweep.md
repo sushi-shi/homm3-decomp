@@ -1254,3 +1254,33 @@ Mac comparison loses the two previously exact writers, `saveObject` and
 references. The two list-reader comparisons were already unavailable; their
 first unresolved reference is now `readValue<short>`. No native helper
 addresses or forced inline qualifiers have been invented to mask these gaps.
+
+### Map lifetime and nested call paths
+
+The map destructor now releases sprites through the existing
+`ResourceManager::dispose(CSprite*)` wrapper, as the object loaders already
+do. Mac `0x11efb0` is its expanded virtual disposal operation; the adjacent
+`0x8100` accessor returns vector storage and is library machinery. `close`
+already expresses the checked virtual deletion of map-object data, and the
+hero/monster notification loops already broadcast through the corresponding
+virtual slots. The two zero-fill calls, invalid-object message dialog and
+rectangle intersection are represented by the existing platform operations.
+
+DC's outer read/load disposal calls are represented by Complete's nested
+object loaders, which retain old sprite references until replacement sprites
+have been acquired. The seer-name call is likewise already nested in
+`TSeerHut::read`; adding it to the outer wrapper would assign twice.
+Two other DC leads are actual revision differences. Its `readMapObjects`
+constructs `type_point(-1,-1,-1)` in a hero-reset loop before the count read;
+Windows `0x50449b..0x5044b2` and Mac `0x1272b8..0x1272c8` proceed directly
+from invalid-placement clearing to that read. DC `0xf106e` rolls default
+experience and adds forty; Windows `0x5023d9..0x5023ea` instead conditionally
+stores supplied experience and immediately starts reading the portrait.
+The existing source comments identify both differences.
+
+The targeted build keeps the destructor at 100%, has no Windows MAX changes
+and loses no further Mac comparison availability. Twenty reviewed sites bring
+the working queue to 5,788 open native sites and 2,208 operation notes. All
+currently queued mapcell sites have dispositions. This does not certify every
+mapcell body or erase the outstanding inlining/comparison debt; the queue is
+still based on the earlier global native graph.

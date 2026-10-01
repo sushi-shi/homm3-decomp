@@ -591,7 +591,7 @@ NewfullMap::~NewfullMap()
     unsigned int i;
 
     for (i = 0; i < m_sprites.size(); ++i)
-        m_sprites[i]->dispose();
+        ResourceManager::dispose(m_sprites[i]);
     m_sprites.clear();
 }
 
