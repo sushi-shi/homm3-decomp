@@ -124,18 +124,17 @@ class type_AI_combat_data {
 public:
     // DC ai_combat.h:245-246, dc 0x2c6a4; retained const mana getter.
     long getMana() const;
-    std::vector<type_monster_data> m_creatures;  // +0x00
-    long m_terrain;  // +0x10
 
 protected:
+    // Native LF_CLASS 0x5a07 marks every simulation data member protected.
+    // External evaluators use the public mana and total-value accessors.
+    std::vector<type_monster_data> m_creatures;  // +0x00
+    long m_terrain;  // +0x10
     long m_mana;  // +0x14
-
-public:
     unsigned char m_canCastSpells;  // +0x18, natural padding to +0x1c
     // Sum of the units' combat values, rather than their hit points.
     long m_totalCombatValue;  // +0x1c
 
-protected:
     // The attacker's Tactics edge over the defender. A REAL FIELD, not
     // padding: initialize_creatures (0x424120) seeds it with 0, then
     // `movsx edx, byte [my_hero+0xdc]` (secondary-skill slot 19 =
