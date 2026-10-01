@@ -1250,7 +1250,7 @@ public:
     void setupDynamicStuff(int update, int forceUpdate);  // 0x51bd50
     void setupNewOverviewType(int whichType,
                               unsigned char update);  // 0x51e330
-    int processIconSelect(int codeY, unsigned char rightMouse);  // 0x51ee50
+    int processIconSelect(int codeY, bool rightMouse);  // 0x51ee50
     playerData* getLocalPlayer();
     int getLastHuman() const;
     int getLocalPlayerGamePos() const;  // 0x4cea20
