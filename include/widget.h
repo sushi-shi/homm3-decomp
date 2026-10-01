@@ -267,6 +267,8 @@ protected:
     // Project-inferred display operations; resolve geometry after virtual draw.
     void updateScreenRegion() const;
     void drawAndUpdate() const;
+    // Prepare left/right selection without changing the input message id.
+    void prepareMouseSelection(message& msg);
 
 public:
     // Slot 12. The empty body lives in widget.cpp so button's qualified

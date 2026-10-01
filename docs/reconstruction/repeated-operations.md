@@ -1722,12 +1722,12 @@ No stored fields, native access declarations or virtual slots change.
 
 ## Widget hit boxes, presentation and input transitions
 
-Twelve hit tests now share ordinary `widget::containsPoint()`: the base widget,
-border, icon, text, text-entry, button and slider handlers, plus the window's
-reverse widget lookup. The half-open bounds retain their comparison order and
+Thirteen hit tests now share ordinary `widget::containsPoint()`: the base widget,
+border, icon, text, text-entry, button, slider and hotspot handlers, plus the
+window's reverse widget lookup. The half-open bounds retain their comparison order and
 signed dimensions. Callers still subtract parent coordinates and narrow to
-short where they did before; window lookup retains int coordinates and its
-subsequent active/dimmed checks. Slider track interiors and drag tolerance have
+short where they did before; hotspot handling and window lookup retain int
+coordinates, and window lookup retains its subsequent active/dimmed checks. Slider track interiors and drag tolerance have
 different bounds and remain separate.
 
 Ten full-widget screen updates share protected `updateScreenRegion()`. Six are
@@ -1756,6 +1756,43 @@ public unsigned-short cursor and signed-short display offset. Slider type
 old state and callback. These native access distinctions are preserved. The five
 new helper names and ordinary source placements are project inferences; stored
 layout and virtual slots do not change.
+
+## Widget command messages and slider stepping
+
+Forty three-field command setups now share ordinary
+`message::setWidgetCommand(command, widgetId)`. Twelve are widget-side command
+production: base send-message, border/icon/text/hotspot deselection, button and
+slider selection/right-click, and text-entry keyboard/left/right handling.
+Twenty-eight are recruitment broadcasts in `open()`, `update()` and
+`quickViewRecruit()`. The operation writes message id, command and widget id in
+that order. It retains modifier bits, mouse coordinates, payload and window;
+borrowed text assignments and dispatch stay in the callers, and reused messages
+remain the same objects. The existing dialog-end methods and partial command
+updates remain distinct. The native message fields remain public.
+
+Four mouse-down branches share protected `widget::prepareMouseSelection()`.
+Right clicks set the right-button modifier and command; left clicks mark the
+widget selected before setting the command. It leaves the input id intact.
+Border's virtual click hook remains after this preparation and before message
+conversion, while icon's hook remains before preparation. Text and hotspot
+handlers retain their own drawn/disabled policies. Icon release still converts
+the message before its hook and later right-button test; this unusual existing
+ordering has not been normalized.
+
+Six original slider step-and-position pairs share private `stepState(direction)`:
+the two keyboard arrows and both arrow ends for horizontal/vertical release.
+Unlike native `setState()`, the operation leaves the saved notification state
+unchanged and adds no clamp or one-state division fallback. Private
+`stepFromArrow(click)` shares the complete release conditional for both axes,
+retaining the strict far-arrow comparison, state guards and multiplication/division
+order. Callers still choose their axis, clear selection, draw, set message and
+modifier state, and notify in their existing order. Page selection, knob dragging,
+resolution changes and initialization retain their distinct semantics.
+
+All four new helper names and ordinary source placements are project inferences.
+No stored layout, public/protected native data distinctions or virtual slots
+change. Additional widget-message producers elsewhere remain leads for subsequent
+flow review; this section records the callers actually migrated.
 
 ## Validation provenance
 

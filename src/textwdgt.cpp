@@ -143,13 +143,7 @@ int textWidget::main(message& msg)
         short mouseX = msg.m_codeX - m_parentWindow->m_x;
         short mouseY = msg.m_codeY - m_parentWindow->m_y;
         if (containsPoint(mouseX, mouseY)) {
-            if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
-                msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
-                msg.m_codeX = WIDGET_RIGHT_SELECT;
-            } else {
-                m_status |= WIDGET_SELECTED;
-                msg.m_codeX = WIDGET_SELECT;
-            }
+            prepareMouseSelection(msg);
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeY = m_id;
             return MESSAGE_DISPATCH_FORWARD;
@@ -171,9 +165,7 @@ int textWidget::main(message& msg)
             if (msg.m_id == MESSAGE_RIGHT_BUTTON_UP) {
                 msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
             }
-            msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = WIDGET_DESELECT;
-            msg.m_codeY = m_id;
+            msg.setWidgetCommand(WIDGET_DESELECT, m_id);
             return MESSAGE_DISPATCH_FORWARD;
         } else {
             return 0;

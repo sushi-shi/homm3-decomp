@@ -98,6 +98,8 @@ protected:
 
 private:
     void notifyStateChange();
+    void stepState(int direction);
+    void stepFromArrow(int click);
 };
 SIZE(slider, 0x68);
 

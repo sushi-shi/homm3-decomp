@@ -26,6 +26,10 @@ public:
     };
     heroWindow* m_window;
 
+    // Project-inferred widget command envelope. Retain modifiers, coordinates,
+    // payload and window when converting or reusing an existing message.
+    void setWidgetCommand(int command, int widgetId);
+
     // Project-inferred dialog protocol operations. The native message fields
     // are public. These leave coordinates, modifiers and extra/window intact.
     void setDialogEnd();                 // widget/end; retain codeY

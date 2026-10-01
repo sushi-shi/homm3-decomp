@@ -352,9 +352,7 @@ int recruitUnit::open(int newPriority)
     m_totalGold = 0;
     m_totalResources = 0;
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = 0;
+    msg.setWidgetCommand(widget::WIDGET_SET_PLAYER_PALETTE_COLORS, 0);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     g_recruitWindow->broadcastMessage(msg);
 
@@ -365,60 +363,42 @@ int recruitUnit::open(int newPriority)
         creatureName = "";
     sprintf(g_text, "%s %s",
         (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE], creatureName);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x226;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x226);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
     sprintf(g_text, "%d", m_goldPerTroop);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x200;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x200);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
     if (m_altResource != -1) {
         sprintf(g_text, "%d", m_resourcesPerTroop);
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_TEXT;
-        msg.m_codeY = 0x204;
+        msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x204);
         msg.m_extraText = g_text;
         g_recruitWindow->broadcastMessage(msg);
 
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-        msg.m_codeY = 0x1fc;
+        msg.setWidgetCommand(widget::WIDGET_SET_ICON_FRAME, 0x1fc);
         msg.m_extra = m_altResource;
         g_recruitWindow->broadcastMessage(msg);
 
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-        msg.m_codeY = 0x211;
+        msg.setWidgetCommand(widget::WIDGET_SET_ICON_FRAME, 0x211);
         msg.m_extra = m_altResource;
         g_recruitWindow->broadcastMessage(msg);
     } else {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.m_codeY = 0x1fc;
+        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, 0x1fc);
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         g_recruitWindow->broadcastMessage(msg);
 
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.m_codeY = 0x211;
+        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, 0x211);
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         g_recruitWindow->broadcastMessage(msg);
 
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.m_codeY = 0x204;
+        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, 0x204);
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         g_recruitWindow->broadcastMessage(msg);
 
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.m_codeY = 0x213;
+        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, 0x213);
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         g_recruitWindow->broadcastMessage(msg);
     }
@@ -563,9 +543,7 @@ void recruitUnit::update(bool newMonster, long slot)
     sprintf(g_text, "%s %s",
         (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
         getArmyName(m_monsterType, 2));
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x226;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x226);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
@@ -579,9 +557,7 @@ void recruitUnit::update(bool newMonster, long slot)
     } else {
         sprintf(g_text, "%d", *m_numAvail - m_numberToBuy);
     }
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x209;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x209);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
@@ -622,24 +598,18 @@ void recruitUnit::update(bool newMonster, long slot)
     }
 
     sprintf(g_text, "%d", m_numberToBuy);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = RECRUIT_QUANTITY_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, RECRUIT_QUANTITY_ID);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
     m_totalGold = m_numberToBuy * m_goldPerTroop;
     sprintf(g_text, "%d", m_totalGold);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x212;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x212);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
     sprintf(g_text, "%d", m_goldPerTroop);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x200;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x200);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
@@ -647,46 +617,32 @@ void recruitUnit::update(bool newMonster, long slot)
         m_resourcesPerTroop = 0;
     m_totalResources = m_numberToBuy * m_resourcesPerTroop;
     sprintf(g_text, "%d", m_totalResources);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x213;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x213);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
     sprintf(g_text, "%d", m_resourcesPerTroop);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x204;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x204);
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
-    msg.m_codeY = RECRUIT_CREATURE_0_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_COLOR, RECRUIT_CREATURE_0_ID);
     msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
-    msg.m_codeY = RECRUIT_CREATURE_1_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_COLOR, RECRUIT_CREATURE_1_ID);
     msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
-    msg.m_codeY = RECRUIT_CREATURE_2_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_COLOR, RECRUIT_CREATURE_2_ID);
     msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
-    msg.m_codeY = RECRUIT_CREATURE_3_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_COLOR, RECRUIT_CREATURE_3_ID);
     msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_COLOR;
-    msg.m_codeY = m_selectedPosition + RECRUIT_CREATURE_0_ID;
+    msg.setWidgetCommand(widget::WIDGET_SET_COLOR, m_selectedPosition + RECRUIT_CREATURE_0_ID);
     msg.m_extra = g_systemPalette->m_data[36];
     g_recruitWindow->broadcastMessage(msg);
 }
@@ -1218,9 +1174,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
                 "crtoinfo.pcx"),
             0x800), -1);
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = 0;
+    msg.setWidgetCommand(widget::WIDGET_SET_PLAYER_PALETTE_COLORS, 0);
     msg.m_extra = g_game->getLocalPlayerGamePos();
     recruitWindow->broadcastMessage(msg);
 
@@ -1274,9 +1228,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
     sprintf(g_text,
         DATA_COMPGEN(0x00660a1c, quickRecruitDecimalFormat, "%d"),
         cost[6]);
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = 0x200;
+    msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x200);
     msg.m_extraText = g_text;
     recruitWindow->broadcastMessage(msg);
 
@@ -1284,27 +1236,19 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
         sprintf(g_text,
             DATA_COMPGEN(0x00660a1c, quickRecruitDecimalFormat, "%d"),
             resourcesPerTroop);
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_TEXT;
-        msg.m_codeY = 0x204;
+        msg.setWidgetCommand(widget::WIDGET_SET_TEXT, 0x204);
         msg.m_extraText = g_text;
         recruitWindow->broadcastMessage(msg);
 
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-        msg.m_codeY = 0x1fc;
+        msg.setWidgetCommand(widget::WIDGET_SET_ICON_FRAME, 0x1fc);
         msg.m_extra = altResource;
         recruitWindow->broadcastMessage(msg);
     } else {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.m_codeY = 0x1fc;
+        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, 0x1fc);
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         recruitWindow->broadcastMessage(msg);
 
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.m_codeY = 0x204;
+        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS, 0x204);
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         recruitWindow->broadcastMessage(msg);
     }

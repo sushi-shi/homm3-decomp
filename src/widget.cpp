@@ -10,6 +10,15 @@
 #include "window.h"
 #include "winmgr.h"
 
+// Project-inferred widget protocol operation. Keep the caller's existing
+// modifiers, mouse coordinates, payload and window, including borrowed text.
+void message::setWidgetCommand(int command, int widgetId)
+{
+    m_id = MESSAGE_WIDGET;
+    m_codeX = command;
+    m_codeY = widgetId;
+}
+
 // Project-inferred initialization operations. Neither releases owned text nor
 // removes a live widget from its window; they only initialize these fields.
 void widget::initializeLinks()
@@ -127,6 +136,19 @@ bool widget::containsPoint(int x, int y) const
     return x >= m_x && y >= m_y && x < m_x + m_width && y < m_y + m_height;
 }
 
+// Project-inferred mouse-down preparation. Callers retain their hook order
+// and only convert the message id after any hook has accepted the click.
+void widget::prepareMouseSelection(message& msg)
+{
+    if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
+        msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
+        msg.m_codeX = WIDGET_RIGHT_SELECT;
+    } else {
+        m_status |= WIDGET_SELECTED;
+        msg.m_codeX = WIDGET_SELECT;
+    }
+}
+
 VA(0x005fe4f0, 0x2C8)
 DC_ADDRESS(0x196cd0, 0x2b8)
 MAC_ADDRESS(0x20a684, 0x388)
@@ -232,9 +254,7 @@ int widget::sendMessage(widget::ECommands command, int extra)
     msg.m_qualifier = 0;
     msg.m_mouseX = 0;
     msg.m_mouseY = 0;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = command;
-    msg.m_codeY = m_id;
+    msg.setWidgetCommand(command, m_id);
     msg.m_extra = extra;
     msg.m_window = m_parentWindow;
     return main(msg);

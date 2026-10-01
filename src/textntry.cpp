@@ -313,9 +313,7 @@ int textEntryWidget::onKeyPress(message* msg)
         g_windowManager->updateScreen(xLoc, yLoc, m_width, m_height);
     }
     g_textEntryEscaped = 0;
-    msg->m_id = MESSAGE_WIDGET;
-    msg->m_codeX = WIDGET_SELECT;
-    msg->m_codeY = m_id;
+    msg->setWidgetCommand(WIDGET_SELECT, m_id);
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -351,18 +349,14 @@ int textEntryWidget::main(message& msg)
                 short hitY = msg.m_codeY - m_parentWindow->m_y;
                 if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
                     if (containsPoint(hitX, hitY)) {
-                        msg.m_id = MESSAGE_WIDGET;
-                        msg.m_codeX = WIDGET_RIGHT_SELECT;
-                        msg.m_codeY = m_id;
+                        msg.setWidgetCommand(WIDGET_RIGHT_SELECT, m_id);
                         msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
                         return MESSAGE_DISPATCH_FORWARD;
                     }
                 } else if (containsPoint(hitX, hitY)) {
                     if (!m_hasFocus && m_parentWindow)
                         m_parentWindow->setFocus(m_id);
-                    msg.m_id = MESSAGE_WIDGET;
-                    msg.m_codeX = WIDGET_SELECT;
-                    msg.m_codeY = m_id;
+                    msg.setWidgetCommand(WIDGET_SELECT, m_id);
                     return MESSAGE_DISPATCH_FORWARD;
                 }
             }

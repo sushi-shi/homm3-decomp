@@ -98,16 +98,9 @@ int CHotspotWidget::main(message& msg)
     case MESSAGE_RIGHT_BUTTON_DOWN: {
         int mouseX = msg.m_codeX - m_parentWindow->m_x;
         int mouseY = msg.m_codeY - m_parentWindow->m_y;
-        if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
-            || mouseY >= m_y + m_height)
+        if (!containsPoint(mouseX, mouseY))
             return 0;
-        if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
-            msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
-            msg.m_codeX = WIDGET_RIGHT_SELECT;
-        } else {
-            m_status |= WIDGET_SELECTED;
-            msg.m_codeX = WIDGET_SELECT;
-        }
+        prepareMouseSelection(msg);
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeY = m_id;
         return 2;
@@ -120,9 +113,7 @@ int CHotspotWidget::main(message& msg)
     case MESSAGE_RIGHT_BUTTON_UP:
         if (m_status & WIDGET_SELECTED) {
             m_status &= ~WIDGET_SELECTED;
-            msg.m_id = MESSAGE_WIDGET;
-            msg.m_codeX = WIDGET_DESELECT;
-            msg.m_codeY = m_id;
+            msg.setWidgetCommand(WIDGET_DESELECT, m_id);
             return 2;
         }
         return 0;

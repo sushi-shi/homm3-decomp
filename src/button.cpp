@@ -273,9 +273,7 @@ int button::main(message& msg)
         short rightY = msg.m_codeY - m_parentWindow->m_y;
         if (!containsPoint(rightX, rightY))
             return 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = widget::WIDGET_RIGHT_SELECT;
-        msg.m_codeY = m_id;
+        msg.setWidgetCommand(widget::WIDGET_RIGHT_SELECT, m_id);
         msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
         return 2;
     }
@@ -309,9 +307,7 @@ int button::select(message& msg)
         g_soundManager->setPlaybackState(saved);
     }
     drawAndUpdate();
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SELECT;
-    msg.m_codeY = m_id;
+    msg.setWidgetCommand(widget::WIDGET_SELECT, m_id);
     g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT] = GameTime::get() + BUTTON_REPEAT_DELAY_TICKS;
     g_leftRightSave = msg.m_qualifier & 0x300;
     return 2;
