@@ -46,8 +46,15 @@ public:
 
     TSplitWindow(int x2, int y2, TCreatureType thisArmy);
     virtual ~TSplitWindow();
-    void updateSplitArmy(unsigned char update);
+    // Original public UpdateSplitArmy@@QAAX_N@Z proves public void(bool).
+    void updateSplitArmy(bool update);
+
+private:
+    // Original SetRolloverText@@AAAXH@Z proves private void(int).
     void setRolloverText(int codeY);
+
+protected:
+    // Original WindowHandler@@EAAHAAUmessage@@@Z proves protected virtual.
     virtual int windowHandler(message& msg);
 };
 SIZE(TSplitWindow, 0x80);
