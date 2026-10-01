@@ -3853,9 +3853,12 @@ bool TSingleSelectionWindow::processRightSelect(int id)
     case SSW_TOWN_DETAIL_LAST: {
         int gamePos =
             nbr - (SSW_TOWN_DETAIL_FIRST - SSW_HERO_DETAIL_FIRST);
-        int townType;
+        // DC's town-detail scope records TTownType (sp+0x4c), distinct
+        // from the bonus arm's int townType. VC6 bytes are unchanged.
+        TTownType townType;
         if (m_loadMode)
-            townType = g_game->m_setup.m_alignment[gamePos];
+            townType = H3_ENUM_DECODE(TTownType,
+                g_game->m_setup.m_alignment[gamePos]);
         else {
             townType = getDisplayTown(gamePos);
         }
@@ -3869,7 +3872,7 @@ bool TSingleSelectionWindow::processRightSelect(int id)
         } else {
             CTownDlg dlg(!m_saveMode && !m_loadMode);
             dlg.createWin(m_townPix, townType * 2 + 2,
-                          static_cast<TTownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+                          townType);
             dlg.doModal(0);
         }
         displayChat();
