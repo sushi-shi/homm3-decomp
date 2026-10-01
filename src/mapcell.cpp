@@ -3143,8 +3143,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     if (charBuffer) {
         heroData->m_customArmies = 1;
         for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
-            heroData->m_armies[x] =
-                readMapCreatureId(infile, mapVersion);
+            heroData->m_armies[x] = static_cast<TCreatureType>(
+                readMapCreatureId(infile, mapVersion));
 
             shortBuffer = readLittleEndianValue<short>(infile);
             heroData->m_numTroops[x] = shortBuffer;
