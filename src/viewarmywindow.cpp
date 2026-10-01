@@ -273,7 +273,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     // DC line 159 passes the literal 2 to GetArmyName for a plural name.
     createNameWidget(getArmyName(m_armyType, 2));
 
-    int townType = g_game->getAlignment(m_armyType);
+    TTownType townType = g_game->getAlignment(m_armyType);
     createPortraitWidget(traits.m_spriteName, townType,
                            group->m_numTroops[iarmy]);
 
@@ -364,7 +364,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     createBackgroundWidget(0);
     createNameWidget(traits->m_pluralName);
 
-    int townType = g_game->getAlignment(armyType);
+    TTownType townType = g_game->getAlignment(armyType);
     createPortraitWidget(traits->m_spriteName, townType, 0);
 
     createAttackWidget(traits->m_attackSkill, traits->m_attackSkill);
@@ -729,11 +729,12 @@ void TViewArmyWindow::createNameWidget(const char* name)
 // empty slot, which is what the three-widget/two-widget split of the retail
 // tail encodes.
 // E:\gamedcs\viewarmywindow.cpp:646
+// Original private public AAAXPBDW4TTownType@@H proves the faction formal.
 VA(0x005f5060, 0x2D6)
 DC_ADDRESS(0x191f2c, 0x154)
 MAC_ADDRESS(0x2012cc, 0x27c)  // ctor call set + CrBkg table + Verd10B.fnt
 void TViewArmyWindow::createPortraitWidget(const char* spriteName,
-                                             int townType, int count)
+                                             TTownType townType, int count)
 {
     m_widgets.push_back(new bitmapBorder(
         21, 48, 100, 130, SPRITE_BACKGROUND_ID,
