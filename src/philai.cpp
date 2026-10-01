@@ -2507,7 +2507,7 @@ long type_spellvalue::getMassDamageSpellValue(SpellID spell, TSkillMastery maste
         int creature = m_ourHero->m_army.m_armies[i];
         if (creature != CREATURE_NONE) {
             TCreatureType creatureType = H3_ENUM_DECODE(TCreatureType, creature);
-            double chance = getSpellWorkChance(spell, creatureType, m_ourHero, 0);
+            double chance = getSpellWorkChance(ESpellId(spell), creatureType, m_ourHero, 0);
             total = static_cast<long>(
                 static_cast<double>(g_creatureTypeTraits[creature].m_aiValue)
                 * static_cast<double>(m_ourHero->m_army.m_numTroops[i])
@@ -2548,7 +2548,7 @@ long type_spellvalue::getEnchantmentValue(SpellID spell, TSkillMastery mastery,
     long total = 0;
     for (long i = 0; i < m_list.size() && i < timesCastable; i++) {
         if (traits->m_karma > 0
-            && getSpellWorkChance(spell, m_list[i].m_type, m_ourHero, 0) == 0.0)
+            && getSpellWorkChance(ESpellId(spell), m_list[i].m_type, m_ourHero, 0) == 0.0)
             continue;
         total += traits->m_masteryValues[mastery] * m_list[i].m_value
             * totalDuration;
