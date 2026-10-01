@@ -2,6 +2,7 @@
 #define HOMM3_SINGLESELECTIONWINDOW_H
 
 #include "va.h"
+#include "platform.h"
 #include "platform_file_time.h"
 
 #include <vector>
@@ -276,8 +277,10 @@ public:
     DC_ADDRESS(0x1474b8, 0xbc)
     GameSelectionHeadersStruct()
     {
-        memset(m_title, 0, sizeof(m_title));
-        memset(m_description, 0, sizeof(m_description));
+        // Mac callers retain these 61/301-byte clears (for example,
+        // getHeaders 0x17aa14/0x17aa20); Windows expands both operations.
+        ZeroMemory(m_title, sizeof(m_title));
+        ZeroMemory(m_description, sizeof(m_description));
         m_setup.m_difficulty = 1;
     }
 

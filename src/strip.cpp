@@ -1,11 +1,9 @@
 // 5 retail functions in link order (of 8 DC procs).
 
-// Absent from retail (documented, not forced): DrawNumber (DC :124)
-// and DrawSelector (DC :253) - both survive only /Ob2-inlined inside DrawIcons
-// 0x5a9db0 (the sprintf/SET_TEXT pair; three selector expansions at
-// msg slots -0x48/-0x68/-0x68). The `inline` definitions below
-// reproduce the absence under the non-/Gy profile (winfile Exists
-// precedent).
+// DrawNumber (DC :124) and DrawSelector (DC :253) survive as ordinary
+// helpers on Mac; Windows expands them inside DrawIcons 0x5a9db0
+// (the SET_TEXT pair and three selector expansions at message slots
+// -0x48/-0x68/-0x68). Keep their source bodies and calls below.
 #include "va.h"
 
 #include <stdio.h>
@@ -55,6 +53,10 @@ void strip::draw(TCreatureType divideCreature)
     g_windowManager->updateScreen(m_x, m_y, 494, 64);
 }
 
+// DC 0x15892a constructs an unused message before DrawOwner and only
+// writes its id. This is separate from DrawNumber's live message:
+// neither desktop body initializes that unused local before DrawOwner
+// (Windows 0x5a9dbf, Mac 0x19b064).
 VA(0x005a9db0, 0x2A2)
 DC_ADDRESS(0x158910, 0xf0)
 MAC_ADDRESS(0x19b040, 0x15c)

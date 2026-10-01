@@ -442,7 +442,7 @@ unsigned char saveValid(const char* filename)
         return 0;
     }
     char name[100];
-    memset(name, 0, sizeof(name));
+    ZeroMemory(name, sizeof(name));
     strcpy(name, filename);
     strtok(name, ".");
     if (strlen(name) != 0) {
@@ -759,7 +759,7 @@ public:
         : CGameHeaderInfoInitMsg(numMaps, loadGameMode,
                                  sizeof(CGameHeaderInfoInitMsgEx))
     {
-        memset(m_version, 0, sizeof(m_version));
+        ZeroMemory(m_version, sizeof(m_version));
         strncpy(m_version, version, sizeof(m_version) - 1);
     }
 };
@@ -2004,7 +2004,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     } else if (gameMode == SINGLE_SELECTION_SAVE_GAME) {
         m_saveMode = 1;
         m_textIndex = -1;
-        memset(g_saveGameName, 0, 351);
+        ZeroMemory(g_saveGameName, 351);
         g_saveHeader = new game;
         backupGameHeaders(g_saveHeader, g_game);
         g_scenarioListVisibleRows = 16;
@@ -5568,7 +5568,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         if (isMultiPlayer() && !m_saveMode)
             remoteCleanup();
         if (m_saveMode)
-            memset(g_saveGameName, 0, 351);
+            ZeroMemory(g_saveGameName, 351);
         break;
 
     case SSW_BEGIN:

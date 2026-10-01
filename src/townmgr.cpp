@@ -25,6 +25,7 @@
 #include "message.h"
 #include "misc.h"
 #include "mousemgr.h"
+#include "platform.h"
 #include "quickherowindow.h"
 #include "quicktownwindow.h"
 #include "recruit.h"
@@ -1108,8 +1109,9 @@ void townObject::draw(int incFrame, unsigned char drawHotspots)
 // 0x5c63c0 Open, 0x5c71b0 Close, 0x5d3240 Main - are the three pure
 // slots baseManager introduces. Every member below +0x38 is written
 // here exactly once, which is what fixes the layout: two arrays cleared
-// by inline memset (seven object slots at +0x40, forty-four strip slots
-// at +0x5c), the -1 sentinels, and the two file-scope words.
+// by expanded zero fills (seven creature sprites at +0x40, forty-four
+// town objects at +0x5c), the -1 sentinels, and the two file-scope words.
+// Mac 0x1b9718/0x1b9724 retains the 28/176-byte clear calls.
 VA(0x005c3310, 0xDF)
 DC_ADDRESS(0x16a59c, 0xa8)
 MAC_ADDRESS(0x1b9684, 0x154)
@@ -1127,8 +1129,8 @@ townManager::townManager()
     m_netMsgHandler = 0;
     m_netMsgHandlerSave = 0;
     m_panorama = 0;
-    memset(m_monPix, 0, sizeof(m_monPix));
-    memset(m_townObjects, 0, sizeof(m_townObjects));
+    ZeroMemory(m_monPix, sizeof(m_monPix));
+    ZeroMemory(m_townObjects, sizeof(m_townObjects));
     m_townObjectCount = 0;
     m_loadedTownType = -1;
     m_townWindow = 0;
@@ -1199,7 +1201,7 @@ TTownScreenWindow::TTownScreenWindow()
         m_topTown = 0;
 
     m_zBuffer = new unsigned short[m_height * m_width];
-    memset(m_zBuffer, 0, m_height * m_width * 2);
+    ZeroMemory(m_zBuffer, m_height * m_width * 2);
 
     m_widgets.reserve(96);
 
@@ -1743,8 +1745,8 @@ int townManager::open(int newPriority)
     g_tavernWindow = 0;
     m_netMsgHandler = 0;
     m_netMsgHandlerSave = 0;
-    memset(m_monPix, 0, sizeof(m_monPix));
-    memset(m_townObjects, 0, sizeof(m_townObjects));
+    ZeroMemory(m_monPix, sizeof(m_monPix));
+    ZeroMemory(m_townObjects, sizeof(m_townObjects));
     m_currIndex = -1;
     m_srcIndex = -1;
     m_destIndex = -1;
@@ -4890,8 +4892,8 @@ void townManager::drawTown(int update, int incFrame,
                      unsigned char drawHotspots)
 {
     if (drawHotspots)
-        memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
-               WINDOW_SCREEN_WIDTH * WINDOW_SCREEN_HEIGHT * 2);
+        ZeroMemory(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer,
+                   WINDOW_SCREEN_WIDTH * WINDOW_SCREEN_HEIGHT * 2);
     m_panorama->draw2();
     pollSound();
     for (int i = 0; i < m_townObjectCount; i++) {
