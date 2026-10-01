@@ -823,6 +823,9 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, type_AI_com
 // 924 scans downward, 926 gets the value, 927 compares strictly, and
 // 929/930 store value before target. Retail expands this ordinary helper
 // in castSpell; VC6 reduces its switch to the signed 38..39 range there.
+// Mac 0x27ad4 expands the same getHero read as the other valuation helpers.
+// Completing this and the casting getter below changes castSpell from
+// 94.00% to 91.28% in the ba362e249 context; its 23 named calls still agree.
 DC_ADDRESS(0x02afb8, 0x7e)
 MAC_ADDRESS(0x027a6c, 0xb8)
 void type_AI_combat_data::getSummoningValue(type_spell_choice& choice) const
@@ -838,7 +841,7 @@ void type_AI_combat_data::getSummoningValue(type_spell_choice& choice) const
     case SPELL_ANIMATE_DEAD:
         for (long i = m_creatures.size(); i-- > 0; ) {
             const type_monster_data& monster = m_creatures[i];
-            long value = monster.getResurrectionValue(choice, m_currentHero);
+            long value = monster.getResurrectionValue(choice, getHero());
             if (value > choice.m_value) {
                 choice.m_value = value;
                 choice.m_target = i;
@@ -851,6 +854,7 @@ void type_AI_combat_data::getSummoningValue(type_spell_choice& choice) const
 // DC943 has the same no-op/resurrection dispatch and 955 calls the
 // selected monster's cast_resurrection. Preserve this ordinary boundary
 // even though retail expands it and retains no separate body.
+// Mac 0x27b6c expands the casting-side getHero read before castResurrection.
 DC_ADDRESS(0x02b038, 0x5a)
 MAC_ADDRESS(0x027b24, 0x64)
 void type_AI_combat_data::castSummoning(type_spell_choice& choice)
@@ -864,7 +868,7 @@ void type_AI_combat_data::castSummoning(type_spell_choice& choice)
         break;
     case SPELL_RESURRECTION:
     case SPELL_ANIMATE_DEAD:
-        m_creatures[choice.m_target].castResurrection(choice, m_currentHero);
+        m_creatures[choice.m_target].castResurrection(choice, getHero());
         break;
     }
 }
