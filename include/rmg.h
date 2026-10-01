@@ -1345,10 +1345,9 @@ public:
     virtual int getTerrain(const TRmgGridPoint& point);
 };
 
-// Retail retains these support bodies outside CreateRiver while the adapter
-// and map-view construction remains expanded at the call site.  Keeping the
-// class definitions shared but the retained bodies in rmg_support.cpp
-// reproduces that ordinary translation-unit visibility boundary.
+// The adapter bodies live beside the map implementation in rmg.cpp and
+// access its packed river fields. The river painter wrappers that forward
+// through this adapter interface live in rmg_support.cpp.
 // Former provisional name: TRmgMapAdapter. Its tile payload is the river layer.
 class TRmgRiverMapAdapter : public TRmgRiverMapAdapterInterface {
 public:
@@ -2050,6 +2049,17 @@ public:
     // guarded treasure group; 0x54bc50 removes the old object's map marks,
     // counts and list entry without deleting the object itself.
     unsigned char placeKeyTentGuard(type_object* object, int maxValue);
+    // Shared scan after a caller changes color availability. Exhaustion keeps
+    // size() as the sentinel; this does not initialize the constructor's
+    // intentionally untouched m_nextKeyTentColor. Cleanup helper, not a
+    // recovered original declaration.
+    void refreshNextKeyTentColor()
+    {
+        m_nextKeyTentColor = 0;
+        while (m_nextKeyTentColor < m_disabledKeyTents.size()
+            && m_disabledKeyTents[m_nextKeyTentColor])
+            ++m_nextKeyTentColor;
+    }
     void setHumanPlayer(int seat);
     void setTownChoice(int seat, int town);
     void removeObject(type_object* object);
