@@ -279,12 +279,13 @@ public:
     void updateAllSlots();
     void updateBackpackItem(int hero, int i);
     void updateBackpack(int hero);
-    void handleMonster(int hero, int monster, int rightMouse,
-                       unsigned char shift);
-    void handleArtifactClick(long side, long id,
-                               unsigned char rightClick);
-    void handleBackpackClick(long side, long id,
-                               unsigned char rightClick);
+private:
+    // Original AAAXHHH_N / AAAXJJ_N publics prove private Boolean flags.
+    void handleMonster(int hero, int monster, int rightMouse, bool shift);
+    void handleArtifactClick(long side, long id, bool rightClick);
+    void handleBackpackClick(long side, long id, bool rightClick);
+
+public:
     void swapMons();
     void viewMon();
     void setRolloverText(int codeY);

@@ -1242,7 +1242,7 @@ void swapManager::updateBackpack(int hero)
 VA(0x005af2b0, 0x2DD)
 DC_ADDRESS(0x15cf54, 0x1fc)
 MAC_ADDRESS(0x1a6ef4, 0x2b0)
-void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned char shift)
+void swapManager::handleMonster(int hero, int monster, int rightMouse, bool shift)
 {
     if (rightMouse)
     {
@@ -1316,7 +1316,7 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
 VA(0x005af590, 0x3F7)
 DC_ADDRESS(0x15d150, 0x190)
 MAC_ADDRESS(0x1a71a4, 0x450)  // Main roster/callees + full retail body
-void swapManager::handleArtifactClick(long side, long id, unsigned char rightClick)
+void swapManager::handleArtifactClick(long side, long id, bool rightClick)
 {
     TArtifactSlot slot =
         static_cast<TArtifactSlot>(id) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
@@ -1429,7 +1429,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 VA(0x005af990, 0x251)
 DC_ADDRESS(0x15d2e0, 0x160)
 MAC_ADDRESS(0x1a75f4, 0x1a8)  // roster bracket + body/callees
-void swapManager::handleBackpackClick(long side, long id, unsigned char rightClick)
+void swapManager::handleBackpackClick(long side, long id, bool rightClick)
 {
     hero* ourHero = m_heroes[side];
     type_artifact oldArtifact = ourHero->getBackpack(id);
@@ -1549,12 +1549,13 @@ MAC_ADDRESS(0x1a7954, 0xdc0)  // full retail dispatcher + DC dossier
 int swapManager::main(message& msg)
 {
     int exitFlag = 0;
-    unsigned char rightMouse;
+    // Inferred binary carriers for the native Boolean click/shift formals.
+    bool rightMouse;
     if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
         rightMouse = 1;
     else
         rightMouse = 0;
-    unsigned char shift;
+    bool shift;
     if (msg.m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS)
         shift = 1;
     else
