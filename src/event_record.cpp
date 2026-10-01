@@ -639,11 +639,11 @@ unsigned char type_record_erase::load(TAbstractFile* infile, int version)
         return 0;
     if (infile->read(&m_location, sizeof(m_location)) != sizeof(m_location))
         return 0;
-    if (infile->read(&m_objectId, sizeof(m_objectId)) != sizeof(m_objectId))
+    if (readValue(infile, m_objectId) != sizeof(m_objectId))
         return 0;
-    if (infile->read(&m_extraInfo, sizeof(m_extraInfo)) != sizeof(m_extraInfo))
+    if (readValue(infile, m_extraInfo) != sizeof(m_extraInfo))
         return 0;
-    unsigned char ok = infile->read(&m_objectIndex, sizeof(m_objectIndex)) == sizeof(m_objectIndex);
+    unsigned char ok = readValue(infile, m_objectIndex) == sizeof(m_objectIndex);
     return ok;
 }
 
@@ -654,9 +654,9 @@ unsigned char type_record_erase::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
     outfile->write(&m_location, sizeof(m_location));
-    outfile->write(&m_objectId, sizeof(m_objectId));
-    outfile->write(&m_extraInfo, sizeof(m_extraInfo));
-    unsigned char ok = outfile->write(&m_objectIndex, sizeof(m_objectIndex)) == sizeof(m_objectIndex);
+    writeScalar(outfile, m_objectId);
+    writeScalar(outfile, m_extraInfo);
+    unsigned char ok = writeScalar(outfile, m_objectIndex) == sizeof(m_objectIndex);
     return ok;
 }
 
@@ -724,12 +724,12 @@ unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
     if (!type_event_record::load(infile, version))
         return 0;
     int heroId;
-    if (infile->read(&heroId, sizeof(heroId)) != sizeof(heroId))
+    if (readValue(infile, heroId) != sizeof(heroId))
         return 0;
     m_currentHero = g_game->getHero(heroId);
-    if (infile->read(&m_newOwner, 1) != 1)
+    if (readValue(infile, m_newOwner) != 1)
         return 0;
-    if (infile->read(&m_prevOwner, 1) != 1)
+    if (readValue(infile, m_prevOwner) != 1)
         return 0;
     if (m_prevOwner < 0) {
         m_townGarrison = 0;
@@ -746,12 +746,12 @@ MAC_ADDRESS(0x0c0bfc, 0xdc)
 unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
-    outfile->write(&m_currentHero->m_id, sizeof(m_currentHero->m_id));
-    outfile->write(&m_newOwner, 1);
+    writeScalar(outfile, m_currentHero->m_id);
+    writeScalar(outfile, m_newOwner);
     unsigned char packed = m_prevOwner;
     if (m_townGarrison)
         packed |= 0x40;
-    unsigned char ok = outfile->write(&packed, 1) == 1;
+    unsigned char ok = writeScalar(outfile, packed) == 1;
     return ok;
 }
 
@@ -835,9 +835,9 @@ unsigned char type_record_show_hero::load(TAbstractFile* infile, int version)
         return 0;
     if (infile->read(&m_previousLocation, sizeof(m_previousLocation)) != sizeof(m_previousLocation))
         return 0;
-    if (infile->read(&m_onBoat, 1) != 1)
+    if (readValue(infile, m_onBoat) != 1)
         return 0;
-    unsigned char ok = infile->read(&m_previousBoat, 1) == 1;
+    unsigned char ok = readValue(infile, m_previousBoat) == 1;
     return ok;
 }
 
@@ -849,8 +849,8 @@ unsigned char type_record_show_hero::save(TAbstractFile* outfile)
     type_record_hide_hero::save(outfile);
     outfile->write(&m_location, sizeof(m_location));
     outfile->write(&m_previousLocation, sizeof(m_previousLocation));
-    outfile->write(&m_onBoat, 1);
-    unsigned char ok = outfile->write(&m_previousBoat, 1) == 1;
+    writeScalar(outfile, m_onBoat);
+    unsigned char ok = writeScalar(outfile, m_previousBoat) == 1;
     return ok;
 }
 
@@ -933,7 +933,7 @@ unsigned char type_record_player_death::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
-    unsigned char ok = infile->read(&m_extra, 1) == 1;
+    unsigned char ok = readValue(infile, m_extra) == 1;
     return ok;
 }
 
@@ -943,7 +943,7 @@ MAC_ADDRESS(0x0c14b8, 0x84)
 unsigned char type_record_player_death::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
-    unsigned char ok = outfile->write(&m_extra, 1) == 1;
+    unsigned char ok = writeScalar(outfile, m_extra) == 1;
     return ok;
 }
 
@@ -1007,7 +1007,7 @@ unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
         return 0;
 
     short count;
-    if (infile->read(&count, sizeof(count)) != sizeof(count))
+    if (readValue(infile, count) != sizeof(count))
         return 0;
 
     type_shroud_change change;
@@ -1029,7 +1029,7 @@ unsigned char type_record_shroud::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
     short count = m_changes.size();
-    outfile->write(&count, sizeof(count));
+    writeScalar(outfile, count);
     for (int i = 0; i < count; ++i)
         outfile->write(&m_changes[i], sizeof(type_shroud_change));
     return 1;
@@ -1443,7 +1443,7 @@ MAC_ADDRESS(0x0c2fe8, 0x19c)
 unsigned char game::loadRecordedEvents(TAbstractFile* infile, int version)
 {
     long count;
-    if (infile->read(&count, sizeof(count)) != sizeof(count))
+    if (readValue(infile, count) != sizeof(count))
         return 0;
 
     clearEventRecords();
@@ -1452,7 +1452,7 @@ unsigned char game::loadRecordedEvents(TAbstractFile* infile, int version)
     char type;
     type_event_record* record;
     while (count--) {
-        if (infile->read(&type, 1) != 1)
+        if (readValue(infile, type) != 1)
             return 0;
         if (type <= 0 || type > RECORD_SHROUD)
             return 0;
@@ -1470,10 +1470,10 @@ MAC_ADDRESS(0x0c3184, 0xf4)
 unsigned char game::saveRecordedEvents(TAbstractFile* outfile)
 {
     long count = m_eventRecords.size();
-    outfile->write(&count, 4);
+    writeScalar(outfile, count);
     for (int i = 0; i < count; ++i) {
         char type = m_eventRecords[i]->getType();
-        outfile->write(&type, 1);
+        writeScalar(outfile, type);
         if (!m_eventRecords[i]->save(outfile))
             return 0;
     }

@@ -1317,3 +1317,36 @@ unpaired references: base load/save (both previously 100%), move load/save
 (18.9024%/20.6140%) and mine-claim load/save (20.3390%/19.6809%). Boat-hide
 comparisons were already unavailable. The recovered helpers remain while
 these compiler and comparison differences stay open.
+
+### Remaining event records and their drivers
+
+Erase, hide/show hero, player-death and shroud serializers now retain twenty
+additional scalar calls. Their native-order widths and exact-size checks are
+preserved, including the hide-hero writer's packed owner/garrison local and
+the shroud list's signed-short count. Packed points and eight-byte shroud
+changes remain whole-record transfers. The record-list drivers add four more
+scalar calls: a native-order long count and signed byte record type. Load
+checks both sizes and the type range; save ignores both transfer results and
+checks only each record's virtual save result.
+
+The other inspected driver calls already have source counterparts: virtual
+undo/replay, getType/load/save, factory-table dispatch, null-guarded deletion,
+and vector storage used by range erase. The boat/hero constructor leads map
+to existing constructors whose Complete interfaces add occupancy and garrison
+arguments. Shroud construction already invokes base and vector construction
+through `new type_record_shroud()`, matching DC `0x8dc24` and Mac `0xc1634`.
+The retained DC type record `0x533b` is only a forward declaration; it does not
+prove whether the original empty constructor was written or generated. This
+review accounts for its operation without asserting a missing compgen flag.
+
+The targeted builds succeed. All ten edited record serializers and the list
+writer remain Windows 100%. The list loader is 87.0602%, with HIST 100% kept;
+its call report preserves all nine retail calls and additionally retains STL
+`_Destroy` and `size`, which retail expands. Ten further Mac comparisons become
+unavailable through unpaired scalar-helper references: erase load/save,
+hide/show-hero load/save, player-death load/save, shroud save, and the previously
+exact record-list writer. Prior scores remain recorded in the working evidence.
+The latest event_record AST refresh has zero diagnostics. Seventy-three more
+native sites are accounted for, leaving 5,683 open sites and 2,313 operation
+notes. The current event_record queue is empty; the broader body review,
+source-graph reconciliation and compiler differences remain open.
