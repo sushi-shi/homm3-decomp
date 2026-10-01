@@ -1413,14 +1413,9 @@ TTownScreenWindow::TTownScreenWindow()
         m_widgets.push_back(label);
     }
 
-    widget** it = m_widgets.begin();
-    while (it != m_widgets.end()) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-        ++it;
-    }
+    // Mac 0x1bd35c..0x1bd3ac expands the existing null-checking
+    // registration operation: addWidget(widget, -1), or memError.
+    addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005c58b0, 0x21, SCALAR_DELETING_DTOR, TTownScreenWindow)
