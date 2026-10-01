@@ -1662,13 +1662,15 @@ int getTeam(int playerNum) const
         return (m_globalInfoFlags[flag] & (1 << playerNum)) != 0;
     }
     void playRecordedEvents();
-    unsigned char replayAvailable() const;
+    // Original replay_available QBA_NXZ proves public const bool.
+    bool replayAvailable() const;
     int getNumThievesGuilds(int whichPlayer);
 
 private:
-    unsigned char saveRecordedEvents(TAbstractFile* outfile);
-    // declarator (`?load_recorded_events@game@@AAA_NPAX@Z`, private,
-    unsigned char loadRecordedEvents(TAbstractFile* infile, int version);
+    // Original load/save_recorded_events AAA_NPAX prove private bool.
+    // Complete keeps its TAbstractFile stream and added load version.
+    bool saveRecordedEvents(TAbstractFile* outfile);
+    bool loadRecordedEvents(TAbstractFile* infile, int version);
     // 0x4bcb30 (dc 0xa8144, E:\gamedcs\game.cpp:2975,
     // `?setup_shipyards@game@@AAAXXZ`). Clears all eight
     // players[i].shipyards and re-derives them by sweeping the map,
