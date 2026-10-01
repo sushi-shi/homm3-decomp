@@ -26,6 +26,9 @@
 // vector::erase expansion inside clearPath, not a reason to flatten it.
 // Earlier result-reference and 24 local-order probes did not recover retail's
 // retained vector base; four current initialization phases give three objects.
+// The native final path-count operation (DC line 103; Mac 0x1618a4)
+// matches the existing getPathSteps body. This caller spelling is inferred;
+// replacing the direct vector-size expression is Windows byte-flat.
 VA(0x0056a0d0, 0x282)
 DC_ADDRESS(0x12b2e0, 0x110)
 MAC_ADDRESS(0x161498, 0x41c)  // anchor-global
@@ -72,7 +75,7 @@ int searchArray::buildPath(const hero* currentHero, long limit)
         flying = !currentPathCell->m_lastCanStop;
     }
 
-    return m_result.size();
+    return getPathSteps();
 }
 
 long aiValueOfEvent(const hero* currentHero, type_point point);
