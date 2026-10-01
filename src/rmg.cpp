@@ -8135,6 +8135,19 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     return definition->generate(properties[selectedIndex], this, zone);
 }
 
+// Initial treasure objects and quest huts share this temporary-map placement.
+// Preserve unsigned dimension addition and division, including even-size
+// rounding, and set the temporary level independently of the object's level.
+static inline TRmgMapPosition getRmgCenteredGroupObjectPosition(
+    const TRmgTreasureGroup* group, const TObjectType* prototype)
+{
+    TRmgMapPosition position;
+    position.m_x = (group->m_map.getWidth() + static_cast<unsigned>(prototype->getWidth())) / 2;
+    position.m_y = (group->m_map.getHeight() + static_cast<unsigned>(prototype->getHeight())) / 2;
+    position.m_z = 0;
+    return position;
+}
+
 // Complete-only group fill. The first object is centered in the temporary
 // map; later objects use the fit helper. Generation and fit have independent
 // three-attempt limits. Failed fits release the object before retrying;
@@ -8167,9 +8180,7 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
             return 0;
         TObjectType* prototype = selected->m_properties->m_prototype;
         type_object* object = selected;
-        position.m_x = (group->m_map.m_mapWidth + static_cast<unsigned>(prototype->getWidth())) / 2;
-        position.m_y = (group->m_map.m_mapHeight + static_cast<unsigned>(prototype->getHeight())) / 2;
-        position.m_z = 0;
+        position = getRmgCenteredGroupObjectPosition(group, prototype);
         group->addObject(object, position);
         total = objectValue;
     }
@@ -10164,9 +10175,7 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
     TRmgTreasureGroup group(16, 16);
     TObjectType* prototype = seerHut->m_properties->m_prototype;
     TRmgMapPosition position;
-    position.m_x = (group.m_map.getWidth() + static_cast<unsigned>(prototype->getWidth())) / 2;
-    position.m_y = (group.m_map.getHeight() + static_cast<unsigned>(prototype->getHeight())) / 2;
-    position.m_z = 0;
+    position = getRmgCenteredGroupObjectPosition(&group, prototype);
     type_object* questObject = seerHut;
     group.addObject(questObject, position);
     group.updateBounds();
