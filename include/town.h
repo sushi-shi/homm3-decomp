@@ -503,7 +503,9 @@ public:
     TTerrainType getNativeTerrain() const;
     // The garrisoned hero steps out onto the town tile (0x5be390).
     void removeGarrisonHero();
-    static int upgradedDwellingID(int id);
+    // Original public ?UpgradedDwellingID@town@@SA?AW4type_building_id@@W42@@Z
+    // independently proves the building enum result and argument.
+    static type_building_id upgradedDwellingID(type_building_id id);
 
 protected:
     // Retail .data

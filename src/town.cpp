@@ -2022,13 +2022,13 @@ const armyGroup& town::getArmy() const
 VA(0x005c14a0, 0x19)
 DC_ADDRESS(0x168c20, 0x1c)
 MAC_ADDRESS(0x1b7064, 0x28)
-int town::upgradedDwellingID(int id)
+type_building_id town::upgradedDwellingID(type_building_id id)
 {
     if (id == HORDE_ID)
         return HORDE_UPG_ID;
     if (id == HORDE_2_ID)
         return HORDE_2_UPG_ID;
-    return id + TOWN_DWELLING_COUNT;
+    return static_cast<type_building_id>(id + TOWN_DWELLING_COUNT);
 }
 
 // E:\gamedcs\town.cpp:2476, static and inlined at all three of its call
