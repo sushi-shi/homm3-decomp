@@ -1323,14 +1323,16 @@ MAC_ADDRESS(0x0f4d94, 0x68)
 // therefore do not contradict the original contract. The ordinary int
 // source keeps the same loops/branches but emits full-width zero/one
 // exits (66 body bytes versus retail 63); no narrowing cast is evidenced.
+// Mac f4da0/f4da4 and f4dd0/f4dd4 expand the equipped/backpack reference
+// reads owned by the canonical getters; restoring their calls is byte-flat.
 int hero::hasArtifact(int whichArtifact) const
 {
     for (int slot = 0; slot < 19; slot++) {
-        if (m_equipped[slot].m_artifactId == whichArtifact)
+        if (getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
             return 1;
     }
     for (int pack = 0; pack < 64; pack++) {
-        if (m_backpack[pack].m_artifactId == whichArtifact)
+        if (getBackpack(pack).m_artifactId == whichArtifact)
             return 1;
     }
     return 0;
