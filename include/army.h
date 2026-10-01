@@ -809,7 +809,7 @@ public:
     long getAdjustedAttack(const army* enemy,
                              unsigned char rangedAttack) const;
     long getAdjustedDefense(const army* enemy,
-                              unsigned char frenzyIncluded) const;
+                              bool frenzyIncluded) const;
     long getAIExpectedDamage() const;
     const army* getAITarget() const;
     long getAITargetValue() const;
@@ -1384,7 +1384,7 @@ public:
     // calls it on `this` in the Frenzy tail. Nothing in the body
     // writes.
     long getAdjustedDefense(const army* enemy,
-                              unsigned char frenzy_included) const;
+                              bool frenzyIncluded) const;
     // 0x443840 / 0x443b90, carcasses in army.cpp; declared because
     // adjust_damage (0x443f40) calls both and retail does NOT inline
     // either. Both const

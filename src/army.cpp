@@ -2317,8 +2317,9 @@ long army::getAttackModifier(const army* enemy,
 VA(0x00442590, 0xC2)
 DC_ADDRESS(0x0477e8, 0xde)
 MAC_ADDRESS(0x04e31c, 0x17c)
+// Original DC get_adjusted_defense mangles the frenzy flag as _N (bool).
 long army::getAdjustedDefense(const army* enemy,
-                                unsigned char frenzyIncluded) const
+                                bool frenzyIncluded) const
 {
     if (frenzyIncluded && m_spellInfluence[56])
         return 0;
