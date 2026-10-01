@@ -1694,6 +1694,15 @@ public:
         return &m_heroes[which];
     }
 
+    // Selection's two hero-detail owners expand an unguarded hero lookup
+    // (DC ProcessRightSelect lines 3244/3290; Mac 17a12c..17a14c and
+    // 17a308..17a328). These callers require a valid ID, unlike getHero's
+    // nullable -1 lookup. The original helper spelling is unknown.
+    hero& getHeroReference(int which)
+    {
+        return m_heroes[which];
+    }
+
     // DC `game::GetCurrHero` (E:\gamedcs\Game.h:991) and
     // `game::GetCurrTown` (dc 0x1ff40, Game.h:1023) - the acting player's
     // pair, and NOT GetHero/GetTown applied to the id. Two retail facts
