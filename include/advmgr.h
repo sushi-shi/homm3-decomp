@@ -1439,7 +1439,7 @@ private:
 public:
     void animateMove(class hero* curr, int direction, int xInc, int yInc);
     int validMove(const class hero* currentHero, int direction, int withEvent,
-                  unsigned char normalMoveOnly);
+                  bool normalMoveOnly);
     int validMoveWithEvent(class hero* who, int direction);
     // The two out-of-compiland members DoAdvCommand reaches, DECLARED
     // and not defined here - each is defined in its own TU and a call
