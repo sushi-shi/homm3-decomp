@@ -2237,6 +2237,53 @@ ID ranges or do intervening text work are distinct. New names and ordinary
 source placements are project inferences; no native annotations, virtual slots,
 field access declarations or storage layout are added or changed.
 
+## Media archive ownership, town popups and overview replacement
+
+Six archive-directory loads share file-static readArchiveHeaders in smackmgr:
+three video directories and three sound directories. The operation reads the
+four-byte count, allocates count+2 typed entries, publishes the pointer and
+reads the directory. The existing record declarations prove 44-byte video and
+48-byte sound entries; the size is cast to int before multiplying by the signed
+count, preserving the original arithmetic. Handles, counts and published
+pointer cells are references, so the second read retains current values after
+the first API call and allocation. The caller still owns its DWORD read-count
+local across archive loads. Neither read's result is newly checked.
+
+Opening paths, required-archive error dialogs, optional-archive handling and
+partial-load state remain in their callers. In particular, a failed optional
+video archive becomes null while sound handles retain INVALID_HANDLE_VALUE.
+Three video arrays reuse clearArchiveHeaders in their original 3,2,1 order.
+Three sound archives reuse closeSoundArchive: close a non-invalid handle, store
+INVALID_HANDLE_VALUE, then invoke that same guarded array delete/null operation.
+Counts remain unchanged. Video shutdown's separate handle-close protocol is
+not folded into the sound operation. These templates and ordinary source
+placement are project inferences, with no native template claim.
+
+Town mage-guild and construction-hall paths share private showHallPopup: draw
+the current hall window, update the full screen, then run its modal loop. The
+member window is read again for the modal call. Their resource-bar replacement
+and two completion paths share private clearPopupBank, preserving deletion
+before nulling. createPopupBank retains its existing nonnull guard. Mage-guild
+completion restores the network handler's ordinary bar before deleting the
+popup bar and hall window; construction-hall completion deletes the hall first,
+then clears the popup bar, then restores the subscription. Neither helper
+absorbs those intentionally different orders, allocation or town rebuilding.
+
+Six overview replacement sites share clearOverviewWidget: skip empty slots,
+call the existing removeWidget, delete the typed slot and null it. Five dynamic
+tables and the fixed title array retain their original loop order and bounds.
+The template binds the table rather than a cached widget or element reference;
+removeWidget can dispatch virtual close, so deletion and nulling continue to
+reread a dynamic table pointer after that call. The native removeAndDeleteWidget
+ID-search method is not a replacement for this operation: its current recovered
+body only unlinks matching widgets. Final overview teardown remains distinct,
+with its original non-unlinking deletes and array release order.
+
+All added names and source placements are project inferences. Existing native
+entry points and nested helpers remain represented. Field visibility, layouts,
+resource types and ownership policies are unchanged. No compiler or matching
+claim is made for this continuation.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

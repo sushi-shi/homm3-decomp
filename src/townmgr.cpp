@@ -3464,14 +3464,29 @@ int TMageGuildWindow::windowHandler(message& msg)
     return 1;
 }
 
+// Project-inferred popup operations. Callers own subscription and teardown
+// order, which differs between the mage-guild and construction-hall paths.
+void townManager::clearPopupBank()
+{
+    delete m_dialogResourceDisplay;
+    m_dialogResourceDisplay = 0;
+}
+
+void townManager::showHallPopup()
+{
+    m_hallWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
+                                  WINDOW_SCREEN_HEIGHT);
+    m_hallWindow->doModal(0);
+}
+
 // Original: townManager::create_popup_bank; townmgr.cpp:4728
 DC_ADDRESS(0x1712c4, 0x5a)
 MAC_ADDRESS(0x1c93dc, 0xa4)
 void townManager::createPopupBank(heroWindow* parent)
 {
     if (m_dialogResourceDisplay) {
-        delete m_dialogResourceDisplay;
-        m_dialogResourceDisplay = 0;
+        clearPopupBank();
     }
     m_dialogResourceDisplay = new TResourceDisplay(parent, 1);
     m_dialogResourceDisplay->update(1, 0);
@@ -3535,15 +3550,11 @@ void townManager::handleMageGuildClick()
 
     createPopupBank(m_hallWindow);
 
-    m_hallWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
-                                  WINDOW_SCREEN_HEIGHT);
-    m_hallWindow->doModal(0);
+    showHallPopup();
 
     if (m_netMsgHandler)
         m_netMsgHandler->setResourceDisplay(m_resourceDisplay);
-    delete m_dialogResourceDisplay;
-    m_dialogResourceDisplay = 0;
+    clearPopupBank();
     delete m_hallWindow;
 }
 
@@ -4467,14 +4478,10 @@ void townManager::doHall()
 
     createPopupBank(m_hallWindow);
 
-    m_hallWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
-                                  WINDOW_SCREEN_HEIGHT);
-    m_hallWindow->doModal(0);
+    showHallPopup();
 
     delete m_hallWindow;
-    delete m_dialogResourceDisplay;
-    m_dialogResourceDisplay = 0;
+    clearPopupBank();
     if (m_netMsgHandler)
         m_netMsgHandler->setResourceDisplay(m_resourceDisplay);
 

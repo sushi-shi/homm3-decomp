@@ -990,6 +990,8 @@ public:
 
 private:
     void handleHallClick();
+    void showHallPopup();
+    void clearPopupBank();
 };
 
 extern townManager* g_townManager;
