@@ -748,11 +748,13 @@ long armyGroup::getAIValue() const
 VA(0x0044acc0, 0x14)
 DC_ADDRESS(0x04ed28, 0x24)
 MAC_ADDRESS(0x058528, 0x7c)
+// Original armyGroup record 0x1a9d / array 0x1bf7 proves TCreatureType[7].
+// Read that native enum view independently of the helper placement model.
 int armyGroup::getNumArmies() const
 {
     int numArmies = 0;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
-        if (m_armies[i] != CREATURE_NONE)
+        if (m_armyTypes[i] != CREATURE_NONE)
             ++numArmies;
     }
     return numArmies;
