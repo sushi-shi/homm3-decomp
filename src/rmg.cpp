@@ -9176,10 +9176,15 @@ void type_random_map_generator::createRoads()
 // then paints the predecessor chain. Role-derived name; no DC RMG counterpart.
 // Unlike the coast-bound river, this search ignores impassable/direction flags
 // and stops on the shared roadTarget bit set by markRiverObjectTargets.
-// Partial 89.61%: direct invalid-predecessor field stores remove the extra
-// constructor in the first 87.80% candidate. A separate default-then-filled
-// invalid-position local scores 83.63%. Retained vector cleanup boundaries
-// and frame/register homes remain unresolved; no inlining pins are used.
+// Mac 0x24c99c..0x24c9c8 and 0x24cd84..0x24cda8 copy complete positions
+// into the by-value map query, as do the two intermediate flood queries.
+// At 0x24c9cc..0x24ca28, an invalid position is constructed and then copied
+// to a separate formal before the cost/predecessor writes: setMovementCost.
+// Recovering all four queries and that seed setter raises fresh Windows
+// 57.5459% -> 79.4612%. Earlier isolated invalid-position controls favored
+// flattened fields, but omitted this complete native helper model. Current
+// frame 0xa8 differs from retail 0xb4; reset/cleanup expansions and the
+// duplicate exit remain unresolved. Keep the canonical helper calls.
 VA(0x00548500, 0x533)
 MAC_ADDRESS(0x24c8ac, 0x588)
 void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
@@ -9189,11 +9194,8 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     std::vector<int> openCosts;
     openPositions.push_back(source);
     openCosts.push_back(0);
-    TRmgMapItem* mapItem = m_map.getMapItem(source.m_x, source.m_y, source.m_z);
-    mapItem->m_movement.m_cost = 0;
-    mapItem->m_previousTile.m_x = -1;
-    mapItem->m_previousTile.m_y = -1;
-    mapItem->m_previousTile.m_z = -1;
+    TRmgMapItem* mapItem = m_map.getMapItem(source);
+    mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
     unsigned char sourceIsSnow;
     int riverType;
     if (mapItem->m_tile.m_landType == eTerrainSnow) {
@@ -9209,14 +9211,14 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
         position = openPositions.back();
         openCosts.pop_back();
         openPositions.pop_back();
-        mapItem = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
+        mapItem = m_map.getMapItem(position);
         int positionCost = mapItem->m_movement.m_cost;
         for (int direction = 0; direction < 8; direction += 2) {
             nextPosition = position + g_rmgDirections[direction];
             if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.getWidth()
                 || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.getHeight())
                 continue;
-            mapItem = m_map.getMapItem(nextPosition.m_x, nextPosition.m_y, nextPosition.m_z);
+            mapItem = m_map.getMapItem(nextPosition);
             if (mapItem->m_tile.m_landType == eTerrainWater
                 || mapItem->m_tile.m_landType == eTerrainRock
                 || (mapItem->m_tile.m_landType == eTerrainSnow) != sourceIsSnow)
@@ -9243,7 +9245,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
         &mapAdapter, riverType, TRmgGridPoint(nextPosition.m_x, nextPosition.m_y));
     while (mapItem->m_movement.m_cost > 0) {
         position = mapItem->m_previousTile;
-        mapItem = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
+        mapItem = m_map.getMapItem(position);
         riverPainter.drawTo(TRmgGridPoint(position.m_x, position.m_y));
     }
 }
