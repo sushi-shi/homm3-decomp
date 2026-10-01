@@ -8691,6 +8691,11 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // ordinary predicate return forms do not recover the caller lowering.
 // Native 0x24ae00..0x24ae58 translates the copied position by the guard point;
 // preserve that canonical addition as well (byte-flat with these predicates).
+// Mac 0x24afd4..0x24b010 owns a trigger XY temporary and subtracts it
+// from the copied object position through the canonical operator-= model.
+// At 0x24b014..0x24b018 it sets that result's level to the placement level.
+// Keep this complete coordinate operation even though VC6 removes its unused
+// level store: fresh Windows 81.0773% -> 80.6534%, no sibling score movement.
 VA(0x00546C70, 0x452)
 MAC_ADDRESS(0x24ad0c, 0x6cc) // anchor-callee 0x54721c; thiscall, ret 0x14
 unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
@@ -8732,8 +8737,9 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     type_object* lastObject = group->m_objects.back();
     TObjectType* prototype = lastObject->m_properties->m_prototype;
     TRmgMapPosition entrance = lastObject->getPosition();
-    entrance.m_x -= prototype->m_triggerCell.m_x;
-    entrance.m_y -= prototype->m_triggerCell.m_y;
+    entrance -= TPoint(prototype->m_triggerCell.m_x,
+        prototype->m_triggerCell.m_y);
+    entrance.m_z = position.m_z;
     if (!g_adventureObjectTraits[prototype->getObjectType()].m_trait1) {
         firstDirection = 1;
         lastDirection = 4;
