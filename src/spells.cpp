@@ -488,14 +488,26 @@ static void showInvalidSpellTarget(SpellID spell, EGeneralTextIndex prompt, long
     g_combatManager->turnOffHighlighter(1);
 }
 
+// Project-inferred first-target presentation shared by the ordinary, wall,
+// sacrifice-beneficiary and teleport-source pickers. Resolve the global
+// manager again after each operation and retain caller-specific highlighting.
+static void showValidSpellTarget(SpellID spell, long hex, bool highlight)
+{
+    g_mouseManager->setPointer(spell + 1, mouseManager::SPELL_SET);
+    g_combatManager->spellTargetMessage(spell, hex, 1);
+    if (highlight)
+        g_combatManager->checkChangeHighlighter(hex);
+}
+
 // Complete factors the live rollover update out of InitiateSpell and the
 // dialog handler. There is no Dreamcast counterpart, so the name is
 // behaviour-derived; the retained body and its three callers prove the
 // boundary and fastcall argument placement. Mac's lightly optimized body
 // confirms that an out-of-range hex still reaches validSpellTarget: the
 // inInvisibleColumn helper rejects invalid indices without blocking that call.
-// Keeping the spell and casting hero locals ahead of creatureSpell gives VC6
-// retail's prologue register assignment; Windows bytes are exact.
+// Keeping the spell and casting hero locals ahead of creatureSpell gave VC6
+// retail's prologue register assignment in the prior exact reconstruction.
+// The shared presentation operation below has not been compiled or measured.
 VA(0x0059f700, 0x192)
 MAC_ADDRESS(0x18f538, 0x22c)  // retail-only factored helper
 static int updateSpellTarget(long hex)
@@ -526,10 +538,7 @@ static int updateSpellTarget(long hex)
                 || g_combatManager->m_cells[hex].getArmy()->getOwningSide()
                     != g_combatManager->m_currentSide)) {
         result = hex;
-        g_mouseManager->setPointer(spell + 1, mouseManager::SPELL_SET);
-        g_combatManager->spellTargetMessage(spell, hex, 1);
-        if (!markArea)
-            g_combatManager->checkChangeHighlighter(hex);
+        showValidSpellTarget(spell, hex, !markArea);
     } else {
         result = -1;
         showInvalidSpellTarget(spell, GENERAL_TEXT_SELECT_SPELL_TARGET, hex);
@@ -1819,11 +1828,12 @@ static long g_sacrificeBeneficiaryLastIndex = -1;
 DATA(0x006a3cd4)
 static unsigned char g_sacrificeBeneficiaryValidTarget;
 
-// Project-inferred phase reset shared by confirmation and cancellation.
-static void resetSacrificeBeneficiarySelection()
+// Project-inferred phase completion shared by confirmation and cancellation.
+static void finishSacrificeBeneficiarySelection(message& msg)
 {
     g_sacrificeBeneficiaryLastIndex = -1;
     g_sacrificeBeneficiaryValidTarget = 0;
+    msg.setDialogEnd();
 }
 
 VA(0x005a2d00, 0x184)
@@ -1845,10 +1855,7 @@ int handleSacrificeBeneficiary(message& msg)
                                               g_combatManager->m_currentSide,
                                               1, 0)) {
             g_sacrificeBeneficiaryValidTarget = 1;
-            g_mouseManager->setPointer(SPELL_SACRIFICE + 1,
-                                       mouseManager::SPELL_SET);
-            g_combatManager->spellTargetMessage(SPELL_SACRIFICE, hex, 1);
-            g_combatManager->checkChangeHighlighter(hex);
+            showValidSpellTarget(SPELL_SACRIFICE, hex, true);
         } else {
             g_sacrificeBeneficiaryValidTarget = 0;
             showInvalidSpellTarget(
@@ -1860,16 +1867,14 @@ int handleSacrificeBeneficiary(message& msg)
         if (!g_sacrificeBeneficiaryValidTarget)
             break;
         g_combatManager->selectActionTarget(g_sacrificeBeneficiaryLastIndex);
-        resetSacrificeBeneficiarySelection();
-        msg.setDialogEnd();
+        finishSacrificeBeneficiarySelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
         g_combatManager->cancelPendingAction();
-        resetSacrificeBeneficiarySelection();
-        msg.setDialogEnd();
+        finishSacrificeBeneficiarySelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -1880,11 +1885,12 @@ static long g_sacrificeLastIndex = -1;
 DATA(0x006a3cd8)
 static int g_sacrificeIndexIsValid;
 
-// Project-inferred reset for the second, sacrificed-stack selection phase.
-static void resetSacrificeSelection()
+// Project-inferred completion of the second, sacrificed-stack selection phase.
+static void finishSacrificeSelection(message& msg)
 {
     g_sacrificeLastIndex = -1;
     g_sacrificeIndexIsValid = 0;
+    msg.setDialogEnd();
 }
 
 VA(0x005a2e90, 0x1D4)
@@ -1923,16 +1929,14 @@ int handleCastSacrifice(message& msg)
         if (!g_sacrificeIndexIsValid)
             break;
         g_combatManager->selectSecondaryActionTarget(g_sacrificeLastIndex);
-        resetSacrificeSelection();
-        msg.setDialogEnd();
+        finishSacrificeSelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
         g_combatManager->cancelPendingAction();
-        resetSacrificeSelection();
-        msg.setDialogEnd();
+        finishSacrificeSelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -2022,6 +2026,20 @@ static void clearAreaHighlights()
     }
 }
 
+// Project-inferred single-click completion. The two-click phases keep their
+// reset between the action update and dialog completion instead.
+static void confirmSpellSelection(message& msg, long targetHex)
+{
+    g_combatManager->selectActionTarget(targetHex);
+    msg.setDialogEnd();
+}
+
+static void cancelSpellSelection(message& msg)
+{
+    g_combatManager->cancelPendingAction();
+    msg.setDialogEnd();
+}
+
 DATA(0x00688324)
 static long g_castSpellIndexToCastOn = -1;
 
@@ -2043,8 +2061,7 @@ int handleCastSpell(message& msg)
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (g_castSpellIndexToCastOn == -1)
             break;
-        g_combatManager->selectActionTarget(g_castSpellIndexToCastOn);
-        msg.setDialogEnd();
+        confirmSpellSelection(msg, g_castSpellIndexToCastOn);
         clearAreaHighlights();
         g_castSpellIndexToCastOn = -1;
         return MESSAGE_DISPATCH_FORWARD;
@@ -2052,8 +2069,7 @@ int handleCastSpell(message& msg)
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
-        g_combatManager->cancelPendingAction();
-        msg.setDialogEnd();
+        cancelSpellSelection(msg);
         g_castSpellIndexToCastOn = -1;
         clearAreaHighlights();
         return MESSAGE_DISPATCH_FORWARD;
@@ -2114,8 +2130,7 @@ int handleCastWallSpell(message& msg)
                                               g_combatManager->m_currentSide,
                                               1, 0)) {
             g_castWallIndexToCastOn = hex;
-            g_mouseManager->setPointer(spell + 1, mouseManager::SPELL_SET);
-            g_combatManager->spellTargetMessage(spell, hex, 1);
+            showValidSpellTarget(spell, hex, false);
             if (g_config.m_showCombatMouseHex
                 && spell != SPELL_FORCE_FIELD) {
                 std::vector<long> hexes;
@@ -2138,15 +2153,13 @@ int handleCastWallSpell(message& msg)
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (g_castWallIndexToCastOn == -1)
             break;
-        g_combatManager->selectActionTarget(g_castWallIndexToCastOn);
-        msg.setDialogEnd();
+        confirmSpellSelection(msg, g_castWallIndexToCastOn);
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
-        g_combatManager->cancelPendingAction();
-        msg.setDialogEnd();
+        cancelSpellSelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -2157,11 +2170,12 @@ static long g_castTeleportArmyHex = -1;
 DATA(0x00688330)
 static long g_castTeleportPreviousHex = -1;
 
-// Project-inferred reset of the first teleport phase's hover and selected hex.
-static void resetTeleportSourceSelection()
+// Project-inferred first-phase completion: reset hover/selection, then end dialog.
+static void finishTeleportSourceSelection(message& msg)
 {
     g_castTeleportPreviousHex = -1;
     g_castTeleportArmyHex = -1;
+    msg.setDialogEnd();
 }
 
 VA(0x005a3570, 0x184)
@@ -2182,10 +2196,7 @@ int handleCastTeleport(message& msg)
                                               g_combatManager->m_magicTerrain),
                 hex, g_combatManager->m_currentSide, 1, 0)) {
             g_castTeleportArmyHex = hex;
-            g_mouseManager->setPointer(SPELL_TELEPORT + 1,
-                                       mouseManager::SPELL_SET);
-            g_combatManager->spellTargetMessage(SPELL_TELEPORT, hex, 1);
-            g_combatManager->checkChangeHighlighter(hex);
+            showValidSpellTarget(SPELL_TELEPORT, hex, true);
         } else {
             g_castTeleportArmyHex = -1;
             showInvalidSpellTarget(
@@ -2198,16 +2209,14 @@ int handleCastTeleport(message& msg)
         if (g_castTeleportArmyHex == -1)
             break;
         g_combatManager->selectActionTarget(g_castTeleportArmyHex);
-        resetTeleportSourceSelection();
-        msg.setDialogEnd();
+        finishTeleportSourceSelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
         g_combatManager->cancelPendingAction();
-        resetTeleportSourceSelection();
-        msg.setDialogEnd();
+        finishTeleportSourceSelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -2241,11 +2250,12 @@ unsigned char combatManager::isValidTeleport(const army* thisArmy, long newHex)
     return 1;
 }
 
-// Project-inferred reset of the second teleport phase's independent cache.
-static void resetTeleportDestinationSelection()
+// Project-inferred second-phase completion with its independent hover cache.
+static void finishTeleportDestinationSelection(message& msg)
 {
     g_teleportHoverHex = -1;
     g_teleportDestinationHex = -1;
+    msg.setDialogEnd();
 }
 
 // combatManager::field_44 already holds the hex the first click picked,
@@ -2283,8 +2293,7 @@ static int handleGetTeleportDestination(message& msg)
         if (g_teleportDestinationHex == -1)
             break;
         g_combatManager->selectSecondaryActionTarget(g_teleportDestinationHex);
-        resetTeleportDestinationSelection();
-        msg.setDialogEnd();
+        finishTeleportDestinationSelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         // The ESC scancode in the codeX domain, the same value
@@ -2294,8 +2303,7 @@ static int handleGetTeleportDestination(message& msg)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
         g_combatManager->cancelPendingAction();
-        resetTeleportDestinationSelection();
-        msg.setDialogEnd();
+        finishTeleportDestinationSelection(msg);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

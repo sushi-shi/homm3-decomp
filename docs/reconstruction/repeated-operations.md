@@ -2765,6 +2765,39 @@ The view operation is private; the hero charge is an owner operation available
 to spell callers. Native-public mana storage and existing layouts/interfaces
 remain intact. No builds, tests or matching-score investigations were run.
 
+## Combat target presentation and phase completion
+
+Four first-target paths share showValidSpellTarget: select the spell cursor,
+post the native spellTargetMessage and conditionally update the highlighter.
+The ordinary target updater passes its existing !markArea policy; wall spells
+omit highlighter changes and keep their separate preference/Force Field checks
+and vector lifetimes. Sacrifice's beneficiary picker and Teleport's source picker
+retain highlighting. Their validity flags/selected hexes are still stored before
+presentation, and globals are reread between cursor, message and highlight calls.
+The sacrificed-stack and teleport-destination phases keep their different combat
+cursor and message/highlight policies rather than adopting the first-target
+presentation.
+
+Ordinary and wall casts share confirmSpellSelection and cancelSpellSelection,
+which retain the native pending-action operation followed by message::setDialogEnd.
+The ordinary cast still clears area highlights before resetting its cached hex
+on confirmation, and resets its hex before clearing highlights on cancellation.
+Wall selection retains its existing cache behavior. Input checks, ESC fallthrough
+and dispatch return values remain in the handlers.
+
+The four existing project-inferred Sacrifice/Teleport reset helpers now complete
+their respective phases: finishSacrificeBeneficiarySelection,
+finishSacrificeSelection, finishTeleportSourceSelection and
+finishTeleportDestinationSelection. Each retains its ordered cache reset and
+then ends the dialog, covering both confirmation and cancellation. The native
+action selection/cancellation still occurs before this operation, so the phase
+reset remains between the action change and dialog end at all eight sites.
+
+These three new helpers and four expanded helper contracts have ordinary
+file-static definitions in spells.cpp. They introduce no native identity or
+inline claim, field/layout changes or added reset semantics. No builds, tests
+or matching-score investigations were run.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
