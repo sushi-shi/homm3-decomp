@@ -3892,276 +3892,281 @@ int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
 // Remaining call decisions: the first bank size(), magic school and power
 // school still expand where retail retains calls; BlackBox's merged secondary
 // skill tail also remains unresolved. Preserve all canonical helper paths.
+// DC3840's trigger guard owns the scope through4119; the dispatch begins
+// inside it at3843. Restore that enclosing phase rather than an early
+// return. In the530e5f00b context with native file-local schools, this is
+// byte-flat96.6915% across all147 emitted philai code sections. Switch
+// labels and folded vector size aliases are not missing game helpers;
+// the first bank size and the two school expansion decisions remain.
 DC_ADDRESS(0x113e24, 0x986)
 long aiValueOfEvent(const hero* currentHero, type_point point,
                        long& moveCost)
 {
     playerData* player = currentHero->getPlayer();
     NewmapCell* cell = g_advManager->getCell(point);
-    if (!cell->m_isTrigger)
-        return 0;
+    if (cell->m_isTrigger) {
+        switch (cell->m_type) {
+        case ARENA:
+            return valueOfArena(currentHero, cell);
+        case ARTIFACT:
+            return valueOfMapArtifact(currentHero, cell);
+        case BLACK_BOX:
+            return valueOfBlackBox(currentHero, cell);
+        case BLACK_MARKET:
+            return valueOfBlackMarket(currentHero, cell);
 
-    switch (cell->m_type) {
-    case ARENA:
-        return valueOfArena(currentHero, cell);
-    case ARTIFACT:
-        return valueOfMapArtifact(currentHero, cell);
-    case BLACK_BOX:
-        return valueOfBlackBox(currentHero, cell);
-    case BLACK_MARKET:
-        return valueOfBlackMarket(currentHero, cell);
+        case BORDER_TENT:
+            if (g_game->m_borderTentVisitFlags[cell->m_objectIndex]
+                & g_curPlayerBit)
+                return 0;
+            return 5000;
+        case BUOY:
+            if (currentHero->m_flags & 4)
+                return 0;
+            if (moveCost > currentHero->m_movePoints)
+                return 0;
+            return const_cast<hero*>(currentHero)->moraleIncreaseValue(1);
+        case CAMPFIRE:
+            return valueOfCampfire(player, cell);
+        case CLOVER_FIELD:
+            if (currentHero->m_flags & 8)
+                return 0;
+            if (moveCost > currentHero->m_movePoints)
+                return 0;
+            if (moveCost + 200 < currentHero->m_movePoints)
+                return 0;
+            moveCost = max(moveCost, currentHero->m_movePoints);
+            return const_cast<hero*>(currentHero)->luckIncreaseValue(2);
+        case CREATURE_BANK:
+            return valueOfBank(currentHero, cell);
+        case CREATURE_GENERATOR_1:
+        case CREATURE_GENERATOR_4:
+            return valueOfGenerator(currentHero, point.m_x, point.m_y, point.m_z,
+                                    cell, moveCost);
+        case DEAD_GUY:
+            return valueOfSkeleton(currentHero, cell);
+        case DEFENSE_TOWER:
+            return valueOfDefenseTower(currentHero, cell);
+        case DERELICT_SHIP:
+        case DRAGON_CITY:
+            return valueOfBank(currentHero, cell);
+        case FAERIE_RING:
+            if (currentHero->m_flags & 0x2000)
+                return 0;
+            if (moveCost > currentHero->m_movePoints)
+                return 0;
+            return const_cast<hero*>(currentHero)->luckIncreaseValue(1);
+        case FLOTSAM:
+            return valueOfFlotsam(player);
 
-    case BORDER_TENT:
-        if (g_game->m_borderTentVisitFlags[cell->m_objectIndex]
-            & g_curPlayerBit)
-            return 0;
-        return 5000;
-    case BUOY:
-        if (currentHero->m_flags & 4)
-            return 0;
-        if (moveCost > currentHero->m_movePoints)
-            return 0;
-        return const_cast<hero*>(currentHero)->moraleIncreaseValue(1);
-    case CAMPFIRE:
-        return valueOfCampfire(player, cell);
-    case CLOVER_FIELD:
-        if (currentHero->m_flags & 8)
-            return 0;
-        if (moveCost > currentHero->m_movePoints)
-            return 0;
-        if (moveCost + 200 < currentHero->m_movePoints)
-            return 0;
-        moveCost = max(moveCost, currentHero->m_movePoints);
-        return const_cast<hero*>(currentHero)->luckIncreaseValue(2);
-    case CREATURE_BANK:
-        return valueOfBank(currentHero, cell);
-    case CREATURE_GENERATOR_1:
-    case CREATURE_GENERATOR_4:
-        return valueOfGenerator(currentHero, point.m_x, point.m_y, point.m_z,
-                                cell, moveCost);
-    case DEAD_GUY:
-        return valueOfSkeleton(currentHero, cell);
-    case DEFENSE_TOWER:
-        return valueOfDefenseTower(currentHero, cell);
-    case DERELICT_SHIP:
-    case DRAGON_CITY:
-        return valueOfBank(currentHero, cell);
-    case FAERIE_RING:
-        if (currentHero->m_flags & 0x2000)
-            return 0;
-        if (moveCost > currentHero->m_movePoints)
-            return 0;
-        return const_cast<hero*>(currentHero)->luckIncreaseValue(1);
-    case FLOTSAM:
-        return valueOfFlotsam(player);
+        case FOUNTAIN_OF_FORTUNE:
+            if (currentHero->m_flags & 0x20)
+                return 0;
+            if (currentHero->m_flags & 0x8000000)
+                return 0;
+            if (currentHero->m_flags & 0x10000000)
+                return 0;
+            if (currentHero->m_flags & 0x20000000)
+                return 0;
+            if (moveCost > currentHero->m_movePoints)
+                return 0;
+            if (cell->playerKnowsCell(currentHero->m_owner)) {
+                const ExtraInfoUnion* info =
+                    static_cast<const ExtraInfoUnion*>(
+                        static_cast<const void*>(cell));
+                return static_cast<int>(aiValueOfLuck(
+                    currentHero->getLuck(0, 0, 1),
+                    info->m_fountainInfo.m_luck));
+            }
+            return static_cast<int>(aiValueOfLuck(
+                currentHero->getLuck(0, 0, 1), 1));
+        case FOUNTAIN_OF_YOUTH:
+            return valueOfMoveSource(
+                currentHero, 0x4000, 200, moveCost);
 
-    case FOUNTAIN_OF_FORTUNE:
-        if (currentHero->m_flags & 0x20)
-            return 0;
-        if (currentHero->m_flags & 0x8000000)
-            return 0;
-        if (currentHero->m_flags & 0x10000000)
-            return 0;
-        if (currentHero->m_flags & 0x20000000)
-            return 0;
-        if (moveCost > currentHero->m_movePoints)
-            return 0;
-        if (cell->playerKnowsCell(currentHero->m_owner)) {
+        case GARDEN_OF_REVELATION:
+            return valueOfGarden(currentHero, cell);
+        case GARRISON:
+            return valueOfGarrison(currentHero, cell);
+        case IDOL_OF_FORTUNE:
+            return valueOfIdol(currentHero, moveCost);
+        case HERO:
+            return valueOfHeroEvent(currentHero, cell, point.m_x, point.m_y,
+                                       point.m_z, static_cast<short>(moveCost));
+        case HILL_FORT:
+            return valueOfHillFort(currentHero, moveCost);
+        case HUT_OF_MAGI:
+            return valueOfMagusHut(currentHero->m_owner);
+        case LEAN_TO:
+            return valueOfLeanTo(cell, player);
+        case LIBRARY:
+            return valueOfLibrary(currentHero, cell);
+        case LIGHTHOUSE:
+            return valueOfLighthouse(cell);
+        case MAGIC_SCHOOL:
+            return valueOfMagicSchool(currentHero, cell);
+        case MAGIC_SPRING:
+            return getValueOfSpring(
+                currentHero, cell,
+                static_cast<unsigned short>(moveCost));
+        case MAGIC_WELL:
+            return getValueOfWell(
+                currentHero, static_cast<unsigned short>(moveCost));
+        case MERC_CAMP:
+            return valueOfMercenaryCamp(currentHero, cell);
+        case MERMAID:
+            if (currentHero->m_flags & 0x8000)
+                return 0;
+            if (moveCost > currentHero->m_movePoints)
+                return 0;
+            return
+                const_cast<hero*>(currentHero)->luckIncreaseValue(1);
+        case MINE:
+            return valueOfMine(currentHero, cell);
+        case MONSTER:
+            return valueOfMonsters(currentHero, cell, point);
+
+        case MYSTICAL_GARDEN: {
             const ExtraInfoUnion* info =
                 static_cast<const ExtraInfoUnion*>(
                     static_cast<const void*>(cell));
-            return static_cast<int>(aiValueOfLuck(
-                currentHero->getLuck(0, 0, 1),
-                info->m_fountainInfo.m_luck));
-        }
-        return static_cast<int>(aiValueOfLuck(
-            currentHero->getLuck(0, 0, 1), 1));
-    case FOUNTAIN_OF_YOUTH:
-        return valueOfMoveSource(
-            currentHero, 0x4000, 200, moveCost);
-
-    case GARDEN_OF_REVELATION:
-        return valueOfGarden(currentHero, cell);
-    case GARRISON:
-        return valueOfGarrison(currentHero, cell);
-    case IDOL_OF_FORTUNE:
-        return valueOfIdol(currentHero, moveCost);
-    case HERO:
-        return valueOfHeroEvent(currentHero, cell, point.m_x, point.m_y,
-                                   point.m_z, static_cast<short>(moveCost));
-    case HILL_FORT:
-        return valueOfHillFort(currentHero, moveCost);
-    case HUT_OF_MAGI:
-        return valueOfMagusHut(currentHero->m_owner);
-    case LEAN_TO:
-        return valueOfLeanTo(cell, player);
-    case LIBRARY:
-        return valueOfLibrary(currentHero, cell);
-    case LIGHTHOUSE:
-        return valueOfLighthouse(cell);
-    case MAGIC_SCHOOL:
-        return valueOfMagicSchool(currentHero, cell);
-    case MAGIC_SPRING:
-        return getValueOfSpring(
-            currentHero, cell,
-            static_cast<unsigned short>(moveCost));
-    case MAGIC_WELL:
-        return getValueOfWell(
-            currentHero, static_cast<unsigned short>(moveCost));
-    case MERC_CAMP:
-        return valueOfMercenaryCamp(currentHero, cell);
-    case MERMAID:
-        if (currentHero->m_flags & 0x8000)
-            return 0;
-        if (moveCost > currentHero->m_movePoints)
-            return 0;
-        return
-            const_cast<hero*>(currentHero)->luckIncreaseValue(1);
-    case MINE:
-        return valueOfMine(currentHero, cell);
-    case MONSTER:
-        return valueOfMonsters(currentHero, cell, point);
-
-    case MYSTICAL_GARDEN: {
-        const ExtraInfoUnion* info =
-            static_cast<const ExtraInfoUnion*>(
-                static_cast<const void*>(cell));
-        if (!info->gardenIsFull())
-            return 0;
-        return static_cast<long>(
-            (player->m_ai.m_resourceValue[GOLD] * 500.0
-             + player->m_ai.m_resourceValue[GEMS] * 5.0)
-            / 2.0);
-    }
-
-    case OASIS:
-        return valueOfMoveSource(
-            currentHero, 0x80, 400, moveCost);
-    case OBELISK:
-        return valueOfObelisk(cell, currentHero->m_owner);
-    // Windows maps object58 and60 to one arm at0x529134. Mac's
-    // data1+0x4b7dc table also shares their aiValueOfObservatory call.
-    case OBSERVATORY:
-    case PILLAR_OF_FIRE:
-        return
-            aiValueOfObservatory(point, currentHero->m_owner, 20);
-    case POWER_SCHOOL:
-        return valueOfPowerSchool(currentHero, cell);
-    case PRISON:
-        return valueOfPrison(cell, player);
-    case PYRAMID:
-        return valueOfPyramid(currentHero, cell);
-    case RALLY_FLAG:
-        if (moveCost > currentHero->m_movePoints)
-            return 0;
-        return valueOfRallyFlag(currentHero, moveCost);
-    case REFUGEE_CAMP:
-        return valueOfRefugeeCamp(currentHero, cell);
-    case RESOURCE:
-        return valueOfResource(currentHero, cell, player);
-    case SCHOLAR:
-        return static_cast<int>(
-            currentHero->getExperienceIncrement()
-            * currentHero->m_turnExperienceToRvRatio);
-    case SEA_CHEST:
-        return valueOfSeaChest(currentHero, cell);
-    case SEER:
-        return g_game->m_worldMap.m_seerHutList[cell->m_extraInfo].getValue(
-            const_cast<hero*>(currentHero));
-    case SEPULCHER:
-    case SHIPWRECK:
-        return valueOfBank(currentHero, cell);
-    case SHIPYARD: {
-        const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
-            static_cast<const void*>(&cell->m_extraInfo));
-        if (g_game->onSameTeam(
-                info->m_owner, g_netLocalGamePos))
-            return 0;
-        return 1000;
-    }
-    case SHRINE1:
-    case SHRINE2:
-    case SHRINE3:
-        return valueOfShrine(currentHero, cell);
-    case SIREN:
-        return valueOfSirens(currentHero);
-    case SPELL_SCROLL:
-        return valueOfScroll(currentHero, cell);
-    case STABLES:
-        return valueOfStables(currentHero, moveCost);
-    case TEMPLE:
-        if (currentHero->m_flags & 0x100)
-            return 0;
-        if (currentHero->m_flags & 0x4000000)
-            return 0;
-        if (moveCost > currentHero->m_movePoints)
-            return 0;
-        return
-            const_cast<hero*>(currentHero)->moraleIncreaseValue(2);
-    case TOWN:
-        return valueOfTown(
-            currentHero, point.m_x, point.m_y, point.m_z,
-            static_cast<short>(moveCost));
-    case TRAINING_GROUNDS: {
-        const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
-            static_cast<const void*>(cell));
-        if (currentHero->m_trainingGroundsFlags
-            & (1UL << info->getItemId()))
-            return 0;
-        return static_cast<int>(
-            currentHero->m_turnExperienceToRvRatio * 1000.0f);
-    }
-    case TREASURE_CHEST:
-        return valueOfTreasure(currentHero);
-    case TREE_OF_KNOWLEDGE:
-        return valueOfTree(currentHero, cell);
-    case UNIVERSITY:
-        return valueOfUniversity(currentHero, cell);
-    case WAGON:
-        return valueOfWagon(cell, currentHero->m_owner);
-    case WAR_MACHINE_FACTORY:
-        return valueOfWarFactory(currentHero, moveCost);
-    case WAR_SCHOOL:
-        return valueOfWarSchool(currentHero, cell);
-    case WARRIOR_TOMB: {
-        const ExtraInfoUnion* info =
-            static_cast<const ExtraInfoUnion*>(
-                static_cast<const void*>(cell));
-        if (info->playerKnowsCell(g_netLocalGamePos))
-            return 0;
-        // An unvisited tomb shares the survivor appraisal below.
-    }
-    case SHIPWRECK_SURVIVOR:
-        if (const_cast<hero*>(currentHero)
-                ->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
-            return 0;
-        return static_cast<int>(g_currentPlayer->m_ai.m_turnValueOfAvgArtifact);
-    case WATER_WHEEL: {
-        const ExtraInfoUnion* info =
-            static_cast<const ExtraInfoUnion*>(
-                static_cast<const void*>(cell));
-        if (info->playerKnowsCell(g_netLocalGamePos)) {
-            return static_cast<long>(
-                info->getWheelGold() * player->m_ai.m_resourceValue[GOLD]);
-        }
-        return static_cast<long>(
-            player->m_ai.m_resourceValue[GOLD] * 1000.0);
-    }
-    case WATERING_HOLE:
-        return valueOfMoveSource(
-            currentHero, 0x40, 200, moveCost);
-    case WINDMILL: {
-        const ExtraInfoUnion* info =
-            static_cast<const ExtraInfoUnion*>(
-                static_cast<const void*>(cell));
-        if (info->playerKnowsCell(g_netLocalGamePos)) {
-            if (info->getWindmillAmount() == 0)
+            if (!info->gardenIsFull())
                 return 0;
+            return static_cast<long>(
+                (player->m_ai.m_resourceValue[GOLD] * 500.0
+                 + player->m_ai.m_resourceValue[GEMS] * 5.0)
+                / 2.0);
         }
-        return g_currentPlayer->m_ai.m_averageResourceValue * 9 / 2;
-    }
-    case WITCH_HUT:
-        return valueOfWitchHut(currentHero, cell);
+
+        case OASIS:
+            return valueOfMoveSource(
+                currentHero, 0x80, 400, moveCost);
+        case OBELISK:
+            return valueOfObelisk(cell, currentHero->m_owner);
+        // Windows maps object58 and60 to one arm at0x529134. Mac's
+        // data1+0x4b7dc table also shares their aiValueOfObservatory call.
+        case OBSERVATORY:
+        case PILLAR_OF_FIRE:
+            return
+                aiValueOfObservatory(point, currentHero->m_owner, 20);
+        case POWER_SCHOOL:
+            return valueOfPowerSchool(currentHero, cell);
+        case PRISON:
+            return valueOfPrison(cell, player);
+        case PYRAMID:
+            return valueOfPyramid(currentHero, cell);
+        case RALLY_FLAG:
+            if (moveCost > currentHero->m_movePoints)
+                return 0;
+            return valueOfRallyFlag(currentHero, moveCost);
+        case REFUGEE_CAMP:
+            return valueOfRefugeeCamp(currentHero, cell);
+        case RESOURCE:
+            return valueOfResource(currentHero, cell, player);
+        case SCHOLAR:
+            return static_cast<int>(
+                currentHero->getExperienceIncrement()
+                * currentHero->m_turnExperienceToRvRatio);
+        case SEA_CHEST:
+            return valueOfSeaChest(currentHero, cell);
+        case SEER:
+            return g_game->m_worldMap.m_seerHutList[cell->m_extraInfo].getValue(
+                const_cast<hero*>(currentHero));
+        case SEPULCHER:
+        case SHIPWRECK:
+            return valueOfBank(currentHero, cell);
+        case SHIPYARD: {
+            const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
+                static_cast<const void*>(&cell->m_extraInfo));
+            if (g_game->onSameTeam(
+                    info->m_owner, g_netLocalGamePos))
+                return 0;
+            return 1000;
+        }
+        case SHRINE1:
+        case SHRINE2:
+        case SHRINE3:
+            return valueOfShrine(currentHero, cell);
+        case SIREN:
+            return valueOfSirens(currentHero);
+        case SPELL_SCROLL:
+            return valueOfScroll(currentHero, cell);
+        case STABLES:
+            return valueOfStables(currentHero, moveCost);
+        case TEMPLE:
+            if (currentHero->m_flags & 0x100)
+                return 0;
+            if (currentHero->m_flags & 0x4000000)
+                return 0;
+            if (moveCost > currentHero->m_movePoints)
+                return 0;
+            return
+                const_cast<hero*>(currentHero)->moraleIncreaseValue(2);
+        case TOWN:
+            return valueOfTown(
+                currentHero, point.m_x, point.m_y, point.m_z,
+                static_cast<short>(moveCost));
+        case TRAINING_GROUNDS: {
+            const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
+                static_cast<const void*>(cell));
+            if (currentHero->m_trainingGroundsFlags
+                & (1UL << info->getItemId()))
+                return 0;
+            return static_cast<int>(
+                currentHero->m_turnExperienceToRvRatio * 1000.0f);
+        }
+        case TREASURE_CHEST:
+            return valueOfTreasure(currentHero);
+        case TREE_OF_KNOWLEDGE:
+            return valueOfTree(currentHero, cell);
+        case UNIVERSITY:
+            return valueOfUniversity(currentHero, cell);
+        case WAGON:
+            return valueOfWagon(cell, currentHero->m_owner);
+        case WAR_MACHINE_FACTORY:
+            return valueOfWarFactory(currentHero, moveCost);
+        case WAR_SCHOOL:
+            return valueOfWarSchool(currentHero, cell);
+        case WARRIOR_TOMB: {
+            const ExtraInfoUnion* info =
+                static_cast<const ExtraInfoUnion*>(
+                    static_cast<const void*>(cell));
+            if (info->playerKnowsCell(g_netLocalGamePos))
+                return 0;
+            // An unvisited tomb shares the survivor appraisal below.
+        }
+        case SHIPWRECK_SURVIVOR:
+            if (const_cast<hero*>(currentHero)
+                    ->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
+                return 0;
+            return static_cast<int>(g_currentPlayer->m_ai.m_turnValueOfAvgArtifact);
+        case WATER_WHEEL: {
+            const ExtraInfoUnion* info =
+                static_cast<const ExtraInfoUnion*>(
+                    static_cast<const void*>(cell));
+            if (info->playerKnowsCell(g_netLocalGamePos)) {
+                return static_cast<long>(
+                    info->getWheelGold() * player->m_ai.m_resourceValue[GOLD]);
+            }
+            return static_cast<long>(
+                player->m_ai.m_resourceValue[GOLD] * 1000.0);
+        }
+        case WATERING_HOLE:
+            return valueOfMoveSource(
+                currentHero, 0x40, 200, moveCost);
+        case WINDMILL: {
+            const ExtraInfoUnion* info =
+                static_cast<const ExtraInfoUnion*>(
+                    static_cast<const void*>(cell));
+            if (info->playerKnowsCell(g_netLocalGamePos)) {
+                if (info->getWindmillAmount() == 0)
+                    return 0;
+            }
+            return g_currentPlayer->m_ai.m_averageResourceValue * 9 / 2;
+        }
+        case WITCH_HUT:
+            return valueOfWitchHut(currentHero, cell);
+        }
     }
     return 0;
 }
