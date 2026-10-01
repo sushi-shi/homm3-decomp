@@ -121,20 +121,12 @@ MAC_ADDRESS(0x218434, 0xdc)
 int soundManager::convertVolume(int volumeValue, int volumeType)
 {
     int result = 0;
-    if (volumeType == VOLUME_TYPE_101) {
-        const int& setting = g_config.m_musicVolume;
-        if (setting >= 1 && setting <= 10) {
-            result = (setting + 1) * volumeValue / 10;
-            if (result < 1)
-                result = 1;
-        }
-    } else {
-        const int& setting = g_config.m_soundVolume;
-        if (setting >= 1 && setting <= 10) {
-            result = (setting + 1) * volumeValue / 10;
-            if (result < 1)
-                result = 1;
-        }
+    const int& setting = volumeType == VOLUME_TYPE_101
+                         ? g_config.m_musicVolume : g_config.m_soundVolume;
+    if (setting >= 1 && setting <= 10) {
+        result = (setting + 1) * volumeValue / 10;
+        if (result < 1)
+            result = 1;
     }
     if (result < 0)
         result = 0;

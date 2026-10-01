@@ -1202,6 +1202,19 @@ existing virtual slots, native interfaces, field visibility and storage remain
 unchanged. Address, name, lobby-settings and compound-address readers retain
 their distinct allocation/error protocols.
 
+## Shared volume-setting calculation
+
+`convertVolume()` now selects the music/effects setting by reference and applies
+one copy of the existing range-and-scale calculation. Only `VOLUME_TYPE_101`
+selects music; every other type still selects effects. Settings outside `1..10`
+produce zero, valid settings retain `(setting + 1) * volumeValue / 10` and its
+minimum-one rule, and the original final `0..127` clamp remains.
+
+All sample and music callers keep using the existing native operation, including
+sample playback's separate zero-volume branch. This is a project-inferred
+consolidation inside the established owner function, without another helper,
+interface change, arithmetic widening or normalization of the stored settings.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
