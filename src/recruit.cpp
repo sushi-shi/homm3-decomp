@@ -107,10 +107,15 @@ void recruitSliderCallback(int state, heroWindow* parentWindow)
 // DC lines 247/249 implement a four-element clear loop, not four source
 // assignments; Mac 0x14e9c8..0x14e9d4 unrolls it. Recovering that local
 // improves 99.2570% -> 99.9271%, two states/two reproduced objects.
-// All 185 CFG blocks, 161 calls and 203 relocations agree. The remaining
+// Before restoring the registration helper, all 185 CFG blocks, 161 calls
+// and 203 relocations agreed at 99.9271%. The remaining
 // immediate differences start with allocation/conversion homes at [ebp+0xc]
 // and [ebp+0x10] versus retail's [ebp+0x8] and [ebp+0xc]. Keep the native
 // loop rather than flattening it to four source stores.
+// With canonical registration restored, its addWidget/MemError expansion
+// agrees, but the maximum-button border append now expands vector::insert
+// where retail retains it (91.9444%). Preserve the helper while recovering
+// the surrounding source model; do not paste its registration loop back.
 VA(0x0054e850, 0x1295)
 DC_ADDRESS(0x118bb4, 0xc08)
 MAC_ADDRESS(0x14d310, 0x186c)  // unique x86/DC structure + constructor call

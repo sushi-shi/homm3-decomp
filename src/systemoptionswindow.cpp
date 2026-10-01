@@ -39,6 +39,9 @@
 // Text subscripts keep the public operator[] -> getText -> vector[] chain.
 // Native Mac 0x1ab964 onward retains the vector indexer; DC names the
 // outer operator on the corresponding label and confirmation statements.
+// Canonical registration expands to the correct addWidget/MemError calls.
+// Current 88.8025% first differs in reserve's nested destruction/size
+// admissions, before widget construction; the registration call is retained.
 // E:\gamedcs\systemoptionswindow.cpp:43
 VA(0x005b1790, 0x187C)
 DC_ADDRESS(0x15f588, 0x10ac)
