@@ -1359,6 +1359,9 @@ public:
     int getWidth() const { return m_mapWidth; }
     int getHeight() const { return m_mapHeight; }
     int getNumberLevels() const { return m_numberLevels; }
+    // Project-inferred half-open rectangle clipping shared by map scans.
+    TRmgZoneBounds getClippedBounds(int minimumX, int minimumY,
+                                    int maximumX, int maximumY) const;
 
     TRmgMapItem* getMapItem(int x, int y);
     inline TRmgMapItem* getMapItem(int x, int y, int z)

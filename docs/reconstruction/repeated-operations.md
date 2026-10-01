@@ -1381,6 +1381,36 @@ inside different filters, with the RoE loop's shared counter and skipped slot
 117 feeding the eligibility scan. They do not form the connection or position
 reset operation and retain their original loop behavior.
 
+## RMG clipped scan rectangles
+
+Nineteen integer-coordinate rectangle constructions now share
+`type_random_map::getClippedBounds()`. The operation clamps lower coordinates
+against zero and upper coordinates against the owning map's width/height,
+returning the existing half-open `TRmgZoneBounds` value. It does not force
+inverted or wholly out-of-map intervals into nonempty ranges. Dimension getters
+remain nested in the shared body, and the map's dimension fields stay private.
+The name and ordinary source placement are project inferences, without a new
+native-address or explicit-inline claim.
+
+Callers retain their actual requested rectangles: coast and path neighborhoods,
+river painting's 3-by-3 and 5-by-5 areas, object-footprint clearance, water-zone
+surroundings, island radii, obstacle scans, border repair, connection clearing,
+additional-town eligibility and the row below a mine. Signed conversions from
+the adapter's unsigned grid point remain before the arithmetic. Prototype and
+map dimension getters were read and return signed integers without mutation;
+these calls and local-coordinate reads can feed the shared bounds calculation
+without changing caller-visible state. Existing named upper/lower point
+constructions and their scopes remain in the obstacle/water-border callers.
+
+Treasure-group overlap clips against the group's own map after translating the
+destination map limits into group coordinates. Object insertion still precedes
+the bounds calculation; per-cell ownership and flag snapshots remain inside the
+unchanged loop. Water preparation's interior margin and subterranean-gate bounds
+intersection are separate domains and retain their different lower limits.
+The junction entrance still uses its explicit `cppMin<long>`/`cppMax<long>`
+path; this pass does not erase that typed-helper path in favor of the new
+integer-coordinate interface.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

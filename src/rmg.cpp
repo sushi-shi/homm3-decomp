@@ -546,6 +546,19 @@ unsigned char type_random_map::hasConnectedOutline(
     return 1;
 }
 
+// Project-inferred shared map clipping. Bounds stay half-open; inverted or
+// entirely out-of-map ranges are not normalized into nonempty rectangles.
+TRmgZoneBounds type_random_map::getClippedBounds(int minimumX, int minimumY,
+                                                int maximumX, int maximumY) const
+{
+    TRmgZoneBounds bounds;
+    bounds.m_minimumX = max(minimumX, 0);
+    bounds.m_minimumY = max(minimumY, 0);
+    bounds.m_maximumX = min(maximumX, getWidth());
+    bounds.m_maximumY = min(maximumY, getHeight());
+    return bounds;
+}
+
 VA(0x00531310, 0x14B)
 MAC_ADDRESS(0x22d778, 0x234)
 void type_random_map::markCoastalTiles()
@@ -556,11 +569,9 @@ void type_random_map::markCoastalTiles()
         for (position.setY(0); position.getY() < m_mapHeight; position.setY(position.getY() + 1)) {
             for (position.setX(0); position.getX() < m_mapWidth; position.setX(position.getX() + 1), ++item) {
                 if (item->getLandType() == eTerrainWater) {
-                    TRmgZoneBounds bounds;
-                    bounds.m_minimumX = max(position.getX() - 1, 0);
-                    bounds.m_minimumY = max(position.getY() - 1, 0);
-                    bounds.m_maximumX = min(position.getX() + 2, m_mapWidth);
-                    bounds.m_maximumY = min(position.getY() + 2, m_mapHeight);
+                    TRmgZoneBounds bounds = getClippedBounds(
+                        position.getX() - 1, position.getY() - 1,
+                        position.getX() + 2, position.getY() + 2);
                     for (int nearY = bounds.m_minimumY; nearY < bounds.m_maximumY; ++nearY) {
                         for (int nearX = bounds.m_minimumX; nearX < bounds.m_maximumX; ++nearX) {
                             TRmgMapItem* neighbor = getMapItem(nearX, nearY, position.m_z);
@@ -775,11 +786,9 @@ void type_random_map::openPathPatch(int x, int y, int level)
 {
     TRmgMapItem* item = getMapItem(x, y, level);
     item->openPath();
-    TRmgZoneBounds bounds;
-    bounds.m_minimumX = max(x - 1, 0);
-    bounds.m_minimumY = max(y - 1, 0);
-    bounds.m_maximumX = min(x + 2, m_mapWidth);
-    bounds.m_maximumY = min(y + 2, m_mapHeight);
+    TRmgZoneBounds bounds = getClippedBounds(
+        x - 1, y - 1,
+        x + 2, y + 2);
     for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
         for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
             TRmgMapItem* nearby = getMapItem(column, row, level);
@@ -794,11 +803,9 @@ void type_random_map::markBorderPatch(TRmgMapPosition position)
 {
     TRmgMapItem* item = getMapItem(position);
     item->markBorder();
-    TRmgZoneBounds bounds;
-    bounds.m_minimumX = max(position.getX() - 1, 0);
-    bounds.m_minimumY = max(position.getY() - 1, 0);
-    bounds.m_maximumX = min(position.getX() + 2, m_mapWidth);
-    bounds.m_maximumY = min(position.getY() + 2, m_mapHeight);
+    TRmgZoneBounds bounds = getClippedBounds(
+        position.getX() - 1, position.getY() - 1,
+        position.getX() + 2, position.getY() + 2);
     for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
         for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
             TRmgMapItem* nearby = getMapItem(column, row, position.m_z);
@@ -1076,11 +1083,9 @@ void TRmgMapAdapter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& t
     item.setRiver(terrain, frame, flipX, flipY);
     if (tile.getTerrain() != 0) {
         {
-            TRmgZoneBounds bounds;
-            bounds.m_minimumX = max(static_cast<int>(point.getX()) - 1, 0);
-            bounds.m_minimumY = max(static_cast<int>(point.getY()) - 1, 0);
-            bounds.m_maximumX = min(static_cast<int>(point.getX()) + 2, m_map->getWidth());
-            bounds.m_maximumY = min(static_cast<int>(point.getY()) + 2, m_map->getHeight());
+            TRmgZoneBounds bounds = m_map->getClippedBounds(
+                static_cast<int>(point.getX()) - 1, static_cast<int>(point.getY()) - 1,
+                static_cast<int>(point.getX()) + 2, static_cast<int>(point.getY()) + 2);
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
                 for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
                     TRmgMapItem& neighbour = *m_map->getMapItem(x, y);
@@ -1089,11 +1094,9 @@ void TRmgMapAdapter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& t
             }
         }
         {
-            TRmgZoneBounds bounds;
-            bounds.m_minimumX = max(static_cast<int>(point.getX()) - 2, 0);
-            bounds.m_minimumY = max(static_cast<int>(point.getY()) - 2, 0);
-            bounds.m_maximumX = min(static_cast<int>(point.getX()) + 3, m_map->getWidth());
-            bounds.m_maximumY = min(static_cast<int>(point.getY()) + 3, m_map->getHeight());
+            TRmgZoneBounds bounds = m_map->getClippedBounds(
+                static_cast<int>(point.getX()) - 2, static_cast<int>(point.getY()) - 2,
+                static_cast<int>(point.getX()) + 3, static_cast<int>(point.getY()) + 3);
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
                 for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
                     TRmgMapItem& neighbour = *m_map->getMapItem(x, y);
@@ -3357,11 +3360,10 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
             TRmgMapPosition candidatePosition = positions[index];
             TObjectType* prototype = properties->m_prototype;
             addObject(new type_object(properties), candidatePosition);
-            TRmgZoneBounds bounds;
-            bounds.m_minimumX = max(candidatePosition.getX() - prototype->getWidth(), 0);
-            bounds.m_minimumY = max(candidatePosition.getY() - prototype->getHeight(), 0);
-            bounds.m_maximumX = min(candidatePosition.getX() + 2, m_map.getWidth());
-            bounds.m_maximumY = min(candidatePosition.getY() + 2, m_map.getHeight());
+            TRmgZoneBounds bounds = m_map.getClippedBounds(
+                candidatePosition.getX() - prototype->getWidth(),
+                candidatePosition.getY() - prototype->getHeight(),
+                candidatePosition.getX() + 2, candidatePosition.getY() + 2);
             candidatePosition.m_z = position.m_z;
             for (candidatePosition.setY(bounds.m_minimumY);
                 candidatePosition.getY() < bounds.m_maximumY; candidatePosition.setY(candidatePosition.getY() + 1)) {
@@ -5455,11 +5457,9 @@ void type_random_map_generator::prepareWaterZoneConnections(TRmgZone* zone)
             item->setConnectionPathState(32000, 0, 0);
         }
     }
-    TRmgZoneBounds surrounding;
-    surrounding.m_minimumX = max(bounds.m_minimumX - 1, 0);
-    surrounding.m_minimumY = max(bounds.m_minimumY - 1, 0);
-    surrounding.m_maximumX = min(bounds.m_maximumX + 1, m_map.getWidth());
-    surrounding.m_maximumY = min(bounds.m_maximumY + 1, m_map.getHeight());
+    TRmgZoneBounds surrounding = m_map.getClippedBounds(
+        bounds.m_minimumX - 1, bounds.m_minimumY - 1,
+        bounds.m_maximumX + 1, bounds.m_maximumY + 1);
     for (position.setY(surrounding.m_minimumY); position.getY() < surrounding.m_maximumY; position.setY(position.getY() + 1)) {
         for (position.setX(surrounding.m_minimumX); position.getX() < surrounding.m_maximumX; position.setX(position.getX() + 1)) {
             TRmgMapItem* item = m_map.getMapItem(position);
@@ -5487,11 +5487,9 @@ void type_random_map_generator::prepareWaterZoneConnections(TRmgZone* zone)
         int radius = rand() % range + 3;
         if (radius > 6)
             radius = 6;
-        TRmgZoneBounds island;
-        island.m_minimumX = max(position.getX() - radius, 0);
-        island.m_minimumY = max(position.getY() - radius, 0);
-        island.m_maximumX = min(position.getX() + radius, m_map.getWidth());
-        island.m_maximumY = min(position.getY() + radius, m_map.getHeight());
+        TRmgZoneBounds island = m_map.getClippedBounds(
+            position.getX() - radius, position.getY() - radius,
+            position.getX() + radius, position.getY() + radius);
         createWaterZoneIsland(island, position.m_z);
         floodWaterZoneDistances(position, zoneIndex);
     }
@@ -5522,13 +5520,9 @@ void type_random_map_generator::expandObstacleClearance()
                 int zoneIndex = current->m_zoneState.m_zone;
                 if (zoneIndex < 0 || current->getLandType() == eTerrainWater)
                     continue;
-                TRmgZoneBounds bounds;
-                {
-                    bounds.m_minimumY = max(position.getY() - 1, 0);
-                    bounds.m_minimumX = max(position.getX() - 1, 0);
-                    bounds.m_maximumY = min(position.getY() + 2, m_map.getHeight());
-                    bounds.m_maximumX = min(position.getX() + 2, m_map.getWidth());
-                }
+                TRmgZoneBounds bounds = m_map.getClippedBounds(
+                    position.getX() - 1, position.getY() - 1,
+                    position.getX() + 2, position.getY() + 2);
                 TRmgZone* zone = m_zones[zoneIndex];
                 unsigned char found = 0;
                 nearby.m_z = position.m_z;
@@ -5551,12 +5545,9 @@ void type_random_map_generator::expandObstacleClearance()
                 if (!found)
                     continue;
                 current->markBorder();
-                {
-                    bounds.m_minimumY = max(position.getY(), 0);
-                    bounds.m_minimumX = max(position.getX(), 0);
-                    bounds.m_maximumY = min(position.getY() + 1, m_map.getHeight());
-                    bounds.m_maximumX = min(position.getX() + 1, m_map.getWidth());
-                }
+                bounds = m_map.getClippedBounds(
+                    position.getX(), position.getY(),
+                    position.getX() + 1, position.getY() + 1);
                 for (nearby.setY(bounds.m_minimumY); nearby.getY() < bounds.m_maximumY; nearby.setY(nearby.getY() + 1)) {
                     for (nearby.setX(bounds.m_minimumX); nearby.getX() < bounds.m_maximumX; nearby.setX(nearby.getX() + 1)) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
@@ -5568,10 +5559,9 @@ void type_random_map_generator::expandObstacleClearance()
                 }
                 {
                     TPoint upper(position.getX() + 2, position.getY() + 2);
-                    bounds.m_minimumY = max(position.getY() - 1, 0);
-                    bounds.m_minimumX = max(position.getX() - 1, 0);
-                    bounds.m_maximumY = min(upper.getY(), m_map.getHeight());
-                    bounds.m_maximumX = min(upper.getX(), m_map.getWidth());
+                    bounds = m_map.getClippedBounds(
+                        position.getX() - 1, position.getY() - 1,
+                        upper.getX(), upper.getY());
                 }
                 for (nearby.setY(bounds.m_minimumY); nearby.getY() < bounds.m_maximumY; nearby.setY(nearby.getY() + 1)) {
                     for (nearby.setX(bounds.m_minimumX); nearby.getX() < bounds.m_maximumX; nearby.setX(nearby.getX() + 1)) {
@@ -5618,12 +5608,8 @@ void type_random_map_generator::repairWaterZoneBorders()
                 {
                     int row = position.getY();
                     TPoint lower(position.getX() - 1, row - 1);
-                    bounds.m_minimumY = max(lower.getY(), 0);
-                    bounds.m_minimumX = max(lower.getX(), 0);
-                    int height = m_map.getHeight();
-                    bounds.m_maximumY = min(row + 2, height);
-                    int width = m_map.getWidth();
-                    bounds.m_maximumX = min(position.getX() + 2, width);
+                    bounds = m_map.getClippedBounds(
+                        lower.getX(), lower.getY(), position.getX() + 2, row + 2);
                 }
                 nearby.m_z = position.m_z;
                 TRmgZone* zone = m_zones[zoneIndex];
@@ -5653,12 +5639,8 @@ void type_random_map_generator::repairWaterZoneBorders()
                 {
                     int row = position.getY();
                     TPoint lower(position.getX() - 1, row - 1);
-                    bounds.m_minimumY = max(lower.getY(), 0);
-                    bounds.m_minimumX = max(lower.getX(), 0);
-                    int height = m_map.getHeight();
-                    bounds.m_maximumY = min(row + 2, height);
-                    int width = m_map.getWidth();
-                    bounds.m_maximumX = min(position.getX() + 2, width);
+                    bounds = m_map.getClippedBounds(
+                        lower.getX(), lower.getY(), position.getX() + 2, row + 2);
                 }
                 for (nearby.setY(bounds.m_minimumY); nearby.getY() < bounds.m_maximumY; nearby.setY(nearby.getY() + 1)) {
                     for (nearby.setX(bounds.m_minimumX); nearby.getX() < bounds.m_maximumX; nearby.setX(nearby.getX() + 1)) {
@@ -5674,12 +5656,8 @@ void type_random_map_generator::repairWaterZoneBorders()
                 {
                     int row = position.getY();
                     TPoint lower(position.getX() - 2, row - 2);
-                    bounds.m_minimumY = max(lower.getY(), 0);
-                    bounds.m_minimumX = max(lower.getX(), 0);
-                    int height = m_map.getHeight();
-                    bounds.m_maximumY = min(row + 3, height);
-                    int width = m_map.getWidth();
-                    bounds.m_maximumX = min(position.getX() + 3, width);
+                    bounds = m_map.getClippedBounds(
+                        lower.getX(), lower.getY(), position.getX() + 3, row + 3);
                 }
                 for (nearby.setY(bounds.m_minimumY); nearby.getY() < bounds.m_maximumY; nearby.setY(nearby.getY() + 1)) {
                     for (nearby.setX(bounds.m_minimumX); nearby.getX() < bounds.m_maximumX; nearby.setX(nearby.getX() + 1)) {
@@ -5920,11 +5898,9 @@ void type_random_map_generator::openConnectionPath(
         item->openPath();
         TRmgMapPosition previous = item->getPreviousTile();
         if (!narrow) {
-            TRmgZoneBounds bounds;
-            bounds.m_minimumX = max(position.getX() - 1, 0);
-            bounds.m_minimumY = max(position.getY() - 1, 0);
-            bounds.m_maximumX = min(position.getX() + 2, m_map.getWidth());
-            bounds.m_maximumY = min(position.getY() + 2, m_map.getHeight());
+            TRmgZoneBounds bounds = m_map.getClippedBounds(
+                position.getX() - 1, position.getY() - 1,
+                position.getX() + 2, position.getY() + 2);
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
                 for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
                     TRmgMapItem* nearby = m_map.getMapItem(x, y, position.m_z);
@@ -6052,11 +6028,9 @@ MAC_ADDRESS(0x243824, 0x2d4) // anchor-callee createGroundConnection; thiscall, 
 void type_random_map_generator::markBorderObjectArea(
     TRmgMapPosition position, int direction)
 {
-    TRmgZoneBounds bounds;
-    bounds.m_minimumX = max(position.getX() - 1, 0);
-    bounds.m_maximumX = min(position.getX() + 2, m_map.getWidth());
-    bounds.m_minimumY = max(position.getY() - 1, 0);
-    bounds.m_maximumY = min(position.getY() + 2, m_map.getHeight());
+    TRmgZoneBounds bounds = m_map.getClippedBounds(
+        position.getX() - 1, position.getY() - 1,
+        position.getX() + 2, position.getY() + 2);
     for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
         for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
             TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
@@ -7673,11 +7647,9 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
             int score = item->m_zoneState.m_score;
             if (score < spacing || !m_map.canPlaceObject(properties, position, zone))
                 continue;
-            TRmgZoneBounds nearby;
-            nearby.m_minimumY = max(entrance.getY() - 1, 0);
-            nearby.m_minimumX = max(entrance.getX() - 1, 0);
-            nearby.m_maximumY = min(entrance.getY() + 2, m_map.getHeight());
-            nearby.m_maximumX = min(entrance.getX() + 2, m_map.getWidth());
+            TRmgZoneBounds nearby = m_map.getClippedBounds(
+                entrance.getX() - 1, entrance.getY() - 1,
+                entrance.getX() + 2, entrance.getY() + 2);
             unsigned char valid = 1;
             for (int y = nearby.m_minimumY; y < nearby.m_maximumY; ++y) {
                 for (int x = nearby.m_minimumX; x < nearby.m_maximumX; ++x) {
@@ -7955,11 +7927,9 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     if (!resourceProperties)
         return 1;
     TRmgMapPosition position = mine->getPosition();
-    TRmgZoneBounds bounds;
-    bounds.m_minimumY = max(position.getY() + 1, 0);
-    bounds.m_maximumY = min(position.getY() + 2, m_map.getHeight());
-    bounds.m_minimumX = max(position.getX() - prototype->getWidth(), 0);
-    bounds.m_maximumX = min(position.getX() + 2, m_map.getWidth());
+    TRmgZoneBounds bounds = m_map.getClippedBounds(
+        position.getX() - prototype->getWidth(), position.getY() + 1,
+        position.getX() + 2, position.getY() + 2);
     for (position.setY(bounds.m_minimumY); position.getY() < bounds.m_maximumY; position.setY(position.getY() + 1)) {
         for (position.setX(bounds.m_minimumX); position.getX() < bounds.m_maximumX && placed <= 2; position.setX(position.getX() + 1)) {
             if (rand() % 2 == 0 && m_map.canPlaceObject(resourceProperties, position, zone)) {
@@ -8473,11 +8443,9 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
         objectPosition.m_z = position.m_z;
         addObject(object, objectPosition);
     }
-    TRmgZoneBounds bounds;
-    bounds.m_minimumX = max(0, -position.getX());
-    bounds.m_minimumY = max(0, -position.getY());
-    bounds.m_maximumX = min(group->m_map.getWidth(), m_map.getWidth() - position.getX());
-    bounds.m_maximumY = min(group->m_map.getHeight(), m_map.getHeight() - position.getY());
+    TRmgZoneBounds bounds = group->m_map.getClippedBounds(
+        -position.getX(), -position.getY(),
+        m_map.getWidth() - position.getX(), m_map.getHeight() - position.getY());
     TPoint point;
     for (point.setY(bounds.m_minimumY); point.getY() < bounds.m_maximumY; point.setY(point.getY() + 1)) {
         for (point.setX(bounds.m_minimumX); point.getX() < bounds.m_maximumX; point.setX(point.getX() + 1)) {
