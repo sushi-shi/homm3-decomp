@@ -1285,8 +1285,7 @@ int oldmain()
                 campaignScored = 1;
             } else {
 
-                if (g_executive->addManager(g_advManager, -1))
-                    shutDown((*g_generalText)[GENERAL_TEXT_ADD_MANAGER_ERROR]);
+                g_executive->addManagerOrShutDown(g_advManager);
                 unloadProgressBar();
 
                 if (g_remoteOn) {

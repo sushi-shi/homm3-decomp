@@ -1033,6 +1033,33 @@ remain public. The four new method names and ordinary sound-TU definitions are
 project inferences, with no claimed native addresses or explicit inline
 qualifiers. Constructor and opening initialization remain owner-local writes.
 
+## Manager insertion, detachment and resumption
+
+Eight manager-add sites share `executive::addManagerOrShutDown()`: four dialog
+stack additions, new-manager entry, both saved-manager restoration paths and
+adventure entry from the main menu. It keeps default priority `-1`, calls the
+existing insertion operation and looks up the common error text only on failure.
+Input/mouse/window startup retains its distinct error messages. Shutdown may
+return when already in progress, so neither the helper nor its callers acquire
+an unconditional return, throw or no-return annotation. Dialog stack snapshots,
+manager receivers and exception boundaries remain in their original callers.
+
+Both removal branches share `baseManager::clearLinks()` after close and neighbor
+repair, clearing previous then next. Head/tail repair stays in the executive;
+construction retains its next-then-previous member initializers, and dialog
+restoration keeps its saved links rather than clearing them. Dreamcast
+`baseManager` `0x1866` / field list `0x1867` explicitly declares both links public;
+`executive` `0x51da` / field list `0x51e4` also declares its list state public.
+Their visibility, storage, and virtual slots are unchanged.
+
+Normal return and exception unwinding share TU-local `resumeAdventureManager()`:
+set active status through the existing setter, then wake the adventure window's
+widgets. Global accesses remain separate. Success-only redraw, menu, hover,
+bottom-view and fade restoration stays in the normal branch; exception handling
+retains its rethrow and outer current-manager restoration. All three helper
+names and ordinary source placements are project inferences, without native
+address or explicit-inline claims.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

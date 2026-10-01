@@ -19,6 +19,8 @@ public:
     int initSystem();
     void shutDownSystem();
     int addManager(baseManager* newManager, int newPriority);
+    // Project-inferred default-priority add with the common failure message.
+    void addManagerOrShutDown(baseManager* newManager);
     int doDialog(baseManager* newDialog);
     void removeManager(baseManager* killManager);
     void callManager(baseManager* newManager);
