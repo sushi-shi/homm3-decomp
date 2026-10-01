@@ -759,7 +759,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
                 continue;
         }
 
-        unsigned char adjacentMonster = 0;
+        bool adjacentMonster = false;
         if (cell.m_inBoat) {
             if (g_advManager->getCell(cell.m_point)->m_groundSet
                 != eTerrainWater)
@@ -776,7 +776,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
             && cell.m_point != start
             && g_advManager->findAdjacentMonster(
                 cell.m_point, &monster, cell.m_monster))
-            adjacentMonster = 1;
+            adjacentMonster = true;
 
         testPossibleDirections(currentHero, cell, turnMobility,
                                maxMobility, adjacentMonster, monster,

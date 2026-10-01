@@ -529,7 +529,7 @@ DC_ADDRESS(0x09f718, 0xbb0)
 MAC_ADDRESS(0x0c552c, 0xf80)  // anchor-callee
 void searchArray::testPossibleDirections(const hero* currentHero, pathCell& source,
                                          long turnMobility, long maxMobility,
-                                         unsigned char adjacentMonster,
+                                         bool adjacentMonster,
                                          type_point monsterLocation,
                                          TSkillMastery pathfinding,
                                          type_search_type searchType,
