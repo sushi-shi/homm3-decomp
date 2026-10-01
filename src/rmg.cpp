@@ -307,7 +307,7 @@ static const char* g_rmgTownNames[9] = {
 // helper; its original name and declaration are not in the DC corpus.
 static bool isRmgTemplateFieldSet(const char* value)
 {
-    return value && value[0] && value[0] != ' ';
+    return value && isResourceFieldSet(value);
 }
 
 } // namespace
@@ -3045,7 +3045,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
     TTerrainType terrain;
     for (; row < sheet->getNumberOfRows();) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
-        if (values[0][0] == ' ' || values[0][0] == 0)
+        if (!isResourceFieldSet(values[0]))
             break;
         TRmgObjectPlacementRule rule;
         rule.m_index = row - 3;
@@ -3553,8 +3553,8 @@ static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
 {
     for (int connectionRow = firstRow; connectionRow < endRow; ++connectionRow) {
         const TSpreadsheetResource::TStringVector& fields = sheet->getRow(connectionRow);
-        if (fields.size() > 84 && fields[76][0]
-            && fields[76][0] != ' ' && fields[77][0]) {
+        if (fields.size() > 84 && isResourceFieldSet(fields[76])
+            && fields[77][0]) {
             int firstZone = atoi(fields[76]);
             int secondZone = atoi(fields[77]);
             TRmgTownSlot* first = mapTemplate->findZone(firstZone);
@@ -3563,8 +3563,8 @@ static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
                 TRmgZoneConnection connection;
                 connection.m_destination = second;
                 connection.m_value = atoi(fields[78]);
-                connection.m_unguarded = fields[79][0] && fields[79][0] != ' ';
-                connection.m_placeBorderObjects = fields[80][0] && fields[80][0] != ' ';
+                connection.m_unguarded = isResourceFieldSet(fields[79]);
+                connection.m_placeBorderObjects = isResourceFieldSet(fields[80]);
                 connection.m_minimumHumanPlayers = atoi(fields[81]);
                 connection.m_maximumHumanPlayers = atoi(fields[82]);
                 connection.m_minimumPlayers = atoi(fields[83]);
@@ -3634,7 +3634,7 @@ void type_random_map_generator::loadTemplates()
         mapTemplate->m_name = values[0];
         int endRow = row + 1;
         while (endRow < sheet->getNumberOfRows()
-            && (!sheet->getRow(endRow)[0][0] || sheet->getRow(endRow)[0][0] == ' '))
+            && !isResourceFieldSet(sheet->getRow(endRow)[0]))
             ++endRow;
         bool accepted = mapSize >= mapTemplate->m_minimumSize
             && mapSize <= mapTemplate->m_maximumSize;

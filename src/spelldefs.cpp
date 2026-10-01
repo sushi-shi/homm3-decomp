@@ -180,9 +180,20 @@ public:
     DC_ADDRESS(0x14e7b0, 0x4)
     char* get() const { return m_string; }
 
+    // Project-inferred allocation/copy used to initialize owned table text.
+    void copyText(const char* source);
+
 private:
     char* m_string;
 };
+
+// Keep the native Set/Get operations and store ownership before copying.
+// Like the existing initialization sequence, this does not release an old value.
+void TAutoStrPtr::copyText(const char* source)
+{
+    set(new char[strlen(source) + 1]);
+    strcpy(get(), source);
+}
 
 }
 
@@ -198,26 +209,24 @@ static void initializeSpellTraits(
     DATA(0x006a350c)
     static TAutoStrPtr spellNames[81];
 
-    spellNames[id].set(new char[strlen(resource[0]) + 1]);
-    strcpy(spellNames[id].get(), resource[0]);
+    spellNames[id].copyText(resource[0]);
     traits.m_name = spellNames[id].get();
 
     DATA(0x006a3654)
     static TAutoStrPtr abbreviatedSpellNames[81];
 
-    abbreviatedSpellNames[id].set(new char[strlen(resource[1]) + 1]);
-    strcpy(abbreviatedSpellNames[id].get(), resource[1]);
+    abbreviatedSpellNames[id].copyText(resource[1]);
     traits.m_abbreviatedName = abbreviatedSpellNames[id].get();
 
     traits.m_level = atoi(resource[2]);
     traits.m_schoolBits = 0;
-    if (resource[3][0] && resource[3][0] != ' ')
+    if (isResourceFieldSet(resource[3]))
         traits.m_schoolBits |= 8;
-    if (resource[4][0] && resource[4][0] != ' ')
+    if (isResourceFieldSet(resource[4]))
         traits.m_schoolBits |= 4;
-    if (resource[5][0] && resource[5][0] != ' ')
+    if (isResourceFieldSet(resource[5]))
         traits.m_schoolBits |= 2;
-    if (resource[6][0] && resource[6][0] != ' ')
+    if (isResourceFieldSet(resource[6]))
         traits.m_schoolBits |= 1;
 
     int column = 7;
@@ -248,9 +257,7 @@ static void initializeSpellTraits(
     static TAutoStrPtr spellDescriptions[81][4];
 
     for (i = 0; i < 4; ++i) {
-        spellDescriptions[id][i].set(
-            new char[strlen(resource[column]) + 1]);
-        strcpy(spellDescriptions[id][i].get(), resource[column]);
+        spellDescriptions[id][i].copyText(resource[column]);
         traits.m_levelDescriptions[i] = spellDescriptions[id][i].get();
         ++column;
     }

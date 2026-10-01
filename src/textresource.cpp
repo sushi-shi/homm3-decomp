@@ -4,6 +4,13 @@
 
 #include "textresource.h"
 
+// Shared by flags, optional names and row delimiters. Nullable formats retain
+// their own pointer guard before this non-null spreadsheet-cell operation.
+bool isResourceFieldSet(const char* value)
+{
+    return value[0] && value[0] != ' ';
+}
+
 // Project-inferred common operation used by pooled table loaders. Preserve
 // one length scan, unsigned byte count and memcpy rather than a second scan.
 unsigned copyResourceString(char* destination, const char* source)

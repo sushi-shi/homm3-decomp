@@ -266,31 +266,36 @@ void widget::dim() const
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
 }
 
+// Project-inferred per-string replacement steps. Borrowed text is detached
+// without deletion; callers change the ownership flag only after both releases.
+void widget::releaseHelpText(char*& text)
+{
+    if (text) {
+        if (m_freeText)
+            delete[] text;
+        text = 0;
+    }
+}
+
+void widget::copyHelpText(char*& destination, const char* source)
+{
+    if (source) {
+        destination = new char[strlen(source) + 1];
+        strcpy(destination, source);
+    }
+}
+
 VA(0x005fe840, 0xE9)
 DC_ADDRESS(0x196ffc, 0xaa)
 MAC_ADDRESS(0x20aad4, 0x110)
 void widget::setHelpText(const char* text, const char* rclick, unsigned char copyText)
 {
-    if (m_rollOver) {
-        if (m_freeText)
-            delete[] m_rollOver;
-        m_rollOver = 0;
-    }
-    if (m_rightClick) {
-        if (m_freeText)
-            delete[] m_rightClick;
-        m_rightClick = 0;
-    }
+    releaseHelpText(m_rollOver);
+    releaseHelpText(m_rightClick);
     if (copyText) {
         m_freeText = 1;
-        if (text) {
-            m_rollOver = new char[strlen(text) + 1];
-            strcpy(m_rollOver, text);
-        }
-        if (rclick) {
-            m_rightClick = new char[strlen(rclick) + 1];
-            strcpy(m_rightClick, rclick);
-        }
+        copyHelpText(m_rollOver, text);
+        copyHelpText(m_rightClick, rclick);
     } else {
         m_freeText = 0;
         m_rollOver = const_cast<char*>(text);

@@ -1970,6 +1970,55 @@ calculations are a further reviewed batch; original native entry points and
 existing helper calls remain represented. No native addresses or inline claims
 are attached to these extractions, and field visibility/layout is unchanged.
 
+## Resource field markers and owned text initialization
+
+`isResourceFieldSet()` supplies one ordinary textresource.cpp body for the
+non-null spreadsheet-cell predicate: the leading character is neither NUL nor
+a literal space. Eleven direct expressions now call it: four spell schools,
+artifact slot eligibility, seer-hut names, three random-map connection fields,
+placement-rule termination and template-row continuation. Tabs, numeric zero
+text and other non-space characters retain their previous meaning. This is not
+a whitespace trim or a textual boolean parser. Spell bit order, artifact bitset
+proxy assignment, the seer-hut skip and the RMG break/continue boundaries stay
+in their callers.
+
+The existing `isRmgTemplateFieldSet()` remains the nullable wrapper and calls
+the same predicate after its pointer check, preserving all eleven existing
+wrapper call sites (including loops over town, terrain and monster fields).
+The connection's second zone field still tests only for an empty string; it
+has not acquired the first field's space rule. Row-width gates and lookup order
+are unchanged. `getRow()` is the existing nonvirtual vector accessor; template
+boundary scanning now passes its first cell once to the shared predicate.
+
+Ten table-string initialization sites share `TAutoStrPtr::copyText()` within
+their respective native owner classes: three spell strings, three creature
+strings, and four hero/class/secondary-skill strings. Dreamcast declarations
+and the existing source put separate private string classes in those three
+translation units. Each keeps its own ordinary method body and type identity,
+private pointer, native constructor/destructor, and native `set()`/`get()`
+methods. The new operation allocates strlen+1, installs the buffer through set,
+and copies through get. Trait-pointer publication remains afterward in the
+caller. Static-array guards, destruction claims, row parsing and description
+loops retain their positions. Like the original sequence, this initialization
+does not delete a previous value or add a null-input policy.
+
+Widget help replacement shares two private per-string operations at two sites
+each. `releaseHelpText()` deletes a non-null string only under the existing
+ownership flag, then detaches it; borrowed strings are merely detached.
+`copyHelpText()` copies only a non-null source, installing the allocation before
+strcpy. An empty but non-null source still allocates a terminator. The complete
+setHelpText operation releases rollover before right-click text, changes its
+ownership flag after both releases, and then copies or borrows in that same
+order. The destructor keeps its different final-teardown order, one ownership
+gate and absence of nulling stores. Initial zeroing remains the existing
+initializeHelpText operation.
+
+The predicate and added owner methods are project-inferred names and ordinary
+source placements, with no native address or inline claims. Pooled artifact
+strings still use copyResourceString into their existing owner; widget text
+retains its separate conditional ownership. The three native table-owner types
+have not been merged merely because their layouts and small methods agree.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

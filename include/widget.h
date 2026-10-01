@@ -279,6 +279,9 @@ private:
     // Project-inferred shared initialization, without release or unlink work.
     void initializeLinks();
     void initializeHelpText();
+    // Project-inferred per-string transitions used by setHelpText.
+    void releaseHelpText(char*& text);
+    static void copyHelpText(char*& destination, const char* source);
 };
 SIZE(widget, 48);
 

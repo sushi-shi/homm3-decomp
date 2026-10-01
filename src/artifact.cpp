@@ -538,8 +538,7 @@ static void initializeArtifactTraits(int id,
     traits.m_cost = atoi(resource[1]);
     for (column = 2; column < 21; ++column) {
         int bit = g_artifactSlotColumnBits[column - 2];
-        allowableSlots[bit] = resource[column][0] != 0
-            && resource[column][0] != ' ';
+        allowableSlots[bit] = isResourceFieldSet(resource[column]);
     }
     mask = 0;
     while (allowableSlots != g_artifactSlotMasks[mask])

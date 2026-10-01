@@ -227,9 +227,20 @@ public:
     DC_ADDRESS(0x0d60f8, 0x4)
     char* get() const { return m_string; }
 
+    // Project-inferred allocation/copy used to initialize owned table text.
+    void copyText(const char* source);
+
 private:
     char* m_string;
 };
+
+// Keep the native Set/Get operations and store ownership before copying.
+// Like the existing initialization sequence, this does not release an old value.
+void TAutoStrPtr::copyText(const char* source)
+{
+    set(new char[strlen(source) + 1]);
+    strcpy(get(), source);
+}
 
 }
 
@@ -329,8 +340,7 @@ static void initializeHeroTraits(int id, const TSpreadsheetResource::TStringVect
     DATA(0x00698eb0)
     static TAutoStrPtr heroStrings[156];
 
-    heroStrings[id].set(new char[strlen(values[0]) + 1]);
-    strcpy(heroStrings[id].get(), values[0]);
+    heroStrings[id].copyText(values[0]);
 
     traits.m_defaultName = heroStrings[id].get();
     traits.m_firstStackLow = atoi(values[1]);
@@ -353,8 +363,7 @@ static void initializeHeroClassTraits(int id, const TSpreadsheetResource::TStrin
     DATA(0x00699120)
     static TAutoStrPtr heroClassStrings[18];
 
-    heroClassStrings[id].set(new char[strlen(values[0]) + 1]);
-    strcpy(heroClassStrings[id].get(), values[0]);
+    heroClassStrings[id].copyText(values[0]);
     traits.m_className = heroClassStrings[id].get();
     traits.m_aggression = static_cast<float>(atof(values[1]));
 
@@ -388,8 +397,7 @@ static void initializeSSkillTraits(int id, const TSpreadsheetResource::TStringVe
     DATA(0x00698b28)
     static TAutoStrPtr secondarySkillNames[28];
 
-    secondarySkillNames[id].set(new char[strlen(values[0]) + 1]);
-    strcpy(secondarySkillNames[id].get(), values[0]);
+    secondarySkillNames[id].copyText(values[0]);
     traits.m_name = secondarySkillNames[id].get();
 
     DATA(0x00698b9c)
@@ -397,10 +405,7 @@ static void initializeSSkillTraits(int id, const TSpreadsheetResource::TStringVe
 
     int level;
     for (level = 0; level < 3; ++level) {
-        secondarySkillLevelNames[id][level].set(
-            new char[strlen(values[level + 1]) + 1]);
-        strcpy(secondarySkillLevelNames[id][level].get(),
-               values[level + 1]);
+        secondarySkillLevelNames[id][level].copyText(values[level + 1]);
         traits.m_levelNames[level] =
             secondarySkillLevelNames[id][level].get();
     }

@@ -126,7 +126,7 @@ unsigned char initializeSeerHutText()
 
     for (int row = 50; row < sheet->getNumberOfRows(); ++row) {
         const char* name = sheet->getRow(row)[0];
-        if (!name[0] || name[0] == ' ')
+        if (!isResourceFieldSet(name))
             continue;
         g_seerHutNames.push_back(name);
     }

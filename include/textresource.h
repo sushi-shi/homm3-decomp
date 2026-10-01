@@ -7,6 +7,10 @@
 
 #include "resource.h"
 
+// Project-inferred spreadsheet marker predicate for a non-null field.
+// Only NUL and a literal leading space count as unset; do not trim whitespace.
+bool isResourceFieldSet(const char* value);
+
 // Project-inferred copy into pre-sized resource storage; returns bytes copied,
 // including the terminator. Table assignment and cursor advancement are caller-owned.
 unsigned copyResourceString(char* destination, const char* source);
