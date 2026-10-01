@@ -5410,6 +5410,10 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
 // suppressed an extra cost-vector _Destroy but supplied no source boundary.
 // Seed insertion, popped erasure and shared insertion-helper expansions still
 // differ from retail; their natural inline decisions remain unresolved.
+// Mac 0x2410ec..0x241124 copies the full position and planar offset
+// before forming a distinct result, matching the canonical by-value operator+.
+// Restoring that call improves fresh Windows 85.1841% -> 89.0335%; all 27
+// blocks retain their flow kinds. Seed/pop/sorted-vector expansions remain.
 VA(0x0053F1A0, 0x2C6)
 MAC_ADDRESS(0x240ee4, 0x358)
 void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position, int zoneIndex)
@@ -5429,10 +5433,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
         unsigned currentCost = m_map.getMapItem(position)->m_movement.m_zonePathCost;
         for (int direction = 0; direction < 8; ++direction) {
             TPoint offset = g_rmgDirections[direction];
-            TRmgMapPosition next;
-            next.m_x = position.m_x + offset.m_x;
-            next.m_y = position.m_y + offset.m_y;
-            next.m_z = position.m_z;
+            TRmgMapPosition next = position + offset;
             if (next.m_x < 0 || next.m_x >= m_map.getWidth()
                 || next.m_y < 0 || next.m_y >= m_map.getHeight())
                 continue;
