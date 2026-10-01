@@ -536,7 +536,8 @@ static int updateSpellTarget(long hex)
         result = -1;
         g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
         g_combatManager->displayFailureReason(
-            spell, g_generalText->getText(GENERAL_TEXT_SELECT_SPELL_TARGET), hex);
+            static_cast<ESpellId>(spell) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+            g_generalText->getText(GENERAL_TEXT_SELECT_SPELL_TARGET), hex);
         g_combatManager->turnOffHighlighter(1);
     }
     if (markArea)
@@ -1762,7 +1763,9 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
 VA(0x005a2880, 0x3D5)
 DC_ADDRESS(0x151b44, 0x310)
 MAC_ADDRESS(0x192f34, 0x304)
-std::string combatManager::getFailureReason(SpellID spell, const char* msg,
+// Original DC public at file 0x5d8827 proves the private SpellID enum formal;
+// DisplayFailureReason's public at 0x5b8e63 carries the same enum domain.
+std::string combatManager::getFailureReason(ESpellId spell, const char* msg,
                                               long hex)
 {
     const SSpellTraits* spellTraits = &g_spellTraits[spell];
@@ -1807,7 +1810,7 @@ std::string combatManager::getFailureReason(SpellID spell, const char* msg,
 VA(0x005a2c60, 0x9B)
 DC_ADDRESS(0x151e54, 0x40)
 MAC_ADDRESS(0x193238, 0x70)
-void combatManager::displayFailureReason(SpellID spell, const char* msg,
+void combatManager::displayFailureReason(ESpellId spell, const char* msg,
                                            long hex)
 {
     m_combatWindow->combatMessage(getFailureReason(spell, msg, hex).c_str(),
@@ -2135,7 +2138,8 @@ int handleCastWallSpell(message& msg)
             g_castWallIndexToCastOn = -1;
             g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
             g_combatManager->displayFailureReason(
-                spell, (*g_generalText)[GENERAL_TEXT_SELECT_SPELL_TARGET], hex);
+                static_cast<ESpellId>(spell) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+                (*g_generalText)[GENERAL_TEXT_SELECT_SPELL_TARGET], hex);
             if (g_config.m_showCombatMouseHex
                 && spell != SPELL_FORCE_FIELD) {
                 std::vector<long> hexes;
@@ -4606,7 +4610,10 @@ long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
         damage = const_cast<hero*>(castingHero)->modifySpellDamage(
             spellType, baseDamage, targetArmy);
     if (targetArmy) {
-        damage = ::modifySpellDamage(damage, spellType,
+        // Native ModifySpellDamage keeps its int spell formal; the creature
+        // modifier independently takes the SpellID enum.
+        damage = ::modifySpellDamage(
+            damage, static_cast<ESpellId>(spellType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
                                      targetArmy->m_creatureType);
         damage = modifySpellDamageForSpells(damage, spellType, targetArmy);
         if (printResult && damage != baseDamage
@@ -4973,11 +4980,17 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
         break;
     }
 
+    // Native SpellCastWorkChance takes int; get_spell_work_chance takes
+    // the SpellID enum, so this is an actual interface boundary.
     if (benefit <= 0 && target->isInAura())
-        return getSpellWorkChance(spell, creature, castingHero,
+        return getSpellWorkChance(
+        static_cast<ESpellId>(spell) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+            creature, castingHero,
                                      targetHero)
             * 0.8f;
-    return getSpellWorkChance(spell, creature, castingHero, targetHero);
+    return getSpellWorkChance(
+        static_cast<ESpellId>(spell) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+        creature, castingHero, targetHero);
 }
 
 VA(0x005a8640, 0x49)

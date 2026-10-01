@@ -1657,11 +1657,11 @@ public:
                 int segmentLength, int drawsPerSegment,
                 int distortAlways, int delay,
                 int flashLighten);  // 0x5a5c20
-    void displayFailureReason(SpellID spell, const char* msg,
+    void displayFailureReason(ESpellId spell, const char* msg,
                                 long hex);  // 0x5a2c60
 
 private:
-    std::string getFailureReason(SpellID spell, const char* msg,
+    std::string getFailureReason(ESpellId spell, const char* msg,
                                    long hex);  // 0x5a2880
 
 public:
