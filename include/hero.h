@@ -1177,8 +1177,11 @@ public:
     DC_ADDRESS(0x037dc4, 0x8)
     long getValueOfDuration() const { return m_valueOfDuration; }
 
+    // The native header getters below are canonical cached-value loads.
+    // Keep their ordinary in-class inline bodies; no native evidence
+    // supports the former forced-inline qualifier.
     DC_ADDRESS(0x037dcc, 0x8)
-    __forceinline long getValueOfKnowledge() const
+    long getValueOfKnowledge() const
     {
         return m_valueOfKnowledge;
     }
@@ -1187,7 +1190,7 @@ public:
     // get_skill_value; retaining the source boundaries still emits the direct
     // loads proved at +0x47e/+0x486.
     DC_ADDRESS(0x037dd4, 0x8)
-    __forceinline long getValueOfPower() const
+    long getValueOfPower() const
     {
         return m_valueOfPower;
     }
