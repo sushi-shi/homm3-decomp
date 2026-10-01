@@ -1113,3 +1113,30 @@ them. The helper is kept while that compiler difference remains open. No
 additional Mac comparison availability loss occurs in this batch. The working
 review has 5,905 open native call-site leads and 2,091 explicit operation-site
 notes; these counts do not establish complete body coverage.
+
+### Resource quantity and garrison troops
+
+Two more previously exact Windows callers now retain their endian-reader
+operations. `readResourceData` checks its dword transfer before Mac
+`0x121744` decodes the quantity, then inserts its low nineteen bits without
+disturbing the custom-treasure index. `readGarrisonData` checks each short
+before `lhbrx` at `0x1254ec` and signed widening into the army count. Its
+existing versioned creature-ID helper remains separate, and its two version
+sources remain distinct. Both use the existing checked reference reader.
+
+The full artifact, scroll, resource and garrison bodies account for twelve
+more stream sites. Four inspected member-destructor sites in
+`readBlackBoxData` are already implicit in its local BlackBoxData lifetime;
+six more stream sites in the grail, shrine and shipyard readers are already
+represented. The source preserves the shrine's signed-byte widening, the
+shipyard's post-padding boat-coordinate initialization, and the garrison's
+pool insertion before its final padding check.
+
+The targeted build succeeds and keeps `readGarrisonData` at 100%.
+`readResourceData` now measures 96.1611%, with its earlier exact peak retained.
+Its named call comparison retains all eight retail calls and adds a
+`basic_string::_Tidy` call where retail expands it. The recovered quantity
+reader remains in source. No further Mac comparison availability loss occurs
+in this batch. With these 22 reviewed sites, the working queue has 5,883 open
+native call-site leads and 2,113 explicit operation-site notes. The broader
+all-function review remains incomplete.

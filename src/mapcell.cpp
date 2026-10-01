@@ -1594,6 +1594,8 @@ int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject
     return 0;
 }
 
+// Mac 0x121728 checks the resource quantity's four-byte read before
+// lwbrx at 0x121744 and insertion into the low nineteen object bits.
 VA(0x004ff4d0, 0x1DA)
 DC_ADDRESS(0x0ee410, 0x15a)
 MAC_ADDRESS(0x121624, 0x17c)
@@ -1622,7 +1624,7 @@ int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
     }
 
     int intBuffer;
-    count = infile->read(&intBuffer, 4);
+    count = readLittleEndianValue(infile, intBuffer);
     if (static_cast<unsigned>(count) < 4)
         return -1;
     resourceObject->m_extraInfo ^= (resourceObject->m_extraInfo ^ intBuffer) & 0x7ffff;
@@ -3236,6 +3238,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
 
 // The map file's garrison record, appended to the game's garrison pool with
 // the object's extraInfo left holding its index.
+// Mac 0x1254d4 checks each troop-count short before lhbrx at 0x1254ec.
+// The creature ID remains the separate, unchecked versioned helper call.
 VA(0x00502a00, 0x151)
 DC_ADDRESS(0x0f151c, 0x1ac)
 MAC_ADDRESS(0x12541c, 0x1d4)
@@ -3258,7 +3262,7 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
             readMapCreatureId(infile, mapVersion);
 
         short count;
-        if (readValue(infile, count) < sizeof(count))
+        if (readLittleEndianValue(infile, count) < sizeof(count))
             return -1;
         newGarrison.m_garrisonArmy.m_numTroops[slot] = count;
     }
