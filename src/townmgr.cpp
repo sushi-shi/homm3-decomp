@@ -3461,8 +3461,16 @@ void TMageGuildWindow::setRolloverText(int codeY)
 // retail computes it with the `neg / sbb / and 3 / inc` chain off the
 // masked qualifier at both sites.
 
-// Residual 97.3926%: delayed EBX save/restore and one SIB operand order.
-// A common return and direct message-id reads are flat in four controls.
+// Earlier common-return/direct-message controls were flat at 97.3926%.
+// Both natives put the widget operation before hover; DC 4691 and 4706
+// return immediately for an invalid spell column and unchanged hover.
+// Mac 0x1c937c/0x1c93a4 preserves those early exits. The complete native
+// guard/order model improves current Windows 94.3190% to 96.8650% and
+// Mac 18.8830% to 23.6702%, with the canonical helper chain intact.
+// Remaining: getBuildingMask's expanded high word clobbers the column's
+// EDX home, causing a spill and 28 versus retail's 27 blocks. All eight
+// calls agree; retain getBuildingMask inside hasBuilding and the pre-Grail
+// division/remainder order observed at Mac 0x1c91c4..0x1c91f4.
 VA(0x005ce370, 0x1F0)
 DC_ADDRESS(0x171118, 0x1ac)
 MAC_ADDRESS(0x1c90ec, 0x2f0)  // anchor-vtable 0x6437dc slot 9 + anchor-callee(SetRolloverText 0x5ce1c0, whose sole caller this is) + arity(ret 4)
@@ -3473,54 +3481,52 @@ int TMageGuildWindow::windowHandler(message& msg)
         return result;
 
     switch (msg.m_id) {
-    case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(msg);
-        if (msg.m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg.m_codeY;
-            setRolloverText(msg.m_codeY);
-        }
-        break;
-
     case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
         case widget::WIDGET_RIGHT_SELECT: {
             int qualifier = msg.m_qualifier & MESSAGE_MODIFIER_RIGHT;
             int id = msg.m_codeY;
-            // The frame run (10..35) and the scroll run (40..65), thirty
-            // slots each and the same thirty spells; anything else
-            // leaves the slot at the sentinel and the arm does nothing.
             int slot = -1;
             if (id >= 10 && id < 36)
                 slot = id - 10;
             if (id >= 40 && id < 66)
                 slot = id - 40;
-            if (slot != -1) {
-                town* thisTown = g_townManager->m_townToView;
-                int level = slot / 6;
-                int column = slot % 6;
-                if (thisTown->m_type == TOWN_CONFLUX
-                    && (thisTown->hasBuilding(HOLY_GRAIL_ID, true))) {
-                    normalDialog(
-                        formatString(
-                            // Row 715, byte-proven: the inlined lookup
-                            // reads [rows + 0xb2c] = 715*4, not 707*4.
-                            g_generalText->getText(GENERAL_TEXT_ARTIFACT_MAKES_ALL_SPELLS_AVAILABLE_FORMAT),
-                            getBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID))
-                            .c_str(),
-                        qualifier ? 4 : 1, -1, -1, -1, 0, -1, 0, -1, 0,
-                        -1, 0);
-                } else if (column < thisTown->m_mageGuildSpellCounts[level]) {
-                    int spell = thisTown->m_mageGuildSpells[level][column];
-                    normalDialog(g_spellTraits[spell].m_levelDescriptions[0],
-                                 qualifier ? 4 : 1, -1, -1, 9, spell,
-                                 -1, 0, -1, 0, -1, 0);
-                }
+            if (slot == -1)
+                return 1;
+
+            town* thisTown = g_townManager->m_townToView;
+            int level = slot / 6;
+            int column = slot % 6;
+            if (thisTown->m_type == TOWN_CONFLUX
+                && thisTown->hasBuilding(HOLY_GRAIL_ID, true)) {
+                normalDialog(
+                    formatString(
+                        g_generalText->getText(GENERAL_TEXT_ARTIFACT_MAKES_ALL_SPELLS_AVAILABLE_FORMAT),
+                        getBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID))
+                        .c_str(),
+                    qualifier ? 4 : 1, -1, -1, -1, 0, -1, 0, -1, 0,
+                    -1, 0);
+                return 1;
             }
-            break;
+            if (column >= thisTown->m_mageGuildSpellCounts[level])
+                return 1;
+            int spell = thisTown->m_mageGuildSpells[level][column];
+            normalDialog(g_spellTraits[spell].m_levelDescriptions[0],
+                         qualifier ? 4 : 1, -1, -1, 9, spell,
+                         -1, 0, -1, 0, -1, 0);
+            return 1;
         }
         }
         break;
+
+    case MESSAGE_MOUSE_MOVE:
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY == g_windowManager->m_lastHover)
+            return 1;
+        g_windowManager->m_lastHover = msg.m_codeY;
+        setRolloverText(msg.m_codeY);
+        return 1;
     }
     return 1;
 }
@@ -3804,8 +3810,13 @@ type_garrison_base_window::~type_garrison_base_window()
 // different, beginning with the register used for the manager load.
 // Earlier flattened-arm control: moving thisStrip/mgr before qualifier
 // worsened 95.6856% to 95.4367%; that did not recover ArmyCommand.
-// DC's GetArmyName is restored in the divide status arm; VC6 still emits
-// the same 34 blocks and 10 retained calls at 98.838425%.
+// DC 0x172bfa passes count 2 to GetArmyName in the divide status arm.
+// Mac 0x1cc788 and retail use the plural traits field (+0x18), not the
+// singular field (+0x14). With that argument restored, all 34 block sizes,
+// ten calls and 29 relocations agree; only four prefix instruction rows
+// differ (manager register and command-store ordering). On default
+// 94fe82954 this restores CUR 98.838425 -> 98.8428%; no other townmgr
+// function moves in the focused comparison.
 // DC declares message&; Complete passes the same one-word address.
 VA(0x005d05f0, 0x31B)
 DC_ADDRESS(0x172af0, 0x178)
@@ -3853,12 +3864,8 @@ void type_garrison_base_window::setCommandAndText(message& msg)
             strcpy(mgr->m_statusText, g_townCommand[3]);
         } else {
             int creature = mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex];
-            // The traits row's own bound, spelled as the literal
-            // retail compares against: armygrp.h's ARMY_CREATURE_LAST
-            // is a member of `army`, which this compiland's include
-            // closure does not define and must not grow to.
             sprintf(mgr->m_statusText, g_townCommand[0],
-                    getArmyName(creature, 1));
+                    getArmyName(creature, 2));
         }
         break;
     }
@@ -3894,15 +3901,17 @@ void type_garrison_base_window::showText()
 
 // Original: type_garrison_base_window::ViewArmy; townmgr.cpp:5012
 // Mac 0x1cc8c8/0x1cc90c reads the manager index for the test and call.
-// Direct member expressions also recover the Windows caller block sizes.
+// Mac also reads thisStrip->m_group independently for the troop test at
+// 0x1cc8cc and the view call at 0x1cc908. Keep those two property queries
+// rather than an invented group snapshot; the canonical helper then restores
+// its windowHandler caller from 98.8% to 100% (22 blocks, 10 calls, 23 relocs).
 DC_ADDRESS(0x172ca0, 0x52)
 MAC_ADDRESS(0x1cc8ac, 0x78)
 void type_garrison_base_window::viewArmy()
 {
     strip* thisStrip = g_townManager->m_currStrip;
-    armyGroup* group = thisStrip->m_group;
-    if (group->m_armies[g_townManager->m_currIndex] != -1)
-        g_game->viewArmy(*group, g_townManager->m_currIndex, thisStrip->m_thisHero, 0, 119, 20, 0, 1);
+    if (thisStrip->m_group->m_armies[g_townManager->m_currIndex] != -1)
+        g_game->viewArmy(*thisStrip->m_group, g_townManager->m_currIndex, thisStrip->m_thisHero, 0, 119, 20, 0, 1);
 }
 
 // The garrison dialog's handler. It reads its window out of the MESSAGE
@@ -3924,9 +3933,6 @@ void type_garrison_base_window::viewArmy()
 // latch and repaints BOTH strips with the creature that is being divided.
 
 // E:\gamedcs\townmgr.cpp
-// Residual 98.8%: all 22 block sizes and ten calls agree; register choices
-// in the expanded viewArmy arms still differ. Keep the canonical helper
-// and its direct manager-index expressions.
 // Mac 0x1cc9e8/0x1ccaa0 retain distinct left-select and owner-right-select
 // dispatches. Windows jump tables 0x5d0af0/0x5d0b18 confirm owner 0x7c
 // on right-select and owner/frame ids 0x7b..0x7d on left-select.

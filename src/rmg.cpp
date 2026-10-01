@@ -2567,6 +2567,10 @@ void TRmgTreasureGroup::addObject(type_object* object, TPoint point)
 // sums at 0x233458/0x23356c use the shared isPassableLand and operator+.
 // Restoring these calls keeps the group insertion helper and reaches
 // 88.2086%; the remaining vector expansion and coordinate homes differ.
+// Mac 0x233088..0x2330b4 materializes the trigger XY point before
+// subtracting X and then Y from the owned position. Preserve the same
+// canonical operator-= path used by the gate/mine placement callers.
+// Fresh Windows 86.5372% -> 87.91%; all 73 branch-flow blocks still agree.
 VA(0x00535110, 0x4AB)
 MAC_ADDRESS(0x233028, 0x6a8) // anchor-callee 0x546843; thiscall, ret 4
 unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
@@ -2579,8 +2583,8 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
         type_object* object = m_objects[objectIndex];
         prototype = object->m_properties->m_prototype;
         TRmgMapPosition entrance = object->getPosition();
-        entrance.m_y -= prototype->m_triggerCell.m_y;
-        entrance.m_x -= prototype->m_triggerCell.m_x;
+        entrance -= TPoint(prototype->m_triggerCell.m_x,
+            prototype->m_triggerCell.m_y);
         unsigned int direction = g_adventureObjectTraits[prototype->getObjectType()].m_trait1
             ? RMG_DIRECTION_COUNT : 5;
         while (direction--) {
@@ -5352,6 +5356,12 @@ void __fastcall generateRmgIslandMask(unsigned char* mask, int width, int height
     }
 }
 
+// Mac 0x240c54 initializes the shared point level before painting;
+// 0x240d18..0x240d2c copies that complete point into the map query.
+// Keep its lifetime and canonical by-value lookup instead of reconstructing
+// another position through the scalar overload (99.3392 -> 99.9298%).
+// Residual: height/level multiply operands trade register/memory roles;
+// the retained getMapItem body remains exact and is not changed for this site.
 VA(0x0053EFA0, 0x1F2)
 MAC_ADDRESS(0x240ba8, 0x270)
 void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& bounds, int level)
@@ -5366,6 +5376,7 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
             m_map.m_mapWidth, m_map.m_mapHeight);
         TRmgTerrainBrush brush(&map, terrain, 4);
         generateRmgIslandMask(mask, width, height);
+        point.m_z = level;
         for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
             for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
                 if (mask[(point.m_y - bounds.m_minimumY) * width + point.m_x - bounds.m_minimumX] > 0)
@@ -5373,10 +5384,9 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
             }
         }
     }
-    point.m_z = level;
     for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
         for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
-            TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
+            TRmgMapItem* item = m_map.getMapItem(point);
             if (item->m_tile.m_landType != eTerrainWater && !item->m_connection.m_present) {
                 item->m_tileData.m_subterraneanGate = 0;
                 item->m_tileData.m_borderObject = 1;
@@ -5404,6 +5414,10 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
 // suppressed an extra cost-vector _Destroy but supplied no source boundary.
 // Seed insertion, popped erasure and shared insertion-helper expansions still
 // differ from retail; their natural inline decisions remain unresolved.
+// Mac 0x2410ec..0x241124 copies the full position and planar offset
+// before forming a distinct result, matching the canonical by-value operator+.
+// Restoring that call improves fresh Windows 85.1841% -> 89.0335%; all 27
+// blocks retain their flow kinds. Seed/pop/sorted-vector expansions remain.
 VA(0x0053F1A0, 0x2C6)
 MAC_ADDRESS(0x240ee4, 0x358)
 void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position, int zoneIndex)
@@ -5423,10 +5437,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
         unsigned currentCost = m_map.getMapItem(position)->m_movement.m_zonePathCost;
         for (int direction = 0; direction < 8; ++direction) {
             TPoint offset = g_rmgDirections[direction];
-            TRmgMapPosition next;
-            next.m_x = position.m_x + offset.m_x;
-            next.m_y = position.m_y + offset.m_y;
-            next.m_z = position.m_z;
+            TRmgMapPosition next = position + offset;
             if (next.m_x < 0 || next.m_x >= m_map.getWidth()
                 || next.m_y < 0 || next.m_y >= m_map.getHeight())
                 continue;
@@ -9165,10 +9176,15 @@ void type_random_map_generator::createRoads()
 // then paints the predecessor chain. Role-derived name; no DC RMG counterpart.
 // Unlike the coast-bound river, this search ignores impassable/direction flags
 // and stops on the shared roadTarget bit set by markRiverObjectTargets.
-// Partial 89.61%: direct invalid-predecessor field stores remove the extra
-// constructor in the first 87.80% candidate. A separate default-then-filled
-// invalid-position local scores 83.63%. Retained vector cleanup boundaries
-// and frame/register homes remain unresolved; no inlining pins are used.
+// Mac 0x24c99c..0x24c9c8 and 0x24cd84..0x24cda8 copy complete positions
+// into the by-value map query, as do the two intermediate flood queries.
+// At 0x24c9cc..0x24ca28, an invalid position is constructed and then copied
+// to a separate formal before the cost/predecessor writes: setMovementCost.
+// Recovering all four queries and that seed setter raises fresh Windows
+// 57.5459% -> 79.4612%. Earlier isolated invalid-position controls favored
+// flattened fields, but omitted this complete native helper model. Current
+// frame 0xa8 differs from retail 0xb4; reset/cleanup expansions and the
+// duplicate exit remain unresolved. Keep the canonical helper calls.
 VA(0x00548500, 0x533)
 MAC_ADDRESS(0x24c8ac, 0x588)
 void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
@@ -9178,11 +9194,8 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     std::vector<int> openCosts;
     openPositions.push_back(source);
     openCosts.push_back(0);
-    TRmgMapItem* mapItem = m_map.getMapItem(source.m_x, source.m_y, source.m_z);
-    mapItem->m_movement.m_cost = 0;
-    mapItem->m_previousTile.m_x = -1;
-    mapItem->m_previousTile.m_y = -1;
-    mapItem->m_previousTile.m_z = -1;
+    TRmgMapItem* mapItem = m_map.getMapItem(source);
+    mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
     unsigned char sourceIsSnow;
     int riverType;
     if (mapItem->m_tile.m_landType == eTerrainSnow) {
@@ -9198,14 +9211,14 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
         position = openPositions.back();
         openCosts.pop_back();
         openPositions.pop_back();
-        mapItem = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
+        mapItem = m_map.getMapItem(position);
         int positionCost = mapItem->m_movement.m_cost;
         for (int direction = 0; direction < 8; direction += 2) {
             nextPosition = position + g_rmgDirections[direction];
             if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.getWidth()
                 || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.getHeight())
                 continue;
-            mapItem = m_map.getMapItem(nextPosition.m_x, nextPosition.m_y, nextPosition.m_z);
+            mapItem = m_map.getMapItem(nextPosition);
             if (mapItem->m_tile.m_landType == eTerrainWater
                 || mapItem->m_tile.m_landType == eTerrainRock
                 || (mapItem->m_tile.m_landType == eTerrainSnow) != sourceIsSnow)
@@ -9232,7 +9245,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
         &mapAdapter, riverType, TRmgGridPoint(nextPosition.m_x, nextPosition.m_y));
     while (mapItem->m_movement.m_cost > 0) {
         position = mapItem->m_previousTile;
-        mapItem = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
+        mapItem = m_map.getMapItem(position);
         riverPainter.drawTo(TRmgGridPoint(position.m_x, position.m_y));
     }
 }

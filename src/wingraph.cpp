@@ -114,7 +114,7 @@ DC_ADDRESS(0x198b68, 0x64)
 static void ddSetupClipper()
 {
     HRESULT result;
-    if (!g_config.m_mainGameFullScreen) {
+    if (!g_config.m_windowConfig.m_fullScreen) {
         result = g_directDraw->CreateClipper(0, &g_ddClipper, 0);
         if (result != DD_OK)
             ddsd(result,
@@ -388,7 +388,7 @@ VA(0x006003c0, 0x22D)  // recovery sequence + first-caller static emission
 DC_ADDRESS(0x1990e4, 0x86)
 static void ddRestoreFrontBuffer(tagRECT& dstRect)
 {
-    if (g_config.m_mainGameFullScreen) {
+    if (g_config.m_windowConfig.m_fullScreen) {
         HRESULT result = g_directDraw->SetCooperativeLevel(
             g_hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
         if (result != DD_OK)
@@ -422,7 +422,7 @@ static void ddRestoreFrontBuffer(tagRECT& dstRect)
         OffsetRect(&dstRect, origin.x, origin.y);
         g_ddClipper->Release();
         g_ddClipper = 0;
-        g_config.m_mainGameFullScreen = 1;
+        g_config.m_windowConfig.m_fullScreen = 1;
         SetWindowLongA(g_hwndApp, GWL_STYLE, WS_POPUP | WS_VISIBLE);
         SetWindowLongA(g_hwndApp, GWL_EXSTYLE, WS_EX_TOPMOST);
         kbChangeMenu(0);
@@ -439,7 +439,7 @@ static void ddRestoreFrontBuffer(tagRECT& dstRect)
 
     g_ddsPrimary = ddCreateSurface(800, 600, 1);
 
-    if (!g_config.m_mainGameFullScreen) {
+    if (!g_config.m_windowConfig.m_fullScreen) {
         result = g_ddsPrimary->SetClipper(g_ddClipper);
         if (result != DD_OK)
             ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
@@ -1227,7 +1227,7 @@ void ddInitGraphics()
                           "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
              0x9a);
 
-    if (g_config.m_mainGameFullScreen) {
+    if (g_config.m_windowConfig.m_fullScreen) {
         result = g_directDraw->SetCooperativeLevel(
             g_hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
         if (result != DD_OK)
@@ -1340,7 +1340,7 @@ unsigned char setFullScreenStatus(int fullScreenOn)
 {
     if (g_fullScreenChangesDisabled)
         return 0;
-    if (fullScreenOn == g_config.m_mainGameFullScreen)
+    if (fullScreenOn == g_config.m_windowConfig.m_fullScreen)
         return 1;
 
     unsigned char changed = ddSetFullScreenStatus(fullScreenOn);
@@ -1359,7 +1359,7 @@ unsigned char setFullScreenStatus(int fullScreenOn)
 DC_ADDRESS(0x19a20c, 0x28)
 void resizeWindow(int windowX, int windowY)
 {
-    if (!g_config.m_mainGameFullScreen) {
+    if (!g_config.m_windowConfig.m_fullScreen) {
         RECT windowRect = {0, 0, 800, 600};
         AdjustWindowRectEx(&windowRect, WINDOWED_WINDOW_STYLE, 1, 0);
         MoveWindow(g_hwndApp, windowX, windowY,
@@ -1404,7 +1404,7 @@ unsigned char ddSetFullScreenStatus(int newStatus)
     int status = newStatus;
     Bitmap16Bit savedScreen(800, 600);
 
-    if (g_config.m_mainGameFullScreen == newStatus)
+    if (g_config.m_windowConfig.m_fullScreen == newStatus)
         return 1;
     if (g_winGraphBusy)
         return 0;
@@ -1434,9 +1434,9 @@ unsigned char ddSetFullScreenStatus(int newStatus)
         status = 1;
         changed = 0;
     }
-    g_config.m_mainGameFullScreen = status;
+    g_config.m_windowConfig.m_fullScreen = status;
 
-    if (g_config.m_mainGameFullScreen) {
+    if (g_config.m_windowConfig.m_fullScreen) {
         SetWindowLong(g_hwndApp, GWL_STYLE, WS_POPUP | WS_VISIBLE);
         SetWindowLong(g_hwndApp, GWL_EXSTYLE, WS_EX_TOPMOST);
     } else {
@@ -1461,7 +1461,7 @@ unsigned char ddSetFullScreenStatus(int newStatus)
     g_mouseManager->reset();
     g_mouseManager->loadFrame(g_mouseManager->getFrame());
 
-    resizeWindow(g_config.m_mainGameX, g_config.m_mainGameY);
+    resizeWindow(g_config.m_windowConfig.m_x, g_config.m_windowConfig.m_y);
 
     kbChangeMenu(0);
     videoRealignBuffers();

@@ -17366,7 +17366,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0xfb700	0x4fb710	code	push	code	imm	kept
 0xfb716	0x62dc10	code	push	code	imm	kept
 0xfb72c	0x67fa64	code	mov	data	mem	kept
-0xfb747	0x500000	code	cmp	code	imm	kept
+0xfb747	0x500000	code	cmp; mainMenuHandler GetAvailableDiskSpace < 5 MiB; retail 4fb746=3d00005000; DC ea640	code	imm	rejected-integer-threshold
 0xfb74e	0x6a5d5c	code	mov	data	mem	kept
 0xfb77d	0x699280	code	mov	data	mem	kept
 0xfb78e	0x67fa64	code	mov	data	mem	kept
