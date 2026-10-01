@@ -5351,9 +5351,7 @@ int townManager::main(message& msg)
                             g_game->getHero(m_townToView->m_visitingHeroId);
                         TQuickHeroWindow quickHero(
                             h, TQuickHeroWindow::ViewAll);
-                        quickHero.m_x = 0x140;
-                        quickHero.m_y = 0x172;
-                        quickHero.quickWindowWait();
+                        quickHero.quickWindowWaitAt(0x140, 0x172);
                     } else if (msg.m_codeY
                                    == TTownScreenWindow::
                                           GARRISON_PORTRAIT_SELECTOR_ID
@@ -5362,9 +5360,7 @@ int townManager::main(message& msg)
                             g_game->getHero(m_townToView->m_garrisonHeroId);
                         TQuickHeroWindow quickHero(
                             h, TQuickHeroWindow::ViewAll);
-                        quickHero.m_x = 0x140;
-                        quickHero.m_y = 0x172;
-                        quickHero.quickWindowWait();
+                        quickHero.quickWindowWaitAt(0x140, 0x172);
                     } else {
                         int found = 0;
                         if (msg.m_codeY >= TTownScreenWindow::

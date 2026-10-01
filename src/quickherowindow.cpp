@@ -214,4 +214,12 @@ void TQuickHeroWindow::quickWindowWait()
     g_windowManager->doQuickView(this);
 }
 
+// Project-inferred shared placement. Callers retain their window lifetime.
+void TQuickHeroWindow::quickWindowWaitAt(int x, int y)
+{
+    m_x = x;
+    m_y = y;
+    quickWindowWait();
+}
+
 // E:\gamedcs\quickherowindow.cpp:209

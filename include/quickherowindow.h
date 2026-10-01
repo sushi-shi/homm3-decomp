@@ -45,6 +45,8 @@ public:
     TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel);
     virtual ~TQuickHeroWindow();
     void quickWindowWait();
+    // Project-inferred fixed placement before the native quick-view wrapper.
+    void quickWindowWaitAt(int x, int y);
 };
 SIZE(TQuickHeroWindow, 0x4c);
 

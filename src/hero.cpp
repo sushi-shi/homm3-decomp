@@ -3837,9 +3837,7 @@ int THeroScreenWindow::windowHandler(message& msg)
                     g_game->getHero(localPlayer->m_heroes[
                         m_topHero + msg.m_codeY - HERO_LOCATOR_0_ID]),
                     TQuickHeroWindow::ViewAll);
-                infoWin.m_x = 0x1a4;
-                infoWin.m_y = 0x172;
-                infoWin.quickWindowWait();
+                infoWin.quickWindowWaitAt(0x1a4, 0x172);
                 break;
             }
             if (g_heroScreenArmySlot != HERO_SCREEN_NO_ARMY_SLOT)

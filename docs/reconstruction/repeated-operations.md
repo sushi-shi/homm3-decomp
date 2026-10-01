@@ -1127,6 +1127,30 @@ fields public; their visibility and types remain unchanged. The three new
 methods have project-inferred names and ordinary source definitions without
 added storage, virtual slots, native addresses or inline qualifiers.
 
+## Quick-preview placement
+
+Hero, town and creature adventure previews share the coordinate-only clamp
+through `heroWindow::centerQuickView()`. The native `TQuickTownWindow::center()`
+wrapper delegates to that operation, and town preview now calls the wrapper
+instead of repeating its body; garrison preview keeps its existing wrapper call.
+Half-width/height arithmetic and the final-pixel bounds remain unchanged.
+`centerWindow()` and `moveWindow()` retain their distinct top-left/default-center
+semantics and background/redraw behavior.
+
+Three fixed hero previews share `TQuickHeroWindow::quickWindowWaitAt()`, storing
+x then y before calling the existing native quick-view wrapper. Both town hero
+portraits retain `(0x140, 0x172)`; the hero-screen locator retains `(0x1a4, 0x172)`.
+Their block-scoped windows, including the Dreamcast-named `infowin`, remain in
+the callers with their original construction/destruction boundaries. Adventure
+visibility selection, shadow flags and creature-window heap ownership also
+remain in their callers. The town-locator popup keeps its separate placement.
+
+Dreamcast heroWindow `0x101c` / field list `0x1a5f` declares x, y, width and height
+public; their visibility, types and layout are unchanged. New method names and
+ordinary source placement are project inferences. Existing native centering and
+quick-view wrappers remain on the complete call paths, with no new virtual slots,
+native-address claims or inline qualifiers.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

@@ -93,6 +93,8 @@ class heroWindow {
 public:
     heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType);
     void centerWindow(int centerX, int centerY);
+    // Project-inferred coordinate-only centering used by quick previews.
+    void centerQuickView(int centerX, int centerY);
     void moveWindow(int deltaX, int deltaY);
     void enableAllWidgets(unsigned char enable);
     void removeAndDeleteWidget(int id);

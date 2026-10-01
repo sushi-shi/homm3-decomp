@@ -260,10 +260,7 @@ DC_ADDRESS(0x118794, 0x64)
 MAC_ADDRESS(0x14cecc, 0xe4)
 void TQuickTownWindow::center(long newX, long newY)
 {
-    m_x = limit(m_width / 2, newX,
-              WINDOW_SCREEN_WIDTH - m_width / 2 - 1) - m_width / 2;
-    m_y = limit(m_height / 2, newY,
-              WINDOW_SCREEN_HEIGHT - m_height / 2 - 1) - m_height / 2;
+    centerQuickView(newX, newY);
 }
 
 VA(0x00530d30, 0xD)

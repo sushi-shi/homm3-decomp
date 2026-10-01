@@ -6735,12 +6735,7 @@ void advManager::heroQuickView(int heroId, int x, int y,
         level = TQuickHeroWindow::ViewSome;
 
     TQuickHeroWindow window(theHero, level);
-    window.m_x = limit(window.m_width / 2, x,
-                     WINDOW_SCREEN_WIDTH - 1 - window.m_width / 2)
-               - window.m_width / 2;
-    window.m_y = limit(window.m_height / 2, y,
-                     WINDOW_SCREEN_HEIGHT - 1 - window.m_height / 2)
-               - window.m_height / 2;
+    window.centerQuickView(x, y);
     if (!displayDropShadow)
         window.m_type &= ~WINDOW_FLAG_SHADOWED;
     window.quickWindowWait();
@@ -6865,12 +6860,7 @@ void advManager::townQuickView(int townId, int x, int y,
                     : TQuickTownWindow::ViewNone;
 
     TQuickTownWindow infoWin(thisTown, viewLevel);
-    infoWin.m_x = limit(infoWin.m_width / 2, x,
-                     WINDOW_SCREEN_WIDTH - 1 - infoWin.m_width / 2)
-               - infoWin.m_width / 2;
-    infoWin.m_y = limit(infoWin.m_height / 2, y,
-                     WINDOW_SCREEN_HEIGHT - 1 - infoWin.m_height / 2)
-               - infoWin.m_height / 2;
+    infoWin.center(x, y);
     if (!displayDropShadow)
         infoWin.m_type &= ~WINDOW_FLAG_SHADOWED;
     infoWin.quickWindowWait();
@@ -6980,12 +6970,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
                                           count, TQuickCreatureWindow::Flee, 0);
 
     }
-    window->m_x = limit(window->m_width / 2, cellx * 32,
-                      WINDOW_SCREEN_WIDTH - 1 - window->m_width / 2)
-                - window->m_width / 2;
-    window->m_y = limit(window->m_height / 2, celly * 32,
-                      WINDOW_SCREEN_HEIGHT - 1 - window->m_height / 2)
-                - window->m_height / 2;
+    window->centerQuickView(cellx * 32, celly * 32);
     window->quickWindowWait();
     if (window)
         delete window;

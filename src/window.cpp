@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "window.h"
+#include "includes.h"
 
 #include "bitmap16.h"
 #include "kb.h"
@@ -482,6 +483,16 @@ void heroWindow::centerWindow(int centerX, int centerY)
             startY = m_y;
         g_windowManager->updateScreen(startX, startY, startW, startH);
     }
+}
+
+// Project-inferred shared quick-preview clamp. Keep the half-size arithmetic
+// and final-pixel boundary; centerWindow has different positioning semantics.
+void heroWindow::centerQuickView(int centerX, int centerY)
+{
+    m_x = limit(m_width / 2, centerX,
+                WINDOW_SCREEN_WIDTH - 1 - m_width / 2) - m_width / 2;
+    m_y = limit(m_height / 2, centerY,
+                WINDOW_SCREEN_HEIGHT - 1 - m_height / 2) - m_height / 2;
 }
 
 VA(0x005ff3b0, 0x23)
