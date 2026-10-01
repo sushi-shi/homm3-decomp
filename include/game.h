@@ -1292,6 +1292,14 @@ public:
     // overrides GetStartingHeroId for human players.
     void createTownHeroes(int* startingHeroIds);
     TTownType getAlignment(int creature) const;
+    // Older game.h:1375 get_alignment maps player ids; Complete keeps
+    // that operation expanded in ViewPuzzle (Mac 0x1b474..0x1b494).
+    DC_ADDRESS(0x02000c, 0x58)
+    TTownType getPlayerAlignment(int playerId) const
+    {
+        return playerId >= 0 ? TTownType(m_setup.m_alignment[playerId])
+                             : eTownNeutral;
+    }
     void claimShipyard(type_point location, int newPlayerOwner);  // 0x4c6a30
     // Original ClaimTown QAAXHH_N0 proves both flag formals are bool.
     void claimTown(int townId, int newPlayerOwner,
@@ -2068,7 +2076,6 @@ inline bool game::isHumanAlly(int playerNum) const
 // VC6 source cost 75, so the 72-budget nested call remains out of line without
 // a pragma. Dreamcast's same-named game.h:1375 helper instead maps player ids.
 VA(0x004c6690, 0x43)
-DC_ADDRESS(0x02000c, 0x58)
 // Native get_alignment public QBA?AW4TTownType@@H proves the result domain.
 inline TTownType game::getAlignment(int creature) const
 {

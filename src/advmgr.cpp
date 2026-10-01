@@ -9136,7 +9136,7 @@ void advManager::viewPuzzle()
     demobilizeCurrHero(0, 1);
     int pos = g_game->getLocalPlayerGamePos();
     g_game->setupPuzzlePieces(pos, 0);
-    TPuzzleWindow puzzle(pos >= 0 ? g_game->m_setup.m_alignment[pos] : -1);
+    TPuzzleWindow puzzle(g_game->getPlayerAlignment(pos));
     SAMPLE2 sample2 = loadPlaySample("Obelisk.wav");
     puzzle.updatePuzzle(1);
     drawAdventureMapGems();
