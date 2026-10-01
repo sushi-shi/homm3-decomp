@@ -30,8 +30,7 @@ static const int g_angelicAllianceFirstMap = 8;
 static const int g_angelicAllianceSecondMap = 9;
 
 // Native retains the campaign base across the special artifact-vector path.
-// The shared reference restores those +2/+4 member accesses; Windows remains
-// 86.10% versus the prior86.11%, with exact siblings unchanged.
+// The shared reference preserves those +2/+4 member accesses.
 // DC line 41 names GetTeam and IsHumanTeam directly (no is_human_ally
 // row), and the explicit team local reproduces retail's expanded
 // guarded scan: 85.91 -> 99.59 over the isHumanAlly wrapper (2026-09-29).
@@ -42,6 +41,13 @@ static const int g_angelicAllianceSecondMap = 9;
 // (cost 58) only 30, so it stays a call where retail expands it and stores
 // out_of_range's vptr after logic_error's ctor; about 28 more depth-1
 // budget is missing and no evidenced statement supplies it.
+// With current target identities this body is 99.7464%. Using both predicate
+// calls directly instead of the hasComponent/carriesComponent locals leaves
+// the same exception-constructor mismatch and adds two earlier register
+// differences (99.72%); native code does not distinguish those local spellings.
+// Ignoring erase's returned iterator is byte-flat. Mac ignores that return too,
+// but the visible library body returns the same iterator, so optimization may
+// remove the assignment; retain the conventional iterator update.
 // Original DC public CheckForArtifactWin@@QAA_NXZ proves a bool result;
 // the dossier's primitive 0x20 display is lowered-byte metadata.
 VA(0x005f1610, 0x4FE)
