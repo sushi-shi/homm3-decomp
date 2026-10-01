@@ -1353,12 +1353,14 @@ public:
     void drawAdventureMapGems();
     int moreTreesNear(type_point point);
     void viewPuzzle();
-    void updateRadar(type_point origin, unsigned char updateFlag,
-                     unsigned char partialUpdate, unsigned char viewMines,
-                     unsigned char viewHeroes, unsigned char viewTowns);
-    void updateRadar(unsigned char updateFlag,
-                     unsigned char partialUpdate, unsigned char viewMines,
-                     unsigned char viewHeroes, unsigned char viewTowns);
+    // Original UpdateRadar publics encode _N1111 with origin and
+    // _N0000 without it: all five flags are bool, not source uchar.
+    void updateRadar(type_point origin, bool updateFlag,
+                     bool partialUpdate, bool viewMines,
+                     bool viewHeroes, bool viewTowns);
+    void updateRadar(bool updateFlag,
+                     bool partialUpdate, bool viewMines,
+                     bool viewHeroes, bool viewTowns);
     void quickInfo(int cellX, int cellY, int z);
     void heroQuickView(int heroId, int x, int y,
                        unsigned char displayDropShadow);
