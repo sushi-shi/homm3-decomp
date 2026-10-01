@@ -1086,6 +1086,22 @@ updates and allocation ownership differ from compound-address construction.
 The player/group data pair remains a lead for its own shared protocol, rather
 than being routed through this factory operation.
 
+## DirectPlay borrowed address-element setup
+
+Ten address-record assignment sites now share the GUID/size/borrowed-pointer
+operation `initializeDirectPlayAddressElement()`. Two of those sites are nested
+in the shared TCP/IP and IPX enumeration-copy loop,
+`copyDirectPlayAddressElements()`. The loop retains virtual `getCount()` and
+`get()` calls and advances the caller's count after each copied record.
+
+Provider, IP-address, modem, phone and serial records retain their original
+optional guards and positions. String lengths still include the terminator;
+serial data retains its fixed `0x14` size. Enumeration and container ownership
+stay in each factory, through packed-address construction and connection copy.
+The helpers borrow data without allocating, freeing or adding a new capacity
+policy. Both are project-inferred TU-local operations; SDK record layouts and
+native container interfaces are unchanged.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

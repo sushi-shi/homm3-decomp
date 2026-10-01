@@ -1173,6 +1173,30 @@ unsigned char CDPlayLobby::receiveLobbyMsg(unsigned long appId, CDPlayMsg* msg)
     return 1;
 }
 
+// Project-inferred borrowed address-record setup. The SDK record stays a
+// plain value; the factory or enumeration container owns the pointed-to data.
+static void initializeDirectPlayAddressElement(DPCOMPOUNDADDRESSELEMENT& element,
+                                              const GUID& type,
+                                              unsigned long size,
+                                              const void* data)
+{
+    element.m_guidDataType = type;
+    element.m_dataSize = size;
+    element.m_data = data;
+}
+
+static void copyDirectPlayAddressElements(DPCOMPOUNDADDRESSELEMENT* elements,
+                                         CAutoArray<CDPlayAddressElement>& addresses,
+                                         unsigned long& count)
+{
+    while (count < addresses.getCount()) {
+        CDPlayAddressElement* element = addresses.get(count);
+        initializeDirectPlayAddressElement(elements[count], element->m_guid,
+                                           element->m_dataSize, element->m_data);
+        ++count;
+    }
+}
+
 // Project-inferred common tail of the four transport factories. Borrowed
 // element data stays alive in each caller until the connection copy is made.
 CDPlayConnection* CDPlayLobby::createConnectionFromElements(
@@ -1208,22 +1232,14 @@ CDPlayConnection* CDPlayLobby::createTCPIPConnection(
     if (append) {
         if (!enumAddress(append->m_connection, append->m_size, &addresses))
             return 0;
-        while (count < addresses.getCount()) {
-            CDPlayAddressElement* element = addresses.get(count);
-            elements[count].m_guidDataType = element->m_guid;
-            elements[count].m_dataSize = element->m_dataSize;
-            elements[count].m_data = element->m_data;
-            ++count;
-        }
+        copyDirectPlayAddressElements(elements, addresses, count);
     }
-    elements[count].m_guidDataType = DPAID_ServiceProvider;
-    elements[count].m_dataSize = sizeof(GUID);
-    elements[count].m_data = &DPSPGUID_TCPIP;
+    initializeDirectPlayAddressElement(elements[count], DPAID_ServiceProvider,
+                                       sizeof(GUID), &DPSPGUID_TCPIP);
     ++count;
     if (ipAddress) {
-        elements[count].m_guidDataType = DPAID_INet;
-        elements[count].m_dataSize = strlen(ipAddress) + 1;
-        elements[count].m_data = ipAddress;
+        initializeDirectPlayAddressElement(elements[count], DPAID_INet,
+                                           strlen(ipAddress) + 1, ipAddress);
         ++count;
     }
     return createConnectionFromElements(elements, count, &DPSPGUID_TCPIP, name);
@@ -1239,17 +1255,10 @@ CDPlayConnection* CDPlayLobby::createIPXConnection(char* name, CDPlayConnection*
     if (connAppend) {
         if (!enumAddress(connAppend->m_connection, connAppend->m_size, &addresses))
             return 0;
-        while (count < addresses.getCount()) {
-            CDPlayAddressElement* elem = addresses.get(count);
-            elements[count].m_guidDataType = elem->m_guid;
-            elements[count].m_dataSize = elem->m_dataSize;
-            elements[count].m_data = elem->m_data;
-            ++count;
-        }
+        copyDirectPlayAddressElements(elements, addresses, count);
     }
-    elements[count].m_guidDataType = DPAID_ServiceProvider;
-    elements[count].m_dataSize = sizeof(GUID);
-    elements[count].m_data = &DPSPGUID_IPX;
+    initializeDirectPlayAddressElement(elements[count], DPAID_ServiceProvider,
+                                       sizeof(GUID), &DPSPGUID_IPX);
     ++count;
     return createConnectionFromElements(elements, count, &DPSPGUID_IPX, name);
 }
@@ -1259,20 +1268,17 @@ DC_ADDRESS(0x08b958, 0x4)
 CDPlayConnection* CDPlayLobby::createModemConnection(char* name, char* phoneNbr, char* modemString)
 {
     DPCOMPOUNDADDRESSELEMENT elements[10];
-    elements[0].m_guidDataType = DPAID_ServiceProvider;
-    elements[0].m_dataSize = sizeof(GUID);
-    elements[0].m_data = &DPSPGUID_MODEM;
+    initializeDirectPlayAddressElement(elements[0], DPAID_ServiceProvider,
+                                       sizeof(GUID), &DPSPGUID_MODEM);
     unsigned long count = 1;
     if (modemString) {
-        elements[1].m_guidDataType = DPAID_Modem;
-        elements[1].m_dataSize = strlen(modemString) + 1;
-        elements[1].m_data = modemString;
+        initializeDirectPlayAddressElement(elements[1], DPAID_Modem,
+                                           strlen(modemString) + 1, modemString);
         count = 2;
     }
     if (phoneNbr) {
-        elements[count].m_guidDataType = DPAID_Phone;
-        elements[count].m_dataSize = strlen(phoneNbr) + 1;
-        elements[count].m_data = phoneNbr;
+        initializeDirectPlayAddressElement(elements[count], DPAID_Phone,
+                                           strlen(phoneNbr) + 1, phoneNbr);
         ++count;
     }
     return createConnectionFromElements(elements, count, &DPSPGUID_MODEM, name);
@@ -1283,14 +1289,12 @@ DC_ADDRESS(0x08b95c, 0x4)
 CDPlayConnection* CDPlayLobby::createSerialConnection(char* name, _DPCOMPORTADDRESS* comPortInfo)
 {
     DPCOMPOUNDADDRESSELEMENT elements[10];
-    elements[0].m_guidDataType = DPAID_ServiceProvider;
-    elements[0].m_dataSize = sizeof(GUID);
-    elements[0].m_data = &DPSPGUID_SERIAL;
+    initializeDirectPlayAddressElement(elements[0], DPAID_ServiceProvider,
+                                       sizeof(GUID), &DPSPGUID_SERIAL);
     unsigned long count = 1;
     if (comPortInfo) {
-        elements[1].m_guidDataType = DPAID_ComPort;
-        elements[1].m_dataSize = 0x14;
-        elements[1].m_data = comPortInfo;
+        initializeDirectPlayAddressElement(elements[1], DPAID_ComPort,
+                                           0x14, comPortInfo);
         count = 2;
     }
     return createConnectionFromElements(elements, count, &DPSPGUID_SERIAL, name);
