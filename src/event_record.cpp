@@ -1209,7 +1209,7 @@ DC_ADDRESS(0x08e33c, 0x210)
 MAC_ADDRESS(0x0c2314, 0x3bc)  // anchor-global (0x63df7c + GetMapExtraPtr)
 void game::setVisibility(const int startX, const int startY, const int z,
                          const int whichPlayer,
-                         int range, unsigned char remoteMove)
+                         int range, bool remoteMove)
 {
     if (whichPlayer < 0 || whichPlayer >= 8)
         return;

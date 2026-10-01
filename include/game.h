@@ -1344,7 +1344,7 @@ public:
     void perMonth();
     void setVisibility(const int startX, const int startY, const int z,
                        const int whichPlayer, int range,
-                       unsigned char remoteMove);  // 0x49cdd0
+                       bool remoteMove);  // Original SetVisibility QAAXHHHHH_N proves bool.
     // event_record.cpp:1189 in the DC roster (dc 0x8e54c), the negative
     // twin of SetVisibility below and the same five parameters in the same
     // order. DoEventCoverOfDarkness is the caller that needs the
