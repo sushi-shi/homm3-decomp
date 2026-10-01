@@ -6454,7 +6454,10 @@ int hero::heroFn004E5DE0() const
 VA(0x004e5e10, 0x11C)
 DC_ADDRESS(0x0d55c0, 0x82)
 MAC_ADDRESS(0x106d34, 0x138)
-unsigned char hero::isInIdentifyRange(const type_point* location) const
+// Original IsInIdentifyRange@hero@@QBA_NABUtype_point@@@Z proves bool
+// and a const point reference. Complete reads that point without a null
+// guard; both adventure callers supply an existing point.
+bool hero::isInIdentifyRange(const type_point& location) const
 {
     int identifyLevel = heroFn004E5DE0();
     int range = g_spellTraits[SPELL_VISIONS].m_masteryBonus[identifyLevel]
@@ -6462,7 +6465,7 @@ unsigned char hero::isInIdentifyRange(const type_point* location) const
     if (range < 3)
         range = 3;
 
-    if (m_z == location->m_z) {
+    if (m_z == location.m_z) {
         // Constructor form, not default-then-assign: it merges the y|z
         // bitfield unit into one clear-then-or (98.6813 -> 100.0000).
         type_point heroLocation(m_x, m_y, m_z);
@@ -6470,7 +6473,7 @@ unsigned char hero::isInIdentifyRange(const type_point* location) const
         // Dreamcast hero.cpp:6395 passes location as the DistanceSquared
         // receiver and the constructed hero point as its argument. Retail
         // expands that same x/y-only call.
-        if (location->distanceSquared(heroLocation) < range * range)
+        if (location.distanceSquared(heroLocation) < range * range)
             return 1;
     }
     return 0;

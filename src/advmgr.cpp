@@ -7257,7 +7257,7 @@ static TSkillMastery getIdentifyLevel(type_point point)
     for (int i = 0; i < player->m_numHeroes; i++) {
         hero* currentHero = g_game->getHero(player->m_heroes[i]);
         if (currentHero->heroFn004E5DE0() > identifyLevel
-            && currentHero->isInIdentifyRange(&point))
+            && currentHero->isInIdentifyRange(point))
             identifyLevel = currentHero->heroFn004E5DE0();
     }
     return (TSkillMastery)identifyLevel;
@@ -7489,7 +7489,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
         {
             type_point point(m_radarOrigin.m_x + cellx, m_radarOrigin.m_y + celly,
                              m_radarOrigin.m_z);
-            inIdentifyRange = currHero->isInIdentifyRange(&point);
+            inIdentifyRange = currHero->isInIdentifyRange(point);
         }
         if ((inIdentifyRange
              && currHero->heroFn004E5DE0() != eMasteryInvalid)

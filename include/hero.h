@@ -831,7 +831,7 @@ public:
     // 0x4e5dd0 - one-argument setter for waterWalkLevel.
     void walkOnWater(int level);
     // 0x4e5e10 - tests whether a packed map point is inside Visions range.
-    unsigned char isInIdentifyRange(const type_point* location) const;
+    bool isInIdentifyRange(const type_point& location) const;
 
 private:
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
