@@ -2065,6 +2065,13 @@ void advManager::processRadarSelect(const message* msg)
 // VIEW_HERO dispatch remain different. Historical explicit-goto models changed
 // the wrong CFG (88.463%);
 // hoisting the DC locals alone was byte-flat in that older context.
+// DC 2450/2452/2456 and Mac 0xa8ec..0xa900 preserve the visibility
+// test and separate 1/0 assignments before GetCell. Restoring that phase
+// raises Windows 89.6679 -> 90.2941 with no other advmgr score movement.
+// The native pc local is const pathCell* const; the hero arm also records
+// a byte-lowered waiting local. A bool predicate carrier at the restored
+// bool context boundary, with the pointer's proven cv layers, raises this
+// to 94.3548%. All ordinary call targets agree; DoAdvCommand remains split.
 // The redundant `currHeroId != -1` guard is retail's own: its inlined
 // GetHero re-tests the id off the same flags and leaves a dead
 // `xor ebx,ebx` arm behind. Dropping the guard reproduces that dead block
@@ -2086,9 +2093,11 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
     m_lastHoverX = m_lastMapHover.m_x - m_radarOrigin.m_x;
     m_lastHoverY = m_lastMapHover.m_y - m_radarOrigin.m_y;
 
-    unsigned char visible =
-        (getMapExtra(point)
-         & visibilityBit) != 0;
+    unsigned char visible;
+    if (getMapExtra(point) & visibilityBit)
+        visible = 1;
+    else
+        visible = 0;
 
     NewmapCell* cell = getCell(point);
 
@@ -2144,7 +2153,8 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
                 return;
             }
 
-            pathCell* pathAt = g_searchArray->getCell(m_lastMapHover, 0);
+            const pathCell* const pathAt =
+                g_searchArray->getCell(m_lastMapHover, 0);
             if (g_currentPlayer->isLocalHuman() && pathAt && pathAt->m_visited) {
                 if (!heroMobile
                     || (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS)
@@ -2176,10 +2186,11 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
         if (myPos != g_game->getHero(clickedIndex)->m_owner)
             return;
         // Retail homes this bool at [ebp+0xc] and pushes SetHeroContext's
-        // trailing 1 AFTER the IsLocalHuman call, but naming it is a loss
-        // in both widths: `unsigned char waitingPlayer` 89.99 and
-        // `int waitingPlayer` 90.55 against 91.10 for the folded call.
-        setHeroContext(clickedIndex, 0, !g_currentPlayer->isLocalHuman(), 1);
+        // trailing 1 AFTER the IsLocalHuman call. Historical uchar/int
+        // local controls lost to the direct expression; the native local
+        // restored as bool now preserves that push order without normalization.
+        bool waitingPlayer = !g_currentPlayer->isLocalHuman();
+        setHeroContext(clickedIndex, 0, waitingPlayer, 1);
         return;
     }
 
@@ -5745,18 +5756,18 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
     int rowPhase = 0;
     int blockPhase = 0;
     unsigned short* destRow;
+    // DC 7097..7117 names GetMap for the radar origin. Mac 13a5c..13b20
+    // and retail compute map + bytePitch*rectY + 2*rectX, with no signed
+    // divide/round path. Let the canonical accessor preserve byte pitch.
     if (g_mapHeight == MAP_DIMENSION_SMALL
         || g_mapHeight == MAP_DIMENSION_MEDIUM) {
-        destRow = g_windowManager->m_screenBitmap->getMap(0, 0)
-                  + g_windowManager->m_screenBitmap->getPitch() * rectY / 2 + rectX;
+        destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
     } else if (g_mapHeight == MAP_DIMENSION_LARGE) {
         rowPhase = 0;
         blockPhase = 0;
-        destRow = g_windowManager->m_screenBitmap->getMap(0, 0)
-                  + g_windowManager->m_screenBitmap->getPitch() * rectY / 2 + rectX;
+        destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
     } else {
-        destRow = g_windowManager->m_screenBitmap->getMap(0, 0)
-                  + g_windowManager->m_screenBitmap->getPitch() * rectY / 2 + rectX;
+        destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
     }
 
     unsigned char visibilityBit = g_mapVisibilityBit;
