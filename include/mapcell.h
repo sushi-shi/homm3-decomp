@@ -1206,7 +1206,7 @@ public:
     bool isDiggable() const;
     TAdventureObjectType getMapObject() const;
     unsigned long getMapExtraInfo() const;
-    unsigned char cellIsTrigger() const;
+    bool cellIsTrigger() const;
     TArtifact getArtifactIndex() const;
     NewmapCell* getTriggerCell();
 };

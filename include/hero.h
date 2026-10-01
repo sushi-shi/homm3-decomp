@@ -178,8 +178,10 @@ public:
     }
 
     // Original: type_obscuring_object::get_obscured_trigger; Hero.h:167
+    // Original public get_obscured_trigger@type_obscuring_object@@QBA_NXZ
+    // proves the const bool getter shared by hero and boat obscurers.
     DC_ADDRESS(0x0f4abc, 0x32)
-    unsigned char getObscuredTrigger() const { return m_valid && m_wasTrigger; }
+    bool getObscuredTrigger() const { return m_valid && m_wasTrigger; }
     void restoreCell();
     bool save(void* outfile);
 

@@ -388,10 +388,12 @@ unsigned long NewmapCell::getMapExtraInfo() const
     return m_extraInfo;
 }
 
+// Original cell_is_trigger@NewmapCell@@QBA_NXZ proves this const bool
+// predicate, whose obscurer branches use the canonical bool getter.
 VA(0x004fcc80, 0x65)
 DC_ADDRESS(0x0ec1c8, 0x8c)
 MAC_ADDRESS(0x11e454, 0xc0)
-unsigned char NewmapCell::cellIsTrigger() const
+bool NewmapCell::cellIsTrigger() const
 {
     if (m_type == HERO) {
         hero* obscurer = g_game->getHero(m_extraInfo);
