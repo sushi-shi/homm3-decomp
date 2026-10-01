@@ -1158,7 +1158,7 @@ bool town::buyBuilding(type_building_id building)
 VA(0x005bf4e0, 0xC)
 DC_ADDRESS(0x167378, 0xe)
 MAC_ADDRESS(0x1b4b6c, 0x14)
-unsigned char town::canBuildDock() const
+bool town::canBuildDock() const
 {
     return m_dockSite != TOWN_DOCK_SITE_NONE;
 }
@@ -1785,7 +1785,7 @@ void town::updateFullBuildingMask()
 VA(0x005c0d20, 0x13D)
 DC_ADDRESS(0x168504, 0x158)
 MAC_ADDRESS(0x1b67f8, 0x19c)  // anchor-global
-unsigned char town::canBuild(short buildingId) const
+bool town::canBuild(short buildingId) const
 {
     if (!g_game->townAlreadyBuiltOn(m_id)) {
         if (isLegalBuilding(type_building_id(buildingId))) {
@@ -1812,9 +1812,10 @@ unsigned char town::canBuild(short buildingId) const
 VA(0x005c0e60, 0xC0)
 DC_ADDRESS(0x16865c, 0xb6)
 MAC_ADDRESS(0x1b6994, 0xf8)
-// Complete reads the full dword parameter and its exact symbol encodes int;
-// Dreamcast's older interface records short building_id.
-unsigned char town::canEverBuild(int buildingId) const
+// Original DC can_build/can_ever_build/CanBuildDock publics prove bool returns.
+// Complete canEverBuild reads [ebp+8] as a dword; the native-short candidate
+// adds a word load and movsx absent in retail. Retain the Complete int formal.
+bool town::canEverBuild(int buildingId) const
 {
     if (isLegalBuilding(type_building_id(buildingId))) {
         if (buildingId == DOCK_ID)

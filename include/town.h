@@ -338,7 +338,7 @@ public:
     __int64 m_active;
     __int64 m_available;
     void applySpecialBuildingEffect(hero* townHero);
-    unsigned char canBuildDock() const;
+    bool canBuildDock() const;
 
     // DC Town.h:299 / :305 header inlines, declaration-only here
     // (?get_building_mask@town@@QBA_JXZ kept out of line by the DC
@@ -425,8 +425,8 @@ public:
     void setSummoningGenerator();
     int getPortraitFrame(bool isSmall) const;
     town();
-    unsigned char canBuild(short buildingId) const;
-    unsigned char canEverBuild(int buildingId) const;
+    bool canBuild(short buildingId) const;
+    bool canEverBuild(int buildingId) const;
     // 0x5bfe50.
     void changeGeneratorBonus(TCreatureType creature, long change);
     // 0x5be930. Declared for update_shipyard's direct call; the body is
