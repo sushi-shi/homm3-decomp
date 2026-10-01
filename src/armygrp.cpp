@@ -1115,6 +1115,10 @@ VA(0x0044b620, 0x1FE)
 DC_ADDRESS(0x04f3cc, 0x21e)
 MAC_ADDRESS(0x059200, 0x3c4)
 // Original public ?Merge@armyGroup@@QAA_NPAV1@@Z proves bool.
+// Mac 0x5939c/0x593a0, 0x59400/0x59404 and 0x59480/0x59484
+// expand the same zero-count / empty-type operation owned by dismiss.
+// Canonical calls expand under VC6; the current section grows from 512
+// to 552 bytes, leaving recovery debt against the prior exact body.
 bool armyGroup::merge(armyGroup* ag)
 {
     armyGroup ag1;
@@ -1134,8 +1138,7 @@ bool armyGroup::merge(armyGroup* ag)
                 ++j;
             if (j < ARMY_GROUP_SLOT_COUNT) {
                 ag1.m_numTroops[j] += ag2.m_numTroops[i];
-                ag2.m_numTroops[i] = 0;
-                ag2.m_armies[i] = CREATURE_NONE;
+                ag2.dismiss(i);
                 ++i;
             } else {
                 j = 0;
@@ -1144,8 +1147,7 @@ bool armyGroup::merge(armyGroup* ag)
                 if (j < ARMY_GROUP_SLOT_COUNT) {
                     ag1.m_numTroops[j] = ag2.m_numTroops[i];
                     ag1.m_armies[j] = ag2.m_armies[i];
-                    ag2.m_numTroops[i] = 0;
-                    ag2.m_armies[i] = CREATURE_NONE;
+                    ag2.dismiss(i);
                     ++i;
                 } else {
                     int a = 0;
@@ -1156,8 +1158,7 @@ bool armyGroup::merge(armyGroup* ag)
                         }
                         if (b < ARMY_GROUP_SLOT_COUNT) {
                             ag1.m_numTroops[a] += ag1.m_numTroops[b];
-                            ag1.m_numTroops[b] = 0;
-                            ag1.m_armies[b] = CREATURE_NONE;
+                            ag1.dismiss(b);
                             progress = 1;
                         } else {
                             ++a;
