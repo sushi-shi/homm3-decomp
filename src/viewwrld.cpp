@@ -1433,8 +1433,8 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
     g_combatActive = 2;
     {
         TViewWorldWindow viewWorldWindow;
-        type_point mapCenter(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
-                              m_radarOrigin.m_z);
+        // DC viewwrld.cpp:1461 names get_map_center before init.
+        type_point mapCenter = getMapCenter();
 
         viewWorldWindow.init(mapCenter, 0);
         viewWorldWindow.drawWindow();
