@@ -920,6 +920,39 @@ same order. The new helper's name, Boolean flag parameter and ordinary source
 placement are project inferences; existing native annotations remain on their
 original functions. No field visibility or storage changes are involved.
 
+## Path results and spell-picker phase state
+
+Adventure-search clearing and combat-path setup now use the existing
+`searchArray::clearPath()` for their result-vector clearing. Their other work
+stays ordered as before: adventure clearing empties the queue first and visited
+points afterward, while combat setup constructs its path-cell temporary, clears
+the result, then clears its queue through the existing reference. The two paths
+do not share a broader reset or change visited-cell/terrain initialization.
+
+Four spell-picker phases now each have one TU-local cache-reset operation,
+shared by confirmation and cancellation: Sacrifice beneficiary, sacrificed stack,
+Teleport source and Teleport destination. The two Sacrifice validity fields retain
+their distinct byte/int types; both Teleport phases retain separate hover and
+selection sentinels. Each caller still selects its pending-action target or
+cancels the opcode before clearing its own cache, then ends the dialog. Invalid
+hover handling remains a partial update and does not use these complete resets.
+
+Four invalid-target paths share `showInvalidSpellTarget()`: ordinary rollover,
+both Sacrifice phases and Teleport source selection. It restores the combat
+pointer, obtains the caller-selected general-text prompt, invokes the existing
+failure-reason helper and turns off the highlighter. Globals are resolved at
+each original stage; the prompt lookup remains after the cursor update. Existing
+`getText()` calls are retained, and the three `operator[]` spellings use that
+same accessor body directly. Caller validity/sentinel writes remain before this
+display operation; area highlighting remains afterward where applicable.
+
+Wall spells retain their distinct mouse-grid handling, and Teleport destination
+failure retains its direct message without highlighter cleanup. Ordinary spell
+confirmation and cancellation retain their different ordering of cache clearing
+and area-highlight cleanup. The new helper names and ordinary source placement
+are project inferences; no native addresses, inline qualifiers or storage changes
+are introduced.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

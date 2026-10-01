@@ -106,7 +106,7 @@ MAC_ADDRESS(0x0c48e0, 0x198)
 void searchArray::clear(long flyLevel, long startZ, long stopZ)
 {
     m_queue.clear();
-    m_result.clear();
+    clearPath();
     m_visitedPoints.clear();
 
     long width = m_validRectangle.right - m_validRectangle.left;
@@ -1216,7 +1216,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
     // empty constructor before both vector clears. Restoring that lifetime
     // is byte-flat at 87.9780 but preserves the positive source evidence.
     pathCell pc;
-    m_result.clear();
+    clearPath();
     // The BFS queue NAMED AS A REFERENCE: 87.6468 -> 87.9780.
     std::vector<pathCell>& rQueue = m_queue;
     rQueue.clear();

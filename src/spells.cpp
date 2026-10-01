@@ -478,6 +478,16 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
 }
 
+// Project-inferred shared refusal display. Resolve globals at each operation,
+// and look up the prompt only after restoring the ordinary combat pointer.
+static void showInvalidSpellTarget(SpellID spell, EGeneralTextIndex prompt, long hex)
+{
+    g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
+    g_combatManager->displayFailureReason(
+        spell, g_generalText->getText(prompt), hex);
+    g_combatManager->turnOffHighlighter(1);
+}
+
 // Complete factors the live rollover update out of InitiateSpell and the
 // dialog handler. There is no Dreamcast counterpart, so the name is
 // behaviour-derived; the retained body and its three callers prove the
@@ -522,10 +532,7 @@ static int updateSpellTarget(long hex)
             g_combatManager->checkChangeHighlighter(hex);
     } else {
         result = -1;
-        g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
-        g_combatManager->displayFailureReason(
-            spell, g_generalText->getText(GENERAL_TEXT_SELECT_SPELL_TARGET), hex);
-        g_combatManager->turnOffHighlighter(1);
+        showInvalidSpellTarget(spell, GENERAL_TEXT_SELECT_SPELL_TARGET, hex);
     }
     if (markArea)
         markAreaHighlights(
@@ -1813,6 +1820,13 @@ static long g_sacrificeBeneficiaryLastIndex = -1;
 DATA(0x006a3cd4)
 static unsigned char g_sacrificeBeneficiaryValidTarget;
 
+// Project-inferred phase reset shared by confirmation and cancellation.
+static void resetSacrificeBeneficiarySelection()
+{
+    g_sacrificeBeneficiaryLastIndex = -1;
+    g_sacrificeBeneficiaryValidTarget = 0;
+}
+
 VA(0x005a2d00, 0x184)
 DC_ADDRESS(0x151e94, 0x1c6)
 MAC_ADDRESS(0x1932a8, 0x238)
@@ -1838,10 +1852,8 @@ int handleSacrificeBeneficiary(message& msg)
             g_combatManager->checkChangeHighlighter(hex);
         } else {
             g_sacrificeBeneficiaryValidTarget = 0;
-            g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
-            g_combatManager->displayFailureReason(
-                SPELL_SACRIFICE, (*g_generalText)[GENERAL_TEXT_CHOOSE_RESURRECTION_TARGET], hex);
-            g_combatManager->turnOffHighlighter(1);
+            showInvalidSpellTarget(
+                SPELL_SACRIFICE, GENERAL_TEXT_CHOOSE_RESURRECTION_TARGET, hex);
         }
         break;
     }
@@ -1849,8 +1861,7 @@ int handleSacrificeBeneficiary(message& msg)
         if (!g_sacrificeBeneficiaryValidTarget)
             break;
         g_combatManager->selectActionTarget(g_sacrificeBeneficiaryLastIndex);
-        g_sacrificeBeneficiaryLastIndex = -1;
-        g_sacrificeBeneficiaryValidTarget = 0;
+        resetSacrificeBeneficiarySelection();
         msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
@@ -1858,8 +1869,7 @@ int handleSacrificeBeneficiary(message& msg)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
         g_combatManager->cancelPendingAction();
-        g_sacrificeBeneficiaryLastIndex = -1;
-        g_sacrificeBeneficiaryValidTarget = 0;
+        resetSacrificeBeneficiarySelection();
         msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     }
@@ -1870,6 +1880,13 @@ DATA(0x00688320)
 static long g_sacrificeLastIndex = -1;
 DATA(0x006a3cd8)
 static int g_sacrificeIndexIsValid;
+
+// Project-inferred reset for the second, sacrificed-stack selection phase.
+static void resetSacrificeSelection()
+{
+    g_sacrificeLastIndex = -1;
+    g_sacrificeIndexIsValid = 0;
+}
 
 VA(0x005a2e90, 0x1D4)
 DC_ADDRESS(0x15205c, 0x1e2)
@@ -1898,10 +1915,8 @@ int handleCastSacrifice(message& msg)
             g_combatManager->checkChangeHighlighter(hex);
         } else {
             g_sacrificeIndexIsValid = 0;
-            g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
-            g_combatManager->displayFailureReason(
-                SPELL_SACRIFICE, (*g_generalText)[GENERAL_TEXT_CHOOSE_SACRIFICE_TARGET], hex);
-            g_combatManager->turnOffHighlighter(1);
+            showInvalidSpellTarget(
+                SPELL_SACRIFICE, GENERAL_TEXT_CHOOSE_SACRIFICE_TARGET, hex);
         }
         break;
     }
@@ -1909,8 +1924,7 @@ int handleCastSacrifice(message& msg)
         if (!g_sacrificeIndexIsValid)
             break;
         g_combatManager->selectSecondaryActionTarget(g_sacrificeLastIndex);
-        g_sacrificeLastIndex = -1;
-        g_sacrificeIndexIsValid = 0;
+        resetSacrificeSelection();
         msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
@@ -1918,8 +1932,7 @@ int handleCastSacrifice(message& msg)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
         g_combatManager->cancelPendingAction();
-        g_sacrificeLastIndex = -1;
-        g_sacrificeIndexIsValid = 0;
+        resetSacrificeSelection();
         msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     }
@@ -2145,6 +2158,13 @@ static long g_castTeleportArmyHex = -1;
 DATA(0x00688330)
 static long g_castTeleportPreviousHex = -1;
 
+// Project-inferred reset of the first teleport phase's hover and selected hex.
+static void resetTeleportSourceSelection()
+{
+    g_castTeleportPreviousHex = -1;
+    g_castTeleportArmyHex = -1;
+}
+
 VA(0x005a3570, 0x184)
 DC_ADDRESS(0x152a14, 0x166)
 MAC_ADDRESS(0x193bd0, 0x228)
@@ -2169,10 +2189,8 @@ int handleCastTeleport(message& msg)
             g_combatManager->checkChangeHighlighter(hex);
         } else {
             g_castTeleportArmyHex = -1;
-            g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
-            g_combatManager->displayFailureReason(
-                SPELL_TELEPORT, (*g_generalText)[GENERAL_TEXT_SELECT_SPELL_TARGET], hex);
-            g_combatManager->turnOffHighlighter(1);
+            showInvalidSpellTarget(
+                SPELL_TELEPORT, GENERAL_TEXT_SELECT_SPELL_TARGET, hex);
         }
         g_castTeleportPreviousHex = hex;
         break;
@@ -2181,8 +2199,7 @@ int handleCastTeleport(message& msg)
         if (g_castTeleportArmyHex == -1)
             break;
         g_combatManager->selectActionTarget(g_castTeleportArmyHex);
-        g_castTeleportPreviousHex = -1;
-        g_castTeleportArmyHex = -1;
+        resetTeleportSourceSelection();
         msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
@@ -2190,8 +2207,7 @@ int handleCastTeleport(message& msg)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
         g_combatManager->cancelPendingAction();
-        g_castTeleportPreviousHex = -1;
-        g_castTeleportArmyHex = -1;
+        resetTeleportSourceSelection();
         msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     }
@@ -2224,6 +2240,13 @@ unsigned char combatManager::isValidTeleport(const army* thisArmy, long newHex)
     if (mastery < 3 && !hasLineOfSight)
         return 0;
     return 1;
+}
+
+// Project-inferred reset of the second teleport phase's independent cache.
+static void resetTeleportDestinationSelection()
+{
+    g_teleportHoverHex = -1;
+    g_teleportDestinationHex = -1;
 }
 
 // combatManager::field_44 already holds the hex the first click picked,
@@ -2261,8 +2284,7 @@ static int handleGetTeleportDestination(message& msg)
         if (g_teleportDestinationHex == -1)
             break;
         g_combatManager->selectSecondaryActionTarget(g_teleportDestinationHex);
-        g_teleportHoverHex = -1;
-        g_teleportDestinationHex = -1;
+        resetTeleportDestinationSelection();
         msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
@@ -2273,8 +2295,7 @@ static int handleGetTeleportDestination(message& msg)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
         g_combatManager->cancelPendingAction();
-        g_teleportHoverHex = -1;
-        g_teleportDestinationHex = -1;
+        resetTeleportDestinationSelection();
         msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     }
