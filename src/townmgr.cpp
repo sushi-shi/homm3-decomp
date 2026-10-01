@@ -5951,9 +5951,10 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
 // DC locals iThisWidth, resourceIcon and resources name the icon width,
 // cached sprite and resource-type array. Its line 7429 calls the canonical
 // ResourceManager::Dispose wrapper after adding the last icon.
-// Derived widget locals reproduce retail's widget* conversion temporaries
-// for vector insertion, its extra frame slot and nested construction call.
-// Residual at 99.9819%: the loop back edge reloads width/window in the
+// The derived widget locals are retained with the shared owned insertion.
+// Earlier matching before that extraction reproduced retail's widget*
+// conversion temporaries, extra frame slot and nested construction call.
+// Its residual at 99.9819%: the loop back edge reloaded width/window in the
 // opposite order. Combining GetSprite/GetWidth in one full expression
 // (DC row 7403) is byte-flat; preserve the ordinary helper calls.
 VA(0x005d5f30, 0x8DA)
@@ -6007,8 +6008,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
             "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8);
         if (amountText == 0)
             memError();
-        window->m_widgets.push_back(amountText);
-        window->addWidget(amountText, -1);
+        window->addOwnedWidget(amountText);
 
         iconWidget* icon = new iconWidget(
             resourceX[numResources - 1][i] + 18,
@@ -6016,8 +6016,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
             "Resource.def", resources[i], 0, 0, 0, 0x10);
         if (icon == 0)
             memError();
-        window->m_widgets.push_back(icon);
-        window->addWidget(icon, -1);
+        window->addOwnedWidget(icon);
     }
     ResourceManager::dispose(resourceIcon);
 

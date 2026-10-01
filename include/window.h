@@ -110,6 +110,8 @@ public:
     widget* findWidgetPtr(int mx, int my) const;
     int findWidget(int mx, int my) const;
     void addWidget(widget* newWidget, int newPriority);
+    // Project-inferred append followed by immediate default-priority registration.
+    void addOwnedWidget(widget* newWidget);
     void removeWidget(widget* killWidget);
     widget* getWidget(int id);
     void setFocus(int id);
@@ -142,8 +144,6 @@ protected:
     // clearing the vector or unlinking widgets from the message stream.
     void deleteWidgetObjects();
     void deleteWidgets();
-    // Project-inferred append followed by immediate default-priority registration.
-    void addOwnedWidget(widget* newWidget);
     // Project-inferred registration for windows that deliberately skip nulls.
     void addPresentWidgetsToMessageStream();
     // DC window.cpp owns the ordinary body. Complete's overview constructor

@@ -92,6 +92,15 @@ void TSubWindow::addHiddenWidgetsToMessageStream()
     }
 }
 
+// Project-inferred dynamic insertion. The placement bar guards this operation
+// itself, while the control bar retains null entries in its owned vector.
+void TSubWindow::addOwnedWidget(widget* newWidget)
+{
+    m_widgets.push_back(newWidget);
+    if (newWidget)
+        addWidget(newWidget, -1);
+}
+
 // Project-inferred terminal operations. Combat information popups only
 // delete; replaceable control/bottom-view strips unlink each item immediately
 // before deleting it. Neither operation clears the pointer vector.

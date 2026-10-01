@@ -156,7 +156,8 @@ type_combat_sub_window::~type_combat_sub_window()
 // THE TAIL LOOP PUSHES UNCONDITIONALLY AND ONLY GUARDS AddWidget. Retail
 // hands push_back the iterator itself (`push edi`, no copy through a
 // local) and only then tests the element, where the placement bar's loop
-// wraps both calls in one `if`. Two loops, two shapes, both transcribed.
+// wraps both calls in one `if`. The shared insertion retains null entries;
+// the placement caller keeps its outer guard and therefore skips them.
 //
 // rolloverWidget IS THE BASE'S MEMBER AT +0x34 and its declared type is a
 // bitmapBackedTextWidget*: retail reloads it out of +0x34 into a stack
@@ -221,11 +222,8 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
     m_logScrollDownButton->setDisabledFrame(3);
     newWidgets.push_back(m_logScrollDownButton);
 
-    for (widget** it = newWidgets.begin(); it != newWidgets.end(); ++it) {
-        m_widgets.push_back(*it);
-        if (*it)
-            addWidget(*it, -1);
-    }
+    for (widget** it = newWidgets.begin(); it != newWidgets.end(); ++it)
+        addOwnedWidget(*it);
 
     m_logScrollUpButton->sendMessage(widget::WIDGET_SET_STATUS,
         widget::WIDGET_DIMMED);
@@ -321,10 +319,8 @@ TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
 
     for (widget** it = buttons.begin(); it != buttons.end(); ++it) {
         widget* w = *it;
-        if (w) {
-            m_widgets.push_back(w);
-            addWidget(w, -1);
-        }
+        if (w)
+            addOwnedWidget(w);
     }
 }
 

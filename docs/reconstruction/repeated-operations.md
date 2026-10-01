@@ -1677,17 +1677,30 @@ helper names and ordinary source bodies are project inferences.
 
 ## Dynamic widget ownership and thieves' guild rows
 
-Seventeen original append/register sites now share protected
+Nineteen original append/register sites now share public
 `heroWindow::addOwnedWidget()`: quick-creature information (three), monster-join
 and garrison additions (three), thieves' guild dynamic rows (nine), multiplayer
-IP text and text-dialog setup. It records the pointer in the owned vector before
-passing the vector's last entry to the existing `addWidget()` at priority -1.
+IP text, text-dialog setup and town building resource text/icons (two). It records
+the pointer in the owned vector before passing the vector's last entry to the
+existing `addWidget()` at priority -1.
 Registration still opens the widget and links it through the native operation;
 a rejected open still leaves ownership recorded, and no new null or allocation
 failure policy is introduced. Allocations, retained widget handles, title-string
 lifetimes, formatting and conditional insertion remain with the callers. Base
-registration is unchanged; combat subwindow additions have a separate parent
-owner and are not routed through this window helper.
+registration is unchanged. The operation is public because the town manager
+adds resource widgets to its newly allocated purchase dialog; it preserves
+caller-side allocation checks, text/icon locals, sprite disposal and dialog
+ownership without exposing new stored state.
+
+Combat control and placement bars share their own protected
+`TSubWindow::addOwnedWidget()`. It appends even null entries but only registers
+non-null widgets through the subwindow's native `addWidget()`, which adjusts
+coordinates, expands the ID range and registers with the parent window. The
+placement caller retains its outer null guard, so it still skips ownership of
+null entries; the control caller still keeps them. Both local vectors retain
+their original lifetime and traversal. Combat-family base destruction still
+unlinks and deletes each non-null owned widget. This separate owner operation does not
+append those widgets to the parent's owned vector.
 
 The guild's four primary-skill cells share `addHeroPrimarySkill()`, preserving
 skill order, the existing getter, formatting before construction and immediate
@@ -1704,7 +1717,7 @@ Town candidates still resolve their army through the existing garrison-aware
 no state change is moved across the selection. Equal values keep the first
 candidate, and no candidate leaves the prior display snapshots untouched.
 
-All three helper names and ordinary source placements are project inferences.
+All four helper names and ordinary source placements are project inferences.
 No stored fields, native access declarations or virtual slots change.
 
 ## Widget hit boxes, presentation and input transitions

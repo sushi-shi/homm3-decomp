@@ -33,6 +33,8 @@ protected:
     // Registration retains its distinct null policies.
     void addWidgetsToMessageStream();
     void addHiddenWidgetsToMessageStream();
+    // Record ownership even for null entries; only non-null widgets register.
+    void addOwnedWidget(widget* newWidget);
     void deleteWidgetObjects();
     void removeAndDeleteWidgets();
     void showWithSavedBackground(int extraWidth);
