@@ -1138,21 +1138,9 @@ void advManager::vwDrawGround(int srcX, int srcY, int z, int destX, int destY)
 // adds the two address-taken surface/underground controls. Retail corroborates
 // every revised row through the 45 operator-new EH states and constructor-call
 // stream. The ViewWorld caller's adjacent stack local proves sizeof(*this)=0x78.
-// Residual (96.4425%) PRICED AS CALLER MASS, polish 16, and the direction is
-// DOWN.  The visible defect is an UNDER-inline: at the first two widget sites
-// retail expands `vector<widget*>::push_back` into its `insert(_Last, 1, x)`
-// call (`push edx / push 1 / push eax`) where this compile CALLS the
-// out-of-line `push_back` COMDAT with one argument, which is the /Ob2
-// `budget / sites-remaining` quotient starving the EARLIEST sites. The
-// textbook fix is to grow caller_cb, and it does not work here: an `if (0)`
-// carrier after `Widgets.reserve(NWIDGETS)` - the measuring instrument, not a
-// fix, and deliberately not shipped - gives
-//   N = 1,2,3,5 -> 96.30 | 10 -> 96.09 | 20 -> 90.59 | 30 -> 90.31 |
-//   40 -> 84.95
-// monotone down with no plateau anywhere, so more mass over-inlines faster
-// than it recovers push_back. The lever this body wants is the numerator from
-// the other side (SHRINK the caller), and the Dreamcast roster names no helper
-// to lift these blocks into, so it is out of reach without invented source.
+// Earlier quota-only controls could not recover the first push_back sites.
+// The current shared helper model is retail-exact; the final registration
+// remains a call to the canonical header-visible window helper.
 VA(0x005fa600, 0x1726)
 DC_ADDRESS(0x1952b8, 0x80c)
 MAC_ADDRESS(0x2067dc, 0x2594)  // caller stack extent + vtable 0x643c54
@@ -1298,12 +1286,9 @@ TViewWorldWindow::TViewWorldWindow()
     ok->setHotkey(28);
     m_widgets.push_back(ok);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // DC 1377..1383 and Mac 0x208c2c..0x208c70 expand the same
+    // canonical widget-registration operation as the adventure constructor.
+    addWidgetsToMessageStream();
 
     message msg;
     msg.m_id = MESSAGE_WIDGET;
