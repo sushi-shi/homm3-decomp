@@ -637,6 +637,15 @@ CNetMsgHandler* CDPlayHeroes::getNetMsgHandler()
     return m_netMsgHandler;
 }
 
+// Project-inferred optional-handler update. Preserve the native accessor and
+// the captured handler; callers own remote/transport and player guards.
+void CDPlayHeroes::setHandlerPopupState(unsigned char inPopup)
+{
+    CNetMsgHandler* handler = getNetMsgHandler();
+    if (handler)
+        handler->setInPopup(inPopup);
+}
+
 // Original: CChatManager::CChatManager; remote.cpp:804
 // Retail initializer 0x5521c0 constructs g_chatMan with 20 lines. It adds
 // the Miles handle at +0x28 between isSysMsg and the five sample stores.
@@ -2685,6 +2694,14 @@ CNetMsgHandler::CNetMsgHandler()
 {
     m_inPopup = 0;
     m_abortPopupMsg = 0;
+}
+
+// Project-inferred popup polling operation. Both calls retain virtual dispatch
+// on this same handler even if processing installs another active handler.
+bool CNetMsgHandler::pollPopupAbort(unsigned char& msgReceived)
+{
+    checkHandleNet(1, &msgReceived);
+    return msgReceived && getAbortPopupMsg();
 }
 
 // Complete's CNetMsgHandler::`scalar deleting destructor', slot 0 of

@@ -4794,11 +4794,8 @@ int townManager::main(message& msg)
         netMsgSeen = 0;
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {
-            handler->checkHandleNet(1, &netMsgSeen);
-            if (netMsgSeen) {
-                if (handler->getAbortPopupMsg())
-                    return exitTownManager(msg);
-            }
+            if (handler->pollPopupAbort(netMsgSeen))
+                return exitTownManager(msg);
         }
     }
 

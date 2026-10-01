@@ -3632,6 +3632,13 @@ unsigned char game::saveGame(const char* filename, unsigned char determineSuffix
     }
 }
 
+// Project-inferred whole-array reset. Keep the second launch-path reset after
+// setupOrigData and its intervening progress/update work rather than eliding it.
+void clearStartingHeroOverrides()
+{
+    memset(g_startingHeroOverrides, -1, sizeof(g_startingHeroOverrides));
+}
+
 // Project-inferred initial Grail search state, shared by construction and
 // new-game setup. Digging up the Grail only clears presence and keeps the
 // location for the puzzle; it must not use this reset.
@@ -3663,7 +3670,7 @@ void game::setupOrigData()
     strncpy(m_saveFileName, g_generalText->getText(GENERAL_TEXT_NEW_GAME_SAVE_NAME), sizeof(m_saveFileName));
     m_saveFileName[sizeof(m_saveFileName) - 1] = 0;
     MEMSET(m_playerDisabled, 0, sizeof(m_playerDisabled), i);
-    memset(g_startingHeroOverrides, -1, sizeof(g_startingHeroOverrides));
+    clearStartingHeroOverrides();
 
     resetHolyGrail();
     m_month = 1;

@@ -787,8 +787,7 @@ int recruitUnit::main(message& msg)
         unsigned char msgReceived = 0;
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {
-            handler->checkHandleNet(1, &msgReceived);
-            if (msgReceived && handler->getAbortPopupMsg())
+            if (handler->pollPopupAbort(msgReceived))
                 abortDialog = 1;
         }
     }

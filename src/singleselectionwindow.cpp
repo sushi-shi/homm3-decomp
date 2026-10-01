@@ -7797,7 +7797,7 @@ bool TSingleSelectionWindow::beginNewGame()
     incProgressBar(1);
 
     strcpy(g_mapName, g_game->m_setup.m_filename);
-    memset(g_startingHeroOverrides, -1, sizeof(g_startingHeroOverrides));
+    clearStartingHeroOverrides();
     for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
         CNetPlayerHandlerPlayer* player = m_players.getHumanPlayer(i);
         if (player->getPlayerPos() != -1 && player->getHeroIndex() != -1)

@@ -1958,6 +1958,17 @@ static int exitNormalDialog(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
+// Project-inferred grace-period transition shared by turn expiry and network
+// aborts. Keep both time queries: the stored value uses the later reading.
+static bool deferNormalDialogExit()
+{
+    if (GameTime::elapsedSince(g_normalDialogStart) < 15000) {
+        g_dialogDeadline = 15000 - GameTime::elapsedSince(g_normalDialogStart);
+        return true;
+    }
+    return false;
+}
+
 VA(0x004f08d0, 0x20C)
 DC_ADDRESS(0x0e1ccc, 0x118)
 MAC_ADDRESS(0x111d38, 0x184)
@@ -1966,9 +1977,7 @@ int normalDialogHandler(message& msg)
     if (g_advManager && g_advManager->m_advWindow)
         g_advManager->m_advWindow->animateBottomView(1);
     if (!g_dialogDeadline && g_turnDuration.isExpired()) {
-        if (GameTime::elapsedSince(g_normalDialogStart) < 15000)
-            g_dialogDeadline = 15000 - GameTime::elapsedSince(g_normalDialogStart);
-        else
+        if (!deferNormalDialogExit())
             return exitNormalDialog(msg);
     }
     if (g_remoteOn && !g_dialogDeadline) {
@@ -1976,12 +1985,8 @@ int normalDialogHandler(message& msg)
         if (g_dPlay) {
             CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
             if (handler) {
-                handler->checkHandleNet(1, &msgReceived);
-                if (msgReceived && handler->getAbortPopupMsg()) {
-                    if (GameTime::elapsedSince(g_normalDialogStart) < 15000)
-                        g_dialogDeadline =
-                            15000 - GameTime::elapsedSince(g_normalDialogStart);
-                    else
+                if (handler->pollPopupAbort(msgReceived)) {
+                    if (!deferNormalDialogExit())
                         return exitNormalDialog(msg);
                 }
             }

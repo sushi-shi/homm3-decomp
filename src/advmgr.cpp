@@ -1235,10 +1235,7 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
             setEnvironmentOrigin(centre, 1);
         }
         if (g_remoteOn && g_dPlay) {
-            // Before normalization: pNetMsgHandler.
-            CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
-            if (handler)
-                handler->setInPopup(0);
+            g_dPlay->setHandlerPopupState(0);
         }
         redrawAdvScreen(1, 0);
         break;
@@ -8857,9 +8854,7 @@ MAC_ADDRESS(0x01be60, 0x9c)
 CAdvPopup::~CAdvPopup()
 {
     if (g_remoteOn) {
-        CNetMsgHandler* netMsgHandler = g_dPlay->getNetMsgHandler();
-        if (netMsgHandler)
-            netMsgHandler->setInPopup(m_savedPlayerState);
+        g_dPlay->setHandlerPopupState(m_savedPlayerState);
     }
 }
 
@@ -8898,9 +8893,7 @@ int CAdvPopup::windowHandler(message& msg)
     if (g_remoteOn) {
         unsigned char msgReceived = 0;
         CNetMsgHandler* netMsgHandler = g_dPlay->getNetMsgHandler();
-        if (netMsgHandler)
-            netMsgHandler->checkHandleNet(1, &msgReceived);
-        if (msgReceived && netMsgHandler->getAbortPopupMsg())
+        if (netMsgHandler && netMsgHandler->pollPopupAbort(msgReceived))
             return exitDialog(msg);
     }
     return 0;

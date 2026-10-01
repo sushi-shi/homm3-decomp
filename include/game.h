@@ -1985,6 +1985,8 @@ extern int g_grailOwner;
 // gUnnamed69950c's precedent rather than inventing a role name.
 extern unsigned char g_normalVictory;
 extern int g_startingHeroOverrides[8];
+// Project-inferred reset of the complete per-player override array.
+void clearStartingHeroOverrides();
 // Dreamcast public `iCurHourGlassPhase`; game.cpp owns the retail word and
 // philAI::DoAI advances it as computer heroes are processed.
 extern int g_curHourGlassPhase;

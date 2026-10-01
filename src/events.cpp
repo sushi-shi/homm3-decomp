@@ -4507,9 +4507,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_remoteOn && g_dPlay
             && g_netLocalGamePos == g_game->getLocalPlayerGamePos()) {
-            CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
-            if (handler)
-                handler->setInPopup(0);
+            g_dPlay->setHandlerPopupState(0);
         }
         type_point savedOrigin = m_radarOrigin;
         demobilizeCurrHero(0, 1);

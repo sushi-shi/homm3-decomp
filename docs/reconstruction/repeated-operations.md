@@ -2058,6 +2058,55 @@ enable/disable, and the reused-message multiplayer load/restart handling.
 The method name and ordinary source placement are project inferences; no native
 annotation, virtual slot, field visibility or layout changes are introduced.
 
+## Popup network polling, grace periods and hero overrides
+
+Four popup consumers share `CNetMsgHandler::pollPopupAbort(msgReceived)`:
+recruitment, normal dialogs, town management and the adventure-popup base.
+The ordinary method invokes virtual checkHandleNet with inPopup=1 and the
+caller's existing byte flag, then invokes virtual getAbortPopupMsg only when
+that flag is nonzero. It preserves the same captured handler across both calls,
+even if processing changes the globally installed handler. It does not reset
+the byte itself: caller initialization remains in place, which also preserves
+the behavior of the single-selection override that does not write the flag.
+The native poll's return value remains ignored.
+
+Each caller keeps its transport/remote guard and timer check. Recruitment still
+sets its shared abort flag before its one exit operation; the other paths keep
+their existing exit helpers and returns. Adventure-popup's missing-handler
+path is now the explicit left side of the combined condition; its initialized
+zero byte previously skipped the abort query through short-circuit evaluation.
+The quick-view pump is distinct: it passes a null flag and queries an abort
+without the received-message gate, so it does not use this operation.
+
+Three guarded popup-state changes share
+`CDPlayHeroes::setHandlerPopupState(value)`: hero-view return, Hut of Magi
+processing, and adventure-popup destruction. It gets the current handler once,
+checks it and calls native setInPopup. The caller-specific remote, transport and
+local-player conditions remain outside; destruction still restores its saved
+byte. Popup construction keeps its coupled snapshot-and-set operation on the
+same captured handler. Handler replacement/copying and ownership are unchanged.
+
+Normal-dialog timeout and network-abort branches share file-static
+`deferNormalDialogExit()`. The first elapsed-time query decides whether the
+15-second grace period remains; only that branch makes the second query and
+stores the existing 15000-minus-elapsed value. It reports whether exit was
+deferred, leaving native exitNormalDialog calls and their random/default answer
+selection in the caller. No time query is cached and no deadline arithmetic is
+changed; the outer zero-deadline guards retain their original order.
+
+The two complete starting-hero override resets share
+`clearStartingHeroOverrides()` in the array's owning game.cpp. The operation
+keeps memset(-1) over all eight ints. Both setupOrigData and beginNewGame call
+it, including the second reset after progress and map-name work in the launch
+path. Per-player override selection, subsequent map loading and the array's
+external declaration are unchanged.
+
+These four names and ordinary source placements are project inferences across
+eleven occurrences. No native annotation or virtual slot is added, and the
+existing accessors/poll/exit helpers remain nested in the source call paths.
+The network flag and other caller-owned locals retain their existing scopes;
+backing field visibility and layout are unchanged.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
