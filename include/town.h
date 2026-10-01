@@ -432,7 +432,8 @@ public:
     // 0x5be930. Declared for update_shipyard's direct call; the body is
     // still outside the admitted surface.
     type_building_id createBuilding(type_building_id building);
-    unsigned char buyBuilding(type_building_id building);
+    // Original buy_building public returns _N, despite the lowered byte record.
+    bool buyBuilding(type_building_id building);
     void destroyExtraCapitol();
     void getBuildCost(type_building_id building, int* resources) const;
     short getBuildCost(type_building_id building, EGameResource* types,
@@ -452,9 +453,10 @@ public:
     void increasePopulation(TCreatureType bonusCreature,
                              TCreatureType alternateBonus, long bonusAmount);
     void initialize(const TownExtra* townSetup);
-    unsigned char isLegalBuilding(type_building_id building) const;
+    // Original is_legal_building/is_disabled publics both return _N.
+    bool isLegalBuilding(type_building_id building) const;
     void setLegalBuildings(__int64 disabledBuildings);
-    unsigned char isDisabled(type_building_id building) const;
+    bool isDisabled(type_building_id building) const;
     // Dreamcast's LF_FIELDLIST puts these immediately before update_shipyard,
     // in this order. BuildBuilding calls both, and retail inlines both into
     // that owner.
@@ -466,8 +468,8 @@ public:
     int hasGarrison();
     // 0x5bede0. DC signature; buy_building is the only claimed caller
     // and it pushes exactly these three.
-    type_building_id buildBuilding(int buildingId, unsigned char setBuiltFlag,
-                                   unsigned char applySpecialEffect);
+    type_building_id buildBuilding(int buildingId, bool setBuiltFlag,
+                                   bool applySpecialEffect);
     int load(TAbstractFile* infile, int saveVersion);
     // 0x5bd2f0 (body in town.obj, not yet reconstructed). game::Save's
     // town-pool loop is the only consumer here: it calls it on towns[i]
@@ -514,7 +516,8 @@ public:
     void deallocate();
     void placeInMap(int heroId, long playerId, unsigned char resetFlags);
     static void initializeHordes();
-    static unsigned char initializeBuildingCostsTables();
+    // Original InitializeBuildingCostsTables public is SA_NXZ.
+    static bool initializeBuildingCostsTables();
     const char* getTypeName() const;
     TTerrainType getNativeTerrain() const;
     // The garrisoned hero steps out onto the town tile (0x5be390).

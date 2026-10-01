@@ -1038,18 +1038,20 @@ void checkEndGame(int forceWin);
 VA(0x005bede0, 0x427)
 DC_ADDRESS(0x166fc8, 0x202)
 MAC_ADDRESS(0x1b43ac, 0x420)  // anchor-global
+// Original BuildBuilding public H_N0 independently proves bool flags.
+// Snapshot-local types remain separate hypotheses; preserve their domains.
 // Moving the result declaration after the fort/capitol snapshots and
 // grouping the special-effect guards did not recover the retained hasBuilding
 // call (six VC6 combinations, three objects). Keep the canonical helpers.
 type_building_id town::buildBuilding(int buildingId,
-                                     unsigned char setBuiltFlag,
-                                     unsigned char applySpecialEffect)
+                                     bool setBuiltFlag,
+                                     bool applySpecialEffect)
 {
     type_building_id built;
     unsigned char hadFort = isCastle();
     unsigned char hadCapitol = isCapitol();
     // The parameter is int - DC-attested (`...QAA?AW4type_building_id@@
-    // HEE@Z`) and required by the townmgr call sites - while
+    // H_N0@Z`) and required by the townmgr call sites - while
     // create_building's domain is the enum; the conversion is the
     // boundary between retail's own two spellings of the id.
     built = createBuilding(type_building_id(buildingId));
@@ -1130,7 +1132,7 @@ void town::updateShipyard()
 VA(0x005bf3c0, 0x11E)
 DC_ADDRESS(0x167274, 0x102)
 MAC_ADDRESS(0x1b4948, 0x224)
-unsigned char town::buyBuilding(type_building_id building)
+bool town::buyBuilding(type_building_id building)
 {
     if (m_owner < 0)
         return 0;
@@ -1921,7 +1923,7 @@ int* town::getSiloIncome() const
 VA(0x005c12a0, 0x39)
 DC_ADDRESS(0x1689ec, 0x22)
 MAC_ADDRESS(0x1b6de0, 0x40)
-unsigned char town::isLegalBuilding(type_building_id building) const
+bool town::isLegalBuilding(type_building_id building) const
 {
     return (g_bitNumber[building] & m_available) != 0;
 }
@@ -1936,7 +1938,7 @@ void town::setLegalBuildings(__int64 disabledBuildings)
 
 // Original: town::is_disabled; town.cpp:2300
 DC_ADDRESS(0x168a50, 0x48)
-unsigned char town::isDisabled(type_building_id building) const
+bool town::isDisabled(type_building_id building) const
 {
     if (isLegalBuilding(building))
         return 0;
@@ -2062,7 +2064,7 @@ int town::s_dwellingCosts[9][14][NUM_RESOURCES];
 VA(0x005c14c0, 0x1F6)
 DC_ADDRESS(0x168c3c, 0x112)
 MAC_ADDRESS(0x1b708c, 0x158)
-unsigned char town::initializeBuildingCostsTables()
+bool town::initializeBuildingCostsTables()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00688fb4, townBuildingSpreadsheetName, "building.txt"));
