@@ -968,7 +968,8 @@ void TViewArmyWindow::createLuckWidget(int newLuck)
 VA(0x005f65b0, 0x2B5)
 DC_ADDRESS(0x192900, 0x128)
 MAC_ADDRESS(0x20262c, 0x1b0)  // queue iterator arithmetic + SpellInt.def + widget ids
-void TViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
+// Original private public AAAXQBVarmy@@ fixes the const pointer formal.
+void TViewArmyWindow::createSpellInfluenceWidgets(const army* const thisArmy)
 {
     int x = 127;
     int widgetId = AFFECTING_SPELLS_0_ID;

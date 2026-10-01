@@ -97,7 +97,7 @@ private:
     void createSpeedWidget(int normalSpeed, int currentSpeed);
     void createMoraleWidget(int newMorale);
     void createLuckWidget(int newLuck);
-    void createSpellInfluenceWidgets(const army* thisArmy);
+    void createSpellInfluenceWidgets(const army* const thisArmy);
     void createOkWidget();
     void createUpgradeWidget();
     void createDismissWidget();
