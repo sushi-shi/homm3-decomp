@@ -80,7 +80,7 @@ def path_axes(original):
     placement = connection[len("        if (item->m_connection.m_present) {\n"):split]
     cleanup = connection[split + len("        }\n"):]
     clear = ("            item->m_tileData.m_borderObject = 0;\n"
-             "            item->m_tileData.m_subterraneanGate = 1;\n")
+             "            item->m_tileData.m_pathClearance = 1;\n")
     nested_true = ("        if (item->m_connection.m_present) {\n" + placement
                    + textwrap.indent(cleanup, "    ") + "        } else {\n" + clear + "        }\n")
     nested_false = ("        if (!item->m_connection.m_present) {\n" + clear

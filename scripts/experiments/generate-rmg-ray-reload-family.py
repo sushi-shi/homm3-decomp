@@ -36,14 +36,14 @@ def variants(original):
         if shape == 5:
             lines += ["        TRmgMapPosition query(nearby.m_x, nearby.m_y, level);"]
         query = "query" if shape == 5 else "nearby"
-        access = f"getMapItem({query})->hasSubterraneanGate()"
+        access = f"getMapItem({query})->hasPathClearance()"
         declarations = [None, f"TRmgMapItem* item = getMapItem({query});",
                         f"const TRmgMapItem* item = getMapItem({query});",
                         f"TRmgMapItem& item = *getMapItem({query});",
                         f"const TRmgMapItem& item = *getMapItem({query});"]
         if receiver:
             lines += ["        " + declarations[receiver]]
-            access = "item" + ("->" if receiver < 3 else ".") + "hasSubterraneanGate()"
+            access = "item" + ("->" if receiver < 3 else ".") + "hasPathClearance()"
         if polarity:
             lines += ["        bool blocked = " + access + ";", "        if (blocked)", "            return toward;"]
         else:

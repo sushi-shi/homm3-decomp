@@ -60,24 +60,24 @@ HEAD = """void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup*
     bounds.m_maximumY = std::_cpp_min<long>(group->m_map.m_mapHeight, m_map.m_mapHeight - position.m_y);
 """
 POLICY = """            if (destination->m_tile.m_landType != eTerrainWater
-                && !source->hasSubterraneanGate() && source->m_tileData.m_roadPassable
+                && !source->hasPathClearance() && source->m_tileData.m_roadPassable
                 && source->m_tile.m_landType != eTerrainRock && !source->isRoadEntrance()
                 && destination->m_tileData.m_roadPassable
                 && destination->m_tile.m_landType != eTerrainRock && !destination->isRoadEntrance()) {
                 if (!destination->m_connection.m_present)
-                    destination->m_tileData.m_subterraneanGate = 0;
+                    destination->m_tileData.m_pathClearance = 0;
                 if (source->hasBorderObject() && !destination->m_connection.m_present) {
-                    destination->m_tileData.m_subterraneanGate = 0;
+                    destination->m_tileData.m_pathClearance = 0;
                     destination->m_tileData.m_borderObject = 1;
                 }
             }
             if (!source->m_connection.m_present) {
                 source->m_tileData.m_borderObject = border;
                 if (border)
-                    source->m_tileData.m_subterraneanGate = 0;
+                    source->m_tileData.m_pathClearance = 0;
             }
             if (!source->m_connection.m_present) {
-                source->m_tileData.m_subterraneanGate = gate;
+                source->m_tileData.m_pathClearance = gate;
                 if (gate)
                     source->m_tileData.m_borderObject = 0;
             }
@@ -112,7 +112,7 @@ def body(scan, construction, snapshots):
     destination = forms[construction]
     if construction:
         destination += "            TRmgMapItem* destination = m_map.getMapItem(destinationPosition);\n"
-    gate = "            unsigned char gate = destination->hasSubterraneanGate();\n"
+    gate = "            unsigned char gate = destination->hasPathClearance();\n"
     border = "            unsigned char border = destination->hasBorderObject();\n"
     source = "            TRmgMapItem* source = group->m_map.getMapItem(" + x + ", " + y + ", 0);\n"
     orders = (gate + border + source, gate + source + border, source + gate + border, border + gate + source)

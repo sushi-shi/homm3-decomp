@@ -59,8 +59,8 @@ copy/snapshot boundaries rather than being mechanically merged.
 
 All three terrain gotos were removed using direct returns from a shared gap
 helper and structured early exits from the separated-neighbour predicate.
-Two `canFitObject` failure gotos remain: they converge on the next candidate
-position, and the owning comment records the existing byte-matching evidence
+Two `canFitObject` failure gotos remain: they converge on the shared placement-failure
+return, and the owning comment records the existing byte-matching evidence
 for that first-failure join. The remaining generator/support bodies have no
 gotos. The review does not replace a short, evidenced join with duplicated
 cleanup or an artificial state machine.

@@ -115,7 +115,7 @@ BASELINE = """unsigned char type_random_map_generator::canPlaceTreasureGroup(TRm
         point.m_x = entrance.m_x + g_rmgDirections[direction].m_x;
         point.m_y = entrance.m_y + g_rmgDirections[direction].m_y;
         TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y, 0);
-        if (!source->hasSubterraneanGate() || !source->m_tileData.m_roadPassable
+        if (!source->hasPathClearance() || !source->m_tileData.m_roadPassable
             || source->m_tile.m_landType == eTerrainRock || source->isRoadEntrance()
             || !source->isPlacementOutline())
             continue;
@@ -128,7 +128,7 @@ BASELINE = """unsigned char type_random_map_generator::canPlaceTreasureGroup(TRm
         if ((destination->m_tile.m_landType == eTerrainWater) == waterZone
             && destination->m_tileData.m_roadPassable
             && destination->m_tile.m_landType != eTerrainRock
-            && !destination->isRoadEntrance() && destination->hasSubterraneanGate())
+            && !destination->isRoadEntrance() && destination->hasPathClearance())
             break;
     }
     if (direction == lastDirection)
@@ -152,7 +152,7 @@ checkOutline:
     for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
         for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
             TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y, 0);
-            if (!source->hasSubterraneanGate()) {
+            if (!source->hasPathClearance()) {
                 int x = point.m_x + position.m_x;
                 int y = point.m_y + position.m_y;
                 if (x < m_map.m_mapWidth && y < m_map.m_mapHeight

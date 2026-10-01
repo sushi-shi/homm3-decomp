@@ -87,7 +87,7 @@ BASELINE = """void type_random_map::floodConnectionCosts(TRmgMapPosition positio
                     nextCost = currentCost + 10;
                 if (next->m_movement.m_cost <= nextCost)
                     continue;
-                if (!currentCost && next->hasSubterraneanGate()
+                if (!currentCost && next->hasPathClearance()
                     && (next->m_tile.m_landType != eTerrainWater || waterZone))
                     nextCost = 0;
                 next->setMovementCost(nextCost, currentPosition);

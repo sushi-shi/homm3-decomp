@@ -1294,7 +1294,7 @@ public:
 
     unsigned char hasConnectedOutline(
         const std::vector<TPoint>& outline, TRmgMapPosition position,
-        unsigned char allowEntrances, TRmgZone* zone, unsigned char requireGate);
+        unsigned char allowEntrances, TRmgZone* zone, unsigned char requirePathClearance);
     unsigned char isPlacementBlocked(
         TRmgObjectPropertiesRef* properties, TRmgMapPosition position,
         int zoneIndex, unsigned char rejectBorder);
