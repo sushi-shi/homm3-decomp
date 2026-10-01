@@ -80,6 +80,62 @@ in evidence comments where useful for lookup.
 
 ## Validation
 
-Final compiler and generated-output results are recorded here after all
-source changes and integration reviews are complete. Historical campaign
-results in the oracle guide describe the pre-cleanup implementation only.
+The final source revision is `214a21a7b` (2026-10-02). VC6 SP3 compiled
+`rmg`, `rmg_support`, `rmg_terrain` and the result-code consumer
+`singleselectionwindow`. Renamed symbols were refreshed with unit-scoped
+`homm3 delink`; their targeted `homm3 build --fast` completed successfully.
+
+After all source edits, the execution oracle compared 600 cases, each twice
+in retail and twice in the candidate: **2,400 fresh processes**. The set contains
+480 sampled requests covering the full product of four sizes, two level counts,
+three formats, four water settings and five monster settings; 118 existing
+acceptance requests; and the two documented crash reproductions. Player counts,
+town arrangements, 484 distinct stack fills and 222 heap fills also vary.
+
+- **597 cases:** byte-identical uncompressed maps, return codes, post-call
+  requests, final RNG state and x87 state; both implementations repeat exactly.
+- **Three cases:** two river faults and one negative-zone guard fault, each
+  repeated in both implementations. No candidate-only failure, retail-only
+  failure, normal-output mismatch or repeatability disagreement occurred.
+- The river fault is retail `0x53284f` and candidate `0x3000336f`: offset `+0x1f`
+  in `TRmgRiverMapAdapter::getLineType` on both sides. The guard fault is retail
+  `0x540b34` and candidate `0x30011a24`: offset `+0x14` in `createGuard`.
+  The linker map establishes the candidate function starts. Crashes remain
+  execution errors in the raw report; they are not counted as passing maps.
+
+The ignored artifacts are `build/rmg-review/final/`: full `cases.json`,
+`report.json`, per-process raw files/logs, frozen link inputs, `driver.map` and
+`provenance.json` with asset/tool/object hashes. The disposable bounded-parallel
+runner in `build/rmg-review/compare_final.py` uses the standard oracle's
+preparation, execution and comparison functions. The campaign returned 2
+because its three preserved crash cases are explicitly classified as errors.
+This is sampled behavioral agreement, not a proof over every possible input.
+
+### Machine-code comparison remains a separate measure
+
+Cleanup preserves the sampled generated output; it does not preserve every
+former instruction sequence. The following terrain bodies changed Windows
+comparison scores after shared-helper/structured-flow changes:
+
+| Body | Previous checkpoint | Final comparison |
+| --- | ---: | ---: |
+| `refreshRmgLinePoint` | 99.75% | 84.81% |
+| `TRmgLineWalker::paintPoint` | 100.00% | 78.78% |
+| `rmgTerrainPainter::paintPoint` | 100.00% | 85.16% |
+| `rmgTerrainPainter::repairTerrainPoint` | 99.18% | 88.44% |
+| `rmgTerrainPainter::paintTransitions` | 100.00% | 78.10% |
+| `rmgTerrainPainter::hasSeparatedNeighbours` | 100.00% | 99.75% |
+| `rmgTerrainPainter::buildNeighbourKinds` | 100.00% | 69.42% |
+
+The weighted treasure scheduler improves from 69.76% to 70.32%. Other reported
+MAX resets can expose an already lower CUR when a function is renamed; those
+are distinct from newly changed machine code. These are targeted comparisons;
+this review does not bank a repository-wide scoring checkpoint from unrelated
+copied objects.
+
+The targeted CodeWarrior comparison reports no RMG score drop or loss of a
+previously available RMG pair. Its whole report scores 112 pairs with 32 exact;
+251 emitted pairs remain unresolved and 40 Windows claims have no full-TU Mac
+body. The ancillary selection-window `CChatWidget::draw` pair is unavailable
+because `.getPitch__11Bitmap16BitCFv` cannot be resolved. No new Mac linking
+manifests or unrelated game changes are introduced to expand that coverage.
