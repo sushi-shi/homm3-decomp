@@ -238,20 +238,23 @@ long g_aiEventVisibilityValues[232];
 // both constructors and calls check_towns on one base and one derived
 // instance. The virtual roster/order comes from the three retail vtable
 // entries and the corresponding DC public names.
+// Native class records 0x5a4d/0x5a58 make the player id protected long
+// and the three virtual operations protected. Original constructor publics
+// at 0x5e404a/0x56feba use J; is_marked at 0x5ddad2/0x614566 uses MBA_N.
 class type_town_threat_checker {
 protected:
     void markTowns(hero* enemyHero, searchArray* currentSearchArray);
+    long m_currentPlayerId;
 
 public:
-    int m_currentPlayerId;
-
     // E:\gamedcs\ai_player.cpp:89
     DC_ADDRESS(0x02dd40, 0x22)
     MAC_ADDRESS(0x02ae18, 0x10)
-    type_town_threat_checker(int newPlayer) { m_currentPlayerId = newPlayer; }
+    type_town_threat_checker(long newPlayer) { m_currentPlayerId = newPlayer; }
     void checkTowns();
+protected:
     virtual void clearMarks() const;
-    virtual unsigned char isMarked(const town* ourTown) const;
+    virtual bool isMarked(const town* ourTown) const;
     virtual void markTown(town* ourTown) const;
 };
 
@@ -334,7 +337,7 @@ unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown)
 // Retail vtable0x63b670 slot1 points to the folded xor-al/ret4 body
 // 0x5543f0; DC independently returns false at source180.
 DC_ADDRESS(0x02dfa0, 0x4)
-unsigned char type_town_threat_checker::isMarked(const town* ourTown) const
+bool type_town_threat_checker::isMarked(const town* ourTown) const
 {
     return 0;
 }
@@ -352,10 +355,11 @@ public:
     // E:\gamedcs\ai_player.cpp:195
     DC_ADDRESS(0x02dfb8, 0x32)
     MAC_ADDRESS(0x02b200, 0x38)
-    type_garrison_purchaser(int newPlayer)
+    type_garrison_purchaser(long newPlayer)
         : type_town_threat_checker(newPlayer) {}
+protected:
     virtual void clearMarks() const;
-    virtual unsigned char isMarked(const town* ourTown) const;
+    virtual bool isMarked(const town* ourTown) const;
     virtual void markTown(town* ourTown) const;
 };
 
@@ -369,7 +373,7 @@ void type_garrison_purchaser::clearMarks() const
 // Original: type_garrison_purchaser::is_marked; ai_player.cpp:209
 // Retail vtable0x63b67c slot1 shares the false/ret4 body0x5543f0.
 DC_ADDRESS(0x02dff0, 0x4)
-unsigned char type_garrison_purchaser::isMarked(const town* ourTown) const
+bool type_garrison_purchaser::isMarked(const town* ourTown) const
 {
     return 0;
 }
@@ -592,31 +596,34 @@ void type_AI_player::endTurn()
     hireHeroes();
     calculateDemand();
 
-    short townIndex = 0;
-    if (townIndex < player->m_numTowns) {
-        while (true) {
-            town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
-            if (currentTown->hasBuilding(MARKETPLACE_ID, true)) {
-                for (short playerId = 0; playerId < 8; playerId++) {
-                    if (!g_game->m_playerDisabled[playerId]
-                        && playerId != m_team
-                        && g_game->onSameTeam(playerId, m_team)
-                        && !g_game->m_players[playerId].isHuman())
-                        makeGift(playerId);
-                }
-                for (short humanPlayerId = 0; humanPlayerId < 8;
-                     humanPlayerId++) {
-                    if (!g_game->m_playerDisabled[humanPlayerId]
-                        && humanPlayerId != m_team
-                        && g_game->onSameTeam(humanPlayerId, m_team)
-                        && g_game->m_players[humanPlayerId].isHuman())
-                        makeGift(humanPlayerId);
-                }
-                break;
-            }
-            townIndex++;
-            if (townIndex >= player->m_numTowns)
-                break;
+    // DC450-455 and Mac0x2bc7c/0x2bce0/0x2bcf8 keep a marketplace
+    // latch across the completed town search, then enter the gift phase.
+    // Restoring this phase and the native strategy declarations above is
+    // byte-flat at87.03%: all307 emitted ai_player code sections agree
+    // with the preceding control. The frame/register residual remains.
+    bool hasMarketplace = false;
+    for (short townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
+        town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
+        if (currentTown->hasBuilding(MARKETPLACE_ID, true)) {
+            hasMarketplace = true;
+            break;
+        }
+    }
+    if (hasMarketplace) {
+        for (short playerId = 0; playerId < 8; playerId++) {
+            if (!g_game->m_playerDisabled[playerId]
+                && playerId != m_team
+                && g_game->onSameTeam(playerId, m_team)
+                && !g_game->m_players[playerId].isHuman())
+                makeGift(playerId);
+        }
+        for (short humanPlayerId = 0; humanPlayerId < 8;
+             humanPlayerId++) {
+            if (!g_game->m_playerDisabled[humanPlayerId]
+                && humanPlayerId != m_team
+                && g_game->onSameTeam(humanPlayerId, m_team)
+                && g_game->m_players[humanPlayerId].isHuman())
+                makeGift(humanPlayerId);
         }
     }
 
