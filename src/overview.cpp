@@ -1748,11 +1748,14 @@ TOverviewWindow::TOverviewWindow()
         m_widgets.push_back(new iconWidget(
             739, i * 57 + 47, 50, 50, i + 40, "FlagPort.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-        m_flaggableCountWidgets.push_back(new textWidget(
+        // Both appends reuse the allocation result: Mac 1385fc/138670,
+        // retail [-0x24]. The second vector does not read the first back.
+        textWidget* countWidget = new textWidget(
             739, i * 57 + 81, 50, 16, "",
             "smalfont.fnt", font::PRIMARY, -1,
-            font::RIGHT_JUSTIFIED, 0, 8));
-        m_widgets.push_back(m_flaggableCountWidgets.back());
+            font::RIGHT_JUSTIFIED, 0, 8);
+        m_flaggableCountWidgets.push_back(countWidget);
+        m_widgets.push_back(countWidget);
     }
 
     // SEVEN resource icons, not six (found 2026-09-05 by the tree-wide
