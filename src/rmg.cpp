@@ -4632,10 +4632,12 @@ void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
 // separate parameter homes before writing a distinct translated result:
 // preserve the same free operator+ boundary recovered in the water flood.
 // The full result copy at 0x23e878..0x23e898 belongs to getMapItem(position).
-// Complete helper model: Windows 100% -> 77.1119%; seed erasure now expands
-// std::copy which retail retains, with four extra CFG blocks. No other
-// Windows function changes at this checkpoint; keep this source fact apart
-// from matching gains rather than restoring partial field-wise translation.
+// Copy-initializing the helper result gave 77.1119%: pop_back's nested
+// copy was admitted at 62 against cost 46, adding four CFG blocks. Retaining
+// the ordinary default destination and assigning the returned position
+// restores 100% with these canonical calls intact (14 blocks, five calls,
+// eight relocations and every compared instruction agree). Mac supports
+// the operand/result ownership; exact bytes do not prove unique syntax.
 VA(0x0053CF50, 0x177)
 MAC_ADDRESS(0x23e738, 0x1f0)
 void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
@@ -4648,8 +4650,9 @@ void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
         position = pending.back();
         pending.pop_back();
         for (int direction = 0; direction < 8; direction += 2) {
+            TRmgMapPosition next;
             TPoint offset = g_rmgDirections[direction];
-            TRmgMapPosition next = position + offset;
+            next = position + offset;
             if (next.m_x < 0 || next.m_x >= m_map.m_mapWidth
                 || next.m_y < 0 || next.m_y >= m_map.m_mapHeight)
                 continue;
