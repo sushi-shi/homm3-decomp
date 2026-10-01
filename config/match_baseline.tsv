@@ -885,7 +885,7 @@ campaignbrief	?_Refcnt@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@s
 campaignbrief	?_Ucopy@?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@IAEPAUtype_map_hero_identity@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x5d230	-
 campaignbrief	?addBonusIcons@TCampaignBrief@@QAEXXZ	98.8137	98.8184	98.8391	0x58120	tokens1:324882563276
 campaignbrief	?assign@?$char_traits@D@std@@SAXAADABD@Z	100.0000	100.0000	100.0000	0x5dc90	tokens1:14a4588a3c7d
-campaignbrief	?campaignBriefHandler@@YIHAAVmessage@@@Z	86.3865	86.3865	87.3081	0x5b1e0	tokens1:b6a0606a3c4c
+campaignbrief	?campaignBriefHandler@@YIHAAVmessage@@@Z	91.0541	91.0541	91.0541	0x5b1e0	tokens1:0f70c2a407e7
 campaignbrief	?capacity@?$vector@W4HeroId@@V?$allocator@W4HeroId@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x14deb0	-
 campaignbrief	?deallocate@?$allocator@D@std@@QAEXPAXI@Z	100.0000	100.0000	100.0000	0x5c1e0	-
 campaignbrief	?decreaseCampaignDifficulty@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x57f70	tokens1:8355420ff0e6
