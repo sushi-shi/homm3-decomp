@@ -1223,3 +1223,34 @@ inline qualifier. The working queue now has 5,830 open native call-site leads
 and 2,166 operation notes. The latest targeted AST snapshot predates these
 seven scalar substitutions; the four new event helper bodies remain in its
 separate inventory until the next full source-graph reconciliation.
+
+### Object records and saved pool counts
+
+`saveObject` now calls the scalar writer for its three byte coordinates and
+native-order unsigned-short type index, preserving the shared byte local and
+separate short local seen at Mac `0x126268`. `saveMapObjects` likewise retains
+scalar writes for its two native-order dword counts. The treasure and black-box
+list readers now use the reference reader for their checked signed-short
+counts. These are eight recovered helper uses; their widths, result guards,
+loop bounds and success values are unchanged.
+
+The object map reader already uses the little-endian dword reader before
+narrowing its type index, whereas saved objects use a native-order short.
+The seer, treasure and black-box list counts are native order; quest guards
+are the unchecked unsigned-short little-endian exception. Seer and guard
+loads already register nonnull quests, with the guard loop using its cached
+count and the seer loop rereading size. Twenty-two new stream-site notes and
+one updated treasure note record these distinctions. The working queue has
+5,808 open sites and 2,188 explicit operation notes; this remains partial
+call-site accounting, not complete function-body coverage.
+
+The targeted build succeeds. Windows `saveObject`, `loadTreasureList` and
+`loadBlackBoxList` remain 100%. `saveMapObjects` falls from 100% to 55.4453%,
+with HIST retained: named call comparison confirms that VC6 expands the four
+scalar transfers from `saveObject`, while retail retains that member call.
+Keep the canonical source calls while recovering the compiler decision.
+Mac comparison loses the two previously exact writers, `saveObject` and
+`saveMapObjects`, because their emitted bodies retain unpaired `writeScalar`
+references. The two list-reader comparisons were already unavailable; their
+first unresolved reference is now `readValue<short>`. No native helper
+addresses or forced inline qualifiers have been invented to mask these gaps.

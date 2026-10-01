@@ -2574,7 +2574,7 @@ mapcell	?isDiggable@NewmapCell@@QBEEXZ	100.0000	100.0000	100.0000	0xfccf0	tokens
 mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	96.4373	96.4373	96.4526	0xfdbc0	tokens1:d2f17f0246cb
 mapcell	?load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc6a0	tokens1:43fa3c57ac71
 mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@AAVBlackBoxData@@H@Z	91.4222	91.4222	96.1450	0x100430	tokens1:e00f0e2a90b7
-mapcell	?loadBlackBoxList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x100200	tokens1:7b9c824c4184
+mapcell	?loadBlackBoxList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x100200	tokens1:c222c40ff6c0
 mapcell	?loadMapLayer@NewfullMap@@AAEHPAVTAbstractFile@@HHH@Z	94.8593	94.8593	100.0000	0xfe920	tokens1:0db85739c8f8
 mapcell	?loadMapObjects@NewfullMap@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x104b70	tokens1:bf6cb7802d57
 mapcell	?loadMonsterList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x101790	tokens1:dbdf793140e8
@@ -2585,7 +2585,7 @@ mapcell	?loadQuestGuardList@NewfullMap@@QAEXPAVTAbstractFile@@H@Z	91.1135	91.113
 mapcell	?loadShipyards@NewfullMap@@QAEXXZ	100.0000	100.0000	100.0000	0x100de0	tokens1:35f211ba298a
 mapcell	?loadTimedEventList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc500	tokens1:b5b8ab7ce364
 mapcell	?loadTownEventList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc870	tokens1:5eb271168ccf
-mapcell	?loadTreasureList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfef60	tokens1:95840349f97f
+mapcell	?loadTreasureList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfef60	tokens1:672a06004faa
 mapcell	?notifyHeroDefeated@NewfullMap@@QAEXHH@Z	100.0000	100.0000	100.0000	0x105d20	tokens1:26b581bf256a
 mapcell	?notifyMonsterDefeated@NewfullMap@@QAEXUtype_point@@H@Z	100.0000	100.0000	100.0000	0x105d60	tokens1:8354f0cf4f3a
 mapcell	?placeObject@NewfullMap@@QAEHHE@Z	100.0000	100.0000	100.0000	0x105b20	tokens1:b2c78b13bbc9
@@ -2618,9 +2618,9 @@ mapcell	?save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	95.7637	95.7637	95.7637	0xf
 mapcell	?save@TTimedEvent@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc440	tokens1:01c2e822687a
 mapcell	?saveBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@@Z	100.0000	100.0000	100.0000	0xffea0	tokens1:c39aaa4cea90
 mapcell	?saveMapLayer@NewfullMap@@AAEHPAVTAbstractFile@@HH@Z	100.0000	100.0000	100.0000	0xfe490	tokens1:d1df8e41364a
-mapcell	?saveMapObjects@NewfullMap@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x104a40	tokens1:eeb8c8b3ed71
+mapcell	?saveMapObjects@NewfullMap@@AAEHPAVTAbstractFile@@@Z	55.4453	55.4453	100.0000	0x104a40	tokens1:96b68db1d5ec
 mapcell	?saveMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVMonsterData@@@Z	100.0000	100.0000	100.0000	0x101980	tokens1:fa0f64b6e73e
-mapcell	?saveObject@NewfullMap@@QAEHPAVTAbstractFile@@AAVCObject@@@Z	100.0000	100.0000	100.0000	0x103640	tokens1:4e188315d7c6
+mapcell	?saveObject@NewfullMap@@QAEHPAVTAbstractFile@@AAVCObject@@@Z	100.0000	100.0000	100.0000	0x103640	tokens1:7f74c8b4ac6e
 mapcell	?saveObjectType@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObjectType@@@Z	94.4186	94.4186	100.0000	0x103c40	tokens1:211f14460828
 mapcell	?saveTimedEventList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	0.0000	100.0000	100.0000	0xfc390	tokens1:e64c20b95dc5
 mapcell	?saveTownEventList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	43.0408	100.0000	100.0000	0xfc770	tokens1:27fce2ff2ad2

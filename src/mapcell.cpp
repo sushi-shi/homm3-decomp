@@ -1547,7 +1547,7 @@ MAC_ADDRESS(0x1211e8, 0xc4)
 int NewfullMap::loadTreasureList(TAbstractFile* infile)
 {
     short count;
-    if (static_cast<unsigned>(infile->read(&count, 2)) < 2)
+    if (static_cast<unsigned>(readValue(infile, count)) < 2)
         return -1;
 
     m_customTreasure.resize(count);
@@ -2054,7 +2054,7 @@ MAC_ADDRESS(0x12266c, 0xb4)
 int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 {
     short count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return -1;
 
     m_blackBoxes.resize(count);
@@ -3771,9 +3771,10 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
 // DC records char_buffer, ushort_buffer and count at function scope and
 // calls gzwrite directly at each of the four rows (dc 0xf1b3a..0xf1bca).
 // Mac stages the three coordinates through one byte slot and the type index
-// through a separate short slot. Direct write calls matter to the caller:
-// through the free writeScalar wrapper this body's /Ob2 cost fell to 156 and
-// saveMapObjects expanded it (55.45%); retail and Mac both call it.
+// through a separate short slot; the saved short remains native order.
+// Keep the canonical scalar writes. An earlier probe lowered the /Ob2 cost
+// to 156 and expanded this body in saveMapObjects (55.45%), where both native
+// builds retain its call. That caller inlining difference remains to recover.
 VA(0x00503640, 0x8D)
 DC_ADDRESS(0x0f1b1c, 0xda)
 MAC_ADDRESS(0x126268, 0x108)
@@ -3784,22 +3785,22 @@ int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
     char charBuffer;
 
     charBuffer = tempObject.m_x;
-    count = outfile->write(&charBuffer, sizeof(charBuffer));
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(charBuffer))
         return -1;
 
     charBuffer = tempObject.m_y;
-    count = outfile->write(&charBuffer, sizeof(charBuffer));
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(charBuffer))
         return -1;
 
     charBuffer = tempObject.m_z;
-    count = outfile->write(&charBuffer, sizeof(charBuffer));
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(charBuffer))
         return -1;
 
     ushortBuffer = tempObject.m_typeIndex;
-    count = outfile->write(&ushortBuffer, sizeof(ushortBuffer));
+    count = writeScalar(outfile, ushortBuffer);
     if (count < sizeof(ushortBuffer))
         return -1;
     return 0;
@@ -4321,7 +4322,7 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
     int x;
 
     intBuffer = m_objectTypes.size();
-    count = outfile->write(&intBuffer, sizeof(intBuffer));
+    count = writeScalar(outfile, intBuffer);
     if (count < sizeof(intBuffer))
         return -1;
 
@@ -4332,7 +4333,7 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
     }
 
     intBuffer = m_objects.size();
-    count = outfile->write(&intBuffer, sizeof(intBuffer));
+    count = writeScalar(outfile, intBuffer);
     if (count < sizeof(intBuffer))
         return -1;
 
