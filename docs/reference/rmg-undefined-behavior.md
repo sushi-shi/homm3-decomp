@@ -218,7 +218,8 @@ boundary. The review establishes the defective check, not that a shipped
 request necessarily reaches the allocation-end case.
 
 `createRiverToObject` (`0x548500`) also tests its last inspected tile after the
-queue empties and follows predecessors if that tile has the target flag. Its
+queue empties and follows predecessors if that tile has the `m_hasRiver` flag
+(a different flag from `createRiver`'s `m_riverTarget`). Its
 source has the same missing-success-state risk as `createRiver`. The crash
 requests above establish `createRiver` specifically; they do not establish a
 second reproduced crash class in `createRiverToObject`.
@@ -257,6 +258,37 @@ would change the proven vtable ABI and generated code. Any later portability
 repair must retain the direct-deallocation contract or deliberately establish
 a new nonmatching ownership model.
 
+### Failed quest/key-tent replacement: removed wrapper is never destroyed
+
+`removeObject` (`0x54bc50`) removes the object from the generator and tile
+pointer vectors, but never destroys or deallocates it. This operation alone is
+not a leak: a caller could retain ownership. The two actual replacement callers,
+however, abandon the removed wrapper:
+
+- `rmgKeyTentObject::isWritable` (`0x5338e0`) removes `this` at `+0x4a`,
+  attempts to generate a replacement, and returns false without deleting the
+  original key tent.
+- `placeQuestArtifact` (`0x54b490`) removes the artifact wrapper at `+0x298`
+  when `placeQuestGroup` fails. Its remaining cleanup destroys the temporary
+  group's containers and map, not the wrapper. On return,
+  `rmgQuestArtifactObject::isWritable` (`0x533a50`) deletes the seer hut through
+  the member at `+0x20` and clears that member, but does not delete itself.
+
+Retail `commitTreasureGroup` calls vtable slot `+8` at `0x546c55` and advances
+the loop immediately, ignoring the returned byte. Its group vector contains
+nonowning pointers; clearing or destroying that vector does not delete them.
+The generator destructor (`0x5363b0`) only deletes objects still in `m_objects`.
+Consequently the removed wrapper allocation survives generation. Its missing
+base destructor also leaves the prototype's `m_refCount` elevated, so a prototype
+used only by a removed object can still enter the serialized prototype table.
+Deleting the wrapper as a cleanup would therefore affect both allocation
+history and potentially map bytes.
+
+These are native control-flow and ownership findings, not newly executed leak
+reproductions. They apply when the specified replacement path is taken; an early
+`placeQuestArtifact` failure due to an empty artifact pool does not remove the
+wrapper and is not this leak. Preserve the existing lifetime behavior.
+
 ## Conditional contracts and unresolved hazards
 
 These source review leads are retained for later work. Unless native evidence
@@ -276,10 +308,12 @@ valid, and helps keep a helper extraction from silently changing its behavior.
 | `buildOutline` / `hasConnectedOutline` | A prototype has a usable bottom-row footprint and nonempty outline. The outline builder can return empty; the consumer's `index % outline.size()` has no zero-size guard. |
 | `buildOverlapPriorities` / `scoreObjectPlacement` | Prototype dimensions fit 8×6; blocked cells used as priority predecessors have initialized draw-cell priorities; caller supplies a nonnull placement rule. Priority writes occur only for draw cells. A malformed mask can make a later predecessor/object priority read uninitialized. |
 | `positionZone` / `paintZoneTerrain` | Position filtering leaves a candidate and generation supplies zones. Selection uses `% candidates.size()` and progress divides by the zone count. |
-| `calculateZoneBounds`, `insetIslandZone` | The normalization span and radial vector lengths are nonzero before integer division. Collapsed sites/boundaries need separate reachability evidence. |
+| `initializeZones` | The normalization span is nonzero before scaling positions and boundary roughness by integer division. `calculateZoneBounds` only accumulates bounds and has no normalization division. Collapsed sites need separate reachability evidence. |
+| `insetIslandZone` | The boundary vector is nonempty before its initial `m_boundary[0]` read. Both radial divisions already check `length > 0`; a zero-length radial vector is not an unchecked divisor here. |
 | `buildZoneConnectionPaths` | At least one same-zone, suitable-terrain tile without objects exists in the bounds. Otherwise `seed` is never assigned before `getMapItem(seed)` and the flood. Initializing it would conceal the current failure path rather than preserve it. |
 | `connectZones` and connection graph consumers | Every referenced zone index names an existing zone, reverse connections exist when dereferenced, and selected monolith prototype families are nonempty. Newly appended extra-zone connections leave four player-limit fields uninitialized; those fields are not read by the later generator path reviewed here. |
-| `createTreasureObject` | A valued footprint contains an occupied cell, and candidate densities form a positive representable total. Occupied-cell division, weight products/sums and the final random remainder have no general malformed-data protection. |
+| `createTreasureObject` | A valued footprint contains an occupied cell, and candidate densities form a positive representable total. Occupied-cell division, density sums and the final random remainder have no general malformed-data protection. |
+| `placeAdditionalTowns`, `placeExtraMines`, `placeZoneTreasures` | Positive category densities have a representable sum and product; initial counts times their density-derived steps and subsequent count increments remain representable. These routines multiply all enabled densities before dividing by each category's density. For example, seven mine densities of 100 overflow the signed 32-bit product. This is an arithmetic contract for custom template values, not a reproduced shipped-template failure. Disabled categories' uninitialized count/step entries are protected by the `finished` short-circuit and are not read by selection. |
 | Creature/scroll factories | Creature levels index the seven-entry value table, AI value is nonzero before division, creature/town/subtype indices fit their trait tables, and the requested spell level has at least one selectable spell before the scroll factory's `rand() % count`. The built-in roster supplies these contracts; arbitrary replacement traits do not automatically satisfy them. |
 | `connectJunctionEntrance` | The selected displacement limit is positive before `rand() % limit`; nonpositive template roughness can violate this. |
 | `drawIrregularZoneBoundary` / `drawIslandBoundary` | The selected displacement limit is positive before its random remainder. The segment-length test alone does not ensure positive template roughness. |
