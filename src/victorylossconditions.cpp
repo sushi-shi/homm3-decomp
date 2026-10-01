@@ -6,6 +6,19 @@
 
 #include "game.h"
 
+// Project-inferred common gate; retain the null check before slot lookup.
+static bool canCheckCurrentPlayerVictory()
+{
+    return g_currentPlayer && !g_game->m_playerDisabled[g_netLocalGamePos];
+}
+
+// The human-team query precedes the computer-policy flag in these callers.
+// appliesToPlayer has a different short-circuit order and stays independent.
+bool VictoryConditionStruct::allowsCurrentPlayerVictory() const
+{
+    return g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer;
+}
+
 // Project-inferred map/save reader transitions. Only the selected type and
 // result pair are initialized; coordinates, requirements and policy survive
 // until their own decoder writes them. Keep the original signed-byte type.
@@ -137,8 +150,7 @@ bool VictoryConditionStruct::checkForArtifactWin()
     }
 
     if (m_type != VICTORY_CONDITION_ARTIFACT
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+        || !canCheckCurrentPlayerVictory())
         return 0;
 
     int team = g_game->getTeam(g_netLocalGamePos);
@@ -175,9 +187,8 @@ unsigned char VictoryConditionStruct::checkForTotalCreatures()
 {
     if (m_type == VICTORY_CONDITION_TOTAL_CREATURES) {
         long total = 0;
-        if (g_currentPlayer
-            && !g_game->m_playerDisabled[g_netLocalGamePos]) {
-            if (g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer) {
+        if (canCheckCurrentPlayerVictory()) {
+            if (allowsCurrentPlayerVictory()) {
                 int i;
                 for (i = 0; i < g_currentPlayer->m_numHeroes; ++i)
                     total += g_game->getHero(g_currentPlayer->m_heroes[i])
@@ -201,9 +212,8 @@ MAC_ADDRESS(0x1fd9fc, 0x130)
 unsigned char VictoryConditionStruct::checkForTotalResources()
 {
     if (m_type == VICTORY_CONDITION_TOTAL_RESOURCES
-        && g_currentPlayer
-        && !g_game->m_playerDisabled[g_netLocalGamePos]) {
-        if (g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer) {
+        && canCheckCurrentPlayerVictory()) {
+        if (allowsCurrentPlayerVictory()) {
             if (g_currentPlayer->m_resources[m_resourceType] >= m_resourceAmount) {
                 recordWin(static_cast<signed char>(g_netLocalGamePos));
                 return 1;
@@ -219,8 +229,7 @@ MAC_ADDRESS(0x1fdb2c, 0x298)
 unsigned char VictoryConditionStruct::checkForUpgradedTown()
 {
     if (m_type != VICTORY_CONDITION_UPGRADE_TOWN
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+        || !canCheckCurrentPlayerVictory())
         return 0;
 
     unsigned char hallOk = 0;
@@ -266,8 +275,7 @@ MAC_ADDRESS(0x1fddc4, 0x2d0)
 unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
 {
     if (m_type != VICTORY_CONDITION_BUILD_GRAIL
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+        || !canCheckCurrentPlayerVictory())
         return 0;
 
     // Mac 0x1fde18 constructs the target before the loop; DC records
@@ -306,8 +314,7 @@ bool VictoryConditionStruct::checkForHeroDefeatWin(
 {
     if (m_type == VICTORY_CONDITION_DEFEAT_HERO
         && loser
-        && g_currentPlayer
-        && !g_game->m_playerDisabled[g_netLocalGamePos]
+        && canCheckCurrentPlayerVictory()
         && loser->m_id == m_heroId) {
         recordWin(winningPlayer);
         return true;
@@ -345,11 +352,10 @@ MAC_ADDRESS(0x1fe314, 0x154)
 unsigned char VictoryConditionStruct::checkForTownCaptureWin()
 {
     if (m_type != VICTORY_CONDITION_CAPTURE_TOWN
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+        || !canCheckCurrentPlayerVictory())
         return 0;
 
-    if (!(g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer))
+    if (!allowsCurrentPlayerVictory())
         return 0;
 
     int townId = g_game->getTownId(m_townX, m_townY, m_townZ);
@@ -384,8 +390,7 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
         return 1;
     }
     if (m_type == VICTORY_CONDITION_DEFEAT_MONSTER
-        && g_currentPlayer
-        && !g_game->m_playerDisabled[g_netLocalGamePos]) {
+        && canCheckCurrentPlayerVictory()) {
         type_point pos(m_monsterX, m_monsterY, m_monsterZ);
         if (monsterLoc == pos) {
             recordWin(thisHero->m_owner);
@@ -401,11 +406,10 @@ MAC_ADDRESS(0x1fe810, 0x194)
 unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
 {
     if (m_type != VICTORY_CONDITION_FLAG_ALL_GENERATORS
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+        || !canCheckCurrentPlayerVictory())
         return 0;
 
-    if (!(g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer))
+    if (!allowsCurrentPlayerVictory())
         return 0;
 
     for (unsigned int i = 0; i < g_game->m_generators.size(); ++i) {
@@ -423,11 +427,10 @@ MAC_ADDRESS(0x1fe9a4, 0x190)
 unsigned char VictoryConditionStruct::checkForFlaggedMineWin()
 {
     if (m_type != VICTORY_CONDITION_FLAG_ALL_MINES
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+        || !canCheckCurrentPlayerVictory())
         return 0;
 
-    if (!(g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer))
+    if (!allowsCurrentPlayerVictory())
         return 0;
 
     for (unsigned int i = 0; i < g_game->getMineCount(); ++i) {
@@ -462,11 +465,10 @@ unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
     const hero* thisHero, const type_point townLoc)
 {
     if (m_type != VICTORY_CONDITION_TRANSPORT_ARTIFACT
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+        || !canCheckCurrentPlayerVictory())
         return 0;
 
-    if (g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer) {
+    if (allowsCurrentPlayerVictory()) {
         type_point target(m_townX, m_townY, m_townZ);
         if (target == townLoc) {
             if (thisHero->hasArtifact(m_artifactNum)) {

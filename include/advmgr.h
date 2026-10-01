@@ -1391,6 +1391,8 @@ public:
                         bool update);
     void mobilizeCurrHero(int inMove, bool waitingPlayer,
                           bool drawChanges);
+    // Project-inferred paired reset after hiding a mobile hero.
+    void clearHeroCursor();
     void setHeroContext(int heroId, int inMove,
                         bool waitingPlayer,
                         bool drawChanges);

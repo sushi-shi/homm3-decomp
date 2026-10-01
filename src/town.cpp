@@ -819,8 +819,7 @@ void town::swapHeroes()
     if (g_currentPlayer->m_currHeroId == visitingHero->m_id) {
         g_currentPlayer->m_currHeroId = -1;
         if (g_netLocalGamePos == visitingHero->m_owner) {
-            g_advManager->m_drawCursor = 0;
-            g_advManager->m_curHeroMobile = 0;
+            g_advManager->clearHeroCursor();
         }
     }
 

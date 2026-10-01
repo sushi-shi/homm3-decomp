@@ -56,6 +56,13 @@
 #include "window.h"
 #include "winmgr.h"
 
+// Project-inferred paired state reset; does not stop or redraw the cursor.
+void advManager::clearHeroCursor()
+{
+    m_drawCursor = 0;
+    m_curHeroMobile = 0;
+}
+
 // Project-inferred full radar/map repaint after an origin change. Keep the
 // native drawing helpers and their arguments in their original order.
 void advManager::refreshRadarAndMap()

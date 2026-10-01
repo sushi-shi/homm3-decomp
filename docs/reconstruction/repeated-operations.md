@@ -2146,6 +2146,50 @@ own count. LOD buffer cleanup also retains distinct clear and pointAt state
 changes, and memory-file reads clamp where writes grow. Similar-looking tests
 alone do not establish interchangeable operations.
 
+## Hidden-hero cursor state, campaign scalars and victory gates
+
+Four hide/garrison paths share ordinary `advManager::clearHeroCursor()`, which
+clears the cursor-overlay byte followed by the current-hero mobility byte.
+The callers are hide-record replay, show-record undo, playerData's garrison
+insertion and town hero exchange. They retain their original local-owner and
+current-hero guards, roster/owner updates, cell operations and redraws. The
+helper performs no calls between its two stores. Hero dismissal remains
+separate because its cursor and mobility writes have different owner guards;
+demobilizeCurrHero retains its intervening cursor, cell and facing work. Neither
+the initialization paths nor single-field updates are broadened into this pair.
+The name and ordinary source placement are project inferences; storage and
+existing access declarations are unchanged.
+
+CampaignScenarioInfo::write and SCampaign::save now reuse the existing by-value
+writeValue operation for eighteen one-use scalar buffers: fourteen chars,
+three ints and one short. The five-field score writer retains completion,
+days, score, completion-order and index order. Campaign headers retain their
+seven separate byte writes, string length before payload, completion array,
+score records, carryover pools and assigned-hero IDs. The helper owns each
+staged value, preserves its original narrowing and ignores the write result as
+the caller did. Loop bounds still query live vector sizes; hero/artifact pool
+references retain their scopes, and the existing artifact short writes remain.
+The artifact-count int passed with a two-byte length stays explicit because its
+source buffer type differs from its written width. No array, record or string
+payload is coalesced with a scalar write. Historical matching comments are
+explicitly labeled as preceding this broader reuse.
+
+Eleven victory paths share file-static `canCheckCurrentPlayerVictory()`: require
+a current player before checking the local slot's disabled flag. Each caller
+retains the condition-type check ahead of this query; the defeated-hero path
+also retains its loser-null check first. Campaign artifact exceptions,
+defeat-all-monsters and time-survival paths keep their distinct gates.
+
+Six paths share private `VictoryConditionStruct::allowsCurrentPlayerVictory()`:
+query isHumanAlly first, then the computer-policy flag only if needed. Total
+creatures/resources, town capture, flagged generators/mines and artifact
+transport use it. The native appliesToPlayer checks the flag before querying
+the team and therefore remains independent; artifact collection retains its
+explicit getTeam, nonnegative-team guard and isHumanTeam calls. The two new
+predicate names and ordinary source placements are project inferences. Native
+condition entry points, winner recording, field visibility and layout remain
+unchanged.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

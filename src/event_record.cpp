@@ -775,8 +775,7 @@ void type_record_hide_hero::replay(unsigned char draw)
 
     m_currentHero->m_owner = m_newOwner;
     if (g_netLocalGamePos == m_prevOwner && !m_townGarrison) {
-        g_advManager->m_drawCursor = 0;
-        g_advManager->m_curHeroMobile = 0;
+        g_advManager->clearHeroCursor();
     }
     if (draw) {
         g_advManager->completeDraw(0);
@@ -886,8 +885,7 @@ void type_record_show_hero::undo()
 {
     m_currentHero->restoreCell();
     if (g_netLocalGamePos == m_newOwner) {
-        g_advManager->m_drawCursor = 0;
-        g_advManager->m_curHeroMobile = 0;
+        g_advManager->clearHeroCursor();
     }
     m_currentHero->m_owner = m_prevOwner;
     m_currentHero->m_x = m_previousLocation.m_x;

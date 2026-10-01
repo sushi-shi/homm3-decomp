@@ -115,6 +115,8 @@ public:
     unsigned char checkForGrailBuildingWin();
 
 private:
+    // Project-inferred query shared by current-player condition checks.
+    bool allowsCurrentPlayerVictory() const;
     // Project-inferred complete result update; player-independent wins retain
     // the existing winner and set only GameWon.
     void recordWin(signed char player);

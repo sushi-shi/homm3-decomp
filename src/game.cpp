@@ -1350,8 +1350,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
     if (m_currHeroId == ourHero->m_id) {
         m_currHeroId = -1;
         if (g_netLocalGamePos == ourHero->m_owner) {
-            g_advManager->m_drawCursor = 0;
-            g_advManager->m_curHeroMobile = 0;
+            g_advManager->clearHeroCursor();
         }
     }
     ourTown->m_garrisonHeroId = ourHero->m_id;
