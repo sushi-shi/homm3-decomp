@@ -264,7 +264,7 @@ DC_ADDRESS(0x0729d0, 0x86)
 MAC_ADDRESS(0x08a9f4, 0x84)  // sequence zero + shadow implementation
 void CSprite::drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
                                unsigned short* dst, int dx, int dy, int dw,
-                               int dh, int dpitch, unsigned char hflip) const
+                               int dh, int dpitch, bool hflip) const
 {
     m_s[0]->m_f[framenum]->drawAdvObjShadow(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);

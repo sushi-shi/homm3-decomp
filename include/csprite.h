@@ -181,7 +181,7 @@ public:
                                  unsigned char hflip) const;
     void drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
                           unsigned short* dst, int dx, int dy, int dw,
-                          int dh, int dpitch, unsigned char hflip) const;
+                          int dh, int dpitch, bool hflip) const;
     void drawPointer(int framenum, unsigned short* dst, int dx, int dy,
                      int dw, int dh, int dpitch, bool hflip) const;
     void drawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, bool hflip) const;
@@ -341,10 +341,12 @@ public:
                            hflip);
     }
 
+    // Original DrawAdvObjShadow publics encode _N for hflip in both
+    // the Bitmap16Bit* facade and the raw pixel-buffer overload.
     DC_ADDRESS(0x01f480, 0xa4)
     void drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
                           Bitmap16Bit* dst, int dx, int dy,
-                          unsigned char hflip) const
+                          bool hflip) const
     {
         drawAdvObjShadow(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                          dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);

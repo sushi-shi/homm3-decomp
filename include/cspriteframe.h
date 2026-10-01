@@ -165,7 +165,7 @@ public:
 
     DC_ADDRESS(0x0741fc, 0x5c)
     void drawAdvObjShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
-                 int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned char hflip) const
+                 int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, bool hflip) const
     {
         drawAdvObjShadowImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip);
     }
@@ -187,7 +187,7 @@ public:
 
     DC_ADDRESS(0x0742b8, 0x5c)
     void drawHeroShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
-                 int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned char hflip) const
+                 int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, bool hflip) const
     {
         drawAdvObjShadowImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip);
     }
@@ -291,10 +291,12 @@ private:
                         unsigned short* dst, int dx, int dy, int dw, int dh,
                         int dpitch, TPalette16& pal, unsigned char hflip,
                         unsigned short flagcolor) const;
+    // Original DrawAdvObjShadow, DrawHeroShadow and the private
+    // DrawAdvObjShadowImpl publics all encode _N, not E, for hflip.
     void drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                               unsigned short* dst, int dx, int dy, int dw,
                               int dh, int dpitch, TPalette16& pal,
-                              unsigned char hflip) const;
+                              bool hflip) const;
     void clip(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
               int dw, int dh, unsigned char hflip,
               unsigned char vflip) const;

@@ -1693,7 +1693,7 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                                         unsigned short* dst, int dx, int dy,
                                         int dw, int dh, int dpitch,
                                         TPalette16& pal,
-                                        unsigned char hflip) const
+                                        bool hflip) const
 {
     unsigned int cellsPerLine;
     const unsigned short* cellOffset;
