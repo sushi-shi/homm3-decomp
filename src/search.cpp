@@ -589,10 +589,10 @@ DC_ADDRESS(0x12c36c, 0x728)
 MAC_ADDRESS(0x1631a0, 0xbac)  // exhaustive search.obj order-map
 void searchArray::seedPosition(hero* currentHero, type_point start,
                                type_point target, int maxMobility,
-                               unsigned char isBoat,
+                               bool isBoat,
                                type_search_type searchType,
                                int curTempMobility,
-                               unsigned char seedContinuation)
+                               bool seedContinuation)
 {
     TSkillMastery pathfinding =
         currentHero->getSecondarySkill(eSecSkillPathfinding);

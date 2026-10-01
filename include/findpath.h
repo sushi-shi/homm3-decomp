@@ -141,12 +141,14 @@ public:
                          * g_mapWidth + point.m_x];
     }
     long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
+    // Original public 0x13d36c encodes _N for isBoat and repeats it for
+    // seedContinuation; CodeView's lowered unsigned-byte records are bool.
     void seedPosition(hero* currentHero, type_point start,
                       type_point target, int maxMobility,
-                      unsigned char isBoat,
+                      bool isBoat,
                       type_search_type searchType,
                       int curTempMobility,
-                      unsigned char seedContinuation);
+                      bool seedContinuation);
     int buildPath(const hero* currentHero, long limit);
 
     // E:\gamedcs\FindPath.h:211-213: vector::clear.
