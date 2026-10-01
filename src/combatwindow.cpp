@@ -98,7 +98,8 @@ CCombatChatEdit::CCombatChatEdit(
 VA(0x004721d0, 0x42A)
 DC_ADDRESS(0x069850, 0x2dc)
 MAC_ADDRESS(0x08008c, 0x52c)
-TCombatWindow::TCombatWindow(unsigned char doPlacement)
+// Original ??0TCombatWindow@@QAA@_N@Z proves the placement-mode bool.
+TCombatWindow::TCombatWindow(bool doPlacement)
     : heroWindow(0, 0, 800, 600, 1)
 {
     g_combatWindow = this;
@@ -525,7 +526,8 @@ void TCombatWindow::drawWindow(unsigned char update, int low, int high)
 // Keep the shared helper and widget::show/hide source calls.
 DC_ADDRESS(0x06a310, 0xb0)
 MAC_ADDRESS(0x081318, 0x98)
-void TCombatWindow::onChatActivate(unsigned char active)
+// Original ?OnChatActivate@TCombatWindow@@QAAX_N@Z proves the bool formal.
+void TCombatWindow::onChatActivate(bool active)
 {
     if (!active) {
         if (m_controlSubWindow) {

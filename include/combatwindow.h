@@ -69,13 +69,13 @@ public:
     void scrollRollover(long delta);
     static int scrollUp(message& msg);
     static int scrollDown(message& msg);
-    TCombatWindow(unsigned char doPlacement);
+    TCombatWindow(bool doPlacement);
     void endPlacementPhase();
     void combatMessage(const char* newText, bool keep,
                         bool priority);
     void drawChatText(unsigned char update);
     void drawChatEdit(unsigned char update);
-    void onChatActivate(unsigned char active);
+    void onChatActivate(bool active);
 };
 SIZE(TCombatWindow, 0x8c);
 
