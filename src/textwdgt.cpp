@@ -258,7 +258,7 @@ void iconBackedTextWidget::draw() const
 
 // Original: bitmapBackedTextWidget::bitmapBackedTextWidget; textwdgt.cpp:319
 DC_ADDRESS(0x165184, 0x54)
-bitmapBackedTextWidget::bitmapBackedTextWidget() : m_image(0) {}
+bitmapBackedTextWidget::bitmapBackedTextWidget() : m_background(0) {}
 
 VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, bitmapBackedTextWidget)
 
@@ -277,7 +277,7 @@ bitmapBackedTextWidget::bitmapBackedTextWidget(
     int style)
     : textWidget(x, y, w, h, text, fontName, color, id, justify, 0, style)
 {
-    m_image = ResourceManager::getBitmap816(backName);
+    m_background = ResourceManager::getBitmap816(backName);
 }
 
 // Claim-only home for the ordinary textWidget definition above. Retail
@@ -312,9 +312,9 @@ void bitmapBackedTextWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;
     int drawY = m_y + m_parentWindow->m_y;
-    int blitWidth = min(m_image->getWidth(), m_width);
-    int blitHeight = min(m_image->getHeight(), m_height);
-    m_image->draw(0, 0, blitWidth, blitHeight,
+    int blitWidth = min(m_background->getWidth(), m_width);
+    int blitHeight = min(m_background->getHeight(), m_height);
+    m_background->draw(0, 0, blitWidth, blitHeight,
                 g_windowManager->m_screenBitmap, drawX, drawY, 0);
     textWidget::draw();
 }

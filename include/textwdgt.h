@@ -80,11 +80,13 @@ class Bitmap16Bit;
 // ~textWidget body under this class's vtable store, then ~widget.
 // It does NOT free the backing bitmap - that resource is borrowed.
 class bitmapBackedTextWidget : public textWidget {
-public:
+private:
     // +0x50: the 11-argument constructor 0x5bc760 stores GetBitmap816's
     // result here, and Draw 0x5bc7f0 blits out of it after clamping the
     // widget extent against its +0x24/+0x28 Width/Height.
-    Bitmap816* m_image;
+    // Native class record 0x1dbc: private Bitmap816* Background.
+    Bitmap816* m_background;
+public:
     bitmapBackedTextWidget();
     bitmapBackedTextWidget(int x, int y, int w, int h, const char* text,
                            const char* fontName, const char* backName,
