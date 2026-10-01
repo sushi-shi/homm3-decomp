@@ -2542,6 +2542,47 @@ without new native identities or inline declarations. Existing native lookup,
 resource and bit-position helpers remain on the call paths. No current compiler
 or behavioral validation is claimed.
 
+## Palette adjustments and pixel-mask layout
+
+Three hue-adjustment paths share file-static adjustPaletteHue: calculate the
+float delta, apply its weighted change, then perform the existing conditional
+wrap only when the absolute delta exceeds one half. The mixed float/double
+literals and compound-assignment expressions remain unchanged. The standalone
+16-bit hue adjustment calls it unconditionally; both HSV adjusters retain their
+nonnegative-adjustment guards.
+
+Five saturation/value adjustments share adjustPaletteComponent, multiplying at
+amounts <=1 and using the original reciprocal expression above one. The 16-bit
+HSV path still adjusts saturation before value; the 24-bit path adjusts value
+first and keeps its special bright, low-saturation branch separate. No clamping,
+parameter normalization or reordered RGB/HSV conversion is introduced.
+
+Both default-format RGB palette constructors share a private convert24to16
+overload. It computes the same three unsigned scale values once, then converts
+256 RGB triples using multiply, shift, mask and final unsigned-short packing.
+Each constructor retains its resource-base identity. Native explicit-channel
+converters and the separate RGBA/quad source formats remain intact.
+
+Both colorizers and hsvToRGB share selectHSVChannels. It retains the six sector
+mappings, RGB assignment order and three native ftol calls per selected sector.
+The absent default remains absent: unsupported sectors do not initialize the
+outputs. The 24-bit colorizer still calculates its sector before the fractional
+hue work, while the other callers calculate it at their existing dispatch
+point. Value scaling, p/q/t calculation and HSVToRGB's achromatic chained write
+remain caller-owned.
+
+ResourceManager::setPixelFormat shares getChannelMaskLayout across red, green
+and blue. Each scan first clears and computes the trailing-zero shift, then
+clears and computes the remaining mask width. A zero mask yields two zeroes;
+noncontiguous masks retain span width rather than population count. Native
+pixel-format setters and all three global mask stores still precede these
+scans, which retain channel order.
+
+All five helpers are project-inferred ordinary bodies in their owning sources,
+without native annotations or explicit inline claims. Fields, palette extents
+and virtual interfaces are unchanged. Source arithmetic is preserved, but no
+new compiled floating-point or matching result is claimed.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

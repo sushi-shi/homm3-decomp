@@ -36,6 +36,51 @@ static long ftol(double d)
     return result.m_words[0];
 }
 
+// Project-inferred sector selection shared by both colorizers and HSVToRGB.
+// Out-of-range sectors leave the supplied channels untouched, as before.
+static void selectHSVChannels(int sector, float value, float p, float q, float t,
+                               unsigned int* r, unsigned int* g, unsigned int* b)
+{
+    switch (sector) {
+    case HSV_RED_SECTOR:
+        *r = ftol(value); *g = ftol(t); *b = ftol(p); break;
+    case HSV_YELLOW_SECTOR:
+        *r = ftol(q); *g = ftol(value); *b = ftol(p); break;
+    case HSV_GREEN_SECTOR:
+        *r = ftol(p); *g = ftol(value); *b = ftol(t); break;
+    case HSV_CYAN_SECTOR:
+        *r = ftol(p); *g = ftol(q); *b = ftol(value); break;
+    case HSV_BLUE_SECTOR:
+        *r = ftol(t); *g = ftol(p); *b = ftol(value); break;
+    case HSV_MAGENTA_SECTOR:
+        *r = ftol(value); *g = ftol(p); *b = ftol(q); break;
+    }
+}
+
+// Project-inferred adjustments shared by the palette transform entry points.
+// Keep the original float stores, wrap condition and arithmetic expressions.
+static void adjustPaletteHue(float& hue, float target, float amount)
+{
+    float delta = target - hue;
+    hue += delta * amount;
+    if (fabs(delta) > 0.5) {
+        if (delta > 0.0)
+            hue += 1.0f - amount;
+        else
+            hue += amount;
+        if (hue >= 1.0)
+            hue -= 1.0;
+    }
+}
+
+static void adjustPaletteComponent(float& component, float amount)
+{
+    if (amount <= 1.0f)
+        component *= amount;
+    else
+        component = 1.0f - (1.0f - component) / amount;
+}
+
 VA(0x00522650, 0x16)
 DC_ADDRESS(0x10a2a8, 0x48)
 MAC_ADDRESS(0x13b73c, 0x40)
@@ -104,18 +149,7 @@ MAC_ADDRESS(0x13b8f0, 0x120)
 TPalette16::TPalette16(const TPalette24& p24)
     : resource(0, RESOURCE_TYPE_NONE)
 {
-    unsigned short* dst = m_data;
-    const unsigned int redScale = (s_redMask + s_redMask) & ~s_redMask;
-    const unsigned int greenScale = (s_greenMask + s_greenMask) & ~s_greenMask;
-    const unsigned int blueScale = (s_blueMask + s_blueMask) & ~s_blueMask;
-    const unsigned char* src = p24.m_palette;
-    for (int index = 0; index < 256; ++index) {
-        unsigned int red = ((src[3 * index] * redScale) >> 8) & s_redMask;
-        unsigned int green = ((src[3 * index + 1] * greenScale) >> 8) & s_greenMask;
-        unsigned int blue = ((src[3 * index + 2] * blueScale) >> 8) & s_blueMask;
-        *dst = static_cast<unsigned short>(red | green | blue);
-        ++dst;
-    }
+    convert24to16(p24.m_palette);
 }
 
 // Original: TPalette16::TPalette16; palette.cpp:116
@@ -159,17 +193,7 @@ DC_ADDRESS(0x10a77c, 0xd6)
 TPalette16::TPalette16(const char* name, const TPalette24& p24)
     : resource(name, RESOURCE_TYPE_PALETTE)
 {
-    const unsigned int redScale = (s_redMask + s_redMask) & ~s_redMask;
-    const unsigned int greenScale = (s_greenMask + s_greenMask) & ~s_greenMask;
-    const unsigned int blueScale = (s_blueMask + s_blueMask) & ~s_blueMask;
-    unsigned short* destination = m_data;
-    for (int index = 0; index < 256; ++index) {
-        unsigned int red = ((p24.m_palette[3 * index] * redScale) >> 8) & s_redMask;
-        unsigned int green = ((p24.m_palette[3 * index + 1] * greenScale) >> 8) & s_greenMask;
-        unsigned int blue = ((p24.m_palette[3 * index + 2] * blueScale) >> 8) & s_blueMask;
-        *destination = static_cast<unsigned short>(red | green | blue);
-        ++destination;
-    }
+    convert24to16(p24.m_palette);
 }
 
 // The pointer-taking copy constructor, and the payload-only assignment behind
@@ -222,6 +246,22 @@ void TPalette16::convert24to16(const unsigned char* p24, int rbits, int rshift,
             (p24[3 * index + 1] >> (8 - gbits)) << gshift);
         unsigned short blue = static_cast<unsigned short>(
             (p24[3 * index + 2] >> (8 - bbits)) << bshift);
+        *destination = static_cast<unsigned short>(red | green | blue);
+        ++destination;
+    }
+}
+
+// Project-inferred default-format counterpart to the explicit-channel helper.
+void TPalette16::convert24to16(const unsigned char* p24)
+{
+    const unsigned int redScale = (s_redMask + s_redMask) & ~s_redMask;
+    const unsigned int greenScale = (s_greenMask + s_greenMask) & ~s_greenMask;
+    const unsigned int blueScale = (s_blueMask + s_blueMask) & ~s_blueMask;
+    unsigned short* destination = m_data;
+    for (int index = 0; index < 256; ++index) {
+        unsigned int red = ((p24[3 * index] * redScale) >> 8) & s_redMask;
+        unsigned int green = ((p24[3 * index + 1] * greenScale) >> 8) & s_greenMask;
+        unsigned int blue = ((p24[3 * index + 2] * blueScale) >> 8) & s_blueMask;
         *destination = static_cast<unsigned short>(red | green | blue);
         ++destination;
     }
@@ -301,14 +341,8 @@ void TPalette16::colorize(float hue, float saturation)
         const float p = value * (1.0f - saturation);
         const float q = value * (1.0f - saturation * f);
         const float t = value * (1.0f - saturation * (1.0f - f));
-        switch (static_cast<int>(hue * 6.0f)) {
-        case HSV_RED_SECTOR:     r = ftol(value); g = ftol(t); b = ftol(p); break;
-        case HSV_YELLOW_SECTOR:  r = ftol(q); g = ftol(value); b = ftol(p); break;
-        case HSV_GREEN_SECTOR:   r = ftol(p); g = ftol(value); b = ftol(t); break;
-        case HSV_CYAN_SECTOR:    r = ftol(p); g = ftol(q); b = ftol(value); break;
-        case HSV_BLUE_SECTOR:    r = ftol(t); g = ftol(p); b = ftol(value); break;
-        case HSV_MAGENTA_SECTOR: r = ftol(value); g = ftol(p); b = ftol(q); break;
-        }
+        selectHSVChannels(static_cast<int>(hue * 6.0f), value, p, q, t,
+                           &r, &g, &b);
         m_data[i] = static_cast<unsigned short>(
             ((r / redNorm) & s_redMask) |
             ((g / greenNorm) & s_greenMask) |
@@ -331,16 +365,7 @@ void TPalette16::adjustHue(float hue, float amount)
         float s;
         float v;
         rgbToHSV(r, g, b, &h, &s, &v);
-        float delta = hue - h;
-        h += delta * amount;
-        if (fabs(delta) > 0.5) {
-            if (delta > 0.0)
-                h += 1.0f - amount;
-            else
-                h += amount;
-            if (h >= 1.0)
-                h -= 1.0;
-        }
+        adjustPaletteHue(h, hue, amount);
         hsvToRGB(h, s, v, &r, &g, &b);
         m_data[i] = static_cast<unsigned short>(
             ((r / redNorm) & s_redMask) |
@@ -371,11 +396,7 @@ void TPalette16::adjustSaturation(float amount)
         float v;
         rgbToHSV(r, g, b, &h, &s, &v);
 
-        if (amount <= 1.0f) {
-            s *= amount;
-        } else {
-            s = 1.0f - (1.0f - s) / amount;
-        }
+        adjustPaletteComponent(s, amount);
 
         hsvToRGB(h, s, v, &r, &g, &b);
 
@@ -426,10 +447,7 @@ void TPalette16::adjustValue(float amount)
         float s;
         float v;
         rgbToHSV(r, g, b, &h, &s, &v);
-        if (amount <= 1.0f)
-            v *= amount;
-        else
-            v = 1.0f - (1.0f - v) / amount;
+        adjustPaletteComponent(v, amount);
         hsvToRGB(h, s, v, &r, &g, &b);
         m_data[i] = static_cast<unsigned short>(
             ((r / redNorm) & s_redMask) |
@@ -462,34 +480,15 @@ void TPalette16::adjustHSV(float hue, float hueAdjust,
         rgbToHSV(r, g, b, &h, &s, &v);
 
         if (hueAdjust >= 0.0f) {
-            float delta = hue - h;
-            h += delta * hueAdjust;
-            if (fabs(delta) > 0.5) {
-                if (delta > 0.0) {
-                    h += 1.0f - hueAdjust;
-                } else {
-                    h += hueAdjust;
-                }
-                if (h >= 1.0) {
-                    h -= 1.0;
-                }
-            }
+            adjustPaletteHue(h, hue, hueAdjust);
         }
 
         if (saturationAdjust >= 0.0f) {
-            if (saturationAdjust <= 1.0f) {
-                s *= saturationAdjust;
-            } else {
-                s = 1.0f - (1.0f - s) / saturationAdjust;
-            }
+            adjustPaletteComponent(s, saturationAdjust);
         }
 
         if (valueAdjust >= 0.0) {
-            if (valueAdjust <= 1.0f) {
-                v *= valueAdjust;
-            } else {
-                v = 1.0f - (1.0f - v) / valueAdjust;
-            }
+            adjustPaletteComponent(v, valueAdjust);
         }
 
         hsvToRGB(h, s, v, &r, &g, &b);
@@ -651,14 +650,7 @@ void TPalette24::colorize(float hue, float saturation)
         const float p = value * (1.0f - saturation);
         const float q = value * (1.0f - saturation * f);
         const float t = value * (1.0f - saturation * (1.0f - f));
-        switch (hextant) {
-        case HSV_RED_SECTOR:     r = ftol(value); g = ftol(t); b = ftol(p); break;
-        case HSV_YELLOW_SECTOR:  r = ftol(q); g = ftol(value); b = ftol(p); break;
-        case HSV_GREEN_SECTOR:   r = ftol(p); g = ftol(value); b = ftol(t); break;
-        case HSV_CYAN_SECTOR:    r = ftol(p); g = ftol(q); b = ftol(value); break;
-        case HSV_BLUE_SECTOR:    r = ftol(t); g = ftol(p); b = ftol(value); break;
-        case HSV_MAGENTA_SECTOR: r = ftol(value); g = ftol(p); b = ftol(q); break;
-        }
+        selectHSVChannels(hextant, value, p, q, t, &r, &g, &b);
         m_palette[3 * i] = static_cast<unsigned char>(r);
         m_palette[3 * i + 1] = static_cast<unsigned char>(g);
         m_palette[3 * i + 2] = static_cast<unsigned char>(b);
@@ -704,26 +696,11 @@ void TPalette24::adjustHSV(float hue, float hueAdjust,
         rgbToHSV(r, g, b, &h, &s, &v);
 
         if (hueAdjust >= 0.0f) {
-            float delta = hue - h;
-            h += delta * hueAdjust;
-            if (fabs(delta) > 0.5) {
-                if (delta > 0.0) {
-                    h += 1.0f - hueAdjust;
-                } else {
-                    h += hueAdjust;
-                }
-                if (h >= 1.0) {
-                    h -= 1.0;
-                }
-            }
+            adjustPaletteHue(h, hue, hueAdjust);
         }
 
         if (valueAdjust >= 0.0) {
-            if (valueAdjust <= 1.0f) {
-                v *= valueAdjust;
-            } else {
-                v = 1.0f - (1.0f - v) / valueAdjust;
-            }
+            adjustPaletteComponent(v, valueAdjust);
         }
 
         if (saturationAdjust >= 0.0f) {
@@ -802,38 +779,8 @@ void hsvToRGB(float h, float s, float v,
         const float q = v * (1.0f - s * f);
         const float t = v * (1.0f - s * (1.0f - f));
 
-        switch (static_cast<int>(h * 6.0f)) {
-        case HSV_RED_SECTOR:
-            *r = ftol(v);
-            *g = ftol(t);
-            *b = ftol(p);
-            break;
-        case HSV_YELLOW_SECTOR:
-            *r = ftol(q);
-            *g = ftol(v);
-            *b = ftol(p);
-            break;
-        case HSV_GREEN_SECTOR:
-            *r = ftol(p);
-            *g = ftol(v);
-            *b = ftol(t);
-            break;
-        case HSV_CYAN_SECTOR:
-            *r = ftol(p);
-            *g = ftol(q);
-            *b = ftol(v);
-            break;
-        case HSV_BLUE_SECTOR:
-            *r = ftol(t);
-            *g = ftol(p);
-            *b = ftol(v);
-            break;
-        case HSV_MAGENTA_SECTOR:
-            *r = ftol(v);
-            *g = ftol(p);
-            *b = ftol(q);
-            break;
-        }
+        selectHSVChannels(static_cast<int>(h * 6.0f), v, p, q, t,
+                           r, g, b);
     } else {
         *r = *g = *b = ftol(
             v * static_cast<float>(std::numeric_limits<int>::max()));

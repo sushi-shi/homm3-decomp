@@ -617,6 +617,22 @@ void ResourceManager::setPath(const char* path)
 #endif
 }
 
+// Project-inferred channel-mask decomposition shared by red, green and blue.
+// Width is the span after trailing zeros, not the population count of the mask.
+static void getChannelMaskLayout(unsigned long mask, int& shift, int& bits)
+{
+    shift = 0;
+    while (!(mask & 1) && mask) {
+        mask >>= 1;
+        ++shift;
+    }
+    bits = 0;
+    while (mask) {
+        ++bits;
+        mask >>= 1;
+    }
+}
+
 VA(0x0055a6b0, 0xEF)
 DC_ADDRESS(0x1218c4, 0x168)
 MAC_ADDRESS(0x152c38, 0x16c)
@@ -631,38 +647,11 @@ void ResourceManager::setPixelFormat(unsigned long redMask,
     g_spriteMaskGreen = greenMask;
     g_spriteMaskLast = blueMask;
 
-    g_firstMaskShift = 0;
-    while (!(redMask & 1) && redMask) {
-        redMask >>= 1;
-        ++g_firstMaskShift;
-    }
-    g_firstMaskBits = 0;
-    while (redMask) {
-        ++g_firstMaskBits;
-        redMask >>= 1;
-    }
+    getChannelMaskLayout(redMask, g_firstMaskShift, g_firstMaskBits);
 
-    g_greenMaskShift = 0;
-    while (!(greenMask & 1) && greenMask) {
-        greenMask >>= 1;
-        ++g_greenMaskShift;
-    }
-    g_greenMaskBits = 0;
-    while (greenMask) {
-        ++g_greenMaskBits;
-        greenMask >>= 1;
-    }
+    getChannelMaskLayout(greenMask, g_greenMaskShift, g_greenMaskBits);
 
-    g_lastMaskShift = 0;
-    while (!(blueMask & 1) && blueMask) {
-        blueMask >>= 1;
-        ++g_lastMaskShift;
-    }
-    g_lastMaskBits = 0;
-    while (blueMask) {
-        ++g_lastMaskBits;
-        blueMask >>= 1;
-    }
+    getChannelMaskLayout(blueMask, g_lastMaskShift, g_lastMaskBits);
 }
 
 VA_COMPGEN(0x0055a7a0, 0x21, SCALAR_DELETING_DTOR,
