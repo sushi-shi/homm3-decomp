@@ -1477,7 +1477,8 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
 VA(0x005fc240, 0x274)
 DC_ADDRESS(0x195d30, 0x2ca)
 MAC_ADDRESS(0x20929c, 0x514)  // anchor-caller ViewWorld, anchor-callee UpdateRadar
-void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
+// Original init@TViewWorldWindow@@QAAXUtype_point@@_N@Z proves bool updateFlag.
+void TViewWorldWindow::init(type_point newCenter, bool updateFlag)
 {
     int i;
 
@@ -1591,7 +1592,9 @@ void advManager::vwCompleteDraw(int startX, int startY, int z, int drawwidth,
 VA(0x005fc7a0, 0x147)
 DC_ADDRESS(0x196228, 0xd4)
 MAC_ADDRESS(0x209ac0, 0x178)
-void TViewWorldWindow::updateViewWorld(message* msg)
+// Original update_view_world@TViewWorldWindow@@AAAXAAUmessage@@@Z proves
+// the private method's message reference; preserve that boundary in callers.
+void TViewWorldWindow::updateViewWorld(message& msg)
 {
     message msg2;
     int i;
@@ -1604,7 +1607,7 @@ void TViewWorldWindow::updateViewWorld(message* msg)
         broadcastMessage(msg2);
     }
     msg2.m_id = MESSAGE_WIDGET;
-    msg2.m_codeY = msg->m_codeY;
+    msg2.m_codeY = msg.m_codeY;
     msg2.m_codeX = 5;
     msg2.m_extra = 16;
     broadcastMessage(msg2);
@@ -1732,17 +1735,17 @@ int TViewWorldWindow::windowHandler(message& msg)
             case MAGNIFY_FAR_ID:
                 g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_FAR;
                 g_viewWorldScale = 7;
-                updateViewWorld(&msg);
+                updateViewWorld(msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case MAGNIFY_MID_ID:
                 g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_MID;
                 g_viewWorldScale = 11;
-                updateViewWorld(&msg);
+                updateViewWorld(msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case MAGNIFY_FULL_ID:
                 g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_FULL;
                 g_viewWorldScale = 16;
-                updateViewWorld(&msg);
+                updateViewWorld(msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case PUZZLE_ID:
                 g_windowManager->fadeScreen(1, 4, 0);
