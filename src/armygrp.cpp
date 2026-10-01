@@ -63,7 +63,7 @@ bool armyGroup::hasCreatures() const
 // splitArmy and windowHandler retain calls; VC6 expands the same-TU calls.
 DC_ADDRESS(0x04db08, 0x80)
 MAC_ADDRESS(0x0564e8, 0xf4)
-void TSplitWindow::updateSplitArmy(unsigned char update)
+void TSplitWindow::updateSplitArmy(bool update)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
