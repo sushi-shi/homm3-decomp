@@ -962,6 +962,8 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 VA(0x00494390, 0xA7)
 DC_ADDRESS(0x084dac, 0x80)
 MAC_ADDRESS(0x0a5df4, 0x178)
+// Mac 0xa5e38..0xa5eb8 expands ValidHex followed by InInvisibleColumn:
+// the latter repeats the bounds test before rejecting columns 0 and 16.
 void combatManager::updateMouseGrid(int newMouseGridIndex,
                                     int allowDuringAction)
 {
@@ -969,11 +971,8 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
         return;
 
     std::vector<long> hexes;
-    if (newMouseGridIndex >= 0
-            && newMouseGridIndex < COMBAT_GRID_HEX_COUNT
-            && newMouseGridIndex % COMBAT_GRID_COLUMN_COUNT != 0
-            && newMouseGridIndex % COMBAT_GRID_COLUMN_COUNT
-                   != COMBAT_GRID_RIGHT_BORDER_COLUMN) {
+    if (validHex(newMouseGridIndex)
+            && !inInvisibleColumn(newMouseGridIndex)) {
         hexes.push_back(newMouseGridIndex);
     } else {
         newMouseGridIndex = -1;
