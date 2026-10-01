@@ -21,6 +21,16 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// Project-inferred ordered transition for tutorial-disabled checkboxes.
+// Each command retains its own widget lookup and native message dispatch.
+void TSystemOptionsWindow::disableTutorialOption(int id)
+{
+    getWidget(id)->sendMessage(widget::WIDGET_SET_ICON_FRAME, 0);
+    getWidget(id)->sendMessage(
+        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
+    getWidget(id)->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE);
+}
+
 // The shared Help.txt table is owned and filled by text.cpp.
 // Retail reads column 1 (right-click), four bytes after each row base.
 
@@ -201,18 +211,8 @@ TSystemOptionsWindow::TSystemOptionsWindow()
         getWidget(QUICK_COMBAT_ID)->sendMessage(
             widget::WIDGET_SET_ICON_FRAME, g_config.m_quickCombat);
     } else {
-        getWidget(MOVE_REMINDER_ID)->sendMessage(
-            widget::WIDGET_SET_ICON_FRAME, 0);
-        getWidget(MOVE_REMINDER_ID)->sendMessage(
-            widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
-        getWidget(MOVE_REMINDER_ID)->sendMessage(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE);
-        getWidget(QUICK_COMBAT_ID)->sendMessage(
-            widget::WIDGET_SET_ICON_FRAME, 0);
-        getWidget(QUICK_COMBAT_ID)->sendMessage(
-            widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
-        getWidget(QUICK_COMBAT_ID)->sendMessage(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE);
+        disableTutorialOption(MOVE_REMINDER_ID);
+        disableTutorialOption(QUICK_COMBAT_ID);
     }
 
     getWidget(VIDEO_SUBTITLES_ID)->sendMessage(

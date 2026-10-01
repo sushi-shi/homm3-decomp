@@ -2019,6 +2019,45 @@ strings still use copyResourceString into their existing owner; widget text
 retains its separate conditional ownership. The three native table-owner types
 have not been merged merely because their layouts and small methods agree.
 
+## RMG scalar writers and tutorial option transitions
+
+Eighty-five one-use scalar staging sequences in thirteen RMG object writers now
+call the existing `writeValue<T>()` from abstractfile.h. The explicitly selected
+staging types are 57 char, 21 int, six short and one unsigned int. This covers
+the base object and monster, town, ownable, artifact, resource, black-box, seer
+hut, hero, scholar, shrine, spell-scroll and witch-hut payloads. Each helper
+still makes one native virtual write with a by-value scalar buffer; no endian
+conversion, coalesced write or new result check is introduced. The base write
+and existing position accessors remain nested in each relevant caller.
+
+The version gates retain their original order and constants: object IDs and
+expanded creature/artifact IDs appear only in their established formats, and
+hero custom-experience, biography, sex and spell/primary-skill fields keep their
+separate conditions. Seer rewards still prefer experience, then creatures,
+then resources. Spell counts still narrow to char before their write, while
+the element loop continues to query the live vector size. Reserved scalar
+writes remain separate calls. Field roles formerly carried only by staging
+variable names are retained as comments beside literal payloads.
+
+Five int buffers deliberately passed to write with sizeof(short) remain explicit
+rather than being relabeled as short source variables. Array payloads also stay
+local: base/town/ownable/hero reserved regions, black-box resources and the town
+spell mask. The town mask still uses the same buffer for its conditional and
+unconditional writes; this preserves possible stream-visible mutation between
+calls. Bare scopes used only by the removed one-use staging scalar are gone;
+branch/loop scopes and the remaining buffer lifetimes are retained. The helper
+is an existing inferred interface, not a newly claimed native template.
+
+The tutorial's move-reminder and quick-combat options share private
+`TSystemOptionsWindow::disableTutorialOption(id)`: send frame zero, set
+DIMMED_NODRAW, then clear ACTIVE. Every step resolves the widget anew and uses
+its native sendMessage operation. The two option IDs keep their original order,
+and normal-mode preference frames remain outside the operation. This is a
+complete three-message transition, distinct from raw status writes, ordinary
+enable/disable, and the reused-message multiplayer load/restart handling.
+The method name and ordinary source placement are project inferences; no native
+annotation, virtual slot, field visibility or layout changes are introduced.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

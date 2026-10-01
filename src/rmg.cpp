@@ -1539,26 +1539,17 @@ void type_object::clearPlacementMarks()
     m_blockedByCandidate = 0;
 }
 
+// The object writers use the existing scalar writer for one-use staging
+// values. Explicit template types preserve each serialized width; wider
+// locals deliberately written as short prefixes and array payloads stay local.
 VA(0x00533170, 0x79)
 MAC_ADDRESS(0x2304c8, 0xfc)
 void type_object::write(TAbstractFile* outfile, int parameter)
 {
-    {
-        char byteBuffer = m_position.getX();
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
-    }
-    {
-        char byteBuffer = m_position.getY();
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
-    }
-    {
-        char byteBuffer = m_position.m_z;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
-    }
-    {
-        int intBuffer = m_properties->m_prototypeIndex;
-        outfile->write(&intBuffer, sizeof(intBuffer));
-    }
+    writeValue<char>(outfile, m_position.getX());
+    writeValue<char>(outfile, m_position.getY());
+    writeValue<char>(outfile, m_position.m_z);
+    writeValue<int>(outfile, m_properties->m_prototypeIndex);
     char reserved[5];
     memset(reserved, 0, sizeof(reserved));
     outfile->write(reserved, sizeof(reserved));
@@ -1570,29 +1561,13 @@ void rmgMonsterObject::write(TAbstractFile* outfile, int version)
 {
     type_object::write(outfile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-        int intBuffer = m_objectId;
-        outfile->write(&intBuffer, sizeof(intBuffer));
+        writeValue<int>(outfile, m_objectId);
     }
-    {
-        short intBuffer = m_count;
-        outfile->write(&intBuffer, sizeof(short));
-    }
-    {
-        char byteBuffer = m_disposition;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
-    }
-    {
-        char byteBuffer = 0;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
-    }
-    {
-        char byteBuffer = 0;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
-    }
-    {
-        char byteBuffer = 0;
-        outfile->write(&byteBuffer, sizeof(byteBuffer));
-    }
+    writeValue<short>(outfile, m_count);
+    writeValue<char>(outfile, m_disposition);
+    writeValue<char>(outfile, 0);
+    writeValue<char>(outfile, 0);
+    writeValue<char>(outfile, 0);
     {
         int intBuffer = 0;
         outfile->write(&intBuffer, sizeof(short));
@@ -1605,45 +1580,22 @@ void rmgTownObject::write(TAbstractFile* outfile, int version)
 {
     type_object::write(outfile, version);
     if (version >= 1) {
-        int value = m_objectId;
-        outfile->write(&value, sizeof(value));
+        writeValue<int>(outfile, m_objectId);
     }
-    {
-        char value = m_player;
-        outfile->write(&value, sizeof(value));
-    }
-    {
-        char value = 0;
-        outfile->write(&value, sizeof(value));
-    }
-    {
-        char value = 0;
-        outfile->write(&value, sizeof(value));
-    }
-    {
-        char value = 0;
-        outfile->write(&value, sizeof(value));
-    }
-    {
-        char value = 0;
-        outfile->write(&value, sizeof(value));
-    }
-    {
-        char value = m_townOption;
-        outfile->write(&value, sizeof(value));
-    }
+    writeValue<char>(outfile, m_player);
+    writeValue<char>(outfile, 0);
+    writeValue<char>(outfile, 0);
+    writeValue<char>(outfile, 0);
+    writeValue<char>(outfile, 0);
+    writeValue<char>(outfile, m_townOption);
     char spells[9];
     memset(spells, 0, sizeof(spells));
     if (version >= 1)
         outfile->write(spells, sizeof(spells));
     outfile->write(spells, sizeof(spells));
-    {
-        int value = 0;
-        outfile->write(&value, sizeof(value));
-    }
+    writeValue<int>(outfile, 0);
     if (version >= 2) {
-        char value = -1;
-        outfile->write(&value, sizeof(value));
+        writeValue<char>(outfile, -1);
     }
     char reserved[3];
     memset(reserved, 0, sizeof(reserved));
@@ -1655,10 +1607,7 @@ MAC_ADDRESS(0x230a1c, 0x78) // base serialization plus unowned player and reserv
 void rmgOwnableObject::write(TAbstractFile* outfile, int parameter)
 {
     type_object::write(outfile, parameter);
-    {
-        char player = -1;
-        outfile->write(&player, sizeof(player));
-    }
+    writeValue<char>(outfile, -1);  // player
     char reserved[3];
     memset(reserved, 0, sizeof(reserved));
     outfile->write(reserved, sizeof(reserved));
@@ -1712,10 +1661,7 @@ MAC_ADDRESS(0x230acc, 0x50)
 void rmgArtifactObject::write(TAbstractFile* outfile, int parameter)
 {
     type_object::write(outfile, parameter);
-    {
-        char hasCustomTreasure = 0;
-        outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
-    }
+    writeValue<char>(outfile, 0);  // hasCustomTreasure
 }
 
 VA_COMPGEN(0x00533590, 0x21, SCALAR_DELETING_DTOR, rmgOwnableObject)
@@ -1725,18 +1671,9 @@ MAC_ADDRESS(0x230bb4, 0x78) // anchor-vtable 0x640ac4 slot 3; thiscall ret 8
 void rmgResourceObject::write(TAbstractFile* outfile, int parameter)
 {
     type_object::write(outfile, parameter);
-    {
-        char hasCustomTreasure = 0;
-        outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
-    }
-    {
-        int amount = 0;
-        outfile->write(&amount, sizeof(amount));
-    }
-    {
-        int reserved = 0;
-        outfile->write(&reserved, sizeof(reserved));
-    }
+    writeValue<char>(outfile, 0);  // hasCustomTreasure
+    writeValue<int>(outfile, 0);  // amount
+    writeValue<int>(outfile, 0);
 }
 
 VA_COMPGEN(0x00533680, 0x21, SCALAR_DELETING_DTOR, rmgBlackBoxObject)
@@ -1749,75 +1686,32 @@ MAC_ADDRESS(0x230cac, 0x32c)
 void rmgBlackBoxObject::write(TAbstractFile* outfile, int version)
 {
     type_object::write(outfile, version);
-    {
-        char hasCustomTreasure = 0;
-        outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
-    }
-    {
-        int experience = m_experience;
-        outfile->write(&experience, sizeof(experience));
-    }
-    {
-        int mana = 0;
-        outfile->write(&mana, sizeof(mana));
-    }
-    {
-        char morale = 0;
-        outfile->write(&morale, sizeof(morale));
-    }
-    {
-        char luck = 0;
-        outfile->write(&luck, sizeof(luck));
-    }
+    writeValue<char>(outfile, 0);  // hasCustomTreasure
+    writeValue<int>(outfile, m_experience);
+    writeValue<int>(outfile, 0);  // mana
+    writeValue<char>(outfile, 0);  // morale
+    writeValue<char>(outfile, 0);  // luck
     outfile->write(m_resources, sizeof(m_resources));
-    {
-        int primarySkills = 0;
-        outfile->write(&primarySkills, sizeof(primarySkills));
-    }
-    {
-        char secondarySkillCount = 0;
-        outfile->write(&secondarySkillCount, sizeof(secondarySkillCount));
-    }
-    {
-        char artifactCount = 0;
-        outfile->write(&artifactCount, sizeof(artifactCount));
-    }
-    {
-        char spellCount = m_spells.size();
-        outfile->write(&spellCount, sizeof(spellCount));
-    }
+    writeValue<int>(outfile, 0);  // primarySkills
+    writeValue<char>(outfile, 0);  // secondarySkillCount
+    writeValue<char>(outfile, 0);  // artifactCount
+    writeValue<char>(outfile, m_spells.size());
     for (unsigned int i = 0; i < m_spells.size(); ++i) {
-        char spell = m_spells[i];
-        outfile->write(&spell, sizeof(spell));
+        writeValue<char>(outfile, m_spells[i]);
     }
     if (m_creatureType == -1) {
-        char creatureCount = 0;
-        outfile->write(&creatureCount, sizeof(creatureCount));
+        writeValue<char>(outfile, 0);  // creatureCount
     } else {
-        {
-            char creatureCount = 1;
-            outfile->write(&creatureCount, sizeof(creatureCount));
-        }
+        writeValue<char>(outfile, 1);  // creatureCount
         if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-            short creatureType = m_creatureType;
-            outfile->write(&creatureType, sizeof(creatureType));
+            writeValue<short>(outfile, m_creatureType);
         } else {
-            char creatureType = m_creatureType;
-            outfile->write(&creatureType, sizeof(creatureType));
+            writeValue<char>(outfile, m_creatureType);
         }
-        {
-            short creatureCount = m_creatureCount;
-            outfile->write(&creatureCount, sizeof(creatureCount));
-        }
+        writeValue<short>(outfile, m_creatureCount);
     }
-    {
-        int reserved = 0;
-        outfile->write(&reserved, sizeof(reserved));
-    }
-    {
-        int reserved = 0;
-        outfile->write(&reserved, sizeof(reserved));
-    }
+    writeValue<int>(outfile, 0);
+    writeValue<int>(outfile, 0);
 }
 
 // Vptr restoration and the property reference release at 0x5338d0.
@@ -1880,76 +1774,31 @@ void rmgSeerHutObject::write(TAbstractFile* outfile, int version)
 {
     type_object::write(outfile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-        {
-            char questKind = 5;
-            outfile->write(&questKind, sizeof(questKind));
-        }
-        {
-            char artifactCount = 1;
-            outfile->write(&artifactCount, sizeof(artifactCount));
-        }
-        {
-            short artifact = m_artifact;
-            outfile->write(&artifact, sizeof(artifact));
-        }
-        {
-            int deadline = -1;
-            outfile->write(&deadline, sizeof(deadline));
-        }
-        {
-            int firstVisitLength = 0;
-            outfile->write(&firstVisitLength, sizeof(firstVisitLength));
-        }
-        {
-            int nextVisitLength = 0;
-            outfile->write(&nextVisitLength, sizeof(nextVisitLength));
-        }
-        {
-            int completionLength = 0;
-            outfile->write(&completionLength, sizeof(completionLength));
-        }
+        writeValue<char>(outfile, 5);  // questKind
+        writeValue<char>(outfile, 1);  // artifactCount
+        writeValue<short>(outfile, m_artifact);
+        writeValue<int>(outfile, -1);  // deadline
+        writeValue<int>(outfile, 0);  // firstVisitLength
+        writeValue<int>(outfile, 0);  // nextVisitLength
+        writeValue<int>(outfile, 0);  // completionLength
     } else {
-        char artifact = m_artifact;
-        outfile->write(&artifact, sizeof(artifact));
+        writeValue<char>(outfile, m_artifact);
     }
     if (m_experience > 0) {
-        {
-            char rewardKind = 1;
-            outfile->write(&rewardKind, sizeof(rewardKind));
-        }
-        {
-            int experience = m_experience;
-            outfile->write(&experience, sizeof(experience));
-        }
+        writeValue<char>(outfile, 1);  // rewardKind
+        writeValue<int>(outfile, m_experience);
     } else if (m_creatureType != -1) {
-        {
-            char rewardKind = 10;
-            outfile->write(&rewardKind, sizeof(rewardKind));
-        }
+        writeValue<char>(outfile, 10);  // rewardKind
         if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-            short creature = m_creatureType;
-            outfile->write(&creature, sizeof(creature));
+            writeValue<short>(outfile, m_creatureType);
         } else {
-            char creature = m_creatureType;
-            outfile->write(&creature, sizeof(creature));
+            writeValue<char>(outfile, m_creatureType);
         }
-        {
-            short count = m_creatureCount;
-            outfile->write(&count, sizeof(count));
-        }
+        writeValue<short>(outfile, m_creatureCount);
     } else {
-        {
-            char rewardKind = 5;
-            outfile->write(&rewardKind, sizeof(rewardKind));
-        }
-        {
-            char resourceType = m_resourceType;
-            outfile->write(&resourceType, sizeof(resourceType));
-        }
-        {
-            int resourceCount = m_resourceCount;
-            outfile->write(&resourceCount, sizeof(resourceCount));
-        }
+        writeValue<char>(outfile, 5);  // rewardKind
+        writeValue<char>(outfile, m_resourceType);
+        writeValue<int>(outfile, m_resourceCount);
     }
     {
         int reserved = 0;
@@ -1984,79 +1833,33 @@ void rmgHeroObject::write(TAbstractFile* outfile, int version)
 {
     type_object::write(outfile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-        int objectId = m_objectId;
-        outfile->write(&objectId, sizeof(objectId));
+        writeValue<int>(outfile, m_objectId);
     }
-    {
-        char owner = -1;
-        outfile->write(&owner, sizeof(owner));
-    }
-    {
-        char heroIndex = m_heroIndex;
-        outfile->write(&heroIndex, sizeof(heroIndex));
-    }
-    {
-        char customName = 0;
-        outfile->write(&customName, sizeof(customName));
-    }
+    writeValue<char>(outfile, -1);  // owner
+    writeValue<char>(outfile, m_heroIndex);
+    writeValue<char>(outfile, 0);  // customName
     if (version >= RMG_MAP_SHADOW_OF_DEATH) {
-        {
-            char customExperience = m_experience != 0;
-            outfile->write(&customExperience, sizeof(customExperience));
-        }
+        writeValue<char>(outfile, m_experience != 0);
         if (m_experience != 0) {
-            int experience = m_experience;
-            outfile->write(&experience, sizeof(experience));
+            writeValue<int>(outfile, m_experience);
         }
     } else {
-        int experience = m_experience;
-        outfile->write(&experience, sizeof(experience));
+        writeValue<int>(outfile, m_experience);
     }
-    {
-        char customPortrait = 0;
-        outfile->write(&customPortrait, sizeof(customPortrait));
-    }
-    {
-        char customSecondarySkills = 0;
-        outfile->write(&customSecondarySkills, sizeof(customSecondarySkills));
-    }
-    {
-        char customArmies = 0;
-        outfile->write(&customArmies, sizeof(customArmies));
-    }
-    {
-        char groupFormation = 0;
-        outfile->write(&groupFormation, sizeof(groupFormation));
-    }
-    {
-        char customArtifacts = 0;
-        outfile->write(&customArtifacts, sizeof(customArtifacts));
-    }
-    {
-        char patrolRadius = -1;
-        outfile->write(&patrolRadius, sizeof(patrolRadius));
-    }
+    writeValue<char>(outfile, 0);  // customPortrait
+    writeValue<char>(outfile, 0);  // customSecondarySkills
+    writeValue<char>(outfile, 0);  // customArmies
+    writeValue<char>(outfile, 0);  // groupFormation
+    writeValue<char>(outfile, 0);  // customArtifacts
+    writeValue<char>(outfile, -1);  // patrolRadius
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-        {
-            char customBiography = 0;
-            outfile->write(&customBiography, sizeof(customBiography));
-        }
-        {
-            char sex = -1;
-            outfile->write(&sex, sizeof(sex));
-        }
+        writeValue<char>(outfile, 0);  // customBiography
+        writeValue<char>(outfile, -1);  // sex
         if (version >= RMG_MAP_SHADOW_OF_DEATH) {
-            {
-                char customSpells = 0;
-                outfile->write(&customSpells, sizeof(customSpells));
-            }
-            {
-                char customPrimarySkills = 0;
-                outfile->write(&customPrimarySkills, sizeof(customPrimarySkills));
-            }
+            writeValue<char>(outfile, 0);  // customSpells
+            writeValue<char>(outfile, 0);  // customPrimarySkills
         } else {
-            char spell = -2;
-            outfile->write(&spell, sizeof(spell));
+            writeValue<char>(outfile, -2);  // spell
         }
     }
     char reserved[16];
@@ -2069,18 +1872,9 @@ MAC_ADDRESS(0x2319ac, 0xbc) // anchor-vtable + default serialization bytes; ret 
 void rmgScholarObject::write(TAbstractFile* outfile, int parameter)
 {
     type_object::write(outfile, parameter);
-    {
-        char rewardKind = -1;
-        outfile->write(&rewardKind, sizeof(rewardKind));
-    }
-    {
-        char rewardValue = 0;
-        outfile->write(&rewardValue, sizeof(rewardValue));
-    }
-    {
-        int reserved = 0;
-        outfile->write(&reserved, sizeof(reserved));
-    }
+    writeValue<char>(outfile, -1);  // rewardKind
+    writeValue<char>(outfile, 0);  // rewardValue
+    writeValue<int>(outfile, 0);
     {
         int reserved = 0;
         outfile->write(&reserved, sizeof(short));
@@ -2092,18 +1886,12 @@ MAC_ADDRESS(0x231aa0, 0x9c) // anchor-vtable + ordered write sizes; ret 8
 void rmgShrineObject::write(TAbstractFile* outfile, int parameter)
 {
     type_object::write(outfile, parameter);
-    {
-        char spell = -1;
-        outfile->write(&spell, sizeof(spell));
-    }
+    writeValue<char>(outfile, -1);  // spell
     {
         int reserved = 0;
         outfile->write(&reserved, sizeof(short));
     }
-    {
-        char reservedByte = 0;
-        outfile->write(&reservedByte, sizeof(reservedByte));
-    }
+    writeValue<char>(outfile, 0);
 }
 
 VA(0x00533FF0, 0xC2)
@@ -2111,22 +1899,13 @@ MAC_ADDRESS(0x231b84, 0xc8)
 void rmgSpellScrollObject::write(TAbstractFile* outfile, int parameter)
 {
     type_object::write(outfile, parameter);
-    {
-        char message = 0;
-        outfile->write(&message, sizeof(message));
-    }
-    {
-        char spell = m_spell;
-        outfile->write(&spell, sizeof(spell));
-    }
+    writeValue<char>(outfile, 0);  // message
+    writeValue<char>(outfile, m_spell);
     {
         int reserved = 0;
         outfile->write(&reserved, sizeof(short));
     }
-    {
-        char reserved = 0;
-        outfile->write(&reserved, sizeof(reserved));
-    }
+    writeValue<char>(outfile, 0);
 }
 
 VA(0x005340C0, 0x93)
@@ -2135,8 +1914,7 @@ void rmgWitchHutObject::write(TAbstractFile* outfile, int parameter)
 {
     type_object::write(outfile, parameter);
     if (parameter >= RMG_MAP_ARMAGEDDONS_BLADE) {
-        unsigned int allowedSkills = 0xefdf;
-        outfile->write(&allowedSkills, sizeof(allowedSkills));
+        writeValue<unsigned int>(outfile, 0xefdf);  // allowedSkills
     }
 }
 

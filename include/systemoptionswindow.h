@@ -102,6 +102,8 @@ public:
     enum { NWIDGETS = 44 };
 
 private:
+    // Project-inferred full tutorial-option transition; resolve each dispatch anew.
+    void disableTutorialOption(int id);
     int convertID2HelpID(int id) const;
 };
 SIZE(TSystemOptionsWindow, 0x68);
