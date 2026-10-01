@@ -2676,6 +2676,35 @@ are private, with no field-layout or virtual-interface changes. Existing native
 encoder and loader identities remain on their original entry points. No builds,
 tests or matching-score investigations were run.
 
+## Remote combat records and adventure-view completion
+
+Five received combat records share file-static applyReceivedCombatData: test the
+received pointer, assign through the destination and delete the received object.
+The typed template retains the town, hero and army-group assignment/destruction
+operations. Calls remain ordered right town, right hero, left hero, left army,
+right army, followed by the winner assignment. A null received pointer still
+leaves the destination alone. Assignment failure does not gain cleanup, and the
+caller's temporary pointer is not cleared. The remote-wait dialog still leaves
+scope through the existing combatFinished jump before aftermath processing.
+
+Both successful town-capture paths share private refreshTownCaptureView, calling
+the native radar update before the paired hero/town locator refresh. Private
+refreshHeroAndTownLocators also serves local-turn startup; the resource display
+update and hover reset remain afterward. Both locator calls reread m_advWindow,
+rather than retaining the first window pointer through a drawing operation.
+Capture-specific victory/loss checks and the two different checkEndGame policies
+remain in their callers. Hero-loss radar/hero-only refresh remains distinct.
+
+Both town-view exits share file-static finishTownView, clearing graphics
+preservation before the town-view-active flag. The visiting local hero still
+gets its context update before this operation and retains its early return;
+the other exit retains its original position after the visitor checks.
+
+All four helper names and ordinary source placements are project inferences,
+without new native or inline claims. The adventure-view members are private;
+field layout and existing virtual boundaries are unchanged. No builds, tests
+or matching-score investigations were run.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

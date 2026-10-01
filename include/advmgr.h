@@ -1041,6 +1041,9 @@ public:
     void bvMessage(const char* message);
 
 private:
+    // Project-inferred shared adventure-view operations.
+    void refreshHeroAndTownLocators();
+    void refreshTownCaptureView();
     void clearMovingObject();
     void stopLoopingSound(e_looping_sound_id soundId);
     unsigned char updBottomViewHero(unsigned char forceUpdate);

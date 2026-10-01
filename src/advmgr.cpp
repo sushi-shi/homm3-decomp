@@ -63,6 +63,14 @@ void advManager::clearHeroCursor()
     m_curHeroMobile = 0;
 }
 
+// Project-inferred paired locator refresh. Resolve m_advWindow again after
+// the hero update, just as the town-capture and turn-start callers did.
+void advManager::refreshHeroAndTownLocators()
+{
+    m_advWindow->updateHeroLocators(-1, 1, 1);
+    m_advWindow->updateTownLocators(-1, 1, 1);
+}
+
 // Project-inferred full radar/map repaint after an origin change. Keep the
 // native drawing helpers and their arguments in their original order.
 void advManager::refreshRadarAndMap()
@@ -8310,8 +8318,7 @@ void advManager::startLocalPlayerTurn()
     }
     g_game->doNewTurn();
 
-    m_advWindow->updateHeroLocators(-1, 1, 1);
-    m_advWindow->updateTownLocators(-1, 1, 1);
+    refreshHeroAndTownLocators();
     m_advWindow->updateResourceDisplay(1, 1);
 
     g_advManager->forceNewHover();

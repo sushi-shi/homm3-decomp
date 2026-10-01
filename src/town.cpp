@@ -709,6 +709,13 @@ void town::giveSpells(hero* forceHero) const
     }
 }
 
+// Project-inferred paired exit state for both town-view return paths.
+static void finishTownView()
+{
+    g_adventureGraphicsPreserveMode = 0;
+    g_townViewActive = 0;
+}
+
 VA(0x005be210, 0xC0)
 DC_ADDRESS(0x166688, 0x98)
 MAC_ADDRESS(0x1b3664, 0x104)
@@ -730,13 +737,11 @@ void town::view(int alreadyFaded)
         hero* visitingHero = g_game->getHero(heroId);
         if (visitingHero->m_owner == g_curWatchPlayer) {
             g_advManager->setHeroContext(visitingHero->m_id, 0, 0, 1);
-            g_adventureGraphicsPreserveMode = 0;
-            g_townViewActive = 0;
+            finishTownView();
             return;
         }
     }
-    g_adventureGraphicsPreserveMode = 0;
-    g_townViewActive = 0;
+    finishTownView();
 }
 
 VA(0x005be2d0, 0xB3)

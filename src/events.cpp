@@ -44,6 +44,13 @@ void hero::copyPrimarySkills(signed char* stats) const
     memcpy(stats, m_stats, sizeof(m_stats));
 }
 
+// Project-inferred full view refresh used by both successful town-capture paths.
+void advManager::refreshTownCaptureView()
+{
+    updateRadar(1, 1, 0, 0, 0);
+    refreshHeroAndTownLocators();
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\events.cpp:300
@@ -5050,9 +5057,7 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
         checkEndGame(0);
         if (g_gameOver)
             return;
-        updateRadar(1, 1, 0, 0, 0);
-        m_advWindow->updateHeroLocators(-1, 1, 1);
-        m_advWindow->updateTownLocators(-1, 1, 1);
+        refreshTownCaptureView();
         if (g_game->m_mapHeader.m_victoryCondition
                 .checkForArtifactTransportWin(currentHero, point))
         {
@@ -5098,9 +5103,7 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
                 checkEndGame(0);
             if (g_gameOver)
                 return;
-            updateRadar(1, 1, 0, 0, 0);
-            m_advWindow->updateHeroLocators(-1, 1, 1);
-            m_advWindow->updateTownLocators(-1, 1, 1);
+            refreshTownCaptureView();
         }
     }
 
@@ -6018,6 +6021,18 @@ inline CTurnDurationPause::~CTurnDurationPause()
     }
 }
 
+// Project-inferred common remote-combat copy operation. Preserve null-source
+// handling and delete only after assignment succeeds; do not clear the caller's
+// temporary pointer or introduce ownership cleanup on an assignment exception.
+template <class T>
+static void applyReceivedCombatData(T* destination, T* received)
+{
+    if (received) {
+        *destination = *received;
+        delete received;
+    }
+}
+
 // cText/alternate_layout ride to SetupCombat; bFinishHeroes gates the
 // level-pick wait.  All callees are already declared (cmbtmgr.h,
 // remotedlg.h, exec.h, game.h).
@@ -6129,26 +6144,11 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
                                         &trightHero, &trightArmyGroup, &seed,
                                         &winnerId, &g_combatRetreated,
                                         &g_combatSurrendered);
-                    if (trightTown) {
-                        *rightTown = *trightTown;
-                        delete trightTown;
-                    }
-                    if (trightHero) {
-                        *rightHero = *trightHero;
-                        delete trightHero;
-                    }
-                    if (tleftHero) {
-                        *leftHero = *tleftHero;
-                        delete tleftHero;
-                    }
-                    if (tleftArmyGroup) {
-                        *leftArmyGroup = *tleftArmyGroup;
-                        delete tleftArmyGroup;
-                    }
-                    if (trightArmyGroup) {
-                        *rightArmyGroup = *trightArmyGroup;
-                        delete trightArmyGroup;
-                    }
+                    applyReceivedCombatData(rightTown, trightTown);
+                    applyReceivedCombatData(rightHero, trightHero);
+                    applyReceivedCombatData(leftHero, tleftHero);
+                    applyReceivedCombatData(leftArmyGroup, tleftArmyGroup);
+                    applyReceivedCombatData(rightArmyGroup, trightArmyGroup);
                     g_combatManager->m_winner = winnerId;
                 } else {
                     g_combatManager->m_winner = 0;
