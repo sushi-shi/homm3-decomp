@@ -4298,7 +4298,7 @@ swapmgr	?handleBackpackClick@swapManager@@QAEXJJE@Z	100.0000	100.0000	100.0000	0
 swapmgr	?handleMonster@swapManager@@QAEXHHHE@Z	100.0000	100.0000	100.0000	0x1af2b0	tokens1:0e87cb2a6501
 swapmgr	?handleNetMsg@CSwapMgrNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x1aeb00	tokens1:5e7f0796ed30
 swapmgr	?isLeftHero@swapManager@@QAE_NXZ	100.0000	100.0000	100.0000	0x1b1380	tokens1:c93f03c39366
-swapmgr	?main@swapManager@@UAEHAAVmessage@@@Z	86.8109	86.8109	86.8161	0x1afdf0	tokens1:61b1ed484bfb
+swapmgr	?main@swapManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1afdf0	tokens1:0e9143c092a6
 swapmgr	?onWidgetDeselect@swapManager@@QAEXAAVmessage@@AAH@Z	100.0000	100.0000	100.0000	0x1b10d0	tokens1:ee54841608e4
 swapmgr	?open@swapManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x1ae750	tokens1:b03e69bede5b
 swapmgr	?reset@swapManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ae5b0	tokens1:63d96cc3cb15
