@@ -1841,12 +1841,9 @@ TOverviewWindow::TOverviewWindow()
     m_widgets.push_back(new button(
         748, 563, 48, 32, 0x7800, "OvButn1.def", 3, 4, 1, 28, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac constructor registration matches the canonical window helper
+    // (0x20bccc): register nonnull widgets at -1 and reject null allocations.
+    addWidgetsToMessageStream();
 
     int localPlayer = g_game->getLocalPlayerGamePos();
 
