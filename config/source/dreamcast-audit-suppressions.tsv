@@ -464,8 +464,6 @@ kbwin.obj	0xe8014	eecdd67b9679	10	Complete exact decorated symbol ?appCommand@@Y
 kbwin.obj	0xe801c	9c070d8fc8fb	10	Complete exact decorated symbol ?kbChangeMenu@@YIXPAUHMENU__@@@Z encodes struct HMENU__ *; Dreamcast records void *, so this is a versioned ABI difference.
 kbwin.obj	0xe8054	9c070d8fc8fb	10	Complete exact decorated symbol ?setMenus@@YIXPAUHMENU__@@H@Z encodes struct HMENU__ *; Dreamcast records void *, so this is a versioned ABI difference.
 hiscore.obj	0xd8d2c	a38f48419157	10	Complete exact decorated symbol ??0CHighScoreEdit@@QAE@HHHHHPAD0W4TColor@font@@W4EJustify@2@0HHHHHH@Z encodes font::TColor; Dreamcast records int, so this is a versioned ABI difference.
-hero.obj	0xcc220	8cdc92891831	10	Complete exact decorated symbol ?hasArtifact@hero@@QBEEH@Z encodes unsigned char; Dreamcast records int, so this is a versioned ABI difference.
-hero.obj	0xcc26c	8cdc92891831	10	Complete exact decorated symbol ?isWieldingArtifact@hero@@QBEEH@Z encodes unsigned char; Dreamcast records int, so this is a versioned ABI difference.
 hero.obj	0xcc75c	dce37351ca11	10	Complete exact decorated symbol ?viewArtifact@hero@@QAEXPBUtype_artifact@@H@Z encodes const type_artifact *; Dreamcast records const type_artifact &, so this is a versioned ABI difference.
 hero.obj	0xd4df0	294b268e58c2	10	Complete exact decorated symbol ?getSpecialTerrain@hero@@QBEHXZ encodes int; Dreamcast records TAdventureObjectType, so this is a versioned ABI difference.
 hero.obj	0xd55c0	13edb222c926	10	Complete exact decorated symbol ?isInIdentifyRange@hero@@QBEEPBUtype_point@@@Z encodes const type_point *; Dreamcast records const type_point &, so this is a versioned ABI difference.
