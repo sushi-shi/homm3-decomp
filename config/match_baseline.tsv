@@ -4050,7 +4050,7 @@ singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCN
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	tokens1:b9f9c72a63cb
 singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	tokens1:e24d4233f25b
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	tokens1:3edd1e5e919c
-singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
+singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	tokens1:c1f6f3aeee6f
 singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	85.8638	85.8638	93.0332	0x189710	tokens1:ab487a2ce852
@@ -4067,7 +4067,7 @@ singleselectionwindow	?onUpdatePlayerPosMsg@TSingleSelectionWindow@@QAEXPAVCNetM
 singleselectionwindow	?onWidgetDeselect@TSingleSelectionWindow@@QAEHPAVmessage@@PAEE@Z	100.0000	100.0000	100.0000	0x1865b0	tokens1:f25a39faeb17
 singleselectionwindow	?playerDropped@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189480	tokens1:3a0068339df2
 singleselectionwindow	?processMouse@@YGIPAX@Z	100.0000	100.0000	100.0000	0x177740	tokens1:87a8e8da6103
-singleselectionwindow	?processRightSelect@TSingleSelectionWindow@@EAEEH@Z	88.0701	88.0701	88.9695	0x1822d0	tokens1:d4298a7aa8ee
+singleselectionwindow	?processRightSelect@TSingleSelectionWindow@@EAEEH@Z	88.8933	88.8933	88.9695	0x1822d0	tokens1:5a760f6d73f4
 singleselectionwindow	?read@CGameHeaderInfoMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177880	tokens1:2133655fd639
 singleselectionwindow	?read@CNewMapHeaderInfoMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177a10	tokens1:da9d90f3b76b
 singleselectionwindow	?rebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	97.6865	97.6865	97.6979	0x180430	tokens1:041125d7a85b
