@@ -6329,7 +6329,8 @@ long hero::modifySpellDamage(SpellID spell, int damage,
     value = getSorceryFactor() * value;
     if (targetArmy)
         value = static_cast<float>(
-                    getHeroSpellBonus(spell, targetArmy->m_monInfo.m_level,
+                    getHeroSpellBonus(static_cast<ESpellId>(spell) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+                                      targetArmy->m_monInfo.m_level,
                                       static_cast<int>(value)))
                 + value;
     return static_cast<long>(value);
@@ -6478,7 +6479,9 @@ bool hero::isMobile() const
 VA(0x004e5ff0, 0x123)
 DC_ADDRESS(0x0d5710, 0xf0)
 MAC_ADDRESS(0x106f98, 0x108)
-int hero::getHeroSpellBonus(SpellID spellId, int targetLevel, int value) const
+// Original public ?GetHeroSpellBonus@hero@@QBAHW4SpellID@@HH@Z
+// uses the project ESpellId domain; legacy integer spell APIs convert at use.
+int hero::getHeroSpellBonus(ESpellId spellId, int targetLevel, int value) const
 {
     HOMM3_RELEASE_VERIFY(m_id >= 0);
     HOMM3_RELEASE_VERIFY(m_id < sizeof(g_heroSpecificAbilities)
