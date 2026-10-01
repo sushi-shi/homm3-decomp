@@ -4367,7 +4367,7 @@ textresource	??_GTTextResource@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bbb70	-
 textresource	?erase@?$vector@PAV?$vector@PADV?$allocator@PAD@std@@@std@@V?$allocator@PAV?$vector@PADV?$allocator@PAD@std@@@std@@@2@@std@@QAEPAPAV?$vector@PADV?$allocator@PAD@std@@@2@PAPAV32@0@Z	100.0000	100.0000	100.0000	0x1bc1f0	tokens1:b238b60c1d46
 textresource	?getSize@TSpreadsheetResource@@UBEIXZ	100.0000	100.0000	100.0000	0x1bc160	tokens1:082ff4247bcd
 textresource	?getSize@TTextResource@@UBEIXZ	100.0000	100.0000	100.0000	0x1bbe20	tokens1:1c06d2904596
-textscroller	??0type_text_scroller@@QAE@PBDHHHH0W4TColor@font@@W4EGraphics@slider@@@Z	100.0000	100.0000	100.0000	0x1b9fb0	tokens1:897defcd7dfb
+textscroller	??0type_text_scroller@@QAE@PBDHHHH0W4TColor@font@@W4EGraphics@slider@@@Z	100.0000	100.0000	100.0000	0x1b9fb0	tokens1:a315d63bdcaa
 textscroller	??1type_text_scroller@@UAE@XZ	100.0000	100.0000	100.0000	0x1ba3b0	tokens1:25ad7bcd80c1
 textscroller	??_Gtype_text_scroller@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ba2b0	-
 textscroller	?close@type_text_slider@@UAEXXZ	100.0000	100.0000	100.0000	0x1b9fa0	tokens1:90a9bb0c8d01

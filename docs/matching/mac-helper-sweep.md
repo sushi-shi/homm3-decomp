@@ -1394,3 +1394,48 @@ claiming independently proven retail identities for the unpaired wrappers.
 
 Only evidence comments and this review record changed, so no build or score
 refresh was run. Existing comparison debts are unchanged.
+
+### Artifact library calls, resource display and text scroller
+
+The text-scroller constructor now releases its font through the canonical
+`ResourceManager::dispose` wrapper, as its `setText` method already does.
+Mac `0x25b424` and Windows `0x5ba297` perform the wrapper's unguarded
+resource virtual call. This restores the supported helper expansion; its
+original call spelling remains an inference. All eight scored Windows
+functions in the targeted TU remain 100%. The four available Mac scores
+are unchanged. The constructor/destructor cannot currently be scored because
+their vtable payload is unresolved; `setText` has an unresolved anonymous
+literal. The refreshed textscroller AST has 128 bodies and zero diagnostics.
+
+All eighteen queued scroller sites were inspected with their owning native
+bodies. Other sites are existing vector initialization, string append/member
+destruction, slider state/resolution calls, text-widget setText/draw, owned
+widget deletion and the already represented font disposal in `setText`.
+The slider constructor, close hook and scroller message dispatcher were also
+read: the null callback, owner refresh, background capture and status-message
+forwarding already have canonical source counterparts.
+
+Nine artifact sites also have source counterparts. Mac `0x5b0f8` and
+`0x5b1e0` are bounds-checked bitset set operations reached through the staged
+reference proxy; `0x5afcc` zeroes the five-word component mask, and
+`0x5b014` tests a slot bit. The variadic mask builders, the recovered
+`initializeArtifactTraits` helper and the slot-class search already express
+these operations. Four calls to `0x8100` return the vector storage address
+used for spreadsheet subscripting: the two traits cells are reached through
+`getSpreadsheet`, and the two slot-name loops use `getRow(slot)[0]`.
+The complete initializer and these library target bodies were inspected.
+
+Sixteen resource-display sites are the existing background/text/icon/day
+widget deletions and virtual `setText` calls. Mac slot `+0x3c` and DC slot
+`+0x2c` receive the formatted text or empty string. The inspected bodies
+also retain palette updates, calendar-label access and subwindow drawing.
+Mac confirms the two-argument update interface and absence of DC's `inMap`
+hide operations already documented in the owning source.
+
+These 43 dispositions leave 5,595 open native sites and 2,401 operation
+notes. The global native graph and its coverage gaps remain unchanged.
+The score checkpoint initially rejected the preceding batch's unbuilt comment
+edits. Targeted bitmap16/bitmap816/csprite builds cleared those pending
+edges with no Windows MAX change, and the score/README update then succeeded.
+That comparison reports seven unavailable Mac bitmap pairs and 24 CSprite
+claims without an emitted full-TU object; these remain explicit coverage gaps.

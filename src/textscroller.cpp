@@ -101,7 +101,9 @@ type_text_scroller::type_text_scroller(const char* text, int x, int y,
         this, this->m_x + m_width - 16, this->m_y, 16, m_height, -1,
         max(1, m_textLines.size() - m_lineImages.size() + 1),
         graphics, m_lineImages.size(), 1);
-    textFont->dispose();
+    // Mac 0x25b424 and retail 0x5ba297 expand the same resource-disposal
+    // wrapper used by setText below; the resource overload has no null guard.
+    ResourceManager::dispose(textFont);
 }
 
 // The scalar deleting destructor, slot 0 of vtable 0x642d0c.
