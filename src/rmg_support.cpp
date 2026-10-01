@@ -171,14 +171,45 @@ TRmgLinePatternTable* TRmgRiverLinePainter::getPattern(int)
     return &g_rmgRiverPatternTable;
 }
 
-VA(0x0055EDC0, 0x36)
-MAC_ADDRESS(0x253ae0, 0x54) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +4
-void TRmgRiverLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
+// Both line painters materialize all tile fields before calling the adapter.
+// Keep the snapshot here, including its constructor and flip-copy order.
+template<class Adapter>
+static inline void writeRmgLineTileSnapshot(Adapter* adapter,
+    const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
     rmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
     snapshot.m_flipX = tile.m_flipX;
     snapshot.m_flipY = tile.m_flipY;
-    m_adapter->setTile(point, snapshot);
+    adapter->setTile(point, snapshot);
+}
+
+// Adapt the value-returning query to the painter's output reference. Retain
+// the local snapshot and the tile's four-field assignment boundary.
+template<class Adapter>
+static inline void readRmgLineTileSnapshot(Adapter* adapter,
+    const TRmgGridPoint& point, rmgTerrainTile& tile)
+{
+    rmgTerrainTile snapshot = adapter->getTile(point);
+    tile = snapshot;
+}
+
+// Road and river painting share this terrain policy. Query only once before
+// testing water and rock; these are underlying terrain, not line-type ids.
+template<class Adapter>
+static inline int isRmgLinePaintingBlocked(Adapter* adapter,
+    const TRmgGridPoint& point)
+{
+    int terrain = adapter->getTerrain(point);
+    if (terrain == eTerrainWater || terrain == eTerrainRock)
+        return 1;
+    return 0;
+}
+
+VA(0x0055EDC0, 0x36)
+MAC_ADDRESS(0x253ae0, 0x54) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +4
+void TRmgRiverLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
+{
+    writeRmgLineTileSnapshot(m_adapter, point, tile);
 }
 
 MAC_ADDRESS(0x253b34, 0x30)
@@ -190,8 +221,7 @@ void TRmgRiverLinePainter::setLineType(const TRmgGridPoint& point, int value)
 MAC_ADDRESS(0x253ba8, 0x88)
 void TRmgRiverLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
 {
-    rmgTerrainTile snapshot = m_adapter->getTile(point);
-    tile = snapshot;
+    readRmgLineTileSnapshot(m_adapter, point, tile);
 }
 
 // Slot 3 of all four river/road painter vtables forwards to the adapter's
@@ -201,10 +231,7 @@ VA(0x0055EE00, 0x28)
 MAC_ADDRESS(0x253b64, 0x44)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
 int TRmgRiverLinePainter::isBlocked(const TRmgGridPoint& point)
 {
-    int terrain = m_adapter->getTerrain(point);
-    if (terrain == eTerrainWater || terrain == eTerrainRock)
-        return 1;
-    return 0;
+    return isRmgLinePaintingBlocked(m_adapter, point);
 }
 
 VA(0x0055EE30, 0x13)
@@ -239,19 +266,13 @@ TRmgLinePatternTable* TRmgRoadLinePainter::getPattern(int)
 MAC_ADDRESS(0x253fc8, 0x54)
 void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
-    rmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
-    snapshot.m_flipX = tile.m_flipX;
-    snapshot.m_flipY = tile.m_flipY;
-    m_adapter->setTile(point, snapshot);
+    writeRmgLineTileSnapshot(m_adapter, point, tile);
 }
 
 MAC_ADDRESS(0x25404c, 0x44)
 int TRmgRoadLinePainter::isBlocked(const TRmgGridPoint& point)
 {
-    int terrain = m_adapter->getTerrain(point);
-    if (terrain == eTerrainWater || terrain == eTerrainRock)
-        return 1;
-    return 0;
+    return isRmgLinePaintingBlocked(m_adapter, point);
 }
 
 VA(0x0055F330, 0x17)
@@ -265,8 +286,7 @@ VA(0x0055F350, 0x34)
 MAC_ADDRESS(0x254090, 0x88) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +0x10
 void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
 {
-    rmgTerrainTile snapshot = m_adapter->getTile(point);
-    tile = snapshot;
+    readRmgLineTileSnapshot(m_adapter, point, tile);
 }
 
 // The road hierarchy's parallel vtables 0x6411f0/0x64120c use the same
@@ -306,13 +326,20 @@ TRmgRoadPainter::~TRmgRoadPainter()
 {
 }
 
+// Squared norms in both length and incircle evaluation use signed 32-bit
+// products and addition before their callers widen. Do not move the casts in.
+static inline int getRmgSquaredNorm(int x, int y)
+{
+    return x * x + y * y;
+}
+
 VA(0x005FCEB0, 0x39)
 MAC_ADDRESS(0x25c018, 0x64)
 int TRmgVector::length() const
 {
     // Preserve retail's 32-bit squared norm before conversion and truncated
     // square root. Widening the products would change overflow behavior.
-    return static_cast<int>(sqrt(static_cast<double>(m_x * m_x + m_y * m_y)));
+    return static_cast<int>(sqrt(static_cast<double>(getRmgSquaredNorm(m_x, m_y))));
 }
 
 // Both constructors start a half-edge as its own ring with no vertex. The
@@ -436,22 +463,25 @@ TRmgHalfEdge* TRmgVoronoi::connectEdges(TRmgHalfEdge* first,
     return edge;
 }
 
+// Remove one half-edge's reference without destroying it. Membership is a
+// retail precondition: a failed search still reaches erase(end()).
+static inline void eraseRmgHalfEdgeReference(std::vector<TRmgHalfEdge*>& edges,
+    TRmgHalfEdge* edge)
+{
+    unsigned int index = 0;
+    while (index < edges.size() && edges[index] != edge)
+        ++index;
+    edges.erase(edges.begin() + index);
+}
+
 VA(0x005FD5B0, 0xFF)
 MAC_ADDRESS(0x25c8c8, 0x100) // anchor-caller 0x5fd790; Complete-only, thiscall ret 4
 void TRmgVoronoi::removeEdge(TRmgHalfEdge* edge)
 {
     edge->detach();
-    unsigned int index = 0;
-    while (index < m_edges.size() && m_edges[index] != edge)
-        ++index;
-    // Both halves must belong to m_edges. Retail does not handle a failed
-    // search: it would erase end(). Keep that ownership precondition.
-    m_edges.erase(m_edges.begin() + index);
+    eraseRmgHalfEdgeReference(m_edges, edge);
     TRmgHalfEdge* twin = edge->getTwin();
-    index = 0;
-    while (index < m_edges.size() && m_edges[index] != twin)
-        ++index;
-    m_edges.erase(m_edges.begin() + index);
+    eraseRmgHalfEdgeReference(m_edges, twin);
     delete edge;
     delete twin;
 }
@@ -479,6 +509,20 @@ static int isRmgPointRightOfEdge(TPoint point, TRmgHalfEdge* edge)
     return isRmgCounterClockwise(edge->m_sitePosition, point, twin->m_sitePosition);
 }
 
+// Location and insertion both compare a copied endpoint with the query.
+// Preserve the point snapshot before the two-coordinate equality test.
+static inline bool isRmgEdgeOrigin(TPoint point, TRmgHalfEdge* edge)
+{
+    TPoint origin = edge->getSitePosition();
+    return point == origin;
+}
+
+static inline bool isRmgEdgeDestination(TPoint point, TRmgHalfEdge* edge)
+{
+    TPoint destination = edge->getOppositeSitePosition();
+    return point == destination;
+}
+
 VA(0x005FD6B0, 0xD7)
 MAC_ADDRESS(0x25c9c8, 0x124) // anchor-callers 0x53dad0/0x53e050/0x5fd790; ret 8
 TRmgHalfEdge* TRmgVoronoi::locate(TPoint point)
@@ -488,17 +532,11 @@ TRmgHalfEdge* TRmgVoronoi::locate(TPoint point)
     // non-strict side tests (see the provenance document's hull discussion).
     TRmgHalfEdge* edge = m_root;
     for (;;) {
-        {
-            TPoint origin = edge->m_sitePosition;
-            if (point == origin)
-                break;
-        }
-        {
-            TPoint destination = edge->m_twin->m_sitePosition;
-            if (point == destination) {
-                edge = edge->m_twin;
-                break;
-            }
+        if (isRmgEdgeOrigin(point, edge))
+            break;
+        if (isRmgEdgeDestination(point, edge)) {
+            edge = edge->m_twin;
+            break;
         }
         if (isRmgPointRightOfEdge(point, edge)) {
             edge = edge->m_twin;
@@ -517,6 +555,15 @@ TRmgHalfEdge* TRmgVoronoi::locate(TPoint point)
     return edge;
 }
 
+// A flipped half-edge takes both the site and its zone from the opposite
+// endpoint of its saved predecessor. Keep zone-before-position assignment.
+static inline void copyRmgOppositeSite(TRmgHalfEdge* destination,
+    TRmgHalfEdge* source)
+{
+    destination->m_zone = source->m_twin->m_zone;
+    destination->m_sitePosition = source->m_twin->m_sitePosition;
+}
+
 // Provisional edge flip: retail saves both predecessors before detach,
 // transfers their opposite sites/zones, and splices into the new rings.
 MAC_ADDRESS(0x25c204, 0xb0)
@@ -525,10 +572,8 @@ static void flipRmgEdge(TRmgHalfEdge* edge)
     TRmgHalfEdge* previous = edge->m_previous;
     TRmgHalfEdge* twinPrevious = edge->m_twin->m_previous;
     edge->detach();
-    edge->m_zone = previous->m_twin->m_zone;
-    edge->m_sitePosition = previous->m_twin->m_sitePosition;
-    edge->m_twin->m_zone = twinPrevious->m_twin->m_zone;
-    edge->m_twin->m_sitePosition = twinPrevious->m_twin->m_sitePosition;
+    copyRmgOppositeSite(edge, previous);
+    copyRmgOppositeSite(edge->m_twin, twinPrevious);
     edge->splice(previous->m_twin->m_previous);
     edge->m_twin->splice(twinPrevious->m_twin->m_previous);
 }
@@ -582,10 +627,10 @@ static unsigned char isRmgPointInsideCircumcircle(TPoint first, TPoint second,
     int secondArea = getRmgPointOrientation(first, third, point);
     int thirdArea = getRmgPointOrientation(first, second, point);
     int pointArea = getRmgPointOrientation(first, second, third);
-    __int64 determinant = static_cast<__int64>(third.m_x * third.m_x + third.m_y * third.m_y) * thirdArea
-        - static_cast<__int64>(second.m_x * second.m_x + second.m_y * second.m_y) * secondArea
-        + static_cast<__int64>(first.m_x * first.m_x + first.m_y * first.m_y) * firstArea
-        - static_cast<__int64>(point.m_x * point.m_x + point.m_y * point.m_y) * pointArea;
+    __int64 determinant = static_cast<__int64>(getRmgSquaredNorm(third.m_x, third.m_y)) * thirdArea
+        - static_cast<__int64>(getRmgSquaredNorm(second.m_x, second.m_y)) * secondArea
+        + static_cast<__int64>(getRmgSquaredNorm(first.m_x, first.m_y)) * firstArea
+        - static_cast<__int64>(getRmgSquaredNorm(point.m_x, point.m_y)) * pointArea;
     return determinant > 0;
 }
 
@@ -597,16 +642,10 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
     // necessary, build a triangle fan, then legalize it by local edge flips.
     // The Voronoi diagram is the dual built later by buildVertices().
     TRmgHalfEdge* edge = locate(point);
-    {
-        TPoint origin = edge->getSitePosition();
-        if (point == origin)
-            return;
-    }
-    {
-        TPoint destination = edge->getOppositeSitePosition();
-        if (point == destination)
-            return;
-    }
+    if (isRmgEdgeOrigin(point, edge))
+        return;
+    if (isRmgEdgeDestination(point, edge))
+        return;
     if (isRmgPointOnSegment(point, edge)) {
         edge = edge->getPrevious();
         removeEdge(edge->getNext());
