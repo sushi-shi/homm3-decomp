@@ -3773,14 +3773,14 @@ seerhut	?getQuestDescription@type_experience_quest@@UAE?AV?$basic_string@DU?$cha
 seerhut	?getQuestDescription@type_monster_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16eb30	tokens1:ec060e2b7b39
 seerhut	?getQuestDescription@type_resource_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x1716e0	tokens1:795651272991
 seerhut	?getQuestDescription@type_skill_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d990	tokens1:7758c94bef92
-seerhut	?getRequirementText@type_artifact_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16f5f0	tokens1:0f25e76ac42c
+seerhut	?getRequirementText@type_artifact_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.9545	100.0000	100.0000	0x16f5f0	tokens1:0f25e76ac42c
 seerhut	?getRequirementText@type_be_hero_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172060	tokens1:cf80336b36fd
 seerhut	?getRequirementText@type_belong_to_player_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172650	tokens1:145d039fda47
-seerhut	?getRequirementText@type_creature_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x1704e0	tokens1:51c3daeab945
+seerhut	?getRequirementText@type_creature_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.9660	100.0000	100.0000	0x1704e0	tokens1:51c3daeab945
 seerhut	?getRequirementText@type_defeat_hero_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16e240	tokens1:0ebc301a9ca6
 seerhut	?getRequirementText@type_experience_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d3e0	tokens1:9dd1ba331c79
 seerhut	?getRequirementText@type_monster_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16ea30	tokens1:4dea0a5fb74d
-seerhut	?getRequirementText@type_resource_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x171580	tokens1:704171db0086
+seerhut	?getRequirementText@type_resource_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.9594	100.0000	100.0000	0x171580	tokens1:704171db0086
 seerhut	?getRequirementText@type_skill_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d960	tokens1:6dc21f9ae2b3
 seerhut	?getRewardExtra@TSeerReward@@QAEHPBVhero@@@Z	100.0000	100.0000	100.0000	0x173f10	tokens1:27b398e60214
 seerhut	?getSeerLogText@TSeerHut@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x174070	tokens1:568c81fe1f37
@@ -3829,7 +3829,7 @@ seerhut	?questType@type_belong_to_player_quest@@UAEHXZ	100.0000	100.0000	100.000
 seerhut	?questType@type_defeat_hero_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x16e3d0	tokens1:fb9b12088472
 seerhut	?questType@type_monster_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x16ebc0	tokens1:417a635cf70a
 seerhut	?read@TQuestGuard@@QAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x1734e0	tokens1:054737ea84bd
-seerhut	?read@TSeerHut@@QAEXPAVTAbstractFile@@@Z	86.4900	86.4900	94.2388	0x174610	tokens1:c8b93b1bb7cd
+seerhut	?read@TSeerHut@@QAEXPAVTAbstractFile@@@Z	87.5224	87.5224	94.2388	0x174610	tokens1:fc7b227adcfc
 seerhut	?save@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173520	tokens1:cdc31a722f83
 seerhut	?save@TSeerHut@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173fd0	tokens1:c67872b5021d
 seerhut	?save@type_artifact_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x1700a0	tokens1:4c62b01eeb72
