@@ -2851,7 +2851,8 @@ unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIn
 VA(0x00467600, 0x23A)
 DC_ADDRESS(0x061284, 0x92)
 MAC_ADDRESS(0x07388c, 0x134)
-unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* defender) const
+// Original DC ShotIsNotOptimal mangles its result as _N (bool).
+bool combatManager::shotIsNotOptimal(const army* attacker, const army* defender) const
 {
     int side = attacker->getControllingSide();
     if (m_heroes[side]

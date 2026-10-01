@@ -1161,7 +1161,7 @@ public:
     void checkApplyGoodMorale(int group, int index);
     void spellEffect(int effect, army* targetArmy, int delay,
                      bool doWince);
-    unsigned char shotIsNotOptimal(const army* attacker,
+    bool shotIsNotOptimal(const army* attacker,
                                    const army* defender) const;
     unsigned char shotIsThroughWall(const army* shooter, int sourceIndex,
                                     int destIndex) const;
