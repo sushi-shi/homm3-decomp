@@ -2068,6 +2068,10 @@ void advManager::processRadarSelect(const message* msg)
 // DC 2450/2452/2456 and Mac 0xa8ec..0xa900 preserve the visibility
 // test and separate 1/0 assignments before GetCell. Restoring that phase
 // raises Windows 89.6679 -> 90.2941 with no other advmgr score movement.
+// The native pc local is const pathCell* const; the hero arm also records
+// a byte-lowered waiting local. A bool predicate carrier at the restored
+// bool context boundary, with the pointer's proven cv layers, raises this
+// to 94.3548%. All ordinary call targets agree; DoAdvCommand remains split.
 // The redundant `currHeroId != -1` guard is retail's own: its inlined
 // GetHero re-tests the id off the same flags and leaves a dead
 // `xor ebx,ebx` arm behind. Dropping the guard reproduces that dead block
@@ -2149,7 +2153,8 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
                 return;
             }
 
-            pathCell* pathAt = g_searchArray->getCell(m_lastMapHover, 0);
+            const pathCell* const pathAt =
+                g_searchArray->getCell(m_lastMapHover, 0);
             if (g_currentPlayer->isLocalHuman() && pathAt && pathAt->m_visited) {
                 if (!heroMobile
                     || (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS)
@@ -2181,10 +2186,11 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
         if (myPos != g_game->getHero(clickedIndex)->m_owner)
             return;
         // Retail homes this bool at [ebp+0xc] and pushes SetHeroContext's
-        // trailing 1 AFTER the IsLocalHuman call, but naming it is a loss
-        // in both widths: `unsigned char waitingPlayer` 89.99 and
-        // `int waitingPlayer` 90.55 against 91.10 for the folded call.
-        setHeroContext(clickedIndex, 0, !g_currentPlayer->isLocalHuman(), 1);
+        // trailing 1 AFTER the IsLocalHuman call. Historical uchar/int
+        // local controls lost to the direct expression; the native local
+        // restored as bool now preserves that push order without normalization.
+        bool waitingPlayer = !g_currentPlayer->isLocalHuman();
+        setHeroContext(clickedIndex, 0, waitingPlayer, 1);
         return;
     }
 
