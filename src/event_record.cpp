@@ -48,7 +48,7 @@ VA_COMPGEN(0x0049a5b0, 0x23, SCALAR_DELETING_DTOR, type_event_record)
 VA(0x0049a5e0, 0x1D)
 DC_ADDRESS(0x08c678, 0x1e)
 MAC_ADDRESS(0x0befc0, 0x48)
-unsigned char type_event_record::load(TAbstractFile* infile, int version)
+bool type_event_record::load(TAbstractFile* infile, int version)
 {
     return infile->read(&m_playerId, 1) == 1;
 }
@@ -56,7 +56,7 @@ unsigned char type_event_record::load(TAbstractFile* infile, int version)
 VA(0x0049a600, 0x1D)
 DC_ADDRESS(0x08c698, 0x1e)
 MAC_ADDRESS(0x0bf008, 0x48)
-unsigned char type_event_record::save(TAbstractFile* outfile)
+bool type_event_record::save(TAbstractFile* outfile)
 {
     return outfile->write(&m_playerId, 1) == 1;
 }
@@ -141,7 +141,7 @@ type_event_record_type type_record_move_hero::getType() const
 VA(0x0049a690, 0xB1)
 DC_ADDRESS(0x08c7ec, 0xce)
 MAC_ADDRESS(0x0bf1f8, 0x148)
-unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
+bool type_record_move_hero::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
@@ -153,21 +153,21 @@ unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
         return 0;
     if (infile->read(&m_source, sizeof(m_source)) != sizeof(m_source))
         return 0;
-    unsigned char ok = infile->read(&m_destination, sizeof(m_destination)) == sizeof(m_destination);
+    bool ok = infile->read(&m_destination, sizeof(m_destination)) == sizeof(m_destination);
     return ok;
 }
 
 VA(0x0049a750, 0x63)
 DC_ADDRESS(0x08c8bc, 0x60)
 MAC_ADDRESS(0x0bf340, 0xe4)
-unsigned char type_record_move_hero::save(TAbstractFile* outfile)
+bool type_record_move_hero::save(TAbstractFile* outfile)
 {
     int heroId = m_currentHero->m_id;
     type_event_record::save(outfile);
     outfile->write(&heroId, sizeof(heroId));
     outfile->write(&m_direction, 1);
     outfile->write(&m_source, sizeof(m_source));
-    unsigned char ok = outfile->write(&m_destination, sizeof(m_destination)) == sizeof(m_destination);
+    bool ok = outfile->write(&m_destination, sizeof(m_destination)) == sizeof(m_destination);
     return ok;
 }
 
@@ -288,7 +288,7 @@ type_event_record* type_record_claim_mine::create()
 VA(0x0049aa70, 0x71)
 DC_ADDRESS(0x08cbb4, 0x66)
 MAC_ADDRESS(0x0bf840, 0xec)
-unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
+bool type_record_claim_mine::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
@@ -296,19 +296,19 @@ unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
         return 0;
     if (infile->read(&m_oldOwner, 1) != 1)
         return 0;
-    unsigned char ok = infile->read(&m_newOwner, 1) == 1;
+    bool ok = infile->read(&m_newOwner, 1) == 1;
     return ok;
 }
 
 VA(0x0049aaf0, 0x4A)
 DC_ADDRESS(0x08cc1c, 0x4e)
 MAC_ADDRESS(0x0bf92c, 0xbc)
-unsigned char type_record_claim_mine::save(TAbstractFile* outfile)
+bool type_record_claim_mine::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
     outfile->write(&m_id, sizeof(m_id));
     outfile->write(&m_oldOwner, 1);
-    unsigned char ok = outfile->write(&m_newOwner, 1) == 1;
+    bool ok = outfile->write(&m_newOwner, 1) == 1;
     return ok;
 }
 
@@ -444,7 +444,7 @@ type_event_record_type type_record_hide_boat::getType() const
 VA(0x0049ad00, 0xE7)
 DC_ADDRESS(0x08cedc, 0x4e)
 MAC_ADDRESS(0x0bfdb0, 0x1c0)
-unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
+bool type_record_hide_boat::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
@@ -472,7 +472,7 @@ unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
 VA(0x0049adf0, 0x8A)
 DC_ADDRESS(0x08cf2c, 0x36)
 MAC_ADDRESS(0x0bff70, 0x11c)
-unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
+bool type_record_hide_boat::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
     if (outfile->write(&m_currentBoat->m_id, 1) != 1)
@@ -544,13 +544,13 @@ type_event_record_type type_record_show_boat::getType() const
 VA(0x0049af40, 0x51)
 DC_ADDRESS(0x08d070, 0xa0)
 MAC_ADDRESS(0x0c0294, 0xa8)
-unsigned char type_record_show_boat::load(TAbstractFile* infile, int version)
+bool type_record_show_boat::load(TAbstractFile* infile, int version)
 {
     if (!type_record_hide_boat::load(infile, version))
         return 0;
     if (infile->read(&m_location, sizeof(m_location)) != sizeof(m_location))
         return 0;
-    unsigned char ok = infile->read(&m_previousLocation, sizeof(m_previousLocation))
+    bool ok = infile->read(&m_previousLocation, sizeof(m_previousLocation))
                        == sizeof(m_previousLocation);
     return ok;
 }
@@ -558,11 +558,11 @@ unsigned char type_record_show_boat::load(TAbstractFile* infile, int version)
 VA(0x0049afa0, 0x9F)
 DC_ADDRESS(0x08d110, 0x3a)
 MAC_ADDRESS(0x0c033c, 0x88)
-unsigned char type_record_show_boat::save(TAbstractFile* outfile)
+bool type_record_show_boat::save(TAbstractFile* outfile)
 {
     type_record_hide_boat::save(outfile);
     outfile->write(&m_location, sizeof(m_location));
-    unsigned char ok = outfile->write(&m_previousLocation, sizeof(m_previousLocation))
+    bool ok = outfile->write(&m_previousLocation, sizeof(m_previousLocation))
                        == sizeof(m_previousLocation);
     return ok;
 }
@@ -633,7 +633,7 @@ type_event_record_type type_record_erase::getType() const
 VA(0x0049b190, 0x8B)
 DC_ADDRESS(0x08d2bc, 0x7a)
 MAC_ADDRESS(0x0c05f8, 0x118)
-unsigned char type_record_erase::load(TAbstractFile* infile, int version)
+bool type_record_erase::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
@@ -643,20 +643,20 @@ unsigned char type_record_erase::load(TAbstractFile* infile, int version)
         return 0;
     if (infile->read(&m_extraInfo, sizeof(m_extraInfo)) != sizeof(m_extraInfo))
         return 0;
-    unsigned char ok = infile->read(&m_objectIndex, sizeof(m_objectIndex)) == sizeof(m_objectIndex);
+    bool ok = infile->read(&m_objectIndex, sizeof(m_objectIndex)) == sizeof(m_objectIndex);
     return ok;
 }
 
 VA(0x0049b220, 0x57)
 DC_ADDRESS(0x08d338, 0x90)
 MAC_ADDRESS(0x0c0710, 0xd8)
-unsigned char type_record_erase::save(TAbstractFile* outfile)
+bool type_record_erase::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
     outfile->write(&m_location, sizeof(m_location));
     outfile->write(&m_objectId, sizeof(m_objectId));
     outfile->write(&m_extraInfo, sizeof(m_extraInfo));
-    unsigned char ok = outfile->write(&m_objectIndex, sizeof(m_objectIndex)) == sizeof(m_objectIndex);
+    bool ok = outfile->write(&m_objectIndex, sizeof(m_objectIndex)) == sizeof(m_objectIndex);
     return ok;
 }
 
@@ -719,7 +719,7 @@ type_event_record* type_record_hide_hero::create()
 VA(0x0049b430, 0xC8)
 DC_ADDRESS(0x08d52c, 0x72)
 MAC_ADDRESS(0x0c0aac, 0x150)
-unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
+bool type_record_hide_hero::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
@@ -743,7 +743,7 @@ unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
 VA(0x0049b500, 0x61)
 DC_ADDRESS(0x08d5a0, 0x4e)
 MAC_ADDRESS(0x0c0bfc, 0xdc)
-unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
+bool type_record_hide_hero::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
     outfile->write(&m_currentHero->m_id, sizeof(m_currentHero->m_id));
@@ -751,7 +751,7 @@ unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
     unsigned char packed = m_prevOwner;
     if (m_townGarrison)
         packed |= 0x40;
-    unsigned char ok = outfile->write(&packed, 1) == 1;
+    bool ok = outfile->write(&packed, 1) == 1;
     return ok;
 }
 
@@ -827,7 +827,7 @@ type_event_record_type type_record_show_hero::getType() const
 VA(0x0049b6d0, 0x85)
 DC_ADDRESS(0x08d7ec, 0x72)
 MAC_ADDRESS(0x0c0fbc, 0x100)
-unsigned char type_record_show_hero::load(TAbstractFile* infile, int version)
+bool type_record_show_hero::load(TAbstractFile* infile, int version)
 {
     if (!type_record_hide_hero::load(infile, version))
         return 0;
@@ -837,20 +837,20 @@ unsigned char type_record_show_hero::load(TAbstractFile* infile, int version)
         return 0;
     if (infile->read(&m_onBoat, 1) != 1)
         return 0;
-    unsigned char ok = infile->read(&m_previousBoat, 1) == 1;
+    bool ok = infile->read(&m_previousBoat, 1) == 1;
     return ok;
 }
 
 VA(0x0049b760, 0x95)
 DC_ADDRESS(0x08d860, 0x52)
 MAC_ADDRESS(0x0c10bc, 0xc0)
-unsigned char type_record_show_hero::save(TAbstractFile* outfile)
+bool type_record_show_hero::save(TAbstractFile* outfile)
 {
     type_record_hide_hero::save(outfile);
     outfile->write(&m_location, sizeof(m_location));
     outfile->write(&m_previousLocation, sizeof(m_previousLocation));
     outfile->write(&m_onBoat, 1);
-    unsigned char ok = outfile->write(&m_previousBoat, 1) == 1;
+    bool ok = outfile->write(&m_previousBoat, 1) == 1;
     return ok;
 }
 
@@ -929,21 +929,21 @@ type_event_record_type type_record_player_death::getType() const
 VA(0x0049ba40, 0x3D)
 DC_ADDRESS(0x08daec, 0x3e)
 MAC_ADDRESS(0x0c1424, 0x94)
-unsigned char type_record_player_death::load(TAbstractFile* infile, int version)
+bool type_record_player_death::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
-    unsigned char ok = infile->read(&m_extra, 1) == 1;
+    bool ok = infile->read(&m_extra, 1) == 1;
     return ok;
 }
 
 VA(0x0049ba80, 0x30)
 DC_ADDRESS(0x08db2c, 0x68)
 MAC_ADDRESS(0x0c14b8, 0x84)
-unsigned char type_record_player_death::save(TAbstractFile* outfile)
+bool type_record_player_death::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
-    unsigned char ok = outfile->write(&m_extra, 1) == 1;
+    bool ok = outfile->write(&m_extra, 1) == 1;
     return ok;
 }
 
@@ -1001,7 +1001,7 @@ type_event_record_type type_record_shroud::getType() const
 VA(0x0049bc90, 0x151)
 DC_ADDRESS(0x08dcd8, 0xb0)
 MAC_ADDRESS(0x0c16e0, 0xf4)
-unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
+bool type_record_shroud::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
@@ -1025,7 +1025,7 @@ unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
 VA(0x0049bdf0, 0x66)
 DC_ADDRESS(0x08dd88, 0x62)
 MAC_ADDRESS(0x0c17d4, 0xcc)
-unsigned char type_record_shroud::save(TAbstractFile* outfile)
+bool type_record_shroud::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
     short count = m_changes.size();
