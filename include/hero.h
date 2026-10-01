@@ -730,7 +730,7 @@ public:
     // Bulk-copy boundary names provisional; bodies precede their callers.
     void copyPrimarySkills(signed char* stats) const;
     void setPrimarySkills(const signed char* stats);
-    unsigned char hasArtifact(int whichArtifact) const;
+    int hasArtifact(int whichArtifact) const;
     unsigned char hasSecondarySkill(int whichSkill);
     // 0x4d9330 - sets both per-spell byte tables for one spell.
     // Native hero initialization and campaign carry-over both expand these

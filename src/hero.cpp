@@ -1317,7 +1317,13 @@ hero_seqid boat::getStandSequence()
 VA(0x004d91b0, 0x3F)
 DC_ADDRESS(0x0cc220, 0x4a)
 MAC_ADDRESS(0x0f4d94, 0x68)
-unsigned char hero::hasArtifact(int whichArtifact) const
+// Original public ?HasArtifact@hero@@QBAHH@Z proves const int result.
+// Complete returns full EAX 0/1: each hit ordinal is below 64 before
+// mov al,1; failure leaves EAX=64 before xor al,al. Narrow instructions
+// therefore do not contradict the original contract. The ordinary int
+// source keeps the same loops/branches but emits full-width zero/one
+// exits (66 body bytes versus retail 63); no narrowing cast is evidenced.
+int hero::hasArtifact(int whichArtifact) const
 {
     for (int slot = 0; slot < 19; slot++) {
         if (m_equipped[slot].m_artifactId == whichArtifact)
