@@ -606,10 +606,12 @@ long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopC
 
 // DC ai_tactical.cpp:717/729/735 names OffsetToFront and two ValidHex
 // calls; Complete expands these header helpers in the attack search.
+// Original DC ?find_attack_hex@type_AI_attack_hex_chooser@@QAA_NXZ
+// proves bool; chooseMeleeTarget consumes the success result directly.
 VA(0x00436840, 0xEA)
 DC_ADDRESS(0x03d440, 0xe2)
 MAC_ADDRESS(0x03e070, 0x1a0)
-unsigned char type_AI_attack_hex_chooser::findAttackHex()
+bool type_AI_attack_hex_chooser::findAttackHex()
 {
     m_bestValue = 0;
     m_bestHex = -1;

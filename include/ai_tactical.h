@@ -171,7 +171,7 @@ public:
     type_AI_attack_hex_chooser(const army* attacker, const army* defender,
                                const long* attackArray, searchArray* search,
                                const type_AI_combat_parameters* combatData);
-    unsigned char findAttackHex();
+    bool findAttackHex();
     // dc 0x3d154. Inlined into check_adjacent_hexes and carrying no
     // retail body of its own.
     long getAttackTime(const pathCell* cell) const;
