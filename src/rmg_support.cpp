@@ -161,9 +161,9 @@ TRmgRiverPainter::~TRmgRiverPainter()
 {
 }
 
-// The first virtual slot returns the shared river pattern table. The argument
-// selects within that table at later painting sites and is intentionally not
-// consumed by this accessor.
+// The first virtual slot returns the shared river pattern table. The line-type
+// argument belongs to the shared interface; all river types use this same
+// table, so this accessor intentionally ignores it.
 VA(0x0055EDB0, 0x08)
 MAC_ADDRESS(0x253ad8, 0x8)  // vtables 0x641174/0x641190; Complete-only
 TRmgLinePatternTable* TRmgRiverLinePainter::getPattern(int)

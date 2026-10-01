@@ -4,6 +4,7 @@
 
 #include "va.h"
 class TAbstractFile;
+class TProgressSink;
 
 // The generator's result code (retail 0x54c090's return, dispatched through
 // GenerateRandomMap's four-entry jump table). Zero is success; each failure
@@ -26,8 +27,8 @@ enum ERandomMapResult {
 // through this header for the selection window and the RMG implementation.
 class TRandomMapRequest {
 public:
-    // Set to 1 for every seat the lobby has a live player record for; the
-    // constructor zeroes both dwords.
+    // Set to 1 for seats whose lobby player reports isHuman(); computer
+    // seats remain zero. The constructor zeroes both dwords.
     unsigned char m_isHumanSeat[8];   // +0x00
     // The eight seats' chosen town, -1 for random (constructor fill).
     int m_townType[8];                // +0x08
@@ -50,8 +51,12 @@ public:
     int m_mapVersion;                 // +0x4c
 
     TRandomMapRequest(int width, int height, int levels);
-    int generate(const char* fileName, void* progress);
-    int generateToFile(TAbstractFile* outputFile, void* progress);
+    // The optional progress sink is borrowed for the call. The lobby passes
+    // its TRandomMapProgress base, and the worker forwards it to the generator.
+    // generateToFile changes both player counts to one if their sum is below
+    // two; that request mutation remains even when generation later fails.
+    int generate(const char* fileName, TProgressSink* progress);
+    int generateToFile(TAbstractFile* outputFile, TProgressSink* progress);
 };
 SIZE(TRandomMapRequest, 0x50);
 
