@@ -1938,13 +1938,14 @@ void TTownScreenWindow::bonusRightClick(long id)
 }
 
 // Original: townManager::ChangeTown; townmgr.cpp:2833
-// DC first evicts the console sprite cache. Complete owns ordinary cached
-// resources and has no Sp_loaded/cache-reload path; its four expanded calls
-// begin at StartMouseThread and retain the setup/message/stop sequence.
+// DC 0x16b9f2 first evicts the console sprite cache. Keep that call at
+// entry, as in open/unloadTown; the desktop helper is empty, so Mac
+// 0x1be53c and the Windows expansions start with StartMouseThread.
 DC_ADDRESS(0x16b9e4, 0xac)
 MAC_ADDRESS(0x1be520, 0xac)
 void townManager::changeTown(unsigned char fade)
 {
+    ResourceManager::delSprFromCache();
     startMouseThread();
     setupExtraStuff();
     setupTown(fade);
@@ -4904,6 +4905,10 @@ void townManager::drawTown(int update, int incFrame,
         g_windowManager->updateScreen(0, 0, 800, 374);
 }
 
+// DC Main opens TTownMenu from widget 183 / key 50 (0x176450, 0x17659a)
+// and jumps the cursor on key 1 (0x176602). The desktop dispatchers
+// (Windows 0x5d478b onward, Mac 0x1d17e0 onward) have no such actions:
+// their keyboard paths handle town navigation and the space-bar hero swap.
 // E:\gamedcs\townmgr.cpp:5854
 VA(0x005d3240, 0x19CF)
 DC_ADDRESS(0x175160, 0x14d2)
