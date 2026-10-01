@@ -43,7 +43,7 @@ public:
 
     unsigned char m_prefsChanged;   // +0x60
 
-    void updateSystemOptions(unsigned char firstUpdate);
+    void updateSystemOptions(bool firstUpdate);
 
 private:
     int m_quickCombatSave;           // +0x64
