@@ -940,13 +940,12 @@ public:
 
     townManager();
     void unloadTown();
-    // Retail 0x5c6870 (dc 0x16bba4) and 0x5c77a0 (dc 0x16c940). Neither
-    // is reconstructed; both are declared for DoTownGate below, which
-    // expands townManager::ChangeTown inline and so has to name them.
-    // Same gate, same measured reason, as SetupExtraStuff above.
-    void setupTown(unsigned char fade);
+    // Original publics SetupTown/ChangeTown are QAAX_N@Z, independently
+    // proving bool fade despite the lowered byte record. Complete retains
+    // the same Boolean domain; setupTown owns the full retail 0x5c6870 body.
+    void setupTown(bool fade);
     void setupExtraStuff();
-    void changeTown(unsigned char fade);
+    void changeTown(bool fade);
     void createPopupBank(heroWindow* parent);
     void doPortalOfSummoning();
 

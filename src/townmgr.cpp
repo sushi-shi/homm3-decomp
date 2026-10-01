@@ -1924,7 +1924,7 @@ void TTownScreenWindow::bonusRightClick(long id)
 // begin at StartMouseThread and retain the setup/message/stop sequence.
 DC_ADDRESS(0x16b9e4, 0xac)
 MAC_ADDRESS(0x1be520, 0xac)
-void townManager::changeTown(unsigned char fade)
+void townManager::changeTown(bool fade)
 {
     startMouseThread();
     setupExtraStuff();
@@ -1950,7 +1950,7 @@ void townManager::changeTown(unsigned char fade)
 VA(0x005c6870, 0x59F)
 DC_ADDRESS(0x16bba4, 0x540)
 MAC_ADDRESS(0x1be888, 0x738)  // anchor-caller(Open 0x5c63c0 + Main) + anchor-callee(UnloadTown/NewStrips/RedrawTownScreen) + anchor-string %sBack.pcx
-void townManager::setupTown(unsigned char fade)
+void townManager::setupTown(bool fade)
 {
     message msg;
     int objToLoad;
