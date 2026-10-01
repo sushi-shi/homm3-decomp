@@ -535,6 +535,14 @@ void type_obscuring_object::initialize()
     m_extraInfo = 0;
 }
 
+// Project-inferred counterpart to getLocation, shared by heroes and boats.
+void type_obscuring_object::setLocation(const type_point& point)
+{
+    m_x = point.m_x;
+    m_y = point.m_y;
+    m_z = point.m_z;
+}
+
 VA(0x004d74f0, 0xD6)
 DC_ADDRESS(0x0cab54, 0x102)
 MAC_ADDRESS(0x0f22e0, 0x194)
@@ -664,9 +672,7 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
     g_game->m_heroPoolMap[m_id][playerId] = true;
 
     m_owner = static_cast<signed char>(playerId);
-    m_x = point.m_x;
-    m_y = point.m_y;
-    m_z = point.m_z;
+    setLocation(point);
     m_facing = 2;
     if (resetFlags)
         m_flags &= 0xfff9ffff;
@@ -1084,9 +1090,7 @@ MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4
 void hero::initialize(const HeroExtra* setup)
 {
     m_order = setup->m_objRef;
-    m_x = setup->m_location.m_x;
-    m_y = setup->m_location.m_y;
-    m_z = setup->m_location.m_z;
+    setLocation(setup->m_location);
     m_owner = setup->m_owner;
     m_id = setup->m_id;
     m_heroClass = g_heroTraits[setup->m_id].m_heroClass;
@@ -4434,11 +4438,6 @@ MAC_ADDRESS(0x10210c, 0x224)
 void hero::updateStats()
 {
     message msg;
-    msg.m_codeY = 0;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_extraText = g_text;

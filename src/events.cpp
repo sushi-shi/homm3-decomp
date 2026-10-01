@@ -2651,9 +2651,7 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
     g_game->m_heroAvailability[heroID] = currentHero->m_owner;
     g_game->m_heroPoolMap[heroID][currentHero->m_owner] = 1;
     g_currentPlayer->addHero(heroID);
-    prisoner->m_x = point.m_x;
-    prisoner->m_y = point.m_y;
-    prisoner->m_z = point.m_z;
+    prisoner->setLocation(point);
     prisoner->m_flags = 0;
     prisoner->m_facing = hero::kFacingE;
     prisoner->refreshMovement();

@@ -677,9 +677,7 @@ void advManager::teleportTo(hero* who, type_point destination,
         who->restoreCell();
     }
 
-    who->m_x = destination.m_x;
-    who->m_y = destination.m_y;
-    who->m_z = destination.m_z;
+    who->setLocation(destination);
     g_game->setVisibility(destination.m_x, destination.m_y, destination.m_z,
                           g_netLocalGamePos, who->getVisibility(),
                           isRemoteMove);

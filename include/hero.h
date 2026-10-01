@@ -172,6 +172,9 @@ public:
     {
         return type_point(m_x, m_y, m_z);
     }
+    // Project-inferred coordinate update only; callers own cell restoration.
+    // Native mapX/mapY/mapZ are public short members in Dreamcast CodeView.
+    void setLocation(const type_point& point);
     bool load(void* infile);
 
     // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView

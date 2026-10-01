@@ -965,9 +965,7 @@ void advManager::onRecruitHero(CMapChange* mapChange)
     CMCRecruitHero* change = static_cast<CMCRecruitHero*>(mapChange);
     g_game->getCell(change->m_point);
     hero* currentHero = g_game->getHero(change->m_heroId);
-    currentHero->m_x = change->m_point.m_x;
-    currentHero->m_y = change->m_point.m_y;
-    currentHero->m_z = change->m_point.m_z;
+    currentHero->setLocation(change->m_point);
     currentHero->m_flags = 0;
     currentHero->m_facing = hero::kFacingE;
     currentHero->m_owner = static_cast<signed char>(change->m_playerPos);

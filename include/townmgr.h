@@ -992,6 +992,8 @@ private:
     void handleHallClick();
     void showHallPopup();
     void clearPopupBank();
+    void initializeDialogPointers();
+    void clearTownGraphicSlots();
 };
 
 extern townManager* g_townManager;

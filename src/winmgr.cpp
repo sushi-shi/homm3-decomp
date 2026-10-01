@@ -244,10 +244,6 @@ int heroWindowManager::broadcastMessage(int msgId, int msgCodeX, int msgCodeY, i
 {
     message msg;
 
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_window = 0;
     msg.m_id = msgId;
     msg.m_codeX = msgCodeX;
     msg.m_codeY = msgCodeY;

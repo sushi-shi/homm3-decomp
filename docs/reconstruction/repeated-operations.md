@@ -2284,6 +2284,45 @@ entry points and nested helpers remain represented. Field visibility, layouts,
 resource types and ownership policies are unchanged. No compiler or matching
 claim is made for this continuation.
 
+## Hero/boat locations, town initialization and fresh messages
+
+Ten packed-point-to-coordinate copies share ordinary
+`type_obscuring_object::setLocation(const type_point&)`. The operation reads X,
+Y and Z in order and stores each into the existing short member; it does not
+restore or obscure a map cell, change occupancy, update visibility or move a
+roster entry. Callers are hero placement and setup initialization, prison
+release, teleportation, remote recruitment, move-hero undo, and show-hero/boat
+replay and undo. Their existing cell, facing, owner, boat-state, visibility and
+redraw operations retain their relative order. The point is referenced without
+introducing another packed-point construction or copy.
+
+The cached Dreamcast type record positively declares mapX, mapY and mapZ as
+public short members at offsets 0, 2 and 4 (field attributes 3). Those fields
+therefore remain public despite the new operation. The setter name and ordinary
+hero.cpp placement are project inferences, paired with the existing native
+getLocation; it receives no native annotation and adds no virtual slot. Raw
+stream reads, partial coordinate changes and unrelated packed path records
+remain distinct from this complete hero/boat update.
+
+Town-manager construction and opening share private initializeDialogPointers:
+resource bar, dialog resource bar, auxiliary window, global tavern window,
+active handler and saved handler are nulled in the original order. They also
+share clearTownGraphicSlots, retaining the two whole-array memsets for monster
+portraits and town-object pointers. The constructor's panorama write remains
+between those operations, while open keeps them adjacent. These are pointer
+initializations, not release operations: allocation, cleanup, counts, strips,
+command sentinels, hover qualifiers and the other caller-specific fields stay
+where they were. Names and ordinary source placement are project inferences.
+
+Three fresh-message sites now rely on the native message constructor for their
+unchanged zero fields: hero-stat refresh, overview mode changes and the window
+manager's broadcast overload. The hero message also retains constructor-provided
+codeY zero before its loop assigns widget IDs. Overview construction stays after
+the slider branch, and its two broadcasts continue to reuse the same message.
+Generic broadcasts retain the supplied message ID rather than acquiring a
+widget-only envelope. Payload writes, loops and dispatch order are unchanged.
+No reset is added to an already-used message.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

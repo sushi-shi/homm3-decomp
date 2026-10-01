@@ -814,15 +814,10 @@ void game::setupNewOverviewType(int whichType, bool update)
         g_overviewSlider->setResolution(1);
     }
 
-    // Dreamcast constructs this message after the slider branch. Complete
-    // overwrites all eight fields before the first use, so that lifetime also
-    // lets VC6 remove the constructor's zero stores.
+    // Dreamcast constructs this message after the slider branch. Keep that
+    // lifetime and let the native constructor supply its unchanged zero fields.
     message msg;
     msg.m_codeY = 195 + (g_overviewType != 1);
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
     msg.m_extra = 8;

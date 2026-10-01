@@ -1120,6 +1120,24 @@ void townManager::invalidateHover()
     m_lastHover = -1;
 }
 
+// Project-inferred initialization shared by construction and opening.
+// These operations initialize pointer storage without releasing resources.
+void townManager::initializeDialogPointers()
+{
+    m_resourceDisplay = 0;
+    m_dialogResourceDisplay = 0;
+    m_multiWin = 0;
+    g_tavernWindow = 0;
+    m_netMsgHandler = 0;
+    m_netMsgHandlerSave = 0;
+}
+
+void townManager::clearTownGraphicSlots()
+{
+    memset(m_monPix, 0, sizeof(m_monPix));
+    memset(m_townObjects, 0, sizeof(m_townObjects));
+}
+
 // The manager constructor, and with it the whole class layout. It is
 // the only body in the compiland that calls baseManager's constructor
 // and the only one that stores vtable 0x643720, whose three slots -
@@ -1138,15 +1156,9 @@ townManager::townManager()
     m_saveWin = 0;
     m_objToBuild = -1;
     g_castleOpen = 0;
-    m_resourceDisplay = 0;
-    m_dialogResourceDisplay = 0;
-    m_multiWin = 0;
-    g_tavernWindow = 0;
-    m_netMsgHandler = 0;
-    m_netMsgHandlerSave = 0;
+    initializeDialogPointers();
     m_panorama = 0;
-    memset(m_monPix, 0, sizeof(m_monPix));
-    memset(m_townObjects, 0, sizeof(m_townObjects));
+    clearTownGraphicSlots();
     m_townObjectCount = 0;
     m_loadedTownType = -1;
     m_townWindow = 0;
@@ -1720,14 +1732,8 @@ int townManager::open(int newPriority)
     g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] = GameTime::get() + 150;
     m_objToBuild = -1;
     m_hallWindow = 0;
-    m_resourceDisplay = 0;
-    m_dialogResourceDisplay = 0;
-    m_multiWin = 0;
-    g_tavernWindow = 0;
-    m_netMsgHandler = 0;
-    m_netMsgHandlerSave = 0;
-    memset(m_monPix, 0, sizeof(m_monPix));
-    memset(m_townObjects, 0, sizeof(m_townObjects));
+    initializeDialogPointers();
+    clearTownGraphicSlots();
     m_currIndex = -1;
     m_srcIndex = -1;
     m_destIndex = -1;
