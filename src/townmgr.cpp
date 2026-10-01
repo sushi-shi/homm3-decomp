@@ -3721,12 +3721,8 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x1cc314..0x1cc368 expands canonical null-checking registration.
+    addWidgetsToMessageStream();
 
     message msg;
     msg.m_qualifier = 0;
@@ -4180,12 +4176,8 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
     m_widgets.push_back(new button(224, 312, 64, 30, CANCEL_BUTTON_ID,
                                  "iCancel.def", 0, 1, 1, 1, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x1cdcf4..0x1cdd44 expands canonical null-checking registration.
+    addWidgetsToMessageStream();
 
     if (!g_currentPlayer->isLocalHuman())
         getWidget(BUY_BUTTON_ID)->enable(0);
@@ -4420,12 +4412,8 @@ TShipWindow::TShipWindow(int type)
     m_widgets.push_back(new button(224, 312, 64, 30, CANCEL_BUTTON_ID,
                                  "iCancel.def", 0, 1, 1, 1, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x1cf0ac..0x1cf0fc expands canonical null-checking registration.
+    addWidgetsToMessageStream();
 
     if (!g_currentPlayer->isLocalHuman())
         getWidget(BUY_BUTTON_ID)->enable(0);
