@@ -663,13 +663,19 @@ void launchSample(const char* sampleName, int maxTime, int channel)
         _beginthread(waitEndSampleThread, 0, launched);
 }
 
-// E:\gamedcs\soundmgr.cpp:911
+// Windows-only thread callback. Dreamcast soundmgr.cpp:911 identifies the
+// separate WaitEndSample operation (retail 0x59a4c0), not this callback.
 // A counted for-loop with its timer initialized inside the eligibility
 // guard scores 87.32% versus 92%; retail initializes that timer before
 // the guard. Preserve the original helper query and body update order.
 // An explicit infinite loop with the same query/time exit is byte-flat;
 // the residual is the expanded query's receiver/zero-result path, not
 // the named AIL_end_sample import's extra underscore in delinked labels.
+// The query-before-time test, Sleep/increment/shutdown order and final
+// clearMemSample/delete/worker-count cleanup all agree. Retail's EAX receiver
+// and join-point reload do not establish an additional source pointer local;
+// the native soundManager record exposes these members publicly, with no
+// missing access-control wrapper supported by that record.
 VA(0x0059a6b0, 0x113)  // address-taken + packet layout, retail-only
 void __cdecl waitEndSampleThread(void* arglist)
 {
