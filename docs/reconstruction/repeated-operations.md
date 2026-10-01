@@ -2190,6 +2190,53 @@ predicate names and ordinary source placements are project inferences. Native
 condition entry points, winner recording, field visibility and layout remain
 unchanged.
 
+## Buffered input, mouse rectangles and selection repainting
+
+The native getEvent and peekEvent wrappers share private ordinary
+`inputManager::readBufferedEvent(message&, consume)`. Each still constructs its
+own return message before polling sound. The common operation polls first,
+checks active status and a nonempty queue, copies the current slot, updates the
+head, then conditionally converts a key-down to ASCII. Consumption advances by
+one modulo 64; peeking retains its original head modulo 64 store. Inactive or
+empty queues retain the nested setNoInput operation and do not normalize the
+head. Conversion acts on the caller-owned copy, leaving the buffered record
+untouched. Both native signatures, return lifetimes and claims remain intact.
+
+Mouse rendering shares three file-static operations in mousemgr.cpp. Both
+branches obtain the primary surface description through the same zero, size
+and GetSurfaceDesc sequence, retaining their separate caller-owned v1
+DDSURFACEDESC objects and ignoring the SDK result as before. Three surface-space
+rectangle clips share left/right/top/bottom checks against that description;
+comparisons retain the signed-long dimension casts and stores retain the
+original DWORD values. The fixed 800x600 initial clipping and translated client
+clipping remain separate because their ordering, bounds and arithmetic differ.
+
+Five save/copy/blit rectangle constructions share setLocalMouseRect: zero left
+and top, then derive right and bottom from the bounds' extents. The rectangle
+objects keep their original scopes, including saveAndDraw's subsequent copy
+into sourceRect. Blit surfaces, offsets, flags, IsRectEmpty guards and the
+retained saveAndDraw/restoreUnderlying boundaries remain unchanged. The two
+update exits reached after incrementing m_busy share private finishUpdate,
+which clears the global reentrancy byte before decrementing m_busy. Earlier
+exits still clear only that byte, and the caller-owned critical-section lock
+outlives every cleanup call.
+
+Twenty-five selection-window draw/update sequences share private ordinary
+redrawSelection. It invokes virtual drawWindow with the existing no-immediate-
+update flag and full ID range, then the window's native update. Six of those
+paths use an outer refreshChatAndSelection operation, retaining displayChat
+before the nested repaint: five detail-popup branches and player-drop handling.
+The filter-options branch also reuses the existing refreshFilterWidgets rather
+than repeating its three operations; that native helper and openRandomMapOptions
+now retain the common repaint as a nested call.
+
+Host, popup, redraw and map-receive guards remain caller-owned. Modal object
+lifetimes, widget changes, setup broadcasts, file-slider state and full-window
+update timing retain their order. Paths that draw with update=1, draw partial
+ID ranges or do intervening text work are distinct. New names and ordinary
+source placements are project inferences; no native annotations, virtual slots,
+field access declarations or storage layout are added or changed.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

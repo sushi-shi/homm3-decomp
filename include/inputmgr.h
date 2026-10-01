@@ -144,6 +144,7 @@ public:
 
 private:
     void resetQueueIndices();
+    void readBufferedEvent(message& msg, bool consume);
 };
 
 // Retail .bss 0x6994e0 (DC ?gpInputManager@@3PAVinputManager@@A).

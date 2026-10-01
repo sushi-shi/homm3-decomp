@@ -215,24 +215,31 @@ void inputManager::flush()
     resetQueueIndices();
 }
 
-// GetEvent and PeekEvent poll sound before checking the queue and share the
-// no-input result operation. Only GetEvent consumes the buffered message.
+// Project-inferred common read. Callers construct their own return message
+// before sound polling; peeking retains its original head normalization.
+void inputManager::readBufferedEvent(message& msg, bool consume)
+{
+    pollSound();
+    if (m_status == STATUS_ACTIVE && m_head != m_tail) {
+        msg = m_buffer[m_head];
+        if (consume)
+            m_head = (m_head + 1) % 64;
+        else
+            m_head = m_head % 64;
+        if (msg.m_id == MESSAGE_KEY_DOWN && m_keyCodeType == 0)
+            asciiConvert(&msg);
+    } else {
+        msg.setNoInput();
+    }
+}
+
 VA(0x004ec590, 0xAE)
 DC_ADDRESS(0x0dda74, 0x19e)
 MAC_ADDRESS(0x10e1e8, 0x15c)
 message inputManager::getEvent()
 {
     message msg;
-
-    pollSound();
-    if (m_status == STATUS_ACTIVE && m_head != m_tail) {
-        msg = m_buffer[m_head];
-        m_head = (m_head + 1) % 64;
-        if (msg.m_id == MESSAGE_KEY_DOWN && m_keyCodeType == 0)
-            asciiConvert(&msg);
-    } else {
-        msg.setNoInput();
-    }
+    readBufferedEvent(msg, true);
     return msg;
 }
 
@@ -242,16 +249,7 @@ MAC_ADDRESS(0x10e344, 0x154)
 message inputManager::peekEvent()
 {
     message msg;
-
-    pollSound();
-    if (m_status == STATUS_ACTIVE && m_head != m_tail) {
-        msg = m_buffer[m_head];
-        m_head = m_head % 64;
-        if (msg.m_id == MESSAGE_KEY_DOWN && m_keyCodeType == 0)
-            asciiConvert(&msg);
-    } else {
-        msg.setNoInput();
-    }
+    readBufferedEvent(msg, false);
     return msg;
 }
 

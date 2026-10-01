@@ -738,6 +738,9 @@ public:
 
 private:
     virtual unsigned char processRightSelect(int id);  // slot 11
+    // Project-inferred full selection repaint and its chat-refresh prefix.
+    void redrawSelection();
+    void refreshChatAndSelection();
 
 public:
     virtual int exitDialog(message& msg);   // slot 14

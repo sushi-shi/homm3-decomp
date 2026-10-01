@@ -1983,6 +1983,20 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
     memcpy(m_compPlayer, compPlayers, sizeof(m_compPlayer));
 }
 
+// Project-inferred repaint shared by selection and network callbacks.
+// Keep virtual drawing ahead of the selection-specific update operation.
+void TSingleSelectionWindow::redrawSelection()
+{
+    drawWindow(0, 0xffff0001, 0xffff);
+    update();
+}
+
+void TSingleSelectionWindow::refreshChatAndSelection()
+{
+    displayChat();
+    redrawSelection();
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:1953
 // DC's allies/enemies and generic flag widget are widget*, not pointers to
 // their allocated subclasses. Together with the corrected handler base and
@@ -3322,8 +3336,7 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
         w->enable(1);
         w->draw();
     }
-    drawWindow(0, 0xffff0001, 0xffff);
-    update();
+    redrawSelection();
 
     if (g_remoteOn && isHost())
         sendPlayerPositions(0);
@@ -3834,9 +3847,7 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
                 }
             }
         }
-        displayChat();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshChatAndSelection();
         break;
     }
 
@@ -3869,9 +3880,7 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
                           static_cast<TTownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             dlg.doModal(0);
         }
-        displayChat();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshChatAndSelection();
         break;
     }
 
@@ -3937,9 +3946,7 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
 
         dlg.createWin(header, m_resource, sprite, bonusEx, desc);
         dlg.doModal(0);
-        displayChat();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshChatAndSelection();
         break;
     }
 
@@ -3947,18 +3954,14 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
         CTeamAlignmentDlg dlg(!m_saveMode && !m_loadMode);
         dlg.createWin();
         dlg.doModal(0);
-        displayChat();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshChatAndSelection();
         break;
     }
 
     default:
         if (!CHeroWindowEx::processRightSelect(id))
             break;
-        displayChat();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshChatAndSelection();
         break;
     }
 
@@ -4919,8 +4922,7 @@ void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
         updateGameVars();
     m_fileSlider->setState(m_currentIndex);
     if (update) {
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        redrawSelection();
     }
 }
 
@@ -5153,8 +5155,7 @@ void TSingleSelectionWindow::setFilter(int size)
     broadcastMessage(msg);
     m_fileSlider->setResolution(m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
     setCurrentMap(m_selectionHeaders.size() > 0 ? 0 : -1, 0);
-    drawWindow(0, 0xffff0001, 0xffff);
-    update();
+    redrawSelection();
     if (g_remoteOn != 0 && isHost()) {
         CSetFilterMsg filterMsg(size);
         transmitRemoteDataDPID(&filterMsg, NET_BROADCAST_DPID, false, true);
@@ -5329,8 +5330,7 @@ MAC_ADDRESS(0x17e308, 0x5c)
 void TSingleSelectionWindow::refreshFilterWidgets()
 {
     updateFilterWidgets();
-    drawWindow(0, 0xffff0001, 0xffff);
-    this->update();
+    redrawSelection();
 }
 
 // Mac 0x17e364/0x17e394 places these ordinary helpers between the
@@ -5371,8 +5371,7 @@ MAC_ADDRESS(0x17e3c4, 0x60)
 void TSingleSelectionWindow::openRandomMapOptions()
 {
     setupScenarioOptions(1);
-    drawWindow(0, 0xffff0001, 0xffff);
-    this->update();
+    redrawSelection();
 }
 
 // The retail jump-table arm layout and Dreamcast's line table independently
@@ -5609,25 +5608,20 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         g_lastDiff = g_game->m_setup.m_difficulty;
         setDifficultyHiLite();
         sendSetupInfo(0);
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        redrawSelection();
         break;
 
     case SSW_SCENARIO_OPTIONS:
         setupScenarioOptions(0);
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        redrawSelection();
         break;
     case SSW_ADVANCED_OPTIONS:
         setupAdvancedOptions();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        redrawSelection();
         break;
     case SSW_FILTER_OPTIONS:
         setupFilterOptions();
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         break;
 
     case SSW_GENERATE_RANDOM_MAP: {
@@ -6091,8 +6085,7 @@ int TSingleSelectionWindow::windowHandler(message& msg)
         normalDialog(g_generalText->getText(GENERAL_TEXT_NO_SAVED_GAMES), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         getWidget(186)->enable(0);
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        redrawSelection();
     }
 
     if (m_saveMode) {
@@ -6750,9 +6743,7 @@ bool TSingleSelectionWindow::onPlayerDroppedMsg(CNetMsg* netMsg)
     if (player)
         g_chatMan.playerDropMsg(g_generalText->getText(GENERAL_TEXT_PLAYER_LEFT_GAME_FORMAT), player->m_name);
     updateNameLists();
-    displayChat();
-    drawWindow(0, 0xffff0001, 0xffff);
-    this->update();
+    refreshChatAndSelection();
     return true;
 }
 
@@ -6826,8 +6817,7 @@ bool TSingleSelectionWindow::onGameHeaderInfoEndMsg(CNetMsg* netMsg)
     m_fileSlider->setResolution(m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
     if (m_selectionHeaders.size() > 0)
         updateGameVars();
-    drawWindow(0, 0xffff0001, 0xffff);
-    this->update();
+    redrawSelection();
     return true;
 }
 
@@ -6921,8 +6911,7 @@ unsigned char TSingleSelectionWindow::onNewSetupInfoMsg(CNetMsg* netMsg)
     m_randomMapOptions[7] = msg->m_extras[7];
     m_durationIndex = g_game->m_setup.m_turnDuration;
     m_durationSlider->setState(m_durationIndex);
-    drawWindow(0, 0xffff0001, 0xffff);
-    update();
+    redrawSelection();
     return 1;
 }
 
@@ -7026,8 +7015,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         m_newPlayerUpdateMan->newPlayer(netMsg->m_dpidFrom);
         if (m_inAdvancedOptions) {
             if (assignPlayerToOpenHumanSlot(netMsg->m_dpidFrom)) {
-                drawWindow(0, 0xffff0001, 0xffff);
-                this->update();
+                redrawSelection();
             }
         } else {
             setHumanSlot();
@@ -7185,8 +7173,7 @@ inline void TSingleSelectionWindow::onDurationSlider(int newIndex)
     g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
     if (g_remoteOn && isHost())
         sendSetupInfo(0);
-    drawWindow(0, 0xffff0001, 0xffff);
-    update();
+    redrawSelection();
 }
 
 // Dreamcast retains this source helper; Complete expands it
@@ -7337,8 +7324,7 @@ void TSingleSelectionWindow::onRequestHeroFaceReplyMsg(CNetMsg* netMsg, bool inP
     if (p) {
         p->setHeroIndex(msg->m_face);
         if (!inPopup) {
-            drawWindow(0, 0xffff0001, 0xffff);
-            this->update();
+            redrawSelection();
         }
     }
 }
@@ -7421,8 +7407,7 @@ void TSingleSelectionWindow::onNewHostMsg(CNetMsg* netMsg)
         sprintf(text, g_generalText->getText(GENERAL_TEXT_NEW_HOST_FORMAT),
                 DATA_COMPGEN(0x00683958, unknownHostName, "????????????"));
     g_chatMan.systemMsg(text);
-    drawWindow(0, 0xffff0001, 0xffff);
-    update();
+    redrawSelection();
 }
 
 VA(0x0058B620, 0x16F)
@@ -7544,8 +7529,7 @@ void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
     if (!m_receivingMaps) {
         makeHeroFilter();
         updateAllyEnemyFlags(0);
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        redrawSelection();
     }
 }
 
@@ -7884,8 +7868,7 @@ void TSingleSelectionWindow::turnChatOn(bool update)
     m_chatShowing = 1;
     setFocus(m_chatEdit->m_id);
     if (update) {
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        redrawSelection();
     }
 }
 
@@ -7907,8 +7890,7 @@ void TSingleSelectionWindow::turnChatOff(unsigned char update)
     setFocus(-1);
     m_chatShowing = 0;
     if (update) {
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        redrawSelection();
     }
 }
 
