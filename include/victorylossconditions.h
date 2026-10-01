@@ -127,7 +127,8 @@ SIZE(VictoryConditionStruct, 0x4C);
 struct LossConditionStruct {
 public:
     signed char m_type;
-    char m_paddingBeforeTownPosition[3];
+    // The int coordinates naturally align at +4; the preceding bytes are
+    // implicit padding, not an additional field in the native member roster.
     int m_townX;
     int m_townY;
     int m_townZ;
