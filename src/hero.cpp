@@ -5948,7 +5948,7 @@ float hero::getFirstAidFactor() const
 VA(0x004e4990, 0x3F6)
 DC_ADDRESS(0x0d4b50, 0x210)
 MAC_ADDRESS(0x105898, 0x348)
-int hero::getMobility(unsigned char seaMovement) const
+int hero::getMobility(bool seaMovement) const
 {
     if (m_flags & 0x1000000)
         return 1000000;
