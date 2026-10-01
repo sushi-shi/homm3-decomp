@@ -1325,6 +1325,9 @@ MAC_ADDRESS(0x0f4d94, 0x68)
 // exits (66 body bytes versus retail 63); no narrowing cast is evidenced.
 // Mac f4da0/f4da4 and f4dd0/f4dd4 expand the equipped/backpack reference
 // reads owned by the canonical getters; restoring their calls is byte-flat.
+// Boolean true/false return tokens, promoted to the native int result, are
+// also byte-flat at 99.4643%; both loops and all eight CFG blocks agree.
+// The remaining exits are xor eax/eax and mov eax/1 versus retail AL forms.
 int hero::hasArtifact(int whichArtifact) const
 {
     for (int slot = 0; slot < 19; slot++) {
