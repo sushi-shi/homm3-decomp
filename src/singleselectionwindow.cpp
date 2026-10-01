@@ -8004,11 +8004,13 @@ void TSingleSelectionWindow::onTownUpdateMsg(
     updateTown(msg->m_gamePos, msg->m_town, inPopup);
 }
 
+// Native ?UpdateTown@TSingleSelectionWindow@@QAAXHW4TTownType@@_N@Z
+// proves the forwarded popup flag is bool, retaining the town enum.
 VA(0x0058CD50, 0x119)
 DC_ADDRESS(0x143138, 0x84)
 MAC_ADDRESS(0x184538, 0xac)
 void TSingleSelectionWindow::updateTown(
-        int pos, TTownType town, unsigned char inPopup)
+        int pos, TTownType town, bool inPopup)
 {
     CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(pos);
     if (!p)
@@ -8306,11 +8308,13 @@ unsigned char TSingleSelectionWindow::highlightFile(char* filename)
 // fall through into the random case. Updating only the local gives 99.7181%;
 // an explicit exit without that update gives 99.6789%; together they give
 // 100%. Nested if/else and early-break forms both reproduce the exact body.
+// Native ?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAAXH_NH@Z
+// proves the update flag is bool between the two int arguments.
 VA(0x0058d510, 0xA40)
 DC_ADDRESS(0x143a7c, 0x158a)
 MAC_ADDRESS(0x184ff0, 0xccc)  // anchor-callee both CEnterNameEdit overrides call it (pos, 1, -1) after the name commit, matching DC OnNameChange->DrawHeroAdvancedOption; also called from WindowHandler per DC edge; size 0.48x
 void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
-                                                    unsigned char update,
+                                                    bool update,
                                                     int position)
 {
     if (position == -1)

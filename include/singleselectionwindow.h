@@ -727,7 +727,7 @@ public:
     // provisional role names describe the byte-decoded caller contract.
     unsigned char generateRandomMap(const char* name);
     void setCurrentMap(int map, bool update);
-    void drawHeroAdvancedOption(int playerPos, unsigned char update,
+    void drawHeroAdvancedOption(int playerPos, bool update,
                                 int position);
     void onDeleteFile();
     unsigned char onNewSetupInfoMsg(CNetMsg* netMsg);
@@ -776,7 +776,7 @@ public:
     void turnChatOff(unsigned char update);
     void onTownUpdateMsg(CNetMsg* netMsg, bool inPopup);
     void updateNameLists();
-    void updateTown(int pos, TTownType town, unsigned char inPopup);
+    void updateTown(int pos, TTownType town, bool inPopup);
     void setNewPlayerSlot(CNetPlayerInfo* playerInfo);
     void removePlayer(unsigned long dpid);
     void setupLoadGameMode();
