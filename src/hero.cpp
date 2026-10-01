@@ -1182,7 +1182,8 @@ void hero::initialize(const HeroExtra* setup)
         if (g_inCampaign
             && g_game->m_campaign.m_currentCampaign == g_startLevelCampaign
             && g_game->m_campaign.m_currentMap == g_startLevelScenario) {
-            int level = g_game->m_heroes[g_startLevelHeroId].m_level
+            // Mac f4998..f49a4 uses the canonical unguarded hero-row view.
+            int level = g_game->getHeroReference(g_startLevelHeroId).m_level
                        + g_startLevelBonus;
             amount = getExperience(level);
         }
