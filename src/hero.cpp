@@ -1444,6 +1444,13 @@ void hero::raiseManaTo(int minimum)
         m_mana = static_cast<short>(minimum);
 }
 
+// Project-inferred spell charge shared by adventure casts and Fly. Preserve
+// the native cost lookup and useSpell's mana clamp and locator refresh.
+void hero::spendSpellMana(SpellID whichSpell)
+{
+    useSpell(getManaCost(whichSpell));
+}
+
 VA(0x004d92d0, 0x59)
 DC_ADDRESS(0x0cc300, 0x48)
 MAC_ADDRESS(0x0f4f4c, 0xa0)
@@ -6473,7 +6480,7 @@ MAC_ADDRESS(0x1069d0, 0x50)
 void hero::fly(int level)
 {
     m_flightLevel = level;
-    useSpell(getManaCost(SPELL_FLY));
+    spendSpellMana(SPELL_FLY);
 }
 
 VA(0x004e5aa0, 0xE0)

@@ -2734,6 +2734,37 @@ member ordering, network payload copying and virtual entry points are unchanged.
 All three helper names and ordinary singleselectionwindow.cpp bodies are project
 inferences. No builds, tests or matching-score investigations were run.
 
+## Adventure-spell refusals, view casts and mana charges
+
+Eight unformatted refusal paths share file-static showLocalAdventureSpellRefusal,
+and four caster-name paths share showLocalNamedSpellRefusal. Both retain the
+local-human owner check before reading the text resource. The latter then formats
+the caster's name into g_text before opening the same dialog. Their callers keep
+all movement, terrain, town-availability, random-roll and casting-limit gates,
+including early returns and subsequent radar updates. These paths retain their
+existing text indexer; confirmation and unconditional getText-based dialogs keep
+their existing helpers and separate policies.
+
+View Earth and View Air share private advManager::castViewSpell: launch the
+annotated view.wav sample, display the world using the selected spell/mastery,
+then charge the original caster. The caster pointer remains the dispatcher's
+snapshot across the modal display, while its cost is queried afterward.
+
+Ten original casting paths share hero::spendSpellMana, now nested in castViewSpell
+for both view spells and called directly by the remaining seven adventure paths
+and hero::fly. It retains one-argument getManaCost followed by native useSpell,
+including that operation's zero clamp and guarded locator refresh. No cost is
+cached earlier in a cast, and no success-only guard is added: failed boat rolls
+and the accepted-but-blocked Dimension Door path retain their existing charges.
+Fly still stores its flight level before computing the charge. Sound waits,
+movement deductions, locator updates and spell counters remain at their existing
+caller positions.
+
+These four names and ordinary owning-source bodies are project inferences.
+The view operation is private; the hero charge is an owner operation available
+to spell callers. Native-public mana storage and existing layouts/interfaces
+remain intact. No builds, tests or matching-score investigations were run.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

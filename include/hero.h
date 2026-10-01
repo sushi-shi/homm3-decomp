@@ -932,6 +932,8 @@ public:
     // 0x004d92d0 - spends mana and refreshes the local adventure hero
     // locators while that manager is active.
     void useSpell(int cost);
+    // Project-inferred cost lookup followed by the native charge operation.
+    void spendSpellMana(SpellID whichSpell);
     // Project-inferred resource operations; native mana remains public.
     void resetManaToMaximum();
     void raiseManaTo(int minimum);

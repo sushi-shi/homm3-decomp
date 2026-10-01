@@ -21,6 +21,35 @@
 #include "towngatewindow.h"
 #include "winmgr.h"
 
+// Project-inferred local-player diagnostics shared by adventure spells.
+// Keep the text lookup behind the player gate and preserve the native indexer.
+static void showLocalAdventureSpellRefusal(const hero* caster,
+                                           EGeneralTextIndex textIndex)
+{
+    if (g_game->isLocalHuman(caster->m_owner)) {
+        normalDialog((*g_generalText)[textIndex],
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+}
+
+static void showLocalNamedSpellRefusal(const hero* caster,
+                                      EGeneralTextIndex textIndex)
+{
+    if (g_game->isLocalHuman(caster->m_owner)) {
+        sprintf(g_text, (*g_generalText)[textIndex], caster->m_name);
+        normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+}
+
+// Project-inferred View Earth/Air operation. Keep the original caster through
+// the modal map display; calculate and charge its mana only after returning.
+void advManager::castViewSpell(hero* caster, SpellID spell, TSkillMastery level)
+{
+    launchSample(DATA_COMPGEN(0x006604C4, castSpellViewSample, "view.wav"), -1, 3);
+    viewWorld(spell, level);
+    caster->spendSpellMana(spell);
+}
+
 VA(0x0041c2f0, 0x192)
 DC_ADDRESS(0x02194c, 0xe0)
 MAC_ADDRESS(0x01cf84, 0x224)
@@ -65,8 +94,9 @@ void advManager::checkCastSpell()
 }
 
 // E:\gamedcs\advspells.cpp:93
-// The dispatcher, and the ONE place every adventure spell is charged from.
-// Ten ascending cases through a jump table; four of the arms are Dreamcast
+// The dispatcher keeps each spell handler's own charge point; View Earth/Air
+// now share castViewSpell. Ten ascending cases through a jump table; four arms
+// are Dreamcast
 // handlers retail has no body for, expanded here because each has exactly
 // this one call site - which is what makes 1028 bytes out of the DC's 344.
 // Each arm re-derives its own `who` because each inlined handler opens with
@@ -94,21 +124,13 @@ void advManager::castSpell(SpellID whichSpell)
         identify(level);
         break;
     case SPELL_VIEW_EARTH:
-        launchSample(DATA_COMPGEN(0x006604C4, castSpellViewSample,
-                                   "view.wav"),
-                      -1, 3);
-        viewWorld(SPELL_VIEW_EARTH, level);
-        who->useSpell(who->getManaCost(SPELL_VIEW_EARTH));
+        castViewSpell(who, SPELL_VIEW_EARTH, level);
         break;
     case SPELL_DISGUISE:
         disguise(level);
         break;
     case SPELL_VIEW_AIR:
-        launchSample(DATA_COMPGEN(0x006604C4, castSpellViewSample,
-                                   "view.wav"),
-                      -1, 3);
-        viewWorld(SPELL_VIEW_AIR, level);
-        who->useSpell(who->getManaCost(SPELL_VIEW_AIR));
+        castViewSpell(who, SPELL_VIEW_AIR, level);
         break;
     case SPELL_FLY:
         flight(level);
@@ -168,12 +190,8 @@ void advManager::summonBoat(TSkillMastery level)
 
     type_point point = who->getLocation();
     if (getCell(point)->m_groundSet == eTerrainWater) {
-        if (g_game->isLocalHuman(who->m_owner)) {
-            sprintf(g_text,
-                    (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_ALREADY_AT_SEA_FORMAT],
-                    who->m_name);
-            normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        }
+        showLocalNamedSpellRefusal(
+            who, GENERAL_TEXT_SUMMON_BOAT_ALREADY_AT_SEA_FORMAT);
         return;
     }
 
@@ -194,11 +212,7 @@ void advManager::summonBoat(TSkillMastery level)
         }
     }
     if (!foundWater) {
-        if (g_game->isLocalHuman(who->m_owner)) {
-            normalDialog(
-                (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_NO_WATER],
-                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        }
+        showLocalAdventureSpellRefusal(who, GENERAL_TEXT_SUMMON_BOAT_NO_WATER);
         return;
 
     }
@@ -228,11 +242,8 @@ void advManager::summonBoat(TSkillMastery level)
             if (level < eMasteryAdvanced
                 || g_game->createBoat(x, y, who->m_z, who->m_owner, 0, 0)
                        < 0) {
-                if (g_game->isLocalHuman(who->m_owner)) {
-                    normalDialog(
-                        (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_NONE_AVAILABLE],
-                        1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                }
+                showLocalAdventureSpellRefusal(
+                    who, GENERAL_TEXT_SUMMON_BOAT_NONE_AVAILABLE);
                 return;
             }
         }
@@ -248,14 +259,11 @@ void advManager::summonBoat(TSkillMastery level)
         updateScreen(0, 0);
         reseed(0, 0);
         waitEndSample(sample, -1);
-    } else if (g_game->isLocalHuman(who->m_owner)) {
-        sprintf(g_text,
-                (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_FAILED_FORMAT],
-                who->m_name);
-        normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    } else {
+        showLocalNamedSpellRefusal(who, GENERAL_TEXT_SUMMON_BOAT_FAILED_FORMAT);
     }
 
-    who->useSpell(who->getManaCost(SPELL_SUMMON_BOAT));
+    who->spendSpellMana(SPELL_SUMMON_BOAT);
 }
 
 // E:\gamedcs\advspells.cpp:328
@@ -308,15 +316,10 @@ void advManager::skuttleBoat(TSkillMastery level)
         reseed(0, 0);
         waitEndSample(sample, -1);
     } else {
-        if (g_game->isLocalHuman(who->m_owner)) {
-            sprintf(g_text,
-                    (*g_generalText)[GENERAL_TEXT_SCUTTLE_BOAT_FAILED_FORMAT],
-                    who->m_name);
-            normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        }
+        showLocalNamedSpellRefusal(who, GENERAL_TEXT_SCUTTLE_BOAT_FAILED_FORMAT);
     }
 
-    who->useSpell(who->getManaCost(SPELL_SCUTTLE_BOAT));
+    who->spendSpellMana(SPELL_SCUTTLE_BOAT);
 }
 
 // E:\gamedcs\advspells.cpp:397
@@ -342,22 +345,13 @@ void advManager::dimensionDoor(TSkillMastery level)
     const SSpellTraits& traits = g_spellTraits[SPELL_DIMENSION_DOOR];
     hero* who = g_game->getCurrHero();
     if (who->m_movePoints <= 0) {
-        if (g_game->isLocalHuman(who->m_owner)) {
-            normalDialog(
-                (*g_generalText)[GENERAL_TEXT_SPELL_NEEDS_MOVEMENT],
-                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        }
+        showLocalAdventureSpellRefusal(who, GENERAL_TEXT_SPELL_NEEDS_MOVEMENT);
         return;
     }
 
     TSkillMastery mastery = who->getSpellLevel(SPELL_DIMENSION_DOOR);
     if (who->m_dWalkSpellsCast >= traits.m_masteryBonus[mastery]) {
-        if (g_game->isLocalHuman(who->m_owner)) {
-            sprintf(g_text,
-                    (*g_generalText)[GENERAL_TEXT_DIMENSION_DOOR_LIMIT_FORMAT],
-                    who->m_name);
-            normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        }
+        showLocalNamedSpellRefusal(who, GENERAL_TEXT_DIMENSION_DOOR_LIMIT_FORMAT);
         return;
     }
 
@@ -373,11 +367,7 @@ void advManager::dimensionDoor(TSkillMastery level)
              && cell->m_groundSet != eTerrainWater)
             || (!who->isOnBoat()
                 && cell->m_groundSet == eTerrainWater)) {
-            if (g_game->isLocalHuman(who->m_owner)) {
-                normalDialog(
-                    (*g_generalText)[GENERAL_TEXT_DIMENSION_DOOR_BLOCKED],
-                    1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-            }
+            showLocalAdventureSpellRefusal(who, GENERAL_TEXT_DIMENSION_DOOR_BLOCKED);
             updateRadar(1, 1, 0, 0, 0);
         } else {
             teleportTo(who, destination, traits.m_sample, 0, 1, 0);
@@ -385,7 +375,7 @@ void advManager::dimensionDoor(TSkillMastery level)
         who->m_movePoints -= level == eMasteryExpert ? 200 : 300;
         if (who->m_movePoints < 0)
             who->m_movePoints = 0;
-        who->useSpell(who->getManaCost(SPELL_DIMENSION_DOOR));
+        who->spendSpellMana(SPELL_DIMENSION_DOOR);
         m_advWindow->updateHeroLocator(-1, 1, 1);
         reseed(0, 0);
         ++who->m_dWalkSpellsCast;
@@ -449,11 +439,7 @@ void advManager::townGate(TSkillMastery level)
 
     int cost = movementCost[level];
     if (who->m_movePoints < cost) {
-        if (g_game->isLocalHuman(who->m_owner)) {
-            normalDialog(
-                (*g_generalText)[GENERAL_TEXT_SPELL_NEEDS_MOVEMENT],
-                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        }
+        showLocalAdventureSpellRefusal(who, GENERAL_TEXT_SPELL_NEEDS_MOVEMENT);
         return;
     }
 
@@ -463,20 +449,12 @@ void advManager::townGate(TSkillMastery level)
             numTowns++;
     }
     if (numTowns == 0) {
-        if (g_game->isLocalHuman(who->m_owner)) {
-            normalDialog(
-                (*g_generalText)[GENERAL_TEXT_TOWN_PORTAL_NO_TOWN],
-                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        }
+        showLocalAdventureSpellRefusal(who, GENERAL_TEXT_TOWN_PORTAL_NO_TOWN);
         return;
     }
 
     if (who->isOnBoat()) {
-        if (g_game->isLocalHuman(who->m_owner)) {
-            normalDialog(
-                (*g_generalText)[GENERAL_TEXT_SPELL_NOT_FROM_BOAT],
-                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        }
+        showLocalAdventureSpellRefusal(who, GENERAL_TEXT_SPELL_NOT_FROM_BOAT);
         return;
     }
 
@@ -515,11 +493,7 @@ void advManager::townGate(TSkillMastery level)
 
     town* destination = g_game->getTown(selectedTown);
     if (destination->m_visitingHeroId != -1) {
-        if (g_game->isLocalHuman(who->m_owner)) {
-            normalDialog(
-                (*g_generalText)[GENERAL_TEXT_TOWN_PORTAL_TOWN_OCCUPIED],
-                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        }
+        showLocalAdventureSpellRefusal(who, GENERAL_TEXT_TOWN_PORTAL_TOWN_OCCUPIED);
         return;
     }
 
@@ -527,7 +501,7 @@ void advManager::townGate(TSkillMastery level)
     destination->giveSpells(0);
     who->m_movePoints -= cost;
     who->m_movePoints = ::max(who->m_movePoints, 0);
-    who->useSpell(who->getManaCost(SPELL_TOWN_PORTAL));
+    who->spendSpellMana(SPELL_TOWN_PORTAL);
     m_advWindow->updateHeroLocator(-1, 1, 1);
     if (g_game->m_mapHeader.m_victoryCondition.checkForArtifactTransportWin(
             who, destination->getLocation())) {
@@ -549,7 +523,7 @@ void advManager::identify(TSkillMastery level)
         normalDialog(g_generalText->getText(GENERAL_TEXT_VISIONS_CAST),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
-    who->useSpell(who->getManaCost(SPELL_VISIONS));
+    who->spendSpellMana(SPELL_VISIONS);
     waitEndSample(sample, -1);
 }
 
@@ -569,7 +543,7 @@ void advManager::waterWalk(TSkillMastery level)
     SAMPLE2 sample = loadPlaySample(traits->m_sample);
     who->walkOnWater(level);
     reseed(0, 0);
-    who->useSpell(who->getManaCost(SPELL_WATER_WALK));
+    who->spendSpellMana(SPELL_WATER_WALK);
     waitEndSample(sample, -1);
 }
 
@@ -582,7 +556,7 @@ void advManager::disguise(TSkillMastery level)
     hero* who = g_game->getCurrHero();
     SAMPLE2 sample = loadPlaySample(g_spellTraits[SPELL_DISGUISE].m_sample);
     who->m_disguiseLevel = level;
-    who->useSpell(who->getManaCost(SPELL_DISGUISE));
+    who->spendSpellMana(SPELL_DISGUISE);
     waitEndSample(sample, -1);
 }
 

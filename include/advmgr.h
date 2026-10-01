@@ -1044,6 +1044,8 @@ private:
     // Project-inferred shared adventure-view operations.
     void refreshHeroAndTownLocators();
     void refreshTownCaptureView();
+    // Project-inferred shared View Earth/Air casting sequence.
+    void castViewSpell(hero* caster, SpellID spell, TSkillMastery level);
     void clearMovingObject();
     void stopLoopingSound(e_looping_sound_id soundId);
     unsigned char updBottomViewHero(unsigned char forceUpdate);
