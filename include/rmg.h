@@ -92,7 +92,8 @@ public:
 class type_black_box_creature_def : public type_treasure_def {
 public:
     int m_creatureType;
-    int m_adjustedValue;
+    // Former m_adjustedValue: reward count, multiplied by creature AI value.
+    int m_creatureCount;
 
     type_black_box_creature_def(int creatureType);
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
@@ -429,8 +430,22 @@ struct TRmgTreasureRange {
 // ReadRmgTemplateZones allocates 0xd4 bytes and constructs connections at
 // +0xc4. ConnectZones reads its _First at +0xc8 and _Last at +0xcc;
 // those pointer offsets must not be mistaken for the vector's own offset.
-// Unresolved scalar groups retain offset-based names until their consumers
-// establish their roles. Other field names are provisional retail roles.
+// Town and mine fields are named from the template reader and placement
+// consumers. Role names do not claim recovered original source spellings.
+// Spreadsheet columns 14..21 hold player-owned and neutral town counts and
+// densities. BASIC/OPTION retain the existing town-option distinction without
+// asserting a stronger meaning for the serialized option byte.
+enum ERmgTownPlacementParameter {
+    RMG_TOWN_PLAYER_BASIC_COUNT = 0,
+    RMG_TOWN_PLAYER_OPTION_COUNT = 1,
+    RMG_TOWN_PLAYER_BASIC_DENSITY = 2,
+    RMG_TOWN_PLAYER_OPTION_DENSITY = 3,
+    RMG_TOWN_NEUTRAL_BASIC_COUNT = 4,
+    RMG_TOWN_NEUTRAL_OPTION_COUNT = 5,
+    RMG_TOWN_NEUTRAL_BASIC_DENSITY = 6,
+    RMG_TOWN_NEUTRAL_OPTION_DENSITY = 7
+};
+
 struct TRmgTownSlot {
     int m_zoneIndex;                    // +0x00
     int m_kind;                         // +0x04: ERmgTemplateZoneKind
@@ -440,12 +455,12 @@ struct TRmgTownSlot {
     int m_minimumPlayers;               // +0x14
     int m_maximumPlayers;               // +0x18
     int m_playerIndex;                  // +0x1c
-    int m_parameters0020[8];
+    int m_townPlacement[8];             // +0x20: ERmgTownPlacementParameter
     // Template column 22: preserve zone alignment for neutral towns.
     unsigned char m_neutralTownsMatchZone; // +0x40, provisional retail role
     unsigned char m_allowedTowns[9];    // +0x41
-    int m_parameters004c[7];
-    int m_parameters0068[7];
+    int m_mineCounts[7];                // +0x4c: indexed by resource
+    int m_mineDensities[7];             // +0x68: indexed by resource
     // template byte to prefer the aligned town's native terrain table.
     // Complete-only provisional role name.
     unsigned char m_useNativeTerrain;
@@ -799,12 +814,14 @@ public:
     }
 
     virtual ~type_object();
-    virtual void unknownOperation();
+    // Former provisional name: unknownOperation. The prison override releases
+    // its reserved hero when removal rejects this object; other objects do nothing.
+    virtual void releaseReservation();
     // The quest-artifact override at 0x533a50 clears owned state, and its
     // generator callee replaces this object's property reference. These
     // mutable operations reject the earlier const receiver placeholder.
     virtual unsigned char isWritable();
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 
 // Provisional Complete-only role: createGuard (0x540b20) allocates 0x2c and
@@ -856,7 +873,7 @@ class rmgOwnableObject : public type_object {
 public:
     rmgOwnableObject(TRmgObjectPropertiesRef* properties)
         : type_object(properties) {}
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 
 // Artifact factory 0x5341f0 allocates the base 0x1c extent and installs
@@ -865,7 +882,7 @@ public:
 class rmgArtifactObject : public type_object {
 public:
     rmgArtifactObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(rmgArtifactObject, 0x1c);
 
@@ -876,7 +893,7 @@ SIZE(rmgArtifactObject, 0x1c);
 class rmgResourceObject : public type_object {
 public:
     rmgResourceObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(rmgResourceObject, 0x1c);
 
@@ -952,7 +969,7 @@ SIZE(rmgKeyTentObject, 0x24);
 class rmgScholarObject : public type_object {
 public:
     rmgScholarObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(rmgScholarObject, 0x1c);
 
@@ -960,7 +977,7 @@ SIZE(rmgScholarObject, 0x1c);
 class rmgShrineObject : public type_object {
 public:
     rmgShrineObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(rmgShrineObject, 0x1c);
 
@@ -973,7 +990,7 @@ class rmgSpellScrollObject : public type_object {
 public:
     int m_spell; // +0x1c, role-derived name
     rmgSpellScrollObject(TRmgObjectPropertiesRef* properties, int spell);
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(rmgSpellScrollObject, 0x20);
 
@@ -981,7 +998,7 @@ SIZE(rmgSpellScrollObject, 0x20);
 class rmgWitchHutObject : public type_object {
 public:
     rmgWitchHutObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(rmgWitchHutObject, 0x1c);
 
@@ -999,8 +1016,8 @@ public:
         type_random_map_generator* generator, const int& objectId, int heroIndex,
         int experience);
 
-    virtual void unknownOperation();
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void releaseReservation();
+    virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(rmgHeroObject, 0x2c);
 
@@ -1136,9 +1153,10 @@ public:
     virtual int getOverlay(const TRmgGridPoint& point) = 0;
 };
 
-class TRmgMapAdapterInterface {
+// Former provisional name: TRmgMapAdapterInterface; this interface paints rivers.
+class TRmgRiverMapAdapterInterface {
 public:
-    virtual ~TRmgMapAdapterInterface();
+    virtual ~TRmgRiverMapAdapterInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
     virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
@@ -1314,11 +1332,12 @@ public:
 // and map-view construction remains expanded at the call site.  Keeping the
 // class definitions shared but the retained bodies in rmg_support.cpp
 // reproduces that ordinary translation-unit visibility boundary.
-class TRmgMapAdapter : public TRmgMapAdapterInterface {
+// Former provisional name: TRmgMapAdapter. Its tile payload is the river layer.
+class TRmgRiverMapAdapter : public TRmgRiverMapAdapterInterface {
 public:
     type_random_map* m_map;
 
-    inline TRmgMapAdapter(type_random_map* newMap) : m_map(newMap) {}
+    inline TRmgRiverMapAdapter(type_random_map* newMap) : m_map(newMap) {}
 
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
@@ -1376,7 +1395,8 @@ public:
     virtual TRmgLinePatternTable* getPattern(int value) = 0;
     virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
     virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
-    virtual int canPaint(const TRmgGridPoint& point) = 0;
+    // Former canPaint had inverted polarity: nonzero prevents painting.
+    virtual int isBlocked(const TRmgGridPoint& point) = 0;
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile) = 0;
     virtual int getLand(const TRmgGridPoint& point) = 0;
 
@@ -1418,9 +1438,9 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
 
 class TRmgLinePainter : public TRmgLinePainterInterface {
 public:
-    TRmgMapAdapterInterface* m_adapter;
+    TRmgRiverMapAdapterInterface* m_adapter;
 
-    inline TRmgLinePainter(TRmgMapAdapterInterface* newAdapter)
+    inline TRmgLinePainter(TRmgRiverMapAdapterInterface* newAdapter)
         : TRmgLinePainterInterface(newAdapter->getSize()), m_adapter(newAdapter)
     {
     }
@@ -1434,7 +1454,7 @@ public:
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setOverlay(const TRmgGridPoint& point, int value);
-    virtual int canPaint(const TRmgGridPoint& point);
+    virtual int isBlocked(const TRmgGridPoint& point);
     // Slot 4's caller at 0x4f9fdd pushes output first, then point. The
     // retained wrapper 0x55f350 writes through its second explicit argument;
     // unlike the adapter, this interface does not return a tile by value.
@@ -1471,12 +1491,12 @@ SIZE(TRmgLineWalkAxis, 0x0c);
 class TRmgLineWalker {
 public:
     TRmgLinePainterInterface* m_painter;
-    int m_riverType;
+    int m_lineType;
     TRmgGridPoint m_position;
 
     TRmgLineWalker(
         TRmgLinePainterInterface* newPainter,
-        int newRiverType,
+        int newLineType,
         const TRmgGridPoint& start);
     void drawTo(const TRmgGridPoint& destination);
     // Shared by constructor 0x4fa280 and the two-axis walk 0x4fa2b0.
@@ -1486,7 +1506,7 @@ public:
 class TRmgRiverPainter : public TRmgLinePainter, public TRmgLineWalker {
 public:
     TRmgRiverPainter(
-        TRmgMapAdapterInterface* newAdapter,
+        TRmgRiverMapAdapterInterface* newAdapter,
         int newRiverType,
         const TRmgGridPoint& start);
     virtual ~TRmgRiverPainter();
@@ -1512,7 +1532,7 @@ public:
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setOverlay(const TRmgGridPoint& point, int value);
-    virtual int canPaint(const TRmgGridPoint& point);
+    virtual int isBlocked(const TRmgGridPoint& point);
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile);
     virtual int getLand(const TRmgGridPoint& point);
 };
@@ -2027,9 +2047,9 @@ SIZE(rmgOwnableObject, 0x1c);
 SIZE(TRmgMapItem, 0x30);
 SIZE(type_random_map, 0x18);
 SIZE(TRmgMapInterface, 0x04);
-SIZE(TRmgMapAdapterInterface, 0x04);
+SIZE(TRmgRiverMapAdapterInterface, 0x04);
 SIZE(TRmgRoadMapAdapterInterface, 0x04);
-SIZE(TRmgMapAdapter, 0x08);
+SIZE(TRmgRiverMapAdapter, 0x08);
 SIZE(TRmgLinePainterInterface, 0x0c);
 SIZE(TRmgLinePainter, 0x10);
 SIZE(TRmgRoadLinePainter, 0x10);
