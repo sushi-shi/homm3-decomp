@@ -415,6 +415,16 @@ void TRmgMapItem::setConnectionPathState(unsigned int cost,
     m_zoneState.m_connectionEligibility = connectionZone;
 }
 
+// Project-inferred river-search step shared by both river builders. Sample
+// once before reading this cell's road type, retaining the existing rand stream.
+int TRmgMapItem::calculateRiverStepCost(int precedingCost) const
+{
+    int cost = precedingCost + (rand() & 31) + 1;
+    if (getRoadType())
+        cost += 30;
+    return cost;
+}
+
 // Project-inferred shared transitions from openPathPatch, markBorderPatch,
 // guard placement, border repair and the connection builders. Connection
 // decoration protects the current flags from these ordinary cell edits.
@@ -4621,8 +4631,7 @@ void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
             TPoint offset = g_rmgDirections[direction];
             next += offset;
             next.m_z = position.m_z;
-            if (next.getX() < 0 || next.getX() >= m_map.getWidth()
-                || next.getY() < 0 || next.getY() >= m_map.getHeight())
+            if (!contains(next))
                 continue;
             TRmgMapItem* item = m_map.getMapItem(next.getX(), next.getY(), next.m_z);
             if (item->isZoneBoundary() || item->m_zoneState.m_zone != zoneIndex)
@@ -4760,8 +4769,7 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex*
     position = zone->getLevelPosition();
     TRmgMapPosition upper;
     TRmgMapPosition lower;
-    if (position.getX() < 0 || position.getX() >= m_map.getWidth()
-        || position.getY() < 0 || position.getY() >= m_map.getHeight()) {
+    if (!contains(position)) {
         int bestClearance = 0;
         TPoint best;
         best.setX(-1);
@@ -5403,8 +5411,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
             next.setX(position.getX() + offset.getX());
             next.setY(position.getY() + offset.getY());
             next.m_z = position.m_z;
-            if (next.getX() < 0 || next.getX() >= m_map.getWidth()
-                || next.getY() < 0 || next.getY() >= m_map.getHeight())
+            if (!contains(next))
                 continue;
             TRmgMapItem* item = m_map.getMapItem(next);
             if (item->m_zoneState.m_zone != zoneIndex)
@@ -5752,8 +5759,7 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
                 if (direction & 1)
                     ++nextCost;
                 TRmgMapPosition nextPosition = currentPosition + g_rmgDirections[direction];
-                if (nextPosition.getX() < 0 || nextPosition.getX() >= m_map.getWidth()
-                    || nextPosition.getY() < 0 || nextPosition.getY() >= m_map.getHeight())
+                if (!contains(nextPosition))
                     continue;
                 TRmgMapItem* next = m_map.getMapItem(nextPosition);
                 if (nextCost >= next->m_zoneState.m_score)
@@ -6040,8 +6046,7 @@ void type_random_map_generator::markBorderObjectArea(
         }
     }
     TRmgMapPosition previous = m_map.getMapItem(position)->getPreviousTile();
-    if (previous.getX() >= 0 && previous.getX() < m_map.getWidth()
-        && previous.getY() >= 0 && previous.getY() < m_map.getHeight()) {
+    if (contains(previous)) {
         TRmgMapItem* item = m_map.getMapItem(previous);
         item->clearConnectionDecoration();
     }
@@ -6234,8 +6239,7 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
         openPositions.pop_back();
         for (int direction = 0; direction < 8; direction += 2) {
             TRmgMapPosition nearby = position + g_rmgDirections[direction];
-            if (nearby.getX() < 0 || nearby.getX() >= m_map.getWidth()
-                || nearby.getY() < 0 || nearby.getY() >= m_map.getHeight())
+            if (!contains(nearby))
                 continue;
             TRmgMapItem* item = m_map.getMapItem(nearby);
             unsigned char visited = item->isConnectionVisited();
@@ -8579,8 +8583,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
             continue;
         point.setX(point.getX() + (position.getX()));
         point.setY(point.getY() + (position.getY()));
-        if (point.getX() < 0 || point.getX() >= m_map.getWidth()
-            || point.getY() < 0 || point.getY() >= m_map.getHeight())
+        if (!contains(point))
             continue;
         TRmgMapItem* destination = m_map.getMapItem(point.getX(), point.getY(), position.m_z);
         if ((destination->getLandType() == eTerrainWater) == waterZone
@@ -8861,8 +8864,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
         while (direction--) {
             TRmgMapPosition nextPosition = position + g_rmgDirections[direction];
 
-            if (nextPosition.getX() < 0 || nextPosition.getX() >= m_map.getWidth()
-                || nextPosition.getY() < 0 || nextPosition.getY() >= m_map.getHeight())
+            if (!contains(nextPosition))
                 continue;
 
             TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
@@ -9044,17 +9046,14 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
         int positionCost = mapItem->getMovementCost();
         for (int direction = 0; direction < 8; direction += 2) {
             nextPosition = position + g_rmgDirections[direction];
-            if (nextPosition.getX() < 0 || nextPosition.getX() >= m_map.getWidth()
-                || nextPosition.getY() < 0 || nextPosition.getY() >= m_map.getHeight())
+            if (!contains(nextPosition))
                 continue;
             mapItem = m_map.getMapItem(nextPosition.getX(), nextPosition.getY(), nextPosition.m_z);
             if (mapItem->getLandType() == eTerrainWater
                 || mapItem->getLandType() == eTerrainRock
                 || (mapItem->getLandType() == eTerrainSnow) != sourceIsSnow)
                 continue;
-            int nextCost = positionCost + (rand() & 31) + 1;
-            if (mapItem->getRoadType())
-                nextCost += 30;
+            int nextCost = mapItem->calculateRiverStepCost(positionCost);
             if (nextCost >= mapItem->getMovementCost())
                 continue;
             mapItem->setMovementCost(nextCost, position);
@@ -9079,6 +9078,14 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     }
 }
 
+// Project-inferred query shared by the water, dry and inland coast scans.
+// Retail admits X == width here; this is intentionally distinct from contains.
+bool type_random_map_generator::isRiverCoastPointInRange(const TPoint& point) const
+{
+    return point.getX() >= 0 && point.getX() <= m_map.getWidth()
+        && point.getY() >= 0 && point.getY() < m_map.getHeight();
+}
+
 // Retail-only coastal target test: three water cells across the shore,
 // three dry entrance-free cells beside them, then four cells inland.
 // Preserve retail's asymmetric x > width versus y >= height bounds check.
@@ -9100,8 +9107,7 @@ void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, i
     TRmgMapPosition point = position + g_rmgDirections[(direction + 2) & 7];
     TPoint step = g_rmgDirections[(direction - 2) & 7];
     for (int waterCount = 0; waterCount < 3; ++waterCount) {
-        if (point.getX() < 0 || point.getX() > m_map.getWidth()
-            || point.getY() < 0 || point.getY() >= m_map.getHeight())
+        if (!isRiverCoastPointInRange(point))
             return;
         if (m_map.getMapItem(point.getX(), point.getY(), point.m_z)->getLandType() != eTerrainWater)
             return;
@@ -9109,8 +9115,7 @@ void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, i
     }
     point = position + g_rmgDirections[(direction + 1) & 7];
     for (int dryCount = 0; dryCount < 3; ++dryCount) {
-        if (point.getX() < 0 || point.getX() > m_map.getWidth()
-            || point.getY() < 0 || point.getY() >= m_map.getHeight())
+        if (!isRiverCoastPointInRange(point))
             return;
         TRmgMapItem* item = m_map.getMapItem(point.getX(), point.getY(), point.m_z);
         if (item->getLandType() == eTerrainWater || item->isRoadEntrance())
@@ -9121,8 +9126,7 @@ void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, i
     point += g_rmgDirections[direction];
     TRmgMapItem* item;
     for (int inlandCount = 0; inlandCount < 4; ++inlandCount) {
-        if (point.getX() < 0 || point.getX() > m_map.getWidth()
-            || point.getY() < 0 || point.getY() >= m_map.getHeight())
+        if (!isRiverCoastPointInRange(point))
             return;
         item = m_map.getMapItem(point.getX(), point.getY(), point.m_z);
         if (item->getLandType() == eTerrainWater || item->isRoadEntrance())
@@ -9220,8 +9224,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
         for (direction = 0; direction < 8; direction += 2) {
             nextPosition = position + g_rmgDirections[direction];
 
-            if (nextPosition.getX() < 0 || nextPosition.getX() >= m_map.getWidth()
-                || nextPosition.getY() < 0 || nextPosition.getY() >= m_map.getHeight())
+            if (!contains(nextPosition))
                 continue;
 
             mapItem = m_map.getMapItem(nextPosition);
@@ -9231,9 +9234,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
                 || (mapItem->getLandType() == eTerrainSnow) != sourceIsSnow)
                 continue;
 
-            int nextCost = positionCost + (rand() & 31) + 1;
-            if (mapItem->getRoadType())
-                nextCost += 30;
+            int nextCost = mapItem->calculateRiverStepCost(positionCost);
 
             if (nextCost >= mapItem->getMovementCost())
                 continue;
@@ -9352,8 +9353,7 @@ void type_random_map_generator::markRiverObjectTargets()
             }
             position.setX(position.getX() - (offsetX));
             position.setY(position.getY() - (offsetY));
-            if (position.getX() >= 0 && position.getX() < m_map.getWidth()
-                && position.getY() >= 0 && position.getY() < m_map.getHeight())
+            if (contains(position))
             {
                 TRmgMapItem* item = m_map.getMapItem(position.getX(), position.getY(), position.m_z);
                 item->setHasRiver(1);

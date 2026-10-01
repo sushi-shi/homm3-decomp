@@ -1435,6 +1435,37 @@ All three helpers are ordinary TU-local project inferences in `kb.cpp`.
 No native addresses, inline qualifiers, new stored state or interface changes
 are introduced.
 
+## RMG domain queries and river step costs
+
+Eleven generator callers now use the existing `contains(const TPoint&)` query:
+island/zone fill, water-distance flooding, object-score propagation, border
+cleanup, connection flooding, treasure-group placement, road costs, both river
+builders and river-object targets. The shared body and its original branch
+callers remain intact. The query preserves X-before-Y short-circuiting and live
+map-dimension access; positions bind through their existing point base without
+copying or adding a level check. Seed clipping, local construction, map lookups,
+terrain vetoes and loop exits retain their places.
+
+Three river-coast scans share private `isRiverCoastPointInRange()`. The query
+preserves the documented asymmetry: X may equal map width, while Y must remain
+strictly below height. Water, dry and inland loops retain their distinct step
+calculations, lookup forms, iteration counts and final target marking. Interior
+margins and the shipyard's X-only checks remain distinct. The map and treasure
+group's separate owner contexts were read but are not redirected through a
+generator instance.
+
+Both river builders share `TRmgMapItem::calculateRiverStepCost()`: add one
+`rand() & 31` result and one to the predecessor cost, then add 30 if the current
+cell has a road. The draw occurs after terrain eligibility and before the road
+query, as before. Cost rejection, predecessor writes, work-list insertion and
+the general river builder's additional impassable/direction checks stay in their
+callers. The existing road getter remains nested; no random sample is cached
+across steps or moved across a rejection condition.
+
+The coast query and cost operation have project-inferred names and ordinary
+owner-source bodies, without native-address, explicit-inline, field-layout or
+virtual-interface changes.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

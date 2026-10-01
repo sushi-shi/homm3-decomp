@@ -1082,6 +1082,7 @@ public:
     // Project-inferred ordered update shared by connection-search passes.
     void setConnectionPathState(unsigned int cost, unsigned int direction,
                                 int connectionZone);
+    int calculateRiverStepCost(int precedingCost) const;
 
     // Project-inferred cell operations from repeated path/border transitions.
     // Ordinary edits retain cells with a connection decoration; installing or
@@ -2191,6 +2192,10 @@ public:
     void createRiverToObject(TRmgMapPosition source);
     void createRivers();
     void writeMapHeader(TAbstractFile* outfile);
+
+private:
+    // Project-inferred coast-scan range, with retail's inclusive right edge.
+    bool isRiverCoastPointInRange(const TPoint& point) const;
 };
 
 SIZE(TRmgMapPosition, 0x0c);
