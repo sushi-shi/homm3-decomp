@@ -7004,10 +7004,12 @@ unsigned char TSingleSelectionWindow::onNewSetupInfoMsg(CNetMsg* netMsg)
     return 1;
 }
 
+// Original ?IsVersionCompatible@TSingleSelectionWindow@@QAA_NPBD@Z
+// proves bool while preserving the const char* version argument.
 VA(0x00589D30, 0x265)
 DC_ADDRESS(0x1409d4, 0xa0)
 MAC_ADDRESS(0x18154c, 0x148)
-unsigned char TSingleSelectionWindow::isVersionCompatible(const char* otherVersion)
+bool TSingleSelectionWindow::isVersionCompatible(const char* otherVersion)
 {
     if (_strcmpi(m_gameVersion,
                  DATA_COMPGEN(0x00683900, defaultRemoteVersion, "1.0"))
@@ -8263,10 +8265,12 @@ void TSingleSelectionWindow::updateNames()
     }
 }
 
+// Original ?HighlightFile@TSingleSelectionWindow@@QAA_NPAD@Z proves
+// bool and retains the mutable char* filename boundary.
 VA(0x0058D3E0, 0x122)
 DC_ADDRESS(0x143954, 0x128)
 MAC_ADDRESS(0x184f00, 0xf0)
-unsigned char TSingleSelectionWindow::highlightFile(char* filename)
+bool TSingleSelectionWindow::highlightFile(char* filename)
 {
     int len = strlen(filename);
     int i = 0;

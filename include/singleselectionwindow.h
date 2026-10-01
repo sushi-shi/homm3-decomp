@@ -720,9 +720,9 @@ public:
     const char* getHeroName(int gamePos);
     void onNameChange(int gamePos, const char* newName);
     void updateNames();
-    unsigned char highlightFile(char* filename);
+    bool highlightFile(char* filename);
     void onNameClick(int pos);
-    unsigned char isVersionCompatible(const char* otherVersion);
+    bool isVersionCompatible(const char* otherVersion);
     // Complete-only random-map helpers at 0x5879a0 and 0x5860e0. Their
     // provisional role names describe the byte-decoded caller contract.
     unsigned char generateRandomMap(const char* name);
