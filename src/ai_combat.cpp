@@ -110,7 +110,8 @@ long type_monster_data::getResurrectionValue(type_spell_choice& choice, const he
                  + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     if (castingHero)
         value += const_cast<hero*>(castingHero)->getHeroSpellBonus(
-            choice.m_spell, g_creatureTypeTraits[m_type].m_level, value);
+            static_cast<ESpellId>(choice.m_spell),
+            g_creatureTypeTraits[m_type].m_level, value);
     long resurrected = min(static_cast<long>(value * m_combatValuePerHit) / m_value,
                            m_originalNumber - m_number);
     return resurrected * m_value;
