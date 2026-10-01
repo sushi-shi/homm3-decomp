@@ -6578,6 +6578,9 @@ TTavernWindow::~TTavernWindow()
     ResourceManager::delSprFromCache();
 }
 
+// DC broadcasts the rollover text and draws widgets 13..14 with update=1.
+// Windows 0x5d7b13/0x5d7b20 and Mac 0x1d5834/0x1d5854 instead call
+// the text widget directly, then draw the same range with update=0.
 VA(0x005d7920, 0x20A)
 DC_ADDRESS(0x17a7a0, 0x288)
 MAC_ADDRESS(0x1d5600, 0x270)
@@ -6970,8 +6973,8 @@ void townManager::doTownTavern()
 // Dreamcast calls MoveHero (dc 0x17b428) and ChangeTown (dc 0x16b9e4).
 // Keep those ordinary members and their source calls; their retail expansions
 // do not establish different declarations or authorize pasted caller bodies.
-// ChangeTown's del_Spr_from_Cache operation is Dreamcast-only: retail's
-// corresponding redraw sequence omits it.
+// ChangeTown retains del_Spr_from_Cache through the canonical cache helper;
+// its desktop body is empty, so retail's redraw sequence emits no cache call.
 // Earlier flattened-caller probes reached 98.61%. Naming the selected town
 // before the guard erased GetTown's null arm (97.51%); reading dialogReturn
 // twice retained a redundant load (98.13%). Those results describe the old
