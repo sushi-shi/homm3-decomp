@@ -2119,7 +2119,7 @@ void combatManager::checkChangeHighlighter(int currentIndex)
 VA(0x00477e10, 0xC2)
 DC_ADDRESS(0x06ed18, 0xa4)
 MAC_ADDRESS(0x086180, 0xfc)
-void combatManager::turnOffHighlighter(unsigned char drawIt)
+void combatManager::turnOffHighlighter(bool drawIt)
 {
     if (!m_highlighterOn)
         return;

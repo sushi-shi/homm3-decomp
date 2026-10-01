@@ -1302,7 +1302,8 @@ public:
     void checkChangeHighlighter(int currentIndex);  // 0x478040
     // Original ?TurnOffSelector@combatManager@@QAAX_N@Z: bool flag.
     void turnOffSelector(bool drawIt);
-    void turnOffHighlighter(unsigned char restore);  // 0x477e10
+    // Original ?TurnOffHighlighter@combatManager@@QAAX_N@Z: bool flag.
+    void turnOffHighlighter(bool drawIt);  // 0x477e10
     void setCombatGrid(int showEntireGrid, int showMouseHex, int gridLevel,
                        unsigned char drawNow);  // 0x479fc0
     // 0x46a520 (68 B), army::simple_move's second call: it zeroes a
