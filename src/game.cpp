@@ -8162,7 +8162,7 @@ void game::randomizeHeroPool()
 VA(0x004c9730, 0x159)
 DC_ADDRESS(0x0b5094, 0x268)
 MAC_ADDRESS(0x0e0910, 0x1c4)
-void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
+void game::setRandomHeroArmies(int hero, int cheat, bool minimal)
 {
     armyGroup* currentArmy = &m_heroes[hero].m_army;
     const THeroTraits* traits = &g_heroTraits[hero];

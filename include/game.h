@@ -1235,8 +1235,9 @@ public:
     void rehomeCampaignHeroSetup(int heroId);  // 0x486110
                  // DC game.cpp:10132
     type_point getPuzzleOrigin() const;  // 0x4cea70
+    // Original SetRandomHeroArmies public QAAXHH_N proves only minimal is bool.
     void setRandomHeroArmies(int heroId, int cheat,
-                             unsigned char minimal);  // 0x4c9730
+                             bool minimal);  // 0x4c9730
     TArtifact getRandomArtifactId(int artifactClass);  // 0x4c94d0
     void setupTowns();
     void checkHeroConsistency();
