@@ -281,10 +281,12 @@ static const long g_playerActiveUpdateInterval = 600000;
 // its native transport supplies the incoming message. DC remote.cpp:318/331
 // names text lookups at the ping reply and destroyed-session messages;
 // Complete keeps the existing getText calls at 98.3470%.
+// Original public ?HandleLowLevelMsg@CDPlayHeroes@@IAA_NPAVCNetMsg@@@Z
+// proves the protected bool return despite the lowered DC byte record.
 VA(0x00552db0, 0x28F)
 DC_ADDRESS(0x11bc88, 0xd2)
 MAC_ADDRESS(0x2109e4, 0x1a0)
-unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
+bool CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
 {
     switch (netMsg->m_subType) {
     case RS_PING:
@@ -338,10 +340,10 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
         break;
 
     default:
-        return 0;
+        return false;
     }
 
-    return 1;
+    return true;
 }
 
 // Original: CDPlayHeroes::GetRemoteData; remote.cpp:350

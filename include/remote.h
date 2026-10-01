@@ -132,7 +132,7 @@ protected:
     void queueMsg(CNetMsg* netMsg);
     CNetMsg* compressMsg(CNetMsg* netMsg);
     CNetMsg* uncompressMsg(CNetMsg* netMsg);
-    unsigned char handleLowLevelMsg(CNetMsg* netMsg);
+    bool handleLowLevelMsg(CNetMsg* netMsg);
 
 public:
     friend int transmitRemoteDataDPID(CNetMsg*, unsigned long,
