@@ -805,10 +805,12 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
     return 0;
 }
 
+// Original DC ?can_cast_spells@combatManager@@QBA_NJ_N@Z proves bool
+// result and heroSpell flag; long side and the const receiver are preserved.
 VA(0x0041f890, 0x8F)
 DC_ADDRESS(0x024e5c, 0x98)
 MAC_ADDRESS(0x0214bc, 0xd8)
-unsigned char combatManager::canCastSpells(long side, unsigned char heroSpell) const
+bool combatManager::canCastSpells(long side, bool heroSpell) const
 {
     if (!heroSpell && m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS)
         return 0;

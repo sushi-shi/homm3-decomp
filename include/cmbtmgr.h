@@ -1357,8 +1357,7 @@ public:
                              int averageDamage);
     void unnamed4693a0(int side);  // 0x4693a0
     void checkRebirth();  // 0x469440
-    unsigned char canCastSpells(long side,
-                                  unsigned char heroSpell) const;  // 0x41f890
+    bool canCastSpells(long side, bool heroSpell) const;  // 0x41f890
     long computeFireShieldDamage(long damage, const army* attacker,
                                     const army* target,
                                     long targetHits) const;
