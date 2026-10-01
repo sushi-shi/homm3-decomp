@@ -8095,8 +8095,12 @@ bool TSingleSelectionWindow::canChooseHero(int gamePos)
         return 0;
     if (slotAtt->m_generateHero)
         return 1;
-    unsigned char randomHero = slotAtt->m_hasRandomHero != 0;
-    return randomHero;
+    // DC lines 8098/8099/8101 preserve a field guard and true/false returns,
+    // not a byte-valued temporary. Mac 1848b4..1848cc normalizes the same
+    // predicate; this restores retail's AL return with the native bool ABI.
+    if (slotAtt->m_hasRandomHero)
+        return true;
+    return false;
 }
 
 VA(0x0058D0E0, 0x10A)
