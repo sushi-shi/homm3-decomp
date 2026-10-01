@@ -581,7 +581,9 @@ void type_AI_player::endTurn()
     playerData* player = &g_game->m_players[m_team];
     g_game->calculateProduction();
 
-    for (int resource = 0; resource < 7; resource++) {
+    // SH4 0x2e80c sign-extends the increment to short; Mac0x2bc1c
+    // likewise uses extsh before the seven-resource bound.
+    for (short resource = 0; resource < 7; resource++) {
         m_reservedFunds[resource] -= player->m_ai.m_turnProductionResource[resource];
         if (m_reservedFunds[resource] < 0)
             m_reservedFunds[resource] = 0;
