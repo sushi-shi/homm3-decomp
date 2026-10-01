@@ -2530,6 +2530,10 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 // after dontGrow. Mac code0+0x123e64..0x123e6c proves the latter store;
 // the Windows mask 0x87fbffff combines it with the dontGrow assignment.
 // Shared typed-field probes preserve Windows 97.3333% and its call structure.
+// Mac decodes the identifier/resource dwords with lwbrx at 0x123b78/
+// 0x123d18 and quantity/artifact shorts with lhbrx at 0x123bac/0x123d94.
+// The identifier and artifact reads ignore counts; quantity/resources check
+// them before decoding. Preserve those two scalar-reader contracts.
 VA(0x005013b0, 0x3DC)
 DC_ADDRESS(0x0f0390, 0x358)
 MAC_ADDRESS(0x123b10, 0x3dc)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing
@@ -2549,15 +2553,13 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         // Reading straight into `identifier` loses the pair; hoisting the
         // zero out of the if arm scores 94.95 and the whole-block rewrite
         // 94.96.
-        int rawIdentifier;
-        infile->read(&rawIdentifier, sizeof(rawIdentifier));
-        identifier = LITTLE_ENDIAN_LONG(rawIdentifier);
+        int rawIdentifier = readLittleEndianValue<int>(infile);
+        identifier = rawIdentifier;
     }
 
     short quantity;
-    if (infile->read(&quantity, sizeof(quantity)) < sizeof(quantity))
+    if (readLittleEndianValue(infile, quantity) < sizeof(quantity))
         return -1;
-    quantity = LITTLE_ENDIAN_SHORT(quantity);
     monsterObject->m_monsterInfo.m_qty = quantity;
 
     // DC records unsigned char_buffer at line 2598, then the signed
@@ -2607,10 +2609,9 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         // function-scoped, and the pin costs 96.4729 -> 90.0370.
         for (int i = 0; i < 7; ++i) {
             int quantityRead;
-            if (infile->read(&quantityRead, sizeof(quantityRead))
+            if (readLittleEndianValue(infile, quantityRead)
                 < sizeof(quantityRead))
                 return -1;
-            quantityRead = LITTLE_ENDIAN_LONG(quantityRead);
             tempMonster.m_resQty[i] = quantityRead;
         }
 
@@ -2620,9 +2621,8 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
             infile->read(&narrow, sizeof(narrow));
             artifact = narrow;
         } else {
-            short wide;
-            infile->read(&wide, sizeof(wide));
-            artifact = static_cast<short>(LITTLE_ENDIAN_SHORT(wide));
+            short wide = readLittleEndianValue<short>(infile);
+            artifact = wide;
         }
         tempMonster.m_artifact = H3_ENUM_DECODE(TArtifact, artifact);
 
@@ -3380,6 +3380,8 @@ static void readWitchHutData(TAbstractFile* infile, CObject* tempObject)
     }
 }
 
+// Mac 0x1258b4/0x1258e8 expands the unchecked little-endian scalar
+// readers for the castle ID and conditional faction mask.
 MAC_ADDRESS(0x125830, 0x134)
 void NewfullMap::readRandomDwellingData(TAbstractFile* infile,
                                          CObject* object)
@@ -3391,9 +3393,9 @@ void NewfullMap::readRandomDwellingData(TAbstractFile* infile,
     char padding[3];
     infile->read(padding, 3);
 
-    dwelling.m_castleId = readValue<int>(infile);
+    dwelling.m_castleId = readLittleEndianValue<int>(infile);
     if (dwelling.m_castleId == 0)
-        dwelling.m_factionMask = readValue<short>(infile);
+        dwelling.m_factionMask = readLittleEndianValue<short>(infile);
 
     dwelling.m_minLevel = readValue<char>(infile);
     dwelling.m_maxLevel = readValue<char>(infile);
@@ -3402,6 +3404,8 @@ void NewfullMap::readRandomDwellingData(TAbstractFile* infile,
     m_randomDwellings.push_back(dwelling);
 }
 
+// Same unchecked scalar readers at Mac 0x1259e8/0x125a1c; the level
+// comes from this map's object-type table, not from the serialized record.
 MAC_ADDRESS(0x125964, 0x110)
 void NewfullMap::readRandomDwellingLevelData(TAbstractFile* infile,
                                               CObject* object)
@@ -3413,9 +3417,9 @@ void NewfullMap::readRandomDwellingLevelData(TAbstractFile* infile,
     char padding[3];
     infile->read(padding, 3);
 
-    dwelling.m_castleId = readValue<int>(infile);
+    dwelling.m_castleId = readLittleEndianValue<int>(infile);
     if (dwelling.m_castleId == 0)
-        dwelling.m_factionMask = readValue<short>(infile);
+        dwelling.m_factionMask = readLittleEndianValue<short>(infile);
 
     dwelling.m_minLevel = static_cast<unsigned char>(
         m_objectTypes[object->m_typeIndex].m_extra);

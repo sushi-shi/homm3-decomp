@@ -1055,3 +1055,35 @@ at 100%, raises `loadBlackBox` from 91.4115% to 91.4222%, and measures
 comparison now retains an unpaired `readLittleEndianValue<short>` call; this
 additional comparison gap is recorded, with no fabricated target address or
 inline qualifier. Windows score losses remain visible in the checkpoint.
+
+### Monster, event and random-dwelling readers
+
+`readMonsterData` now uses the canonical endian readers for its identifier,
+quantity, resource and newer artifact fields. Mac `0x123b78`/`0x123d18`
+performs the dword conversions, and `0x123bac`/`0x123d94` the short
+conversions. Identifier and artifact reads remain unchecked; quantity and
+resource reads retain their unsigned count guards. The separate identifier
+staging local, signed legacy artifact byte, temporary MonsterData lifetime,
+version source and default disposition behavior are preserved.
+
+The two random-dwelling readers at `0x125830` and `0x125964` also decode
+castle IDs and conditional faction masks through the existing unchecked
+endian readers. The faction-only variant has no multibyte transfer: it derives
+its mask from this map's object-type table. All three keep their existing
+byte readers, ignored padding, object association and vector insertion.
+
+The full event-reader body at `0x122bbc+0x3b0` already represents its game
+calls. The extra destructor targets at `0xbe748` and `0x89c84` clear trivial
+four-byte vector elements and free their buffers; six exits destroy the
+local BlackBoxData's spell and artifact members with a zero delete-object
+flag. These are implicit member lifetimes, not missing explicit calls.
+
+This batch restores eight endian-helper uses and reviews 40 native call-site
+leads. The targeted mapcell build succeeds and raises the Windows monster
+reader from 98.38% to 99.96%. Its previously available Mac comparison
+(42.5703%) is now unavailable because of an unpaired value-returning
+`readLittleEndianValue<int>` call. This is an additional comparison loss,
+not a successful Mac-preservation checkpoint. No address or inline qualifier
+was invented to conceal it. The working review now has 5,939 open native
+call-site leads and 2,057 explicit operation-site notes; the source graph is
+still the earlier checkpoint and does not certify current complete bodies.
