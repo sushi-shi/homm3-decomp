@@ -2050,7 +2050,7 @@ int game::getNewBoatId()
 VA(0x004bb250, 0x1AA)
 DC_ADDRESS(0x0a6690, 0x12c)
 MAC_ADDRESS(0x0ce070, 0x158)
-int game::createBoat(int x, int y, int z, int owner, unsigned char isRemoteMove, signed char type)
+int game::createBoat(int x, int y, int z, int owner, bool isRemoteMove, signed char type)
 {
     int id = getNewBoatId();
     if (id == -1)
@@ -10341,7 +10341,7 @@ game::~game()
 VA(0x004ce900, 0x3B)
 DC_ADDRESS(0x0bbe68, 0x7c)
 MAC_ADDRESS(0x0e6ba0, 0x54)
-boat* game::getHeroBoat(int id, unsigned char occupied)
+boat* game::getHeroBoat(int id, bool occupied)
 {
     for (boat* i = m_boats.begin(); i != m_boats.end(); i++) {
         if (i->m_allocated && i->m_occupyingHero == id && i->m_occupied == occupied)

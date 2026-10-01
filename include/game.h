@@ -1219,8 +1219,10 @@ public:
     int randomScan(signed char* whichList, int start, int length,
                    signed char scanValue);
     int getNewBoatId();  // 0x4bb170
+    // Original CreateBoat@@QAAHHHHH_NC@Z proves the remote-move bool;
+    // coordinates/owner remain int and the boat type remains signed char.
     int createBoat(int x, int y, int z, int owner,
-                   unsigned char remoteMove, signed char type);  // 0x4bb250
+                   bool remoteMove, signed char type);  // 0x4bb250
     int getNewHeroId(int playerPos, THeroClass excluded,
                      unsigned char preferAlignment,
                      THeroClass preferredClass);  // 0x4bb5e0
@@ -1248,7 +1250,8 @@ public:
     int getLocalPlayerGamePos() const;  // 0x4cea20
     SpellID getRandomSpell(std::bitset<5> spellLevels);  // 0x4c95a0
     SpellID getRandomSpell(int level);
-    boat* getHeroBoat(int id, unsigned char occupied);  // 0x4ce900
+    // Original GetHeroBoat@@QAAPAVboat@@H_N@Z proves bool occupied.
+    boat* getHeroBoat(int id, bool occupied);  // 0x4ce900
     int getHeroId(type_point heroLocation);
     int getMineId(int x, int y, int z);
     int getGarrisonId(int x, int y, int z);
