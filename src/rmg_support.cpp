@@ -32,7 +32,7 @@ TRmgLinePatternTable::TRmgLinePatternTable(unsigned int patternCount, const int*
     if (!allocated)
         throw TAllocationFailure();
     std::copy(patterns, patterns + m_patternCount, m_patterns);
-    for (unsigned int value = 0; value < 9; ++value) {
+    for (unsigned int value = 0; value < RMG_LINE_PATTERN_COUNT; ++value) {
         m_ranges[value].m_firstIndex = 0;
         m_ranges[value].m_valueCount = 0;
     }
@@ -83,20 +83,20 @@ void selectRmgLinePattern(
 {
     if (neighbours[TILE_DIR_NORTH] && neighbours[TILE_DIR_EAST]
         && neighbours[TILE_DIR_SOUTH] && neighbours[TILE_DIR_WEST]) {
-        pattern = 8;
+        pattern = RMG_LINE_CROSS;
         flipX = 0;
         flipY = 0;
         return;
     }
     if (neighbours[TILE_DIR_NORTH] && neighbours[TILE_DIR_SOUTH]) {
         if (neighbours[TILE_DIR_EAST]) {
-            pattern = 6;
+            pattern = RMG_LINE_NORTH_EAST_SOUTH;
             flipX = 0;
         } else if (neighbours[TILE_DIR_WEST]) {
-            pattern = 6;
+            pattern = RMG_LINE_NORTH_EAST_SOUTH;
             flipX = 1;
         } else {
-            pattern = 2;
+            pattern = RMG_LINE_NORTH_SOUTH;
             flipX = 0;
         }
         flipY = 0;
@@ -104,51 +104,52 @@ void selectRmgLinePattern(
     }
     if (neighbours[TILE_DIR_EAST] && neighbours[TILE_DIR_WEST]) {
         if (neighbours[TILE_DIR_SOUTH]) {
-            pattern = 7;
+            pattern = RMG_LINE_EAST_SOUTH_WEST;
             flipY = 0;
         } else if (neighbours[TILE_DIR_NORTH]) {
-            pattern = 7;
+            pattern = RMG_LINE_EAST_SOUTH_WEST;
             flipY = 1;
         } else {
-            pattern = 3;
+            pattern = RMG_LINE_EAST_WEST;
             flipY = 0;
         }
         flipX = 0;
         return;
     }
-    unsigned char hasCornerVariant = table->m_ranges[5].m_valueCount > 0;
+    unsigned char hasCornerVariant = table->m_ranges[RMG_LINE_EAST_SOUTH_CORNER_VARIANT].m_valueCount > 0;
     for (unsigned int reflection = 0; reflection < 4; ++reflection) {
         const int* order = g_rmgLineReflectedNeighbours
             [g_rmgLineReflections[reflection][0]][g_rmgLineReflections[reflection][1]];
         if (neighbours[order[TILE_DIR_EAST]] && neighbours[order[TILE_DIR_SOUTH]]) {
             if (hasCornerVariant && (neighbours[order[TILE_DIR_NORTHEAST]]
                 || neighbours[order[TILE_DIR_SOUTHWEST]]))
-                pattern = 5;
+                pattern = RMG_LINE_EAST_SOUTH_CORNER_VARIANT;
             else
-                pattern = 4;
+                pattern = RMG_LINE_EAST_SOUTH_CORNER;
             flipX = g_rmgLineReflections[reflection][0];
             flipY = g_rmgLineReflections[reflection][1];
             return;
         }
     }
-    if (table->m_ranges[0].m_valueCount > 0) {
+    if (table->m_ranges[RMG_LINE_SOUTH_END].m_valueCount > 0) {
         if (neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST]) {
-            pattern = 1;
+            pattern = RMG_LINE_EAST_END;
             flipX = neighbours[TILE_DIR_WEST];
             flipY = 0;
         } else {
             if (neighbours[TILE_DIR_SOUTH]) {
-                pattern = 0;
+                pattern = RMG_LINE_SOUTH_END;
                 flipX = 0;
                 flipY = 0;
             } else {
-                pattern = 0;
+                pattern = RMG_LINE_SOUTH_END;
                 flipX = 0;
                 flipY = 1;
             }
         }
     } else {
-        pattern = neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST] ? 3 : 2;
+        pattern = neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST]
+            ? RMG_LINE_EAST_WEST : RMG_LINE_NORTH_SOUTH;
         flipX = 0;
         flipY = 0;
     }
