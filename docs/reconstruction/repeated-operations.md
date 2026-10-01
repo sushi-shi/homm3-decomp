@@ -1559,6 +1559,30 @@ Both names and ordinary owner-source bodies are project inferences. The new
 visibility does not claim original RMG access control; native entry points and
 virtual slot order are unchanged.
 
+## RMG quest construction and placement fallback
+
+The three seer-hut reward definitions share the artifact wrapper's ordinary
+`createForSeerHut()` factory. Each caller still allocates its hut first; the
+factory selects the dirt/artifact/subtype-zero prototype and constructs the
+owning wrapper, then the caller assigns its creature, experience or gold reward.
+The hut constructor remains the canonical source of all six default fields.
+Reward assignment order, wrapper ownership and the absence of new failure
+cleanup are preserved. The hut writer still selects experience, creatures,
+then resources in its existing precedence order.
+
+Failed key-tent and quest-artifact placement share generator-owned
+`replaceObjectWithTreasure()`. It saves the old position, removes the object's
+map registration without deleting it, then rereads the position's zone and
+requests treasure in the original value-to-three-halves range. A non-null
+replacement is added at that position. The key-tent caller retains its cached
+generator/value reads; the quest caller evaluates its definition's virtual
+value query first and keeps its treasure-group lifetime. Pending hut deletion
+or transfer remains in the wrapper's existing writable operation/destructor.
+
+Both helper names and source placement are project inferences from repeated
+flows in the same TU. No native address, explicit inline qualifier, layout or
+virtual slot is introduced.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

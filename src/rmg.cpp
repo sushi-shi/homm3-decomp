@@ -1691,6 +1691,16 @@ rmgQuestArtifactObject::rmgQuestArtifactObject(TRmgObjectPropertiesRef* properti
 {
 }
 
+// Project-inferred common factory for the three seer-hut reward definitions.
+// Keep prototype selection after hut construction and before reward assignment.
+rmgQuestArtifactObject* rmgQuestArtifactObject::createForSeerHut(
+    type_random_map_generator* generator, rmgSeerHutObject* seerHut,
+    type_treasure_def* definition)
+{
+    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
+    return new rmgQuestArtifactObject(artifact, generator, seerHut, definition);
+}
+
 rmgKeyTentObject::rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, int value)
     : type_object(properties), m_generator(generator), m_value(value)
@@ -1831,15 +1841,7 @@ unsigned char rmgKeyTentObject::isWritable()
         return 1;
     type_random_map_generator* generator = m_generator;
     int value = m_value;
-    TRmgMapPosition position = getPosition();
-    generator->removeObject(this);
-    TRmgZone* zone = generator->m_zones[
-        generator->m_map.getMapItem(position)->m_zoneState.m_zone];
-    int actualValue;
-    type_object* object = generator->createTreasureObject(
-        zone, value, value * 3 / 2, &actualValue, 0, 0, 0, position);
-    if (object)
-        generator->addObject(object, position);
+    generator->replaceObjectWithTreasure(this, value);
     return 0;
 }
 
@@ -2385,8 +2387,7 @@ type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properti
     type_random_map_generator* generator, TRmgZone*)
 {
     rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
-    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
-    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    rmgQuestArtifactObject* object = rmgQuestArtifactObject::createForSeerHut(generator, seerHut, this);
     int count = m_adjustedValue;
     seerHut->m_creatureType = m_creatureType;
     seerHut->m_creatureCount = count;
@@ -2418,8 +2419,7 @@ type_object* type_quest_experience_def::generate(TRmgObjectPropertiesRef* proper
     type_random_map_generator* generator, TRmgZone*)
 {
     rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
-    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
-    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    rmgQuestArtifactObject* object = rmgQuestArtifactObject::createForSeerHut(generator, seerHut, this);
     seerHut->m_experience = m_experience;
     return object;
 }
@@ -2430,8 +2430,7 @@ type_object* type_quest_gold_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
 {
     rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
-    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
-    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    rmgQuestArtifactObject* object = rmgQuestArtifactObject::createForSeerHut(generator, seerHut, this);
     int amount = m_gold;
     seerHut->m_resourceType = 6;
     seerHut->m_resourceCount = amount;
@@ -10168,6 +10167,20 @@ bool type_random_map_generator::isQuestArtifactAvailable(int artifact) const
         && (g_artifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass);
 }
 
+// Project-inferred shared placement fallback. removeObject detaches the old
+// object without deleting it; its caller still owns pending-object cleanup.
+void type_random_map_generator::replaceObjectWithTreasure(type_object* object, int value)
+{
+    TRmgMapPosition position = object->getPosition();
+    removeObject(object);
+    TRmgZone* zone = m_zones[m_map.getMapItem(position)->m_zoneState.m_zone];
+    int actualValue;
+    type_object* replacement = createTreasureObject(
+        zone, value, value * 3 / 2, &actualValue, 0, 0, 0, position);
+    if (replacement)
+        addObject(replacement, position);
+}
+
 // rmgQuestArtifactObject::isWritable calls this member with its wrapper.
 // The pending hut, prototype reference counts, artifact traits at 0x660b68,
 // and generator masks fix ownership and selection semantics. Failure
@@ -10230,14 +10243,7 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
     group.markPlacementOutline();
     if (!placeQuestGroup(&group, origin)) {
         int value = object->m_definition->getValue(origin, this);
-        TRmgMapPosition originalPosition = object->getPosition();
-        removeObject(object);
-        TRmgZone* zone = m_zones[m_map.getMapItem(originalPosition)->m_zoneState.m_zone];
-        int actualValue;
-        type_object* replacement = createTreasureObject(zone, value, value * 3 / 2,
-            &actualValue, 0, 0, 0, originalPosition);
-        if (replacement)
-            addObject(replacement, originalPosition);
+        replaceObjectWithTreasure(object, value);
         return 0;
     }
     m_usedQuestArtifacts[artifact] = 1;

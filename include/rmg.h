@@ -984,6 +984,10 @@ public:
     rmgQuestArtifactObject(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, rmgSeerHutObject* seerHut,
         type_treasure_def* definition);
+    // Project-inferred factory; the wrapper takes ownership of the pending hut.
+    static rmgQuestArtifactObject* createForSeerHut(
+        type_random_map_generator* generator, rmgSeerHutObject* seerHut,
+        type_treasure_def* definition);
     virtual ~rmgQuestArtifactObject();
     virtual unsigned char isWritable();
 };
@@ -2196,6 +2200,8 @@ public:
     // guarded treasure group; 0x54bc50 removes the old object's map marks,
     // counts and list entry without deleting the object itself.
     unsigned char placeKeyTentGuard(type_object* object, int maxValue);
+    // Project-inferred fallback shared by key-tent and quest-artifact placement.
+    void replaceObjectWithTreasure(type_object* object, int value);
     void setHumanPlayer(int seat);
     void setTownChoice(int seat, int town);
     void removeObject(type_object* object);
