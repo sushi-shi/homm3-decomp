@@ -2838,12 +2838,8 @@ TThievesGuildWindow::TThievesGuildWindow(int numGuilds)
     mageButton->setHotkey(1);
     m_widgets.push_back(mageButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x1c29cc..0x1c2a1c expands canonical null-checking registration.
+    addWidgetsToMessageStream();
 
     setWinText(this, 14);
     setupThievesGuild(numGuilds);
@@ -3239,12 +3235,8 @@ THallWindow::THallWindow(int which)
     exitButton->setHotkey(1);
     m_widgets.push_back(exitButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x1c6500..0x1c6550 expands canonical null-checking registration.
+    addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005cc8e0, 0x21, SCALAR_DELETING_DTOR, THallWindow)
@@ -3373,12 +3365,8 @@ TMageGuildWindow::TMageGuildWindow()
     exitButton->setHotkey(1);
     m_widgets.push_back(exitButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x1c8db0..0x1c8dfc expands canonical null-checking registration.
+    addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005ce120, 0x21, SCALAR_DELETING_DTOR, TMageGuildWindow)
