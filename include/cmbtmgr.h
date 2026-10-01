@@ -1894,7 +1894,7 @@ public:
     unsigned char unnamed464f50(const army* incumbent, const army* candidate);
     virtual int main(message& msg);
     int processCombatMsg(message& msg);
-    int processNextAction(message& msg, unsigned char automaticTurn);
+    int processNextAction(message& msg, bool automaticTurn);
     void setCombatDirections(int hex);
     // DC command.cpp:2800. Complete likewise expands its sole call, while
     // retaining the helper's source-level surrender-dialog boundary.

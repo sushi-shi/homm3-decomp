@@ -2506,12 +2506,14 @@ void combatManager::processFirstAid(army* currentArmy)
 // 0x87888 (defend) and 0x87a90 (wait) fixes both lifetimes independently;
 // pristine VC6 XSTRING calls _Tidy from that same default constructor.
 // The residual is its nested expansion decision, not a different string.
+// Original DC public ?ProcessNextAction@combatManager@@QAAHAAUmessage@@_N@Z
+// proves the automatic-turn Boolean parameter despite lowered primitive 0x20.
 // DC3625's extra FullUpdate in the surrender-error arm is absent in retail.
 // Mac and Windows both retain testRaiseDoor in this caller (retail 0x4672e0).
 VA(0x00478d80, 0x1054)
 DC_ADDRESS(0x06f984, 0x82a)
 MAC_ADDRESS(0x0871d0, 0xb3c)  // anchor-callee exhaustive + single-fn gap
-int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
+int combatManager::processNextAction(message& msg, bool automaticTurn)
 {
     if (!isQuickCombat()) {
         m_combatWindow->clearCombatMessages();
