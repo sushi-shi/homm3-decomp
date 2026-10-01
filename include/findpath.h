@@ -214,8 +214,9 @@ public:
     bool limitWasReached() const { return m_limitReached != 0; }
     // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
     void lowerDoor();
-    unsigned char findCombatPath(const army* currentArmy, long currentGroup,
-                                 long destination, unsigned char inPlacementPhase,
+    // Original public 0xb1b18 proves bool result and bool placement flag.
+    bool findCombatPath(const army* currentArmy, long currentGroup,
+                                 long destination, bool inPlacementPhase,
                                  long limit, long baseSpeed);  // 0x4b3400
     // 0x4b2ff0. Rebuilds the teleport-reachable combat cells, then keeps
     // enemy occupied cells marked when they border that reachable set.

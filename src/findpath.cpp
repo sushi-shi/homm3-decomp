@@ -1181,9 +1181,9 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 VA(0x004b3400, 0x787)
 DC_ADDRESS(0x0a0b18, 0x43a)
 MAC_ADDRESS(0x0c6e78, 0x720)  // anchor-global
-unsigned char searchArray::findCombatPath(const army* currentArmy,
+bool searchArray::findCombatPath(const army* currentArmy,
                                           long currentGroup, long destination,
-                                          unsigned char inPlacementPhase,
+                                          bool inPlacementPhase,
                                           long limit, long baseSpeed)
 {
     if (currentArmy == 0)
