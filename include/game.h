@@ -883,9 +883,9 @@ public:
     // +0x28, the two heroes the player's taverns are currently
     // offering. DC type 0x35C7 is 8 bytes; retail reads them as DWORDS
     // - hero::hire (0x4d7890) scans `[player + 0x28 + 4*i]` for the
-    // hero's own id with a stride of 4 - so the row is two ints, not
-    // eight bytes.
-    int m_recruits[2];
+    // hero's own id with a stride of 4. Native playerData 0x1c50 binds
+    // recruits to array 0x35c7: THeroID[2], eight bytes (not byte IDs).
+    HeroId m_recruits[2];
     unsigned char m_startingNumHeroes;  // +0x30
     int m_personality;  // +0x34
 #pragma pack(push, 1)
@@ -1446,7 +1446,8 @@ private:
     // Original DC clear_recruits and set_weekly_recruits carry private
     // AAAX mangling. The Complete helpers are called only by game methods.
     void setWeeklyRecruits(int playerPos);
-    void clearRecruits(int* recruits);
+    // Original private clear_recruits AAAXQAW4THeroID takes an enum array.
+    void clearRecruits(HeroId recruits[2]);
 
 public:
     void randomizeHeroPool();

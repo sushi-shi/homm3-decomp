@@ -1817,7 +1817,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
             if (other != -1 && g_game->m_heroAvailability[other] == HERO_AVAILABILITY_TAVERN_POOL)
                 g_game->m_heroAvailability[other] = -1;
         }
-        g_game->m_players[m_owner].m_recruits[slot] = m_id;
+        g_game->m_players[m_owner].m_recruits[slot] = HeroId(m_id);
         g_game->m_heroAvailability[m_id] = HERO_AVAILABILITY_TAVERN_POOL;
         m_flags |= 0x20000;
     }

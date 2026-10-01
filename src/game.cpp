@@ -1195,8 +1195,8 @@ void playerData::init()
     m_numTowns = 0;
     m_deathCountDown = -1;
     m_extraPuzzlePieces = 0;
-    m_recruits[0] = -1;
-    m_recruits[1] = -1;
+    m_recruits[0] = heroIdNone;
+    m_recruits[1] = heroIdNone;
     m_personality = 0;
     memset(&m_ai, 0, sizeof(m_ai));
     int heroIndex;
@@ -1384,7 +1384,7 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
     }
 
     for (i = 0; i < 2; i++) {
-        m_recruits[i] = loadHeroId(infile, saveVersion);
+        m_recruits[i] = HeroId(loadHeroId(infile, saveVersion));
     }
 
     unsigned char flag;
@@ -7515,19 +7515,20 @@ void game::perDay()
 // Original: game::clear_recruits; game.cpp:8266
 // DC 8266/8290 and Mac 0xdeefc/0xdef98 place these two helpers between
 // perDay and setWeeklyRecruits. DC names the long loop index recruit and
-// the selected hero pointer old_hero.
+// the selected hero pointer old_hero and the cached THeroID hero_id.
+// Mac caches each slot ID; preserve that local and the nullable getHero path.
 DC_ADDRESS(0x0b3d8c, 0x74)
 MAC_ADDRESS(0x0deefc, 0x9c)
-void game::clearRecruits(int* recruits)
+void game::clearRecruits(HeroId recruits[2])
 {
     for (long recruit = 0; recruit < 2; ++recruit) {
-        int heroId = recruits[recruit];
+        HeroId heroId = recruits[recruit];
         if (heroId >= 0) {
             hero* oldHero = getHero(heroId);
             if (oldHero->m_flags & g_heroRecruitReservedFlag)
                 continue;
             m_heroAvailability[heroId] = -1;
-            recruits[recruit] = -1;
+            recruits[recruit] = heroIdNone;
         }
     }
 }
@@ -7589,7 +7590,7 @@ void game::setWeeklyRecruits(int playerPos)
                 playerPos, otherClass, recruitSlot == 0, kNumHeroClasses);
         }
 
-        player->m_recruits[recruitSlot] = heroId;
+        player->m_recruits[recruitSlot] = HeroId(heroId);
         if (heroId == -1)
             continue;
 
@@ -7620,7 +7621,7 @@ void game::replaceRecruit(int playerPos, long recruitSlot)
     }
 
     int heroId = getNewHeroId(playerPos, otherClass, 0, kNumHeroClasses);
-    player->m_recruits[recruitSlot] = heroId;
+    player->m_recruits[recruitSlot] = HeroId(heroId);
     if (heroId != -1) {
         m_heroAvailability[heroId] = 64;
         m_heroes[heroId].m_mana = static_cast<short>(m_heroes[heroId].getMaxMana());
