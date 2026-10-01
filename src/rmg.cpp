@@ -4732,6 +4732,22 @@ static void initializeRmgZoneDistances(
     }
 }
 
+// Search a zone's closed boundary ring for an edge adjoining another zone.
+// Both extra-zone connection passes advance before testing, so keep that
+// first-next order and test the starting edge last. This inline boundary is
+// a cleanup abstraction, not a recovered original declaration.
+static inline TRmgHalfEdge* findRmgBoundaryWithZone(
+    TRmgHalfEdge* first, const TRmgZone* destination)
+{
+    TRmgHalfEdge* edge = first;
+    do {
+        edge = edge->m_next;
+        if (edge->m_twin->m_zone == destination)
+            return edge;
+    } while (edge != first);
+    return 0;
+}
+
 // BuildZoneBoundaries passes the count from before the radial sites were
 // added and its live Voronoi diagram. Extra-to-extra edges become completed
 // unguarded connections when their shared boundary intersects the map.
@@ -4767,13 +4783,8 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             TRmgZone* destination = m_zones[other];
             if (destination->getLevelPosition().m_z != zone->getLevelPosition().m_z)
                 continue;
-            TRmgHalfEdge* edge = first;
-            do {
-                edge = edge->m_next;
-                if (edge->m_twin->m_zone == destination)
-                    break;
-            } while (edge != first);
-            if (edge->m_twin->m_zone != destination)
+            TRmgHalfEdge* edge = findRmgBoundaryWithZone(first, destination);
+            if (!edge)
                 continue;
             TPoint clipped = clipRmgBoundaryPoint(bounds, edge->m_position, edge->m_previous->m_position);
             if (bounds.contains(clipped)) {
@@ -4801,13 +4812,8 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             TRmgZone* destination = m_zones[other];
             if (destination->getLevelPosition().m_z != zone->getLevelPosition().m_z)
                 continue;
-            TRmgHalfEdge* edge = first;
-            do {
-                edge = edge->m_next;
-                if (edge->m_twin->m_zone == destination)
-                    break;
-            } while (edge != first);
-            if (edge->m_twin->m_zone != destination)
+            TRmgHalfEdge* edge = findRmgBoundaryWithZone(first, destination);
+            if (!edge)
                 continue;
             int column = 0;
             for (; column < originalZones; ++column) {
@@ -6103,6 +6109,8 @@ unsigned char type_random_map_generator::createGroundConnection(
         return 1;
 
     int count = min(candidates.size(), (eligibleCount + 39) / 40);
+    // Retail shares guardValue across crossings: either successful border
+    // placement suppresses the current guard and all remaining crossings' guards.
     for (int crossing = 0; crossing < count; ++crossing) {
         int selected = rand() % candidates.size();
         TRmgMapPosition position = candidates[selected];
@@ -6735,6 +6743,8 @@ void type_random_map_generator::createMonolithConnection(
         source->m_entrances.push_back(entrance);
         if (connection->m_placeBorderObjects
             && placeMonolithBorder(object->getPosition(), destination)) {
+            // This value also controls the destination's guard. Preserve
+            // that suppression even when its own later border placement fails.
             guardValue = 0;
         } else if (guardValue > 0) {
             placeGuard(guardValue, object->getPosition() + TPoint(0, 1));
