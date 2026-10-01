@@ -169,14 +169,9 @@ TSystemOptionsWindow::TSystemOptionsWindow()
         282, 215, 182, 24, (*g_generalText)[GENERAL_TEXT_SPELL_BOOK_ANIMATION], "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
 
-    // DC121 initializes the pointer iterator from begin, checks end at
-    // each iteration, then DC123..126 register the widget or call MemError.
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // DC121..126 and Mac 0x1ac4a8..0x1ac4e8 expand the complete canonical
+    // registration helper, including its null-allocation MemError arm.
+    addWidgetsToMessageStream();
 
     // DC 130..136 send the status bits directly: the Dreamcast compiler
     // never expands widget::set_visible (all 51 DC uses call dc 0x56df8) and
