@@ -548,7 +548,7 @@ army	?doAttack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	tokens1:5dd269cb
 army	?doFireShield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	tokens1:dd679f8769cb
 army	?doMultiHeadAttack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	tokens1:da1030a81c6d
 army	?doPostAttack@army@@AAEXPAV1@HHH@Z	100.0000	100.0000	100.0000	0x40bc0	tokens1:0fbb32b31c6c
-army	?drawToBuffer@army@@QAEXHHH@Z	99.1724	99.1724	99.1817	0x3e140	tokens1:01135e18d399
+army	?drawToBuffer@army@@QAEXHHH@Z	99.5839	99.5839	99.5839	0x3e140	tokens1:d8b6f51577ff
 army	?enemyIsAdjacent@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x429f0	tokens1:de82859f063c
 army	?erase@?$deque@HV?$allocator@H@std@@@std@@QAE?AViterator@12@V312@0@Z	100.0000	100.0000	100.0000	0x48db0	-
 army	?erase@?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@QAEPAPAVarmy@@PAPAV3@@Z	100.0000	100.0000	100.0000	0x48d30	-
