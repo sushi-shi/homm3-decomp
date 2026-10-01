@@ -1114,7 +1114,8 @@ long modifySpellDamage(long damage, SpellID spell, TCreatureType creature)
 VA(0x0044b620, 0x1FE)
 DC_ADDRESS(0x04f3cc, 0x21e)
 MAC_ADDRESS(0x059200, 0x3c4)
-unsigned char armyGroup::merge(armyGroup* ag)
+// Original public ?Merge@armyGroup@@QAA_NPAV1@@Z proves bool.
+bool armyGroup::merge(armyGroup* ag)
 {
     armyGroup ag1;
     armyGroup ag2;

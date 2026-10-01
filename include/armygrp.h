@@ -768,7 +768,7 @@ public:
     // its morale consumers; VC6 /Ob2 expands the loop and /OPT:REF removes
     // the unreferenced out-of-line copy from retail.
     bool hasSomeUndead() const;
-    unsigned char merge(armyGroup* ag);
+    bool merge(armyGroup* ag);
     void mergeArmies(armyGroup& source);
     void splitArmy(int srcIndex, armyGroup* ag, int destIndex,
                    unsigned char inSrcRestricted,
