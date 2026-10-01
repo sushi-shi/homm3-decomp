@@ -110,8 +110,7 @@ long type_monster_data::getResurrectionValue(type_spell_choice& choice, const he
                  + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     if (castingHero)
         value += const_cast<hero*>(castingHero)->getHeroSpellBonus(
-            static_cast<ESpellId>(choice.m_spell),
-            g_creatureTypeTraits[m_type].m_level, value);
+            choice.m_spell, g_creatureTypeTraits[m_type].m_level, value);
     long resurrected = min(static_cast<long>(value * m_combatValuePerHit) / m_value,
                            m_originalNumber - m_number);
     return resurrected * m_value;
@@ -133,10 +132,12 @@ void type_monster_data::castResurrection(
     m_totalValue += resurrected * m_value;
 }
 
+// Original ?get_spell_damage@type_monster_data@@QBAJW4SpellID@@PBVhero@@1J@Z
+// shares the native enum domain with type_spell_choice::m_spell.
 VA(0x00423de0, 0xB1)
 DC_ADDRESS(0x029ce0, 0x10a)
 MAC_ADDRESS(0x026228, 0x140)
-long type_monster_data::getSpellDamage(SpellID spell, const hero* castingHero, const hero* targetHero, long damage) const
+long type_monster_data::getSpellDamage(ESpellId spell, const hero* castingHero, const hero* targetHero, long damage) const
 {
     if (m_totalValue == 0)
         return 0;
@@ -896,7 +897,7 @@ void type_AI_combat_data::castSpell(
         if (manaCost > m_mana)
             continue;
 
-        type_spell_choice choice(spell, mastery, spellPower, spellDuration);
+        type_spell_choice choice(static_cast<ESpellId>(spell), mastery, spellPower, spellDuration);
         switch (g_spellTraits[spell].m_flags & g_aiSpellClassMask) {
         case g_aiSpellDirectDamage:
             getDamageSpellValue(choice, defender);
