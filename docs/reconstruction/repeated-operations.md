@@ -2858,6 +2858,35 @@ All three names and ordinary ai_combat.cpp bodies are project inferences.
 Existing native method access, storage widths, layouts and virtual interfaces
 are unchanged. No builds, tests or matching-score investigations were run.
 
+## Archive lookup and resource-loading policy
+
+Archive stream lookup and directory-entry lookup share private findOpenEntry.
+It checks whether the archive is open, performs the existing native find and
+reports whether a match was found. A closed archive still leaves m_matchindex
+untouched. getDataPtr retains the seek followed by the selected-item update;
+getItemIndex returns the matching entry without selecting a data stream. exist
+keeps its distinct unconditional search. Archive clearing, failed selection and
+successful selection retain their different buffer and position updates.
+
+Five resource-loading sites share file-static adjustLoadedResourceSaturation:
+the Bitmap816 palette, 24-bit bitmap conversion, both palette readers and the
+sprite palette. The ordinary template keeps each type's adjustHSV operation
+behind the original g_graphicsSaturated gate with the same four arguments.
+It accepts a pointer so a nullable allocation is not dereferenced before that
+gate. Palette construction, conversion and cache insertion keep their original
+order, and sprite sequence buffers are still released before saturation.
+
+Both palette readers share file-static readPaletteRecord for the ordered
+24-byte header and 256-entry RGBA reads. References to the caller's arrays
+preserve their sizes and lifetimes; return values remain ignored as before.
+The 16-bit reader retains its stack palette and the 24-bit reader its allocated
+palette. Loose-file and archive adapters retain their existing lifetime rules.
+
+All three helper names and ordinary source placements are project inferences,
+covering nine call sites. No native identities, inline qualifiers, field-layout
+changes or extra reset semantics are introduced. No builds, tests or
+matching-score investigations were run.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

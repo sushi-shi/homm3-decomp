@@ -18,6 +18,16 @@ void LODFile::clear()
     }
 }
 
+// Project-inferred lookup shared by stream and directory-entry access.
+// A closed archive leaves the previous match index untouched.
+bool LODFile::findOpenEntry(const char* itemName)
+{
+    if (!m_opened)
+        return false;
+    find(0, m_numEntries, itemName);
+    return m_matchindex >= 0;
+}
+
 // E:\gamedcs\lodfile.cpp:72
 // DC's getDataPtr is an ordinary helper called at pointAt line 431.
 // The PC expansion seeks the archive stream before returning its handle.
@@ -25,15 +35,11 @@ DC_ADDRESS(0x0e9100, 0x54)
 MAC_ADDRESS(0x11b5f4, 0x8c)
 void* LODFile::getDataPtr(const char* itemName)
 {
-    if (!m_opened)
+    if (!findOpenEntry(itemName))
         return 0;
-    find(0, m_numEntries, itemName);
-    if (m_matchindex >= 0) {
-        fseek(m_fileptr, m_subindex[m_matchindex].m_offset, SEEK_SET);
-        m_dataItemIndex = m_matchindex;
-        return m_fileptr;
-    }
-    return 0;
+    fseek(m_fileptr, m_subindex[m_matchindex].m_offset, SEEK_SET);
+    m_dataItemIndex = m_matchindex;
+    return m_fileptr;
 }
 
 VA(0x004fa610, 0x45)
@@ -41,11 +47,8 @@ DC_ADDRESS(0x0e9154, 0x42)
 MAC_ADDRESS(0x11b680, 0x70)
 LODEntry* LODFile::getItemIndex(const char* itemName)
 {
-    if (m_opened) {
-        find(0, m_numEntries, itemName);
-        if (m_matchindex >= 0)
-            return &m_subindex[m_matchindex];
-    }
+    if (findOpenEntry(itemName))
+        return &m_subindex[m_matchindex];
     return 0;
 }
 

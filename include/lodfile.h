@@ -55,6 +55,7 @@ private:
 
     void find(unsigned begin, unsigned end, const char* itemName);
     void findLinear(unsigned begin, unsigned end, const char* itemName);
+    bool findOpenEntry(const char* itemName);
     void* getDataPtr(const char* itemName);
 
 public:

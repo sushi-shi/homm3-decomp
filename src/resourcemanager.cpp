@@ -677,6 +677,15 @@ VA_COMPGEN(0x0055a7a0, 0x21, SCALAR_DELETING_DTOR,
 VA_COMPGEN(0x0055a7d0, 0x21, SCALAR_DELETING_DTOR,
            t_lod_file_adapter)
 
+// Project-inferred saturation policy shared by loaded bitmaps and palettes.
+// Keep the pointer dereference inside the original saturation gate.
+template <class T>
+static void adjustLoadedResourceSaturation(T* value)
+{
+    if (g_graphicsSaturated)
+        value->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+}
+
 // Mac 0:0x152df8..0x152fc8 calls the retained findBitmapResource helper
 // for name and default.pcx, now nested in findBitmapResourceOrDefault.
 // The same two ordinary source calls auto-inline in Complete. Dreamcast names
@@ -734,8 +743,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
 
             TPalette24 palette24;
             lodFile->read(palette24.m_palette, sizeof(palette24.m_palette));
-            if (g_graphicsSaturated)
-                palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+            adjustLoadedResourceSaturation(&palette24);
 
             TPalette16 palette16(
                 palette24,
@@ -775,8 +783,7 @@ bool ResourceManager::TCacheMapKey::operator<(const TCacheMapKey& other) const
 // The caller keeps ownership of the source and any archive buffer.
 static Bitmap16Bit* convertLoadedBitmap24(const char* name, Bitmap24Bit* source)
 {
-    if (g_graphicsSaturated)
-        source->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+    adjustLoadedResourceSaturation(source);
 
     Bitmap16Bit* result = new Bitmap16Bit(
         name, source->getWidth(), source->getHeight());
@@ -839,6 +846,15 @@ Bitmap16Bit* ResourceManager::getBitmap16(const char* name)
     return loaded;
 }
 
+// Project-inferred record read shared by the 16- and 24-bit palette loaders.
+// The callers retain their buffers and palette construction lifetimes.
+static void readPaletteRecord(TAbstractFile* stream, char (&header)[24],
+                              TRGBA (&data)[256])
+{
+    stream->read(header, sizeof(header));
+    stream->read(data, sizeof(data));
+}
+
 // Mac 0:0x153258 retains the reader immediately before loadPalette. It owns
 // the two stream reads, palette temporary, saturation and conversion; Complete
 // expands the same work in both its loose-file and archive paths. The helper
@@ -849,11 +865,9 @@ TPalette16* ResourceManager::loadPaletteData(const char* name,
 {
     char header[24];
     TRGBA paletteData[256];
-    stream->read(header, sizeof(header));
-    stream->read(paletteData, sizeof(paletteData));
+    readPaletteRecord(stream, header, paletteData);
     TPalette24 palette24(paletteData);
-    if (g_graphicsSaturated)
-        palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+    adjustLoadedResourceSaturation(&palette24);
     return new TPalette16(name, palette24,
         g_firstMaskBits, g_firstMaskShift,
         g_greenMaskBits, g_greenMaskShift,
@@ -921,12 +935,10 @@ TPalette24* ResourceManager::loadPalette24Data(const char* name,
 {
     char header[24];
     TRGBA rgba[256];
-    stream->read(header, sizeof(header));
-    stream->read(rgba, sizeof(rgba));
+    readPaletteRecord(stream, header, rgba);
 
     TPalette24* result = new TPalette24(rgba);
-    if (g_graphicsSaturated)
-        result->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+    adjustLoadedResourceSaturation(result);
     return result;
 }
 
@@ -1604,8 +1616,7 @@ CSprite* ResourceManager::getSprite(const char* name)
     delete[] sequences;
 
     TPalette24 palette24(sdef.m_palette);
-    if (g_graphicsSaturated)
-        palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+    adjustLoadedResourceSaturation(&palette24);
 
     TPalette16 palette16(
         palette24,
