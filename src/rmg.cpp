@@ -3769,6 +3769,18 @@ static inline TRmgMapPosition getRmgRadialZonePosition(
         y, level);
 }
 
+// Trial placement leaves the zone at the candidate even when rejected.
+// Snapshot accepted positions after the predicate, which can observe or
+// alter the zone; do not append the incoming coordinate directly.
+static inline void appendRmgZoneCandidate(type_random_map_generator* generator,
+    TRmgZone* zone, const TRmgMapPosition& candidate,
+    std::vector<TRmgMapPosition>& candidates)
+{
+    zone->setLevelPosition(candidate);
+    if (generator->canPlaceZone(zone))
+        candidates.push_back(zone->getLevelPosition());
+}
+
 // Candidate selector 0x53b970 passes an existing center, the zone being
 // placed and its 12-byte position vector. Retail samples offsets around
 // the center and appends positions accepted by canPlaceZone. Provisional
@@ -3797,29 +3809,19 @@ void type_random_map_generator::appendZonePositions(TRmgZone* center,
     TRmgMapPosition candidate;
     for (int direction = 0; direction < 32; ++direction) {
         candidate = getRmgRadialZonePosition(position, radius, direction, position.m_z);
-        zone->m_levelPosition.m_x = candidate.m_x;
-        zone->m_levelPosition.m_y = candidate.m_y;
-        zone->m_levelPosition.m_z = candidate.m_z;
-        if (canPlaceZone(zone))
-            candidates.push_back(zone->getLevelPosition());
+        appendRmgZoneCandidate(this, zone, candidate, candidates);
     }
     if (m_map.m_numberLevels == 1)
         return;
     int level = 1 - position.m_z;
     candidate = TRmgMapPosition(position.m_x, position.m_y, level);
-    zone->setLevelPosition(candidate);
-    if (canPlaceZone(zone))
-        candidates.push_back(zone->getLevelPosition());
+    appendRmgZoneCandidate(this, zone, candidate, candidates);
     radius = center->m_templateZone->m_size;
     if (radius < zone->m_templateZone->m_size)
         radius = zone->m_templateZone->m_size;
     for (direction = 0; direction < 32; ++direction) {
         candidate = getRmgRadialZonePosition(position, radius, direction, level);
-        zone->m_levelPosition.m_x = candidate.m_x;
-        zone->m_levelPosition.m_y = candidate.m_y;
-        zone->m_levelPosition.m_z = candidate.m_z;
-        if (canPlaceZone(zone))
-            candidates.push_back(zone->getLevelPosition());
+        appendRmgZoneCandidate(this, zone, candidate, candidates);
     }
 }
 
@@ -4765,6 +4767,25 @@ static inline TRmgHalfEdge* findRmgBoundaryWithZone(
     return 0;
 }
 
+// Add both directed records for one unguarded extra-zone connection.
+// Keep the player-filter limits uninitialized, as in retail: these generated
+// records are consumed after template filtering. Append source first, then
+// retarget the same caller-owned record for the reverse edge. The caller
+// keeps the record storage/lifetime, including its untouched filter fields.
+static inline void appendRmgExtraZoneConnection(
+    TRmgZoneConnection& connection, TRmgZone* source, TRmgZone* destination,
+    unsigned char connected)
+{
+    connection.m_destination = destination->m_templateZone;
+    connection.m_value = 0;
+    connection.m_unguarded = 1;
+    connection.m_placeBorderObjects = 0;
+    connection.m_connected = connected;
+    source->m_templateZone->m_connections.push_back(connection);
+    connection.m_destination = source->m_templateZone;
+    destination->m_templateZone->m_connections.push_back(connection);
+}
+
 // BuildZoneBoundaries passes the count from before the radial sites were
 // added and its live Voronoi diagram. Extra-to-extra edges become completed
 // unguarded connections when their shared boundary intersects the map.
@@ -4806,14 +4827,7 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             TPoint clipped = clipRmgBoundaryPoint(bounds, edge->m_position, edge->m_previous->m_position);
             if (bounds.contains(clipped)) {
                 TRmgZoneConnection connection;
-                connection.m_destination = destination->m_templateZone;
-                connection.m_value = 0;
-                connection.m_unguarded = 1;
-                connection.m_placeBorderObjects = 0;
-                connection.m_connected = 1;
-                zone->m_templateZone->m_connections.push_back(connection);
-                connection.m_destination = zone->m_templateZone;
-                destination->m_templateZone->m_connections.push_back(connection);
+                appendRmgExtraZoneConnection(connection, zone, destination, 1);
             }
         }
     }
@@ -4841,14 +4855,7 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             if (column < originalZones)
                 continue;
             TRmgZoneConnection connection;
-            connection.m_destination = destination->m_templateZone;
-            connection.m_value = 0;
-            connection.m_unguarded = 1;
-            connection.m_placeBorderObjects = 0;
-            connection.m_connected = 0;
-            zone->m_templateZone->m_connections.push_back(connection);
-            connection.m_destination = zone->m_templateZone;
-            destination->m_templateZone->m_connections.push_back(connection);
+            appendRmgExtraZoneConnection(connection, zone, destination, 0);
             propagateZoneDistances(destination);
         }
     }
@@ -5261,9 +5268,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
     positions.push_back(position);
     costs.push_back(0);
     TRmgMapItem* seed = m_map.getMapItem(position);
-    seed->m_movement.m_zonePathCost = 0;
-    seed->m_tileData.m_connectionDirection = 0;
-    seed->m_zoneState.m_connectionEligibility = 0;
+    seed->setWaterZoneDistance(0, 0);
     while (positions.size()) {
         position = positions.back();
         costs.pop_back();
@@ -5287,9 +5292,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
                 nextCost = currentCost + 2;
             if (nextCost >= item->m_movement.m_zonePathCost)
                 continue;
-            item->m_movement.m_zonePathCost = nextCost;
-            item->m_tileData.m_connectionDirection = direction;
-            item->m_zoneState.m_connectionEligibility = 0;
+            item->setWaterZoneDistance(nextCost, direction);
             insertRmgWorkItem(positions, costs, next, nextCost);
         }
     }
@@ -5327,9 +5330,7 @@ void type_random_map_generator::prepareWaterZoneConnections(TRmgZone* zone)
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position);
-            item->m_movement.m_zonePathCost = 32000;
-            item->m_tileData.m_connectionDirection = 0;
-            item->m_zoneState.m_connectionEligibility = 0;
+            item->setWaterZoneDistance(32000, 0);
         }
     }
     TRmgZoneBounds surrounding;
