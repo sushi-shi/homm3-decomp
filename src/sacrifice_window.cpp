@@ -302,12 +302,8 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
     m_canSacrificeCreatures = townType > TOWN_TOWER;
     m_totalExperience = 0;
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x155e80..0x155ec0 expands canonical null-checking registration.
+    addWidgetsToMessageStream();
 }
 
 // These labels use the public text subscript, retaining its getText call.
