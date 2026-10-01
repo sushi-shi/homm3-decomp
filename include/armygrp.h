@@ -833,7 +833,7 @@ public:
     {
         int numArmies = 0;
         for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
-            if (m_armies[i] != CREATURE_NONE)
+            if (m_armyTypes[i] != CREATURE_NONE)
                 ++numArmies;
         }
         return numArmies;
