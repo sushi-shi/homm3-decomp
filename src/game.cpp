@@ -7062,7 +7062,8 @@ void game::nextPlayer()
     unsigned char lastWasHuman;
     int giCurPlayerSave;
     int save;
-    unsigned char makeOrig;
+    // Inferred bool carrier: only 0/1 stores, passed to native bool transmitSaveGame.
+    bool makeOrig;
 
     m_mapHeader.m_victoryCondition.checkForArtifactWin();
     m_mapHeader.m_victoryCondition.checkForTotalCreatures();
