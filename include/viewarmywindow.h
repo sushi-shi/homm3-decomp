@@ -36,9 +36,10 @@ public:
     TViewArmyWindow(int armyType, int x0, int y0, bool showOk);
     TViewArmyWindow(const army* thisArmy, int x0, int y0,
                     bool showOk);
-    // Complete adds the tenth groupAlignments argument (ret 0x28) and
-    // uses the mutable group pointer required by GetArmyMorale/GetArmyLuck.
-    TViewArmyWindow(armyGroup* group, int iarmy, const hero* thisHero,
+    // Original public at DC file 0x5dfe5f encodes ABVarmyGroup: const ref.
+    // GetArmyMorale/GetArmyLuck are const; they require no mutable facade.
+    // Complete adds the tenth groupAlignments argument (ret 0x28).
+    TViewArmyWindow(const armyGroup& group, int iarmy, const hero* thisHero,
                     const town* thisTown, int x0, int y0, int upgrade,
                     bool showDismiss, bool showOk,
                     unsigned char groupAlignments);

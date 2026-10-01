@@ -227,6 +227,12 @@ VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 // caller is byte-flat, so it does not recover the required inline decision.
 // The canonical registration call above now restores that named boundary;
 // all 52 calls agree at 98.6832%, with the remaining allocation differences open.
+// Original public at DC file 0x5dfe5f encodes ABVarmyGroup (const ref).
+// Both morale/luck APIs are const, removing the old mutable-pointer facade
+// rationale. The sole game::viewArmy caller already owns a live reference;
+// no constructor path stores or mutates the group. Complete's extra grouping
+// byte stays distinct. Owning VC6 compile preserves every constructor byte
+// across the reference-signature recovery; target binding requires refresh.
 
 //  * the traits row is COPIED BY VALUE onto the frame (`mov ecx,0x1d /
 //    rep movsd`) so hero::HeroFn_004E6120 can fold the hero's own
@@ -245,15 +251,15 @@ VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 VA(0x005f3b50, 0x6B2)
 DC_ADDRESS(0x190e78, 0x614)
 MAC_ADDRESS(0x1ffd98, 0x4f8)  // vtable-store + builder call set + describer pair
-TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
+TViewArmyWindow::TViewArmyWindow(const armyGroup& group, int iarmy,
                                  const hero* thisHero, const town* thisTown,
                                  int x0, int y0, int upgrade,
                                  bool showDismiss,
                                  bool showOk,
                                  unsigned char groupAlignments)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
-      m_armyType(group->m_armyTypes[iarmy]),
-      m_armySize(group->m_numTroops[iarmy]),
+      m_armyType(group.m_armyTypes[iarmy]),
+      m_armySize(group.m_numTroops[iarmy]),
       m_showingOkButton(showOk)
 {
     if (!showOk) {
@@ -278,7 +284,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
 
     TTownType townType = g_game->getAlignment(m_armyType);
     createPortraitWidget(traits.m_spriteName, townType,
-                           group->m_numTroops[iarmy]);
+                           group.m_numTroops[iarmy]);
 
     if (thisHero)
         thisHero->heroFn004E6120(m_armyType, &traits);
@@ -290,14 +296,14 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     createHitpointsWidget(typeTraits->m_hitPoints, traits.m_hitPoints);
     createSpeedWidget(typeTraits->m_speed, traits.m_speed);
 
-    createMoraleWidget(group->getArmyMorale(
+    createMoraleWidget(group.getArmyMorale(
         iarmy, thisHero, thisTown, -1, groupAlignments, 0));
-    m_moraleHelp = group->getMoraleDescription(
+    m_moraleHelp = group.getMoraleDescription(
         m_armyType, m_morale, thisHero, thisTown,
         0, 0, -1, groupAlignments);
 
-    createLuckWidget(group->getArmyLuck(iarmy, thisHero, thisTown, -1, 1));
-    m_luckHelp = group->getLuckDescription(
+    createLuckWidget(group.getArmyLuck(iarmy, thisHero, thisTown, -1, 1));
+    m_luckHelp = group.getLuckDescription(
         m_armyType, m_luck, thisHero, thisTown,
         0, 0, -1);
 
