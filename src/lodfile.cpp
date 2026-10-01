@@ -220,19 +220,23 @@ void LODFile::sort()
 VA(0x004faa70, 0xAB)
 DC_ADDRESS(0x0e9690, 0x4e)
 MAC_ADDRESS(0x11bb74, 0x80)
-unsigned char LODFile::pointAt(const char* itemName)
+// Original public0x593733 ?pointAt@LODFile@@QAA_NPBD@Z proves bool,
+// despite byte lowering. Fresh VC6 emits QAE_NPBD rather than QAEEPBD;
+// all17 lodfile and235 resourcemanager code sections remain byte-identical.
+// The owner comparison requires refreshed target labels for the bool name.
+bool LODFile::pointAt(const char* itemName)
 {
     if (!getDataPtr(itemName)) {
         m_dataItemIndex = -1;
         m_dataPos = -1;
-        return 0;
+        return false;
     }
     m_dataItemIndex = m_matchindex;
     m_dataPos = 0;
     delete[] m_dataBuffer;
     m_dataBuffer = 0;
     m_dataBufferSize = 0;
-    return 1;
+    return true;
 }
 
 VA(0x004fab20, 0x114)
