@@ -1331,13 +1331,15 @@ private:
     NewmapCell* zCell(int x, int y, int z);
 
 public:
-    int load(TAbstractFile* infile, int size, unsigned char twoLayers,
+    // Original DC Init/Read/Load/Save publics (fd80c/fd8f4/fdb94/fddf8)
+    // encode the layer flag as _N, independently of the lowered byte records.
+    int load(TAbstractFile* infile, int size, bool twoLayers,
              int saveVersion);
-    int save(TAbstractFile* outfile, int size, unsigned char twoLayers);
+    int save(TAbstractFile* outfile, int size, bool twoLayers);
     // `ret 0x10`: FOUR arguments, one more than Save's three. The fourth is
     // the map version, and Read forwards it verbatim to readMapObjects and
     // readTimedEventList and reads it nowhere else.
-    int read(TAbstractFile* infile, int size, unsigned char twoLayers,
+    int read(TAbstractFile* infile, int size, bool twoLayers,
              int mapVersion);
 
 private:
@@ -1366,7 +1368,7 @@ public:
     int loadObject(TAbstractFile* infile, CObject* object);
 
 private:
-    void init(int size, unsigned char twoLayers);
+    void init(int size, bool twoLayers);
     void close();  // Original: Close, mapcell.cpp:537, dc 0xec724.
     // `ret 0xc`: the layer index is the third argument, and the return is
     // the cell count (size * size), not a status.

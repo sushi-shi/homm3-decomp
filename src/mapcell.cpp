@@ -569,7 +569,7 @@ VA_COMPGEN(0x004fd4c0, 0x26, IMPLICIT_DTOR, NewmapCell)
 VA(0x004fd4f0, 0x160)
 DC_ADDRESS(0x0ec80c, 0xe6)
 MAC_ADDRESS(0x11f28c, 0xc8)
-void NewfullMap::init(int size, unsigned char twoLayers)
+void NewfullMap::init(int size, bool twoLayers)
 {
     m_size = size;
     m_hasTwoLevels = twoLayers;
@@ -594,7 +594,7 @@ void NewfullMap::init(int size, unsigned char twoLayers)
 VA(0x004fd690, 0x2B3)
 DC_ADDRESS(0x0ec8f4, 0x2a0)
 MAC_ADDRESS(0x11f3dc, 0x1f0)
-int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
+int NewfullMap::read(TAbstractFile* infile, int size, bool twoLayers,
                      int mapVersion)
 {
     init(size, twoLayers);
@@ -771,7 +771,7 @@ void NewfullMap::saveQuestGuardList(TAbstractFile* outfile)
 VA(0x004fdbc0, 0x371)
 DC_ADDRESS(0x0ecb94, 0x264)
 MAC_ADDRESS(0x11f948, 0x274)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects
-int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
+int NewfullMap::load(TAbstractFile* infile, int size, bool twoLayers,
                      int saveVersion)
 {
     int count;
@@ -852,7 +852,7 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
 VA(0x004fdf40, 0x2D1)
 DC_ADDRESS(0x0ecdf8, 0x19e)
 MAC_ADDRESS(0x11fbbc, 0x164)  // order-map: calls saveTimedEventList 0xfc390, saveTownEventList 0xfc770, saveMapLayer 0xfe490 x2, saveMapObjects 0x104a40, TQuestGuard::save
-int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
+int NewfullMap::save(TAbstractFile* outfile, int size, bool twoLayers)
 {
     int count;
     count = saveMapLayer(outfile, size, 0);
