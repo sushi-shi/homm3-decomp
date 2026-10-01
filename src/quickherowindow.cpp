@@ -106,13 +106,15 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
     }
 
     if (viewLevel >= ViewSome && thisHero->m_army.getNumArmies() > 0) {
-        int disguiseCreature = CREATURE_NONE;
+        TCreatureType disguiseCreature = CREATURE_NONE;
         if (thisHero->m_disguiseLevel != TQuickHeroWindow::DisguiseInvalid &&
             thisHero->m_disguiseLevel <= TQuickHeroWindow::DisguiseAdvanced) {
-            const int* currentArmy = thisHero->m_army.m_armies;
+            // Native armyGroup record 0x1a9d owns TCreatureType[7]
+            // (array 0x1bf7); both disguise and display scans read that view.
+            const TCreatureType* currentArmy = thisHero->m_army.m_armyTypes;
             for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
                  ++slot, ++currentArmy) {
-                int creature = *currentArmy;
+                TCreatureType creature = *currentArmy;
                 // Retail compares the slot ordinal, not the creature loaded just
                 // above.  Preserve that byte-proven source-level wart.
                 if (slot != CREATURE_NONE &&
@@ -134,7 +136,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
                     (disguiseCreature == CREATURE_NONE ||
                      g_creatureTypeTraits[creature].m_aiValue >
                          g_creatureTypeTraits[disguiseCreature].m_aiValue))
-                    disguiseCreature = creature;
+                    disguiseCreature = static_cast<TCreatureType>(creature);
             }
         }
 
@@ -144,7 +146,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
         // out of the neighboring numTroops member.
         int displaySlot = 0;
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-            int creature = thisHero->m_army.m_armies[slot];
+            TCreatureType creature = thisHero->m_army.m_armyTypes[slot];
             if (creature == CREATURE_NONE)
                 continue;
             if (disguiseCreature != CREATURE_NONE)
