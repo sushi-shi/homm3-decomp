@@ -76,7 +76,7 @@ void TCampaignWindow::hideText()
     }
 }
 
-// One preview row's video: open it at the row's own position, pause the
+// One preview row's video: open it at the row's own position, resume the
 // track, snapshot the Bink playback state into the row and clear
 // its first track so the next row opens a fresh one, then hang the row's still on
 // the window. The destructor and the hover handler restore that snapshot.
@@ -88,10 +88,8 @@ void TCampaignWindow::openPreview(int campaignIndex)
 
     videoOpen(preview->m_video, preview->m_x, preview->m_y, PREVIEW_WIDTH,
               PREVIEW_HEIGHT, 1, 0, 1);
-    BinkManager::g_playingBink.m_paused = 0;
-    BinkPause(BinkManager::g_playingBink.m_bink, 0);
-    memcpy(&preview->m_binkState, &BinkManager::g_playingBink,
-        sizeof(BinkManager::g_playingBink));
+    BinkManager::setTrackPaused(BinkManager::g_playingBink.m_bink, 0);
+    BinkManager::savePlaybackState(preview->m_binkState);
     BinkManager::g_playingBink.m_bink = 0;
 
     m_widgets.push_back(new bitmapBorder16(preview->m_x, preview->m_y,
@@ -297,11 +295,9 @@ TCampaignWindow::~TCampaignWindow()
         BinkManager::BinkManagerStruct* savedBinkState =
             &g_campaignPreviews[preview].m_binkState;
         if (savedBinkState->m_bink) {
-            memcpy(&BinkManager::g_playingBink, savedBinkState,
-                sizeof(BinkManager::g_playingBink));
+            BinkManager::restorePlaybackState(*savedBinkState);
             BinkManager::closeBink();
-            memcpy(savedBinkState, &BinkManager::g_playingBink,
-                sizeof(BinkManager::g_playingBink));
+            BinkManager::savePlaybackState(*savedBinkState);
         }
     }
 
@@ -367,8 +363,7 @@ int campaignWindowHandler(message& msg)
                     id - TCampaignWindow::CAMPAIGN_FIRST_ID,
                     g_campaignFileNames[
                         id - TCampaignWindow::CAMPAIGN_FIRST_ID]);
-                BinkManager::g_playingBink.m_paused = 1;
-                BinkPause(BinkManager::g_playingBink.m_bink, 1);
+                BinkManager::setTrackPaused(BinkManager::g_playingBink.m_bink, 1);
                 exitFlag = 1;
                 break;
             case DIALOG_RETURN_CANCEL:
@@ -402,14 +397,11 @@ int campaignWindowHandler(message& msg)
                 g_campaignWindow->hideText();
                 g_campaignWindow->getWidget(hoverID
                         - g_campaignWindow->m_firstCampaign - 7)->show();
-                memcpy(&BinkManager::g_playingBink, &preview->m_binkState,
-                    sizeof(BinkManager::g_playingBink));
-                BinkManager::g_playingBink.m_paused = 0;
-                BinkPause(BinkManager::g_playingBink.m_bink, 0);
+                BinkManager::restorePlaybackState(preview->m_binkState);
+                BinkManager::setTrackPaused(BinkManager::g_playingBink.m_bink, 0);
                 BinkManager::restartBink();
             } else {
-                BinkManager::g_playingBink.m_paused = 1;
-                BinkPause(BinkManager::g_playingBink.m_bink, 1);
+                BinkManager::setTrackPaused(BinkManager::g_playingBink.m_bink, 1);
                 g_campaignWindow->hideText();
             }
 

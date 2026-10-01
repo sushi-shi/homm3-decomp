@@ -389,12 +389,10 @@ void videoPause()
     if (SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2)
         SmackManager::g_playingSmack.m_paused = 1;
     if (BinkManager::g_playingBink.m_bink) {
-        BinkManager::g_playingBink.m_paused = 1;
-        BinkPause(BinkManager::g_playingBink.m_bink, 1);
+        BinkManager::setTrackPaused(BinkManager::g_playingBink.m_bink, 1);
     }
     if (BinkManager::g_playingBink.m_bink2) {
-        BinkManager::g_playingBink.m_paused = 1;
-        BinkPause(BinkManager::g_playingBink.m_bink2, 1);
+        BinkManager::setTrackPaused(BinkManager::g_playingBink.m_bink2, 1);
     }
     videoSoundOnOff(0);
 }
@@ -412,12 +410,10 @@ void videoResume()
     if (SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2)
         SmackManager::g_playingSmack.m_paused = 0;
     if (BinkManager::g_playingBink.m_bink) {
-        BinkManager::g_playingBink.m_paused = 0;
-        BinkPause(BinkManager::g_playingBink.m_bink, 0);
+        BinkManager::setTrackPaused(BinkManager::g_playingBink.m_bink, 0);
     }
     if (BinkManager::g_playingBink.m_bink2) {
-        BinkManager::g_playingBink.m_paused = 0;
-        BinkPause(BinkManager::g_playingBink.m_bink2, 0);
+        BinkManager::setTrackPaused(BinkManager::g_playingBink.m_bink2, 0);
     }
     videoSoundOnOff(1);
 }

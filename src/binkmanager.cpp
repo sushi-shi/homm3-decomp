@@ -42,6 +42,24 @@ static int g_binkSound;
 DATA(0x00694cb0)
 BinkManager::BinkManagerStruct BinkManager::g_playingBink;
 
+// Project-inferred shared operations. Track guards and pause nesting belong
+// to callers; snapshots retain all twelve words without transferring handles.
+void BinkManager::setTrackPaused(HBINK track, int paused)
+{
+    g_playingBink.m_paused = paused;
+    BinkPause(track, paused);
+}
+
+void BinkManager::savePlaybackState(BinkManagerStruct& state)
+{
+    memcpy(&state, &g_playingBink, sizeof(g_playingBink));
+}
+
+void BinkManager::restorePlaybackState(const BinkManagerStruct& state)
+{
+    memcpy(&g_playingBink, &state, sizeof(g_playingBink));
+}
+
 // DC SetPixelFormat(ulong, ulong, ulong), binkmanager.cpp:123, is a
 // four-byte no-op. No retail body is identified. Windows selects Bink's
 // format with BinkDDSurfaceType in openBink and videoRealignBuffers;

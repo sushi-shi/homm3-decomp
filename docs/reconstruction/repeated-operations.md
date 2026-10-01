@@ -1151,6 +1151,29 @@ ordinary source placement are project inferences. Existing native centering and
 quick-view wrappers remain on the complete call paths, with no new virtual slots,
 native-address claims or inline qualifiers.
 
+## Bink pause transitions and campaign snapshots
+
+Eight pause/resume pairs share `BinkManager::setTrackPaused()`, which writes the
+raw paused state then calls the vendor operation for the selected track. Campaign
+opening, selection and hover retain their primary-track calls. General video
+pause/resume retains its nesting counter, first/second-track guards, separate
+state updates for each present track, Smacker state and final sound toggle.
+The helper adds no guard or pause-count policy.
+
+Campaign preview opening and destruction share `savePlaybackState()`; destruction
+and hover share `restorePlaybackState()`. Both copy the entire twelve-word native
+aggregate with `memcpy`. Opening still clears only the active primary handle
+after saving. Destruction still checks each saved primary handle, restores,
+closes through `closeBink()` and saves the resulting state before moving to the
+next row. Hover retains text hiding/showing before restore and restart afterward.
+The existing six-row destruction bound remains unchanged.
+
+`closeBink()` keeps its separate pause-before-close operations and final reset;
+it does not acquire the shared state write before each close. Track-transition
+and playback-completion resets also retain their own sequences. New helpers are
+ordinary namespace functions with project-inferred names, preserving the native
+aggregate, globals and SDK boundary without new storage or inline claims.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
