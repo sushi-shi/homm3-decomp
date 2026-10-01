@@ -716,6 +716,9 @@ void type_AI_combat_data::castMassDamageSpell(
 // row: /Ob2 inlined all four call sites in the two-side overload below
 // and OPT:REF dropped the body. The const signature and ordinary definition
 // preserve all four expansions; emission alone does not prove source inline.
+// Mac 0x276c0 and 0x278c8/0x27908 expand the target getHero read;
+// 0x27784/0x277f0/0x27840/0x27854 and the paired casting arms expand
+// the casting-side read. Keep the same canonical accessor on both sides.
 DC_ADDRESS(0x02ace4, 0x72)
 MAC_ADDRESS(0x027678, 0xa8)
 void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, const hero* castingHero) const
@@ -723,7 +726,7 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, const h
     unsigned char mass = !spellTargetsASingleArmy(choice.m_spell, choice.m_mastery);
     for (long i = m_creatures.size(); i-- > 0; ) {
         const type_monster_data& monster = m_creatures[i];
-        long value = monster.getEnchantmentValue(choice, castingHero, m_currentHero);
+        long value = monster.getEnchantmentValue(choice, castingHero, getHero());
         if (mass) {
             choice.m_value += value;
         } else if (choice.m_value < value) {
@@ -749,13 +752,13 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI
             || choice.m_spell == SPELL_CURE))
         return;
     if (choice.m_spell == SPELL_DISPEL) {
-        getEnchantmentValue(choice, m_currentHero);
+        getEnchantmentValue(choice, getHero());
         if (choice.m_mastery < eMasteryAdvanced)
             return;
         // retail copies the whole 0x24-byte record with one rep movsd
         // (0x4256b7) and compares the ourChoice value after the second pass
         type_spell_choice ourChoice = choice;
-        defender.getEnchantmentValue(choice, m_currentHero);
+        defender.getEnchantmentValue(choice, getHero());
         if (choice.m_mastery != eMasteryAdvanced)
             return;
         if (ourChoice.m_value >= choice.m_value)
@@ -765,9 +768,9 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI
         return;
     }
     if (g_spellTraits[choice.m_spell].m_karma > 0)
-        getEnchantmentValue(choice, m_currentHero);
+        getEnchantmentValue(choice, getHero());
     else
-        defender.getEnchantmentValue(choice, m_currentHero);
+        defender.getEnchantmentValue(choice, getHero());
 }
 
 VA(0x004258a0, 0x269)
@@ -777,12 +780,12 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, const hero*
 {
     long value;
     if (spellTargetsASingleArmy(choice.m_spell, choice.m_mastery)) {
-        value = m_creatures[choice.m_target].getEnchantmentValue(choice, castingHero, m_currentHero);
+        value = m_creatures[choice.m_target].getEnchantmentValue(choice, castingHero, getHero());
         m_creatures[choice.m_target].castEnchantment(value, increase);
         return;
     }
     for (long i = m_creatures.size(); i-- > 0; ) {
-        value = m_creatures[i].getEnchantmentValue(choice, castingHero, m_currentHero);
+        value = m_creatures[i].getEnchantmentValue(choice, castingHero, getHero());
         if (value > 0)
             m_creatures[i].castEnchantment(value, increase);
     }
@@ -799,19 +802,19 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, type_AI_com
             if (choice.m_target < 0) {
                 if (choice.m_secondTargetHex >= 0) {
                     choice.m_target = choice.m_secondTargetHex;
-                    defender.castEnchantment(choice, m_currentHero, 0);
+                    defender.castEnchantment(choice, getHero(), 0);
                 }
             } else {
-                castEnchantment(choice, m_currentHero, 1);
+                castEnchantment(choice, getHero(), 1);
             }
         } else {
-            castEnchantment(choice, m_currentHero, 1);
-            defender.castEnchantment(choice, m_currentHero, 0);
+            castEnchantment(choice, getHero(), 1);
+            defender.castEnchantment(choice, getHero(), 0);
         }
     } else if (g_spellTraits[choice.m_spell].m_karma > 0) {
-        castEnchantment(choice, m_currentHero, 1);
+        castEnchantment(choice, getHero(), 1);
     } else {
-        defender.castEnchantment(choice, m_currentHero, 0);
+        defender.castEnchantment(choice, getHero(), 0);
     }
 }
 
