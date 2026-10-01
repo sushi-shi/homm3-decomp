@@ -4426,11 +4426,9 @@ TShipWindow::TShipWindow(int type)
         // emits both message builds inline here and shares one record
         // between them - only codeX and extra are re-stored for the
         // second broadcast.
+        // DC 5438 calls the default message constructor; subsequent rows
+        // only set the widget payload. The constructor owns the zero fields.
         message msg;
-        msg.m_qualifier = 0;
-        msg.m_mouseX = 0;
-        msg.m_mouseY = 0;
-        msg.m_window = 0;
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_codeY = BUY_BUTTON_ID;
