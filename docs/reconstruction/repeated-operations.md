@@ -2502,6 +2502,46 @@ header template shared by two TUs; the other three bodies stay in their owner
 sources, with no invented inline qualifier or native identity. No serialized
 width, record layout, virtual interface or field visibility changes.
 
+## Map sprite replacement, object bounds and cell identity
+
+Both map-object loaders share private copySpriteReferences and
+reloadObjectSprites. The first retains resize plus indexed raw-reference copy;
+the second resizes the destination, loads sprites in object-type order, makes
+the two original progress updates, then disposes old sprites through the native
+ResourceManager wrapper and clears the temporary vector. The old-reference
+vector remains caller-owned through all subsequent object reads and failures.
+Map loading still passes its cached numObjects; save loading evaluates the
+current type-vector size after the reference copy. The loops keep current
+bounds and progress thresholds, including two updates at the same index when
+small lists make those thresholds equal. No null skipping, move/swap or new
+failure cleanup is introduced. Destructor disposal remains distinct.
+
+stampObject shares getObjectBounds for the new and existing objects. Left/top
+subtract the current type's dimensions and add one; right/bottom add one to the
+object coordinates. Coordinates and dimensions are read in their original
+order. Both caller-owned rectangles, intersection, map-edge clipping and layer
+comparison remain in place; no bounds normalization or cached type is added.
+
+Three non-trigger classification branches share NewmapCell::setObjectIdentity:
+store the unsigned object index into the existing short field, assign type and
+narrowed subtype, then optionally copy extra information. The two blocking
+branches share the outer setBlockingObject, which nests that identity operation
+before blockMovement. Terrain-hole classification uses only the identity
+operation. The trigger branch retains its different order, inserting the trigger
+flag between type and subtype writes. Reverse scan order and early returns are
+unchanged.
+
+blockMovement also serves rock loading: clear passability, then set the packed
+blocked bit. The rock test remains after the original permissive initialization;
+cell recalculation's separate rock-only blocked-bit write is a partial update
+and remains distinct. Existing packed fields, neighboring bits and record
+layouts are unchanged.
+
+All six helper names and ordinary mapcell.cpp placements are project inferences,
+without new native identities or inline declarations. Existing native lookup,
+resource and bit-position helpers remain on the call paths. No current compiler
+or behavioral validation is claimed.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

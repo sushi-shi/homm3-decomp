@@ -977,8 +977,7 @@ int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
             thisCell->m_isBlocked = 0;
             thisCell->m_passable = 1;
             if (thisCell->m_groundSet == eTerrainRock) {
-                thisCell->m_passable = 0;
-                thisCell->m_isBlocked = 1;
+                thisCell->blockMovement();
             }
 
             if (thisCell->m_groundSet == eTerrainWater
@@ -4158,6 +4157,35 @@ void NewfullMap::rebuildObjectTypeIndex()
     }
 }
 
+// Project-inferred reload phases shared by map and saved-object loading.
+// The old-reference vector stays alive in the caller through its later reads.
+void NewfullMap::copySpriteReferences(std::vector<CSprite*>& oldSprites) const
+{
+    oldSprites.resize(m_sprites.size());
+    for (int x = 0; x < m_sprites.size(); ++x)
+        oldSprites[x] = m_sprites[x];
+}
+
+void NewfullMap::reloadObjectSprites(std::vector<CSprite*>& oldSprites,
+                                     size_t count)
+{
+    int x;
+    m_sprites.resize(count);
+    for (x = 0; x < m_objectTypes.size(); ++x) {
+        m_sprites[x] =
+            ResourceManager::getSprite(m_objectTypes[x].m_imageName.c_str());
+        if (x == m_objectTypes.size() / 3)
+            incProgressBar(1);
+        if (x == m_objectTypes.size() / 3 * 2)
+            incProgressBar(1);
+    }
+
+    // DC Read/Load and Mac 0x1274f8..0x12752c retain this disposal path.
+    for (x = 0; x < oldSprites.size(); ++x)
+        ResourceManager::dispose(oldSprites[x]);
+    oldSprites.clear();
+}
+
 // E:\gamedcs\mapcell.cpp:3838
 // DC's long i (sp+0x18) belongs to the preceding hero-reset loop, absent in
 // Complete. These three loading loops use int x (sp+0x1c); push_back at
@@ -4176,6 +4204,7 @@ void NewfullMap::rebuildObjectTypeIndex()
 // a native-forwarding helper body do not change this inline residual.
 // Naming the canonical GetSprite result inside the sprite loop also changes
 // the inline context; its direct vector assignment is the supported form.
+// These compiler observations predate extraction of the shared reload phases.
 VA(0x00504470, 0x5C9)
 DC_ADDRESS(0x0f2c20, 0x3f6)
 MAC_ADDRESS(0x127278, 0x440)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing
@@ -4210,26 +4239,8 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     incProgressBar(1);
 
     std::vector<CSprite*> oldSprites;
-    oldSprites.resize(m_sprites.size());
-    for (x = 0; x < m_sprites.size(); ++x)
-        oldSprites[x] = m_sprites[x];
-
-    m_sprites.resize(numObjects);
-    for (x = 0; x < m_objectTypes.size(); ++x) {
-        m_sprites[x] =
-            ResourceManager::getSprite(m_objectTypes[x].m_imageName.c_str());
-        if (x == m_objectTypes.size() / 3)
-            incProgressBar(1);
-        if (x == m_objectTypes.size() / 3 * 2)
-            incProgressBar(1);
-    }
-
-    // DC NewfullMap::Read/Load (mapcell.cpp:640/704) release the sprite list
-    // through ResourceManager::Dispose. Mac 0x1274f8..0x12752c retains the
-    // nested virtual sprite-disposal call; keep the canonical wrapper here.
-    for (x = 0; x < oldSprites.size(); ++x)
-        ResourceManager::dispose(oldSprites[x]);
-    oldSprites.clear();
+    copySpriteReferences(oldSprites);
+    reloadObjectSprites(oldSprites, numObjects);
 
     incProgressBar(1);
 
@@ -4332,23 +4343,8 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
     rebuildObjectTypeIndex();
 
     std::vector<CSprite*> oldSprites;
-    oldSprites.resize(m_sprites.size());
-    for (x = 0; x < m_sprites.size(); ++x)
-        oldSprites[x] = m_sprites[x];
-
-    m_sprites.resize(m_objectTypes.size());
-    for (x = 0; x < m_objectTypes.size(); ++x) {
-        m_sprites[x] =
-            ResourceManager::getSprite(m_objectTypes[x].m_imageName.c_str());
-        if (x == m_objectTypes.size() / 3)
-            incProgressBar(1);
-        if (x == m_objectTypes.size() / 3 * 2)
-            incProgressBar(1);
-    }
-
-    for (x = 0; x < oldSprites.size(); ++x)
-        ResourceManager::dispose(oldSprites[x]);
-    oldSprites.clear();
+    copySpriteReferences(oldSprites);
+    reloadObjectSprites(oldSprites, m_objectTypes.size());
 
     incProgressBar(1);
 
@@ -4408,6 +4404,15 @@ void NewfullMap::generateHeightMap(const CObject* object,
     }
 }
 
+// Project-inferred bounds of an object's lower-right-anchored footprint.
+void NewfullMap::getObjectBounds(const CObject& object, tagRECT& bounds) const
+{
+    bounds.left = object.m_x - m_objectTypes[object.m_typeIndex].m_width + 1;
+    bounds.top = object.m_y - m_objectTypes[object.m_typeIndex].m_height + 1;
+    bounds.right = object.m_x + 1;
+    bounds.bottom = object.m_y + 1;
+}
+
 VA(0x00505230, 0x3D9)
 DC_ADDRESS(0x0f36b0, 0x372)
 MAC_ADDRESS(0x127c4c, 0x320)
@@ -4432,18 +4437,10 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
             CObject* belowObject = &m_objects[nextCellObjInfo.m_objectIndex];
 
             RECT newRect;
-            newRect.left = newObject->m_x - m_objectTypes[newObject->m_typeIndex].m_width + 1;
-            newRect.top = newObject->m_y - m_objectTypes[newObject->m_typeIndex].m_height + 1;
-            newRect.right = newObject->m_x + 1;
-            newRect.bottom = newObject->m_y + 1;
+            getObjectBounds(*newObject, newRect);
 
             RECT belowRect;
-            belowRect.left = belowObject->m_x
-                - m_objectTypes[belowObject->m_typeIndex].m_width + 1;
-            belowRect.top = belowObject->m_y
-                - m_objectTypes[belowObject->m_typeIndex].m_height + 1;
-            belowRect.right = belowObject->m_x + 1;
-            belowRect.bottom = belowObject->m_y + 1;
+            getObjectBounds(*belowObject, belowRect);
 
             RECT overlap;
             unsigned char intersects = IntersectRect(&overlap, &newRect, &belowRect) != 0;
@@ -4486,6 +4483,33 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
     }
 
     objectList.insert(position, *objectCell);
+}
+
+// Project-inferred paired transition shared by rock loading and object blocking.
+void NewmapCell::blockMovement()
+{
+    m_passable = 0;
+    m_isBlocked = 1;
+}
+
+// Project-inferred identity assignment shared by non-trigger classification.
+void NewmapCell::setObjectIdentity(unsigned short index, const CObject& object,
+                                    const CObjectType& type,
+                                    unsigned char copyExtra)
+{
+    m_objectTypeIndex = index;
+    m_typeValue = type.m_objectType;
+    m_objectIndex = static_cast<short>(type.m_extra);
+    if (copyExtra)
+        m_extraInfo = object.m_extraInfo;
+}
+
+void NewmapCell::setBlockingObject(unsigned short index, const CObject& object,
+                                    const CObjectType& type,
+                                    unsigned char copyExtra)
+{
+    setObjectIdentity(index, object, type, copyExtra);
+    blockMovement();
 }
 
 // DC record 0x30b7 declares four-bit char CellX at bit 0 and CellY
@@ -4551,13 +4575,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
             int col = it->m_cellX;
             if (!objectType->m_passableCells.test(
                     CObjectType::getBitPos(col, row))) {
-                thisCell->m_objectTypeIndex = it->m_objectIndex;
-                thisCell->m_typeValue = objectType->m_objectType;
-                thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
-                if (setExtraInfo)
-                    thisCell->m_extraInfo = object->m_extraInfo;
-                thisCell->m_passable = 0;
-                thisCell->m_isBlocked = 1;
+                thisCell->setBlockingObject(it->m_objectIndex, *object,
+                                            *objectType, setExtraInfo);
                 return;
             }
         }
@@ -4571,13 +4590,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
         int col = it->m_cellX;
         if (!objectType->m_passableCells.test(
                 CObjectType::getBitPos(col, row))) {
-            thisCell->m_objectTypeIndex = it->m_objectIndex;
-            thisCell->m_typeValue = objectType->m_objectType;
-            thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
-            if (setExtraInfo)
-                thisCell->m_extraInfo = object->m_extraInfo;
-            thisCell->m_passable = 0;
-            thisCell->m_isBlocked = 1;
+            thisCell->setBlockingObject(it->m_objectIndex, *object,
+                                        *objectType, setExtraInfo);
             return;
         }
     }
@@ -4587,11 +4601,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
         CObject* object = &m_objects[it->m_objectIndex];
         CObjectType* objectType = &m_objectTypes[object->m_typeIndex];
         if (objectType->m_objectType == TERRAIN_HOLE) {
-            thisCell->m_objectTypeIndex = it->m_objectIndex;
-            thisCell->m_typeValue = objectType->m_objectType;
-            thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
-            if (setExtraInfo)
-                thisCell->m_extraInfo = object->m_extraInfo;
+            thisCell->setObjectIdentity(it->m_objectIndex, *object,
+                                        *objectType, setExtraInfo);
             return;
         }
     }

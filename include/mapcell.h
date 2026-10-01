@@ -17,6 +17,7 @@
 class BlackBoxData;
 struct type_creature_bank;
 struct type_university;
+struct tagRECT;
 
 class CObject;
 
@@ -1211,6 +1212,13 @@ public:
         m_extraInfo = 0;
         m_objectTypeIndex = -1;
     }
+    // Project-inferred paired passability/blocking transition.
+    void blockMovement();
+    // Project-inferred derived object state; trigger selection is separate.
+    void setObjectIdentity(unsigned short index, const CObject& object,
+                           const CObjectType& type, unsigned char copyExtra);
+    void setBlockingObject(unsigned short index, const CObject& object,
+                           const CObjectType& type, unsigned char copyExtra);
     TAdventureObjectType getSpecialTerrain() const;
     // Implicit destructor; CodeView dc 0xf4bdc compgenx.
     const unsigned char hasTriggerableEvent() const;
@@ -1350,6 +1358,9 @@ public:
              int mapVersion);
 
 private:
+    // Project-inferred reload phases keep the old-reference vector in callers.
+    void copySpriteReferences(std::vector<CSprite*>& oldSprites) const;
+    void reloadObjectSprites(std::vector<CSprite*>& oldSprites, size_t count);
     int readMapObjects(TAbstractFile* infile, int mapVersion);
     // `ret 4`: ONE argument, unlike readMapObjects' two - the save stream
     // carries no map version.
@@ -1466,6 +1477,8 @@ public:
 
 private:
     void calcCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
+    // Project-inferred bounds shared by the two objects in overlap ordering.
+    void getObjectBounds(const CObject& object, tagRECT& bounds) const;
 
 public:
     // Role-based names. DoCombat (0x4ad470) broadcasts the defeated hero
