@@ -270,7 +270,7 @@ protected:
     // dc 0x3d7b0. "Is this the last stack on our side that can still
     // act?" - inlined into consider_teleport, consider_resurrect and
     // consider_single_enchantment, with no retail body of its own.
-    unsigned char isLastAction() const;
+    bool isLastAction() const;
     // A THIRD census on the same 16-byte stride, byte-proven by
     // get_defense_skill_value (0x438910): it reads the record's `enemy`
     // pointer as `(bitIndex + 0x2d) * 16 + this`, i.e. this + 0x2d0 +
@@ -302,7 +302,7 @@ protected:
     long getBlessValue(const army* ourArmy, type_enchant_data caster) const;
     long getBloodLustValue(const army* ourArmy, type_enchant_data caster) const;
     long getBlindValue(const army* enemy, type_enchant_data caster) const;
-    long getCancelValue(army* currentArmy, unsigned char badSpellsOnly) const;
+    long getCancelValue(army& currentArmy, bool badSpellsOnly) const;
     long getChainLightningValue(long power, TSkillMastery mastery,
                                    army* target) const;
     long getCloneValue(const army* ourArmy, type_enchant_data caster) const;
@@ -353,7 +353,7 @@ protected:
     long getWaterProtectionValue(const army* ourArmy,
                                     type_enchant_data caster) const;
     long getWeaknessValue(const army* enemy, type_enchant_data caster) const;
-    unsigned char shouldAttackNow(const army& enemy) const;
+    bool shouldAttackNow(const army& enemy) const;
     long unimplemented(const army* enemy, type_enchant_data caster) const;
     // The shape of every row in get_enchantment_function's table, and
     // the shape get_cancel_value (0x439a80) and get_caliph_value
@@ -393,7 +393,7 @@ protected:
     void setWorstEnemies();
     void addEnemy(type_AI_enemy_data& sum, const army* ourArmy,
                   const army* enemy, bool ranged);
-    unsigned char spellsNotRequired() const;
+    bool spellsNotRequired() const;
 };
 SIZE(type_AI_spellcaster, 0x410);
 

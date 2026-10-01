@@ -766,6 +766,8 @@ type_AI_spellcaster::~type_AI_spellcaster()
         delete m_enemyCaster;
 }
 
+// Original DC ?is_last_action@type_AI_spellcaster@@IBA_NXZ and
+// ?should_attack_now@type_AI_spellcaster@@IBA_NABVarmy@@@Z prove bool results.
 // E:\gamedcs\ai_tactical.cpp:837
 // DC's ordinary const helper precedes should_attack_now in this TU. Its
 // GetCurrentArmy, Is and IsIncapacitated calls remain canonical; VC6 expands
@@ -775,7 +777,7 @@ type_AI_spellcaster::~type_AI_spellcaster()
 // the condition also reproduces retail VC6's Teleport stack homes exactly.
 DC_ADDRESS(0x03d7b0, 0x86)
 MAC_ADDRESS(0x03e528, 0xd8)
-unsigned char type_AI_spellcaster::isLastAction() const
+bool type_AI_spellcaster::isLastAction() const
 {
     const army* current = g_combatManager->getCurrentArmy();
     for (long j = 0; j < g_combatManager->m_numArmies[m_side]; j++) {
@@ -793,7 +795,7 @@ unsigned char type_AI_spellcaster::isLastAction() const
 VA(0x00436c60, 0x1C4)
 DC_ADDRESS(0x03d838, 0x132)
 MAC_ADDRESS(0x03e600, 0x1d4)
-unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
+bool type_AI_spellcaster::shouldAttackNow(const army& enemy) const
 {
     if (m_estimate.m_killsOnly)
         return 1;
@@ -1848,14 +1850,17 @@ double type_AI_spellcaster::getDuration(long turns, bool movedThisTurn) const
     return result;
 }
 
+// Original DC ?get_cancel_value@type_AI_spellcaster@@IBAJAAVarmy@@_N@Z
+// proves a nonnullable army reference and bool badSpellsOnly. All three
+// Complete callers supply their live copied army; callback APIs keep pointers.
 VA(0x00439a80, 0x135)
 DC_ADDRESS(0x040248, 0xfe)
 MAC_ADDRESS(0x0420cc, 0x18c)
-long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpellsOnly) const
+long type_AI_spellcaster::getCancelValue(army& currentArmy, bool badSpellsOnly) const
 {
     long value = 0;
     for (long spell = 10; spell < 81; spell++) {
-        long duration = currentArmy->getSpellTime(spell);
+        long duration = currentArmy.getSpellTime(spell);
         if (duration == 0)
             continue;
         if (badSpellsOnly) {
@@ -1868,16 +1873,16 @@ long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpe
         TEnchantValue valueOf = getEnchantmentFunction(spell);
         if (valueOf == 0)
             continue;
-        type_enchant_data caster(spell, currentArmy->getSpellLevel(spell),
+        type_enchant_data caster(spell, currentArmy.getSpellLevel(spell),
                                  duration, duration);
         caster.m_checkResistance = 0;
-        currentArmy->cancelIndividualSpell(spell);
-        long ours = currentArmy->getOwningSide() == m_side;
+        currentArmy.cancelIndividualSpell(spell);
+        long ours = currentArmy.getOwningSide() == m_side;
         long bad = g_spellTraits[spell].m_karma < 0;
         if (bad == ours)
-            value += (m_enemyCaster->*valueOf)(currentArmy, caster);
+            value += (m_enemyCaster->*valueOf)(&currentArmy, caster);
         else
-            value -= (this->*valueOf)(currentArmy, caster);
+            value -= (this->*valueOf)(&currentArmy, caster);
     }
     return value;
 }
@@ -1888,7 +1893,7 @@ MAC_ADDRESS(0x042258, 0x4f0)
 long type_AI_spellcaster::getDispelValue(const army* ourArmy, type_enchant_data caster) const
 {
     army testArmy = *ourArmy;
-    return getCancelValue(&testArmy, 0);
+    return getCancelValue(testArmy, false);
 }
 
 // DC ai_tactical.cpp:2199 names the by-value min wrapper; its parameter
@@ -1899,7 +1904,7 @@ MAC_ADDRESS(0x042748, 0x61c)
 long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data caster) const
 {
     army currentArmy = *ourArmy;
-    long value = getCancelValue(&currentArmy, 1);
+    long value = getCancelValue(currentArmy, true);
     int mastery = caster.getMasteryValue();
     int damage = ourArmy->m_topCreatureDamage;
     int healed = min(mastery + g_spellTraits[SPELL_CURE].m_powerFactor * caster.m_power,
@@ -1924,7 +1929,7 @@ MAC_ADDRESS(0x042d64, 0x538)
 long type_AI_spellcaster::getAntimagicValue(const army* ourArmy, type_enchant_data caster) const
 {
     army testArmy = *ourArmy;
-    long value = getCancelValue(&testArmy, 0);
+    long value = getCancelValue(testArmy, false);
     value += getProtectionValue(ourArmy, eSchoolAll,
                                   g_spellTraits[SPELL_ANTI_MAGIC].m_masteryBonus[caster.m_mastery],
                                   caster.m_duration, 0);
@@ -2982,13 +2987,14 @@ void type_AI_spellcaster::checkSimulation()
     m_winLikely = 1;
 }
 
+// Original DC ?spells_not_required@type_AI_spellcaster@@IBA_NXZ proves bool.
 // E:\gamedcs\ai_tactical.cpp:3398
 // DC proves the const helper and early returns; cast_spell calls it
 // at line 3436. Complete also excludes Arrow Towers. Retail expands this
 // ordinary helper into 0x43c800; the bracket has no retained body for it.
 DC_ADDRESS(0x042610, 0xa0)
 MAC_ADDRESS(0x0465d8, 0x8c)
-unsigned char type_AI_spellcaster::spellsNotRequired() const
+bool type_AI_spellcaster::spellsNotRequired() const
 {
     if (!m_winLikely)
         return 0;
