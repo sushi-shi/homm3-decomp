@@ -286,11 +286,11 @@ int town::load(TAbstractFile* infile, int saveVersion)
     if (infile->read(m_mageGuildSpellCounts, sizeof(m_mageGuildSpellCounts))
         < sizeof(m_mageGuildSpellCounts))
         return -1;
-    if (infile->read(&m_built, sizeof(m_built)) < sizeof(m_built))
+    if (infile->read(&m_populationMask, sizeof(m_populationMask)) < sizeof(m_populationMask))
         return -1;
-    if (infile->read(&m_active, sizeof(m_active)) < sizeof(m_active))
+    if (infile->read(&m_fullBuildingMask, sizeof(m_fullBuildingMask)) < sizeof(m_fullBuildingMask))
         return -1;
-    if (infile->read(&m_available, sizeof(m_available)) < sizeof(m_available))
+    if (infile->read(&m_legalBuildings, sizeof(m_legalBuildings)) < sizeof(m_legalBuildings))
         return -1;
     if (infile->read(m_mageGuildSpells, sizeof(m_mageGuildSpells))
         < sizeof(m_mageGuildSpells))
@@ -413,11 +413,11 @@ int town::save(TAbstractFile* outfile)
     if (outfile->write(m_mageGuildSpellCounts, sizeof(m_mageGuildSpellCounts))
         < sizeof(m_mageGuildSpellCounts))
         return -1;
-    if (outfile->write(&m_built, sizeof(m_built)) < sizeof(m_built))
+    if (outfile->write(&m_populationMask, sizeof(m_populationMask)) < sizeof(m_populationMask))
         return -1;
-    if (outfile->write(&m_active, sizeof(m_active)) < sizeof(m_active))
+    if (outfile->write(&m_fullBuildingMask, sizeof(m_fullBuildingMask)) < sizeof(m_fullBuildingMask))
         return -1;
-    if (outfile->write(&m_available, sizeof(m_available)) < sizeof(m_available))
+    if (outfile->write(&m_legalBuildings, sizeof(m_legalBuildings)) < sizeof(m_legalBuildings))
         return -1;
     if (outfile->write(m_mageGuildSpells, sizeof(m_mageGuildSpells))
         < sizeof(m_mageGuildSpells))
@@ -603,8 +603,8 @@ town::town()
     m_mapY = 0;
     m_mapZ = 0;
     m_visitingHeroId = -1;
-    m_built = g_bitNumber[HALL_VILLAGE_ID];
-    m_active = m_built;
+    m_populationMask = g_bitNumber[HALL_VILLAGE_ID];
+    m_fullBuildingMask = m_populationMask;
     m_mageLevel = 0;
     m_owner = -1;
     m_garrisonHeroId = -1;
@@ -943,27 +943,27 @@ type_building_id town::createBuilding(type_building_id building)
 {
     // Dreamcast CodeView names this short local `dwelling`.
     short dwelling;
-    m_built |= g_bitNumber[building];
-    m_built &= ~s_includedBuildings[m_type][building];
+    m_populationMask |= g_bitNumber[building];
+    m_populationMask &= ~s_includedBuildings[m_type][building];
 
     for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
         dwelling = s_constHordeEffects[m_type][slot].m_dwelling;
         if (building == g_hordeBuildings[slot]) {
-            m_built &= ~g_bitNumber[DWELLING_0_ID + dwelling];
+            m_populationMask &= ~g_bitNumber[DWELLING_0_ID + dwelling];
             if (dwelling < TOWN_DWELLING_COUNT
                 && hasBuilding(DWELLING_0_UPG_ID + dwelling, false)) {
-                m_built &= ~g_bitNumber[building];
-                m_built &= ~g_bitNumber[DWELLING_0_UPG_ID + dwelling];
+                m_populationMask &= ~g_bitNumber[building];
+                m_populationMask &= ~g_bitNumber[DWELLING_0_UPG_ID + dwelling];
                 building = g_hordeBuildings[slot + 1];
-                m_built |= g_bitNumber[building];
+                m_populationMask |= g_bitNumber[building];
             }
         }
         if (hasBuilding(g_hordeBuildings[slot], false)) {
             if (building == DWELLING_0_UPG_ID + dwelling) {
-                m_built &= ~g_bitNumber[building];
-                m_built &= ~g_bitNumber[g_hordeBuildings[slot]];
+                m_populationMask &= ~g_bitNumber[building];
+                m_populationMask &= ~g_bitNumber[g_hordeBuildings[slot]];
                 building = g_hordeBuildings[slot + 1];
-                m_built |= g_bitNumber[building];
+                m_populationMask |= g_bitNumber[building];
             }
         }
     }
@@ -1014,9 +1014,9 @@ void town::destroyExtraCapitol()
             if (townId != m_id) {
                 town* otherTown = g_game->getTown(townId);
                 if (otherTown->isCapitol()) {
-                    m_built &= ~g_bitNumber[HALL_CAPITOL_ID];
-                    m_built |= g_bitNumber[HALL_CITY_ID];
-                    m_active &= ~g_bitNumber[HALL_CAPITOL_ID];
+                    m_populationMask &= ~g_bitNumber[HALL_CAPITOL_ID];
+                    m_populationMask |= g_bitNumber[HALL_CITY_ID];
+                    m_fullBuildingMask &= ~g_bitNumber[HALL_CAPITOL_ID];
 
                     NewmapCell* cell =
                         g_game->m_worldMap.cell(m_mapX, m_mapY, m_mapZ);
@@ -1119,7 +1119,7 @@ void town::updateShipyard()
         if (!cell->m_isTrigger
             || (cell->m_type != BOAT && cell->m_type != HERO)) {
             if (hasBuilding(DOCK_WITH_BOAT_ID, false)) {
-                m_built &= ~g_bitNumber[DOCK_WITH_BOAT_ID];
+                m_populationMask &= ~g_bitNumber[DOCK_WITH_BOAT_ID];
                 updateFullBuildingMask();
             }
         } else if (!(hasBuilding(DOCK_WITH_BOAT_ID, true))) {
@@ -1771,10 +1771,10 @@ DC_ADDRESS(0x168494, 0x6e)
 MAC_ADDRESS(0x1b66f4, 0x104)
 void town::updateFullBuildingMask()
 {
-    m_active = m_built;
+    m_fullBuildingMask = m_populationMask;
     for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
         if (hasBuilding(i, false))
-            m_active |= s_includedBuildings[m_type][i];
+            m_fullBuildingMask |= s_includedBuildings[m_type][i];
     }
 }
 
@@ -1824,7 +1824,7 @@ bool town::canEverBuild(int buildingId) const
         if (!(buildingId == HALL_CAPITOL_ID
               && g_game->m_players[m_owner].hasCapitol())) {
             __int64 requirements = g_hierarchyMask[m_type][buildingId];
-            if (((getBuildingMask() | m_available) & requirements) == requirements)
+            if (((getBuildingMask() | m_legalBuildings) & requirements) == requirements)
                 return 1;
         }
     }
@@ -1852,7 +1852,7 @@ __int64 town::getBuildableMask() const
             && (activeMask & requirements) == requirements)
             mask |= g_bitNumber[building];
     }
-    mask &= m_available;
+    mask &= m_legalBuildings;
     if (!canBuildDock())
         mask &= ~g_bitNumber[DOCK_ID];
     if (g_game->m_players[m_owner].hasCapitol())
@@ -1927,7 +1927,7 @@ DC_ADDRESS(0x1689ec, 0x22)
 MAC_ADDRESS(0x1b6de0, 0x40)
 bool town::isLegalBuilding(type_building_id building) const
 {
-    return (g_bitNumber[building] & m_available) != 0;
+    return (g_bitNumber[building] & m_legalBuildings) != 0;
 }
 
 // Original: town::set_legal_buildings; town.cpp:2291
@@ -1935,7 +1935,7 @@ DC_ADDRESS(0x168a10, 0x3e)
 MAC_ADDRESS(0x1b6e20, 0x38)
 void town::setLegalBuildings(__int64 disabledBuildings)
 {
-    m_available = g_townEligibleBuildMask[m_type] & ~disabledBuildings;
+    m_legalBuildings = g_townEligibleBuildMask[m_type] & ~disabledBuildings;
 }
 
 // Original: town::is_disabled; town.cpp:2300
