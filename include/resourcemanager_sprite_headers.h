@@ -11,14 +11,16 @@ struct SpriteDefHeader {
     int m_width;
     int m_height;
     int m_numSequences;
-    unsigned char m_palette[768];
+    // Native0x28ac is char[768], distinct from the palette's unsigned bytes.
+    char m_palette[768];
 };
 SIZE(SpriteDefHeader, 0x310);
 
 struct TSpriteDataHeader {
     int m_sequenceNumber;
     int m_numFrames;
-    char* m_frameNames;
+    // Native0x55f6 fname points through0x55f4 to char[13] (LF_ARRAY0x184e).
+    char (*m_frameNames)[13];
     int* m_frameOffsets;
 };
 SIZE(TSpriteDataHeader, 0x10);

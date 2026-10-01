@@ -1505,6 +1505,13 @@ inline void addPal24(CSprite* sprite, const TPalette24* pal)
 // both still have 73/72 CFG blocks. Prior peaks remain historical controls.
 // The earlier flattened-cache model reached 88.8564% in HIST, but lost the
 // proven shared cache-helper structure and remains only a diagnostic lead.
+// SpriteDataHeader0x55f6's fname is char(*)[13], not a flat char buffer;
+// SpriteDefHeader0x28ae's pal is char[768]. Restore the row allocation and
+// ordinal accesses while retaining the palette's proven unsigned-byte API.
+// Mac154348/1543e0 reload fname at each call: a hoisted row cursor loses
+// that source lifetime despite scoring88.80%. The complete indexed record
+// model measures87.6790% against the saved88.9355% control, with all46 calls
+// retained. Only GetSprite changes among235 emitted TU code sections.
 VA(0x0055c7b0, 0x743)
 DC_ADDRESS(0x122320, 0x112)
 MAC_ADDRESS(0x153fcc, 0x618)  // anchor-caller/body records; wall
@@ -1560,7 +1567,7 @@ CSprite* ResourceManager::getSprite(const char* name)
         memcpy(sequence, definitionPosition, sizeof(*sequence));
         definitionPosition += sizeof(*sequence);
 
-        sequence->m_frameNames = new char[sequence->m_numFrames * 13];
+        sequence->m_frameNames = new char[sequence->m_numFrames][13];
         memcpy(sequence->m_frameNames, definitionPosition,
                sequence->m_numFrames * 13);
         definitionPosition += sequence->m_numFrames * 13;
@@ -1581,9 +1588,8 @@ CSprite* ResourceManager::getSprite(const char* name)
         sprite->allocateSeq(sequenceNumber, sequence.m_numFrames);
 
         int frameIndex;
-        int frameNameOffset = 0;
         for (frameIndex = 0; frameIndex < sequence.m_numFrames;
-             ++frameIndex, frameNameOffset += 13) {
+             ++frameIndex) {
             TCompactSpriteFrameHeader compactHeader;
             TCroppedSpriteFrameHeader croppedHeader;
             unsigned char* frameData;
@@ -1613,7 +1619,7 @@ CSprite* ResourceManager::getSprite(const char* name)
             }
 
             CSpriteFrame* frame = static_cast<CSpriteFrame*>(getFromCache(
-                sequence.m_frameNames + frameNameOffset));
+                sequence.m_frameNames[frameIndex]));
 
             if (!frame) {
                 if (sdef.m_type == RESOURCE_TYPE_SPRITE ||
@@ -1625,7 +1631,7 @@ CSprite* ResourceManager::getSprite(const char* name)
                     sdef.m_type == RESOURCE_TYPE_POINTER ||
                     sdef.m_type == RESOURCE_TYPE_COMBAT_HERO) {
                     frame = new CSpriteFrame(
-                        sequence.m_frameNames + frameNameOffset,
+                        sequence.m_frameNames[frameIndex],
                         croppedHeader.m_width, croppedHeader.m_height,
                         frameData, croppedHeader.m_dataSize,
                         croppedHeader.m_encoding,
@@ -1634,7 +1640,7 @@ CSprite* ResourceManager::getSprite(const char* name)
                         croppedHeader.m_croppedX, croppedHeader.m_croppedY);
                 } else {
                     frame = new CSpriteFrame(
-                        sequence.m_frameNames + frameNameOffset,
+                        sequence.m_frameNames[frameIndex],
                         compactHeader.m_width, compactHeader.m_height,
                         frameData, compactHeader.m_dataSize,
                         croppedHeader.m_encoding);
@@ -1656,7 +1662,10 @@ CSprite* ResourceManager::getSprite(const char* name)
     }
     delete[] sequences;
 
-    TPalette24 palette24(sdef.m_palette);
+    // The DEF record owns chars; the native palette constructor consumes
+    // unsigned bytes (??0TPalette24@@QAA@PBE@Z, DC public0x5b145b).
+    TPalette24 palette24(
+        reinterpret_cast<const unsigned char*>(sdef.m_palette));
     if (g_graphicsSaturated)
         palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
