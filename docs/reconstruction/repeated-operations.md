@@ -1242,6 +1242,38 @@ source placements are project inferences, with the resource-copy declaration
 shared through the existing text-resource header and one body in its source.
 No new native addresses, inline qualifiers or ownership policies are claimed.
 
+## Combat highlighter and obstacle state
+
+`checkChangeHighlighter()` reuses the native `turnOffHighlighter(0)` after its
+existing guarded effect marking. Both `markCreatureEffect()` branches were
+read: ordinary armies update the effect bitmap and towers update their archer
+effect, without changing highlighter state. The call therefore preserves the
+flag/index clear while retaining the caller's has-army guard, extent reset and
+final redraw. Death's flag-only clear and constructor initialization remain
+distinct; neither acquires an index reset or draw.
+
+Hex cells share three obstacle operations: `setObstacle()` ORs the caller's
+attributes before recording the index; `clearObstacle()` clears only the supplied
+mask before invalidating the index; `resetObstacle()` invalidates the index then
+clears all attributes. Each has two call sites. Footprint removal retains the
+full obstacle mask, while anchor removal retains only `obstacleOrigin`. Terrain,
+boat and siege blocking that does not identify an obstacle stays separate.
+Constructor/map initialization retain their different ordering relative to army,
+corpse, shading and background initialization.
+
+Three obstacle walks share private `getObstacleFootprintHex()`: placement
+eligibility, attachment and removal. It adds the signed offset and applies the
+original odd-origin/even-destination row correction through existing `gridY()`
+and `rowIsOdd()` calls. Each caller retains its cached origin parity, loop,
+column/overlap checks and anchor processing. Removal keeps sprite disposal and
+pointer clearing after the cell updates.
+
+Dreamcast hexcell `0x1fb1` / field list `0x4434` explicitly declares attributes
+and obstacle index public; visibility, stored types and layout are unchanged.
+The four new helpers have project-inferred names and ordinary owner-source
+bodies, without new native-address claims, storage, virtual slots or inline
+qualifiers.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

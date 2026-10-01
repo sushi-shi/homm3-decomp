@@ -12,8 +12,7 @@ MAC_ADDRESS(0x1081cc, 0x2c)
 hexcell::hexcell()
 {
     int none = -1;
-    m_obstacleIndex = none;
-    m_attributes = 0;
+    resetObstacle();
     resetArmy();
     m_bodiesInHex = 0;
     m_mouseShaded = 0;
@@ -70,4 +69,23 @@ void hexcell::recordArmyBody()
         m_deadPartOfDouble[m_bodiesInHex] = m_partOfDouble;
         ++m_bodiesInHex;
     }
+}
+
+// Project-inferred state operations; preserve attribute/index store order.
+void hexcell::setObstacle(int index, unsigned attributes)
+{
+    m_attributes |= attributes;
+    m_obstacleIndex = index;
+}
+
+void hexcell::clearObstacle(int attributes)
+{
+    m_attributes &= ~attributes;
+    m_obstacleIndex = -1;
+}
+
+void hexcell::resetObstacle()
+{
+    m_obstacleIndex = -1;
+    m_attributes = 0;
 }

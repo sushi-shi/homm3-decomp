@@ -1381,8 +1381,7 @@ void combatManager::generateMap()
             cell->m_hexBry = static_cast<short>(cell->m_hexUly + 42);
             cell->m_fullHexBry = static_cast<short>(cell->m_hexUly + 52);
             cell->resetArmy();
-            cell->m_obstacleIndex = -1;
-            cell->m_attributes = 0;
+            cell->resetObstacle();
             cell->m_bodiesInHex = 0;
             cell->m_backgroundOffset = -1;
             cell->m_mouseShaded = 0;
@@ -2247,6 +2246,17 @@ void combatManager::resetHitByCreature()
     }
 }
 
+// Project-inferred footprint mapping shared by placement tests, attachment
+// and removal. Callers retain their cached origin-row parity.
+int combatManager::getObstacleFootprintHex(int baseHex, int offset,
+                                           unsigned char baseRowIsOdd) const
+{
+    int cellIndex = offset + baseHex;
+    if (baseRowIsOdd && !rowIsOdd(gridY(cellIndex)))
+        --cellIndex;
+    return cellIndex;
+}
+
 // DC cmbtmgr.cpp:2797 records two GridX calls on the combined rejection row.
 // Keep both calls: caching the column over-inlines the early-return cleanup
 // (94.7277%); the combined guard restores all retail instructions. Refreshing
@@ -2276,9 +2286,8 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             const unsigned char baseRowIsOdd = rowIsOdd(row);
             unsigned char overlap = 0;
             for (int i = 0; i < shape->m_extraHexCount; i++) {
-                int cellIndex = shape->m_extraHexOffsets[i] + hex;
-                if (baseRowIsOdd && !rowIsOdd(gridY(cellIndex)))
-                    cellIndex--;
+                int cellIndex = getObstacleFootprintHex(
+                    hex, shape->m_extraHexOffsets[i], baseRowIsOdd);
                 int cellColumn = gridX(cellIndex);
                 if (cellColumn <= 2 || cellColumn >= 14
                         || (m_cells[cellIndex].m_attributes & hexcell::obstacleMask)) {
@@ -2514,16 +2523,12 @@ void combatManager::placeObstacle(const combatManager::TObstacle& obstacle, int 
     const TObstacleInfo* const info = obstacle.m_shape;
     bool oddRow = rowIsOdd(gridY(hex));
     for (int i = 0; i < info->m_extraHexCount; i++) {
-        int cellIndex = info->m_extraHexOffsets[i] + hex;
-        if (oddRow && !rowIsOdd(gridY(cellIndex)))
-            cellIndex--;
+        int cellIndex = getObstacleFootprintHex(hex, info->m_extraHexOffsets[i], oddRow);
         hexcell& cell = m_cells[cellIndex];
-        cell.m_attributes |= attributes;
-        cell.m_obstacleIndex = id;
+        cell.setObstacle(id, attributes);
     }
     hexcell& anchor = m_cells[hex];
-    anchor.m_attributes |= hexcell::obstacleOrigin;
-    anchor.m_obstacleIndex = id;
+    anchor.setObstacle(id, hexcell::obstacleOrigin);
 }
 
 VA(0x00466a70, 0xBD)
@@ -2567,16 +2572,13 @@ void combatManager::removeObstacle(int index)
     // Mac 0x72d9c/0x72de8 expands gridY and rowIsOdd at both checks.
     unsigned char oddRow = rowIsOdd(gridY(obstacle->m_hex));
     for (int i = 0; i < shape->m_extraHexCount; i++) {
-        int cellIndex = shape->m_extraHexOffsets[i] + obstacle->m_hex;
-        if (oddRow && !rowIsOdd(gridY(cellIndex)))
-            cellIndex--;
+        int cellIndex = getObstacleFootprintHex(
+            obstacle->m_hex, shape->m_extraHexOffsets[i], oddRow);
         hexcell& cell = m_cells[cellIndex];
-        cell.m_attributes &= ~hexcell::obstacleMask;
-        cell.m_obstacleIndex = -1;
+        cell.clearObstacle(hexcell::obstacleMask);
     }
     hexcell& anchor = m_cells[obstacle->m_hex];
-    anchor.m_attributes &= ~hexcell::obstacleOrigin;
-    anchor.m_obstacleIndex = -1;
+    anchor.clearObstacle(hexcell::obstacleOrigin);
     ResourceManager::dispose(obstacle->m_sprite);
     obstacle->m_sprite = 0;
 }

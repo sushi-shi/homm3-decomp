@@ -1303,6 +1303,9 @@ public:
     int drawCreatureAndHeroSubwindows();
 
 private:
+    // Project-inferred obstacle geometry shared by placement and removal.
+    int getObstacleFootprintHex(int baseHex, int offset,
+                                unsigned char baseRowIsOdd) const;
     void computeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,
                        bool saveBiggestExtent);

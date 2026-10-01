@@ -2108,8 +2108,7 @@ void combatManager::checkChangeHighlighter(int currentIndex)
         if (m_cells[m_highlighterIndex].hasArmy())
             markCreatureEffect(m_cells[m_highlighterIndex].m_armySide,
                                m_cells[m_highlighterIndex].m_armySlot);
-        m_highlighterOn = 0;
-        m_highlighterIndex = -1;
+        turnOffHighlighter(0);
     }
 
     if (currentArmy) {
