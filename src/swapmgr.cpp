@@ -661,13 +661,11 @@ TSwapWindow::TSwapWindow(hero** heroes)
     if (m_receiveButton)
         m_widgets.push_back(m_receiveButton);
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x1a5b34..0x1a5b80 expands the canonical registration helper,
+    // including addWidget(-1) and the null-allocation MemError arm.
+    // Recovering this call moves Windows 100 -> 99.14; the first residual
+    // is reserve's nested library expansion before widget construction.
+    addWidgetsToMessageStream();
 }
 
 VA(0x005ae370, 0x1D)
