@@ -434,6 +434,10 @@ public:
     {
         memcpy(m_computerPlayers, players, sizeof(m_computerPlayers));
     }
+
+private:
+    // Project-inferred complete cycle reset; same-position restoration is partial.
+    void beginPlayerCycle(int pos);
 };
 SIZE(CNetPlayerHandler, 0x7d0);
 

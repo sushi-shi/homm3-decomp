@@ -1871,6 +1871,52 @@ drawing calls remain nested in the shared operations; no storage or virtual
 layout changes. These thirteen migrated occurrences are a reviewed batch, not
 a claim that the whole-codebase search is complete.
 
+## Optional saved bytes, legacy hero IDs and player-choice cycles
+
+Ten optional-byte conversions share file-static `decodeOptionalByte(value)` in
+game.cpp. Only 0xff becomes -1; other values, including 0x80 through 0xfe, retain
+their unsigned-byte values. The callers are the two native byte hero-ID readers,
+three grail coordinates in each of the scenario/save victory readers, and the
+portrait field in each custom-hero setup reader. The scenario grail reader still
+uses its existing partially filled int buffer and explicit low-byte mask; the
+save reader retains its unsigned-char temporary and individual stream calls.
+Coordinates are stored in X/Y/Z order between reads. Existing unchecked reads
+remain unchecked; no error handling or input consumption is added.
+
+The custom-hero setup constructor and save writer identify that value as a
+portrait, despite the former local name heroId. Those locals now say portrait;
+the scenario reader keeps its byte temporary. Portraits receive no hero-roster
+remapping. Both readers retain their existing name/mask temporary lifetimes,
+record insertion, count loops and version-dependent availability handling.
+Required victory/loss coordinates and raw placeholder IDs retain 0xff as before.
+The short hero-ID reader is also excluded from byte-sentinel decoding: its 255
+is a short value, while an already signed -1 remains -1.
+
+The separate file-static `remapLegacyHeroId()` shares the two ordered legacy-ID
+comparisons across `readHeroId()`, `loadHeroId()` and `loadHeroIdShort()`. Their
+native boundaries and read types remain intact. The map reader gates on version
+14; the save readers gate on versions below 25. The byte readers still return
+for the absent value before applying their version gate. All other IDs pass
+through, and only 0x80/0x81 map to 0x92/0x9c. The short reader keeps this same
+remapping without inheriting the byte sentinel rule.
+
+Private `CNetPlayerHandler::beginPlayerCycle(pos)` shares the ordered current
+position, m_unused=-1 and saved-assignment=-1 transition between construction
+and selection of a different position. Constructor player-count initialization
+still precedes it, with color/name setup afterward. The same-position path still
+restores its saved assignment before clearing only that assignment. The separate
+external invalidation of m_playerPos also remains a partial mutation. The helper
+does not reset players, their town/hero choices, or the player count.
+
+These three names and ordinary source placements are project inferences from
+reviewed repeated operations; they add no native annotations or inline claims.
+The three legacy remap occurrences overlap two of the ten byte-decoding callers;
+the two cycle resets are separate occurrences. Native field layout and visibility
+remain unchanged. The no-team loops were also reviewed: both stream readers use
+identity team assignments, while random-map setup interleaves them with slot
+configuration. That related operation remains a follow-up lead rather than a
+claim of completed codebase coverage.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

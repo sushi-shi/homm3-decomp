@@ -158,7 +158,6 @@ template <class T>
 bool loadObjectVector(TAbstractFile* infile, std::vector<T>& destVector);
 
 const int g_savedCreatureNone = 0xff;
-const int g_savedMapCoordinateNone = 0xff;
 // The on-disk hero-id domain playerData::load reads. 0xff is the "no
 // hero" sentinel the roster stores as -1. Saves older than version 25
 // spell two heroes 0x80/0x81 where the shipped roster carries them at
@@ -1397,19 +1396,36 @@ void playerData::clearNetInfo()
     setComputer();
 }
 
+// Project-inferred map/save scalar operations. Optional unsigned-byte values
+// use 0xff for absence; this is not a signed-char conversion and must not be
+// applied to required coordinates, raw placeholder IDs or the short-ID reader.
+static int decodeOptionalByte(int value)
+{
+    if (value == 0xff)
+        return -1;
+    return value;
+}
+
+// Keep the format/version gates in the native readers. Portrait IDs use the
+// optional-byte decoder but never this legacy hero-roster remap.
+static int remapLegacyHeroId(int heroId)
+{
+    if (heroId == g_savedHeroPre25First)
+        return g_heroPre25FirstRemap;
+    if (heroId == g_savedHeroPre25Second)
+        return g_heroPre25SecondRemap;
+    return heroId;
+}
+
 VA(0x004ba1c0, 0x50)
 MAC_ADDRESS(0x0cc788, 0x78)
 int __fastcall readHeroId(TAbstractFile* infile, int mapVersion)
 {
-    int heroId = readValue<unsigned char>(infile);
-    if (heroId == g_savedHeroNone)
+    int heroId = decodeOptionalByte(readValue<unsigned char>(infile));
+    if (heroId == -1)
         return -1;
-    if (mapVersion == g_mapVersionOldCampaignHeroIds) {
-        if (heroId == g_savedHeroPre25First)
-            return g_heroPre25FirstRemap;
-        if (heroId == g_savedHeroPre25Second)
-            return g_heroPre25SecondRemap;
-    }
+    if (mapVersion == g_mapVersionOldCampaignHeroIds)
+        return remapLegacyHeroId(heroId);
     return heroId;
 }
 
@@ -1417,15 +1433,11 @@ VA(0x004ba210, 0x50)
 MAC_ADDRESS(0x0cc800, 0x78)
 int __fastcall loadHeroId(TAbstractFile* infile, int saveVersion)
 {
-    int heroId = readValue<unsigned char>(infile);
-    if (heroId == g_savedHeroNone)
+    int heroId = decodeOptionalByte(readValue<unsigned char>(infile));
+    if (heroId == -1)
         return -1;
-    if (saveVersion < g_saveVersionCompleteHeroRoster) {
-        if (heroId == g_savedHeroPre25First)
-            return g_heroPre25FirstRemap;
-        if (heroId == g_savedHeroPre25Second)
-            return g_heroPre25SecondRemap;
-    }
+    if (saveVersion < g_saveVersionCompleteHeroRoster)
+        return remapLegacyHeroId(heroId);
     return heroId;
 }
 
@@ -1435,12 +1447,8 @@ MAC_ADDRESS(0x0cc878, 0x74)
 static int loadHeroIdShort(TAbstractFile* infile, int saveVersion)
 {
     int heroId = readValue<short>(infile);
-    if (saveVersion < g_saveVersionCompleteHeroRoster) {
-        if (heroId == g_savedHeroPre25First)
-            heroId = g_heroPre25FirstRemap;
-        else if (heroId == g_savedHeroPre25Second)
-            heroId = g_heroPre25SecondRemap;
-    }
+    if (saveVersion < g_saveVersionCompleteHeroRoster)
+        heroId = remapLegacyHeroId(heroId);
     return heroId;
 }
 
@@ -5620,17 +5628,11 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
     case VICTORY_CONDITION_BUILD_GRAIL: {
         int intBuffer;
         infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townX = intBuffer & 0xff;
-        if (m_victoryCondition.m_townX == g_savedMapCoordinateNone)
-            m_victoryCondition.m_townX = -1;
+        m_victoryCondition.m_townX = decodeOptionalByte(intBuffer & 0xff);
         infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townY = intBuffer & 0xff;
-        if (m_victoryCondition.m_townY == g_savedMapCoordinateNone)
-            m_victoryCondition.m_townY = -1;
+        m_victoryCondition.m_townY = decodeOptionalByte(intBuffer & 0xff);
         infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townZ = intBuffer & 0xff;
-        if (m_victoryCondition.m_townZ == g_savedMapCoordinateNone)
-            m_victoryCondition.m_townZ = -1;
+        m_victoryCondition.m_townZ = decodeOptionalByte(intBuffer & 0xff);
         break;
     }
 
@@ -5893,17 +5895,11 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
 
     case VICTORY_CONDITION_BUILD_GRAIL: {
         unsigned char grailTown = readValue<unsigned char>(infile);
-        m_victoryCondition.m_townX = grailTown;
-        if (m_victoryCondition.m_townX == g_savedMapCoordinateNone)
-            m_victoryCondition.m_townX = -1;
+        m_victoryCondition.m_townX = decodeOptionalByte(grailTown);
         grailTown = readValue<unsigned char>(infile);
-        m_victoryCondition.m_townY = grailTown;
-        if (m_victoryCondition.m_townY == g_savedMapCoordinateNone)
-            m_victoryCondition.m_townY = -1;
+        m_victoryCondition.m_townY = decodeOptionalByte(grailTown);
         grailTown = readValue<unsigned char>(infile);
-        m_victoryCondition.m_townZ = grailTown;
-        if (m_victoryCondition.m_townZ == g_savedMapCoordinateNone)
-            m_victoryCondition.m_townZ = -1;
+        m_victoryCondition.m_townZ = decodeOptionalByte(grailTown);
         return 0;
     }
 
@@ -6179,7 +6175,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
 // const-reference forms are flat at 95.0513%. Direct modern assignment alone
 // gives 93.1657%; pairing it with a player const-reference returns 95.0513%.
 // Keep the named values until stronger evidence distinguishes their lifetime.
-// Complete setup records compare the saved hero ID as a byte before mapping
+// Complete setup records compare the saved portrait ID as a byte before mapping
 // 0xff to -1. A byte buffer with a widened int preserves that source operation
 // and gives 95.2598%; a fused conditional gives 93.2122%. Separating the setup
 // count from the reused x buffer gives 93.2408% (93.4827% with the byte ID).
@@ -6354,10 +6350,8 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
             do {
                 int heroKey = readValue<unsigned char>(infile);
 
-                unsigned char savedHeroId = readValue<unsigned char>(infile);
-                int heroId = savedHeroId;
-                if (savedHeroId == g_savedHeroNone)
-                    heroId = -1;
+                unsigned char savedPortrait = readValue<unsigned char>(infile);
+                int portrait = decodeOptionalByte(savedPortrait);
 
                 std::string heroName = readLengthPrefixedString(infile);
                 std::bitset<8> availability = readPackedBits<8>(infile);
@@ -6365,7 +6359,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                 m_heroPlayerSetups.insert(
                     std::pair<const int, type_map_hero_info>(
                         heroKey,
-                        type_map_hero_info(heroId, heroName, availability)));
+                        type_map_hero_info(portrait, heroName, availability)));
             } while (--count != 0);
         }
     }
@@ -6743,9 +6737,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     do {
         int heroKey = readValue<unsigned char>(infile);
 
-        int heroId = readValue<unsigned char>(infile);
-        if (heroId == g_savedHeroNone)
-            heroId = -1;
+        int portrait = decodeOptionalByte(readValue<unsigned char>(infile));
 
         std::string strTemp = readLengthPrefixedString(infile);
         std::bitset<8> availability =
@@ -6754,7 +6746,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
 
         m_heroPlayerSetups.insert(
             std::pair<const int, type_map_hero_info>(
-                heroKey, type_map_hero_info(heroId, strTemp, availability)));
+                heroKey, type_map_hero_info(portrait, strTemp, availability)));
     } while (--count != 0);
 
     return 0;

@@ -1178,6 +1178,15 @@ bool initializeTurnDurationText()
     return 1;
 }
 
+// Project-inferred start of a player-choice cycle, also used for its initial
+// inactive state. Keep m_unused reset alongside the saved assignment.
+void CNetPlayerHandler::beginPlayerCycle(int pos)
+{
+    m_playerPos = pos;
+    m_unused = -1;
+    m_assignedPos = -1;
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:1005
 // Dreamcast: the two seat-array
 // constructions, the four seat counters and the human-seat colour /
@@ -1192,9 +1201,7 @@ MAC_ADDRESS(0x16ecc8, 0xd4)
 CNetPlayerHandler::CNetPlayerHandler()
 {
     m_playersCount = 0;
-    m_playerPos = -1;
-    m_unused = -1;
-    m_assignedPos = -1;
+    beginPlayerCycle(-1);
     for (int i = 0; i < MAX_PLAYERS; ++i) {
         m_humanPlayers[i].m_color = i;
         strcpy(m_computerPlayers[i].m_name, g_generalText->getText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
@@ -1223,9 +1230,7 @@ unsigned char CNetPlayerHandler::setNextPlayer(int pos)
             m_assignedPos = -1;
         }
     } else {
-        m_playerPos = pos;
-        m_unused = -1;
-        m_assignedPos = -1;
+        beginPlayerCycle(pos);
     }
 
     if (start >= MAX_PLAYERS) {
