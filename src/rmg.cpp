@@ -8210,7 +8210,7 @@ static inline void discardRmgTreasureGroup(TRmgTreasureGroup* group)
 // retain the shared source and recover this caller's own inline state.
 // Separate requested/actual value locals previously measured byte-flat.
 VA(0x005466E0, 0x253)
-MAC_ADDRESS(0x24a7b0, 0x110) // anchor-callee 0x547594/0x54768c; thiscall, ret 0x14
+MAC_ADDRESS(0x24a7b0, 0x110) // anchor-callee 0x547594/0x54768c; thiscall, ret 0x14; MAC_ABSTRACTION_FROM(tokens1:4deef3890efa,29.6117): discardRmgTreasureGroup shares ordered reservation release, deletion and reset across four failed-placement paths.
 unsigned char type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
     TRmgTreasureGroup* group, unsigned char alternate, int minimum, int maximum)
 {

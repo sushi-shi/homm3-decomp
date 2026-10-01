@@ -2,12 +2,16 @@
 
 This review covers all function bodies, declarations and fixed tables in
 `src/rmg.cpp`, `src/rmg_support.cpp`, `src/rmg_terrain.cpp`, `include/rmg.h`,
-`include/rmg_terrain.h` and `include/rmg_request.h`. The reference revision is
-`22315fafa`. Six parallel reviewers divided the generator into contiguous
-function ranges, reviewed support and terrain separately, and independently
-audited safety. The integration pass reviews shared interfaces and cross-file
-uses. Generated-output comparison is deferred until the combined cleanup is
-finished.
+`include/rmg_terrain.h` and `include/rmg_request.h`. The initial reference
+revision was `22315fafa`; the published cleanup is isolated on the helper
+recovery branch at `45032fe50`, excluding unrelated local recovery commits.
+After the initial review, seven parallel reviewers continued through four
+more rounds, rotating source regions and independently auditing safety.
+The fifth round found no remaining substantive cleanup under the preservation
+constraint. Integration covered shared interfaces, source ownership, matching
+experiment references and the oracle's typed request entry. Generated-output
+comparison ran only at the end of each completed cleanup campaign, never
+between these additional review rounds.
 
 The compatibility requirement is unchanged generated maps, return values,
 request mutations, RNG state and x87 state. Retail bugs remain intentional
@@ -30,6 +34,21 @@ sampled execution comparison proves absence of undefined behavior.
 | Terrain and line painting | Shared neighbour-mask queries, frame-range draws, boundary counting, neighbour classification and cyclic gap construction. Reused the existing base-tile operation. Corrected transition/frame and special-frame probability names. |
 | Voronoi support | Clarified circumcircle and squared-distance names; documented incremental Delaunay insertion, local flips and walking location. Retained integer arithmetic and half-edge ownership contracts. |
 | Safety | Reviewed index guards, pointer offsets, uninitialized fields, arithmetic, shifts, temporary references, destruction and fixed tables. Added concrete native evidence and conditional leads to the safety inventory. |
+
+The subsequent rounds reused the existing scalar writer at 95 more call sites,
+shared failed treasure-group cleanup, candidate bounds, noise quadrants,
+boundary-ring lookup and border marking, and consolidated the identical
+monolith road-cost loops. Terrain helpers now also share guarded border
+refreshes, diagonal queue admission and special-frame queries. Pattern IDs
+have topology names; count and selection share the quest-artifact predicate.
+The request's progress pointer is typed through the game and oracle callers.
+
+Path-clearance bit 27 previously had a misleading subterranean-gate name.
+Its name now describes its generation role, and common open/border updates
+preserve their connection guard and opposite store orders. Four key-color
+rescans share one helper; the first-use uninitialized color remains untouched.
+The independent safety pass also established a removed-wrapper leak in failed
+quest/key-tent replacement and documented density-product overflow contracts.
 
 The new source-local inline helpers are cleanup abstractions, not claims that
 their original spellings or exact declarations survived. Existing ordinary
@@ -78,9 +97,18 @@ the reconstruction less accurate. Existing source-attested type spellings and
 external ABI names are also retained. Role-derived renames keep former names
 in evidence comments where useful for lookup.
 
+The final pass rejected further generic factories, tiny one-use predicates and
+mechanical merging of different snapshot, traversal or placement policies.
+`isPassableLand` retains its established name and exact road-passable/non-rock
+predicate; it admits water, whose policy is checked separately by callers.
+The no-progress result is a review stopping point, not proof that every defect
+or possible improvement has been discovered.
+
 ## Validation
 
-The final source revision is `214a21a7b` (2026-10-02). VC6 SP3 compiled
+The final executable-source revision is `7d422bcc8` (2026-10-02); subsequent
+changes only record review evidence and the intentional Mac abstraction
+checkpoint. VC6 SP3 compiled
 `rmg`, `rmg_support`, `rmg_terrain` and the result-code consumer
 `singleselectionwindow`. Renamed symbols were refreshed with unit-scoped
 `homm3 delink`; their targeted `homm3 build --fast` completed successfully.
@@ -97,16 +125,16 @@ town arrangements, 484 distinct stack fills and 222 heap fills also vary.
 - **Three cases:** two river faults and one negative-zone guard fault, each
   repeated in both implementations. No candidate-only failure, retail-only
   failure, normal-output mismatch or repeatability disagreement occurred.
-- The river fault is retail `0x53284f` and candidate `0x3000336f`: offset `+0x1f`
+- The river fault is retail `0x53284f` and candidate `0x3000337f`: offset `+0x1f`
   in `TRmgRiverMapAdapter::getLineType` on both sides. The guard fault is retail
-  `0x540b34` and candidate `0x30011a24`: offset `+0x14` in `createGuard`.
+  `0x540b34` and candidate `0x30011a34`: offset `+0x14` in `createGuard`.
   The linker map establishes the candidate function starts. Crashes remain
   execution errors in the raw report; they are not counted as passing maps.
 
-The ignored artifacts are `build/rmg-review/final/`: full `cases.json`,
+The ignored artifacts are `build/rmg-review/final-reviewed/`: full `cases.json`,
 `report.json`, per-process raw files/logs, frozen link inputs, `driver.map` and
 `provenance.json` with asset/tool/object hashes. The disposable bounded-parallel
-runner in `build/rmg-review/compare_final.py` uses the standard oracle's
+runner in `build/rmg-review/compare_reviewed.py` uses the standard oracle's
 preparation, execution and comparison functions. The campaign returned 2
 because its three preserved crash cases are explicitly classified as errors.
 This is sampled behavioral agreement, not a proof over every possible input.
@@ -114,28 +142,55 @@ This is sampled behavioral agreement, not a proof over every possible input.
 ### Machine-code comparison remains a separate measure
 
 Cleanup preserves the sampled generated output; it does not preserve every
-former instruction sequence. The following terrain bodies changed Windows
-comparison scores after shared-helper/structured-flow changes:
+former instruction sequence. The following bodies show representative Windows score changes after the
+shared-helper and structured-flow changes (previous banked CUR versus final):
 
 | Body | Previous checkpoint | Final comparison |
 | --- | ---: | ---: |
+| `TRmgTreasureGroup::addGuard` | 86.54% | 83.09% |
+| `filterZonePositions` | 98.87% | 85.42% |
+| `joinExtraZones` | 76.28% | 69.73% |
+| `subdivideRmgNoiseRegion` | 100.00% | 89.04% |
+| `createSubterraneanGate` | 85.81% | 80.44% |
+| `carveBranchingPaths` | 96.10% | 94.16% |
+| `tryPlaceMine` | 95.06% | 93.27% |
+| `buildRoadCostMap` | 90.92% | 42.07% |
+| `writeMapHeader` | 96.34% | 94.09% |
+| `writeRmgObjectPrototype` | 100.00% | 91.43% |
+| `placeQuestArtifact` | 76.68% | 73.44% |
 | `refreshRmgLinePoint` | 99.75% | 84.81% |
 | `TRmgLineWalker::paintPoint` | 100.00% | 78.78% |
 | `rmgTerrainPainter::paintPoint` | 100.00% | 85.16% |
+| `rmgTerrainPainter::queueOtherTerrainNeighbours` | 100.00% | 75.19% |
+| `rmgTerrainPainter::getTransitionStrength` | 100.00% | 73.81% |
 | `rmgTerrainPainter::repairTerrainPoint` | 99.18% | 88.44% |
 | `rmgTerrainPainter::paintTransitions` | 100.00% | 78.10% |
 | `rmgTerrainPainter::hasSeparatedNeighbours` | 100.00% | 99.75% |
 | `rmgTerrainPainter::buildNeighbourKinds` | 100.00% | 69.42% |
 
-The weighted treasure scheduler improves from 69.76% to 70.32%. Other reported
-MAX resets can expose an already lower CUR when a function is renamed; those
+Other bodies improve: `assembleTreasureGroup` reaches 88.23%,
+`commitTreasureGroup` 93.30%, and `tryPlaceAdditionalTown` 83.28%. The weighted
+treasure scheduler reaches 69.33% (banked CUR 65.74%, prior MAX 69.76%). Other
+reported MAX resets can expose an already lower CUR when a function is renamed; those
 are distinct from newly changed machine code. These are targeted comparisons;
 this review does not bank a repository-wide scoring checkpoint from unrelated
 copied objects.
 
-The targeted CodeWarrior comparison reports no RMG score drop or loss of a
-previously available RMG pair. Its whole report scores 112 pairs with 32 exact;
-251 emitted pairs remain unresolved and 40 Windows claims have no full-TU Mac
-body. The ancillary selection-window `CChatWidget::draw` pair is unavailable
-because `.getPitch__11Bitmap16BitCFv` cannot be resolved. No new Mac linking
-manifests or unrelated game changes are introduced to expand that coverage.
+The targeted CodeWarrior report scores 97 pairs with 31 exact; 266 emitted
+pairs remain unresolved and 40 Windows claims have no full-TU Mac body.
+Compared with the initial cleanup checkpoint, 15 RMG serializer pairs that
+previously scored are now unavailable: CodeWarrior retains calls to the shared
+`writeValue` template instantiations, whose Mac targets are unpaired. This is
+an explicit loss of comparison coverage, not a zero score or a passing gate.
+No speculative Mac target addresses or linking manifests are added to conceal
+it. `assembleTreasureGroup` moves from 29.6117% to 27.7523% after adopting the
+canonical failed-group cleanup; its `MAC_ADDRESS` line records the one-checkpoint
+abstraction reason against the preceding ledger hash and score. The ancillary
+selection-window `CChatWidget::draw` pair remains unavailable because
+`.getPitch__11Bitmap16BitCFv` cannot be resolved.
+
+The full-build Mac preservation gate has not been passed: the lost serializer
+comparisons remain a limitation of this draft PR. The Windows execution oracle
+is the generated-output check; it does not establish unchanged instruction
+bytes or complete Mac comparison coverage. The targeted results also retain
+pre-existing Clang parsing gaps and use the label tool's declared fallback.
