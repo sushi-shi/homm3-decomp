@@ -129,12 +129,15 @@ public:
 //   0xa4 updateNeeded  Close reads it
 //   0xac maxAvail / 0xb0 totalGold / 0xb4 totalResources /
 //   0xb8 numberToBuy   Update computes and displays all four
-// The gaps (0x38, 0x80, 0x94, 0xa0, 0xa8) stay padding: the Dreamcast
-// names them but no retail body reconstructed here touches them.
+// Dreamcast also names the less-used fields at 0x38, 0x80, 0x94,
+// 0xa0 and 0xa8; their typed declarations preserve the retail offsets.
 class recruitUnit : public baseManager {
-public:
-    // Dreamcast array type 0x3dcc: four ints; NH3API agrees at +0x38.
+private:
+    // Original CurrentSpriteFrame: DC class 0x3f7f records private access
+    // and array type 0x3dcc (four ints); the retail field begins at +0x38.
     int m_currentSpriteFrame[4];
+
+public:
     int m_type;
     unsigned char m_viewOnly;
     TCreatureType m_monsterType;
