@@ -7669,9 +7669,7 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
         for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
             if (m_map.getMapItem(nearby)->m_zoneState.m_zone != zoneIndex)
                 continue;
-            int dy = nearby.m_y - position.m_y;
-            int dx = nearby.m_x - position.m_x;
-            int distance = dx * dx + dy * dy;
+            int distance = getRmgSquaredDistance(nearby, position);
             if (distance <= bestDistance && m_map.canPlaceObject(properties, nearby, zone)) {
                 if (distance < bestDistance) {
                     bestDistance = distance;
@@ -7735,9 +7733,7 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
             if (item->m_zoneState.m_zone != zoneIndex || !m_map.canPlaceObject(properties, position, zone))
                 continue;
             if (startingMine) {
-                int dy = position.m_y - townPosition.m_y;
-                int dx = position.m_x - townPosition.m_x;
-                int distance = dx * dx + dy * dy;
+                int distance = getRmgSquaredDistance(position, townPosition);
                 if (distance > bestDistance || distance < 16)
                     continue;
                 if (distance < 144)
@@ -7787,6 +7783,17 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
     return 1;
 }
 
+// Combine template and request difficulty for guarded mines and treasure.
+// Keep the upper-bound-first clamp; zero template strength is a separate
+// caller policy and must not be converted into an enabled guard here.
+static inline int getRmgCombinedMonsterStrength(int zoneStrength, int mapStrength)
+{
+    int strength = zoneStrength + mapStrength - 3;
+    if (strength > 5) strength = 5;
+    else if (strength < 0) strength = 0;
+    return strength;
+}
+
 // Complete-only mine valuation: resource price, local enablement and combined
 // difficulty precede the retained scalar curve at retail 0x545b76. This ordinary
 // member is a provisional source boundary/name, not a recovered DC declaration.
@@ -7803,9 +7810,7 @@ int type_random_map_generator::getMineGuardValue(int resource, const TRmgZone* z
     int localStrength = zone->m_templateZone->m_monsterStrength;
     if (!localStrength)
         return 0;
-    int strength = localStrength + m_monsterStrength - 3;
-    if (strength > 5) strength = 5;
-    else if (strength < 0) strength = 0;
+    int strength = getRmgCombinedMonsterStrength(localStrength, m_monsterStrength);
     return getRmgGuardValue(value, strength);
 }
 
@@ -8242,9 +8247,8 @@ unsigned char type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
     if (!totalValue)
         return 0;
     if (zone->m_templateZone->m_monsterStrength) {
-        int strength = zone->m_templateZone->m_monsterStrength + m_monsterStrength - 3;
-        if (strength > 5) strength = 5;
-        else if (strength < 0) strength = 0;
+        int strength = getRmgCombinedMonsterStrength(
+            zone->m_templateZone->m_monsterStrength, m_monsterStrength);
         int guardValue = getRmgGuardValue(totalValue, strength);
         if (guardValue > 0) {
             type_object* guard = createGuard(guardValue, zone);
@@ -8348,6 +8352,19 @@ VA_COMPGEN(0x005093c0, 0x25, STD_COPY, Int)
 
 VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
 
+// Group objects store local XY positions on their temporary map. Translate
+// those coordinates, but replace Z with the destination map level rather
+// than adding it. Validation and commit must project each object identically.
+static inline TRmgMapPosition getRmgPlacedGroupObjectPosition(
+    type_object* object, const TRmgMapPosition& groupPosition)
+{
+    TRmgMapPosition position = object->getPosition();
+    position.m_x += groupPosition.m_x;
+    position.m_y += groupPosition.m_y;
+    position.m_z = groupPosition.m_z;
+    return position;
+}
+
 // Group placement transfers its contents at a chosen three-coordinate
 // offset. The retained routine updates object positions and map-cell state.
 // Starting body reconstructed on decomp-complete-4.0 in 938b3d5d; checked
@@ -8386,10 +8403,7 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
     group->m_position = position;
     for (unsigned int i = 0; i < group->m_objects.size(); ++i) {
         type_object* object = group->m_objects[i];
-        TRmgMapPosition objectPosition = object->getPosition();
-        objectPosition.m_x += position.m_x;
-        objectPosition.m_y += position.m_y;
-        objectPosition.m_z = position.m_z;
+        TRmgMapPosition objectPosition = getRmgPlacedGroupObjectPosition(object, position);
         addObject(object, objectPosition);
     }
     TRmgZoneBounds bounds;
@@ -8485,11 +8499,8 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     int zoneIndex = zone->m_templateZone->m_zoneIndex;
     for (unsigned int i = 0; i < group->m_objects.size(); ++i) {
         type_object* object = group->m_objects[i];
-        workingPosition = object->getPosition();
+        workingPosition = getRmgPlacedGroupObjectPosition(object, position);
         TRmgObjectPropertiesRef* properties = object->m_properties;
-        workingPosition.m_x += position.m_x;
-        workingPosition.m_y += position.m_y;
-        workingPosition.m_z = position.m_z;
         if (m_map.isPlacementBlocked(properties, workingPosition, zoneIndex, 1))
             return 0;
     }
@@ -8623,6 +8634,13 @@ unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* g
     return 1;
 }
 
+// Both scheduler setup passes admit only nontrivial, positive-density bands.
+// Keep the value cutoff before the density test in this cleanup predicate.
+static inline bool isRmgTreasureBandEnabled(const TRmgTreasureRange& range)
+{
+    return range.m_maximum >= 100 && range.m_density > 0;
+}
+
 VA(0x00547360, 0x460)
 MAC_ADDRESS(0x24b6e8, 0x358)
 void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
@@ -8633,7 +8651,7 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
     int totalDensity = 0;
     int densityProduct = 1;
     for (int band = 0; band < 3; ++band) {
-        if (slot->m_treasure[band].m_maximum >= 100 && slot->m_treasure[band].m_density > 0) {
+        if (isRmgTreasureBandEnabled(slot->m_treasure[band])) {
             totalDensity += slot->m_treasure[band].m_density;
             densityProduct *= slot->m_treasure[band].m_density;
             finished[band] = 0;
@@ -8651,7 +8669,7 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
     int weightedCounts[3] = {0, 0, 0};
     int countSteps[3];
     for (band = 0; band < 3; ++band) {
-        if (slot->m_treasure[band].m_maximum >= 100 && slot->m_treasure[band].m_density > 0)
+        if (isRmgTreasureBandEnabled(slot->m_treasure[band]))
             countSteps[band] = densityProduct / slot->m_treasure[band].m_density;
     }
     for (;;) {
@@ -8932,6 +8950,17 @@ void type_random_map_generator::createRoads()
     }
 }
 
+// Both river searches draw a fresh step cost before testing improvement.
+// Preserve the random draw before the destination's road surcharge, even
+// when the caller subsequently rejects the relaxation or approach direction.
+static inline int getRmgRiverStepCost(int currentCost, const TRmgMapItem* destination)
+{
+    int nextCost = currentCost + (rand() & 31) + 1;
+    if (destination->m_tile.m_roadType)
+        nextCost += 30;
+    return nextCost;
+}
+
 // Retail 0x5498de routes from a water-wheel trigger to a marked object,
 // then paints the predecessor chain. Role-derived name; no DC RMG counterpart.
 // This is randomized best-first relaxation: edge costs are drawn during each
@@ -8984,9 +9013,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
                 || mapItem->getLandType() == eTerrainRock
                 || (mapItem->getLandType() == eTerrainSnow) != sourceIsSnow)
                 continue;
-            int nextCost = positionCost + (rand() & 31) + 1;
-            if (mapItem->m_tile.m_roadType)
-                nextCost += 30;
+            int nextCost = getRmgRiverStepCost(positionCost, mapItem);
             if (nextCost >= mapItem->m_movement.m_cost)
                 continue;
             mapItem->setMovementCost(nextCost, position);
@@ -9170,9 +9197,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
                 || (mapItem->getLandType() == eTerrainSnow) != sourceIsSnow)
                 continue;
 
-            int nextCost = positionCost + (rand() & 31) + 1;
-            if (mapItem->m_tile.m_roadType)
-                nextCost += 30;
+            int nextCost = getRmgRiverStepCost(positionCost, mapItem);
 
             if (nextCost >= mapItem->m_movement.m_cost)
                 continue;
@@ -9874,6 +9899,28 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
     return result;
 }
 
+enum TRmgPrototypeCellMask {
+    RMG_PROTOTYPE_PASSABLE_CELLS,
+    RMG_PROTOTYPE_TRIGGER_CELLS
+};
+
+// H3M stores each fixed 8x6 footprint in reverse row/column order, packed
+// least-significant bit first. Both masks use the same traversal and packing;
+// keep their buffers and stream writes at the caller's separate lifetimes.
+static inline void encodeRmgPrototypeCellMask(TObjectType* prototype,
+    TRmgPrototypeCellMask kind, unsigned char* mask)
+{
+    memset(mask, 0, 6);
+    int bit = 0;
+    for (int y = 6; y--;)
+        for (int x = 7; x >= 0; --x) {
+            if (kind == RMG_PROTOTYPE_PASSABLE_CELLS
+                ? prototype->isPassableCell(x, y) : prototype->isTriggerCell(x, y))
+                mask[bit / 8] |= 1 << (bit % 8);
+            ++bit;
+        }
+}
+
 VA(0x0054AE30, 0x2C5)
 MAC_ADDRESS(0x24f980, 0x398)
 void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* prototype)
@@ -9882,30 +9929,14 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
     int nameLength = prototype->getImageName().size();
     writeValue<int>(outfile, nameLength);
     outfile->write(prototype->getImageName().c_str(), nameLength);
-    int x;
-    int y;
     {
         unsigned char mask[6];
-        memset(mask, 0, sizeof(mask));
-        int bit = 0;
-        for (y = 6; y--;)
-            for (x = 7; x >= 0; --x) {
-                if (prototype->isPassableCell(x, y))
-                    mask[bit / 8] |= 1 << (bit % 8);
-                ++bit;
-            }
+        encodeRmgPrototypeCellMask(prototype, RMG_PROTOTYPE_PASSABLE_CELLS, mask);
         outfile->write(mask, sizeof(mask));
     }
     {
         unsigned char mask[6];
-        memset(mask, 0, sizeof(mask));
-        int bit = 0;
-        for (y = 6; y--;)
-            for (x = 7; x >= 0; --x) {
-                if (prototype->isTriggerCell(x, y))
-                    mask[bit / 8] |= 1 << (bit % 8);
-                ++bit;
-            }
+        encodeRmgPrototypeCellMask(prototype, RMG_PROTOTYPE_TRIGGER_CELLS, mask);
         outfile->write(mask, sizeof(mask));
     }
     {
