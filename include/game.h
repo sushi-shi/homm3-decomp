@@ -458,7 +458,11 @@ public:
     // the dword at +0x18 with nothing between; a named pad adds a word+byte
     // pair retail lacks.
     int m_size;
-    unsigned char m_hasTwoLayers;
+    // Native HasTwoLayers is a lowered byte (DC CMapHeaderData 24ef/+0x18).
+    // Boolean storage is inferred from the read/load != 0 producers and
+    // retail forwarding to the independently proven bool map interfaces
+    // without a test/setne normalization; the field record alone is ambiguous.
+    bool m_hasTwoLayers;
     // +0x1d..+0x1f: alignment hole (0x5904f0 goes +0x1c byte -> +0x20 vector).
     // Native Mac clears the hero IDs through the element walk at 0x68f40;
     // the enum preserves that boundary instead of MSL's integer POD path.
