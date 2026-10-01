@@ -230,6 +230,13 @@ protected:
     long inflictMeleeDamage(long damage, long start, long speedLimit);
     void initializeCreatures(double baseModifier, const hero* enemyHero);
     void kill();
+
+private:
+    // Project-inferred shared damage accounting and round operations.
+    long takeCreatureDamage(unsigned int index, long damage);
+    void exchangeDamage(type_AI_combat_data& defender, long ourAttack,
+                        long theirAttack, long blockerSpeed);
+    bool canContinueCombat(const type_AI_combat_data& enemy) const;
 };
 
 // Getter body order recorded at ai_combat.h:245, 250, 255 and 260.

@@ -2829,6 +2829,35 @@ helpers live with existing command.cpp operations and use its existing numeric
 constants; no enum-domain, field-layout or virtual-interface changes are added.
 No builds, tests or matching-score investigations were run.
 
+## Quick-combat damage accounting and round gates
+
+Four simulated spell-damage paths share private takeCreatureDamage. It calls the
+native monster takeDamage operation, deducts the returned capped loss from the
+side total and returns that loss. Chain lightning and mass damage retain their
+returned-value assignment; mass damage still adds the next creature's calculated
+damage to that capped running value. Area-effect eligibility and positive-value
+checks stay outside the operation, as do chain exclusions and the ordinary
+spell's subsequent dispatch. The target is indexed afresh after getSpellDamage;
+no creature reference is cached across that call.
+
+The native ranged round and both melee-round overloads share private
+exchangeDamage. Each caller first calculates both attacks using its original
+speed/blocking arguments. The helper applies the opponent's attack to this side,
+then this side's precomputed attack to the opponent, preserving the asymmetric
+blocker-speed rule. It adds no survival check between hits. Native inflictDamage
+and kill remain nested on both paths; general melee retains its distinct
+ratio-based winner/loser handling.
+
+Both speculative round loops in chooseMelee and the main simulateCombat loop
+share private canContinueCombat. It queries this side's total first and queries
+the enemy only if that result is positive. It stays at each original pre-round
+gate, without adding a second gate after spells or changing final general melee.
+Simulation copy lifetimes, tie handling and round/category casts remain intact.
+
+All three names and ordinary ai_combat.cpp bodies are project inferences.
+Existing native method access, storage widths, layouts and virtual interfaces
+are unchanged. No builds, tests or matching-score investigations were run.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
