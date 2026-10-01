@@ -1093,8 +1093,7 @@ void TRmgRiverMapAdapter::setLineType(const TRmgGridPoint& point, int value)
 // returning the query's reference, rather than returning the named output.
 // Value-result forwarding, cv qualification and signed-dimension conversion
 // controls do not recover that source/result ownership (37B or wrong 39B).
-// The shared value-return convenience overload owns the short output lifetime;
-// the terrain painter consumes the same helper without an artificial caller block.
+// The temporary output lives through the query and returned-value copy.
 VA(0x00532790, 0x27)
 MAC_ADDRESS(0x22f2e4, 0x3c) // vtable 0x640a3c slot 3, ICF with road slot 3
 TRmgGridPoint TRmgRiverMapAdapter::getSize()
@@ -5930,10 +5929,7 @@ int type_random_map_generator::placeBorderObject(
     }
 
     m_disabledKeyTents[color] = 1;
-    m_nextKeyTentColor = 0;
-    while (m_nextKeyTentColor < m_disabledKeyTents.size()
-           && m_disabledKeyTents[m_nextKeyTentColor])
-        ++m_nextKeyTentColor;
+    refreshNextKeyTentColor();
     return color;
 }
 
@@ -10178,8 +10174,9 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
 // binding does too. Neither resolves failure reset or the outline lookup.
 // The best shared-color form is only 73.3681% and still expands reset;
 // its called two-coordinate lookup belongs inside reset, not the outline.
-// No form adopted. The standalone original color loops remain canonical;
-// the helper is an experimental inference from four repeated retail scans.
+// No matching-search form was adopted. The later cleanup shares the four
+// scans through refreshNextKeyTentColor without claiming an original helper;
+// it preserves each flag update and deliberately leaves initial color unset.
 // See generate-rmg-key-tent-family.py / generate-rmg-key-color-helper-family.py.
 // 207 native caller/helper combinations pass with thirteen wrong controls.
 VA(0x0054B8C0, 0x385)
@@ -10198,10 +10195,7 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
     TRmgTreasureGroup group(16, 16);
     type_object* guard = new type_object(properties);
     m_disabledKeyTents[color] = 1;
-    m_nextKeyTentColor = 0;
-    while (m_nextKeyTentColor < m_disabledKeyTents.size()
-        && m_disabledKeyTents[m_nextKeyTentColor])
-        ++m_nextKeyTentColor;
+    refreshNextKeyTentColor();
     if (fillTreasureGroup(origin, &group, 0, maxValue) && group.addGuard(guard)) {
         group.updateBounds();
         group.traceOutline();
@@ -10213,10 +10207,7 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
     }
     discardRmgTreasureGroup(&group);
     m_disabledKeyTents[color] = 0;
-    m_nextKeyTentColor = 0;
-    while (m_nextKeyTentColor < m_disabledKeyTents.size()
-        && m_disabledKeyTents[m_nextKeyTentColor])
-        ++m_nextKeyTentColor;
+    refreshNextKeyTentColor();
     return 0;
 }
 
@@ -10249,10 +10240,7 @@ void type_random_map_generator::removeObject(type_object* object)
     }
     if (prototype->getObjectType() == BORDER_GUARD) {
         m_disabledKeyTents[prototype->getSubtype()] = 0;
-        m_nextKeyTentColor = 0;
-        while (m_nextKeyTentColor < m_disabledKeyTents.size()
-            && m_disabledKeyTents[m_nextKeyTentColor])
-            ++m_nextKeyTentColor;
+        refreshNextKeyTentColor();
     }
     TRmgGridPoint cell;
     TRmgMapPosition mapPosition;
@@ -10313,7 +10301,7 @@ void type_random_map_generator::setTownChoice(int seat, int town)
 
 VA(0x0054BF60, 0x130)
 MAC_ADDRESS(0x251070, 0x140)
-int TRandomMapRequest::generateToFile(TAbstractFile* outfile, void* progress)
+int TRandomMapRequest::generateToFile(TAbstractFile* outfile, TProgressSink* progress)
 {
     int strength = m_monsterStrength + 3;
     if (strength < 1)
@@ -10327,7 +10315,7 @@ int TRandomMapRequest::generateToFile(TAbstractFile* outfile, void* progress)
     type_random_map_generator generator(m_width, m_height, m_levels,
         m_humanPlayerCount, m_humanTeamCount, m_computerPlayerCount,
         m_computerTeamCount, m_waterContent, strength,
-        static_cast<TProgressSink*>(progress), m_mapVersion);
+        progress, m_mapVersion);
     for (int seat = 0; seat < 8; ++seat) {
         if (m_isHumanSeat[seat])
             generator.setHumanPlayer(seat);
@@ -10343,7 +10331,7 @@ int TRandomMapRequest::generateToFile(TAbstractFile* outfile, void* progress)
 
 VA(0x0054C090, 0x8C)
 MAC_ADDRESS(0x2511b0, 0x98)
-int TRandomMapRequest::generate(const char* fileName, void* progress)
+int TRandomMapRequest::generate(const char* fileName, TProgressSink* progress)
 {
     try {
         TGzFile outfile(fileName, "wb6");
