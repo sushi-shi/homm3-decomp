@@ -101,7 +101,7 @@ void TSpellbookWindow::reset()
 // the guarded pointer array are byte-proven by retail.
 DC_ADDRESS(0x14bc80, 0x74)
 MAC_ADDRESS(0x18ada4, 0xec)
-static const char* getLevelString(SpellID spell)
+static const char* getLevelString(ESpellId spell)
 {
     // Retail: construction guard 0x6a34dc and the five label pointers at
     // 0x6a34f8 (stored by the inlined copies in getSpellDescription and
@@ -140,7 +140,7 @@ MAC_ADDRESS(0x18ae90, 0x21c)  // retail widens DC's magic-plains byte to the Com
 // Native get_spell_description's private AAA public ends PBVhero@@_N@Z:
 // the rollover formal is bool, despite the lowered CodeView byte record.
 std::string TSpellbookWindow::getSpellDescription(
-    SpellID spell, const hero* currentHero, bool rollover)
+    ESpellId spell, const hero* currentHero, bool rollover)
 {
     const SSpellTraits* traits = &g_spellTraits[spell];
     std::string result;
@@ -440,7 +440,7 @@ void TSpellbookWindow::gotoPage(int page)
                 school = highestSchool;
             TSkillMastery mastery = m_hero.getSpellLevel(
                 spell, m_onMagicPlains);
-            availableSpells.push_back(TSpellbookEntry(spell, school, mastery));
+            availableSpells.push_back(TSpellbookEntry(ESpellId(spell), school, mastery));
         }
     }
 
@@ -461,7 +461,7 @@ void TSpellbookWindow::gotoPage(int page)
             ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
         m_spellNameWidgets[0]->setText(
             DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, ""));
-        m_spellMap[0] = -1;
+        m_spellMap[0] = SPELL_NONE;
 
         m_spellLevelWidgets[1]->m_status &=
             ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
@@ -469,7 +469,7 @@ void TSpellbookWindow::gotoPage(int page)
             ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
         m_spellNameWidgets[1]->setText(
             DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, ""));
-        m_spellMap[1] = -1;
+        m_spellMap[1] = SPELL_NONE;
         widgetIndex = firstSlotAfterHeading;
     } else {
         m_headingWidget->m_status &=
@@ -480,7 +480,7 @@ void TSpellbookWindow::gotoPage(int page)
     for (; widgetIndex < SPELLS_PER_PAGE && spellIndex < availableSpells.size();
          ++widgetIndex, ++spellIndex) {
         const TSpellbookEntry& entry = availableSpells[spellIndex];
-        SpellID displaySpell = entry.m_id;
+        ESpellId displaySpell = entry.m_id;
         m_spellLevelWidgets[widgetIndex]->m_status |=
             widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         m_spellLevelWidgets[widgetIndex]->setSprite(
@@ -528,7 +528,7 @@ void TSpellbookWindow::gotoPage(int page)
             ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
         m_spellNameWidgets[widgetIndex]->setText(
             DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, ""));
-        m_spellMap[widgetIndex] = -1;
+        m_spellMap[widgetIndex] = SPELL_NONE;
     }
 
     m_page = page;
@@ -617,7 +617,7 @@ int TSpellbookWindow::windowHandler(message& msg)
             || msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
             int id = msg.m_codeY;
             if (id >= SPELL_0_ID && id <= SPELL_11_ID) {
-                SpellID spell = m_spellMap[id - SPELL_0_ID];
+                ESpellId spell = m_spellMap[id - SPELL_0_ID];
                 normalDialog(getSpellDescription(spell, &m_hero, 0).c_str(),
                              4, -1, -1,
                              9, spell, -1, 0, -1, 0, -1, 0);
@@ -708,7 +708,7 @@ int TSpellbookWindow::windowHandler(message& msg)
             case SPELL_9_ID:
             case SPELL_10_ID:
             case SPELL_11_ID: {
-                SpellID spell = m_spellMap[msg.m_codeY - SPELL_0_ID];
+                ESpellId spell = m_spellMap[msg.m_codeY - SPELL_0_ID];
                 if ((m_allowedContext == eContextCombat
                      && getContextMask() == eCombatContextMask)
                     || (m_allowedContext == eContextAdventure
@@ -788,7 +788,7 @@ int TSpellbookWindow::windowHandler(message& msg)
             if (id != -1) {
                 g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
                 if (id >= SPELL_0_ID && id <= SPELL_11_ID) {
-                    SpellID spell = m_spellMap[id - SPELL_0_ID];
+                    ESpellId spell = m_spellMap[id - SPELL_0_ID];
                     rollover = getSpellDescription(spell, &m_hero, 1);
                 } else {
                     int helpId = convertID2HelpID(id);

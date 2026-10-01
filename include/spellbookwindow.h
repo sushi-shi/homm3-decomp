@@ -4,6 +4,7 @@
 #include "va.h"
 
 #include "advmgr_popup.h"
+#include "armygrp.h"
 #include "herospec.h"
 #include "spellschool.h"
 class armyGroup;
@@ -12,8 +13,6 @@ class bitmapBorder;
 class hero;
 class iconWidget;
 class textWidget;
-
-typedef int SpellID;
 
 // DC lays this class out over its 0x58-byte CAdvPopup and has six spell
 // entries per page. Retail's constructor and GotoPage prove both divergences:
@@ -93,15 +92,16 @@ public:
 
     class TSpellbookEntry {
     public:
-
+        // Native SpellID is the signed enum owned here as ESpellId;
+        // retain that domain in the record, spell map, and text helpers.
         DC_ADDRESS(0x14d320, 0xa)
-        TSpellbookEntry(SpellID id, TSpellSchool school,
+        TSpellbookEntry(ESpellId id, TSpellSchool school,
                         TSkillMastery mastery)
             : m_id(id), m_school(school), m_mastery(mastery)
         {
         }
         bool operator<(const TSpellbookEntry& y) const;
-        SpellID m_id;
+        ESpellId m_id;
         TSpellSchool m_school;
         TSkillMastery m_mastery;
     };
@@ -175,7 +175,7 @@ private:
     TSpellSchool m_school;                      // +0x70
     unsigned m_contextMask;                     // +0x74
     int m_page;                                 // +0x78
-    SpellID m_spellMap[SPELLS_PER_PAGE];        // +0x7c
+    ESpellId m_spellMap[SPELLS_PER_PAGE];       // +0x7c
     iconWidget** m_spellLevelWidgets;           // +0xac
     iconWidget** m_spellIconWidgets;            // +0xb0
     textWidget** m_spellNameWidgets;            // +0xb4
@@ -189,7 +189,7 @@ private:
 
     static int s_lastPage;
 
-    std::string getSpellDescription(SpellID spell,
+    std::string getSpellDescription(ESpellId spell,
                                       const hero* currentHero,
                                       bool rollover);
 
