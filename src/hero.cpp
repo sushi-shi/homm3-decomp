@@ -1342,13 +1342,15 @@ MAC_ADDRESS(0x0f4dfc, 0xc4)
 // Retail tests AL and retains separate mov al,1 / mov eax,1 exits. A byte
 // result formerly matched the body, but is not independently proven by
 // those narrow instructions or by the generated Windows symbol spelling.
+// Mac 0xf4e38/0xf4e3c expands the equipped-record reference and ID read
+// owned by getArtifact; the canonical calls leave this int body byte-flat.
 int hero::isWieldingArtifact(int whichArtifact) const
 {
     if (whichArtifact == ARTIFACT_SPELLBOOK) {
-        return m_equipped[17].m_artifactId == ARTIFACT_SPELLBOOK;
+        return getArtifact(eArtifactSlotSpellbook).m_artifactId == ARTIFACT_SPELLBOOK;
     } else {
         for (int slot = 0; slot < 19; slot++) {
-            if (m_equipped[slot].m_artifactId == whichArtifact)
+            if (getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
                 return 1;
         }
     }
