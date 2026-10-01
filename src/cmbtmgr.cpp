@@ -2513,6 +2513,9 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
 VA(0x004669b0, 0xBF)
 DC_ADDRESS(0x0609d0, 0xa0)
 MAC_ADDRESS(0x072ca0, 0xb8)
+// Original public ?PlaceObstacle@combatManager@@QAAXABUTObstacle@1@HHI@Z
+// (DC file 0x5bdeff) proves const TObstacle&. Retail immediately reads its
+// shape without a null guard; all six record callers pass live lvalues.
 void combatManager::placeObstacle(const combatManager::TObstacle& obstacle, int id, int hex, unsigned attributes)
 {
     const TObstacleInfo* const info = obstacle.m_shape;
