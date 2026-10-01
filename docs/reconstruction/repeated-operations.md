@@ -1500,6 +1500,40 @@ Underground gates retain their separate level flip and cost-plus-one operation.
 The two new helper names and ordinary source placements are project inferences;
 virtual slots, native entry points and stored layouts are unchanged.
 
+## RMG key-tent reservations and quest eligibility
+
+Four color transitions share private `setKeyTentDisabled()`: successful border
+placement, key-tent guard reservation, its failure release, and border-guard
+removal. The operation writes the byte first, resets the selected color to zero,
+and walks the live availability vector until an enabled entry or `size()`.
+The all-disabled sentinel is unchanged. Reservation still follows border-object
+placement, precedes tentative treasure generation, and is released only after
+failed-group disposal. Object removal still releases the color after its object
+and zone bookkeeping and before clearing its footprint.
+
+`getNextKeyTentColor()` serves the key-tent value query and border placement.
+Initialization retains its bulk resize/clear and definition generation without
+calling the transition helper: the existing constructor does not initialize
+the cached next color, and this pass does not introduce an earlier scan.
+Historical matching comments now distinguish the earlier unadopted experiment
+from the shared operation implemented here; no new matching measurement is
+claimed.
+
+Three quest definitions share `canGenerateQuest()`, testing the selected
+seer-hut prototype before the artifact-pool latch. Rejected definitions still
+return -1; creature valuation still invokes its existing value calculation only
+after eligibility, while gold/experience return their stored values.
+`isQuestArtifactAvailable()` shares the count/selection filter: globally enabled,
+not reserved by this generator, and in the required artifact class. Both passes
+reevaluate it; the low-pool latch, random selection, replacement failure path and
+successful reservation/cursor advance retain their original order.
+
+The two selection cursors, key-tent availability vector, quest-artifact
+reservation array and pool latch are private generator state. Their declaration
+order and stored types are unchanged. Original RMG access control is unavailable;
+this visibility and the four ordinary helper names/placements are project
+inferences from their owner operations and callers, not new native source facts.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

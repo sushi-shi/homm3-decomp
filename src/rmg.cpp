@@ -2362,13 +2362,18 @@ type_object* type_witch_hut_def::generate(TRmgObjectPropertiesRef* properties,
     return new rmgWitchHutObject(properties);
 }
 
+// Project-inferred eligibility query shared by the three quest definitions.
+// Test the current prototype before consulting the artifact-pool latch.
+bool type_random_map_generator::canGenerateQuest(int subtype) const
+{
+    return m_nextSeerHutPrototypeIndex == subtype && !m_questArtifactPoolLow;
+}
+
 VA(0x00534AF0, 0x9E)
 MAC_ADDRESS(0x23277c, 0x68)
 int type_quest_creature_def::getValue(TRmgZone* zone, type_random_map_generator* generator)
 {
-    if (generator->m_nextSeerHutPrototypeIndex != m_subtype)
-        return -1;
-    if (generator->m_questArtifactPoolLow)
+    if (!generator->canGenerateQuest(m_subtype))
         return -1;
     int value = type_black_box_creature_def::getValue(zone, generator);
     return (2 * value - 4000) / 3;
@@ -2395,18 +2400,14 @@ VA(0x00534C80, 0x34)
 MAC_ADDRESS(0x232900, 0x34)
 int type_quest_experience_def::getValue(TRmgZone*, type_random_map_generator* generator)
 {
-    if (generator->m_nextSeerHutPrototypeIndex != m_subtype)
-        return -1;
-    if (generator->m_questArtifactPoolLow)
+    if (!generator->canGenerateQuest(m_subtype))
         return -1;
     return m_value;
 }
 
 int type_quest_gold_def::getValue(TRmgZone*, type_random_map_generator* generator)
 {
-    if (generator->m_nextSeerHutPrototypeIndex != m_subtype)
-        return -1;
-    if (generator->m_questArtifactPoolLow)
+    if (!generator->canGenerateQuest(m_subtype))
         return -1;
     return m_value;
 }
@@ -2474,7 +2475,7 @@ VA(0x00534FA0, 0x21)
 MAC_ADDRESS(0x232cd4, 0x20)
 int type_key_tent_def::getValue(TRmgZone*, type_random_map_generator* generator)
 {
-    if (generator->m_nextKeyTentColor != m_subtype)
+    if (generator->getNextKeyTentColor() != m_subtype)
         return -1;
     return m_value;
 }
@@ -5995,12 +5996,29 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
     return new rmgMonsterObject(properties, m_nextObjectId++, count);
 }
 
+// Project-inferred key-tent state interface. Keep the availability write
+// before the live scan, and preserve size() as the all-colors-used sentinel.
+int type_random_map_generator::getNextKeyTentColor() const
+{
+    return m_nextKeyTentColor;
+}
+
+void type_random_map_generator::setKeyTentDisabled(int color,
+                                                   unsigned char disabled)
+{
+    m_disabledKeyTents[color] = disabled;
+    m_nextKeyTentColor = 0;
+    while (m_nextKeyTentColor < m_disabledKeyTents.size()
+            && m_disabledKeyTents[m_nextKeyTentColor])
+        ++m_nextKeyTentColor;
+}
+
 VA(0x00540D60, 0x256)
 MAC_ADDRESS(0x24356c, 0x2b8) // anchor-callee createShipyardConnection; thiscall, ret 0x14
 int type_random_map_generator::placeBorderObject(
     TRmgMapPosition position, int count, TRmgZone* zone)
 {
-    int color = m_nextKeyTentColor;
+    int color = getNextKeyTentColor();
     int index = 0;
     for (; index < m_objectPrototypes[BORDER_TENT].size(); ++index) {
         if (m_objectPrototypes[BORDER_TENT][index]->m_prototype->getSubtype() == color)
@@ -6032,11 +6050,7 @@ int type_random_map_generator::placeBorderObject(
         position.setX(position.getX() + 1);
     }
 
-    m_disabledKeyTents[color] = 1;
-    m_nextKeyTentColor = 0;
-    while (m_nextKeyTentColor < m_disabledKeyTents.size()
-           && m_disabledKeyTents[m_nextKeyTentColor])
-        ++m_nextKeyTentColor;
+    setKeyTentDisabled(color, 1);
     return color;
 }
 
@@ -10139,6 +10153,13 @@ unsigned char type_random_map_generator::placeQuestGroup(
 // that same treasure-class bit at 0x54b4db/0x54b536. No separate data body.
 static const int g_rmgQuestArtifactClass = 2;
 
+// Project-inferred shared predicate for counting and choosing quest artifacts.
+bool type_random_map_generator::isQuestArtifactAvailable(int artifact) const
+{
+    return !g_artifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
+        && (g_artifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass);
+}
+
 // rmgQuestArtifactObject::isWritable calls this member with its wrapper.
 // The pending hut, prototype reference counts, artifact traits at 0x660b68,
 // and generator masks fix ownership and selection semantics. Failure
@@ -10166,8 +10187,7 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
     int available = 0;
     int artifact;
     for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
-        if (!g_artifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
-            && (g_artifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass)) {
+        if (isQuestArtifactAvailable(artifact)) {
             ++available;
         }
     }
@@ -10177,8 +10197,7 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
         return 0;
     int selected = rand() % available;
     for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
-        if (!g_artifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
-            && (g_artifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass)) {
+        if (isQuestArtifactAvailable(artifact)) {
             if (selected-- <= 0)
                 break;
         }
@@ -10239,8 +10258,9 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
 // binding does too. Neither resolves failure reset or the outline lookup.
 // The best shared-color form is only 73.3681% and still expands reset;
 // its called two-coordinate lookup belongs inside reset, not the outline.
-// No form adopted. The standalone original color loops remain canonical;
-// the helper is an experimental inference from four repeated retail scans.
+// Those earlier matching experiments adopted no form. The repeated-operation
+// sweep now shares the four color transitions through setKeyTentDisabled;
+// its name and ordinary source placement remain project inferences.
 // See generate-rmg-key-tent-family.py / generate-rmg-key-color-helper-family.py.
 // 207 native caller/helper combinations pass with thirteen wrong controls.
 VA(0x0054B8C0, 0x385)
@@ -10258,11 +10278,7 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[BORDER_GUARD][index];
     TRmgTreasureGroup group(16, 16);
     type_object* guard = new type_object(properties);
-    m_disabledKeyTents[color] = 1;
-    m_nextKeyTentColor = 0;
-    while (m_nextKeyTentColor < m_disabledKeyTents.size()
-        && m_disabledKeyTents[m_nextKeyTentColor])
-        ++m_nextKeyTentColor;
+    setKeyTentDisabled(color, 1);
     if (fillTreasureGroup(origin, &group, 0, maxValue) && group.addGuard(guard)) {
         group.updateBounds();
         group.traceOutline();
@@ -10273,11 +10289,7 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
         delete guard;
     }
     group.discard();
-    m_disabledKeyTents[color] = 0;
-    m_nextKeyTentColor = 0;
-    while (m_nextKeyTentColor < m_disabledKeyTents.size()
-        && m_disabledKeyTents[m_nextKeyTentColor])
-        ++m_nextKeyTentColor;
+    setKeyTentDisabled(color, 0);
     return 0;
 }
 
@@ -10309,11 +10321,7 @@ void type_random_map_generator::removeObject(type_object* object)
         }
     }
     if (prototype->getObjectType() == BORDER_GUARD) {
-        m_disabledKeyTents[prototype->getSubtype()] = 0;
-        m_nextKeyTentColor = 0;
-        while (m_nextKeyTentColor < m_disabledKeyTents.size()
-            && m_disabledKeyTents[m_nextKeyTentColor])
-            ++m_nextKeyTentColor;
+        setKeyTentDisabled(prototype->getSubtype(), 0);
     }
     TRmgGridPoint cell;
     TRmgMapPosition mapPosition;

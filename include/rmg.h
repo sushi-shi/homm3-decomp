@@ -1987,6 +1987,8 @@ public:
     int m_humanTeamCount;                              // +0x0f4c
     int m_computerPlayerCount;                         // +0x0f50
     int m_computerTeamCount;                           // +0x0f54
+
+private:
     // Role-derived names; original spellings unknown. Replaces opaque0f58.
     // 0x54b834 advances +0xf58 modulo objectPrototypes[83].size();
     // seer-hut value paths 0x534af0/0x534c80 require this prototype index.
@@ -1997,11 +1999,15 @@ public:
     // first value comes from the caller's stack. Preserve that behavior;
     // execution comparisons must supply identical initial stack contents.
     int m_nextKeyTentColor;                            // +0x0f5c
+
+public:
     // 0x549bae clears nine alignment counts; 0x549be0..0x549c05 counts
     // active zones both by their alignment (+4) and in the total.
     int m_activeZoneCount;                             // +0x0f60
     int m_activeZoneCountsByAlignment[9];              // +0x0f64
     unsigned char m_disabledHeroes[156];               // +0x0f88
+
+private:
     // Role-derived names; original spellings unknown. Replaces opaque1024.
     // Ctor 0x537cc6 clears 144 bytes. Quest selection 0x54b490 excludes
     // marked artifacts; successful placement 0x54b813 marks the chosen ID.
@@ -2010,6 +2016,8 @@ public:
     // seer-hut value paths 0x534b0c/0x534c9c reject further candidates.
     unsigned char m_questArtifactPoolLow;              // +0x10b4
     // +0x10b5..0x10b7: implicit alignment before the next int.
+
+public:
     int m_waterContent;                                // +0x10b8
     int m_monsterStrength;                             // +0x10bc
     // Retail ctor 0x537b10 initializes a Dinkumware string at +0x10c0.
@@ -2025,7 +2033,11 @@ public:
     std::vector<TRmgTemplate*> m_templates;            // +0x10d0
     std::vector<TRmgZone*> m_zones;                    // +0x10e0
     std::vector<type_treasure_def*> m_objectGenerators; // +0x10f0
+
+private:
     std::vector<unsigned char> m_disabledKeyTents;     // +0x1100
+
+public:
     int m_objectCountByType[232];                      // +0x1110
     std::vector<TRmgMapPosition> m_roadTargets;        // +0x14b0
     std::vector<type_object*> m_monolithsOneWay;       // +0x14c0
@@ -2039,6 +2051,9 @@ public:
     void loadTemplates();
     // Role-derived from generation coordinator 0x549b30 and placement 0x545250.
     void placeMines();
+    // Project-inferred queries for generator-owned key-tent/quest selection.
+    int getNextKeyTentColor() const;
+    bool canGenerateQuest(int subtype) const;
     // Provisional roles from the Complete-only connection coordinator.
     void prepareZoneConnections();
     void expandObstacleClearance();
@@ -2196,6 +2211,8 @@ public:
     void writeMapHeader(TAbstractFile* outfile);
 
 private:
+    void setKeyTentDisabled(int color, unsigned char disabled);
+    bool isQuestArtifactAvailable(int artifact) const;
     // Project-inferred shared normal/alternate treasure retry operation.
     bool tryPlaceTreasureRange(TRmgZone* zone, TRmgTreasureGroup& group,
                                unsigned char alternate,
