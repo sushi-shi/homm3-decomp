@@ -1079,6 +1079,9 @@ public:
     TRmgMapItem();
     void clear();
     void write(TAbstractFile* outfile);
+    // Project-inferred ordered update shared by connection-search passes.
+    void setConnectionPathState(unsigned int cost, unsigned int direction,
+                                int connectionZone);
 
     // Project-inferred cell operations from repeated path/border transitions.
     // Ordinary edits retain cells with a connection decoration; installing or

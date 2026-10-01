@@ -1351,6 +1351,36 @@ The four new helper names and ordinary owner-source placements are project
 inferences. Native APIs and existing nested helpers remain intact; no new
 native-address or explicit-inline claims are made.
 
+## RMG connection state and invalid positions
+
+Five connection-search updates share `TRmgMapItem::setConnectionPathState()`:
+zone-path cost, connection direction, then connection eligibility. Existing
+cost/direction setters remain nested in the operation, preserving their bitfield
+conversions. Cross-zone flooding retains its source-zone value and reversed
+direction; water-distance seeding/relaxation retain zero eligibility; water
+preparation retains cost 32000 with zero eligibility; the whole-map connection
+reset retains cost 32000 with eligibility -1. Movement cost and predecessor
+reset remain separate and follow the connection-state update as before.
+Cell initialization retains its different 32700 costs, zone/score writes and
+partial predecessor sentinel. The helper's name and ordinary cell-owner source
+placement are project inferences, without a new native-address or inline claim.
+
+Six full invalid-position initializations now reuse the existing retained
+`TRmgMapPosition(-1, -1, -1)` constructor. Five are local predecessors or
+unspecified placement positions in connection/junction preparation, the two
+treasure-group selection paths, and river creation. Their scopes and per-loop
+construction stay in place. The object constructor nests the position value
+through its existing `setPosition()` after incrementing the properties reference
+and before clearing placement marks. The existing point base, three-coordinate
+layout and by-value movement helpers remain intact.
+
+X-only sentinels and the two-coordinate Voronoi position remain distinct;
+neither gains a third coordinate or extra initialization. Guard prototype
+exclusion was also read: its two -1 writes are individual local-array entries
+inside different filters, with the RoE loop's shared counter and skipped slot
+117 feeding the eligibility scan. They do not form the connection or position
+reset operation and retain their original loop behavior.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

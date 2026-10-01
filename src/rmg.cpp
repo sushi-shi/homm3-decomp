@@ -404,6 +404,17 @@ void TRmgMapItem::clear()
     m_tileData = tileData;
 }
 
+// Project-inferred shared connection-search update. Keep cost, direction and
+// connection-zone writes in that order; movement/predecessor state is separate.
+void TRmgMapItem::setConnectionPathState(unsigned int cost,
+                                         unsigned int direction,
+                                         int connectionZone)
+{
+    setZonePathCost(cost);
+    setConnectionDirection(direction);
+    m_zoneState.m_connectionEligibility = connectionZone;
+}
+
 // Project-inferred shared transitions from openPathPatch, markBorderPatch,
 // guard placement, border repair and the connection builders. Connection
 // decoration protects the current flags from these ordinary cell edits.
@@ -671,9 +682,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
                     continue;
                 if (next->getZonePathCost() <= nextCost)
                     continue;
-                next->setZonePathCost(nextCost);
-                next->setConnectionDirection(direction - 4);
-                next->m_zoneState.m_connectionEligibility = zone;
+                next->setConnectionPathState(nextCost, direction - 4, zone);
             } else {
                 if (currentZone != zone)
                     continue;
@@ -1451,9 +1460,7 @@ type_object::type_object(TRmgObjectPropertiesRef* newProperties)
 {
     m_properties = newProperties;
     ++m_properties->m_refCount;
-    m_position.setX(-1);
-    m_position.setY(-1);
-    m_position.m_z = -1;
+    setPosition(TRmgMapPosition(-1, -1, -1));
     clearPlacementMarks();
 }
 
@@ -5382,9 +5389,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
     positions.push_back(position);
     costs.push_back(0);
     TRmgMapItem* seed = m_map.getMapItem(position);
-    seed->setZonePathCost(0);
-    seed->setConnectionDirection(0);
-    seed->m_zoneState.m_connectionEligibility = 0;
+    seed->setConnectionPathState(0, 0, 0);
     while (positions.size()) {
         position = positions.back();
         costs.pop_back();
@@ -5409,9 +5414,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
                 nextCost = currentCost + 2;
             if (nextCost >= item->getZonePathCost())
                 continue;
-            item->setZonePathCost(nextCost);
-            item->setConnectionDirection(direction);
-            item->m_zoneState.m_connectionEligibility = 0;
+            item->setConnectionPathState(nextCost, direction, 0);
             insertRmgWorkItem(positions, costs, next, nextCost);
         }
     }
@@ -5449,9 +5452,7 @@ void type_random_map_generator::prepareWaterZoneConnections(TRmgZone* zone)
     for (position.setY(bounds.m_minimumY); position.getY() < bounds.m_maximumY; position.setY(position.getY() + 1)) {
         for (position.setX(bounds.m_minimumX); position.getX() < bounds.m_maximumX; position.setX(position.getX() + 1)) {
             TRmgMapItem* item = m_map.getMapItem(position);
-            item->setZonePathCost(32000);
-            item->setConnectionDirection(0);
-            item->m_zoneState.m_connectionEligibility = 0;
+            item->setConnectionPathState(32000, 0, 0);
         }
     }
     TRmgZoneBounds surrounding;
@@ -5827,13 +5828,8 @@ void type_random_map_generator::buildZoneConnectionPaths()
     int count = m_map.getNumberLevels() * m_map.getHeight() * m_map.getWidth();
     TRmgMapItem* item = m_map.getMapItems();
     while (count--) {
-        item->setZonePathCost(32000);
-        item->setConnectionDirection(0);
-        item->m_zoneState.m_connectionEligibility = -1;
-        TRmgMapPosition previous;
-        previous.setX(-1);
-        previous.setY(-1);
-        previous.m_z = -1;
+        item->setConnectionPathState(32000, 0, -1);
+        TRmgMapPosition previous(-1, -1, -1);
         item->resetMovement(previous);
         ++item;
     }
@@ -7443,10 +7439,7 @@ void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
             TRmgMapItem* item = m_map.getMapItem(position.getX(), position.getY(), level);
             if (item->m_zoneState.m_zone == zoneIndex
                 && item->getLandType() != eTerrainWater) {
-                TRmgMapPosition previous;
-                previous.setX(-1);
-                previous.setY(-1);
-                previous.m_z = -1;
+                TRmgMapPosition previous(-1, -1, -1);
                 item->resetMovement(previous);
                 if (static_cast<int>(item->m_objects.size()) <= 0) {
                     item->markBorder();
@@ -8231,10 +8224,7 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
     int total;
     {
         type_object* selected;
-        TRmgMapPosition position;
-        position.setX(-1);
-        position.setY(-1);
-        position.m_z = -1;
+        TRmgMapPosition position(-1, -1, -1);
         for (attempts = 0; attempts < RMG_TREASURE_ATTEMPTS; ++attempts) {
             selected = createTreasureObject(zone, value / 4, value, &objectValue,
                 1, 1, alternate, position);
@@ -8260,10 +8250,7 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
             int creationAttempts;
             for (creationAttempts = 0; creationAttempts < RMG_TREASURE_ATTEMPTS;
                  ++creationAttempts) {
-                TRmgMapPosition unspecified;
-                unspecified.setX(-1);
-                unspecified.setY(-1);
-                unspecified.m_z = -1;
+                TRmgMapPosition unspecified(-1, -1, -1);
                 nextObject = createTreasureObject(zone, remainder / 4, 5 * remainder / 4,
                     &objectValue, 0, 1, alternate, unspecified);
                 if (nextObject)
@@ -9219,10 +9206,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     resetMovementCosts();
 
     TRmgMapItem* mapItem;
-    TRmgMapPosition emptyPosition;
-    emptyPosition.setX(-1);
-    emptyPosition.setY(-1);
-    emptyPosition.m_z = -1;
+    TRmgMapPosition emptyPosition(-1, -1, -1);
 
     std::vector<TRmgMapPosition> openPositions;
     std::vector<int> openCosts;
