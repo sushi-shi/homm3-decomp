@@ -257,10 +257,11 @@ void widget::processHover()
 
 // Dreamcast calls sendMessage in both enable branches; Mac retains both
 // calls at 0:0x20ac34/0x20ac44. Windows expands the canonical helper body.
+// Original ?enable@widget@@UAAX_N@Z proves the Boolean virtual formal.
 VA(0x005fe940, 0x83)
 DC_ADDRESS(0x1970c0, 0x44)
 MAC_ADDRESS(0x20ac18, 0x40)
-void widget::enable(unsigned char arg)
+void widget::enable(bool arg)
 {
     if (arg)
         sendMessage(WIDGET_CLEAR_STATUS, WIDGET_DISABLED);

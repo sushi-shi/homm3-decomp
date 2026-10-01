@@ -616,10 +616,11 @@ void slider::onKillFocus()
     m_scrolling = 0;
 }
 
+// Original ?enable@slider@@UAAX_N@Z proves the same Boolean override.
 VA(0x00597140, 0x45)
 DC_ADDRESS(0x14abb0, 0x4c)
 MAC_ADDRESS(0x18ab44, 0x74)
-void slider::enable(unsigned char arg)
+void slider::enable(bool arg)
 {
     if (arg) {
         sendMessage(WIDGET_CLEAR_STATUS, WIDGET_DISABLED);

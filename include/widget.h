@@ -154,7 +154,7 @@ public:
     virtual int getRealWidth() const { return m_width; }  // slot 6
     virtual void processHover();  // slot 7
     virtual void dim() const;  // slot 8
-    virtual void enable(unsigned char on);  // slot 9
+    virtual void enable(bool on);  // slot 9
     void setHelpText(const char* text, const char* rclick, bool copyText);
     int sendMessage(widget::ECommands command, int extra);
 

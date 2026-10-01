@@ -67,7 +67,7 @@ public:
     virtual void draw() const;                            // slot 4
     virtual int getRealHeight() const;                    // slot 5
     virtual int getRealWidth() const;                     // slot 6
-    virtual void enable(unsigned char on);          // slot 9
+    virtual void enable(bool on);          // slot 9
     virtual void onSetFocus();                      // slot 10
     virtual void onKillFocus();                     // slot 11
     virtual void setResolution(int num);            // slot 13
