@@ -637,12 +637,14 @@ bool type_AI_attack_hex_chooser::findAttackHex()
     return combatManager::validHex(m_bestHex);
 }
 
+// Original constructor publics at DC file 0x5664f6/0x60aaf2 encode
+// W4SpellID; integer iteration/API boundaries convert only at construction.
 // E:\gamedcs\ai_tactical.cpp:744 -  No retail slot: both
 // type_spell_choice ctors inline it whole (their bytes carry the five
 // stores), so /OPT:REF dropped the out-of-line copy.
 DC_ADDRESS(0x03d524, 0x48)
 MAC_ADDRESS(0x03e210, 0x1c)
-type_enchant_data::type_enchant_data(SpellID newSpell, TSkillMastery newMastery, long newPower, long newDuration)
+type_enchant_data::type_enchant_data(ESpellId newSpell, TSkillMastery newMastery, long newPower, long newDuration)
 {
     m_spell = newSpell;
     m_mastery = newMastery;
@@ -665,7 +667,7 @@ VA(0x00436950, 0x23)
 DC_ADDRESS(0x03d584, 0x2a)
 MAC_ADDRESS(0x03e254, 0x58)
 type_spell_choice::type_spell_choice()
-    : type_enchant_data(-1, eMasteryNone, 0, 0)
+    : type_enchant_data(SPELL_NONE, eMasteryNone, 0, 0)
 {
     m_value = 0;
     m_target = -1;
@@ -676,7 +678,7 @@ type_spell_choice::type_spell_choice()
 VA(0x00436980, 0x35)
 DC_ADDRESS(0x03d5b0, 0x2a)
 MAC_ADDRESS(0x03e2ac, 0x48)
-type_spell_choice::type_spell_choice(SpellID newSpell, TSkillMastery newMastery, long newPower, long newDuration)
+type_spell_choice::type_spell_choice(ESpellId newSpell, TSkillMastery newMastery, long newPower, long newDuration)
     : type_enchant_data(newSpell, newMastery, newPower, newDuration)
 {
     m_value = 0;
@@ -1875,7 +1877,8 @@ long type_AI_spellcaster::getCancelValue(army& currentArmy, bool badSpellsOnly) 
         TEnchantValue valueOf = getEnchantmentFunction(spell);
         if (valueOf == 0)
             continue;
-        type_enchant_data caster(spell, currentArmy.getSpellLevel(spell),
+        type_enchant_data caster(static_cast<ESpellId>(spell),
+                                 currentArmy.getSpellLevel(spell),
                                  duration, duration);
         caster.m_checkResistance = 0;
         currentArmy.cancelIndividualSpell(spell);
@@ -2905,7 +2908,7 @@ long type_AI_spellcaster::getCaliphValue(const army* target) const
         count++;
         TEnchantValue valueOf = getEnchantmentFunction(spell);
         if (valueOf != 0) {
-            type_spell_choice choice(spell, mastery, 6, 6);
+            type_spell_choice choice(static_cast<ESpellId>(spell), mastery, 6, 6);
             if (spellTargetsASingleArmy(spell, mastery)) {
                 total += (this->*valueOf)(target, choice);
             } else {
@@ -2929,7 +2932,7 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
                                    g_combatManager->m_magicTerrain))
         mastery = eMasteryExpert;
 
-    type_spell_choice choice(spell, mastery, power, power);
+    type_spell_choice choice(static_cast<ESpellId>(spell), mastery, power, power);
     army* target = g_combatManager->m_cells[hex].getArmy();
     long baseDamage;
     switch (spell) {
@@ -3074,7 +3077,7 @@ bool type_AI_spellcaster::castSpell(bool retreating)
             if (spell != SPELL_RESURRECTION && spell != SPELL_ANIMATE_DEAD)
                 continue;
         }
-        type_spell_choice choice(spell, mastery, power, duration);
+        type_spell_choice choice(static_cast<ESpellId>(spell), mastery, power, duration);
         considerSpell(choice);
         if (choice.m_value <= 0)
             continue;

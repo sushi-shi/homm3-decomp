@@ -71,7 +71,7 @@ public:
     type_speed_catagory m_catagory;  // +0x38
     long m_value;  // +0x3c
     long m_totalValue;  // +0x40
-    long getSpellDamage(SpellID spell, const hero* castingHero,
+    long getSpellDamage(ESpellId spell, const hero* castingHero,
                           const hero* targetHero, long damage) const;
 
     long getEnchantmentValue(type_spell_choice& choice,
