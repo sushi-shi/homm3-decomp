@@ -1102,6 +1102,31 @@ The helpers borrow data without allocating, freeing or adding a new capacity
 policy. Both are project-inferred TU-local operations; SDK record layouts and
 native container interfaces are unchanged.
 
+## Town and garrison strip-selection state
+
+Town setup and garrison-dialog setup share `clearStripSelection()`, clearing
+destination, source and current pointers before setting their indices to `-2`
+in the same order. Town setup retains the preceding loaded-town update;
+garrison setup retains its preceding null town pointer. Neither call redraws
+or clears divide state.
+
+Eight current-strip/index assignments and five destination-strip/index
+assignments share `setCurrentStrip()` and `setDestinationStrip()`. These cover
+constructor pairs, portrait targeting, existing `selectArmy()` / `armyCommand()`
+boundaries and both pages' right-click paths. Each operation writes the strip
+before its index; portrait `-1` and troop indices remain caller-selected.
+Command generation, ownership checks, text, split rules and army previews stay
+at their original stages. Existing native helper calls are retained.
+
+Opening retains its separated index and pointer initialization. `newStrips()`
+retains its four-field `-1` reset; `resetStrips()` still redraws then clears only
+source/destination state to `-2`, preserving the current pair. Single-field
+merge-loop index changes and the source-selection latch remain distinct.
+Dreamcast townManager field list `0x719f` explicitly declares all six selection
+fields public; their visibility and types remain unchanged. The three new
+methods have project-inferred names and ordinary source definitions without
+added storage, virtual slots, native addresses or inline qualifiers.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

@@ -1152,12 +1152,10 @@ townManager::townManager()
     m_townWindow = 0;
     m_garrisonStrip = 0;
     m_heroStrip = 0;
-    m_currStrip = 0;
-    m_currIndex = -1;
+    setCurrentStrip(0, -1);
     m_srcStrip = 0;
     m_srcIndex = -1;
-    m_destStrip = 0;
-    m_destIndex = -1;
+    setDestinationStrip(0, -1);
     invalidateHover();
     m_lastQualifier = -1;
     m_command = -1;
@@ -2073,12 +2071,7 @@ void townManager::setupTown(unsigned char fade)
     newStrips();
 
     m_loadedTownType = m_townToView->m_type;
-    m_destStrip = 0;
-    m_srcStrip = 0;
-    m_currStrip = 0;
-    m_destIndex = -2;
-    m_srcIndex = -2;
-    m_currIndex = -2;
+    clearStripSelection();
 
     for (int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
         if (m_townToView->hasBuilding(DWELLING_0_UPG_ID + slot, true))
@@ -2486,12 +2479,10 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::GARRISON_PORTRAIT_ID:
     case TTownScreenWindow::GARRISON_PORTRAIT_SELECTOR_ID:
         if (m_srcIndex == -1) {
-            m_destStrip = m_garrisonStrip;
-            m_destIndex = -1;
+            setDestinationStrip(m_garrisonStrip, -1);
             setHeroCommand();
         } else {
-            m_currStrip = m_garrisonStrip;
-            m_currIndex = -1;
+            setCurrentStrip(m_garrisonStrip, -1);
             if (m_townToView->m_garrisonHeroId == -1) {
                 strcpy(m_statusText, g_townCommand[11]);
                 m_command = -2;
@@ -2518,15 +2509,13 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::VISITING_PORTRAIT_SELECTOR_ID:
         if (m_srcIndex == -1
             && m_heroStrip->m_owner == g_game->getLocalPlayerGamePos()) {
-            m_destStrip = m_heroStrip;
-            m_destIndex = -1;
+            setDestinationStrip(m_heroStrip, -1);
             setHeroCommand();
         } else if (m_townToView->m_visitingHeroId == -1) {
             strcpy(m_statusText, g_townCommand[11]);
         } else {
             hero* visiting;
-            m_currStrip = m_heroStrip;
-            m_currIndex = -1;
+            setCurrentStrip(m_heroStrip, -1);
             visiting = (m_townToView->m_visitingHeroId == -1)
                            ? 0
                            : g_game->getHero(m_townToView->m_visitingHeroId);
@@ -2687,15 +2676,14 @@ void townManager::setCommandAndText(message* msg)
 
 // DC townmgr.cpp:3802 names GetArmyName. Mac 0x1c0618..0x1c0684
 // reloads the latched strip/index and expands its guarded name selection.
-// The canonical call preserves the exact Windows body.
+// The checkpoint before the strip-state helper preserved the exact Windows body.
 VA(0x005c8080, 0x108)
 DC_ADDRESS(0x16d0dc, 0x104)
 MAC_ADDRESS(0x1c05b0, 0x154)
 void townManager::selectArmy(strip* fromStrip, long slot,
                               unsigned char isOwnerCell)
 {
-    m_currStrip = fromStrip;
-    m_currIndex = slot;
+    setCurrentStrip(fromStrip, slot);
 
     if (!fromStrip->m_group || fromStrip->m_group->m_armies[slot] < 0) {
         strcpy(m_statusText, g_townCommand[11]);
@@ -2732,8 +2720,7 @@ void townManager::armyCommand(strip* whichStrip, int i, int shift,
 {
     if (whichStrip->m_group) {
         if (m_srcIndex >= 0 && m_srcStrip->m_owner == g_netLocalGamePos) {
-            m_destStrip = whichStrip;
-            m_destIndex = i;
+            setDestinationStrip(whichStrip, i);
             setArmyCommand(m_divideStatus || shift, joinDialog);
         } else {
             selectArmy(whichStrip, i, joinDialog);
@@ -3764,12 +3751,7 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
         memError();
 
     g_townManager->m_townToView = 0;
-    g_townManager->m_destStrip = 0;
-    g_townManager->m_srcStrip = 0;
-    g_townManager->m_currStrip = 0;
-    g_townManager->m_destIndex = -2;
-    g_townManager->m_srcIndex = -2;
-    g_townManager->m_currIndex = -2;
+    g_townManager->clearStripSelection();
 }
 
 VA_COMPGEN(0x005d0550, 0x21, SCALAR_DELETING_DTOR, type_garrison_base_window)
@@ -3823,8 +3805,7 @@ void type_garrison_base_window::setCommandAndText(message& msg)
     }
 
     case BOTTOM_OWNER_ID:
-        g_townManager->m_destStrip = g_townManager->m_heroStrip;
-        g_townManager->m_destIndex = -1;
+        g_townManager->setDestinationStrip(g_townManager->m_heroStrip, -1);
         g_townManager->m_command = TOWN_COMMAND_VIEW_HERO;
         break;
 
@@ -3918,7 +3899,8 @@ void type_garrison_base_window::viewArmy()
 // latch and repaints BOTH strips with the creature that is being divided.
 
 // E:\gamedcs\townmgr.cpp
-// Residual 98.8%: all 22 block sizes and ten calls agree; register choices
+// Before the strip-state helper: residual 98.8%, all 22 block sizes and ten
+// calls agreed; register choices
 // in the expanded viewArmy arms still differ. Keep the canonical helper
 // and its direct manager-index expressions.
 // Mac 0x1cc9e8/0x1ccaa0 retain distinct left-select and owner-right-select
@@ -3973,8 +3955,8 @@ int type_garrison_base_window::windowHandler(message& msg)
             case TOP_SLOT_FIRST_ID + 4:
             case TOP_SLOT_FIRST_ID + 5:
             case TOP_SLOT_FIRST_ID + 6:
-                g_townManager->m_currStrip = g_townManager->m_garrisonStrip;
-                g_townManager->m_currIndex = msg.m_codeY - TOP_SLOT_FIRST_ID;
+                g_townManager->setCurrentStrip(g_townManager->m_garrisonStrip,
+                                              msg.m_codeY - TOP_SLOT_FIRST_ID);
                 win->viewArmy();
                 return 1;
 
@@ -3985,8 +3967,8 @@ int type_garrison_base_window::windowHandler(message& msg)
             case BOTTOM_SLOT_FIRST_ID + 4:
             case BOTTOM_SLOT_FIRST_ID + 5:
             case BOTTOM_SLOT_FIRST_ID + 6:
-                g_townManager->m_currStrip = g_townManager->m_heroStrip;
-                g_townManager->m_currIndex = msg.m_codeY - BOTTOM_SLOT_FIRST_ID;
+                g_townManager->setCurrentStrip(g_townManager->m_heroStrip,
+                                              msg.m_codeY - BOTTOM_SLOT_FIRST_ID);
                 win->viewArmy();
                 return 1;
 
@@ -5389,21 +5371,17 @@ int townManager::main(message& msg)
                                               TOWN_GARRISON_0_SELECTOR_ID
                             && msg.m_codeY <= TTownScreenWindow::
                                                  TOWN_GARRISON_6_SELECTOR_ID) {
-                            m_currStrip = m_garrisonStrip;
-                            m_currIndex =
-                                msg.m_codeY
-                                - TTownScreenWindow::
-                                      TOWN_GARRISON_0_SELECTOR_ID;
+                            setCurrentStrip(m_garrisonStrip,
+                                msg.m_codeY - TTownScreenWindow::
+                                                  TOWN_GARRISON_0_SELECTOR_ID);
                             found = 1;
                         }
                         if (msg.m_codeY >= TTownScreenWindow::
                                               HERO_ARMY_0_SELECTOR_ID
                             && msg.m_codeY <= TTownScreenWindow::
                                                  HERO_ARMY_6_SELECTOR_ID) {
-                            m_currStrip = m_heroStrip;
-                            m_currIndex =
-                                msg.m_codeY
-                                - TTownScreenWindow::HERO_ARMY_0_SELECTOR_ID;
+                            setCurrentStrip(m_heroStrip,
+                                msg.m_codeY - TTownScreenWindow::HERO_ARMY_0_SELECTOR_ID);
                         } else if (!found) {
                             break;
                         }
@@ -5747,6 +5725,30 @@ void townManager::redrawTownScreen()
                            WINDOW_ALL_WIDGETS_HIGH);
     g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
                                   WINDOW_SCREEN_HEIGHT);
+}
+
+// Project-inferred state operations shared by the town and garrison pages.
+// Native-public strip/index fields retain their layout and visibility.
+void townManager::clearStripSelection()
+{
+    m_destStrip = 0;
+    m_srcStrip = 0;
+    m_currStrip = 0;
+    m_destIndex = -2;
+    m_srcIndex = -2;
+    m_currIndex = -2;
+}
+
+void townManager::setCurrentStrip(strip* whichStrip, int index)
+{
+    m_currStrip = whichStrip;
+    m_currIndex = index;
+}
+
+void townManager::setDestinationStrip(strip* whichStrip, int index)
+{
+    m_destStrip = whichStrip;
+    m_destIndex = index;
 }
 
 // Clear both hovered troop selections; -2 means no slot is selected.

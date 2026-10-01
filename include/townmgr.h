@@ -917,6 +917,10 @@ public:
     // at +0x1c4/+0x1c8.
     unsigned char m_currentDwellingIdOff[7];
     void resetStrips();
+    // Project-inferred state operations; selection drawing stays with callers.
+    void clearStripSelection();
+    void setCurrentStrip(strip* whichStrip, int index);
+    void setDestinationStrip(strip* whichStrip, int index);
     void setCommandAndText(message* msg);
     void showText();
     void setArmyCommand(int splitEnabled, unsigned char joinDialog);
