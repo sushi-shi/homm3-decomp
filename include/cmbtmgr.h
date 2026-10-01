@@ -1142,7 +1142,7 @@ public:
                                   unsigned char isWalking);
     unsigned char checkLandmine(long hex, army* currentArmy,
                                  unsigned char isWalking);
-    unsigned char shouldLowerDoor(army* thisArmy, long hex) const;
+    bool shouldLowerDoor(army* thisArmy, long hex) const;
     int experienceValueOfStack(int whichGroup);
     void makeCreaturesVanish();
     void raiseDoor();
@@ -1172,7 +1172,7 @@ public:
 private:
     void loadIcons();
     void freeIcons();
-    unsigned char doorCanBeLowered() const;
+    bool doorCanBeLowered() const;
 
 public:
     // Complete-only moat damage worker; its sole caller passes the entered

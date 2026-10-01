@@ -2712,7 +2712,8 @@ void combatManager::makeCreaturesVanish()
 VA(0x00467130, 0x82)
 DC_ADDRESS(0x060ee0, 0xc8)
 MAC_ADDRESS(0x073328, 0xa8)
-unsigned char combatManager::shouldLowerDoor(army* thisArmy, long hex) const
+// Original DC should_lower_door mangles its result as _N (bool).
+bool combatManager::shouldLowerDoor(army* thisArmy, long hex) const
 {
     int side = thisArmy->getControllingSide();
     if (side != 1 || m_fortificationLevel == 0 || m_drawbridgeState != DRAWBRIDGE_UP)
@@ -3889,7 +3890,8 @@ void combatManager::getMissileStartingPosition(int armyType, int x, int y, int f
 // HexIsBlocked; its two cell/body tests are the same retail operands.
 DC_ADDRESS(0x063268, 0x5a)
 MAC_ADDRESS(0x07612c, 0x60)
-unsigned char combatManager::doorCanBeLowered() const
+// Original DC DoorCanBeLowered is private const and returns bool (ABA_N).
+bool combatManager::doorCanBeLowered() const
 {
     if (m_currentSide != 1)
         return 0;
