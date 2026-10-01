@@ -1218,7 +1218,8 @@ public:
     std::vector<MonsterIdentifier> m_monsterIdentifiers;
     NewfullMap* getWorldMapData();
     type_point gameFn004CEF10(int identifier);
-    int getStartingHeroId(int alignment, int playerPos,
+    // Original GetStartingHeroId public takes TTownType; Complete adds Conflux.
+    int getStartingHeroId(TTownType alignment, int playerPos,
                           int mapPosition);  // 0x4bb400
     int scan(signed char* whichList, int start, int length);
     int randomScan(signed char* whichList, int start, int length,

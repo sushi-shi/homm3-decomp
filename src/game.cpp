@@ -2106,7 +2106,7 @@ int game::randomScan(signed char* whichList, int start, int length,
 VA(0x004bb400, 0x1DC)
 DC_ADDRESS(0x0a68d8, 0x3fc)
 MAC_ADDRESS(0x0ce1c8, 0x1d0)
-int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
+int game::getStartingHeroId(TTownType alignment, int playerPos, int mapPosition)
 {
     int heroArray[HERO_COUNT];
     THeroClass heroClass1 = classKnight;
@@ -8510,9 +8510,9 @@ void game::createTownHeroes(int* startingHeroIds)
             && startingHeroIds[i] != -1)
             heroId = startingHeroIds[i];
         else if (g_inCampaign)
-            heroId = getStartingHeroId(m_setup.m_alignment[i], i, 0);
+            heroId = getStartingHeroId(TTownType(m_setup.m_alignment[i]), i, 0);
         else
-            heroId = getStartingHeroId(m_setup.m_alignment[i], i, 0);
+            heroId = getStartingHeroId(TTownType(m_setup.m_alignment[i]), i, 0);
 
         if (m_setup.m_startingHero[i] == -1)
             m_setup.m_startingHero[i] = heroId;

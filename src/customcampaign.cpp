@@ -1677,8 +1677,8 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
     int heroId = placeholder->m_heroId;
     int owner = static_cast<signed char>(placeholder->m_owner);
     if (heroId == -1) {
-        heroId = g_game->getStartingHeroId(g_game->m_setup.m_alignment[owner],
-                                           owner, 0);
+        heroId = g_game->getStartingHeroId(
+            TTownType(g_game->m_setup.m_alignment[owner]), owner, 0);
     } else {
         g_game->rehomeCampaignHeroSetup(heroId);
     }

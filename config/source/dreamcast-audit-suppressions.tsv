@@ -465,7 +465,6 @@ kbwin.obj	0xe801c	9c070d8fc8fb	10	Complete exact decorated symbol ?kbChangeMenu@
 kbwin.obj	0xe8054	9c070d8fc8fb	10	Complete exact decorated symbol ?setMenus@@YIXPAUHMENU__@@H@Z encodes struct HMENU__ *; Dreamcast records void *, so this is a versioned ABI difference.
 hiscore.obj	0xd8d2c	a38f48419157	10	Complete exact decorated symbol ??0CHighScoreEdit@@QAE@HHHHHPAD0W4TColor@font@@W4EJustify@2@0HHHHHH@Z encodes font::TColor; Dreamcast records int, so this is a versioned ABI difference.
 hero.obj	0xd4df0	294b268e58c2	10	Complete exact decorated symbol ?getSpecialTerrain@hero@@QBEHXZ encodes int; Dreamcast records TAdventureObjectType, so this is a versioned ABI difference.
-game.obj	0xa68d8	25ac3b4f4119	10	Complete exact decorated symbol ?getStartingHeroId@game@@QAEHHHH@Z encodes int; Dreamcast records TTownType, so this is a versioned ABI difference.
 game.obj	0xb4e04	0c578efe7f8d	10	Complete exact decorated symbol ?getRandomSpell@game@@QAEHV?$bitset@$04@std@@@Z encodes const std::bitset<5>; Dreamcast records const int, so this is a versioned ABI difference.
 events.obj	0x9b788	1cbfd6c836f5	10	Complete exact decorated symbol ?doNetCombat@advManager@@QAEHPAVCNetMsg@@@Z encodes CNetMsg *; Dreamcast records CCombatInitMsg *, so this is a versioned ABI difference.
 cmbtmgr.obj	0x5fcec	25e4d9c13236	10	Complete exact decorated symbol ?getTargetWallIndex@@YIHH@Z encodes int; Dreamcast records TWallTargetId, so this is a versioned ABI difference.
