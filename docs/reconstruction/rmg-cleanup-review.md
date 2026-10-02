@@ -64,6 +64,17 @@ entry point accepts `--help` successfully. The RMG output-validation tooling in
 `scripts/homm3/rmg` and the generic source-family runner remain available;
 Git history preserves the retired scripts.
 
+Logical byte and integer declarations now use `b8` and `b32`, respectively,
+with `true`/`false` for logical constants. These are project aliases for
+`unsigned char` and `int`, preserving storage, mangling and noncanonical values;
+they do not assert original source spellings or native `bool` contracts.
+Retail `isWritable` implementations return through AL, so that interface stays
+byte-sized. The line-painter virtual blocking result remains 32-bit, and its
+tile wrapper retains the original low-byte conversion. Existing native `bool`,
+bitfield base types, counts, masks, noise, IDs and unresolved option bytes stay
+unchanged. Token review limited this edit to aliases, includes and logical
+literals; generated-output validation remains pending.
+
 The final source shares complete policies for placement retries, monolith
 lifecycle, ordered worklists, player limits, subtype lookup, footprint bounds,
 border clearance, outline traversal and terrain repair. Captured trigger values
@@ -171,9 +182,11 @@ not be treated as validation of later helper changes. No intermediate output
 comparisons are run during the review rounds.
 
 After the review converged at `7d1d07f2f`, VC6 SP3 compiled `rmg`,
-`rmg_support`, `rmg_terrain` and `singleselectionwindow`. The targeted
-`homm3 build --fast` completed with exit status 0. Its ignored log is
-`build/rmg-review/helper-sweep-build.log`. Reported similarity drops were
+`rmg_support`, `rmg_terrain` and `singleselectionwindow`. The same targeted
+`homm3 build --fast` passed again after the boolean cleanup at `48df064ea`,
+with exit status 0. The ignored logs are
+`build/rmg-review/helper-sweep-build.log` and
+`build/rmg-review/cleanup-bool-build.log`. Reported similarity drops were
 retained, as intended for this readability sweep; these results do not establish
 generated-output identity. The current Mac report has 95 scored pairs, 30 exact,
 268 emitted pairs unavailable because of unresolved references, and 40 Windows
