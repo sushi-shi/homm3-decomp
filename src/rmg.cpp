@@ -4148,8 +4148,9 @@ static inline void appendRmgExtraZoneConnection(
 }
 
 // Extra-to-extra edges are completed unguarded connections when their boundary
-// intersects the map. Extra-to-original edges must not shorten another original
-// zone's distance; accepted changes trigger another graph relaxation.
+// intersects the map. An extra-to-original edge must not shorten that original
+// zone's distance to any other original zone; each one added triggers another
+// graph relaxation.
 VA(0x0053DAD0, 0x57F)
 MAC_ADDRESS(0x23f518, 0x40c)
 void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* diagram)
@@ -4555,8 +4556,8 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
     }
 }
 
-// Seed islands at least 20 distance units from the current coast, rebuilding
-// the candidate list after every island.
+// Seed islands at least 20 distance units from the zone edge and from earlier
+// island centres, rebuilding the candidate list after every island.
 VA(0x0053F470, 0x409)
 MAC_ADDRESS(0x24123c, 0x638)
 void type_random_map_generator::placeWaterZoneIslands(TRmgZone* zone)

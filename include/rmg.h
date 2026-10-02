@@ -614,7 +614,8 @@ struct TRmgZoneCellState {
     signed m_connectionZone : 8;
 };
 
-// Packed terrain, river and road types and frames of one map cell.
+// Packed terrain, river and road types and the terrain and river frames of
+// one map cell; the road frame is in TRmgGroundTileData.
 struct TRmgGroundTile {
     signed m_landType : 6;
     signed m_terrainFrame : 8;
