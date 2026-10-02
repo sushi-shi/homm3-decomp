@@ -42,6 +42,31 @@ Byte-similarity percentage drops are acceptable for this campaign. Generated
 behavior is the acceptance criterion, with the million-case validation deferred
 until the review and source changes are finished.
 
+Seven reviewers completed an extraction round followed by nine semantic rounds,
+rotating ownership across all six files and independently reviewing preservation.
+The final two rounds reconsidered complete operations and previous dispositions,
+including arithmetic hidden inside higher-level placement and painting code.
+The ninth round found no further worthwhile extraction or missing canonical
+helper call at executable-source checkpoint `7d1d07f2f`. This is a review stopping
+point, not proof that every possible improvement has been discovered.
+
+The final source shares complete policies for placement retries, monolith
+lifecycle, ordered worklists, player limits, subtype lookup, footprint bounds,
+border clearance, outline traversal and terrain repair. Captured trigger values
+can use the same translation helper as live prototype fields. Existing native
+point and half-edge helpers remain nested in the shared operations. Cleanup-only
+helpers reduced to one source call by a larger extraction were folded into that
+operation; native-supported helper boundaries were retained. New helper names
+and signatures are admitted in `config/source/win_only_modules.tsv` as cleanup
+choices, not recovered original symbols.
+
+Remaining explicit code has specific reasons: different worklist mutation order,
+live versus cached terrain reads, native long-coordinate selectors, callback
+snapshot lifetimes, partial-width integer-backed serialization, differing cache
+validity timing and reflection priority. The review rejected wrappers that need
+many policy parameters or merely package obvious individual stores. No retail
+bug was repaired and no generated-output comparison ran between rounds.
+
 | Area | Review outcome |
 | --- | --- |
 | Map storage, adapters and packed fields | Reviewed ownership, view lifetime, flattening and partial initialization. Named template-zone records, half-edges, owned-object lists, and the river painter/adapter and corrected the inverted line-painter blockage query. Scalar accessors now distinguish terrain/frame from line type/underlying terrain. Kept layouts, field widths, virtual ordering and snapshot boundaries. |
@@ -127,9 +152,20 @@ or possible improvement has been discovered.
 ## Validation status
 
 The expanded helper campaign has not yet undergone generated-output validation.
-The million-case run remains pending. The results below describe the earlier
-source checkpoint only and must not be treated as validation of later helper
-changes. No intermediate output comparisons are run during the review rounds.
+The million-case run remains pending. The earlier execution results below must
+not be treated as validation of later helper changes. No intermediate output
+comparisons are run during the review rounds.
+
+After the review converged at `7d1d07f2f`, VC6 SP3 compiled `rmg`,
+`rmg_support`, `rmg_terrain` and `singleselectionwindow`. The targeted
+`homm3 build --fast` completed with exit status 0. Its ignored log is
+`build/rmg-review/helper-sweep-build.log`. Reported similarity drops were
+retained, as intended for this readability sweep; these results do not establish
+generated-output identity. The current Mac report has 95 scored pairs, 30 exact,
+268 emitted pairs unavailable because of unresolved references, and 40 Windows
+claims without a full-TU body. No full-build preservation gate or global ledger
+checkpoint was run. The older score table below belongs only to the previous
+campaign.
 
 ### Earlier source checkpoint
 
