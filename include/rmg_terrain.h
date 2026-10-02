@@ -190,7 +190,9 @@ public:
 // Terrain rule per terrain type.
 extern TRmgTerrainRule* const g_rmgTerrainRules[];
 
-// Nonmatching run of a neighbour ring; weight counts cardinals 2, diagonals 1.
+// Nonmatching run of a cell's neighbour ring. Its weight is how much of the
+// cell's border it covers (edge-sharing cardinals 2, corner diagonals 1);
+// repair fills the lightest gaps first.
 struct TRmgTerrainGap {
     unsigned int m_weight;
     unsigned int m_start;

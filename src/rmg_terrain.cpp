@@ -1006,6 +1006,13 @@ static inline void repairTerrainGap(rmgTerrainPainter& painter,
     painter.paintPoint(fillPositive ? positive : negative);
 }
 
+
+// Odd tile directions are the diagonals, which touch the cell only at a corner.
+static inline bool isRmgDiagonalDirection(unsigned int direction)
+{
+    return (direction & 1) != 0;
+}
+
 // Repair one-cell gaps, then greedily fill the lightest neighbour-ring gaps
 // until only one remains; ties go to the first gap. Painting order matters
 // because each repair updates the worklists.
@@ -1045,7 +1052,7 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
             gap.m_start = direction;
             gap.m_length = 0;
             do {
-                gap.m_weight += (direction & 1) ? 1 : 2;
+                gap.m_weight += isRmgDiagonalDirection(direction) ? 1 : 2;
                 ++gap.m_length;
                 direction = (direction + 1) % TILE_DIR_COUNT;
             } while (direction != firstMatch && !matches[direction]);
