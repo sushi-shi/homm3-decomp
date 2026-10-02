@@ -185,7 +185,7 @@ TPoint g_rmgDirections[RMG_DIRECTION_COUNT] = {
 };
 
 // Shipyards are three tiles wide; these offsets probe the water squares
-// beside their upper and lower edges.
+// beside the left and right ends of both footprint rows.
 DATA(0x0069CE00)
 TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
     TPoint(-3, 0),
@@ -697,8 +697,8 @@ static inline bool allowsRmgSharedObjectEntrance(int objectType)
         && g_adventureObjectTraits[objectType].m_trait1;
 }
 
-// The object must fit, have a connected outline, and its entrance cell below
-// the trigger must be passable land of the same zone and water class.
+// The object must fit and have a connected outline, and the cell below its
+// trigger must be passable land of the same zone and water class.
 VA(0x00531CF0, 0x1A5)
 MAC_ADDRESS(0x22e6a8, 0x270) // anchor-callee 0x541c73; thiscall, ret 0x14; retail-only
 b8 type_random_map::canPlaceObject(
@@ -1177,8 +1177,8 @@ VA(0x00532C80, 0x1BA)
 MAC_ADDRESS(0x22fe88, 0x208)
 void TRmgObjectPropertiesRef::buildOutline()
 {
-    // Wall-follows the footprint with cardinal steps. Offsets are
-    // nonpositive, measured back from the object's bottom-right cell.
+    // Wall-follows the footprint with cardinal steps. Offsets are relative
+    // to the object's bottom-right cell, so footprint cells are nonpositive.
     if (m_outline.size() > 0)
         return;
     TPoint position;
@@ -3524,7 +3524,8 @@ void type_random_map_generator::calculateZoneBounds()
     }
 }
 
-// Places the zones in two passes, then normalizes them into a centred square.
+// Places each zone, repositions all of them twice, then scales the layout
+// into a centred square.
 VA(0x0053BCB0, 0x33B)
 MAC_ADDRESS(0x23cd84, 0x458)
 void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
@@ -3820,8 +3821,8 @@ static inline bool crossesRmgBoundaryAxis(
         || (original < maximum && clipped >= maximum);
 }
 
-// Ordered integer line/rectangle clipping (left, top, right, bottom). Each
-// rounded intersection and early rejection affects the generated map.
+// Integer clipping toward `toward` against the left, top, right, then bottom
+// edge; a rejected clip returns the point unchanged.
 VA(0x0053CAC0, 0x266)
 MAC_ADDRESS(0x23d1dc, 0x4a8)
 TPoint clipRmgBoundaryPoint(
@@ -3946,8 +3947,8 @@ void type_random_map_generator::recenterZone(TRmgZone* zone)
     }
 }
 
-// Move one polygon vertex inward using the same clamped radius for the
-// closing vertex and every subsequently visited vertex.
+// Moves a coast vertex toward the zone centre by a quarter of its distance,
+// at least 4 cells but never more than half.
 static inline void insetRmgIslandBoundaryPoint(
     TPoint& point, const TRmgMapPosition& center)
 {
@@ -4814,8 +4815,8 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
     }
 }
 
-// Opens a path from each zone's seed cell. Zone bounds are read before
-// flooding and the zone level after it.
+// Floods path costs from a seed cell in each zone, then opens a path back
+// toward it from every reached clear, dry cell of the zone.
 VA(0x005405D0, 0x304)
 MAC_ADDRESS(0x242a40, 0x448)
 void type_random_map_generator::buildZoneConnectionPaths()
@@ -5170,8 +5171,9 @@ static inline TRmgMapPosition addRmgObjectAtRandomCandidate(
     return position;
 }
 
-// All equally cheap empty crossings are eligible. Open their predecessor
-// paths and record both entrances before placing borders or guards.
+// Opens one crossing per 40 eligible border cells (rounded up), chosen from
+// the cheapest empty ones; each gets open paths and entrances on both sides
+// before its border or guard.
 VA(0x00541140, 0x63A)
 MAC_ADDRESS(0x243af8, 0x53c) // anchor-callee ConnectZones 0x543550; retail-only
 b8 type_random_map_generator::createGroundConnection(
@@ -5249,8 +5251,8 @@ b8 type_random_map_generator::createGroundConnection(
     return true;
 }
 
-// Mark admitted cardinal neighbours visited, but enqueue only water.
-// Path-clearance water cells remain traversable.
+// Cardinal flood across path-clearance water; adjoining land is marked
+// visited but not expanded.
 VA(0x00541780, 0x18D)
 MAC_ADDRESS(0x244034, 0x254) // anchor-callee 0x541f1f; thiscall, ret 0x0c
 void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
@@ -5711,8 +5713,9 @@ static inline void clearRmgConnectionVisits(type_random_map& map, int level)
         item->m_tileData.m_connectionVisited = false;
 }
 
-// Try template connections first, then repair remaining non-water connections
-// with shipyard reachability and paired monoliths.
+// First pass: land crossings, then shipyards, then subterranean gates.
+// Second pass: remaining connections get a shipyard, or monoliths between
+// land zones.
 VA(0x00543240, 0x797)
 MAC_ADDRESS(0x2462bc, 0x6f4)
 void type_random_map_generator::connectZones()
@@ -7148,8 +7151,7 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
 {
     TRmgTemplateZone* slot = zone->m_templateZone;
     TRmgTreasureGroup group(16, 16);
-    // Bands below value 100 or without density enter the shared scheduler
-    // with zero density.
+    // Bands with a maximum value below 100 or no density are skipped.
     int densities[3];
     for (int band = 0; band < 3; ++band) {
         const TRmgTreasureRange& range = slot->m_treasure[band];
@@ -7167,7 +7169,7 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
         spacing = getRmgDensitySpacing(1600, totalDensity);
     else
         spacing = getRmgDensitySpacing(800, totalDensity);
-    // Treasure counts start at zero, so the aliased weighted counts remain zero.
+    // No band has placed a treasure yet.
     int weightedCounts[3] = {0, 0, 0};
     int countSteps[3];
     initializeRmgCategoryStrides(densities, weightedCounts, 3,
@@ -7779,8 +7781,9 @@ void type_random_map_generator::createRivers()
     }
 }
 
-// Generation order matters: players, separate town and connection passes,
-// then coast marking, decoration, roads and rivers.
+// Assigns players to template slots, lays out zones and terrain, places
+// towns, connections, mines and treasures, then decorates and adds roads
+// and rivers.
 VA(0x00549930, 0x37B)
 MAC_ADDRESS(0x24e294, 0x41c)
 b8 type_random_map_generator::generate()
@@ -8355,8 +8358,8 @@ static void insertRmgWorkItem(std::vector<TRmgZone*>& zones, TRmgZone* zone)
     zones.insert(zones.begin() + middle, 1, zone);
 }
 
-// Unit-edge shortest paths over the zone connection graph using a
-// descending priority worklist; its tie order matters.
+// Stores each zone's connection-graph distance from origin in its quest
+// placement score (20000 when unreachable).
 VA(0x0054B180, 0x174)
 MAC_ADDRESS(0x25013c, 0x210) // anchor-callee + zone/template layouts; retail-only
 void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
@@ -8381,8 +8384,8 @@ void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
     }
 }
 
-// Stable ascending insertion preserves zone order on ties. Random scores
-// are drawn for excluded zones too.
+// Tries reachable non-junction land zones nearest first, but adjacent zones
+// last; ties keep zone order. Excluded zones still draw a random score.
 VA(0x0054B300, 0x18B)
 MAC_ADDRESS(0x25034c, 0x23c) // anchor-callee + placement call + zone fields; retail-only
 b8 type_random_map_generator::placeQuestGroup(
@@ -8423,7 +8426,7 @@ b8 type_random_map_generator::placeQuestGroup(
 // Treasure artifact class ('T') bit in the artifact table.
 static const int g_rmgQuestArtifactClass = 2;
 
-// Counting and selecting must use the same quest-artifact eligibility rule.
+// Enabled treasure-class artifacts not yet used by a seer hut.
 static inline bool isRmgQuestArtifact(int artifact, const b8* usedArtifacts)
 {
     return !g_artifactTraits[artifact].m_disabled && !usedArtifacts[artifact]

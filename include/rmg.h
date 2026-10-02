@@ -571,8 +571,8 @@ enum ERmgConnectionConstants {
     RMG_WATER_RANDOM = 3
 };
 
-// Guard creature limits. For RoE maps, evaluation stops before creature 117
-// while the exclusion starts at 118 (retail quirk).
+// Guard creature limits. On RoE maps creatures from 118 are excluded but only
+// those below 117 are evaluated, so 117 slips through (retail bug).
 enum ERmgGuardConstants {
     RMG_GUARD_CREATURE_COUNT = 145,
     RMG_GUARD_ROE_CREATURE_LIMIT = 117,
@@ -593,12 +593,14 @@ class type_object;
 
 struct TRmgMovementCost {
     unsigned m_cost : 16;
-    // Distance from a flood seed within one zone (step costs 2/3); ranks
-    // candidate ground-connection crossings.
+    // Cost of reaching this cell in a flood from another zone; ranks
+    // ground-connection crossings. Water zones reuse it for distance from
+    // their edge (cardinal 2, diagonal 3).
     unsigned m_zonePathCost : 16;
 };
 
-// Per-cell zone id and candidate score used by the connection pass.
+// Per-cell zone id and distance to the nearest object entrance (cardinal 2,
+// diagonal 3), used to space placements.
 struct TRmgZoneCellState {
     unsigned m_score : 16;
     signed m_zone : 8;
@@ -721,11 +723,10 @@ public:
     }
 
     virtual ~type_object();
-    // The prison override releases its reserved hero when removal rejects
-    // this object; other objects do nothing.
+    // Undoes a discarded object's reservation; only prisons reserve (a hero).
     virtual void releaseReservation();
-    // Quest artifacts clear owned state and may replace their properties
-    // during this query.
+    // Runs once the object's treasure group is committed: key tents and quest
+    // artifacts place their guard or seer hut, or are replaced by a treasure.
     virtual b8 isWritable();
     virtual void write(TAbstractFile* outputFile, int version);
 };
@@ -835,8 +836,8 @@ public:
 };
 SIZE(rmgQuestArtifactObject, 0x28);
 
-// Keymaster's tent. When written it tries to place a matching guard,
-// and substitutes another treasure if that fails.
+// Keymaster's tent. Once committed it tries to place a matching border
+// guard, and is replaced by another treasure if that fails.
 class rmgKeyTentObject : public type_object {
 public:
     type_random_map_generator* m_generator; // +0x1c
@@ -1415,10 +1416,10 @@ struct TRmgZone {
     // Name from H3API (H3RmgZoneGenerator::townType2). Compared with a
     // creature's town when valuing dwellings and creature rewards.
     int m_townType2;
-    // Terrain ordinal 0..7 chosen by chooseTerrain.
+    // Chosen by chooseTerrain; added water zones use water.
     int m_terrain;                      // +0x0c
     TRmgMapPosition m_levelPosition;   // +0x10
-    int m_boundaryRoughness;            // +0x1c: minimum of adjacent zones
+    int m_boundaryRoughness;            // +0x1c: zone size scaled to the map
     TRmgZoneBounds m_bounds;           // +0x20
     TRmgMapPosition m_position;        // +0x30: main town
     b8 m_active;            // +0x3c
