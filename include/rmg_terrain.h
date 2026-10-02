@@ -190,7 +190,7 @@ public:
 // Terrain rule per terrain type.
 extern TRmgTerrainRule* const g_rmgTerrainRules[];
 
-// RepairTerrainPoint ranks up to four disjoint runs in an eight-cell ring.
+// Nonmatching run of a neighbour ring; weight counts cardinals 2, diagonals 1.
 struct TRmgTerrainGap {
     unsigned int m_weight;
     unsigned int m_start;

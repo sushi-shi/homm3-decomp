@@ -1,4 +1,4 @@
-// rmg_terrain.cpp - random-map terrain, road and river tile painting.
+// Random-map terrain, road and river tile painting.
 #include "va.h"
 #include "includes.h"
 
@@ -34,7 +34,6 @@ void TRmgLinePainterTile::setTile(const rmgTerrainTile& tile)
     m_painter->setTile(m_point, tile);
 }
 
-// Nonzero blocks painting on water and rock.
 b8 TRmgLinePainterTile::isBlocked()
 {
     return m_painter->isBlocked(m_point);

@@ -1,4 +1,4 @@
-// rmg.cpp - random-map generator.
+// Random-map generator.
 
 #include "va.h"
 #include "includes.h"
@@ -1343,7 +1343,6 @@ static inline void writeRmgReservedBytes(TAbstractFile* outputFile)
     outputFile->write(reserved, sizeof(reserved));
 }
 
-// Write two reserved zero bytes.
 static inline void writeRmgReservedWord(TAbstractFile* outputFile)
 {
     int reserved = 0;
@@ -1537,9 +1536,9 @@ b8 rmgKeyTentObject::isWritable()
     return false;
 }
 
-// Deletes the pending seer hut if it was never placed.
 VA_COMPGEN(0x005339C0, 0x21, SCALAR_DELETING_DTOR, rmgQuestArtifactObject)
 
+// Deletes the pending seer hut if it was never placed.
 VA(0x005339F0, 0x58)
 MAC_ADDRESS(0x231100, 0x9c)
 rmgQuestArtifactObject::~rmgQuestArtifactObject()
@@ -2710,7 +2709,6 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
         std::vector<TRmgObjectPropertiesRef*> candidates;
         std::vector<TRmgMapPosition> positions;
         std::vector<int> weights;
-        // Unused.
         std::vector<type_object*> unusedObjects;
         int totalWeight = 0;
         for (const int* type = g_rmgDecorationTypes;
@@ -2840,8 +2838,7 @@ static inline void applyRmgObjectLimitOverrides(int* limits,
         limits[overrides[count].m_objectType] = overrides[count].m_limit;
 }
 
-// Hero eligibility uses THeroTraits attribute bytes: special heroes are
-// excluded, and availability depends on the map version.
+// Special heroes and heroes missing from the map version are never offered.
 VA(0x00537B10, 0x2A8)
 MAC_ADDRESS(0x2363e4, 0x2ec)
 type_random_map_generator::type_random_map_generator(
@@ -3585,7 +3582,6 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     }
 }
 
-// Midpoint rounded as (a + b + 1) / 2 with signed division.
 static inline TPoint getRmgSubdivisionMidpoint(const TPoint& from, const TPoint& to)
 {
     return TPoint((from.m_x + to.m_x + 1) / 2, (from.m_y + to.m_y + 1) / 2);
@@ -3625,7 +3621,6 @@ static inline bool splitRmgBoundarySegment(std::vector<TPoint>& pending,
     return true;
 }
 
-// Clamp a boundary point to the map.
 static inline TPoint clampRmgBoundaryToMap(
     const TPoint& point, const type_random_map& map)
 {
@@ -3636,7 +3631,6 @@ static inline TPoint clampRmgBoundaryToMap(
     return TPoint(x, y);
 }
 
-// Assign a cell to its zone, optionally marking it for zone-terrain painting.
 static inline void assignRmgZoneCell(
     TRmgMapItem* item, int zoneIndex, b8 markForTerrain)
 {
@@ -5537,8 +5531,8 @@ b8 type_random_map_generator::createSubterraneanGate(
     destinationEntrance->openPath();
 
     if (connection->m_placeBorderObjects) {
-        // Retail shares guardValue across both entrances. Success on either
-        // side suppresses both guards; failed placement does not undo objects.
+        // Success on either side suppresses both guards; a failed placement
+        // does not undo the other side's objects.
         placeRmgGateConnectionBorder(*this, position, destination, guardValue);
         placeRmgGateConnectionBorder(*this, otherPosition, source, guardValue);
     }

@@ -1,4 +1,4 @@
-// rmg_support.cpp - random-map line painting and Voronoi helpers.
+// Random-map line painting and Voronoi helpers.
 
 #include "va.h"
 
@@ -29,9 +29,8 @@ TRmgLinePatternTable::TRmgLinePatternTable(unsigned int patternCount, const int*
         m_ranges[value].m_firstIndex = 0;
         m_ranges[value].m_valueCount = 0;
     }
-    // Expects a nonempty list of ids in [0, 8] with each id's frames
-    // contiguous; this is not validated, and a repeated run would corrupt
-    // its range. Both shipped tables obey it.
+    // Expects a nonempty, unvalidated list of ids 0..8 with each id's frames
+    // contiguous.
     int previousPattern = m_patterns[0];
     ++m_ranges[previousPattern].m_valueCount;
     for (unsigned int index = 1; index < m_patternCount; ++index) {
@@ -209,7 +208,6 @@ void TRmgRiverLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& t
     readRmgLineTileSnapshot(m_adapter, point, tile);
 }
 
-// Nonzero means the line cannot be painted on this tile.
 VA(0x0055EE00, 0x28)
 MAC_ADDRESS(0x253b64, 0x44)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
 b32 TRmgRiverLinePainter::isBlocked(const TRmgGridPoint& point)
@@ -372,7 +370,6 @@ TRmgVoronoi::TRmgVoronoi()
     m_root = firstEdge;
 }
 
-// The subdivision owns both half-edges of every allocated pair.
 VA(0x005FD330, 0x58)
 MAC_ADDRESS(0x25c6b4, 0xa4) // anchor-callee 0x53e685; thiscall, ret 0
 TRmgVoronoi::~TRmgVoronoi()
@@ -589,8 +586,7 @@ VA(0x005FDAE0, 0x2B)
 MAC_ADDRESS(0x25c2b4, 0x50) // anchor-callee 0x5fd937/0x5fd97e; Complete-only
 int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
 {
-    // Signed twice-area: positive means counterclockwise in the coordinate
-    // system used by the subdivision.
+    // Signed twice-area; positive means counterclockwise.
     return (second.m_x - first.m_x) * (third.m_y - first.m_y)
         - (second.m_y - first.m_y) * (third.m_x - first.m_x);
 }

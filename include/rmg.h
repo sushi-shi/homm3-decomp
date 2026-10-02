@@ -581,7 +581,7 @@ enum ERmgGuardConstants {
     RMG_GUARD_DISPOSITION = 3
 };
 
-// Offset used by CreateRiver when shaping a river delta.
+// River-delta placement offset from the river's end, per direction.
 struct TRmgRiverDeltaOffset {
     int m_x;
     int m_y;
@@ -1520,7 +1520,6 @@ struct TRmgHalfEdge {
     {
         return getTwin()->getZone();
     }
-    // Voronoi vertex bookkeeping: the computed flag and the shared vertex.
     b8 isPositionComputed() const
     {
         return m_positionComputed;
@@ -1798,7 +1797,8 @@ public:
     void removeObject(type_object* object);
     // Paints a road back along the path-cost predecessors.
     b8 paintRoad(TRmgMapPosition position, int roadType);
-    // Called by water-wheel placement and river-delta object selection.
+    // Runs a river from beside a water wheel to a river target, possibly
+    // ending in a river delta.
     void createRiver(TRmgMapPosition source);
     void markRiverObjectTargets();
     void markRiverTargets();
