@@ -145,9 +145,9 @@ and the complete-object byte view preserve 98.9155%; indexed byte-row rebinding
 falls to 75.2535%. The selected typed-row object was reproduced separately
 and agrees with the adopted production object.
 
-`scripts/experiments/test-owner-payloads.py` extracts the actual palette
-constructors/helper and diff `apply`, and includes the actual diff accessors.
-At `-O0` and `-O2`, it checks 48 palettes in three channel layouts, all 256
+The retired owner-payload fixture extracted the actual palette
+constructors/helper and diff `apply`, and included the actual diff accessors.
+At `-O0` and `-O2`, it checked 48 palettes in three channel layouts, all 256
 entries through all three conversion constructors, the raw RGB copy, unchanged
 input storage, and a mixed three-record diff. Three bounded negative controls
 (missing final entry, wrong channel, wrong old-data offset) are rejected.

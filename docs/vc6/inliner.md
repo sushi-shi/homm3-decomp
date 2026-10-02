@@ -2039,7 +2039,7 @@ budget, while the EH-bearing constructor budget-tests it.
 
 Byte-identical spellings carry different costs, so bracket a callee from its
 callers' retail decisions and then pick the spelling in the bracket (splice
-above; `TRmgBoundaryVertex` constructors 132..157 and 87..112). Accessors
+above; `TRmgHalfEdge` constructors 132..157 and 87..112). Accessors
 returning `TPoint` by value versus `const TPoint&` also changed addSite's
 coincidence test (both coordinates loaded before the compares) and its
 copies inside the circle test.
@@ -2209,7 +2209,7 @@ the structures the replay admits. What it found:
   entry pointer anchors it at the Y-flip byte. 100%.
 - The line painter (`refreshRmgLinePoint`, `TRmgLineWalker::paintPoint`):
   the sum, conversion and factory sites of a neighbour query can only be
-  refused from a nested context, so an ordinary `getNeighbourLand` helper
+  refused from a nested context, so an ordinary `getNeighbourLineType` helper
   on the painter interface holds them; the current tile's frame and flip
   accessors give the refresh's tail the sites the helper's budget divides
   by, the proxy's initializer-list copy keeps the walker's compound add
@@ -2220,7 +2220,7 @@ the structures the replay admits. What it found:
   materializes the one-cell rectangle's two unit extents from one register
   copied into another, the painter alias and availability mask scoped to
   the first pass give retail's frame, and naming the converted sum inside
-  `getNeighbourLand` orders the neighbour proxy's stores (painter before
+  `getNeighbourLineType` orders the neighbour proxy's stores (painter before
   the coordinates). Refresh keeps its entry swap.
 - Callee IL cost as the lever (terrain `paintPoint`, 98.68 -> 100): the
   loop erase's `_Distance` wrapper had to be refused while the final

@@ -5373,15 +5373,15 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
     switch (result) {
     case RANDOM_MAP_OK:
         return 1;
-    case RANDOM_MAP_FAILED_1:
+    case RANDOM_MAP_OPEN_FAILED:
         normalDialog(g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_FILE_CREATE_ERROR), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         break;
-    case RANDOM_MAP_FAILED_2:
+    case RANDOM_MAP_WRITE_FAILED:
         normalDialog(g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_FILE_WRITE_ERROR), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         break;
-    case RANDOM_MAP_FAILED_3:
+    case RANDOM_MAP_GENERATION_FAILED:
         normalDialog(g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_GENERATION_FAILED), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         break;

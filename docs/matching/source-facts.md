@@ -62,7 +62,7 @@ The RMG vtables provide concrete examples in the pinned Complete executable
 | RMG use | Vtable / slot | Retail body | Existing matched name |
 | --- | --- | --- | --- |
 | `TRmgTableTerrainRule::isSpecialFrame(int)` | 0x642cb0 / 2 | 0x5543f0, false / ret 4 | `CChatEdit::ignoreKey` |
-| `type_object::unknownOperation()` | 0x640a74 / 1 | 0x5bc690, ret | `textWidget::dim` |
+| `type_object::releaseReservation()` | 0x640a74 / 1 | 0x5bc690, ret | `textWidget::dim` |
 | `type_object::isWritable()` | 0x640a74 / 2 | 0x484620, true / ret | `TCampaignBuildingBonus::isBuildingBonus` |
 | `type_treasure_def::isTerrainDependent()` | 0x640b64 / 2 | 0x484d50, false / ret | `TCampaignBonus::isBuildingBonus` |
 
