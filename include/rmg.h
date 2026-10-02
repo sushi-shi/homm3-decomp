@@ -82,7 +82,7 @@ public:
 class type_black_box_creature_def : public type_treasure_def {
 public:
     int m_creatureType;
-    // Reward count, multiplied by creature AI value.
+    // Stack size: the level's reward value divided by AI value, rounded.
     int m_creatureCount;
 
     type_black_box_creature_def(int creatureType);
@@ -418,7 +418,7 @@ struct TRmgTemplateZone {
     b8 m_allowedTowns[9];    // +0x41
     int m_mineCounts[7];                // +0x4c: indexed by resource
     int m_mineDensities[7];             // +0x68: indexed by resource
-    // Prefer the aligned town's native terrain table.
+    // Use the aligned town's native terrain.
     b8 m_useNativeTerrain;
     b8 m_allowedTerrain[8];  // +0x85
     int m_monsterStrength;              // +0x90
@@ -629,19 +629,19 @@ struct TRmgGroundTileData {
     unsigned m_roadFlipX : 1;
     unsigned m_roadFlipY : 1;
     unsigned m_coastal : 1;
-    // Object entrance whose traits constrain approach directions.
+    // Object entrance (trigger) cell.
     unsigned m_roadEntrance : 1;
-    // On the traced perimeter of an accepted treasure or quest placement.
+    // On an assembled treasure group's traced outline (group map only).
     unsigned m_placementOutline : 1;
     unsigned m_connectionVisited : 1;
-    // Admitted to the road-cost flood.
+    // Not blocked by an object.
     unsigned m_roadPassable : 1;
     unsigned m_borderObject : 1;
     // Kept clear for generated paths; obstacle footprints may not cover it.
     unsigned m_pathClearance : 1;
     // Set on zone cells whose terrain paintZoneTerrain paints.
     unsigned m_paintZoneTerrain : 1;
-    // Set whenever a river is painted; distinct from the routing target.
+    // River painted here, or a mountain, lake or gem-mine cell rivers flow to.
     unsigned m_hasRiver : 1;
     unsigned m_riverTarget : 1;
     unsigned m_impassable : 1;
@@ -1333,7 +1333,7 @@ public:
 inline TRmgRiverLinePainter::~TRmgRiverLinePainter() {}
 
 // One axis of a line walk from the destination back toward the previous
-// position: current coordinate, remaining distance and unit step.
+// position: current coordinate, distance and unit step.
 struct TRmgLineWalkAxis {
     unsigned int m_position;
     unsigned int m_distance;
@@ -1429,7 +1429,7 @@ struct TRmgZone {
     int m_questPlacementScore;         // +0x40
     // Placed objects per object type, checked against per-zone limits.
     int m_objectCountByType[232];      // +0x44
-    // Connection-graph distance to each zone (32000 = unreached).
+    // Connection-graph distance to each original zone (32000 = unreached).
     std::vector<short> m_zoneDistances;// +0x3e4
     std::vector<TPoint> m_boundary;    // +0x3f4: clipped polygon vertices
     std::vector<TPoint> m_entrances;   // +0x404
@@ -1829,7 +1829,7 @@ SIZE(TRmgRiverPainter, 0x20);
 SIZE(TRmgRoadPainter, 0x20);
 SIZE(type_random_map_generator, 0x14e0);
 
-// Creature value by level, used to size Pandora's Box creature rewards.
+// Creature value by level, used to size creature rewards.
 DATA(0x006824E0) extern int g_rmgCreatureValueByLevel[];
 
 #endif  // HOMM3_RMG_H

@@ -3659,7 +3659,7 @@ void type_random_map_generator::drawIrregularZoneBoundary(
 }
 
 // Bresenham line rasterization with an accumulated half-major-axis error.
-// The final cell receives its zone but deliberately not the terrain mark.
+// The final cell receives its zone but not the terrain mark.
 VA(0x0053C220, 0x16A)
 MAC_ADDRESS(0x23da90, 0x2a4)
 void type_random_map_generator::drawStraightZoneBoundary(
@@ -4435,7 +4435,7 @@ MAC_ADDRESS(0x2406bc, 0x484)
 void __fastcall generateRmgIslandMask(unsigned char* mask, int width, int height)
 {
     std::vector<TRmgNoiseRegion> patches;
-    // This noise grid deliberately uses bounds X for rows and Y for columns:
+    // This noise grid uses bounds X for rows and Y for columns:
     // subdivision receives (height, width), and output uses X*width + Y.
     TRmgNoiseRegion patch = {
         { 0, 0, height, width }, { 0, 0, 0, 0 }, (height + width) / 4 + 1
@@ -5578,8 +5578,8 @@ b8 type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* z
     return true;
 }
 
-// A positive-cost entrance follows its predecessor; a zero-cost entrance
-// searches same-zone open neighbours, falling back to the cell directly below.
+// The border goes on a positive-cost entrance's path predecessor; a zero-cost
+// entrance uses the first same-zone open neighbour, else the cell below.
 VA(0x00542B00, 0x1D2)
 MAC_ADDRESS(0x245870, 0x364) // anchor-callers 0x542ec5/0x54304f; Complete-only, ret 0x10
 b8 type_random_map_generator::placeMonolithBorder(
@@ -7507,7 +7507,7 @@ static inline TRmgMapItem* getRmgDryRiverCoastCell(
 }
 
 // Test three water cells, three dry entrance-free cells, then four inland
-// cells. Retail admits x == width; the last inland cell receives the target.
+// cells; the last inland cell receives the target.
 VA(0x00548A40, 0x222)
 MAC_ADDRESS(0x24ce88, 0x404)
 void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, int direction)

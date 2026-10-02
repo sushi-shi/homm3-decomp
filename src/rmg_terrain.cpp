@@ -982,9 +982,9 @@ b8 rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
         return hasSeparatedNeighbours(point);
 }
 
-// Fill one side of an axis gap. Prefer the negative side unless it needs no
-// repair and the positive side either needs repair or avoids a perpendicular
-// gap in the paint terrain.
+// Fill one side of an axis gap: the negative side, unless it needs no repair
+// and either the positive side does or only the negative side has a
+// perpendicular gap in the paint terrain.
 static inline void repairTerrainGap(rmgTerrainPainter& painter,
     const TRmgGridPoint& negative, const TRmgGridPoint& positive,
     TRmgTerrainGapAxis axis)
