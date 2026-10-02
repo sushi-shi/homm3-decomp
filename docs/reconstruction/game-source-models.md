@@ -12,11 +12,11 @@ comparisons.
 
 The union/pragma cleanup uses the same driver outside RMG. Its historical
 `generate-shipyard-boundary-family.py`, `generate-shipyard-scope-family.py` and
-`generate-movehero-helper-family.py` populations restore four ordinary static
+`generate-movehero-helper-family.py` populations restored four ordinary static
 helpers, preserving their actual calls and early-exit scopes while deleting
 seven existing fences. The native `generate-game-vector-helper-family.py` and
-`generate-game-vector-return-family.py` populations jointly recover typed
-load/save templates, delete a pointer union and six more fences, and retain
+`generate-game-vector-return-family.py` populations jointly recovered typed
+load/save templates, deleted a pointer union and six more fences, and retained
 both exact writer bodies. The
 [audit](union-pragma-audit.md#ordinary-shipyard-and-movement-helpers) records
 the frozen contexts, source/candidate counts, rejected higher-scoring false
@@ -34,9 +34,9 @@ ICF twin when the requested native element/signature is missing or ambiguous.
 
 ### University record ownership and header collateral
 
-`generate-university-insertion-family.py` exhausts 36 meaningful API, receiver,
+`generate-university-insertion-family.py` exhausted 36 meaningful API, receiver,
 record and fence choices (24 object identities) in context
-`9d5e8e882a44a0242bf7`. `generate-university-initializer-family.py` then compares
+`9d5e8e882a44a0242bf7`. `generate-university-initializer-family.py` then compared
 the generic aggregate plus explicit Conflux initializer with the old default
 constructor: 13 successful states, 13 objects, context `99ba0ea5c2a6db673a5a`.
 Both families reproduce ten retained candidates. Their exact anchors require
@@ -47,7 +47,7 @@ The [audit](union-pragma-audit.md#generic-university-records-and-conflux-initial
 separates proven generic-record ownership from the provisional initializer name
 and original helper kind. Scores alone do not establish those source facts.
 
-`generate-university-header-control.py` is a post-adoption two-state negative
+`generate-university-header-control.py` was a post-adoption two-state negative
 control: restore only the old constructor declaration in unrelated consumers.
 It isolates the two small whole-build score movements in army and
 singleselectionwindow: context `ea72eb19220d16fbe772` scores both states,
@@ -70,7 +70,7 @@ retail build.
 
 ### Native marketplace artifact ownership
 
-`generate-market-artifact-owner-family.py` is a finite two-state ownership
+`generate-market-artifact-owner-family.py` was a finite two-state ownership
 control against `2359d5a4`: context `d7a243b77c8e39872831`, two scored states,
 two object identities, both retained candidates reproduced. The selected
 `372591115abd7d96fb098eeb` changes the entry, header, dispatcher, state and
@@ -91,14 +91,14 @@ score changes, MAX resets, or historical peaks lost. Full gates pass at
 
 `homm3.vc6.test_market_artifact_owner` imports the actual entry, dispatcher arm,
 enum, record, array member and global declarations into a native-only semantic
-fixture. It checks identity and in-place mutation of all seven slots in each
+fixture. It checked identity and in-place mutation of all seven slots in each
 owner, hero forwarding, modal state and AI dispatch. Eight negative controls
 reject wrong pointers, records, state, branch choice and missing modal calls.
 The host fixture does not claim x86 ABI or codegen proof.
 
 ### Marketplace ratio accessor and setup boundaries
 
-`generate-market-ratio-boundary-family.py` exhausts the twelve supported
+`generate-market-ratio-boundary-family.py` exhausted the twelve supported
 accessor, resource-value lifetime and selection-call combinations against the
 native artifact-pointer checkpoint. Context `ddb391c2a56bfe8804a0` scores all
 twelve states, produces six object identities, and reproduces all six elites.
@@ -132,7 +132,7 @@ one observed MAX reset and no banked RVA lost. The new census is 227 inline
 overrides in 33 TUs, and 65 unions. The retained local peak is a recovery lead,
 not grounds to reintroduce the retired compiler intervention.
 
-`generate-count-markets-boundary-family.py` separately exhausts four
+`generate-count-markets-boundary-family.py` separately exhausted four
 declaration/building-query choices in context `d39faa6bb2f147e6f44f`, producing
 two symbol identities and reproducing both elites. DC row 621 calls
 `GetTown` followed by `HasBuilding(14, true)`; all three retail entry points
@@ -144,7 +144,7 @@ inline keyword was unnecessary, not evidence of an original annotation.
 
 ### Full-width object-type input ownership
 
-The object-type input experiment started at `ba9d07f2` and exhausts
+The object-type input experiment started at `ba9d07f2` and exhausted
 eight owner/query alternatives in context `f19ddfdcac44d6eb1e45`: eight scored
 states, three emitted identities, all three elites reproduced. It preserves
 the existing integer buffer's filename-length and extra-field uses, crossing
@@ -191,7 +191,7 @@ retains 100%. The census becomes 227 inline overrides and 64 unions.
 
 ### Ordinary volume conversion and selected-setting lifetimes
 
-`generate-volume-boundary-family.py` starts from `a7a83c6e` and exhausts
+`generate-volume-boundary-family.py` started from `a7a83c6e` and exhausted
 twelve combinations in context `c682cc6559d87a47dbef`: twelve scored states,
 five object identities and five reproduced elites. Three actual setting
 bindings (value snapshot, const reference, direct reads) cross equivalent
@@ -229,7 +229,7 @@ VC6 inlining or overflowing multiplication semantics.
 
 The complete post-integration deletion audit at `d7f7be28` finds two
 individually byte-neutral `game::load` fences. Before adopting them,
-`generate-redundant-load-fence-family.py` exhausts the four combinations in
+`generate-redundant-load-fence-family.py` exhausted the four combinations in
 context `c37c4b8bdc6f290cfc35`: four scored states, one emitted object identity,
 one reproduced elite. This separate joint control prevents assuming that two
 individually inert directives are also inert together.
@@ -244,7 +244,7 @@ pre-adoption anchors; the complete audit snapshots remain separate controls.
 
 ### Compiler-generated text-dialog teardown
 
-`generate-text-dialog-dtor-family.py` uses positive Dreamcast member attributes:
+`generate-text-dialog-dtor-family.py` used positive Dreamcast member attributes:
 the CTextDialog field list (class `0x2c52`, fields `0x2c53`) gives its destructor
 `0x107`, including `compgenx`, as for CWaitForReadyPlayersDlg. Explicit
 CAnimatedDlg and TDialogBox destructor controls give `0x007`. This is not an
@@ -264,7 +264,7 @@ Removing the animated-destructor fence makes the implicit wait-dialog
 destructor exact (86.3333% to 100%), but drops waitForReadyToPlayMsg from
 90.6522% to 75.0683% and removes the retained CNetMsgHandler::copy body.
 The correction therefore does not itself justify deleting that override.
-`generate-animated-dtor-lifetime-family.py` follows the corrected parent with
+`generate-animated-dtor-lifetime-family.py` followed the corrected parent with
 six real nullable-sprite bindings crossed with that fence. Context
 `5ebe0ea56c6aed44ee2a` exhausts all twelve states, five emitted-object identities
 and five reproduced elites. Every unfenced state still loses the copy body;
@@ -277,7 +277,7 @@ possible caller reconstruction.
 
 ### Creature-bank and resource-cost boundaries
 
-`generate-bank-value-lifetime-family.py` starts from the shared nested-size
+`generate-bank-value-lifetime-family.py` started from the shared nested-size
 fence in valueOfBank. Context `66bc080d5cad95205a44` exhausts sixty bank-receiver,
 artifact-size/receiver and combat-value lifetimes crossed with fence removal:
 sixty scored states, eight emitted-object identities, eight reproduced elites.
@@ -326,7 +326,7 @@ behavior or VC6 inlining.
 
 ### Mouse-thread lifetimes and inherited task teardown
 
-`generate-stop-mouse-lifetime-family.py` tests mutable/const references to
+`generate-stop-mouse-lifetime-family.py` tested mutable/const references to
 the actual global thread and event storage, plus guarded-block/early-return
 exits, crossed with the existing fence. References retain every global reload
 across Windows calls; they are not snapshots of potentially changed handles.
@@ -369,7 +369,7 @@ with no score change, MAX reset, migration or lost banked RVA.
 
 ### Sacrifice-slot helper boundaries
 
-`generate-sacrifice-slot-boundary-family.py` checks two positive DC facts from
+`generate-sacrifice-slot-boundary-family.py` checked two positive DC facts from
 `update_slot` (`0x125b3c`): line 842 obtains the artifact snapshot from
 `hero::get_artifact`, and lines 847/855 both call the ordinary
 `update_artifact_widget` (`0x125a4c`, line 800). Retail `0x562840` expands both
@@ -407,7 +407,7 @@ depth-zero overrides.
 
 ### Creature-bank table owners and ordinary level reader
 
-`generate-bank-table-owner-family.py` replaces two incorrectly file-scoped
+`generate-bank-table-owner-family.py` replaced two incorrectly file-scoped
 `const int` tables and the reward enum adapter with the source-owned tables.
 NB11's `guard_types` (type `0x5601`) and `reward_types` (`0x5602`) are mutable
 `TCreatureType[11][5]` and `[11]` statics belonging to loader procedure
@@ -437,7 +437,7 @@ RMG preserves all 441 function positions and section extents, with actual
 body-byte changes confined to the same three scored functions. No object
 rewriter or new scoring normalization is involved.
 
-`verify-bank-table-owners.py` independently checks NB11 procedure ownership,
+`verify-bank-table-owners.py` independently checked NB11 procedure ownership,
 exact enum dimensions, emitted local-static mangled owners, writable section
 placement and **all 66 dwords**. It passes on the selected object and production,
 rejects the old file-static control, and rejects six non-mutating byte/order/
@@ -448,7 +448,7 @@ DC's ordinary static `initialize_creature_bank_level` (`0x70fe0`, source
 line 32) takes `type_creature_bank_level&` and `const vector<char*>&`; the
 loader calls it at line 136 after installing the guard/reward types. Restore
 that real body before its caller, not a false inline declaration or pasted
-reader. `generate-bank-level-boundary-family.py` crosses four meaningful
+reader. `generate-bank-level-boundary-family.py` crossed four meaningful
 column-cursor lifetimes plus the pasted control with unsigned/signed guard
 indices. Retail's guard-copy `jl` positively supports the signed index.
 Context `c601a370d5246188c67a` exhausts and reproduces all ten states/objects.
@@ -488,7 +488,7 @@ statements were inspected before these families. The input is a signed byte;
 the current `const int&` binds a converted temporary, not the field itself.
 
 `generate-skill-proposal-input-family.py`, context `32c06caa67f5495b6533`,
-exhausts **36 states / 24 distinct objects**, with ten reproduced elites.
+exhausted **36 states / 24 distinct objects**, with ten reproduced elites.
 It crosses three input bindings, three output bindings, independent declaration
 order and the first dialog loop's index signedness. None improves the caller
 or any sibling. A native signed-byte reference reaches the same 83.2252%;
@@ -498,14 +498,14 @@ raw section bytes but different generated EH function-label numbering, so
 this is not claimed as a strict whole-object identity result.
 
 `generate-skill-proposal-fence-family.py`, context `d65a9ca695d30ffc1d3c`,
-exhausts all **64 subsets / 64 objects** of the six inherited fences, including
+exhausted all **64 subsets / 64 objects** of the six inherited fences, including
 joint removals; ten elites are reproduced per generation. Every nonempty
 deletion lowers only the proposal caller. The least-cost individual deletion
 is the custom-string insert fence, **83.2252% → 82.2342%**; removing both
 insert fences gives 78.7928%. All 118 other scored rows stay fixed.
 
-`generate-skill-proposal-string-family.py` verifies that parent's snapshot
-and reproduced control, then crosses owned versus lifetime-extended const
+`generate-skill-proposal-string-family.py` verified that parent's snapshot
+and reproduced control, then crossed owned versus lifetime-extended const
 references for both unmodified returned strings with twelve paired/individual
 fence masks. Context `c46dad8e3df70bd51249` exhausts **48 states / 36 objects**
 and reproduces ten elites. These real string-lifetime alternatives change no
@@ -556,13 +556,13 @@ generated claim and historical peak remain; a passing banked-RVA gate does
 not mean that body is still present. `_Sort`, vector-size and vector-copy
 remain exact. This must not be hidden as claim removal or a normalization fix.
 
-`generate-ai-creature-initialization-family.py` exhausts/reproduces **nine
+`generate-ai-creature-initialization-family.py` exhausted/reproduced **nine
 states / nine objects**, context `6de4e0a94f21173ed59e`: the force modifier's
 real early initialization and three public sort-argument lifetimes. DC line
 222 and retail's entry argument copy support the declaration initializer;
 it recovers initializeCreatures to **83.4275%**. Direct calls, a vector
 reference and named iterators score identically.
-`generate-ai-classifier-boundary-family.py` verifies all nine parents and extends them with the
+`generate-ai-classifier-boundary-family.py` verified all nine parents and extended them with the
 ordinary/inline, const/mutable and original/hoisted `getCatagory` interface.
 Context `2027c66d848baf9eadfa` exhausts **72 states / 27 objects** and reproduces
 ten elites per generation. Those declaration choices do not change scores;
@@ -579,7 +579,7 @@ The full checkpoint has **4075/4764 exact, 96.39% linked and 96.38% whole-image*
 Only the initializer's source edit resets MAX below its old peak; HIST retains
 91.9548%. The missing partition keeps its unchanged-source MAX/HIST at 100%.
 
-`test-ai-melee-owner-boundary.py` extracts the actual accessor and ordinary
+`test-ai-melee-owner-boundary.py` extracted the actual accessor and ordinary
 melee body. At native `-O0` and `-O2`, twenty independent vector-count/total
 cases and 169 melee pairs cover zeroes, ties and float rounding around 2^24.
 Mocked kill/damage/final-value calls check operands and ordering. Five deliberate
@@ -614,7 +614,7 @@ behavior when accumulated damage exceeds a stack's total. Separate vector
 subscripts across the opaque spell-damage call and zero initialization before
 mastery lookup are also corroborated by both builds.
 
-`generate-ai-mass-damage-boundary-family.py` crosses these three facts with
+`generate-ai-mass-damage-boundary-family.py` crossed these three facts with
 cloned/canonical, inherited-inline/ordinary and fenced/unfenced boundaries.
 Context `ba7a1cfd8351a6b35d25` exhausts **48 states / 48 objects**, with ten
 reproduced elites and complete 176-row, two-TU vectors. A high score from the
@@ -625,8 +625,8 @@ ordinary single helper scores 88.5664% with the first inherited fence, and
 DC `cast_spell` line 1047 calls the ordinary const `has_creature` predicate
 (`0x2ab3c`, source line 694, before mass valuation). Retail's Familiar scan
 corroborates its type/positive-count tests and single mana update after success.
-`generate-ai-familiar-boundary-family.py` verifies the 48-parent manifest,
-snapshots and reproduced elites, then crosses that canonical boundary with
+`generate-ai-familiar-boundary-family.py` verified the 48-parent manifest,
+snapshots and reproduced elites, then crossed that canonical boundary with
 all parents. Context `dbe7501806f1d9581f9e` exhausts **96 states / 96 objects**,
 with ten reproduced elites per generation. Restoring the predicate raises the
 correct unpinned mass variant to **86.7910%**, while the corrected one-pin
@@ -650,7 +650,7 @@ together is strictly byte-neutral under the one emitted function rename:
 75 ai_combat sections / 443 relocation destinations, plus all of ai_player.
 The full build migrates the existing enchantment claim at its same RVA.
 
-`generate-ai-value-helper-family.py` restores a different canonical boundary:
+`generate-ai-value-helper-family.py` restored a different canonical boundary:
 the by-value `min`/`max` wrappers already owned by `homm3_minmax.h`. DC
 `includes.h:97,114` and actual AI call relocations name those wrappers; their
 callee selectors return const references to the wrappers' still-live arguments.
@@ -663,7 +663,7 @@ preserve every score except getResurrectionValue's 100% → 92.9310% dip.
 Production reproduces the all-canonical corner's 77 sections / 462 relocation
 destinations and the unchanged ai_player object.
 
-`generate-ai-resurrection-value-family.py` addresses that precise residual:
+`generate-ai-resurrection-value-family.py` addressed that precise residual:
 retail loads the selected scalar before multiplying, while a single return
 expression multiplies through a retained address. DC lines 99..102 support
 separate scale/divide, cap and result stages. Context `5de5d8835a813ce9959c`
@@ -674,11 +674,11 @@ All other 175 scores remain fixed. Keep the real value-returning wrappers.
 Production reproduces the selected 77-section / 462-relocation object; retail
 review confirms nine CFG blocks, four named calls and zero instruction deltas.
 
-`test-ai-mass-damage-boundary.py` extracts both the actual canonical mass loop
+`test-ai-mass-damage-boundary.py` extracted both the actual canonical mass loop
 and `takeDamage`; at native `-O0` and `-O2`, 328 stack-array cases check reverse
 order, the capped loop carry, hero/damage arguments, stack counts and total
 combat value. Six deliberate faults, including the inherited uncapped carry,
-are rejected. `test-ai-resurrection-value.py` checks 3456 bounded input cases,
+are rejected. `test-ai-resurrection-value.py` checked 3456 bounded input cases,
 call order and nonmutation with five negative controls. The spell/hero services
 are mocked; these are behavioral tests, not VC6 ABI or inlining proofs.
 
@@ -708,7 +708,7 @@ finds a 39-block, 19-branch, ten-return caller at 98.1927%, with all seventeen
 named calls already aligned and only register/scheduling deltas remaining.
 
 `generate-tactical-mass-boundary-family.py`, context `07302be162953796ffdc`,
-exhausts **24 states / 16 objects**, with ten reproduced elites and all **347
+exhausted **24 states / 16 objects**, with ten reproduced elites and all **347
 scores across five TUs** checked. It crosses ordinary mass/group definitions,
 the existing effect fence/deletion, and pasted-table/pasted-accessor/canonical
 ordinary-summon forms. The fully canonical, unfenced corner `[1,1,1,2]`,
@@ -728,7 +728,7 @@ claimed retained retail address. This is not whole-object identity with the
 old object, nor permission to ignore untracked code changes.
 
 `generate-tactical-dispatch-lifetime-family.py`, context `8704e5c4ec9d3952d373`,
-then exhausts **16 states / six objects**, all six representative objects
+then exhausted **16 states / six objects**, all six representative objects
 reproduced. DC row 973 forms the target address before row 975's damage call;
 the family tests a direct address, named pointer/reference and named damage
 result, crossed with four ordered mass-result lifetimes. The pointer and
@@ -747,7 +747,7 @@ name differences are four spell-table alias references and six unclaimed
 global references. All sixteen actual calls and the jump-table dispatch
 relocation agree by named target/addend; no data-name normalization is changed.
 
-`test-tactical-mass-boundaries.py` extracts the four actual helper bodies. At
+`test-tactical-mass-boundaries.py` extracted the four actual helper bodies. At
 native `-O0` and `-O2`, **3025 effect cases, 6144 group/mass cases and 1024 summon
 cases** check ratios, clamps, reverse order, both hero/side arguments, mastery,
 guards, the post-split cast-now write, and unaffected choice fields. Nine
@@ -813,7 +813,7 @@ No data-name normalization or retail target is changed to obtain this result.
 
 The native actual-body oracle tests **8192 cases per form at -O0 and -O2**,
 crossing all seven-resource sign masks with 64 player/town/alliance/purchase
-states. It checks reserve clamps, strategy and purchase order, the mutable
+states. It checked reserve clamps, strategy and purchase order, the mutable
 145-entry flag array across repeated calls, Marketplace lookup, AI-before-
 human gifts, formatting arguments, and warning order/content. Five deliberately
 wrong controls are rejected. All sixty source forms pass before adoption;
@@ -856,8 +856,8 @@ build. The generator now defaults to those 18 name-preserving states;
 `--signature-controls` retains the original diagnostic interface choices.
 This family used the pre-adoption `182b7a26` source.
 
-`generate-ai-grail-lifetime-family.py`, context `23ae2167ec23afbe3de3`, exhausts
-**24 states / 11 objects**, with ten reproduced elites. It tests actual artifact
+`generate-ai-grail-lifetime-family.py`, context `23ae2167ec23afbe3de3`, exhausted
+**24 states / 11 objects**, with ten reproduced elites. It tested actual artifact
 construction and player/friendly-distance lifetimes after the interface repair.
 Removing the artifact pin alone gives **90.7841%**; the original typed temporary
 without the later caller-boundary recovery gives **61.8460%**. These are local
@@ -871,7 +871,7 @@ remove findpath.cpp's falsely static duplicate, and restore the two point
 calls at destination lines 3300 and 3359. The scalar declaration agrees with
 kb.h and the retained exact 0x4f79b0 body.
 
-`generate-ai-grail-map-extra-family.py`, context `3512473cbfdffe1a9642`, tests
+`generate-ai-grail-map-extra-family.py`, context `3512473cbfdffe1a9642`, tested
 **24 states / 22 objects** and all **2340 tracked scores across 34 header
 consumers**, with **ten reproduced elites**. Its unchanged-source and
 opposite-corner repeat controls pass.
@@ -912,16 +912,14 @@ accesses either home. All **3063 kb relocation destinations** and all function
 locations remain identical. Do not describe all score-flat consumers as raw
 byte-identical.
 
-`test-ai-grail-boundaries.py` exercises actual helper source at native `-O0`
+`test-ai-grail-boundaries.py` exercised actual helper source at native `-O0`
 and `-O2`: **20,480 cases per form** check eligibility, ordered calls, artifact
 fields/owner, coordinate flattening, friendly-cost ties, movement floors,
 victory value and existing-vector-prefix preservation. Five deliberately
 wrong controls must fail. All 24 lifetime forms and the reproduced selected
 corner pass. A separate **2401-case** point-overload oracle covers signed
 10/10/4-bit coordinates and unsigned-short-to-int result widening. The
-fixture mocks services and does not certify VC6 ABI, EH or inlining. Default
-execution checks current source; `--source` selects a snapshot, and
-`--all-forms` requires the pre-adoption lifetime-family anchors.
+fixture mocked services; its results do not establish VC6 ABI, EH or inlining.
 
 All **34 production objects** strictly reproduce the selected independent
 repeat, including section bytes, function locations and relocation
@@ -935,7 +933,7 @@ are complete.
 
 ### Scenario deselection: ordinary body ownership, not an inline fence
 
-`generate-scenario-deselect-family.py` crosses the base handler's current
+`generate-scenario-deselect-family.py` crossed the base handler's current
 header definition / recovered ordinary definition with the scenario caller's
 existing fence / natural call. The source fact is **window.cpp:1122/1123,
 dc 0x197f48**, not the existence of a folded retail body. Dreamcast's public
@@ -994,7 +992,7 @@ by their actual section/offset destinations, including the four renumbered
 `hero_rollover`, `town_rollover`, `generic_help` and `ignore` labels. No new
 score normalization or second symbol ledger is involved.
 
-`test-scenario-deselect.py` extracts the actual base, scenario callback and
+`test-scenario-deselect.py` extracted the actual base, scenario callback and
 WindowHandler bodies. At native `-O0` and `-O2`, **262,160 direct callback
 checks** cover both initial flag values, all signed-16-bit IDs and four
 outlying IDs; **864 dispatcher cases** check message priority, callback
@@ -1073,7 +1071,7 @@ across **1,448 sections and 15,089 relocation destinations**.
 
 After adopting that model and running a fresh full build, the follow-up
 verifies exact parent source/header identity and carries both reproduced
-complete-receiver parents. It tests each of the remaining 14 dispatcher
+complete-receiver parents. It tested each of the remaining 14 dispatcher
 depth-zero regions separately and all together, crossed with the adjacent
 auto-inline override:
 
@@ -1087,7 +1085,7 @@ helper models. Contexts `e95ac2ee39002ff3643c` and `5d5ccc52816c48107f9d`
 identify the frozen four-state and follow-up inputs. Their generators are
 historical pre-adoption controls and deliberately reject changed anchors.
 
-`test-lobby-map-header.py` extracts the actual helper, receive bridge and
+`test-lobby-map-header.py` extracted the actual helper, receive bridge and
 virtual-reader bodies. Its reduced fixture checks **1,920 cases** spanning
 sender identities, short-message lengths, read results and exceptional exit
 paths, preserving construction/read/setup/destruction order and the input
@@ -1107,7 +1105,7 @@ flattened-helper differences are open reconstruction work, not TU closure.
 The bounded wall below is superseded by [the exact dispatcher recovery](#lobby-dispatcher-exact-recovery).
 Its measurements remain valid for the frozen, partially flattened source.
 
-`generate-lobby-player-helpers-family.py` crosses three binary decisions:
+`generate-lobby-player-helpers-family.py` crossed three binary decisions:
 restore both ordinary `getThisPlayer` calls, restore ordinary bool
 `onPlayerDroppedMsg`, and remove the existing `HeaderRequested` auto-inline
 override. The first two recover positive DC facts at caller lines 6488/6511,
@@ -1130,8 +1128,8 @@ swap their -0x10/-0x20 spill homes and corresponding reloads. Its score is
 unchanged. All four production objects strictly reproduce the selected
 candidate's 1,449 sections, function locations and 15,092 relocation targets.
 
-The extended `generate-lobby-dispatch-pins-family.py` accepts the completed
-player-helper parent and verifies its exact authored source/header identity.
+The extended `generate-lobby-dispatch-pins-family.py` accepted the completed
+player-helper parent and verified its exact authored source/header identity.
 It retains both fully recovered parent corners and tests each of the eleven
 remaining depth regions, plus all together, crossed with auto-inline removal.
 All **26 states emit distinct objects**, and **ten elites reproduce**. All 223
@@ -1158,7 +1156,7 @@ adding source mass or a new suppression pin would not be recovery. Later
 flattened handler boundaries and allocation choices remain open. This bounded
 pass does not prove no future source model can improve the function.
 
-`test-lobby-player-helpers.py` extracts the actual two helper definitions and
+`test-lobby-player-helpers.py` extracted the actual two helper definitions and
 transfer arm. Its **146 cases** check local/network mode, null lookup, two
 fresh query results, rejection, successful/failed transfer, cancel preservation
 and dropped-player update order. Six controls fail: caching the first query,
@@ -1183,7 +1181,7 @@ natural VC6 inlining. All eleven remaining dispatcher depth-zero regions and
 the adjacent `HeaderRequested` auto-inline override are removed. This is a
 function match, not closure of `singleselectionwindow`.
 
-The `generate-netmsg-*-family.py` experiments exhaust 235 meaningful source
+The `generate-netmsg-*-family.py` experiments exhausted 235 meaningful source
 states, with successful unchanged/opposite-corner controls and reproduced
 elites. Object counts below are within each context, not distinct across the
 whole campaign. Header families score all four consumers (416 rows); local
@@ -1352,7 +1350,7 @@ survive; the unchanged caller bodies retain their own MAX 100% peaks.
 
 ### Save recovery bounds after header ownership
 
-`generate-save-local-recovery-family.py` uses the `game::Save` Dreamcast
+`generate-save-local-recovery-family.py` used the `game::Save` Dreamcast
 local roster and retail narrow writes to test byte-buffer reuse/scope,
 unsigned-word staging, the signed map-extra size, loop-index declaration
 lifetime and the native-bool vector writer result. Context
@@ -1362,7 +1360,7 @@ against 59.5944% unchanged; every other game row holds. The tiny gain does
 not recover the `SavedGameHeader::reset`/`save` calls or the retail frame,
 so none of these alternatives is adopted.
 
-`generate-save-header-placement-family.py` separately compares the existing
+`generate-save-header-placement-family.py` separately compared the existing
 class location, moving it beside the late inline definitions, and embedding
 those same bodies inside the class there. Field order, signatures, body
 operations and `game.h` ownership stay fixed. Compiler dependency records
@@ -1390,7 +1388,7 @@ Sound variants accept either reviewed body as the unchanged control.
 | Filter pointer conversion/refinement | 61 | 61 | 10 per generation |
 | Sound service locals and guards, 51 dependent TUs | 30 | 14 | 10 |
 
-`generate-spell-obstacle-append-family.py` tests the four source-proven
+`generate-spell-obstacle-append-family.py` tested the four source-proven
 `push_back` sites in `combatManager::castSpell`. DC spells.cpp lines
 849/925/962/996 supply positive call evidence. Three SH4 sites load the named
 callee before the line block containing the indirect `jsr`: inspect
@@ -1403,7 +1401,7 @@ calls reproduce 93.9814%, up from 72.8210% and above HIST 93.3687%, in context
 obstacle locals, append-before-slot order, and original-record arguments to
 `placeObstacle` are unchanged. No container replacement or new helper is used.
 
-`generate-filter-widget-recovery-family.py` exhausts 54 allocation-result,
+`generate-filter-widget-recovery-family.py` exhausted 54 allocation-result,
 button-binding, public append API and loop-scope choices in context
 `3916b52e69a9a5b42b8c`. `generate-filter-widget-refinement-family.py` then
 adds real widget-pointer conversions and a vector reference to ten reproduced
@@ -1434,7 +1432,7 @@ and its retained body stays exact. DC 0xe6ef4 is a WinCE stub proving source
 ownership; the nonempty PC behavior comes from retail 0x59a7d0. `showVideo`
 rises from 67.8147% to 94.1120%, with every other tracked score holding across
 the 51 units. The unchanged combined guard is the negative byte control.
-The native test imports the current body and all 30 variants. It checks lock
+The native test imports the current body and all 30 variants. It checked lock
 receiver identity separately from the global manager, stream changes during
 Miles service, state guards and call order; six negative controls fail.
 
@@ -1478,7 +1476,7 @@ character conversions. Complete defers the old shipyard terrain scan to
 helper; the caller discards status, so those final comparisons disappear
 naturally in the retail expansion.
 
-`generate-map-reader-helper-family.py` records the initial two-state byte
+`generate-map-reader-helper-family.py` recorded the initial two-state byte
 control in context `a70571d26b1e09d9f9f3`, comparing all 76 header-dependent
 TUs. Both objects reproduce; candidate `6835a1c0264f821a3d5faaff` raises the
 reader from 56.6382% to 60.0594%. Restoring the helpers also exposes an older
@@ -1497,7 +1495,7 @@ and discarded caller status. Five negative controls reject wrong boat owner,
 grail radius, shrine value, boat coordinate and status. This is an effect
 oracle, not a replacement for VC6 layout or byte validation.
 
-`generate-quest-guard-append-family.py` then tests 36 source choices at the
+`generate-quest-guard-append-family.py` then tested 36 source choices at the
 corrected full checkpoint (`376ad64f07b280fd969d`): DC's function-scope
 read-count local and five separate read/result-test statements, plus actual
 quest-vector iterator/reference lifetimes and public append spelling.
@@ -1527,7 +1525,7 @@ expansions in both callers. Restoring that one ordinary body in place gives:
 | `markTeleport` | 71.6135% | 100% |
 | Retained `getHex` | 0% | 100% |
 
-`generate-mark-enemy-restoration-family.py` exhausts the two-state control
+`generate-mark-enemy-restoration-family.py` exhausted the two-state control
 in `8a71980a4ee16edd6844`; both objects reproduce. The adopted implementation
 is candidate `10a61ce51f0271cdda248e93`. The native oracle imports its actual
 body and covers existing flags, cheaper/equal/dearer costs, negative and
@@ -1547,7 +1545,7 @@ new gate also rejects the real pre-fix markEnemy snapshot as a negative control.
 
 ### Crossover lifetime recovery bound
 
-`generate-crossover-lifetime-family.py` tests the current retail-only
+`generate-crossover-lifetime-family.py` tested the current retail-only
 `SCampaign::pruneCrossoverHeroes` body, preserving the repeated inflated-size
 read after the virtual pool query, signed scenario count, canonical max,
 artifact accessors, sort and vector assignment. Thirty-six combinations of
@@ -1580,7 +1578,7 @@ The follow-up starts at `028e1b09` with a clean, full-build checkpoint.
 `SCampaign::load` is Complete-only: the full Dreamcast roster has no matching
 procedure. Retail's six unsigned counts/identifiers use dword loads followed
 by masks after one- or two-byte reads. That is not proof of an int source
-buffer. `generate-campaign-load-buffer-family.py` exhausts 64 independent
+buffer. `generate-campaign-load-buffer-family.py` exhausted 64 independent
 width combinations in `906a2aed32d636cfd8eb`: two distinct emitted identities,
 both reproduced, and **no score changes in any tracked function**. Keep the
 narrow buffers; replay this historical-width control at `028e1b09`.
@@ -1588,7 +1586,7 @@ narrow buffers; replay this historical-width control at `028e1b09`.
 The useful alternative is lexical lifetime. Retail gives the modern scenario
 fields distinct scratch homes, and the previously removed synthetic scalar
 helpers left isolated read/assignment blocks. The generator
-`generate-campaign-load-lifetime-family.py` tests named locals in their real
+`generate-campaign-load-lifetime-family.py` tested named locals in their real
 enclosing prefix/loop scopes for four groups, plus separate days/score scopes.
 All 32 states compile, nine objects reproduce in `20be28ec9c6caccae8c7`.
 Candidate `3937da971249f1010a4be6b1` (`scopes-11010`) raises the loader from
@@ -1614,7 +1612,7 @@ The Complete seer/quest loops still belong in the caller. DC's static
 save results; retail uses the current map and ignores those results. This
 semantic contradiction rules out restoring that older helper interface.
 
-`generate-map-save-lifetime-family.py` exhausts 24 combinations of result
+`generate-map-save-lifetime-family.py` exhausted 24 combinations of result
 assignment, list-count sharing, unsigned loop-index scope and final failure
 check in `a58ef16d0c060ff7bba4`. Sixteen objects are distinct; ten retained
 candidates reproduce. The adopted `d929d6f793d422be39225cf3` restores the DC
