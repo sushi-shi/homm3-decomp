@@ -2364,7 +2364,9 @@ int __fastcall game::loadString(TAbstractFile* infile, std::string& s)
     int count;
     short length;
 
-    count = infile->read(&length, sizeof(length));
+    // Mac 0xcec70 checks the scalar count before decoding the short at
+    // 0xcec84; the canonical reader preserves that caller slot and guard.
+    count = readLittleEndianValue(infile, length);
     if (count < sizeof(length))
         return -1;
 
@@ -2436,16 +2438,10 @@ int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 {
     HOMM3_RELEASE_VERIFY(outfile != 0);
     short length = s.size();
-    // Platform difference: Mac byte-swaps the length (0xced70..0xced8c).
-    // Windows writes the local directly; routing it through the endian
-    // writer's template chain lowers this body's /Ob2 cost until every
-    // retail caller (saveSignPool 6.50%, saveRumours 27.56%, game::save)
-    // expands it instead of retaining the call.
-#if defined(__POWERPC__)
+    // Mac 0xced70..0xced8c encodes the owned length before writing it.
+    // The canonical writer keeps Windows' direct scalar representation;
+    // bypassing its call solely to affect VC6 cost hid this source boundary.
     int count = writeLittleEndianValue(outfile, length);
-#else
-    int count = outfile->write(&length, sizeof(length));
-#endif
     if (count < sizeof(length))
         return -1;
 
@@ -3330,13 +3326,15 @@ int game::save(TAbstractFile* outfile)
 
     // The map-extra plane. HasTwoLevels is read through the GLOBAL gpGame,
     // not through this->worldMap, and the *2 is applied LAST - retail's
-    // `lea edi,[eax+eax]` follows both imuls. The count is computed once
-    // into one local because a virtual call sits between its two uses.
-    unsigned int mapExtraBytes =
-        g_game->getNumMapLevels() * g_mapHeight * g_mapWidth *
-        sizeof(unsigned short);
-    count = outfile->write(g_mapExtra, mapExtraBytes);
-    if (count < mapExtraBytes)
+    // `lea edi,[eax+eax]` follows both imuls. DC 3637 records an int cell
+    // count; 3638/3639 form its byte span. Mac d4130/d4150 also multiplies
+    // the dimensions before the levels, then doubles at d4154.
+    // This recovered model measures Windows 92.76% vs 92.80%; masked
+    // instruction differences fall 116->91 and relocation differences 14->10.
+    int mapExtraSize =
+        (g_mapHeight * g_mapWidth) * g_game->getNumMapLevels();
+    count = outfile->write(g_mapExtra, mapExtraSize * sizeof(unsigned short));
+    if (count < mapExtraSize * sizeof(unsigned short))
         return -1;
 
     // Keep the canonical pool writers; retail retains all seven calls.
@@ -3712,14 +3710,32 @@ void game::giveTroopsToNeutralTowns()
 // Full do/for failure scopes lose to 87.4352..87.7111%, and the earlier
 // result flag gives 89.2426%; these used break as the failure-scope exit.
 // These are limits of the tested scopes, not proof of original gotos.
-// The town-loss scope uses continue for either failed team check and a
-// return for valid ownership. This removes both remaining joins at 90.0315%
-// with the full contribution and all relocation names/addends unchanged.
-// The earlier failure scopes used break and do not predict this lowering.
+// The earlier do/continue/return town-loss scope was a lowering control,
+// not recovered source. DC 4225 attributes all three rejection predicates
+// together, followed by the invalid-condition store at 4227. Mac
+// d5a18..d5a84 likewise has three short-circuit tests and one failure store.
+// Keep that compound predicate and the DC int team loop (signed cmp/gt;
+// Mac d5a10 uses cmpwi), without provisional owner/team staging locals.
+// That predicate model measures 95.4407% with refreshed bool labels.
+// DC 4116 passes the hero's owner directly to IsHumanTeam; Mac d5540..d558c
+// and retail 4bf978..4bf9bb compare that owner against teamInfo entries.
+// An extra GetTeam lookup changes the operation and adds two CFG blocks.
+// Keep it only in the town predicates, where native actually maps the owner.
+// DC 4158 immediately passes GetTeam's return to IsHumanTeam; the negative
+// team guard belongs inside the canonical predicate, as at Mac d56c0.
+// Removing the duplicate caller guard and named staging local is byte-flat.
+// The direct-owner hero predicate gives 96.1648%, with all 167 blocks aligned
+// and 103 branches agreeing; packed-point homes are the first residual.
+// DC 4116/4118/4122/4124 and 4189/4191/4195/4197 record the mirrored
+// invalid/valid assignment arms and one common break in each hero loop.
+// Mac d559c/d55ac and d5928/d5938 join those assignments. Restoring that
+// natural completion structure is byte-flat in the corrected predicate model.
+// Original DC public ?ValidateVictoryLossConditions@game@@QAAX_N@Z proves
+// checkMapLocations is bool; CodeView's byte primitive is its lowered form.
 VA(0x004bf780, 0x6E2)
 DC_ADDRESS(0x0aa7e0, 0x5c4)
 MAC_ADDRESS(0x0d513c, 0x960)  // order-map + whole-function identity
-void game::validateVictoryLossConditions(unsigned char checkMapLocations)
+void game::validateVictoryLossConditions(bool checkMapLocations)
 {
     signed char victoryType = m_mapHeader.m_victoryCondition.m_type;
     if (victoryType == VICTORY_CONDITION_ARTIFACT
@@ -3777,12 +3793,11 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         for (int i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
             if (vcheroLoc == poolheroLoc) {
-                int team = getTeam(m_heroes[i].m_owner);
-                if (team >= 0 && isHumanTeam(team)) {
+                if (isHumanTeam(m_heroes[i].m_owner)) {
                     victory.m_type = -1;
-                    break;
+                } else {
+                    victory.m_heroId = i;
                 }
-                victory.m_heroId = i;
                 break;
             }
         }
@@ -3807,8 +3822,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
     if (victory.m_type == VICTORY_CONDITION_CAPTURE_TOWN) {
         town* thisTown = getTown(getTownId(
             victory.m_townX, victory.m_townY, victory.m_townZ));
-        int team = getTeam(thisTown->m_owner);
-        if (team >= 0 && isHumanTeam(team))
+        if (isHumanTeam(getTeam(thisTown->m_owner)))
             victory.m_type = -1;
     }
 
@@ -3824,13 +3838,11 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
                     if (isHumanTeam(team))
                         ++numHumanTeams;
                 }
-                if (numHumanTeams <= 1) {
-                    if (!isComputerTeam(getTeam(m_heroes[i].m_owner))) {
-                        loss.m_heroId = i;
-                        break;
-                    }
-                }
-                loss.m_type = -1;
+                if (numHumanTeams > 1
+                    || isComputerTeam(getTeam(m_heroes[i].m_owner)))
+                    loss.m_type = -1;
+                else
+                    loss.m_heroId = i;
                 break;
             }
         }
@@ -3842,23 +3854,14 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         town* thisTown = getTown(getTownId(
             loss.m_townX, loss.m_townY, loss.m_townZ));
         int numHumanTeams = 0;
-        int owner;
-        int townTeam;
-        for (unsigned int teamCheck = 0; teamCheck < 8; ++teamCheck) {
-            if (isHumanTeam(teamCheck))
+        for (int team = 0; team < 8; ++team) {
+            if (isHumanTeam(team))
                 ++numHumanTeams;
         }
-        do {
-            if (numHumanTeams > 1)
-                continue;
-            owner = thisTown->m_owner;
-            townTeam = getTeam(owner);
-            if (isComputerTeam(townTeam))
-                continue;
-            if (owner != -1)
-                return;
-        } while (0);
-        loss.m_type = -1;
+        if (numHumanTeams > 1
+            || isComputerTeam(getTeam(thisTown->m_owner))
+            || thisTown->m_owner == -1)
+            loss.m_type = -1;
     }
 }
 
@@ -4661,6 +4664,10 @@ void game::matchUndergroundGates()
 // DC 5127 passes the bank type field directly without a conversion scope.
 // These combined recoveries reach 89.6121% from 89.2441% in reproduced
 // source families, preserving every canonical body/call and sibling MAX.
+// Lean-to/windmill resource conversions are ordinary scalar assignments:
+// DC 5291..5294 and 5582..5583 stay in their case scope. The nested blocks
+// left by conversion-helper removal (8c6106f8e0) own no object lifetime;
+// removing those two blocks leaves Windows 89.5017% unchanged.
 VA(0x004c0cc0, 0x1668)
 DC_ADDRESS(0x0ac910, 0x1278)
 MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order
@@ -4893,9 +4900,7 @@ void game::randomizeEvents()
 
                 case LEAN_TO:
                     {
-                        {
-                            resType = EGameResource(random(0, 5));
-                        }
+                        resType = EGameResource(random(0, 5));
                         resQty = static_cast<unsigned char>(random(1, 5));
                         tempCell->setLeanTo(numLeanTo++, resQty, resType);
                     }
@@ -5122,9 +5127,7 @@ void game::randomizeEvents()
                 case WINDMILL:
                     {
                         resQty = static_cast<unsigned char>(random(3, 6));
-                        {
-                            resType = EGameResource(random(1, 5));
-                        }
+                        resType = EGameResource(random(1, 5));
                         // DC 5582..5583; retail's 0xfffe001f mask also
                         // clears the visited-player lane, not just amount.
                         tempCell->setWindmill(resType, resQty);
@@ -6910,9 +6913,11 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
 VA(0x004c6c50, 0x2EB)
 DC_ADDRESS(0x0b1c8c, 0x28e)
 MAC_ADDRESS(0x0dd324, 0x3e8)
+// Original DC public ?ViewArmy@game@@QAAXAAVarmyGroup@@HPBVhero@@PBVtown@@HH_N3@Z
+// proves both flag parameters are bool despite lowered byte CodeView records.
 void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                     const town* thisTown, int x, int y,
-                    unsigned char showDismiss, unsigned char isQuickView)
+                    bool showDismiss, bool isQuickView)
 {
     TCreatureType armyType = group.m_armyTypes[iarmy];
     const int numTroops = group.m_numTroops[iarmy];
@@ -7248,7 +7253,9 @@ void game::nextPlayer()
 VA(0x004c7930, 0x266)
 DC_ADDRESS(0x0b2ad4, 0x55c)
 MAC_ADDRESS(0x0de078, 0x308)
-int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
+// Original DC public ?ComputeDailyGold@game@@QAAHH_N@Z proves bool includeSilo;
+// the byte primitive in its lowered debug parameter record is not source uchar.
+int game::computeDailyGold(int whichPlayer, bool includeSilo)
 {
     const playerData& p = m_players[whichPlayer];
     int gold = 0;
@@ -7663,6 +7670,11 @@ void game::setRecruits()
 // aliases scored 96.9467%; the canonical model scores 94.1719%. The native
 // loop spelling, obscuringHero initialization and helper body placement are
 // byte-flat for that boundary. Historical 99.8370% is a TU-context lead.
+// The three scalar creature assignments use ordinary expression statements:
+// their standalone scopes came from 8c6106f8e0's conversion-helper cleanup,
+// not a recovered lifetime. DC 8416/8425..8430 and Mac df6a4/df704..df724
+// show scalar assignments within the existing arms. Removing that scaffolding
+// leaves the current Windows comparison at 94.12%.
 VA(0x004c8780, 0x7B7)
 DC_ADDRESS(0x0b41e0, 0x5d8)
 MAC_ADDRESS(0x0df4d8, 0x6bc)  // PerDay/PerMonth bracket + dc lines/callees
@@ -7720,21 +7732,15 @@ void game::perWeek()
             }
         }
         g_weekTypeExtra = align;
-        {
-            bonusCreature = TCreatureType(align);
-        }
+        bonusCreature = TCreatureType(align);
     }
 
     for (i = 0; i < m_towns.size(); ++i) {
         if (m_towns[i].m_type == TOWN_INFERNO
             && m_towns[i].hasBuilding(HOLY_GRAIL_ID, false)) {
             g_weekType = g_weekTypeInfernoGrail;
-            {
-                bonusCreature = TCreatureType(g_creatureImpId);
-            }
-            {
-                alternateBonus = TCreatureType(g_creatureFamiliarId);
-            }
+            bonusCreature = TCreatureType(g_creatureImpId);
+            alternateBonus = TCreatureType(g_creatureFamiliarId);
             bonusAmount = g_creatureTypeTraits[g_creatureImpId].m_growthRate;
             g_weekTypeExtra = g_creatureImpId;
             break;
@@ -8159,6 +8165,12 @@ void game::randomizeHeroPool()
 // -1 sentinel, so the hero is subscripted directly. Mac 0xe0a44..0xe0a5c
 // stores each artifact id before its -1 payload: the converting
 // type_artifact constructor builds both war-machine artifacts.
+// DC 8930..8932 records the alternating slot-clear loop below. Mac
+// 0xe0984..0xe09b8 likewise interleaves its seven type/count stores;
+// armyGroup::initialize instead retains two bulk clears at 0x58128/0x58134.
+// Equal final state does not identify that helper's expansion. Calling it
+// with a header-visible body scored Windows 80.14% (100% loop), Mac 20.1327%
+// (94.4690% loop); restore the recorded loop and source-owned helper body.
 VA(0x004c9730, 0x159)
 DC_ADDRESS(0x0b5094, 0x268)
 MAC_ADDRESS(0x0e0910, 0x1c4)
@@ -8966,8 +8978,9 @@ void game::processOnMapHeroes()
 VA(0x004cafd0, 0xD14)
 DC_ADDRESS(0x0b7560, 0x1064)
 MAC_ADDRESS(0x0e2414, 0xd20)  // retail body + typed catch + continuation/tables
+// Original DC public ?TransmitSaveGame@game@@QAAHHH_N0@Z proves both bool flags.
 int game::transmitSaveGame(int toWho, int thisPlayerDead,
-                           unsigned char inGame, unsigned char makeOrig)
+                           bool inGame, bool makeOrig)
 {
     CNetMsgHandlerPause netMsgHandlerPause;
     g_advManager->trimLoopingSounds(4);

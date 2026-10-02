@@ -5,6 +5,8 @@
 
 #include <vector>
 
+#include "kb.h"
+
 class widget;
 class textWidget;
 class message;
@@ -118,11 +120,13 @@ public:
     void sleepAllWidgets(unsigned char sleep);
 
     virtual ~heroWindow();
-    virtual int open(int zOrder, unsigned char update);
+    // Original DC public ?Open@heroWindow@@UAAHH_N@Z proves bool update.
+    virtual int open(int zOrder, bool update);
     virtual void close(unsigned char update);         // slot 2, retail 0x5fec60
     virtual int handleMessage(message& msg);         // slot 3, folded onto 0x4ec560
     virtual void handleWidgetHover(widget* w);      // slot 4, folded onto 0x485d80
-    virtual void drawWindow(unsigned char update, int lowID, int highID);
+    // Original DC DrawWindow@@UAAX_NHH@Z proves bool despite lowered 0x20.
+    virtual void drawWindow(bool update, int lowID, int highID);
     // DC DoModal's UAAX_N public and all three overrides prove void(bool).
     // Retail callers discard EAX; the dispatcher's residual value is not
     // a returned dialog result. The virtual slot remains unchanged.
@@ -130,7 +134,21 @@ public:
 
 protected:
     void deleteWidgets();
-    virtual void addWidgetsToMessageStream();
+    // DC window.cpp owns the ordinary body. Complete's overview constructor
+    // expands this operation across TUs, requiring header body visibility.
+    // Preserve the protected virtual boundary and its null-widget guard.
+    VA(0x005ff570, 0x32)
+    DC_ADDRESS(0x197cd4, 0x72)
+    MAC_ADDRESS(0x20bccc, 0x74)
+    virtual void addWidgetsToMessageStream()
+    {
+        for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+            if (*it)
+                addWidget(*it, -1);
+            else
+                memError();
+        }
+    }
 
 public:
     // Slot 8 is NOT pure - 0x5ff5f0 is a real heroWindow body in

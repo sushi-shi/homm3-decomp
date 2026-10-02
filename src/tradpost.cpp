@@ -1607,7 +1607,7 @@ void doMarket()
 VA(0x005ea5d0, 0x103)
 DC_ADDRESS(0x188bd4, 0xf4)
 MAC_ADDRESS(0x1f555c, 0x194)
-void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
+void TSellArtifactWindow::updateSellArtifactWidget(message& msg, long i)
 {
     type_artifact art;
     if (i < 18) {
@@ -1622,25 +1622,25 @@ void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
     }
 
     if (art.m_artifactId == -1) {
-        msg->m_codeY = i + 0x54;
+        msg.m_codeY = i + 0x54;
     } else {
-        msg->m_codeX = 5;
-        msg->m_extra = 2;
-        broadcastMessage(*msg);
-        msg->m_codeX = 5;
-        msg->m_codeY = i + 0x54;
-        msg->m_extra = 6;
-        broadcastMessage(*msg);
-        msg->m_codeX = 4;
-        msg->m_extra = art.m_artifactId;
+        msg.m_codeX = 5;
+        msg.m_extra = 2;
+        broadcastMessage(msg);
+        msg.m_codeX = 5;
+        msg.m_codeY = i + 0x54;
+        msg.m_extra = 6;
+        broadcastMessage(msg);
+        msg.m_codeX = 4;
+        msg.m_extra = art.m_artifactId;
     }
-    broadcastMessage(*msg);
+    broadcastMessage(msg);
     if (g_selectedArtifact == i)
-        msg->m_codeX = 5;
+        msg.m_codeX = 5;
     else
-        msg->m_codeX = 6;
-    msg->m_extra = 4;
-    msg->m_codeY = i + 0x6b;
+        msg.m_codeX = 6;
+    msg.m_extra = 4;
+    msg.m_codeY = i + 0x6b;
 }
 
 // DC SetWidgetOff also clears widget::focusable after GetWidget (e.g.
@@ -1801,7 +1801,7 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 VA(0x005ea6e0, 0x862)
 DC_ADDRESS(0x188fa4, 0x602)
 MAC_ADDRESS(0x1f5ad8, 0x900)  // ordermap clean run + arity ret 4
-void TTradeResourceWindow::update(unsigned char update)
+void TTradeResourceWindow::update(bool update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
@@ -2212,7 +2212,7 @@ void TGiveResourceWindow::update(bool update)
 VA(0x005eb6a0, 0x7d9)
 DC_ADDRESS(0x189aac, 0x580)
 MAC_ADDRESS(0x1f6b6c, 0x774)  // ordermap clean run + arity ret 4
-void TBuyArtifactWindow::update(unsigned char update)
+void TBuyArtifactWindow::update(bool update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
@@ -2401,7 +2401,7 @@ void TBuyArtifactWindow::update(unsigned char update)
 VA(0x005ebe80, 0x6cb)
 DC_ADDRESS(0x18a02c, 0x522)
 MAC_ADDRESS(0x1f72e0, 0x684)
-void TSellArtifactWindow::update(unsigned char update)
+void TSellArtifactWindow::update(bool update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
@@ -2548,7 +2548,7 @@ void TSellArtifactWindow::update(unsigned char update)
                 msg.m_codeY = slot + 0x6b;
                 msg.m_extra = 6;
                 broadcastMessage(msg);
-                updateSellArtifactWidget(&msg, slot);
+                updateSellArtifactWidget(msg, slot);
                 broadcastMessage(msg);
             }
         }
@@ -3173,6 +3173,9 @@ int TTradeResourceWindow::windowHandler(message& msg)
 VA(0x005ed3a0, 0x1a2)
 DC_ADDRESS(0x18b7c4, 0x110)
 MAC_ADDRESS(0x1f8dac, 0x1a4)
+// Native Mac 0x1f8edc..0x1f8ef0 passes g_text directly as the four-int
+// broadcast payload. The callee owns message construction; no caller
+// message object is needed solely to reinterpret that pointer.
 void TTradeResourceWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
@@ -3196,9 +3199,8 @@ void TTradeResourceWindow::setRolloverText(int codeY)
     case MARKET_COMMAND_ID: strcpy(g_text, g_resourceWindowHelp[5].m_text); break;
     default: strcpy(g_text, ""); break;
     }
-    message update;
-    update.m_extraText = g_text;
-    broadcastMessage(0x200, 3, 0x93, update.m_extra);
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x93,
+                     reinterpret_cast<int>(g_text));
     drawWindow(0, 0x92, 0x93);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x238, 0x249, 0x12);
 }
@@ -3334,6 +3336,9 @@ int TGiveResourceWindow::windowHandler(message& msg)
 VA(0x005ed850, 0x190)
 DC_ADDRESS(0x18bb40, 0x124)
 MAC_ADDRESS(0x1f9264, 0x1b8)
+// Native Mac 0x1f93a4..0x1f93b8 passes g_text directly as the four-int
+// broadcast payload. The callee owns message construction; no caller
+// message object is needed solely to reinterpret that pointer.
 void TGiveResourceWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
@@ -3357,9 +3362,8 @@ void TGiveResourceWindow::setRolloverText(int codeY)
     case MARKET_COMMAND_ID: strcpy(g_text, g_giveResourceWindowHelp[4].m_text); break;
     default: strcpy(g_text, ""); break;
     }
-    message update;
-    update.m_extraText = g_text;
-    broadcastMessage(0x200, 3, 0x93, update.m_extra);
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x93,
+                     reinterpret_cast<int>(g_text));
     drawWindow(0, 0x92, 0x93);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x238, 0x249, 0x12);
 }
@@ -3463,7 +3467,7 @@ int TBuyArtifactWindow::windowHandler(message& msg)
             type_artifact artifact(
                 g_marketArtifacts[
                     msg.m_codeY - BUY_ARTIFACT_SLOT_0_ID]);
-            g_marketHero->viewArtifact(&artifact, 1);
+            g_marketHero->viewArtifact(artifact, 1);
             return MESSAGE_DISPATCH_CONSUME;
         }
 
@@ -3492,6 +3496,9 @@ int TBuyArtifactWindow::windowHandler(message& msg)
 VA(0x005eddd0, 0x188)
 DC_ADDRESS(0x18bee8, 0x124)
 MAC_ADDRESS(0x1f9728, 0x1b4)
+// Native Mac 0x1f9868..0x1f987c passes g_text directly as the four-int
+// broadcast payload. The callee owns message construction; no caller
+// message object is needed solely to reinterpret that pointer.
 void TBuyArtifactWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
@@ -3520,9 +3527,8 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
     case MARKET_COMMAND_ID: strcpy(g_text, g_buyArtifactWindowHelp[4].m_text); break;
     default: strcpy(g_text, ""); break;
     }
-    message update;
-    update.m_extraText = g_text;
-    broadcastMessage(0x200, 3, 0x93, update.m_extra);
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x93,
+                     reinterpret_cast<int>(g_text));
     drawWindow(0, 0x92, 0x93);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x238, 0x249, 0x12);
 }
@@ -3631,7 +3637,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
                 artifact = g_marketHero->getBackpack(slot);
             }
             // Mac retains one view call shared by both artifact sources.
-            g_marketHero->viewArtifact(&artifact, 1);
+            g_marketHero->viewArtifact(artifact, 1);
             break;
         }
 
@@ -3715,6 +3721,9 @@ int TSellArtifactWindow::windowHandler(message& msg)
 VA(0x005ee6c0, 0x1cf)
 DC_ADDRESS(0x18c378, 0x144)
 MAC_ADDRESS(0x1f9ce8, 0x210)
+// Native Mac 0x1f9e80..0x1f9e94 passes g_text directly as the four-int
+// broadcast payload. The callee owns message construction; no caller
+// message object is needed solely to reinterpret that pointer.
 void TSellArtifactWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
@@ -3755,9 +3764,8 @@ void TSellArtifactWindow::setRolloverText(int codeY)
     }
     default: strcpy(g_text, ""); break;
     }
-    message update;
-    update.m_extraText = g_text;
-    broadcastMessage(0x200, 3, 0x93, update.m_extra);
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x93,
+                     reinterpret_cast<int>(g_text));
     drawWindow(0, 0x92, 0x93);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x238, 0x249, 0x12);
 }
@@ -3896,6 +3904,9 @@ int TSellCreatureWindow::windowHandler(message& msg)
 VA(0x005eebd0, 0x1a1)
 DC_ADDRESS(0x18c7b0, 0x134)
 MAC_ADDRESS(0x1fa260, 0x1bc)
+// Native Mac 0x1fa3a8..0x1fa3bc passes g_text directly as the four-int
+// broadcast payload. The callee owns message construction; no caller
+// message object is needed solely to reinterpret that pointer.
 void TSellCreatureWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
@@ -3933,9 +3944,8 @@ void TSellCreatureWindow::setRolloverText(int codeY)
         strcpy(g_text, "");
         break;
     }
-    message update;
-    update.m_extraText = g_text;
-    broadcastMessage(0x200, 3, 0x93, update.m_extra);
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x93,
+                     reinterpret_cast<int>(g_text));
     drawWindow(0, 0x92, 0x93);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x238, 0x249, 0x12);
 }

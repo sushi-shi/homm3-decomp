@@ -395,12 +395,12 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     accept->setHotkey(1);
     m_widgets.push_back(accept);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Complete Mac 0x7f9e8..0x7fa2c expands the canonical registration
+    // operation (0x20bccc); older DC lines 328..334 spell the loop here.
+    // VC6 expands this call but changes nested vector insertion decisions:
+    // 288 versus retail's 279 blocks, with new vector<int> insertion calls
+    // around +0x1334. Keep the recovered path while resolving that frontier.
+    addWidgetsToMessageStream();
 
     videoOpen(videoId, 272, 89, 0, 0, 1, 1, 1);
 }
@@ -422,7 +422,7 @@ TCombatResultsWindow::~TCombatResultsWindow()
 VA(0x00471af0, 0x54)
 DC_ADDRESS(0x069200, 0x44)
 MAC_ADDRESS(0x07fb20, 0x98)
-int TCombatResultsWindow::open(int newPriority, unsigned char update)
+int TCombatResultsWindow::open(int newPriority, bool update)
 {
     int result = heroWindow::open(newPriority, 0);
     drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);

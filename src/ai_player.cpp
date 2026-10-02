@@ -385,14 +385,19 @@ MAC_COMPGEN_ADDRESS(0x02b304, 0x68, IMPLICIT_DTOR, type_AI_creature_purchaser)
 // Original: type_AI_player::get_resource_value; ai_player.cpp:230
 // DC235/236 sums seven resources with conversion back to long each turn;
 // GetTotalValue calls it at DC1359. Retail0x42a150 expands this loop.
+// The indexed double reads expand the canonical ai_player.h:278 resource
+// getter, also used by the income artifact. Preserve that nested access path.
 DC_ADDRESS(0x02e094, 0xc8)
 MAC_ADDRESS(0x02b36c, 0x78)
-long type_AI_player::getResourceValue(int* resources) const
+// Original DC ?get_resource_value@type_AI_player@@QBAJQAH@Z proves a
+// const pointer parameter; its elements retain the mutable integer type.
+long type_AI_player::getResourceValue(int* const resources) const
 {
     long value = 0;
     for (int resource = 0; resource < 7; ++resource)
         value = static_cast<long>(
-            value + resources[resource] * m_resourceValue[resource]);
+            value + resources[resource]
+                * getResourceValue(static_cast<EGameResource>(resource)));
     return value;
 }
 
@@ -417,18 +422,14 @@ float type_AI_player::getAttackBonus(short player)
 // seven doubles are mirrored into playerData before the six-resource
 // running total is divided by five.
 
-// Residual (97.4340%): the algorithm, calls, loops, floating-point flow,
-// and persistent fields agree. Two levers closed the old 86.38 plateau
-// (2026-08-20): the top-three cost loop copies its creature record BY VALUE
-// (retail's three-dword copy with spilled value/amount reads `type` once,
-// precomputes the traits row, strength-reduces both walks and counts DOWN
-// `mov edx,7 / dec/jne`; the const-reference re-read `type` per iteration
-// and pinned an indexed up-count, +7.03), and the /Ob2 numerator device
-// below the average loop (+4.03, see its comment). Remaining delta:
-// ECX/EDX and EBX/EDI transpositions in the trading-value loop and the
-// amount-word read (`movsx esi, cx` from the register copy vs our
-// `movsx esi, word ptr [ecx+8]` from the source) - register-homing family;
-// the creation-order probes measured against it are in the device note.
+// Keep the top-three creature copy by value: retail's three-dword copy
+// reads the type once and uses a seven-resource decrementing cost walk;
+// Mac 0x2b7f8..0x2b874 independently preserves that copy and loop guards.
+// With the canonical resource getter, the current residual is an outer
+// std::_Sort expansion: VC6 retains it, while retail expands it and keeps
+// its two recursive calls. The refreshed trace gives the nested _Sort
+// cost 172 against budget 164. Aggregate call counts mislabel this as
+// over-inlining; preserve the named recursive frontier and getter path.
 VA(0x00428740, 0x68E)
 DC_ADDRESS(0x02e188, 0x64e)
 MAC_ADDRESS(0x02b43c, 0x704)  // linkorder
@@ -557,7 +558,8 @@ void type_AI_player::calculateDemand()
     int averageValue = 0;
     int averageResource;
     for (averageResource = 0; averageResource < 6; averageResource++)
-        averageValue += m_resourceValue[averageResource];
+        averageValue += getResourceValue(
+            static_cast<EGameResource>(averageResource));
     player->m_ai.m_averageResourceValue = averageValue / 5;
 }
 
@@ -584,31 +586,33 @@ void type_AI_player::endTurn()
     hireHeroes();
     calculateDemand();
 
-    short townIndex = 0;
-    if (townIndex < player->m_numTowns) {
-        while (true) {
-            town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
-            if (currentTown->hasBuilding(MARKETPLACE_ID, true)) {
-                for (short playerId = 0; playerId < 8; playerId++) {
-                    if (!g_game->m_playerDisabled[playerId]
-                        && playerId != m_team
-                        && g_game->onSameTeam(playerId, m_team)
-                        && !g_game->m_players[playerId].isHuman())
-                        makeGift(playerId);
-                }
-                for (short humanPlayerId = 0; humanPlayerId < 8;
-                     humanPlayerId++) {
-                    if (!g_game->m_playerDisabled[humanPlayerId]
-                        && humanPlayerId != m_team
-                        && g_game->onSameTeam(humanPlayerId, m_team)
-                        && g_game->m_players[humanPlayerId].isHuman())
-                        makeGift(humanPlayerId);
-                }
-                break;
-            }
-            townIndex++;
-            if (townIndex >= player->m_numTowns)
-                break;
+    // DC450..455 initializes a separate zero/one result, sets it on the
+    // successful short-index town search, then routes gifts after that scope.
+    // Retail also compares the search index in AX; a dword spill is not an
+    // int declaration. The separate canonical search is byte-flat at 87.03%.
+    bool marketplaceAvailable = false;
+    for (short townIndex = 0; townIndex < player->m_numTowns; townIndex++) {
+        town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
+        if (currentTown->hasBuilding(MARKETPLACE_ID, true)) {
+            marketplaceAvailable = true;
+            break;
+        }
+    }
+    if (marketplaceAvailable) {
+        for (short playerId = 0; playerId < 8; playerId++) {
+            if (!g_game->m_playerDisabled[playerId]
+                && playerId != m_team
+                && g_game->onSameTeam(playerId, m_team)
+                && !g_game->m_players[playerId].isHuman())
+                makeGift(playerId);
+        }
+        for (short humanPlayerId = 0; humanPlayerId < 8;
+             humanPlayerId++) {
+            if (!g_game->m_playerDisabled[humanPlayerId]
+                && humanPlayerId != m_team
+                && g_game->onSameTeam(humanPlayerId, m_team)
+                && g_game->m_players[humanPlayerId].isHuman())
+                makeGift(humanPlayerId);
         }
     }
 
@@ -944,7 +948,7 @@ static long sumPlayerDwellings(long playerId)
 VA(0x00429d50, 0x3F9)
 DC_ADDRESS(0x02f694, 0x20c)
 MAC_ADDRESS(0x02d03c, 0x3a8)
-void fillProhibitedArray(playerData* player, unsigned char* prohibited)
+void fillProhibitedArray(playerData* player, bool* prohibited)
 {
     long humanStrength;
     int income[7];
@@ -1014,7 +1018,9 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
 VA(0x0042a150, 0x157)
 DC_ADDRESS(0x0301c4, 0x11c)
 MAC_ADDRESS(0x02df5c, 0x13c)
-long type_AI_player::getTotalValue(long basicValue, int* cost)
+// Original DC public ?get_total_value@type_AI_player@@IAAJJQAH@Z
+// records a const pointer parameter (the pointed-to costs remain mutable).
+long type_AI_player::getTotalValue(long basicValue, int* const cost)
 {
     playerData* player = &g_game->m_players[m_team];
     unsigned char tradeNeeded = 0;
@@ -1061,8 +1067,10 @@ long type_AI_player::getTotalValue(long basicValue, int* cost)
 VA(0x0042a2b0, 0x1BF)
 DC_ADDRESS(0x030334, 0x196)
 MAC_ADDRESS(0x02e1b4, 0x284)  // retail link order + arity
-bool type_AI_player::checkTradeSupply(const int* cost, long number,
-                                        int* supply,
+// Original DC public IAA_NQBHJQAH... proves const pointer parameters:
+// cost's elements are const, while supply's elements remain writable.
+bool type_AI_player::checkTradeSupply(const int* const cost, long number,
+                                        int* const supply,
                                         std::vector<long>& tradeQty)
 {
     unsigned char tradeNeeded = 0;
@@ -1131,7 +1139,9 @@ void type_AI_player::tradeResources(const int* cost, long number)
 VA(0x0042a580, 0x5BE)
 DC_ADDRESS(0x0305b4, 0x41e)
 MAC_ADDRESS(0x02e580, 0x424)  // retail link order + arity
-bool type_AI_player::canTradeResources(const int* cost, int* supply,
+// Original DC public IAA_NQBH QAH... proves the same const pointer
+// contract as checkTradeSupply; do not infer it from authored labels.
+bool type_AI_player::canTradeResources(const int* const cost, int* const supply,
                                          std::vector<long>& tradeQty)
 {
     // DC records long markets/market_value/on_hand, double efficiency and
@@ -1297,14 +1307,14 @@ void type_AI_player::doResourceTrade(int* supply)
 }
 
 long valueOfDwelling(town* currentTown, short dwelling,
-                       unsigned char* prohibited, int* extraCost);
+                       bool* prohibited, int* extraCost);
 long valueOfDwellingUpgrade(town* currentTown, short dwelling,
                                int* extraCost);
 int valueOfCastleUpgrade(town* currentTown, int* extraCost);
 long valueOfHorde(town* currentTown, type_building_id building,
-                    unsigned char* prohibited, int* extraCost);
+                    bool* prohibited, int* extraCost);
 long valueOfHordeUpgrade(town* currentTown, type_building_id building,
-                            unsigned char* prohibited, int* extraCost);
+                            bool* prohibited, int* extraCost);
 long valueOfHall(town* currentTown, type_building_id building);
 int aiResourceCost(const playerData* player, const int* resources);
 int canBuy(const town* currTown, int buildingId);
@@ -1328,7 +1338,7 @@ static long valueOfSilo(town* currentTown, playerData* player)
 DC_ADDRESS(0x02fdac, 0x29c)
 MAC_ADDRESS(0x02dacc, 0x290)
 static long valueOfBuilding(town* currentTown, type_building_id building,
-                              unsigned char* prohibitedCreatures,
+                              bool* prohibitedCreatures,
                               int* extraCost)
 {
     playerData* player = &g_game->m_players[currentTown->m_owner];
@@ -1537,8 +1547,11 @@ static void markValues(long* fullValue, long totalValue,
 VA(0x0042ae00, 0x718)
 DC_ADDRESS(0x030d6c, 0x2c2)
 MAC_ADDRESS(0x02ed58, 0x420)  // retail callee set + arity
-unsigned char type_AI_player::purchaseBuilding(
-    unsigned char* prohibitedCreatures)
+// Original DC public ?purchase_building@type_AI_player@@IAA_NPA_N@Z
+// proves bool result/table. Its pointer type 0x420 is shared by the native
+// fill, dwelling, horde and value-of-building interfaces; retain that chain.
+bool type_AI_player::purchaseBuilding(
+    bool* prohibitedCreatures)
 {
     int extraCosts[MAX_BUILDING_TYPE][7];
     long fullValue[MAX_BUILDING_TYPE];
@@ -1627,7 +1640,7 @@ unsigned char type_AI_player::purchaseBuilding(
 VA(0x0042b520, 0x8b)
 DC_ADDRESS(0x02f4b0, 0x96)
 MAC_ADDRESS(0x02cc84, 0x138)
-long valueOfDwelling(town* currentTown, short dwelling, unsigned char* prohibited, int* extraCost)
+long valueOfDwelling(town* currentTown, short dwelling, bool* prohibited, int* extraCost)
 {
     TCreatureType creature = g_townDwellingCreatures[
         currentTown->m_type * 14 + dwelling];
@@ -1697,7 +1710,7 @@ int valueOfCastleUpgrade(town* currentTown, int* extraCost)
 VA(0x0042b790, 0x62)
 DC_ADDRESS(0x02f9bc, 0xcc)
 MAC_ADDRESS(0x02d674, 0x124)
-long valueOfHorde(town* currentTown, type_building_id building, unsigned char* prohibited, int* extraCost)
+long valueOfHorde(town* currentTown, type_building_id building, bool* prohibited, int* extraCost)
 {
     type_horde_effect* horde = currentTown->getHordeEffect(building);
     TCreatureType creature = horde->m_creature;
@@ -1712,7 +1725,7 @@ long valueOfHorde(town* currentTown, type_building_id building, unsigned char* p
 VA(0x0042b800, 0xa2)
 DC_ADDRESS(0x02fa88, 0xa2)
 MAC_ADDRESS(0x02d798, 0x17c)
-long valueOfHordeUpgrade(town* currentTown, type_building_id building, unsigned char* prohibited, int* extraCost)
+long valueOfHordeUpgrade(town* currentTown, type_building_id building, bool* prohibited, int* extraCost)
 {
     type_horde_effect* horde = currentTown->getHordeEffect(building);
     if (!horde)
@@ -1796,7 +1809,7 @@ DC_ADDRESS(0x031094, 0x60)
 MAC_ADDRESS(0x02f20c, 0x60)
 void type_AI_player::purchaseBuildings()
 {
-    unsigned char prohibitedCreatures[145];
+    bool prohibitedCreatures[145];
     fillProhibitedArray(&g_game->m_players[m_team], prohibitedCreatures);
     while (purchaseBuilding(prohibitedCreatures)) {
     }
@@ -2611,14 +2624,15 @@ long type_AI_creature_purchaser::doBestPurchase(
 }
 
 // Original DC ?do_purchase@type_AI_creature_purchaser@@QAAXPAVarmyGroup@@F0QAJ_N@Z
-// proves bool allowTrade, forwarded to doBestPurchase. All seven Complete
+// proves bool allowTrade and long* const funds (QAJ), forwarded to
+// doBestPurchase. All seven Complete
 // callers pass 0/1; its added Angelic-Alliance argument remains separate.
 VA(0x0042d690, 0xE1)
 DC_ADDRESS(0x032288, 0x70)
 MAC_ADDRESS(0x030ca8, 0xa4)
 void type_AI_creature_purchaser::doPurchase(
     armyGroup* newArmy, short newMorale, armyGroup* newAdjacentArmy,
-    long* newFunds, bool allowTrade,
+    long* const newFunds, bool allowTrade,
     unsigned char newHasAngelicAlliance)
 {
     HOMM3_RELEASE_VERIFY(newArmy != 0);
@@ -2639,6 +2653,8 @@ void type_AI_creature_purchaser::doPurchase(
         *m_creatures[source].m_ptr = m_creatures[source].m_number;
 }
 
+// Original DC public ?get_purchase_value@type_AI_creature_purchaser@@QAAJPBVarmyGroup@@F0QBJ@Z
+// proves const long* const funds (QBJ); the mutable purchase path uses QAJ.
 // Complete adds the final Angelic-Alliance byte to the DC signature. Retail
 // copies both armies and all seven resources, so the valuation can run the
 // real purchaser loop without mutating any caller-owned state. The adjacent
@@ -2654,7 +2670,7 @@ DC_ADDRESS(0x0322f8, 0xc2)
 MAC_ADDRESS(0x030d4c, 0x194)  // DC method/locals + retail Complete tail;
 long type_AI_creature_purchaser::getPurchaseValue(
     const armyGroup* newArmy, short newMorale,
-    const armyGroup* newAdjacentArmy, const long* newFunds,
+    const armyGroup* newAdjacentArmy, const long* const newFunds,
     unsigned char newHasAngelicAlliance)
 {
     armyGroup localArmy(*newArmy);
@@ -3185,14 +3201,16 @@ static void unblockLith(hero* currentHero,
 // value test. The audit's missing GetMapExtra here is a platform difference.
 // The zero-count destination vector is the native fill constructor, not a
 // default constructor (Mac 0x33328..0x3335c, DC constructor 0x38c3c).
+// Original ?AI_choose_destination@@YAHPAVhero@@JAAUHeroDestination@@AAJ_N3@Z
+// proves both final flags bool despite their lowered byte debug records.
 VA(0x0042e0b0, 0xb6e)
 DC_ADDRESS(0x033cf8, 0x46a)
 MAC_ADDRESS(0x0332f8, 0x71c)  // anchor-caller move_hero + order bracket
 int aiChooseDestination(hero* currentHero, long maxDistance,
                           HeroDestination& bestPoint,
                           long& bestRawValue,
-                          unsigned char allowSpells,
-                          unsigned char exploreMode)
+                          bool allowSpells,
+                          bool exploreMode)
 {
     long rawValue;
     long nearbyCost;
@@ -3729,17 +3747,19 @@ static void considerHidingMouse(hero* currentHero, int direction)
 VA(0x0042fc50, 0x285)
 DC_ADDRESS(0x0341f4, 0x1ce)
 MAC_ADDRESS(0x033af8, 0x300)
-unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
-                           unsigned char standEnd, unsigned char firstStep)
+// Original DC public ?attempt_step@@YA_NPAVhero@@AAUpathCell@@_N2@Z
+// proves bool result/flags and a non-null path-cell reference.
+bool attemptStep(hero* currentHero, pathCell& currentPathCell,
+                 bool standEnd, bool firstStep)
 {
     type_point triggerPoint;
-    int direction = currentPathCell->m_direction;
+    int direction = currentPathCell.m_direction;
     considerHidingMouse(currentHero, direction);
 
-    triggerPoint = currentPathCell->m_point;
+    triggerPoint = currentPathCell.m_point;
     NewmapCell* cell = g_game->getCell(triggerPoint);
 
-    if (currentPathCell->m_inBoat && !(currentHero->m_flags & 0x40000)) {
+    if (currentPathCell.m_inBoat && !(currentHero->m_flags & 0x40000)) {
         if (!(cell->m_type == BOAT && cell->m_isTrigger)) {
             g_advManager->stopCursor(1);
             if (currentHero->canSummonBoat()) {
@@ -3760,7 +3780,7 @@ unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
     int savedZ = currentHero->m_pathTargetZ;
 
     unsigned char retargeted =
-        currentPathCell->m_flying && currentPathCell->m_canStop && cell->m_isTrigger;
+        currentPathCell.m_flying && currentPathCell.m_canStop && cell->m_isTrigger;
     if (retargeted) {
         currentHero->m_pathTargetX = triggerPoint.m_x;
         currentHero->m_pathTargetY = triggerPoint.m_y;
@@ -3770,7 +3790,7 @@ unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
     int noMove;
     int foughtBattle;
     NewmapCell* eventCell = g_advManager->moveHero(
-        currentPathCell->m_direction, standEnd, triggerPoint, &noMove, 1,
+        currentPathCell.m_direction, standEnd, triggerPoint, &noMove, 1,
         &foughtBattle, 0);
     if (retargeted) {
         currentHero->m_pathTargetX = savedX;
@@ -4015,8 +4035,10 @@ static inline void checkGatePurchase(type_point point)
     }
 }
 
-// E:\gamedcs\ai_player.cpp:4179.  The reference pair is fixed by the DC
-// decorated signature and the retail /Gr call at move_hero+0x219.  The body
+// E:\gamedcs\ai_player.cpp:4179. Original public
+// ?AI_AttemptMove@@YAXPAVhero@@AAUHeroDestination@@AAJ_N@Z proves the
+// reference pair and bool exploreMode. Keep the philai declaration equal;
+// retail's /Gr call at move_hero+0x219 corroborates the references. The body
 // lies after attempt_step and immediately before the Town.h COMDAT band.
 // Residual (84.83%, 2026-09-01): the Dreamcast statement groups now recover
 // the compound puzzle-guess test, both check_gate_purchase -> game::GetTown
@@ -4040,11 +4062,15 @@ VA(0x0042fee0, 0x6b8)
 DC_ADDRESS(0x034b08, 0x4b0)
 MAC_ADDRESS(0x0346d4, 0x938)  // anchor-caller move_hero + order bracket
 void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
-                    long& bestRawValue, unsigned char exploreMode)
+                    long& bestRawValue, bool exploreMode)
 {
     long totalCost;
     std::vector<pathCell> path;
-    unsigned char firstStep;
+    // DC's lowered byte local is ambiguous; retail passes firstStep and
+    // standEnd straight to attempt_step's proven bool parameters. Bool
+    // locals remove both candidate test/setne conversions and recover the
+    // retail frame and first returned-location copy (85.26% -> 86.18%).
+    bool firstStep;
     long maxDistance;
     type_point destination;
 
@@ -4082,7 +4108,7 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
             currentHero->m_movePoints),
         350);
     firstStep = 1;
-    unsigned char standEnd = 0;
+    bool standEnd = false;
     totalCost = 0;
 
     for (long step = 0; step < path.size(); ++step) {
@@ -4101,11 +4127,17 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
                                      0, 1, 0);
             currentHero->useSpell(
                 currentHero->getManaCost(SPELL_TOWN_PORTAL));
-            if (currentHero->getSpellLevel(SPELL_TOWN_PORTAL)
-                == eMasteryExpert)
-                currentHero->m_movePoints -= 200;
-            else
-                currentHero->m_movePoints -= 300;
+            // DC line 4234 selects the charge before one shared subtract
+            // (0x34d92); Complete's neg/sbb/and/add sequence likewise
+            // computes 200/300 then subtracts once. Keep that boundary. The
+            // focused
+            // VC6 comparison is 85.26% vs 86.75% with separate subtraction
+            // arms: point inequality becomes retained, while vector teardown
+            // still has three delete sites against retail's two.
+            currentHero->m_movePoints -=
+                currentHero->getSpellLevel(SPELL_TOWN_PORTAL)
+                        == eMasteryExpert
+                    ? 200 : 300;
             if (currentHero->m_movePoints < 0)
                 currentHero->m_movePoints = 0;
             return;
@@ -4133,7 +4165,7 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
                    > currentHero->m_movePoints)
             standEnd = 1;
 
-        if (!attemptStep(currentHero, &path[step], standEnd, firstStep))
+        if (!attemptStep(currentHero, path[step], standEnd, firstStep))
             return;
         if (standEnd)
             return;
@@ -4577,6 +4609,17 @@ long aiValueOfObservatory(type_point origin, long playerId, long range)
 VA_COMPGEN(0x004324b0, 0x18, DEFAULT_CTOR_CLOSURE, type_artifact_effect)
 
 VA_COMPGEN(0x004324d0, 0x23, SCALAR_DELETING_DTOR, type_artifact_effect)
+
+// Native ai_player.cpp:5043 precedes the combat-derived constructor at
+// 5073; Mac 0x36bfc likewise precedes 0x36cc0. Keep the ordinary base body
+// visible before the derived constructors and their initialization caller.
+// This source-order recovery is byte-flat in the focused ai_player build;
+// initializeArtifactEffects still retains one extra combat constructor.
+DC_ADDRESS(0x0361c8, 0x2c)
+MAC_ADDRESS(0x036bfc, 0xc)
+type_artifact_effect::type_artifact_effect()
+{
+}
 
 VA(0x00432500, 0x7)
 DC_ADDRESS(0x0361f4, 0x20)
@@ -5484,12 +5527,6 @@ void aiSwapArtifacts(hero* source, hero* dest)
 // Mac initializeArtifactEffects retains the ordinary constructors below;
 // VC6 still expands their calls in the Windows body. The two unpaired elixir
 // and statue constructors remain inline: Mac retains their effect-base calls.
-DC_ADDRESS(0x0361c8, 0x2c)
-MAC_ADDRESS(0x036bfc, 0xc)
-type_artifact_effect::type_artifact_effect()
-{
-}
-
 DC_ADDRESS(0x036214, 0x44)
 MAC_ADDRESS(0x036c50, 0x48)
 type_scouting_artifact::type_scouting_artifact(long newBonus)

@@ -797,8 +797,8 @@ unsigned int CSpriteFrame::getSize() const
 DC_ADDRESS(0x079294, 0x184)
 inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
                                int& dx, int& dy, int dw, int dh,
-                               unsigned char hflip,
-                               unsigned char vflip) const
+                               bool hflip,
+                               bool vflip) const
 {
     int deltaX;
 
@@ -876,8 +876,8 @@ DC_ADDRESS(0x075810, 0x310)
 MAC_ADDRESS(0x08b710, 0x430)  // unique PC/DC renderer identity; retail byte verdict
 void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
-                        int dpitch, TPalette16& pal, unsigned char hflip,
-                        unsigned char tblit) const
+                        int dpitch, TPalette16& pal, bool hflip,
+                        bool tblit) const
 {
     if (m_encodingMethod == eEncodeTilesetRLE || m_encodingMethod == eEncodeRaw) {
         drawTile(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
@@ -1046,9 +1046,9 @@ MAC_ADDRESS(0x08bb40, 0x6f4)  // unique PC/DC renderer identity; retail byte ver
 void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                                     unsigned short* dst, int dx, int dy,
                                     int dw, int dh, int dpitch,
-                                    TPalette16& pal, unsigned char hflip,
+                                    TPalette16& pal, bool hflip,
                                     unsigned short outcolor,
-                                    unsigned char alpha) const
+                                    bool alpha) const
 {
     typedef unsigned int TOffset;
     typedef unsigned short TDstPixel;
@@ -1320,7 +1320,7 @@ MAC_ADDRESS(0x08c234, 0x460) // retail packed-cell decoder + DC source identity
 void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
                                   int dh, int dpitch, TPalette16& pal,
-                                  unsigned char hflip,
+                                  bool hflip,
                                   unsigned short flagcolor) const
 {
     const unsigned short* palette;
@@ -1510,7 +1510,7 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                                            int dw, int dh, int dpitch,
                                            TPalette16& pal,
                                            unsigned short flagcolor,
-                                           unsigned char hflip) const
+                                           bool hflip) const
 {
     const unsigned short* palette;
     unsigned int cellsPerLine;
@@ -1686,6 +1686,8 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
 // dropping it took this row 98.5765 -> 99.9400 on one line.
 // The native row cursor restores 99.9404%; an extra base/offset pair changes
 // the surrounding lifetimes and leaves 94.3325%.
+// Original DC public ends TPalette16@@_N@Z: hflip is bool; Clip also
+// encodes both flips as _N. Preserve that domain through shadow wrappers.
 VA(0x0047d930, 0x40F)
 DC_ADDRESS(0x076688, 0x2fe)
 MAC_ADDRESS(0x08cae4, 0x440)  // anchor-callee (CSprite::DrawAdvObjShadow/DrawHeroShadow) + DC source identity
@@ -1693,7 +1695,7 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                                         unsigned short* dst, int dx, int dy,
                                         int dw, int dh, int dpitch,
                                         TPalette16& pal,
-                                        unsigned char hflip) const
+                                        bool hflip) const
 {
     unsigned int cellsPerLine;
     const unsigned short* cellOffset;
@@ -1885,8 +1887,8 @@ DC_ADDRESS(0x076988, 0x762)
 MAC_ADDRESS(0x08cf24, 0x834) // retail raw/tileset decoder + DC source identity
 void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                             int dx, int dy, int dw, int dh, int dpitch,
-                            TPalette16& pal, unsigned char hflip,
-                            unsigned char vflip) const
+                            TPalette16& pal, bool hflip,
+                            bool vflip) const
 {
     static const unsigned char opaqueRunCode = 7;
 
@@ -2323,8 +2325,8 @@ MAC_ADDRESS(0x08d758, 0x7a0)  // anchor-callee (CSprite::DrawTileShadow/DrawShro
 void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
                                   int dh, int dpitch, TPalette16& pal,
-                                  unsigned char hflip,
-                                  unsigned char vflip) const
+                                  bool hflip,
+                                  bool vflip) const
 {
     static const unsigned char opaqueRunCode = 7;
 
@@ -2665,8 +2667,8 @@ MAC_ADDRESS(0x08def8, 0x44c)  // anchor-callee (CSprite::DrawSpellEffect) + DC s
 void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
                                    unsigned short* dst, int dx, int dy, int dw,
                                    int dh, int dpitch, TPalette16& pal,
-                                   unsigned char hflip,
-                                   unsigned char alpha) const
+                                   bool hflip,
+                                   bool alpha) const
 {
     if (!alpha) {
         draw(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);

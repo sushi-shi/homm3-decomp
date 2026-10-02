@@ -380,6 +380,9 @@ void type_sacrifice_window::createArtifactWidgets(
     // default constructor, whose base call supplies TArtifact(-1). Line 444
     // initializes item_count before that constructor.
     type_artifact_offering artifactOffering;
+    // DC line 455 and Mac 156820 reset the empty ID after construction.
+    // Native store retained despite VC6 vector expansion changing 99.9812 -> 97.0555.
+    artifactOffering.m_artifactId = ARTIFACT_NONE;
     textWidget* currentTextWidget;
     for (long j = 0; j < 5; ++j) {
         long itemX = g_rowStart[j][0];
@@ -1026,7 +1029,7 @@ void type_sacrifice_window::artifactClick(
             return;
 
         if (rightClick) {
-            m_currentHero->viewArtifact(&oldArtifact, rightClick);
+            m_currentHero->viewArtifact(oldArtifact, rightClick);
             return;
         }
 
@@ -1100,7 +1103,7 @@ void type_sacrifice_window::backpackClick(
         if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
             if (rightClick) {
                 m_currentHero->viewArtifact(
-                    &oldArtifact, rightClick);
+                    oldArtifact, rightClick);
             } else {
                 m_currentHero->removeBackpackArtifact(slot);
                 updateBackpack();
@@ -1148,7 +1151,7 @@ void type_sacrifice_window::offeringClick(
         if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
             if (rightClick) {
                 m_currentHero->viewArtifact(
-                    &oldArtifact, rightClick);
+                    oldArtifact, rightClick);
             } else {
                 m_artifactOfferings[slot].m_artifactId = ARTIFACT_NONE;
                 updateArtifactOffering(slot);

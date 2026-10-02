@@ -1241,8 +1241,8 @@ public:
     int getRandomNumTroops(int whichMon);
     void setupDynamicStuff(int update, int forceUpdate);  // 0x51bd50
     void setupNewOverviewType(int whichType,
-                              unsigned char update);  // 0x51e330
-    int processIconSelect(int codeY, unsigned char rightMouse);  // 0x51ee50
+                              bool update);  // 0x51e330
+    int processIconSelect(int codeY, bool rightMouse);  // 0x51ee50
     playerData* getLocalPlayer();
     int getLastHuman() const;
     int getLocalPlayerGamePos() const;  // 0x4cea20
@@ -1349,7 +1349,7 @@ public:
     // when the protocol is hotseat.
     void waitForPlayer(char* text, int gamePos);  // 0x4ca840
     int transmitSaveGame(int toWho, int thisPlayerDead,
-                         unsigned char inGame, unsigned char makeOrig);
+                         bool inGame, bool makeOrig);
     // DC game.cpp:10587 names the received-save body. Retail's transmit-init
     // handlers independently prove the five arguments and 0x4cbd40 entry.
     int receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
@@ -1399,7 +1399,7 @@ private:
 
 public:
     // 0x4bf780 (dc 0xaa7e0).
-    void validateVictoryLossConditions(unsigned char checkMapLocations);
+    void validateVictoryLossConditions(bool checkMapLocations);
     void giveTroopsToNeutralTowns();
     void giveTroopsToNeutralTown(int townId);  // 0x4bf570
     void setupOrigData();
@@ -1457,7 +1457,7 @@ public:
     // The random-object pass and the monster roll it drives. Both bodies
     // are claimed in game.cpp.
     TCreatureType getRandomMonster(int minLevel, int maxLevel);  // 0x4c92c0
-    int computeDailyGold(int player, unsigned char includeSilo);
+    int computeDailyGold(int player, bool includeSilo);
     void cancelComputerScreen();
     void makeTerrainVisible(int whichPlayer, unsigned short visMask);
     // 0x4c9990. town.obj needs this declaration for
@@ -1661,9 +1661,10 @@ private:
     void setupShipyards();
 
 public:
+    // Original DC ViewArmy public ends HH_N3@Z: both UI flags are bool.
     void viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                   const town* thisTown, int x, int y,
-                  unsigned char showDismiss, unsigned char isQuickView);
+                  bool showDismiss, bool isQuickView);
     void overview();
 
     VA(0x004317d0, 0x26)  // hd-crossbuild + exact body/callers x15

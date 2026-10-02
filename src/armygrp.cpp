@@ -742,6 +742,12 @@ long armyGroup::getAIValue() const
     return value;
 }
 
+// Original: armyGroup::GetNumArmies; armygrp.cpp:804.
+// The older DC body belongs to armygrp.cpp; Mac places its body after
+// getAIValue and before add, with 42 retained game-call sites. Body order
+// alone does not exclude a retained header copy. The ordinary source body
+// restores eight Windows callers to exact; Complete's hero bottom-view
+// count still expands, so its original TU/placement remains unresolved.
 VA(0x0044acc0, 0x14)
 DC_ADDRESS(0x04ed28, 0x24)
 MAC_ADDRESS(0x058528, 0x7c)

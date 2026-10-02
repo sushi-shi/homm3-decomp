@@ -36,10 +36,10 @@ void aiEquipArtifacts(hero* currentHero);
 int aiChooseDestination(hero* currentHero, long maxDistance,
                           HeroDestination& bestPoint,
                           long& bestRawValue,
-                          unsigned char allowSpells,
-                          unsigned char exploreMode);
+                          bool allowSpells,
+                          bool exploreMode);
 void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
-                    long& bestRawValue, unsigned char exploreMode);
+                    long& bestRawValue, bool exploreMode);
 static void moveHero(hero* currentHero, unsigned char isLastHero,
                      unsigned char& exploreMode);
 static void moveHero(hero* currentHero, long* dangerZones,

@@ -1525,7 +1525,7 @@ void CAnimatedDlg::tickAnimation()
 VA(0x00554e90, 0x7D)
 DC_ADDRESS(0x11d5dc, 0xec)
 MAC_ADDRESS(0x2134d0, 0xc4)
-void CAnimatedDlg::drawWindow(unsigned char update, int lowID, int highID)
+void CAnimatedDlg::drawWindow(bool update, int lowID, int highID)
 {
     if (!m_palUpdated) {
         if (g_game->getLocalPlayer()) {
@@ -3026,7 +3026,7 @@ CNetMsgHandlerPause::~CNetMsgHandlerPause()
 VA(0x00557f80, 0x31)
 DC_ADDRESS(0x11f4d0, 0x16)
 MAC_ADDRESS(0x215d0c, 0x34)
-CHourGlass::CHourGlass(unsigned char thread)
+CHourGlass::CHourGlass(bool thread)
     : m_thread(thread)
 {
     start();

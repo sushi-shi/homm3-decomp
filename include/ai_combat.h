@@ -258,7 +258,7 @@ inline hero* type_AI_combat_data::getHero() const
     return m_currentHero;
 }
 
-unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
+bool aiQuickCombat(hero* attackingHero, hero* defendingHero,
                               armyGroup& defendingArmy, town* defendingTown,
                               NewmapCell* cell);
 void aiAutoCombat(hero* attackingHero, hero* defendingHero,

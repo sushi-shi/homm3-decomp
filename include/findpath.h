@@ -281,7 +281,7 @@ private:
     // DC findpath.cpp:461 proves these cv/ref and enum parameter layers.
     void testPossibleDirections(const hero* currentHero, pathCell& source,
                                 long turnMobility, long maxMobility,
-                                unsigned char adjacentMonster,
+                                bool adjacentMonster,
                                 type_point monsterLocation, TSkillMastery pathfinding,
                                 type_search_type searchType,
                                 TTerrainType nativeTerrain);

@@ -196,7 +196,7 @@ void type_AI_combat_parameters::simulateAttack(const army& currentArmy, long& ou
     if (ourHits == 0 || enemyHits <= 0 || ranged)
         return;
     if (enemy.canRetaliate(currentArmy)
-            && (g_game->m_setup.m_difficulty > 0 || g_combatManager->m_sideIsAi[m_ourGroup])) {
+            && (g_game->m_setup.m_difficulty > 0 || g_combatManager->m_sideIsAi[getGroup()])) {
         simulateSingleAttack(enemy, enemyHits, currentArmy, ourHits, 0, 0);
         if (ourHits == 0 || enemyHits == 0)
             return;
@@ -250,7 +250,7 @@ MAC_ADDRESS(0x03d3fc, 0x1dc)
 long type_AI_combat_parameters::getRangedAttackValue(const army& currentArmy, const army& enemy) const
 {
     long value = getSimpleAttackEffect(currentArmy, enemy, 1, 0);
-    if (!g_game->m_setup.m_difficulty && !g_combatManager->m_sideIsAi[m_ourGroup])
+    if (!g_game->m_setup.m_difficulty && !g_combatManager->m_sideIsAi[getGroup()])
         return value;
     if (enemy.isIncapacitated())
         return value / 10;
@@ -299,6 +299,12 @@ DC_ADDRESS(0x03cc8c, 0x22c)
 MAC_ADDRESS(0x03d71c, 0x290)
 type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat, long side)
 {
+    // Original NB11 records attack/ratio at procedure scope (both scope=None),
+    // unlike the inner-loop/final-if declarations. Their assignment sites
+    // stay fixed; VC6 remains 97.5667%, with 25 exact CFG blocks and only
+    // the 24 register rows in the four canonical group-value calls differing.
+    long attack;
+    double ratio;
     unsigned char first = 1;
     this->m_ourGroup = side;
     m_enemyGroup = 1 - side;
@@ -313,8 +319,8 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
                 continue;
             if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
-            unsigned char ranged = ourArmy->canShoot(0);
-            long attack = ourArmy->getAttackModifier(0, ranged);
+            bool ranged = ourArmy->canShoot(0);
+            attack = ourArmy->getAttackModifier(0, ranged);
             long defense = ourArmy->getDefenseModifier();
             if (first || m_lowestAttack > attack)
                 m_lowestAttack = attack;
@@ -323,17 +329,20 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
             first = 0;
         }
     }
-    m_friendlyCombatValue = combat->getTotalCombatValue(this->m_ourGroup, m_lowestAttack,
+    // Mac 0x3d71c's total-value calls expand the existing ai_tactical.h
+    // group getters (+0x20/+0x24); preserve the same canonical access path
+    // in the ranged/retaliation gates above.
+    m_friendlyCombatValue = combat->getTotalCombatValue(getGroup(), m_lowestAttack,
                                                m_lowestDefense, 1);
-    m_awakeFriendlyValue = combat->getTotalCombatValue(this->m_ourGroup, m_lowestAttack,
+    m_awakeFriendlyValue = combat->getTotalCombatValue(getGroup(), m_lowestAttack,
                                                     m_lowestDefense, 0);
-    m_enemyCombatValue = combat->getTotalCombatValue(m_enemyGroup, m_lowestAttack,
+    m_enemyCombatValue = combat->getTotalCombatValue(getEnemyGroup(), m_lowestAttack,
                                                  m_lowestDefense, 1);
-    m_awakeEnemyValue = combat->getTotalCombatValue(m_enemyGroup, m_lowestAttack,
+    m_awakeEnemyValue = combat->getTotalCombatValue(getEnemyGroup(), m_lowestAttack,
                                                       m_lowestDefense, 0);
     if (m_friendlyCombatValue * 2 < m_enemyCombatValue
             && (g_game->m_setup.m_difficulty > 0
-                || g_combatManager->m_sideIsAi[this->m_ourGroup]))
+                || g_combatManager->m_sideIsAi[getGroup()]))
         m_killsOnly = 1;
     long high = m_awakeFriendlyValue;
     long low = m_awakeEnemyValue;
@@ -342,7 +351,7 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
         low = m_awakeFriendlyValue;
     }
     if (low * 5 > high && high != 0) {
-        double ratio = static_cast<double>(high) / static_cast<double>(low);
+        ratio = static_cast<double>(high) / static_cast<double>(low);
         for (m_roundsLeft = 0; m_roundsLeft < 6; m_roundsLeft++) {
             if (ratio >= g_aiOddsLadder[m_roundsLeft])
                 break;
@@ -477,8 +486,8 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
         if (cell->m_flightCost > 0)
             continue;
         turns = getAttackTime(cell);
-        if (m_bestHex >= 0) {
-            if (m_bestAttackTime < turns)
+        if (getBestHex() >= 0) {
+            if (getAttackTime() < turns)
                 continue;
         }
         checked = 0;
@@ -517,11 +526,13 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
             threat = min(m_enemyAttackArray[otherHex], threat);
         }
         value += threat;
-        if (m_bestHex >= 0 && turns == m_bestAttackTime) {
-            if (value < m_bestValue)
+        // Mac expands the ai_tactical.h:471..482 result getters at these
+        // best-hex/time/value reads. Keep their canonical caller boundaries.
+        if (getBestHex() >= 0 && turns == getAttackTime()) {
+            if (value < getHexValue())
                 continue;
-            if (value == m_bestValue) {
-                const pathCell* bestCell = m_searchData->getHex(m_bestHex);
+            if (value == getHexValue()) {
+                const pathCell* bestCell = m_searchData->getHex(getBestHex());
                 long difference = cell->m_cost - bestCell->m_cost;
                 if ((m_attackArmy->m_creatureType == CREATURE_CAVALIER
                             || m_attackArmy->m_creatureType == CREATURE_CHAMPION)
@@ -632,7 +643,7 @@ unsigned char type_AI_attack_hex_chooser::findAttackHex()
                 checkAdjacentHexes(second, 0, 3);
         }
     }
-    return combatManager::validHex(m_bestHex);
+    return combatManager::validHex(getBestHex());
 }
 
 // E:\gamedcs\ai_tactical.cpp:744 -  No retail slot: both
@@ -640,7 +651,9 @@ unsigned char type_AI_attack_hex_chooser::findAttackHex()
 // stores), so /OPT:REF dropped the out-of-line copy.
 DC_ADDRESS(0x03d524, 0x48)
 MAC_ADDRESS(0x03e210, 0x1c)
-type_enchant_data::type_enchant_data(SpellID newSpell, TSkillMastery newMastery, long newPower, long newDuration)
+// Original DC ??0type_enchant_data@@QAA@W4SpellID@@W4TSkillMastery@@JJ@Z
+// agrees with the native enum field contract.
+type_enchant_data::type_enchant_data(ESpellId newSpell, TSkillMastery newMastery, long newPower, long newDuration)
 {
     m_spell = newSpell;
     m_mastery = newMastery;
@@ -663,7 +676,7 @@ VA(0x00436950, 0x23)
 DC_ADDRESS(0x03d584, 0x2a)
 MAC_ADDRESS(0x03e254, 0x58)
 type_spell_choice::type_spell_choice()
-    : type_enchant_data(-1, eMasteryNone, 0, 0)
+    : type_enchant_data(SPELL_NONE, eMasteryNone, 0, 0)
 {
     m_value = 0;
     m_target = -1;
@@ -674,7 +687,8 @@ type_spell_choice::type_spell_choice()
 VA(0x00436980, 0x35)
 DC_ADDRESS(0x03d5b0, 0x2a)
 MAC_ADDRESS(0x03e2ac, 0x48)
-type_spell_choice::type_spell_choice(SpellID newSpell, TSkillMastery newMastery, long newPower, long newDuration)
+// Original DC ??0type_spell_choice@@QAA@W4SpellID@@W4TSkillMastery@@JJ@Z.
+type_spell_choice::type_spell_choice(ESpellId newSpell, TSkillMastery newMastery, long newPower, long newDuration)
     : type_enchant_data(newSpell, newMastery, newPower, newDuration)
 {
     m_value = 0;
@@ -1724,6 +1738,10 @@ long type_AI_spellcaster::getHasteValue(const army* ourArmy, type_enchant_data c
 // The work chance stays FLOAT to __ftol here exactly as in
 // get_damage_value - `fild dword / fstp DWORD / fmul dword` - while the
 // closing odds ladder is the TU's usual double one.
+// DC's ranged byte record is compatible with lowered bool. Keep the
+// canShoot bool result in its native domain through getLossCombatValue's
+// bool parameter: retail forwards the saved byte without test/setne.
+// This restores all 31 blocks, 11 calls and 25 relocations at 100%.
 VA(0x004396e0, 0x2BC)
 DC_ADDRESS(0x03fde4, 0x27c)
 MAC_ADDRESS(0x041bd8, 0x2d8)
@@ -1738,9 +1756,10 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
         return 0;
     long power = g_combatManager->m_spellPower[m_enemySide];
     long value = 0;
-    unsigned char ranged = ourArmy->canShoot(0);
+    bool ranged = ourArmy->canShoot(0);
     long ourHits = ourArmy->getTotalHitPoints(0);
     armyGroup* group = g_combatManager->m_armyGroups[m_enemySide];
+    TSkillMastery mastery;  // DC records enemy_mastery at procedure scope.
     for (long i = 0; i < hero::NUM_SPELLS; i++) {
         if ((school & g_spellTraits[i].m_schoolBits) == 0)
             continue;
@@ -1754,7 +1773,7 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
             continue;
         if (!g_combatManager->validSpellTargetArmy(i, m_enemySide, ourArmy, 1, 0))
             continue;
-        TSkillMastery mastery = m_enemyHero->getSpellLevel(i, g_combatManager->m_magicTerrain);
+        mastery = m_enemyHero->getSpellLevel(i, g_combatManager->m_magicTerrain);
         long manaCost = m_enemyHero->getManaCost(
             i, group, g_combatManager->m_magicTerrain);
         if (manaCost > m_enemyHero->m_mana)
@@ -1862,7 +1881,8 @@ long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpe
         TEnchantValue valueOf = getEnchantmentFunction(spell);
         if (valueOf == 0)
             continue;
-        type_enchant_data caster(spell, currentArmy->getSpellLevel(spell),
+        type_enchant_data caster(static_cast<ESpellId>(spell),
+                                 currentArmy->getSpellLevel(spell),
                                  duration, duration);
         caster.m_checkResistance = 0;
         currentArmy->cancelIndividualSpell(spell);
@@ -2277,13 +2297,13 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice& choice) const
             continue;
         long hex = ourArmy->m_gridIndex;
         if (g_combatManager->findResurrectionTarget(
-                static_cast<ESpellId>(choice.m_spell), m_side, hex, 0)
+                choice.m_spell, m_side, hex, 0)
                 != ourArmy) {
             if (!ourArmy->is(creatureDoubleWide))
                 continue;
             hex = ourArmy->getSecondGridIndex();
             if (g_combatManager->findResurrectionTarget(
-                    static_cast<ESpellId>(choice.m_spell), m_side, hex, 0)
+                    choice.m_spell, m_side, hex, 0)
                     != ourArmy)
                 continue;
         }
@@ -2401,14 +2421,14 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice) const
 
         long candidateTargetHex = candidateHealedArmy->m_gridIndex;
         army* target = g_combatManager->findResurrectionTarget(
-            static_cast<ESpellId>(choice.m_spell), m_side, candidateTargetHex, 0);
+            choice.m_spell, m_side, candidateTargetHex, 0);
 
         if (target != candidateHealedArmy) {
             if (!candidateHealedArmy->is(creatureDoubleWide))
                 continue;
             candidateTargetHex = candidateHealedArmy->getSecondGridIndex();
             target = g_combatManager->findResurrectionTarget(
-                static_cast<ESpellId>(choice.m_spell), m_side, candidateTargetHex, 0);
+                choice.m_spell, m_side, candidateTargetHex, 0);
             if (target != candidateHealedArmy)
                 continue;
         }
@@ -2892,7 +2912,8 @@ long type_AI_spellcaster::getCaliphValue(const army* target) const
         count++;
         TEnchantValue valueOf = getEnchantmentFunction(spell);
         if (valueOf != 0) {
-            type_spell_choice choice(spell, mastery, 6, 6);
+            type_spell_choice choice(static_cast<ESpellId>(spell),
+                                      mastery, 6, 6);
             if (spellTargetsASingleArmy(spell, mastery)) {
                 total += (this->*valueOf)(target, choice);
             } else {
@@ -2916,7 +2937,8 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
                                    g_combatManager->m_magicTerrain))
         mastery = eMasteryExpert;
 
-    type_spell_choice choice(spell, mastery, power, power);
+    type_spell_choice choice(static_cast<ESpellId>(spell),
+                              mastery, power, power);
     army* target = g_combatManager->m_cells[hex].getArmy();
     long baseDamage;
     switch (spell) {
@@ -3060,7 +3082,8 @@ bool type_AI_spellcaster::castSpell(bool retreating)
             if (spell != SPELL_RESURRECTION && spell != SPELL_ANIMATE_DEAD)
                 continue;
         }
-        type_spell_choice choice(spell, mastery, power, duration);
+        type_spell_choice choice(static_cast<ESpellId>(spell),
+                                  mastery, power, duration);
         considerSpell(choice);
         if (choice.m_value <= 0)
             continue;
@@ -3073,7 +3096,7 @@ bool type_AI_spellcaster::castSpell(bool retreating)
         if (choice.m_value > best.m_value)
             best = choice;
     }
-    if (best.m_spell != -1) {
+    if (best.m_spell != SPELL_NONE) {
         if (best.m_castNow || retreating) {
             g_combatManager->m_nextAction = 1;
             g_combatManager->m_nextActionExtra = best.m_spell;

@@ -139,10 +139,12 @@ enum EGameTransmitLimits {
 class CNetMsg {
 public:
     int m_from;
-    int m_dpidFrom;
-    int m_subType;
+    // DC CNetMsg 0x1b88/fieldlist 0x3562 preserves the message enum
+    // and unsigned long domains in this twenty-byte wire header.
+    unsigned long m_dpidFrom;
+    eRS_Messages m_subType;
     unsigned long m_size;
-    int m_uncompressedSize;
+    unsigned long m_uncompressedSize;
 
     VA(0x004f2930, 0x23)  // anchor-callee + exact body, retail-only slot
     DC_ADDRESS(0x02018c, 0x2a)
@@ -155,9 +157,11 @@ public:
         m_uncompressedSize = 0;
     }
 
-    // Original: CNetMsg::IsCompressed; netmsg.h:179
+    // Original: CNetMsg::IsCompressed; netmsg.h:179.
+    // Native public ?IsCompressed@CNetMsg@@QAA_NXZ proves bool return;
+    // DC's primitive 0x20 is its lowered storage type.
     DC_ADDRESS(0x11f5f4, 0x16)
-    unsigned char isCompressed()
+    bool isCompressed()
     {
         return m_uncompressedSize && m_uncompressedSize != m_size;
     }

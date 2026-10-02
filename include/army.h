@@ -750,18 +750,18 @@ public:
     void loadResources();
     void resetRound();
     void endWalk();
-    void walk(int direction, unsigned char endWalk,
-              unsigned char initialWalk);
-    unsigned char walkTo(int destIndex, unsigned char restoreFacing);
+    void walk(int direction, bool endWalk,
+              bool initialWalk);
+    bool walkTo(int destIndex, bool restoreFacing);
     int fly(int destIndex);
-    int flyTo(int destIndex, unsigned char restoreFacing);
+    int flyTo(int destIndex, bool restoreFacing);
     int teleport(int destIndex);
-    int teleportTo(int destIndex, unsigned char restoreFacing);
+    int teleportTo(int destIndex, bool restoreFacing);
     long adjustDamage(army* enemy, long baseDamage, bool isShot,
                        bool simulated, long distance,
                        long* fireDamage) const;
     void adjustHitpoints();
-    unsigned char attackHex(int hex, unsigned char restoreFacing);
+    bool attackHex(int hex, bool restoreFacing);
 private:
     // Original public ?do_attack@army@@AAA_NPAV1@H@Z: private bool.
     // Keep this overload in its attested LF_FIELDLIST position.
@@ -780,7 +780,7 @@ private:
 public:
     void rangeAttack();
     void attackWall(int targetGridIndex);
-    void turn(unsigned char animateTurn);
+    void turn(bool animateTurn);
     bool needToTurn(int direction) const;
     bool canCastResurrect(long hex) const;
     bool canCastResurrect() const;
@@ -799,17 +799,17 @@ public:
     ~army();
     void faerieDragonSpell();
     unsigned char unnamed447fe0();
-    unsigned char checkObstacleAttacks(unsigned char isWalking);
+    bool checkObstacleAttacks(bool isWalking);
     void clearAIValues();
     void considerAttack(const army* enemy, long value,
                          long attackDistance);
-    unsigned char enemyIsAdjacent(const army* excluded) const;
+    bool enemyIsAdjacent(const army* excluded) const;
     unsigned getAttackMask(int currIndex, int criteria,
                            int literalTargetIndex) const;
     long getAdjustedAttack(const army* enemy,
-                             unsigned char rangedAttack) const;
+                             bool rangedAttack) const;
     long getAdjustedDefense(const army* enemy,
-                              unsigned char frenzyIncluded) const;
+                              bool frenzyIncluded) const;
     long getAIExpectedDamage() const;
     const army* getAITarget() const;
     long getAITargetValue() const;
@@ -817,7 +817,7 @@ public:
     long getAITargetTime() const;
     long getAIPossibleTargets() const;
     long getAttackModifier(const army* enemy,
-                             unsigned char rangedAttack) const;
+                             bool rangedAttack) const;
     long getAverageDamage(const army& enemy, bool rangedAttack,
                             long amount, bool limitDamage,
                             long distance) const;
@@ -850,9 +850,9 @@ public:
     int getBestDirection(int start, int target, int direction);
     unsigned char isAdjacent(const army& otherArmy) const;
     unsigned char isAdjacent(int hex) const;
-    unsigned char isEnemy(const army* arg) const;
+    bool isEnemy(const army* arg) const;
     bool isInAura() const;
-    unsigned char moveTo(int hex, unsigned char restoreFacing);
+    bool moveTo(int hex, bool restoreFacing);
     void newTurn();
     void setAIExpectedDamage(long arg);
     int findPath(int fpTargetCellIndex, int maxMoves,
@@ -863,8 +863,8 @@ public:
                     int literalIndex, int* testCellIndex) const;
     void resetPath();
     unsigned char validPath(int destIndex, unsigned char literalTest);
-    unsigned char validFlight(int destIndex,
-                              unsigned char literalTest) const;
+    bool validFlight(int destIndex,
+                     bool literalTest) const;
     int validRange(int destIndex);
     inline long damageEnemy(army* enemy, int* damageOut, int* killed,
                             bool isShot);
@@ -966,7 +966,7 @@ private:
     bool findFlyerAttackCell(int start, int target) const;
     bool findFlyerAttackCell(int target) const;
     bool leavesNoBody() const;
-    unsigned char simpleMove(int hex, unsigned char restoreFacing);
+    bool simpleMove(int hex, bool restoreFacing);
     double computeKarma() const;
 
     // LF_FIELDLIST entries 237..249. The established source aliases preserve
@@ -1055,11 +1055,8 @@ private:
     // (?simple_move@army@@AAA_NH_N@Z) and every member of this movement
     // family returns `_N` - bool - and takes `restore_facing` as one:
     // WalkTo, attack_hex, move_to and ValidFlight all mangle _NH_N.
-    // RECORDED, NOT ACTED ON: the access change and the bool retype are
-    // one measured pass over the whole family (bool is not free in VC6
-    // - it normalizes), and this lane only needed the declarations.
-    unsigned char simpleMove(int hex, unsigned char restore_facing);
-    unsigned char moveTo(int hex, unsigned char restore_facing);
+    bool simpleMove(int hex, bool restore_facing);
+    bool moveTo(int hex, bool restore_facing);
     // ProcessNextAction's two dispatch-only army calls.
     void attackWall(int iTargetGridIndex);
     void castSpell(long hex);
@@ -1074,7 +1071,7 @@ private:
     // 0x43f2c0, EH-bearing carcass in army.cpp; declared because the
     // volley worker above calls it once per shot.
     void animateMissile(army* armyToAttack);
-    unsigned char checkObstacleAttacks(unsigned char is_walking);
+    bool checkObstacleAttacks(bool is_walking);
     // 0x440500, reconstructed in army.cpp: the attacker's on-attack
     // debuff roll (bind/blind/disease/curse/age/stone/poison/acid/
     // paralyze); returns 1 for the three incapacitators.
@@ -1083,7 +1080,7 @@ private:
     // do_attack's kill-accounting tail.
     void doPostAttack(army* target, int iDamage, int iKilled,
                         int total_life);
-    void turn(unsigned char play_animation); // 0x446720
+    void turn(bool play_animation); // 0x446720
     void setupAnimation();                   // 0x446830
     void playAnimation(int sequence, int nframes, int start_frame);
     // 0x43e140, carcass in army.cpp; declared here because army::Fly
@@ -1113,8 +1110,8 @@ private:
                            const hero* casting_hero);
     // Const (?ValidFlight@army@@QBA_NH_N@Z): the fly.obj body only
     // reads, and both callees it drives on `this` are already const.
-    unsigned char validFlight(int destIndex,
-                              unsigned char bLiteralTest) const;
+    bool validFlight(int destIndex,
+                              bool bLiteralTest) const;
     void setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                  const town* ownerTown, const hero* otherHero,
                  const armyGroup* otherGroup, int magicTerrain);
@@ -1332,20 +1329,20 @@ public:
     // the 112-byte hexcell stride.
     int midX() const;                        // 0x446660
     int midY() const;                        // 0x446630
-    unsigned char isEnemy(const army* arg) const; // 0x442880
+    bool isEnemy(const army* arg) const; // 0x442880
     // 0x4429f0: asks the combat manager whether any enemy stack (other
     // than `excluded`) neighbours this stack's own hex, and for a
     // two-hex creature its second hex as well. Const
     // (?enemy_is_adjacent@army@@QBA_NPBV1@@Z) - the last of the chain
     // combatManager::enemy_is_adjacent's own const `this` needs.
-    unsigned char enemyIsAdjacent(const army* excluded) const;
+    bool enemyIsAdjacent(const army* excluded) const;
     // 0x4430d0: clamps the AI's committed damage to what the stack can
     // actually absorb - `_cpp_min(get_total_hit_points(), arg)`.
     void setAIExpectedDamage(long arg);
     long getAdjustedAttack(const army* enemy,
-                             unsigned char ranged_attack) const;
+                             bool ranged_attack) const;
     long getAttackModifier(const army* enemy,
-                             unsigned char ranged_attack) const;
+                             bool ranged_attack) const;
     // 0x442660 (41 B). The 2026-08-08 note on ai_tactical's
     // type_AI_combat_parameters ctor called this leaf "unidentified";
     // it is get_defense_modifier, and three things say so together: the
@@ -1384,7 +1381,7 @@ public:
     // calls it on `this` in the Frenzy tail. Nothing in the body
     // writes.
     long getAdjustedDefense(const army* enemy,
-                              unsigned char frenzy_included) const;
+                              bool frenzy_included) const;
     // 0x443840 / 0x443b90, carcasses in army.cpp; declared because
     // adjust_damage (0x443f40) calls both and retail does NOT inline
     // either. Both const
@@ -1706,13 +1703,19 @@ inline int army::getOwningSide() const
     }
 
     // E:\gamedcs\Army.h:800
+// DC line 803 records the condition; line 804 attributes both owning-side
+// calls to the return, with no recorded local. A conditional return keeps
+// those two canonical paths and lets Complete expand this getter inside
+// getUnitCombatValue's first damage reduction (97.6613 -> 100%). The former
+// guarded-return body costs 49 against that nested budget of 48. This is a
+// source-shape inference, not proof of the original expression's spelling.
 VA(0x00440140, 0x1F)  // anchor-callee + body identity, retail-only slot
 DC_ADDRESS(0x027d44, 0x30)
 inline int army::getControllingSide() const
     {
-        if (m_spellInfluence[60])
-            return 1 - getOwningSide();
-        return getOwningSide();
+        return m_spellInfluence[60]
+                   ? 1 - getOwningSide()
+                   : getOwningSide();
     }
 
     // E:\gamedcs\Army.h:810

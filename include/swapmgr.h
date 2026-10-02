@@ -266,7 +266,7 @@ public:
     virtual int main(message& msg);     // slot 2
     int drawSwapWin();
     inline bool isLeftHero();
-    inline unsigned char isRightHero();
+    inline bool isRightHero();
     inline hero* getOtherHero();
     hero* getOurHero();
     void drawSelector();

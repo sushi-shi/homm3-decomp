@@ -256,7 +256,7 @@ names/locations agree too. Defined relocation destinations match by proven
 identical section/offset; undefined targets retain their names. This checks
 3439 relocations in hero, 4105 in advmgr, 1962 in ai_player and 1743 in remote,
 including untracked emitted code. Only compiler-private label identities vary.
-`compare-coff-layout.py` performs this read-only stronger comparison; it fails
+`scripts/tools/compare-coff-layout.py` performs this read-only stronger comparison; it fails
 on the deletion-only controls and never changes the normal scoring rules.
 
 The five finite families scored 7/3/5/5/4 source states respectively, with
@@ -268,19 +268,11 @@ separate bounds. The other spelling retains the intended call but perturbs
 inner capacity test in `giveSS`; that scope was restored. Flattening it is
 byte-neutral, unlike removing the verification.
 
-The source-family generators accept the inspected pre-edit or retained body,
-refuse an unreviewed boundary, and can regenerate current-source controls:
-
-```sh
-python scripts/experiments/generate-givess-boundary-family.py build/givess-family.json
-python scripts/experiments/generate-small-helper-verification-family.py cursor build/cursor-family.json
-PYTHONPATH=scripts python -m homm3.vc6.source_families build/cursor-family.json --keep 3 --generations 1
-```
-
-Use `purchase`, `compress`, or `spellbonus` for the other individual families.
+The one-off source-family generators are retired; [Git history](https://github.com/sushi-shi/homm3-decomp/commits/a9e013a71/scripts/experiments)
+archives their source.
 Historical contexts, in the table's order, are `2ff41da5e8b0e579044c`,
 `192a25c02fd05fa8e2d1`, `51f3cf10f7743637ddfb`, `8845e9f7b12b05bd6fd7`, and
-`faf7fbb799ec071bd270`. Fresh source controls intentionally get new contexts.
+`faf7fbb799ec071bd270`.
 
 ### Serialization locals and interface recovery
 
@@ -322,9 +314,8 @@ in context `41f7062873689b4033e9`. Its CObject-reference argument was restored
 separately with the same whole-object proof and one explicit symbol rename.
 Its boundary row is also borrowed: no assertion was added.
 
-
-These generators accept both the inspected pre-edit source and the adopted
-source. Current controls do not reintroduce old pragmas.
+The historical families checked both pre-edit and adopted source without
+reintroducing old pragmas into the adopted controls.
 
 ### Map accessor: canonical helper retained through caller collateral
 
@@ -488,7 +479,7 @@ rescues the remaining hero drawing expansion decision.
 
 Historical generators and contexts:
 
-| Generator suffix (`scripts/experiments/generate-...-family.py`) | Context | Scored states / distinct objects |
+| Archived family | Context | Scored states / distinct objects |
 |---|---|---|
 | `adventure-cell-call` | `76b71ba668f31dcdfd1d` | 32 / 32 |
 | `adventure-cell-const` | `2675b9280570a49850e1` | 24 / 24 |
@@ -500,8 +491,8 @@ Historical generators and contexts:
 Each family reproduced its retained candidates (ten, except seven for the
 eight-state university family). The drawing base is `e4650642`; sites runs
 after the validity-signature correction. The pathfinding families additionally
-include the adopted boat/ground changes. Use the frozen snapshots for exact
-reproduction; source anchors intentionally reject the post-adoption tree.
+include the adopted boat/ground changes. These measurements belong to those
+source snapshots, not the current tree.
 
 The initial university family retained the then-modelled constructor boundary: a
 typed local scores 97.8623% versus 99.7464%; typed local plus `push_back`
@@ -787,8 +778,8 @@ export HOMM3_DIR="$PWD"
 export HOMM3_TOOLCHAIN="$HOMM3_DIR/build/homm3-toolchain-vc6-sp3"
 export WINEPREFIX="$HOMM3_DIR/build/wineprefix"
 homm3 build
-python3 scripts/experiments/audit-inline-pragmas.py --run
-python3 scripts/experiments/summarize-inline-pragmas.py
+python3 scripts/tools/audit-inline-pragmas.py --run
+python3 scripts/tools/summarize-inline-pragmas.py
 ```
 
 Use `--output-dir build/pragma-audit-current` for a distinct follow-up inventory

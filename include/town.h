@@ -296,7 +296,9 @@ public:
     // +0x44, five mage-guild rows of six spell ids. GiveSpells walks
     // rows with a 0x18 stride and pairs them with the signed counts at
     // +0xbc; five rows close exactly at that count band.
-    int m_mageGuildSpells[5][6];
+    // DC town records 0x1aa3/0x61b5/0x631f: townSpells is SpellID[5][6]
+    // (arrays 0x3f11/0x1efc, canonical signed enum 0x1b61).
+    ESpellId m_mageGuildSpells[5][6];
     signed char m_mageGuildSpellCounts[5];
     // +0xc1..+0xc3 alignment padding (retail's ??4town copies the five
     // count bytes and goes straight to the string assign).
@@ -316,29 +318,26 @@ public:
     armyGroup m_garrison;
 
 protected:
-    int m_generatorBonus[14];
+    // The same native records declare generator_bonus as long[14]
+    // (array 0x3f19, element 0x12); Complete retains its four-byte slots.
+    long m_generatorBonus[14];
+
+    // DC town class 0x1aa3 (also 0x61b5/0x631f) records these __int64
+    // fields as protected (attributes 2): populationMask at +0x148,
+    // full_building_mask at +0x150, legal_buildings at +0x158. Their retail
+    // counterparts retain this order at +0x150/+0x158/+0x160.
+    // populationMask holds constructed buildings; full_building_mask also
+    // includes the buildings implied by them; legal_buildings limits builds.
+    // Keep the native boundary and layout; callers use the public queries.
+    __int64 m_populationMask;
+    __int64 m_fullBuildingMask;
+    __int64 m_legalBuildings;
 
 public:
-    // Three 64-bit building bitfields, all read as pairs of dwords by
-    // retail's __int64 lowering (the DC's own set_mask/
-    // get_buildable_mask signatures are __int64 too; the DC build
-    // spells them std::bitset<70,unsigned long>, which retail did not):
-    //   built     - get_castle_growth_bonus' fort/citadel/castle tests
-    //               and get_gold_income's hall tests; ctor seeds it
-    //               with bitNumber[HALL_VILLAGE_ID];
-    //   active    - what can_build/can_ever_build/get_buildable_mask
-    //               test requirement masks against, and where
-    //               get_gold_income finds the Grail; ctor copies built
-    //               into it;
-    //   available - the legal-building mask is_legal_building tests
-    //               (can_build and can_ever_build inline that test as
-    //               their first gate).
-    // Names provisional.
-    __int64 m_built;
-    __int64 m_active;
-    __int64 m_available;
     void applySpecialBuildingEffect(hero* townHero);
-    unsigned char canBuildDock() const;
+    // Original ?CanBuildDock@town@@QBA_NXZ proves bool; the DC
+    // byte primitive is lowered, as for the other building predicates.
+    bool canBuildDock() const;
 
     // DC Town.h:299 / :305 header inlines, declaration-only here
     // (?get_building_mask@town@@QBA_JXZ kept out of line by the DC
@@ -350,17 +349,19 @@ public:
     // create_artifact_widgets 100.0 -> 99.59, a cross-jump/reload
     // quirk in a textWidget arm; count restored, the row returns).
     // DC Town.h:299/300 returns full_building_mask (+0x150 in DC).
-    // Retail's +0x158 band is m_active; getBuildableMask expands this read.
+    // Retail's +0x158 band is m_fullBuildingMask; getBuildableMask expands this read.
     DC_ADDRESS(0x037f50, 0x12)
-    __int64 getBuildingMask() const { return m_active; }
+    __int64 getBuildingMask() const { return m_fullBuildingMask; }
     long getCastleGrowthBonus(TCreatureType creature) const;
 
     // DC Town.h:305-306 returns generatorBonus[dwelling].
     // set_bonus_display calls this header helper; retail 0x5c5b40 expands it.
     DC_ADDRESS(0x181404, 0x12)
     long getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
-    short getGoldIncome(unsigned char includeSilo) const;
-    int getHorde(long dwelling) const;
+    // Original ?get_gold_income@town@@QBAF_N@Z proves bool includeSilo.
+    short getGoldIncome(bool includeSilo) const;
+    // Original ?get_horde@town@@QBA?AW4type_building_id@@J@Z proves enum return.
+    type_building_id getHorde(long dwelling) const;
     long getHordeBonus(long dwelling) const;
     long getAssembledLegionBonus(long dwelling) const;
     // 0x5bf900. Per-tier artifact growth contributed by the two heroes
@@ -394,14 +395,14 @@ public:
     {
         if (checkIncluded)
             return (getBuildingMask() & g_bitNumber[buildingId]) != 0;
-        return (m_built & g_bitNumber[buildingId]) != 0;
+        return (m_populationMask & g_bitNumber[buildingId]) != 0;
     }
 
     // Original: town::set_mask; Town.h:331
     DC_ADDRESS(0x168dfc, 0x28)
     void setMask(__int64 newMask)
     {
-        m_built = newMask;
+        m_populationMask = newMask;
         updateFullBuildingMask();
     }
 
@@ -425,14 +426,17 @@ public:
     void setSummoningGenerator();
     int getPortraitFrame(bool isSmall) const;
     town();
-    unsigned char canBuild(short buildingId) const;
-    unsigned char canEverBuild(int buildingId) const;
+    // Original town publics prove _N returns for can_build, can_ever_build,
+    // buy_building, is_legal_building, is_disabled and InitializeBuildingCostsTables.
+    // Preserve retail parameter ABI: native can_ever_build used an older short.
+    bool canBuild(short buildingId) const;
+    bool canEverBuild(int buildingId) const;
     // 0x5bfe50.
     void changeGeneratorBonus(TCreatureType creature, long change);
     // 0x5be930. Declared for update_shipyard's direct call; the body is
     // still outside the admitted surface.
     type_building_id createBuilding(type_building_id building);
-    unsigned char buyBuilding(type_building_id building);
+    bool buyBuilding(type_building_id building);
     void destroyExtraCapitol();
     void getBuildCost(type_building_id building, int* resources) const;
     short getBuildCost(type_building_id building, EGameResource* types,
@@ -452,9 +456,9 @@ public:
     void increasePopulation(TCreatureType bonusCreature,
                              TCreatureType alternateBonus, long bonusAmount);
     void initialize(const TownExtra* townSetup);
-    unsigned char isLegalBuilding(type_building_id building) const;
+    bool isLegalBuilding(type_building_id building) const;
     void setLegalBuildings(__int64 disabledBuildings);
-    unsigned char isDisabled(type_building_id building) const;
+    bool isDisabled(type_building_id building) const;
     // Dreamcast's LF_FIELDLIST puts these immediately before update_shipyard,
     // in this order. BuildBuilding calls both, and retail inlines both into
     // that owner.
@@ -466,8 +470,8 @@ public:
     int hasGarrison();
     // 0x5bede0. DC signature; buy_building is the only claimed caller
     // and it pushes exactly these three.
-    type_building_id buildBuilding(int buildingId, unsigned char setBuiltFlag,
-                                   unsigned char applySpecialEffect);
+    type_building_id buildBuilding(int buildingId, bool setBuiltFlag,
+                                   bool applySpecialEffect);
     int load(TAbstractFile* infile, int saveVersion);
     // 0x5bd2f0 (body in town.obj, not yet reconstructed). game::Save's
     // town-pool loop is the only consumer here: it calls it on towns[i]
@@ -512,9 +516,11 @@ public:
     // 0x5be2d0. Removes this town from its owner's roster and marks
     // both this record and gpGame->towns[id] unowned.
     void deallocate();
-    void placeInMap(int heroId, long playerId, unsigned char resetFlags);
+    // Original ?PlaceInMap@town@@QAAXW4THeroID@@J_N@Z proves
+    // the bool flag; Complete retains its independently modeled int heroId.
+    void placeInMap(int heroId, long playerId, bool resetFlags);
     static void initializeHordes();
-    static unsigned char initializeBuildingCostsTables();
+    static bool initializeBuildingCostsTables();
     const char* getTypeName() const;
     TTerrainType getNativeTerrain() const;
     // The garrisoned hero steps out onto the town tile (0x5be390).

@@ -725,8 +725,8 @@ private:
 public:
     // Retail level-update messages carry the raw four-byte skill band,
     // including values outside GetPrimarySkill's clamped gameplay range.
-    // Bulk-copy boundary names provisional; bodies precede their callers.
-    void copyPrimarySkills(signed char* stats) const;
+    // Raw-view/bulk-set names provisional; bodies precede their callers.
+    signed char* getRawPrimarySkills();
     void setPrimarySkills(const signed char* stats);
     unsigned char hasArtifact(int whichArtifact) const;
     unsigned char hasSecondarySkill(int whichSkill);
@@ -741,8 +741,8 @@ public:
                     static_cast<unsigned char>(0));
     }
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
-    long getEquippedArtifacts(unsigned char countWarMachines) const;
-    long getNumberInBackpack(unsigned char countWarMachines) const;
+    long getEquippedArtifacts(bool countWarMachines) const;
+    long getNumberInBackpack(bool countWarMachines) const;
     // 0x4d9330 - sets both per-spell byte tables for one spell.
     void addSpell(int whichSpell);
 
@@ -788,7 +788,10 @@ public:
     // bracket assignment to ViewArtifact is disproved by that name's exact
     // retail identity at 0x4d9a00; this remains an ordinal retail-only name.
     int heroFn004D9CC0(int artifact);
-    void viewArtifact(const type_artifact* artifact, int isQuickView);
+    // Original ?ViewArtifact@hero@@QAAXABUtype_artifact@@H@Z proves
+    // const reference. The Windows body passes the same one-word address
+    // and never treats the artifact as optional.
+    void viewArtifact(const type_artifact& artifact, int isQuickView);
     // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
     // its luck and morale icon frames. Same gate, same reason.
     void updateStats();
@@ -817,7 +820,7 @@ public:
     // 0x4e5550 - checks spell access, mana, boat reachability and pool space.
     unsigned char canSummonBoat() const;
     long getNavigationFactor() const;
-    int getMobility(unsigned char seaMovement) const;
+    int getMobility(bool seaMovement) const;
     int getMobility() const;
     // 0x4e5960 - the four primary skills, each clamped to 0..99, with
     // slots 2 and 3 floored at 1.
@@ -832,7 +835,8 @@ public:
 
 private:
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
-    unsigned char canLand() const;
+    // Original Dreamcast public ?can_land@hero@@ABA_NXZ proves private bool.
+    bool canLand() const;
 
 public:
     int heroFn004E5DE0() const;
@@ -978,8 +982,9 @@ public:
     // uses checkTerrain=1; Complete expands the helper before calling canLand.
     // These are real shared header bodies, not an ai_player.obj declaration
     // view: cursor.obj proves the same nested IsWieldingArtifact boundary.
+    // Original Dreamcast public ?IsFlying@hero@@QBA_N_N@Z proves both bools.
     DC_ADDRESS(0x01fbdc, 0x98)
-    unsigned char isFlying(unsigned char checkTerrain) const
+    bool isFlying(bool checkTerrain) const
     {
         return !(m_flags & 0x40000)
             && (m_flightLevel != -1 || isWieldingArtifact(0x48))
@@ -1266,7 +1271,7 @@ public:
     // ORDINAL PLACEHOLDER.
     void heroFn004DC100(long slot);
     boat* findSummonableBoat() const;
-    void placeInMap(int playerId, type_point point, unsigned char resetFlags);
+    void placeInMap(int playerId, type_point point, bool resetFlags);
     int load(TAbstractFile* infile, int saveVersion);
     int save(TAbstractFile* outfile);
 };

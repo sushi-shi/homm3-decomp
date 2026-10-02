@@ -88,6 +88,11 @@ static const int g_combatActionFirstAid = 11;
 // first-aid (416B), wall predicate (80B), and main (1456B) bytes unchanged.
 // Catapult therefore retains its 98.6842% residual; renamed call/data symbols
 // require target rebinding before scoring these source interfaces.
+// The wall scans use ordinary loop bodies. Their extra enclosing scopes
+// survived 2bb943d19f's replacement of provisional loop-local indices with
+// the shared native index; no declaration remains in either outer scope.
+// Removing that scaffolding leaves Windows at 98.6842%, with 59 aligned
+// blocks, four calls and all 22 relocations unchanged.
 VA(0x00473c00, 0x29F)
 DC_ADDRESS(0x06af98, 0x194)
 MAC_ADDRESS(0x081d04, 0x3f8)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map
@@ -130,24 +135,22 @@ bool combatManager::automateCatapult()
 
     long index;
     count = 0;
-    { for (index = 0; index < 4; index++) {
-            if (getWallStrength(walls[index]) > 0)
-                count++;
-        }
+    for (index = 0; index < 4; index++) {
+        if (getWallStrength(walls[index]) > 0)
+            count++;
     }
 
     if (count > 0 && (skill == 0 || count == static_cast<long>(sizeof(walls) / sizeof(walls[0])))) {
         long weakest = 100;
         count = 0;
-        { for (index = 0; index < 4; index++) {
-                long strength = getWallStrength(walls[index]);
-                if (strength <= 0 || strength > weakest)
-                    continue;
-                if (strength < weakest)
-                    count = 0;
-                count++;
-                weakest = strength;
-            }
+        for (index = 0; index < 4; index++) {
+            long strength = getWallStrength(walls[index]);
+            if (strength <= 0 || strength > weakest)
+                continue;
+            if (strength < weakest)
+                count = 0;
+            count++;
+            weakest = strength;
         }
 
         // Dreamcast and Mac retain sRandom here. Complete binds its
@@ -918,7 +921,7 @@ int combatManager::processCombatMsg(message& msg)
                                  1, -1, -1, -1, 0,
                                  -1, 0, -1, 0, -1, 0);
                 } else {
-                    initiateSpell(viewSpells(), 0);
+                    initiateSpell(static_cast<ESpellId>(viewSpells()), 0);
                     resetMouse();
                 }
                 break;
@@ -1150,7 +1153,8 @@ int combatManager::processCombatMsg(message& msg)
                 army* currentArmy = getCurrentArmy();
                 if (currentArmy->m_creatureType == CREATURE_FAERIE_DRAGON
                         && currentArmy->m_monInfo.m_hasSpell) {
-                    initiateSpell(currentArmy->m_faerieDragonSpell, 1);
+                    initiateSpell(
+                        static_cast<ESpellId>(currentArmy->m_faerieDragonSpell), 1);
                     if (m_nextAction == 1)
                         m_nextAction = 10;
                 }
@@ -1685,7 +1689,7 @@ void combatManager::doCommand(int command)
             m_combatWindow->m_creatureSubWindows[2]->unShow();
             m_combatWindow->m_creatureSubWindows[3]->unShow();
             g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
-            initiateSpell(spell, 0);
+            initiateSpell(static_cast<ESpellId>(spell), 0);
             resetMouse();
         }
         break;
@@ -2504,10 +2508,12 @@ void combatManager::processFirstAid(army* currentArmy)
 // The residual is its nested expansion decision, not a different string.
 // DC3625's extra FullUpdate in the surrender-error arm is absent in retail.
 // Mac and Windows both retain testRaiseDoor in this caller (retail 0x4672e0).
+// Original DC public ?ProcessNextAction@combatManager@@QAAHAAUmessage@@_N@Z
+// proves bool automaticTurn despite the lowered byte CodeView primitive.
 VA(0x00478d80, 0x1054)
 DC_ADDRESS(0x06f984, 0x82a)
 MAC_ADDRESS(0x0871d0, 0xb3c)  // anchor-callee exhaustive + single-fn gap
-int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
+int combatManager::processNextAction(message& msg, bool automaticTurn)
 {
     if (!isQuickCombat()) {
         m_combatWindow->clearCombatMessages();

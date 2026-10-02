@@ -46,14 +46,18 @@ public:
 // members - so the record ends at +0x14 and derives.
 struct type_enchant_data {
 public:
-    SpellID m_spell;  // +0x00
+    // Native LF_STRUCT 0x599a/0x6839 types spell as LF_ENUM SpellID
+    // 0x1b61 (signed int), not a legacy integer selector.
+    // Constructors retain that domain; legacy ordinal scans and integer
+    // interfaces convert explicitly at their construction boundary.
+    ESpellId m_spell;  // +0x00
     TSkillMastery m_mastery;  // +0x04
     long m_power;  // +0x08
     long m_duration;  // +0x0c
     // Both ctors seed it to 1; no located consumer reads it yet.
     unsigned char m_checkResistance;  // +0x10
 
-    type_enchant_data(SpellID newSpell, TSkillMastery newMastery,
+    type_enchant_data(ESpellId newSpell, TSkillMastery newMastery,
                       long newPower, long newDuration);
     long getMasteryValue() const;
 };
@@ -75,7 +79,7 @@ public:
     unsigned char m_castNow;  // +0x20 (0)
 
     type_spell_choice();
-    type_spell_choice(SpellID newSpell, TSkillMastery newMastery,
+    type_spell_choice(ESpellId newSpell, TSkillMastery newMastery,
                       long newPower, long newDuration);
 };
 SIZE(type_spell_choice, 0x24);

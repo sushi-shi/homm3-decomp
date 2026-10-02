@@ -113,6 +113,7 @@ army::~army()
 // increments the Griffin allowance; VC6 folds the known initial value to 2.
 DC_ADDRESS(0x0437ac, 0x84)
 MAC_ADDRESS(0x048e5c, 0x68)
+// Mac 0x48e90 expands the COUNTERSTRIKE duration getter at +0x280.
 void army::setRetaliationCount()
 {
     m_retaliationCount = 1;
@@ -120,7 +121,7 @@ void army::setRetaliationCount()
         m_retaliationCount++;
     if (m_creatureType == ARMY_CREATURE_ROYAL_GRIFFIN)
         m_retaliationCount = 5000;
-    if (m_spellInfluence[SPELL_COUNTERSTRIKE])
+    if (getSpellTime(SPELL_COUNTERSTRIKE))
         m_retaliationCount += m_counterstrokeBonus;
     if (is(creatureSiegeWeapon))
         m_retaliationCount = 0;
@@ -287,6 +288,11 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
 
 VA(0x0043d8b0, 0x135)
 DC_ADDRESS(0x043d9c, 0xe4)
+// Mac 0x49330/0x49388 expand getOwningSide before both cell side stores.
+// DC records hexcell& back_cell. Restoring that reference is byte-flat;
+// implicit byte-field conversions also leave the two full-word getter loads
+// where retail narrows them. Complete/Mac addAura precedes retaliation setup,
+// unlike the older DC order.
 MAC_ADDRESS(0x0492e0, 0x13c)
 void army::init(int armyId, int newNumTroops, const hero* owner, int side,
                 int inIndex, int gridIndex, int origPos)
@@ -295,15 +301,15 @@ void army::init(int armyId, int newNumTroops, const hero* owner, int side,
                gridIndex);
     if (g_combatManager->validHex(m_gridIndex)) {
         hexcell* cell = &g_combatManager->m_cells[m_gridIndex];
-        cell->m_armySide = static_cast<signed char>(m_combatSide);
+        cell->m_armySide = static_cast<signed char>(getOwningSide());
         cell->m_armySlot = static_cast<signed char>(m_bitIndex);
         cell->m_partOfDouble = -1;
         if (is(creatureDoubleWide)) {
-            hexcell* second =
-                &g_combatManager->m_cells[m_gridIndex + offsetToFront(-1)];
-            second->m_armySide = static_cast<signed char>(m_combatSide);
-            second->m_armySlot = static_cast<signed char>(m_bitIndex);
-            second->m_partOfDouble = m_facing != 0;
+            hexcell& backCell =
+                g_combatManager->m_cells[m_gridIndex + offsetToFront(-1)];
+            backCell.m_armySide = static_cast<signed char>(getOwningSide());
+            backCell.m_armySlot = static_cast<signed char>(m_bitIndex);
+            backCell.m_partOfDouble = m_facing != 0;
             cell->m_partOfDouble = m_facing == 0;
         }
         addAura();
@@ -511,6 +517,7 @@ void army::loadResources()
 VA(0x0043df20, 0xDD)
 DC_ADDRESS(0x044318, 0x9c)
 MAC_ADDRESS(0x049b90, 0x150)
+// Mac 0x49c2c/0x49c40 expand the two luck spell-duration getters.
 void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                    const town* ownerTown, const hero* otherHero,
                    const armyGroup* otherGroup, int magicTerrain)
@@ -525,9 +532,9 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
             value = ownerGroup->getLuck(
                 ownerHero, ownerTown, otherHero, otherGroup, 0, 0);
         }
-        if (m_spellInfluence[51])
+        if (getSpellTime(51))
             value += m_luckBonus;
-        if (m_spellInfluence[52])
+        if (getSpellTime(52))
             value -= m_luckPenalty;
 
         if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
@@ -559,6 +566,7 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
 VA(0x0043e000, 0x139)
 DC_ADDRESS(0x0443b4, 0xf4)
 MAC_ADDRESS(0x049ce0, 0x1f4)
+// Mac 0x49d48/0x49d5c expand the two morale spell-duration getters.
 void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                      const town* ownerTown, const hero* otherHero,
                      const armyGroup* otherGroup, int magicTerrain,
@@ -571,9 +579,9 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                 ownerHero, ownerTown, otherHero, otherGroup, 0,
                 groupAlignments, 0);
         }
-        if (m_spellInfluence[49])
+        if (getSpellTime(49))
             value += m_moraleBonus;
-        if (m_spellInfluence[50])
+        if (getSpellTime(50))
             value -= m_moralePenalty;
 
         if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
@@ -887,6 +895,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
 // its spell table grew from DC's 80 entries to 81.
 DC_ADDRESS(0x044d50, 0xc2)
 MAC_ADDRESS(0x04a6e4, 0xcc)
+// Mac 0x4a720 expands getSpellTime(i) before reading the karma table.
 double army::computeKarma() const
 {
     if (m_numSpellInfluences == 0)
@@ -894,7 +903,7 @@ double army::computeKarma() const
     long sum = 0;
     long absSum = 0;
     for (long i = 0; i < 81; i++) {
-        if (m_spellInfluence[i] != 0) {
+        if (getSpellTime(i) != 0) {
             sum += g_spellTraits[i].m_karma;
             absSum += abs(g_spellTraits[i].m_karma);
         }
@@ -1048,13 +1057,13 @@ void army::removeBinding()
 // byte row.
 VA(0x0043efe0, 0xCF)
 DC_ADDRESS(0x045164, 0xa0)
-MAC_ADDRESS(0x04abf0, 0x118)
+MAC_ADDRESS(0x04abf0, 0x118)  // MAC_ABSTRACTION_FROM(tokens1:134f00e84cc5,100.0000): restore canonical getOwningSide inside the retained markCreatureEffect path (Mac 0x4ac24 own-side load).
 unsigned char army::setInsideAreaEffect(unsigned char arg)
 {
     if (m_isAreaEffectTarget == arg)
         return 0;
     m_isAreaEffectTarget = arg;
-    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
+    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
     if (m_isAreaEffectTarget) {
         if (m_stdIcon->isValidSeq(cs_fidget)
             && m_currFrameType != cs_fidget) {
@@ -1091,8 +1100,8 @@ void army::endWalk()
 VA(0x0043f0b0, 0x206)
 DC_ADDRESS(0x045254, 0x172)
 MAC_ADDRESS(0x04ad94, 0x20c)
-void army::walk(int direction, unsigned char endWalk,
-                unsigned char initialWalk)
+void army::walk(int direction, bool endWalk,
+                bool initialWalk)
 {
     if (initialWalk)
         setupAnimation();
@@ -1682,14 +1691,19 @@ bool army::checkSpecialAttack(army* target)
 // cleared again.
 VA(0x004409c0, 0x1F9)
 DC_ADDRESS(0x0464e0, 0x178)
-MAC_ADDRESS(0x04c5ac, 0x258)
+MAC_ADDRESS(0x04c5ac, 0x258)  // MAC_ABSTRACTION_FROM(tokens1:dd679f8769cb,83.7662): restore canonical getOwningSide before markCreatureEffect (Mac 0x4c5d4 own-side load).
 void army::doFireShield(long damageAmount)
 {
     long side;
     int i;
     army* a;
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
+    // Retail captures the slot before expanding the side getter. This
+    // temporary recovers 99.9324%; the remaining two LEA/store operands
+    // commute the manager/slot bases inside markCreatureEffect. A named
+    // first-mark combatManager reference is byte-flat at the same score.
+    const int bitIndex = m_bitIndex;
+    g_combatManager->markCreatureEffect(getOwningSide(), bitIndex);
     for (side = 0; side < 2; side++) {
         a = &g_combatManager->m_armies[side][0];
         for (i = g_combatManager->m_numArmies[side]; i-- > 0; a++) {
@@ -1947,6 +1961,10 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // (Windows 99.9040 -> 99.9232). The integrated declaration context also
 // restores the reload order after DoMultiHeadAttack (99.9616%). Remaining
 // differences are address-register choices in two MarkCreatureEffect expansions.
+// The canonical conditional controlling-side return closes getUnitCombatValue
+// while moving this caller to 99.9232%: the same two address decompositions
+// remain, plus the ordering of independent EDI/EBX loads after the hydra call.
+// No helper, branch or source-lifetime discrepancy supports a caller rewrite.
 VA(0x00441610, 0x6A0)
 DC_ADDRESS(0x046bec, 0x3c2)
 MAC_ADDRESS(0x04d288, 0x638)  // corroborates
@@ -2133,7 +2151,9 @@ void army::doAttack(int direction)
 VA(0x00441f70, 0x26)
 DC_ADDRESS(0x047270, 0x84)
 MAC_ADDRESS(0x04dc2c, 0x44)
-unsigned char army::checkObstacleAttacks(unsigned char isWalking)
+// Original ?check_obstacle_attacks@army@@QAA_N_N@Z proves both
+// boolean domains; Complete delegates the older inline operation.
+bool army::checkObstacleAttacks(bool isWalking)
 {
     if (m_creatureType == ARMY_CREATURE_ARROW_TOWER)
         return 0;
@@ -2148,7 +2168,7 @@ unsigned char army::checkObstacleAttacks(unsigned char isWalking)
 // Champion's joustBonus with the step count - and re-wire auras and
 // facing at the end.
 
-// DC names/types: save_facing (int), initial_walk (unsigned char),
+// DC names/types: save_facing (int), initial_walk (lowered bool byte),
 // direction and both next_cell locals (const int). Its named calls recover
 // remove_aura, EndWalk, GetObstacle, Is, OffsetToFront and
 // check_obstacle_attacks instead of pasted helper bodies.
@@ -2156,6 +2176,9 @@ unsigned char army::checkObstacleAttacks(unsigned char isWalking)
 // restoring the remaining helpers/types reaches 99.32%. Stopping before
 // revealing the obstacle (DC 2459 before GetObstacle:2461, likewise
 // 2481/2483) closes the two store-order differences: 100% without pins.
+// Refreshed bool model is 99.906%: its only difference is getSpeed
+// loading SLOW before the side/slot stores in retail and after in VC6.
+// The boolean forwarding and final succeeded return agree.
 // Merely swapping stop/succeeded after the visibility store cross-jumps
 // the trap arms and gives 95.78%; the full statement order matters.
 // Mac walkTo calls cancelSpellType(AFTER_MOVE) at 0:0x4dfd0 with r4=0,
@@ -2164,7 +2187,9 @@ unsigned char army::checkObstacleAttacks(unsigned char isWalking)
 VA(0x00441fa0, 0x461)
 DC_ADDRESS(0x0472f4, 0x2f8)
 MAC_ADDRESS(0x04dc70, 0x3a4)  // anchor-global
-unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
+// Original WalkTo/move_to/simple_move publics use _N for result and
+// restoreFacing; Walk uses _N for both logical animation flags.
+bool army::walkTo(int destIndex, bool restoreFacing)
 {
     m_side = m_slot = -1;
     if (!findPath(destIndex, getSpeed(), 0, 0))
@@ -2172,7 +2197,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
     int saveFacing = m_facing;
     removeAura();
     removeBinding();
-    unsigned char succeeded = 1;
+    bool succeeded = true;
     long stop;
     if (!g_combatManager->m_creaturePlacement) {
         stop = g_searchArray->getPathSteps() - getSpeed();
@@ -2182,7 +2207,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
         stop = 0;
     }
     long last = g_searchArray->getPathSteps() - 1;
-    unsigned char initialWalk = 1;
+    bool initialWalk = 1;
     m_isMoving = 1;
     m_joustBonus = last - stop + 1;
     for (long i = last; i >= stop; i--) {
@@ -2273,8 +2298,10 @@ inline void army::checkLuck()
 VA(0x00442410, 0x13B)
 DC_ADDRESS(0x047690, 0x128)
 MAC_ADDRESS(0x04e174, 0x160)
+// Original DC ?get_adjusted_attack@army@@QBAJPBV1@_N@Z proves bool
+// rangedAttack, matching the predicate parameter used by the modifier leaf.
 long army::getAdjustedAttack(const army* enemy,
-                               unsigned char rangedAttack) const
+                               bool rangedAttack) const
 {
     long attack = m_monInfo.m_attackSkill;
     if (rangedAttack) {
@@ -2307,8 +2334,10 @@ long army::getAdjustedAttack(const army* enemy,
 VA(0x00442550, 0x35)
 DC_ADDRESS(0x0477b8, 0x30)
 MAC_ADDRESS(0x04e2d4, 0x48)
+// Original DC ?get_attack_modifier@army@@QBAJPBV1@_N@Z proves the same
+// bool contract as getAdjustedAttack; preserve the call and named result.
 long army::getAttackModifier(const army* enemy,
-                               unsigned char rangedAttack) const
+                               bool rangedAttack) const
 {
     long adjusted = getAdjustedAttack(enemy, rangedAttack);
     return adjusted - g_creatureTypeTraits[m_creatureType].m_attackSkill;
@@ -2317,8 +2346,11 @@ long army::getAttackModifier(const army* enemy,
 VA(0x00442590, 0xC2)
 DC_ADDRESS(0x0477e8, 0xde)
 MAC_ADDRESS(0x04e31c, 0x17c)
+// Original public ?get_adjusted_defense@army@@QBAJPBV1@_N@Z proves the
+// Frenzy flag bool. Every Complete caller supplies 0 or 1; keep the native
+// domain alongside the adjusted-attack interface and modifier wrappers.
 long army::getAdjustedDefense(const army* enemy,
-                                unsigned char frenzyIncluded) const
+                                bool frenzyIncluded) const
 {
     if (frenzyIncluded && m_spellInfluence[56])
         return 0;
@@ -2451,7 +2483,9 @@ long army::getAverageDamage(const army& enemy, bool rangedAttack, long amount, b
 VA(0x00442880, 0x68)
 DC_ADDRESS(0x047bcc, 0x38)
 MAC_ADDRESS(0x04e7d0, 0x70)
-unsigned char army::isEnemy(const army* arg) const
+// Original public ?is_enemy@army@@QBA_NPBV1@@Z proves bool. Its callers
+// use the result as a predicate; keep the native type through adjacency.
+bool army::isEnemy(const army* arg) const
 {
     if (!arg)
         return 0;
@@ -2491,7 +2525,10 @@ bool army::canShoot(const army* excluded) const
 VA(0x004429f0, 0x5C)
 DC_ADDRESS(0x047c74, 0x80)
 MAC_ADDRESS(0x04e958, 0x94)
-unsigned char army::enemyIsAdjacent(const army* excluded) const
+// Original public ?enemy_is_adjacent@army@@QBA_NPBV1@@Z proves bool.
+// Retail directly forwards the manager's second-cell result, so that
+// canonical callee must share the bool domain rather than normalize a byte.
+bool army::enemyIsAdjacent(const army* excluded) const
 {
     if (g_combatManager->enemyIsAdjacent(this, m_gridIndex, excluded))
         return 1;
@@ -2532,6 +2569,11 @@ VA(0x00442a50, 0x410)
 DC_ADDRESS(0x047cf4, 0x472)
 MAC_ADDRESS(0x04e9ec, 0x30c)  // anchor-global
 // Original DC public ?get_unit_combat_value@army@@QBANJJ_NPBV1@@Z.
+// Mac 0x4ec18/0x4ec68 expand getOwningSide for the side-mass pointer/count.
+// The canonical conditional return in getControllingSide restores its
+// expansion inside the first damage reduction (97.6613 -> 100%); all seven
+// named retail calls agree. Combining the defense product into its
+// initializer was byte-flat; retain the canonical helper path.
 double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                                    bool ranged,
                                    const army* excluded) const
@@ -2573,8 +2615,8 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
     if (is(creatureSiegeWeapon | creatureSummoned)) {
         long total = getTotalHitPoints(0);
         long sum = 0;
-        army* group = g_combatManager->m_armies[m_combatSide];
-        for (long i = 0; i < g_combatManager->m_numArmies[m_combatSide];
+        army* group = g_combatManager->m_armies[getOwningSide()];
+        for (long i = 0; i < g_combatManager->m_numArmies[getOwningSide()];
              i++, group++) {
             if (!group->is(creatureSiegeWeapon | creatureImmobilized | creatureSummoned)) {
                 sum += group->getTotalHitPoints(0);
@@ -3212,6 +3254,8 @@ unsigned long army::strength()
 VA(0x00444120, 0x3A6)
 DC_ADDRESS(0x0493a0, 0x2f4)
 MAC_ADDRESS(0x0500f8, 0x338)
+// Mac 0x50224/0x503a4/0x503e4 expand getOwningSide for vanished/mirror rows;
+// its earlier 0x50160/0x50184 loads already occur through the existing calls.
 void army::processDeath(int fadeElementals)
 {
     if (is(creatureImmobilized))
@@ -3244,7 +3288,7 @@ void army::processDeath(int fadeElementals)
             cell2 = &g_combatManager->m_cells[gi2];
         }
         if (leavesNoBody()) {
-            g_combatManager->m_creatureIsDead[m_combatSide][m_bitIndex] = 1;
+            g_combatManager->m_creatureIsDead[getOwningSide()][m_bitIndex] = 1;
             g_combatManager->m_someCreaturesVanish = 1;
         } else {
             if (cell->m_bodiesInHex < 14
@@ -3280,13 +3324,13 @@ void army::processDeath(int fadeElementals)
         }
         if (m_mirrorSourceIndex != -1) {
             army* mirror =
-                &g_combatManager->m_armies[m_combatSide][m_mirrorSourceIndex];
+                &g_combatManager->m_armies[getOwningSide()][m_mirrorSourceIndex];
             if (mirror->m_mirrorDestIndex == m_bitIndex)
                 mirror->m_mirrorDestIndex = -1;
         }
         if (m_mirrorDestIndex != -1) {
             army* clone =
-                &g_combatManager->m_armies[m_combatSide][m_mirrorDestIndex];
+                &g_combatManager->m_armies[getOwningSide()][m_mirrorDestIndex];
             clone->m_numTroops = 0;
             clone->processDeath(fadeElementals);
         }
@@ -3315,9 +3359,10 @@ void army::cancelSpellType(int spellType)
 // The by-value min wrapper preserves its two argument copies in retail.
 DC_ADDRESS(0x0496dc, 0x6a)
 MAC_ADDRESS(0x0504ac, 0xd4)
+// Mac 0x504ac reads AGE at +0x2c4: the constant-index getSpellTime body.
 void army::adjustHitpoints()
 {
-    if (m_spellInfluence[SPELL_AGE])
+    if (getSpellTime(SPELL_AGE))
         m_monInfo.m_hitPoints = static_cast<int>(
             m_origHitPoints * m_poisonPenalty * 0.5f + 0.95f);
     else
@@ -3355,9 +3400,10 @@ void army::adjustHitpoints()
 VA(0x00444510, 0x3DB)
 DC_ADDRESS(0x049748, 0x262)
 MAC_ADDRESS(0x050580, 0x3b4)  // anchor-global
+// Mac 0x505a0..0x505ac expands getSpellTime(spell) before clearing its row.
 void army::cancelIndividualSpell(int spell)
 {
-    if (m_spellInfluence[spell] <= 0)
+    if (getSpellTime(spell) <= 0)
         return;
     if (spell == SPELL_DISRUPTING_RAY)
         return;
@@ -3416,10 +3462,11 @@ void army::cancelIndividualSpell(int spell)
 // E:\gamedcs\army.cpp:3802
 DC_ADDRESS(0x0499ac, 0x3a)
 MAC_ADDRESS(0x050c24, 0x68)
+// Mac 0x50c48 expands getSpellTime(i); the following call cancels that spell.
 void army::cancelAllSpells()
 {
     for (int i = 0; i < 81; i++) {
-        if (m_spellInfluence[i] > 0)
+        if (getSpellTime(i) > 0)
             cancelIndividualSpell(i);
     }
 }
@@ -3498,6 +3545,8 @@ static void drop_aura_links(army* self)
 VA(0x004448f0, 0xB99)
 DC_ADDRESS(0x0499e8, 0x900)
 MAC_ADDRESS(0x050c8c, 0x7a8)  // anchor-global
+// Mac 0x50d18 and 0x50d34 expand getSpellTime/getSpellLevel before
+// comparing the existing duration/mastery. Their writes remain field stores.
 void army::setSpellInfluence(int spell, int power, int mastery,
                              const hero* castingHero)
 {
@@ -3518,10 +3567,10 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         rounds = power;
         break;
     }
-    if (m_spellInfluence[spell] > 0) {
-        if (rounds > m_spellInfluence[spell])
+    if (getSpellTime(spell) > 0) {
+        if (rounds > getSpellTime(spell))
             m_spellInfluence[spell] = rounds;
-        if (mastery > m_spellLevel[spell])
+        if (mastery > getSpellLevel(spell))
             m_spellLevel[spell] = mastery;
         return;
     }
@@ -3694,11 +3743,13 @@ void army::setSpellInfluence(int spell, int power, int mastery,
 // entries; the older DC loop at line 4133 ends at 80.
 DC_ADDRESS(0x04a2e8, 0x5e)
 MAC_ADDRESS(0x051434, 0x98)
+// Mac 0x51458 expands getSpellTime(spell), reused by both tests; the
+// decrement at 0x51488 remains a mutation of the duration row.
 void army::decrementSpellRounds()
 {
     for (int spell = 0; spell < 81; spell++) {
-        if (m_spellInfluence[spell] > 0 && spell != SPELL_FRENZY) {
-            if (m_spellInfluence[spell] == 1)
+        if (getSpellTime(spell) > 0 && spell != SPELL_FRENZY) {
+            if (getSpellTime(spell) == 1)
                 cancelIndividualSpell(spell);
             else
                 m_spellInfluence[spell]--;
@@ -3839,7 +3890,7 @@ inline long army::getAttackDirection(long ourHex, const army* enemy) const
 VA(0x00445950, 0x107)
 DC_ADDRESS(0x04a6a4, 0x108)
 MAC_ADDRESS(0x051968, 0x16c)
-unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
+bool army::simpleMove(int hex, bool restoreFacing)
 {
     m_side = -1;
     m_slot = -1;
@@ -3850,7 +3901,7 @@ unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
     g_combatManager->m_lastMovedArmy = 0;
     g_combatManager->turnOffHighlighter(1);
     g_combatManager->markMovingArmy(this);
-    unsigned char moved;
+    bool moved;
     if (is(creatureFlyingArmy)) {
         m_pathTarget = hex;
         moved = validFlight(hex, 0);
@@ -3881,7 +3932,8 @@ unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
 VA(0x00445a60, 0x26D)
 DC_ADDRESS(0x04a7ac, 0x10a)
 MAC_ADDRESS(0x051ad4, 0x1b4)
-unsigned char army::attackHex(int hex, unsigned char restoreFacing)
+// Original ?attack_hex@army@@QAA_NH_N@Z proves result and facing flag.
+bool army::attackHex(int hex, bool restoreFacing)
 {
     m_side = -1;
     m_slot = -1;
@@ -3901,7 +3953,7 @@ unsigned char army::attackHex(int hex, unsigned char restoreFacing)
     } else {
         int direction = getAttackDirection(target);
         if (direction >= 0) {
-            unsigned char turned;
+            bool turned;
             if (needToTurn(direction)) {
                 setupAnimation();
                 turn(1);
@@ -3926,7 +3978,7 @@ unsigned char army::attackHex(int hex, unsigned char restoreFacing)
 // E:\gamedcs\army.cpp:4427
 // The old link-order join placed move_to at 0x445cd0; decorated-symbol and
 // call-edge evidence instead prove its retail body at 0x445d10 below.
-unsigned char army::moveTo(int hex, unsigned char restore_facing)
+bool army::moveTo(int hex, bool restore_facing)
 {
     // @stub
 }
@@ -3994,7 +4046,7 @@ static TWallTargetId chooseWallTarget(TWallTargetId wall,
 VA(0x00445d10, 0x14)
 DC_ADDRESS(0x04a8b8, 0x10)
 MAC_ADDRESS(0x051c88, 0x20)
-unsigned char army::moveTo(int hex, unsigned char restoreFacing)
+bool army::moveTo(int hex, bool restoreFacing)
 {
     return simpleMove(hex, restoreFacing);
 }
@@ -4403,7 +4455,9 @@ int army::otherArmyAdjacent(int group, int index)
 VA(0x00446720, 0x107)
 DC_ADDRESS(0x04b454, 0x104)
 MAC_ADDRESS(0x052938, 0x174)  // anchor-global
-void army::turn(unsigned char animateTurn)
+// Original ?Turn@army@@QAAX_N@Z proves the animation predicate;
+// Walk forwards its native bool initialWalk and all other callers use 0/1.
+void army::turn(bool animateTurn)
 {
     if (m_facing == FACING_ATTACKER) {
         if (animateTurn)
@@ -4544,7 +4598,7 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
 // iNewDestIndex.
 VA(0x00446c40, 0x1E1)
 DC_ADDRESS(0x04b8c4, 0x1c4)
-MAC_ADDRESS(0x053028, 0x374)
+MAC_ADDRESS(0x053028, 0x374)  // MAC_ABSTRACTION_FROM(tokens1:0f367c3b8d54,23.0851): restore canonical getOwningSide in both occupied-cell ownership comparisons (Mac 0x5310c/0x5322c).
 int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
 {
     if (newDestIndex)
@@ -4559,7 +4613,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
     if (g_combatManager->hexIsBlocked(destIndex))
         return 0;
     if (cell->hasArmy()) {
-        if (cell->m_armySide != m_combatSide)
+        if (cell->m_armySide != getOwningSide())
             return 0;
         if (cell->m_armySlot != m_bitIndex)
             return 0;
@@ -4576,7 +4630,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
     hexcell* otherCell = &g_combatManager->m_cells[otherIndex];
     if (!g_combatManager->hexIsBlocked(otherIndex)) {
         if (!otherCell->hasArmy()
-                || (otherCell->m_armySide == m_combatSide
+                || (otherCell->m_armySide == getOwningSide()
                     && otherCell->m_armySlot == m_bitIndex))
             return 1;
     }
@@ -4606,6 +4660,9 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
 VA(0x00446e30, 0x2E1)
 DC_ADDRESS(0x04ba88, 0x1fc)
 MAC_ADDRESS(0x05339c, 0x300)
+// Mac 0x53458..0x53464 expands getOwner: own-side+0xf4 followed by heroes
+// +0x53cc, matching the retained canonical body at 0x4e51c. Keep that upper
+// helper and its nested getOwningSide operation at both source uses.
 void army::newTurn()
 {
     if (m_resetThisRound != 0)
@@ -4618,14 +4675,19 @@ void army::newTurn()
     if (g_combatManager->m_creaturePlacement != 0)
         return;
     if (m_topCreatureDamage > 0) {
+        // Mac 0x53458..0x53474 loads/null-checks the owner once, then
+        // calls isWieldingArtifact with that same pointer. Capture it at
+        // the conditional boundary; the local name is inferred. Windows
+        // improves 96.68 -> 97.27, with all 43 blocks now the same size.
+        hero* owner;
         if (m_creatureType == CREATURE_WIGHT
             || m_creatureType == ARMY_CREATURE_WRAITH
             || m_creatureType == CREATURE_TROLL
             || ((g_creatureTypeTraits[m_creatureType].m_attributes
                  & g_ctaAlive)
-                && g_combatManager->m_heroes[m_combatSide] != 0
-                && g_combatManager->m_heroes[m_combatSide]
-                       ->isWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))) {
+                && (owner = getOwner()) != 0
+                && owner->isWieldingArtifact(
+                       ARTIFACT_ELIXIR_OF_LIFE))) {
             long heal = m_topCreatureDamage;
             long amount = heal > 50 ? 50 : heal;
             m_topCreatureDamage = heal - amount;
@@ -4669,6 +4731,11 @@ void army::newTurn()
 VA(0x00447120, 0x20A)
 DC_ADDRESS(0x04bc84, 0xfa)
 MAC_ADDRESS(0x05369c, 0x15c)
+// Mac 0x53700 expands the POISON duration getter at +0x2b4.
+// Windows 97.4026 residual: the AGE getter load/test in adjustHitpoints
+// schedules after the poison-factor float copy/store rather than across it.
+// Capturing its duration result in the canonical helper is byte-flat; all
+// 36 blocks, 19 branches, nine calls and 19 references already agree.
 void army::resetRound()
 {
     if (m_numTroops <= 0)
@@ -4683,7 +4750,7 @@ void army::resetRound()
 
     decrementSpellRounds();
 
-    if (m_spellInfluence[SPELL_POISON] > 0) {
+    if (getSpellTime(SPELL_POISON) > 0) {
         int oldHitPoints = m_monInfo.m_hitPoints;
         double factor = cppMax<double>(m_poisonPenalty - 0.1f, 0.5);
         m_poisonPenalty = static_cast<float>(factor);
@@ -4763,6 +4830,10 @@ static const int g_faerieDragonSpells[] = {
     -1,
 };
 
+// With the canonical conditional controlling-side return, all 29 blocks and
+// helper boundaries remain aligned. The 99.9248% residual is one commutative
+// sideIsAi load address: [EAX + ECX] versus retail [ECX + EAX]. Preserve the
+// recovered getter instead of manufacturing an alternate indexing spelling.
 VA(0x00447510, 0x1A8)
 MAC_ADDRESS(0x053a3c, 0x18c)
 void army::faerieDragonSpell()
@@ -5133,6 +5204,7 @@ unsigned char army::unnamed447fe0()
 VA(0x00448260, 0x582)
 DC_ADDRESS(0x04c468, 0x30e)
 MAC_ADDRESS(0x0548f4, 0x4f0)
+// Mac 0x549a8 expands getOwningSide before the animation effect mark.
 void army::castSpell(long hex)
 {
     long originalFacing = m_facing;
@@ -5149,7 +5221,7 @@ void army::castSpell(long hex)
         if ((targetX < myX && m_facing == 1) || shouldTurn)
             turn(1);
         g_combatManager->resetLimitCreature();
-        g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
+        g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
         g_combatManager->computeMaxExtent();
         long dx = targetX - myX;
         long dy = targetY - myY;
@@ -5232,10 +5304,11 @@ void army::castSpell(long hex)
 
 VA(0x004487f0, 0x43)
 MAC_ADDRESS(0x054de4, 0x5c)
+// Mac 0x54de4 expands the MAGIC_MIRROR duration getter at +0x228.
 int army::getMirrorEffect() const
 {
     int effect = 0;
-    if (m_spellInfluence[36] > 0)
+    if (getSpellTime(36) > 0)
         effect = m_backlashChance;
     if (m_creatureType == CREATURE_FAERIE_DRAGON) {
         const SSpellTraits* mirrorTraits =
@@ -5314,10 +5387,11 @@ VA_COMPGEN(0x00448d30, 0x36, VECTOR_ERASE, army)
 VA(0x00448cd0, 0x4B)
 DC_ADDRESS(0x04c918, 0x50)
 MAC_ADDRESS(0x055028, 0x6c)
+// Mac 0x55028 expands the SLOW duration getter at +0x270.
 int army::getSpeed() const
 {
     int speed = m_monInfo.m_speed;
-    if (m_spellInfluence[54]) {
+    if (getSpellTime(54)) {
         if (is(creatureSiegeWeapon))
             return 0;
         speed = static_cast<long>(speed * m_slowFactor);

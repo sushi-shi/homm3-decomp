@@ -144,11 +144,14 @@ int heroWindowManager::broadcastMessage(int msgId, int msgCodeX, int msgCodeY, i
     return main(msg);
 }
 
+// Original DC public AddWindow ends PAVheroWindow@@H_N: update is bool.
+// Mac 20d4d8..20d4ec forwards it directly to the virtual window opener;
+// retail likewise forwards the stack argument without byte normalization.
 VA(0x006023b0, 0xE7)
 DC_ADDRESS(0x19aa64, 0x1b0)
 MAC_ADDRESS(0x20d468, 0x154)
 void heroWindowManager::addWindow(heroWindow* newWindow, int newPriority,
-                                  unsigned char update)
+                                  bool update)
 {
     heroWindow* at = m_tailWindow;
 
@@ -711,6 +714,9 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
     // order remains. Six cursor increment orders emit identical bytes.
     // All six row-pointer declaration orders, with either column scope,
     // produce only the current object or a lower-scoring register variant.
+    // DC 1389..1394 reads the old/new red, green, then blue channels;
+    // 1396..1402 interpolates and combines them in that order. Restoring
+    // this RGB spelling also aligns all 17 retail references (99.91%).
     const int defaultFadeTime = 33;
     if (g_completeDrawEnabled) {
         if (startX < 0) {
@@ -753,22 +759,22 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                     const unsigned short* s = target.m_pixels;
                     const unsigned short* od = source.m_pixels;
                     for (int col = 0; col < width; col++) {
-                        int fromBlue = *od & Bitmap16Bit::s_blueMask;
-                        int toBlue = *s & Bitmap16Bit::s_blueMask;
-                        int fromGreen = *od & Bitmap16Bit::s_greenMask;
-                        int toGreen = *s & Bitmap16Bit::s_greenMask;
                         int fromRed = *od & Bitmap16Bit::s_redMask;
                         int toRed = *s & Bitmap16Bit::s_redMask;
-                        const int outBlue =
-                            ((toBlue - fromBlue) * alpha >> 16) + fromBlue;
-                        const int outGreen =
-                            ((toGreen - fromGreen) * alpha >> 16) + fromGreen;
+                        int fromGreen = *od & Bitmap16Bit::s_greenMask;
+                        int toGreen = *s & Bitmap16Bit::s_greenMask;
+                        int fromBlue = *od & Bitmap16Bit::s_blueMask;
+                        int toBlue = *s & Bitmap16Bit::s_blueMask;
                         const int outRed =
                             ((toRed - fromRed) * alpha >> 16) + fromRed;
+                        const int outGreen =
+                            ((toGreen - fromGreen) * alpha >> 16) + fromGreen;
+                        const int outBlue =
+                            ((toBlue - fromBlue) * alpha >> 16) + fromBlue;
                         *d = static_cast<unsigned short>(
-                            (outBlue & Bitmap16Bit::s_blueMask)
+                            (outRed & Bitmap16Bit::s_redMask)
                             | (outGreen & Bitmap16Bit::s_greenMask)
-                            | (outRed & Bitmap16Bit::s_redMask));
+                            | (outBlue & Bitmap16Bit::s_blueMask));
                         d++;
                         s++;
                         od++;
@@ -981,6 +987,8 @@ void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
 // calls are platform paths, not missing helpers in the Windows fade.
 // DC names const unsigned pixel masks, a read-only pixel source and the
 // fade period; the ordinary Windows body retains those types and helpers.
+// The source row owner also stays const across pitch advances (DC FadeFrom
+// 19c450/19c468/19c502). Restoring this qualifier is Windows byte-flat.
 // DC locals: bmpFadeSource, red_mask_2, green_mask_2, blue_mask_2,
 // next_fade_time and time1. The spelling below normalizes the underscores.
 // Mac uses separate gamma/bitmap paths; these native comparisons remain
@@ -1008,11 +1016,11 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
         unsigned long time1 = GameTime::get();
         unsigned char* destinationBytes = static_cast<unsigned char*>(
             static_cast<void*>(m_screenBitmap->getMap(0, 0)));
-        unsigned char* sourceBytes = static_cast<unsigned char*>(
-            static_cast<void*>(bmpFadeSource.getMap(0, 0)));
+        const unsigned char* sourceBytes = static_cast<const unsigned char*>(
+            static_cast<const void*>(bmpFadeSource.getMap(0, 0)));
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
             const unsigned int* src = static_cast<const unsigned int*>(
-                static_cast<void*>(sourceBytes));
+                static_cast<const void*>(sourceBytes));
             unsigned int* dst = static_cast<unsigned int*>(
                 static_cast<void*>(destinationBytes));
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
@@ -1079,11 +1087,11 @@ void heroWindowManager::fadeFromBlack(int speed)
         unsigned long started = GameTime::get();
         unsigned char* destinationBytes = static_cast<unsigned char*>(
             static_cast<void*>(m_screenBitmap->getMap(0, 0)));
-        unsigned char* sourceBytes = static_cast<unsigned char*>(
-            static_cast<void*>(fadeFrom.getMap(0, 0)));
+        const unsigned char* sourceBytes = static_cast<const unsigned char*>(
+            static_cast<const void*>(fadeFrom.getMap(0, 0)));
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
             const unsigned int* src = static_cast<const unsigned int*>(
-                static_cast<void*>(sourceBytes));
+                static_cast<const void*>(sourceBytes));
             unsigned int* dst = static_cast<unsigned int*>(
                 static_cast<void*>(destinationBytes));
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {

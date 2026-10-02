@@ -1932,7 +1932,7 @@ void townManager::changeTown(unsigned char fade)
     message msg;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeY = -1;
-    setCommandAndText(&msg);
+    setCommandAndText(msg);
     stopMouseThread();
 }
 
@@ -2270,29 +2270,35 @@ void townManager::setHeroCommand()
 VA(0x005c7400, 0x391)
 DC_ADDRESS(0x16c6a8, 0x296)
 MAC_ADDRESS(0x1bf77c, 0x454)
+// Mac 0x1bf860..0x1bf884 and six sibling arms expand GetArmyName:
+// 0..0x96 guard, empty fallback, and the singular/plural trait columns.
+// Keep those operations on the canonical header helper. VC6 now expands
+// the ordinary getNumArmies call that retail retains at +0x21: all seven
+// name helpers expand, and all other calls agree. This caller's C2 cost is
+// 710 (budget 1420); the recovered helper path measures 88.3501% versus
+// the old flattened caller's 100%. Preserve both canonical boundaries.
+// DC 3275/3277 places command initialization before native unsigned-char
+// restricted. Direct GetArmyName arguments follow DC 3297..3375. This source
+// family remains 88.3501%; a temporary depth-zero army-count arm reproduces
+// 100%, proving that getNumArmies admission is the sole remaining boundary.
 void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 {
-    char flag = 0;
     m_command = -1;
+    unsigned char restricted = 0;
     if (m_srcStrip->m_group->getNumArmies() == 1) {
         if (m_townToView) {
             if (m_srcStrip == m_heroStrip || m_townToView->m_garrisonHeroId != -1) {
                 if (m_destStrip != m_srcStrip)
-                    flag = 1;
+                    restricted = 1;
             }
         } else if (m_srcStrip == m_heroStrip && m_destStrip != m_srcStrip) {
-            flag = 1;
+            restricted = 1;
         }
     }
 
     if (m_srcStrip == m_destStrip && m_srcIndex == m_destIndex) {
         int id = m_srcStrip->m_group->m_armies[m_srcIndex];
-        const char* name;
-        if (id >= 0 && id <= 150)
-            name = g_creatureTypeTraits[id].m_pluralName;
-        else
-            name = "";
-        sprintf(m_statusText, g_townCommand[4], name);
+        sprintf(m_statusText, g_townCommand[4], getArmyName(id, 2));
         m_command = 1;
         return;
     }
@@ -2307,52 +2313,36 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
     int selId = m_srcStrip->m_group->m_armies[m_srcIndex];
     if (anchorId == selId && selOwner == m_destStrip->m_owner) {
         if (splitEnabled) {
-            const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_name;
-            else
-                name = "";
-            sprintf(m_statusText, g_townCommand[0], name);
+            sprintf(m_statusText, g_townCommand[0],
+                    getArmyName(selId, 1));
             m_command = 5;
             return;
         }
-        if (flag) {
+        if (restricted) {
             strcpy(m_statusText, g_townCommand[1]);
             return;
         }
-        const char* name;
-        if (selId >= 0 && selId <= 150)
-            name = g_creatureTypeTraits[selId].m_name;
-        else
-            name = "";
-        sprintf(m_statusText, g_townCommand[2], name);
+        sprintf(m_statusText, g_townCommand[2],
+                getArmyName(selId, 1));
         m_command = 2;
         return;
     }
 
     if (splitEnabled) {
         if (anchorId == -1) {
-            const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_name;
-            else
-                name = "";
-            sprintf(m_statusText, g_townCommand[3], name);
+            sprintf(m_statusText, g_townCommand[3],
+                    getArmyName(selId, 1));
             m_command = 5;
             return;
         }
     } else {
         if (anchorId == -1) {
-            if (flag) {
+            if (restricted) {
                 strcpy(m_statusText, g_townCommand[5]);
                 return;
             }
-            const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_pluralName;
-            else
-                name = "";
-            sprintf(m_statusText, g_townCommand[6], name);
+            sprintf(m_statusText, g_townCommand[6],
+                    getArmyName(selId, 2));
             m_command = 3;
             return;
         }
@@ -2362,17 +2352,8 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
         selectArmy(m_destStrip, m_destIndex, joinDialog);
         return;
     }
-    const char* nameAnchor;
-    if (anchorId >= 0 && anchorId <= 150)
-        nameAnchor = g_creatureTypeTraits[anchorId].m_pluralName;
-    else
-        nameAnchor = "";
-    const char* nameSel;
-    if (selId >= 0 && selId <= 150)
-        nameSel = g_creatureTypeTraits[selId].m_pluralName;
-    else
-        nameSel = "";
-    sprintf(m_statusText, g_townCommand[7], nameSel, nameAnchor);
+    sprintf(m_statusText, g_townCommand[7],
+            getArmyName(selId, 2), getArmyName(anchorId, 2));
     m_command = 3;
 }
 
@@ -2395,16 +2376,21 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 // Residual: town-id array address reassociation; four sum orders and named
 // slot/top or pointer-index forms did not improve it. Naming the selected
 // town id before getTownName is also byte-flat. Helpers stay canonical.
+// Original public ?SetCommandAndText@townManager@@QAAXAAUmessage@@@Z
+// proves message&. Both native and Complete pass one address; this ordinary
+// member is not a pointer-based callback or a virtual interface. Restoring
+// the reference leaves this full VC6 body and both caller bodies byte-flat;
+// the 99.9775% residual remains only the two town-ID address rows.
 // E:\gamedcs\townmgr.cpp:3383
 VA(0x005c77a0, 0x8DD)
 DC_ADDRESS(0x16c940, 0x572)
-MAC_ADDRESS(0x1bfbd0, 0x9e0)  // order-map + anchor-callee(SetHeroCommand 0x5c7250) + arity(ret 4, message*)
-void townManager::setCommandAndText(message* msg)
+MAC_ADDRESS(0x1bfbd0, 0x9e0)  // order-map + anchor-callee(SetHeroCommand 0x5c7250) + arity(ret 4, message&)
+void townManager::setCommandAndText(message& msg)
 {
-    int code = msg->m_codeY;
+    int code = msg.m_codeY;
     if (code >= 0 && code <= DWELLING_6_UPG_ID
         && (code = static_cast<TTownScreenWindow*>(m_townWindow)
-                       ->m_zBuffer[msg->m_mouseY * 800 + msg->m_mouseX] - 1) >= 0
+                       ->m_zBuffer[msg.m_mouseY * 800 + msg.m_mouseX] - 1) >= 0
         && code <= DWELLING_6_UPG_ID) {
         g_outlinedTownObjectId = code;
         playImmEffect(DATA_COMPGEN(0x0068c210, guiPopEffectName, "GuiPop"), 1);
@@ -2501,7 +2487,7 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::TOWN_GARRISON_4_SELECTOR_ID:
     case TTownScreenWindow::TOWN_GARRISON_5_SELECTOR_ID:
     case TTownScreenWindow::TOWN_GARRISON_6_SELECTOR_ID: {
-        int shift = msg->m_qualifier & 3;
+        int shift = msg.m_qualifier & 3;
         int slot = code - TTownScreenWindow::TOWN_GARRISON_0_SELECTOR_ID;
         armyCommand(m_garrisonStrip, slot, shift, 0);
         break;
@@ -2533,7 +2519,7 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::HERO_ARMY_4_SELECTOR_ID:
     case TTownScreenWindow::HERO_ARMY_5_SELECTOR_ID:
     case TTownScreenWindow::HERO_ARMY_6_SELECTOR_ID: {
-        int shift = msg->m_qualifier & 3;
+        int shift = msg.m_qualifier & 3;
         int slot = code - TTownScreenWindow::HERO_ARMY_0_SELECTOR_ID;
         armyCommand(m_heroStrip, slot, shift, 0);
         break;
@@ -2929,10 +2915,10 @@ void TThievesGuildWindow::setRolloverText(int codeY)
         break;
     }
 
-    message textMessage;
-    textMessage.m_extraText = g_text;
+    // Mac 0x1c2ce0..0x1c2cf0 passes g_text directly to the four-int
+    // broadcast overload; message construction belongs to the callee.
     broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x29,
-                     textMessage.m_extra);
+                     reinterpret_cast<int>(g_text));
     drawWindow(0, 0x28, 0x29);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x22c, 0x2e0, 0x12);
 }
@@ -3433,10 +3419,10 @@ void TMageGuildWindow::setRolloverText(int codeY)
         strcpy(g_text, "");
     }
 
-    message textMessage;
-    textMessage.m_extraText = g_text;
+    // Mac 0x1c9080..0x1c9090 passes g_text directly to the four-int
+    // broadcast overload; message construction belongs to the callee.
     broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 3,
-                     textMessage.m_extra);
+                     reinterpret_cast<int>(g_text));
     drawWindow(0, 2, 3);
     g_windowManager->updateScreen(8, 0x22c, 0x2e0, 0x12);
 }
@@ -3461,8 +3447,16 @@ void TMageGuildWindow::setRolloverText(int codeY)
 // retail computes it with the `neg / sbb / and 3 / inc` chain off the
 // masked qualifier at both sites.
 
-// Residual 97.3926%: delayed EBX save/restore and one SIB operand order.
-// A common return and direct message-id reads are flat in four controls.
+// Earlier common-return/direct-message controls were flat at 97.3926%.
+// Both natives put the widget operation before hover; DC 4691 and 4706
+// return immediately for an invalid spell column and unchanged hover.
+// Mac 0x1c937c/0x1c93a4 preserves those early exits. The complete native
+// guard/order model improves current Windows 94.3190% to 96.8650% and
+// Mac 18.8830% to 23.6702%, with the canonical helper chain intact.
+// Remaining: getBuildingMask's expanded high word clobbers the column's
+// EDX home, causing a spill and 28 versus retail's 27 blocks. All eight
+// calls agree; retain getBuildingMask inside hasBuilding and the pre-Grail
+// division/remainder order observed at Mac 0x1c91c4..0x1c91f4.
 VA(0x005ce370, 0x1F0)
 DC_ADDRESS(0x171118, 0x1ac)
 MAC_ADDRESS(0x1c90ec, 0x2f0)  // anchor-vtable 0x6437dc slot 9 + anchor-callee(SetRolloverText 0x5ce1c0, whose sole caller this is) + arity(ret 4)
@@ -3473,54 +3467,52 @@ int TMageGuildWindow::windowHandler(message& msg)
         return result;
 
     switch (msg.m_id) {
-    case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(msg);
-        if (msg.m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg.m_codeY;
-            setRolloverText(msg.m_codeY);
-        }
-        break;
-
     case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
         case widget::WIDGET_RIGHT_SELECT: {
             int qualifier = msg.m_qualifier & MESSAGE_MODIFIER_RIGHT;
             int id = msg.m_codeY;
-            // The frame run (10..35) and the scroll run (40..65), thirty
-            // slots each and the same thirty spells; anything else
-            // leaves the slot at the sentinel and the arm does nothing.
             int slot = -1;
             if (id >= 10 && id < 36)
                 slot = id - 10;
             if (id >= 40 && id < 66)
                 slot = id - 40;
-            if (slot != -1) {
-                town* thisTown = g_townManager->m_townToView;
-                int level = slot / 6;
-                int column = slot % 6;
-                if (thisTown->m_type == TOWN_CONFLUX
-                    && (thisTown->hasBuilding(HOLY_GRAIL_ID, true))) {
-                    normalDialog(
-                        formatString(
-                            // Row 715, byte-proven: the inlined lookup
-                            // reads [rows + 0xb2c] = 715*4, not 707*4.
-                            g_generalText->getText(GENERAL_TEXT_ARTIFACT_MAKES_ALL_SPELLS_AVAILABLE_FORMAT),
-                            getBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID))
-                            .c_str(),
-                        qualifier ? 4 : 1, -1, -1, -1, 0, -1, 0, -1, 0,
-                        -1, 0);
-                } else if (column < thisTown->m_mageGuildSpellCounts[level]) {
-                    int spell = thisTown->m_mageGuildSpells[level][column];
-                    normalDialog(g_spellTraits[spell].m_levelDescriptions[0],
-                                 qualifier ? 4 : 1, -1, -1, 9, spell,
-                                 -1, 0, -1, 0, -1, 0);
-                }
+            if (slot == -1)
+                return 1;
+
+            town* thisTown = g_townManager->m_townToView;
+            int level = slot / 6;
+            int column = slot % 6;
+            if (thisTown->m_type == TOWN_CONFLUX
+                && thisTown->hasBuilding(HOLY_GRAIL_ID, true)) {
+                normalDialog(
+                    formatString(
+                        g_generalText->getText(GENERAL_TEXT_ARTIFACT_MAKES_ALL_SPELLS_AVAILABLE_FORMAT),
+                        getBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID))
+                        .c_str(),
+                    qualifier ? 4 : 1, -1, -1, -1, 0, -1, 0, -1, 0,
+                    -1, 0);
+                return 1;
             }
-            break;
+            if (column >= thisTown->m_mageGuildSpellCounts[level])
+                return 1;
+            int spell = thisTown->m_mageGuildSpells[level][column];
+            normalDialog(g_spellTraits[spell].m_levelDescriptions[0],
+                         qualifier ? 4 : 1, -1, -1, 9, spell,
+                         -1, 0, -1, 0, -1, 0);
+            return 1;
         }
         }
         break;
+
+    case MESSAGE_MOUSE_MOVE:
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY == g_windowManager->m_lastHover)
+            return 1;
+        g_windowManager->m_lastHover = msg.m_codeY;
+        setRolloverText(msg.m_codeY);
+        return 1;
     }
     return 1;
 }
@@ -3804,8 +3796,11 @@ type_garrison_base_window::~type_garrison_base_window()
 // different, beginning with the register used for the manager load.
 // Earlier flattened-arm control: moving thisStrip/mgr before qualifier
 // worsened 95.6856% to 95.4367%; that did not recover ArmyCommand.
-// DC's GetArmyName is restored in the divide status arm; VC6 still emits
-// the same 34 blocks and 10 retained calls at 98.838425%.
+// DC 0x172bfa passes count 2 to GetArmyName in the divide status arm.
+// Mac 0x1cc788 and retail use the plural traits field (+0x18), not the
+// singular field (+0x14). With that argument restored, all 34 block sizes,
+// ten calls and 29 relocations agree; only four prefix instruction rows
+// differ (manager register and command-store ordering), at 98.838425%.
 // DC declares message&; Complete passes the same one-word address.
 VA(0x005d05f0, 0x31B)
 DC_ADDRESS(0x172af0, 0x178)
@@ -3853,12 +3848,8 @@ void type_garrison_base_window::setCommandAndText(message& msg)
             strcpy(mgr->m_statusText, g_townCommand[3]);
         } else {
             int creature = mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex];
-            // The traits row's own bound, spelled as the literal
-            // retail compares against: armygrp.h's ARMY_CREATURE_LAST
-            // is a member of `army`, which this compiland's include
-            // closure does not define and must not grow to.
             sprintf(mgr->m_statusText, g_townCommand[0],
-                    getArmyName(creature, 1));
+                    getArmyName(creature, 2));
         }
         break;
     }
@@ -4273,10 +4264,10 @@ void TBlacksmithWindow::setRolloverText(int id)
         strcpy(g_text, "");
         break;
     }
-    message textMessage;
-    textMessage.m_extraText = g_text;
+    // Mac 0x1ce108..0x1ce118 passes g_text directly to the four-int
+    // broadcast overload; message construction belongs to the callee.
     broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8,
-                     textMessage.m_extra);
+                     reinterpret_cast<int>(g_text));
     drawWindow(0, 7, 8);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x16b, 0x138, 0x11);
 }
@@ -4506,10 +4497,10 @@ void TShipWindow::setRolloverText(int codeY)
         strcpy(g_text, "");
         break;
     }
-    message textMessage;
-    textMessage.m_extraText = g_text;
+    // Mac 0x1cf36c..0x1cf37c passes g_text directly to the four-int
+    // broadcast overload; message construction belongs to the callee.
     broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8,
-                     textMessage.m_extra);
+                     reinterpret_cast<int>(g_text));
     drawWindow(0, 7, 8);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x16b, 0x138, 0x11);
 }
@@ -4900,7 +4891,7 @@ void townManager::drawTown(int update, int incFrame,
 // E:\gamedcs\townmgr.cpp:5854
 VA(0x005d3240, 0x19CF)
 DC_ADDRESS(0x175160, 0x14d2)
-MAC_ADDRESS(0x1d00c0, 0x19e4)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*)
+MAC_ADDRESS(0x1d00c0, 0x19e4)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message&)
 int townManager::main(message& msg)
 {
     int exitFlag = 0;
@@ -5482,7 +5473,7 @@ building_popup:
                     }
                 } else {
                     doCommand(m_command, 0, 0);
-                    setCommandAndText(&msg);
+                    setCommandAndText(msg);
                 }
                 break;
             }
@@ -5533,7 +5524,7 @@ building_popup:
         if (hover != m_lastHover || msg.m_qualifier != m_lastQualifier) {
             m_lastHover = hover;
             m_lastQualifier = msg.m_qualifier;
-            setCommandAndText(&msg);
+            setCommandAndText(msg);
         }
         break;
     }
@@ -6759,7 +6750,7 @@ int TTavernWindow::windowHandler(message& msg)
 VA(0x005d7e20, 0x42)
 DC_ADDRESS(0x17ad3c, 0x3a)
 MAC_ADDRESS(0x1d5c14, 0x84)
-int TTavernWindow::open(int zOrder, unsigned char update)
+int TTavernWindow::open(int zOrder, bool update)
 {
     videoOpen(6, 0x110, 0x68, 0, 0, 1, 1, 1);
     int result = heroWindow::open(zOrder, update);
@@ -7039,8 +7030,9 @@ TCastleWindow::TCastleWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
     ResourceManager::delSprFromCache();  // DC townmgr.cpp:8256
-    // Conventional release expansion of VERIFY(Widgets.size() == 0).
-    static_cast<void>(m_widgets.size() == 0);
+    // DC 8257 initializes the removed scroll_offset (+0x58), not a size
+    // check. Mac 0x1d66b8..0x1d66d4 goes from base/vtable setup to reserve.
+    // Removing the formerly assumed release VERIFY is byte-flat at 95.6830%.
     m_widgets.reserve(156);
 
     if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
@@ -7963,10 +7955,16 @@ int TCastleWindow::windowHandler(message& msg)
 VA(0x005dd390, 0x67E)
 DC_ADDRESS(0x17fd08, 0x4fa)
 MAC_ADDRESS(0x1e1580, 0x6c4)  // anchor-bracket + arity + townManager thiscall
+// Mac 0x1e1804..0x1e1828 and 0x1e18b8..0x1e18dc expand the plural
+// GetArmyName path. The eleven stat broadcasts at 0x1e1970..0x1e1c2c
+// pass g_text directly in r7 to the four-int overload (0x20b4ac). The
+// dwelling tests at 0x1e1730..0x1e177c and 0x1e1a50..0x1e1aa0 expand
+// HasBuilding's active-mask path, including its byte-bool conversion; keep
+// that outer helper and its nested getBuildingMask call. Only
+// the palette/name messages above use the caller-owned message reference.
 void townManager::setupWell(TCastleWindow* wellWin)
 {
     message msg;
-    message textMessage;
 
     g_castleOpen = 1;
     msg.m_id = MESSAGE_WIDGET;
@@ -7995,8 +7993,8 @@ void townManager::setupWell(TCastleWindow* wellWin)
         msg.m_codeY = i + 9;
         msg.m_extraText = g_text;
         wellWin->broadcastMessage(msg);
-        if (m_townToView->getBuildingMask()
-            & g_bitNumber[DWELLING_0_ID + m_currentDwellingIdOff[i]]) {
+        if (m_townToView->hasBuilding(
+                DWELLING_0_ID + m_currentDwellingIdOff[i], true)) {
             sprintf(g_text, "%s %d", g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
                     m_townToView->m_population[m_currentDwellingIdOff[i]]);
             msg.m_codeY = i + 0x21;
@@ -8007,11 +8005,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         TCreatureType rowCreature =
             g_townDwellingCreatures[m_townToView->m_type * TOWN_DWELLING_SLOTS
                                    + m_currentDwellingIdOff[i]];
-        const char* creatureName;
-        if (rowCreature >= 0 && rowCreature <= 150)
-            creatureName = g_creatureTypeTraits[rowCreature].m_pluralName;
-        else
-            creatureName = "";
+        const char* creatureName = getArmyName(rowCreature, 2);
         strcpy(g_text, creatureName);
         msg.m_extraText = g_text;
         wellWin->broadcastMessage(msg);
@@ -8025,13 +8019,8 @@ void townManager::setupWell(TCastleWindow* wellWin)
         wellWin->broadcastMessage(msg);
 
         msg.m_codeY = 0x20;
-        const char* summonName;
-        if (g_townManager->m_townToView->m_summoningType >= 0
-            && g_townManager->m_townToView->m_summoningType <= 150)
-            summonName =
-                g_creatureTypeTraits[g_townManager->m_townToView->m_summoningType].m_pluralName;
-        else
-            summonName = "";
+        const char* summonName = getArmyName(
+            g_townManager->m_townToView->m_summoningType, 2);
         strcpy(g_text, summonName);
         msg.m_extraText = g_text;
         wellWin->broadcastMessage(msg);
@@ -8043,37 +8032,31 @@ void townManager::setupWell(TCastleWindow* wellWin)
                 m_townToView->m_type * TOWN_DWELLING_SLOTS
                 + m_currentDwellingIdOff[i]]];
         sprintf(g_text, "%d", monInfo.m_attackSkill);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x29, textMessage.m_extra);
+                                  i + 0x29, reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_defenseSkill);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x31, textMessage.m_extra);
+                                  i + 0x31, reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_damageLowBound);
         if (monInfo.m_damageLowBound != monInfo.m_damageHighBound) {
             char damageText[40];
             sprintf(damageText, "-%d", monInfo.m_damageHighBound);
             strcat(g_text, damageText);
         }
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x69, textMessage.m_extra);
+                                  i + 0x69, reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_hitPoints);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x71, textMessage.m_extra);
+                                  i + 0x71, reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_speed);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x79, textMessage.m_extra);
-        if (m_townToView->getBuildingMask()
-            & g_bitNumber[DWELLING_0_ID + m_currentDwellingIdOff[i]]) {
+                                  i + 0x79, reinterpret_cast<int>(g_text));
+        if (m_townToView->hasBuilding(
+                DWELLING_0_ID + m_currentDwellingIdOff[i], true)) {
             int growth = m_townToView->getGrowthRate(m_currentDwellingIdOff[i]);
             sprintf(g_text, "%d", growth);
-            textMessage.m_extraText = g_text;
             wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                      i + 0x81, textMessage.m_extra);
+                                      i + 0x81, reinterpret_cast<int>(g_text));
         }
     }
 
@@ -8081,30 +8064,25 @@ void townManager::setupWell(TCastleWindow* wellWin)
         TCreatureTypeTraits monInfo =
             g_creatureTypeTraits[g_townManager->m_townToView->m_summoningType];
         sprintf(g_text, "%d", monInfo.m_attackSkill);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x30,
-                                  textMessage.m_extra);
+                                  reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_defenseSkill);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x38,
-                                  textMessage.m_extra);
+                                  reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_damageLowBound);
         if (monInfo.m_damageLowBound != monInfo.m_damageHighBound) {
             char damageText[40];
             sprintf(damageText, "-%d", monInfo.m_damageHighBound);
             strcat(g_text, damageText);
         }
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x70,
-                                  textMessage.m_extra);
+                                  reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_hitPoints);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x78,
-                                  textMessage.m_extra);
+                                  reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_speed);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x80,
-                                  textMessage.m_extra);
+                                  reinterpret_cast<int>(g_text));
     }
 }
 

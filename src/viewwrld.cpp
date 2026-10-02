@@ -742,6 +742,9 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 // local. Measured worse: caching GetMap(0,0) in a local across the row loop
 // (unit 96.76 -> 95.77 - retail reloads it), and dropping the clamp upper
 // bounds (this body +1.36, unit -2.03).
+// Bool foundHero/foundBoat locals fed by the restored bool scan helper are
+// also byte-flat (89.05%); native local primitive 0x20 does not distinguish
+// their original spelling, and the extra nested GetMap remains.
 VA(0x005f8be0, 0x636)
 DC_ADDRESS(0x1943ec, 0x462)
 MAC_ADDRESS(0x204ea0, 0x5e4)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer)
@@ -848,6 +851,8 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
 // disjunction, the RiverSet test through the bitfield unit, the scaled origin
 // pair, the inlined clear of the scratch buffer and the DrawTile through
 // riverTileset. advmgr.cpp's full-size DrawRiver is the unscaled twin.
+// The native flip fields (DC 0x3e18..0x3e1b) feed DrawTile directly;
+// Mac 2055e4/205600 and 2058b0/2058cc extract the same river/road bits.
 VA(0x005f9220, 0x38A)
 DC_ADDRESS(0x194850, 0x17c)
 MAC_ADDRESS(0x205484, 0x2cc)  // exhaustive dc-order-map + VWCompleteDraw call order (2nd layer)
@@ -874,8 +879,8 @@ void advManager::vwDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 
     m_riverTileset[thisCell->m_riverSet]->drawTile(
         thisCell->m_riverIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
-        (thisCell->m_flags0011 >> 2) & 1,
-        (thisCell->m_flags0011 >> 3) & 1);
+        thisCell->m_riverFlippedHorizontal,
+        thisCell->m_riverFlippedVertical);
 
     vwScaleToScreenBuffer(baseX, baseY + 8);
 }
@@ -920,8 +925,8 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 
     m_roadTileset[thisCell->m_roadSet]->drawTile(
         thisCell->m_roadIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
-        (thisCell->m_flags0011 >> 4) & 1,
-        (thisCell->m_flags0011 >> 5) & 1);
+        thisCell->m_roadFlippedHorizontal,
+        thisCell->m_roadFlippedVertical);
 
     vwScaleToScreenBuffer(baseX, baseY + 8);
 }
@@ -940,6 +945,12 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 // retail keeps this no-draw-first order. DC 1045's bCloudFlip store before
 // baseX/baseY is +0.04 only. Retail's frame is 0x10 against our 0xc: hflip
 // and lookup get real locals where this body reuses the parameter homes.
+// Nesting the canonical GetPitch in both Bitmap16Bit::getMap overloads
+// changes this CURRENT comparison from 93.3920% to 88.3551%. Retail retains
+// two getMap calls: they match candidate+0x21e/+0x3b2. Candidate additionally
+// retains getMap at +0x27c/+0x3c6/+0x424 (five vs two); the original-header
+// control has only four, with two extras. MAX 93.3920 remains held because
+// this caller's source tokens are unchanged; that is not a current match gain.
 VA(0x005f9940, 0x44A)
 DC_ADDRESS(0x194b48, 0x284)
 MAC_ADDRESS(0x205a1c, 0x4dc)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer)

@@ -704,9 +704,14 @@ void NewfullMap::loadQuestGuardList(
 // count/read/resize/row-load operation. Complete moves the pool into this map,
 // makes row load void, and registers quests in m_mapObjectData. A map-owned
 // member is the inferred replacement interface; its original placement is
-// unknown. DC uses one vector subscript per row. Keeping that named row
-// reference makes VC6 expand this helper in load while retaining the nested
-// TSeerHut constructor, as retail does.
+// unknown. DC's one subscript predates Complete's quest registration.
+// Native Mac 0x11f6ec loads a row, then 0x11f6f0 reloads the vector storage
+// before reading its quest. The quest value owns stack slot +0x5c across the
+// guard and append (0x11f6fc/0x11f754), rather than holding a row reference
+// across load. Retail passes the corresponding pointer local at ebp-4.
+// Recovering both owners raises Windows NewfullMap::load 96.43730% -> 100%.
+// Indexed reloads without the quest local retain the whole helper and score
+// 73.2997%; preserve the complete lifetime model and canonical operations.
 MAC_ADDRESS(0x11f67c, 0x11c)
 int NewfullMap::loadSeerList(TAbstractFile* infile, int saveVersion)
 {
@@ -717,11 +722,11 @@ int NewfullMap::loadSeerList(TAbstractFile* infile, int saveVersion)
     m_seerHutList.resize(seerCount);
     int spriteNum;
     for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum) {
-        TSeerHut& seerHut = m_seerHutList[spriteNum];
-        seerHut.load(infile, saveVersion);
-        if (seerHut.m_quest)
-            m_mapObjectData.push_back(static_cast<CMapObjectData*>(
-                static_cast<void*>(seerHut.m_quest)));
+        m_seerHutList[spriteNum].load(infile, saveVersion);
+        CMapObjectData* quest = static_cast<CMapObjectData*>(
+            static_cast<void*>(m_seerHutList[spriteNum].m_quest));
+        if (quest)
+            m_mapObjectData.push_back(quest);
     }
     return 0;
 }
@@ -1672,6 +1677,12 @@ int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 // Native Mac 0x1217f4/0x121860 byte-reverses the short before sign
 // extension. Keep that conversion in each canonical reader; it is the
 // identity operation in Windows, where the same file is little endian.
+// Both retained helpers now delegate that unchecked scalar operation to
+// readLittleEndianValue. The artifact sites at 0x121c34/0x123d94 and
+// identifier at 0x123b78 use the same reader with their existing caller
+// buffers/copies. Windows readBlackBox improves from 92.7097% to 95.45161%;
+// readMonsterData remains exact. This saved-creature short's native decode
+// is independent evidence; loadBlackBox's other save scalars remain raw.
 MAC_ADDRESS(0x1217a0, 0x6c)
 static int readMapCreatureId(TAbstractFile* infile, int mapVersion)
 {
@@ -1681,8 +1692,7 @@ static int readMapCreatureId(TAbstractFile* infile, int mapVersion)
         return narrow;
     }
     short wide;
-    infile->read(&wide, sizeof(wide));
-    wide = LITTLE_ENDIAN_SHORT(wide);
+    wide = readLittleEndianValue<short>(infile);
     return wide;
 }
 
@@ -1695,8 +1705,7 @@ static int readSavedCreatureId(TAbstractFile* infile, int saveVersion)
         return narrow;
     }
     short wide;
-    infile->read(&wide, sizeof(wide));
-    wide = LITTLE_ENDIAN_SHORT(wide);
+    wide = readLittleEndianValue<short>(infile);
     return wide;
 }
 
@@ -1808,8 +1817,8 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
                 thisBox.m_artifacts[x] = TArtifact(narrow);
             } else {
                 short wide;
-                infile->read(&wide, sizeof(wide));
-                thisBox.m_artifacts[x] = TArtifact(LITTLE_ENDIAN_SHORT(wide));
+                wide = readLittleEndianValue<short>(infile);
+                thisBox.m_artifacts[x] = TArtifact(wide);
             }
         }
     }
@@ -2545,8 +2554,8 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         // zero out of the if arm scores 94.95 and the whole-block rewrite
         // 94.96.
         int rawIdentifier;
-        infile->read(&rawIdentifier, sizeof(rawIdentifier));
-        identifier = LITTLE_ENDIAN_LONG(rawIdentifier);
+        rawIdentifier = readLittleEndianValue<int>(infile);
+        identifier = rawIdentifier;
     }
 
     short quantity;
@@ -2608,9 +2617,8 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
             tempMonster.m_artifact = H3_ENUM_DECODE(TArtifact, narrow);
         } else {
             short wide;
-            infile->read(&wide, sizeof(wide));
-            tempMonster.m_artifact = H3_ENUM_DECODE(TArtifact,
-                static_cast<short>(LITTLE_ENDIAN_SHORT(wide)));
+            wide = readLittleEndianValue<short>(infile);
+            tempMonster.m_artifact = H3_ENUM_DECODE(TArtifact, wide);
         }
 
         if (customIndex < 4000) {
@@ -2977,8 +2985,15 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // Native Mac 0x125004/0x125030 and 0x1250b8/0x1250e4 store the equipped
 // and backpack artifact enums within each format arm, without an intBuffer
 // join. Recovering those stores raises Windows 93.9180% -> 96.86389%; both
-// artifact loops now match. The remaining 94-block/49-call body differs in
-// starting-hero argument scheduling and the later sex/spell byte promotion.
+// artifact loops now match. Native Mac 0x1251cc..0x1251dc
+// widens the sex byte before its sentinel test/store, and 0x125210..0x125268
+// retains the widened spell value across the bitset temporary. Reusing the
+// existing intBuffer for those consumers reproduces both Windows regions:
+// 96.86389% -> 98.68750%. Mac 0x124cf4..0x124d08 loads alignment
+// directly as the getStartingHeroId argument; keeping that expression at the
+// call restores retail's right-to-left argument evaluation (99.808334%).
+// Mac 0x124d4c/0x124d50/0x124d54 and retail store the quest identifier
+// before owner and hero ID. Restoring that order closes Windows at 100%.
 VA(0x005021c0, 0x835)
 DC_ADDRESS(0x0f0df4, 0x726)
 MAC_ADDRESS(0x124a84, 0x998)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject
@@ -3065,19 +3080,19 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             heroID = H3_ENUM_DECODE(HeroId, g_startingHeroOverrides[owner]);
             g_startingHeroOverrides[owner] = -1;
         } else {
-            TTownType alignment = H3_ENUM_DECODE(
-                TTownType, g_game->m_setup.m_alignment[owner]);
             heroID = H3_ENUM_DECODE(HeroId,
-                g_game->getStartingHeroId(alignment, owner, experience));
+                g_game->getStartingHeroId(H3_ENUM_DECODE(
+                    TTownType, g_game->m_setup.m_alignment[owner]),
+                    owner, experience));
         }
     }
     if (g_game->m_setup.m_startingHero[owner] == -1)
         g_game->m_setup.m_startingHero[owner] = heroID;
 
     heroData = &g_game->m_heroSetup[heroID];
+    heroData->m_objRef = identifier;
     heroData->m_owner = owner;
     heroData->m_id = heroID;
-    heroData->m_objRef = identifier;
     heroObject->m_extraInfo = heroID;
 
     // Dreamcast first stores `customName` into bCustomName, then copies only
@@ -3188,16 +3203,18 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         }
 
         charBuffer = readValue<char>(infile);
-        if (charBuffer != -1)
-            heroData->m_sex = charBuffer;
+        intBuffer = charBuffer;
+        if (intBuffer != -1)
+            heroData->m_sex = intBuffer;
 
         if (g_game->m_mapHeader.m_version == MAP_FORMAT_ARMAGEDDONS_BLADE) {
             charBuffer = readValue<char>(infile);
-            if (charBuffer != -2) {
+            intBuffer = charBuffer;
+            if (intBuffer != -2) {
                 heroData->m_customSpells = 1;
                 heroData->m_spells = std::bitset<70>();
-                if (charBuffer != -1)
-                    heroData->m_spells[charBuffer] = 1;
+                if (intBuffer != -1)
+                    heroData->m_spells[intBuffer] = 1;
             }
         } else {
             charBuffer = readValue<char>(infile);
@@ -3381,6 +3398,10 @@ static void readWitchHutData(TAbstractFile* infile, CObject* tempObject)
     }
 }
 
+// Native Mac 0x1258b4/0x1258e8 decodes the unchecked castle ID and
+// faction mask; the level-only sibling does the same at 0x1259e8/0x125a1c.
+// These map scalars use the canonical little-endian value reader, retaining
+// their ignored read counts and the conditional faction-mask acquisition.
 MAC_ADDRESS(0x125830, 0x134)
 void NewfullMap::readRandomDwellingData(TAbstractFile* infile,
                                          CObject* object)
@@ -3392,9 +3413,9 @@ void NewfullMap::readRandomDwellingData(TAbstractFile* infile,
     char padding[3];
     infile->read(padding, 3);
 
-    dwelling.m_castleId = readValue<int>(infile);
+    dwelling.m_castleId = readLittleEndianValue<int>(infile);
     if (dwelling.m_castleId == 0)
-        dwelling.m_factionMask = readValue<short>(infile);
+        dwelling.m_factionMask = readLittleEndianValue<short>(infile);
 
     dwelling.m_minLevel = readValue<char>(infile);
     dwelling.m_maxLevel = readValue<char>(infile);
@@ -3414,14 +3435,16 @@ void NewfullMap::readRandomDwellingLevelData(TAbstractFile* infile,
     char padding[3];
     infile->read(padding, 3);
 
-    dwelling.m_castleId = readValue<int>(infile);
+    dwelling.m_castleId = readLittleEndianValue<int>(infile);
     if (dwelling.m_castleId == 0)
-        dwelling.m_factionMask = readValue<short>(infile);
+        dwelling.m_factionMask = readLittleEndianValue<short>(infile);
 
     dwelling.m_minLevel = static_cast<unsigned char>(
         m_objectTypes[object->m_typeIndex].m_extra);
-    dwelling.m_maxLevel = static_cast<unsigned char>(
-        m_objectTypes[object->m_typeIndex].m_extra);
+    // Native Mac 0x125a3c..0x125a4c stores the subtype into minLevel,
+    // then reads it back into maxLevel. Retail shares that single byte;
+    // repeating the table lookup gives it two independent source owners.
+    dwelling.m_maxLevel = dwelling.m_minLevel;
 
     dwelling.m_object = object;
     m_randomDwellings.push_back(dwelling);

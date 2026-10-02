@@ -2442,6 +2442,9 @@ void sendPlayerLost()
 // self-call difference is the switch table's shifted +0x1318/+0x1314 addend.
 // DC retains a text lookup in the older victory arms. Keep Complete's getText
 // helper; this spelling is Windows byte-flat here.
+// DC 3165/3167 separately admits a won defeat-hero condition and its team;
+// keep those nested predicates as in the loss display. Windows is byte-flat
+// at 97.3784% after restoring this source boundary.
 VA(0x004f15e0, 0x1348)
 DC_ADDRESS(0x0e29a8, 0xb1a)
 MAC_ADDRESS(0x113208, 0x154c)  // linkorder + anchor-string/callee
@@ -2673,16 +2676,17 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
         break;
 
     case VICTORY_CONDITION_DEFEAT_HERO:
-        if (victoryCondition.m_gameWon
-            && g_game->onSameTeam(g_game->getLocalPlayerGamePos(),
-                                  victoryCondition.m_playerWinner)) {
-            gameWon = 1;
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_DEFEAT_HERO_VICTORY_FORMAT),
-                    g_game->getHero(victoryCondition.m_heroId)->m_name);
-            if (!remoteCheck)
-                sendPlayerWon();
-            normalDialog(g_text, 1, -1, -1, -1, 0,
-                         -1, 0, -1, 0, -1, 0);
+        if (victoryCondition.m_gameWon) {
+            if (g_game->onSameTeam(g_game->getLocalPlayerGamePos(),
+                                   victoryCondition.m_playerWinner)) {
+                gameWon = 1;
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_DEFEAT_HERO_VICTORY_FORMAT),
+                        g_game->getHero(victoryCondition.m_heroId)->m_name);
+                if (!remoteCheck)
+                    sendPlayerWon();
+                normalDialog(g_text, 1, -1, -1, -1, 0,
+                             -1, 0, -1, 0, -1, 0);
+            }
         }
         break;
 
@@ -2902,7 +2906,7 @@ int getEnemyCount()
 // corrections are byte-flat at the 79.1107% MAX (2026-09-07).
 
 // Residual: 880 padded candidate bytes, 46 CFG blocks and clean branches.
-// Passive C2 trace finds LossConditionStruct's default ctor costs 41. Its
+// Earlier passive C2 trace finds LossConditionStruct's default ctor costs 41. Its
 // town/time-limit sites receive budgets 26/25 and remain calls; retail
 // expands it at all three sites. The hero site receives 53 and expands.
 // CNetMsg already has retail's one call/two expansions. The differing loss
@@ -2933,6 +2937,11 @@ int getEnemyCount()
 // a one-expression getter has no source support here. Keep that boundary.
 // Using false for the proven bool loss-flag initializer is byte-flat and
 // leaves the constructor cost at 41, with budgets 26/54/26 (79.0916%).
+// DC 3448/3452 and 3491/3493 record separate nested admission tests,
+// not one combined condition. Restoring those source boundaries raises
+// Windows 79.0916% -> 81.85%, with all 46 blocks/26 branches still aligned.
+// The named call stream now has one extra LossConditionStruct constructor,
+// in the town arm after getTownId/formatting; hero/time-limit expand it.
 VA(0x004f2960, 0x37E)
 DC_ADDRESS(0x0e3558, 0x228)
 MAC_ADDRESS(0x114924, 0x3b8)  // decorated identity (kb.h) + anchor-caller (CheckEndGame)
@@ -2943,43 +2952,45 @@ bool displayLCWinLoss(LossConditionStruct& lossCondition,
 
     switch (lossCondition.m_type) {
     case LOSS_CONDITION_LOSE_TOWN:
-        if (lossCondition.m_gameLost
-            && g_game->onSameTeam(localPos, lossCondition.m_playerLoser)) {
-            gameLost = 1;
-            town* lostTown = g_game->getTown(
-                g_game->getTownId(lossCondition.m_townX,
-                                  lossCondition.m_townY,
-                                  lossCondition.m_townZ));
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOSE_TOWN_DEFEAT_FORMAT), lostTown->m_name.c_str());
-            if (remoteCheck)
-                g_gameOver = 1;
-            else
-                sendPlayerLost();
-            normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, -1, 0, -1, 0,
-                         -1, 0, -1, 0);
+        if (lossCondition.m_gameLost) {
+            if (g_game->onSameTeam(localPos, lossCondition.m_playerLoser)) {
+                gameLost = 1;
+                town* lostTown = g_game->getTown(
+                    g_game->getTownId(lossCondition.m_townX,
+                                      lossCondition.m_townY,
+                                      lossCondition.m_townZ));
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOSE_TOWN_DEFEAT_FORMAT), lostTown->m_name.c_str());
+                if (remoteCheck)
+                    g_gameOver = 1;
+                else
+                    sendPlayerLost();
+                normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, -1, 0, -1, 0,
+                             -1, 0, -1, 0);
+            }
         }
         break;
 
     case LOSS_CONDITION_LOSE_HERO:
-        if (lossCondition.m_gameLost
-            && g_game->onSameTeam(localPos, lossCondition.m_playerLoser)) {
-            gameLost = 1;
-            if (localPos == lossCondition.m_playerLoser) {
-                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOSE_HERO_DEFEAT_FORMAT),
-                        g_game->getHero(lossCondition.m_heroId)->m_name);
-            } else {
-                char* loserName =
-                    g_game->getPlayerName(lossCondition.m_playerLoser);
-                if (loserName)
-                    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOSS_HERO_DEFEATED_FORMAT), loserName,
+        if (lossCondition.m_gameLost) {
+            if (g_game->onSameTeam(localPos, lossCondition.m_playerLoser)) {
+                gameLost = 1;
+                if (localPos == lossCondition.m_playerLoser) {
+                    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOSE_HERO_DEFEAT_FORMAT),
                             g_game->getHero(lossCondition.m_heroId)->m_name);
+                } else {
+                    char* loserName =
+                        g_game->getPlayerName(lossCondition.m_playerLoser);
+                    if (loserName)
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOSS_HERO_DEFEATED_FORMAT), loserName,
+                                g_game->getHero(lossCondition.m_heroId)->m_name);
+                }
+                if (remoteCheck)
+                    g_gameOver = 1;
+                else
+                    sendPlayerLost();
+                normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, -1, 0, -1, 0,
+                             -1, 0, -1, 0);
             }
-            if (remoteCheck)
-                g_gameOver = 1;
-            else
-                sendPlayerLost();
-            normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, -1, 0, -1, 0,
-                         -1, 0, -1, 0);
         }
         break;
 

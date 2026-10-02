@@ -2039,7 +2039,7 @@ budget, while the EH-bearing constructor budget-tests it.
 
 Byte-identical spellings carry different costs, so bracket a callee from its
 callers' retail decisions and then pick the spelling in the bracket (splice
-above; `TRmgBoundaryVertex` constructors 132..157 and 87..112). Accessors
+above; `TRmgHalfEdge` constructors 132..157 and 87..112). Accessors
 returning `TPoint` by value versus `const TPoint&` also changed addSite's
 coincidence test (both coordinates loaded before the compares) and its
 copies inside the circle test.
@@ -2209,7 +2209,7 @@ the structures the replay admits. What it found:
   entry pointer anchors it at the Y-flip byte. 100%.
 - The line painter (`refreshRmgLinePoint`, `TRmgLineWalker::paintPoint`):
   the sum, conversion and factory sites of a neighbour query can only be
-  refused from a nested context, so an ordinary `getNeighbourLand` helper
+  refused from a nested context, so an ordinary `getNeighbourLineType` helper
   on the painter interface holds them; the current tile's frame and flip
   accessors give the refresh's tail the sites the helper's budget divides
   by, the proxy's initializer-list copy keeps the walker's compound add
@@ -2220,7 +2220,7 @@ the structures the replay admits. What it found:
   materializes the one-cell rectangle's two unit extents from one register
   copied into another, the painter alias and availability mask scoped to
   the first pass give retail's frame, and naming the converted sum inside
-  `getNeighbourLand` orders the neighbour proxy's stores (painter before
+  `getNeighbourLineType` orders the neighbour proxy's stores (painter before
   the coordinates). Refresh keeps its entry swap.
 - Callee IL cost as the lever (terrain `paintPoint`, 98.68 -> 100): the
   loop erase's `_Distance` wrapper had to be refused while the final
@@ -2581,3 +2581,26 @@ call and four adventure calls all target retail 0x4e3070. The kill-side body
 and every other preexisting emitted body in these three TUs are unchanged;
 the adventure TU additionally emits the retained string `_Tidy`. All 1,510
 previously scored Mac pairs remain available with unchanged scores.
+
+### A nested pitch accessor can consume a map frontier
+
+`Bitmap16Bit::getMap` uses the canonical `getPitch()` operation for its byte
+stride in both overloads. Native Bitmap16.h records the pitch accessor at
+line 113 and the map bodies at 150/156; their nested source-call placement is
+inferred from the identical one-word pitch operation, preserving one header
+definition and the original typed address calculation.
+
+A live, byte-identical `vwDrawHeroPart` trace measures root cost 649 and
+budget 1298. An expanded map costs 45 and admits its pitch getter (cost 24,
+budget 28); the final map still fails with budget 23. Focused viewwrld,
+cmbtmgr, and advmgr builds preserve all projected MAX scores. Their five
+single-map frontiers remain, as do ballistic's frame getter and shootMissile's
+area-update wrapper frontier.
+
+An original-header viewwrld control identifies a concrete effect in
+`vwDrawShroud`: CURRENT 93.3920 becomes 88.3551 with the nested pitch path.
+Candidate has five map calls against retail's two; ordered matches are
+candidate+0x21e/+0x3b2, extras+0x27c/+0x3c6/+0x424. Control has four map
+calls and two extras. The caller's unchanged token hash holds MAX 93.3920;
+that held peak must not obscure the current extra call or be reported as a
+gain. Keep the canonical path and investigate the enclosing helper frontier.

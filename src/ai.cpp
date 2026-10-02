@@ -232,6 +232,11 @@ DC_ADDRESS(0x02389c, 0x690)
 MAC_ADDRESS(0x01f874, 0x7e4)  // order-map(DC ai.obj head) + anchor-callee failed_siege
 bool combatManager::aiCheckRetreat()
 {
+    // Native NB11 records these scalar/array declarations outside S_BLOCK32.
+    // Keep their acquisitions in the original guarded arms below.
+    long surrenderCost;
+    long combatValue;
+    int fightValues[2];
     if (!m_heroes[m_currentSide])
         return 0;
     if ((m_sideIsAi[m_currentSide]
@@ -266,7 +271,7 @@ bool combatManager::aiCheckRetreat()
                 if (failedSiege())
                     return 1;
 
-                long combatValue = 0;
+                combatValue = 0;
                 type_artifact artifact;
                 { for (long i = 0; i < 19; i++) {
                         artifact = m_heroes[m_currentSide]->getArtifact(TArtifactSlot(i));
@@ -294,7 +299,7 @@ bool combatManager::aiCheckRetreat()
                 }
                 if (combatValue >= 1000
                     || m_heroes[m_currentSide]->m_experience >= 2000) {
-                    long surrenderCost = getSurrenderCost();
+                    surrenderCost = getSurrenderCost();
                     simulateCombat(m_currentSide, 1);
 
                     long remaining = m_numArmies[m_currentSide];
@@ -309,7 +314,6 @@ bool combatManager::aiCheckRetreat()
                     if (remaining < 0)
                         return 1;
                     if (player->m_resources[GOLD] >= surrenderCost + 2500) {
-                        int fightValues[2];
                         { for (long side = 0; side < 2; side++) {
                                 long fightValue = 0;
                                 { for (long i = 0; i < 20; i++) {
@@ -372,7 +376,9 @@ bool combatManager::aiCheckRetreat()
 VA(0x0041eac0, 0xB8)
 DC_ADDRESS(0x023f2c, 0xe0)
 MAC_ADDRESS(0x020058, 0x128)
-long combatManager::getTotalCombatValue(long side, long lowestAttack, long lowestDefense, unsigned char includeCripples) const
+// Original DC public ?get_total_combat_value@combatManager@@QBAJJJJ_N@Z
+// proves bool includeCripples; the three numeric parameters remain long.
+long combatManager::getTotalCombatValue(long side, long lowestAttack, long lowestDefense, bool includeCripples) const
 {
     long total = 0;
     const army* currentArmy = m_armies[side];
@@ -1549,7 +1555,9 @@ bool combatManager::sodChooseFaerieDragonSpell(
 VA(0x00421000, 0x275)
 DC_ADDRESS(0x026140, 0x324)
 MAC_ADDRESS(0x022f94, 0x2e4)  // anchor-callee
-unsigned char combatManager::chooseResurrectAction(const army* currentArmy, long& bestValue, type_AI_combat_parameters& estimate)
+// Original DC public ?choose_resurrect_action@combatManager@@AAA_NPBVarmy@@AAJAAVtype_AI_combat_parameters@@@Z
+// proves a private bool result; the existing output references are native.
+bool combatManager::chooseResurrectAction(const army* currentArmy, long& bestValue, type_AI_combat_parameters& estimate)
 {
     long bestTargetHex = -1;  // Original: best_target_hex.
     if (!currentArmy->canCastResurrect())
@@ -1790,12 +1798,14 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 VA(0x00421680, 0x8F9)
 DC_ADDRESS(0x0266d4, 0x80c)
 MAC_ADDRESS(0x023724, 0xbb0)  // linkorder
-unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned char teleport, long* actionValue, type_AI_combat_parameters* estimate)
+// Original DC public encodes private bool, bool teleport, and two references:
+// ?choose_melee_target@combatManager@@AAA_NPBVarmy@@_NAAJAAVtype_AI_combat_parameters@@@Z
+bool combatManager::chooseMeleeTarget(const army* currentArmy, bool teleport, long& actionValue, type_AI_combat_parameters& estimate)
 {
     long enemyAttacks[COMBAT_GRID_CELLS];
 
-    long ourGroup = estimate->getGroup();
-    long enemyGroup = estimate->getEnemyGroup();
+    long ourGroup = estimate.getGroup();
+    long enemyGroup = estimate.getEnemyGroup();
     army* bestTarget = 0;
     long bestValue = 0;
     long bestTime = 0;
@@ -1806,15 +1816,15 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     long budget = 127;
     memset(enemyAttacks, 0, sizeof(enemyAttacks));
 
-    markFirewalls(currentArmy, enemyAttacks, estimate);
+    markFirewalls(currentArmy, enemyAttacks, &estimate);
     if (g_game->m_gameVersion >= 2)
-        markMoat(currentArmy, enemyAttacks, estimate);
+        markMoat(currentArmy, enemyAttacks, &estimate);
     if (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[ourGroup])
         markEnemyAttacks(currentArmy, enemyAttacks, markedEnemies,
-                           *estimate);
+                           estimate);
     if (g_game->m_setup.m_difficulty >= 2 || m_sideIsAi[ourGroup])
         markFriendlyArmies(currentArmy, enemyAttacks, markedEnemies,
-                             *estimate);
+                             estimate);
 
     if (currentArmy->isIncapacitated())
         budget = 0;
@@ -1823,7 +1833,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     else
         g_searchArray->seedCombatPosition(currentArmy, ourGroup, budget,
                                           m_creaturePlacement, -1);
-    unsigned char stayingInCastle = shouldStayInCastle(estimate);
+    unsigned char stayingInCastle = shouldStayInCastle(&estimate);
 
     for (long i = 0; i < m_numArmies[enemyGroup]; i++) {
         army* enemy = &m_armies[enemyGroup][i];
@@ -1831,7 +1841,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
             continue;
         if (enemy->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
-        if (estimate->m_simulated && enemy->getTotalHitPoints(1) == 0)
+        if (estimate.m_simulated && enemy->getTotalHitPoints(1) == 0)
             continue;
         if (currentArmy->getSpeed() == 0 || currentArmy->getSpellTime(72)) {
             const pathCell* stand = g_searchArray->getHex(enemy->m_gridIndex);
@@ -1851,11 +1861,11 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                 && !enemy->is(creatureMultiHeaded)) {
             const pathCell* reach = g_searchArray->getHex(enemy->m_gridIndex);
             if (reach->m_cost <= currentArmy->getSpeed())
-                change = getAttackChange(currentArmy, enemy, *estimate);
+                change = getAttackChange(currentArmy, enemy, estimate);
         }
 
         type_AI_attack_hex_chooser chooser(currentArmy, enemy, enemyAttacks,
-                                           g_searchArray, estimate);
+                                           g_searchArray, &estimate);
         if (!chooser.findAttackHex())
             continue;
         if (!currentArmy->cannotAttack()) {
@@ -1864,7 +1874,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                 const pathCell* attackCell = g_searchArray->getHex(chooser.getBestHex());
                 distance = attackCell->m_cost;
             }
-            change += estimate->getSimpleAttackEffect(*(currentArmy), *(enemy), 0, distance);
+            change += estimate.getSimpleAttackEffect(*(currentArmy), *(enemy), 0, distance);
         }
 
         if (chooser.getHexValue() <= 0 || currentArmy->is(creatureSummoned)
@@ -1876,7 +1886,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                 isBlockingAction = 1;
                 change = chooser.getHexValue();
             }
-        } else if (change < 0 && hasRangedAdvantage(*estimate)) {
+        } else if (change < 0 && hasRangedAdvantage(estimate)) {
             change = chooser.getHexValue();
             isBlockingAction = 1;
         } else {
@@ -1922,9 +1932,9 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
         bestValue = score / bestTime;
     }
 
-    *actionValue = max(bestValue, bestHexValue);
+    actionValue = max(bestValue, bestHexValue);
     if (teleport) {
-        if (bestTarget != 0 && *actionValue >= 0) {
+        if (bestTarget != 0 && actionValue >= 0) {
             m_nextAction = 6;
             m_nextActionExtra = bestHex;
             m_nextActionGridIndex = bestTarget->m_gridIndex;
@@ -1933,15 +1943,15 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
         m_nextAction = 3;
         return 1;
     }
-    if (!estimate->m_simulated && !m_creaturePlacement
-            && chooseSpellAction(currentArmy, actionValue, estimate))
+    if (!estimate.m_simulated && !m_creaturePlacement
+            && chooseSpellAction(currentArmy, &actionValue, &estimate))
         return 1;
     if (bestIsBlockingAction) {
-        *actionValue = bestHexValue;
+        actionValue = bestHexValue;
         if (bestHex == currentArmy->m_gridIndex)
             return 0;
         moveToward(currentArmy, bestHex, enemyAttacks,
-                    static_cast<unsigned char>(!estimate->m_simulated
+                    static_cast<unsigned char>(!estimate.m_simulated
                                                && bestTime > 1));
         return 1;
     }
@@ -1973,23 +1983,23 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
             || (bestValue < 0 && bestValue < bestHexValue
                 && !currentArmy->is(creatureSummoned)
                 && (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[ourGroup])
-                && hasRangedAdvantage(*estimate))) {
-        *actionValue = 0;
-        if (!estimate->m_simulated
+                && hasRangedAdvantage(estimate))) {
+        actionValue = 0;
+        if (!estimate.m_simulated
                 && getAreaEffect(enemyGroup, currentArmy,
                                    markedEnemies,
-                                   *estimate) == 0
-                && attemptShooterDefense(currentArmy, g_searchArray, estimate))
+                                   estimate) == 0
+                && attemptShooterDefense(currentArmy, g_searchArray, &estimate))
             return 1;
         if (bestTarget == 0) {
-            if (!estimate->m_simulated
+            if (!estimate.m_simulated
                     && chooseToRun(currentArmy, enemyAttacks, g_searchArray))
                 return 1;
             return 0;
         }
     }
 
-    *actionValue = bestValue;
+    actionValue = bestValue;
     if (bestTime <= 1 && !m_creaturePlacement) {
         m_nextActionExtra = bestHex;
         m_nextAction = 6;
@@ -2001,7 +2011,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     // Retail merges an integer 0/1 argument before this retained call.
     // Byte and bool carriers change the expansion decision elsewhere in
     // this body; the ordinary int closes Windows without removing helpers.
-    int shouldMoveToward = !estimate->m_simulated && bestTime > 1;
+    int shouldMoveToward = !estimate.m_simulated && bestTime > 1;
     moveToward(currentArmy, bestHex, enemyAttacks,
                shouldMoveToward);
     return 1;
@@ -2018,7 +2028,7 @@ long combatManager::chooseMeleeAction(const army* currentArmy, bool teleport, bo
     findMoveOrder(0);
     findAITargets(side, currentArmy, 1, &data, 0);
     long actionValue = 0;
-    if (chooseMeleeTarget(currentArmy, teleport, &actionValue, &data))
+    if (chooseMeleeTarget(currentArmy, teleport, actionValue, data))
         return actionValue;
     if (!simulated && chooseSpellAction(currentArmy, &actionValue, &data))
         return actionValue;

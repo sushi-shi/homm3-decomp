@@ -1122,7 +1122,7 @@ public:
     // play before it lands the DamageWall - the wall visibly breaks
     // mid-animation, not on the last frame.
     enum { WALL_EXPLOSION_HIT_FRAME = 0x5 };
-    unsigned char enemyIsAdjacent(const army* currentArmy, int gridIndex,
+    bool enemyIsAdjacent(const army* currentArmy, int gridIndex,
                                     const army* excluded) const;
     unsigned char isAdjacent(int first, int second) const;
     void viewArmy(army* thisArmy, int isQuickView);
@@ -1130,18 +1130,15 @@ public:
     void placeArmyInGrid(const army& a, int hex);
     // Retail 0x59ec50 extends Dreamcast's one-argument spells.cpp:176
     // routine with the creature-cast selector passed by command.cpp.
-    void initiateSpell(SpellID spellToCast, int creatureSpell);
+    void initiateSpell(ESpellId spellToCast, int creatureSpell);
     unsigned char placeObstacle(int obstacleId);
     void markMovingArmy(army* stack);  // 0x46a520
-    unsigned char checkObstacleAttacks(army* thisArmy,
-                                         unsigned char isWalking);
+    bool checkObstacleAttacks(army* thisArmy, bool isWalking);
     void lootDeadHero(int side,
                       std::vector<type_artifact>& lootedArtifacts);
     void calculateGainedExperience(int side, int* experienceGained);
-    unsigned char checkFireWall(long hex, army* currentArmy,
-                                  unsigned char isWalking);
-    unsigned char checkLandmine(long hex, army* currentArmy,
-                                 unsigned char isWalking);
+    bool checkFireWall(long hex, army* currentArmy, bool isWalking);
+    bool checkLandmine(long hex, army* currentArmy, bool isWalking);
     unsigned char shouldLowerDoor(army* thisArmy, long hex) const;
     int experienceValueOfStack(int whichGroup);
     void makeCreaturesVanish();
@@ -1369,7 +1366,7 @@ public:
     void findMoveOrder(std::vector<army*>* result);
     long getTotalCombatValue(long side, long lowestAttack,
                                 long lowestDefense,
-                                unsigned char includeCripples) const;
+                                bool includeCripples) const;
     CSprite* loadSpellEffect(int effect);  // 0x5a92f0
 
 private:
@@ -1394,11 +1391,11 @@ private:
     unsigned char chooseCreatureSpell(const army* currentArmy,
                                         long& bestValue,
                                         type_AI_combat_parameters& estimate);  // 0x420d20
-    unsigned char chooseMeleeTarget(const army* currentArmy,
-                                      unsigned char teleport,
-                                      long* actionValue,
-                                      type_AI_combat_parameters* estimate);  // 0x421680
-    unsigned char chooseResurrectAction(
+    bool chooseMeleeTarget(const army* currentArmy,
+                           bool teleport,
+                           long& actionValue,
+                           type_AI_combat_parameters& estimate);  // 0x421680
+    bool chooseResurrectAction(
         const army* currentArmy, long& bestValue,
         type_AI_combat_parameters& estimate);  // 0x421000
     long chooseShooterTarget(const army* currentArmy,
@@ -1871,12 +1868,12 @@ public:
     void markBerserkAreaEffect(long hex, long mastery,
                                   std::vector<army*>& targets);
     // DC ?SetupCombat@combatManager@@QAAXUtype_point@@PAVhero@@PAVarmyGroup@@
-    // JPAVtown@@12HHH_N@Z - the S_PUB32 run types every parameter. The
+    // JPAVtown@@12HHH_N@Z - the S_PUB32 run proves the final flag bool.
     void setupCombat(type_point point, hero* leftHero,
                      armyGroup* leftArmyGroup, long rightPlayer,
                      town* rightTown, hero* rightHero,
                      armyGroup* rightArmyGroup, int x, int y, int seed,
-                     unsigned char isSurrounded);
+                     bool isSurrounded);
     // Original public ?NextArmy@combatManager@@QAA_N_N@Z: bool result/flag.
     bool nextArmy(bool checkingForBadMorale);
     void setNextArmy(int group, int index);
@@ -1895,7 +1892,7 @@ public:
     unsigned char unnamed464f50(const army* incumbent, const army* candidate);
     virtual int main(message& msg);
     int processCombatMsg(message& msg);
-    int processNextAction(message& msg, unsigned char automaticTurn);
+    int processNextAction(message& msg, bool automaticTurn);
     void setCombatDirections(int hex);
     // DC command.cpp:2800. Complete likewise expands its sole call, while
     // retaining the helper's source-level surrender-dialog boundary.

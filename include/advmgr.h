@@ -228,7 +228,7 @@ DATA(0x0069873c) extern int g_overviewReturnActionExtra;
 DATA(0x00682a38) extern unsigned char g_followPlayerMode;
 extern int g_drawingPuzzle;
 extern int g_blackoutPlayer;
-extern unsigned char g_goSolo;
+extern bool g_goSolo;
 
 extern int g_soloPos;
 
@@ -653,7 +653,7 @@ public:
     void* m_immersion;
     TAdventureMapWindow();
     ~TAdventureMapWindow();
-    virtual int open(int zOrder, unsigned char update);
+    virtual int open(int zOrder, bool update);
     virtual void close(unsigned char update);
     virtual void vslot8(unsigned char on);
     unsigned char processRightSelect(const message* msg);
@@ -1010,8 +1010,8 @@ public:
                  armyGroup* leftArmyGroup, long rightPlayer,
                  class town* rightTown, class hero* rightHero,
                  armyGroup* rightArmyGroup, int seed,
-                 unsigned char finishHeroes,
-                 unsigned char alternateLayout);
+                 bool finishHeroes,
+                 bool alternateLayout);
     int doNetCombat(class CNetMsg* netMsg);
     void sendHeroTownData(type_point point, hero* leftHero,
                           armyGroup* leftArmyGroup, long rightPlayer,
@@ -1353,12 +1353,12 @@ public:
     void drawAdventureMapGems();
     int moreTreesNear(type_point point);
     void viewPuzzle();
-    void updateRadar(type_point origin, unsigned char updateFlag,
-                     unsigned char partialUpdate, unsigned char viewMines,
-                     unsigned char viewHeroes, unsigned char viewTowns);
-    void updateRadar(unsigned char updateFlag,
-                     unsigned char partialUpdate, unsigned char viewMines,
-                     unsigned char viewHeroes, unsigned char viewTowns);
+    void updateRadar(type_point origin, bool updateFlag,
+                     bool partialUpdate, bool viewMines,
+                     bool viewHeroes, bool viewTowns);
+    void updateRadar(bool updateFlag,
+                     bool partialUpdate, bool viewMines,
+                     bool viewHeroes, bool viewTowns);
     void quickInfo(int cellX, int cellY, int z);
     void heroQuickView(int heroId, int x, int y,
                        unsigned char displayDropShadow);

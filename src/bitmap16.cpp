@@ -253,9 +253,17 @@ int Bitmap16Bit::importPCXFile(const char* filename)
         static_cast<const unsigned char*>(static_cast<const void*>(pointer)) \
         + offset))
 
+// The Mac draw/grab/rectangle family expands the canonical Bitmap16.h
+// dimension and byte-pitch reads (DC header lines 111-113). Examples:
+// draw 0x5c1e8/0x5c224, grab 0x5c274/0x5c278/0x5c31c,
+// fillRect 0x5c348/0x5c35c/0x5c41c, frameRect 0x5c438/0x5c44c/0x5c534,
+// darken 0x5c55c/0x5c570/0x5c6d4, masked darken 0x5c6fc/0x5c710/0x5c7e8.
+// Keep these operations as calls to the existing getters. The expanded
+// one-word reads identify the operation; original source-call spelling is
+// inferred. Map lookup is already represented by getMap in each caller.
 VA(0x0044e2b0, 0x139)
 DC_ADDRESS(0x051378, 0xf0)
-MAC_ADDRESS(0x05c0f8, 0x158)  // order-map(DC bitmap16.obj, immediately before Grab)
+MAC_ADDRESS(0x05c0f8, 0x158)  // MAC_ABSTRACTION_FROM(tokens1:172e459daefb,41.2791): canonical getPitch calls replace the two direct row-stride loads; Windows remains exact.
 void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
                        unsigned short* dst, int dstX, int dstY, int dstWidth,
                        int dstHeight, int dstPitch, bool flipped) const
@@ -290,13 +298,13 @@ void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
                     ++in;
                     ++out;
                 }
-                src = BITMAP16_CONST_BYTE_OFFSET(src, m_pitch);
+                src = BITMAP16_CONST_BYTE_OFFSET(src, getPitch());
                 dst = BITMAP16_BYTE_OFFSET(dst, dstPitch);
             }
         } else {
             for (int row = 0; row < srcHeight; ++row) {
                 memcpy(dst, src, srcWidth * sizeof(unsigned short));
-                src = BITMAP16_CONST_BYTE_OFFSET(src, m_pitch);
+                src = BITMAP16_CONST_BYTE_OFFSET(src, getPitch());
                 dst = BITMAP16_BYTE_OFFSET(dst, dstPitch);
             }
         }
@@ -315,8 +323,8 @@ void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
 {
     int dstX = 0;
     int dstY = 0;
-    int w = m_width;
-    int h = m_height;
+    int w = getWidth();
+    int h = getHeight();
 
     if (srcX < 0) {
         dstX -= srcX;
@@ -343,7 +351,7 @@ void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
     source.m_bytes += srcY * srcPitch + srcX * sizeof(unsigned short);
     for (int row = 0; row < h; ++row) {
         memcpy(dst.m_pixels, source.m_pixels, w * sizeof(unsigned short));
-        dst.m_bytes += m_pitch;
+        dst.m_bytes += getPitch();
         source.m_bytes += srcPitch;
     }
 }
@@ -364,10 +372,10 @@ DC_ADDRESS(0x05150c, 0x70)
 MAC_ADDRESS(0x05c348, 0xec)  // anchor-caller(textWidget::Draw, FadeToBlack) + order-map(DC bitmap16.obj)
 void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
 {
-    if (w > m_width - x)
-        w = m_width - x;
-    if (h > m_height - y)
-        h = m_height - y;
+    if (w > getWidth() - x)
+        w = getWidth() - x;
+    if (h > getHeight() - y)
+        h = getHeight() - y;
 
     if (w && h) {
         Bitmap16MapPointer dst;
@@ -375,7 +383,7 @@ void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
         for (int row = 0; row < h; ++row) {
             for (int col = 0; col < w; ++col)
                 dst.m_pixels[col] = color;
-            dst.m_bytes += m_pitch;
+            dst.m_bytes += getPitch();
         }
     }
 }
@@ -393,10 +401,10 @@ MAC_ADDRESS(0x05c434, 0x11c)
 void Bitmap16Bit::frameRect(int x, int y, int w, int h,
                             unsigned short color)
 {
-    if (w > m_width - x)
-        w = m_width - x;
-    if (h > m_height - y)
-        h = m_height - y;
+    if (w > getWidth() - x)
+        w = getWidth() - x;
+    if (h > getHeight() - y)
+        h = getHeight() - y;
 
     if (w && h) {
         Bitmap16MapPointer dst;
@@ -409,7 +417,7 @@ void Bitmap16Bit::frameRect(int x, int y, int w, int h,
                 dst.m_pixels[0] = color;
                 dst.m_pixels[w - 1] = color;
             }
-            dst.m_bytes += m_pitch;
+            dst.m_bytes += getPitch();
         }
     }
 }
@@ -426,10 +434,10 @@ DC_ADDRESS(0x051614, 0x94)
 MAC_ADDRESS(0x05c550, 0x1a8)
 void Bitmap16Bit::darken(int x, int y, int w, int h)
 {
-    if (w > m_width - x)
-        w = m_width - x;
-    if (h > m_height - y)
-        h = m_height - y;
+    if (w > getWidth() - x)
+        w = getWidth() - x;
+    if (h > getHeight() - y)
+        h = getHeight() - y;
 
     if (w && h) {
         unsigned long shiftMask =
@@ -447,7 +455,7 @@ void Bitmap16Bit::darken(int x, int y, int w, int h)
                 ++pixel.m_pixels;
             }
 
-            row.m_bytes += m_pitch;
+            row.m_bytes += getPitch();
         }
     }
 }
@@ -462,14 +470,14 @@ void Bitmap16Bit::darken(int x, int y, int w, int h)
 // pitch meanings (dc 0x52570/0x5256c), not a width-to-pitch substitution.
 VA(0x0044e6a0, 0xE0)
 DC_ADDRESS(0x0516a8, 0xd4)
-MAC_ADDRESS(0x05c6f8, 0x10c)  // anchor-caller(UpdateGrid, seven pushes) + order-map(DC bitmap16.obj)
+MAC_ADDRESS(0x05c6f8, 0x10c)  // MAC_ABSTRACTION_FROM(tokens1:ad3fb507f76d,31.1644): canonical dimension/pitch getters replace the expanded field reads; Windows remains exact.
 void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
                          int sx, int sy)
 {
-    if (w > m_width - x)
-        w = m_width - x;
-    if (h > m_height - y)
-        h = m_height - y;
+    if (w > getWidth() - x)
+        w = getWidth() - x;
+    if (h > getHeight() - y)
+        h = getHeight() - y;
 
     if (w && h) {
         unsigned int shiftMask =
@@ -492,7 +500,7 @@ void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
                 ++pixel.m_pixels;
             }
             maskRow += mask->getPitch();
-            row.m_bytes += m_pitch;
+            row.m_bytes += getPitch();
         }
     }
 }

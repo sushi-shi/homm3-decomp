@@ -1077,7 +1077,7 @@ void combatManager::checkNativeTerrain()
 VA(0x004639f0, 0x270)
 DC_ADDRESS(0x05e464, 0x22a)
 MAC_ADDRESS(0x06f0b8, 0x330)
-void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int seed, unsigned char isSurrounded)
+void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int seed, bool isSurrounded)
 {
     g_combatSeed = seed;
     sRand(x * 0x1aed3 + y * 0x28f79 + 0x13ea1);
@@ -1716,10 +1716,13 @@ unsigned char combatManager::unnamed464f50(
 VA(0x00465080, 0x2A2)
 DC_ADDRESS(0x05f518, 0x41c)
 MAC_ADDRESS(0x070b74, 0x328)
+// Mac 0x70b9c..0x70bb8 still indexes both acting side and slot after
+// testing side == 0: the canonical getCurrentArmy expansion, rather
+// than a source-level constant-side army lookup.
 bool combatManager::nextArmy(bool checkingForBadMorale)
 {
     if (m_actingSlot >= 0 && m_actingSide == 0
-        && m_armies[0][m_actingSlot].m_creatureType == CREATURE_CATAPULT) {
+        && getCurrentArmy()->m_creatureType == CREATURE_CATAPULT) {
         m_actingSide = 1;
         m_actingSlot = 0;
     }
@@ -3391,7 +3394,8 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
         } else {
             view->doModal();
             if (g_windowManager->m_dialogReturn == TViewArmyWindow::OK_ID) {
-                initiateSpell(thisArmy->m_faerieDragonSpell, 1);
+                initiateSpell(
+                    static_cast<ESpellId>(thisArmy->m_faerieDragonSpell), 1);
                 if (m_nextAction == 1)
                     m_nextAction = 10;
             }
@@ -3764,7 +3768,9 @@ void combatManager::checkRebirth()
 VA(0x00469600, 0x6E)
 DC_ADDRESS(0x062db8, 0x94)
 MAC_ADDRESS(0x075c3c, 0x9c)
-unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
+// Original public ?enemy_is_adjacent@combatManager@@QBA_NPBVarmy@@H0@Z
+// proves bool independently of CodeView's lowered byte display.
+bool combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
                                                const army* excluded) const
 {
     for (int i = 0; i < 6; i++) {
@@ -4184,11 +4190,12 @@ void combatManager::markMovingArmy(army* stack)
 
 VA(0x0046a570, 0xE0)
 MAC_ADDRESS(0x076cf0, 0x15c)
-unsigned char combatManager::checkObstacleAttacks(army* thisArmy,
-                                                    unsigned char isWalking)
+// Complete manager interface is inferred: the original bool army wrapper
+// forwards its result unchanged in retail, and this body returns only 0/1.
+bool combatManager::checkObstacleAttacks(army* thisArmy, bool isWalking)
 {
-    unsigned char attacked = 0;
-    unsigned char moatAttacked = 0;
+    bool attacked = false;
+    bool moatAttacked = false;
     int hex = thisArmy->m_gridIndex;
 
     if (!m_obstacleAttackVisited[hex]) {

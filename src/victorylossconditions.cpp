@@ -6,6 +6,9 @@
 
 #include "game.h"
 
+// The canonical team helper replaces the pasted scan. Both compilers expand
+// it and retain its nested isHuman call; the caller keeps explicit integer
+// success/failure returns, as Mac 0x1fd394 and 0x1fd3a8 do.
 VA(0x005f15a0, 0x63)
 DC_ADDRESS(0x18fdc4, 0x34)
 MAC_ADDRESS(0x1fd30c, 0xc0)
@@ -13,15 +16,10 @@ int VictoryConditionStruct::appliesToPlayer(long playerId) const
 {
     if (!m_appliesToComputer) {
         int team = g_game->getTeam(playerId);
-        if (team >= 0) {
-            int player = 0;
-            signed char* teams = g_game->m_mapHeader.m_teamInfo;
-            for (; player < 8; ++player) {
-                if (teams[player] == team
-                    && g_game->isHuman(player))
-                    return 1;
-            }
-        }
+        // Mac 0x1fd35c..0x1fd3a8 expands isHumanTeam's negative-team
+        // guard and eight-player scan, retaining its nested isHuman call.
+        if (g_game->isHumanTeam(team))
+            return 1;
         return 0;
     }
     return 1;
@@ -51,6 +49,9 @@ static const int g_angelicAllianceSecondMap = 9;
 // (cost 58) only 30, so it stays a call where retail expands it and stores
 // out_of_range's vptr after logic_error's ctor; about 28 more depth-1
 // budget is missing and no evidenced statement supplies it.
+// The current bool-interface trace has caller cost 895 and budget 1790.
+// Prefix/postfix spellings of the five real loop increments preserve
+// 99.7464% and that exact budget; they do not explain the constructor gap.
 // Original DC public CheckForArtifactWin@@QAA_NXZ proves a bool result;
 // the dossier's primitive 0x20 display is lowered-byte metadata.
 VA(0x005f1610, 0x4FE)
@@ -739,7 +740,9 @@ bool LossConditionStruct::checkForDefeatedTownLoss(
 VA(0x005f2f20, 0x50)
 DC_ADDRESS(0x1907bc, 0xa0)
 MAC_ADDRESS(0x1ff444, 0x78)
-unsigned char LossConditionStruct::checkForTimeLimitExpired()
+// Original DC public ?CheckForTimeLimitExpired@LossConditionStruct@@QAA_NXZ
+// proves bool despite the lowered byte debug primitive.
+bool LossConditionStruct::checkForTimeLimitExpired()
 {
     if (m_type == LOSS_CONDITION_TIME_LIMIT) {
         // The time-limit check keeps the full unsigned calendar expression;
