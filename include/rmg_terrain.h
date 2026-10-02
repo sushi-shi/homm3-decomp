@@ -8,45 +8,32 @@
 
 #include "rmg.h"
 
-// Grid points add tile directions through the signed TPoint: refresh and
-// both paintPoints build `point + g_tileDirections[d]` as a TPoint copy, the
-// retained TPoint::operator+= and a copied result, then convert back through
-// the retained TRmgGridPoint(const TPoint&) constructor at 0x4fa520. The sum
-// lives here with its only users; in rmg.h it perturbs rmg the same way.
+// Grid-direction addition preserves the signed TPoint copy/compound-add
+// before conversion through TRmgGridPoint(const TPoint&) at 0x4fa520.
 inline TPoint operator+(const TPoint& point, const TPoint& offset)
 {
     TPoint result = point;
     return result += offset;
 }
 
-// Retail adapter slots 1 and 4 exchange this three-dword value. The first
-// two dwords are the terrain and frame fields; the low two bytes of the last
-// dword are the independent sprite flips. The names in this file describe
-// proven roles because the Dreamcast build has no RMG compiland.
-// Prior provisional class role: TRmgTerrainTile.
+// Adapter slots 1 and 4 exchange two ints and two flip bytes. Names are
+// role-derived: Dreamcast has no RMG compiland.
 struct rmgTerrainTile {
+    // Kind of the adapter-selected layer: terrain, road or river.
     int m_terrain;
     int m_frame;
-    unsigned char m_flipX;
-    unsigned char m_flipY;
-    // +0x0a..0x0b are natural alignment padding, not source members.
-    // Painter copies at 0x55edc0 and 0x55f350 transfer the two dwords and
-    // only these two flip bytes; an explicit padding array makes copies
-    // transfer data that neither retail operation owns. Prior role: pad000a.
+    b8 m_flipX;
+    b8 m_flipY;
+    // +0x0a..0x0b are natural padding. Retail copies only the named fields.
 
     rmgTerrainTile() {}
     rmgTerrainTile(int newTerrain, int newFrame)
-        : m_terrain(newTerrain), m_frame(newFrame), m_flipX(0), m_flipY(0) {}
-    // Frame and flip accessors: the line refresh compares the current tile
-    // through them so its neighbour helper keeps retail's three retained
-    // calls (2026-09-12); the painters' own copies still use the fields.
+        : m_terrain(newTerrain), m_frame(newFrame), m_flipX(false), m_flipY(false) {}
     int getFrame() const { return m_frame; }
-    unsigned char getFlipX() const { return m_flipX; }
-    unsigned char getFlipY() const { return m_flipY; }
-    // 0x55edc0 constructs its snapshot separately from adapter return values.
-    // Those returns keep an implicit copy boundary: a custom copy constructor
-    // changes the retained 0x5b3dd0 fill and its expanded terrain callers.
-    // The output-reference wrapper 0x55f350 assigns the same four fields.
+    b8 getFlipX() const { return m_flipX; }
+    b8 getFlipY() const { return m_flipY; }
+    // Keep implicit copy construction for adapter returns; 0x55edc0 constructs
+    // a separate snapshot, while the output-reference wrapper assigns fields.
     rmgTerrainTile& operator=(const rmgTerrainTile& other)
     {
         m_terrain = other.m_terrain;
@@ -58,15 +45,16 @@ struct rmgTerrainTile {
 };
 
 struct TRmgTerrainFlip {
-    unsigned char m_flipX;
-    unsigned char m_flipY;
+    b8 m_flipX;
+    b8 m_flipY;
 
     TRmgTerrainFlip() {}
-    TRmgTerrainFlip(unsigned char x, unsigned char y) : m_flipX(x), m_flipY(y) {}
+    TRmgTerrainFlip(b8 x, b8 y) : m_flipX(x), m_flipY(y) {}
 };
 
-// BuildNeighbourKinds (0x5b68a0) returns zero for no edge, one when both
-// terrain rules permit blending, and two for the remaining terrain changes.
+// BuildNeighbourKinds (0x5b68a0) returns zero for equal terrain or a sand
+// centre, and also for a dirt centre when both rules permit blending. Other
+// mutually blending pairs produce one; remaining terrain changes produce two.
 enum TRmgTerrainNeighbourKind {
     RMG_NEIGHBOUR_NO_EDGE = 0,
     RMG_NEIGHBOUR_BLEND_EDGE = 1,
@@ -84,12 +72,12 @@ struct TRmgPackedTerrainCell {
     unsigned short m_flipY : 1;
     unsigned short m_unknown14 : 2;
 
-    TRmgPackedTerrainCell() : m_initialized(0) {}
+    TRmgPackedTerrainCell() : m_initialized(false) {}
 
     inline int getTerrain() const { return m_terrain; }
     inline int getFrame() const { return m_frame; }
-    inline unsigned char getFlipX() const { return m_flipX; }
-    inline unsigned char getFlipY() const { return m_flipY; }
+    inline b8 getFlipX() const { return m_flipX; }
+    inline b8 getFlipY() const { return m_flipY; }
     inline rmgTerrainTile getTile() const
     {
         rmgTerrainTile tile;
@@ -99,35 +87,40 @@ struct TRmgPackedTerrainCell {
         tile.m_flipY = getFlipY();
         return tile;
     }
-    inline void setInitialized() { m_initialized = 1; }
+    inline void setInitialized() { m_initialized = true; }
     inline void setTerrain(int value) { m_terrain = value; }
     inline void setFrame(int value) { m_frame = value; }
-    inline void setFlipX(unsigned char value) { m_flipX = value; }
-    inline void setFlipY(unsigned char value) { m_flipY = value; }
+    inline void setFlipX(b8 value) { m_flipX = value; }
+    inline void setFlipY(b8 value) { m_flipY = value; }
+    // Copy only the tile payload. Callers own validity timing: cache fills
+    // mark initialized afterward, while adapter writes mark it beforehand.
+    inline void setTileValues(const rmgTerrainTile& tile)
+    {
+        setTerrain(tile.m_terrain);
+        setFrame(tile.m_frame);
+        setFlipX(tile.m_flipX);
+        setFlipY(tile.m_flipY);
+    }
 };
 
-// Vtable 0x642c98 fixes these six slots. Only the three methods used by the
-// admitted renderer are named by role here; the concrete terrain-rule type
-// and its source spellings remain unknown.
+// Vtable 0x642c98 fixes these six slots; source names remain unknown.
 class TRmgTerrainRule {
 public:
-    unsigned char m_blendsWithOtherTerrain; // +0x04
-    // needsTerrainRepair and repairTerrainPoint
-    // consult this byte before joining separated neighbour regions.
-    unsigned char m_allowsSeparatedNeighbours; // +0x05
+    b8 m_blendsWithOtherTerrain; // +0x04
+    b8 m_allowsSeparatedNeighbours; // +0x05
     char m_tailPadding[2];
 
-    TRmgTerrainRule(unsigned char blendsWithOtherTerrain = 0,
-        unsigned char allowsSeparatedNeighbours = 0)
+    TRmgTerrainRule(b8 blendsWithOtherTerrain = false,
+        b8 allowsSeparatedNeighbours = false)
         : m_blendsWithOtherTerrain(blendsWithOtherTerrain),
           m_allowsSeparatedNeighbours(allowsSeparatedNeighbours) {}
     // Retail's base vtable at 0x642c80 has six _purecall slots. The pure
     // destructor still has its ordinary out-of-line body at 0x5b3850.
     virtual ~TRmgTerrainRule() = 0;
-    virtual unsigned char hasEntries() = 0;
-    virtual unsigned char isSpecialFrame(int frame) = 0;
-    virtual int getEntry(int index) = 0;
-    virtual int selectBaseFrame(int value, int oldFrame) = 0;
+    virtual b8 hasSpecialBaseFrames() = 0;
+    virtual b8 isSpecialFrame(int frame) = 0;
+    virtual int getTransition(int frame) = 0;
+    virtual int selectBaseFrame(int strength, int oldFrame) = 0;
     virtual int selectTransitionFrame(
         int transition,
         TRmgTerrainFlip requestedFlip,
@@ -139,31 +132,27 @@ struct TRmgTerrainPatternRange {
     int m_firstIndex;
     unsigned int m_count;
 
-    // Both table owners initialize their range arrays before the body scan.
     TRmgTerrainPatternRange() : m_firstIndex(0), m_count(0) {}
 };
 
 struct TRmgTerrainPatternEntry {
-    int m_frame;
-    unsigned char m_special;
+    int m_transition;
+    b8 m_special;
     char m_padding[3];
 };
 
-// Fixed table at retail 0x6424a8; the Complete-only source name is unknown.
-// Unlike the pattern rule's special-frame flag, +4/+5 here are the two
-// transition flips (selector 0x5b3ae0 and range constructor 0x5b3940).
+// Table 0x6424a8 uses two flip bytes at +4/+5, unlike the pattern rule's
+// special-frame flag.
 struct TRmgTerrainTransitionEntry {
-    int m_frame;
-    unsigned char m_flipX;
-    unsigned char m_flipY;
+    int m_transition;
+    b8 m_flipX;
+    b8 m_flipY;
 };
 DATA(0x006424A8)
 extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
 
-// The table constructor at 0x5b3940 builds 116 first/count pairs from the
-// fixed pattern records. The stateless table rule consumes the first pair.
-// The static initializer at 0x5b3a10 passes this complete global as `this`.
-// Complete-only owner spelling is provisional.
+// Constructor 0x5b3940 builds 116 ranges. Cinit 0x5b3a10 passes this global
+// as `this`; the stateless rule consumes its first pair.
 struct TRmgTerrainPatternTable {
     TRmgTerrainPatternRange m_ranges[116];
     TRmgTerrainPatternTable();
@@ -171,26 +160,25 @@ struct TRmgTerrainPatternTable {
 DATA(0x006A4158)
 extern TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 
-// Constructor 0x5b3780 retains the entry-array pointer at +0x10 and builds
-// 58 first/count ranges at +0x14. This data-backed rule supplies vtable 0x642c98; its
-// original Complete-only class name is unavailable.
+// Constructor 0x5b3780 retains the entries and builds 58 ranges; this rule
+// supplies vtable 0x642c98.
 class TRmgPatternTerrainRule : public TRmgTerrainRule {
 public:
-    int m_defaultFrame;                         // +0x08
+    int m_specialFrameChance;                   // +0x08: percentage at strength 8
     unsigned int m_entryCount;                  // +0x0c
-    const TRmgTerrainPatternEntry* m_entries;   // +0x10
+    const TRmgTerrainPatternEntry* m_entries;    // +0x10
     TRmgTerrainPatternRange m_ranges[58];        // +0x14
 
-    TRmgPatternTerrainRule(unsigned char blendsWithOtherTerrain,
-        unsigned char allowsSeparatedNeighbours, int defaultFrame,
+    TRmgPatternTerrainRule(b8 blendsWithOtherTerrain,
+        b8 allowsSeparatedNeighbours, int specialFrameChance,
         unsigned int entryCount, const TRmgTerrainPatternEntry* entries);
 
     // Implicit destruction shares the base's retained cleanup at 0x5b3850;
     // both concrete rule vtables use the deleting wrapper at 0x5b3a50.
-    virtual unsigned char hasEntries();
-    virtual unsigned char isSpecialFrame(int frame);
-    virtual int getEntry(int index);
-    virtual int selectBaseFrame(int value, int oldFrame);
+    virtual b8 hasSpecialBaseFrames();
+    virtual b8 isSpecialFrame(int frame);
+    virtual int getTransition(int frame);
+    virtual int selectBaseFrame(int strength, int oldFrame);
     virtual int selectTransitionFrame(
         int transition,
         TRmgTerrainFlip requestedFlip,
@@ -198,17 +186,14 @@ public:
         int oldFrame);
 };
 
-// Vtable 0x642cb0 is the stateless, table-backed terrain-rule variant.  Its
-// concrete source name is unavailable because the Dreamcast build predates
-// the random-map generator; this role name follows the retail implementation,
-// whose remaining slots read the fixed transition table at 0x6424a8.
+// Stateless rule, vtable 0x642cb0; reads the fixed table at 0x6424a8.
 class TRmgTableTerrainRule : public TRmgTerrainRule {
 public:
     TRmgTableTerrainRule();
-    virtual unsigned char hasEntries();
-    virtual unsigned char isSpecialFrame(int frame);
-    virtual int getEntry(int index);
-    virtual int selectBaseFrame(int value, int oldFrame);
+    virtual b8 hasSpecialBaseFrames();
+    virtual b8 isSpecialFrame(int frame);
+    virtual int getTransition(int frame);
+    virtual int selectBaseFrame(int strength, int oldFrame);
     virtual int selectTransitionFrame(
         int transition,
         TRmgTerrainFlip requestedFlip,
@@ -227,16 +212,14 @@ struct TRmgTerrainGap {
 };
 
 enum TRmgTerrainTransitionCase {
-    RMG_TERRAIN_FIRST_DIAGONAL_LOW = 2,
-    RMG_TERRAIN_SECOND_DIAGONAL_LOW = 5,
-    RMG_TERRAIN_FIRST_DIAGONAL_HIGH = 8,
-    RMG_TERRAIN_SECOND_DIAGONAL_HIGH = 11
+    RMG_TERRAIN_FIRST_DIAGONAL_BLEND = 2,
+    RMG_TERRAIN_SECOND_DIAGONAL_BLEND = 5,
+    RMG_TERRAIN_FIRST_DIAGONAL_HARD = 8,
+    RMG_TERRAIN_SECOND_DIAGONAL_HARD = 11
 };
 
-// Provisional role name. Allocation at 0x5b7250 proves the 0x44-byte object;
-// the constructor at 0x5b45f0 proves the field order and the two Dinkumware
-// point sets followed by the packed-cell vector.
-// Prior provisional class role: TRmgTerrainPainter.
+// Allocation at 0x5b7250 proves size 0x44; constructor 0x5b45f0 proves
+// the field order, including two point sets followed by the packed-cell vector.
 class rmgTerrainPainter {
 public:
     TRmgMapInterface* m_adapter;                // +0x00
@@ -249,8 +232,8 @@ public:
 
     rmgTerrainPainter(
         TRmgMapInterface* newAdapter,
-        int newParameterA,
-        int newTransitionStrength);
+        int terrain,
+        int strength);
     ~rmgTerrainPainter();
 
     void finish();
@@ -263,9 +246,6 @@ public:
     TRmgPackedTerrainCell* getPackedCell(const TRmgGridPoint& point);
     int getTerrain(const TRmgGridPoint& point);
     int getFrame(const TRmgGridPoint& point);
-    // Provisional dimension accessors inferred from paintTransitions' scalar
-    // loads and inline boundaries. Unused declarations are byte-neutral;
-    // the source calls restore all but one of its retained cache reads.
     unsigned int getWidth() const;
     unsigned int getHeight() const;
     void paintTransitions();
@@ -273,30 +253,29 @@ public:
     void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
     void paintBaseTile(const TRmgGridPoint& point);
     const int& getPaintTerrain() const;
-    unsigned char isPaintTerrain(const TRmgGridPoint& point);
+    b8 isPaintTerrain(const TRmgGridPoint& point);
 
     void paintPoint(const TRmgGridPoint& point);
     void queueOtherTerrainNeighbours(const TRmgGridPoint& point);
     void repairTerrainPoint(const TRmgGridPoint& point);
-    unsigned char isHorizontalGap(const TRmgGridPoint& point, int terrain);
-    unsigned char isVerticalGap(const TRmgGridPoint& point, int terrain);
-    unsigned char isHorizontalGap(const TRmgGridPoint& point);
-    unsigned char isVerticalGap(const TRmgGridPoint& point);
-    unsigned char needsTerrainRepair(const TRmgGridPoint& point);
-    unsigned char hasSeparatedNeighbours(const TRmgGridPoint& point);
+    b8 isHorizontalGap(const TRmgGridPoint& point, int terrain);
+    b8 isVerticalGap(const TRmgGridPoint& point, int terrain);
+    b8 isHorizontalGap(const TRmgGridPoint& point);
+    b8 isVerticalGap(const TRmgGridPoint& point);
+    b8 needsTerrainRepair(const TRmgGridPoint& point);
+    b8 hasSeparatedNeighbours(const TRmgGridPoint& point);
     void buildMatchingNeighbourMask(
-        const TRmgGridPoint& point, unsigned char* matches);
+        const TRmgGridPoint& point, b8* matches);
 
     void buildNeighbourKinds(const TRmgGridPoint& point, int* neighbours);
-    unsigned char checkFirstDiagonal(
+    b8 checkFirstDiagonal(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
-    unsigned char checkSecondDiagonal(
+    b8 checkSecondDiagonal(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
     int getTransitionStrength(const TRmgGridPoint& point, int terrain);
 };
 
-// Provisional facade name. The ctor at 0x5b7250 initializes the exact VC6
-// auto_ptr ownership byte/pointer pair; 0x5b72f0 conditionally deletes it.
+// Constructor 0x5b7250 and destructor 0x5b72f0 prove auto_ptr ownership.
 class TRmgTerrainBrush {
 public:
     std::auto_ptr<rmgTerrainPainter> m_painter;
