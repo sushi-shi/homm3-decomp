@@ -5160,12 +5160,14 @@ void type_random_map_generator::buildZoneConnectionPaths()
     }
 }
 
-// Widen an opened route by removing same-zone border obstacles, retaining
-// cells reserved for a connection. Bounds calculation stays with each caller
-// to preserve its integer types; visit the rectangle in row-major order.
+// Widen an opened route by removing same-zone border obstacles in the cell's
+// clipped 3x3 neighbourhood, retaining cells reserved for a connection.
+// Visit the rectangle in row-major order.
 static inline void clearRmgZonePathBorders(type_random_map& map,
-    const TRmgZoneBounds& bounds, int level, int zoneIndex)
+    const TPoint& center, int level, int zoneIndex)
 {
+    TRmgZoneBounds bounds;
+    setRmgNeighborhoodBounds(bounds, center, map, 1);
     for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
         for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
             TRmgMapItem* nearby = map.getMapItem(x, y, level);
@@ -5197,11 +5199,8 @@ void type_random_map_generator::openConnectionPath(
         }
         item->openPath();
         TRmgMapPosition previous = item->m_previousTile;
-        if (!narrow) {
-            TRmgZoneBounds bounds;
-            setRmgNeighborhoodBounds(bounds, position, m_map, 1);
-            clearRmgZonePathBorders(m_map, bounds, position.m_z, zone);
-        }
+        if (!narrow)
+            clearRmgZonePathBorders(m_map, position, position.m_z, zone);
         position = previous;
         item = m_map.getMapItem(position);
     }
@@ -6402,17 +6401,10 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
             pending.push_back(midpoint);
         } else {
             TPoint clamped = clampRmgBoundaryToMap(from, m_map);
-            long x = clamped.m_x;
-            long y = clamped.m_y;
-            TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
+            TRmgMapItem* item = m_map.getMapItem(clamped.m_x, clamped.m_y, position.m_z);
             if (item->m_zoneState.m_zone == zoneIndex) {
                 item->openPath();
-                TRmgZoneBounds bounds;
-                bounds.m_minimumX = cppMax<long>(x - 1, 0);
-                bounds.m_minimumY = cppMax<long>(y - 1, 0);
-                bounds.m_maximumX = cppMin<long>(x + 2, m_map.m_mapWidth);
-                bounds.m_maximumY = cppMin<long>(y + 2, m_map.m_mapHeight);
-                clearRmgZonePathBorders(m_map, bounds, position.m_z, zoneIndex);
+                clearRmgZonePathBorders(m_map, clamped, position.m_z, zoneIndex);
             }
             from = to;
         }
@@ -7527,18 +7519,17 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
 {
     TRmgTemplateZone* slot = zone->m_templateZone;
     TRmgTreasureGroup group(16, 16);
+    // Disabled bands enter the shared density scheduler with zero density;
+    // every enabled band has a positive density.
+    int densities[3];
+    for (int band = 0; band < 3; ++band) {
+        densities[band] = isRmgTreasureBandEnabled(slot->m_treasure[band])
+            ? slot->m_treasure[band].m_density : 0;
+    }
     b8 finished[3];
     int totalDensity = 0;
     int densityProduct = 1;
-    for (int band = 0; band < 3; ++band) {
-        if (isRmgTreasureBandEnabled(slot->m_treasure[band])) {
-            totalDensity += slot->m_treasure[band].m_density;
-            densityProduct *= slot->m_treasure[band].m_density;
-            finished[band] = false;
-        } else {
-            finished[band] = true;
-        }
-    }
+    initializeRmgDensityCategories(densities, 3, finished, totalDensity, densityProduct);
     if (totalDensity == 0)
         return;
     int spacing;
@@ -7546,12 +7537,11 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
         spacing = getRmgDensitySpacing(1600, totalDensity);
     else
         spacing = getRmgDensitySpacing(800, totalDensity);
+    // Treasure counts start at zero, so the aliased weighted counts remain zero.
     int weightedCounts[3] = {0, 0, 0};
     int countSteps[3];
-    for (band = 0; band < 3; ++band) {
-        if (isRmgTreasureBandEnabled(slot->m_treasure[band]))
-            countSteps[band] = densityProduct / slot->m_treasure[band].m_density;
-    }
+    initializeRmgCategoryStrides(densities, weightedCounts, 3,
+        densityProduct, countSteps, weightedCounts);
     for (;;) {
         int selected = selectRmgWeightedCategory(finished, weightedCounts, 3);
         if (selected == -1)
