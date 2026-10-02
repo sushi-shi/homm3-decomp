@@ -1513,6 +1513,16 @@ static inline TRmgGridPoint getClampedTerrainOffset(rmgTerrainPainter& painter,
             static_cast<int>(painter.getHeight()) - 1));
 }
 
+// First-diagonal checks compare terrain at a reflected offset, extending
+// edge cells through the existing coordinate clamp. Keep the caller's first
+// successful probe as an early return before querying the other offset.
+static inline bool matchesTerrainAtClampedOffset(rmgTerrainPainter& painter,
+    const TRmgGridPoint& point, const TPoint& offset, int terrain)
+{
+    TRmgGridPoint nearby = getClampedTerrainOffset(painter, point, offset);
+    return painter.getTerrain(nearby) == terrain;
+}
+
 // These Complete-only diagonal callers retain the opposite upper-clamp
 // operand orientation under canonical tLimit. Spelling the comparison as
 // value > maximum makes these two callers exact but regresses the retained
@@ -1539,11 +1549,9 @@ unsigned char rmgTerrainPainter::checkFirstDiagonal(
     };
     int terrain = getTerrain(point);
     const TPoint* pair = firstDiagonalOffsets[(flip.m_flipY << 1) | flip.m_flipX];
-    TRmgGridPoint nearby = getClampedTerrainOffset(*this, point, pair[0]);
-    if (getTerrain(nearby) == terrain)
+    if (matchesTerrainAtClampedOffset(*this, point, pair[0], terrain))
         return 1;
-    nearby = getClampedTerrainOffset(*this, point, pair[1]);
-    return getTerrain(nearby) == terrain;
+    return matchesTerrainAtClampedOffset(*this, point, pair[1], terrain);
 }
 
 VA(0x005B6E00, 0x1B3)
