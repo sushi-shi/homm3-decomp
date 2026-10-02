@@ -1199,10 +1199,7 @@ TRmgZone::TRmgZone(TRmgTemplateZone* newSlot)
     m_templateZone = newSlot;
     m_alignment = newSlot->selectAllowedTown();
     m_boundaryRoughness = newSlot->m_size;
-    m_bounds.m_minimumX = 32000;
-    m_bounds.m_maximumX = -32000;
-    m_bounds.m_minimumY = 32000;
-    m_bounds.m_maximumY = -32000;
+    m_bounds.resetEmpty();
     m_active = 0;
     memset(m_objectCountByType, 0, sizeof(m_objectCountByType));
 }
@@ -2648,10 +2645,7 @@ VA(0x00535DF0, 0xEA)
 MAC_ADDRESS(0x233e4c, 0x16c) // anchor-callee 0x5466c6/0x5355a4; thiscall, ret 0
 void TRmgTreasureGroup::updateBounds()
 {
-    m_bounds.m_minimumX = 32000;
-    m_bounds.m_minimumY = 32000;
-    m_bounds.m_maximumX = -32000;
-    m_bounds.m_maximumY = -32000;
+    m_bounds.resetEmpty();
     TRmgMapItem* item = m_map.m_mapItems;
     for (int y = 0; y < m_map.m_mapHeight; ++y) {
         for (int x = 0; x < m_map.m_mapWidth; ++x, ++item) {
