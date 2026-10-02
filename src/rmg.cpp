@@ -571,6 +571,17 @@ static void insertRmgWorkItem(
     costs.insert(costs.begin() + middle, cost);
 }
 
+// Remove the next movement position together with its parallel priority.
+// Copy the position before either erase, and preserve cost-before-position
+// removal. Searches that consume the queued cost use their own extraction.
+static inline void popRmgMovementPosition(TRmgMapPosition& position,
+    std::vector<TRmgMapPosition>& positions, std::vector<int>& costs)
+{
+    position = positions.back();
+    costs.pop_back();
+    positions.pop_back();
+}
+
 // Retail 0x5407dd/0x5408a2 pass the map, a by-value position and a water byte.
 // Complete-only cost flood; its original source name is unavailable.
 // Residual (83.6813%): the 0x58 frame and cost-first sorted insertion now
@@ -7051,8 +7062,8 @@ void type_random_map_generator::decorateUnderground()
     TRmgTerrainBrush brush(&map, eTerrainRock, 4);
     for (scan.m_y = 0; scan.m_y < m_map.m_mapHeight; ++scan.m_y) {
         for (scan.m_x = 0; scan.m_x < m_map.m_mapWidth; ++scan.m_x, ++item) {
-            if (!item->hasPathClearance() && item->m_tileData.m_roadPassable
-                && item->getLandType() != eTerrainRock && !item->isRoadEntrance())
+            if (!item->hasPathClearance() && item->isPassableLand()
+                && !item->isRoadEntrance())
                 brush.paintRectangle(scan.m_x, scan.m_y, 1, 1);
         }
     }
@@ -7430,8 +7441,7 @@ void type_random_map_generator::prepareZoneConnections()
     for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
-                if (!item->hasBorderObject() && item->m_tileData.m_roadPassable
-                    && item->getLandType() != eTerrainRock && !item->isRoadEntrance()
+                if (!item->hasBorderObject() && item->isPassableLand() && !item->isRoadEntrance()
                     && static_cast<int>(item->m_objects.size()) <= 0
                     && item->m_zoneState.m_zone < 0 && item->getLandType() != eTerrainWater)
                     m_map.markBorderPatch(position);
@@ -7811,8 +7821,7 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
                 if (x < 0 || x >= m_map.m_mapWidth || y < 0 || y >= m_map.m_mapHeight || y > position.m_y)
                     continue;
                 TRmgMapItem* nearby = m_map.getMapItem(x, y, position.m_z);
-                if (nearby->m_tileData.m_roadPassable && nearby->getLandType() != eTerrainRock
-                    && nearby->hasBorderObject())
+                if (nearby->isPassableLand() && nearby->hasBorderObject())
                     ++borderCount;
             }
             if (borderCount > 5)
@@ -8796,9 +8805,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
     mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
 
     while (openPositions.size()) {
-        position = openPositions.back();
-        openCosts.pop_back();
-        openPositions.pop_back();
+        popRmgMovementPosition(position, openPositions, openCosts);
 
         mapItem = m_map.getMapItem(position);
         int currentCost = mapItem->m_movement.m_cost;
@@ -8864,8 +8871,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
 
             TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
             if (nextMapItem->getLandType() == eTerrainWater
-                || !nextMapItem->m_tileData.m_roadPassable
-                || nextMapItem->getLandType() == eTerrainRock)
+                || !nextMapItem->isPassableLand())
                 continue;
 
             unsigned char nextRoadEntrance =
@@ -9035,6 +9041,16 @@ static inline void selectRmgRiverAppearance(const TRmgMapItem* source,
     }
 }
 
+// Rivers stay on dry, non-rock terrain and cannot cross the snow boundary.
+// Object and coast searches share this terrain rule; only the coast search
+// also rejects impassable cells and restricted approach directions.
+static inline bool isRmgRiverTerrain(const TRmgMapItem* item, unsigned char sourceIsSnow)
+{
+    return item->getLandType() != eTerrainWater
+        && item->getLandType() != eTerrainRock
+        && (item->getLandType() == eTerrainSnow) == sourceIsSnow;
+}
+
 // Retail 0x5498de routes from a water-wheel trigger to a marked object,
 // then paints the predecessor chain. Role-derived name; no DC RMG counterpart.
 // This is randomized best-first relaxation: edge costs are drawn during each
@@ -9066,9 +9082,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     TRmgMapPosition position;
     TRmgMapPosition nextPosition;
     while (!openPositions.empty()) {
-        position = openPositions.back();
-        openCosts.pop_back();
-        openPositions.pop_back();
+        popRmgMovementPosition(position, openPositions, openCosts);
         mapItem = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
         int positionCost = mapItem->m_movement.m_cost;
         for (int direction = 0; direction < 8; direction += 2) {
@@ -9076,9 +9090,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
             if (!m_map.containsXY(nextPosition))
                 continue;
             mapItem = m_map.getMapItem(nextPosition.m_x, nextPosition.m_y, nextPosition.m_z);
-            if (mapItem->getLandType() == eTerrainWater
-                || mapItem->getLandType() == eTerrainRock
-                || (mapItem->getLandType() == eTerrainSnow) != sourceIsSnow)
+            if (!isRmgRiverTerrain(mapItem, sourceIsSnow))
                 continue;
             int nextCost = getRmgRiverStepCost(positionCost, mapItem);
             if (nextCost >= mapItem->m_movement.m_cost)
@@ -9209,6 +9221,20 @@ void type_random_map_generator::markRiverTargets()
         m_progress->advance(1000);
 }
 
+// Seed one coast-bound river source in both worklists and the movement map.
+// The three sources share the caller's already constructed invalid predecessor;
+// keep both appends before the cell lookup and cost/predecessor update.
+static inline TRmgMapItem* seedRmgRiverSource(type_random_map& map,
+    const TRmgMapPosition& source, const TRmgMapPosition& invalidPredecessor,
+    std::vector<TRmgMapPosition>& positions, std::vector<int>& costs)
+{
+    positions.push_back(source);
+    costs.push_back(0);
+    TRmgMapItem* item = map.getMapItem(source);
+    item->setMovementCost(0, invalidPredecessor);
+    return item;
+}
+
 // Randomized best-first relaxation, with the same per-visit random edge costs
 // as createRiverToObject, seeded at the three water-wheel approach cells.
 VA(0x00548DF0, 0x99F)
@@ -9226,35 +9252,27 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     std::vector<TRmgMapPosition> openPositions;
     std::vector<int> openCosts;
 
-    openPositions.push_back(source);
-    openCosts.push_back(0);
-    mapItem = m_map.getMapItem(source);
-    mapItem->setMovementCost(0, invalidPredecessor);
+    mapItem = seedRmgRiverSource(m_map, source, invalidPredecessor,
+        openPositions, openCosts);
 
     unsigned char sourceIsSnow;
     int riverType;
     selectRmgRiverAppearance(mapItem, sourceIsSnow, riverType);
 
     --source.m_y;
-    openPositions.push_back(source);
-    openCosts.push_back(0);
-    mapItem = m_map.getMapItem(source);
-    mapItem->setMovementCost(0, invalidPredecessor);
+    mapItem = seedRmgRiverSource(m_map, source, invalidPredecessor,
+        openPositions, openCosts);
 
     ++source.m_x;
-    openPositions.push_back(source);
-    openCosts.push_back(0);
-    mapItem = m_map.getMapItem(source);
-    mapItem->setMovementCost(0, invalidPredecessor);
+    mapItem = seedRmgRiverSource(m_map, source, invalidPredecessor,
+        openPositions, openCosts);
 
     TRmgMapPosition position;
     TRmgMapPosition nextPosition;
     int direction;
 
     while (!openPositions.empty()) {
-        position = openPositions.back();
-        openCosts.pop_back();
-        openPositions.pop_back();
+        popRmgMovementPosition(position, openPositions, openCosts);
 
         mapItem = m_map.getMapItem(position);
         int positionCost = mapItem->m_movement.m_cost;
@@ -9265,10 +9283,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
                 continue;
 
             mapItem = m_map.getMapItem(nextPosition);
-            if (mapItem->getLandType() == eTerrainWater
-                || mapItem->getLandType() == eTerrainRock
-                || mapItem->isImpassable()
-                || (mapItem->getLandType() == eTerrainSnow) != sourceIsSnow)
+            if (!isRmgRiverTerrain(mapItem, sourceIsSnow) || mapItem->isImpassable())
                 continue;
 
             int nextCost = getRmgRiverStepCost(positionCost, mapItem);
