@@ -725,7 +725,10 @@ struct TRmgGroundTileData {
     // Generation path clearance: clear() and openPath() set bit 27;
     // scoreObjectPlacement rejects obstacle footprints on a set bit.
     unsigned m_pathClearance : 1;
-    unsigned m_zoneBoundary : 1;
+    // Bit 28 selects owned cells for paintZoneTerrain. Zone outlines and
+    // fills set it except on the islands-mode surface, where only the coast
+    // and island interior are marked. Formerly named m_zoneBoundary.
+    unsigned m_paintZoneTerrain : 1;
     // 0x532769..0x532780 sets bit 29 from a nonzero river kind. This is
     // river presence, not the separate routing target at bit 30.
     unsigned m_hasRiver : 1;
@@ -1039,9 +1042,9 @@ struct TRmgMapItem {
     // PaintZoneTerrain extracts bit 28 then tests its byte result. The
     // direct field condition instead folds to a dword mask. Retail-only
     // accessor hypothesis, consistent with the adjacent flag queries.
-    b8 isZoneBoundary() const
+    b8 shouldPaintZoneTerrain() const
     {
-        return m_tileData.m_zoneBoundary;
+        return m_tileData.m_paintZoneTerrain;
     }
 
     // Placement helpers 0x531170/0x5318b0/0x531cf0 all shift bit 22 and

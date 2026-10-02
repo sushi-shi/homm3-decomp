@@ -296,6 +296,7 @@ static const char* g_rmgTownNames[9] = {
 };
 
 // Ordinary helper used by ReadRmgTemplateZones; original name unknown.
+// The connection reader and template-row scan share the same blank test.
 static bool isRmgTemplateFieldSet(const char* value)
 {
     return value && value[0] && value[0] != ' ';
@@ -370,7 +371,7 @@ void TRmgMapItem::clear()
     tileData.m_roadPassable = true;
     tileData.m_borderObject = false;
     tileData.m_pathClearance = true;
-    tileData.m_zoneBoundary = false;
+    tileData.m_paintZoneTerrain = false;
     tileData.m_hasRiver = false;
     tileData.m_riverTarget = false;
     tileData.m_impassable = false;
@@ -421,6 +422,14 @@ void type_random_map::clear()
     }
 }
 
+// Preserve land, entrance, then zone query order; border, water and path
+// clearance policies stay with each caller.
+static inline bool isRmgFootprintCellBlocked(TRmgMapItem* item, int zoneIndex)
+{
+    return !item->isPassableLand() || item->isRoadEntrance()
+        || item->m_zoneState.m_zone != zoneIndex;
+}
+
 VA(0x00531170, 0x19C)
 MAC_ADDRESS(0x22d534, 0x244)
 b8 type_random_map::hasConnectedOutline(
@@ -444,12 +453,10 @@ b8 type_random_map::hasConnectedOutline(
             TRmgMapItem* item = getMapItem(x, y, position.m_z);
             if (!allowEntrances && item->isRoadEntrance())
                 return false;
-            blocked = !item->isPassableLand() || item->isRoadEntrance();
+            blocked = isRmgFootprintCellBlocked(item, zoneIndex);
             if (requirePathClearance && !item->hasPathClearance())
                 blocked = true;
             if ((item->getLandType() == eTerrainWater) != waterZone)
-                blocked = true;
-            if (item->m_zoneState.m_zone != zoneIndex)
                 blocked = true;
         }
         if (blocked && !previouslyBlocked) {
@@ -625,13 +632,6 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
     }
 }
 
-// Preserve land, entrance, then zone query order; border/water policy is separate.
-static inline bool isRmgFootprintCellBlocked(TRmgMapItem* item, int zoneIndex)
-{
-    return !item->isPassableLand() || item->isRoadEntrance()
-        || item->m_zoneState.m_zone != zoneIndex;
-}
-
 // The category guard precedes the bitset query.
 static inline bool isRmgWaterOnlyPrototype(const TObjectType& prototype)
 {
@@ -723,6 +723,13 @@ static inline TRmgMapPosition getRmgObjectTriggerPosition(
     TPoint triggerOffset(trigger.m_x, trigger.m_y);
     position -= triggerOffset;
     return position;
+}
+
+// Translate a placed object's stored position by its live prototype trigger.
+static inline TRmgMapPosition getRmgPlacedObjectEntrance(const type_object* object)
+{
+    return getRmgObjectTriggerPosition(object->getPosition(),
+        object->m_properties->m_prototype->m_triggerCell);
 }
 
 // Keep trait2 before trait1; direction limits use trait1 alone elsewhere.
@@ -988,9 +995,7 @@ void TRmgRiverMapAdapter::setTile(const TRmgGridPoint& point, const rmgTerrainTi
     if (tile.m_terrain != 0) {
         {
             TRmgZoneBounds bounds;
-            setRmgNeighborhoodBounds(bounds,
-                TPoint(static_cast<int>(point.m_x), static_cast<int>(point.m_y)),
-                *m_map, 1);
+            setRmgNeighborhoodBounds(bounds, point, *m_map, 1);
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
                 for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
                     TRmgMapItem& neighbour = *m_map->getMapItem(x, y);
@@ -1000,9 +1005,7 @@ void TRmgRiverMapAdapter::setTile(const TRmgGridPoint& point, const rmgTerrainTi
         }
         {
             TRmgZoneBounds bounds;
-            setRmgNeighborhoodBounds(bounds,
-                TPoint(static_cast<int>(point.m_x), static_cast<int>(point.m_y)),
-                *m_map, 2);
+            setRmgNeighborhoodBounds(bounds, point, *m_map, 2);
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
                 for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
                     TRmgMapItem& neighbour = *m_map->getMapItem(x, y);
@@ -1450,7 +1453,7 @@ static inline void writeRmgMapPosition(
     writeValue<char>(outputFile, position.m_z);
 }
 
-// One write per fixed-size block; partial-width int staging stays separate.
+// One write per fixed-size block.
 template <int N>
 static inline void writeRmgReservedBytes(TAbstractFile* outputFile)
 {
@@ -1459,7 +1462,14 @@ static inline void writeRmgReservedBytes(TAbstractFile* outputFile)
     outputFile->write(reserved, sizeof(reserved));
 }
 
-// Partial-width writes from int staging slots remain explicit, as in retail.
+// Retail stages the two reserved bytes in a zeroed int slot and writes only
+// its low short.
+static inline void writeRmgReservedWord(TAbstractFile* outputFile)
+{
+    int reserved = 0;
+    outputFile->write(&reserved, sizeof(short));
+}
+
 VA(0x00533170, 0x79)
 MAC_ADDRESS(0x2304c8, 0xfc)
 void type_object::write(TAbstractFile* outputFile, int version)
@@ -1482,10 +1492,7 @@ void rmgMonsterObject::write(TAbstractFile* outputFile, int version)
     writeValue<char>(outputFile, 0);
     writeValue<char>(outputFile, 0);
     writeValue<char>(outputFile, 0);
-    {
-        int intBuffer = 0;
-        outputFile->write(&intBuffer, sizeof(short));
-    }
+    writeRmgReservedWord(outputFile);
 }
 
 VA(0x005332F0, 0x16A)
@@ -1712,10 +1719,7 @@ void rmgSeerHutObject::write(TAbstractFile* outputFile, int version)
         writeValue<char>(outputFile, m_resourceType);
         writeValue<int>(outputFile, m_resourceCount);
     }
-    {
-        int reserved = 0;
-        outputFile->write(&reserved, sizeof(short));
-    }
+    writeRmgReservedWord(outputFile);
 }
 
 // The hero-object factory marks the selected index in disabledHeroes before
@@ -1785,10 +1789,7 @@ void rmgScholarObject::write(TAbstractFile* outputFile, int version)
     writeValue<char>(outputFile, -1); // reward kind
     writeValue<char>(outputFile, 0); // reward value
     writeValue<int>(outputFile, 0);
-    {
-        int reserved = 0;
-        outputFile->write(&reserved, sizeof(short));
-    }
+    writeRmgReservedWord(outputFile);
 }
 
 VA(0x00533F40, 0xAF)
@@ -1797,10 +1798,7 @@ void rmgShrineObject::write(TAbstractFile* outputFile, int version)
 {
     type_object::write(outputFile, version);
     writeValue<char>(outputFile, -1); // spell
-    {
-        int reserved = 0;
-        outputFile->write(&reserved, sizeof(short));
-    }
+    writeRmgReservedWord(outputFile);
     writeValue<char>(outputFile, 0); // reserved byte
 }
 
@@ -1811,10 +1809,7 @@ void rmgSpellScrollObject::write(TAbstractFile* outputFile, int version)
     type_object::write(outputFile, version);
     writeValue<char>(outputFile, 0); // message
     writeValue<char>(outputFile, m_spell);
-    {
-        int reserved = 0;
-        outputFile->write(&reserved, sizeof(short));
-    }
+    writeRmgReservedWord(outputFile);
     writeValue<char>(outputFile, 0);
 }
 
@@ -2275,8 +2270,7 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
     for (unsigned int objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
         type_object* object = m_objects[objectIndex];
         prototype = object->m_properties->m_prototype;
-        TRmgMapPosition entrance = object->getPosition();
-        entrance = getRmgObjectTriggerPosition(entrance, prototype->m_triggerCell);
+        TRmgMapPosition entrance = getRmgPlacedObjectEntrance(object);
         unsigned int direction = g_adventureObjectTraits[prototype->getObjectType()].m_trait1
             ? RMG_DIRECTION_COUNT : 5;
         while (direction--) {
@@ -2371,10 +2365,8 @@ b8 TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
 {
     TObjectType* prototype = properties->m_prototype;
     int objectType = prototype->getObjectType();
-    TObjectType::TPoint trigger = prototype->m_triggerCell;
-    TRmgVector origin(position.m_x, position.m_y);
-    origin.m_x -= trigger.m_x;
-    origin.m_y -= trigger.m_y;
+    TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, prototype->m_triggerCell);
+    TRmgVector origin(entrance.m_x, entrance.m_y);
     if (!g_adventureObjectTraits[objectType].m_trait1) {
         for (int direction = 5; direction < RMG_DIRECTION_COUNT; ++direction) {
             TPoint nearby = g_rmgDirections[direction] + origin;
@@ -2437,8 +2429,7 @@ b8 TRmgTreasureGroup::tryAddObject(type_object* object)
     for (index = 0; index < m_objects.size(); ++index) {
         type_object* existing = m_objects[index];
         TObjectType* existingPrototype = existing->m_properties->m_prototype;
-        TRmgMapPosition entrance = existing->getPosition();
-        entrance = getRmgObjectTriggerPosition(entrance, existingPrototype->m_triggerCell);
+        TRmgMapPosition entrance = getRmgPlacedObjectEntrance(existing);
         int endDirection;
         int firstDirection;
         if (g_adventureObjectTraits[existingPrototype->getObjectType()].m_trait1) {
@@ -3128,8 +3119,8 @@ static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
 {
     for (int connectionRow = firstRow; connectionRow < endRow; ++connectionRow) {
         const TSpreadsheetResource::TStringVector& fields = sheet->getRow(connectionRow);
-        if (fields.size() > 84 && fields[76][0]
-            && fields[76][0] != ' ' && fields[77][0]) {
+        if (fields.size() > 84 && isRmgTemplateFieldSet(fields[76])
+            && fields[77][0]) {
             int firstZone = atoi(fields[76]);
             int secondZone = atoi(fields[77]);
             TRmgTemplateZone* first = mapTemplate->findZone(firstZone);
@@ -3138,8 +3129,8 @@ static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
                 TRmgZoneConnection connection;
                 connection.m_destination = second;
                 connection.m_value = atoi(fields[78]);
-                connection.m_unguarded = fields[79][0] && fields[79][0] != ' ';
-                connection.m_placeBorderObjects = fields[80][0] && fields[80][0] != ' ';
+                connection.m_unguarded = isRmgTemplateFieldSet(fields[79]);
+                connection.m_placeBorderObjects = isRmgTemplateFieldSet(fields[80]);
                 readRmgTemplatePlayerLimits(connection, fields, 81);
                 connection.m_connected = false;
                 if (allowsRmgTemplatePlayerCounts(connection, humanPlayers, computerPlayers)) {
@@ -3193,7 +3184,7 @@ void type_random_map_generator::loadTemplates()
         mapTemplate->m_name = values[0];
         int endRow = row + 1;
         while (endRow < sheet->getNumberOfRows()
-            && (!sheet->getRow(endRow)[0][0] || sheet->getRow(endRow)[0][0] == ' '))
+            && !isRmgTemplateFieldSet(sheet->getRow(endRow)[0]))
             ++endRow;
         bool accepted = mapSize >= mapTemplate->m_minimumSize
             && mapSize <= mapTemplate->m_maximumSize;
@@ -3854,15 +3845,16 @@ static inline TPoint clampRmgBoundaryToMap(
     return TPoint(x, y);
 }
 
-// Assign an outline cell to its zone, then apply the caller's captured
-// boundary policy. The straight drawer's final cell intentionally omits this
-// operation because that endpoint receives only the zone assignment.
-static inline void markRmgZoneBoundaryCell(
-    TRmgMapItem* item, int zoneIndex, b8 markBoundary)
+// Assign a cell to its zone and, under the caller's captured policy, mark it
+// for zone-terrain painting. Zone outlines and the scanline fill share this;
+// on the islands-mode surface only the coast and island interior are marked.
+// The straight drawer's final cell receives only the zone assignment.
+static inline void assignRmgZoneCell(
+    TRmgMapItem* item, int zoneIndex, b8 markForTerrain)
 {
     item->m_zoneState.m_zone = zoneIndex;
-    if (markBoundary)
-        item->m_tileData.m_zoneBoundary = true;
+    if (markForTerrain)
+        item->m_tileData.m_paintZoneTerrain = true;
 }
 
 // Depth-first midpoint displacement: rounding, displacement bounds and RNG
@@ -3873,7 +3865,7 @@ void type_random_map_generator::drawIrregularZoneBoundary(
     TPoint from, TPoint to, int zoneIndex, int level, int roughness)
 {
     std::vector<TPoint> pending;
-    b8 markBoundary = level == 1 || m_waterContent != RMG_WATER_ISLANDS;
+    b8 markForTerrain = level == 1 || m_waterContent != RMG_WATER_ISLANDS;
     pending.push_back(to);
     while (pending.size() > 0) {
         to = pending.back();
@@ -3886,14 +3878,14 @@ void type_random_map_generator::drawIrregularZoneBoundary(
         } else {
             TPoint clamped = clampRmgBoundaryToMap(from, m_map);
             TRmgMapItem* item = m_map.getMapItem(clamped.m_x, clamped.m_y, level);
-            markRmgZoneBoundaryCell(item, zoneIndex, markBoundary);
+            assignRmgZoneCell(item, zoneIndex, markForTerrain);
             from = to;
         }
     }
 }
 
 // Bresenham line rasterization with an accumulated half-major-axis error.
-// The final cell receives its zone but deliberately not the boundary flag.
+// The final cell receives its zone but deliberately not the terrain mark.
 VA(0x0053C220, 0x16A)
 MAC_ADDRESS(0x23da90, 0x2a4)
 void type_random_map_generator::drawStraightZoneBoundary(
@@ -3921,11 +3913,11 @@ void type_random_map_generator::drawStraightZoneBoundary(
         diagonalStep = axialStep;
     }
     diagonalStep.m_x = 1;
-    b8 markBoundary = level == 1 || m_waterContent != RMG_WATER_ISLANDS;
+    b8 markForTerrain = level == 1 || m_waterContent != RMG_WATER_ISLANDS;
     int error = majorDistance / 2;
     while (from.m_x != to.m_x || from.m_y != to.m_y) {
         TRmgMapItem* item = m_map.getMapItem(from.m_x, from.m_y, level);
-        markRmgZoneBoundaryCell(item, zoneIndex, markBoundary);
+        assignRmgZoneCell(item, zoneIndex, markForTerrain);
         error += minorDistance;
         if (error < majorDistance) {
             from += axialStep;
@@ -4131,13 +4123,14 @@ void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
             TPoint clamped = clampRmgBoundaryToMap(from, m_map);
             TRmgMapItem* item = m_map.getMapItem(clamped.m_x, clamped.m_y, level);
             if (item->m_zoneState.m_zone == zoneIndex)
-                item->m_tileData.m_zoneBoundary = true;
+                item->m_tileData.m_paintZoneTerrain = true;
             from = to;
         }
     }
 }
 
-// Four-connected depth-first flood fill; boundary-marked cells stop growth.
+// Four-connected depth-first flood fill marking the island for zone terrain;
+// cells already marked, including the coast, stop growth.
 VA(0x0053CF50, 0x177)
 MAC_ADDRESS(0x23e738, 0x1f0)
 void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
@@ -4159,9 +4152,9 @@ void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
             if (!m_map.containsXY(next))
                 continue;
             TRmgMapItem* item = m_map.getMapItem(next.m_x, next.m_y, next.m_z);
-            if (item->isZoneBoundary() || item->m_zoneState.m_zone != zoneIndex)
+            if (item->shouldPaintZoneTerrain() || item->m_zoneState.m_zone != zoneIndex)
                 continue;
-            item->m_tileData.m_zoneBoundary = true;
+            item->m_tileData.m_paintZoneTerrain = true;
             pending.push_back(next);
         }
     }
@@ -4283,7 +4276,7 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
             --position.m_x;
         }
         while (position.m_x < m_map.getWidth() && item->m_zoneState.m_zone == -1) {
-            markRmgZoneBoundaryCell(item, zoneIndex,
+            assignRmgZoneCell(item, zoneIndex,
                 m_waterContent != RMG_WATER_ISLANDS || position.m_z == 1);
             if (position.m_y > 0) {
                 if ((item - m_map.getWidth())->m_zoneState.m_zone == -1) {
@@ -4612,7 +4605,7 @@ void type_random_map_generator::paintZoneTerrain()
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
                 for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
                     TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
-                    if (item->m_zoneState.m_zone == zoneIndex && item->isZoneBoundary())
+                    if (item->m_zoneState.m_zone == zoneIndex && item->shouldPaintZoneTerrain())
                         brush.paintRectangle(x, y, 1, 1);
                 }
             }
@@ -7422,8 +7415,7 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     b8 waterZone = zone->m_terrain == eTerrainWater;
     type_object* lastObject = group->m_objects.back();
     TObjectType* prototype = lastObject->m_properties->m_prototype;
-    TRmgMapPosition entrance = lastObject->getPosition();
-    entrance = getRmgObjectTriggerPosition(entrance, prototype->m_triggerCell);
+    TRmgMapPosition entrance = getRmgPlacedObjectEntrance(lastObject);
     if (!g_adventureObjectTraits[prototype->getObjectType()].m_trait1) {
         firstDirection = 1;
         lastDirection = 4;
@@ -8183,9 +8175,7 @@ void type_random_map_generator::createRivers()
         type_object* object = m_objects[index];
         TObjectType* prototype = object->m_properties->m_prototype;
         if (prototype->getObjectType() == WATER_WHEEL) {
-            TObjectType::TPoint trigger = prototype->m_triggerCell;
-            TRmgMapPosition position = object->m_position;
-            position = getRmgObjectTriggerPosition(position, trigger);
+            TRmgMapPosition position = getRmgPlacedObjectEntrance(object);
             createRiverToObject(position);
             position.m_x -= 2;
             createRiver(position);
