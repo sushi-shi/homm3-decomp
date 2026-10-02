@@ -7559,12 +7559,13 @@ static inline void placeRmgFixedTownCategory(type_random_map_generator* generato
 // nonempty fixed-count category therefore skips one placement. Density
 // placement balances four weighted counters until every category fails.
 // Complete-only role names; count/density offsets and call order are retail facts.
-// Exact 688-byte body: explicit primary-skip initialization restores all
-// four fixed-count loops. Starting the density sum/product before the two
-// input arrays restores the scheduler's stack homes and register allocation.
-// Delaying those accumulators leaves 95.8441%; conditional-expression starts
-// leave 93.0076%. Reusing sum as spacing and shared density helpers are neutral.
-// All 49 blocks and the complete instruction/relocation stream reproduce.
+// Earlier 688-byte exact checkpoint: explicit primary-skip initialization
+// restored all four fixed-count loops. Starting the density sum/product before
+// the two input arrays restored the scheduler's stack homes and registers.
+// Delaying those accumulators left 95.8441%; conditional-expression starts
+// left 93.0076%. That spelling reproduced all 49 blocks and relocations.
+// The cleanup now shares fixed-category placement and stride initialization;
+// the earlier exact verdict does not describe these unmeasured helper calls.
 VA(0x00544AE0, 0x2B0)
 MAC_ADDRESS(0x248418, 0x414)
 void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
