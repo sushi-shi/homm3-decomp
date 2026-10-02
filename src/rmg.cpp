@@ -511,6 +511,18 @@ static inline void popRmgMovementPosition(TRmgMapPosition& position,
     positions.pop_back();
 }
 
+// Seed a zero-cost source in both worklists and the movement map.
+static inline TRmgMapItem* seedRmgMovementSearch(type_random_map& map,
+    const TRmgMapPosition& source, const TRmgMapPosition& invalidPredecessor,
+    std::vector<TRmgMapPosition>& positions, std::vector<int>& costs)
+{
+    positions.push_back(source);
+    costs.push_back(0);
+    TRmgMapItem* item = map.getMapItem(source);
+    item->setMovementCost(0, invalidPredecessor);
+    return item;
+}
+
 // Floods movement costs out from a connection cell. Entering another zone
 // or water costs 10 per step, other steps 1.
 VA(0x00531460, 0x441)
@@ -521,11 +533,9 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
     // after the improvement test.
     std::vector<int> costs;
     std::vector<TRmgMapPosition> positions;
-    TRmgMapItem* seed = getMapItem(position);
+    TRmgMapItem* seed = seedRmgMovementSearch(*this, position,
+        TRmgMapPosition(-1, -1, -1), positions, costs);
     int zone = seed->m_zoneState.m_zone;
-    positions.push_back(position);
-    costs.push_back(0);
-    seed->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
     while (positions.size()) {
         TRmgMapPosition currentPosition = positions.back();
         int queuedCost = costs.back();
@@ -3589,12 +3599,16 @@ static inline int getRmgCenteredRandomOffset(int range)
     return rand() % range - range / 2;
 }
 
-// Displace an interior midpoint perpendicular to its segment. Island
-// outlines limit the displacement to half the segment length, other
-// boundaries to the full length.
-static inline void displaceRmgBoundaryMidpoint(TPoint& midpoint,
+// Split a boundary segment at a midpoint displaced at random across it,
+// pushing the far half first so the near half is walked next. Island
+// outlines limit the displacement to half the segment length. Returns false
+// when the segment has no interior midpoint.
+static inline bool splitRmgBoundarySegment(std::vector<TPoint>& pending,
     const TPoint& from, const TPoint& to, int roughness, int lengthDivisor)
 {
+    TPoint midpoint = getRmgSubdivisionMidpoint(from, to);
+    if (midpoint == from || midpoint == to)
+        return false;
     TRmgVector perpendicular;
     {
         TRmgVector delta = to - from;
@@ -3608,18 +3622,6 @@ static inline void displaceRmgBoundaryMidpoint(TPoint& midpoint,
         perpendicular = perpendicular * displacement / length;
         midpoint += perpendicular;
     }
-}
-
-// Split a boundary segment at its displaced midpoint, pushing the far half
-// first so the near half is walked next. Returns false when the segment has
-// no interior midpoint.
-static inline bool splitRmgBoundarySegment(std::vector<TPoint>& pending,
-    const TPoint& from, const TPoint& to, int roughness, int lengthDivisor)
-{
-    TPoint midpoint = getRmgSubdivisionMidpoint(from, to);
-    if (midpoint == from || midpoint == to)
-        return false;
-    displaceRmgBoundaryMidpoint(midpoint, from, to, roughness, lengthDivisor);
     pending.push_back(to);
     pending.push_back(midpoint);
     return true;
@@ -6114,12 +6116,7 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
     while (pending.size() > 0) {
         to = pending.back();
         pending.pop_back();
-        TPoint midpoint = getRmgSubdivisionMidpoint(from, to);
-        if (midpoint != from && midpoint != to) {
-            displaceRmgBoundaryMidpoint(midpoint, from, to, roughness, 1);
-            pending.push_back(to);
-            pending.push_back(midpoint);
-        } else {
+        if (!splitRmgBoundarySegment(pending, from, to, roughness, 1)) {
             TPoint clamped = clampRmgBoundaryToMap(from, m_map);
             TRmgMapItem* item = m_map.getMapItem(clamped.m_x, clamped.m_y, position.m_z);
             if (item->m_zoneState.m_zone == zoneIndex) {
@@ -7218,18 +7215,6 @@ static inline void queueRmgMovementStep(TRmgMapItem* destination,
 {
     destination->setMovementCost(cost, previous);
     insertRmgWorkItem(positions, costs, next, cost);
-}
-
-// Seed a zero-cost source in both worklists and the movement map.
-static inline TRmgMapItem* seedRmgMovementSearch(type_random_map& map,
-    const TRmgMapPosition& source, const TRmgMapPosition& invalidPredecessor,
-    std::vector<TRmgMapPosition>& positions, std::vector<int>& costs)
-{
-    positions.push_back(source);
-    costs.push_back(0);
-    TRmgMapItem* item = map.getMapItem(source);
-    item->setMovementCost(0, invalidPredecessor);
-    return item;
 }
 
 // Road exits and entries share this restricted-approach policy.
