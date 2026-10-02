@@ -2908,6 +2908,16 @@ static inline bool allowsRmgTemplatePlayerCounts(const Record& record,
         && record.m_maximumPlayers >= humanPlayers + computerPlayers;
 }
 
+// Store one connection on both zones, each copy pointing at the other zone.
+static inline void appendRmgTwoWayConnection(TRmgTemplateZone* first,
+    TRmgTemplateZone* second, TRmgZoneConnection connection)
+{
+    connection.m_destination = second;
+    first->m_connections.push_back(connection);
+    connection.m_destination = first;
+    second->m_connections.push_back(connection);
+}
+
 static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
     TRmgTemplate* mapTemplate, int firstRow, int endRow,
     int humanPlayers, int computerPlayers)
@@ -2922,17 +2932,13 @@ static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
             TRmgTemplateZone* second = mapTemplate->findZone(secondZone);
             if (first && second) {
                 TRmgZoneConnection connection;
-                connection.m_destination = second;
                 connection.m_value = atoi(fields[78]);
                 connection.m_unguarded = isRmgTemplateFieldSet(fields[79]);
                 connection.m_placeBorderObjects = isRmgTemplateFieldSet(fields[80]);
                 readRmgTemplatePlayerLimits(connection, fields, 81);
                 connection.m_connected = false;
-                if (allowsRmgTemplatePlayerCounts(connection, humanPlayers, computerPlayers)) {
-                    first->m_connections.push_back(connection);
-                    connection.m_destination = first;
-                    second->m_connections.push_back(connection);
-                }
+                if (allowsRmgTemplatePlayerCounts(connection, humanPlayers, computerPlayers))
+                    appendRmgTwoWayConnection(first, second, connection);
             }
         }
     }
@@ -4134,14 +4140,12 @@ static inline void appendRmgExtraZoneConnection(
     TRmgZone* source, TRmgZone* destination, b8 connected)
 {
     TRmgZoneConnection connection;
-    connection.m_destination = destination->m_templateZone;
     connection.m_value = 0;
     connection.m_unguarded = true;
     connection.m_placeBorderObjects = false;
     connection.m_connected = connected;
-    source->m_templateZone->m_connections.push_back(connection);
-    connection.m_destination = source->m_templateZone;
-    destination->m_templateZone->m_connections.push_back(connection);
+    appendRmgTwoWayConnection(source->m_templateZone,
+        destination->m_templateZone, connection);
 }
 
 // Extra-to-extra edges are completed unguarded connections when their boundary
