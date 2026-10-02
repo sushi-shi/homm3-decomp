@@ -7,8 +7,7 @@
 class TAbstractFile;
 class TProgressSink;
 
-// Retail 0x54c090 returns these codes; GenerateRandomMap maps failures
-// through a four-entry jump table to general-text rows.
+// Generation result; GenerateRandomMap shows a general-text message per failure.
 enum ERandomMapResult {
     RANDOM_MAP_OK = 0,
     RANDOM_MAP_OPEN_FAILED = 1,
@@ -16,8 +15,7 @@ enum ERandomMapResult {
     RANDOM_MAP_GENERATION_FAILED = 3
 };
 
-// Shared lobby/generator request. Constructor 0x54bf00 and the lobby stores
-// prove the layout; field names describe those roles.
+// Random-map settings chosen in the lobby and passed to the generator.
 class TRandomMapRequest {
 public:
     // Lobby human seats are 1; computer seats remain zero.
@@ -27,16 +25,14 @@ public:
     int m_width;                      // +0x28
     int m_height;                     // +0x2c
     int m_levels;                     // +0x30
-    // Retail 0x54bf60 forwards these to generator ctor 0x537b10, adding 3
-    // to monster strength and clamping it to [1, 5].
+    // The generator receives monster strength + 3, clamped to [1, 5].
     int m_humanPlayerCount;           // +0x34
     int m_humanTeamCount;             // +0x38
     int m_computerPlayerCount;        // +0x3c
     int m_computerTeamCount;          // +0x40
     int m_waterContent;               // +0x44
     int m_monsterStrength;            // +0x48
-    // 0/1/2 - the map-format class the running game context implies (the
-    // same ordinals EGameVersion carries).
+    // Map format 0/1/2, using the EGameVersion ordinals.
     int m_mapVersion;                 // +0x4c
 
     TRandomMapRequest(int width, int height, int levels);

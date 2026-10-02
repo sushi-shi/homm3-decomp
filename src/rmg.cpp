@@ -1,9 +1,5 @@
-// rmg.cpp - Complete-only random-map generator support.
+// rmg.cpp - random-map generator.
 
-// The Dreamcast build has no RMG compiland. Retail's direct caller graph
-// reaches this library from TSingleSelectionWindow::GenerateRandomMap, and
-// the tree node layout proves an eight-byte TPoint value ordered by y, then x.
-// Helper names are inferred from retail; Dreamcast attests no RMG spelling.
 #include "va.h"
 #include "includes.h"
 #include "bitset_iterator.h"
@@ -39,10 +35,7 @@
 #include "textresource.h"
 #include "town.h"
 
-// Mac 0x22cef0 retains the shared two-point integer distance calculation.
-// Its by-value point arguments are spilled as two adjacent coordinate pairs.
-// Euclidean distance truncated to an integer; keep the integer squares before
-// conversion to double, as in retail, rather than changing rounding/overflow.
+// Euclidean distance, truncated; the squares are 32-bit integers.
 MAC_ADDRESS(0x22cef0, 0x84)
 int getRmgDistance(TPoint first, TPoint second)
 {
@@ -52,26 +45,19 @@ int getRmgDistance(TPoint first, TPoint second)
 
 typedef std::set<TPoint> TRmgPointSet;
 
-// Complete-only creature reward values: seven signed dwords at 0x6824e0.
 DATA(0x006824E0)
 int g_rmgCreatureValueByLevel[7] = {5000, 7000, 9000, 12000, 16000, 21000, 27000};
 
-// Vtable 0x640a74 slots 1/2 retain the shared empty/true bodies at
-// 0x5bc690/0x484620. These are real base-class defaults, not missing hooks.
 void type_object::releaseReservation() {}
 b8 type_object::isWritable() { return true; }
 
-// Vtable 0x640b64 slot 2 is the shared false body at 0x484d50.
-// Quest vtables 0x640c00/0x640c0c/0x640c18 and key tent 0x640c30
-// replace it with the shared true body at 0x484620. No DC RMG counterpart.
 b8 type_treasure_def::isTerrainDependent() { return false; }
 b8 type_quest_creature_def::isTerrainDependent() { return true; }
 b8 type_quest_experience_def::isTerrainDependent() { return true; }
 b8 type_quest_gold_def::isTerrainDependent() { return true; }
 b8 type_key_tent_def::isTerrainDependent() { return true; }
 
-// Retail constructor defaults and overrides; 0x546257 compares map counts,
-// while 0x546270 compares per-zone counts. Names are role-derived.
+// Per-type object limits for the whole map and for each zone.
 DATA(0x0069CE4C)
 int g_rmgMapObjectLimits[232];
 DATA(0x0069D1F4)
@@ -137,9 +123,6 @@ static const TRmgObjectLimit g_rmgZoneObjectLimitOverrides[24] = {
     { WITCH_HUT, 3 },
 };
 
-// Complete-only pattern globals: retail cinit 0x55ed70/0x55f2f0 passes the
-// array and count to the shared support constructor, then registers cleanup
-// at 0x55ed90/0x55f310. Both cleanups retain the support destructor.
 DATA(0x00641140)
 static const int g_rmgRiverPatterns[13] = {
     4, 4, 4, 4, 8, 7, 7, 6, 6, 2, 2, 3, 3
@@ -178,8 +161,6 @@ TProgressSink::~TProgressSink()
 {
 }
 
-// Vtable 0x6409c0 slot 1 stores the new total at +4. The derived progress
-// dialog overrides the same interface while the base Advance slot stays pure.
 VA(0x00530E80, 0x0D)
 MAC_ADDRESS(0x22cfd4, 0x8)  // Complete-only RMG progress base
 void TProgressSink::setTotal(int totalSteps)
@@ -189,8 +170,8 @@ void TProgressSink::setTotal(int totalSteps)
 
 namespace {
 
-// The cinit at 0x530da0 writes these eight clockwise neighbours.  The river
-// search advances by two entries, selecting only the four cardinal offsets.
+// Eight neighbour directions, clockwise from east; even entries are the
+// four cardinal directions.
 DATA(0x0069CDC0)
 TPoint g_rmgDirections[RMG_DIRECTION_COUNT] = {
     TPoint(1, 0),
@@ -203,9 +184,8 @@ TPoint g_rmgDirections[RMG_DIRECTION_COUNT] = {
     TPoint(1, -1)
 };
 
-// Shipyards are three tiles wide.  The connection repair pass probes the
-// four water-facing squares beside their upper and lower edges before it
-// floods the reachable water region.
+// Shipyards are three tiles wide; these offsets probe the water squares
+// beside their upper and lower edges.
 DATA(0x0069CE00)
 TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
     TPoint(-3, 0),
@@ -220,9 +200,7 @@ static const int g_landRiverDeltaIndex[4] = {2, 0, 3, 1};
 DATA(0x006409B0)
 static const int g_snowRiverDeltaIndex[4] = {7, 5, 4, 6};
 
-// Terrain-indexed town preferences consumed by initialization 0x53bf85.
-// Nine four-entry rows read from the SHA-256-pinned retail image. The
-// unusual sentinel/version scan is retained in the caller as retail code.
+// Candidate town types for each zone terrain; -1 ends a row.
 DATA(0x00682450)
 int g_rmgTerrainTownChoices[9][4] = {
     {0, 1, 4, -1}, {6, -1, 0, 0}, {0, 1, -1, 0},
@@ -230,10 +208,7 @@ int g_rmgTerrainTownChoices[9][4] = {
     {5, 3, 4, -1}, {3, -1, 0, 0}, {-1, 0, 0, 0}
 };
 
-// Town-alignment preference used by chooseTerrain 0x532ace..0x532ad5.
-// Nine dwords from the SHA-256-pinned Complete image; this is a distinct
-// RMG table, not armygrp's native-terrain table at 0x643698. Role-derived
-// name: no Dreamcast RMG compiland or original global spelling exists.
+// Native terrain of each town alignment, used when choosing zone terrain.
 DATA(0x006408C8)
 static const int g_rmgTownNativeTerrains[9] = {
     eTerrainGrass, eTerrainGrass, eTerrainSnow, eTerrainLava, eTerrainDirt,
@@ -256,8 +231,7 @@ double g_rmgDirectionSines[32] = {
     -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951
 };
 
-// Four six-entry tables drive Complete's guarded-zone connection strength.
-// Six dwords per row in the pinned Complete image; original names unknown.
+// Guard value thresholds and scales by combined monster strength (0-5).
 DATA(0x006823F0) int g_rmgGuardThresholdLow[6] = {50000, 2500, 1500, 1000, 500, 0};
 DATA(0x00682408) int g_rmgGuardThresholdHigh[6] = {50000, 7500, 7500, 7500, 5000, 5000};
 DATA(0x00682420) int g_rmgGuardScaleLow[6] = {0, 2, 3, 4, 6, 6};
@@ -295,8 +269,6 @@ static const char* g_rmgTownNames[9] = {
     DATA_COMPGEN(0x00682750, rmgTownConflux, "conflux")
 };
 
-// Ordinary helper used by ReadRmgTemplateZones; original name unknown.
-// The connection reader and template-row scan share the same blank test.
 static bool isRmgTemplateFieldSet(const char* value)
 {
     return value && value[0] && value[0] != ' ';
@@ -311,8 +283,6 @@ static void __fastcall assignRmgTeams(
     const b8* players,
     char* teams);
 
-// Retail retains bitset<156>::set and bitset<128>::set in the two expansions.
-// The wrapper name is inferred.
 template <unsigned int N>
 static void setAvailableRmgHeroes(
     std::bitset<N>* availableHeroes,
@@ -324,9 +294,6 @@ static void setAvailableRmgHeroes(
         std::logical_not<b8>());
 }
 
-// Vtable 0x6409cc slot 0 and the 0x14-byte concrete map layout identify this
-// scalar deleting wrapper. Its non-deleting half destroys the owned array of
-// 0x30-byte TRmgMapItem elements before restoring the abstract map vtable.
 VA_COMPGEN(0x00530F80, 0x21, SCALAR_DELETING_DTOR, type_random_map)
 
 VA(0x00530E90, 0x4A)
@@ -339,9 +306,7 @@ TRmgMapItem::TRmgMapItem()
 VA_COMPGEN(0x00530EE0, 0x26, IMPLICIT_DTOR, TRmgMapItem)
 MAC_COMPGEN_ADDRESS(0x22d02c, 0x84, IMPLICIT_DTOR, TRmgMapItem)
 
-// Called by the array constructor at 0x530e90 after m_objects construction.
-// Retail clears the pointer vector before taking the packed-field snapshots;
-// fields absent from these writes, including previous Y/Z, remain unchanged.
+// Resets the cell to empty water; the previous-tile Y/Z are left unchanged.
 VA(0x00530F10, 0x6F)
 MAC_ADDRESS(0x22d110, 0x15c)
 void TRmgMapItem::clear()
@@ -385,8 +350,6 @@ void TRmgMapItem::clear()
     m_tileData = tileData;
 }
 
-// Retail retains this constructor call in TRmgGeneratorBase::TRmgGeneratorBase
-// (0x536070).
 VA(0x00530FB0, 0xA0)
 MAC_ADDRESS(0x22d394, 0xbc)
 type_random_map::type_random_map(int width, int height, int levels)
@@ -398,8 +361,6 @@ type_random_map::type_random_map(int width, int height, int levels)
     m_mapItems = new TRmgMapItem[m_mapWidth * m_mapHeight * m_numberLevels];
 }
 
-// The array-delete helper for TRmgMapItem uses the recovered 0x30-byte stride
-// and delegates every element to the implicit destructor above.
 VA_COMPGEN(0x00531050, 0x58, VECTOR_DELETING_DTOR, TRmgMapItem)
 
 VA(0x005310B0, 0x83)
@@ -437,8 +398,8 @@ b8 type_random_map::hasConnectedOutline(
     const std::vector<TPoint>& outline, TRmgMapPosition position,
     b8 allowEntrances, TRmgZone* zone, b8 requirePathClearance)
 {
-    // Circular run counting: the repeated first point closes the final run.
-    // Retail requires a nonempty outline; preserve its empty-outline behavior.
+    // Counts blocked runs around the outline, revisiting the first point to
+    // close the last run. The outline must be nonempty.
     b8 blocked = true;
     b8 foundBoundary = false;
     b8 waterZone = zone->m_terrain == eTerrainWater;
@@ -471,7 +432,6 @@ b8 type_random_map::hasConnectedOutline(
     return true;
 }
 
-// Preserve the callers' Y-before-X bound updates.
 static inline void setRmgNeighborhoodBounds(TRmgZoneBounds& bounds,
     const TPoint& position, const type_random_map& map, int radius)
 {
@@ -511,8 +471,8 @@ void type_random_map::markCoastalTiles()
     }
 }
 
-// Equal-cost entries precede older entries, so back removal processes ties
-// oldest first. Retail uses one top test with two unconditional back edges.
+// Binary search in a cost-descending worklist. Equal costs go before older
+// entries, so popping from the back processes ties oldest first.
 static int findRmgWorkItemInsertionIndex(
     const std::vector<int>& costs, int count, int cost)
 {
@@ -532,8 +492,6 @@ static int findRmgWorkItemInsertionIndex(
     return middle;
 }
 
-// BuildRoadCostMap and CreateRiver materialize a separate by-value position
-// before this search. No standalone body survives; name/linkage are inferred.
 static void insertRmgWorkItem(
     std::vector<TRmgMapPosition>& positions,
     std::vector<int>& costs,
@@ -545,8 +503,6 @@ static void insertRmgWorkItem(
     costs.insert(costs.begin() + middle, cost);
 }
 
-// Copy the position before either erase, and preserve cost-before-position
-// removal. Searches that consume the queued cost use their own extraction.
 static inline void popRmgMovementPosition(TRmgMapPosition& position,
     std::vector<TRmgMapPosition>& positions, std::vector<int>& costs)
 {
@@ -555,16 +511,14 @@ static inline void popRmgMovementPosition(TRmgMapPosition& position,
     positions.pop_back();
 }
 
-// Retail 0x5407dd/0x5408a2 pass a by-value position and a water byte; name unknown.
-// This flood inserts costs before positions (+0x3c6, stride 4; +0x3de, stride 12).
-// Other position worklists insert positions first. Keep the distinct order and
-// this caller's direct neighbor argument rather than an extra by-value copy.
+// Floods movement costs out from a connection cell. Entering another zone
+// or water costs 10 per step, other steps 1.
 VA(0x00531460, 0x441)
 MAC_ADDRESS(0x22d9ac, 0x5cc)
 void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZone)
 {
-    // Retail applies the zero-cost clearance override after the improvement
-    // test and reads the queued cost even though it is not subsequently used.
+    // Clear cells beside a zero-cost cell also cost zero; this is applied
+    // after the improvement test.
     std::vector<int> costs;
     std::vector<TRmgMapPosition> positions;
     TRmgMapItem* seed = getMapItem(position);
@@ -633,17 +587,15 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
     }
 }
 
-// The category guard precedes the bitset query.
 static inline bool isRmgWaterOnlyPrototype(const TObjectType& prototype)
 {
     return prototype.m_slotCategory == TObjectType::SLOT_CATEGORY_0
         && prototype.m_recommendedTerrainMask.test(eTerrainWater);
 }
 
-// Retail checks trigger and blocked-mask cells separately, even when both
-// select the same tile. Only the trigger arm observes rejectBorder. The
-// category-zero water rule belongs to the blocked-mask arm, not the whole
-// footprint. Bounds are signed; the two mask loops use unsigned indices.
+// Checks the footprint against map bounds, zones and entrances. Only trigger
+// cells honour rejectBorder; only blocked cells apply the water rule
+// (water-only objects must stand on water, others on land).
 VA(0x005318B0, 0x212)
 MAC_ADDRESS(0x22dfe0, 0x2a4) // anchor-callee 0x531d29; thiscall, ret 0x18; retail-only
 b8 type_random_map::isPlacementBlocked(
@@ -715,9 +667,8 @@ void type_random_map::markBorderPatch(TRmgMapPosition position)
     }
 }
 
-// Keep the native point construction and compound subtraction nested.
-// Callers pass either the live prototype trigger or their earlier snapshot;
-// town placement must keep its captured offset across virtual object insertion.
+// Map position of an object's trigger cell. Town placement passes a trigger
+// captured before the object is inserted.
 static inline TRmgMapPosition getRmgObjectTriggerPosition(
     TRmgMapPosition position, const TObjectType::TPoint& trigger)
 {
@@ -726,23 +677,21 @@ static inline TRmgMapPosition getRmgObjectTriggerPosition(
     return position;
 }
 
-// Translate a placed object's stored position by its live prototype trigger.
+// Entrance cell of a placed object: its position offset by the trigger cell.
 static inline TRmgMapPosition getRmgPlacedObjectEntrance(const type_object* object)
 {
     return getRmgObjectTriggerPosition(object->getPosition(),
         object->m_properties->m_prototype->m_triggerCell);
 }
 
-// Keep trait2 before trait1; direction limits use trait1 alone elsewhere.
 static inline bool allowsRmgSharedObjectEntrance(int objectType)
 {
     return g_adventureObjectTraits[objectType].m_trait2
         && g_adventureObjectTraits[objectType].m_trait1;
 }
 
-// The footprint/outline helper calls are retained, followed by an expanded
-// entrance lookup one row below the trigger. Retail checks a negative zone
-// separately from a different zone, then compares water membership as ints.
+// The object must fit, have a connected outline, and its entrance cell below
+// the trigger must be passable land of the same zone and water class.
 VA(0x00531CF0, 0x1A5)
 MAC_ADDRESS(0x22e6a8, 0x270) // anchor-callee 0x541c73; thiscall, ret 0x14; retail-only
 b8 type_random_map::canPlaceObject(
@@ -780,15 +729,8 @@ b8 type_random_map::canPlaceObject(
     return result;
 }
 
-// Treasure fill and guard placement pass a map in ECX, followed by an
-// object address and a by-value position. Retail first stores that position
-// into the object, then updates the footprint's cells and object vectors.
-// At both STL insertion sites retail creates a pointer temporary at [ebp-4].
-// A type_object reference supplies &object prvalues naturally; a pointer
-// parameter binds directly from [ebp+8] instead. This source contract remains
-// a retail-supported inference: there is no Dreamcast RMG declaration.
-// Mask coordinates are unsigned, world coordinates signed; width/height
-// queries remain live throughout both footprint walkers.
+// Puts the object on the map: trigger cells become entrances with open
+// paths, blocked cells become impassable, and both record the object.
 VA(0x00531EA0, 0x2E6)
 MAC_ADDRESS(0x22e918, 0x1c4) // anchor-callee 0x5465d9/0x535400; thiscall, ret 0x10
 void type_random_map::addObject(type_object& object, TRmgMapPosition position)
@@ -829,7 +771,6 @@ void type_random_map::setTile(const TRmgGridPoint& point, const rmgTerrainTile& 
     item.setTerrain(terrain, frame, flipX, flipY);
 }
 
-// Slot 2 updates only the packed eight-bit terrain frame.
 VA(0x00532200, 0x3C)
 MAC_ADDRESS(0x22eb4c, 0x38)
 void type_random_map::setFrame(const TRmgGridPoint& point, int value)
@@ -838,13 +779,9 @@ void type_random_map::setFrame(const TRmgGridPoint& point, int value)
     item.m_tile.m_terrainFrame = value;
 }
 
-// Slot 3 writes the explicit output and returns its address. This body alone
-// also fits a hidden value result; retail adapter 0x532790 distinguishes the
-// contracts by copying from the returned reference, not the named temporary.
 VA(0x00532240, 0x15)
 MAC_ADDRESS(0x22eb84, 0x14)
 #if defined(HOMM3_TARGET_MAC)
-// Mac 0x22eb84 returns the size through a hidden result pointer.
 TRmgGridPoint type_random_map::getSize()
 {
     return TRmgGridPoint(m_mapWidth, m_mapHeight);
@@ -857,8 +794,6 @@ TRmgGridPoint& type_random_map::getSize(TRmgGridPoint& output)
 }
 #endif
 
-// Slot 4 expands the packed terrain fields into the adapter's three-dword
-// value, including the two independent flip bytes.
 VA(0x00532260, 0x60)
 MAC_ADDRESS(0x22eb98, 0x80)
 rmgTerrainTile type_random_map::getTile(const TRmgGridPoint& point)
@@ -872,9 +807,6 @@ rmgTerrainTile type_random_map::getTile(const TRmgGridPoint& point)
     return tile;
 }
 
-// Vtable 0x6409cc slots 5 and 6 index the 0x30-byte cell array with the
-// supplied x/y point. The two signed extracts select the six-bit land kind
-// and its adjacent eight-bit terrain frame from TRmgGroundTile.
 VA(0x005322C0, 0x2A)
 MAC_ADDRESS(0x22ec18, 0x34)
 int type_random_map::getTerrain(const TRmgGridPoint& point)
@@ -948,21 +880,15 @@ int TRmgRoadMapAdapter::getTerrain(const TRmgGridPoint& point)
     return m_map->getMapItem(point.m_x, point.m_y)->getLandType();
 }
 
-// The two concrete adapter vtables share retail 0x532790. Keep both source
-// methods; the river method below owns their joint ICF representative.
-// VC6 accepts the temporary output at the non-const-reference slot; copy
-// its returned reference before the full expression ends, as in the painter.
 TRmgGridPoint TRmgRoadMapAdapter::getSize()
 {
 #if defined(HOMM3_TARGET_MAC)
-    return m_map->getSize();  // Mac 0x22f2e4
+    return m_map->getSize();
 #else
     return m_map->getSize(TRmgGridPoint());
 #endif
 }
 
-// The real road-painting stack construction at 0x548120 retains the
-// concrete adapter vtable and this ordinary deleting wrapper naturally.
 VA_COMPGEN(0x00532320, 0x21, SCALAR_DELETING_DTOR, TRmgRoadMapAdapter)
 
 VA(0x00532510, 0x07)
@@ -973,9 +899,6 @@ TRmgRiverMapAdapterInterface::~TRmgRiverMapAdapterInterface()
 
 VA_COMPGEN(0x00537910, 0x23, SCALAR_DELETING_DTOR, TRmgRiverMapAdapterInterface)
 
-// Vtable 0x640a3c slot 0 and the 0x08 concrete adapter layout identify this
-// scalar deleting wrapper. The retained body delegates to the adapter-interface
-// destructor at 0x532510 before conditionally releasing the object.
 VA_COMPGEN(0x005324E0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverMapAdapter)
 
 VA(0x00532520, 0x205)
@@ -1029,15 +952,12 @@ void TRmgRiverMapAdapter::setLineType(const TRmgGridPoint& point, int value)
     item.m_tileData.m_hasRiver = present;
 }
 
-// Both adapter vtables share this body. Retail copies from the map query's
-// returned reference into its value result. The temporary output lives
-// through both the query and the copy.
 VA(0x00532790, 0x27)
 MAC_ADDRESS(0x22f2e4, 0x3c) // vtable 0x640a3c slot 3, ICF with road slot 3
 TRmgGridPoint TRmgRiverMapAdapter::getSize()
 {
 #if defined(HOMM3_TARGET_MAC)
-    return m_map->getSize();  // Mac 0x22f2e4
+    return m_map->getSize();
 #else
     return m_map->getSize(TRmgGridPoint());
 #endif
@@ -1056,8 +976,6 @@ rmgTerrainTile TRmgRiverMapAdapter::getTile(const TRmgGridPoint& point)
     return tile;
 }
 
-// Concrete river-adapter vtable 0x640a3c slots 5 and 6 read the packed river
-// kind and underlying land kind from the wrapped map's 0x30-byte cell array.
 VA(0x00532830, 0x2D)
 MAC_ADDRESS(0x22f3c4, 0x38)
 int TRmgRiverMapAdapter::getLineType(const TRmgGridPoint& point)
@@ -1096,9 +1014,7 @@ void TRmgMapItem::write(TAbstractFile* outputFile)
 VA_COMPGEN(0x005329A0, 0x32, IMPLICIT_DTOR, TRmgTemplateZone)
 MAC_COMPGEN_ADDRESS(0x22f660, 0x68, IMPLICIT_DTOR, TRmgTemplateZone)
 
-// Native 0x22f6c8 counts enabled town types and uniformly selects one.
-// It returns -1 for an empty set. Both the zone constructor (0x22f834)
-// and additional-town placement (0x248878) retain this shared selection.
+// Picks a uniformly random allowed town type, or -1 when none is allowed.
 MAC_ADDRESS(0x22f6c8, 0xb4)
 int TRmgTemplateZone::selectAllowedTown()
 {
@@ -1129,8 +1045,6 @@ TRmgZone::TRmgZone(TRmgTemplateZone* newSlot)
     memset(m_objectCountByType, 0, sizeof(m_objectCountByType));
 }
 
-// Native 0x22f9d8 retains this selection; initializeZones calls it at
-// 0x23d1b4. Both builds retain the unusual OR condition in the town scan.
 MAC_ADDRESS(0x22f9d8, 0xcc)
 void TRmgZone::chooseTownType(b8 expanded)
 {
@@ -1138,9 +1052,8 @@ void TRmgZone::chooseTownType(b8 expanded)
         m_townType2 = m_alignment;
     } else {
         int count = 0;
-        // Retail 0x53bf8c..0x53bf98 continues on != -1, then on
-        // expanded, then on != 8. Preserve this observed condition,
-        // even though no table entry can satisfy both equalities.
+        // Retail bug: this condition is always true, so all four row
+        // entries are candidates, including -1 and the zero padding.
         while (count < 4 &&
             (g_rmgTerrainTownChoices[m_terrain][count] != -1 || expanded ||
              g_rmgTerrainTownChoices[m_terrain][count] != TOWN_CONFLUX))
@@ -1152,7 +1065,6 @@ void TRmgZone::chooseTownType(b8 expanded)
     }
 }
 
-// Count and selection must use the same allowed-terrain and level policy.
 static inline bool isRmgZoneTerrainAllowed(const TRmgZone& zone, int terrain)
 {
     return zone.m_templateZone->m_allowedTerrain[terrain]
@@ -1189,26 +1101,17 @@ void TRmgZone::chooseTerrain()
         m_terrain = eTerrainSubterranean;
 }
 
-// Retail 0x532b62/0x532b85/0x532ba6 destroys entrances (+0x404), boundary
-// (+0x3f4), then distances (+0x3e4), with no pointee or user cleanup.
-// The body is visible before the derived generator destructor at 0x537df0;
-// whether the original declaration was explicit remains inferred.
 VA(0x00532B50, 0x76)
 MAC_ADDRESS(0x22fbd4, 0xa0)
 TRmgZone::~TRmgZone()
 {
 }
 
-// Provisional Complete-only bookkeeping boundary, inferred from the
-// expansion in removeObject (0x54bc50); no separate retained body is known.
 void TRmgZone::decrementObjectCount(TAdventureObjectType objectType)
 {
     --m_objectCountByType[objectType];
 }
 
-// Both the level-occupancy pass and the bounds pass in FilterZonePositions
-// copy the whole coordinate before selecting a component. That retained
-// value-copy shape motivates this ordinary accessor; no DC name is known.
 TRmgMapPosition TRmgZone::getLevelPosition() const
 {
     TRmgMapPosition result;
@@ -1216,18 +1119,14 @@ TRmgMapPosition TRmgZone::getLevelPosition() const
     return result;
 }
 
-// Candidate placement loads all three coordinates before writing the zone,
-// consistent with passing the coordinate value through an ordinary setter.
 void TRmgZone::setLevelPosition(TRmgMapPosition position)
 {
     m_levelPosition = position;
 }
 
-// FilterZonePositions calls this predicate at 0x53b4b7 and 0x53b5ae.
-// The two center coordinates, template sizes and map-level comparison prove
-// its role independently of the provisional name. Return value is in al.
-// Mac 0x22fdec calls the shared two-point distance helper and reads this
-// zone's size before the other zone's size.
+// Whether two zones are close enough to connect: on one level within 110%
+// of their combined sizes; across levels the overlap must exceed half the
+// smaller size.
 VA(0x00532BD0, 0xA8)
 MAC_ADDRESS(0x22fdc0, 0xc8) // anchor-callee 0x53b4b7/0x53b5ae; thiscall, ret 4
 b8 TRmgZone::canConnect(const TRmgZone* other) const
@@ -1247,14 +1146,12 @@ b8 TRmgZone::canConnect(const TRmgZone* other) const
     return 11 * combinedSize >= 10 * distance;
 }
 
-// Query passability first so trigger-mask access remains short-circuited.
 static inline bool isRmgObjectFootprintCell(
     const TObjectType* prototype, unsigned int x, unsigned int y)
 {
     return !prototype->isPassableCell(x, y) || prototype->isTriggerCell(x, y);
 }
 
-// Update the direction before copying its offset and adding XY.
 static inline TPoint nextRmgOutlineProbe(const TPoint& position, int& direction)
 {
     direction = (direction - 2) & 7;
@@ -1262,7 +1159,6 @@ static inline TPoint nextRmgOutlineProbe(const TPoint& position, int& direction)
     return TPoint(position.m_x + offset.m_x, position.m_y + offset.m_y);
 }
 
-// Preserve the canonical point/vector addition before reversing direction.
 static inline void advanceRmgOutlineWalk(TPoint& position, int& direction)
 {
     position = position + TRmgVector(g_rmgDirections[direction].m_x,
@@ -1274,8 +1170,8 @@ VA(0x00532C80, 0x1BA)
 MAC_ADDRESS(0x22fe88, 0x208)
 void TRmgObjectPropertiesRef::buildOutline()
 {
-    // Cardinal wall following around the footprint. The world offsets are
-    // nonpositive; their negations, not negative array indices, address masks.
+    // Wall-follows the footprint with cardinal steps. Offsets are
+    // nonpositive, measured back from the object's bottom-right cell.
     if (m_outline.size() > 0)
         return;
     TPoint position;
@@ -1338,9 +1234,6 @@ void TRmgObjectPropertiesRef::buildOverlapPriorities()
     }
 }
 
-// The generator destructor calls this body at 0x537e84, then frees the
-// template. It deletes every owned slot, destroys zones, and finally name;
-// the member offsets agree with the rmg.txt coordinator and zone reader.
 VA(0x00532FE0, 0xB4)
 MAC_ADDRESS(0x230254, 0xb0)
 TRmgTemplate::~TRmgTemplate()
@@ -1349,9 +1242,6 @@ TRmgTemplate::~TRmgTemplate()
         delete m_zones[zone];
 }
 
-// The rmg.txt connection reader calls this for both endpoint identifiers.
-// It searches the template's pointer vector and compares each slot's first
-// field; ret 4 fixes the member's one integer argument.
 VA(0x005330A0, 0x3E)
 MAC_ADDRESS(0x230304, 0x48)
 TRmgTemplateZone* TRmgTemplate::findZone(int zoneIndex)
@@ -1363,9 +1253,6 @@ TRmgTemplateZone* TRmgTemplate::findZone(int zoneIndex)
     return 0;
 }
 
-// Shipyard water probing copies all three fields from the object before
-// adding offsets. This ordinary value accessor models that copy boundary;
-// the source name is inferred from the Complete-only retail use.
 TRmgMapPosition type_object::getPosition() const
 {
     return m_position;
@@ -1383,12 +1270,7 @@ type_object::type_object(TRmgObjectPropertiesRef* newProperties)
     clearPlacementMarks();
 }
 
-// The base-sized default-payload classes retain separate serialization
-// vtables. Their ordinary constructors expand the same canonical base call.
-// These Complete generator classes have no Dreamcast RMG compiland or
-// class/procedure counterparts. The factories 0x534870/0x534970/0x534a00/
-// 0x534a90 allocate only the base's 0x1c bytes and install 0x640ac4/0x640b24/
-// 0x640b34/0x640b54 respectively; writer slot 3 proves each payload role.
+// Objects whose record is the default payload for their type.
 rmgResourceObject::rmgResourceObject(TRmgObjectPropertiesRef* properties)
     : type_object(properties)
 {
@@ -1414,13 +1296,6 @@ rmgWitchHutObject::rmgWitchHutObject(TRmgObjectPropertiesRef* properties)
 {
 }
 
-// The three simple reward factories expand this same constructor. The
-// vector's automatic construction precedes these scalar/default writes.
-// Complete's generation classes have no Dreamcast RMG compiland, class or
-// procedure counterparts. DC's BlackBoxData and NewfullMap::readBlackBox
-// are the gameplay payload and reader, not these generator definitions.
-// Retail 0x534380/0x534410/0x534490 allocate 0x54 bytes, install 0x640ad4,
-// clear vector words +0x48/+0x4c/+0x50, and set the reward defaults below.
 rmgBlackBoxObject::rmgBlackBoxObject(TRmgObjectPropertiesRef* properties)
     : type_object(properties)
 {
@@ -1430,8 +1305,6 @@ rmgBlackBoxObject::rmgBlackBoxObject(TRmgObjectPropertiesRef* properties)
     memset(m_resources, 0, sizeof(m_resources));
 }
 
-// Base-object vtable 0x640a74 slot 0 retains the generated deleting wrapper;
-// its non-deleting half is the shared refcount release at 0x5338d0.
 VA_COMPGEN(0x00533120, 0x2D, SCALAR_DELETING_DTOR, type_object)
 
 VA(0x00533150, 0x12)
@@ -1445,7 +1318,6 @@ void type_object::clearPlacementMarks()
     m_blockedByCandidate = false;
 }
 
-// Keep coordinate reads interleaved with their one-byte writes.
 static inline void writeRmgMapPosition(
     TAbstractFile* outputFile, const TRmgMapPosition& position)
 {
@@ -1454,7 +1326,6 @@ static inline void writeRmgMapPosition(
     writeValue<char>(outputFile, position.m_z);
 }
 
-// One write per fixed-size block.
 template <int N>
 static inline void writeRmgReservedBytes(TAbstractFile* outputFile)
 {
@@ -1463,8 +1334,7 @@ static inline void writeRmgReservedBytes(TAbstractFile* outputFile)
     outputFile->write(reserved, sizeof(reserved));
 }
 
-// Retail stages the two reserved bytes in a zeroed int slot and writes only
-// its low short.
+// Write two reserved zero bytes.
 static inline void writeRmgReservedWord(TAbstractFile* outputFile)
 {
     int reserved = 0;
@@ -1531,9 +1401,6 @@ void rmgOwnableObject::write(TAbstractFile* outputFile, int version)
     writeRmgReservedBytes<3>(outputFile);
 }
 
-// Artifact vtable 0x640ab4 is the only change from the base constructor.
-// Its factory at 0x5341f0 expands this ordinary constructor and the canonical
-// base body; no independent retained artifact-constructor address is claimed.
 rmgArtifactObject::rmgArtifactObject(TRmgObjectPropertiesRef* properties)
     : type_object(properties)
 {
@@ -1589,7 +1456,6 @@ VA_COMPGEN(0x00533680, 0x21, SCALAR_DELETING_DTOR, rmgBlackBoxObject)
 VA_COMPGEN(0x005336B0, 0x36, IMPLICIT_DTOR, rmgBlackBoxObject)
 MAC_COMPGEN_ADDRESS(0x251488, 0x7c, IMPLICIT_DTOR, rmgBlackBoxObject)
 
-// Read the count only after the id write.
 static inline void writeRmgCreatureReward(
     TAbstractFile* outputFile, int version, int creature, const int& count)
 {
@@ -1628,8 +1494,6 @@ void rmgBlackBoxObject::write(TAbstractFile* outputFile, int version)
     writeValue<int>(outputFile, 0);
 }
 
-// Base and ownable destructors share this 13-byte body and base-vtable
-// relocation at 0x5338d0. The base cleanup is visible to the ownable destructor.
 VA(0x005338D0, 0x0D)
 MAC_ADDRESS(0x230448, 0x58)
 type_object::~type_object()
@@ -1637,7 +1501,7 @@ type_object::~type_object()
     --m_properties->m_refCount;
 }
 
-// Callers snapshot value/position before removal; query the owning zone afterward.
+// Replaces a removed object with a treasure of up to 1.5x its value.
 static inline void replaceRmgObjectWithTreasure(type_random_map_generator* generator,
     type_object* object, int value, TRmgMapPosition position)
 {
@@ -1664,8 +1528,7 @@ b8 rmgKeyTentObject::isWritable()
     return false;
 }
 
-// Vtable 0x640af4 owns a pending polymorphic seer-hut object. The retained
-// destructor deletes it before the ordinary artifact/base property release.
+// Deletes the pending seer hut if it was never placed.
 VA_COMPGEN(0x005339C0, 0x21, SCALAR_DELETING_DTOR, rmgQuestArtifactObject)
 
 VA(0x005339F0, 0x58)
@@ -1675,8 +1538,8 @@ rmgQuestArtifactObject::~rmgQuestArtifactObject()
     delete m_seerHut;
 }
 
-// The generator places the seer hut on success and takes ownership. On
-// failure the wrapper destroys its pending hut. Both paths clear ownership.
+// On success the generator places the seer hut and takes ownership; on
+// failure the hut is destroyed.
 VA(0x00533A50, 0x33)
 MAC_ADDRESS(0x2311fc, 0x78) // vtable 0x640af4 slot 2 + retained callee 0x54b490
 b8 rmgQuestArtifactObject::isWritable()
@@ -1690,9 +1553,9 @@ b8 rmgQuestArtifactObject::isWritable()
     return false;
 }
 
-// Vtable 0x640b04 serializes the artifact quest followed by exactly one
-// reward: experience, creatures, or resources, in that precedence order.
-// AB adds the quest kind, artifact count, deadline and three empty strings.
+// Artifact quest followed by exactly one reward: experience, creatures or
+// resources, in that precedence. The AB format adds the quest kind,
+// artifact count, deadline and three empty texts.
 VA(0x00533A90, 0x1E0)
 MAC_ADDRESS(0x2312d0, 0x31c)
 void rmgSeerHutObject::write(TAbstractFile* outputFile, int version)
@@ -1723,9 +1586,8 @@ void rmgSeerHutObject::write(TAbstractFile* outputFile, int version)
     writeRmgReservedWord(outputFile);
 }
 
-// The hero-object factory marks the selected index in disabledHeroes before
-// construction. Vtable 0x640b14 slot 1 clears that byte when the reservation
-// is released.
+// The factory reserves the hero in disabledHeroes; releaseReservation
+// frees it again.
 rmgHeroObject::rmgHeroObject(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, const int& objectId, int heroIndex,
     int experience)
@@ -1824,9 +1686,6 @@ void rmgWitchHutObject::write(TAbstractFile* outputFile, int version)
     }
 }
 
-// Complete-only helper called by InitializeObjectGenerators at 0x538b10.
-// The four argument loads, five stores, vtable relocation, and `ret 0x10`
-// independently prove this constructor and the shared 0x14-byte prefix.
 VA(0x00534160, 0x27)
 MAC_ADDRESS(0x231cec, 0x1c)
 type_treasure_def::type_treasure_def(
@@ -1879,7 +1738,7 @@ type_black_box_creature_def::type_black_box_creature_def(int newCreatureType)
         m_creatureCount = ((m_creatureCount + 1) / 2) * 2;
 }
 
-// Keep integer multiplication before division and the zero-zone guard.
+// Raises a value by the share of active zones with the same alignment.
 static inline int adjustRmgValueForAlignment(int value, int alignmentCount, int zoneCount)
 {
     if (zoneCount > 0)
@@ -1887,9 +1746,8 @@ static inline int adjustRmgValueForAlignment(int value, int alignmentCount, int 
     return value;
 }
 
-// Creature-definition vtable 0x640b7c slot 1. The zone test reads +8
-// (townType2), and the alignment weighting uses the generator's active-zone
-// counts.
+// Creature rewards are offered only in zones of the creature's town; the
+// value rises with that town's share of active zones.
 VA(0x00534310, 0x64)
 MAC_ADDRESS(0x231f04, 0x6c)
 int type_black_box_creature_def::getValue(
@@ -1955,7 +1813,6 @@ type_object* type_black_box_spells_def::generate(TRmgObjectPropertiesRef* proper
     return object;
 }
 
-// Both dwelling-definition tables share this ownable-object factory.
 VA(0x00534790, 0x53)
 MAC_ADDRESS(0x2322e4, 0x50)
 type_object* type_dwelling_def::generate(TRmgObjectPropertiesRef* properties,
@@ -1981,8 +1838,6 @@ int type_map_dwelling_def::getValue(TRmgZone* zone, type_random_map_generator* g
     return value + creature.m_aiValue * alignmentZoneCount / 2;
 }
 
-// Resource-definition table 0x640bc4 constructs the base-sized resource
-// object and replaces its vptr with 0x640ac4 after the canonical base call.
 VA(0x00534870, 0x53)
 MAC_ADDRESS(0x23243c, 0x50) // anchor-definition table + allocated-object vptr; ret 0xc
 type_object* type_resource_lump_def::generate(TRmgObjectPropertiesRef* properties,
@@ -1991,11 +1846,7 @@ type_object* type_resource_lump_def::generate(TRmgObjectPropertiesRef* propertie
     return new rmgResourceObject(properties);
 }
 
-// Prison-definition table 0x640bd0 selects this factory. Retail reserves
-// a hero, returns null on exhaustion, and expands the 0x2c-byte object's
-// constructor with the definition's experience and the next generator id.
-// Complete-only: no Dreamcast counterpart; constructor spelling provisional.
-// The post-incremented id's const-reference temporary lives through construction.
+// Reserves a random available hero; no prison when none is left.
 VA(0x005348D0, 0x93)
 MAC_ADDRESS(0x2324e4, 0x84) // anchor-definition/object vtables + selectPrisonHero
 type_object* type_prison_def::generate(TRmgObjectPropertiesRef* properties,
@@ -2008,7 +1859,6 @@ type_object* type_prison_def::generate(TRmgObjectPropertiesRef* properties,
         generator->m_nextObjectId++, heroIndex, m_experience);
 }
 
-// Scholar-definition table 0x640bdc selects object vtable 0x640b24.
 VA(0x00534970, 0x53)
 MAC_ADDRESS(0x2325b0, 0x50) // anchor-definition and object vtables; ret 0xc
 type_object* type_scholar_def::generate(TRmgObjectPropertiesRef* properties,
@@ -2024,7 +1874,6 @@ type_shrine_def::type_shrine_def(int newObjectType, int newValue)
 {
 }
 
-// Shrine-definition table 0x640be8 selects object vtable 0x640b34.
 VA(0x00534A00, 0x53)
 MAC_ADDRESS(0x232644, 0x50) // anchor-definition and object vtables; ret 0xc
 type_object* type_shrine_def::generate(TRmgObjectPropertiesRef* properties,
@@ -2040,7 +1889,6 @@ type_witch_hut_def::type_witch_hut_def()
 {
 }
 
-// Witch-hut definition 0x640bf4 selects object vtable 0x640b54.
 VA(0x00534A90, 0x53)
 MAC_ADDRESS(0x2326dc, 0x50) // anchor-definition and object vtables; ret 0xc
 type_object* type_witch_hut_def::generate(TRmgObjectPropertiesRef* properties,
@@ -2049,7 +1897,6 @@ type_object* type_witch_hut_def::generate(TRmgObjectPropertiesRef* properties,
     return new rmgWitchHutObject(properties);
 }
 
-// Check the prototype before the pool; creature alignment/value policy follows.
 static inline bool canUseRmgSeerHutPrototype(
     const type_random_map_generator* generator, int prototypeIndex)
 {
@@ -2057,8 +1904,6 @@ static inline bool canUseRmgSeerHutPrototype(
         && !generator->m_questArtifactPoolLow;
 }
 
-// Callers allocate the hut before this operation and write its payload afterward,
-// even if wrapper allocation returns null.
 static inline rmgQuestArtifactObject* createRmgQuestArtifactForHut(
     type_random_map_generator* generator, rmgSeerHutObject* seerHut,
     type_treasure_def* definition)
@@ -2091,9 +1936,8 @@ type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properti
     return object;
 }
 
-// Seer-hut definition tables 0x640c0c and 0x640c18 share this ICF body.
-// Both classes exist independently and use the same availability checks:
-// current prototype at +0xf58, then the exhausted-artifact flag at +0x10b4.
+// Seer huts are offered only for the current seer-hut prototype and while
+// enough quest artifacts remain.
 VA(0x00534C80, 0x34)
 MAC_ADDRESS(0x232900, 0x34)
 int type_quest_experience_def::getValue(TRmgZone*, type_random_map_generator* generator)
@@ -2142,7 +1986,7 @@ type_spell_scroll_def::type_spell_scroll_def(int newSpellLevel, int newValue)
     m_spellLevel = newSpellLevel;
 }
 
-// Query the excluded flag, school membership, then level in that order.
+// Scroll spells: not flagged 0x2000, in some school, of the given level.
 static inline bool isRmgScrollSpell(int spell, int level)
 {
     return !(g_spellTraits[spell].m_flags & 0x2000)
@@ -2155,8 +1999,8 @@ MAC_ADDRESS(0x232b80, 0x108)
 type_object* type_spell_scroll_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator*, TRmgZone*)
 {
-    // Count then select the nth eligible spell: one random draw, in spell order.
-    // Retail assumes at least one eligible spell for the configured level.
+    // One random draw picks among eligible spells in spell order; at least
+    // one eligible spell must exist.
     int eligibleSpellCount = 0;
     int spell;
     for (spell = 0; spell < 70; ++spell) {
@@ -2182,9 +2026,7 @@ int type_key_tent_def::getValue(TRmgZone*, type_random_map_generator* generator)
     return m_value;
 }
 
-// Definition vtable 0x640c30 slot 0 constructs the concrete 0x24-byte tent.
-// The generator is the second factory argument; +0x20 receives m_value,
-// not the definition subtype/color (that is already in its properties).
+// The tent stores its treasure value; its colour is the prototype subtype.
 VA(0x00534FD0, 0x64)
 MAC_ADDRESS(0x232cfc, 0x70)
 type_object* type_key_tent_def::generate(TRmgObjectPropertiesRef* properties,
@@ -2193,9 +2035,7 @@ type_object* type_key_tent_def::generate(TRmgObjectPropertiesRef* properties,
     return new rmgKeyTentObject(properties, generator, m_value);
 }
 
-// Called after map/vector construction. Clears entries without deleting objects;
-// ownership is established by 0x547360 and 0x5466e0. Retail reset copies at
-// 0x547625/0x547717 call the ordinary two-coordinate lookup.
+// Empties the group; its objects are owned elsewhere.
 VA(0x00535040, 0xC6)
 MAC_ADDRESS(0x232e70, 0xa8) // anchor-callee 0x5473d2; thiscall, ret 0; retail-only
 void TRmgTreasureGroup::reset()
@@ -2216,9 +2056,7 @@ void TRmgTreasureGroup::reset()
     }
 }
 
-// Native 0x232fc4 marks the group ready and flags every surface-outline cell.
-// Its retained callers are assembleTreasureGroup, placeQuestArtifact and
-// placeKeyTentGuard; Windows expands the same shared loop in those callers.
+// Marks the group ready and flags its outline cells.
 MAC_ADDRESS(0x232fc4, 0x64)
 void TRmgTreasureGroup::markPlacementOutline()
 {
@@ -2228,8 +2066,6 @@ void TRmgTreasureGroup::markPlacementOutline()
             m_outline[index].m_y)->m_tileData.m_placementOutline = true;
 }
 
-// Native 0x233d18 tests each group's object trait before the caller checks
-// its separate guard flag. The only retained caller is 0x24b22c.
 MAC_ADDRESS(0x233d18, 0x60)
 b8 TRmgTreasureGroup::objectsAllowEntrances() const
 {
@@ -2241,8 +2077,6 @@ b8 TRmgTreasureGroup::objectsAllowEntrances() const
     return true;
 }
 
-// Mac keeps this shared group insertion at 0x233d78. Its four callers
-// pass one object and a two-dimensional point; map storage uses level zero.
 MAC_ADDRESS(0x233d78, 0xd4)
 void TRmgTreasureGroup::addObject(type_object* object, TPoint point)
 {
@@ -2251,22 +2085,15 @@ void TRmgTreasureGroup::addObject(type_object* object, TPoint point)
     m_map.addObject(*object, position);
 }
 
-// Complete-only group helpers: assembly passes the guard pointer in one
-// stack dword to 0x535110 (AL result); its first and last calls trace the
-// group's closed outline. 0x535ee0 appends points at +0x38 until closure.
-// Provisional names describe these retail roles.
-// Native 0x233234/0x23333c/0x2334a0/0x2335e0 uses the surface
-// lookup overload. Its three materialized land predicates and copied point
-// sums at 0x233458/0x23356c use the shared isPassableLand and operator+.
+// Rings the objects' entrances with border cells, places the guard on a
+// random fitting border cell, opens paths around it and retraces the outline.
 VA(0x00535110, 0x4AB)
 MAC_ADDRESS(0x233028, 0x6a8) // anchor-callee 0x546843; thiscall, ret 4
 b8 TRmgTreasureGroup::addGuard(type_object* guard)
 {
     traceOutline();
-    // Retail 0x535150 saves the existing object's prototype; 0x535405
-    // still reads that last prototype's trigger after inserting the guard.
-    // Preserve that retail quirk: substituting the guard prototype changes
-    // generated maps. This path also assumes the group already owns an object.
+    // Retail bug: the guard position is adjusted by the trigger of the last
+    // object's prototype, not the guard's. The group must hold an object.
     TObjectType* prototype;
     for (unsigned int objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
         type_object* object = m_objects[objectIndex];
@@ -2348,17 +2175,14 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
     return true;
 }
 
-// Retained immediately before canFitObject. Three stores and ret 12 prove
-// the value ABI and 12-byte layout; original source-file ownership is inferred.
 VA(0x005355C0, 0x1A)
 TRmgMapPosition::TRmgMapPosition(int newX, int newY, int newZ)
     : TPoint(newX, newY), m_z(newZ)
 {
 }
 
-// Mac 0x2337b4, 0x233858 and 0x233978 query the surface XY plane using a
-// shared translated trigger snapshot. Keep the native first-failure join;
-// placement checking receives the original by-value position.
+// Whether an object fits on the group map without blocking neighbouring
+// entrances; guards also need a free neighbouring cell.
 VA(0x005355E0, 0x1F9)
 MAC_ADDRESS(0x2336d0, 0x374) // anchor-callee 0x535ab9; thiscall, ret 0x10
 b8 TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
@@ -2408,9 +2232,7 @@ placementFailure:
     return true;
 }
 
-// Mac retains addObject at 0x233cf0 and reuses the candidate position for
-// selection. Native 0x233aa0..0x233ab4 snapshots the trigger before conversion;
-// 0x233b70..0x233c18 uses the ordinary -= and two returned point sums.
+// Places an object at a random fitting cell beside an existing entrance.
 VA(0x00535970, 0x240)
 MAC_ADDRESS(0x233a44, 0x2d4) // anchor-callee 0x546680; thiscall, ret 4
 b8 TRmgTreasureGroup::tryAddObject(type_object* object)
@@ -2470,13 +2292,8 @@ void TRmgTreasureGroup::updateBounds()
     }
 }
 
-// The cell predicates match the two retail expansions at 0x535f39 and
-// 0x536000, including the byte-return entrance/clearance queries.
-// Keep the x == width exhaustion test, including retail's zero-height behavior.
-// The retained vector<TPoint>::insert matches all 582 bytes of the folded
-// vector<type_artifact> body at 0x54d330, with identical new/delete calls.
-// Direction-table references resolve to g_rmgDirections (0x69cdc0) and +4.
-// The native perimeter uses the surface lookup overload.
+// Traces the closed outline around the occupied cells, starting above the
+// first occupied cell in row-major order.
 VA(0x00535EE0, 0x18F)
 MAC_ADDRESS(0x233fb8, 0x274) // anchor-callee 0x5468ea/0x53511b; thiscall, ret 0
 void TRmgTreasureGroup::traceOutline()
@@ -2541,9 +2358,7 @@ VA_COMPGEN(0x005361B0, 0x23, SCALAR_DELETING_DTOR, TRmgMapInterface)
 
 VA_COMPGEN(0x005361E0, 0x18, DEFAULT_CTOR_CLOSURE, TRmgObjectPropertiesRef)
 
-// The loader inlines construction of each reference. Its owned outline
-// vector is constructed before the scalar stores below; the 8x6 priority
-// table is left uninitialized until the lazy builder sets its flag.
+// Overlap priorities stay uninitialized until first built.
 TRmgObjectPropertiesRef::TRmgObjectPropertiesRef(TObjectType* prototype)
 {
     m_prototype = prototype;
@@ -2583,9 +2398,8 @@ void TRmgGeneratorBase::loadObjectPrototypes()
         memcpy(&type, &g_adventureObjectTraits[type].m_nameRow, sizeof(type));
         m_objectPrototypes[type].push_back(properties);
     }
-    // Exchange sort by subtype, swapping prototype pointers within the refs.
-    // Keep its exact swaps and the retail nonempty-monster-list assumption;
-    // replacing the unsigned size()-1 condition would repair retail behavior.
+    // Exchange sort of the monsters by subtype, swapping prototypes. Retail
+    // bug: an empty monster list underflows size() - 1.
     for (index = 0; index < m_objectPrototypes[MONSTER].size() - 1; ++index) {
         for (unsigned int second = index + 1; second < m_objectPrototypes[MONSTER].size(); ++second) {
             if (m_objectPrototypes[MONSTER][index]->m_prototype->getSubtype() > m_objectPrototypes[MONSTER][second]->m_prototype->getSubtype()) {
@@ -2609,8 +2423,7 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
             delete m_objectPrototypes[type][prototype];
 }
 
-// Sixteen metadata columns precede scores. Resize before parsing and retain
-// left-to-right reads and index + preceding-score-count + metadata order.
+// Score columns follow sixteen metadata columns.
 static inline void readRmgPlacementScores(std::vector<int>& scores,
     const TSpreadsheetResource::TStringVector& fields, int precedingScores, int count)
 {
@@ -2619,12 +2432,8 @@ static inline void readRmgPlacementScores(std::vector<int>& scores,
         scores[index] = atoi(fields[index + precedingScores + 16]);
 }
 
-// The final lookup's temporary reverse iterator preserves the signed match
-// sentinel and last-duplicate precedence. Construct it only on the guarded
-// RHS: an empty group never forms a pointer offset.
-// Mac 0x234998/0x2349a4 use separate object/terrain enum-vector families,
-// distinct from the subtype integer/POD vector at 0x2348e4. The object list
-// indexes the adventure-object traits/prototypes, establishing its domain.
+// Reads rand_trn.txt and binds each prototype to the last rule matching its
+// object type, subtype and first recommended terrain.
 VA(0x00536560, 0x5F2)
 MAC_ADDRESS(0x23486c, 0x6a0) // anchor-string rand_trn.txt; thiscall, ret 0; retail-only
 void TRmgGeneratorBase::readObjectPlacementRules()
@@ -2668,7 +2477,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
     sheet->dispose();
 
 #if defined(HOMM3_TARGET_MAC)
-    // CodeWarrior's 32K frame limit: Mac 0x23486c news both tables in one 0xd980 block.
+    // The Mac build allocates these large tables on the heap.
     struct TPlacementTables {
         std::vector<TRmgObjectPlacementRule*> rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
         std::vector<int> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
@@ -2703,8 +2512,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
             if (terrain != eTerrainRock) {
                 subtype = prototype->getSubtype();
                 int mappedType;
-                // Same canonical byte table used by readObjectType: the
-                // dword at +8 remaps aliases to their objnames.txt row.
+                // Aliased object types use their objnames.txt row.
                 memcpy(&mappedType, &g_adventureObjectTraits[objectType].m_nameRow,
                        sizeof(mappedType));
                 int match = rulesByType[mappedType][terrain].size();
@@ -2721,9 +2529,8 @@ void TRmgGeneratorBase::readObjectPlacementRules()
 #endif
 }
 
-// Caller 0x5375ff admits only positive scores. Retail retains bitset<48>::test
-// at 0x536ca3/0x536cc1 and bitset<10>::test at 0x536d06. The insert callee's
-// widget* name is an ICF alias of this pointer-vector instantiation.
+// Scores a candidate position from the terrain under the object and the
+// objects it touches; callers accept only positive scores.
 VA(0x00536BC0, 0x5F4)
 MAC_ADDRESS(0x23515c, 0x7a0) // anchor-callee 0x5375ff; thiscall, ret 0x10; retail-only
 int TRmgGeneratorBase::scoreObjectPlacement(
@@ -2754,8 +2561,8 @@ int TRmgGeneratorBase::scoreObjectPlacement(
                 if (item->hasPathClearance())
                     return RMG_PLACEMENT_INVALID;
 
-                // Retail 0x536d34 overwrites the complete mark with one
-                // before marking the surrounding area; retain that store.
+                // The cell's earlier marks are replaced by ADJACENT before
+                // its neighbourhood is marked.
                 marks[column + 1][row + 1] = RMG_PLACEMENT_ADJACENT;
                 terrainSeen[item->getLandType()] = true;
                 int firstRow = position.m_y - min(y + 1, m_map.m_mapHeight) + 1;
@@ -2859,11 +2666,8 @@ void TRmgGeneratorBase::addObject(type_object* object, TRmgMapPosition position)
     m_objects.push_back(object);
 }
 
-// Map-decoration caller 0x537a59 passes a position value and progress share.
-// The body uses base fields and virtual object insertion; ownership/name provisional.
-// Pinned retail 0x6408ec..0x64099f: decoration type ordinals, excluding
-// terrain holes, rivers and roads. The final six Complete-only ids have
-// no admitted semantic names. Role-derived table name.
+// Decoration (obstacle) object types, excluding holes, rivers and roads.
+// The last six are unnamed Complete additions.
 DATA(0x006408EC)
 static const int g_rmgDecorationTypes[45] = {
     TERRAIN_BRUSH, TERRAIN_BUSH, TERRAIN_CACTUS, TERRAIN_CANYON,
@@ -2879,8 +2683,7 @@ static const int g_rmgDecorationTypes[45] = {
     TERRAIN_YUCCA_TREE, TERRAIN_REEF, 206, 207, 208, 209, 210, 211
 };
 
-// Retail retains the initial single insert, worklist erase and first
-// by-value getMapItem call.
+// Fills obstacles outward from a cell with weighted random decorations.
 VA(0x005373A0, 0x53D)
 MAC_ADDRESS(0x2359b4, 0x76c)
 void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSteps)
@@ -2899,9 +2702,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
         std::vector<TRmgObjectPropertiesRef*> candidates;
         std::vector<TRmgMapPosition> positions;
         std::vector<int> weights;
-        // Retail constructs a fourth vector at frame -0x84 and destroys it
-        // before weights (-0x48), positions (-0x58), candidates (-0x38).
-        // No element use survives; object-pointer element type/name provisional.
+        // Unused.
         std::vector<type_object*> unusedObjects;
         int totalWeight = 0;
         for (const int* type = g_rmgDecorationTypes;
@@ -2941,7 +2742,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
             }
         }
         if (candidates.size()) {
-            // Candidate traversal and subtraction order determine seed identity.
+            // Weighted random pick; candidate order affects the result.
             int selected = rand() % totalWeight;
             unsigned int index;
             for (index = 0; index < candidates.size(); ++index) {
@@ -2980,7 +2781,7 @@ TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)
     return &m_mapItems[(point.m_z * m_mapHeight + point.m_y) * m_mapWidth + point.m_x];
 }
 
-// Retail 0x549c91 calls this base-prefix pass after coastal marking.
+// Decorates the whole map; runs after coastal tiles are marked.
 VA(0x00537970, 0x199)
 MAC_ADDRESS(0x236120, 0x2c4)
 void TRmgGeneratorBase::decorateMap()
@@ -3031,8 +2832,8 @@ static inline void applyRmgObjectLimitOverrides(int* limits,
         limits[overrides[count].m_objectType] = overrides[count].m_limit;
 }
 
-// Hero eligibility uses bytes within THeroTraits' attributes word:
-// 0x537d11/+0x3a excludes special heroes; +0x38/+0x39 selects map-version availability.
+// Hero eligibility uses THeroTraits attribute bytes: special heroes are
+// excluded, and availability depends on the map version.
 VA(0x00537B10, 0x2A8)
 MAC_ADDRESS(0x2363e4, 0x2ec)
 type_random_map_generator::type_random_map_generator(
@@ -3102,7 +2903,6 @@ static inline void readRmgTemplatePlayerLimits(Record& record,
     record.m_maximumPlayers = atoi(fields[firstField + 3]);
 }
 
-// Keep the short-circuit order and the two signed total-count additions.
 template<class Record>
 static inline bool allowsRmgTemplatePlayerCounts(const Record& record,
     int humanPlayers, int computerPlayers)
@@ -3113,7 +2913,6 @@ static inline bool allowsRmgTemplatePlayerCounts(const Record& record,
         && record.m_maximumPlayers >= humanPlayers + computerPlayers;
 }
 
-// The retail coordinator snapshots player counts separately before each pass.
 static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
     TRmgTemplate* mapTemplate, int firstRow, int endRow,
     int humanPlayers, int computerPlayers)
@@ -3159,8 +2958,7 @@ static bool hasRmgTemplatePlayerSlots(TRmgTemplate* mapTemplate,
     return playerSlots >= humanPlayers + computerPlayers;
 }
 
-// Template size units are 36*36 cells. Retail uses one rejection cleanup
-// before the acceptance arm and retains separate zone/connection reader calls.
+// Template sizes are in units of 36x36 cells.
 VA(0x00537FF0, 0x482)
 MAC_ADDRESS(0x2372ec, 0x304)
 void type_random_map_generator::loadTemplates()
@@ -3173,8 +2971,7 @@ void type_random_map_generator::loadTemplates()
         mapSize = max(mapSize / 2, 1);
     for (; row < sheet->getNumberOfRows();) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
-        // Retail's guard permits a two-field row even though it reads [2].
-        // Preserve that malformed-template behavior rather than widening it.
+        // Retail bug: a two-field row still reads field [2].
         if (values.size() < 2) {
             ++row;
             continue;
@@ -3218,8 +3015,8 @@ void readRmgTemplateZones(
 {
     for (int row = firstRow; row < endRow; ++row) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
-        // RETAIL BUG: a three-field row reads values[3] before the full
-        // row-length check. Preserve this evaluation order.
+        // Retail bug: a three-field row reads values[3] before the full
+        // row-length check.
         if (values.size() >= 3 && isRmgTemplateFieldSet(values[3]) &&
             values.size() > 75) {
 
@@ -3302,8 +3099,6 @@ void readRmgTemplateZones(
     }
 }
 
-// Retail registers each generator through push_back; the differing retained
-// vector overloads are compiler expansions of that operation.
 VA(0x00538B10, 0x2241)
 MAC_ADDRESS(0x2375f0, 0x4880)
 void type_random_map_generator::initializeObjectGenerators()
@@ -3483,8 +3278,6 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_witch_hut_def());
 }
 
-// Mac 0x23bf6c retains getRmgDistance on the XY bases of owned position copies,
-// as does TRmgZone::canConnect.
 VA(0x0053AD60, 0x113)
 MAC_ADDRESS(0x23be70, 0x14c) // anchor-callee 0x53e2ea/0x53af04; thiscall, ret 4
 b8 type_random_map_generator::canPlaceZone(TRmgZone* zone)
@@ -3511,8 +3304,7 @@ b8 type_random_map_generator::canPlaceZone(TRmgZone* zone)
     return true;
 }
 
-// Sample one of the 32 radial zone candidates. Keep the Y conversion before
-// the X expression and truncate only after adding the scaled direction.
+// One of the 32 radial candidate positions around a zone.
 static inline TRmgMapPosition getRmgRadialZonePosition(
     const TRmgMapPosition& center, int radius, int direction, int level)
 {
@@ -3523,8 +3315,6 @@ static inline TRmgMapPosition getRmgRadialZonePosition(
 }
 
 // Trial placement leaves the zone at the candidate even when rejected.
-// Snapshot accepted positions after the predicate, which can observe or
-// alter the zone; do not append the incoming coordinate directly.
 static inline void appendRmgZoneCandidate(type_random_map_generator* generator,
     TRmgZone* zone, const TRmgMapPosition& candidate,
     std::vector<TRmgMapPosition>& candidates)
@@ -3560,7 +3350,6 @@ void type_random_map_generator::appendZonePositions(TRmgZone* center,
     }
 }
 
-// Both filtering passes retain the same size and canConnect calls.
 MAC_ADDRESS(0x23c248, 0x9c)
 int type_random_map_generator::countPlacedZoneConnections(TRmgZone* zone) const
 {
@@ -3575,7 +3364,6 @@ int type_random_map_generator::countPlacedZoneConnections(TRmgZone* zone) const
 }
 
 // Grow a half-open bounding rectangle around a zone's nominal radius.
-// Keep Y-before-X updates and the inclusive far cell's +1 adjustment.
 static inline void includeRmgZoneFootprint(int& minimumY, int& minimumX,
     int& maximumY, int& maximumX, const TRmgMapPosition& position, int size)
 {
@@ -3602,9 +3390,8 @@ void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimum
     }
 }
 
-// Square-map extent needed to enclose a candidate zone and the bounds of
-// all other zones. Both ranking and rejection use this same integer measure.
-// Keep the Y-before-X calculations and minimum requested map size.
+// Square-map extent needed to enclose a candidate zone and all other zones,
+// at least the requested map size.
 static inline int getRmgCandidateMapSize(const TRmgZoneBounds& bounds,
     const TRmgMapPosition& position, int zoneSize, int mapSize)
 {
@@ -3616,9 +3403,8 @@ static inline int getRmgCandidateMapSize(const TRmgZoneBounds& bounds,
     return candidateSize;
 }
 
-// Prefer unused levels, then maximum connections, then the smallest enclosing
-// square. Keep owned position snapshots and the by-value setter's load-before-
-// store boundary.
+// Prefer unused levels, then the most connections, then the smallest
+// enclosing square.
 VA(0x0053B2F0, 0x678)
 MAC_ADDRESS(0x23c454, 0x62c) // anchor-callee 0x53bb38; thiscall, ret 0xc
 void type_random_map_generator::filterZonePositions(
@@ -3637,8 +3423,8 @@ void type_random_map_generator::filterZonePositions(
                 if (!occupiedLevels[candidates[candidate].m_z])
                     break;
             }
-            // RETAIL BUG: an unused-level candidate at index zero alone
-            // does not trigger filtering. Preserve the strict > 0 test.
+            // Retail bug: a lone unused-level candidate at index zero does
+            // not trigger filtering.
             if (candidate > 0) {
                 candidate = candidates.size();
                 while (candidate--) {
@@ -3692,7 +3478,6 @@ void type_random_map_generator::filterZonePositions(
 
 // The first zone may start on either eligible level. Later zones sample
 // template neighbours, falling back to all placed zones before filtering.
-// Preserve the owned snapshot of the selected coordinate.
 VA(0x0053B970, 0x232)
 MAC_ADDRESS(0x23ca80, 0x20c) // anchor-callee 0x53bde2/0x53be39; thiscall, ret 8
 void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
@@ -3718,8 +3503,7 @@ void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
         }
         filterZonePositions(zone, candidates, mapSize);
     }
-    // Retail assumes a legal candidate exists; an empty set reaches rand()%0.
-    // Do not add a fallback here: it would change placement and RNG behavior.
+    // Assumes a legal candidate exists; an empty set reaches rand() % 0.
     unsigned int count = candidates.size();
     unsigned int selected = rand() % count;
     TRmgMapPosition selectedPosition;
@@ -3745,8 +3529,7 @@ void type_random_map_generator::calculateZoneBounds()
     }
 }
 
-// The two placement passes precede normalization to a centered square.
-// Preserve the town table's sentinel/version traversal.
+// Places the zones in two passes, then normalizes them into a centred square.
 VA(0x0053BCB0, 0x33B)
 MAC_ADDRESS(0x23cd84, 0x458)
 void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
@@ -3794,23 +3577,21 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     }
 }
 
-// Subdivision uses +1 before signed division on both axes. This is retail's
-// rounding rule, including for negative coordinates, rather than a plain average.
+// Midpoint rounded as (a + b + 1) / 2 with signed division.
 static inline TPoint getRmgSubdivisionMidpoint(const TPoint& from, const TPoint& to)
 {
     return TPoint((from.m_x + to.m_x + 1) / 2, (from.m_y + to.m_y + 1) / 2);
 }
 
-// Center one modulo-distributed draw on zero. Preserve modulo bias, asymmetric
-// even ranges, signed division and one RNG draw; callers own range validity.
+// One random draw centred on zero (modulo bias; even ranges are asymmetric).
 static inline int getRmgCenteredRandomOffset(int range)
 {
     return rand() % range - range / 2;
 }
 
-// Displace an interior midpoint across its segment. Island outlines use
-// half the segment length as their displacement limit; the other boundary
-// drawers use the full length. Keep the single RNG draw after the length test.
+// Displace an interior midpoint perpendicular to its segment. Island
+// outlines limit the displacement to half the segment length, other
+// boundaries to the full length.
 static inline void displaceRmgBoundaryMidpoint(TPoint& midpoint,
     const TPoint& from, const TPoint& to, int roughness, int lengthDivisor)
 {
@@ -3821,7 +3602,7 @@ static inline void displaceRmgBoundaryMidpoint(TPoint& midpoint,
     }
     int length = perpendicular.length();
     if (length > 1) {
-        // Retail requires positive roughness here; zero reaches rand()%0.
+        // Roughness must be positive; zero reaches rand() % 0.
         int limit = cppMin<long>(length / lengthDivisor, roughness);
         int displacement = getRmgCenteredRandomOffset(limit);
         perpendicular = perpendicular * displacement / length;
@@ -3829,10 +3610,9 @@ static inline void displaceRmgBoundaryMidpoint(TPoint& midpoint,
     }
 }
 
-// One step of the depth-first subdivision worklist. A segment with an interior
-// rounded midpoint is displaced and replaced by its two halves: pushing the
-// far endpoint before the midpoint keeps the near half next. Otherwise the
-// caller handles the segment's start cell and advances to its end.
+// Split a boundary segment at its displaced midpoint, pushing the far half
+// first so the near half is walked next. Returns false when the segment has
+// no interior midpoint.
 static inline bool splitRmgBoundarySegment(std::vector<TPoint>& pending,
     const TPoint& from, const TPoint& to, int roughness, int lengthDivisor)
 {
@@ -3845,8 +3625,7 @@ static inline bool splitRmgBoundarySegment(std::vector<TPoint>& pending,
     return true;
 }
 
-// Clamp each boundary coordinate in X-then-Y order before querying or
-// opening the map cell. Keep the long-reference selectors used by retail.
+// Clamp a boundary point to the map.
 static inline TPoint clampRmgBoundaryToMap(
     const TPoint& point, const type_random_map& map)
 {
@@ -3857,10 +3636,7 @@ static inline TPoint clampRmgBoundaryToMap(
     return TPoint(x, y);
 }
 
-// Assign a cell to its zone and, under the caller's captured policy, mark it
-// for zone-terrain painting. Zone outlines and the scanline fill share this;
-// on the islands-mode surface only the coast and island interior are marked.
-// The straight drawer's final cell receives only the zone assignment.
+// Assign a cell to its zone, optionally marking it for zone-terrain painting.
 static inline void assignRmgZoneCell(
     TRmgMapItem* item, int zoneIndex, b8 markForTerrain)
 {
@@ -3947,8 +3723,6 @@ static inline void clipRmgBoundarySegment(const TRmgZoneBounds& bounds,
 }
 
 // Clip each Voronoi edge, assign its map cells and record the zone polygon.
-// Keep the owning-zone snapshot outside the neighbour branch; bounds and
-// neighbour-dependent minimum temporaries retain separate lifetimes.
 VA(0x0053C390, 0x730)
 MAC_ADDRESS(0x23dd34, 0x614) // caller 0x53e5f4/0x53e602, ret 8; retail-only
 void type_random_map_generator::traceZoneBoundary(
@@ -4048,8 +3822,7 @@ void type_random_map_generator::traceZoneBoundary(
     } while (vertex != first);
 }
 
-// Reject clipping across an axis limit from its permitted side. The
-// lower-bound test precedes the upper-bound test.
+// Reject clipping across an axis limit from its permitted side.
 static inline bool crossesRmgBoundaryAxis(
     int original, int clipped, int minimum, int maximum)
 {
@@ -4057,9 +3830,8 @@ static inline bool crossesRmgBoundaryAxis(
         || (original < maximum && clipped >= maximum);
 }
 
-// Ordered integer line/rectangle clipping (left, top, right, bottom).
-// Each rounded intersection and early rejection is observable in maps; this
-// is not a direct implementation of Cohen-Sutherland or Liang-Barsky clipping.
+// Ordered integer line/rectangle clipping (left, top, right, bottom). Each
+// rounded intersection and early rejection affects the generated map.
 VA(0x0053CAC0, 0x266)
 MAC_ADDRESS(0x23d1dc, 0x4a8)
 TPoint clipRmgBoundaryPoint(
@@ -4098,8 +3870,6 @@ TPoint clipRmgBoundaryPoint(
 }
 
 // Equal costs insert before existing equals, so older equal-cost work pops first.
-// Unlike the position overload, this overload inserts the cost before the zone.
-// Retail 0x53da1b..0x53da6f also snapshots the pointer argument separately.
 static void insertRmgWorkItem(
     std::vector<TRmgZone*>& zones, std::vector<int>& costs,
     TRmgZone* zone, int cost)
@@ -4199,7 +3969,6 @@ static inline void insetRmgIslandBoundaryPoint(
     TRmgVector delta(center.m_x - point.m_x, center.m_y - point.m_y);
     int length = delta.length();
     if (length > 0) {
-        // Retail binds both clamps through long references.
         long displacement = std::max<long>(4, length / 4);
         displacement = std::min<long>(displacement, length / 2);
         delta = delta * displacement / length;
@@ -4225,10 +3994,8 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
     fillIslandInterior(zone);
 }
 
-// Four-connected scanline fill of unassigned cells. An out-of-bounds center is
-// clipped toward the interior ring site with the greatest edge clearance.
-// X/Y guards keep left/up pointer offsets inside the contiguous map-item array.
-// Mac 0x23ef84..0x23efb8 identifies the pending-seed removal as pop_back.
+// Four-connected scanline fill of unassigned cells. An out-of-bounds centre
+// is clipped toward the interior ring site with the greatest edge clearance.
 VA(0x0053D380, 0x551)
 MAC_ADDRESS(0x23ed74, 0x4a4) // anchor-caller 0x53e050; Complete-only, thiscall ret 8
 void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first)
@@ -4314,8 +4081,8 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
     }
 }
 
-// Unit-weight distance relaxation uses a sorted worklist, not FIFO traversal.
-// Read the next distance from the per-zone short table, not the queued priority.
+// Unit-weight distance relaxation with a cost-ordered worklist. The next
+// distance comes from the zone's table, not the queued cost.
 VA(0x0053D8E0, 0x1EC)
 MAC_ADDRESS(0x23f218, 0x2f0) // anchor-callee 0x53dcd2/0x53e020; Complete-only, ret 4
 void type_random_map_generator::propagateZoneDistances(TRmgZone* zone)
@@ -4360,9 +4127,8 @@ static void initializeRmgZoneDistances(
     }
 }
 
-// Search a zone's closed boundary ring for an edge adjoining another zone.
-// Both extra-zone connection passes advance before testing, so keep that
-// first-next order and test the starting edge last.
+// Search a zone's closed boundary ring for an edge adjoining another zone,
+// testing the starting edge last.
 static inline TRmgHalfEdge* findRmgBoundaryWithZone(
     TRmgHalfEdge* first, const TRmgZone* destination)
 {
@@ -4375,11 +4141,9 @@ static inline TRmgHalfEdge* findRmgBoundaryWithZone(
     return 0;
 }
 
-// Add both directed records for one unguarded extra-zone connection.
-// Keep the player-filter limits uninitialized, as in retail: these generated
-// records are consumed after template filtering. Append source first, then
-// retarget the same caller-owned record for the reverse edge. The caller
-// keeps the record storage/lifetime, including its untouched filter fields.
+// Add both directed records for one unguarded extra-zone connection. The
+// player-count limits stay uninitialized; these records skip template
+// filtering.
 static inline void appendRmgExtraZoneConnection(
     TRmgZoneConnection& connection, TRmgZone* source, TRmgZone* destination,
     b8 connected)
@@ -4453,9 +4217,7 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
 VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, TRmgZoneConnection)
 
 // Existing zones seed the subdivision; radial sites add surface water zones
-// and underground boundaries. Keep one subdivision lifetime and the nested
-// temporary slot/zone pair. The selected zone stays live across radial inserts;
-// copy each center before scaling and keep bound temporaries inside their guards.
+// and underground boundaries.
 VA(0x0053E050, 0x64D)
 MAC_ADDRESS(0x23f924, 0x798) // anchor-callee 0x549af9; thiscall, ret 8
 void type_random_map_generator::buildZoneBoundaries(
@@ -4511,8 +4273,8 @@ void type_random_map_generator::buildZoneBoundaries(
                 if (!canPlaceZone(&testZone))
                     continue;
                 if (position.m_z == 0) {
-                    // RETAIL BUG: m_allowedTowns is untouched before the constructor
-                    // reads it at 0x53e45c; recycled heap contents affect RNG consumption.
+                    // Retail bug: m_allowedTowns is left uninitialized before the
+                    // zone constructor reads it, so heap contents affect RNG use.
                     TRmgTemplateZone* slot = new TRmgTemplateZone;
                     slot->m_zoneIndex = mapTemplate->m_zones.size();
                     slot->m_size = radius;
@@ -4571,7 +4333,6 @@ void type_random_map_generator::buildZoneBoundaries(
     joinExtraZones(originalZones, &diagram);
 }
 
-// Mac retains the view-map constructor at 0x22d320 and expands the initial lookup.
 VA(0x0053E6A0, 0x337)
 MAC_ADDRESS(0x2400bc, 0x354)
 void type_random_map_generator::paintZoneTerrain()
@@ -4626,9 +4387,7 @@ static inline void appendRmgNoiseQuadrant(
         pending.push_back(quadrant);
 }
 
-// Each nondegenerate subdivision quadrant inherits the original variation.
-// Preserve Y-before-X midpoint evaluation. The center is last in the source
-// signature despite being passed in EDX before the two by-value records.
+// Each nondegenerate quadrant inherits the original variation.
 VA(0x0053E9E0, 0x31E)
 MAC_ADDRESS(0x240410, 0x2ac) // anchor-callee 0x53ed91; Complete-only, fastcall ret 0x34
 void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
@@ -4673,7 +4432,6 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     appendRmgNoiseQuadrant(pending, quadrant);
 }
 
-// The nine-dword copy stride identifies this vector specialization.
 VA_COMPGEN(0x0054C670, 0x21, VECTOR_SIZE, TRmgNoiseRegion)
 
 VA_COMPGEN(0x0054D5C0, 0x2E4, VECTOR_INSERT_COUNT, TRmgNoiseRegion)
@@ -4682,9 +4440,6 @@ VA_COMPGEN(0x0054D960, 0x3B, VECTOR_UCOPY, TRmgNoiseRegion)
 
 VA_COMPGEN(0x0054D9A0, 0x31, VECTOR_UFILL, TRmgNoiseRegion)
 
-// The inlined search at 0x53fe7a returns an element pointer and its caller
-// then tests that pointer, even on the found arm. Preserve that ordinary
-// helper boundary rather than reducing the search to a boolean.
 TRmgZoneConnection* TRmgTemplateZone::findConnection(int destinationZone)
 {
     for (unsigned int connectionIndex = 0; connectionIndex < m_connections.size(); ++connectionIndex) {
@@ -4694,11 +4449,8 @@ TRmgZoneConnection* TRmgTemplateZone::findConnection(int destinationZone)
     return 0;
 }
 
-// Retail 0x53f048 passes the mask in ECX, width in EDX and height on the stack.
 void __fastcall generateRmgIslandMask(unsigned char* mask, int width, int height);
 
-// Initialize the Y edge pair before X. Each random displacement keeps its own
-// range / 2 expression and lifetime.
 VA(0x0053ED00, 0x29B)
 MAC_ADDRESS(0x2406bc, 0x484)
 void __fastcall generateRmgIslandMask(unsigned char* mask, int width, int height)
@@ -4784,10 +4536,9 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
         m_progress->advance(1000);
 }
 
-// Eight-neighbour chamfer distances use cardinal/diagonal costs 2/3. Only the
-// supplied zone is traversed; accepting a shorter distance resets connection
-// metadata without checking terrain or objects. Copy both direction components
-// before reading the current position.
+// Eight-neighbour chamfer distances (cardinal 2, diagonal 3) within one
+// zone; a shorter distance resets connection metadata without checking
+// terrain or objects.
 VA(0x0053F1A0, 0x2C6)
 MAC_ADDRESS(0x240ee4, 0x358)
 void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position, int zoneIndex)
@@ -4903,8 +4654,7 @@ static inline void releaseRmgNeighborhoodPathClearance(type_random_map& map,
 }
 
 // Separate dry assigned cells near water or another zone according to the
-// connection, level and guard policy. Keep the two distinct connection-policy
-// tests at 0x53fa3f..0x53fa58.
+// connection, level and guard policy.
 VA(0x0053F880, 0x429)
 MAC_ADDRESS(0x241874, 0x628)
 void type_random_map_generator::expandObstacleClearance()
@@ -4960,8 +4710,6 @@ void type_random_map_generator::expandObstacleClearance()
         m_progress->advance(1600);
 }
 
-// Mac terrain push_back 0x251f80 and clear 0x252374 preserve the terrain enum
-// domain; the subtype vector in placement-rule loading is a distinct POD type.
 VA(0x0053FCB0, 0x5EC)
 MAC_ADDRESS(0x241e9c, 0x770)
 void type_random_map_generator::repairWaterZoneBorders()
@@ -5046,9 +4794,7 @@ void type_random_map_generator::repairWaterZoneBorders()
     }
 }
 
-// Generator vtable 0x640c44 slot 1 uses the base object's by-value position
-// interface. Registration precedes type counting and entrance-score propagation.
-// Keep the canonical base, position-addition and sorted-worklist helpers.
+// Registers the object, then updates type counts and entrance costs.
 VA(0x005402A0, 0x32A)
 MAC_ADDRESS(0x24260c, 0x434) // anchor-vtable + generator/map layouts; retail-only
 void type_random_map_generator::addObject(type_object* object, TRmgMapPosition position)
@@ -5089,9 +4835,8 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
     }
 }
 
-// Preserve separate movement-cost resets and predecessor construction within
-// each cell iteration. Zone bounds are captured before flooding; its level is
-// read again afterward because the flood can observe or mutate the zone.
+// Opens a path from each zone's seed cell. Zone bounds are read before
+// flooding and the zone level after it.
 VA(0x005405D0, 0x304)
 MAC_ADDRESS(0x242a40, 0x448)
 void type_random_map_generator::buildZoneConnectionPaths()
@@ -5113,8 +4858,8 @@ void type_random_map_generator::buildZoneConnectionPaths()
         TRmgZone* zone = m_zones[zoneIndex];
         TRmgZoneBounds bounds = zone->m_bounds;
         TRmgMapPosition position = zone->m_levelPosition;
-        // RETAIL BUG: if the zone contains no eligible empty cell, the scan
-        // never assigns seed, yet the fallback below still uses it.
+        // Retail bug: with no eligible empty cell the scan never assigns
+        // seed, yet the fallback below still uses it.
         TRmgMapPosition seed;
         TRmgMapPosition pathPosition;
         b8 foundClearPath = false;
@@ -5165,9 +4910,8 @@ void type_random_map_generator::buildZoneConnectionPaths()
     }
 }
 
-// Widen an opened route by removing same-zone border obstacles in the cell's
-// clipped 3x3 neighbourhood, retaining cells reserved for a connection.
-// Visit the rectangle in row-major order.
+// Widen an opened route by removing same-zone border obstacles around the
+// cell, keeping cells reserved for a connection.
 static inline void clearRmgZonePathBorders(type_random_map& map,
     const TPoint& center, int level, int zoneIndex)
 {
@@ -5182,9 +4926,8 @@ static inline void clearRmgZonePathBorders(type_random_map& map,
     }
 }
 
-// Follow predecessors to the zero-cost seed without changing costs. After
-// virtual addObject, recheck connection presence. Widened routes clear only
-// borderObject in nearby same-zone cells; those neighbours are not route cells.
+// Follow predecessors to the zero-cost seed without changing costs. Widened
+// routes clear only the border mark of nearby same-zone cells.
 VA(0x005408E0, 0x23F)
 MAC_ADDRESS(0x242e88, 0x380) // anchor-callee createGroundConnection; thiscall, ret 0x10
 void type_random_map_generator::openConnectionPath(
@@ -5211,10 +4954,9 @@ void type_random_map_generator::openConnectionPath(
     }
 }
 
-// Retail filters creature traits in reverse, then selects across all 145 slots,
-// including for RoE. Its exclusion ends at 117 and the next predecrement starts
-// eligibility at 116 without clearing slot 117. The two variation draws retain
-// first-draw-minus-second-draw order.
+// Picks a random allowed creature for a guard of the given value. Retail bug
+// on RoE maps: creature 117 is neither evaluated nor excluded, so it can be
+// selected without being counted. Two draws vary the stack size.
 VA(0x00540B20, 0x240)
 MAC_ADDRESS(0x243208, 0x290) // anchor-callee 0x54203b; thiscall, ret 8; retail-only
 type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
@@ -5243,8 +4985,8 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
         if ((traits.m_wanderingHigh + traits.m_wanderingLow) / 2 * traits.m_aiValue <= value
             && value <= traits.m_aiValue * RMG_GUARD_MAXIMUM_COUNT
             && traits.m_level >= 0 && allowedFactions[traits.m_townType + 1]) {
-            // RETAIL BUG: eligibility counts traits even without a loaded
-            // prototype. Selection below only consumes actual prototypes.
+            // Retail bug: counted even without a loaded prototype, while
+            // selection only picks loaded prototypes.
             ++eligibleCreatureCount;
         } else {
             prototypeIndices[creature] = -1;
@@ -5257,8 +4999,7 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
         if (prototypeIndices[creature] >= 0 && --selectionRank < 0)
             break;
     }
-    // RETAIL BUG: if the eligibility/prototype counts disagree, creature can
-    // reach -1. Preserve the unchecked lookup rather than changing selection.
+    // Retail bug: if the counts disagree, creature can reach -1.
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[MONSTER][prototypeIndices[creature]];
     int aiValue = g_creatureTypeTraits[creature].m_aiValue;
     int creatureCount = (value + aiValue / 2) / aiValue;
@@ -5269,9 +5010,7 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
     return new rmgMonsterObject(properties, m_nextObjectId++, creatureCount);
 }
 
-// Locate the first prototype of a requested subtype in stored order. Preserve
-// each caller's index type and read the live count on every iteration. Callers
-// retain their distinct missing-prototype behavior, including unchecked use.
+// First prototype of the requested subtype, or size() when missing.
 template<class Index>
 static inline Index findRmgPrototypeSubtypeIndex(
     std::vector<TRmgObjectPropertiesRef*>& prototypes, int subtype)
@@ -5295,8 +5034,8 @@ int type_random_map_generator::placeBorderObject(
     TRmgObjectPropertiesRef* tentProperties = m_objectPrototypes[BORDER_TENT][index];
 
     index = findRmgPrototypeSubtypeIndex<int>(m_objectPrototypes[BORDER_GUARD], color);
-    // RETAIL BUG: missing guard art returns color zero, which callers treat
-    // as successful placement, unlike the -1 used for missing tent art.
+    // Retail bug: missing guard art returns colour zero, which callers treat
+    // as success, unlike the -1 for missing tent art.
     if (index == m_objectPrototypes[BORDER_GUARD].size())
         return 0;
     TRmgObjectPropertiesRef* guardProperties = m_objectPrototypes[BORDER_GUARD][index];
@@ -5318,10 +5057,8 @@ int type_random_map_generator::placeBorderObject(
     return color;
 }
 
-// Border-area and subterranean-gate marking share the same empty-cell
-// policy. An existing connection keeps its tile flags but receives the new
-// direction. Monolith marking intentionally has no empty-cell check and
-// must remain separate.
+// Border marking for empty cells; an existing connection keeps its tile
+// flags but takes the new direction.
 static inline void markRmgBorderObjectCell(TRmgMapItem* item, int direction)
 {
     if (item->m_objects.size() == 0) {
@@ -5349,15 +5086,11 @@ void type_random_map_generator::markBorderObjectArea(
     }
 }
 
-// Native ground (0x243c40), road (0x24c18c), object-score (0x24288c) and coast
-// (0x24ced0) callers copy the full position and planar offset before addition.
-// Preserve both by-value operands and the ordinary position constructor.
 TRmgMapPosition operator+(TRmgMapPosition position, TPoint offset)
 {
     return TRmgMapPosition(position.m_x + offset.m_x, position.m_y + offset.m_y, position.m_z);
 }
 
-// Preserve X-before-Y updates.
 TRmgMapPosition& TRmgMapPosition::operator+=(const TPoint& offset)
 {
     m_x += offset.m_x;
@@ -5372,8 +5105,7 @@ TRmgMapPosition& TRmgMapPosition::operator-=(const TPoint& offset)
     return *this;
 }
 
-// Native 0x243498 retains this helper in ground, shipyard, gate, monolith and
-// mine placement. Value precedes the copied position in the native interface.
+// Places a guard of the given value unless the cell is occupied.
 MAC_ADDRESS(0x243498, 0xd4)
 void type_random_map_generator::placeGuard(int value, TRmgMapPosition position)
 {
@@ -5387,8 +5119,7 @@ void type_random_map_generator::placeGuard(int value, TRmgMapPosition position)
 }
 
 // A successful ground border placement marks its surrounding area and
-// suppresses guards for this and all remaining crossings. The guard value
-// belongs to the caller's whole connection, not just this endpoint.
+// suppresses guards for this and all remaining crossings.
 static inline void placeRmgGroundConnectionBorder(type_random_map_generator& generator,
     TRmgMapPosition position, TRmgZone* keyTentZone, int& guardValue)
 {
@@ -5399,9 +5130,8 @@ static inline void placeRmgGroundConnectionBorder(type_random_map_generator& gen
     }
 }
 
-// A successful gate border placement suppresses both gate guards, then
-// extends the border to the empty cells west then east of the entrance.
-// The caller's guard positions remain unshifted.
+// Place a gate border at an entrance. On success both gate guards are
+// dropped and the border extends to the empty cells beside the entrance.
 static inline void placeRmgGateConnectionBorder(type_random_map_generator& generator,
     TRmgMapPosition entrance, TRmgZone* keyTentZone, int& guardValue)
 {
@@ -5415,9 +5145,7 @@ static inline void placeRmgGateConnectionBorder(type_random_map_generator& gener
     }
 }
 
-// Unguarded template connections bypass valuation entirely. Keep the native
-// scalar value helper on the guarded path. Preserve the shipyard's consecutive
-// strength-before-value snapshots, after the unguarded early return.
+// Unguarded template connections need no guard value.
 static inline int getRmgConnectionGuardValue(const TRmgZoneConnection* connection,
     const type_random_map_generator& generator)
 {
@@ -5454,8 +5182,7 @@ static inline void addRmgLowestScoreCandidate(
 }
 
 // All equally cheap empty crossings are eligible. Open their predecessor
-// paths and record both entrances before placing borders or guards. Native
-// 0x243b24..0x243b38 captures both input slots before reading their zone indices.
+// paths and record both entrances before placing borders or guards.
 VA(0x00541140, 0x63A)
 MAC_ADDRESS(0x243af8, 0x53c) // anchor-callee ConnectZones 0x543550; retail-only
 b8 type_random_map_generator::createGroundConnection(
@@ -5504,8 +5231,6 @@ b8 type_random_map_generator::createGroundConnection(
         return true;
 
     int count = min(candidates.size(), (eligibleCount + 39) / 40);
-    // Retail shares guardValue across crossings: either successful border
-    // placement suppresses the current guard and all remaining crossings' guards.
     for (int crossing = 0; crossing < count; ++crossing) {
         int selected = rand() % candidates.size();
         TRmgMapPosition position = candidates[selected];
@@ -5568,10 +5293,7 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
     }
 }
 
-// Footprint X validity is a caller precondition: retail checks only y+1 here,
-// and only X for the side offsets. Preserve ordered water/entrance/passability/
-// rock queries. Native 0x2443cc uses the same copied-origin offset operation as
-// both shipyard water scans.
+// Water cell probed beside a shipyard; callers keep the footprint on the map.
 static TRmgMapPosition getRmgShipyardWaterPosition(TRmgMapPosition shipyardPosition,
     int waterOffset);
 
@@ -5621,8 +5343,6 @@ static TRmgMapPosition getRmgShipyardWaterPosition(TRmgMapPosition shipyardPosit
     return shipyardPosition + g_rmgShipyardWaterOffsets[waterOffset];
 }
 
-// Native 0x24457c owns the water scan and flood. Its offset translation at
-// Mac 0x2445b0 is the same copied-origin operation as canPlaceShipyard's scan.
 MAC_ADDRESS(0x24457c, 0x130)
 void type_random_map_generator::floodShipyardWater(type_object* shipyard)
 {
@@ -5639,10 +5359,8 @@ void type_random_map_generator::floodShipyardWater(type_object* shipyard)
         floodConnectionRegion(waterPosition);
 }
 
-// Keep one nearby coordinate through scanning and placement; the scan initializes
-// only Z. Read the prototype vector after the random index is selected. Snapshot
-// the trigger offset before updating nearby and retain an owned selected position.
-// Border success clears guardValue and reaches the common exit.
+// Connects zones by a shipyard beside reachable water. A successful border
+// placement clears the guard value.
 VA(0x00541AD0, 0x5B0)
 MAC_ADDRESS(0x2446ac, 0x55c) // anchor-callee connectZones; thiscall, ret 8; retail-only
 b8 type_random_map_generator::createShipyardConnection(
@@ -5727,8 +5445,6 @@ b8 type_random_map_generator::createShipyardConnection(
     return true;
 }
 
-// Retail reloads the source zone's position after rand(); do not reuse the
-// earlier level snapshot. Preserve intersection-bound and coordinate lifetimes.
 VA(0x00542080, 0x8AA)
 MAC_ADDRESS(0x244c08, 0xa1c)
 b8 type_random_map_generator::createSubterraneanGate(
@@ -5837,7 +5553,7 @@ b8 type_random_map_generator::createSubterraneanGate(
 }
 
 // Object positions name the lower-right footprint cell. Inset the minimum
-// anchor coordinates so the whole footprint fits, keeping height before width.
+// anchor coordinates so the whole footprint fits.
 static inline void insetRmgObjectPlacementBounds(
     TRmgZoneBounds& bounds, const TObjectType* prototype)
 {
@@ -5845,9 +5561,7 @@ static inline void insetRmgObjectPlacementBounds(
     bounds.m_minimumX += prototype->getWidth() - 1;
 }
 
-// Mac 0x245670..0x24568c snapshots the bounds, and 0x2456c0..0x2456d4 copies
-// the whole position before consuming its level. Keep the aggregate accessors
-// and assign the chosen candidate back before the virtual addObject call.
+// Places an object at a random fitting cell of the zone.
 VA(0x00542930, 0x1C6)
 MAC_ADDRESS(0x245624, 0x24c) // anchor-callee 0x540e81; thiscall, ret 8; retail-only
 b8 type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* zone)
@@ -5920,9 +5634,7 @@ b8 type_random_map_generator::placeMonolithBorder(
     return border >= 0;
 }
 
-// Each portal placement owns its allocation until placement succeeds. Only
-// successful objects enter the registry and zone entrance list; a failure
-// leaves the remaining endpoint attempts to the caller.
+// Places one portal; a failed placement deletes it.
 static inline type_object* placeRmgMonolith(type_random_map_generator& generator,
     TRmgObjectPropertiesRef* properties, TRmgZone* zone, bool oneWay)
 {
@@ -5966,8 +5678,8 @@ void type_random_map_generator::createMonolithConnection(
     if (object) {
         if (connection->m_placeBorderObjects
             && placeMonolithBorder(object->getPosition(), destination)) {
-            // This value also controls the destination's guard. Preserve
-            // that suppression even when its own later border placement fails.
+            // This value also controls the destination's guard, even when
+            // its own border placement later fails.
             guardValue = 0;
         } else if (guardValue > 0) {
             placeGuard(guardValue, object->getPosition() + TPoint(0, 1));
@@ -5997,8 +5709,8 @@ void TRmgZoneConnection::setConnected()
     m_connected = true;
 }
 
-// Land crossings and paired portals complete both directed records. Preserve
-// forward-before-reverse updates; shipyards complete only their own direction.
+// Land crossings and paired portals complete both directed records;
+// shipyards complete only their own direction.
 static inline void completeRmgBidirectionalConnection(
     TRmgZoneConnection* connection, TRmgZoneConnection* oppositeConnection)
 {
@@ -6014,8 +5726,7 @@ static inline void clearRmgConnectionVisits(type_random_map& map, int level)
 }
 
 // Try template connections first, then repair remaining non-water connections
-// with shipyard reachability and paired monoliths. Each connection pass preserves
-// its directional completion policy.
+// with shipyard reachability and paired monoliths.
 VA(0x00543240, 0x797)
 MAC_ADDRESS(0x2462bc, 0x6f4)
 void type_random_map_generator::connectZones()
@@ -6051,8 +5762,7 @@ void type_random_map_generator::connectZones()
 
     int prototypeIndex = 0;
 
-    // Retail constructs and destroys this empty work vector.  Its element
-    // type and abandoned role are not recoverable from the optimized body.
+    // Unused.
     std::vector<TRmgMapPosition> connectionPositionsScratch;
 
     TRmgZone* zone;
@@ -6169,17 +5879,13 @@ void type_random_map_generator::connectZones()
 }
 
 // Underground rock and treasure-group filler may close passable floor only
-// outside path and entrance reservations. Keep this ordered policy separate
-// from each caller's terrain and object checks; it does not exclude water.
-// File-local review cleanup, with no recovered original helper name claimed.
+// outside path and entrance reservations; water is not excluded here.
 static inline bool canBlockRmgFloorCell(const TRmgMapItem* item)
 {
     return !item->hasPathClearance() && item->isPassableLand()
         && !item->isRoadEntrance();
 }
 
-// One borrowed level-one map and brush span both scans; both progress
-// updates precede their cleanup.
 VA(0x005439E0, 0x283)
 MAC_ADDRESS(0x246a34, 0x31c)
 void type_random_map_generator::decorateUnderground()
@@ -6283,16 +5989,13 @@ TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
     }
 }
 
-// Inferred generator-owned query: retail tests X before loading the map
-// dimensions and forms the map receiver only for openPathPatch.
 bool type_random_map_generator::contains(const TPoint& point) const
 {
     return m_map.containsXY(point);
 }
 
-// Midpoint subdivision uses a LIFO vector; deferred perpendicular branches
-// use a FIFO queue. Retail gives both containers one level's lifetime.
-// Midpoint and perpendicular arithmetic identify their values as TPoint pairs.
+// Midpoint subdivision uses a LIFO stack; deferred perpendicular branches
+// use a FIFO queue.
 VA(0x00543E20, 0x574)
 MAC_ADDRESS(0x24705c, 0x750) // anchor-callee 0x544920; Complete-only, thiscall, no arguments
 void type_random_map_generator::carveBranchingPaths()
@@ -6428,9 +6131,6 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
     }
 }
 
-// Retail retains both floodConnectionCosts calls and the point-pair helper.
-// The default position constructor is empty; reset sentinels require all
-// three coordinates to be initialized explicitly.
 VA(0x005446A0, 0x27E)
 MAC_ADDRESS(0x247d9c, 0x3e0)
 void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
@@ -6548,15 +6248,13 @@ static inline void initializeRmgDensityCategories(const int* densities,
     }
 }
 
-// Density is expressed per reference area. Preserve integer division before
-// the square root and truncate only the resulting distance.
+// Object spacing for a density given per reference area (integer area
+// division, truncated square root).
 static inline int getRmgDensitySpacing(int referenceArea, int density)
 {
     return static_cast<int>(sqrt(static_cast<double>(referenceArea / density)));
 }
 
-// Counts may alias weightedCounts; consume each input before assigning its
-// output. Disabled entries stay untouched.
 static inline void initializeRmgCategoryStrides(const int* densities,
     const int* counts, int categoryCount, int densityProduct,
     int* countSteps, int* weightedCounts)
@@ -6569,8 +6267,8 @@ static inline void initializeRmgCategoryStrides(const int* densities,
     }
 }
 
-// Strict comparison preserves the first category on ties; callers advance
-// by densityProduct / density with retail's integer product and rounding.
+// Picks the unfinished category with the lowest weighted count; ties go to
+// the first.
 static inline int selectRmgWeightedCategory(const b8* finished,
     const int* weightedCounts, int categoryCount)
 {
@@ -6586,8 +6284,7 @@ static inline int selectRmgWeightedCategory(const b8* finished,
 }
 
 // Only the first enabled category accounts for the already placed primary
-// town. Keep count as a reference because placement can call virtual object
-// insertion; each loop condition must still read the live template field.
+// town.
 static inline void placeRmgFixedTownCategory(type_random_map_generator* generator,
     TRmgZone* zone, const int& count, int alignment, int player,
     unsigned char townOption, b8& skipPrimary)
@@ -6656,9 +6353,7 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
     }
 }
 
-// Create the town before the random candidate draw, add it there and return
-// its entrance. The trigger reference is read after the virtual addObject:
-// additional towns pass their earlier snapshot, primary towns the live field.
+// Create a town, add it at a random candidate and return its entrance.
 static inline TRmgMapPosition placeRmgTownAtRandomCandidate(
     type_random_map_generator* generator, TRmgObjectPropertiesRef* properties,
     int player, unsigned char townOption,
@@ -6671,8 +6366,7 @@ static inline TRmgMapPosition placeRmgTownAtRandomCandidate(
     return getRmgObjectTriggerPosition(position, trigger);
 }
 
-// Keep the caller's position storage and append the trigger before stepping
-// to its southern approach.
+// Registers a town entrance as a road target and opens the cell below it.
 static inline void registerRmgTownRoadEntrance(
     type_random_map_generator* generator, TRmgMapPosition& entrance)
 {
@@ -6683,7 +6377,6 @@ static inline void registerRmgTownRoadEntrance(
 }
 
 // The trigger's entire clipped 3x3 neighbourhood must remain in the zone.
-// Keep its saved trigger coordinates across placement callbacks.
 VA(0x00544D90, 0x4B7)
 MAC_ADDRESS(0x24882c, 0x5d4)
 b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
@@ -6739,8 +6432,6 @@ b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     return true;
 }
 
-// Caller 0x544a50 proves four stack arguments and byte success; retail
-// constructs a 0x28-byte town object before updating the zone.
 VA(0x00545250, 0x324)
 MAC_ADDRESS(0x248e00, 0x3b4)
 b8 type_random_map_generator::tryPlacePrimaryTown(
@@ -6776,7 +6467,6 @@ b8 type_random_map_generator::tryPlacePrimaryTown(
     return true;
 }
 
-// Keep the distance, border-count and spacing filters in that order.
 VA(0x00545580, 0x401)
 MAC_ADDRESS(0x249214, 0x46c)
 b8 type_random_map_generator::placeMineSite(type_object* object,
@@ -6848,9 +6538,8 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
     return true;
 }
 
-// Guarded mines and treasure share zone valuation: zero template strength
-// disables the guard; otherwise combine template and request difficulty with
-// the upper-bound-first clamp before applying the native scalar guard curve.
+// Guard value for a zone object: none when the template monster strength is
+// zero, otherwise the combined template and map strength applied to value.
 static inline int getRmgZoneGuardValue(int value, const TRmgZone* zone,
     const type_random_map_generator& generator)
 {
@@ -6863,8 +6552,7 @@ static inline int getRmgZoneGuardValue(int value, const TRmgZone* zone,
     return getRmgGuardValue(value, strength);
 }
 
-// Inferred mine-valuation boundary; retail 0x545b76 retains the scalar guard
-// curve after resource pricing, local enablement and difficulty combination.
+// Mine guard value by resource; zero when the zone has no monsters.
 int type_random_map_generator::getMineGuardValue(int resource, const TRmgZone* zone) const
 {
     int value;
@@ -6876,10 +6564,8 @@ int type_random_map_generator::getMineGuardValue(int resource, const TRmgZone* z
     return getRmgZoneGuardValue(value, zone, *this);
 }
 
-// Retail keeps the last scanned prototype at 0x5459f5/0x545a5d and reloads
-// it at 0x545b7e/0x545ca9 after random selection. Its trigger/width quirk
-// is intentional here. The non-const terrain query uses the checked bitset
-// proxy; the later resource prototype has a separate lifetime.
+// Retail bug: the entrance and resource area use the trigger and width of
+// the last scanned mine prototype, not the selected one.
 VA(0x00545990, 0x466)
 MAC_ADDRESS(0x249680, 0x5ac)
 b8 type_random_map_generator::tryPlaceMine(TRmgZone* zone,
@@ -7010,8 +6696,6 @@ void type_random_map_generator::placeMines()
         m_progress->advance(3900);
 }
 
-// Retail openConnectionPath calls this ordinary selector at 0x540954.
-// Its const terrain query uses the checked bitset::test at Mac 0x24a004.
 VA(0x00546040, 0x141)
 MAC_ADDRESS(0x249f60, 0x194) // anchor-callee openConnectionPath; thiscall, ret 0x0c
 TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
@@ -7037,8 +6721,8 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
     return candidates[rand() % candidates.size()];
 }
 
-// Keep candidate order and each prototype-selection random draw. The
-// selected definition's virtual value query runs again before generation.
+// Picks a random treasure in the value range. The chosen definition's
+// value is queried again before generation.
 VA(0x00546190, 0x385)
 MAC_ADDRESS(0x24a190, 0x3f4) // anchor-callee 0x546572/0x546663; thiscall, ret 0x28
 type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
@@ -7109,8 +6793,7 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     return definition->generate(properties[selectedIndex], this, zone);
 }
 
-// Preserve unsigned dimension addition and division, including even-size
-// rounding, and set the temporary level independently of the object's level.
+// Centres an object on the group map (unsigned division).
 static inline TRmgMapPosition getRmgCenteredGroupObjectPosition(
     const TRmgTreasureGroup* group, const TObjectType* prototype)
 {
@@ -7121,8 +6804,6 @@ static inline TRmgMapPosition getRmgCenteredGroupObjectPosition(
     return position;
 }
 
-// Keep the output value in the caller's storage and the first/later primary
-// flag explicit. Failed placement retries remain a separate caller policy.
 static inline type_object* createRmgTreasureWithRetries(
     type_random_map_generator* generator, TRmgZone* zone, int minimum, int maximum,
     int* value, b8 primary, b8 alternate)
@@ -7140,9 +6821,8 @@ static inline type_object* createRmgTreasureWithRetries(
     return 0;
 }
 
-// Generation and fit have independent three-attempt limits. Keep distinct
-// first/later object lifetimes and the native group->addObject boundary
-// (Mac 0x24a670); failed fits release reservations before deletion.
+// Generation and fit have independent three-attempt limits; failed fits
+// release reservations before deletion.
 VA(0x00546520, 0x1B6)
 MAC_ADDRESS(0x24a584, 0x22c) // anchor-callee 0x54678a; thiscall, ret 0x10
 int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
@@ -7190,9 +6870,8 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
     return total;
 }
 
-// Failed placement still owns the group's objects. Release reservations before
-// deleting each object, then clear the non-owning placement state. Successful
-// groups transfer ownership to the generator and must use reset() alone.
+// Discards a failed group: releases reservations, deletes its objects and
+// resets it.
 static inline void discardRmgTreasureGroup(TRmgTreasureGroup* group)
 {
     for (unsigned int index = 0; index < group->m_objects.size(); ++index) {
@@ -7245,7 +6924,6 @@ TRmgMapItem* type_random_map::getMapItem(int x, int y)
 
 VA_COMPGEN(0x00404200, 0x209, VECTOR_INSERT, Int)
 
-// The second overload returns an iterator (int*) rather than void.
 VA_COMPGEN(0x00422F50, 0x1B1, VECTOR_INSERT_SINGLE, Int)
 
 VA_COMPGEN(0x004347A0, 0x32E, VECTOR_INSERT, TRmgMapPosition)
@@ -7264,8 +6942,6 @@ VA_COMPGEN(0x0054D8F0, 0x29, VECTOR_UFILL, TRmgObjectPlacementRule)
 
 VA_COMPGEN(0x0054DD80, 0x104, STD_CONSTRUCT, TRmgObjectPlacementRule)
 
-// The retained insertion calls these value-assignment loops. Both traverse
-// 0x4c-byte rules with the two owned vectors at +0x2c and +0x3c.
 VA_COMPGEN(0x0054DA20, 0x19F, STD_FILL, TRmgObjectPlacementRule)
 
 VA_COMPGEN(0x0054DBC0, 0x1A0, STD_COPY_BACKWARD, TRmgObjectPlacementRule)
@@ -7279,41 +6955,28 @@ VA_COMPGEN(0x00536BA0, 0x18, DEFAULT_CTOR_CLOSURE, vector)
 VA_COMPGEN(0x00536B60, 0x3D, IMPLICIT_DTOR, TRmgObjectPlacementRule)
 MAC_COMPGEN_ADDRESS(0x235010, 0x84, IMPLICIT_DTOR, TRmgObjectPlacementRule)
 
-// The recovered generator-base constructor's exception cleanup naturally
-// retains the value-vector destructor. Its 0x4c-stride loop and calls to
-// TRmgObjectPlacementRule::~TRmgObjectPlacementRule distinguish it from
-// the separate pointer-vector destructor emitted by the rule loader.
 VA_COMPGEN(0x0054C170, 0x38, VECTOR_DTOR, TRmgObjectPlacementRule)
 
 VA_COMPGEN(0x0054C1B0, 0x23, VECTOR_SIZE, TRmgZoneConnection)
 
 VA_COMPGEN(0x0054CD70, 0x3D, VECTOR_ERASE, TPoint)
 
-// The neighboring 12-byte position worklist retains the same single-element
-// erase specialization with TRmgMapPosition's three-dword copy loop.
 VA_COMPGEN(0x0054C610, 0x53, VECTOR_ERASE, TRmgMapPosition)
 
-// The reader's two resize shrink arms retain this int-vector erase.
 VA_COMPGEN(0x0054CDB0, 0x33, VECTOR_ERASE, Int)
 
 VA_COMPGEN(0x0054CDF0, 0x1D3, VECTOR_INSERT, unsigned_char)
 
 VA_COMPGEN(0x0054CFD0, 0x2F, VECTOR_ERASE, unsigned_char)
 
-// FilterZonePositions erases 12-byte positions through this forward copy;
-// the retained body copies three dwords and returns the end pointer.
 VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
 
-// Retail addObject (0x5402a0) calls the mutable form from its costs worklist;
-// BlackBoxData assignment and the RMG helper cluster call the const form.
-// Keep their distinct retained RVAs even though their machine code agrees.
 VA_COMPGEN(0x005093c0, 0x25, STD_COPY, Int)
 
 VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
 
-// Group objects store local XY positions on their temporary map. Translate
-// those coordinates, but replace Z with the destination map level rather
-// than adding it. Validation and commit must project each object identically.
+// Group objects store local XY positions; translate them and replace Z with
+// the destination level.
 static inline TRmgMapPosition getRmgPlacedGroupObjectPosition(
     type_object* object, const TRmgMapPosition& groupPosition)
 {
@@ -7324,9 +6987,6 @@ static inline TRmgMapPosition getRmgPlacedGroupObjectPosition(
     return position;
 }
 
-// Keep border-before-clearance snapshots and live object-vector bounds
-// across callbacks. Mac 0x24ab68..0x24abc4 expands the land predicates;
-// 0x24aa6c..0x24aacc copies the position and point before translation.
 VA(0x005469B0, 0x2B4)
 MAC_ADDRESS(0x24a8c0, 0x44c) // anchor-callee 0x547330; thiscall, ret 0x10
 void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
@@ -7374,9 +7034,6 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
         group->m_objects[objectIndex]->isWritable();
 }
 
-// Keep cached bounds/zone identity but live object-vector bounds. Native
-// objectsAllowEntrances precedes the guard check; Mac 0x24b0c8/0x24b1cc
-// preserves the land predicates and 0x24ae00..0x24ae58 the guard translation.
 VA(0x00546C70, 0x452)
 MAC_ADDRESS(0x24ad0c, 0x6cc) // anchor-callee 0x54721c; thiscall, ret 0x14
 b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
@@ -7446,8 +7103,8 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
             if (!source->hasPathClearance()) {
                 int x = point.m_x + position.m_x;
                 int y = point.m_y + position.m_y;
-                // Retail checks only the upper bounds here. Negative translated
-                // coordinates are the caller's responsibility; preserve the unchecked query.
+                // Only the upper bounds are checked; callers keep translated
+                // coordinates nonnegative.
                 if (x < m_map.m_mapWidth && y < m_map.m_mapHeight
                     && m_map.getMapItem(x, y, position.m_z)->isRoadEntrance())
                     return false;
@@ -7457,9 +7114,6 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     return true;
 }
 
-// Read the live cell score after the fit callback; bounds and zone identity
-// remain snapshots. Mac 0x24b514..0x24b590 copies the position and center
-// point before the translated map query.
 VA(0x005470D0, 0x286)
 MAC_ADDRESS(0x24b3d8, 0x310) // anchor-callee 0x5475b2/0x5476aa; thiscall, ret 0xc
 b8 type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
@@ -7494,9 +7148,8 @@ b8 type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
     return true;
 }
 
-// Retry one treasure-band shape, releasing each assembled group whose map
-// placement fails. The caller retains the group across ordinary/compact
-// passes and advances the scheduler only after this complete attempt batch.
+// Up to three attempts to assemble and place a group for one treasure band;
+// groups that fail placement are discarded.
 static inline b8 tryPlaceRmgTreasureBand(
     type_random_map_generator* generator, TRmgZone* zone, TRmgTreasureGroup* group,
     b8 alternate, const TRmgTreasureRange& range, int spacing)
@@ -7559,8 +7212,6 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
 VA_COMPGEN(0x005477C0, 0xB3, IMPLICIT_DTOR, TRmgTreasureGroup)
 MAC_COMPGEN_ADDRESS(0x24ba40, 0x90, IMPLICIT_DTOR, TRmgTreasureGroup)
 
-// Record movement before queue insertion copies the next position. Callers
-// retain their admission checks and random-cost draws.
 static inline void queueRmgMovementStep(TRmgMapItem* destination,
     int cost, const TRmgMapPosition& previous, const TRmgMapPosition& next,
     std::vector<TRmgMapPosition>& positions, std::vector<int>& costs)
@@ -7569,10 +7220,7 @@ static inline void queueRmgMovementStep(TRmgMapItem* destination,
     insertRmgWorkItem(positions, costs, next, cost);
 }
 
-// Seed a zero-cost source in both worklists and the movement map. Keep both
-// appends before the cell lookup and the by-value cost/predecessor update.
-// Road and river searches pass a constructed invalid predecessor; the three
-// coast-bound river sources share the caller's single instance.
+// Seed a zero-cost source in both worklists and the movement map.
 static inline TRmgMapItem* seedRmgMovementSearch(type_random_map& map,
     const TRmgMapPosition& source, const TRmgMapPosition& invalidPredecessor,
     std::vector<TRmgMapPosition>& positions, std::vector<int>& costs)
@@ -7584,8 +7232,7 @@ static inline TRmgMapItem* seedRmgMovementSearch(type_random_map& map,
     return item;
 }
 
-// Road exits and entries share this restricted-approach policy. The caller
-// retains its outgoing direction limit or incoming direction rejection.
+// Road exits and entries share this restricted-approach policy.
 static inline bool hasRmgRestrictedRoadApproach(const TAdvObjectTraits& traits)
 {
     return !traits.m_trait1 && !traits.m_trait2;
@@ -7600,8 +7247,6 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
     std::vector<TRmgMapPosition> openPositions;
     std::vector<int> openCosts;
 
-    // Mac 0x24bcf8..0x24bd50 copies the constructed invalid predecessor into
-    // a separate by-value setter parameter before storing cost and coordinates.
     TRmgMapItem* mapItem = seedRmgMovementSearch(m_map, position,
         TRmgMapPosition(-1, -1, -1), openPositions, openCosts);
 
@@ -7625,8 +7270,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
             case LITH_ONEWAY_ENTRANCE:
             case LITH_ONEWAY_EXIT:
             case LITH_TWOWAY: {
-                // Both families relax matching subtypes in stored order.
-                // Keep the one-way entrance/exit traversal used by retail.
+                // Monoliths of the same subtype connect, in stored order.
                 const std::vector<type_object*>& destinations = objectType == LITH_TWOWAY
                     ? m_monolithsTwoWay : m_monolithsOneWay;
                 int subtype = prototype->getSubtype();
@@ -7703,8 +7347,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
     }
 }
 
-// Paint same-level cardinal runs, restarting the map view at diagonal or
-// level transitions. The adapter and painter live only for each painted run.
+// Paint same-level cardinal runs, restarting at diagonal or level transitions.
 VA(0x00548040, 0x244)
 MAC_ADDRESS(0x24c3c4, 0x2bc) // anchor-callee 0x548408 + adapter/painter vtables; retail-only
 b8 type_random_map_generator::paintRoad(TRmgMapPosition position, int roadType)
@@ -7745,9 +7388,6 @@ b8 type_random_map_generator::paintRoad(TRmgMapPosition position, int roadType)
     }
 }
 
-// Retail createRiverToObject +0x2f/+0x3d retains the invalid-predecessor
-// constructor and GetMapItem(0, 0). Preserve the signed levels*height row
-// count before multiplying by width.
 MAC_ADDRESS(0x24bb68, 0x78)
 void type_random_map_generator::resetMovementCosts()
 {
@@ -7774,8 +7414,7 @@ MAC_ADDRESS(0x24c6d4, 0x1d8)
 void type_random_map_generator::createRoads()
 {
     int roadType = rand() % 3 + 1;
-    // Retail subtracts before comparing: an empty target vector underflows.
-    // Preserve this precondition/bug; do not replace it with a guarded loop.
+    // Retail bug: an empty target list underflows size() - 1.
     for (unsigned int first = 0; first < m_roadTargets.size() - 1; ++first) {
         TRmgMapPosition source = m_roadTargets[first];
         rebuildRmgRoadCostMap(this, source);
@@ -7794,9 +7433,8 @@ void type_random_map_generator::createRoads()
     }
 }
 
-// Both river searches draw a fresh step cost before testing improvement.
-// Preserve the random draw before the destination's road surcharge, even
-// when the caller subsequently rejects the relaxation or approach direction.
+// River step cost: a random 1-32, plus 30 on roads. The draw happens even
+// when the step is later rejected.
 static inline int getRmgRiverStepCost(int currentCost, const TRmgMapItem* destination)
 {
     int nextCost = currentCost + (rand() & 31) + 1;
@@ -7806,7 +7444,7 @@ static inline int getRmgRiverStepCost(int currentCost, const TRmgMapItem* destin
 }
 
 // The source terrain determines both river graphics and the snow boundary
-// restriction. Both searches initialize these together before traversal.
+// restriction.
 static inline void selectRmgRiverAppearance(const TRmgMapItem* source,
     b8& sourceIsSnow, int& riverType)
 {
@@ -7831,8 +7469,7 @@ static inline bool isRmgRiverTerrain(const TRmgMapItem* item, b8 sourceIsSnow)
 
 // Random edge costs are drawn on each neighbour visit, even without an
 // improvement. Unlike coast-bound rivers, this search ignores impassable
-// and direction flags. Mac 0x24c9cc..0x24ca28 preserves the by-value
-// invalid-predecessor setter at the seed.
+// and direction flags.
 VA(0x00548500, 0x533)
 MAC_ADDRESS(0x24c8ac, 0x588)
 void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
@@ -7869,8 +7506,8 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
             }
         }
     }
-    // As in createRiver, this is the last inspected tile, not an explicit
-    // successful-search result. Preserve the retail acceptance condition.
+    // As in createRiver, this tests the last inspected tile rather than an
+    // explicit search result.
     if (!mapItem->hasRiver())
         return;
     type_random_map levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
@@ -7885,8 +7522,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     }
 }
 
-// This scan deliberately admits x == width. Preserve the retail river-coast
-// policy separately from containsXY; correcting it would change generation.
+// Retail quirk: this scan admits x == width.
 static inline bool isOutsideRmgRiverCoastScan(
     const TRmgMapPosition& point, const type_random_map& map)
 {
@@ -7894,8 +7530,8 @@ static inline bool isOutsideRmgRiverCoastScan(
         || point.m_y < 0 || point.m_y >= map.m_mapHeight;
 }
 
-// The dry strip and inland approach share the same coast-scan bounds and
-// water/entrance exclusions. Rock remains admissible, as in retail.
+// The dry strip and inland approach exclude water and entrances; rock is
+// allowed.
 static inline TRmgMapItem* getRmgDryRiverCoastCell(
     type_random_map& map, const TRmgMapPosition& point)
 {
@@ -8046,9 +7682,9 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
         }
     }
 
-    // Retail tests the last inspected tile, even if relaxation rejected it.
-    // An unreached target can start an invalid predecessor walk; see
-    // docs/reference/rmg-undefined-behavior.md. Preserve that behavior.
+    // Retail bug: this tests the last inspected tile, even if relaxation
+    // rejected it; an unreached target can start an invalid predecessor walk
+    // (see docs/reference/rmg-undefined-behavior.md).
     if (!mapItem->isRiverTarget())
         return;
 
@@ -8067,10 +7703,6 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
                 break;
         }
 
-        // Construction guard byte 0x69d59c; the four offsets at 0x69ce28 are
-        // indexed by eight here. The guarded initializer registers
-        // atexit(0x549790), the table's empty cleanup (a bare `ret`) right
-        // after this function in rmg's contribution.
         DATA_COMPGEN_GUARD(0x0069d59c, riverDeltaOffsetsGuard, deltaOffsets)
 
         VA_COMPGEN(0x00549790, 0x1, STATIC_DTOR, deltaOffsets)
@@ -8178,9 +7810,8 @@ void type_random_map_generator::createRivers()
     }
 }
 
-// Preserve player order, separate town/connection passes, and the final
-// coastal/decorative/road/river order. Mac 0x24e37c reloads the selected
-// template through m_templates on every loop test; do not cache that pointer.
+// Generation order matters: players, separate town and connection passes,
+// then coast marking, decoration, roads and rivers.
 VA(0x00549930, 0x37B)
 MAC_ADDRESS(0x24e294, 0x41c)
 b8 type_random_map_generator::generate()
@@ -8264,7 +7895,6 @@ b8 type_random_map_generator::generate()
     return true;
 }
 
-// These encoder/writer boundaries are inferred from repeated header expansions.
 template <size_t N>
 void encodePackedBits(const std::bitset<N>& bits, unsigned char* packed)
 {
@@ -8283,8 +7913,7 @@ int writePackedBits(TAbstractFile* outfile, const std::bitset<N>& bits)
     return outfile->write(packed, sizeof(packed));
 }
 
-// Length-prefixed text retains the caller-owned string/buffer lifetime and
-// reads the payload length again after writing its native int prefix.
+// Length-prefixed text: an int length followed by the characters.
 int writeString(TAbstractFile* outfile, const std::string& text)
 {
     writeValue<int>(outfile, text.length());
@@ -8298,7 +7927,7 @@ int writeString(TAbstractFile* outfile, const char* text)
 }
 
 // Each player clause in the map description appends a separator, the player
-// color and the clause text. Retail uses unchecked strcat for all three.
+// colour and the clause text, using unchecked strcat.
 static inline void appendRmgPlayerDescription(char* description, int player,
     const char* clause)
 {
@@ -8323,10 +7952,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         DATA_COMPGEN(0x00682900, rmgMapName, "Random Map"));
     writeString(outfile, mapName);
 
-    // Retail places description at [ebp-0x324] and mainTowns at
-    // [ebp-0x130]; their 0x1f4-byte separation proves the 500-byte extent.
-    // Retail uses unchecked sprintf/strcat below; oversized template names
-    // or appended player descriptions can exceed this fixed buffer.
+    // Retail uses unchecked sprintf/strcat below; long template names or
+    // player descriptions can overflow this fixed buffer.
     char description[500];
     sprintf(
         description,
@@ -8380,9 +8007,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
                     0x0068280C, rmgTownChoiceIs, " town choice is "));
             strcat(
                 description,
-                // Retail 0x549fba reuses the player-index byte offset for
-                // this lookup, as it does for the preceding color name.
-                // Preserve that description bug when another town was chosen.
+                // Retail bug: indexed by the player rather than the chosen
+                // town, so the named town can be wrong.
                 g_rmgTownNames[descriptionPlayer]);
         }
     }
@@ -8557,8 +8183,6 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         disabledArtifacts[artifactIndex] =
             g_artifactTraits[artifactIndex].m_comboType != -1;
     }
-    // Retail 0x54a78d/0x54a790 sets bit 0 of word 4 and bit 31 of
-    // word 3, relative to the bitset base at [ebp-0x64]: IDs 128 and 127.
     disabledArtifacts.set(128);
     disabledArtifacts.set(127);
 
@@ -8628,8 +8252,8 @@ static void __fastcall assignRmgTeams(
 void __fastcall writeRmgObjectPrototype(TAbstractFile*, TObjectType*);
 
 // Prototype slots 0/1 hold the first RANDOM_MONSTER/TERRAIN_HOLE entries;
-// referenced prototypes start at 2. Keep prototype/object loop bounds live
-// across serialization callbacks and retain the two trait-ordered object passes.
+// referenced prototypes start at 2. Objects are written in two trait-ordered
+// passes.
 VA(0x0054ABF0, 0x235)
 MAC_ADDRESS(0x24fd18, 0x350) // anchor-callee 0x54c05b + WriteMapHeader and map loops; retail-only
 b8 type_random_map_generator::writeMap(TAbstractFile* outfile)
@@ -8683,8 +8307,7 @@ enum TRmgPrototypeCellMask {
 };
 
 // H3M stores each fixed 8x6 footprint in reverse row/column order, packed
-// least-significant bit first. Both masks use the same traversal and packing;
-// keep their buffers and stream writes at the caller's separate lifetimes.
+// least-significant bit first.
 static inline void encodeRmgPrototypeCellMask(TObjectType* prototype,
     TRmgPrototypeCellMask kind, unsigned char* mask)
 {
@@ -8759,9 +8382,7 @@ int type_random_map_generator::selectPrisonHero()
     return hero;
 }
 
-// This one-vector worklist reads priorities from the zones themselves;
-// the other zone overload carries a parallel cost vector. Retail 0x54b294
-// expands the same descending binary-search boundary before count insert.
+// Priority worklist ordered by each zone's quest placement score.
 static void insertRmgWorkItem(std::vector<TRmgZone*>& zones, TRmgZone* zone)
 {
     int first = 0;
@@ -8780,9 +8401,8 @@ static void insertRmgWorkItem(std::vector<TRmgZone*>& zones, TRmgZone* zone)
     zones.insert(zones.begin() + middle, 1, zone);
 }
 
-// Unit-edge shortest paths use a descending priority worklist. Keep its tie
-// order even though FIFO BFS also computes distances. Template destinations
-// index the generated zones through their 0x1c-byte connection records.
+// Unit-edge shortest paths over the zone connection graph using a
+// descending priority worklist; its tie order matters.
 VA(0x0054B180, 0x174)
 MAC_ADDRESS(0x25013c, 0x210) // anchor-callee + zone/template layouts; retail-only
 void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
@@ -8846,21 +8466,16 @@ b8 type_random_map_generator::placeQuestGroup(
     return false;
 }
 
-// Artifact's table loader maps class 'T' to bit 2. The quest worker tests
-// that same treasure-class bit at 0x54b4db/0x54b536. No separate data body.
+// Treasure artifact class ('T') bit in the artifact table.
 static const int g_rmgQuestArtifactClass = 2;
 
 // Counting and selecting must use the same quest-artifact eligibility rule.
-// Preserve the disabled/used/class short-circuit order and the separate
-// unchecked prototype lookup after selection.
 static inline bool isRmgQuestArtifact(int artifact, const b8* usedArtifacts)
 {
     return !g_artifactTraits[artifact].m_disabled && !usedArtifacts[artifact]
         && (g_artifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass);
 }
 
-// Mac 0x2507c4/0x2507dc retains TRmgTreasureGroup::addObject and
-// markPlacementOutline; preparePlacement preserves the latter call.
 VA(0x0054B490, 0x42E)
 MAC_ADDRESS(0x250588, 0x360) // anchor-caller + artifact/group/generator fields; retail-only
 b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
@@ -8887,8 +8502,7 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
     seerHut->m_artifact = artifact;
     unsigned int prototypeIndex = findRmgPrototypeSubtypeIndex<unsigned int>(
         m_objectPrototypes[ARTIFACT], artifact);
-    // Retail assumes an eligible artifact always has a loaded prototype;
-    // there is no end-of-vector check after the subtype search.
+    // Assumes an eligible artifact always has a loaded prototype.
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[ARTIFACT][prototypeIndex];
     --object->m_properties->m_refCount;
     object->m_properties = properties;
@@ -8913,9 +8527,8 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
     return true;
 }
 
-// Reserve the color before filling the group and release it on failure.
+// Reserve the colour before filling the group and release it on failure.
 // Failed placement releases each object's reservation before deletion.
-// The initial key-tent color remains unset, as in retail.
 VA(0x0054B8C0, 0x385)
 MAC_ADDRESS(0x2508e8, 0x334) // anchor-callee 0x5338e0; retail-only
 b8 type_random_map_generator::placeKeyTentGuard(type_object* object, int maxValue)
@@ -8942,9 +8555,8 @@ b8 type_random_map_generator::placeKeyTentGuard(type_object* object, int maxValu
     return false;
 }
 
-// Callers retain ownership of the object. Both retail find loops test the
-// iterator against null, including the end-iterator path (0x54bc95/0x54be6d).
-// Preserve that bug and the footprint's position/prototype snapshots.
+// Callers keep ownership of the object. Retail bug: both find loops compare
+// the iterator with null rather than end().
 VA(0x0054BC50, 0x2AE)
 MAC_ADDRESS(0x250c1c, 0x2ac) // anchor-callee 0x5338e0/0x54b490; retail-only
 void type_random_map_generator::removeObject(type_object* object)
@@ -9009,7 +8621,6 @@ TRandomMapRequest::TRandomMapRequest(int width, int height, int levels)
     memset(m_townType, -1, sizeof(m_townType));
 }
 
-// Inferred ordinary seat setters expanded by retail worker 0x54bf60.
 void type_random_map_generator::setHumanPlayer(int seat)
 {
     m_fixedHumanPlayers[seat] = true;
@@ -9062,10 +8673,6 @@ int TRandomMapRequest::generate(const char* fileName, TProgressSink* progress)
     }
 }
 
-// Retail carveBranchingPaths unwind thunk 0x62fdb8 passes its queue at
-// EBP-0x68 to 0x54c6a0, whose destructor expands the list teardown.
-// Eight-byte coordinate values and 16-byte linked nodes identify list<TPoint>;
-// erase's iterator result is returned through a hidden stack pointer.
 VA_COMPGEN(0x0054C6A0, 0x4D, QUEUE_LIST_DTOR, TPoint)
 
 VA_COMPGEN(0x0054D000, 0x5E, LIST_INSERT_SINGLE, TPoint)
@@ -9076,14 +8683,8 @@ VA_COMPGEN(0x0054D0A0, 0x45, LIST_ERASE_RANGE, TPoint)
 
 VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, TPoint)
 
-// Mine's non-const terrain query retains the checked ten-bit test.
 VA_COMPGEN(0x005166E0, 0x34, BITSET_TEST, Bitset10)
 
-// Retail's 129-bit setter is claimed from its identical canonical COMDAT in
-// customcampaign.cpp.
-
-// The three-point orientation helper at 0x5fdae0 belongs with the retained
-// Voronoi operations in rmg_support.cpp.
 VA(0x005FDB10, 0x21)
 MAC_ADDRESS(0x25c3b4, 0x38) // anchor-callee addSite; Complete-only, ret 0x10
 int getRmgSquaredDistance(TPoint first, TPoint second)
@@ -9095,9 +8696,6 @@ int getRmgSquaredDistance(TPoint first, TPoint second)
 
 // Circumcenter of the triangle with these three sites: the perpendicular
 // bisector of the origin-to-second side, scaled by the projected sides.
-// Retail expands the first subtraction inside this ordinary helper, retaining
-// two later subtractions and five arithmetic calls. Keep the caller's opposite-
-// site snapshot, by-value parameters, and dot products' Y-before-X order.
 static TPoint computeRmgCircumcenter(TPoint third, TPoint origin, TPoint second)
 {
     TRmgVector axis = second - origin;

@@ -1,7 +1,5 @@
-// rmg_support.cpp - retained Complete random-map helper bodies.
+// rmg_support.cpp - random-map line painting and Voronoi helpers.
 
-// Retail retains these ordinary helpers out of line in CreateRiver; this
-// companion TU preserves that body-visibility boundary.
 #include "va.h"
 
 #include <algorithm>
@@ -12,7 +10,6 @@
 #include "rmg_terrain.h"
 #include "tiles.h"
 
-// Both final painters query adapter size before building this shared base.
 TRmgLinePainterInterface::TRmgLinePainterInterface(const TRmgGridPoint& size)
     : m_size(size)
 {
@@ -32,10 +29,9 @@ TRmgLinePatternTable::TRmgLinePatternTable(unsigned int patternCount, const int*
         m_ranges[value].m_firstIndex = 0;
         m_ranges[value].m_valueCount = 0;
     }
-    // Retail requires a nonempty array of ids in [0, 8], with all frames
-    // for each id contiguous. It neither validates those preconditions nor
-    // handles a repeated run: a later run replaces the first index while
-    // the count still includes earlier runs. Both shipped tables obey them.
+    // Expects a nonempty list of ids in [0, 8] with each id's frames
+    // contiguous; this is not validated, and a repeated run would corrupt
+    // its range. Both shipped tables obey it.
     int previousPattern = m_patterns[0];
     ++m_ranges[previousPattern].m_valueCount;
     for (unsigned int index = 1; index < m_patternCount; ++index) {
@@ -47,7 +43,6 @@ TRmgLinePatternTable::TRmgLinePatternTable(unsigned int patternCount, const int*
     }
 }
 
-// Both table cleanup thunks tail-call this array-owning destructor.
 VA(0x004F9CA0, 0x0B)
 MAC_ADDRESS(0x2222f8, 0x54)  // cinit cleanups 0x55ed90/0x55f310; Complete-only
 TRmgLinePatternTable::~TRmgLinePatternTable()
@@ -55,9 +50,7 @@ TRmgLinePatternTable::~TRmgLinePatternTable()
     delete[] m_patterns;
 }
 
-// This library-side copy is retained separately from the terrain selector's
-// 0x642c00 table. Retail 0x4f9df0 indexes it with the two bytes from 0x63ff1c.
-// Values and row order are read from the pinned image, not inferred rotations.
+// Neighbour direction order for each (flipX, flipY) reflection.
 DATA(0x0063FE9C)
 static const int g_rmgLineReflectedNeighbours[2][2][8] = {
     {{0, 1, 2, 3, 4, 5, 6, 7}, {4, 3, 2, 1, 0, 7, 6, 5}},
@@ -69,8 +62,6 @@ static const b8 g_rmgLineReflections[4][2] = {
     {false, false}, {false, true}, {true, false}, {true, true}
 };
 
-// Endpoints and the no-endpoint-art fallback share the horizontal choice.
-// Keep the west-before-east short-circuit order.
 static inline bool hasRmgHorizontalLineNeighbour(const b8* neighbours)
 {
     return neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST];
@@ -170,8 +161,6 @@ TRmgLinePatternTable* TRmgRiverLinePainter::getPattern(int)
     return &g_rmgRiverPatternTable;
 }
 
-// Both line painters materialize all tile fields before calling the adapter.
-// Keep the snapshot here, including its constructor and flip-copy order.
 template<class Adapter>
 static inline void writeRmgLineTileSnapshot(Adapter* adapter,
     const TRmgGridPoint& point, const rmgTerrainTile& tile)
@@ -182,8 +171,6 @@ static inline void writeRmgLineTileSnapshot(Adapter* adapter,
     adapter->setTile(point, snapshot);
 }
 
-// Adapt the value-returning query to the painter's output reference. Retain
-// the local snapshot and the tile's four-field assignment boundary.
 template<class Adapter>
 static inline void readRmgLineTileSnapshot(Adapter* adapter,
     const TRmgGridPoint& point, rmgTerrainTile& tile)
@@ -192,8 +179,7 @@ static inline void readRmgLineTileSnapshot(Adapter* adapter,
     tile = snapshot;
 }
 
-// Road and river painting share this terrain policy. Query only once before
-// testing water and rock; these are underlying terrain, not line-type ids.
+// Roads and rivers cannot be painted over water or rock terrain.
 template<class Adapter>
 static inline b32 isRmgLinePaintingBlocked(Adapter* adapter,
     const TRmgGridPoint& point)
@@ -223,7 +209,7 @@ void TRmgRiverLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& t
     readRmgLineTileSnapshot(m_adapter, point, tile);
 }
 
-// Slot 3 returns an integer blocking result, not permission to paint.
+// Nonzero means the line cannot be painted on this tile.
 VA(0x0055EE00, 0x28)
 MAC_ADDRESS(0x253b64, 0x44)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
 b32 TRmgRiverLinePainter::isBlocked(const TRmgGridPoint& point)
@@ -251,7 +237,6 @@ TRmgRiverPainter::TRmgRiverPainter(
 
 VA_COMPGEN(0x0055EED0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverPainter)
 
-// Cinit 0x55f2f0 builds the road table from seventeen ids at 0x6411ac.
 VA(0x0055F320, 0x08)
 MAC_ADDRESS(0x253fc0, 0x8)  // vtables 0x6411f0/0x64120c; Complete-only
 TRmgLinePatternTable* TRmgRoadLinePainter::getPattern(int)
@@ -292,8 +277,6 @@ int TRmgRoadLinePainter::getLineType(const TRmgGridPoint& point)
     return m_adapter->getLineType(point);
 }
 
-// The road builder at 0x548143 passes the common painter prefix to the
-// walker, whose subobject begins at +0x10.
 VA(0x0055F3B0, 0x76)
 MAC_ADDRESS(0x254148, 0x6c) // anchor-callee 0x548143; Complete-only, thiscall ret 0xc
 TRmgRoadPainter::TRmgRoadPainter(
@@ -307,7 +290,6 @@ TRmgRoadPainter::TRmgRoadPainter(
 
 VA_COMPGEN(0x0055F430, 0x21, SCALAR_DELETING_DTOR, TRmgRoadPainter)
 
-// The empty derived destructor restores the road base vtable at 0x6411f0.
 VA(0x0055F460, 0x07)
 MAC_ADDRESS(0x2541b4, 0x60)  // road painter cleanup; Complete-only RMG helper
 TRmgRoadPainter::~TRmgRoadPainter()
@@ -318,12 +300,10 @@ VA(0x005FCEB0, 0x39)
 MAC_ADDRESS(0x25c018, 0x64)
 int TRmgVector::length() const
 {
-    // Preserve retail's 32-bit squared norm before conversion and truncated
-    // square root. Widening the products would change overflow behavior.
+    // The squared norm is 32-bit and may overflow; the root is truncated.
     return static_cast<int>(sqrt(static_cast<double>(getRmgSquaredNorm(m_x, m_y))));
 }
 
-// Both constructors share this ordinary self-ring and vertex initialization.
 MAC_ADDRESS(0x25c164, 0x20)
 void TRmgHalfEdge::initialize()
 {
@@ -334,7 +314,6 @@ void TRmgHalfEdge::initialize()
     m_position.m_y = -1;
 }
 
-// The paired constructor expands this twin constructor after allocation.
 TRmgHalfEdge::TRmgHalfEdge(
     TPoint sitePosition, TRmgZone* zone, TRmgHalfEdge* twin)
 {
@@ -414,8 +393,7 @@ TRmgHalfEdge* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
 }
 
 // Quad-edge Connect(a, b): connect first's destination to second's origin,
-// then splice into first's left face and second's origin ring. Retail expands
-// this helper at 0x5fd2c3/0x5fd72a but retains its createEdge and splice calls.
+// then splice into first's left face and second's origin ring.
 MAC_ADDRESS(0x25caec, 0x94)
 TRmgHalfEdge* TRmgVoronoi::connectEdges(TRmgHalfEdge* first,
     TRmgHalfEdge* second)
@@ -427,8 +405,8 @@ TRmgHalfEdge* TRmgVoronoi::connectEdges(TRmgHalfEdge* first,
     return edge;
 }
 
-// Remove one half-edge's reference without destroying it. Membership is a
-// retail precondition: a failed search still reaches erase(end()).
+// Removes one half-edge reference without destroying it. The edge must be
+// present: a failed search still erases end().
 static inline void eraseRmgHalfEdgeReference(std::vector<TRmgHalfEdge*>& edges,
     TRmgHalfEdge* edge)
 {
@@ -450,9 +428,8 @@ void TRmgVoronoi::removeEdge(TRmgHalfEdge* edge)
     delete twin;
 }
 
-// Graphics Gems IV's RightOf/ccw/TriArea suggests these helper boundaries,
-// with Complete's integer by-value points and cyclic orientation order.
-// See docs/reference/rmg-voronoi-provenance.md for evidence and limits.
+// Integer forms of Graphics Gems IV's ccw/RightOf predicates; see
+// docs/reference/rmg-voronoi-provenance.md.
 MAC_ADDRESS(0x25c304, 0x68)
 static int isRmgCounterClockwise(TPoint first, TPoint second, TPoint third)
 {
@@ -465,8 +442,6 @@ static int isRmgPointRightOfEdge(TPoint point, TRmgHalfEdge* edge)
     return isRmgCounterClockwise(edge->m_sitePosition, point, twin->m_sitePosition);
 }
 
-// Location and insertion both compare a copied endpoint with the query.
-// Preserve the point snapshot before the two-coordinate equality test.
 static inline bool isRmgEdgeOrigin(TPoint point, TRmgHalfEdge* edge)
 {
     TPoint origin = edge->getSitePosition();
@@ -484,8 +459,7 @@ MAC_ADDRESS(0x25c9c8, 0x124) // anchor-callers 0x53dad0/0x53e050/0x5fd790; ret 8
 TRmgHalfEdge* TRmgVoronoi::locate(TPoint point)
 {
     // Walking point location in the incremental Delaunay triangulation.
-    // Retail has no iteration limit or outside-domain fallback; retain the
-    // non-strict side tests (see the provenance document's hull discussion).
+    // There is no iteration limit or outside-domain fallback.
     TRmgHalfEdge* edge = m_root;
     for (;;) {
         if (isRmgEdgeOrigin(point, edge))
@@ -512,7 +486,7 @@ TRmgHalfEdge* TRmgVoronoi::locate(TPoint point)
 }
 
 // A flipped half-edge takes both the site and its zone from the opposite
-// endpoint of its saved predecessor. Keep zone-before-position assignment.
+// endpoint of its saved predecessor.
 static inline void copyRmgOppositeSite(TRmgHalfEdge* destination,
     TRmgHalfEdge* source)
 {
@@ -520,8 +494,8 @@ static inline void copyRmgOppositeSite(TRmgHalfEdge* destination,
     destination->m_sitePosition = source->getOppositeSitePosition();
 }
 
-// Provisional edge flip: retail saves both predecessors before detach,
-// transfers their opposite sites/zones, and splices into the new rings.
+// Delaunay edge flip: save both predecessors, detach, take their opposite
+// sites/zones, and splice into the new rings.
 MAC_ADDRESS(0x25c204, 0xb0)
 static void flipRmgEdge(TRmgHalfEdge* edge)
 {
@@ -534,9 +508,8 @@ static void flipRmgEdge(TRmgHalfEdge* edge)
     edge->m_twin->splice(twinPrevious->getLeftNext());
 }
 
-// Segment containment uses a saved opposite endpoint, three squared-distance
-// checks, then an implicit-line test. Keep the line origin bound to its site
-// field; a copied endpoint changes the native read lifetime.
+// True when the point lies on the edge's segment: within both endpoint
+// distances and exactly on its line.
 static b8 isRmgPointOnSegment(TPoint point, TRmgHalfEdge* edge)
 {
     TPoint opposite = edge->getOppositeSitePosition();
@@ -554,15 +527,13 @@ static b8 isRmgPointOnSegment(TPoint point, TRmgHalfEdge* edge)
 }
 
 // Incircle predicate for a counterclockwise triangle; zero (cocircular)
-// does not request an edge flip. Retail snapshots three points before
-// four orientation calls and a signed 64-bit circumcircle determinant.
+// does not request an edge flip.
 MAC_ADDRESS(0x25cb80, 0x1c4)
 static b8 isRmgPointInsideCircumcircle(TPoint first, TPoint second,
     TPoint third, TPoint point)
 {
-    // Squared norms and orientations stay signed 32-bit before the final
-    // 64-bit products. Preserve this retail overflow limitation; casting
-    // coordinates before multiplication would change the algorithm's result.
+    // Squared norms and orientations are 32-bit before the 64-bit products,
+    // so large coordinates overflow.
     int firstArea = getRmgPointOrientation(second, third, point);
     int secondArea = getRmgPointOrientation(first, third, point);
     int thirdArea = getRmgPointOrientation(first, second, point);
@@ -619,15 +590,11 @@ MAC_ADDRESS(0x25c2b4, 0x50) // anchor-callee 0x5fd937/0x5fd97e; Complete-only
 int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
 {
     // Signed twice-area: positive means counterclockwise in the coordinate
-    // system used by the subdivision. Keep retail's 32-bit arithmetic.
+    // system used by the subdivision.
     return (second.m_x - first.m_x) * (third.m_y - first.m_y)
         - (second.m_y - first.m_y) * (third.m_x - first.m_x);
 }
 
-// Four-byte elements, ret 8 and constructor calls at 0x5fd091..0x5fd1d3
-// identify this vector<TRmgHalfEdge*> specialization despite ICF names.
 VA_COMPGEN(0x005FDD60, 0x1B1, VECTOR_INSERT_SINGLE, TRmgHalfEdge)
 
-// createEdge and the boundary-vertex insert call this half-edge vector fill;
-// widget vectors use the separate folded copy at 0x48d940.
 VA_COMPGEN(0x005FDF20, 0x26, VECTOR_UFILL, TRmgHalfEdge)

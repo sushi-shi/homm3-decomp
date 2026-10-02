@@ -1,8 +1,4 @@
-// rmg_terrain.cpp - Complete-only random-map terrain transition support.
-
-// The Dreamcast build contains no random-map generator compiland. Function
-// ownership, field layout, helper boundaries, and call/expansion decisions in
-// this unit therefore come directly from the retail x86 cluster.
+// rmg_terrain.cpp - random-map terrain, road and river tile painting.
 #include "va.h"
 #include "includes.h"
 
@@ -13,7 +9,7 @@
 #include "exceptions.h"
 #include "tiles.h"
 
-// Vtable 0x642cb0 slot 2 shares the false/ret-4 body at 0x5543f0.
+// The fixed table has no special frames.
 MAC_ADDRESS(0x259d44, 0x8)
 b8 TRmgTableTerrainRule::isSpecialFrame(int) { return false; }
 
@@ -38,8 +34,6 @@ void TRmgLinePainterTile::setTile(const rmgTerrainTile& tile)
     m_painter->setTile(m_point, tile);
 }
 
-// The point walker tests AL after slot 3 (0x4fa400..0x4fa405). Keep that
-// low-byte gate while preserving the retained virtual's integer-return ABI.
 // Nonzero blocks painting on water and rock.
 b8 TRmgLinePainterTile::isBlocked()
 {
@@ -51,16 +45,11 @@ void TRmgLinePainterTile::setLineType(int value)
     m_painter->setLineType(m_point, value);
 }
 
-// The size is a grid point: the walker's one-cell rectangle then constructs
-// a unit size the way retail 0x4fa3c0 materializes it (see paintPoint).
 TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGridPoint& size)
     : m_origin(origin), m_size(size)
 {
 }
 
-// Keep one tile proxy across neighbour queries and select pattern/flips before
-// reading the current tile. Draw a frame only when the pattern or flips differ.
-// The output-reference selector keeps the two flip bytes independent.
 int selectRmgLinePattern(
     const b8* neighbours, const TRmgLinePatternTable* table,
     b8& flipX, b8& flipY)
@@ -70,8 +59,7 @@ int selectRmgLinePattern(
     return pattern;
 }
 
-// Query valid neighbours in direction-table order through the signed-coordinate
-// conversion and tile-proxy helper.
+// Marks each on-map neighbour that carries the same line type.
 static inline void buildMatchingLineNeighbourMask(
     TRmgLinePainterInterface* painter, const TRmgGridPoint& point,
     int lineType, b8* matches)
@@ -117,16 +105,13 @@ TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
     return TRmgLinePainterTile(this, point);
 }
 
-// Retail refresh retains the signed-point add, grid conversion and proxy
-// factory nested here; the walker retains only the compound add.
 int TRmgLinePainterInterface::getNeighbourLineType(const TRmgGridPoint& point, unsigned int direction)
 {
     TRmgGridPoint nearby = point + g_tileDirections[direction];
     return at(nearby).getLineType();
 }
 
-// Rectangle borders share the same conditional refresh. Keep the query here:
-// even a border cell with no line is visited, but it consumes no frame draw.
+// Border cells without a line are skipped and consume no frame draw.
 static inline void refreshExistingRmgLinePoint(
     TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
@@ -134,9 +119,7 @@ static inline void refreshExistingRmgLinePoint(
         refreshRmgLinePoint(painter, point);
 }
 
-// Expand the rectangle's half-open end for an adjacent border. The caller
-// supplies each side's retail limit, including the right-side height - 1.
-// Keep unsigned addition and its wrap behavior before the comparison.
+// Extends a border's half-open end by one cell when it stays below the limit.
 static inline unsigned int getLineBorderEnd(
     unsigned int origin, unsigned int extent, unsigned int limit)
 {
@@ -170,9 +153,8 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
     if (rectangle.m_origin.m_x + rectangle.m_size.m_x < painter->m_size.m_x) {
         point.m_x = rectangle.m_origin.m_x + rectangle.m_size.m_x;
         unsigned int first = rectangle.m_origin.m_y > 0 ? rectangle.m_origin.m_y - 1 : 0;
-        // Preserve retail's asymmetric right-edge limit: unlike the left
-        // edge, a rectangle ending on the penultimate row excludes the last
-        // row here. Normalizing these bounds would change refreshed tiles.
+        // Retail quirk: unlike the left edge, a rectangle ending on the
+        // penultimate row does not refresh the last row here.
         unsigned int end = getLineBorderEnd(rectangle.m_origin.m_y,
             rectangle.m_size.m_y, painter->m_size.m_y - 1);
         for (point.m_y = first; point.m_y < end; ++point.m_y) {
@@ -206,9 +188,8 @@ TRmgLineWalker::TRmgLineWalker(
     paintPoint(m_position);
 }
 
-// Integer error-accumulation line rasterization (a four-connected Bresenham
-// variant). Walk destination-to-start and paint the intermediate cell before
-// each minor-axis step, preserving river connectivity and visit order.
+// Four-connected Bresenham line: the corner cell is painted on each
+// minor-axis step so the road or river stays connected.
 VA(0x004FA2B0, 0x110)
 MAC_ADDRESS(0x222c8c, 0x190) // anchor-caller 0x548040 and createRiver; thiscall ret 4
 void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
@@ -303,7 +284,7 @@ TRmgPatternTerrainRule::TRmgPatternTerrainRule(
     }
 }
 
-// Vtable 0x642c98 slot 1 tests the special base-frame range (key 1).
+// True when the terrain has special (decorated) base frames.
 VA(0x005B3840, 0x0C)
 MAC_ADDRESS(0x259dac, 0x14)  // Complete-only pattern terrain rule
 b8 TRmgPatternTerrainRule::hasSpecialBaseFrames()
@@ -317,7 +298,6 @@ TRmgTerrainRule::~TRmgTerrainRule()
 {
 }
 
-// Vtable 0x642c98 slot 2 reads the special-frame byte in the source entry.
 VA(0x005B3860, 0x11)
 MAC_ADDRESS(0x254ce4, 0x14)  // Complete-only pattern terrain rule
 b8 TRmgPatternTerrainRule::isSpecialFrame(int frame)
@@ -332,16 +312,14 @@ int TRmgPatternTerrainRule::getTransition(int frame)
     return m_entries[frame].m_transition;
 }
 
-// Preserve modulo selection and its RNG consumption/bias. Admitted ranges
-// are nonempty.
+// Draws a random frame from a nonempty range (one rand() call, modulo bias).
 static inline int selectTerrainRangeFrame(const TRmgTerrainPatternRange& range)
 {
     return rand() % range.m_count + range.m_firstIndex;
 }
 
-// Base and transition selection both retain an old frame only when it is
-// present and names the requested transition. Check the sentinel before
-// indexing either admitted entry-table type.
+// An existing frame (-1 for none) is kept when it already shows the
+// requested transition.
 template<class Entry>
 static inline bool matchesTerrainFrame(const Entry* entries,
     int oldFrame, int transition)
@@ -370,7 +348,7 @@ int TRmgPatternTerrainRule::selectBaseFrame(int strength, int oldFrame)
     return oldFrame;
 }
 
-// Transition ranges have two first/count pairs; this selector uses the first.
+// Transitions always draw from the non-special range.
 VA(0x005B38F0, 0x41)
 MAC_ADDRESS(0x254dd0, 0x88)
 int TRmgPatternTerrainRule::selectTransitionFrame(
@@ -387,8 +365,6 @@ int TRmgPatternTerrainRule::selectTransitionFrame(
     return oldFrame;
 }
 
-// Both table construction and frame reuse compare the complete transition
-// key, in transition/X/Y order. The frame sentinel stays at the caller.
 static inline bool matchesTerrainTransition(
     const TRmgTerrainTransitionEntry& entry, int transition,
     b8 flipX, b8 flipY)
@@ -397,9 +373,7 @@ static inline bool matchesTerrainTransition(
         && entry.m_flipX == flipX && entry.m_flipY == flipY;
 }
 
-// Pack the transition and two independent reflection bytes into the table's
-// range key. Construction and selection must use the same nesting and signed
-// arithmetic; the admitted bytes are 0/1, but this is not a bitwise mask.
+// Range key: transition, then flipX, then flipY (each flip 0/1).
 static inline TRmgTerrainPatternRange& getTerrainTransitionRange(
     TRmgTerrainPatternTable& table, int transition,
     b8 flipX, b8 flipY)
@@ -445,8 +419,6 @@ b8 TRmgTableTerrainRule::hasSpecialBaseFrames()
     return false;
 }
 
-// Both concrete rule vtables share the deleting wrapper: call the base
-// destructor at 0x5b3850, then delete the object when bit 0 is set.
 VA_COMPGEN(0x005B3A50, 0x21, SCALAR_DELETING_DTOR, TRmgTableTerrainRule)
 
 VA(0x005B3A80, 0x11)
@@ -486,15 +458,13 @@ int TRmgTableTerrainRule::selectTransitionFrame(
 int __fastcall selectTerrainTransition(
     const int* neighbours, TRmgTerrainFlip* flip);
 
-// Four reflections of the eight neighbour slots. Read from the pinned
-// retail image; both flip bytes index this table independently.
+// Neighbour direction order for each (flipX, flipY) reflection.
 DATA(0x00642C00)
 const int g_rmgReflectedNeighbours[2][2][8] = {
     {{0, 1, 2, 3, 4, 5, 6, 7}, {4, 3, 2, 1, 0, 7, 6, 5}},
     {{0, 7, 6, 5, 4, 3, 2, 1}, {4, 5, 6, 7, 0, 1, 2, 3}}
 };
 
-// Preserve the constructed value's temporary lifetime at selector call sites.
 static TRmgTerrainFlip makeTerrainFlip(b8 x, b8 y)
 {
     return TRmgTerrainFlip(x, y);
@@ -526,9 +496,7 @@ int __fastcall getRmgTerrainNeighbourKind(int terrain, int neighbourTerrain)
     return RMG_NEIGHBOUR_HARD_EDGE;
 }
 
-// Composite pattern predicates describe the reflected geometry while keeping
-// each directional read short-circuited in its original order. Family and
-// reflection priority, flip output and transition selection stay in the caller.
+// Pattern predicates over neighbour kinds, read through a reflection order.
 static inline bool hasSoutheastTerrainCorner(const int* neighbours,
     const int* order, int eastKind, int southKind)
 {
@@ -574,17 +542,15 @@ static inline bool hasSouthNortheastTerrainEdges(const int* neighbours,
 }
 
 // Priority-ordered terrain pattern classification under four reflections.
-// Each pass considers one pattern family; combining the passes into a single
-// reflection loop would change which overlapping pattern wins.
+// Each pass tries one pattern family over all reflections, which decides
+// which overlapping pattern wins.
 VA(0x005B3E80, 0x75F)
 MAC_ADDRESS(0x2552e8, 0x980)  // fastcall call at 0x5b5f5b; retail-only
 int __fastcall selectTerrainTransition(
     const int* neighbours, TRmgTerrainFlip* flip)
 {
-    // Retail construction guard byte 0x6a52a1 (tested and set in this body).
     DATA_COMPGEN_GUARD(0x006a52a1, terrainFlipsGuard, flips)
 
-    // atexit(0x5b45e0): the table's empty cleanup, right after this function.
     VA_COMPGEN(0x005b45e0, 0x1, STATIC_DTOR, flips)
     DATA(0x006A52B8)
     static TRmgTerrainFlip flips[4] = {
@@ -772,9 +738,6 @@ int __fastcall selectTerrainTransition(
     return 0;
 }
 
-// VC6 binds the output temporary to a non-const reference. Copy the returned
-// reference before the temporary dies at the full-expression boundary;
-// virtual slot 3 retains its output-reference ABI.
 VA(0x005B45F0, 0x26D)
 MAC_ADDRESS(0x255c68, 0xbc)
 rmgTerrainPainter::rmgTerrainPainter(
@@ -782,7 +745,7 @@ rmgTerrainPainter::rmgTerrainPainter(
     : m_adapter(newAdapter), m_paintTerrain(terrain), m_transitionStrength(strength)
 {
 #if defined(HOMM3_TARGET_MAC)
-    // Mac 0x255c68 calls the value-returning slot.
+    // The Mac adapter returns the size by value.
     m_size = m_adapter->getSize();
 #else
     m_size = m_adapter->getSize(TRmgGridPoint());
@@ -800,7 +763,6 @@ TRmgPackedTerrainCell* rmgTerrainPainter::getPackedCell(
     return &m_packedCells[index];
 }
 
-// Retail proves this shared accessor but not an explicit inline qualifier.
 int rmgTerrainPainter::getTerrain(const TRmgGridPoint& point)
 {
     return getPackedCell(point)->getTerrain();
@@ -821,8 +783,6 @@ unsigned int rmgTerrainPainter::getHeight() const
     return m_size.m_y;
 }
 
-// Compute strength before loading the rule receiver, preserving the captured
-// terrain index across the first call.
 MAC_ADDRESS(0x259998, 0x60)
 int rmgTerrainPainter::selectBaseFrame(
     const TRmgGridPoint& point, int terrain, int oldFrame)
@@ -831,8 +791,7 @@ int rmgTerrainPainter::selectBaseFrame(
     return g_rmgTerrainRules[terrain]->selectBaseFrame(strength, oldFrame);
 }
 
-// Adapter writes mark cache validity before copying the four tile values;
-// initialization from an adapter read has the opposite order.
+// Writes through to the map and keeps the cached cell in sync.
 MAC_ADDRESS(0x2550f0, 0xc4)
 void rmgTerrainPainter::setTile(
     const TRmgGridPoint& point, const rmgTerrainTile& tile)
@@ -850,8 +809,6 @@ void rmgTerrainPainter::paintBaseTile(const TRmgGridPoint& point)
     setTile(point, tile);
 }
 
-// Retail 0x5b4e55's neighbour query uses both the cached-terrain accessor and
-// configured-terrain accessor. Keep those ordinary helper boundaries.
 const int& rmgTerrainPainter::getPaintTerrain() const
 {
     return m_paintTerrain;
@@ -889,9 +846,8 @@ enum TRmgTerrainGapAxis {
     RMG_VERTICAL_GAP
 };
 
-// A queued gap that has closed no longer needs primary repair. Test queue
-// membership before querying terrain, then remove it before queuing affected
-// neighbours. The caller retains the four cardinal probes and their order.
+// A queued gap that has closed no longer needs primary repair; dequeue it
+// and queue its other-terrain neighbours instead.
 static inline void resolveQueuedTerrainGap(rmgTerrainPainter& painter,
     const TRmgGridPoint& point, TRmgTerrainGapAxis axis)
 {
@@ -959,8 +915,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 }
 
 // Diagonal neighbours enter the secondary worklist only for terrain rules
-// that require connected neighbours. Cardinal neighbours use a different,
-// priority-ordered test in queueOtherTerrainNeighbours below.
+// that require connected neighbours.
 static inline void queueOtherTerrainDiagonalNeighbour(
     rmgTerrainPainter& painter, const TRmgGridPoint& neighbour)
 {
@@ -970,9 +925,7 @@ static inline void queueOtherTerrainDiagonalNeighbour(
         painter.m_secondaryPoints.insert(neighbour);
 }
 
-// Probe and queue one cardinal neighbour. Return whether this axis has found
-// its preferred neighbour so the caller can skip the opposite side. Rebuild
-// the insertion coordinate after the terrain query, preserving its live reads.
+// Queues one cardinal neighbour of other terrain; returns whether it did.
 static inline bool tryQueueOtherTerrainCardinalNeighbour(rmgTerrainPainter& painter,
     const TRmgGridPoint& point, int offsetX, int offsetY)
 {
@@ -988,8 +941,8 @@ VA(0x005B50F0, 0x34E)
 MAC_ADDRESS(0x2565ac, 0x638) // anchor-callee 0x5b4c72, 0x5b50dd; thiscall, ret 4
 void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
 {
-    // Retail queues at most one neighbour on each cardinal axis, preferring
-    // north over south and west over east. Skip the opposite side after success.
+    // At most one neighbour per cardinal axis, preferring north over south
+    // and west over east.
     bool queuedNorth = point.getY() > 0
         && tryQueueOtherTerrainCardinalNeighbour(*this, point, 0, -1);
     if (!queuedNorth && point.getY() < getHeight() - 1)
@@ -1016,8 +969,6 @@ void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
     }
 }
 
-// Retail retains the nested horizontal predicate and expands the vertical
-// predicate at adjacent-row/column probes.
 b8 rmgTerrainPainter::isHorizontalGap(const TRmgGridPoint& point)
 {
     return isHorizontalGap(point, getTerrain(point));
@@ -1028,7 +979,6 @@ b8 rmgTerrainPainter::isVerticalGap(const TRmgGridPoint& point)
     return isVerticalGap(point, getTerrain(point));
 }
 
-// Preserve guard order and return the separation helper's byte result directly.
 MAC_ADDRESS(0x2588c4, 0x1a0)
 b8 rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 {
@@ -1044,8 +994,7 @@ b8 rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 
 // Fill one side of an axis gap. Prefer the negative side unless it needs no
 // repair and the positive side either needs repair or avoids a perpendicular
-// gap in the paint terrain. Preserve the negative/positive query order and
-// only examine perpendicular gaps when the repair checks leave a tie.
+// gap in the paint terrain.
 static inline void repairTerrainGap(rmgTerrainPainter& painter,
     const TRmgGridPoint& negative, const TRmgGridPoint& positive,
     TRmgTerrainGapAxis axis)
@@ -1066,8 +1015,8 @@ static inline void repairTerrainGap(rmgTerrainPainter& painter,
 }
 
 // Repair one-cell gaps, then greedily fill the lightest neighbour-ring gaps
-// until only one remains. Stable first-minimum selection preserves the retail
-// tie order. Painting order matters because each repair updates the worklists.
+// until only one remains; ties go to the first gap. Painting order matters
+// because each repair updates the worklists.
 VA(0x005B5440, 0x628)
 MAC_ADDRESS(0x256be4, 0x630) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
@@ -1087,8 +1036,8 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
         buildMatchingNeighbourMask(point, matches);
         TRmgTerrainGap gaps[TILE_DIR_COUNT / 2];
         // Run-length encode the nonmatching ring, starting after a known
-        // match so a wrapped gap stays together. Separated runs prove that
-        // a match exists and that at most four gaps need storage.
+        // match so a wrapped gap stays together. Separated neighbours imply
+        // a match exists and at most four gaps.
         unsigned int firstMatch = 0;
         while (!matches[firstMatch])
             ++firstMatch;
@@ -1136,7 +1085,6 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 }
 
 // Count each undirected terrain boundary once, adding it to both endpoints.
-// The caller retains the retail row-major east/south-diagonal visitation order.
 static inline void countTerrainBoundary(
     rmgTerrainPainter& painter, const TRmgGridPoint& point,
     const TRmgGridPoint& neighbour, int terrain,
@@ -1148,9 +1096,7 @@ static inline void countTerrainBoundary(
     }
 }
 
-// Write a cached tile back only when its frame or either sprite reflection
-// changes. Keep the frame/X/Y short-circuit order; the tile is the caller's
-// local snapshot, so its field updates precede the single adapter write.
+// Write a tile back only when its frame or either sprite reflection changes.
 static inline void updateTerrainTileAppearance(rmgTerrainPainter& painter,
     const TRmgGridPoint& point, rmgTerrainTile& tile,
     int frame, b8 flipX, b8 flipY)
@@ -1167,8 +1113,7 @@ VA(0x005B5A70, 0x8A7)
 MAC_ADDRESS(0x257214, 0xd54)
 void rmgTerrainPainter::paintTransitions()
 {
-    // RMG maps have at least two rows and columns. The retail border scan
-    // assumes those dimensions when it reads column 1 and subtracts one.
+    // Assumes the map has at least two rows and columns.
     std::vector<unsigned char> edgeCounts(getWidth() * getHeight());
     TRmgGridPoint point;
 
@@ -1276,8 +1221,7 @@ b8 rmgTerrainPainter::isVerticalGap(
         && getTerrain(TRmgGridPoint(point.getX(), point.getY() + 1)) != terrain;
 }
 
-// The two neighbourhood builders share the same clamped coordinate window.
-// Keep north/south/west/east calculation order and unsigned edge arithmetic.
+// The 3x3 neighbourhood window, clamped to the map edge.
 static inline void getTerrainNeighbourBounds(const TRmgGridPoint& point,
     const TRmgGridPoint& size, TRmgGridPoint& northWest, TRmgGridPoint& southEast)
 {
@@ -1289,7 +1233,6 @@ static inline void getTerrainNeighbourBounds(const TRmgGridPoint& point,
     southEast = TRmgGridPoint(east, south);
 }
 
-// Compare against the captured centre terrain; diagonal admission stays outside.
 static inline bool matchesTerrainAt(rmgTerrainPainter& painter,
     unsigned int x, unsigned int y, int terrain)
 {
@@ -1398,10 +1341,7 @@ void rmgTerrainPainter::buildNeighbourKinds(
         *this, TRmgGridPoint(southEast.getX(), southEast.getY()), terrain);
 }
 
-// First-diagonal checks compare terrain at a reflected offset, extending
-// edge cells by clamping both signed coordinates to the adapter bounds.
-// Keep the caller's first successful probe as an early return before querying
-// the other offset; second-diagonal probes move only one axis at a time.
+// Compares terrain at a reflected offset, clamped to the map edge.
 static inline bool matchesTerrainAtClampedOffset(rmgTerrainPainter& painter,
     const TRmgGridPoint& point, const TPoint& offset, int terrain)
 {
@@ -1418,11 +1358,8 @@ MAC_ADDRESS(0x258f18, 0x360)
 b8 rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
-    // Retail construction guard byte 0x6a52a0 (tested and set in this body).
     DATA_COMPGEN_GUARD(0x006a52a0, firstDiagonalOffsetsGuard, firstDiagonalOffsets)
 
-    // The guarded initializer registers atexit(0x5b6df0), this table's empty
-    // cleanup, placed right after this function.
     VA_COMPGEN(0x005b6df0, 0x1, STATIC_DTOR, firstDiagonalOffsets)
     DATA(0x006A5260)
     static TPoint firstDiagonalOffsets[4][2] = {
@@ -1443,10 +1380,8 @@ MAC_ADDRESS(0x259278, 0x288)
 b8 rmgTerrainPainter::checkSecondDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
-    // Retail construction guard byte 0x6a3d64 (tested and set in this body).
     DATA_COMPGEN_GUARD(0x006a3d64, secondDiagonalOffsetsGuard, secondDiagonalOffsets)
 
-    // atexit(0x5b6fc0): the table's empty cleanup, right after this function.
     VA_COMPGEN(0x005b6fc0, 0x1, STATIC_DTOR, secondDiagonalOffsets)
     DATA(0x006A3D68)
     static TPoint secondDiagonalOffsets[4] = {
@@ -1466,9 +1401,6 @@ b8 rmgTerrainPainter::checkSecondDiagonal(
 }
 
 // Cardinal special-frame neighbours each halve the transition strength.
-// Share only the query: the caller keeps its west/north/east/south order and
-// the rule pointer captured before any cache fill. The frame is queried only
-// after the terrain agrees, as in each original short-circuited predicate.
 static inline bool hasSpecialTerrainFrameAt(rmgTerrainPainter& painter,
     const TRmgGridPoint& point, int terrain, TRmgTerrainRule* rule)
 {
@@ -1510,8 +1442,8 @@ int rmgTerrainPainter::getTransitionStrength(
     return strength;
 }
 
-// Terrain changes and destruction share completion. Keep set::erase(key);
-// its distance walk expands only at the change site.
+// Drains both repair worklists, then paints transitions. Runs on terrain
+// change and destruction.
 MAC_ADDRESS(0x257f68, 0xd4)
 void rmgTerrainPainter::finish()
 {
@@ -1530,7 +1462,7 @@ void rmgTerrainPainter::finish()
     paintTransitions();
 }
 
-// The previous-terrain return is provisional: retail's brush caller discards it.
+// Returns the previous terrain; the brush ignores it.
 MAC_ADDRESS(0x255ea4, 0x4c)
 int rmgTerrainPainter::changeTerrain(int terrain, int strength)
 {
@@ -1573,9 +1505,6 @@ void TRmgTerrainBrush::paintRectangle(
     m_painter->paintRectangle(x, y, rectangleWidth, rectangleHeight);
 }
 
-// The brush constructor's allocation-failure unwind reaches the retained
-// Dinkumware auto_ptr destructor. Its {owns, pointer} layout, pointee
-// destructor call, and scalar delete exactly identify this specialization.
 VA_COMPGEN(0x005B76D0, 0x20, IMPLICIT_DTOR, rmgTerrainPainter_auto_ptr)
 
 VA(0x005B76F0, 0x209)
@@ -1585,32 +1514,22 @@ rmgTerrainPainter::~rmgTerrainPainter()
     finish();
 }
 
-// Grid-point set operations own 0x18-byte nodes, nil at 0x6a52c4 and its
-// reference count at 0x6a52c8. The generic coordinate comparator preserves
-// their natural template emission and lock-unwind boundary.
 VA_COMPGEN(0x005B7CD0, 0x156, TREE_INSERT, TRmgCoordinatePoint_unsigned_int)
 
 VA_COMPGEN(0x005B8670, 0xA8, TREE_INIT, TRmgCoordinatePoint_unsigned_int)
 
 VA_COMPGEN(0x005B8720, 0x2FE, TREE_NODE_INSERT, TRmgCoordinatePoint_unsigned_int)
 
-// The predecessor walk's color at +0x14 and nil references identify the
-// terrain point-set instance.
 VA_COMPGEN(0x005B8AA0, 0xB3, TREE_CONST_ITERATOR_DEC, TRmgCoordinatePoint_unsigned_int)
 
 VA_COMPGEN(0x005B7F60, 0x59, TREE_ERASE_KEY, TRmgCoordinatePoint_unsigned_int)
 
-// erase(key) calls the two-iterator range erase at 0x5b7e30. Whole ranges
-// clear recursively through 0x5b85f0; partial ranges call 0x5b8090. All use
-// nil at 0x6a52c4. _Lockit destruction releases the CRT critical section.
 VA_COMPGEN(0x005B7E30, 0x121, TREE_ERASE_RANGE, TRmgCoordinatePoint_unsigned_int)
 
 VA_COMPGEN(0x005B8090, 0x50F, TREE_ERASE_ITERATOR, TRmgCoordinatePoint_unsigned_int)
 
 VA_COMPGEN(0x005B85F0, 0x7E, TREE_ERASE, TRmgCoordinatePoint_unsigned_int)
 
-// The erase overloads and distance loop share this successor walk. Nil at
-// 0x6a52c4 identifies TRmgGridPoint; TPoint has a distinct nil symbol.
 VA_COMPGEN(0x005B8BC0, 0xA3, TREE_CONST_ITERATOR_INC, TRmgCoordinatePoint_unsigned_int)
 
 VA_COMPGEN(0x005B7FC0, 0x57, TREE_FIND, TRmgCoordinatePoint_unsigned_int)
@@ -1619,26 +1538,18 @@ VA_COMPGEN(0x005B8020, 0x35, VECTOR_ERASE, TRmgPackedTerrainCell)
 
 VA_COMPGEN(0x005B8060, 0x24, VECTOR_UFILL, unsigned_char)
 
-// PaintPoint and TRmgTerrainBrush::changeTerrain retain this one-dword
-// iterator wrapper around the tree's raw-node lower bound.
 VA_COMPGEN(0x005B85A0, 0x17, TREE_LOWER_BOUND, TRmgCoordinatePoint_unsigned_int)
 
-// PaintPoint retains the two-bound wrapper returning its iterator pair.
 VA_COMPGEN(0x005B85C0, 0x2C, TREE_EQUAL_RANGE, TRmgCoordinatePoint_unsigned_int)
 
 VA_COMPGEN(0x005B8A20, 0x17, TREE_UPPER_BOUND, TRmgCoordinatePoint_unsigned_int)
 
-// The retained public wrappers above delegate to these raw-node searches.
 VA_COMPGEN(0x005B8A40, 0x59, TREE_LBOUND, TRmgCoordinatePoint_unsigned_int)
 
 VA_COMPGEN(0x005B8B60, 0x59, TREE_UBOUND, TRmgCoordinatePoint_unsigned_int)
 
 VA_COMPGEN(0x005B4860, 0x6E, IMPLICIT_DTOR, set)
 
-// erase(key) in TRmgTerrainBrush::changeTerrain retains Dinkumware's
-// public distance wrapper and its category-dispatched overload. The wrapper
-// increments the caller's count directly; the unused tag argument accounts
-// for the tagged body's missing self-store.
 VA_COMPGEN(0x005B8C70, 0x2B, STD_DISTANCE, TRmgCoordinatePoint_unsigned_int)
 
 VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgCoordinatePoint_unsigned_int)
@@ -1652,9 +1563,7 @@ bool operator<(const TRmgCoordinatePoint<Coordinate>& left,
     return left.getY() < right.getY() || (left.getY() == right.getY() && left.getX() < right.getX());
 }
 
-// Complete terrain data, read from the pinned retail image. The initializer
-// calls at 0x5b3b60..0x5b3da0 prove entry counts, arguments and object order;
-// the table at 0x642bd8 proves terrain-index order. Names are role-derived.
+// Terrain frame tables and the per-terrain rules built from them.
 DATA(0x006424A8)
 const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[48] = {
     {0, false, false}, {0, false, false}, {0, false, false}, {0, false, false}, {0, false, false}, {0, false, false},
@@ -1715,8 +1624,6 @@ static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] = {
     {0, false}, {0, false}, {0, false},
 };
 
-// Nine atexit callbacks tail-call TRmgTerrainRule::~TRmgTerrainRule.
-// LINK folds each implicit derived destructor with the retained base body.
 DATA(0x006A48D0)
 static TRmgPatternTerrainRule g_rmgDirtRule(true, true, 50, 46, g_rmgDirtPatternEntries);
 
@@ -1774,7 +1681,6 @@ VA_COMPGEN(0x005B3D90, 0x0A, STATIC_DTOR, g_rmgWaterRule)
 DATA(0x006A48C8)
 static TRmgTableTerrainRule g_rmgRockRule;
 
-// Same owner/atexit and folded base-destructor proof as the pattern rules.
 VA_COMPGEN(0x005B3DA0, 0x16, STATIC_CTOR, g_rmgRockRule)
 
 VA_COMPGEN(0x005B3DC0, 0x0A, STATIC_DTOR, g_rmgRockRule)
