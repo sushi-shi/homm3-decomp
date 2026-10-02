@@ -22,16 +22,16 @@ struct rmgTerrainTile {
     // Kind of the adapter-selected layer: terrain, road or river.
     int m_terrain;
     int m_frame;
-    unsigned char m_flipX;
-    unsigned char m_flipY;
+    b8 m_flipX;
+    b8 m_flipY;
     // +0x0a..0x0b are natural padding. Retail copies only the named fields.
 
     rmgTerrainTile() {}
     rmgTerrainTile(int newTerrain, int newFrame)
-        : m_terrain(newTerrain), m_frame(newFrame), m_flipX(0), m_flipY(0) {}
+        : m_terrain(newTerrain), m_frame(newFrame), m_flipX(false), m_flipY(false) {}
     int getFrame() const { return m_frame; }
-    unsigned char getFlipX() const { return m_flipX; }
-    unsigned char getFlipY() const { return m_flipY; }
+    b8 getFlipX() const { return m_flipX; }
+    b8 getFlipY() const { return m_flipY; }
     // Keep implicit copy construction for adapter returns; 0x55edc0 constructs
     // a separate snapshot, while the output-reference wrapper assigns fields.
     rmgTerrainTile& operator=(const rmgTerrainTile& other)
@@ -45,11 +45,11 @@ struct rmgTerrainTile {
 };
 
 struct TRmgTerrainFlip {
-    unsigned char m_flipX;
-    unsigned char m_flipY;
+    b8 m_flipX;
+    b8 m_flipY;
 
     TRmgTerrainFlip() {}
-    TRmgTerrainFlip(unsigned char x, unsigned char y) : m_flipX(x), m_flipY(y) {}
+    TRmgTerrainFlip(b8 x, b8 y) : m_flipX(x), m_flipY(y) {}
 };
 
 // BuildNeighbourKinds (0x5b68a0) returns zero for equal terrain or a sand
@@ -72,12 +72,12 @@ struct TRmgPackedTerrainCell {
     unsigned short m_flipY : 1;
     unsigned short m_unknown14 : 2;
 
-    TRmgPackedTerrainCell() : m_initialized(0) {}
+    TRmgPackedTerrainCell() : m_initialized(false) {}
 
     inline int getTerrain() const { return m_terrain; }
     inline int getFrame() const { return m_frame; }
-    inline unsigned char getFlipX() const { return m_flipX; }
-    inline unsigned char getFlipY() const { return m_flipY; }
+    inline b8 getFlipX() const { return m_flipX; }
+    inline b8 getFlipY() const { return m_flipY; }
     inline rmgTerrainTile getTile() const
     {
         rmgTerrainTile tile;
@@ -87,11 +87,11 @@ struct TRmgPackedTerrainCell {
         tile.m_flipY = getFlipY();
         return tile;
     }
-    inline void setInitialized() { m_initialized = 1; }
+    inline void setInitialized() { m_initialized = true; }
     inline void setTerrain(int value) { m_terrain = value; }
     inline void setFrame(int value) { m_frame = value; }
-    inline void setFlipX(unsigned char value) { m_flipX = value; }
-    inline void setFlipY(unsigned char value) { m_flipY = value; }
+    inline void setFlipX(b8 value) { m_flipX = value; }
+    inline void setFlipY(b8 value) { m_flipY = value; }
     // Copy only the tile payload. Callers own validity timing: cache fills
     // mark initialized afterward, while adapter writes mark it beforehand.
     inline void setTileValues(const rmgTerrainTile& tile)
@@ -106,19 +106,19 @@ struct TRmgPackedTerrainCell {
 // Vtable 0x642c98 fixes these six slots; source names remain unknown.
 class TRmgTerrainRule {
 public:
-    unsigned char m_blendsWithOtherTerrain; // +0x04
-    unsigned char m_allowsSeparatedNeighbours; // +0x05
+    b8 m_blendsWithOtherTerrain; // +0x04
+    b8 m_allowsSeparatedNeighbours; // +0x05
     char m_tailPadding[2];
 
-    TRmgTerrainRule(unsigned char blendsWithOtherTerrain = 0,
-        unsigned char allowsSeparatedNeighbours = 0)
+    TRmgTerrainRule(b8 blendsWithOtherTerrain = false,
+        b8 allowsSeparatedNeighbours = false)
         : m_blendsWithOtherTerrain(blendsWithOtherTerrain),
           m_allowsSeparatedNeighbours(allowsSeparatedNeighbours) {}
     // Retail's base vtable at 0x642c80 has six _purecall slots. The pure
     // destructor still has its ordinary out-of-line body at 0x5b3850.
     virtual ~TRmgTerrainRule() = 0;
-    virtual unsigned char hasSpecialBaseFrames() = 0;
-    virtual unsigned char isSpecialFrame(int frame) = 0;
+    virtual b8 hasSpecialBaseFrames() = 0;
+    virtual b8 isSpecialFrame(int frame) = 0;
     virtual int getTransition(int frame) = 0;
     virtual int selectBaseFrame(int strength, int oldFrame) = 0;
     virtual int selectTransitionFrame(
@@ -137,7 +137,7 @@ struct TRmgTerrainPatternRange {
 
 struct TRmgTerrainPatternEntry {
     int m_transition;
-    unsigned char m_special;
+    b8 m_special;
     char m_padding[3];
 };
 
@@ -145,8 +145,8 @@ struct TRmgTerrainPatternEntry {
 // special-frame flag.
 struct TRmgTerrainTransitionEntry {
     int m_transition;
-    unsigned char m_flipX;
-    unsigned char m_flipY;
+    b8 m_flipX;
+    b8 m_flipY;
 };
 DATA(0x006424A8)
 extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
@@ -169,14 +169,14 @@ public:
     const TRmgTerrainPatternEntry* m_entries;    // +0x10
     TRmgTerrainPatternRange m_ranges[58];        // +0x14
 
-    TRmgPatternTerrainRule(unsigned char blendsWithOtherTerrain,
-        unsigned char allowsSeparatedNeighbours, int specialFrameChance,
+    TRmgPatternTerrainRule(b8 blendsWithOtherTerrain,
+        b8 allowsSeparatedNeighbours, int specialFrameChance,
         unsigned int entryCount, const TRmgTerrainPatternEntry* entries);
 
     // Implicit destruction shares the base's retained cleanup at 0x5b3850;
     // both concrete rule vtables use the deleting wrapper at 0x5b3a50.
-    virtual unsigned char hasSpecialBaseFrames();
-    virtual unsigned char isSpecialFrame(int frame);
+    virtual b8 hasSpecialBaseFrames();
+    virtual b8 isSpecialFrame(int frame);
     virtual int getTransition(int frame);
     virtual int selectBaseFrame(int strength, int oldFrame);
     virtual int selectTransitionFrame(
@@ -190,8 +190,8 @@ public:
 class TRmgTableTerrainRule : public TRmgTerrainRule {
 public:
     TRmgTableTerrainRule();
-    virtual unsigned char hasSpecialBaseFrames();
-    virtual unsigned char isSpecialFrame(int frame);
+    virtual b8 hasSpecialBaseFrames();
+    virtual b8 isSpecialFrame(int frame);
     virtual int getTransition(int frame);
     virtual int selectBaseFrame(int strength, int oldFrame);
     virtual int selectTransitionFrame(
@@ -253,24 +253,24 @@ public:
     void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
     void paintBaseTile(const TRmgGridPoint& point);
     const int& getPaintTerrain() const;
-    unsigned char isPaintTerrain(const TRmgGridPoint& point);
+    b8 isPaintTerrain(const TRmgGridPoint& point);
 
     void paintPoint(const TRmgGridPoint& point);
     void queueOtherTerrainNeighbours(const TRmgGridPoint& point);
     void repairTerrainPoint(const TRmgGridPoint& point);
-    unsigned char isHorizontalGap(const TRmgGridPoint& point, int terrain);
-    unsigned char isVerticalGap(const TRmgGridPoint& point, int terrain);
-    unsigned char isHorizontalGap(const TRmgGridPoint& point);
-    unsigned char isVerticalGap(const TRmgGridPoint& point);
-    unsigned char needsTerrainRepair(const TRmgGridPoint& point);
-    unsigned char hasSeparatedNeighbours(const TRmgGridPoint& point);
+    b8 isHorizontalGap(const TRmgGridPoint& point, int terrain);
+    b8 isVerticalGap(const TRmgGridPoint& point, int terrain);
+    b8 isHorizontalGap(const TRmgGridPoint& point);
+    b8 isVerticalGap(const TRmgGridPoint& point);
+    b8 needsTerrainRepair(const TRmgGridPoint& point);
+    b8 hasSeparatedNeighbours(const TRmgGridPoint& point);
     void buildMatchingNeighbourMask(
-        const TRmgGridPoint& point, unsigned char* matches);
+        const TRmgGridPoint& point, b8* matches);
 
     void buildNeighbourKinds(const TRmgGridPoint& point, int* neighbours);
-    unsigned char checkFirstDiagonal(
+    b8 checkFirstDiagonal(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
-    unsigned char checkSecondDiagonal(
+    b8 checkSecondDiagonal(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
     int getTransitionStrength(const TRmgGridPoint& point, int terrain);
 };

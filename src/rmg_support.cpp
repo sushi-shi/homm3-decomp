@@ -65,13 +65,13 @@ static const int g_rmgLineReflectedNeighbours[2][2][8] = {
 };
 
 DATA(0x0063FF1C)
-static const unsigned char g_rmgLineReflections[4][2] = {
-    {0, 0}, {0, 1}, {1, 0}, {1, 1}
+static const b8 g_rmgLineReflections[4][2] = {
+    {false, false}, {false, true}, {true, false}, {true, true}
 };
 
 // Endpoints and the no-endpoint-art fallback share the horizontal choice.
 // Keep the west-before-east short-circuit order.
-static inline bool hasRmgHorizontalLineNeighbour(const unsigned char* neighbours)
+static inline bool hasRmgHorizontalLineNeighbour(const b8* neighbours)
 {
     return neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST];
 }
@@ -79,45 +79,45 @@ static inline bool hasRmgHorizontalLineNeighbour(const unsigned char* neighbours
 VA(0x004F9CB0, 0x24E)
 MAC_ADDRESS(0x222498, 0x2a4)
 void selectRmgLinePattern(
-    const unsigned char* neighbours, const TRmgLinePatternTable* table,
-    int& pattern, unsigned char& flipX, unsigned char& flipY)
+    const b8* neighbours, const TRmgLinePatternTable* table,
+    int& pattern, b8& flipX, b8& flipY)
 {
     if (neighbours[TILE_DIR_NORTH] && neighbours[TILE_DIR_EAST]
         && neighbours[TILE_DIR_SOUTH] && neighbours[TILE_DIR_WEST]) {
         pattern = RMG_LINE_CROSS;
-        flipX = 0;
-        flipY = 0;
+        flipX = false;
+        flipY = false;
         return;
     }
     if (neighbours[TILE_DIR_NORTH] && neighbours[TILE_DIR_SOUTH]) {
         if (neighbours[TILE_DIR_EAST]) {
             pattern = RMG_LINE_NORTH_EAST_SOUTH;
-            flipX = 0;
+            flipX = false;
         } else if (neighbours[TILE_DIR_WEST]) {
             pattern = RMG_LINE_NORTH_EAST_SOUTH;
-            flipX = 1;
+            flipX = true;
         } else {
             pattern = RMG_LINE_NORTH_SOUTH;
-            flipX = 0;
+            flipX = false;
         }
-        flipY = 0;
+        flipY = false;
         return;
     }
     if (neighbours[TILE_DIR_EAST] && neighbours[TILE_DIR_WEST]) {
         if (neighbours[TILE_DIR_SOUTH]) {
             pattern = RMG_LINE_EAST_SOUTH_WEST;
-            flipY = 0;
+            flipY = false;
         } else if (neighbours[TILE_DIR_NORTH]) {
             pattern = RMG_LINE_EAST_SOUTH_WEST;
-            flipY = 1;
+            flipY = true;
         } else {
             pattern = RMG_LINE_EAST_WEST;
-            flipY = 0;
+            flipY = false;
         }
-        flipX = 0;
+        flipX = false;
         return;
     }
-    unsigned char hasCornerVariant = table->m_ranges[RMG_LINE_EAST_SOUTH_CORNER_VARIANT].m_valueCount > 0;
+    b8 hasCornerVariant = table->m_ranges[RMG_LINE_EAST_SOUTH_CORNER_VARIANT].m_valueCount > 0;
     for (unsigned int reflection = 0; reflection < 4; ++reflection) {
         const int* order = g_rmgLineReflectedNeighbours
             [g_rmgLineReflections[reflection][0]][g_rmgLineReflections[reflection][1]];
@@ -136,23 +136,23 @@ void selectRmgLinePattern(
         if (hasRmgHorizontalLineNeighbour(neighbours)) {
             pattern = RMG_LINE_EAST_END;
             flipX = neighbours[TILE_DIR_WEST];
-            flipY = 0;
+            flipY = false;
         } else {
             if (neighbours[TILE_DIR_SOUTH]) {
                 pattern = RMG_LINE_SOUTH_END;
-                flipX = 0;
-                flipY = 0;
+                flipX = false;
+                flipY = false;
             } else {
                 pattern = RMG_LINE_SOUTH_END;
-                flipX = 0;
-                flipY = 1;
+                flipX = false;
+                flipY = true;
             }
         }
     } else {
         pattern = hasRmgHorizontalLineNeighbour(neighbours)
             ? RMG_LINE_EAST_WEST : RMG_LINE_NORTH_SOUTH;
-        flipX = 0;
-        flipY = 0;
+        flipX = false;
+        flipY = false;
     }
 }
 
@@ -195,13 +195,13 @@ static inline void readRmgLineTileSnapshot(Adapter* adapter,
 // Road and river painting share this terrain policy. Query only once before
 // testing water and rock; these are underlying terrain, not line-type ids.
 template<class Adapter>
-static inline int isRmgLinePaintingBlocked(Adapter* adapter,
+static inline b32 isRmgLinePaintingBlocked(Adapter* adapter,
     const TRmgGridPoint& point)
 {
     int terrain = adapter->getTerrain(point);
     if (terrain == eTerrainWater || terrain == eTerrainRock)
-        return 1;
-    return 0;
+        return true;
+    return false;
 }
 
 VA(0x0055EDC0, 0x36)
@@ -226,7 +226,7 @@ void TRmgRiverLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& t
 // Slot 3 returns an integer blocking result, not permission to paint.
 VA(0x0055EE00, 0x28)
 MAC_ADDRESS(0x253b64, 0x44)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
-int TRmgRiverLinePainter::isBlocked(const TRmgGridPoint& point)
+b32 TRmgRiverLinePainter::isBlocked(const TRmgGridPoint& point)
 {
     return isRmgLinePaintingBlocked(m_adapter, point);
 }
@@ -266,7 +266,7 @@ void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTi
 }
 
 MAC_ADDRESS(0x25404c, 0x44)
-int TRmgRoadLinePainter::isBlocked(const TRmgGridPoint& point)
+b32 TRmgRoadLinePainter::isBlocked(const TRmgGridPoint& point)
 {
     return isRmgLinePaintingBlocked(m_adapter, point);
 }
@@ -329,7 +329,7 @@ void TRmgHalfEdge::initialize()
 {
     m_next = this;
     m_previous = this;
-    m_positionComputed = 0;
+    m_positionComputed = false;
     m_position.m_x = -1;
     m_position.m_y = -1;
 }
@@ -537,7 +537,7 @@ static void flipRmgEdge(TRmgHalfEdge* edge)
 // Segment containment uses a saved opposite endpoint, three squared-distance
 // checks, then an implicit-line test. Keep the line origin bound to its site
 // field; a copied endpoint changes the native read lifetime.
-static unsigned char isRmgPointOnSegment(TPoint point, TRmgHalfEdge* edge)
+static b8 isRmgPointOnSegment(TPoint point, TRmgHalfEdge* edge)
 {
     TPoint opposite = edge->getOppositeSitePosition();
     int distanceToOriginSquared = getRmgSquaredDistance(point, edge->getSitePosition());
@@ -545,7 +545,7 @@ static unsigned char isRmgPointOnSegment(TPoint point, TRmgHalfEdge* edge)
     int edgeLengthSquared = getRmgSquaredDistance(edge->getSitePosition(), opposite);
     if (distanceToOriginSquared > edgeLengthSquared
         || distanceToDestinationSquared > edgeLengthSquared)
-        return 0;
+        return false;
     const TPoint& origin = edge->m_sitePosition;
     int deltaX = opposite.m_x - origin.m_x;
     int deltaY = opposite.m_y - origin.m_y;
@@ -557,7 +557,7 @@ static unsigned char isRmgPointOnSegment(TPoint point, TRmgHalfEdge* edge)
 // does not request an edge flip. Retail snapshots three points before
 // four orientation calls and a signed 64-bit circumcircle determinant.
 MAC_ADDRESS(0x25cb80, 0x1c4)
-static unsigned char isRmgPointInsideCircumcircle(TPoint first, TPoint second,
+static b8 isRmgPointInsideCircumcircle(TPoint first, TPoint second,
     TPoint third, TPoint point)
 {
     // Squared norms and orientations stay signed 32-bit before the final

@@ -3,6 +3,7 @@
 #define HOMM3_RMG_REQUEST_H
 
 #include "va.h"
+#include "homm3_bool.h"
 class TAbstractFile;
 class TProgressSink;
 
@@ -20,7 +21,7 @@ enum ERandomMapResult {
 class TRandomMapRequest {
 public:
     // Lobby human seats are 1; computer seats remain zero.
-    unsigned char m_isHumanSeat[8];   // +0x00
+    b8 m_isHumanSeat[8];   // +0x00
     // -1 selects a random town.
     int m_townType[8];                // +0x08
     int m_width;                      // +0x28

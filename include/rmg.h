@@ -5,6 +5,7 @@
 #define HOMM3_RMG_H
 
 #include "va.h"
+#include "homm3_bool.h"
 
 #include <bitset>
 #include <string>
@@ -55,7 +56,7 @@ public:
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
     virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
-    virtual unsigned char isTerrainDependent();
+    virtual b8 isTerrainDependent();
 };
 
 SIZE(type_treasure_def, 0x14);
@@ -167,7 +168,7 @@ public:
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
     virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
-    virtual unsigned char isTerrainDependent();
+    virtual b8 isTerrainDependent();
 };
 
 // Vtable stores 0x640bac then 0x640bb8 establish this dwelling hierarchy.
@@ -242,7 +243,7 @@ public:
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
     virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
-    virtual unsigned char isTerrainDependent();
+    virtual b8 isTerrainDependent();
 };
 
 class type_quest_experience_def : public type_treasure_def {
@@ -259,7 +260,7 @@ public:
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
     virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
-    virtual unsigned char isTerrainDependent();
+    virtual b8 isTerrainDependent();
 };
 
 class type_quest_gold_def : public type_treasure_def {
@@ -275,7 +276,7 @@ public:
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
     virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
-    virtual unsigned char isTerrainDependent();
+    virtual b8 isTerrainDependent();
 };
 
 SIZE(type_shrine_def, 0x14);
@@ -382,10 +383,10 @@ TRmgMapPosition operator+(TRmgMapPosition position, TPoint offset);
 struct TRmgZoneConnection {
     TRmgTemplateZone* m_destination;             // +0x00
     int m_value;                             // +0x04
-    unsigned char m_unguarded;               // +0x08
-    unsigned char m_placeBorderObjects;      // +0x09
-    unsigned char m_connected;               // +0x0a
-    unsigned char isConnected() const;
+    b8 m_unguarded;               // +0x08
+    b8 m_placeBorderObjects;      // +0x09
+    b8 m_connected;               // +0x0a
+    b8 isConnected() const;
     void setConnected();
     // +0x0b aligns four int limits.
     // Retail connection reader 0x5382c9..0x538304 parses spreadsheet
@@ -446,17 +447,17 @@ struct TRmgTemplateZone {
     int m_playerIndex;                  // +0x1c
     int m_townPlacement[8];             // +0x20: ERmgTownPlacementParameter
     // Template column 22: preserve zone alignment for neutral towns.
-    unsigned char m_neutralTownsMatchZone; // +0x40
-    unsigned char m_allowedTowns[9];    // +0x41
+    b8 m_neutralTownsMatchZone; // +0x40
+    b8 m_allowedTowns[9];    // +0x41
     int m_mineCounts[7];                // +0x4c: indexed by resource
     int m_mineDensities[7];             // +0x68: indexed by resource
     // Prefer the aligned town's native terrain table.
-    unsigned char m_useNativeTerrain;
-    unsigned char m_allowedTerrain[8];  // +0x85
+    b8 m_useNativeTerrain;
+    b8 m_allowedTerrain[8];  // +0x85
     int m_monsterStrength;              // +0x90
     // Template column 56: restrict guards to the zone's town alignment.
-    unsigned char m_guardsMatchZone;    // +0x94
-    unsigned char m_allowedMonsters[10]; // +0x95
+    b8 m_guardsMatchZone;    // +0x94
+    b8 m_allowedMonsters[10]; // +0x95
     TRmgTreasureRange m_treasure[3];     // +0xa0
     std::vector<TRmgZoneConnection> m_connections; // +0xc4
 
@@ -774,7 +775,7 @@ struct TRmgObjectPropertiesRef {
     TRmgObjectPlacementRule* m_placementRule; // +0x10
     std::vector<TPoint> m_outline;         // +0x14
     int m_overlapPriorities[8][6];         // +0x24
-    unsigned char m_prioritiesInitialized; // +0xe4
+    b8 m_prioritiesInitialized; // +0xe4
     char m_pad00e5[3];
 
     TRmgObjectPropertiesRef(TObjectType* prototype);
@@ -787,11 +788,11 @@ class type_object {
 public:
     TRmgObjectPropertiesRef* m_properties; // +0x04
     TRmgMapPosition m_position;             // +0x08
-    unsigned char m_candidateCovers;
-    unsigned char m_candidateBehind;
-    unsigned char m_adjacentToCandidate;
-    unsigned char m_overlapsCandidate;
-    unsigned char m_blockedByCandidate;
+    b8 m_candidateCovers;
+    b8 m_candidateBehind;
+    b8 m_adjacentToCandidate;
+    b8 m_overlapsCandidate;
+    b8 m_blockedByCandidate;
     char m_tailPadding[3];
 
     type_object(TRmgObjectPropertiesRef* newProperties);
@@ -799,14 +800,14 @@ public:
 
     void clearPlacementMarks();
 
-    unsigned char isPlacementTouched() const
+    b8 isPlacementTouched() const
     {
         return m_adjacentToCandidate || m_blockedByCandidate || m_overlapsCandidate;
     }
 
     // Different overlapping cells can require the candidate to be both
     // behind and in front of this object, which invalidates its placement.
-    unsigned char hasConflictingPlacementOrder() const
+    b8 hasConflictingPlacementOrder() const
     {
         return m_candidateBehind && m_candidateCovers;
     }
@@ -817,7 +818,7 @@ public:
     virtual void releaseReservation();
     // Quest artifacts clear owned state and may replace their properties
     // during this query (0x533a50).
-    virtual unsigned char isWritable();
+    virtual b8 isWritable();
     virtual void write(TAbstractFile* outputFile, int version);
 };
 
@@ -938,7 +939,7 @@ public:
         type_random_map_generator* generator, rmgSeerHutObject* seerHut,
         type_treasure_def* definition);
     virtual ~rmgQuestArtifactObject();
-    virtual unsigned char isWritable();
+    virtual b8 isWritable();
 };
 SIZE(rmgQuestArtifactObject, 0x28);
 
@@ -954,7 +955,7 @@ public:
 
     rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, int value);
-    virtual unsigned char isWritable();
+    virtual b8 isWritable();
 };
 SIZE(rmgKeyTentObject, 0x24);
 
@@ -1026,7 +1027,7 @@ struct TRmgMapItem {
     void write(TAbstractFile* outputFile);
     // Retained cell writer 0x546940; four scalar inputs, terrain fields only.
     void setTerrain(int terrain, int frame,
-        unsigned char flipX, unsigned char flipY);
+        b8 flipX, b8 flipY);
 
     // CreateRiver's predicate reads shift the high tile bits and test a
     // byte result. These queries recover that boundary; direct field tests
@@ -1038,7 +1039,7 @@ struct TRmgMapItem {
     // PaintZoneTerrain extracts bit 28 then tests its byte result. The
     // direct field condition instead folds to a dword mask. Retail-only
     // accessor hypothesis, consistent with the adjacent flag queries.
-    unsigned char isZoneBoundary() const
+    b8 isZoneBoundary() const
     {
         return m_tileData.m_zoneBoundary;
     }
@@ -1046,44 +1047,44 @@ struct TRmgMapItem {
     // Placement helpers 0x531170/0x5318b0/0x531cf0 all shift bit 22 and
     // test the truncated byte. Direct bitfield conditions fold to a dword
     // mask; keep this same ordinary query at each recovered boundary.
-    unsigned char isRoadEntrance() const
+    b8 isRoadEntrance() const
     {
         return m_tileData.m_roadEntrance;
     }
 
     // ScoreObjectPlacement reads bit 27 through a byte-valued query.
-    unsigned char hasPathClearance() const
+    b8 hasPathClearance() const
     {
         return m_tileData.m_pathClearance;
     }
 
     // Native Mac group callers expand this byte-valued land predicate.
-    unsigned char isPassableLand() const
+    b8 isPassableLand() const
     {
         return m_tileData.m_roadPassable && getLandType() != eTerrainRock;
     }
 
     // RepairWaterZoneBorders tests this flag after truncating it to a byte
     // at 0x53fe30, then tests roadPassable directly as a dword bit.
-    unsigned char hasBorderObject() const
+    b8 hasBorderObject() const
     {
         return m_tileData.m_borderObject;
     }
 
     // Group fit 0x546ed5 shifts bit 23 and tests the byte result.
-    unsigned char isPlacementOutline() const
+    b8 isPlacementOutline() const
     {
         return m_tileData.m_placementOutline;
     }
     // Connection flood: the visited bit is read and written through the
     // same byte boundary the other flag queries use.
-    unsigned char isConnectionVisited() const
+    b8 isConnectionVisited() const
     {
         return m_tileData.m_connectionVisited;
     }
     void setConnectionVisited()
     {
-        m_tileData.m_connectionVisited = 1;
+        m_tileData.m_connectionVisited = true;
     }
     int getLandType() const
     {
@@ -1122,8 +1123,8 @@ struct TRmgMapItem {
     void openPath()
     {
         if (!m_connection.m_present) {
-            m_tileData.m_borderObject = 0;
-            m_tileData.m_pathClearance = 1;
+            m_tileData.m_borderObject = false;
+            m_tileData.m_pathClearance = true;
         }
     }
 
@@ -1133,8 +1134,8 @@ struct TRmgMapItem {
     void markBorderObject()
     {
         if (!m_connection.m_present) {
-            m_tileData.m_pathClearance = 0;
-            m_tileData.m_borderObject = 1;
+            m_tileData.m_pathClearance = false;
+            m_tileData.m_borderObject = true;
         }
     }
 
@@ -1143,14 +1144,14 @@ struct TRmgMapItem {
     void clearBorderObject()
     {
         if (!m_connection.m_present)
-            m_tileData.m_borderObject = 0;
+            m_tileData.m_borderObject = false;
     }
 
     // Removing a border connection also opens its cell. Keep the connection
     // reset before openPath(), whose existing-connection guard then permits it.
     void clearBorderConnection()
     {
-        m_connection.m_present = 0;
+        m_connection.m_present = false;
         m_connection.m_direction = 0;
         openPath();
     }
@@ -1161,12 +1162,12 @@ struct TRmgMapItem {
     {
         markBorderObject();
         m_connection.m_direction = direction;
-        m_connection.m_present = 1;
+        m_connection.m_present = true;
     }
 
     // The group outline follows cells outside entrances and occupied terrain
     // that retain generation path clearance. Water policy stays with callers.
-    unsigned char isClearOutlineCell() const
+    b8 isClearOutlineCell() const
     {
         return !isRoadEntrance() && isPassableLand() && hasPathClearance();
     }
@@ -1176,7 +1177,7 @@ struct TRmgMapItem {
     void releasePathClearance()
     {
         if (!m_connection.m_present)
-            m_tileData.m_pathClearance = 0;
+            m_tileData.m_pathClearance = false;
     }
 
     // The border-expansion passes release only unoccupied cells. Retain
@@ -1241,7 +1242,7 @@ public:
 
 class type_random_map : public TRmgMapInterface {
 public:
-    unsigned char m_ownsMapItems;           // +0x04
+    b8 m_ownsMapItems;           // +0x04
     // The ownership flag is a byte at +4 after the vptr, and
     // mapItems starts at +8. These three bytes align the pointer.
     char m_paddingBeforeMapItems[3];
@@ -1263,7 +1264,7 @@ public:
         m_mapWidth = width;
         m_mapHeight = height;
         m_numberLevels = 1;
-        m_ownsMapItems = 0;
+        m_ownsMapItems = false;
     }
 
     virtual ~type_random_map();
@@ -1285,7 +1286,7 @@ public:
     // parameters; source reference contract inferred at 0x531ea0.
     void addObject(type_object& object, TRmgMapPosition position);
     void markCoastalTiles();
-    void floodConnectionCosts(TRmgMapPosition position, unsigned char waterZone);
+    void floodConnectionCosts(TRmgMapPosition position, b8 waterZone);
 
     int getWidth() const { return m_mapWidth; }
     int getHeight() const { return m_mapHeight; }
@@ -1304,13 +1305,13 @@ public:
     void markBorderPatch(TRmgMapPosition position);
     TPoint traceBranchEnd(TPoint from, TPoint toward, int level);
 
-    unsigned char hasConnectedOutline(
+    b8 hasConnectedOutline(
         const std::vector<TPoint>& outline, TRmgMapPosition position,
-        unsigned char allowEntrances, TRmgZone* zone, unsigned char requirePathClearance);
-    unsigned char isPlacementBlocked(
+        b8 allowEntrances, TRmgZone* zone, b8 requirePathClearance);
+    b8 isPlacementBlocked(
         TRmgObjectPropertiesRef* properties, TRmgMapPosition position,
-        int zoneIndex, unsigned char rejectBorder);
-    unsigned char canPlaceObject(
+        int zoneIndex, b8 rejectBorder);
+    b8 canPlaceObject(
         TRmgObjectPropertiesRef* properties,
         TRmgMapPosition position,
         TRmgZone* zone);
@@ -1334,7 +1335,7 @@ struct TRmgTreasureGroup {
     std::vector<type_object*> m_objects;    // +0x28
     std::vector<TPoint> m_outline;           // +0x38
     // with the guard's local coordinates; canPlaceTreasureGroup checks them.
-    unsigned char m_hasGuard;               // +0x48, cleared by reset
+    b8 m_hasGuard;               // +0x48, cleared by reset
     char m_padding0049[3];
     // addGuard stores x/y at 0x53556f.
     // canPlaceTreasureGroup reads x/y
@@ -1342,20 +1343,20 @@ struct TRmgTreasureGroup {
     TPoint m_guardPosition;                 // +0x4c
     // Retail commitTreasureGroup 0x5469ca stores the selected map offset.
     TRmgMapPosition m_position;             // +0x54
-    unsigned char m_ready;                  // +0x60, set after assembly
+    b8 m_ready;                  // +0x60, set after assembly
     char m_padding0061[3];
 
     TRmgTreasureGroup(int width, int height)
-        : m_map(width, height, 1), m_hasGuard(0), m_ready(0)
+        : m_map(width, height, 1), m_hasGuard(false), m_ready(false)
     {
         reset();
     }
     void reset();
     void markPlacementOutline();
-    unsigned char addGuard(type_object* guard);
-    unsigned char canFitObject(TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
-    unsigned char tryAddObject(type_object* object);
-    unsigned char objectsAllowEntrances() const;
+    b8 addGuard(type_object* guard);
+    b8 canFitObject(TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
+    b8 tryAddObject(type_object* object);
+    b8 objectsAllowEntrances() const;
     void addObject(type_object* object, TPoint point);
     void updateBounds();
     void traceOutline();
@@ -1449,8 +1450,8 @@ extern TRmgLinePatternTable g_rmgRiverPatternTable;
 extern TRmgLinePatternTable g_rmgRoadPatternTable;
 
 void selectRmgLinePattern(
-    const unsigned char* neighbours, const TRmgLinePatternTable* table,
-    int& pattern, unsigned char& flipX, unsigned char& flipY);
+    const b8* neighbours, const TRmgLinePatternTable* table,
+    int& pattern, b8& flipX, b8& flipY);
 
 struct TRmgLinePainterTile;
 
@@ -1468,7 +1469,7 @@ public:
     virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
     virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
     // Nonzero prevents painting.
-    virtual int isBlocked(const TRmgGridPoint& point) = 0;
+    virtual b32 isBlocked(const TRmgGridPoint& point) = 0;
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile) = 0;
     virtual int getLineType(const TRmgGridPoint& point) = 0;
 
@@ -1488,7 +1489,7 @@ struct TRmgLinePainterTile {
     int getLineType();
     void getTile(rmgTerrainTile& tile);
     void setTile(const rmgTerrainTile& tile);
-    unsigned char isBlocked();
+    b8 isBlocked();
     void setLineType(int value);
 };
 SIZE(TRmgLinePainterTile, 0x0c);
@@ -1526,7 +1527,7 @@ public:
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setLineType(const TRmgGridPoint& point, int value);
-    virtual int isBlocked(const TRmgGridPoint& point);
+    virtual b32 isBlocked(const TRmgGridPoint& point);
     // Slot 4's caller at 0x4f9fdd pushes output first, then point. The
     // retained wrapper 0x55f350 writes through its second explicit argument;
     // unlike the adapter, this interface does not return a tile by value.
@@ -1603,7 +1604,7 @@ public:
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setLineType(const TRmgGridPoint& point, int value);
-    virtual int isBlocked(const TRmgGridPoint& point);
+    virtual b32 isBlocked(const TRmgGridPoint& point);
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile);
     virtual int getLineType(const TRmgGridPoint& point);
 };
@@ -1646,7 +1647,7 @@ struct TRmgZone {
     int m_boundaryRoughness;            // +0x1c: minimum of adjacent zones
     TRmgZoneBounds m_bounds;           // +0x20
     TRmgMapPosition m_position;        // +0x30: main town
-    unsigned char m_active;            // +0x3c
+    b8 m_active;            // +0x3c
     char m_opaque003d[3];              // +0x3d..+0x3f
     // Retail 0x54b180 relaxes graph
     // distances here; 0x54b300 converts them into randomized quest-zone
@@ -1666,7 +1667,7 @@ struct TRmgZone {
 
     TRmgZone(TRmgTemplateZone* slot);
     void decrementObjectCount(TAdventureObjectType objectType);
-    void chooseTownType(unsigned char expanded);
+    void chooseTownType(b8 expanded);
     void chooseTerrain();
     ~TRmgZone();
     int getTerrain() const
@@ -1685,7 +1686,7 @@ struct TRmgZone {
     {
         return m_templateZone->m_size;
     }
-    unsigned char canConnect(const TRmgZone* other) const;
+    b8 canConnect(const TRmgZone* other) const;
 };
 
 // Partial Voronoi topology recovered from TraceZoneBoundary and its caller
@@ -1707,7 +1708,7 @@ struct TRmgHalfEdge {
     // Constructor clears this byte. buildVertices tests it at 0x5fdb7a,
     // writes the computed point, then sets it on three incident edges at
     // 0x5fdc7d/89/9e. +0x19..1b is natural alignment before the point.
-    unsigned char m_positionComputed;  // +0x18
+    b8 m_positionComputed;  // +0x18
     TPoint m_position;                  // +0x1c
 
     // The 0x5fcef0 retained constructor takes two by-value point/zone
@@ -1763,7 +1764,7 @@ struct TRmgHalfEdge {
         return getTwin()->getZone();
     }
     // Voronoi vertex bookkeeping: the computed flag and the shared vertex.
-    unsigned char isPositionComputed() const
+    b8 isPositionComputed() const
     {
         return m_positionComputed;
     }
@@ -1773,7 +1774,7 @@ struct TRmgHalfEdge {
         // transfer before each of its three expanded stores.
         TPoint copy = position;
         m_position = copy;
-        m_positionComputed = 1;
+        m_positionComputed = true;
     }
 };
 SIZE(TRmgHalfEdge, 0x24);
@@ -1871,7 +1872,7 @@ enum ERmgTownPlacementCategory {
 
 class type_random_map_generator : public TRmgGeneratorBase {
 public:
-    unsigned char m_fixedHumanPlayers[8];              // +0x0ed8
+    b8 m_fixedHumanPlayers[8];              // +0x0ed8
     // Retail 0x5499fb clears nine integers at +0xee0; slot +1 is used
     // at 0x549a75/0x549ab8. Entry zero preserves the unmapped sentinel.
     int m_playerIndexMap[9];                          // +0x0ee0
@@ -1899,13 +1900,13 @@ public:
     // active zones both by their alignment (+4) and in the total.
     int m_activeZoneCount;                             // +0x0f60
     int m_activeZoneCountsByAlignment[9];              // +0x0f64
-    unsigned char m_disabledHeroes[156];               // +0x0f88
+    b8 m_disabledHeroes[156];               // +0x0f88
     // Ctor 0x537cc6 clears 144 bytes. Quest selection 0x54b490 excludes
     // marked artifacts; successful placement 0x54b813 marks the chosen ID.
-    unsigned char m_usedQuestArtifacts[144];           // +0x1024
+    b8 m_usedQuestArtifacts[144];           // +0x1024
     // 0x54b4f1 latches this when fewer than 20 eligible artifacts remain;
     // seer-hut value paths 0x534b0c/0x534c9c reject further candidates.
-    unsigned char m_questArtifactPoolLow;              // +0x10b4
+    b8 m_questArtifactPoolLow;              // +0x10b4
     // +0x10b5..0x10b7: implicit alignment before the next int.
     int m_waterContent;                                // +0x10b8
     int m_monsterStrength;                             // +0x10bc
@@ -1919,7 +1920,7 @@ public:
     std::vector<TRmgTemplate*> m_templates;            // +0x10d0
     std::vector<TRmgZone*> m_zones;                    // +0x10e0
     std::vector<type_treasure_def*> m_objectGenerators; // +0x10f0
-    std::vector<unsigned char> m_disabledKeyTents;     // +0x1100
+    std::vector<b8> m_disabledKeyTents;     // +0x1100
     int m_objectCountByType[232];                      // +0x1110
     std::vector<TRmgMapPosition> m_roadTargets;        // +0x14b0
     std::vector<type_object*> m_monolithsOneWay;       // +0x14c0
@@ -1941,12 +1942,12 @@ public:
     void floodWaterZoneDistances(TRmgMapPosition position, int zoneIndex);
     void buildZoneConnectionPaths();
     void placeExtraMines(TRmgZone* zone);
-    unsigned char placeMineSite(type_object* object, TRmgZone* zone,
-        unsigned char startingMine, int spacing);
-    unsigned char tryPlaceMine(TRmgZone* zone, int resource,
-        unsigned char startingMine, int spacing);
+    b8 placeMineSite(type_object* object, TRmgZone* zone,
+        b8 startingMine, int spacing);
+    b8 tryPlaceMine(TRmgZone* zone, int resource,
+        b8 startingMine, int spacing);
     void placePrimaryTown(TRmgZone* zone);
-    unsigned char tryPlacePrimaryTown(TRmgZone* zone, int alignment,
+    b8 tryPlacePrimaryTown(TRmgZone* zone, int alignment,
         int player, unsigned char townOption);
     void initializeZones(TRmgTemplate* mapTemplate);
     void positionZone(TRmgZone* zone, int mapSize);
@@ -1962,25 +1963,25 @@ public:
     void fillIslandInterior(TRmgZone* zone);
     void drawIslandBoundary(TPoint from, TPoint to, int zoneIndex, int level, int roughness);
     void placeAdditionalTowns(TRmgZone* zone);
-    unsigned char tryPlaceAdditionalTown(TRmgZone* zone, int alignment,
+    b8 tryPlaceAdditionalTown(TRmgZone* zone, int alignment,
         int player, unsigned char townOption, int spacing);
     void prepareJunctionZone(TRmgZone* zone);
     void connectJunctionEntrance(TPoint from, TPoint to, TRmgZone* zone);
     void placeZoneTreasures(TRmgZone* zone);
     type_object* createTreasureObject(TRmgZone* zone, int minimum, int maximum,
-        int* value, unsigned char primary, unsigned char allowTerrainDependent,
-        unsigned char compact, TRmgMapPosition position);
+        int* value, b8 primary, b8 allowTerrainDependent,
+        b8 compact, TRmgMapPosition position);
     int fillTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
-        unsigned char alternate, int value);
-    unsigned char assembleTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
-        unsigned char alternate, int minimum, int maximum);
-    unsigned char placeTreasureGroup(TRmgTreasureGroup* group, TRmgZone* zone, int spacing);
-    unsigned char canPlaceTreasureGroup(TRmgTreasureGroup* group,
+        b8 alternate, int value);
+    b8 assembleTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
+        b8 alternate, int minimum, int maximum);
+    b8 placeTreasureGroup(TRmgTreasureGroup* group, TRmgZone* zone, int spacing);
+    b8 canPlaceTreasureGroup(TRmgTreasureGroup* group,
         TRmgMapPosition position, TRmgZone* zone);
     void commitTreasureGroup(TRmgTreasureGroup* group, TRmgMapPosition position);
     void decorateUnderground();
-    unsigned char generate();
-    unsigned char writeMap(TAbstractFile* outputFile);
+    b8 generate();
+    b8 writeMap(TAbstractFile* outputFile);
     virtual ~type_random_map_generator();
     virtual void addObject(type_object* object, TRmgMapPosition position);
 
@@ -1998,7 +1999,7 @@ public:
 
     void initializeObjectGenerators();
     int selectPrisonHero();
-    unsigned char canPlaceZone(TRmgZone* zone);
+    b8 canPlaceZone(TRmgZone* zone);
     void buildZoneBoundaries(TRmgTemplate* mapTemplate, int level);
     // Complete-only 0x53d8e0 propagates each signed-short distance column
     // from one zone through the template connection graph.
@@ -2012,8 +2013,8 @@ public:
         TPoint from, TPoint to, int zoneIndex, int level, int roughness);
     void drawStraightZoneBoundary(
         TPoint from, TPoint to, int zoneIndex, int level);
-    void traceZoneBoundary(TRmgHalfEdge* first, unsigned char irregular);
-    unsigned char createGroundConnection(
+    void traceZoneBoundary(TRmgHalfEdge* first, b8 irregular);
+    b8 createGroundConnection(
         TRmgZone* source,
         TRmgZoneConnection* connection,
         std::vector<TRmgMapItem*>* borderItems,
@@ -2022,13 +2023,13 @@ public:
     void floodShipyardWater(type_object* shipyard);
     // Retail 0x541ad0 selects objectPrototypes[SHIPYARD] and places it beside
     // reachable water.
-    unsigned char createShipyardConnection(
+    b8 createShipyardConnection(
         TRmgZone* source, TRmgZoneConnection* connection);
-    unsigned char canPlaceShipyard(TRmgMapPosition position);
-    unsigned char createSubterraneanGate(
+    b8 canPlaceShipyard(TRmgMapPosition position);
+    b8 createSubterraneanGate(
         TRmgZone* source, TRmgZoneConnection* connection);
     // Complete-only 0x542b00 places and marks a monolith entrance border.
-    unsigned char placeMonolithBorder(TRmgMapPosition position, TRmgZone* zone);
+    b8 placeMonolithBorder(TRmgMapPosition position, TRmgZone* zone);
     void createMonolithConnection(
         TRmgZone* source,
         TRmgZoneConnection* connection,
@@ -2041,12 +2042,12 @@ public:
     void repairWaterZoneBorders();
     // Complete-only roles proved by the predecessor walk at 0x5408e0 and
     // the surrounding connection-cell updates at 0x540fc0.
-    void openConnectionPath(TRmgMapPosition position, unsigned char narrow);
+    void openConnectionPath(TRmgMapPosition position, b8 narrow);
     void markBorderObjectArea(TRmgMapPosition position, int direction);
     int placeBorderObject(
         TRmgMapPosition position, int count, TRmgZone* zone);
     type_object* createGuard(int value, TRmgZone* zone);
-    unsigned char placeObjectInZone(type_object* object, TRmgZone* zone);
+    b8 placeObjectInZone(type_object* object, TRmgZone* zone);
     void placeGuard(int value, TRmgMapPosition position);
     int getMineGuardValue(int resource, const TRmgZone* zone) const;
     // Complete-only prototype/subtype/terrain filter at retail 0x546040.
@@ -2061,16 +2062,16 @@ public:
     // It changes the artifact prototype and attempts to place its seer hut;
     // success transfers ownership to the generated map. Retained thiscall
     // boundary with one mutable artifact argument.
-    unsigned char placeQuestArtifact(rmgQuestArtifactObject* object);
+    b8 placeQuestArtifact(rmgQuestArtifactObject* object);
     // Retained Complete-only helpers at 0x54b180 and 0x54b300. The quest
     // artifact caller supplies its origin zone and the prepared hut group.
     void calculateQuestZoneDistances(TRmgZone* origin);
-    unsigned char placeQuestGroup(TRmgTreasureGroup* group, TRmgZone* origin);
+    b8 placeQuestGroup(TRmgTreasureGroup* group, TRmgZone* origin);
     // Retained helpers used by the key-tent override at 0x5338e0.
     // 0x54b8c0 finds objectPrototypes[9] of the same color and tries a
     // guarded treasure group; 0x54bc50 removes the old object's map marks,
     // counts and list entry without deleting the object itself.
-    unsigned char placeKeyTentGuard(type_object* object, int maxValue);
+    b8 placeKeyTentGuard(type_object* object, int maxValue);
     // Shared scan after a caller changes color availability. Exhaustion keeps
     // size() as the sentinel; this does not initialize the constructor's
     // intentionally untouched m_nextKeyTentColor.
@@ -2086,7 +2087,7 @@ public:
     void removeObject(type_object* object);
     // Retail 0x548040 walks predecessor runs for the caller at 0x548408.
     // Position is passed by value.
-    unsigned char paintRoad(TRmgMapPosition position, int roadType);
+    b8 paintRoad(TRmgMapPosition position, int roadType);
     // Called by water-wheel placement and river-delta object selection.
     void createRiver(TRmgMapPosition source);
     void markRiverObjectTargets();

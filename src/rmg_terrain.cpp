@@ -15,7 +15,7 @@
 
 // Vtable 0x642cb0 slot 2 shares the false/ret-4 body at 0x5543f0.
 MAC_ADDRESS(0x259d44, 0x8)
-unsigned char TRmgTableTerrainRule::isSpecialFrame(int) { return 0; }
+b8 TRmgTableTerrainRule::isSpecialFrame(int) { return false; }
 
 TRmgLinePainterTile::TRmgLinePainterTile(
     TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
@@ -41,7 +41,7 @@ void TRmgLinePainterTile::setTile(const rmgTerrainTile& tile)
 // The point walker tests AL after slot 3 (0x4fa400..0x4fa405). Keep that
 // low-byte gate while preserving the retained virtual's integer-return ABI.
 // Nonzero blocks painting on water and rock.
-unsigned char TRmgLinePainterTile::isBlocked()
+b8 TRmgLinePainterTile::isBlocked()
 {
     return m_painter->isBlocked(m_point);
 }
@@ -62,8 +62,8 @@ TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGrid
 // reading the current tile. Draw a frame only when the pattern or flips differ.
 // The output-reference selector keeps the two flip bytes independent.
 int selectRmgLinePattern(
-    const unsigned char* neighbours, const TRmgLinePatternTable* table,
-    unsigned char& flipX, unsigned char& flipY)
+    const b8* neighbours, const TRmgLinePatternTable* table,
+    b8& flipX, b8& flipY)
 {
     int pattern;
     selectRmgLinePattern(neighbours, table, pattern, flipX, flipY);
@@ -74,16 +74,16 @@ int selectRmgLinePattern(
 // conversion and tile-proxy helper.
 static inline void buildMatchingLineNeighbourMask(
     TRmgLinePainterInterface* painter, const TRmgGridPoint& point,
-    int lineType, unsigned char* matches)
+    int lineType, b8* matches)
 {
-    unsigned char available[TILE_DIR_COUNT];
+    b8 available[TILE_DIR_COUNT];
     buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
                            point.m_x, point.m_y, available);
     for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (available[direction])
             matches[direction] = painter->getNeighbourLineType(point, direction) == lineType;
         else
-            matches[direction] = 0;
+            matches[direction] = false;
     }
 }
 
@@ -93,10 +93,10 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
 {
     TRmgLinePainterTile tile = painter->at(point);
     int oldType = tile.getLineType();
-    unsigned char matches[TILE_DIR_COUNT];
+    b8 matches[TILE_DIR_COUNT];
     buildMatchingLineNeighbourMask(painter, point, oldType, matches);
     TRmgLinePatternTable* table = painter->getPattern(oldType);
-    unsigned char flipX, flipY;
+    b8 flipX, flipY;
     int selected = selectRmgLinePattern(matches, table, flipX, flipY);
     rmgTerrainTile current;
     tile.getTile(current);
@@ -254,7 +254,7 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     tile.setLineType(m_lineType);
     refreshRmgLinePoint(m_painter, point);
 
-    unsigned char matches[TILE_DIR_COUNT];
+    b8 matches[TILE_DIR_COUNT];
     buildMatchingLineNeighbourMask(m_painter, point, m_lineType, matches);
     for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (matches[direction])
@@ -282,13 +282,13 @@ TPoint& TPoint::operator+=(const TPoint& offset)
 VA(0x005B3780, 0xB3)
 MAC_ADDRESS(0x254be0, 0xf4)
 TRmgPatternTerrainRule::TRmgPatternTerrainRule(
-    unsigned char blendsWithOtherTerrain, unsigned char allowsSeparatedNeighbours,
+    b8 blendsWithOtherTerrain, b8 allowsSeparatedNeighbours,
     int specialFrameChance, unsigned int entryCount, const TRmgTerrainPatternEntry* entries)
     : TRmgTerrainRule(blendsWithOtherTerrain, allowsSeparatedNeighbours),
       m_specialFrameChance(specialFrameChance), m_entryCount(entryCount), m_entries(entries)
 {
     int transition = m_entries[0].m_transition;
-    unsigned char special = m_entries[0].m_special;
+    b8 special = m_entries[0].m_special;
     int range = transition * 2 + special;
     ++m_ranges[range].m_count;
     for (unsigned int index = 1; index < m_entryCount; ++index) {
@@ -306,7 +306,7 @@ TRmgPatternTerrainRule::TRmgPatternTerrainRule(
 // Vtable 0x642c98 slot 1 tests the special base-frame range (key 1).
 VA(0x005B3840, 0x0C)
 MAC_ADDRESS(0x259dac, 0x14)  // Complete-only pattern terrain rule
-unsigned char TRmgPatternTerrainRule::hasSpecialBaseFrames()
+b8 TRmgPatternTerrainRule::hasSpecialBaseFrames()
 {
     return 0 < m_ranges[1].m_count;
 }
@@ -320,7 +320,7 @@ TRmgTerrainRule::~TRmgTerrainRule()
 // Vtable 0x642c98 slot 2 reads the special-frame byte in the source entry.
 VA(0x005B3860, 0x11)
 MAC_ADDRESS(0x254ce4, 0x14)  // Complete-only pattern terrain rule
-unsigned char TRmgPatternTerrainRule::isSpecialFrame(int frame)
+b8 TRmgPatternTerrainRule::isSpecialFrame(int frame)
 {
     return m_entries[frame].m_special;
 }
@@ -391,7 +391,7 @@ int TRmgPatternTerrainRule::selectTransitionFrame(
 // key, in transition/X/Y order. The frame sentinel stays at the caller.
 static inline bool matchesTerrainTransition(
     const TRmgTerrainTransitionEntry& entry, int transition,
-    unsigned char flipX, unsigned char flipY)
+    b8 flipX, b8 flipY)
 {
     return entry.m_transition == transition
         && entry.m_flipX == flipX && entry.m_flipY == flipY;
@@ -402,7 +402,7 @@ static inline bool matchesTerrainTransition(
 // arithmetic; the admitted bytes are 0/1, but this is not a bitwise mask.
 static inline TRmgTerrainPatternRange& getTerrainTransitionRange(
     TRmgTerrainPatternTable& table, int transition,
-    unsigned char flipX, unsigned char flipY)
+    b8 flipX, b8 flipY)
 {
     return table.m_ranges[(transition * 2 + flipX) * 2 + flipY];
 }
@@ -415,8 +415,8 @@ MAC_ADDRESS(0x254e58, 0xe4)
 TRmgTerrainPatternTable::TRmgTerrainPatternTable()
 {
     int transition = g_rmgTerrainPatterns[0].m_transition;
-    unsigned char flipX = g_rmgTerrainPatterns[0].m_flipX;
-    unsigned char flipY = g_rmgTerrainPatterns[0].m_flipY;
+    b8 flipX = g_rmgTerrainPatterns[0].m_flipX;
+    b8 flipY = g_rmgTerrainPatterns[0].m_flipY;
     TRmgTerrainPatternRange* range =
         &getTerrainTransitionRange(*this, transition, flipX, flipY);
     ++range->m_count;
@@ -440,9 +440,9 @@ TRmgTableTerrainRule::TRmgTableTerrainRule()
 
 VA(0x005B3A40, 0x03)
 MAC_ADDRESS(0x254f6c, 0x8)
-unsigned char TRmgTableTerrainRule::hasSpecialBaseFrames()
+b8 TRmgTableTerrainRule::hasSpecialBaseFrames()
 {
-    return 0;
+    return false;
 }
 
 // Both concrete rule vtables share the deleting wrapper: call the base
@@ -479,7 +479,7 @@ int TRmgTableTerrainRule::selectTransitionFrame(
             g_rmgTerrainPatternRanges, transition, requestedFlip.m_flipX, requestedFlip.m_flipY);
         oldFrame = selectTerrainRangeFrame(range);
     }
-    selectedFlip = TRmgTerrainFlip(0, 0);
+    selectedFlip = TRmgTerrainFlip(false, false);
     return oldFrame;
 }
 
@@ -495,7 +495,7 @@ const int g_rmgReflectedNeighbours[2][2][8] = {
 };
 
 // Preserve the constructed value's temporary lifetime at selector call sites.
-static TRmgTerrainFlip makeTerrainFlip(unsigned char x, unsigned char y)
+static TRmgTerrainFlip makeTerrainFlip(b8 x, b8 y)
 {
     return TRmgTerrainFlip(x, y);
 }
@@ -508,7 +508,7 @@ void rmgTerrainPainter::initializePackedCell(
     rmgTerrainTile tile = m_adapter->getTile(point);
     TRmgPackedTerrainCell& packed = m_packedCells[index];
     packed.setTileValues(tile);
-    packed.m_initialized = 1;
+    packed.m_initialized = true;
 }
 
 VA(0x005B3E40, 0x38)
@@ -588,8 +588,8 @@ int __fastcall selectTerrainTransition(
     VA_COMPGEN(0x005b45e0, 0x1, STATIC_DTOR, flips)
     DATA(0x006A52B8)
     static TRmgTerrainFlip flips[4] = {
-        makeTerrainFlip(0, 0), makeTerrainFlip(0, 1),
-        makeTerrainFlip(1, 0), makeTerrainFlip(1, 1)
+        makeTerrainFlip(false, false), makeTerrainFlip(false, true),
+        makeTerrainFlip(true, false), makeTerrainFlip(true, true)
     };
     unsigned int reflection;
     for (reflection = 0; reflection < 4; ++reflection) {
@@ -768,7 +768,7 @@ int __fastcall selectTerrainTransition(
             return 11;
         }
     }
-    *flip = makeTerrainFlip(0, 0);
+    *flip = makeTerrainFlip(false, false);
     return 0;
 }
 
@@ -857,11 +857,11 @@ const int& rmgTerrainPainter::getPaintTerrain() const
     return m_paintTerrain;
 }
 
-unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
+b8 rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
 {
     if (getTerrain(point) != getPaintTerrain())
-        return 0;
-    return 1;
+        return false;
+    return true;
 }
 
 VA(0x005B4960, 0x1B2)
@@ -897,7 +897,7 @@ static inline void resolveQueuedTerrainGap(rmgTerrainPainter& painter,
 {
     if (painter.m_primaryPoints.find(point) == painter.m_primaryPoints.end())
         return;
-    unsigned char remainsGap = axis == RMG_HORIZONTAL_GAP
+    b8 remainsGap = axis == RMG_HORIZONTAL_GAP
         ? painter.isHorizontalGap(point) : painter.isVerticalGap(point);
     if (!remainsGap) {
         painter.m_primaryPoints.erase(point);
@@ -932,7 +932,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
             resolveQueuedTerrainGap(*this, nearby, RMG_VERTICAL_GAP);
         }
     } else {
-        unsigned char neighbourExists[TILE_DIR_COUNT];
+        b8 neighbourExists[TILE_DIR_COUNT];
         buildTileNeighbourMask(
             m_size.m_x, m_size.m_y, point.m_x, point.m_y, neighbourExists);
         for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
@@ -1018,26 +1018,26 @@ void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
 
 // Retail retains the nested horizontal predicate and expands the vertical
 // predicate at adjacent-row/column probes.
-unsigned char rmgTerrainPainter::isHorizontalGap(const TRmgGridPoint& point)
+b8 rmgTerrainPainter::isHorizontalGap(const TRmgGridPoint& point)
 {
     return isHorizontalGap(point, getTerrain(point));
 }
 
-unsigned char rmgTerrainPainter::isVerticalGap(const TRmgGridPoint& point)
+b8 rmgTerrainPainter::isVerticalGap(const TRmgGridPoint& point)
 {
     return isVerticalGap(point, getTerrain(point));
 }
 
 // Preserve guard order and return the separation helper's byte result directly.
 MAC_ADDRESS(0x2588c4, 0x1a0)
-unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
+b8 rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 {
     if (isHorizontalGap(point))
-        return 1;
+        return true;
     else if (isVerticalGap(point))
-        return 1;
+        return true;
     else if (g_rmgTerrainRules[getTerrain(point)]->m_allowsSeparatedNeighbours)
-        return 0;
+        return false;
     else
         return hasSeparatedNeighbours(point);
 }
@@ -1083,7 +1083,7 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 
     if (!g_rmgTerrainRules[getPaintTerrain()]->m_allowsSeparatedNeighbours &&
         hasSeparatedNeighbours(point)) {
-        unsigned char matches[TILE_DIR_COUNT];
+        b8 matches[TILE_DIR_COUNT];
         buildMatchingNeighbourMask(point, matches);
         TRmgTerrainGap gaps[TILE_DIR_COUNT / 2];
         // Run-length encode the nonmatching ring, starting after a known
@@ -1109,7 +1109,7 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
                 direction = (direction + 1) % TILE_DIR_COUNT;
             } while (direction != firstMatch && !matches[direction]);
         }
-        unsigned char neighbourExists[TILE_DIR_COUNT];
+        b8 neighbourExists[TILE_DIR_COUNT];
         buildTileNeighbourMask(getWidth(), getHeight(), point.m_x, point.m_y,
                                neighbourExists);
         do {
@@ -1151,7 +1151,7 @@ static inline void countTerrainBoundary(
 // Terrain frames are reusable only when both sprite reflections also match.
 // Keep frame/X/Y short-circuit order; callers retain their distinct write order.
 static inline bool matchesTerrainAppearance(const rmgTerrainTile& tile,
-    int frame, unsigned char flipX, unsigned char flipY)
+    int frame, b8 flipX, b8 flipY)
 {
     return tile.m_frame == frame && tile.m_flipX == flipX && tile.m_flipY == flipY;
 }
@@ -1247,10 +1247,10 @@ void rmgTerrainPainter::paintTransitions()
                 rmgTerrainTile tile = getPackedCell(point)->getTile();
 
                 int newFrame = selectBaseFrame(point, tile.m_terrain, tile.m_frame);
-                if (!matchesTerrainAppearance(tile, newFrame, 0, 0)) {
+                if (!matchesTerrainAppearance(tile, newFrame, false, false)) {
                     tile.m_frame = newFrame;
-                    tile.m_flipX = 0;
-                    tile.m_flipY = 0;
+                    tile.m_flipX = false;
+                    tile.m_flipY = false;
                     setTile(point, tile);
                 }
             }
@@ -1260,7 +1260,7 @@ void rmgTerrainPainter::paintTransitions()
 
 VA(0x005B6320, 0x107)
 MAC_ADDRESS(0x25803c, 0x160)
-unsigned char rmgTerrainPainter::isHorizontalGap(
+b8 rmgTerrainPainter::isHorizontalGap(
     const TRmgGridPoint& point, int terrain)
 {
     return point.m_x > 0 && point.m_x < getWidth() - 1
@@ -1270,7 +1270,7 @@ unsigned char rmgTerrainPainter::isHorizontalGap(
 
 VA(0x005B6430, 0x106)
 MAC_ADDRESS(0x25819c, 0x160)
-unsigned char rmgTerrainPainter::isVerticalGap(
+b8 rmgTerrainPainter::isVerticalGap(
     const TRmgGridPoint& point, int terrain)
 {
     return point.m_y > 0 && point.m_y < getHeight() - 1
@@ -1306,7 +1306,7 @@ static inline bool matchesTerrainAt(rmgTerrainPainter& painter,
 VA(0x005B6540, 0x2CA)
 MAC_ADDRESS(0x2582fc, 0x4f8) // anchor-callee 0x5b58f8, 0x5b681e; retail-only
 void rmgTerrainPainter::buildMatchingNeighbourMask(
-    const TRmgGridPoint& point, unsigned char* matches)
+    const TRmgGridPoint& point, b8* matches)
 {
     int terrain = getTerrain(point);
     TRmgGridPoint northWest;
@@ -1335,34 +1335,34 @@ void rmgTerrainPainter::buildMatchingNeighbourMask(
 // another matching cell proves that the centre's neighbours are separated.
 VA(0x005B6810, 0x84)
 MAC_ADDRESS(0x2587f4, 0xd0)
-unsigned char rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
+b8 rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
 {
-    unsigned char matches[TILE_DIR_COUNT];
+    b8 matches[TILE_DIR_COUNT];
     buildMatchingNeighbourMask(point, matches);
     unsigned int first = 0;
     unsigned int direction;
     while (matches[first]) {
         first = (first + 1) % TILE_DIR_COUNT;
         if (first == 0)
-            return 0;
+            return false;
     }
     direction = first;
     do {
         direction = (direction + 1) % TILE_DIR_COUNT;
         if (direction == first)
-            return 0;
+            return false;
     } while (!matches[direction]);
     do {
         direction = (direction + 1) % TILE_DIR_COUNT;
         if (direction == first)
-            return 0;
+            return false;
     } while (matches[direction]);
     while (!matches[direction]) {
         direction = (direction + 1) % TILE_DIR_COUNT;
         if (direction == first)
-            return 0;
+            return false;
     }
-    return 1;
+    return true;
 }
 
 static inline int getTerrainNeighbourKindAt(
@@ -1417,7 +1417,7 @@ static inline bool matchesTerrainAtClampedOffset(rmgTerrainPainter& painter,
 
 VA(0x005B6BA0, 0x24C)
 MAC_ADDRESS(0x258f18, 0x360)
-unsigned char rmgTerrainPainter::checkFirstDiagonal(
+b8 rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
     // Retail construction guard byte 0x6a52a0 (tested and set in this body).
@@ -1436,13 +1436,13 @@ unsigned char rmgTerrainPainter::checkFirstDiagonal(
     int terrain = getTerrain(point);
     const TPoint* pair = firstDiagonalOffsets[(flip.m_flipY << 1) | flip.m_flipX];
     if (matchesTerrainAtClampedOffset(*this, point, pair[0], terrain))
-        return 1;
+        return true;
     return matchesTerrainAtClampedOffset(*this, point, pair[1], terrain);
 }
 
 VA(0x005B6E00, 0x1B3)
 MAC_ADDRESS(0x259278, 0x288)
-unsigned char rmgTerrainPainter::checkSecondDiagonal(
+b8 rmgTerrainPainter::checkSecondDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
     // Retail construction guard byte 0x6a3d64 (tested and set in this body).
@@ -1459,7 +1459,7 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
     TRmgGridPoint nearby(
         tLimit(0, static_cast<int>(point.getX()) + offset.getX(), static_cast<int>(getWidth()) - 1), point.getY());
     if (getTerrain(nearby) != terrain)
-        return 1;
+        return true;
     nearby.setX(point.getX());
     int maximum = static_cast<int>(getHeight()) - 1;
     int y = static_cast<int>(point.getY()) + offset.getY();
@@ -1659,116 +1659,116 @@ bool operator<(const TRmgCoordinatePoint<Coordinate>& left,
 // the table at 0x642bd8 proves terrain-index order. Names are role-derived.
 DATA(0x006424A8)
 const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[48] = {
-    {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0},
-    {0, 0, 0}, {0, 0, 0}, {8, 0, 0}, {8, 0, 0}, {8, 1, 0}, {8, 1, 0},
-    {8, 0, 1}, {8, 0, 1}, {8, 1, 1}, {8, 1, 1}, {9, 0, 0}, {9, 0, 0},
-    {9, 1, 0}, {9, 1, 0}, {10, 0, 0}, {10, 0, 0}, {10, 0, 1}, {10, 0, 1},
-    {11, 0, 0}, {11, 0, 0}, {11, 1, 0}, {11, 1, 0}, {11, 0, 1}, {11, 0, 1},
-    {11, 1, 1}, {11, 1, 1}, {12, 0, 0}, {12, 0, 0}, {12, 1, 0}, {12, 1, 0},
-    {12, 0, 1}, {12, 0, 1}, {12, 1, 1}, {12, 1, 1}, {13, 0, 0}, {13, 0, 0},
-    {13, 1, 0}, {13, 1, 0}, {13, 0, 1}, {13, 0, 1}, {13, 1, 1}, {13, 1, 1},
+    {0, false, false}, {0, false, false}, {0, false, false}, {0, false, false}, {0, false, false}, {0, false, false},
+    {0, false, false}, {0, false, false}, {8, false, false}, {8, false, false}, {8, true, false}, {8, true, false},
+    {8, false, true}, {8, false, true}, {8, true, true}, {8, true, true}, {9, false, false}, {9, false, false},
+    {9, true, false}, {9, true, false}, {10, false, false}, {10, false, false}, {10, false, true}, {10, false, true},
+    {11, false, false}, {11, false, false}, {11, true, false}, {11, true, false}, {11, false, true}, {11, false, true},
+    {11, true, true}, {11, true, true}, {12, false, false}, {12, false, false}, {12, true, false}, {12, true, false},
+    {12, false, true}, {12, false, true}, {12, true, true}, {12, true, true}, {13, false, false}, {13, false, false},
+    {13, true, false}, {13, true, false}, {13, false, true}, {13, false, true}, {13, true, true}, {13, true, true},
 };
 
 DATA(0x00642628)
 static const TRmgTerrainPatternEntry g_rmgLandPatternEntries[79] = {
-    {2, 0}, {2, 0}, {2, 0}, {2, 0}, {3, 0}, {3, 0},
-    {3, 0}, {3, 0}, {4, 0}, {4, 0}, {4, 0}, {4, 0},
-    {5, 0}, {5, 0}, {5, 0}, {5, 0}, {6, 0}, {6, 0},
-    {7, 0}, {7, 0}, {8, 0}, {8, 0}, {8, 0}, {8, 0},
-    {9, 0}, {9, 0}, {9, 0}, {9, 0}, {10, 0}, {10, 0},
-    {10, 0}, {10, 0}, {11, 0}, {11, 0}, {11, 0}, {11, 0},
-    {12, 0}, {12, 0}, {13, 0}, {13, 0}, {14, 0}, {15, 0},
-    {16, 0}, {17, 0}, {18, 0}, {19, 0}, {20, 0}, {21, 0},
-    {22, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
-    {0, 0}, {0, 0}, {0, 0}, {0, 1}, {0, 1}, {0, 1},
-    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
-    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
-    {0, 1}, {23, 0}, {24, 0}, {25, 0}, {26, 0}, {28, 0},
-    {27, 0},
+    {2, false}, {2, false}, {2, false}, {2, false}, {3, false}, {3, false},
+    {3, false}, {3, false}, {4, false}, {4, false}, {4, false}, {4, false},
+    {5, false}, {5, false}, {5, false}, {5, false}, {6, false}, {6, false},
+    {7, false}, {7, false}, {8, false}, {8, false}, {8, false}, {8, false},
+    {9, false}, {9, false}, {9, false}, {9, false}, {10, false}, {10, false},
+    {10, false}, {10, false}, {11, false}, {11, false}, {11, false}, {11, false},
+    {12, false}, {12, false}, {13, false}, {13, false}, {14, false}, {15, false},
+    {16, false}, {17, false}, {18, false}, {19, false}, {20, false}, {21, false},
+    {22, false}, {0, false}, {0, false}, {0, false}, {0, false}, {0, false},
+    {0, false}, {0, false}, {0, false}, {0, true}, {0, true}, {0, true},
+    {0, true}, {0, true}, {0, true}, {0, true}, {0, true}, {0, true},
+    {0, true}, {0, true}, {0, true}, {0, true}, {0, true}, {0, true},
+    {0, true}, {23, false}, {24, false}, {25, false}, {26, false}, {28, false},
+    {27, false},
 };
 
 DATA(0x006428A0)
 static const TRmgTerrainPatternEntry g_rmgDirtPatternEntries[46] = {
-    {8, 0}, {8, 0}, {8, 0}, {8, 0}, {9, 0}, {9, 0},
-    {9, 0}, {9, 0}, {10, 0}, {10, 0}, {10, 0}, {10, 0},
-    {11, 0}, {11, 0}, {11, 0}, {11, 0}, {12, 0}, {12, 0},
-    {13, 0}, {13, 0}, {16, 0}, {0, 0}, {0, 0}, {0, 0},
-    {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 1},
-    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
-    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
-    {0, 1}, {0, 1}, {0, 1}, {24, 0},
+    {8, false}, {8, false}, {8, false}, {8, false}, {9, false}, {9, false},
+    {9, false}, {9, false}, {10, false}, {10, false}, {10, false}, {10, false},
+    {11, false}, {11, false}, {11, false}, {11, false}, {12, false}, {12, false},
+    {13, false}, {13, false}, {16, false}, {0, false}, {0, false}, {0, false},
+    {0, false}, {0, false}, {0, false}, {0, false}, {0, false}, {0, true},
+    {0, true}, {0, true}, {0, true}, {0, true}, {0, true}, {0, true},
+    {0, true}, {0, true}, {0, true}, {0, true}, {0, true}, {0, true},
+    {0, true}, {0, true}, {0, true}, {24, false},
 };
 
 DATA(0x00642A10)
 static const TRmgTerrainPatternEntry g_rmgSandPatternEntries[24] = {
-    {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
-    {0, 0}, {0, 0}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
-    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
-    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+    {0, false}, {0, false}, {0, false}, {0, false}, {0, false}, {0, false},
+    {0, false}, {0, false}, {0, true}, {0, true}, {0, true}, {0, true},
+    {0, true}, {0, true}, {0, true}, {0, true}, {0, true}, {0, true},
+    {0, true}, {0, true}, {0, true}, {0, true}, {0, true}, {0, true},
 };
 
 DATA(0x00642AD0)
 static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] = {
-    {8, 0}, {8, 0}, {8, 0}, {8, 0}, {9, 0}, {9, 0},
-    {9, 0}, {9, 0}, {10, 0}, {10, 0}, {10, 0}, {10, 0},
-    {11, 0}, {11, 0}, {11, 0}, {11, 0}, {12, 0}, {12, 0},
-    {13, 0}, {13, 0}, {16, 0}, {0, 0}, {0, 0}, {0, 0},
-    {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
-    {0, 0}, {0, 0}, {0, 0},
+    {8, false}, {8, false}, {8, false}, {8, false}, {9, false}, {9, false},
+    {9, false}, {9, false}, {10, false}, {10, false}, {10, false}, {10, false},
+    {11, false}, {11, false}, {11, false}, {11, false}, {12, false}, {12, false},
+    {13, false}, {13, false}, {16, false}, {0, false}, {0, false}, {0, false},
+    {0, false}, {0, false}, {0, false}, {0, false}, {0, false}, {0, false},
+    {0, false}, {0, false}, {0, false},
 };
 
 // Nine atexit callbacks tail-call TRmgTerrainRule::~TRmgTerrainRule.
 // LINK folds each implicit derived destructor with the retained base body.
 DATA(0x006A48D0)
-static TRmgPatternTerrainRule g_rmgDirtRule(1, 1, 50, 46, g_rmgDirtPatternEntries);
+static TRmgPatternTerrainRule g_rmgDirtRule(true, true, 50, 46, g_rmgDirtPatternEntries);
 
 VA_COMPGEN(0x005B3B60, 0x23, STATIC_CTOR, g_rmgDirtRule)
 
 VA_COMPGEN(0x005B3B90, 0x0A, STATIC_DTOR, g_rmgDirtRule)
 DATA(0x006A44F8)
-static TRmgPatternTerrainRule g_rmgSandRule(0, 1, 70, 24, g_rmgSandPatternEntries);
+static TRmgPatternTerrainRule g_rmgSandRule(false, true, 70, 24, g_rmgSandPatternEntries);
 
 VA_COMPGEN(0x005B3BA0, 0x23, STATIC_CTOR, g_rmgSandRule)
 
 VA_COMPGEN(0x005B3BD0, 0x0A, STATIC_DTOR, g_rmgSandRule)
 DATA(0x006A3D88)
-static TRmgPatternTerrainRule g_rmgGrassRule(1, 1, 50, 79, g_rmgLandPatternEntries);
+static TRmgPatternTerrainRule g_rmgGrassRule(true, true, 50, 79, g_rmgLandPatternEntries);
 
 VA_COMPGEN(0x005B3BE0, 0x23, STATIC_CTOR, g_rmgGrassRule)
 
 VA_COMPGEN(0x005B3C10, 0x0A, STATIC_DTOR, g_rmgGrassRule)
 DATA(0x006A3F70)
-static TRmgPatternTerrainRule g_rmgSnowRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+static TRmgPatternTerrainRule g_rmgSnowRule(true, true, 80, 79, g_rmgLandPatternEntries);
 
 VA_COMPGEN(0x005B3C20, 0x23, STATIC_CTOR, g_rmgSnowRule)
 
 VA_COMPGEN(0x005B3C50, 0x0A, STATIC_DTOR, g_rmgSnowRule)
 DATA(0x006A46E0)
-static TRmgPatternTerrainRule g_rmgSwampRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+static TRmgPatternTerrainRule g_rmgSwampRule(true, true, 80, 79, g_rmgLandPatternEntries);
 
 VA_COMPGEN(0x005B3C60, 0x23, STATIC_CTOR, g_rmgSwampRule)
 
 VA_COMPGEN(0x005B3C90, 0x0A, STATIC_DTOR, g_rmgSwampRule)
 DATA(0x006A4AB8)
-static TRmgPatternTerrainRule g_rmgRoughRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+static TRmgPatternTerrainRule g_rmgRoughRule(true, true, 80, 79, g_rmgLandPatternEntries);
 
 VA_COMPGEN(0x005B3CA0, 0x23, STATIC_CTOR, g_rmgRoughRule)
 
 VA_COMPGEN(0x005B3CD0, 0x0A, STATIC_DTOR, g_rmgRoughRule)
 DATA(0x006A5070)
-static TRmgPatternTerrainRule g_rmgSubterraneanRule(1, 1, 60, 79, g_rmgLandPatternEntries);
+static TRmgPatternTerrainRule g_rmgSubterraneanRule(true, true, 60, 79, g_rmgLandPatternEntries);
 
 VA_COMPGEN(0x005B3CE0, 0x23, STATIC_CTOR, g_rmgSubterraneanRule)
 
 VA_COMPGEN(0x005B3D10, 0x0A, STATIC_DTOR, g_rmgSubterraneanRule)
 DATA(0x006A4E88)
-static TRmgPatternTerrainRule g_rmgLavaRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+static TRmgPatternTerrainRule g_rmgLavaRule(true, true, 80, 79, g_rmgLandPatternEntries);
 
 VA_COMPGEN(0x005B3D20, 0x23, STATIC_CTOR, g_rmgLavaRule)
 
 VA_COMPGEN(0x005B3D50, 0x0A, STATIC_DTOR, g_rmgLavaRule)
 DATA(0x006A4CA0)
-static TRmgPatternTerrainRule g_rmgWaterRule(0, 0, 0, 33, g_rmgWaterPatternEntries);
+static TRmgPatternTerrainRule g_rmgWaterRule(false, false, 0, 33, g_rmgWaterPatternEntries);
 
 VA_COMPGEN(0x005B3D60, 0x23, STATIC_CTOR, g_rmgWaterRule)
 
