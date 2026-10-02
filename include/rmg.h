@@ -847,6 +847,13 @@ public:
         return m_adjacentToCandidate || m_blockedByCandidate || m_overlapsCandidate;
     }
 
+    // Different overlapping cells can require the candidate to be both
+    // behind and in front of this object, which invalidates its placement.
+    unsigned char hasConflictingPlacementOrder() const
+    {
+        return m_candidateBehind && m_candidateCovers;
+    }
+
     virtual ~type_object();
     // Former provisional name: unknownOperation. The prison override releases
     // its reserved hero when removal rejects this object; other objects do nothing.
@@ -1226,6 +1233,14 @@ struct TRmgMapItem {
     {
         if (!m_connection.m_present)
             m_tileData.m_pathClearance = 0;
+    }
+
+    // The border-expansion passes release only unoccupied cells. Retain
+    // retail's signed count test before the connection-aware flag update.
+    void releaseUnoccupiedPathClearance()
+    {
+        if (static_cast<int>(m_objects.size()) <= 0)
+            releasePathClearance();
     }
 };
 
