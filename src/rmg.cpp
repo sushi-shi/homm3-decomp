@@ -422,9 +422,10 @@ void type_random_map::clear()
     }
 }
 
-// Preserve land, entrance, then zone query order; border, water and path
-// clearance policies stay with each caller.
-static inline bool isRmgFootprintCellBlocked(TRmgMapItem* item, int zoneIndex)
+// Shared by the footprint and surrounding-outline placement tests. Preserve
+// land, entrance, then zone query order; border, water and path clearance
+// policies stay with each caller.
+static inline bool isRmgPlacementCellBlocked(TRmgMapItem* item, int zoneIndex)
 {
     return !item->isPassableLand() || item->isRoadEntrance()
         || item->m_zoneState.m_zone != zoneIndex;
@@ -453,7 +454,7 @@ b8 type_random_map::hasConnectedOutline(
             TRmgMapItem* item = getMapItem(x, y, position.m_z);
             if (!allowEntrances && item->isRoadEntrance())
                 return false;
-            blocked = isRmgFootprintCellBlocked(item, zoneIndex);
+            blocked = isRmgPlacementCellBlocked(item, zoneIndex);
             if (requirePathClearance && !item->hasPathClearance())
                 blocked = true;
             if ((item->getLandType() == eTerrainWater) != waterZone)
@@ -660,13 +661,13 @@ b8 type_random_map::isPlacementBlocked(
             TRmgGridPoint maskPoint(x, y);
             TRmgMapItem* item = getMapItem(nearby);
             if (prototype.isTriggerCell(maskPoint.m_x, maskPoint.m_y)) {
-                if (isRmgFootprintCellBlocked(item, zoneIndex))
+                if (isRmgPlacementCellBlocked(item, zoneIndex))
                     return true;
                 if (rejectBorder && item->hasBorderObject())
                     return true;
             }
             if (!prototype.isPassableCell(maskPoint.m_x, maskPoint.m_y)) {
-                if (isRmgFootprintCellBlocked(item, zoneIndex))
+                if (isRmgPlacementCellBlocked(item, zoneIndex))
                     return true;
                 if (item->getLandType() == eTerrainWater) {
                     if (!isRmgWaterOnlyPrototype(prototype))
@@ -3702,13 +3703,8 @@ void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
         zone->m_levelPosition.m_z = 0;
         zone->m_levelPosition.m_x = 0;
         candidates.push_back(zone->getLevelPosition());
-        if (m_map.m_numberLevels > 1) {
-            zone->m_levelPosition.m_x = 0;
-            zone->m_levelPosition.m_y = 0;
-            zone->m_levelPosition.m_z = 1;
-            if (canPlaceZone(zone))
-                candidates.push_back(zone->getLevelPosition());
-        }
+        if (m_map.m_numberLevels > 1)
+            appendRmgZoneCandidate(this, zone, TRmgMapPosition(0, 0, 1), candidates);
     } else {
         TRmgTemplateZone* slot = zone->m_templateZone;
         for (int connection = 0; connection < slot->m_connections.size(); ++connection) {
@@ -3833,6 +3829,22 @@ static inline void displaceRmgBoundaryMidpoint(TPoint& midpoint,
     }
 }
 
+// One step of the depth-first subdivision worklist. A segment with an interior
+// rounded midpoint is displaced and replaced by its two halves: pushing the
+// far endpoint before the midpoint keeps the near half next. Otherwise the
+// caller handles the segment's start cell and advances to its end.
+static inline bool splitRmgBoundarySegment(std::vector<TPoint>& pending,
+    const TPoint& from, const TPoint& to, int roughness, int lengthDivisor)
+{
+    TPoint midpoint = getRmgSubdivisionMidpoint(from, to);
+    if (midpoint == from || midpoint == to)
+        return false;
+    displaceRmgBoundaryMidpoint(midpoint, from, to, roughness, lengthDivisor);
+    pending.push_back(to);
+    pending.push_back(midpoint);
+    return true;
+}
+
 // Clamp each boundary coordinate in X-then-Y order before querying or
 // opening the map cell. Keep the long-reference selectors used by retail.
 static inline TPoint clampRmgBoundaryToMap(
@@ -3870,12 +3882,7 @@ void type_random_map_generator::drawIrregularZoneBoundary(
     while (pending.size() > 0) {
         to = pending.back();
         pending.pop_back();
-        TPoint midpoint = getRmgSubdivisionMidpoint(from, to);
-        if (midpoint != from && midpoint != to) {
-            displaceRmgBoundaryMidpoint(midpoint, from, to, roughness, 1);
-            pending.push_back(to);
-            pending.push_back(midpoint);
-        } else {
+        if (!splitRmgBoundarySegment(pending, from, to, roughness, 1)) {
             TPoint clamped = clampRmgBoundaryToMap(from, m_map);
             TRmgMapItem* item = m_map.getMapItem(clamped.m_x, clamped.m_y, level);
             assignRmgZoneCell(item, zoneIndex, markForTerrain);
@@ -4114,12 +4121,7 @@ void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
     while (pending.size() > 0) {
         to = pending.back();
         pending.pop_back();
-        TPoint midpoint = getRmgSubdivisionMidpoint(from, to);
-        if (midpoint != from && midpoint != to) {
-            displaceRmgBoundaryMidpoint(midpoint, from, to, roughness, 2);
-            pending.push_back(to);
-            pending.push_back(midpoint);
-        } else {
+        if (!splitRmgBoundarySegment(pending, from, to, roughness, 2)) {
             TPoint clamped = clampRmgBoundaryToMap(from, m_map);
             TRmgMapItem* item = m_map.getMapItem(clamped.m_x, clamped.m_y, level);
             if (item->m_zoneState.m_zone == zoneIndex)
