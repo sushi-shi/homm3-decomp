@@ -5964,26 +5964,32 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
     return new rmgMonsterObject(properties, m_nextObjectId++, creatureCount);
 }
 
+// Locate the first prototype of a requested subtype in stored order. Preserve
+// each caller's index type and read the live count on every iteration. Callers
+// retain their distinct missing-prototype behavior, including unchecked use.
+template<class Index>
+static inline Index findRmgPrototypeSubtypeIndex(
+    std::vector<TRmgObjectPropertiesRef*>& prototypes, int subtype)
+{
+    Index index = 0;
+    while (index < prototypes.size()
+        && prototypes[index]->m_prototype->getSubtype() != subtype)
+        ++index;
+    return index;
+}
+
 VA(0x00540D60, 0x256)
 MAC_ADDRESS(0x24356c, 0x2b8) // anchor-callee createShipyardConnection; thiscall, ret 0x14
 int type_random_map_generator::placeBorderObject(
     TRmgMapPosition position, int count, TRmgZone* zone)
 {
     int color = m_nextKeyTentColor;
-    int index = 0;
-    for (; index < m_objectPrototypes[BORDER_TENT].size(); ++index) {
-        if (m_objectPrototypes[BORDER_TENT][index]->m_prototype->getSubtype() == color)
-            break;
-    }
+    int index = findRmgPrototypeSubtypeIndex<int>(m_objectPrototypes[BORDER_TENT], color);
     if (index == m_objectPrototypes[BORDER_TENT].size())
         return -1;
     TRmgObjectPropertiesRef* tentProperties = m_objectPrototypes[BORDER_TENT][index];
 
-    index = 0;
-    for (; index < m_objectPrototypes[BORDER_GUARD].size(); ++index) {
-        if (m_objectPrototypes[BORDER_GUARD][index]->m_prototype->getSubtype() == color)
-            break;
-    }
+    index = findRmgPrototypeSubtypeIndex<int>(m_objectPrototypes[BORDER_GUARD], color);
     // RETAIL BUG: missing guard art returns color zero, which callers treat
     // as successful placement, unlike the -1 used for missing tent art.
     if (index == m_objectPrototypes[BORDER_GUARD].size())
@@ -10234,10 +10240,8 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
         }
     }
     seerHut->m_artifact = artifact;
-    unsigned int prototypeIndex = 0;
-    while (prototypeIndex < m_objectPrototypes[ARTIFACT].size()
-        && m_objectPrototypes[ARTIFACT][prototypeIndex]->m_prototype->getSubtype() != artifact)
-        ++prototypeIndex;
+    unsigned int prototypeIndex = findRmgPrototypeSubtypeIndex<unsigned int>(
+        m_objectPrototypes[ARTIFACT], artifact);
     // Retail assumes an eligible artifact always has a loaded prototype;
     // there is no end-of-vector check after the subtype search.
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[ARTIFACT][prototypeIndex];
@@ -10291,10 +10295,8 @@ MAC_ADDRESS(0x2508e8, 0x334) // anchor-callee 0x5338e0; retail-only
 unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, int maxValue)
 {
     int color = object->m_properties->m_prototype->getSubtype();
-    unsigned int index = 0;
-    while (index < m_objectPrototypes[BORDER_GUARD].size()
-        && m_objectPrototypes[BORDER_GUARD][index]->m_prototype->getSubtype() != color)
-        ++index;
+    unsigned int index = findRmgPrototypeSubtypeIndex<unsigned int>(
+        m_objectPrototypes[BORDER_GUARD], color);
     if (index == m_objectPrototypes[BORDER_GUARD].size())
         return 0;
     TRmgZone* origin = m_zones[m_map.getMapItem(object->m_position)->m_zoneState.m_zone];
