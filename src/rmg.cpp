@@ -7257,14 +7257,13 @@ void type_random_map_generator::carveBranchingPaths()
                 pending.pop_back();
                 first = pending.back();
                 pending.pop_back();
-                TPoint middle((first.m_x + last.m_x + 1) / 2,
-                    (first.m_y + last.m_y + 1) / 2);
+                TPoint middle = getRmgSubdivisionMidpoint(first, last);
                 if (middle != first && middle != last) {
                     TRmgVector delta = last - first;
                     TRmgVector perpendicular(-delta.m_y, delta.m_x);
                     int length = perpendicular.length();
                     if (length > 1) {
-                        int displacement = rand() % length - length / 2;
+                        int displacement = getRmgCenteredRandomOffset(length);
                         middle += perpendicular * displacement / length;
                     }
                     pending.push_back(last);
@@ -7329,7 +7328,7 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
     while (pending.size() > 0) {
         to = pending.back();
         pending.pop_back();
-        TPoint midpoint((from.m_x + to.m_x + 1) / 2, (from.m_y + to.m_y + 1) / 2);
+        TPoint midpoint = getRmgSubdivisionMidpoint(from, to);
         if (midpoint != from && midpoint != to) {
             displaceRmgBoundaryMidpoint(midpoint, from, to, roughness, 1);
             pending.push_back(to);
@@ -7494,6 +7493,28 @@ static inline void initializeRmgDensityCategories(const int* densities,
     }
 }
 
+// Density is expressed per reference area. Preserve integer division before
+// the square root and truncate only the resulting distance.
+static inline int getRmgDensitySpacing(int referenceArea, int density)
+{
+    return static_cast<int>(sqrt(static_cast<double>(referenceArea / density)));
+}
+
+// Positive-density categories receive a stride and their initial weighted
+// count. Counts may alias weightedCounts; each element is consumed before
+// its corresponding output is assigned. Disabled entries stay untouched.
+static inline void initializeRmgCategoryStrides(const int* densities,
+    const int* counts, int categoryCount, int densityProduct,
+    int* countSteps, int* weightedCounts)
+{
+    for (int category = 0; category < categoryCount; ++category) {
+        if (densities[category] > 0) {
+            countSteps[category] = densityProduct / densities[category];
+            weightedCounts[category] = counts[category] * countSteps[category];
+        }
+    }
+}
+
 // Stride scheduling chooses the unfinished category with the lowest weighted
 // count. A strict comparison keeps the first category on ties. Callers advance
 // by densityProduct / density, retaining retail's integer product and rounding.
@@ -7510,6 +7531,21 @@ static inline int selectRmgWeightedCategory(const unsigned char* finished,
         }
     }
     return selected;
+}
+
+// Only the first enabled category accounts for the already placed primary
+// town. Keep count as a reference because placement can call virtual object
+// insertion; each loop condition must still read the live template field.
+static inline void placeRmgFixedTownCategory(type_random_map_generator* generator,
+    TRmgZone* zone, const int& count, int alignment, int player,
+    unsigned char townOption, unsigned char& skipPrimary)
+{
+    if (count <= 0)
+        return;
+    int townIndex = skipPrimary ? 1 : 0;
+    for (; townIndex < count; ++townIndex)
+        generator->tryPlaceAdditionalTown(zone, alignment, player, townOption, 0);
+    skipPrimary = 0;
 }
 
 // Retail generation places its primary town before this pass. The first
@@ -7530,37 +7566,14 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
     int alignment = zone->m_alignment;
     int player = m_playerIndexMap[slot->m_playerIndex + 1];
     unsigned char skipPrimary = 1;
-    if (slot->m_townPlacement[RMG_TOWN_PLAYER_OPTION_COUNT] > 0) {
-        int townIndex = 0;
-        if (skipPrimary)
-            townIndex = 1;
-        for (; townIndex < slot->m_townPlacement[RMG_TOWN_PLAYER_OPTION_COUNT]; ++townIndex)
-            tryPlaceAdditionalTown(zone, alignment, player, 1, 0);
-        skipPrimary = 0;
-    }
-    if (slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT] > 0) {
-        int townIndex = 0;
-        if (skipPrimary)
-            townIndex = 1;
-        for (; townIndex < slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT]; ++townIndex)
-            tryPlaceAdditionalTown(zone, alignment, player, 0, 0);
-        skipPrimary = 0;
-    }
-    if (slot->m_townPlacement[RMG_TOWN_NEUTRAL_OPTION_COUNT] > 0) {
-        int townIndex = 0;
-        if (skipPrimary)
-            townIndex = 1;
-        for (; townIndex < slot->m_townPlacement[RMG_TOWN_NEUTRAL_OPTION_COUNT]; ++townIndex)
-            tryPlaceAdditionalTown(zone, alignment, -1, 1, 0);
-        skipPrimary = 0;
-    }
-    if (slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT] > 0) {
-        int townIndex = 0;
-        if (skipPrimary)
-            townIndex = 1;
-        for (; townIndex < slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT]; ++townIndex)
-            tryPlaceAdditionalTown(zone, alignment, -1, 0, 0);
-    }
+    placeRmgFixedTownCategory(this, zone,
+        slot->m_townPlacement[RMG_TOWN_PLAYER_OPTION_COUNT], alignment, player, 1, skipPrimary);
+    placeRmgFixedTownCategory(this, zone,
+        slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT], alignment, player, 0, skipPrimary);
+    placeRmgFixedTownCategory(this, zone,
+        slot->m_townPlacement[RMG_TOWN_NEUTRAL_OPTION_COUNT], alignment, -1, 1, skipPrimary);
+    placeRmgFixedTownCategory(this, zone,
+        slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT], alignment, -1, 0, skipPrimary);
     int totalDensity = 0;
     int densityProduct = 1;
     int densities[4] = { slot->m_townPlacement[RMG_TOWN_PLAYER_OPTION_DENSITY], slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_DENSITY],
@@ -7572,13 +7585,9 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
     initializeRmgDensityCategories(densities, 4, finished, totalDensity, densityProduct);
     if (!totalDensity)
         return;
-    int spacing = static_cast<int>(sqrt(static_cast<double>(82944 / totalDensity)));
-    for (int category = 0; category < 4; ++category) {
-        if (densities[category] > 0) {
-            countSteps[category] = densityProduct / densities[category];
-            weightedCounts[category] *= countSteps[category];
-        }
-    }
+    int spacing = getRmgDensitySpacing(82944, totalDensity);
+    initializeRmgCategoryStrides(densities, weightedCounts, 4,
+        densityProduct, countSteps, weightedCounts);
     for (;;) {
         int selected = selectRmgWeightedCategory(finished, weightedCounts, 4);
         if (selected == -1)
@@ -7603,6 +7612,31 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
             break;
         }
     }
+}
+
+// An already eligible candidate replaces weaker spacing ties, then joins
+// the current best set. Read a live cell score after placement validation;
+// town and mine callers instead pass their existing score snapshots.
+static inline void addRmgSpacingCandidate(
+    std::vector<TRmgMapPosition>& candidates, const TRmgMapPosition& position,
+    int score, int& spacing)
+{
+    if (score > spacing) {
+        spacing = score;
+        candidates.clear();
+    }
+    candidates.push_back(position);
+}
+
+// Towns register the trigger as a road target, then open its southern approach.
+// Keep the caller's position storage and the append-before-step ordering.
+static inline void registerRmgTownRoadEntrance(
+    type_random_map_generator* generator, TRmgMapPosition& entrance)
+{
+    generator->m_roadTargets.push_back(entrance);
+    ++entrance.m_y;
+    TRmgMapItem* item = generator->m_map.getMapItem(entrance);
+    item->openPath();
 }
 
 // Additional-town placement picks an allowed alignment when needed, then
@@ -7647,10 +7681,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
             if (score < spacing || !m_map.canPlaceObject(properties, position, zone))
                 continue;
             TRmgZoneBounds nearby;
-            nearby.m_minimumY = max(entrance.m_y - 1, 0);
-            nearby.m_minimumX = max(entrance.m_x - 1, 0);
-            nearby.m_maximumY = min(entrance.m_y + 2, m_map.m_mapHeight);
-            nearby.m_maximumX = min(entrance.m_x + 2, m_map.m_mapWidth);
+            setRmgNeighborhoodBounds(nearby, entrance, m_map, 1);
             unsigned char valid = 1;
             for (int y = nearby.m_minimumY; y < nearby.m_maximumY; ++y) {
                 for (int x = nearby.m_minimumX; x < nearby.m_maximumX; ++x) {
@@ -7661,11 +7692,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
             }
             if (!valid)
                 continue;
-            if (score > spacing) {
-                spacing = score;
-                candidates.clear();
-            }
-            candidates.push_back(position);
+            addRmgSpacingCandidate(candidates, position, score, spacing);
         }
     }
     if (!candidates.size())
@@ -7676,10 +7703,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     TRmgMapPosition entrance = position;
     entrance.m_x -= trigger.m_x;
     entrance.m_y -= trigger.m_y;
-    m_roadTargets.push_back(entrance);
-    ++entrance.m_y;
-    TRmgMapItem* item = m_map.getMapItem(entrance.m_x, entrance.m_y, entrance.m_z);
-    item->openPath();
+    registerRmgTownRoadEntrance(this, entrance);
     return 1;
 }
 
@@ -7734,10 +7758,7 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
         prototype->m_triggerCell.m_y);
     zone->m_position = position;
     zone->m_active = 1;
-    m_roadTargets.push_back(position);
-    ++position.m_y;
-    TRmgMapItem* item = m_map.getMapItem(position);
-    item->openPath();
+    registerRmgTownRoadEntrance(this, position);
     return 1;
 }
 
@@ -7813,11 +7834,7 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
                 candidates.clear();
                 bestBorderCount = borderCount;
             }
-            if (score > spacing) {
-                spacing = score;
-                candidates.clear();
-            }
-            candidates.push_back(position);
+            addRmgSpacingCandidate(candidates, position, score, spacing);
         }
     }
     if (!candidates.size())
@@ -7978,15 +7995,11 @@ void type_random_map_generator::placeExtraMines(TRmgZone* zone)
         finished, totalDensity, densityProduct);
     if (!totalDensity)
         return;
-    int spacing = sqrt(static_cast<double>(82944 / totalDensity));
+    int spacing = getRmgDensitySpacing(82944, totalDensity);
     int countSteps[7];
     int weightedCounts[7];
-    for (int resource = 0; resource < 7; ++resource) {
-        if (slot->m_mineDensities[resource] > 0) {
-            countSteps[resource] = densityProduct / slot->m_mineDensities[resource];
-            weightedCounts[resource] = slot->m_mineCounts[resource] * countSteps[resource];
-        }
-    }
+    initializeRmgCategoryStrides(slot->m_mineDensities, slot->m_mineCounts, 7,
+        densityProduct, countSteps, weightedCounts);
     for (;;) {
         int selected = selectRmgWeightedCategory(finished, weightedCounts, 7);
         if (selected == -1)
@@ -8139,8 +8152,7 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
             int occupied = 0;
             for (unsigned int x = 0; x < prototype->getWidth(); ++x) {
                 for (unsigned int y = 0; y < prototype->getHeight(); ++y) {
-                    if (!prototype->isPassableCell(x, y)
-                        || prototype->isTriggerCell(x, y))
+                    if (isRmgObjectFootprintCell(prototype, x, y))
                         ++occupied;
                 }
             }
@@ -8185,6 +8197,26 @@ static inline TRmgMapPosition getRmgCenteredGroupObjectPosition(
     return position;
 }
 
+// Creation retries share one value range and unconstrained map position.
+// Keep the output value in the caller's storage and the first/later primary
+// flag explicit. Failed placement retries remain a separate caller policy.
+static inline type_object* createRmgTreasureWithRetries(
+    type_random_map_generator* generator, TRmgZone* zone, int minimum, int maximum,
+    int* value, unsigned char primary, unsigned char alternate)
+{
+    for (int attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
+        TRmgMapPosition unspecified;
+        unspecified.m_x = -1;
+        unspecified.m_y = -1;
+        unspecified.m_z = -1;
+        type_object* object = generator->createTreasureObject(zone, minimum, maximum,
+            value, primary, 1, alternate, unspecified);
+        if (object)
+            return object;
+    }
+    return 0;
+}
+
 // Complete-only group fill. The first object is centered in the temporary
 // map; later objects use the fit helper. Generation and fit have independent
 // three-attempt limits. Failed fits release the object before retrying;
@@ -8202,17 +8234,9 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
     int attempts;
     int total;
     {
-        type_object* selected;
+        type_object* selected = createRmgTreasureWithRetries(
+            this, zone, value / 4, value, &objectValue, 1, alternate);
         TRmgMapPosition position;
-        position.m_x = -1;
-        position.m_y = -1;
-        position.m_z = -1;
-        for (attempts = 0; attempts < RMG_TREASURE_ATTEMPTS; ++attempts) {
-            selected = createTreasureObject(zone, value / 4, value, &objectValue,
-                1, 1, alternate, position);
-            if (selected)
-                break;
-        }
         if (!selected)
             return 0;
         TObjectType* prototype = selected->m_properties->m_prototype;
@@ -8227,18 +8251,8 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
             break;
         type_object* nextObject;
         for (attempts = 0; ; ) {
-            int creationAttempts;
-            for (creationAttempts = 0; creationAttempts < RMG_TREASURE_ATTEMPTS;
-                 ++creationAttempts) {
-                TRmgMapPosition unspecified;
-                unspecified.m_x = -1;
-                unspecified.m_y = -1;
-                unspecified.m_z = -1;
-                nextObject = createTreasureObject(zone, remainder / 4, 5 * remainder / 4,
-                    &objectValue, 0, 1, alternate, unspecified);
-                if (nextObject)
-                    break;
-            }
+            nextObject = createRmgTreasureWithRetries(this, zone,
+                remainder / 4, 5 * remainder / 4, &objectValue, 0, alternate);
             if (!nextObject)
                 break;
             if (group->tryAddObject(nextObject))
@@ -8665,11 +8679,7 @@ unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* g
             TRmgMapItem* item = m_map.getMapItem(position + center);
             if (item->m_zoneState.m_zone == zoneIndex && item->m_zoneState.m_score >= spacing
                 && canPlaceTreasureGroup(group, position, zone)) {
-                if (item->m_zoneState.m_score > spacing) {
-                    spacing = item->m_zoneState.m_score;
-                    candidates.clear();
-                }
-                candidates.push_back(position);
+                addRmgSpacingCandidate(candidates, position, item->m_zoneState.m_score, spacing);
             }
         }
     }
@@ -8727,9 +8737,9 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
         return;
     int spacing;
     if (zone->m_terrain == eTerrainWater)
-        spacing = static_cast<int>(sqrt(static_cast<double>(1600 / totalDensity)));
+        spacing = getRmgDensitySpacing(1600, totalDensity);
     else
-        spacing = static_cast<int>(sqrt(static_cast<double>(800 / totalDensity)));
+        spacing = getRmgDensitySpacing(800, totalDensity);
     int weightedCounts[3] = {0, 0, 0};
     int countSteps[3];
     for (band = 0; band < 3; ++band) {
@@ -8751,6 +8761,18 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
 
 VA_COMPGEN(0x005477C0, 0xB3, IMPLICIT_DTOR, TRmgTreasureGroup)
 MAC_COMPGEN_ADDRESS(0x24ba40, 0x90, IMPLICIT_DTOR, TRmgTreasureGroup)
+
+// A successful relaxation records its predecessor/cost before inserting the
+// destination into the ordered queue. Callers retain their distinct admission
+// checks and random-cost draws; insertion still copies the next position only
+// after the map state update.
+static inline void queueRmgMovementStep(TRmgMapItem* destination,
+    int cost, const TRmgMapPosition& previous, const TRmgMapPosition& next,
+    std::vector<TRmgMapPosition>& positions, std::vector<int>& costs)
+{
+    destination->setMovementCost(cost, previous);
+    insertRmgWorkItem(positions, costs, next, cost);
+}
 
 // Complete's road-target pass at 0x548290 invokes this flood once for each
 // prospective source. Dijkstra-style relaxation uses the lowest-cost entry
@@ -8826,9 +8848,8 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
                     if (nextMapItem->m_movement.m_cost <= nextCost)
                         continue;
 
-                    nextMapItem->setMovementCost(nextCost, position);
-                    insertRmgWorkItem(
-                        openPositions, openCosts, nextPosition, nextCost);
+                    queueRmgMovementStep(nextMapItem, nextCost, position, nextPosition,
+                        openPositions, openCosts);
                 }
                 break;
             }
@@ -8841,10 +8862,8 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
                 TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
                 int nextCost = currentCost + 1;
                 if (nextMapItem->m_movement.m_cost > nextCost) {
-                    nextMapItem->setMovementCost(nextCost, position);
-                    insertRmgWorkItem(
-                        openPositions, openCosts,
-                        nextPosition, nextCost);
+                    queueRmgMovementStep(nextMapItem, nextCost, position, nextPosition,
+                        openPositions, openCosts);
                 }
                 break;
             }
@@ -8886,9 +8905,8 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
             if (nextMapItem->m_movement.m_cost <= nextCost)
                 continue;
 
-            nextMapItem->setMovementCost(nextCost, position);
-            insertRmgWorkItem(
-                openPositions, openCosts, nextPosition, nextCost);
+            queueRmgMovementStep(nextMapItem, nextCost, position, nextPosition,
+                openPositions, openCosts);
         }
     }
 }
@@ -8967,6 +8985,15 @@ void type_random_map_generator::resetMovementCosts()
     }
 }
 
+// Roads change future traversal costs. Rebuild the complete cost field from
+// the same source after resetting both movement costs and predecessors.
+static inline void rebuildRmgRoadCostMap(type_random_map_generator* generator,
+    const TRmgMapPosition& source)
+{
+    generator->resetMovementCosts();
+    generator->buildRoadCostMap(source);
+}
+
 // Retail 0x549c98 connects every ordered target pair using one random road
 // style. A successful draw changes traversal costs for subsequent targets.
 // Exact with a copied destination and the shared scalar-volume reset.
@@ -8980,15 +9007,13 @@ void type_random_map_generator::createRoads()
     // Preserve this precondition/bug; do not replace it with a guarded loop.
     for (unsigned int first = 0; first < m_roadTargets.size() - 1; ++first) {
         TRmgMapPosition source = m_roadTargets[first];
-        resetMovementCosts();
-        buildRoadCostMap(source);
+        rebuildRmgRoadCostMap(this, source);
         for (unsigned int second = first + 1; second < m_roadTargets.size(); ++second) {
             TRmgMapPosition destination = m_roadTargets[second];
             if (m_map.getMapItem(destination)->m_movement.m_cost <= 30000
                 && paintRoad(destination, roadType)
                 && second < m_roadTargets.size() - 1) {
-                resetMovementCosts();
-                buildRoadCostMap(source);
+                rebuildRmgRoadCostMap(this, source);
                 if (m_progress)
                     m_progress->advance(1000);
             }
@@ -9007,6 +9032,20 @@ static inline int getRmgRiverStepCost(int currentCost, const TRmgMapItem* destin
     if (destination->m_tile.m_roadType)
         nextCost += 30;
     return nextCost;
+}
+
+// The source terrain determines both river graphics and the snow boundary
+// restriction. Both searches initialize these together before traversal.
+static inline void selectRmgRiverAppearance(const TRmgMapItem* source,
+    unsigned char& sourceIsSnow, int& riverType)
+{
+    if (source->getLandType() == eTerrainSnow) {
+        sourceIsSnow = 1;
+        riverType = 2;
+    } else {
+        sourceIsSnow = 0;
+        riverType = 1;
+    }
 }
 
 // Retail 0x5498de routes from a water-wheel trigger to a marked object,
@@ -9036,13 +9075,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
     unsigned char sourceIsSnow;
     int riverType;
-    if (mapItem->getLandType() == eTerrainSnow) {
-        sourceIsSnow = 1;
-        riverType = 2;
-    } else {
-        sourceIsSnow = 0;
-        riverType = 1;
-    }
+    selectRmgRiverAppearance(mapItem, sourceIsSnow, riverType);
     TRmgMapPosition position;
     TRmgMapPosition nextPosition;
     while (!openPositions.empty()) {
@@ -9063,8 +9096,8 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
             int nextCost = getRmgRiverStepCost(positionCost, mapItem);
             if (nextCost >= mapItem->m_movement.m_cost)
                 continue;
-            mapItem->setMovementCost(nextCost, position);
-            insertRmgWorkItem(openPositions, openCosts, nextPosition, nextCost);
+            queueRmgMovementStep(mapItem, nextCost, position, nextPosition,
+                openPositions, openCosts);
             if (mapItem->hasRiver()) {
                 openPositions.clear();
                 break;
@@ -9213,13 +9246,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
 
     unsigned char sourceIsSnow;
     int riverType;
-    if (mapItem->getLandType() == eTerrainSnow) {
-        sourceIsSnow = 1;
-        riverType = 2;
-    } else {
-        sourceIsSnow = 0;
-        riverType = 1;
-    }
+    selectRmgRiverAppearance(mapItem, sourceIsSnow, riverType);
 
     --source.m_y;
     openPositions.push_back(source);
@@ -9267,9 +9294,8 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
                 & (1 << oppositeDirection))
                 continue;
 
-            mapItem->setMovementCost(nextCost, position);
-            insertRmgWorkItem(
-                openPositions, openCosts, nextPosition, nextCost);
+            queueRmgMovementStep(mapItem, nextCost, position, nextPosition,
+                openPositions, openCosts);
 
             if (mapItem->isRiverTarget()) {
                 openPositions.clear();
@@ -9735,9 +9761,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
                 writeValue<char>(outfile, -1);
             }
 
-            writeValue<char>(outfile, mainTowns[serializedPlayer].m_x);
-            writeValue<char>(outfile, mainTowns[serializedPlayer].m_y);
-            writeValue<char>(outfile, mainTowns[serializedPlayer].m_z);
+            writeRmgMapPosition(outfile, mainTowns[serializedPlayer]);
         }
 
         writeValue<char>(outfile, 0);
@@ -9809,9 +9833,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         writeValue<char>(outfile, 0);
     }
 
-    char reserved[31];
-    memset(reserved, 0, sizeof(reserved));
-    outfile->write(reserved, sizeof(reserved));
+    writeRmgReservedBytes<31>(outfile);
 
     std::bitset<144> disabledArtifacts;
     for (int artifactIndex = 0; artifactIndex < 144; ++artifactIndex) {
@@ -10230,13 +10252,7 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
     if (!placeQuestGroup(&group, origin)) {
         int value = object->m_definition->getValue(origin, this);
         TRmgMapPosition originalPosition = object->m_position;
-        removeObject(object);
-        TRmgZone* zone = m_zones[m_map.getMapItem(originalPosition)->m_zoneState.m_zone];
-        int actualValue;
-        type_object* replacement = createTreasureObject(zone, value, value * 3 / 2,
-            &actualValue, 0, 0, 0, originalPosition);
-        if (replacement)
-            addObject(replacement, originalPosition);
+        replaceRmgObjectWithTreasure(this, object, value, originalPosition);
         return 0;
     }
     m_usedQuestArtifacts[artifact] = 1;
@@ -10339,8 +10355,7 @@ void type_random_map_generator::removeObject(type_object* object)
             mapPosition.m_x = position.m_x - cell.m_x;
             if (mapPosition.m_x < 0 || mapPosition.m_x >= m_map.m_mapWidth)
                 continue;
-            if (!prototype->isPassableCell(cell.m_x, cell.m_y)
-                || prototype->isTriggerCell(cell.m_x, cell.m_y)) {
+            if (isRmgObjectFootprintCell(prototype, cell.m_x, cell.m_y)) {
                 TRmgMapItem* item = m_map.getMapItem(mapPosition);
                 std::vector<type_object*>::iterator entry = std::find(item->m_objects.begin(), item->m_objects.end(), object);
                 if (entry) {
