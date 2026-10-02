@@ -1234,8 +1234,14 @@ static inline bool matchesTerrainAt(rmgTerrainPainter& painter,
     return painter.getTerrain(nearby) == terrain;
 }
 
-// Cardinal neighbours use coordinates clamped to the map edge. A diagonal
-// contributes only when at least one adjoining cardinal cell also matches.
+// A diagonal neighbour matches only beside a matching cardinal neighbour.
+static inline bool matchesTerrainCorner(rmgTerrainPainter& painter,
+    b8 firstSide, b8 secondSide, unsigned int x, unsigned int y, int terrain)
+{
+    return (firstSide || secondSide) && matchesTerrainAt(painter, x, y, terrain);
+}
+
+// Cardinal neighbours use coordinates clamped to the map edge.
 VA(0x005B6540, 0x2CA)
 MAC_ADDRESS(0x2582fc, 0x4f8)
 void rmgTerrainPainter::buildMatchingNeighbourMask(
@@ -1250,22 +1256,31 @@ void rmgTerrainPainter::buildMatchingNeighbourMask(
     matches[TILE_DIR_SOUTH] = matchesTerrainAt(*this, point.m_x, southEast.getY(), terrain);
     matches[TILE_DIR_WEST] = matchesTerrainAt(*this, northWest.getX(), point.m_y, terrain);
     matches[TILE_DIR_EAST] = matchesTerrainAt(*this, southEast.getX(), point.m_y, terrain);
-    matches[TILE_DIR_NORTHWEST] =
-        (matches[TILE_DIR_NORTH] || matches[TILE_DIR_WEST])
-        && matchesTerrainAt(*this, northWest.getX(), northWest.getY(), terrain);
-    matches[TILE_DIR_NORTHEAST] =
-        (matches[TILE_DIR_NORTH] || matches[TILE_DIR_EAST])
-        && matchesTerrainAt(*this, southEast.getX(), northWest.getY(), terrain);
-    matches[TILE_DIR_SOUTHWEST] =
-        (matches[TILE_DIR_SOUTH] || matches[TILE_DIR_WEST])
-        && matchesTerrainAt(*this, northWest.getX(), southEast.getY(), terrain);
-    matches[TILE_DIR_SOUTHEAST] =
-        (matches[TILE_DIR_SOUTH] || matches[TILE_DIR_EAST])
-        && matchesTerrainAt(*this, southEast.getX(), southEast.getY(), terrain);
+    matches[TILE_DIR_NORTHWEST] = matchesTerrainCorner(*this, matches[TILE_DIR_NORTH],
+        matches[TILE_DIR_WEST], northWest.getX(), northWest.getY(), terrain);
+    matches[TILE_DIR_NORTHEAST] = matchesTerrainCorner(*this, matches[TILE_DIR_NORTH],
+        matches[TILE_DIR_EAST], southEast.getX(), northWest.getY(), terrain);
+    matches[TILE_DIR_SOUTHWEST] = matchesTerrainCorner(*this, matches[TILE_DIR_SOUTH],
+        matches[TILE_DIR_WEST], northWest.getX(), southEast.getY(), terrain);
+    matches[TILE_DIR_SOUTHEAST] = matchesTerrainCorner(*this, matches[TILE_DIR_SOUTH],
+        matches[TILE_DIR_EAST], southEast.getX(), southEast.getY(), terrain);
 }
 
-// Scan cyclic runs: after the first matching run and its following gap,
-// another matching cell proves that the centre's neighbours are separated.
+// Steps round the neighbour ring to the next direction whose match state is
+// wanted; false once the scan returns to first.
+static inline bool advanceToMatchState(const b8* matches, unsigned int& direction,
+    unsigned int first, b8 wanted)
+{
+    do {
+        direction = (direction + 1) % TILE_DIR_COUNT;
+        if (direction == first)
+            return false;
+    } while (matches[direction] != wanted);
+    return true;
+}
+
+// Starting in a gap, a matching run, another gap and another match before
+// returning to the start prove that the centre's neighbours are separated.
 VA(0x005B6810, 0x84)
 MAC_ADDRESS(0x2587f4, 0xd0)
 b8 rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
@@ -1273,29 +1288,15 @@ b8 rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
     b8 matches[TILE_DIR_COUNT];
     buildMatchingNeighbourMask(point, matches);
     unsigned int first = 0;
-    unsigned int direction;
     while (matches[first]) {
         first = (first + 1) % TILE_DIR_COUNT;
         if (first == 0)
             return false;
     }
-    direction = first;
-    do {
-        direction = (direction + 1) % TILE_DIR_COUNT;
-        if (direction == first)
-            return false;
-    } while (!matches[direction]);
-    do {
-        direction = (direction + 1) % TILE_DIR_COUNT;
-        if (direction == first)
-            return false;
-    } while (matches[direction]);
-    while (!matches[direction]) {
-        direction = (direction + 1) % TILE_DIR_COUNT;
-        if (direction == first)
-            return false;
-    }
-    return true;
+    unsigned int direction = first;
+    return advanceToMatchState(matches, direction, first, true)
+        && advanceToMatchState(matches, direction, first, false)
+        && advanceToMatchState(matches, direction, first, true);
 }
 
 static inline int getTerrainNeighbourKindAt(
