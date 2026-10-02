@@ -1500,26 +1500,18 @@ void rmgTerrainPainter::buildNeighbourKinds(
         *this, TRmgGridPoint(southEast.getX(), southEast.getY()), terrain);
 }
 
-// Build the two-axis offset point and clamp both signed coordinates to the
-// adapter bounds. First-diagonal probes share this complete coordinate step;
-// the second-diagonal probes intentionally move only one axis at a time.
-static inline TRmgGridPoint getClampedTerrainOffset(rmgTerrainPainter& painter,
-    const TRmgGridPoint& point, const TPoint& offset)
+// First-diagonal checks compare terrain at a reflected offset, extending
+// edge cells by clamping both signed coordinates to the adapter bounds.
+// Keep the caller's first successful probe as an early return before querying
+// the other offset; second-diagonal probes move only one axis at a time.
+static inline bool matchesTerrainAtClampedOffset(rmgTerrainPainter& painter,
+    const TRmgGridPoint& point, const TPoint& offset, int terrain)
 {
-    return TRmgGridPoint(
+    TRmgGridPoint nearby(
         tLimit(0, static_cast<int>(point.getX()) + offset.getX(),
             static_cast<int>(painter.getWidth()) - 1),
         tLimit(0, static_cast<int>(point.getY()) + offset.getY(),
             static_cast<int>(painter.getHeight()) - 1));
-}
-
-// First-diagonal checks compare terrain at a reflected offset, extending
-// edge cells through the existing coordinate clamp. Keep the caller's first
-// successful probe as an early return before querying the other offset.
-static inline bool matchesTerrainAtClampedOffset(rmgTerrainPainter& painter,
-    const TRmgGridPoint& point, const TPoint& offset, int terrain)
-{
-    TRmgGridPoint nearby = getClampedTerrainOffset(painter, point, offset);
     return painter.getTerrain(nearby) == terrain;
 }
 
