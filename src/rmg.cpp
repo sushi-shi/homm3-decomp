@@ -184,8 +184,8 @@ TPoint g_rmgDirections[RMG_DIRECTION_COUNT] = {
     TPoint(1, -1)
 };
 
-// Shipyards are three tiles wide; these offsets probe the water squares
-// beside the left and right ends of both footprint rows.
+// Shipyards are three tiles wide; these offsets probe beside the left and
+// right ends of the bottom footprint row and the row below it.
 DATA(0x0069CE00)
 TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
     TPoint(-3, 0),
@@ -674,8 +674,7 @@ void type_random_map::markBorderPatch(TRmgMapPosition position)
     }
 }
 
-// Map position of an object's trigger cell. Town placement passes a trigger
-// captured before the object is inserted.
+// Map position of an object's trigger cell.
 static inline TRmgMapPosition getRmgObjectTriggerPosition(
     TRmgMapPosition position, const TObjectType::TPoint& trigger)
 {
@@ -737,7 +736,7 @@ b8 type_random_map::canPlaceObject(
 }
 
 // Puts the object on the map: trigger cells become entrances with open
-// paths, blocked cells become impassable, and both record the object.
+// paths, other non-passable cells become object-blocked, and both record it.
 VA(0x00531EA0, 0x2E6)
 MAC_ADDRESS(0x22e918, 0x1c4) // anchor-callee 0x5465d9/0x535400; thiscall, ret 0x10
 void type_random_map::addObject(type_object& object, TRmgMapPosition position)
@@ -3662,7 +3661,7 @@ void type_random_map_generator::drawIrregularZoneBoundary(
     }
 }
 
-// Bresenham line rasterization with an accumulated half-major-axis error.
+// Bresenham line whose error starts at half the major distance.
 // The final cell receives its zone but not the terrain mark.
 VA(0x0053C220, 0x16A)
 MAC_ADDRESS(0x23da90, 0x2a4)
@@ -4614,7 +4613,7 @@ void type_random_map_generator::prepareWaterZoneConnections(TRmgZone* zone)
 }
 
 // Both border-expansion passes finish by releasing path clearance on the
-// unoccupied cells of a clipped square around the processed cell, row-major.
+// unoccupied cells of a clipped square around the processed cell.
 static inline void releaseRmgNeighborhoodPathClearance(type_random_map& map,
     const TRmgMapPosition& center, int radius)
 {
@@ -4631,8 +4630,8 @@ static inline void releaseRmgNeighborhoodPathClearance(type_random_map& map,
     }
 }
 
-// Separate dry assigned cells near water or another zone according to the
-// connection, level and guard policy.
+// Marks dry zone cells for border obstacles beside unassigned water or
+// another zone, unless that zone is joined by an unguarded surface connection.
 VA(0x0053F880, 0x429)
 MAC_ADDRESS(0x241874, 0x628)
 void type_random_map_generator::expandObstacleClearance()
@@ -5282,7 +5281,7 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
     }
 }
 
-// Water cell probed beside a shipyard; callers keep the footprint on the map.
+// Water cell probed beside a shipyard; callers bounds-check only its column.
 static TRmgMapPosition getRmgShipyardWaterPosition(TRmgMapPosition shipyardPosition,
     int waterOffset);
 
@@ -5700,7 +5699,7 @@ void TRmgZoneConnection::setConnected()
     m_connected = true;
 }
 
-// Land crossings and paired portals complete both directed records;
+// Land crossings, gates and portals complete both directed records;
 // shipyards complete only their own direction.
 static inline void completeRmgBidirectionalConnection(
     TRmgZoneConnection* connection, TRmgZoneConnection* oppositeConnection)

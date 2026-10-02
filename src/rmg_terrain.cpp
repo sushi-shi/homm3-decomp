@@ -1383,7 +1383,8 @@ b8 rmgTerrainPainter::checkSecondDiagonal(
         || !matchesTerrainAtClampedOffset(*this, point, TPoint(0, offset.getY()), terrain);
 }
 
-// Cardinal special-frame neighbours each halve the transition strength.
+// Each same-terrain cardinal neighbour showing a special frame halves the
+// transition strength.
 static inline bool hasSpecialTerrainFrameAt(rmgTerrainPainter& painter,
     const TRmgGridPoint& point, int terrain, TRmgTerrainRule* rule)
 {

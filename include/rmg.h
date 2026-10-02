@@ -538,7 +538,7 @@ struct TRmgZoneBounds {
 TPoint clipRmgBoundaryPoint(
     const TRmgZoneBounds& bounds, TPoint point, TPoint toward);
 
-// Pending square of the midpoint-displacement terrain noise. Corners are
+// Pending rectangle of the midpoint-displacement island mask. Corners are
 // (minX,minY), (minX,maxY), (maxX,minY), (maxX,maxY); variation bounds the
 // random displacement.
 struct TRmgNoiseRegion {
@@ -1424,7 +1424,7 @@ struct TRmgZone {
     // radius and to bound boundary roughness.
     int m_scaledSize;                   // +0x1c
     TRmgZoneBounds m_bounds;           // +0x20
-    TRmgMapPosition m_position;        // +0x30: main town
+    TRmgMapPosition m_position;        // +0x30: main town entrance
     b8 m_active;            // +0x3c
     char m_opaque003d[3];              // +0x3d..+0x3f
     // Graph distance turned into a randomized quest-zone priority that
@@ -1460,7 +1460,8 @@ struct TRmgZone {
 };
 
 // Quad-edge half-edge of the zone Delaunay/Voronoi subdivision. The twin's
-// zone is the region across the edge; following next walks a closed polygon.
+// zone is the region across the edge; next circles the edges leaving the same
+// site, whose vertex positions outline that zone.
 struct TRmgHalfEdge {
     TPoint m_sitePosition;               // +0x00
     TRmgZone* m_zone;                   // +0x08
@@ -1772,12 +1773,14 @@ public:
     void resetMovementCosts();
     void buildRoadCostMap(TRmgMapPosition position);
     void createRoads();
-    // Picks the quest artifact and tries to place its seer hut; success
-    // hands the hut to the map.
+    // Picks an unused quest artifact and places its seer hut in another zone,
+    // handing the hut to the map; if the hut cannot be placed, the artifact
+    // is replaced by a treasure.
     b8 placeQuestArtifact(rmgQuestArtifactObject* object);
     void calculateQuestZoneDistances(TRmgZone* origin);
     b8 placeQuestGroup(TRmgTreasureGroup* group, TRmgZone* origin);
-    // Places a treasure group guarded by a same-colour border guard.
+    // Places a treasure group guarded by a same-colour border guard in another
+    // zone; on success that colour stays disabled.
     b8 placeKeyTentGuard(type_object* object, int maxValue);
     // Change one colour's availability, then rescan for the first enabled
     // colour (size() when none remain).

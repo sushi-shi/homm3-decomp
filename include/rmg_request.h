@@ -7,7 +7,7 @@
 class TAbstractFile;
 class TProgressSink;
 
-// Generation result; GenerateRandomMap shows a general-text message per failure.
+// Generation result; the lobby shows a general-text message for each failure.
 enum ERandomMapResult {
     RANDOM_MAP_OK = 0,
     RANDOM_MAP_OPEN_FAILED = 1,
