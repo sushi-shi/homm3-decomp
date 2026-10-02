@@ -647,10 +647,10 @@ struct TRmgGroundTileData {
     unsigned m_impassable : 1;
 };
 
-// Pending border-guard cell; m_direction holds the guard colour.
+// Pending border-guard cell and the guard's key colour.
 struct TRmgConnectionDecoration {
     unsigned m_present : 1;
-    unsigned m_direction : 4;
+    unsigned m_guardColor : 4;
     unsigned m_unknown05 : 27;
 };
 
@@ -1011,15 +1011,15 @@ struct TRmgMapItem {
     void clearBorderConnection()
     {
         m_connection.m_present = false;
-        m_connection.m_direction = 0;
+        m_connection.m_guardColor = 0;
         openPath();
     }
 
     // An existing connection keeps its tile flags but takes the new colour.
-    void markBorderConnection(int direction)
+    void markBorderConnection(int color)
     {
         markBorderObject();
-        m_connection.m_direction = direction;
+        m_connection.m_guardColor = color;
         m_connection.m_present = true;
     }
 
@@ -1420,7 +1420,9 @@ struct TRmgZone {
     // Chosen by chooseTerrain; added water zones use water.
     int m_terrain;                      // +0x0c
     TRmgMapPosition m_levelPosition;   // +0x10
-    int m_boundaryRoughness;            // +0x1c: zone size scaled to the map
+    // Template size scaled to the map (H3API: size); used as the zone's
+    // radius and to bound boundary roughness.
+    int m_scaledSize;                   // +0x1c
     TRmgZoneBounds m_bounds;           // +0x20
     TRmgMapPosition m_position;        // +0x30: main town
     b8 m_active;            // +0x3c
@@ -1758,7 +1760,7 @@ public:
     void carveBranchingPaths();
     void repairWaterZoneBorders();
     void openConnectionPath(TRmgMapPosition position, b8 narrow);
-    void markBorderObjectArea(TRmgMapPosition position, int direction);
+    void markBorderObjectArea(TRmgMapPosition position, int color);
     int placeBorderObject(
         TRmgMapPosition position, int count, TRmgZone* zone);
     type_object* createGuard(int value, TRmgZone* zone);

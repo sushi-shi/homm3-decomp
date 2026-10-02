@@ -1046,7 +1046,7 @@ TRmgZone::TRmgZone(TRmgTemplateZone* newSlot)
 {
     m_templateZone = newSlot;
     m_alignment = newSlot->selectAllowedTown();
-    m_boundaryRoughness = newSlot->m_size;
+    m_scaledSize = newSlot->m_size;
     m_bounds.resetEmpty();
     m_active = false;
     memset(m_objectCountByType, 0, sizeof(m_objectCountByType));
@@ -3571,7 +3571,7 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
         position.m_x = (position.m_x - minimumX) * size / span;
         position.m_y = (position.m_y - minimumY) * size / span;
         m_zones[zoneIndex]->setLevelPosition(position);
-        m_zones[zoneIndex]->m_boundaryRoughness = m_zones[zoneIndex]->m_templateZone->m_size * size / span;
+        m_zones[zoneIndex]->m_scaledSize = m_zones[zoneIndex]->m_templateZone->m_size * size / span;
         m_zones[zoneIndex]->chooseTerrain();
         m_zones[zoneIndex]->chooseTownType(m_mapVersion >= 0);
     }
@@ -3775,10 +3775,10 @@ void type_random_map_generator::traceZoneBoundary(
         zone->m_boundary.push_back(TPoint(from));
 
         if (!neighbour || neighbour->m_templateZone->m_zoneIndex > zoneIndex) {
-            int roughness = zone->m_boundaryRoughness;
+            int roughness = zone->m_scaledSize;
             if (neighbour) {
                 int ownRoughness = roughness;
-                int neighbourRoughness = neighbour->m_boundaryRoughness;
+                int neighbourRoughness = neighbour->m_scaledSize;
                 roughness = min(ownRoughness, neighbourRoughness);
             }
             if (irregular)
@@ -3979,7 +3979,7 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
         TPoint previous = point;
         point = zone->m_boundary[count];
         insetRmgIslandBoundaryPoint(point, center);
-        drawIslandBoundary(point, previous, zoneIndex, center.m_z, zone->m_boundaryRoughness / 2);
+        drawIslandBoundary(point, previous, zoneIndex, center.m_z, zone->m_scaledSize / 2);
     }
     fillIslandInterior(zone);
 }
@@ -4235,7 +4235,7 @@ void type_random_map_generator::buildZoneBoundaries(
             TRmgZone* current = m_zones[zone];
             if (current->getLevelPosition().m_z != level)
                 continue;
-            int radius = current->m_boundaryRoughness;
+            int radius = current->m_scaledSize;
             testSlot.m_size = radius;
             TRmgMapPosition position = current->getLevelPosition();
             for (int direction = 0; direction < 32; direction += 4) {
@@ -4918,7 +4918,7 @@ void type_random_map_generator::openConnectionPath(
     while (item->m_movement.m_cost > 0) {
         if (item->m_connection.m_present) {
             TRmgObjectPropertiesRef* properties = selectObjectPrototype(
-                eTerrainDirt, BORDER_GUARD, item->m_connection.m_direction);
+                eTerrainDirt, BORDER_GUARD, item->m_connection.m_guardColor);
             type_object* object = new type_object(properties);
             item->clearBorderConnection();
             addObject(object, position);
@@ -6101,7 +6101,7 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
     std::vector<TPoint> pending;
     TRmgMapPosition position = zone->getLevelPosition();
     int zoneIndex = zone->m_templateZone->m_zoneIndex;
-    int roughness = zone->m_boundaryRoughness;
+    int roughness = zone->m_scaledSize;
     pending.push_back(to);
     while (pending.size() > 0) {
         to = pending.back();
