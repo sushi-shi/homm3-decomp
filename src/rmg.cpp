@@ -7563,7 +7563,7 @@ static inline void placeRmgFixedTownCategory(type_random_map_generator* generato
 // Delaying those accumulators left 95.8441%; conditional-expression starts
 // left 93.0076%. That spelling reproduced all 49 blocks and relocations.
 // The cleanup now shares fixed-category placement and stride initialization;
-// the earlier exact verdict does not describe these unmeasured helper calls.
+// the earlier exact verdict does not establish exactness for these helper calls.
 VA(0x00544AE0, 0x2B0)
 MAC_ADDRESS(0x248418, 0x414)
 void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
