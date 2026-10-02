@@ -551,10 +551,7 @@ void rmgTerrainPainter::initializePackedCell(
 {
     rmgTerrainTile tile = m_adapter->getTile(point);
     TRmgPackedTerrainCell& packed = m_packedCells[index];
-    packed.m_terrain = tile.m_terrain;
-    packed.m_frame = tile.m_frame;
-    packed.m_flipX = tile.m_flipX;
-    packed.m_flipY = tile.m_flipY;
+    packed.setTileValues(tile);
     packed.m_initialized = 1;
 }
 
@@ -899,10 +896,7 @@ void rmgTerrainPainter::setTile(
     m_adapter->setTile(point, tile);
     TRmgPackedTerrainCell& packed = m_packedCells[point.m_y * m_size.m_x + point.m_x];
     packed.setInitialized();
-    packed.setTerrain(tile.m_terrain);
-    packed.setFrame(tile.m_frame);
-    packed.setFlipX(tile.m_flipX);
-    packed.setFlipY(tile.m_flipY);
+    packed.setTileValues(tile);
 }
 
 // Shared base-tile operation for rectangle painting and individual repairs.
@@ -1042,26 +1036,34 @@ static inline void queueOtherTerrainDiagonalNeighbour(
         painter.m_secondaryPoints.insert(neighbour);
 }
 
+// Probe and queue one cardinal neighbour. Return whether this axis has found
+// its preferred neighbour so the caller can skip the opposite side. Rebuild
+// the insertion coordinate after the terrain query, preserving its live reads.
+static inline bool tryQueueOtherTerrainCardinalNeighbour(rmgTerrainPainter& painter,
+    const TRmgGridPoint& point, int offsetX, int offsetY)
+{
+    if (painter.getTerrain(TRmgGridPoint(point.getX() + offsetX, point.getY() + offsetY))
+        == painter.m_paintTerrain)
+        return false;
+    painter.m_secondaryPoints.insert(
+        TRmgGridPoint(point.getX() + offsetX, point.getY() + offsetY));
+    return true;
+}
+
 VA(0x005B50F0, 0x34E)
 MAC_ADDRESS(0x2565ac, 0x638) // anchor-callee 0x5b4c72, 0x5b50dd; thiscall, ret 4
 void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
 {
     // Retail queues at most one neighbour on each cardinal axis, preferring
-    // north over south and west over east. Keep the else-if priority.
-    if (point.getY() > 0
-        && getTerrain(TRmgGridPoint(point.getX(), point.getY() - 1)) != m_paintTerrain) {
-        m_secondaryPoints.insert(TRmgGridPoint(point.getX(), point.getY() - 1));
-    } else if (point.getY() < getHeight() - 1
-        && getTerrain(TRmgGridPoint(point.getX(), point.getY() + 1)) != m_paintTerrain) {
-        m_secondaryPoints.insert(TRmgGridPoint(point.getX(), point.getY() + 1));
-    }
-    if (point.getX() > 0
-        && getTerrain(TRmgGridPoint(point.getX() - 1, point.getY())) != m_paintTerrain) {
-        m_secondaryPoints.insert(TRmgGridPoint(point.getX() - 1, point.getY()));
-    } else if (point.getX() < getWidth() - 1
-        && getTerrain(TRmgGridPoint(point.getX() + 1, point.getY())) != m_paintTerrain) {
-        m_secondaryPoints.insert(TRmgGridPoint(point.getX() + 1, point.getY()));
-    }
+    // north over south and west over east. Skip the opposite side after success.
+    bool queuedNorth = point.getY() > 0
+        && tryQueueOtherTerrainCardinalNeighbour(*this, point, 0, -1);
+    if (!queuedNorth && point.getY() < getHeight() - 1)
+        tryQueueOtherTerrainCardinalNeighbour(*this, point, 0, 1);
+    bool queuedWest = point.getX() > 0
+        && tryQueueOtherTerrainCardinalNeighbour(*this, point, -1, 0);
+    if (!queuedWest && point.getX() < getWidth() - 1)
+        tryQueueOtherTerrainCardinalNeighbour(*this, point, 1, 0);
     if (point.getX() > 0 && point.getY() > 0) {
         TRmgGridPoint nearby(point.getX() - 1, point.getY() - 1);
         queueOtherTerrainDiagonalNeighbour(*this, nearby);

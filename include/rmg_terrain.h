@@ -106,6 +106,15 @@ struct TRmgPackedTerrainCell {
     inline void setFrame(int value) { m_frame = value; }
     inline void setFlipX(unsigned char value) { m_flipX = value; }
     inline void setFlipY(unsigned char value) { m_flipY = value; }
+    // Copy only the tile payload. Callers own validity timing: cache fills
+    // mark initialized afterward, while adapter writes mark it beforehand.
+    inline void setTileValues(const rmgTerrainTile& tile)
+    {
+        setTerrain(tile.m_terrain);
+        setFrame(tile.m_frame);
+        setFlipX(tile.m_flipX);
+        setFlipY(tile.m_flipY);
+    }
 };
 
 // Vtable 0x642c98 fixes these six slots. Only the three methods used by the
