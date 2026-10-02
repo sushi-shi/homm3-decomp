@@ -1838,7 +1838,7 @@ struct TRmgHalfEdge {
     }
     TPoint getOppositeSitePosition() const
     {
-        return m_twin->m_sitePosition;
+        return getTwin()->getSitePosition();
     }
     TRmgZone* getZone() const
     {
