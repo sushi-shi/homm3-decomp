@@ -563,8 +563,13 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     TRmgNoiseMidpoints midpoints,
     int centerValue);
 
-enum ERmgConnectionConstants {
-    RMG_SHIPYARD_WATER_OFFSET_COUNT = 4,
+enum ERmgShipyardConstants {
+    RMG_SHIPYARD_WATER_OFFSET_COUNT = 4
+};
+
+// Requested water content; the generator resolves RANDOM to one of the
+// other three.
+enum ERmgWaterContent {
     RMG_WATER_NONE = 0,
     RMG_WATER_NORMAL = 1,
     RMG_WATER_ISLANDS = 2,
@@ -924,6 +929,13 @@ struct TRmgMapItem {
     b8 hasObjects() const
     {
         return m_objects.size() != 0;
+    }
+
+    // Type of the object whose entrance this cell is; only valid on an
+    // entrance, whose owner is the cell's first object.
+    TAdventureObjectType getEntranceObjectType() const
+    {
+        return m_objects[0]->m_properties->m_prototype->getObjectType();
     }
 
     b8 shouldPaintZoneTerrain() const
@@ -1649,7 +1661,7 @@ public:
     // Set once fewer than 20 quest artifacts remain; seer huts are then
     // rejected.
     b8 m_questArtifactPoolLow;              // +0x10b4
-    int m_waterContent;                                // +0x10b8
+    int m_waterContent;                                // +0x10b8: ERmgWaterContent
     int m_monsterStrength;                             // +0x10bc
     // Name of the selected template.
     std::string m_templateName;                        // +0x10c0

@@ -544,7 +544,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
             ? current->m_movement.m_cost : current->m_movement.m_zonePathCost;
         int direction = RMG_DIRECTION_COUNT;
         if (current->isRoadEntrance()) {
-            int objectType = current->m_objects[0]->m_properties->m_prototype->getObjectType();
+            int objectType = current->getEntranceObjectType();
             if (!g_adventureObjectTraits[objectType].m_trait1)
                 direction = 5;
         }
@@ -558,7 +558,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
             if (next->m_zoneState.m_zone < 0 || !next->isPassableLand())
                 continue;
             if (next->isRoadEntrance()) {
-                int objectType = next->m_objects[0]->m_properties->m_prototype->getObjectType();
+                int objectType = next->getEntranceObjectType();
                 const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
                 if (traits.m_blocksLanding && !traits.m_trait2)
                     continue;
@@ -727,7 +727,7 @@ b8 type_random_map::canPlaceObject(
     if (item->m_zoneState.m_zone != zoneIndex)
         return false;
     if (item->isRoadEntrance()) {
-        int entranceType = item->m_objects[0]->m_properties->m_prototype->getObjectType();
+        int entranceType = item->getEntranceObjectType();
         if (!g_adventureObjectTraits[entranceType].m_trait2)
             return false;
     }
@@ -2201,7 +2201,7 @@ b8 TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
             TPoint nearby = g_rmgDirections[direction] + origin;
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
             if (item->isRoadEntrance()) {
-                int neighborType = item->m_objects[0]->m_properties->m_prototype->getObjectType();
+                int neighborType = item->getEntranceObjectType();
                 if (!allowsRmgSharedObjectEntrance(neighborType))
                     goto placementFailure;
             }
@@ -3276,6 +3276,8 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_witch_hut_def());
 }
 
+// Player zones go underground only with Inferno, Necropolis or Dungeon
+// towns; zones on one level stay at least 80% of their combined size apart.
 VA(0x0053AD60, 0x113)
 MAC_ADDRESS(0x23be70, 0x14c)
 b8 type_random_map_generator::canPlaceZone(TRmgZone* zone)
