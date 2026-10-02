@@ -5507,12 +5507,7 @@ void type_random_map_generator::expandObstacleClearance()
                 if (zoneIndex < 0 || current->getLandType() == eTerrainWater)
                     continue;
                 TRmgZoneBounds bounds;
-                {
-                    bounds.m_minimumY = max(position.m_y - 1, 0);
-                    bounds.m_minimumX = max(position.m_x - 1, 0);
-                    bounds.m_maximumY = min(position.m_y + 2, m_map.m_mapHeight);
-                    bounds.m_maximumX = min(position.m_x + 2, m_map.m_mapWidth);
-                }
+                setRmgNeighborhoodBounds(bounds, position, m_map, 1);
                 TRmgZone* zone = m_zones[zoneIndex];
                 unsigned char needsClearance = 0;
                 nearby.m_z = position.m_z;
@@ -5535,12 +5530,7 @@ void type_random_map_generator::expandObstacleClearance()
                 if (!needsClearance)
                     continue;
                 current->markBorderObject();
-                {
-                    bounds.m_minimumY = max(position.m_y, 0);
-                    bounds.m_minimumX = max(position.m_x, 0);
-                    bounds.m_maximumY = min(position.m_y + 1, m_map.m_mapHeight);
-                    bounds.m_maximumX = min(position.m_x + 1, m_map.m_mapWidth);
-                }
+                setRmgNeighborhoodBounds(bounds, position, m_map, 0);
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
@@ -5550,13 +5540,7 @@ void type_random_map_generator::expandObstacleClearance()
                         }
                     }
                 }
-                {
-                    TPoint upper(position.m_x + 2, position.m_y + 2);
-                    bounds.m_minimumY = max(position.m_y - 1, 0);
-                    bounds.m_minimumX = max(position.m_x - 1, 0);
-                    bounds.m_maximumY = min(upper.m_y, m_map.m_mapHeight);
-                    bounds.m_maximumX = min(upper.m_x, m_map.m_mapWidth);
-                }
+                setRmgNeighborhoodBounds(bounds, position, m_map, 1);
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
@@ -5899,10 +5883,7 @@ void type_random_map_generator::openConnectionPath(
         TRmgMapPosition previous = item->m_previousTile;
         if (!narrow) {
             TRmgZoneBounds bounds;
-            bounds.m_minimumX = max(position.m_x - 1, 0);
-            bounds.m_minimumY = max(position.m_y - 1, 0);
-            bounds.m_maximumX = min(position.m_x + 2, m_map.m_mapWidth);
-            bounds.m_maximumY = min(position.m_y + 2, m_map.m_mapHeight);
+            setRmgNeighborhoodBounds(bounds, position, m_map, 1);
             clearRmgZonePathBorders(m_map, bounds, position.m_z, zone);
         }
         position = previous;
@@ -6039,10 +6020,7 @@ void type_random_map_generator::markBorderObjectArea(
     TRmgMapPosition position, int direction)
 {
     TRmgZoneBounds bounds;
-    bounds.m_minimumX = max(position.m_x - 1, 0);
-    bounds.m_maximumX = min(position.m_x + 2, m_map.m_mapWidth);
-    bounds.m_minimumY = max(position.m_y - 1, 0);
-    bounds.m_maximumY = min(position.m_y + 2, m_map.m_mapHeight);
+    setRmgNeighborhoodBounds(bounds, position, m_map, 1);
     for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
         for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
             TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
@@ -6663,6 +6641,15 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     return 1;
 }
 
+// Object positions name the lower-right footprint cell. Inset the minimum
+// anchor coordinates so the whole footprint fits, keeping height before width.
+static inline void insetRmgObjectPlacementBounds(
+    TRmgZoneBounds& bounds, const TObjectType* prototype)
+{
+    bounds.m_minimumY += prototype->getHeight() - 1;
+    bounds.m_minimumX += prototype->getWidth() - 1;
+}
+
 // Called by placeBorderObject at 0x540e81 with a newly created tent and zone.
 // Scans the zone bounds for matching cells accepted by canPlaceObject, then
 // chooses a candidate through rand and forwards it to virtual addObject.
@@ -6692,8 +6679,7 @@ unsigned char type_random_map_generator::placeObjectInZone(type_object* object, 
     std::vector<TRmgMapPosition> candidates;
     TRmgZoneBounds bounds = zone->getBounds();
     int zoneIndex = zone->m_templateZone->m_zoneIndex;
-    bounds.m_minimumY += prototype->getHeight() - 1;
-    bounds.m_minimumX += prototype->getWidth() - 1;
+    insetRmgObjectPlacementBounds(bounds, prototype);
     TRmgMapPosition position;
     position = zone->getLevelPosition();
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
@@ -6765,16 +6751,25 @@ unsigned char type_random_map_generator::placeMonolithBorder(
     return border >= 0;
 }
 
-// Record a placed monolith in its generator list and the owning zone's
-// entrance list before attempting any border or guard placement.
-static inline void registerRmgMonolith(std::vector<type_object*>& monoliths,
-    type_object* object, TRmgZone* zone)
+// Each portal placement owns its allocation until placement succeeds. Only
+// successful objects enter the registry and zone entrance list; a failure
+// leaves the remaining endpoint attempts to the caller.
+static inline type_object* placeRmgMonolith(type_random_map_generator& generator,
+    TRmgObjectPropertiesRef* properties, TRmgZone* zone, bool oneWay)
 {
+    type_object* object = new type_object(properties);
+    if (!generator.placeObjectInZone(object, zone)) {
+        delete object;
+        return 0;
+    }
+    std::vector<type_object*>& monoliths =
+        oneWay ? generator.m_monolithsOneWay : generator.m_monolithsTwoWay;
     monoliths.push_back(object);
     TPoint entrance;
     entrance.m_x = object->m_position.m_x;
     entrance.m_y = object->m_position.m_y;
     zone->m_entrances.push_back(entrance);
+    return object;
 }
 
 // The final fallback in connectZones pairs monolith prototypes by index.
@@ -6811,12 +6806,8 @@ void type_random_map_generator::createMonolithConnection(
     }
     int guardValue = getRmgConnectionGuardValue(connection, *this);
 
-    type_object* object = new type_object(properties);
-    if (!placeObjectInZone(object, source)) {
-        delete object;
-    } else {
-        registerRmgMonolith(!exitProperties ? m_monolithsTwoWay : m_monolithsOneWay,
-            object, source);
+    type_object* object = placeRmgMonolith(*this, properties, source, exitProperties != 0);
+    if (object) {
         if (connection->m_placeBorderObjects
             && placeMonolithBorder(object->getPosition(), destination)) {
             // This value also controls the destination's guard. Preserve
@@ -6826,12 +6817,8 @@ void type_random_map_generator::createMonolithConnection(
             placeGuard(guardValue, object->getPosition() + TPoint(0, 1));
         }
     }
-    object = new type_object(properties);
-    if (!placeObjectInZone(object, destination)) {
-        delete object;
-    } else {
-        registerRmgMonolith(!exitProperties ? m_monolithsTwoWay : m_monolithsOneWay,
-            object, destination);
+    object = placeRmgMonolith(*this, properties, destination, exitProperties != 0);
+    if (object) {
         if (!connection->m_placeBorderObjects
             || !placeMonolithBorder(object->getPosition(), source)) {
             if (guardValue > 0)
@@ -6839,18 +6826,8 @@ void type_random_map_generator::createMonolithConnection(
         }
     }
     if (exitProperties) {
-        object = new type_object(exitProperties);
-        if (!placeObjectInZone(object, source)) {
-            delete object;
-        } else {
-            registerRmgMonolith(m_monolithsOneWay, object, source);
-        }
-        object = new type_object(exitProperties);
-        if (!placeObjectInZone(object, destination)) {
-            delete object;
-        } else {
-            registerRmgMonolith(m_monolithsOneWay, object, destination);
-        }
+        object = placeRmgMonolith(*this, exitProperties, source, true);
+        object = placeRmgMonolith(*this, exitProperties, destination, true);
     }
 }
 
@@ -7807,8 +7784,7 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
         townPosition = zone->m_position;
         townPosition += TPoint(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
     }
-    bounds.m_minimumY += prototype->getHeight() - 1;
-    bounds.m_minimumX += prototype->getWidth() - 1;
+    insetRmgObjectPlacementBounds(bounds, prototype);
     TRmgMapPosition position = zone->m_levelPosition;
     properties->buildOutline();
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
