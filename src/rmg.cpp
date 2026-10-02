@@ -5110,15 +5110,15 @@ static inline void placeRmgGroundConnectionBorder(type_random_map_generator& gen
 // success both gate guards are dropped and the border extends to the empty
 // cells either side of it.
 static inline void placeRmgGateConnectionBorder(type_random_map_generator& generator,
-    TRmgMapPosition entrance, TRmgZone* keyTentZone, int& guardValue)
+    TRmgMapPosition approach, TRmgZone* keyTentZone, int& guardValue)
 {
-    int color = generator.placeBorderObject(entrance, 1, keyTentZone);
+    int color = generator.placeBorderObject(approach, 1, keyTentZone);
     if (color >= 0) {
         guardValue = 0;
-        --entrance.m_x;
-        markRmgEmptyBorderConnection(generator.m_map.getMapItem(entrance), color);
-        entrance.m_x += 2;
-        markRmgEmptyBorderConnection(generator.m_map.getMapItem(entrance), color);
+        --approach.m_x;
+        markRmgEmptyBorderConnection(generator.m_map.getMapItem(approach), color);
+        approach.m_x += 2;
+        markRmgEmptyBorderConnection(generator.m_map.getMapItem(approach), color);
     }
 }
 
@@ -6162,11 +6162,11 @@ void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
             item = m_map.getMapItem(previous.m_x, previous.m_y, previous.m_z);
         }
         connectJunctionEntrance(from, TPoint(previous.m_x, previous.m_y), zone);
-        TRmgMapPosition next;
-        next.m_x = from.m_x;
-        next.m_y = from.m_y;
-        next.m_z = level;
-        m_map.floodConnectionCosts(next, false);
+        TRmgMapPosition entrancePosition;
+        entrancePosition.m_x = from.m_x;
+        entrancePosition.m_y = from.m_y;
+        entrancePosition.m_z = level;
+        m_map.floodConnectionCosts(entrancePosition, false);
     }
 }
 
@@ -7579,10 +7579,10 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     selectRmgRiverAppearance(mapItem, sourceIsSnow, riverType);
 
     --source.m_y;
-    mapItem = seedRmgMovementSearch(m_map, source, openPositions, openCosts);
+    seedRmgMovementSearch(m_map, source, openPositions, openCosts);
 
     ++source.m_x;
-    mapItem = seedRmgMovementSearch(m_map, source, openPositions, openCosts);
+    seedRmgMovementSearch(m_map, source, openPositions, openCosts);
 
     TRmgMapPosition position;
     TRmgMapPosition nextPosition;
@@ -8217,8 +8217,8 @@ b8 type_random_map_generator::writeMap(TAbstractFile* outfile)
     writeRmgObjectPrototype(outfile, m_objectPrototypes[RANDOM_MONSTER][0]->m_prototype);
     writeRmgObjectPrototype(outfile, m_objectPrototypes[TERRAIN_HOLE][0]->m_prototype);
     for (int objectType = 0; objectType < 232; ++objectType)
-        for (unsigned int prototype = 0; prototype < m_objectPrototypes[objectType].size(); ++prototype) {
-            TRmgObjectPropertiesRef* properties = m_objectPrototypes[objectType][prototype];
+        for (unsigned int index = 0; index < m_objectPrototypes[objectType].size(); ++index) {
+            TRmgObjectPropertiesRef* properties = m_objectPrototypes[objectType][index];
             if (static_cast<int>(properties->m_refCount) > 0)
                 writeRmgObjectPrototype(outfile, properties->m_prototype);
         }
