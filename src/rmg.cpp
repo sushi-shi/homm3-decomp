@@ -5061,10 +5061,7 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
         TObjectType::TPoint trigger = prototype->m_triggerCell;
         std::vector<TRmgMapPosition> positions;
         std::vector<int> costs;
-        TRmgMapPosition currentPosition;
-        currentPosition.m_x = position.m_x - trigger.m_x;
-        currentPosition.m_y = position.m_y - trigger.m_y;
-        currentPosition.m_z = position.m_z;
+        TRmgMapPosition currentPosition = getRmgObjectTriggerPosition(position, trigger);
         TRmgMapItem* seed = m_map.getMapItem(currentPosition);
         int zoneIndex = seed->m_zoneState.m_zone;
         if (zoneIndex >= 0)
@@ -5073,9 +5070,7 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
         positions.push_back(currentPosition);
         costs.push_back(0);
         while (positions.size()) {
-            currentPosition = positions.back();
-            positions.pop_back();
-            costs.pop_back();
+            popRmgMovementPosition(currentPosition, positions, costs);
             int cost = m_map.getMapItem(currentPosition)->m_zoneState.m_score + 2;
             for (int direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
                 int nextCost = cost;
@@ -5320,8 +5315,7 @@ int type_random_map_generator::placeBorderObject(
         ++position.m_x;
     }
 
-    m_disabledKeyTents[color] = true;
-    refreshNextKeyTentColor();
+    setKeyTentColorDisabled(color, true);
     return color;
 }
 
@@ -5334,6 +5328,17 @@ static inline void markRmgBorderObjectCell(TRmgMapItem* item, int direction)
     if (item->m_objects.size() == 0) {
         item->markBorderConnection(direction);
     }
+}
+
+// A placed gate border extends to the empty cells west then east of its
+// entrance. The caller's guard positions remain unshifted.
+static inline void markRmgGateSideBorderCells(type_random_map& map,
+    TRmgMapPosition entrance, int direction)
+{
+    --entrance.m_x;
+    markRmgBorderObjectCell(map.getMapItem(entrance), direction);
+    entrance.m_x += 2;
+    markRmgBorderObjectCell(map.getMapItem(entrance), direction);
 }
 
 VA(0x00540FC0, 0x172)
@@ -5592,8 +5597,8 @@ static TRmgMapPosition getRmgShipyardWaterPosition(TRmgMapPosition shipyardPosit
     return shipyardPosition + g_rmgShipyardWaterOffsets[waterOffset];
 }
 
-// Native 0x24457c owns the water scan and flood. Keep the position addition
-// inside this shared body, preserving its nested constructor boundary.
+// Native 0x24457c owns the water scan and flood. Its offset translation at
+// Mac 0x2445b0 is the same copied-origin operation as canPlaceShipyard's scan.
 MAC_ADDRESS(0x24457c, 0x130)
 void type_random_map_generator::floodShipyardWater(type_object* shipyard)
 {
@@ -5601,7 +5606,7 @@ void type_random_map_generator::floodShipyardWater(type_object* shipyard)
     TRmgMapPosition waterPosition;
     int waterOffset = 0;
     for (; waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT; ++waterOffset) {
-        waterPosition = shipyardPosition + g_rmgShipyardWaterOffsets[waterOffset];
+        waterPosition = getRmgShipyardWaterPosition(shipyardPosition, waterOffset);
         if (waterPosition.m_x >= 0 && waterPosition.m_x < m_map.getWidth()
             && m_map.getMapItem(waterPosition)->getLandType() == eTerrainWater)
             break;
@@ -5801,25 +5806,13 @@ b8 type_random_map_generator::createSubterraneanGate(
         // side suppresses both guards; failed placement does not undo objects.
         int direction = placeBorderObject(position, 1, destination);
         if (direction >= 0) {
-            --position.m_x;
             guardValue = 0;
-            TRmgMapItem* item = m_map.getMapItem(position);
-            markRmgBorderObjectCell(item, direction);
-
-            position.m_x += 2;
-            item = m_map.getMapItem(position);
-            markRmgBorderObjectCell(item, direction);
+            markRmgGateSideBorderCells(m_map, position, direction);
         }
 
         direction = placeBorderObject(otherPosition, 1, source);
         if (direction >= 0) {
-            --otherPosition.m_x;
-            TRmgMapItem* item = m_map.getMapItem(otherPosition);
-            markRmgBorderObjectCell(item, direction);
-
-            otherPosition.m_x += 2;
-            item = m_map.getMapItem(otherPosition);
-            markRmgBorderObjectCell(item, direction);
+            markRmgGateSideBorderCells(m_map, otherPosition, direction);
             return true;
         }
     }
@@ -6925,10 +6918,9 @@ b8 type_random_map_generator::tryPlaceMine(TRmgZone* zone,
         return false;
     }
     int guardValue = getMineGuardValue(resource, zone);
-    TRmgMapPosition entrance = mine->getPosition();
-    TObjectType::TPoint trigger = lastScannedPrototype->m_triggerCell;
-    entrance.m_x -= trigger.m_x;
-    entrance.m_y += 1 - trigger.m_y;
+    TRmgMapPosition entrance = getRmgObjectTriggerPosition(
+        mine->getPosition(), lastScannedPrototype->m_triggerCell);
+    ++entrance.m_y;
     TRmgMapItem* item = m_map.getMapItem(entrance);
     item->openPath();
     if (guardValue > 0)
@@ -7592,6 +7584,21 @@ static inline void queueRmgMovementStep(TRmgMapItem* destination,
     insertRmgWorkItem(positions, costs, next, cost);
 }
 
+// Seed a zero-cost source in both worklists and the movement map. Keep both
+// appends before the cell lookup and the by-value cost/predecessor update.
+// Road and river searches pass a constructed invalid predecessor; the three
+// coast-bound river sources share the caller's single instance.
+static inline TRmgMapItem* seedRmgMovementSearch(type_random_map& map,
+    const TRmgMapPosition& source, const TRmgMapPosition& invalidPredecessor,
+    std::vector<TRmgMapPosition>& positions, std::vector<int>& costs)
+{
+    positions.push_back(source);
+    costs.push_back(0);
+    TRmgMapItem* item = map.getMapItem(source);
+    item->setMovementCost(0, invalidPredecessor);
+    return item;
+}
+
 // Road exits and entries share this restricted-approach policy. The caller
 // retains its outgoing direction limit or incoming direction rejection.
 static inline bool hasRmgRestrictedRoadApproach(const TAdvObjectTraits& traits)
@@ -7608,13 +7615,10 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
     std::vector<TRmgMapPosition> openPositions;
     std::vector<int> openCosts;
 
-    openPositions.push_back(position);
-    openCosts.push_back(0);
-
-    TRmgMapItem* mapItem = m_map.getMapItem(position);
     // Mac 0x24bcf8..0x24bd50 copies the constructed invalid predecessor into
     // a separate by-value setter parameter before storing cost and coordinates.
-    mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
+    TRmgMapItem* mapItem = seedRmgMovementSearch(m_map, position,
+        TRmgMapPosition(-1, -1, -1), openPositions, openCosts);
 
     while (openPositions.size()) {
         popRmgMovementPosition(position, openPositions, openCosts);
@@ -7851,10 +7855,8 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     resetMovementCosts();
     std::vector<TRmgMapPosition> openPositions;
     std::vector<int> openCosts;
-    openPositions.push_back(source);
-    openCosts.push_back(0);
-    TRmgMapItem* mapItem = m_map.getMapItem(source.m_x, source.m_y, source.m_z);
-    mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
+    TRmgMapItem* mapItem = seedRmgMovementSearch(m_map, source,
+        TRmgMapPosition(-1, -1, -1), openPositions, openCosts);
     b8 sourceIsSnow;
     int riverType;
     selectRmgRiverAppearance(mapItem, sourceIsSnow, riverType);
@@ -7988,20 +7990,6 @@ void type_random_map_generator::markRiverTargets()
         m_progress->advance(1000);
 }
 
-// Seed one coast-bound river source in both worklists and the movement map.
-// The three sources share the caller's already constructed invalid predecessor;
-// keep both appends before the cell lookup and cost/predecessor update.
-static inline TRmgMapItem* seedRmgRiverSource(type_random_map& map,
-    const TRmgMapPosition& source, const TRmgMapPosition& invalidPredecessor,
-    std::vector<TRmgMapPosition>& positions, std::vector<int>& costs)
-{
-    positions.push_back(source);
-    costs.push_back(0);
-    TRmgMapItem* item = map.getMapItem(source);
-    item->setMovementCost(0, invalidPredecessor);
-    return item;
-}
-
 // Randomized best-first relaxation, with the same per-visit random edge costs
 // as createRiverToObject, seeded at the three water-wheel approach cells.
 VA(0x00548DF0, 0x99F)
@@ -8019,7 +8007,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     std::vector<TRmgMapPosition> openPositions;
     std::vector<int> openCosts;
 
-    mapItem = seedRmgRiverSource(m_map, source, invalidPredecessor,
+    mapItem = seedRmgMovementSearch(m_map, source, invalidPredecessor,
         openPositions, openCosts);
 
     b8 sourceIsSnow;
@@ -8027,11 +8015,11 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     selectRmgRiverAppearance(mapItem, sourceIsSnow, riverType);
 
     --source.m_y;
-    mapItem = seedRmgRiverSource(m_map, source, invalidPredecessor,
+    mapItem = seedRmgMovementSearch(m_map, source, invalidPredecessor,
         openPositions, openCosts);
 
     ++source.m_x;
-    mapItem = seedRmgRiverSource(m_map, source, invalidPredecessor,
+    mapItem = seedRmgMovementSearch(m_map, source, invalidPredecessor,
         openPositions, openCosts);
 
     TRmgMapPosition position;
@@ -8326,6 +8314,16 @@ int writeString(TAbstractFile* outfile, const char* text)
     return outfile->write(text, strlen(text));
 }
 
+// Each player clause in the map description appends a separator, the player
+// color and the clause text. Retail uses unchecked strcat for all three.
+static inline void appendRmgPlayerDescription(char* description, int player,
+    const char* clause)
+{
+    strcat(description, DATA_COMPGEN(0x0066032C, rmgListSeparator, ", "));
+    strcat(description, g_rmgPlayerNames[player]);
+    strcat(description, clause);
+}
+
 VA(0x00549CB0, 0xE90)
 MAC_ADDRESS(0x24e7d4, 0x11ac)  // GenerateRandomMap caller chain; retail-only RMG
 void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
@@ -8389,22 +8387,12 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     for (int descriptionPlayer = 0; descriptionPlayer < 8;
          ++descriptionPlayer) {
         if (m_fixedHumanPlayers[descriptionPlayer]) {
-            strcat(
-                description,
-                DATA_COMPGEN(0x0066032C, rmgListSeparator, ", "));
-            strcat(description, g_rmgPlayerNames[descriptionPlayer]);
-            strcat(
-                description,
+            appendRmgPlayerDescription(description, descriptionPlayer,
                 DATA_COMPGEN(0x00682820, rmgIsHuman, " is human"));
         }
 
         if (m_townChoices[descriptionPlayer] != -1) {
-            strcat(
-                description,
-                DATA_COMPGEN(0x0066032C, rmgListSeparator, ", "));
-            strcat(description, g_rmgPlayerNames[descriptionPlayer]);
-            strcat(
-                description,
+            appendRmgPlayerDescription(description, descriptionPlayer,
                 DATA_COMPGEN(
                     0x0068280C, rmgTownChoiceIs, " town choice is "));
             strcat(
@@ -8958,8 +8946,7 @@ b8 type_random_map_generator::placeKeyTentGuard(type_object* object, int maxValu
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[BORDER_GUARD][index];
     TRmgTreasureGroup group(16, 16);
     type_object* guard = new type_object(properties);
-    m_disabledKeyTents[color] = true;
-    refreshNextKeyTentColor();
+    setKeyTentColorDisabled(color, true);
     if (fillTreasureGroup(origin, &group, false, maxValue) && group.addGuard(guard)) {
         group.preparePlacement();
         if (placeQuestGroup(&group, origin))
@@ -8968,8 +8955,7 @@ b8 type_random_map_generator::placeKeyTentGuard(type_object* object, int maxValu
         delete guard;
     }
     discardRmgTreasureGroup(&group);
-    m_disabledKeyTents[color] = false;
-    refreshNextKeyTentColor();
+    setKeyTentColorDisabled(color, false);
     return false;
 }
 
@@ -8997,8 +8983,7 @@ void type_random_map_generator::removeObject(type_object* object)
         }
     }
     if (prototype->getObjectType() == BORDER_GUARD) {
-        m_disabledKeyTents[prototype->getSubtype()] = false;
-        refreshNextKeyTentColor();
+        setKeyTentColorDisabled(prototype->getSubtype(), false);
     }
     TRmgGridPoint cell;
     TRmgMapPosition mapPosition;

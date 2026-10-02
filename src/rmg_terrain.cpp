@@ -1148,12 +1148,19 @@ static inline void countTerrainBoundary(
     }
 }
 
-// Terrain frames are reusable only when both sprite reflections also match.
-// Keep frame/X/Y short-circuit order; callers retain their distinct write order.
-static inline bool matchesTerrainAppearance(const rmgTerrainTile& tile,
+// Write a cached tile back only when its frame or either sprite reflection
+// changes. Keep the frame/X/Y short-circuit order; the tile is the caller's
+// local snapshot, so its field updates precede the single adapter write.
+static inline void updateTerrainTileAppearance(rmgTerrainPainter& painter,
+    const TRmgGridPoint& point, rmgTerrainTile& tile,
     int frame, b8 flipX, b8 flipY)
 {
-    return tile.m_frame == frame && tile.m_flipX == flipX && tile.m_flipY == flipY;
+    if (tile.m_frame == frame && tile.m_flipX == flipX && tile.m_flipY == flipY)
+        return;
+    tile.m_frame = frame;
+    tile.m_flipX = flipX;
+    tile.m_flipY = flipY;
+    painter.setTile(point, tile);
 }
 
 VA(0x005B5A70, 0x8A7)
@@ -1237,22 +1244,13 @@ void rmgTerrainPainter::paintTransitions()
                     newFrame = selectBaseFrame(point, tile.m_terrain, tile.m_frame);
                 }
 
-                if (!matchesTerrainAppearance(tile, newFrame, flip.m_flipX, flip.m_flipY)) {
-                    tile.m_flipX = flip.m_flipX;
-                    tile.m_flipY = flip.m_flipY;
-                    tile.m_frame = newFrame;
-                    setTile(point, tile);
-                }
+                updateTerrainTileAppearance(*this, point, tile,
+                    newFrame, flip.m_flipX, flip.m_flipY);
             } else {
                 rmgTerrainTile tile = getPackedCell(point)->getTile();
 
                 int newFrame = selectBaseFrame(point, tile.m_terrain, tile.m_frame);
-                if (!matchesTerrainAppearance(tile, newFrame, false, false)) {
-                    tile.m_frame = newFrame;
-                    tile.m_flipX = false;
-                    tile.m_flipY = false;
-                    setTile(point, tile);
-                }
+                updateTerrainTileAppearance(*this, point, tile, newFrame, false, false);
             }
         }
     }

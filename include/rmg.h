@@ -2072,11 +2072,12 @@ public:
     // guarded treasure group; 0x54bc50 removes the old object's map marks,
     // counts and list entry without deleting the object itself.
     b8 placeKeyTentGuard(type_object* object, int maxValue);
-    // Shared scan after a caller changes color availability. Exhaustion keeps
-    // size() as the sentinel; this does not initialize the constructor's
-    // intentionally untouched m_nextKeyTentColor.
-    void refreshNextKeyTentColor()
+    // Change one color's availability, then rescan for the first enabled
+    // color. Exhaustion keeps size() as the sentinel; this does not initialize
+    // the constructor's intentionally untouched m_nextKeyTentColor.
+    void setKeyTentColorDisabled(int color, b8 disabled)
     {
+        m_disabledKeyTents[color] = disabled;
         m_nextKeyTentColor = 0;
         while (m_nextKeyTentColor < m_disabledKeyTents.size()
             && m_disabledKeyTents[m_nextKeyTentColor])
