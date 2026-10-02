@@ -4633,7 +4633,8 @@ static inline void releaseRmgNeighborhoodPathClearance(type_random_map& map,
     for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
         for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
             TRmgMapItem* item = map.getMapItem(nearby);
-            item->releaseUnoccupiedPathClearance();
+            if (static_cast<int>(item->m_objects.size()) <= 0)
+                item->releasePathClearance();
         }
     }
 }
@@ -6354,7 +6355,7 @@ static inline TRmgMapPosition placeRmgTownAtRandomCandidate(
 
 // Registers a town entrance as a road target and opens the cell below it.
 static inline void registerRmgTownRoadEntrance(
-    type_random_map_generator* generator, TRmgMapPosition& entrance)
+    type_random_map_generator* generator, TRmgMapPosition entrance)
 {
     generator->m_roadTargets.push_back(entrance);
     ++entrance.m_y;
@@ -7492,6 +7493,12 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     }
 }
 
+// Blocked-direction bit for the cardinal opposite an eight-way direction.
+static inline int getRmgOppositeCardinalBit(int direction)
+{
+    return 1 << (((direction - 4) >> 1) & 3);
+}
+
 // Retail quirk: this scan admits x == width.
 static inline bool isOutsideRmgRiverCoastScan(
     const TRmgMapPosition& point, const type_random_map& map)
@@ -7543,7 +7550,7 @@ void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, i
             return;
         point += g_rmgDirections[direction];
     }
-    item->m_tileData.m_blockedDirections |= 1 << (((direction - 4) >> 1) & 3);
+    item->m_tileData.m_blockedDirections |= getRmgOppositeCardinalBit(direction);
     item->m_tileData.m_riverTarget = true;
 }
 
@@ -7637,9 +7644,8 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
             if (nextCost >= mapItem->m_movement.m_cost)
                 continue;
 
-            int oppositeDirection = ((direction - 4) >> 1) & 3;
             if (mapItem->m_tileData.m_blockedDirections
-                & (1 << oppositeDirection))
+                & getRmgOppositeCardinalBit(direction))
                 continue;
 
             queueRmgMovementStep(mapItem, nextCost, position, nextPosition,
@@ -8278,10 +8284,11 @@ enum TRmgPrototypeCellMask {
 
 // H3M stores each fixed 8x6 footprint in reverse row/column order, packed
 // least-significant bit first.
-static inline void encodeRmgPrototypeCellMask(TObjectType* prototype,
-    TRmgPrototypeCellMask kind, unsigned char* mask)
+static inline void writeRmgPrototypeCellMask(TAbstractFile* outfile,
+    TObjectType* prototype, TRmgPrototypeCellMask kind)
 {
-    memset(mask, 0, 6);
+    unsigned char mask[6];
+    memset(mask, 0, sizeof(mask));
     int bit = 0;
     for (int y = 6; y--;)
         for (int x = 7; x >= 0; --x) {
@@ -8290,32 +8297,18 @@ static inline void encodeRmgPrototypeCellMask(TObjectType* prototype,
                 mask[bit / 8] |= 1 << (bit % 8);
             ++bit;
         }
+    outfile->write(mask, sizeof(mask));
 }
 
 VA(0x0054AE30, 0x2C5)
 MAC_ADDRESS(0x24f980, 0x398)
 void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* prototype)
 {
-    unsigned char terrainMask[2];
     writeString(outfile, prototype->getImageName());
-    {
-        unsigned char mask[6];
-        encodeRmgPrototypeCellMask(prototype, RMG_PROTOTYPE_PASSABLE_CELLS, mask);
-        outfile->write(mask, sizeof(mask));
-    }
-    {
-        unsigned char mask[6];
-        encodeRmgPrototypeCellMask(prototype, RMG_PROTOTYPE_TRIGGER_CELLS, mask);
-        outfile->write(mask, sizeof(mask));
-    }
-    {
-        encodePackedBits(prototype->m_terrainMask, terrainMask);
-        outfile->write(terrainMask, sizeof(terrainMask));
-    }
-    {
-        encodePackedBits(prototype->m_recommendedTerrainMask, terrainMask);
-        outfile->write(terrainMask, sizeof(terrainMask));
-    }
+    writeRmgPrototypeCellMask(outfile, prototype, RMG_PROTOTYPE_PASSABLE_CELLS);
+    writeRmgPrototypeCellMask(outfile, prototype, RMG_PROTOTYPE_TRIGGER_CELLS);
+    writePackedBits(outfile, prototype->m_terrainMask);
+    writePackedBits(outfile, prototype->m_recommendedTerrainMask);
     writeValue<int>(outfile, prototype->getObjectType());
     writeValue<int>(outfile, prototype->getSubtype());
     writeValue<char>(outfile, prototype->m_slotCategory);

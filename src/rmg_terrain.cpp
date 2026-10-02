@@ -118,12 +118,26 @@ static inline void refreshExistingRmgLinePoint(
         refreshRmgLinePoint(painter, point);
 }
 
-// Extends a border's half-open end by one cell when it stays below the limit.
-static inline unsigned int getLineBorderEnd(
-    unsigned int origin, unsigned int extent, unsigned int limit)
+// Refreshes one border column from the row above the rectangle through the
+// row below it, when that row stays below the limit.
+static inline void refreshRmgLineBorderColumn(TRmgLinePainterInterface* painter,
+    unsigned int x, const TRmgGridRectangle& rectangle, unsigned int limit)
 {
-    unsigned int end = origin + extent;
-    return end < limit ? end + 1 : end;
+    unsigned int first = rectangle.m_origin.m_y > 0 ? rectangle.m_origin.m_y - 1 : 0;
+    unsigned int end = rectangle.m_origin.m_y + rectangle.m_size.m_y;
+    if (end < limit)
+        ++end;
+    for (TRmgGridPoint point(x, first); point.m_y < end; ++point.m_y)
+        refreshExistingRmgLinePoint(painter, point);
+}
+
+// Refreshes one border row across the rectangle's width.
+static inline void refreshRmgLineBorderRow(TRmgLinePainterInterface* painter,
+    unsigned int y, const TRmgGridRectangle& rectangle)
+{
+    for (TRmgGridPoint point(rectangle.m_origin.m_x, y);
+         point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x)
+        refreshExistingRmgLinePoint(painter, point);
 }
 
 VA(0x004FA080, 0x1FB)
@@ -141,39 +155,19 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
         }
     }
     if (rectangle.m_origin.m_x > 0) {
-        point.m_x = rectangle.m_origin.m_x - 1;
-        unsigned int first = rectangle.m_origin.m_y > 0 ? rectangle.m_origin.m_y - 1 : 0;
-        unsigned int end = getLineBorderEnd(rectangle.m_origin.m_y,
-            rectangle.m_size.m_y, painter->m_size.m_y);
-        for (point.m_y = first; point.m_y < end; ++point.m_y) {
-            refreshExistingRmgLinePoint(painter, point);
-        }
+        refreshRmgLineBorderColumn(painter, rectangle.m_origin.m_x - 1,
+            rectangle, painter->m_size.m_y);
     }
     if (rectangle.m_origin.m_x + rectangle.m_size.m_x < painter->m_size.m_x) {
-        point.m_x = rectangle.m_origin.m_x + rectangle.m_size.m_x;
-        unsigned int first = rectangle.m_origin.m_y > 0 ? rectangle.m_origin.m_y - 1 : 0;
         // Retail quirk: unlike the left edge, a rectangle ending on the
         // penultimate row does not refresh the last row here.
-        unsigned int end = getLineBorderEnd(rectangle.m_origin.m_y,
-            rectangle.m_size.m_y, painter->m_size.m_y - 1);
-        for (point.m_y = first; point.m_y < end; ++point.m_y) {
-            refreshExistingRmgLinePoint(painter, point);
-        }
+        refreshRmgLineBorderColumn(painter, rectangle.m_origin.m_x + rectangle.m_size.m_x,
+            rectangle, painter->m_size.m_y - 1);
     }
-    if (rectangle.m_origin.m_y > 0) {
-        point.m_y = rectangle.m_origin.m_y - 1;
-        for (point.m_x = rectangle.m_origin.m_x;
-             point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
-            refreshExistingRmgLinePoint(painter, point);
-        }
-    }
-    if (rectangle.m_origin.m_y + rectangle.m_size.m_y < painter->m_size.m_y) {
-        point.m_y = rectangle.m_origin.m_y + rectangle.m_size.m_y;
-        for (point.m_x = rectangle.m_origin.m_x;
-             point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
-            refreshExistingRmgLinePoint(painter, point);
-        }
-    }
+    if (rectangle.m_origin.m_y > 0)
+        refreshRmgLineBorderRow(painter, rectangle.m_origin.m_y - 1, rectangle);
+    if (rectangle.m_origin.m_y + rectangle.m_size.m_y < painter->m_size.m_y)
+        refreshRmgLineBorderRow(painter, rectangle.m_origin.m_y + rectangle.m_size.m_y, rectangle);
 }
 
 VA(0x004FA280, 0x30)
@@ -1387,15 +1381,8 @@ b8 rmgTerrainPainter::checkSecondDiagonal(
     };
     int terrain = getTerrain(point);
     const TPoint& offset = secondDiagonalOffsets[(flip.m_flipY << 1) | flip.m_flipX];
-    TRmgGridPoint nearby(
-        tLimit(0, static_cast<int>(point.getX()) + offset.getX(), static_cast<int>(getWidth()) - 1), point.getY());
-    if (getTerrain(nearby) != terrain)
-        return true;
-    nearby.setX(point.getX());
-    int maximum = static_cast<int>(getHeight()) - 1;
-    int y = static_cast<int>(point.getY()) + offset.getY();
-    nearby.setY(tLimit(0, y, maximum));
-    return getPackedCell(nearby)->getTerrain() != terrain;
+    return !matchesTerrainAtClampedOffset(*this, point, TPoint(offset.getX(), 0), terrain)
+        || !matchesTerrainAtClampedOffset(*this, point, TPoint(0, offset.getY()), terrain);
 }
 
 // Cardinal special-frame neighbours each halve the transition strength.

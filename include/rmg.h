@@ -1033,13 +1033,6 @@ struct TRmgMapItem {
         if (!m_connection.m_present)
             m_tileData.m_pathClearance = false;
     }
-
-    // The border-expansion passes release only unoccupied cells.
-    void releaseUnoccupiedPathClearance()
-    {
-        if (static_cast<int>(m_objects.size()) <= 0)
-            releasePathClearance();
-    }
 };
 
 // Terrain-layer view of a map used by the terrain painter.
