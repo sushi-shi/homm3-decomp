@@ -907,8 +907,8 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
         queueOtherTerrainNeighbours(point);
 }
 
-// Diagonal neighbours enter the secondary worklist only for terrain rules
-// that require connected neighbours.
+// Other-terrain diagonal neighbours are queued only when their own terrain
+// requires connected neighbours.
 static inline void queueOtherTerrainDiagonalNeighbour(
     rmgTerrainPainter& painter, const TRmgGridPoint& neighbour)
 {

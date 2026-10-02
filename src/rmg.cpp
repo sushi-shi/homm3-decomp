@@ -2428,7 +2428,7 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
             delete m_objectPrototypes[type][prototype];
 }
 
-// Score columns follow sixteen metadata columns.
+// Neighbour scores start at column 16, after the type and terrain scores.
 static inline void readRmgPlacementScores(std::vector<int>& scores,
     const TSpreadsheetResource::TStringVector& fields, int precedingScores, int count)
 {

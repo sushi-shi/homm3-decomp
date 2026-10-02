@@ -610,7 +610,7 @@ struct TRmgZoneCellState {
     unsigned m_objectDistance : 16;
     signed m_zone : 8;
     // Neighbouring zone whose connection-cost flood crossed into this cell
-    // (-1 none); m_connectionDirection points back into it.
+    // (-1 none); m_connectionDirection points back toward it.
     signed m_connectionZone : 8;
 };
 

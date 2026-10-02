@@ -17,7 +17,7 @@ inline TPoint operator+(const TPoint& point, const TPoint& offset)
 
 // One map-layer tile as read from or written to the map adapter.
 struct rmgTerrainTile {
-    // Kind of the adapter-selected layer: terrain, road or river.
+    // Terrain, road or river type, depending on the adapter's layer.
     int m_terrain;
     int m_frame;
     b8 m_flipX;
