@@ -716,11 +716,11 @@ b8 type_random_map::canPlaceObject(
         return false;
     if (!prototype.m_hasTrigger)
         return true;
-    TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, prototype.m_triggerCell);
-    ++entrance.m_y;
-    if (entrance.m_y >= m_mapHeight)
+    TRmgMapPosition approach = getRmgObjectTriggerPosition(position, prototype.m_triggerCell);
+    ++approach.m_y;
+    if (approach.m_y >= m_mapHeight)
         return false;
-    TRmgMapItem* item = getMapItem(entrance);
+    TRmgMapItem* item = getMapItem(approach);
     if (!item->isPassableLand())
         return false;
     if (item->m_zoneState.m_zone < 0)
@@ -1501,9 +1501,11 @@ type_object::~type_object()
 }
 
 // Removes the object and puts a treasure worth 1-1.5x its value in its place.
+// removeObject keeps the object alive and its position unchanged.
 static inline void replaceRmgObjectWithTreasure(type_random_map_generator* generator,
-    type_object* object, int value, TRmgMapPosition position)
+    type_object* object, int value)
 {
+    TRmgMapPosition position = object->m_position;
     generator->removeObject(object);
     TRmgZone* zone = generator->m_zones[
         generator->m_map.getMapItem(position)->m_zoneState.m_zone];
@@ -1520,10 +1522,7 @@ b8 rmgKeyTentObject::completePlacement()
 {
     if (m_generator->placeKeyTentGuard(this, m_value * 3 / 2))
         return true;
-    type_random_map_generator* generator = m_generator;
-    int value = m_value;
-    TRmgMapPosition position = m_position;
-    replaceRmgObjectWithTreasure(generator, this, value, position);
+    replaceRmgObjectWithTreasure(m_generator, this, m_value);
     return false;
 }
 
@@ -4203,11 +4202,12 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
 
 VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, TRmgZoneConnection)
 
-// Per axis, a radial site may overhang the map by about half its offset.
-static inline bool isRmgRadialSiteTooFarOffMap(int coordinate, int extent, double offset)
+// Per axis, a radial site lies twice halfOffset from its zone; it may overhang
+// only the map edge it points toward, by about halfOffset.
+static inline bool isRmgRadialSiteTooFarOffMap(int coordinate, int extent, double halfOffset)
 {
-    return (coordinate < 0 && coordinate < offset)
-        || (coordinate >= extent && coordinate >= extent + offset);
+    return (coordinate < 0 && coordinate < halfOffset)
+        || (coordinate >= extent && coordinate >= extent + halfOffset);
 }
 
 // Existing zones seed the subdivision; radial sites add surface water zones
@@ -8436,8 +8436,7 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
     group.preparePlacement();
     if (!placeQuestGroup(&group, origin)) {
         int value = object->m_definition->getValue(origin, this);
-        TRmgMapPosition originalPosition = object->m_position;
-        replaceRmgObjectWithTreasure(this, object, value, originalPosition);
+        replaceRmgObjectWithTreasure(this, object, value);
         return false;
     }
     m_usedQuestArtifacts[artifact] = true;
