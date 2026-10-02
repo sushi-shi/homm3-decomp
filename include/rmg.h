@@ -607,7 +607,7 @@ struct TRmgMovementCost {
 // Per-cell zone id and distance to the nearest object entrance (cardinal 2,
 // diagonal 3), used to space placements.
 struct TRmgZoneCellState {
-    unsigned m_score : 16;
+    unsigned m_objectDistance : 16;
     signed m_zone : 8;
     // Neighbouring zone whose connection-cost flood crossed into this cell
     // (-1 none); m_connectionDirection points back into it.
@@ -1772,7 +1772,7 @@ public:
     b8 canPlaceShipyard(TRmgMapPosition position);
     b8 createSubterraneanGate(
         TRmgZone* source, TRmgZoneConnection* connection);
-    b8 placeMonolithBorder(TRmgMapPosition position, TRmgZone* zone);
+    b8 placeMonolithBorder(TRmgMapPosition position, TRmgZone* keyTentZone);
     void createMonolithConnection(
         TRmgZone* source,
         TRmgZoneConnection* connection,
@@ -1786,7 +1786,7 @@ public:
     void openConnectionPath(TRmgMapPosition position, b8 narrow);
     void markBorderObjectArea(TRmgMapPosition position, int color);
     int placeBorderObject(
-        TRmgMapPosition position, int count, TRmgZone* zone);
+        TRmgMapPosition position, int guardCount, TRmgZone* keyTentZone);
     type_object* createGuard(int value, TRmgZone* zone);
     b8 placeObjectInZone(type_object* object, TRmgZone* zone);
     void placeGuard(int value, TRmgMapPosition position);

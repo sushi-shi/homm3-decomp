@@ -343,7 +343,7 @@ void TRmgMapItem::clear()
     m_connection = connection;
     m_movement.m_cost = 32700;
     m_movement.m_zonePathCost = 32700;
-    m_zoneState.m_score = 32700;
+    m_zoneState.m_objectDistance = 32700;
     m_zoneState.m_zone = -1;
     m_zoneState.m_connectionZone = -1;
     m_previousTile.m_x = -1;
@@ -4791,12 +4791,12 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
         int zoneIndex = seed->m_zoneState.m_zone;
         if (zoneIndex >= 0)
             ++m_zones[zoneIndex]->m_objectCountByType[objectType];
-        seed->m_zoneState.m_score = 0;
+        seed->m_zoneState.m_objectDistance = 0;
         positions.push_back(currentPosition);
         costs.push_back(0);
         while (positions.size()) {
             popRmgWorkItem(currentPosition, positions, costs);
-            int cost = m_map.getMapItem(currentPosition)->m_zoneState.m_score + 2;
+            int cost = m_map.getMapItem(currentPosition)->m_zoneState.m_objectDistance + 2;
             for (int direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
                 int nextCost = cost;
                 if (direction & 1)
@@ -4805,9 +4805,9 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
                 if (!m_map.containsXY(nextPosition))
                     continue;
                 TRmgMapItem* next = m_map.getMapItem(nextPosition);
-                if (nextCost >= next->m_zoneState.m_score)
+                if (nextCost >= next->m_zoneState.m_objectDistance)
                     continue;
-                next->m_zoneState.m_score = nextCost;
+                next->m_zoneState.m_objectDistance = nextCost;
                 insertRmgWorkItem(positions, costs, nextPosition, nextCost);
             }
         }
@@ -5000,7 +5000,7 @@ static inline Index findRmgPrototypeSubtypeIndex(
 VA(0x00540D60, 0x256)
 MAC_ADDRESS(0x24356c, 0x2b8)
 int type_random_map_generator::placeBorderObject(
-    TRmgMapPosition position, int count, TRmgZone* zone)
+    TRmgMapPosition position, int guardCount, TRmgZone* keyTentZone)
 {
     int color = m_nextKeyTentColor;
     int index = findRmgPrototypeSubtypeIndex<int>(m_objectPrototypes[BORDER_TENT], color);
@@ -5015,12 +5015,12 @@ int type_random_map_generator::placeBorderObject(
         return 0;
     TRmgObjectPropertiesRef* guardProperties = m_objectPrototypes[BORDER_GUARD][index];
     type_object* tent = new type_object(tentProperties);
-    if (!placeObjectInZone(tent, zone)) {
+    if (!placeObjectInZone(tent, keyTentZone)) {
         delete tent;
         return -1;
     }
 
-    for (index = 0; index < count; ++index) {
+    for (int guardIndex = 0; guardIndex < guardCount; ++guardIndex) {
         type_object* guard = new type_object(guardProperties);
         TRmgMapItem* item = m_map.getMapItem(position);
         item->clearBorderConnection();
@@ -5481,7 +5481,7 @@ b8 type_random_map_generator::createSubterraneanGate(
             TRmgMapItem* sourceItem = m_map.getMapItem(position);
             if (sourceItem->m_zoneState.m_zone != sourceZone)
                 continue;
-            int score = sourceItem->m_zoneState.m_score;
+            int score = sourceItem->m_zoneState.m_objectDistance;
 
             TRmgMapPosition otherPosition;
             otherPosition.m_x = position.m_x;
@@ -5491,7 +5491,7 @@ b8 type_random_map_generator::createSubterraneanGate(
             if (destinationItem->m_zoneState.m_zone != destinationZone)
                 continue;
 
-            score += destinationItem->m_zoneState.m_score;
+            score += destinationItem->m_zoneState.m_objectDistance;
             if (score < bestScore)
                 continue;
             if (!m_map.canPlaceObject(gateProperties, position, source))
@@ -5582,7 +5582,7 @@ b8 type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* z
 VA(0x00542B00, 0x1D2)
 MAC_ADDRESS(0x245870, 0x364)
 b8 type_random_map_generator::placeMonolithBorder(
-    TRmgMapPosition position, TRmgZone* zone)
+    TRmgMapPosition position, TRmgZone* keyTentZone)
 {
     TPoint offsets[5] = {
         TPoint(0, 1), TPoint(1, 0), TPoint(-1, 0), TPoint(1, 1), TPoint(-1, 1)
@@ -5610,7 +5610,7 @@ b8 type_random_map_generator::placeMonolithBorder(
             borderPosition = position + TPoint(0, 1);
         }
     }
-    int color = placeBorderObject(borderPosition, 1, zone);
+    int color = placeBorderObject(borderPosition, 1, keyTentZone);
     if (color >= 0) {
         for (int direction = 0; direction < directionCount; ++direction) {
             TPoint offset = offsets[direction];
@@ -5644,10 +5644,10 @@ static inline type_object* placeRmgMonolith(type_random_map_generator& generator
 // Borders a portal toward the other zone, or else guards the cell below it.
 static inline void protectRmgMonolith(type_random_map_generator& generator,
     type_object* portal, const TRmgZoneConnection* connection,
-    TRmgZone* borderZone, int& guardValue)
+    TRmgZone* keyTentZone, int& guardValue)
 {
     if (connection->m_placeBorderObjects
-        && generator.placeMonolithBorder(portal->getPosition(), borderZone)) {
+        && generator.placeMonolithBorder(portal->getPosition(), keyTentZone)) {
         guardValue = 0;
     } else if (guardValue > 0) {
         generator.placeGuard(guardValue, portal->getPosition() + TPoint(0, 1));
@@ -6380,7 +6380,7 @@ b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
             TRmgMapItem* item = m_map.getMapItem(entrance.m_x, entrance.m_y, entrance.m_z);
             if (item->m_zoneState.m_zone != zoneIndex)
                 continue;
-            int score = item->m_zoneState.m_score;
+            int score = item->m_zoneState.m_objectDistance;
             if (score < spacing || !m_map.canPlaceObject(properties, position, zone))
                 continue;
             TRmgZoneBounds nearby;
@@ -6477,7 +6477,7 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
                     candidates.clear();
                 }
             }
-            int score = item->m_zoneState.m_score;
+            int score = item->m_zoneState.m_objectDistance;
             if (score < spacing)
                 continue;
             int borderCount = 0;
@@ -7094,9 +7094,11 @@ b8 type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
     for (; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position + center);
-            if (item->m_zoneState.m_zone == zoneIndex && item->m_zoneState.m_score >= spacing
+            if (item->m_zoneState.m_zone == zoneIndex
+                && item->m_zoneState.m_objectDistance >= spacing
                 && canPlaceTreasureGroup(group, position, zone)) {
-                addRmgHighestScoreCandidate(candidates, position, item->m_zoneState.m_score, spacing);
+                addRmgHighestScoreCandidate(candidates, position,
+                    item->m_zoneState.m_objectDistance, spacing);
             }
         }
     }
@@ -8523,7 +8525,7 @@ void type_random_map_generator::removeObject(type_object* object)
                         item->m_tileData.m_roadEntrance = false;
                         item->m_tileData.m_roadPassable = true;
                     }
-                    item->m_zoneState.m_score = 32700;
+                    item->m_zoneState.m_objectDistance = 32700;
                 }
             }
         }

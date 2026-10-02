@@ -79,10 +79,10 @@ MAC_ADDRESS(0x22273c, 0x168)
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
     TRmgLinePainterTile tile = painter->at(point);
-    int oldType = tile.getLineType();
+    int lineType = tile.getLineType();
     b8 matches[TILE_DIR_COUNT];
-    buildMatchingLineNeighbourMask(painter, point, oldType, matches);
-    TRmgLinePatternTable* table = painter->getPattern(oldType);
+    buildMatchingLineNeighbourMask(painter, point, lineType, matches);
+    TRmgLinePatternTable* table = painter->getPattern(lineType);
     b8 flipX, flipY;
     int selected = selectRmgLinePattern(matches, table, flipX, flipY);
     rmgTerrainTile current;
