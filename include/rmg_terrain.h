@@ -208,7 +208,7 @@ class rmgTerrainPainter {
 public:
     TRmgMapInterface* m_adapter;                // +0x00
     int m_paintTerrain;                               // +0x04
-    int m_transitionStrength;                         // +0x08
+    int m_specialFrameStrength;                         // +0x08
     TRmgGridPoint m_size;                             // +0x0c
     std::set<TRmgGridPoint> m_primaryPoints;            // +0x14
     std::set<TRmgGridPoint> m_secondaryPoints;          // +0x24
@@ -256,7 +256,7 @@ public:
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
     b8 checkSecondDiagonal(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
-    int getTransitionStrength(const TRmgGridPoint& point, int terrain);
+    int getSpecialFrameStrength(const TRmgGridPoint& point, int terrain);
 };
 
 // Owns a terrain painter for repeated rectangle painting.

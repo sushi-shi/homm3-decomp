@@ -735,7 +735,7 @@ VA(0x005B45F0, 0x26D)
 MAC_ADDRESS(0x255c68, 0xbc)
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
-    : m_adapter(newAdapter), m_paintTerrain(terrain), m_transitionStrength(strength)
+    : m_adapter(newAdapter), m_paintTerrain(terrain), m_specialFrameStrength(strength)
 {
 #if defined(HOMM3_TARGET_MAC)
     m_size = m_adapter->getSize();
@@ -779,7 +779,7 @@ MAC_ADDRESS(0x259998, 0x60)
 int rmgTerrainPainter::selectBaseFrame(
     const TRmgGridPoint& point, int terrain, int oldFrame)
 {
-    int strength = getTransitionStrength(point, terrain);
+    int strength = getSpecialFrameStrength(point, terrain);
     return g_rmgTerrainRules[terrain]->selectBaseFrame(strength, oldFrame);
 }
 
@@ -1384,7 +1384,7 @@ b8 rmgTerrainPainter::checkSecondDiagonal(
 }
 
 // Each same-terrain cardinal neighbour showing a special frame halves the
-// transition strength.
+// special-frame strength.
 static inline bool hasSpecialTerrainFrameAt(rmgTerrainPainter& painter,
     const TRmgGridPoint& point, int terrain, TRmgTerrainRule* rule)
 {
@@ -1394,10 +1394,10 @@ static inline bool hasSpecialTerrainFrameAt(rmgTerrainPainter& painter,
 
 VA(0x005B6FD0, 0x271)
 MAC_ADDRESS(0x259500, 0x444)
-int rmgTerrainPainter::getTransitionStrength(
+int rmgTerrainPainter::getSpecialFrameStrength(
     const TRmgGridPoint& point, int terrain)
 {
-    unsigned int strength = m_transitionStrength;
+    unsigned int strength = m_specialFrameStrength;
     TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
     if (point.getX() > 0) {
         TRmgGridPoint nearby(point.getX(), point.getY());
@@ -1453,7 +1453,7 @@ int rmgTerrainPainter::changeTerrain(int terrain, int strength)
     int previous = m_paintTerrain;
     finish();
     m_paintTerrain = terrain;
-    m_transitionStrength = strength;
+    m_specialFrameStrength = strength;
     return previous;
 }
 

@@ -251,7 +251,7 @@ Windows score changes at that checkpoint (previous banked CUR versus measured):
 | `TRmgLineWalker::paintPoint` | 100.00% | 78.78% |
 | `rmgTerrainPainter::paintPoint` | 100.00% | 85.16% |
 | `rmgTerrainPainter::queueOtherTerrainNeighbours` | 100.00% | 75.19% |
-| `rmgTerrainPainter::getTransitionStrength` | 100.00% | 73.81% |
+| `rmgTerrainPainter::getSpecialFrameStrength` | 100.00% | 73.81% |
 | `rmgTerrainPainter::repairTerrainPoint` | 99.18% | 88.44% |
 | `rmgTerrainPainter::paintTransitions` | 100.00% | 78.10% |
 | `rmgTerrainPainter::hasSeparatedNeighbours` | 100.00% | 99.75% |

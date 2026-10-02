@@ -1048,7 +1048,7 @@ field setters. An ordinary shared `SetTile(point, tile)` preserves that
 operation and raises `PaintPoint` from 78.4213% to 92.2405%. Flattening the
 body into its callers changes later set and gap-predicate expansions.
 
-The same callers compute transition strength before loading the base-frame
+The same callers compute special-frame strength before loading the base-frame
 rule's virtual receiver. A shared `SelectBaseFrame(point, terrain, oldFrame)`
 captures the terrain index across that call and preserves this evaluation
 order. With a named frame result and scoped neighbour points, `PaintPoint`
@@ -2090,7 +2090,7 @@ point became trivially copyable. What they settle and what they leave:
   unindexed forms break the retained 0x5b48d0 body, and the three fill
   spellings are one object. The six callers where retail calls
   `getPackedCell` but expands `initializePackedCell` elsewhere
-  (`paintTransitions`, both diagonal checks, `getTransitionStrength`,
+  (`paintTransitions`, both diagonal checks, `getSpecialFrameStrength`,
   `paintRectangle`, `buildMatchingNeighbourMask`) therefore need their own
   site structure, not a cheaper cache pair.
 - `queueOtherTerrainNeighbours` (63.63%): retail refuses three cardinal
@@ -2194,7 +2194,7 @@ the structures the replay admits. What it found:
   and changes the flow; conversion-built temporaries give the same sites
   with a larger frame. 99.27%: the south-east fill's SIB order and cell
   base register are C2 state that no declaration order moves.
-- `getTransitionStrength` keeps two reads per arm: the frame read sits in
+- `getSpecialFrameStrength` keeps two reads per arm: the frame read sits in
   a `getFrame` sibling of `getTerrain` so its cost divides like the terrain
   read's, and each neighbour is constructed at the cell and stepped by one
   setter from the parameter's coordinate (the point's own coordinate shifts

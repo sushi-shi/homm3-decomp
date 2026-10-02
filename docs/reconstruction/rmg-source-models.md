@@ -2268,7 +2268,7 @@ dimension, level, coordinate and mutated-base controls.
 
 The RMG strength-family generator demonstrates a structural follow-up: it
 selects top distinct grid parents from a completed grid checkpoint and combines
-them with ordinary implementation alternatives for `getTransitionStrength`.
+them with ordinary implementation alternatives for `getSpecialFrameStrength`.
 
 Other generators cover the classifier caller/packed-field snapshots, the
 diagonal checks/coordinate class, shipyard footprint/side selection, and connection-path/prototype selection.

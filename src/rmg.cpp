@@ -4648,7 +4648,7 @@ void type_random_map_generator::expandObstacleClearance()
                 TRmgZoneBounds bounds;
                 setRmgNeighborhoodBounds(bounds, position, m_map, 1);
                 TRmgZone* zone = m_zones[zoneIndex];
-                b8 needsClearance = false;
+                b8 needsBorder = false;
                 nearby.m_z = position.m_z;
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
@@ -4656,17 +4656,17 @@ void type_random_map_generator::expandObstacleClearance()
                         int otherZone = item->m_zoneState.m_zone;
                         if (otherZone < 0) {
                             if (item->getLandType() == eTerrainWater)
-                                needsClearance = true;
+                                needsBorder = true;
                         } else if (otherZone != zoneIndex) {
                             TRmgZoneConnection* connection = zone->m_templateZone->findConnection(otherZone);
                             if (!connection || position.m_z == 1)
-                                needsClearance = true;
+                                needsBorder = true;
                             if (connection && !connection->m_unguarded)
-                                needsClearance = true;
+                                needsBorder = true;
                         }
                     }
                 }
-                if (!needsClearance)
+                if (!needsBorder)
                     continue;
                 current->markBorderObject();
                 setRmgNeighborhoodBounds(bounds, position, m_map, 0);
@@ -5507,8 +5507,8 @@ b8 type_random_map_generator::createSubterraneanGate(
     if (candidates.size() == 0)
         return false;
 
-    position = candidates[rand() % candidates.size()];
-    addObject(new type_object(gateProperties), position);
+    position = addRmgObjectAtRandomCandidate(
+        this, new type_object(gateProperties), candidates);
 
     TRmgMapPosition otherPosition = position;
     otherPosition.m_z = destination->getLevelPosition().m_z;
@@ -7977,29 +7977,29 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     memset(mainTowns, 0, sizeof(mainTowns));
     memset(canBeComputer, 0, sizeof(canBeComputer));
     int generatedHumanTowns = 0;
-    for (unsigned int townIndex = 0; townIndex < m_zones.size(); ++townIndex) {
-        TRmgZone* town = m_zones[townIndex];
-        TRmgTemplateZone* slot = town->m_templateZone;
+    for (unsigned int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
+        TRmgZone* zone = m_zones[zoneIndex];
+        TRmgTemplateZone* slot = zone->m_templateZone;
         int player = slot->m_playerIndex;
         if (player < 0)
             continue;
 
         player = m_playerIndexMap[player + 1];
-        if (player < 0 || !town->m_active)
+        if (player < 0 || !zone->m_active)
             continue;
 
         if (slot->m_kind == RMG_TEMPLATE_HUMAN && !canBeHuman[player]) {
             ++generatedHumanTowns;
             canBeHuman[player] = true;
-            mainTowns[player] = town->m_position;
+            mainTowns[player] = zone->m_position;
         }
 
         if (slot->m_kind == RMG_TEMPLATE_COMPUTER && !canBeComputer[player]) {
             canBeComputer[player] = true;
-            mainTowns[player] = town->m_position;
+            mainTowns[player] = zone->m_position;
         }
 
-        legalAlignments[player] |= 1 << town->m_alignment;
+        legalAlignments[player] |= 1 << zone->m_alignment;
     }
 
     generatedHumanTowns -= m_humanPlayerCount;
