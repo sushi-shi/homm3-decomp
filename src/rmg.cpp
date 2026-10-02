@@ -4498,18 +4498,7 @@ static void insertRmgWorkItem(
     std::vector<TRmgZone*>& zones, std::vector<int>& costs,
     TRmgZone* zone, int cost)
 {
-    int firstIndex = 0;
-    int endIndex = zones.size();
-    int insertionIndex;
-    while (1) {
-        insertionIndex = (firstIndex + endIndex) >> 1;
-        if (firstIndex >= endIndex)
-            break;
-        if (cost < costs[insertionIndex])
-            firstIndex = insertionIndex + 1;
-        else
-            endIndex = insertionIndex;
-    }
+    int insertionIndex = findRmgWorkItemInsertionIndex(costs, zones.size(), cost);
     costs.insert(costs.begin() + insertionIndex, cost);
     zones.insert(zones.begin() + insertionIndex, 1, zone);
 }
@@ -5359,9 +5348,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
     TRmgMapItem* seed = m_map.getMapItem(position);
     seed->setWaterZoneDistance(0, 0);
     while (positions.size()) {
-        position = positions.back();
-        costs.pop_back();
-        positions.pop_back();
+        popRmgMovementPosition(position, positions, costs);
         unsigned currentCost = m_map.getMapItem(position)->m_movement.m_zonePathCost;
         for (int direction = 0; direction < 8; ++direction) {
             TPoint offset = g_rmgDirections[direction];
@@ -5543,8 +5530,7 @@ void type_random_map_generator::expandObstacleClearance()
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
-                        if (static_cast<int>(item->m_objects.size()) <= 0)
-                            item->releasePathClearance();
+                        item->releaseUnoccupiedPathClearance();
                     }
                 }
             }
@@ -5624,8 +5610,7 @@ void type_random_map_generator::repairWaterZoneBorders()
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
-                        if (static_cast<int>(item->m_objects.size()) <= 0)
-                            item->releasePathClearance();
+                        item->releaseUnoccupiedPathClearance();
                     }
                 }
             }
@@ -5822,8 +5807,8 @@ void type_random_map_generator::buildZoneConnectionPaths()
             for (pathPosition.m_x = bounds.m_minimumX; pathPosition.m_x < bounds.m_maximumX; ++pathPosition.m_x) {
                 TRmgMapItem* current = m_map.getMapItem(pathPosition);
                 if (current->m_zoneState.m_zone == zoneIndex
-                    && current->hasPathClearance() && current->m_tileData.m_roadPassable
-                    && current->getLandType() != eTerrainRock && current->m_movement.m_cost
+                    && current->hasPathClearance() && current->isPassableLand()
+                    && current->m_movement.m_cost
                     && current->getLandType() != eTerrainWater) {
                     openConnectionPath(pathPosition, 0);
                     m_map.floodConnectionCosts(pathPosition, zone->m_terrain == eTerrainWater);
@@ -6100,6 +6085,17 @@ static inline void placeRmgGroundConnectionBorder(type_random_map_generator& gen
     }
 }
 
+// Unguarded template connections bypass valuation entirely. Keep the native
+// scalar value helper on the guarded path, including its argument reads.
+// Shipyards capture strength before value and retain their distinct sequence.
+static inline int getRmgConnectionGuardValue(const TRmgZoneConnection* connection,
+    const type_random_map_generator& generator)
+{
+    if (connection->m_unguarded)
+        return 0;
+    return getRmgGuardValue(connection->m_value, generator.m_monsterStrength);
+}
+
 // Complete-only ground connection pass.  ConnectZones passes the paired
 // boundary item/position vectors.  Retail selects all equally cheap empty
 // crossings, opens their predecessor paths, and records both zone entrances
@@ -6173,12 +6169,7 @@ unsigned char type_random_map_generator::createGroundConnection(
     if (candidates.size() == 0)
         return 0;
 
-    int guardValue;
-    if (connection->m_unguarded) {
-        guardValue = 0;
-    } else {
-        guardValue = getRmgGuardValue(connection->m_value, m_monsterStrength);
-    }
+    int guardValue = getRmgConnectionGuardValue(connection, *this);
 
     if (bestCost == 1 && guardValue == 0 && !connection->m_placeBorderObjects)
         return 1;
@@ -6279,8 +6270,7 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
             if (item->getLandType() == eTerrainWater)
                 return 0;
             unsigned char entrance = item->m_tileData.m_roadEntrance;
-            if (entrance || !item->m_tileData.m_roadPassable
-                || item->getLandType() == eTerrainRock)
+            if (entrance || !item->isPassableLand())
                 return 0;
         }
     }
@@ -6598,12 +6588,7 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     destination->m_entrances.push_back(
         TPoint(otherPosition.m_x, otherPosition.m_y));
 
-    int guardValue;
-    if (connection->m_unguarded) {
-        guardValue = 0;
-    } else {
-        guardValue = getRmgGuardValue(connection->m_value, m_monsterStrength);
-    }
+    int guardValue = getRmgConnectionGuardValue(connection, *this);
 
     ++position.m_y;
     ++otherPosition.m_y;
@@ -6794,11 +6779,7 @@ void type_random_map_generator::createMonolithConnection(
         properties = m_objectPrototypes[LITH_ONEWAY_ENTRANCE][prototypeIndex];
         exitProperties = m_objectPrototypes[LITH_ONEWAY_EXIT][prototypeIndex];
     }
-    int guardValue;
-    if (connection->m_unguarded)
-        guardValue = 0;
-    else
-        guardValue = getRmgGuardValue(connection->m_value, m_monsterStrength);
+    int guardValue = getRmgConnectionGuardValue(connection, *this);
 
     type_object* object = new type_object(properties);
     if (!placeObjectInZone(object, source)) {
@@ -6855,6 +6836,15 @@ unsigned char TRmgZoneConnection::isConnected() const
 void TRmgZoneConnection::setConnected()
 {
     m_connected = 1;
+}
+
+// Land crossings and paired portals complete both directed records. Preserve
+// forward-before-reverse updates; shipyards complete only their own direction.
+static inline void completeRmgBidirectionalConnection(
+    TRmgZoneConnection* connection, TRmgZoneConnection* oppositeConnection)
+{
+    connection->setConnected();
+    oppositeConnection->setConnected();
 }
 
 // Each connection pass starts with a fresh reachability mask on its level.
@@ -6955,8 +6945,7 @@ void type_random_map_generator::connectZones()
                     connection,
                     &borderItems,
                     &borderPositions)) {
-                connection->setConnected();
-                oppositeConnection->setConnected();
+                completeRmgBidirectionalConnection(connection, oppositeConnection);
                 continue;
             }
 
@@ -6969,8 +6958,7 @@ void type_random_map_generator::connectZones()
                 continue;
 
             if (createSubterraneanGate(zone, connection)) {
-                connection->setConnected();
-                oppositeConnection->setConnected();
+                completeRmgBidirectionalConnection(connection, oppositeConnection);
             }
         }
     }
@@ -7025,8 +7013,7 @@ void type_random_map_generator::connectZones()
 
             createMonolithConnection(
                 zone, connection, prototypeIndex);
-            connection->setConnected();
-            oppositeConnection->setConnected();
+            completeRmgBidirectionalConnection(connection, oppositeConnection);
             prototypeIndex = (prototypeIndex + 1)
                 % (m_objectPrototypes[LITH_TWOWAY].size()
                    + m_objectPrototypes[LITH_ONEWAY_ENTRANCE].size());
