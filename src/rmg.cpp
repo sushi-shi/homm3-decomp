@@ -629,12 +629,9 @@ b8 type_random_map::isPlacementBlocked(
             if (!prototype.isPassableCell(maskPoint.m_x, maskPoint.m_y)) {
                 if (isRmgPlacementCellBlocked(item, zoneIndex))
                     return true;
-                if (item->getLandType() == eTerrainWater) {
-                    if (!isRmgWaterOnlyPrototype(prototype))
-                        return true;
-                } else if (isRmgWaterOnlyPrototype(prototype)) {
+                if ((item->getLandType() == eTerrainWater)
+                    != isRmgWaterOnlyPrototype(prototype))
                     return true;
-                }
             }
         }
     }
@@ -2328,6 +2325,12 @@ void TRmgTreasureGroup::traceOutline()
     } while (start != position);
 }
 
+// Progress steps reported by loadObjectPrototypes, which the base
+// constructor runs and budgets.
+enum ERmgPrototypeLoadProgress {
+    RMG_PROTOTYPE_LOAD_PROGRESS = 15300
+};
+
 VA(0x00536070, 0xFB)
 MAC_ADDRESS(0x23422c, 0xec)
 TRmgGeneratorBase::TRmgGeneratorBase(int width, int height, int levels,
@@ -2337,7 +2340,8 @@ TRmgGeneratorBase::TRmgGeneratorBase(int width, int height, int levels,
     m_progress = progress;
     m_mapVersion = version;
     if (progress)
-        progress->setTotal(progress->m_steps + additionalSteps + 0x3bc4);
+        progress->setTotal(progress->m_steps + additionalSteps
+            + RMG_PROTOTYPE_LOAD_PROGRESS);
     time(&m_randomSeed);
     srand(m_randomSeed);
     loadObjectPrototypes();
@@ -2392,7 +2396,8 @@ void TRmgGeneratorBase::loadObjectPrototypes()
             continue;
         TRmgObjectPropertiesRef* properties =
             new TRmgObjectPropertiesRef(&m_objectsTxt.m_objectTypes[index]);
-        memcpy(&type, &g_adventureObjectTraits[type].m_nameRow, sizeof(type));
+        // Aliased object types are listed under their objnames.txt row.
+        memcpy(&type,&g_adventureObjectTraits[type].m_nameRow, sizeof(type));
         m_objectPrototypes[type].push_back(properties);
     }
     // Exchange sort of the monsters by subtype, swapping prototypes. Retail
@@ -2406,7 +2411,7 @@ void TRmgGeneratorBase::loadObjectPrototypes()
     }
     readObjectPlacementRules();
     if (m_progress)
-        m_progress->advance(15300);
+        m_progress->advance(RMG_PROTOTYPE_LOAD_PROGRESS);
 }
 
 VA(0x005363B0, 0x1A9)
