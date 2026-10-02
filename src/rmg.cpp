@@ -4774,7 +4774,7 @@ void type_random_map_generator::repairWaterZoneBorders()
     }
 }
 
-// Registers the object, then updates type counts and entrance costs.
+// Registers the object, then updates type counts and entrance distances.
 VA(0x005402A0, 0x32A)
 MAC_ADDRESS(0x24260c, 0x434)
 void type_random_map_generator::addObject(type_object* object, TRmgMapPosition position)
@@ -6336,7 +6336,8 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
     }
 }
 
-// Places a town at a random candidate and returns its opened road entrance.
+// Places a town at a random candidate and returns its entrance, now a road
+// target with the cell below it opened.
 static inline TRmgMapPosition placeRmgTownAtRandomCandidate(
     type_random_map_generator* generator, TRmgObjectPropertiesRef* properties,
     int player, unsigned char townOption,
