@@ -4335,12 +4335,10 @@ void type_random_map_generator::drawStraightZoneBoundary(
         markRmgZoneBoundaryCell(item, zoneIndex, markBoundary);
         error += minorDistance;
         if (error < majorDistance) {
-            from.m_x += axialStep.m_x;
-            from.m_y += axialStep.m_y;
+            from += axialStep;
         } else {
             error -= majorDistance;
-            from.m_x += diagonalStep.m_x;
-            from.m_y += diagonalStep.m_y;
+            from += diagonalStep;
         }
     }
     TRmgMapItem* lastItem = m_map.getMapItem(from.m_x, from.m_y, level);
