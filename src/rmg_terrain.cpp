@@ -1388,10 +1388,11 @@ b8 rmgTerrainPainter::checkSecondDiagonal(
 // Each same-terrain cardinal neighbour showing a special frame halves the
 // special-frame strength.
 static inline bool hasSpecialTerrainFrameAt(rmgTerrainPainter& painter,
-    const TRmgGridPoint& point, int terrain, TRmgTerrainRule* rule)
+    const TRmgGridPoint& point, int dx, int dy, int terrain, TRmgTerrainRule* rule)
 {
-    return painter.getTerrain(point) == terrain
-        && rule->isSpecialFrame(painter.getFrame(point));
+    TRmgGridPoint nearby(point.getX() + dx, point.getY() + dy);
+    return painter.getTerrain(nearby) == terrain
+        && rule->isSpecialFrame(painter.getFrame(nearby));
 }
 
 VA(0x005B6FD0, 0x271)
@@ -1401,30 +1402,16 @@ int rmgTerrainPainter::getSpecialFrameStrength(
 {
     unsigned int strength = m_specialFrameStrength;
     TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
-    if (point.getX() > 0) {
-        TRmgGridPoint nearby(point.getX(), point.getY());
-        nearby.setX(point.getX() - 1);
-        if (hasSpecialTerrainFrameAt(*this, nearby, terrain, rule))
-            strength >>= 1;
-    }
-    if (point.getY() > 0) {
-        TRmgGridPoint nearby(point.getX(), point.getY());
-        nearby.setY(point.getY() - 1);
-        if (hasSpecialTerrainFrameAt(*this, nearby, terrain, rule))
-            strength >>= 1;
-    }
-    if (point.getX() < getWidth() - 1) {
-        TRmgGridPoint nearby(point.getX(), point.getY());
-        nearby.setX(point.getX() + 1);
-        if (hasSpecialTerrainFrameAt(*this, nearby, terrain, rule))
-            strength >>= 1;
-    }
-    if (point.getY() < getHeight() - 1) {
-        TRmgGridPoint nearby(point.getX(), point.getY());
-        nearby.setY(point.getY() + 1);
-        if (hasSpecialTerrainFrameAt(*this, nearby, terrain, rule))
-            strength >>= 1;
-    }
+    if (point.getX() > 0 && hasSpecialTerrainFrameAt(*this, point, -1, 0, terrain, rule))
+        strength >>= 1;
+    if (point.getY() > 0 && hasSpecialTerrainFrameAt(*this, point, 0, -1, terrain, rule))
+        strength >>= 1;
+    if (point.getX() < getWidth() - 1
+        && hasSpecialTerrainFrameAt(*this, point, 1, 0, terrain, rule))
+        strength >>= 1;
+    if (point.getY() < getHeight() - 1
+        && hasSpecialTerrainFrameAt(*this, point, 0, 1, terrain, rule))
+        strength >>= 1;
     return strength;
 }
 
