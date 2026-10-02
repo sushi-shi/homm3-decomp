@@ -1537,6 +1537,16 @@ void type_object::clearPlacementMarks()
 
 // Reserved fields are zero-filled blocks written in one operation. Keep their
 // fixed stack sizes and single write; partial-width int staging stays separate.
+// H3M stores each coordinate in one byte. Keep reads interleaved with their
+// writes so both object records and main-town headers share the wire layout.
+static inline void writeRmgMapPosition(
+    TAbstractFile* outputFile, const TRmgMapPosition& position)
+{
+    writeValue<char>(outputFile, position.m_x);
+    writeValue<char>(outputFile, position.m_y);
+    writeValue<char>(outputFile, position.m_z);
+}
+
 template <int N>
 static inline void writeRmgReservedBytes(TAbstractFile* outputFile)
 {
@@ -1553,9 +1563,7 @@ VA(0x00533170, 0x79)
 MAC_ADDRESS(0x2304c8, 0xfc)
 void type_object::write(TAbstractFile* outputFile, int version)
 {
-    writeValue<char>(outputFile, m_position.m_x);
-    writeValue<char>(outputFile, m_position.m_y);
-    writeValue<char>(outputFile, m_position.m_z);
+    writeRmgMapPosition(outputFile, m_position);
     writeValue<int>(outputFile, m_properties->m_prototypeIndex);
     writeRmgReservedBytes<5>(outputFile);
 }
