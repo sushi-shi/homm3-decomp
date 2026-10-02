@@ -7040,6 +7040,16 @@ void type_random_map_generator::connectZones()
         m_progress->advance(0x1900);
 }
 
+// Underground rock and treasure-group filler may close passable floor only
+// outside path and entrance reservations. Keep this ordered policy separate
+// from each caller's terrain and object checks; it does not exclude water.
+// File-local review cleanup, with no recovered original helper name claimed.
+static inline bool canBlockRmgFloorCell(const TRmgMapItem* item)
+{
+    return !item->hasPathClearance() && item->isPassableLand()
+        && !item->isRoadEntrance();
+}
+
 // Underground-only terrain pass retained by generation at 0x549c82.
 // One borrowed level-one map and one brush span both scans. The first scan
 // closes unused floor with rock; the second restores each zone's terrain at
@@ -7067,8 +7077,7 @@ void type_random_map_generator::decorateUnderground()
     TRmgTerrainBrush brush(&map, eTerrainRock, 4);
     for (scan.m_y = 0; scan.m_y < m_map.m_mapHeight; ++scan.m_y) {
         for (scan.m_x = 0; scan.m_x < m_map.m_mapWidth; ++scan.m_x, ++item) {
-            if (!item->hasPathClearance() && item->isPassableLand()
-                && !item->isRoadEntrance())
+            if (canBlockRmgFloorCell(item))
                 brush.paintRectangle(scan.m_x, scan.m_y, 1, 1);
         }
     }
@@ -8480,7 +8489,7 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
             unsigned char pathClearance = destination->hasPathClearance();
             TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
             if (destination->getLandType() != eTerrainWater
-                && !source->hasPathClearance() && source->isPassableLand() && !source->isRoadEntrance()
+                && canBlockRmgFloorCell(source)
                 && destination->isPassableLand() && !destination->isRoadEntrance()) {
                 destination->releasePathClearance();
                 if (source->hasBorderObject()) {
@@ -10338,8 +10347,9 @@ void type_random_map_generator::removeObject(type_object* object)
         --m_objectCountByType[prototype->getObjectType()];
         TAdventureObjectType objectType = prototype->getObjectType();
         TObjectType::TPoint trigger = prototype->m_triggerCell;
-        int zone = m_map.getMapItem(position.m_x - trigger.m_x,
-            position.m_y - trigger.m_y, position.m_z)->m_zoneState.m_zone;
+        TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, trigger);
+        int zone = m_map.getMapItem(entrance.m_x,
+            entrance.m_y, entrance.m_z)->m_zoneState.m_zone;
         if (zone >= 0) {
             m_zones[zone]->decrementObjectCount(objectType);
         }
