@@ -544,7 +544,7 @@ TRmgHalfEdge* TRmgVoronoi::locate(TPoint point)
                 edge = next;
                 continue;
             }
-            TRmgHalfEdge* destinationPrevious = edge->m_twin->m_previous->m_twin;
+            TRmgHalfEdge* destinationPrevious = edge->getLeftNext()->getTwin();
             if (isRmgPointRightOfEdge(point, destinationPrevious))
                 break;
             edge = destinationPrevious;
@@ -558,8 +558,8 @@ TRmgHalfEdge* TRmgVoronoi::locate(TPoint point)
 static inline void copyRmgOppositeSite(TRmgHalfEdge* destination,
     TRmgHalfEdge* source)
 {
-    destination->m_zone = source->m_twin->m_zone;
-    destination->m_sitePosition = source->m_twin->m_sitePosition;
+    destination->m_zone = source->getOppositeZone();
+    destination->m_sitePosition = source->getOppositeSitePosition();
 }
 
 // Provisional edge flip: retail saves both predecessors before detach,
@@ -572,8 +572,8 @@ static void flipRmgEdge(TRmgHalfEdge* edge)
     edge->detach();
     copyRmgOppositeSite(edge, previous);
     copyRmgOppositeSite(edge->m_twin, twinPrevious);
-    edge->splice(previous->m_twin->m_previous);
-    edge->m_twin->splice(twinPrevious->m_twin->m_previous);
+    edge->splice(previous->getLeftNext());
+    edge->m_twin->splice(twinPrevious->getLeftNext());
 }
 
 // Provisional segment predicate, Graphics Gems IV's OnEdge: retail snapshots
