@@ -471,7 +471,7 @@ void rmgTerrainPainter::initializePackedCell(
     rmgTerrainTile tile = m_adapter->getTile(point);
     TRmgPackedTerrainCell& packed = m_packedCells[index];
     packed.setTileValues(tile);
-    packed.m_initialized = true;
+    packed.setInitialized();
 }
 
 VA(0x005B3E40, 0x38)

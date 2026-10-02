@@ -3918,7 +3918,7 @@ void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
     while (pending.size()) {
         position = pending.back();
         pending.pop_back();
-        for (int direction = 0; direction < 8; direction += 2) {
+        for (int direction = 0; direction < RMG_DIRECTION_COUNT; direction += 2) {
             TRmgMapPosition next = position + g_rmgDirections[direction];
             if (!m_map.containsXY(next))
                 continue;
@@ -4544,7 +4544,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
     while (positions.size()) {
         popRmgWorkItem(position, positions, costs);
         unsigned currentCost = m_map.getMapItem(position)->m_movement.m_zonePathCost;
-        for (int direction = 0; direction < 8; ++direction) {
+        for (int direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
             TRmgMapPosition next = position + g_rmgDirections[direction];
             if (!m_map.containsXY(next))
                 continue;
@@ -5269,7 +5269,7 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
     while (openPositions.size()) {
         position = openPositions.back();
         openPositions.pop_back();
-        for (int direction = 0; direction < 8; direction += 2) {
+        for (int direction = 0; direction < RMG_DIRECTION_COUNT; direction += 2) {
             TRmgMapPosition nearby = position + g_rmgDirections[direction];
             if (!m_map.containsXY(nearby))
                 continue;
@@ -6617,20 +6617,20 @@ MAC_ADDRESS(0x249c8c, 0x1c4)
 void type_random_map_generator::placeExtraMines(TRmgZone* zone)
 {
     TRmgTemplateZone* slot = zone->m_templateZone;
-    b8 finished[7];
+    b8 finished[NUM_RESOURCES];
     int totalDensity = 0;
     int densityProduct = 1;
-    initializeRmgDensityCategories(slot->m_mineDensities, 7,
+    initializeRmgDensityCategories(slot->m_mineDensities, NUM_RESOURCES,
         finished, totalDensity, densityProduct);
     if (!totalDensity)
         return;
     int spacing = getRmgDensitySpacing(82944, totalDensity);
-    int countSteps[7];
-    int weightedCounts[7];
-    initializeRmgCategoryStrides(slot->m_mineDensities, slot->m_mineCounts, 7,
+    int countSteps[NUM_RESOURCES];
+    int weightedCounts[NUM_RESOURCES];
+    initializeRmgCategoryStrides(slot->m_mineDensities, slot->m_mineCounts, NUM_RESOURCES,
         densityProduct, countSteps, weightedCounts);
     for (;;) {
-        int selected = selectRmgWeightedCategory(finished, weightedCounts, 7);
+        int selected = selectRmgWeightedCategory(finished, weightedCounts, NUM_RESOURCES);
         if (selected == -1)
             break;
         weightedCounts[selected] += countSteps[selected];
@@ -7201,7 +7201,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
         TRmgMapItem* mapItem = m_map.getMapItem(position);
         int currentCost = mapItem->m_movement.m_cost;
         b8 currentHasRoad = mapItem->m_tile.m_roadType != 0;
-        int direction = 8;
+        int direction = RMG_DIRECTION_COUNT;
         if (mapItem->isRoadEntrance()) {
             type_object* object = mapItem->m_objects[0];
             TObjectType* prototype = object->m_properties->m_prototype;
@@ -7427,7 +7427,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
         popRmgWorkItem(position, openPositions, openCosts);
         mapItem = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
         int positionCost = mapItem->m_movement.m_cost;
-        for (int direction = 0; direction < 8; direction += 2) {
+        for (int direction = 0; direction < RMG_DIRECTION_COUNT; direction += 2) {
             nextPosition = position + g_rmgDirections[direction];
             if (!m_map.containsXY(nextPosition))
                 continue;
@@ -7532,7 +7532,7 @@ void type_random_map_generator::markRiverTargets()
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (item->getLandType() == eTerrainWater) {
-                    for (int direction = 0; direction < 8; direction += 2)
+                    for (int direction = 0; direction < RMG_DIRECTION_COUNT; direction += 2)
                         markRiverCoastTarget(position, direction);
                 }
             }
@@ -7590,7 +7590,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
 
         mapItem = m_map.getMapItem(position);
         int positionCost = mapItem->m_movement.m_cost;
-        for (direction = 0; direction < 8; direction += 2) {
+        for (direction = 0; direction < RMG_DIRECTION_COUNT; direction += 2) {
             nextPosition = position + g_rmgDirections[direction];
 
             if (!m_map.containsXY(nextPosition))
