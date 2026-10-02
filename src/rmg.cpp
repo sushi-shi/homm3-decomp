@@ -536,11 +536,9 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
         TRmgMapPosition(-1, -1, -1), positions, costs);
     int zone = seed->m_zoneState.m_zone;
     while (positions.size()) {
-        TRmgMapPosition currentPosition = positions.back();
-        int queuedCost = costs.back();
+        TRmgMapPosition currentPosition;
+        popRmgMovementPosition(currentPosition, positions, costs);
         TRmgMapItem* current = getMapItem(currentPosition);
-        positions.pop_back();
-        costs.pop_back();
         int currentZone = current->m_zoneState.m_zone;
         int currentCost = currentZone == zone
             ? current->m_movement.m_cost : current->m_movement.m_zonePathCost;
@@ -1343,12 +1341,6 @@ static inline void writeRmgReservedBytes(TAbstractFile* outputFile)
     outputFile->write(reserved, sizeof(reserved));
 }
 
-static inline void writeRmgReservedWord(TAbstractFile* outputFile)
-{
-    int reserved = 0;
-    outputFile->write(&reserved, sizeof(short));
-}
-
 VA(0x00533170, 0x79)
 MAC_ADDRESS(0x2304c8, 0xfc)
 void type_object::write(TAbstractFile* outputFile, int version)
@@ -1371,7 +1363,7 @@ void rmgMonsterObject::write(TAbstractFile* outputFile, int version)
     writeValue<char>(outputFile, 0);
     writeValue<char>(outputFile, 0);
     writeValue<char>(outputFile, 0);
-    writeRmgReservedWord(outputFile);
+    writeRmgReservedBytes<2>(outputFile);
 }
 
 VA(0x005332F0, 0x16A)
@@ -1591,7 +1583,7 @@ void rmgSeerHutObject::write(TAbstractFile* outputFile, int version)
         writeValue<char>(outputFile, m_resourceType);
         writeValue<int>(outputFile, m_resourceCount);
     }
-    writeRmgReservedWord(outputFile);
+    writeRmgReservedBytes<2>(outputFile);
 }
 
 // The factory reserves the hero in disabledHeroes; releaseReservation
@@ -1660,7 +1652,7 @@ void rmgScholarObject::write(TAbstractFile* outputFile, int version)
     writeValue<char>(outputFile, -1); // reward kind
     writeValue<char>(outputFile, 0); // reward value
     writeValue<int>(outputFile, 0);
-    writeRmgReservedWord(outputFile);
+    writeRmgReservedBytes<2>(outputFile);
 }
 
 VA(0x00533F40, 0xAF)
@@ -1669,7 +1661,7 @@ void rmgShrineObject::write(TAbstractFile* outputFile, int version)
 {
     type_object::write(outputFile, version);
     writeValue<char>(outputFile, -1); // spell
-    writeRmgReservedWord(outputFile);
+    writeRmgReservedBytes<2>(outputFile);
     writeValue<char>(outputFile, 0); // reserved byte
 }
 
@@ -1680,7 +1672,7 @@ void rmgSpellScrollObject::write(TAbstractFile* outputFile, int version)
     type_object::write(outputFile, version);
     writeValue<char>(outputFile, 0); // message
     writeValue<char>(outputFile, m_spell);
-    writeRmgReservedWord(outputFile);
+    writeRmgReservedBytes<2>(outputFile);
     writeValue<char>(outputFile, 0);
 }
 
@@ -3631,6 +3623,12 @@ static inline TPoint clampRmgBoundaryToMap(
     return TPoint(x, y);
 }
 
+// Island maps paint surface zone terrain only on the islands.
+static inline bool paintsRmgZoneTerrainOnLevel(int waterContent, int level)
+{
+    return level == 1 || waterContent != RMG_WATER_ISLANDS;
+}
+
 static inline void assignRmgZoneCell(
     TRmgMapItem* item, int zoneIndex, b8 markForTerrain)
 {
@@ -3647,7 +3645,7 @@ void type_random_map_generator::drawIrregularZoneBoundary(
     TPoint from, TPoint to, int zoneIndex, int level, int roughness)
 {
     std::vector<TPoint> pending;
-    b8 markForTerrain = level == 1 || m_waterContent != RMG_WATER_ISLANDS;
+    b8 markForTerrain = paintsRmgZoneTerrainOnLevel(m_waterContent, level);
     pending.push_back(to);
     while (pending.size() > 0) {
         to = pending.back();
@@ -3690,7 +3688,7 @@ void type_random_map_generator::drawStraightZoneBoundary(
         diagonalStep = axialStep;
     }
     diagonalStep.m_x = 1;
-    b8 markForTerrain = level == 1 || m_waterContent != RMG_WATER_ISLANDS;
+    b8 markForTerrain = paintsRmgZoneTerrainOnLevel(m_waterContent, level);
     int error = majorDistance / 2;
     while (from.m_x != to.m_x || from.m_y != to.m_y) {
         TRmgMapItem* item = m_map.getMapItem(from.m_x, from.m_y, level);
@@ -4040,7 +4038,7 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
         }
         while (position.m_x < m_map.getWidth() && item->m_zoneState.m_zone == -1) {
             assignRmgZoneCell(item, zoneIndex,
-                m_waterContent != RMG_WATER_ISLANDS || position.m_z == 1);
+                paintsRmgZoneTerrainOnLevel(m_waterContent, position.m_z));
             if (position.m_y > 0) {
                 if ((item - m_map.getWidth())->m_zoneState.m_zone == -1) {
                     if (!hasUpperSpan) {
@@ -4139,9 +4137,9 @@ static inline TRmgHalfEdge* findRmgBoundaryWithZone(
 // player-count limits stay uninitialized; these records skip template
 // filtering.
 static inline void appendRmgExtraZoneConnection(
-    TRmgZoneConnection& connection, TRmgZone* source, TRmgZone* destination,
-    b8 connected)
+    TRmgZone* source, TRmgZone* destination, b8 connected)
 {
+    TRmgZoneConnection connection;
     connection.m_destination = destination->m_templateZone;
     connection.m_value = 0;
     connection.m_unguarded = true;
@@ -4172,10 +4170,8 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             if (!edge)
                 continue;
             TPoint clipped = clipRmgBoundaryPoint(bounds, edge->m_position, edge->m_previous->m_position);
-            if (bounds.contains(clipped)) {
-                TRmgZoneConnection connection;
-                appendRmgExtraZoneConnection(connection, zone, destination, true);
-            }
+            if (bounds.contains(clipped))
+                appendRmgExtraZoneConnection(zone, destination, true);
         }
     }
     initializeRmgZoneDistances(this, originalZones);
@@ -4201,8 +4197,7 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             }
             if (column < originalZones)
                 continue;
-            TRmgZoneConnection connection;
-            appendRmgExtraZoneConnection(connection, zone, destination, false);
+            appendRmgExtraZoneConnection(zone, destination, false);
             propagateZoneDistances(destination);
         }
     }
@@ -4312,7 +4307,7 @@ void type_random_map_generator::buildZoneBoundaries(
             query.m_x = position.m_x;
             TRmgHalfEdge* first = diagram.locate(query);
             traceZoneBoundary(first,
-                zone < originalZones && (m_waterContent != RMG_WATER_ISLANDS || level == 1));
+                zone < originalZones && paintsRmgZoneTerrainOnLevel(m_waterContent, level));
         }
     }
     for (zone = 0; zone < m_zones.size(); ++zone) {
