@@ -837,14 +837,15 @@ enum TRmgTerrainGapAxis {
     RMG_VERTICAL_GAP
 };
 
-// A queued gap that has closed no longer needs primary repair; dequeue it
+// Painting beside a queued paint-terrain cell closes its gap on that axis.
+// Without a perpendicular gap it no longer needs primary repair; dequeue it
 // and queue its other-terrain neighbours instead.
 static inline void resolveQueuedTerrainGap(rmgTerrainPainter& painter,
-    const TRmgGridPoint& point, TRmgTerrainGapAxis axis)
+    const TRmgGridPoint& point, TRmgTerrainGapAxis closedAxis)
 {
     if (painter.m_primaryPoints.find(point) == painter.m_primaryPoints.end())
         return;
-    b8 remainsGap = axis == RMG_HORIZONTAL_GAP
+    b8 remainsGap = closedAxis == RMG_VERTICAL_GAP
         ? painter.isHorizontalGap(point) : painter.isVerticalGap(point);
     if (!remainsGap) {
         painter.m_primaryPoints.erase(point);
@@ -864,19 +865,19 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
     if (g_rmgTerrainRules[m_paintTerrain]->m_allowsSeparatedNeighbours) {
         if (point.m_y > 0) {
             TRmgGridPoint nearby(point.m_x, point.m_y - 1);
-            resolveQueuedTerrainGap(*this, nearby, RMG_HORIZONTAL_GAP);
+            resolveQueuedTerrainGap(*this, nearby, RMG_VERTICAL_GAP);
         }
         if (point.m_y < m_size.m_y - 1) {
             TRmgGridPoint nearby(point.m_x, point.m_y + 1);
-            resolveQueuedTerrainGap(*this, nearby, RMG_HORIZONTAL_GAP);
+            resolveQueuedTerrainGap(*this, nearby, RMG_VERTICAL_GAP);
         }
         if (point.m_x > 0) {
             TRmgGridPoint nearby(point.m_x - 1, point.m_y);
-            resolveQueuedTerrainGap(*this, nearby, RMG_VERTICAL_GAP);
+            resolveQueuedTerrainGap(*this, nearby, RMG_HORIZONTAL_GAP);
         }
         if (point.m_x < m_size.m_x - 1) {
             TRmgGridPoint nearby(point.m_x + 1, point.m_y);
-            resolveQueuedTerrainGap(*this, nearby, RMG_VERTICAL_GAP);
+            resolveQueuedTerrainGap(*this, nearby, RMG_HORIZONTAL_GAP);
         }
     } else {
         b8 neighbourExists[TILE_DIR_COUNT];

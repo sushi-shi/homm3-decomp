@@ -1669,8 +1669,8 @@ public:
     void loadTemplates();
     void placeMines();
     void prepareZoneConnections();
-    void expandObstacleClearance();
-    void prepareWaterZoneConnections(TRmgZone* zone);
+    void markZoneBorders();
+    void placeWaterZoneIslands(TRmgZone* zone);
     void createWaterZoneIsland(const TRmgZoneBounds& bounds, int level);
     void floodWaterZoneDistances(TRmgMapPosition position, int zoneIndex);
     void buildZoneConnectionPaths();

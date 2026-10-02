@@ -4556,7 +4556,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
 // the candidate list after every island.
 VA(0x0053F470, 0x409)
 MAC_ADDRESS(0x24123c, 0x638)
-void type_random_map_generator::prepareWaterZoneConnections(TRmgZone* zone)
+void type_random_map_generator::placeWaterZoneIslands(TRmgZone* zone)
 {
     if (zone->m_terrain != eTerrainWater)
         return;
@@ -4634,7 +4634,7 @@ static inline void releaseRmgNeighborhoodPathClearance(type_random_map& map,
 // another zone, unless that zone is joined by an unguarded surface connection.
 VA(0x0053F880, 0x429)
 MAC_ADDRESS(0x241874, 0x628)
-void type_random_map_generator::expandObstacleClearance()
+void type_random_map_generator::markZoneBorders()
 {
     TRmgMapItem* current = m_map.m_mapItems;
     TRmgMapPosition position;
@@ -5448,19 +5448,20 @@ b8 type_random_map_generator::createSubterraneanGate(
     if (source->m_terrain == eTerrainWater)
         return false;
 
-    TRmgZoneBounds sourceBounds = source->m_bounds;
+    // Gate sites lie where the two zones' bounds overlap.
+    TRmgZoneBounds overlap = source->m_bounds;
     {
         TRmgZoneBounds destinationBounds = destination->m_bounds;
-        sourceBounds.m_minimumX = max(
-            sourceBounds.m_minimumX, destinationBounds.m_minimumX);
-        sourceBounds.m_minimumY = max(
-            sourceBounds.m_minimumY, destinationBounds.m_minimumY);
-        sourceBounds.m_maximumX = min(
-            sourceBounds.m_maximumX, destinationBounds.m_maximumX);
-        sourceBounds.m_maximumY = min(
-            sourceBounds.m_maximumY, destinationBounds.m_maximumY);
+        overlap.m_minimumX = max(
+            overlap.m_minimumX, destinationBounds.m_minimumX);
+        overlap.m_minimumY = max(
+            overlap.m_minimumY, destinationBounds.m_minimumY);
+        overlap.m_maximumX = min(
+            overlap.m_maximumX, destinationBounds.m_maximumX);
+        overlap.m_maximumY = min(
+            overlap.m_maximumY, destinationBounds.m_maximumY);
     }
-    if (sourceBounds.m_minimumX >= sourceBounds.m_maximumX || sourceBounds.m_minimumY >= sourceBounds.m_maximumY)
+    if (overlap.m_minimumX >= overlap.m_maximumX || overlap.m_minimumY >= overlap.m_maximumY)
         return false;
 
     int gateIndex = rand() % m_objectPrototypes[UNDERGROUND_GATE].size();
@@ -5472,8 +5473,8 @@ b8 type_random_map_generator::createSubterraneanGate(
     TRmgMapPosition position;
     position = source->getLevelPosition();
 
-    for (position.m_y = sourceBounds.m_minimumY; position.m_y < sourceBounds.m_maximumY; ++position.m_y) {
-        for (position.m_x = sourceBounds.m_minimumX; position.m_x < sourceBounds.m_maximumX; ++position.m_x) {
+    for (position.m_y = overlap.m_minimumY; position.m_y < overlap.m_maximumY; ++position.m_y) {
+        for (position.m_x = overlap.m_minimumX; position.m_x < overlap.m_maximumX; ++position.m_x) {
             TRmgMapItem* sourceItem = m_map.getMapItem(position);
             if (sourceItem->m_zoneState.m_zone != sourceZone)
                 continue;
@@ -6170,7 +6171,7 @@ MAC_ADDRESS(0x24817c, 0x1ac)
 void type_random_map_generator::prepareZoneConnections()
 {
     carveBranchingPaths();
-    expandObstacleClearance();
+    markZoneBorders();
     TRmgMapItem* item = m_map.m_mapItems;
     TRmgMapPosition position;
     for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
@@ -6184,7 +6185,7 @@ void type_random_map_generator::prepareZoneConnections()
         }
     }
     for (unsigned int zone = 0; zone < m_zones.size(); ++zone)
-        prepareWaterZoneConnections(m_zones[zone]);
+        placeWaterZoneIslands(m_zones[zone]);
     buildZoneConnectionPaths();
     repairWaterZoneBorders();
     connectZones();
