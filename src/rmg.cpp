@@ -5685,8 +5685,8 @@ void type_random_map_generator::createMonolithConnection(
     if (object)
         protectRmgMonolith(*this, object, connection, source, guardValue);
     if (exitProperties) {
-        object = placeRmgMonolith(*this, exitProperties, source, true);
-        object = placeRmgMonolith(*this, exitProperties, destination, true);
+        placeRmgMonolith(*this, exitProperties, source, true);
+        placeRmgMonolith(*this, exitProperties, destination, true);
     }
 }
 
@@ -7020,8 +7020,7 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
         for (point.m_x = workingPosition.m_x - 1; point.m_x <= workingPosition.m_x + 1; ++point.m_x) {
             for (point.m_y = workingPosition.m_y - 1; point.m_y <= workingPosition.m_y + 1; ++point.m_y) {
                 TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
-                if (item->isRoadEntrance()
-                    && item->m_objects[0]->m_properties->m_prototype->getObjectType() == MONSTER)
+                if (item->isRoadEntrance() && item->getEntranceObjectType() == MONSTER)
                     return false;
             }
         }
@@ -7265,8 +7264,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
                 continue;
 
             if (nextMapItem->isRoadEntrance()) {
-                int objectType =
-                    nextMapItem->m_objects[0]->m_properties->m_prototype->getObjectType();
+                int objectType = nextMapItem->getEntranceObjectType();
                 const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
                 if (traits.m_blocksLanding && !traits.m_trait2)
                     continue;

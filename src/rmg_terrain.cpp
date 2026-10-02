@@ -484,7 +484,8 @@ int __fastcall getRmgTerrainNeighbourKind(int terrain, int neighbourTerrain)
     const TRmgTerrainRule* neighbourRule = g_rmgTerrainRules[neighbourTerrain];
     if (rule->m_blendsWithOtherTerrain) {
         if (neighbourRule->m_blendsWithOtherTerrain)
-            return terrain != eTerrainDirt;
+            return terrain == eTerrainDirt
+                ? RMG_NEIGHBOUR_NO_EDGE : RMG_NEIGHBOUR_BLEND_EDGE;
     }
     return RMG_NEIGHBOUR_HARD_EDGE;
 }
