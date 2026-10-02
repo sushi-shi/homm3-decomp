@@ -448,6 +448,41 @@ int TRmgTableTerrainRule::selectTransitionFrame(
     return oldFrame;
 }
 
+// Cell transition shapes, unreflected (flipX/flipY give the rest). Names list
+// the other-terrain neighbours, each run followed by its edge kind: N_W = both
+// sides (outer corner), SE = that diagonal only, DIAG = corner on a 45-degree
+// edge. Id 1 is unused. Diagrams: docs/reference/rmg-terrain-shapes.md
+enum ERmgTerrainShape {
+    SHAPE_FILL = 0,
+    SHAPE_N_W_BLEND = 2,
+    SHAPE_W_BLEND = 3,
+    SHAPE_N_BLEND = 4,
+    SHAPE_SE_BLEND = 5,
+    SHAPE_N_W_DIAG_BLEND = 6,
+    SHAPE_SE_DIAG_BLEND = 7,
+    SHAPE_N_W_HARD = 8,
+    SHAPE_W_HARD = 9,
+    SHAPE_N_HARD = 10,
+    SHAPE_SE_HARD = 11,
+    SHAPE_N_W_DIAG_HARD = 12,
+    SHAPE_SE_DIAG_HARD = 13,
+    SHAPE_NW_SE_BLEND = 14,
+    SHAPE_NW_BLEND_SE_HARD = 15,
+    SHAPE_NW_SE_HARD = 16,
+    SHAPE_E_BLEND_SW_HARD = 17,
+    SHAPE_S_BLEND_NE_HARD = 18,
+    SHAPE_E_BLEND_SE_HARD = 19,
+    SHAPE_S_BLEND_SE_HARD = 20,
+    SHAPE_E_HARD_SW_BLEND = 21,
+    SHAPE_S_HARD_NE_BLEND = 22,
+    SHAPE_N_W_SE_BLEND = 23,
+    SHAPE_N_W_SE_HARD = 24,
+    SHAPE_N_W_BLEND_SE_HARD = 25,
+    SHAPE_N_W_HARD_SE_BLEND = 26,
+    SHAPE_E_S_BLEND_SE_HARD = 27,
+    SHAPE_E_S_BLEND_NE_SW_HARD = 28
+};
+
 int __fastcall selectTerrainTransition(
     const int* neighbours, TRmgTerrainFlip* flip);
 
@@ -560,11 +595,11 @@ int __fastcall selectTerrainTransition(
             if (neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE &&
                 neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
                 *flip = flips[reflection];
-                return 28;
+                return SHAPE_E_S_BLEND_NE_SW_HARD;
             }
             if (neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
                 *flip = flips[reflection];
-                return 27;
+                return SHAPE_E_S_BLEND_SE_HARD;
             }
         }
     }
@@ -574,12 +609,14 @@ int __fastcall selectTerrainTransition(
         if (hasNorthwestTerrainCorner(neighbours, order, RMG_NEIGHBOUR_BLEND_EDGE)) {
             if (neighbours[order[TILE_DIR_SOUTHEAST]] != RMG_NEIGHBOUR_NO_EDGE) {
                 *flip = flips[reflection];
-                return neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE ? 23 : 25;
+                return neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE
+                    ? SHAPE_N_W_SE_BLEND : SHAPE_N_W_BLEND_SE_HARD;
             }
         } else if (hasNorthwestTerrainCorner(neighbours, order, RMG_NEIGHBOUR_HARD_EDGE)) {
             if (neighbours[order[TILE_DIR_SOUTHEAST]] != RMG_NEIGHBOUR_NO_EDGE) {
                 *flip = flips[reflection];
-                return neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE ? 24 : 26;
+                return neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE
+                    ? SHAPE_N_W_SE_HARD : SHAPE_N_W_HARD_SE_BLEND;
             }
         }
     }
@@ -590,20 +627,20 @@ int __fastcall selectTerrainTransition(
                 RMG_NEIGHBOUR_HARD_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
             if (neighbours[order[TILE_DIR_SOUTHWEST]] != RMG_NEIGHBOUR_HARD_EDGE) {
                 *flip = flips[reflection];
-                return 21;
+                return SHAPE_E_HARD_SW_BLEND;
             } else {
                 *flip = makeTerrainFlip(!flips[reflection].m_flipX, !flips[reflection].m_flipY);
-                return 8;
+                return SHAPE_N_W_HARD;
             }
         }
         if (hasSoutheastTerrainCorner(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_HARD_EDGE)) {
             if (neighbours[order[TILE_DIR_NORTHEAST]] != RMG_NEIGHBOUR_HARD_EDGE) {
                 *flip = flips[reflection];
-                return 22;
+                return SHAPE_S_HARD_NE_BLEND;
             } else {
                 *flip = makeTerrainFlip(!flips[reflection].m_flipX, !flips[reflection].m_flipY);
-                return 8;
+                return SHAPE_N_W_HARD;
             }
         }
     }
@@ -614,9 +651,9 @@ int __fastcall selectTerrainTransition(
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
             *flip = flips[reflection];
             if (neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE)
-                return 17;
+                return SHAPE_E_BLEND_SW_HARD;
             if (neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE)
-                return 18;
+                return SHAPE_S_BLEND_NE_HARD;
         }
     }
     for (reflection = 0; reflection < 4; ++reflection) {
@@ -624,11 +661,11 @@ int __fastcall selectTerrainTransition(
             [flips[reflection].m_flipX][flips[reflection].m_flipY];
         if (hasNorthwestTerrainCorner(neighbours, order, RMG_NEIGHBOUR_BLEND_EDGE)) {
             *flip = flips[reflection];
-            return 2;
+            return SHAPE_N_W_BLEND;
         }
         if (hasNorthwestTerrainCorner(neighbours, order, RMG_NEIGHBOUR_HARD_EDGE)) {
             *flip = flips[reflection];
-            return 8;
+            return SHAPE_N_W_HARD;
         }
     }
     for (reflection = 0; reflection < 4; ++reflection) {
@@ -637,30 +674,30 @@ int __fastcall selectTerrainTransition(
         if (hasEastSouthwestTerrainEdges(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_HARD_EDGE)) {
             *flip = flips[reflection];
-            return 17;
+            return SHAPE_E_BLEND_SW_HARD;
         }
         if (hasSouthNortheastTerrainEdges(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_HARD_EDGE)) {
             *flip = flips[reflection];
-            return 18;
+            return SHAPE_S_BLEND_NE_HARD;
         }
         if (hasEastSouthwestTerrainEdges(neighbours, order,
                 RMG_NEIGHBOUR_HARD_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
             *flip = flips[reflection];
-            return 21;
+            return SHAPE_E_HARD_SW_BLEND;
         }
         if (hasSouthNortheastTerrainEdges(neighbours, order,
                 RMG_NEIGHBOUR_HARD_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
             *flip = flips[reflection];
-            return 22;
+            return SHAPE_S_HARD_NE_BLEND;
         }
         if (hasOffsetNorthwestTerrainCorner(neighbours, order, RMG_NEIGHBOUR_BLEND_EDGE)) {
             *flip = flips[reflection];
-            return 2;
+            return SHAPE_N_W_BLEND;
         }
         if (hasOffsetNorthwestTerrainCorner(neighbours, order, RMG_NEIGHBOUR_HARD_EDGE)) {
             *flip = flips[reflection];
-            return 8;
+            return SHAPE_N_W_HARD;
         }
     }
     for (reflection = 0; reflection < 4; ++reflection) {
@@ -669,12 +706,12 @@ int __fastcall selectTerrainTransition(
         if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
             neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
             *flip = flips[reflection];
-            return 19;
+            return SHAPE_E_BLEND_SE_HARD;
         }
         if (neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_BLEND_EDGE &&
             neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
             *flip = flips[reflection];
-            return 20;
+            return SHAPE_S_BLEND_SE_HARD;
         }
     }
     for (reflection = 0; reflection < 4; ++reflection) {
@@ -682,19 +719,19 @@ int __fastcall selectTerrainTransition(
             [flips[reflection].m_flipX][flips[reflection].m_flipY];
         if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_BLEND_EDGE) {
             *flip = flips[reflection];
-            return 4;
+            return SHAPE_N_BLEND;
         }
         if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_HARD_EDGE) {
             *flip = flips[reflection];
-            return 10;
+            return SHAPE_N_HARD;
         }
         if (neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
             *flip = flips[reflection];
-            return 3;
+            return SHAPE_W_BLEND;
         }
         if (neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
             *flip = flips[reflection];
-            return 9;
+            return SHAPE_W_HARD;
         }
     }
     for (reflection = 0; reflection < 4; ++reflection) {
@@ -703,17 +740,17 @@ int __fastcall selectTerrainTransition(
         if (hasOppositeTerrainDiagonalEdges(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
             *flip = flips[reflection];
-            return 14;
+            return SHAPE_NW_SE_BLEND;
         }
         if (hasOppositeTerrainDiagonalEdges(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_HARD_EDGE)) {
             *flip = flips[reflection];
-            return 15;
+            return SHAPE_NW_BLEND_SE_HARD;
         }
         if (hasOppositeTerrainDiagonalEdges(neighbours, order,
                 RMG_NEIGHBOUR_HARD_EDGE, RMG_NEIGHBOUR_HARD_EDGE)) {
             *flip = flips[reflection];
-            return 16;
+            return SHAPE_NW_SE_HARD;
         }
     }
     for (reflection = 0; reflection < 4; ++reflection) {
@@ -721,15 +758,15 @@ int __fastcall selectTerrainTransition(
             [flips[reflection].m_flipX][flips[reflection].m_flipY];
         if (neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
             *flip = flips[reflection];
-            return 5;
+            return SHAPE_SE_BLEND;
         }
         if (neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
             *flip = flips[reflection];
-            return 11;
+            return SHAPE_SE_HARD;
         }
     }
     *flip = makeTerrainFlip(false, false);
-    return 0;
+    return SHAPE_FILL;
 }
 
 VA(0x005B45F0, 0x26D)
@@ -1163,18 +1200,18 @@ void rmgTerrainPainter::paintTransitions()
                 int transition;
                 TRmgTerrainFlip flip;
                 transition = selectTerrainTransition(neighbours, &flip);
-                if (transition == RMG_TERRAIN_FIRST_DIAGONAL_BLEND) {
+                if (transition == SHAPE_N_W_BLEND) {
                     if (checkFirstDiagonal(point, flip))
-                        transition = 6;
-                } else if (transition == RMG_TERRAIN_FIRST_DIAGONAL_HARD) {
+                        transition = SHAPE_N_W_DIAG_BLEND;
+                } else if (transition == SHAPE_N_W_HARD) {
                     if (checkFirstDiagonal(point, flip))
-                        transition = 12;
-                } else if (transition == RMG_TERRAIN_SECOND_DIAGONAL_BLEND) {
+                        transition = SHAPE_N_W_DIAG_HARD;
+                } else if (transition == SHAPE_SE_BLEND) {
                     if (checkSecondDiagonal(point, flip))
-                        transition = 7;
-                } else if (transition == RMG_TERRAIN_SECOND_DIAGONAL_HARD) {
+                        transition = SHAPE_SE_DIAG_BLEND;
+                } else if (transition == SHAPE_SE_HARD) {
                     if (checkSecondDiagonal(point, flip))
-                        transition = 13;
+                        transition = SHAPE_SE_DIAG_HARD;
                 }
 
                 rmgTerrainTile tile = getPackedCell(point)->getTile();
@@ -1547,62 +1584,99 @@ bool operator<(const TRmgCoordinatePoint<Coordinate>& left,
 // Terrain frame tables and the per-terrain rules built from them.
 DATA(0x006424A8)
 const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[48] = {
-    {0, false, false}, {0, false, false}, {0, false, false}, {0, false, false}, {0, false, false}, {0, false, false},
-    {0, false, false}, {0, false, false}, {8, false, false}, {8, false, false}, {8, true, false}, {8, true, false},
-    {8, false, true}, {8, false, true}, {8, true, true}, {8, true, true}, {9, false, false}, {9, false, false},
-    {9, true, false}, {9, true, false}, {10, false, false}, {10, false, false}, {10, false, true}, {10, false, true},
-    {11, false, false}, {11, false, false}, {11, true, false}, {11, true, false}, {11, false, true}, {11, false, true},
-    {11, true, true}, {11, true, true}, {12, false, false}, {12, false, false}, {12, true, false}, {12, true, false},
-    {12, false, true}, {12, false, true}, {12, true, true}, {12, true, true}, {13, false, false}, {13, false, false},
-    {13, true, false}, {13, true, false}, {13, false, true}, {13, false, true}, {13, true, true}, {13, true, true},
+    {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false},
+    {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false},
+    {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false},
+    {SHAPE_N_W_HARD, false, false}, {SHAPE_N_W_HARD, false, false}, {SHAPE_N_W_HARD, true, false},
+    {SHAPE_N_W_HARD, true, false}, {SHAPE_N_W_HARD, false, true}, {SHAPE_N_W_HARD, false, true},
+    {SHAPE_N_W_HARD, true, true}, {SHAPE_N_W_HARD, true, true},
+    {SHAPE_W_HARD, false, false}, {SHAPE_W_HARD, false, false}, {SHAPE_W_HARD, true, false},
+    {SHAPE_W_HARD, true, false},
+    {SHAPE_N_HARD, false, false}, {SHAPE_N_HARD, false, false}, {SHAPE_N_HARD, false, true},
+    {SHAPE_N_HARD, false, true},
+    {SHAPE_SE_HARD, false, false}, {SHAPE_SE_HARD, false, false}, {SHAPE_SE_HARD, true, false},
+    {SHAPE_SE_HARD, true, false}, {SHAPE_SE_HARD, false, true}, {SHAPE_SE_HARD, false, true},
+    {SHAPE_SE_HARD, true, true}, {SHAPE_SE_HARD, true, true},
+    {SHAPE_N_W_DIAG_HARD, false, false}, {SHAPE_N_W_DIAG_HARD, false, false},
+    {SHAPE_N_W_DIAG_HARD, true, false}, {SHAPE_N_W_DIAG_HARD, true, false},
+    {SHAPE_N_W_DIAG_HARD, false, true}, {SHAPE_N_W_DIAG_HARD, false, true},
+    {SHAPE_N_W_DIAG_HARD, true, true}, {SHAPE_N_W_DIAG_HARD, true, true},
+    {SHAPE_SE_DIAG_HARD, false, false}, {SHAPE_SE_DIAG_HARD, false, false},
+    {SHAPE_SE_DIAG_HARD, true, false}, {SHAPE_SE_DIAG_HARD, true, false},
+    {SHAPE_SE_DIAG_HARD, false, true}, {SHAPE_SE_DIAG_HARD, false, true},
+    {SHAPE_SE_DIAG_HARD, true, true}, {SHAPE_SE_DIAG_HARD, true, true},
 };
 
 DATA(0x00642628)
 static const TRmgTerrainPatternEntry g_rmgLandPatternEntries[79] = {
-    {2, false}, {2, false}, {2, false}, {2, false}, {3, false}, {3, false},
-    {3, false}, {3, false}, {4, false}, {4, false}, {4, false}, {4, false},
-    {5, false}, {5, false}, {5, false}, {5, false}, {6, false}, {6, false},
-    {7, false}, {7, false}, {8, false}, {8, false}, {8, false}, {8, false},
-    {9, false}, {9, false}, {9, false}, {9, false}, {10, false}, {10, false},
-    {10, false}, {10, false}, {11, false}, {11, false}, {11, false}, {11, false},
-    {12, false}, {12, false}, {13, false}, {13, false}, {14, false}, {15, false},
-    {16, false}, {17, false}, {18, false}, {19, false}, {20, false}, {21, false},
-    {22, false}, {0, false}, {0, false}, {0, false}, {0, false}, {0, false},
-    {0, false}, {0, false}, {0, false}, {0, true}, {0, true}, {0, true},
-    {0, true}, {0, true}, {0, true}, {0, true}, {0, true}, {0, true},
-    {0, true}, {0, true}, {0, true}, {0, true}, {0, true}, {0, true},
-    {0, true}, {23, false}, {24, false}, {25, false}, {26, false}, {28, false},
-    {27, false},
+    {SHAPE_N_W_BLEND, false}, {SHAPE_N_W_BLEND, false}, {SHAPE_N_W_BLEND, false},
+    {SHAPE_N_W_BLEND, false},
+    {SHAPE_W_BLEND, false}, {SHAPE_W_BLEND, false}, {SHAPE_W_BLEND, false}, {SHAPE_W_BLEND, false},
+    {SHAPE_N_BLEND, false}, {SHAPE_N_BLEND, false}, {SHAPE_N_BLEND, false}, {SHAPE_N_BLEND, false},
+    {SHAPE_SE_BLEND, false}, {SHAPE_SE_BLEND, false}, {SHAPE_SE_BLEND, false},
+    {SHAPE_SE_BLEND, false}, {SHAPE_N_W_DIAG_BLEND, false}, {SHAPE_N_W_DIAG_BLEND, false},
+    {SHAPE_SE_DIAG_BLEND, false}, {SHAPE_SE_DIAG_BLEND, false},
+    {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false},
+    {SHAPE_N_W_HARD, false},
+    {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false},
+    {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false},
+    {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false},
+    {SHAPE_N_W_DIAG_HARD, false}, {SHAPE_N_W_DIAG_HARD, false},
+    {SHAPE_SE_DIAG_HARD, false}, {SHAPE_SE_DIAG_HARD, false}, {SHAPE_NW_SE_BLEND, false},
+    {SHAPE_NW_BLEND_SE_HARD, false}, {SHAPE_NW_SE_HARD, false}, {SHAPE_E_BLEND_SW_HARD, false},
+    {SHAPE_S_BLEND_NE_HARD, false}, {SHAPE_E_BLEND_SE_HARD, false}, {SHAPE_S_BLEND_SE_HARD, false},
+    {SHAPE_E_HARD_SW_BLEND, false}, {SHAPE_S_HARD_NE_BLEND, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_N_W_SE_BLEND, false}, {SHAPE_N_W_SE_HARD, false}, {SHAPE_N_W_BLEND_SE_HARD, false},
+    {SHAPE_N_W_HARD_SE_BLEND, false}, {SHAPE_E_S_BLEND_NE_SW_HARD, false},
+    {SHAPE_E_S_BLEND_SE_HARD, false},
 };
 
 DATA(0x006428A0)
 static const TRmgTerrainPatternEntry g_rmgDirtPatternEntries[46] = {
-    {8, false}, {8, false}, {8, false}, {8, false}, {9, false}, {9, false},
-    {9, false}, {9, false}, {10, false}, {10, false}, {10, false}, {10, false},
-    {11, false}, {11, false}, {11, false}, {11, false}, {12, false}, {12, false},
-    {13, false}, {13, false}, {16, false}, {0, false}, {0, false}, {0, false},
-    {0, false}, {0, false}, {0, false}, {0, false}, {0, false}, {0, true},
-    {0, true}, {0, true}, {0, true}, {0, true}, {0, true}, {0, true},
-    {0, true}, {0, true}, {0, true}, {0, true}, {0, true}, {0, true},
-    {0, true}, {0, true}, {0, true}, {24, false},
+    {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false},
+    {SHAPE_N_W_HARD, false},
+    {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false},
+    {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false},
+    {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false},
+    {SHAPE_N_W_DIAG_HARD, false}, {SHAPE_N_W_DIAG_HARD, false},
+    {SHAPE_SE_DIAG_HARD, false}, {SHAPE_SE_DIAG_HARD, false}, {SHAPE_NW_SE_HARD, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_N_W_SE_HARD, false},
 };
 
 DATA(0x00642A10)
 static const TRmgTerrainPatternEntry g_rmgSandPatternEntries[24] = {
-    {0, false}, {0, false}, {0, false}, {0, false}, {0, false}, {0, false},
-    {0, false}, {0, false}, {0, true}, {0, true}, {0, true}, {0, true},
-    {0, true}, {0, true}, {0, true}, {0, true}, {0, true}, {0, true},
-    {0, true}, {0, true}, {0, true}, {0, true}, {0, true}, {0, true},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
 };
 
 DATA(0x00642AD0)
 static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] = {
-    {8, false}, {8, false}, {8, false}, {8, false}, {9, false}, {9, false},
-    {9, false}, {9, false}, {10, false}, {10, false}, {10, false}, {10, false},
-    {11, false}, {11, false}, {11, false}, {11, false}, {12, false}, {12, false},
-    {13, false}, {13, false}, {16, false}, {0, false}, {0, false}, {0, false},
-    {0, false}, {0, false}, {0, false}, {0, false}, {0, false}, {0, false},
-    {0, false}, {0, false}, {0, false},
+    {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false},
+    {SHAPE_N_W_HARD, false},
+    {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false},
+    {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false},
+    {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false},
+    {SHAPE_N_W_DIAG_HARD, false}, {SHAPE_N_W_DIAG_HARD, false},
+    {SHAPE_SE_DIAG_HARD, false}, {SHAPE_SE_DIAG_HARD, false}, {SHAPE_NW_SE_HARD, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
 };
 
 DATA(0x006A48D0)

@@ -199,13 +199,6 @@ struct TRmgTerrainGap {
     unsigned int m_length;
 };
 
-enum TRmgTerrainTransitionCase {
-    RMG_TERRAIN_FIRST_DIAGONAL_BLEND = 2,
-    RMG_TERRAIN_SECOND_DIAGONAL_BLEND = 5,
-    RMG_TERRAIN_FIRST_DIAGONAL_HARD = 8,
-    RMG_TERRAIN_SECOND_DIAGONAL_HARD = 11
-};
-
 class rmgTerrainPainter {
 public:
     TRmgMapInterface* m_adapter;                // +0x00
