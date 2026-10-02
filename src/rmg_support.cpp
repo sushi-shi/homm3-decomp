@@ -658,9 +658,9 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 
     for (;;) {
         TRmgHalfEdge* previous = edge->getPrevious();
-        if (isRmgPointRightOfEdge(previous->getTwin()->getSitePosition(), edge)) {
+        if (isRmgPointRightOfEdge(previous->getOppositeSitePosition(), edge)) {
             if (isRmgPointInsideCircumcircle(edge->getSitePosition(),
-                    previous->getTwin()->getSitePosition(), edge->getOppositeSitePosition(), point)) {
+                    previous->getOppositeSitePosition(), edge->getOppositeSitePosition(), point)) {
                 flipRmgEdge(edge);
                 edge = edge->getPrevious();
                 continue;
