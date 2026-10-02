@@ -4885,6 +4885,23 @@ void type_random_map_generator::prepareWaterZoneConnections(TRmgZone* zone)
     }
 }
 
+// Both border-expansion passes finish by releasing path clearance on the
+// unoccupied cells of a clipped square around the processed cell, row-major.
+static inline void releaseRmgNeighborhoodPathClearance(type_random_map& map,
+    const TRmgMapPosition& center, int radius)
+{
+    TRmgZoneBounds bounds;
+    setRmgNeighborhoodBounds(bounds, center, map, radius);
+    TRmgMapPosition nearby;
+    nearby.m_z = center.m_z;
+    for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
+        for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
+            TRmgMapItem* item = map.getMapItem(nearby);
+            item->releaseUnoccupiedPathClearance();
+        }
+    }
+}
+
 // Separate dry assigned cells near water or another zone according to the
 // connection, level and guard policy. Keep the two distinct connection-policy
 // tests at 0x53fa3f..0x53fa58.
@@ -4935,13 +4952,7 @@ void type_random_map_generator::expandObstacleClearance()
                         }
                     }
                 }
-                setRmgNeighborhoodBounds(bounds, position, m_map, 1);
-                for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
-                    for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
-                        TRmgMapItem* item = m_map.getMapItem(nearby);
-                        item->releaseUnoccupiedPathClearance();
-                    }
-                }
+                releaseRmgNeighborhoodPathClearance(m_map, position, 1);
             }
         }
     }
@@ -5010,13 +5021,7 @@ void type_random_map_generator::repairWaterZoneBorders()
                     }
                 }
 
-                setRmgNeighborhoodBounds(bounds, position, m_map, 2);
-                for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
-                    for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
-                        TRmgMapItem* item = m_map.getMapItem(nearby);
-                        item->releaseUnoccupiedPathClearance();
-                    }
-                }
+                releaseRmgNeighborhoodPathClearance(m_map, position, 2);
             }
             if (m_progress)
                 m_progress->advance(20);
@@ -5324,17 +5329,6 @@ static inline void markRmgBorderObjectCell(TRmgMapItem* item, int direction)
     }
 }
 
-// A placed gate border extends to the empty cells west then east of its
-// entrance. The caller's guard positions remain unshifted.
-static inline void markRmgGateSideBorderCells(type_random_map& map,
-    TRmgMapPosition entrance, int direction)
-{
-    --entrance.m_x;
-    markRmgBorderObjectCell(map.getMapItem(entrance), direction);
-    entrance.m_x += 2;
-    markRmgBorderObjectCell(map.getMapItem(entrance), direction);
-}
-
 VA(0x00540FC0, 0x172)
 MAC_ADDRESS(0x243824, 0x2d4) // anchor-callee createGroundConnection; thiscall, ret 0x10
 void type_random_map_generator::markBorderObjectArea(
@@ -5405,6 +5399,22 @@ static inline void placeRmgGroundConnectionBorder(type_random_map_generator& gen
     }
 }
 
+// A successful gate border placement suppresses both gate guards, then
+// extends the border to the empty cells west then east of the entrance.
+// The caller's guard positions remain unshifted.
+static inline void placeRmgGateConnectionBorder(type_random_map_generator& generator,
+    TRmgMapPosition entrance, TRmgZone* keyTentZone, int& guardValue)
+{
+    int direction = generator.placeBorderObject(entrance, 1, keyTentZone);
+    if (direction >= 0) {
+        guardValue = 0;
+        --entrance.m_x;
+        markRmgBorderObjectCell(generator.m_map.getMapItem(entrance), direction);
+        entrance.m_x += 2;
+        markRmgBorderObjectCell(generator.m_map.getMapItem(entrance), direction);
+    }
+}
+
 // Unguarded template connections bypass valuation entirely. Keep the native
 // scalar value helper on the guarded path. Preserve the shipyard's consecutive
 // strength-before-value snapshots, after the unguarded early return.
@@ -5416,6 +5426,31 @@ static inline int getRmgConnectionGuardValue(const TRmgZoneConnection* connectio
     int strength = generator.m_monsterStrength;
     int value = connection->m_value;
     return getRmgGuardValue(value, strength);
+}
+
+// Keep every admitted position tied for the best score. A strictly better
+// score restarts the list and becomes the new bound; callers retain their own
+// admission tests, including spacing minimums and score snapshots.
+static inline void addRmgHighestScoreCandidate(
+    std::vector<TRmgMapPosition>& candidates, const TRmgMapPosition& position,
+    int score, int& highestScore)
+{
+    if (score > highestScore) {
+        highestScore = score;
+        candidates.clear();
+    }
+    candidates.push_back(position);
+}
+
+static inline void addRmgLowestScoreCandidate(
+    std::vector<TRmgMapPosition>& candidates, const TRmgMapPosition& position,
+    int score, int& lowestScore)
+{
+    if (score < lowestScore) {
+        lowestScore = score;
+        candidates.clear();
+    }
+    candidates.push_back(position);
 }
 
 // All equally cheap empty crossings are eligible. Open their predecessor
@@ -5454,13 +5489,8 @@ b8 type_random_map_generator::createGroundConnection(
             if (static_cast<int>(m_map.getMapItem(other)->m_objects.size()) <= 0) {
                 ++eligibleCount;
                 int cost = item->m_movement.m_zonePathCost;
-                if (cost <= bestCost) {
-                    if (cost < bestCost) {
-                        candidates.clear();
-                        bestCost = cost;
-                    }
-                    candidates.push_back((*borderPositions)[index]);
-                }
+                if (cost <= bestCost)
+                    addRmgLowestScoreCandidate(candidates, (*borderPositions)[index], cost, bestCost);
             }
         }
     }
@@ -5760,11 +5790,7 @@ b8 type_random_map_generator::createSubterraneanGate(
                     gateProperties, otherPosition, destination))
                 continue;
 
-            if (score > bestScore) {
-                candidates.clear();
-                bestScore = score;
-            }
-            candidates.push_back(position);
+            addRmgHighestScoreCandidate(candidates, position, score, bestScore);
         }
     }
 
@@ -5798,17 +5824,8 @@ b8 type_random_map_generator::createSubterraneanGate(
     if (connection->m_placeBorderObjects) {
         // Retail shares guardValue across both entrances. Success on either
         // side suppresses both guards; failed placement does not undo objects.
-        int direction = placeBorderObject(position, 1, destination);
-        if (direction >= 0) {
-            guardValue = 0;
-            markRmgGateSideBorderCells(m_map, position, direction);
-        }
-
-        direction = placeBorderObject(otherPosition, 1, source);
-        if (direction >= 0) {
-            markRmgGateSideBorderCells(m_map, otherPosition, direction);
-            return true;
-        }
+        placeRmgGateConnectionBorder(*this, position, destination, guardValue);
+        placeRmgGateConnectionBorder(*this, otherPosition, source, guardValue);
     }
 
     if (guardValue > 0) {
@@ -6639,17 +6656,19 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
     }
 }
 
-// Read a live cell score after placement validation; town and mine callers
-// instead pass their existing score snapshots.
-static inline void addRmgSpacingCandidate(
-    std::vector<TRmgMapPosition>& candidates, const TRmgMapPosition& position,
-    int score, int& spacing)
+// Create the town before the random candidate draw, add it there and return
+// its entrance. The trigger reference is read after the virtual addObject:
+// additional towns pass their earlier snapshot, primary towns the live field.
+static inline TRmgMapPosition placeRmgTownAtRandomCandidate(
+    type_random_map_generator* generator, TRmgObjectPropertiesRef* properties,
+    int player, unsigned char townOption,
+    const std::vector<TRmgMapPosition>& candidates, const TObjectType::TPoint& trigger)
 {
-    if (score > spacing) {
-        spacing = score;
-        candidates.clear();
-    }
-    candidates.push_back(position);
+    rmgTownObject* town = new rmgTownObject(properties,
+        generator->m_nextObjectId++, player, townOption);
+    TRmgMapPosition position = candidates[rand() % candidates.size()];
+    generator->addObject(town, position);
+    return getRmgObjectTriggerPosition(position, trigger);
 }
 
 // Keep the caller's position storage and append the trigger before stepping
@@ -6709,15 +6728,13 @@ b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
             }
             if (!valid)
                 continue;
-            addRmgSpacingCandidate(candidates, position, score, spacing);
+            addRmgHighestScoreCandidate(candidates, position, score, spacing);
         }
     }
     if (!candidates.size())
         return false;
-    rmgTownObject* object = new rmgTownObject(properties, m_nextObjectId++, player, townOption);
-    position = candidates[rand() % candidates.size()];
-    addObject(object, position);
-    TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, trigger);
+    TRmgMapPosition entrance = placeRmgTownAtRandomCandidate(this, properties,
+        player, townOption, candidates, trigger);
     registerRmgTownRoadEntrance(this, entrance);
     return true;
 }
@@ -6745,22 +6762,14 @@ b8 type_random_map_generator::tryPlacePrimaryTown(
             if (m_map.getMapItem(nearby)->m_zoneState.m_zone != zoneIndex)
                 continue;
             int distance = getRmgSquaredDistance(nearby, position);
-            if (distance <= bestDistance && m_map.canPlaceObject(properties, nearby, zone)) {
-                if (distance < bestDistance) {
-                    bestDistance = distance;
-                    candidates.clear();
-                }
-                candidates.push_back(nearby);
-            }
+            if (distance <= bestDistance && m_map.canPlaceObject(properties, nearby, zone))
+                addRmgLowestScoreCandidate(candidates, nearby, distance, bestDistance);
         }
     }
     if (!candidates.size())
         return false;
-    rmgTownObject* town = new rmgTownObject(properties, m_nextObjectId++, player, townOption);
-    unsigned int selected = rand() % candidates.size();
-    position = candidates[selected];
-    addObject(town, position);
-    position = getRmgObjectTriggerPosition(position, prototype->m_triggerCell);
+    position = placeRmgTownAtRandomCandidate(this, properties,
+        player, townOption, candidates, prototype->m_triggerCell);
     zone->m_position = position;
     zone->m_active = true;
     registerRmgTownRoadEntrance(this, position);
@@ -6828,7 +6837,7 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
                 candidates.clear();
                 bestBorderCount = borderCount;
             }
-            addRmgSpacingCandidate(candidates, position, score, spacing);
+            addRmgHighestScoreCandidate(candidates, position, score, spacing);
         }
     }
     if (!candidates.size())
@@ -6839,15 +6848,19 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
     return true;
 }
 
-// Combine template and request difficulty for guarded mines and treasure.
-// Keep the upper-bound-first clamp; zero template strength is a separate
-// caller policy and must not be converted into an enabled guard here.
-static inline int getRmgCombinedMonsterStrength(int zoneStrength, int mapStrength)
+// Guarded mines and treasure share zone valuation: zero template strength
+// disables the guard; otherwise combine template and request difficulty with
+// the upper-bound-first clamp before applying the native scalar guard curve.
+static inline int getRmgZoneGuardValue(int value, const TRmgZone* zone,
+    const type_random_map_generator& generator)
 {
-    int strength = zoneStrength + mapStrength - 3;
+    int zoneStrength = zone->m_templateZone->m_monsterStrength;
+    if (!zoneStrength)
+        return 0;
+    int strength = zoneStrength + generator.m_monsterStrength - 3;
     if (strength > 5) strength = 5;
     else if (strength < 0) strength = 0;
-    return strength;
+    return getRmgGuardValue(value, strength);
 }
 
 // Inferred mine-valuation boundary; retail 0x545b76 retains the scalar guard
@@ -6860,11 +6873,7 @@ int type_random_map_generator::getMineGuardValue(int resource, const TRmgZone* z
     case GOLD: value = 7000; break;
     default: value = 3500; break;
     }
-    int localStrength = zone->m_templateZone->m_monsterStrength;
-    if (!localStrength)
-        return 0;
-    int strength = getRmgCombinedMonsterStrength(localStrength, m_monsterStrength);
-    return getRmgGuardValue(value, strength);
+    return getRmgZoneGuardValue(value, zone, *this);
 }
 
 // Retail keeps the last scanned prototype at 0x5459f5/0x545a5d and reloads
@@ -7204,17 +7213,13 @@ b8 type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
     int totalValue = fillTreasureGroup(zone, group, alternate, value);
     if (!totalValue)
         return false;
-    if (zone->m_templateZone->m_monsterStrength) {
-        int strength = getRmgCombinedMonsterStrength(
-            zone->m_templateZone->m_monsterStrength, m_monsterStrength);
-        int guardValue = getRmgGuardValue(totalValue, strength);
-        if (guardValue > 0) {
-            type_object* guard = createGuard(guardValue, zone);
-            if (guard && !group->addGuard(guard)) {
-                discardRmgTreasureGroup(group);
-                delete guard;
-                return false;
-            }
+    int guardValue = getRmgZoneGuardValue(totalValue, zone, *this);
+    if (guardValue > 0) {
+        type_object* guard = createGuard(guardValue, zone);
+        if (guard && !group->addGuard(guard)) {
+            discardRmgTreasureGroup(group);
+            delete guard;
+            return false;
         }
     }
     group->traceOutline();
@@ -7478,7 +7483,7 @@ b8 type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
             TRmgMapItem* item = m_map.getMapItem(position + center);
             if (item->m_zoneState.m_zone == zoneIndex && item->m_zoneState.m_score >= spacing
                 && canPlaceTreasureGroup(group, position, zone)) {
-                addRmgSpacingCandidate(candidates, position, item->m_zoneState.m_score, spacing);
+                addRmgHighestScoreCandidate(candidates, position, item->m_zoneState.m_score, spacing);
             }
         }
     }
@@ -7487,12 +7492,6 @@ b8 type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
     position = candidates[rand() % candidates.size()];
     commitTreasureGroup(group, position);
     return true;
-}
-
-// Keep the value cutoff before the density test.
-static inline bool isRmgTreasureBandEnabled(const TRmgTreasureRange& range)
-{
-    return range.m_maximum >= 100 && range.m_density > 0;
 }
 
 // Retry one treasure-band shape, releasing each assembled group whose map
@@ -7520,11 +7519,13 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
     TRmgTemplateZone* slot = zone->m_templateZone;
     TRmgTreasureGroup group(16, 16);
     // Disabled bands enter the shared density scheduler with zero density;
-    // every enabled band has a positive density.
+    // every enabled band has a positive density. Keep the value cutoff before
+    // the density test.
     int densities[3];
     for (int band = 0; band < 3; ++band) {
-        densities[band] = isRmgTreasureBandEnabled(slot->m_treasure[band])
-            ? slot->m_treasure[band].m_density : 0;
+        const TRmgTreasureRange& range = slot->m_treasure[band];
+        densities[band] = range.m_maximum >= 100 && range.m_density > 0
+            ? range.m_density : 0;
     }
     b8 finished[3];
     int totalDensity = 0;
