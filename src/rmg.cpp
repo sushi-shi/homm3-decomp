@@ -1365,6 +1365,24 @@ static inline bool isRmgObjectFootprintCell(
     return !prototype->isPassableCell(x, y) || prototype->isTriggerCell(x, y);
 }
 
+// Both outline walkers turn one cardinal step before probing the adjacent
+// cell. Keep the direction update before copying its offset and adding XY.
+static inline TPoint nextRmgOutlineProbe(const TPoint& position, int& direction)
+{
+    direction = (direction - 2) & 7;
+    TPoint offset = g_rmgDirections[direction];
+    return TPoint(position.m_x + offset.m_x, position.m_y + offset.m_y);
+}
+
+// Take the chosen outline step, then face back across it for the next probe
+// sequence. Preserve the canonical point/vector addition before reversing.
+static inline void advanceRmgOutlineWalk(TPoint& position, int& direction)
+{
+    position = position + TRmgVector(g_rmgDirections[direction].m_x,
+        g_rmgDirections[direction].m_y);
+    direction = (direction - 4) & 7;
+}
+
 VA(0x00532C80, 0x1BA)
 MAC_ADDRESS(0x22fe88, 0x208)
 void TRmgObjectPropertiesRef::buildOutline()
@@ -1390,17 +1408,14 @@ void TRmgObjectPropertiesRef::buildOutline()
         m_outline.push_back(position);
         int attempts = 0;
         do {
-            direction = (direction - 2) & 7;
-            TPoint offset = g_rmgDirections[direction];
-            TPoint nearby(position.m_x + offset.m_x, position.m_y + offset.m_y);
+            TPoint nearby = nextRmgOutlineProbe(position, direction);
             if (nearby.m_x > 0 || static_cast<unsigned int>(-nearby.m_x) >= m_prototype->getWidth()
                 || nearby.m_y > 0 || static_cast<unsigned int>(-nearby.m_y) >= m_prototype->getHeight())
                 break;
             if (!isRmgObjectFootprintCell(m_prototype, -nearby.m_x, -nearby.m_y))
                 break;
         } while (++attempts < 4);
-        position = position + TRmgVector(g_rmgDirections[direction].m_x, g_rmgDirections[direction].m_y);
-        direction = (direction - 4) & 7;
+        advanceRmgOutlineWalk(position, direction);
     } while (start != position);
 }
 
@@ -2722,17 +2737,14 @@ void TRmgTreasureGroup::traceOutline()
         m_outline.push_back(position);
         int attempts = 0;
         do {
-            direction = (direction - 2) & 7;
-            TPoint offset = g_rmgDirections[direction];
-            TPoint nearby(position.m_x + offset.m_x, position.m_y + offset.m_y);
+            TPoint nearby = nextRmgOutlineProbe(position, direction);
             if (!m_map.containsXY(nearby))
                 break;
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
             if (item->isClearOutlineCell())
                 break;
         } while (++attempts < 4);
-        position = position + TRmgVector(g_rmgDirections[direction].m_x, g_rmgDirections[direction].m_y);
-        direction = (direction - 4) & 7;
+        advanceRmgOutlineWalk(position, direction);
     } while (start != position);
 }
 
@@ -3298,6 +3310,15 @@ void TRmgGeneratorBase::decorateMap()
     }
 }
 
+// Apply the ordered exception table after default limits have been filled.
+// Reverse traversal makes an earlier record win if an object type repeats.
+static inline void applyRmgObjectLimitOverrides(int* limits,
+    const TRmgObjectLimit* overrides, int count)
+{
+    while (count--)
+        limits[overrides[count].m_objectType] = overrides[count].m_limit;
+}
+
 // Retail-only constructor: base and member initialization precede template
 // loading. Hero eligibility uses bytes within the canonical attributes field;
 // 0x537d11/+0x3a excludes special heroes, +0x38/+0x39 selects map-version availability.
@@ -3351,12 +3372,8 @@ type_random_map_generator::type_random_map_generator(
             g_rmgZoneObjectLimits[zoneObjectType] = 32000;
         for (int mapObjectType = 0; mapObjectType < 232; ++mapObjectType)
             g_rmgMapObjectLimits[mapObjectType] = 32000;
-        for (int mapLimit = 30; mapLimit--;)
-            g_rmgMapObjectLimits[g_rmgMapObjectLimitOverrides[mapLimit].m_objectType]
-                = g_rmgMapObjectLimitOverrides[mapLimit].m_limit;
-        for (int zoneLimit = 24; zoneLimit--;)
-            g_rmgZoneObjectLimits[g_rmgZoneObjectLimitOverrides[zoneLimit].m_objectType]
-                = g_rmgZoneObjectLimitOverrides[zoneLimit].m_limit;
+        applyRmgObjectLimitOverrides(g_rmgMapObjectLimits, g_rmgMapObjectLimitOverrides, 30);
+        applyRmgObjectLimitOverrides(g_rmgZoneObjectLimits, g_rmgZoneObjectLimitOverrides, 24);
         memset(m_fixedHumanPlayers, 0, sizeof(m_fixedHumanPlayers));
     }
 }
