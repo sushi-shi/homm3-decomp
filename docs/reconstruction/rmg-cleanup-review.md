@@ -7,8 +7,10 @@ revision was `22315fafa`; the published cleanup is isolated on the helper
 recovery branch at `45032fe50`, excluding unrelated local recovery commits.
 After the initial review, seven parallel reviewers continued through four
 more rounds, rotating source regions and independently auditing safety.
-The fifth round found no remaining substantive cleanup under the preservation
-constraint. Integration covered shared interfaces, source ownership, matching
+The fifth round found no remaining substantive cleanup under its original
+scope. A subsequent helper-focused campaign broadened the review to repeated
+semantic operations, including composite predicates, bounded geometry,
+serialization and coordinated state updates. Integration covered shared interfaces, source ownership, matching
 experiment references and the oracle's typed request entry. Generated-output
 comparison ran only at the end of each completed cleanup campaign, never
 between these additional review rounds.
@@ -22,6 +24,24 @@ sampled execution comparison proves absence of undefined behavior.
 
 ## Coverage and changes
 
+The helper-focused campaign requires each new abstraction to be self-contained,
+combine multiple actions or checks, occur in at least two genuine source sites,
+and make its callers clearer. A descriptive semantic name supports that decision;
+textual similarity alone does not. The final review rounds read complete
+algorithms and ask whether high-level operations still contain repeated low-level
+math or state manipulation. Workers rotate regions and independently review
+preservation risks. Existing evidenced native helpers remain canonical.
+
+The expanded sweep shares transition/flip predicates, directional terrain
+patterns, coordinate lookup, clipped neighborhood bounds, guarded clearance
+updates, object footprints, reward serialization, descending worklist search,
+density initialization and complete treasure-placement retries. Small wrappers
+that merely relocate a single action are rejected; the former single-caller
+`buildTerrainGaps` cleanup wrapper was folded back into its owning algorithm.
+Byte-similarity percentage drops are acceptable for this campaign. Generated
+behavior is the acceptance criterion, with the million-case validation deferred
+until the review and source changes are finished.
+
 | Area | Review outcome |
 | --- | --- |
 | Map storage, adapters and packed fields | Reviewed ownership, view lifetime, flattening and partial initialization. Named template-zone records, half-edges, owned-object lists, and the river painter/adapter and corrected the inverted line-painter blockage query. Scalar accessors now distinguish terrain/frame from line type/underlying terrain. Kept layouts, field widths, virtual ordering and snapshot boundaries. |
@@ -31,7 +51,7 @@ sampled execution comparison proves absence of undefined behavior.
 | Zone placement, bounds, noise and connections | Named scanline seeds, major/minor line steps, displacement quadrants, clearance flags and connection choices. Reviewed the existing canonical lookup, position, flood and boundary helpers. |
 | Towns, mines and treasures | Shared first-minimum weighted-category selection across three schedulers. Named weighted counters, increments and last-scanned mine prototype. Retained strict tie ordering and finished-category short circuit. |
 | Roads, rivers and quests | Identified worklist algorithms, reviewed predecessor traversal and stable rankings, retained random draw order and known failed-search behavior. |
-| Terrain and line painting | Shared neighbour-mask queries, frame-range draws, boundary counting, neighbour classification and cyclic gap construction. Reused the existing base-tile operation. Corrected transition/frame and special-frame probability names. |
+| Terrain and line painting | Shared neighbour-mask queries, frame-range draws, boundary counting, neighbour classification and axis-gap repair. Reused the existing base-tile operation. Corrected transition/frame and special-frame probability names. |
 | Voronoi support | Clarified circumcircle and squared-distance names; documented incremental Delaunay insertion, local flips and walking location. Retained integer arithmetic and half-edge ownership contracts. |
 | Safety | Reviewed index guards, pointer offsets, uninitialized fields, arithmetic, shifts, temporary references, destruction and fixed tables. Added concrete native evidence and conditional leads to the safety inventory. |
 
@@ -76,8 +96,8 @@ copy/snapshot boundaries rather than being mechanically merged.
 
 ## Control flow and indexing decisions
 
-All three terrain gotos were removed using direct returns from a shared gap
-helper and structured early exits from the separated-neighbour predicate.
+All three terrain gotos were removed using structured gap loops and early
+exits from the separated-neighbour predicate.
 Two `canFitObject` failure gotos remain: they converge on the shared placement-failure
 return, and the owning comment records the existing byte-matching evidence
 for that first-failure join. The remaining generator/support bodies have no
@@ -97,18 +117,24 @@ the reconstruction less accurate. Existing source-attested type spellings and
 external ABI names are also retained. Role-derived renames keep former names
 in evidence comments where useful for lookup.
 
-The final pass rejected further generic factories, tiny one-use predicates and
+The earlier campaign's final pass rejected further generic factories, tiny one-use predicates and
 mechanical merging of different snapshot, traversal or placement policies.
 `isPassableLand` retains its established name and exact road-passable/non-rock
 predicate; it admits water, whose policy is checked separately by callers.
 The no-progress result is a review stopping point, not proof that every defect
 or possible improvement has been discovered.
 
-## Validation
+## Validation status
 
-The final executable-source revision is `7d422bcc8` (2026-10-02); subsequent
-changes only record review evidence and the intentional Mac abstraction
-checkpoint. VC6 SP3 compiled
+The expanded helper campaign has not yet undergone generated-output validation.
+The million-case run remains pending. The results below describe the earlier
+source checkpoint only and must not be treated as validation of later helper
+changes. No intermediate output comparisons are run during the review rounds.
+
+### Earlier source checkpoint
+
+The earlier executable-source revision is `7d422bcc8` (2026-10-02), published
+with evidence updates at `370c71dee`. VC6 SP3 compiled
 `rmg`, `rmg_support`, `rmg_terrain` and the result-code consumer
 `singleselectionwindow`. Renamed symbols were refreshed with unit-scoped
 `homm3 delink`; their targeted `homm3 build --fast` completed successfully.
@@ -141,11 +167,11 @@ This is sampled behavioral agreement, not a proof over every possible input.
 
 ### Machine-code comparison remains a separate measure
 
-Cleanup preserves the sampled generated output; it does not preserve every
-former instruction sequence. The following bodies show representative Windows score changes after the
-shared-helper and structured-flow changes (previous banked CUR versus final):
+That checkpoint preserves the sampled generated output; it does not preserve
+every former instruction sequence. The following bodies show representative
+Windows score changes at that checkpoint (previous banked CUR versus measured):
 
-| Body | Previous checkpoint | Final comparison |
+| Body | Previous checkpoint | Earlier measured comparison |
 | --- | ---: | ---: |
 | `TRmgTreasureGroup::addGuard` | 86.54% | 83.09% |
 | `filterZonePositions` | 98.87% | 85.42% |

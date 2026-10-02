@@ -1535,8 +1535,6 @@ void type_object::clearPlacementMarks()
     m_blockedByCandidate = 0;
 }
 
-// Reserved fields are zero-filled blocks written in one operation. Keep their
-// fixed stack sizes and single write; partial-width int staging stays separate.
 // H3M stores each coordinate in one byte. Keep reads interleaved with their
 // writes so both object records and main-town headers share the wire layout.
 static inline void writeRmgMapPosition(
@@ -1547,6 +1545,8 @@ static inline void writeRmgMapPosition(
     writeValue<char>(outputFile, position.m_z);
 }
 
+// Reserved fields are zero-filled blocks written in one operation. Keep their
+// fixed stack sizes and single write; partial-width int staging stays separate.
 template <int N>
 static inline void writeRmgReservedBytes(TAbstractFile* outputFile)
 {
@@ -8995,7 +8995,8 @@ static inline void rebuildRmgRoadCostMap(type_random_map_generator* generator,
 
 // Retail 0x549c98 connects every ordered target pair using one random road
 // style. A successful draw changes traversal costs for subsequent targets.
-// Exact with a copied destination and the shared scalar-volume reset.
+// The earlier spelling with a copied destination and the shared scalar-volume
+// reset was exact; the cleanup now shares the complete cost-field rebuild.
 // A destination reference leaves different register homes (99.8341%).
 VA(0x00548290, 0x26E)
 MAC_ADDRESS(0x24c6d4, 0x1d8)
