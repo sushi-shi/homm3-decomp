@@ -1,5 +1,5 @@
-// Random-map generator declarations (Complete only). Most names describe
-// recovered roles rather than original source spellings.
+// Random-map generator declarations. Most names describe recovered roles
+// rather than original source spellings.
 #ifndef HOMM3_RMG_H
 #define HOMM3_RMG_H
 

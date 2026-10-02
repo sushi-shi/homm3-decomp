@@ -1,4 +1,4 @@
-// Shared Complete-only random-map request and result contract.
+// Random-map request and result shared by the lobby and the generator.
 #ifndef HOMM3_RMG_REQUEST_H
 #define HOMM3_RMG_REQUEST_H
 

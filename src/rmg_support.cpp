@@ -43,7 +43,7 @@ TRmgLinePatternTable::TRmgLinePatternTable(unsigned int patternCount, const int*
 }
 
 VA(0x004F9CA0, 0x0B)
-MAC_ADDRESS(0x2222f8, 0x54)  // cinit cleanups 0x55ed90/0x55f310; Complete-only
+MAC_ADDRESS(0x2222f8, 0x54)
 TRmgLinePatternTable::~TRmgLinePatternTable()
 {
     delete[] m_patterns;
@@ -154,7 +154,7 @@ TRmgRiverPainter::~TRmgRiverPainter()
 
 // All river types use the same pattern table, so the argument is ignored.
 VA(0x0055EDB0, 0x08)
-MAC_ADDRESS(0x253ad8, 0x8)  // vtables 0x641174/0x641190; Complete-only
+MAC_ADDRESS(0x253ad8, 0x8)
 TRmgLinePatternTable* TRmgRiverLinePainter::getPattern(int)
 {
     return &g_rmgRiverPatternTable;
@@ -190,7 +190,7 @@ static inline b32 isRmgLinePaintingBlocked(Adapter* adapter,
 }
 
 VA(0x0055EDC0, 0x36)
-MAC_ADDRESS(0x253ae0, 0x54) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +4
+MAC_ADDRESS(0x253ae0, 0x54)
 void TRmgRiverLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
     writeRmgLineTileSnapshot(m_adapter, point, tile);
@@ -209,7 +209,7 @@ void TRmgRiverLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& t
 }
 
 VA(0x0055EE00, 0x28)
-MAC_ADDRESS(0x253b64, 0x44)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
+MAC_ADDRESS(0x253b64, 0x44)
 b32 TRmgRiverLinePainter::isBlocked(const TRmgGridPoint& point)
 {
     return isRmgLinePaintingBlocked(m_adapter, point);
@@ -236,7 +236,7 @@ TRmgRiverPainter::TRmgRiverPainter(
 VA_COMPGEN(0x0055EED0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverPainter)
 
 VA(0x0055F320, 0x08)
-MAC_ADDRESS(0x253fc0, 0x8)  // vtables 0x6411f0/0x64120c; Complete-only
+MAC_ADDRESS(0x253fc0, 0x8)
 TRmgLinePatternTable* TRmgRoadLinePainter::getPattern(int)
 {
     return &g_rmgRoadPatternTable;
@@ -255,28 +255,28 @@ b32 TRmgRoadLinePainter::isBlocked(const TRmgGridPoint& point)
 }
 
 VA(0x0055F330, 0x17)
-MAC_ADDRESS(0x25401c, 0x30)  // vtables 0x641174/0x641190/0x6411f0/0x64120c; Complete-only
+MAC_ADDRESS(0x25401c, 0x30)
 void TRmgRoadLinePainter::setLineType(const TRmgGridPoint& point, int value)
 {
     m_adapter->setLineType(point, value);
 }
 
 VA(0x0055F350, 0x34)
-MAC_ADDRESS(0x254090, 0x88) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +0x10
+MAC_ADDRESS(0x254090, 0x88)
 void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
 {
     readRmgLineTileSnapshot(m_adapter, point, tile);
 }
 
 VA(0x0055F390, 0x13)
-MAC_ADDRESS(0x254118, 0x30)  // Complete-only road painter
+MAC_ADDRESS(0x254118, 0x30)
 int TRmgRoadLinePainter::getLineType(const TRmgGridPoint& point)
 {
     return m_adapter->getLineType(point);
 }
 
 VA(0x0055F3B0, 0x76)
-MAC_ADDRESS(0x254148, 0x6c) // anchor-callee 0x548143; Complete-only, thiscall ret 0xc
+MAC_ADDRESS(0x254148, 0x6c)
 TRmgRoadPainter::TRmgRoadPainter(
     TRmgRoadMapAdapterInterface* newAdapter,
     int newRoadType,
@@ -289,7 +289,7 @@ TRmgRoadPainter::TRmgRoadPainter(
 VA_COMPGEN(0x0055F430, 0x21, SCALAR_DELETING_DTOR, TRmgRoadPainter)
 
 VA(0x0055F460, 0x07)
-MAC_ADDRESS(0x2541b4, 0x60)  // road painter cleanup; Complete-only RMG helper
+MAC_ADDRESS(0x2541b4, 0x60)
 TRmgRoadPainter::~TRmgRoadPainter()
 {
 }
@@ -322,7 +322,7 @@ TRmgHalfEdge::TRmgHalfEdge(
 }
 
 VA(0x005FCEF0, 0x6C)
-MAC_ADDRESS(0x25c07c, 0x98) // anchor-callee 0x5fd078; Complete-only, ret 0x18
+MAC_ADDRESS(0x25c07c, 0x98)
 TRmgHalfEdge::TRmgHalfEdge(
     TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone)
     : m_zone(zone)
@@ -333,7 +333,7 @@ TRmgHalfEdge::TRmgHalfEdge(
 }
 
 VA(0x005FCF60, 0x31)
-MAC_ADDRESS(0x25c184, 0x34) // anchor-callee 0x5fd308; thiscall, ret 4; Complete-only
+MAC_ADDRESS(0x25c184, 0x34)
 void TRmgHalfEdge::splice(TRmgHalfEdge* other)
 {
     std::swap(m_next->m_previous, other->m_next->m_previous);
@@ -341,7 +341,7 @@ void TRmgHalfEdge::splice(TRmgHalfEdge* other)
 }
 
 VA(0x005FCFA0, 0x61)
-MAC_ADDRESS(0x25c1b8, 0x4c) // anchor-callee addSite 0x5fd790; thiscall, ret 0; Complete-only
+MAC_ADDRESS(0x25c1b8, 0x4c)
 void TRmgHalfEdge::detach()
 {
     TRmgHalfEdge* previous = m_previous;
@@ -351,7 +351,7 @@ void TRmgHalfEdge::detach()
 }
 
 VA(0x005FD010, 0x316)
-MAC_ADDRESS(0x25c4e4, 0x14c) // anchor-caller 0x53e050 and five createEdge expansions/calls
+MAC_ADDRESS(0x25c4e4, 0x14c)
 TRmgVoronoi::TRmgVoronoi()
 {
     TPoint first(-200, -200);
@@ -371,7 +371,7 @@ TRmgVoronoi::TRmgVoronoi()
 }
 
 VA(0x005FD330, 0x58)
-MAC_ADDRESS(0x25c6b4, 0xa4) // anchor-callee 0x53e685; thiscall, ret 0
+MAC_ADDRESS(0x25c6b4, 0xa4)
 TRmgVoronoi::~TRmgVoronoi()
 {
     for (int edge = 0; edge < m_edges.size(); ++edge)
@@ -379,7 +379,7 @@ TRmgVoronoi::~TRmgVoronoi()
 }
 
 VA(0x005FD390, 0x21C)
-MAC_ADDRESS(0x25c758, 0x170) // anchor-callers 0x5fd010/0x5fd790; Complete-only, ret 0x18
+MAC_ADDRESS(0x25c758, 0x170)
 TRmgHalfEdge* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
     TPoint second, TRmgZone* secondZone)
 {
@@ -414,7 +414,7 @@ static inline void eraseRmgHalfEdgeReference(std::vector<TRmgHalfEdge*>& edges,
 }
 
 VA(0x005FD5B0, 0xFF)
-MAC_ADDRESS(0x25c8c8, 0x100) // anchor-caller 0x5fd790; Complete-only, thiscall ret 4
+MAC_ADDRESS(0x25c8c8, 0x100)
 void TRmgVoronoi::removeEdge(TRmgHalfEdge* edge)
 {
     edge->detach();
@@ -452,7 +452,7 @@ static inline bool isRmgEdgeDestination(TPoint point, TRmgHalfEdge* edge)
 }
 
 VA(0x005FD6B0, 0xD7)
-MAC_ADDRESS(0x25c9c8, 0x124) // anchor-callers 0x53dad0/0x53e050/0x5fd790; ret 8
+MAC_ADDRESS(0x25c9c8, 0x124)
 TRmgHalfEdge* TRmgVoronoi::locate(TPoint point)
 {
     // Walking point location in the incremental Delaunay triangulation.
@@ -543,7 +543,7 @@ static b8 isRmgPointInsideCircumcircle(TPoint first, TPoint second,
 }
 
 VA(0x005FD790, 0x348)
-MAC_ADDRESS(0x25cd44, 0x218) // anchor-caller 0x53e050; Complete-only, thiscall ret 0xc
+MAC_ADDRESS(0x25cd44, 0x218)
 void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 {
     // Incremental Delaunay insertion: locate, split an existing edge when
@@ -583,7 +583,7 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 }
 
 VA(0x005FDAE0, 0x2B)
-MAC_ADDRESS(0x25c2b4, 0x50) // anchor-callee 0x5fd937/0x5fd97e; Complete-only
+MAC_ADDRESS(0x25c2b4, 0x50)
 int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
 {
     // Signed twice-area; positive means counterclockwise.

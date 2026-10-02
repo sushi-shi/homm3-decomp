@@ -1,4 +1,4 @@
-// Complete-only random-map terrain transition support.
+// Random-map terrain transition painting.
 #ifndef HOMM3_RMG_TERRAIN_H
 #define HOMM3_RMG_TERRAIN_H
 

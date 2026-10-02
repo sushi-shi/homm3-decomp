@@ -75,7 +75,7 @@ static inline void buildMatchingLineNeighbourMask(
 }
 
 VA(0x004F9F00, 0x146)
-MAC_ADDRESS(0x22273c, 0x168) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
+MAC_ADDRESS(0x22273c, 0x168)
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
     TRmgLinePainterTile tile = painter->at(point);
@@ -98,7 +98,7 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
     }
 }
 
-VA(0x004FA050, 0x22) // anchor-callee 0x4f9f86; thiscall hidden value return
+VA(0x004FA050, 0x22)
 TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
 {
     return TRmgLinePainterTile(this, point);
@@ -141,7 +141,7 @@ static inline void refreshRmgLineBorderRow(TRmgLinePainterInterface* painter,
 }
 
 VA(0x004FA080, 0x1FB)
-MAC_ADDRESS(0x2228b8, 0x388) // anchor-callee 0x4fa42c; fastcall, no stack args
+MAC_ADDRESS(0x2228b8, 0x388)
 void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRectangle& rectangle)
 {
     TRmgGridPoint point;
@@ -171,7 +171,7 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
 }
 
 VA(0x004FA280, 0x30)
-MAC_ADDRESS(0x222c40, 0x4c) // anchor-caller 0x55ee50/0x55f3b0; thiscall ret 0xc
+MAC_ADDRESS(0x222c40, 0x4c)
 TRmgLineWalker::TRmgLineWalker(
     TRmgLinePainterInterface* newPainter,
     int newLineType,
@@ -184,7 +184,7 @@ TRmgLineWalker::TRmgLineWalker(
 // Four-connected Bresenham line: the corner cell is painted on each
 // minor-axis step so the road or river stays connected.
 VA(0x004FA2B0, 0x110)
-MAC_ADDRESS(0x222c8c, 0x190) // anchor-caller 0x548040 and createRiver; thiscall ret 4
+MAC_ADDRESS(0x222c8c, 0x190)
 void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
 {
     TRmgLineWalkAxis x(destination.m_x, m_position.m_x);
@@ -216,7 +216,7 @@ void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
 }
 
 VA(0x004FA3C0, 0x156)
-MAC_ADDRESS(0x222e1c, 0x18c) // anchor-caller 0x4fa280/0x4fa2b0; thiscall, ret 4
+MAC_ADDRESS(0x222e1c, 0x18c)
 void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 {
     TRmgLinePainterTile tile(m_painter, point);
@@ -239,13 +239,13 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 template<class Coordinate>
 // VA instance: TRmgCoordinatePoint<unsigned int>::TRmgCoordinatePoint(const TPoint&)
 VA(0x004FA520, 0x16)
-MAC_ADDRESS(0x2228a4, 0x14) // anchor-callee 0x4f9f77; thiscall, ret 4
+MAC_ADDRESS(0x2228a4, 0x14)
 TRmgCoordinatePoint<Coordinate>::TRmgCoordinatePoint(const TPoint& point)
     : m_x(point.m_x), m_y(point.m_y)
 {
 }
 
-VA(0x004FA540, 0x21) // anchor-callers 0x4f9f00/0x4fa3c0; thiscall, ret 4
+VA(0x004FA540, 0x21)
 TPoint& TPoint::operator+=(const TPoint& offset)
 {
     m_x += offset.m_x;
@@ -279,27 +279,27 @@ TRmgPatternTerrainRule::TRmgPatternTerrainRule(
 
 // True when the terrain has special (decorated) base frames.
 VA(0x005B3840, 0x0C)
-MAC_ADDRESS(0x259dac, 0x14)  // Complete-only pattern terrain rule
+MAC_ADDRESS(0x259dac, 0x14)
 b8 TRmgPatternTerrainRule::hasSpecialBaseFrames()
 {
     return 0 < m_ranges[1].m_count;
 }
 
 VA(0x005B3850, 0x07)
-MAC_ADDRESS(0x254b98, 0x48)  // terrain-rule deleting destructors; Complete-only
+MAC_ADDRESS(0x254b98, 0x48)
 TRmgTerrainRule::~TRmgTerrainRule()
 {
 }
 
 VA(0x005B3860, 0x11)
-MAC_ADDRESS(0x254ce4, 0x14)  // Complete-only pattern terrain rule
+MAC_ADDRESS(0x254ce4, 0x14)
 b8 TRmgPatternTerrainRule::isSpecialFrame(int frame)
 {
     return m_entries[frame].m_special;
 }
 
 VA(0x005B3880, 0x10)
-MAC_ADDRESS(0x254cf8, 0x10)  // Complete-only pattern terrain rule
+MAC_ADDRESS(0x254cf8, 0x10)
 int TRmgPatternTerrainRule::getTransition(int frame)
 {
     return m_entries[frame].m_transition;
@@ -400,7 +400,7 @@ TRmgTerrainPatternTable::TRmgTerrainPatternTable()
 }
 
 VA(0x005B3A20, 0x11)
-MAC_ADDRESS(0x254f4c, 0x20)  // Complete-only table terrain rule
+MAC_ADDRESS(0x254f4c, 0x20)
 TRmgTableTerrainRule::TRmgTableTerrainRule()
 {
 }
@@ -422,7 +422,7 @@ int TRmgTableTerrainRule::getTransition(int frame)
 }
 
 VA(0x005B3AA0, 0x31)
-MAC_ADDRESS(0x254f84, 0x94)  // vtable 0x642cb0 slot 4; Complete-only table rule
+MAC_ADDRESS(0x254f84, 0x94)
 int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
 {
     if (!matchesTerrainFrame(g_rmgTerrainPatterns, oldFrame, 0)) {
@@ -538,7 +538,7 @@ static inline bool hasSouthNortheastTerrainEdges(const int* neighbours,
 // Each pass tries one pattern family over all reflections, which decides
 // which overlapping pattern wins.
 VA(0x005B3E80, 0x75F)
-MAC_ADDRESS(0x2552e8, 0x980)  // fastcall call at 0x5b5f5b; retail-only
+MAC_ADDRESS(0x2552e8, 0x980)
 int __fastcall selectTerrainTransition(
     const int* neighbours, TRmgTerrainFlip* flip)
 {
@@ -745,7 +745,7 @@ rmgTerrainPainter::rmgTerrainPainter(
     m_packedCells.resize(getWidth() * getHeight(), TRmgPackedTerrainCell());
 }
 
-VA(0x005B48D0, 0x8D)  // repeated caller identity in 0x5b3dd0..0x5b76f0
+VA(0x005B48D0, 0x8D)
 TRmgPackedTerrainCell* rmgTerrainPainter::getPackedCell(
     const TRmgGridPoint& point)
 {
@@ -853,7 +853,7 @@ static inline void resolveQueuedTerrainGap(rmgTerrainPainter& painter,
 }
 
 VA(0x005B4B20, 0x5CB)
-MAC_ADDRESS(0x256014, 0x580) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
+MAC_ADDRESS(0x256014, 0x580)
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
     paintBaseTile(point);
@@ -928,7 +928,7 @@ static inline bool tryQueueOtherTerrainCardinalNeighbour(rmgTerrainPainter& pain
 }
 
 VA(0x005B50F0, 0x34E)
-MAC_ADDRESS(0x2565ac, 0x638) // anchor-callee 0x5b4c72, 0x5b50dd; thiscall, ret 4
+MAC_ADDRESS(0x2565ac, 0x638)
 void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
 {
     // At most one neighbour per cardinal axis, preferring north over south
@@ -1008,7 +1008,7 @@ static inline void repairTerrainGap(rmgTerrainPainter& painter,
 // until only one remains; ties go to the first gap. Painting order matters
 // because each repair updates the worklists.
 VA(0x005B5440, 0x628)
-MAC_ADDRESS(0x256be4, 0x630) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
+MAC_ADDRESS(0x256be4, 0x630)
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
     if (isVerticalGap(point)) {
@@ -1235,7 +1235,7 @@ static inline bool matchesTerrainAt(rmgTerrainPainter& painter,
 // Cardinal neighbours use coordinates clamped to the map edge. A diagonal
 // contributes only when at least one adjoining cardinal cell also matches.
 VA(0x005B6540, 0x2CA)
-MAC_ADDRESS(0x2582fc, 0x4f8) // anchor-callee 0x5b58f8, 0x5b681e; retail-only
+MAC_ADDRESS(0x2582fc, 0x4f8)
 void rmgTerrainPainter::buildMatchingNeighbourMask(
     const TRmgGridPoint& point, b8* matches)
 {
@@ -1458,7 +1458,7 @@ int rmgTerrainPainter::changeTerrain(int terrain, int strength)
 }
 
 VA(0x005B7250, 0x9A)
-MAC_ADDRESS(0x2599f8, 0xac) // anchor-callee 0x54017e; allocation and throw RTTI
+MAC_ADDRESS(0x2599f8, 0xac)
 TRmgTerrainBrush::TRmgTerrainBrush(
     TRmgMapInterface* map, int terrain, int strength)
     : m_painter(new rmgTerrainPainter(map, terrain, strength))
@@ -1468,7 +1468,7 @@ TRmgTerrainBrush::TRmgTerrainBrush(
 }
 
 VA(0x005B72F0, 0x225)
-MAC_ADDRESS(0x259aa4, 0xc8) // anchor-callee 0x540207; auto_ptr ownership cleanup
+MAC_ADDRESS(0x259aa4, 0xc8)
 TRmgTerrainBrush::~TRmgTerrainBrush()
 {
 }
@@ -1481,7 +1481,7 @@ void TRmgTerrainBrush::changeTerrain(int terrain, int strength)
 }
 
 VA(0x005B7690, 0x1F)
-MAC_ADDRESS(0x259cc0, 0x24) // anchor-callee 0x5401e9; four unsigned rectangle args
+MAC_ADDRESS(0x259cc0, 0x24)
 void TRmgTerrainBrush::paintRectangle(
     unsigned int x, unsigned int y,
     unsigned int rectangleWidth, unsigned int rectangleHeight)
@@ -1492,7 +1492,7 @@ void TRmgTerrainBrush::paintRectangle(
 VA_COMPGEN(0x005B76D0, 0x20, IMPLICIT_DTOR, rmgTerrainPainter_auto_ptr)
 
 VA(0x005B76F0, 0x209)
-MAC_ADDRESS(0x259be4, 0xb8) // anchor-callee 0x5b76e0; retained painter destructor
+MAC_ADDRESS(0x259be4, 0xb8)
 rmgTerrainPainter::~rmgTerrainPainter()
 {
     finish();
@@ -1540,7 +1540,7 @@ VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgCoordinatePoint_unsigned_i
 
 template<class Coordinate>
 // VA instance: operator< <unsigned int>
-VA(0x005B8CA0, 0x20) // anchor-callee 0x5b4e96; fastcall, two point references
+VA(0x005B8CA0, 0x20)
 bool operator<(const TRmgCoordinatePoint<Coordinate>& left,
     const TRmgCoordinatePoint<Coordinate>& right)
 {
