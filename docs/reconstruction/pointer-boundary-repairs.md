@@ -169,9 +169,8 @@ by two four-state recombinations; Bitmap24 exhausted nine states. Sprite
 search scored 60 states and reproduced a five-state whole-TU recombination.
 Puzzle/fizzle/PCX each exhausted four forms; flip exhausted three. Function
 comments retain the failed forms and specific remaining differences. The
-generators under `scripts/experiments/generate-*-row-*-family.py` describe
-pre-adoption source anchors: a fresh changed source requires a rebased family,
-not reuse of stale snapshots or old scores.
+retired row-family generators are archived in [Git history](https://github.com/sushi-shi/homm3-decomp/commits/a9e013a71/scripts/experiments).
+Their measurements apply to pre-adoption source snapshots.
 
 The two map checks exhausted shared-throw, local-throw and `vector::at`
 alternatives against the unchecked control. The shared ordinary helper was

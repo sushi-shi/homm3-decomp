@@ -136,11 +136,10 @@ where a caller's score fell. Their earlier peaks remain in HIST.
 | `videoDrawRects` | 90.3379% | Individual DirectDraw object scopes improve the existing `BinkRect` bounds reconstruction. A retained 89.7123% scalar candidate reproduces every DirectDraw stack address; union-loop registers and scheduling remain unresolved. |
 | `calculateNormalDialogSize` | 99.9762% | DC5430’s per-element cursor and ordered chained-zero initialization improve the match. Nine array-address operands and two exchanged field-load operands remain; array/center-element binding controls did not close them. |
 
-Reproducible source-family generators are under `scripts/experiments/`.
-They reject stale or ambiguous anchors; generated manifests, isolated
-candidate trees, unchanged-source controls and reproduced elites are in this
-worktree's `build/preprocessor-audit/` and `build/source-families/`. None of
-these attempts uses new inline-control pins or synthetic release diagnostics.
+The one-off source families are archived in [Git history](https://github.com/sushi-shi/homm3-decomp/commits/a9e013a71/scripts/experiments).
+Their reported results used isolated candidates, unchanged-source controls
+and independently reproduced finalists. No new inline-control pins or
+synthetic release diagnostics were used.
 
 The new [`homm3 dreamcast audit`](../matching/source-facts.md) command checks positive
 Dreamcast type, qualifier, reference, named-local, helper and source-order
@@ -174,7 +173,7 @@ directive review and the tree-wide search for common-code macros are complete.
 
 The unchanged-source full build passed before editing. Immediately after macro cleanup, the five TUs affected
 only by aliases, constants, or common-code expansion passed the strict
-`scripts/experiments/compare-coff-layout.py` comparison against that baseline:
+`scripts/tools/compare-coff-layout.py` comparison against that baseline:
 
 | TU | Identical sections | Identical relocation destinations |
 | --- | ---: | ---: |
@@ -405,7 +404,6 @@ retail retains the outer `cell` call in that invalid-point arm. The trace
 supplies a compiler-state lead, not permission to suppress the canonical body
 or add mass to change its budget.
 
-
 ### Dialog placement cursor
 
 The fresh DC5430 group at `0xe5ea8` increments the current icon index inside
@@ -442,7 +440,6 @@ no candidate was adopted. The current name-before-frame order is supported
 by the following shared string assignments and later frame stores. The
 verified icon compiler trace has both EXPERIENCE `_Eos` sites at budget 47
 against cost 46; the result-binding alternatives do not resolve those calls.
-
 
 The dialog's subsequent 18-state array-element/center-icon/zero-assignment
 family (`459a068b223a41e11e3b`) produced eight distinct objects and eight

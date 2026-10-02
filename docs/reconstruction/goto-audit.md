@@ -34,9 +34,9 @@ joins. Matching a jump instruction does not distinguish these origins.
 Run the read-only inventory from the repository root:
 
 ```sh
-python scripts/experiments/audit-gotos.py
-python scripts/experiments/audit-gotos.py --revision HEAD
-python scripts/experiments/audit-gotos.py --json /tmp/homm3-gotos.json
+python scripts/tools/audit-gotos.py
+python scripts/tools/audit-gotos.py --revision HEAD
+python scripts/tools/audit-gotos.py --json /tmp/homm3-gotos.json
 ```
 
 The script reads tracked C/C++ files under `src/` and `include/`, excludes

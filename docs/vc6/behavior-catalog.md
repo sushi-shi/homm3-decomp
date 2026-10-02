@@ -564,8 +564,8 @@ source hypothesis independently of the stub.
 - status: explained-lever — restore the real accessor and receiver lifetime
   before attributing flattened arithmetic to a reassociation limit.
 - evidence: `src/smackmgr.cpp` at 0x5971f0, `include/bitmap16.h`,
-  `scripts/experiments/generate-dialog-video-source-family.py video`;
-  full VC6 build passed, five exact CFG blocks and zero instruction deltas.
+  the archived dialog-video source family; full VC6 build passed, five exact
+  CFG blocks and zero instruction deltas.
 - probe: full TU source family; no standalone reduction claimed.
 
 ### B21. Dinkumware `min`/`max` reference shape as an allocation constraint

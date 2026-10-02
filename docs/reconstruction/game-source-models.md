@@ -1,9 +1,12 @@
 # Game helper source-model evidence
 
-These are source-recovery findings and rejected alternatives, not current scores
-or runnable search instructions. Some referenced experiments have been retired;
-Git history preserves their source. Start new work with the
-[source-family runner](../vc6/source-families.md) and current retail comparisons.
+The one-off generators and behavior fixtures named here are retired. Their
+filenames identify historical evidence archived in [Git history](https://github.com/sushi-shi/homm3-decomp/commits/a9e013a71/scripts/experiments),
+not supported commands or current validation results.
+
+These are source-recovery findings and rejected alternatives. Start new work
+with the [source-family runner](../vc6/source-families.md) and current retail
+comparisons.
 
 ### Ordinary movement and native serialization boundaries
 
@@ -21,7 +24,7 @@ declarations, and caller/whole-object controls. These generators require their
 pre-adoption source snapshot; stale source anchors must not be relaxed merely
 to rerun historical numbers.
 
-`PYTHONPATH=scripts python -m unittest homm3.vc6.test_game_vector_io` extracts
+The historical vector-I/O fixture extracted
 the adopted serializer templates into the native stream-contract fixture.
 It covers resize/zero-fill, short I/O, payload strides and narrow count
 boundaries with six rejected negative controls. The associated narrow
@@ -76,7 +79,7 @@ the `TArtifact*` parameter; the recovered game and black-market fields already
 have that element type. Retail's entry stores the pointer unchanged.
 
 The pre-delink old entry label scores zero for the corrected signature. This
-is not treated as body identity: `compare-coff-layout.py`, with the explicit
+is not treated as body identity: `scripts/tools/compare-coff-layout.py`, with the explicit
 old/new function-name pair, independently proves identical section layout and
 bytes, function positions, and relocation sites/kinds/destinations. It passes
 for tradpost (150 sections / 4059 relocations), events (304 / 3873), philai
@@ -197,7 +200,7 @@ keeps both duplicated scale arms and the shared lower/upper clamp; Complete's
 0..127 return must not acquire Dreamcast's final 0..100 platform conversion.
 
 Selected `7bb1334725faaa2026c1258b` uses branch-local const references and
-removes the fence. Strict `compare-coff-layout.py` passes for all 110 raw
+removes the fence. Strict `scripts/tools/compare-coff-layout.py` passes for all 110 raw
 sections, 699 relocation destinations and function positions against the old
 `c441b9aa0f03520c7206d8aa` control. Production passes the same comparison.
 Every scored soundmgr function remains unchanged, including all four exact
@@ -385,7 +388,7 @@ candidate `b20261b99b0d0a9b31069e1f`, against unchanged
 
 The six distinct runner identities do not imply six different instruction
 streams: private label counters are deliberately not generalized away by that
-metric. The stricter same-layout proof, `compare-coff-layout.py`, independently
+metric. The stricter same-layout proof, `scripts/tools/compare-coff-layout.py`, independently
 shows all **200 raw sections**, **1678 relocation destinations**, and function
 identities/positions unchanged between the untouched control and the selected
 candidate, and again against production. This includes untracked bodies and
@@ -775,11 +778,8 @@ the retained `append(string, pos, count)` at 0x41b250 and exits on an unsigned
 positive length check. The old source used an explicit append and named copy,
 pasted the purchase helper, and expressed the warning walk as two pointers.
 
-
-
-Run the generator against the pre-adoption source (`3be2cd52`); its anchors
-intentionally reject changed source. The complete manifest and snapshots are
-preserved under context **`6d71af72491811a3bd28`**. All **60/60 states** compile,
+The family used the pre-adoption source `3be2cd52` and recorded context
+**`6d71af72491811a3bd28`**. All **60/60 states** compiled,
 producing **60 distinct objects** and **ten reproduced elites**. All **437
 tracked scores across five current header consumers** are checked; only
 endTurn changes in the entire family. The reproduced opposite corner and
@@ -854,7 +854,7 @@ name, producing false zeroes. They are not codegen losses or valid ranking
 inputs. The reference migration was instead verified by full labels/delink/
 build. The generator now defaults to those 18 name-preserving states;
 `--signature-controls` retains the original diagnostic interface choices.
-Run this generator against the pre-adoption `182b7a26` source.
+This family used the pre-adoption `182b7a26` source.
 
 `generate-ai-grail-lifetime-family.py`, context `23ae2167ec23afbe3de3`, exhausts
 **24 states / 11 objects**, with ten reproduced elites. It tests actual artifact
@@ -1047,8 +1047,6 @@ function location and relocation destination across its four consuming TUs;
 only the independently evidenced symbol rename is admitted. The full
 checkpoint has no score movement before searching.
 
-
-
 The two axes cross the incomplete/pinned arm with the ordinary complete
 receiver, and the existing `HeaderRequested` auto-inline override with its
 removal. All **four states emit distinct code and reproduce**; all **416
@@ -1078,8 +1076,6 @@ verifies exact parent source/header identity and carries both reproduced
 complete-receiver parents. It tests each of the remaining 14 dispatcher
 depth-zero regions separately and all together, crossed with the adjacent
 auto-inline override:
-
-
 
 All **32 states produce distinct objects**, with **ten reproduced elites**.
 All **223 TU score rows** are checked; only the dispatcher moves. No deletion
@@ -1118,8 +1114,6 @@ override. The first two recover positive DC facts at caller lines 6488/6511,
 with definitions at 7323/6937. Complete's dropped-player expansion adds version
 recomputation and uses no-argument `update`; its older DC `message junk` local
 is not copied into the newer implementation.
-
-
 
 All **eight states emit distinct objects and reproduce**, scoring **416 rows
 across four header consumers**. Dispatcher percentages with the adjacent
@@ -1707,7 +1701,6 @@ of `nextBinkFrame` and `videoClose`, resetting their MAX values to their
 unchanged current scores (0% and 38.1538%); their 92.9245% and 100% HIST peaks
 remain available. Every unchanged-source MAX is preserved.
 
-
 ## Sound definition placement and shared native library bodies
 
 The former in-class/out-of-class header placement family was byte-flat for
@@ -1767,7 +1760,6 @@ the enrollment edits introduce no code change. RMG's pre-existing score rows
 also remain unchanged. This control is necessary before attributing a cached
 object difference to a comment/enrollment edit.
 
-
 ## Remaining bitset and scenario emission audit
 
 The same native-consumer audit identifies four more retained bodies without
@@ -1806,7 +1798,6 @@ function locations and named relocations. All 76 ownership/native-oracle tests
 pass. The RVA audit has four CUR gains, no declines or MAX resets, and retains
 all 4,752 ledger rows plus every historical peak. Ownership remains 4,788
 canonical definitions with zero violations; the 200 existing pins are unchanged.
-
 
 ## Aggregate argument materialization in Voronoi
 
