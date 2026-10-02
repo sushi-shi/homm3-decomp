@@ -1,6 +1,6 @@
 """Inventory and test every source-level inline override region.
 
-Usage: python scripts/experiments/audit-inline-pragmas.py [--run] [UNIT ...]
+Usage: python scripts/tools/audit-inline-pragmas.py [--run] [UNIT ...]
 Results stay under build/pragma-audit and build/source-families. The inventory
 includes directives in #if 0 blocks; the compiler distinguishes inactive and
 active-but-redundant overrides. Pair resets with opens, do not count each line

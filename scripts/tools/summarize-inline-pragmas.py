@@ -1,6 +1,6 @@
 """Join exhaustive deletion controls to their emitted source identities.
 
-Usage: python scripts/experiments/summarize-inline-pragmas.py [OUTPUT_DIR]
+Usage: python scripts/tools/summarize-inline-pragmas.py [OUTPUT_DIR]
 OUTPUT_DIR is the inventory/manifest directory made by audit-inline-pragmas.py.
 The baseline comes from each runner snapshot, never today's changed source.
 Unscored alternatives and ambiguous repeated contexts are errors, not passes.
