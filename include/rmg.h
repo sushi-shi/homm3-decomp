@@ -1826,11 +1826,11 @@ struct TRmgHalfEdge {
     }
     TRmgHalfEdge* getLeftNext() const
     {
-        return m_twin->m_previous;
+        return getTwin()->getPrevious();
     }
     TRmgHalfEdge* getLeftPrevious() const
     {
-        return m_next->m_twin;
+        return getNext()->getTwin();
     }
     TPoint getSitePosition() const
     {

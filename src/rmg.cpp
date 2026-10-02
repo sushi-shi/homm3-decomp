@@ -10558,9 +10558,9 @@ void TRmgVoronoi::buildVertices()
             TPoint position = computeRmgCircumcenter(edge->getNext()->getOppositeSitePosition(),
                 edge->getSitePosition(), second);
             edge->setPosition(position);
-            edge = edge->getNext()->getTwin();
+            edge = edge->getLeftPrevious();
             edge->setPosition(position);
-            edge = edge->getNext()->getTwin();
+            edge = edge->getLeftPrevious();
             edge->setPosition(position);
         }
     }
