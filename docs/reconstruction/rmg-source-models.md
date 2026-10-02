@@ -1,9 +1,11 @@
 # RMG source-model evidence
 
-These are source-recovery findings and rejected alternatives, not current scores
-or runnable search instructions. Some referenced experiments have been retired;
-Git history preserves their source. Start new work with the
-[source-family runner](../vc6/source-families.md) and current retail comparisons.
+These are historical source-recovery findings and rejected alternatives, not
+current scores or runnable search instructions. The one-off generators and
+behavior fixtures have been retired; their filenames below identify archived
+experiments in [Git history](https://github.com/sushi-shi/homm3-decomp/commits/a9e013a71/scripts/experiments).
+Start new work with the [source-family runner](../vc6/source-families.md)
+and current retail comparisons.
 
 ## RMG placement: separate mask and world-coordinate ownership
 
@@ -971,9 +973,7 @@ retail byte-access evidence, and the previous peak remains a recovery lead.
 `test_rmg_generator_construction.py` checks the changed policy, reset and
 limit-table regions with 16,384 attribute/version scenarios per form, all 156
 hero positions, preserved old flags, duplicate override precedence, and unique
-range endpoints. Six incorrect policies/ranges must fail. Set
-`HOMM3_GENERATOR_MANIFEST` to test an archived population; by default the oracle
-checks the current authored constructor after adoption. It does not model
+range endpoints. Six incorrect policies/ranges were rejected. It did not model
 string construction, exception unwinding or inlining; the VC6 comparison is
 the evidence for those. Historical generators deliberately reject stale source
 anchors instead of silently applying an old family to the adopted body.
@@ -983,10 +983,6 @@ construction, assignment, lifetime, helper-call and statement-order alternatives
 It is not `state-sweep`, which adds transient random includes to an unchanged
 function body. Source alternatives require semantic review and retail evidence;
 a higher similarity score alone does not validate a reconstruction.
-
-Inside the pinned build shell, with `HOMM3_DIR` set to the owning worktree:
-
-
 
 The schema-1 manifest specifies `source`, `units`, and named `axes`. Every axis
 has a unique exact `find` span and named `options`; an option omitting `replace`
@@ -1048,17 +1044,9 @@ The Voronoi return family separates returned-value lifetimes in `buildVertices`
 from construction in its five canonical arithmetic operators. Its follow-up
 accepts a completed vertex checkpoint, checks the parent source snapshot and
 reproduced definitions, and carries all ten retained parents. `--control`
-reduces the family to four caller/scale-operator controls for causal isolation:
+reduces the family to four caller/scale-operator controls for causal isolation.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-voronoi-vertices-family.py build/rmg-voronoi-vertices.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-voronoi-return-family.py build/source-families/VERTEX_CONTEXT/checkpoint.json build/rmg-voronoi-return.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-voronoi-return-family.py build/source-families/VERTEX_CONTEXT/checkpoint.json build/rmg-voronoi-control.json --control
-```
-
-Run the vertex search before producing the follow-up. A changed authored parent
-is rejected, not silently rebased to the checkpoint. The circumcenter oracle
-checks integer division order and shared half-edge flags with four negative
+The circumcenter oracle checked integer division order and shared half-edge flags with four negative
 controls; all three return constructions use the actual point/vector types.
 
 The ray reload and recurrence generators target the two independently scheduled
@@ -1066,12 +1054,7 @@ loads at `traceBranchEnd`'s neighbour-loop exit. They preserve the canonical
 coordinate lookup and stepping algorithm while varying loop, query-receiver,
 error-update and previous-point lifetimes. Their reduced fixture checks 17,150
 cases per form against a closed-form lattice ray, including zero directions,
-two levels, seven obstacle patterns, and four deliberately wrong controls:
-
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-ray-reload-family.py build/rmg-ray-reload.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-ray-recurrence-family.py build/rmg-ray-recurrence.json
-```
+two levels, seven obstacle patterns, and four deliberately wrong controls.
 
 The quadrant-ownership followup `generate-rmg-noise-quadrant-family.py`
 challenges the shared work-record model: one reused region, four separately
@@ -1089,8 +1072,6 @@ Its native oracle derives expected samples from a 3x3 lattice, checks all
 3,136 origin/extent combinations and existing-vector-prefix preservation,
 and rejects four wrong midpoint/sample/degeneracy/variation controls:
 
-
-
 `build/source-families/<context>/` retains the input, snapshot, candidate trees,
 objects, complete score vectors, failures, generation summaries and checkpoint.
 Re-running with the same inputs resumes; a new source, profile, toolchain,
@@ -1101,11 +1082,7 @@ The canonical map-accessor family varies row/index lifetime, multiplication
 and row-addition operand order, and pointer-result binding. Unlike a local
 caller edit, this header experiment scores all seven consuming units, including
 the single-selection dialogs and tiles. The scalar inline declaration and
-ordinary position-overload delegation remain intact:
-
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-map-accessor-family.py build/rmg-map-accessor.json
-```
+ordinary position-overload delegation remain intact.
 
 The independent pointer-offset oracle checks 882 in-bounds coordinates per
 form across square/non-square dimensions and both levels. Four deliberately
@@ -1135,8 +1112,6 @@ The native oracle checks 72 dimension combinations, every possible array-element
 constructor failure, cleanup, ownership and four deliberately wrong controls;
 it tests lifecycle semantics, not the packed retail layout.
 
-
-
 The zone-destructor ownership family is genuinely finite: the stale public
 `~TRmgZone();` declaration versus its removal, across all seven `rmg.h`
 consumers. The source had already replaced the empty written definition with
@@ -1147,8 +1122,6 @@ emits the exact 118-byte retained destructor and improves `buildZoneBoundaries`
 from 93.5031% to 96.3209%, with all other frozen scores unchanged. Its retained
 caller and expanded cleanup are separate boundaries to verify. The restored
 direct-symbol claim requires the full-build label refresh described above.
-
-
 
 Retained bytes alone do not settle implicit versus written ownership. The
 derived generator destructor (`0x537df0`, not the already-exact base at
@@ -1161,8 +1134,6 @@ the sole score change is derived teardown to 100%. Its EH states and four
 unwind actions now agree with retail; Zone's retained body and the exact
 boundary expansion stay exact. The ordinary definition is adopted. Original
 explicitness remains a retail-supported inference without Dreamcast evidence.
-
-
 
 The boundary caller needs two expanded point-vector member destructors,
 two retained `_Destroy` calls, then the retained short-vector destructor.
@@ -1196,22 +1167,13 @@ opaque constructor/query operations with initialized fixture scalars; it
 does not invent game initialization or claim to validate VC6 rounding/EH.
 Retail call review verifies adjacent registration-allocation order separately.
 
-
-
 The connection-owner family targets `canConnect`'s ECX/EBX exchange after
 the signed distance conversion. Six slot/value/reference bindings, five sum
 lifetimes and two minimum forms make 60 states. Its follow-up retains the
 ten distinct reproduced parents (substituting unchanged source for one
-object-identical neutral parent) and adds 50 const-value/copied-temporary forms:
+object-identical neutral parent) and adds 50 const-value/copied-temporary forms.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-connect-owners-family.py build/rmg-connect-owners.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-connect-owners-family.py build/rmg-connect-snapshots.json --parents-from build/source-families/OWNER_CONTEXT/checkpoint.json
-```
-
-Run the first manifest before generating its follow-up. Source/header snapshots,
-input options, reproduced bodies, and the neutral parent's code identity are
-checked before reuse. Each batch scores all of `rmg`, producing ten and fourteen
+Each batch scored all of `rmg`, producing ten and fourteen
 distinct objects. All sibling scores remain unchanged. A reference to the other
 slot's size reaches 97.7922% from 96.4286%, but splits retail's single field load
 into an address addition plus load and exchanges the sum's LEA operands. Copied
@@ -1268,7 +1230,6 @@ retained candidates reproduce; no tracked peak improves and none is adopted.
 All 29 constructor CFG blocks already agree, but retail's width reload and
 height-load schedule are still unresolved:
 
-
 The native fixture uses the actual accessor bodies and checks dimension,
 query-count, area and initialized-cell semantics for 49 dimension pairs per
 form. Four negative controls change height, area, strength or query count.
@@ -1285,10 +1246,6 @@ alternatives disturb the exact island or water-border callers. No accessor
 change is adopted. The combined native accessor oracle checks 118 old/new
 forms against 882 coordinates each and rejects five wrong dimension, level,
 coordinate and mutated-base controls. It verifies owner fields remain intact.
-
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-map-base-family.py build/rmg-map-base.json
-```
 
 The Voronoi construction family preserves the four perimeter factories and
 diagonal while varying corner ownership, edge declaration lifetimes and
@@ -1318,11 +1275,7 @@ finalists reproduce. Neither peak improves, and the best combined candidates
 retain the original factory body. These are experimental frontiers, not
 adopted matching source.
 
-
-
-Run each parent search before generating its descendant. Parent source/header
-snapshots, input options and reproduced source trees must agree. The native
-checks use the actual point/edge/diagram classes, factories and splice bodies:
+The native checks used the actual point/edge/diagram classes, factories and splice bodies:
 an explicit ten-edge initial graph, 100 aliased/non-aliased connection pairs,
 and full site insertion with eight cyclic input orders and duplicate sites.
 Ring links, ownership, planarity and the triangulation edge count are checked
@@ -1338,8 +1291,6 @@ reproduced finalists and every tracked score unchanged. In particular,
 `detach`, while the candidate expands both. The existing eighteen blocks and
 ten branches already agree; public erase and search-loop lifetimes do not
 explain that helper decision. No source form is adopted.
-
-
 
 The native removal oracle checks 82 cases per form, removing either half of
 every pair from the initial subdivision and from appended isolated pairs.
@@ -1369,8 +1320,6 @@ score is unchanged. The separate 47.0387% insertion peak does not preserve
 exact lookup. The adopted pair passes the full VC6 build, and the verified
 /Z7 source comparison agrees on every lookup block.
 
-
-
 The determinant oracle uses actual point/edge declarations and constructors.
 An independent 64-bit shoelace determinant checks 117,649 coordinate triples
 per predicate, including collinear/duplicate endpoints and input aliases;
@@ -1397,8 +1346,6 @@ new method calls; neither occurs in retail. Neither family is adopted, and
 the canonical 45.4167% source remains unchanged. These are bounded failures
 of the tested boundary models, not evidence for an inline directive.
 
-
-
 Both forms pass the full insertion oracle and an independent segment oracle:
 117,649 coordinate triples per form, with collinearity plus projection bounds
 instead of the candidate's two distance bounds. Degenerate segments, endpoint
@@ -1416,8 +1363,6 @@ span 33.2202%–45.4167%, without improving the unchanged caller or recovering
 the missing orientation calls. Only `addSite` varies in all three of these
 segment/line-object/circle batches; exact lookup and every sibling score hold.
 No game implementation or MAX is changed by these experiments.
-
-
 
 An independent four-by-four determinant oracle enumerates all 24 permutations
 instead of reusing the candidate's triangle decomposition. Every form passes
@@ -1449,8 +1394,6 @@ specialization; these are not differing instructions or call positions.
 Allocation-time table reloads, reference ownership, prototype-only sorting
 and the later rule/progress calls remain unchanged. The adopted source passes
 the full VC6 build and changes only the loader's tracked score, to 100%.
-
-
 
 Parent reuse checks source/header snapshots, rendered source, repeated scores
 and code identities. After adoption, the generator recognizes the selected
@@ -1497,11 +1440,6 @@ wrong subtype, water, mask, random and candidate-order controls must fail.
 The fixture supplies public STL semantics and reduced owner records, not
 retail layout or original class declarations; VC6 remains the byte verdict.
 Both tests pass with the receiver family and with the return frontier.
-
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-prototype-receiver-family.py build/rmg-prototype-receivers.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-prototype-receiver-family.py build/rmg-prototype-returns.json --returns-from build/source-families/RECEIVER_CONTEXT/checkpoint.json
-```
 
 The placement-rule reader (`0x536560`) has one surplus count-one push at its
 rule append. Fresh retail comparison aligns all 62 blocks' branch destinations
@@ -1578,12 +1516,9 @@ spanning 83.4501–99.7862%. All 30 still call the count-insert overload; no
 function improves and no game-body alternative is adopted. The initial
 60-state smoke control rejected aggregate initialization with VC6 C2552;
 those two construction forms were removed before the population ran.
-The existing parsed-row/last-matching-rule oracle also accepts a manifest
-through `HOMM3_RULE_READER_MANIFEST`. It checks the additional bodies with
-the same independent expected rows and nine negative controls. Its object
-field declarations now come from their current owner, `objecttype.h`.
-
-
+The parsed-row/last-matching-rule oracle checked the additional bodies with
+independent expected rows and nine negative controls. Its object field
+declarations came from `objecttype.h`.
 
 The coordinated range follow-up crosses ten reproduced construction/lifetime
 parents with six consumed range/traversal forms (60 states, 60 objects, ten
@@ -1608,8 +1543,6 @@ nonempty guard. Both families pass the parsed-row/last-match oracle and its
 nine negative controls. Their parent loader verifies source/header snapshots,
 manifest identity and all ten reproduced parent objects before recombination.
 
-
-
 The guarded counted-range family preserves empty/null safety explicitly and
 uses `begin() + match`: 60 states, 53 objects and ten reproduced finalists.
 It restores the earlier register roles, but its outer nonempty guard folds
@@ -1626,12 +1559,6 @@ sibling scores reproduce. The native oracle passes all source alternatives
 and its nine negative controls. The iterator accesses are alternative source
 hypotheses, not evidence of unique original text.
 
-
-
-These follow-ups deliberately require the matching pre-adoption parent
-snapshot. Once an exact body is adopted, regenerate a compatible family for
-any new hypothesis rather than weakening their snapshot/anchor checks.
-
 The full checkpoint with the minimal reader expression, ordinary Zone
 destructor, owning-map allocation and shared boundary query/index passes every
 gate: RMG exact functions rise from 273 to 284, generated emission debt drops
@@ -1641,8 +1568,6 @@ reader passes the existing
 198-form native oracle
 and all nine negative controls; the Zone destructor agrees in every
 semantic-diff view.
-
-
 
 `generate-rmg-zone-fit-family.py` reopens `canPlaceZone` (`0x53ad60`) from
 its remaining B12 arithmetic mismatch. All fifteen blocks' control-flow
@@ -1676,11 +1601,6 @@ must fail. The first radius set did not distinguish 70% from 80% spacing;
 a sum-of-radii-nine, distance-seven case fixes that oracle coverage gap.
 The expanded oracle passes. The extra retail move remains unresolved.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-zone-fit-family.py build/rmg-zone-fit.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-zone-fit-family.py build/rmg-zone-fit-displacements.json --displacements
-```
-
 ### Map-size return ownership
 
 `generate-rmg-size-return-family.py` couples twelve base getter forms with
@@ -1705,8 +1625,6 @@ and exactly one query. Wrong component order, corrupted returned data and a
 double query must fail. Reduced owner classes test semantics, not retail ABI.
 The final full VC6 build passes with no ledger raises or source-hash resets;
 all 26 experiment regressions pass, including this new return oracle.
-
-
 
 ### Junction preparation coordinate ownership (0x5446a0)
 
@@ -1752,13 +1670,6 @@ packed-field/guard preservation. Eleven deliberately broken controls fail.
 Reduced owners and scripted helper algorithms establish the caller contract,
 not retail ABI or correctness of the complete flood implementation.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-junction-prepare-family.py build/rmg-junction-prepare.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-junction-prepare-family.py build/rmg-junction-bindings.json --bindings-from build/source-families/JUNCTION_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-junction-prepare-family.py build/rmg-junction-entrances.json --entrances-from build/source-families/BINDING_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-junction-prepare-family.py build/rmg-junction-predecessors.json --predecessors-from build/source-families/ENTRANCE_CONTEXT/checkpoint.json
-```
-
 The oracle also accepts colon-separated manifest paths to cover multiple
 historical populations together, always including the currently authored body.
 
@@ -1779,11 +1690,6 @@ separate source contexts from the four pre-adoption populations above.
 The complete six-manifest union contains 314 distinct function bodies; all
 pass the 864-scenario oracle and eleven negative controls. The final full
 VC6 build passes with no further ledger changes, preserving 77.5209%.
-
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-junction-scan-family.py build/rmg-junction-scans.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-junction-scan-family.py build/rmg-junction-receivers.json --receivers-from build/source-families/SCAN_CONTEXT/checkpoint.json
-```
 
 ### Object-distance flood lifetimes (0x5402a0)
 
@@ -1821,12 +1727,6 @@ Reduced owners establish this behavioral contract, not retail ABI or allocation
 failure behavior. Old checkpoints remain tied to their original snapshots.
 The final full VC6 build passes with no ledger changes, and all 28 experiment
 regressions pass. This checkpoint does not close the object-distance flood.
-
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-add-object-family.py build/rmg-add-object.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-add-object-family.py build/rmg-add-object-coordinates.json --coordinates-from build/source-families/QUEUE_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-add-object-family.py build/rmg-add-object-seeds.json --seeds-from build/source-families/COORDINATE_CONTEXT/checkpoint.json
-```
 
 ### Key-tent guard ownership and cleanup (0x54b8c0)
 
@@ -1881,13 +1781,6 @@ instrumentation never enters a matching compiler snapshot.
 
 The closing full build passed all gates without MAX changes, followed by
 all 29 then-existing experiment tests (261.569 seconds).
-
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-key-tent-family.py build/rmg-key-tent.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-key-tent-family.py build/rmg-key-tent-receivers.json --receivers-from build/source-families/KEY_TENT_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-key-tent-family.py build/rmg-key-tent-results.json --results-from build/source-families/RECEIVER_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-key-color-helper-family.py build/source-families/RECEIVER_CONTEXT/checkpoint.json build/rmg-key-color-helper.json
-```
 
 ### Object-removal coordinate ownership (0x54bc50)
 
@@ -2018,12 +1911,6 @@ lifetimes and call decisions are not solved. The five other queue callers
 retain their previous scores. The unchanged-source header writer moves
 77.9030% to 77.8952%, retaining its prior MAX/HIST.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-connection-queue-family.py build/rmg-connection-queue.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-connection-queue-family.py build/rmg-connection-local.json --local
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-connection-queue-family.py build/rmg-connection-lookups.json --lookups-from build/source-families/LOCAL_CONTEXT/checkpoint.json
-```
-
 The other first-population frontiers use `--parents-from`, `--pointers-from`
 and `--ranges-from`. Complete snapshots, rendered source, repeated scores,
 code identities and hashes must agree before parent reuse. After adoption,
@@ -2079,11 +1966,6 @@ barriers, both endpoint seeds and unrelated packed-bit preservation. Six
 wrong step/level/zone/direction/seed controls must fail. Reduced owner layouts
 are not x86 ABI evidence; successful allocation and bounded costs are assumed.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-queue-family.py build/rmg-water-queue.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-queue-family.py build/rmg-water-queue-frontier.json --frontier
-```
-
 After adoption the generator recognizes the selected source as its unchanged
 control and retains all original alternatives; old search contexts stay tied
 to their original snapshots. Neither the finite search nor the partial score
@@ -2112,11 +1994,6 @@ actual insert uses and the cleanup control distinguish them from unused
 compiler-state padding. Flattening the seed expressions restores the wrong
 cleanup. The canonical queue helper, signatures and vector types stay intact.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-queue-family.py build/rmg-water-queue-lifetimes.json --lifetimes
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-queue-family.py build/rmg-water-queue-iterator-controls.json --iterator-controls
-```
-
 The native oracle passes all sixty lifetime forms plus the initial controls
 (108 distinct bodies), and all four isolated iterator controls plus initial
 controls (52 bodies), with six broken controls rejected in each run. Those
@@ -2144,8 +2021,6 @@ aligned. The frame is still 0x28 rather than 0x30, and the inlined borrowed
 view and scan homes are unresolved; the point hypothesis is not a frame fix.
 Only those two source changes are adopted, leaving allocation's original
 multiplication order and every helper declaration intact.
-
-
 
 The native fixture imports actual point/bounds types, packed cell fields,
 map lookup and borrowed constructor. Mask generation, terrain painting and
@@ -2187,8 +2062,6 @@ finalists, but none raises the score or resolves the borrowed constructor's
 load/store order. No origin/binding alternative is adopted. The canonical
 buffer-first constructor and scalar lookup remain unchanged.
 
-
-
 The native level population covers 119 distinct original/new bodies; the
 origin population covers 110. Both pass 1,152 scenarios per body. A seventh
 negative control clears the adopted coordinate's level without changing the
@@ -2219,17 +2092,6 @@ states, 158 distinct sources and 78 code identities. Every batch reproduces
 ten finalists; no sibling score moves. The minimal first-stage candidate also
 reproduces independently, including its complete score vector, code identity,
 source hashes and choices, before adoption. No loop or getter rewrite is adopted.
-
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-prepare-family.py build/rmg-water-prepare.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-prepare-family.py build/rmg-water-prepare-loops.json --loops-from build/source-families/PREPARE_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-prepare-family.py build/rmg-water-prepare-getters.json --getters-from build/source-families/LOOP_CONTEXT/checkpoint.json
-```
-
-Run each parent search before generating its frontier. Complete source/header
-snapshots, rendered parents, repeated scores, code identities and source hashes
-must agree. Adoption invalidates historical parent anchors; the initial
-generator recognizes only its reviewed child and keeps it as unchanged control.
 
 The native oracle imports actual coordinate/bounds/packed types, constructor,
 map accessors and getter. A flat-cell reference checks 1,728 scenarios per body:
@@ -2266,12 +2128,6 @@ the selected minimal pointer body preserves it. ADD-negative expressions and
 named limit values do not recover retail's two `ADD -4` instructions. No scan,
 insertion, radius or upper-limit spelling is adopted. These three populations
 contain 180 scored states, 159 distinct sources and ninety code identities.
-
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-prepare-family.py build/rmg-water-prepare-selection.json --selection
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-prepare-family.py build/rmg-water-prepare-scan.json --scan-from build/source-families/SELECTION_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-water-prepare-family.py build/rmg-water-prepare-upper-bounds.json --bounds-from build/source-families/SCAN_CONTEXT/checkpoint.json
-```
 
 Each population passes the independent caller oracle with 119 original/new
 bodies. Two added upper-limit off-by-one controls bring the negative total to
@@ -2336,12 +2192,6 @@ The verified source comparison confirms x+2 but still has 84 versus 82
 blocks; call and relocation streams agree. CUR/MAX/HIST are 91.7350%.
 The three RMG units remain at 247 currently exact and 253 MAX-exact tracked
 functions out of 363, so this partial recovery is not whole-TU closure.
-
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-obstacle-clearance-family.py build/rmg-clearance.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-obstacle-clearance-family.py build/rmg-clearance-upper.json --upper-corners
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-obstacle-clearance-family.py build/rmg-clearance-corners.json --corners-from build/source-families/UPPER_CONTEXT/checkpoint.json
-```
 
 ### Underground decoration lifetimes (0x5439e0)
 
@@ -2421,26 +2271,13 @@ and underground oracles against the adopted shared constructor. The expanded
 118-form scalar-lookup oracle also passes separately, rejecting five wrong
 dimension, level, coordinate and mutated-base controls.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-underground-family.py build/rmg-underground.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-underground-family.py build/rmg-underground-origins.json --origins-from build/source-families/UNDERGROUND_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-underground-family.py build/rmg-underground-constructor.json --constructor-from build/source-families/UNDERGROUND_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-underground-family.py build/rmg-underground-controls.json --constructor-from build/source-families/UNDERGROUND_CONTEXT/checkpoint.json --constructor-controls
-```
-
 The RMG strength-family generator demonstrates a structural follow-up: it
 selects top distinct grid parents from a completed grid checkpoint and combines
 them with ordinary implementation alternatives for `getTransitionStrength`.
 
-
-
 Other generators cover the classifier caller/packed-field snapshots, the
 diagonal checks/coordinate class, shipyard footprint/side selection, and connection-path/prototype selection.
-They read the current authored baseline;
-their output lives under `build/`, while the generator itself is reviewable.
-
-
-Use an output as the family-runner argument. The neighbour family keeps
+The neighbour family kept
 the eight real classifier calls and their order; it varies point/query and
 iterator lifetimes plus independent packed-field updates. The diagonal family
 keeps signed offset tables, reference-select clamps and early-return predicates,
@@ -2493,7 +2330,6 @@ with signed offset arithmetic in range; it does not claim unsigned clipping or
 zero-dimension equivalence. An unsigned selector would wrongly clip a negative
 offset to the upper edge.
 
-
 For `repairTerrainPoint`, sixteen coordinate-accessor forms produce sixteen
 objects without improving 93.6307%. The value-returning accessors recover the
 fresh scalar copy passed to the reference-taking coordinate constructor, but
@@ -2503,7 +2339,6 @@ the coordinate-ownership follow-up tests scoped fixed/pair coordinates and
 caller accessors (60 states, 45 objects). Neither improves the retained score.
 All preserve the ordinary gap-predicate APIs and the later neighbour-ring
 phase. The native predicate/workflow oracles include negative controls.
-
 
 The border family tests scalar bounds against one rectangle or two corner
 values, including independent bound-evaluation order. A rectangle's allocation
@@ -2550,8 +2385,7 @@ independent predicate initialization, iteration-local previous state, descending
 map coordinates beside ascending mask coordinates, and entry-time placement
 snapshots. These alternatives recovered the full outline and connectivity
 bodies; the footprint and placement callers still require further work.
-The generators can rebase their reviewed forms after adopting a winner;
-round-trip tests preserve the mask arms and their coordinate progression.
+Round-trip checks preserved the mask arms and their coordinate progression.
 
 The copy/cursor family holds the now-exact outline helpers fixed. It varies
 the allocation result and real `std::copy` argument lifetimes, the footprint's
@@ -2821,41 +2655,11 @@ The mixed grid-constructor family extends that boundary with genuine
 initializer/body splits, copy-through-assignment, translation lifetimes and
 member-definition order. It preserves the unsigned layout, both constructor
 signatures and the ordinary compound-add definition. Each stage compiles 60
-source states across **all three** RMG TUs:
+source states across **all three** RMG TUs.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
-  build/rmg-grid-ctors.json
-PYTHONPATH=scripts python -m homm3.vc6.source_families \
-  build/rmg-grid-ctors.json --width 60 --keep 10 --jobs 6
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
-  build/rmg-grid-returns.json --parents-from build/source-families/CTOR_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python -m homm3.vc6.source_families \
-  build/rmg-grid-returns.json --width 60 --keep 10 --jobs 6
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
-  build/rmg-grid-orders.json --member-orders-from build/source-families/RETURN_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python -m homm3.vc6.source_families \
-  build/rmg-grid-orders.json --width 60 --keep 10 --jobs 6
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
-  build/rmg-grid-assignment.json --assignment-from build/source-families/ORDER_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python -m homm3.vc6.source_families \
-  build/rmg-grid-assignment.json --width 60 --keep 10 --jobs 6
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
-  build/rmg-grid-proxy.json --proxy-from build/source-families/ASSIGNMENT_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
-  build/rmg-grid-temporaries.json --temporaries-from build/source-families/PROXY_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
-  build/rmg-grid-visibility.json --visibility-from build/source-families/TEMPORARY_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
-  build/rmg-grid-binding.json --binding-from build/source-families/TEMPORARY_CONTEXT/checkpoint.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
-  build/rmg-grid-factory.json --factory-from build/source-families/BINDING_CONTEXT/checkpoint.json
-```
-
-Run each generated manifest with the same runner arguments before generating
-its descendant. The visibility test is a separate negative-control branch;
-binding consumes the pre-visibility parents. Factory returns have portable
-semantic coverage but are not part of the completed retail matrix below.
+The visibility test was a separate negative-control branch; binding used the
+pre-visibility parents. Factory returns had portable semantic coverage but
+were not part of the completed retail matrix below.
 
 Six copy forms, five coordinate forms and two returns produce six distinct
 code/relocation results. Crossing those reproduced constructor parents with
@@ -2922,8 +2726,6 @@ insert in island subdivision (`0x53cd30`), and junction neighbour-query values
 (`0x5443a0`). The 6 x 6 x 5 family has enough combinations for three complete
 populations, with aggregate/specialist elites and fresh sampling between them:
 
-
-
 All states preserve the bounds' output-reference write order and canonical
 long min/max calls, the initial single-element `insert`, and the real map-query
 overloads. The native fixture compiles the actual point/position/vector types
@@ -2962,8 +2764,6 @@ independent explicit eligible list checks all 256 masks, alignments -1..8,
 levels -1..2, zero/nonzero byte flags and six random results; wrong levels,
 rank tests, native preference guards and empty-set defaults must fail.
 
-
-
 The first selector reconstruction matches the 150-byte retail body. The
 60-state control produces 18 distinct objects and eight exact forms, with
 ten reproduced finalists. Naming the template pointer/reference suppresses
@@ -3000,8 +2800,6 @@ into position/trigger snapshots and prototype-reference binding. Parent input,
 source/header snapshots, source hashes, scores and code/relocation identities
 must reproduce before the next population is generated; a changed source
 requires a new checkpoint, not reused scores.
-
-
 
 The independent mask oracle compiles all 198 first/second-stage forms and,
 when selected, every exact method from a later-stage manifest. It checks all
@@ -3066,18 +2864,6 @@ first-generation snapshot reordering is retained; the additional bindings
 are controls, not adopted source. The four-byte multiply difference remains
 open rather than being hidden by a helper rewrite or false inline boundary.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-commit-family.py \
-  build/rmg-group-commit.json
-PYTHONPATH=scripts python -m homm3.vc6.source_families \
-  build/rmg-group-commit.json --width 60 --keep 10 --jobs 6
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-commit-family.py \
-  build/rmg-group-commit-parents.json --parents-from build/source-families/COMMIT_CONTEXT/checkpoint.json
-HOMM3_GROUP_COMMIT_MANIFEST=build/rmg-group-commit-parents.json PYTHONPATH=scripts \
-PYTHONPATH=scripts python -m homm3.vc6.source_families \
-  build/rmg-group-commit-parents.json --width 60 --keep 10 --jobs 6
-```
-
 The independent native oracle checks all 420 permitted initial/refined bodies
 and every body in an optional selected manifest. It reuses actual value types,
 bitfields, byte predicates, accessors, position constructor and object-position
@@ -3127,16 +2913,6 @@ guard/entrance, does not resolve the residual (99.9676%). Some experimental
 variants also move `writeMapHeader`; the adopted source preserves all other
 339 tracked RMG scores. The six bytes remain open, and these measurements
 are not a whole-TU closure claim.
-
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-place-family.py \
-  build/rmg-group-place.json
-HOMM3_GROUP_PLACE_MANIFEST=build/rmg-group-place.json PYTHONPATH=scripts \
-PYTHONPATH=scripts python -m homm3.vc6.source_families \
-  build/rmg-group-place.json --width 60 --keep 10 --jobs 6
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-place-family.py \
-  build/rmg-group-place-parents.json --parents-from build/source-families/PLACE_CONTEXT/checkpoint.json
-```
 
 The later stages use `--lifetime-parents-from`, `--frame-parents-from` and
 `--shared-parents-from` against the immediately preceding stage's checkpoint.
@@ -3196,11 +2972,6 @@ Its actual getters, value types and map interfaces remain canonical. These
 bounded negative results do not prove that the six-byte residual is unreachable.
 The closing full VC6 build passes all gates with no ledger changes.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-place-homes-family.py build/rmg-group-place-homes.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-place-homes-family.py build/rmg-group-place-phases.json --phases-from build/source-families/HOMES_CONTEXT/checkpoint.json
-```
-
 `generate-rmg-group-select-family.py` targets `placeTreasureGroup` at
 `0x5470d0`, the 646-byte Complete-only caller that selects and commits a
 treasure-group offset. Its first 60 states cross five entry-declaration
@@ -3234,22 +3005,6 @@ outer-loop bound-reload block is missing (17 blocks versus 18). These remain
 source/register-lifetime questions, not a reason to flatten helpers.
 The adopted candidate preserves the other 339 tracked RMG scores; some
 experimental competitors also move `writeMapHeader`.
-
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-select-family.py \
-  build/rmg-group-select.json
-HOMM3_GROUP_SELECT_MANIFEST=build/rmg-group-select.json PYTHONPATH=scripts \
-PYTHONPATH=scripts python -m homm3.vc6.source_families \
-  build/rmg-group-select.json --width 60 --keep 10 --jobs 6
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-select-family.py \
-  build/rmg-group-select-parents.json --parents-from build/source-families/SELECT_CONTEXT/checkpoint.json
-```
-
-Continue from the second and third checkpoints with `--shape-parents-from`
-and `--lifetime-parents-from`, respectively. Parent manifests, complete
-source/header snapshots, source hashes and repeated score/code identities
-are checked recursively. Adoption invalidates the old checkpoint anchors;
-scores are not silently reused under a changed implementation.
 
 The independent native oracle enumerates translated footprint inequalities
 over a containing coordinate domain rather than copying the candidate's
@@ -3331,21 +3086,6 @@ EBP frame and eleven blocks. The direct field control remains at 80.8902%.
 This rejects the tested query composition on its actual call sequence; no
 source model is adopted. The canonical size interface itself is unchanged.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-reset-family.py \
-  build/rmg-group-reset.json
-HOMM3_GROUP_RESET_MANIFEST=build/rmg-group-reset.json PYTHONPATH=scripts \
-PYTHONPATH=scripts python -m homm3.vc6.source_families \
-  build/rmg-group-reset.json --width 60 --keep 10 --jobs 6
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-reset-family.py \
-  build/rmg-group-reset-frontier.json --parents-from build/source-families/RESET_CONTEXT/checkpoint.json
-```
-
-Use `--lifetime-parents-from` for the second checkpoint. The loader verifies
-the preceding manifests recursively, source/header snapshots, source hashes,
-and each elite's repeated score vector and code identity. Adoption requires
-a new current-source baseline; old scores are not silently reused.
-
 The independent native reset oracle checks 600 scenarios per body: empty,
 rectangular and 16-by-16 maps, one to three levels, varied packed bits,
 borrowed-pointer populations, and flag bytes 0/1/255. It compiles the actual
@@ -3388,21 +3128,6 @@ insertion: the split-properties control grows from 438 to 821 bytes. None of
 these experiments changes canonical helpers, adds inline controls or passes
 an integer sum through signed-overflow arithmetic.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-fill-family.py \
-  build/rmg-group-fill.json
-HOMM3_GROUP_FILL_MANIFEST=build/rmg-group-fill.json PYTHONPATH=scripts \
-PYTHONPATH=scripts python -m homm3.vc6.source_families \
-  build/rmg-group-fill.json --width 60 --keep 10 --jobs 3
-```
-
-Use `--parents-from FIRST_CHECKPOINT` for the receiver/lifetime frontier and
-`--centering-parents-from SECOND_CHECKPOINT` for the centering frontier. The
-loader validates preceding manifests recursively, unchanged source/header
-snapshots, source hashes and each parent's repeated code identity and score
-vector. After adoption, generate a fresh baseline rather than silently reusing
-pre-adoption checkpoints.
-
 The independent native oracle uses a phase/budget state machine and scripted
 opaque factory, map-placement, fit and virtual lifecycle boundaries. It checks
 1,540 scenarios per body, including independent three-attempt budgets,
@@ -3444,9 +3169,8 @@ not missing symbols. Six generator-reference candidates also move
 `writeMapHeader` from 93.2864% to 93.2786%; the other collateral scores hold.
 Neither family is adopted, so no game implementation or MAX changes.
 
-The independent native selection oracle covers 2,304 scenarios for every
-first-stage body and every second-stage grammar body, plus an optional
-`HOMM3_TREASURE_CREATE_MANIFEST`. It checks ordered filter/virtual/selector/
+The independent native selection oracle covered 2,304 scenarios for every
+first-stage and second-stage grammar body. It checked ordered filter/virtual/selector/
 placement traces, map and zone limits, inclusive value bounds, compact mask
 occupancy, candidate resets, cumulative weighted intervals, null factories,
 and the final fresh value call and output store before generation. Coordinate
@@ -3788,11 +3512,6 @@ The final full VC6 build passes with no checkpoint changes. All nine focused
 centroid, spatial-frontier, coastal and river-target regressions pass, including
 both new populations and all eight centroid negative controls.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-recenter-family.py build/rmg-recenter-entry-bindings.json --entry-bindings
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-recenter-family.py build/rmg-recenter-zeroing.json --zeroing-from build/source-families/ENTRY_CONTEXT/checkpoint.json
-```
-
 ### Island interior fill
 
 Retail `insetIslandZone` ends with a retained call at 0x53d36b to the
@@ -3910,11 +3629,6 @@ negative controls must all fail.
 The closing full VC6 checkpoint passes all gates with no ledger changes;
 both map-writer tests pass, including the complete 220-body union.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-map-writer-scans-family.py build/rmg-map-writer-scans.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-map-writer-scans-family.py build/rmg-map-writer-owners-fixed.json --owners-from build/source-families/SCAN_CONTEXT/checkpoint.json
-```
-
 `test_rmg_map_writer.py` imports the actual coordinate declaration and abstract
 stream interface, with reduced map/prototype/object owners and opaque helper
 callbacks. An independent event sequence uses a flattened prototype inventory
@@ -3928,11 +3642,6 @@ reference-sign, cell-walk, progress and return controls are rejected. This
 tests successful allocation and synchronous buffer consumption, not x86 owner
 layout or arbitrary callback mutations. After adoption the original sixty
 forms remain explicit semantic controls without importing old compiler scores.
-
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-map-writer-family.py build/rmg-map-writer.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-map-writer-family.py build/rmg-map-writer-buffers.json --buffers-from build/source-families/MAP_WRITER_CONTEXT/checkpoint.json
-```
 
 ### Prototype wire-buffer reconstruction
 
@@ -3988,14 +3697,6 @@ consumption are the tested contract, not allocator-failure behavior.
 
 The post-adoption experiment regression run passes all 33 tests in 318.399
 seconds, including the full 158-form historical/current writer union.
-
-After adoption, the generator recognizes this exact child as its unchanged
-control and reconstructs the historical alternatives explicitly. Old compiler
-checkpoints must still pass full source/header, manifest, rendered-body,
-repeated-score and code-identity checks; they cannot silently rebase. Native
-tests may import the historical bodies without importing any old scores.
-
-
 
 ### Request worker seat setters
 
@@ -4127,7 +3828,6 @@ is independently required by other callers. No game-code change is adopted;
 the local extraction mismatch remains open, not a claimed semantic failure
 or a resolved compiler limitation.
 
-
 ## Native terrain queries and movement seed setters
 
 The Mac bodies of floodConnectionCosts, decorateUnderground,
@@ -4151,7 +3851,6 @@ resets; prior peaks and unresolved getter/cleanup expansion evidence remain
 in the owning source and score history. No new inline qualifier or caller
 scope is introduced.
 
-
 ## Map and adapter lookup paths in exact virtual methods
 
 Fifteen native Mac map/road/river methods at 0x22eadc..0x22f434 expand
@@ -4165,7 +3864,6 @@ and returned tile lifetimes remain in their original caller positions.
 One targeted rmg build preserves all fifteen Windows bodies at 100%.
 No header, inline qualifier, runtime dispatch or additional helper body is
 introduced. The canonical ordinary helpers remain visible in the same TU.
-
 
 The next native pass covers twenty further paired callers and restores
 forty-one remaining pointer-based cell land queries through getLandType.
