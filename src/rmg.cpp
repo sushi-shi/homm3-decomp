@@ -4166,6 +4166,13 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     }
 }
 
+// Subdivision uses +1 before signed division on both axes. This is retail's
+// rounding rule, including for negative coordinates, rather than a plain average.
+static inline TPoint getRmgSubdivisionMidpoint(const TPoint& from, const TPoint& to)
+{
+    return TPoint((from.m_x + to.m_x + 1) / 2, (from.m_y + to.m_y + 1) / 2);
+}
+
 // Center one modulo-distributed draw on zero. Preserve modulo bias, asymmetric
 // even ranges, signed division and one RNG draw; callers own range validity.
 static inline int getRmgCenteredRandomOffset(int range)
@@ -4233,7 +4240,7 @@ void type_random_map_generator::drawIrregularZoneBoundary(
     while (pending.size() > 0) {
         to = pending.back();
         pending.pop_back();
-        TPoint midpoint((from.m_x + to.m_x + 1) / 2, (from.m_y + to.m_y + 1) / 2);
+        TPoint midpoint = getRmgSubdivisionMidpoint(from, to);
         if (midpoint != from && midpoint != to) {
             displaceRmgBoundaryMidpoint(midpoint, from, to, roughness, 1);
             pending.push_back(to);
@@ -4511,9 +4518,7 @@ void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
     while (pending.size() > 0) {
         to = pending.back();
         pending.pop_back();
-        TPoint midpoint;
-        midpoint.m_x = (from.m_x + to.m_x + 1) / 2;
-        midpoint.m_y = (from.m_y + to.m_y + 1) / 2;
+        TPoint midpoint = getRmgSubdivisionMidpoint(from, to);
         if (midpoint != from && midpoint != to) {
             displaceRmgBoundaryMidpoint(midpoint, from, to, roughness, 2);
             pending.push_back(to);
