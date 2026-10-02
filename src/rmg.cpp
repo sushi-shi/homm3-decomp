@@ -49,7 +49,7 @@ DATA(0x006824E0)
 int g_rmgCreatureValueByLevel[7] = {5000, 7000, 9000, 12000, 16000, 21000, 27000};
 
 void type_object::releaseReservation() {}
-b8 type_object::isWritable() { return true; }
+b8 type_object::completePlacement() { return true; }
 
 b8 type_treasure_def::isTerrainDependent() { return false; }
 b8 type_quest_creature_def::isTerrainDependent() { return true; }
@@ -345,7 +345,7 @@ void TRmgMapItem::clear()
     m_movement.m_zonePathCost = 32700;
     m_zoneState.m_score = 32700;
     m_zoneState.m_zone = -1;
-    m_zoneState.m_connectionEligibility = -1;
+    m_zoneState.m_connectionZone = -1;
     m_previousTile.m_x = -1;
     m_tileData = tileData;
 }
@@ -502,7 +502,7 @@ static void insertRmgWorkItem(
     costs.insert(costs.begin() + middle, cost);
 }
 
-static inline void popRmgMovementPosition(TRmgMapPosition& position,
+static inline void popRmgWorkItem(TRmgMapPosition& position,
     std::vector<TRmgMapPosition>& positions, std::vector<int>& costs)
 {
     position = positions.back();
@@ -537,7 +537,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
     int zone = seed->m_zoneState.m_zone;
     while (positions.size()) {
         TRmgMapPosition currentPosition;
-        popRmgMovementPosition(currentPosition, positions, costs);
+        popRmgWorkItem(currentPosition, positions, costs);
         TRmgMapItem* current = getMapItem(currentPosition);
         int currentZone = current->m_zoneState.m_zone;
         int currentCost = currentZone == zone
@@ -573,7 +573,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
                     continue;
                 next->m_movement.m_zonePathCost = nextCost;
                 next->m_tileData.m_connectionDirection = direction - 4;
-                next->m_zoneState.m_connectionEligibility = zone;
+                next->m_zoneState.m_connectionZone = zone;
             } else {
                 if (currentZone != zone)
                     continue;
@@ -1515,7 +1515,7 @@ static inline void replaceRmgObjectWithTreasure(type_random_map_generator* gener
 
 VA(0x005338E0, 0xD4)
 MAC_ADDRESS(0x231030, 0x68)
-b8 rmgKeyTentObject::isWritable()
+b8 rmgKeyTentObject::completePlacement()
 {
     if (m_generator->placeKeyTentGuard(this, m_value * 3 / 2))
         return true;
@@ -1540,7 +1540,7 @@ rmgQuestArtifactObject::~rmgQuestArtifactObject()
 // failure the hut is destroyed.
 VA(0x00533A50, 0x33)
 MAC_ADDRESS(0x2311fc, 0x78)
-b8 rmgQuestArtifactObject::isWritable()
+b8 rmgQuestArtifactObject::completePlacement()
 {
     if (m_generator->placeQuestArtifact(this)) {
         m_seerHut = 0;
@@ -4530,7 +4530,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
     TRmgMapItem* seed = m_map.getMapItem(position);
     seed->setWaterZoneDistance(0, 0);
     while (positions.size()) {
-        popRmgMovementPosition(position, positions, costs);
+        popRmgWorkItem(position, positions, costs);
         unsigned currentCost = m_map.getMapItem(position)->m_movement.m_zonePathCost;
         for (int direction = 0; direction < 8; ++direction) {
             TRmgMapPosition next = position + g_rmgDirections[direction];
@@ -4624,7 +4624,7 @@ static inline void releaseRmgNeighborhoodPathClearance(type_random_map& map,
     for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
         for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
             TRmgMapItem* item = map.getMapItem(nearby);
-            if (static_cast<int>(item->m_objects.size()) <= 0)
+            if (!item->hasObjects())
                 item->releasePathClearance();
         }
     }
@@ -4674,7 +4674,7 @@ void type_random_map_generator::expandObstacleClearance()
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
                         if (item->getLandType() != eTerrainWater
-                            && static_cast<int>(item->m_objects.size()) <= 0) {
+                            && !item->hasObjects()) {
                             item->markBorderObject();
                         }
                     }
@@ -4703,7 +4703,7 @@ void type_random_map_generator::repairWaterZoneBorders()
                 int zoneIndex = current->m_zoneState.m_zone;
                 if (zoneIndex < 0 || current->getLandType() != eTerrainWater)
                     continue;
-                int destinationZone = current->m_zoneState.m_connectionEligibility;
+                int destinationZone = current->m_zoneState.m_connectionZone;
                 if (destinationZone < 0)
                     continue;
 
@@ -4793,7 +4793,7 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
         positions.push_back(currentPosition);
         costs.push_back(0);
         while (positions.size()) {
-            popRmgMovementPosition(currentPosition, positions, costs);
+            popRmgWorkItem(currentPosition, positions, costs);
             int cost = m_map.getMapItem(currentPosition)->m_zoneState.m_score + 2;
             for (int direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
                 int nextCost = cost;
@@ -4823,12 +4823,8 @@ void type_random_map_generator::buildZoneConnectionPaths()
     while (count--) {
         item->m_movement.m_zonePathCost = 32000;
         item->m_tileData.m_connectionDirection = 0;
-        item->m_zoneState.m_connectionEligibility = -1;
-        TRmgMapPosition previous;
-        previous.m_x = -1;
-        previous.m_y = -1;
-        previous.m_z = -1;
-        item->resetMovement(previous);
+        item->m_zoneState.m_connectionZone = -1;
+        item->resetMovement();
         ++item;
     }
     for (unsigned int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
@@ -4849,7 +4845,7 @@ void type_random_map_generator::buildZoneConnectionPaths()
                     if (current->m_zoneState.m_zone == zoneIndex) {
                         unsigned terrain = current->getLandType();
                         if ((terrain != eTerrainWater || zone->m_terrain == terrain)
-                            && static_cast<int>(current->m_objects.size()) <= 0) {
+                            && !current->hasObjects()) {
                             seed.m_x = x;
                             seed.m_y = pathPosition.m_y;
                             seed.m_z = position.m_z;
@@ -5038,7 +5034,7 @@ int type_random_map_generator::placeBorderObject(
 // its tile flags but takes the new guard colour.
 static inline void markRmgEmptyBorderConnection(TRmgMapItem* item, int color)
 {
-    if (item->m_objects.size() == 0) {
+    if (!item->hasObjects()) {
         item->markBorderConnection(color);
     }
 }
@@ -5088,7 +5084,7 @@ void type_random_map_generator::placeGuard(int value, TRmgMapPosition position)
 {
     TRmgMapItem* item = m_map.getMapItem(position);
     TRmgZone* zone = m_zones[item->m_zoneState.m_zone];
-    if (static_cast<int>(item->m_objects.size()) > 0)
+    if (item->hasObjects())
         return;
     type_object* guard = createGuard(value, zone);
     if (guard)
@@ -5197,11 +5193,11 @@ b8 type_random_map_generator::createGroundConnection(
     for (int index = 0; index < borderItems->size(); ++index) {
         TRmgMapItem* item = (*borderItems)[index];
         if (item->m_zoneState.m_zone == sourceZone
-            && item->m_zoneState.m_connectionEligibility == destinationZone
-            && static_cast<int>(item->m_objects.size()) <= 0) {
+            && item->m_zoneState.m_connectionZone == destinationZone
+            && !item->hasObjects()) {
             TRmgMapPosition other = (*borderPositions)[index]
                 + g_rmgDirections[item->m_tileData.m_connectionDirection];
-            if (static_cast<int>(m_map.getMapItem(other)->m_objects.size()) <= 0) {
+            if (!m_map.getMapItem(other)->hasObjects()) {
                 ++eligibleCount;
                 int cost = item->m_movement.m_zonePathCost;
                 if (cost <= bestCost)
@@ -5376,7 +5372,7 @@ b8 type_random_map_generator::createShipyardConnection(
                  ++position.m_x) {
                 TRmgMapItem* item = m_map.getMapItem(position);
                 if (item->m_zoneState.m_zone == sourceZone
-                    && item->m_zoneState.m_connectionEligibility == destinationZone) {
+                    && item->m_zoneState.m_connectionZone == destinationZone) {
                     if (item->isConnectionVisited())
                         return true;
                     if (item->getLandType() != eTerrainWater) {
@@ -5731,7 +5727,7 @@ void type_random_map_generator::connectZones()
         for (position.m_y = 0; position.m_y < m_map.getHeight(); ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.getWidth();
                  ++position.m_x, ++mapItem) {
-                if (mapItem->m_zoneState.m_connectionEligibility < 0)
+                if (mapItem->m_zoneState.m_connectionZone < 0)
                     continue;
 
                 if (mapItem->getLandType() == eTerrainWater
@@ -5911,7 +5907,7 @@ void type_random_map_generator::decorateUnderground()
                 TRmgMapItem* item = m_map.getMapItem(x, y, 1);
                 if (item->getLandType() == eTerrainRock
                     && item->m_zoneState.m_zone == zone
-                    && (item->hasPathClearance() || item->m_objects.size())) {
+                    && (item->hasPathClearance() || item->hasObjects())) {
                     if (terrain != currentTerrain) {
                         brush.changeTerrain(terrain, 4);
                         currentTerrain = terrain;
@@ -5994,7 +5990,7 @@ void type_random_map_generator::carveBranchingPaths()
     TRmgMapItem* item = m_map.m_mapItems;
     int remaining = m_map.getHeight() * m_map.getWidth() * m_map.m_numberLevels;
     for (; remaining--; ++item) {
-        if (!item->m_objects.size()) {
+        if (!item->hasObjects()) {
             item->markBorderObject();
         } else {
             item->openPath();
@@ -6130,12 +6126,8 @@ void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
             TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, level);
             if (item->m_zoneState.m_zone == zoneIndex
                 && item->getLandType() != eTerrainWater) {
-                TRmgMapPosition previous;
-                previous.m_x = -1;
-                previous.m_y = -1;
-                previous.m_z = -1;
-                item->resetMovement(previous);
-                if (static_cast<int>(item->m_objects.size()) <= 0) {
+                item->resetMovement();
+                if (!item->hasObjects()) {
                     item->markBorderObject();
                 }
             }
@@ -6185,7 +6177,7 @@ void type_random_map_generator::prepareZoneConnections()
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (!item->hasBorderObject() && item->isPassableLand() && !item->isRoadEntrance()
-                    && static_cast<int>(item->m_objects.size()) <= 0
+                    && !item->hasObjects()
                     && item->m_zoneState.m_zone < 0 && item->getLandType() != eTerrainWater)
                     m_map.markBorderPatch(position);
             }
@@ -6777,7 +6769,7 @@ static inline void addRmgCenteredGroupObject(TRmgTreasureGroup* group, type_obje
 
 static inline type_object* createRmgTreasureWithRetries(
     type_random_map_generator* generator, TRmgZone* zone, int minimum, int maximum,
-    int* value, b8 primary, b8 alternate)
+    int* value, b8 primary, b8 compact)
 {
     for (int attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
         TRmgMapPosition unspecified;
@@ -6785,7 +6777,7 @@ static inline type_object* createRmgTreasureWithRetries(
         unspecified.m_y = -1;
         unspecified.m_z = -1;
         type_object* object = generator->createTreasureObject(zone, minimum, maximum,
-            value, primary, true, alternate, unspecified);
+            value, primary, true, compact, unspecified);
         if (object)
             return object;
     }
@@ -6797,12 +6789,12 @@ static inline type_object* createRmgTreasureWithRetries(
 VA(0x00546520, 0x1B6)
 MAC_ADDRESS(0x24a584, 0x22c)
 int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
-    TRmgTreasureGroup* group, b8 alternate, int value)
+    TRmgTreasureGroup* group, b8 compact, int value)
 {
     int objectValue = 0;
     int attempts;
     type_object* selected = createRmgTreasureWithRetries(
-        this, zone, value / 4, value, &objectValue, true, alternate);
+        this, zone, value / 4, value, &objectValue, true, compact);
     if (!selected)
         return 0;
     addRmgCenteredGroupObject(group, selected);
@@ -6814,7 +6806,7 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
         type_object* nextObject;
         for (attempts = 0; ; ) {
             nextObject = createRmgTreasureWithRetries(this, zone,
-                remainder / 4, 5 * remainder / 4, &objectValue, false, alternate);
+                remainder / 4, 5 * remainder / 4, &objectValue, false, compact);
             if (!nextObject)
                 break;
             if (group->tryAddObject(nextObject))
@@ -6849,11 +6841,11 @@ static inline void discardRmgTreasureGroup(TRmgTreasureGroup* group)
 VA(0x005466E0, 0x253)
 MAC_ADDRESS(0x24a7b0, 0x110) // MAC_ABSTRACTION_FROM(tokens1:4deef3890efa,29.6117): discardRmgTreasureGroup shares ordered reservation release, deletion and reset across four failed-placement paths.
 b8 type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
-    TRmgTreasureGroup* group, b8 alternate, int minimum, int maximum)
+    TRmgTreasureGroup* group, b8 compact, int minimum, int maximum)
 {
     group->reset();
     int value = maximum <= minimum ? maximum : rand() % (maximum - minimum) + minimum;
-    int totalValue = fillTreasureGroup(zone, group, alternate, value);
+    int totalValue = fillTreasureGroup(zone, group, compact, value);
     if (!totalValue)
         return false;
     int guardValue = getRmgZoneGuardValue(totalValue, zone, *this);
@@ -6994,7 +6986,7 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
         }
     }
     for (unsigned int objectIndex = 0; objectIndex < group->m_objects.size(); ++objectIndex)
-        group->m_objects[objectIndex]->isWritable();
+        group->m_objects[objectIndex]->completePlacement();
 }
 
 VA(0x00546C70, 0x452)
@@ -7115,10 +7107,10 @@ b8 type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
 // groups that fail placement are discarded.
 static inline b8 tryPlaceRmgTreasureBand(
     type_random_map_generator* generator, TRmgZone* zone, TRmgTreasureGroup* group,
-    b8 alternate, const TRmgTreasureRange& range, int spacing)
+    b8 compact, const TRmgTreasureRange& range, int spacing)
 {
     for (int attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
-        if (generator->assembleTreasureGroup(zone, group, alternate,
+        if (generator->assembleTreasureGroup(zone, group, compact,
                 range.m_minimum, range.m_maximum)) {
             if (generator->placeTreasureGroup(group, zone, spacing))
                 return true;
@@ -7200,7 +7192,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
         TRmgMapPosition(-1, -1, -1), openPositions, openCosts);
 
     while (openPositions.size()) {
-        popRmgMovementPosition(position, openPositions, openCosts);
+        popRmgWorkItem(position, openPositions, openCosts);
 
         mapItem = m_map.getMapItem(position);
         int currentCost = mapItem->m_movement.m_cost;
@@ -7336,12 +7328,11 @@ b8 type_random_map_generator::paintRoad(TRmgMapPosition position, int roadType)
 MAC_ADDRESS(0x24bb68, 0x78)
 void type_random_map_generator::resetMovementCosts()
 {
-    TRmgMapPosition resetPosition(-1, -1, -1);
     TRmgMapItem* mapItem = m_map.getMapItem(0, 0);
     int rowCount = m_map.m_numberLevels * m_map.m_mapHeight;
     int mapItemCount = rowCount * m_map.m_mapWidth;
     while (mapItemCount--) {
-        mapItem->resetMovement(resetPosition);
+        mapItem->resetMovement();
         ++mapItem;
     }
 }
@@ -7430,7 +7421,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     TRmgMapPosition position;
     TRmgMapPosition nextPosition;
     while (!openPositions.empty()) {
-        popRmgMovementPosition(position, openPositions, openCosts);
+        popRmgWorkItem(position, openPositions, openCosts);
         mapItem = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
         int positionCost = mapItem->m_movement.m_cost;
         for (int direction = 0; direction < 8; direction += 2) {
@@ -7599,7 +7590,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     int direction;
 
     while (!openPositions.empty()) {
-        popRmgMovementPosition(position, openPositions, openCosts);
+        popRmgWorkItem(position, openPositions, openCosts);
 
         mapItem = m_map.getMapItem(position);
         int positionCost = mapItem->m_movement.m_cost;
@@ -8524,7 +8515,7 @@ void type_random_map_generator::removeObject(type_object* object)
                 std::vector<type_object*>::iterator entry = std::find(item->m_objects.begin(), item->m_objects.end(), object);
                 if (entry) {
                     item->m_objects.erase(entry);
-                    if (item->m_objects.empty()) {
+                    if (!item->hasObjects()) {
                         item->m_tileData.m_roadEntrance = false;
                         item->m_tileData.m_roadPassable = true;
                     }

@@ -68,7 +68,7 @@ Logical byte and integer declarations now use `b8` and `b32`, respectively,
 with `true`/`false` for logical constants. These are project aliases for
 `unsigned char` and `int`, preserving storage, mangling and noncanonical values;
 they do not assert original source spellings or native `bool` contracts.
-Retail `isWritable` implementations return through AL, so that interface stays
+Retail `completePlacement` implementations return through AL, so that interface stays
 byte-sized. The line-painter virtual blocking result remains 32-bit, and its
 tile wrapper retains the original low-byte conversion. Existing native `bool`,
 bitfield base types, counts, masks, noise, IDs and unresolved option bytes stay

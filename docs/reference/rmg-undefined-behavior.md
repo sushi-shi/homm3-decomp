@@ -265,13 +265,13 @@ pointer vectors, but never destroys or deallocates it. This operation alone is
 not a leak: a caller could retain ownership. The two actual replacement callers,
 however, abandon the removed wrapper:
 
-- `rmgKeyTentObject::isWritable` (`0x5338e0`) removes `this` at `+0x4a`,
+- `rmgKeyTentObject::completePlacement` (`0x5338e0`) removes `this` at `+0x4a`,
   attempts to generate a replacement, and returns false without deleting the
   original key tent.
 - `placeQuestArtifact` (`0x54b490`) removes the artifact wrapper at `+0x298`
   when `placeQuestGroup` fails. Its remaining cleanup destroys the temporary
   group's containers and map, not the wrapper. On return,
-  `rmgQuestArtifactObject::isWritable` (`0x533a50`) deletes the seer hut through
+  `rmgQuestArtifactObject::completePlacement` (`0x533a50`) deletes the seer hut through
   the member at `+0x20` and clears that member, but does not delete itself.
 
 Retail `commitTreasureGroup` calls vtable slot `+8` at `0x546c55` and advances

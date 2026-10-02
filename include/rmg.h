@@ -604,7 +604,9 @@ struct TRmgMovementCost {
 struct TRmgZoneCellState {
     unsigned m_score : 16;
     signed m_zone : 8;
-    signed m_connectionEligibility : 8;
+    // Neighbouring zone whose connection-cost flood crossed into this cell
+    // (-1 none); m_connectionDirection points back into it.
+    signed m_connectionZone : 8;
 };
 
 // Packed terrain, river and road types and frames of one map cell.
@@ -728,7 +730,8 @@ public:
     virtual void releaseReservation();
     // Runs once the object's treasure group is committed: key tents and quest
     // artifacts place their guard or seer hut, or are replaced by a treasure.
-    virtual b8 isWritable();
+    // The success result is ignored. Formerly named isWritable.
+    virtual b8 completePlacement();
     virtual void write(TAbstractFile* outputFile, int version);
 };
 
@@ -833,7 +836,7 @@ public:
         type_random_map_generator* generator, rmgSeerHutObject* seerHut,
         type_treasure_def* definition);
     virtual ~rmgQuestArtifactObject();
-    virtual b8 isWritable();
+    virtual b8 completePlacement();
 };
 SIZE(rmgQuestArtifactObject, 0x28);
 
@@ -846,7 +849,7 @@ public:
 
     rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, int value);
-    virtual b8 isWritable();
+    virtual b8 completePlacement();
 };
 SIZE(rmgKeyTentObject, 0x24);
 
@@ -917,6 +920,12 @@ struct TRmgMapItem {
     bool isRiverTarget() const { return m_tileData.m_riverTarget != 0; }
     bool isImpassable() const { return m_tileData.m_impassable != 0; }
 
+    // Any object footprint (entrance or blocked cell) covers this cell.
+    b8 hasObjects() const
+    {
+        return m_objects.size() != 0;
+    }
+
     b8 shouldPaintZoneTerrain() const
     {
         return m_tileData.m_paintZoneTerrain;
@@ -966,20 +975,20 @@ struct TRmgMapItem {
         m_previousTile = previous;
     }
 
-    // Resets the path cost to 32000 (unreached).
-    void resetMovement(TRmgMapPosition previous)
+    // Resets the path cost to 32000 (unreached) with no predecessor.
+    void resetMovement()
     {
         m_movement.m_cost = 32000;
-        m_previousTile = previous;
+        m_previousTile = TRmgMapPosition(-1, -1, -1);
     }
 
-    // Water-zone spacing: distance and incoming direction; sets connection
-    // eligibility to 0.
+    // Water-zone spacing: distance and incoming direction; sets the
+    // connection zone to 0 (reset before connections are built).
     void setWaterZoneDistance(unsigned int cost, int direction)
     {
         m_movement.m_zonePathCost = cost;
         m_tileData.m_connectionDirection = direction;
-        m_zoneState.m_connectionEligibility = 0;
+        m_zoneState.m_connectionZone = 0;
     }
 
     // Opens a generated path here unless a connection protects the cell.
@@ -1691,13 +1700,15 @@ public:
     void prepareJunctionZone(TRmgZone* zone);
     void connectJunctionEntrance(TPoint from, TPoint to, TRmgZone* zone);
     void placeZoneTreasures(TRmgZone* zone);
+    // Compact selection keeps only treasures near the best value per
+    // footprint cell; zones retry a failed treasure band with it.
     type_object* createTreasureObject(TRmgZone* zone, int minimum, int maximum,
         int* value, b8 primary, b8 allowTerrainDependent,
         b8 compact, TRmgMapPosition position);
     int fillTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
-        b8 alternate, int value);
+        b8 compact, int value);
     b8 assembleTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
-        b8 alternate, int minimum, int maximum);
+        b8 compact, int minimum, int maximum);
     b8 placeTreasureGroup(TRmgTreasureGroup* group, TRmgZone* zone, int spacing);
     b8 canPlaceTreasureGroup(TRmgTreasureGroup* group,
         TRmgMapPosition position, TRmgZone* zone);
