@@ -75,6 +75,13 @@ static const unsigned char g_rmgLineReflections[4][2] = {
     {0, 0}, {0, 1}, {1, 0}, {1, 1}
 };
 
+// Endpoints and the no-endpoint-art fallback share the horizontal choice.
+// Keep the west-before-east short-circuit order.
+static inline bool hasRmgHorizontalLineNeighbour(const unsigned char* neighbours)
+{
+    return neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST];
+}
+
 VA(0x004F9CB0, 0x24E)
 MAC_ADDRESS(0x222498, 0x2a4)
 void selectRmgLinePattern(
@@ -132,7 +139,7 @@ void selectRmgLinePattern(
         }
     }
     if (table->m_ranges[RMG_LINE_SOUTH_END].m_valueCount > 0) {
-        if (neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST]) {
+        if (hasRmgHorizontalLineNeighbour(neighbours)) {
             pattern = RMG_LINE_EAST_END;
             flipX = neighbours[TILE_DIR_WEST];
             flipY = 0;
@@ -148,7 +155,7 @@ void selectRmgLinePattern(
             }
         }
     } else {
-        pattern = neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST]
+        pattern = hasRmgHorizontalLineNeighbour(neighbours)
             ? RMG_LINE_EAST_WEST : RMG_LINE_NORTH_SOUTH;
         flipX = 0;
         flipY = 0;
