@@ -4199,6 +4199,13 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
 
 VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, TRmgZoneConnection)
 
+// Per axis, a radial site may overhang the map by about half its offset.
+static inline bool isRmgRadialSiteTooFarOffMap(int coordinate, int extent, double offset)
+{
+    return (coordinate < 0 && coordinate < offset)
+        || (coordinate >= extent && coordinate >= extent + offset);
+}
+
 // Existing zones seed the subdivision; radial sites add surface water zones
 // and underground boundaries.
 VA(0x0053E050, 0x64D)
@@ -4238,20 +4245,9 @@ void type_random_map_generator::buildZoneBoundaries(
                 verticalCenter = current->getLevelPosition();
                 double dy = radius * g_rmgDirectionSines[direction];
                 position.m_y = static_cast<int>(verticalCenter.m_y + dy * 2);
-                if (position.m_x < 0 && position.m_x < dx)
+                if (isRmgRadialSiteTooFarOffMap(position.m_x, m_map.m_mapWidth, dx)
+                    || isRmgRadialSiteTooFarOffMap(position.m_y, m_map.m_mapHeight, dy))
                     continue;
-                if (position.m_x >= m_map.m_mapWidth) {
-                    int maximumWidth = m_map.m_mapWidth;
-                    if (position.m_x >= maximumWidth + dx)
-                        continue;
-                }
-                if (position.m_y < 0 && position.m_y < dy)
-                    continue;
-                if (position.m_y >= m_map.m_mapHeight) {
-                    int maximumHeight = m_map.m_mapHeight;
-                    if (position.m_y >= maximumHeight + dy)
-                        continue;
-                }
                 testZone.setLevelPosition(position);
                 if (!canPlaceZone(&testZone))
                     continue;
