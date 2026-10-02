@@ -462,7 +462,7 @@ unsigned char type_random_map::hasConnectedOutline(
         TPoint offset(outline[index % outline.size()]);
         int x = position.m_x + offset.m_x;
         int y = position.m_y + offset.m_y;
-        if (x < 0 || x >= m_mapWidth || y < 0 || y >= m_mapHeight) {
+        if (!containsXY(TPoint(x, y))) {
             blocked = 1;
         } else {
             TRmgMapItem* item = getMapItem(x, y, position.m_z);
@@ -1149,18 +1149,12 @@ VA(0x00532890, 0x104)
 MAC_ADDRESS(0x22f434, 0x1d4)
 void TRmgMapItem::write(TAbstractFile* outputFile)
 {
-    char land = m_tile.m_landType;
-    outputFile->write(&land, sizeof(land));
-    char value = m_tile.m_terrainFrame;
-    outputFile->write(&value, sizeof(value));
-    value = m_tile.m_riverType;
-    outputFile->write(&value, sizeof(value));
-    value = m_tile.m_riverFrame;
-    outputFile->write(&value, sizeof(value));
-    value = m_tile.m_roadType;
-    outputFile->write(&value, sizeof(value));
-    value = m_tileData.m_roadFrame;
-    outputFile->write(&value, sizeof(value));
+    writeValue<char>(outputFile, m_tile.m_landType);
+    writeValue<char>(outputFile, m_tile.m_terrainFrame);
+    writeValue<char>(outputFile, m_tile.m_riverType);
+    writeValue<char>(outputFile, m_tile.m_riverFrame);
+    writeValue<char>(outputFile, m_tile.m_roadType);
+    writeValue<char>(outputFile, m_tileData.m_roadFrame);
     char flags = 0;
     if (m_tileData.m_terrainFlipX) flags |= 1;
     if (m_tileData.m_terrainFlipY) flags |= 2;
@@ -1169,8 +1163,7 @@ void TRmgMapItem::write(TAbstractFile* outputFile)
     if (m_tileData.m_roadFlipX) flags |= 16;
     if (m_tileData.m_roadFlipY) flags |= 32;
     if (m_tileData.m_coastal) flags |= 64;
-    value = flags;
-    outputFile->write(&value, sizeof(value));
+    writeValue<char>(outputFile, flags);
 }
 
 VA_COMPGEN(0x005329A0, 0x32, IMPLICIT_DTOR, TRmgTemplateZone)
@@ -1726,6 +1719,22 @@ type_object::~type_object()
     --m_properties->m_refCount;
 }
 
+// Replace an unfulfillable quest object with ordinary treasure at its
+// original position. Callers snapshot value and position before removal;
+// the owning zone is deliberately queried afterwards.
+static inline void replaceRmgObjectWithTreasure(type_random_map_generator* generator,
+    type_object* object, int value, TRmgMapPosition position)
+{
+    generator->removeObject(object);
+    TRmgZone* zone = generator->m_zones[
+        generator->m_map.getMapItem(position)->m_zoneState.m_zone];
+    int actualValue;
+    type_object* replacement = generator->createTreasureObject(
+        zone, value, value * 3 / 2, &actualValue, 0, 0, 0, position);
+    if (replacement)
+        generator->addObject(replacement, position);
+}
+
 VA(0x005338E0, 0xD4)
 MAC_ADDRESS(0x231030, 0x68)
 unsigned char rmgKeyTentObject::isWritable()
@@ -1735,14 +1744,7 @@ unsigned char rmgKeyTentObject::isWritable()
     type_random_map_generator* generator = m_generator;
     int value = m_value;
     TRmgMapPosition position = m_position;
-    generator->removeObject(this);
-    TRmgZone* zone = generator->m_zones[
-        generator->m_map.getMapItem(position)->m_zoneState.m_zone];
-    int actualValue;
-    type_object* object = generator->createTreasureObject(
-        zone, value, value * 3 / 2, &actualValue, 0, 0, 0, position);
-    if (object)
-        generator->addObject(object, position);
+    replaceRmgObjectWithTreasure(generator, this, value, position);
     return 0;
 }
 
