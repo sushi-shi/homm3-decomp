@@ -4763,9 +4763,8 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
             --position.m_x;
         }
         while (position.m_x < m_map.getWidth() && item->m_zoneState.m_zone == -1) {
-            item->m_zoneState.m_zone = zoneIndex;
-            if (m_waterContent != RMG_WATER_ISLANDS || position.m_z == 1)
-                item->m_tileData.m_zoneBoundary = 1;
+            markRmgZoneBoundaryCell(item, zoneIndex,
+                m_waterContent != RMG_WATER_ISLANDS || position.m_z == 1);
             if (position.m_y > 0) {
                 if ((item - m_map.getWidth())->m_zoneState.m_zone == -1) {
                     if (!hasUpperSpan) {
@@ -6102,14 +6101,16 @@ static inline void placeRmgGroundConnectionBorder(type_random_map_generator& gen
 }
 
 // Unguarded template connections bypass valuation entirely. Keep the native
-// scalar value helper on the guarded path, including its argument reads.
-// Shipyards capture strength before value and retain their distinct sequence.
+// scalar value helper on the guarded path. Preserve the shipyard's consecutive
+// strength-before-value snapshots, after the unguarded early return.
 static inline int getRmgConnectionGuardValue(const TRmgZoneConnection* connection,
     const type_random_map_generator& generator)
 {
     if (connection->m_unguarded)
         return 0;
-    return getRmgGuardValue(connection->m_value, generator.m_monsterStrength);
+    int strength = generator.m_monsterStrength;
+    int value = connection->m_value;
+    return getRmgGuardValue(value, strength);
 }
 
 // Complete-only ground connection pass.  ConnectZones passes the paired
@@ -6471,14 +6472,7 @@ unsigned char type_random_map_generator::createShipyardConnection(
 
     floodShipyardWater(shipyard);
 
-    int guardValue;
-    if (connection->m_unguarded)
-        guardValue = 0;
-    else {
-        int strength = m_monsterStrength;
-        int value = connection->m_value;
-        guardValue = getRmgGuardValue(value, strength);
-    }
+    int guardValue = getRmgConnectionGuardValue(connection, *this);
 
     if (connection->m_placeBorderObjects) {
         nearby.m_x = entranceX - 1;
