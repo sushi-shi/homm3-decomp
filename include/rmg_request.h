@@ -6,10 +6,8 @@
 class TAbstractFile;
 class TProgressSink;
 
-// The generator's result code (retail 0x54c090's return, dispatched through
-// GenerateRandomMap's four-entry jump table). Zero is success; each failure
-// selects one general-text row. Names describe the failure sites in
-// generate/generateToFile; original Complete-only spellings are unavailable.
+// Retail 0x54c090 returns these codes; GenerateRandomMap maps failures
+// through a four-entry jump table to general-text rows.
 enum ERandomMapResult {
     RANDOM_MAP_OK = 0,
     RANDOM_MAP_OPEN_FAILED = 1,
@@ -17,29 +15,19 @@ enum ERandomMapResult {
     RANDOM_MAP_GENERATION_FAILED = 3
 };
 
-// The Complete-only random-map request record GenerateRandomMap fills and
-// hands to the generator entry at 0x54c090. Every offset below is fixed by
-// the constructor at 0x54bf00 (`ret 0xc`, so three stack arguments) and by
-// the window's own field stores; the constructor's own defaults are
-// field_34 = 2, field_38 = 2, field_3C = 0, field_40 = 8, field_44 = 3,
-// field_48 = 0 and mapVersion = 2. Names describe roles proven by the caller
-// contract; no original symbol survives for this type. It is shared
-// through this header for the selection window and the RMG implementation.
+// Shared lobby/generator request. Constructor 0x54bf00 and the lobby stores
+// prove the layout; field names describe those roles.
 class TRandomMapRequest {
 public:
-    // Set to 1 for seats whose lobby player reports isHuman(); computer
-    // seats remain zero. The constructor zeroes both dwords.
+    // Lobby human seats are 1; computer seats remain zero.
     unsigned char m_isHumanSeat[8];   // +0x00
-    // The eight seats' chosen town, -1 for random (constructor fill).
+    // -1 selects a random town.
     int m_townType[8];                // +0x08
     int m_width;                      // +0x28
     int m_height;                     // +0x2c
     int m_levels;                     // +0x30
-    // Retail 0x54bf60 passes these six slots to generator ctor 0x537b10:
-    // +34/+38/+3c/+40 become +f48/+f4c/+f50/+f54 (player/team counts);
-    // +44 becomes +10b8 (waterContent), and clamp(+48+3,1,5) becomes
-    // +10bc (monsterStrength). Generator consumers corroborate these roles.
-    // Semantic names follow the generator; original request names unknown.
+    // Retail 0x54bf60 forwards these to generator ctor 0x537b10, adding 3
+    // to monster strength and clamping it to [1, 5].
     int m_humanPlayerCount;           // +0x34
     int m_humanTeamCount;             // +0x38
     int m_computerPlayerCount;        // +0x3c
@@ -51,10 +39,8 @@ public:
     int m_mapVersion;                 // +0x4c
 
     TRandomMapRequest(int width, int height, int levels);
-    // The optional progress sink is borrowed for the call. The lobby passes
-    // its TRandomMapProgress base, and the worker forwards it to the generator.
-    // generateToFile changes both player counts to one if their sum is below
-    // two; that request mutation remains even when generation later fails.
+    // The optional progress sink is borrowed. generateToFile changes both
+    // player counts to one when their sum is below two, even on later failure.
     int generate(const char* fileName, TProgressSink* progress);
     int generateToFile(TAbstractFile* outputFile, TProgressSink* progress);
 };

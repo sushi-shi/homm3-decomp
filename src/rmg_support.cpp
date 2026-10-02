@@ -1,9 +1,7 @@
 // rmg_support.cpp - retained Complete random-map helper bodies.
 
-// Retail keeps these ordinary helpers out of line in CreateRiver.  Their
-// declarations remain visible through rmg.h, while placing the definitions in
-// this companion translation unit reproduces the natural body-visibility
-// boundary without source-false inline controls.
+// Retail retains these ordinary helpers out of line in CreateRiver; this
+// companion TU preserves that body-visibility boundary.
 #include "va.h"
 
 #include <algorithm>
@@ -14,9 +12,7 @@
 #include "rmg_terrain.h"
 #include "tiles.h"
 
-// The common painter prefix owns only the two dimensions and virtual API.
-// Both retained final constructors obtain the adapter size before building
-// this base, then store their own adapter at +0xc. Keep one ordinary helper.
+// Both final painters query adapter size before building this shared base.
 TRmgLinePainterInterface::TRmgLinePainterInterface(const TRmgGridPoint& size)
     : m_size(size)
 {
@@ -51,9 +47,7 @@ TRmgLinePatternTable::TRmgLinePatternTable(unsigned int patternCount, const int*
     }
 }
 
-// Both table cleanup thunks tail-call this body. The paired constructor owns
-// only the copied pattern-id array at +4; the nine index/count pairs are plain
-// integers and need no cleanup.
+// Both table cleanup thunks tail-call this array-owning destructor.
 VA(0x004F9CA0, 0x0B)
 MAC_ADDRESS(0x2222f8, 0x54)  // cinit cleanups 0x55ed90/0x55f310; Complete-only
 TRmgLinePatternTable::~TRmgLinePatternTable()
@@ -168,9 +162,7 @@ TRmgRiverPainter::~TRmgRiverPainter()
 {
 }
 
-// The first virtual slot returns the shared river pattern table. The line-type
-// argument belongs to the shared interface; all river types use this same
-// table, so this accessor intentionally ignores it.
+// All river types use the same pattern table, so the argument is ignored.
 VA(0x0055EDB0, 0x08)
 MAC_ADDRESS(0x253ad8, 0x8)  // vtables 0x641174/0x641190; Complete-only
 TRmgLinePatternTable* TRmgRiverLinePainter::getPattern(int)
@@ -231,9 +223,7 @@ void TRmgRiverLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& t
     readRmgLineTileSnapshot(m_adapter, point, tile);
 }
 
-// Slot 3 of all four river/road painter vtables forwards to the adapter's
-// terrain query: water and rock prevent painting. The earlier provisional
-// name canPaint inverted this meaning; the integer return ABI is unchanged.
+// Slot 3 returns an integer blocking result, not permission to paint.
 VA(0x0055EE00, 0x28)
 MAC_ADDRESS(0x253b64, 0x44)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
 int TRmgRiverLinePainter::isBlocked(const TRmgGridPoint& point)
@@ -261,8 +251,7 @@ TRmgRiverPainter::TRmgRiverPainter(
 
 VA_COMPGEN(0x0055EED0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverPainter)
 
-// Cinit 0x55f2f0 builds the seventeen-entry road pattern table from the ids
-// at 0x6411ac. The road painter's first virtual slot returns that table.
+// Cinit 0x55f2f0 builds the road table from seventeen ids at 0x6411ac.
 VA(0x0055F320, 0x08)
 MAC_ADDRESS(0x253fc0, 0x8)  // vtables 0x6411f0/0x64120c; Complete-only
 TRmgLinePatternTable* TRmgRoadLinePainter::getPattern(int)
@@ -296,8 +285,6 @@ void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& ti
     readRmgLineTileSnapshot(m_adapter, point, tile);
 }
 
-// The road hierarchy's parallel vtables 0x6411f0/0x64120c use the same
-// adapter getLineType forwarding shape in slot 5.
 VA(0x0055F390, 0x13)
 MAC_ADDRESS(0x254118, 0x30)  // Complete-only road painter
 int TRmgRoadLinePainter::getLineType(const TRmgGridPoint& point)
@@ -305,9 +292,8 @@ int TRmgRoadLinePainter::getLineType(const TRmgGridPoint& point)
     return m_adapter->getLineType(point);
 }
 
-// The road builder constructs adapter vtable 0x640a04 at 0x548120 and passes
-// it here at 0x548143. As in the river constructor, the common painter prefix
-// is passed unchanged to walker 0x4fa280, whose subobject begins at +0x10.
+// The road builder at 0x548143 passes the common painter prefix to the
+// walker, whose subobject begins at +0x10.
 VA(0x0055F3B0, 0x76)
 MAC_ADDRESS(0x254148, 0x6c) // anchor-callee 0x548143; Complete-only, thiscall ret 0xc
 TRmgRoadPainter::TRmgRoadPainter(
@@ -319,14 +305,9 @@ TRmgRoadPainter::TRmgRoadPainter(
 {
 }
 
-// Recovering the real constructor emits the final vtable and this wrapper
-// naturally. Its 33 bytes call the retained destructor, test the deleting
-// flag, conditionally release this, and return the original object pointer.
 VA_COMPGEN(0x0055F430, 0x21, SCALAR_DELETING_DTOR, TRmgRoadPainter)
 
-// The road painter's empty derived destructor restores its distinct base
-// vtable at 0x6411f0. The road builder at 0x548040 constructs this parallel
-// hierarchy; its scalar deleting destructor is retained at 0x55f430.
+// The empty derived destructor restores the road base vtable at 0x6411f0.
 VA(0x0055F460, 0x07)
 MAC_ADDRESS(0x2541b4, 0x60)  // road painter cleanup; Complete-only RMG helper
 TRmgRoadPainter::~TRmgRoadPainter()
@@ -342,13 +323,7 @@ int TRmgVector::length() const
     return static_cast<int>(sqrt(static_cast<double>(getRmgSquaredNorm(m_x, m_y))));
 }
 
-// Both constructors start a half-edge as its own ring with no vertex. The
-// ordinary helper is expanded in both; its /Ob2 cost of 60 is spent twice
-// inside createEdge's paired-constructor expansion (126 + 60 + 81 + 60),
-// which is what leaves the second insert's count-insert body a budget of
-// 34 and keeps its first size() call as retail does. The same stores
-// written inline in each constructor (costs 157 and 87..135) never spend
-// enough: createEdge stayed at 90.96% through 14 constructor spellings.
+// Both constructors share this ordinary self-ring and vertex initialization.
 MAC_ADDRESS(0x25c164, 0x20)
 void TRmgHalfEdge::initialize()
 {
@@ -359,10 +334,7 @@ void TRmgHalfEdge::initialize()
     m_position.m_y = -1;
 }
 
-// The retained paired constructor expands this ordinary twin constructor
-// into the successful allocation arm. The same site/zone fields feed the
-// Voronoi vertex calculations. Body assignments (cost 81) keep createEdge
-// exact; the initializer-list form costs 70 and loses it (90.96%).
+// The paired constructor expands this twin constructor after allocation.
 TRmgHalfEdge::TRmgHalfEdge(
     TPoint sitePosition, TRmgZone* zone, TRmgHalfEdge* twin)
 {
@@ -421,8 +393,7 @@ TRmgVoronoi::TRmgVoronoi()
     m_root = firstEdge;
 }
 
-// The subdivision owns every allocated half-edge and its pointer vector.
-// Its retained destructor proves the +0x04 vector and trivial edge cleanup.
+// The subdivision owns both half-edges of every allocated pair.
 VA(0x005FD330, 0x58)
 MAC_ADDRESS(0x25c6b4, 0xa4) // anchor-callee 0x53e685; thiscall, ret 0
 TRmgVoronoi::~TRmgVoronoi()
@@ -442,14 +413,9 @@ TRmgHalfEdge* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
     return edge;
 }
 
-// Quad-edge Connect(a, b): a new edge from first's destination to second's
-// origin, spliced into first's left face and second's origin ring. Ordinary
-// and shared; retail expands it in the constructor (0x5fd2c3) and addSite
-// (0x5fd72a) while calling createEdge and the fan splices inside it. Its
-// /Ob2 cost of 98 sits inside the constructor's 63..145 bracket; field
-// reads (93), a named twin (103), chained accessors (113) or endpoint
-// locals (122) keep the same bytes here, and 137 or more loses the
-// constructor's first diagonal splice.
+// Quad-edge Connect(a, b): connect first's destination to second's origin,
+// then splice into first's left face and second's origin ring. Retail expands
+// this helper at 0x5fd2c3/0x5fd72a but retains its createEdge and splice calls.
 MAC_ADDRESS(0x25caec, 0x94)
 TRmgHalfEdge* TRmgVoronoi::connectEdges(TRmgHalfEdge* first,
     TRmgHalfEdge* second)
@@ -484,17 +450,9 @@ void TRmgVoronoi::removeEdge(TRmgHalfEdge* edge)
     delete twin;
 }
 
-// Provisional shared edge-side predicate, used by locate and legalization.
-// docs/reference/rmg-voronoi-provenance.md records the adaptation evidence and its
-// limits; this resemblance does not establish an original name/declaration.
-// Graphics Gems IV delaunay/quadedge.C's RightOf(x, e) is ccw(x, Dest, Org)
-// over TriArea; Complete uses integer by-value TPoint and the canonical
-// orientation below in the same cyclic order. The ccw layer is ordinary:
-// addSite expands RightOf with a nested budget of 54, expands ccw (cost 31)
-// and refuses the orientation call as retail does at 0x5fdfa7; locate's
-// budgets expand all three. Retail locate's first expanded orientation has
-// no spilled endpoint; the named twin restores all 215 bytes. Flattening
-// the call boundary returns 91.0460%.
+// Graphics Gems IV's RightOf/ccw/TriArea suggests these helper boundaries,
+// with Complete's integer by-value points and cyclic orientation order.
+// See docs/reference/rmg-voronoi-provenance.md for evidence and limits.
 MAC_ADDRESS(0x25c304, 0x68)
 static int isRmgCounterClockwise(TPoint first, TPoint second, TPoint third)
 {
@@ -576,20 +534,9 @@ static void flipRmgEdge(TRmgHalfEdge* edge)
     edge->m_twin->splice(twinPrevious->getLeftNext());
 }
 
-// Provisional segment predicate, Graphics Gems IV's OnEdge: retail snapshots
-// the opposite endpoint, calls the three squared distances, rejects a site
-// beyond either endpoint, then evaluates the implicit line a*x + b*y + c
-// (a = dy, b = -dx, c = -(a*org.x + b*org.y)) and materializes the zero
-// test as a byte. Inside addSite this expansion gets a nested budget of 33
-// (908 - 174 over 22 remaining sites), which refuses all three distance
-// calls like retail; a TRmgLine constructor/evaluate pair is refused at
-// that budget too (72.5%-77.6%), so the equation stays inline. An
-// orientation call here scores 89.4762% against the accessor form's
-// 91.1250%. The line origin is bound by reference to the site field, the
-// way the flip helper reads it: retail loads org.x once into ecx and spills
-// dx/dy to [ebp-8]/[ebp-0xc] for the four products, which only this binding
-// reproduces; a by-value TPoint copy through the accessor re-reads the
-// field and keeps dx in a register (addSite 90.3482% with the rest exact).
+// Segment containment uses a saved opposite endpoint, three squared-distance
+// checks, then an implicit-line test. Keep the line origin bound to its site
+// field; a copied endpoint changes the native read lifetime.
 static unsigned char isRmgPointOnSegment(TPoint point, TRmgHalfEdge* edge)
 {
     TPoint opposite = edge->getOppositeSitePosition();
@@ -609,11 +556,6 @@ static unsigned char isRmgPointOnSegment(TPoint point, TRmgHalfEdge* edge)
 // Incircle predicate for a counterclockwise triangle; zero (cocircular)
 // does not request an edge flip. Retail snapshots three points before
 // four orientation calls and a signed 64-bit circumcircle determinant.
-// Sixty determinant-expression forms tested named versus embedded area
-// calls, equivalent sum groupings, x/y square order, which product operand
-// widens, and result lifetime. Twenty distinct objects span 33.2202% to the
-// unchanged 45.4167% caller score; none recovers the missing orientation
-// calls. Preserve the actual by-value point and signed-product boundaries.
 MAC_ADDRESS(0x25cb80, 0x1c4)
 static unsigned char isRmgPointInsideCircumcircle(TPoint first, TPoint second,
     TPoint third, TPoint point)
@@ -682,14 +624,10 @@ int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
         - (second.m_y - first.m_y) * (third.m_x - first.m_x);
 }
 
-// The subdivision constructor retains seven single-edge insertions at
-// 0x5fd091/0x5fd0f6/0x5fd10e/0x5fd15a/0x5fd172/0x5fd1bb/0x5fd1d3.
-// Four-byte elements, ret 8 and the owning m_edges vector identify this
-// ordinary Dinkumware specialization independently of its ICF helper names.
+// Four-byte elements, ret 8 and constructor calls at 0x5fd091..0x5fd1d3
+// identify this vector<TRmgHalfEdge*> specialization despite ICF names.
 VA_COMPGEN(0x005FDD60, 0x1B1, VECTOR_INSERT_SINGLE, TRmgHalfEdge)
 
-// Retail's only callers of the four-byte fill at 0x5fdf20 are
-// TRmgVoronoi::createEdge (0x5fd4b9, 0x5fd53d) and the boundary-vertex insert
-// above (0x5fde8c): it is this unit's vector<TRmgHalfEdge*> _Ufill.
-// Widget vectors reach the folded copy at 0x48d940 instead.
+// createEdge and the boundary-vertex insert call this half-edge vector fill;
+// widget vectors use the separate folded copy at 0x48d940.
 VA_COMPGEN(0x005FDF20, 0x26, VECTOR_UFILL, TRmgHalfEdge)
