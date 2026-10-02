@@ -4547,11 +4547,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
         popRmgMovementPosition(position, positions, costs);
         unsigned currentCost = m_map.getMapItem(position)->m_movement.m_zonePathCost;
         for (int direction = 0; direction < 8; ++direction) {
-            TPoint offset = g_rmgDirections[direction];
-            TRmgMapPosition next;
-            next.m_x = position.m_x + offset.m_x;
-            next.m_y = position.m_y + offset.m_y;
-            next.m_z = position.m_z;
+            TRmgMapPosition next = position + g_rmgDirections[direction];
             if (!m_map.containsXY(next))
                 continue;
             TRmgMapItem* item = m_map.getMapItem(next);
@@ -5051,9 +5047,9 @@ int type_random_map_generator::placeBorderObject(
     return color;
 }
 
-// Border marking for empty cells; an existing connection keeps its tile
-// flags but takes the new direction.
-static inline void markRmgBorderObjectCell(TRmgMapItem* item, int direction)
+// Marks an empty cell as a border connection; an existing connection keeps
+// its tile flags but takes the new direction.
+static inline void markRmgEmptyBorderConnection(TRmgMapItem* item, int direction)
 {
     if (item->m_objects.size() == 0) {
         item->markBorderConnection(direction);
@@ -5070,7 +5066,7 @@ void type_random_map_generator::markBorderObjectArea(
     for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
         for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
             TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
-            markRmgBorderObjectCell(item, direction);
+            markRmgEmptyBorderConnection(item, direction);
         }
     }
     TRmgMapPosition previous = m_map.getMapItem(position)->m_previousTile;
@@ -5133,9 +5129,9 @@ static inline void placeRmgGateConnectionBorder(type_random_map_generator& gener
     if (direction >= 0) {
         guardValue = 0;
         --entrance.m_x;
-        markRmgBorderObjectCell(generator.m_map.getMapItem(entrance), direction);
+        markRmgEmptyBorderConnection(generator.m_map.getMapItem(entrance), direction);
         entrance.m_x += 2;
-        markRmgBorderObjectCell(generator.m_map.getMapItem(entrance), direction);
+        markRmgEmptyBorderConnection(generator.m_map.getMapItem(entrance), direction);
     }
 }
 
@@ -5172,6 +5168,17 @@ static inline void addRmgLowestScoreCandidate(
         candidates.clear();
     }
     candidates.push_back(position);
+}
+
+// Adds the object at a uniformly drawn candidate and returns that position.
+// The candidate list must be nonempty.
+static inline TRmgMapPosition addRmgObjectAtRandomCandidate(
+    type_random_map_generator* generator, type_object* object,
+    const std::vector<TRmgMapPosition>& candidates)
+{
+    TRmgMapPosition position = candidates[rand() % candidates.size()];
+    generator->addObject(object, position);
+    return position;
 }
 
 // All equally cheap empty crossings are eligible. Open their predecessor
@@ -5405,8 +5412,7 @@ b8 type_random_map_generator::createShipyardConnection(
         return false;
 
     rmgOwnableObject* shipyard = new rmgOwnableObject(properties);
-    TRmgMapPosition position = candidates[rand() % candidates.size()];
-    addObject(shipyard, position);
+    TRmgMapPosition position = addRmgObjectAtRandomCandidate(this, shipyard, candidates);
 
     nearby = getRmgObjectTriggerPosition(position, prototype->m_triggerCell);
     int entranceX = nearby.m_x;
@@ -5576,9 +5582,7 @@ b8 type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* z
     }
     if (!candidates.size())
         return false;
-    unsigned int selected = rand() % candidates.size();
-    position = candidates[selected];
-    addObject(object, position);
+    addRmgObjectAtRandomCandidate(this, object, candidates);
     return true;
 }
 
@@ -6274,7 +6278,7 @@ static inline int selectRmgWeightedCategory(const b8* finished,
 // Only the first enabled category accounts for the already placed primary
 // town.
 static inline void placeRmgFixedTownCategory(type_random_map_generator* generator,
-    TRmgZone* zone, const int& count, int alignment, int player,
+    TRmgZone* zone, int count, int alignment, int player,
     unsigned char townOption, b8& skipPrimary)
 {
     if (count <= 0)
@@ -6349,8 +6353,7 @@ static inline TRmgMapPosition placeRmgTownAtRandomCandidate(
 {
     rmgTownObject* town = new rmgTownObject(properties,
         generator->m_nextObjectId++, player, townOption);
-    TRmgMapPosition position = candidates[rand() % candidates.size()];
-    generator->addObject(town, position);
+    TRmgMapPosition position = addRmgObjectAtRandomCandidate(generator, town, candidates);
     return getRmgObjectTriggerPosition(position, trigger);
 }
 
@@ -6520,9 +6523,7 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
     }
     if (!candidates.size())
         return false;
-    unsigned int selected = rand() % candidates.size();
-    position = candidates[selected];
-    addObject(object, position);
+    addRmgObjectAtRandomCandidate(this, object, candidates);
     return true;
 }
 
@@ -7006,16 +7007,15 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
                     destination->markBorderObject();
                 }
             }
-            if (!source->m_connection.m_present) {
-                source->m_tileData.m_borderObject = border;
-                if (border)
-                    source->m_tileData.m_pathClearance = false;
-            }
-            if (!source->m_connection.m_present) {
-                source->m_tileData.m_pathClearance = pathClearance;
-                if (pathClearance)
-                    source->m_tileData.m_borderObject = false;
-            }
+            // Copy the destination's earlier marks back to the group map.
+            if (border)
+                source->markBorderObject();
+            else
+                source->clearBorderObject();
+            if (pathClearance)
+                source->openPath();
+            else
+                source->releasePathClearance();
         }
     }
     for (unsigned int objectIndex = 0; objectIndex < group->m_objects.size(); ++objectIndex)
@@ -8302,9 +8302,7 @@ MAC_ADDRESS(0x24f980, 0x398)
 void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* prototype)
 {
     unsigned char terrainMask[2];
-    int nameLength = prototype->getImageName().size();
-    writeValue<int>(outfile, nameLength);
-    outfile->write(prototype->getImageName().c_str(), nameLength);
+    writeString(outfile, prototype->getImageName());
     {
         unsigned char mask[6];
         encodeRmgPrototypeCellMask(prototype, RMG_PROTOTYPE_PASSABLE_CELLS, mask);
@@ -8544,8 +8542,7 @@ void type_random_map_generator::removeObject(type_object* object)
         m_objects.erase(found);
         --m_objectCountByType[prototype->getObjectType()];
         TAdventureObjectType objectType = prototype->getObjectType();
-        TObjectType::TPoint trigger = prototype->m_triggerCell;
-        TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, trigger);
+        TRmgMapPosition entrance = getRmgPlacedObjectEntrance(object);
         int zone = m_map.getMapItem(entrance.m_x,
             entrance.m_y, entrance.m_z)->m_zoneState.m_zone;
         if (zone >= 0) {
