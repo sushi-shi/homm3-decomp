@@ -2822,10 +2822,12 @@ void TRmgGeneratorBase::decorateMap()
     }
 }
 
-// Reverse traversal makes an earlier record win if an object type repeats.
-static inline void applyRmgObjectLimitOverrides(int* limits,
+// Unlisted types get 32000 (unlimited); an earlier override wins on repeats.
+static inline void initializeRmgObjectLimits(int* limits,
     const TRmgObjectLimit* overrides, int count)
 {
+    for (int objectType = 0; objectType < 232; ++objectType)
+        limits[objectType] = 32000;
     while (count--)
         limits[overrides[count].m_objectType] = overrides[count].m_limit;
 }
@@ -2866,12 +2868,8 @@ type_random_map_generator::type_random_map_generator(
             } else if (!g_heroTraits[hero].m_availability.m_availableInOriginal)
                 m_disabledHeroes[hero] = true;
         }
-        for (int zoneObjectType = 0; zoneObjectType < 232; ++zoneObjectType)
-            g_rmgZoneObjectLimits[zoneObjectType] = 32000;
-        for (int mapObjectType = 0; mapObjectType < 232; ++mapObjectType)
-            g_rmgMapObjectLimits[mapObjectType] = 32000;
-        applyRmgObjectLimitOverrides(g_rmgMapObjectLimits, g_rmgMapObjectLimitOverrides, 30);
-        applyRmgObjectLimitOverrides(g_rmgZoneObjectLimits, g_rmgZoneObjectLimitOverrides, 24);
+        initializeRmgObjectLimits(g_rmgMapObjectLimits, g_rmgMapObjectLimitOverrides, 30);
+        initializeRmgObjectLimits(g_rmgZoneObjectLimits, g_rmgZoneObjectLimitOverrides, 24);
         memset(m_fixedHumanPlayers, 0, sizeof(m_fixedHumanPlayers));
     }
 }
@@ -3907,15 +3905,10 @@ void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
         position = pending.back();
         pending.pop_back();
         for (int direction = 0; direction < 8; direction += 2) {
-            TRmgMapPosition next;
-            next.m_x = position.m_x;
-            next.m_y = position.m_y;
-            TPoint offset = g_rmgDirections[direction];
-            next += offset;
-            next.m_z = position.m_z;
+            TRmgMapPosition next = position + g_rmgDirections[direction];
             if (!m_map.containsXY(next))
                 continue;
-            TRmgMapItem* item = m_map.getMapItem(next.m_x, next.m_y, next.m_z);
+            TRmgMapItem* item = m_map.getMapItem(next);
             if (item->shouldPaintZoneTerrain() || item->m_zoneState.m_zone != zoneIndex)
                 continue;
             item->m_tileData.m_paintZoneTerrain = true;
