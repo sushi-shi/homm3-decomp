@@ -50,6 +50,20 @@ The ninth round found no further worthwhile extraction or missing canonical
 helper call at executable-source checkpoint `7d1d07f2f`. This is a review stopping
 point, not proof that every possible improvement has been discovered.
 
+The subsequent cleanup removes stale matching percentages, failed-probe history,
+placeholder commentary and explanations that merely repeat the code. Native
+evidence, address annotations, retail quirks and non-obvious ordering, arithmetic,
+aliasing and lifetime constraints remain. A lexical comparison against
+`a9e013a71` verified unchanged executable tokens in all six RMG files before
+the separate boolean-type cleanup.
+
+All 166 one-off experiment scripts were retired at the user's request. Four
+reusable audit/comparison tools moved from `scripts/experiments` to
+`scripts/tools`, and documentation references were updated. Each retained
+entry point accepts `--help` successfully. The RMG output-validation tooling in
+`scripts/homm3/rmg` and the generic source-family runner remain available;
+Git history preserves the retired scripts.
+
 The final source shares complete policies for placement retries, monolith
 lifecycle, ordered worklists, player limits, subtype lookup, footprint bounds,
 border clearance, outline traversal and terrain repair. Captured trigger values

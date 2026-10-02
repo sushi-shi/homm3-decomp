@@ -1893,7 +1893,7 @@ static inline int adjustRmgValueForAlignment(int value, int alignmentCount, int 
 
 // Creature-definition vtable 0x640b7c slot 1. The zone test reads +8
 // (townType2), and the alignment weighting uses the generator's active-zone
-// counts. These offsets distinguish both arguments from the old placeholders.
+// counts.
 VA(0x00534310, 0x64)
 MAC_ADDRESS(0x231f04, 0x6c)
 int type_black_box_creature_def::getValue(
@@ -3227,7 +3227,7 @@ void readRmgTemplateZones(
     for (int row = firstRow; row < endRow; ++row) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
         // RETAIL BUG: a three-field row reads values[3] before the full
-        // row-length check. Preserve the predicate order for matching.
+        // row-length check. Preserve this evaluation order.
         if (values.size() >= 3 && isRmgTemplateFieldSet(values[3]) &&
             values.size() > 75) {
 
