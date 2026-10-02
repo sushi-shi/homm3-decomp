@@ -3245,8 +3245,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
                     candidatePosition.m_x < bounds.m_maximumX; ++candidatePosition.m_x) {
                     TRmgMapItem* nearby = m_map.getMapItem(candidatePosition);
                     if (nearby->hasBorderObject() && nearby->isPassableLand()) {
-                        if (!nearby->m_connection.m_present)
-                            nearby->m_tileData.m_borderObject = 0;
+                        nearby->clearBorderObject();
                         pending.push_back(candidatePosition);
                     }
                 }
@@ -5846,9 +5845,8 @@ static inline void clearRmgZonePathBorders(type_random_map& map,
     for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
         for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
             TRmgMapItem* nearby = map.getMapItem(x, y, level);
-            if (nearby->m_zoneState.m_zone == zoneIndex
-                && !nearby->m_connection.m_present)
-                nearby->m_tileData.m_borderObject = 0;
+            if (nearby->m_zoneState.m_zone == zoneIndex)
+                nearby->clearBorderObject();
         }
     }
 }

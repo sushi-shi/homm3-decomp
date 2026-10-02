@@ -1202,6 +1202,14 @@ struct TRmgMapItem {
         }
     }
 
+    // Clear only the border-filling mark, preserving both path clearance
+    // and cells protected by an existing connection decoration.
+    void clearBorderObject()
+    {
+        if (!m_connection.m_present)
+            m_tileData.m_borderObject = 0;
+    }
+
     // Removing a border connection also opens its cell. Keep the connection
     // reset before openPath(), whose existing-connection guard then permits it.
     void clearBorderConnection()
@@ -1846,7 +1854,7 @@ struct TRmgHalfEdge {
     }
     TRmgZone* getOppositeZone() const
     {
-        return m_twin->m_zone;
+        return getTwin()->getZone();
     }
     // Voronoi vertex bookkeeping: the computed flag and the shared vertex.
     unsigned char isPositionComputed() const
