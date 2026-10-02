@@ -4852,8 +4852,7 @@ void type_random_map_generator::buildZoneConnectionPaths()
                             seed.m_x = x;
                             seed.m_y = pathPosition.m_y;
                             seed.m_z = position.m_z;
-                            if (current->hasPathClearance() && current->m_tileData.m_roadPassable
-                                && terrain != eTerrainRock) {
+                            if (current->hasPathClearance() && current->isPassableLand()) {
                                 foundClearPath = true;
                                 break;
                             }
@@ -5296,8 +5295,7 @@ b8 type_random_map_generator::canPlaceShipyard(TRmgMapPosition position)
             TRmgMapItem* item = m_map.getMapItem(nearby);
             if (item->getLandType() == eTerrainWater)
                 return false;
-            b8 entrance = item->m_tileData.m_roadEntrance;
-            if (entrance || !item->isPassableLand())
+            if (item->isRoadEntrance() || !item->isPassableLand())
                 return false;
         }
     }
@@ -5377,8 +5375,7 @@ b8 type_random_map_generator::createShipyardConnection(
                 TRmgMapItem* item = m_map.getMapItem(position);
                 if (item->m_zoneState.m_zone == sourceZone
                     && item->m_zoneState.m_connectionEligibility == destinationZone) {
-                    b8 visited = item->m_tileData.m_connectionVisited;
-                    if (visited)
+                    if (item->isConnectionVisited())
                         return true;
                     if (item->getLandType() != eTerrainWater) {
                         nearby = position;
@@ -6765,15 +6762,15 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     return definition->generate(properties[selectedIndex], this, zone);
 }
 
-// Centres an object on the group map (unsigned division).
-static inline TRmgMapPosition getRmgCenteredGroupObjectPosition(
-    const TRmgTreasureGroup* group, const TObjectType* prototype)
+// Adds an object centred on the group map (unsigned division).
+static inline void addRmgCenteredGroupObject(TRmgTreasureGroup* group, type_object* object)
 {
+    const TObjectType* prototype = object->m_properties->m_prototype;
     TRmgMapPosition position;
     position.m_x = (group->m_map.getWidth() + static_cast<unsigned>(prototype->getWidth())) / 2;
     position.m_y = (group->m_map.getHeight() + static_cast<unsigned>(prototype->getHeight())) / 2;
     position.m_z = 0;
-    return position;
+    group->addObject(object, position);
 }
 
 static inline type_object* createRmgTreasureWithRetries(
@@ -6802,19 +6799,12 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
 {
     int objectValue = 0;
     int attempts;
-    int total;
-    {
-        type_object* selected = createRmgTreasureWithRetries(
-            this, zone, value / 4, value, &objectValue, true, alternate);
-        TRmgMapPosition position;
-        if (!selected)
-            return 0;
-        TObjectType* prototype = selected->m_properties->m_prototype;
-        type_object* object = selected;
-        position = getRmgCenteredGroupObjectPosition(group, prototype);
-        group->addObject(object, position);
-        total = objectValue;
-    }
+    type_object* selected = createRmgTreasureWithRetries(
+        this, zone, value / 4, value, &objectValue, true, alternate);
+    if (!selected)
+        return 0;
+    addRmgCenteredGroupObject(group, selected);
+    int total = objectValue;
     while (total < value) {
         int remainder = value - total;
         if (remainder < RMG_TREASURE_MINIMUM_REMAINDER && remainder < total / 2)
@@ -7214,9 +7204,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
         int currentCost = mapItem->m_movement.m_cost;
         b8 currentHasRoad = mapItem->m_tile.m_roadType != 0;
         int direction = 8;
-        b8 roadEntrance = mapItem->m_tileData.m_roadEntrance;
-
-        if (roadEntrance) {
+        if (mapItem->isRoadEntrance()) {
             type_object* object = mapItem->m_objects[0];
             TObjectType* prototype = object->m_properties->m_prototype;
             int objectType = prototype->getObjectType();
@@ -7275,9 +7263,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
                 || !nextMapItem->isPassableLand())
                 continue;
 
-            b8 nextRoadEntrance =
-                nextMapItem->m_tileData.m_roadEntrance;
-            if (nextRoadEntrance) {
+            if (nextMapItem->isRoadEntrance()) {
                 int objectType =
                     nextMapItem->m_objects[0]->m_properties->m_prototype->getObjectType();
                 const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
@@ -8457,11 +8443,7 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
     ++properties->m_refCount;
     TRmgZone* origin = m_zones[m_map.getMapItem(object->m_position)->m_zoneState.m_zone];
     TRmgTreasureGroup group(16, 16);
-    TObjectType* prototype = seerHut->m_properties->m_prototype;
-    TRmgMapPosition position;
-    position = getRmgCenteredGroupObjectPosition(&group, prototype);
-    type_object* questObject = seerHut;
-    group.addObject(questObject, position);
+    addRmgCenteredGroupObject(&group, seerHut);
     group.preparePlacement();
     if (!placeQuestGroup(&group, origin)) {
         int value = object->m_definition->getValue(origin, this);
