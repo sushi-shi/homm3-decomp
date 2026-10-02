@@ -396,7 +396,7 @@ MAC_ADDRESS(0x25c1b8, 0x4c) // anchor-callee addSite 0x5fd790; thiscall, ret 0; 
 void TRmgHalfEdge::detach()
 {
     TRmgHalfEdge* previous = m_previous;
-    TRmgHalfEdge* twinPrevious = m_twin->m_previous;
+    TRmgHalfEdge* twinPrevious = getLeftNext();
     splice(previous);
     m_twin->splice(twinPrevious);
 }
@@ -568,7 +568,7 @@ MAC_ADDRESS(0x25c204, 0xb0)
 static void flipRmgEdge(TRmgHalfEdge* edge)
 {
     TRmgHalfEdge* previous = edge->m_previous;
-    TRmgHalfEdge* twinPrevious = edge->m_twin->m_previous;
+    TRmgHalfEdge* twinPrevious = edge->getLeftNext();
     edge->detach();
     copyRmgOppositeSite(edge, previous);
     copyRmgOppositeSite(edge->m_twin, twinPrevious);

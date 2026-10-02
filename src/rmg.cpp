@@ -4424,7 +4424,7 @@ void type_random_map_generator::traceZoneBoundary(
     first = vertex;
     do {
         next = vertex->m_next;
-        TRmgZone* neighbour = next->m_twin->m_zone;
+        TRmgZone* neighbour = next->getOppositeZone();
         originalFrom = vertex->m_position;
         originalTo = next->m_position;
         clipRmgBoundarySegment(bounds, originalFrom, originalTo, from, to);
@@ -4732,7 +4732,7 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
         TRmgHalfEdge* edge = first;
         do {
             edge = edge->m_next;
-            TPoint point = edge->m_twin->m_sitePosition;
+            TPoint point = edge->getOppositeSitePosition();
             if (point.m_x >= 1 && point.m_x < m_map.getWidth() - 1
                 && point.m_y >= 1 && point.m_y < m_map.getHeight() - 1) {
                 int clearance = min(min(min(point.m_x,
@@ -4874,7 +4874,7 @@ static inline TRmgHalfEdge* findRmgBoundaryWithZone(
     TRmgHalfEdge* edge = first;
     do {
         edge = edge->m_next;
-        if (edge->m_twin->m_zone == destination)
+        if (edge->getOppositeZone() == destination)
             return edge;
     } while (edge != first);
     return 0;
