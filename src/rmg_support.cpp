@@ -654,7 +654,7 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
     do {
         fanBase = connectEdges(edge, fanBase->getTwin());
         edge = fanBase->getPrevious();
-    } while (edge->getTwin()->getPrevious() != m_root);
+    } while (edge->getLeftNext() != m_root);
 
     for (;;) {
         TRmgHalfEdge* previous = edge->getPrevious();
@@ -668,7 +668,7 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
         }
         if (edge->getNext() == m_root)
             return;
-        edge = edge->getNext()->getNext()->getTwin();
+        edge = edge->getNext()->getLeftPrevious();
     }
 }
 
