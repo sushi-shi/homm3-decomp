@@ -651,7 +651,8 @@ struct TRmgGroundTileData {
     // River painted here, or a mountain, lake or gem-mine cell rivers flow to.
     unsigned m_hasRiver : 1;
     unsigned m_riverTarget : 1;
-    unsigned m_impassable : 1;
+    // On or beside a painted river; coast-bound rivers may not enter it.
+    unsigned m_nearRiver : 1;
 };
 
 // Pending border-guard cell and the guard's key colour.
@@ -923,7 +924,7 @@ struct TRmgMapItem {
 
     bool hasRiver() const { return m_tileData.m_hasRiver != 0; }
     bool isRiverTarget() const { return m_tileData.m_riverTarget != 0; }
-    bool isImpassable() const { return m_tileData.m_impassable != 0; }
+    bool isNearRiver() const { return m_tileData.m_nearRiver != 0; }
 
     // Any object footprint (entrance or blocked cell) covers this cell.
     b8 hasObjects() const

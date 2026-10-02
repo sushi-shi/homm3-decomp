@@ -339,7 +339,7 @@ void TRmgMapItem::clear()
     tileData.m_paintZoneTerrain = false;
     tileData.m_hasRiver = false;
     tileData.m_riverTarget = false;
-    tileData.m_impassable = false;
+    tileData.m_nearRiver = false;
     m_connection = connection;
     m_movement.m_cost = 32700;
     m_movement.m_zonePathCost = 32700;
@@ -510,15 +510,16 @@ static inline void popRmgWorkItem(TRmgMapPosition& position,
     positions.pop_back();
 }
 
-// Seed a zero-cost source in both worklists and the movement map.
+// Seed a zero-cost source with no predecessor in both worklists and the
+// movement map.
 static inline TRmgMapItem* seedRmgMovementSearch(type_random_map& map,
-    const TRmgMapPosition& source, const TRmgMapPosition& invalidPredecessor,
+    const TRmgMapPosition& source,
     std::vector<TRmgMapPosition>& positions, std::vector<int>& costs)
 {
     positions.push_back(source);
     costs.push_back(0);
     TRmgMapItem* item = map.getMapItem(source);
-    item->setMovementCost(0, invalidPredecessor);
+    item->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
     return item;
 }
 
@@ -533,7 +534,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
     std::vector<int> costs;
     std::vector<TRmgMapPosition> positions;
     TRmgMapItem* seed = seedRmgMovementSearch(*this, position,
-        TRmgMapPosition(-1, -1, -1), positions, costs);
+        positions, costs);
     int zone = seed->m_zoneState.m_zone;
     while (positions.size()) {
         TRmgMapPosition currentPosition;
@@ -929,7 +930,7 @@ void TRmgRiverMapAdapter::setTile(const TRmgGridPoint& point, const rmgTerrainTi
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
                 for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
                     TRmgMapItem& neighbour = *m_map->getMapItem(x, y);
-                    neighbour.m_tileData.m_impassable = true;
+                    neighbour.m_tileData.m_nearRiver = true;
                 }
             }
         }
@@ -7195,7 +7196,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
     std::vector<int> openCosts;
 
     TRmgMapItem* mapItem = seedRmgMovementSearch(m_map, position,
-        TRmgMapPosition(-1, -1, -1), openPositions, openCosts);
+        openPositions, openCosts);
 
     while (openPositions.size()) {
         popRmgWorkItem(position, openPositions, openCosts);
@@ -7401,7 +7402,7 @@ static inline void selectRmgRiverAppearance(const TRmgMapItem* source,
 
 // Rivers stay on dry, non-rock terrain and cannot cross the snow boundary.
 // Object and coast searches share this terrain rule; only the coast search
-// also rejects impassable cells and restricted approach directions.
+// also rejects cells beside rivers and restricted approach directions.
 static inline bool isRmgRiverTerrain(const TRmgMapItem* item, b8 sourceIsSnow)
 {
     return item->getLandType() != eTerrainWater
@@ -7410,7 +7411,7 @@ static inline bool isRmgRiverTerrain(const TRmgMapItem* item, b8 sourceIsSnow)
 }
 
 // Random edge costs are drawn on each neighbour visit, even without an
-// improvement. Unlike coast-bound rivers, this search ignores impassable
+// improvement. Unlike coast-bound rivers, this search ignores near-river
 // and direction flags.
 VA(0x00548500, 0x533)
 MAC_ADDRESS(0x24c8ac, 0x588)
@@ -7420,7 +7421,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     std::vector<TRmgMapPosition> openPositions;
     std::vector<int> openCosts;
     TRmgMapItem* mapItem = seedRmgMovementSearch(m_map, source,
-        TRmgMapPosition(-1, -1, -1), openPositions, openCosts);
+        openPositions, openCosts);
     b8 sourceIsSnow;
     int riverType;
     selectRmgRiverAppearance(mapItem, sourceIsSnow, riverType);
@@ -7568,28 +7569,21 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     resetMovementCosts();
 
     TRmgMapItem* mapItem;
-    TRmgMapPosition invalidPredecessor;
-    invalidPredecessor.m_x = -1;
-    invalidPredecessor.m_y = -1;
-    invalidPredecessor.m_z = -1;
 
     std::vector<TRmgMapPosition> openPositions;
     std::vector<int> openCosts;
 
-    mapItem = seedRmgMovementSearch(m_map, source, invalidPredecessor,
-        openPositions, openCosts);
+    mapItem = seedRmgMovementSearch(m_map, source, openPositions, openCosts);
 
     b8 sourceIsSnow;
     int riverType;
     selectRmgRiverAppearance(mapItem, sourceIsSnow, riverType);
 
     --source.m_y;
-    mapItem = seedRmgMovementSearch(m_map, source, invalidPredecessor,
-        openPositions, openCosts);
+    mapItem = seedRmgMovementSearch(m_map, source, openPositions, openCosts);
 
     ++source.m_x;
-    mapItem = seedRmgMovementSearch(m_map, source, invalidPredecessor,
-        openPositions, openCosts);
+    mapItem = seedRmgMovementSearch(m_map, source, openPositions, openCosts);
 
     TRmgMapPosition position;
     TRmgMapPosition nextPosition;
@@ -7607,7 +7601,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
                 continue;
 
             mapItem = m_map.getMapItem(nextPosition);
-            if (!isRmgRiverTerrain(mapItem, sourceIsSnow) || mapItem->isImpassable())
+            if (!isRmgRiverTerrain(mapItem, sourceIsSnow) || mapItem->isNearRiver())
                 continue;
 
             int nextCost = getRmgRiverStepCost(positionCost, mapItem);
