@@ -1050,7 +1050,6 @@ public:
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
     virtual void setFrame(const TRmgGridPoint& point, int value) = 0;
 #if defined(HOMM3_TARGET_MAC)
-    // The Mac build returns the size by value.
     virtual TRmgGridPoint getSize() = 0;
 #else
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output) = 0;

@@ -745,7 +745,6 @@ rmgTerrainPainter::rmgTerrainPainter(
     : m_adapter(newAdapter), m_paintTerrain(terrain), m_transitionStrength(strength)
 {
 #if defined(HOMM3_TARGET_MAC)
-    // The Mac adapter returns the size by value.
     m_size = m_adapter->getSize();
 #else
     m_size = m_adapter->getSize(TRmgGridPoint());

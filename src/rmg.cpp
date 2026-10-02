@@ -383,9 +383,8 @@ void type_random_map::clear()
     }
 }
 
-// Shared by the footprint and surrounding-outline placement tests. Preserve
-// land, entrance, then zone query order; border, water and path clearance
-// policies stay with each caller.
+// Shared by the footprint and surrounding-outline placement tests; border,
+// water and path-clearance policies stay with each caller.
 static inline bool isRmgPlacementCellBlocked(TRmgMapItem* item, int zoneIndex)
 {
     return !item->isPassableLand() || item->isRoadEntrance()
@@ -2487,7 +2486,6 @@ void TRmgGeneratorBase::readObjectPlacementRules()
     sheet->dispose();
 
 #if defined(HOMM3_TARGET_MAC)
-    // The Mac build allocates these large tables on the heap.
     struct TPlacementTables {
         std::vector<TRmgObjectPlacementRule*> rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
         std::vector<int> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
@@ -5158,9 +5156,8 @@ static inline int getRmgConnectionGuardValue(const TRmgZoneConnection* connectio
     return getRmgGuardValue(value, strength);
 }
 
-// Keep every admitted position tied for the best score. A strictly better
-// score restarts the list and becomes the new bound; callers retain their own
-// admission tests, including spacing minimums and score snapshots.
+// Keeps every position tied for the best score; a strictly better score
+// restarts the list and becomes the new bound.
 static inline void addRmgHighestScoreCandidate(
     std::vector<TRmgMapPosition>& candidates, const TRmgMapPosition& position,
     int score, int& highestScore)
@@ -7168,9 +7165,8 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
 {
     TRmgTemplateZone* slot = zone->m_templateZone;
     TRmgTreasureGroup group(16, 16);
-    // Disabled bands enter the shared density scheduler with zero density;
-    // every enabled band has a positive density. Keep the value cutoff before
-    // the density test.
+    // Bands below value 100 or without density enter the shared scheduler
+    // with zero density.
     int densities[3];
     for (int band = 0; band < 3; ++band) {
         const TRmgTreasureRange& range = slot->m_treasure[band];

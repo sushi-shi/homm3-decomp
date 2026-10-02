@@ -25,12 +25,12 @@ public:
     int m_width;                      // +0x28
     int m_height;                     // +0x2c
     int m_levels;                     // +0x30
-    // The generator receives monster strength + 3, clamped to [1, 5].
     int m_humanPlayerCount;           // +0x34
     int m_humanTeamCount;             // +0x38
     int m_computerPlayerCount;        // +0x3c
     int m_computerTeamCount;          // +0x40
     int m_waterContent;               // +0x44
+    // The generator receives monster strength + 3, clamped to [1, 5].
     int m_monsterStrength;            // +0x48
     // Map format 0/1/2, using the EGameVersion ordinals.
     int m_mapVersion;                 // +0x4c
