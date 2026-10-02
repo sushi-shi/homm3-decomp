@@ -5596,9 +5596,8 @@ void type_random_map_generator::repairWaterZoneBorders()
                         do {
                             TRmgMapItem* item = m_map.getMapItem(nearby);
                             if (item->getLandType() != eTerrainWater
-                                && item->getLandType() != eTerrainRock
-                                && !item->hasBorderObject()
-                                && item->m_tileData.m_roadPassable) {
+                                && item->isPassableLand()
+                                && !item->hasBorderObject()) {
                                 terrain = H3_ENUM_DECODE(TTerrainType, item->getLandType());
                                 foundLandTerrain = 1;
                                 break;
