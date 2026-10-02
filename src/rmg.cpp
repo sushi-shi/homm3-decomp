@@ -468,8 +468,7 @@ unsigned char type_random_map::hasConnectedOutline(
             TRmgMapItem* item = getMapItem(x, y, position.m_z);
             if (!allowEntrances && item->isRoadEntrance())
                 return 0;
-            blocked = !item->m_tileData.m_roadPassable
-                || item->getLandType() == eTerrainRock || item->isRoadEntrance();
+            blocked = !item->isPassableLand() || item->isRoadEntrance();
             if (requirePathClearance && !item->hasPathClearance())
                 blocked = 1;
             if ((item->getLandType() == eTerrainWater) != waterZone)
@@ -645,8 +644,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
             if (!containsXY(nextPosition))
                 continue;
             TRmgMapItem* next = getMapItem(nextPosition);
-            if (next->m_zoneState.m_zone < 0 || !next->m_tileData.m_roadPassable
-                || next->getLandType() == eTerrainRock)
+            if (next->m_zoneState.m_zone < 0 || !next->isPassableLand())
                 continue;
             if (next->isRoadEntrance()) {
                 int objectType = next->m_objects[0]->m_properties->m_prototype->getObjectType();
@@ -781,8 +779,7 @@ void type_random_map::markBorderPatch(TRmgMapPosition position)
     for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
         for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
             TRmgMapItem* nearby = getMapItem(column, row, position.m_z);
-            if (!nearby->isRoadEntrance() && nearby->m_tileData.m_roadPassable
-                && nearby->getLandType() != eTerrainRock
+            if (!nearby->isRoadEntrance() && nearby->isPassableLand()
                 && nearby->getLandType() != eTerrainWater)
                 nearby->releasePathClearance();
         }
@@ -2835,6 +2832,17 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
             delete m_objectPrototypes[type][prototype];
 }
 
+// Both placement matrices load a contiguous score row after sizing it.
+// The first sixteen columns hold metadata. Preserve resize before parsing,
+// left-to-right reads, and index + preceding-score-count + metadata order.
+static inline void readRmgPlacementScores(std::vector<int>& scores,
+    const TSpreadsheetResource::TStringVector& fields, int precedingScores, int count)
+{
+    scores.resize(count, 0);
+    for (int index = 0; index < count; ++index)
+        scores[index] = atoi(fields[index + precedingScores + 16]);
+}
+
 // The final lookup's temporary reverse iterator preserves the signed match
 // sentinel and last-duplicate precedence. Construct it only on the guarded
 // RHS: an empty group never forms a pointer offset. This natural iterator
@@ -2887,12 +2895,8 @@ void TRmgGeneratorBase::readObjectPlacementRules()
     for (row = 3; row < ruleCount + 3; ++row) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
         TRmgObjectPlacementRule& rule = m_placementRules[row - 3];
-        rule.m_adjacentScores.resize(ruleCount, 0);
-        for (int index = 0; index < ruleCount; ++index)
-            rule.m_adjacentScores[index] = atoi(values[index + 16]);
-        rule.m_blockedScores.resize(ruleCount, 0);
-        for (index = 0; index < ruleCount; ++index)
-            rule.m_blockedScores[index] = atoi(values[index + ruleCount + 16]);
+        readRmgPlacementScores(rule.m_adjacentScores, values, 0, ruleCount);
+        readRmgPlacementScores(rule.m_blockedScores, values, ruleCount, ruleCount);
     }
     sheet->dispose();
 
@@ -3051,7 +3055,7 @@ int TRmgGeneratorBase::scoreObjectPlacement(
             if (!mark)
                 continue;
             TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
-            if (item->m_tileData.m_roadPassable && item->getLandType() != eTerrainRock)
+            if (item->isPassableLand())
                 continue;
             int priority;
             // Only interior cells receive OVERLAP above (column+1, row+1),
@@ -3078,7 +3082,7 @@ int TRmgGeneratorBase::scoreObjectPlacement(
                     object->m_blockedByCandidate = 1;
                 if (!wasTouched && object->isPlacementTouched())
                     affected.push_back(object);
-                if (object->m_candidateBehind && object->m_candidateCovers)
+                if (object->hasConflictingPlacementOrder())
                     break;
             }
         }
@@ -3095,7 +3099,7 @@ int TRmgGeneratorBase::scoreObjectPlacement(
             if (object->m_properties->m_placementRule)
                 score += rule->m_adjacentScores[object->m_properties->m_placementRule->m_index];
         }
-        if (object->m_candidateBehind && object->m_candidateCovers)
+        if (object->hasConflictingPlacementOrder())
             score = RMG_PLACEMENT_INVALID;
         object->clearPlacementMarks();
     }
@@ -3221,8 +3225,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
                 for (candidatePosition.m_x = bounds.m_minimumX;
                     candidatePosition.m_x < bounds.m_maximumX; ++candidatePosition.m_x) {
                     TRmgMapItem* nearby = m_map.getMapItem(candidatePosition);
-                    if (nearby->hasBorderObject() && nearby->m_tileData.m_roadPassable
-                        && nearby->getLandType() != eTerrainRock) {
+                    if (nearby->hasBorderObject() && nearby->isPassableLand()) {
                         if (!nearby->m_connection.m_present)
                             nearby->m_tileData.m_borderObject = 0;
                         pending.push_back(candidatePosition);
@@ -3287,8 +3290,7 @@ void TRmgGeneratorBase::decorateMap()
     for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
-                if (!item->hasPathClearance() && item->m_tileData.m_roadPassable
-                    && item->getLandType() != eTerrainRock) {
+                if (!item->hasPathClearance() && item->isPassableLand()) {
                     item->openPath();
                 }
             }
