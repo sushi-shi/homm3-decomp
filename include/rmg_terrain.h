@@ -18,8 +18,8 @@ inline TPoint operator+(const TPoint& point, const TPoint& offset)
 // One map-layer tile as read from or written to the map adapter.
 struct rmgTerrainTile {
     // Terrain, road or river type, depending on the adapter's layer.
-    int m_terrain;
-    int m_frame;
+    s32 m_terrain;
+    s32 m_frame;
     b8 m_flipX;
     b8 m_flipY;
 
@@ -119,21 +119,21 @@ public:
 };
 
 struct TRmgTerrainPatternRange {
-    int m_firstIndex;
-    unsigned int m_count;
+    s32 m_firstIndex;
+    u32 m_count;
 
     TRmgTerrainPatternRange() : m_firstIndex(0), m_count(0) {}
 };
 
 struct TRmgTerrainPatternEntry {
-    int m_transition;
+    s32 m_transition;
     b8 m_special;
     char m_padding[3];
 };
 
 // Fixed transition table entry; carries flips instead of a special-frame flag.
 struct TRmgTerrainTransitionEntry {
-    int m_transition;
+    s32 m_transition;
     b8 m_flipX;
     b8 m_flipY;
 };
@@ -152,14 +152,14 @@ extern TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 // and special flag.
 class TRmgPatternTerrainRule : public TRmgTerrainRule {
 public:
-    int m_specialFrameChance;                   // +0x08: percentage at strength 8
-    unsigned int m_entryCount;                  // +0x0c
+    s32 m_specialFrameChance;                   // +0x08: percentage at strength 8
+    u32 m_entryCount;                           // +0x0c
     const TRmgTerrainPatternEntry* m_entries;    // +0x10
     TRmgTerrainPatternRange m_ranges[58];        // +0x14
 
     TRmgPatternTerrainRule(b8 blendsWithOtherTerrain,
         b8 allowsSeparatedNeighbours, int specialFrameChance,
-        unsigned int entryCount, const TRmgTerrainPatternEntry* entries);
+        u32 entryCount, const TRmgTerrainPatternEntry* entries);
 
     virtual b8 hasSpecialBaseFrames();
     virtual b8 isSpecialFrame(int frame);
@@ -194,16 +194,16 @@ extern TRmgTerrainRule* const g_rmgTerrainRules[];
 // cell's border it covers (edge-sharing cardinals 2, corner diagonals 1);
 // repair fills the lightest gaps first.
 struct TRmgTerrainGap {
-    unsigned int m_weight;
-    unsigned int m_start;
-    unsigned int m_length;
+    u32 m_weight;
+    u32 m_start;
+    u32 m_length;
 };
 
 class rmgTerrainPainter {
 public:
     TRmgMapInterface* m_adapter;                // +0x00
-    int m_paintTerrain;                               // +0x04
-    int m_specialFrameStrength;                         // +0x08
+    s32 m_paintTerrain;                               // +0x04
+    s32 m_specialFrameStrength;                         // +0x08
     TRmgGridPoint m_size;                             // +0x0c
     std::set<TRmgGridPoint> m_primaryPoints;            // +0x14
     std::set<TRmgGridPoint> m_secondaryPoints;          // +0x24
@@ -218,15 +218,15 @@ public:
     void finish();
     int changeTerrain(int terrain, int strength);
     void paintRectangle(
-        unsigned int x, unsigned int y,
-        unsigned int rectangleWidth, unsigned int rectangleHeight);
+        u32 x, u32 y,
+        u32 rectangleWidth, u32 rectangleHeight);
 
-    void initializePackedCell(const TRmgGridPoint& point, unsigned int index);
+    void initializePackedCell(const TRmgGridPoint& point, u32 index);
     TRmgPackedTerrainCell* getPackedCell(const TRmgGridPoint& point);
     int getTerrain(const TRmgGridPoint& point);
     int getFrame(const TRmgGridPoint& point);
-    unsigned int getWidth() const;
-    unsigned int getHeight() const;
+    u32 getWidth() const;
+    u32 getHeight() const;
     void paintTransitions();
     int selectBaseFrame(const TRmgGridPoint& point, int terrain, int oldFrame);
     void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
@@ -263,8 +263,8 @@ public:
     ~TRmgTerrainBrush();
     void changeTerrain(int terrain, int strength);
     void paintRectangle(
-        unsigned int x, unsigned int y,
-        unsigned int rectangleWidth, unsigned int rectangleHeight);
+        u32 x, u32 y,
+        u32 rectangleWidth, u32 rectangleHeight);
 };
 
 SIZE(rmgTerrainTile, 0x0c);

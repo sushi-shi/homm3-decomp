@@ -17,7 +17,7 @@ TRmgLinePainterInterface::TRmgLinePainterInterface(const TRmgGridPoint& size)
 
 VA(0x004F9BE0, 0xB7)
 MAC_ADDRESS(0x22210c, 0x1ec)
-TRmgLinePatternTable::TRmgLinePatternTable(unsigned int patternCount, const int* patterns)
+TRmgLinePatternTable::TRmgLinePatternTable(u32 patternCount, const int* patterns)
     : m_patternCount(patternCount), m_patterns(0)
 {
     int* allocated = new int[m_patternCount];
@@ -25,7 +25,7 @@ TRmgLinePatternTable::TRmgLinePatternTable(unsigned int patternCount, const int*
     if (!allocated)
         throw TAllocationFailure();
     std::copy(patterns, patterns + m_patternCount, m_patterns);
-    for (unsigned int value = 0; value < LINE_PATTERN_COUNT; ++value) {
+    for (u32 value = 0; value < LINE_PATTERN_COUNT; ++value) {
         m_ranges[value].m_firstIndex = 0;
         m_ranges[value].m_valueCount = 0;
     }
@@ -33,7 +33,7 @@ TRmgLinePatternTable::TRmgLinePatternTable(unsigned int patternCount, const int*
     // contiguous.
     int previousPattern = m_patterns[0];
     ++m_ranges[previousPattern].m_valueCount;
-    for (unsigned int index = 1; index < m_patternCount; ++index) {
+    for (u32 index = 1; index < m_patternCount; ++index) {
         if (m_patterns[index] != previousPattern) {
             previousPattern = m_patterns[index];
             m_ranges[previousPattern].m_firstIndex = index;
@@ -51,7 +51,7 @@ TRmgLinePatternTable::~TRmgLinePatternTable()
 
 // Neighbour direction order for each (flipX, flipY) reflection.
 DATA(0x0063FE9C)
-static const int g_rmgLineReflectedNeighbours[2][2][8] = {
+static const s32 g_rmgLineReflectedNeighbours[2][2][8] = {
     {{0, 1, 2, 3, 4, 5, 6, 7}, {4, 3, 2, 1, 0, 7, 6, 5}},
     {{0, 7, 6, 5, 4, 3, 2, 1}, {4, 5, 6, 7, 0, 1, 2, 3}}
 };
@@ -108,7 +108,7 @@ void selectRmgLinePattern(
         return;
     }
     b8 hasCornerVariant = table->m_ranges[LINE_SE_VARIANT].m_valueCount > 0;
-    for (unsigned int reflection = 0; reflection < 4; ++reflection) {
+    for (u32 reflection = 0; reflection < 4; ++reflection) {
         const int* order = g_rmgLineReflectedNeighbours
             [g_rmgLineReflections[reflection][0]][g_rmgLineReflections[reflection][1]];
         if (neighbours[order[TILE_DIR_EAST]] && neighbours[order[TILE_DIR_SOUTH]]) {
@@ -407,7 +407,7 @@ TRmgHalfEdge* TRmgVoronoi::connectEdges(TRmgHalfEdge* first,
 static inline void eraseRmgHalfEdgeReference(std::vector<TRmgHalfEdge*>& edges,
     TRmgHalfEdge* edge)
 {
-    unsigned int index = 0;
+    u32 index = 0;
     while (index < edges.size() && edges[index] != edge)
         ++index;
     edges.erase(edges.begin() + index);
@@ -535,10 +535,10 @@ static b8 isRmgPointInsideCircumcircle(TPoint first, TPoint second,
     int secondArea = getRmgPointOrientation(first, third, point);
     int thirdArea = getRmgPointOrientation(first, second, point);
     int pointArea = getRmgPointOrientation(first, second, third);
-    __int64 determinant = static_cast<__int64>(getRmgSquaredNorm(third.m_x, third.m_y)) * thirdArea
-        - static_cast<__int64>(getRmgSquaredNorm(second.m_x, second.m_y)) * secondArea
-        + static_cast<__int64>(getRmgSquaredNorm(first.m_x, first.m_y)) * firstArea
-        - static_cast<__int64>(getRmgSquaredNorm(point.m_x, point.m_y)) * pointArea;
+    s64 determinant = static_cast<s64>(getRmgSquaredNorm(third.m_x, third.m_y)) * thirdArea
+        - static_cast<s64>(getRmgSquaredNorm(second.m_x, second.m_y)) * secondArea
+        + static_cast<s64>(getRmgSquaredNorm(first.m_x, first.m_y)) * firstArea
+        - static_cast<s64>(getRmgSquaredNorm(point.m_x, point.m_y)) * pointArea;
     return determinant > 0;
 }
 

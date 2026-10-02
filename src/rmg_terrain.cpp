@@ -66,7 +66,7 @@ static inline void buildMatchingLineNeighbourMask(
     b8 available[TILE_DIR_COUNT];
     buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
                            point.m_x, point.m_y, available);
-    for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
+    for (u32 direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (available[direction])
             matches[direction] = painter->getNeighbourLineType(point, direction) == lineType;
         else
@@ -89,7 +89,7 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
     tile.getTile(current);
     if (table->m_patterns[current.getFrame()] != selected
         || current.getFlipX() != flipX || current.getFlipY() != flipY) {
-        unsigned int frame = table->m_ranges[selected].m_firstIndex
+        u32 frame = table->m_ranges[selected].m_firstIndex
             + rand() % table->m_ranges[selected].m_valueCount;
         current.m_frame = frame;
         current.m_flipX = flipX;
@@ -104,7 +104,7 @@ TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
     return TRmgLinePainterTile(this, point);
 }
 
-int TRmgLinePainterInterface::getNeighbourLineType(const TRmgGridPoint& point, unsigned int direction)
+int TRmgLinePainterInterface::getNeighbourLineType(const TRmgGridPoint& point, u32 direction)
 {
     TRmgGridPoint nearby = point + g_tileDirections[direction];
     return at(nearby).getLineType();
@@ -121,10 +121,10 @@ static inline void refreshExistingRmgLinePoint(
 // Refreshes one border column from the row above the rectangle through the
 // row below it, when that row stays below the limit.
 static inline void refreshRmgLineBorderColumn(TRmgLinePainterInterface* painter,
-    unsigned int x, const TRmgGridRectangle& rectangle, unsigned int limit)
+    u32 x, const TRmgGridRectangle& rectangle, u32 limit)
 {
-    unsigned int first = rectangle.m_origin.m_y > 0 ? rectangle.m_origin.m_y - 1 : 0;
-    unsigned int end = rectangle.m_origin.m_y + rectangle.m_size.m_y;
+    u32 first = rectangle.m_origin.m_y > 0 ? rectangle.m_origin.m_y - 1 : 0;
+    u32 end = rectangle.m_origin.m_y + rectangle.m_size.m_y;
     if (end < limit)
         ++end;
     for (TRmgGridPoint point(x, first); point.m_y < end; ++point.m_y)
@@ -133,7 +133,7 @@ static inline void refreshRmgLineBorderColumn(TRmgLinePainterInterface* painter,
 
 // Refreshes one border row across the rectangle's width.
 static inline void refreshRmgLineBorderRow(TRmgLinePainterInterface* painter,
-    unsigned int y, const TRmgGridRectangle& rectangle)
+    u32 y, const TRmgGridRectangle& rectangle)
 {
     for (TRmgGridPoint point(rectangle.m_origin.m_x, y);
          point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x)
@@ -198,9 +198,9 @@ void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
         major = &y;
         minor = &x;
     }
-    unsigned int error = 0;
-    unsigned int distance = major->m_distance;
-    for (unsigned int index = 0; index < distance; ++index) {
+    u32 error = 0;
+    u32 distance = major->m_distance;
+    for (u32 index = 0; index < distance; ++index) {
         paintPoint(TRmgGridPoint(x.m_position, y.m_position));
         error += minor->m_distance;
         if (error >= major->m_distance) {
@@ -230,7 +230,7 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 
     b8 matches[TILE_DIR_COUNT];
     buildMatchingLineNeighbourMask(m_painter, point, m_lineType, matches);
-    for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
+    for (u32 direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (matches[direction])
             refreshRmgLinePoint(m_painter, point + g_tileDirections[direction]);
     }
@@ -257,7 +257,7 @@ VA(0x005B3780, 0xB3)
 MAC_ADDRESS(0x254be0, 0xf4)
 TRmgPatternTerrainRule::TRmgPatternTerrainRule(
     b8 blendsWithOtherTerrain, b8 allowsSeparatedNeighbours,
-    int specialFrameChance, unsigned int entryCount, const TRmgTerrainPatternEntry* entries)
+    int specialFrameChance, u32 entryCount, const TRmgTerrainPatternEntry* entries)
     : TRmgTerrainRule(blendsWithOtherTerrain, allowsSeparatedNeighbours),
       m_specialFrameChance(specialFrameChance), m_entryCount(entryCount), m_entries(entries)
 {
@@ -265,7 +265,7 @@ TRmgPatternTerrainRule::TRmgPatternTerrainRule(
     b8 special = m_entries[0].m_special;
     int range = transition * 2 + special;
     ++m_ranges[range].m_count;
-    for (unsigned int index = 1; index < m_entryCount; ++index) {
+    for (u32 index = 1; index < m_entryCount; ++index) {
         const TRmgTerrainPatternEntry& entry = m_entries[index];
         if (entry.m_transition != transition || entry.m_special != special) {
             transition = entry.m_transition;
@@ -327,9 +327,9 @@ int TRmgPatternTerrainRule::selectBaseFrame(int strength, int oldFrame)
     if (!matchesTerrainFrame(m_entries, oldFrame, 0)) {
         TRmgTerrainPatternRange* range;
         if (m_ranges[1].m_count > 0) {
-            unsigned int chance =
-                static_cast<unsigned int>(m_specialFrameChance * strength) / 8;
-            if (static_cast<unsigned int>(rand() % 100) < chance)
+            u32 chance =
+                static_cast<u32>(m_specialFrameChance * strength) / 8;
+            if (static_cast<u32>(rand() % 100) < chance)
                 range = &m_ranges[1];
             else
                 range = &m_ranges[0];
@@ -387,7 +387,7 @@ TRmgTerrainPatternTable::TRmgTerrainPatternTable()
     TRmgTerrainPatternRange* range =
         &getTerrainTransitionRange(*this, transition, flipX, flipY);
     ++range->m_count;
-    for (unsigned int index = 1; index < 48; ++index) {
+    for (u32 index = 1; index < 48; ++index) {
         if (!matchesTerrainTransition(g_rmgTerrainPatterns[index], transition, flipX, flipY)) {
             transition = g_rmgTerrainPatterns[index].m_transition;
             flipX = g_rmgTerrainPatterns[index].m_flipX;
@@ -488,7 +488,7 @@ int __fastcall selectTerrainTransition(
 
 // Neighbour direction order for each (flipX, flipY) reflection.
 DATA(0x00642C00)
-const int g_rmgReflectedNeighbours[2][2][8] = {
+const s32 g_rmgReflectedNeighbours[2][2][8] = {
     {{0, 1, 2, 3, 4, 5, 6, 7}, {4, 3, 2, 1, 0, 7, 6, 5}},
     {{0, 7, 6, 5, 4, 3, 2, 1}, {4, 5, 6, 7, 0, 1, 2, 3}}
 };
@@ -501,7 +501,7 @@ static TRmgTerrainFlip makeTerrainFlip(b8 x, b8 y)
 VA(0x005B3DD0, 0x6F)
 MAC_ADDRESS(0x2551b4, 0xd0)
 void rmgTerrainPainter::initializePackedCell(
-    const TRmgGridPoint& point, unsigned int index)
+    const TRmgGridPoint& point, u32 index)
 {
     rmgTerrainTile tile = m_adapter->getTile(point);
     TRmgPackedTerrainCell& packed = m_packedCells[index];
@@ -586,7 +586,7 @@ int __fastcall selectTerrainTransition(
         makeTerrainFlip(false, false), makeTerrainFlip(false, true),
         makeTerrainFlip(true, false), makeTerrainFlip(true, true)
     };
-    unsigned int reflection;
+    u32 reflection;
     for (reflection = 0; reflection < 4; ++reflection) {
         const int* order = g_rmgReflectedNeighbours
             [flips[reflection].m_flipX][flips[reflection].m_flipY];
@@ -787,7 +787,7 @@ VA(0x005B48D0, 0x8D)
 TRmgPackedTerrainCell* rmgTerrainPainter::getPackedCell(
     const TRmgGridPoint& point)
 {
-    unsigned int index = point.m_y * m_size.m_x + point.m_x;
+    u32 index = point.m_y * m_size.m_x + point.m_x;
     if (!m_packedCells[index].m_initialized)
         initializePackedCell(point, index);
     return &m_packedCells[index];
@@ -803,12 +803,12 @@ int rmgTerrainPainter::getFrame(const TRmgGridPoint& point)
     return getPackedCell(point)->getFrame();
 }
 
-unsigned int rmgTerrainPainter::getWidth() const
+u32 rmgTerrainPainter::getWidth() const
 {
     return m_size.m_x;
 }
 
-unsigned int rmgTerrainPainter::getHeight() const
+u32 rmgTerrainPainter::getHeight() const
 {
     return m_size.m_y;
 }
@@ -854,11 +854,11 @@ b8 rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
 VA(0x005B4960, 0x1B2)
 MAC_ADDRESS(0x255ef0, 0x11c)
 void rmgTerrainPainter::paintRectangle(
-    unsigned int x, unsigned int y,
-    unsigned int rectangleWidth, unsigned int rectangleHeight)
+    u32 x, u32 y,
+    u32 rectangleWidth, u32 rectangleHeight)
 {
-    unsigned int endX = x + rectangleWidth;
-    unsigned int endY = y + rectangleHeight;
+    u32 endX = x + rectangleWidth;
+    u32 endY = y + rectangleHeight;
     TRmgGridPoint point;
     for (point.setY(y); point.getY() < endY; point.setY(point.getY() + 1)) {
         for (point.setX(x); point.getX() < endX; point.setX(point.getX() + 1)) {
@@ -921,7 +921,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
         b8 neighbourExists[TILE_DIR_COUNT];
         buildTileNeighbourMask(
             m_size.m_x, m_size.m_y, point.m_x, point.m_y, neighbourExists);
-        for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
+        for (u32 direction = 0; direction < TILE_DIR_COUNT; ++direction) {
             if (neighbourExists[direction]) {
                 const TPoint& offset = g_tileDirections[direction];
                 TRmgGridPoint nearby(point + offset);
@@ -1045,7 +1045,7 @@ static inline void repairTerrainGap(rmgTerrainPainter& painter,
 
 
 // Odd tile directions are the diagonals, which touch the cell only at a corner.
-static inline bool isRmgDiagonalDirection(unsigned int direction)
+static inline bool isRmgDiagonalDirection(u32 direction)
 {
     return (direction & 1) != 0;
 }
@@ -1074,11 +1074,11 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
         // Run-length encode the nonmatching ring, starting after a known
         // match so a wrapped gap stays together. Separated neighbours imply
         // a match exists and at most four gaps.
-        unsigned int firstMatch = 0;
+        u32 firstMatch = 0;
         while (!matches[firstMatch])
             ++firstMatch;
-        unsigned int gapCount = 0;
-        unsigned int direction = (firstMatch + 1) % TILE_DIR_COUNT;
+        u32 gapCount = 0;
+        u32 direction = (firstMatch + 1) % TILE_DIR_COUNT;
         while (direction != firstMatch) {
             if (matches[direction]) {
                 direction = (direction + 1) % TILE_DIR_COUNT;
@@ -1098,23 +1098,23 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
         buildTileNeighbourMask(getWidth(), getHeight(), point.m_x, point.m_y,
                                neighbourExists);
         do {
-            unsigned int smallest = 0;
-            unsigned int smallestWeight = gaps[0].m_weight;
-            for (unsigned int gap = 1; gap < gapCount; ++gap) {
+            u32 smallest = 0;
+            u32 smallestWeight = gaps[0].m_weight;
+            for (u32 gap = 1; gap < gapCount; ++gap) {
                 if (gaps[gap].m_weight < smallestWeight) {
                     smallest = gap;
                     smallestWeight = gaps[gap].m_weight;
                 }
             }
-            unsigned int end =
+            u32 end =
                 (gaps[smallest].m_start + gaps[smallest].m_length) % TILE_DIR_COUNT;
-            for (unsigned int direction = gaps[smallest].m_start; direction != end;
+            for (u32 direction = gaps[smallest].m_start; direction != end;
                  direction = (direction + 1) % TILE_DIR_COUNT) {
                 if (neighbourExists[direction])
                     paintPoint(point + g_tileDirections[direction]);
             }
             --gapCount;
-            for (unsigned int remainingGap = smallest; remainingGap < gapCount; ++remainingGap)
+            for (u32 remainingGap = smallest; remainingGap < gapCount; ++remainingGap)
                 gaps[remainingGap] = gaps[remainingGap + 1];
         } while (gapCount > 1);
     }
@@ -1124,7 +1124,7 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 static inline void countTerrainBoundary(
     rmgTerrainPainter& painter, const TRmgGridPoint& point,
     const TRmgGridPoint& neighbour, int terrain,
-    std::vector<unsigned char>& edgeCounts)
+    std::vector<u8>& edgeCounts)
 {
     if (painter.getTerrain(neighbour) != terrain) {
         ++edgeCounts[point.getY() * painter.getWidth() + point.getX()];
@@ -1150,7 +1150,7 @@ MAC_ADDRESS(0x257214, 0xd54)
 void rmgTerrainPainter::paintTransitions()
 {
     // Assumes the map has at least two rows and columns.
-    std::vector<unsigned char> edgeCounts(getWidth() * getHeight());
+    std::vector<u8> edgeCounts(getWidth() * getHeight());
     TRmgGridPoint point;
 
     for (point.setY(0); point.m_y < getHeight() - 1; point.setY(point.getY() + 1)) {
@@ -1191,7 +1191,7 @@ void rmgTerrainPainter::paintTransitions()
 
     for (point.setY(0); point.m_y < getHeight(); point.setY(point.getY() + 1)) {
         for (point.setX(0); point.m_x < getWidth(); point.setX(point.getX() + 1)) {
-            unsigned int index = point.getY() * getWidth() + point.getX();
+            u32 index = point.getY() * getWidth() + point.getX();
 
             if (edgeCounts[index] > 0) {
                 int neighbours[TILE_DIR_COUNT];
@@ -1261,16 +1261,16 @@ b8 rmgTerrainPainter::isVerticalGap(
 static inline void getTerrainNeighbourBounds(const TRmgGridPoint& point,
     const TRmgGridPoint& size, TRmgGridPoint& northWest, TRmgGridPoint& southEast)
 {
-    unsigned int north = point.m_y > 0 ? point.m_y - 1 : point.m_y;
-    unsigned int south = point.m_y < size.m_y - 1 ? point.m_y + 1 : point.m_y;
-    unsigned int west = point.m_x > 0 ? point.m_x - 1 : point.m_x;
-    unsigned int east = point.m_x < size.m_x - 1 ? point.m_x + 1 : point.m_x;
+    u32 north = point.m_y > 0 ? point.m_y - 1 : point.m_y;
+    u32 south = point.m_y < size.m_y - 1 ? point.m_y + 1 : point.m_y;
+    u32 west = point.m_x > 0 ? point.m_x - 1 : point.m_x;
+    u32 east = point.m_x < size.m_x - 1 ? point.m_x + 1 : point.m_x;
     northWest = TRmgGridPoint(west, north);
     southEast = TRmgGridPoint(east, south);
 }
 
 static inline bool matchesTerrainAt(rmgTerrainPainter& painter,
-    unsigned int x, unsigned int y, int terrain)
+    u32 x, u32 y, int terrain)
 {
     TRmgGridPoint nearby;
     nearby.setX(x);
@@ -1280,7 +1280,7 @@ static inline bool matchesTerrainAt(rmgTerrainPainter& painter,
 
 // A diagonal neighbour matches only beside a matching cardinal neighbour.
 static inline bool matchesTerrainCorner(rmgTerrainPainter& painter,
-    b8 firstSide, b8 secondSide, unsigned int x, unsigned int y, int terrain)
+    b8 firstSide, b8 secondSide, u32 x, u32 y, int terrain)
 {
     return (firstSide || secondSide) && matchesTerrainAt(painter, x, y, terrain);
 }
@@ -1312,8 +1312,8 @@ void rmgTerrainPainter::buildMatchingNeighbourMask(
 
 // Steps round the neighbour ring to the next direction whose match state is
 // wanted; false once the scan returns to first.
-static inline bool advanceToMatchState(const b8* matches, unsigned int& direction,
-    unsigned int first, b8 wanted)
+static inline bool advanceToMatchState(const b8* matches, u32& direction,
+    u32 first, b8 wanted)
 {
     do {
         direction = (direction + 1) % TILE_DIR_COUNT;
@@ -1331,13 +1331,13 @@ b8 rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
 {
     b8 matches[TILE_DIR_COUNT];
     buildMatchingNeighbourMask(point, matches);
-    unsigned int first = 0;
+    u32 first = 0;
     while (matches[first]) {
         first = (first + 1) % TILE_DIR_COUNT;
         if (first == 0)
             return false;
     }
-    unsigned int direction = first;
+    u32 direction = first;
     return advanceToMatchState(matches, direction, first, true)
         && advanceToMatchState(matches, direction, first, false)
         && advanceToMatchState(matches, direction, first, true);
@@ -1445,7 +1445,7 @@ MAC_ADDRESS(0x259500, 0x444)
 int rmgTerrainPainter::getSpecialFrameStrength(
     const TRmgGridPoint& point, int terrain)
 {
-    unsigned int strength = m_specialFrameStrength;
+    u32 strength = m_specialFrameStrength;
     TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
     if (point.getX() > 0 && hasSpecialTerrainFrameAt(*this, point, -1, 0, terrain, rule))
         strength >>= 1;
@@ -1517,8 +1517,8 @@ void TRmgTerrainBrush::changeTerrain(int terrain, int strength)
 VA(0x005B7690, 0x1F)
 MAC_ADDRESS(0x259cc0, 0x24)
 void TRmgTerrainBrush::paintRectangle(
-    unsigned int x, unsigned int y,
-    unsigned int rectangleWidth, unsigned int rectangleHeight)
+    u32 x, u32 y,
+    u32 rectangleWidth, u32 rectangleHeight)
 {
     m_painter->paintRectangle(x, y, rectangleWidth, rectangleHeight);
 }
