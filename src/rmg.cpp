@@ -798,6 +798,14 @@ static inline TRmgMapPosition getRmgObjectTriggerPosition(
     return position;
 }
 
+// An object can share entrance cells only when both approach traits permit
+// it. Keep trait2 before trait1; direction limits use trait1 alone elsewhere.
+static inline bool allowsRmgSharedObjectEntrance(int objectType)
+{
+    return g_adventureObjectTraits[objectType].m_trait2
+        && g_adventureObjectTraits[objectType].m_trait1;
+}
+
 // The footprint/outline helper calls are retained, followed by an expanded
 // entrance lookup one row below the trigger. Retail checks a negative zone
 // separately from a different zone, then compares water membership as ints.
@@ -821,7 +829,7 @@ unsigned char type_random_map::canPlaceObject(
     int objectType = prototype.getObjectType();
     properties->buildOutline();
     if (!hasConnectedOutline(properties->m_outline, position,
-            g_adventureObjectTraits[objectType].m_trait2 && g_adventureObjectTraits[objectType].m_trait1,
+            allowsRmgSharedObjectEntrance(objectType),
             zone, 0))
         return 0;
     if (!prototype.m_hasTrigger)
@@ -2594,8 +2602,7 @@ unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* propertie
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
             if (item->isRoadEntrance()) {
                 int neighborType = item->m_objects[0]->m_properties->m_prototype->getObjectType();
-                if (!g_adventureObjectTraits[neighborType].m_trait2
-                    || !g_adventureObjectTraits[neighborType].m_trait1)
+                if (!allowsRmgSharedObjectEntrance(neighborType))
                     goto placementFailure;
             }
         }
