@@ -1248,20 +1248,19 @@ public:
     virtual int getTerrain(const TRmgGridPoint& point);
 };
 
-// Canonical unreflected connections selected by selectRmgLinePattern.
-// Reflections supply the other orientations; SOUTH_END also covers an
-// isolated tile. The corner variant requires a matching NE or SW neighbour.
+// Unreflected line shapes chosen by selectRmgLinePattern; reflections supply
+// the other orientations. LINE_END_S also covers an isolated tile.
 enum ERmgLinePattern {
-    RMG_LINE_SOUTH_END = 0,
-    RMG_LINE_EAST_END = 1,
-    RMG_LINE_NORTH_SOUTH = 2,
-    RMG_LINE_EAST_WEST = 3,
-    RMG_LINE_EAST_SOUTH_CORNER = 4,
-    RMG_LINE_EAST_SOUTH_CORNER_VARIANT = 5,
-    RMG_LINE_NORTH_EAST_SOUTH = 6,
-    RMG_LINE_EAST_SOUTH_WEST = 7,
-    RMG_LINE_CROSS = 8,
-    RMG_LINE_PATTERN_COUNT = 9
+    LINE_END_S = 0,
+    LINE_END_E = 1,
+    LINE_NS = 2,
+    LINE_EW = 3,
+    LINE_SE = 4,
+    LINE_SE_VARIANT = 5,
+    LINE_NES = 6,
+    LINE_ESW = 7,
+    LINE_CROSS = 8,
+    LINE_PATTERN_COUNT = 9
 };
 
 // Frames of one line pattern: first frame index and frame count.
@@ -1274,7 +1273,7 @@ SIZE(TRmgLinePatternRange, 0x8);
 struct TRmgLinePatternTable {
     unsigned int m_patternCount;
     int* m_patterns;
-    TRmgLinePatternRange m_ranges[RMG_LINE_PATTERN_COUNT];
+    TRmgLinePatternRange m_ranges[LINE_PATTERN_COUNT];
 
     TRmgLinePatternTable(unsigned int patternCount, const int* patterns);
     ~TRmgLinePatternTable();

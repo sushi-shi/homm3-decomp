@@ -125,7 +125,8 @@ static const TRmgObjectLimit g_rmgZoneObjectLimitOverrides[24] = {
 
 DATA(0x00641140)
 static const int g_rmgRiverPatterns[13] = {
-    4, 4, 4, 4, 8, 7, 7, 6, 6, 2, 2, 3, 3
+    LINE_SE, LINE_SE, LINE_SE, LINE_SE, LINE_CROSS, LINE_ESW, LINE_ESW,
+    LINE_NES, LINE_NES, LINE_NS, LINE_NS, LINE_EW, LINE_EW
 };
 DATA(0x0069E5D0)
 TRmgLinePatternTable g_rmgRiverPatternTable(13, g_rmgRiverPatterns);
@@ -136,7 +137,9 @@ VA_COMPGEN(0x0055ED90, 0x0A, STATIC_DTOR, g_rmgRiverPatternTable)
 
 DATA(0x006411AC)
 static const int g_rmgRoadPatterns[17] = {
-    4, 4, 5, 5, 5, 5, 6, 6, 7, 7, 2, 2, 3, 3, 0, 1, 8
+    LINE_SE, LINE_SE, LINE_SE_VARIANT, LINE_SE_VARIANT, LINE_SE_VARIANT, LINE_SE_VARIANT,
+    LINE_NES, LINE_NES, LINE_ESW, LINE_ESW, LINE_NS, LINE_NS, LINE_EW, LINE_EW,
+    LINE_END_S, LINE_END_E, LINE_CROSS
 };
 DATA(0x0069E650)
 TRmgLinePatternTable g_rmgRoadPatternTable(17, g_rmgRoadPatterns);
