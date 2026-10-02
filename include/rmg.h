@@ -592,6 +592,16 @@ struct TRmgZoneBounds {
             point.m_y >= m_minimumY && point.m_y < m_maximumY;
     }
 
+    // Empty accumulator used by zone and treasure-group bounds. Preserve
+    // retail's finite sentinels rather than substituting integer extrema.
+    void resetEmpty()
+    {
+        m_minimumX = 32000;
+        m_minimumY = 32000;
+        m_maximumX = -32000;
+        m_maximumY = -32000;
+    }
+
     // Extend half-open bounds to include one unit cell. Both callers pass
     // coordinate values independent of these four fields; their different
     // field-store orders have no effect on the accumulated rectangle.

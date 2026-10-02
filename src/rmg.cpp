@@ -778,6 +778,18 @@ void type_random_map::markBorderPatch(TRmgMapPosition position)
     }
 }
 
+// Translate an object's placement anchor to its trigger cell without changing
+// level. Keep the native point construction and compound subtraction nested.
+// Scalar callers formerly stored X/Y in either order; these independent fields
+// belong to a copied local, and the prototype is only read during translation.
+static inline TRmgMapPosition getRmgObjectTriggerPosition(
+    TRmgMapPosition position, const TObjectType* prototype)
+{
+    TPoint triggerOffset(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
+    position -= triggerOffset;
+    return position;
+}
+
 // The footprint/outline helper calls are retained, followed by an expanded
 // entrance lookup one row below the trigger. Retail checks a negative zone
 // separately from a different zone, then compares water membership as ints.
@@ -806,11 +818,8 @@ unsigned char type_random_map::canPlaceObject(
         return 0;
     if (!prototype.m_hasTrigger)
         return 1;
-    TRmgMapPosition entrance;
-    entrance.m_y = position.m_y - prototype.m_triggerCell.m_y;
-    entrance.m_x = position.m_x - prototype.m_triggerCell.m_x;
+    TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, &prototype);
     ++entrance.m_y;
-    entrance.m_z = position.m_z;
     if (entrance.m_y >= m_mapHeight)
         return 0;
     TRmgMapItem* item = getMapItem(entrance);
@@ -2403,8 +2412,7 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
         type_object* object = m_objects[objectIndex];
         prototype = object->m_properties->m_prototype;
         TRmgMapPosition entrance = object->getPosition();
-        entrance.m_y -= prototype->m_triggerCell.m_y;
-        entrance.m_x -= prototype->m_triggerCell.m_x;
+        entrance = getRmgObjectTriggerPosition(entrance, prototype);
         unsigned int direction = g_adventureObjectTraits[prototype->getObjectType()].m_trait1
             ? RMG_DIRECTION_COUNT : 5;
         while (direction--) {
@@ -2615,8 +2623,7 @@ unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
         type_object* existing = m_objects[index];
         TObjectType* existingPrototype = existing->m_properties->m_prototype;
         TRmgMapPosition entrance = existing->getPosition();
-        entrance -= TPoint(existingPrototype->m_triggerCell.m_x,
-            existingPrototype->m_triggerCell.m_y);
+        entrance = getRmgObjectTriggerPosition(entrance, existingPrototype);
         int endDirection;
         int firstDirection;
         if (g_adventureObjectTraits[existingPrototype->getObjectType()].m_trait1) {
@@ -2649,8 +2656,7 @@ void TRmgTreasureGroup::updateBounds()
     TRmgMapItem* item = m_map.m_mapItems;
     for (int y = 0; y < m_map.m_mapHeight; ++y) {
         for (int x = 0; x < m_map.m_mapWidth; ++x, ++item) {
-            if (!item->isPassableLand()
-                || item->isRoadEntrance() || !item->hasPathClearance()) {
+            if (!item->isClearOutlineCell()) {
                 m_bounds.includeCell(x, y);
             }
         }
@@ -6436,11 +6442,7 @@ unsigned char type_random_map_generator::createShipyardConnection(
     TRmgMapPosition position = candidates[rand() % candidates.size()];
     addObject(shipyard, position);
 
-    {
-        TPoint triggerOffset(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
-        nearby = position;
-        nearby -= triggerOffset;
-    }
+    nearby = getRmgObjectTriggerPosition(position, prototype);
     int entranceX = nearby.m_x;
     m_roadTargets.push_back(nearby);
 
@@ -6580,8 +6582,7 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     otherPosition.m_z = destination->getLevelPosition().m_z;
     addObject(new type_object(gateProperties), otherPosition);
 
-    position -= TPoint(gatePrototype->m_triggerCell.m_x,
-                       gatePrototype->m_triggerCell.m_y);
+    position = getRmgObjectTriggerPosition(position, gatePrototype);
     otherPosition = destination->getLevelPosition();
     otherPosition.m_x = position.m_x;
     otherPosition.m_y = position.m_y;
@@ -7748,8 +7749,7 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
     unsigned int selected = rand() % candidates.size();
     position = candidates[selected];
     addObject(town, position);
-    position -= TPoint(prototype->m_triggerCell.m_x,
-        prototype->m_triggerCell.m_y);
+    position = getRmgObjectTriggerPosition(position, prototype);
     zone->m_position = position;
     zone->m_active = 1;
     registerRmgTownRoadEntrance(this, position);
@@ -8582,8 +8582,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     type_object* lastObject = group->m_objects.back();
     TObjectType* prototype = lastObject->m_properties->m_prototype;
     TRmgMapPosition entrance = lastObject->getPosition();
-    entrance.m_x -= prototype->m_triggerCell.m_x;
-    entrance.m_y -= prototype->m_triggerCell.m_y;
+    entrance = getRmgObjectTriggerPosition(entrance, prototype);
     if (!g_adventureObjectTraits[prototype->getObjectType()].m_trait1) {
         firstDirection = 1;
         lastDirection = 4;
@@ -8592,8 +8591,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     for (direction = firstDirection; direction < lastDirection; ++direction) {
         TPoint point = g_rmgDirections[direction] + TRmgVector(entrance.m_x, entrance.m_y);
         TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
-        if (!source->hasPathClearance() || !source->isPassableLand() || source->isRoadEntrance()
-            || !source->isPlacementOutline())
+        if (!source->isClearOutlineCell() || !source->isPlacementOutline())
             continue;
         point.m_x += position.m_x;
         point.m_y += position.m_y;
@@ -8601,8 +8599,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
             continue;
         TRmgMapItem* destination = m_map.getMapItem(point.m_x, point.m_y, position.m_z);
         if ((destination->getLandType() == eTerrainWater) == waterZone
-            && destination->isPassableLand()
-            && !destination->isRoadEntrance() && destination->hasPathClearance())
+            && destination->isClearOutlineCell())
             break;
     }
     if (direction == lastDirection)
