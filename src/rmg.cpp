@@ -5036,25 +5036,25 @@ int type_random_map_generator::placeBorderObject(
 }
 
 // Marks an empty cell as a border connection; an existing connection keeps
-// its tile flags but takes the new colour.
-static inline void markRmgEmptyBorderConnection(TRmgMapItem* item, int direction)
+// its tile flags but takes the new guard colour.
+static inline void markRmgEmptyBorderConnection(TRmgMapItem* item, int color)
 {
     if (item->m_objects.size() == 0) {
-        item->markBorderConnection(direction);
+        item->markBorderConnection(color);
     }
 }
 
 VA(0x00540FC0, 0x172)
 MAC_ADDRESS(0x243824, 0x2d4) // anchor-callee createGroundConnection; thiscall, ret 0x10
 void type_random_map_generator::markBorderObjectArea(
-    TRmgMapPosition position, int direction)
+    TRmgMapPosition position, int color)
 {
     TRmgZoneBounds bounds;
     setRmgNeighborhoodBounds(bounds, position, m_map, 1);
     for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
         for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
             TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
-            markRmgEmptyBorderConnection(item, direction);
+            markRmgEmptyBorderConnection(item, color);
         }
     }
     TRmgMapPosition previous = m_map.getMapItem(position)->m_previousTile;
@@ -5101,9 +5101,9 @@ void type_random_map_generator::placeGuard(int value, TRmgMapPosition position)
 static inline void placeRmgGroundConnectionBorder(type_random_map_generator& generator,
     TRmgMapPosition position, TRmgZone* keyTentZone, int& guardValue)
 {
-    int direction = generator.placeBorderObject(position, 1, keyTentZone);
-    if (direction >= 0) {
-        generator.markBorderObjectArea(position, direction);
+    int color = generator.placeBorderObject(position, 1, keyTentZone);
+    if (color >= 0) {
+        generator.markBorderObjectArea(position, color);
         guardValue = 0;
     }
 }
@@ -5113,13 +5113,13 @@ static inline void placeRmgGroundConnectionBorder(type_random_map_generator& gen
 static inline void placeRmgGateConnectionBorder(type_random_map_generator& generator,
     TRmgMapPosition entrance, TRmgZone* keyTentZone, int& guardValue)
 {
-    int direction = generator.placeBorderObject(entrance, 1, keyTentZone);
-    if (direction >= 0) {
+    int color = generator.placeBorderObject(entrance, 1, keyTentZone);
+    if (color >= 0) {
         guardValue = 0;
         --entrance.m_x;
-        markRmgEmptyBorderConnection(generator.m_map.getMapItem(entrance), direction);
+        markRmgEmptyBorderConnection(generator.m_map.getMapItem(entrance), color);
         entrance.m_x += 2;
-        markRmgEmptyBorderConnection(generator.m_map.getMapItem(entrance), direction);
+        markRmgEmptyBorderConnection(generator.m_map.getMapItem(entrance), color);
     }
 }
 
@@ -5611,16 +5611,16 @@ b8 type_random_map_generator::placeMonolithBorder(
             borderPosition = position + TPoint(0, 1);
         }
     }
-    int border = placeBorderObject(borderPosition, 1, zone);
-    if (border >= 0) {
+    int color = placeBorderObject(borderPosition, 1, zone);
+    if (color >= 0) {
         for (int direction = 0; direction < directionCount; ++direction) {
             TPoint offset = offsets[direction];
             TRmgMapPosition nearby = position + offset;
             TRmgMapItem* neighbor = m_map.getMapItem(nearby);
-            neighbor->markBorderConnection(border);
+            neighbor->markBorderConnection(color);
         }
     }
-    return border >= 0;
+    return color >= 0;
 }
 
 // Places one portal; a failed placement deletes it.
