@@ -231,7 +231,7 @@ double g_rmgDirectionSines[32] = {
     -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951
 };
 
-// Guard value thresholds and scales by combined monster strength (0-5).
+// Guard value thresholds and scales by monster strength (0-5).
 DATA(0x006823F0) int g_rmgGuardThresholdLow[6] = {50000, 2500, 1500, 1000, 500, 0};
 DATA(0x00682408) int g_rmgGuardThresholdHigh[6] = {50000, 7500, 7500, 7500, 5000, 5000};
 DATA(0x00682420) int g_rmgGuardScaleLow[6] = {0, 2, 3, 4, 6, 6};
@@ -1277,7 +1277,6 @@ type_object::type_object(TRmgObjectPropertiesRef* newProperties)
     clearPlacementMarks();
 }
 
-// Objects whose record is the default payload for their type.
 rmgResourceObject::rmgResourceObject(TRmgObjectPropertiesRef* properties)
     : type_object(properties)
 {
@@ -1501,7 +1500,7 @@ type_object::~type_object()
     --m_properties->m_refCount;
 }
 
-// Replaces a removed object with a treasure of up to 1.5x its value.
+// Removes the object and puts a treasure worth 1-1.5x its value in its place.
 static inline void replaceRmgObjectWithTreasure(type_random_map_generator* generator,
     type_object* object, int value, TRmgMapPosition position)
 {
@@ -1986,7 +1985,6 @@ type_spell_scroll_def::type_spell_scroll_def(int newSpellLevel, int newValue)
     m_spellLevel = newSpellLevel;
 }
 
-// Scroll spells: not flagged 0x2000, in some school, of the given level.
 static inline bool isRmgScrollSpell(int spell, int level)
 {
     return !(g_spellTraits[spell].m_flags & 0x2000)
@@ -4905,7 +4903,8 @@ static inline void clearRmgZonePathBorders(type_random_map& map,
     }
 }
 
-// Follow predecessors to the zero-cost seed without changing costs. Widened
+// Follow predecessors to the zero-cost seed without changing costs; marked
+// connection cells on the way get a border guard of their colour. Widened
 // routes clear only the border mark of nearby same-zone cells.
 VA(0x005408E0, 0x23F)
 MAC_ADDRESS(0x242e88, 0x380) // anchor-callee createGroundConnection; thiscall, ret 0x10
@@ -5037,7 +5036,7 @@ int type_random_map_generator::placeBorderObject(
 }
 
 // Marks an empty cell as a border connection; an existing connection keeps
-// its tile flags but takes the new direction.
+// its tile flags but takes the new colour.
 static inline void markRmgEmptyBorderConnection(TRmgMapItem* item, int direction)
 {
     if (item->m_objects.size() == 0) {
@@ -7565,7 +7564,7 @@ void type_random_map_generator::markRiverTargets()
 }
 
 // Randomized best-first relaxation, with the same per-visit random edge costs
-// as createRiverToObject, seeded at the three water-wheel approach cells.
+// as createRiverToObject, seeded at three cells beside the water wheel.
 VA(0x00548DF0, 0x99F)
 MAC_ADDRESS(0x24d4f0, 0xb00)  // water-wheel caller + river-delta object; retail-only
 void type_random_map_generator::createRiver(TRmgMapPosition source)

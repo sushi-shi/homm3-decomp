@@ -647,6 +647,7 @@ struct TRmgGroundTileData {
     unsigned m_impassable : 1;
 };
 
+// Pending border-guard cell; m_direction holds the guard colour.
 struct TRmgConnectionDecoration {
     unsigned m_present : 1;
     unsigned m_direction : 4;
@@ -958,7 +959,7 @@ struct TRmgMapItem {
         return m_tile.m_landType;
     }
 
-    // Records a road/river path cost and its predecessor tile.
+    // Records a path cost and its predecessor tile.
     void setMovementCost(int cost, TRmgMapPosition previous)
     {
         m_movement.m_cost = cost;
@@ -972,8 +973,8 @@ struct TRmgMapItem {
         m_previousTile = previous;
     }
 
-    // Water-zone spacing: distance and incoming direction; clears
-    // connection eligibility.
+    // Water-zone spacing: distance and incoming direction; sets connection
+    // eligibility to 0.
     void setWaterZoneDistance(unsigned int cost, int direction)
     {
         m_movement.m_zonePathCost = cost;
@@ -1014,7 +1015,7 @@ struct TRmgMapItem {
         openPath();
     }
 
-    // An existing connection keeps its tile flags but takes the new direction.
+    // An existing connection keeps its tile flags but takes the new colour.
     void markBorderConnection(int direction)
     {
         markBorderObject();
@@ -1774,7 +1775,7 @@ public:
     b8 placeQuestArtifact(rmgQuestArtifactObject* object);
     void calculateQuestZoneDistances(TRmgZone* origin);
     b8 placeQuestGroup(TRmgTreasureGroup* group, TRmgZone* origin);
-    // Tries to place a same-colour border guard as a guarded treasure group.
+    // Places a treasure group guarded by a same-colour border guard.
     b8 placeKeyTentGuard(type_object* object, int maxValue);
     // Change one colour's availability, then rescan for the first enabled
     // colour (size() when none remain).
