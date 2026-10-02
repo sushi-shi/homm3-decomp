@@ -3354,6 +3354,30 @@ type_random_map_generator::~type_random_map_generator()
         delete m_objectGenerators[definition];
 }
 
+// Zone and connection rows store the same four player limits. Parse in
+// human-min/human-max/total-min/total-max order into the caller's record.
+template<class Record>
+static inline void readRmgTemplatePlayerLimits(Record& record,
+    const TSpreadsheetResource::TStringVector& fields, int firstField)
+{
+    record.m_minimumHumanPlayers = atoi(fields[firstField]);
+    record.m_maximumHumanPlayers = atoi(fields[firstField + 1]);
+    record.m_minimumPlayers = atoi(fields[firstField + 2]);
+    record.m_maximumPlayers = atoi(fields[firstField + 3]);
+}
+
+// Both record kinds admit inclusive human and total player intervals.
+// Keep the short-circuit order and the two signed total-count additions.
+template<class Record>
+static inline bool allowsRmgTemplatePlayerCounts(const Record& record,
+    int humanPlayers, int computerPlayers)
+{
+    return record.m_minimumHumanPlayers <= humanPlayers
+        && record.m_maximumHumanPlayers >= humanPlayers
+        && record.m_minimumPlayers <= humanPlayers + computerPlayers
+        && record.m_maximumPlayers >= humanPlayers + computerPlayers;
+}
+
 // Role-derived ordinary helpers: the retail coordinator snapshots player
 // counts before each pass. Separate lifetimes preserve those parameter values
 // and let VC6 choose the nested findZone/vector call boundaries.
@@ -3375,15 +3399,9 @@ static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
                 connection.m_value = atoi(fields[78]);
                 connection.m_unguarded = fields[79][0] && fields[79][0] != ' ';
                 connection.m_placeBorderObjects = fields[80][0] && fields[80][0] != ' ';
-                connection.m_minimumHumanPlayers = atoi(fields[81]);
-                connection.m_maximumHumanPlayers = atoi(fields[82]);
-                connection.m_minimumPlayers = atoi(fields[83]);
-                connection.m_maximumPlayers = atoi(fields[84]);
+                readRmgTemplatePlayerLimits(connection, fields, 81);
                 connection.m_connected = 0;
-                if (connection.m_minimumHumanPlayers <= humanPlayers
-                    && connection.m_maximumHumanPlayers >= humanPlayers
-                    && connection.m_minimumPlayers <= humanPlayers + computerPlayers
-                    && connection.m_maximumPlayers >= humanPlayers + computerPlayers) {
+                if (allowsRmgTemplatePlayerCounts(connection, humanPlayers, computerPlayers)) {
                     first->m_connections.push_back(connection);
                     connection.m_destination = first;
                     second->m_connections.push_back(connection);
@@ -3496,14 +3514,8 @@ void readRmgTemplateZones(
             if (isRmgTemplateFieldSet(values[7]))
                 slot->m_kind = RMG_TEMPLATE_JUNCTION;
             slot->m_size = atoi(values[8]);
-            slot->m_minimumHumanPlayers = atoi(values[9]);
-            slot->m_maximumHumanPlayers = atoi(values[10]);
-            slot->m_minimumPlayers = atoi(values[11]);
-            slot->m_maximumPlayers = atoi(values[12]);
-            if (slot->m_minimumHumanPlayers > humanPlayers ||
-                slot->m_maximumHumanPlayers < humanPlayers ||
-                slot->m_minimumPlayers > humanPlayers + computerPlayers ||
-                slot->m_maximumPlayers < humanPlayers + computerPlayers) {
+            readRmgTemplatePlayerLimits(*slot, values, 9);
+            if (!allowsRmgTemplatePlayerCounts(*slot, humanPlayers, computerPlayers)) {
                 delete slot;
             } else {
                 slot->m_playerIndex = atoi(values[13]) - 1;
@@ -3892,6 +3904,17 @@ int type_random_map_generator::countPlacedZoneConnections(TRmgZone* zone) const
     return connectionCount;
 }
 
+// Grow a half-open bounding rectangle around a zone's nominal radius.
+// Keep Y-before-X updates and the inclusive far cell's +1 adjustment.
+static inline void includeRmgZoneFootprint(int& minimumY, int& minimumX,
+    int& maximumY, int& maximumX, const TRmgMapPosition& position, int size)
+{
+    minimumY = min(minimumY, position.m_y - size);
+    minimumX = min(minimumX, position.m_x - size);
+    maximumY = max(maximumY, position.m_y + size + 1);
+    maximumX = max(maximumX, position.m_x + size + 1);
+}
+
 VA(0x0053B1F0, 0xFE)
 MAC_ADDRESS(0x23c2e4, 0x170)
 void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimumX,
@@ -3905,10 +3928,7 @@ void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimum
         TRmgMapPosition position;
         position = m_zones[zone]->getLevelPosition();
         int size = m_zones[zone]->m_templateZone->m_size;
-        minimumY = min(minimumY, position.m_y - size);
-        minimumX = min(minimumX, position.m_x - size);
-        maximumY = max(maximumY, position.m_y + size + 1);
-        maximumX = max(maximumX, position.m_x + size + 1);
+        includeRmgZoneFootprint(minimumY, minimumX, maximumY, maximumX, position, size);
     }
 }
 
@@ -3918,12 +3938,11 @@ void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimum
 static inline int getRmgCandidateMapSize(const TRmgZoneBounds& bounds,
     const TRmgMapPosition& position, int zoneSize, int mapSize)
 {
-    int minimumY = min(bounds.m_minimumY, position.m_y - zoneSize);
-    int minimumX = min(bounds.m_minimumX, position.m_x - zoneSize);
-    int maximumY = max(bounds.m_maximumY, position.m_y + zoneSize + 1);
-    int maximumX = max(bounds.m_maximumX, position.m_x + zoneSize + 1);
-    int candidateSize = max(mapSize, maximumY - minimumY);
-    candidateSize = max(candidateSize, maximumX - minimumX);
+    TRmgZoneBounds candidate = bounds;
+    includeRmgZoneFootprint(candidate.m_minimumY, candidate.m_minimumX,
+        candidate.m_maximumY, candidate.m_maximumX, position, zoneSize);
+    int candidateSize = max(mapSize, candidate.m_maximumY - candidate.m_minimumY);
+    candidateSize = max(candidateSize, candidate.m_maximumX - candidate.m_minimumX);
     return candidateSize;
 }
 
@@ -4001,10 +4020,8 @@ void type_random_map_generator::filterZonePositions(
             TRmgMapPosition position;
             position = m_zones[other]->getLevelPosition();
             int size = m_zones[other]->getSize();
-            bounds.m_minimumY = min(bounds.m_minimumY, position.m_y - size);
-            bounds.m_minimumX = min(bounds.m_minimumX, position.m_x - size);
-            bounds.m_maximumY = max(bounds.m_maximumY, position.m_y + size + 1);
-            bounds.m_maximumX = max(bounds.m_maximumX, position.m_x + size + 1);
+            includeRmgZoneFootprint(bounds.m_minimumY, bounds.m_minimumX,
+                bounds.m_maximumY, bounds.m_maximumX, position, size);
         }
     }
     int size = zone->getSize();
@@ -4149,6 +4166,13 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     }
 }
 
+// Center one modulo-distributed draw on zero. Preserve modulo bias, asymmetric
+// even ranges, signed division and one RNG draw; callers own range validity.
+static inline int getRmgCenteredRandomOffset(int range)
+{
+    return rand() % range - range / 2;
+}
+
 // Displace an interior midpoint across its segment. Island outlines use
 // half the segment length as their displacement limit; the other boundary
 // drawers use the full length. Keep the single RNG draw after the length test.
@@ -4164,7 +4188,7 @@ static inline void displaceRmgBoundaryMidpoint(TPoint& midpoint,
     if (length > 1) {
         // Retail requires positive roughness here; zero reaches rand()%0.
         int limit = cppMin<long>(length / lengthDivisor, roughness);
-        int displacement = rand() % limit - limit / 2;
+        int displacement = getRmgCenteredRandomOffset(limit);
         perpendicular = perpendicular * displacement / length;
         midpoint += perpendicular;
     }
@@ -4180,6 +4204,17 @@ static inline TPoint clampRmgBoundaryToMap(
     long y = cppMax<long>(point.m_y, 0);
     y = cppMin<long>(y, map.m_mapHeight - 1);
     return TPoint(x, y);
+}
+
+// Assign an outline cell to its zone, then apply the caller's captured
+// boundary policy. The straight drawer's final cell intentionally omits this
+// operation because that endpoint receives only the zone assignment.
+static inline void markRmgZoneBoundaryCell(
+    TRmgMapItem* item, int zoneIndex, unsigned char markBoundary)
+{
+    item->m_zoneState.m_zone = zoneIndex;
+    if (markBoundary)
+        item->m_tileData.m_zoneBoundary = 1;
 }
 
 // Random midpoint displacement subdivides a segment depth-first using a LIFO
@@ -4206,9 +4241,7 @@ void type_random_map_generator::drawIrregularZoneBoundary(
         } else {
             TPoint clamped = clampRmgBoundaryToMap(from, m_map);
             TRmgMapItem* item = m_map.getMapItem(clamped.m_x, clamped.m_y, level);
-            item->m_zoneState.m_zone = zoneIndex;
-            if (markBoundary)
-                item->m_tileData.m_zoneBoundary = 1;
+            markRmgZoneBoundaryCell(item, zoneIndex, markBoundary);
             from = to;
         }
     }
@@ -4247,9 +4280,7 @@ void type_random_map_generator::drawStraightZoneBoundary(
     int error = majorDistance / 2;
     while (from.m_x != to.m_x || from.m_y != to.m_y) {
         TRmgMapItem* item = m_map.getMapItem(from.m_x, from.m_y, level);
-        item->m_zoneState.m_zone = zoneIndex;
-        if (markBoundary)
-            item->m_tileData.m_zoneBoundary = 1;
+        markRmgZoneBoundaryCell(item, zoneIndex, markBoundary);
         error += minorDistance;
         if (error < majorDistance) {
             from.m_x += axialStep.m_x;
@@ -4262,6 +4293,15 @@ void type_random_map_generator::drawStraightZoneBoundary(
     }
     TRmgMapItem* lastItem = m_map.getMapItem(from.m_x, from.m_y, level);
     lastItem->m_zoneState.m_zone = zoneIndex;
+}
+
+// Clip both endpoints toward the original opposite endpoint. The second
+// clipping must not use the already-clipped first result as its target.
+static inline void clipRmgBoundarySegment(const TRmgZoneBounds& bounds,
+    const TPoint& originalFrom, const TPoint& originalTo, TPoint& from, TPoint& to)
+{
+    from = clipRmgBoundaryPoint(bounds, originalFrom, originalTo);
+    to = clipRmgBoundaryPoint(bounds, originalTo, originalFrom);
 }
 
 // The zone coordinator at 0x53e050 calls this with its generator receiver
@@ -4308,8 +4348,7 @@ void type_random_map_generator::traceZoneBoundary(
         next = vertex->m_next;
         originalFrom = vertex->m_position;
         originalTo = next->m_position;
-        from = clipRmgBoundaryPoint(bounds, vertex->m_position, next->m_position);
-        to = clipRmgBoundaryPoint(bounds, originalTo, originalFrom);
+        clipRmgBoundarySegment(bounds, originalFrom, originalTo, from, to);
         if (bounds.contains(from) && from != to) {
             found = true;
             break;
@@ -4338,8 +4377,7 @@ void type_random_map_generator::traceZoneBoundary(
         TRmgZone* neighbour = next->m_twin->m_zone;
         originalFrom = vertex->m_position;
         originalTo = next->m_position;
-        from = clipRmgBoundaryPoint(bounds, vertex->m_position, next->m_position);
-        to = clipRmgBoundaryPoint(bounds, originalTo, originalFrom);
+        clipRmgBoundarySegment(bounds, originalFrom, originalTo, from, to);
         zone->m_boundary.push_back(TPoint(from));
 
         if (!neighbour || neighbour->m_templateZone->m_zoneIndex > zoneIndex) {
@@ -5233,11 +5271,11 @@ void __fastcall generateRmgIslandMask(unsigned char* mask, int width, int height
             + patch.m_corners[1] + patch.m_corners[0]) / 4;
         int range = patch.m_variation;
         if (range > 1) {
-            edges.m_minXValue += rand() % range - range / 2;
-            edges.m_minYValue += rand() % range - range / 2;
-            edges.m_maxXValue += rand() % range - range / 2;
-            edges.m_maxYValue += rand() % range - range / 2;
-            center += rand() % range - range / 2;
+            edges.m_minXValue += getRmgCenteredRandomOffset(range);
+            edges.m_minYValue += getRmgCenteredRandomOffset(range);
+            edges.m_maxXValue += getRmgCenteredRandomOffset(range);
+            edges.m_maxYValue += getRmgCenteredRandomOffset(range);
+            center += getRmgCenteredRandomOffset(range);
         }
         patch.m_variation = (range - 1) / 2 + 1;
         subdivideRmgNoiseRegion(patches, patch, edges, center);
@@ -5782,6 +5820,22 @@ void type_random_map_generator::buildZoneConnectionPaths()
     }
 }
 
+// Widen an opened route by removing same-zone border obstacles, retaining
+// cells reserved for a connection. Bounds calculation stays with each caller
+// to preserve its integer types; visit the rectangle in row-major order.
+static inline void clearRmgZonePathBorders(type_random_map& map,
+    const TRmgZoneBounds& bounds, int level, int zoneIndex)
+{
+    for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+        for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+            TRmgMapItem* nearby = map.getMapItem(x, y, level);
+            if (nearby->m_zoneState.m_zone == zoneIndex
+                && !nearby->m_connection.m_present)
+                nearby->m_tileData.m_borderObject = 0;
+        }
+    }
+}
+
 // Complete's ground connection follows predecessor cells with positive
 // movement cost, stopping at the zero-cost seed. It does not change costs:
 // it clears border obstacles and marks the route traversable. Decoration
@@ -5821,14 +5875,7 @@ void type_random_map_generator::openConnectionPath(
             bounds.m_minimumY = max(position.m_y - 1, 0);
             bounds.m_maximumX = min(position.m_x + 2, m_map.m_mapWidth);
             bounds.m_maximumY = min(position.m_y + 2, m_map.m_mapHeight);
-            for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
-                for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
-                    TRmgMapItem* nearby = m_map.getMapItem(x, y, position.m_z);
-                    if (nearby->m_zoneState.m_zone == zone
-                        && !nearby->m_connection.m_present)
-                        nearby->m_tileData.m_borderObject = 0;
-                }
-            }
+            clearRmgZonePathBorders(m_map, bounds, position.m_z, zone);
         }
         position = previous;
         item = m_map.getMapItem(position);
@@ -6027,6 +6074,19 @@ void type_random_map_generator::placeGuard(int value, TRmgMapPosition position)
         addObject(guard, position);
 }
 
+// A successful ground border placement marks its surrounding area and
+// suppresses guards for this and all remaining crossings. The guard value
+// belongs to the caller's whole connection, not just this endpoint.
+static inline void placeRmgGroundConnectionBorder(type_random_map_generator& generator,
+    TRmgMapPosition position, TRmgZone* keyTentZone, int& guardValue)
+{
+    int direction = generator.placeBorderObject(position, 1, keyTentZone);
+    if (direction >= 0) {
+        generator.markBorderObjectArea(position, direction);
+        guardValue = 0;
+    }
+}
+
 // Complete-only ground connection pass.  ConnectZones passes the paired
 // boundary item/position vectors.  Retail selects all equally cheap empty
 // crossings, opens their predecessor paths, and records both zone entrances
@@ -6127,16 +6187,8 @@ unsigned char type_random_map_generator::createGroundConnection(
         candidates.erase(candidates.begin() + selected);
 
         if (connection->m_placeBorderObjects) {
-            int borderDirection = placeBorderObject(position, 1, destination);
-            if (borderDirection >= 0) {
-                markBorderObjectArea(position, borderDirection);
-                guardValue = 0;
-            }
-            borderDirection = placeBorderObject(otherPosition, 1, source);
-            if (borderDirection >= 0) {
-                markBorderObjectArea(otherPosition, borderDirection);
-                guardValue = 0;
-            }
+            placeRmgGroundConnectionBorder(*this, position, destination, guardValue);
+            placeRmgGroundConnectionBorder(*this, otherPosition, source, guardValue);
         }
 
         if (guardValue > 0) {
@@ -7289,14 +7341,7 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
                 bounds.m_minimumY = cppMax<long>(y - 1, 0);
                 bounds.m_maximumX = cppMin<long>(x + 2, m_map.m_mapWidth);
                 bounds.m_maximumY = cppMin<long>(y + 2, m_map.m_mapHeight);
-                for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
-                    for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
-                        TRmgMapItem* nearby = m_map.getMapItem(column, row, position.m_z);
-                        if (nearby->m_zoneState.m_zone == zoneIndex
-                            && !nearby->m_connection.m_present)
-                            nearby->m_tileData.m_borderObject = 0;
-                    }
-                }
+                clearRmgZonePathBorders(m_map, bounds, position.m_z, zoneIndex);
             }
             from = to;
         }
