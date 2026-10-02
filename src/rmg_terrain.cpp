@@ -824,11 +824,10 @@ void rmgTerrainPainter::paintRectangle(
     TRmgGridPoint point;
     for (point.setY(y); point.getY() < endY; point.setY(point.getY() + 1)) {
         for (point.setX(x); point.getX() < endX; point.setX(point.getX() + 1)) {
-            if (m_paintTerrain != getTerrain(point)) {
-                paintPoint(point);
-            } else {
+            if (isPaintTerrain(point))
                 paintBaseTile(point);
-            }
+            else
+                paintPoint(point);
         }
     }
 }
@@ -921,11 +920,10 @@ static inline void queueOtherTerrainDiagonalNeighbour(
 static inline bool tryQueueOtherTerrainCardinalNeighbour(rmgTerrainPainter& painter,
     const TRmgGridPoint& point, int offsetX, int offsetY)
 {
-    if (painter.getTerrain(TRmgGridPoint(point.getX() + offsetX, point.getY() + offsetY))
-        == painter.m_paintTerrain)
+    TRmgGridPoint neighbour(point.getX() + offsetX, point.getY() + offsetY);
+    if (painter.isPaintTerrain(neighbour))
         return false;
-    painter.m_secondaryPoints.insert(
-        TRmgGridPoint(point.getX() + offsetX, point.getY() + offsetY));
+    painter.m_secondaryPoints.insert(neighbour);
     return true;
 }
 

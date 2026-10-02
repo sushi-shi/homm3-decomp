@@ -5435,6 +5435,15 @@ b8 type_random_map_generator::createShipyardConnection(
     return true;
 }
 
+// Opens the approach cell directly below an object entrance and returns it.
+static inline TRmgMapPosition openRmgEntranceApproach(type_random_map& map,
+    TRmgMapPosition entrance)
+{
+    ++entrance.m_y;
+    map.getMapItem(entrance)->openPath();
+    return entrance;
+}
+
 VA(0x00542080, 0x8AA)
 MAC_ADDRESS(0x244c08, 0xa1c)
 b8 type_random_map_generator::createSubterraneanGate(
@@ -5520,12 +5529,8 @@ b8 type_random_map_generator::createSubterraneanGate(
 
     int guardValue = getRmgConnectionGuardValue(connection, *this);
 
-    ++position.m_y;
-    ++otherPosition.m_y;
-    TRmgMapItem* sourceEntrance = m_map.getMapItem(position);
-    sourceEntrance->openPath();
-    TRmgMapItem* destinationEntrance = m_map.getMapItem(otherPosition);
-    destinationEntrance->openPath();
+    position = openRmgEntranceApproach(m_map, position);
+    otherPosition = openRmgEntranceApproach(m_map, otherPosition);
 
     if (connection->m_placeBorderObjects) {
         // Success on either side suppresses both guards; a failed placement
@@ -5641,6 +5646,19 @@ static inline type_object* placeRmgMonolith(type_random_map_generator& generator
     return object;
 }
 
+// Borders a portal toward the other zone, or else guards the cell below it.
+static inline void protectRmgMonolith(type_random_map_generator& generator,
+    type_object* portal, const TRmgZoneConnection* connection,
+    TRmgZone* borderZone, int& guardValue)
+{
+    if (connection->m_placeBorderObjects
+        && generator.placeMonolithBorder(portal->getPosition(), borderZone)) {
+        guardValue = 0;
+    } else if (guardValue > 0) {
+        generator.placeGuard(guardValue, portal->getPosition() + TPoint(0, 1));
+    }
+}
+
 // One-way prototypes produce an entrance/exit pair in each zone. Failed
 // placement deletes only that object; subsequent endpoint attempts continue.
 VA(0x00542CE0, 0x554)
@@ -5662,25 +5680,14 @@ void type_random_map_generator::createMonolithConnection(
     }
     int guardValue = getRmgConnectionGuardValue(connection, *this);
 
+    // A source-side border also drops the destination's guard, even when the
+    // destination's own border placement later fails.
     type_object* object = placeRmgMonolith(*this, properties, source, exitProperties != 0);
-    if (object) {
-        if (connection->m_placeBorderObjects
-            && placeMonolithBorder(object->getPosition(), destination)) {
-            // This value also controls the destination's guard, even when
-            // its own border placement later fails.
-            guardValue = 0;
-        } else if (guardValue > 0) {
-            placeGuard(guardValue, object->getPosition() + TPoint(0, 1));
-        }
-    }
+    if (object)
+        protectRmgMonolith(*this, object, connection, destination, guardValue);
     object = placeRmgMonolith(*this, properties, destination, exitProperties != 0);
-    if (object) {
-        if (!connection->m_placeBorderObjects
-            || !placeMonolithBorder(object->getPosition(), source)) {
-            if (guardValue > 0)
-                placeGuard(guardValue, object->getPosition() + TPoint(0, 1));
-        }
-    }
+    if (object)
+        protectRmgMonolith(*this, object, connection, source, guardValue);
     if (exitProperties) {
         object = placeRmgMonolith(*this, exitProperties, source, true);
         object = placeRmgMonolith(*this, exitProperties, destination, true);
@@ -6337,7 +6344,7 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
     }
 }
 
-// Create a town, add it at a random candidate and return its entrance.
+// Places a town at a random candidate and returns its opened road entrance.
 static inline TRmgMapPosition placeRmgTownAtRandomCandidate(
     type_random_map_generator* generator, TRmgObjectPropertiesRef* properties,
     int player, unsigned char townOption,
@@ -6346,17 +6353,10 @@ static inline TRmgMapPosition placeRmgTownAtRandomCandidate(
     rmgTownObject* town = new rmgTownObject(properties,
         generator->m_nextObjectId++, player, townOption);
     TRmgMapPosition position = addRmgObjectAtRandomCandidate(generator, town, candidates);
-    return getRmgObjectTriggerPosition(position, trigger);
-}
-
-// Registers a town entrance as a road target and opens the cell below it.
-static inline void registerRmgTownRoadEntrance(
-    type_random_map_generator* generator, TRmgMapPosition entrance)
-{
+    TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, trigger);
     generator->m_roadTargets.push_back(entrance);
-    ++entrance.m_y;
-    TRmgMapItem* item = generator->m_map.getMapItem(entrance);
-    item->openPath();
+    openRmgEntranceApproach(generator->m_map, entrance);
+    return entrance;
 }
 
 // The trigger's entire clipped 3x3 neighbourhood must remain in the zone.
@@ -6409,9 +6409,8 @@ b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     }
     if (!candidates.size())
         return false;
-    TRmgMapPosition entrance = placeRmgTownAtRandomCandidate(this, properties,
+    placeRmgTownAtRandomCandidate(this, properties,
         player, townOption, candidates, trigger);
-    registerRmgTownRoadEntrance(this, entrance);
     return true;
 }
 
@@ -6446,7 +6445,6 @@ b8 type_random_map_generator::tryPlacePrimaryTown(
         player, townOption, candidates, prototype->m_triggerCell);
     zone->m_position = position;
     zone->m_active = true;
-    registerRmgTownRoadEntrance(this, position);
     return true;
 }
 
@@ -6581,13 +6579,10 @@ b8 type_random_map_generator::tryPlaceMine(TRmgZone* zone,
         return false;
     }
     int guardValue = getMineGuardValue(resource, zone);
-    TRmgMapPosition entrance = getRmgObjectTriggerPosition(
-        mine->getPosition(), lastScannedPrototype->m_triggerCell);
-    ++entrance.m_y;
-    TRmgMapItem* item = m_map.getMapItem(entrance);
-    item->openPath();
+    TRmgMapPosition approach = openRmgEntranceApproach(m_map, getRmgObjectTriggerPosition(
+        mine->getPosition(), lastScannedPrototype->m_triggerCell));
     if (guardValue > 0)
-        placeGuard(guardValue, entrance);
+        placeGuard(guardValue, approach);
     int placed = 0;
     TRmgObjectPropertiesRef* resourceProperties = selectObjectPrototype(terrain, RESOURCE, resource);
     if (!resourceProperties)
