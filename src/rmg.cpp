@@ -7719,18 +7719,15 @@ void type_random_map_generator::markRiverObjectTargets()
         if (prototype->getObjectType() == TERRAIN_MOUNTAIN
             || prototype->getObjectType() == TERRAIN_LAKE
             || (prototype->getObjectType() == MINE && prototype->getSubtype() == GEMS)) {
-            TRmgMapPosition position = object->m_position;
-            int offsetX;
-            int offsetY;
+            // Objects without an entrance use their footprint centre.
+            TRmgMapPosition position;
             if (prototype->m_hasTrigger) {
-                offsetX = prototype->m_triggerCell.m_x;
-                offsetY = prototype->m_triggerCell.m_y;
+                position = getRmgPlacedObjectEntrance(object);
             } else {
-                offsetX = static_cast<unsigned int>(prototype->getWidth()) / 2;
-                offsetY = static_cast<unsigned int>(prototype->getHeight()) / 2;
+                position = object->m_position;
+                position -= TPoint(static_cast<unsigned int>(prototype->getWidth()) / 2,
+                    static_cast<unsigned int>(prototype->getHeight()) / 2);
             }
-            position.m_x -= offsetX;
-            position.m_y -= offsetY;
             if (m_map.containsXY(position))
             {
                 TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
