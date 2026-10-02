@@ -788,12 +788,12 @@ void type_random_map::markBorderPatch(TRmgMapPosition position)
 
 // Translate an object's placement anchor to its trigger cell without changing
 // level. Keep the native point construction and compound subtraction nested.
-// Scalar callers formerly stored X/Y in either order; these independent fields
-// belong to a copied local, and the prototype is only read during translation.
+// Callers pass either the live prototype trigger or their earlier snapshot;
+// town placement must keep its captured offset across virtual object insertion.
 static inline TRmgMapPosition getRmgObjectTriggerPosition(
-    TRmgMapPosition position, const TObjectType* prototype)
+    TRmgMapPosition position, const TObjectType::TPoint& trigger)
 {
-    TPoint triggerOffset(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
+    TPoint triggerOffset(trigger.m_x, trigger.m_y);
     position -= triggerOffset;
     return position;
 }
@@ -834,7 +834,7 @@ unsigned char type_random_map::canPlaceObject(
         return 0;
     if (!prototype.m_hasTrigger)
         return 1;
-    TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, &prototype);
+    TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, prototype.m_triggerCell);
     ++entrance.m_y;
     if (entrance.m_y >= m_mapHeight)
         return 0;
@@ -2451,7 +2451,7 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
         type_object* object = m_objects[objectIndex];
         prototype = object->m_properties->m_prototype;
         TRmgMapPosition entrance = object->getPosition();
-        entrance = getRmgObjectTriggerPosition(entrance, prototype);
+        entrance = getRmgObjectTriggerPosition(entrance, prototype->m_triggerCell);
         unsigned int direction = g_adventureObjectTraits[prototype->getObjectType()].m_trait1
             ? RMG_DIRECTION_COUNT : 5;
         while (direction--) {
@@ -2661,7 +2661,7 @@ unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
         type_object* existing = m_objects[index];
         TObjectType* existingPrototype = existing->m_properties->m_prototype;
         TRmgMapPosition entrance = existing->getPosition();
-        entrance = getRmgObjectTriggerPosition(entrance, existingPrototype);
+        entrance = getRmgObjectTriggerPosition(entrance, existingPrototype->m_triggerCell);
         int endDirection;
         int firstDirection;
         if (g_adventureObjectTraits[existingPrototype->getObjectType()].m_trait1) {
@@ -6453,7 +6453,7 @@ unsigned char type_random_map_generator::createShipyardConnection(
     TRmgMapPosition position = candidates[rand() % candidates.size()];
     addObject(shipyard, position);
 
-    nearby = getRmgObjectTriggerPosition(position, prototype);
+    nearby = getRmgObjectTriggerPosition(position, prototype->m_triggerCell);
     int entranceX = nearby.m_x;
     m_roadTargets.push_back(nearby);
 
@@ -6593,7 +6593,7 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     otherPosition.m_z = destination->getLevelPosition().m_z;
     addObject(new type_object(gateProperties), otherPosition);
 
-    position = getRmgObjectTriggerPosition(position, gatePrototype);
+    position = getRmgObjectTriggerPosition(position, gatePrototype->m_triggerCell);
     otherPosition = destination->getLevelPosition();
     otherPosition.m_x = position.m_x;
     otherPosition.m_y = position.m_y;
@@ -7672,9 +7672,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     bounds.m_minimumX += prototype->getWidth();
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
-            TRmgMapPosition entrance = position;
-            entrance.m_x -= trigger.m_x;
-            entrance.m_y -= trigger.m_y;
+            TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, trigger);
             TRmgMapItem* item = m_map.getMapItem(entrance.m_x, entrance.m_y, entrance.m_z);
             if (item->m_zoneState.m_zone != zoneIndex)
                 continue;
@@ -7701,9 +7699,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     rmgTownObject* object = new rmgTownObject(properties, m_nextObjectId++, player, townOption);
     position = candidates[rand() % candidates.size()];
     addObject(object, position);
-    TRmgMapPosition entrance = position;
-    entrance.m_x -= trigger.m_x;
-    entrance.m_y -= trigger.m_y;
+    TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, trigger);
     registerRmgTownRoadEntrance(this, entrance);
     return 1;
 }
@@ -7755,7 +7751,7 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
     unsigned int selected = rand() % candidates.size();
     position = candidates[selected];
     addObject(town, position);
-    position = getRmgObjectTriggerPosition(position, prototype);
+    position = getRmgObjectTriggerPosition(position, prototype->m_triggerCell);
     zone->m_position = position;
     zone->m_active = 1;
     registerRmgTownRoadEntrance(this, position);
@@ -8586,7 +8582,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     type_object* lastObject = group->m_objects.back();
     TObjectType* prototype = lastObject->m_properties->m_prototype;
     TRmgMapPosition entrance = lastObject->getPosition();
-    entrance = getRmgObjectTriggerPosition(entrance, prototype);
+    entrance = getRmgObjectTriggerPosition(entrance, prototype->m_triggerCell);
     if (!g_adventureObjectTraits[prototype->getObjectType()].m_trait1) {
         firstDirection = 1;
         lastDirection = 4;
@@ -8769,6 +8765,13 @@ static inline void queueRmgMovementStep(TRmgMapItem* destination,
     insertRmgWorkItem(positions, costs, next, cost);
 }
 
+// Road exits and entries share this restricted-approach policy. The caller
+// retains its outgoing direction limit or incoming direction rejection.
+static inline bool hasRmgRestrictedRoadApproach(const TAdvObjectTraits& traits)
+{
+    return !traits.m_trait1 && !traits.m_trait2;
+}
+
 // Complete's road-target pass at 0x548290 invokes this flood once for each
 // prospective source. Dijkstra-style relaxation uses the lowest-cost entry
 // at the back of a descending worklist; duplicate entries are retained.
@@ -8817,8 +8820,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
             type_object* object = mapItem->m_objects[0];
             TObjectType* prototype = object->m_properties->m_prototype;
             int objectType = prototype->getObjectType();
-            if (!g_adventureObjectTraits[objectType].m_trait1
-                && !g_adventureObjectTraits[objectType].m_trait2)
+            if (hasRmgRestrictedRoadApproach(g_adventureObjectTraits[objectType]))
                 direction = 5;
 
             switch (objectType) {
@@ -8882,7 +8884,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
                 const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
                 if (traits.m_blocksLanding && !traits.m_trait2)
                     continue;
-                if (!traits.m_trait1 && !traits.m_trait2
+                if (hasRmgRestrictedRoadApproach(traits)
                     && direction > 0 && direction < 4)
                     continue;
             }
@@ -9430,8 +9432,7 @@ void type_random_map_generator::createRivers()
         if (prototype->getObjectType() == WATER_WHEEL) {
             TObjectType::TPoint trigger = prototype->m_triggerCell;
             TRmgMapPosition position = object->m_position;
-            position.m_x -= trigger.m_x;
-            position.m_y -= trigger.m_y;
+            position = getRmgObjectTriggerPosition(position, trigger);
             createRiverToObject(position);
             position.m_x -= 2;
             createRiver(position);
