@@ -1584,7 +1584,7 @@ void rmgSeerHutObject::write(TAbstractFile* outputFile, int version)
     writeRmgReservedBytes<2>(outputFile);
 }
 
-// The factory reserves the hero in disabledHeroes; releaseReservation
+// The factory reserves the hero in m_disabledHeroes; releaseReservation
 // frees it again.
 rmgHeroObject::rmgHeroObject(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, const int& objectId, int heroIndex,
@@ -4614,8 +4614,8 @@ void type_random_map_generator::placeWaterZoneIslands(TRmgZone* zone)
     }
 }
 
-// Both border-expansion passes finish by releasing path clearance on the
-// unoccupied cells of a clipped square around the processed cell.
+// markZoneBorders and repairWaterZoneBorders finish each marked cell by
+// releasing path clearance on unoccupied cells of a square around it.
 static inline void releaseRmgNeighborhoodPathClearance(type_random_map& map,
     const TRmgMapPosition& center, int radius)
 {

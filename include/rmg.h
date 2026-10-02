@@ -735,7 +735,7 @@ public:
     virtual void releaseReservation();
     // Runs once the object's treasure group is committed: key tents and quest
     // artifacts place their guard or seer hut, or are replaced by a treasure.
-    // The success result is ignored. Formerly named isWritable.
+    // The success result is ignored.
     virtual b8 completePlacement();
     virtual void write(TAbstractFile* outputFile, int version);
 };
