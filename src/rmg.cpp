@@ -522,8 +522,8 @@ static inline TRmgMapItem* seedRmgMovementSearch(type_random_map& map,
     return item;
 }
 
-// Floods movement costs out from a connection cell. Entering another zone
-// or water costs 10 per step, other steps 1.
+// Floods movement costs out from a seed cell. Entering another zone or
+// water costs 10 per step, other steps 1.
 VA(0x00531460, 0x441)
 MAC_ADDRESS(0x22d9ac, 0x5cc)
 void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZone)
@@ -5105,8 +5105,9 @@ static inline void placeRmgGroundConnectionBorder(type_random_map_generator& gen
     }
 }
 
-// Place a gate border at an entrance. On success both gate guards are
-// dropped and the border extends to the empty cells beside the entrance.
+// Place a gate border on the approach cell below the gate's entrance. On
+// success both gate guards are dropped and the border extends to the empty
+// cells either side of it.
 static inline void placeRmgGateConnectionBorder(type_random_map_generator& generator,
     TRmgMapPosition entrance, TRmgZone* keyTentZone, int& guardValue)
 {
