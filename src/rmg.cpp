@@ -1499,7 +1499,7 @@ rmgShrineObject::rmgShrineObject(TRmgObjectPropertiesRef* properties)
 }
 
 rmgSpellScrollObject::rmgSpellScrollObject(TRmgObjectPropertiesRef* properties, s32 spell)
-    : type_object(properties), m_spell(spell)
+    : type_object(properties), m_spell(static_cast<ESpellId>(spell))
 {
 }
 

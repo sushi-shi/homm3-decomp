@@ -959,7 +959,7 @@ SIZE(rmgShrineObject, 0x1c);
 // Spell scroll; the spell is written as one byte.
 class rmgSpellScrollObject : public type_object {
 public:
-    s32 m_spell; // +0x1c
+    ESpellId m_spell; // +0x1c
     rmgSpellScrollObject(TRmgObjectPropertiesRef* properties, s32 spell);
     virtual void write(TAbstractFile* outputFile, s32 version);
 };
