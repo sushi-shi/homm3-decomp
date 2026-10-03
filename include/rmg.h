@@ -429,9 +429,9 @@ struct TRmgTemplateZone {
     s32 m_townPlacement[8];             // +0x20: ERmgTownPlacementParameter
     // Template column 22: neutral towns use the zone's town alignment.
     b8 m_neutralTownsMatchZone; // +0x40
-    b8 m_allowedTowns[9];    // +0x41
-    s32 m_mineCounts[7];                // +0x4c: indexed by resource
-    s32 m_mineDensities[7];             // +0x68: indexed by resource
+    b8 m_allowedTowns[TOWN_TYPE_COUNT]; // +0x41
+    s32 m_mineCounts[NUM_RESOURCES];    // +0x4c: indexed by resource
+    s32 m_mineDensities[NUM_RESOURCES]; // +0x68: indexed by resource
     // Use the aligned town's native terrain.
     b8 m_useNativeTerrain;
     b8 m_allowedTerrain[8];  // +0x85
@@ -439,7 +439,7 @@ struct TRmgTemplateZone {
     // Template column 56: restrict guards to the zone's town alignment.
     b8 m_guardsMatchZone;    // +0x94
     // Indexed by town type + 1; slot 0 is neutral.
-    b8 m_allowedMonsters[10]; // +0x95
+    b8 m_allowedMonsters[TOWN_TYPE_COUNT + 1]; // +0x95
     TRmgTreasureRange m_treasure[3];     // +0xa0
     std::vector<TRmgZoneConnection> m_connections; // +0xc4
 
@@ -834,7 +834,7 @@ SIZE(rmgResourceObject, 0x1c);
 class rmgBlackBoxObject : public type_object {
 public:
     s32 m_experience;                  // +0x1c
-    s32 m_resources[7];                // +0x20, gold at +0x38
+    s32 m_resources[NUM_RESOURCES];    // +0x20, gold at +0x38
     s32 m_creatureType;                // +0x3c, -1 means no creature reward
     s32 m_creatureCount;               // +0x40
     std::vector<s32> m_spells;         // +0x44
@@ -1702,10 +1702,10 @@ public:
     s32 m_nextKeyTentColor;                            // +0x0f5c
     // Active zones, in total and per town alignment.
     s32 m_activeZoneCount;                             // +0x0f60
-    s32 m_activeZoneCountsByAlignment[9];              // +0x0f64
+    s32 m_activeZoneCountsByAlignment[TOWN_TYPE_COUNT]; // +0x0f64
     b8 m_disabledHeroes[156];               // +0x0f88
     // Artifacts already used as seer-hut quests.
-    b8 m_usedQuestArtifacts[144];           // +0x1024
+    b8 m_usedQuestArtifacts[ARTIFACT_COUNT]; // +0x1024
     // Set once fewer than 20 quest artifacts remain; seer huts are then
     // rejected.
     b8 m_questArtifactPoolLow;              // +0x10b4

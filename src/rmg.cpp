@@ -314,7 +314,7 @@ static const char* g_rmgPlayerNames[RMG_PLAYER_COUNT] = {
 };
 
 DATA(0x0068272C)
-static const char* g_rmgTownNames[9] = {
+static const char* g_rmgTownNames[TOWN_TYPE_COUNT] = {
     DATA_COMPGEN(0x0068279C, rmgTownCastle, "castle"),
     DATA_COMPGEN(0x00682794, rmgTownRampart, "rampart"),
     DATA_COMPGEN(0x0068278C, rmgTownTower, "tower"),
