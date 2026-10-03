@@ -2835,6 +2835,8 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition start, int progressSteps
                 if (!properties->m_placementRule
                     || properties->m_placementRule->m_terrainScores[terrain] <= RMG_PLACEMENT_INVALID)
                     continue;
+                // Never skips: loadObjectPrototypes listed only prototypes
+                // available in m_mapVersion. Retail repeats the test.
                 if (!isRmgObjectAvailableInVersion(prototype->getObjectType(), m_mapVersion))
                     continue;
                 TRmgZoneBounds bounds;
