@@ -1713,7 +1713,8 @@ inline void type_random_map_generator::replaceObjectWithTreasure(type_object* ob
     TRmgZone* zone = m_zones[
         m_map.getMapItem(position)->m_zoneState.m_zone];
     s32 actualValue;
-    // Not primary, no terrain-dependent treasures, no compact selection.
+    // Not a group's first object, no terrain-dependent treasures, no compact
+    // selection.
     type_object* replacement = createTreasureObject(
         zone, value, value * 3 / 2, &actualValue, false, false, false, position);
     if (replacement)
@@ -1951,15 +1952,16 @@ type_black_box_creature_def::type_black_box_creature_def(s32 newCreatureType)
 }
 
 // Raises a value by the share of town zones with the same alignment.
-static inline s32 adjustRmgValueForAlignment(s32 value, s32 alignmentCount, s32 zoneCount)
+static inline s32 adjustRmgValueForAlignment(s32 value,
+    s32 alignedTownZoneCount, s32 townZoneCount)
 {
-    if (zoneCount > 0)
-        value += alignmentCount * value / zoneCount;
+    if (townZoneCount > 0)
+        value += alignedTownZoneCount * value / townZoneCount;
     return value;
 }
 
 // Town zones of an alignment; none for eTownNeutral.
-inline s32 type_random_map_generator::getAlignedZoneCount(s32 alignment) const
+inline s32 type_random_map_generator::getTownZoneCount(s32 alignment) const
 {
     if (alignment == eTownNeutral)
         return 0;
@@ -1983,7 +1985,7 @@ s32 type_black_box_creature_def::getValue(
         return RMG_TREASURE_NOT_OFFERED;
     s32 value = g_creatureTypeTraits[m_creatureType].m_aiValue * m_creatureCount;
     return adjustRmgValueForAlignment(value,
-        generator->getAlignedZoneCount(alignment), generator->m_townZoneCount);
+        generator->getTownZoneCount(alignment), generator->m_townZoneCount);
 }
 
 VA(0x00534380, 0x85)
@@ -2063,9 +2065,10 @@ s32 type_map_dwelling_def::getValue(TRmgZone* zone, type_random_map_generator* g
         return RMG_TREASURE_NOT_OFFERED;
 
     s32 value = creature.m_growthRate * creature.m_aiValue;
-    s32 alignmentZoneCount = generator->getAlignedZoneCount(creature.m_townType);
-    value = adjustRmgValueForAlignment(value, alignmentZoneCount, generator->m_townZoneCount);
-    return value + creature.m_aiValue * alignmentZoneCount / 2;
+    s32 alignedTownZoneCount = generator->getTownZoneCount(creature.m_townType);
+    value = adjustRmgValueForAlignment(value, alignedTownZoneCount,
+        generator->m_townZoneCount);
+    return value + creature.m_aiValue * alignedTownZoneCount / 2;
 }
 
 VA(0x00534870, 0x53)
@@ -7019,7 +7022,7 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
 VA(0x00546190, 0x385)
 MAC_ADDRESS(0x24a190, 0x3f4)
 type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
-    s32 minimum, s32 maximum, s32* value, b8 primary,
+    s32 minimum, s32 maximum, s32* value, b8 firstInGroup,
     b8 allowTerrainDependent, b8 compact,
     TRmgMapPosition position)
 {
@@ -7031,7 +7034,7 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     for (u32 index = 0; index < m_objectGenerators.size(); ++index) {
         type_treasure_def* definition = m_objectGenerators[index];
         s32 objectType = definition->m_objectType;
-        if (!primary && g_adventureObjectTraits[objectType].m_blocksLanding
+        if (!firstInGroup && g_adventureObjectTraits[objectType].m_blocksLanding
             && !g_adventureObjectTraits[objectType].m_trait2)
             continue;
         if (!allowTerrainDependent && definition->isTerrainDependent())
@@ -7102,12 +7105,12 @@ inline void TRmgTreasureGroup::addCenteredObject(type_object* object)
 }
 
 inline type_object* type_random_map_generator::createTreasureWithRetries(TRmgZone* zone,
-    s32 minimum, s32 maximum, s32* value, b8 primary, b8 compact)
+    s32 minimum, s32 maximum, s32* value, b8 firstInGroup, b8 compact)
 {
     for (s32 attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
         TRmgMapPosition unspecified(RMG_NO_POSITION, RMG_NO_POSITION, RMG_NO_POSITION);
         type_object* object = createTreasureObject(zone, minimum, maximum,
-            value, primary, true, compact, unspecified);
+            value, firstInGroup, true, compact, unspecified);
         if (object)
             return object;
     }

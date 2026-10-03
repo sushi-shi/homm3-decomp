@@ -373,8 +373,8 @@ struct TRmgMapPosition : TPoint {
 
 TRmgMapPosition operator+(TRmgMapPosition position, TPoint offset);
 
-// Template connection to another zone: value, guard/border policy,
-// whether it has been built, and the player counts for which it applies.
+// Template connection to another zone: value, unguarded and border-guard
+// flags, whether it has been built, and the player counts for which it applies.
 struct TRmgZoneConnection {
     TRmgTemplateZone* m_destination;             // +0x00
     // Unchecked; the guard value is getRmgGuardValue of this at the map's
@@ -1870,12 +1870,13 @@ public:
     void connectJunctionEntrance(TPoint from, TPoint to, TRmgZone* zone);
     void placeZoneTreasures(TRmgZone* zone);
     // Compact selection keeps only treasures near the best value per
-    // footprint cell; zones retry a failed treasure band with it.
+    // footprint cell; zones retry a failed treasure band with it. Only a
+    // group's first object may be a landing-blocking type without trait 2.
     type_object* createTreasureObject(TRmgZone* zone, s32 minimum, s32 maximum,
-        s32* value, b8 primary, b8 allowTerrainDependent,
+        s32* value, b8 firstInGroup, b8 allowTerrainDependent,
         b8 compact, TRmgMapPosition position);
     type_object* createTreasureWithRetries(TRmgZone* zone, s32 minimum,
-        s32 maximum, s32* value, b8 primary, b8 compact);
+        s32 maximum, s32* value, b8 firstInGroup, b8 compact);
     s32 fillTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
         b8 compact, s32 targetValue);
     b8 assembleTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
@@ -1979,7 +1980,7 @@ public:
     // be placed, the artifact is replaced by a treasure and the call fails; it
     // also fails, leaving the object unchanged, when no quest artifact remains.
     b8 placeQuestArtifact(rmgQuestArtifactObject* object);
-    s32 getAlignedZoneCount(s32 alignment) const;
+    s32 getTownZoneCount(s32 alignment) const;
     bool canUseSeerHutPrototype(s32 prototypeIndex) const;
     rmgQuestArtifactObject* createQuestArtifactForHut(
         rmgSeerHutObject* seerHut, type_treasure_def* definition);
