@@ -1562,7 +1562,7 @@ void rmgMonsterObject::write(TAbstractFile* outputFile, s32 version)
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         writeValue<s32>(outputFile, m_objectId);
     }
-    writeValue<s16>(outputFile, m_count);
+    writeValue<s16>(outputFile, m_creatureCount);
     writeValue<u8>(outputFile, m_disposition);
     writeValue<u8>(outputFile, 0);
     writeValue<u8>(outputFile, 0);
@@ -2266,7 +2266,7 @@ void TRmgTreasureGroup::reset()
     m_outline.clear();
     m_map.clear();
     m_hasGuard = false;
-    m_ready = false;
+    m_outlineMarked = false;
     TRmgMapItem* item = m_map.getMapItem(0, 0);
     s32 count = m_map.m_mapWidth * m_map.m_mapHeight;
     while (count--) {
@@ -2275,11 +2275,11 @@ void TRmgTreasureGroup::reset()
     }
 }
 
-// Marks the group ready and flags its outline cells.
+// Flags the group's outline cells on its map.
 MAC_ADDRESS(0x232fc4, 0x64)
 void TRmgTreasureGroup::markPlacementOutline()
 {
-    m_ready = true;
+    m_outlineMarked = true;
     for (u32 index = 0; index < m_outline.size(); ++index)
         m_map.getMapItem(m_outline[index].m_x,
             m_outline[index].m_y)->m_tileData.m_placementOutline = true;

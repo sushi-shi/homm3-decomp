@@ -24,7 +24,7 @@ TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const s32* framePatte
         throw TAllocationFailure();
     std::copy(framePatterns, framePatterns + m_frameCount, m_framePatterns);
     for (u32 pattern = LINE_END_S; pattern < LINE_PATTERN_COUNT; ++pattern) {
-        m_ranges[pattern].m_firstIndex = 0;
+        m_ranges[pattern].m_firstFrame = 0;
         m_ranges[pattern].m_frameCount = 0;
     }
     // Expects a nonempty, unvalidated list of ids 0..8 with each id's frames
@@ -34,7 +34,7 @@ TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const s32* framePatte
     for (u32 index = 1; index < m_frameCount; ++index) {
         if (m_framePatterns[index] != runPattern) {
             runPattern = m_framePatterns[index];
-            m_ranges[runPattern].m_firstIndex = index;
+            m_ranges[runPattern].m_firstFrame = index;
         }
         ++m_ranges[runPattern].m_frameCount;
     }

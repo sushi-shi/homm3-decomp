@@ -828,14 +828,15 @@ public:
 class rmgMonsterObject : public type_object {
 public:
     s32 m_objectId;       // +0x1c
-    s32 m_count;          // +0x20, serialized as two bytes
+    s32 m_creatureCount;  // +0x20, serialized as two bytes
     s32 m_disposition;    // +0x24, serialized as one byte
     // Never read or written.
     s32 m_unused28;       // +0x28
 
-    rmgMonsterObject(TRmgObjectPropertiesRef* properties, s32 objectId, s32 count)
-        : type_object(properties), m_objectId(objectId), m_count(count),
-          m_disposition(RMG_GUARD_DISPOSITION)
+    rmgMonsterObject(TRmgObjectPropertiesRef* properties, s32 objectId,
+        s32 creatureCount)
+        : type_object(properties), m_objectId(objectId),
+          m_creatureCount(creatureCount), m_disposition(RMG_GUARD_DISPOSITION)
     {
     }
     virtual void write(TAbstractFile* outputFile, s32 version);
@@ -1287,10 +1288,11 @@ struct TRmgTreasureGroup {
     TPoint m_guardPosition;                 // +0x4c
     // Map offset chosen when the group is committed.
     TRmgMapPosition m_position;             // +0x54
-    b8 m_ready;                  // +0x60, set after assembly
+    // Set by markPlacementOutline and cleared by reset; never read.
+    b8 m_outlineMarked;          // +0x60
 
     TRmgTreasureGroup(s32 width, s32 height)
-        : m_map(width, height, 1), m_hasGuard(false), m_ready(false)
+        : m_map(width, height, 1), m_hasGuard(false), m_outlineMarked(false)
     {
         reset();
     }
@@ -1369,7 +1371,7 @@ enum ERmgLinePattern {
 
 // Frames of one line pattern: first frame index and frame count.
 struct TRmgLinePatternRange {
-    u32 m_firstIndex;
+    u32 m_firstFrame;
     u32 m_frameCount;
 };
 SIZE(TRmgLinePatternRange, 0x8);

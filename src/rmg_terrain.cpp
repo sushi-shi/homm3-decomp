@@ -81,7 +81,7 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
     tile.getTile(current);
     if (table->m_framePatterns[current.getFrame()] != selected
         || current.getFlipX() != flipX || current.getFlipY() != flipY) {
-        current.m_frame = table->m_ranges[selected].m_firstIndex
+        current.m_frame = table->m_ranges[selected].m_firstFrame
             + rand() % table->m_ranges[selected].m_frameCount;
         current.m_flipX = flipX;
         current.m_flipY = flipY;
@@ -307,16 +307,16 @@ TRmgPatternTerrainRule::TRmgPatternTerrainRule(
     s32 transition = m_entries[0].m_transition;
     b8 special = m_entries[0].m_special;
     TRmgTerrainPatternRange* range = &getRange(transition, special);
-    ++range->m_count;
+    ++range->m_frameCount;
     for (u32 index = 1; index < m_entryCount; ++index) {
         const TRmgTerrainPatternEntry& entry = m_entries[index];
         if (entry.m_transition != transition || entry.m_special != special) {
             transition = entry.m_transition;
             special = entry.m_special;
             range = &getRange(transition, special);
-            range->m_firstIndex = index;
+            range->m_firstFrame = index;
         }
-        ++range->m_count;
+        ++range->m_frameCount;
     }
 }
 
@@ -324,7 +324,7 @@ VA(0x005b3840, 0x0c)
 MAC_ADDRESS(0x259dac, 0x14)
 b8 TRmgPatternTerrainRule::hasSpecialBaseFrames()
 {
-    return 0 < getRange(SHAPE_FILL, true).m_count;
+    return 0 < getRange(SHAPE_FILL, true).m_frameCount;
 }
 
 VA(0x005b3850, 0x07)
@@ -350,7 +350,7 @@ s32 TRmgPatternTerrainRule::getTransition(s32 frame)
 // Draws a random frame from a nonempty range (one rand() call, modulo bias).
 inline s32 TRmgTerrainPatternRange::selectFrame() const
 {
-    return rand() % m_count + m_firstIndex;
+    return rand() % m_frameCount + m_firstFrame;
 }
 
 // oldFrame value of a cell painted from scratch.
@@ -429,16 +429,16 @@ TRmgTerrainPatternTable::TRmgTerrainPatternTable()
     b8 flipY = g_rmgTerrainPatterns[0].m_flipY;
     TRmgTerrainPatternRange* range =
         &getRange(transition, flipX, flipY);
-    ++range->m_count;
+    ++range->m_frameCount;
     for (u32 index = 1; index < RMG_FIXED_TRANSITION_FRAME_COUNT; ++index) {
         if (!g_rmgTerrainPatterns[index].matches(transition, flipX, flipY)) {
             transition = g_rmgTerrainPatterns[index].m_transition;
             flipX = g_rmgTerrainPatterns[index].m_flipX;
             flipY = g_rmgTerrainPatterns[index].m_flipY;
             range = &getRange(transition, flipX, flipY);
-            range->m_firstIndex = index;
+            range->m_firstFrame = index;
         }
-        ++range->m_count;
+        ++range->m_frameCount;
     }
 }
 

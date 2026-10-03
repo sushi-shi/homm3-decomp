@@ -138,10 +138,10 @@ public:
 };
 
 struct TRmgTerrainPatternRange {
-    s32 m_firstIndex;
-    u32 m_count;
+    s32 m_firstFrame;
+    u32 m_frameCount;
 
-    TRmgTerrainPatternRange() : m_firstIndex(0), m_count(0) {}
+    TRmgTerrainPatternRange() : m_firstFrame(0), m_frameCount(0) {}
     s32 selectFrame() const;
 };
 
