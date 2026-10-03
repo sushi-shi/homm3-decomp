@@ -822,11 +822,9 @@ public:
     s32 m_unknown28;      // +0x28
 
     rmgMonsterObject(TRmgObjectPropertiesRef* properties, s32 objectId, s32 count)
-        : type_object(properties)
+        : type_object(properties), m_objectId(objectId), m_count(count),
+          m_disposition(RMG_GUARD_DISPOSITION)
     {
-        m_count = count;
-        m_disposition = RMG_GUARD_DISPOSITION;
-        m_objectId = objectId;
     }
     virtual void write(TAbstractFile* outputFile, s32 version);
 };
@@ -839,11 +837,10 @@ public:
     s32 m_player;
     b8 m_hasFort;
     rmgTownObject(TRmgObjectPropertiesRef* properties, s32 objectId,
-        s32 player, b8 hasFort) : type_object(properties)
+        s32 player, b8 hasFort)
+        : type_object(properties), m_objectId(objectId), m_player(player),
+          m_hasFort(hasFort)
     {
-        m_player = player;
-        m_hasFort = hasFort;
-        m_objectId = objectId;
     }
     virtual void write(TAbstractFile* outputFile, s32 version);
 };

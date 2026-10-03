@@ -1512,11 +1512,9 @@ rmgWitchHutObject::rmgWitchHutObject(TRmgObjectPropertiesRef* properties)
 }
 
 rmgBlackBoxObject::rmgBlackBoxObject(TRmgObjectPropertiesRef* properties)
-    : type_object(properties)
+    : type_object(properties), m_experience(0), m_creatureType(CREATURE_NONE),
+      m_creatureCount(0)
 {
-    m_creatureType = CREATURE_NONE;
-    m_creatureCount = 0;
-    m_experience = 0;
     memset(m_resources, 0, sizeof(m_resources));
 }
 
@@ -1616,14 +1614,10 @@ rmgArtifactObject::rmgArtifactObject(TRmgObjectPropertiesRef* properties)
 }
 
 rmgSeerHutObject::rmgSeerHutObject(TRmgObjectPropertiesRef* properties)
-    : type_object(properties)
+    : type_object(properties), m_artifact(ARTIFACT_NONE), m_experience(0),
+      m_resourceType(GOLD), m_resourceCount(0), m_creatureType(CREATURE_NONE),
+      m_creatureCount(0)
 {
-    m_experience = 0;
-    m_artifact = ARTIFACT_NONE;
-    m_resourceType = GOLD;
-    m_resourceCount = 0;
-    m_creatureType = CREATURE_NONE;
-    m_creatureCount = 0;
 }
 
 rmgQuestArtifactObject::rmgQuestArtifactObject(TRmgObjectPropertiesRef* properties,

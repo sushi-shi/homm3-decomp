@@ -219,6 +219,11 @@ following keeps only with a pointer here:
   that code runs after the connection paths are built. It kept
   `rmgTerrainPainter::getPaintTerrain` returning a reference: by value,
   `repairTerrainPoint`, which paints zone terrain earlier, compiled differently.
+- An eighth pass initialized the guard, town, Pandora's box and seer hut
+  objects in declaration order. Guards and towns are created before the
+  connection paths, but `createGuard` and `placeTownAtRandomCandidate` only
+  reorder equal-length heap stores; their frames, stack writes and call
+  addresses are unchanged.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every
