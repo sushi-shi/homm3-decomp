@@ -1533,8 +1533,8 @@ static inline void writeRmgMapPosition(
     writeValue<u8>(outputFile, position.m_z);
 }
 
-// Writes count zero bytes (at most 32). Kept a function argument; see
-// rmg-cleanup-review.md.
+// Writes count zero bytes (at most 32). count is an argument, not a template
+// parameter: VC6 merges function templates that differ only in such a value.
 static inline void writeRmgReservedBytes(TAbstractFile* outputFile, s32 count)
 {
     u8 reserved[32];
