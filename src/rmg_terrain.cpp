@@ -300,10 +300,10 @@ enum ERmgTerrainShape {
 };
 
 // Range key: transition, then the special flag (0/1).
-static inline TRmgTerrainPatternRange& getTerrainPatternRange(
-    TRmgPatternTerrainRule& rule, s32 transition, b8 special)
+inline TRmgTerrainPatternRange& TRmgPatternTerrainRule::getRange(
+    s32 transition, b8 special)
 {
-    return rule.m_ranges[transition * 2 + special];
+    return m_ranges[transition * 2 + special];
 }
 
 VA(0x005b3780, 0xb3)
@@ -316,14 +316,14 @@ TRmgPatternTerrainRule::TRmgPatternTerrainRule(
 {
     s32 transition = m_entries[0].m_transition;
     b8 special = m_entries[0].m_special;
-    TRmgTerrainPatternRange* range = &getTerrainPatternRange(*this, transition, special);
+    TRmgTerrainPatternRange* range = &getRange(transition, special);
     ++range->m_count;
     for (u32 index = 1; index < m_entryCount; ++index) {
         const TRmgTerrainPatternEntry& entry = m_entries[index];
         if (entry.m_transition != transition || entry.m_special != special) {
             transition = entry.m_transition;
             special = entry.m_special;
-            range = &getTerrainPatternRange(*this, transition, special);
+            range = &getRange(transition, special);
             range->m_firstIndex = index;
         }
         ++range->m_count;
@@ -334,7 +334,7 @@ VA(0x005b3840, 0x0c)
 MAC_ADDRESS(0x259dac, 0x14)
 b8 TRmgPatternTerrainRule::hasSpecialBaseFrames()
 {
-    return 0 < getTerrainPatternRange(*this, SHAPE_FILL, true).m_count;
+    return 0 < getRange(SHAPE_FILL, true).m_count;
 }
 
 VA(0x005b3850, 0x07)
@@ -388,7 +388,7 @@ s32 TRmgPatternTerrainRule::selectBaseFrame(s32 strength, s32 oldFrame)
                 / RMG_FULL_BRUSH_STRENGTH;
             special = static_cast<u32>(rand() % 100) < chancePercent;
         }
-        frame = selectTerrainRangeFrame(getTerrainPatternRange(*this, SHAPE_FILL, special));
+        frame = selectTerrainRangeFrame(getRange(SHAPE_FILL, special));
     }
     return frame;
 }
@@ -404,7 +404,7 @@ s32 TRmgPatternTerrainRule::selectTransitionFrame(
 {
     s32 frame = oldFrame;
     if (!matchesTerrainFrame(m_entries, oldFrame, transition)) {
-        frame = selectTerrainRangeFrame(getTerrainPatternRange(*this, transition, false));
+        frame = selectTerrainRangeFrame(getRange(transition, false));
     }
     selectedFlip = requestedFlip;
     return frame;
@@ -419,11 +419,10 @@ static inline bool matchesTerrainTransition(
 }
 
 // Range key: transition, then flipX, then flipY (each flip 0/1).
-static inline TRmgTerrainPatternRange& getTerrainTransitionRange(
-    TRmgTerrainPatternTable& table, s32 transition,
-    b8 flipX, b8 flipY)
+inline TRmgTerrainPatternRange& TRmgTerrainPatternTable::getRange(
+    s32 transition, b8 flipX, b8 flipY)
 {
-    return table.m_ranges[(transition * 2 + flipX) * 2 + flipY];
+    return m_ranges[(transition * 2 + flipX) * 2 + flipY];
 }
 
 // Frames in the fixed (rock) transition table.
@@ -442,14 +441,14 @@ TRmgTerrainPatternTable::TRmgTerrainPatternTable()
     b8 flipX = g_rmgTerrainPatterns[0].m_flipX;
     b8 flipY = g_rmgTerrainPatterns[0].m_flipY;
     TRmgTerrainPatternRange* range =
-        &getTerrainTransitionRange(*this, transition, flipX, flipY);
+        &getRange(transition, flipX, flipY);
     ++range->m_count;
     for (u32 index = 1; index < RMG_FIXED_TRANSITION_FRAME_COUNT; ++index) {
         if (!matchesTerrainTransition(g_rmgTerrainPatterns[index], transition, flipX, flipY)) {
             transition = g_rmgTerrainPatterns[index].m_transition;
             flipX = g_rmgTerrainPatterns[index].m_flipX;
             flipY = g_rmgTerrainPatterns[index].m_flipY;
-            range = &getTerrainTransitionRange(*this, transition, flipX, flipY);
+            range = &getRange(transition, flipX, flipY);
             range->m_firstIndex = index;
         }
         ++range->m_count;
@@ -484,8 +483,8 @@ s32 TRmgTableTerrainRule::selectBaseFrame(s32, s32 oldFrame)
 {
     s32 frame = oldFrame;
     if (!matchesTerrainFrame(g_rmgTerrainPatterns, oldFrame, SHAPE_FILL)) {
-        frame = selectTerrainRangeFrame(getTerrainTransitionRange(
-            g_rmgTerrainPatternRanges, SHAPE_FILL, false, false));
+        frame = selectTerrainRangeFrame(
+            g_rmgTerrainPatternRanges.getRange(SHAPE_FILL, false, false));
     }
     return frame;
 }
@@ -500,8 +499,8 @@ s32 TRmgTableTerrainRule::selectTransitionFrame(
     if (oldFrame == RMG_NO_TERRAIN_FRAME
         || !matchesTerrainTransition(g_rmgTerrainPatterns[oldFrame], transition,
                                      requestedFlip.m_flipX, requestedFlip.m_flipY)) {
-        TRmgTerrainPatternRange& range = getTerrainTransitionRange(
-            g_rmgTerrainPatternRanges, transition, requestedFlip.m_flipX, requestedFlip.m_flipY);
+        TRmgTerrainPatternRange& range = g_rmgTerrainPatternRanges.getRange(
+            transition, requestedFlip.m_flipX, requestedFlip.m_flipY);
         frame = selectTerrainRangeFrame(range);
     }
     selectedFlip = TRmgTerrainFlip(false, false);
@@ -917,31 +916,20 @@ enum ERmgNeighbourStep {
     RMG_STEP_SOUTH = 1
 };
 
-// A gap cell C has other terrain x on both sides along one axis. North is up:
-//   horizontal  vertical
-//                   x
-//     x C x         C
-//                   x
-enum TRmgTerrainGapAxis {
-    RMG_HORIZONTAL_GAP,
-    RMG_VERTICAL_GAP
-};
-
 // Painting beside a queued paint-terrain cell closes its gap on that axis.
 // Without a perpendicular gap it no longer needs primary repair; dequeue it
 // and queue its other-terrain neighbours instead.
-static inline void resolveQueuedTerrainGap(rmgTerrainPainter& painter,
-    const TRmgGridPoint& painted, s32 offsetX, s32 offsetY,
-    TRmgTerrainGapAxis closedAxis)
+inline void rmgTerrainPainter::resolveQueuedGap(const TRmgGridPoint& painted,
+    s32 offsetX, s32 offsetY, TRmgTerrainGapAxis closedAxis)
 {
     TRmgGridPoint point(painted.getX() + offsetX, painted.getY() + offsetY);
-    if (painter.m_primaryPoints.find(point) == painter.m_primaryPoints.end())
+    if (m_primaryPoints.find(point) == m_primaryPoints.end())
         return;
     b8 remainsGap = closedAxis == RMG_VERTICAL_GAP
-        ? painter.isHorizontalGap(point) : painter.isVerticalGap(point);
+        ? isHorizontalGap(point) : isVerticalGap(point);
     if (!remainsGap) {
-        painter.m_primaryPoints.erase(point);
-        painter.queueOtherTerrainNeighbours(point);
+        m_primaryPoints.erase(point);
+        queueOtherTerrainNeighbours(point);
     }
 }
 
@@ -956,16 +944,16 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 
     if (g_rmgTerrainRules[m_paintTerrain]->m_allowsSeparatedNeighbours) {
         if (point.m_y > 0)
-            resolveQueuedTerrainGap(*this, point, RMG_STEP_NONE, RMG_STEP_NORTH,
+            resolveQueuedGap(point, RMG_STEP_NONE, RMG_STEP_NORTH,
                 RMG_VERTICAL_GAP);
         if (point.m_y < m_size.m_y - 1)
-            resolveQueuedTerrainGap(*this, point, RMG_STEP_NONE, RMG_STEP_SOUTH,
+            resolveQueuedGap(point, RMG_STEP_NONE, RMG_STEP_SOUTH,
                 RMG_VERTICAL_GAP);
         if (point.m_x > 0)
-            resolveQueuedTerrainGap(*this, point, RMG_STEP_WEST, RMG_STEP_NONE,
+            resolveQueuedGap(point, RMG_STEP_WEST, RMG_STEP_NONE,
                 RMG_HORIZONTAL_GAP);
         if (point.m_x < m_size.m_x - 1)
-            resolveQueuedTerrainGap(*this, point, RMG_STEP_EAST, RMG_STEP_NONE,
+            resolveQueuedGap(point, RMG_STEP_EAST, RMG_STEP_NONE,
                 RMG_HORIZONTAL_GAP);
     } else {
         b8 neighbourExists[TILE_DIR_COUNT];
@@ -996,24 +984,24 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 
 // Other-terrain diagonal neighbours are queued only when their own terrain
 // requires connected neighbours.
-static inline void queueOtherTerrainDiagonalNeighbour(rmgTerrainPainter& painter,
+inline void rmgTerrainPainter::queueOtherTerrainDiagonalNeighbour(
     const TRmgGridPoint& point, s32 offsetX, s32 offsetY)
 {
     TRmgGridPoint neighbour(point.getX() + offsetX, point.getY() + offsetY);
-    s32 terrain = painter.getTerrain(neighbour);
-    if (terrain != painter.m_paintTerrain
+    s32 terrain = getTerrain(neighbour);
+    if (terrain != m_paintTerrain
         && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
-        painter.m_secondaryPoints.insert(neighbour);
+        m_secondaryPoints.insert(neighbour);
 }
 
 // Queues one cardinal neighbour of other terrain; returns whether it did.
-static inline bool tryQueueOtherTerrainCardinalNeighbour(rmgTerrainPainter& painter,
+inline bool rmgTerrainPainter::tryQueueOtherTerrainCardinalNeighbour(
     const TRmgGridPoint& point, s32 offsetX, s32 offsetY)
 {
     TRmgGridPoint neighbour(point.getX() + offsetX, point.getY() + offsetY);
-    if (painter.isPaintTerrain(neighbour))
+    if (isPaintTerrain(neighbour))
         return false;
-    painter.m_secondaryPoints.insert(neighbour);
+    m_secondaryPoints.insert(neighbour);
     return true;
 }
 
@@ -1024,21 +1012,21 @@ void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
     // At most one neighbour per cardinal axis, preferring north over south
     // and west over east.
     bool queuedNorth = point.getY() > 0
-        && tryQueueOtherTerrainCardinalNeighbour(*this, point, RMG_STEP_NONE, RMG_STEP_NORTH);
+        && tryQueueOtherTerrainCardinalNeighbour(point, RMG_STEP_NONE, RMG_STEP_NORTH);
     if (!queuedNorth && point.getY() < getHeight() - 1)
-        tryQueueOtherTerrainCardinalNeighbour(*this, point, RMG_STEP_NONE, RMG_STEP_SOUTH);
+        tryQueueOtherTerrainCardinalNeighbour(point, RMG_STEP_NONE, RMG_STEP_SOUTH);
     bool queuedWest = point.getX() > 0
-        && tryQueueOtherTerrainCardinalNeighbour(*this, point, RMG_STEP_WEST, RMG_STEP_NONE);
+        && tryQueueOtherTerrainCardinalNeighbour(point, RMG_STEP_WEST, RMG_STEP_NONE);
     if (!queuedWest && point.getX() < getWidth() - 1)
-        tryQueueOtherTerrainCardinalNeighbour(*this, point, RMG_STEP_EAST, RMG_STEP_NONE);
+        tryQueueOtherTerrainCardinalNeighbour(point, RMG_STEP_EAST, RMG_STEP_NONE);
     if (point.getX() > 0 && point.getY() > 0)
-        queueOtherTerrainDiagonalNeighbour(*this, point, RMG_STEP_WEST, RMG_STEP_NORTH);
+        queueOtherTerrainDiagonalNeighbour(point, RMG_STEP_WEST, RMG_STEP_NORTH);
     if (point.getX() < getWidth() - 1 && point.getY() > 0)
-        queueOtherTerrainDiagonalNeighbour(*this, point, RMG_STEP_EAST, RMG_STEP_NORTH);
+        queueOtherTerrainDiagonalNeighbour(point, RMG_STEP_EAST, RMG_STEP_NORTH);
     if (point.getX() > 0 && point.getY() < getHeight() - 1)
-        queueOtherTerrainDiagonalNeighbour(*this, point, RMG_STEP_WEST, RMG_STEP_SOUTH);
+        queueOtherTerrainDiagonalNeighbour(point, RMG_STEP_WEST, RMG_STEP_SOUTH);
     if (point.getX() < getWidth() - 1 && point.getY() < getHeight() - 1)
-        queueOtherTerrainDiagonalNeighbour(*this, point, RMG_STEP_EAST, RMG_STEP_SOUTH);
+        queueOtherTerrainDiagonalNeighbour(point, RMG_STEP_EAST, RMG_STEP_SOUTH);
 }
 
 b8 rmgTerrainPainter::isHorizontalGap(const TRmgGridPoint& point)
@@ -1063,23 +1051,22 @@ b8 rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // Fill one side of an axis gap: the negative side, unless it needs no repair
 // and either the positive side does or only the negative side has a
 // perpendicular gap in the paint terrain.
-static inline void repairTerrainGap(rmgTerrainPainter& painter,
-    const TRmgGridPoint& negative, const TRmgGridPoint& positive,
-    TRmgTerrainGapAxis axis)
+inline void rmgTerrainPainter::repairTerrainGap(const TRmgGridPoint& negative,
+    const TRmgGridPoint& positive, TRmgTerrainGapAxis axis)
 {
     bool fillPositive = false;
-    if (!painter.needsTerrainRepair(negative)) {
-        if (painter.needsTerrainRepair(positive)) {
+    if (!needsTerrainRepair(negative)) {
+        if (needsTerrainRepair(positive)) {
             fillPositive = true;
         } else if (axis == RMG_VERTICAL_GAP) {
-            fillPositive = painter.isHorizontalGap(negative, painter.getPaintTerrain())
-                && !painter.isHorizontalGap(positive, painter.getPaintTerrain());
+            fillPositive = isHorizontalGap(negative, getPaintTerrain())
+                && !isHorizontalGap(positive, getPaintTerrain());
         } else {
-            fillPositive = painter.isVerticalGap(negative, painter.getPaintTerrain())
-                && !painter.isVerticalGap(positive, painter.getPaintTerrain());
+            fillPositive = isVerticalGap(negative, getPaintTerrain())
+                && !isVerticalGap(positive, getPaintTerrain());
         }
     }
-    painter.paintPoint(fillPositive ? positive : negative);
+    paintPoint(fillPositive ? positive : negative);
 }
 
 // Repair one-cell gaps. Then, if the paint terrain needs connected neighbours
@@ -1091,11 +1078,11 @@ MAC_ADDRESS(0x256be4, 0x630)
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
     if (isVerticalGap(point)) {
-        repairTerrainGap(*this, TRmgGridPoint(point.m_x, point.m_y - 1),
+        repairTerrainGap(TRmgGridPoint(point.m_x, point.m_y - 1),
             TRmgGridPoint(point.m_x, point.m_y + 1), RMG_VERTICAL_GAP);
     }
     if (isHorizontalGap(point)) {
-        repairTerrainGap(*this, TRmgGridPoint(point.m_x - 1, point.m_y),
+        repairTerrainGap(TRmgGridPoint(point.m_x - 1, point.m_y),
             TRmgGridPoint(point.m_x + 1, point.m_y), RMG_HORIZONTAL_GAP);
     }
 
@@ -1154,14 +1141,13 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 }
 
 // Count the terrain boundary toward one neighbour, adding it to both cells.
-static inline void countTerrainBoundary(
-    rmgTerrainPainter& painter, const TRmgGridPoint& point, u32 direction,
-    s32 terrain, std::vector<u8>& edgeCounts)
+inline void rmgTerrainPainter::countTerrainBoundary(const TRmgGridPoint& point,
+    u32 direction, s32 terrain, std::vector<u8>& edgeCounts)
 {
     TRmgGridPoint neighbour(point + g_tileDirections[direction]);
-    if (painter.getTerrain(neighbour) != terrain) {
-        ++edgeCounts[point.getY() * painter.getWidth() + point.getX()];
-        ++edgeCounts[neighbour.getY() * painter.getWidth() + neighbour.getX()];
+    if (getTerrain(neighbour) != terrain) {
+        ++edgeCounts[point.getY() * getWidth() + point.getX()];
+        ++edgeCounts[neighbour.getY() * getWidth() + neighbour.getX()];
     }
 }
 
@@ -1187,7 +1173,7 @@ void rmgTerrainPainter::paintTransitions()
                                    neighbourExists);
             for (u32 direction = TILE_DIR_EAST; direction <= TILE_DIR_SOUTHWEST; ++direction) {
                 if (neighbourExists[direction])
-                    countTerrainBoundary(*this, point, direction, terrain, edgeCounts);
+                    countTerrainBoundary(point, direction, terrain, edgeCounts);
             }
         }
     }
@@ -1270,20 +1256,19 @@ static inline void getTerrainNeighbourBounds(const TRmgGridPoint& point,
     southEast = TRmgGridPoint(east, south);
 }
 
-static inline bool matchesTerrainAt(rmgTerrainPainter& painter,
-    u32 x, u32 y, s32 terrain)
+inline bool rmgTerrainPainter::matchesTerrainAt(u32 x, u32 y, s32 terrain)
 {
     TRmgGridPoint nearby;
     nearby.setX(x);
     nearby.setY(y);
-    return painter.getTerrain(nearby) == terrain;
+    return getTerrain(nearby) == terrain;
 }
 
 // A diagonal neighbour matches only beside a matching cardinal neighbour.
-static inline bool matchesTerrainCorner(rmgTerrainPainter& painter,
+inline bool rmgTerrainPainter::matchesTerrainCorner(
     b8 firstSide, b8 secondSide, u32 x, u32 y, s32 terrain)
 {
-    return (firstSide || secondSide) && matchesTerrainAt(painter, x, y, terrain);
+    return (firstSide || secondSide) && matchesTerrainAt(x, y, terrain);
 }
 
 // Neighbour coordinates are clamped to the map edge.
@@ -1297,17 +1282,17 @@ void rmgTerrainPainter::buildMatchingNeighbourMask(
     TRmgGridPoint southEast;
     getTerrainNeighbourBounds(point, m_size, northWest, southEast);
 
-    matches[TILE_DIR_NORTH] = matchesTerrainAt(*this, point.m_x, northWest.getY(), terrain);
-    matches[TILE_DIR_SOUTH] = matchesTerrainAt(*this, point.m_x, southEast.getY(), terrain);
-    matches[TILE_DIR_WEST] = matchesTerrainAt(*this, northWest.getX(), point.m_y, terrain);
-    matches[TILE_DIR_EAST] = matchesTerrainAt(*this, southEast.getX(), point.m_y, terrain);
-    matches[TILE_DIR_NORTHWEST] = matchesTerrainCorner(*this, matches[TILE_DIR_NORTH],
+    matches[TILE_DIR_NORTH] = matchesTerrainAt(point.m_x, northWest.getY(), terrain);
+    matches[TILE_DIR_SOUTH] = matchesTerrainAt(point.m_x, southEast.getY(), terrain);
+    matches[TILE_DIR_WEST] = matchesTerrainAt(northWest.getX(), point.m_y, terrain);
+    matches[TILE_DIR_EAST] = matchesTerrainAt(southEast.getX(), point.m_y, terrain);
+    matches[TILE_DIR_NORTHWEST] = matchesTerrainCorner(matches[TILE_DIR_NORTH],
         matches[TILE_DIR_WEST], northWest.getX(), northWest.getY(), terrain);
-    matches[TILE_DIR_NORTHEAST] = matchesTerrainCorner(*this, matches[TILE_DIR_NORTH],
+    matches[TILE_DIR_NORTHEAST] = matchesTerrainCorner(matches[TILE_DIR_NORTH],
         matches[TILE_DIR_EAST], southEast.getX(), northWest.getY(), terrain);
-    matches[TILE_DIR_SOUTHWEST] = matchesTerrainCorner(*this, matches[TILE_DIR_SOUTH],
+    matches[TILE_DIR_SOUTHWEST] = matchesTerrainCorner(matches[TILE_DIR_SOUTH],
         matches[TILE_DIR_WEST], northWest.getX(), southEast.getY(), terrain);
-    matches[TILE_DIR_SOUTHEAST] = matchesTerrainCorner(*this, matches[TILE_DIR_SOUTH],
+    matches[TILE_DIR_SOUTHEAST] = matchesTerrainCorner(matches[TILE_DIR_SOUTH],
         matches[TILE_DIR_EAST], southEast.getX(), southEast.getY(), terrain);
 }
 
@@ -1348,10 +1333,10 @@ b8 rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
         && advanceToMatchState(matches, direction, first, true);
 }
 
-static inline s32 getTerrainNeighbourKindAt(
-    rmgTerrainPainter& painter, const TRmgGridPoint& neighbour, s32 terrain)
+inline s32 rmgTerrainPainter::getTerrainNeighbourKindAt(
+    const TRmgGridPoint& neighbour, s32 terrain)
 {
-    s32 neighbourTerrain = painter.getTerrain(neighbour);
+    s32 neighbourTerrain = getTerrain(neighbour);
     return getRmgTerrainNeighbourKind(terrain, neighbourTerrain);
 }
 
@@ -1366,33 +1351,33 @@ void rmgTerrainPainter::buildNeighbourKinds(
     getTerrainNeighbourBounds(point, m_size, northWest, southEast);
 
     neighbours[TILE_DIR_NORTH] = getTerrainNeighbourKindAt(
-        *this, TRmgGridPoint(point.m_x, northWest.getY()), terrain);
+        TRmgGridPoint(point.m_x, northWest.getY()), terrain);
     neighbours[TILE_DIR_SOUTH] = getTerrainNeighbourKindAt(
-        *this, TRmgGridPoint(point.m_x, southEast.getY()), terrain);
+        TRmgGridPoint(point.m_x, southEast.getY()), terrain);
     neighbours[TILE_DIR_WEST] = getTerrainNeighbourKindAt(
-        *this, TRmgGridPoint(northWest.getX(), point.m_y), terrain);
+        TRmgGridPoint(northWest.getX(), point.m_y), terrain);
     neighbours[TILE_DIR_EAST] = getTerrainNeighbourKindAt(
-        *this, TRmgGridPoint(southEast.getX(), point.m_y), terrain);
+        TRmgGridPoint(southEast.getX(), point.m_y), terrain);
     neighbours[TILE_DIR_NORTHWEST] = getTerrainNeighbourKindAt(
-        *this, TRmgGridPoint(northWest.getX(), northWest.getY()), terrain);
+        TRmgGridPoint(northWest.getX(), northWest.getY()), terrain);
     neighbours[TILE_DIR_NORTHEAST] = getTerrainNeighbourKindAt(
-        *this, TRmgGridPoint(southEast.getX(), northWest.getY()), terrain);
+        TRmgGridPoint(southEast.getX(), northWest.getY()), terrain);
     neighbours[TILE_DIR_SOUTHWEST] = getTerrainNeighbourKindAt(
-        *this, TRmgGridPoint(northWest.getX(), southEast.getY()), terrain);
+        TRmgGridPoint(northWest.getX(), southEast.getY()), terrain);
     neighbours[TILE_DIR_SOUTHEAST] = getTerrainNeighbourKindAt(
-        *this, TRmgGridPoint(southEast.getX(), southEast.getY()), terrain);
+        TRmgGridPoint(southEast.getX(), southEast.getY()), terrain);
 }
 
 // Compares terrain at a reflected offset, clamped to the map edge.
-static inline bool matchesTerrainAtClampedOffset(rmgTerrainPainter& painter,
+inline bool rmgTerrainPainter::matchesTerrainAtClampedOffset(
     const TRmgGridPoint& point, const TPoint& offset, s32 terrain)
 {
     TRmgGridPoint nearby(
         tLimit(0, static_cast<s32>(point.getX()) + offset.getX(),
-            static_cast<s32>(painter.getWidth()) - 1),
+            static_cast<s32>(getWidth()) - 1),
         tLimit(0, static_cast<s32>(point.getY()) + offset.getY(),
-            static_cast<s32>(painter.getHeight()) - 1));
-    return painter.getTerrain(nearby) == terrain;
+            static_cast<s32>(getHeight()) - 1));
+    return getTerrain(nearby) == terrain;
 }
 
 // Row of a reflection in the corner probe tables: flipX + 2 * flipY.
@@ -1424,8 +1409,8 @@ b8 rmgTerrainPainter::isOuterCornerOnDiagonalEdge(
     };
     s32 terrain = getTerrain(point);
     const TPoint* pair = outerCornerProbeOffsets[getTerrainFlipIndex(flip)];
-    return matchesTerrainAtClampedOffset(*this, point, pair[0], terrain)
-        || matchesTerrainAtClampedOffset(*this, point, pair[1], terrain);
+    return matchesTerrainAtClampedOffset(point, pair[0], terrain)
+        || matchesTerrainAtClampedOffset(point, pair[1], terrain);
 }
 
 // An inner corner lies on a 45-degree edge when the cell two steps along
@@ -1448,19 +1433,19 @@ b8 rmgTerrainPainter::isInnerCornerOnDiagonalEdge(
     };
     s32 terrain = getTerrain(point);
     const TPoint& offset = innerCornerProbeOffsets[getTerrainFlipIndex(flip)];
-    return !matchesTerrainAtClampedOffset(*this, point, TPoint(offset.getX(), 0), terrain)
-        || !matchesTerrainAtClampedOffset(*this, point, TPoint(0, offset.getY()), terrain);
+    return !matchesTerrainAtClampedOffset(point, TPoint(offset.getX(), 0), terrain)
+        || !matchesTerrainAtClampedOffset(point, TPoint(0, offset.getY()), terrain);
 }
 
 // Each same-terrain cardinal neighbour showing a special frame halves the
 // special-frame strength.
-static inline bool hasSpecialTerrainFrameAt(rmgTerrainPainter& painter,
+inline bool rmgTerrainPainter::hasSpecialTerrainFrameAt(
     const TRmgGridPoint& point, s32 offsetX, s32 offsetY, s32 terrain,
     TRmgTerrainRule* rule)
 {
     TRmgGridPoint nearby(point.getX() + offsetX, point.getY() + offsetY);
-    return painter.getTerrain(nearby) == terrain
-        && rule->isSpecialFrame(painter.getFrame(nearby));
+    return getTerrain(nearby) == terrain
+        && rule->isSpecialFrame(getFrame(nearby));
 }
 
 VA(0x005b6fd0, 0x271)
@@ -1470,16 +1455,16 @@ s32 rmgTerrainPainter::getSpecialFrameStrength(
 {
     u32 strength = m_specialFrameStrength;
     TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
-    if (point.getX() > 0 && hasSpecialTerrainFrameAt(*this, point,
+    if (point.getX() > 0 && hasSpecialTerrainFrameAt(point,
             RMG_STEP_WEST, RMG_STEP_NONE, terrain, rule))
         strength /= 2;
-    if (point.getY() > 0 && hasSpecialTerrainFrameAt(*this, point,
+    if (point.getY() > 0 && hasSpecialTerrainFrameAt(point,
             RMG_STEP_NONE, RMG_STEP_NORTH, terrain, rule))
         strength /= 2;
-    if (point.getX() < getWidth() - 1 && hasSpecialTerrainFrameAt(*this, point,
+    if (point.getX() < getWidth() - 1 && hasSpecialTerrainFrameAt(point,
             RMG_STEP_EAST, RMG_STEP_NONE, terrain, rule))
         strength /= 2;
-    if (point.getY() < getHeight() - 1 && hasSpecialTerrainFrameAt(*this, point,
+    if (point.getY() < getHeight() - 1 && hasSpecialTerrainFrameAt(point,
             RMG_STEP_NONE, RMG_STEP_SOUTH, terrain, rule))
         strength /= 2;
     return strength;

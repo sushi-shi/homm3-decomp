@@ -163,6 +163,7 @@ extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
 struct TRmgTerrainPatternTable {
     TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT * 2 * 2];
     TRmgTerrainPatternTable();
+    TRmgTerrainPatternRange& getRange(s32 transition, b8 flipX, b8 flipY);
 };
 DATA(0x006a4158)
 extern TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
@@ -179,6 +180,7 @@ public:
     TRmgPatternTerrainRule(b8 blendsWithOtherTerrain,
         b8 allowsSeparatedNeighbours, s32 specialFrameChance,
         u32 entryCount, const TRmgTerrainPatternEntry* entries);
+    TRmgTerrainPatternRange& getRange(s32 transition, b8 special);
 
     virtual b8 hasSpecialBaseFrames();
     virtual b8 isSpecialFrame(s32 frame);
@@ -216,6 +218,16 @@ struct TRmgTerrainGap {
     u32 m_weight;
     u32 m_start;
     u32 m_length;
+};
+
+// A gap cell C has other terrain x on both sides along one axis. North is up:
+//   horizontal  vertical
+//                   x
+//     x C x         C
+//                   x
+enum TRmgTerrainGapAxis {
+    RMG_HORIZONTAL_GAP,
+    RMG_VERTICAL_GAP
 };
 
 class rmgTerrainPainter {
@@ -257,22 +269,40 @@ public:
     b8 isPaintTerrain(const TRmgGridPoint& point);
 
     void paintPoint(const TRmgGridPoint& point);
+    void resolveQueuedGap(const TRmgGridPoint& painted,
+        s32 offsetX, s32 offsetY, TRmgTerrainGapAxis closedAxis);
     void queueOtherTerrainNeighbours(const TRmgGridPoint& point);
+    void queueOtherTerrainDiagonalNeighbour(
+        const TRmgGridPoint& point, s32 offsetX, s32 offsetY);
+    bool tryQueueOtherTerrainCardinalNeighbour(
+        const TRmgGridPoint& point, s32 offsetX, s32 offsetY);
     void repairTerrainPoint(const TRmgGridPoint& point);
+    void repairTerrainGap(const TRmgGridPoint& negative,
+        const TRmgGridPoint& positive, TRmgTerrainGapAxis axis);
+    void countTerrainBoundary(const TRmgGridPoint& point, u32 direction,
+        s32 terrain, std::vector<u8>& edgeCounts);
     b8 isHorizontalGap(const TRmgGridPoint& point, s32 terrain);
     b8 isVerticalGap(const TRmgGridPoint& point, s32 terrain);
     b8 isHorizontalGap(const TRmgGridPoint& point);
     b8 isVerticalGap(const TRmgGridPoint& point);
     b8 needsTerrainRepair(const TRmgGridPoint& point);
     b8 hasSeparatedNeighbours(const TRmgGridPoint& point);
+    bool matchesTerrainAt(u32 x, u32 y, s32 terrain);
+    bool matchesTerrainCorner(b8 firstSide, b8 secondSide,
+        u32 x, u32 y, s32 terrain);
     void buildMatchingNeighbourMask(
         const TRmgGridPoint& point, b8* matches);
 
+    s32 getTerrainNeighbourKindAt(const TRmgGridPoint& neighbour, s32 terrain);
     void buildNeighbourKinds(const TRmgGridPoint& point, s32* neighbours);
+    bool matchesTerrainAtClampedOffset(
+        const TRmgGridPoint& point, const TPoint& offset, s32 terrain);
     b8 isOuterCornerOnDiagonalEdge(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
     b8 isInnerCornerOnDiagonalEdge(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
+    bool hasSpecialTerrainFrameAt(const TRmgGridPoint& point,
+        s32 offsetX, s32 offsetY, s32 terrain, TRmgTerrainRule* rule);
     s32 getSpecialFrameStrength(const TRmgGridPoint& point, s32 terrain);
 };
 
