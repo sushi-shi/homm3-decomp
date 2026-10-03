@@ -171,20 +171,6 @@ TRmgLinePatternTable* TRmgRiverLinePainter::getPattern(s32)
     return &g_rmgRiverPatternTable;
 }
 
-template<class Adapter>
-static inline void writeRmgLineTileSnapshot(Adapter* adapter,
-    const TRmgGridPoint& point, const rmgTerrainTile& tile)
-{
-    adapter->setTile(point, tile);
-}
-
-template<class Adapter>
-static inline void readRmgLineTileSnapshot(Adapter* adapter,
-    const TRmgGridPoint& point, rmgTerrainTile& tile)
-{
-    tile = adapter->getTile(point);
-}
-
 // Roads and rivers cannot be painted over water or rock terrain.
 template<class Adapter>
 static inline b32 isRmgLinePaintingBlocked(Adapter* adapter,
@@ -198,7 +184,7 @@ VA(0x0055edc0, 0x36)
 MAC_ADDRESS(0x253ae0, 0x54)
 void TRmgRiverLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
-    writeRmgLineTileSnapshot(m_adapter, point, tile);
+    m_adapter->setTile(point, tile);
 }
 
 MAC_ADDRESS(0x253b34, 0x30)
@@ -210,7 +196,7 @@ void TRmgRiverLinePainter::setLineType(const TRmgGridPoint& point, s32 value)
 MAC_ADDRESS(0x253ba8, 0x88)
 void TRmgRiverLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
 {
-    readRmgLineTileSnapshot(m_adapter, point, tile);
+    tile = m_adapter->getTile(point);
 }
 
 VA(0x0055ee00, 0x28)
@@ -250,7 +236,7 @@ TRmgLinePatternTable* TRmgRoadLinePainter::getPattern(s32)
 MAC_ADDRESS(0x253fc8, 0x54)
 void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
-    writeRmgLineTileSnapshot(m_adapter, point, tile);
+    m_adapter->setTile(point, tile);
 }
 
 MAC_ADDRESS(0x25404c, 0x44)
@@ -270,7 +256,7 @@ VA(0x0055f350, 0x34)
 MAC_ADDRESS(0x254090, 0x88)
 void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
 {
-    readRmgLineTileSnapshot(m_adapter, point, tile);
+    tile = m_adapter->getTile(point);
 }
 
 VA(0x0055f390, 0x13)

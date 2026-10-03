@@ -7727,9 +7727,9 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     b8 sourceIsSnow;
     s32 riverType;
     selectRmgRiverAppearance(mapItem, sourceIsSnow, riverType);
-    TRmgMapPosition position;
     TRmgMapPosition nextPosition;
     while (!openPositions.empty()) {
+        TRmgMapPosition position;
         popRmgWorkItem(position, openPositions, openCosts);
         mapItem = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
         s32 positionCost = mapItem->m_movement.m_cost;
@@ -7762,7 +7762,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     TRmgRiverPainter riverPainter(
         &mapAdapter, riverType, TRmgGridPoint(nextPosition.m_x, nextPosition.m_y));
     while (mapItem->m_movement.m_cost > 0) {
-        position = mapItem->m_previousTile;
+        TRmgMapPosition position = mapItem->m_previousTile;
         mapItem = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
         riverPainter.drawTo(TRmgGridPoint(position.m_x, position.m_y));
     }
@@ -7885,10 +7885,10 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     m_map.seedMovementSearch(source + TPoint(0, -1), openPositions, openCosts);
     m_map.seedMovementSearch(source + TPoint(1, -1), openPositions, openCosts);
 
-    TRmgMapPosition position;
     TRmgMapPosition nextPosition;
 
     while (!openPositions.empty()) {
+        TRmgMapPosition position;
         popRmgWorkItem(position, openPositions, openCosts);
 
         mapItem = m_map.getMapItem(position);
@@ -7990,7 +7990,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     }
 
     while (mapItem->m_movement.m_cost > 0) {
-        position = mapItem->m_previousTile;
+        TRmgMapPosition position = mapItem->m_previousTile;
         mapItem = m_map.getMapItem(position);
         mapItem->m_tileData.m_riverTarget = true;
         riverPainter.drawTo(TRmgGridPoint(position.m_x, position.m_y));

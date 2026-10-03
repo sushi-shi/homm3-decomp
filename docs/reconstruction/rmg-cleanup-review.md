@@ -286,6 +286,12 @@ following keeps only with a pointer here:
   layouts changed. It kept the treasure definitions' constructor-body stores:
   as member initializers, `initializeObjectGenerators` stores the fields
   before the vtable pointer.
+- A seventeenth pass inlined the one-line tile read and write forwarders
+  into the road and river painters, dropped `selectRmgLinePattern`'s
+  single-caller overload that only returned the pattern instead of writing
+  it, and gave `createRiver` and `createRiverToObject` separate search and
+  trace positions instead of reusing one. All of it runs after the
+  connection paths; only `refreshRmgLinePoint`'s frame changed.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every

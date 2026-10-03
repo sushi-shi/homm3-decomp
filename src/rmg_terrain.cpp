@@ -49,15 +49,6 @@ TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGrid
 {
 }
 
-s32 selectRmgLinePattern(
-    const b8* neighbours, const TRmgLinePatternTable* table,
-    b8& flipX, b8& flipY)
-{
-    s32 pattern;
-    selectRmgLinePattern(neighbours, table, pattern, flipX, flipY);
-    return pattern;
-}
-
 // Marks each on-map neighbour that carries the same line type.
 static inline void buildMatchingLineNeighbourMask(
     TRmgLinePainterInterface* painter, const TRmgGridPoint& point,
@@ -83,8 +74,9 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
     b8 matches[TILE_DIR_COUNT];
     buildMatchingLineNeighbourMask(painter, point, lineType, matches);
     TRmgLinePatternTable* table = painter->getPattern(lineType);
+    s32 selected;
     b8 flipX, flipY;
-    s32 selected = selectRmgLinePattern(matches, table, flipX, flipY);
+    selectRmgLinePattern(matches, table, selected, flipX, flipY);
     rmgTerrainTile current;
     tile.getTile(current);
     if (table->m_framePatterns[current.getFrame()] != selected
