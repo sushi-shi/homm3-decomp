@@ -3732,13 +3732,16 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     getInitialZoneBounds(minimumY, minimumX, maximumY, maximumX);
     int span = max(maximumY - minimumY, maximumX - minimumX);
     int size = max(m_map.m_mapWidth, m_map.m_mapHeight);
-    int originY = (minimumY - span + maximumY) / 2;
-    int originX = (minimumX - span + maximumX) / 2;
+    // The bounds minimum becomes the square's origin in place. This frame's
+    // stack residue reaches buildZoneBoundaries' uninitialized testSlot town
+    // flags (retail bug), so extra locals here change generated maps.
+    minimumY = (minimumY - span + maximumY) / 2;
+    minimumX = (minimumX - span + maximumX) / 2;
     for (int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
         TRmgMapPosition position = zone->getLevelPosition();
-        position.m_x = (position.m_x - originX) * size / span;
-        position.m_y = (position.m_y - originY) * size / span;
+        position.m_x = (position.m_x - minimumX) * size / span;
+        position.m_y = (position.m_y - minimumY) * size / span;
         zone->setLevelPosition(position);
         zone->m_scaledSize = zone->m_templateZone->m_size * size / span;
         zone->chooseTerrain();
