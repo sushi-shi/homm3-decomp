@@ -238,7 +238,7 @@ body; no incomplete-prototype asset set was executed during the review.
 The RoE exclusion has a distinct compatibility quirk: it clears entries
 144..118, evaluates eligibility for 116..0, then selects across 144..0. Slot 117
 retains its loaded prototype without the eligibility test. The source constants
-`RMG_GUARD_ROE_EXCLUDED_FIRST` and `RMG_GUARD_ROE_CREATURE_LIMIT` deliberately
+`RMG_ROE_CREATURE_TYPE_COUNT` and `RMG_GUARD_ROE_CREATURE_LIMIT` deliberately
 represent these different boundaries. Do not merge them or add prototype
 presence to eligibility while doing source cleanup.
 
@@ -336,6 +336,9 @@ Other preserved behavior defects, separate from undefined behavior:
   inequality terms make it true for every choice. It therefore counts all four
   entries, including sentinels, rather than stopping at the sentinel or
   excluding Conflux. Preserve the expression and its RNG behavior.
+- On RoE maps `readRmgTemplateZones` clears `m_allowedMonsters[TOWN_CONFLUX]`.
+  `createGuard` indexes that array by town type + 1 (neutral at 0), so this
+  slot is Fortress; Conflux guards stay allowed. Preserve the index.
 - `filterZonePositions` accepts the candidate found on an unused level only
   when its index is greater than zero, so a suitable candidate at index zero is
   ignored. Changing to a nonnegative test changes selection and subsequent RNG.

@@ -358,6 +358,11 @@ TRmgMapItem::TRmgMapItem()
 VA_COMPGEN(0x00530EE0, 0x26, IMPLICIT_DTOR, TRmgMapItem)
 MAC_COMPGEN_ADDRESS(0x22d02c, 0x84, IMPLICIT_DTOR, TRmgMapItem)
 
+// First plain (shape 0) water frame.
+enum ERmgWaterFrames {
+    RMG_WATER_BASE_FRAME = 21
+};
+
 // Resets the cell to empty water; the previous-tile Y/Z are left unchanged.
 VA(0x00530F10, 0x6F)
 MAC_ADDRESS(0x22d110, 0x15c)
@@ -369,7 +374,7 @@ void TRmgMapItem::clear()
 
     connection.m_present = false;
     m_tile.m_landType = eTerrainWater;
-    m_tile.m_terrainFrame = 21;
+    m_tile.m_terrainFrame = RMG_WATER_BASE_FRAME;
     m_tile.m_riverType = 0;
     m_tile.m_riverFrame = 0;
     m_tile.m_roadType = 0;
@@ -1126,7 +1131,8 @@ void TRmgZone::chooseTownType(b8 expanded)
 static inline bool isRmgZoneTerrainAllowed(const TRmgZone& zone, int terrain)
 {
     return zone.m_templateZone->m_allowedTerrain[terrain]
-        && (terrain != eTerrainSubterranean || zone.m_levelPosition.m_z == 1);
+        && (terrain != eTerrainSubterranean
+            || zone.m_levelPosition.m_z == RMG_UNDERGROUND_LEVEL);
 }
 
 VA(0x00532AB0, 0x96)
@@ -1155,7 +1161,7 @@ void TRmgZone::chooseTerrain()
             m_terrain = terrain;
         }
     }
-    if (m_levelPosition.m_z == 1 && m_terrain != eTerrainLava)
+    if (m_levelPosition.m_z == RMG_UNDERGROUND_LEVEL && m_terrain != eTerrainLava)
         m_terrain = eTerrainSubterranean;
 }
 
@@ -2319,16 +2325,10 @@ b8 TRmgTreasureGroup::tryAddObject(type_object* object)
         type_object* existing = m_objects[index];
         TObjectType* existingPrototype = existing->m_properties->m_prototype;
         TRmgMapPosition entrance = getRmgPlacedObjectEntrance(existing);
-        int endDirection;
-        int firstDirection;
-        if (isRmgEntranceOpenToNorth(existingPrototype->getObjectType())) {
-            endDirection = RMG_DIRECTION_COUNT;
-            firstDirection = RMG_DIRECTION_EAST;
-        } else {
-            endDirection = RMG_DIRECTION_SOUTH_WEST + 1;
-            firstDirection = RMG_DIRECTION_SOUTH_EAST;
-        }
-        for (int direction = endDirection; direction-- > firstDirection; ) {
+        b8 openToNorth = isRmgEntranceOpenToNorth(existingPrototype->getObjectType());
+        for (int direction = RMG_DIRECTION_COUNT; direction--; ) {
+            if (!openToNorth && !isRmgSouthwardDirection(direction))
+                continue;
             position = entrance + g_rmgDirections[direction] + trigger;
             if (bounds.contains(position) && canFitObject(properties, position))
                 candidates.push_back(position);
@@ -3161,8 +3161,11 @@ void readRmgTemplateZones(
                 for (int monster = 0; monster < 10; ++monster)
                     slot->m_allowedMonsters[monster] =
                         isRmgTemplateFieldSet(values[57 + monster]);
+                // Retail bug: TOWN_CONFLUX is the Conflux slot of m_allowedTowns,
+                // but monster slots are offset by one, so RoE maps disallow
+                // Fortress guards instead.
                 if (mapVersion < RMG_MAP_ARMAGEDDONS_BLADE)
-                    slot->m_allowedMonsters[8] = false;
+                    slot->m_allowedMonsters[TOWN_CONFLUX] = false;
                 for (int treasure = 0; treasure < 3; ++treasure) {
                     slot->m_treasure[treasure].m_minimum = atoi(values[67 + 3 * treasure]);
                     slot->m_treasure[treasure].m_maximum = atoi(values[68 + 3 * treasure]);
@@ -3174,10 +3177,10 @@ void readRmgTemplateZones(
     }
 }
 
-// RoE maps lack the expansion creature types (118 and up).
 static inline int getRmgCreatureTypeCount(int mapVersion)
 {
-    return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? 145 : 118;
+    return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE
+        ? RMG_CREATURE_TYPE_COUNT : RMG_ROE_CREATURE_TYPE_COUNT;
 }
 
 VA(0x00538B10, 0x2241)
@@ -3366,7 +3369,7 @@ b8 type_random_map_generator::canPlaceZone(TRmgZone* zone)
     int size = slot->m_size;
     if ((slot->m_kind == RMG_TEMPLATE_HUMAN ||
          slot->m_kind == RMG_TEMPLATE_COMPUTER) &&
-        position.m_z == 1 && zone->m_alignment != TOWN_INFERNO &&
+        position.m_z == RMG_UNDERGROUND_LEVEL && zone->m_alignment != TOWN_INFERNO &&
         zone->m_alignment != TOWN_NECROPOLIS && zone->m_alignment != TOWN_DUNGEON)
         return false;
     int zoneIndex = slot->m_zoneIndex;
@@ -3569,7 +3572,8 @@ void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
         zone->m_levelPosition.m_x = 0;
         candidates.push_back(zone->getLevelPosition());
         if (m_map.m_numberLevels > 1)
-            appendRmgZoneCandidate(this, zone, TRmgMapPosition(0, 0, 1), candidates);
+            appendRmgZoneCandidate(this, zone,
+                TRmgMapPosition(0, 0, RMG_UNDERGROUND_LEVEL), candidates);
     } else {
         TRmgTemplateZone* slot = zone->m_templateZone;
         for (int connection = 0; connection < slot->m_connections.size(); ++connection) {
@@ -3630,10 +3634,11 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
         TRmgTemplateZone* slot = mapTemplate->m_zones[slotIndex];
         TRmgZone* zone = new TRmgZone(slot);
         if (slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT] + slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT] > 0
-            && slot->m_playerIndex >= 0
-            && m_playerIndexMap[slot->m_playerIndex + 1] >= 0
-            && m_townChoices[m_playerIndexMap[slot->m_playerIndex + 1]] != -1)
-            zone->m_alignment = m_townChoices[m_playerIndexMap[slot->m_playerIndex + 1]];
+            && slot->m_playerIndex >= 0) {
+            int player = m_playerIndexMap[slot->m_playerIndex + 1];
+            if (player >= 0 && m_townChoices[player] != -1)
+                zone->m_alignment = m_townChoices[player];
+        }
         positionZone(zone, mapSize);
         m_zones.push_back(zone);
     }
@@ -3711,7 +3716,7 @@ static inline TPoint clampRmgBoundaryToMap(
 // Island maps paint surface zone terrain only on the islands.
 static inline bool paintsRmgZoneTerrainOnLevel(int waterContent, int level)
 {
-    return level == 1 || waterContent != RMG_WATER_ISLANDS;
+    return level == RMG_UNDERGROUND_LEVEL || waterContent != RMG_WATER_ISLANDS;
 }
 
 static inline void assignRmgZoneCell(
@@ -4307,7 +4312,7 @@ void type_random_map_generator::buildZoneBoundaries(
             diagram.addSite(position, m_zones[zone]);
     }
     int originalZones = m_zones.size();
-    if (level == 1 || m_waterContent != RMG_WATER_NONE) {
+    if (level == RMG_UNDERGROUND_LEVEL || m_waterContent != RMG_WATER_NONE) {
         TRmgTemplateZone testSlot;
         testSlot.m_zoneIndex = -1;
         testSlot.m_kind = RMG_TEMPLATE_JUNCTION;
@@ -4333,7 +4338,7 @@ void type_random_map_generator::buildZoneBoundaries(
                 testZone.setLevelPosition(position);
                 if (!canPlaceZone(&testZone))
                     continue;
-                if (position.m_z == 0) {
+                if (position.m_z == RMG_SURFACE_LEVEL) {
                     // Retail bug: m_allowedTowns is left uninitialized before the
                     // zone constructor reads it, so heap contents affect RNG use.
                     TRmgTemplateZone* slot = new TRmgTemplateZone;
@@ -4996,16 +5001,16 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
     } else {
         memcpy(allowedFactions, zone->m_templateZone->m_allowedMonsters, sizeof(allowedFactions));
     }
-    int prototypeIndices[RMG_GUARD_CREATURE_COUNT];
+    int prototypeIndices[RMG_CREATURE_TYPE_COUNT];
     memset(prototypeIndices, -1, sizeof(prototypeIndices));
     for (u32 index = 0; index < m_objectPrototypes[MONSTER].size(); ++index) {
         TRmgObjectPropertiesRef* properties = m_objectPrototypes[MONSTER][index];
         prototypeIndices[properties->m_prototype->getSubtype()] = index;
     }
     int eligibleCreatureCount = 0;
-    int creature = RMG_GUARD_CREATURE_COUNT;
+    int creature = RMG_CREATURE_TYPE_COUNT;
     if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE) {
-        while (--creature >= RMG_GUARD_ROE_EXCLUDED_FIRST)
+        while (--creature >= RMG_ROE_CREATURE_TYPE_COUNT)
             prototypeIndices[creature] = -1;
     }
     for (--creature; creature >= 0; --creature) {
@@ -5023,7 +5028,7 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
     if (!eligibleCreatureCount)
         return 0;
     int selectionRank = rand() % eligibleCreatureCount;
-    for (creature = RMG_GUARD_CREATURE_COUNT - 1; creature >= 0; --creature) {
+    for (creature = RMG_CREATURE_TYPE_COUNT - 1; creature >= 0; --creature) {
         if (prototypeIndices[creature] >= 0 && --selectionRank < 0)
             break;
     }

@@ -342,7 +342,7 @@ struct TPoint {
     TPoint& operator+=(const TPoint& offset);
 };
 
-// Map position: a plane point plus level (0 surface, 1 underground).
+// Map position: a plane point plus level (ERmgMapLevel).
 struct TRmgMapPosition : TPoint {
     s32 m_z;
 
@@ -354,6 +354,11 @@ struct TRmgMapPosition : TPoint {
 };
 
 TRmgMapPosition operator+(TRmgMapPosition position, TPoint offset);
+
+enum ERmgMapLevel {
+    RMG_SURFACE_LEVEL = 0,
+    RMG_UNDERGROUND_LEVEL = 1
+};
 
 // Template connection to another zone: value, guard/border policy,
 // whether it has been built, and the player counts for which it applies.
@@ -425,6 +430,7 @@ struct TRmgTemplateZone {
     s32 m_monsterStrength;              // +0x90
     // Template column 56: restrict guards to the zone's town alignment.
     b8 m_guardsMatchZone;    // +0x94
+    // Indexed by town type + 1; slot 0 is neutral.
     b8 m_allowedMonsters[10]; // +0x95
     TRmgTreasureRange m_treasure[3];     // +0xa0
     std::vector<TRmgZoneConnection> m_connections; // +0xc4
@@ -577,12 +583,13 @@ enum ERmgWaterContent {
     RMG_WATER_RANDOM = 3
 };
 
-// Guard creature limits. On RoE maps creatures from 118 are excluded but only
-// those below 117 are evaluated, so 117 slips through (retail bug).
+// Creature-type counts and guard limits. RoE maps lack the expansion creature
+// types; their guards exclude creatures from 118 but evaluate only those below
+// 117, so 117 slips through (retail bug).
 enum ERmgGuardConstants {
-    RMG_GUARD_CREATURE_COUNT = 145,
+    RMG_CREATURE_TYPE_COUNT = 145,
     RMG_GUARD_ROE_CREATURE_LIMIT = 117,
-    RMG_GUARD_ROE_EXCLUDED_FIRST = 118,
+    RMG_ROE_CREATURE_TYPE_COUNT = 118,
     RMG_GUARD_MAXIMUM_COUNT = 100,
     RMG_GUARD_DISPOSITION = 3
 };
