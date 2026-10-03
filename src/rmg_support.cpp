@@ -597,7 +597,8 @@ VA(0x005fdae0, 0x2b)
 MAC_ADDRESS(0x25c2b4, 0x50)
 s32 getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
 {
-    // Signed twice-area; positive means counterclockwise.
+    // Signed twice-area; positive means counterclockwise with y up, which is
+    // clockwise as drawn on the map (y down), like the TRmgVoronoi square.
     return (second.m_x - first.m_x) * (third.m_y - first.m_y)
         - (second.m_y - first.m_y) * (third.m_x - first.m_x);
 }
