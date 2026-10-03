@@ -568,6 +568,8 @@ struct TRmgZoneBounds {
         m_maximumX = maximumX > m_maximumX ? maximumX : m_maximumX;
         m_maximumY = maximumY > m_maximumY ? maximumY : m_maximumY;
     }
+
+    void insetForObjectFootprint(const TObjectType* prototype);
 };
 
 TPoint clipRmgBoundaryPoint(

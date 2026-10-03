@@ -5898,11 +5898,10 @@ b8 type_random_map_generator::createSubterraneanGate(
 
 // Object positions name the lower-right footprint cell. Inset the minimum
 // anchor coordinates so the whole footprint fits.
-static inline void insetRmgObjectPlacementBounds(
-    TRmgZoneBounds& bounds, const TObjectType* prototype)
+inline void TRmgZoneBounds::insetForObjectFootprint(const TObjectType* prototype)
 {
-    bounds.m_minimumY += prototype->getHeight() - 1;
-    bounds.m_minimumX += prototype->getWidth() - 1;
+    m_minimumY += prototype->getHeight() - 1;
+    m_minimumX += prototype->getWidth() - 1;
 }
 
 // Places an object at a random fitting cell of the zone.
@@ -5915,7 +5914,7 @@ b8 type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* z
     std::vector<TRmgMapPosition> candidates;
     TRmgZoneBounds bounds = zone->getBounds();
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
-    insetRmgObjectPlacementBounds(bounds, prototype);
+    bounds.insetForObjectFootprint(prototype);
     TRmgMapPosition position;
     position = zone->getLevelPosition();
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
@@ -6834,7 +6833,7 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
         townAlignedAnchor = zone->m_position;
         townAlignedAnchor += TPoint(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
     }
-    insetRmgObjectPlacementBounds(bounds, prototype);
+    bounds.insetForObjectFootprint(prototype);
     TRmgMapPosition position = zone->m_levelPosition;
     properties->buildOutline();
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {

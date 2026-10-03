@@ -64,6 +64,8 @@ struct TRmgTerrainFlip {
 
     TRmgTerrainFlip() {}
     TRmgTerrainFlip(b8 x, b8 y) : m_flipX(x), m_flipY(y) {}
+    const s32* getReflectedNeighbourOrder() const;
+    s32 getIndex() const;
 };
 
 // No edge for equal terrain, a sand centre, or a dirt centre that blends with
@@ -142,6 +144,7 @@ struct TRmgTerrainPatternRange {
     u32 m_count;
 
     TRmgTerrainPatternRange() : m_firstIndex(0), m_count(0) {}
+    s32 selectFrame() const;
 };
 
 struct TRmgTerrainPatternEntry {
@@ -155,6 +158,8 @@ struct TRmgTerrainTransitionEntry {
     s32 m_transition;
     b8 m_flipX;
     b8 m_flipY;
+
+    bool matches(s32 transition, b8 flipX, b8 flipY) const;
 };
 DATA(0x006424a8)
 extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
@@ -290,6 +295,8 @@ public:
     bool matchesTerrainAt(u32 x, u32 y, s32 terrain);
     bool matchesTerrainCorner(b8 firstSide, b8 secondSide,
         u32 x, u32 y, s32 terrain);
+    void getNeighbourBounds(const TRmgGridPoint& point,
+        TRmgGridPoint& northWest, TRmgGridPoint& southEast) const;
     void buildMatchingNeighbourMask(
         const TRmgGridPoint& point, b8* matches);
 
