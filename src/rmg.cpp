@@ -2932,7 +2932,6 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition start, s32 progressSteps
         std::vector<TRmgObjectPropertiesRef*> candidates;
         std::vector<TRmgMapPosition> positions;
         std::vector<s32> weights;
-        // Unused.
         std::vector<type_object*> unusedObjects;
         s32 totalWeight = 0;
         for (const s32* type = g_rmgDecorationTypes;
