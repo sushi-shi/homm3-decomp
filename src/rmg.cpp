@@ -628,9 +628,7 @@ b8 type_random_map::hasConnectedOutline(
             foundBoundary = true;
         }
     }
-    if (blocked && !foundBoundary)
-        return false;
-    return true;
+    return !blocked || foundBoundary;
 }
 
 // Radius of a square neighbourhood around a cell, clipped to the map.
@@ -4071,11 +4069,8 @@ void type_random_map_generator::traceZoneBoundary(
 
         if (!neighbour || neighbour->m_templateZone->m_zoneIndex > zoneIndex) {
             s32 roughness = zone->m_scaledSize;
-            if (neighbour) {
-                s32 ownRoughness = roughness;
-                s32 neighbourRoughness = neighbour->m_scaledSize;
-                roughness = min(ownRoughness, neighbourRoughness);
-            }
+            if (neighbour)
+                roughness = min(roughness, neighbour->m_scaledSize);
             if (irregular)
                 drawIrregularZoneBoundary(from, to, zoneIndex, zonePosition.m_z, roughness);
             else
@@ -4231,10 +4226,7 @@ void type_random_map_generator::recenterZone(TRmgZone* zone)
     TRmgMapPosition position = zone->getLevelPosition();
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
     s32 cellCount = 0;
-    TRmgMapPosition coordinateTotal;
-    coordinateTotal.m_x = 0;
-    coordinateTotal.m_y = 0;
-    coordinateTotal.m_z = position.m_z;
+    TRmgMapPosition coordinateTotal(0, 0, position.m_z);
     for (s32 y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
         for (s32 x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
             if (m_map.getMapItem(x, y, position.m_z)->m_zoneState.m_zone == zoneIndex) {
@@ -5631,8 +5623,7 @@ b8 type_random_map_generator::canPlaceShipyard(TRmgMapPosition position)
         if (water.m_x < 0 || water.m_x >= m_map.m_mapWidth)
             continue;
         TRmgMapItem* item = m_map.getMapItem(water);
-        s32 terrain = item->getLandType();
-        if (terrain == eTerrainWater && item->hasPathClearance())
+        if (item->getLandType() == eTerrainWater && item->hasPathClearance())
             break;
     }
     if (waterOffset == RMG_SHIPYARD_WATER_OFFSET_COUNT)
@@ -6180,15 +6171,13 @@ VA(0x005439e0, 0x283)
 MAC_ADDRESS(0x246a34, 0x31c)
 void type_random_map_generator::decorateUnderground()
 {
-    TRmgMapPosition scan;
-    scan.m_z = RMG_UNDERGROUND_LEVEL;
-    TRmgMapItem* item = m_map.getMapItem(0, 0, scan.m_z);
+    TRmgMapItem* item = m_map.getMapItem(0, 0, RMG_UNDERGROUND_LEVEL);
     type_random_map map(item, m_map.m_mapWidth, m_map.m_mapHeight);
     TRmgTerrainBrush brush(&map, eTerrainRock, RMG_BRUSH_STRENGTH);
-    for (scan.m_y = 0; scan.m_y < m_map.m_mapHeight; ++scan.m_y) {
-        for (scan.m_x = 0; scan.m_x < m_map.m_mapWidth; ++scan.m_x, ++item) {
+    for (s32 y = 0; y < m_map.m_mapHeight; ++y) {
+        for (s32 x = 0; x < m_map.m_mapWidth; ++x, ++item) {
             if (item->canBlockFloor())
-                brush.paintRectangle(scan.m_x, scan.m_y, 1, 1);
+                brush.paintRectangle(x, y, 1, 1);
         }
     }
     if (m_progress)
@@ -7333,11 +7322,9 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
         if (guardPosition.m_x < 1 || guardPosition.m_x + 1 >= m_map.m_mapWidth
             || guardPosition.m_y < 1 || guardPosition.m_y + 1 >= m_map.m_mapHeight)
             return false;
-        TRmgMapPosition point;
-        point.m_z = guardPosition.m_z;
-        for (point.m_x = guardPosition.m_x - 1; point.m_x <= guardPosition.m_x + 1; ++point.m_x) {
-            for (point.m_y = guardPosition.m_y - 1; point.m_y <= guardPosition.m_y + 1; ++point.m_y) {
-                TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
+        for (s32 x = guardPosition.m_x - 1; x <= guardPosition.m_x + 1; ++x) {
+            for (s32 y = guardPosition.m_y - 1; y <= guardPosition.m_y + 1; ++y) {
+                TRmgMapItem* item = m_map.getMapItem(x, y, guardPosition.m_z);
                 if (item->isRoadEntrance() && item->getEntranceObjectType() == MONSTER)
                     return false;
             }
@@ -7883,16 +7870,14 @@ void type_random_map_generator::markRiverTargets()
             }
         }
     }
-    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
-        for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
-            m_map.getMapItem(0, position.m_y, position.m_z)->m_tileData.m_riverTarget = true;
-            m_map.getMapItem(m_map.m_mapWidth - 1, position.m_y, position.m_z)
-                ->m_tileData.m_riverTarget = true;
+    for (s32 level = RMG_SURFACE_LEVEL; level < m_map.m_numberLevels; ++level) {
+        for (s32 y = 0; y < m_map.m_mapHeight; ++y) {
+            m_map.getMapItem(0, y, level)->m_tileData.m_riverTarget = true;
+            m_map.getMapItem(m_map.m_mapWidth - 1, y, level)->m_tileData.m_riverTarget = true;
         }
-        for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x) {
-            m_map.getMapItem(position.m_x, 0, position.m_z)->m_tileData.m_riverTarget = true;
-            m_map.getMapItem(position.m_x, m_map.m_mapHeight - 1, position.m_z)
-                ->m_tileData.m_riverTarget = true;
+        for (s32 x = 0; x < m_map.m_mapWidth; ++x) {
+            m_map.getMapItem(x, 0, level)->m_tileData.m_riverTarget = true;
+            m_map.getMapItem(x, m_map.m_mapHeight - 1, level)->m_tileData.m_riverTarget = true;
         }
     }
     if (m_progress)
@@ -8545,16 +8530,14 @@ VA(0x0054abf0, 0x235)
 MAC_ADDRESS(0x24fd18, 0x350)
 b8 type_random_map_generator::writeMap(TAbstractFile* outfile)
 {
-    TRmgMapPosition position;
     writeMapHeader(outfile);
     writeValue<s32>(outfile, 0);
     TRmgMapItem* item = m_map.m_mapItems;
-    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z)
-        for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y)
-            for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x) {
-                item->write(outfile);
-                ++item;
-            }
+    s32 itemCount = m_map.m_numberLevels * m_map.m_mapHeight * m_map.m_mapWidth;
+    while (itemCount--) {
+        item->write(outfile);
+        ++item;
+    }
     s32 prototypeCount = 2;
     for (s32 type = NOTHING; type < ADVENTURE_OBJECT_TRAIT_COUNT; ++type)
         for (u32 index = 0; index < m_objectPrototypes[type].size(); ++index) {
@@ -8862,19 +8845,16 @@ void type_random_map_generator::removeObject(type_object* object)
     if (prototype->getObjectType() == BORDER_GUARD) {
         setKeyTentColorDisabled(prototype->getSubtype(), false);
     }
-    TRmgGridPoint cell;
-    TRmgMapPosition mapPosition;
-    mapPosition.m_z = position.m_z;
-    for (cell.m_y = 0; cell.m_y < prototype->getHeight(); ++cell.m_y) {
-        mapPosition.m_y = position.m_y - cell.m_y;
-        if (mapPosition.m_y < 0 || mapPosition.m_y >= m_map.m_mapHeight)
+    for (u32 row = 0; row < prototype->getHeight(); ++row) {
+        s32 y = position.m_y - row;
+        if (y < 0 || y >= m_map.m_mapHeight)
             continue;
-        for (cell.m_x = 0; cell.m_x < prototype->getWidth(); ++cell.m_x) {
-            mapPosition.m_x = position.m_x - cell.m_x;
-            if (mapPosition.m_x < 0 || mapPosition.m_x >= m_map.m_mapWidth)
+        for (u32 column = 0; column < prototype->getWidth(); ++column) {
+            s32 x = position.m_x - column;
+            if (x < 0 || x >= m_map.m_mapWidth)
                 continue;
-            if (isRmgObjectFootprintCell(prototype, cell.m_x, cell.m_y)) {
-                TRmgMapItem* item = m_map.getMapItem(mapPosition);
+            if (isRmgObjectFootprintCell(prototype, column, row)) {
+                TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
                 std::vector<type_object*>::iterator entry = std::find(item->m_objects.begin(), item->m_objects.end(), object);
                 if (entry) {
                     item->m_objects.erase(entry);

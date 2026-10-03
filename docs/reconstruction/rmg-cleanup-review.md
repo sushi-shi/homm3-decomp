@@ -236,6 +236,18 @@ following keeps only with a pointer here:
   instead of a copy. All of this runs after the connection paths are built;
   only `placeQuestArtifact`'s frame changed, through VC6 inlining
   `TRmgTreasureGroup::addObject` there.
+- An eleventh pass dropped the staged roughness in `traceZoneBoundary`,
+  built `recenterZone`'s coordinate total with its constructor and dropped
+  `canPlaceShipyard`'s staged terrain, all compiling identically, and
+  returned `hasConnectedOutline`'s result as one expression, which only
+  reorders its epilogue. Later code (`removeObject`, `canPlaceTreasureGroup`,
+  `decorateUnderground`, `markRiverTargets`, `writeMap`) now loops over plain
+  coordinates or an item count instead of position structs used only as
+  counters. It kept `TRmgZone::canConnect`'s staged minimum,
+  `TRmgHalfEdge::setPosition`'s copy, `matchesTerrainAt`'s setter calls and
+  `openConnectionPath`'s staged predecessor: rewriting them changed the
+  initializeZones or buildZoneBoundaries code, terrain painting before the
+  connection paths, or `openConnectionPath`'s frame.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every
