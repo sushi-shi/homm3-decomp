@@ -3238,11 +3238,12 @@ void type_random_map_generator::loadTemplates()
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
 #if defined(HOMM3_RMG_HOTFIX)
         // Rows without a maximum size are skipped.
-        if (values.size() <= RMG_TEMPLATE_COLUMN_MAXIMUM_SIZE) {
+        if (values.size() <= RMG_TEMPLATE_COLUMN_MAXIMUM_SIZE
 #else
         // Retail bug: a row ending at the minimum size still reads the maximum.
-        if (values.size() < RMG_TEMPLATE_COLUMN_MAXIMUM_SIZE) {
+        if (values.size() < RMG_TEMPLATE_COLUMN_MAXIMUM_SIZE
 #endif
+            ) {
             ++row;
             continue;
         }
@@ -7744,13 +7745,15 @@ void type_random_map_generator::createRoads()
 {
     ERmgRoadType roadType =
         static_cast<ERmgRoadType>(rand() % RMG_ROAD_TYPE_COUNT + RMG_ROAD_DIRT);
+    for (u32 first = 0;
 #if defined(HOMM3_RMG_HOTFIX)
-    // No road targets means no roads.
-    for (u32 first = 0; first + 1 < m_roadTargets.size(); ++first) {
+         // No road targets means no roads.
+         first + 1 < m_roadTargets.size();
 #else
-    // Retail bug: an empty target list underflows size() - 1.
-    for (u32 first = 0; first < m_roadTargets.size() - 1; ++first) {
+         // Retail bug: an empty target list underflows size() - 1.
+         first < m_roadTargets.size() - 1;
 #endif
+         ++first) {
         TRmgMapPosition source = m_roadTargets[first];
         rebuildRoadCostMap(source);
         for (u32 second = first + 1; second < m_roadTargets.size(); ++second) {
@@ -8928,10 +8931,11 @@ void type_random_map_generator::removeObject(type_object* object)
     std::vector<type_object*>::iterator found = std::find(m_objects.begin(), m_objects.end(), object);
 #if defined(HOMM3_RMG_HOTFIX)
     // An object missing from a list is not erased from it.
-    if (found != m_objects.end()) {
+    if (found != m_objects.end()
 #else
-    if (found) {
+    if (found
 #endif
+        ) {
         m_objects.erase(found);
         TAdventureObjectType objectType = prototype->getObjectType();
         --m_objectCountByType[objectType];
@@ -8956,10 +8960,11 @@ void type_random_map_generator::removeObject(type_object* object)
                 TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
                 std::vector<type_object*>::iterator entry = std::find(item->m_objects.begin(), item->m_objects.end(), object);
 #if defined(HOMM3_RMG_HOTFIX)
-                if (entry != item->m_objects.end()) {
+                if (entry != item->m_objects.end()
 #else
-                if (entry) {
+                if (entry
 #endif
+                    ) {
                     item->m_objects.erase(entry);
                     if (!item->hasObjects()) {
                         item->m_tileData.m_objectEntrance = false;
