@@ -123,6 +123,8 @@ static const TRmgObjectLimit g_rmgZoneObjectLimitOverrides[24] = {
     { WITCH_HUT, 3 },
 };
 
+// Frame i of a river sprite draws shape g_rmgRiverPatterns[i]; repeated
+// shapes are alternative frames picked at random.
 DATA(0x00641140)
 static const s32 g_rmgRiverPatterns[13] = {
     LINE_SE, LINE_SE, LINE_SE, LINE_SE, LINE_CROSS, LINE_ESW, LINE_ESW,
@@ -135,6 +137,7 @@ VA_COMPGEN(0x0055ED70, 0x1D, STATIC_CTOR, g_rmgRiverPatternTable)
 
 VA_COMPGEN(0x0055ED90, 0x0A, STATIC_DTOR, g_rmgRiverPatternTable)
 
+// The same for road sprites.
 DATA(0x006411AC)
 static const s32 g_rmgRoadPatterns[17] = {
     LINE_SE, LINE_SE, LINE_SE_VARIANT, LINE_SE_VARIANT, LINE_SE_VARIANT, LINE_SE_VARIANT,

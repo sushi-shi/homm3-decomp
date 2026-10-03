@@ -1273,7 +1273,13 @@ public:
 };
 
 // Unreflected line shapes chosen by selectRmgLinePattern; reflections supply
-// the other orientations. LINE_END_S also covers an isolated tile.
+// the other orientations. North is up; # is a line tile.
+//   END_S  END_E  NS     EW     SE     NES    ESW    CROSS
+//   . . .  . . .  . # .  . . .  . . .  . # .  . . .  . # .
+//   . # .  . # #  . # .  # # #  . # #  . # #  # # #  # # #
+//   . # .  . . .  . # .  . . .  . # .  . # .  . # .  . # .
+// SE_VARIANT is SE with the NE or SW diagonal also a line tile.
+// END_S also covers an isolated tile.
 enum ERmgLinePattern {
     LINE_END_S = 0,
     LINE_END_E = 1,
