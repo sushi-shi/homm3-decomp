@@ -598,7 +598,6 @@ enum ERmgWaterContent {
 // 117, so 117 slips through (retail bug).
 enum ERmgGuardConstants {
     RMG_CREATURE_TYPE_COUNT = 145,
-    RMG_GUARD_ROE_CREATURE_LIMIT = 117,
     RMG_ROE_CREATURE_TYPE_COUNT = 118,
     RMG_GUARD_MAXIMUM_COUNT = 100,
     RMG_GUARD_DISPOSITION = 3

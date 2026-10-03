@@ -237,10 +237,11 @@ body; no incomplete-prototype asset set was executed during the review.
 
 The RoE exclusion has a distinct compatibility quirk: it clears entries
 144..118, evaluates eligibility for 116..0, then selects across 144..0. Slot 117
-retains its loaded prototype without the eligibility test. The source constants
-`RMG_ROE_CREATURE_TYPE_COUNT` and `RMG_GUARD_ROE_CREATURE_LIMIT` deliberately
-represent these different boundaries. Do not merge them or add prototype
-presence to eligibility while doing source cleanup.
+retains its loaded prototype without the eligibility test.
+`RMG_ROE_CREATURE_TYPE_COUNT` is the exclusion boundary; the evaluation starts
+one lower only because the evaluation loop decrements the exclusion loop's
+final index again. Do not align these boundaries or add prototype presence to
+eligibility while doing source cleanup.
 
 ### Factory destruction: C++ lifetime risk with direct retail deallocation
 
