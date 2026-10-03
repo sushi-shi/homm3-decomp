@@ -801,10 +801,10 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
                     nextCost = 0;
                 next->setMovementCost(nextCost, currentPosition);
             }
-            s32 middle = findRmgWorkItemInsertionIndex(
+            s32 insertionIndex = findRmgWorkItemInsertionIndex(
                 costs, positions.size(), nextCost);
-            costs.insert(costs.begin() + middle, nextCost);
-            positions.insert(positions.begin() + middle, nextPosition);
+            costs.insert(costs.begin() + insertionIndex, nextCost);
+            positions.insert(positions.begin() + insertionIndex, nextPosition);
         }
     }
 }
@@ -5905,7 +5905,7 @@ b8 type_random_map_generator::placeMonolithBorder(
         TPoint(0, 1), TPoint(1, 0), TPoint(-1, 0), TPoint(1, 1), TPoint(-1, 1)
     };
     TRmgMapPosition guardPosition;
-    const s32 directionCount = sizeof(offsets) / sizeof(offsets[0]);
+    const s32 probeCount = sizeof(offsets) / sizeof(offsets[0]);
     buildZoneConnectionPaths();
     TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
     s32 zoneIndex = item->m_zoneState.m_zone;
@@ -5915,22 +5915,22 @@ b8 type_random_map_generator::placeMonolithBorder(
     if (movementCost > 0) {
         guardPosition = item->m_previousTile;
     } else {
-        s32 direction;
-        for (direction = 0; direction < directionCount; ++direction) {
-            guardPosition = position + offsets[direction];
+        s32 probe;
+        for (probe = 0; probe < probeCount; ++probe) {
+            guardPosition = position + offsets[probe];
             TRmgMapItem* nearby = m_map.getMapItem(guardPosition);
             if (nearby->m_zoneState.m_zone == zoneIndex
                 && nearby->hasPathClearance())
                 break;
         }
-        if (direction == directionCount) {
+        if (probe == probeCount) {
             guardPosition = position + TPoint(0, 1);
         }
     }
     s32 color = placeBorderObject(guardPosition, RMG_SINGLE_BORDER_GUARD, keyTentZone);
     if (color >= 0) {
-        for (s32 direction = 0; direction < directionCount; ++direction)
-            m_map.getMapItem(position + offsets[direction])->markBorderConnection(color);
+        for (s32 probe = 0; probe < probeCount; ++probe)
+            m_map.getMapItem(position + offsets[probe])->markBorderConnection(color);
     }
     return color >= 0;
 }

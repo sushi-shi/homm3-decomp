@@ -68,7 +68,7 @@ These describe equivalent traversal roles, not identical storage layouts.
 
 | Operation | Independently observable retail evidence | Published comparison and significance |
 | --- | --- | --- |
-| Edge representation | `0x005FCEF0` allocates a twin; each half is `0x24` bytes, with embedded integer site coordinates, zone pointer, twin, forward/backward links, and cached dual position. | [quadedge.h][gg-h], lines 8–62: four records per quad-edge, numbered navigation, point pointers. **Different representation.** |
+| Edge representation | `0x005FCEF0` allocates a twin; each half is `0x24` bytes, with embedded integer site coordinates, zone pointer, twin, forward/backward links, and cached dual vertex. | [quadedge.h][gg-h], lines 8–62: four records per quad-edge, numbered navigation, point pointers. **Different representation.** |
 | Splice and detach | `0x005FCF60` exchanges the two next links and their previous links; `0x005FCFA0` splices each half against its predecessor. | [quadedge.C][gg-c], lines 16–45: corresponding topology operations. **Common family evidence.** |
 | Initial subdivision | `0x005FD010` builds four corners at `(-200,-200)`, `(400,-200)`, `(400,400)`, `(-200,400)`, four perimeter edges and a diagonal. | [quadedge.C][gg-c], lines 49–64: caller-supplied triangle. **Different boundary policy.** |
 | Point location | `0x005FD6B0`, length `0xD7`: endpoint checks followed by side tests on the edge, next edge, and destination predecessor. A destination hit returns the twin (`+0xCB`), putting the query at the result's origin. | [quadedge.C][gg-c], lines 148–168, and paper p. 121: same walk, but either endpoint returns the current edge. **Shared walk; meaningful behavioral difference.** |
