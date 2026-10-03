@@ -224,6 +224,12 @@ following keeps only with a pointer here:
   connection paths, but `createGuard` and `placeTownAtRandomCandidate` only
   reorder equal-length heap stores; their frames, stack writes and call
   addresses are unchanged.
+- A ninth pass constructed the guard-outline position in
+  `TRmgTreasureGroup::addGuard`, the group centre in `placeTreasureGroup`
+  and the outline start in `buildOutline` directly, and dropped
+  `refreshRmgLinePoint`'s staged frame. `buildOutline` runs before the
+  connection paths, but only swaps two adjacent zero stores to the same
+  slots; its frame, function size and stack contents are unchanged.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every

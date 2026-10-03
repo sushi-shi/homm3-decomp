@@ -1390,9 +1390,7 @@ void TRmgObjectPropertiesRef::buildOutline()
     // to the object's bottom-right cell, so footprint cells are nonpositive.
     if (m_outline.size() > 0)
         return;
-    TPoint position;
-    position.m_y = 0;
-    position.m_x = 0;
+    TPoint position(0, 0);
     while (static_cast<u32>(-position.m_x) < m_prototype->getWidth()) {
         if (isRmgObjectFootprintCell(m_prototype, -position.m_x, 0))
             break;
@@ -2343,10 +2341,7 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
     TRmgObjectPropertiesRef* guardProperties = guard->m_properties;
     for (u32 index = m_outline.size(); index--;) {
         TPoint point = m_outline[index];
-        TRmgMapPosition position;
-        position.m_x = point.m_x;
-        position.m_y = point.m_y;
-        position.m_z = 0;
+        TRmgMapPosition position(point.m_x, point.m_y, 0);
         if (!m_map.getMapItem(point.m_x, point.m_y)->hasBorderObject()
             || !canFitObject(guardProperties, position))
             m_outline.erase(m_outline.begin() + index);
@@ -7425,9 +7420,8 @@ b8 type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
     bounds.m_maximumX += 1 - groupBounds.m_maximumX;
     bounds.m_maximumY += 1 - groupBounds.m_maximumY;
     TRmgMapPosition position = zone->getLevelPosition();
-    TPoint center;
-    center.m_x = (groupBounds.m_minimumX + groupBounds.m_maximumX) / 2;
-    center.m_y = (groupBounds.m_minimumY + groupBounds.m_maximumY) / 2;
+    TPoint center((groupBounds.m_minimumX + groupBounds.m_maximumX) / 2,
+        (groupBounds.m_minimumY + groupBounds.m_maximumY) / 2);
     s32 bestScore = spacing;
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
