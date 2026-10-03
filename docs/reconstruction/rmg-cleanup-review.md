@@ -246,7 +246,7 @@ following keeps only with a pointer here:
   counters. It kept `TRmgZone::canConnect`'s staged minimum,
   `TRmgHalfEdge::setPosition`'s copy, `matchesTerrainAt`'s setter calls and
   `openConnectionPath`'s staged predecessor: rewriting them changed the
-  initializeZones or buildZoneBoundaries code, terrain painting before the
+  `initializeZones` or `buildZoneBoundaries` code, terrain painting before the
   connection paths, or `openConnectionPath`'s frame.
 - A twelfth pass replaced the last counter-only loops in post-path code:
   `canPlaceTreasureGroup`'s group-bounds scan uses plain coordinates, and
