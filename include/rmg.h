@@ -1581,7 +1581,7 @@ struct TRmgZone {
     bool isTerrainAllowed(s32 terrain) const;
     void chooseTerrain();
     ~TRmgZone();
-    s32 getTerrain() const
+    TTerrainType getTerrain() const
     {
         return m_terrain;
     }
@@ -1851,7 +1851,7 @@ public:
     void insetIslandZone(TRmgZone* zone);
     void fillIslandInterior(TRmgZone* zone);
     void drawIslandBoundary(TPoint from, TPoint to, s32 zoneIndex, s32 level, s32 roughness);
-    void placeFixedTownCategory(TRmgZone* zone, s32 count, s32 alignment,
+    void placeFixedTownCategory(TRmgZone* zone, s32 count, TTownType alignment,
         s32 player, b8 hasFort, b8& skipPrimary);
     void placeAdditionalTowns(TRmgZone* zone);
     TRmgMapPosition placeTownAtRandomCandidate(

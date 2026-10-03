@@ -252,7 +252,7 @@ static inline bool isRmgSouthwardDirection(s32 direction)
 
 // Most object entrances are entered and left only through the cells beside
 // and below them; these object types also allow the three cells above.
-static inline bool isRmgEntranceOpenToNorth(s32 objectType)
+static inline bool isRmgEntranceOpenToNorth(TAdventureObjectType objectType)
 {
     return g_adventureObjectTraits[objectType].m_trait1 != 0;
 }
@@ -751,7 +751,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
             ? current->m_movement.m_cost : current->m_movement.m_zonePathCost;
         s32 direction = RMG_DIRECTION_COUNT;
         if (current->isRoadEntrance()) {
-            s32 objectType = current->getEntranceObjectType();
+            TAdventureObjectType objectType = current->getEntranceObjectType();
             if (!isRmgEntranceOpenToNorth(objectType))
                 direction = RMG_FIRST_NORTHERN_DIRECTION;
         }
@@ -765,7 +765,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
             if (next->m_zoneState.m_zone < 0 || !next->isPassableLand())
                 continue;
             if (next->isRoadEntrance()) {
-                s32 objectType = next->getEntranceObjectType();
+                TAdventureObjectType objectType = next->getEntranceObjectType();
                 const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
                 if (traits.m_blocksLanding && !traits.m_trait2)
                     continue;
@@ -905,7 +905,7 @@ inline TRmgMapPosition type_object::getEntrance() const
         m_properties->m_prototype->m_triggerCell);
 }
 
-static inline bool allowsRmgSharedObjectEntrance(s32 objectType)
+static inline bool allowsRmgSharedObjectEntrance(TAdventureObjectType objectType)
 {
     return g_adventureObjectTraits[objectType].m_trait2
         && isRmgEntranceOpenToNorth(objectType);
@@ -923,7 +923,7 @@ b8 type_random_map::canPlaceObject(
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
     if (isPlacementBlocked(properties, position, zoneIndex, RMG_ALLOW_BORDER_ENTRANCES))
         return false;
-    s32 objectType = prototype.getObjectType();
+    TAdventureObjectType objectType = prototype.getObjectType();
     properties->buildOutline();
     if (!hasConnectedOutline(properties->m_outline, position,
             allowsRmgSharedObjectEntrance(objectType),
@@ -943,7 +943,7 @@ b8 type_random_map::canPlaceObject(
     if (item->m_zoneState.m_zone != zoneIndex)
         return false;
     if (item->isRoadEntrance()) {
-        s32 entranceType = item->getEntranceObjectType();
+        TAdventureObjectType entranceType = item->getEntranceObjectType();
         if (!g_adventureObjectTraits[entranceType].m_trait2)
             return false;
     }
@@ -2284,7 +2284,8 @@ MAC_ADDRESS(0x233d18, 0x60)
 b8 TRmgTreasureGroup::objectsAllowEntrances() const
 {
     for (u32 index = 0; index < m_objects.size(); ++index) {
-        s32 objectType = m_objects[index]->m_properties->m_prototype->getObjectType();
+        TAdventureObjectType objectType =
+            m_objects[index]->m_properties->m_prototype->getObjectType();
         if (!g_adventureObjectTraits[objectType].m_trait2)
             return false;
     }
@@ -2345,7 +2346,7 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
     addObject(guard, guardPosition);
     TPoint guardEntrance(guardPosition.m_x - prototype->m_triggerCell.m_x,
         guardPosition.m_y - prototype->m_triggerCell.m_y);
-    s32 guardType = guardProperties->m_prototype->getObjectType();
+    TAdventureObjectType guardType = guardProperties->m_prototype->getObjectType();
     for (s32 direction = RMG_DIRECTION_EAST; direction < RMG_DIRECTION_COUNT; ++direction) {
         TPoint point = g_rmgDirections[direction]
             + TRmgVector(guardEntrance.m_x, guardEntrance.m_y);
@@ -2408,7 +2409,7 @@ b8 TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
     TRmgMapPosition position)
 {
     TObjectType* prototype = properties->m_prototype;
-    s32 objectType = prototype->getObjectType();
+    TAdventureObjectType objectType = prototype->getObjectType();
     TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, prototype->m_triggerCell);
     TRmgVector origin(entrance.m_x, entrance.m_y);
     if (!isRmgEntranceOpenToNorth(objectType)) {
@@ -2576,7 +2577,8 @@ TRmgObjectPropertiesRef::TRmgObjectPropertiesRef(TObjectType* prototype)
     m_prioritiesInitialized = false;
 }
 
-static inline bool isRmgObjectAvailableInVersion(s32 objectType, s32 version)
+static inline bool isRmgObjectAvailableInVersion(
+    TAdventureObjectType objectType, s32 version)
 {
     if (version < RMG_MAP_SHADOW_OF_DEATH && objectType >= CLOVER_FIELD_2)
         return false;
@@ -2591,7 +2593,7 @@ void TRmgGeneratorBase::loadObjectPrototypes()
 {
     m_objectsTxt.load("objects.txt");
     for (u32 index = 0; index < m_objectsTxt.m_objectTypes.size(); ++index) {
-        s32 type = m_objectsTxt.m_objectTypes[index].getObjectType();
+        TAdventureObjectType type = m_objectsTxt.m_objectTypes[index].getObjectType();
         if (!isRmgObjectAvailableInVersion(type, m_mapVersion))
             continue;
         if (m_mapVersion < RMG_MAP_SHADOW_OF_DEATH && (type == LITH_TWOWAY || type == LITH_ONEWAY_ENTRANCE || type == LITH_ONEWAY_EXIT)
@@ -5057,7 +5059,7 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
 {
     TRmgGeneratorBase::addObject(object, position);
     TObjectType* prototype = object->m_properties->m_prototype;
-    s32 objectType = prototype->getObjectType();
+    TAdventureObjectType objectType = prototype->getObjectType();
     ++m_objectCountByType[objectType];
     if (prototype->m_hasTrigger) {
         TObjectType::TPoint trigger = prototype->m_triggerCell;
@@ -6554,7 +6556,7 @@ enum ERmgObjectSpacing {
 // The first category with a positive count places one town fewer for the
 // primary town, even if placePrimaryTown used a later category or failed.
 inline void type_random_map_generator::placeFixedTownCategory(TRmgZone* zone, s32 count,
-    s32 alignment, s32 player, b8 hasFort, b8& skipPrimary)
+    TTownType alignment, s32 player, b8 hasFort, b8& skipPrimary)
 {
     if (count <= 0)
         return;
@@ -7476,7 +7478,7 @@ static inline void queueRmgMovementStep(TRmgMapItem* destination,
 }
 
 // Road exits and entries share this restricted-approach policy.
-static inline bool hasRmgRestrictedRoadApproach(s32 objectType)
+static inline bool hasRmgRestrictedRoadApproach(TAdventureObjectType objectType)
 {
     return !isRmgEntranceOpenToNorth(objectType)
         && !g_adventureObjectTraits[objectType].m_trait2;
@@ -7513,7 +7515,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition source)
         if (mapItem->isRoadEntrance()) {
             type_object* object = mapItem->m_objects[0];
             TObjectType* prototype = object->m_properties->m_prototype;
-            s32 objectType = prototype->getObjectType();
+            TAdventureObjectType objectType = prototype->getObjectType();
             if (hasRmgRestrictedRoadApproach(objectType))
                 direction = RMG_FIRST_NORTHERN_DIRECTION;
 
@@ -7569,7 +7571,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition source)
                 continue;
 
             if (nextMapItem->isRoadEntrance()) {
-                s32 objectType = nextMapItem->getEntranceObjectType();
+                TAdventureObjectType objectType = nextMapItem->getEntranceObjectType();
                 const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
                 if (traits.m_blocksLanding && !traits.m_trait2)
                     continue;
