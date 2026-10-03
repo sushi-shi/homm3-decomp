@@ -1775,8 +1775,8 @@ public:
     b8 m_disabledHeroes[156];               // +0x0f88
     // Artifacts already used as seer-hut quests.
     b8 m_usedQuestArtifacts[ARTIFACT_COUNT]; // +0x1024
-    // Set once fewer than 20 quest artifacts remain; seer huts are then
-    // rejected.
+    // Set once fewer than 20 quest artifacts remain; no further seer huts
+    // are offered.
     b8 m_questArtifactPoolLow;              // +0x10b4
     // RMG_WATER_RANDOM is resolved by the constructor.
     s32 m_waterContent;                                // +0x10b8: ERmgWaterContent

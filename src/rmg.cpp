@@ -1556,9 +1556,8 @@ static inline void writeRmgMapPosition(
     writeValue<char>(outputFile, position.m_z);
 }
 
-// Writes count zero bytes (at most 32). The count is an argument, not a
-// template parameter: VC6 merges function templates whose parameters do not
-// mention every template argument.
+// Writes count zero bytes (at most 32). count stays a function argument: as
+// a template argument alone, every instantiation would be merged into one.
 static inline void writeRmgReservedBytes(TAbstractFile* outputFile, s32 count)
 {
     char reserved[32];
@@ -3460,8 +3459,8 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, eSchoolEarth));
     m_objectGenerators.push_back(new type_black_box_spells_def(30000, 1, 5, eSchoolAll));
 
-    // Removing this block changes VC6's push_back inlining here, and the
-    // constructor tree's stack residue reaches buildZoneBoundaries' testSlot.
+    // Kept as is: generated maps depend on this frame; see
+    // rmg-cleanup-review.md.
     {
         s32 tentIndex = m_objectPrototypes[BORDER_TENT].size();
         m_disabledKeyTents.resize(tentIndex);
@@ -3894,9 +3893,8 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     getInitialZoneBounds(minimumY, minimumX, maximumY, maximumX);
     s32 span = max(maximumY - minimumY, maximumX - minimumX);
     s32 size = max(m_map.m_mapWidth, m_map.m_mapHeight);
-    // The bounds minimum becomes the square's origin in place. This frame's
-    // stack residue reaches buildZoneBoundaries' uninitialized testSlot town
-    // flags (retail bug), so extra locals here change generated maps.
+    // The bounds minimum becomes the square's origin. Kept as is: generated
+    // maps depend on this frame; see rmg-cleanup-review.md.
     minimumY = (minimumY - span + maximumY) / 2;
     minimumX = (minimumX - span + maximumX) / 2;
     for (s32 zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
@@ -3970,8 +3968,8 @@ static inline bool paintsRmgZoneTerrainOnLevel(s32 waterContent, s32 level)
     return level == RMG_UNDERGROUND_LEVEL || waterContent != RMG_WATER_ISLANDS;
 }
 
-// Stays a free helper: as a TRmgMapItem member, VC6 lays out
-// drawIrregularZoneBoundary (under buildZoneBoundaries) differently.
+// Kept a free function: generated maps depend on drawIrregularZoneBoundary's
+// frame; see rmg-cleanup-review.md.
 static inline void assignRmgZoneCell(
     TRmgMapItem* item, s32 zoneIndex, b8 markForTerrain)
 {

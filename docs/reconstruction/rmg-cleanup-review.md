@@ -173,8 +173,31 @@ explicit, returned directly from Voronoi point location and declared
 boundary-tracing, fill-seed and fit-test locals where they are used.
 A third review dropped the river adapter's paired scope blocks and gave
 Delaunay legalization its if/else-if/else form; both compile identically.
-`initializeObjectGenerators` keeps its key-tent block, since removing it
-changes the constructor tree's VC6 code.
+The deliberate keeps are listed under frame-sensitive code below.
+
+### Frame-sensitive code
+
+Retail `buildZoneBoundaries` reads its `testSlot` town flags uninitialized
+(see the [safety inventory](../reference/rmg-undefined-behavior.md)), so those
+bytes are whatever earlier calls left on the stack. Source changes that alter
+VC6's frames or inlining in the generator constructor tree, `initializeZones`
+or `buildZoneBoundaries` change generated maps. Source comments mark the
+following keeps only with a pointer here:
+
+- `initializeObjectGenerators`' key-tent scope block: removing it changes
+  VC6's `push_back` inlining in that function and the constructor tree's
+  stack residue.
+- `initializeZones` reuses `minimumY`/`minimumX` as the square's origin.
+  Separate origin locals changed its frame and moved towns on maps with water
+  or two levels (caught by the output comparison below).
+- `assignRmgZoneCell` stays a free function: as a `TRmgMapItem` member, VC6
+  lays out `drawIrregularZoneBoundary`, called under `buildZoneBoundaries`,
+  differently.
+
+`writeRmgReservedBytes` takes its count as a function argument for a separate
+reason: VC6 merges function templates whose parameters do not mention every
+template argument, so a count-only template parameter wrote the same size for
+every call.
 
 Subtraction in an index is not automatically an out-of-bounds access. The
 placement scratch array includes a one-cell border, its overlap flag proves
