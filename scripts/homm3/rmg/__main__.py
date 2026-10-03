@@ -23,7 +23,7 @@ from homm3.core.project import Project
 from .bindings import DRIVER_BASE, prepare_calls, resolve, absolute_object
 from .bootstrap import patch_winmain
 from .cases import (load_cases, validate_case, job_bytes, digest, compare_runs,
-                    decode_result)
+                    compare_outputs, decode_result)
 
 UNITS = ('rmg', 'rmg_support', 'rmg_terrain')
 DLLS = ('BINKW32.DLL', 'MSS32.DLL', 'SMACKW32.DLL', 'IFC20.dll')
@@ -162,6 +162,78 @@ def run_case(out: Path, name: str, mode: str, job: bytes, data: Path,
     write_json(directory / 'run.json', result)
     print(f'[rmg] {name}: {result["status"]} ({result["seconds"]}s)', flush=True)
     return result
+
+
+def run_batch(out: Path, name: str, mode: str, jobs: list[bytes], data: Path,
+              libraries: list[Path], timeout: float) -> list[dict]:
+    """Run several jobs in order in one fresh process.
+
+    The driver restores the fresh-process x87 and rand() state and refills
+    stack and heap storage per job. Each entry reports its job; a fault or
+    timeout ends the process, and later jobs come back as 'not-run' for the
+    caller to resubmit. Job i writes map-i.raw and result-i.bin.
+    """
+    directory = out / name
+    directory.mkdir()
+    for path in (out / 'rmg-host.exe', out / 'rmg-driver.dll', *libraries):
+        (directory / path.name).symlink_to(path)
+    (directory / 'job.bin').write_bytes(b''.join(jobs))
+    env = dict(os.environ, RMG_JOB=winepath_w(directory / 'job.bin'),
+               RMG_DATA=winepath_w(data) + '\\', RMG_MODE=mode,
+               WINEDLLOVERRIDES='winedbg.exe=d')
+    started = time.monotonic()
+    with (directory / 'wine.log').open('wb') as stream:
+        process = subprocess.Popen(['wine', str(directory / 'rmg-host.exe')],
+                                   cwd=directory, env=env, stdout=stream,
+                                   stderr=subprocess.STDOUT, start_new_session=True)
+        try:
+            code = process.wait(timeout=timeout * len(jobs))
+            status = 'ok' if code == 0 else 'process-error'
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            process.wait()
+            code, status = None, 'timeout'
+    seconds = round(time.monotonic() - started, 3)
+    fault = None
+    failure = directory / 'failure.bin'
+    if failure.exists():
+        raw = failure.read_bytes()
+        if len(raw) == 16:
+            fault = dict(zip(('code', 'address', 'stage', 'job'), struct.unpack('<IIII', raw)))
+        elif len(raw) == 12 and len(jobs) == 1:
+            fault = dict(zip(('code', 'address', 'stage'), struct.unpack('<III', raw)), job=0)
+    results = []
+    stopped = False  # an earlier job ended the process
+    for index in range(len(jobs)):
+        map_path = directory / (f'map-{index}.raw' if len(jobs) > 1 else 'map.raw')
+        result_path = directory / (f'result-{index}.bin' if len(jobs) > 1 else 'result.bin')
+        entry = {'map': map_path, 'result': result_path}
+        if not stopped and result_path.is_file() and map_path.is_file():
+            try:
+                entry.update(status='ok', state=decode_result(result_path.read_bytes()))
+            except ValueError as error:
+                entry.update(status='invalid-output', error=str(error))
+                stopped = True
+        elif stopped:
+            entry.update(status='not-run')
+        elif fault is not None and fault['job'] == index:
+            entry.update(status='crash', exception=f"0x{fault['code']:08x}",
+                         address=f"0x{fault['address']:08x}", stage=fault['stage'])
+            stopped = True
+        elif status == 'timeout':
+            entry.update(status='timeout')
+            stopped = True
+        else:
+            entry.update(status='process-error', exitCode=code)
+            stopped = True
+        results.append(entry)
+    write_json(directory / 'batch.json', {'seconds': seconds, 'status': status, 'exitCode': code,
+                                          'jobs': [{k: v for k, v in r.items() if k not in ('map', 'result', 'state')}
+                                                   for r in results]})
+    return results
 
 
 def compare(args) -> int:
