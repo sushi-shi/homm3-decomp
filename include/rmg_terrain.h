@@ -63,7 +63,7 @@ struct TRmgTerrainFlip {
     b8 m_flipY;
 
     TRmgTerrainFlip() {}
-    TRmgTerrainFlip(b8 x, b8 y) : m_flipX(x), m_flipY(y) {}
+    TRmgTerrainFlip(b8 flipX, b8 flipY) : m_flipX(flipX), m_flipY(flipY) {}
     const s32* getReflectedNeighbourOrder() const;
     s32 getIndex() const;
 };

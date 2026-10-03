@@ -521,9 +521,9 @@ inline const s32* TRmgTerrainFlip::getReflectedNeighbourOrder() const
     return g_rmgReflectedNeighbours[m_flipX][m_flipY];
 }
 
-static TRmgTerrainFlip makeTerrainFlip(b8 x, b8 y)
+static TRmgTerrainFlip makeTerrainFlip(b8 flipX, b8 flipY)
 {
-    return TRmgTerrainFlip(x, y);
+    return TRmgTerrainFlip(flipX, flipY);
 }
 
 VA(0x005b3dd0, 0x6f)

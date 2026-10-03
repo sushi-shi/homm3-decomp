@@ -673,10 +673,10 @@ void type_random_map::markCoastalTiles()
                     getNeighborhoodBounds(bounds, position, RMG_NEIGHBORHOOD_3X3);
                     for (s32 nearY = bounds.m_minimumY; nearY < bounds.m_maximumY; ++nearY) {
                         for (s32 nearX = bounds.m_minimumX; nearX < bounds.m_maximumX; ++nearX) {
-                            TRmgMapItem* neighbor = getMapItem(nearX, nearY, position.m_z);
-                            if (neighbor->getLandType() != eTerrainWater
-                                && neighbor->getLandType() != eTerrainRock)
-                                neighbor->m_tileData.m_coastal = true;
+                            TRmgMapItem* neighbour = getMapItem(nearX, nearY, position.m_z);
+                            if (neighbour->getLandType() != eTerrainWater
+                                && neighbour->getLandType() != eTerrainRock)
+                                neighbour->m_tileData.m_coastal = true;
                         }
                     }
                 }
@@ -1896,12 +1896,12 @@ void rmgWitchHutObject::write(TAbstractFile* outputFile, s32 version)
 VA(0x00534160, 0x27)
 MAC_ADDRESS(0x231cec, 0x1c)
 type_treasure_def::type_treasure_def(
-    s32 newObjectType, s32 newSubtype, s32 newValue, s32 newDensity)
+    s32 objectType, s32 subtype, s32 value, s32 density)
 {
-    m_objectType = newObjectType;
-    m_subtype = newSubtype;
-    m_value = newValue;
-    m_density = newDensity;
+    m_objectType = objectType;
+    m_subtype = subtype;
+    m_value = value;
+    m_density = density;
 }
 
 VA(0x00534190, 0x06)
@@ -1935,13 +1935,13 @@ static inline s32 roundRmgCreatureCount(s32 count, s32 step)
 
 VA(0x00534250, 0xb5)
 MAC_ADDRESS(0x231dfc, 0x108)
-type_black_box_creature_def::type_black_box_creature_def(s32 newCreatureType)
+type_black_box_creature_def::type_black_box_creature_def(s32 creatureType)
     : type_treasure_def(BLACK_BOX, 0, -1, 3),
-      m_creatureType(static_cast<TCreatureType>(newCreatureType))
+      m_creatureType(static_cast<TCreatureType>(creatureType))
 {
     m_creatureCount =
-        g_rmgCreatureValueByLevel[g_creatureTypeTraits[newCreatureType].m_level]
-        / g_creatureTypeTraits[newCreatureType].m_aiValue;
+        g_rmgCreatureValueByLevel[g_creatureTypeTraits[creatureType].m_level]
+        / g_creatureTypeTraits[creatureType].m_aiValue;
 
     if (m_creatureCount > 50)
         m_creatureCount = roundRmgCreatureCount(m_creatureCount, 10);
@@ -2102,8 +2102,8 @@ type_object* type_scholar_def::generate(TRmgObjectPropertiesRef* properties,
 
 VA(0x005349d0, 0x29)
 MAC_ADDRESS(0x232600, 0x44)
-type_shrine_def::type_shrine_def(s32 newObjectType, s32 newValue)
-    : type_treasure_def(newObjectType, 0, newValue, 100)
+type_shrine_def::type_shrine_def(s32 objectType, s32 value)
+    : type_treasure_def(objectType, 0, value, 100)
 {
 }
 
@@ -2209,10 +2209,10 @@ type_object* type_quest_gold_def::generate(TRmgObjectPropertiesRef* properties,
 
 VA(0x00534ea0, 0x30)
 MAC_ADDRESS(0x232b28, 0x58)
-type_spell_scroll_def::type_spell_scroll_def(s32 newSpellLevel, s32 newValue)
-    : type_treasure_def(SPELL_SCROLL, 0, newValue, 30)
+type_spell_scroll_def::type_spell_scroll_def(s32 spellLevel, s32 value)
+    : type_treasure_def(SPELL_SCROLL, 0, value, 30)
 {
-    m_spellLevel = newSpellLevel;
+    m_spellLevel = spellLevel;
 }
 
 static inline bool isRmgScrollSpell(s32 spell, s32 level)
@@ -3277,41 +3277,41 @@ void readRmgTemplateZones(
             && isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_ZONE_INDEX])
             && values.size() > RMG_TEMPLATE_COLUMN_LAST_TREASURE_DENSITY) {
 
-            TRmgTemplateZone* slot = new TRmgTemplateZone;
-            slot->m_zoneIndex = atoi(values[RMG_TEMPLATE_COLUMN_ZONE_INDEX]);
-            slot->m_kind = RMG_TEMPLATE_TREASURE;
+            TRmgTemplateZone* templateZone = new TRmgTemplateZone;
+            templateZone->m_zoneIndex = atoi(values[RMG_TEMPLATE_COLUMN_ZONE_INDEX]);
+            templateZone->m_kind = RMG_TEMPLATE_TREASURE;
             if (isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_KIND_HUMAN]))
-                slot->m_kind = RMG_TEMPLATE_HUMAN;
+                templateZone->m_kind = RMG_TEMPLATE_HUMAN;
             if (isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_KIND_COMPUTER]))
-                slot->m_kind = RMG_TEMPLATE_COMPUTER;
+                templateZone->m_kind = RMG_TEMPLATE_COMPUTER;
             if (isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_KIND_TREASURE]))
-                slot->m_kind = RMG_TEMPLATE_TREASURE;
+                templateZone->m_kind = RMG_TEMPLATE_TREASURE;
             if (isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_KIND_JUNCTION]))
-                slot->m_kind = RMG_TEMPLATE_JUNCTION;
-            slot->m_size = atoi(values[RMG_TEMPLATE_COLUMN_SIZE]);
-            readRmgTemplatePlayerLimits(*slot, values,
+                templateZone->m_kind = RMG_TEMPLATE_JUNCTION;
+            templateZone->m_size = atoi(values[RMG_TEMPLATE_COLUMN_SIZE]);
+            readRmgTemplatePlayerLimits(*templateZone, values,
                 RMG_TEMPLATE_COLUMN_MINIMUM_HUMAN_PLAYERS);
-            if (!allowsRmgTemplatePlayerCounts(*slot, humanPlayers, computerPlayers)) {
-                delete slot;
+            if (!allowsRmgTemplatePlayerCounts(*templateZone, humanPlayers, computerPlayers)) {
+                delete templateZone;
             } else {
-                slot->m_playerIndex = atoi(values[RMG_TEMPLATE_COLUMN_PLAYER_INDEX]) - 1;
-                slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT] =
+                templateZone->m_playerIndex = atoi(values[RMG_TEMPLATE_COLUMN_PLAYER_INDEX]) - 1;
+                templateZone->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT] =
                     atoi(values[RMG_TEMPLATE_COLUMN_PLAYER_BASIC_COUNT]);
-                slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT] =
+                templateZone->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT] =
                     atoi(values[RMG_TEMPLATE_COLUMN_PLAYER_CASTLE_COUNT]);
-                slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_DENSITY] =
+                templateZone->m_townPlacement[RMG_TOWN_PLAYER_BASIC_DENSITY] =
                     atoi(values[RMG_TEMPLATE_COLUMN_PLAYER_BASIC_DENSITY]);
-                slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_DENSITY] =
+                templateZone->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_DENSITY] =
                     atoi(values[RMG_TEMPLATE_COLUMN_PLAYER_CASTLE_DENSITY]);
-                slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT] =
+                templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT] =
                     atoi(values[RMG_TEMPLATE_COLUMN_NEUTRAL_BASIC_COUNT]);
-                slot->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_COUNT] =
+                templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_COUNT] =
                     atoi(values[RMG_TEMPLATE_COLUMN_NEUTRAL_CASTLE_COUNT]);
-                slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_DENSITY] =
+                templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_DENSITY] =
                     atoi(values[RMG_TEMPLATE_COLUMN_NEUTRAL_BASIC_DENSITY]);
-                slot->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_DENSITY] =
+                templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_DENSITY] =
                     atoi(values[RMG_TEMPLATE_COLUMN_NEUTRAL_CASTLE_DENSITY]);
-                slot->m_neutralTownsMatchZone =
+                templateZone->m_neutralTownsMatchZone =
                     isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_NEUTRAL_TOWNS_MATCH_ZONE]);
                 // RoE maps have no Conflux.
                 s32 townCount;
@@ -3319,61 +3319,61 @@ void readRmgTemplateZones(
                     townCount = TOWN_TYPE_COUNT;
                 else {
                     townCount = TOWN_CONFLUX;
-                    slot->m_allowedTowns[TOWN_CONFLUX] = false;
+                    templateZone->m_allowedTowns[TOWN_CONFLUX] = false;
                 }
                 while (townCount--)
-                    slot->m_allowedTowns[townCount] =
+                    templateZone->m_allowedTowns[townCount] =
                         isRmgTemplateFieldSet(
                             values[RMG_TEMPLATE_COLUMN_ALLOWED_TOWNS + townCount]);
                 for (s32 resource = WOOD; resource < NUM_RESOURCES; ++resource) {
-                    slot->m_mineCounts[resource] =
+                    templateZone->m_mineCounts[resource] =
                         atoi(values[RMG_TEMPLATE_COLUMN_MINE_COUNTS + resource]);
-                    slot->m_mineDensities[resource] =
+                    templateZone->m_mineDensities[resource] =
                         atoi(values[RMG_TEMPLATE_COLUMN_MINE_DENSITIES + resource]);
                 }
-                slot->m_useNativeTerrain =
+                templateZone->m_useNativeTerrain =
                     isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_USE_NATIVE_TERRAIN]);
                 b8 anyTerrain = false;
                 for (s32 terrain = eTerrainDirt; terrain < eTerrainWater; ++terrain) {
-                    slot->m_allowedTerrain[terrain] =
+                    templateZone->m_allowedTerrain[terrain] =
                         isRmgTemplateFieldSet(
                             values[RMG_TEMPLATE_COLUMN_ALLOWED_TERRAIN + terrain]);
-                    if (slot->m_allowedTerrain[terrain])
+                    if (templateZone->m_allowedTerrain[terrain])
                         anyTerrain = true;
                 }
                 if (!anyTerrain)
-                    slot->m_allowedTerrain[eTerrainDirt] = true;
+                    templateZone->m_allowedTerrain[eTerrainDirt] = true;
                 switch (tolower(values[RMG_TEMPLATE_COLUMN_MONSTER_STRENGTH][0])) {
-                case 'n': slot->m_monsterStrength = RMG_ZONE_MONSTERS_NONE; break;
-                case 'w': slot->m_monsterStrength = RMG_ZONE_MONSTERS_WEAK; break;
-                case 's': slot->m_monsterStrength = RMG_ZONE_MONSTERS_STRONG; break;
-                case 'a': slot->m_monsterStrength = RMG_ZONE_MONSTERS_AVERAGE; break;
-                default: slot->m_monsterStrength = RMG_ZONE_MONSTERS_AVERAGE; break;
+                case 'n': templateZone->m_monsterStrength = RMG_ZONE_MONSTERS_NONE; break;
+                case 'w': templateZone->m_monsterStrength = RMG_ZONE_MONSTERS_WEAK; break;
+                case 's': templateZone->m_monsterStrength = RMG_ZONE_MONSTERS_STRONG; break;
+                case 'a': templateZone->m_monsterStrength = RMG_ZONE_MONSTERS_AVERAGE; break;
+                default: templateZone->m_monsterStrength = RMG_ZONE_MONSTERS_AVERAGE; break;
                 }
-                slot->m_guardsMatchZone =
+                templateZone->m_guardsMatchZone =
                     isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_GUARDS_MATCH_ZONE]);
                 // Neutral, then one slot per town type.
                 for (s32 monster = 0; monster < TOWN_TYPE_COUNT + 1; ++monster)
-                    slot->m_allowedMonsters[monster] =
+                    templateZone->m_allowedMonsters[monster] =
                         isRmgTemplateFieldSet(
                             values[RMG_TEMPLATE_COLUMN_ALLOWED_MONSTERS + monster]);
                 // Retail bug: TOWN_CONFLUX is the Conflux slot of m_allowedTowns,
                 // but monster slots are offset by one, so RoE maps disallow
                 // Fortress guards instead.
                 if (mapVersion < RMG_MAP_ARMAGEDDONS_BLADE)
-                    slot->m_allowedMonsters[TOWN_CONFLUX] = false;
+                    templateZone->m_allowedMonsters[TOWN_CONFLUX] = false;
                 for (s32 treasure = 0; treasure < 3; ++treasure) {
-                    slot->m_treasure[treasure].m_minimum =
+                    templateZone->m_treasure[treasure].m_minimum =
                         atoi(values[RMG_TEMPLATE_COLUMN_TREASURE_MINIMUM
                             + RMG_TEMPLATE_TREASURE_COLUMN_COUNT * treasure]);
-                    slot->m_treasure[treasure].m_maximum =
+                    templateZone->m_treasure[treasure].m_maximum =
                         atoi(values[RMG_TEMPLATE_COLUMN_TREASURE_MAXIMUM
                             + RMG_TEMPLATE_TREASURE_COLUMN_COUNT * treasure]);
-                    slot->m_treasure[treasure].m_density =
+                    templateZone->m_treasure[treasure].m_density =
                         atoi(values[RMG_TEMPLATE_COLUMN_TREASURE_DENSITY
                             + RMG_TEMPLATE_TREASURE_COLUMN_COUNT * treasure]);
                 }
-                mapTemplate->m_zones.push_back(slot);
+                mapTemplate->m_zones.push_back(templateZone);
             }
         }
     }
@@ -3575,15 +3575,15 @@ VA(0x0053ad60, 0x113)
 MAC_ADDRESS(0x23be70, 0x14c)
 b8 type_random_map_generator::canPlaceZone(TRmgZone* zone)
 {
-    TRmgTemplateZone* slot = zone->m_templateZone;
+    TRmgTemplateZone* templateZone = zone->m_templateZone;
     TRmgMapPosition position = zone->getLevelPosition();
-    s32 size = slot->m_size;
-    if ((slot->m_kind == RMG_TEMPLATE_HUMAN ||
-         slot->m_kind == RMG_TEMPLATE_COMPUTER) &&
+    s32 size = templateZone->m_size;
+    if ((templateZone->m_kind == RMG_TEMPLATE_HUMAN ||
+         templateZone->m_kind == RMG_TEMPLATE_COMPUTER) &&
         position.m_z == RMG_UNDERGROUND_LEVEL && zone->m_alignment != TOWN_INFERNO &&
         zone->m_alignment != TOWN_NECROPOLIS && zone->m_alignment != TOWN_DUNGEON)
         return false;
-    s32 zoneIndex = slot->m_zoneIndex;
+    s32 zoneIndex = templateZone->m_zoneIndex;
     for (s32 other = 0; other < m_zones.size(); ++other) {
         TRmgZone* otherZone = m_zones[other];
         if (otherZone->getLevelPosition().m_z != position.m_z ||
@@ -3654,9 +3654,9 @@ MAC_ADDRESS(0x23c248, 0x9c)
 s32 type_random_map_generator::countPlacedZoneConnections(TRmgZone* zone) const
 {
     s32 connectionCount = 0;
-    TRmgTemplateZone* slot = zone->m_templateZone;
-    for (s32 connection = 0; connection < slot->m_connections.size(); ++connection) {
-        s32 destination = slot->m_connections[connection].m_destination->m_zoneIndex;
+    TRmgTemplateZone* templateZone = zone->m_templateZone;
+    for (s32 connection = 0; connection < templateZone->m_connections.size(); ++connection) {
+        s32 destination = templateZone->m_connections[connection].m_destination->m_zoneIndex;
         if (destination < m_zones.size() && m_zones[destination]->canConnect(zone))
             ++connectionCount;
     }
@@ -3790,9 +3790,9 @@ void type_random_map_generator::positionZone(TRmgZone* zone, s32 mapSize)
             appendZoneCandidate(zone,
                 TRmgMapPosition(0, 0, RMG_UNDERGROUND_LEVEL), candidates);
     } else {
-        TRmgTemplateZone* slot = zone->m_templateZone;
-        for (s32 connection = 0; connection < slot->m_connections.size(); ++connection) {
-            TRmgTemplateZone* destination = slot->m_connections[connection].m_destination;
+        TRmgTemplateZone* templateZone = zone->m_templateZone;
+        for (s32 connection = 0; connection < templateZone->m_connections.size(); ++connection) {
+            TRmgTemplateZone* destination = templateZone->m_connections[connection].m_destination;
             if (destination->m_zoneIndex < m_zones.size())
                 appendZonePositions(m_zones[destination->m_zoneIndex], zone, candidates);
         }
@@ -3836,8 +3836,8 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
 {
     m_zones.clear();
     s32 minimumSize = 32000;
-    for (s32 slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex)
-        minimumSize = min(minimumSize, mapTemplate->m_zones[slotIndex]->m_size);
+    for (s32 index = 0; index < mapTemplate->m_zones.size(); ++index)
+        minimumSize = min(minimumSize, mapTemplate->m_zones[index]->m_size);
     s32 mapSize = min(minimumSize * m_map.m_mapWidth,
         minimumSize * m_map.m_mapHeight);
     switch (m_waterContent) {
@@ -3845,12 +3845,13 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     case RMG_WATER_NORMAL: mapSize /= 6; break;
     default: mapSize /= 7; break;
     }
-    for (slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex) {
-        TRmgTemplateZone* slot = mapTemplate->m_zones[slotIndex];
-        TRmgZone* zone = new TRmgZone(slot);
-        if (slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT] + slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT] > 0
-            && slot->m_playerIndex >= 0) {
-            s32 player = m_playerIndexMap[slot->m_playerIndex + 1];
+    for (index = 0; index < mapTemplate->m_zones.size(); ++index) {
+        TRmgTemplateZone* templateZone = mapTemplate->m_zones[index];
+        TRmgZone* zone = new TRmgZone(templateZone);
+        if (templateZone->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT]
+                + templateZone->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT] > 0
+            && templateZone->m_playerIndex >= 0) {
+            s32 player = m_playerIndexMap[templateZone->m_playerIndex + 1];
             if (player >= 0 && m_townChoices[player] != eTownNeutral)
                 zone->m_alignment = m_townChoices[player];
         }
@@ -3858,8 +3859,8 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
         m_zones.push_back(zone);
     }
     for (s32 pass = 0; pass < 2; ++pass) {
-        for (slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex)
-            positionZone(m_zones[slotIndex], mapSize);
+        for (index = 0; index < mapTemplate->m_zones.size(); ++index)
+            positionZone(m_zones[index], mapSize);
     }
     s32 minimumY, minimumX, maximumY, maximumX;
     getInitialZoneBounds(minimumY, minimumX, maximumY, maximumX);
@@ -4395,11 +4396,11 @@ void type_random_map_generator::propagateZoneDistances(TRmgZone* zone)
         while (pending.size()) {
             TRmgZone* current = pending.back();
             pending.pop_back();
-            TRmgTemplateZone* slot = current->m_templateZone;
+            TRmgTemplateZone* templateZone = current->m_templateZone;
             costs.pop_back();
             s32 distance = current->m_zoneDistances[column] + 1;
-            for (u32 connection = 0; connection < slot->m_connections.size(); ++connection) {
-                TRmgZone* next = m_zones[slot->m_connections[connection].m_destination->m_zoneIndex];
+            for (u32 connection = 0; connection < templateZone->m_connections.size(); ++connection) {
+                TRmgZone* next = m_zones[templateZone->m_connections[connection].m_destination->m_zoneIndex];
                 if (next->m_zoneDistances[column] > distance) {
                     next->m_zoneDistances[column] = distance;
                     insertRmgWorkItem(pending, costs, next, distance);
@@ -4563,28 +4564,28 @@ void type_random_map_generator::buildZoneBoundaries(
                 if (position.m_z == RMG_SURFACE_LEVEL) {
                     // Retail bug: m_allowedTowns is left uninitialized before the
                     // zone constructor reads it, so heap contents affect RNG use.
-                    TRmgTemplateZone* slot = new TRmgTemplateZone;
-                    slot->m_zoneIndex = mapTemplate->m_zones.size();
-                    slot->m_size = radius;
-                    memset(slot->m_allowedMonsters, 0, sizeof(slot->m_allowedMonsters));
-                    memset(slot->m_allowedTerrain, 0, sizeof(slot->m_allowedTerrain));
-                    memset(slot->m_mineCounts, 0, sizeof(slot->m_mineCounts));
-                    memset(slot->m_mineDensities, 0, sizeof(slot->m_mineDensities));
-                    memset(slot->m_townPlacement, 0, sizeof(slot->m_townPlacement));
-                    slot->m_monsterStrength = RMG_ZONE_MONSTERS_NONE;
-                    slot->m_playerIndex = -1;
-                    memset(slot->m_treasure, 0, sizeof(slot->m_treasure));
-                    slot->m_treasure[0].m_density = 5;
-                    slot->m_treasure[0].m_maximum = 1000;
-                    slot->m_treasure[0].m_minimum = 100;
-                    slot->m_treasure[1].m_density = 1;
-                    slot->m_treasure[1].m_maximum = 6000;
-                    slot->m_treasure[1].m_minimum = 2000;
-                    slot->m_kind = RMG_TEMPLATE_JUNCTION;
-                    addedZone = new TRmgZone(slot);
+                    TRmgTemplateZone* templateZone = new TRmgTemplateZone;
+                    templateZone->m_zoneIndex = mapTemplate->m_zones.size();
+                    templateZone->m_size = radius;
+                    memset(templateZone->m_allowedMonsters, 0, sizeof(templateZone->m_allowedMonsters));
+                    memset(templateZone->m_allowedTerrain, 0, sizeof(templateZone->m_allowedTerrain));
+                    memset(templateZone->m_mineCounts, 0, sizeof(templateZone->m_mineCounts));
+                    memset(templateZone->m_mineDensities, 0, sizeof(templateZone->m_mineDensities));
+                    memset(templateZone->m_townPlacement, 0, sizeof(templateZone->m_townPlacement));
+                    templateZone->m_monsterStrength = RMG_ZONE_MONSTERS_NONE;
+                    templateZone->m_playerIndex = -1;
+                    memset(templateZone->m_treasure, 0, sizeof(templateZone->m_treasure));
+                    templateZone->m_treasure[0].m_density = 5;
+                    templateZone->m_treasure[0].m_maximum = 1000;
+                    templateZone->m_treasure[0].m_minimum = 100;
+                    templateZone->m_treasure[1].m_density = 1;
+                    templateZone->m_treasure[1].m_maximum = 6000;
+                    templateZone->m_treasure[1].m_minimum = 2000;
+                    templateZone->m_kind = RMG_TEMPLATE_JUNCTION;
+                    addedZone = new TRmgZone(templateZone);
                     addedZone->m_terrain = eTerrainWater;
                     addedZone->setLevelPosition(position);
-                    mapTemplate->m_zones.push_back(slot);
+                    mapTemplate->m_zones.push_back(templateZone);
                     m_zones.push_back(addedZone);
                 }
                 diagram.addSite(position, addedZone);
@@ -5511,10 +5512,10 @@ b8 type_random_map_generator::createGroundConnection(
     std::vector<TRmgMapItem*>* borderItems,
     std::vector<TRmgMapPosition>* borderPositions)
 {
-    TRmgTemplateZone* sourceSlot = source->m_templateZone;
-    TRmgTemplateZone* destinationSlot = connection->m_destination;
-    s32 sourceZone = sourceSlot->m_zoneIndex;
-    TRmgZone* destination = m_zones[destinationSlot->m_zoneIndex];
+    TRmgTemplateZone* sourceTemplateZone = source->m_templateZone;
+    TRmgTemplateZone* destinationTemplateZone = connection->m_destination;
+    s32 sourceZone = sourceTemplateZone->m_zoneIndex;
+    TRmgZone* destination = m_zones[destinationTemplateZone->m_zoneIndex];
     s32 destinationZone = destination->m_templateZone->m_zoneIndex;
     if (source->getLevelPosition().m_z != destination->getLevelPosition().m_z)
         return false;
@@ -6072,17 +6073,17 @@ void type_random_map_generator::connectZones()
     s32 zoneIndex;
     for (zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
-        TRmgTemplateZone* zoneTemplate = zone->m_templateZone;
+        TRmgTemplateZone* templateZone = zone->m_templateZone;
         if (zone->getTerrain() == eTerrainWater)
             continue;
 
         m_map.clearConnectionVisits(zone->getLevelPosition().m_z);
 
         for (s32 connectionIndex = 0;
-             connectionIndex < zoneTemplate->m_connections.size();
+             connectionIndex < templateZone->m_connections.size();
              ++connectionIndex) {
             TRmgZoneConnection* connection =
-                &zoneTemplate->m_connections[connectionIndex];
+                &templateZone->m_connections[connectionIndex];
             if (connection->isConnected())
                 continue;
 
@@ -6116,15 +6117,15 @@ void type_random_map_generator::connectZones()
 
     for (zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
-        TRmgTemplateZone* zoneTemplate = zone->m_templateZone;
+        TRmgTemplateZone* templateZone = zone->m_templateZone;
         if (zone->getTerrain() == eTerrainWater)
             continue;
 
         s32 connectionIndex = 0;
-        while (connectionIndex < zoneTemplate->m_connections.size()
-               && zoneTemplate->m_connections[connectionIndex].isConnected())
+        while (connectionIndex < templateZone->m_connections.size()
+               && templateZone->m_connections[connectionIndex].isConnected())
             ++connectionIndex;
-        if (connectionIndex == zoneTemplate->m_connections.size())
+        if (connectionIndex == templateZone->m_connections.size())
             continue;
 
         m_map.clearConnectionVisits(zone->getLevelPosition().m_z);
@@ -6140,10 +6141,10 @@ void type_random_map_generator::connectZones()
         }
 
         for (;
-             connectionIndex < zoneTemplate->m_connections.size();
+             connectionIndex < templateZone->m_connections.size();
              ++connectionIndex) {
             TRmgZoneConnection* connection =
-                &zoneTemplate->m_connections[connectionIndex];
+                &templateZone->m_connections[connectionIndex];
             if (connection->isConnected())
                 continue;
 
@@ -6488,19 +6489,19 @@ VA(0x00544a50, 0x90)
 MAC_ADDRESS(0x248328, 0xf0)
 void type_random_map_generator::placePrimaryTown(TRmgZone* zone)
 {
-    TRmgTemplateZone* slot = zone->m_templateZone;
+    TRmgTemplateZone* templateZone = zone->m_templateZone;
     TTownType alignment = zone->m_alignment;
-    s32 player = m_playerIndexMap[slot->m_playerIndex + 1];
-    if (slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT] > 0
+    s32 player = m_playerIndexMap[templateZone->m_playerIndex + 1];
+    if (templateZone->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT] > 0
         && tryPlacePrimaryTown(zone, alignment, player, true))
         return;
-    if (slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT] > 0
+    if (templateZone->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT] > 0
         && tryPlacePrimaryTown(zone, alignment, player, false))
         return;
-    if (slot->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_COUNT] > 0
+    if (templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_COUNT] > 0
         && tryPlacePrimaryTown(zone, alignment, -1, true))
         return;
-    if (slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT] > 0)
+    if (templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT] > 0)
         tryPlacePrimaryTown(zone, alignment, -1, false);
 }
 
@@ -6595,33 +6596,33 @@ VA(0x00544ae0, 0x2b0)
 MAC_ADDRESS(0x248418, 0x414)
 void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
 {
-    TRmgTemplateZone* slot = zone->m_templateZone;
+    TRmgTemplateZone* templateZone = zone->m_templateZone;
     TTownType alignment = zone->m_alignment;
-    s32 player = m_playerIndexMap[slot->m_playerIndex + 1];
+    s32 player = m_playerIndexMap[templateZone->m_playerIndex + 1];
     b8 skipPrimary = true;
     placeFixedTownCategory(zone,
-        slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT], alignment, player, true, skipPrimary);
+        templateZone->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT], alignment, player, true, skipPrimary);
     placeFixedTownCategory(zone,
-        slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT], alignment, player, false, skipPrimary);
+        templateZone->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT], alignment, player, false, skipPrimary);
     placeFixedTownCategory(zone,
-        slot->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_COUNT], alignment, -1, true, skipPrimary);
+        templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_COUNT], alignment, -1, true, skipPrimary);
     placeFixedTownCategory(zone,
-        slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT], alignment, -1, false, skipPrimary);
+        templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT], alignment, -1, false, skipPrimary);
     s32 totalDensity = 0;
     s32 densityProduct = 1;
     // Indexed by ERmgTownPlacementCategory.
     const s32 categoryCount = RMG_TOWN_NEUTRAL_BASIC + 1;
     s32 densities[categoryCount] = {
-        slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_DENSITY],
-        slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_DENSITY],
-        slot->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_DENSITY],
-        slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_DENSITY]
+        templateZone->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_DENSITY],
+        templateZone->m_townPlacement[RMG_TOWN_PLAYER_BASIC_DENSITY],
+        templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_DENSITY],
+        templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_DENSITY]
     };
     s32 weightedCounts[categoryCount] = {
-        slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT],
-        slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT],
-        slot->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_COUNT],
-        slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT]
+        templateZone->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT],
+        templateZone->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT],
+        templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_COUNT],
+        templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT]
     };
     s32 countSteps[categoryCount];
     b8 finished[categoryCount];
@@ -6666,9 +6667,9 @@ MAC_ADDRESS(0x24882c, 0x5d4)
 b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     s32 alignment, s32 player, b8 hasFort, s32 spacing)
 {
-    TRmgTemplateZone* slot = zone->m_templateZone;
-    if ((player == -1 && !slot->m_neutralTownsMatchZone) || alignment == eTownNeutral) {
-        alignment = slot->selectAllowedTown();
+    TRmgTemplateZone* templateZone = zone->m_templateZone;
+    if ((player == -1 && !templateZone->m_neutralTownsMatchZone) || alignment == eTownNeutral) {
+        alignment = templateZone->selectAllowedTown();
         // RoE maps have no Conflux.
         if (alignment == eTownNeutral)
             alignment = rand() % (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE
@@ -6678,7 +6679,7 @@ b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
         return tryPlacePrimaryTown(zone, alignment, player, hasFort);
 
     std::vector<TRmgMapPosition> candidates;
-    s32 zoneIndex = slot->m_zoneIndex;
+    s32 zoneIndex = templateZone->m_zoneIndex;
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[TOWN][alignment];
     TObjectType* prototype = properties->m_prototype;
     TObjectType::TPoint trigger = prototype->m_triggerCell;
@@ -6946,19 +6947,19 @@ VA(0x00545e60, 0xfa)
 MAC_ADDRESS(0x249c8c, 0x1c4)
 void type_random_map_generator::placeExtraMines(TRmgZone* zone)
 {
-    TRmgTemplateZone* slot = zone->m_templateZone;
+    TRmgTemplateZone* templateZone = zone->m_templateZone;
     b8 finished[NUM_RESOURCES];
     s32 totalDensity = 0;
     s32 densityProduct = 1;
-    initializeRmgDensityCategories(slot->m_mineDensities, NUM_RESOURCES,
+    initializeRmgDensityCategories(templateZone->m_mineDensities, NUM_RESOURCES,
         finished, totalDensity, densityProduct);
     if (!totalDensity)
         return;
     s32 spacing = getRmgDensitySpacing(RMG_TOWN_AND_MINE_DENSITY_AREA, totalDensity);
     s32 countSteps[NUM_RESOURCES];
     s32 weightedCounts[NUM_RESOURCES];
-    initializeRmgCategoryStrides(slot->m_mineDensities, slot->m_mineCounts, NUM_RESOURCES,
-        densityProduct, countSteps, weightedCounts);
+    initializeRmgCategoryStrides(templateZone->m_mineDensities, templateZone->m_mineCounts,
+        NUM_RESOURCES, densityProduct, countSteps, weightedCounts);
     for (;;) {
         s32 selected = selectRmgWeightedCategory(finished, weightedCounts, NUM_RESOURCES);
         if (selected == RMG_NO_CATEGORY)
@@ -6975,12 +6976,13 @@ void type_random_map_generator::placeMines()
 {
     for (u32 index = 0; index < m_zones.size(); ++index) {
         TRmgZone* zone = m_zones[index];
-        TRmgTemplateZone* slot = zone->m_templateZone;
+        TRmgTemplateZone* templateZone = zone->m_templateZone;
         for (s32 resource = WOOD; resource <= GOLD; ++resource) {
             b8 startingMine = (resource == WOOD || resource == ORE)
-                && (slot->m_kind == RMG_TEMPLATE_HUMAN || slot->m_kind == RMG_TEMPLATE_COMPUTER)
+                && (templateZone->m_kind == RMG_TEMPLATE_HUMAN
+                    || templateZone->m_kind == RMG_TEMPLATE_COMPUTER)
                 && zone->m_hasPrimaryTown;
-            for (s32 mine = 0; mine < slot->m_mineCounts[resource]; ++mine) {
+            for (s32 mine = 0; mine < templateZone->m_mineCounts[resource]; ++mine) {
                 if (!tryPlaceMine(zone, resource, startingMine, RMG_NO_SPACING))
                     break;
                 startingMine = false;
@@ -7455,13 +7457,13 @@ VA(0x00547360, 0x460)
 MAC_ADDRESS(0x24b6e8, 0x358)
 void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
 {
-    TRmgTemplateZone* slot = zone->m_templateZone;
+    TRmgTemplateZone* templateZone = zone->m_templateZone;
     TRmgTreasureGroup group(RMG_TREASURE_GROUP_MAP_SIZE, RMG_TREASURE_GROUP_MAP_SIZE);
-    const s32 bandCount = sizeof(slot->m_treasure) / sizeof(slot->m_treasure[0]);
+    const s32 bandCount = sizeof(templateZone->m_treasure) / sizeof(templateZone->m_treasure[0]);
     // Bands with a maximum value below 100 or no density are skipped.
     s32 densities[bandCount];
     for (s32 band = 0; band < bandCount; ++band) {
-        const TRmgTreasureRange& range = slot->m_treasure[band];
+        const TRmgTreasureRange& range = templateZone->m_treasure[band];
         densities[band] = range.m_maximum >= 100 && range.m_density > 0
             ? range.m_density : 0;
     }
@@ -7484,7 +7486,7 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
         if (selected == RMG_NO_CATEGORY)
             break;
         weightedCounts[selected] += countSteps[selected];
-        TRmgTreasureRange& range = slot->m_treasure[selected];
+        TRmgTreasureRange& range = templateZone->m_treasure[selected];
         // On failure, retry the band with compact treasure selection.
         if (!tryPlaceTreasureBand(zone, &group, false, range, spacing)
             && !tryPlaceTreasureBand(zone, &group, true, range, spacing))
@@ -8105,12 +8107,12 @@ b8 type_random_map_generator::generate()
     s32 allSlotByte;
     MEMSET(allSlots, 0, sizeof(allSlots), allSlotByte);
     for (u32 zone = 0; zone < m_templates[selected]->m_zones.size(); ++zone) {
-        TRmgTemplateZone* slot = m_templates[selected]->m_zones[zone];
-        if (slot->m_kind == RMG_TEMPLATE_HUMAN) {
-            humanSlots[slot->m_playerIndex] = true;
-            allSlots[slot->m_playerIndex] = true;
-        } else if (slot->m_kind == RMG_TEMPLATE_COMPUTER) {
-            allSlots[slot->m_playerIndex] = true;
+        TRmgTemplateZone* templateZone = m_templates[selected]->m_zones[zone];
+        if (templateZone->m_kind == RMG_TEMPLATE_HUMAN) {
+            humanSlots[templateZone->m_playerIndex] = true;
+            allSlots[templateZone->m_playerIndex] = true;
+        } else if (templateZone->m_kind == RMG_TEMPLATE_COMPUTER) {
+            allSlots[templateZone->m_playerIndex] = true;
         }
     }
     s32 mapIndex;
@@ -8185,24 +8187,24 @@ void encodePackedBits(const std::bitset<N>& bits, u8* packed)
 }
 
 template <u32 N>
-s32 writePackedBits(TAbstractFile* outfile, const std::bitset<N>& bits)
+s32 writePackedBits(TAbstractFile* outputFile, const std::bitset<N>& bits)
 {
     u8 packed[(N + 7) / 8];
     encodePackedBits(bits, packed);
-    return outfile->write(packed, sizeof(packed));
+    return outputFile->write(packed, sizeof(packed));
 }
 
 // Length-prefixed text: a 32-bit length followed by the characters.
-s32 writeString(TAbstractFile* outfile, const std::string& text)
+s32 writeString(TAbstractFile* outputFile, const std::string& text)
 {
-    writeValue<s32>(outfile, text.length());
-    return outfile->write(text.c_str(), text.length());
+    writeValue<s32>(outputFile, text.length());
+    return outputFile->write(text.c_str(), text.length());
 }
 
-s32 writeString(TAbstractFile* outfile, const char* text)
+s32 writeString(TAbstractFile* outputFile, const char* text)
 {
-    writeValue<s32>(outfile, strlen(text));
-    return outfile->write(text, strlen(text));
+    writeValue<s32>(outputFile, strlen(text));
+    return outputFile->write(text, strlen(text));
 }
 
 // Artifact ids an AB map knows: it ends before the SoD combination artifacts.
@@ -8225,19 +8227,19 @@ static inline void appendRmgPlayerDescription(char* description, s32 player,
 
 VA(0x00549cb0, 0xe90)
 MAC_ADDRESS(0x24e7d4, 0x11ac)
-void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
+void type_random_map_generator::writeMapHeader(TAbstractFile* outputFile)
 {
-    writeValue<s32>(outfile, getSerializedMapVersion());
+    writeValue<s32>(outputFile, getSerializedMapVersion());
 
-    writeValue<b8>(outfile, 1); // playable
+    writeValue<b8>(outputFile, 1); // playable
 
-    writeValue<s32>(outfile, m_map.getWidth());
+    writeValue<s32>(outputFile, m_map.getWidth());
 
-    writeValue<b8>(outfile, m_map.m_numberLevels > 1);
+    writeValue<b8>(outputFile, m_map.m_numberLevels > 1);
 
     std::string mapName(
         DATA_COMPGEN(0x00682900, rmgMapName, "Random Map"));
-    writeString(outfile, mapName);
+    writeString(outputFile, mapName);
 
     // Retail uses unchecked sprintf/strcat below; long template names or
     // player descriptions can overflow this fixed buffer.
@@ -8300,11 +8302,11 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         }
     }
 
-    writeString(outfile, description);
+    writeString(outputFile, description);
 
-    writeValue<u8>(outfile, 1); // difficulty
+    writeValue<u8>(outputFile, 1); // difficulty
     if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
-        writeValue<u8>(outfile, 0); // hero level limit
+        writeValue<u8>(outputFile, 0); // hero level limit
     }
 
     b8 canBeHuman[RMG_PLAYER_COUNT];
@@ -8319,22 +8321,22 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     s32 generatedHumanTowns = 0;
     for (u32 zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
-        TRmgTemplateZone* slot = zone->m_templateZone;
-        s32 slotPlayer = slot->m_playerIndex;
-        if (slotPlayer < 0)
+        TRmgTemplateZone* templateZone = zone->m_templateZone;
+        s32 templatePlayer = templateZone->m_playerIndex;
+        if (templatePlayer < 0)
             continue;
 
-        s32 player = m_playerIndexMap[slotPlayer + 1];
+        s32 player = m_playerIndexMap[templatePlayer + 1];
         if (player < 0 || !zone->m_hasPrimaryTown)
             continue;
 
-        if (slot->m_kind == RMG_TEMPLATE_HUMAN && !canBeHuman[player]) {
+        if (templateZone->m_kind == RMG_TEMPLATE_HUMAN && !canBeHuman[player]) {
             ++generatedHumanTowns;
             canBeHuman[player] = true;
             mainTowns[player] = zone->m_primaryTownEntrance;
         }
 
-        if (slot->m_kind == RMG_TEMPLATE_COMPUTER && !canBeComputer[player]) {
+        if (templateZone->m_kind == RMG_TEMPLATE_COMPUTER && !canBeComputer[player]) {
             canBeComputer[player] = true;
             mainTowns[player] = zone->m_primaryTownEntrance;
         }
@@ -8356,54 +8358,54 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
     for (s32 serializedPlayer = 0; serializedPlayer < RMG_PLAYER_COUNT;
          ++serializedPlayer) {
-        writeValue<char>(outfile, canBeHuman[serializedPlayer]);
+        writeValue<char>(outputFile, canBeHuman[serializedPlayer]);
 
-        writeValue<b8>(outfile, canBeHuman[serializedPlayer] || canBeComputer[serializedPlayer]);
+        writeValue<b8>(outputFile, canBeHuman[serializedPlayer] || canBeComputer[serializedPlayer]);
 
-        writeValue<u8>(outfile, 0); // AI strategy
+        writeValue<u8>(outputFile, 0); // AI strategy
 
         if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
-            writeValue<u8>(outfile, 0); // byte the reader skips
+            writeValue<u8>(outputFile, 0); // byte the reader skips
         }
 
         if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
-            writeValue<u16>(outfile, legalAlignments[serializedPlayer]);
+            writeValue<u16>(outputFile, legalAlignments[serializedPlayer]);
         } else {
-            writeValue<u8>(outfile, legalAlignments[serializedPlayer]);
+            writeValue<u8>(outputFile, legalAlignments[serializedPlayer]);
         }
 
-        writeValue<b8>(outfile, 0); // random alignment
+        writeValue<b8>(outputFile, 0); // random alignment
 
         if (!canBeHuman[serializedPlayer]
             && !canBeComputer[serializedPlayer]) {
-            writeValue<b8>(outfile, 0); // no main town
+            writeValue<b8>(outputFile, 0); // no main town
         } else {
             if (canBeHuman[serializedPlayer])
                 ++m_humanPlayerCount;
             else
                 ++m_computerPlayerCount;
 
-            writeValue<b8>(outfile, 1); // has main town
+            writeValue<b8>(outputFile, 1); // has main town
 
             if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
-                writeValue<b8>(outfile, 1); // generate hero there
-                writeValue<s8>(outfile, eTownNeutral); // main town type
+                writeValue<b8>(outputFile, 1); // generate hero there
+                writeValue<s8>(outputFile, eTownNeutral); // main town type
             }
 
-            writeRmgMapPosition(outfile, mainTowns[serializedPlayer]);
+            writeRmgMapPosition(outputFile, mainTowns[serializedPlayer]);
         }
 
-        writeValue<b8>(outfile, 0); // random hero
-        writeValue<s8>(outfile, heroIdNone); // main custom hero
+        writeValue<b8>(outputFile, 0); // random hero
+        writeValue<s8>(outputFile, heroIdNone); // main custom hero
 
         if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
-            writeValue<u8>(outfile, 0); // placeholder heroes
-            writeValue<s32>(outfile, 0); // hero count
+            writeValue<u8>(outputFile, 0); // placeholder heroes
+            writeValue<s32>(outputFile, 0); // hero count
         }
     }
 
-    writeValue<s8>(outfile, -1); // no special victory condition
-    writeValue<s8>(outfile, -1); // no special loss condition
+    writeValue<s8>(outputFile, -1); // no special victory condition
+    writeValue<s8>(outputFile, -1); // no special loss condition
 
     if (!m_computerTeamCount)
         m_computerTeamCount = m_computerPlayerCount;
@@ -8414,7 +8416,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
     if (m_humanTeamCount >= m_humanPlayerCount
         && m_computerTeamCount >= m_computerPlayerCount) {
-        writeValue<u8>(outfile, 0); // no teams
+        writeValue<u8>(outputFile, 0); // no teams
     } else {
         char teams[RMG_PLAYER_COUNT];
         memset(teams, 0, sizeof(teams));
@@ -8437,8 +8439,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
             canBeComputer,
             teams);
 
-        writeValue<u8>(outfile, m_humanTeamCount + m_computerTeamCount);
-        outfile->write(teams, sizeof(teams));
+        writeValue<u8>(outputFile, m_humanTeamCount + m_computerTeamCount);
+        outputFile->write(teams, sizeof(teams));
     }
 
     if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
@@ -8446,23 +8448,23 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         setAvailableRmgHeroes(
             &availableHeroes, m_disabledHeroes, m_disabledHeroes + RMG_HERO_COUNT);
 
-        writePackedBits(outfile, availableHeroes);
+        writePackedBits(outputFile, availableHeroes);
     } else {
         std::bitset<RMG_ROE_HERO_COUNT> availableHeroes;
         setAvailableRmgHeroes(
             &availableHeroes, m_disabledHeroes, m_disabledHeroes + RMG_ROE_HERO_COUNT);
 
-        writePackedBits(outfile, availableHeroes);
+        writePackedBits(outputFile, availableHeroes);
     }
 
     if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
-        writeValue<s32>(outfile, 0);
+        writeValue<s32>(outputFile, 0);
     }
     if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
-        writeValue<u8>(outfile, 0);
+        writeValue<u8>(outputFile, 0);
     }
 
-    writeRmgReservedBytes(outfile, 31);
+    writeRmgReservedBytes(outputFile, 31);
 
     // Combination artifacts, the Vial of Dragon Blood and Armageddon's Blade
     // are disabled.
@@ -8475,7 +8477,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     disabledArtifacts.set(g_rmgArtifactVialOfDragonBlood);
 
     if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
-        writePackedBits(outfile, disabledArtifacts);
+        writePackedBits(outputFile, disabledArtifacts);
     } else if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
         std::bitset<RMG_AB_ARTIFACT_COUNT> legacyDisabledArtifacts;
         std::copy(
@@ -8483,18 +8485,18 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
             bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, RMG_AB_ARTIFACT_COUNT),
             bitset_iterator<RMG_AB_ARTIFACT_COUNT>(legacyDisabledArtifacts, 0));
 
-        writePackedBits(outfile, legacyDisabledArtifacts);
+        writePackedBits(outputFile, legacyDisabledArtifacts);
     }
 
     if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
         std::bitset<hero::NUM_SPELLS> disabledSpells;
-        writePackedBits(outfile, disabledSpells);
+        writePackedBits(outputFile, disabledSpells);
 
         std::bitset<kNumSecSkills> disabledSkills;
-        writePackedBits(outfile, disabledSkills);
+        writePackedBits(outputFile, disabledSkills);
 
         for (s32 hero = 0; hero < RMG_HERO_COUNT; ++hero) {
-            writeValue<u8>(outfile, 0);
+            writeValue<u8>(outputFile, 0);
         }
     }
 }
@@ -8544,14 +8546,14 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile*, TObjectType*);
 // passes.
 VA(0x0054abf0, 0x235)
 MAC_ADDRESS(0x24fd18, 0x350)
-b8 type_random_map_generator::writeMap(TAbstractFile* outfile)
+b8 type_random_map_generator::writeMap(TAbstractFile* outputFile)
 {
-    writeMapHeader(outfile);
-    writeValue<s32>(outfile, 0);
+    writeMapHeader(outputFile);
+    writeValue<s32>(outputFile, 0);
     TRmgMapItem* item = m_map.m_mapItems;
     s32 itemCount = m_map.m_numberLevels * m_map.m_mapHeight * m_map.m_mapWidth;
     while (itemCount--) {
-        item->write(outfile);
+        item->write(outputFile);
         ++item;
     }
     s32 prototypeCount = 2;
@@ -8561,29 +8563,29 @@ b8 type_random_map_generator::writeMap(TAbstractFile* outfile)
             if (static_cast<s32>(properties->m_refCount) > 0)
                 properties->m_prototypeIndex = prototypeCount++;
         }
-    writeValue<s32>(outfile, prototypeCount);
-    writeRmgObjectPrototype(outfile, m_objectPrototypes[RANDOM_MONSTER][0]->m_prototype);
-    writeRmgObjectPrototype(outfile, m_objectPrototypes[TERRAIN_HOLE][0]->m_prototype);
+    writeValue<s32>(outputFile, prototypeCount);
+    writeRmgObjectPrototype(outputFile, m_objectPrototypes[RANDOM_MONSTER][0]->m_prototype);
+    writeRmgObjectPrototype(outputFile, m_objectPrototypes[TERRAIN_HOLE][0]->m_prototype);
     for (s32 objectType = NOTHING; objectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++objectType)
         for (u32 index = 0; index < m_objectPrototypes[objectType].size(); ++index) {
             TRmgObjectPropertiesRef* properties = m_objectPrototypes[objectType][index];
             if (static_cast<s32>(properties->m_refCount) > 0)
-                writeRmgObjectPrototype(outfile, properties->m_prototype);
+                writeRmgObjectPrototype(outputFile, properties->m_prototype);
         }
-    writeValue<s32>(outfile, m_objects.size());
+    writeValue<s32>(outputFile, m_objects.size());
     for (u32 first = 0; first < m_objects.size(); ++first) {
         type_object* object = m_objects[first];
         if (g_adventureObjectTraits[object->m_properties->m_prototype->getObjectType()].m_trait3)
-            object->write(outfile, m_mapVersion);
+            object->write(outputFile, m_mapVersion);
     }
     for (u32 second = 0; second < m_objects.size(); ++second) {
         type_object* object = m_objects[second];
         if (!g_adventureObjectTraits[object->m_properties->m_prototype->getObjectType()].m_trait3)
-            object->write(outfile, m_mapVersion);
+            object->write(outputFile, m_mapVersion);
     }
     if (m_progress)
         m_progress->advance(2000);
-    return writeValue<s32>(outfile, 0) == sizeof(s32);
+    return writeValue<s32>(outputFile, 0) == sizeof(s32);
 }
 
 enum TRmgPrototypeCellMask {
@@ -8598,7 +8600,7 @@ enum TRmgPrototypeCellMask {
 //    8  9 .. 14 15
 //   ..
 //   40 41 .. 46  P   (bit 47)
-static inline void writeRmgPrototypeCellMask(TAbstractFile* outfile,
+static inline void writeRmgPrototypeCellMask(TAbstractFile* outputFile,
     TObjectType* prototype, TRmgPrototypeCellMask kind)
 {
     u8 mask[6];
@@ -8612,25 +8614,25 @@ static inline void writeRmgPrototypeCellMask(TAbstractFile* outfile,
             ++bit;
         }
     }
-    outfile->write(mask, sizeof(mask));
+    outputFile->write(mask, sizeof(mask));
 }
 
 VA(0x0054ae30, 0x2c5)
 MAC_ADDRESS(0x24f980, 0x398)
-void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* prototype)
+void __fastcall writeRmgObjectPrototype(TAbstractFile* outputFile, TObjectType* prototype)
 {
-    writeString(outfile, prototype->getImageName());
-    writeRmgPrototypeCellMask(outfile, prototype, RMG_PROTOTYPE_PASSABLE_CELLS);
-    writeRmgPrototypeCellMask(outfile, prototype, RMG_PROTOTYPE_TRIGGER_CELLS);
-    writePackedBits(outfile, prototype->m_terrainMask);
-    writePackedBits(outfile, prototype->m_recommendedTerrainMask);
-    writeValue<s32>(outfile, prototype->getObjectType());
-    writeValue<s32>(outfile, prototype->getSubtype());
-    writeValue<u8>(outfile, prototype->m_slotCategory);
-    writeValue<b8>(outfile, prototype->isUnderlay());
+    writeString(outputFile, prototype->getImageName());
+    writeRmgPrototypeCellMask(outputFile, prototype, RMG_PROTOTYPE_PASSABLE_CELLS);
+    writeRmgPrototypeCellMask(outputFile, prototype, RMG_PROTOTYPE_TRIGGER_CELLS);
+    writePackedBits(outputFile, prototype->m_terrainMask);
+    writePackedBits(outputFile, prototype->m_recommendedTerrainMask);
+    writeValue<s32>(outputFile, prototype->getObjectType());
+    writeValue<s32>(outputFile, prototype->getSubtype());
+    writeValue<u8>(outputFile, prototype->m_slotCategory);
+    writeValue<b8>(outputFile, prototype->isUnderlay());
     s32 reserved[4];
     memset(reserved, 0, sizeof(reserved));
-    outfile->write(reserved, sizeof(reserved));
+    outputFile->write(reserved, sizeof(reserved));
 }
 
 // Prisons draw from the RoE heroes, or in later formats from the first
@@ -8704,10 +8706,10 @@ void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
     while (pending.size()) {
         TRmgZone* current = pending.back();
         pending.pop_back();
-        TRmgTemplateZone* slot = current->m_templateZone;
+        TRmgTemplateZone* templateZone = current->m_templateZone;
         s32 distance = current->m_questPlacementScore + 1;
-        for (u32 connection = 0; connection < slot->m_connections.size(); ++connection) {
-            TRmgZone* next = m_zones[slot->m_connections[connection].m_destination->m_zoneIndex];
+        for (u32 connection = 0; connection < templateZone->m_connections.size(); ++connection) {
+            TRmgZone* next = m_zones[templateZone->m_connections[connection].m_destination->m_zoneIndex];
             if (next->m_questPlacementScore > distance) {
                 next->m_questPlacementScore = distance;
                 insertRmgWorkItem(pending, next);
@@ -8911,7 +8913,7 @@ void type_random_map_generator::setTownChoice(s32 seat, TTownType town)
 
 VA(0x0054bf60, 0x130)
 MAC_ADDRESS(0x251070, 0x140)
-s32 TRandomMapRequest::generateToFile(TAbstractFile* outfile, TProgressSink* progress)
+s32 TRandomMapRequest::generateToFile(TAbstractFile* outputFile, TProgressSink* progress)
 {
     s32 strength = m_monsterStrength + RMG_ZONE_MONSTERS_AVERAGE;
     if (strength < 1)
@@ -8933,7 +8935,7 @@ s32 TRandomMapRequest::generateToFile(TAbstractFile* outfile, TProgressSink* pro
     }
     if (!generator.generate())
         return RANDOM_MAP_GENERATION_FAILED;
-    if (!generator.writeMap(outfile))
+    if (!generator.writeMap(outputFile))
         return RANDOM_MAP_WRITE_FAILED;
     return RANDOM_MAP_OK;
 }
@@ -8943,8 +8945,8 @@ MAC_ADDRESS(0x2511b0, 0x98)
 s32 TRandomMapRequest::generate(const char* fileName, TProgressSink* progress)
 {
     try {
-        TGzFile outfile(fileName, "wb6");
-        return generateToFile(&outfile, progress);
+        TGzFile outputFile(fileName, "wb6");
+        return generateToFile(&outputFile, progress);
     } catch (const TGzFile::TOpenFailure&) {
         return RANDOM_MAP_OPEN_FAILED;
     }
