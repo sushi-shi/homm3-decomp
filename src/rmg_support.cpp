@@ -31,14 +31,14 @@ TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const int* framePatte
     }
     // Expects a nonempty, unvalidated list of ids 0..8 with each id's frames
     // contiguous.
-    int previousPattern = m_framePatterns[0];
-    ++m_ranges[previousPattern].m_frameCount;
+    int runPattern = m_framePatterns[0];
+    ++m_ranges[runPattern].m_frameCount;
     for (u32 index = 1; index < m_frameCount; ++index) {
-        if (m_framePatterns[index] != previousPattern) {
-            previousPattern = m_framePatterns[index];
-            m_ranges[previousPattern].m_firstIndex = index;
+        if (m_framePatterns[index] != runPattern) {
+            runPattern = m_framePatterns[index];
+            m_ranges[runPattern].m_firstIndex = index;
         }
-        ++m_ranges[previousPattern].m_frameCount;
+        ++m_ranges[runPattern].m_frameCount;
     }
 }
 

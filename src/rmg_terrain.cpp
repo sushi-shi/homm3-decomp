@@ -669,11 +669,14 @@ int __fastcall selectTerrainTransition(
         const int* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
         if (hasSoutheastTerrainCorner(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
-            *flip = flips[reflection];
-            if (neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE)
+            if (neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+                *flip = flips[reflection];
                 return SHAPE_E_BLEND_SW_HARD;
-            if (neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE)
+            }
+            if (neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+                *flip = flips[reflection];
                 return SHAPE_S_BLEND_NE_HARD;
+            }
         }
     }
     for (reflection = 0; reflection < reflectionCount; ++reflection) {
