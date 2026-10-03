@@ -507,12 +507,13 @@ s32 TRmgTableTerrainRule::selectTransitionFrame(
 s32 __fastcall selectTerrainTransition(
     const s32* neighbours, TRmgTerrainFlip* flip);
 
-// Neighbour direction order for each (flipX, flipY) reflection. North is up;
-// each grid puts order[d], a TILE_DIR_* index, at canonical direction d.
-//   none   flipY  flipX  both
-//   7 0 1  5 4 3  1 0 7  3 4 5
-//   6 . 2  6 . 2  2 . 6  2 . 6
-//   5 4 3  7 0 1  3 4 5  1 0 7
+// Neighbour direction order for each (flipX, flipY) reflection. A canonical
+// pattern's direction d reads neighbour order[d]. North is up; each grid puts
+// order[d] at d.
+//   none      flipY     flipX     both
+//   NW N NE   SW S SE   NE N NW   SE S SW
+//   W  .  E   W  .  E   E  .  W   E  .  W
+//   SW S SE   NW N NE   SE S SW   NE N NW
 DATA(0x00642C00)
 const s32 g_rmgReflectedNeighbours[2][2][8] = {
     {
@@ -903,6 +904,11 @@ void rmgTerrainPainter::paintRectangle(
     }
 }
 
+// A gap cell C has other terrain x on both sides along one axis. North is up:
+//   horizontal  vertical
+//                   x
+//     x C x         C
+//                   x
 enum TRmgTerrainGapAxis {
     RMG_HORIZONTAL_GAP,
     RMG_VERTICAL_GAP

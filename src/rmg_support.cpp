@@ -50,12 +50,12 @@ TRmgLinePatternTable::~TRmgLinePatternTable()
 }
 
 // Neighbour direction order for each (flipX, flipY) reflection; the same
-// values as g_rmgReflectedNeighbours. North is up; each grid puts order[d],
-// a TILE_DIR_* index, at canonical direction d.
-//   none   flipY  flipX  both
-//   7 0 1  5 4 3  1 0 7  3 4 5
-//   6 . 2  6 . 2  2 . 6  2 . 6
-//   5 4 3  7 0 1  3 4 5  1 0 7
+// values as g_rmgReflectedNeighbours. A canonical pattern's direction d reads
+// neighbour order[d]. North is up; each grid puts order[d] at d.
+//   none      flipY     flipX     both
+//   NW N NE   SW S SE   NE N NW   SE S SW
+//   W  .  E   W  .  E   E  .  W   E  .  W
+//   SW S SE   NW N NE   SE S SW   NE N NW
 DATA(0x0063FE9C)
 static const s32 g_rmgLineReflectedNeighbours[2][2][8] = {
     {

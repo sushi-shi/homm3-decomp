@@ -267,8 +267,8 @@ TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
     TPoint(1, 1)
 };
 
-// River-delta prototype for each coast side (east, south, west, north), for
-// land and then snow rivers: the nth delta recommended for the end's terrain.
+// River-delta choice per coast side (east, south, west, north), for land and
+// then snow rivers: the nth (from 0) delta recommended for the end's terrain.
 DATA(0x006409A0)
 static const s32 g_landRiverDeltaIndex[4] = {2, 0, 3, 1};
 
@@ -2952,8 +2952,8 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition start, s32 progressSteps
                 if (!isRmgObjectAvailableInVersion(prototype->getObjectType(), m_mapVersion))
                     continue;
                 // Candidate anchors put the start cell S under each blocked
-                // footprint cell in turn. For a 3x2 object they are S and each
-                // o; North is up:
+                // footprint cell in turn. For a fully blocked 3x2 object they
+                // are S and each o; North is up:
                 //   S o o
                 //   o o o
                 TRmgZoneBounds bounds;
@@ -4666,7 +4666,15 @@ static inline void appendRmgNoiseQuadrant(
         pending.push_back(quadrant);
 }
 
-// Each nondegenerate quadrant inherits the region's variation.
+// Each nondegenerate quadrant inherits the region's variation. Quadrants are
+// pushed in the order shown, with x growing right and y down. Each keeps its
+// outer region corner; the centre value and the two edge midpoints beside it
+// become its other corners.
+//          minY
+//   minX   4 | 2   maxX
+//          --+--
+//          3 | 1
+//          maxY
 VA(0x0053E9E0, 0x31E)
 MAC_ADDRESS(0x240410, 0x2ac)
 void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
@@ -7327,7 +7335,8 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
 
 // A candidate position is where the group map's origin O lands, so group cell
 // g goes to position + g. Its occupied bounds (#) must fit the zone bounds,
-// and spacing is read at their centre c. North is up:
+// and the object distance under their centre c must reach the spacing.
+// North is up:
 //   O . . . . .
 //   . . # # # .
 //   . . # c # .

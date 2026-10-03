@@ -648,6 +648,7 @@ struct TRmgGroundTileData {
     //   2 . 0
     //     1
     u32 m_blockedDirections : 4;
+    // A g_rmgDirections index: 0 east, then clockwise.
     u32 m_connectionDirection : 3;
     // Sprite reflections of the terrain, river and road layers.
     u32 m_terrainFlipX : 1;
