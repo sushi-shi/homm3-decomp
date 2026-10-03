@@ -7675,7 +7675,8 @@ VA(0x00548290, 0x26e)
 MAC_ADDRESS(0x24c6d4, 0x1d8)
 void type_random_map_generator::createRoads()
 {
-    s32 roadType = rand() % RMG_ROAD_TYPE_COUNT + RMG_ROAD_DIRT;
+    ERmgRoadType roadType =
+        static_cast<ERmgRoadType>(rand() % RMG_ROAD_TYPE_COUNT + RMG_ROAD_DIRT);
     // Retail bug: an empty target list underflows size() - 1.
     for (u32 first = 0; first < m_roadTargets.size() - 1; ++first) {
         TRmgMapPosition source = m_roadTargets[first];
