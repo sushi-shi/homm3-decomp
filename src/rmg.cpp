@@ -1781,6 +1781,12 @@ type_object* type_artifact_def::generate(TRmgObjectPropertiesRef* properties,
     return new rmgArtifactObject(properties);
 }
 
+// Rounds a positive count to the nearest multiple of step, ties upward.
+static inline int roundRmgCreatureCount(int count, int step)
+{
+    return ((count + step / 2) / step) * step;
+}
+
 VA(0x00534250, 0xB5)
 MAC_ADDRESS(0x231dfc, 0x108)
 type_black_box_creature_def::type_black_box_creature_def(int newCreatureType)
@@ -1792,11 +1798,11 @@ type_black_box_creature_def::type_black_box_creature_def(int newCreatureType)
         / g_creatureTypeTraits[newCreatureType].m_aiValue;
 
     if (m_creatureCount > 50)
-        m_creatureCount = ((m_creatureCount + 5) / 10) * 10;
+        m_creatureCount = roundRmgCreatureCount(m_creatureCount, 10);
     else if (m_creatureCount > 12)
-        m_creatureCount = ((m_creatureCount + 2) / 5) * 5;
+        m_creatureCount = roundRmgCreatureCount(m_creatureCount, 5);
     else if (m_creatureCount > 5)
-        m_creatureCount = ((m_creatureCount + 1) / 2) * 2;
+        m_creatureCount = roundRmgCreatureCount(m_creatureCount, 2);
 }
 
 // Raises a value by the share of active zones with the same alignment.
@@ -3149,7 +3155,7 @@ void readRmgTemplateZones(
                         anyTerrain = true;
                 }
                 if (!anyTerrain)
-                    slot->m_allowedTerrain[0] = true;
+                    slot->m_allowedTerrain[eTerrainDirt] = true;
                 switch (tolower(values[55][0])) {
                 case 'n': slot->m_monsterStrength = 0; break;
                 case 'w': slot->m_monsterStrength = 2; break;
@@ -3158,7 +3164,8 @@ void readRmgTemplateZones(
                 default: slot->m_monsterStrength = 3; break;
                 }
                 slot->m_guardsMatchZone = isRmgTemplateFieldSet(values[56]);
-                for (int monster = 0; monster < 10; ++monster)
+                // Neutral, then one slot per town type.
+                for (int monster = 0; monster < TOWN_TYPE_COUNT + 1; ++monster)
                     slot->m_allowedMonsters[monster] =
                         isRmgTemplateFieldSet(values[57 + monster]);
                 // Retail bug: TOWN_CONFLUX is the Conflux slot of m_allowedTowns,
@@ -3182,6 +3189,12 @@ static inline int getRmgCreatureTypeCount(int mapVersion)
     return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE
         ? RMG_CREATURE_TYPE_COUNT : RMG_ROE_CREATURE_TYPE_COUNT;
 }
+
+// Creature dwelling subtypes offered as treasures (g_creatureGenerator1Types).
+enum ERmgDwellingSubtypeCounts {
+    RMG_DWELLING_SUBTYPE_COUNT = 80,
+    RMG_ROE_DWELLING_SUBTYPE_COUNT = 58
+};
 
 VA(0x00538B10, 0x2241)
 MAC_ADDRESS(0x2375f0, 0x4880)
@@ -3210,16 +3223,16 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_black_box_gold_def(15000, 15000));
     m_objectGenerators.push_back(new type_black_box_gold_def(20000, 20000));
 
-    m_objectGenerators.push_back(new type_black_box_spells_def(5000, 1, 1, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(7500, 2, 2, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(10000, 3, 3, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(12500, 4, 4, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 5, 5, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, 1));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, 2));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, 4));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, 8));
-    m_objectGenerators.push_back(new type_black_box_spells_def(30000, 1, 5, 15));
+    m_objectGenerators.push_back(new type_black_box_spells_def(5000, 1, 1, eSchoolAll));
+    m_objectGenerators.push_back(new type_black_box_spells_def(7500, 2, 2, eSchoolAll));
+    m_objectGenerators.push_back(new type_black_box_spells_def(10000, 3, 3, eSchoolAll));
+    m_objectGenerators.push_back(new type_black_box_spells_def(12500, 4, 4, eSchoolAll));
+    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 5, 5, eSchoolAll));
+    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, eSchoolAir));
+    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, eSchoolFire));
+    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, eSchoolWater));
+    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, eSchoolEarth));
+    m_objectGenerators.push_back(new type_black_box_spells_def(30000, 1, 5, eSchoolAll));
 
     {
         int tentIndex = m_objectPrototypes[BORDER_TENT].size();
@@ -3249,9 +3262,9 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, 5, 3000, 100));
     m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, 6, 9000, 100));
 
-    int dwelling = 80;
+    int dwelling = RMG_DWELLING_SUBTYPE_COUNT;
     if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE)
-        dwelling = 58;
+        dwelling = RMG_ROE_DWELLING_SUBTYPE_COUNT;
     for (; dwelling--;)
         m_objectGenerators.push_back(new type_map_dwelling_def(dwelling));
 
@@ -3386,6 +3399,12 @@ b8 type_random_map_generator::canPlaceZone(TRmgZone* zone)
     return true;
 }
 
+// The other level of a two-level map.
+static inline int getRmgOtherLevel(int level)
+{
+    return RMG_UNDERGROUND_LEVEL - level;
+}
+
 // One of the 32 radial candidate positions around a zone.
 static inline TRmgMapPosition getRmgRadialZonePosition(
     const TRmgMapPosition& center, int radius, int direction, int level)
@@ -3420,7 +3439,7 @@ void type_random_map_generator::appendZonePositions(TRmgZone* center,
     }
     if (m_map.m_numberLevels == 1)
         return;
-    int level = 1 - position.m_z;
+    int level = getRmgOtherLevel(position.m_z);
     candidate = TRmgMapPosition(position.m_x, position.m_y, level);
     appendRmgZoneCandidate(this, zone, candidate, candidates);
     radius = center->m_templateZone->m_size;
@@ -3499,7 +3518,8 @@ void type_random_map_generator::filterZonePositions(
             if (m_zones[other] != zone)
                 occupiedLevels[m_zones[other]->getLevelPosition().m_z] = true;
         }
-        if (!occupiedLevels[0] || !occupiedLevels[1]) {
+        if (!occupiedLevels[RMG_SURFACE_LEVEL]
+            || !occupiedLevels[RMG_UNDERGROUND_LEVEL]) {
             int candidate = candidates.size();
             while (candidate--) {
                 if (!occupiedLevels[candidates[candidate].m_z])
@@ -3530,11 +3550,7 @@ void type_random_map_generator::filterZonePositions(
     }
 
     int bestSize = 32000;
-    TRmgZoneBounds bounds;
-    bounds.m_minimumY = 0;
-    bounds.m_minimumX = 0;
-    bounds.m_maximumY = 0;
-    bounds.m_maximumX = 0;
+    TRmgZoneBounds bounds = {0, 0, 0, 0};
     for (int other = 0; other < m_zones.size(); ++other) {
         if (m_zones[other] != zone) {
             TRmgMapPosition position;
@@ -3568,7 +3584,7 @@ void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
     std::vector<TRmgMapPosition> candidates;
     if (m_zones.size() == 0) {
         zone->m_levelPosition.m_y = 0;
-        zone->m_levelPosition.m_z = 0;
+        zone->m_levelPosition.m_z = RMG_SURFACE_LEVEL;
         zone->m_levelPosition.m_x = 0;
         candidates.push_back(zone->getLevelPosition());
         if (m_map.m_numberLevels > 1)
@@ -3814,10 +3830,7 @@ void type_random_map_generator::traceZoneBoundary(
     TRmgZone* zone = vertex->m_zone;
     int zoneIndex = zone->m_templateZone->m_zoneIndex;
     TRmgMapPosition zonePosition = zone->m_levelPosition;
-    TRmgZoneBounds bounds;
-    bounds.m_maximumY = m_map.m_mapHeight;
-    bounds.m_minimumX = bounds.m_minimumY = 0;
-    bounds.m_maximumX = m_map.m_mapWidth;
+    TRmgZoneBounds bounds = {0, 0, m_map.m_mapWidth, m_map.m_mapHeight};
     TRmgHalfEdge* next;
     TPoint originalFrom;
     TPoint originalTo;
