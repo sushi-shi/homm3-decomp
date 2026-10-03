@@ -686,12 +686,12 @@ b8 type_random_map::isPlacementBlocked(
     if (position.m_x < prototype.getWidth() - 1 || position.m_x >= m_mapWidth
         || position.m_y < prototype.getHeight() - 1 || position.m_y >= m_mapHeight)
         return true;
-    TRmgMapPosition nearby = position;
-    for (u32 y = 0; y < prototype.getHeight(); ++y, --nearby.m_y) {
-        nearby.m_x = position.m_x;
-        for (u32 x = 0; x < prototype.getWidth(); ++x, --nearby.m_x) {
+    TRmgMapPosition cell = position;
+    for (u32 y = 0; y < prototype.getHeight(); ++y, --cell.m_y) {
+        cell.m_x = position.m_x;
+        for (u32 x = 0; x < prototype.getWidth(); ++x, --cell.m_x) {
             TRmgGridPoint maskPoint(x, y);
-            TRmgMapItem* item = getMapItem(nearby);
+            TRmgMapItem* item = getMapItem(cell);
             if (prototype.isTriggerCell(maskPoint.m_x, maskPoint.m_y)) {
                 if (isRmgPlacementCellBlocked(item, zoneIndex))
                     return true;
@@ -817,16 +817,16 @@ void type_random_map::addObject(type_object& object, TRmgMapPosition position)
 {
     TObjectType& prototype = *object.m_properties->m_prototype;
     object.m_position = position;
-    TRmgMapPosition nearby = position;
-    for (u32 y = 0; y < prototype.getHeight(); ++y, --nearby.m_y) {
-        if (nearby.m_y < 0 || nearby.m_y >= m_mapHeight)
+    TRmgMapPosition cell = position;
+    for (u32 y = 0; y < prototype.getHeight(); ++y, --cell.m_y) {
+        if (cell.m_y < 0 || cell.m_y >= m_mapHeight)
             continue;
-        nearby.m_x = position.m_x;
-        for (u32 x = 0; x < prototype.getWidth(); ++x, --nearby.m_x) {
-            if (nearby.m_x < 0 || nearby.m_x >= m_mapWidth)
+        cell.m_x = position.m_x;
+        for (u32 x = 0; x < prototype.getWidth(); ++x, --cell.m_x) {
+            if (cell.m_x < 0 || cell.m_x >= m_mapWidth)
                 continue;
             TRmgGridPoint maskPoint(x, y);
-            TRmgMapItem* item = getMapItem(nearby);
+            TRmgMapItem* item = getMapItem(cell);
             if (prototype.isTriggerCell(maskPoint.m_x, maskPoint.m_y)) {
                 item->m_tileData.m_roadEntrance = true;
                 item->openPath();
@@ -2498,8 +2498,7 @@ MAC_ADDRESS(0x234440, 0x24c)
 void TRmgGeneratorBase::loadObjectPrototypes()
 {
     m_objectsTxt.load("objects.txt");
-    u32 index = 0;
-    for (; index < m_objectsTxt.m_objectTypes.size(); ++index) {
+    for (u32 index = 0; index < m_objectsTxt.m_objectTypes.size(); ++index) {
         int type = m_objectsTxt.m_objectTypes[index].getObjectType();
         if (!isRmgObjectAvailableInVersion(type, m_mapVersion))
             continue;
@@ -2517,10 +2516,10 @@ void TRmgGeneratorBase::loadObjectPrototypes()
     }
     // Exchange sort of the monsters by subtype, swapping prototypes. Retail
     // bug: an empty monster list underflows size() - 1.
-    for (index = 0; index < m_objectPrototypes[MONSTER].size() - 1; ++index) {
-        for (u32 second = index + 1; second < m_objectPrototypes[MONSTER].size(); ++second) {
-            if (m_objectPrototypes[MONSTER][index]->m_prototype->getSubtype() > m_objectPrototypes[MONSTER][second]->m_prototype->getSubtype()) {
-                std::swap(m_objectPrototypes[MONSTER][index]->m_prototype, m_objectPrototypes[MONSTER][second]->m_prototype);
+    for (u32 first = 0; first < m_objectPrototypes[MONSTER].size() - 1; ++first) {
+        for (u32 second = first + 1; second < m_objectPrototypes[MONSTER].size(); ++second) {
+            if (m_objectPrototypes[MONSTER][first]->m_prototype->getSubtype() > m_objectPrototypes[MONSTER][second]->m_prototype->getSubtype()) {
+                std::swap(m_objectPrototypes[MONSTER][first]->m_prototype, m_objectPrototypes[MONSTER][second]->m_prototype);
             }
         }
     }
