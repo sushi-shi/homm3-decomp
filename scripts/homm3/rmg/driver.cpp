@@ -100,6 +100,160 @@ public:
     }
 };
 
+// Diagnostic capture, enabled only by RMG_TRACE_SITE: the hex address of the
+// call in buildZoneBoundaries that constructs testZone from the stack test
+// slot. The call is redirected through a thunk that copies the stack around
+// the slot into a global record without writing any stack storage of its own
+// (the original call already stores the return address), then continues to
+// the constructor. After each job the records are appended to trace.bin.
+static unsigned long g_entryEsp;
+static unsigned long g_traceTarget;
+static HANDLE g_trace;
+static const unsigned long TRACE_BEFORE = 0x400, TRACE_AFTER = 0x400;
+static const unsigned long TRACE_WINDOW = TRACE_BEFORE + TRACE_AFTER;
+struct TraceRecord {
+    unsigned long job, hit, entryEsp, slot;
+    unsigned char window[TRACE_WINDOW];
+};
+static TraceRecord g_records[2];
+static unsigned long g_recordCount;
+static unsigned long g_saved[4];
+
+static __declspec(naked) void traceThunk()
+{
+    __asm {
+        mov g_saved[0], esi
+        mov g_saved[4], edi
+        mov g_saved[8], ecx
+        mov g_saved[12], eax
+        mov eax, g_recordCount
+        cmp eax, 2
+        jae done
+        inc g_recordCount
+        imul eax, eax, TYPE TraceRecord
+        lea edi, g_records[eax]
+        mov esi, g_job
+        mov [edi], esi
+        mov esi, g_recordCount
+        mov [edi + 4], esi
+        mov esi, g_entryEsp
+        mov [edi + 8], esi
+        mov esi, [esp + 4]
+        mov [edi + 12], esi
+        sub esi, 0400h          // TRACE_BEFORE
+        add edi, 16
+        mov ecx, 0200h          // TRACE_WINDOW / 4
+        cld
+        rep movsd
+done:
+        mov esi, g_saved[0]
+        mov edi, g_saved[4]
+        mov ecx, g_saved[8]
+        mov eax, g_saved[12]
+        jmp g_traceTarget
+    }
+}
+
+static unsigned long parseHex(const char* text)
+{
+    unsigned long value = 0;
+    if (text[0] == '0' && (text[1] == 'x' || text[1] == 'X')) text += 2;
+    for (; *text; ++text) {
+        char c = *text;
+        value = value * 16 + (c <= '9' ? c - '0' : (c | 0x20) - 'a' + 10);
+    }
+    return value;
+}
+
+static bool prepareTrace()
+{
+    char text[32];
+    if (!GetEnvironmentVariableA("RMG_TRACE_SITE", text, sizeof(text))) return true;
+    unsigned char* site = (unsigned char*)parseHex(text);
+    if (site[0] != 0xe8) return false;
+    g_trace = CreateFileA("trace.bin", GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_NEW, 0, 0);
+    if (g_trace == INVALID_HANDLE_VALUE) return false;
+    DWORD oldProtection, ignored;
+    if (!VirtualProtect(site, 5, PAGE_EXECUTE_READWRITE, &oldProtection)) return false;
+    g_traceTarget = (unsigned long)site + 5 + *(unsigned long*)(site + 1);
+    *(unsigned long*)(site + 1) = (unsigned long)&traceThunk - (unsigned long)site - 5;
+    FlushInstructionCache(GetCurrentProcess(), site, 5);
+    return VirtualProtect(site, 5, oldProtection, &ignored) != 0;
+}
+
+// Retail-only diagnostic (RMG_TRACE_FALLBACK): buildZoneConnectionPaths'
+// fallback branch at 0x54077d reads its seed (ebp-0x30..-0x28). Log the zone,
+// the seed, the zone bounds and the zone that owns the seed tile.
+static HANDLE g_fallback;
+static void __stdcall recordFallback(unsigned long ebp)
+{
+    const long* frame = (const long*)ebp;
+    const unsigned char* generator = (const unsigned char*)frame[-2];
+    long x = frame[-12], y = frame[-11], z = frame[-10];
+    long width = *(long*)(generator + 0x18), height = *(long*)(generator + 0x1c);
+    long levels = *(long*)(generator + 0x20);
+    long tileZone = -2;
+    if (x >= 0 && y >= 0 && z >= 0 && x < width && y < height && z < levels) {
+        const unsigned char* item = *(unsigned char**)(generator + 0x14)
+            + ((z * height + y) * width + x) * 0x30;
+        tileZone = (long)(*(long*)(item + 0x20) << 8) >> 24;
+    }
+    long record[10] = {(long)g_job, frame[-3], x, y, z, tileZone,
+        frame[-19], frame[-18], frame[-17], frame[-16]};
+    DWORD written;
+    WriteFile(g_fallback, record, sizeof(record), &written, 0);
+}
+
+static __declspec(naked) void fallbackThunk()
+{
+    __asm {
+        pushad
+        push ebp
+        call recordFallback
+        popad
+        mov eax, [edx + 01ch]
+        mov esi, [ebp - 02ch]
+        push 0540783h
+        ret
+    }
+}
+
+static bool prepareFallbackTrace()
+{
+    char text[8];
+    if (!GetEnvironmentVariableA("RMG_TRACE_FALLBACK", text, sizeof(text))) return true;
+    unsigned char* site = (unsigned char*)0x54077d;
+    if (site[0] != 0x8b || site[1] != 0x42 || site[2] != 0x1c) return false;
+    g_fallback = CreateFileA("fallback.bin", GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_NEW, 0, 0);
+    if (g_fallback == INVALID_HANDLE_VALUE) return false;
+    DWORD oldProtection, ignored;
+    if (!VirtualProtect(site, 6, PAGE_EXECUTE_READWRITE, &oldProtection)) return false;
+    site[0] = 0xe9;
+    *(unsigned long*)(site + 1) = (unsigned long)&fallbackThunk - (unsigned long)site - 5;
+    site[5] = 0x90;
+    FlushInstructionCache(GetCurrentProcess(), site, 6);
+    return VirtualProtect(site, 6, oldProtection, &ignored) != 0;
+}
+
+static void traceJob(bool start)
+{
+    if (!g_trace) return;
+    if (start) {
+        g_recordCount = 0;
+        return;
+    }
+    DWORD written;
+    WriteFile(g_trace, g_records, g_recordCount * sizeof(TraceRecord), &written, 0);
+    if (!g_recordCount) {
+        // A job without a test slot still gets a (slotless) record.
+        g_records[0].job = g_job;
+        g_records[0].hit = 0;
+        g_records[0].entryEsp = g_entryEsp;
+        g_records[0].slot = 0;
+        WriteFile(g_trace, g_records, sizeof(TraceRecord), &written, 0);
+    }
+}
+
 // Both sides enter through this exact call site. An extra wrapper on only
 // one side changes the initial storage of the stack-allocated generator.
 static int callGenerator(TRandomMapRequest* request, TAbstractFile* output,
@@ -117,6 +271,7 @@ fillStack:
         dec ecx
         jnz fillStack
         add esp, 010000h
+        mov g_entryEsp, esp
         push 0
         push output
         mov ecx, request
@@ -243,6 +398,7 @@ static int execute()
     logMessage("loading hero traits\r\n");
     if (!((LoadTable)0x4e67a0)()) return 125;
     if (!prepareHeap()) return 134;
+    if (!prepareTrace() || !prepareFallbackTrace()) return 135;
     // Every job starts from the state a fresh process has here: the same
     // x87 control word and CRT rand() state. Stack and heap storage are
     // refilled per job by callGenerator and filledAllocation.
@@ -264,7 +420,9 @@ static int execute()
         OutputFile stream;
         unsigned short controlWord;
         __asm fnstcw controlWord
+        traceJob(true);
         int result = generate((TRandomMapRequest*)requestBytes, stream, mode[0] == 'c');
+        traceJob(false);
         unsigned short finalControlWord;
         __asm fnstcw finalControlWord
         outputName(name, "map", ".raw");
