@@ -43,8 +43,6 @@ int getRmgDistance(TPoint first, TPoint second)
         getRmgSquaredDistance(first, second))));
 }
 
-typedef std::set<TPoint> TRmgPointSet;
-
 DATA(0x006824E0)
 s32 g_rmgCreatureValueByLevel[7] = {5000, 7000, 9000, 12000, 16000, 21000, 27000};
 
