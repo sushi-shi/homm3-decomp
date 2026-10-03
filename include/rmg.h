@@ -604,6 +604,13 @@ struct TRmgRiverDeltaOffset {
 
 class type_object;
 
+// Path costs and zone graph distances start at RMG_UNREACHED_COST. Searches
+// treat costs beyond RMG_REACHED_COST_LIMIT as unreached.
+enum ERmgPathCostLimits {
+    RMG_REACHED_COST_LIMIT = 30000,
+    RMG_UNREACHED_COST = 32000
+};
+
 struct TRmgMovementCost {
     unsigned m_cost : 16;
     // Cost of reaching this cell in a flood from another zone; ranks
@@ -997,10 +1004,10 @@ struct TRmgMapItem {
         m_previousTile = previous;
     }
 
-    // Resets the path cost to 32000 (unreached) with no predecessor.
+    // Resets the path cost to unreached with no predecessor.
     void resetMovement()
     {
-        m_movement.m_cost = 32000;
+        m_movement.m_cost = RMG_UNREACHED_COST;
         m_previousTile = TRmgMapPosition(-1, -1, -1);
     }
 
@@ -1462,7 +1469,7 @@ struct TRmgZone {
     s32 m_questPlacementScore;         // +0x40
     // Placed objects per object type, checked against per-zone limits.
     s32 m_objectCountByType[232];      // +0x44
-    // Connection-graph distance to each original zone (32000 = unreached).
+    // Connection-graph distance to each original zone, or RMG_UNREACHED_COST.
     std::vector<s16> m_zoneDistances;// +0x3e4
     std::vector<TPoint> m_boundary;    // +0x3f4: clipped polygon vertices
     std::vector<TPoint> m_entrances;   // +0x404
@@ -1635,6 +1642,11 @@ public:
 };
 SIZE(TRmgGeneratorBase, 0xed8);
 
+// Player colours (red, blue, tan, green, orange, purple, teal, pink).
+enum ERmgPlayerLimits {
+    RMG_PLAYER_COUNT = 8
+};
+
 // Town count/density groups by ownership and starting fort.
 enum ERmgTownPlacementCategory {
     RMG_TOWN_PLAYER_CASTLE,
@@ -1645,11 +1657,11 @@ enum ERmgTownPlacementCategory {
 
 class type_random_map_generator : public TRmgGeneratorBase {
 public:
-    b8 m_fixedHumanPlayers[8];              // +0x0ed8
+    b8 m_fixedHumanPlayers[RMG_PLAYER_COUNT];         // +0x0ed8
     // Entry zero is the unmapped sentinel.
-    s32 m_playerIndexMap[9];                          // +0x0ee0
+    s32 m_playerIndexMap[RMG_PLAYER_COUNT + 1];       // +0x0ee0
     char m_opaque0f04[0x20];                          // +0x0f04
-    s32 m_townChoices[8];                              // +0x0f24
+    s32 m_townChoices[RMG_PLAYER_COUNT];              // +0x0f24
     // Counter for generated object ids; starts at 1.
     s32 m_nextObjectId;                               // +0x0f44
     s32 m_humanPlayerCount;                            // +0x0f48

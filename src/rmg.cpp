@@ -292,7 +292,7 @@ static const char* g_rmgWaterNames[3] = {
 };
 
 DATA(0x0068270C)
-static const char* g_rmgPlayerNames[8] = {
+static const char* g_rmgPlayerNames[RMG_PLAYER_COUNT] = {
     DATA_COMPGEN(0x006827D8, rmgPlayerRed, "red"),
     DATA_COMPGEN(0x006827D0, rmgPlayerBlue, "blue"),
     DATA_COMPGEN(0x006827CC, rmgPlayerTan, "tan"),
@@ -3676,7 +3676,8 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
         zone->setLevelPosition(position);
         zone->m_scaledSize = zone->m_templateZone->m_size * size / span;
         zone->chooseTerrain();
-        zone->chooseTownType(m_mapVersion >= 0);
+        // True for every version.
+        zone->chooseTownType(m_mapVersion >= RMG_MAP_RESTORATION_OF_ERATHIA);
     }
 }
 
@@ -3831,6 +3832,10 @@ void type_random_map_generator::traceZoneBoundary(
     int zoneIndex = zone->m_templateZone->m_zoneIndex;
     TRmgMapPosition zonePosition = zone->m_levelPosition;
     TRmgZoneBounds bounds = {0, 0, m_map.m_mapWidth, m_map.m_mapHeight};
+    TPoint upperLeft(bounds.m_minimumX, bounds.m_minimumY);
+    TPoint upperRight(bounds.m_maximumX - 1, bounds.m_minimumY);
+    TPoint lowerLeft(bounds.m_minimumX, bounds.m_maximumY - 1);
+    TPoint lowerRight(bounds.m_maximumX - 1, bounds.m_maximumY - 1);
     TRmgHalfEdge* next;
     TPoint originalFrom;
     TPoint originalTo;
@@ -3850,10 +3855,6 @@ void type_random_map_generator::traceZoneBoundary(
         vertex = next;
     } while (vertex != first);
     if (!found) {
-        TPoint upperLeft(bounds.m_minimumX, bounds.m_minimumY);
-        TPoint upperRight(bounds.m_maximumX - 1, bounds.m_minimumY);
-        TPoint lowerLeft(bounds.m_minimumX, bounds.m_maximumY - 1);
-        TPoint lowerRight(bounds.m_maximumX - 1, bounds.m_maximumY - 1);
         drawStraightZoneBoundary(lowerRight, upperRight, zoneIndex, zonePosition.m_z);
         drawStraightZoneBoundary(upperRight, upperLeft, zoneIndex, zonePosition.m_z);
         drawStraightZoneBoundary(upperLeft, lowerLeft, zoneIndex, zonePosition.m_z);
@@ -3897,16 +3898,17 @@ void type_random_map_generator::traceZoneBoundary(
                     break;
                 vertex = next;
             }
+            // Follow the map border clockwise, one corner at a time.
             while (from.m_x != to.m_x && from.m_y != to.m_y) {
                 TPoint corner;
-                if (from.m_x == bounds.m_minimumX && from.m_y != bounds.m_minimumY)
-                    corner = TPoint(bounds.m_minimumX, bounds.m_minimumY);
-                else if (from.m_y == bounds.m_minimumY && from.m_x != bounds.m_maximumX - 1)
-                    corner = TPoint(bounds.m_maximumX - 1, bounds.m_minimumY);
-                else if (from.m_x == bounds.m_maximumX - 1 && from.m_y != bounds.m_maximumY - 1)
-                    corner = TPoint(bounds.m_maximumX - 1, bounds.m_maximumY - 1);
+                if (from.m_x == upperLeft.m_x && from != upperLeft)
+                    corner = upperLeft;
+                else if (from.m_y == upperRight.m_y && from != upperRight)
+                    corner = upperRight;
+                else if (from.m_x == lowerRight.m_x && from != lowerRight)
+                    corner = lowerRight;
                 else
-                    corner = TPoint(bounds.m_minimumX, bounds.m_maximumY - 1);
+                    corner = lowerLeft;
                 drawStraightZoneBoundary(from, corner, zoneIndex, zonePosition.m_z);
                 zone->m_boundary.push_back(TPoint(from));
                 from = corner;
@@ -4212,7 +4214,7 @@ static void initializeRmgZoneDistances(
         TRmgZone* zone = generator->m_zones[index];
         zone->m_zoneDistances.resize(originalZones);
         for (int column = originalZones; column--;)
-            zone->m_zoneDistances[column] = 32000;
+            zone->m_zoneDistances[column] = RMG_UNREACHED_COST;
         if (zone->m_templateZone->m_zoneIndex < originalZones)
             zone->m_zoneDistances[zone->m_templateZone->m_zoneIndex] = 0;
     }
@@ -4655,7 +4657,7 @@ void type_random_map_generator::placeWaterZoneIslands(TRmgZone* zone)
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position);
-            item->setWaterZoneDistance(32000, 0);
+            item->setWaterZoneDistance(RMG_UNREACHED_COST, 0);
         }
     }
     TRmgZoneBounds surrounding;
@@ -4902,7 +4904,7 @@ void type_random_map_generator::buildZoneConnectionPaths()
     int count = m_map.m_numberLevels * m_map.m_mapHeight * m_map.m_mapWidth;
     TRmgMapItem* item = m_map.m_mapItems;
     while (count--) {
-        item->m_movement.m_zonePathCost = 32000;
+        item->m_movement.m_zonePathCost = RMG_UNREACHED_COST;
         item->m_tileData.m_connectionDirection = 0;
         item->m_zoneState.m_connectionZone = -1;
         item->resetMovement();
@@ -4981,7 +4983,7 @@ void type_random_map_generator::openConnectionPath(
 {
     TRmgMapItem* item = m_map.getMapItem(position);
     int zone = item->m_zoneState.m_zone;
-    if (item->m_movement.m_cost >= 30000)
+    if (item->m_movement.m_cost >= RMG_REACHED_COST_LIMIT)
         return;
     while (item->m_movement.m_cost > 0) {
         if (item->m_connection.m_present) {
@@ -5657,7 +5659,7 @@ b8 type_random_map_generator::placeMonolithBorder(
     TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
     int zoneIndex = item->m_zoneState.m_zone;
     u32 movementCost = item->m_movement.m_cost;
-    if (movementCost >= 30000)
+    if (movementCost >= RMG_REACHED_COST_LIMIT)
         return false;
     if (movementCost > 0) {
         borderPosition = item->m_previousTile;
@@ -6206,7 +6208,7 @@ void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
         TPoint from = zone->m_entrances[entrance];
         item = m_map.getMapItem(from.m_x, from.m_y, level);
         u32 cost = item->m_movement.m_cost;
-        if (!cost || cost > 30000)
+        if (!cost || cost > RMG_REACHED_COST_LIMIT)
             continue;
         // Follow predecessors from the positive-cost entrance to the seed.
         TRmgMapPosition previous;
@@ -7392,7 +7394,7 @@ void type_random_map_generator::createRoads()
         rebuildRmgRoadCostMap(this, source);
         for (u32 second = first + 1; second < m_roadTargets.size(); ++second) {
             TRmgMapPosition destination = m_roadTargets[second];
-            if (m_map.getMapItem(destination)->m_movement.m_cost <= 30000
+            if (m_map.getMapItem(destination)->m_movement.m_cost <= RMG_REACHED_COST_LIMIT
                 && paintRoad(destination, roadType)
                 && second < m_roadTargets.size() - 1) {
                 rebuildRmgRoadCostMap(this, source);
@@ -7794,10 +7796,10 @@ b8 type_random_map_generator::generate()
         return false;
     u32 selected = rand() % m_templates.size();
     m_templateName = m_templates[selected]->m_name;
-    char humanSlots[8];
+    char humanSlots[RMG_PLAYER_COUNT];
     int humanSlotByte;
     MEMSET(humanSlots, 0, sizeof(humanSlots), humanSlotByte);
-    char allSlots[8];
+    char allSlots[RMG_PLAYER_COUNT];
     int allSlotByte;
     MEMSET(allSlots, 0, sizeof(allSlots), allSlotByte);
     for (u32 zone = 0; zone < m_templates[selected]->m_zones.size(); ++zone) {
@@ -7811,24 +7813,24 @@ b8 type_random_map_generator::generate()
     }
     int mapIndex;
     MEMSET(m_playerIndexMap, -1, sizeof(m_playerIndexMap), mapIndex);
-    int players[8];
+    int players[RMG_PLAYER_COUNT];
     int count = 0;
-    for (int player = 0; player < 8; ++player)
+    for (int player = 0; player < RMG_PLAYER_COUNT; ++player)
         if (m_fixedHumanPlayers[player])
             players[count++] = player;
-    for (player = 0; player < 8; ++player)
+    for (player = 0; player < RMG_PLAYER_COUNT; ++player)
         if (!m_fixedHumanPlayers[player])
             players[count++] = player;
     int slot = 0;
     for (player = 0; player < m_humanPlayerCount; ++player) {
-        while (slot < 8 && !humanSlots[slot])
+        while (slot < RMG_PLAYER_COUNT && !humanSlots[slot])
             ++slot;
         allSlots[slot] = 0;
         m_playerIndexMap[++slot] = players[player];
     }
     slot = 0;
     for (; player < m_humanPlayerCount + m_computerPlayerCount; ++player) {
-        while (slot < 8 && !allSlots[slot])
+        while (slot < RMG_PLAYER_COUNT && !allSlots[slot])
             ++slot;
         m_playerIndexMap[++slot] = players[player];
     }
@@ -7974,7 +7976,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         break;
     }
 
-    for (int descriptionPlayer = 0; descriptionPlayer < 8;
+    for (int descriptionPlayer = 0; descriptionPlayer < RMG_PLAYER_COUNT;
          ++descriptionPlayer) {
         if (m_fixedHumanPlayers[descriptionPlayer]) {
             appendRmgPlayerDescription(description, descriptionPlayer,
@@ -8000,10 +8002,10 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         writeValue<char>(outfile, 0);
     }
 
-    b8 canBeHuman[8];
-    int legalAlignments[8];
-    TRmgMapPosition mainTowns[8];
-    b8 canBeComputer[8];
+    b8 canBeHuman[RMG_PLAYER_COUNT];
+    int legalAlignments[RMG_PLAYER_COUNT];
+    TRmgMapPosition mainTowns[RMG_PLAYER_COUNT];
+    b8 canBeComputer[RMG_PLAYER_COUNT];
     memset(canBeHuman, 0, sizeof(canBeHuman));
     memset(legalAlignments, 0, sizeof(legalAlignments));
     memset(mainTowns, 0, sizeof(mainTowns));
@@ -8035,7 +8037,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     }
 
     generatedHumanTowns -= m_humanPlayerCount;
-    int reversePlayer = 7;
+    int reversePlayer = RMG_PLAYER_COUNT - 1;
     do {
         if (canBeHuman[reversePlayer]
             && !m_fixedHumanPlayers[reversePlayer]
@@ -8048,7 +8050,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
     m_computerPlayerCount = m_humanPlayerCount = 0;
 
-    for (int serializedPlayer = 0; serializedPlayer < 8;
+    for (int serializedPlayer = 0; serializedPlayer < RMG_PLAYER_COUNT;
          ++serializedPlayer) {
         writeValue<char>(outfile, canBeHuman[serializedPlayer]);
 
@@ -8110,7 +8112,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         && m_computerTeamCount >= m_computerPlayerCount) {
         writeValue<char>(outfile, 0);
     } else {
-        char teams[8];
+        char teams[RMG_PLAYER_COUNT];
         memset(teams, 0, sizeof(teams));
 
         m_humanTeamCount = max(m_humanTeamCount, 1);
@@ -8210,7 +8212,7 @@ static void __fastcall assignRmgTeams(
             playerCount / teamCount + (playerCount % teamCount > team);
     }
 
-    for (int player = 0; player < 8; ++player) {
+    for (int player = 0; player < RMG_PLAYER_COUNT; ++player) {
         if (!players[player])
             continue;
 
@@ -8615,7 +8617,7 @@ int TRandomMapRequest::generateToFile(TAbstractFile* outfile, TProgressSink* pro
         m_humanPlayerCount, m_humanTeamCount, m_computerPlayerCount,
         m_computerTeamCount, m_waterContent, strength,
         progress, m_mapVersion);
-    for (int seat = 0; seat < 8; ++seat) {
+    for (int seat = 0; seat < RMG_PLAYER_COUNT; ++seat) {
         if (m_isHumanSeat[seat])
             generator.setHumanPlayer(seat);
         generator.setTownChoice(seat, m_townType[seat]);
