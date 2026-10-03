@@ -2301,8 +2301,7 @@ MAC_ADDRESS(0x233d78, 0xd4)
 void TRmgTreasureGroup::addObject(type_object* object, TPoint point)
 {
     m_objects.push_back(object);
-    TRmgMapPosition position(point.m_x, point.m_y, 0);
-    m_map.addObject(*object, position);
+    m_map.addObject(*object, TRmgMapPosition(point.m_x, point.m_y, 0));
 }
 
 // Rings the objects' entrances with border cells, places the guard on a
@@ -7097,11 +7096,9 @@ enum ERmgTreasureGroupMapSize {
 inline void TRmgTreasureGroup::addCenteredObject(type_object* object)
 {
     const TObjectType* prototype = object->m_properties->m_prototype;
-    TRmgMapPosition position;
-    position.m_x = (m_map.getWidth() + static_cast<u32>(prototype->getWidth())) / 2;
-    position.m_y = (m_map.getHeight() + static_cast<u32>(prototype->getHeight())) / 2;
-    position.m_z = 0;
-    addObject(object, position);
+    addObject(object,
+        TPoint((m_map.getWidth() + static_cast<u32>(prototype->getWidth())) / 2,
+            (m_map.getHeight() + static_cast<u32>(prototype->getHeight())) / 2));
 }
 
 inline type_object* type_random_map_generator::createTreasureWithRetries(TRmgZone* zone,
@@ -7282,8 +7279,7 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
     group->m_position = position;
     for (u32 i = 0; i < group->m_objects.size(); ++i) {
         type_object* object = group->m_objects[i];
-        TRmgMapPosition objectPosition = object->getPlacedGroupPosition(position);
-        addObject(object, objectPosition);
+        addObject(object, object->getPlacedGroupPosition(position));
     }
     TRmgZoneBounds bounds;
     bounds.m_minimumX = max(0, -position.m_x);
@@ -7436,8 +7432,7 @@ b8 type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
     }
     if (candidates.size() == 0)
         return false;
-    position = candidates[rand() % candidates.size()];
-    commitTreasureGroup(group, position);
+    commitTreasureGroup(group, candidates[rand() % candidates.size()]);
     return true;
 }
 
@@ -7973,8 +7968,6 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     if (!mapItem->isRiverTarget())
         return;
 
-    position = nextPosition;
-
     type_random_map levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
         m_map.m_mapWidth, m_map.m_mapHeight);
     TRmgRiverMapAdapter mapAdapter(&levelMap);
@@ -8031,8 +8024,8 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
         mapItem = m_map.getMapItem(mouth);
         mapItem->m_tileData.m_riverTarget = true;
 
-        riverPainter.drawTo(TRmgGridPoint(position.m_x, position.m_y));
-        mapItem = m_map.getMapItem(position);
+        riverPainter.drawTo(TRmgGridPoint(nextPosition.m_x, nextPosition.m_y));
+        mapItem = m_map.getMapItem(nextPosition);
     }
 
     while (mapItem->m_movement.m_cost > 0) {
@@ -8811,8 +8804,7 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
     group.addCenteredObject(seerHut);
     group.preparePlacement();
     if (!placeQuestGroup(&group, origin)) {
-        s32 value = object->m_definition->getValue(origin, this);
-        replaceObjectWithTreasure(object, value);
+        replaceObjectWithTreasure(object, object->m_definition->getValue(origin, this));
         return false;
     }
     m_usedQuestArtifacts[artifact] = true;

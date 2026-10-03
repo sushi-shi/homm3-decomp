@@ -230,6 +230,12 @@ following keeps only with a pointer here:
   `refreshRmgLinePoint`'s staged frame. `buildOutline` runs before the
   connection paths, but only swaps two adjacent zero stores to the same
   slots; its frame, function size and stack contents are unchanged.
+- A tenth pass passed treasure-group positions, the chosen group position
+  and the quest artifact's replacement value directly, centred group objects
+  with a point constructor and let `createRiver` use its target position
+  instead of a copy. All of this runs after the connection paths are built;
+  only `placeQuestArtifact`'s frame changed, through VC6 inlining
+  `TRmgTreasureGroup::addObject` there.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every
