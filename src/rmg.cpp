@@ -2362,9 +2362,7 @@ b8 TRmgTreasureGroup::tryAddObject(type_object* object)
     TObjectType::TPoint triggerCell = prototype->m_triggerCell;
     TPoint trigger(triggerCell.m_x, triggerCell.m_y);
     std::vector<TRmgMapPosition> candidates;
-    TRmgMapPosition position;
-    u32 index;
-    for (index = 0; index < m_objects.size(); ++index) {
+    for (u32 index = 0; index < m_objects.size(); ++index) {
         type_object* existing = m_objects[index];
         TObjectType* existingPrototype = existing->m_properties->m_prototype;
         TRmgMapPosition entrance = getRmgPlacedObjectEntrance(existing);
@@ -2372,16 +2370,16 @@ b8 TRmgTreasureGroup::tryAddObject(type_object* object)
         for (int direction = RMG_DIRECTION_COUNT; direction--; ) {
             if (!openToNorth && !isRmgSouthwardDirection(direction))
                 continue;
-            position = entrance + g_rmgDirections[direction] + trigger;
-            if (bounds.contains(position) && canFitObject(properties, position))
-                candidates.push_back(position);
+            TRmgMapPosition candidate = entrance + g_rmgDirections[direction] + trigger;
+            if (bounds.contains(candidate) && canFitObject(properties, candidate))
+                candidates.push_back(candidate);
         }
     }
     u32 count = candidates.size();
     if (!count)
         return false;
-    index = rand() % count;
-    position = candidates[index];
+    u32 selected = rand() % count;
+    TRmgMapPosition position = candidates[selected];
     addObject(object, position);
     return true;
 }
@@ -2512,8 +2510,9 @@ void TRmgGeneratorBase::loadObjectPrototypes()
         TRmgObjectPropertiesRef* properties =
             new TRmgObjectPropertiesRef(&m_objectsTxt.m_objectTypes[index]);
         // Aliased object types are listed under their objnames.txt row.
-        memcpy(&type,&g_adventureObjectTraits[type].m_nameRow, sizeof(type));
-        m_objectPrototypes[type].push_back(properties);
+        int mappedType;
+        memcpy(&mappedType, &g_adventureObjectTraits[type].m_nameRow, sizeof(mappedType));
+        m_objectPrototypes[mappedType].push_back(properties);
     }
     // Exchange sort of the monsters by subtype, swapping prototypes. Retail
     // bug: an empty monster list underflows size() - 1.
@@ -2561,21 +2560,20 @@ void TRmgGeneratorBase::readObjectPlacementRules()
     std::vector<TAdventureObjectType> objectTypes;
     std::vector<TTerrainType> terrains;
     std::vector<int> subtypes;
-    TAdventureObjectType objectType;
-    int subtype;
-    TTerrainType terrain;
     for (; row < sheet->getNumberOfRows();) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
         if (values[0][0] == ' ' || values[0][0] == 0)
             break;
         TRmgObjectPlacementRule rule;
         rule.m_index = row - RMG_FIRST_DATA_ROW;
-        objectType = H3_ENUM_DECODE(TAdventureObjectType, atoi(values[3]));
-        subtype = atoi(values[4]);
-        terrain = H3_ENUM_DECODE(TTerrainType, atoi(values[6]));
-        objectTypes.push_back(objectType);
-        terrains.push_back(terrain);
-        subtypes.push_back(subtype);
+        TAdventureObjectType ruleObjectType =
+            H3_ENUM_DECODE(TAdventureObjectType, atoi(values[3]));
+        int ruleSubtype = atoi(values[4]);
+        TTerrainType ruleTerrain = H3_ENUM_DECODE(TTerrainType, atoi(values[6]));
+        objectTypes.push_back(ruleObjectType);
+        terrains.push_back(ruleTerrain);
+        subtypes.push_back(ruleSubtype);
+        TTerrainType terrain;
         for (terrain = eTerrainDirt; terrain <= eTerrainWater;
              terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1))
             rule.m_terrainScores[terrain] = atoi(values[terrain + 7]);
@@ -2612,13 +2610,14 @@ void TRmgGeneratorBase::readObjectPlacementRules()
         rulesByType[objectTypes[index]][terrains[index]].push_back(rule);
         subtypesByType[objectTypes[index]][terrains[index]].push_back(subtypes[index]);
     }
-    for (objectType = NOTHING; objectType < ADVENTURE_OBJECT_TRAIT_COUNT;
+    for (TAdventureObjectType objectType = NOTHING; objectType < ADVENTURE_OBJECT_TRAIT_COUNT;
          objectType = H3_ENUM_DECODE(TAdventureObjectType, objectType + 1)) {
         for (int index = 0; index < m_objectPrototypes[objectType].size();
              ++index) {
             TRmgObjectPropertiesRef* properties = m_objectPrototypes[objectType][index];
             TObjectType* prototype = properties->m_prototype;
             properties->m_placementRule = 0;
+            TTerrainType terrain;
             for (terrain = eTerrainDirt; terrain < eTerrainRock;
                  terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1)) {
                 if (prototype->m_recommendedTerrainMask[terrain])
@@ -2626,7 +2625,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
             }
             properties->m_preferredTerrain = terrain;
             if (terrain != eTerrainRock) {
-                subtype = prototype->getSubtype();
+                int subtype = prototype->getSubtype();
                 int mappedType;
                 // Aliased object types use their objnames.txt row.
                 memcpy(&mappedType, &g_adventureObjectTraits[objectType].m_nameRow,
@@ -2804,12 +2803,12 @@ static const s32 g_rmgDecorationTypes[45] = {
 // Fills obstacles outward from a cell with weighted random decorations.
 VA(0x005373A0, 0x53D)
 MAC_ADDRESS(0x2359b4, 0x76c)
-void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSteps)
+void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition start, int progressSteps)
 {
     std::vector<TRmgMapPosition> pending;
-    pending.push_back(position);
+    pending.push_back(start);
     while (pending.size()) {
-        position = pending.back();
+        TRmgMapPosition position = pending.back();
         pending.pop_back();
         if (m_progress)
             m_progress->advance(progressSteps);
@@ -2868,23 +2867,24 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
                     break;
             }
             TRmgObjectPropertiesRef* properties = candidates[index];
-            TRmgMapPosition candidatePosition = positions[index];
+            TRmgMapPosition placement = positions[index];
             TObjectType* prototype = properties->m_prototype;
-            addObject(new type_object(properties), candidatePosition);
+            addObject(new type_object(properties), placement);
             TRmgZoneBounds bounds;
-            bounds.m_minimumX = max(candidatePosition.m_x - prototype->getWidth(), 0);
-            bounds.m_minimumY = max(candidatePosition.m_y - prototype->getHeight(), 0);
-            bounds.m_maximumX = min(candidatePosition.m_x + 2, m_map.m_mapWidth);
-            bounds.m_maximumY = min(candidatePosition.m_y + 2, m_map.m_mapHeight);
-            candidatePosition.m_z = position.m_z;
-            for (candidatePosition.m_y = bounds.m_minimumY;
-                candidatePosition.m_y < bounds.m_maximumY; ++candidatePosition.m_y) {
-                for (candidatePosition.m_x = bounds.m_minimumX;
-                    candidatePosition.m_x < bounds.m_maximumX; ++candidatePosition.m_x) {
-                    TRmgMapItem* nearby = m_map.getMapItem(candidatePosition);
+            bounds.m_minimumX = max(placement.m_x - prototype->getWidth(), 0);
+            bounds.m_minimumY = max(placement.m_y - prototype->getHeight(), 0);
+            bounds.m_maximumX = min(placement.m_x + 2, m_map.m_mapWidth);
+            bounds.m_maximumY = min(placement.m_y + 2, m_map.m_mapHeight);
+            TRmgMapPosition nearbyPosition;
+            nearbyPosition.m_z = position.m_z;
+            for (nearbyPosition.m_y = bounds.m_minimumY;
+                nearbyPosition.m_y < bounds.m_maximumY; ++nearbyPosition.m_y) {
+                for (nearbyPosition.m_x = bounds.m_minimumX;
+                    nearbyPosition.m_x < bounds.m_maximumX; ++nearbyPosition.m_x) {
+                    TRmgMapItem* nearby = m_map.getMapItem(nearbyPosition);
                     if (nearby->hasBorderObject() && nearby->isPassableLand()) {
                         nearby->clearBorderObject();
-                        pending.push_back(candidatePosition);
+                        pending.push_back(nearbyPosition);
                     }
                 }
             }
@@ -3704,13 +3704,13 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     getInitialZoneBounds(minimumY, minimumX, maximumY, maximumX);
     int span = max(maximumY - minimumY, maximumX - minimumX);
     int size = max(m_map.m_mapWidth, m_map.m_mapHeight);
-    minimumY = (minimumY - span + maximumY) / 2;
-    minimumX = (minimumX - span + maximumX) / 2;
+    int originY = (minimumY - span + maximumY) / 2;
+    int originX = (minimumX - span + maximumX) / 2;
     for (int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
         TRmgMapPosition position = zone->getLevelPosition();
-        position.m_x = (position.m_x - minimumX) * size / span;
-        position.m_y = (position.m_y - minimumY) * size / span;
+        position.m_x = (position.m_x - originX) * size / span;
+        position.m_y = (position.m_y - originY) * size / span;
         zone->setLevelPosition(position);
         zone->m_scaledSize = zone->m_templateZone->m_size * size / span;
         zone->chooseTerrain();

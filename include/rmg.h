@@ -1665,7 +1665,7 @@ public:
     int scoreObjectPlacement(
         TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
     void decorateMap();
-    void decorateMapCell(TRmgMapPosition position, int progressSteps);
+    void decorateMapCell(TRmgMapPosition start, int progressSteps);
 };
 SIZE(TRmgGeneratorBase, 0xed8);
 
