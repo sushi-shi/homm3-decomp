@@ -5096,17 +5096,17 @@ int type_random_map_generator::placeBorderObject(
     TRmgMapPosition position, int guardCount, TRmgZone* keyTentZone)
 {
     int color = m_nextKeyTentColor;
-    int index = findRmgPrototypeSubtypeIndex<int>(m_objectPrototypes[BORDER_TENT], color);
-    if (index == m_objectPrototypes[BORDER_TENT].size())
+    int tentPrototypeIndex = findRmgPrototypeSubtypeIndex<int>(m_objectPrototypes[BORDER_TENT], color);
+    if (tentPrototypeIndex == m_objectPrototypes[BORDER_TENT].size())
         return -1;
-    TRmgObjectPropertiesRef* tentProperties = m_objectPrototypes[BORDER_TENT][index];
+    TRmgObjectPropertiesRef* tentProperties = m_objectPrototypes[BORDER_TENT][tentPrototypeIndex];
 
-    index = findRmgPrototypeSubtypeIndex<int>(m_objectPrototypes[BORDER_GUARD], color);
+    int guardPrototypeIndex = findRmgPrototypeSubtypeIndex<int>(m_objectPrototypes[BORDER_GUARD], color);
     // Retail bug: missing guard art returns colour zero, which callers treat
     // as success, unlike the -1 for missing tent art.
-    if (index == m_objectPrototypes[BORDER_GUARD].size())
+    if (guardPrototypeIndex == m_objectPrototypes[BORDER_GUARD].size())
         return 0;
-    TRmgObjectPropertiesRef* guardProperties = m_objectPrototypes[BORDER_GUARD][index];
+    TRmgObjectPropertiesRef* guardProperties = m_objectPrototypes[BORDER_GUARD][guardPrototypeIndex];
     type_object* tent = new type_object(tentProperties);
     if (!placeObjectInZone(tent, keyTentZone)) {
         delete tent;
@@ -5390,24 +5390,24 @@ b8 type_random_map_generator::canPlaceShipyard(TRmgMapPosition position)
     }
     int waterOffset;
     for (waterOffset = 0; waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT; ++waterOffset) {
-        nearby = getRmgShipyardWaterPosition(position, waterOffset);
-        if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth)
+        TRmgMapPosition water = getRmgShipyardWaterPosition(position, waterOffset);
+        if (water.m_x < 0 || water.m_x >= m_map.m_mapWidth)
             continue;
-        TRmgMapItem* item = m_map.getMapItem(nearby);
+        TRmgMapItem* item = m_map.getMapItem(water);
         int terrain = item->getLandType();
         if (terrain == eTerrainWater && item->hasPathClearance())
             break;
     }
     if (waterOffset == RMG_SHIPYARD_WATER_OFFSET_COUNT)
         return false;
-    nearby = position;
+    TRmgMapPosition farSide = position;
     if (g_rmgShipyardWaterOffsets[waterOffset].m_x < 0)
-        ++nearby.m_x;
+        ++farSide.m_x;
     else
-        nearby.m_x -= 3;
-    if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth)
+        farSide.m_x -= 3;
+    if (farSide.m_x < 0 || farSide.m_x >= m_map.m_mapWidth)
         return false;
-    int terrain = m_map.getMapItem(nearby)->getLandType();
+    int terrain = m_map.getMapItem(farSide)->getLandType();
     return terrain != eTerrainWater;
 }
 
@@ -5759,9 +5759,9 @@ void type_random_map_generator::createMonolithConnection(
     if (prototypeIndex < m_objectPrototypes[LITH_TWOWAY].size()) {
         properties = m_objectPrototypes[LITH_TWOWAY][prototypeIndex];
     } else {
-        prototypeIndex -= m_objectPrototypes[LITH_TWOWAY].size();
-        properties = m_objectPrototypes[LITH_ONEWAY_ENTRANCE][prototypeIndex];
-        exitProperties = m_objectPrototypes[LITH_ONEWAY_EXIT][prototypeIndex];
+        int oneWayIndex = prototypeIndex - m_objectPrototypes[LITH_TWOWAY].size();
+        properties = m_objectPrototypes[LITH_ONEWAY_ENTRANCE][oneWayIndex];
+        exitProperties = m_objectPrototypes[LITH_ONEWAY_EXIT][oneWayIndex];
     }
     int guardValue = getRmgConnectionGuardValue(connection, *this);
 
@@ -5914,8 +5914,8 @@ void type_random_map_generator::connectZones()
         for (int objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
             type_object* object = m_objects[objectIndex];
             if (object->m_properties->m_prototype->getObjectType() == SHIPYARD) {
-                position = object->getPosition();
-                if (m_map.getMapItem(position)->m_zoneState.m_zone == zoneIndex) {
+                TRmgMapPosition shipyardPosition = object->getPosition();
+                if (m_map.getMapItem(shipyardPosition)->m_zoneState.m_zone == zoneIndex) {
                     floodShipyardWater(object);
                 }
             }
@@ -6488,20 +6488,20 @@ b8 type_random_map_generator::tryPlacePrimaryTown(
         return false;
     std::vector<TRmgMapPosition> candidates;
     int zoneIndex = zone->m_templateZone->m_zoneIndex;
-    TRmgMapPosition position = zone->m_levelPosition;
+    TRmgMapPosition center = zone->m_levelPosition;
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[TOWN][alignment];
     TObjectType* prototype = properties->m_prototype;
     int bestDistance = 32000;
-    TRmgMapPosition nearby;
-    nearby.m_z = position.m_z;
+    TRmgMapPosition site;
+    site.m_z = center.m_z;
     TRmgZoneBounds bounds = zone->m_bounds;
-    for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
-        for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
-            if (m_map.getMapItem(nearby)->m_zoneState.m_zone != zoneIndex)
+    for (site.m_y = bounds.m_minimumY; site.m_y < bounds.m_maximumY; ++site.m_y) {
+        for (site.m_x = bounds.m_minimumX; site.m_x < bounds.m_maximumX; ++site.m_x) {
+            if (m_map.getMapItem(site)->m_zoneState.m_zone != zoneIndex)
                 continue;
-            int distance = getRmgSquaredDistance(nearby, position);
-            if (distance <= bestDistance && m_map.canPlaceObject(properties, nearby, zone))
-                addRmgLowestScoreCandidate(candidates, nearby, distance, bestDistance);
+            int distance = getRmgSquaredDistance(site, center);
+            if (distance <= bestDistance && m_map.canPlaceObject(properties, site, zone))
+                addRmgLowestScoreCandidate(candidates, site, distance, bestDistance);
         }
     }
     if (!candidates.size())
@@ -6809,14 +6809,14 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
                         ++occupied;
                 }
             }
-            objectValue /= occupied;
-            if (objectValue < 3 * bestValuePerCell / 4)
+            int valuePerCell = objectValue / occupied;
+            if (valuePerCell < 3 * bestValuePerCell / 4)
                 continue;
-            if (bestValuePerCell < 3 * objectValue / 4) {
+            if (bestValuePerCell < 3 * valuePerCell / 4) {
                 totalWeight = 0;
                 candidates.clear();
                 properties.clear();
-                bestValuePerCell = objectValue;
+                bestValuePerCell = valuePerCell;
             }
         }
         totalWeight += definition->m_density;
@@ -6825,11 +6825,11 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     }
     if (!candidates.size())
         return 0;
-    int selected = rand() % totalWeight;
+    int remainingWeight = rand() % totalWeight;
     u32 selectedIndex;
     for (selectedIndex = 0; selectedIndex < candidates.size(); ++selectedIndex) {
-        selected -= candidates[selectedIndex]->m_density;
-        if (selected < 0)
+        remainingWeight -= candidates[selectedIndex]->m_density;
+        if (remainingWeight < 0)
             break;
     }
     type_treasure_def* definition = candidates[selectedIndex];
@@ -7763,9 +7763,9 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
                 nextPosition.m_y + deltaOffsets[cardinal].m_y,
                 nextPosition.m_z));
 
-        nextPosition = nextPosition + g_rmgDirections[cardinal * 2];
-        riverPainter.drawTo(TRmgGridPoint(nextPosition.m_x, nextPosition.m_y));
-        mapItem = m_map.getMapItem(nextPosition);
+        TRmgMapPosition mouth = nextPosition + g_rmgDirections[cardinal * 2];
+        riverPainter.drawTo(TRmgGridPoint(mouth.m_x, mouth.m_y));
+        mapItem = m_map.getMapItem(mouth);
         mapItem->m_tileData.m_riverTarget = true;
 
         riverPainter.drawTo(TRmgGridPoint(position.m_x, position.m_y));
@@ -8064,11 +8064,11 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     for (u32 zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
         TRmgTemplateZone* slot = zone->m_templateZone;
-        int player = slot->m_playerIndex;
-        if (player < 0)
+        int slotPlayer = slot->m_playerIndex;
+        if (slotPlayer < 0)
             continue;
 
-        player = m_playerIndexMap[player + 1];
+        int player = m_playerIndexMap[slotPlayer + 1];
         if (player < 0 || !zone->m_active)
             continue;
 
