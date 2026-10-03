@@ -947,8 +947,7 @@ b8 type_random_map::canPlaceObject(
         if (!g_adventureObjectTraits[entranceType].m_trait2)
             return false;
     }
-    b8 result = (item->getLandType() == eTerrainWater) == (zone->m_terrain == eTerrainWater);
-    return result;
+    return (item->getLandType() == eTerrainWater) == (zone->m_terrain == eTerrainWater);
 }
 
 // Puts the object on the map: trigger cells become entrances with open
@@ -8656,8 +8655,7 @@ b8 type_random_map_generator::writeMap(TAbstractFile* outfile)
     }
     if (m_progress)
         m_progress->advance(2000);
-    b8 result = writeValue<s32>(outfile, 0) == sizeof(s32);
-    return result;
+    return writeValue<s32>(outfile, 0) == sizeof(s32);
 }
 
 enum TRmgPrototypeCellMask {
@@ -8678,13 +8676,14 @@ static inline void writeRmgPrototypeCellMask(TAbstractFile* outfile,
     u8 mask[6];
     memset(mask, 0, sizeof(mask));
     s32 bit = 0;
-    for (s32 y = 6; y--;)
+    for (s32 y = 5; y >= 0; --y) {
         for (s32 x = 7; x >= 0; --x) {
             if (kind == RMG_PROTOTYPE_PASSABLE_CELLS
                 ? prototype->isPassableCell(x, y) : prototype->isTriggerCell(x, y))
                 mask[bit / 8] |= 1 << (bit % 8);
             ++bit;
         }
+    }
     outfile->write(mask, sizeof(mask));
 }
 
