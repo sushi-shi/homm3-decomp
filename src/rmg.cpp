@@ -5584,35 +5584,36 @@ b8 type_random_map_generator::createSubterraneanGate(
     if (candidates.size() == 0)
         return false;
 
-    position = addRmgObjectAtRandomCandidate(
+    TRmgMapPosition gatePosition = addRmgObjectAtRandomCandidate(
         this, new type_object(gateProperties), candidates);
 
-    TRmgMapPosition otherPosition(position.m_x, position.m_y,
+    TRmgMapPosition otherGatePosition(gatePosition.m_x, gatePosition.m_y,
         destination->getLevelPosition().m_z);
-    addObject(new type_object(gateProperties), otherPosition);
+    addObject(new type_object(gateProperties), otherGatePosition);
 
-    position = getRmgObjectTriggerPosition(position, gatePrototype->m_triggerCell);
-    otherPosition = TRmgMapPosition(position.m_x, position.m_y,
+    TRmgMapPosition entrance =
+        getRmgObjectTriggerPosition(gatePosition, gatePrototype->m_triggerCell);
+    TRmgMapPosition otherEntrance(entrance.m_x, entrance.m_y,
         destination->getLevelPosition().m_z);
-    source->m_entrances.push_back(TPoint(position.m_x, position.m_y));
+    source->m_entrances.push_back(TPoint(entrance.m_x, entrance.m_y));
     destination->m_entrances.push_back(
-        TPoint(otherPosition.m_x, otherPosition.m_y));
+        TPoint(otherEntrance.m_x, otherEntrance.m_y));
 
     int guardValue = getRmgConnectionGuardValue(connection, *this);
 
-    position = openRmgEntranceApproach(m_map, position);
-    otherPosition = openRmgEntranceApproach(m_map, otherPosition);
+    TRmgMapPosition approach = openRmgEntranceApproach(m_map, entrance);
+    TRmgMapPosition otherApproach = openRmgEntranceApproach(m_map, otherEntrance);
 
     if (connection->m_placeBorderObjects) {
         // Success on either side suppresses both guards; a failed placement
         // does not undo the other side's objects.
-        placeRmgGateConnectionBorder(*this, position, destination, guardValue);
-        placeRmgGateConnectionBorder(*this, otherPosition, source, guardValue);
+        placeRmgGateConnectionBorder(*this, approach, destination, guardValue);
+        placeRmgGateConnectionBorder(*this, otherApproach, source, guardValue);
     }
 
     if (guardValue > 0) {
-        placeGuard(guardValue, position);
-        placeGuard(guardValue, otherPosition);
+        placeGuard(guardValue, approach);
+        placeGuard(guardValue, otherApproach);
     }
 
     return true;
@@ -6124,12 +6125,12 @@ void type_random_map_generator::carveBranchingPaths()
                     pending.push_back(middle);
                     pending.push_back(first);
                     if (length >= 8 && contains(middle)) {
-                        first = middle + perpendicular;
+                        TPoint toward = middle + perpendicular;
                         branches.push(middle);
-                        branches.push(first);
-                        first = TPoint(middle.m_x - perpendicular.m_x, middle.m_y - perpendicular.m_y);
+                        branches.push(toward);
+                        toward = TPoint(middle.m_x - perpendicular.m_x, middle.m_y - perpendicular.m_y);
                         branches.push(middle);
-                        branches.push(first);
+                        branches.push(toward);
                     }
                 } else if (contains(first)) {
                     m_map.openPathPatch(first.m_x, first.m_y, level);
@@ -6435,6 +6436,7 @@ b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     TRmgZoneBounds bounds = zone->m_bounds;
     bounds.m_minimumY += prototype->getHeight();
     bounds.m_minimumX += prototype->getWidth();
+    int bestScore = spacing;
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
             TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, trigger);
@@ -6442,7 +6444,7 @@ b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
             if (item->m_zoneState.m_zone != zoneIndex)
                 continue;
             int score = item->m_zoneState.m_objectDistance;
-            if (score < spacing || !m_map.canPlaceObject(properties, position, zone))
+            if (score < bestScore || !m_map.canPlaceObject(properties, position, zone))
                 continue;
             TRmgZoneBounds nearby;
             setRmgNeighborhoodBounds(nearby, entrance, m_map, 1);
@@ -6455,7 +6457,7 @@ b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
             }
             if (!valid)
                 continue;
-            addRmgHighestScoreCandidate(candidates, position, score, spacing);
+            addRmgHighestScoreCandidate(candidates, position, score, bestScore);
         }
     }
     if (!candidates.size())
@@ -6492,9 +6494,8 @@ b8 type_random_map_generator::tryPlacePrimaryTown(
     }
     if (!candidates.size())
         return false;
-    position = placeRmgTownAtRandomCandidate(this, properties,
+    zone->m_position = placeRmgTownAtRandomCandidate(this, properties,
         player, hasFort, candidates, prototype->m_triggerCell);
-    zone->m_position = position;
     zone->m_active = true;
     return true;
 }
@@ -6510,6 +6511,7 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
     TRmgZoneBounds bounds = zone->m_bounds;
     int bestBorderCount = 0;
     int bestDistance = 40000;
+    int bestScore = spacing;
     int zoneIndex = zone->m_templateZone->m_zoneIndex;
     // The mine position whose entrance would be the town entrance, so anchor
     // distances below equal entrance-to-entrance distances.
@@ -6535,12 +6537,12 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
                 if (distance < bestDistance) {
                     bestDistance = distance;
                     bestBorderCount = 0;
-                    spacing = 0;
+                    bestScore = 0;
                     candidates.clear();
                 }
             }
             int score = item->m_zoneState.m_objectDistance;
-            if (score < spacing)
+            if (score < bestScore)
                 continue;
             int borderCount = 0;
             for (u32 i = 0; i < properties->m_outline.size(); ++i) {
@@ -6561,7 +6563,7 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
                 candidates.clear();
                 bestBorderCount = borderCount;
             }
-            addRmgHighestScoreCandidate(candidates, position, score, spacing);
+            addRmgHighestScoreCandidate(candidates, position, score, bestScore);
         }
     }
     if (!candidates.size())
@@ -7154,14 +7156,15 @@ b8 type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
     TPoint center;
     center.m_x = (groupBounds.m_minimumX + groupBounds.m_maximumX) / 2;
     center.m_y = (groupBounds.m_minimumY + groupBounds.m_maximumY) / 2;
+    int bestScore = spacing;
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position + center);
             if (item->m_zoneState.m_zone == zoneIndex
-                && item->m_zoneState.m_objectDistance >= spacing
+                && item->m_zoneState.m_objectDistance >= bestScore
                 && canPlaceTreasureGroup(group, position, zone)) {
                 addRmgHighestScoreCandidate(candidates, position,
-                    item->m_zoneState.m_objectDistance, spacing);
+                    item->m_zoneState.m_objectDistance, bestScore);
             }
         }
     }
@@ -8071,15 +8074,15 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         legalAlignments[player] |= 1 << zone->m_alignment;
     }
 
-    generatedHumanTowns -= m_humanPlayerCount;
+    int surplusHumanTowns = generatedHumanTowns - m_humanPlayerCount;
     int reversePlayer = RMG_PLAYER_COUNT - 1;
     do {
         if (canBeHuman[reversePlayer]
             && !m_fixedHumanPlayers[reversePlayer]
-            && generatedHumanTowns > 0) {
+            && surplusHumanTowns > 0) {
             canBeComputer[reversePlayer] = true;
             canBeHuman[reversePlayer] = false;
-            --generatedHumanTowns;
+            --surplusHumanTowns;
         }
     } while (reversePlayer-- != 0);
 
