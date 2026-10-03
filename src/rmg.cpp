@@ -3952,6 +3952,8 @@ static inline bool splitRmgBoundarySegment(std::vector<TPoint>& pending,
     return true;
 }
 
+// Kept a free function: generated maps depend on drawIrregularZoneBoundary's
+// frame; see rmg-cleanup-review.md.
 static inline TPoint clampRmgBoundaryToMap(
     const TPoint& point, const type_random_map& map)
 {
@@ -4564,8 +4566,8 @@ void type_random_map_generator::buildZoneBoundaries(
     }
     s32 originalZones = m_zones.size();
     if (level == RMG_UNDERGROUND_LEVEL || m_waterContent != RMG_WATER_NONE) {
-        // Retail bug: testSlot's m_allowedTowns is uninitialized too, so
-        // stack contents decide whether testZone's constructor draws a town.
+        // Retail bug: testSlot's m_allowedTowns is uninitialized, so stack
+        // contents decide whether testZone's constructor draws a town.
         TRmgTemplateZone testSlot;
         testSlot.m_zoneIndex = RMG_NO_ZONE;
         testSlot.m_kind = RMG_TEMPLATE_JUNCTION;

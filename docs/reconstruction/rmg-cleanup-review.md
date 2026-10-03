@@ -190,9 +190,9 @@ following keeps only with a pointer here:
 - `initializeZones` reuses `minimumY`/`minimumX` as the square's origin.
   Separate origin locals changed its frame and moved towns on maps with water
   or two levels (caught by the output comparison below).
-- `assignRmgZoneCell` stays a free function: as a `TRmgMapItem` member, VC6
-  lays out `drawIrregularZoneBoundary`, called under `buildZoneBoundaries`,
-  differently.
+- `assignRmgZoneCell` and `clampRmgBoundaryToMap` stay free functions: as a
+  `TRmgMapItem` or `type_random_map` member respectively, VC6 lays out
+  `drawIrregularZoneBoundary`, called under `buildZoneBoundaries`, differently.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every
