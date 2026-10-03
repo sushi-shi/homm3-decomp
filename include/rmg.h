@@ -409,6 +409,14 @@ enum ERmgTownPlacementParameter {
     RMG_TOWN_NEUTRAL_CASTLE_DENSITY = 7
 };
 
+// Template column 55: zone monster strength letter n, w, a or s.
+enum ERmgZoneMonsterStrength {
+    RMG_ZONE_MONSTERS_NONE = 0,
+    RMG_ZONE_MONSTERS_WEAK = 2,
+    RMG_ZONE_MONSTERS_AVERAGE = 3,
+    RMG_ZONE_MONSTERS_STRONG = 4
+};
+
 struct TRmgTemplateZone {
     s32 m_zoneIndex;                    // +0x00
     s32 m_kind;                         // +0x04: ERmgTemplateZoneKind
@@ -427,7 +435,7 @@ struct TRmgTemplateZone {
     // Use the aligned town's native terrain.
     b8 m_useNativeTerrain;
     b8 m_allowedTerrain[8];  // +0x85
-    s32 m_monsterStrength;              // +0x90
+    s32 m_monsterStrength;              // +0x90: ERmgZoneMonsterStrength
     // Template column 56: restrict guards to the zone's town alignment.
     b8 m_guardsMatchZone;    // +0x94
     // Indexed by town type + 1; slot 0 is neutral.

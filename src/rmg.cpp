@@ -3164,11 +3164,11 @@ void readRmgTemplateZones(
                 if (!anyTerrain)
                     slot->m_allowedTerrain[eTerrainDirt] = true;
                 switch (tolower(values[55][0])) {
-                case 'n': slot->m_monsterStrength = 0; break;
-                case 'w': slot->m_monsterStrength = 2; break;
-                case 's': slot->m_monsterStrength = 4; break;
-                case 'a': slot->m_monsterStrength = 3; break;
-                default: slot->m_monsterStrength = 3; break;
+                case 'n': slot->m_monsterStrength = RMG_ZONE_MONSTERS_NONE; break;
+                case 'w': slot->m_monsterStrength = RMG_ZONE_MONSTERS_WEAK; break;
+                case 's': slot->m_monsterStrength = RMG_ZONE_MONSTERS_STRONG; break;
+                case 'a': slot->m_monsterStrength = RMG_ZONE_MONSTERS_AVERAGE; break;
+                default: slot->m_monsterStrength = RMG_ZONE_MONSTERS_AVERAGE; break;
                 }
                 slot->m_guardsMatchZone = isRmgTemplateFieldSet(values[56]);
                 // Neutral, then one slot per town type.
@@ -4371,7 +4371,7 @@ void type_random_map_generator::buildZoneBoundaries(
                     memset(slot->m_mineCounts, 0, sizeof(slot->m_mineCounts));
                     memset(slot->m_mineDensities, 0, sizeof(slot->m_mineDensities));
                     memset(slot->m_townPlacement, 0, sizeof(slot->m_townPlacement));
-                    slot->m_monsterStrength = 0;
+                    slot->m_monsterStrength = RMG_ZONE_MONSTERS_NONE;
                     slot->m_playerIndex = -1;
                     memset(slot->m_treasure, 0, sizeof(slot->m_treasure));
                     slot->m_treasure[0].m_density = 5;
