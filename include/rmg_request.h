@@ -16,13 +16,18 @@ enum ERandomMapResult {
     RANDOM_MAP_GENERATION_FAILED = 3
 };
 
+// Player colours (red, blue, tan, green, orange, purple, teal, pink).
+enum ERmgPlayerLimits {
+    RMG_PLAYER_COUNT = 8
+};
+
 // Random-map settings chosen in the lobby and passed to the generator.
 class TRandomMapRequest {
 public:
     // Lobby human seats are 1; computer seats remain zero.
-    b8 m_isHumanSeat[8];   // +0x00
+    b8 m_isHumanSeat[RMG_PLAYER_COUNT]; // +0x00
     // -1 selects a random town.
-    s32 m_townType[8];                // +0x08
+    s32 m_townType[RMG_PLAYER_COUNT];   // +0x08
     // Map size in tiles; the lobby passes its map dimension for both.
     s32 m_width;                      // +0x28
     s32 m_height;                     // +0x2c

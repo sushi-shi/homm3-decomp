@@ -40,7 +40,8 @@
 
 enum ERmgMapLevel {
     RMG_SURFACE_LEVEL = 0,
-    RMG_UNDERGROUND_LEVEL = 1
+    RMG_UNDERGROUND_LEVEL = 1,
+    RMG_MAP_LEVEL_COUNT = 2
 };
 
 // Zone index of a cell outside every zone; cleared cells start here.
@@ -62,11 +63,6 @@ enum ERmgZoneMonsterStrength {
     RMG_ZONE_MONSTERS_STRONG = 4
 };
 
-// Player colours (red, blue, tan, green, orange, purple, teal, pink).
-enum ERmgPlayerLimits {
-    RMG_PLAYER_COUNT = 8
-};
-
 // Euclidean distance, truncated; the squares are 32-bit integers.
 MAC_ADDRESS(0x22cef0, 0x84)
 s32 getRmgDistance(TPoint first, TPoint second)
@@ -76,7 +72,9 @@ s32 getRmgDistance(TPoint first, TPoint second)
 }
 
 DATA(0x006824e0)
-s32 g_rmgCreatureValueByLevel[7] = {5000, 7000, 9000, 12000, 16000, 21000, 27000};
+s32 g_rmgCreatureValueByLevel[TOWN_DWELLING_COUNT] = {
+    5000, 7000, 9000, 12000, 16000, 21000, 27000
+};
 
 void type_object::releaseReservation() {}
 b8 type_object::completePlacement() { return true; }
@@ -294,7 +292,7 @@ static const s32 g_snowRiverDeltaIndex[4] = {7, 5, 4, 6};
 // chooseTownType draws from all four entries, so the zero padding after it is
 // a Castle candidate.
 DATA(0x00682450)
-s32 g_rmgTerrainTownChoices[9][4] = {
+s32 g_rmgTerrainTownChoices[eTerrainWater + 1][4] = {
     {TOWN_CASTLE, TOWN_RAMPART, TOWN_NECROPOLIS, eTownNeutral}, // dirt
     {TOWN_STRONGHOLD, eTownNeutral, 0, 0},                       // sand
     {TOWN_CASTLE, TOWN_RAMPART, eTownNeutral, 0},                // grass
@@ -1580,7 +1578,7 @@ void rmgTownObject::write(TAbstractFile* outputFile, s32 version)
     writeValue<u8>(outputFile, 0);
     writeValue<u8>(outputFile, 0);
     writeValue<b8>(outputFile, m_hasFort);
-    u8 spells[9];
+    u8 spells[(hero::NUM_SPELLS + 7) / 8];
     memset(spells, 0, sizeof(spells));
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE)
         outputFile->write(spells, sizeof(spells));
@@ -2673,7 +2671,8 @@ void TRmgGeneratorBase::readObjectPlacementRules()
              terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1))
             rule.m_terrainScores[terrain] =
                 atoi(values[terrain + RMG_PLACEMENT_COLUMN_TERRAIN_SCORES]);
-        for (; terrain < 10; terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1))
+        for (; terrain < RMG_TERRAIN_COUNT;
+             terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1))
             rule.m_terrainScores[terrain] = RMG_PLACEMENT_INVALID;
         m_placementRules.push_back(rule);
         ++row;
@@ -2689,17 +2688,19 @@ void TRmgGeneratorBase::readObjectPlacementRules()
 
 #if defined(HOMM3_TARGET_MAC)
     struct TPlacementTables {
-        std::vector<TRmgObjectPlacementRule*> rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
-        std::vector<s32> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
+        std::vector<TRmgObjectPlacementRule*>
+            rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][RMG_TERRAIN_COUNT];
+        std::vector<s32> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][RMG_TERRAIN_COUNT];
     };
     TPlacementTables* tables = new TPlacementTables;
-    std::vector<TRmgObjectPlacementRule*> (&rulesByType)[ADVENTURE_OBJECT_TRAIT_COUNT][10] =
-        tables->rulesByType;
-    std::vector<s32> (&subtypesByType)[ADVENTURE_OBJECT_TRAIT_COUNT][10] =
+    std::vector<TRmgObjectPlacementRule*>
+        (&rulesByType)[ADVENTURE_OBJECT_TRAIT_COUNT][RMG_TERRAIN_COUNT] = tables->rulesByType;
+    std::vector<s32> (&subtypesByType)[ADVENTURE_OBJECT_TRAIT_COUNT][RMG_TERRAIN_COUNT] =
         tables->subtypesByType;
 #else
-    std::vector<TRmgObjectPlacementRule*> rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
-    std::vector<s32> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
+    std::vector<TRmgObjectPlacementRule*>
+        rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][RMG_TERRAIN_COUNT];
+    std::vector<s32> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][RMG_TERRAIN_COUNT];
 #endif
     for (s32 index = 0; index < ruleCount; ++index) {
         TRmgObjectPlacementRule* rule = &m_placementRules[index];
@@ -2750,7 +2751,7 @@ s32 TRmgGeneratorBase::scoreObjectPlacement(
 {
     TObjectType* prototype = properties->m_prototype;
     std::vector<type_object*> affected;
-    b8 terrainSeen[10];
+    b8 terrainSeen[RMG_TERRAIN_COUNT];
     memset(terrainSeen, 0, sizeof(terrainSeen));
     // The 8x6 footprint plus a one-cell border; footprint cell (column, row)
     // is marks[column + 1][row + 1].
@@ -2805,7 +2806,7 @@ s32 TRmgGeneratorBase::scoreObjectPlacement(
     TRmgObjectPlacementRule* rule = properties->m_placementRule;
     s32 score = 0;
     b8 hasPositiveTerrain = false;
-    for (s32 terrain = eTerrainDirt; terrain < 10; ++terrain) {
+    for (s32 terrain = eTerrainDirt; terrain < RMG_TERRAIN_COUNT; ++terrain) {
         if (terrainSeen[terrain]) {
             score += rule->m_terrainScores[terrain];
             if (rule->m_terrainScores[terrain] > 0)
@@ -3681,7 +3682,7 @@ void type_random_map_generator::filterZonePositions(
 {
     s32 bestConnections = 0;
     if (m_map.m_numberLevels > 1) {
-        b8 occupiedLevels[2] = {false, false};
+        b8 occupiedLevels[RMG_MAP_LEVEL_COUNT] = {false, false};
         for (s32 other = 0; other < m_zones.size(); ++other) {
             if (m_zones[other] != zone)
                 occupiedLevels[m_zones[other]->getLevelPosition().m_z] = true;
@@ -8163,12 +8164,6 @@ s32 writeString(TAbstractFile* outfile, const char* text)
     return outfile->write(text, strlen(text));
 }
 
-// Hero ids a map format knows: RoE maps stop before the expansion heroes.
-enum ERmgHeroCount {
-    RMG_ROE_HERO_COUNT = 128,
-    RMG_HERO_COUNT = 156
-};
-
 // Artifact ids an AB map knows: it ends before the SoD combination artifacts.
 enum ERmgArtifactCount {
     RMG_AB_ARTIFACT_COUNT = ARTIFACT_ANGELIC_ALLIANCE
@@ -8593,10 +8588,12 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
     outfile->write(reserved, sizeof(reserved));
 }
 
-// Prisons draw from the RoE heroes, or in later formats from the first 145.
+// Prisons draw from the RoE heroes, or in later formats from the first
+// RMG_PRISON_HERO_COUNT.
 static inline s32 getRmgPrisonHeroCount(s32 mapVersion)
 {
-    return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? 145 : RMG_ROE_HERO_COUNT;
+    return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE
+        ? RMG_PRISON_HERO_COUNT : RMG_ROE_HERO_COUNT;
 }
 
 VA(0x0054b100, 0x71)

@@ -501,7 +501,7 @@ s32 __fastcall selectTerrainTransition(
 //   W  .  E   W  .  E   E  .  W   E  .  W
 //   SW S SE   NW N NE   SE S SW   NE N NW
 DATA(0x00642c00)
-const s32 g_rmgReflectedNeighbours[2][2][8] = {
+const s32 g_rmgReflectedNeighbours[2][2][TILE_DIR_COUNT] = {
     {
         {TILE_DIR_NORTH, TILE_DIR_NORTHEAST, TILE_DIR_EAST, TILE_DIR_SOUTHEAST,
          TILE_DIR_SOUTH, TILE_DIR_SOUTHWEST, TILE_DIR_WEST, TILE_DIR_NORTHWEST}, // none
@@ -1757,7 +1757,7 @@ VA_COMPGEN(0x005b3da0, 0x16, STATIC_CTOR, g_rmgRockRule)
 VA_COMPGEN(0x005b3dc0, 0x0a, STATIC_DTOR, g_rmgRockRule)
 
 DATA(0x00642bd8)
-TRmgTerrainRule* const g_rmgTerrainRules[10] = {
+TRmgTerrainRule* const g_rmgTerrainRules[RMG_TERRAIN_COUNT] = {
     &g_rmgDirtRule, &g_rmgSandRule, &g_rmgGrassRule, &g_rmgSnowRule,
     &g_rmgSwampRule, &g_rmgRoughRule, &g_rmgSubterraneanRule,
     &g_rmgLavaRule, &g_rmgWaterRule, &g_rmgRockRule

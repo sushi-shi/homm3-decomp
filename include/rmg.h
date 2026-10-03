@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "advmgr_objects.h"
+#include "rmg_request.h"
 #include "terrain_type.h"
 
 class TAbstractFile;
@@ -24,6 +25,19 @@ struct TPoint;
 struct TObjectType;
 struct TRmgObjectPropertiesRef;
 class type_object;
+
+// Terrain types, dirt through rock.
+enum ERmgTerrainLimits {
+    RMG_TERRAIN_COUNT = eTerrainRock + 1
+};
+
+// Hero ids a map format knows: RoE maps stop before the expansion heroes.
+// Prisons in later formats hold only the first RMG_PRISON_HERO_COUNT.
+enum ERmgHeroCount {
+    RMG_ROE_HERO_COUNT = 128,
+    RMG_PRISON_HERO_COUNT = 145,
+    RMG_HERO_COUNT = 156
+};
 
 // Progress reporting interface driven by the random-map generator.
 class TProgressSink {
@@ -421,7 +435,8 @@ enum ERmgTownPlacementParameter {
     RMG_TOWN_NEUTRAL_BASIC_COUNT = 4,
     RMG_TOWN_NEUTRAL_CASTLE_COUNT = 5,
     RMG_TOWN_NEUTRAL_BASIC_DENSITY = 6,
-    RMG_TOWN_NEUTRAL_CASTLE_DENSITY = 7
+    RMG_TOWN_NEUTRAL_CASTLE_DENSITY = 7,
+    RMG_TOWN_PLACEMENT_PARAMETER_COUNT = 8
 };
 
 struct TRmgTemplateZone {
@@ -440,7 +455,7 @@ struct TRmgTemplateZone {
     // Template player number minus one, or -1 for none;
     // m_playerIndexMap[m_playerIndex + 1] is the player colour.
     s32 m_playerIndex;                  // +0x1c
-    s32 m_townPlacement[8];             // +0x20: ERmgTownPlacementParameter
+    s32 m_townPlacement[RMG_TOWN_PLACEMENT_PARAMETER_COUNT]; // +0x20
     // Neutral towns use the zone's town alignment.
     b8 m_neutralTownsMatchZone; // +0x40
     // Town types selectAllowedTown draws from; RoE maps exclude Conflux.
@@ -452,7 +467,7 @@ struct TRmgTemplateZone {
     // Use the aligned town's native terrain.
     b8 m_useNativeTerrain;
     // Dirt to lava; when none is set the reader allows dirt.
-    b8 m_allowedTerrain[8];  // +0x85
+    b8 m_allowedTerrain[eTerrainWater];  // +0x85
     s32 m_monsterStrength;              // +0x90: ERmgZoneMonsterStrength (rmg.cpp)
     // Restrict guards to the zone's town alignment.
     b8 m_guardsMatchZone;    // +0x94
@@ -723,7 +738,7 @@ struct TRmgConnectionDecoration {
 // rule id, used to score object placement.
 struct TRmgObjectPlacementRule {
     s32 m_index;                         // +0x00
-    s32 m_terrainScores[10];             // +0x04
+    s32 m_terrainScores[RMG_TERRAIN_COUNT]; // +0x04
     std::vector<s32> m_adjacentScores;    // +0x2c
     std::vector<s32> m_blockedScores;     // +0x3c
 };
@@ -1549,8 +1564,9 @@ struct TRmgZone {
     // Graph distance turned into a randomized quest-zone priority that
     // penalizes immediately adjacent zones (ERmgQuestZoneScore in rmg.cpp).
     s32 m_questPlacementScore;         // +0x40
-    // Placed objects per object type, checked against per-zone limits.
-    s32 m_objectCountByType[232];      // +0x44
+    // Placed objects per object type (ROCKLANDS is the last), checked against
+    // per-zone limits.
+    s32 m_objectCountByType[ROCKLANDS + 1]; // +0x44
     // Connection-graph distance to each original zone, or RMG_UNREACHED_COST.
     std::vector<s16> m_zoneDistances;// +0x3e4
     std::vector<TPoint> m_boundary;    // +0x3f4: clipped polygon vertices
@@ -1717,7 +1733,7 @@ public:
     TObjectTypeTable m_objectsTxt;                     // +0x024
     // [object type][n]: that type's prototypes in objects.txt order (aliases
     // under their objnames.txt row); monsters are sorted by subtype.
-    std::vector<TRmgObjectPropertiesRef*> m_objectPrototypes[232]; // +0x034
+    std::vector<TRmgObjectPropertiesRef*> m_objectPrototypes[ROCKLANDS + 1]; // +0x034
     // rand_trn.txt placement rules.
     std::vector<TRmgObjectPlacementRule> m_placementRules; // +0xeb4
     std::vector<type_object*> m_objects;               // +0xec4
@@ -1748,14 +1764,14 @@ enum ERmgTownPlacementCategory {
 class type_random_map_generator : public TRmgGeneratorBase {
 public:
     // Lobby human seats, one entry per player colour.
-    b8 m_fixedHumanPlayers[8];                        // +0x0ed8
+    b8 m_fixedHumanPlayers[RMG_PLAYER_COUNT];         // +0x0ed8
     // Player colour per template player number 1-8, or -1; entry 0 (zones
     // without a player) stays -1.
-    s32 m_playerIndexMap[9];                          // +0x0ee0
+    s32 m_playerIndexMap[RMG_PLAYER_COUNT + 1];       // +0x0ee0
     // Never read or written.
     u8 m_unused0f04[0x20];                          // +0x0f04
     // Lobby town per player colour; eTownNeutral keeps the zone's random town.
-    s32 m_townChoices[8];                             // +0x0f24
+    s32 m_townChoices[RMG_PLAYER_COUNT];              // +0x0f24
     // Counter for generated object ids; starts at 1.
     s32 m_nextObjectId;                               // +0x0f44
     // Requested counts; writeMapHeader recounts the players it writes. A
@@ -1773,7 +1789,7 @@ public:
     s32 m_activeZoneCount;                             // +0x0f60
     s32 m_activeZoneCountsByAlignment[TOWN_TYPE_COUNT]; // +0x0f64
     // Per hero: special, missing from the map version, or held by a prison.
-    b8 m_disabledHeroes[156];               // +0x0f88
+    b8 m_disabledHeroes[RMG_HERO_COUNT];    // +0x0f88
     // Artifacts already used as seer-hut quests.
     b8 m_usedQuestArtifacts[ARTIFACT_COUNT]; // +0x1024
     // Set once fewer than 20 quest artifacts remain; no further seer huts
@@ -1795,7 +1811,7 @@ public:
     // being placed.
     std::vector<b8> m_disabledKeyTents;     // +0x1100
     // Placed objects per object type, checked against map-wide limits.
-    s32 m_objectCountByType[232];                      // +0x1110
+    s32 m_objectCountByType[ROCKLANDS + 1];            // +0x1110
     // Town and shipyard entrances that createRoads joins pairwise.
     std::vector<TRmgMapPosition> m_roadTargets;        // +0x14b0
     // Placed portals; same-subtype portals link road searches.
