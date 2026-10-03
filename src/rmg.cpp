@@ -5231,10 +5231,11 @@ static inline void placeRmgGateConnectionBorder(type_random_map_generator& gener
     int color = generator.placeBorderObject(approach, 1, keyTentZone);
     if (color >= 0) {
         guardValue = 0;
-        --approach.m_x;
-        markRmgEmptyBorderConnection(generator.m_map.getMapItem(approach), color);
-        approach.m_x += 2;
-        markRmgEmptyBorderConnection(generator.m_map.getMapItem(approach), color);
+        TRmgMapPosition side = approach;
+        --side.m_x;
+        markRmgEmptyBorderConnection(generator.m_map.getMapItem(side), color);
+        side.m_x += 2;
+        markRmgEmptyBorderConnection(generator.m_map.getMapItem(side), color);
     }
 }
 
@@ -5547,9 +5548,10 @@ b8 type_random_map_generator::createShipyardConnection(
 static inline TRmgMapPosition openRmgEntranceApproach(type_random_map& map,
     TRmgMapPosition entrance)
 {
-    ++entrance.m_y;
-    map.getMapItem(entrance)->openPath();
-    return entrance;
+    TRmgMapPosition approach = entrance;
+    ++approach.m_y;
+    map.getMapItem(approach)->openPath();
+    return approach;
 }
 
 VA(0x00542080, 0x8AA)
