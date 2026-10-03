@@ -372,6 +372,7 @@ VA(0x005B3890, 0x58)
 MAC_ADDRESS(0x254d08, 0xc8)
 int TRmgPatternTerrainRule::selectBaseFrame(int strength, int oldFrame)
 {
+    int frame = oldFrame;
     if (!matchesTerrainFrame(m_entries, oldFrame, SHAPE_FILL)) {
         b8 special = false;
         if (hasSpecialBaseFrames()) {
@@ -379,9 +380,9 @@ int TRmgPatternTerrainRule::selectBaseFrame(int strength, int oldFrame)
                 / RMG_FULL_BRUSH_STRENGTH;
             special = static_cast<u32>(rand() % 100) < chance;
         }
-        oldFrame = selectTerrainRangeFrame(getTerrainPatternRange(*this, SHAPE_FILL, special));
+        frame = selectTerrainRangeFrame(getTerrainPatternRange(*this, SHAPE_FILL, special));
     }
-    return oldFrame;
+    return frame;
 }
 
 // Transitions always draw from the non-special range.
@@ -393,11 +394,12 @@ int TRmgPatternTerrainRule::selectTransitionFrame(
     TRmgTerrainFlip& selectedFlip,
     int oldFrame)
 {
+    int frame = oldFrame;
     if (!matchesTerrainFrame(m_entries, oldFrame, transition)) {
-        oldFrame = selectTerrainRangeFrame(getTerrainPatternRange(*this, transition, false));
+        frame = selectTerrainRangeFrame(getTerrainPatternRange(*this, transition, false));
     }
     selectedFlip = requestedFlip;
-    return oldFrame;
+    return frame;
 }
 
 static inline bool matchesTerrainTransition(
@@ -472,11 +474,12 @@ VA(0x005B3AA0, 0x31)
 MAC_ADDRESS(0x254f84, 0x94)
 int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
 {
+    int frame = oldFrame;
     if (!matchesTerrainFrame(g_rmgTerrainPatterns, oldFrame, SHAPE_FILL)) {
-        oldFrame = selectTerrainRangeFrame(getTerrainTransitionRange(
+        frame = selectTerrainRangeFrame(getTerrainTransitionRange(
             g_rmgTerrainPatternRanges, SHAPE_FILL, false, false));
     }
-    return oldFrame;
+    return frame;
 }
 
 VA(0x005B3AE0, 0x74)
@@ -485,15 +488,16 @@ int TRmgTableTerrainRule::selectTransitionFrame(
     int transition, TRmgTerrainFlip requestedFlip,
     TRmgTerrainFlip& selectedFlip, int oldFrame)
 {
+    int frame = oldFrame;
     if (oldFrame == -1
         || !matchesTerrainTransition(g_rmgTerrainPatterns[oldFrame], transition,
                                      requestedFlip.m_flipX, requestedFlip.m_flipY)) {
         TRmgTerrainPatternRange& range = getTerrainTransitionRange(
             g_rmgTerrainPatternRanges, transition, requestedFlip.m_flipX, requestedFlip.m_flipY);
-        oldFrame = selectTerrainRangeFrame(range);
+        frame = selectTerrainRangeFrame(range);
     }
     selectedFlip = TRmgTerrainFlip(false, false);
-    return oldFrame;
+    return frame;
 }
 
 int __fastcall selectTerrainTransition(

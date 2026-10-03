@@ -6055,8 +6055,9 @@ TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
     }
     int error = major / 2;
     int steps = 0;
+    TPoint previous;
     for (;;) {
-        toward = from;
+        previous = from;
         error += minor;
         ++steps;
         if (error < major)
@@ -6067,14 +6068,14 @@ TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
         }
         if (from.m_x < 1 || from.m_x >= m_mapWidth - 1
             || from.m_y < 1 || from.m_y >= m_mapHeight - 1)
-            return toward;
+            return previous;
         if (steps > 2) {
             TRmgMapPosition nearby;
             nearby.m_z = level;
             for (nearby.m_x = from.m_x - 1; nearby.m_x <= from.m_x + 1; ++nearby.m_x) {
                 for (nearby.m_y = from.m_y - 1; nearby.m_y <= from.m_y + 1; ++nearby.m_y) {
                     if (getMapItem(nearby)->hasPathClearance())
-                        return toward;
+                        return previous;
                 }
             }
         }
