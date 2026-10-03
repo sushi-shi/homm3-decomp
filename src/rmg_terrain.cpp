@@ -363,13 +363,17 @@ static inline s32 selectTerrainRangeFrame(const TRmgTerrainPatternRange& range)
     return rand() % range.m_count + range.m_firstIndex;
 }
 
-// An existing frame (-1 for none) is kept when it already shows the
-// requested transition.
+// oldFrame value of a cell painted from scratch.
+enum ERmgTerrainFrameSentinel {
+    RMG_NO_TERRAIN_FRAME = -1
+};
+
+// An existing frame is kept when it already shows the requested transition.
 template<class Entry>
 static inline bool matchesTerrainFrame(const Entry* entries,
     s32 oldFrame, s32 transition)
 {
-    return oldFrame != -1 && entries[oldFrame].m_transition == transition;
+    return oldFrame != RMG_NO_TERRAIN_FRAME && entries[oldFrame].m_transition == transition;
 }
 
 VA(0x005B3890, 0x58)
@@ -380,9 +384,9 @@ s32 TRmgPatternTerrainRule::selectBaseFrame(s32 strength, s32 oldFrame)
     if (!matchesTerrainFrame(m_entries, oldFrame, SHAPE_FILL)) {
         b8 special = false;
         if (hasSpecialBaseFrames()) {
-            u32 chance = static_cast<u32>(m_specialFrameChance * strength)
+            u32 chancePercent = static_cast<u32>(m_specialFrameChance * strength)
                 / RMG_FULL_BRUSH_STRENGTH;
-            special = static_cast<u32>(rand() % 100) < chance;
+            special = static_cast<u32>(rand() % 100) < chancePercent;
         }
         frame = selectTerrainRangeFrame(getTerrainPatternRange(*this, SHAPE_FILL, special));
     }
@@ -493,7 +497,7 @@ s32 TRmgTableTerrainRule::selectTransitionFrame(
     TRmgTerrainFlip& selectedFlip, s32 oldFrame)
 {
     s32 frame = oldFrame;
-    if (oldFrame == -1
+    if (oldFrame == RMG_NO_TERRAIN_FRAME
         || !matchesTerrainTransition(g_rmgTerrainPatterns[oldFrame], transition,
                                      requestedFlip.m_flipX, requestedFlip.m_flipY)) {
         TRmgTerrainPatternRange& range = getTerrainTransitionRange(
@@ -620,184 +624,186 @@ MAC_ADDRESS(0x2552e8, 0x980)
 s32 __fastcall selectTerrainTransition(
     const s32* neighbours, TRmgTerrainFlip* flip)
 {
-    DATA_COMPGEN_GUARD(0x006a52a1, terrainFlipsGuard, flips)
+    DATA_COMPGEN_GUARD(0x006a52a1, reflectionFlipsGuard, reflectionFlips)
 
-    VA_COMPGEN(0x005b45e0, 0x1, STATIC_DTOR, flips)
+    VA_COMPGEN(0x005b45e0, 0x1, STATIC_DTOR, reflectionFlips)
     DATA(0x006A52B8)
-    static TRmgTerrainFlip flips[4] = {
+    static TRmgTerrainFlip reflectionFlips[4] = {
         makeTerrainFlip(false, false), makeTerrainFlip(false, true),
         makeTerrainFlip(true, false), makeTerrainFlip(true, true)
     };
-    const u32 reflectionCount = sizeof(flips) / sizeof(flips[0]);
+    const u32 reflectionCount = sizeof(reflectionFlips) / sizeof(reflectionFlips[0]);
     u32 reflection;
     for (reflection = 0; reflection < reflectionCount; ++reflection) {
-        const s32* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
+        const s32* order = getReflectedTerrainNeighbourOrder(reflectionFlips[reflection]);
         if (hasSoutheastTerrainCorner(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
             if (neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE &&
                 neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
-                *flip = flips[reflection];
+                *flip = reflectionFlips[reflection];
                 return SHAPE_E_S_BLEND_NE_SW_HARD;
             }
             if (neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
-                *flip = flips[reflection];
+                *flip = reflectionFlips[reflection];
                 return SHAPE_E_S_BLEND_SE_HARD;
             }
         }
     }
     for (reflection = 0; reflection < reflectionCount; ++reflection) {
-        const s32* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
+        const s32* order = getReflectedTerrainNeighbourOrder(reflectionFlips[reflection]);
         if (hasNorthwestTerrainCorner(neighbours, order, RMG_NEIGHBOUR_BLEND_EDGE)) {
             if (neighbours[order[TILE_DIR_SOUTHEAST]] != RMG_NEIGHBOUR_NO_EDGE) {
-                *flip = flips[reflection];
+                *flip = reflectionFlips[reflection];
                 return neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE
                     ? SHAPE_N_W_SE_BLEND : SHAPE_N_W_BLEND_SE_HARD;
             }
         } else if (hasNorthwestTerrainCorner(neighbours, order, RMG_NEIGHBOUR_HARD_EDGE)) {
             if (neighbours[order[TILE_DIR_SOUTHEAST]] != RMG_NEIGHBOUR_NO_EDGE) {
-                *flip = flips[reflection];
+                *flip = reflectionFlips[reflection];
                 return neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE
                     ? SHAPE_N_W_SE_HARD : SHAPE_N_W_HARD_SE_BLEND;
             }
         }
     }
     for (reflection = 0; reflection < reflectionCount; ++reflection) {
-        const s32* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
+        const s32* order = getReflectedTerrainNeighbourOrder(reflectionFlips[reflection]);
         if (hasSoutheastTerrainCorner(neighbours, order,
                 RMG_NEIGHBOUR_HARD_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
             if (neighbours[order[TILE_DIR_SOUTHWEST]] != RMG_NEIGHBOUR_HARD_EDGE) {
-                *flip = flips[reflection];
+                *flip = reflectionFlips[reflection];
                 return SHAPE_E_HARD_SW_BLEND;
             } else {
-                *flip = makeTerrainFlip(!flips[reflection].m_flipX, !flips[reflection].m_flipY);
+                *flip = makeTerrainFlip(!reflectionFlips[reflection].m_flipX,
+                    !reflectionFlips[reflection].m_flipY);
                 return SHAPE_N_W_HARD;
             }
         }
         if (hasSoutheastTerrainCorner(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_HARD_EDGE)) {
             if (neighbours[order[TILE_DIR_NORTHEAST]] != RMG_NEIGHBOUR_HARD_EDGE) {
-                *flip = flips[reflection];
+                *flip = reflectionFlips[reflection];
                 return SHAPE_S_HARD_NE_BLEND;
             } else {
-                *flip = makeTerrainFlip(!flips[reflection].m_flipX, !flips[reflection].m_flipY);
+                *flip = makeTerrainFlip(!reflectionFlips[reflection].m_flipX,
+                    !reflectionFlips[reflection].m_flipY);
                 return SHAPE_N_W_HARD;
             }
         }
     }
     for (reflection = 0; reflection < reflectionCount; ++reflection) {
-        const s32* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
+        const s32* order = getReflectedTerrainNeighbourOrder(reflectionFlips[reflection]);
         if (hasSoutheastTerrainCorner(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
             if (neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
-                *flip = flips[reflection];
+                *flip = reflectionFlips[reflection];
                 return SHAPE_E_BLEND_SW_HARD;
             }
             if (neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
-                *flip = flips[reflection];
+                *flip = reflectionFlips[reflection];
                 return SHAPE_S_BLEND_NE_HARD;
             }
         }
     }
     for (reflection = 0; reflection < reflectionCount; ++reflection) {
-        const s32* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
+        const s32* order = getReflectedTerrainNeighbourOrder(reflectionFlips[reflection]);
         if (hasNorthwestTerrainCorner(neighbours, order, RMG_NEIGHBOUR_BLEND_EDGE)) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_N_W_BLEND;
         }
         if (hasNorthwestTerrainCorner(neighbours, order, RMG_NEIGHBOUR_HARD_EDGE)) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_N_W_HARD;
         }
     }
     for (reflection = 0; reflection < reflectionCount; ++reflection) {
-        const s32* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
+        const s32* order = getReflectedTerrainNeighbourOrder(reflectionFlips[reflection]);
         if (hasEastSouthwestTerrainEdges(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_HARD_EDGE)) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_E_BLEND_SW_HARD;
         }
         if (hasSouthNortheastTerrainEdges(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_HARD_EDGE)) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_S_BLEND_NE_HARD;
         }
         if (hasEastSouthwestTerrainEdges(neighbours, order,
                 RMG_NEIGHBOUR_HARD_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_E_HARD_SW_BLEND;
         }
         if (hasSouthNortheastTerrainEdges(neighbours, order,
                 RMG_NEIGHBOUR_HARD_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_S_HARD_NE_BLEND;
         }
         if (hasOffsetNorthwestTerrainCorner(neighbours, order, RMG_NEIGHBOUR_BLEND_EDGE)) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_N_W_BLEND;
         }
         if (hasOffsetNorthwestTerrainCorner(neighbours, order, RMG_NEIGHBOUR_HARD_EDGE)) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_N_W_HARD;
         }
     }
     for (reflection = 0; reflection < reflectionCount; ++reflection) {
-        const s32* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
+        const s32* order = getReflectedTerrainNeighbourOrder(reflectionFlips[reflection]);
         if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
             neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_E_BLEND_SE_HARD;
         }
         if (neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_BLEND_EDGE &&
             neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_S_BLEND_SE_HARD;
         }
     }
     for (reflection = 0; reflection < reflectionCount; ++reflection) {
-        const s32* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
+        const s32* order = getReflectedTerrainNeighbourOrder(reflectionFlips[reflection]);
         if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_N_BLEND;
         }
         if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_N_HARD;
         }
         if (neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_W_BLEND;
         }
         if (neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_W_HARD;
         }
     }
     for (reflection = 0; reflection < reflectionCount; ++reflection) {
-        const s32* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
+        const s32* order = getReflectedTerrainNeighbourOrder(reflectionFlips[reflection]);
         if (hasOppositeTerrainDiagonalEdges(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_NW_SE_BLEND;
         }
         if (hasOppositeTerrainDiagonalEdges(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_HARD_EDGE)) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_NW_BLEND_SE_HARD;
         }
         if (hasOppositeTerrainDiagonalEdges(neighbours, order,
                 RMG_NEIGHBOUR_HARD_EDGE, RMG_NEIGHBOUR_HARD_EDGE)) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_NW_SE_HARD;
         }
     }
     for (reflection = 0; reflection < reflectionCount; ++reflection) {
-        const s32* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
+        const s32* order = getReflectedTerrainNeighbourOrder(reflectionFlips[reflection]);
         if (neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_SE_BLEND;
         }
         if (neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[reflection];
+            *flip = reflectionFlips[reflection];
             return SHAPE_SE_HARD;
         }
     }
@@ -870,7 +876,7 @@ void rmgTerrainPainter::setTile(
 
 void rmgTerrainPainter::paintBaseTile(const TRmgGridPoint& point)
 {
-    s32 frame = selectBaseFrame(point, m_paintTerrain, -1);
+    s32 frame = selectBaseFrame(point, m_paintTerrain, RMG_NO_TERRAIN_FRAME);
     rmgTerrainTile tile(m_paintTerrain, frame);
     setTile(point, tile);
 }
@@ -903,6 +909,16 @@ void rmgTerrainPainter::paintRectangle(
         }
     }
 }
+
+// One-cell (offsetX, offsetY) steps toward a neighbour; x grows east and y
+// grows south.
+enum ERmgNeighbourStep {
+    RMG_STEP_NONE = 0,
+    RMG_STEP_WEST = -1,
+    RMG_STEP_EAST = 1,
+    RMG_STEP_NORTH = -1,
+    RMG_STEP_SOUTH = 1
+};
 
 // A gap cell C has other terrain x on both sides along one axis. North is up:
 //   horizontal  vertical
@@ -943,13 +959,17 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 
     if (g_rmgTerrainRules[m_paintTerrain]->m_allowsSeparatedNeighbours) {
         if (point.m_y > 0)
-            resolveQueuedTerrainGap(*this, point, 0, -1, RMG_VERTICAL_GAP);
+            resolveQueuedTerrainGap(*this, point, RMG_STEP_NONE, RMG_STEP_NORTH,
+                RMG_VERTICAL_GAP);
         if (point.m_y < m_size.m_y - 1)
-            resolveQueuedTerrainGap(*this, point, 0, 1, RMG_VERTICAL_GAP);
+            resolveQueuedTerrainGap(*this, point, RMG_STEP_NONE, RMG_STEP_SOUTH,
+                RMG_VERTICAL_GAP);
         if (point.m_x > 0)
-            resolveQueuedTerrainGap(*this, point, -1, 0, RMG_HORIZONTAL_GAP);
+            resolveQueuedTerrainGap(*this, point, RMG_STEP_WEST, RMG_STEP_NONE,
+                RMG_HORIZONTAL_GAP);
         if (point.m_x < m_size.m_x - 1)
-            resolveQueuedTerrainGap(*this, point, 1, 0, RMG_HORIZONTAL_GAP);
+            resolveQueuedTerrainGap(*this, point, RMG_STEP_EAST, RMG_STEP_NONE,
+                RMG_HORIZONTAL_GAP);
     } else {
         b8 neighbourExists[TILE_DIR_COUNT];
         buildTileNeighbourMask(
@@ -1007,21 +1027,21 @@ void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
     // At most one neighbour per cardinal axis, preferring north over south
     // and west over east.
     bool queuedNorth = point.getY() > 0
-        && tryQueueOtherTerrainCardinalNeighbour(*this, point, 0, -1);
+        && tryQueueOtherTerrainCardinalNeighbour(*this, point, RMG_STEP_NONE, RMG_STEP_NORTH);
     if (!queuedNorth && point.getY() < getHeight() - 1)
-        tryQueueOtherTerrainCardinalNeighbour(*this, point, 0, 1);
+        tryQueueOtherTerrainCardinalNeighbour(*this, point, RMG_STEP_NONE, RMG_STEP_SOUTH);
     bool queuedWest = point.getX() > 0
-        && tryQueueOtherTerrainCardinalNeighbour(*this, point, -1, 0);
+        && tryQueueOtherTerrainCardinalNeighbour(*this, point, RMG_STEP_WEST, RMG_STEP_NONE);
     if (!queuedWest && point.getX() < getWidth() - 1)
-        tryQueueOtherTerrainCardinalNeighbour(*this, point, 1, 0);
+        tryQueueOtherTerrainCardinalNeighbour(*this, point, RMG_STEP_EAST, RMG_STEP_NONE);
     if (point.getX() > 0 && point.getY() > 0)
-        queueOtherTerrainDiagonalNeighbour(*this, point, -1, -1);
+        queueOtherTerrainDiagonalNeighbour(*this, point, RMG_STEP_WEST, RMG_STEP_NORTH);
     if (point.getX() < getWidth() - 1 && point.getY() > 0)
-        queueOtherTerrainDiagonalNeighbour(*this, point, 1, -1);
+        queueOtherTerrainDiagonalNeighbour(*this, point, RMG_STEP_EAST, RMG_STEP_NORTH);
     if (point.getX() > 0 && point.getY() < getHeight() - 1)
-        queueOtherTerrainDiagonalNeighbour(*this, point, -1, 1);
+        queueOtherTerrainDiagonalNeighbour(*this, point, RMG_STEP_WEST, RMG_STEP_SOUTH);
     if (point.getX() < getWidth() - 1 && point.getY() < getHeight() - 1)
-        queueOtherTerrainDiagonalNeighbour(*this, point, 1, 1);
+        queueOtherTerrainDiagonalNeighbour(*this, point, RMG_STEP_EAST, RMG_STEP_SOUTH);
 }
 
 b8 rmgTerrainPainter::isHorizontalGap(const TRmgGridPoint& point)
@@ -1378,7 +1398,7 @@ static inline bool matchesTerrainAtClampedOffset(rmgTerrainPainter& painter,
     return painter.getTerrain(nearby) == terrain;
 }
 
-// Row of a reflection in the corner offset tables: flipX + 2 * flipY.
+// Row of a reflection in the corner probe tables: flipX + 2 * flipY.
 static inline s32 getTerrainFlipIndex(const TRmgTerrainFlip& flip)
 {
     return (flip.m_flipY << 1) | flip.m_flipX;
@@ -1395,18 +1415,18 @@ MAC_ADDRESS(0x258f18, 0x360)
 b8 rmgTerrainPainter::isOuterCornerOnDiagonalEdge(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
-    DATA_COMPGEN_GUARD(0x006a52a0, firstDiagonalOffsetsGuard, firstDiagonalOffsets)
+    DATA_COMPGEN_GUARD(0x006a52a0, outerCornerProbeOffsetsGuard, outerCornerProbeOffsets)
 
-    VA_COMPGEN(0x005b6df0, 0x1, STATIC_DTOR, firstDiagonalOffsets)
+    VA_COMPGEN(0x005b6df0, 0x1, STATIC_DTOR, outerCornerProbeOffsets)
     DATA(0x006A5260)
-    static TPoint firstDiagonalOffsets[4][2] = {
+    static TPoint outerCornerProbeOffsets[4][2] = {
         { TPoint(-1, 1), TPoint(1, -1) },  // none: SW, NE
         { TPoint(1, 1), TPoint(-1, -1) },  // flipX: SE, NW
         { TPoint(-1, -1), TPoint(1, 1) },  // flipY: NW, SE
         { TPoint(1, -1), TPoint(-1, 1) }   // both: NE, SW
     };
     s32 terrain = getTerrain(point);
-    const TPoint* pair = firstDiagonalOffsets[getTerrainFlipIndex(flip)];
+    const TPoint* pair = outerCornerProbeOffsets[getTerrainFlipIndex(flip)];
     if (matchesTerrainAtClampedOffset(*this, point, pair[0], terrain))
         return true;
     return matchesTerrainAtClampedOffset(*this, point, pair[1], terrain);
@@ -1423,15 +1443,15 @@ MAC_ADDRESS(0x259278, 0x288)
 b8 rmgTerrainPainter::isInnerCornerOnDiagonalEdge(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
-    DATA_COMPGEN_GUARD(0x006a3d64, secondDiagonalOffsetsGuard, secondDiagonalOffsets)
+    DATA_COMPGEN_GUARD(0x006a3d64, innerCornerProbeOffsetsGuard, innerCornerProbeOffsets)
 
-    VA_COMPGEN(0x005b6fc0, 0x1, STATIC_DTOR, secondDiagonalOffsets)
+    VA_COMPGEN(0x005b6fc0, 0x1, STATIC_DTOR, innerCornerProbeOffsets)
     DATA(0x006A3D68)
-    static TPoint secondDiagonalOffsets[4] = {
+    static TPoint innerCornerProbeOffsets[4] = {
         TPoint(2, 2), TPoint(-2, 2), TPoint(2, -2), TPoint(-2, -2) // none, flipX, flipY, both
     };
     s32 terrain = getTerrain(point);
-    const TPoint& offset = secondDiagonalOffsets[getTerrainFlipIndex(flip)];
+    const TPoint& offset = innerCornerProbeOffsets[getTerrainFlipIndex(flip)];
     return !matchesTerrainAtClampedOffset(*this, point, TPoint(offset.getX(), 0), terrain)
         || !matchesTerrainAtClampedOffset(*this, point, TPoint(0, offset.getY()), terrain);
 }
@@ -1439,9 +1459,10 @@ b8 rmgTerrainPainter::isInnerCornerOnDiagonalEdge(
 // Each same-terrain cardinal neighbour showing a special frame halves the
 // special-frame strength.
 static inline bool hasSpecialTerrainFrameAt(rmgTerrainPainter& painter,
-    const TRmgGridPoint& point, s32 dx, s32 dy, s32 terrain, TRmgTerrainRule* rule)
+    const TRmgGridPoint& point, s32 offsetX, s32 offsetY, s32 terrain,
+    TRmgTerrainRule* rule)
 {
-    TRmgGridPoint nearby(point.getX() + dx, point.getY() + dy);
+    TRmgGridPoint nearby(point.getX() + offsetX, point.getY() + offsetY);
     return painter.getTerrain(nearby) == terrain
         && rule->isSpecialFrame(painter.getFrame(nearby));
 }
@@ -1453,16 +1474,18 @@ s32 rmgTerrainPainter::getSpecialFrameStrength(
 {
     u32 strength = m_specialFrameStrength;
     TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
-    if (point.getX() > 0 && hasSpecialTerrainFrameAt(*this, point, -1, 0, terrain, rule))
-        strength >>= 1;
-    if (point.getY() > 0 && hasSpecialTerrainFrameAt(*this, point, 0, -1, terrain, rule))
-        strength >>= 1;
-    if (point.getX() < getWidth() - 1
-        && hasSpecialTerrainFrameAt(*this, point, 1, 0, terrain, rule))
-        strength >>= 1;
-    if (point.getY() < getHeight() - 1
-        && hasSpecialTerrainFrameAt(*this, point, 0, 1, terrain, rule))
-        strength >>= 1;
+    if (point.getX() > 0 && hasSpecialTerrainFrameAt(*this, point,
+            RMG_STEP_WEST, RMG_STEP_NONE, terrain, rule))
+        strength /= 2;
+    if (point.getY() > 0 && hasSpecialTerrainFrameAt(*this, point,
+            RMG_STEP_NONE, RMG_STEP_NORTH, terrain, rule))
+        strength /= 2;
+    if (point.getX() < getWidth() - 1 && hasSpecialTerrainFrameAt(*this, point,
+            RMG_STEP_EAST, RMG_STEP_NONE, terrain, rule))
+        strength /= 2;
+    if (point.getY() < getHeight() - 1 && hasSpecialTerrainFrameAt(*this, point,
+            RMG_STEP_NONE, RMG_STEP_SOUTH, terrain, rule))
+        strength /= 2;
     return strength;
 }
 
@@ -1707,7 +1730,8 @@ static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] = {
 };
 
 // Rule arguments: blends with other terrain, allows separated neighbours,
-// special-frame chance (percent at strength 8), frame count and frames.
+// special-frame chance (percent at full brush strength), frame count and
+// the frame list.
 DATA(0x006A48D0)
 static TRmgPatternTerrainRule g_rmgDirtRule(true, true, 50, 46, g_rmgDirtPatternEntries);
 

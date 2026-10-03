@@ -23,15 +23,20 @@ public:
     b8 m_isHumanSeat[8];   // +0x00
     // -1 selects a random town.
     s32 m_townType[8];                // +0x08
+    // Map size in tiles; the lobby passes its map dimension for both.
     s32 m_width;                      // +0x28
     s32 m_height;                     // +0x2c
+    // Map levels; the second is underground.
     s32 m_levels;                     // +0x30
+    // A team count of 0 gives each player its own team.
     s32 m_humanPlayerCount;           // +0x34
     s32 m_humanTeamCount;             // +0x38
     s32 m_computerPlayerCount;        // +0x3c
     s32 m_computerTeamCount;          // +0x40
+    // ERmgWaterContent (rmg.h); RMG_WATER_RANDOM by default.
     s32 m_waterContent;               // +0x44
-    // The generator receives monster strength + 3, clamped to [1, 5].
+    // 0 is normal. The generator receives monster strength + 3, clamped to
+    // [1, 5].
     s32 m_monsterStrength;            // +0x48
     // Map format 0/1/2, using the EGameVersion ordinals.
     s32 m_mapVersion;                 // +0x4c

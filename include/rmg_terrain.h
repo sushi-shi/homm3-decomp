@@ -221,7 +221,10 @@ struct TRmgTerrainGap {
 class rmgTerrainPainter {
 public:
     TRmgMapInterface* m_adapter;                // +0x00
+    // Terrain type being painted.
     s32 m_paintTerrain;                               // +0x04
+    // Brush strength (ERmgBrushStrength); each same-terrain cardinal
+    // neighbour with a special frame halves it for a cell.
     s32 m_specialFrameStrength;                         // +0x08
     TRmgGridPoint m_size;                             // +0x0c
     std::set<TRmgGridPoint> m_primaryPoints;            // +0x14

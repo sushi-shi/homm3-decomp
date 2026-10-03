@@ -126,6 +126,18 @@ helpers stay ordinary; no inlining pragmas or duplicated game declarations are
 introduced. Painter wrappers with different native entries retain their own
 copy/snapshot boundaries rather than being mechanically merged.
 
+A reader-trap round named RMG-internal sentinels (no zone, unset position,
+no category, no frame, failed border placement), literal arguments (3x3/5x5
+neighbourhoods, border-entrance and path-clearance policies, border guard
+counts, neighbour steps, spacing), the H3M tile-flag bits and the unit-bearing
+constants: density areas are squared entrance distances (2 per cardinal
+step), so 82944 = 4 x 144 x 144, 800 and 1600 are 4 x 200 and 4 x 400 tiles.
+Header fields document their ranges and writers. Enumerators replace literals
+only where VC6 emits identical bytes; an enum-typed conditional changed an
+inline decision in `buildRoadCostMap`, so its operands are cast to `s32`.
+Function-local static tables keep the repository's unprefixed convention, with
+`<table>Guard` labels.
+
 ## Algorithm names and preservation constraints
 
 | Source operation | Algorithm and details that affect output |
