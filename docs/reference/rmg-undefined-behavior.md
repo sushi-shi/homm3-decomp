@@ -11,6 +11,15 @@ RMG has no Dreamcast counterpart. The evidence below is retail x86 code and
 execution, not inferred original source text or a sanitizer result. These are
 known issues, not an exhaustive UB audit.
 
+The default build keeps all of this retail behavior. The opt-in compile-time
+switch `HOMM3_RMG_HOTFIX` (described in `include/rmg.h`) instead selects
+defined, non-crashing alternatives at each site: unreached river targets are
+not drawn, guards are skipped on unzoned cells or when no creature is
+selectable, uninitialized town flags and the first key-tent colour get fixed
+values, and short template rows, empty road lists and long map descriptions
+are bounded. Hotfix maps differ from retail and are not oracle targets; the
+per-site list is in [the RMG UB todo](../todos/rmg-undefined-behavior.md).
+
 ## Initial key-tent color: uninitialized stack integer
 
 - Field: `type_random_map_generator::m_nextKeyTentColor`, offset `+0xf5c`.
@@ -109,8 +118,8 @@ faults at corresponding instructions on both sides. That set includes
 also matched. With `getLandType()` returning `TTerrainType` (which changes later
 generator frames), million-v1 requests 0..999 matched. This is sampled
 agreement. A state whose last heap call leaves that dword zero would make
-retail skip the draw; none was observed. The source keeps the real fix (no
-towns, so no draw) as a `TODO`. It would change generated maps.
+retail skip the draw; none was observed. The real fix (no towns, so no draw)
+is the `HOMM3_RMG_HOTFIX` branch. It changes generated maps.
 
 **Added water zones.** Their heap `TRmgTemplateZone` flags remain uninitialized
 (oracle `heapByte`). The resulting `TRmgZone::m_alignment` has no consequential
@@ -370,7 +379,7 @@ valid, and helps keep a helper extraction from silently changing its behavior.
 | `positionZone` / `paintZoneTerrain` | Position filtering leaves a candidate and generation supplies zones. Selection uses `% candidates.size()` and progress divides by the zone count. |
 | `initializeZones` | The normalization span is nonzero before scaling positions and boundary roughness by integer division. `calculateZoneBounds` only accumulates bounds and has no normalization division. Collapsed sites need separate reachability evidence. |
 | `insetIslandZone` | The boundary vector is nonempty before its initial `m_boundary[0]` read. Both radial divisions already check `length > 0`; a zero-length radial vector is not an unchecked divisor here. |
-| `buildZoneConnectionPaths` | Some zone before or at the first zone without a same-zone, suitable-terrain tile free of objects has one. Retail stores `seed` (`[ebp-0x30..-0x28]`) only at `0x540731..0x54073f`. A zone without such a tile therefore floods from the last assigned seed, and the source declares `seed` once per call to state that. A probe at the fallback branch (`0x54077d`) on 3,000 requests found 1,765 fallback reads in 885 requests. 1,620 used a seed from the same zone; 145 in 53 requests reused an earlier zone's, 142 of them for zones with no cells. None preceded the first assignment. In that unobserved case retail reads stack residue, which is environment-dependent and likely faults. The source initializes `seed` to `RMG_NO_POSITION` and skips such a zone; this differs only where retail is undefined. The 53 requests with a reused seed, plus `m0000076`/`m0000135`, matched retail with this handling (54 maps, one paired river fault). The real fix, not borrowing another zone's seed, is a `TODO`. |
+| `buildZoneConnectionPaths` | Some zone before or at the first zone without a same-zone, suitable-terrain tile free of objects has one. Retail stores `seed` (`[ebp-0x30..-0x28]`) only at `0x540731..0x54073f`. A zone without such a tile therefore floods from the last assigned seed, and the source declares `seed` once per call to state that. A probe at the fallback branch (`0x54077d`) on 3,000 requests found 1,765 fallback reads in 885 requests. 1,620 used a seed from the same zone; 145 in 53 requests reused an earlier zone's, 142 of them for zones with no cells. None preceded the first assignment. In that unobserved case retail reads stack residue, which is environment-dependent and likely faults. The source initializes `seed` to `RMG_NO_POSITION` and skips such a zone; this differs only where retail is undefined. The 53 requests with a reused seed, plus `m0000076`/`m0000135`, matched retail with this handling (54 maps, one paired river fault). The real fix, not borrowing another zone's seed, is the `HOMM3_RMG_HOTFIX` branch. |
 | `connectZones` and connection graph consumers | Every referenced zone index names an existing zone, reverse connections exist when dereferenced, and selected monolith prototype families are nonempty. Newly appended extra-zone connections leave four player-limit fields uninitialized; those fields are not read by the later generator path reviewed here. |
 | `createTreasureObject` | A valued footprint contains an occupied cell, and candidate densities form a positive representable total. Occupied-cell division, density sums and the final random remainder have no general malformed-data protection. |
 | `placeAdditionalTowns`, `placeExtraMines`, `placeZoneTreasures` | Positive category densities have a representable sum and product; initial counts times their density-derived steps and subsequent count increments remain representable. These routines multiply all enabled densities before dividing by each category's density. For example, seven mine densities of 100 overflow the signed 32-bit product. This is an arithmetic contract for custom template values, not a reproduced shipped-template failure. Disabled categories' uninitialized count/step entries are protected by the `finished` short-circuit and are not read by selection. |

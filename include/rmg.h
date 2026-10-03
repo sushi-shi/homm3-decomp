@@ -1,5 +1,15 @@
 // Random-map generator declarations. Most names describe recovered roles
 // rather than original source spellings.
+//
+// HOMM3_RMG_HOTFIX (not defined by default) replaces the generator's retail
+// bugs that crash, index out of bounds or read uninitialized memory with
+// defined, non-crashing alternatives: unreached river targets are not drawn,
+// guards are skipped on unzoned cells and when no creature can be selected,
+// uninitialized town flags and the first key-tent colour get fixed values,
+// and short rows, empty lists and oversized descriptions are bounded. Maps
+// then differ from retail wherever retail was undefined or used stack/heap
+// residue. Without the define the source reproduces retail exactly. See
+// docs/todos/rmg-undefined-behavior.md for the site list.
 #ifndef HOMM3_RMG_H
 #define HOMM3_RMG_H
 
@@ -1790,7 +1800,8 @@ public:
     // Cycles through the seer-hut prototypes.
     s32 m_nextSeerHutPrototypeIndex;                     // +0x0f58
     // Next free keymaster tent colour. Retail bug: never initialized, so
-    // its first value is whatever was on the caller's stack.
+    // its first value is whatever was on the caller's stack (HOMM3_RMG_HOTFIX
+    // starts it at colour 0).
     s32 m_nextKeyTentColor;                              // +0x0f5c
     // Town zones (zones with a primary town), in total and per alignment.
     s32 m_townZoneCount;                                 // +0x0f60
@@ -1905,6 +1916,12 @@ public:
         case RMG_MAP_SHADOW_OF_DEATH:
             return 28;
         }
+#if defined(HOMM3_RMG_HOTFIX)
+        // Unknown request versions are written as Shadow of Death maps.
+        return 28;
+#else
+        // Retail bug: another version falls off the end of this function.
+#endif
     }
 
     void initializeObjectGenerators();
