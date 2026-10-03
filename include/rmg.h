@@ -343,7 +343,7 @@ struct TPoint {
     TPoint& operator+=(const TPoint& offset);
 };
 
-// Map position: a plane point plus level (ERmgMapLevel).
+// Map position: a plane point plus level (ERmgMapLevel in rmg.cpp).
 struct TRmgMapPosition : TPoint {
     s32 m_z;
 
@@ -423,7 +423,7 @@ struct TRmgTemplateZone {
     // Use the aligned town's native terrain.
     b8 m_useNativeTerrain;
     b8 m_allowedTerrain[8];  // +0x85
-    s32 m_monsterStrength;              // +0x90: ERmgZoneMonsterStrength
+    s32 m_monsterStrength;              // +0x90: ERmgZoneMonsterStrength (rmg.cpp)
     // Template column 56: restrict guards to the zone's town alignment.
     b8 m_guardsMatchZone;    // +0x94
     // Indexed by town type + 1; slot 0 is neutral.
@@ -1670,9 +1670,11 @@ class type_random_map_generator : public TRmgGeneratorBase {
 public:
     // One entry per player colour.
     b8 m_fixedHumanPlayers[8];                        // +0x0ed8
-    // Entry zero is the unmapped sentinel.
+    // Player colour per template player number 1-8, or -1; entry 0 (zones
+    // without a player) stays -1.
     s32 m_playerIndexMap[9];                          // +0x0ee0
     char m_opaque0f04[0x20];                          // +0x0f04
+    // Lobby town per player colour; -1 keeps the zone's random town.
     s32 m_townChoices[8];                             // +0x0f24
     // Counter for generated object ids; starts at 1.
     s32 m_nextObjectId;                               // +0x0f44
@@ -1695,9 +1697,9 @@ public:
     // rejected.
     b8 m_questArtifactPoolLow;              // +0x10b4
     s32 m_waterContent;                                // +0x10b8: ERmgWaterContent
-    // Map-wide strength 1..5 on the zone scale; RMG_ZONE_MONSTERS_AVERAGE
-    // is the lobby's normal setting.
-    s32 m_monsterStrength;                             // +0x10bc: ERmgZoneMonsterStrength
+    // Map-wide strength 1..5 on the zone scale (ERmgZoneMonsterStrength in
+    // rmg.cpp); RMG_ZONE_MONSTERS_AVERAGE is the lobby's normal setting.
+    s32 m_monsterStrength;                             // +0x10bc
     // Name of the selected template.
     std::string m_templateName;                        // +0x10c0
     // Owned templates loaded from rmg.txt.
