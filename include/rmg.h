@@ -1543,9 +1543,10 @@ struct TRmgZone {
     // Town type: one of the template's allowed towns, or the lobby choice of
     // the zone's player; eTownNeutral when none.
     TTownType m_alignment;             // +0x04
-    // Name from H3API (H3RmgZoneGenerator::townType2). Compared with a
-    // creature's town when valuing dwellings and creature rewards.
-    TTownType m_townType2;
+    // Town whose creature dwellings and creature rewards the zone offers:
+    // the zone's town type, or for a neutral zone a draw from its terrain's
+    // candidates (H3API: townType2).
+    TTownType m_creatureTownType;      // +0x08
     // Chosen by chooseTerrain; added water zones use water.
     TTerrainType m_terrain;             // +0x0c
     // Zone centre: layout units until initializeZones scales it to tiles;

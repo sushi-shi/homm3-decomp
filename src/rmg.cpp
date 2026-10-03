@@ -1248,7 +1248,7 @@ MAC_ADDRESS(0x22f9d8, 0xcc)
 void TRmgZone::chooseTownType(b8 expanded)
 {
     if (m_alignment != eTownNeutral) {
-        m_townType2 = m_alignment;
+        m_creatureTownType = m_alignment;
     } else {
         s32 count = 0;
         // Retail bug: this condition is always true, so all four row
@@ -1258,9 +1258,9 @@ void TRmgZone::chooseTownType(b8 expanded)
              g_rmgTerrainTownChoices[m_terrain][count] != TOWN_CONFLUX))
             ++count;
         if (count == 0)
-            m_townType2 = eTownNeutral;
+            m_creatureTownType = eTownNeutral;
         else
-            m_townType2 = static_cast<TTownType>(
+            m_creatureTownType = static_cast<TTownType>(
                 g_rmgTerrainTownChoices[m_terrain][rand() % count]);
     }
 }
@@ -1965,7 +1965,7 @@ s32 type_black_box_creature_def::getValue(
     TRmgZone* zone, type_random_map_generator* generator)
 {
     s32 alignment = g_creatureTypeTraits[m_creatureType].m_townType;
-    if (alignment != zone->m_townType2)
+    if (alignment != zone->m_creatureTownType)
         return RMG_TREASURE_NOT_OFFERED;
     s32 value = g_creatureTypeTraits[m_creatureType].m_aiValue * m_creatureCount;
     return adjustRmgValueForAlignment(value,
@@ -2045,7 +2045,7 @@ s32 type_map_dwelling_def::getValue(TRmgZone* zone, type_random_map_generator* g
 {
     const TCreatureTypeTraits& creature =
         g_creatureTypeTraits[g_creatureGenerator1Types[m_subtype]];
-    if (creature.m_townType != zone->m_townType2)
+    if (creature.m_townType != zone->m_creatureTownType)
         return RMG_TREASURE_NOT_OFFERED;
 
     s32 value = creature.m_growthRate * creature.m_aiValue;

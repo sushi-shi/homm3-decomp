@@ -394,8 +394,8 @@ Several suspicious-looking expressions are supported by local invariants:
   aliasing read. Replacing it with a reinterpreted integer pointer would
   introduce a separate aliasing/alignment assumption.
 - Map clear and packed-cache construction intentionally initialize selected
-  bitfields only. Map clear preserves `m_connection.m_guardColor`/opaque bits and
-  `m_connectionVisited`, and sets only predecessor X to the invalid sentinel;
+  bitfields only. Map clear preserves `m_connection.m_guardColor`, unnamed
+  bitfield remainders and `m_connectionVisited`, and sets only predecessor X to the invalid sentinel;
   later cost resets initialize full predecessors. Copying these aggregates
   includes indeterminate fields at initial construction, a C++ portability
   concern, but the review did not prove that every preserved field is consumed

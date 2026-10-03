@@ -309,9 +309,9 @@ Those invariants are documented next to the code and in the safety inventory.
 The actual negative-zone guard lookup and failed predecessor-chain bugs are
 preserved and documented separately.
 
-Opaque fields and unobserved bits keep their offset-based names when no read
-establishes their role. Renaming them to invented gameplay concepts would make
-the reconstruction less accurate. Existing source-attested type spellings and
+Storage that no code reads or writes keeps an offset-based `m_unused` name,
+and unobserved bitfield remainders stay unnamed. Renaming them to invented
+gameplay concepts would make the reconstruction less accurate. Existing source-attested type spellings and
 external ABI names are also retained. Role-derived renames keep former names
 in evidence comments where useful for lookup.
 
