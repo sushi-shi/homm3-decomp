@@ -1717,6 +1717,8 @@ public:
     s32 m_mapVersion;                                  // +0x008: ERmgMapVersion
     type_random_map m_map;                             // +0x00c
     TObjectTypeTable m_objectsTxt;                     // +0x024
+    // [object type][n]: that type's prototypes in objects.txt order (aliases
+    // under their objnames.txt row); monsters are sorted by subtype.
     std::vector<TRmgObjectPropertiesRef*> m_objectPrototypes[232]; // +0x034
     // rand_trn.txt placement rules.
     std::vector<TRmgObjectPlacementRule> m_placementRules; // +0xeb4

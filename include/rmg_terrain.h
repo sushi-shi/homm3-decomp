@@ -246,6 +246,7 @@ public:
     TRmgGridPoint m_size;                             // +0x0c
     std::set<TRmgGridPoint> m_primaryPoints;            // +0x14
     std::set<TRmgGridPoint> m_secondaryPoints;          // +0x24
+    // Lazily filled tile cache, row by row: cell (x, y) is at y * width + x.
     std::vector<TRmgPackedTerrainCell> m_packedCells;   // +0x34
 
     rmgTerrainPainter(
