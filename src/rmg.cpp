@@ -6634,10 +6634,9 @@ b8 type_random_map_generator::tryPlaceMine(TRmgZone* zone,
 {
     std::vector<TRmgObjectPropertiesRef*> candidates;
     int terrain = zone->m_terrain;
-    TRmgObjectPropertiesRef* properties;
     TObjectType* lastScannedPrototype;
     for (u32 i = 0; i < m_objectPrototypes[MINE].size(); ++i) {
-        properties = m_objectPrototypes[MINE][i];
+        TRmgObjectPropertiesRef* properties = m_objectPrototypes[MINE][i];
         lastScannedPrototype = properties->m_prototype;
         if (lastScannedPrototype->getSubtype() == resource
             && lastScannedPrototype->isRecommendedTerrain(terrain))
@@ -6645,7 +6644,7 @@ b8 type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     }
     if (!candidates.size()) {
         for (u32 i = 0; i < m_objectPrototypes[MINE].size(); ++i) {
-            properties = m_objectPrototypes[MINE][i];
+            TRmgObjectPropertiesRef* properties = m_objectPrototypes[MINE][i];
             lastScannedPrototype = properties->m_prototype;
             if (lastScannedPrototype->getSubtype() == resource)
                 candidates.push_back(properties);
@@ -6654,8 +6653,8 @@ b8 type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     if (!candidates.size())
         return false;
     u32 selected = rand() % candidates.size();
-    properties = candidates[selected];
-    rmgOwnableObject* mine = new rmgOwnableObject(properties);
+    TRmgObjectPropertiesRef* selectedProperties = candidates[selected];
+    rmgOwnableObject* mine = new rmgOwnableObject(selectedProperties);
     if (!placeMineSite(mine, zone, startingMine, spacing)) {
         delete mine;
         return false;
@@ -6886,18 +6885,18 @@ static inline type_object* createRmgTreasureWithRetries(
 VA(0x00546520, 0x1B6)
 MAC_ADDRESS(0x24a584, 0x22c)
 int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
-    TRmgTreasureGroup* group, b8 compact, int value)
+    TRmgTreasureGroup* group, b8 compact, int targetValue)
 {
     int objectValue = 0;
     int attempts;
-    type_object* selected = createRmgTreasureWithRetries(
-        this, zone, value / 4, value, &objectValue, true, compact);
-    if (!selected)
+    type_object* firstObject = createRmgTreasureWithRetries(
+        this, zone, targetValue / 4, targetValue, &objectValue, true, compact);
+    if (!firstObject)
         return 0;
-    addRmgCenteredGroupObject(group, selected);
+    addRmgCenteredGroupObject(group, firstObject);
     int total = objectValue;
-    while (total < value) {
-        int remainder = value - total;
+    while (total < targetValue) {
+        int remainder = targetValue - total;
         if (remainder < RMG_TREASURE_MINIMUM_REMAINDER && remainder < total / 2)
             break;
         type_object* nextObject;
@@ -6941,8 +6940,8 @@ b8 type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
     TRmgTreasureGroup* group, b8 compact, int minimum, int maximum)
 {
     group->reset();
-    int value = maximum <= minimum ? maximum : rand() % (maximum - minimum) + minimum;
-    int totalValue = fillTreasureGroup(zone, group, compact, value);
+    int targetValue = maximum <= minimum ? maximum : rand() % (maximum - minimum) + minimum;
+    int totalValue = fillTreasureGroup(zone, group, compact, targetValue);
     if (!totalValue)
         return false;
     int guardValue = getRmgZoneGuardValue(totalValue, zone, *this);
@@ -7876,26 +7875,27 @@ b8 type_random_map_generator::generate()
     }
     int mapIndex;
     MEMSET(m_playerIndexMap, -1, sizeof(m_playerIndexMap), mapIndex);
-    int players[RMG_PLAYER_COUNT];
-    int count = 0;
+    int playerOrder[RMG_PLAYER_COUNT];
+    int orderedCount = 0;
     for (int player = 0; player < RMG_PLAYER_COUNT; ++player)
         if (m_fixedHumanPlayers[player])
-            players[count++] = player;
+            playerOrder[orderedCount++] = player;
     for (player = 0; player < RMG_PLAYER_COUNT; ++player)
         if (!m_fixedHumanPlayers[player])
-            players[count++] = player;
+            playerOrder[orderedCount++] = player;
     int slot = 0;
-    for (player = 0; player < m_humanPlayerCount; ++player) {
+    int orderIndex;
+    for (orderIndex = 0; orderIndex < m_humanPlayerCount; ++orderIndex) {
         while (slot < RMG_PLAYER_COUNT && !humanSlots[slot])
             ++slot;
         allSlots[slot] = 0;
-        m_playerIndexMap[++slot] = players[player];
+        m_playerIndexMap[++slot] = playerOrder[orderIndex];
     }
     slot = 0;
-    for (; player < m_humanPlayerCount + m_computerPlayerCount; ++player) {
+    for (; orderIndex < m_humanPlayerCount + m_computerPlayerCount; ++orderIndex) {
         while (slot < RMG_PLAYER_COUNT && !allSlots[slot])
             ++slot;
-        m_playerIndexMap[++slot] = players[player];
+        m_playerIndexMap[++slot] = playerOrder[orderIndex];
     }
     initializeZones(m_templates[selected]);
     for (int level = 0; level < m_map.m_numberLevels; ++level)
@@ -8568,7 +8568,7 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
 // Failed placement releases each object's reservation before deletion.
 VA(0x0054B8C0, 0x385)
 MAC_ADDRESS(0x2508e8, 0x334)
-b8 type_random_map_generator::placeKeyTentGuard(type_object* object, int maxValue)
+b8 type_random_map_generator::placeKeyTentGuard(type_object* object, int targetValue)
 {
     int color = object->m_properties->m_prototype->getSubtype();
     u32 index = findRmgPrototypeSubtypeIndex<u32>(
@@ -8580,7 +8580,7 @@ b8 type_random_map_generator::placeKeyTentGuard(type_object* object, int maxValu
     TRmgTreasureGroup group(RMG_TREASURE_GROUP_MAP_SIZE, RMG_TREASURE_GROUP_MAP_SIZE);
     type_object* guard = new type_object(properties);
     setKeyTentColorDisabled(color, true);
-    if (fillTreasureGroup(origin, &group, false, maxValue) && group.addGuard(guard)) {
+    if (fillTreasureGroup(origin, &group, false, targetValue) && group.addGuard(guard)) {
         group.preparePlacement();
         if (placeQuestGroup(&group, origin))
             return true;

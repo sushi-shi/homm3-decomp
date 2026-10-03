@@ -1768,7 +1768,7 @@ public:
         int* value, b8 primary, b8 allowTerrainDependent,
         b8 compact, TRmgMapPosition position);
     int fillTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
-        b8 compact, int value);
+        b8 compact, int targetValue);
     b8 assembleTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
         b8 compact, int minimum, int maximum);
     b8 placeTreasureGroup(TRmgTreasureGroup* group, TRmgZone* zone, int spacing);
@@ -1856,7 +1856,7 @@ public:
     b8 placeQuestGroup(TRmgTreasureGroup* group, TRmgZone* origin);
     // Places a treasure group guarded by a same-colour border guard in another
     // zone; on success that colour stays disabled.
-    b8 placeKeyTentGuard(type_object* object, int maxValue);
+    b8 placeKeyTentGuard(type_object* object, int targetValue);
     // Change one colour's availability, then rescan for the first enabled
     // colour (size() when none remain).
     void setKeyTentColorDisabled(int color, b8 disabled)
