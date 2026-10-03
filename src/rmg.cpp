@@ -5498,7 +5498,7 @@ enum ERmgGroundCrossingLimits {
 // Connects land zones on one level. Opens one crossing per 40 eligible
 // border cells (rounded up), drawn without repeats from the empty ones tied
 // for the lowest zone-path cost, which must be at most 100; each gets open
-// paths and entrances on both sides before its border or guard.
+// paths and entrances on both sides before its border guard or monster guard.
 VA(0x00541140, 0x63a)
 MAC_ADDRESS(0x243af8, 0x53c)
 b8 type_random_map_generator::createGroundConnection(
@@ -5903,7 +5903,7 @@ b8 type_random_map_generator::placeMonolithBorder(
     TPoint offsets[5] = {
         TPoint(0, 1), TPoint(1, 0), TPoint(-1, 0), TPoint(1, 1), TPoint(-1, 1)
     };
-    TRmgMapPosition borderPosition;
+    TRmgMapPosition guardPosition;
     const s32 directionCount = sizeof(offsets) / sizeof(offsets[0]);
     buildZoneConnectionPaths();
     TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
@@ -5912,21 +5912,21 @@ b8 type_random_map_generator::placeMonolithBorder(
     if (movementCost >= RMG_REACHED_COST_LIMIT)
         return false;
     if (movementCost > 0) {
-        borderPosition = item->m_previousTile;
+        guardPosition = item->m_previousTile;
     } else {
         s32 direction;
         for (direction = 0; direction < directionCount; ++direction) {
-            borderPosition = position + offsets[direction];
-            TRmgMapItem* nearby = m_map.getMapItem(borderPosition);
+            guardPosition = position + offsets[direction];
+            TRmgMapItem* nearby = m_map.getMapItem(guardPosition);
             if (nearby->m_zoneState.m_zone == zoneIndex
                 && nearby->hasPathClearance())
                 break;
         }
         if (direction == directionCount) {
-            borderPosition = position + TPoint(0, 1);
+            guardPosition = position + TPoint(0, 1);
         }
     }
-    s32 color = placeBorderObject(borderPosition, RMG_SINGLE_BORDER_GUARD, keyTentZone);
+    s32 color = placeBorderObject(guardPosition, RMG_SINGLE_BORDER_GUARD, keyTentZone);
     if (color >= 0) {
         for (s32 direction = 0; direction < directionCount; ++direction)
             m_map.getMapItem(position + offsets[direction])->markBorderConnection(color);
@@ -5984,8 +5984,8 @@ void type_random_map_generator::createMonolithConnection(
     }
     s32 guardValue = getConnectionGuardValue(connection);
 
-    // A source-side border also drops the destination's guard, even when the
-    // destination's own border placement later fails.
+    // A source-side border guard also drops the destination's guard, even when
+    // the destination's own border-guard placement later fails.
     type_object* object = placeMonolith(properties, source, exitProperties != 0);
     if (object)
         protectMonolith(object, connection, destination, guardValue);
@@ -7289,7 +7289,7 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
     for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
         for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
             TRmgMapItem* destination = m_map.getMapItem(position + point);
-            b8 border = destination->hasObstacleFill();
+            b8 obstacleFill = destination->hasObstacleFill();
             b8 pathClearance = destination->hasPathClearance();
             TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
             if (destination->getLandType() != eTerrainWater
@@ -7301,7 +7301,7 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
                 }
             }
             // Copy the destination's earlier marks back to the group map.
-            if (border)
+            if (obstacleFill)
                 source->markObstacleFill();
             else
                 source->clearObstacleFill();

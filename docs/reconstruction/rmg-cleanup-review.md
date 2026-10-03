@@ -114,9 +114,9 @@ have topology names; count and selection share the quest-artifact predicate.
 The request's progress pointer is typed through the game and oracle callers.
 
 Path-clearance bit 27 previously had a misleading subterranean-gate name.
-Its name now describes its generation role, and common open/border updates
-preserve their connection guard and opposite store orders. Four key-color
-rescans share one helper; the first-use uninitialized color remains untouched.
+Its name now describes its generation role, and common open/obstacle-mark
+updates preserve their border-connection guard and opposite store orders. Four
+key-color rescans share one helper; the first-use uninitialized color remains untouched.
 The independent safety pass also established a removed-wrapper leak in failed
 quest/key-tent replacement and documented density-product overflow contracts.
 
@@ -127,8 +127,8 @@ introduced. Painter wrappers with different native entries retain their own
 copy/snapshot boundaries rather than being mechanically merged.
 
 A reader-trap round named RMG-internal sentinels (no zone, unset position,
-no category, no frame, failed border placement), literal arguments (3x3/5x5
-neighbourhoods, border-entrance and path-clearance policies, border guard
+no category, no frame, failed border-guard placement), literal arguments
+(3x3/5x5 neighbourhoods, obstacle-entrance and path-clearance policies, border guard
 counts, neighbour steps, spacing), the H3M tile-flag bits and the unit-bearing
 constants: density areas are squared entrance distances (2 per cardinal
 step), so 82944 = 4 x 144 x 144, 800 and 1600 are 4 x 200 and 4 x 400 tiles.
@@ -250,8 +250,8 @@ following keeps only with a pointer here:
   connection paths, or `openConnectionPath`'s frame.
 - A twelfth pass replaced the last counter-only loops in post-path code:
   `canPlaceTreasureGroup`'s group-bounds scan uses plain coordinates, and
-  `decorateMap` walks the cell array directly when counting border cells and
-  opening paths. Only those two frames changed.
+  `decorateMap` walks the cell array directly when counting obstacle-fill
+  cells and opening paths. Only those two frames changed.
 - A thirteenth pass let `decorateMapCell` iterate the blocked footprint
   cells instead of a staged bounds struct, chose `placeZoneTreasures`'
   density area once, and dropped staging in the line-pattern table

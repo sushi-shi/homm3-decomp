@@ -355,8 +355,8 @@ Other preserved behavior defects, separate from undefined behavior:
   neighbours: rand_trn.txt's blocked scores, the draw-order conflict test and
   the rejection of rule-less objects never apply to them. Preserve the store.
 - `createSubterraneanGate` shares one guard value between both entrances, and
-  both guards are placed after both borders: a border on either side leaves
-  neither entrance guarded. Separate per-entrance values would change that.
+  both guards are placed after both border guards: a border guard on either
+  side leaves neither entrance guarded. Separate per-entrance values would change that.
 
 ## Reviewed invariants and coverage
 
@@ -394,7 +394,7 @@ Several suspicious-looking expressions are supported by local invariants:
   aliasing read. Replacing it with a reinterpreted integer pointer would
   introduce a separate aliasing/alignment assumption.
 - Map clear and packed-cache construction intentionally initialize selected
-  bitfields only. Map clear preserves `m_connection.m_guardColor`, unnamed
+  bitfields only. Map clear preserves `m_borderConnection.m_guardColor`, unnamed
   bitfield remainders and `m_connectionVisited`, and sets only predecessor X to the invalid sentinel;
   later cost resets initialize full predecessors. Copying these aggregates
   includes indeterminate fields at initial construction, a C++ portability
