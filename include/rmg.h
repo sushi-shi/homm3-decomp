@@ -604,10 +604,12 @@ struct TRmgRiverDeltaOffset {
 class type_object;
 
 // Path costs and zone graph distances start at RMG_UNREACHED_COST. Searches
-// treat costs beyond RMG_REACHED_COST_LIMIT as unreached.
+// treat costs beyond RMG_REACHED_COST_LIMIT as unreached. A cleared map cell
+// instead starts its costs and object distance at RMG_CLEARED_CELL_COST.
 enum ERmgPathCostLimits {
     RMG_REACHED_COST_LIMIT = 30000,
-    RMG_UNREACHED_COST = 32000
+    RMG_UNREACHED_COST = 32000,
+    RMG_CLEARED_CELL_COST = 32700
 };
 
 struct TRmgMovementCost {

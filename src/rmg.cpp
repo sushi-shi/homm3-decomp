@@ -399,9 +399,9 @@ void TRmgMapItem::clear()
     tileData.m_riverTarget = false;
     tileData.m_nearRiver = false;
     m_connection = connection;
-    m_movement.m_cost = 32700;
-    m_movement.m_zonePathCost = 32700;
-    m_zoneState.m_objectDistance = 32700;
+    m_movement.m_cost = RMG_CLEARED_CELL_COST;
+    m_movement.m_zonePathCost = RMG_CLEARED_CELL_COST;
+    m_zoneState.m_objectDistance = RMG_CLEARED_CELL_COST;
     m_zoneState.m_zone = -1;
     m_zoneState.m_connectionZone = -1;
     m_previousTile.m_x = -1;
@@ -8600,7 +8600,7 @@ void type_random_map_generator::removeObject(type_object* object)
                         item->m_tileData.m_roadEntrance = false;
                         item->m_tileData.m_roadPassable = true;
                     }
-                    item->m_zoneState.m_objectDistance = 32700;
+                    item->m_zoneState.m_objectDistance = RMG_CLEARED_CELL_COST;
                 }
             }
         }
