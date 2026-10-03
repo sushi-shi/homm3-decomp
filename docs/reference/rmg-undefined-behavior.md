@@ -112,6 +112,22 @@ agreement. A state whose last heap call leaves that dword zero would make
 retail skip the draw; none was observed. The source keeps the real fix (no
 towns, so no draw) as a `TODO`. It would change generated maps.
 
+**Added water zones.** Their heap `TRmgTemplateZone` flags remain uninitialized
+(oracle `heapByte`). The resulting `TRmgZone::m_alignment` has no consequential
+reader under the reviewed paths. `canPlaceZone` tests it
+only for human and computer kinds. `placePrimaryTown` and
+`placeAdditionalTowns` see zero town counts and densities. The town-zone
+counts in `generate` and the player alignments in `writeMapHeader` require a primary town or a player.
+`createGuard` is reached only through `placeGuard` or
+`assembleTreasureGroup`. Water zones have monster strength none, so
+`getZoneGuardValue` returns 0; their connections are unguarded. These zones
+also never set `m_creatureTownType`, because `chooseTownType` runs only in
+`initializeZones`, before they exist. `TRmgZone`'s constructor leaves
+it as allocation contents. `createTreasureObject` still reads it through
+`getValue` for creature rewards, dwellings and quest creatures. This happens for every candidate definition, before the water-terrain
+prototype filter. Whether a water prototype makes that read affect output was
+not traced.
+
 ## River drawing: unchecked out-of-range coordinates
 
 After its path-search queue becomes empty, `createRiver` tests the last inspected
