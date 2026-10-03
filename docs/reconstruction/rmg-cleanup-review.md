@@ -147,12 +147,15 @@ copy/snapshot boundaries rather than being mechanically merged.
 ## Control flow and indexing decisions
 
 All three terrain gotos were removed using structured gap loops and early
-exits from the separated-neighbour predicate.
-Two `canFitObject` failure gotos remain: they converge on the shared placement-failure
-return, and the owning comment records the existing byte-matching evidence
-for that first-failure join. The remaining generator/support bodies have no
-gotos. The review does not replace a short, evidenced join with duplicated
-cleanup or an artificial state machine.
+exits from the separated-neighbour predicate. A later control-flow pass
+replaced `canFitObject`'s two jumps into the placement-failure return with
+early returns, so the RMG sources contain no gotos. The same pass rewrote
+matching-shaped loops (`while (1)` binary searches, a `do`/post-decrement seat
+scan, an attempt loop that cleared its result to signal exhaustion, an
+empty-bodied reverse-iterator search) and removed scope blocks or hoisted
+declarations that only shaped stack reuse. Rewrites in the constructor and
+`initializeZones` call trees were kept only where VC6 emits identical code,
+because `buildZoneBoundaries` reads their stack residue.
 
 Subtraction in an index is not automatically an out-of-bounds access. The
 placement scratch array includes a one-cell border, its overlap flag proves
