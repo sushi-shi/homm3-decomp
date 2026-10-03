@@ -4455,6 +4455,14 @@ void type_random_map_generator::paintZoneTerrain()
     }
 }
 
+// Indices of TRmgNoiseRegion::m_corners, named by their bounds corner.
+enum ERmgNoiseCorner {
+    RMG_NOISE_MIN_X_MIN_Y = 0,
+    RMG_NOISE_MIN_X_MAX_Y = 1,
+    RMG_NOISE_MAX_X_MIN_Y = 2,
+    RMG_NOISE_MAX_X_MAX_Y = 3
+};
+
 // Omit collapsed dimensions, but preserve reversed bounds.
 static inline void appendRmgNoiseQuadrant(
     std::vector<TRmgNoiseRegion>& pending, const TRmgNoiseRegion& quadrant)
@@ -4472,40 +4480,38 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     TRmgNoiseMidpoints midpoints,
     int centerValue)
 {
-    int midpointCoordinates[2] = {
-        (region.m_bounds.m_minimumY + region.m_bounds.m_maximumY) / 2,
-        (region.m_bounds.m_minimumX + region.m_bounds.m_maximumX) / 2
-    };
+    int middleY = (region.m_bounds.m_minimumY + region.m_bounds.m_maximumY) / 2;
+    int middleX = (region.m_bounds.m_minimumX + region.m_bounds.m_maximumX) / 2;
     TRmgNoiseRegion quadrant = region;
-    quadrant.m_bounds.m_minimumX = midpointCoordinates[1];
-    quadrant.m_bounds.m_minimumY = midpointCoordinates[0];
-    quadrant.m_corners[0] = centerValue;
-    quadrant.m_corners[1] = midpoints.m_maxYValue;
-    quadrant.m_corners[2] = midpoints.m_maxXValue;
+    quadrant.m_bounds.m_minimumX = middleX;
+    quadrant.m_bounds.m_minimumY = middleY;
+    quadrant.m_corners[RMG_NOISE_MIN_X_MIN_Y] = centerValue;
+    quadrant.m_corners[RMG_NOISE_MIN_X_MAX_Y] = midpoints.m_maxYValue;
+    quadrant.m_corners[RMG_NOISE_MAX_X_MIN_Y] = midpoints.m_maxXValue;
     appendRmgNoiseQuadrant(pending, quadrant);
 
     quadrant = region;
-    quadrant.m_bounds.m_minimumX = midpointCoordinates[1];
-    quadrant.m_bounds.m_maximumY = midpointCoordinates[0];
-    quadrant.m_corners[0] = midpoints.m_minYValue;
-    quadrant.m_corners[1] = centerValue;
-    quadrant.m_corners[3] = midpoints.m_maxXValue;
+    quadrant.m_bounds.m_minimumX = middleX;
+    quadrant.m_bounds.m_maximumY = middleY;
+    quadrant.m_corners[RMG_NOISE_MIN_X_MIN_Y] = midpoints.m_minYValue;
+    quadrant.m_corners[RMG_NOISE_MIN_X_MAX_Y] = centerValue;
+    quadrant.m_corners[RMG_NOISE_MAX_X_MAX_Y] = midpoints.m_maxXValue;
     appendRmgNoiseQuadrant(pending, quadrant);
 
     quadrant = region;
-    quadrant.m_bounds.m_maximumX = midpointCoordinates[1];
-    quadrant.m_bounds.m_minimumY = midpointCoordinates[0];
-    quadrant.m_corners[0] = midpoints.m_minXValue;
-    quadrant.m_corners[2] = centerValue;
-    quadrant.m_corners[3] = midpoints.m_maxYValue;
+    quadrant.m_bounds.m_maximumX = middleX;
+    quadrant.m_bounds.m_minimumY = middleY;
+    quadrant.m_corners[RMG_NOISE_MIN_X_MIN_Y] = midpoints.m_minXValue;
+    quadrant.m_corners[RMG_NOISE_MAX_X_MIN_Y] = centerValue;
+    quadrant.m_corners[RMG_NOISE_MAX_X_MAX_Y] = midpoints.m_maxYValue;
     appendRmgNoiseQuadrant(pending, quadrant);
 
     quadrant = region;
-    quadrant.m_bounds.m_maximumX = midpointCoordinates[1];
-    quadrant.m_bounds.m_maximumY = midpointCoordinates[0];
-    quadrant.m_corners[1] = midpoints.m_minXValue;
-    quadrant.m_corners[2] = midpoints.m_minYValue;
-    quadrant.m_corners[3] = centerValue;
+    quadrant.m_bounds.m_maximumX = middleX;
+    quadrant.m_bounds.m_maximumY = middleY;
+    quadrant.m_corners[RMG_NOISE_MIN_X_MAX_Y] = midpoints.m_minXValue;
+    quadrant.m_corners[RMG_NOISE_MAX_X_MIN_Y] = midpoints.m_minYValue;
+    quadrant.m_corners[RMG_NOISE_MAX_X_MAX_Y] = centerValue;
     appendRmgNoiseQuadrant(pending, quadrant);
 }
 
@@ -4552,19 +4558,20 @@ void __fastcall generateRmgIslandMask(u8* mask, int width, int height)
             if (patch.m_bounds.m_minimumX < 0 || patch.m_bounds.m_minimumX >= height
                 || patch.m_bounds.m_minimumY < 0 || patch.m_bounds.m_minimumY >= width)
                 continue;
-            patch.m_corners[0] = min(max(patch.m_corners[0], 0), 255);
-            mask[patch.m_bounds.m_minimumX * width + patch.m_bounds.m_minimumY] = patch.m_corners[0];
+            int value = min(max(patch.m_corners[RMG_NOISE_MIN_X_MIN_Y], 0), 255);
+            mask[patch.m_bounds.m_minimumX * width + patch.m_bounds.m_minimumY] = value;
             continue;
         }
         if (patch.m_bounds.m_maximumX < 0 || patch.m_bounds.m_maximumY < 0
             || patch.m_bounds.m_minimumX >= height || patch.m_bounds.m_minimumY >= width)
             continue;
-        edges.m_minXValue = (patch.m_corners[1] + patch.m_corners[0]) / 2;
-        edges.m_minYValue = (patch.m_corners[2] + patch.m_corners[0]) / 2;
-        edges.m_maxXValue = (patch.m_corners[3] + patch.m_corners[2]) / 2;
-        edges.m_maxYValue = (patch.m_corners[3] + patch.m_corners[1]) / 2;
-        int center = (patch.m_corners[3] + patch.m_corners[2]
-            + patch.m_corners[1] + patch.m_corners[0]) / 4;
+        const int* corners = patch.m_corners;
+        edges.m_minXValue = (corners[RMG_NOISE_MIN_X_MAX_Y] + corners[RMG_NOISE_MIN_X_MIN_Y]) / 2;
+        edges.m_minYValue = (corners[RMG_NOISE_MAX_X_MIN_Y] + corners[RMG_NOISE_MIN_X_MIN_Y]) / 2;
+        edges.m_maxXValue = (corners[RMG_NOISE_MAX_X_MAX_Y] + corners[RMG_NOISE_MAX_X_MIN_Y]) / 2;
+        edges.m_maxYValue = (corners[RMG_NOISE_MAX_X_MAX_Y] + corners[RMG_NOISE_MIN_X_MAX_Y]) / 2;
+        int center = (corners[RMG_NOISE_MAX_X_MAX_Y] + corners[RMG_NOISE_MAX_X_MIN_Y]
+            + corners[RMG_NOISE_MIN_X_MAX_Y] + corners[RMG_NOISE_MIN_X_MIN_Y]) / 4;
         int range = patch.m_variation;
         if (range > 1) {
             edges.m_minXValue += getRmgCenteredRandomOffset(range);
@@ -4757,26 +4764,17 @@ void type_random_map_generator::markZoneBorders()
                                 needsBorder = true;
                         } else if (otherZone != zoneIndex) {
                             TRmgZoneConnection* connection = zone->m_templateZone->findConnection(otherZone);
-                            if (!connection || position.m_z == RMG_UNDERGROUND_LEVEL)
-                                needsBorder = true;
-                            if (connection && !connection->m_unguarded)
+                            if (!connection || position.m_z == RMG_UNDERGROUND_LEVEL
+                                || !connection->m_unguarded)
                                 needsBorder = true;
                         }
                     }
                 }
                 if (!needsBorder)
                     continue;
+                // Retail then re-marks this cell through a radius-0 scan;
+                // the repeat is idempotent and omitted.
                 current->markBorderObject();
-                setRmgNeighborhoodBounds(bounds, position, m_map, 0);
-                for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
-                    for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
-                        TRmgMapItem* item = m_map.getMapItem(nearby);
-                        if (item->getLandType() != eTerrainWater
-                            && !item->hasObjects()) {
-                            item->markBorderObject();
-                        }
-                    }
-                }
                 releaseRmgNeighborhoodPathClearance(m_map, position, 1);
             }
         }
@@ -4827,7 +4825,6 @@ void type_random_map_generator::repairWaterZoneBorders()
                 if (!foundLandTerrain || zone->m_templateZone->findConnection(destinationZone))
                     continue;
 
-                setRmgNeighborhoodBounds(bounds, position, m_map, 1);
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
@@ -4855,8 +4852,8 @@ void type_random_map_generator::repairWaterZoneBorders()
                     brush.changeTerrain(terrain, RMG_BRUSH_STRENGTH);
                     lastTerrain = terrain;
                 }
-                position = positions[paintIndex];
-                brush.paintRectangle(position.m_x, position.m_y, 1, 1);
+                TRmgMapPosition painted = positions[paintIndex];
+                brush.paintRectangle(painted.m_x, painted.m_y, 1, 1);
             }
             positions.clear();
             terrains.clear();
@@ -6449,8 +6446,7 @@ b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
             b8 valid = true;
             for (int y = nearby.m_minimumY; y < nearby.m_maximumY; ++y) {
                 for (int x = nearby.m_minimumX; x < nearby.m_maximumX; ++x) {
-                    int otherZone = m_map.getMapItem(x, y, entrance.m_z)->m_zoneState.m_zone;
-                    if (otherZone < 0 || otherZone != zoneIndex)
+                    if (m_map.getMapItem(x, y, entrance.m_z)->m_zoneState.m_zone != zoneIndex)
                         valid = false;
                 }
             }
@@ -8235,7 +8231,7 @@ static void __fastcall assignRmgTeams(
     const b8* players,
     char* teams)
 {
-    int playersPerTeam[8];
+    int playersPerTeam[RMG_PLAYER_COUNT];
     int team;
 
     for (team = 0; team < teamCount; ++team) {
