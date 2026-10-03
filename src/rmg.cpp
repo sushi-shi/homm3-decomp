@@ -279,13 +279,18 @@ static const s32 g_landRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {2, 0, 3,
 DATA(0x006409b0)
 static const s32 g_snowRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {7, 5, 4, 6};
 
+// Candidate town types one zone terrain can list.
+enum ERmgTerrainTownChoiceLimits {
+    RMG_TERRAIN_TOWN_CHOICE_COUNT = 4
+};
+
 // Candidate town types for each zone terrain, dirt to water. The pick only
 // selects which creatures' dwellings and rewards the zone favours; eTownNeutral
 // (no faction) favours neutral creatures. It was meant to end a row, but
 // chooseTownType draws from all four entries, so the zero padding after it is
 // a Castle candidate.
 DATA(0x00682450)
-s32 g_rmgTerrainTownChoices[eTerrainWater + 1][4] = {
+s32 g_rmgTerrainTownChoices[eTerrainWater + 1][RMG_TERRAIN_TOWN_CHOICE_COUNT] = {
     {TOWN_CASTLE, TOWN_RAMPART, TOWN_NECROPOLIS, eTownNeutral}, // dirt
     {TOWN_STRONGHOLD, eTownNeutral, 0, 0},                       // sand
     {TOWN_CASTLE, TOWN_RAMPART, eTownNeutral, 0},                // grass
@@ -1266,7 +1271,7 @@ void TRmgZone::chooseTownType(b8 expanded)
         s32 count = 0;
         // Retail bug: this condition is always true, so all four row
         // entries are candidates, including eTownNeutral and the padding.
-        while (count < 4 &&
+        while (count < RMG_TERRAIN_TOWN_CHOICE_COUNT &&
             (g_rmgTerrainTownChoices[m_terrain][count] != eTownNeutral || expanded ||
              g_rmgTerrainTownChoices[m_terrain][count] != TOWN_CONFLUX))
             ++count;
@@ -2587,6 +2592,11 @@ static inline bool isRmgObjectAvailableInVersion(
     return true;
 }
 
+// Monolith subtypes, per kind, that maps before Shadow of Death may use.
+enum ERmgMonolithSubtypeLimits {
+    RMG_PRE_SOD_MONOLITH_SUBTYPE_COUNT = 3
+};
+
 VA(0x00536200, 0x1ac)
 MAC_ADDRESS(0x234440, 0x24c)
 void TRmgGeneratorBase::loadObjectPrototypes()
@@ -2597,7 +2607,7 @@ void TRmgGeneratorBase::loadObjectPrototypes()
         if (!isRmgObjectAvailableInVersion(type, m_mapVersion))
             continue;
         if (m_mapVersion < RMG_MAP_SHADOW_OF_DEATH && (type == LITH_TWOWAY || type == LITH_ONEWAY_ENTRANCE || type == LITH_ONEWAY_EXIT)
-            && m_objectsTxt.m_objectTypes[index].getSubtype() >= 3)
+            && m_objectsTxt.m_objectTypes[index].getSubtype() >= RMG_PRE_SOD_MONOLITH_SUBTYPE_COUNT)
             continue;
         if (type < 0 || type >= ADVENTURE_OBJECT_TRAIT_COUNT)
             continue;
