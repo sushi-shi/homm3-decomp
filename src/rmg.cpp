@@ -1498,8 +1498,8 @@ rmgShrineObject::rmgShrineObject(TRmgObjectPropertiesRef* properties)
 {
 }
 
-rmgSpellScrollObject::rmgSpellScrollObject(TRmgObjectPropertiesRef* properties, s32 spell)
-    : type_object(properties), m_spell(static_cast<ESpellId>(spell))
+rmgSpellScrollObject::rmgSpellScrollObject(TRmgObjectPropertiesRef* properties, ESpellId spell)
+    : type_object(properties), m_spell(spell)
 {
 }
 
@@ -1657,7 +1657,7 @@ VA_COMPGEN(0x005336b0, 0x36, IMPLICIT_DTOR, rmgBlackBoxObject)
 MAC_COMPGEN_ADDRESS(0x251488, 0x7c, IMPLICIT_DTOR, rmgBlackBoxObject)
 
 static inline void writeRmgCreatureReward(
-    TAbstractFile* outputFile, s32 version, s32 creature, s32 count)
+    TAbstractFile* outputFile, s32 version, TCreatureType creature, s32 count)
 {
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE)
         writeValue<s16>(outputFile, creature);
@@ -1935,7 +1935,7 @@ VA(0x00534250, 0xb5)
 MAC_ADDRESS(0x231dfc, 0x108)
 type_black_box_creature_def::type_black_box_creature_def(s32 newCreatureType)
     : type_treasure_def(BLACK_BOX, 0, -1, 3),
-      m_creatureType(newCreatureType)
+      m_creatureType(static_cast<TCreatureType>(newCreatureType))
 {
     m_creatureCount =
         g_rmgCreatureValueByLevel[g_creatureTypeTraits[newCreatureType].m_level]
@@ -2236,7 +2236,7 @@ type_object* type_spell_scroll_def::generate(TRmgObjectPropertiesRef* properties
         if (isRmgScrollSpell(spell, m_spellLevel) && selectedIndex-- <= 0)
             break;
     }
-    return new rmgSpellScrollObject(properties, spell);
+    return new rmgSpellScrollObject(properties, static_cast<ESpellId>(spell));
 }
 
 VA(0x00534fa0, 0x21)

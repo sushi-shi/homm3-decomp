@@ -99,7 +99,7 @@ public:
 
 class type_black_box_creature_def : public type_treasure_def {
 public:
-    s32 m_creatureType;
+    TCreatureType m_creatureType;
     // Stack size: the level's reward value divided by AI value; counts above
     // 5 are rounded to a multiple of 2, 5 or 10.
     s32 m_creatureCount;
@@ -888,7 +888,7 @@ class rmgBlackBoxObject : public type_object {
 public:
     s32 m_experience;                  // +0x1c
     s32 m_resources[NUM_RESOURCES];    // +0x20, gold at +0x38
-    s32 m_creatureType;                // +0x3c, CREATURE_NONE for no creature reward
+    TCreatureType m_creatureType;      // +0x3c, CREATURE_NONE for no creature reward
     s32 m_creatureCount;               // +0x40
     std::vector<s32> m_spells;         // +0x44
 
@@ -904,7 +904,7 @@ public:
     s32 m_experience;                  // +0x20
     EGameResource m_resourceType;      // +0x24, defaults to GOLD
     s32 m_resourceCount;               // +0x28
-    s32 m_creatureType;                // +0x2c, defaults to CREATURE_NONE
+    TCreatureType m_creatureType;      // +0x2c, defaults to CREATURE_NONE
     s32 m_creatureCount;               // +0x30
 
     rmgSeerHutObject(TRmgObjectPropertiesRef* properties);
@@ -960,7 +960,7 @@ SIZE(rmgShrineObject, 0x1c);
 class rmgSpellScrollObject : public type_object {
 public:
     ESpellId m_spell; // +0x1c
-    rmgSpellScrollObject(TRmgObjectPropertiesRef* properties, s32 spell);
+    rmgSpellScrollObject(TRmgObjectPropertiesRef* properties, ESpellId spell);
     virtual void write(TAbstractFile* outputFile, s32 version);
 };
 SIZE(rmgSpellScrollObject, 0x20);
