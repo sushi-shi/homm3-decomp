@@ -1987,7 +1987,7 @@ public:
     void replaceObjectWithTreasure(type_object* object, s32 value);
     // Paints a road back along the path-cost predecessors.
     b8 paintRoad(TRmgMapPosition position, s32 roadType);
-    // Runs a river from beside a water wheel to a river target, possibly
+    // Runs a river from a water wheel's west end to a river target, possibly
     // ending in a river delta.
     void createRiver(TRmgMapPosition source);
     void markRiverObjectTargets();

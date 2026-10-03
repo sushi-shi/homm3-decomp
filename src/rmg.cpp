@@ -7912,7 +7912,8 @@ void type_random_map_generator::markRiverTargets()
 }
 
 // Randomized best-first relaxation, with the same per-visit random edge costs
-// as createRiverToObject, seeded at three cells beside the water wheel.
+// as createRiverToObject, seeded at the water wheel's south-west cell and the
+// cells north and north-east of it.
 VA(0x00548df0, 0x99f)
 MAC_ADDRESS(0x24d4f0, 0xb00)
 void type_random_map_generator::createRiver(TRmgMapPosition source)

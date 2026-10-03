@@ -332,8 +332,9 @@ Other preserved behavior defects, separate from undefined behavior:
 - `TRmgZone::chooseTownType` uses the disjunction
   `choice != eTownNeutral || expanded || choice != TOWN_CONFLUX`; the two different
   inequality terms make it true for every choice. It therefore counts all four
-  entries, including sentinels, rather than stopping at the sentinel or
-  excluding Conflux. Preserve the expression and its RNG behavior.
+  entries, including `eTownNeutral` and the zero padding (a Castle candidate),
+  rather than stopping at `eTownNeutral` or excluding Conflux. Preserve the
+  expression and its RNG behavior.
 - On RoE maps `readRmgTemplateZones` clears `m_allowedMonsters[TOWN_CONFLUX]`.
   `createGuard` indexes that array by town type + 1 (neutral at 0), so this
   slot is Fortress; Conflux guards stay allowed. Preserve the index.
