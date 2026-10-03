@@ -1430,12 +1430,14 @@ static inline void writeRmgMapPosition(
     writeValue<char>(outputFile, position.m_z);
 }
 
-template <int N>
-static inline void writeRmgReservedBytes(TAbstractFile* outputFile)
+// Writes count zero bytes (at most 32). The count is an argument, not a
+// template parameter: VC6 merges function templates whose parameters do not
+// mention every template argument.
+static inline void writeRmgReservedBytes(TAbstractFile* outputFile, int count)
 {
-    char reserved[N];
-    memset(reserved, 0, sizeof(reserved));
-    outputFile->write(reserved, sizeof(reserved));
+    char reserved[32];
+    memset(reserved, 0, count);
+    outputFile->write(reserved, count);
 }
 
 VA(0x00533170, 0x79)
@@ -1444,7 +1446,7 @@ void type_object::write(TAbstractFile* outputFile, int version)
 {
     writeRmgMapPosition(outputFile, m_position);
     writeValue<s32>(outputFile, m_properties->m_prototypeIndex);
-    writeRmgReservedBytes<5>(outputFile);
+    writeRmgReservedBytes(outputFile, 5);
 }
 
 VA(0x005331F0, 0xFD)
@@ -1460,7 +1462,7 @@ void rmgMonsterObject::write(TAbstractFile* outputFile, int version)
     writeValue<char>(outputFile, 0);
     writeValue<char>(outputFile, 0);
     writeValue<char>(outputFile, 0);
-    writeRmgReservedBytes<2>(outputFile);
+    writeRmgReservedBytes(outputFile, 2);
 }
 
 VA(0x005332F0, 0x16A)
@@ -1486,7 +1488,7 @@ void rmgTownObject::write(TAbstractFile* outputFile, int version)
     if (version >= RMG_MAP_SHADOW_OF_DEATH) {
         writeValue<char>(outputFile, -1);
     }
-    writeRmgReservedBytes<3>(outputFile);
+    writeRmgReservedBytes(outputFile, 3);
 }
 
 VA(0x00533460, 0xA0)
@@ -1495,7 +1497,7 @@ void rmgOwnableObject::write(TAbstractFile* outputFile, int version)
 {
     type_object::write(outputFile, version);
     writeValue<char>(outputFile, -1); // player
-    writeRmgReservedBytes<3>(outputFile);
+    writeRmgReservedBytes(outputFile, 3);
 }
 
 rmgArtifactObject::rmgArtifactObject(TRmgObjectPropertiesRef* properties)
@@ -1680,7 +1682,7 @@ void rmgSeerHutObject::write(TAbstractFile* outputFile, int version)
         writeValue<char>(outputFile, m_resourceType);
         writeValue<s32>(outputFile, m_resourceCount);
     }
-    writeRmgReservedBytes<2>(outputFile);
+    writeRmgReservedBytes(outputFile, 2);
 }
 
 // The factory reserves the hero in m_disabledHeroes; releaseReservation
@@ -1738,7 +1740,7 @@ void rmgHeroObject::write(TAbstractFile* outputFile, int version)
             writeValue<char>(outputFile, -2); // spell
         }
     }
-    writeRmgReservedBytes<16>(outputFile);
+    writeRmgReservedBytes(outputFile, 16);
 }
 
 VA(0x00533E70, 0xC3)
@@ -1749,7 +1751,7 @@ void rmgScholarObject::write(TAbstractFile* outputFile, int version)
     writeValue<char>(outputFile, -1); // reward kind
     writeValue<char>(outputFile, 0); // reward value
     writeValue<s32>(outputFile, 0);
-    writeRmgReservedBytes<2>(outputFile);
+    writeRmgReservedBytes(outputFile, 2);
 }
 
 VA(0x00533F40, 0xAF)
@@ -1758,7 +1760,7 @@ void rmgShrineObject::write(TAbstractFile* outputFile, int version)
 {
     type_object::write(outputFile, version);
     writeValue<char>(outputFile, -1); // spell
-    writeRmgReservedBytes<2>(outputFile);
+    writeRmgReservedBytes(outputFile, 2);
     writeValue<char>(outputFile, 0); // reserved byte
 }
 
@@ -1769,7 +1771,7 @@ void rmgSpellScrollObject::write(TAbstractFile* outputFile, int version)
     type_object::write(outputFile, version);
     writeValue<char>(outputFile, 0); // message
     writeValue<char>(outputFile, m_spell);
-    writeRmgReservedBytes<2>(outputFile);
+    writeRmgReservedBytes(outputFile, 2);
     writeValue<char>(outputFile, 0);
 }
 
@@ -8271,7 +8273,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         writeValue<char>(outfile, 0);
     }
 
-    writeRmgReservedBytes<31>(outfile);
+    writeRmgReservedBytes(outfile, 31);
 
     // Combination artifacts, artifact 127 and Armageddon's Blade are disabled.
     std::bitset<ARTIFACT_COUNT> disabledArtifacts;
