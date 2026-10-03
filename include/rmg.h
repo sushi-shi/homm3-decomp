@@ -1961,9 +1961,9 @@ public:
     void rebuildRoadCostMap(const TRmgMapPosition& source);
     void createRoads();
     // Picks an unused quest artifact, turns the object into it and places its
-    // seer hut in another zone, handing the hut to the map; if the hut cannot
-    // be placed, the artifact is replaced by a treasure. Fails, leaving the
-    // object unchanged, when no quest artifact remains.
+    // seer hut in another zone, handing the hut to the map. If the hut cannot
+    // be placed, the artifact is replaced by a treasure and the call fails; it
+    // also fails, leaving the object unchanged, when no quest artifact remains.
     b8 placeQuestArtifact(rmgQuestArtifactObject* object);
     s32 getAlignedZoneCount(s32 alignment) const;
     bool canUseSeerHutPrototype(s32 prototypeIndex) const;
