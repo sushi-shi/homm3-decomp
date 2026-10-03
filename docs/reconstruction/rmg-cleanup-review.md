@@ -301,6 +301,13 @@ following keeps only with a pointer here:
   decremented directly like its increment in `addObject`. `removeObject`
   runs only when a treasure replaces a failed key tent or quest artifact,
   after the connection paths; its frame is unchanged.
+- A twentieth pass gave `findRmgPrototypeSubtypeIndex` one unsigned index
+  type instead of a template parameter that only preserved each caller's
+  original index type; every caller, including the pre-path
+  `placeBorderObject`, compiles identically. It also counts
+  `type_black_box_spells_def::generate`'s spells in `s32` rather than a
+  `long` chosen to copy each id into a temporary; treasures are generated
+  after the connection paths, and only that frame shrank.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every

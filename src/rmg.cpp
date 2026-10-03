@@ -2034,7 +2034,7 @@ type_object* type_black_box_spells_def::generate(TRmgObjectPropertiesRef* proper
 {
     rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
     for (s32 level = m_maximumLevel; level >= m_minimumLevel; --level) {
-        for (long spell = SPELL_SUMMON_BOAT; spell < hero::NUM_SPELLS; ++spell) {
+        for (s32 spell = SPELL_SUMMON_BOAT; spell < hero::NUM_SPELLS; ++spell) {
             if (!isRmgSpellDisabledByDefault(spell)
                 && g_spellTraits[spell].m_level == level
                 && (g_spellTraits[spell].m_school & m_schoolMask))
@@ -5283,11 +5283,10 @@ type_object* type_random_map_generator::createGuard(s32 value, TRmgZone* zone)
 }
 
 // First prototype of the requested subtype, or size() when missing.
-template<class Index>
-static inline Index findRmgPrototypeSubtypeIndex(
+static inline u32 findRmgPrototypeSubtypeIndex(
     std::vector<TRmgObjectPropertiesRef*>& prototypes, s32 subtype)
 {
-    Index index = 0;
+    u32 index = 0;
     while (index < prototypes.size()
         && prototypes[index]->m_prototype->getSubtype() != subtype)
         ++index;
@@ -5313,12 +5312,12 @@ s32 type_random_map_generator::placeBorderObject(
     TRmgMapPosition position, s32 guardCount, TRmgZone* keyTentZone)
 {
     s32 color = m_nextKeyTentColor;
-    s32 tentPrototypeIndex = findRmgPrototypeSubtypeIndex<s32>(m_objectPrototypes[BORDER_TENT], color);
+    u32 tentPrototypeIndex = findRmgPrototypeSubtypeIndex(m_objectPrototypes[BORDER_TENT], color);
     if (tentPrototypeIndex == m_objectPrototypes[BORDER_TENT].size())
         return RMG_BORDER_NOT_PLACED;
     TRmgObjectPropertiesRef* tentProperties = m_objectPrototypes[BORDER_TENT][tentPrototypeIndex];
 
-    s32 guardPrototypeIndex = findRmgPrototypeSubtypeIndex<s32>(m_objectPrototypes[BORDER_GUARD], color);
+    u32 guardPrototypeIndex = findRmgPrototypeSubtypeIndex(m_objectPrototypes[BORDER_GUARD], color);
     // Retail bug: missing guard art returns colour zero, which callers treat
     // as success, unlike RMG_BORDER_NOT_PLACED for missing tent art.
     if (guardPrototypeIndex == m_objectPrototypes[BORDER_GUARD].size())
@@ -8771,7 +8770,7 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
             break;
     }
     seerHut->m_artifact = static_cast<TArtifact>(artifact);
-    u32 prototypeIndex = findRmgPrototypeSubtypeIndex<u32>(
+    u32 prototypeIndex = findRmgPrototypeSubtypeIndex(
         m_objectPrototypes[ARTIFACT], artifact);
     // Assumes an eligible artifact always has a loaded prototype.
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[ARTIFACT][prototypeIndex];
@@ -8798,7 +8797,7 @@ MAC_ADDRESS(0x2508e8, 0x334)
 b8 type_random_map_generator::placeKeyTentGuard(type_object* object, s32 targetValue)
 {
     s32 color = object->m_properties->m_prototype->getSubtype();
-    u32 index = findRmgPrototypeSubtypeIndex<u32>(
+    u32 index = findRmgPrototypeSubtypeIndex(
         m_objectPrototypes[BORDER_GUARD], color);
     if (index == m_objectPrototypes[BORDER_GUARD].size())
         return false;
