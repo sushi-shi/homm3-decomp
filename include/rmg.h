@@ -470,7 +470,7 @@ SIZE(TRmgTemplateZone, 0xd4);
 struct TRmgTemplate {
     std::string m_name;                  // +0x00
     std::vector<TRmgTemplateZone*> m_zones;   // +0x10
-    char m_opaque0020[0x10];
+    u8 m_opaque0020[0x10];
     // Accepted map size: tiles on all levels / (36 * 36), halved (at least
     // 1) on island maps.
     s32 m_minimumSize;                  // +0x30
@@ -761,7 +761,7 @@ struct TRmgObjectPropertiesRef {
     std::vector<TPoint> m_outline;         // +0x14
     s32 m_overlapPriorities[8][6];         // +0x24
     b8 m_prioritiesInitialized; // +0xe4
-    char m_pad00e5[3];
+    u8 m_pad00e5[3];
 
     TRmgObjectPropertiesRef(TObjectType* prototype);
 
@@ -780,7 +780,7 @@ public:
     b8 m_adjacentToCandidate;
     b8 m_overlapsCandidate;
     b8 m_blockedByCandidate;
-    char m_tailPadding[3];
+    u8 m_tailPadding[3];
 
     type_object(TRmgObjectPropertiesRef* newProperties);
     TRmgMapPosition getPosition() const;
@@ -1176,7 +1176,7 @@ public:
 class type_random_map : public TRmgMapInterface {
 public:
     b8 m_ownsMapItems;           // +0x04
-    char m_paddingBeforeMapItems[3];
+    u8 m_paddingBeforeMapItems[3];
     // Level by level, row by row: cell (x, y, z) is
     // m_mapItems[(z * m_mapHeight + y) * m_mapWidth + x].
     TRmgMapItem* m_mapItems;                // +0x08
@@ -1271,13 +1271,13 @@ struct TRmgTreasureGroup {
     // Cells ringing the occupied ones, clockwise, in group-map coordinates.
     std::vector<TPoint> m_outline;           // +0x38
     b8 m_hasGuard;               // +0x48, cleared by reset
-    char m_padding0049[3];
+    u8 m_padding0049[3];
     // Guard entrance in group-local coordinates (see addGuard's trigger bug).
     TPoint m_guardPosition;                 // +0x4c
     // Map offset chosen when the group is committed.
     TRmgMapPosition m_position;             // +0x54
     b8 m_ready;                  // +0x60, set after assembly
-    char m_padding0061[3];
+    u8 m_padding0061[3];
 
     TRmgTreasureGroup(s32 width, s32 height)
         : m_map(width, height, 1), m_hasGuard(false), m_ready(false)
@@ -1551,7 +1551,7 @@ struct TRmgZone {
     TRmgMapPosition m_position;        // +0x30: main town entrance
     // Has a primary town.
     b8 m_active;            // +0x3c
-    char m_opaque003d[3];              // +0x3d..+0x3f
+    u8 m_opaque003d[3];                // +0x3d..+0x3f
     // Graph distance turned into a randomized quest-zone priority that
     // penalizes immediately adjacent zones (ERmgQuestZoneScore in rmg.cpp).
     s32 m_questPlacementScore;         // +0x40
@@ -1717,7 +1717,7 @@ class TRmgGeneratorBase {
 public:
     // time() at construction; seeds rand() and is reported in the map
     // description.
-    long m_randomSeed;                                 // +0x004
+    time_t m_randomSeed;                               // +0x004
     s32 m_mapVersion;                                  // +0x008: ERmgMapVersion
     type_random_map m_map;                             // +0x00c
     TObjectTypeTable m_objectsTxt;                     // +0x024
@@ -1758,7 +1758,7 @@ public:
     // Player colour per template player number 1-8, or -1; entry 0 (zones
     // without a player) stays -1.
     s32 m_playerIndexMap[9];                          // +0x0ee0
-    char m_opaque0f04[0x20];                          // +0x0f04
+    u8 m_opaque0f04[0x20];                            // +0x0f04
     // Lobby town per player colour; eTownNeutral keeps the zone's random town.
     s32 m_townChoices[8];                             // +0x0f24
     // Counter for generated object ids; starts at 1.

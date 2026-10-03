@@ -121,7 +121,7 @@ class TRmgTerrainRule {
 public:
     b8 m_blendsWithOtherTerrain; // +0x04
     b8 m_allowsSeparatedNeighbours; // +0x05
-    char m_tailPadding[2];
+    u8 m_tailPadding[2];
 
     TRmgTerrainRule(b8 blendsWithOtherTerrain = false,
         b8 allowsSeparatedNeighbours = false)
@@ -150,7 +150,7 @@ struct TRmgTerrainPatternRange {
 struct TRmgTerrainPatternEntry {
     s32 m_transition;
     b8 m_special;
-    char m_padding[3];
+    u8 m_padding[3];
 };
 
 // Fixed transition table entry; carries flips instead of a special-frame flag.

@@ -1203,13 +1203,13 @@ VA(0x00532890, 0x104)
 MAC_ADDRESS(0x22f434, 0x1d4)
 void TRmgMapItem::write(TAbstractFile* outputFile)
 {
-    writeValue<char>(outputFile, m_tile.m_landType);
-    writeValue<char>(outputFile, m_tile.m_terrainFrame);
-    writeValue<char>(outputFile, m_tile.m_riverType);
-    writeValue<char>(outputFile, m_tile.m_riverFrame);
-    writeValue<char>(outputFile, m_tile.m_roadType);
-    writeValue<char>(outputFile, m_tileData.m_roadFrame);
-    char flags = 0;
+    writeValue<u8>(outputFile, m_tile.m_landType);
+    writeValue<u8>(outputFile, m_tile.m_terrainFrame);
+    writeValue<u8>(outputFile, m_tile.m_riverType);
+    writeValue<u8>(outputFile, m_tile.m_riverFrame);
+    writeValue<u8>(outputFile, m_tile.m_roadType);
+    writeValue<u8>(outputFile, m_tileData.m_roadFrame);
+    u8 flags = 0;
     if (m_tileData.m_terrainFlipX) flags |= RMG_TILE_TERRAIN_FLIP_X;
     if (m_tileData.m_terrainFlipY) flags |= RMG_TILE_TERRAIN_FLIP_Y;
     if (m_tileData.m_riverFlipX) flags |= RMG_TILE_RIVER_FLIP_X;
@@ -1217,7 +1217,7 @@ void TRmgMapItem::write(TAbstractFile* outputFile)
     if (m_tileData.m_roadFlipX) flags |= RMG_TILE_ROAD_FLIP_X;
     if (m_tileData.m_roadFlipY) flags |= RMG_TILE_ROAD_FLIP_Y;
     if (m_tileData.m_coastal) flags |= RMG_TILE_COASTAL;
-    writeValue<char>(outputFile, flags);
+    writeValue<u8>(outputFile, flags);
 }
 
 VA_COMPGEN(0x005329a0, 0x32, IMPLICIT_DTOR, TRmgTemplateZone)
@@ -1527,16 +1527,16 @@ void type_object::clearPlacementMarks()
 static inline void writeRmgMapPosition(
     TAbstractFile* outputFile, const TRmgMapPosition& position)
 {
-    writeValue<char>(outputFile, position.m_x);
-    writeValue<char>(outputFile, position.m_y);
-    writeValue<char>(outputFile, position.m_z);
+    writeValue<u8>(outputFile, position.m_x);
+    writeValue<u8>(outputFile, position.m_y);
+    writeValue<u8>(outputFile, position.m_z);
 }
 
 // Writes count zero bytes (at most 32). Kept a function argument; see
 // rmg-cleanup-review.md.
 static inline void writeRmgReservedBytes(TAbstractFile* outputFile, s32 count)
 {
-    char reserved[32];
+    u8 reserved[32];
     memset(reserved, 0, count);
     outputFile->write(reserved, count);
 }
@@ -1559,10 +1559,10 @@ void rmgMonsterObject::write(TAbstractFile* outputFile, s32 version)
         writeValue<s32>(outputFile, m_objectId);
     }
     writeValue<s16>(outputFile, m_count);
-    writeValue<char>(outputFile, m_disposition);
-    writeValue<char>(outputFile, 0);
-    writeValue<char>(outputFile, 0);
-    writeValue<char>(outputFile, 0);
+    writeValue<u8>(outputFile, m_disposition);
+    writeValue<u8>(outputFile, 0);
+    writeValue<u8>(outputFile, 0);
+    writeValue<u8>(outputFile, 0);
     writeRmgReservedBytes(outputFile, 2);
 }
 
@@ -1574,20 +1574,20 @@ void rmgTownObject::write(TAbstractFile* outputFile, s32 version)
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         writeValue<s32>(outputFile, m_objectId);
     }
-    writeValue<char>(outputFile, m_player);
-    writeValue<char>(outputFile, 0);
-    writeValue<char>(outputFile, 0);
-    writeValue<char>(outputFile, 0);
-    writeValue<char>(outputFile, 0);
-    writeValue<char>(outputFile, m_hasFort);
-    char spells[9];
+    writeValue<s8>(outputFile, m_player);
+    writeValue<u8>(outputFile, 0);
+    writeValue<u8>(outputFile, 0);
+    writeValue<u8>(outputFile, 0);
+    writeValue<u8>(outputFile, 0);
+    writeValue<b8>(outputFile, m_hasFort);
+    u8 spells[9];
     memset(spells, 0, sizeof(spells));
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE)
         outputFile->write(spells, sizeof(spells));
     outputFile->write(spells, sizeof(spells));
     writeValue<s32>(outputFile, 0);
     if (version >= RMG_MAP_SHADOW_OF_DEATH) {
-        writeValue<char>(outputFile, -1);
+        writeValue<s8>(outputFile, -1);
     }
     writeRmgReservedBytes(outputFile, 3);
 }
@@ -1597,7 +1597,7 @@ MAC_ADDRESS(0x230a1c, 0x78)
 void rmgOwnableObject::write(TAbstractFile* outputFile, s32 version)
 {
     type_object::write(outputFile, version);
-    writeValue<char>(outputFile, -1); // player
+    writeValue<s8>(outputFile, -1); // player
     writeRmgReservedBytes(outputFile, 3);
 }
 
@@ -1632,7 +1632,7 @@ MAC_ADDRESS(0x230acc, 0x50)
 void rmgArtifactObject::write(TAbstractFile* outputFile, s32 version)
 {
     type_object::write(outputFile, version);
-    writeValue<char>(outputFile, 0); // has custom treasure
+    writeValue<b8>(outputFile, 0); // has custom treasure
 }
 
 VA_COMPGEN(0x00533590, 0x21, SCALAR_DELETING_DTOR, rmgOwnableObject)
@@ -1642,7 +1642,7 @@ MAC_ADDRESS(0x230bb4, 0x78)
 void rmgResourceObject::write(TAbstractFile* outputFile, s32 version)
 {
     type_object::write(outputFile, version);
-    writeValue<char>(outputFile, 0); // has custom treasure
+    writeValue<b8>(outputFile, 0); // has custom treasure
     writeValue<s32>(outputFile, 0); // amount
     writeValue<s32>(outputFile, 0);
 }
@@ -1658,7 +1658,7 @@ static inline void writeRmgCreatureReward(
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE)
         writeValue<s16>(outputFile, creature);
     else
-        writeValue<char>(outputFile, creature);
+        writeValue<u8>(outputFile, creature);
     writeValue<s16>(outputFile, count);
 }
 
@@ -1667,23 +1667,23 @@ MAC_ADDRESS(0x230cac, 0x32c)
 void rmgBlackBoxObject::write(TAbstractFile* outputFile, s32 version)
 {
     type_object::write(outputFile, version);
-    writeValue<char>(outputFile, 0); // has custom treasure
+    writeValue<b8>(outputFile, 0); // has custom treasure
     writeValue<s32>(outputFile, m_experience);
     writeValue<s32>(outputFile, 0); // mana
-    writeValue<char>(outputFile, 0); // morale
-    writeValue<char>(outputFile, 0); // luck
+    writeValue<s8>(outputFile, 0); // morale
+    writeValue<s8>(outputFile, 0); // luck
     outputFile->write(m_resources, sizeof(m_resources));
     writeValue<s32>(outputFile, 0); // primary skills
-    writeValue<char>(outputFile, 0); // secondary skill count
-    writeValue<char>(outputFile, 0); // artifact count
-    writeValue<char>(outputFile, m_spells.size()); // spell count
+    writeValue<u8>(outputFile, 0); // secondary skill count
+    writeValue<u8>(outputFile, 0); // artifact count
+    writeValue<u8>(outputFile, m_spells.size()); // spell count
     for (u32 spellIndex = 0; spellIndex < m_spells.size(); ++spellIndex) {
-        writeValue<char>(outputFile, m_spells[spellIndex]);
+        writeValue<u8>(outputFile, m_spells[spellIndex]);
     }
     if (m_creatureType == CREATURE_NONE) {
-        writeValue<char>(outputFile, 0); // creature count
+        writeValue<u8>(outputFile, 0); // creature count
     } else {
-        writeValue<char>(outputFile, 1); // creature count
+        writeValue<u8>(outputFile, 1); // creature count
         writeRmgCreatureReward(outputFile, version, m_creatureType, m_creatureCount);
     }
     writeValue<s32>(outputFile, 0);
@@ -1759,25 +1759,25 @@ void rmgSeerHutObject::write(TAbstractFile* outputFile, s32 version)
 {
     type_object::write(outputFile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-        writeValue<char>(outputFile, QUEST_ARTIFACTS);
-        writeValue<char>(outputFile, 1); // artifact count
+        writeValue<u8>(outputFile, QUEST_ARTIFACTS);
+        writeValue<u8>(outputFile, 1); // artifact count
         writeValue<s16>(outputFile, m_artifact);
         writeValue<s32>(outputFile, -1); // deadline
         writeValue<s32>(outputFile, 0); // first visit length
         writeValue<s32>(outputFile, 0); // next visit length
         writeValue<s32>(outputFile, 0); // completion length
     } else {
-        writeValue<char>(outputFile, m_artifact);
+        writeValue<u8>(outputFile, m_artifact);
     }
     if (m_experience > 0) {
-        writeValue<char>(outputFile, eRewardExperience);
+        writeValue<u8>(outputFile, eRewardExperience);
         writeValue<s32>(outputFile, m_experience);
     } else if (m_creatureType != CREATURE_NONE) {
-        writeValue<char>(outputFile, eRewardCreature);
+        writeValue<u8>(outputFile, eRewardCreature);
         writeRmgCreatureReward(outputFile, version, m_creatureType, m_creatureCount);
     } else {
-        writeValue<char>(outputFile, eRewardResource);
-        writeValue<char>(outputFile, m_resourceType);
+        writeValue<u8>(outputFile, eRewardResource);
+        writeValue<u8>(outputFile, m_resourceType);
         writeValue<s32>(outputFile, m_resourceCount);
     }
     writeRmgReservedBytes(outputFile, 2);
@@ -1808,31 +1808,31 @@ void rmgHeroObject::write(TAbstractFile* outputFile, s32 version)
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         writeValue<s32>(outputFile, m_objectId);
     }
-    writeValue<char>(outputFile, -1); // owner
-    writeValue<char>(outputFile, m_heroIndex);
-    writeValue<char>(outputFile, 0); // custom name
+    writeValue<s8>(outputFile, -1); // owner
+    writeValue<u8>(outputFile, m_heroIndex);
+    writeValue<b8>(outputFile, 0); // custom name
     if (version >= RMG_MAP_SHADOW_OF_DEATH) {
-        writeValue<char>(outputFile, m_experience != 0); // custom experience
+        writeValue<b8>(outputFile, m_experience != 0); // custom experience
         if (m_experience != 0) {
             writeValue<s32>(outputFile, m_experience);
         }
     } else {
         writeValue<s32>(outputFile, m_experience);
     }
-    writeValue<char>(outputFile, 0); // custom portrait
-    writeValue<char>(outputFile, 0); // custom secondary skills
-    writeValue<char>(outputFile, 0); // custom armies
-    writeValue<char>(outputFile, 0); // group formation
-    writeValue<char>(outputFile, 0); // custom artifacts
-    writeValue<char>(outputFile, -1); // patrol radius
+    writeValue<b8>(outputFile, 0); // custom portrait
+    writeValue<b8>(outputFile, 0); // custom secondary skills
+    writeValue<b8>(outputFile, 0); // custom armies
+    writeValue<u8>(outputFile, 0); // group formation
+    writeValue<b8>(outputFile, 0); // custom artifacts
+    writeValue<s8>(outputFile, -1); // patrol radius
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-        writeValue<char>(outputFile, 0); // custom biography
-        writeValue<char>(outputFile, -1); // sex
+        writeValue<b8>(outputFile, 0); // custom biography
+        writeValue<s8>(outputFile, -1); // sex
         if (version >= RMG_MAP_SHADOW_OF_DEATH) {
-            writeValue<char>(outputFile, 0); // custom spells
-            writeValue<char>(outputFile, 0); // custom primary skills
+            writeValue<b8>(outputFile, 0); // custom spells
+            writeValue<b8>(outputFile, 0); // custom primary skills
         } else {
-            writeValue<char>(outputFile, -2); // spell
+            writeValue<s8>(outputFile, -2); // spell
         }
     }
     writeRmgReservedBytes(outputFile, 16);
@@ -1843,8 +1843,8 @@ MAC_ADDRESS(0x2319ac, 0xbc)
 void rmgScholarObject::write(TAbstractFile* outputFile, s32 version)
 {
     type_object::write(outputFile, version);
-    writeValue<char>(outputFile, -1); // ScholarAwards; -1 picks one at random
-    writeValue<char>(outputFile, 0); // award value
+    writeValue<s8>(outputFile, -1); // ScholarAwards; -1 picks one at random
+    writeValue<u8>(outputFile, 0); // award value
     writeValue<s32>(outputFile, 0);
     writeRmgReservedBytes(outputFile, 2);
 }
@@ -1854,9 +1854,9 @@ MAC_ADDRESS(0x231aa0, 0x9c)
 void rmgShrineObject::write(TAbstractFile* outputFile, s32 version)
 {
     type_object::write(outputFile, version);
-    writeValue<char>(outputFile, SPELL_NONE);
+    writeValue<s8>(outputFile, SPELL_NONE);
     writeRmgReservedBytes(outputFile, 2);
-    writeValue<char>(outputFile, 0); // reserved byte
+    writeValue<u8>(outputFile, 0); // reserved byte
 }
 
 VA(0x00533ff0, 0xc2)
@@ -1864,10 +1864,10 @@ MAC_ADDRESS(0x231b84, 0xc8)
 void rmgSpellScrollObject::write(TAbstractFile* outputFile, s32 version)
 {
     type_object::write(outputFile, version);
-    writeValue<char>(outputFile, 0); // message
-    writeValue<char>(outputFile, m_spell);
+    writeValue<b8>(outputFile, 0); // message
+    writeValue<u8>(outputFile, m_spell);
     writeRmgReservedBytes(outputFile, 2);
-    writeValue<char>(outputFile, 0);
+    writeValue<u8>(outputFile, 0);
 }
 
 // Witch hut skill mask: the first 16 secondary skills except Navigation and
@@ -4234,8 +4234,8 @@ static inline void insetRmgIslandBoundaryPoint(
     TRmgVector delta(center.m_x - point.m_x, center.m_y - point.m_y);
     s32 length = delta.length();
     if (length > 0) {
-        long displacement = std::max<long>(4, length / 4);
-        displacement = std::min<long>(displacement, length / 2);
+        s32 displacement = std::max<s32>(4, length / 4);
+        displacement = std::min<s32>(displacement, length / 2);
         delta = delta * displacement / length;
         point += delta;
     }
@@ -8056,10 +8056,10 @@ b8 type_random_map_generator::generate()
         return false;
     u32 selected = rand() % m_templates.size();
     m_templateName = m_templates[selected]->m_name;
-    char humanSlots[RMG_PLAYER_COUNT];
+    b8 humanSlots[RMG_PLAYER_COUNT];
     s32 humanSlotByte;
     MEMSET(humanSlots, 0, sizeof(humanSlots), humanSlotByte);
-    char allSlots[RMG_PLAYER_COUNT];
+    b8 allSlots[RMG_PLAYER_COUNT];
     s32 allSlotByte;
     MEMSET(allSlots, 0, sizeof(allSlots), allSlotByte);
     for (u32 zone = 0; zone < m_templates[selected]->m_zones.size(); ++zone) {
@@ -8190,11 +8190,11 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 {
     writeValue<s32>(outfile, getSerializedMapVersion());
 
-    writeValue<char>(outfile, 1); // playable
+    writeValue<b8>(outfile, 1); // playable
 
     writeValue<s32>(outfile, m_map.getWidth());
 
-    writeValue<char>(outfile, m_map.m_numberLevels > 1);
+    writeValue<b8>(outfile, m_map.m_numberLevels > 1);
 
     std::string mapName(
         DATA_COMPGEN(0x00682900, rmgMapName, "Random Map"));
@@ -8263,9 +8263,9 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
     writeString(outfile, description);
 
-    writeValue<char>(outfile, 1); // difficulty
+    writeValue<u8>(outfile, 1); // difficulty
     if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
-        writeValue<char>(outfile, 0); // hero level limit
+        writeValue<u8>(outfile, 0); // hero level limit
     }
 
     b8 canBeHuman[RMG_PLAYER_COUNT];
@@ -8319,52 +8319,52 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
          ++serializedPlayer) {
         writeValue<char>(outfile, canBeHuman[serializedPlayer]);
 
-        writeValue<char>(outfile, canBeHuman[serializedPlayer] || canBeComputer[serializedPlayer]);
+        writeValue<b8>(outfile, canBeHuman[serializedPlayer] || canBeComputer[serializedPlayer]);
 
-        writeValue<char>(outfile, 0); // AI strategy
+        writeValue<u8>(outfile, 0); // AI strategy
 
         if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
-            writeValue<char>(outfile, 0); // byte the reader skips
+            writeValue<u8>(outfile, 0); // byte the reader skips
         }
 
         if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
             writeValue<u16>(outfile, legalAlignments[serializedPlayer]);
         } else {
-            writeValue<char>(outfile, legalAlignments[serializedPlayer]);
+            writeValue<u8>(outfile, legalAlignments[serializedPlayer]);
         }
 
-        writeValue<char>(outfile, 0); // random alignment
+        writeValue<b8>(outfile, 0); // random alignment
 
         if (!canBeHuman[serializedPlayer]
             && !canBeComputer[serializedPlayer]) {
-            writeValue<char>(outfile, 0); // no main town
+            writeValue<b8>(outfile, 0); // no main town
         } else {
             if (canBeHuman[serializedPlayer])
                 ++m_humanPlayerCount;
             else
                 ++m_computerPlayerCount;
 
-            writeValue<char>(outfile, 1); // has main town
+            writeValue<b8>(outfile, 1); // has main town
 
             if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
-                writeValue<char>(outfile, 1); // generate hero there
-                writeValue<char>(outfile, eTownNeutral); // main town type
+                writeValue<b8>(outfile, 1); // generate hero there
+                writeValue<s8>(outfile, eTownNeutral); // main town type
             }
 
             writeRmgMapPosition(outfile, mainTowns[serializedPlayer]);
         }
 
-        writeValue<char>(outfile, 0); // random hero
-        writeValue<char>(outfile, heroIdNone); // main custom hero
+        writeValue<b8>(outfile, 0); // random hero
+        writeValue<s8>(outfile, heroIdNone); // main custom hero
 
         if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
-            writeValue<char>(outfile, 0); // placeholder heroes
+            writeValue<u8>(outfile, 0); // placeholder heroes
             writeValue<s32>(outfile, 0); // hero count
         }
     }
 
-    writeValue<char>(outfile, -1); // no special victory condition
-    writeValue<char>(outfile, -1); // no special loss condition
+    writeValue<s8>(outfile, -1); // no special victory condition
+    writeValue<s8>(outfile, -1); // no special loss condition
 
     if (!m_computerTeamCount)
         m_computerTeamCount = m_computerPlayerCount;
@@ -8375,7 +8375,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
     if (m_humanTeamCount >= m_humanPlayerCount
         && m_computerTeamCount >= m_computerPlayerCount) {
-        writeValue<char>(outfile, 0); // no teams
+        writeValue<u8>(outfile, 0); // no teams
     } else {
         char teams[RMG_PLAYER_COUNT];
         memset(teams, 0, sizeof(teams));
@@ -8398,7 +8398,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
             canBeComputer,
             teams);
 
-        writeValue<char>(outfile, m_humanTeamCount + m_computerTeamCount);
+        writeValue<u8>(outfile, m_humanTeamCount + m_computerTeamCount);
         outfile->write(teams, sizeof(teams));
     }
 
@@ -8420,7 +8420,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         writeValue<s32>(outfile, 0);
     }
     if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
-        writeValue<char>(outfile, 0);
+        writeValue<u8>(outfile, 0);
     }
 
     writeRmgReservedBytes(outfile, 31);
@@ -8454,7 +8454,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         writePackedBits(outfile, disabledSkills);
 
         for (s32 hero = 0; hero < RMG_HERO_COUNT; ++hero) {
-            writeValue<char>(outfile, 0);
+            writeValue<u8>(outfile, 0);
         }
     }
 }
@@ -8586,8 +8586,8 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
     writePackedBits(outfile, prototype->m_recommendedTerrainMask);
     writeValue<s32>(outfile, prototype->getObjectType());
     writeValue<s32>(outfile, prototype->getSubtype());
-    writeValue<char>(outfile, prototype->m_slotCategory);
-    writeValue<char>(outfile, prototype->isUnderlay());
+    writeValue<u8>(outfile, prototype->m_slotCategory);
+    writeValue<b8>(outfile, prototype->isUnderlay());
     s32 reserved[4];
     memset(reserved, 0, sizeof(reserved));
     outfile->write(reserved, sizeof(reserved));
