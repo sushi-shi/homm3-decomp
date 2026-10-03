@@ -42,7 +42,7 @@ enum ERmgMapLevel {
     RMG_UNDERGROUND_LEVEL = 1
 };
 
-// Template column 55: zone monster strength letter n, w, a or s.
+// Zone monster strength, from the template letter n, w, a or s.
 enum ERmgZoneMonsterStrength {
     RMG_ZONE_MONSTERS_NONE = 0,
     RMG_ZONE_MONSTERS_WEAK = 2,
@@ -370,6 +370,66 @@ static bool isRmgTemplateFieldSet(const char* value)
 // rmg.txt and rand_trn.txt rows start after three header rows.
 enum ERmgSpreadsheetLayout {
     RMG_FIRST_DATA_ROW = 3
+};
+
+// rmg.txt columns. A template's first row holds its name and size range;
+// any row may also hold one zone and one connection.
+enum ERmgTemplateColumn {
+    RMG_TEMPLATE_COLUMN_NAME = 0,
+    RMG_TEMPLATE_COLUMN_MINIMUM_SIZE = 1,
+    RMG_TEMPLATE_COLUMN_MAXIMUM_SIZE = 2,
+    RMG_TEMPLATE_COLUMN_ZONE_INDEX = 3,
+    RMG_TEMPLATE_COLUMN_KIND_HUMAN = 4,
+    RMG_TEMPLATE_COLUMN_KIND_COMPUTER = 5,
+    RMG_TEMPLATE_COLUMN_KIND_TREASURE = 6,
+    RMG_TEMPLATE_COLUMN_KIND_JUNCTION = 7,
+    RMG_TEMPLATE_COLUMN_SIZE = 8,
+    RMG_TEMPLATE_COLUMN_MINIMUM_HUMAN_PLAYERS = 9,
+    RMG_TEMPLATE_COLUMN_MAXIMUM_HUMAN_PLAYERS = 10,
+    RMG_TEMPLATE_COLUMN_MINIMUM_PLAYERS = 11,
+    RMG_TEMPLATE_COLUMN_MAXIMUM_PLAYERS = 12,
+    RMG_TEMPLATE_COLUMN_PLAYER_INDEX = 13,
+    RMG_TEMPLATE_COLUMN_PLAYER_BASIC_COUNT = 14,
+    RMG_TEMPLATE_COLUMN_PLAYER_CASTLE_COUNT = 15,
+    RMG_TEMPLATE_COLUMN_PLAYER_BASIC_DENSITY = 16,
+    RMG_TEMPLATE_COLUMN_PLAYER_CASTLE_DENSITY = 17,
+    RMG_TEMPLATE_COLUMN_NEUTRAL_BASIC_COUNT = 18,
+    RMG_TEMPLATE_COLUMN_NEUTRAL_CASTLE_COUNT = 19,
+    RMG_TEMPLATE_COLUMN_NEUTRAL_BASIC_DENSITY = 20,
+    RMG_TEMPLATE_COLUMN_NEUTRAL_CASTLE_DENSITY = 21,
+    RMG_TEMPLATE_COLUMN_NEUTRAL_TOWNS_MATCH_ZONE = 22,
+    RMG_TEMPLATE_COLUMN_ALLOWED_TOWNS = 23,      // one per town type
+    RMG_TEMPLATE_COLUMN_MINE_COUNTS = 32,        // one per resource
+    RMG_TEMPLATE_COLUMN_MINE_DENSITIES = 39,     // one per resource
+    RMG_TEMPLATE_COLUMN_USE_NATIVE_TERRAIN = 46,
+    RMG_TEMPLATE_COLUMN_ALLOWED_TERRAIN = 47,    // one per land terrain
+    RMG_TEMPLATE_COLUMN_MONSTER_STRENGTH = 55,
+    RMG_TEMPLATE_COLUMN_GUARDS_MATCH_ZONE = 56,
+    RMG_TEMPLATE_COLUMN_ALLOWED_MONSTERS = 57,
+    // Three columns per treasure tier.
+    RMG_TEMPLATE_COLUMN_TREASURE_MINIMUM = 67,
+    RMG_TEMPLATE_COLUMN_TREASURE_MAXIMUM = 68,
+    RMG_TEMPLATE_COLUMN_TREASURE_DENSITY = 69,
+    RMG_TEMPLATE_COLUMN_LAST_TREASURE_DENSITY = 75,
+    RMG_TEMPLATE_COLUMN_CONNECTION_FIRST_ZONE = 76,
+    RMG_TEMPLATE_COLUMN_CONNECTION_SECOND_ZONE = 77,
+    RMG_TEMPLATE_COLUMN_CONNECTION_VALUE = 78,
+    RMG_TEMPLATE_COLUMN_CONNECTION_UNGUARDED = 79,            // "Wide"
+    RMG_TEMPLATE_COLUMN_CONNECTION_PLACE_BORDER_OBJECTS = 80, // "Border Guard"
+    RMG_TEMPLATE_COLUMN_CONNECTION_MINIMUM_HUMAN_PLAYERS = 81,
+    RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_HUMAN_PLAYERS = 82,
+    RMG_TEMPLATE_COLUMN_CONNECTION_MINIMUM_PLAYERS = 83,
+    RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_PLAYERS = 84
+};
+
+// rand_trn.txt columns. Neighbour scores take one column per rule: all
+// adjacent scores, then all blocked scores.
+enum ERmgPlacementRuleColumn {
+    RMG_PLACEMENT_COLUMN_OBJECT_TYPE = 3,
+    RMG_PLACEMENT_COLUMN_SUBTYPE = 4,
+    RMG_PLACEMENT_COLUMN_TERRAIN = 6,
+    RMG_PLACEMENT_COLUMN_TERRAIN_SCORES = 7,     // one per terrain
+    RMG_PLACEMENT_COLUMN_NEIGHBOUR_SCORES = 16
 };
 
 } // namespace
@@ -2581,13 +2641,13 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
             delete m_objectPrototypes[type][prototype];
 }
 
-// Neighbour scores start at column 16, after the type and terrain scores.
 static inline void readRmgPlacementScores(std::vector<s32>& scores,
     const TSpreadsheetResource::TStringVector& fields, s32 precedingScores, s32 count)
 {
     scores.resize(count, 0);
     for (s32 index = 0; index < count; ++index)
-        scores[index] = atoi(fields[index + precedingScores + 16]);
+        scores[index] = atoi(
+            fields[index + precedingScores + RMG_PLACEMENT_COLUMN_NEIGHBOUR_SCORES]);
 }
 
 // Reads rand_trn.txt and binds each prototype to the last rule matching its
@@ -2609,16 +2669,19 @@ void TRmgGeneratorBase::readObjectPlacementRules()
         TRmgObjectPlacementRule rule;
         rule.m_index = row - RMG_FIRST_DATA_ROW;
         TAdventureObjectType ruleObjectType =
-            H3_ENUM_DECODE(TAdventureObjectType, atoi(values[3]));
-        s32 ruleSubtype = atoi(values[4]);
-        TTerrainType ruleTerrain = H3_ENUM_DECODE(TTerrainType, atoi(values[6]));
+            H3_ENUM_DECODE(TAdventureObjectType,
+                atoi(values[RMG_PLACEMENT_COLUMN_OBJECT_TYPE]));
+        s32 ruleSubtype = atoi(values[RMG_PLACEMENT_COLUMN_SUBTYPE]);
+        TTerrainType ruleTerrain = H3_ENUM_DECODE(TTerrainType,
+            atoi(values[RMG_PLACEMENT_COLUMN_TERRAIN]));
         objectTypes.push_back(ruleObjectType);
         terrains.push_back(ruleTerrain);
         subtypes.push_back(ruleSubtype);
         TTerrainType terrain;
         for (terrain = eTerrainDirt; terrain <= eTerrainWater;
              terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1))
-            rule.m_terrainScores[terrain] = atoi(values[terrain + 7]);
+            rule.m_terrainScores[terrain] =
+                atoi(values[terrain + RMG_PLACEMENT_COLUMN_TERRAIN_SCORES]);
         for (; terrain < 10; terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1))
             rule.m_terrainScores[terrain] = RMG_PLACEMENT_INVALID;
         m_placementRules.push_back(rule);
@@ -3092,18 +3155,22 @@ static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
 {
     for (s32 connectionRow = firstRow; connectionRow < endRow; ++connectionRow) {
         const TSpreadsheetResource::TStringVector& fields = sheet->getRow(connectionRow);
-        if (fields.size() > 84 && isRmgTemplateFieldSet(fields[76])
-            && fields[77][0]) {
-            s32 firstZone = atoi(fields[76]);
-            s32 secondZone = atoi(fields[77]);
+        if (fields.size() > RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_PLAYERS
+            && isRmgTemplateFieldSet(fields[RMG_TEMPLATE_COLUMN_CONNECTION_FIRST_ZONE])
+            && fields[RMG_TEMPLATE_COLUMN_CONNECTION_SECOND_ZONE][0]) {
+            s32 firstZone = atoi(fields[RMG_TEMPLATE_COLUMN_CONNECTION_FIRST_ZONE]);
+            s32 secondZone = atoi(fields[RMG_TEMPLATE_COLUMN_CONNECTION_SECOND_ZONE]);
             TRmgTemplateZone* first = mapTemplate->findZone(firstZone);
             TRmgTemplateZone* second = mapTemplate->findZone(secondZone);
             if (first && second) {
                 TRmgZoneConnection connection;
-                connection.m_value = atoi(fields[78]);
-                connection.m_unguarded = isRmgTemplateFieldSet(fields[79]);
-                connection.m_placeBorderObjects = isRmgTemplateFieldSet(fields[80]);
-                readRmgTemplatePlayerLimits(connection, fields, 81);
+                connection.m_value = atoi(fields[RMG_TEMPLATE_COLUMN_CONNECTION_VALUE]);
+                connection.m_unguarded = isRmgTemplateFieldSet(
+                    fields[RMG_TEMPLATE_COLUMN_CONNECTION_UNGUARDED]);
+                connection.m_placeBorderObjects = isRmgTemplateFieldSet(
+                    fields[RMG_TEMPLATE_COLUMN_CONNECTION_PLACE_BORDER_OBJECTS]);
+                readRmgTemplatePlayerLimits(connection, fields,
+                    RMG_TEMPLATE_COLUMN_CONNECTION_MINIMUM_HUMAN_PLAYERS);
                 connection.m_connected = false;
                 if (allowsRmgTemplatePlayerCounts(connection, humanPlayers, computerPlayers))
                     appendRmgTwoWayConnection(first, second, connection);
@@ -3140,18 +3207,18 @@ void type_random_map_generator::loadTemplates()
         mapSize = max(mapSize / 2, 1);
     for (; row < sheet->getNumberOfRows();) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
-        // Retail bug: a two-field row still reads field [2].
-        if (values.size() < 2) {
+        // Retail bug: a two-field row still reads the maximum size.
+        if (values.size() < RMG_TEMPLATE_COLUMN_MAXIMUM_SIZE) {
             ++row;
             continue;
         }
         TRmgTemplate* mapTemplate = new TRmgTemplate;
-        mapTemplate->m_minimumSize = atoi(values[1]);
-        mapTemplate->m_maximumSize = atoi(values[2]);
-        mapTemplate->m_name = values[0];
+        mapTemplate->m_minimumSize = atoi(values[RMG_TEMPLATE_COLUMN_MINIMUM_SIZE]);
+        mapTemplate->m_maximumSize = atoi(values[RMG_TEMPLATE_COLUMN_MAXIMUM_SIZE]);
+        mapTemplate->m_name = values[RMG_TEMPLATE_COLUMN_NAME];
         s32 endRow = row + 1;
         while (endRow < sheet->getNumberOfRows()
-            && !isRmgTemplateFieldSet(sheet->getRow(endRow)[0]))
+            && !isRmgTemplateFieldSet(sheet->getRow(endRow)[RMG_TEMPLATE_COLUMN_NAME]))
             ++endRow;
         bool accepted = mapSize >= mapTemplate->m_minimumSize
             && mapSize <= mapTemplate->m_maximumSize;
@@ -3184,37 +3251,48 @@ void readRmgTemplateZones(
 {
     for (s32 row = firstRow; row < endRow; ++row) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
-        // Retail bug: a three-field row reads values[3] before the full
+        // Retail bug: a three-field row reads the zone index before the full
         // row-length check.
-        if (values.size() >= 3 && isRmgTemplateFieldSet(values[3]) &&
-            values.size() > 75) {
+        if (values.size() >= RMG_TEMPLATE_COLUMN_ZONE_INDEX
+            && isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_ZONE_INDEX])
+            && values.size() > RMG_TEMPLATE_COLUMN_LAST_TREASURE_DENSITY) {
 
             TRmgTemplateZone* slot = new TRmgTemplateZone;
-            slot->m_zoneIndex = atoi(values[3]);
+            slot->m_zoneIndex = atoi(values[RMG_TEMPLATE_COLUMN_ZONE_INDEX]);
             slot->m_kind = RMG_TEMPLATE_TREASURE;
-            if (isRmgTemplateFieldSet(values[4]))
+            if (isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_KIND_HUMAN]))
                 slot->m_kind = RMG_TEMPLATE_HUMAN;
-            if (isRmgTemplateFieldSet(values[5]))
+            if (isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_KIND_COMPUTER]))
                 slot->m_kind = RMG_TEMPLATE_COMPUTER;
-            if (isRmgTemplateFieldSet(values[6]))
+            if (isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_KIND_TREASURE]))
                 slot->m_kind = RMG_TEMPLATE_TREASURE;
-            if (isRmgTemplateFieldSet(values[7]))
+            if (isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_KIND_JUNCTION]))
                 slot->m_kind = RMG_TEMPLATE_JUNCTION;
-            slot->m_size = atoi(values[8]);
-            readRmgTemplatePlayerLimits(*slot, values, 9);
+            slot->m_size = atoi(values[RMG_TEMPLATE_COLUMN_SIZE]);
+            readRmgTemplatePlayerLimits(*slot, values,
+                RMG_TEMPLATE_COLUMN_MINIMUM_HUMAN_PLAYERS);
             if (!allowsRmgTemplatePlayerCounts(*slot, humanPlayers, computerPlayers)) {
                 delete slot;
             } else {
-                slot->m_playerIndex = atoi(values[13]) - 1;
-                slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT] = atoi(values[14]);
-                slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT] = atoi(values[15]);
-                slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_DENSITY] = atoi(values[16]);
-                slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_DENSITY] = atoi(values[17]);
-                slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT] = atoi(values[18]);
-                slot->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_COUNT] = atoi(values[19]);
-                slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_DENSITY] = atoi(values[20]);
-                slot->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_DENSITY] = atoi(values[21]);
-                slot->m_neutralTownsMatchZone = isRmgTemplateFieldSet(values[22]);
+                slot->m_playerIndex = atoi(values[RMG_TEMPLATE_COLUMN_PLAYER_INDEX]) - 1;
+                slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT] =
+                    atoi(values[RMG_TEMPLATE_COLUMN_PLAYER_BASIC_COUNT]);
+                slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT] =
+                    atoi(values[RMG_TEMPLATE_COLUMN_PLAYER_CASTLE_COUNT]);
+                slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_DENSITY] =
+                    atoi(values[RMG_TEMPLATE_COLUMN_PLAYER_BASIC_DENSITY]);
+                slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_DENSITY] =
+                    atoi(values[RMG_TEMPLATE_COLUMN_PLAYER_CASTLE_DENSITY]);
+                slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT] =
+                    atoi(values[RMG_TEMPLATE_COLUMN_NEUTRAL_BASIC_COUNT]);
+                slot->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_COUNT] =
+                    atoi(values[RMG_TEMPLATE_COLUMN_NEUTRAL_CASTLE_COUNT]);
+                slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_DENSITY] =
+                    atoi(values[RMG_TEMPLATE_COLUMN_NEUTRAL_BASIC_DENSITY]);
+                slot->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_DENSITY] =
+                    atoi(values[RMG_TEMPLATE_COLUMN_NEUTRAL_CASTLE_DENSITY]);
+                slot->m_neutralTownsMatchZone =
+                    isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_NEUTRAL_TOWNS_MATCH_ZONE]);
                 // RoE maps have no Conflux.
                 s32 townCount;
                 if (mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE)
@@ -3225,42 +3303,52 @@ void readRmgTemplateZones(
                 }
                 while (townCount--)
                     slot->m_allowedTowns[townCount] =
-                        isRmgTemplateFieldSet(values[23 + townCount]);
+                        isRmgTemplateFieldSet(
+                            values[RMG_TEMPLATE_COLUMN_ALLOWED_TOWNS + townCount]);
                 for (s32 resource = 0; resource < NUM_RESOURCES; ++resource) {
-                    slot->m_mineCounts[resource] = atoi(values[32 + resource]);
-                    slot->m_mineDensities[resource] = atoi(values[39 + resource]);
+                    slot->m_mineCounts[resource] =
+                        atoi(values[RMG_TEMPLATE_COLUMN_MINE_COUNTS + resource]);
+                    slot->m_mineDensities[resource] =
+                        atoi(values[RMG_TEMPLATE_COLUMN_MINE_DENSITIES + resource]);
                 }
-                slot->m_useNativeTerrain = isRmgTemplateFieldSet(values[46]);
+                slot->m_useNativeTerrain =
+                    isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_USE_NATIVE_TERRAIN]);
                 b8 anyTerrain = false;
                 for (s32 terrain = 0; terrain < eTerrainWater; ++terrain) {
                     slot->m_allowedTerrain[terrain] =
-                        isRmgTemplateFieldSet(values[47 + terrain]);
+                        isRmgTemplateFieldSet(
+                            values[RMG_TEMPLATE_COLUMN_ALLOWED_TERRAIN + terrain]);
                     if (slot->m_allowedTerrain[terrain])
                         anyTerrain = true;
                 }
                 if (!anyTerrain)
                     slot->m_allowedTerrain[eTerrainDirt] = true;
-                switch (tolower(values[55][0])) {
+                switch (tolower(values[RMG_TEMPLATE_COLUMN_MONSTER_STRENGTH][0])) {
                 case 'n': slot->m_monsterStrength = RMG_ZONE_MONSTERS_NONE; break;
                 case 'w': slot->m_monsterStrength = RMG_ZONE_MONSTERS_WEAK; break;
                 case 's': slot->m_monsterStrength = RMG_ZONE_MONSTERS_STRONG; break;
                 case 'a': slot->m_monsterStrength = RMG_ZONE_MONSTERS_AVERAGE; break;
                 default: slot->m_monsterStrength = RMG_ZONE_MONSTERS_AVERAGE; break;
                 }
-                slot->m_guardsMatchZone = isRmgTemplateFieldSet(values[56]);
+                slot->m_guardsMatchZone =
+                    isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_GUARDS_MATCH_ZONE]);
                 // Neutral, then one slot per town type.
                 for (s32 monster = 0; monster < TOWN_TYPE_COUNT + 1; ++monster)
                     slot->m_allowedMonsters[monster] =
-                        isRmgTemplateFieldSet(values[57 + monster]);
+                        isRmgTemplateFieldSet(
+                            values[RMG_TEMPLATE_COLUMN_ALLOWED_MONSTERS + monster]);
                 // Retail bug: TOWN_CONFLUX is the Conflux slot of m_allowedTowns,
                 // but monster slots are offset by one, so RoE maps disallow
                 // Fortress guards instead.
                 if (mapVersion < RMG_MAP_ARMAGEDDONS_BLADE)
                     slot->m_allowedMonsters[TOWN_CONFLUX] = false;
                 for (s32 treasure = 0; treasure < 3; ++treasure) {
-                    slot->m_treasure[treasure].m_minimum = atoi(values[67 + 3 * treasure]);
-                    slot->m_treasure[treasure].m_maximum = atoi(values[68 + 3 * treasure]);
-                    slot->m_treasure[treasure].m_density = atoi(values[69 + 3 * treasure]);
+                    slot->m_treasure[treasure].m_minimum =
+                        atoi(values[RMG_TEMPLATE_COLUMN_TREASURE_MINIMUM + 3 * treasure]);
+                    slot->m_treasure[treasure].m_maximum =
+                        atoi(values[RMG_TEMPLATE_COLUMN_TREASURE_MAXIMUM + 3 * treasure]);
+                    slot->m_treasure[treasure].m_density =
+                        atoi(values[RMG_TEMPLATE_COLUMN_TREASURE_DENSITY + 3 * treasure]);
                 }
                 mapTemplate->m_zones.push_back(slot);
             }
