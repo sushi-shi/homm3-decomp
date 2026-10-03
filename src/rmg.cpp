@@ -1253,14 +1253,14 @@ MAC_ADDRESS(0x22f6c8, 0xb4)
 s32 TRmgTemplateZone::selectAllowedTown()
 {
     s32 allowedTownCount = 0;
-    for (s32 town = 0; town < TOWN_TYPE_COUNT; ++town) {
+    for (s32 town = TOWN_CASTLE; town < TOWN_TYPE_COUNT; ++town) {
         if (m_allowedTowns[town])
             ++allowedTownCount;
     }
     if (!allowedTownCount)
         return eTownNeutral;
     s32 selectedIndex = rand() % allowedTownCount;
-    for (town = 0; town < TOWN_TYPE_COUNT; ++town) {
+    for (town = TOWN_CASTLE; town < TOWN_TYPE_COUNT; ++town) {
         if (m_allowedTowns[town] && --selectedIndex < 0)
             return town;
     }
@@ -2076,7 +2076,7 @@ type_object* type_black_box_spells_def::generate(TRmgObjectPropertiesRef* proper
 {
     rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
     for (s32 level = m_maximumLevel; level >= m_minimumLevel; --level) {
-        for (long spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (long spell = SPELL_SUMMON_BOAT; spell < hero::NUM_SPELLS; ++spell) {
             if (!isRmgSpellDisabledByDefault(spell)
                 && g_spellTraits[spell].m_level == level
                 && (g_spellTraits[spell].m_school & m_schoolMask))
@@ -2273,12 +2273,12 @@ type_object* type_spell_scroll_def::generate(TRmgObjectPropertiesRef* properties
     // one eligible spell must exist.
     s32 eligibleSpellCount = 0;
     s32 spell;
-    for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+    for (spell = SPELL_SUMMON_BOAT; spell < hero::NUM_SPELLS; ++spell) {
         if (isRmgScrollSpell(spell, m_spellLevel))
             ++eligibleSpellCount;
     }
     s32 selectedIndex = rand() % eligibleSpellCount;
-    for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+    for (spell = SPELL_SUMMON_BOAT; spell < hero::NUM_SPELLS; ++spell) {
         if (isRmgScrollSpell(spell, m_spellLevel)) {
             if (selectedIndex-- <= 0)
                 break;
@@ -2691,7 +2691,7 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
 {
     for (u32 object = 0; object < m_objects.size(); ++object)
         delete m_objects[object];
-    for (s32 type = 0; type < ADVENTURE_OBJECT_TRAIT_COUNT; ++type)
+    for (s32 type = NOTHING; type < ADVENTURE_OBJECT_TRAIT_COUNT; ++type)
         for (u32 prototype = 0; prototype < m_objectPrototypes[type].size(); ++prototype)
             delete m_objectPrototypes[type][prototype];
 }
@@ -2869,7 +2869,7 @@ s32 TRmgGeneratorBase::scoreObjectPlacement(
     TRmgObjectPlacementRule* rule = properties->m_placementRule;
     s32 score = 0;
     b8 hasPositiveTerrain = false;
-    for (s32 terrain = 0; terrain < 10; ++terrain) {
+    for (s32 terrain = eTerrainDirt; terrain < 10; ++terrain) {
         if (terrainSeen[terrain]) {
             score += rule->m_terrainScores[terrain];
             if (rule->m_terrainScores[terrain] > 0)
@@ -3123,7 +3123,7 @@ void TRmgGeneratorBase::decorateMap()
 static inline void initializeRmgObjectLimits(s32* limits,
     const TRmgObjectLimit* overrides, s32 count)
 {
-    for (s32 objectType = 0; objectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++objectType)
+    for (s32 objectType = NOTHING; objectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++objectType)
         limits[objectType] = 32000;
     while (count--)
         limits[overrides[count].m_objectType] = overrides[count].m_limit;
@@ -3374,7 +3374,7 @@ void readRmgTemplateZones(
                     slot->m_allowedTowns[townCount] =
                         isRmgTemplateFieldSet(
                             values[RMG_TEMPLATE_COLUMN_ALLOWED_TOWNS + townCount]);
-                for (s32 resource = 0; resource < NUM_RESOURCES; ++resource) {
+                for (s32 resource = WOOD; resource < NUM_RESOURCES; ++resource) {
                     slot->m_mineCounts[resource] =
                         atoi(values[RMG_TEMPLATE_COLUMN_MINE_COUNTS + resource]);
                     slot->m_mineDensities[resource] =
@@ -8573,7 +8573,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
     // Combination artifacts, artifact 127 and Armageddon's Blade are disabled.
     std::bitset<ARTIFACT_COUNT> disabledArtifacts;
-    for (s32 artifactIndex = 0; artifactIndex < ARTIFACT_COUNT; ++artifactIndex) {
+    for (s32 artifactIndex = ARTIFACT_SPELLBOOK; artifactIndex < ARTIFACT_COUNT; ++artifactIndex) {
         disabledArtifacts[artifactIndex] =
             g_artifactTraits[artifactIndex].m_comboType != -1;
     }
@@ -8663,7 +8663,7 @@ b8 type_random_map_generator::writeMap(TAbstractFile* outfile)
                 ++item;
             }
     s32 prototypeCount = 2;
-    for (s32 type = 0; type < ADVENTURE_OBJECT_TRAIT_COUNT; ++type)
+    for (s32 type = NOTHING; type < ADVENTURE_OBJECT_TRAIT_COUNT; ++type)
         for (u32 index = 0; index < m_objectPrototypes[type].size(); ++index) {
             TRmgObjectPropertiesRef* properties = m_objectPrototypes[type][index];
             if (static_cast<s32>(properties->m_refCount) > 0)
@@ -8672,7 +8672,7 @@ b8 type_random_map_generator::writeMap(TAbstractFile* outfile)
     writeValue<s32>(outfile, prototypeCount);
     writeRmgObjectPrototype(outfile, m_objectPrototypes[RANDOM_MONSTER][0]->m_prototype);
     writeRmgObjectPrototype(outfile, m_objectPrototypes[TERRAIN_HOLE][0]->m_prototype);
-    for (s32 objectType = 0; objectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++objectType)
+    for (s32 objectType = NOTHING; objectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++objectType)
         for (u32 index = 0; index < m_objectPrototypes[objectType].size(); ++index) {
             TRmgObjectPropertiesRef* properties = m_objectPrototypes[objectType][index];
             if (static_cast<s32>(properties->m_refCount) > 0)
@@ -8887,7 +8887,7 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
     rmgSeerHutObject* seerHut = object->m_seerHut;
     s32 available = 0;
     s32 artifact;
-    for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
+    for (artifact = ARTIFACT_SPELLBOOK; artifact < ARTIFACT_COUNT; ++artifact) {
         if (isRmgQuestArtifact(artifact, m_usedQuestArtifacts)) {
             ++available;
         }
@@ -8897,7 +8897,7 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
     if (!available)
         return false;
     s32 selected = rand() % available;
-    for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
+    for (artifact = ARTIFACT_SPELLBOOK; artifact < ARTIFACT_COUNT; ++artifact) {
         if (isRmgQuestArtifact(artifact, m_usedQuestArtifacts)) {
             if (selected-- <= 0)
                 break;

@@ -66,7 +66,7 @@ static inline void buildMatchingLineNeighbourMask(
     b8 available[TILE_DIR_COUNT];
     buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
                            point.m_x, point.m_y, available);
-    for (u32 direction = 0; direction < TILE_DIR_COUNT; ++direction) {
+    for (u32 direction = TILE_DIR_NORTH; direction < TILE_DIR_COUNT; ++direction) {
         if (available[direction])
             matches[direction] = painter->getNeighbourLineType(point, direction) == lineType;
         else
@@ -235,7 +235,7 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 
     b8 matches[TILE_DIR_COUNT];
     buildMatchingLineNeighbourMask(m_painter, point, m_lineType, matches);
-    for (u32 direction = 0; direction < TILE_DIR_COUNT; ++direction) {
+    for (u32 direction = TILE_DIR_NORTH; direction < TILE_DIR_COUNT; ++direction) {
         if (matches[direction])
             refreshRmgLinePoint(m_painter, point + g_tileDirections[direction]);
     }
@@ -974,7 +974,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
         b8 neighbourExists[TILE_DIR_COUNT];
         buildTileNeighbourMask(
             m_size.m_x, m_size.m_y, point.m_x, point.m_y, neighbourExists);
-        for (u32 direction = 0; direction < TILE_DIR_COUNT; ++direction) {
+        for (u32 direction = TILE_DIR_NORTH; direction < TILE_DIR_COUNT; ++direction) {
             if (neighbourExists[direction]) {
                 const TPoint& offset = g_tileDirections[direction];
                 TRmgGridPoint nearby(point + offset);
@@ -1110,7 +1110,7 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
         // Run-length encode the nonmatching ring, starting after a known
         // match so a wrapped gap stays together. Separated neighbours imply
         // a match exists and at most four gaps.
-        u32 firstMatch = 0;
+        u32 firstMatch = TILE_DIR_NORTH;
         while (!matches[firstMatch])
             ++firstMatch;
         u32 gapCount = 0;
@@ -1339,10 +1339,10 @@ b8 rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
 {
     b8 matches[TILE_DIR_COUNT];
     buildMatchingNeighbourMask(point, matches);
-    u32 first = 0;
+    u32 first = TILE_DIR_NORTH;
     while (matches[first]) {
         first = (first + 1) % TILE_DIR_COUNT;
-        if (first == 0)
+        if (first == TILE_DIR_NORTH)
             return false;
     }
     u32 direction = first;
