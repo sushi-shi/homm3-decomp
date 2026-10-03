@@ -10,6 +10,9 @@
 #include <bitset>
 #include <string>
 #include <vector>
+#if defined(HOMM3_TARGET_MAC)
+#include <time.h> // time_t; VC6 gets it through the STL headers
+#endif
 
 #include "advmgr_objects.h"
 #include "rmg_request.h"
