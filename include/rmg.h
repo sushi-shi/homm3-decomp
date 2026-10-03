@@ -356,11 +356,6 @@ struct TRmgMapPosition : TPoint {
 
 TRmgMapPosition operator+(TRmgMapPosition position, TPoint offset);
 
-enum ERmgMapLevel {
-    RMG_SURFACE_LEVEL = 0,
-    RMG_UNDERGROUND_LEVEL = 1
-};
-
 // Template connection to another zone: value, guard/border policy,
 // whether it has been built, and the player counts for which it applies.
 struct TRmgZoneConnection {
@@ -408,14 +403,6 @@ enum ERmgTownPlacementParameter {
     RMG_TOWN_NEUTRAL_CASTLE_COUNT = 5,
     RMG_TOWN_NEUTRAL_BASIC_DENSITY = 6,
     RMG_TOWN_NEUTRAL_CASTLE_DENSITY = 7
-};
-
-// Template column 55: zone monster strength letter n, w, a or s.
-enum ERmgZoneMonsterStrength {
-    RMG_ZONE_MONSTERS_NONE = 0,
-    RMG_ZONE_MONSTERS_WEAK = 2,
-    RMG_ZONE_MONSTERS_AVERAGE = 3,
-    RMG_ZONE_MONSTERS_STRONG = 4
 };
 
 struct TRmgTemplateZone {
@@ -1671,11 +1658,6 @@ public:
 };
 SIZE(TRmgGeneratorBase, 0xed8);
 
-// Player colours (red, blue, tan, green, orange, purple, teal, pink).
-enum ERmgPlayerLimits {
-    RMG_PLAYER_COUNT = 8
-};
-
 // Town count/density groups by ownership and starting fort.
 enum ERmgTownPlacementCategory {
     RMG_TOWN_PLAYER_CASTLE,
@@ -1686,11 +1668,12 @@ enum ERmgTownPlacementCategory {
 
 class type_random_map_generator : public TRmgGeneratorBase {
 public:
-    b8 m_fixedHumanPlayers[RMG_PLAYER_COUNT];         // +0x0ed8
+    // One entry per player colour.
+    b8 m_fixedHumanPlayers[8];                        // +0x0ed8
     // Entry zero is the unmapped sentinel.
-    s32 m_playerIndexMap[RMG_PLAYER_COUNT + 1];       // +0x0ee0
+    s32 m_playerIndexMap[9];                          // +0x0ee0
     char m_opaque0f04[0x20];                          // +0x0f04
-    s32 m_townChoices[RMG_PLAYER_COUNT];              // +0x0f24
+    s32 m_townChoices[8];                             // +0x0f24
     // Counter for generated object ids; starts at 1.
     s32 m_nextObjectId;                               // +0x0f44
     s32 m_humanPlayerCount;                            // +0x0f48

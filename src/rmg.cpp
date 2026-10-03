@@ -35,6 +35,24 @@
 #include "textresource.h"
 #include "town.h"
 
+enum ERmgMapLevel {
+    RMG_SURFACE_LEVEL = 0,
+    RMG_UNDERGROUND_LEVEL = 1
+};
+
+// Template column 55: zone monster strength letter n, w, a or s.
+enum ERmgZoneMonsterStrength {
+    RMG_ZONE_MONSTERS_NONE = 0,
+    RMG_ZONE_MONSTERS_WEAK = 2,
+    RMG_ZONE_MONSTERS_AVERAGE = 3,
+    RMG_ZONE_MONSTERS_STRONG = 4
+};
+
+// Player colours (red, blue, tan, green, orange, purple, teal, pink).
+enum ERmgPlayerLimits {
+    RMG_PLAYER_COUNT = 8
+};
+
 // Euclidean distance, truncated; the squares are 32-bit integers.
 MAC_ADDRESS(0x22cef0, 0x84)
 int getRmgDistance(TPoint first, TPoint second)
