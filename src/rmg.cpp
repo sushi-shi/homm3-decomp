@@ -243,7 +243,7 @@ static const s32 g_landRiverDeltaIndex[4] = {2, 0, 3, 1};
 DATA(0x006409B0)
 static const s32 g_snowRiverDeltaIndex[4] = {7, 5, 4, 6};
 
-// Candidate town types for each zone terrain; -1 ends a row.
+// Candidate town types for each zone terrain; -1 was meant to end a row.
 DATA(0x00682450)
 s32 g_rmgTerrainTownChoices[9][4] = {
     {0, 1, 4, -1}, {6, -1, 0, 0}, {0, 1, -1, 0},
@@ -1857,8 +1857,8 @@ type_object* type_black_box_gold_def::generate(TRmgObjectPropertiesRef* properti
     return object;
 }
 
-// Spell-trait flag of spells that every map disables unless it lists its own
-// spell settings (see the map loader in game.cpp); never a generated reward.
+// Spell-trait flag of spells the map loader disables on every map (see
+// game.cpp); never a generated reward.
 enum ERmgSpellTraitFlags {
     RMG_SPELL_DISABLED_BY_DEFAULT = 0x2000
 };

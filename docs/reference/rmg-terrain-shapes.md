@@ -78,7 +78,7 @@ Blend shapes 2..7 and hard shapes 8..13 are the same geometry; hard is blend + 6
 | 2 / 8 | `SHAPE_N_W_BLEND` / `SHAPE_N_W_HARD` | `? b ?`<br>`b C ?`<br>`? ? ?` | outer corner: other terrain on the N and W sides. It also matches W + NE or N + SW (offset corner). |
 | 3 / 9 | `SHAPE_W_BLEND` / `SHAPE_W_HARD` | `? . ?`<br>`b C ?`<br>`? ? ?` | straight west side |
 | 4 / 10 | `SHAPE_N_BLEND` / `SHAPE_N_HARD` | `? b ?`<br>`? C ?`<br>`? ? ?` | straight north side |
-| 5 / 11 | `SHAPE_SE_BLEND` / `SHAPE_SE_HARD` | `? . ?`<br>`. C .`<br>`? . b` | inner corner: only the SE diagonal differs |
+| 5 / 11 | `SHAPE_SE_BLEND` / `SHAPE_SE_HARD` | `? . ?`<br>`. C .`<br>`? . b` | inner corner: the SE diagonal differs but no side does |
 | 6 / 12 | `SHAPE_N_W_DIAG_BLEND` / `SHAPE_N_W_DIAG_HARD` | `? b o`<br>`b C ?`<br>`? ? ?` (or `o` at SW) | outer corner on a 45-degree edge |
 | 7 / 13 | `SHAPE_SE_DIAG_BLEND` / `SHAPE_SE_DIAG_HARD` | `? . ? ?`<br>`. C . x`<br>`? . b ?`<br>`? x ? ?` (either `x`) | inner corner on a 45-degree edge |
 | 14 | `SHAPE_NW_SE_BLEND` | `b . ?`<br>`. C .`<br>`? . b` | two opposite inner corners, both blend |
