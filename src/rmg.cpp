@@ -213,7 +213,8 @@ enum ERmgDirection {
     // From here on (NW, N, NE) the directions step north.
     RMG_FIRST_NORTHERN_DIRECTION = RMG_DIRECTION_NORTH_WEST,
     // Cardinal c is direction c * 2; stepping by this visits E, S, W, N.
-    RMG_CARDINAL_DIRECTION_STEP = 2
+    RMG_CARDINAL_DIRECTION_STEP = 2,
+    RMG_CARDINAL_DIRECTION_COUNT = RMG_DIRECTION_COUNT / RMG_CARDINAL_DIRECTION_STEP
 };
 
 // Eight neighbour directions, clockwise from east; even entries are the
@@ -239,7 +240,7 @@ static inline s32 turnRmgDirection(s32 direction, s32 steps)
 
 static inline s32 getRmgOppositeDirection(s32 direction)
 {
-    return turnRmgDirection(direction, 4);
+    return turnRmgDirection(direction, RMG_DIRECTION_COUNT / 2);
 }
 
 // SE, S or SW.
@@ -273,10 +274,10 @@ TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
 // River-delta choice per coast side (east, south, west, north), for land and
 // then snow rivers: the nth (from 0) delta recommended for the end's terrain.
 DATA(0x006409a0)
-static const s32 g_landRiverDeltaIndex[4] = {2, 0, 3, 1};
+static const s32 g_landRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {2, 0, 3, 1};
 
 DATA(0x006409b0)
-static const s32 g_snowRiverDeltaIndex[4] = {7, 5, 4, 6};
+static const s32 g_snowRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {7, 5, 4, 6};
 
 // Candidate town types for each zone terrain, dirt to water. The pick only
 // selects which creatures' dwellings and rewards the zone favours; eTownNeutral
@@ -335,15 +336,27 @@ double g_rmgDirectionSines[RMG_RADIAL_DIRECTION_COUNT] = {
     -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951
 };
 
-// Guard value thresholds and scales by monster strength (0-5); a scale counts
-// quarters of the value above its threshold.
-DATA(0x006823f0) s32 g_rmgGuardThresholdLow[6] = {50000, 2500, 1500, 1000, 500, 0};
-DATA(0x00682408) s32 g_rmgGuardThresholdHigh[6] = {50000, 7500, 7500, 7500, 5000, 5000};
-DATA(0x00682420) s32 g_rmgGuardScaleLow[6] = {0, 2, 3, 4, 6, 6};
-DATA(0x00682438) s32 g_rmgGuardScaleHigh[6] = {0, 2, 3, 4, 4, 6};
+// Guard strengths: the zone scale (ERmgZoneMonsterStrength) shifted by the
+// map strength, from 0 up to the strongest.
+enum ERmgGuardStrengthLimits {
+    RMG_STRONGEST_GUARD_STRENGTH = 5,
+    RMG_GUARD_STRENGTH_COUNT = RMG_STRONGEST_GUARD_STRENGTH + 1
+};
 
+// Guard value thresholds and scales by guard strength; a scale counts
+// quarters of the value above its threshold.
+DATA(0x006823f0)
+s32 g_rmgGuardThresholdLow[RMG_GUARD_STRENGTH_COUNT] = {50000, 2500, 1500, 1000, 500, 0};
+DATA(0x00682408)
+s32 g_rmgGuardThresholdHigh[RMG_GUARD_STRENGTH_COUNT] = {50000, 7500, 7500, 7500, 5000, 5000};
+DATA(0x00682420)
+s32 g_rmgGuardScaleLow[RMG_GUARD_STRENGTH_COUNT] = {0, 2, 3, 4, 6, 6};
+DATA(0x00682438)
+s32 g_rmgGuardScaleHigh[RMG_GUARD_STRENGTH_COUNT] = {0, 2, 3, 4, 4, 6};
+
+// Map-description names per resolved water content.
 DATA(0x00682700)
-static const char* g_rmgWaterNames[3] = {
+static const char* g_rmgWaterNames[RMG_WATER_RANDOM] = {
     DATA_COMPGEN(0x006827ec, rmgWaterNone, "None"),
     DATA_COMPGEN(0x006827e4, rmgWaterNormal, "normal"),
     DATA_COMPGEN(0x006827dc, rmgWaterIslands, "islands")
@@ -6803,7 +6816,7 @@ inline s32 type_random_map_generator::getZoneGuardValue(s32 value,
     if (zoneStrength == RMG_ZONE_MONSTERS_NONE)
         return 0;
     s32 strength = zoneStrength + m_monsterStrength - RMG_ZONE_MONSTERS_AVERAGE;
-    if (strength > 5) strength = 5;
+    if (strength > RMG_STRONGEST_GUARD_STRENGTH) strength = RMG_STRONGEST_GUARD_STRENGTH;
     else if (strength < 0) strength = 0;
     return getRmgGuardValue(value, strength);
 }
@@ -7638,11 +7651,20 @@ inline void type_random_map_generator::rebuildRoadCostMap(const TRmgMapPosition&
     buildRoadCostMap(source);
 }
 
+// Road-layer types, dirt through cobblestone; zero is no road.
+enum ERmgRoadType {
+    RMG_ROAD_DIRT = 1,
+    RMG_ROAD_GRAVEL = 2,
+    RMG_ROAD_COBBLESTONE = 3,
+    RMG_ROAD_TYPE_COUNT = RMG_ROAD_COBBLESTONE
+};
+
+// Every road on the map uses one random road type.
 VA(0x00548290, 0x26e)
 MAC_ADDRESS(0x24c6d4, 0x1d8)
 void type_random_map_generator::createRoads()
 {
-    s32 roadType = rand() % 3 + 1;
+    s32 roadType = rand() % RMG_ROAD_TYPE_COUNT + RMG_ROAD_DIRT;
     // Retail bug: an empty target list underflows size() - 1.
     for (u32 first = 0; first < m_roadTargets.size() - 1; ++first) {
         TRmgMapPosition source = m_roadTargets[first];
@@ -7928,7 +7950,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
 
     if (mapItem->m_tileData.m_blockedDirections) {
         s32 cardinal;
-        for (cardinal = 0; cardinal < 4; ++cardinal) {
+        for (cardinal = 0; cardinal < RMG_CARDINAL_DIRECTION_COUNT; ++cardinal) {
             if (mapItem->m_tileData.m_blockedDirections & (1 << cardinal))
                 break;
         }
@@ -7937,7 +7959,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
 
         VA_COMPGEN(0x00549790, 0x1, STATIC_DTOR, riverDeltaOffsets)
         DATA(0x0069ce28)
-        static TRmgRiverDeltaOffset riverDeltaOffsets[4] = {
+        static TRmgRiverDeltaOffset riverDeltaOffsets[RMG_CARDINAL_DIRECTION_COUNT] = {
             TRmgRiverDeltaOffset(4, 1),  // coast to the east
             TRmgRiverDeltaOffset(1, 4),  // south
             TRmgRiverDeltaOffset(-2, 1), // west
@@ -8861,8 +8883,8 @@ s32 TRandomMapRequest::generateToFile(TAbstractFile* outfile, TProgressSink* pro
     s32 strength = m_monsterStrength + RMG_ZONE_MONSTERS_AVERAGE;
     if (strength < 1)
         strength = 1;
-    if (strength > 5)
-        strength = 5;
+    if (strength > RMG_STRONGEST_GUARD_STRENGTH)
+        strength = RMG_STRONGEST_GUARD_STRENGTH;
     if (m_humanPlayerCount + m_computerPlayerCount < 2) {
         m_humanPlayerCount = 1;
         m_computerPlayerCount = 1;
