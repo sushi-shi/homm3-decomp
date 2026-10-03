@@ -278,6 +278,14 @@ following keeps only with a pointer here:
   cells at offsets from the source instead of shifting the parameter, and
   dropped `TRmgTreasureGroup::tryAddObject`'s staged candidate count. All of
   it runs after the connection paths; the last two frames changed.
+- A sixteenth pass gave `buildRoadCostMap` its own worklist cursor instead
+  of reusing the seed parameter, named `TRmgTreasureGroup::addGuard`'s
+  trigger-adjusted cell instead of shifting the chosen outline point, and
+  let `canPlaceTreasureGroup` translate its approach cell into a separate map
+  position. All of it runs after the connection paths; all three stack
+  layouts changed. It kept the treasure definitions' constructor-body stores:
+  as member initializers, `initializeObjectGenerators` stores the fields
+  before the vtable pointer.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every

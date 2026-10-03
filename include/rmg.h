@@ -1954,7 +1954,7 @@ public:
     TRmgObjectPropertiesRef* selectObjectPrototype(
         s32 terrain, s32 objectType, s32 subtype);
     void resetMovementCosts();
-    void buildRoadCostMap(TRmgMapPosition position);
+    void buildRoadCostMap(TRmgMapPosition source);
     void rebuildRoadCostMap(const TRmgMapPosition& source);
     void createRoads();
     // Picks an unused quest artifact, turns the object into it and places its

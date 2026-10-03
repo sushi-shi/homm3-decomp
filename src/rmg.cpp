@@ -2344,12 +2344,12 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
         return false;
     TPoint guardPosition = m_outline[rand() % m_outline.size()];
     addObject(guard, guardPosition);
-    guardPosition.m_x -= prototype->m_triggerCell.m_x;
-    guardPosition.m_y -= prototype->m_triggerCell.m_y;
+    TPoint guardEntrance(guardPosition.m_x - prototype->m_triggerCell.m_x,
+        guardPosition.m_y - prototype->m_triggerCell.m_y);
     s32 guardType = guardProperties->m_prototype->getObjectType();
     for (s32 direction = RMG_DIRECTION_EAST; direction < RMG_DIRECTION_COUNT; ++direction) {
         TPoint point = g_rmgDirections[direction]
-            + TRmgVector(guardPosition.m_x, guardPosition.m_y);
+            + TRmgVector(guardEntrance.m_x, guardEntrance.m_y);
         TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y);
         if (!item->isPassableLand())
             continue;
@@ -2386,7 +2386,7 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
             fanDirection = turnRmgDirection(fanDirection, 1);
         }
     }
-    m_guardPosition = guardPosition;
+    m_guardPosition = guardEntrance;
     m_hasGuard = true;
     m_outline.clear();
     updateBounds();
@@ -7329,11 +7329,10 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
         TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
         if (!source->isClearOutlineCell() || !source->isPlacementOutline())
             continue;
-        point.m_x += position.m_x;
-        point.m_y += position.m_y;
-        if (!m_map.containsXY(point))
+        TRmgMapPosition target = position + point;
+        if (!m_map.containsXY(target))
             continue;
-        TRmgMapItem* destination = m_map.getMapItem(point.m_x, point.m_y, position.m_z);
+        TRmgMapItem* destination = m_map.getMapItem(target);
         if ((destination->getLandType() == eTerrainWater) == waterZone
             && destination->isClearOutlineCell())
             break;
@@ -7492,14 +7491,15 @@ enum ERmgRoadStepCost {
 // duplicate entries. Monolith/gate transitions precede neighbour relaxation.
 VA(0x00547880, 0x7b1)
 MAC_ADDRESS(0x24bbe0, 0x7e4)
-void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
+void type_random_map_generator::buildRoadCostMap(TRmgMapPosition source)
 {
     std::vector<TRmgMapPosition> openPositions;
     std::vector<s32> openCosts;
 
-    m_map.seedMovementSearch(position, openPositions, openCosts);
+    m_map.seedMovementSearch(source, openPositions, openCosts);
 
     while (openPositions.size()) {
+        TRmgMapPosition position;
         popRmgWorkItem(position, openPositions, openCosts);
 
         TRmgMapItem* mapItem = m_map.getMapItem(position);
