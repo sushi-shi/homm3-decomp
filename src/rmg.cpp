@@ -5134,8 +5134,8 @@ void type_random_map_generator::buildZoneConnectionPaths()
         item->resetMovement();
         ++item;
     }
-    // A zone whose scan finds no eligible empty cell (in practice a zone with
-    // no cells) floods from the seed of the last zone that had one.
+    // Retail bug: a zone whose scan finds no eligible empty cell (in practice
+    // a zone with no cells) floods from the seed of the last zone that had one.
     TRmgMapPosition seed(RMG_NO_POSITION, RMG_NO_POSITION, RMG_NO_POSITION);
     for (u32 zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
