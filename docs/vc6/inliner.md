@@ -2054,7 +2054,7 @@ the trace lists UNDER/OVER callees:
 - `filterZonePositions` (0x53b2f0, 94.45% -> 98.85%): the first expanded
   `countPlacedZoneConnections` had a nested budget of exactly 42 with the
   connection-vector `size` at cost 42 (slack 0); reading the two later zone
-  sizes through `TRmgZone::getSize()` adds two sites, lowers it to 40, and
+  sizes through `TRmgZone::getTemplateSize()` adds two sites, lowers it to 40, and
   retail's four size calls all reappear.
 - `TRmgMapPosition::TRmgMapPosition(int, int, int)` is retained at 0x5355c0,
   directly before `canFitObject`, so it belongs in `rmg.cpp`; it lives in

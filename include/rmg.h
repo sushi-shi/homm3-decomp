@@ -715,7 +715,8 @@ struct TRmgGroundTileData {
     u32 m_connectionVisited : 1;
     // Not blocked by an object.
     u32 m_passable : 1;
-    u32 m_borderObject : 1;
+    // decorateMap fills marked passable cells with obstacles.
+    u32 m_obstacleFill : 1;
     // Kept clear for generated paths; obstacle footprints may not cover it.
     u32 m_pathClearance : 1;
     // Set on zone cells whose terrain paintZoneTerrain paints.
@@ -996,7 +997,7 @@ struct TRmgMapItem {
     TRmgZoneCellState m_zoneState;           // +0x20
     TRmgGroundTile m_tile;                  // +0x24
     TRmgGroundTileData m_tileData;          // +0x28
-    TRmgConnectionDecoration m_connection;  // +0x2c
+    TRmgConnectionDecoration m_borderConnection;  // +0x2c
 
     TRmgMapItem();
     void clear();
@@ -1042,9 +1043,9 @@ struct TRmgMapItem {
         return m_tileData.m_passable && getLandType() != eTerrainRock;
     }
 
-    b8 hasBorderObject() const
+    b8 hasObstacleFill() const
     {
-        return m_tileData.m_borderObject;
+        return m_tileData.m_obstacleFill;
     }
 
     b8 isPlacementOutline() const
@@ -1086,45 +1087,45 @@ struct TRmgMapItem {
         m_zoneState.m_connectionZone = 0;
     }
 
-    // Opens a generated path here unless a connection protects the cell.
+    // Opens a generated path here unless a border connection protects the cell.
     void openPath()
     {
-        if (!m_connection.m_present) {
-            m_tileData.m_borderObject = false;
+        if (!m_borderConnection.m_present) {
+            m_tileData.m_obstacleFill = false;
             m_tileData.m_pathClearance = true;
         }
     }
 
-    // Schedules border filling here unless a connection protects the cell.
-    void markBorderObject()
+    // Marks the cell for obstacles unless a border connection protects it.
+    void markObstacleFill()
     {
-        if (!m_connection.m_present) {
+        if (!m_borderConnection.m_present) {
             m_tileData.m_pathClearance = false;
-            m_tileData.m_borderObject = true;
+            m_tileData.m_obstacleFill = true;
         }
     }
 
-    // Clears the border-filling mark unless a connection protects the cell.
-    void clearBorderObject()
+    // Clears the obstacle mark unless a border connection protects the cell.
+    void clearObstacleFill()
     {
-        if (!m_connection.m_present)
-            m_tileData.m_borderObject = false;
+        if (!m_borderConnection.m_present)
+            m_tileData.m_obstacleFill = false;
     }
 
     // Removing a border connection also opens its cell.
     void clearBorderConnection()
     {
-        m_connection.m_present = false;
-        m_connection.m_guardColor = 0;
+        m_borderConnection.m_present = false;
+        m_borderConnection.m_guardColor = 0;
         openPath();
     }
 
-    // An existing connection keeps its tile flags but takes the new colour.
+    // An existing border connection keeps its tile flags but takes the new colour.
     void markBorderConnection(s32 color)
     {
-        markBorderObject();
-        m_connection.m_guardColor = color;
-        m_connection.m_present = true;
+        markObstacleFill();
+        m_borderConnection.m_guardColor = color;
+        m_borderConnection.m_present = true;
     }
 
     // Passable land with path clearance that is not an object entrance.
@@ -1133,10 +1134,10 @@ struct TRmgMapItem {
         return !isObjectEntrance() && isPassableLand() && hasPathClearance();
     }
 
-    // Allows obstacles here unless a connection protects the cell.
+    // Allows obstacles here unless a border connection protects the cell.
     void releasePathClearance()
     {
-        if (!m_connection.m_present)
+        if (!m_borderConnection.m_present)
             m_tileData.m_pathClearance = false;
     }
 
@@ -1232,7 +1233,7 @@ public:
     void floodConnectionCosts(TRmgMapPosition position, b8 waterZone);
     void releaseNeighborhoodPathClearance(
         const TRmgMapPosition& center, s32 radius);
-    void clearZonePathBorders(const TPoint& center, s32 level, s32 zoneIndex);
+    void clearNearbyObstacleFill(const TPoint& center, s32 level, s32 zoneIndex);
     TRmgMapPosition openEntranceApproach(TRmgMapPosition entrance);
     void clearConnectionVisits(s32 level);
     bool isOutsideRiverCoastScan(const TRmgMapPosition& point) const;
@@ -1261,7 +1262,7 @@ public:
         b8 allowEntrances, TRmgZone* zone, b8 requirePathClearance);
     b8 isPlacementBlocked(
         TRmgObjectPropertiesRef* properties, TRmgMapPosition position,
-        s32 zoneIndex, b8 rejectBorder);
+        s32 zoneIndex, b8 rejectObstacleFill);
     b8 canPlaceObject(
         TRmgObjectPropertiesRef* properties,
         TRmgMapPosition position,
@@ -1946,18 +1947,18 @@ public:
         s32 prototypeIndex);
     void connectZones();
     bool contains(const TPoint& point) const;
-    // Marks every empty cell for border filling, carves paths by random
+    // Marks every empty cell for obstacles, carves paths by random
     // midpoint displacement and queued side branches, then opens water and
-    // rock cells and releases path clearance beside border marks.
+    // rock cells and releases path clearance beside obstacle marks.
     void carveBranchingPaths();
     void repairWaterZoneBorders();
     void openConnectionPath(TRmgMapPosition position, b8 narrow);
     void markBorderObjectArea(TRmgMapPosition position, s32 color);
     s32 placeBorderObject(
         TRmgMapPosition position, s32 guardCount, TRmgZone* keyTentZone);
-    void placeGroundConnectionBorder(TRmgMapPosition position,
+    void placeGroundConnectionBorderGuard(TRmgMapPosition position,
         TRmgZone* keyTentZone, s32& guardValue);
-    void placeGateConnectionBorder(TRmgMapPosition approach,
+    void placeGateConnectionBorderGuard(TRmgMapPosition approach,
         TRmgZone* keyTentZone, s32& guardValue);
     s32 getConnectionGuardValue(const TRmgZoneConnection* connection) const;
     type_object* createGuard(s32 value, TRmgZone* zone);

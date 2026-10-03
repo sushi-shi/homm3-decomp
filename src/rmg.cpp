@@ -514,10 +514,10 @@ MAC_ADDRESS(0x22d110, 0x15c)
 void TRmgMapItem::clear()
 {
     m_objects.clear();
-    TRmgConnectionDecoration connection = m_connection;
+    TRmgConnectionDecoration borderConnection = m_borderConnection;
     TRmgGroundTileData tileData = m_tileData;
 
-    connection.m_present = false;
+    borderConnection.m_present = false;
     m_tile.m_landType = eTerrainWater;
     m_tile.m_terrainFrame = RMG_WATER_BASE_FRAME;
     m_tile.m_riverType = 0;
@@ -537,13 +537,13 @@ void TRmgMapItem::clear()
     tileData.m_objectEntrance = false;
     tileData.m_placementOutline = false;
     tileData.m_passable = true;
-    tileData.m_borderObject = false;
+    tileData.m_obstacleFill = false;
     tileData.m_pathClearance = true;
     tileData.m_paintZoneTerrain = false;
     tileData.m_hasRiver = false;
     tileData.m_riverTarget = false;
     tileData.m_nearRiver = false;
-    m_connection = connection;
+    m_borderConnection = borderConnection;
     m_movement.m_cost = RMG_CLEARED_CELL_COST;
     m_movement.m_zonePathCost = RMG_CLEARED_CELL_COST;
     m_zoneState.m_objectDistance = RMG_CLEARED_CELL_COST;
@@ -586,8 +586,8 @@ void type_random_map::clear()
     }
 }
 
-// Shared by the footprint and surrounding-outline placement tests; border,
-// water and path-clearance policies stay with each caller.
+// Shared by the footprint and surrounding-outline placement tests;
+// obstacle-mark, water and path-clearance policies stay with each caller.
 inline bool TRmgMapItem::isPlacementBlocked(s32 zoneIndex) const
 {
     return !isPassableLand() || isObjectEntrance()
@@ -707,9 +707,9 @@ static void insertRmgWorkItem(
     TRmgMapPosition position,
     s32 cost)
 {
-    s32 middle = findRmgWorkItemInsertionIndex(costs, positions.size(), cost);
-    positions.insert(positions.begin() + middle, position);
-    costs.insert(costs.begin() + middle, cost);
+    s32 insertionIndex = findRmgWorkItemInsertionIndex(costs, positions.size(), cost);
+    positions.insert(positions.begin() + insertionIndex, position);
+    costs.insert(costs.begin() + insertionIndex, cost);
 }
 
 static inline void popRmgWorkItem(TRmgMapPosition& position,
@@ -814,20 +814,20 @@ static inline bool isRmgWaterOnlyPrototype(const TObjectType& prototype)
         && prototype.m_recommendedTerrainMask.test(eTerrainWater);
 }
 
-// isPlacementBlocked's rejectBorder argument.
-enum ERmgBorderEntrancePolicy {
-    RMG_ALLOW_BORDER_ENTRANCES = false,
-    RMG_REJECT_BORDER_ENTRANCES = true
+// isPlacementBlocked's rejectObstacleFill argument.
+enum ERmgObstacleEntrancePolicy {
+    RMG_ALLOW_OBSTACLE_ENTRANCES = false,
+    RMG_REJECT_OBSTACLE_ENTRANCES = true
 };
 
 // Checks the footprint against map bounds, zones and entrances. Only trigger
-// cells honour rejectBorder; only blocked cells apply the water rule
+// cells honour rejectObstacleFill; only blocked cells apply the water rule
 // (water-only objects must stand on water, others on land).
 VA(0x005318b0, 0x212)
 MAC_ADDRESS(0x22dfe0, 0x2a4)
 b8 type_random_map::isPlacementBlocked(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position,
-    s32 zoneIndex, b8 rejectBorder)
+    s32 zoneIndex, b8 rejectObstacleFill)
 {
     TObjectType& prototype = *properties->m_prototype;
     if (position.m_x < prototype.getWidth() - 1 || position.m_x >= m_mapWidth
@@ -841,7 +841,7 @@ b8 type_random_map::isPlacementBlocked(
             if (prototype.isTriggerCell(x, y)) {
                 if (item->isPlacementBlocked(zoneIndex))
                     return true;
-                if (rejectBorder && item->hasBorderObject())
+                if (rejectObstacleFill && item->hasObstacleFill())
                     return true;
             }
             if (!prototype.isPassableCell(x, y)) {
@@ -877,7 +877,7 @@ MAC_ADDRESS(0x22e454, 0x254)
 void type_random_map::markBorderPatch(TRmgMapPosition position)
 {
     TRmgMapItem* item = getMapItem(position);
-    item->markBorderObject();
+    item->markObstacleFill();
     TRmgZoneBounds bounds;
     getNeighborhoodBounds(bounds, position, RMG_NEIGHBORHOOD_3X3);
     for (s32 row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
@@ -926,7 +926,7 @@ b8 type_random_map::canPlaceObject(
 {
     TObjectType& prototype = *properties->m_prototype;
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
-    if (isPlacementBlocked(properties, position, zoneIndex, RMG_ALLOW_BORDER_ENTRANCES))
+    if (isPlacementBlocked(properties, position, zoneIndex, RMG_ALLOW_OBSTACLE_ENTRANCES))
         return false;
     TAdventureObjectType objectType = prototype.getObjectType();
     properties->buildOutline();
@@ -2304,9 +2304,9 @@ void TRmgTreasureGroup::addObject(type_object* object, TPoint point)
     m_map.addObject(*object, TRmgMapPosition(point.m_x, point.m_y, 0));
 }
 
-// Rings the objects' entrances with border cells, places the guard on a
-// random fitting border cell of the outline (failing if none), opens paths
-// around it and retraces the outline.
+// Rings the objects' entrances with cells marked for obstacles, places the
+// guard on a random fitting marked cell of the outline (failing if none),
+// opens paths around it and retraces the outline.
 VA(0x00535110, 0x4ab)
 MAC_ADDRESS(0x233028, 0x6a8)
 b8 TRmgTreasureGroup::addGuard(type_object* guard)
@@ -2326,7 +2326,7 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
             TRmgMapItem* item = m_map.getMapItem(position);
             if (item->isObjectEntrance() || !item->isPassableLand())
                 continue;
-            item->markBorderObject();
+            item->markObstacleFill();
             for (s32 x = position.m_x - 1; x <= position.m_x + 1; ++x) {
                 for (s32 y = position.m_y - 1; y <= position.m_y + 1; ++y) {
                     TRmgMapItem* nearby = m_map.getMapItem(x, y);
@@ -2341,7 +2341,7 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
     for (u32 index = m_outline.size(); index--;) {
         TPoint point = m_outline[index];
         TRmgMapPosition position(point.m_x, point.m_y, 0);
-        if (!m_map.getMapItem(point.m_x, point.m_y)->hasBorderObject()
+        if (!m_map.getMapItem(point.m_x, point.m_y)->hasObstacleFill()
             || !canFitObject(guardProperties, position))
             m_outline.erase(m_outline.begin() + index);
     }
@@ -2358,7 +2358,7 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
         TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y);
         if (!item->isPassableLand())
             continue;
-        if (guardType == BORDER_GUARD && item->hasBorderObject())
+        if (guardType == BORDER_GUARD && item->hasObstacleFill())
             continue;
         item->openPath();
         // Open the next cell outward too; diagonals fan out to three cells.
@@ -2383,7 +2383,7 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
                 + TRmgVector(point.m_x, point.m_y);
             if (m_map.containsXY(nearby)) {
                 TRmgMapItem* next = m_map.getMapItem(nearby.m_x, nearby.m_y);
-                if (!next->hasBorderObject() && !next->hasPathClearance()
+                if (!next->hasObstacleFill() && !next->hasPathClearance()
                     && next->isPassableLand()) {
                     next->openPath();
                 }
@@ -2406,8 +2406,8 @@ TRmgMapPosition::TRmgMapPosition(s32 newX, s32 newY, s32 newZ)
 }
 
 // Whether an object fits on the group map without blocking neighbouring
-// entrances. Other objects' entrances avoid border cells; guards may stand
-// on them but need a free neighbouring cell.
+// entrances. Other objects' entrances avoid cells marked for obstacles;
+// guards may stand on them but need a free neighbouring cell.
 VA(0x005355e0, 0x1f9)
 MAC_ADDRESS(0x2336d0, 0x374)
 b8 TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
@@ -2434,15 +2434,15 @@ b8 TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
     // Group-map cells belong to no zone.
     if (objectType != MONSTER && objectType != BORDER_GUARD)
         return !m_map.isPlacementBlocked(properties, position, RMG_NO_ZONE,
-            RMG_REJECT_BORDER_ENTRANCES);
+            RMG_REJECT_OBSTACLE_ENTRANCES);
     if (m_map.isPlacementBlocked(properties, position, RMG_NO_ZONE,
-            RMG_ALLOW_BORDER_ENTRANCES))
+            RMG_ALLOW_OBSTACLE_ENTRANCES))
         return false;
     for (s32 neighbour = RMG_DIRECTION_EAST; neighbour < RMG_DIRECTION_COUNT; ++neighbour) {
         TPoint nearby = g_rmgDirections[neighbour] + origin;
         TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
         if (!item->isObjectEntrance() && item->isPassableLand()
-            && !item->hasBorderObject())
+            && !item->hasObstacleFill())
             return true;
     }
     return false;
@@ -3002,8 +3002,8 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition start, s32 progressSteps
                 for (nearbyPosition.m_x = bounds.m_minimumX;
                     nearbyPosition.m_x < bounds.m_maximumX; ++nearbyPosition.m_x) {
                     TRmgMapItem* nearby = m_map.getMapItem(nearbyPosition);
-                    if (nearby->hasBorderObject() && nearby->isPassableLand()) {
-                        nearby->clearBorderObject();
+                    if (nearby->hasObstacleFill() && nearby->isPassableLand()) {
+                        nearby->clearObstacleFill();
                         pending.push_back(nearbyPosition);
                     }
                 }
@@ -3028,7 +3028,7 @@ void TRmgGeneratorBase::decorateMap()
     s32 count = 0;
     TRmgMapItem* item;
     for (item = m_map.m_mapItems; item != end; ++item) {
-        if (item->hasBorderObject())
+        if (item->hasObstacleFill())
             ++count;
     }
     if (!count)
@@ -3039,7 +3039,7 @@ void TRmgGeneratorBase::decorateMap()
     for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
-                if (item->hasBorderObject()) {
+                if (item->hasObstacleFill()) {
                     if (item->isPassableLand())
                         decorateMapCell(position, progressSteps);
                     else if (m_progress)
@@ -4802,7 +4802,7 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
         for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
             TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
             if (item->getLandType() != eTerrainWater) {
-                item->markBorderObject();
+                item->markObstacleFill();
             }
         }
     }
@@ -4974,7 +4974,7 @@ void type_random_map_generator::markZoneBorders()
                 }
                 if (!needsBorder)
                     continue;
-                current->markBorderObject();
+                current->markObstacleFill();
                 m_map.releaseNeighborhoodPathClearance(position, RMG_NEIGHBORHOOD_3X3);
             }
         }
@@ -5015,7 +5015,7 @@ void type_random_map_generator::repairWaterZoneBorders()
                         TRmgMapItem* item = m_map.getMapItem(nearby);
                         if (item->getLandType() != eTerrainWater
                             && item->isPassableLand()
-                            && !item->hasBorderObject()) {
+                            && !item->hasObstacleFill()) {
                             terrain = H3_ENUM_DECODE(TTerrainType, item->getLandType());
                             foundLandTerrain = true;
                             break;
@@ -5028,7 +5028,7 @@ void type_random_map_generator::repairWaterZoneBorders()
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
-                        item->markBorderObject();
+                        item->markObstacleFill();
                         if (item->getLandType() == eTerrainWater) {
                             positions.push_back(nearby);
                             terrains.push_back(terrain);
@@ -5102,7 +5102,7 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
 }
 
 // openConnectionPath's narrow argument; wide paths also clear nearby
-// same-zone border marks.
+// same-zone obstacle marks.
 enum ERmgConnectionPathWidth {
     RMG_WIDE_CONNECTION_PATH = false,
     RMG_NARROW_CONNECTION_PATH = true
@@ -5169,9 +5169,9 @@ void type_random_map_generator::buildZoneConnectionPaths()
     }
 }
 
-// Widen an opened route by removing same-zone border obstacles around the
-// cell, keeping cells reserved for a connection.
-inline void type_random_map::clearZonePathBorders(const TPoint& center, s32 level,
+// Widen an opened route by clearing same-zone obstacle marks around the
+// cell, keeping border-connection cells.
+inline void type_random_map::clearNearbyObstacleFill(const TPoint& center, s32 level,
     s32 zoneIndex)
 {
     TRmgZoneBounds bounds;
@@ -5180,14 +5180,14 @@ inline void type_random_map::clearZonePathBorders(const TPoint& center, s32 leve
         for (s32 x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
             TRmgMapItem* nearby = getMapItem(x, y, level);
             if (nearby->m_zoneState.m_zone == zoneIndex)
-                nearby->clearBorderObject();
+                nearby->clearObstacleFill();
         }
     }
 }
 
 // From a reached cell, follow predecessors to the zero-cost seed without
-// changing costs; marked connection cells on the way get a border guard of
-// their colour. Widened routes clear only the border mark of nearby
+// changing costs; border-connection cells on the way get a border guard of
+// their colour. Widened routes clear only the obstacle mark of nearby
 // same-zone cells.
 VA(0x005408e0, 0x23f)
 MAC_ADDRESS(0x242e88, 0x380)
@@ -5199,9 +5199,9 @@ void type_random_map_generator::openConnectionPath(
     if (item->m_movement.m_cost >= RMG_REACHED_COST_LIMIT)
         return;
     while (item->m_movement.m_cost > 0) {
-        if (item->m_connection.m_present) {
+        if (item->m_borderConnection.m_present) {
             TRmgObjectPropertiesRef* properties = selectObjectPrototype(
-                eTerrainDirt, BORDER_GUARD, item->m_connection.m_guardColor);
+                eTerrainDirt, BORDER_GUARD, item->m_borderConnection.m_guardColor);
             type_object* object = new type_object(properties);
             item->clearBorderConnection();
             addObject(object, position);
@@ -5209,7 +5209,7 @@ void type_random_map_generator::openConnectionPath(
         item->openPath();
         TRmgMapPosition previous = item->m_previousTile;
         if (!narrow)
-            m_map.clearZonePathBorders(position, position.m_z, zone);
+            m_map.clearNearbyObstacleFill(position, position.m_z, zone);
         position = previous;
         item = m_map.getMapItem(position);
     }
@@ -5402,9 +5402,9 @@ void type_random_map_generator::placeGuard(s32 value, TRmgMapPosition position)
         addObject(guard, position);
 }
 
-// A successful ground border placement marks its surrounding area and
+// A successful ground border-guard placement marks its surrounding area and
 // suppresses guards for this and all remaining crossings.
-inline void type_random_map_generator::placeGroundConnectionBorder(
+inline void type_random_map_generator::placeGroundConnectionBorderGuard(
     TRmgMapPosition position, TRmgZone* keyTentZone, s32& guardValue)
 {
     s32 color = placeBorderObject(position, RMG_SINGLE_BORDER_GUARD, keyTentZone);
@@ -5414,10 +5414,10 @@ inline void type_random_map_generator::placeGroundConnectionBorder(
     }
 }
 
-// Place a gate border on the approach cell below the gate's entrance. On
-// success both gate guards are dropped and the border extends to the empty
-// cells either side of it.
-inline void type_random_map_generator::placeGateConnectionBorder(
+// Places a border guard on the approach cell below the gate's entrance. On
+// success both gate guards are dropped and the border connection extends to
+// the empty cells either side of it.
+inline void type_random_map_generator::placeGateConnectionBorderGuard(
     TRmgMapPosition approach, TRmgZone* keyTentZone, s32& guardValue)
 {
     s32 color = placeBorderObject(approach, RMG_SINGLE_BORDER_GUARD, keyTentZone);
@@ -5550,8 +5550,8 @@ b8 type_random_map_generator::createGroundConnection(
         candidates.erase(candidates.begin() + selected);
 
         if (connection->m_borderGuard) {
-            placeGroundConnectionBorder(position, destination, guardValue);
-            placeGroundConnectionBorder(otherPosition, source, guardValue);
+            placeGroundConnectionBorderGuard(position, destination, guardValue);
+            placeGroundConnectionBorderGuard(otherPosition, source, guardValue);
         }
 
         if (guardValue > 0) {
@@ -5659,7 +5659,7 @@ void type_random_map_generator::floodShipyardWater(type_object* shipyard)
 
 // Connects zones by a shipyard, or succeeds without one when water flooded
 // from this zone's shipyards already reaches a cell facing the destination.
-// A successful border placement clears the guard value.
+// A successful border-guard placement clears the guard value.
 VA(0x00541ad0, 0x5b0)
 MAC_ADDRESS(0x2446ac, 0x55c)
 b8 type_random_map_generator::createShipyardConnection(
@@ -5828,8 +5828,8 @@ b8 type_random_map_generator::createSubterraneanGate(
     if (connection->m_borderGuard) {
         // Success on either side suppresses both guards; a failed placement
         // does not undo the other side's objects.
-        placeGateConnectionBorder(approach, destination, guardValue);
-        placeGateConnectionBorder(otherApproach, source, guardValue);
+        placeGateConnectionBorderGuard(approach, destination, guardValue);
+        placeGateConnectionBorderGuard(otherApproach, source, guardValue);
     }
 
     if (guardValue > 0) {
@@ -5874,7 +5874,7 @@ b8 type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* z
     return true;
 }
 
-// Rebuilds the zone connection paths, then puts the border on the portal
+// Rebuilds the zone connection paths, then puts a border guard on the portal
 // cell's path predecessor; a zero-cost cell uses the first same-zone open
 // neighbour, else the cell below, and an unreached cell fails. Success also
 // marks the cell's five side and lower neighbours as border connections.
@@ -6274,7 +6274,7 @@ void type_random_map_generator::carveBranchingPaths()
     s32 remaining = m_map.getHeight() * m_map.getWidth() * m_map.m_numberLevels;
     for (; remaining--; ++item) {
         if (!item->hasObjects()) {
-            item->markBorderObject();
+            item->markObstacleFill();
         } else {
             item->openPath();
         }
@@ -6364,7 +6364,7 @@ void type_random_map_generator::carveBranchingPaths()
                 if (item->getLandType() == eTerrainWater || item->getLandType() == eTerrainRock) {
                     item->openPath();
                 }
-                if (item->hasBorderObject())
+                if (item->hasObstacleFill())
                     m_map.markBorderPatch(position);
             }
         }
@@ -6390,7 +6390,7 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
             TRmgMapItem* item = m_map.getMapItem(clamped.m_x, clamped.m_y, position.m_z);
             if (item->m_zoneState.m_zone == zoneIndex) {
                 item->openPath();
-                m_map.clearZonePathBorders(clamped, position.m_z, zoneIndex);
+                m_map.clearNearbyObstacleFill(clamped, position.m_z, zoneIndex);
             }
             from = to;
         }
@@ -6412,7 +6412,7 @@ void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
                 && item->getLandType() != eTerrainWater) {
                 item->resetMovement();
                 if (!item->hasObjects()) {
-                    item->markBorderObject();
+                    item->markObstacleFill();
                 }
             }
         }
@@ -6453,7 +6453,7 @@ void type_random_map_generator::prepareZoneConnections()
     for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
-                if (!item->hasBorderObject() && item->isPassableLand() && !item->isObjectEntrance()
+                if (!item->hasObstacleFill() && item->isPassableLand() && !item->isObjectEntrance()
                     && !item->hasObjects()
                     && item->m_zoneState.m_zone < 0 && item->getLandType() != eTerrainWater)
                     m_map.markBorderPatch(position);
@@ -6752,7 +6752,7 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
     TObjectType* prototype = properties->m_prototype;
     std::vector<TRmgMapPosition> candidates;
     TRmgZoneBounds bounds = zone->m_bounds;
-    s32 bestBorderCount = 0;
+    s32 bestObstacleCount = 0;
     s32 bestSquaredDistance = RMG_STARTING_MINE_MAXIMUM_SQUARED_DISTANCE;
     s32 bestScore = spacing;
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
@@ -6780,7 +6780,7 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
                     squaredDistance = RMG_STARTING_MINE_NEAR_SQUARED_DISTANCE;
                 if (squaredDistance < bestSquaredDistance) {
                     bestSquaredDistance = squaredDistance;
-                    bestBorderCount = 0;
+                    bestObstacleCount = 0;
                     bestScore = 0;
                     candidates.clear();
                 }
@@ -6788,7 +6788,7 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
             s32 score = item->m_zoneState.m_objectDistance;
             if (score < bestScore)
                 continue;
-            s32 borderCount = 0;
+            s32 obstacleCount = 0;
             for (u32 i = 0; i < properties->m_outline.size(); ++i) {
                 TPoint offset = properties->m_outline[i];
                 s32 x = position.m_x + offset.m_x;
@@ -6796,16 +6796,16 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
                 if (x < 0 || x >= m_map.m_mapWidth || y < 0 || y >= m_map.m_mapHeight || y > position.m_y)
                     continue;
                 TRmgMapItem* nearby = m_map.getMapItem(x, y, position.m_z);
-                if (nearby->isPassableLand() && nearby->hasBorderObject())
-                    ++borderCount;
+                if (nearby->isPassableLand() && nearby->hasObstacleFill())
+                    ++obstacleCount;
             }
-            if (borderCount > 5)
-                borderCount = 5;
-            if (borderCount < bestBorderCount)
+            if (obstacleCount > 5)
+                obstacleCount = 5;
+            if (obstacleCount < bestObstacleCount)
                 continue;
-            if (borderCount > bestBorderCount) {
+            if (obstacleCount > bestObstacleCount) {
                 candidates.clear();
-                bestBorderCount = borderCount;
+                bestObstacleCount = obstacleCount;
             }
             addRmgHighestScoreCandidate(candidates, position, score, bestScore);
         }
@@ -7034,7 +7034,7 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
         if (!candidate)
             continue;
         if (position.m_x >= 0 && m_map.isPlacementBlocked(candidate, position, zoneIndex,
-                RMG_REJECT_BORDER_ENTRANCES))
+                RMG_REJECT_OBSTACLE_ENTRANCES))
             continue;
         if (compact) {
             TObjectType* prototype = candidate->m_prototype;
@@ -7276,22 +7276,22 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
     for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
         for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
             TRmgMapItem* destination = m_map.getMapItem(position + point);
-            b8 border = destination->hasBorderObject();
+            b8 border = destination->hasObstacleFill();
             b8 pathClearance = destination->hasPathClearance();
             TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
             if (destination->getLandType() != eTerrainWater
                 && source->canBlockFloor()
                 && destination->isPassableLand() && !destination->isObjectEntrance()) {
                 destination->releasePathClearance();
-                if (source->hasBorderObject()) {
-                    destination->markBorderObject();
+                if (source->hasObstacleFill()) {
+                    destination->markObstacleFill();
                 }
             }
             // Copy the destination's earlier marks back to the group map.
             if (border)
-                source->markBorderObject();
+                source->markObstacleFill();
             else
-                source->clearBorderObject();
+                source->clearObstacleFill();
             if (pathClearance)
                 source->openPath();
             else
@@ -7312,7 +7312,7 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
         type_object* object = group->m_objects[i];
         if (m_map.isPlacementBlocked(object->m_properties,
                 object->getPlacedGroupPosition(position), zoneIndex,
-                RMG_REJECT_BORDER_ENTRANCES))
+                RMG_REJECT_OBSTACLE_ENTRANCES))
             return false;
     }
     if (group->m_hasGuard) {
