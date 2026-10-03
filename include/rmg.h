@@ -932,10 +932,11 @@ SIZE(rmgQuestArtifactObject, 0x28);
 class rmgKeyTentObject : public type_object {
 public:
     type_random_map_generator* m_generator; // +0x1c
-    s32 m_value;                           // +0x20
+    // The tent's treasure value; its border guard targets 1.5 times this.
+    s32 m_treasureValue;                   // +0x20
 
     rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, s32 value);
+        type_random_map_generator* generator, s32 treasureValue);
     virtual b8 completePlacement();
 };
 SIZE(rmgKeyTentObject, 0x24);
@@ -1557,10 +1558,10 @@ struct TRmgZone {
     s32 m_scaledSize;                   // +0x1c
     // Half-open bounds of the zone's cells.
     TRmgZoneBounds m_bounds;           // +0x20
-    // Valid once m_active is set.
-    TRmgMapPosition m_position;        // +0x30: main town entrance
-    // Has a primary town.
-    b8 m_active;            // +0x3c
+    // Entrance of the zone's primary town, placed nearest its centre; valid
+    // once m_hasPrimaryTown is set.
+    TRmgMapPosition m_primaryTownEntrance; // +0x30
+    b8 m_hasPrimaryTown;               // +0x3c
     // Graph distance turned into a randomized quest-zone priority that
     // penalizes immediately adjacent zones (ERmgQuestZoneScore in rmg.cpp).
     s32 m_questPlacementScore;         // +0x40
@@ -1784,9 +1785,9 @@ public:
     // Next free keymaster tent colour. Retail bug: never initialized, so
     // its first value is whatever was on the caller's stack.
     s32 m_nextKeyTentColor;                            // +0x0f5c
-    // Active zones, in total and per town alignment.
-    s32 m_activeZoneCount;                             // +0x0f60
-    s32 m_activeZoneCountsByAlignment[TOWN_TYPE_COUNT]; // +0x0f64
+    // Town zones (zones with a primary town), in total and per alignment.
+    s32 m_townZoneCount;                               // +0x0f60
+    s32 m_townZoneCountsByAlignment[TOWN_TYPE_COUNT];  // +0x0f64
     // Per hero: special, missing from the map version, or held by a prison.
     b8 m_disabledHeroes[RMG_HERO_COUNT];    // +0x0f88
     // Artifacts already used as seer-hut quests.

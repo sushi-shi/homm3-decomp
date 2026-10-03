@@ -904,18 +904,18 @@ enum ERmgNeighbourStep {
 };
 
 // Painting beside a queued paint-terrain cell closes its gap on that axis.
-// Without a perpendicular gap it no longer needs primary repair; dequeue it
+// Without a perpendicular gap it no longer needs repair; dequeue it
 // and queue its other-terrain neighbours instead.
 inline void rmgTerrainPainter::resolveQueuedGap(const TRmgGridPoint& painted,
     s32 offsetX, s32 offsetY, TRmgTerrainGapAxis closedAxis)
 {
     TRmgGridPoint point(painted.getX() + offsetX, painted.getY() + offsetY);
-    if (m_primaryPoints.find(point) == m_primaryPoints.end())
+    if (m_repairPoints.find(point) == m_repairPoints.end())
         return;
     b8 remainsGap = closedAxis == RMG_VERTICAL_GAP
         ? isHorizontalGap(point) : isVerticalGap(point);
     if (!remainsGap) {
-        m_primaryPoints.erase(point);
+        m_repairPoints.erase(point);
         queueOtherTerrainNeighbours(point);
     }
 }
@@ -926,8 +926,8 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
     paintBaseTile(point);
 
-    if (m_secondaryPoints.find(point) != m_secondaryPoints.end())
-        m_secondaryPoints.erase(point);
+    if (m_otherTerrainPoints.find(point) != m_otherTerrainPoints.end())
+        m_otherTerrainPoints.erase(point);
 
     if (g_rmgTerrainRules[m_paintTerrain]->m_allowsSeparatedNeighbours) {
         if (point.m_y > 0)
@@ -951,20 +951,20 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
                 const TPoint& offset = g_tileDirections[direction];
                 TRmgGridPoint nearby(point + offset);
                 if (isPaintTerrain(nearby)) {
-                    if (m_primaryPoints.find(nearby) != m_primaryPoints.end()) {
+                    if (m_repairPoints.find(nearby) != m_repairPoints.end()) {
                         if (!needsTerrainRepair(nearby)) {
-                            m_primaryPoints.erase(nearby);
+                            m_repairPoints.erase(nearby);
                             queueOtherTerrainNeighbours(nearby);
                         }
                     } else if (needsTerrainRepair(nearby)) {
-                        m_primaryPoints.insert(nearby);
+                        m_repairPoints.insert(nearby);
                     }
                 }
             }
         }
     }
     if (needsTerrainRepair(point))
-        m_primaryPoints.insert(point);
+        m_repairPoints.insert(point);
     else
         queueOtherTerrainNeighbours(point);
 }
@@ -978,7 +978,7 @@ inline void rmgTerrainPainter::queueOtherTerrainDiagonalNeighbour(
     s32 terrain = getTerrain(neighbour);
     if (terrain != m_paintTerrain
         && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
-        m_secondaryPoints.insert(neighbour);
+        m_otherTerrainPoints.insert(neighbour);
 }
 
 inline bool rmgTerrainPainter::tryQueueOtherTerrainCardinalNeighbour(
@@ -987,7 +987,7 @@ inline bool rmgTerrainPainter::tryQueueOtherTerrainCardinalNeighbour(
     TRmgGridPoint neighbour(point.getX() + offsetX, point.getY() + offsetY);
     if (isPaintTerrain(neighbour))
         return false;
-    m_secondaryPoints.insert(neighbour);
+    m_otherTerrainPoints.insert(neighbour);
     return true;
 }
 
@@ -1462,17 +1462,17 @@ MAC_ADDRESS(0x257f68, 0xd4)
 void rmgTerrainPainter::finish()
 {
     do {
-        while (m_primaryPoints.size()) {
-            TRmgGridPoint point = *m_primaryPoints.begin();
+        while (m_repairPoints.size()) {
+            TRmgGridPoint point = *m_repairPoints.begin();
             repairTerrainPoint(point);
         }
-        while (m_secondaryPoints.size()) {
-            TRmgGridPoint point = *m_secondaryPoints.begin();
-            m_secondaryPoints.erase(point);
+        while (m_otherTerrainPoints.size()) {
+            TRmgGridPoint point = *m_otherTerrainPoints.begin();
+            m_otherTerrainPoints.erase(point);
             if (needsTerrainRepair(point))
                 paintPoint(point);
         }
-    } while (m_primaryPoints.size());
+    } while (m_repairPoints.size());
     paintTransitions();
 }
 

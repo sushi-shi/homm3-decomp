@@ -240,8 +240,11 @@ public:
     // neighbour with a special frame halves it for a cell.
     s32 m_specialFrameStrength;                         // +0x08
     TRmgGridPoint m_size;                             // +0x0c
-    std::set<TRmgGridPoint> m_primaryPoints;            // +0x14
-    std::set<TRmgGridPoint> m_secondaryPoints;          // +0x24
+    // Paint-terrain cells whose shape still needs repair.
+    std::set<TRmgGridPoint> m_repairPoints;             // +0x14
+    // Other-terrain neighbours of settled cells, repainted with the paint
+    // terrain if they need repair.
+    std::set<TRmgGridPoint> m_otherTerrainPoints;       // +0x24
     // Lazily filled tile cache, row by row: cell (x, y) is at y * width + x.
     std::vector<TRmgPackedTerrainCell> m_packedCells;   // +0x34
 

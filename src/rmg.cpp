@@ -1253,7 +1253,7 @@ TRmgZone::TRmgZone(TRmgTemplateZone* newSlot)
     m_alignment = static_cast<TTownType>(newSlot->selectAllowedTown());
     m_scaledSize = newSlot->m_size;
     m_bounds.resetEmpty();
-    m_active = false;
+    m_hasPrimaryTown = false;
     memset(m_objectCountByType, 0, sizeof(m_objectCountByType));
 }
 
@@ -1621,8 +1621,8 @@ rmgQuestArtifactObject::rmgQuestArtifactObject(TRmgObjectPropertiesRef* properti
 }
 
 rmgKeyTentObject::rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, s32 value)
-    : type_object(properties), m_generator(generator), m_value(value)
+    type_random_map_generator* generator, s32 treasureValue)
+    : type_object(properties), m_generator(generator), m_treasureValue(treasureValue)
 {
 }
 
@@ -1718,9 +1718,9 @@ VA(0x005338e0, 0xd4)
 MAC_ADDRESS(0x231030, 0x68)
 b8 rmgKeyTentObject::completePlacement()
 {
-    if (m_generator->placeKeyTentGuard(this, m_value * 3 / 2))
+    if (m_generator->placeKeyTentGuard(this, m_treasureValue * 3 / 2))
         return true;
-    m_generator->replaceObjectWithTreasure(this, m_value);
+    m_generator->replaceObjectWithTreasure(this, m_treasureValue);
     return false;
 }
 
@@ -1944,7 +1944,7 @@ type_black_box_creature_def::type_black_box_creature_def(s32 newCreatureType)
         m_creatureCount = roundRmgCreatureCount(m_creatureCount, 2);
 }
 
-// Raises a value by the share of active zones with the same alignment.
+// Raises a value by the share of town zones with the same alignment.
 static inline s32 adjustRmgValueForAlignment(s32 value, s32 alignmentCount, s32 zoneCount)
 {
     if (zoneCount > 0)
@@ -1952,12 +1952,12 @@ static inline s32 adjustRmgValueForAlignment(s32 value, s32 alignmentCount, s32 
     return value;
 }
 
-// Active zones of a town alignment; none for eTownNeutral.
+// Town zones of an alignment; none for eTownNeutral.
 inline s32 type_random_map_generator::getAlignedZoneCount(s32 alignment) const
 {
     if (alignment == eTownNeutral)
         return 0;
-    return m_activeZoneCountsByAlignment[alignment];
+    return m_townZoneCountsByAlignment[alignment];
 }
 
 // getValue result for a treasure this zone or moment cannot offer.
@@ -1966,7 +1966,7 @@ enum ERmgTreasureOffer {
 };
 
 // Creature rewards are offered only in zones of the creature's town; the
-// value rises with that town's share of active zones.
+// value rises with that town's share of town zones.
 VA(0x00534310, 0x64)
 MAC_ADDRESS(0x231f04, 0x6c)
 s32 type_black_box_creature_def::getValue(
@@ -1977,7 +1977,7 @@ s32 type_black_box_creature_def::getValue(
         return RMG_TREASURE_NOT_OFFERED;
     s32 value = g_creatureTypeTraits[m_creatureType].m_aiValue * m_creatureCount;
     return adjustRmgValueForAlignment(value,
-        generator->getAlignedZoneCount(alignment), generator->m_activeZoneCount);
+        generator->getAlignedZoneCount(alignment), generator->m_townZoneCount);
 }
 
 VA(0x00534380, 0x85)
@@ -2058,7 +2058,7 @@ s32 type_map_dwelling_def::getValue(TRmgZone* zone, type_random_map_generator* g
 
     s32 value = creature.m_growthRate * creature.m_aiValue;
     s32 alignmentZoneCount = generator->getAlignedZoneCount(creature.m_townType);
-    value = adjustRmgValueForAlignment(value, alignmentZoneCount, generator->m_activeZoneCount);
+    value = adjustRmgValueForAlignment(value, alignmentZoneCount, generator->m_townZoneCount);
     return value + creature.m_aiValue * alignmentZoneCount / 2;
 }
 
@@ -6646,7 +6646,7 @@ b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
             alignment = rand() % (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE
                 ? TOWN_TYPE_COUNT : TOWN_CONFLUX);
     }
-    if (!zone->m_active)
+    if (!zone->m_hasPrimaryTown)
         return tryPlacePrimaryTown(zone, alignment, player, hasFort);
 
     std::vector<TRmgMapPosition> candidates;
@@ -6718,9 +6718,9 @@ b8 type_random_map_generator::tryPlacePrimaryTown(
     }
     if (!candidates.size())
         return false;
-    zone->m_position = placeTownAtRandomCandidate(properties,
+    zone->m_primaryTownEntrance = placeTownAtRandomCandidate(properties,
         player, hasFort, candidates, prototype->m_triggerCell);
-    zone->m_active = true;
+    zone->m_hasPrimaryTown = true;
     return true;
 }
 
@@ -6749,7 +6749,7 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
     // distances below equal entrance-to-entrance distances.
     TRmgMapPosition townAlignedAnchor;
     if (startingMine) {
-        townAlignedAnchor = zone->m_position;
+        townAlignedAnchor = zone->m_primaryTownEntrance;
         townAlignedAnchor += TPoint(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
     }
     bounds.insetForObjectFootprint(prototype);
@@ -6951,7 +6951,7 @@ void type_random_map_generator::placeMines()
         for (s32 resource = WOOD; resource <= GOLD; ++resource) {
             b8 startingMine = (resource == WOOD || resource == ORE)
                 && (slot->m_kind == RMG_TEMPLATE_HUMAN || slot->m_kind == RMG_TEMPLATE_COMPUTER)
-                && zone->m_active;
+                && zone->m_hasPrimaryTown;
             for (s32 mine = 0; mine < slot->m_mineCounts[resource]; ++mine) {
                 if (!tryPlaceMine(zone, resource, startingMine, RMG_NO_SPACING))
                     break;
@@ -8122,12 +8122,12 @@ b8 type_random_map_generator::generate()
             && m_zones[zone]->m_terrain != eTerrainWater)
             prepareJunctionZone(m_zones[zone]);
     placeMines();
-    memset(m_activeZoneCountsByAlignment, 0, sizeof(m_activeZoneCountsByAlignment));
-    m_activeZoneCount = 0;
+    memset(m_townZoneCountsByAlignment, 0, sizeof(m_townZoneCountsByAlignment));
+    m_townZoneCount = 0;
     for (zone = 0; zone < m_zones.size(); ++zone) {
-        if (m_zones[zone]->m_active) {
-            ++m_activeZoneCountsByAlignment[m_zones[zone]->m_alignment];
-            ++m_activeZoneCount;
+        if (m_zones[zone]->m_hasPrimaryTown) {
+            ++m_townZoneCountsByAlignment[m_zones[zone]->m_alignment];
+            ++m_townZoneCount;
         }
     }
     buildZoneConnectionPaths();
@@ -8293,18 +8293,18 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
             continue;
 
         s32 player = m_playerIndexMap[slotPlayer + 1];
-        if (player < 0 || !zone->m_active)
+        if (player < 0 || !zone->m_hasPrimaryTown)
             continue;
 
         if (slot->m_kind == RMG_TEMPLATE_HUMAN && !canBeHuman[player]) {
             ++generatedHumanTowns;
             canBeHuman[player] = true;
-            mainTowns[player] = zone->m_position;
+            mainTowns[player] = zone->m_primaryTownEntrance;
         }
 
         if (slot->m_kind == RMG_TEMPLATE_COMPUTER && !canBeComputer[player]) {
             canBeComputer[player] = true;
-            mainTowns[player] = zone->m_position;
+            mainTowns[player] = zone->m_primaryTownEntrance;
         }
 
         legalAlignments[player] |= 1 << zone->m_alignment;
