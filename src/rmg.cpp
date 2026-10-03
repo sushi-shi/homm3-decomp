@@ -918,8 +918,8 @@ void TRmgRoadMapAdapter::setTile(
     b8 flipY = tile.m_flipY;
     int frame = tile.m_frame;
     b8 flipX = tile.m_flipX;
-    int terrain = tile.m_terrain;
-    item.m_tile.m_roadType = terrain;
+    int roadType = tile.m_terrain;
+    item.m_tile.m_roadType = roadType;
     item.m_tileData.m_roadFrame = frame;
     item.m_tileData.m_roadFlipX = flipX;
     item.m_tileData.m_roadFlipY = flipY;
@@ -987,10 +987,10 @@ void TRmgRiverMapAdapter::setTile(const TRmgGridPoint& point, const rmgTerrainTi
 {
     TRmgMapItem& item = *m_map->getMapItem(point.m_x, point.m_y);
     b8 flipX = tile.m_flipX;
-    int terrain = tile.m_terrain;
+    int riverType = tile.m_terrain;
     b8 flipY = tile.m_flipY;
     int frame = tile.m_frame;
-    item.m_tile.m_riverType = terrain;
+    item.m_tile.m_riverType = riverType;
     item.m_tile.m_riverFrame = frame;
     item.m_tileData.m_riverFlipX = flipX;
     item.m_tileData.m_riverFlipY = flipY;
@@ -2678,8 +2678,10 @@ int TRmgGeneratorBase::scoreObjectPlacement(
                 if (item->hasPathClearance())
                     return RMG_PLACEMENT_INVALID;
 
-                // The cell's earlier marks are replaced by ADJACENT before
-                // its neighbourhood is marked.
+                // Retail bug: this replaces the OVERLAP and BLOCKED marks just
+                // set, and BLOCKED is set nowhere else. Blocked cells therefore
+                // never take the overlap-order or blocked-score paths below;
+                // objects under them count only as adjacent.
                 marks[column + 1][row + 1] = RMG_PLACEMENT_ADJACENT;
                 terrainSeen[item->getLandType()] = true;
                 int firstRow = position.m_y - min(y + 1, m_map.m_mapHeight) + 1;
