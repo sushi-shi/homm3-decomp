@@ -592,8 +592,9 @@ static inline TRmgMapItem* seedRmgMovementSearch(type_random_map& map,
     return item;
 }
 
-// Floods movement costs out from a seed cell. Entering another zone or
-// water costs 10 per step, other steps 1.
+// Floods movement costs out from a seed cell. Steps onto water or outside the
+// seed's zone cost 10, others 1. The flood spills into neighbouring zones as
+// zone-path costs but never re-enters the seed zone or reaches a third zone.
 VA(0x00531460, 0x441)
 MAC_ADDRESS(0x22d9ac, 0x5cc)
 void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZone)
@@ -3667,8 +3668,8 @@ void type_random_map_generator::calculateZoneBounds()
     }
 }
 
-// Places each zone, repositions all of them twice, then scales the layout
-// into a centred square.
+// Places each zone, repositions all of them twice, scales the layout into a
+// centred square, then picks each zone's terrain and town type.
 VA(0x0053BCB0, 0x33B)
 MAC_ADDRESS(0x23cd84, 0x458)
 void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
@@ -4144,7 +4145,8 @@ static inline void scanRmgFillSpan(const TRmgMapItem* neighbour,
 }
 
 // Four-connected scanline fill of unassigned cells. An out-of-bounds centre
-// is clipped toward the interior ring site with the greatest edge clearance.
+// is clipped toward the interior ring site with the greatest edge clearance;
+// with no interior site nothing is filled.
 VA(0x0053D380, 0x551)
 MAC_ADDRESS(0x23ed74, 0x4a4)
 void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first)
@@ -6023,9 +6025,9 @@ void type_random_map_generator::decorateUnderground()
         m_progress->advance(1200);
 }
 
-// This Bresenham-style ray continues beyond toward until the map edge or
-// a path-clearance tile in its 3x3 neighbourhood. The first two steps ignore
-// neighbours; the returned point precedes the obstruction.
+// This Bresenham-style ray continues beyond toward until it reaches the map's
+// outermost ring or a path-clearance tile in its 3x3 neighbourhood. The first
+// two steps ignore neighbours; the returned point precedes the obstruction.
 VA(0x00543C70, 0x1A2)
 MAC_ADDRESS(0x246d50, 0x30c)
 TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
@@ -7502,8 +7504,9 @@ static inline bool isRmgRiverTerrain(const TRmgMapItem* item, b8 sourceIsSnow)
         && (item->getLandType() == eTerrainSnow) == sourceIsSnow;
 }
 
-// Random edge costs are drawn on each neighbour visit, even without an
-// improvement. Unlike createRiver, this search ignores near-river and
+// Paints a river from source to the first m_hasRiver cell the search reaches.
+// Random edge costs are drawn for every river-terrain neighbour, even without
+// an improvement. Unlike createRiver, this search ignores near-river and
 // blocked-direction flags.
 VA(0x00548500, 0x533)
 MAC_ADDRESS(0x24c8ac, 0x588)
@@ -7586,10 +7589,10 @@ static inline TRmgMapItem* getRmgDryRiverCoastCell(
 }
 
 // Test three water cells, three dry entrance-free cells, then four inland
-// cells. The last inland cell becomes a river target whose blocked bit
-// faces the coast: rivers cannot arrive from there, and createRiver puts
-// its delta on that side. For direction East, North up: P and ~ water,
-// d the dry strip, i inland (the middle d is inland too), T the target.
+// cells starting with the middle dry one. The last becomes a river target
+// whose blocked bit faces the coast: rivers cannot arrive from there, and
+// createRiver puts its delta on that side. For direction East, North up:
+// P and ~ water, d the dry strip, i inland, T the target.
 //   ~ d
 //   P d i i T
 //   ~ d

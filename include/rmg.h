@@ -1214,7 +1214,7 @@ struct TRmgTreasureGroup {
     std::vector<TPoint> m_outline;           // +0x38
     b8 m_hasGuard;               // +0x48, cleared by reset
     char m_padding0049[3];
-    // Guard position in group-local coordinates.
+    // Guard entrance in group-local coordinates (see addGuard's trigger bug).
     TPoint m_guardPosition;                 // +0x4c
     // Map offset chosen when the group is committed.
     TRmgMapPosition m_position;             // +0x54
@@ -1589,8 +1589,8 @@ struct TRmgHalfEdge {
 };
 SIZE(TRmgHalfEdge, 0x24);
 
-// Delaunay subdivision of the zone sites; owns every allocated edge. Zone
-// placement inserts the sites, computes the dual Voronoi vertices, then looks
+// Delaunay subdivision of the zone sites; owns every allocated edge. Boundary
+// building inserts the sites, computes the dual Voronoi vertices, then looks
 // up an edge for each site.
 class TRmgVoronoi {
 public:
@@ -1831,8 +1831,8 @@ public:
     void connectZones();
     bool contains(const TPoint& point) const;
     // Marks every empty cell for border filling, carves paths by random
-    // midpoint displacement and queued side branches, then cleans up terrain
-    // and borders.
+    // midpoint displacement and queued side branches, then opens water and
+    // rock cells and releases path clearance beside border marks.
     void carveBranchingPaths();
     void repairWaterZoneBorders();
     void openConnectionPath(TRmgMapPosition position, b8 narrow);

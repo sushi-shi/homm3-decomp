@@ -151,9 +151,9 @@ lava, which share one table.
 | 28 `E_S_BLEND_NE_SW_HARD` | 77 | - | - | - | - |
 
 The classifier could give water shape 24 and rock shapes 16 and 24, but their
-tables have no frames for them. Water and rock disallow separated neighbours,
-and both shapes separate the cell's matching neighbours, so terrain repair
-probably removes them before painting. This has not been verified.
+tables have no frames for them. On water or rock both shapes imply a
+one-cell gap or separated matching neighbours, so terrain repair probably
+removes them before painting. This has not been verified.
 
 ### Base and special frames
 
