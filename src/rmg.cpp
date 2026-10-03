@@ -7031,7 +7031,7 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
     s32 totalWeight = 0;
     std::vector<type_treasure_def*> candidates;
-    std::vector<TRmgObjectPropertiesRef*> properties;
+    std::vector<TRmgObjectPropertiesRef*> candidateProperties;
     s32 bestValuePerCell = 0;
     for (u32 index = 0; index < m_objectGenerators.size(); ++index) {
         type_treasure_def* definition = m_objectGenerators[index];
@@ -7048,15 +7048,15 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
         s32 objectValue = definition->getValue(zone, this);
         if (objectValue < 0 || objectValue < minimum || objectValue > maximum)
             continue;
-        TRmgObjectPropertiesRef* candidate = selectObjectPrototype(
+        TRmgObjectPropertiesRef* properties = selectObjectPrototype(
             zone->m_terrain, definition->m_objectType, definition->m_subtype);
-        if (!candidate)
+        if (!properties)
             continue;
-        if (position.m_x >= 0 && m_map.isPlacementBlocked(candidate, position, zoneIndex,
+        if (position.m_x >= 0 && m_map.isPlacementBlocked(properties, position, zoneIndex,
                 RMG_REJECT_OBSTACLE_ENTRANCES))
             continue;
         if (compact) {
-            TObjectType* prototype = candidate->m_prototype;
+            TObjectType* prototype = properties->m_prototype;
             s32 occupied = 0;
             for (u32 x = 0; x < prototype->getWidth(); ++x) {
                 for (u32 y = 0; y < prototype->getHeight(); ++y) {
@@ -7070,13 +7070,13 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
             if (bestValuePerCell < 3 * valuePerCell / 4) {
                 totalWeight = 0;
                 candidates.clear();
-                properties.clear();
+                candidateProperties.clear();
                 bestValuePerCell = valuePerCell;
             }
         }
         totalWeight += definition->m_density;
         candidates.push_back(definition);
-        properties.push_back(candidate);
+        candidateProperties.push_back(properties);
     }
     if (!candidates.size())
         return 0;
@@ -7089,7 +7089,7 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     }
     type_treasure_def* definition = candidates[selectedIndex];
     *value = definition->getValue(zone, this);
-    return definition->generate(properties[selectedIndex], this, zone);
+    return definition->generate(candidateProperties[selectedIndex], this, zone);
 }
 
 // Treasure groups are assembled on a square scratch map before placement.
