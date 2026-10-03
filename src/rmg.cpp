@@ -418,6 +418,7 @@ enum ERmgTemplateColumn {
     RMG_TEMPLATE_COLUMN_TREASURE_MINIMUM = 67,
     RMG_TEMPLATE_COLUMN_TREASURE_MAXIMUM = 68,
     RMG_TEMPLATE_COLUMN_TREASURE_DENSITY = 69,
+    RMG_TEMPLATE_TREASURE_COLUMN_COUNT = 3,
     RMG_TEMPLATE_COLUMN_LAST_TREASURE_DENSITY = 75,
     RMG_TEMPLATE_COLUMN_CONNECTION_FIRST_ZONE = 76,
     RMG_TEMPLATE_COLUMN_CONNECTION_SECOND_ZONE = 77,
@@ -430,13 +431,20 @@ enum ERmgTemplateColumn {
     RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_PLAYERS = 84
 };
 
+// Offsets from a zone's or connection's minimum human players column.
+enum ERmgPlayerLimitColumn {
+    RMG_PLAYER_LIMIT_MAXIMUM_HUMAN_PLAYERS = 1,
+    RMG_PLAYER_LIMIT_MINIMUM_PLAYERS = 2,
+    RMG_PLAYER_LIMIT_MAXIMUM_PLAYERS = 3
+};
+
 // rand_trn.txt columns. Neighbour scores take one column per rule: all
 // adjacent scores, then all blocked scores.
 enum ERmgPlacementRuleColumn {
     RMG_PLACEMENT_COLUMN_OBJECT_TYPE = 3,
     RMG_PLACEMENT_COLUMN_SUBTYPE = 4,
     RMG_PLACEMENT_COLUMN_TERRAIN = 6,
-    RMG_PLACEMENT_COLUMN_TERRAIN_SCORES = 7,     // one per terrain
+    RMG_PLACEMENT_COLUMN_TERRAIN_SCORES = 7,     // dirt through water
     RMG_PLACEMENT_COLUMN_NEIGHBOUR_SCORES = 16
 };
 
@@ -3130,9 +3138,10 @@ static inline void readRmgTemplatePlayerLimits(Record& record,
     const TSpreadsheetResource::TStringVector& fields, s32 firstField)
 {
     record.m_minimumHumanPlayers = atoi(fields[firstField]);
-    record.m_maximumHumanPlayers = atoi(fields[firstField + 1]);
-    record.m_minimumPlayers = atoi(fields[firstField + 2]);
-    record.m_maximumPlayers = atoi(fields[firstField + 3]);
+    record.m_maximumHumanPlayers =
+        atoi(fields[firstField + RMG_PLAYER_LIMIT_MAXIMUM_HUMAN_PLAYERS]);
+    record.m_minimumPlayers = atoi(fields[firstField + RMG_PLAYER_LIMIT_MINIMUM_PLAYERS]);
+    record.m_maximumPlayers = atoi(fields[firstField + RMG_PLAYER_LIMIT_MAXIMUM_PLAYERS]);
 }
 
 template<class Record>
@@ -3350,11 +3359,14 @@ void readRmgTemplateZones(
                     slot->m_allowedMonsters[TOWN_CONFLUX] = false;
                 for (s32 treasure = 0; treasure < 3; ++treasure) {
                     slot->m_treasure[treasure].m_minimum =
-                        atoi(values[RMG_TEMPLATE_COLUMN_TREASURE_MINIMUM + 3 * treasure]);
+                        atoi(values[RMG_TEMPLATE_COLUMN_TREASURE_MINIMUM
+                            + RMG_TEMPLATE_TREASURE_COLUMN_COUNT * treasure]);
                     slot->m_treasure[treasure].m_maximum =
-                        atoi(values[RMG_TEMPLATE_COLUMN_TREASURE_MAXIMUM + 3 * treasure]);
+                        atoi(values[RMG_TEMPLATE_COLUMN_TREASURE_MAXIMUM
+                            + RMG_TEMPLATE_TREASURE_COLUMN_COUNT * treasure]);
                     slot->m_treasure[treasure].m_density =
-                        atoi(values[RMG_TEMPLATE_COLUMN_TREASURE_DENSITY + 3 * treasure]);
+                        atoi(values[RMG_TEMPLATE_COLUMN_TREASURE_DENSITY
+                            + RMG_TEMPLATE_TREASURE_COLUMN_COUNT * treasure]);
                 }
                 mapTemplate->m_zones.push_back(slot);
             }
