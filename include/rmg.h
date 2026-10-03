@@ -756,6 +756,8 @@ struct TRmgObjectPropertiesRef {
     // H3M prototype number that writeMap assigns to used ones (from 2).
     s32 m_prototypeIndex;
     TRmgObjectPlacementRule* m_placementRule; // +0x10
+    // Cells ringing the footprint, clockwise, as offsets from the object's
+    // position (see buildOutline).
     std::vector<TPoint> m_outline;         // +0x14
     s32 m_overlapPriorities[8][6];         // +0x24
     b8 m_prioritiesInitialized; // +0xe4
@@ -770,6 +772,8 @@ struct TRmgObjectPropertiesRef {
 class type_object {
 public:
     TRmgObjectPropertiesRef* m_properties; // +0x04
+    // The footprint's bottom-right cell; its mask grows west and north.
+    // In a treasure group, group-map coordinates until the group is committed.
     TRmgMapPosition m_position;             // +0x08
     b8 m_candidateCovers;
     b8 m_candidateBehind;
@@ -1268,6 +1272,7 @@ struct TRmgTreasureGroup {
     type_random_map m_map;                  // +0x00
     TRmgZoneBounds m_bounds;                // +0x18
     std::vector<type_object*> m_objects;    // +0x28
+    // Cells ringing the occupied ones, clockwise, in group-map coordinates.
     std::vector<TPoint> m_outline;           // +0x38
     b8 m_hasGuard;               // +0x48, cleared by reset
     char m_padding0049[3];
