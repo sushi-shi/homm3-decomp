@@ -9,9 +9,9 @@ end-position inserts	0
 std internal references	1
 cpp extern decls	0
 .cpp-local views	1
-.cpp-local enums	0
-casts to enum types	5
+.cpp-local enums	4
+casts to enum types	34
 magic case labels	0
 unnamed domain compares	0
 view preprocessor artifacts	0
-per-TU preprocessor scaffolds	0
+per-TU preprocessor scaffolds	19
