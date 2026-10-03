@@ -615,9 +615,10 @@ struct TRmgRiverDeltaOffset {
 class type_object;
 
 // Path costs and zone graph distances start at RMG_UNREACHED_COST. Searches
-// treat costs beyond RMG_REACHED_COST_LIMIT as unreached. Clearing a cell sets
-// its costs and object distance to RMG_CLEARED_CELL_COST; removing an object
-// resets the object distance under its footprint to it.
+// treat costs above RMG_REACHED_COST_LIMIT as unreached; some also reject the
+// limit itself. Clearing a cell sets its costs and object distance to
+// RMG_CLEARED_CELL_COST; removing an object resets the object distance under
+// its footprint to it.
 enum ERmgPathCostLimits {
     RMG_REACHED_COST_LIMIT = 30000,
     RMG_UNREACHED_COST = 32000,
@@ -638,7 +639,7 @@ struct TRmgZoneCellState {
     unsigned m_objectDistance : 16;
     signed m_zone : 8;
     // Neighbouring zone whose connection-cost flood crossed into this cell
-    // (-1 none); m_connectionDirection points back toward it.
+    // (-1 none); m_connectionDirection points back along that flood.
     signed m_connectionZone : 8;
 };
 
@@ -764,8 +765,8 @@ public:
     // Undoes a discarded object's reservation; only prisons reserve (a hero).
     virtual void releaseReservation();
     // Runs once the object's treasure group is committed: key tents and quest
-    // artifacts place their guard or seer hut, or are replaced by a treasure.
-    // The success result is ignored.
+    // artifacts place their guard or seer hut; if that placement fails they
+    // are replaced by a treasure. The success result is ignored.
     virtual b8 completePlacement();
     virtual void write(TAbstractFile* outputFile, int version);
 };

@@ -771,7 +771,8 @@ static inline bool allowsRmgSharedObjectEntrance(int objectType)
 }
 
 // The object must fit and have a connected outline, and the cell below its
-// trigger must be passable land of the same zone and water class.
+// trigger must be passable land of the same zone and water class. If that
+// cell is another entrance, its object type needs trait 2.
 VA(0x00531CF0, 0x1A5)
 MAC_ADDRESS(0x22e6a8, 0x270)
 b8 type_random_map::canPlaceObject(
@@ -1580,7 +1581,8 @@ type_object::~type_object()
     --m_properties->m_refCount;
 }
 
-// Removes the object and puts a treasure worth 1-1.5x its value in its place.
+// Removes the object and, if one fits, puts a treasure worth 1-1.5x its value
+// in its place.
 // removeObject keeps the object alive and its position unchanged.
 static inline void replaceRmgObjectWithTreasure(type_random_map_generator* generator,
     type_object* object, int value)
@@ -2296,7 +2298,8 @@ TRmgMapPosition::TRmgMapPosition(int newX, int newY, int newZ)
 }
 
 // Whether an object fits on the group map without blocking neighbouring
-// entrances; guards also need a free neighbouring cell.
+// entrances. Other objects' entrances avoid border cells; guards may stand
+// on them but need a free neighbouring cell.
 VA(0x005355E0, 0x1F9)
 MAC_ADDRESS(0x2336d0, 0x374)
 b8 TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
@@ -3862,6 +3865,7 @@ static inline void clipRmgBoundarySegment(const TRmgZoneBounds& bounds,
 }
 
 // Clip each Voronoi edge, assign its map cells and record the zone polygon.
+// A shared edge is drawn only by the lower-indexed zone.
 VA(0x0053C390, 0x730)
 MAC_ADDRESS(0x23dd34, 0x614)
 void type_random_map_generator::traceZoneBoundary(
@@ -4751,8 +4755,9 @@ void type_random_map_generator::placeWaterZoneIslands(TRmgZone* zone)
     }
 }
 
-// markZoneBorders and repairWaterZoneBorders finish each marked cell by
-// releasing path clearance on unoccupied cells of a square around it.
+// markZoneBorders finishes each marked cell, and repairWaterZoneBorders each
+// repaired water cell, by releasing path clearance on unoccupied cells of a
+// square around it.
 static inline void releaseRmgNeighborhoodPathClearance(type_random_map& map,
     const TRmgMapPosition& center, int radius)
 {
@@ -4933,8 +4938,8 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
 }
 
 // Floods path costs from a seed cell in each zone. Every clear, dry zone cell
-// still at nonzero cost then opens a path back along the costs and reseeds
-// the flood from itself.
+// still at nonzero cost then opens a path back along the costs (if reached)
+// and reseeds the flood from itself.
 VA(0x005405D0, 0x304)
 MAC_ADDRESS(0x242a40, 0x448)
 void type_random_map_generator::buildZoneConnectionPaths()
@@ -5009,9 +5014,10 @@ static inline void clearRmgZonePathBorders(type_random_map& map,
     }
 }
 
-// Follow predecessors to the zero-cost seed without changing costs; marked
-// connection cells on the way get a border guard of their colour. Widened
-// routes clear only the border mark of nearby same-zone cells.
+// From a reached cell, follow predecessors to the zero-cost seed without
+// changing costs; marked connection cells on the way get a border guard of
+// their colour. Widened routes clear only the border mark of nearby
+// same-zone cells.
 VA(0x005408E0, 0x23F)
 MAC_ADDRESS(0x242e88, 0x380)
 void type_random_map_generator::openConnectionPath(
@@ -5040,7 +5046,8 @@ void type_random_map_generator::openConnectionPath(
 
 // Picks a random allowed creature for a guard of the given value. Retail bug
 // on RoE maps: creature 117 is neither evaluated nor excluded, so it can be
-// selected without being counted. Two draws vary the stack size.
+// selected without being counted. Stacks of four or more get two draws of
+// size variation.
 VA(0x00540B20, 0x240)
 MAC_ADDRESS(0x243208, 0x290)
 type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
@@ -5278,8 +5285,9 @@ static inline TRmgMapPosition addRmgObjectAtRandomCandidate(
 }
 
 // Opens one crossing per 40 eligible border cells (rounded up), chosen from
-// the cheapest empty ones; each gets open paths and entrances on both sides
-// before its border or guard.
+// the empty ones tied for the lowest zone-path cost, which must be at most
+// 100; each gets open paths and entrances on both sides before its border
+// or guard.
 VA(0x00541140, 0x63A)
 MAC_ADDRESS(0x243af8, 0x53c)
 b8 type_random_map_generator::createGroundConnection(
@@ -5681,10 +5689,10 @@ b8 type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* z
     return true;
 }
 
-// Rebuilds the zone connection paths, then puts the border on a positive-cost
-// entrance's path predecessor; a zero-cost entrance uses the first same-zone
-// open neighbour, else the cell below. Success also marks the entrance's five
-// side and lower neighbours as border connections.
+// Rebuilds the zone connection paths, then puts the border on the portal
+// cell's path predecessor; a zero-cost cell uses the first same-zone open
+// neighbour, else the cell below, and an unreached cell fails. Success also
+// marks the cell's five side and lower neighbours as border connections.
 VA(0x00542B00, 0x1D2)
 MAC_ADDRESS(0x245870, 0x364)
 b8 type_random_map_generator::placeMonolithBorder(
@@ -6440,7 +6448,9 @@ static inline TRmgMapPosition placeRmgTownAtRandomCandidate(
     return entrance;
 }
 
-// The trigger's entire clipped 3x3 neighbourhood must remain in the zone.
+// A zone without a primary town gets this one as its primary town.
+// Otherwise the entrance must be at least spacing from other objects, with
+// its clipped 3x3 neighbourhood in the zone; the farthest such sites win.
 VA(0x00544D90, 0x4B7)
 MAC_ADDRESS(0x24882c, 0x5d4)
 b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
@@ -6937,7 +6947,8 @@ static inline void discardRmgTreasureGroup(TRmgTreasureGroup* group)
     group->reset();
 }
 
-// A failed guard fit destroys the group's objects and the unaccepted guard.
+// Without a suitable guard creature the group stays unguarded; a failed
+// guard fit destroys the group's objects and the unaccepted guard.
 VA(0x005466E0, 0x253)
 MAC_ADDRESS(0x24a7b0, 0x110) // MAC_ABSTRACTION_FROM(tokens1:4deef3890efa,29.6117): discardRmgTreasureGroup shares ordered reservation release, deletion and reset across four failed-placement paths.
 b8 type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
