@@ -255,7 +255,7 @@ static inline bool isRmgSouthwardDirection(s32 direction)
 // and below them; these object types also allow the three cells above.
 static inline bool isRmgEntranceOpenToNorth(TAdventureObjectType objectType)
 {
-    return g_adventureObjectTraits[objectType].m_trait1 != 0;
+    return g_adventureObjectTraits[objectType].m_enterableFromNorth != 0;
 }
 
 // Shipyards are three tiles wide; these offsets probe beside the left and
@@ -773,7 +773,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
             if (next->isObjectEntrance()) {
                 TAdventureObjectType objectType = next->getEntranceObjectType();
                 const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
-                if (traits.m_blocksLanding && !traits.m_trait2)
+                if (traits.m_blocksLanding && !traits.m_clearedOnVisit)
                     continue;
                 if (!isRmgEntranceOpenToNorth(objectType)
                     && isRmgSouthwardDirection(direction))
@@ -913,13 +913,13 @@ inline TRmgMapPosition type_object::getEntrance() const
 
 static inline bool allowsRmgSharedObjectEntrance(TAdventureObjectType objectType)
 {
-    return g_adventureObjectTraits[objectType].m_trait2
+    return g_adventureObjectTraits[objectType].m_clearedOnVisit
         && isRmgEntranceOpenToNorth(objectType);
 }
 
 // The object must fit and have a connected outline. With a trigger, the cell
 // below it must also be passable land of the same zone and water class; if
-// that cell is another entrance, its object type needs trait 2.
+// that cell is another entrance, its object must be cleared on visit.
 VA(0x00531cf0, 0x1a5)
 MAC_ADDRESS(0x22e6a8, 0x270)
 b8 type_random_map::canPlaceObject(
@@ -950,7 +950,7 @@ b8 type_random_map::canPlaceObject(
         return false;
     if (item->isObjectEntrance()) {
         TAdventureObjectType entranceType = item->getEntranceObjectType();
-        if (!g_adventureObjectTraits[entranceType].m_trait2)
+        if (!g_adventureObjectTraits[entranceType].m_clearedOnVisit)
             return false;
     }
     return (item->getLandType() == eTerrainWater) == (zone->m_terrain == eTerrainWater);
@@ -2295,7 +2295,7 @@ b8 TRmgTreasureGroup::objectsAllowEntrances() const
     for (u32 index = 0; index < m_objects.size(); ++index) {
         TAdventureObjectType objectType =
             m_objects[index]->m_properties->m_prototype->getObjectType();
-        if (!g_adventureObjectTraits[objectType].m_trait2)
+        if (!g_adventureObjectTraits[objectType].m_clearedOnVisit)
             return false;
     }
     return true;
@@ -7037,7 +7037,7 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
         type_treasure_def* definition = m_objectGenerators[index];
         s32 objectType = definition->m_objectType;
         if (!firstInGroup && g_adventureObjectTraits[objectType].m_blocksLanding
-            && !g_adventureObjectTraits[objectType].m_trait2)
+            && !g_adventureObjectTraits[objectType].m_clearedOnVisit)
             continue;
         if (!allowTerrainDependent && definition->isTerrainDependent())
             continue;
@@ -7509,7 +7509,7 @@ static inline void queueRmgMovementStep(TRmgMapItem* destination,
 static inline bool hasRmgRestrictedRoadApproach(TAdventureObjectType objectType)
 {
     return !isRmgEntranceOpenToNorth(objectType)
-        && !g_adventureObjectTraits[objectType].m_trait2;
+        && !g_adventureObjectTraits[objectType].m_clearedOnVisit;
 }
 
 // Road search step costs; a diagonal step costs three times a cardinal one.
@@ -7601,7 +7601,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition source)
             if (nextMapItem->isObjectEntrance()) {
                 TAdventureObjectType objectType = nextMapItem->getEntranceObjectType();
                 const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
-                if (traits.m_blocksLanding && !traits.m_trait2)
+                if (traits.m_blocksLanding && !traits.m_clearedOnVisit)
                     continue;
                 if (hasRmgRestrictedRoadApproach(objectType)
                     && isRmgSouthwardDirection(direction))
@@ -8575,12 +8575,12 @@ b8 type_random_map_generator::writeMap(TAbstractFile* outputFile)
     writeValue<s32>(outputFile, m_objects.size());
     for (u32 first = 0; first < m_objects.size(); ++first) {
         type_object* object = m_objects[first];
-        if (g_adventureObjectTraits[object->m_properties->m_prototype->getObjectType()].m_trait3)
+        if (g_adventureObjectTraits[object->m_properties->m_prototype->getObjectType()].m_isDecoration)
             object->write(outputFile, m_mapVersion);
     }
     for (u32 second = 0; second < m_objects.size(); ++second) {
         type_object* object = m_objects[second];
-        if (!g_adventureObjectTraits[object->m_properties->m_prototype->getObjectType()].m_trait3)
+        if (!g_adventureObjectTraits[object->m_properties->m_prototype->getObjectType()].m_isDecoration)
             object->write(outputFile, m_mapVersion);
     }
     if (m_progress)

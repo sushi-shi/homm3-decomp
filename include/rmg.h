@@ -1874,7 +1874,7 @@ public:
     void placeZoneTreasures(TRmgZone* zone);
     // Compact selection keeps only treasures near the best value per
     // footprint cell; zones retry a failed treasure band with it. Only a
-    // group's first object may be a landing-blocking type without trait 2.
+    // group's first object may be a landing-blocking type not cleared on visit.
     type_object* createTreasureObject(TRmgZone* zone, s32 minimum, s32 maximum,
         s32* value, b8 firstInGroup, b8 allowTerrainDependent,
         b8 compact, TRmgMapPosition position);
