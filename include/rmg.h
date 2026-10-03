@@ -408,8 +408,9 @@ struct TRmgTreasureRange {
     s32 m_density;
 };
 
-// rmg.txt zone town columns: player-owned and neutral town counts and
-// densities. CASTLE towns start with a fort; BASIC towns start without one.
+// m_townPlacement slots, read from rmg.txt's zone town fields: player-owned
+// and neutral town counts and densities. CASTLE towns start with a fort;
+// BASIC towns start without one.
 enum ERmgTownPlacementParameter {
     RMG_TOWN_PLAYER_BASIC_COUNT = 0,
     RMG_TOWN_PLAYER_CASTLE_COUNT = 1,

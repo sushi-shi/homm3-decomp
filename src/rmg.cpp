@@ -3259,7 +3259,7 @@ void type_random_map_generator::loadTemplates()
         mapSize = max(mapSize / 2, 1);
     while (row < sheet->getNumberOfRows()) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
-        // Retail bug: a two-field row still reads the maximum size.
+        // Retail bug: a row ending at the minimum size still reads the maximum.
         if (values.size() < RMG_TEMPLATE_COLUMN_MAXIMUM_SIZE) {
             ++row;
             continue;
@@ -3303,8 +3303,8 @@ void readRmgTemplateZones(
 {
     for (s32 row = firstRow; row < endRow; ++row) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
-        // Retail bug: a three-field row reads the zone index before the full
-        // row-length check.
+        // Retail bug: a row ending just before the zone index still reads it
+        // before the full row-length check.
         if (values.size() >= RMG_TEMPLATE_COLUMN_ZONE_INDEX
             && isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_ZONE_INDEX])
             && values.size() > RMG_TEMPLATE_COLUMN_LAST_TREASURE_DENSITY) {
