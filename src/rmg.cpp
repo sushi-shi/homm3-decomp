@@ -55,14 +55,6 @@ enum ERmgPositionSentinel {
     RMG_NO_POSITION = -1
 };
 
-// Zone monster strength, from the template letter n, w, a or s.
-enum ERmgZoneMonsterStrength {
-    RMG_ZONE_MONSTERS_NONE = 0,
-    RMG_ZONE_MONSTERS_WEAK = 2,
-    RMG_ZONE_MONSTERS_AVERAGE = 3,
-    RMG_ZONE_MONSTERS_STRONG = 4
-};
-
 // Euclidean distance, truncated; the squares are 32-bit integers.
 MAC_ADDRESS(0x22cef0, 0x84)
 s32 getRmgDistance(TPoint first, TPoint second)
@@ -306,7 +298,7 @@ s32 g_rmgTerrainTownChoices[eTerrainWater + 1][4] = {
 
 // Native terrain of each town alignment, used when choosing zone terrain.
 DATA(0x006408c8)
-static const s32 g_rmgTownNativeTerrains[TOWN_TYPE_COUNT] = {
+static const TTerrainType g_rmgTownNativeTerrains[TOWN_TYPE_COUNT] = {
     eTerrainGrass, // castle
     eTerrainGrass, // rampart
     eTerrainSnow,  // tower
@@ -1245,7 +1237,7 @@ MAC_ADDRESS(0x22f7c4, 0xc0)
 TRmgZone::TRmgZone(TRmgTemplateZone* newSlot)
 {
     m_templateZone = newSlot;
-    m_alignment = newSlot->selectAllowedTown();
+    m_alignment = static_cast<TTownType>(newSlot->selectAllowedTown());
     m_scaledSize = newSlot->m_size;
     m_bounds.resetEmpty();
     m_active = false;
@@ -1268,7 +1260,8 @@ void TRmgZone::chooseTownType(b8 expanded)
         if (count == 0)
             m_townType2 = eTownNeutral;
         else
-            m_townType2 = g_rmgTerrainTownChoices[m_terrain][rand() % count];
+            m_townType2 = static_cast<TTownType>(
+                g_rmgTerrainTownChoices[m_terrain][rand() % count]);
     }
 }
 
@@ -1300,7 +1293,7 @@ void TRmgZone::chooseTerrain()
                 if (isTerrainAllowed(terrain) && selected-- <= 0)
                     break;
             }
-            m_terrain = terrain;
+            m_terrain = static_cast<TTerrainType>(terrain);
         }
     }
     if (m_levelPosition.m_z == RMG_UNDERGROUND_LEVEL && m_terrain != eTerrainLava)
@@ -3063,14 +3056,14 @@ type_random_map_generator::type_random_map_generator(
 {
     m_nextObjectId = 1;
     m_questArtifactPoolLow = false;
-    m_waterContent = waterContent;
+    m_waterContent = static_cast<ERmgWaterContent>(waterContent);
     m_monsterStrength = monsterStrength;
     m_humanPlayerCount = humanPlayers;
     m_humanTeamCount = humanTeams;
     m_computerPlayerCount = computerPlayers;
     m_computerTeamCount = computerTeams;
     if (m_waterContent == RMG_WATER_RANDOM)
-        m_waterContent = rand() % RMG_WATER_RANDOM;
+        m_waterContent = static_cast<ERmgWaterContent>(rand() % RMG_WATER_RANDOM);
     loadTemplates();
     if (m_templates.size()) {
         m_nextSeerHutPrototypeIndex = 0;
@@ -3907,7 +3900,8 @@ static inline TPoint clampRmgBoundaryToMap(
 }
 
 // Island maps paint surface zone terrain only on the islands.
-static inline bool paintsRmgZoneTerrainOnLevel(s32 waterContent, s32 level)
+static inline bool paintsRmgZoneTerrainOnLevel(
+    ERmgWaterContent waterContent, s32 level)
 {
     return level == RMG_UNDERGROUND_LEVEL || waterContent != RMG_WATER_ISLANDS;
 }
@@ -6166,12 +6160,12 @@ void type_random_map_generator::decorateUnderground()
     }
     if (m_progress)
         m_progress->advance(1200);
-    s32 currentTerrain = eTerrainRock;
+    TTerrainType currentTerrain = eTerrainRock;
     for (u32 zone = 0; zone < m_zones.size(); ++zone) {
         if (m_zones[zone]->getLevelPosition().m_z != RMG_UNDERGROUND_LEVEL)
             continue;
         TRmgZoneBounds bounds = m_zones[zone]->m_bounds;
-        s32 terrain = m_zones[zone]->m_terrain;
+        TTerrainType terrain = m_zones[zone]->m_terrain;
         if (currentTerrain == eTerrainRock) {
             brush.changeTerrain(terrain, RMG_BRUSH_STRENGTH);
             currentTerrain = terrain;
@@ -6459,7 +6453,7 @@ MAC_ADDRESS(0x248328, 0xf0)
 void type_random_map_generator::placePrimaryTown(TRmgZone* zone)
 {
     TRmgTemplateZone* slot = zone->m_templateZone;
-    s32 alignment = zone->m_alignment;
+    TTownType alignment = zone->m_alignment;
     s32 player = m_playerIndexMap[slot->m_playerIndex + 1];
     if (slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT] > 0
         && tryPlacePrimaryTown(zone, alignment, player, true))
@@ -6566,7 +6560,7 @@ MAC_ADDRESS(0x248418, 0x414)
 void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
 {
     TRmgTemplateZone* slot = zone->m_templateZone;
-    s32 alignment = zone->m_alignment;
+    TTownType alignment = zone->m_alignment;
     s32 player = m_playerIndexMap[slot->m_playerIndex + 1];
     b8 skipPrimary = true;
     placeFixedTownCategory(zone,
@@ -6809,7 +6803,8 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
 inline s32 type_random_map_generator::getZoneGuardValue(s32 value,
     const TRmgZone* zone) const
 {
-    s32 zoneStrength = zone->m_templateZone->m_monsterStrength;
+    ERmgZoneMonsterStrength zoneStrength =
+        zone->m_templateZone->m_monsterStrength;
     if (zoneStrength == RMG_ZONE_MONSTERS_NONE)
         return 0;
     s32 strength = zoneStrength + m_monsterStrength - RMG_ZONE_MONSTERS_AVERAGE;
@@ -6838,7 +6833,7 @@ b8 type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     s32 resource, b8 startingMine, s32 spacing)
 {
     std::vector<TRmgObjectPropertiesRef*> candidates;
-    s32 terrain = zone->m_terrain;
+    TTerrainType terrain = zone->m_terrain;
     TObjectType* lastScannedPrototype;
     for (u32 i = 0; i < m_objectPrototypes[MINE].size(); ++i) {
         TRmgObjectPropertiesRef* properties = m_objectPrototypes[MINE][i];
@@ -7691,7 +7686,7 @@ enum ERmgRiverType {
 // The source terrain determines both river graphics and the snow boundary
 // restriction.
 static inline void selectRmgRiverAppearance(const TRmgMapItem* source,
-    b8& sourceIsSnow, s32& riverType)
+    b8& sourceIsSnow, ERmgRiverType& riverType)
 {
     if (source->getLandType() == eTerrainSnow) {
         sourceIsSnow = true;
@@ -7726,7 +7721,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     TRmgMapItem* mapItem = m_map.seedMovementSearch(source,
         openPositions, openCosts);
     b8 sourceIsSnow;
-    s32 riverType;
+    ERmgRiverType riverType;
     selectRmgRiverAppearance(mapItem, sourceIsSnow, riverType);
     TRmgMapPosition nextPosition;
     while (!openPositions.empty()) {
@@ -7880,7 +7875,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     TRmgMapItem* mapItem = m_map.seedMovementSearch(source, openPositions, openCosts);
 
     b8 sourceIsSnow;
-    s32 riverType;
+    ERmgRiverType riverType;
     selectRmgRiverAppearance(mapItem, sourceIsSnow, riverType);
 
     m_map.seedMovementSearch(source + TPoint(0, -1), openPositions, openCosts);
@@ -8746,7 +8741,7 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
         if (isRmgQuestArtifact(artifact, m_usedQuestArtifacts) && selected-- <= 0)
             break;
     }
-    seerHut->m_artifact = artifact;
+    seerHut->m_artifact = static_cast<TArtifact>(artifact);
     u32 prototypeIndex = findRmgPrototypeSubtypeIndex<u32>(
         m_objectPrototypes[ARTIFACT], artifact);
     // Assumes an eligible artifact always has a loaded prototype.
@@ -8860,7 +8855,7 @@ void type_random_map_generator::setHumanPlayer(s32 seat)
     m_fixedHumanPlayers[seat] = true;
 }
 
-void type_random_map_generator::setTownChoice(s32 seat, s32 town)
+void type_random_map_generator::setTownChoice(s32 seat, TTownType town)
 {
     m_townChoices[seat] = town;
 }
@@ -8885,7 +8880,7 @@ s32 TRandomMapRequest::generateToFile(TAbstractFile* outfile, TProgressSink* pro
     for (s32 seat = 0; seat < RMG_PLAYER_COUNT; ++seat) {
         if (m_isHumanSeat[seat])
             generator.setHumanPlayer(seat);
-        generator.setTownChoice(seat, m_townType[seat]);
+        generator.setTownChoice(seat, static_cast<TTownType>(m_townType[seat]));
     }
     if (!generator.generate())
         return RANDOM_MAP_GENERATION_FAILED;

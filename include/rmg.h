@@ -439,11 +439,19 @@ enum ERmgTownPlacementParameter {
     RMG_TOWN_PLACEMENT_PARAMETER_COUNT = 8
 };
 
+// Zone monster strength, from the template letter n, w, a or s.
+enum ERmgZoneMonsterStrength {
+    RMG_ZONE_MONSTERS_NONE = 0,
+    RMG_ZONE_MONSTERS_WEAK = 2,
+    RMG_ZONE_MONSTERS_AVERAGE = 3,
+    RMG_ZONE_MONSTERS_STRONG = 4
+};
+
 struct TRmgTemplateZone {
     // Template zone number while connections are read, then the zone's index
     // in its template; RMG_NO_ZONE for buildZoneBoundaries' test slot.
     s32 m_zoneIndex;                    // +0x00
-    s32 m_kind;                         // +0x04: ERmgTemplateZoneKind
+    ERmgTemplateZoneKind m_kind;        // +0x04
     // Unchecked. Initial layout distances are sums of sizes; initializeZones
     // scales them into m_scaledSize.
     s32 m_size;                         // +0x08
@@ -468,7 +476,7 @@ struct TRmgTemplateZone {
     b8 m_useNativeTerrain;
     // Dirt to lava; when none is set the reader allows dirt.
     b8 m_allowedTerrain[eTerrainWater];  // +0x85
-    s32 m_monsterStrength;              // +0x90: ERmgZoneMonsterStrength (rmg.cpp)
+    ERmgZoneMonsterStrength m_monsterStrength; // +0x90
     // Restrict guards to the zone's town alignment.
     b8 m_guardsMatchZone;    // +0x94
     // Indexed by town type + 1; slot 0 is neutral.
@@ -764,7 +772,7 @@ struct TRmgObjectPropertiesRef {
     TObjectType* m_prototype;              // +0x00
     // First recommended terrain, or eTerrainRock when none; TERRAIN_NONE
     // until the placement rules are read.
-    s32 m_preferredTerrain;               // +0x04, rand_trn.txt rule binding
+    TTerrainType m_preferredTerrain;      // +0x04, rand_trn.txt rule binding
     // Live objects using this prototype; writeMap writes only used ones.
     u32 m_refCount;                        // +0x08
     // H3M prototype number that writeMap assigns to used ones (from 2).
@@ -900,9 +908,9 @@ SIZE(rmgBlackBoxObject, 0x54);
 // Seer hut asking for an artifact and granting one reward.
 class rmgSeerHutObject : public type_object {
 public:
-    s32 m_artifact;                    // +0x1c, required quest artifact
+    TArtifact m_artifact;              // +0x1c, required quest artifact
     s32 m_experience;                  // +0x20
-    s32 m_resourceType;                // +0x24, defaults to GOLD
+    EGameResource m_resourceType;      // +0x24, defaults to GOLD
     s32 m_resourceCount;               // +0x28
     s32 m_creatureType;                // +0x2c, defaults to CREATURE_NONE
     s32 m_creatureCount;               // +0x30
@@ -1543,12 +1551,12 @@ struct TRmgZone {
     TRmgTemplateZone* m_templateZone;  // +0x00
     // Town type: one of the template's allowed towns, or the lobby choice of
     // the zone's player; eTownNeutral when none.
-    s32 m_alignment;                   // +0x04
+    TTownType m_alignment;             // +0x04
     // Name from H3API (H3RmgZoneGenerator::townType2). Compared with a
     // creature's town when valuing dwellings and creature rewards.
-    s32 m_townType2;
+    TTownType m_townType2;
     // Chosen by chooseTerrain; added water zones use water.
-    s32 m_terrain;                      // +0x0c
+    TTerrainType m_terrain;             // +0x0c
     // Zone centre: layout units until initializeZones scales it to tiles;
     // recenterZone then moves it to the centroid of the zone's cells.
     TRmgMapPosition m_levelPosition;   // +0x10
@@ -1718,7 +1726,7 @@ enum ERmgBranchSeedPattern {
 };
 
 struct TRmgObjectLimit {
-    s32 m_objectType;
+    TAdventureObjectType m_objectType;
     s32 m_limit;
 };
 
@@ -1771,7 +1779,7 @@ public:
     // Never read or written.
     u8 m_unused0f04[0x20];                          // +0x0f04
     // Lobby town per player colour; eTownNeutral keeps the zone's random town.
-    s32 m_townChoices[RMG_PLAYER_COUNT];              // +0x0f24
+    TTownType m_townChoices[RMG_PLAYER_COUNT];        // +0x0f24
     // Counter for generated object ids; starts at 1.
     s32 m_nextObjectId;                               // +0x0f44
     // Requested counts; writeMapHeader recounts the players it writes. A
@@ -1796,9 +1804,9 @@ public:
     // are offered.
     b8 m_questArtifactPoolLow;              // +0x10b4
     // RMG_WATER_RANDOM is resolved by the constructor.
-    s32 m_waterContent;                                // +0x10b8: ERmgWaterContent
-    // Map-wide strength 1..5 on the zone scale (ERmgZoneMonsterStrength in
-    // rmg.cpp); RMG_ZONE_MONSTERS_AVERAGE is the lobby's normal setting.
+    ERmgWaterContent m_waterContent;                   // +0x10b8
+    // Map-wide strength 1..5 on the zone scale (ERmgZoneMonsterStrength);
+    // RMG_ZONE_MONSTERS_AVERAGE is the lobby's normal setting.
     s32 m_monsterStrength;                             // +0x10bc
     std::string m_templateName;                        // +0x10c0
     // Owned templates loaded from rmg.txt.
@@ -1993,7 +2001,7 @@ public:
             ++m_nextKeyTentColor;
     }
     void setHumanPlayer(s32 seat);
-    void setTownChoice(s32 seat, s32 town);
+    void setTownChoice(s32 seat, TTownType town);
     void removeObject(type_object* object);
     void replaceObjectWithTreasure(type_object* object, s32 value);
     // Paints a road back along the path-cost predecessors.

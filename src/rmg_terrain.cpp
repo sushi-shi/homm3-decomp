@@ -552,21 +552,22 @@ s32 __fastcall getRmgTerrainNeighbourKind(s32 terrain, s32 neighbourTerrain)
 
 // Pattern predicates over neighbour kinds, read through a reflection order.
 static inline bool hasSoutheastTerrainCorner(const s32* neighbours,
-    const s32* order, s32 eastKind, s32 southKind)
+    const s32* order, TRmgTerrainNeighbourKind eastKind,
+    TRmgTerrainNeighbourKind southKind)
 {
     return neighbours[order[TILE_DIR_EAST]] == eastKind
         && neighbours[order[TILE_DIR_SOUTH]] == southKind;
 }
 
 static inline bool hasNorthwestTerrainCorner(const s32* neighbours,
-    const s32* order, s32 kind)
+    const s32* order, TRmgTerrainNeighbourKind kind)
 {
     return neighbours[order[TILE_DIR_NORTH]] == kind
         && neighbours[order[TILE_DIR_WEST]] == kind;
 }
 
 static inline bool hasOffsetNorthwestTerrainCorner(const s32* neighbours,
-    const s32* order, s32 kind)
+    const s32* order, TRmgTerrainNeighbourKind kind)
 {
     return (neighbours[order[TILE_DIR_WEST]] == kind
             && neighbours[order[TILE_DIR_NORTHEAST]] == kind)
@@ -575,21 +576,24 @@ static inline bool hasOffsetNorthwestTerrainCorner(const s32* neighbours,
 }
 
 static inline bool hasOppositeTerrainDiagonalEdges(const s32* neighbours,
-    const s32* order, s32 northwestKind, s32 southeastKind)
+    const s32* order, TRmgTerrainNeighbourKind northwestKind,
+    TRmgTerrainNeighbourKind southeastKind)
 {
     return neighbours[order[TILE_DIR_NORTHWEST]] == northwestKind
         && neighbours[order[TILE_DIR_SOUTHEAST]] == southeastKind;
 }
 
 static inline bool hasEastSouthwestTerrainEdges(const s32* neighbours,
-    const s32* order, s32 eastKind, s32 southwestKind)
+    const s32* order, TRmgTerrainNeighbourKind eastKind,
+    TRmgTerrainNeighbourKind southwestKind)
 {
     return neighbours[order[TILE_DIR_EAST]] == eastKind
         && neighbours[order[TILE_DIR_SOUTHWEST]] == southwestKind;
 }
 
 static inline bool hasSouthNortheastTerrainEdges(const s32* neighbours,
-    const s32* order, s32 southKind, s32 northeastKind)
+    const s32* order, TRmgTerrainNeighbourKind southKind,
+    TRmgTerrainNeighbourKind northeastKind)
 {
     return neighbours[order[TILE_DIR_SOUTH]] == southKind
         && neighbours[order[TILE_DIR_NORTHEAST]] == northeastKind;
