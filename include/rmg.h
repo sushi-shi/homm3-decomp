@@ -631,15 +631,6 @@ enum ERmgShipyardConstants {
     RMG_SHIPYARD_WATER_OFFSET_COUNT = 4
 };
 
-// Requested water content; the generator resolves RANDOM to one of the
-// other three.
-enum ERmgWaterContent {
-    RMG_WATER_NONE = 0,
-    RMG_WATER_NORMAL = 1,
-    RMG_WATER_ISLANDS = 2,
-    RMG_WATER_RANDOM = 3
-};
-
 // Creature-type counts and guard limits. RoE maps lack the expansion creature
 // types; their guards exclude creatures from 118 but evaluate only those below
 // 117, so 117 slips through (retail bug).

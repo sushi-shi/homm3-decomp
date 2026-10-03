@@ -5336,7 +5336,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
         request.m_humanTeamCount = humanTeamCount;
         request.m_computerPlayerCount = computerPlayerCount;
         request.m_computerTeamCount = computerTeamCount;
-        request.m_waterContent = waterContent;
+        request.m_waterContent = static_cast<ERmgWaterContent>(waterContent);
         request.m_monsterStrength = monsterStrength;
         request.m_mapVersion = mapVersion;
 

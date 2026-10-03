@@ -21,6 +21,15 @@ enum ERmgPlayerLimits {
     RMG_PLAYER_COUNT = 8
 };
 
+// Requested water content; the generator resolves RANDOM to one of the
+// other three.
+enum ERmgWaterContent {
+    RMG_WATER_NONE = 0,
+    RMG_WATER_NORMAL = 1,
+    RMG_WATER_ISLANDS = 2,
+    RMG_WATER_RANDOM = 3
+};
+
 // Random-map settings chosen in the lobby and passed to the generator.
 class TRandomMapRequest {
 public:
@@ -38,8 +47,8 @@ public:
     s32 m_humanTeamCount;             // +0x38
     s32 m_computerPlayerCount;        // +0x3c
     s32 m_computerTeamCount;          // +0x40
-    // ERmgWaterContent (rmg.h); RMG_WATER_RANDOM by default.
-    s32 m_waterContent;               // +0x44
+    // RMG_WATER_RANDOM by default.
+    ERmgWaterContent m_waterContent;  // +0x44
     // 0 is normal. The generator receives it plus RMG_ZONE_MONSTERS_AVERAGE
     // (3), clamped to [1, 5].
     s32 m_monsterStrength;            // +0x48
