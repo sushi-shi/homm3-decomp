@@ -176,10 +176,25 @@ or possible improvement has been discovered.
 
 ## Validation status
 
-The expanded helper campaign has not yet undergone generated-output validation.
-The million-case run remains pending. The earlier execution results below must
-not be treated as validation of later helper changes. No intermediate output
-comparisons are run during the review rounds.
+The generated-output comparison of the final cleanup (2026-10-03) uses the
+standard oracle with deterministic random requests (`million-v1`: all sizes,
+levels, formats, water and monster settings, player/team splits, town choices,
+seeds, stack words and heap fill bytes). It first caught two cleanup defects,
+both fixed before the comparison was restarted:
+
+- `writeRmgReservedBytes<N>` took its size only as a template argument; VC6
+  merged every instantiation, so plain object records gained 26 bytes.
+- Splitting `initializeZones`' square origin into new locals changed the stack
+  residue that `buildZoneBoundaries`' uninitialized `testSlot` town flags read,
+  moving towns on maps with water or two levels.
+
+After the fixes, 88,923 single-process cases agreed byte for byte (map, return
+code, request, RNG and x87 state) except for retail faults reproduced at the same
+documented sites on both sides (river `getLineType+0x1f`, guard
+`createGuard+0x14`). The comparison continues with batched driver processes,
+which were checked identical to fresh processes on 640 sampled cases per side;
+it stops at the first mismatch that is not such an agreed fault. This is
+sampled agreement, not a proof over every input.
 
 After the review converged at `7d1d07f2f`, VC6 SP3 compiled `rmg`,
 `rmg_support`, `rmg_terrain` and `singleselectionwindow`. The same targeted
