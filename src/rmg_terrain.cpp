@@ -195,8 +195,7 @@ void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
         minor = &x;
     }
     u32 error = 0;
-    u32 distance = major->m_distance;
-    for (u32 index = 0; index < distance; ++index) {
+    for (u32 index = 0; index < major->m_distance; ++index) {
         paintPoint(TRmgGridPoint(x.m_position, y.m_position));
         error += minor->m_distance;
         if (error >= major->m_distance) {

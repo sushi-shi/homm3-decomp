@@ -292,6 +292,10 @@ following keeps only with a pointer here:
   it, and gave `createRiver` and `createRiverToObject` separate search and
   trace positions instead of reusing one. All of it runs after the
   connection paths; only `refreshRmgLinePoint`'s frame changed.
+- An eighteenth pass let the line walker's `drawTo` loop read the major
+  axis distance directly instead of a staged copy. Line painting runs only
+  for roads and rivers, after the connection paths; its frame grew by one
+  slot.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every
