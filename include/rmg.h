@@ -375,8 +375,8 @@ struct TRmgZoneConnection {
     b8 m_connected;               // +0x0a
     b8 isConnected() const;
     void setConnected();
-    // Template columns 81..84. The connection exists only when the human
-    // count and the total player count fall within these ranges.
+    // The connection exists only when the human count and the total
+    // player count fall within these ranges.
     s32 m_minimumHumanPlayers;               // +0x0c
     s32 m_maximumHumanPlayers;               // +0x10
     s32 m_minimumPlayers;                    // +0x14
@@ -407,7 +407,7 @@ struct TRmgTreasureRange {
     s32 m_density;
 };
 
-// Template columns 14..21: player-owned and neutral town counts and
+// rmg.txt zone town columns: player-owned and neutral town counts and
 // densities. CASTLE towns start with a fort; BASIC towns start without one.
 enum ERmgTownPlacementParameter {
     RMG_TOWN_PLAYER_BASIC_COUNT = 0,
@@ -437,7 +437,7 @@ struct TRmgTemplateZone {
     // m_playerIndexMap[m_playerIndex + 1] is the player colour.
     s32 m_playerIndex;                  // +0x1c
     s32 m_townPlacement[8];             // +0x20: ERmgTownPlacementParameter
-    // Template column 22: neutral towns use the zone's town alignment.
+    // Neutral towns use the zone's town alignment.
     b8 m_neutralTownsMatchZone; // +0x40
     // Town types selectAllowedTown draws from; RoE maps exclude Conflux.
     b8 m_allowedTowns[TOWN_TYPE_COUNT]; // +0x41
@@ -450,7 +450,7 @@ struct TRmgTemplateZone {
     // Dirt to lava; when none is set the reader allows dirt.
     b8 m_allowedTerrain[8];  // +0x85
     s32 m_monsterStrength;              // +0x90: ERmgZoneMonsterStrength (rmg.cpp)
-    // Template column 56: restrict guards to the zone's town alignment.
+    // Restrict guards to the zone's town alignment.
     b8 m_guardsMatchZone;    // +0x94
     // Indexed by town type + 1; slot 0 is neutral.
     b8 m_allowedMonsters[TOWN_TYPE_COUNT + 1]; // +0x95
