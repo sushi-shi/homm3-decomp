@@ -384,7 +384,7 @@ Several suspicious-looking expressions are supported by local invariants:
   and subsequent gap selection have an entry; an arbitrary all-zero mask is
   not passed directly into that block.
 - Terrain reflection and diagonal indices derive from selector-produced 0/1
-  flips. Bit writers shift by `index & 7`, `bit % 8`, or cardinal direction
+  flips. Bit writers shift by `index % 8`, `bit % 8`, or cardinal direction
   0..3; these shifts have valid counts.
 - `getSize(TRmgGridPoint())` uses the VC6 non-const-reference extension. The
   returned reference is copied within the same full expression, before the

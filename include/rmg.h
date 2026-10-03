@@ -372,7 +372,9 @@ struct TRmgZoneConnection {
     // rmg.txt "Border Guard": try a border guard keyed to a keymaster's tent
     // in the other zone, which then replaces the monster guard.
     b8 m_placeBorderObjects;      // +0x09
-    // Set once a crossing, shipyard, gate or portal pair is built.
+    // Set once a crossing, shipyard or gate is built, or after a portal
+    // attempt even if it placed nothing. Links between two added water zones
+    // start set.
     b8 m_connected;               // +0x0a
     b8 isConnected() const;
     void setConnected();

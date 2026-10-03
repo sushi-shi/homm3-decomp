@@ -5393,8 +5393,7 @@ s32 type_random_map_generator::placeBorderObject(
     return color;
 }
 
-// Marks an empty cell as a border connection; an existing connection keeps
-// its tile flags but takes the new guard colour.
+// Marks the cell as a border connection unless an object covers it.
 inline void TRmgMapItem::markEmptyBorderConnection(s32 color)
 {
     if (!hasObjects()) {
@@ -8886,7 +8885,6 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
 }
 
 // Reserve the colour before filling the group and release it on failure.
-// Failed placement releases each object's reservation before deletion.
 VA(0x0054b8c0, 0x385)
 MAC_ADDRESS(0x2508e8, 0x334)
 b8 type_random_map_generator::placeKeyTentGuard(type_object* object, s32 targetValue)
