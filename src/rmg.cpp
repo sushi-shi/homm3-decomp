@@ -2302,7 +2302,7 @@ MAC_ADDRESS(0x233d78, 0xd4)
 void TRmgTreasureGroup::addObject(type_object* object, TPoint point)
 {
     m_objects.push_back(object);
-    m_map.addObject(*object, TRmgMapPosition(point.m_x, point.m_y, 0));
+    m_map.addObject(*object, TRmgMapPosition(point.m_x, point.m_y, RMG_SURFACE_LEVEL));
 }
 
 // Rings the objects' entrances with cells marked for obstacles, places the
