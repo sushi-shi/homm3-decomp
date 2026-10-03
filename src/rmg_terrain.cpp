@@ -598,8 +598,9 @@ int __fastcall selectTerrainTransition(
         makeTerrainFlip(false, false), makeTerrainFlip(false, true),
         makeTerrainFlip(true, false), makeTerrainFlip(true, true)
     };
+    const u32 reflectionCount = sizeof(flips) / sizeof(flips[0]);
     u32 reflection;
-    for (reflection = 0; reflection < 4; ++reflection) {
+    for (reflection = 0; reflection < reflectionCount; ++reflection) {
         const int* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
         if (hasSoutheastTerrainCorner(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
@@ -614,7 +615,7 @@ int __fastcall selectTerrainTransition(
             }
         }
     }
-    for (reflection = 0; reflection < 4; ++reflection) {
+    for (reflection = 0; reflection < reflectionCount; ++reflection) {
         const int* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
         if (hasNorthwestTerrainCorner(neighbours, order, RMG_NEIGHBOUR_BLEND_EDGE)) {
             if (neighbours[order[TILE_DIR_SOUTHEAST]] != RMG_NEIGHBOUR_NO_EDGE) {
@@ -630,7 +631,7 @@ int __fastcall selectTerrainTransition(
             }
         }
     }
-    for (reflection = 0; reflection < 4; ++reflection) {
+    for (reflection = 0; reflection < reflectionCount; ++reflection) {
         const int* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
         if (hasSoutheastTerrainCorner(neighbours, order,
                 RMG_NEIGHBOUR_HARD_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
@@ -653,7 +654,7 @@ int __fastcall selectTerrainTransition(
             }
         }
     }
-    for (reflection = 0; reflection < 4; ++reflection) {
+    for (reflection = 0; reflection < reflectionCount; ++reflection) {
         const int* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
         if (hasSoutheastTerrainCorner(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
@@ -664,7 +665,7 @@ int __fastcall selectTerrainTransition(
                 return SHAPE_S_BLEND_NE_HARD;
         }
     }
-    for (reflection = 0; reflection < 4; ++reflection) {
+    for (reflection = 0; reflection < reflectionCount; ++reflection) {
         const int* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
         if (hasNorthwestTerrainCorner(neighbours, order, RMG_NEIGHBOUR_BLEND_EDGE)) {
             *flip = flips[reflection];
@@ -675,7 +676,7 @@ int __fastcall selectTerrainTransition(
             return SHAPE_N_W_HARD;
         }
     }
-    for (reflection = 0; reflection < 4; ++reflection) {
+    for (reflection = 0; reflection < reflectionCount; ++reflection) {
         const int* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
         if (hasEastSouthwestTerrainEdges(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_HARD_EDGE)) {
@@ -706,7 +707,7 @@ int __fastcall selectTerrainTransition(
             return SHAPE_N_W_HARD;
         }
     }
-    for (reflection = 0; reflection < 4; ++reflection) {
+    for (reflection = 0; reflection < reflectionCount; ++reflection) {
         const int* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
         if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
             neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
@@ -719,7 +720,7 @@ int __fastcall selectTerrainTransition(
             return SHAPE_S_BLEND_SE_HARD;
         }
     }
-    for (reflection = 0; reflection < 4; ++reflection) {
+    for (reflection = 0; reflection < reflectionCount; ++reflection) {
         const int* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
         if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_BLEND_EDGE) {
             *flip = flips[reflection];
@@ -738,7 +739,7 @@ int __fastcall selectTerrainTransition(
             return SHAPE_W_HARD;
         }
     }
-    for (reflection = 0; reflection < 4; ++reflection) {
+    for (reflection = 0; reflection < reflectionCount; ++reflection) {
         const int* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
         if (hasOppositeTerrainDiagonalEdges(neighbours, order,
                 RMG_NEIGHBOUR_BLEND_EDGE, RMG_NEIGHBOUR_BLEND_EDGE)) {
@@ -756,7 +757,7 @@ int __fastcall selectTerrainTransition(
             return SHAPE_NW_SE_HARD;
         }
     }
-    for (reflection = 0; reflection < 4; ++reflection) {
+    for (reflection = 0; reflection < reflectionCount; ++reflection) {
         const int* order = getReflectedTerrainNeighbourOrder(flips[reflection]);
         if (neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
             *flip = flips[reflection];

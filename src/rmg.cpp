@@ -5007,7 +5007,8 @@ VA(0x00540B20, 0x240)
 MAC_ADDRESS(0x243208, 0x290)
 type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
 {
-    b8 allowedFactions[10];
+    // Indexed by town type + 1; entry zero is neutral creatures.
+    b8 allowedFactions[TOWN_TYPE_COUNT + 1];
     if (zone->m_templateZone->m_guardsMatchZone && zone->m_alignment != -1) {
         memset(allowedFactions, 0, sizeof(allowedFactions));
         allowedFactions[zone->m_alignment + 1] = true;
@@ -6395,8 +6396,10 @@ b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     TRmgTemplateZone* slot = zone->m_templateZone;
     if ((player == -1 && !slot->m_neutralTownsMatchZone) || alignment == -1) {
         alignment = slot->selectAllowedTown();
+        // RoE maps have no Conflux.
         if (alignment == -1)
-            alignment = rand() % (8 + (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE));
+            alignment = rand() % (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE
+                ? TOWN_TYPE_COUNT : TOWN_CONFLUX);
     }
     if (!zone->m_active)
         return tryPlacePrimaryTown(zone, alignment, player, hasFort);
@@ -7057,15 +7060,15 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
             }
         }
     }
-    int firstDirection = 0;
+    int firstDirection = RMG_DIRECTION_EAST;
     int lastDirection = RMG_DIRECTION_COUNT;
     b8 waterZone = zone->m_terrain == eTerrainWater;
     type_object* lastObject = group->m_objects.back();
     TObjectType* prototype = lastObject->m_properties->m_prototype;
     TRmgMapPosition entrance = getRmgPlacedObjectEntrance(lastObject);
-    if (!g_adventureObjectTraits[prototype->getObjectType()].m_trait1) {
-        firstDirection = 1;
-        lastDirection = 4;
+    if (!isRmgEntranceOpenToNorth(prototype->getObjectType())) {
+        firstDirection = RMG_DIRECTION_SOUTH_EAST;
+        lastDirection = RMG_DIRECTION_SOUTH_WEST + 1;
     }
     int direction;
     for (direction = firstDirection; direction < lastDirection; ++direction) {
@@ -7163,17 +7166,18 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
 {
     TRmgTemplateZone* slot = zone->m_templateZone;
     TRmgTreasureGroup group(16, 16);
+    const int bandCount = sizeof(slot->m_treasure) / sizeof(slot->m_treasure[0]);
     // Bands with a maximum value below 100 or no density are skipped.
-    int densities[3];
-    for (int band = 0; band < 3; ++band) {
+    int densities[bandCount];
+    for (int band = 0; band < bandCount; ++band) {
         const TRmgTreasureRange& range = slot->m_treasure[band];
         densities[band] = range.m_maximum >= 100 && range.m_density > 0
             ? range.m_density : 0;
     }
-    b8 finished[3];
+    b8 finished[bandCount];
     int totalDensity = 0;
     int densityProduct = 1;
-    initializeRmgDensityCategories(densities, 3, finished, totalDensity, densityProduct);
+    initializeRmgDensityCategories(densities, bandCount, finished, totalDensity, densityProduct);
     if (totalDensity == 0)
         return;
     int spacing;
@@ -7182,12 +7186,12 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
     else
         spacing = getRmgDensitySpacing(800, totalDensity);
     // No band has placed a treasure yet.
-    int weightedCounts[3] = {0, 0, 0};
-    int countSteps[3];
-    initializeRmgCategoryStrides(densities, weightedCounts, 3,
+    int weightedCounts[bandCount] = {0, 0, 0};
+    int countSteps[bandCount];
+    initializeRmgCategoryStrides(densities, weightedCounts, bandCount,
         densityProduct, countSteps, weightedCounts);
     for (;;) {
-        int selected = selectRmgWeightedCategory(finished, weightedCounts, 3);
+        int selected = selectRmgWeightedCategory(finished, weightedCounts, bandCount);
         if (selected == -1)
             break;
         weightedCounts[selected] += countSteps[selected];
@@ -7211,9 +7215,10 @@ static inline void queueRmgMovementStep(TRmgMapItem* destination,
 }
 
 // Road exits and entries share this restricted-approach policy.
-static inline bool hasRmgRestrictedRoadApproach(const TAdvObjectTraits& traits)
+static inline bool hasRmgRestrictedRoadApproach(int objectType)
 {
-    return !traits.m_trait1 && !traits.m_trait2;
+    return !isRmgEntranceOpenToNorth(objectType)
+        && !g_adventureObjectTraits[objectType].m_trait2;
 }
 
 // Dijkstra-style relaxation uses the back of a descending worklist, retaining
@@ -7238,7 +7243,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
             type_object* object = mapItem->m_objects[0];
             TObjectType* prototype = object->m_properties->m_prototype;
             int objectType = prototype->getObjectType();
-            if (hasRmgRestrictedRoadApproach(g_adventureObjectTraits[objectType]))
+            if (hasRmgRestrictedRoadApproach(objectType))
                 direction = RMG_FIRST_NORTHERN_DIRECTION;
 
             switch (objectType) {
@@ -7296,8 +7301,8 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
                 const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
                 if (traits.m_blocksLanding && !traits.m_trait2)
                     continue;
-                if (hasRmgRestrictedRoadApproach(traits)
-                    && direction > 0 && direction < 4)
+                if (hasRmgRestrictedRoadApproach(objectType)
+                    && isRmgSouthwardDirection(direction))
                     continue;
             }
 
@@ -7410,6 +7415,12 @@ static inline int getRmgRiverStepCost(int currentCost, const TRmgMapItem* destin
     return nextCost;
 }
 
+// River-layer line types the generator paints; zero is no river.
+enum ERmgRiverType {
+    RMG_RIVER_CLEAR = 1,
+    RMG_RIVER_ICY = 2
+};
+
 // The source terrain determines both river graphics and the snow boundary
 // restriction.
 static inline void selectRmgRiverAppearance(const TRmgMapItem* source,
@@ -7417,10 +7428,10 @@ static inline void selectRmgRiverAppearance(const TRmgMapItem* source,
 {
     if (source->getLandType() == eTerrainSnow) {
         sourceIsSnow = true;
-        riverType = 2;
+        riverType = RMG_RIVER_ICY;
     } else {
         sourceIsSnow = false;
-        riverType = 1;
+        riverType = RMG_RIVER_CLEAR;
     }
 }
 
@@ -7889,6 +7900,12 @@ int writeString(TAbstractFile* outfile, const char* text)
     return outfile->write(text, strlen(text));
 }
 
+// Hero ids a map format knows: RoE maps stop before the expansion heroes.
+enum ERmgHeroCount {
+    RMG_ROE_HERO_COUNT = 128,
+    RMG_HERO_COUNT = 156
+};
+
 // Each player clause in the map description appends a separator, the player
 // colour and the clause text, using unchecked strcat.
 static inline void appendRmgPlayerDescription(char* description, int player,
@@ -8119,15 +8136,15 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     }
 
     if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
-        std::bitset<156> availableHeroes;
+        std::bitset<RMG_HERO_COUNT> availableHeroes;
         setAvailableRmgHeroes(
-            &availableHeroes, m_disabledHeroes, m_disabledHeroes + 156);
+            &availableHeroes, m_disabledHeroes, m_disabledHeroes + RMG_HERO_COUNT);
 
         writePackedBits(outfile, availableHeroes);
     } else {
-        std::bitset<128> availableHeroes;
+        std::bitset<RMG_ROE_HERO_COUNT> availableHeroes;
         setAvailableRmgHeroes(
-            &availableHeroes, m_disabledHeroes, m_disabledHeroes + 128);
+            &availableHeroes, m_disabledHeroes, m_disabledHeroes + RMG_ROE_HERO_COUNT);
 
         writePackedBits(outfile, availableHeroes);
     }
@@ -8141,21 +8158,23 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
     writeRmgReservedBytes<31>(outfile);
 
-    std::bitset<144> disabledArtifacts;
-    for (int artifactIndex = 0; artifactIndex < 144; ++artifactIndex) {
+    // Combination artifacts, artifact 127 and Armageddon's Blade are disabled.
+    std::bitset<ARTIFACT_COUNT> disabledArtifacts;
+    for (int artifactIndex = 0; artifactIndex < ARTIFACT_COUNT; ++artifactIndex) {
         disabledArtifacts[artifactIndex] =
             g_artifactTraits[artifactIndex].m_comboType != -1;
     }
-    disabledArtifacts.set(128);
+    disabledArtifacts.set(ARTIFACT_ARMAGEDDONS_BLADE);
     disabledArtifacts.set(127);
 
     if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
         writePackedBits(outfile, disabledArtifacts);
     } else if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
+        // AB maps end before the SoD combination artifacts (129 on).
         std::bitset<129> legacyDisabledArtifacts;
         std::copy(
-            bitset_iterator<144>(disabledArtifacts, 0),
-            bitset_iterator<144>(disabledArtifacts, 129),
+            bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 0),
+            bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 129),
             bitset_iterator<129>(legacyDisabledArtifacts, 0));
 
         writePackedBits(outfile, legacyDisabledArtifacts);
@@ -8168,7 +8187,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         std::bitset<28> disabledSkills;
         writePackedBits(outfile, disabledSkills);
 
-        for (int hero = 0; hero < 156; ++hero) {
+        for (int hero = 0; hero < RMG_HERO_COUNT; ++hero) {
             writeValue<char>(outfile, 0);
         }
     }
@@ -8305,13 +8324,19 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
     outfile->write(reserved, sizeof(reserved));
 }
 
+// Prisons draw from the RoE heroes, or in later formats from the first 145.
+static inline int getRmgPrisonHeroCount(int mapVersion)
+{
+    return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? 145 : RMG_ROE_HERO_COUNT;
+}
+
 VA(0x0054B100, 0x71)
 MAC_ADDRESS(0x250068, 0xd4)
 int type_random_map_generator::selectPrisonHero()
 {
     int available = 0;
     int hero;
-    for (hero = (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? 145 : 128) - 1; hero >= 0; --hero) {
+    for (hero = getRmgPrisonHeroCount(m_mapVersion) - 1; hero >= 0; --hero) {
         if (!m_disabledHeroes[hero])
             ++available;
     }
@@ -8319,7 +8344,7 @@ int type_random_map_generator::selectPrisonHero()
         return -1;
 
     int selected = rand() % available;
-    for (hero = (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? 145 : 128) - 1; hero >= 0; --hero) {
+    for (hero = getRmgPrisonHeroCount(m_mapVersion) - 1; hero >= 0; --hero) {
         if (!m_disabledHeroes[hero]) {
             --selected;
             if (selected < 0)

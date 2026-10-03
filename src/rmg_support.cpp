@@ -108,7 +108,8 @@ void selectRmgLinePattern(
         return;
     }
     b8 hasCornerVariant = table->m_ranges[LINE_SE_VARIANT].m_valueCount > 0;
-    for (u32 reflection = 0; reflection < 4; ++reflection) {
+    const u32 reflectionCount = sizeof(g_rmgLineReflections) / sizeof(g_rmgLineReflections[0]);
+    for (u32 reflection = 0; reflection < reflectionCount; ++reflection) {
         const int* order = g_rmgLineReflectedNeighbours
             [g_rmgLineReflections[reflection][0]][g_rmgLineReflections[reflection][1]];
         if (neighbours[order[TILE_DIR_EAST]] && neighbours[order[TILE_DIR_SOUTH]]) {
