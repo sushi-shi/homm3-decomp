@@ -314,7 +314,7 @@ inline s32 getRmgSquaredNorm(s32 x, s32 y)
     return x * x + y * y;
 }
 
-// Signed map-plane point; ordered by row, then column.
+// Signed map-plane point (x grows east, y south); ordered by row, then column.
 struct TPoint {
     s32 m_x;
     s32 m_y;
@@ -1177,6 +1177,8 @@ class type_random_map : public TRmgMapInterface {
 public:
     b8 m_ownsMapItems;           // +0x04
     char m_paddingBeforeMapItems[3];
+    // Level by level, row by row: cell (x, y, z) is
+    // m_mapItems[(z * m_mapHeight + y) * m_mapWidth + x].
     TRmgMapItem* m_mapItems;                // +0x08
     s32 m_mapWidth;                         // +0x0c
     s32 m_mapHeight;                        // +0x10
