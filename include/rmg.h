@@ -587,10 +587,8 @@ struct TRmgZoneBounds {
     {
         m_minimumX = x < m_minimumX ? x : m_minimumX;
         m_minimumY = y < m_minimumY ? y : m_minimumY;
-        s32 maximumX = x + 1;
-        s32 maximumY = y + 1;
-        m_maximumX = maximumX > m_maximumX ? maximumX : m_maximumX;
-        m_maximumY = maximumY > m_maximumY ? maximumY : m_maximumY;
+        m_maximumX = x + 1 > m_maximumX ? x + 1 : m_maximumX;
+        m_maximumY = y + 1 > m_maximumY ? y + 1 : m_maximumY;
     }
 
     void insetForObjectFootprint(const TObjectType* prototype);
@@ -1060,9 +1058,9 @@ struct TRmgMapItem {
     {
         m_tileData.m_connectionVisited = true;
     }
-    s32 getLandType() const
+    TTerrainType getLandType() const
     {
-        return m_tile.m_landType;
+        return static_cast<TTerrainType>(m_tile.m_landType);
     }
 
     void setMovementCost(s32 cost, TRmgMapPosition previous)
