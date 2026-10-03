@@ -8132,7 +8132,7 @@ b8 type_random_map_generator::generate()
     return true;
 }
 
-template <size_t N>
+template <u32 N>
 void encodePackedBits(const std::bitset<N>& bits, u8* packed)
 {
     memset(packed, 0, (N + 7) / 8);
@@ -8142,7 +8142,7 @@ void encodePackedBits(const std::bitset<N>& bits, u8* packed)
     }
 }
 
-template <size_t N>
+template <u32 N>
 s32 writePackedBits(TAbstractFile* outfile, const std::bitset<N>& bits)
 {
     u8 packed[(N + 7) / 8];
@@ -8150,7 +8150,7 @@ s32 writePackedBits(TAbstractFile* outfile, const std::bitset<N>& bits)
     return outfile->write(packed, sizeof(packed));
 }
 
-// Length-prefixed text: an int length followed by the characters.
+// Length-prefixed text: a 32-bit length followed by the characters.
 s32 writeString(TAbstractFile* outfile, const std::string& text)
 {
     writeValue<s32>(outfile, text.length());
