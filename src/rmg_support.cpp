@@ -298,9 +298,9 @@ void TRmgHalfEdge::initialize()
 {
     m_next = this;
     m_previous = this;
-    m_positionComputed = false;
-    m_position.m_x = -1;
-    m_position.m_y = -1;
+    m_vertexComputed = false;
+    m_vertex.m_x = -1;
+    m_vertex.m_y = -1;
 }
 
 TRmgHalfEdge::TRmgHalfEdge(

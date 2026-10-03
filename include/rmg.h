@@ -709,12 +709,12 @@ struct TRmgGroundTileData {
     u32 m_roadFlipY : 1;
     u32 m_coastal : 1;
     // Object entrance (trigger) cell.
-    u32 m_roadEntrance : 1;
+    u32 m_objectEntrance : 1;
     // On an assembled treasure group's traced outline (group map only).
     u32 m_placementOutline : 1;
     u32 m_connectionVisited : 1;
     // Not blocked by an object.
-    u32 m_roadPassable : 1;
+    u32 m_passable : 1;
     u32 m_borderObject : 1;
     // Kept clear for generated paths; obstacle footprints may not cover it.
     u32 m_pathClearance : 1;
@@ -1027,9 +1027,9 @@ struct TRmgMapItem {
         return m_tileData.m_paintZoneTerrain;
     }
 
-    b8 isRoadEntrance() const
+    b8 isObjectEntrance() const
     {
-        return m_tileData.m_roadEntrance;
+        return m_tileData.m_objectEntrance;
     }
 
     b8 hasPathClearance() const
@@ -1039,7 +1039,7 @@ struct TRmgMapItem {
 
     b8 isPassableLand() const
     {
-        return m_tileData.m_roadPassable && getLandType() != eTerrainRock;
+        return m_tileData.m_passable && getLandType() != eTerrainRock;
     }
 
     b8 hasBorderObject() const
@@ -1130,7 +1130,7 @@ struct TRmgMapItem {
     // Passable land with path clearance that is not an object entrance.
     b8 isClearOutlineCell() const
     {
-        return !isRoadEntrance() && isPassableLand() && hasPathClearance();
+        return !isObjectEntrance() && isPassableLand() && hasPathClearance();
     }
 
     // Allows obstacles here unless a connection protects the cell.
@@ -1403,7 +1403,7 @@ public:
     TRmgGridPoint m_size;
 
     TRmgLinePainterInterface(const TRmgGridPoint& size);
-    virtual TRmgLinePatternTable* getPattern(s32 value) = 0;
+    virtual TRmgLinePatternTable* getPattern(s32 lineType) = 0;
     virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
     virtual void setLineType(const TRmgGridPoint& point, s32 value) = 0;
     // Nonzero prevents painting.
@@ -1452,7 +1452,7 @@ public:
     }
     virtual ~TRmgRiverLinePainter() = 0;
 
-    virtual TRmgLinePatternTable* getPattern(s32 value);
+    virtual TRmgLinePatternTable* getPattern(s32 lineType);
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setLineType(const TRmgGridPoint& point, s32 value);
@@ -1518,7 +1518,7 @@ public:
     }
     virtual ~TRmgRoadLinePainter() = 0;
 
-    virtual TRmgLinePatternTable* getPattern(s32 value);
+    virtual TRmgLinePatternTable* getPattern(s32 lineType);
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setLineType(const TRmgGridPoint& point, s32 value);
@@ -1578,7 +1578,7 @@ struct TRmgZone {
     // each later entrance to the open paths reached from the first.
     std::vector<TPoint> m_entrances;   // +0x404
 
-    TRmgZone(TRmgTemplateZone* slot);
+    TRmgZone(TRmgTemplateZone* templateZone);
     void chooseTownType(b8 expanded);
     bool isTerrainAllowed(s32 terrain) const;
     void chooseTerrain();
@@ -1610,8 +1610,8 @@ struct TRmgHalfEdge {
     TRmgHalfEdge* m_next;        // +0x10
     TRmgHalfEdge* m_previous;     // +0x14
     // Set once buildVertices has computed the Voronoi vertex below.
-    b8 m_positionComputed;  // +0x18
-    TPoint m_position;                  // +0x1c
+    b8 m_vertexComputed;  // +0x18
+    TPoint m_vertex;                    // +0x1c
 
     // The first form allocates its twin; the second builds that twin.
     TRmgHalfEdge(TPoint sitePosition, TRmgZone* zone,
@@ -1660,15 +1660,15 @@ struct TRmgHalfEdge {
     {
         return getTwin()->getZone();
     }
-    b8 isPositionComputed() const
+    b8 isVertexComputed() const
     {
-        return m_positionComputed;
+        return m_vertexComputed;
     }
-    void setPosition(const TPoint& position)
+    void setVertex(const TPoint& vertex)
     {
-        TPoint copy = position;
-        m_position = copy;
-        m_positionComputed = true;
+        TPoint copy = vertex;
+        m_vertex = copy;
+        m_vertexComputed = true;
     }
 };
 SIZE(TRmgHalfEdge, 0x24);

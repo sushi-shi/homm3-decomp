@@ -244,7 +244,7 @@ following keeps only with a pointer here:
   `decorateUnderground`, `markRiverTargets`, `writeMap`) now loops over plain
   coordinates or an item count instead of position structs used only as
   counters. It kept `TRmgZone::canConnect`'s staged minimum,
-  `TRmgHalfEdge::setPosition`'s copy, `matchesTerrainAt`'s setter calls and
+  `TRmgHalfEdge::setVertex`'s copy, `matchesTerrainAt`'s setter calls and
   `openConnectionPath`'s staged predecessor: rewriting them changed the
   `initializeZones` or `buildZoneBoundaries` code, terrain painting before the
   connection paths, or `openConnectionPath`'s frame.
@@ -329,7 +329,7 @@ in evidence comments where useful for lookup.
 
 The earlier campaign's final pass rejected further generic factories, tiny one-use predicates and
 mechanical merging of different snapshot, traversal or placement policies.
-`isPassableLand` retains its established name and exact road-passable/non-rock
+`isPassableLand` retains its established name and exact passable/non-rock
 predicate; it admits water, whose policy is checked separately by callers.
 The no-progress result is a review stopping point, not proof that every defect
 or possible improvement has been discovered.

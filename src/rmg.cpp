@@ -534,9 +534,9 @@ void TRmgMapItem::clear()
     tileData.m_roadFlipX = false;
     tileData.m_roadFlipY = false;
     tileData.m_coastal = false;
-    tileData.m_roadEntrance = false;
+    tileData.m_objectEntrance = false;
     tileData.m_placementOutline = false;
-    tileData.m_roadPassable = true;
+    tileData.m_passable = true;
     tileData.m_borderObject = false;
     tileData.m_pathClearance = true;
     tileData.m_paintZoneTerrain = false;
@@ -590,7 +590,7 @@ void type_random_map::clear()
 // water and path-clearance policies stay with each caller.
 inline bool TRmgMapItem::isPlacementBlocked(s32 zoneIndex) const
 {
-    return !isPassableLand() || isRoadEntrance()
+    return !isPassableLand() || isObjectEntrance()
         || m_zoneState.m_zone != zoneIndex;
 }
 
@@ -622,7 +622,7 @@ b8 type_random_map::hasConnectedOutline(
             blocked = true;
         } else {
             TRmgMapItem* item = getMapItem(x, y, position.m_z);
-            if (!allowEntrances && item->isRoadEntrance())
+            if (!allowEntrances && item->isObjectEntrance())
                 return false;
             blocked = item->isPlacementBlocked(zoneIndex);
             if (requirePathClearance && !item->hasPathClearance())
@@ -755,7 +755,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
         s32 currentCost = currentZone == zone
             ? current->m_movement.m_cost : current->m_movement.m_zonePathCost;
         s32 direction = RMG_DIRECTION_COUNT;
-        if (current->isRoadEntrance()) {
+        if (current->isObjectEntrance()) {
             TAdventureObjectType objectType = current->getEntranceObjectType();
             if (!isRmgEntranceOpenToNorth(objectType))
                 direction = RMG_FIRST_NORTHERN_DIRECTION;
@@ -769,7 +769,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
             TRmgMapItem* next = getMapItem(nextPosition);
             if (next->m_zoneState.m_zone < 0 || !next->isPassableLand())
                 continue;
-            if (next->isRoadEntrance()) {
+            if (next->isObjectEntrance()) {
                 TAdventureObjectType objectType = next->getEntranceObjectType();
                 const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
                 if (traits.m_blocksLanding && !traits.m_trait2)
@@ -883,7 +883,7 @@ void type_random_map::markBorderPatch(TRmgMapPosition position)
     for (s32 row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
         for (s32 column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
             TRmgMapItem* nearby = getMapItem(column, row, position.m_z);
-            if (!nearby->isRoadEntrance() && nearby->isPassableLand()
+            if (!nearby->isObjectEntrance() && nearby->isPassableLand()
                 && nearby->getLandType() != eTerrainWater)
                 nearby->releasePathClearance();
         }
@@ -947,7 +947,7 @@ b8 type_random_map::canPlaceObject(
         return false;
     if (item->m_zoneState.m_zone != zoneIndex)
         return false;
-    if (item->isRoadEntrance()) {
+    if (item->isObjectEntrance()) {
         TAdventureObjectType entranceType = item->getEntranceObjectType();
         if (!g_adventureObjectTraits[entranceType].m_trait2)
             return false;
@@ -974,11 +974,11 @@ void type_random_map::addObject(type_object& object, TRmgMapPosition position)
             TRmgGridPoint maskPoint(x, y);
             TRmgMapItem* item = getMapItem(cell);
             if (prototype.isTriggerCell(maskPoint.m_x, maskPoint.m_y)) {
-                item->m_tileData.m_roadEntrance = true;
+                item->m_tileData.m_objectEntrance = true;
                 item->openPath();
                 item->m_objects.push_back(&object);
             } else if (!prototype.isPassableCell(maskPoint.m_x, maskPoint.m_y)) {
-                item->m_tileData.m_roadPassable = false;
+                item->m_tileData.m_passable = false;
                 item->m_objects.push_back(&object);
             }
         }
@@ -1252,11 +1252,11 @@ s32 TRmgTemplateZone::selectAllowedTown()
 
 VA(0x005329e0, 0xcf)
 MAC_ADDRESS(0x22f7c4, 0xc0)
-TRmgZone::TRmgZone(TRmgTemplateZone* newSlot)
+TRmgZone::TRmgZone(TRmgTemplateZone* templateZone)
 {
-    m_templateZone = newSlot;
-    m_alignment = static_cast<TTownType>(newSlot->selectAllowedTown());
-    m_scaledSize = newSlot->m_size;
+    m_templateZone = templateZone;
+    m_alignment = static_cast<TTownType>(templateZone->selectAllowedTown());
+    m_scaledSize = templateZone->m_size;
     m_bounds.resetEmpty();
     m_hasPrimaryTown = false;
     memset(m_objectCountByType, 0, sizeof(m_objectCountByType));
@@ -2324,14 +2324,14 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
         while (direction--) {
             TRmgMapPosition position = entrance + g_rmgDirections[direction];
             TRmgMapItem* item = m_map.getMapItem(position);
-            if (item->isRoadEntrance() || !item->isPassableLand())
+            if (item->isObjectEntrance() || !item->isPassableLand())
                 continue;
             item->markBorderObject();
             for (s32 x = position.m_x - 1; x <= position.m_x + 1; ++x) {
                 for (s32 y = position.m_y - 1; y <= position.m_y + 1; ++y) {
                     TRmgMapItem* nearby = m_map.getMapItem(x, y);
                     if (nearby->isPassableLand()
-                        && !nearby->isRoadEntrance())
+                        && !nearby->isObjectEntrance())
                         nearby->releasePathClearance();
                 }
             }
@@ -2420,14 +2420,14 @@ b8 TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
     if (!isRmgEntranceOpenToNorth(objectType)) {
         for (s32 direction = RMG_FIRST_NORTHERN_DIRECTION; direction < RMG_DIRECTION_COUNT; ++direction) {
             TPoint nearby = g_rmgDirections[direction] + origin;
-            if (m_map.getMapItem(nearby.m_x, nearby.m_y)->isRoadEntrance())
+            if (m_map.getMapItem(nearby.m_x, nearby.m_y)->isObjectEntrance())
                 return false;
         }
     }
     for (s32 direction = RMG_DIRECTION_EAST; direction < RMG_FIRST_NORTHERN_DIRECTION; ++direction) {
         TPoint nearby = g_rmgDirections[direction] + origin;
         TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
-        if (item->isRoadEntrance()
+        if (item->isObjectEntrance()
             && !allowsRmgSharedObjectEntrance(item->getEntranceObjectType()))
             return false;
     }
@@ -2441,7 +2441,7 @@ b8 TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
     for (s32 neighbour = RMG_DIRECTION_EAST; neighbour < RMG_DIRECTION_COUNT; ++neighbour) {
         TPoint nearby = g_rmgDirections[neighbour] + origin;
         TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
-        if (!item->isRoadEntrance() && item->isPassableLand()
+        if (!item->isObjectEntrance() && item->isPassableLand()
             && !item->hasBorderObject())
             return true;
     }
@@ -4021,8 +4021,8 @@ MAC_ADDRESS(0x23dd34, 0x614)
 void type_random_map_generator::traceZoneBoundary(
     TRmgHalfEdge* first, b8 irregular)
 {
-    TRmgHalfEdge* vertex = first;
-    TRmgZone* zone = vertex->m_zone;
+    TRmgHalfEdge* edge = first;
+    TRmgZone* zone = edge->m_zone;
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
     TRmgMapPosition zonePosition = zone->m_levelPosition;
     TRmgZoneBounds bounds = {0, 0, m_map.m_mapWidth, m_map.m_mapHeight};
@@ -4033,16 +4033,16 @@ void type_random_map_generator::traceZoneBoundary(
 
     bool found = false;
     do {
-        TRmgHalfEdge* next = vertex->m_next;
+        TRmgHalfEdge* next = edge->m_next;
         TPoint from;
         TPoint to;
-        clipRmgBoundarySegment(bounds, vertex->m_position, next->m_position, from, to);
+        clipRmgBoundarySegment(bounds, edge->m_vertex, next->m_vertex, from, to);
         if (bounds.contains(from) && from != to) {
             found = true;
             break;
         }
-        vertex = next;
-    } while (vertex != first);
+        edge = next;
+    } while (edge != first);
     if (!found) {
         drawStraightZoneBoundary(lowerRight, upperRight, zoneIndex, zonePosition.m_z);
         drawStraightZoneBoundary(upperRight, upperLeft, zoneIndex, zonePosition.m_z);
@@ -4055,14 +4055,14 @@ void type_random_map_generator::traceZoneBoundary(
         return;
     }
 
-    first = vertex;
+    first = edge;
     do {
-        TRmgHalfEdge* next = vertex->m_next;
+        TRmgHalfEdge* next = edge->m_next;
         TRmgZone* neighbour = next->getOppositeZone();
-        TPoint originalTo = next->m_position;
+        TPoint originalTo = next->m_vertex;
         TPoint from;
         TPoint to;
-        clipRmgBoundarySegment(bounds, vertex->m_position, originalTo, from, to);
+        clipRmgBoundarySegment(bounds, edge->m_vertex, originalTo, from, to);
         zone->m_boundary.push_back(TPoint(from));
 
         if (!neighbour || neighbour->m_templateZone->m_zoneIndex > zoneIndex) {
@@ -4075,15 +4075,15 @@ void type_random_map_generator::traceZoneBoundary(
                 drawStraightZoneBoundary(from, to, zoneIndex, zonePosition.m_z);
         }
 
-        vertex = next;
+        edge = next;
         if (to != originalTo) {
             from = to;
             for (;;) {
                 next = next->m_next;
-                to = clipRmgBoundaryPoint(bounds, vertex->m_position, next->m_position);
+                to = clipRmgBoundaryPoint(bounds, edge->m_vertex, next->m_vertex);
                 if (bounds.contains(to))
                     break;
-                vertex = next;
+                edge = next;
             }
             // Follow the map border clockwise, one corner at a time.
             // North is up:  upperLeft -> upperRight
@@ -4106,7 +4106,7 @@ void type_random_map_generator::traceZoneBoundary(
             drawStraightZoneBoundary(from, to, zoneIndex, zonePosition.m_z);
             zone->m_boundary.push_back(TPoint(from));
         }
-    } while (vertex != first);
+    } while (edge != first);
 }
 
 // Reject clipping across an axis limit from its permitted side.
@@ -4456,7 +4456,7 @@ void type_random_map_generator::joinExtraZones(s32 originalZones, TRmgVoronoi* d
             TRmgHalfEdge* edge = first->findBoundaryWithZone(destination);
             if (!edge)
                 continue;
-            TPoint clipped = clipRmgBoundaryPoint(bounds, edge->m_position, edge->m_previous->m_position);
+            TPoint clipped = clipRmgBoundaryPoint(bounds, edge->m_vertex, edge->m_previous->m_vertex);
             if (bounds.contains(clipped))
                 appendRmgExtraZoneConnection(zone, destination, true);
         }
@@ -5610,7 +5610,7 @@ b8 type_random_map_generator::canPlaceShipyard(TRmgMapPosition position)
             TRmgMapItem* item = m_map.getMapItem(nearby);
             if (item->getLandType() == eTerrainWater)
                 return false;
-            if (item->isRoadEntrance() || !item->isPassableLand())
+            if (item->isObjectEntrance() || !item->isPassableLand())
                 return false;
         }
     }
@@ -6161,7 +6161,7 @@ void type_random_map_generator::connectZones()
 inline bool TRmgMapItem::canBlockFloor() const
 {
     return !hasPathClearance() && isPassableLand()
-        && !isRoadEntrance();
+        && !isObjectEntrance();
 }
 
 VA(0x005439e0, 0x283)
@@ -6453,7 +6453,7 @@ void type_random_map_generator::prepareZoneConnections()
     for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
-                if (!item->hasBorderObject() && item->isPassableLand() && !item->isRoadEntrance()
+                if (!item->hasBorderObject() && item->isPassableLand() && !item->isObjectEntrance()
                     && !item->hasObjects()
                     && item->m_zoneState.m_zone < 0 && item->getLandType() != eTerrainWater)
                     m_map.markBorderPatch(position);
@@ -7281,7 +7281,7 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
             TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
             if (destination->getLandType() != eTerrainWater
                 && source->canBlockFloor()
-                && destination->isPassableLand() && !destination->isRoadEntrance()) {
+                && destination->isPassableLand() && !destination->isObjectEntrance()) {
                 destination->releasePathClearance();
                 if (source->hasBorderObject()) {
                     destination->markBorderObject();
@@ -7323,7 +7323,7 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
         for (s32 x = guardPosition.m_x - 1; x <= guardPosition.m_x + 1; ++x) {
             for (s32 y = guardPosition.m_y - 1; y <= guardPosition.m_y + 1; ++y) {
                 TRmgMapItem* item = m_map.getMapItem(x, y, guardPosition.m_z);
-                if (item->isRoadEntrance() && item->getEntranceObjectType() == MONSTER)
+                if (item->isObjectEntrance() && item->getEntranceObjectType() == MONSTER)
                     return false;
             }
         }
@@ -7368,7 +7368,7 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
                 // Only the upper bounds are checked; callers keep translated
                 // coordinates nonnegative.
                 if (x < m_map.m_mapWidth && y < m_map.m_mapHeight
-                    && m_map.getMapItem(x, y, position.m_z)->isRoadEntrance())
+                    && m_map.getMapItem(x, y, position.m_z)->isObjectEntrance())
                     return false;
             }
         }
@@ -7521,7 +7521,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition source)
         s32 currentCost = mapItem->m_movement.m_cost;
         b8 currentHasRoad = mapItem->m_tile.m_roadType != 0;
         s32 direction = RMG_DIRECTION_COUNT;
-        if (mapItem->isRoadEntrance()) {
+        if (mapItem->isObjectEntrance()) {
             type_object* object = mapItem->m_objects[0];
             TObjectType* prototype = object->m_properties->m_prototype;
             TAdventureObjectType objectType = prototype->getObjectType();
@@ -7579,7 +7579,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition source)
                 || !nextMapItem->isPassableLand())
                 continue;
 
-            if (nextMapItem->isRoadEntrance()) {
+            if (nextMapItem->isObjectEntrance()) {
                 TAdventureObjectType objectType = nextMapItem->getEntranceObjectType();
                 const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
                 if (traits.m_blocksLanding && !traits.m_trait2)
@@ -7814,7 +7814,7 @@ inline TRmgMapItem* type_random_map::getDryRiverCoastCell(const TRmgMapPosition&
     if (isOutsideRiverCoastScan(point))
         return 0;
     TRmgMapItem* item = getMapItem(point.m_x, point.m_y, point.m_z);
-    if (item->getLandType() == eTerrainWater || item->isRoadEntrance())
+    if (item->getLandType() == eTerrainWater || item->isObjectEntrance())
         return 0;
     return item;
 }
@@ -8855,8 +8855,8 @@ void type_random_map_generator::removeObject(type_object* object)
                 if (entry) {
                     item->m_objects.erase(entry);
                     if (!item->hasObjects()) {
-                        item->m_tileData.m_roadEntrance = false;
-                        item->m_tileData.m_roadPassable = true;
+                        item->m_tileData.m_objectEntrance = false;
+                        item->m_tileData.m_passable = true;
                     }
                     item->m_zoneState.m_objectDistance = RMG_CLEARED_CELL_COST;
                 }
@@ -8966,15 +8966,15 @@ void TRmgVoronoi::buildVertices()
 {
     for (u32 index = 0; index < m_edges.size(); ++index) {
         TRmgHalfEdge* edge = m_edges[index];
-        if (edge->getZone() && !edge->isPositionComputed()) {
+        if (edge->getZone() && !edge->isVertexComputed()) {
             TPoint second = edge->getOppositeSitePosition();
-            TPoint position = computeRmgCircumcenter(edge->getNext()->getOppositeSitePosition(),
+            TPoint vertex = computeRmgCircumcenter(edge->getNext()->getOppositeSitePosition(),
                 edge->getSitePosition(), second);
-            edge->setPosition(position);
+            edge->setVertex(vertex);
             edge = edge->getLeftPrevious();
-            edge->setPosition(position);
+            edge->setVertex(vertex);
             edge = edge->getLeftPrevious();
-            edge->setPosition(position);
+            edge->setVertex(vertex);
         }
     }
 }
