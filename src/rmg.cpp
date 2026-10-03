@@ -1140,26 +1140,20 @@ void TRmgRiverMapAdapter::setTile(const TRmgGridPoint& point, const rmgTerrainTi
     b8 present = tile.m_terrain != 0;
     item.m_tileData.m_hasRiver = present;
     if (present) {
-        {
-            TRmgZoneBounds bounds;
-            setRmgNeighborhoodBounds(bounds, point, *m_map, RMG_NEIGHBORHOOD_3X3);
-            for (s32 y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
-                for (s32 x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
-                    TRmgMapItem& neighbour = *m_map->getMapItem(x, y);
-                    neighbour.m_tileData.m_nearRiver = true;
-                }
+        TRmgZoneBounds bounds;
+        setRmgNeighborhoodBounds(bounds, point, *m_map, RMG_NEIGHBORHOOD_3X3);
+        for (s32 y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+            for (s32 x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+                TRmgMapItem& neighbour = *m_map->getMapItem(x, y);
+                neighbour.m_tileData.m_nearRiver = true;
             }
         }
-        {
-            TRmgZoneBounds bounds;
-            setRmgNeighborhoodBounds(bounds, point, *m_map, RMG_NEIGHBORHOOD_5X5);
-            for (s32 y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
-                for (s32 x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
-                    TRmgMapItem& neighbour = *m_map->getMapItem(x, y);
-                    if (neighbour.m_tile.m_riverType == 0) {
-                        neighbour.m_tileData.m_riverTarget = false;
-                    }
-                }
+        setRmgNeighborhoodBounds(bounds, point, *m_map, RMG_NEIGHBORHOOD_5X5);
+        for (y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+            for (s32 x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+                TRmgMapItem& neighbour = *m_map->getMapItem(x, y);
+                if (neighbour.m_tile.m_riverType == 0)
+                    neighbour.m_tileData.m_riverTarget = false;
             }
         }
     }
@@ -3472,6 +3466,8 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, eSchoolEarth));
     m_objectGenerators.push_back(new type_black_box_spells_def(30000, 1, 5, eSchoolAll));
 
+    // Removing this block changes VC6's push_back inlining here, and the
+    // constructor tree's stack residue reaches buildZoneBoundaries' testSlot.
     {
         s32 tentIndex = m_objectPrototypes[BORDER_TENT].size();
         m_disabledKeyTents.resize(tentIndex);

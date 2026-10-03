@@ -585,11 +585,11 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
                 previous->getOppositeSitePosition(), edge->getOppositeSitePosition(), point)) {
             flipRmgEdge(edge);
             edge = edge->getPrevious();
-            continue;
-        }
-        if (edge->getNext() == m_root)
+        } else if (edge->getNext() == m_root) {
             return;
-        edge = edge->getNext()->getLeftPrevious();
+        } else {
+            edge = edge->getNext()->getLeftPrevious();
+        }
     }
 }
 

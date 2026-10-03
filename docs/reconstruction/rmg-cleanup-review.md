@@ -171,6 +171,10 @@ because `buildZoneBoundaries` reads their stack residue. A second review
 merged nested selection tests, made `createGuard`'s skipped RoE creature
 explicit, returned directly from Voronoi point location and declared
 boundary-tracing, fill-seed and fit-test locals where they are used.
+A third review dropped the river adapter's paired scope blocks and gave
+Delaunay legalization its if/else-if/else form; both compile identically.
+`initializeObjectGenerators` keeps its key-tent block, since removing it
+changes the constructor tree's VC6 code.
 
 Subtraction in an index is not automatically an out-of-bounds access. The
 placement scratch array includes a one-cell border, its overlap flag proves
