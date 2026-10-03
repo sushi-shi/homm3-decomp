@@ -25,7 +25,7 @@ TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const s32* framePatte
     if (!allocated)
         throw TAllocationFailure();
     std::copy(framePatterns, framePatterns + m_frameCount, m_framePatterns);
-    for (u32 pattern = 0; pattern < LINE_PATTERN_COUNT; ++pattern) {
+    for (u32 pattern = LINE_END_S; pattern < LINE_PATTERN_COUNT; ++pattern) {
         m_ranges[pattern].m_firstIndex = 0;
         m_ranges[pattern].m_frameCount = 0;
     }

@@ -658,7 +658,7 @@ void type_random_map::markCoastalTiles()
 {
     TRmgMapPosition position;
     TRmgMapItem* item = m_mapItems;
-    for (position.m_z = 0; position.m_z < m_numberLevels; ++position.m_z) {
+    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_mapWidth; ++position.m_x, ++item) {
                 if (item->getLandType() == eTerrainWater) {
@@ -2397,7 +2397,7 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
     guardPosition.m_x -= prototype->m_triggerCell.m_x;
     guardPosition.m_y -= prototype->m_triggerCell.m_y;
     s32 guardType = guardProperties->m_prototype->getObjectType();
-    for (s32 direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
+    for (s32 direction = RMG_DIRECTION_EAST; direction < RMG_DIRECTION_COUNT; ++direction) {
         TPoint point = g_rmgDirections[direction]
             + TRmgVector(guardPosition.m_x, guardPosition.m_y);
         TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y);
@@ -2469,7 +2469,7 @@ b8 TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
                 return false;
         }
     }
-    for (s32 direction = 0; direction < RMG_FIRST_NORTHERN_DIRECTION; ++direction) {
+    for (s32 direction = RMG_DIRECTION_EAST; direction < RMG_FIRST_NORTHERN_DIRECTION; ++direction) {
         TPoint nearby = g_rmgDirections[direction] + origin;
         TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
         if (item->isRoadEntrance()
@@ -2483,7 +2483,7 @@ b8 TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
     if (m_map.isPlacementBlocked(properties, position, RMG_NO_ZONE,
             RMG_ALLOW_BORDER_ENTRANCES))
         return false;
-    for (s32 neighbour = 0; neighbour < RMG_DIRECTION_COUNT; ++neighbour) {
+    for (s32 neighbour = RMG_DIRECTION_EAST; neighbour < RMG_DIRECTION_COUNT; ++neighbour) {
         TPoint nearby = g_rmgDirections[neighbour] + origin;
         TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
         if (!item->isRoadEntrance() && item->isPassableLand()
@@ -3074,7 +3074,7 @@ void TRmgGeneratorBase::decorateMap()
     TRmgMapPosition position;
     s32 count = 0;
     TRmgMapItem* item = m_map.m_mapItems;
-    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z)
+    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z)
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y)
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item)
                 if (item->hasBorderObject())
@@ -3083,7 +3083,7 @@ void TRmgGeneratorBase::decorateMap()
         return;
     s32 progressSteps = 276300 / count;
     item = m_map.m_mapItems;
-    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
+    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (item->hasBorderObject()) {
@@ -3096,7 +3096,7 @@ void TRmgGeneratorBase::decorateMap()
         }
     }
     item = m_map.m_mapItems;
-    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
+    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (!item->hasPathClearance() && item->isPassableLand()) {
@@ -3852,7 +3852,7 @@ void type_random_map_generator::calculateZoneBounds()
 {
     TRmgMapItem* item = m_map.m_mapItems;
     TRmgMapPosition position;
-    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
+    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (item->m_zoneState.m_zone >= 0) {
@@ -4254,7 +4254,7 @@ void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
     while (pending.size()) {
         position = pending.back();
         pending.pop_back();
-        for (s32 direction = 0; direction < RMG_DIRECTION_COUNT;
+        for (s32 direction = RMG_DIRECTION_EAST; direction < RMG_DIRECTION_COUNT;
              direction += RMG_CARDINAL_DIRECTION_STEP) {
             TRmgMapPosition next = position + g_rmgDirections[direction];
             if (!m_map.containsXY(next))
@@ -4890,7 +4890,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
     while (positions.size()) {
         popRmgWorkItem(position, positions, costs);
         u32 currentCost = m_map.getMapItem(position)->m_movement.m_zonePathCost;
-        for (s32 direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
+        for (s32 direction = RMG_DIRECTION_EAST; direction < RMG_DIRECTION_COUNT; ++direction) {
             TRmgMapPosition next = position + g_rmgDirections[direction];
             if (!m_map.containsXY(next))
                 continue;
@@ -5004,7 +5004,7 @@ void type_random_map_generator::markZoneBorders()
     TRmgMapItem* current = m_map.m_mapItems;
     TRmgMapPosition position;
     TRmgMapPosition nearby;
-    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
+    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++current) {
                 s32 zoneIndex = current->m_zoneState.m_zone;
@@ -5051,7 +5051,7 @@ void type_random_map_generator::repairWaterZoneBorders()
     TRmgMapPosition nearby;
     std::vector<TRmgMapPosition> positions;
     std::vector<TTerrainType> terrains;
-    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
+    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++current) {
                 s32 zoneIndex = current->m_zoneState.m_zone;
@@ -5144,7 +5144,7 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
         while (positions.size()) {
             popRmgWorkItem(currentPosition, positions, costs);
             s32 distance = m_map.getMapItem(currentPosition)->m_zoneState.m_objectDistance;
-            for (s32 direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
+            for (s32 direction = RMG_DIRECTION_EAST; direction < RMG_DIRECTION_COUNT; ++direction) {
                 s32 nextCost = distance + getRmgChamferStepCost(direction);
                 TRmgMapPosition nextPosition = currentPosition + g_rmgDirections[direction];
                 if (!m_map.containsXY(nextPosition))
@@ -5638,7 +5638,7 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
     while (openPositions.size()) {
         position = openPositions.back();
         openPositions.pop_back();
-        for (s32 direction = 0; direction < RMG_DIRECTION_COUNT;
+        for (s32 direction = RMG_DIRECTION_EAST; direction < RMG_DIRECTION_COUNT;
              direction += RMG_CARDINAL_DIRECTION_STEP) {
             TRmgMapPosition nearby = position + g_rmgDirections[direction];
             if (!m_map.containsXY(nearby))
@@ -6098,7 +6098,7 @@ void type_random_map_generator::connectZones()
 
     TRmgMapItem* mapItem = m_map.m_mapItems;
     TRmgMapPosition position;
-    for (position.m_z = 0; position.m_z < m_map.getNumberLevels(); ++position.m_z) {
+    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.getNumberLevels(); ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.getHeight(); ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.getWidth();
                  ++position.m_x, ++mapItem) {
@@ -6361,7 +6361,7 @@ void type_random_map_generator::carveBranchingPaths()
             item->openPath();
         }
     }
-    for (s32 level = 0; level < m_map.m_numberLevels; ++level) {
+    for (s32 level = RMG_SURFACE_LEVEL; level < m_map.m_numberLevels; ++level) {
         TPoint first;
         TPoint last;
         switch (rand() % RMG_BRANCH_SEED_PATTERN_COUNT) {
@@ -6440,7 +6440,7 @@ void type_random_map_generator::carveBranchingPaths()
     }
     item = m_map.m_mapItems;
     TRmgMapPosition position;
-    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
+    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (item->getLandType() == eTerrainWater || item->getLandType() == eTerrainRock) {
@@ -6532,7 +6532,7 @@ void type_random_map_generator::prepareZoneConnections()
     markZoneBorders();
     TRmgMapItem* item = m_map.m_mapItems;
     TRmgMapPosition position;
-    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
+    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (!item->hasBorderObject() && item->isPassableLand() && !item->isRoadEntrance()
@@ -7848,7 +7848,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
         popRmgWorkItem(position, openPositions, openCosts);
         mapItem = m_map.getMapItem(position.m_x, position.m_y, position.m_z);
         s32 positionCost = mapItem->m_movement.m_cost;
-        for (s32 direction = 0; direction < RMG_DIRECTION_COUNT;
+        for (s32 direction = RMG_DIRECTION_EAST; direction < RMG_DIRECTION_COUNT;
              direction += RMG_CARDINAL_DIRECTION_STEP) {
             nextPosition = position + g_rmgDirections[direction];
             if (!m_map.containsXY(nextPosition))
@@ -7957,18 +7957,18 @@ void type_random_map_generator::markRiverTargets()
 {
     TRmgMapPosition position;
     TRmgMapItem* item = m_map.m_mapItems;
-    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
+    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (item->getLandType() == eTerrainWater) {
-                    for (s32 direction = 0; direction < RMG_DIRECTION_COUNT;
+                    for (s32 direction = RMG_DIRECTION_EAST; direction < RMG_DIRECTION_COUNT;
                          direction += RMG_CARDINAL_DIRECTION_STEP)
                         markRiverCoastTarget(position, direction);
                 }
             }
         }
     }
-    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
+    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             item = m_map.getMapItem(0, position.m_y, position.m_z);
             item->m_tileData.m_riverTarget = true;
@@ -8017,7 +8017,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
 
         mapItem = m_map.getMapItem(position);
         s32 positionCost = mapItem->m_movement.m_cost;
-        for (s32 direction = 0; direction < RMG_DIRECTION_COUNT;
+        for (s32 direction = RMG_DIRECTION_EAST; direction < RMG_DIRECTION_COUNT;
              direction += RMG_CARDINAL_DIRECTION_STEP) {
             nextPosition = position + g_rmgDirections[direction];
 
@@ -8223,7 +8223,7 @@ b8 type_random_map_generator::generate()
         m_playerIndexMap[++slot] = playerOrder[orderIndex];
     }
     initializeZones(m_templates[selected]);
-    for (s32 level = 0; level < m_map.m_numberLevels; ++level)
+    for (s32 level = RMG_SURFACE_LEVEL; level < m_map.m_numberLevels; ++level)
         buildZoneBoundaries(m_templates[selected], level);
     paintZoneTerrain();
     for (zone = 0; zone < m_zones.size(); ++zone)
@@ -8637,7 +8637,7 @@ b8 type_random_map_generator::writeMap(TAbstractFile* outfile)
     writeMapHeader(outfile);
     writeValue<s32>(outfile, 0);
     TRmgMapItem* item = m_map.m_mapItems;
-    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z)
+    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z)
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y)
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x) {
                 item->write(outfile);
