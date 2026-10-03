@@ -1031,7 +1031,7 @@ declaration, inline control, or unused operation is needed. This is a measured
 source/value-lifetime model for a retail-only function, not proof of the
 original local names or lexical scope.
 
-The same lever closed `checkSecondDiagonal` (2026-09-12): its second
+The same lever closed `isInnerCornerOnDiagonalEdge` (2026-09-12): its second
 neighbour query stores the clamp's literal minimum after the value where the
 first query stores it before, and only naming the height limit and then the
 offset sum ahead of the call reproduces that order (the locals in the other

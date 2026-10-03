@@ -99,10 +99,15 @@ def decode_result(data: bytes) -> dict:
                             isHumanSeat=list(values[:8]), townType=list(values[8:16]))}
 
 
-def compare_runs(left: Path, right: Path) -> dict:
+def compare_outputs(left_map: Path, left_result: Path, right_map: Path, right_result: Path) -> dict:
     """Compare every observable, preserving raw differences without masking."""
-    first = decode_result((left / 'result.bin').read_bytes())
-    second = decode_result((right / 'result.bin').read_bytes())
-    output = byte_difference((left / 'map.raw').read_bytes(), (right / 'map.raw').read_bytes())
+    first = decode_result(left_result.read_bytes())
+    second = decode_result(right_result.read_bytes())
+    output = byte_difference(left_map.read_bytes(), right_map.read_bytes())
     return {'equal': first == second and output['equal'], 'map': output,
             'stateEqual': first == second, 'leftState': first, 'rightState': second}
+
+
+def compare_runs(left: Path, right: Path) -> dict:
+    return compare_outputs(left / 'map.raw', left / 'result.bin',
+                           right / 'map.raw', right / 'result.bin')
