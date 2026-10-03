@@ -22,6 +22,7 @@
 #include "rmg.h"
 
 #include "abstractfile.h"
+#include "advmgr.h"
 #include "advmgr_objects.h"
 #include "armygrp.h"
 #include "artifact.h"
@@ -3443,9 +3444,9 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_treasure_def(BLACK_MARKET, 0, 8000, 20));
     m_objectGenerators.push_back(new type_treasure_def(BUOY, 0, 100, 100));
     m_objectGenerators.push_back(new type_treasure_def(CAMPFIRE, 0, 2000, 500));
-    m_objectGenerators.push_back(new type_treasure_def(CARTOGRAPHER, 0, 5000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(CARTOGRAPHER, 1, 10000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(CARTOGRAPHER, 2, 7500, 20));
+    m_objectGenerators.push_back(new type_treasure_def(CARTOGRAPHER, CARTOGRAPHER_WATER, 5000, 20));
+    m_objectGenerators.push_back(new type_treasure_def(CARTOGRAPHER, CARTOGRAPHER_LAND, 10000, 20));
+    m_objectGenerators.push_back(new type_treasure_def(CARTOGRAPHER, CARTOGRAPHER_UNDERGROUND, 7500, 20));
     m_objectGenerators.push_back(new type_treasure_def(CLOVER_FIELD, 0, 100, 100));
     m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_CYCLOPS, 3000, 100));
     m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_DWARF, 2000, 100));
