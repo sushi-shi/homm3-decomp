@@ -211,6 +211,14 @@ following keeps only with a pointer here:
   `placeWaterZoneIslands`, `createSubterraneanGate` and `placeObjectInZone`,
   `type_random_map::addObject`'s mask point and `floodConnectionCosts`'
   neighbour position: each rewrite changed VC6's code for these functions.
+- A seventh pass passed the line-walk axis endpoints, the creature reward
+  count and the prison object id by value, initialized the prison object and
+  map request fields in declaration order, and dropped staged copies in
+  `canPlaceTreasureGroup`, `markRiverCoastTarget` and `markRiverTargets`.
+  Apart from the request constructor, which only reorders two field stores,
+  that code runs after the connection paths are built. It kept
+  `rmgTerrainPainter::getPaintTerrain` returning a reference: by value,
+  `repairTerrainPoint`, which paints zone terrain earlier, compiled differently.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every

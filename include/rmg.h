@@ -970,7 +970,7 @@ public:
     s32 m_experience;                       // +0x28, prison definition experience
 
     rmgHeroObject(TRmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, const s32& objectId, s32 heroIndex,
+        type_random_map_generator* generator, s32 objectId, s32 heroIndex,
         s32 experience);
 
     virtual void releaseReservation();
@@ -1461,7 +1461,7 @@ struct TRmgLineWalkAxis {
     u32 m_distance;
     s32 m_step;
 
-    TRmgLineWalkAxis(const u32& destination, const u32& previous)
+    TRmgLineWalkAxis(u32 destination, u32 previous)
         : m_position(destination)
     {
         if (destination <= previous) {
