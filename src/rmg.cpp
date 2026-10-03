@@ -5339,6 +5339,7 @@ b8 type_random_map_generator::createGroundConnection(
 
     int guardValue = getRmgConnectionGuardValue(connection, *this);
 
+    // Retail dead path: floodConnectionCosts sets crossing costs to 10 or more.
     if (bestCost == 1 && guardValue == 0 && !connection->m_placeBorderObjects)
         return true;
 
