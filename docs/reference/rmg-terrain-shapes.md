@@ -34,8 +34,8 @@ Diagram legend (north is up, `C` is the cell):
 
 So dirt, water and rock cells only ever see hard edges, and sand sees none.
 Neighbour coordinates are clamped to the map: an off-map cardinal neighbour
-is the cell itself (no edge), and an off-map diagonal repeats an on-map
-neighbour.
+is the cell itself (no edge), and an off-map diagonal repeats a cardinal
+neighbour, or the cell itself at a map corner.
 
 ## Shape selection
 
@@ -63,6 +63,7 @@ them. In particular, no cardinal neighbour has an edge when groups 9 and 10 run.
 beside an outer corner (NE or SW of the NW corner) has the cell's own terrain,
 2/8 become 6/12. If a cell two steps along either side of an inner corner
 (+2,0 or 0,+2 of the SE corner) has another terrain, 5/11 become 7/13.
+Both tests clamp coordinates to the map.
 Geometrically, both refinements mark a corner on a 45-degree boundary
 running across the tile grid. This reading of the art is inferred from the
 predicates.
@@ -167,9 +168,10 @@ frame otherwise.
 
 ## Painting and repair
 
-The painter first paints the requested rectangle with the paint terrain's
-base frames. It then keeps two worklists: paint-terrain cells that need
-repair, and other-terrain neighbours to recheck. A rechecked neighbour that
+The painter first paints the requested rectangle with freshly rolled
+shape-0 frames of the paint terrain. It then keeps two worklists:
+paint-terrain cells that need repair, and other-terrain neighbours to
+recheck. A rechecked neighbour that
 needs repair is painted over with the paint terrain. `finish` drains both
 lists until no repair is pending, then runs `paintTransitions`.
 
@@ -192,7 +194,7 @@ Repairing a cell paints the paint terrain into its neighbours:
   left. On a tie, the gap earlier in the ring is painted first.
 
 `paintTransitions` counts terrain boundaries between neighbouring cells. A
-cell with no differing neighbour gets a base frame with no flips. Every other
+cell with no differing neighbour is drawn as shape 0 with no flips. Every other
 cell is classified as above. A frame or flip is written only when it changes.
 
 ## Line shapes (rivers and roads)

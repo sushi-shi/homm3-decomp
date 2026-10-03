@@ -601,7 +601,7 @@ struct TRmgMovementCost {
     unsigned m_cost : 16;
     // Cost of reaching this cell in a flood from another zone; ranks
     // ground-connection crossings. Water zones reuse it for distance from
-    // their edge (cardinal 2, diagonal 3).
+    // their edge and islands (cardinal 2, diagonal 3).
     unsigned m_zonePathCost : 16;
 };
 
