@@ -3021,18 +3021,19 @@ VA(0x00537970, 0x199)
 MAC_ADDRESS(0x236120, 0x2c4)
 void TRmgGeneratorBase::decorateMap()
 {
-    TRmgMapPosition position;
+    TRmgMapItem* end = m_map.m_mapItems
+        + m_map.m_numberLevels * m_map.m_mapHeight * m_map.m_mapWidth;
     s32 count = 0;
-    TRmgMapItem* item = m_map.m_mapItems;
-    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z)
-        for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y)
-            for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item)
-                if (item->hasBorderObject())
-                    ++count;
+    TRmgMapItem* item;
+    for (item = m_map.m_mapItems; item != end; ++item) {
+        if (item->hasBorderObject())
+            ++count;
+    }
     if (!count)
         return;
     s32 progressSteps = 276300 / count;
     item = m_map.m_mapItems;
+    TRmgMapPosition position;
     for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
@@ -3045,15 +3046,9 @@ void TRmgGeneratorBase::decorateMap()
             }
         }
     }
-    item = m_map.m_mapItems;
-    for (position.m_z = RMG_SURFACE_LEVEL; position.m_z < m_map.m_numberLevels; ++position.m_z) {
-        for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
-            for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
-                if (!item->hasPathClearance() && item->isPassableLand()) {
-                    item->openPath();
-                }
-            }
-        }
+    for (item = m_map.m_mapItems; item != end; ++item) {
+        if (!item->hasPathClearance() && item->isPassableLand())
+            item->openPath();
     }
 }
 
@@ -7362,13 +7357,12 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
             RMG_REQUIRE_PATH_CLEARANCE))
         return false;
     const TRmgZoneBounds& bounds = group->m_bounds;
-    TPoint point;
-    for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
-        for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
-            TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
+    for (s32 groupY = bounds.m_minimumY; groupY < bounds.m_maximumY; ++groupY) {
+        for (s32 groupX = bounds.m_minimumX; groupX < bounds.m_maximumX; ++groupX) {
+            TRmgMapItem* source = group->m_map.getMapItem(groupX, groupY);
             if (!source->hasPathClearance()) {
-                s32 x = point.m_x + position.m_x;
-                s32 y = point.m_y + position.m_y;
+                s32 x = groupX + position.m_x;
+                s32 y = groupY + position.m_y;
                 // Only the upper bounds are checked; callers keep translated
                 // coordinates nonnegative.
                 if (x < m_map.m_mapWidth && y < m_map.m_mapHeight

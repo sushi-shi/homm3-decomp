@@ -248,6 +248,10 @@ following keeps only with a pointer here:
   `openConnectionPath`'s staged predecessor: rewriting them changed the
   initializeZones or buildZoneBoundaries code, terrain painting before the
   connection paths, or `openConnectionPath`'s frame.
+- A twelfth pass replaced the last counter-only loops in post-path code:
+  `canPlaceTreasureGroup`'s group-bounds scan uses plain coordinates, and
+  `decorateMap` walks the cell array directly when counting border cells and
+  opening paths. Only those two frames changed.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every
