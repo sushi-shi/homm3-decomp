@@ -1,12 +1,13 @@
 # Unresolved data fields
 
-Status: 20 unresolved declarations from the original 332-field inventory;
-312 handled after evidence pass 86. This is a recovery backlog, not a claim
-that all retained integer types or opaque extents are original source types.
+Status: 14 unresolved declarations from the original 332-field inventory;
+318 handled after evidence pass 86 and the RMG layout pass. This is a
+recovery backlog, not a claim that all retained integer types or opaque
+extents are original source types.
 The detailed evidence and completed recoveries are in
 [remaining-field-recovery.md](../reconstruction/field-layouts.md).
 
-No supported semantic name was established for these 20 from the inspected
+No supported semantic name was established for these 14 from the inspected
 Dreamcast and NH3API records. Some owners or neighboring members have names;
 that does not identify these fields. Additional H3API checks also left them
 unresolved. Original names take priority when found: retain their spelling
@@ -32,12 +33,6 @@ The declarations describe the current model, including its uncertainties.
 | 12 | [TSwapWindow::m_field60](../../include/swapmgr.h) | +0x60, int | Complete allocation proves a tail word; its role is unknown. H3API only forward-declares the corresponding dialog. Find a complete definition or meaningful access. |
 | 13 | [TSingleSelectionWindow::m_pad358](../../include/singleselectionwindow.h) | +0x358, char[4] | H3API also calls this unknown. Its different portrait interpretation at +0x354 does not identify +0x358; retail indexes the preceding slot as heroPix[163]. Trace the remaining word separately. |
 | 14 | [TRandomMapProgress::m_pad28](../../include/singleselectionpopups.h) | +0x28, char[4] | Known members fill 0x28 bytes; 0x2c is only an extent bound. Old 0x30 size overlapped a separate live local (0x5862ef, 0x586306, 0x586437). Establish whether retail sizeof is 0x28 or 0x2c before removing or naming the word. |
-| 15 | [TRmgTemplate::m_opaque0020](../../include/rmg.h) | +0x20, char[0x10] | Gap between zones and size bounds; H3API also leaves it unknown. Recover its construction/destruction or member accesses to establish aggregate boundaries and types. |
-| 16 | [TRmgGroundTile::m_unknown30](../../include/rmg.h) | bits 30–31, unsigned : 2 | No explicit semantic use established; H3API also leaves tail bits unnamed. Inspect masks and whole-word transformations before declaring padding or naming flags. |
-| 17 | [TRmgConnectionDecoration::m_unknown05](../../include/rmg.h) | bits 5–31, unsigned : 27 | Only present/direction bits are identified. Trace producers and consumers of the remaining bits; lack of explicit accesses is not proof of padding. |
-| 18 | [TRmgZone::m_opaque003d](../../include/rmg.h) | +0x3d, char[7] | Three bytes can align the next dword, but +0x40 remains unexplained. H3API does not resolve the region. Identify that word before replacing the entire gap with compiler padding. |
-| 19 | [type_random_map_generator::m_opaque0ee0](../../include/rmg.h) | +0xee0, char[4] | 0x5499fb initializes nine ints; 0x549a75/0x549ab8 write entries 1–8, while readers use +0xee4. Leading sentinel role is visible, but extent through +0xf23 is unresolved. Prove the mapping's boundaries; inventing a 17-element array would hide this uncertainty. |
-| 20 | [TRmgPackedTerrainCell::m_unknown14](../../include/rmg_terrain.h) | bits 14–15, unsigned short : 2 | Neighboring frame/flip fields are recovered; no distinguishing use of the final bits is established. Trace packed-word masks and serialization before naming or removing them. |
 
 ## Completion criteria
 

@@ -236,9 +236,9 @@ body; no incomplete-prototype asset set was executed during the review.
 The RoE exclusion has a distinct compatibility quirk: it clears entries
 144..118, evaluates eligibility for 116..0, then selects across 144..0. Slot 117
 retains its loaded prototype without the eligibility test.
-`RMG_ROE_CREATURE_TYPE_COUNT` is the exclusion boundary; the evaluation starts
-one lower only because the evaluation loop decrements the exclusion loop's
-final index again. Do not align these boundaries or add prototype presence to
+`RMG_ROE_CREATURE_TYPE_COUNT` (118) is the exclusion boundary; evaluation
+starts two below it because retail decrements the exclusion loop's exit index
+(117) once more. Do not align these boundaries or add prototype presence to
 eligibility while doing source cleanup.
 
 ### Factory destruction: C++ lifetime risk with direct retail deallocation
@@ -299,8 +299,8 @@ valid, and helps keep a helper extraction from silently changing its behavior.
 | `TRandomMapRequest::generateToFile`, map construction and lookup | Positive supported dimensions/level count; bounded player counts and enum-like request values. The request entry only clamps monster strength and repairs a total player count below two. Signed dimension products and `monsterStrength + 3` can overflow for arbitrary integers. There is no general input-validation layer in these bodies. |
 | `getSerializedMapVersion` | Version is 0, 1, or 2. Another value falls off the C++ nonvoid helper. Native header code for another value uses the then-current output argument value; no portable fallback value is established. |
 | `getMapItem`, terrain cache, line and terrain painting | Coordinates are in the map, flattened multiplication is representable, and paint rectangles fit. Lookup helpers intentionally do not clamp. `paintTransitions` additionally expects at least two rows and columns: its neighbour mask clears only one side per axis, so a one-row or one-column map reaches row or column one. |
-| `loadTemplates` | The row-size guard rejects fewer than two fields but subsequently reads `values[2]`; a two-field row can pass it. Preserve this short-row behavior alongside the zone reader's separate bounds issue. |
-| `readRmgTemplateZones` | A row with exactly three entries passes the initial `size() >= 3` test and can read `values[3]` before the later full-row size test. Short/malformed spreadsheet behavior has not been reproduced. |
+| `loadTemplates` | The row-size guard compares the field count with the maximum-size column itself (`size() < RMG_TEMPLATE_COLUMN_MAXIMUM_SIZE`), so a row whose last field is the minimum size passes it and still reads the maximum size. Preserve this short-row behavior alongside the zone reader's separate bounds issue. |
+| `readRmgTemplateZones` | A row ending just before the zone index column passes the initial `size() >= RMG_TEMPLATE_COLUMN_ZONE_INDEX` test and reads the zone index before the later full-row size test. Short/malformed spreadsheet behavior has not been reproduced. |
 | `readObjectPlacementRules` | Rows have the required columns, nonnull field strings, object type in the admitted trait range and terrain in 0..9. Parsed type/terrain values index local two-dimensional tables without range checks. |
 | `loadObjectPrototypes` | Required object families exist. Its monster sort uses unsigned `size() - 1`; empty monsters produce a very long outer loop even though the inner loop is empty. Trait alias rows must also map to valid prototype-table indices. |
 | `buildOutline` / `hasConnectedOutline` | A prototype has a usable bottom-row footprint and nonempty outline. The outline builder can return empty; the consumer's `index % outline.size()` has no zero-size guard. |
@@ -318,10 +318,10 @@ valid, and helps keep a helper extraction from silently changing its behavior.
 | `TRmgTreasureGroup` placement/guard routines | Objects and trigger neighborhoods retain the temporary map's padding. Some neighbor reads precede footprint bounds checks. `addGuard` also consumes the last iterated object's prototype after its object loop; it assumes a nonempty group and preserves that prototype choice. |
 | `canPlaceTreasureGroup` | The proposed offset respects the lower bounds established by its callers. Its final tile scan checks only the upper X/Y bounds. |
 | `createRoads` | At least one road target exists. With none, unsigned `size() - 1` wraps and the first target access is invalid. Unlike the analogous empty monster sort, this loop immediately dereferences the absent element. |
-| `generate` player mapping | Template slots cover requested players, player indices fit 0..7, and total players do not exceed eight. A scan that reaches slot eight still indexes/writes the slot and player mapping arrays. Active zones must have a valid alignment before alignment counters and serialization shifts. |
+| `generate` player mapping | Template slots cover requested players, player indices fit 0..7, and total players do not exceed eight. A scan that reaches slot eight still indexes/writes the slot and player mapping arrays. Town zones must have a valid alignment before alignment counters and serialization shifts. |
 | `assignRmgTeams` | Team/player counts fit the eight-element arrays, and a positive number of nonempty teams exists when used as a modulus. |
 | `placeQuestArtifact` | Every eligible artifact has a prototype. The search result is indexed without checking `prototypeIndex == size()`. The seer prototype family used by the subsequent modulus must be nonempty. |
-| `writeMap` | Required prototype families 71 and 124 contain entry zero. The writer checks the final reserved-word write, while most earlier write results are ignored; an earlier failed/short write is not independently latched by this routine. |
+| `writeMap` | Required prototype families `RANDOM_MONSTER` and `TERRAIN_HOLE` contain entry zero. The writer checks the final reserved-word write, while most earlier write results are ignored; an earlier failed/short write is not independently latched by this routine. |
 | `TRmgLinePatternTable` / terrain pattern constructors and selectors | Fixed tables are nonempty, identifiers/frames fit their arrays, runs for a given identifier are contiguous, selected ranges have nonzero counts, and flip bytes are 0 or 1. These hold for the reviewed fixed table declarations; the API is not a validated arbitrary-table interface. |
 | Voronoi geometry / vector operators | Coordinates keep 32-bit differences, squared lengths, cross products and vector scaling representable; circumcenter triangles are noncollinear. Widening the final in-circle multiplication to 64 bits does not widen the preceding 32-bit squared sums. No overflowing supported-map case was established. |
 | `TRmgVoronoi::removeEdge` | Both half-edges belong to its owning vector; otherwise the search falls through to `erase(end())`. Topology is internally constructed, so malformed external edge pointers are not an established generation path. |
@@ -330,10 +330,11 @@ valid, and helps keep a helper extraction from silently changing its behavior.
 Other preserved behavior defects, separate from undefined behavior:
 
 - `TRmgZone::chooseTownType` uses the disjunction
-  `choice != -1 || expanded || choice != TOWN_CONFLUX`; the two different
+  `choice != eTownNeutral || expanded || choice != TOWN_CONFLUX`; the two different
   inequality terms make it true for every choice. It therefore counts all four
-  entries, including sentinels, rather than stopping at the sentinel or
-  excluding Conflux. Preserve the expression and its RNG behavior.
+  entries, including `eTownNeutral` and the zero padding (a Castle candidate),
+  rather than stopping at `eTownNeutral` or excluding Conflux. Preserve the
+  expression and its RNG behavior.
 - On RoE maps `readRmgTemplateZones` clears `m_allowedMonsters[TOWN_CONFLUX]`.
   `createGuard` indexes that array by town type + 1 (neutral at 0), so this
   slot is Fortress; Conflux guards stay allowed. Preserve the index.
@@ -354,8 +355,8 @@ Other preserved behavior defects, separate from undefined behavior:
   neighbours: rand_trn.txt's blocked scores, the draw-order conflict test and
   the rejection of rule-less objects never apply to them. Preserve the store.
 - `createSubterraneanGate` shares one guard value between both entrances, and
-  both guards are placed after both borders: a border on either side leaves
-  neither entrance guarded. Separate per-entrance values would change that.
+  both guards are placed after both border guards: a border guard on either
+  side leaves neither entrance guarded. Separate per-entrance values would change that.
 
 ## Reviewed invariants and coverage
 
@@ -384,7 +385,7 @@ Several suspicious-looking expressions are supported by local invariants:
   and subsequent gap selection have an entry; an arbitrary all-zero mask is
   not passed directly into that block.
 - Terrain reflection and diagonal indices derive from selector-produced 0/1
-  flips. Bit writers shift by `index & 7`, `bit % 8`, or cardinal direction
+  flips. Bit writers shift by `index % 8`, `bit % 8`, or cardinal direction
   0..3; these shifts have valid counts.
 - `getSize(TRmgGridPoint())` uses the VC6 non-const-reference extension. The
   returned reference is copied within the same full expression, before the
@@ -393,8 +394,8 @@ Several suspicious-looking expressions are supported by local invariants:
   aliasing read. Replacing it with a reinterpreted integer pointer would
   introduce a separate aliasing/alignment assumption.
 - Map clear and packed-cache construction intentionally initialize selected
-  bitfields only. Map clear preserves `m_connection.m_guardColor`/opaque bits and
-  `m_connectionVisited`, and sets only predecessor X to the invalid sentinel;
+  bitfields only. Map clear preserves `m_borderConnection.m_guardColor`, unnamed
+  bitfield remainders and `m_connectionVisited`, and sets only predecessor X to the invalid sentinel;
   later cost resets initialize full predecessors. Copying these aggregates
   includes indeterminate fields at initial construction, a C++ portability
   concern, but the review did not prove that every preserved field is consumed

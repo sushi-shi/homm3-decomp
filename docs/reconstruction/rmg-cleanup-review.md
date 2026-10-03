@@ -114,9 +114,9 @@ have topology names; count and selection share the quest-artifact predicate.
 The request's progress pointer is typed through the game and oracle callers.
 
 Path-clearance bit 27 previously had a misleading subterranean-gate name.
-Its name now describes its generation role, and common open/border updates
-preserve their connection guard and opposite store orders. Four key-color
-rescans share one helper; the first-use uninitialized color remains untouched.
+Its name now describes its generation role, and common open/obstacle-mark
+updates preserve their border-connection guard and opposite store orders. Four
+key-color rescans share one helper; the first-use uninitialized color remains untouched.
 The independent safety pass also established a removed-wrapper leak in failed
 quest/key-tent replacement and documented density-product overflow contracts.
 
@@ -126,6 +126,19 @@ helpers stay ordinary; no inlining pragmas or duplicated game declarations are
 introduced. Painter wrappers with different native entries retain their own
 copy/snapshot boundaries rather than being mechanically merged.
 
+A reader-trap round named RMG-internal sentinels (no zone, unset position,
+no category, no frame, failed border-guard placement), literal arguments
+(3x3/5x5 neighbourhoods, obstacle-entrance and path-clearance policies, border guard
+counts, neighbour steps, spacing), the H3M tile-flag bits and the unit-bearing
+constants: density areas are squared entrance distances (2 per cardinal
+step), so 82944 = 4 x 144 x 144, 800 and 1600 are 4 x 200 and 4 x 400 tiles.
+Header fields document their ranges and writers. Enumerators replace literals
+only where VC6 emits identical bytes; `buildRoadCostMap`'s enum-typed step
+cost conditional once needed `s32` casts for that, but now compiles
+identically without them and no longer has them.
+Function-local static tables keep the repository's unprefixed convention, with
+`<table>Guard` labels.
+
 ## Algorithm names and preservation constraints
 
 | Source operation | Algorithm and details that affect output |
@@ -134,7 +147,7 @@ copy/snapshot boundaries rather than being mechanically merged.
 | Ordered map-cost worklists | Descending `lower_bound` insertion with removal from the back implements minimum-cost relaxation. Preserve tie placement and the different zone, water and road cost functions. |
 | Zone graph distances | Dijkstra-style ordered relaxation or stack-based label correction, according to the actual worklist; do not call every flood a breadth-first search. |
 | `createRiver` | Randomized best-first relaxation. Costs draw randomness during visits, so treating this as a fixed-weight graph and reordering the worklist changes output. |
-| Straight boundaries, branch rays and line walker | Bresenham-style integer error accumulation. The line walker also paints the cell before a minor-axis step to maintain four-connected lines, and walks destination-to-start. |
+| Straight boundaries, branch rays and line walker | Bresenham-style integer error accumulation. The line walker also paints the corner cell on each minor-axis step to keep lines four-connected, and walks destination-to-start. |
 | Irregular boundaries, branching paths and noise regions | Random midpoint displacement. Preserve integer truncation, endpoint order, random draw order and the distinct LIFO subdivision/FIFO branch worklists. |
 | `fillZoneArea` and mask floods | Scanline flood fill or depth-first worklist traversal. Guarded backward pointer movement stays within the flattened map array. |
 | Town/mine/treasure density placement | Stride scheduling by minimum weighted count; increments are the integer density product divided by each density. First-on-tie selection is stable. |
@@ -147,12 +160,159 @@ copy/snapshot boundaries rather than being mechanically merged.
 ## Control flow and indexing decisions
 
 All three terrain gotos were removed using structured gap loops and early
-exits from the separated-neighbour predicate.
-Two `canFitObject` failure gotos remain: they converge on the shared placement-failure
-return, and the owning comment records the existing byte-matching evidence
-for that first-failure join. The remaining generator/support bodies have no
-gotos. The review does not replace a short, evidenced join with duplicated
-cleanup or an artificial state machine.
+exits from the separated-neighbour predicate. A later control-flow pass
+replaced `canFitObject`'s two jumps into the placement-failure return with
+early returns, so the RMG sources contain no gotos. The same pass rewrote
+matching-shaped loops (`while (1)` binary searches, a `do`/post-decrement seat
+scan, an attempt loop that cleared its result to signal exhaustion, an
+empty-bodied reverse-iterator search) and removed scope blocks or hoisted
+declarations that only shaped stack reuse. Rewrites in the constructor and
+`initializeZones` call trees were kept only where VC6 emits identical code,
+because `buildZoneBoundaries` reads their stack residue. A second review
+merged nested selection tests, made `createGuard`'s skipped RoE creature
+explicit, returned directly from Voronoi point location and declared
+boundary-tracing, fill-seed and fit-test locals where they are used.
+A third review dropped the river adapter's paired scope blocks and gave
+Delaunay legalization its if/else-if/else form; both compile identically.
+The deliberate keeps are listed under frame-sensitive code below.
+
+### Frame-sensitive code
+
+Retail `buildZoneBoundaries` reads its `testSlot` town flags uninitialized
+(see the [safety inventory](../reference/rmg-undefined-behavior.md)), so those
+bytes are whatever earlier calls left on the stack. Source changes that alter
+VC6's frames or inlining in the generator constructor tree, `initializeZones`
+or `buildZoneBoundaries` change generated maps. Source comments mark the
+following keeps only with a pointer here:
+
+- `initializeObjectGenerators`' key-tent scope block: removing it changes
+  VC6's `push_back` inlining in that function and the constructor tree's
+  stack residue.
+- `initializeZones` reuses `minimumY`/`minimumX` as the square's origin.
+  Separate origin locals changed its frame and moved towns on maps with water
+  or two levels (caught by the output comparison below).
+- `assignRmgZoneCell` and `clampRmgBoundaryToMap` stay free functions: as a
+  `TRmgMapItem` or `type_random_map` member respectively, VC6 lays out
+  `drawIrregularZoneBoundary`, called under `buildZoneBoundaries`, differently.
+- A fifth pass removed temporaries that only reordered loads (the three
+  adapter `setTile` bodies, reward factories, quest scores, group placement
+  bounds, branch-ray steps) and result variables. It kept the staged locals in
+  `getConnectionGuardValue`, `createGroundConnection` and `tryPlaceMine`, the
+  `getNeighborhoodBounds` and `getLevelPosition` bodies, `TRmgVector::operator*`
+  and `TRmgMapItem::clear`'s copies. Rewriting them changes the frames or stack
+  writes of code that runs during map construction or before
+  `buildZoneConnectionPaths`, whose fallback seed reads stack residue.
+- A sixth pass removed the remaining staging that compiles identically
+  (`isPlacementBlocked`'s mask point, `recenterZone`'s position, the creature
+  reward value's zone counts). For the same reason it kept the
+  reference-bound `y` in `getRmgRadialZonePosition`, `positionZone`'s origin
+  stores and staged selection, the declared-then-assigned positions in
+  `getInitialZoneBounds`, `filterZonePositions`, `fillZoneArea`,
+  `placeWaterZoneIslands`, `createSubterraneanGate` and `placeObjectInZone`,
+  `type_random_map::addObject`'s mask point and `floodConnectionCosts`'
+  neighbour position: each rewrite changed VC6's code for these functions.
+- A seventh pass passed the line-walk axis endpoints, the creature reward
+  count and the prison object id by value, initialized the prison object and
+  map request fields in declaration order, and dropped staged copies in
+  `canPlaceTreasureGroup`, `markRiverCoastTarget` and `markRiverTargets`.
+  Apart from the request constructor, which only reorders two field stores,
+  that code runs after the connection paths are built. It kept
+  `rmgTerrainPainter::getPaintTerrain` returning a reference: by value,
+  `repairTerrainPoint`, which paints zone terrain earlier, compiled differently.
+- An eighth pass initialized the guard, town, Pandora's box and seer hut
+  objects in declaration order. Guards and towns are created before the
+  connection paths, but `createGuard` and `placeTownAtRandomCandidate` only
+  reorder equal-length heap stores; their frames, stack writes and call
+  addresses are unchanged.
+- A ninth pass constructed the guard-outline position in
+  `TRmgTreasureGroup::addGuard`, the group centre in `placeTreasureGroup`
+  and the outline start in `buildOutline` directly, and dropped
+  `refreshRmgLinePoint`'s staged frame. `buildOutline` runs before the
+  connection paths, but only swaps two adjacent zero stores to the same
+  slots; its frame, function size and stack contents are unchanged.
+- A tenth pass passed treasure-group positions, the chosen group position
+  and the quest artifact's replacement value directly, centred group objects
+  with a point constructor and let `createRiver` use its target position
+  instead of a copy. All of this runs after the connection paths are built;
+  only `placeQuestArtifact`'s frame changed, through VC6 inlining
+  `TRmgTreasureGroup::addObject` there.
+- An eleventh pass dropped the staged roughness in `traceZoneBoundary`,
+  built `recenterZone`'s coordinate total with its constructor and dropped
+  `canPlaceShipyard`'s staged terrain, all compiling identically, and
+  returned `hasConnectedOutline`'s result as one expression, which only
+  reorders its epilogue. Later code (`removeObject`, `canPlaceTreasureGroup`,
+  `decorateUnderground`, `markRiverTargets`, `writeMap`) now loops over plain
+  coordinates or an item count instead of position structs used only as
+  counters. It kept `TRmgZone::canConnect`'s staged minimum,
+  `TRmgHalfEdge::setVertex`'s copy, `matchesTerrainAt`'s setter calls and
+  `openConnectionPath`'s staged predecessor: rewriting them changed the
+  `initializeZones` or `buildZoneBoundaries` code, terrain painting before the
+  connection paths, or `openConnectionPath`'s frame.
+- A twelfth pass replaced the last counter-only loops in post-path code:
+  `canPlaceTreasureGroup`'s group-bounds scan uses plain coordinates, and
+  `decorateMap` walks the cell array directly when counting obstacle-fill
+  cells and opening paths. Only those two frames changed.
+- A thirteenth pass let `decorateMapCell` iterate the blocked footprint
+  cells instead of a staged bounds struct, chose `placeZoneTreasures`'
+  density area once, and dropped staging in the line-pattern table
+  constructor and in `isRmgPointRightOfEdge`, the pattern and table rules'
+  `selectBaseFrame` result variables and the table rule's staged range; all
+  but the first two compile identically or run only at static
+  initialization. It kept the staged positions in `isRmgEdgeOrigin`,
+  `isRmgEdgeDestination` and `isRmgPointOnSegment`, the half-edge
+  constructors' body stores, `getTerrainNeighbourKindAt`'s staged terrain,
+  both `selectTransitionFrame` result variables, the setter-driven loops in
+  `paintRectangle` and `paintTransitions`, `type_object`'s constructor
+  stores, `carveBranchingPaths`' field-wise seed points, the counter
+  positions in `traceBranchEnd` and `createWaterZoneIsland` and
+  `generateRmgIslandMask`'s field-wise midpoints: each rewrite changed
+  Voronoi, terrain-painting or other pre-path code.
+- A fourteenth pass gave `buildOverlapPriorities` an ordinary row loop
+  instead of a mid-loop break, dropped the line painters' staged `getTile`
+  copy and let `createRivers` seed the second river at the entrance offset
+  instead of shifting a reused position. All of it runs after the connection
+  paths. It kept `makeTerrainFlip` in `selectTerrainTransition`'s body:
+  constructing the flips directly reorders that terrain-painting code.
+- A fifteenth pass passed the line painters' tile to the adapter instead of
+  rebuilding it field by field, seeded `createRiver`'s north and north-east
+  cells at offsets from the source instead of shifting the parameter, and
+  dropped `TRmgTreasureGroup::tryAddObject`'s staged candidate count. All of
+  it runs after the connection paths; the last two frames changed.
+- A sixteenth pass gave `buildRoadCostMap` its own worklist cursor instead
+  of reusing the seed parameter, named `TRmgTreasureGroup::addGuard`'s
+  trigger-adjusted cell instead of shifting the chosen outline point, and
+  let `canPlaceTreasureGroup` translate its approach cell into a separate map
+  position. All of it runs after the connection paths; all three stack
+  layouts changed. It kept the treasure definitions' constructor-body stores:
+  as member initializers, `initializeObjectGenerators` stores the fields
+  before the vtable pointer.
+- A seventeenth pass inlined the one-line tile read and write forwarders
+  into the road and river painters, dropped `selectRmgLinePattern`'s
+  single-caller overload that only returned the pattern instead of writing
+  it, and gave `createRiver` and `createRiverToObject` separate search and
+  trace positions instead of reusing one. All of it runs after the
+  connection paths; only `refreshRmgLinePoint`'s frame changed.
+- An eighteenth pass let the line walker's `drawTo` loop read the major
+  axis distance directly instead of a staged copy. Line painting runs only
+  for roads and rivers, after the connection paths; its frame grew by one
+  slot.
+- A nineteenth pass dropped `TRmgZone::decrementObjectCount`, a single-use
+  wrapper added only to shape `removeObject`'s code, so the zone count is
+  decremented directly like its increment in `addObject`. `removeObject`
+  runs only when a treasure replaces a failed key tent or quest artifact,
+  after the connection paths; its frame is unchanged.
+- A twentieth pass gave `findRmgPrototypeSubtypeIndex` one unsigned index
+  type instead of a template parameter that only preserved each caller's
+  original index type; every caller, including the pre-path
+  `placeBorderObject`, compiles identically. It also counts
+  `type_black_box_spells_def::generate`'s spells in `s32` rather than a
+  `long` chosen to copy each id into a temporary; treasures are generated
+  after the connection paths, and only that frame shrank.
+
+`writeRmgReservedBytes` takes its count as a function argument for a separate
+reason: VC6 merges function templates whose parameters do not mention every
+template argument, so a count-only template parameter wrote the same size for
+every call.
 
 Subtraction in an index is not automatically an out-of-bounds access. The
 placement scratch array includes a one-cell border, its overlap flag proves
@@ -161,15 +321,15 @@ Those invariants are documented next to the code and in the safety inventory.
 The actual negative-zone guard lookup and failed predecessor-chain bugs are
 preserved and documented separately.
 
-Opaque fields and unobserved bits keep their offset-based names when no read
-establishes their role. Renaming them to invented gameplay concepts would make
-the reconstruction less accurate. Existing source-attested type spellings and
+Storage that no code reads or writes keeps an offset-based `m_unused` name,
+and unobserved bitfield remainders stay unnamed. Renaming them to invented
+gameplay concepts would make the reconstruction less accurate. Existing source-attested type spellings and
 external ABI names are also retained. Role-derived renames keep former names
 in evidence comments where useful for lookup.
 
 The earlier campaign's final pass rejected further generic factories, tiny one-use predicates and
 mechanical merging of different snapshot, traversal or placement policies.
-`isPassableLand` retains its established name and exact road-passable/non-rock
+`isPassableLand` retains its established name and exact passable/non-rock
 predicate; it admits water, whose policy is checked separately by callers.
 The no-progress result is a review stopping point, not proof that every defect
 or possible improvement has been discovered.

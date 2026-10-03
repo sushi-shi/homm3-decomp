@@ -8,6 +8,12 @@ the 16 affected function contributions' code and relocation references/addends.
 The integrated result preserves all 4,764 incoming CUR/MAX/HIST triples
 from `3423ece1`; the isolated goto pass also preserves `22f8b0fd`.
 
+That inventory included six RMG statements in four functions
+(`canFitObject` twice, `canPlaceTreasureGroup`, `repairTerrainPoint` and
+`hasSeparatedNeighbours` twice). The later RMG readability cleanup replaced
+them with direct returns and structured loops, accepting the score cost;
+the RMG sources now contain no gotos. Counts below predate that cleanup.
+
 The preceding completion pass removed nine more original sites and two PCX
 sites introduced by parallel work. Its integrated result preserved all 4,764
 incoming CUR/MAX/HIST triples. The source-scope pass before that removed 31
@@ -288,12 +294,13 @@ difference. None of these findings justifies converting every goto mechanically.
 
 Every remaining owner received the Dreamcast dossier, assembly blocks and
 inline clues plus retail summary, structure and candidate-source views.
-Named calls and helper boundaries were reviewed separately. The five RMG
-owners have no older Dreamcast counterpart; their retail code governs.
-Repeated labels are separate statements, identified by their origin below.
-The table is checked against the live inventory, including repeated-label
-counts: **27 forward and four backward jumps**, with no syntactically terminal
-return targets.
+Named calls and helper boundaries were reviewed separately. The six RMG
+rows were retired when the RMG cleanup removed those gotos; the counts in
+this section predate that. Repeated labels are separate statements,
+identified by their origin below.
+The table was checked against the pre-cleanup inventory, including
+repeated-label counts: **27 forward and four backward jumps**, with no
+syntactically terminal return targets.
 
 The newest source families start at `22f8b0fd`, with replay and bolt controls
 reproduced after the adopted playback/placement edits. Earlier independent
@@ -317,12 +324,6 @@ revisit when new source, lifetime or compiler-state evidence appears.
 | [`TMultiPlayerWindow::onWidgetDeselect`](../../src/multiplayerwindow.cpp) | `check_host_join_screen` (Failed Host) | An owned host/join-screen check scores 91.2643% vs 98.1199%; keep this distinct failure route. Grouping Host/Join while retaining their calls gives 96.9836% or 93.6403%; result/cleanup combinations also lose. |
 | [`TMultiPlayerWindow::onWidgetDeselect`](../../src/multiplayerwindow.cpp) | `return_to_main_menu` (Join from host/join screen) | An owned menu action scores 88.8147% vs 98.1199%; menu/host/result combinations also lose. Selective menu results reach 89.3733% (Cancel) or 87.9836% (Join/both); combined success/menu scopes also lose. |
 | [`TMultiPlayerWindow::onWidgetDeselect`](../../src/multiplayerwindow.cpp) | `exit_dialog` (Successful Search) | An owned successful exit scores 94.0872% vs 98.1199%; preserve OnSearch and the existing result tail. Shared success flags reach 97.6022% for Host alone and 97.9836% for Search/both; width, lifetime and actual-helper-result controls stay lower. |
-| [`TRmgTreasureGroup::canFitObject`](../../src/rmg.cpp) | `placementFailure` (First placement failure) | Retail-only body: a direct return scores 98.7778% vs 98.8042%; keep the first failure destination. Positive fits flags guarding both scans and placement score 90.7619%; blocked flags reach 89.0476%. |
-| [`TRmgTreasureGroup::canFitObject`](../../src/rmg.cpp) | `placementFailure` (Second placement failure) | An independent return scores 98.1693% vs 98.8042%; both returns score 98.1429%. Preserve point/trigger copies and map checks. Positive fits flags guarding both scans and placement score 90.7619%; blocked flags reach 89.0476%. |
-| [`type_random_map_generator::canPlaceTreasureGroup`](../../src/rmg.cpp) | `disallowEntrances` (Entrance policy rejected) | Separate entrance-blocked results reach 98.2893%; head-tested exhaustion-owned guard policy reaches 99.2993% with for/while/do headers, below 99.9850%. Preserve the explicit allow arm and coordinate/helper calls. |
-| [`rmgTerrainPainter::repairTerrainPoint`](../../src/rmg_terrain.cpp) | `gapsBuilt` (Neighbour-gap cycle completed) | Inner break plus outer completion test scores 85.3676% vs 91.3389%; cycle-complete flags with header/bottom tests reach 86.0995%/86.1619%. Keep gap construction and the common merge phase. |
-| [`rmgTerrainPainter::hasSeparatedNeighbours`](../../src/rmg_terrain.cpp) | `noSeparation` (Matching run wraps to first direction) | A direct false return at this site scores 99.6610% vs 100%; it selects the wrong duplicate epilogue. A positive continue-scan/else-return scope scores 87.7966%; shared result flags remain below 82%. |
-| [`rmgTerrainPainter::hasSeparatedNeighbours`](../../src/rmg_terrain.cpp) | `noSeparation` (Final nonmatching run wraps) | An independent false return also scores 99.6610%; both surviving returns score 99.7458% with the already-adopted initial return. Keep direction lifetime and branch destinations. A positive continue-scan/else-return scope scores 99.6610%; shared result flags remain below 82%. |
 | [`CSaveGameEdit::ignoreKey`](../../src/singleselectionwindow.cpp) | `ignore` (Shift-period rejection) | Direct return 97.5397%, do/continue 97.8413%, period fallthrough 97.8571%, against 100%. Rejection-default flags reach 93.6905%/94.1667%. Every form retains the live GetKeyState call. |
 | [`combatManager::doBolt`](../../src/spells.cpp) | `done` (All bolts completed) | DC bComplete governs the draw pass. Inner break plus outer break/guard/continue scores 96.4526%; completed-arm ownership of the sole cleanup/reset/return reaches 97.6170%, against 100%. Reproduced after mirrorImage changed. |
 | [`swapManager::main`](../../src/swapmgr.cpp) | `show_secondary_skill` (Left secondary-skill popup) | Separate left/right assignments plus a shared skill-requested flag score 71.6782%. Combined selector 80.3929%, conditional left/right 83.6259%/83.4984%, against 84.0502%; preserve DC constructor/helper order. |
@@ -533,8 +534,9 @@ town-popup result/lifetime alternatives reproduce the same 87.0077% result,
 below 90.2738%. Witch-hut refusal flags and text selection lower its match.
 The explicit campaign replay-loop variants fall to 59.9903--60.0568%, so the
 two backward restarts remain. RMG entrance policies and individual fit returns
-also remain lower. These rejected forms are recorded beside their functions;
-none justifies hiding the remaining joins in invented helpers or macros.
+also scored lower; the later RMG cleanup adopted those structured forms anyway.
+These rejected forms are recorded beside their functions; none justifies
+hiding the remaining joins in invented helpers or macros.
 
 
 ## Source scopes and spell routing
