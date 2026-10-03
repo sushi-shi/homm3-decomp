@@ -4549,9 +4549,12 @@ void type_random_map_generator::buildZoneBoundaries(
                 if (!canPlaceZone(&testZone))
                     continue;
                 if (position.m_z == RMG_SURFACE_LEVEL) {
-                    // Retail bug: m_allowedTowns is left uninitialized before the
-                    // zone constructor reads it, so heap contents affect RNG use.
+                    // Retail bug: m_allowedTowns is never written, so the zone
+                    // constructor draws a town from reused heap bytes, which are
+                    // nonzero in practice. Allowing every town keeps that one
+                    // rand() draw without reading the heap; the town is unused.
                     TRmgTemplateZone* templateZone = new TRmgTemplateZone;
+                    memset(templateZone->m_allowedTowns, true, sizeof(templateZone->m_allowedTowns));
                     // TODO: a water zone has no town. Allowing none skips the
                     // draw, but changes generated maps relative to retail:
                     // memset(templateZone->m_allowedTowns, false, sizeof(templateZone->m_allowedTowns));

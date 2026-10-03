@@ -28,12 +28,14 @@ not an exhaustive UB audit.
    changes key-tent and guard colours.
 
 4. **Added water zones' town flags.** `buildZoneBoundaries` heap
-   `TRmgTemplateZone` (`0x53e45c` constructor call). Allocator residue decides
-   whether `TRmgZone`'s constructor draws. The oracle controls it with
-   `heapByte`; there is no exact explicit equivalent. Possible real fix
-   (`TODO` beside it): allow no towns. The resulting alignment has no
-   consequential reader. The zone's `m_creatureTownType` is never set but is
-   read by treasure `getValue` before the terrain filter. Its effect on output
+   `TRmgTemplateZone` (`0x53e45c` constructor call). Retail never writes them;
+   reused heap bytes decide whether `TRmgZone`'s constructor draws. The source
+   now allows every town (`memset` true), which reproduces retail's one draw
+   whenever any residue byte is nonzero; the drawn alignment has no
+   consequential reader. It differs only when all nine bytes are zero (oracle
+   `heapByte` 0, where retail skips the draw). Possible real fix (`TODO` beside
+   it): allow no towns. The zone's `m_creatureTownType` is never set but is
+   read by treasure `getValue` before the terrain filter; its effect on output
    is untraced.
 
 5. **Reproduced retail faults.** River drawing follows an invalid predecessor
