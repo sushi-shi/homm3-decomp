@@ -1045,9 +1045,10 @@ static inline void repairTerrainGap(rmgTerrainPainter& painter,
     painter.paintPoint(fillPositive ? positive : negative);
 }
 
-// Repair one-cell gaps, then greedily fill the lightest neighbour-ring gaps
-// until only one remains; ties go to the first gap. Painting order matters
-// because each repair updates the worklists.
+// Repair one-cell gaps. Then, if the paint terrain needs connected neighbours
+// and they are separated, greedily fill the lightest neighbour-ring gaps until
+// only one remains; ties go to the first gap. Painting order matters because
+// each repair updates the worklists.
 VA(0x005B5440, 0x628)
 MAC_ADDRESS(0x256be4, 0x630)
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)

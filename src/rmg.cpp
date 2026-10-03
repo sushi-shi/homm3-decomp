@@ -464,8 +464,9 @@ b8 type_random_map::hasConnectedOutline(
     const std::vector<TPoint>& outline, TRmgMapPosition position,
     b8 allowEntrances, TRmgZone* zone, b8 requirePathClearance)
 {
-    // Counts blocked runs around the outline, revisiting the first point to
-    // close the last run. The outline must be nonempty.
+    // Accepts at most one blocked run and at least one open cell, and rejects
+    // entrances unless allowed. The first point is revisited to close the last
+    // run; the outline must be nonempty.
     b8 blocked = true;
     b8 foundBoundary = false;
     b8 waterZone = zone->m_terrain == eTerrainWater;
@@ -768,9 +769,9 @@ static inline bool allowsRmgSharedObjectEntrance(int objectType)
         && isRmgEntranceOpenToNorth(objectType);
 }
 
-// The object must fit and have a connected outline, and the cell below its
-// trigger must be passable land of the same zone and water class. If that
-// cell is another entrance, its object type needs trait 2.
+// The object must fit and have a connected outline. With a trigger, the cell
+// below it must also be passable land of the same zone and water class; if
+// that cell is another entrance, its object type needs trait 2.
 VA(0x00531CF0, 0x1A5)
 MAC_ADDRESS(0x22e6a8, 0x270)
 b8 type_random_map::canPlaceObject(

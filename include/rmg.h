@@ -83,7 +83,8 @@ public:
 class type_black_box_creature_def : public type_treasure_def {
 public:
     s32 m_creatureType;
-    // Stack size: the level's reward value divided by AI value, rounded.
+    // Stack size: the level's reward value divided by AI value; counts above
+    // 5 are rounded to a multiple of 2, 5 or 10.
     s32 m_creatureCount;
 
     type_black_box_creature_def(int creatureType);
@@ -1819,7 +1820,6 @@ public:
         std::vector<TRmgMapPosition>* borderPositions);
     void floodConnectionRegion(TRmgMapPosition position);
     void floodShipyardWater(type_object* shipyard);
-    // Places a shipyard beside reachable water.
     b8 createShipyardConnection(
         TRmgZone* source, TRmgZoneConnection* connection);
     b8 canPlaceShipyard(TRmgMapPosition position);
@@ -1852,8 +1852,8 @@ public:
     void createRoads();
     // Picks an unused quest artifact, turns the object into it and places its
     // seer hut in another zone, handing the hut to the map; if the hut cannot
-    // be placed, the artifact is replaced by a treasure. Fails without
-    // changes when no quest artifact remains.
+    // be placed, the artifact is replaced by a treasure. Fails, leaving the
+    // object unchanged, when no quest artifact remains.
     b8 placeQuestArtifact(rmgQuestArtifactObject* object);
     void calculateQuestZoneDistances(TRmgZone* origin);
     b8 placeQuestGroup(TRmgTreasureGroup* group, TRmgZone* origin);

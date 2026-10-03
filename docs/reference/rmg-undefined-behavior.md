@@ -158,12 +158,10 @@ retail read and missing initialization or invalid access have been established.
 
 ## Review classification (2026-10-01)
 
-The cleanup review does not repair retail bugs. The
-findings below separate instruction-established defects, C++ reconstruction
-risks, and conditional input contracts. An unchecked operation is not evidence
-that a shipped template reaches it. No generation comparison or new crash
-reproduction was run during this review; output identity is checked after the
-combined cleanup. Existing campaign results above are historical evidence.
+The findings below separate instruction-established defects, C++
+reconstruction risks and conditional input contracts; none is repaired. An
+unchecked operation is not evidence that a shipped template reaches it, and no
+new crash reproduction was run for this review.
 
 ### Object removal: failed search is tested against null
 
@@ -339,14 +337,15 @@ Other preserved behavior defects, separate from undefined behavior:
 - On RoE maps `readRmgTemplateZones` clears `m_allowedMonsters[TOWN_CONFLUX]`.
   `createGuard` indexes that array by town type + 1 (neutral at 0), so this
   slot is Fortress; Conflux guards stay allowed. Preserve the index.
-- `filterZonePositions` accepts the candidate found on an unused level only
-  when its index is greater than zero, so a lone suitable candidate at index
-  zero is ignored. Changing to a nonnegative test changes selection and subsequent RNG.
+- `filterZonePositions` drops occupied-level candidates only when the last
+  unused-level candidate's index is greater than zero, so a lone unused-level
+  candidate at index zero leaves every candidate in place. Changing to a
+  nonnegative test changes selection and subsequent RNG.
 - `placeBorderObject` returns zero if it cannot find the required guard
   prototype, although zero is also a successful color and other failure paths
   return minus one. Preserve the return value pending a deliberate bug-fix pass.
-- `tryPlaceMine` retains the last scanned prototype for trigger/width checks
-  after selecting a random candidate. Retail stores it at
+- `tryPlaceMine` uses the last scanned prototype's trigger and width for the
+  entrance approach and resource area after selecting a random candidate. Retail stores it at
   `0x5459f5`/`0x545a5d` and reloads it at `0x545b7e`/`0x545ca9`. Substituting the
   selected candidate's prototype changes the existing behavior.
 - `scoreObjectPlacement` overwrites each blocked footprint cell's mark with
