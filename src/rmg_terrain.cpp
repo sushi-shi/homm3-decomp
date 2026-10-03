@@ -87,10 +87,10 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
     int selected = selectRmgLinePattern(matches, table, flipX, flipY);
     rmgTerrainTile current;
     tile.getTile(current);
-    if (table->m_patterns[current.getFrame()] != selected
+    if (table->m_framePatterns[current.getFrame()] != selected
         || current.getFlipX() != flipX || current.getFlipY() != flipY) {
         u32 frame = table->m_ranges[selected].m_firstIndex
-            + rand() % table->m_ranges[selected].m_valueCount;
+            + rand() % table->m_ranges[selected].m_frameCount;
         current.m_frame = frame;
         current.m_flipX = flipX;
         current.m_flipY = flipY;

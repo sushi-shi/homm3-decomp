@@ -17,28 +17,28 @@ TRmgLinePainterInterface::TRmgLinePainterInterface(const TRmgGridPoint& size)
 
 VA(0x004F9BE0, 0xB7)
 MAC_ADDRESS(0x22210c, 0x1ec)
-TRmgLinePatternTable::TRmgLinePatternTable(u32 patternCount, const int* patterns)
-    : m_patternCount(patternCount), m_patterns(0)
+TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const int* framePatterns)
+    : m_frameCount(frameCount), m_framePatterns(0)
 {
-    int* allocated = new int[m_patternCount];
-    m_patterns = allocated;
+    int* allocated = new int[m_frameCount];
+    m_framePatterns = allocated;
     if (!allocated)
         throw TAllocationFailure();
-    std::copy(patterns, patterns + m_patternCount, m_patterns);
+    std::copy(framePatterns, framePatterns + m_frameCount, m_framePatterns);
     for (u32 value = 0; value < LINE_PATTERN_COUNT; ++value) {
         m_ranges[value].m_firstIndex = 0;
-        m_ranges[value].m_valueCount = 0;
+        m_ranges[value].m_frameCount = 0;
     }
     // Expects a nonempty, unvalidated list of ids 0..8 with each id's frames
     // contiguous.
-    int previousPattern = m_patterns[0];
-    ++m_ranges[previousPattern].m_valueCount;
-    for (u32 index = 1; index < m_patternCount; ++index) {
-        if (m_patterns[index] != previousPattern) {
-            previousPattern = m_patterns[index];
+    int previousPattern = m_framePatterns[0];
+    ++m_ranges[previousPattern].m_frameCount;
+    for (u32 index = 1; index < m_frameCount; ++index) {
+        if (m_framePatterns[index] != previousPattern) {
+            previousPattern = m_framePatterns[index];
             m_ranges[previousPattern].m_firstIndex = index;
         }
-        ++m_ranges[previousPattern].m_valueCount;
+        ++m_ranges[previousPattern].m_frameCount;
     }
 }
 
@@ -46,7 +46,7 @@ VA(0x004F9CA0, 0x0B)
 MAC_ADDRESS(0x2222f8, 0x54)
 TRmgLinePatternTable::~TRmgLinePatternTable()
 {
-    delete[] m_patterns;
+    delete[] m_framePatterns;
 }
 
 // Neighbour direction order for each (flipX, flipY) reflection.
@@ -107,7 +107,7 @@ void selectRmgLinePattern(
         flipX = false;
         return;
     }
-    b8 hasCornerVariant = table->m_ranges[LINE_SE_VARIANT].m_valueCount > 0;
+    b8 hasCornerVariant = table->m_ranges[LINE_SE_VARIANT].m_frameCount > 0;
     const u32 reflectionCount = sizeof(g_rmgLineReflections) / sizeof(g_rmgLineReflections[0]);
     for (u32 reflection = 0; reflection < reflectionCount; ++reflection) {
         const int* order = g_rmgLineReflectedNeighbours
@@ -123,7 +123,7 @@ void selectRmgLinePattern(
             return;
         }
     }
-    if (table->m_ranges[LINE_END_S].m_valueCount > 0) {
+    if (table->m_ranges[LINE_END_S].m_frameCount > 0) {
         if (hasRmgHorizontalLineNeighbour(neighbours)) {
             pattern = LINE_END_E;
             flipX = neighbours[TILE_DIR_WEST];

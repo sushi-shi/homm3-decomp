@@ -1296,16 +1296,18 @@ enum ERmgLinePattern {
 // Frames of one line pattern: first frame index and frame count.
 struct TRmgLinePatternRange {
     u32 m_firstIndex;
-    u32 m_valueCount;
+    u32 m_frameCount;
 };
 SIZE(TRmgLinePatternRange, 0x8);
 
+// Line pattern of each frame of a river or road tileset, and the frame range
+// of each pattern.
 struct TRmgLinePatternTable {
-    u32 m_patternCount;
-    s32* m_patterns;
+    u32 m_frameCount;
+    s32* m_framePatterns;
     TRmgLinePatternRange m_ranges[LINE_PATTERN_COUNT];
 
-    TRmgLinePatternTable(u32 patternCount, const int* patterns);
+    TRmgLinePatternTable(u32 frameCount, const int* framePatterns);
     ~TRmgLinePatternTable();
 };
 SIZE(TRmgLinePatternTable, 0x50);
