@@ -1160,7 +1160,7 @@ void rmgTerrainPainter::paintTransitions()
 
             rmgTerrainTile tile = getPackedCell(point)->getTile();
             int newFrame;
-            if (transition) {
+            if (transition != SHAPE_FILL) {
                 newFrame = g_rmgTerrainRules[tile.m_terrain]
                     ->selectTransitionFrame(transition, flip, flip, tile.m_frame);
             } else {

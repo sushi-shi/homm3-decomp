@@ -6569,15 +6569,16 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
     return true;
 }
 
-// Guard value for a zone object: none when the template monster strength is
-// zero, otherwise the combined template and map strength applied to value.
+// Guard value for a zone object; none in a zone without monsters. Map
+// strength shares the zone scale (2 weak, 3 normal, 4 strong), so an average
+// zone keeps the map strength that connection guards use.
 static inline int getRmgZoneGuardValue(int value, const TRmgZone* zone,
     const type_random_map_generator& generator)
 {
     int zoneStrength = zone->m_templateZone->m_monsterStrength;
-    if (!zoneStrength)
+    if (zoneStrength == RMG_ZONE_MONSTERS_NONE)
         return 0;
-    int strength = zoneStrength + generator.m_monsterStrength - 3;
+    int strength = zoneStrength + generator.m_monsterStrength - RMG_ZONE_MONSTERS_AVERAGE;
     if (strength > 5) strength = 5;
     else if (strength < 0) strength = 0;
     return getRmgGuardValue(value, strength);
@@ -7381,7 +7382,6 @@ b8 type_random_map_generator::paintRoad(TRmgMapPosition position, int roadType)
                 if (position.m_z != level
                     || (position.m_x != previous.m_x && position.m_y != previous.m_y))
                     break;
-                painted = true;
                 painter.drawTo(TRmgGridPoint(position.m_x, position.m_y));
                 previous = position;
             }
