@@ -270,19 +270,36 @@ static const s32 g_landRiverDeltaIndex[4] = {2, 0, 3, 1};
 DATA(0x006409B0)
 static const s32 g_snowRiverDeltaIndex[4] = {7, 5, 4, 6};
 
-// Candidate town types for each zone terrain; -1 was meant to end a row.
+// Candidate town types for each zone terrain, dirt to water. The pick only
+// selects which creatures' dwellings and rewards the zone favours; eTownNeutral
+// (no faction) favours neutral creatures. It was meant to end a row, but
+// chooseTownType draws from all four entries, so the zero padding after it is
+// a Castle candidate.
 DATA(0x00682450)
 s32 g_rmgTerrainTownChoices[9][4] = {
-    {0, 1, 4, -1}, {6, -1, 0, 0}, {0, 1, -1, 0},
-    {2, -1, 0, 0}, {7, 4, -1, 0}, {6, 8, -1, 0},
-    {5, 3, 4, -1}, {3, -1, 0, 0}, {-1, 0, 0, 0}
+    {TOWN_CASTLE, TOWN_RAMPART, TOWN_NECROPOLIS, eTownNeutral}, // dirt
+    {TOWN_STRONGHOLD, eTownNeutral, 0, 0},                       // sand
+    {TOWN_CASTLE, TOWN_RAMPART, eTownNeutral, 0},                // grass
+    {TOWN_TOWER, eTownNeutral, 0, 0},                            // snow
+    {TOWN_FORTRESS, TOWN_NECROPOLIS, eTownNeutral, 0},           // swamp
+    {TOWN_STRONGHOLD, TOWN_CONFLUX, eTownNeutral, 0},            // rough
+    {TOWN_DUNGEON, TOWN_INFERNO, TOWN_NECROPOLIS, eTownNeutral}, // subterranean
+    {TOWN_INFERNO, eTownNeutral, 0, 0},                          // lava
+    {eTownNeutral, 0, 0, 0}                                      // water
 };
 
 // Native terrain of each town alignment, used when choosing zone terrain.
 DATA(0x006408C8)
 static const s32 g_rmgTownNativeTerrains[TOWN_TYPE_COUNT] = {
-    eTerrainGrass, eTerrainGrass, eTerrainSnow, eTerrainLava, eTerrainDirt,
-    eTerrainDirt, eTerrainRough, eTerrainSwamp, eTerrainGrass
+    eTerrainGrass, // castle
+    eTerrainGrass, // rampart
+    eTerrainSnow,  // tower
+    eTerrainLava,  // inferno
+    eTerrainDirt,  // necropolis
+    eTerrainDirt,  // dungeon
+    eTerrainRough, // stronghold
+    eTerrainSwamp, // fortress
+    eTerrainGrass  // conflux
 };
 
 enum ERmgRadialDirectionLimits {
@@ -1151,7 +1168,7 @@ void TRmgZone::chooseTownType(b8 expanded)
     } else {
         int count = 0;
         // Retail bug: this condition is always true, so all four row
-        // entries are candidates, including -1 and the zero padding.
+        // entries are candidates, including eTownNeutral and the padding.
         while (count < 4 &&
             (g_rmgTerrainTownChoices[m_terrain][count] != -1 || expanded ||
              g_rmgTerrainTownChoices[m_terrain][count] != TOWN_CONFLUX))
