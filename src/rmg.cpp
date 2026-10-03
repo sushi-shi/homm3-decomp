@@ -4533,12 +4533,19 @@ void type_random_map_generator::buildZoneBoundaries(
     }
     s32 originalZones = m_zones.size();
     if (level == RMG_UNDERGROUND_LEVEL || m_waterContent != RMG_WATER_NONE) {
-        // Retail bug: testSlot's m_allowedTowns is uninitialized, so stack
-        // contents decide whether testZone's constructor draws a town.
+        // Retail bug: testSlot's town flags are never initialized. Retail
+        // finds stale CRT heap-call frames there (return addresses, heap
+        // block sizes) left by initializeZones, never all zero, so testZone's
+        // constructor always draws a town with one rand(). A junction ignores
+        // its town; allowing every town keeps the draw without the stack read.
         TRmgTemplateZone testSlot;
         testSlot.m_zoneIndex = RMG_NO_ZONE;
         testSlot.m_kind = RMG_TEMPLATE_JUNCTION;
         testSlot.m_size = 0;
+        memset(testSlot.m_allowedTowns, true, sizeof(testSlot.m_allowedTowns));
+        // TODO: the placement probe needs no town. Allowing none skips the
+        // draw, but changes generated maps relative to retail:
+        // memset(testSlot.m_allowedTowns, false, sizeof(testSlot.m_allowedTowns));
         TRmgZone testZone(&testSlot);
         TRmgZone* addedZone = 0;
         for (zone = 0; zone < originalZones; ++zone) {
@@ -4565,6 +4572,9 @@ void type_random_map_generator::buildZoneBoundaries(
                     // Retail bug: m_allowedTowns is left uninitialized before the
                     // zone constructor reads it, so heap contents affect RNG use.
                     TRmgTemplateZone* templateZone = new TRmgTemplateZone;
+                    // TODO: a water zone has no town. Allowing none skips the
+                    // draw, but changes generated maps relative to retail:
+                    // memset(templateZone->m_allowedTowns, false, sizeof(templateZone->m_allowedTowns));
                     templateZone->m_zoneIndex = mapTemplate->m_zones.size();
                     templateZone->m_size = radius;
                     memset(templateZone->m_allowedMonsters, 0, sizeof(templateZone->m_allowedMonsters));
@@ -5142,13 +5152,13 @@ void type_random_map_generator::buildZoneConnectionPaths()
         item->resetMovement();
         ++item;
     }
+    // A zone whose scan finds no eligible empty cell (in practice a zone with
+    // no cells) floods from the seed of the last zone that had one.
+    TRmgMapPosition seed(RMG_NO_POSITION, RMG_NO_POSITION, RMG_NO_POSITION);
     for (u32 zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
         TRmgZoneBounds bounds = zone->m_bounds;
         s32 level = zone->m_levelPosition.m_z;
-        // Retail bug: with no eligible empty cell the scan never assigns
-        // seed, yet the fallback below still uses it.
-        TRmgMapPosition seed;
         b8 foundClearPath = false;
         for (s32 y = bounds.m_minimumY; y < bounds.m_maximumY && !foundClearPath; ++y) {
             for (s32 x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
@@ -5166,6 +5176,17 @@ void type_random_map_generator::buildZoneConnectionPaths()
                 }
             }
         }
+        // Retail bug: before any zone has had an eligible cell, retail floods
+        // from uninitialized stack (environment-dependent, likely a fault).
+        // This zone is skipped instead, differing only where retail is
+        // undefined.
+        if (seed.m_x == RMG_NO_POSITION)
+            continue;
+        // TODO: a zone without an eligible cell should not borrow another
+        // zone's seed. Track foundSeed beside the seed assignment and skip
+        // that zone's flood (changes generated maps relative to retail):
+        // if (!foundSeed)
+        //     continue;
         if (!foundClearPath) {
             TRmgMapItem* current = m_map.getMapItem(seed);
             current->openPath();
