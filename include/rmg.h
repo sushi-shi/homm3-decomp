@@ -1605,7 +1605,8 @@ enum ERmgBranchSeedPattern {
     RMG_BRANCH_SEED_MAIN_DIAGONAL = 0,
     RMG_BRANCH_SEED_VERTICAL = 1,
     RMG_BRANCH_SEED_ANTI_DIAGONAL = 2,
-    RMG_BRANCH_SEED_HORIZONTAL = 3
+    RMG_BRANCH_SEED_HORIZONTAL = 3,
+    RMG_BRANCH_SEED_PATTERN_COUNT = 4
 };
 
 // Per-object-type placement limit.
@@ -1752,6 +1753,7 @@ public:
     virtual ~type_random_map_generator();
     virtual void addObject(type_object* object, TRmgMapPosition position);
 
+    // H3M format number (MAP_FORMAT_* in game.h).
     inline int getSerializedMapVersion() const
     {
         switch (m_mapVersion) {

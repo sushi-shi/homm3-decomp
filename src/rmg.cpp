@@ -6072,7 +6072,7 @@ void type_random_map_generator::carveBranchingPaths()
     for (int level = 0; level < m_map.m_numberLevels; ++level) {
         TPoint first;
         TPoint last;
-        switch (rand() % 4) {
+        switch (rand() % RMG_BRANCH_SEED_PATTERN_COUNT) {
         case RMG_BRANCH_SEED_MAIN_DIAGONAL:
             first.m_x = 0;
             first.m_y = 0;
