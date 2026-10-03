@@ -3089,8 +3089,7 @@ type_random_map_generator::type_random_map_generator(
 {
     m_nextObjectId = 1;
 #if defined(HOMM3_RMG_HOTFIX)
-    // The first keymaster tent and border guard use colour 0, not stack
-    // residue.
+    // First key-tent colour is 0, not stack residue.
     m_nextKeyTentColor = 0;
 #endif
     m_questArtifactPoolLow = false;
@@ -3281,8 +3280,7 @@ void readRmgTemplateZones(
         // Rows without a zone index are skipped.
         if (values.size() > RMG_TEMPLATE_COLUMN_ZONE_INDEX
 #else
-        // Retail bug: a row ending just before the zone index still reads it
-        // before the full row-length check.
+        // Retail bug: a row ending before the zone index still reads it.
         if (values.size() >= RMG_TEMPLATE_COLUMN_ZONE_INDEX
 #endif
             && isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_ZONE_INDEX])
@@ -4573,8 +4571,7 @@ void type_random_map_generator::buildZoneBoundaries(
                     // rand() draw without reading the heap; the town is unused.
                     TRmgTemplateZone* templateZone = new TRmgTemplateZone;
 #if defined(HOMM3_RMG_HOTFIX)
-                    // A water zone has no town: allowing none skips the draw.
-                    // Its other unwritten flags are cleared too.
+                    // A water zone has no town; its other unwritten flags are cleared too.
                     memset(templateZone->m_allowedTowns, false, sizeof(templateZone->m_allowedTowns));
                     templateZone->m_neutralTownsMatchZone = false;
                     templateZone->m_useNativeTerrain = false;
@@ -4601,8 +4598,7 @@ void type_random_map_generator::buildZoneBoundaries(
                     templateZone->m_kind = RMG_TEMPLATE_JUNCTION;
                     addedZone = new TRmgZone(templateZone);
 #if defined(HOMM3_RMG_HOTFIX)
-                    // chooseTownType never runs for added zones; treasure
-                    // values compare creature towns against this.
+                    // chooseTownType never runs for added zones.
                     addedZone->m_creatureTownType = eTownNeutral;
 #endif
                     addedZone->m_terrain = eTerrainWater;
@@ -5194,15 +5190,11 @@ void type_random_map_generator::buildZoneConnectionPaths()
             }
         }
 #if defined(HOMM3_RMG_HOTFIX)
-        // A zone without an eligible cell of its own gets no connection paths
-        // rather than flooding from another zone's seed.
+        // A zone without an eligible cell gets no connection paths.
         if (!foundSeed)
             continue;
 #else
-        // Retail bug: before any zone has had an eligible cell, retail floods
-        // from uninitialized stack (environment-dependent, likely a fault).
-        // This zone is skipped instead, differing only where retail is
-        // undefined.
+        // Retail bug: before any seed exists, retail floods from stack garbage.
         if (seed.m_x == RMG_NO_POSITION)
             continue;
 #endif
@@ -5458,8 +5450,7 @@ MAC_ADDRESS(0x243498, 0xd4)
 void type_random_map_generator::placeGuard(s32 value, TRmgMapPosition position)
 {
 #if defined(HOMM3_RMG_HOTFIX)
-    // Cells off the map or outside every zone (as below a monolith) get no
-    // guard.
+    // No guard off the map or outside every zone.
     if (!m_map.containsXY(position))
         return;
     TRmgMapItem* item = m_map.getMapItem(position);
@@ -5467,8 +5458,7 @@ void type_random_map_generator::placeGuard(s32 value, TRmgMapPosition position)
         return;
 #else
     TRmgMapItem* item = m_map.getMapItem(position);
-    // Retail bug: an unassigned cell indexes m_zones[-1] (see
-    // docs/reference/rmg-undefined-behavior.md).
+    // Retail bug: an unassigned cell indexes m_zones[-1].
 #endif
     TRmgZone* zone = m_zones[item->m_zoneState.m_zone];
     if (item->hasObjects())
@@ -7858,13 +7848,11 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
         }
     }
 #if defined(HOMM3_RMG_HOTFIX)
-    // Draw only to a river cell the search actually reached; a rejected one
-    // still has the reset cost and no predecessor.
+    // Draw only to a river cell the search reached.
     if (!mapItem->hasRiver() || mapItem->m_movement.m_cost >= RMG_UNREACHED_COST)
         return;
 #else
-    // Retail bug: as in createRiver, this tests the last inspected tile
-    // rather than an explicit search result.
+    // Retail bug: tests the last inspected tile, as in createRiver.
     if (!mapItem->hasRiver())
         return;
 #endif
@@ -8043,14 +8031,11 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     }
 
 #if defined(HOMM3_RMG_HOTFIX)
-    // Draw only to a target the search actually reached; a rejected one
-    // still has the reset cost and no predecessor.
+    // Draw only to a target the search reached.
     if (!mapItem->isRiverTarget() || mapItem->m_movement.m_cost >= RMG_UNREACHED_COST)
         return;
 #else
-    // Retail bug: this tests the last inspected tile, even if relaxation
-    // rejected it; an unreached target can start an invalid predecessor walk
-    // (see docs/reference/rmg-undefined-behavior.md).
+    // Retail bug: tests the last inspected tile, even an unreached one.
     if (!mapItem->isRiverTarget())
         return;
 #endif
@@ -8324,14 +8309,12 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outputFile)
     writeString(outputFile, mapName);
 
 #if defined(HOMM3_RMG_HOTFIX)
-    // With the template name cut to 255 characters, the longest description
-    // (every player human with a town choice) is under 900 bytes.
+    // With the name capped at 255 characters, a description fits in 1024.
     char description[1024];
     if (m_templateName.size() > 255)
         m_templateName.resize(255);
 #else
-    // Retail bug: unchecked sprintf/strcat below; long template names or
-    // player descriptions can overflow this fixed buffer.
+    // Retail bug: unchecked sprintf/strcat can overflow this buffer.
     char description[500];
 #endif
     sprintf(
