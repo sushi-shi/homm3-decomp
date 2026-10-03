@@ -175,10 +175,7 @@ template<class Adapter>
 static inline void writeRmgLineTileSnapshot(Adapter* adapter,
     const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
-    rmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
-    snapshot.m_flipX = tile.m_flipX;
-    snapshot.m_flipY = tile.m_flipY;
-    adapter->setTile(point, snapshot);
+    adapter->setTile(point, tile);
 }
 
 template<class Adapter>

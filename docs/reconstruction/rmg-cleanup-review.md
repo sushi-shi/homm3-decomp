@@ -273,6 +273,11 @@ following keeps only with a pointer here:
   instead of shifting a reused position. All of it runs after the connection
   paths. It kept `makeTerrainFlip` in `selectTerrainTransition`'s body:
   constructing the flips directly reorders that terrain-painting code.
+- A fifteenth pass passed the line painters' tile to the adapter instead of
+  rebuilding it field by field, seeded `createRiver`'s north and north-east
+  cells at offsets from the source instead of shifting the parameter, and
+  dropped `TRmgTreasureGroup::tryAddObject`'s staged candidate count. All of
+  it runs after the connection paths; the last two frames changed.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every

@@ -2472,10 +2472,9 @@ b8 TRmgTreasureGroup::tryAddObject(type_object* object)
                 candidates.push_back(candidate);
         }
     }
-    u32 count = candidates.size();
-    if (!count)
+    if (!candidates.size())
         return false;
-    addObject(object, candidates[rand() % count]);
+    addObject(object, candidates[rand() % candidates.size()]);
     return true;
 }
 
@@ -7883,11 +7882,8 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     s32 riverType;
     selectRmgRiverAppearance(mapItem, sourceIsSnow, riverType);
 
-    --source.m_y;
-    m_map.seedMovementSearch(source, openPositions, openCosts);
-
-    ++source.m_x;
-    m_map.seedMovementSearch(source, openPositions, openCosts);
+    m_map.seedMovementSearch(source + TPoint(0, -1), openPositions, openCosts);
+    m_map.seedMovementSearch(source + TPoint(1, -1), openPositions, openCosts);
 
     TRmgMapPosition position;
     TRmgMapPosition nextPosition;
