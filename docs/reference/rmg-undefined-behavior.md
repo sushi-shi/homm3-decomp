@@ -2,9 +2,10 @@
 
 The pinned English GOG Complete retail generator is not a pure function of its
 seed and settings. The following uninitialized reads are present in retail and
-preserved in the recovered implementation. Initializing them in game source would
-change retail behavior; the [execution oracle](../oracles/rmg.md) instead records and
-controls storage contents at its boundary.
+preserved in the recovered implementation, except the boundary test slot, whose
+observed effect is modelled explicitly below. Initializing the others in game
+source would change retail behavior; the [execution oracle](../oracles/rmg.md)
+instead records and controls storage contents at its boundary.
 
 RMG has no Dreamcast counterpart. The evidence below is retail x86 code and
 execution, not inferred original source text or a sanitizer result. These are
@@ -59,12 +60,57 @@ changing RMG instructions; `null` retains native allocation behavior.
 ## Temporary boundary slot: uninitialized stack town flags
 
 `buildZoneBoundaries` also creates a stack `testSlot`, initializes only its zone
-index, kind and size, and passes it to the same zone constructor at `0x53e149`.
-The constructor reads the same uninitialized nine town flags. A retail snapshot
-at that constructor's random draw contained stack/address residue in those bytes.
-This is a separate source of indeterminate input even when fresh heap allocations
-are filled. Initial stack fill does not control storage overwritten by intervening
-calls, so repeatability checks remain necessary.
+index, kind, size and connection vector, and passes it to the same zone
+constructor at `0x53e149`. Retail never writes the slot's nine town flags
+(`[ebp-0x123]..[ebp-0x11b]`, `testSlot+0x41`). If any is nonzero, the
+constructor draws one `rand()` at `0x532a5b`. The chosen town is unused:
+`canPlaceZone` reads the alignment only for human and computer slots, and the
+test slot is a junction. Its only observable effect is that one draw.
+
+**Residue.** The oracle captured the slot at the constructor call through a
+call-site thunk that writes no stack storage (see the `RMG_TRACE_SITE` hook in
+`scripts/homm3/rmg/driver.cpp`). With the harness entry stack at `0x22f518`,
+retail's slot is at `0x22de54`, so the flags are bytes `0x22de95..0x22de9d`.
+`buildZoneBoundaries` writes none of them, and its callees run below its frame.
+Both levels therefore see the bytes left before `generate` called it: the last
+writes at that depth by `initializeZones`' zone positioning, where vector
+reallocation under `positionZone` reaches `operator delete` → `free`. Across
+3,417 captures from 3,000 requests (2,000 sampled requests and million-v1
+requests 0..999, retail run with heap fill), the flags held:
+
+| Flag bytes 3..6 (one aligned stack dword) | Captures | Writer |
+| --- | ---: | --- |
+| `0x0061960a` | 2,082 | `free`'s return address from `_unlock(9)` (small-block path) |
+| `0x0061b305` | 457 | `_unlock`'s return address from `LeaveCriticalSection` |
+| `0x00619626` | 278 | `free`'s return address from `HeapFree` (large-block path) |
+| `0x600`, `0xc00`, `0x1800` | 599 | Wine `RtlFreeHeap` internals below `HeapFree` |
+| `0x30001752` | 1 | the harness's allocation-fill wrapper (an oracle frame) |
+
+Flag bytes 0..2 hold a saved Wine frame pointer (`0x0022de..`) or zero, and
+bytes 7..8 a lock number, critical-section or heap address. That dword was
+nonzero in every capture, so retail always drew. The exact bytes depend on
+which heap call last reached that depth, on CRT and host DLL frames, and on
+oracle frames; they are not a function of generation state alone. On Windows,
+the `HeapFree` path would leave different words.
+
+The candidate's slot was 4 bytes higher (`0x22de58`; `buildZoneBoundaries` is not
+byte exact), where it read other heap-call residue, also always nonzero. A
+frame change exposed the hazard: splitting `initializeZones`' square origin into
+new locals (`0feba6777`) left all nine bytes zero for million-v1 `m0000076` and
+`m0000135`. The candidate skipped the draw and its maps diverged.
+
+**Source model.** `buildZoneBoundaries` now allows all nine test-slot towns
+explicitly, preserving retail's one draw without reading the stack. This costs
+VC6 match: the function moves from 72.15% to 70.46% because retail emits no
+store. With that initialization and the origin-split perturbation re-applied,
+the same 3,000 requests matched retail: 2,993 equal maps, plus 7 river-drawing
+faults at corresponding instructions on both sides. That set includes
+`m0000076` and `m0000135`. Without the perturbation, the same 3,000 requests
+also matched. With `getLandType()` returning `TTerrainType` (which changes later
+generator frames), million-v1 requests 0..999 matched. This is sampled
+agreement. A state whose last heap call leaves that dword zero would make
+retail skip the draw; none was observed. The source keeps the real fix (no
+towns, so no draw) as a `TODO`. It would change generated maps.
 
 ## River drawing: unchecked out-of-range coordinates
 
@@ -308,7 +354,7 @@ valid, and helps keep a helper extraction from silently changing its behavior.
 | `positionZone` / `paintZoneTerrain` | Position filtering leaves a candidate and generation supplies zones. Selection uses `% candidates.size()` and progress divides by the zone count. |
 | `initializeZones` | The normalization span is nonzero before scaling positions and boundary roughness by integer division. `calculateZoneBounds` only accumulates bounds and has no normalization division. Collapsed sites need separate reachability evidence. |
 | `insetIslandZone` | The boundary vector is nonempty before its initial `m_boundary[0]` read. Both radial divisions already check `length > 0`; a zero-length radial vector is not an unchecked divisor here. |
-| `buildZoneConnectionPaths` | At least one same-zone, suitable-terrain tile without objects exists in the bounds. Otherwise `seed` is never assigned before `getMapItem(seed)` and the flood. Initializing it would conceal the current failure path rather than preserve it. |
+| `buildZoneConnectionPaths` | Some zone before or at the first zone without a same-zone, suitable-terrain tile free of objects has one. Retail stores `seed` (`[ebp-0x30..-0x28]`) only at `0x540731..0x54073f`. A zone without such a tile therefore floods from the last assigned seed, and the source declares `seed` once per call to state that. A probe at the fallback branch (`0x54077d`) on 3,000 requests found 1,765 fallback reads in 885 requests. 1,620 used a seed from the same zone; 145 in 53 requests reused an earlier zone's, 142 of them for zones with no cells. None preceded the first assignment. In that unobserved case retail reads stack residue, which is environment-dependent and likely faults. The source initializes `seed` to `RMG_NO_POSITION` and skips such a zone; this differs only where retail is undefined. The 53 requests with a reused seed, plus `m0000076`/`m0000135`, matched retail with this handling (54 maps, one paired river fault). The real fix, not borrowing another zone's seed, is a `TODO`. |
 | `connectZones` and connection graph consumers | Every referenced zone index names an existing zone, reverse connections exist when dereferenced, and selected monolith prototype families are nonempty. Newly appended extra-zone connections leave four player-limit fields uninitialized; those fields are not read by the later generator path reviewed here. |
 | `createTreasureObject` | A valued footprint contains an occupied cell, and candidate densities form a positive representable total. Occupied-cell division, density sums and the final random remainder have no general malformed-data protection. |
 | `placeAdditionalTowns`, `placeExtraMines`, `placeZoneTreasures` | Positive category densities have a representable sum and product; initial counts times their density-derived steps and subsequent count increments remain representable. These routines multiply all enabled densities before dividing by each category's density. For example, seven mine densities of 100 overflow the signed 32-bit product. This is an arithmetic contract for custom template values, not a reproduced shipped-template failure. Disabled categories' uninitialized count/step entries are protected by the `finished` short-circuit and are not read by selection. |

@@ -180,10 +180,15 @@ The deliberate keeps are listed under frame-sensitive code below.
 
 Retail `buildZoneBoundaries` reads its `testSlot` town flags uninitialized
 (see the [safety inventory](../reference/rmg-undefined-behavior.md)), so those
-bytes are whatever earlier calls left on the stack. Source changes that alter
-VC6's frames or inlining in the generator constructor tree, `initializeZones`
-or `buildZoneBoundaries` change generated maps. Source comments mark the
-following keeps only with a pointer here:
+bytes are whatever earlier calls left on the stack. Until 2026-10-03, source
+changes that altered VC6's frames or inlining in the generator constructor
+tree, `initializeZones` or `buildZoneBoundaries` changed generated maps. The
+source now sets the test slot's flags to retail's observed effect (always one
+draw). With it, the origin-split rewrite below matched retail on 3,000 requests.
+The keeps below can be reconsidered under that model with an oracle run;
+`buildZoneConnectionPaths` still reads residue before any zone assigns its
+seed, which was not observed. Source comments mark the following keeps only
+with a pointer here:
 
 - `initializeObjectGenerators`' key-tent scope block: removing it changes
   VC6's `push_back` inlining in that function and the constructor tree's
