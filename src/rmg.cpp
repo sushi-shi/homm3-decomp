@@ -85,63 +85,63 @@ DATA(0x0069d1f4)
 s32 g_rmgZoneObjectLimits[ADVENTURE_OBJECT_TRAIT_COUNT];
 DATA(0x00640718)
 static const TRmgObjectLimit g_rmgMapObjectLimitOverrides[30] = {
-    { EVENT, 200 },
-    { BLACK_BOX, 200 },
-    { OBELISK, 48 },
-    { BOAT, 64 },
-    { TRAINING_GROUNDS, 32 },
-    { DEFENSE_TOWER, 32 },
-    { GARDEN_OF_REVELATION, 32 },
-    { MERC_CAMP, 32 },
-    { POWER_SCHOOL, 32 },
-    { TREE_OF_KNOWLEDGE, 32 },
-    { LIBRARY, 32 },
-    { ARENA, 32 },
-    { MAGIC_SCHOOL, 32 },
-    { WAR_SCHOOL, 32 },
-    { UNIVERSITY, 32 },
-    { WITCH_HUT, 32 },
-    { SHRINE1, 32 },
-    { SHRINE2, 32 },
-    { SHRINE3, 32 },
-    { SIREN, 32 },
-    { MYSTICAL_GARDEN, 32 },
-    { WATER_WHEEL, 32 },
-    { WINDMILL, 32 },
-    { MAGIC_SPRING, 32 },
-    { DEAD_GUY, 32 },
-    { LEAN_TO, 32 },
-    { WARRIOR_TOMB, 32 },
-    { WAGON, 32 },
-    { SEER, 48 },
-    { BLACK_MARKET, 32 },
+    {EVENT,                200},
+    {BLACK_BOX,            200},
+    {OBELISK,              48},
+    {BOAT,                 64},
+    {TRAINING_GROUNDS,     32},
+    {DEFENSE_TOWER,        32},
+    {GARDEN_OF_REVELATION, 32},
+    {MERC_CAMP,            32},
+    {POWER_SCHOOL,         32},
+    {TREE_OF_KNOWLEDGE,    32},
+    {LIBRARY,              32},
+    {ARENA,                32},
+    {MAGIC_SCHOOL,         32},
+    {WAR_SCHOOL,           32},
+    {UNIVERSITY,           32},
+    {WITCH_HUT,            32},
+    {SHRINE1,              32},
+    {SHRINE2,              32},
+    {SHRINE3,              32},
+    {SIREN,                32},
+    {MYSTICAL_GARDEN,      32},
+    {WATER_WHEEL,          32},
+    {WINDMILL,             32},
+    {MAGIC_SPRING,         32},
+    {DEAD_GUY,             32},
+    {LEAN_TO,              32},
+    {WARRIOR_TOMB,         32},
+    {WAGON,                32},
+    {SEER,                 48},
+    {BLACK_MARKET,         32},
 };
 DATA(0x00640808)
 static const TRmgObjectLimit g_rmgZoneObjectLimitOverrides[24] = {
-    { ALTAR_OF_SACRIFICE, 1 },
-    { CARTOGRAPHER, 1 },
-    { CLOVER_FIELD, 1 },
-    { COVER_OF_DARKNESS, 1 },
-    { EYE_OF_MAGI, 1 },
-    { FAERIE_RING, 1 },
-    { FOUNTAIN_OF_FORTUNE, 1 },
-    { FOUNTAIN_OF_YOUTH, 1 },
-    { HILL_FORT, 1 },
-    { IDOL_OF_FORTUNE, 1 },
-    { LIGHTHOUSE, 1 },
-    { MAGIC_SPRING, 1 },
-    { MAGIC_WELL, 1 },
-    { OASIS, 1 },
-    { OBSERVATORY, 1 },
-    { PILLAR_OF_FIRE, 1 },
-    { RALLY_FLAG, 1 },
-    { SANCTUARY, 1 },
-    { STABLES, 1 },
-    { TEMPLE, 1 },
-    { TRADING_POST, 1 },
-    { WAR_MACHINE_FACTORY, 1 },
-    { WATERING_HOLE, 1 },
-    { WITCH_HUT, 3 },
+    {ALTAR_OF_SACRIFICE,  1},
+    {CARTOGRAPHER,        1},
+    {CLOVER_FIELD,        1},
+    {COVER_OF_DARKNESS,   1},
+    {EYE_OF_MAGI,         1},
+    {FAERIE_RING,         1},
+    {FOUNTAIN_OF_FORTUNE, 1},
+    {FOUNTAIN_OF_YOUTH,   1},
+    {HILL_FORT,           1},
+    {IDOL_OF_FORTUNE,     1},
+    {LIGHTHOUSE,          1},
+    {MAGIC_SPRING,        1},
+    {MAGIC_WELL,          1},
+    {OASIS,               1},
+    {OBSERVATORY,         1},
+    {PILLAR_OF_FIRE,      1},
+    {RALLY_FLAG,          1},
+    {SANCTUARY,           1},
+    {STABLES,             1},
+    {TEMPLE,              1},
+    {TRADING_POST,        1},
+    {WAR_MACHINE_FACTORY, 1},
+    {WATERING_HOLE,       1},
+    {WITCH_HUT,           3},
 };
 
 // Frame i of a river sprite draws shape g_rmgRiverPatterns[i]; repeated
@@ -292,15 +292,15 @@ enum ERmgTerrainTownChoiceLimits {
 // a Castle candidate.
 DATA(0x00682450)
 s32 g_rmgTerrainTownChoices[eTerrainWater + 1][RMG_TERRAIN_TOWN_CHOICE_COUNT] = {
-    {TOWN_CASTLE, TOWN_RAMPART, TOWN_NECROPOLIS, eTownNeutral}, // dirt
-    {TOWN_STRONGHOLD, eTownNeutral, 0, 0},                       // sand
-    {TOWN_CASTLE, TOWN_RAMPART, eTownNeutral, 0},                // grass
-    {TOWN_TOWER, eTownNeutral, 0, 0},                            // snow
-    {TOWN_FORTRESS, TOWN_NECROPOLIS, eTownNeutral, 0},           // swamp
-    {TOWN_STRONGHOLD, TOWN_CONFLUX, eTownNeutral, 0},            // rough
-    {TOWN_DUNGEON, TOWN_INFERNO, TOWN_NECROPOLIS, eTownNeutral}, // subterranean
-    {TOWN_INFERNO, eTownNeutral, 0, 0},                          // lava
-    {eTownNeutral, 0, 0, 0}                                      // water
+    {TOWN_CASTLE,     TOWN_RAMPART,    TOWN_NECROPOLIS, eTownNeutral}, // dirt
+    {TOWN_STRONGHOLD, eTownNeutral,    0,               0},            // sand
+    {TOWN_CASTLE,     TOWN_RAMPART,    eTownNeutral,    0},            // grass
+    {TOWN_TOWER,      eTownNeutral,    0,               0},            // snow
+    {TOWN_FORTRESS,   TOWN_NECROPOLIS, eTownNeutral,    0},            // swamp
+    {TOWN_STRONGHOLD, TOWN_CONFLUX,    eTownNeutral,    0},            // rough
+    {TOWN_DUNGEON,    TOWN_INFERNO,    TOWN_NECROPOLIS, eTownNeutral}, // subterranean
+    {TOWN_INFERNO,    eTownNeutral,    0,               0},            // lava
+    {eTownNeutral,    0,               0,               0}             // water
 };
 
 // Native terrain of each town alignment, used when choosing zone terrain.

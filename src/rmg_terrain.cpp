@@ -1388,10 +1388,10 @@ b8 rmgTerrainPainter::isOuterCornerOnDiagonalEdge(
     VA_COMPGEN(0x005b6df0, 0x1, STATIC_DTOR, outerCornerProbeOffsets)
     DATA(0x006a5260)
     static TPoint outerCornerProbeOffsets[4][2] = {
-        { TPoint(-1, 1), TPoint(1, -1) },  // none: SW, NE
-        { TPoint(1, 1), TPoint(-1, -1) },  // flipX: SE, NW
-        { TPoint(-1, -1), TPoint(1, 1) },  // flipY: NW, SE
-        { TPoint(1, -1), TPoint(-1, 1) }   // both: NE, SW
+        {TPoint(-1,  1), TPoint( 1, -1)}, // none: SW, NE
+        {TPoint( 1,  1), TPoint(-1, -1)}, // flipX: SE, NW
+        {TPoint(-1, -1), TPoint( 1,  1)}, // flipY: NW, SE
+        {TPoint( 1, -1), TPoint(-1,  1)}  // both: NE, SW
     };
     s32 terrain = getTerrain(point);
     const TPoint* pair = outerCornerProbeOffsets[flip.getIndex()];
