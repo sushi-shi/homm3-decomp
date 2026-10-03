@@ -5196,7 +5196,8 @@ void type_random_map_generator::buildZoneConnectionPaths()
             continue;
 #else
         // Retail bug: before any seed exists, retail floods from stack garbage.
-        if (seed.m_x == RMG_NO_POSITION)
+        if (seed.m_x == RMG_NO_POSITION && seed.m_y == RMG_NO_POSITION
+            && seed.m_z == RMG_NO_POSITION)
             continue;
 #endif
         if (!foundClearPath) {
