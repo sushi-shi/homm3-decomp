@@ -1,15 +1,9 @@
 // Random-map generator declarations. Most names describe recovered roles
 // rather than original source spellings.
 //
-// HOMM3_RMG_HOTFIX (not defined by default) replaces the generator's retail
-// bugs that crash, index out of bounds or read uninitialized memory with
-// defined, non-crashing alternatives: unreached river targets are not drawn,
-// guards are skipped on unzoned cells and when no creature can be selected,
-// uninitialized town flags and the first key-tent colour get fixed values,
-// and short rows, empty lists and oversized descriptions are bounded. Maps
-// then differ from retail wherever retail was undefined or used stack/heap
-// residue. Without the define the source reproduces retail exactly. See
-// docs/todos/rmg-undefined-behavior.md for the site list.
+// HOMM3_RMG_HOTFIX (off by default) replaces retail bugs that crash or read
+// uninitialized memory with defined behaviour; maps then differ from retail
+// only where retail was undefined. Sites: docs/todos/rmg-undefined-behavior.md.
 #ifndef HOMM3_RMG_H
 #define HOMM3_RMG_H
 
