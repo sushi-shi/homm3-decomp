@@ -5422,8 +5422,9 @@ void type_random_map_generator::floodShipyardWater(type_object* shipyard)
         floodConnectionRegion(waterPosition);
 }
 
-// Connects zones by a shipyard beside reachable water. A successful border
-// placement clears the guard value.
+// Connects zones by a shipyard, or succeeds without one when water flooded
+// from this zone's shipyards already reaches a cell facing the destination.
+// A successful border placement clears the guard value.
 VA(0x00541AD0, 0x5B0)
 MAC_ADDRESS(0x2446ac, 0x55c)
 b8 type_random_map_generator::createShipyardConnection(
@@ -5715,7 +5716,8 @@ static inline type_object* placeRmgMonolith(type_random_map_generator& generator
     return object;
 }
 
-// Borders a portal toward the other zone, or else guards the cell below it.
+// Protects a portal with a border guard keyed to a tent in the other zone,
+// or else with a monster guard on the cell below it.
 static inline void protectRmgMonolith(type_random_map_generator& generator,
     type_object* portal, const TRmgZoneConnection* connection,
     TRmgZone* keyTentZone, int& guardValue)

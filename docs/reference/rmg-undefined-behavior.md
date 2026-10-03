@@ -349,9 +349,9 @@ Other preserved behavior defects, separate from undefined behavior:
   after selecting a random candidate. Existing native notes identify stores at
   `0x5459f5`/`0x545a5d` and reloads at `0x545b7e`/`0x545ca9`. Substituting the
   selected candidate's prototype changes the existing behavior.
-- `createSubterraneanGate` reuses its guard-value local across both entrances;
-  adjustments made for the first guard remain visible to the second. Separate
-  per-entrance values would change that coupling.
+- `createSubterraneanGate` shares one guard value between both entrances, and
+  both guards are placed after both borders: a border on either side leaves
+  neither entrance guarded. Separate per-entrance values would change that.
 
 ## Reviewed invariants and coverage
 
@@ -385,9 +385,7 @@ Several suspicious-looking expressions are supported by local invariants:
   not passed directly into that block.
 - Terrain reflection and diagonal indices derive from selector-produced 0/1
   flips. Bit writers shift by `index & 7`, `bit % 8`, or cardinal direction
-  0..3; these shifts have valid counts. The signed right shift of negative
-  direction differences is VC6's arithmetic-shift convention, not a negative
-  **left** shift.
+  0..3; these shifts have valid counts.
 - `getSize(TRmgGridPoint())` uses the VC6 non-const-reference extension. The
   returned reference is copied within the same full expression, before the
   temporary dies; it is not stored as a dangling reference.

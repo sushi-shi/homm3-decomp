@@ -465,7 +465,6 @@ enum ERmgDirectionLimits {
     RMG_DIRECTION_COUNT = 8
 };
 
-// Point/vector arithmetic used by the Voronoi zone layout.
 TPoint operator+(TPoint point, TRmgVector offset);
 TRmgVector operator-(TPoint left, TPoint right);
 
