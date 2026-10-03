@@ -8739,8 +8739,9 @@ void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
     }
 }
 
-// Tries reachable non-junction land zones nearest first, but adjacent zones
-// last; ties keep zone order. Excluded zones still draw a random score.
+// Tries the other reachable non-junction land zones by ascending score:
+// nearest first, random order within a distance, and adjacent zones after
+// those up to 99 connections away. Excluded zones still draw a random score.
 VA(0x0054b300, 0x18b)
 MAC_ADDRESS(0x25034c, 0x23c)
 b8 type_random_map_generator::placeQuestGroup(

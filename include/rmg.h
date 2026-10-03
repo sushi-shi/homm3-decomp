@@ -372,9 +372,9 @@ struct TRmgZoneConnection {
     // rmg.txt "Border Guard": try a border guard keyed to a keymaster's tent
     // in the other zone, which then replaces the monster guard.
     b8 m_placeBorderObjects;      // +0x09
-    // Set once a crossing, shipyard or gate is built, or after a portal
-    // attempt even if it placed nothing. Links between two added water zones
-    // start set.
+    // Set once a crossing, shipyard or gate connects the zones, or after a
+    // portal attempt even if it placed nothing. Links between two added water
+    // zones start set.
     b8 m_connected;               // +0x0a
     b8 isConnected() const;
     void setConnected();
@@ -1053,7 +1053,6 @@ struct TRmgMapItem {
         return m_tile.m_landType;
     }
 
-    // Records a path cost and its predecessor tile.
     void setMovementCost(s32 cost, TRmgMapPosition previous)
     {
         m_movement.m_cost = cost;
@@ -1719,7 +1718,8 @@ struct TRmgObjectLimit {
 // Map, object prototypes and placement rules shared by the generator.
 class TRmgGeneratorBase {
 public:
-    // Seeded from time().
+    // time() at construction; seeds rand() and is reported in the map
+    // description.
     long m_randomSeed;                                 // +0x004
     s32 m_mapVersion;                                  // +0x008: ERmgMapVersion
     type_random_map m_map;                             // +0x00c
@@ -1792,7 +1792,6 @@ public:
     // Map-wide strength 1..5 on the zone scale (ERmgZoneMonsterStrength in
     // rmg.cpp); RMG_ZONE_MONSTERS_AVERAGE is the lobby's normal setting.
     s32 m_monsterStrength;                             // +0x10bc
-    // Name of the selected template.
     std::string m_templateName;                        // +0x10c0
     // Owned templates loaded from rmg.txt.
     std::vector<TRmgTemplate*> m_templates;            // +0x10d0
