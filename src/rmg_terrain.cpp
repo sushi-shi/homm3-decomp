@@ -991,7 +991,6 @@ inline void rmgTerrainPainter::queueOtherTerrainDiagonalNeighbour(
         m_secondaryPoints.insert(neighbour);
 }
 
-// Queues one cardinal neighbour of other terrain; returns whether it did.
 inline bool rmgTerrainPainter::tryQueueOtherTerrainCardinalNeighbour(
     const TRmgGridPoint& point, s32 offsetX, s32 offsetY)
 {
