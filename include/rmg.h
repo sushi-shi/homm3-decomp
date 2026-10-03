@@ -475,6 +475,7 @@ struct TRmgTemplate {
 
     ~TRmgTemplate();
     TRmgTemplateZone* findZone(s32 zoneIndex);
+    bool hasPlayerSlots(s32 humanPlayers, s32 computerPlayers) const;
 };
 SIZE(TRmgTemplate, 0x38);
 
@@ -774,6 +775,9 @@ public:
 
     type_object(TRmgObjectPropertiesRef* newProperties);
     TRmgMapPosition getPosition() const;
+    TRmgMapPosition getEntrance() const;
+    TRmgMapPosition getPlacedGroupPosition(
+        const TRmgMapPosition& groupPosition) const;
 
     void clearPlacementMarks();
 
@@ -1116,6 +1120,11 @@ struct TRmgMapItem {
         if (!m_connection.m_present)
             m_tileData.m_pathClearance = false;
     }
+
+    bool isPlacementBlocked(s32 zoneIndex) const;
+    bool canBlockFloor() const;
+    void markEmptyBorderConnection(s32 color);
+    bool isRiverTerrain(b8 sourceIsSnow) const;
 };
 
 // Terrain-layer view of a map used by the terrain painter.
@@ -1198,7 +1207,16 @@ public:
     void clear();
     void addObject(type_object& object, TRmgMapPosition position);
     void markCoastalTiles();
+    TRmgMapItem* seedMovementSearch(const TRmgMapPosition& source,
+        std::vector<TRmgMapPosition>& positions, std::vector<s32>& costs);
     void floodConnectionCosts(TRmgMapPosition position, b8 waterZone);
+    void releaseNeighborhoodPathClearance(
+        const TRmgMapPosition& center, s32 radius);
+    void clearZonePathBorders(const TPoint& center, s32 level, s32 zoneIndex);
+    TRmgMapPosition openEntranceApproach(TRmgMapPosition entrance);
+    void clearConnectionVisits(s32 level);
+    bool isOutsideRiverCoastScan(const TRmgMapPosition& point) const;
+    TRmgMapItem* getDryRiverCoastCell(const TRmgMapPosition& point);
 
     s32 getWidth() const { return m_mapWidth; }
     s32 getHeight() const { return m_mapHeight; }
@@ -1210,6 +1228,8 @@ public:
         return getMapItem(TRmgMapPosition(x, y, z));
     }
     TRmgMapItem* getMapItem(TRmgMapPosition point);
+    void getNeighborhoodBounds(TRmgZoneBounds& bounds,
+        const TPoint& position, s32 radius) const;
 
     // Path-carving helpers.
     void openPathPatch(s32 x, s32 y, s32 level);
@@ -1263,6 +1283,8 @@ struct TRmgTreasureGroup {
     b8 tryAddObject(type_object* object);
     b8 objectsAllowEntrances() const;
     void addObject(type_object* object, TPoint point);
+    void addCenteredObject(type_object* object);
+    void discard();
     void updateBounds();
     void traceOutline();
     // Bounds, outline and outline marks, needed before placing quest and
@@ -1535,6 +1557,7 @@ struct TRmgZone {
     TRmgZone(TRmgTemplateZone* slot);
     void decrementObjectCount(TAdventureObjectType objectType);
     void chooseTownType(b8 expanded);
+    bool isTerrainAllowed(s32 terrain) const;
     void chooseTerrain();
     ~TRmgZone();
     s32 getTerrain() const
@@ -1575,6 +1598,7 @@ struct TRmgHalfEdge {
     void initialize();
     void splice(TRmgHalfEdge* other);
     void detach();
+    TRmgHalfEdge* findBoundaryWithZone(const TRmgZone* destination);
     // Quad-edge navigation corresponds to Graphics Gems IV's
     // Sym/Onext/Oprev/Lnext/Lprev and Org2d/Dest2d operations.
     TRmgHalfEdge* getTwin() const
@@ -1792,6 +1816,8 @@ public:
         s32 player, b8 hasFort);
     void initializeZones(TRmgTemplate* mapTemplate);
     void positionZone(TRmgZone* zone, s32 mapSize);
+    void appendZoneCandidate(TRmgZone* zone, const TRmgMapPosition& candidate,
+        std::vector<TRmgMapPosition>& candidates);
     void appendZonePositions(TRmgZone* center, TRmgZone* zone,
         std::vector<TRmgMapPosition>& candidates);
     void getInitialZoneBounds(s32& minimumY, s32& minimumX,
@@ -1802,7 +1828,13 @@ public:
     void insetIslandZone(TRmgZone* zone);
     void fillIslandInterior(TRmgZone* zone);
     void drawIslandBoundary(TPoint from, TPoint to, s32 zoneIndex, s32 level, s32 roughness);
+    void placeFixedTownCategory(TRmgZone* zone, s32 count, s32 alignment,
+        s32 player, b8 hasFort, b8& skipPrimary);
     void placeAdditionalTowns(TRmgZone* zone);
+    TRmgMapPosition placeTownAtRandomCandidate(
+        TRmgObjectPropertiesRef* properties, s32 player, b8 hasFort,
+        const std::vector<TRmgMapPosition>& candidates,
+        const TObjectType::TPoint& trigger);
     b8 tryPlaceAdditionalTown(TRmgZone* zone, s32 alignment,
         s32 player, b8 hasFort, s32 spacing);
     void prepareJunctionZone(TRmgZone* zone);
@@ -1813,11 +1845,15 @@ public:
     type_object* createTreasureObject(TRmgZone* zone, s32 minimum, s32 maximum,
         s32* value, b8 primary, b8 allowTerrainDependent,
         b8 compact, TRmgMapPosition position);
+    type_object* createTreasureWithRetries(TRmgZone* zone, s32 minimum,
+        s32 maximum, s32* value, b8 primary, b8 compact);
     s32 fillTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
         b8 compact, s32 targetValue);
     b8 assembleTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
         b8 compact, s32 minimum, s32 maximum);
     b8 placeTreasureGroup(TRmgTreasureGroup* group, TRmgZone* zone, s32 spacing);
+    b8 tryPlaceTreasureBand(TRmgZone* zone, TRmgTreasureGroup* group,
+        b8 compact, const TRmgTreasureRange& range, s32 spacing);
     b8 canPlaceTreasureGroup(TRmgTreasureGroup* group,
         TRmgMapPosition position, TRmgZone* zone);
     void commitTreasureGroup(TRmgTreasureGroup* group, TRmgMapPosition position);
@@ -1844,6 +1880,7 @@ public:
     s32 selectPrisonHero();
     b8 canPlaceZone(TRmgZone* zone);
     void buildZoneBoundaries(TRmgTemplate* mapTemplate, s32 level);
+    void initializeZoneDistances(s32 originalZones);
     // Spreads this zone's distances to each original zone through the
     // connection graph.
     void propagateZoneDistances(TRmgZone* zone);
@@ -1870,6 +1907,11 @@ public:
     b8 createSubterraneanGate(
         TRmgZone* source, TRmgZoneConnection* connection);
     b8 placeMonolithBorder(TRmgMapPosition position, TRmgZone* keyTentZone);
+    type_object* placeMonolith(
+        TRmgObjectPropertiesRef* properties, TRmgZone* zone, bool oneWay);
+    void protectMonolith(type_object* portal,
+        const TRmgZoneConnection* connection, TRmgZone* keyTentZone,
+        s32& guardValue);
     void createMonolithConnection(
         TRmgZone* source,
         TRmgZoneConnection* connection,
@@ -1885,20 +1927,33 @@ public:
     void markBorderObjectArea(TRmgMapPosition position, s32 color);
     s32 placeBorderObject(
         TRmgMapPosition position, s32 guardCount, TRmgZone* keyTentZone);
+    void placeGroundConnectionBorder(TRmgMapPosition position,
+        TRmgZone* keyTentZone, s32& guardValue);
+    void placeGateConnectionBorder(TRmgMapPosition approach,
+        TRmgZone* keyTentZone, s32& guardValue);
+    s32 getConnectionGuardValue(const TRmgZoneConnection* connection) const;
     type_object* createGuard(s32 value, TRmgZone* zone);
     b8 placeObjectInZone(type_object* object, TRmgZone* zone);
+    TRmgMapPosition addObjectAtRandomCandidate(type_object* object,
+        const std::vector<TRmgMapPosition>& candidates);
     void placeGuard(s32 value, TRmgMapPosition position);
+    s32 getZoneGuardValue(s32 value, const TRmgZone* zone) const;
     s32 getMineGuardValue(s32 resource, const TRmgZone* zone) const;
     TRmgObjectPropertiesRef* selectObjectPrototype(
         s32 terrain, s32 objectType, s32 subtype);
     void resetMovementCosts();
     void buildRoadCostMap(TRmgMapPosition position);
+    void rebuildRoadCostMap(const TRmgMapPosition& source);
     void createRoads();
     // Picks an unused quest artifact, turns the object into it and places its
     // seer hut in another zone, handing the hut to the map; if the hut cannot
     // be placed, the artifact is replaced by a treasure. Fails, leaving the
     // object unchanged, when no quest artifact remains.
     b8 placeQuestArtifact(rmgQuestArtifactObject* object);
+    s32 getAlignedZoneCount(s32 alignment) const;
+    bool canUseSeerHutPrototype(s32 prototypeIndex) const;
+    rmgQuestArtifactObject* createQuestArtifactForHut(
+        rmgSeerHutObject* seerHut, type_treasure_def* definition);
     void calculateQuestZoneDistances(TRmgZone* origin);
     b8 placeQuestGroup(TRmgTreasureGroup* group, TRmgZone* origin);
     // Places a treasure group guarded by a same-colour border guard in another
@@ -1917,6 +1972,7 @@ public:
     void setHumanPlayer(s32 seat);
     void setTownChoice(s32 seat, s32 town);
     void removeObject(type_object* object);
+    void replaceObjectWithTreasure(type_object* object, s32 value);
     // Paints a road back along the path-cost predecessors.
     b8 paintRoad(TRmgMapPosition position, s32 roadType);
     // Runs a river from beside a water wheel to a river target, possibly
