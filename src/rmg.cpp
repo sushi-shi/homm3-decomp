@@ -831,15 +831,14 @@ b8 type_random_map::isPlacementBlocked(
     for (u32 y = 0; y < prototype.getHeight(); ++y, --cell.m_y) {
         cell.m_x = position.m_x;
         for (u32 x = 0; x < prototype.getWidth(); ++x, --cell.m_x) {
-            TRmgGridPoint maskPoint(x, y);
             TRmgMapItem* item = getMapItem(cell);
-            if (prototype.isTriggerCell(maskPoint.m_x, maskPoint.m_y)) {
+            if (prototype.isTriggerCell(x, y)) {
                 if (item->isPlacementBlocked(zoneIndex))
                     return true;
                 if (rejectBorder && item->hasBorderObject())
                     return true;
             }
-            if (!prototype.isPassableCell(maskPoint.m_x, maskPoint.m_y)) {
+            if (!prototype.isPassableCell(x, y)) {
                 if (item->isPlacementBlocked(zoneIndex))
                     return true;
                 if ((item->getLandType() == eTerrainWater)
@@ -1994,9 +1993,8 @@ s32 type_black_box_creature_def::getValue(
     if (alignment != zone->m_townType2)
         return RMG_TREASURE_NOT_OFFERED;
     s32 value = g_creatureTypeTraits[m_creatureType].m_aiValue * m_creatureCount;
-    s32 alignmentCount = generator->getAlignedZoneCount(alignment);
-    s32 zoneCount = generator->m_activeZoneCount;
-    return adjustRmgValueForAlignment(value, alignmentCount, zoneCount);
+    return adjustRmgValueForAlignment(value,
+        generator->getAlignedZoneCount(alignment), generator->m_activeZoneCount);
 }
 
 VA(0x00534380, 0x85)
@@ -3612,6 +3610,8 @@ static inline s32 getRmgOtherLevel(s32 level)
 static inline TRmgMapPosition getRmgRadialZonePosition(
     const TRmgMapPosition& center, s32 radius, s32 direction, s32 level)
 {
+    // Kept as is: generated maps depend on this frame; see
+    // rmg-cleanup-review.md.
     const s32& y = static_cast<s32>(center.m_y + radius * g_rmgDirectionSines[direction]);
     return TRmgMapPosition(
         static_cast<s32>(center.m_x + radius * g_rmgDirectionCosines[direction]),
@@ -4243,8 +4243,7 @@ MAC_ADDRESS(0x23e928, 0x184)
 void type_random_map_generator::recenterZone(TRmgZone* zone)
 {
     TRmgZoneBounds bounds = zone->m_bounds;
-    TRmgMapPosition position;
-    position = zone->getLevelPosition();
+    TRmgMapPosition position = zone->getLevelPosition();
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
     s32 cellCount = 0;
     TRmgMapPosition coordinateTotal;
@@ -7629,8 +7628,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
             }
 
             s32 nextCost = currentHasRoad && nextMapItem->m_tile.m_roadType
-                ? static_cast<s32>(RMG_ROAD_ALONG_ROAD_COST)
-                : static_cast<s32>(RMG_ROAD_OFF_ROAD_COST);
+                ? RMG_ROAD_ALONG_ROAD_COST : RMG_ROAD_OFF_ROAD_COST;
             if (isRmgDiagonalDirection(direction))
                 nextCost *= RMG_ROAD_DIAGONAL_FACTOR;
             nextCost += currentCost;

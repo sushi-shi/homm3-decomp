@@ -133,8 +133,9 @@ counts, neighbour steps, spacing), the H3M tile-flag bits and the unit-bearing
 constants: density areas are squared entrance distances (2 per cardinal
 step), so 82944 = 4 x 144 x 144, 800 and 1600 are 4 x 200 and 4 x 400 tiles.
 Header fields document their ranges and writers. Enumerators replace literals
-only where VC6 emits identical bytes; an enum-typed conditional changed an
-inline decision in `buildRoadCostMap`, so its operands are cast to `s32`.
+only where VC6 emits identical bytes; `buildRoadCostMap`'s enum-typed step
+cost conditional once needed `s32` casts for that, but now compiles
+identically without them and no longer has them.
 Function-local static tables keep the repository's unprefixed convention, with
 `<table>Guard` labels.
 
@@ -201,6 +202,15 @@ following keeps only with a pointer here:
   and `TRmgMapItem::clear`'s copies. Rewriting them changes the frames or stack
   writes of code that runs during map construction or before
   `buildZoneConnectionPaths`, whose fallback seed reads stack residue.
+- A sixth pass removed the remaining staging that compiles identically
+  (`isPlacementBlocked`'s mask point, `recenterZone`'s position, the creature
+  reward value's zone counts). For the same reason it kept the
+  reference-bound `y` in `getRmgRadialZonePosition`, `positionZone`'s origin
+  stores and staged selection, the declared-then-assigned positions in
+  `getInitialZoneBounds`, `filterZonePositions`, `fillZoneArea`,
+  `placeWaterZoneIslands`, `createSubterraneanGate` and `placeObjectInZone`,
+  `type_random_map::addObject`'s mask point and `floodConnectionCosts`'
+  neighbour position: each rewrite changed VC6's code for these functions.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every
