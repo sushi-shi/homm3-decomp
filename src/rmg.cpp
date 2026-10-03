@@ -1306,11 +1306,6 @@ TRmgZone::~TRmgZone()
 {
 }
 
-void TRmgZone::decrementObjectCount(TAdventureObjectType objectType)
-{
-    --m_objectCountByType[objectType];
-}
-
 TRmgMapPosition TRmgZone::getLevelPosition() const
 {
     TRmgMapPosition result;
@@ -8806,9 +8801,8 @@ void type_random_map_generator::removeObject(type_object* object)
         TRmgMapPosition entrance = object->getEntrance();
         s32 zone = m_map.getMapItem(entrance.m_x,
             entrance.m_y, entrance.m_z)->m_zoneState.m_zone;
-        if (zone >= 0) {
-            m_zones[zone]->decrementObjectCount(objectType);
-        }
+        if (zone >= 0)
+            --m_zones[zone]->m_objectCountByType[objectType];
     }
     if (prototype->getObjectType() == BORDER_GUARD) {
         setKeyTentColorDisabled(prototype->getSubtype(), false);

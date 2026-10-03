@@ -296,6 +296,11 @@ following keeps only with a pointer here:
   axis distance directly instead of a staged copy. Line painting runs only
   for roads and rivers, after the connection paths; its frame grew by one
   slot.
+- A nineteenth pass dropped `TRmgZone::decrementObjectCount`, a single-use
+  wrapper added only to shape `removeObject`'s code, so the zone count is
+  decremented directly like its increment in `addObject`. `removeObject`
+  runs only when a treasure replaces a failed key tent or quest artifact,
+  after the connection paths; its frame is unchanged.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every

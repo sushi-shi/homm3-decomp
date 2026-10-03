@@ -1576,7 +1576,6 @@ struct TRmgZone {
     std::vector<TPoint> m_entrances;   // +0x404
 
     TRmgZone(TRmgTemplateZone* slot);
-    void decrementObjectCount(TAdventureObjectType objectType);
     void chooseTownType(b8 expanded);
     bool isTerrainAllowed(s32 terrain) const;
     void chooseTerrain();
