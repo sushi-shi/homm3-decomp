@@ -118,8 +118,8 @@ struct TRmgPackedTerrainCell {
 // Per-terrain frame selection rules used when painting transitions.
 class TRmgTerrainRule {
 public:
-    b8 m_blendsWithOtherTerrain; // +0x04
-    b8 m_allowsSeparatedNeighbours; // +0x05
+    b8 m_blendsWithOtherTerrain;     // +0x04
+    b8 m_allowsSeparatedNeighbours;  // +0x05
 
     TRmgTerrainRule(b8 blendsWithOtherTerrain = false,
         b8 allowsSeparatedNeighbours = false)
@@ -174,10 +174,10 @@ extern TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 // and special flag.
 class TRmgPatternTerrainRule : public TRmgTerrainRule {
 public:
-    s32 m_specialFrameChance;                   // +0x08: percentage at strength 8
-    u32 m_entryCount;                           // +0x0c
-    const TRmgTerrainPatternEntry* m_entries;    // +0x10
-    TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT * 2]; // +0x14
+    s32 m_specialFrameChance;                                       // +0x08: percentage at strength 8
+    u32 m_entryCount;                                               // +0x0c
+    const TRmgTerrainPatternEntry* m_entries;                       // +0x10
+    TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT * 2];  // +0x14
 
     TRmgPatternTerrainRule(b8 blendsWithOtherTerrain,
         b8 allowsSeparatedNeighbours, s32 specialFrameChance,
@@ -234,19 +234,19 @@ enum TRmgTerrainGapAxis {
 
 class rmgTerrainPainter {
 public:
-    TRmgMapInterface* m_adapter;                // +0x00
-    s32 m_paintTerrain;                               // +0x04
+    TRmgMapInterface* m_adapter;                       // +0x00
+    s32 m_paintTerrain;                                // +0x04
     // Brush strength (ERmgBrushStrength); each same-terrain cardinal
     // neighbour with a special frame halves it for a cell.
-    s32 m_specialFrameStrength;                         // +0x08
-    TRmgGridPoint m_size;                             // +0x0c
+    s32 m_specialFrameStrength;                        // +0x08
+    TRmgGridPoint m_size;                              // +0x0c
     // Paint-terrain cells whose shape still needs repair.
-    std::set<TRmgGridPoint> m_repairPoints;             // +0x14
+    std::set<TRmgGridPoint> m_repairPoints;            // +0x14
     // Other-terrain neighbours of settled cells, repainted with the paint
     // terrain if they need repair.
-    std::set<TRmgGridPoint> m_otherTerrainPoints;       // +0x24
+    std::set<TRmgGridPoint> m_otherTerrainPoints;      // +0x24
     // Lazily filled tile cache, row by row: cell (x, y) is at y * width + x.
-    std::vector<TRmgPackedTerrainCell> m_packedCells;   // +0x34
+    std::vector<TRmgPackedTerrainCell> m_packedCells;  // +0x34
 
     rmgTerrainPainter(
         TRmgMapInterface* newAdapter,

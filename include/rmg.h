@@ -379,28 +379,28 @@ TRmgMapPosition operator+(TRmgMapPosition position, TPoint offset);
 // Template connection to another zone: value, unguarded and border-guard
 // flags, whether it has been built, and the player counts for which it applies.
 struct TRmgZoneConnection {
-    TRmgTemplateZone* m_destination;             // +0x00
+    TRmgTemplateZone* m_destination;  // +0x00
     // Unchecked; the guard value is getRmgGuardValue of this at the map's
     // monster strength.
-    s32 m_value;                             // +0x04
+    s32 m_value;                      // +0x04
     // rmg.txt "Wide": no monster guard, and no border obstacles between the
     // zones on the surface.
-    b8 m_unguarded;               // +0x08
+    b8 m_unguarded;                   // +0x08
     // rmg.txt "Border Guard": try a border guard keyed to a keymaster's tent
     // in the other zone, which then replaces the monster guard.
-    b8 m_borderGuard;             // +0x09
+    b8 m_borderGuard;                 // +0x09
     // Set once a crossing, shipyard or gate connects the zones, or after a
     // portal attempt even if it placed nothing. Links between two added water
     // zones start set.
-    b8 m_connected;               // +0x0a
+    b8 m_connected;                   // +0x0a
     b8 isConnected() const;
     void setConnected();
     // The connection exists only when the human count and the total
     // player count fall within these ranges.
-    s32 m_minimumHumanPlayers;               // +0x0c
-    s32 m_maximumHumanPlayers;               // +0x10
-    s32 m_minimumPlayers;                    // +0x14
-    s32 m_maximumPlayers;                    // +0x18
+    s32 m_minimumHumanPlayers;        // +0x0c
+    s32 m_maximumHumanPlayers;        // +0x10
+    s32 m_minimumPlayers;             // +0x14
+    s32 m_maximumPlayers;             // +0x18
 };
 
 enum ERmgTemplateZoneKind {
@@ -453,39 +453,39 @@ enum ERmgZoneMonsterStrength {
 struct TRmgTemplateZone {
     // Template zone number while connections are read, then the zone's index
     // in its template; RMG_NO_ZONE for buildZoneBoundaries' test slot.
-    s32 m_zoneIndex;                    // +0x00
-    ERmgTemplateZoneKind m_kind;        // +0x04
+    s32 m_zoneIndex;                                          // +0x00
+    ERmgTemplateZoneKind m_kind;                              // +0x04
     // Unchecked. Initial layout distances are sums of sizes; initializeZones
     // scales them into m_scaledSize.
-    s32 m_size;                         // +0x08
+    s32 m_size;                                               // +0x08
     // The zone exists only for these player counts.
-    s32 m_minimumHumanPlayers;          // +0x0c
-    s32 m_maximumHumanPlayers;          // +0x10
-    s32 m_minimumPlayers;               // +0x14
-    s32 m_maximumPlayers;               // +0x18
+    s32 m_minimumHumanPlayers;                                // +0x0c
+    s32 m_maximumHumanPlayers;                                // +0x10
+    s32 m_minimumPlayers;                                     // +0x14
+    s32 m_maximumPlayers;                                     // +0x18
     // Template player number minus one, or -1 for none;
     // m_playerIndexMap[m_playerIndex + 1] is the player colour.
-    s32 m_playerIndex;                  // +0x1c
-    s32 m_townPlacement[RMG_TOWN_PLACEMENT_PARAMETER_COUNT]; // +0x20
+    s32 m_playerIndex;                                        // +0x1c
+    s32 m_townPlacement[RMG_TOWN_PLACEMENT_PARAMETER_COUNT];  // +0x20
     // Neutral towns use the zone's town alignment.
-    b8 m_neutralTownsMatchZone; // +0x40
+    b8 m_neutralTownsMatchZone;                               // +0x40
     // Town types selectAllowedTown draws from; RoE maps exclude Conflux.
-    b8 m_allowedTowns[TOWN_TYPE_COUNT]; // +0x41
+    b8 m_allowedTowns[TOWN_TYPE_COUNT];                       // +0x41
     // Mines placed first, per resource, until one fails.
-    s32 m_mineCounts[NUM_RESOURCES];    // +0x4c: indexed by resource
+    s32 m_mineCounts[NUM_RESOURCES];                          // +0x4c: indexed by resource
     // Relative frequency of further mines; 0 or less disables a resource.
-    s32 m_mineDensities[NUM_RESOURCES]; // +0x68: indexed by resource
+    s32 m_mineDensities[NUM_RESOURCES];                       // +0x68: indexed by resource
     // Use the aligned town's native terrain.
     b8 m_useNativeTerrain;
     // Dirt to lava; when none is set the reader allows dirt.
-    b8 m_allowedTerrain[eTerrainWater];  // +0x85
-    ERmgZoneMonsterStrength m_monsterStrength; // +0x90
+    b8 m_allowedTerrain[eTerrainWater];                       // +0x85
+    ERmgZoneMonsterStrength m_monsterStrength;                // +0x90
     // Restrict guards to the zone's town alignment.
-    b8 m_guardsMatchZone;    // +0x94
+    b8 m_guardsMatchZone;                                     // +0x94
     // Indexed by town type + 1; slot 0 is neutral.
-    b8 m_allowedMonsters[TOWN_TYPE_COUNT + 1]; // +0x95
-    TRmgTreasureRange m_treasure[3];     // +0xa0
-    std::vector<TRmgZoneConnection> m_connections; // +0xc4
+    b8 m_allowedMonsters[TOWN_TYPE_COUNT + 1];                // +0x95
+    TRmgTreasureRange m_treasure[3];                          // +0xa0
+    std::vector<TRmgZoneConnection> m_connections;            // +0xc4
 
     s32 selectAllowedTown();
     TRmgZoneConnection* findConnection(s32 destinationZone);
@@ -494,14 +494,14 @@ SIZE(TRmgTemplateZone, 0xd4);
 
 // One rmg.txt template: name, zones and supported map-size range.
 struct TRmgTemplate {
-    std::string m_name;                  // +0x00
-    std::vector<TRmgTemplateZone*> m_zones;   // +0x10
+    std::string m_name;                      // +0x00
+    std::vector<TRmgTemplateZone*> m_zones;  // +0x10
     // Never read or written.
-    u8 m_unused0020[0x10];             // +0x20
+    u8 m_unused0020[0x10];                   // +0x20
     // Accepted map size: tiles on all levels / (36 * 36), halved (at least
     // 1) on island maps.
-    s32 m_minimumSize;                  // +0x30
-    s32 m_maximumSize;                  // +0x34
+    s32 m_minimumSize;                       // +0x30
+    s32 m_maximumSize;                       // +0x34
 
     ~TRmgTemplate();
     TRmgTemplateZone* findZone(s32 zoneIndex);
@@ -740,10 +740,10 @@ struct TRmgConnectionDecoration {
 // One rand_trn.txt row: per-terrain scores and neighbour scores indexed by
 // rule id, used to score object placement.
 struct TRmgObjectPlacementRule {
-    s32 m_index;                         // +0x00
-    s32 m_terrainScores[RMG_TERRAIN_COUNT]; // +0x04
-    std::vector<s32> m_adjacentScores;    // +0x2c
-    std::vector<s32> m_blockedScores;     // +0x3c
+    s32 m_index;                             // +0x00
+    s32 m_terrainScores[RMG_TERRAIN_COUNT];  // +0x04
+    std::vector<s32> m_adjacentScores;       // +0x2c
+    std::vector<s32> m_blockedScores;        // +0x3c
 };
 
 // Cell bits of scoreObjectPlacement's marks grid: ADJACENT in the 3x3 around
@@ -764,20 +764,20 @@ enum ERmgObjectPlacementScore {
 // Shared, reference-counted placement data for one objects.txt prototype;
 // outline and overlap priorities are built lazily.
 struct TRmgObjectPropertiesRef {
-    TObjectType* m_prototype;              // +0x00
+    TObjectType* m_prototype;                  // +0x00
     // First recommended terrain, or eTerrainRock when none; TERRAIN_NONE
     // until the placement rules are read.
-    TTerrainType m_preferredTerrain;      // +0x04, rand_trn.txt rule binding
+    TTerrainType m_preferredTerrain;           // +0x04, rand_trn.txt rule binding
     // Live objects using this prototype; writeMap writes only used ones.
-    u32 m_refCount;                        // +0x08
+    u32 m_refCount;                            // +0x08
     // H3M prototype number that writeMap assigns to used ones (from 2).
     s32 m_prototypeIndex;
-    TRmgObjectPlacementRule* m_placementRule; // +0x10
+    TRmgObjectPlacementRule* m_placementRule;  // +0x10
     // Cells ringing the footprint, clockwise, as offsets from the object's
     // position (see buildOutline).
-    std::vector<TPoint> m_outline;         // +0x14
-    s32 m_overlapPriorities[8][6];         // +0x24
-    b8 m_prioritiesInitialized; // +0xe4
+    std::vector<TPoint> m_outline;             // +0x14
+    s32 m_overlapPriorities[8][6];             // +0x24
+    b8 m_prioritiesInitialized;                // +0xe4
 
     TRmgObjectPropertiesRef(TObjectType* prototype);
 
@@ -787,7 +787,7 @@ struct TRmgObjectPropertiesRef {
 
 class type_object {
 public:
-    TRmgObjectPropertiesRef* m_properties; // +0x04
+    TRmgObjectPropertiesRef* m_properties;  // +0x04
     // The footprint's bottom-right cell; its mask grows west and north.
     // In a treasure group, group-map coordinates until the group is committed.
     TRmgMapPosition m_position;             // +0x08
@@ -920,9 +920,9 @@ SIZE(rmgSeerHutObject, 0x34);
 // hut to the map; the pointer is cleared on success and failure alike.
 class rmgQuestArtifactObject : public rmgArtifactObject {
 public:
-    type_random_map_generator* m_generator; // +0x1c
+    type_random_map_generator* m_generator;  // +0x1c
     rmgSeerHutObject* m_seerHut;             // +0x20
-    type_treasure_def* m_definition;        // +0x24
+    type_treasure_def* m_definition;         // +0x24
 
     rmgQuestArtifactObject(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, rmgSeerHutObject* seerHut,
@@ -936,9 +936,9 @@ SIZE(rmgQuestArtifactObject, 0x28);
 // guard, and is replaced by another treasure if that fails.
 class rmgKeyTentObject : public type_object {
 public:
-    type_random_map_generator* m_generator; // +0x1c
+    type_random_map_generator* m_generator;  // +0x1c
     // The tent's treasure value; its border guard targets 1.5 times this.
-    s32 m_treasureValue;                   // +0x20
+    s32 m_treasureValue;                     // +0x20
 
     rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, s32 treasureValue);
@@ -994,12 +994,12 @@ public:
 SIZE(rmgHeroObject, 0x2c);
 
 struct TRmgMapItem {
-    std::vector<type_object*> m_objects;    // +0x00
-    TRmgMapPosition m_previousTile;         // +0x10
-    TRmgMovementCost m_movement;            // +0x1c
-    TRmgZoneCellState m_zoneState;           // +0x20
-    TRmgGroundTile m_tile;                  // +0x24
-    TRmgGroundTileData m_tileData;          // +0x28
+    std::vector<type_object*> m_objects;          // +0x00
+    TRmgMapPosition m_previousTile;               // +0x10
+    TRmgMovementCost m_movement;                  // +0x1c
+    TRmgZoneCellState m_zoneState;                // +0x20
+    TRmgGroundTile m_tile;                        // +0x24
+    TRmgGroundTileData m_tileData;                // +0x28
     TRmgConnectionDecoration m_borderConnection;  // +0x2c
 
     TRmgMapItem();
@@ -1193,13 +1193,13 @@ public:
 
 class type_random_map : public TRmgMapInterface {
 public:
-    b8 m_ownsMapItems;           // +0x04
+    b8 m_ownsMapItems;        // +0x04
     // Level by level, row by row: cell (x, y, z) is
     // m_mapItems[(z * m_mapHeight + y) * m_mapWidth + x].
-    TRmgMapItem* m_mapItems;                // +0x08
-    s32 m_mapWidth;                         // +0x0c
-    s32 m_mapHeight;                        // +0x10
-    s32 m_numberLevels;                     // +0x14
+    TRmgMapItem* m_mapItems;  // +0x08
+    s32 m_mapWidth;           // +0x0c
+    s32 m_mapHeight;          // +0x10
+    s32 m_numberLevels;       // +0x14
 
     // Allocates and owns the cells (generator map, treasure-group maps).
     type_random_map(s32 width, s32 height, s32 levels);
@@ -1282,18 +1282,18 @@ public:
 // A treasure pile with its optional guard, assembled on a private map before
 // being placed into a zone.
 struct TRmgTreasureGroup {
-    type_random_map m_map;                  // +0x00
-    TRmgZoneBounds m_bounds;                // +0x18
-    std::vector<type_object*> m_objects;    // +0x28
+    type_random_map m_map;                // +0x00
+    TRmgZoneBounds m_bounds;              // +0x18
+    std::vector<type_object*> m_objects;  // +0x28
     // Cells ringing the occupied ones, clockwise, in group-map coordinates.
-    std::vector<TPoint> m_outline;           // +0x38
-    b8 m_hasGuard;               // +0x48, cleared by reset
+    std::vector<TPoint> m_outline;        // +0x38
+    b8 m_hasGuard;                        // +0x48, cleared by reset
     // Guard entrance in group-local coordinates (see addGuard's trigger bug).
-    TPoint m_guardPosition;                 // +0x4c
+    TPoint m_guardPosition;               // +0x4c
     // Map offset chosen when the group is committed.
-    TRmgMapPosition m_position;             // +0x54
+    TRmgMapPosition m_position;           // +0x54
     // Set by markPlacementOutline and cleared by reset; never read.
-    b8 m_outlineMarked;          // +0x60
+    b8 m_outlineMarked;                   // +0x60
 
     TRmgTreasureGroup(s32 width, s32 height)
         : m_map(width, height, 1), m_hasGuard(false), m_outlineMarked(false)
@@ -1546,41 +1546,41 @@ public:
 // including the connection list) and owns its distance, boundary and
 // entrance vectors.
 struct TRmgZone {
-    TRmgTemplateZone* m_templateZone;  // +0x00
+    TRmgTemplateZone* m_templateZone;        // +0x00
     // Town type: one of the template's allowed towns, or the lobby choice of
     // the zone's player; eTownNeutral when none.
-    TTownType m_alignment;             // +0x04
+    TTownType m_alignment;                   // +0x04
     // Town whose creature dwellings and creature rewards the zone offers:
     // the zone's town type, or for a neutral zone a draw from its terrain's
     // candidates (H3API: townType2).
-    TTownType m_creatureTownType;      // +0x08
+    TTownType m_creatureTownType;            // +0x08
     // Chosen by chooseTerrain; added water zones use water.
-    TTerrainType m_terrain;             // +0x0c
+    TTerrainType m_terrain;                  // +0x0c
     // Zone centre: layout units until initializeZones scales it to tiles;
     // recenterZone then moves it to the centroid of the zone's cells.
-    TRmgMapPosition m_levelPosition;   // +0x10
+    TRmgMapPosition m_levelPosition;         // +0x10
     // Template size scaled to the map (H3API: size); used as the zone's
     // radius and to bound boundary roughness.
-    s32 m_scaledSize;                   // +0x1c
+    s32 m_scaledSize;                        // +0x1c
     // Half-open bounds of the zone's cells.
-    TRmgZoneBounds m_bounds;           // +0x20
+    TRmgZoneBounds m_bounds;                 // +0x20
     // Entrance of the zone's primary town, placed nearest its centre; valid
     // once m_hasPrimaryTown is set.
-    TRmgMapPosition m_primaryTownEntrance; // +0x30
-    b8 m_hasPrimaryTown;               // +0x3c
+    TRmgMapPosition m_primaryTownEntrance;   // +0x30
+    b8 m_hasPrimaryTown;                     // +0x3c
     // Graph distance turned into a randomized quest-zone priority that
     // penalizes immediately adjacent zones (ERmgQuestZoneScore in rmg.cpp).
-    s32 m_questPlacementScore;         // +0x40
+    s32 m_questPlacementScore;               // +0x40
     // Placed objects per object type (ROCKLANDS is the last), checked against
     // per-zone limits.
-    s32 m_objectCountByType[ROCKLANDS + 1]; // +0x44
+    s32 m_objectCountByType[ROCKLANDS + 1];  // +0x44
     // Connection-graph distance to each original zone, or RMG_UNREACHED_COST.
     std::vector<s16> m_zoneDistances;// +0x3e4
-    std::vector<TPoint> m_boundary;    // +0x3f4: clipped polygon vertices
+    std::vector<TPoint> m_boundary;          // +0x3f4: clipped polygon vertices
     // Connection entry cells in creation order: crossing cells, the row below
     // a shipyard, gate entrances and portal positions. Junction zones join
     // each later entrance to the open paths reached from the first.
-    std::vector<TPoint> m_entrances;   // +0x404
+    std::vector<TPoint> m_entrances;         // +0x404
 
     TRmgZone(TRmgTemplateZone* templateZone);
     void chooseTownType(b8 expanded);
@@ -1609,14 +1609,14 @@ struct TRmgZone {
 // zone is the region across the edge; next circles the edges leaving the same
 // site, whose vertex positions outline that zone.
 struct TRmgHalfEdge {
-    TPoint m_sitePosition;               // +0x00
-    TRmgZone* m_zone;                   // +0x08
-    TRmgHalfEdge* m_twin;        // +0x0c
-    TRmgHalfEdge* m_next;        // +0x10
-    TRmgHalfEdge* m_previous;     // +0x14
+    TPoint m_sitePosition;     // +0x00
+    TRmgZone* m_zone;          // +0x08
+    TRmgHalfEdge* m_twin;      // +0x0c
+    TRmgHalfEdge* m_next;      // +0x10
+    TRmgHalfEdge* m_previous;  // +0x14
     // Set once buildVertices has computed the Voronoi vertex below.
-    b8 m_vertexComputed;  // +0x18
-    TPoint m_vertex;                    // +0x1c
+    b8 m_vertexComputed;       // +0x18
+    TPoint m_vertex;           // +0x1c
 
     // The first form allocates its twin; the second builds that twin.
     TRmgHalfEdge(TPoint sitePosition, TRmgZone* zone,
@@ -1736,17 +1736,17 @@ class TRmgGeneratorBase {
 public:
     // time() at construction; seeds rand() and is reported in the map
     // description.
-    time_t m_randomSeed;                               // +0x004
-    s32 m_mapVersion;                                  // +0x008: ERmgMapVersion
-    type_random_map m_map;                             // +0x00c
-    TObjectTypeTable m_objectsTxt;                     // +0x024
+    time_t m_randomSeed;                                                      // +0x004
+    s32 m_mapVersion;                                                         // +0x008: ERmgMapVersion
+    type_random_map m_map;                                                    // +0x00c
+    TObjectTypeTable m_objectsTxt;                                            // +0x024
     // [object type][n]: that type's prototypes in objects.txt order (aliases
     // under their objnames.txt row); monsters are sorted by subtype.
-    std::vector<TRmgObjectPropertiesRef*> m_objectPrototypes[ROCKLANDS + 1]; // +0x034
+    std::vector<TRmgObjectPropertiesRef*> m_objectPrototypes[ROCKLANDS + 1];  // +0x034
     // rand_trn.txt placement rules.
-    std::vector<TRmgObjectPlacementRule> m_placementRules; // +0xeb4
-    std::vector<type_object*> m_objects;               // +0xec4
-    TProgressSink* m_progress;                          // +0xed4
+    std::vector<TRmgObjectPlacementRule> m_placementRules;                    // +0xeb4
+    std::vector<type_object*> m_objects;                                      // +0xec4
+    TProgressSink* m_progress;                                                // +0xed4
     TRmgGeneratorBase(s32 width, s32 height, s32 levels,
         TProgressSink* progress, s32 additionalSteps, s32 version);
     virtual ~TRmgGeneratorBase();
@@ -1773,59 +1773,59 @@ enum ERmgTownPlacementCategory {
 class type_random_map_generator : public TRmgGeneratorBase {
 public:
     // Lobby human seats, one entry per player colour.
-    b8 m_fixedHumanPlayers[RMG_PLAYER_COUNT];         // +0x0ed8
+    b8 m_fixedHumanPlayers[RMG_PLAYER_COUNT];            // +0x0ed8
     // Player colour per template player number 1-8, or -1; entry 0 (zones
     // without a player) stays -1.
-    s32 m_playerIndexMap[RMG_PLAYER_COUNT + 1];       // +0x0ee0
+    s32 m_playerIndexMap[RMG_PLAYER_COUNT + 1];          // +0x0ee0
     // Never read or written.
-    u8 m_unused0f04[0x20];                          // +0x0f04
+    u8 m_unused0f04[0x20];                               // +0x0f04
     // Lobby town per player colour; eTownNeutral keeps the zone's random town.
-    TTownType m_townChoices[RMG_PLAYER_COUNT];        // +0x0f24
+    TTownType m_townChoices[RMG_PLAYER_COUNT];           // +0x0f24
     // Counter for generated object ids; starts at 1.
-    s32 m_nextObjectId;                               // +0x0f44
+    s32 m_nextObjectId;                                  // +0x0f44
     // Requested counts; writeMapHeader recounts the players it writes. A
     // team count of 0 gives each player its own team.
-    s32 m_humanPlayerCount;                            // +0x0f48
-    s32 m_humanTeamCount;                              // +0x0f4c
-    s32 m_computerPlayerCount;                         // +0x0f50
-    s32 m_computerTeamCount;                           // +0x0f54
+    s32 m_humanPlayerCount;                              // +0x0f48
+    s32 m_humanTeamCount;                                // +0x0f4c
+    s32 m_computerPlayerCount;                           // +0x0f50
+    s32 m_computerTeamCount;                             // +0x0f54
     // Cycles through the seer-hut prototypes.
-    s32 m_nextSeerHutPrototypeIndex;                   // +0x0f58
+    s32 m_nextSeerHutPrototypeIndex;                     // +0x0f58
     // Next free keymaster tent colour. Retail bug: never initialized, so
     // its first value is whatever was on the caller's stack.
-    s32 m_nextKeyTentColor;                            // +0x0f5c
+    s32 m_nextKeyTentColor;                              // +0x0f5c
     // Town zones (zones with a primary town), in total and per alignment.
-    s32 m_townZoneCount;                               // +0x0f60
-    s32 m_townZoneCountsByAlignment[TOWN_TYPE_COUNT];  // +0x0f64
+    s32 m_townZoneCount;                                 // +0x0f60
+    s32 m_townZoneCountsByAlignment[TOWN_TYPE_COUNT];    // +0x0f64
     // Per hero: special, missing from the map version, or held by a prison.
-    b8 m_disabledHeroes[RMG_HERO_COUNT];    // +0x0f88
+    b8 m_disabledHeroes[RMG_HERO_COUNT];                 // +0x0f88
     // Artifacts already used as seer-hut quests.
-    b8 m_usedQuestArtifacts[ARTIFACT_COUNT]; // +0x1024
+    b8 m_usedQuestArtifacts[ARTIFACT_COUNT];             // +0x1024
     // Set once fewer than 20 quest artifacts remain; no further seer huts
     // are offered.
-    b8 m_questArtifactPoolLow;              // +0x10b4
+    b8 m_questArtifactPoolLow;                           // +0x10b4
     // RMG_WATER_RANDOM is resolved by the constructor.
-    ERmgWaterContent m_waterContent;                   // +0x10b8
+    ERmgWaterContent m_waterContent;                     // +0x10b8
     // Map-wide strength 1..5 on the zone scale (ERmgZoneMonsterStrength);
     // RMG_ZONE_MONSTERS_AVERAGE is the lobby's normal setting.
-    s32 m_monsterStrength;                             // +0x10bc
-    std::string m_templateName;                        // +0x10c0
+    s32 m_monsterStrength;                               // +0x10bc
+    std::string m_templateName;                          // +0x10c0
     // Owned templates loaded from rmg.txt.
-    std::vector<TRmgTemplate*> m_templates;            // +0x10d0
+    std::vector<TRmgTemplate*> m_templates;              // +0x10d0
     // One zone per template zone, in order, then any added water zones.
-    std::vector<TRmgZone*> m_zones;                    // +0x10e0
+    std::vector<TRmgZone*> m_zones;                      // +0x10e0
     // Owned treasure definitions offered by createTreasureObject.
-    std::vector<type_treasure_def*> m_objectGenerators; // +0x10f0
+    std::vector<type_treasure_def*> m_objectGenerators;  // +0x10f0
     // Per keymaster colour: a border guard of that colour is placed or
     // being placed.
-    std::vector<b8> m_disabledKeyTentColors;           // +0x1100
+    std::vector<b8> m_disabledKeyTentColors;             // +0x1100
     // Placed objects per object type, checked against map-wide limits.
-    s32 m_objectCountByType[ROCKLANDS + 1];            // +0x1110
+    s32 m_objectCountByType[ROCKLANDS + 1];              // +0x1110
     // Town and shipyard entrances that createRoads joins pairwise.
-    std::vector<TRmgMapPosition> m_roadTargets;        // +0x14b0
+    std::vector<TRmgMapPosition> m_roadTargets;          // +0x14b0
     // Placed portals; same-subtype portals link road searches.
-    std::vector<type_object*> m_monolithsOneWay;       // +0x14c0
-    std::vector<type_object*> m_monolithsTwoWay;       // +0x14d0
+    std::vector<type_object*> m_monolithsOneWay;         // +0x14c0
+    std::vector<type_object*> m_monolithsTwoWay;         // +0x14d0
 
     type_random_map_generator(s32 width, s32 height, s32 levels,
         s32 humanPlayers, s32 humanTeams, s32 computerPlayers, s32 computerTeams,
