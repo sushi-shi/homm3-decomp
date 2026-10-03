@@ -267,6 +267,12 @@ following keeps only with a pointer here:
   positions in `traceBranchEnd` and `createWaterZoneIsland` and
   `generateRmgIslandMask`'s field-wise midpoints: each rewrite changed
   Voronoi, terrain-painting or other pre-path code.
+- A fourteenth pass gave `buildOverlapPriorities` an ordinary row loop
+  instead of a mid-loop break, dropped the line painters' staged `getTile`
+  copy and let `createRivers` seed the second river at the entrance offset
+  instead of shifting a reused position. All of it runs after the connection
+  paths. It kept `makeTerrainFlip` in `selectTerrainTransition`'s body:
+  constructing the flips directly reorders that terrain-painting code.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every

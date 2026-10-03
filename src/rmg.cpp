@@ -1423,13 +1423,8 @@ void TRmgObjectPropertiesRef::buildOverlapPriorities()
     m_prioritiesInitialized = true;
     for (u32 x = 0; x < m_prototype->getWidth(); ++x) {
         s32 priority = !m_prototype->isUnderlay();
-        u32 y = 0;
-        for (;;) {
-            if (m_prototype->isDrawCell(x, y))
-                m_overlapPriorities[x][y] = priority;
-            if (++y >= m_prototype->getHeight())
-                break;
-            if (!m_prototype->isUnderlay()) {
+        for (u32 y = 0; y < m_prototype->getHeight(); ++y) {
+            if (y > 0 && !m_prototype->isUnderlay()) {
                 if (m_prototype->isPassableCell(x, y)) {
                     if (x > 0 && !m_prototype->isPassableCell(x - 1, y))
                         priority = m_overlapPriorities[x - 1][y];
@@ -1442,6 +1437,8 @@ void TRmgObjectPropertiesRef::buildOverlapPriorities()
                         ++priority;
                 }
             }
+            if (m_prototype->isDrawCell(x, y))
+                m_overlapPriorities[x][y] = priority;
         }
     }
 }
@@ -8043,10 +8040,9 @@ void type_random_map_generator::createRivers()
         type_object* object = m_objects[index];
         TObjectType* prototype = object->m_properties->m_prototype;
         if (prototype->getObjectType() == WATER_WHEEL) {
-            TRmgMapPosition position = object->getEntrance();
-            createRiverToObject(position);
-            position.m_x -= 2;
-            createRiver(position);
+            TRmgMapPosition entrance = object->getEntrance();
+            createRiverToObject(entrance);
+            createRiver(entrance + TPoint(-2, 0));
             if (m_progress)
                 m_progress->advance(1000);
         }

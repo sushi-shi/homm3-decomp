@@ -185,8 +185,7 @@ template<class Adapter>
 static inline void readRmgLineTileSnapshot(Adapter* adapter,
     const TRmgGridPoint& point, rmgTerrainTile& tile)
 {
-    rmgTerrainTile snapshot = adapter->getTile(point);
-    tile = snapshot;
+    tile = adapter->getTile(point);
 }
 
 // Roads and rivers cannot be painted over water or rock terrain.
