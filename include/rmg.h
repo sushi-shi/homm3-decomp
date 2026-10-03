@@ -31,10 +31,10 @@ public:
     s32 m_steps;
     s32 m_done;
 
-    TProgressSink(int totalSteps);
+    TProgressSink(s32 totalSteps);
     virtual ~TProgressSink();
-    virtual void setTotal(int totalSteps);
-    virtual void advance(int amount) = 0;
+    virtual void setTotal(s32 totalSteps);
+    virtual void advance(s32 amount) = 0;
 };
 SIZE(TProgressSink, 0xc);
 
@@ -47,11 +47,11 @@ public:
     s32 m_value;
     s32 m_density;
 
-    type_treasure_def(int objectType, int subtype, int value, int density);
+    type_treasure_def(s32 objectType, s32 subtype, s32 value, s32 density);
 
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
-    virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
+    virtual s32 getValue(TRmgZone* zone, type_random_map_generator* generator);
     virtual b8 isTerrainDependent();
 };
 
@@ -59,7 +59,7 @@ SIZE(type_treasure_def, 0x14);
 
 class type_shrine_def : public type_treasure_def {
 public:
-    type_shrine_def(int objectType, int value);
+    type_shrine_def(s32 objectType, s32 value);
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
 };
@@ -75,7 +75,7 @@ class type_spell_scroll_def : public type_treasure_def {
 public:
     s32 m_spellLevel;
 
-    type_spell_scroll_def(int spellLevel, int value);
+    type_spell_scroll_def(s32 spellLevel, s32 value);
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
 };
@@ -87,15 +87,15 @@ public:
     // 5 are rounded to a multiple of 2, 5 or 10.
     s32 m_creatureCount;
 
-    type_black_box_creature_def(int creatureType);
+    type_black_box_creature_def(s32 creatureType);
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
-    virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
+    virtual s32 getValue(TRmgZone* zone, type_random_map_generator* generator);
 };
 
 class type_artifact_def : public type_treasure_def {
 public:
-    inline type_artifact_def(int objectType, int value)
+    inline type_artifact_def(s32 objectType, s32 value)
         : type_treasure_def(objectType, 0, value, 150)
     {
     }
@@ -108,7 +108,7 @@ class type_black_box_experience_def : public type_treasure_def {
 public:
     s32 m_experience;
 
-    inline type_black_box_experience_def(int value, int experience)
+    inline type_black_box_experience_def(s32 value, s32 experience)
         : type_treasure_def(BLACK_BOX, 0, value, 20)
     {
         this->m_experience = experience;
@@ -122,7 +122,7 @@ class type_black_box_gold_def : public type_treasure_def {
 public:
     s32 m_gold;
 
-    inline type_black_box_gold_def(int value, int gold)
+    inline type_black_box_gold_def(s32 value, s32 gold)
         : type_treasure_def(BLACK_BOX, 0, value, 5)
     {
         this->m_gold = gold;
@@ -139,7 +139,7 @@ public:
     s32 m_schoolMask;
 
     inline type_black_box_spells_def(
-        int value, int minimumLevel, int maximumLevel, int schoolMask)
+        s32 value, s32 minimumLevel, s32 maximumLevel, s32 schoolMask)
         : type_treasure_def(BLACK_BOX, 0, value, 2)
     {
         this->m_minimumLevel = minimumLevel;
@@ -153,20 +153,20 @@ public:
 
 class type_key_tent_def : public type_treasure_def {
 public:
-    inline type_key_tent_def(int subtype, int value)
+    inline type_key_tent_def(s32 subtype, s32 value)
         : type_treasure_def(BORDER_TENT, subtype, value, 10)
     {
     }
 
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
-    virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
+    virtual s32 getValue(TRmgZone* zone, type_random_map_generator* generator);
     virtual b8 isTerrainDependent();
 };
 
 class type_dwelling_def : public type_treasure_def {
 public:
-    inline type_dwelling_def(int subtype)
+    inline type_dwelling_def(s32 subtype)
         : type_treasure_def(CREATURE_GENERATOR_1, subtype, -1, 40)
     {
     }
@@ -177,18 +177,18 @@ public:
 
 class type_map_dwelling_def : public type_dwelling_def {
 public:
-    inline type_map_dwelling_def(int subtype)
+    inline type_map_dwelling_def(s32 subtype)
         : type_dwelling_def(subtype)
     {
     }
 
-    virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
+    virtual s32 getValue(TRmgZone* zone, type_random_map_generator* generator);
 };
 
 class type_resource_lump_def : public type_treasure_def {
 public:
     inline type_resource_lump_def(
-        int objectType, int subtype, int value, int density)
+        s32 objectType, s32 subtype, s32 value, s32 density)
         : type_treasure_def(objectType, subtype, value, density)
     {
     }
@@ -201,7 +201,7 @@ class type_prison_def : public type_treasure_def {
 public:
     s32 m_experience;
 
-    inline type_prison_def(int value, int experience)
+    inline type_prison_def(s32 value, s32 experience)
         : type_treasure_def(PRISON, 0, value, 30)
     {
         this->m_experience = experience;
@@ -224,7 +224,7 @@ public:
 
 class type_quest_creature_def : public type_black_box_creature_def {
 public:
-    inline type_quest_creature_def(int creatureType, int seerHutPrototypeIndex)
+    inline type_quest_creature_def(s32 creatureType, s32 seerHutPrototypeIndex)
         : type_black_box_creature_def(creatureType)
     {
         m_objectType = SEER;
@@ -233,7 +233,7 @@ public:
 
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
-    virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
+    virtual s32 getValue(TRmgZone* zone, type_random_map_generator* generator);
     virtual b8 isTerrainDependent();
 };
 
@@ -242,7 +242,7 @@ public:
     s32 m_experience;
 
     inline type_quest_experience_def(
-        int seerHutPrototypeIndex, int value, int experience)
+        s32 seerHutPrototypeIndex, s32 value, s32 experience)
         : type_treasure_def(SEER, seerHutPrototypeIndex, value, 10)
     {
         this->m_experience = experience;
@@ -250,7 +250,7 @@ public:
 
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
-    virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
+    virtual s32 getValue(TRmgZone* zone, type_random_map_generator* generator);
     virtual b8 isTerrainDependent();
 };
 
@@ -258,7 +258,7 @@ class type_quest_gold_def : public type_treasure_def {
 public:
     s32 m_gold;
 
-    inline type_quest_gold_def(int seerHutPrototypeIndex, int value, int gold)
+    inline type_quest_gold_def(s32 seerHutPrototypeIndex, s32 value, s32 gold)
         : type_treasure_def(SEER, seerHutPrototypeIndex, value, 10)
     {
         this->m_gold = gold;
@@ -266,7 +266,7 @@ public:
 
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
-    virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
+    virtual s32 getValue(TRmgZone* zone, type_random_map_generator* generator);
     virtual b8 isTerrainDependent();
 };
 
@@ -293,20 +293,20 @@ struct TRmgVector {
     s32 m_y;
 
     TRmgVector() {}
-    TRmgVector(int newX, int newY) : m_x(newX), m_y(newY) {}
+    TRmgVector(s32 newX, s32 newY) : m_x(newX), m_y(newY) {}
 
-    int length() const;
+    s32 length() const;
     TRmgVector operator+(TRmgVector other) const;
-    TRmgVector operator*(int scale) const;
-    TRmgVector operator/(int divisor) const;
-    int dot(TRmgVector other) const
+    TRmgVector operator*(s32 scale) const;
+    TRmgVector operator/(s32 divisor) const;
+    s32 dot(TRmgVector other) const
     {
         return m_y * other.m_y + m_x * other.m_x;
     }
 };
 
 // Signed 32-bit squared length; large values overflow.
-inline int getRmgSquaredNorm(int x, int y)
+inline s32 getRmgSquaredNorm(s32 x, s32 y)
 {
     return x * x + y * y;
 }
@@ -317,7 +317,7 @@ struct TPoint {
     s32 m_y;
 
     TPoint() {}
-    TPoint(int newX, int newY) : m_x(newX), m_y(newY) {}
+    TPoint(s32 newX, s32 newY) : m_x(newX), m_y(newY) {}
 
     TPoint& operator+=(const TRmgVector& offset)
     {
@@ -338,8 +338,8 @@ struct TPoint {
     {
         return m_y < other.m_y || (m_y == other.m_y && m_x < other.m_x);
     }
-    int getX() const { return m_x; }
-    int getY() const { return m_y; }
+    s32 getX() const { return m_x; }
+    s32 getY() const { return m_y; }
     TPoint& operator+=(const TPoint& offset);
 };
 
@@ -348,7 +348,7 @@ struct TRmgMapPosition : TPoint {
     s32 m_z;
 
     TRmgMapPosition() {}
-    TRmgMapPosition(int newX, int newY, int newZ);
+    TRmgMapPosition(s32 newX, s32 newY, s32 newZ);
 
     TRmgMapPosition& operator+=(const TPoint& offset);
     TRmgMapPosition& operator-=(const TPoint& offset);
@@ -431,8 +431,8 @@ struct TRmgTemplateZone {
     TRmgTreasureRange m_treasure[3];     // +0xa0
     std::vector<TRmgZoneConnection> m_connections; // +0xc4
 
-    int selectAllowedTown();
-    TRmgZoneConnection* findConnection(int destinationZone);
+    s32 selectAllowedTown();
+    TRmgZoneConnection* findConnection(s32 destinationZone);
 };
 SIZE(TRmgTemplateZone, 0xd4);
 
@@ -445,16 +445,16 @@ struct TRmgTemplate {
     s32 m_maximumSize;                  // +0x34
 
     ~TRmgTemplate();
-    TRmgTemplateZone* findZone(int zoneIndex);
+    TRmgTemplateZone* findZone(s32 zoneIndex);
 };
 SIZE(TRmgTemplate, 0x38);
 
 void readRmgTemplateZones(
     const TSpreadsheetResource* sheet, TRmgTemplate* mapTemplate,
-    int firstRow, int endRow, int humanPlayers, int computerPlayers,
-    int mapVersion);
+    s32 firstRow, s32 endRow, s32 humanPlayers, s32 computerPlayers,
+    s32 mapVersion);
 
-int getRmgGuardValue(int value, int strength);
+s32 getRmgGuardValue(s32 value, s32 strength);
 
 // The eight neighbour directions, clockwise.
 enum ERmgDirectionLimits {
@@ -464,8 +464,8 @@ enum ERmgDirectionLimits {
 TPoint operator+(TPoint point, TRmgVector offset);
 TRmgVector operator-(TPoint left, TPoint right);
 
-int getRmgPointOrientation(TPoint first, TPoint second, TPoint third);
-int getRmgSquaredDistance(TPoint first, TPoint second);
+s32 getRmgPointOrientation(TPoint first, TPoint second, TPoint third);
+s32 getRmgSquaredDistance(TPoint first, TPoint second);
 
 // Unsigned map-grid coordinate used by the terrain painters; ordered by
 // row, then column. Signed geometry uses TPoint.
@@ -526,12 +526,12 @@ struct TRmgZoneBounds {
     }
 
     // Extend half-open bounds to include one unit cell.
-    void includeCell(int x, int y)
+    void includeCell(s32 x, s32 y)
     {
         m_minimumX = x < m_minimumX ? x : m_minimumX;
         m_minimumY = y < m_minimumY ? y : m_minimumY;
-        int maximumX = x + 1;
-        int maximumY = y + 1;
+        s32 maximumX = x + 1;
+        s32 maximumY = y + 1;
         m_maximumX = maximumX > m_maximumX ? maximumX : m_maximumX;
         m_maximumY = maximumY > m_maximumY ? maximumY : m_maximumY;
     }
@@ -566,7 +566,7 @@ SIZE(TRmgNoiseMidpoints, 0x10);
 void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     TRmgNoiseRegion region,
     TRmgNoiseMidpoints midpoints,
-    int centerValue);
+    s32 centerValue);
 
 enum ERmgShipyardConstants {
     RMG_SHIPYARD_WATER_OFFSET_COUNT = 4
@@ -596,7 +596,7 @@ struct TRmgRiverDeltaOffset {
     s32 m_x;
     s32 m_y;
 
-    TRmgRiverDeltaOffset(int newX, int newY) : m_x(newX), m_y(newY) {}
+    TRmgRiverDeltaOffset(s32 newX, s32 newY) : m_x(newX), m_y(newY) {}
 };
 
 class type_object;
@@ -613,70 +613,70 @@ enum ERmgPathCostLimits {
 };
 
 struct TRmgMovementCost {
-    unsigned m_cost : 16;
+    u32 m_cost : 16;
     // Cost of reaching this cell in a flood from another zone; ranks
     // ground-connection crossings. Water zones reuse it for distance from
     // their edge and islands (cardinal 2, diagonal 3).
-    unsigned m_zonePathCost : 16;
+    u32 m_zonePathCost : 16;
 };
 
 // Per-cell zone id and distance to the nearest object entrance (cardinal 2,
 // diagonal 3), used to space placements.
 struct TRmgZoneCellState {
-    unsigned m_objectDistance : 16;
-    signed m_zone : 8;
+    u32 m_objectDistance : 16;
+    s32 m_zone : 8;
     // Neighbouring zone whose connection-cost flood crossed into this cell
     // (-1 none); m_connectionDirection points back along that flood.
-    signed m_connectionZone : 8;
+    s32 m_connectionZone : 8;
 };
 
 // Packed terrain, river and road types and the terrain and river frames of
 // one map cell; the road frame is in TRmgGroundTileData.
 struct TRmgGroundTile {
-    signed m_landType : 6;
-    signed m_terrainFrame : 8;
-    signed m_riverType : 4;
-    signed m_riverFrame : 8;
-    signed m_roadType : 4;
-    unsigned m_unknown30 : 2;
+    s32 m_landType : 6;
+    s32 m_terrainFrame : 8;
+    s32 m_riverType : 4;
+    s32 m_riverFrame : 8;
+    s32 m_roadType : 4;
+    u32 m_unknown30 : 2;
 };
 
 struct TRmgGroundTileData {
-    signed m_roadFrame : 8;
-    unsigned m_blockedDirections : 4;
-    unsigned m_connectionDirection : 3;
+    s32 m_roadFrame : 8;
+    u32 m_blockedDirections : 4;
+    u32 m_connectionDirection : 3;
     // Sprite reflections of the terrain, river and road layers.
-    unsigned m_terrainFlipX : 1;
-    unsigned m_terrainFlipY : 1;
-    unsigned m_riverFlipX : 1;
-    unsigned m_riverFlipY : 1;
-    unsigned m_roadFlipX : 1;
-    unsigned m_roadFlipY : 1;
-    unsigned m_coastal : 1;
+    u32 m_terrainFlipX : 1;
+    u32 m_terrainFlipY : 1;
+    u32 m_riverFlipX : 1;
+    u32 m_riverFlipY : 1;
+    u32 m_roadFlipX : 1;
+    u32 m_roadFlipY : 1;
+    u32 m_coastal : 1;
     // Object entrance (trigger) cell.
-    unsigned m_roadEntrance : 1;
+    u32 m_roadEntrance : 1;
     // On an assembled treasure group's traced outline (group map only).
-    unsigned m_placementOutline : 1;
-    unsigned m_connectionVisited : 1;
+    u32 m_placementOutline : 1;
+    u32 m_connectionVisited : 1;
     // Not blocked by an object.
-    unsigned m_roadPassable : 1;
-    unsigned m_borderObject : 1;
+    u32 m_roadPassable : 1;
+    u32 m_borderObject : 1;
     // Kept clear for generated paths; obstacle footprints may not cover it.
-    unsigned m_pathClearance : 1;
+    u32 m_pathClearance : 1;
     // Set on zone cells whose terrain paintZoneTerrain paints.
-    unsigned m_paintZoneTerrain : 1;
+    u32 m_paintZoneTerrain : 1;
     // River painted here, or a mountain, lake or gem-mine cell rivers flow to.
-    unsigned m_hasRiver : 1;
-    unsigned m_riverTarget : 1;
+    u32 m_hasRiver : 1;
+    u32 m_riverTarget : 1;
     // On or beside a painted river; createRiver's search may not enter it.
-    unsigned m_nearRiver : 1;
+    u32 m_nearRiver : 1;
 };
 
 // Pending border-guard cell and the guard's key colour.
 struct TRmgConnectionDecoration {
-    unsigned m_present : 1;
-    unsigned m_guardColor : 4;
-    unsigned m_unknown05 : 27;
+    u32 m_present : 1;
+    u32 m_guardColor : 4;
+    u32 m_unknown05 : 27;
 };
 
 // One rand_trn.txt row: per-terrain scores and neighbour scores indexed by
@@ -756,7 +756,7 @@ public:
     // are replaced by a treasure, except a quest artifact when no quest
     // artifact remains. The success result is ignored.
     virtual b8 completePlacement();
-    virtual void write(TAbstractFile* outputFile, int version);
+    virtual void write(TAbstractFile* outputFile, s32 version);
 };
 
 // Guard monster stack: id, count and disposition are written to the map.
@@ -767,14 +767,14 @@ public:
     s32 m_disposition;    // +0x24, serialized as one byte
     s32 m_unknown28;      // +0x28
 
-    rmgMonsterObject(TRmgObjectPropertiesRef* properties, int objectId, int count)
+    rmgMonsterObject(TRmgObjectPropertiesRef* properties, s32 objectId, s32 count)
         : type_object(properties)
     {
         m_count = count;
         m_disposition = RMG_GUARD_DISPOSITION;
         m_objectId = objectId;
     }
-    virtual void write(TAbstractFile* outputFile, int version);
+    virtual void write(TAbstractFile* outputFile, s32 version);
 };
 SIZE(rmgMonsterObject, 0x2c);
 
@@ -784,14 +784,14 @@ public:
     s32 m_objectId;
     s32 m_player;
     b8 m_hasFort;
-    rmgTownObject(TRmgObjectPropertiesRef* properties, int objectId,
-        int player, b8 hasFort) : type_object(properties)
+    rmgTownObject(TRmgObjectPropertiesRef* properties, s32 objectId,
+        s32 player, b8 hasFort) : type_object(properties)
     {
         m_player = player;
         m_hasFort = hasFort;
         m_objectId = objectId;
     }
-    virtual void write(TAbstractFile* outputFile, int version);
+    virtual void write(TAbstractFile* outputFile, s32 version);
 };
 SIZE(rmgTownObject, 0x28);
 
@@ -801,21 +801,21 @@ class rmgOwnableObject : public type_object {
 public:
     rmgOwnableObject(TRmgObjectPropertiesRef* properties)
         : type_object(properties) {}
-    virtual void write(TAbstractFile* outputFile, int version);
+    virtual void write(TAbstractFile* outputFile, s32 version);
 };
 
 // Artifact; its record ends with one zero byte.
 class rmgArtifactObject : public type_object {
 public:
     rmgArtifactObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outputFile, int version);
+    virtual void write(TAbstractFile* outputFile, s32 version);
 };
 SIZE(rmgArtifactObject, 0x1c);
 
 class rmgResourceObject : public type_object {
 public:
     rmgResourceObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outputFile, int version);
+    virtual void write(TAbstractFile* outputFile, s32 version);
 };
 SIZE(rmgResourceObject, 0x1c);
 
@@ -829,7 +829,7 @@ public:
     std::vector<s32> m_spells;         // +0x44
 
     rmgBlackBoxObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outputFile, int version);
+    virtual void write(TAbstractFile* outputFile, s32 version);
 };
 SIZE(rmgBlackBoxObject, 0x54);
 
@@ -844,7 +844,7 @@ public:
     s32 m_creatureCount;               // +0x30
 
     rmgSeerHutObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outputFile, int version);
+    virtual void write(TAbstractFile* outputFile, s32 version);
 };
 SIZE(rmgSeerHutObject, 0x34);
 
@@ -872,7 +872,7 @@ public:
     s32 m_value;                           // +0x20
 
     rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, int value);
+        type_random_map_generator* generator, s32 value);
     virtual b8 completePlacement();
 };
 SIZE(rmgKeyTentObject, 0x24);
@@ -880,14 +880,14 @@ SIZE(rmgKeyTentObject, 0x24);
 class rmgScholarObject : public type_object {
 public:
     rmgScholarObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outputFile, int version);
+    virtual void write(TAbstractFile* outputFile, s32 version);
 };
 SIZE(rmgScholarObject, 0x1c);
 
 class rmgShrineObject : public type_object {
 public:
     rmgShrineObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outputFile, int version);
+    virtual void write(TAbstractFile* outputFile, s32 version);
 };
 SIZE(rmgShrineObject, 0x1c);
 
@@ -895,15 +895,15 @@ SIZE(rmgShrineObject, 0x1c);
 class rmgSpellScrollObject : public type_object {
 public:
     s32 m_spell; // +0x1c
-    rmgSpellScrollObject(TRmgObjectPropertiesRef* properties, int spell);
-    virtual void write(TAbstractFile* outputFile, int version);
+    rmgSpellScrollObject(TRmgObjectPropertiesRef* properties, s32 spell);
+    virtual void write(TAbstractFile* outputFile, s32 version);
 };
 SIZE(rmgSpellScrollObject, 0x20);
 
 class rmgWitchHutObject : public type_object {
 public:
     rmgWitchHutObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outputFile, int version);
+    virtual void write(TAbstractFile* outputFile, s32 version);
 };
 SIZE(rmgWitchHutObject, 0x1c);
 
@@ -916,11 +916,11 @@ public:
     s32 m_experience;                       // +0x28, prison definition experience
 
     rmgHeroObject(TRmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, const int& objectId, int heroIndex,
-        int experience);
+        type_random_map_generator* generator, const s32& objectId, s32 heroIndex,
+        s32 experience);
 
     virtual void releaseReservation();
-    virtual void write(TAbstractFile* outputFile, int version);
+    virtual void write(TAbstractFile* outputFile, s32 version);
 };
 SIZE(rmgHeroObject, 0x2c);
 
@@ -937,7 +937,7 @@ struct TRmgMapItem {
     void clear();
     void write(TAbstractFile* outputFile);
     // Sets only the terrain type, frame and flips.
-    void setTerrain(int terrain, int frame,
+    void setTerrain(s32 terrain, s32 frame,
         b8 flipX, b8 flipY);
 
     bool hasRiver() const { return m_tileData.m_hasRiver != 0; }
@@ -994,13 +994,13 @@ struct TRmgMapItem {
     {
         m_tileData.m_connectionVisited = true;
     }
-    int getLandType() const
+    s32 getLandType() const
     {
         return m_tile.m_landType;
     }
 
     // Records a path cost and its predecessor tile.
-    void setMovementCost(int cost, TRmgMapPosition previous)
+    void setMovementCost(s32 cost, TRmgMapPosition previous)
     {
         m_movement.m_cost = cost;
         m_previousTile = previous;
@@ -1015,7 +1015,7 @@ struct TRmgMapItem {
 
     // Water-zone spacing: distance and incoming direction; sets the
     // connection zone to 0 (reset before connections are built).
-    void setWaterZoneDistance(u32 cost, int direction)
+    void setWaterZoneDistance(u32 cost, s32 direction)
     {
         m_movement.m_zonePathCost = cost;
         m_tileData.m_connectionDirection = direction;
@@ -1056,7 +1056,7 @@ struct TRmgMapItem {
     }
 
     // An existing connection keeps its tile flags but takes the new colour.
-    void markBorderConnection(int color)
+    void markBorderConnection(s32 color)
     {
         markBorderObject();
         m_connection.m_guardColor = color;
@@ -1083,15 +1083,15 @@ public:
     virtual ~TRmgMapInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
-    virtual void setFrame(const TRmgGridPoint& point, int value) = 0;
+    virtual void setFrame(const TRmgGridPoint& point, s32 value) = 0;
 #if defined(HOMM3_TARGET_MAC)
     virtual TRmgGridPoint getSize() = 0;
 #else
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output) = 0;
 #endif
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getTerrain(const TRmgGridPoint& point) = 0;
-    virtual int getFrame(const TRmgGridPoint& point) = 0;
+    virtual s32 getTerrain(const TRmgGridPoint& point) = 0;
+    virtual s32 getFrame(const TRmgGridPoint& point) = 0;
 };
 
 class TRmgRiverMapAdapterInterface {
@@ -1099,11 +1099,11 @@ public:
     virtual ~TRmgRiverMapAdapterInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
-    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
+    virtual void setLineType(const TRmgGridPoint& point, s32 value) = 0;
     virtual TRmgGridPoint getSize() = 0;
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getLineType(const TRmgGridPoint& point) = 0;
-    virtual int getTerrain(const TRmgGridPoint& point) = 0;
+    virtual s32 getLineType(const TRmgGridPoint& point) = 0;
+    virtual s32 getTerrain(const TRmgGridPoint& point) = 0;
 };
 
 class TRmgRoadMapAdapterInterface {
@@ -1111,11 +1111,11 @@ public:
     virtual ~TRmgRoadMapAdapterInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
-    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
+    virtual void setLineType(const TRmgGridPoint& point, s32 value) = 0;
     virtual TRmgGridPoint getSize() = 0;
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getLineType(const TRmgGridPoint& point) = 0;
-    virtual int getTerrain(const TRmgGridPoint& point) = 0;
+    virtual s32 getLineType(const TRmgGridPoint& point) = 0;
+    virtual s32 getTerrain(const TRmgGridPoint& point) = 0;
 };
 
 class type_random_map : public TRmgMapInterface {
@@ -1128,10 +1128,10 @@ public:
     s32 m_numberLevels;                     // +0x14
 
     // Allocates and owns the cells (generator map, treasure-group maps).
-    type_random_map(int width, int height, int levels);
+    type_random_map(s32 width, s32 height, s32 levels);
 
     // Single-level view over cells owned elsewhere.
-    inline type_random_map(TRmgMapItem* items, int width, int height)
+    inline type_random_map(TRmgMapItem* items, s32 width, s32 height)
     {
         m_mapItems = items;
         m_mapWidth = width;
@@ -1144,43 +1144,43 @@ public:
 
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setFrame(const TRmgGridPoint& point, int value);
+    virtual void setFrame(const TRmgGridPoint& point, s32 value);
 #if defined(HOMM3_TARGET_MAC)
     virtual TRmgGridPoint getSize();
 #else
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output);
 #endif
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getTerrain(const TRmgGridPoint& point);
-    virtual int getFrame(const TRmgGridPoint& point);
+    virtual s32 getTerrain(const TRmgGridPoint& point);
+    virtual s32 getFrame(const TRmgGridPoint& point);
 
     void clear();
     void addObject(type_object& object, TRmgMapPosition position);
     void markCoastalTiles();
     void floodConnectionCosts(TRmgMapPosition position, b8 waterZone);
 
-    int getWidth() const { return m_mapWidth; }
-    int getHeight() const { return m_mapHeight; }
-    int getNumberLevels() const { return m_numberLevels; }
+    s32 getWidth() const { return m_mapWidth; }
+    s32 getHeight() const { return m_mapHeight; }
+    s32 getNumberLevels() const { return m_numberLevels; }
 
-    TRmgMapItem* getMapItem(int x, int y);
-    inline TRmgMapItem* getMapItem(int x, int y, int z)
+    TRmgMapItem* getMapItem(s32 x, s32 y);
+    inline TRmgMapItem* getMapItem(s32 x, s32 y, s32 z)
     {
         return getMapItem(TRmgMapPosition(x, y, z));
     }
     TRmgMapItem* getMapItem(TRmgMapPosition point);
 
     // Path-carving helpers.
-    void openPathPatch(int x, int y, int level);
+    void openPathPatch(s32 x, s32 y, s32 level);
     void markBorderPatch(TRmgMapPosition position);
-    TPoint traceBranchEnd(TPoint from, TPoint toward, int level);
+    TPoint traceBranchEnd(TPoint from, TPoint toward, s32 level);
 
     b8 hasConnectedOutline(
         const std::vector<TPoint>& outline, TRmgMapPosition position,
         b8 allowEntrances, TRmgZone* zone, b8 requirePathClearance);
     b8 isPlacementBlocked(
         TRmgObjectPropertiesRef* properties, TRmgMapPosition position,
-        int zoneIndex, b8 rejectBorder);
+        s32 zoneIndex, b8 rejectBorder);
     b8 canPlaceObject(
         TRmgObjectPropertiesRef* properties,
         TRmgMapPosition position,
@@ -1210,7 +1210,7 @@ struct TRmgTreasureGroup {
     b8 m_ready;                  // +0x60, set after assembly
     char m_padding0061[3];
 
-    TRmgTreasureGroup(int width, int height)
+    TRmgTreasureGroup(s32 width, s32 height)
         : m_map(width, height, 1), m_hasGuard(false), m_ready(false)
     {
         reset();
@@ -1242,11 +1242,11 @@ public:
 
     TRmgRoadMapAdapter(type_random_map* map) : m_map(map) {}
     virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setLineType(const TRmgGridPoint& point, int value);
+    virtual void setLineType(const TRmgGridPoint& point, s32 value);
     virtual TRmgGridPoint getSize();
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLineType(const TRmgGridPoint& point);
-    virtual int getTerrain(const TRmgGridPoint& point);
+    virtual s32 getLineType(const TRmgGridPoint& point);
+    virtual s32 getTerrain(const TRmgGridPoint& point);
 };
 
 // River-layer view of a map for the river painter.
@@ -1258,11 +1258,11 @@ public:
 
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setLineType(const TRmgGridPoint& point, int value);
+    virtual void setLineType(const TRmgGridPoint& point, s32 value);
     virtual TRmgGridPoint getSize();
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLineType(const TRmgGridPoint& point);
-    virtual int getTerrain(const TRmgGridPoint& point);
+    virtual s32 getLineType(const TRmgGridPoint& point);
+    virtual s32 getTerrain(const TRmgGridPoint& point);
 };
 
 // Unreflected line shapes chosen by selectRmgLinePattern; reflections supply
@@ -1300,7 +1300,7 @@ struct TRmgLinePatternTable {
     s32* m_framePatterns;
     TRmgLinePatternRange m_ranges[LINE_PATTERN_COUNT];
 
-    TRmgLinePatternTable(u32 frameCount, const int* framePatterns);
+    TRmgLinePatternTable(u32 frameCount, const s32* framePatterns);
     ~TRmgLinePatternTable();
 };
 SIZE(TRmgLinePatternTable, 0x50);
@@ -1310,7 +1310,7 @@ extern TRmgLinePatternTable g_rmgRoadPatternTable;
 
 void selectRmgLinePattern(
     const b8* neighbours, const TRmgLinePatternTable* table,
-    int& pattern, b8& flipX, b8& flipY);
+    s32& pattern, b8& flipX, b8& flipY);
 
 struct TRmgLinePainterTile;
 
@@ -1320,16 +1320,16 @@ public:
     TRmgGridPoint m_size;
 
     TRmgLinePainterInterface(const TRmgGridPoint& size);
-    virtual TRmgLinePatternTable* getPattern(int value) = 0;
+    virtual TRmgLinePatternTable* getPattern(s32 value) = 0;
     virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
-    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
+    virtual void setLineType(const TRmgGridPoint& point, s32 value) = 0;
     // Nonzero prevents painting.
     virtual b32 isBlocked(const TRmgGridPoint& point) = 0;
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile) = 0;
-    virtual int getLineType(const TRmgGridPoint& point) = 0;
+    virtual s32 getLineType(const TRmgGridPoint& point) = 0;
 
     TRmgLinePainterTile at(const TRmgGridPoint& point);
-    int getNeighbourLineType(const TRmgGridPoint& point, u32 direction);
+    s32 getNeighbourLineType(const TRmgGridPoint& point, u32 direction);
 };
 
 // Proxy for one tile of a line painter.
@@ -1338,11 +1338,11 @@ struct TRmgLinePainterTile {
     TRmgGridPoint m_point;
 
     TRmgLinePainterTile(TRmgLinePainterInterface* painter, const TRmgGridPoint& point);
-    int getLineType();
+    s32 getLineType();
     void getTile(rmgTerrainTile& tile);
     void setTile(const rmgTerrainTile& tile);
     b8 isBlocked();
-    void setLineType(int value);
+    void setLineType(s32 value);
 };
 SIZE(TRmgLinePainterTile, 0x0c);
 
@@ -1369,13 +1369,13 @@ public:
     }
     virtual ~TRmgRiverLinePainter() = 0;
 
-    virtual TRmgLinePatternTable* getPattern(int value);
+    virtual TRmgLinePatternTable* getPattern(s32 value);
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setLineType(const TRmgGridPoint& point, int value);
+    virtual void setLineType(const TRmgGridPoint& point, s32 value);
     virtual b32 isBlocked(const TRmgGridPoint& point);
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile);
-    virtual int getLineType(const TRmgGridPoint& point);
+    virtual s32 getLineType(const TRmgGridPoint& point);
 };
 
 inline TRmgRiverLinePainter::~TRmgRiverLinePainter() {}
@@ -1409,7 +1409,7 @@ public:
 
     TRmgLineWalker(
         TRmgLinePainterInterface* newPainter,
-        int newLineType,
+        s32 newLineType,
         const TRmgGridPoint& start);
     void drawTo(const TRmgGridPoint& destination);
     void paintPoint(const TRmgGridPoint& point);
@@ -1419,7 +1419,7 @@ class TRmgRiverPainter : public TRmgRiverLinePainter, public TRmgLineWalker {
 public:
     TRmgRiverPainter(
         TRmgRiverMapAdapterInterface* newAdapter,
-        int newRiverType,
+        s32 newRiverType,
         const TRmgGridPoint& start);
     virtual ~TRmgRiverPainter();
 };
@@ -1435,13 +1435,13 @@ public:
     }
     virtual ~TRmgRoadLinePainter() = 0;
 
-    virtual TRmgLinePatternTable* getPattern(int value);
+    virtual TRmgLinePatternTable* getPattern(s32 value);
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setLineType(const TRmgGridPoint& point, int value);
+    virtual void setLineType(const TRmgGridPoint& point, s32 value);
     virtual b32 isBlocked(const TRmgGridPoint& point);
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile);
-    virtual int getLineType(const TRmgGridPoint& point);
+    virtual s32 getLineType(const TRmgGridPoint& point);
 };
 
 inline TRmgRoadLinePainter::~TRmgRoadLinePainter() {}
@@ -1450,7 +1450,7 @@ class TRmgRoadPainter : public TRmgRoadLinePainter, public TRmgLineWalker {
 public:
     TRmgRoadPainter(
         TRmgRoadMapAdapterInterface* newAdapter,
-        int newRoadType,
+        s32 newRoadType,
         const TRmgGridPoint& start);
     virtual ~TRmgRoadPainter();
 };
@@ -1489,7 +1489,7 @@ struct TRmgZone {
     void chooseTownType(b8 expanded);
     void chooseTerrain();
     ~TRmgZone();
-    int getTerrain() const
+    s32 getTerrain() const
     {
         return m_terrain;
     }
@@ -1499,7 +1499,7 @@ struct TRmgZone {
     }
     TRmgMapPosition getLevelPosition() const;
     void setLevelPosition(TRmgMapPosition position);
-    int getSize() const
+    s32 getSize() const
     {
         return m_templateZone->m_size;
     }
@@ -1643,18 +1643,18 @@ public:
     std::vector<TRmgObjectPlacementRule> m_placementRules; // +0xeb4
     std::vector<type_object*> m_objects;               // +0xec4
     TProgressSink* m_progress;                          // +0xed4
-    TRmgGeneratorBase(int width, int height, int levels,
-        TProgressSink* progress, int additionalSteps, int version);
+    TRmgGeneratorBase(s32 width, s32 height, s32 levels,
+        TProgressSink* progress, s32 additionalSteps, s32 version);
     virtual ~TRmgGeneratorBase();
     virtual void addObject(type_object* object, TRmgMapPosition position);
     // Loads objects.txt, builds the per-type prototype lists, then the
     // placement rules.
     void loadObjectPrototypes();
     void readObjectPlacementRules();
-    int scoreObjectPlacement(
+    s32 scoreObjectPlacement(
         TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
     void decorateMap();
-    void decorateMapCell(TRmgMapPosition start, int progressSteps);
+    void decorateMapCell(TRmgMapPosition start, s32 progressSteps);
 };
 SIZE(TRmgGeneratorBase, 0xed8);
 
@@ -1712,53 +1712,53 @@ public:
     std::vector<type_object*> m_monolithsOneWay;       // +0x14c0
     std::vector<type_object*> m_monolithsTwoWay;       // +0x14d0
 
-    type_random_map_generator(int width, int height, int levels,
-        int humanPlayers, int humanTeams, int computerPlayers, int computerTeams,
-        int waterContent, int monsterStrength, TProgressSink* progress, int version);
+    type_random_map_generator(s32 width, s32 height, s32 levels,
+        s32 humanPlayers, s32 humanTeams, s32 computerPlayers, s32 computerTeams,
+        s32 waterContent, s32 monsterStrength, TProgressSink* progress, s32 version);
     void loadTemplates();
     void placeMines();
     void prepareZoneConnections();
     void markZoneBorders();
     void placeWaterZoneIslands(TRmgZone* zone);
-    void createWaterZoneIsland(const TRmgZoneBounds& bounds, int level);
-    void floodWaterZoneDistances(TRmgMapPosition position, int zoneIndex);
+    void createWaterZoneIsland(const TRmgZoneBounds& bounds, s32 level);
+    void floodWaterZoneDistances(TRmgMapPosition position, s32 zoneIndex);
     void buildZoneConnectionPaths();
     void placeExtraMines(TRmgZone* zone);
     b8 placeMineSite(type_object* object, TRmgZone* zone,
-        b8 startingMine, int spacing);
-    b8 tryPlaceMine(TRmgZone* zone, int resource,
-        b8 startingMine, int spacing);
+        b8 startingMine, s32 spacing);
+    b8 tryPlaceMine(TRmgZone* zone, s32 resource,
+        b8 startingMine, s32 spacing);
     void placePrimaryTown(TRmgZone* zone);
-    b8 tryPlacePrimaryTown(TRmgZone* zone, int alignment,
-        int player, b8 hasFort);
+    b8 tryPlacePrimaryTown(TRmgZone* zone, s32 alignment,
+        s32 player, b8 hasFort);
     void initializeZones(TRmgTemplate* mapTemplate);
-    void positionZone(TRmgZone* zone, int mapSize);
+    void positionZone(TRmgZone* zone, s32 mapSize);
     void appendZonePositions(TRmgZone* center, TRmgZone* zone,
         std::vector<TRmgMapPosition>& candidates);
-    void getInitialZoneBounds(int& minimumY, int& minimumX,
-        int& maximumY, int& maximumX) const;
+    void getInitialZoneBounds(s32& minimumY, s32& minimumX,
+        s32& maximumY, s32& maximumX) const;
     void paintZoneTerrain();
     void calculateZoneBounds();
     void recenterZone(TRmgZone* zone);
     void insetIslandZone(TRmgZone* zone);
     void fillIslandInterior(TRmgZone* zone);
-    void drawIslandBoundary(TPoint from, TPoint to, int zoneIndex, int level, int roughness);
+    void drawIslandBoundary(TPoint from, TPoint to, s32 zoneIndex, s32 level, s32 roughness);
     void placeAdditionalTowns(TRmgZone* zone);
-    b8 tryPlaceAdditionalTown(TRmgZone* zone, int alignment,
-        int player, b8 hasFort, int spacing);
+    b8 tryPlaceAdditionalTown(TRmgZone* zone, s32 alignment,
+        s32 player, b8 hasFort, s32 spacing);
     void prepareJunctionZone(TRmgZone* zone);
     void connectJunctionEntrance(TPoint from, TPoint to, TRmgZone* zone);
     void placeZoneTreasures(TRmgZone* zone);
     // Compact selection keeps only treasures near the best value per
     // footprint cell; zones retry a failed treasure band with it.
-    type_object* createTreasureObject(TRmgZone* zone, int minimum, int maximum,
-        int* value, b8 primary, b8 allowTerrainDependent,
+    type_object* createTreasureObject(TRmgZone* zone, s32 minimum, s32 maximum,
+        s32* value, b8 primary, b8 allowTerrainDependent,
         b8 compact, TRmgMapPosition position);
-    int fillTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
-        b8 compact, int targetValue);
+    s32 fillTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
+        b8 compact, s32 targetValue);
     b8 assembleTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
-        b8 compact, int minimum, int maximum);
-    b8 placeTreasureGroup(TRmgTreasureGroup* group, TRmgZone* zone, int spacing);
+        b8 compact, s32 minimum, s32 maximum);
+    b8 placeTreasureGroup(TRmgTreasureGroup* group, TRmgZone* zone, s32 spacing);
     b8 canPlaceTreasureGroup(TRmgTreasureGroup* group,
         TRmgMapPosition position, TRmgZone* zone);
     void commitTreasureGroup(TRmgTreasureGroup* group, TRmgMapPosition position);
@@ -1769,7 +1769,7 @@ public:
     virtual void addObject(type_object* object, TRmgMapPosition position);
 
     // H3M format number (MAP_FORMAT_* in game.h).
-    inline int getSerializedMapVersion() const
+    inline s32 getSerializedMapVersion() const
     {
         switch (m_mapVersion) {
         case RMG_MAP_RESTORATION_OF_ERATHIA:
@@ -1782,21 +1782,21 @@ public:
     }
 
     void initializeObjectGenerators();
-    int selectPrisonHero();
+    s32 selectPrisonHero();
     b8 canPlaceZone(TRmgZone* zone);
-    void buildZoneBoundaries(TRmgTemplate* mapTemplate, int level);
+    void buildZoneBoundaries(TRmgTemplate* mapTemplate, s32 level);
     // Spreads this zone's distances to each original zone through the
     // connection graph.
     void propagateZoneDistances(TRmgZone* zone);
     void fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first);
-    void joinExtraZones(int originalZones, TRmgVoronoi* diagram);
-    int countPlacedZoneConnections(TRmgZone* zone) const;
+    void joinExtraZones(s32 originalZones, TRmgVoronoi* diagram);
+    s32 countPlacedZoneConnections(TRmgZone* zone) const;
     void filterZonePositions(
-        TRmgZone* zone, std::vector<TRmgMapPosition>& candidates, int mapSize);
+        TRmgZone* zone, std::vector<TRmgMapPosition>& candidates, s32 mapSize);
     void drawIrregularZoneBoundary(
-        TPoint from, TPoint to, int zoneIndex, int level, int roughness);
+        TPoint from, TPoint to, s32 zoneIndex, s32 level, s32 roughness);
     void drawStraightZoneBoundary(
-        TPoint from, TPoint to, int zoneIndex, int level);
+        TPoint from, TPoint to, s32 zoneIndex, s32 level);
     void traceZoneBoundary(TRmgHalfEdge* first, b8 irregular);
     b8 createGroundConnection(
         TRmgZone* source,
@@ -1814,7 +1814,7 @@ public:
     void createMonolithConnection(
         TRmgZone* source,
         TRmgZoneConnection* connection,
-        int prototypeIndex);
+        s32 prototypeIndex);
     void connectZones();
     bool contains(const TPoint& point) const;
     // Marks every empty cell for border filling, carves paths by random
@@ -1823,15 +1823,15 @@ public:
     void carveBranchingPaths();
     void repairWaterZoneBorders();
     void openConnectionPath(TRmgMapPosition position, b8 narrow);
-    void markBorderObjectArea(TRmgMapPosition position, int color);
-    int placeBorderObject(
-        TRmgMapPosition position, int guardCount, TRmgZone* keyTentZone);
-    type_object* createGuard(int value, TRmgZone* zone);
+    void markBorderObjectArea(TRmgMapPosition position, s32 color);
+    s32 placeBorderObject(
+        TRmgMapPosition position, s32 guardCount, TRmgZone* keyTentZone);
+    type_object* createGuard(s32 value, TRmgZone* zone);
     b8 placeObjectInZone(type_object* object, TRmgZone* zone);
-    void placeGuard(int value, TRmgMapPosition position);
-    int getMineGuardValue(int resource, const TRmgZone* zone) const;
+    void placeGuard(s32 value, TRmgMapPosition position);
+    s32 getMineGuardValue(s32 resource, const TRmgZone* zone) const;
     TRmgObjectPropertiesRef* selectObjectPrototype(
-        int terrain, int objectType, int subtype);
+        s32 terrain, s32 objectType, s32 subtype);
     void resetMovementCosts();
     void buildRoadCostMap(TRmgMapPosition position);
     void createRoads();
@@ -1844,10 +1844,10 @@ public:
     b8 placeQuestGroup(TRmgTreasureGroup* group, TRmgZone* origin);
     // Places a treasure group guarded by a same-colour border guard in another
     // zone; on success that colour stays disabled.
-    b8 placeKeyTentGuard(type_object* object, int targetValue);
+    b8 placeKeyTentGuard(type_object* object, s32 targetValue);
     // Change one colour's availability, then rescan for the first enabled
     // colour (size() when none remain).
-    void setKeyTentColorDisabled(int color, b8 disabled)
+    void setKeyTentColorDisabled(s32 color, b8 disabled)
     {
         m_disabledKeyTents[color] = disabled;
         m_nextKeyTentColor = 0;
@@ -1855,17 +1855,17 @@ public:
             && m_disabledKeyTents[m_nextKeyTentColor])
             ++m_nextKeyTentColor;
     }
-    void setHumanPlayer(int seat);
-    void setTownChoice(int seat, int town);
+    void setHumanPlayer(s32 seat);
+    void setTownChoice(s32 seat, s32 town);
     void removeObject(type_object* object);
     // Paints a road back along the path-cost predecessors.
-    b8 paintRoad(TRmgMapPosition position, int roadType);
+    b8 paintRoad(TRmgMapPosition position, s32 roadType);
     // Runs a river from beside a water wheel to a river target, possibly
     // ending in a river delta.
     void createRiver(TRmgMapPosition source);
     void markRiverObjectTargets();
     void markRiverTargets();
-    void markRiverCoastTarget(TRmgMapPosition position, int direction);
+    void markRiverCoastTarget(TRmgMapPosition position, s32 direction);
     void createRiverToObject(TRmgMapPosition source);
     void createRivers();
     void writeMapHeader(TAbstractFile* outputFile);
@@ -1899,6 +1899,6 @@ SIZE(TRmgRoadPainter, 0x20);
 SIZE(type_random_map_generator, 0x14e0);
 
 // Creature value by level, used to size creature rewards.
-DATA(0x006824E0) extern int g_rmgCreatureValueByLevel[];
+DATA(0x006824E0) extern s32 g_rmgCreatureValueByLevel[];
 
 #endif  // HOMM3_RMG_H

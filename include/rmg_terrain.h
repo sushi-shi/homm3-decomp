@@ -43,9 +43,9 @@ struct rmgTerrainTile {
     b8 m_flipY;
 
     rmgTerrainTile() {}
-    rmgTerrainTile(int newTerrain, int newFrame)
+    rmgTerrainTile(s32 newTerrain, s32 newFrame)
         : m_terrain(newTerrain), m_frame(newFrame), m_flipX(false), m_flipY(false) {}
-    int getFrame() const { return m_frame; }
+    s32 getFrame() const { return m_frame; }
     b8 getFlipX() const { return m_flipX; }
     b8 getFlipY() const { return m_flipY; }
     rmgTerrainTile& operator=(const rmgTerrainTile& other)
@@ -77,17 +77,17 @@ enum TRmgTerrainNeighbourKind {
 // Cached copy of one map tile. Only the validity bit is cleared on construction;
 // the top two bits are never written.
 struct TRmgPackedTerrainCell {
-    unsigned short m_initialized : 1;
-    unsigned short m_terrain : 4;
-    unsigned short m_frame : 7;
-    unsigned short m_flipX : 1;
-    unsigned short m_flipY : 1;
-    unsigned short m_unknown14 : 2;
+    u16 m_initialized : 1;
+    u16 m_terrain : 4;
+    u16 m_frame : 7;
+    u16 m_flipX : 1;
+    u16 m_flipY : 1;
+    u16 m_unknown14 : 2;
 
     TRmgPackedTerrainCell() : m_initialized(false) {}
 
-    inline int getTerrain() const { return m_terrain; }
-    inline int getFrame() const { return m_frame; }
+    inline s32 getTerrain() const { return m_terrain; }
+    inline s32 getFrame() const { return m_frame; }
     inline b8 getFlipX() const { return m_flipX; }
     inline b8 getFlipY() const { return m_flipY; }
     inline rmgTerrainTile getTile() const
@@ -100,8 +100,8 @@ struct TRmgPackedTerrainCell {
         return tile;
     }
     inline void setInitialized() { m_initialized = true; }
-    inline void setTerrain(int value) { m_terrain = value; }
-    inline void setFrame(int value) { m_frame = value; }
+    inline void setTerrain(s32 value) { m_terrain = value; }
+    inline void setFrame(s32 value) { m_frame = value; }
     inline void setFlipX(b8 value) { m_flipX = value; }
     inline void setFlipY(b8 value) { m_flipY = value; }
     // Copies the tile payload; callers mark the cell initialized.
@@ -127,14 +127,14 @@ public:
           m_allowsSeparatedNeighbours(allowsSeparatedNeighbours) {}
     virtual ~TRmgTerrainRule() = 0;
     virtual b8 hasSpecialBaseFrames() = 0;
-    virtual b8 isSpecialFrame(int frame) = 0;
-    virtual int getTransition(int frame) = 0;
-    virtual int selectBaseFrame(int strength, int oldFrame) = 0;
-    virtual int selectTransitionFrame(
-        int transition,
+    virtual b8 isSpecialFrame(s32 frame) = 0;
+    virtual s32 getTransition(s32 frame) = 0;
+    virtual s32 selectBaseFrame(s32 strength, s32 oldFrame) = 0;
+    virtual s32 selectTransitionFrame(
+        s32 transition,
         TRmgTerrainFlip requestedFlip,
         TRmgTerrainFlip& selectedFlip,
-        int oldFrame) = 0;
+        s32 oldFrame) = 0;
 };
 
 struct TRmgTerrainPatternRange {
@@ -177,18 +177,18 @@ public:
     TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT * 2]; // +0x14
 
     TRmgPatternTerrainRule(b8 blendsWithOtherTerrain,
-        b8 allowsSeparatedNeighbours, int specialFrameChance,
+        b8 allowsSeparatedNeighbours, s32 specialFrameChance,
         u32 entryCount, const TRmgTerrainPatternEntry* entries);
 
     virtual b8 hasSpecialBaseFrames();
-    virtual b8 isSpecialFrame(int frame);
-    virtual int getTransition(int frame);
-    virtual int selectBaseFrame(int strength, int oldFrame);
-    virtual int selectTransitionFrame(
-        int transition,
+    virtual b8 isSpecialFrame(s32 frame);
+    virtual s32 getTransition(s32 frame);
+    virtual s32 selectBaseFrame(s32 strength, s32 oldFrame);
+    virtual s32 selectTransitionFrame(
+        s32 transition,
         TRmgTerrainFlip requestedFlip,
         TRmgTerrainFlip& selectedFlip,
-        int oldFrame);
+        s32 oldFrame);
 };
 
 // Stateless rule reading the fixed transition table.
@@ -196,14 +196,14 @@ class TRmgTableTerrainRule : public TRmgTerrainRule {
 public:
     TRmgTableTerrainRule();
     virtual b8 hasSpecialBaseFrames();
-    virtual b8 isSpecialFrame(int frame);
-    virtual int getTransition(int frame);
-    virtual int selectBaseFrame(int strength, int oldFrame);
-    virtual int selectTransitionFrame(
-        int transition,
+    virtual b8 isSpecialFrame(s32 frame);
+    virtual s32 getTransition(s32 frame);
+    virtual s32 selectBaseFrame(s32 strength, s32 oldFrame);
+    virtual s32 selectTransitionFrame(
+        s32 transition,
         TRmgTerrainFlip requestedFlip,
         TRmgTerrainFlip& selectedFlip,
-        int oldFrame);
+        s32 oldFrame);
 };
 
 // Terrain rule per terrain type.
@@ -230,34 +230,34 @@ public:
 
     rmgTerrainPainter(
         TRmgMapInterface* newAdapter,
-        int terrain,
-        int strength);
+        s32 terrain,
+        s32 strength);
     ~rmgTerrainPainter();
 
     void finish();
-    int changeTerrain(int terrain, int strength);
+    s32 changeTerrain(s32 terrain, s32 strength);
     void paintRectangle(
         u32 x, u32 y,
         u32 rectangleWidth, u32 rectangleHeight);
 
     void initializePackedCell(const TRmgGridPoint& point, u32 index);
     TRmgPackedTerrainCell* getPackedCell(const TRmgGridPoint& point);
-    int getTerrain(const TRmgGridPoint& point);
-    int getFrame(const TRmgGridPoint& point);
+    s32 getTerrain(const TRmgGridPoint& point);
+    s32 getFrame(const TRmgGridPoint& point);
     u32 getWidth() const;
     u32 getHeight() const;
     void paintTransitions();
-    int selectBaseFrame(const TRmgGridPoint& point, int terrain, int oldFrame);
+    s32 selectBaseFrame(const TRmgGridPoint& point, s32 terrain, s32 oldFrame);
     void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
     void paintBaseTile(const TRmgGridPoint& point);
-    const int& getPaintTerrain() const;
+    const s32& getPaintTerrain() const;
     b8 isPaintTerrain(const TRmgGridPoint& point);
 
     void paintPoint(const TRmgGridPoint& point);
     void queueOtherTerrainNeighbours(const TRmgGridPoint& point);
     void repairTerrainPoint(const TRmgGridPoint& point);
-    b8 isHorizontalGap(const TRmgGridPoint& point, int terrain);
-    b8 isVerticalGap(const TRmgGridPoint& point, int terrain);
+    b8 isHorizontalGap(const TRmgGridPoint& point, s32 terrain);
+    b8 isVerticalGap(const TRmgGridPoint& point, s32 terrain);
     b8 isHorizontalGap(const TRmgGridPoint& point);
     b8 isVerticalGap(const TRmgGridPoint& point);
     b8 needsTerrainRepair(const TRmgGridPoint& point);
@@ -265,12 +265,12 @@ public:
     void buildMatchingNeighbourMask(
         const TRmgGridPoint& point, b8* matches);
 
-    void buildNeighbourKinds(const TRmgGridPoint& point, int* neighbours);
+    void buildNeighbourKinds(const TRmgGridPoint& point, s32* neighbours);
     b8 isOuterCornerOnDiagonalEdge(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
     b8 isInnerCornerOnDiagonalEdge(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
-    int getSpecialFrameStrength(const TRmgGridPoint& point, int terrain);
+    s32 getSpecialFrameStrength(const TRmgGridPoint& point, s32 terrain);
 };
 
 // Owns a terrain painter for repeated rectangle painting.
@@ -278,9 +278,9 @@ class TRmgTerrainBrush {
 public:
     std::auto_ptr<rmgTerrainPainter> m_painter;
 
-    TRmgTerrainBrush(TRmgMapInterface* map, int terrain, int strength);
+    TRmgTerrainBrush(TRmgMapInterface* map, s32 terrain, s32 strength);
     ~TRmgTerrainBrush();
-    void changeTerrain(int terrain, int strength);
+    void changeTerrain(s32 terrain, s32 strength);
     void paintRectangle(
         u32 x, u32 y,
         u32 rectangleWidth, u32 rectangleHeight);

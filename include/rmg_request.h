@@ -36,11 +36,11 @@ public:
     // Map format 0/1/2, using the EGameVersion ordinals.
     s32 m_mapVersion;                 // +0x4c
 
-    TRandomMapRequest(int width, int height, int levels);
+    TRandomMapRequest(s32 width, s32 height, s32 levels);
     // The optional progress sink is borrowed. generateToFile changes both
     // player counts to one when their sum is below two, even on later failure.
-    int generate(const char* fileName, TProgressSink* progress);
-    int generateToFile(TAbstractFile* outputFile, TProgressSink* progress);
+    s32 generate(const char* fileName, TProgressSink* progress);
+    s32 generateToFile(TAbstractFile* outputFile, TProgressSink* progress);
 };
 SIZE(TRandomMapRequest, 0x50);
 

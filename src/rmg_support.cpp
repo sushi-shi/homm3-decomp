@@ -17,10 +17,10 @@ TRmgLinePainterInterface::TRmgLinePainterInterface(const TRmgGridPoint& size)
 
 VA(0x004F9BE0, 0xB7)
 MAC_ADDRESS(0x22210c, 0x1ec)
-TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const int* framePatterns)
+TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const s32* framePatterns)
     : m_frameCount(frameCount), m_framePatterns(0)
 {
-    int* allocated = new int[m_frameCount];
+    s32* allocated = new s32[m_frameCount];
     m_framePatterns = allocated;
     if (!allocated)
         throw TAllocationFailure();
@@ -31,7 +31,7 @@ TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const int* framePatte
     }
     // Expects a nonempty, unvalidated list of ids 0..8 with each id's frames
     // contiguous.
-    int runPattern = m_framePatterns[0];
+    s32 runPattern = m_framePatterns[0];
     ++m_ranges[runPattern].m_frameCount;
     for (u32 index = 1; index < m_frameCount; ++index) {
         if (m_framePatterns[index] != runPattern) {
@@ -71,7 +71,7 @@ VA(0x004F9CB0, 0x24E)
 MAC_ADDRESS(0x222498, 0x2a4)
 void selectRmgLinePattern(
     const b8* neighbours, const TRmgLinePatternTable* table,
-    int& pattern, b8& flipX, b8& flipY)
+    s32& pattern, b8& flipX, b8& flipY)
 {
     if (neighbours[TILE_DIR_NORTH] && neighbours[TILE_DIR_EAST]
         && neighbours[TILE_DIR_SOUTH] && neighbours[TILE_DIR_WEST]) {
@@ -111,7 +111,7 @@ void selectRmgLinePattern(
     b8 hasCornerVariant = table->m_ranges[LINE_SE_VARIANT].m_frameCount > 0;
     const u32 reflectionCount = sizeof(g_rmgLineReflections) / sizeof(g_rmgLineReflections[0]);
     for (u32 reflection = 0; reflection < reflectionCount; ++reflection) {
-        const int* order = g_rmgLineReflectedNeighbours
+        const s32* order = g_rmgLineReflectedNeighbours
             [g_rmgLineReflections[reflection][0]][g_rmgLineReflections[reflection][1]];
         if (neighbours[order[TILE_DIR_EAST]] && neighbours[order[TILE_DIR_SOUTH]]) {
             if (hasCornerVariant && (neighbours[order[TILE_DIR_NORTHEAST]]
@@ -151,7 +151,7 @@ TRmgRiverPainter::~TRmgRiverPainter()
 // All river types use the same pattern table, so the argument is ignored.
 VA(0x0055EDB0, 0x08)
 MAC_ADDRESS(0x253ad8, 0x8)
-TRmgLinePatternTable* TRmgRiverLinePainter::getPattern(int)
+TRmgLinePatternTable* TRmgRiverLinePainter::getPattern(s32)
 {
     return &g_rmgRiverPatternTable;
 }
@@ -179,7 +179,7 @@ template<class Adapter>
 static inline b32 isRmgLinePaintingBlocked(Adapter* adapter,
     const TRmgGridPoint& point)
 {
-    int terrain = adapter->getTerrain(point);
+    s32 terrain = adapter->getTerrain(point);
     return terrain == eTerrainWater || terrain == eTerrainRock;
 }
 
@@ -191,7 +191,7 @@ void TRmgRiverLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainT
 }
 
 MAC_ADDRESS(0x253b34, 0x30)
-void TRmgRiverLinePainter::setLineType(const TRmgGridPoint& point, int value)
+void TRmgRiverLinePainter::setLineType(const TRmgGridPoint& point, s32 value)
 {
     m_adapter->setLineType(point, value);
 }
@@ -211,7 +211,7 @@ b32 TRmgRiverLinePainter::isBlocked(const TRmgGridPoint& point)
 
 VA(0x0055EE30, 0x13)
 MAC_ADDRESS(0x253c30, 0x30)
-int TRmgRiverLinePainter::getLineType(const TRmgGridPoint& point)
+s32 TRmgRiverLinePainter::getLineType(const TRmgGridPoint& point)
 {
     return m_adapter->getLineType(point);
 }
@@ -220,7 +220,7 @@ VA(0x0055EE50, 0x76)
 MAC_ADDRESS(0x253c60, 0x6c)
 TRmgRiverPainter::TRmgRiverPainter(
     TRmgRiverMapAdapterInterface* newAdapter,
-    int newRiverType,
+    s32 newRiverType,
     const TRmgGridPoint& newStart)
     : TRmgRiverLinePainter(newAdapter),
       TRmgLineWalker(this, newRiverType, newStart)
@@ -231,7 +231,7 @@ VA_COMPGEN(0x0055EED0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverPainter)
 
 VA(0x0055F320, 0x08)
 MAC_ADDRESS(0x253fc0, 0x8)
-TRmgLinePatternTable* TRmgRoadLinePainter::getPattern(int)
+TRmgLinePatternTable* TRmgRoadLinePainter::getPattern(s32)
 {
     return &g_rmgRoadPatternTable;
 }
@@ -250,7 +250,7 @@ b32 TRmgRoadLinePainter::isBlocked(const TRmgGridPoint& point)
 
 VA(0x0055F330, 0x17)
 MAC_ADDRESS(0x25401c, 0x30)
-void TRmgRoadLinePainter::setLineType(const TRmgGridPoint& point, int value)
+void TRmgRoadLinePainter::setLineType(const TRmgGridPoint& point, s32 value)
 {
     m_adapter->setLineType(point, value);
 }
@@ -264,7 +264,7 @@ void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& ti
 
 VA(0x0055F390, 0x13)
 MAC_ADDRESS(0x254118, 0x30)
-int TRmgRoadLinePainter::getLineType(const TRmgGridPoint& point)
+s32 TRmgRoadLinePainter::getLineType(const TRmgGridPoint& point)
 {
     return m_adapter->getLineType(point);
 }
@@ -273,7 +273,7 @@ VA(0x0055F3B0, 0x76)
 MAC_ADDRESS(0x254148, 0x6c)
 TRmgRoadPainter::TRmgRoadPainter(
     TRmgRoadMapAdapterInterface* newAdapter,
-    int newRoadType,
+    s32 newRoadType,
     const TRmgGridPoint& newStart)
     : TRmgRoadLinePainter(newAdapter),
       TRmgLineWalker(this, newRoadType, newStart)
@@ -290,10 +290,10 @@ TRmgRoadPainter::~TRmgRoadPainter()
 
 VA(0x005FCEB0, 0x39)
 MAC_ADDRESS(0x25c018, 0x64)
-int TRmgVector::length() const
+s32 TRmgVector::length() const
 {
     // The squared norm is 32-bit and may overflow; the root is truncated.
-    return static_cast<int>(sqrt(static_cast<double>(getRmgSquaredNorm(m_x, m_y))));
+    return static_cast<s32>(sqrt(static_cast<double>(getRmgSquaredNorm(m_x, m_y))));
 }
 
 MAC_ADDRESS(0x25c164, 0x20)
@@ -368,7 +368,7 @@ VA(0x005FD330, 0x58)
 MAC_ADDRESS(0x25c6b4, 0xa4)
 TRmgVoronoi::~TRmgVoronoi()
 {
-    for (int edge = 0; edge < m_edges.size(); ++edge)
+    for (s32 edge = 0; edge < m_edges.size(); ++edge)
         delete m_edges[edge];
 }
 
@@ -422,12 +422,12 @@ void TRmgVoronoi::removeEdge(TRmgHalfEdge* edge)
 // Integer forms of Graphics Gems IV's ccw/RightOf predicates; see
 // docs/reference/rmg-voronoi-provenance.md.
 MAC_ADDRESS(0x25c304, 0x68)
-static int isRmgCounterClockwise(TPoint first, TPoint second, TPoint third)
+static s32 isRmgCounterClockwise(TPoint first, TPoint second, TPoint third)
 {
     return getRmgPointOrientation(first, second, third) > 0;
 }
 
-static int isRmgPointRightOfEdge(TPoint point, TRmgHalfEdge* edge)
+static s32 isRmgPointRightOfEdge(TPoint point, TRmgHalfEdge* edge)
 {
     TRmgHalfEdge* twin = edge->m_twin;
     return isRmgCounterClockwise(edge->m_sitePosition, point, twin->m_sitePosition);
@@ -504,16 +504,16 @@ static void flipRmgEdge(TRmgHalfEdge* edge)
 static b8 isRmgPointOnSegment(TPoint point, TRmgHalfEdge* edge)
 {
     TPoint opposite = edge->getOppositeSitePosition();
-    int distanceToOriginSquared = getRmgSquaredDistance(point, edge->getSitePosition());
-    int distanceToDestinationSquared = getRmgSquaredDistance(point, opposite);
-    int edgeLengthSquared = getRmgSquaredDistance(edge->getSitePosition(), opposite);
+    s32 distanceToOriginSquared = getRmgSquaredDistance(point, edge->getSitePosition());
+    s32 distanceToDestinationSquared = getRmgSquaredDistance(point, opposite);
+    s32 edgeLengthSquared = getRmgSquaredDistance(edge->getSitePosition(), opposite);
     if (distanceToOriginSquared > edgeLengthSquared
         || distanceToDestinationSquared > edgeLengthSquared)
         return false;
     const TPoint& origin = edge->m_sitePosition;
-    int deltaX = opposite.m_x - origin.m_x;
-    int deltaY = opposite.m_y - origin.m_y;
-    int lineConstant = -(deltaY * origin.m_x - deltaX * origin.m_y);
+    s32 deltaX = opposite.m_x - origin.m_x;
+    s32 deltaY = opposite.m_y - origin.m_y;
+    s32 lineConstant = -(deltaY * origin.m_x - deltaX * origin.m_y);
     return deltaY * point.m_x - deltaX * point.m_y + lineConstant == 0;
 }
 
@@ -525,10 +525,10 @@ static b8 isRmgPointInsideCircumcircle(TPoint first, TPoint second,
 {
     // Squared norms and orientations are 32-bit before the 64-bit products,
     // so large coordinates overflow.
-    int firstArea = getRmgPointOrientation(second, third, point);
-    int secondArea = getRmgPointOrientation(first, third, point);
-    int thirdArea = getRmgPointOrientation(first, second, point);
-    int pointArea = getRmgPointOrientation(first, second, third);
+    s32 firstArea = getRmgPointOrientation(second, third, point);
+    s32 secondArea = getRmgPointOrientation(first, third, point);
+    s32 thirdArea = getRmgPointOrientation(first, second, point);
+    s32 pointArea = getRmgPointOrientation(first, second, third);
     s64 determinant = static_cast<s64>(getRmgSquaredNorm(third.m_x, third.m_y)) * thirdArea
         - static_cast<s64>(getRmgSquaredNorm(second.m_x, second.m_y)) * secondArea
         + static_cast<s64>(getRmgSquaredNorm(first.m_x, first.m_y)) * firstArea
@@ -578,7 +578,7 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 
 VA(0x005FDAE0, 0x2B)
 MAC_ADDRESS(0x25c2b4, 0x50)
-int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
+s32 getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
 {
     // Signed twice-area; positive means counterclockwise.
     return (second.m_x - first.m_x) * (third.m_y - first.m_y)
