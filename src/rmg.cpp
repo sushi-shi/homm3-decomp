@@ -343,6 +343,18 @@ double g_rmgDirectionSines[RMG_RADIAL_DIRECTION_COUNT] = {
     -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951
 };
 
+// Keymaster's tent and border guard colours (their object subtypes).
+enum ERmgKeyColor {
+    RMG_KEY_LIGHT_BLUE = 0,
+    RMG_KEY_GREEN = 1,
+    RMG_KEY_RED = 2,
+    RMG_KEY_DARK_BLUE = 3,
+    RMG_KEY_BROWN = 4,
+    RMG_KEY_PURPLE = 5,
+    RMG_KEY_WHITE = 6,
+    RMG_KEY_BLACK = 7
+};
+
 // Guard strengths: the zone scale (ERmgZoneMonsterStrength) shifted by the
 // map strength, from 0 up to the strongest.
 enum ERmgGuardStrengthLimits {
@@ -2796,11 +2808,8 @@ s32 TRmgGeneratorBase::scoreObjectPlacement(
                 if (item->hasPathClearance())
                     return RMG_PLACEMENT_INVALID;
 
-                // Retail bug: this replaces the OVERLAP and BLOCKED marks just
-                // set, and BLOCKED is set nowhere else. Blocked cells therefore
-                // never take the overlap-order or blocked-score paths below:
-                // objects under them count only as adjacent, and rand_trn.txt's
-                // blocked scores are never used.
+                // Retail bug: overwrites the OVERLAP/BLOCKED marks just set, so
+                // rand_trn.txt's blocked scores are never used.
                 marks[column + 1][row + 1] = RMG_PLACEMENT_ADJACENT;
                 terrainSeen[item->getLandType()] = true;
                 s32 firstRow = position.m_y - min(y + 1, m_map.m_mapHeight) + 1;
@@ -3089,8 +3098,8 @@ type_random_map_generator::type_random_map_generator(
 {
     m_nextObjectId = 1;
 #if defined(HOMM3_RMG_HOTFIX)
-    // First key-tent colour is 0, not stack residue.
-    m_nextKeyTentColor = 0;
+    // Key tents start at the first colour, not stack residue.
+    m_nextKeyTentColor = RMG_KEY_LIGHT_BLUE;
 #endif
     m_questArtifactPoolLow = false;
     m_waterContent = static_cast<ERmgWaterContent>(waterContent);
@@ -3366,9 +3375,8 @@ void readRmgTemplateZones(
                     templateZone->m_allowedMonsters[monster] =
                         isRmgTemplateFieldSet(
                             values[RMG_TEMPLATE_COLUMN_ALLOWED_MONSTERS + monster]);
-                // Retail bug: TOWN_CONFLUX is the Conflux slot of m_allowedTowns,
-                // but monster slots are offset by one, so RoE maps disallow
-                // Fortress guards instead.
+                // Retail bug: monster slots are offset by one, so this disallows
+                // Fortress guards, not Conflux.
                 if (mapVersion < RMG_MAP_ARMAGEDDONS_BLADE)
                     templateZone->m_allowedMonsters[TOWN_CONFLUX] = false;
                 for (s32 treasure = 0; treasure < 3; ++treasure) {
@@ -4527,11 +4535,8 @@ void type_random_map_generator::buildZoneBoundaries(
     }
     s32 originalZones = m_zones.size();
     if (level == RMG_UNDERGROUND_LEVEL || m_waterContent != RMG_WATER_NONE) {
-        // Retail bug: testSlot's town flags are never initialized. Retail
-        // finds stale CRT heap-call frames there (return addresses, heap
-        // block sizes) left by initializeZones, never all zero, so testZone's
-        // constructor always draws a town with one rand(). A junction ignores
-        // its town; allowing every town keeps the draw without the stack read.
+        // Retail bug: testSlot's town flags are uninitialized stack, nonzero in
+        // practice, so one unused town is drawn. All true keeps that rand().
         TRmgTemplateZone testSlot;
         testSlot.m_zoneIndex = RMG_NO_ZONE;
         testSlot.m_kind = RMG_TEMPLATE_JUNCTION;
@@ -4565,10 +4570,8 @@ void type_random_map_generator::buildZoneBoundaries(
                 if (!canPlaceZone(&testZone))
                     continue;
                 if (position.m_z == RMG_SURFACE_LEVEL) {
-                    // Retail bug: m_allowedTowns is never written, so the zone
-                    // constructor draws a town from reused heap bytes, which are
-                    // nonzero in practice. Allowing every town keeps that one
-                    // rand() draw without reading the heap; the town is unused.
+                    // Retail bug: m_allowedTowns is uninitialized heap, nonzero in
+                    // practice, so one unused town is drawn. All true keeps that rand().
                     TRmgTemplateZone* templateZone = new TRmgTemplateZone;
 #if defined(HOMM3_RMG_HOTFIX)
                     // A water zone has no town; its other unwritten flags are cleared too.
