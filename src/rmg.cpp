@@ -2904,8 +2904,19 @@ void TRmgGeneratorBase::addObject(type_object* object, TRmgMapPosition position)
     m_objects.push_back(object);
 }
 
+// Expansion decoration object types; the shared object type enum has no
+// enumerators for them.
+enum ERmgExpansionDecorationType {
+    RMG_OBJECT_DESERT_HILLS        = 206,
+    RMG_OBJECT_DIRT_HILLS          = 207,
+    RMG_OBJECT_GRASS_HILLS         = 208,
+    RMG_OBJECT_ROUGH_HILLS         = 209,
+    RMG_OBJECT_SUBTERRANEAN_ROCKS  = 210,
+    RMG_OBJECT_SWAMP_FOLIAGE       = 211
+};
+
 // Decoration (obstacle) object types, excluding holes, rivers and roads.
-// The last six are unnamed expansion types, unavailable on RoE maps.
+// The last six are expansion types, unavailable on RoE maps.
 DATA(0x006408ec)
 static const s32 g_rmgDecorationTypes[45] = {
     TERRAIN_BRUSH, TERRAIN_BUSH, TERRAIN_CACTUS, TERRAIN_CANYON,
@@ -2918,7 +2929,9 @@ static const s32 g_rmgDecorationTypes[45] = {
     TERRAIN_SAND_PIT, TERRAIN_SHRUB, TERRAIN_SKULL, TERRAIN_STALAGMITE,
     TERRAIN_STUMP, TERRAIN_TAR_PIT, TERRAIN_TREE, TERRAIN_VINE,
     TERRAIN_VOLCANIC_VENT, TERRAIN_VOLCANO, TERRAIN_WILLOW_TREE,
-    TERRAIN_YUCCA_TREE, TERRAIN_REEF, 206, 207, 208, 209, 210, 211
+    TERRAIN_YUCCA_TREE, TERRAIN_REEF, RMG_OBJECT_DESERT_HILLS,
+    RMG_OBJECT_DIRT_HILLS, RMG_OBJECT_GRASS_HILLS, RMG_OBJECT_ROUGH_HILLS,
+    RMG_OBJECT_SUBTERRANEAN_ROCKS, RMG_OBJECT_SWAMP_FOLIAGE
 };
 
 // Fills obstacles outward from a cell with weighted random decorations.
@@ -8193,6 +8206,9 @@ enum ERmgArtifactCount {
     RMG_AB_ARTIFACT_COUNT = ARTIFACT_ANGELIC_ALLIANCE
 };
 
+// The shared artifact enum has no enumerator for the Vial of Dragon Blood.
+static const s32 g_rmgArtifactVialOfDragonBlood = 127;
+
 // Each player clause in the map description appends a separator, the player
 // colour and the clause text, using unchecked strcat.
 static inline void appendRmgPlayerDescription(char* description, s32 player,
@@ -8444,14 +8460,15 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
     writeRmgReservedBytes(outfile, 31);
 
-    // Combination artifacts, artifact 127 and Armageddon's Blade are disabled.
+    // Combination artifacts, the Vial of Dragon Blood and Armageddon's Blade
+    // are disabled.
     std::bitset<ARTIFACT_COUNT> disabledArtifacts;
     for (s32 artifactIndex = ARTIFACT_SPELLBOOK; artifactIndex < ARTIFACT_COUNT; ++artifactIndex) {
         disabledArtifacts[artifactIndex] =
             g_artifactTraits[artifactIndex].m_comboType != -1;
     }
     disabledArtifacts.set(ARTIFACT_ARMAGEDDONS_BLADE);
-    disabledArtifacts.set(127);
+    disabledArtifacts.set(g_rmgArtifactVialOfDragonBlood);
 
     if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
         writePackedBits(outfile, disabledArtifacts);
