@@ -2341,7 +2341,7 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
     TRmgObjectPropertiesRef* guardProperties = guard->m_properties;
     for (u32 index = m_outline.size(); index--;) {
         TPoint point = m_outline[index];
-        TRmgMapPosition position(point.m_x, point.m_y, 0);
+        TRmgMapPosition position(point.m_x, point.m_y, RMG_SURFACE_LEVEL);
         if (!m_map.getMapItem(point.m_x, point.m_y)->hasObstacleFill()
             || !canFitObject(guardProperties, position))
             m_outline.erase(m_outline.begin() + index);
