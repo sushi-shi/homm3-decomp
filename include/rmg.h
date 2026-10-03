@@ -676,7 +676,7 @@ struct TRmgGroundTileData {
     // River painted here, or a mountain, lake or gem-mine cell rivers flow to.
     unsigned m_hasRiver : 1;
     unsigned m_riverTarget : 1;
-    // On or beside a painted river; coast-bound rivers may not enter it.
+    // On or beside a painted river; createRiver's search may not enter it.
     unsigned m_nearRiver : 1;
 };
 
@@ -1836,9 +1836,9 @@ public:
     void resetMovementCosts();
     void buildRoadCostMap(TRmgMapPosition position);
     void createRoads();
-    // Picks an unused quest artifact and places its seer hut in another zone,
-    // handing the hut to the map; if the hut cannot be placed, the artifact
-    // is replaced by a treasure.
+    // Picks an unused quest artifact, turns the object into it and places its
+    // seer hut in another zone, handing the hut to the map; if the hut cannot
+    // be placed, the artifact is replaced by a treasure.
     b8 placeQuestArtifact(rmgQuestArtifactObject* object);
     void calculateQuestZoneDistances(TRmgZone* origin);
     b8 placeQuestGroup(TRmgTreasureGroup* group, TRmgZone* origin);

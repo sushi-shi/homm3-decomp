@@ -2320,7 +2320,9 @@ placementFailure:
     return true;
 }
 
-// Places an object at a random fitting cell beside an existing entrance.
+// Puts the object's entrance on a random fitting cell next to an existing
+// entrance: one of the three below it, or any of the eight when that entrance
+// is open to the north.
 VA(0x00535970, 0x240)
 MAC_ADDRESS(0x233a44, 0x2d4)
 b8 TRmgTreasureGroup::tryAddObject(type_object* object)
@@ -7462,8 +7464,8 @@ static inline void selectRmgRiverAppearance(const TRmgMapItem* source,
 }
 
 // Rivers stay on dry, non-rock terrain and cannot cross the snow boundary.
-// Object and coast searches share this terrain rule; only the coast search
-// also rejects cells beside rivers and restricted approach directions.
+// Both river searches share this terrain rule; only createRiver also rejects
+// cells beside rivers and blocked approach directions.
 static inline bool isRmgRiverTerrain(const TRmgMapItem* item, b8 sourceIsSnow)
 {
     return item->getLandType() != eTerrainWater
@@ -7472,8 +7474,8 @@ static inline bool isRmgRiverTerrain(const TRmgMapItem* item, b8 sourceIsSnow)
 }
 
 // Random edge costs are drawn on each neighbour visit, even without an
-// improvement. Unlike coast-bound rivers, this search ignores near-river
-// and direction flags.
+// improvement. Unlike createRiver, this search ignores near-river and
+// blocked-direction flags.
 VA(0x00548500, 0x533)
 MAC_ADDRESS(0x24c8ac, 0x588)
 void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
@@ -7555,7 +7557,9 @@ static inline TRmgMapItem* getRmgDryRiverCoastCell(
 }
 
 // Test three water cells, three dry entrance-free cells, then four inland
-// cells; the last inland cell receives the target.
+// cells. The last inland cell becomes a river target whose blocked bit
+// faces the coast: rivers cannot arrive from there, and createRiver puts
+// its delta on that side.
 VA(0x00548A40, 0x222)
 MAC_ADDRESS(0x24ce88, 0x404)
 void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, int direction)
