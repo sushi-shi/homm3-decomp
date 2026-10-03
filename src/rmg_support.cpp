@@ -49,8 +49,13 @@ TRmgLinePatternTable::~TRmgLinePatternTable()
     delete[] m_framePatterns;
 }
 
-// Neighbour direction order for each (flipX, flipY) reflection.
-// Same values as g_rmgReflectedNeighbours, sketched in rmg_terrain.cpp.
+// Neighbour direction order for each (flipX, flipY) reflection; the same
+// values as g_rmgReflectedNeighbours. North is up; each grid puts order[d],
+// a TILE_DIR_* index, at canonical direction d.
+//   none   flipY  flipX  both
+//   7 0 1  5 4 3  1 0 7  3 4 5
+//   6 . 2  6 . 2  2 . 6  2 . 6
+//   5 4 3  7 0 1  3 4 5  1 0 7
 DATA(0x0063FE9C)
 static const s32 g_rmgLineReflectedNeighbours[2][2][8] = {
     {
@@ -67,6 +72,8 @@ static const s32 g_rmgLineReflectedNeighbours[2][2][8] = {
     }
 };
 
+// Reflections tried for corner shapes, as {flipX, flipY}: none, flipY, flipX,
+// then both.
 DATA(0x0063FF1C)
 static const b8 g_rmgLineReflections[4][2] = {
     {false, false}, {false, true}, {true, false}, {true, true}
@@ -354,6 +361,13 @@ void TRmgHalfEdge::detach()
     m_twin->splice(twinPrevious);
 }
 
+// Starts as a large square split by a diagonal. North is up (y down); 1-4 are
+// firstEdge..fourthEdge and 5 the connectEdges diagonal from first to third.
+//   first --1--> second
+//     ^  \         |
+//     4    5       2
+//     |      \     v
+//   fourth <-3-- third
 VA(0x005FD010, 0x316)
 MAC_ADDRESS(0x25c4e4, 0x14c)
 TRmgVoronoi::TRmgVoronoi()

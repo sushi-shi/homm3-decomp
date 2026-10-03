@@ -643,6 +643,10 @@ struct TRmgGroundTile {
 
 struct TRmgGroundTileData {
     s32 m_roadFrame : 8;
+    // Bit k bars a river from entering through side k. North is up:
+    //     3
+    //   2 . 0
+    //     1
     u32 m_blockedDirections : 4;
     u32 m_connectionDirection : 3;
     // Sprite reflections of the terrain, river and road layers.

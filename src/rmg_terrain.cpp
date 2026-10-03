@@ -140,6 +140,11 @@ static inline void refreshRmgLineBorderRow(TRmgLinePainterInterface* painter,
         refreshExistingRmgLinePoint(painter, point);
 }
 
+// Clears the rectangle, then refreshes the line tiles around it. North is up;
+// # is the rectangle, digits the order in which its sides are refreshed.
+//   1 3 3 3 2
+//   1 # # # 2
+//   1 4 4 4 2
 VA(0x004FA080, 0x1FB)
 MAC_ADDRESS(0x2228b8, 0x388)
 void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRectangle& rectangle)
@@ -1147,6 +1152,10 @@ void rmgTerrainPainter::paintTransitions()
 
     // Each cell counts its boundaries toward the neighbours that follow it
     // in scan order (E, SE, S and SW), so every boundary is counted once.
+    // North is up; C counts its boundary with each o.
+    //   . . .
+    //   . C o
+    //   o o o
     for (point.setY(0); point.m_y < getHeight(); point.setY(point.getY() + 1)) {
         for (point.setX(0); point.m_x < getWidth(); point.setX(point.getX() + 1)) {
             s32 terrain = getTerrain(point);
@@ -1294,6 +1303,10 @@ static inline bool advanceToMatchState(const b8* matches, u32& direction,
 
 // Starting in a gap, a matching run, another gap and another match before
 // returning to the start prove that the centre's neighbours are separated.
+// For example, North is up; # matches the centre C's terrain, . does not.
+//   . # .
+//   . C .
+//   . # .
 VA(0x005B6810, 0x84)
 MAC_ADDRESS(0x2587f4, 0xd0)
 b8 rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
@@ -1381,10 +1394,10 @@ b8 rmgTerrainPainter::isOuterCornerOnDiagonalEdge(
     VA_COMPGEN(0x005b6df0, 0x1, STATIC_DTOR, firstDiagonalOffsets)
     DATA(0x006A5260)
     static TPoint firstDiagonalOffsets[4][2] = {
-        { TPoint(-1, 1), TPoint(1, -1) },
-        { TPoint(1, 1), TPoint(-1, -1) },
-        { TPoint(-1, -1), TPoint(1, 1) },
-        { TPoint(1, -1), TPoint(-1, 1) }
+        { TPoint(-1, 1), TPoint(1, -1) },  // none: SW, NE
+        { TPoint(1, 1), TPoint(-1, -1) },  // flipX: SE, NW
+        { TPoint(-1, -1), TPoint(1, 1) },  // flipY: NW, SE
+        { TPoint(1, -1), TPoint(-1, 1) }   // both: NE, SW
     };
     s32 terrain = getTerrain(point);
     const TPoint* pair = firstDiagonalOffsets[getTerrainFlipIndex(flip)];
@@ -1409,7 +1422,7 @@ b8 rmgTerrainPainter::isInnerCornerOnDiagonalEdge(
     VA_COMPGEN(0x005b6fc0, 0x1, STATIC_DTOR, secondDiagonalOffsets)
     DATA(0x006A3D68)
     static TPoint secondDiagonalOffsets[4] = {
-        TPoint(2, 2), TPoint(-2, 2), TPoint(2, -2), TPoint(-2, -2)
+        TPoint(2, 2), TPoint(-2, 2), TPoint(2, -2), TPoint(-2, -2) // none, flipX, flipY, both
     };
     s32 terrain = getTerrain(point);
     const TPoint& offset = secondDiagonalOffsets[getTerrainFlipIndex(flip)];
@@ -1569,6 +1582,16 @@ bool operator<(const TRmgCoordinatePoint<Coordinate>& left,
 }
 
 // Terrain frame tables and the per-terrain rules built from them.
+// Rock's fixed frames, as {shape, flipX, flipY}. The flips are drawn into the
+// art, so each reflection has its own frames and no sprite flip. A flip
+// mirrors the canonical shape; North is up and e is an edge, here for N_W:
+//   none   flipX  flipY  both
+//   . e .  . e .  . . .  . . .
+//   e C .  . C e  e C .  . C e
+//   . . .  . . .  . e .  . e .
+// Frames: 0-7 base, then two per shape and flip, all hard: N_W 8-15 (none,
+// flipX, flipY, both), W 16-19 (none, flipX), N 20-23 (none, flipY),
+// SE 24-31, N_W_DIAG 32-39 and SE_DIAG 40-47.
 DATA(0x006424A8)
 const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[RMG_FIXED_TRANSITION_FRAME_COUNT] = {
     {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false},
@@ -1594,6 +1617,13 @@ const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[RMG_FIXED_TRANSITION_FRAME
     {SHAPE_SE_DIAG_HARD, true, true}, {SHAPE_SE_DIAG_HARD, true, true},
 };
 
+// Pattern-rule frames, as {shape, special}. Special frames are decorated
+// base (shape 0) frames drawn at the rule's chance. These frames show the
+// canonical shapes, and the sprite flips reflect them.
+// Land (grass, snow, swamp, rough, subterranean, lava): blend N_W 0-3,
+// W 4-7, N 8-11, SE 12-15, N_W_DIAG 16-17, SE_DIAG 18-19; the same hard at
+// 20-39; shapes 14-22 at 40-48; base 49-56, special 57-72; shapes 23-26, 28
+// and 27 at 73-78.
 DATA(0x00642628)
 static const TRmgTerrainPatternEntry g_rmgLandPatternEntries[79] = {
     {SHAPE_N_W_BLEND, false}, {SHAPE_N_W_BLEND, false}, {SHAPE_N_W_BLEND, false},
@@ -1624,6 +1654,8 @@ static const TRmgTerrainPatternEntry g_rmgLandPatternEntries[79] = {
     {SHAPE_E_S_BLEND_SE_HARD, false},
 };
 
+// Dirt: hard N_W 0-3, W 4-7, N 8-11, SE 12-15, N_W_DIAG 16-17, SE_DIAG
+// 18-19, NW_SE 20; base 21-28, special 29-44; N_W_SE 45.
 DATA(0x006428A0)
 static const TRmgTerrainPatternEntry g_rmgDirtPatternEntries[46] = {
     {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false},
@@ -1642,6 +1674,7 @@ static const TRmgTerrainPatternEntry g_rmgDirtPatternEntries[46] = {
     {SHAPE_N_W_SE_HARD, false},
 };
 
+// Sand draws no transitions: base 0-7, special 8-23.
 DATA(0x00642A10)
 static const TRmgTerrainPatternEntry g_rmgSandPatternEntries[24] = {
     {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
@@ -1652,6 +1685,7 @@ static const TRmgTerrainPatternEntry g_rmgSandPatternEntries[24] = {
     {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
 };
 
+// Water: dirt's hard frames 0-20, then base 21-32.
 DATA(0x00642AD0)
 static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] = {
     {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false},
@@ -1666,6 +1700,8 @@ static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] = {
     {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
 };
 
+// Rule arguments: blends with other terrain, allows separated neighbours,
+// special-frame chance (percent at strength 8), frame count and frames.
 DATA(0x006A48D0)
 static TRmgPatternTerrainRule g_rmgDirtRule(true, true, 50, 46, g_rmgDirtPatternEntries);
 

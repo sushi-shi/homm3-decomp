@@ -267,6 +267,8 @@ TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
     TPoint(1, 1)
 };
 
+// River-delta prototype for each coast side (east, south, west, north), for
+// land and then snow rivers: the nth delta recommended for the end's terrain.
 DATA(0x006409A0)
 static const s32 g_landRiverDeltaIndex[4] = {2, 0, 3, 1};
 
@@ -309,7 +311,12 @@ enum ERmgRadialDirectionLimits {
     RMG_RADIAL_DIRECTION_COUNT = 32
 };
 
-// Radial directions used by the placement and boundary passes.
+// Radial directions used by the placement and boundary passes. Direction k
+// lies k * 11.25 degrees from east; y grows southward, so k turns clockwise.
+// North is up:
+//         24
+//   16     .     0
+//          8
 DATA(0x00682500)
 double g_rmgDirectionCosines[RMG_RADIAL_DIRECTION_COUNT] = {
     1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
@@ -2764,6 +2771,13 @@ s32 TRmgGeneratorBase::scoreObjectPlacement(
     memset(terrainSeen, 0, sizeof(terrainSeen));
     // The 8x6 footprint plus a one-cell border; footprint cell (column, row)
     // is marks[column + 1][row + 1].
+    // marks[c][r] lies at P + (1 - c, 1 - r): c grows west, r north. North is
+    // up; a 3x2 footprint #, its position P (marks[1][1]) and the border o:
+    //   c: 4 3 2 1 0
+    //      o o o o o  r = 3
+    //      o # # # o  r = 2
+    //      o # # P o  r = 1
+    //      o o o o o  r = 0
     u32 marks[8 + 2][6 + 2];
     memset(marks, 0, sizeof(marks));
     for (u32 row = 0; row < prototype->getHeight(); ++row) {
@@ -2944,6 +2958,11 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition start, s32 progressSteps
                 // available in m_mapVersion. Retail repeats the test.
                 if (!isRmgObjectAvailableInVersion(prototype->getObjectType(), m_mapVersion))
                     continue;
+                // Candidate anchors put the start cell S under each blocked
+                // footprint cell in turn. For a 3x2 object they are S and each
+                // o; North is up:
+                //   S o o
+                //   o o o
                 TRmgZoneBounds bounds;
                 bounds.m_minimumX = position.m_x;
                 bounds.m_minimumY = position.m_y;
@@ -4078,6 +4097,9 @@ void type_random_map_generator::traceZoneBoundary(
                 vertex = next;
             }
             // Follow the map border clockwise, one corner at a time.
+            // North is up:  upperLeft -> upperRight
+            //                   ^             v
+            //               lowerLeft <- lowerRight
             while (from.m_x != to.m_x && from.m_y != to.m_y) {
                 TPoint corner;
                 if (from.m_x == upperLeft.m_x && from != upperLeft)
@@ -5841,6 +5863,10 @@ MAC_ADDRESS(0x245870, 0x364)
 b8 type_random_map_generator::placeMonolithBorder(
     TRmgMapPosition position, TRmgZone* keyTentZone)
 {
+    // North is up; digits are offset indices (probe order) around the
+    // portal position P.
+    //   2 P 1
+    //   4 0 3
     TPoint offsets[5] = {
         TPoint(0, 1), TPoint(1, 0), TPoint(-1, 0), TPoint(1, 1), TPoint(-1, 1)
     };
@@ -7322,6 +7348,13 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     return true;
 }
 
+// A candidate position is where the group map's origin O lands, so group cell
+// g goes to position + g. Its occupied bounds (#) must fit the zone bounds,
+// and spacing is read at their centre c. North is up:
+//   O . . . . .
+//   . . # # # .
+//   . . # c # .
+//   . . # # # .
 VA(0x005470D0, 0x286)
 MAC_ADDRESS(0x24b3d8, 0x310)
 b8 type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
@@ -7907,10 +7940,10 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
         VA_COMPGEN(0x00549790, 0x1, STATIC_DTOR, deltaOffsets)
         DATA(0x0069ce28)
         static TRmgRiverDeltaOffset deltaOffsets[4] = {
-            TRmgRiverDeltaOffset(4, 1),
-            TRmgRiverDeltaOffset(1, 4),
-            TRmgRiverDeltaOffset(-2, 1),
-            TRmgRiverDeltaOffset(1, -2)
+            TRmgRiverDeltaOffset(4, 1),  // coast to the east
+            TRmgRiverDeltaOffset(1, 4),  // south
+            TRmgRiverDeltaOffset(-2, 1), // west
+            TRmgRiverDeltaOffset(1, -2)  // north
         };
 
         s32 deltaIndex = sourceIsSnow
@@ -8517,7 +8550,12 @@ enum TRmgPrototypeCellMask {
 };
 
 // H3M stores each fixed 8x6 footprint in reverse row/column order, packed
-// least-significant bit first.
+// least-significant bit first. On the map that is reading order: North is up,
+// numbers are bit indices, byte k holds row k and P is the object's position.
+//    0  1 ..  6  7
+//    8  9 .. 14 15
+//   ..
+//   40 41 .. 46  P   (bit 47)
 static inline void writeRmgPrototypeCellMask(TAbstractFile* outfile,
     TObjectType* prototype, TRmgPrototypeCellMask kind)
 {
