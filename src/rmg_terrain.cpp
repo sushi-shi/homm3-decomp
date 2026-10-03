@@ -325,7 +325,6 @@ TRmgPatternTerrainRule::TRmgPatternTerrainRule(
     }
 }
 
-// True when the terrain has special (decorated) base frames.
 VA(0x005B3840, 0x0C)
 MAC_ADDRESS(0x259dac, 0x14)
 b8 TRmgPatternTerrainRule::hasSpecialBaseFrames()

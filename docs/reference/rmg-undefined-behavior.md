@@ -360,13 +360,9 @@ Other preserved behavior defects, separate from undefined behavior:
 ## Reviewed invariants and coverage
 
 The review covered `src/rmg.cpp`, `src/rmg_support.cpp`,
-`src/rmg_terrain.cpp`, `include/rmg.h`, `include/rmg_terrain.h`, and
-`include/rmg_request.h`, with parallel function-by-function review of the main
-generator and an independent pass over ownership, arithmetic, index guards,
-initialization and table contracts. Native disassembly was consulted for
-removal, header formatting, coast bounds, guard selection and factory cleanup.
-This is a source audit with concrete leads, not a claim of exhaustive dynamic
-coverage or proof that arbitrary custom assets are safe.
+`src/rmg_terrain.cpp`, `include/rmg.h`, `include/rmg_terrain.h` and
+`include/rmg_request.h`. It is a source audit with concrete leads, not a claim
+of exhaustive dynamic coverage or proof that arbitrary custom assets are safe.
 
 Several suspicious-looking expressions are supported by local invariants:
 

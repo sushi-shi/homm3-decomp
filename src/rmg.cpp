@@ -5257,8 +5257,9 @@ static inline int getRmgConnectionGuardValue(const TRmgZoneConnection* connectio
     return getRmgGuardValue(value, strength);
 }
 
-// Keeps every position tied for the best score; a strictly better score
-// restarts the list and becomes the new bound.
+// Best-score candidate lists (highest, then lowest). Callers pass only scores
+// at least as good as the bound; a strictly better score restarts the list
+// and becomes the new bound, and a tie is appended.
 static inline void addRmgHighestScoreCandidate(
     std::vector<TRmgMapPosition>& candidates, const TRmgMapPosition& position,
     int score, int& highestScore)
@@ -6376,8 +6377,8 @@ static inline int selectRmgWeightedCategory(const b8* finished,
     return selected;
 }
 
-// Only the first enabled category accounts for the already placed primary
-// town.
+// The first category with a positive count places one town fewer for the
+// primary town, even if placePrimaryTown used a later category or failed.
 static inline void placeRmgFixedTownCategory(type_random_map_generator* generator,
     TRmgZone* zone, int count, int alignment, int player,
     b8 hasFort, b8& skipPrimary)
