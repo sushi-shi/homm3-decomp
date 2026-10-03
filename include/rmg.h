@@ -615,8 +615,9 @@ struct TRmgRiverDeltaOffset {
 class type_object;
 
 // Path costs and zone graph distances start at RMG_UNREACHED_COST. Searches
-// treat costs beyond RMG_REACHED_COST_LIMIT as unreached. A cleared map cell
-// instead starts its costs and object distance at RMG_CLEARED_CELL_COST.
+// treat costs beyond RMG_REACHED_COST_LIMIT as unreached. Clearing a cell sets
+// its costs and object distance to RMG_CLEARED_CELL_COST; removing an object
+// resets the object distance under its footprint to it.
 enum ERmgPathCostLimits {
     RMG_REACHED_COST_LIMIT = 30000,
     RMG_UNREACHED_COST = 32000,
@@ -1829,8 +1830,9 @@ public:
         int prototypeIndex);
     void connectZones();
     bool contains(const TPoint& point) const;
-    // Random midpoint displacement, queued side branches, then terrain and
-    // border cleanup.
+    // Marks every empty cell for border filling, carves paths by random
+    // midpoint displacement and queued side branches, then cleans up terrain
+    // and borders.
     void carveBranchingPaths();
     void repairWaterZoneBorders();
     void openConnectionPath(TRmgMapPosition position, b8 narrow);

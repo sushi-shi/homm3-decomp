@@ -158,7 +158,7 @@ retail read and missing initialization or invalid access have been established.
 
 ## Review classification (2026-10-01)
 
-The cleanup review preserves matching and does not repair retail bugs. The
+The cleanup review does not repair retail bugs. The
 findings below separate instruction-established defects, C++ reconstruction
 risks, and conditional input contracts. An unchecked operation is not evidence
 that a shipped template reaches it. No generation comparison or new crash
@@ -254,9 +254,8 @@ is no evidenced lost resource cleanup or observed retail failure here.
 
 This is a standards-level risk in the recovered declaration/operation, not
 proof of the unavailable original C++ spelling. Adding a virtual destructor
-would change the proven vtable ABI and generated code. Any later portability
-repair must retain the direct-deallocation contract or deliberately establish
-a new nonmatching ownership model.
+would change the vtable layout. Any later portability repair must retain the
+direct-deallocation contract or deliberately establish a new ownership model.
 
 ### Failed quest/key-tent replacement: removed wrapper is never destroyed
 
@@ -340,14 +339,14 @@ Other preserved behavior defects, separate from undefined behavior:
   `createGuard` indexes that array by town type + 1 (neutral at 0), so this
   slot is Fortress; Conflux guards stay allowed. Preserve the index.
 - `filterZonePositions` accepts the candidate found on an unused level only
-  when its index is greater than zero, so a suitable candidate at index zero is
-  ignored. Changing to a nonnegative test changes selection and subsequent RNG.
+  when its index is greater than zero, so a lone suitable candidate at index
+  zero is ignored. Changing to a nonnegative test changes selection and subsequent RNG.
 - `placeBorderObject` returns zero if it cannot find the required guard
   prototype, although zero is also a successful color and other failure paths
   return minus one. Preserve the return value pending a deliberate bug-fix pass.
 - `tryPlaceMine` retains the last scanned prototype for trigger/width checks
-  after selecting a random candidate. Existing native notes identify stores at
-  `0x5459f5`/`0x545a5d` and reloads at `0x545b7e`/`0x545ca9`. Substituting the
+  after selecting a random candidate. Retail stores it at
+  `0x5459f5`/`0x545a5d` and reloads it at `0x545b7e`/`0x545ca9`. Substituting the
   selected candidate's prototype changes the existing behavior.
 - `createSubterraneanGate` shares one guard value between both entrances, and
   both guards are placed after both borders: a border on either side leaves

@@ -4789,8 +4789,6 @@ void type_random_map_generator::markZoneBorders()
                 }
                 if (!needsBorder)
                     continue;
-                // Retail then re-marks this cell through a radius-0 scan;
-                // the repeat is idempotent and omitted.
                 current->markBorderObject();
                 releaseRmgNeighborhoodPathClearance(m_map, position, 1);
             }
@@ -4917,8 +4915,9 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
     }
 }
 
-// Floods path costs from a seed cell in each zone, then opens a path back
-// toward it from every reached clear, dry cell of the zone.
+// Floods path costs from a seed cell in each zone. Every clear, dry zone cell
+// still at nonzero cost then opens a path back along the costs and reseeds
+// the flood from itself.
 VA(0x005405D0, 0x304)
 MAC_ADDRESS(0x242a40, 0x448)
 void type_random_map_generator::buildZoneConnectionPaths()
@@ -5665,8 +5664,10 @@ b8 type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* z
     return true;
 }
 
-// The border goes on a positive-cost entrance's path predecessor; a zero-cost
-// entrance uses the first same-zone open neighbour, else the cell below.
+// Rebuilds the zone connection paths, then puts the border on a positive-cost
+// entrance's path predecessor; a zero-cost entrance uses the first same-zone
+// open neighbour, else the cell below. Success also marks the entrance's five
+// side and lower neighbours as border connections.
 VA(0x00542B00, 0x1D2)
 MAC_ADDRESS(0x245870, 0x364)
 b8 type_random_map_generator::placeMonolithBorder(
