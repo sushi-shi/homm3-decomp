@@ -298,9 +298,9 @@ Named calls and helper boundaries were reviewed separately. The six RMG
 rows were retired when the RMG cleanup removed those gotos; the counts in
 this section predate that. Repeated labels are separate statements,
 identified by their origin below.
-The table is checked against the live inventory, including repeated-label
-counts: **27 forward and four backward jumps**, with no syntactically terminal
-return targets.
+The table was checked against the pre-cleanup inventory, including
+repeated-label counts: **27 forward and four backward jumps**, with no
+syntactically terminal return targets.
 
 The newest source families start at `22f8b0fd`, with replay and bolt controls
 reproduced after the adopted playback/placement edits. Earlier independent
@@ -534,8 +534,9 @@ town-popup result/lifetime alternatives reproduce the same 87.0077% result,
 below 90.2738%. Witch-hut refusal flags and text selection lower its match.
 The explicit campaign replay-loop variants fall to 59.9903--60.0568%, so the
 two backward restarts remain. RMG entrance policies and individual fit returns
-also scored lower; the later RMG cleanup adopted those structured forms anyway. These rejected forms are recorded beside their functions;
-none justifies hiding the remaining joins in invented helpers or macros.
+also scored lower; the later RMG cleanup adopted those structured forms anyway.
+These rejected forms are recorded beside their functions; none justifies
+hiding the remaining joins in invented helpers or macros.
 
 
 ## Source scopes and spell routing

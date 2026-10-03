@@ -1196,7 +1196,7 @@ void rmgTerrainPainter::paintTransitions()
         for (point.setX(0); point.m_x < getWidth(); point.setX(point.getX() + 1)) {
             u32 index = point.getY() * getWidth() + point.getX();
 
-            // A cell without a differing neighbour is drawn as shape 0, unflipped.
+            // A cell without a differing neighbour is an unflipped fill.
             s32 transition = SHAPE_FILL;
             TRmgTerrainFlip flip(false, false);
             if (edgeCounts[index] > 0) {

@@ -35,8 +35,8 @@ public:
     s32 m_computerTeamCount;          // +0x40
     // ERmgWaterContent (rmg.h); RMG_WATER_RANDOM by default.
     s32 m_waterContent;               // +0x44
-    // 0 is normal. The generator receives monster strength + 3, clamped to
-    // [1, 5].
+    // 0 is normal. The generator receives it plus RMG_ZONE_MONSTERS_AVERAGE
+    // (3), clamped to [1, 5].
     s32 m_monsterStrength;            // +0x48
     // Map format 0/1/2, using the EGameVersion ordinals.
     s32 m_mapVersion;                 // +0x4c

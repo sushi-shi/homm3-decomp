@@ -363,13 +363,14 @@ TRmgMapPosition operator+(TRmgMapPosition position, TPoint offset);
 // whether it has been built, and the player counts for which it applies.
 struct TRmgZoneConnection {
     TRmgTemplateZone* m_destination;             // +0x00
-    // Template column 78, unchecked; the guard value is getRmgGuardValue of
-    // this at the map's monster strength.
+    // Unchecked; the guard value is getRmgGuardValue of this at the map's
+    // monster strength.
     s32 m_value;                             // +0x04
-    // Template column 79: no monster guard.
+    // rmg.txt "Wide": no monster guard, and no border obstacles between the
+    // zones on the surface.
     b8 m_unguarded;               // +0x08
-    // Template column 80: try a border guard keyed to a keymaster's tent in
-    // the other zone, which then replaces the monster guard.
+    // rmg.txt "Border Guard": try a border guard keyed to a keymaster's tent
+    // in the other zone, which then replaces the monster guard.
     b8 m_placeBorderObjects;      // +0x09
     // Set once a crossing, shipyard, gate or portal pair is built.
     b8 m_connected;               // +0x0a
@@ -395,8 +396,8 @@ enum ERmgTreasurePlacementLimits {
     RMG_TREASURE_MINIMUM_REMAINDER = 1500
 };
 
-// A zone treasure band, from template columns 67..75 (unchecked). Added
-// water zones use 100..1000 at density 5 and 2000..6000 at density 1.
+// A zone treasure band (unchecked template values). Added water zones use
+// 100..1000 at density 5 and 2000..6000 at density 1.
 struct TRmgTreasureRange {
     // Group target value, drawn from [minimum, maximum), or the maximum when
     // maximum <= minimum. Bands with a maximum below 100 are skipped.
@@ -421,19 +422,19 @@ enum ERmgTownPlacementParameter {
 };
 
 struct TRmgTemplateZone {
-    // Template zone number (column 3) while connections are read, then the
-    // zone's index in its template; -1 for buildZoneBoundaries' test slot.
+    // Template zone number while connections are read, then the zone's index
+    // in its template; RMG_NO_ZONE for buildZoneBoundaries' test slot.
     s32 m_zoneIndex;                    // +0x00
     s32 m_kind;                         // +0x04: ERmgTemplateZoneKind
-    // Template column 8, unchecked. Initial layout distances are sums of
-    // sizes; initializeZones scales them into m_scaledSize.
+    // Unchecked. Initial layout distances are sums of sizes; initializeZones
+    // scales them into m_scaledSize.
     s32 m_size;                         // +0x08
-    // Columns 9..12: the zone exists only for these player counts.
+    // The zone exists only for these player counts.
     s32 m_minimumHumanPlayers;          // +0x0c
     s32 m_maximumHumanPlayers;          // +0x10
     s32 m_minimumPlayers;               // +0x14
     s32 m_maximumPlayers;               // +0x18
-    // Template player number minus one (column 13), or -1 for none;
+    // Template player number minus one, or -1 for none;
     // m_playerIndexMap[m_playerIndex + 1] is the player colour.
     s32 m_playerIndex;                  // +0x1c
     s32 m_townPlacement[8];             // +0x20: ERmgTownPlacementParameter
@@ -741,8 +742,8 @@ enum ERmgObjectPlacementScore {
 // outline and overlap priorities are built lazily.
 struct TRmgObjectPropertiesRef {
     TObjectType* m_prototype;              // +0x00
-    // First recommended terrain, or eTerrainRock when none; -1 until the
-    // placement rules are read.
+    // First recommended terrain, or eTerrainRock when none; TERRAIN_NONE
+    // until the placement rules are read.
     s32 m_preferredTerrain;               // +0x04, rand_trn.txt rule binding
     // Live objects using this prototype; writeMap writes only used ones.
     u32 m_refCount;                        // +0x08
@@ -864,7 +865,7 @@ class rmgBlackBoxObject : public type_object {
 public:
     s32 m_experience;                  // +0x1c
     s32 m_resources[NUM_RESOURCES];    // +0x20, gold at +0x38
-    s32 m_creatureType;                // +0x3c, -1 means no creature reward
+    s32 m_creatureType;                // +0x3c, CREATURE_NONE for no creature reward
     s32 m_creatureCount;               // +0x40
     std::vector<s32> m_spells;         // +0x44
 
@@ -878,9 +879,9 @@ class rmgSeerHutObject : public type_object {
 public:
     s32 m_artifact;                    // +0x1c, required quest artifact
     s32 m_experience;                  // +0x20
-    s32 m_resourceType;                // +0x24, defaults to gold (6)
+    s32 m_resourceType;                // +0x24, defaults to GOLD
     s32 m_resourceCount;               // +0x28
-    s32 m_creatureType;                // +0x2c, defaults to -1
+    s32 m_creatureType;                // +0x2c, defaults to CREATURE_NONE
     s32 m_creatureCount;               // +0x30
 
     rmgSeerHutObject(TRmgObjectPropertiesRef* properties);
@@ -1501,7 +1502,7 @@ public:
 struct TRmgZone {
     TRmgTemplateZone* m_templateZone;  // +0x00
     // Town type: one of the template's allowed towns, or the lobby choice of
-    // the zone's player; -1 when none.
+    // the zone's player; eTownNeutral when none.
     s32 m_alignment;                   // +0x04
     // Name from H3API (H3RmgZoneGenerator::townType2). Compared with a
     // creature's town when valuing dwellings and creature rewards.
@@ -1721,7 +1722,7 @@ public:
     // without a player) stays -1.
     s32 m_playerIndexMap[9];                          // +0x0ee0
     char m_opaque0f04[0x20];                          // +0x0f04
-    // Lobby town per player colour; -1 keeps the zone's random town.
+    // Lobby town per player colour; eTownNeutral keeps the zone's random town.
     s32 m_townChoices[8];                             // +0x0f24
     // Counter for generated object ids; starts at 1.
     s32 m_nextObjectId;                               // +0x0f44

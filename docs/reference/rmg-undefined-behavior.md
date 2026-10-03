@@ -236,9 +236,9 @@ body; no incomplete-prototype asset set was executed during the review.
 The RoE exclusion has a distinct compatibility quirk: it clears entries
 144..118, evaluates eligibility for 116..0, then selects across 144..0. Slot 117
 retains its loaded prototype without the eligibility test.
-`RMG_ROE_CREATURE_TYPE_COUNT` is the exclusion boundary; the evaluation starts
-one lower only because the evaluation loop decrements the exclusion loop's
-final index again. Do not align these boundaries or add prototype presence to
+`RMG_ROE_CREATURE_TYPE_COUNT` (118) is the exclusion boundary; evaluation
+starts two below it because retail decrements the exclusion loop's exit index
+(117) once more. Do not align these boundaries or add prototype presence to
 eligibility while doing source cleanup.
 
 ### Factory destruction: C++ lifetime risk with direct retail deallocation
@@ -321,7 +321,7 @@ valid, and helps keep a helper extraction from silently changing its behavior.
 | `generate` player mapping | Template slots cover requested players, player indices fit 0..7, and total players do not exceed eight. A scan that reaches slot eight still indexes/writes the slot and player mapping arrays. Active zones must have a valid alignment before alignment counters and serialization shifts. |
 | `assignRmgTeams` | Team/player counts fit the eight-element arrays, and a positive number of nonempty teams exists when used as a modulus. |
 | `placeQuestArtifact` | Every eligible artifact has a prototype. The search result is indexed without checking `prototypeIndex == size()`. The seer prototype family used by the subsequent modulus must be nonempty. |
-| `writeMap` | Required prototype families 71 and 124 contain entry zero. The writer checks the final reserved-word write, while most earlier write results are ignored; an earlier failed/short write is not independently latched by this routine. |
+| `writeMap` | Required prototype families `RANDOM_MONSTER` and `TERRAIN_HOLE` contain entry zero. The writer checks the final reserved-word write, while most earlier write results are ignored; an earlier failed/short write is not independently latched by this routine. |
 | `TRmgLinePatternTable` / terrain pattern constructors and selectors | Fixed tables are nonempty, identifiers/frames fit their arrays, runs for a given identifier are contiguous, selected ranges have nonzero counts, and flip bytes are 0 or 1. These hold for the reviewed fixed table declarations; the API is not a validated arbitrary-table interface. |
 | Voronoi geometry / vector operators | Coordinates keep 32-bit differences, squared lengths, cross products and vector scaling representable; circumcenter triangles are noncollinear. Widening the final in-circle multiplication to 64 bits does not widen the preceding 32-bit squared sums. No overflowing supported-map case was established. |
 | `TRmgVoronoi::removeEdge` | Both half-edges belong to its owning vector; otherwise the search falls through to `erase(end())`. Topology is internally constructed, so malformed external edge pointers are not an established generation path. |
@@ -330,7 +330,7 @@ valid, and helps keep a helper extraction from silently changing its behavior.
 Other preserved behavior defects, separate from undefined behavior:
 
 - `TRmgZone::chooseTownType` uses the disjunction
-  `choice != -1 || expanded || choice != TOWN_CONFLUX`; the two different
+  `choice != eTownNeutral || expanded || choice != TOWN_CONFLUX`; the two different
   inequality terms make it true for every choice. It therefore counts all four
   entries, including sentinels, rather than stopping at the sentinel or
   excluding Conflux. Preserve the expression and its RNG behavior.

@@ -146,7 +146,7 @@ Function-local static tables keep the repository's unprefixed convention, with
 | Ordered map-cost worklists | Descending `lower_bound` insertion with removal from the back implements minimum-cost relaxation. Preserve tie placement and the different zone, water and road cost functions. |
 | Zone graph distances | Dijkstra-style ordered relaxation or stack-based label correction, according to the actual worklist; do not call every flood a breadth-first search. |
 | `createRiver` | Randomized best-first relaxation. Costs draw randomness during visits, so treating this as a fixed-weight graph and reordering the worklist changes output. |
-| Straight boundaries, branch rays and line walker | Bresenham-style integer error accumulation. The line walker also paints the cell before a minor-axis step to maintain four-connected lines, and walks destination-to-start. |
+| Straight boundaries, branch rays and line walker | Bresenham-style integer error accumulation. The line walker also paints the corner cell on each minor-axis step to keep lines four-connected, and walks destination-to-start. |
 | Irregular boundaries, branching paths and noise regions | Random midpoint displacement. Preserve integer truncation, endpoint order, random draw order and the distinct LIFO subdivision/FIFO branch worklists. |
 | `fillZoneArea` and mask floods | Scanline flood fill or depth-first worklist traversal. Guarded backward pointer movement stays within the flattened map array. |
 | Town/mine/treasure density placement | Stride scheduling by minimum weighted count; increments are the integer density product divided by each density. First-on-tie selection is stable. |
