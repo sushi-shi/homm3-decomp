@@ -1185,7 +1185,6 @@ void rmgTerrainPainter::paintTransitions()
                 newFrame = selectBaseFrame(point, tile.m_terrain, tile.m_frame);
             }
 
-            // Write the tile back only when its frame or a reflection changes.
             if (tile.m_frame != newFrame || tile.m_flipX != flip.m_flipX
                 || tile.m_flipY != flip.m_flipY) {
                 tile.m_frame = newFrame;

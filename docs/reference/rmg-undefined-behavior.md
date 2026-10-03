@@ -403,7 +403,3 @@ Several suspicious-looking expressions are supported by local invariants:
   still exists: local map views precede adapters/painters, and reverse local
   destruction preserves their dependency order. Painter set iterations copy
   points before erasing/inserting, avoiding use of invalidated iterators.
-
-The river adapter was previously named `TRmgMapAdapter`; the cleanup names it
-`TRmgRiverMapAdapter` to describe the packed fields it accesses. Both names in
-older evidence refer to the same retail body and vtable, not two bug classes.
