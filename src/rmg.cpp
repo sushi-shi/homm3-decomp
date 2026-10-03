@@ -985,11 +985,7 @@ MAC_ADDRESS(0x22eadc, 0x70)
 void type_random_map::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
     TRmgMapItem& item = *getMapItem(point.m_x, point.m_y);
-    b8 flipY = tile.m_flipY;
-    b8 flipX = tile.m_flipX;
-    s32 frame = tile.m_frame;
-    s32 terrain = tile.m_terrain;
-    item.setTerrain(terrain, frame, flipX, flipY);
+    item.setTerrain(tile.m_terrain, tile.m_frame, tile.m_flipX, tile.m_flipY);
 }
 
 VA(0x00532200, 0x3c)
@@ -1056,14 +1052,10 @@ void TRmgRoadMapAdapter::setTile(
     const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
     TRmgMapItem& item = *m_map->getMapItem(point.m_x, point.m_y);
-    b8 flipY = tile.m_flipY;
-    s32 frame = tile.m_frame;
-    b8 flipX = tile.m_flipX;
-    s32 roadType = tile.m_terrain;
-    item.m_tile.m_roadType = roadType;
-    item.m_tileData.m_roadFrame = frame;
-    item.m_tileData.m_roadFlipX = flipX;
-    item.m_tileData.m_roadFlipY = flipY;
+    item.m_tile.m_roadType = tile.m_terrain;
+    item.m_tileData.m_roadFrame = tile.m_frame;
+    item.m_tileData.m_roadFlipX = tile.m_flipX;
+    item.m_tileData.m_roadFlipY = tile.m_flipY;
 }
 
 VA(0x005323d0, 0x3c)
@@ -1127,17 +1119,12 @@ MAC_ADDRESS(0x22ef34, 0x35c)
 void TRmgRiverMapAdapter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
     TRmgMapItem& item = *m_map->getMapItem(point.m_x, point.m_y);
-    b8 flipX = tile.m_flipX;
-    s32 riverType = tile.m_terrain;
-    b8 flipY = tile.m_flipY;
-    s32 frame = tile.m_frame;
-    item.m_tile.m_riverType = riverType;
-    item.m_tile.m_riverFrame = frame;
-    item.m_tileData.m_riverFlipX = flipX;
-    item.m_tileData.m_riverFlipY = flipY;
-    b8 present = tile.m_terrain != 0;
-    item.m_tileData.m_hasRiver = present;
-    if (present) {
+    item.m_tile.m_riverType = tile.m_terrain;
+    item.m_tile.m_riverFrame = tile.m_frame;
+    item.m_tileData.m_riverFlipX = tile.m_flipX;
+    item.m_tileData.m_riverFlipY = tile.m_flipY;
+    item.m_tileData.m_hasRiver = tile.m_terrain != 0;
+    if (item.hasRiver()) {
         TRmgZoneBounds bounds;
         m_map->getNeighborhoodBounds(bounds, point, RMG_NEIGHBORHOOD_3X3);
         for (s32 y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
@@ -1163,8 +1150,7 @@ void TRmgRiverMapAdapter::setLineType(const TRmgGridPoint& point, s32 value)
 {
     TRmgMapItem& item = *m_map->getMapItem(point.m_x, point.m_y);
     item.m_tile.m_riverType = value;
-    b8 present = value != 0;
-    item.m_tileData.m_hasRiver = present;
+    item.m_tileData.m_hasRiver = value != 0;
 }
 
 VA(0x00532790, 0x27)
@@ -1987,10 +1973,9 @@ static inline s32 adjustRmgValueForAlignment(s32 value, s32 alignmentCount, s32 
 // Active zones of a town alignment; none for eTownNeutral.
 inline s32 type_random_map_generator::getAlignedZoneCount(s32 alignment) const
 {
-    s32 alignmentCount = 0;
-    if (alignment != eTownNeutral)
-        alignmentCount = m_activeZoneCountsByAlignment[alignment];
-    return alignmentCount;
+    if (alignment == eTownNeutral)
+        return 0;
+    return m_activeZoneCountsByAlignment[alignment];
 }
 
 // getValue result for a treasure this zone or moment cannot offer.
@@ -2020,9 +2005,8 @@ type_object* type_black_box_creature_def::generate(TRmgObjectPropertiesRef* prop
     type_random_map_generator*, TRmgZone*)
 {
     rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
-    s32 count = m_creatureCount;
     object->m_creatureType = m_creatureType;
-    object->m_creatureCount = count;
+    object->m_creatureCount = m_creatureCount;
     return object;
 }
 
@@ -2187,9 +2171,8 @@ type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properti
 {
     rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
     rmgQuestArtifactObject* object = generator->createQuestArtifactForHut(seerHut, this);
-    s32 count = m_creatureCount;
     seerHut->m_creatureType = m_creatureType;
-    seerHut->m_creatureCount = count;
+    seerHut->m_creatureCount = m_creatureCount;
     return object;
 }
 
@@ -2229,9 +2212,8 @@ type_object* type_quest_gold_def::generate(TRmgObjectPropertiesRef* properties,
 {
     rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
     rmgQuestArtifactObject* object = generator->createQuestArtifactForHut(seerHut, this);
-    s32 amount = m_gold;
     seerHut->m_resourceType = GOLD;
-    seerHut->m_resourceCount = amount;
+    seerHut->m_resourceCount = m_gold;
     return object;
 }
 
@@ -2299,11 +2281,8 @@ void TRmgTreasureGroup::reset()
     m_map.clear();
     m_hasGuard = false;
     m_ready = false;
-    type_random_map& map = m_map;
-    TRmgMapItem* item = map.getMapItem(0, 0);
-    s32 width = map.m_mapWidth;
-    s32 height = map.m_mapHeight;
-    s32 count = width * height;
+    TRmgMapItem* item = m_map.getMapItem(0, 0);
+    s32 count = m_map.m_mapWidth * m_map.m_mapHeight;
     while (count--) {
         item->setTerrain(eTerrainDirt, 0, false, false);
         ++item;
@@ -2385,8 +2364,7 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
     }
     if (!m_outline.size())
         return false;
-    u32 outlineCount = m_outline.size();
-    TPoint guardPosition = m_outline[rand() % outlineCount];
+    TPoint guardPosition = m_outline[rand() % m_outline.size()];
     addObject(guard, guardPosition);
     guardPosition.m_x -= prototype->m_triggerCell.m_x;
     guardPosition.m_y -= prototype->m_triggerCell.m_y;
@@ -2501,14 +2479,13 @@ b8 TRmgTreasureGroup::tryAddObject(type_object* object)
     bounds.m_minimumY = prototype->getHeight() + 2;
     bounds.m_maximumX = m_map.getWidth() - 3;
     bounds.m_maximumY = m_map.getHeight() - 3;
-    TObjectType::TPoint triggerCell = prototype->m_triggerCell;
-    TPoint trigger(triggerCell.m_x, triggerCell.m_y);
+    TPoint trigger(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
     std::vector<TRmgMapPosition> candidates;
     for (u32 index = 0; index < m_objects.size(); ++index) {
         type_object* existing = m_objects[index];
-        TObjectType* existingPrototype = existing->m_properties->m_prototype;
         TRmgMapPosition entrance = existing->getEntrance();
-        b8 openToNorth = isRmgEntranceOpenToNorth(existingPrototype->getObjectType());
+        b8 openToNorth = isRmgEntranceOpenToNorth(
+            existing->m_properties->m_prototype->getObjectType());
         for (s32 direction = RMG_DIRECTION_COUNT; direction--; ) {
             if (!openToNorth && !isRmgSouthwardDirection(direction))
                 continue;
@@ -2520,9 +2497,7 @@ b8 TRmgTreasureGroup::tryAddObject(type_object* object)
     u32 count = candidates.size();
     if (!count)
         return false;
-    u32 selected = rand() % count;
-    TRmgMapPosition position = candidates[selected];
-    addObject(object, position);
+    addObject(object, candidates[rand() % count]);
     return true;
 }
 
@@ -5685,8 +5660,7 @@ b8 type_random_map_generator::canPlaceShipyard(TRmgMapPosition position)
         farSide.m_x -= 3;
     if (farSide.m_x < 0 || farSide.m_x >= m_map.m_mapWidth)
         return false;
-    s32 terrain = m_map.getMapItem(farSide)->getLandType();
-    return terrain != eTerrainWater;
+    return m_map.getMapItem(farSide)->getLandType() != eTerrainWater;
 }
 
 static TRmgMapPosition getRmgShipyardWaterPosition(TRmgMapPosition shipyardPosition,
@@ -5719,10 +5693,8 @@ MAC_ADDRESS(0x2446ac, 0x55c)
 b8 type_random_map_generator::createShipyardConnection(
     TRmgZone* source, TRmgZoneConnection* connection)
 {
-    TRmgTemplateZone* sourceSlot = source->m_templateZone;
-    s32 sourceZone = sourceSlot->m_zoneIndex;
-    TRmgTemplateZone* destinationSlot = connection->m_destination;
-    TRmgZone* destination = m_zones[destinationSlot->m_zoneIndex];
+    s32 sourceZone = source->m_templateZone->m_zoneIndex;
+    TRmgZone* destination = m_zones[connection->m_destination->m_zoneIndex];
     s32 destinationZone = destination->m_templateZone->m_zoneIndex;
     if (source->getLevelPosition().m_z != destination->getLevelPosition().m_z)
         return false;
@@ -5971,12 +5943,8 @@ b8 type_random_map_generator::placeMonolithBorder(
     }
     s32 color = placeBorderObject(borderPosition, RMG_SINGLE_BORDER_GUARD, keyTentZone);
     if (color >= 0) {
-        for (s32 direction = 0; direction < directionCount; ++direction) {
-            TPoint offset = offsets[direction];
-            TRmgMapPosition nearby = position + offset;
-            TRmgMapItem* neighbor = m_map.getMapItem(nearby);
-            neighbor->markBorderConnection(color);
-        }
+        for (s32 direction = 0; direction < directionCount; ++direction)
+            m_map.getMapItem(position + offsets[direction])->markBorderConnection(color);
     }
     return color >= 0;
 }
@@ -5993,10 +5961,7 @@ inline type_object* type_random_map_generator::placeMonolith(
     std::vector<type_object*>& monoliths =
         oneWay ? m_monolithsOneWay : m_monolithsTwoWay;
     monoliths.push_back(object);
-    TPoint entrance;
-    entrance.m_x = object->m_position.m_x;
-    entrance.m_y = object->m_position.m_y;
-    zone->m_entrances.push_back(entrance);
+    zone->m_entrances.push_back(TPoint(object->m_position.m_x, object->m_position.m_y));
     return object;
 }
 
@@ -6285,21 +6250,16 @@ TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, s32 level)
     s32 major;
     s32 minor;
     TRmgVector axial;
-    TRmgVector diagonal;
     if (abs(dx) > abs(dy)) {
         major = abs(dx);
         minor = abs(dy);
-        axial.m_y = 0;
-        axial.m_x = dx > 0 ? 1 : -1;
-        diagonal.m_x = axial.m_x;
-        diagonal.m_y = dy > 0 ? 1 : -1;
+        axial = TRmgVector(dx > 0 ? 1 : -1, 0);
     } else {
         major = abs(dy);
         minor = abs(dx);
         axial = TRmgVector(0, dy > 0 ? 1 : -1);
-        diagonal = axial;
-        diagonal.m_x = dx > 0 ? 1 : -1;
     }
+    TRmgVector diagonal(dx > 0 ? 1 : -1, dy > 0 ? 1 : -1);
     s32 error = major / 2;
     s32 steps = 0;
     TPoint previous;
@@ -7383,15 +7343,13 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
     for (u32 i = 0; i < group->m_objects.size(); ++i) {
         type_object* object = group->m_objects[i];
-        TRmgMapPosition objectPosition = object->getPlacedGroupPosition(position);
-        TRmgObjectPropertiesRef* properties = object->m_properties;
-        if (m_map.isPlacementBlocked(properties, objectPosition, zoneIndex,
+        if (m_map.isPlacementBlocked(object->m_properties,
+                object->getPlacedGroupPosition(position), zoneIndex,
                 RMG_REJECT_BORDER_ENTRANCES))
             return false;
     }
     if (group->m_hasGuard) {
-        TPoint localGuard = group->m_guardPosition;
-        TRmgMapPosition guardPosition = position + localGuard;
+        TRmgMapPosition guardPosition = position + group->m_guardPosition;
         if (guardPosition.m_x < 1 || guardPosition.m_x + 1 >= m_map.m_mapWidth
             || guardPosition.m_y < 1 || guardPosition.m_y + 1 >= m_map.m_mapHeight)
             return false;
@@ -7471,11 +7429,11 @@ b8 type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
     std::vector<TRmgMapPosition> candidates;
     TRmgZoneBounds bounds = zone->m_bounds;
     TRmgZoneBounds groupBounds = group->m_bounds;
+    bounds.m_minimumX -= groupBounds.m_minimumX;
     bounds.m_minimumY -= groupBounds.m_minimumY;
-    TRmgMapPosition position = zone->getLevelPosition();
     bounds.m_maximumX += 1 - groupBounds.m_maximumX;
     bounds.m_maximumY += 1 - groupBounds.m_maximumY;
-    bounds.m_minimumX -= groupBounds.m_minimumX;
+    TRmgMapPosition position = zone->getLevelPosition();
     TPoint center;
     center.m_x = (groupBounds.m_minimumX + groupBounds.m_maximumX) / 2;
     center.m_y = (groupBounds.m_minimumY + groupBounds.m_maximumY) / 2;
@@ -7730,8 +7688,7 @@ MAC_ADDRESS(0x24bb68, 0x78)
 void type_random_map_generator::resetMovementCosts()
 {
     TRmgMapItem* mapItem = m_map.getMapItem(0, 0);
-    s32 rowCount = m_map.m_numberLevels * m_map.m_mapHeight;
-    s32 mapItemCount = rowCount * m_map.m_mapWidth;
+    s32 mapItemCount = m_map.m_numberLevels * m_map.m_mapHeight * m_map.m_mapWidth;
     while (mapItemCount--) {
         mapItem->resetMovement();
         ++mapItem;
@@ -8799,11 +8756,9 @@ b8 type_random_map_generator::placeQuestGroup(
         if (distance == 1)
             candidateZone->m_questPlacementScore =
                 RMG_QUEST_ADJACENT_ZONE_SCORE + rand() % RMG_QUEST_DISTANCE_SCALE;
-        else {
-            s32 priority = distance * RMG_QUEST_DISTANCE_SCALE
+        else
+            candidateZone->m_questPlacementScore = distance * RMG_QUEST_DISTANCE_SCALE
                 + rand() % RMG_QUEST_DISTANCE_SCALE;
-            candidateZone->m_questPlacementScore = priority;
-        }
     }
     for (index = 0; index < m_zones.size(); ++index) {
         TRmgZone* candidateZone = m_zones[index];
@@ -8917,8 +8872,7 @@ MAC_ADDRESS(0x250c1c, 0x2ac)
 void type_random_map_generator::removeObject(type_object* object)
 {
     TObjectType* prototype = object->m_properties->m_prototype;
-    TRmgMapPosition position;
-    position = object->m_position;
+    TRmgMapPosition position = object->m_position;
     std::vector<type_object*>::iterator found = std::find(m_objects.begin(), m_objects.end(), object);
     if (found) {
         m_objects.erase(found);
@@ -9009,10 +8963,9 @@ s32 TRandomMapRequest::generateToFile(TAbstractFile* outfile, TProgressSink* pro
     }
     if (!generator.generate())
         return RANDOM_MAP_GENERATION_FAILED;
-    s32 result = RANDOM_MAP_OK;
     if (!generator.writeMap(outfile))
-        result = RANDOM_MAP_WRITE_FAILED;
-    return result;
+        return RANDOM_MAP_WRITE_FAILED;
+    return RANDOM_MAP_OK;
 }
 
 VA(0x0054c090, 0x8c)
@@ -9043,9 +8996,7 @@ VA(0x005fdb10, 0x21)
 MAC_ADDRESS(0x25c3b4, 0x38)
 s32 getRmgSquaredDistance(TPoint first, TPoint second)
 {
-    s32 dy = first.m_y - second.m_y;
-    s32 dx = first.m_x - second.m_x;
-    return getRmgSquaredNorm(dx, dy);
+    return getRmgSquaredNorm(first.m_x - second.m_x, first.m_y - second.m_y);
 }
 
 // Circumcenter of the triangle with these three sites: the perpendicular

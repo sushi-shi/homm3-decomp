@@ -193,6 +193,14 @@ following keeps only with a pointer here:
 - `assignRmgZoneCell` and `clampRmgBoundaryToMap` stay free functions: as a
   `TRmgMapItem` or `type_random_map` member respectively, VC6 lays out
   `drawIrregularZoneBoundary`, called under `buildZoneBoundaries`, differently.
+- A fifth pass removed temporaries that only reordered loads (the three
+  adapter `setTile` bodies, reward factories, quest scores, group placement
+  bounds, branch-ray steps) and result variables. It kept the staged locals in
+  `getConnectionGuardValue`, `createGroundConnection` and `tryPlaceMine`, the
+  `getNeighborhoodBounds` and `getLevelPosition` bodies, `TRmgVector::operator*`
+  and `TRmgMapItem::clear`'s copies. Rewriting them changes the frames or stack
+  writes of code that runs during map construction or before
+  `buildZoneConnectionPaths`, whose fallback seed reads stack residue.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every
