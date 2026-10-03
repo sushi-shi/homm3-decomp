@@ -28,10 +28,12 @@
 #include "hero.h"
 #include "mapcell.h"
 #include "objnames.h"
+#include "quest.h"
 #include "resourcemanager.h"
 #include "rmg_request.h"
 #include "rmg_terrain.h"
 #include "savegame.h"
+#include "seerhut.h"
 #include "textresource.h"
 #include "town.h"
 
@@ -1678,7 +1680,7 @@ void rmgSeerHutObject::write(TAbstractFile* outputFile, int version)
 {
     type_object::write(outputFile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-        writeValue<char>(outputFile, 5); // quest kind
+        writeValue<char>(outputFile, QUEST_ARTIFACTS);
         writeValue<char>(outputFile, 1); // artifact count
         writeValue<s16>(outputFile, m_artifact);
         writeValue<s32>(outputFile, -1); // deadline
@@ -1689,13 +1691,13 @@ void rmgSeerHutObject::write(TAbstractFile* outputFile, int version)
         writeValue<char>(outputFile, m_artifact);
     }
     if (m_experience > 0) {
-        writeValue<char>(outputFile, 1); // reward kind
+        writeValue<char>(outputFile, eRewardExperience);
         writeValue<s32>(outputFile, m_experience);
     } else if (m_creatureType != -1) {
-        writeValue<char>(outputFile, 10); // reward kind
+        writeValue<char>(outputFile, eRewardCreature);
         writeRmgCreatureReward(outputFile, version, m_creatureType, m_creatureCount);
     } else {
-        writeValue<char>(outputFile, 5); // reward kind
+        writeValue<char>(outputFile, eRewardResource);
         writeValue<char>(outputFile, m_resourceType);
         writeValue<s32>(outputFile, m_resourceCount);
     }
@@ -1765,8 +1767,8 @@ MAC_ADDRESS(0x2319ac, 0xbc)
 void rmgScholarObject::write(TAbstractFile* outputFile, int version)
 {
     type_object::write(outputFile, version);
-    writeValue<char>(outputFile, -1); // reward kind
-    writeValue<char>(outputFile, 0); // reward value
+    writeValue<char>(outputFile, -1); // ScholarAwards; -1 picks one at random
+    writeValue<char>(outputFile, 0); // award value
     writeValue<s32>(outputFile, 0);
     writeRmgReservedBytes(outputFile, 2);
 }
