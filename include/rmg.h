@@ -223,11 +223,11 @@ public:
 
 class type_quest_creature_def : public type_black_box_creature_def {
 public:
-    inline type_quest_creature_def(int creatureType, int questIndex)
+    inline type_quest_creature_def(int creatureType, int seerHutPrototypeIndex)
         : type_black_box_creature_def(creatureType)
     {
         m_objectType = SEER;
-        m_subtype = questIndex;
+        m_subtype = seerHutPrototypeIndex;
     }
 
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
@@ -241,8 +241,8 @@ public:
     s32 m_experience;
 
     inline type_quest_experience_def(
-        int questIndex, int value, int experience)
-        : type_treasure_def(SEER, questIndex, value, 10)
+        int seerHutPrototypeIndex, int value, int experience)
+        : type_treasure_def(SEER, seerHutPrototypeIndex, value, 10)
     {
         this->m_experience = experience;
     }
@@ -257,8 +257,8 @@ class type_quest_gold_def : public type_treasure_def {
 public:
     s32 m_gold;
 
-    inline type_quest_gold_def(int questIndex, int value, int gold)
-        : type_treasure_def(SEER, questIndex, value, 10)
+    inline type_quest_gold_def(int seerHutPrototypeIndex, int value, int gold)
+        : type_treasure_def(SEER, seerHutPrototypeIndex, value, 10)
     {
         this->m_gold = gold;
     }
@@ -1701,7 +1701,9 @@ public:
     // rejected.
     b8 m_questArtifactPoolLow;              // +0x10b4
     s32 m_waterContent;                                // +0x10b8: ERmgWaterContent
-    s32 m_monsterStrength;                             // +0x10bc
+    // Map-wide strength 1..5 on the zone scale; RMG_ZONE_MONSTERS_AVERAGE
+    // is the lobby's normal setting.
+    s32 m_monsterStrength;                             // +0x10bc: ERmgZoneMonsterStrength
     // Name of the selected template.
     std::string m_templateName;                        // +0x10c0
     // Owned templates loaded from rmg.txt.

@@ -3331,25 +3331,26 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_scholar_def());
     m_objectGenerators.push_back(new type_treasure_def(SEA_CHEST, 0, 1500, 500));
 
-    for (int quest = 0; quest < m_objectPrototypes[SEER].size(); ++quest) {
+    for (int prototypeIndex = 0; prototypeIndex < m_objectPrototypes[SEER].size();
+         ++prototypeIndex) {
         for (int creature = getRmgCreatureTypeCount(m_mapVersion); creature--;) {
             if (g_creatureTypeTraits[creature].m_level >= 0)
                 m_objectGenerators.push_back(
-                    new type_quest_creature_def(creature, quest));
+                    new type_quest_creature_def(creature, prototypeIndex));
         }
 
         m_objectGenerators.push_back(
-            new type_quest_experience_def(quest, 2000, 5000));
+            new type_quest_experience_def(prototypeIndex, 2000, 5000));
         m_objectGenerators.push_back(
-            new type_quest_experience_def(quest, 5333, 10000));
+            new type_quest_experience_def(prototypeIndex, 5333, 10000));
         m_objectGenerators.push_back(
-            new type_quest_experience_def(quest, 8666, 15000));
+            new type_quest_experience_def(prototypeIndex, 8666, 15000));
         m_objectGenerators.push_back(
-            new type_quest_experience_def(quest, 12000, 20000));
-        m_objectGenerators.push_back(new type_quest_gold_def(quest, 2000, 5000));
-        m_objectGenerators.push_back(new type_quest_gold_def(quest, 5333, 10000));
-        m_objectGenerators.push_back(new type_quest_gold_def(quest, 8666, 15000));
-        m_objectGenerators.push_back(new type_quest_gold_def(quest, 12000, 20000));
+            new type_quest_experience_def(prototypeIndex, 12000, 20000));
+        m_objectGenerators.push_back(new type_quest_gold_def(prototypeIndex, 2000, 5000));
+        m_objectGenerators.push_back(new type_quest_gold_def(prototypeIndex, 5333, 10000));
+        m_objectGenerators.push_back(new type_quest_gold_def(prototypeIndex, 8666, 15000));
+        m_objectGenerators.push_back(new type_quest_gold_def(prototypeIndex, 12000, 20000));
     }
 
     m_objectGenerators.push_back(new type_treasure_def(SEPULCHER, 0, 1000, 100));
@@ -8637,7 +8638,7 @@ VA(0x0054BF60, 0x130)
 MAC_ADDRESS(0x251070, 0x140)
 int TRandomMapRequest::generateToFile(TAbstractFile* outfile, TProgressSink* progress)
 {
-    int strength = m_monsterStrength + 3;
+    int strength = m_monsterStrength + RMG_ZONE_MONSTERS_AVERAGE;
     if (strength < 1)
         strength = 1;
     if (strength > 5)
