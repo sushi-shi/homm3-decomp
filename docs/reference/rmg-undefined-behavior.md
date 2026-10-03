@@ -88,7 +88,7 @@ unreached targets `(79,0,0)` and `(38,0,0)` respectively. Their source-to-target
 searches had no valid predecessor chain, but drawing proceeded anyway.
 
 The captured retail call chain is `createRiver` → `TRmgLineWalker::drawTo` →
-`paintPoint` → `refreshRmgLinePoint` → `TRmgRiverLinePainter::getLand` →
+`paintPoint` → `refreshRmgLinePoint` → `TRmgRiverLinePainter::getLineType` →
 `TRmgRiverMapAdapter::getLineType`. Candidate faults at the corresponding instruction
 with the same coordinates. This is not a candidate-only reconstruction error.
 
@@ -300,7 +300,7 @@ valid, and helps keep a helper extraction from silently changing its behavior.
 | --- | --- |
 | `TRandomMapRequest::generateToFile`, map construction and lookup | Positive supported dimensions/level count; bounded player counts and enum-like request values. The request entry only clamps monster strength and repairs a total player count below two. Signed dimension products and `monsterStrength + 3` can overflow for arbitrary integers. There is no general input-validation layer in these bodies. |
 | `getSerializedMapVersion` | Version is 0, 1, or 2. Another value falls off the C++ nonvoid helper. Native header code for another value uses the then-current output argument value; no portable fallback value is established. |
-| `getMapItem`, terrain cache, line and terrain painting | Coordinates are in the map, flattened multiplication is representable, and paint rectangles fit. Lookup helpers intentionally do not clamp. `paintTransitions` additionally expects width at least two and positive height; width zero underflows its unsigned `width - 1`, and width one reaches column one. |
+| `getMapItem`, terrain cache, line and terrain painting | Coordinates are in the map, flattened multiplication is representable, and paint rectangles fit. Lookup helpers intentionally do not clamp. `paintTransitions` additionally expects at least two rows and columns: its neighbour mask clears only one side per axis, so a one-row or one-column map reaches row or column one. |
 | `loadTemplates` | The row-size guard rejects fewer than two fields but subsequently reads `values[2]`; a two-field row can pass it. Preserve this short-row behavior alongside the zone reader's separate bounds issue. |
 | `readRmgTemplateZones` | A row with exactly three entries passes the initial `size() >= 3` test and can read `values[3]` before the later full-row size test. Short/malformed spreadsheet behavior has not been reproduced. |
 | `readObjectPlacementRules` | Rows have the required columns, nonnull field strings, object type in the admitted trait range and terrain in 0..9. Parsed type/terrain values index local two-dimensional tables without range checks. |

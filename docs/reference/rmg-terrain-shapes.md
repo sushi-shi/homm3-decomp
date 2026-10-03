@@ -190,9 +190,10 @@ Repairing a cell paints the paint terrain into its neighbours:
   (N or W) is preferred, unless that side needs no repair and the other side
   either needs repair or is the only side without a perpendicular gap.
 - Separated neighbours: it splits the nonmatching part of the ring into gaps,
-  starting after a match. Each gap weighs 2 per cardinal and 1 per diagonal.
-  It then paints the lightest gap's on-map cells and repeats until one gap is
-  left. On a tie, the gap earlier in the ring is painted first.
+  scanning clockwise from the first match after north (N itself included).
+  Each gap weighs 2 per cardinal and 1 per diagonal. It then paints the
+  lightest gap's on-map cells and repeats until one gap is left. On a tie, the
+  gap found first in that scan is painted first.
 
 `paintTransitions` counts terrain boundaries between neighbouring cells. A
 cell with no differing neighbour is drawn as shape 0 with no flips. Every other

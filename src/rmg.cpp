@@ -363,7 +363,8 @@ enum ERmgWaterFrames {
     RMG_WATER_BASE_FRAME = 21
 };
 
-// Resets the cell to empty water; the previous-tile Y/Z are left unchanged.
+// Resets the cell to empty water. The guard colour, connection-visited flag
+// and previous-tile Y/Z are left unchanged.
 VA(0x00530F10, 0x6F)
 MAC_ADDRESS(0x22d110, 0x15c)
 void TRmgMapItem::clear()
