@@ -349,6 +349,11 @@ Other preserved behavior defects, separate from undefined behavior:
   after selecting a random candidate. Retail stores it at
   `0x5459f5`/`0x545a5d` and reloads it at `0x545b7e`/`0x545ca9`. Substituting the
   selected candidate's prototype changes the existing behavior.
+- `scoreObjectPlacement` overwrites each blocked footprint cell's mark with
+  ADJACENT (retail store at `0x536d34`), discarding its OVERLAP and BLOCKED
+  bits. Objects under an obstacle's blocked cells therefore score only as
+  neighbours: rand_trn.txt's blocked scores, the draw-order conflict test and
+  the rejection of rule-less objects never apply to them. Preserve the store.
 - `createSubterraneanGate` shares one guard value between both entrances, and
   both guards are placed after both borders: a border on either side leaves
   neither entrance guarded. Separate per-entrance values would change that.

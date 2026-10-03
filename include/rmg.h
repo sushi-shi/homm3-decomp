@@ -765,7 +765,8 @@ public:
     virtual void releaseReservation();
     // Runs once the object's treasure group is committed: key tents and quest
     // artifacts place their guard or seer hut; if that placement fails they
-    // are replaced by a treasure. The success result is ignored.
+    // are replaced by a treasure, except a quest artifact when no quest
+    // artifact remains. The success result is ignored.
     virtual b8 completePlacement();
     virtual void write(TAbstractFile* outputFile, int version);
 };
@@ -1798,7 +1799,8 @@ public:
     int selectPrisonHero();
     b8 canPlaceZone(TRmgZone* zone);
     void buildZoneBoundaries(TRmgTemplate* mapTemplate, int level);
-    // Propagates distances from one zone through the connection graph.
+    // Spreads this zone's distances to each original zone through the
+    // connection graph.
     void propagateZoneDistances(TRmgZone* zone);
     void fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first);
     void joinExtraZones(int originalZones, TRmgVoronoi* diagram);
@@ -1850,7 +1852,8 @@ public:
     void createRoads();
     // Picks an unused quest artifact, turns the object into it and places its
     // seer hut in another zone, handing the hut to the map; if the hut cannot
-    // be placed, the artifact is replaced by a treasure.
+    // be placed, the artifact is replaced by a treasure. Fails without
+    // changes when no quest artifact remains.
     b8 placeQuestArtifact(rmgQuestArtifactObject* object);
     void calculateQuestZoneDistances(TRmgZone* origin);
     b8 placeQuestGroup(TRmgTreasureGroup* group, TRmgZone* origin);

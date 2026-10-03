@@ -2192,7 +2192,8 @@ void TRmgTreasureGroup::addObject(type_object* object, TPoint point)
 }
 
 // Rings the objects' entrances with border cells, places the guard on a
-// random fitting border cell, opens paths around it and retraces the outline.
+// random fitting border cell of the outline (failing if none), opens paths
+// around it and retraces the outline.
 VA(0x00535110, 0x4AB)
 MAC_ADDRESS(0x233028, 0x6a8)
 b8 TRmgTreasureGroup::addGuard(type_object* guard)
@@ -2645,8 +2646,8 @@ void TRmgGeneratorBase::readObjectPlacementRules()
 #endif
 }
 
-// Scores a candidate position from the terrain under the object and the
-// objects it touches; callers accept only positive scores.
+// Scores a candidate position from the terrain under the object's blocked
+// cells and the objects it touches; callers accept only positive scores.
 VA(0x00536BC0, 0x5F4)
 MAC_ADDRESS(0x23515c, 0x7a0)
 int TRmgGeneratorBase::scoreObjectPlacement(
@@ -2681,8 +2682,9 @@ int TRmgGeneratorBase::scoreObjectPlacement(
 
                 // Retail bug: this replaces the OVERLAP and BLOCKED marks just
                 // set, and BLOCKED is set nowhere else. Blocked cells therefore
-                // never take the overlap-order or blocked-score paths below;
-                // objects under them count only as adjacent.
+                // never take the overlap-order or blocked-score paths below:
+                // objects under them count only as adjacent, and rand_trn.txt's
+                // blocked scores are never used.
                 marks[column + 1][row + 1] = RMG_PLACEMENT_ADJACENT;
                 terrainSeen[item->getLandType()] = true;
                 int firstRow = position.m_y - min(y + 1, m_map.m_mapHeight) + 1;
@@ -4371,6 +4373,8 @@ void type_random_map_generator::buildZoneBoundaries(
     }
     int originalZones = m_zones.size();
     if (level == RMG_UNDERGROUND_LEVEL || m_waterContent != RMG_WATER_NONE) {
+        // Retail bug: testSlot's m_allowedTowns is uninitialized too, so
+        // stack contents decide whether testZone's constructor draws a town.
         TRmgTemplateZone testSlot;
         testSlot.m_zoneIndex = -1;
         testSlot.m_kind = RMG_TEMPLATE_JUNCTION;
@@ -4896,7 +4900,8 @@ void type_random_map_generator::repairWaterZoneBorders()
     }
 }
 
-// Registers the object, then updates type counts and entrance distances.
+// Registers the object and counts its type. An object with an entrance is
+// also counted in the entrance's zone and floods entrance distances from it.
 VA(0x005402A0, 0x32A)
 MAC_ADDRESS(0x24260c, 0x434)
 void type_random_map_generator::addObject(type_object* object, TRmgMapPosition position)
@@ -5195,7 +5200,8 @@ TRmgMapPosition& TRmgMapPosition::operator-=(const TPoint& offset)
     return *this;
 }
 
-// Places a guard of the given value unless the cell is occupied.
+// Places a guard of the given value unless the cell is occupied or no
+// creature qualifies.
 MAC_ADDRESS(0x243498, 0xd4)
 void type_random_map_generator::placeGuard(int value, TRmgMapPosition position)
 {
@@ -5283,10 +5289,10 @@ static inline TRmgMapPosition addRmgObjectAtRandomCandidate(
     return position;
 }
 
-// Opens one crossing per 40 eligible border cells (rounded up), chosen from
-// the empty ones tied for the lowest zone-path cost, which must be at most
-// 100; each gets open paths and entrances on both sides before its border
-// or guard.
+// Connects land zones on one level. Opens one crossing per 40 eligible
+// border cells (rounded up), drawn without repeats from the empty ones tied
+// for the lowest zone-path cost, which must be at most 100; each gets open
+// paths and entrances on both sides before its border or guard.
 VA(0x00541140, 0x63A)
 MAC_ADDRESS(0x243af8, 0x53c)
 b8 type_random_map_generator::createGroundConnection(
