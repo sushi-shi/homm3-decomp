@@ -177,6 +177,10 @@ void TProgressSink::setTotal(int totalSteps)
 namespace {
 
 // Indices of g_rmgDirections, clockwise from east; y grows southward.
+// North is up; . is the centre cell.
+//   5 6 7
+//   4 . 0
+//   3 2 1
 enum ERmgDirection {
     RMG_DIRECTION_EAST = 0,
     RMG_DIRECTION_SOUTH_EAST = 1,
@@ -232,6 +236,9 @@ static inline bool isRmgEntranceOpenToNorth(int objectType)
 
 // Shipyards are three tiles wide; these offsets probe beside the left and
 // right ends of the bottom footprint row and the row below it.
+// North is up; P is the shipyard position, # the rest of that row.
+//   0 # # P 1
+//   2 . . . 3
 DATA(0x0069CE00)
 TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
     TPoint(-3, 0),
@@ -735,7 +742,11 @@ void type_random_map::markBorderPatch(TRmgMapPosition position)
     }
 }
 
-// Map position of an object's trigger cell.
+// Map position of an object's trigger cell. Footprint mask cell (column, row)
+// lies at position - (column, row): the mask grows west and north from the
+// object's bottom-right cell P. North is up.
+//   (2,1) (1,1) (0,1)
+//   (2,0) (1,0) (0,0)=P
 static inline TRmgMapPosition getRmgObjectTriggerPosition(
     TRmgMapPosition position, const TObjectType::TPoint& trigger)
 {

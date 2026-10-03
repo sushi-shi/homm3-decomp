@@ -50,6 +50,7 @@ TRmgLinePatternTable::~TRmgLinePatternTable()
 }
 
 // Neighbour direction order for each (flipX, flipY) reflection.
+// Same values as g_rmgReflectedNeighbours, sketched in rmg_terrain.cpp.
 DATA(0x0063FE9C)
 static const s32 g_rmgLineReflectedNeighbours[2][2][8] = {
     {{0, 1, 2, 3, 4, 5, 6, 7}, {4, 3, 2, 1, 0, 7, 6, 5}},

@@ -554,7 +554,10 @@ TPoint clipRmgBoundaryPoint(
 
 // Pending rectangle of the midpoint-displacement island mask. Corners are
 // (minX,minY), (minX,maxY), (maxX,minY), (maxX,maxY); variation bounds the
-// random displacement.
+// random displacement. Corner indices and TRmgNoiseMidpoints, X right, Y down:
+//   0     minY    2
+//   minX  centre  maxX
+//   1     maxY    3
 struct TRmgNoiseRegion {
     TRmgZoneBounds m_bounds;
     s32 m_corners[4];
@@ -1617,7 +1620,12 @@ enum ERmgMapVersion {
     RMG_MAP_SHADOW_OF_DEATH = 2
 };
 
-// Initial segment direction of a carved branching path.
+// Initial segment direction of a carved branching path. Each spans the map;
+// North is up and # is the segment.
+//   MAIN_DIAGONAL  VERTICAL  ANTI_DIAGONAL  HORIZONTAL
+//   # . .          . # .     . . #          . . .
+//   . # .          . # .     . # .          # # #
+//   . . #          . # .     # . .          . . .
 enum ERmgBranchSeedPattern {
     RMG_BRANCH_SEED_MAIN_DIAGONAL = 0,
     RMG_BRANCH_SEED_VERTICAL = 1,

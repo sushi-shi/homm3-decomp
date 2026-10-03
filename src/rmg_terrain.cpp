@@ -257,6 +257,12 @@ TPoint& TPoint::operator+=(const TPoint& offset)
 // the other-terrain neighbours, each run followed by its edge kind: N_W = both
 // sides (outer corner), SE = that diagonal only, DIAG = corner on a 45-degree
 // edge. Id 1 is unused. Diagrams: docs/reference/rmg-terrain-shapes.md
+// The basic blend shapes (hard = blend + 6). North is up; e is an edge of
+// the shape's kind, . no edge, ? not tested by its rule.
+//   N_W    W      N      SE
+//   ? e ?  ? . ?  ? e ?  ? . ?
+//   e C ?  e C ?  ? C ?  . C .
+//   ? ? ?  ? ? ?  ? ? ?  ? . e
 enum ERmgTerrainShape {
     SHAPE_FILL = 0,
     SHAPE_N_W_BLEND = 2,
@@ -493,7 +499,12 @@ int TRmgTableTerrainRule::selectTransitionFrame(
 int __fastcall selectTerrainTransition(
     const int* neighbours, TRmgTerrainFlip* flip);
 
-// Neighbour direction order for each (flipX, flipY) reflection.
+// Neighbour direction order for each (flipX, flipY) reflection. North is up;
+// each grid puts order[d], a TILE_DIR_* index, at canonical direction d.
+//   none   flipY  flipX  both
+//   7 0 1  5 4 3  1 0 7  3 4 5
+//   6 . 2  6 . 2  2 . 6  2 . 6
+//   5 4 3  7 0 1  3 4 5  1 0 7
 DATA(0x00642C00)
 const s32 g_rmgReflectedNeighbours[2][2][8] = {
     {{0, 1, 2, 3, 4, 5, 6, 7}, {4, 3, 2, 1, 0, 7, 6, 5}},
@@ -1340,6 +1351,10 @@ static inline int getTerrainFlipIndex(const TRmgTerrainFlip& flip)
 
 // An outer corner lies on a 45-degree edge when either diagonal beside it
 // (NE or SW of the canonical NW corner) has the cell's own terrain.
+// North is up; e is an edge side, o a probe, ? not tested.
+//   ? e o
+//   e C ?
+//   o ? ?
 VA(0x005B6BA0, 0x24C)
 MAC_ADDRESS(0x258f18, 0x360)
 b8 rmgTerrainPainter::isOuterCornerOnDiagonalEdge(
@@ -1364,6 +1379,10 @@ b8 rmgTerrainPainter::isOuterCornerOnDiagonalEdge(
 
 // An inner corner lies on a 45-degree edge when the cell two steps along
 // either side (E or S of the canonical SE corner) has another terrain.
+// North is up; . no edge, e the diagonal edge, x a probe, ? not tested.
+//   C . x
+//   . e ?
+//   x ? ?
 VA(0x005B6E00, 0x1B3)
 MAC_ADDRESS(0x259278, 0x288)
 b8 rmgTerrainPainter::isInnerCornerOnDiagonalEdge(
