@@ -379,17 +379,15 @@ VA(0x005b3890, 0x58)
 MAC_ADDRESS(0x254d08, 0xc8)
 s32 TRmgPatternTerrainRule::selectBaseFrame(s32 strength, s32 oldFrame)
 {
-    s32 frame = oldFrame;
-    if (!matchesTerrainFrame(m_entries, oldFrame, SHAPE_FILL)) {
-        b8 special = false;
-        if (hasSpecialBaseFrames()) {
-            u32 chancePercent = static_cast<u32>(m_specialFrameChance * strength)
-                / RMG_FULL_BRUSH_STRENGTH;
-            special = static_cast<u32>(rand() % 100) < chancePercent;
-        }
-        frame = getRange(SHAPE_FILL, special).selectFrame();
+    if (matchesTerrainFrame(m_entries, oldFrame, SHAPE_FILL))
+        return oldFrame;
+    b8 special = false;
+    if (hasSpecialBaseFrames()) {
+        u32 chancePercent = static_cast<u32>(m_specialFrameChance * strength)
+            / RMG_FULL_BRUSH_STRENGTH;
+        special = static_cast<u32>(rand() % 100) < chancePercent;
     }
-    return frame;
+    return getRange(SHAPE_FILL, special).selectFrame();
 }
 
 // Transitions always draw from the non-special range.
@@ -479,11 +477,9 @@ VA(0x005b3aa0, 0x31)
 MAC_ADDRESS(0x254f84, 0x94)
 s32 TRmgTableTerrainRule::selectBaseFrame(s32, s32 oldFrame)
 {
-    s32 frame = oldFrame;
-    if (!matchesTerrainFrame(g_rmgTerrainPatterns, oldFrame, SHAPE_FILL)) {
-        frame = g_rmgTerrainPatternRanges.getRange(SHAPE_FILL, false, false).selectFrame();
-    }
-    return frame;
+    if (matchesTerrainFrame(g_rmgTerrainPatterns, oldFrame, SHAPE_FILL))
+        return oldFrame;
+    return g_rmgTerrainPatternRanges.getRange(SHAPE_FILL, false, false).selectFrame();
 }
 
 VA(0x005b3ae0, 0x74)
@@ -496,9 +492,8 @@ s32 TRmgTableTerrainRule::selectTransitionFrame(
     if (oldFrame == RMG_NO_TERRAIN_FRAME
         || !g_rmgTerrainPatterns[oldFrame].matches(
                transition, requestedFlip.m_flipX, requestedFlip.m_flipY)) {
-        TRmgTerrainPatternRange& range = g_rmgTerrainPatternRanges.getRange(
-            transition, requestedFlip.m_flipX, requestedFlip.m_flipY);
-        frame = range.selectFrame();
+        frame = g_rmgTerrainPatternRanges.getRange(
+            transition, requestedFlip.m_flipX, requestedFlip.m_flipY).selectFrame();
     }
     selectedFlip = TRmgTerrainFlip(false, false);
     return frame;

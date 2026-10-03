@@ -18,11 +18,9 @@ TRmgLinePainterInterface::TRmgLinePainterInterface(const TRmgGridPoint& size)
 VA(0x004f9be0, 0xb7)
 MAC_ADDRESS(0x22210c, 0x1ec)
 TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const s32* framePatterns)
-    : m_frameCount(frameCount), m_framePatterns(0)
+    : m_frameCount(frameCount), m_framePatterns(new s32[m_frameCount])
 {
-    s32* allocated = new s32[m_frameCount];
-    m_framePatterns = allocated;
-    if (!allocated)
+    if (!m_framePatterns)
         throw TAllocationFailure();
     std::copy(framePatterns, framePatterns + m_frameCount, m_framePatterns);
     for (u32 pattern = LINE_END_S; pattern < LINE_PATTERN_COUNT; ++pattern) {
@@ -453,8 +451,7 @@ static s32 isRmgCounterClockwise(TPoint first, TPoint second, TPoint third)
 
 static s32 isRmgPointRightOfEdge(TPoint point, TRmgHalfEdge* edge)
 {
-    TRmgHalfEdge* twin = edge->m_twin;
-    return isRmgCounterClockwise(edge->m_sitePosition, point, twin->m_sitePosition);
+    return isRmgCounterClockwise(edge->m_sitePosition, point, edge->m_twin->m_sitePosition);
 }
 
 static inline bool isRmgEdgeOrigin(TPoint point, TRmgHalfEdge* edge)

@@ -252,6 +252,21 @@ following keeps only with a pointer here:
   `canPlaceTreasureGroup`'s group-bounds scan uses plain coordinates, and
   `decorateMap` walks the cell array directly when counting border cells and
   opening paths. Only those two frames changed.
+- A thirteenth pass let `decorateMapCell` iterate the blocked footprint
+  cells instead of a staged bounds struct, chose `placeZoneTreasures`'
+  density area once, and dropped staging in the line-pattern table
+  constructor and in `isRmgPointRightOfEdge`, the pattern and table rules'
+  `selectBaseFrame` result variables and the table rule's staged range; all
+  but the first two compile identically or run only at static
+  initialization. It kept the staged positions in `isRmgEdgeOrigin`,
+  `isRmgEdgeDestination` and `isRmgPointOnSegment`, the half-edge
+  constructors' body stores, `getTerrainNeighbourKindAt`'s staged terrain,
+  both `selectTransitionFrame` result variables, the setter-driven loops in
+  `paintRectangle` and `paintTransitions`, `type_object`'s constructor
+  stores, `carveBranchingPaths`' field-wise seed points, the counter
+  positions in `traceBranchEnd` and `createWaterZoneIsland` and
+  `generateRmgIslandMask`'s field-wise midpoints: each rewrite changed
+  Voronoi, terrain-painting or other pre-path code.
 
 `writeRmgReservedBytes` takes its count as a function argument for a separate
 reason: VC6 merges function templates whose parameters do not mention every

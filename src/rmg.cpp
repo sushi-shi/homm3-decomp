@@ -2950,20 +2950,12 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition start, s32 progressSteps
                 // are S and each o; North is up:
                 //   S o o
                 //   o o o
-                TRmgZoneBounds bounds;
-                bounds.m_minimumX = position.m_x;
-                bounds.m_minimumY = position.m_y;
-                bounds.m_maximumX = position.m_x + prototype->getWidth();
-                bounds.m_maximumY = position.m_y + prototype->getHeight();
-                TRmgMapPosition candidatePosition;
-                candidatePosition.m_z = position.m_z;
-                for (candidatePosition.m_y = bounds.m_minimumY;
-                    candidatePosition.m_y < bounds.m_maximumY; ++candidatePosition.m_y) {
-                    for (candidatePosition.m_x = bounds.m_minimumX;
-                        candidatePosition.m_x < bounds.m_maximumX; ++candidatePosition.m_x) {
-                        if (prototype->isPassableCell(
-                                candidatePosition.m_x - position.m_x, candidatePosition.m_y - position.m_y))
+                for (s32 row = 0; row < prototype->getHeight(); ++row) {
+                    for (s32 column = 0; column < prototype->getWidth(); ++column) {
+                        if (prototype->isPassableCell(column, row))
                             continue;
+                        TRmgMapPosition candidatePosition(position.m_x + column,
+                            position.m_y + row, position.m_z);
                         s32 score = scoreObjectPlacement(properties, candidatePosition);
                         if (score > 0) {
                             totalWeight += score;
@@ -7452,11 +7444,9 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
     initializeRmgDensityCategories(densities, bandCount, finished, totalDensity, densityProduct);
     if (totalDensity == 0)
         return;
-    s32 spacing;
-    if (zone->m_terrain == eTerrainWater)
-        spacing = getRmgDensitySpacing(RMG_WATER_TREASURE_DENSITY_AREA, totalDensity);
-    else
-        spacing = getRmgDensitySpacing(RMG_LAND_TREASURE_DENSITY_AREA, totalDensity);
+    s32 densityArea = zone->m_terrain == eTerrainWater
+        ? RMG_WATER_TREASURE_DENSITY_AREA : RMG_LAND_TREASURE_DENSITY_AREA;
+    s32 spacing = getRmgDensitySpacing(densityArea, totalDensity);
     // No band has placed a treasure yet.
     s32 weightedCounts[bandCount] = {0, 0, 0};
     s32 countSteps[bandCount];
