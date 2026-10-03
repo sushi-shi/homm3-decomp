@@ -563,11 +563,8 @@ s32 __fastcall getRmgTerrainNeighbourKind(s32 terrain, s32 neighbourTerrain)
         return RMG_NEIGHBOUR_NO_EDGE;
     const TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
     const TRmgTerrainRule* neighbourRule = g_rmgTerrainRules[neighbourTerrain];
-    if (rule->m_blendsWithOtherTerrain) {
-        if (neighbourRule->m_blendsWithOtherTerrain)
-            return terrain == eTerrainDirt
-                ? RMG_NEIGHBOUR_NO_EDGE : RMG_NEIGHBOUR_BLEND_EDGE;
-    }
+    if (rule->m_blendsWithOtherTerrain && neighbourRule->m_blendsWithOtherTerrain)
+        return terrain == eTerrainDirt ? RMG_NEIGHBOUR_NO_EDGE : RMG_NEIGHBOUR_BLEND_EDGE;
     return RMG_NEIGHBOUR_HARD_EDGE;
 }
 
@@ -1427,9 +1424,8 @@ b8 rmgTerrainPainter::isOuterCornerOnDiagonalEdge(
     };
     s32 terrain = getTerrain(point);
     const TPoint* pair = outerCornerProbeOffsets[getTerrainFlipIndex(flip)];
-    if (matchesTerrainAtClampedOffset(*this, point, pair[0], terrain))
-        return true;
-    return matchesTerrainAtClampedOffset(*this, point, pair[1], terrain);
+    return matchesTerrainAtClampedOffset(*this, point, pair[0], terrain)
+        || matchesTerrainAtClampedOffset(*this, point, pair[1], terrain);
 }
 
 // An inner corner lies on a 45-degree edge when the cell two steps along

@@ -478,26 +478,20 @@ TRmgHalfEdge* TRmgVoronoi::locate(TPoint point)
     TRmgHalfEdge* edge = m_root;
     for (;;) {
         if (isRmgEdgeOrigin(point, edge))
-            break;
-        if (isRmgEdgeDestination(point, edge)) {
-            edge = edge->m_twin;
-            break;
-        }
+            return edge;
+        if (isRmgEdgeDestination(point, edge))
+            return edge->m_twin;
         if (isRmgPointRightOfEdge(point, edge)) {
             edge = edge->m_twin;
+        } else if (!isRmgPointRightOfEdge(point, edge->m_next)) {
+            edge = edge->m_next;
         } else {
-            TRmgHalfEdge* next = edge->m_next;
-            if (!isRmgPointRightOfEdge(point, next)) {
-                edge = next;
-                continue;
-            }
             TRmgHalfEdge* destinationPrevious = edge->getLeftNext()->getTwin();
             if (isRmgPointRightOfEdge(point, destinationPrevious))
-                break;
+                return edge;
             edge = destinationPrevious;
         }
     }
-    return edge;
 }
 
 // A flipped half-edge takes both the site and its zone from the opposite
@@ -586,13 +580,12 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 
     for (;;) {
         TRmgHalfEdge* previous = edge->getPrevious();
-        if (isRmgPointRightOfEdge(previous->getOppositeSitePosition(), edge)) {
-            if (isRmgPointInsideCircumcircle(edge->getSitePosition(),
-                    previous->getOppositeSitePosition(), edge->getOppositeSitePosition(), point)) {
-                flipRmgEdge(edge);
-                edge = edge->getPrevious();
-                continue;
-            }
+        if (isRmgPointRightOfEdge(previous->getOppositeSitePosition(), edge)
+            && isRmgPointInsideCircumcircle(edge->getSitePosition(),
+                previous->getOppositeSitePosition(), edge->getOppositeSitePosition(), point)) {
+            flipRmgEdge(edge);
+            edge = edge->getPrevious();
+            continue;
         }
         if (edge->getNext() == m_root)
             return;

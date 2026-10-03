@@ -167,7 +167,10 @@ scan, an attempt loop that cleared its result to signal exhaustion, an
 empty-bodied reverse-iterator search) and removed scope blocks or hoisted
 declarations that only shaped stack reuse. Rewrites in the constructor and
 `initializeZones` call trees were kept only where VC6 emits identical code,
-because `buildZoneBoundaries` reads their stack residue.
+because `buildZoneBoundaries` reads their stack residue. A second review
+merged nested selection tests, made `createGuard`'s skipped RoE creature
+explicit, returned directly from Voronoi point location and declared
+boundary-tracing, fill-seed and fit-test locals where they are used.
 
 Subtraction in an index is not automatically an out-of-bounds access. The
 placement scratch array includes a one-cell border, its overlap flag proves
