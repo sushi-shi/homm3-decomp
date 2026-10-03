@@ -236,7 +236,8 @@ static inline bool isRmgEntranceOpenToNorth(int objectType)
 
 // Shipyards are three tiles wide; these offsets probe beside the left and
 // right ends of the bottom footprint row and the row below it.
-// North is up; P is the shipyard position, # the rest of that row.
+// North is up; digits are offset indices, P is the shipyard position and
+// # the rest of its row.
 //   0 # # P 1
 //   2 . . . 3
 DATA(0x0069CE00)
@@ -1245,6 +1246,12 @@ static inline void advanceRmgOutlineWalk(TPoint& position, int& direction)
     direction = getRmgOppositeDirection(direction);
 }
 
+// A full 3x2 footprint gets the ring around it, walked clockwise from S.
+// North is up; # is the footprint, P its bottom-right cell, o the outline.
+//   o o o o o
+//   o # # # o
+//   o # # P o
+//   o o o S o
 VA(0x00532C80, 0x1BA)
 MAC_ADDRESS(0x22fe88, 0x208)
 void TRmgObjectPropertiesRef::buildOutline()
@@ -2244,6 +2251,13 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
             continue;
         item->openPath();
         // Open the next cell outward too; diagonals fan out to three cells.
+        // North is up; G is the guard, and each cell shows the
+        // g_rmgDirections index of the neighbour that opens it.
+        //   5 5 6 7 7
+        //   5 5 6 7 7
+        //   4 4 G 0 0
+        //   3 3 2 1 1
+        //   3 3 2 1 1
         int fanDirection;
         u32 count;
         if (isRmgDiagonalDirection(direction)) {
@@ -7575,7 +7589,11 @@ static inline TRmgMapItem* getRmgDryRiverCoastCell(
 // Test three water cells, three dry entrance-free cells, then four inland
 // cells. The last inland cell becomes a river target whose blocked bit
 // faces the coast: rivers cannot arrive from there, and createRiver puts
-// its delta on that side.
+// its delta on that side. For direction East, North up: P and ~ water,
+// d the dry strip, i inland (the middle d is inland too), T the target.
+//   ~ d
+//   P d i i T
+//   ~ d
 VA(0x00548A40, 0x222)
 MAC_ADDRESS(0x24ce88, 0x404)
 void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, int direction)

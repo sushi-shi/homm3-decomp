@@ -257,12 +257,12 @@ TPoint& TPoint::operator+=(const TPoint& offset)
 // the other-terrain neighbours, each run followed by its edge kind: N_W = both
 // sides (outer corner), SE = that diagonal only, DIAG = corner on a 45-degree
 // edge. Id 1 is unused. Diagrams: docs/reference/rmg-terrain-shapes.md
-// The basic blend shapes (hard = blend + 6). North is up; e is an edge of
-// the shape's kind, . no edge, ? not tested by its rule.
+// The basic blend shapes as their main rules find them (hard = blend + 6).
+// North is up; e is an edge of the shape's kind, . no edge, ? not fixed.
 //   N_W    W      N      SE
-//   ? e ?  ? . ?  ? e ?  ? . ?
-//   e C ?  e C ?  ? C ?  . C .
-//   ? ? ?  ? ? ?  ? ? ?  ? . e
+//   ? e ?  ? . .  ? e ?  . . ?
+//   e C ?  e C ?  . C .  . C .
+//   ? ? .  ? . .  . ? .  ? . e
 enum ERmgTerrainShape {
     SHAPE_FILL = 0,
     SHAPE_N_W_BLEND = 2,
