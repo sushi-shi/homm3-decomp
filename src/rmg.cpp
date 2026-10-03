@@ -6898,7 +6898,7 @@ void type_random_map_generator::placeMines()
     for (u32 index = 0; index < m_zones.size(); ++index) {
         TRmgZone* zone = m_zones[index];
         TRmgTemplateZone* slot = zone->m_templateZone;
-        for (s32 resource = 0; resource <= GOLD; ++resource) {
+        for (s32 resource = WOOD; resource <= GOLD; ++resource) {
             b8 startingMine = false;
             if ((resource == WOOD || resource == ORE)
                 && (slot->m_kind == RMG_TEMPLATE_HUMAN || slot->m_kind == RMG_TEMPLATE_COMPUTER)
@@ -8315,7 +8315,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
             if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
                 writeValue<char>(outfile, 1);
-                writeValue<char>(outfile, -1);
+                writeValue<char>(outfile, eTownNeutral); // main town type
             }
 
             writeRmgMapPosition(outfile, mainTowns[serializedPlayer]);
