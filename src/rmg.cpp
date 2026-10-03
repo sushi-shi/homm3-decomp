@@ -4918,21 +4918,19 @@ void type_random_map_generator::buildZoneConnectionPaths()
     for (u32 zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
         TRmgZoneBounds bounds = zone->m_bounds;
-        TRmgMapPosition position = zone->m_levelPosition;
+        int level = zone->m_levelPosition.m_z;
         // Retail bug: with no eligible empty cell the scan never assigns
         // seed, yet the fallback below still uses it.
         TRmgMapPosition seed;
-        TRmgMapPosition pathPosition;
         b8 foundClearPath = false;
-        for (pathPosition.m_y = bounds.m_minimumY;
-             pathPosition.m_y < bounds.m_maximumY && !foundClearPath; ++pathPosition.m_y) {
+        for (int y = bounds.m_minimumY; y < bounds.m_maximumY && !foundClearPath; ++y) {
             for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
-                TRmgMapItem* current = m_map.getMapItem(x, pathPosition.m_y, position.m_z);
+                TRmgMapItem* current = m_map.getMapItem(x, y, level);
                 if (current->m_zoneState.m_zone == zoneIndex) {
                     u32 terrain = current->getLandType();
                     if ((terrain != eTerrainWater || zone->m_terrain == terrain)
                         && !current->hasObjects()) {
-                        seed = TRmgMapPosition(x, pathPosition.m_y, position.m_z);
+                        seed = TRmgMapPosition(x, y, level);
                         if (current->hasPathClearance() && current->isPassableLand()) {
                             foundClearPath = true;
                             break;
@@ -4946,7 +4944,7 @@ void type_random_map_generator::buildZoneConnectionPaths()
             current->openPath();
         }
         m_map.floodConnectionCosts(seed, zone->m_terrain == eTerrainWater);
-        pathPosition = zone->m_levelPosition;
+        TRmgMapPosition pathPosition = zone->m_levelPosition;
         for (pathPosition.m_y = bounds.m_minimumY; pathPosition.m_y < bounds.m_maximumY; ++pathPosition.m_y) {
             for (pathPosition.m_x = bounds.m_minimumX; pathPosition.m_x < bounds.m_maximumX; ++pathPosition.m_x) {
                 TRmgMapItem* current = m_map.getMapItem(pathPosition);
@@ -5439,7 +5437,6 @@ b8 type_random_map_generator::createShipyardConnection(
     int prototypeIndex = rand() % m_objectPrototypes[SHIPYARD].size();
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[SHIPYARD][prototypeIndex];
     TObjectType* prototype = properties->m_prototype;
-    TRmgMapPosition nearby;
     {
         TRmgZoneBounds bounds = source->m_bounds;
         TRmgMapPosition position;
@@ -5454,13 +5451,13 @@ b8 type_random_map_generator::createShipyardConnection(
                     if (item->isConnectionVisited())
                         return true;
                     if (item->getLandType() != eTerrainWater) {
-                        nearby = position;
-                        if (nearby.m_y + 1 < m_map.m_mapHeight) {
-                            for (nearby.m_x = position.m_x;
-                                 nearby.m_x <= position.m_x + 2; ++nearby.m_x) {
-                                if (m_map.canPlaceObject(properties, nearby, source)
-                                    && canPlaceShipyard(nearby))
-                                    candidates.push_back(nearby);
+                        TRmgMapPosition site = position;
+                        if (site.m_y + 1 < m_map.m_mapHeight) {
+                            for (site.m_x = position.m_x;
+                                 site.m_x <= position.m_x + 2; ++site.m_x) {
+                                if (m_map.canPlaceObject(properties, site, source)
+                                    && canPlaceShipyard(site))
+                                    candidates.push_back(site);
                             }
                         }
                     }
@@ -5474,32 +5471,33 @@ b8 type_random_map_generator::createShipyardConnection(
     rmgOwnableObject* shipyard = new rmgOwnableObject(properties);
     TRmgMapPosition position = addRmgObjectAtRandomCandidate(this, shipyard, candidates);
 
-    nearby = getRmgObjectTriggerPosition(position, prototype->m_triggerCell);
-    int entranceX = nearby.m_x;
-    m_roadTargets.push_back(nearby);
+    TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, prototype->m_triggerCell);
+    m_roadTargets.push_back(entrance);
 
-    nearby = position;
-    ++nearby.m_y;
-    for (nearby.m_x = position.m_x - prototype->getWidth() + 1;
-         nearby.m_x <= position.m_x; ++nearby.m_x) {
-        TRmgMapItem* item = m_map.getMapItem(nearby);
+    // Open the row below the footprint as source-zone entrances.
+    TRmgMapPosition approach = position;
+    ++approach.m_y;
+    for (approach.m_x = position.m_x - prototype->getWidth() + 1;
+         approach.m_x <= position.m_x; ++approach.m_x) {
+        TRmgMapItem* item = m_map.getMapItem(approach);
         item->openPath();
-        source->m_entrances.push_back(TPoint(nearby.m_x, nearby.m_y));
+        source->m_entrances.push_back(TPoint(approach.m_x, approach.m_y));
     }
 
     floodShipyardWater(shipyard);
 
     int guardValue = getRmgConnectionGuardValue(connection, *this);
 
+    // Border guards and the monster guard stand on that row, centred on the
+    // entrance column.
     if (connection->m_placeBorderObjects) {
-        nearby.m_x = entranceX - 1;
-        if (placeBorderObject(nearby, 3, destination) >= 0)
+        approach.m_x = entrance.m_x - 1;
+        if (placeBorderObject(approach, 3, destination) >= 0)
             guardValue = 0;
     }
     if (guardValue > 0) {
-        nearby = position + TPoint(0, 1);
-        nearby.m_x = entranceX;
-        placeGuard(guardValue, nearby);
+        approach.m_x = entrance.m_x;
+        placeGuard(guardValue, approach);
     }
     return true;
 }
@@ -5965,8 +5963,7 @@ void type_random_map_generator::decorateUnderground()
         m_progress->advance(1200);
     int currentTerrain = eTerrainRock;
     for (u32 zone = 0; zone < m_zones.size(); ++zone) {
-        scan = m_zones[zone]->getLevelPosition();
-        if (scan.m_z != RMG_UNDERGROUND_LEVEL)
+        if (m_zones[zone]->getLevelPosition().m_z != RMG_UNDERGROUND_LEVEL)
             continue;
         TRmgZoneBounds bounds = m_zones[zone]->m_bounds;
         int terrain = m_zones[zone]->m_terrain;
@@ -5976,10 +5973,10 @@ void type_random_map_generator::decorateUnderground()
         }
         for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
             for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
-                TRmgMapItem* item = m_map.getMapItem(x, y, RMG_UNDERGROUND_LEVEL);
-                if (item->getLandType() == eTerrainRock
-                    && item->m_zoneState.m_zone == zone
-                    && (item->hasPathClearance() || item->hasObjects())) {
+                TRmgMapItem* cell = m_map.getMapItem(x, y, RMG_UNDERGROUND_LEVEL);
+                if (cell->getLandType() == eTerrainRock
+                    && cell->m_zoneState.m_zone == zone
+                    && (cell->hasPathClearance() || cell->hasObjects())) {
                     if (terrain != currentTerrain) {
                         brush.changeTerrain(terrain, RMG_BRUSH_STRENGTH);
                         currentTerrain = terrain;
@@ -6508,10 +6505,12 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
     int bestBorderCount = 0;
     int bestDistance = 40000;
     int zoneIndex = zone->m_templateZone->m_zoneIndex;
-    TRmgMapPosition townPosition;
+    // The mine position whose entrance would be the town entrance, so anchor
+    // distances below equal entrance-to-entrance distances.
+    TRmgMapPosition townAlignedAnchor;
     if (startingMine) {
-        townPosition = zone->m_position;
-        townPosition += TPoint(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
+        townAlignedAnchor = zone->m_position;
+        townAlignedAnchor += TPoint(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
     }
     insetRmgObjectPlacementBounds(bounds, prototype);
     TRmgMapPosition position = zone->m_levelPosition;
@@ -6522,7 +6521,7 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
             if (item->m_zoneState.m_zone != zoneIndex || !m_map.canPlaceObject(properties, position, zone))
                 continue;
             if (startingMine) {
-                int distance = getRmgSquaredDistance(position, townPosition);
+                int distance = getRmgSquaredDistance(position, townAlignedAnchor);
                 if (distance > bestDistance || distance < 16)
                     continue;
                 if (distance < 144)
