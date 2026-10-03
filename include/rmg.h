@@ -385,7 +385,7 @@ struct TRmgZoneConnection {
     b8 m_unguarded;               // +0x08
     // rmg.txt "Border Guard": try a border guard keyed to a keymaster's tent
     // in the other zone, which then replaces the monster guard.
-    b8 m_placeBorderObjects;      // +0x09
+    b8 m_borderGuard;             // +0x09
     // Set once a crossing, shipyard or gate connects the zones, or after a
     // portal attempt even if it placed nothing. Links between two added water
     // zones start set.
@@ -1593,7 +1593,8 @@ struct TRmgZone {
     }
     TRmgMapPosition getLevelPosition() const;
     void setLevelPosition(TRmgMapPosition position);
-    s32 getSize() const
+    // Unscaled; m_scaledSize is the zone's size on the map.
+    s32 getTemplateSize() const
     {
         return m_templateZone->m_size;
     }
@@ -1678,7 +1679,9 @@ SIZE(TRmgHalfEdge, 0x24);
 // up an edge for each site.
 class TRmgVoronoi {
 public:
-    TRmgHalfEdge* m_root;                 // +0x00
+    // Where locate starts walking; addSite moves it to the new site's first
+    // spoke.
+    TRmgHalfEdge* m_startingEdge;        // +0x00
     std::vector<TRmgHalfEdge*> m_edges;  // +0x04
 
     TRmgVoronoi();
@@ -1811,7 +1814,7 @@ public:
     std::vector<type_treasure_def*> m_objectGenerators; // +0x10f0
     // Per keymaster colour: a border guard of that colour is placed or
     // being placed.
-    std::vector<b8> m_disabledKeyTents;     // +0x1100
+    std::vector<b8> m_disabledKeyTentColors;           // +0x1100
     // Placed objects per object type, checked against map-wide limits.
     s32 m_objectCountByType[ROCKLANDS + 1];            // +0x1110
     // Town and shipyard entrances that createRoads joins pairwise.
@@ -1988,10 +1991,10 @@ public:
     // colour (size() when none remain).
     void setKeyTentColorDisabled(s32 color, b8 disabled)
     {
-        m_disabledKeyTents[color] = disabled;
+        m_disabledKeyTentColors[color] = disabled;
         m_nextKeyTentColor = 0;
-        while (m_nextKeyTentColor < m_disabledKeyTents.size()
-            && m_disabledKeyTents[m_nextKeyTentColor])
+        while (m_nextKeyTentColor < m_disabledKeyTentColors.size()
+            && m_disabledKeyTentColors[m_nextKeyTentColor])
             ++m_nextKeyTentColor;
     }
     void setHumanPlayer(s32 seat);

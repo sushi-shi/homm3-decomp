@@ -73,8 +73,8 @@ These describe equivalent traversal roles, not identical storage layouts.
 | Initial subdivision | `0x005FD010` builds four corners at `(-200,-200)`, `(400,-200)`, `(400,400)`, `(-200,400)`, four perimeter edges and a diagonal. | [quadedge.C][gg-c], lines 49–64: caller-supplied triangle. **Different boundary policy.** |
 | Point location | `0x005FD6B0`, length `0xD7`: endpoint checks followed by side tests on the edge, next edge, and destination predecessor. A destination hit returns the twin (`+0xCB`), putting the query at the result's origin. | [quadedge.C][gg-c], lines 148–168, and paper p. 121: same walk, but either endpoint returns the current edge. **Shared walk; meaningful behavioral difference.** |
 | Point on an edge | `0x005FD790 +0x40:+0xD0`: three calls to squared distance `0x005FDB10`; reject either distance exceeding edge length squared; evaluate an integer implicit line and test exact zero. On success, move to predecessor and remove its next edge. | [quadedge.C][gg-c], lines 128–143, 180–183: distance rejection, line evaluation, and predecessor/deletion sequence. **Suggestive implementation choice.** |
-| Insertion fan | `0x005FD790 +0xD0:+0x186`: create/splice first spoke, save it at the diagram root; repeat connection and predecessor traversal until `twin->previous` equals that root. | [quadedge.C][gg-c], lines 185–195: root-edge termination. **More specific than the original pseudocode.** |
-| Legalization | `0x005FD790 +0x186:+0x348`: predecessor's opposite site must pass the side test and incircle test; flip, then reload the edge's predecessor; otherwise stop at `next == root` or advance `next->next->twin`. | [quadedge.C][gg-c], lines 199–210: same loop choices. **Suggestive in combination.** |
+| Insertion fan | `0x005FD790 +0xD0:+0x186`: create/splice first spoke, save it as the diagram's starting edge; repeat connection and predecessor traversal until `twin->previous` equals that edge. | [quadedge.C][gg-c], lines 185–195: starting-edge termination. **More specific than the original pseudocode.** |
+| Legalization | `0x005FD790 +0x186:+0x348`: predecessor's opposite site must pass the side test and incircle test; flip, then reload the edge's predecessor; otherwise stop at `next == starting edge` or advance `next->next->twin`. | [quadedge.C][gg-c], lines 199–210: same loop choices. **Suggestive in combination.** |
 | Numeric predicates | `0x005FDAE0` computes a signed 32-bit orientation. Insertion makes four further orientation calls and uses signed 64-bit products/additions for the incircle determinant (`+0x1EE:+0x2AB`). | [quadedge.C][gg-c], lines 94–125: corresponding area/determinant algebra. **Mathematical family evidence, with different arithmetic.** |
 | Dual construction and ownership | `0x005FDB40` computes an integer circumcenter and caches it on three incident halves. `0x005FD390` registers both allocated halves in a vector; `0x005FD5B0` erases both; `0x005FD330` destroys owned halves. | [quadedge.h][gg-h], lines 37–55: different ownership/interface; no corresponding dual-cache fields. **Game integration, not proof of original authorship.** |
 
@@ -89,13 +89,13 @@ The closer correspondence is a *combination* of choices:
 
 | Choice | Paper, p. 120 | Gems implementation | HoMM3 retail |
 | --- | --- | --- | --- |
-| Fan completion | Compare destination with saved first site. | Compare left-next with saved starting edge. | Compare twin's previous with root at `0x005FD912`. |
-| Legalization completion | Compare origin with first site. | Compare next with starting edge. | Compare next with root at `0x005FDABD`. |
+| Fan completion | Compare destination with saved first site. | Compare left-next with saved starting edge. | Compare twin's previous with the starting edge at `0x005FD912`. |
+| Legalization completion | Compare origin with first site. | Compare next with starting edge. | Compare next with the starting edge at `0x005FDABD`. |
 | Resume after flip | Reuse saved predecessor `t`. | Read the modified edge's predecessor. | Reload predecessor at `0x005FDA9D`. |
 | Segment membership | Left abstract. | Distance guards plus a line equation. | Squared-distance guards plus an unnormalized integer line equation. |
 
 The post-flip change is also independently documented in the [errata][errata],
-so it is not a unique fingerprint. The two root-edge comparisons and segment
+so it is not a unique fingerprint. The two starting-edge comparisons and segment
 test make adaptation a better-supported hypothesis than lookup exactness
 alone. They still cannot distinguish direct use of Lischinski's code from an
 intermediate derivative or independently chosen equivalent implementation.

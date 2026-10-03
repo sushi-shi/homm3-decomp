@@ -365,7 +365,7 @@ TRmgVoronoi::TRmgVoronoi()
     thirdEdge->getTwin()->splice(fourthEdge);
     fourthEdge->getTwin()->splice(firstEdge);
     connectEdges(fourthEdge, thirdEdge);
-    m_root = firstEdge;
+    m_startingEdge = firstEdge;
 }
 
 VA(0x005fd330, 0x58)
@@ -454,7 +454,7 @@ TRmgHalfEdge* TRmgVoronoi::locate(TPoint point)
 {
     // Walking point location in the incremental Delaunay triangulation.
     // There is no iteration limit or outside-domain fallback.
-    TRmgHalfEdge* edge = m_root;
+    TRmgHalfEdge* edge = m_startingEdge;
     for (;;) {
         if (isRmgEdgeOrigin(point, edge))
             return edge;
@@ -551,11 +551,11 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
     }
     TRmgHalfEdge* fanBase = createEdge(edge->getSitePosition(), edge->getZone(), point, zone);
     fanBase->splice(edge);
-    m_root = fanBase;
+    m_startingEdge = fanBase;
     do {
         fanBase = connectEdges(edge, fanBase->getTwin());
         edge = fanBase->getPrevious();
-    } while (edge->getLeftNext() != m_root);
+    } while (edge->getLeftNext() != m_startingEdge);
 
     for (;;) {
         TRmgHalfEdge* previous = edge->getPrevious();
@@ -564,7 +564,7 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
                 previous->getOppositeSitePosition(), edge->getOppositeSitePosition(), point)) {
             flipRmgEdge(edge);
             edge = edge->getPrevious();
-        } else if (edge->getNext() == m_root) {
+        } else if (edge->getNext() == m_startingEdge) {
             return;
         } else {
             edge = edge->getNext()->getLeftPrevious();

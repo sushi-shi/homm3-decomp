@@ -446,7 +446,7 @@ enum ERmgTemplateColumn {
     RMG_TEMPLATE_COLUMN_CONNECTION_SECOND_ZONE = 77,
     RMG_TEMPLATE_COLUMN_CONNECTION_VALUE = 78,
     RMG_TEMPLATE_COLUMN_CONNECTION_UNGUARDED = 79,            // "Wide"
-    RMG_TEMPLATE_COLUMN_CONNECTION_PLACE_BORDER_OBJECTS = 80, // "Border Guard"
+    RMG_TEMPLATE_COLUMN_CONNECTION_BORDER_GUARD = 80,         // "Border Guard"
     RMG_TEMPLATE_COLUMN_CONNECTION_MINIMUM_HUMAN_PLAYERS = 81,
     RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_HUMAN_PLAYERS = 82,
     RMG_TEMPLATE_COLUMN_CONNECTION_MINIMUM_PLAYERS = 83,
@@ -3171,8 +3171,8 @@ static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
                 connection.m_value = atoi(fields[RMG_TEMPLATE_COLUMN_CONNECTION_VALUE]);
                 connection.m_unguarded = isRmgTemplateFieldSet(
                     fields[RMG_TEMPLATE_COLUMN_CONNECTION_UNGUARDED]);
-                connection.m_placeBorderObjects = isRmgTemplateFieldSet(
-                    fields[RMG_TEMPLATE_COLUMN_CONNECTION_PLACE_BORDER_OBJECTS]);
+                connection.m_borderGuard = isRmgTemplateFieldSet(
+                    fields[RMG_TEMPLATE_COLUMN_CONNECTION_BORDER_GUARD]);
                 readRmgTemplatePlayerLimits(connection, fields,
                     RMG_TEMPLATE_COLUMN_CONNECTION_MINIMUM_HUMAN_PLAYERS);
                 connection.m_connected = false;
@@ -3416,9 +3416,9 @@ void type_random_map_generator::initializeObjectGenerators()
     // rmg-cleanup-review.md.
     {
         s32 tentIndex = m_objectPrototypes[BORDER_TENT].size();
-        m_disabledKeyTents.resize(tentIndex);
+        m_disabledKeyTentColors.resize(tentIndex);
         while (tentIndex--) {
-            m_disabledKeyTents[tentIndex] = false;
+            m_disabledKeyTentColors[tentIndex] = false;
             m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 5000));
             m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 7500));
             m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 10000));
@@ -3737,12 +3737,12 @@ void type_random_map_generator::filterZonePositions(
         if (m_zones[other] != zone) {
             TRmgMapPosition position;
             position = m_zones[other]->getLevelPosition();
-            s32 size = m_zones[other]->getSize();
+            s32 size = m_zones[other]->getTemplateSize();
             includeRmgZoneFootprint(bounds.m_minimumY, bounds.m_minimumX,
                 bounds.m_maximumY, bounds.m_maximumX, position, size);
         }
     }
-    s32 size = zone->getSize();
+    s32 size = zone->getTemplateSize();
     for (candidate = 0; candidate < candidates.size(); ++candidate) {
         s32 candidateSize = getRmgCandidateMapSize(
             bounds, candidates[candidate], size, mapSize);
@@ -4430,7 +4430,7 @@ static inline void appendRmgExtraZoneConnection(
     TRmgZoneConnection connection;
     connection.m_value = 0;
     connection.m_unguarded = true;
-    connection.m_placeBorderObjects = false;
+    connection.m_borderGuard = false;
     connection.m_connected = connected;
     appendRmgTwoWayConnection(source->m_templateZone,
         destination->m_templateZone, connection);
@@ -5531,7 +5531,7 @@ b8 type_random_map_generator::createGroundConnection(
     s32 guardValue = getConnectionGuardValue(connection);
 
     // Retail dead path: floodConnectionCosts sets crossing costs to 10 or more.
-    if (bestCost == 1 && guardValue == 0 && !connection->m_placeBorderObjects)
+    if (bestCost == 1 && guardValue == 0 && !connection->m_borderGuard)
         return true;
 
     s32 count = min(candidates.size(),
@@ -5543,13 +5543,13 @@ b8 type_random_map_generator::createGroundConnection(
             m_map.getMapItem(position)->m_tileData.m_connectionDirection];
         TRmgMapPosition otherPosition = position + direction;
 
-        openConnectionPath(position, connection->m_placeBorderObjects);
+        openConnectionPath(position, connection->m_borderGuard);
         source->m_entrances.push_back(TPoint(position.m_x, position.m_y));
-        openConnectionPath(otherPosition, connection->m_placeBorderObjects);
+        openConnectionPath(otherPosition, connection->m_borderGuard);
         destination->m_entrances.push_back(TPoint(otherPosition.m_x, otherPosition.m_y));
         candidates.erase(candidates.begin() + selected);
 
-        if (connection->m_placeBorderObjects) {
+        if (connection->m_borderGuard) {
             placeGroundConnectionBorder(position, destination, guardValue);
             placeGroundConnectionBorder(otherPosition, source, guardValue);
         }
@@ -5723,7 +5723,7 @@ b8 type_random_map_generator::createShipyardConnection(
 
     // Border guards and the monster guard stand on that row, centred on the
     // entrance column.
-    if (connection->m_placeBorderObjects) {
+    if (connection->m_borderGuard) {
         approach.m_x = entrance.m_x - 1;
         if (placeBorderObject(approach, RMG_SHIPYARD_BORDER_GUARDS, destination) >= 0)
             guardValue = 0;
@@ -5825,7 +5825,7 @@ b8 type_random_map_generator::createSubterraneanGate(
     TRmgMapPosition approach = m_map.openEntranceApproach(entrance);
     TRmgMapPosition otherApproach = m_map.openEntranceApproach(otherEntrance);
 
-    if (connection->m_placeBorderObjects) {
+    if (connection->m_borderGuard) {
         // Success on either side suppresses both guards; a failed placement
         // does not undo the other side's objects.
         placeGateConnectionBorder(approach, destination, guardValue);
@@ -5942,7 +5942,7 @@ inline type_object* type_random_map_generator::placeMonolith(
 inline void type_random_map_generator::protectMonolith(type_object* portal,
     const TRmgZoneConnection* connection, TRmgZone* keyTentZone, s32& guardValue)
 {
-    if (connection->m_placeBorderObjects
+    if (connection->m_borderGuard
         && placeMonolithBorder(portal->getPosition(), keyTentZone)) {
         guardValue = 0;
     } else if (guardValue > 0) {
