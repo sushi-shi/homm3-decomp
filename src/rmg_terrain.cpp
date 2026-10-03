@@ -258,7 +258,7 @@ TPoint& TPoint::operator+=(const TPoint& offset)
 // sides (outer corner), SE = that diagonal only, DIAG = corner on a 45-degree
 // edge. Id 1 is unused. Diagrams: docs/reference/rmg-terrain-shapes.md
 // The basic blend shapes as their main rules find them (hard = blend + 6).
-// North is up; e is an edge of the shape's kind, . no edge, ? not fixed.
+// North is up; C is the cell, e an edge of its kind, . none, ? not fixed.
 //   N_W    W      N      SE
 //   ? e ?  ? . .  ? e ?  . . ?
 //   e C ?  e C ?  . C .  . C .
@@ -1351,7 +1351,7 @@ static inline int getTerrainFlipIndex(const TRmgTerrainFlip& flip)
 
 // An outer corner lies on a 45-degree edge when either diagonal beside it
 // (NE or SW of the canonical NW corner) has the cell's own terrain.
-// North is up; e is an edge side, o a probe, ? not tested.
+// North is up; C is the cell, e an edge, o a probe, ? not tested.
 //   ? e o
 //   e C ?
 //   o ? ?
@@ -1379,10 +1379,10 @@ b8 rmgTerrainPainter::isOuterCornerOnDiagonalEdge(
 
 // An inner corner lies on a 45-degree edge when the cell two steps along
 // either side (E or S of the canonical SE corner) has another terrain.
-// North is up; . no edge, e the diagonal edge, x a probe, ? not tested.
-//   C . x
+// North is up; C is the cell, e its edge, . none, o a probe, ? not tested.
+//   C . o
 //   . e ?
-//   x ? ?
+//   o ? ?
 VA(0x005B6E00, 0x1B3)
 MAC_ADDRESS(0x259278, 0x288)
 b8 rmgTerrainPainter::isInnerCornerOnDiagonalEdge(

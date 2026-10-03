@@ -236,8 +236,8 @@ static inline bool isRmgEntranceOpenToNorth(int objectType)
 
 // Shipyards are three tiles wide; these offsets probe beside the left and
 // right ends of the bottom footprint row and the row below it.
-// North is up; digits are offset indices, P is the shipyard position and
-// # the rest of its row.
+// North is up; digits are offset indices, P is the shipyard position,
+// # the rest of its bottom row and . the row below.
 //   0 # # P 1
 //   2 . . . 3
 DATA(0x0069CE00)
@@ -1247,7 +1247,7 @@ static inline void advanceRmgOutlineWalk(TPoint& position, int& direction)
     direction = getRmgOppositeDirection(direction);
 }
 
-// A full 3x2 footprint gets the ring around it, walked clockwise from S.
+// A full 3x2 footprint gets this ring, walked clockwise from the start S.
 // North is up; # is the footprint, P its bottom-right cell, o the outline.
 //   o o o o o
 //   o # # # o
