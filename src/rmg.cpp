@@ -75,7 +75,7 @@ s32 getRmgDistance(TPoint first, TPoint second)
         getRmgSquaredDistance(first, second))));
 }
 
-DATA(0x006824E0)
+DATA(0x006824e0)
 s32 g_rmgCreatureValueByLevel[7] = {5000, 7000, 9000, 12000, 16000, 21000, 27000};
 
 void type_object::releaseReservation() {}
@@ -88,9 +88,9 @@ b8 type_quest_gold_def::isTerrainDependent() { return true; }
 b8 type_key_tent_def::isTerrainDependent() { return true; }
 
 // Per-type object limits for the whole map and for each zone.
-DATA(0x0069CE4C)
+DATA(0x0069ce4c)
 s32 g_rmgMapObjectLimits[ADVENTURE_OBJECT_TRAIT_COUNT];
-DATA(0x0069D1F4)
+DATA(0x0069d1f4)
 s32 g_rmgZoneObjectLimits[ADVENTURE_OBJECT_TRAIT_COUNT];
 DATA(0x00640718)
 static const TRmgObjectLimit g_rmgMapObjectLimitOverrides[30] = {
@@ -160,28 +160,28 @@ static const s32 g_rmgRiverPatterns[13] = {
     LINE_SE, LINE_SE, LINE_SE, LINE_SE, LINE_CROSS, LINE_ESW, LINE_ESW,
     LINE_NES, LINE_NES, LINE_NS, LINE_NS, LINE_EW, LINE_EW
 };
-DATA(0x0069E5D0)
+DATA(0x0069e5d0)
 TRmgLinePatternTable g_rmgRiverPatternTable(13, g_rmgRiverPatterns);
 
-VA_COMPGEN(0x0055ED70, 0x1D, STATIC_CTOR, g_rmgRiverPatternTable)
+VA_COMPGEN(0x0055ed70, 0x1d, STATIC_CTOR, g_rmgRiverPatternTable)
 
-VA_COMPGEN(0x0055ED90, 0x0A, STATIC_DTOR, g_rmgRiverPatternTable)
+VA_COMPGEN(0x0055ed90, 0x0a, STATIC_DTOR, g_rmgRiverPatternTable)
 
 // The same for road sprites.
-DATA(0x006411AC)
+DATA(0x006411ac)
 static const s32 g_rmgRoadPatterns[17] = {
     LINE_SE, LINE_SE, LINE_SE_VARIANT, LINE_SE_VARIANT, LINE_SE_VARIANT, LINE_SE_VARIANT,
     LINE_NES, LINE_NES, LINE_ESW, LINE_ESW, LINE_NS, LINE_NS, LINE_EW, LINE_EW,
     LINE_END_S, LINE_END_E, LINE_CROSS
 };
-DATA(0x0069E650)
+DATA(0x0069e650)
 TRmgLinePatternTable g_rmgRoadPatternTable(17, g_rmgRoadPatterns);
 
-VA_COMPGEN(0x0055F2F0, 0x1D, STATIC_CTOR, g_rmgRoadPatternTable)
+VA_COMPGEN(0x0055f2f0, 0x1d, STATIC_CTOR, g_rmgRoadPatternTable)
 
-VA_COMPGEN(0x0055F310, 0x0A, STATIC_DTOR, g_rmgRoadPatternTable)
+VA_COMPGEN(0x0055f310, 0x0a, STATIC_DTOR, g_rmgRoadPatternTable)
 
-VA(0x00530E20, 0x1C)
+VA(0x00530e20, 0x1c)
 MAC_ADDRESS(0x22cf74, 0x18)
 TProgressSink::TProgressSink(s32 totalSteps)
 {
@@ -189,15 +189,15 @@ TProgressSink::TProgressSink(s32 totalSteps)
     m_done = 0;
 }
 
-VA_COMPGEN(0x00530E40, 0x23, SCALAR_DELETING_DTOR, TProgressSink)
+VA_COMPGEN(0x00530e40, 0x23, SCALAR_DELETING_DTOR, TProgressSink)
 
-VA(0x00530E70, 0x07)
+VA(0x00530e70, 0x07)
 MAC_ADDRESS(0x22cf8c, 0x48)
 TProgressSink::~TProgressSink()
 {
 }
 
-VA(0x00530E80, 0x0D)
+VA(0x00530e80, 0x0d)
 MAC_ADDRESS(0x22cfd4, 0x8)
 void TProgressSink::setTotal(s32 totalSteps)
 {
@@ -228,7 +228,7 @@ enum ERmgDirection {
 
 // Eight neighbour directions, clockwise from east; even entries are the
 // four cardinal directions.
-DATA(0x0069CDC0)
+DATA(0x0069cdc0)
 TPoint g_rmgDirections[RMG_DIRECTION_COUNT] = {
     TPoint(1, 0),
     TPoint(1, 1),
@@ -272,7 +272,7 @@ static inline bool isRmgEntranceOpenToNorth(s32 objectType)
 // # the rest of its bottom row and . the row below.
 //   0 # # P 1
 //   2 . . . 3
-DATA(0x0069CE00)
+DATA(0x0069ce00)
 TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
     TPoint(-3, 0),
     TPoint(1, 0),
@@ -282,10 +282,10 @@ TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
 
 // River-delta choice per coast side (east, south, west, north), for land and
 // then snow rivers: the nth (from 0) delta recommended for the end's terrain.
-DATA(0x006409A0)
+DATA(0x006409a0)
 static const s32 g_landRiverDeltaIndex[4] = {2, 0, 3, 1};
 
-DATA(0x006409B0)
+DATA(0x006409b0)
 static const s32 g_snowRiverDeltaIndex[4] = {7, 5, 4, 6};
 
 // Candidate town types for each zone terrain, dirt to water. The pick only
@@ -307,7 +307,7 @@ s32 g_rmgTerrainTownChoices[9][4] = {
 };
 
 // Native terrain of each town alignment, used when choosing zone terrain.
-DATA(0x006408C8)
+DATA(0x006408c8)
 static const s32 g_rmgTownNativeTerrains[TOWN_TYPE_COUNT] = {
     eTerrainGrass, // castle
     eTerrainGrass, // rampart
@@ -347,35 +347,35 @@ double g_rmgDirectionSines[RMG_RADIAL_DIRECTION_COUNT] = {
 
 // Guard value thresholds and scales by monster strength (0-5); a scale counts
 // quarters of the value above its threshold.
-DATA(0x006823F0) s32 g_rmgGuardThresholdLow[6] = {50000, 2500, 1500, 1000, 500, 0};
+DATA(0x006823f0) s32 g_rmgGuardThresholdLow[6] = {50000, 2500, 1500, 1000, 500, 0};
 DATA(0x00682408) s32 g_rmgGuardThresholdHigh[6] = {50000, 7500, 7500, 7500, 5000, 5000};
 DATA(0x00682420) s32 g_rmgGuardScaleLow[6] = {0, 2, 3, 4, 6, 6};
 DATA(0x00682438) s32 g_rmgGuardScaleHigh[6] = {0, 2, 3, 4, 4, 6};
 
 DATA(0x00682700)
 static const char* g_rmgWaterNames[3] = {
-    DATA_COMPGEN(0x006827EC, rmgWaterNone, "None"),
-    DATA_COMPGEN(0x006827E4, rmgWaterNormal, "normal"),
-    DATA_COMPGEN(0x006827DC, rmgWaterIslands, "islands")
+    DATA_COMPGEN(0x006827ec, rmgWaterNone, "None"),
+    DATA_COMPGEN(0x006827e4, rmgWaterNormal, "normal"),
+    DATA_COMPGEN(0x006827dc, rmgWaterIslands, "islands")
 };
 
-DATA(0x0068270C)
+DATA(0x0068270c)
 static const char* g_rmgPlayerNames[RMG_PLAYER_COUNT] = {
-    DATA_COMPGEN(0x006827D8, rmgPlayerRed, "red"),
-    DATA_COMPGEN(0x006827D0, rmgPlayerBlue, "blue"),
-    DATA_COMPGEN(0x006827CC, rmgPlayerTan, "tan"),
-    DATA_COMPGEN(0x006827C4, rmgPlayerGreen, "green"),
-    DATA_COMPGEN(0x006827BC, rmgPlayerOrange, "orange"),
-    DATA_COMPGEN(0x006827B4, rmgPlayerPurple, "purple"),
-    DATA_COMPGEN(0x006827AC, rmgPlayerTeal, "teal"),
-    DATA_COMPGEN(0x006827A4, rmgPlayerPink, "pink")
+    DATA_COMPGEN(0x006827d8, rmgPlayerRed, "red"),
+    DATA_COMPGEN(0x006827d0, rmgPlayerBlue, "blue"),
+    DATA_COMPGEN(0x006827cc, rmgPlayerTan, "tan"),
+    DATA_COMPGEN(0x006827c4, rmgPlayerGreen, "green"),
+    DATA_COMPGEN(0x006827bc, rmgPlayerOrange, "orange"),
+    DATA_COMPGEN(0x006827b4, rmgPlayerPurple, "purple"),
+    DATA_COMPGEN(0x006827ac, rmgPlayerTeal, "teal"),
+    DATA_COMPGEN(0x006827a4, rmgPlayerPink, "pink")
 };
 
-DATA(0x0068272C)
+DATA(0x0068272c)
 static const char* g_rmgTownNames[TOWN_TYPE_COUNT] = {
-    DATA_COMPGEN(0x0068279C, rmgTownCastle, "castle"),
+    DATA_COMPGEN(0x0068279c, rmgTownCastle, "castle"),
     DATA_COMPGEN(0x00682794, rmgTownRampart, "rampart"),
-    DATA_COMPGEN(0x0068278C, rmgTownTower, "tower"),
+    DATA_COMPGEN(0x0068278c, rmgTownTower, "tower"),
     DATA_COMPGEN(0x00682784, rmgTownInferno, "inferno"),
     DATA_COMPGEN(0x00682778, rmgTownNecropolis, "necropolis"),
     DATA_COMPGEN(0x00682770, rmgTownDungeon, "dungeon"),
@@ -482,16 +482,16 @@ static void setAvailableRmgHeroes(
         std::logical_not<b8>());
 }
 
-VA_COMPGEN(0x00530F80, 0x21, SCALAR_DELETING_DTOR, type_random_map)
+VA_COMPGEN(0x00530f80, 0x21, SCALAR_DELETING_DTOR, type_random_map)
 
-VA(0x00530E90, 0x4A)
+VA(0x00530e90, 0x4a)
 MAC_ADDRESS(0x22cfdc, 0x50)
 TRmgMapItem::TRmgMapItem()
 {
     clear();
 }
 
-VA_COMPGEN(0x00530EE0, 0x26, IMPLICIT_DTOR, TRmgMapItem)
+VA_COMPGEN(0x00530ee0, 0x26, IMPLICIT_DTOR, TRmgMapItem)
 MAC_COMPGEN_ADDRESS(0x22d02c, 0x84, IMPLICIT_DTOR, TRmgMapItem)
 
 // First plain (shape 0) water frame.
@@ -501,7 +501,7 @@ enum ERmgWaterFrames {
 
 // Resets the cell to empty water. The guard colour, connection-visited flag
 // and previous-tile Y/Z are left unchanged.
-VA(0x00530F10, 0x6F)
+VA(0x00530f10, 0x6f)
 MAC_ADDRESS(0x22d110, 0x15c)
 void TRmgMapItem::clear()
 {
@@ -545,7 +545,7 @@ void TRmgMapItem::clear()
     m_tileData = tileData;
 }
 
-VA(0x00530FB0, 0xA0)
+VA(0x00530fb0, 0xa0)
 MAC_ADDRESS(0x22d394, 0xbc)
 type_random_map::type_random_map(s32 width, s32 height, s32 levels)
 {
@@ -558,7 +558,7 @@ type_random_map::type_random_map(s32 width, s32 height, s32 levels)
 
 VA_COMPGEN(0x00531050, 0x58, VECTOR_DELETING_DTOR, TRmgMapItem)
 
-VA(0x005310B0, 0x83)
+VA(0x005310b0, 0x83)
 MAC_ADDRESS(0x22d450, 0x84)
 type_random_map::~type_random_map()
 {
@@ -566,7 +566,7 @@ type_random_map::~type_random_map()
         delete[] m_mapItems;
 }
 
-VA(0x00531140, 0x2A)
+VA(0x00531140, 0x2a)
 MAC_ADDRESS(0x22d4d4, 0x60)
 void type_random_map::clear()
 {
@@ -592,7 +592,7 @@ enum ERmgOutlinePathClearance {
     RMG_REQUIRE_PATH_CLEARANCE = true
 };
 
-VA(0x00531170, 0x19C)
+VA(0x00531170, 0x19c)
 MAC_ADDRESS(0x22d534, 0x244)
 b8 type_random_map::hasConnectedOutline(
     const std::vector<TPoint>& outline, TRmgMapPosition position,
@@ -652,7 +652,7 @@ static inline void setRmgNeighborhoodBounds(TRmgZoneBounds& bounds,
     bounds.m_maximumX = min(position.m_x + (radius + 1), width);
 }
 
-VA(0x00531310, 0x14B)
+VA(0x00531310, 0x14b)
 MAC_ADDRESS(0x22d778, 0x234)
 void type_random_map::markCoastalTiles()
 {
@@ -818,7 +818,7 @@ enum ERmgBorderEntrancePolicy {
 // Checks the footprint against map bounds, zones and entrances. Only trigger
 // cells honour rejectBorder; only blocked cells apply the water rule
 // (water-only objects must stand on water, others on land).
-VA(0x005318B0, 0x212)
+VA(0x005318b0, 0x212)
 MAC_ADDRESS(0x22dfe0, 0x2a4)
 b8 type_random_map::isPlacementBlocked(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position,
@@ -852,7 +852,7 @@ b8 type_random_map::isPlacementBlocked(
     return false;
 }
 
-VA(0x00531AD0, 0x100)
+VA(0x00531ad0, 0x100)
 MAC_ADDRESS(0x22e284, 0x1d0)
 void type_random_map::openPathPatch(s32 x, s32 y, s32 level)
 {
@@ -868,7 +868,7 @@ void type_random_map::openPathPatch(s32 x, s32 y, s32 level)
     }
 }
 
-VA(0x00531BD0, 0x11F)
+VA(0x00531bd0, 0x11f)
 MAC_ADDRESS(0x22e454, 0x254)
 void type_random_map::markBorderPatch(TRmgMapPosition position)
 {
@@ -915,7 +915,7 @@ static inline bool allowsRmgSharedObjectEntrance(s32 objectType)
 // The object must fit and have a connected outline. With a trigger, the cell
 // below it must also be passable land of the same zone and water class; if
 // that cell is another entrance, its object type needs trait 2.
-VA(0x00531CF0, 0x1A5)
+VA(0x00531cf0, 0x1a5)
 MAC_ADDRESS(0x22e6a8, 0x270)
 b8 type_random_map::canPlaceObject(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position, TRmgZone* zone)
@@ -954,7 +954,7 @@ b8 type_random_map::canPlaceObject(
 
 // Puts the object on the map: trigger cells become entrances with open
 // paths, other non-passable cells become object-blocked, and both record it.
-VA(0x00531EA0, 0x2E6)
+VA(0x00531ea0, 0x2e6)
 MAC_ADDRESS(0x22e918, 0x1c4)
 void type_random_map::addObject(type_object& object, TRmgMapPosition position)
 {
@@ -982,7 +982,7 @@ void type_random_map::addObject(type_object& object, TRmgMapPosition position)
     }
 }
 
-VA(0x00532190, 0x6D)
+VA(0x00532190, 0x6d)
 MAC_ADDRESS(0x22eadc, 0x70)
 void type_random_map::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
@@ -994,7 +994,7 @@ void type_random_map::setTile(const TRmgGridPoint& point, const rmgTerrainTile& 
     item.setTerrain(terrain, frame, flipX, flipY);
 }
 
-VA(0x00532200, 0x3C)
+VA(0x00532200, 0x3c)
 MAC_ADDRESS(0x22eb4c, 0x38)
 void type_random_map::setFrame(const TRmgGridPoint& point, s32 value)
 {
@@ -1030,14 +1030,14 @@ rmgTerrainTile type_random_map::getTile(const TRmgGridPoint& point)
     return tile;
 }
 
-VA(0x005322C0, 0x2A)
+VA(0x005322c0, 0x2a)
 MAC_ADDRESS(0x22ec18, 0x34)
 s32 type_random_map::getTerrain(const TRmgGridPoint& point)
 {
     return getMapItem(point.m_x, point.m_y)->getLandType();
 }
 
-VA(0x005322F0, 0x2A)
+VA(0x005322f0, 0x2a)
 MAC_ADDRESS(0x22ec4c, 0x34)
 s32 type_random_map::getFrame(const TRmgGridPoint& point)
 {
@@ -1052,7 +1052,7 @@ TRmgRoadMapAdapterInterface::~TRmgRoadMapAdapterInterface()
 
 VA_COMPGEN(0x00537940, 0x23, SCALAR_DELETING_DTOR, TRmgRoadMapAdapterInterface)
 
-VA(0x00532360, 0x6E)
+VA(0x00532360, 0x6e)
 MAC_ADDRESS(0x22ece0, 0x6c)
 void TRmgRoadMapAdapter::setTile(
     const TRmgGridPoint& point, const rmgTerrainTile& tile)
@@ -1068,7 +1068,7 @@ void TRmgRoadMapAdapter::setTile(
     item.m_tileData.m_roadFlipY = flipY;
 }
 
-VA(0x005323D0, 0x3C)
+VA(0x005323d0, 0x3c)
 MAC_ADDRESS(0x22ed4c, 0x3c)
 void TRmgRoadMapAdapter::setLineType(const TRmgGridPoint& point, s32 value)
 {
@@ -1089,14 +1089,14 @@ rmgTerrainTile TRmgRoadMapAdapter::getTile(const TRmgGridPoint& point)
     return tile;
 }
 
-VA(0x00532480, 0x2D)
+VA(0x00532480, 0x2d)
 MAC_ADDRESS(0x22ee64, 0x38)
 s32 TRmgRoadMapAdapter::getLineType(const TRmgGridPoint& point)
 {
     return m_map->getMapItem(point.m_x, point.m_y)->m_tile.m_roadType;
 }
 
-VA(0x005324B0, 0x2D)
+VA(0x005324b0, 0x2d)
 MAC_ADDRESS(0x22ee9c, 0x38)
 s32 TRmgRoadMapAdapter::getTerrain(const TRmgGridPoint& point)
 {
@@ -1122,7 +1122,7 @@ TRmgRiverMapAdapterInterface::~TRmgRiverMapAdapterInterface()
 
 VA_COMPGEN(0x00537910, 0x23, SCALAR_DELETING_DTOR, TRmgRiverMapAdapterInterface)
 
-VA_COMPGEN(0x005324E0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverMapAdapter)
+VA_COMPGEN(0x005324e0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverMapAdapter)
 
 VA(0x00532520, 0x205)
 MAC_ADDRESS(0x22ef34, 0x35c)
@@ -1186,7 +1186,7 @@ TRmgGridPoint TRmgRiverMapAdapter::getSize()
 #endif
 }
 
-VA(0x005327C0, 0x63)
+VA(0x005327c0, 0x63)
 MAC_ADDRESS(0x22f320, 0xa4)
 rmgTerrainTile TRmgRiverMapAdapter::getTile(const TRmgGridPoint& point)
 {
@@ -1199,14 +1199,14 @@ rmgTerrainTile TRmgRiverMapAdapter::getTile(const TRmgGridPoint& point)
     return tile;
 }
 
-VA(0x00532830, 0x2D)
+VA(0x00532830, 0x2d)
 MAC_ADDRESS(0x22f3c4, 0x38)
 s32 TRmgRiverMapAdapter::getLineType(const TRmgGridPoint& point)
 {
     return m_map->getMapItem(point.m_x, point.m_y)->m_tile.m_riverType;
 }
 
-VA(0x00532860, 0x2D)
+VA(0x00532860, 0x2d)
 MAC_ADDRESS(0x22f3fc, 0x38)
 s32 TRmgRiverMapAdapter::getTerrain(const TRmgGridPoint& point)
 {
@@ -1245,7 +1245,7 @@ void TRmgMapItem::write(TAbstractFile* outputFile)
     writeValue<char>(outputFile, flags);
 }
 
-VA_COMPGEN(0x005329A0, 0x32, IMPLICIT_DTOR, TRmgTemplateZone)
+VA_COMPGEN(0x005329a0, 0x32, IMPLICIT_DTOR, TRmgTemplateZone)
 MAC_COMPGEN_ADDRESS(0x22f660, 0x68, IMPLICIT_DTOR, TRmgTemplateZone)
 
 // Picks a uniformly random allowed town type, or eTownNeutral if none.
@@ -1267,7 +1267,7 @@ s32 TRmgTemplateZone::selectAllowedTown()
     return eTownNeutral;
 }
 
-VA(0x005329E0, 0xCF)
+VA(0x005329e0, 0xcf)
 MAC_ADDRESS(0x22f7c4, 0xc0)
 TRmgZone::TRmgZone(TRmgTemplateZone* newSlot)
 {
@@ -1306,7 +1306,7 @@ static inline bool isRmgZoneTerrainAllowed(const TRmgZone& zone, s32 terrain)
             || zone.m_levelPosition.m_z == RMG_UNDERGROUND_LEVEL);
 }
 
-VA(0x00532AB0, 0x96)
+VA(0x00532ab0, 0x96)
 MAC_ADDRESS(0x22faa4, 0x130)
 void TRmgZone::chooseTerrain()
 {
@@ -1336,7 +1336,7 @@ void TRmgZone::chooseTerrain()
         m_terrain = eTerrainSubterranean;
 }
 
-VA(0x00532B50, 0x76)
+VA(0x00532b50, 0x76)
 MAC_ADDRESS(0x22fbd4, 0xa0)
 TRmgZone::~TRmgZone()
 {
@@ -1362,7 +1362,7 @@ void TRmgZone::setLevelPosition(TRmgMapPosition position)
 // Whether two zones are close enough to connect: on one level within 110%
 // of their combined sizes; across levels the overlap must exceed half the
 // smaller size.
-VA(0x00532BD0, 0xA8)
+VA(0x00532bd0, 0xa8)
 MAC_ADDRESS(0x22fdc0, 0xc8)
 b8 TRmgZone::canConnect(const TRmgZone* other) const
 {
@@ -1407,7 +1407,7 @@ static inline void advanceRmgOutlineWalk(TPoint& position, s32& direction)
 //   o # # # o
 //   o # # P o
 //   o o o S o
-VA(0x00532C80, 0x1BA)
+VA(0x00532c80, 0x1ba)
 MAC_ADDRESS(0x22fe88, 0x208)
 void TRmgObjectPropertiesRef::buildOutline()
 {
@@ -1443,7 +1443,7 @@ void TRmgObjectPropertiesRef::buildOutline()
     } while (start != position);
 }
 
-VA(0x00532E40, 0x19E)
+VA(0x00532e40, 0x19e)
 MAC_ADDRESS(0x230090, 0x16c)
 void TRmgObjectPropertiesRef::buildOverlapPriorities()
 {
@@ -1475,7 +1475,7 @@ void TRmgObjectPropertiesRef::buildOverlapPriorities()
     }
 }
 
-VA(0x00532FE0, 0xB4)
+VA(0x00532fe0, 0xb4)
 MAC_ADDRESS(0x230254, 0xb0)
 TRmgTemplate::~TRmgTemplate()
 {
@@ -1483,7 +1483,7 @@ TRmgTemplate::~TRmgTemplate()
         delete m_zones[zone];
 }
 
-VA(0x005330A0, 0x3E)
+VA(0x005330a0, 0x3e)
 MAC_ADDRESS(0x230304, 0x48)
 TRmgTemplateZone* TRmgTemplate::findZone(s32 zoneIndex)
 {
@@ -1499,7 +1499,7 @@ TRmgMapPosition type_object::getPosition() const
     return m_position;
 }
 
-VA(0x005330E0, 0x39)
+VA(0x005330e0, 0x39)
 MAC_ADDRESS(0x2303ec, 0x5c)
 type_object::type_object(TRmgObjectPropertiesRef* newProperties)
 {
@@ -1545,7 +1545,7 @@ rmgBlackBoxObject::rmgBlackBoxObject(TRmgObjectPropertiesRef* properties)
     memset(m_resources, 0, sizeof(m_resources));
 }
 
-VA_COMPGEN(0x00533120, 0x2D, SCALAR_DELETING_DTOR, type_object)
+VA_COMPGEN(0x00533120, 0x2d, SCALAR_DELETING_DTOR, type_object)
 
 VA(0x00533150, 0x12)
 MAC_ADDRESS(0x2304a0, 0x1c)
@@ -1585,7 +1585,7 @@ void type_object::write(TAbstractFile* outputFile, s32 version)
     writeRmgReservedBytes(outputFile, 5);
 }
 
-VA(0x005331F0, 0xFD)
+VA(0x005331f0, 0xfd)
 MAC_ADDRESS(0x23062c, 0x144)
 void rmgMonsterObject::write(TAbstractFile* outputFile, s32 version)
 {
@@ -1601,7 +1601,7 @@ void rmgMonsterObject::write(TAbstractFile* outputFile, s32 version)
     writeRmgReservedBytes(outputFile, 2);
 }
 
-VA(0x005332F0, 0x16A)
+VA(0x005332f0, 0x16a)
 MAC_ADDRESS(0x2307d8, 0x20c)
 void rmgTownObject::write(TAbstractFile* outputFile, s32 version)
 {
@@ -1627,7 +1627,7 @@ void rmgTownObject::write(TAbstractFile* outputFile, s32 version)
     writeRmgReservedBytes(outputFile, 3);
 }
 
-VA(0x00533460, 0xA0)
+VA(0x00533460, 0xa0)
 MAC_ADDRESS(0x230a1c, 0x78)
 void rmgOwnableObject::write(TAbstractFile* outputFile, s32 version)
 {
@@ -1666,7 +1666,7 @@ rmgKeyTentObject::rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
 {
 }
 
-VA(0x00533500, 0x8A)
+VA(0x00533500, 0x8a)
 MAC_ADDRESS(0x230acc, 0x50)
 void rmgArtifactObject::write(TAbstractFile* outputFile, s32 version)
 {
@@ -1676,7 +1676,7 @@ void rmgArtifactObject::write(TAbstractFile* outputFile, s32 version)
 
 VA_COMPGEN(0x00533590, 0x21, SCALAR_DELETING_DTOR, rmgOwnableObject)
 
-VA(0x005335C0, 0xB2)
+VA(0x005335c0, 0xb2)
 MAC_ADDRESS(0x230bb4, 0x78)
 void rmgResourceObject::write(TAbstractFile* outputFile, s32 version)
 {
@@ -1688,7 +1688,7 @@ void rmgResourceObject::write(TAbstractFile* outputFile, s32 version)
 
 VA_COMPGEN(0x00533680, 0x21, SCALAR_DELETING_DTOR, rmgBlackBoxObject)
 
-VA_COMPGEN(0x005336B0, 0x36, IMPLICIT_DTOR, rmgBlackBoxObject)
+VA_COMPGEN(0x005336b0, 0x36, IMPLICIT_DTOR, rmgBlackBoxObject)
 MAC_COMPGEN_ADDRESS(0x251488, 0x7c, IMPLICIT_DTOR, rmgBlackBoxObject)
 
 static inline void writeRmgCreatureReward(
@@ -1701,7 +1701,7 @@ static inline void writeRmgCreatureReward(
     writeValue<s16>(outputFile, count);
 }
 
-VA(0x005336F0, 0x1E0)
+VA(0x005336f0, 0x1e0)
 MAC_ADDRESS(0x230cac, 0x32c)
 void rmgBlackBoxObject::write(TAbstractFile* outputFile, s32 version)
 {
@@ -1729,7 +1729,7 @@ void rmgBlackBoxObject::write(TAbstractFile* outputFile, s32 version)
     writeValue<s32>(outputFile, 0);
 }
 
-VA(0x005338D0, 0x0D)
+VA(0x005338d0, 0x0d)
 MAC_ADDRESS(0x230448, 0x58)
 type_object::~type_object()
 {
@@ -1754,7 +1754,7 @@ static inline void replaceRmgObjectWithTreasure(type_random_map_generator* gener
         generator->addObject(replacement, position);
 }
 
-VA(0x005338E0, 0xD4)
+VA(0x005338e0, 0xd4)
 MAC_ADDRESS(0x231030, 0x68)
 b8 rmgKeyTentObject::completePlacement()
 {
@@ -1764,10 +1764,10 @@ b8 rmgKeyTentObject::completePlacement()
     return false;
 }
 
-VA_COMPGEN(0x005339C0, 0x21, SCALAR_DELETING_DTOR, rmgQuestArtifactObject)
+VA_COMPGEN(0x005339c0, 0x21, SCALAR_DELETING_DTOR, rmgQuestArtifactObject)
 
 // Deletes the pending seer hut if it was never placed.
-VA(0x005339F0, 0x58)
+VA(0x005339f0, 0x58)
 MAC_ADDRESS(0x231100, 0x9c)
 rmgQuestArtifactObject::~rmgQuestArtifactObject()
 {
@@ -1776,7 +1776,7 @@ rmgQuestArtifactObject::~rmgQuestArtifactObject()
 
 // On success the generator places the seer hut and takes ownership; on
 // failure the hut is destroyed.
-VA(0x00533A50, 0x33)
+VA(0x00533a50, 0x33)
 MAC_ADDRESS(0x2311fc, 0x78)
 b8 rmgQuestArtifactObject::completePlacement()
 {
@@ -1792,7 +1792,7 @@ b8 rmgQuestArtifactObject::completePlacement()
 // Artifact quest followed by exactly one reward: experience, creatures or
 // resources, in that precedence. The AB format adds the quest kind,
 // artifact count, deadline and three empty texts.
-VA(0x00533A90, 0x1E0)
+VA(0x00533a90, 0x1e0)
 MAC_ADDRESS(0x2312d0, 0x31c)
 void rmgSeerHutObject::write(TAbstractFile* outputFile, s32 version)
 {
@@ -1835,14 +1835,14 @@ rmgHeroObject::rmgHeroObject(TRmgObjectPropertiesRef* properties,
     m_experience = experience;
 }
 
-VA(0x00533C70, 0x0F)
+VA(0x00533c70, 0x0f)
 MAC_ADDRESS(0x231644, 0x18)
 void rmgHeroObject::releaseReservation()
 {
     m_generator->m_disabledHeroes[m_heroIndex] = false;
 }
 
-VA(0x00533C80, 0x1E4)
+VA(0x00533c80, 0x1e4)
 MAC_ADDRESS(0x23165c, 0x318)
 void rmgHeroObject::write(TAbstractFile* outputFile, s32 version)
 {
@@ -1880,7 +1880,7 @@ void rmgHeroObject::write(TAbstractFile* outputFile, s32 version)
     writeRmgReservedBytes(outputFile, 16);
 }
 
-VA(0x00533E70, 0xC3)
+VA(0x00533e70, 0xc3)
 MAC_ADDRESS(0x2319ac, 0xbc)
 void rmgScholarObject::write(TAbstractFile* outputFile, s32 version)
 {
@@ -1891,7 +1891,7 @@ void rmgScholarObject::write(TAbstractFile* outputFile, s32 version)
     writeRmgReservedBytes(outputFile, 2);
 }
 
-VA(0x00533F40, 0xAF)
+VA(0x00533f40, 0xaf)
 MAC_ADDRESS(0x231aa0, 0x9c)
 void rmgShrineObject::write(TAbstractFile* outputFile, s32 version)
 {
@@ -1901,7 +1901,7 @@ void rmgShrineObject::write(TAbstractFile* outputFile, s32 version)
     writeValue<char>(outputFile, 0); // reserved byte
 }
 
-VA(0x00533FF0, 0xC2)
+VA(0x00533ff0, 0xc2)
 MAC_ADDRESS(0x231b84, 0xc8)
 void rmgSpellScrollObject::write(TAbstractFile* outputFile, s32 version)
 {
@@ -1919,7 +1919,7 @@ enum ERmgWitchHutSkills {
         & ~((1 << eSecSkillNavigation) | (1 << eSecSkillNecromancy))
 };
 
-VA(0x005340C0, 0x93)
+VA(0x005340c0, 0x93)
 MAC_ADDRESS(0x231c84, 0x68)
 void rmgWitchHutObject::write(TAbstractFile* outputFile, s32 version)
 {
@@ -1947,7 +1947,7 @@ s32 type_treasure_def::getValue(TRmgZone*, type_random_map_generator*)
     return m_value;
 }
 
-VA(0x005341A0, 0x4D)
+VA(0x005341a0, 0x4d)
 MAC_ADDRESS(0x231d18, 0x50)
 type_object* type_treasure_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator*, TRmgZone*)
@@ -1955,7 +1955,7 @@ type_object* type_treasure_def::generate(TRmgObjectPropertiesRef* properties,
     return new type_object(properties);
 }
 
-VA(0x005341F0, 0x53)
+VA(0x005341f0, 0x53)
 MAC_ADDRESS(0x231dac, 0x50)
 type_object* type_artifact_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator*, TRmgZone*)
@@ -1969,7 +1969,7 @@ static inline s32 roundRmgCreatureCount(s32 count, s32 step)
     return ((count + step / 2) / step) * step;
 }
 
-VA(0x00534250, 0xB5)
+VA(0x00534250, 0xb5)
 MAC_ADDRESS(0x231dfc, 0x108)
 type_black_box_creature_def::type_black_box_creature_def(s32 newCreatureType)
     : type_treasure_def(BLACK_BOX, 0, -1, 3),
@@ -2038,7 +2038,7 @@ type_object* type_black_box_creature_def::generate(TRmgObjectPropertiesRef* prop
     return object;
 }
 
-VA(0x00534410, 0x7F)
+VA(0x00534410, 0x7f)
 MAC_ADDRESS(0x23204c, 0x64)
 type_object* type_black_box_experience_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator*, TRmgZone*)
@@ -2094,7 +2094,7 @@ type_object* type_dwelling_def::generate(TRmgObjectPropertiesRef* properties,
     return new rmgOwnableObject(properties);
 }
 
-VA(0x005347F0, 0x79)
+VA(0x005347f0, 0x79)
 MAC_ADDRESS(0x23237c, 0x88)
 s32 type_map_dwelling_def::getValue(TRmgZone* zone, type_random_map_generator* generator)
 {
@@ -2118,7 +2118,7 @@ type_object* type_resource_lump_def::generate(TRmgObjectPropertiesRef* propertie
 }
 
 // Reserves a random available hero; no prison when none is left.
-VA(0x005348D0, 0x93)
+VA(0x005348d0, 0x93)
 MAC_ADDRESS(0x2324e4, 0x84)
 type_object* type_prison_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
@@ -2138,14 +2138,14 @@ type_object* type_scholar_def::generate(TRmgObjectPropertiesRef* properties,
     return new rmgScholarObject(properties);
 }
 
-VA(0x005349D0, 0x29)
+VA(0x005349d0, 0x29)
 MAC_ADDRESS(0x232600, 0x44)
 type_shrine_def::type_shrine_def(s32 newObjectType, s32 newValue)
     : type_treasure_def(newObjectType, 0, newValue, 100)
 {
 }
 
-VA(0x00534A00, 0x53)
+VA(0x00534a00, 0x53)
 MAC_ADDRESS(0x232644, 0x50)
 type_object* type_shrine_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator*, TRmgZone*)
@@ -2153,14 +2153,14 @@ type_object* type_shrine_def::generate(TRmgObjectPropertiesRef* properties,
     return new rmgShrineObject(properties);
 }
 
-VA(0x00534A60, 0x25)
+VA(0x00534a60, 0x25)
 MAC_ADDRESS(0x232694, 0x48)
 type_witch_hut_def::type_witch_hut_def()
     : type_treasure_def(WITCH_HUT, 0, 1500, 80)
 {
 }
 
-VA(0x00534A90, 0x53)
+VA(0x00534a90, 0x53)
 MAC_ADDRESS(0x2326dc, 0x50)
 type_object* type_witch_hut_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator*, TRmgZone*)
@@ -2184,7 +2184,7 @@ static inline rmgQuestArtifactObject* createRmgQuestArtifactForHut(
     return new rmgQuestArtifactObject(artifact, generator, seerHut, definition);
 }
 
-VA(0x00534AF0, 0x9E)
+VA(0x00534af0, 0x9e)
 MAC_ADDRESS(0x23277c, 0x68)
 s32 type_quest_creature_def::getValue(TRmgZone* zone, type_random_map_generator* generator)
 {
@@ -2194,7 +2194,7 @@ s32 type_quest_creature_def::getValue(TRmgZone* zone, type_random_map_generator*
     return (2 * value - 4000) / 3;
 }
 
-VA(0x00534B90, 0xE7)
+VA(0x00534b90, 0xe7)
 MAC_ADDRESS(0x2327ec, 0xa4)
 type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
@@ -2209,7 +2209,7 @@ type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properti
 
 // Seer huts are offered only for the current seer-hut prototype and while
 // enough quest artifacts remain.
-VA(0x00534C80, 0x34)
+VA(0x00534c80, 0x34)
 MAC_ADDRESS(0x232900, 0x34)
 s32 type_quest_experience_def::getValue(TRmgZone*, type_random_map_generator* generator)
 {
@@ -2225,7 +2225,7 @@ s32 type_quest_gold_def::getValue(TRmgZone*, type_random_map_generator* generato
     return m_value;
 }
 
-VA(0x00534CC0, 0xE1)
+VA(0x00534cc0, 0xe1)
 MAC_ADDRESS(0x23293c, 0x9c)
 type_object* type_quest_experience_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
@@ -2236,7 +2236,7 @@ type_object* type_quest_experience_def::generate(TRmgObjectPropertiesRef* proper
     return object;
 }
 
-VA(0x00534DB0, 0xE8)
+VA(0x00534db0, 0xe8)
 MAC_ADDRESS(0x232a84, 0xa4)
 type_object* type_quest_gold_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
@@ -2249,7 +2249,7 @@ type_object* type_quest_gold_def::generate(TRmgObjectPropertiesRef* properties,
     return object;
 }
 
-VA(0x00534EA0, 0x30)
+VA(0x00534ea0, 0x30)
 MAC_ADDRESS(0x232b28, 0x58)
 type_spell_scroll_def::type_spell_scroll_def(s32 newSpellLevel, s32 newValue)
     : type_treasure_def(SPELL_SCROLL, 0, newValue, 30)
@@ -2264,7 +2264,7 @@ static inline bool isRmgScrollSpell(s32 spell, s32 level)
         && g_spellTraits[spell].m_level == level;
 }
 
-VA(0x00534ED0, 0xC3)
+VA(0x00534ed0, 0xc3)
 MAC_ADDRESS(0x232b80, 0x108)
 type_object* type_spell_scroll_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator*, TRmgZone*)
@@ -2287,7 +2287,7 @@ type_object* type_spell_scroll_def::generate(TRmgObjectPropertiesRef* properties
     return new rmgSpellScrollObject(properties, spell);
 }
 
-VA(0x00534FA0, 0x21)
+VA(0x00534fa0, 0x21)
 MAC_ADDRESS(0x232cd4, 0x20)
 s32 type_key_tent_def::getValue(TRmgZone*, type_random_map_generator* generator)
 {
@@ -2297,7 +2297,7 @@ s32 type_key_tent_def::getValue(TRmgZone*, type_random_map_generator* generator)
 }
 
 // The tent stores its treasure value; its colour is the prototype subtype.
-VA(0x00534FD0, 0x64)
+VA(0x00534fd0, 0x64)
 MAC_ADDRESS(0x232cfc, 0x70)
 type_object* type_key_tent_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
@@ -2306,7 +2306,7 @@ type_object* type_key_tent_def::generate(TRmgObjectPropertiesRef* properties,
 }
 
 // Empties the group; its objects are owned elsewhere.
-VA(0x00535040, 0xC6)
+VA(0x00535040, 0xc6)
 MAC_ADDRESS(0x232e70, 0xa8)
 void TRmgTreasureGroup::reset()
 {
@@ -2358,7 +2358,7 @@ void TRmgTreasureGroup::addObject(type_object* object, TPoint point)
 // Rings the objects' entrances with border cells, places the guard on a
 // random fitting border cell of the outline (failing if none), opens paths
 // around it and retraces the outline.
-VA(0x00535110, 0x4AB)
+VA(0x00535110, 0x4ab)
 MAC_ADDRESS(0x233028, 0x6a8)
 b8 TRmgTreasureGroup::addGuard(type_object* guard)
 {
@@ -2454,7 +2454,7 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
     return true;
 }
 
-VA(0x005355C0, 0x1A)
+VA(0x005355c0, 0x1a)
 TRmgMapPosition::TRmgMapPosition(s32 newX, s32 newY, s32 newZ)
     : TPoint(newX, newY), m_z(newZ)
 {
@@ -2463,7 +2463,7 @@ TRmgMapPosition::TRmgMapPosition(s32 newX, s32 newY, s32 newZ)
 // Whether an object fits on the group map without blocking neighbouring
 // entrances. Other objects' entrances avoid border cells; guards may stand
 // on them but need a free neighbouring cell.
-VA(0x005355E0, 0x1F9)
+VA(0x005355e0, 0x1f9)
 MAC_ADDRESS(0x2336d0, 0x374)
 b8 TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
     TRmgMapPosition position)
@@ -2542,7 +2542,7 @@ b8 TRmgTreasureGroup::tryAddObject(type_object* object)
     return true;
 }
 
-VA(0x00535DF0, 0xEA)
+VA(0x00535df0, 0xea)
 MAC_ADDRESS(0x233e4c, 0x16c)
 void TRmgTreasureGroup::updateBounds()
 {
@@ -2559,7 +2559,7 @@ void TRmgTreasureGroup::updateBounds()
 
 // Traces the closed outline around the occupied cells, starting above the
 // first occupied cell in row-major order.
-VA(0x00535EE0, 0x18F)
+VA(0x00535ee0, 0x18f)
 MAC_ADDRESS(0x233fb8, 0x274)
 void TRmgTreasureGroup::traceOutline()
 {
@@ -2602,7 +2602,7 @@ enum ERmgPrototypeLoadProgress {
     RMG_PROTOTYPE_LOAD_PROGRESS = 15300
 };
 
-VA(0x00536070, 0xFB)
+VA(0x00536070, 0xfb)
 MAC_ADDRESS(0x23422c, 0xec)
 TRmgGeneratorBase::TRmgGeneratorBase(s32 width, s32 height, s32 levels,
     TProgressSink* progress, s32 additionalSteps, s32 version)
@@ -2620,15 +2620,15 @@ TRmgGeneratorBase::TRmgGeneratorBase(s32 width, s32 height, s32 levels,
 
 VA_COMPGEN(0x00536170, 0x21, SCALAR_DELETING_DTOR, TRmgGeneratorBase)
 
-VA(0x005361A0, 0x07)
+VA(0x005361a0, 0x07)
 MAC_ADDRESS(0x22d34c, 0x48)
 TRmgMapInterface::~TRmgMapInterface()
 {
 }
 
-VA_COMPGEN(0x005361B0, 0x23, SCALAR_DELETING_DTOR, TRmgMapInterface)
+VA_COMPGEN(0x005361b0, 0x23, SCALAR_DELETING_DTOR, TRmgMapInterface)
 
-VA_COMPGEN(0x005361E0, 0x18, DEFAULT_CTOR_CLOSURE, TRmgObjectPropertiesRef)
+VA_COMPGEN(0x005361e0, 0x18, DEFAULT_CTOR_CLOSURE, TRmgObjectPropertiesRef)
 
 // Overlap priorities stay uninitialized until first built.
 TRmgObjectPropertiesRef::TRmgObjectPropertiesRef(TObjectType* prototype)
@@ -2650,7 +2650,7 @@ static inline bool isRmgObjectAvailableInVersion(s32 objectType, s32 version)
     return true;
 }
 
-VA(0x00536200, 0x1AC)
+VA(0x00536200, 0x1ac)
 MAC_ADDRESS(0x234440, 0x24c)
 void TRmgGeneratorBase::loadObjectPrototypes()
 {
@@ -2685,7 +2685,7 @@ void TRmgGeneratorBase::loadObjectPrototypes()
         m_progress->advance(RMG_PROTOTYPE_LOAD_PROGRESS);
 }
 
-VA(0x005363B0, 0x1A9)
+VA(0x005363b0, 0x1a9)
 MAC_ADDRESS(0x2346a0, 0x18c)
 TRmgGeneratorBase::~TRmgGeneratorBase()
 {
@@ -2707,12 +2707,12 @@ static inline void readRmgPlacementScores(std::vector<s32>& scores,
 
 // Reads rand_trn.txt and binds each prototype to the last rule matching its
 // object type, subtype and first recommended terrain.
-VA(0x00536560, 0x5F2)
+VA(0x00536560, 0x5f2)
 MAC_ADDRESS(0x23486c, 0x6a0)
 void TRmgGeneratorBase::readObjectPlacementRules()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
-        DATA_COMPGEN(0x006827F4, rmgPlacementRulesFilename, "rand_trn.txt"));
+        DATA_COMPGEN(0x006827f4, rmgPlacementRulesFilename, "rand_trn.txt"));
     s32 row = RMG_FIRST_DATA_ROW;
     std::vector<TAdventureObjectType> objectTypes;
     std::vector<TTerrainType> terrains;
@@ -2807,7 +2807,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
 
 // Scores a candidate position from the terrain under the object's blocked
 // cells and the objects it touches; callers accept only positive scores.
-VA(0x00536BC0, 0x5F4)
+VA(0x00536bc0, 0x5f4)
 MAC_ADDRESS(0x23515c, 0x7a0)
 s32 TRmgGeneratorBase::scoreObjectPlacement(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position)
@@ -2946,7 +2946,7 @@ s32 TRmgGeneratorBase::scoreObjectPlacement(
     return score;
 }
 
-VA(0x005371C0, 0x1DA)
+VA(0x005371c0, 0x1da)
 MAC_ADDRESS(0x2358fc, 0xb8)
 void TRmgGeneratorBase::addObject(type_object* object, TRmgMapPosition position)
 {
@@ -2956,7 +2956,7 @@ void TRmgGeneratorBase::addObject(type_object* object, TRmgMapPosition position)
 
 // Decoration (obstacle) object types, excluding holes, rivers and roads.
 // The last six are unnamed expansion types, unavailable on RoE maps.
-DATA(0x006408EC)
+DATA(0x006408ec)
 static const s32 g_rmgDecorationTypes[45] = {
     TERRAIN_BRUSH, TERRAIN_BUSH, TERRAIN_CACTUS, TERRAIN_CANYON,
     TERRAIN_CRATER, TERRAIN_DEAD_VEGETATION, TERRAIN_FLOWER,
@@ -2972,7 +2972,7 @@ static const s32 g_rmgDecorationTypes[45] = {
 };
 
 // Fills obstacles outward from a cell with weighted random decorations.
-VA(0x005373A0, 0x53D)
+VA(0x005373a0, 0x53d)
 MAC_ADDRESS(0x2359b4, 0x76c)
 void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition start, s32 progressSteps)
 {
@@ -3070,7 +3070,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition start, s32 progressSteps
     }
 }
 
-VA(0x005378E0, 0x27)
+VA(0x005378e0, 0x27)
 TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)
 {
     return &m_mapItems[(point.m_z * m_mapHeight + point.m_y) * m_mapWidth + point.m_x];
@@ -3130,7 +3130,7 @@ static inline void initializeRmgObjectLimits(s32* limits,
 }
 
 // Special heroes and heroes missing from the map version are never offered.
-VA(0x00537B10, 0x2A8)
+VA(0x00537b10, 0x2a8)
 MAC_ADDRESS(0x2363e4, 0x2ec)
 type_random_map_generator::type_random_map_generator(
     s32 width, s32 height, s32 levels, s32 humanPlayers, s32 humanTeams,
@@ -3173,9 +3173,9 @@ type_random_map_generator::type_random_map_generator(
     }
 }
 
-VA_COMPGEN(0x00537DC0, 0x21, SCALAR_DELETING_DTOR, type_random_map_generator)
+VA_COMPGEN(0x00537dc0, 0x21, SCALAR_DELETING_DTOR, type_random_map_generator)
 
-VA(0x00537DF0, 0x200)
+VA(0x00537df0, 0x200)
 MAC_ADDRESS(0x23685c, 0x1cc)
 type_random_map_generator::~type_random_map_generator()
 {
@@ -3264,7 +3264,7 @@ static bool hasRmgTemplatePlayerSlots(TRmgTemplate* mapTemplate,
 }
 
 // Template sizes are in units of 36x36 cells.
-VA(0x00537FF0, 0x482)
+VA(0x00537ff0, 0x482)
 MAC_ADDRESS(0x2372ec, 0x304)
 void type_random_map_generator::loadTemplates()
 {
@@ -3440,7 +3440,7 @@ enum ERmgDwellingSubtypeCounts {
     RMG_ROE_DWELLING_SUBTYPE_COUNT = 58
 };
 
-VA(0x00538B10, 0x2241)
+VA(0x00538b10, 0x2241)
 MAC_ADDRESS(0x2375f0, 0x4880)
 void type_random_map_generator::initializeObjectGenerators()
 {
@@ -3618,7 +3618,7 @@ void type_random_map_generator::initializeObjectGenerators()
 
 // Player zones go underground only with Inferno, Necropolis or Dungeon
 // towns; zones on one level stay at least 80% of their combined size apart.
-VA(0x0053AD60, 0x113)
+VA(0x0053ad60, 0x113)
 MAC_ADDRESS(0x23be70, 0x14c)
 b8 type_random_map_generator::canPlaceZone(TRmgZone* zone)
 {
@@ -3670,7 +3670,7 @@ static inline void appendRmgZoneCandidate(type_random_map_generator* generator,
         candidates.push_back(zone->getLevelPosition());
 }
 
-VA(0x0053AE80, 0x36A)
+VA(0x0053ae80, 0x36a)
 MAC_ADDRESS(0x23bfbc, 0x28c)
 void type_random_map_generator::appendZonePositions(TRmgZone* center,
     TRmgZone* zone, std::vector<TRmgMapPosition>& candidates)
@@ -3719,7 +3719,7 @@ static inline void includeRmgZoneFootprint(s32& minimumY, s32& minimumX,
     maximumX = max(maximumX, position.m_x + size + 1);
 }
 
-VA(0x0053B1F0, 0xFE)
+VA(0x0053b1f0, 0xfe)
 MAC_ADDRESS(0x23c2e4, 0x170)
 void type_random_map_generator::getInitialZoneBounds(s32& minimumY, s32& minimumX,
     s32& maximumY, s32& maximumX) const
@@ -3751,7 +3751,7 @@ static inline s32 getRmgCandidateMapSize(const TRmgZoneBounds& bounds,
 
 // Prefer unused levels, then the most connections, then the smallest
 // enclosing square.
-VA(0x0053B2F0, 0x678)
+VA(0x0053b2f0, 0x678)
 MAC_ADDRESS(0x23c454, 0x62c)
 void type_random_map_generator::filterZonePositions(
     TRmgZone* zone, std::vector<TRmgMapPosition>& candidates, s32 mapSize)
@@ -3822,7 +3822,7 @@ void type_random_map_generator::filterZonePositions(
 // The first zone starts at the origin, on the surface or, when eligible,
 // underground. Later zones sample template neighbours, falling back to all
 // placed zones before filtering.
-VA(0x0053B970, 0x232)
+VA(0x0053b970, 0x232)
 MAC_ADDRESS(0x23ca80, 0x20c)
 void type_random_map_generator::positionZone(TRmgZone* zone, s32 mapSize)
 {
@@ -3856,7 +3856,7 @@ void type_random_map_generator::positionZone(TRmgZone* zone, s32 mapSize)
     zone->setLevelPosition(selectedPosition);
 }
 
-VA(0x0053BBB0, 0xFD)
+VA(0x0053bbb0, 0xfd)
 MAC_ADDRESS(0x23cc8c, 0xf8)
 void type_random_map_generator::calculateZoneBounds()
 {
@@ -3876,7 +3876,7 @@ void type_random_map_generator::calculateZoneBounds()
 
 // Places each zone, repositions all of them twice, scales the layout into a
 // centred square, then picks each zone's terrain and town type.
-VA(0x0053BCB0, 0x33B)
+VA(0x0053bcb0, 0x33b)
 MAC_ADDRESS(0x23cd84, 0x458)
 void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
 {
@@ -4000,7 +4000,7 @@ static inline void assignRmgZoneCell(
 
 // Depth-first midpoint displacement: rounding, displacement bounds and RNG
 // order are observable in generated maps.
-VA(0x0053BFF0, 0x22B)
+VA(0x0053bff0, 0x22b)
 MAC_ADDRESS(0x23d684, 0x408)
 void type_random_map_generator::drawIrregularZoneBoundary(
     TPoint from, TPoint to, s32 zoneIndex, s32 level, s32 roughness)
@@ -4023,7 +4023,7 @@ void type_random_map_generator::drawIrregularZoneBoundary(
 
 // Bresenham line whose error starts at half the major distance.
 // The final cell receives its zone but not the terrain mark.
-VA(0x0053C220, 0x16A)
+VA(0x0053c220, 0x16a)
 MAC_ADDRESS(0x23da90, 0x2a4)
 void type_random_map_generator::drawStraightZoneBoundary(
     TPoint from, TPoint to, s32 zoneIndex, s32 level)
@@ -4078,7 +4078,7 @@ static inline void clipRmgBoundarySegment(const TRmgZoneBounds& bounds,
 
 // Clip each Voronoi edge, assign its map cells and record the zone polygon.
 // A shared edge is drawn only by the lower-indexed zone.
-VA(0x0053C390, 0x730)
+VA(0x0053c390, 0x730)
 MAC_ADDRESS(0x23dd34, 0x614)
 void type_random_map_generator::traceZoneBoundary(
     TRmgHalfEdge* first, b8 irregular)
@@ -4188,7 +4188,7 @@ static inline bool crossesRmgBoundaryAxis(
 
 // Integer clipping toward `toward` against the left, top, right, then bottom
 // edge; a rejected clip returns the point unchanged.
-VA(0x0053CAC0, 0x266)
+VA(0x0053cac0, 0x266)
 MAC_ADDRESS(0x23d1dc, 0x4a8)
 TPoint clipRmgBoundaryPoint(
     const TRmgZoneBounds& bounds, TPoint point, TPoint toward)
@@ -4237,7 +4237,7 @@ static void insertRmgWorkItem(
 
 // Island-coast variant of drawIrregularZoneBoundary: half the displacement
 // range, and it only marks cells already in the zone for terrain painting.
-VA(0x0053CD30, 0x212)
+VA(0x0053cd30, 0x212)
 MAC_ADDRESS(0x23e348, 0x3f0)
 void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
     s32 zoneIndex, s32 level, s32 roughness)
@@ -4260,7 +4260,7 @@ void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
 
 // Four-connected depth-first flood fill marking the island for zone terrain;
 // cells already marked, including the coast, stop growth.
-VA(0x0053CF50, 0x177)
+VA(0x0053cf50, 0x177)
 MAC_ADDRESS(0x23e738, 0x1f0)
 void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
 {
@@ -4285,7 +4285,7 @@ void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
     }
 }
 
-VA(0x0053D0D0, 0xE3)
+VA(0x0053d0d0, 0xe3)
 MAC_ADDRESS(0x23e928, 0x184)
 void type_random_map_generator::recenterZone(TRmgZone* zone)
 {
@@ -4329,7 +4329,7 @@ static inline void insetRmgIslandBoundaryPoint(
     }
 }
 
-VA(0x0053D1C0, 0x1B9)
+VA(0x0053d1c0, 0x1b9)
 MAC_ADDRESS(0x23eaac, 0x2b0)
 void type_random_map_generator::insetIslandZone(TRmgZone* zone)
 {
@@ -4369,7 +4369,7 @@ static inline void scanRmgFillSpan(const TRmgMapItem* neighbour,
 // Four-connected scanline fill of unassigned cells. An out-of-bounds centre
 // is clipped toward the interior ring site with the greatest edge clearance;
 // with no interior site nothing is filled.
-VA(0x0053D380, 0x551)
+VA(0x0053d380, 0x551)
 MAC_ADDRESS(0x23ed74, 0x4a4)
 void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first)
 {
@@ -4438,7 +4438,7 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
 
 // Unit-weight distance relaxation with a cost-ordered worklist. The next
 // distance comes from the zone's table, not the queued cost.
-VA(0x0053D8E0, 0x1EC)
+VA(0x0053d8e0, 0x1ec)
 MAC_ADDRESS(0x23f218, 0x2f0)
 void type_random_map_generator::propagateZoneDistances(TRmgZone* zone)
 {
@@ -4465,9 +4465,9 @@ void type_random_map_generator::propagateZoneDistances(TRmgZone* zone)
     }
 }
 
-VA_COMPGEN(0x0054C1E0, 0x1E9, VECTOR_RESIZE, Short)
+VA_COMPGEN(0x0054c1e0, 0x1e9, VECTOR_RESIZE, Short)
 
-VA_COMPGEN(0x0054C3D0, 0x12, VECTOR_SIZE, Short)
+VA_COMPGEN(0x0054c3d0, 0x12, VECTOR_SIZE, Short)
 
 static void initializeRmgZoneDistances(
     type_random_map_generator* generator, s32 originalZones)
@@ -4515,7 +4515,7 @@ static inline void appendRmgExtraZoneConnection(
 // intersects the map. An extra-to-original edge must not shorten that original
 // zone's distance to any other original zone; each one added triggers another
 // graph relaxation.
-VA(0x0053DAD0, 0x57F)
+VA(0x0053dad0, 0x57f)
 MAC_ADDRESS(0x23f518, 0x40c)
 void type_random_map_generator::joinExtraZones(s32 originalZones, TRmgVoronoi* diagram)
 {
@@ -4565,7 +4565,7 @@ void type_random_map_generator::joinExtraZones(s32 originalZones, TRmgVoronoi* d
     }
 }
 
-VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, TRmgZoneConnection)
+VA_COMPGEN(0x0054de90, 0x14, STD_CONSTRUCT, TRmgZoneConnection)
 
 // Per axis, a radial site lies twice halfOffset from its zone; it may overhang
 // only the map edge it points toward, by about halfOffset.
@@ -4577,7 +4577,7 @@ static inline bool isRmgRadialSiteTooFarOffMap(s32 coordinate, s32 extent, doubl
 
 // Existing zones seed the subdivision; radial sites add surface water zones
 // and underground boundaries.
-VA(0x0053E050, 0x64D)
+VA(0x0053e050, 0x64d)
 MAC_ADDRESS(0x23f924, 0x798)
 void type_random_map_generator::buildZoneBoundaries(
     TRmgTemplate* mapTemplate, s32 level)
@@ -4667,7 +4667,7 @@ void type_random_map_generator::buildZoneBoundaries(
     joinExtraZones(originalZones, &diagram);
 }
 
-VA(0x0053E6A0, 0x337)
+VA(0x0053e6a0, 0x337)
 MAC_ADDRESS(0x2400bc, 0x354)
 void type_random_map_generator::paintZoneTerrain()
 {
@@ -4739,7 +4739,7 @@ static inline void appendRmgNoiseQuadrant(
 //          --+--
 //          3 | 1
 //          maxY
-VA(0x0053E9E0, 0x31E)
+VA(0x0053e9e0, 0x31e)
 MAC_ADDRESS(0x240410, 0x2ac)
 void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     TRmgNoiseRegion region,
@@ -4781,13 +4781,13 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     appendRmgNoiseQuadrant(pending, quadrant);
 }
 
-VA_COMPGEN(0x0054C670, 0x21, VECTOR_SIZE, TRmgNoiseRegion)
+VA_COMPGEN(0x0054c670, 0x21, VECTOR_SIZE, TRmgNoiseRegion)
 
-VA_COMPGEN(0x0054D5C0, 0x2E4, VECTOR_INSERT_COUNT, TRmgNoiseRegion)
+VA_COMPGEN(0x0054d5c0, 0x2e4, VECTOR_INSERT_COUNT, TRmgNoiseRegion)
 
-VA_COMPGEN(0x0054D960, 0x3B, VECTOR_UCOPY, TRmgNoiseRegion)
+VA_COMPGEN(0x0054d960, 0x3b, VECTOR_UCOPY, TRmgNoiseRegion)
 
-VA_COMPGEN(0x0054D9A0, 0x31, VECTOR_UFILL, TRmgNoiseRegion)
+VA_COMPGEN(0x0054d9a0, 0x31, VECTOR_UFILL, TRmgNoiseRegion)
 
 TRmgZoneConnection* TRmgTemplateZone::findConnection(s32 destinationZone)
 {
@@ -4800,7 +4800,7 @@ TRmgZoneConnection* TRmgTemplateZone::findConnection(s32 destinationZone)
 
 void __fastcall generateRmgIslandMask(u8* mask, s32 width, s32 height);
 
-VA(0x0053ED00, 0x29B)
+VA(0x0053ed00, 0x29b)
 MAC_ADDRESS(0x2406bc, 0x484)
 void __fastcall generateRmgIslandMask(u8* mask, s32 width, s32 height)
 {
@@ -4851,7 +4851,7 @@ void __fastcall generateRmgIslandMask(u8* mask, s32 width, s32 height)
     }
 }
 
-VA(0x0053EFA0, 0x1F2)
+VA(0x0053efa0, 0x1f2)
 MAC_ADDRESS(0x240ba8, 0x270)
 void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& bounds, s32 level)
 {
@@ -4894,7 +4894,7 @@ static inline s32 getRmgChamferStepCost(s32 direction)
 
 // Eight-neighbour chamfer distances within one zone; a shorter distance
 // resets connection metadata without checking terrain or objects.
-VA(0x0053F1A0, 0x2C6)
+VA(0x0053f1a0, 0x2c6)
 MAC_ADDRESS(0x240ee4, 0x358)
 void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position, s32 zoneIndex)
 {
@@ -4934,7 +4934,7 @@ enum ERmgWaterZoneIslandLimits {
 
 // Seed islands clear of the zone edge and earlier island centres, rebuilding
 // the candidate list after every island.
-VA(0x0053F470, 0x409)
+VA(0x0053f470, 0x409)
 MAC_ADDRESS(0x24123c, 0x638)
 void type_random_map_generator::placeWaterZoneIslands(TRmgZone* zone)
 {
@@ -5014,7 +5014,7 @@ static inline void releaseRmgNeighborhoodPathClearance(type_random_map& map,
 
 // Marks dry zone cells for border obstacles beside unassigned water or
 // another zone, unless that zone is joined by an unguarded surface connection.
-VA(0x0053F880, 0x429)
+VA(0x0053f880, 0x429)
 MAC_ADDRESS(0x241874, 0x628)
 void type_random_map_generator::markZoneBorders()
 {
@@ -5058,7 +5058,7 @@ void type_random_map_generator::markZoneBorders()
         m_progress->advance(1600);
 }
 
-VA(0x0053FCB0, 0x5EC)
+VA(0x0053fcb0, 0x5ec)
 MAC_ADDRESS(0x241e9c, 0x770)
 void type_random_map_generator::repairWaterZoneBorders()
 {
@@ -5138,7 +5138,7 @@ void type_random_map_generator::repairWaterZoneBorders()
 
 // Registers the object and counts its type. An object with an entrance is
 // also counted in the entrance's zone and floods entrance distances from it.
-VA(0x005402A0, 0x32A)
+VA(0x005402a0, 0x32a)
 MAC_ADDRESS(0x24260c, 0x434)
 void type_random_map_generator::addObject(type_object* object, TRmgMapPosition position)
 {
@@ -5186,7 +5186,7 @@ enum ERmgConnectionPathWidth {
 // Floods path costs from a seed cell in each zone. Every clear, dry zone cell
 // still at nonzero cost then opens a path back along the costs (if reached)
 // and reseeds the flood from itself.
-VA(0x005405D0, 0x304)
+VA(0x005405d0, 0x304)
 MAC_ADDRESS(0x242a40, 0x448)
 void type_random_map_generator::buildZoneConnectionPaths()
 {
@@ -5264,7 +5264,7 @@ static inline void clearRmgZonePathBorders(type_random_map& map,
 // changing costs; marked connection cells on the way get a border guard of
 // their colour. Widened routes clear only the border mark of nearby
 // same-zone cells.
-VA(0x005408E0, 0x23F)
+VA(0x005408e0, 0x23f)
 MAC_ADDRESS(0x242e88, 0x380)
 void type_random_map_generator::openConnectionPath(
     TRmgMapPosition position, b8 narrow)
@@ -5298,7 +5298,7 @@ enum ERmgGuardPrototype {
 // on RoE maps: creature 117 is neither evaluated nor excluded, so it can be
 // selected without being counted. Stacks of four or more get two draws of
 // size variation.
-VA(0x00540B20, 0x240)
+VA(0x00540b20, 0x240)
 MAC_ADDRESS(0x243208, 0x290)
 type_object* type_random_map_generator::createGuard(s32 value, TRmgZone* zone)
 {
@@ -5379,7 +5379,7 @@ enum ERmgBorderGuardCount {
     RMG_SHIPYARD_BORDER_GUARDS = 3
 };
 
-VA(0x00540D60, 0x256)
+VA(0x00540d60, 0x256)
 MAC_ADDRESS(0x24356c, 0x2b8)
 s32 type_random_map_generator::placeBorderObject(
     TRmgMapPosition position, s32 guardCount, TRmgZone* keyTentZone)
@@ -5423,7 +5423,7 @@ static inline void markRmgEmptyBorderConnection(TRmgMapItem* item, s32 color)
     }
 }
 
-VA(0x00540FC0, 0x172)
+VA(0x00540fc0, 0x172)
 MAC_ADDRESS(0x243824, 0x2d4)
 void type_random_map_generator::markBorderObjectArea(
     TRmgMapPosition position, s32 color)
@@ -5561,7 +5561,7 @@ enum ERmgGroundCrossingLimits {
 // border cells (rounded up), drawn without repeats from the empty ones tied
 // for the lowest zone-path cost, which must be at most 100; each gets open
 // paths and entrances on both sides before its border or guard.
-VA(0x00541140, 0x63A)
+VA(0x00541140, 0x63a)
 MAC_ADDRESS(0x243af8, 0x53c)
 b8 type_random_map_generator::createGroundConnection(
     TRmgZone* source,
@@ -5642,7 +5642,7 @@ b8 type_random_map_generator::createGroundConnection(
 
 // Cardinal flood across path-clearance water; adjoining land is marked
 // visited but not expanded.
-VA(0x00541780, 0x18D)
+VA(0x00541780, 0x18d)
 MAC_ADDRESS(0x244034, 0x254)
 void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
 {
@@ -5673,7 +5673,7 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
 static TRmgMapPosition getRmgShipyardWaterPosition(TRmgMapPosition shipyardPosition,
     s32 waterOffset);
 
-VA(0x00541960, 0x16C)
+VA(0x00541960, 0x16c)
 MAC_ADDRESS(0x244288, 0x2f4)
 b8 type_random_map_generator::canPlaceShipyard(TRmgMapPosition position)
 {
@@ -5737,7 +5737,7 @@ void type_random_map_generator::floodShipyardWater(type_object* shipyard)
 // Connects zones by a shipyard, or succeeds without one when water flooded
 // from this zone's shipyards already reaches a cell facing the destination.
 // A successful border placement clears the guard value.
-VA(0x00541AD0, 0x5B0)
+VA(0x00541ad0, 0x5b0)
 MAC_ADDRESS(0x2446ac, 0x55c)
 b8 type_random_map_generator::createShipyardConnection(
     TRmgZone* source, TRmgZoneConnection* connection)
@@ -5824,7 +5824,7 @@ static inline TRmgMapPosition openRmgEntranceApproach(type_random_map& map,
     return approach;
 }
 
-VA(0x00542080, 0x8AA)
+VA(0x00542080, 0x8aa)
 MAC_ADDRESS(0x244c08, 0xa1c)
 b8 type_random_map_generator::createSubterraneanGate(
     TRmgZone* source, TRmgZoneConnection* connection)
@@ -5930,7 +5930,7 @@ static inline void insetRmgObjectPlacementBounds(
 }
 
 // Places an object at a random fitting cell of the zone.
-VA(0x00542930, 0x1C6)
+VA(0x00542930, 0x1c6)
 MAC_ADDRESS(0x245624, 0x24c)
 b8 type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* zone)
 {
@@ -5959,7 +5959,7 @@ b8 type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* z
 // cell's path predecessor; a zero-cost cell uses the first same-zone open
 // neighbour, else the cell below, and an unreached cell fails. Success also
 // marks the cell's five side and lower neighbours as border connections.
-VA(0x00542B00, 0x1D2)
+VA(0x00542b00, 0x1d2)
 MAC_ADDRESS(0x245870, 0x364)
 b8 type_random_map_generator::placeMonolithBorder(
     TRmgMapPosition position, TRmgZone* keyTentZone)
@@ -6041,7 +6041,7 @@ static inline void protectRmgMonolith(type_random_map_generator& generator,
 
 // One-way prototypes produce an entrance/exit pair in each zone. Failed
 // placement deletes only that object; subsequent endpoint attempts continue.
-VA(0x00542CE0, 0x554)
+VA(0x00542ce0, 0x554)
 MAC_ADDRESS(0x245bd4, 0x6e8)
 void type_random_map_generator::createMonolithConnection(
     TRmgZone* source, TRmgZoneConnection* connection, s32 prototypeIndex)
@@ -6253,7 +6253,7 @@ static inline bool canBlockRmgFloorCell(const TRmgMapItem* item)
         && !item->isRoadEntrance();
 }
 
-VA(0x005439E0, 0x283)
+VA(0x005439e0, 0x283)
 MAC_ADDRESS(0x246a34, 0x31c)
 void type_random_map_generator::decorateUnderground()
 {
@@ -6302,7 +6302,7 @@ void type_random_map_generator::decorateUnderground()
 // This Bresenham-style ray continues beyond toward until it reaches the map's
 // outermost ring or a path-clearance tile in its 3x3 neighbourhood. The first
 // two steps ignore neighbours; the returned point precedes the obstruction.
-VA(0x00543C70, 0x1A2)
+VA(0x00543c70, 0x1a2)
 MAC_ADDRESS(0x246d50, 0x30c)
 TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, s32 level)
 {
@@ -6362,7 +6362,7 @@ bool type_random_map_generator::contains(const TPoint& point) const
 
 // Midpoint subdivision uses a LIFO stack; deferred perpendicular branches
 // use a FIFO queue.
-VA(0x00543E20, 0x574)
+VA(0x00543e20, 0x574)
 MAC_ADDRESS(0x24705c, 0x750)
 void type_random_map_generator::carveBranchingPaths()
 {
@@ -6467,7 +6467,7 @@ void type_random_map_generator::carveBranchingPaths()
     }
 }
 
-VA(0x005443A0, 0x2F5)
+VA(0x005443a0, 0x2f5)
 MAC_ADDRESS(0x247800, 0x59c)
 void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
     TRmgZone* zone)
@@ -6493,7 +6493,7 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
     }
 }
 
-VA(0x005446A0, 0x27E)
+VA(0x005446a0, 0x27e)
 MAC_ADDRESS(0x247d9c, 0x3e0)
 void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
 {
@@ -6563,7 +6563,7 @@ void type_random_map_generator::prepareZoneConnections()
     connectZones();
 }
 
-VA(0x00544A50, 0x90)
+VA(0x00544a50, 0x90)
 MAC_ADDRESS(0x248328, 0xf0)
 void type_random_map_generator::placePrimaryTown(TRmgZone* zone)
 {
@@ -6671,7 +6671,7 @@ static inline void placeRmgFixedTownCategory(type_random_map_generator* generato
     skipPrimary = false;
 }
 
-VA(0x00544AE0, 0x2B0)
+VA(0x00544ae0, 0x2b0)
 MAC_ADDRESS(0x248418, 0x414)
 void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
 {
@@ -6742,7 +6742,7 @@ static inline TRmgMapPosition placeRmgTownAtRandomCandidate(
 // A zone without a primary town gets this one as its primary town.
 // Otherwise the entrance must be at least spacing from other objects, with
 // its clipped 3x3 neighbourhood in the zone; the farthest such sites win.
-VA(0x00544D90, 0x4B7)
+VA(0x00544d90, 0x4b7)
 MAC_ADDRESS(0x24882c, 0x5d4)
 b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     s32 alignment, s32 player, b8 hasFort, s32 spacing)
@@ -7006,7 +7006,7 @@ enum ERmgGuardValueLimits {
     RMG_MINIMUM_GUARD_VALUE = 2000
 };
 
-VA(0x00545E00, 0x5B)
+VA(0x00545e00, 0x5b)
 MAC_ADDRESS(0x22ce7c, 0x74)
 s32 getRmgGuardValue(s32 value, s32 strength)
 {
@@ -7022,7 +7022,7 @@ s32 getRmgGuardValue(s32 value, s32 strength)
     return guardValue < RMG_MINIMUM_GUARD_VALUE ? 0 : guardValue;
 }
 
-VA(0x00545E60, 0xFA)
+VA(0x00545e60, 0xfa)
 MAC_ADDRESS(0x249c8c, 0x1c4)
 void type_random_map_generator::placeExtraMines(TRmgZone* zone)
 {
@@ -7049,7 +7049,7 @@ void type_random_map_generator::placeExtraMines(TRmgZone* zone)
     }
 }
 
-VA(0x00545F60, 0xD6)
+VA(0x00545f60, 0xd6)
 MAC_ADDRESS(0x249e50, 0x110)
 void type_random_map_generator::placeMines()
 {
@@ -7204,7 +7204,7 @@ static inline type_object* createRmgTreasureWithRetries(
 
 // Generation and fit have independent three-attempt limits; failed fits
 // release reservations before deletion.
-VA(0x00546520, 0x1B6)
+VA(0x00546520, 0x1b6)
 MAC_ADDRESS(0x24a584, 0x22c)
 s32 type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
     TRmgTreasureGroup* group, b8 compact, s32 targetValue)
@@ -7254,7 +7254,7 @@ static inline void discardRmgTreasureGroup(TRmgTreasureGroup* group)
 
 // Without a suitable guard creature the group stays unguarded; a failed
 // guard fit destroys the group's objects and the unaccepted guard.
-VA(0x005466E0, 0x253)
+VA(0x005466e0, 0x253)
 MAC_ADDRESS(0x24a7b0, 0x110) // MAC_ABSTRACTION_FROM(tokens1:4deef3890efa,29.6117): discardRmgTreasureGroup shares ordered reservation release, deletion and reset across four failed-placement paths.
 b8 type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
     TRmgTreasureGroup* group, b8 compact, s32 minimum, s32 maximum)
@@ -7288,7 +7288,7 @@ void TRmgMapItem::setTerrain(s32 terrain, s32 frame,
     m_tileData.m_terrainFlipY = flipY;
 }
 
-VA(0x00546990, 0x1E)
+VA(0x00546990, 0x1e)
 TRmgMapItem* type_random_map::getMapItem(s32 x, s32 y)
 {
     return &m_mapItems[y * m_mapWidth + x];
@@ -7296,52 +7296,52 @@ TRmgMapItem* type_random_map::getMapItem(s32 x, s32 y)
 
 VA_COMPGEN(0x00404200, 0x209, VECTOR_INSERT, Int)
 
-VA_COMPGEN(0x00422F50, 0x1B1, VECTOR_INSERT_SINGLE, Int)
+VA_COMPGEN(0x00422f50, 0x1b1, VECTOR_INSERT_SINGLE, Int)
 
-VA_COMPGEN(0x004347A0, 0x32E, VECTOR_INSERT, TRmgMapPosition)
+VA_COMPGEN(0x004347a0, 0x32e, VECTOR_INSERT, TRmgMapPosition)
 
-VA_COMPGEN(0x0054C3F0, 0x21C, VECTOR_INSERT_SINGLE, TRmgMapPosition)
+VA_COMPGEN(0x0054c3f0, 0x21c, VECTOR_INSERT_SINGLE, TRmgMapPosition)
 
-VA_COMPGEN(0x0054DD60, 0x15, STD_CONSTRUCT, TRmgMapPosition)
+VA_COMPGEN(0x0054dd60, 0x15, STD_CONSTRUCT, TRmgMapPosition)
 
-VA_COMPGEN(0x0054C730, 0x1DD, VECTOR_INSERT_SINGLE, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054c730, 0x1dd, VECTOR_INSERT_SINGLE, TRmgObjectPlacementRule)
 
-VA_COMPGEN(0x0054C940, 0x23, VECTOR_DESTROY, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054c940, 0x23, VECTOR_DESTROY, TRmgObjectPlacementRule)
 
-VA_COMPGEN(0x0054D8B0, 0x38, VECTOR_UCOPY, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054d8b0, 0x38, VECTOR_UCOPY, TRmgObjectPlacementRule)
 
-VA_COMPGEN(0x0054D8F0, 0x29, VECTOR_UFILL, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054d8f0, 0x29, VECTOR_UFILL, TRmgObjectPlacementRule)
 
-VA_COMPGEN(0x0054DD80, 0x104, STD_CONSTRUCT, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054dd80, 0x104, STD_CONSTRUCT, TRmgObjectPlacementRule)
 
-VA_COMPGEN(0x0054DA20, 0x19F, STD_FILL, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054da20, 0x19f, STD_FILL, TRmgObjectPlacementRule)
 
-VA_COMPGEN(0x0054DBC0, 0x1A0, STD_COPY_BACKWARD, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054dbc0, 0x1a0, STD_COPY_BACKWARD, TRmgObjectPlacementRule)
 
-VA_COMPGEN(0x0054C970, 0x22F, VECTOR_INSERT_SINGLE, TRmgZoneConnection)
+VA_COMPGEN(0x0054c970, 0x22f, VECTOR_INSERT_SINGLE, TRmgZoneConnection)
 
-VA_COMPGEN(0x005157D0, 0x1B, CLASS_CTOR, vector)
+VA_COMPGEN(0x005157d0, 0x1b, CLASS_CTOR, vector)
 
-VA_COMPGEN(0x00536BA0, 0x18, DEFAULT_CTOR_CLOSURE, vector)
+VA_COMPGEN(0x00536ba0, 0x18, DEFAULT_CTOR_CLOSURE, vector)
 
-VA_COMPGEN(0x00536B60, 0x3D, IMPLICIT_DTOR, TRmgObjectPlacementRule)
+VA_COMPGEN(0x00536b60, 0x3d, IMPLICIT_DTOR, TRmgObjectPlacementRule)
 MAC_COMPGEN_ADDRESS(0x235010, 0x84, IMPLICIT_DTOR, TRmgObjectPlacementRule)
 
-VA_COMPGEN(0x0054C170, 0x38, VECTOR_DTOR, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054c170, 0x38, VECTOR_DTOR, TRmgObjectPlacementRule)
 
-VA_COMPGEN(0x0054C1B0, 0x23, VECTOR_SIZE, TRmgZoneConnection)
+VA_COMPGEN(0x0054c1b0, 0x23, VECTOR_SIZE, TRmgZoneConnection)
 
-VA_COMPGEN(0x0054CD70, 0x3D, VECTOR_ERASE, TPoint)
+VA_COMPGEN(0x0054cd70, 0x3d, VECTOR_ERASE, TPoint)
 
-VA_COMPGEN(0x0054C610, 0x53, VECTOR_ERASE, TRmgMapPosition)
+VA_COMPGEN(0x0054c610, 0x53, VECTOR_ERASE, TRmgMapPosition)
 
-VA_COMPGEN(0x0054CDB0, 0x33, VECTOR_ERASE, Int)
+VA_COMPGEN(0x0054cdb0, 0x33, VECTOR_ERASE, Int)
 
-VA_COMPGEN(0x0054CDF0, 0x1D3, VECTOR_INSERT, unsigned_char)
+VA_COMPGEN(0x0054cdf0, 0x1d3, VECTOR_INSERT, unsigned_char)
 
-VA_COMPGEN(0x0054CFD0, 0x2F, VECTOR_ERASE, unsigned_char)
+VA_COMPGEN(0x0054cfd0, 0x2f, VECTOR_ERASE, unsigned_char)
 
-VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
+VA_COMPGEN(0x0054d9e0, 0x39, STD_COPY, TRmgMapPosition)
 
 VA_COMPGEN(0x005093c0, 0x25, STD_COPY, Int)
 
@@ -7359,7 +7359,7 @@ static inline TRmgMapPosition getRmgPlacedGroupObjectPosition(
     return position;
 }
 
-VA(0x005469B0, 0x2B4)
+VA(0x005469b0, 0x2b4)
 MAC_ADDRESS(0x24a8c0, 0x44c)
 void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position)
@@ -7405,7 +7405,7 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
         group->m_objects[objectIndex]->completePlacement();
 }
 
-VA(0x00546C70, 0x452)
+VA(0x00546c70, 0x452)
 MAC_ADDRESS(0x24ad0c, 0x6cc)
 b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position, TRmgZone* zone)
@@ -7494,7 +7494,7 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
 //   . . # # # .
 //   . . # c # .
 //   . . # # # .
-VA(0x005470D0, 0x286)
+VA(0x005470d0, 0x286)
 MAC_ADDRESS(0x24b3d8, 0x310)
 b8 type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
     TRmgZone* zone, s32 spacing)
@@ -7591,7 +7591,7 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
     }
 }
 
-VA_COMPGEN(0x005477C0, 0xB3, IMPLICIT_DTOR, TRmgTreasureGroup)
+VA_COMPGEN(0x005477c0, 0xb3, IMPLICIT_DTOR, TRmgTreasureGroup)
 MAC_COMPGEN_ADDRESS(0x24ba40, 0x90, IMPLICIT_DTOR, TRmgTreasureGroup)
 
 static inline void queueRmgMovementStep(TRmgMapItem* destination,
@@ -7620,7 +7620,7 @@ enum ERmgRoadStepCost {
 
 // Dijkstra-style relaxation uses the back of a descending worklist, retaining
 // duplicate entries. Monolith/gate transitions precede neighbour relaxation.
-VA(0x00547880, 0x7B1)
+VA(0x00547880, 0x7b1)
 MAC_ADDRESS(0x24bbe0, 0x7e4)
 void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
 {
@@ -7780,7 +7780,7 @@ static inline void rebuildRmgRoadCostMap(type_random_map_generator* generator,
     generator->buildRoadCostMap(source);
 }
 
-VA(0x00548290, 0x26E)
+VA(0x00548290, 0x26e)
 MAC_ADDRESS(0x24c6d4, 0x1d8)
 void type_random_map_generator::createRoads()
 {
@@ -7937,7 +7937,7 @@ static inline TRmgMapItem* getRmgDryRiverCoastCell(
 //   ~ d
 //   P d i i T
 //   ~ d
-VA(0x00548A40, 0x222)
+VA(0x00548a40, 0x222)
 MAC_ADDRESS(0x24ce88, 0x404)
 void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, s32 direction)
 {
@@ -7969,7 +7969,7 @@ void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, s
     item->m_tileData.m_riverTarget = true;
 }
 
-VA(0x00548C70, 0x17D)
+VA(0x00548c70, 0x17d)
 MAC_ADDRESS(0x24d28c, 0x264)
 void type_random_map_generator::markRiverTargets()
 {
@@ -8006,7 +8006,7 @@ void type_random_map_generator::markRiverTargets()
 
 // Randomized best-first relaxation, with the same per-visit random edge costs
 // as createRiverToObject, seeded at three cells beside the water wheel.
-VA(0x00548DF0, 0x99F)
+VA(0x00548df0, 0x99f)
 MAC_ADDRESS(0x24d4f0, 0xb00)
 void type_random_map_generator::createRiver(TRmgMapPosition source)
 {
@@ -8141,7 +8141,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
     }
 }
 
-VA(0x005497A0, 0xCE)
+VA(0x005497a0, 0xce)
 MAC_ADDRESS(0x24dff0, 0x18c)
 void type_random_map_generator::markRiverObjectTargets()
 {
@@ -8171,7 +8171,7 @@ void type_random_map_generator::markRiverObjectTargets()
         m_progress->advance(1000);
 }
 
-VA(0x00549870, 0xB1)
+VA(0x00549870, 0xb1)
 MAC_ADDRESS(0x24e17c, 0x118)
 void type_random_map_generator::createRivers()
 {
@@ -8194,7 +8194,7 @@ void type_random_map_generator::createRivers()
 // Assigns players to template slots, lays out zones and terrain, places
 // towns, connections, mines and treasures, then decorates and adds roads
 // and rivers.
-VA(0x00549930, 0x37B)
+VA(0x00549930, 0x37b)
 MAC_ADDRESS(0x24e294, 0x41c)
 b8 type_random_map_generator::generate()
 {
@@ -8325,12 +8325,12 @@ enum ERmgArtifactCount {
 static inline void appendRmgPlayerDescription(char* description, s32 player,
     const char* clause)
 {
-    strcat(description, DATA_COMPGEN(0x0066032C, rmgListSeparator, ", "));
+    strcat(description, DATA_COMPGEN(0x0066032c, rmgListSeparator, ", "));
     strcat(description, g_rmgPlayerNames[player]);
     strcat(description, clause);
 }
 
-VA(0x00549CB0, 0xE90)
+VA(0x00549cb0, 0xe90)
 MAC_ADDRESS(0x24e7d4, 0x11ac)
 void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 {
@@ -8352,7 +8352,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     sprintf(
         description,
         DATA_COMPGEN(
-            0x0068286C,
+            0x0068286c,
             rmgDescriptionFormat,
             "Map created by the Random Map Generator.  Template was %s, "
             "Random seed was %i, size %i, levels %i, humans %i, "
@@ -8370,13 +8370,13 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     case RMG_MAP_RESTORATION_OF_ERATHIA:
         strcat(
             description,
-            DATA_COMPGEN(0x0068282C, rmgOriginalMap, ", original map"));
+            DATA_COMPGEN(0x0068282c, rmgOriginalMap, ", original map"));
         break;
     case RMG_MAP_ARMAGEDDONS_BLADE:
         strcat(
             description,
             DATA_COMPGEN(
-                0x0068283C, rmgFirstExpansionMap, ", first expansion map"));
+                0x0068283c, rmgFirstExpansionMap, ", first expansion map"));
         break;
     case RMG_MAP_SHADOW_OF_DEATH:
         strcat(
@@ -8398,7 +8398,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         if (m_townChoices[descriptionPlayer] != eTownNeutral) {
             appendRmgPlayerDescription(description, descriptionPlayer,
                 DATA_COMPGEN(
-                    0x0068280C, rmgTownChoiceIs, " town choice is "));
+                    0x0068280c, rmgTownChoiceIs, " town choice is "));
             strcat(
                 description,
                 // Retail bug: indexed by the player rather than the chosen
@@ -8605,7 +8605,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     }
 }
 
-VA(0x0054AB40, 0xAD)
+VA(0x0054ab40, 0xad)
 MAC_ADDRESS(0x24e6b0, 0x124)
 static void __fastcall assignRmgTeams(
     s32 teamCount,
@@ -8648,7 +8648,7 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile*, TObjectType*);
 // Prototype slots 0/1 hold the first RANDOM_MONSTER/TERRAIN_HOLE entries;
 // referenced prototypes start at 2. Objects are written in two trait-ordered
 // passes.
-VA(0x0054ABF0, 0x235)
+VA(0x0054abf0, 0x235)
 MAC_ADDRESS(0x24fd18, 0x350)
 b8 type_random_map_generator::writeMap(TAbstractFile* outfile)
 {
@@ -8723,7 +8723,7 @@ static inline void writeRmgPrototypeCellMask(TAbstractFile* outfile,
     outfile->write(mask, sizeof(mask));
 }
 
-VA(0x0054AE30, 0x2C5)
+VA(0x0054ae30, 0x2c5)
 MAC_ADDRESS(0x24f980, 0x398)
 void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* prototype)
 {
@@ -8747,7 +8747,7 @@ static inline s32 getRmgPrisonHeroCount(s32 mapVersion)
     return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? 145 : RMG_ROE_HERO_COUNT;
 }
 
-VA(0x0054B100, 0x71)
+VA(0x0054b100, 0x71)
 MAC_ADDRESS(0x250068, 0xd4)
 s32 type_random_map_generator::selectPrisonHero()
 {
@@ -8801,7 +8801,7 @@ enum ERmgQuestZoneScore {
 
 // Stores each zone's connection-graph distance from origin in its quest
 // placement score (RMG_QUEST_UNREACHED_DISTANCE when unreachable).
-VA(0x0054B180, 0x174)
+VA(0x0054b180, 0x174)
 MAC_ADDRESS(0x25013c, 0x210)
 void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
 {
@@ -8827,7 +8827,7 @@ void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
 
 // Tries reachable non-junction land zones nearest first, but adjacent zones
 // last; ties keep zone order. Excluded zones still draw a random score.
-VA(0x0054B300, 0x18B)
+VA(0x0054b300, 0x18b)
 MAC_ADDRESS(0x25034c, 0x23c)
 b8 type_random_map_generator::placeQuestGroup(
     TRmgTreasureGroup* group, TRmgZone* origin)
@@ -8880,7 +8880,7 @@ static inline bool isRmgQuestArtifact(s32 artifact, const b8* usedArtifacts)
         && (g_artifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass);
 }
 
-VA(0x0054B490, 0x42E)
+VA(0x0054b490, 0x42e)
 MAC_ADDRESS(0x250588, 0x360)
 b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
 {
@@ -8928,7 +8928,7 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
 
 // Reserve the colour before filling the group and release it on failure.
 // Failed placement releases each object's reservation before deletion.
-VA(0x0054B8C0, 0x385)
+VA(0x0054b8c0, 0x385)
 MAC_ADDRESS(0x2508e8, 0x334)
 b8 type_random_map_generator::placeKeyTentGuard(type_object* object, s32 targetValue)
 {
@@ -8956,7 +8956,7 @@ b8 type_random_map_generator::placeKeyTentGuard(type_object* object, s32 targetV
 
 // Callers keep ownership of the object. Retail bug: both find loops compare
 // the iterator with null rather than end().
-VA(0x0054BC50, 0x2AE)
+VA(0x0054bc50, 0x2ae)
 MAC_ADDRESS(0x250c1c, 0x2ac)
 void type_random_map_generator::removeObject(type_object* object)
 {
@@ -9005,7 +9005,7 @@ void type_random_map_generator::removeObject(type_object* object)
     }
 }
 
-VA(0x0054BF00, 0x57)
+VA(0x0054bf00, 0x57)
 MAC_ADDRESS(0x250fe0, 0x90)
 TRandomMapRequest::TRandomMapRequest(s32 width, s32 height, s32 levels)
     : m_width(width), m_height(height), m_levels(levels),
@@ -9029,7 +9029,7 @@ void type_random_map_generator::setTownChoice(s32 seat, s32 town)
     m_townChoices[seat] = town;
 }
 
-VA(0x0054BF60, 0x130)
+VA(0x0054bf60, 0x130)
 MAC_ADDRESS(0x251070, 0x140)
 s32 TRandomMapRequest::generateToFile(TAbstractFile* outfile, TProgressSink* progress)
 {
@@ -9059,7 +9059,7 @@ s32 TRandomMapRequest::generateToFile(TAbstractFile* outfile, TProgressSink* pro
     return result;
 }
 
-VA(0x0054C090, 0x8C)
+VA(0x0054c090, 0x8c)
 MAC_ADDRESS(0x2511b0, 0x98)
 s32 TRandomMapRequest::generate(const char* fileName, TProgressSink* progress)
 {
@@ -9071,19 +9071,19 @@ s32 TRandomMapRequest::generate(const char* fileName, TProgressSink* progress)
     }
 }
 
-VA_COMPGEN(0x0054C6A0, 0x4D, QUEUE_LIST_DTOR, TPoint)
+VA_COMPGEN(0x0054c6a0, 0x4d, QUEUE_LIST_DTOR, TPoint)
 
-VA_COMPGEN(0x0054D000, 0x5E, LIST_INSERT_SINGLE, TPoint)
+VA_COMPGEN(0x0054d000, 0x5e, LIST_INSERT_SINGLE, TPoint)
 
-VA_COMPGEN(0x0054D060, 0x36, LIST_ERASE_ITERATOR, TPoint)
+VA_COMPGEN(0x0054d060, 0x36, LIST_ERASE_ITERATOR, TPoint)
 
-VA_COMPGEN(0x0054D0A0, 0x45, LIST_ERASE_RANGE, TPoint)
+VA_COMPGEN(0x0054d0a0, 0x45, LIST_ERASE_RANGE, TPoint)
 
-VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, TPoint)
+VA_COMPGEN(0x0054d0f0, 0x2d, LIST_BUYNODE, TPoint)
 
-VA_COMPGEN(0x005166E0, 0x34, BITSET_TEST, Bitset10)
+VA_COMPGEN(0x005166e0, 0x34, BITSET_TEST, Bitset10)
 
-VA(0x005FDB10, 0x21)
+VA(0x005fdb10, 0x21)
 MAC_ADDRESS(0x25c3b4, 0x38)
 s32 getRmgSquaredDistance(TPoint first, TPoint second)
 {
@@ -9104,7 +9104,7 @@ static TPoint computeRmgCircumcenter(TPoint third, TPoint origin, TPoint second)
         / perpendicular.dot(thirdSide)) / 2;
 }
 
-VA(0x005FDB40, 0x16E)
+VA(0x005fdb40, 0x16e)
 MAC_ADDRESS(0x25d144, 0x12c)
 void TRmgVoronoi::buildVertices()
 {
@@ -9123,13 +9123,13 @@ void TRmgVoronoi::buildVertices()
     }
 }
 
-VA(0x005FDCB0, 0x1E)
+VA(0x005fdcb0, 0x1e)
 TRmgVector TRmgVector::operator+(TRmgVector other) const
 {
     return TRmgVector(m_x + other.m_x, m_y + other.m_y);
 }
 
-VA(0x005FDCD0, 0x1D)
+VA(0x005fdcd0, 0x1d)
 TRmgVector TRmgVector::operator*(s32 scale) const
 {
     TRmgVector result;
@@ -9138,19 +9138,19 @@ TRmgVector TRmgVector::operator*(s32 scale) const
     return result;
 }
 
-VA(0x005FDCF0, 0x25)
+VA(0x005fdcf0, 0x25)
 TRmgVector TRmgVector::operator/(s32 divisor) const
 {
     return TRmgVector(m_x / divisor, m_y / divisor);
 }
 
-VA(0x005FDD20, 0x20)
+VA(0x005fdd20, 0x20)
 TPoint operator+(TPoint point, TRmgVector offset)
 {
     return TPoint(point.m_x + offset.m_x, point.m_y + offset.m_y);
 }
 
-VA(0x005FDD40, 0x20)
+VA(0x005fdd40, 0x20)
 TRmgVector operator-(TPoint left, TPoint right)
 {
     return TRmgVector(left.m_x - right.m_x, left.m_y - right.m_y);

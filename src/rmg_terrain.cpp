@@ -74,7 +74,7 @@ static inline void buildMatchingLineNeighbourMask(
     }
 }
 
-VA(0x004F9F00, 0x146)
+VA(0x004f9f00, 0x146)
 MAC_ADDRESS(0x22273c, 0x168)
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
@@ -98,7 +98,7 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
     }
 }
 
-VA(0x004FA050, 0x22)
+VA(0x004fa050, 0x22)
 TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
 {
     return TRmgLinePainterTile(this, point);
@@ -145,7 +145,7 @@ static inline void refreshRmgLineBorderRow(TRmgLinePainterInterface* painter,
 //   1 3 3 3 2
 //   1 # # # 2
 //   1 4 4 4 2
-VA(0x004FA080, 0x1FB)
+VA(0x004fa080, 0x1fb)
 MAC_ADDRESS(0x2228b8, 0x388)
 void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRectangle& rectangle)
 {
@@ -175,7 +175,7 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
         refreshRmgLineBorderRow(painter, rectangle.m_origin.m_y + rectangle.m_size.m_y, rectangle);
 }
 
-VA(0x004FA280, 0x30)
+VA(0x004fa280, 0x30)
 MAC_ADDRESS(0x222c40, 0x4c)
 TRmgLineWalker::TRmgLineWalker(
     TRmgLinePainterInterface* newPainter,
@@ -188,7 +188,7 @@ TRmgLineWalker::TRmgLineWalker(
 
 // Four-connected Bresenham line: the corner cell is painted on each
 // minor-axis step so the road or river stays connected.
-VA(0x004FA2B0, 0x110)
+VA(0x004fa2b0, 0x110)
 MAC_ADDRESS(0x222c8c, 0x190)
 void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
 {
@@ -220,7 +220,7 @@ void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
     m_position = destination;
 }
 
-VA(0x004FA3C0, 0x156)
+VA(0x004fa3c0, 0x156)
 MAC_ADDRESS(0x222e1c, 0x18c)
 void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 {
@@ -243,14 +243,14 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 
 template<class Coordinate>
 // VA instance: TRmgCoordinatePoint<unsigned int>::TRmgCoordinatePoint(const TPoint&)
-VA(0x004FA520, 0x16)
+VA(0x004fa520, 0x16)
 MAC_ADDRESS(0x2228a4, 0x14)
 TRmgCoordinatePoint<Coordinate>::TRmgCoordinatePoint(const TPoint& point)
     : m_x(point.m_x), m_y(point.m_y)
 {
 }
 
-VA(0x004FA540, 0x21)
+VA(0x004fa540, 0x21)
 TPoint& TPoint::operator+=(const TPoint& offset)
 {
     m_x += offset.m_x;
@@ -306,7 +306,7 @@ static inline TRmgTerrainPatternRange& getTerrainPatternRange(
     return rule.m_ranges[transition * 2 + special];
 }
 
-VA(0x005B3780, 0xB3)
+VA(0x005b3780, 0xb3)
 MAC_ADDRESS(0x254be0, 0xf4)
 TRmgPatternTerrainRule::TRmgPatternTerrainRule(
     b8 blendsWithOtherTerrain, b8 allowsSeparatedNeighbours,
@@ -330,27 +330,27 @@ TRmgPatternTerrainRule::TRmgPatternTerrainRule(
     }
 }
 
-VA(0x005B3840, 0x0C)
+VA(0x005b3840, 0x0c)
 MAC_ADDRESS(0x259dac, 0x14)
 b8 TRmgPatternTerrainRule::hasSpecialBaseFrames()
 {
     return 0 < getTerrainPatternRange(*this, SHAPE_FILL, true).m_count;
 }
 
-VA(0x005B3850, 0x07)
+VA(0x005b3850, 0x07)
 MAC_ADDRESS(0x254b98, 0x48)
 TRmgTerrainRule::~TRmgTerrainRule()
 {
 }
 
-VA(0x005B3860, 0x11)
+VA(0x005b3860, 0x11)
 MAC_ADDRESS(0x254ce4, 0x14)
 b8 TRmgPatternTerrainRule::isSpecialFrame(s32 frame)
 {
     return m_entries[frame].m_special;
 }
 
-VA(0x005B3880, 0x10)
+VA(0x005b3880, 0x10)
 MAC_ADDRESS(0x254cf8, 0x10)
 s32 TRmgPatternTerrainRule::getTransition(s32 frame)
 {
@@ -376,7 +376,7 @@ static inline bool matchesTerrainFrame(const Entry* entries,
     return oldFrame != RMG_NO_TERRAIN_FRAME && entries[oldFrame].m_transition == transition;
 }
 
-VA(0x005B3890, 0x58)
+VA(0x005b3890, 0x58)
 MAC_ADDRESS(0x254d08, 0xc8)
 s32 TRmgPatternTerrainRule::selectBaseFrame(s32 strength, s32 oldFrame)
 {
@@ -394,7 +394,7 @@ s32 TRmgPatternTerrainRule::selectBaseFrame(s32 strength, s32 oldFrame)
 }
 
 // Transitions always draw from the non-special range.
-VA(0x005B38F0, 0x41)
+VA(0x005b38f0, 0x41)
 MAC_ADDRESS(0x254dd0, 0x88)
 s32 TRmgPatternTerrainRule::selectTransitionFrame(
     s32 transition,
@@ -431,10 +431,10 @@ enum ERmgFixedTransitionTableLimits {
     RMG_FIXED_TRANSITION_FRAME_COUNT = 48
 };
 
-DATA(0x006A4158)
+DATA(0x006a4158)
 TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 
-VA(0x005B3940, 0xC5)
+VA(0x005b3940, 0xc5)
 MAC_ADDRESS(0x254e58, 0xe4)
 TRmgTerrainPatternTable::TRmgTerrainPatternTable()
 {
@@ -456,29 +456,29 @@ TRmgTerrainPatternTable::TRmgTerrainPatternTable()
     }
 }
 
-VA(0x005B3A20, 0x11)
+VA(0x005b3a20, 0x11)
 MAC_ADDRESS(0x254f4c, 0x20)
 TRmgTableTerrainRule::TRmgTableTerrainRule()
 {
 }
 
-VA(0x005B3A40, 0x03)
+VA(0x005b3a40, 0x03)
 MAC_ADDRESS(0x254f6c, 0x8)
 b8 TRmgTableTerrainRule::hasSpecialBaseFrames()
 {
     return false;
 }
 
-VA_COMPGEN(0x005B3A50, 0x21, SCALAR_DELETING_DTOR, TRmgTableTerrainRule)
+VA_COMPGEN(0x005b3a50, 0x21, SCALAR_DELETING_DTOR, TRmgTableTerrainRule)
 
-VA(0x005B3A80, 0x11)
+VA(0x005b3a80, 0x11)
 MAC_ADDRESS(0x254f74, 0x10)
 s32 TRmgTableTerrainRule::getTransition(s32 frame)
 {
     return g_rmgTerrainPatterns[frame].m_transition;
 }
 
-VA(0x005B3AA0, 0x31)
+VA(0x005b3aa0, 0x31)
 MAC_ADDRESS(0x254f84, 0x94)
 s32 TRmgTableTerrainRule::selectBaseFrame(s32, s32 oldFrame)
 {
@@ -490,7 +490,7 @@ s32 TRmgTableTerrainRule::selectBaseFrame(s32, s32 oldFrame)
     return frame;
 }
 
-VA(0x005B3AE0, 0x74)
+VA(0x005b3ae0, 0x74)
 MAC_ADDRESS(0x255018, 0xd8)
 s32 TRmgTableTerrainRule::selectTransitionFrame(
     s32 transition, TRmgTerrainFlip requestedFlip,
@@ -518,7 +518,7 @@ s32 __fastcall selectTerrainTransition(
 //   NW N NE   SW S SE   NE N NW   SE S SW
 //   W  .  E   W  .  E   E  .  W   E  .  W
 //   SW S SE   NW N NE   SE S SW   NE N NW
-DATA(0x00642C00)
+DATA(0x00642c00)
 const s32 g_rmgReflectedNeighbours[2][2][8] = {
     {
         {TILE_DIR_NORTH, TILE_DIR_NORTHEAST, TILE_DIR_EAST, TILE_DIR_SOUTHEAST,
@@ -544,7 +544,7 @@ static TRmgTerrainFlip makeTerrainFlip(b8 x, b8 y)
     return TRmgTerrainFlip(x, y);
 }
 
-VA(0x005B3DD0, 0x6F)
+VA(0x005b3dd0, 0x6f)
 MAC_ADDRESS(0x2551b4, 0xd0)
 void rmgTerrainPainter::initializePackedCell(
     const TRmgGridPoint& point, u32 index)
@@ -555,7 +555,7 @@ void rmgTerrainPainter::initializePackedCell(
     packed.setInitialized();
 }
 
-VA(0x005B3E40, 0x38)
+VA(0x005b3e40, 0x38)
 MAC_ADDRESS(0x255284, 0x64)
 s32 __fastcall getRmgTerrainNeighbourKind(s32 terrain, s32 neighbourTerrain)
 {
@@ -619,7 +619,7 @@ static inline bool hasSouthNortheastTerrainEdges(const s32* neighbours,
 // Priority-ordered terrain pattern classification under four reflections.
 // Each pass tries one pattern family over all reflections, which decides
 // which overlapping pattern wins.
-VA(0x005B3E80, 0x75F)
+VA(0x005b3e80, 0x75f)
 MAC_ADDRESS(0x2552e8, 0x980)
 s32 __fastcall selectTerrainTransition(
     const s32* neighbours, TRmgTerrainFlip* flip)
@@ -627,7 +627,7 @@ s32 __fastcall selectTerrainTransition(
     DATA_COMPGEN_GUARD(0x006a52a1, reflectionFlipsGuard, reflectionFlips)
 
     VA_COMPGEN(0x005b45e0, 0x1, STATIC_DTOR, reflectionFlips)
-    DATA(0x006A52B8)
+    DATA(0x006a52b8)
     static TRmgTerrainFlip reflectionFlips[4] = {
         makeTerrainFlip(false, false), makeTerrainFlip(false, true),
         makeTerrainFlip(true, false), makeTerrainFlip(true, true)
@@ -811,7 +811,7 @@ s32 __fastcall selectTerrainTransition(
     return SHAPE_FILL;
 }
 
-VA(0x005B45F0, 0x26D)
+VA(0x005b45f0, 0x26d)
 MAC_ADDRESS(0x255c68, 0xbc)
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, s32 terrain, s32 strength)
@@ -825,7 +825,7 @@ rmgTerrainPainter::rmgTerrainPainter(
     m_packedCells.resize(getWidth() * getHeight(), TRmgPackedTerrainCell());
 }
 
-VA(0x005B48D0, 0x8D)
+VA(0x005b48d0, 0x8d)
 TRmgPackedTerrainCell* rmgTerrainPainter::getPackedCell(
     const TRmgGridPoint& point)
 {
@@ -891,7 +891,7 @@ b8 rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
     return getTerrain(point) == getPaintTerrain();
 }
 
-VA(0x005B4960, 0x1B2)
+VA(0x005b4960, 0x1b2)
 MAC_ADDRESS(0x255ef0, 0x11c)
 void rmgTerrainPainter::paintRectangle(
     u32 x, u32 y,
@@ -948,7 +948,7 @@ static inline void resolveQueuedTerrainGap(rmgTerrainPainter& painter,
     }
 }
 
-VA(0x005B4B20, 0x5CB)
+VA(0x005b4b20, 0x5cb)
 MAC_ADDRESS(0x256014, 0x580)
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
@@ -1020,7 +1020,7 @@ static inline bool tryQueueOtherTerrainCardinalNeighbour(rmgTerrainPainter& pain
     return true;
 }
 
-VA(0x005B50F0, 0x34E)
+VA(0x005b50f0, 0x34e)
 MAC_ADDRESS(0x2565ac, 0x638)
 void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
 {
@@ -1089,7 +1089,7 @@ static inline void repairTerrainGap(rmgTerrainPainter& painter,
 // and they are separated, greedily fill the lightest neighbour-ring gaps until
 // only one remains; ties go to the first gap. Painting order matters because
 // each repair updates the worklists.
-VA(0x005B5440, 0x628)
+VA(0x005b5440, 0x628)
 MAC_ADDRESS(0x256be4, 0x630)
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
@@ -1168,7 +1168,7 @@ static inline void countTerrainBoundary(
     }
 }
 
-VA(0x005B5A70, 0x8A7)
+VA(0x005b5a70, 0x8a7)
 MAC_ADDRESS(0x257214, 0xd54)
 void rmgTerrainPainter::paintTransitions()
 {
@@ -1241,7 +1241,7 @@ void rmgTerrainPainter::paintTransitions()
     }
 }
 
-VA(0x005B6320, 0x107)
+VA(0x005b6320, 0x107)
 MAC_ADDRESS(0x25803c, 0x160)
 b8 rmgTerrainPainter::isHorizontalGap(
     const TRmgGridPoint& point, s32 terrain)
@@ -1251,7 +1251,7 @@ b8 rmgTerrainPainter::isHorizontalGap(
         && getTerrain(TRmgGridPoint(point.getX() + 1, point.getY())) != terrain;
 }
 
-VA(0x005B6430, 0x106)
+VA(0x005b6430, 0x106)
 MAC_ADDRESS(0x25819c, 0x160)
 b8 rmgTerrainPainter::isVerticalGap(
     const TRmgGridPoint& point, s32 terrain)
@@ -1290,7 +1290,7 @@ static inline bool matchesTerrainCorner(rmgTerrainPainter& painter,
 }
 
 // Neighbour coordinates are clamped to the map edge.
-VA(0x005B6540, 0x2CA)
+VA(0x005b6540, 0x2ca)
 MAC_ADDRESS(0x2582fc, 0x4f8)
 void rmgTerrainPainter::buildMatchingNeighbourMask(
     const TRmgGridPoint& point, b8* matches)
@@ -1333,7 +1333,7 @@ static inline bool advanceToMatchState(const b8* matches, u32& direction,
 //   . # .
 //   . C .
 //   . # .
-VA(0x005B6810, 0x84)
+VA(0x005b6810, 0x84)
 MAC_ADDRESS(0x2587f4, 0xd0)
 b8 rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
 {
@@ -1358,7 +1358,7 @@ static inline s32 getTerrainNeighbourKindAt(
     return getRmgTerrainNeighbourKind(terrain, neighbourTerrain);
 }
 
-VA(0x005B68A0, 0x2FF)
+VA(0x005b68a0, 0x2ff)
 MAC_ADDRESS(0x258aa0, 0x478)
 void rmgTerrainPainter::buildNeighbourKinds(
     const TRmgGridPoint& point, s32* neighbours)
@@ -1410,7 +1410,7 @@ static inline s32 getTerrainFlipIndex(const TRmgTerrainFlip& flip)
 //   ? e o
 //   e C ?
 //   o ? ?
-VA(0x005B6BA0, 0x24C)
+VA(0x005b6ba0, 0x24c)
 MAC_ADDRESS(0x258f18, 0x360)
 b8 rmgTerrainPainter::isOuterCornerOnDiagonalEdge(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
@@ -1418,7 +1418,7 @@ b8 rmgTerrainPainter::isOuterCornerOnDiagonalEdge(
     DATA_COMPGEN_GUARD(0x006a52a0, outerCornerProbeOffsetsGuard, outerCornerProbeOffsets)
 
     VA_COMPGEN(0x005b6df0, 0x1, STATIC_DTOR, outerCornerProbeOffsets)
-    DATA(0x006A5260)
+    DATA(0x006a5260)
     static TPoint outerCornerProbeOffsets[4][2] = {
         { TPoint(-1, 1), TPoint(1, -1) },  // none: SW, NE
         { TPoint(1, 1), TPoint(-1, -1) },  // flipX: SE, NW
@@ -1438,7 +1438,7 @@ b8 rmgTerrainPainter::isOuterCornerOnDiagonalEdge(
 //   C . o
 //   . e ?
 //   o ? ?
-VA(0x005B6E00, 0x1B3)
+VA(0x005b6e00, 0x1b3)
 MAC_ADDRESS(0x259278, 0x288)
 b8 rmgTerrainPainter::isInnerCornerOnDiagonalEdge(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
@@ -1446,7 +1446,7 @@ b8 rmgTerrainPainter::isInnerCornerOnDiagonalEdge(
     DATA_COMPGEN_GUARD(0x006a3d64, innerCornerProbeOffsetsGuard, innerCornerProbeOffsets)
 
     VA_COMPGEN(0x005b6fc0, 0x1, STATIC_DTOR, innerCornerProbeOffsets)
-    DATA(0x006A3D68)
+    DATA(0x006a3d68)
     static TPoint innerCornerProbeOffsets[4] = {
         TPoint(2, 2), TPoint(-2, 2), TPoint(2, -2), TPoint(-2, -2) // none, flipX, flipY, both
     };
@@ -1467,7 +1467,7 @@ static inline bool hasSpecialTerrainFrameAt(rmgTerrainPainter& painter,
         && rule->isSpecialFrame(painter.getFrame(nearby));
 }
 
-VA(0x005B6FD0, 0x271)
+VA(0x005b6fd0, 0x271)
 MAC_ADDRESS(0x259500, 0x444)
 s32 rmgTerrainPainter::getSpecialFrameStrength(
     const TRmgGridPoint& point, s32 terrain)
@@ -1520,7 +1520,7 @@ s32 rmgTerrainPainter::changeTerrain(s32 terrain, s32 strength)
     return previous;
 }
 
-VA(0x005B7250, 0x9A)
+VA(0x005b7250, 0x9a)
 MAC_ADDRESS(0x2599f8, 0xac)
 TRmgTerrainBrush::TRmgTerrainBrush(
     TRmgMapInterface* map, s32 terrain, s32 strength)
@@ -1530,20 +1530,20 @@ TRmgTerrainBrush::TRmgTerrainBrush(
         throw TAllocationFailure();
 }
 
-VA(0x005B72F0, 0x225)
+VA(0x005b72f0, 0x225)
 MAC_ADDRESS(0x259aa4, 0xc8)
 TRmgTerrainBrush::~TRmgTerrainBrush()
 {
 }
 
-VA(0x005B7520, 0x16A)
+VA(0x005b7520, 0x16a)
 MAC_ADDRESS(0x259c9c, 0x24)
 void TRmgTerrainBrush::changeTerrain(s32 terrain, s32 strength)
 {
     m_painter->changeTerrain(terrain, strength);
 }
 
-VA(0x005B7690, 0x1F)
+VA(0x005b7690, 0x1f)
 MAC_ADDRESS(0x259cc0, 0x24)
 void TRmgTerrainBrush::paintRectangle(
     u32 x, u32 y,
@@ -1552,58 +1552,58 @@ void TRmgTerrainBrush::paintRectangle(
     m_painter->paintRectangle(x, y, rectangleWidth, rectangleHeight);
 }
 
-VA_COMPGEN(0x005B76D0, 0x20, IMPLICIT_DTOR, rmgTerrainPainter_auto_ptr)
+VA_COMPGEN(0x005b76d0, 0x20, IMPLICIT_DTOR, rmgTerrainPainter_auto_ptr)
 
-VA(0x005B76F0, 0x209)
+VA(0x005b76f0, 0x209)
 MAC_ADDRESS(0x259be4, 0xb8)
 rmgTerrainPainter::~rmgTerrainPainter()
 {
     finish();
 }
 
-VA_COMPGEN(0x005B7CD0, 0x156, TREE_INSERT, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b7cd0, 0x156, TREE_INSERT, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B8670, 0xA8, TREE_INIT, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b8670, 0xa8, TREE_INIT, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B8720, 0x2FE, TREE_NODE_INSERT, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b8720, 0x2fe, TREE_NODE_INSERT, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B8AA0, 0xB3, TREE_CONST_ITERATOR_DEC, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b8aa0, 0xb3, TREE_CONST_ITERATOR_DEC, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B7F60, 0x59, TREE_ERASE_KEY, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b7f60, 0x59, TREE_ERASE_KEY, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B7E30, 0x121, TREE_ERASE_RANGE, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b7e30, 0x121, TREE_ERASE_RANGE, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B8090, 0x50F, TREE_ERASE_ITERATOR, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b8090, 0x50f, TREE_ERASE_ITERATOR, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B85F0, 0x7E, TREE_ERASE, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b85f0, 0x7e, TREE_ERASE, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B8BC0, 0xA3, TREE_CONST_ITERATOR_INC, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b8bc0, 0xa3, TREE_CONST_ITERATOR_INC, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B7FC0, 0x57, TREE_FIND, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b7fc0, 0x57, TREE_FIND, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B8020, 0x35, VECTOR_ERASE, TRmgPackedTerrainCell)
+VA_COMPGEN(0x005b8020, 0x35, VECTOR_ERASE, TRmgPackedTerrainCell)
 
-VA_COMPGEN(0x005B8060, 0x24, VECTOR_UFILL, unsigned_char)
+VA_COMPGEN(0x005b8060, 0x24, VECTOR_UFILL, unsigned_char)
 
-VA_COMPGEN(0x005B85A0, 0x17, TREE_LOWER_BOUND, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b85a0, 0x17, TREE_LOWER_BOUND, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B85C0, 0x2C, TREE_EQUAL_RANGE, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b85c0, 0x2c, TREE_EQUAL_RANGE, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B8A20, 0x17, TREE_UPPER_BOUND, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b8a20, 0x17, TREE_UPPER_BOUND, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B8A40, 0x59, TREE_LBOUND, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b8a40, 0x59, TREE_LBOUND, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B8B60, 0x59, TREE_UBOUND, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b8b60, 0x59, TREE_UBOUND, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B4860, 0x6E, IMPLICIT_DTOR, set)
+VA_COMPGEN(0x005b4860, 0x6e, IMPLICIT_DTOR, set)
 
-VA_COMPGEN(0x005B8C70, 0x2B, STD_DISTANCE, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b8c70, 0x2b, STD_DISTANCE, TRmgCoordinatePoint_unsigned_int)
 
-VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgCoordinatePoint_unsigned_int)
+VA_COMPGEN(0x005b8cd0, 0x28, STD_DISTANCE_TAGGED, TRmgCoordinatePoint_unsigned_int)
 
 template<class Coordinate>
 // VA instance: operator< <unsigned int>
-VA(0x005B8CA0, 0x20)
+VA(0x005b8ca0, 0x20)
 bool operator<(const TRmgCoordinatePoint<Coordinate>& left,
     const TRmgCoordinatePoint<Coordinate>& right)
 {
@@ -1621,7 +1621,7 @@ bool operator<(const TRmgCoordinatePoint<Coordinate>& left,
 // Frames: 0-7 base, then two per shape and flip, all hard: N_W 8-15 (none,
 // flipX, flipY, both), W 16-19 (none, flipX), N 20-23 (none, flipY),
 // SE 24-31, N_W_DIAG 32-39 and SE_DIAG 40-47.
-DATA(0x006424A8)
+DATA(0x006424a8)
 const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[RMG_FIXED_TRANSITION_FRAME_COUNT] = {
     {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false},
     {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false},
@@ -1685,7 +1685,7 @@ static const TRmgTerrainPatternEntry g_rmgLandPatternEntries[79] = {
 
 // Dirt: hard N_W 0-3, W 4-7, N 8-11, SE 12-15, N_W_DIAG 16-17, SE_DIAG
 // 18-19, NW_SE 20; base 21-28, special 29-44; N_W_SE 45.
-DATA(0x006428A0)
+DATA(0x006428a0)
 static const TRmgTerrainPatternEntry g_rmgDirtPatternEntries[46] = {
     {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false},
     {SHAPE_N_W_HARD, false},
@@ -1704,7 +1704,7 @@ static const TRmgTerrainPatternEntry g_rmgDirtPatternEntries[46] = {
 };
 
 // Sand draws no transitions: base 0-7, special 8-23.
-DATA(0x00642A10)
+DATA(0x00642a10)
 static const TRmgTerrainPatternEntry g_rmgSandPatternEntries[24] = {
     {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
     {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
@@ -1715,7 +1715,7 @@ static const TRmgTerrainPatternEntry g_rmgSandPatternEntries[24] = {
 };
 
 // Water: dirt's hard frames 0-20, then base 21-32.
-DATA(0x00642AD0)
+DATA(0x00642ad0)
 static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] = {
     {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false},
     {SHAPE_N_W_HARD, false},
@@ -1732,68 +1732,68 @@ static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] = {
 // Rule arguments: blends with other terrain, allows separated neighbours,
 // special-frame chance (percent at full brush strength), frame count and
 // the frame list.
-DATA(0x006A48D0)
+DATA(0x006a48d0)
 static TRmgPatternTerrainRule g_rmgDirtRule(true, true, 50, 46, g_rmgDirtPatternEntries);
 
-VA_COMPGEN(0x005B3B60, 0x23, STATIC_CTOR, g_rmgDirtRule)
+VA_COMPGEN(0x005b3b60, 0x23, STATIC_CTOR, g_rmgDirtRule)
 
-VA_COMPGEN(0x005B3B90, 0x0A, STATIC_DTOR, g_rmgDirtRule)
-DATA(0x006A44F8)
+VA_COMPGEN(0x005b3b90, 0x0a, STATIC_DTOR, g_rmgDirtRule)
+DATA(0x006a44f8)
 static TRmgPatternTerrainRule g_rmgSandRule(false, true, 70, 24, g_rmgSandPatternEntries);
 
-VA_COMPGEN(0x005B3BA0, 0x23, STATIC_CTOR, g_rmgSandRule)
+VA_COMPGEN(0x005b3ba0, 0x23, STATIC_CTOR, g_rmgSandRule)
 
-VA_COMPGEN(0x005B3BD0, 0x0A, STATIC_DTOR, g_rmgSandRule)
-DATA(0x006A3D88)
+VA_COMPGEN(0x005b3bd0, 0x0a, STATIC_DTOR, g_rmgSandRule)
+DATA(0x006a3d88)
 static TRmgPatternTerrainRule g_rmgGrassRule(true, true, 50, 79, g_rmgLandPatternEntries);
 
-VA_COMPGEN(0x005B3BE0, 0x23, STATIC_CTOR, g_rmgGrassRule)
+VA_COMPGEN(0x005b3be0, 0x23, STATIC_CTOR, g_rmgGrassRule)
 
-VA_COMPGEN(0x005B3C10, 0x0A, STATIC_DTOR, g_rmgGrassRule)
-DATA(0x006A3F70)
+VA_COMPGEN(0x005b3c10, 0x0a, STATIC_DTOR, g_rmgGrassRule)
+DATA(0x006a3f70)
 static TRmgPatternTerrainRule g_rmgSnowRule(true, true, 80, 79, g_rmgLandPatternEntries);
 
-VA_COMPGEN(0x005B3C20, 0x23, STATIC_CTOR, g_rmgSnowRule)
+VA_COMPGEN(0x005b3c20, 0x23, STATIC_CTOR, g_rmgSnowRule)
 
-VA_COMPGEN(0x005B3C50, 0x0A, STATIC_DTOR, g_rmgSnowRule)
-DATA(0x006A46E0)
+VA_COMPGEN(0x005b3c50, 0x0a, STATIC_DTOR, g_rmgSnowRule)
+DATA(0x006a46e0)
 static TRmgPatternTerrainRule g_rmgSwampRule(true, true, 80, 79, g_rmgLandPatternEntries);
 
-VA_COMPGEN(0x005B3C60, 0x23, STATIC_CTOR, g_rmgSwampRule)
+VA_COMPGEN(0x005b3c60, 0x23, STATIC_CTOR, g_rmgSwampRule)
 
-VA_COMPGEN(0x005B3C90, 0x0A, STATIC_DTOR, g_rmgSwampRule)
-DATA(0x006A4AB8)
+VA_COMPGEN(0x005b3c90, 0x0a, STATIC_DTOR, g_rmgSwampRule)
+DATA(0x006a4ab8)
 static TRmgPatternTerrainRule g_rmgRoughRule(true, true, 80, 79, g_rmgLandPatternEntries);
 
-VA_COMPGEN(0x005B3CA0, 0x23, STATIC_CTOR, g_rmgRoughRule)
+VA_COMPGEN(0x005b3ca0, 0x23, STATIC_CTOR, g_rmgRoughRule)
 
-VA_COMPGEN(0x005B3CD0, 0x0A, STATIC_DTOR, g_rmgRoughRule)
-DATA(0x006A5070)
+VA_COMPGEN(0x005b3cd0, 0x0a, STATIC_DTOR, g_rmgRoughRule)
+DATA(0x006a5070)
 static TRmgPatternTerrainRule g_rmgSubterraneanRule(true, true, 60, 79, g_rmgLandPatternEntries);
 
-VA_COMPGEN(0x005B3CE0, 0x23, STATIC_CTOR, g_rmgSubterraneanRule)
+VA_COMPGEN(0x005b3ce0, 0x23, STATIC_CTOR, g_rmgSubterraneanRule)
 
-VA_COMPGEN(0x005B3D10, 0x0A, STATIC_DTOR, g_rmgSubterraneanRule)
-DATA(0x006A4E88)
+VA_COMPGEN(0x005b3d10, 0x0a, STATIC_DTOR, g_rmgSubterraneanRule)
+DATA(0x006a4e88)
 static TRmgPatternTerrainRule g_rmgLavaRule(true, true, 80, 79, g_rmgLandPatternEntries);
 
-VA_COMPGEN(0x005B3D20, 0x23, STATIC_CTOR, g_rmgLavaRule)
+VA_COMPGEN(0x005b3d20, 0x23, STATIC_CTOR, g_rmgLavaRule)
 
-VA_COMPGEN(0x005B3D50, 0x0A, STATIC_DTOR, g_rmgLavaRule)
-DATA(0x006A4CA0)
+VA_COMPGEN(0x005b3d50, 0x0a, STATIC_DTOR, g_rmgLavaRule)
+DATA(0x006a4ca0)
 static TRmgPatternTerrainRule g_rmgWaterRule(false, false, 0, 33, g_rmgWaterPatternEntries);
 
-VA_COMPGEN(0x005B3D60, 0x23, STATIC_CTOR, g_rmgWaterRule)
+VA_COMPGEN(0x005b3d60, 0x23, STATIC_CTOR, g_rmgWaterRule)
 
-VA_COMPGEN(0x005B3D90, 0x0A, STATIC_DTOR, g_rmgWaterRule)
-DATA(0x006A48C8)
+VA_COMPGEN(0x005b3d90, 0x0a, STATIC_DTOR, g_rmgWaterRule)
+DATA(0x006a48c8)
 static TRmgTableTerrainRule g_rmgRockRule;
 
-VA_COMPGEN(0x005B3DA0, 0x16, STATIC_CTOR, g_rmgRockRule)
+VA_COMPGEN(0x005b3da0, 0x16, STATIC_CTOR, g_rmgRockRule)
 
-VA_COMPGEN(0x005B3DC0, 0x0A, STATIC_DTOR, g_rmgRockRule)
+VA_COMPGEN(0x005b3dc0, 0x0a, STATIC_DTOR, g_rmgRockRule)
 
-DATA(0x00642BD8)
+DATA(0x00642bd8)
 TRmgTerrainRule* const g_rmgTerrainRules[10] = {
     &g_rmgDirtRule, &g_rmgSandRule, &g_rmgGrassRule, &g_rmgSnowRule,
     &g_rmgSwampRule, &g_rmgRoughRule, &g_rmgSubterraneanRule,

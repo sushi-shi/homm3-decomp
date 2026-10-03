@@ -504,7 +504,7 @@ template<class Coordinate> struct TRmgCoordinatePoint {
     TRmgCoordinatePoint() {}
 
     // VA instance: TRmgCoordinatePoint<unsigned int>::TRmgCoordinatePoint(const unsigned int&, const unsigned int&)
-    VA(0x005B76B0, 0x18)
+    VA(0x005b76b0, 0x18)
     TRmgCoordinatePoint(const Coordinate& newX, const Coordinate& newY)
         : m_x(newX), m_y(newY) {}
     TRmgCoordinatePoint(const TPoint& point);
@@ -1954,6 +1954,6 @@ SIZE(TRmgRoadPainter, 0x20);
 SIZE(type_random_map_generator, 0x14e0);
 
 // Creature value by level, used to size creature rewards.
-DATA(0x006824E0) extern s32 g_rmgCreatureValueByLevel[];
+DATA(0x006824e0) extern s32 g_rmgCreatureValueByLevel[];
 
 #endif  // HOMM3_RMG_H

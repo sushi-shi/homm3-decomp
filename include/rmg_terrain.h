@@ -156,7 +156,7 @@ struct TRmgTerrainTransitionEntry {
     b8 m_flipX;
     b8 m_flipY;
 };
-DATA(0x006424A8)
+DATA(0x006424a8)
 extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
 
 // Frame ranges of the fixed table, keyed by transition and both flips.
@@ -164,7 +164,7 @@ struct TRmgTerrainPatternTable {
     TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT * 2 * 2];
     TRmgTerrainPatternTable();
 };
-DATA(0x006A4158)
+DATA(0x006a4158)
 extern TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 
 // Rule driven by a per-terrain frame list; ranges are keyed by transition

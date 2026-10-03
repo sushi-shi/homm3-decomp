@@ -15,7 +15,7 @@ TRmgLinePainterInterface::TRmgLinePainterInterface(const TRmgGridPoint& size)
 {
 }
 
-VA(0x004F9BE0, 0xB7)
+VA(0x004f9be0, 0xb7)
 MAC_ADDRESS(0x22210c, 0x1ec)
 TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const s32* framePatterns)
     : m_frameCount(frameCount), m_framePatterns(0)
@@ -42,7 +42,7 @@ TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const s32* framePatte
     }
 }
 
-VA(0x004F9CA0, 0x0B)
+VA(0x004f9ca0, 0x0b)
 MAC_ADDRESS(0x2222f8, 0x54)
 TRmgLinePatternTable::~TRmgLinePatternTable()
 {
@@ -56,7 +56,7 @@ TRmgLinePatternTable::~TRmgLinePatternTable()
 //   NW N NE   SW S SE   NE N NW   SE S SW
 //   W  .  E   W  .  E   E  .  W   E  .  W
 //   SW S SE   NW N NE   SE S SW   NE N NW
-DATA(0x0063FE9C)
+DATA(0x0063fe9c)
 static const s32 g_rmgLineReflectedNeighbours[2][2][8] = {
     {
         {TILE_DIR_NORTH, TILE_DIR_NORTHEAST, TILE_DIR_EAST, TILE_DIR_SOUTHEAST,
@@ -74,7 +74,7 @@ static const s32 g_rmgLineReflectedNeighbours[2][2][8] = {
 
 // Reflections tried for corner shapes, as {flipX, flipY}: none, flipY, flipX,
 // then both.
-DATA(0x0063FF1C)
+DATA(0x0063ff1c)
 static const b8 g_rmgLineReflections[4][2] = {
     {false, false}, {false, true}, {true, false}, {true, true}
 };
@@ -84,7 +84,7 @@ static inline bool hasRmgHorizontalLineNeighbour(const b8* neighbours)
     return neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST];
 }
 
-VA(0x004F9CB0, 0x24E)
+VA(0x004f9cb0, 0x24e)
 MAC_ADDRESS(0x222498, 0x2a4)
 void selectRmgLinePattern(
     const b8* neighbours, const TRmgLinePatternTable* table,
@@ -159,14 +159,14 @@ void selectRmgLinePattern(
     }
 }
 
-VA(0x0055EDA0, 0x07)
+VA(0x0055eda0, 0x07)
 MAC_ADDRESS(0x253ccc, 0x60)
 TRmgRiverPainter::~TRmgRiverPainter()
 {
 }
 
 // All river types use the same pattern table, so the argument is ignored.
-VA(0x0055EDB0, 0x08)
+VA(0x0055edb0, 0x08)
 MAC_ADDRESS(0x253ad8, 0x8)
 TRmgLinePatternTable* TRmgRiverLinePainter::getPattern(s32)
 {
@@ -200,7 +200,7 @@ static inline b32 isRmgLinePaintingBlocked(Adapter* adapter,
     return terrain == eTerrainWater || terrain == eTerrainRock;
 }
 
-VA(0x0055EDC0, 0x36)
+VA(0x0055edc0, 0x36)
 MAC_ADDRESS(0x253ae0, 0x54)
 void TRmgRiverLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
@@ -219,21 +219,21 @@ void TRmgRiverLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& t
     readRmgLineTileSnapshot(m_adapter, point, tile);
 }
 
-VA(0x0055EE00, 0x28)
+VA(0x0055ee00, 0x28)
 MAC_ADDRESS(0x253b64, 0x44)
 b32 TRmgRiverLinePainter::isBlocked(const TRmgGridPoint& point)
 {
     return isRmgLinePaintingBlocked(m_adapter, point);
 }
 
-VA(0x0055EE30, 0x13)
+VA(0x0055ee30, 0x13)
 MAC_ADDRESS(0x253c30, 0x30)
 s32 TRmgRiverLinePainter::getLineType(const TRmgGridPoint& point)
 {
     return m_adapter->getLineType(point);
 }
 
-VA(0x0055EE50, 0x76)
+VA(0x0055ee50, 0x76)
 MAC_ADDRESS(0x253c60, 0x6c)
 TRmgRiverPainter::TRmgRiverPainter(
     TRmgRiverMapAdapterInterface* newAdapter,
@@ -244,9 +244,9 @@ TRmgRiverPainter::TRmgRiverPainter(
 {
 }
 
-VA_COMPGEN(0x0055EED0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverPainter)
+VA_COMPGEN(0x0055eed0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverPainter)
 
-VA(0x0055F320, 0x08)
+VA(0x0055f320, 0x08)
 MAC_ADDRESS(0x253fc0, 0x8)
 TRmgLinePatternTable* TRmgRoadLinePainter::getPattern(s32)
 {
@@ -265,28 +265,28 @@ b32 TRmgRoadLinePainter::isBlocked(const TRmgGridPoint& point)
     return isRmgLinePaintingBlocked(m_adapter, point);
 }
 
-VA(0x0055F330, 0x17)
+VA(0x0055f330, 0x17)
 MAC_ADDRESS(0x25401c, 0x30)
 void TRmgRoadLinePainter::setLineType(const TRmgGridPoint& point, s32 value)
 {
     m_adapter->setLineType(point, value);
 }
 
-VA(0x0055F350, 0x34)
+VA(0x0055f350, 0x34)
 MAC_ADDRESS(0x254090, 0x88)
 void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
 {
     readRmgLineTileSnapshot(m_adapter, point, tile);
 }
 
-VA(0x0055F390, 0x13)
+VA(0x0055f390, 0x13)
 MAC_ADDRESS(0x254118, 0x30)
 s32 TRmgRoadLinePainter::getLineType(const TRmgGridPoint& point)
 {
     return m_adapter->getLineType(point);
 }
 
-VA(0x0055F3B0, 0x76)
+VA(0x0055f3b0, 0x76)
 MAC_ADDRESS(0x254148, 0x6c)
 TRmgRoadPainter::TRmgRoadPainter(
     TRmgRoadMapAdapterInterface* newAdapter,
@@ -297,15 +297,15 @@ TRmgRoadPainter::TRmgRoadPainter(
 {
 }
 
-VA_COMPGEN(0x0055F430, 0x21, SCALAR_DELETING_DTOR, TRmgRoadPainter)
+VA_COMPGEN(0x0055f430, 0x21, SCALAR_DELETING_DTOR, TRmgRoadPainter)
 
-VA(0x0055F460, 0x07)
+VA(0x0055f460, 0x07)
 MAC_ADDRESS(0x2541b4, 0x60)
 TRmgRoadPainter::~TRmgRoadPainter()
 {
 }
 
-VA(0x005FCEB0, 0x39)
+VA(0x005fceb0, 0x39)
 MAC_ADDRESS(0x25c018, 0x64)
 s32 TRmgVector::length() const
 {
@@ -332,7 +332,7 @@ TRmgHalfEdge::TRmgHalfEdge(
     initialize();
 }
 
-VA(0x005FCEF0, 0x6C)
+VA(0x005fcef0, 0x6c)
 MAC_ADDRESS(0x25c07c, 0x98)
 TRmgHalfEdge::TRmgHalfEdge(
     TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone)
@@ -343,7 +343,7 @@ TRmgHalfEdge::TRmgHalfEdge(
     initialize();
 }
 
-VA(0x005FCF60, 0x31)
+VA(0x005fcf60, 0x31)
 MAC_ADDRESS(0x25c184, 0x34)
 void TRmgHalfEdge::splice(TRmgHalfEdge* other)
 {
@@ -351,7 +351,7 @@ void TRmgHalfEdge::splice(TRmgHalfEdge* other)
     std::swap(m_next, other->m_next);
 }
 
-VA(0x005FCFA0, 0x61)
+VA(0x005fcfa0, 0x61)
 MAC_ADDRESS(0x25c1b8, 0x4c)
 void TRmgHalfEdge::detach()
 {
@@ -368,7 +368,7 @@ void TRmgHalfEdge::detach()
 //     4    5       2
 //     |      \     v
 //   fourth <-3-- third
-VA(0x005FD010, 0x316)
+VA(0x005fd010, 0x316)
 MAC_ADDRESS(0x25c4e4, 0x14c)
 TRmgVoronoi::TRmgVoronoi()
 {
@@ -388,7 +388,7 @@ TRmgVoronoi::TRmgVoronoi()
     m_root = firstEdge;
 }
 
-VA(0x005FD330, 0x58)
+VA(0x005fd330, 0x58)
 MAC_ADDRESS(0x25c6b4, 0xa4)
 TRmgVoronoi::~TRmgVoronoi()
 {
@@ -396,7 +396,7 @@ TRmgVoronoi::~TRmgVoronoi()
         delete m_edges[edge];
 }
 
-VA(0x005FD390, 0x21C)
+VA(0x005fd390, 0x21c)
 MAC_ADDRESS(0x25c758, 0x170)
 TRmgHalfEdge* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
     TPoint second, TRmgZone* secondZone)
@@ -431,7 +431,7 @@ static inline void eraseRmgHalfEdgeReference(std::vector<TRmgHalfEdge*>& edges,
     edges.erase(edges.begin() + index);
 }
 
-VA(0x005FD5B0, 0xFF)
+VA(0x005fd5b0, 0xff)
 MAC_ADDRESS(0x25c8c8, 0x100)
 void TRmgVoronoi::removeEdge(TRmgHalfEdge* edge)
 {
@@ -469,7 +469,7 @@ static inline bool isRmgEdgeDestination(TPoint point, TRmgHalfEdge* edge)
     return point == destination;
 }
 
-VA(0x005FD6B0, 0xD7)
+VA(0x005fd6b0, 0xd7)
 MAC_ADDRESS(0x25c9c8, 0x124)
 TRmgHalfEdge* TRmgVoronoi::locate(TPoint point)
 {
@@ -560,7 +560,7 @@ static b8 isRmgPointInsideCircumcircle(TPoint first, TPoint second,
     return determinant > 0;
 }
 
-VA(0x005FD790, 0x348)
+VA(0x005fd790, 0x348)
 MAC_ADDRESS(0x25cd44, 0x218)
 void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 {
@@ -600,7 +600,7 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
     }
 }
 
-VA(0x005FDAE0, 0x2B)
+VA(0x005fdae0, 0x2b)
 MAC_ADDRESS(0x25c2b4, 0x50)
 s32 getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
 {
@@ -609,6 +609,6 @@ s32 getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
         - (second.m_y - first.m_y) * (third.m_x - first.m_x);
 }
 
-VA_COMPGEN(0x005FDD60, 0x1B1, VECTOR_INSERT_SINGLE, TRmgHalfEdge)
+VA_COMPGEN(0x005fdd60, 0x1b1, VECTOR_INSERT_SINGLE, TRmgHalfEdge)
 
-VA_COMPGEN(0x005FDF20, 0x26, VECTOR_UFILL, TRmgHalfEdge)
+VA_COMPGEN(0x005fdf20, 0x26, VECTOR_UFILL, TRmgHalfEdge)
