@@ -483,10 +483,10 @@ static void __fastcall assignRmgTeams(
 template <u32 N>
 static void setAvailableRmgHeroes(
     std::bitset<N>* availableHeroes,
-    b8* heroFlag,
-    b8* end)
+    b8* disabledBegin,
+    b8* disabledEnd)
 {
-    std::transform(heroFlag, end,
+    std::transform(disabledBegin, disabledEnd,
         bitset_iterator<N>(*availableHeroes, 0),
         std::logical_not<b8>());
 }
