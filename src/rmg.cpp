@@ -649,14 +649,10 @@ enum ERmgNeighborhoodRadius {
 inline void type_random_map::getNeighborhoodBounds(TRmgZoneBounds& bounds,
     const TPoint& position, s32 radius) const
 {
-    s32 row = position.m_y;
-    TPoint lower(position.m_x - radius, row - radius);
-    bounds.m_minimumY = max(lower.m_y, 0);
-    bounds.m_minimumX = max(lower.m_x, 0);
-    s32 height = m_mapHeight;
-    bounds.m_maximumY = min(row + (radius + 1), height);
-    s32 width = m_mapWidth;
-    bounds.m_maximumX = min(position.m_x + (radius + 1), width);
+    bounds.m_minimumY = max(position.m_y - radius, 0);
+    bounds.m_minimumX = max(position.m_x - radius, 0);
+    bounds.m_maximumY = min(position.m_y + radius + 1, m_mapHeight);
+    bounds.m_maximumX = min(position.m_x + radius + 1, m_mapWidth);
 }
 
 VA(0x00531310, 0x14b)
@@ -972,13 +968,12 @@ void type_random_map::addObject(type_object& object, TRmgMapPosition position)
         for (u32 x = 0; x < prototype.getWidth(); ++x, --cell.m_x) {
             if (cell.m_x < 0 || cell.m_x >= m_mapWidth)
                 continue;
-            TRmgGridPoint maskPoint(x, y);
             TRmgMapItem* item = getMapItem(cell);
-            if (prototype.isTriggerCell(maskPoint.m_x, maskPoint.m_y)) {
+            if (prototype.isTriggerCell(x, y)) {
                 item->m_tileData.m_objectEntrance = true;
                 item->openPath();
                 item->m_objects.push_back(&object);
-            } else if (!prototype.isPassableCell(maskPoint.m_x, maskPoint.m_y)) {
+            } else if (!prototype.isPassableCell(x, y)) {
                 item->m_tileData.m_passable = false;
                 item->m_objects.push_back(&object);
             }
@@ -3429,19 +3424,15 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, eSchoolEarth));
     m_objectGenerators.push_back(new type_black_box_spells_def(30000, 1, 5, eSchoolAll));
 
-    // Kept as is: generated maps depend on this frame; see
-    // rmg-cleanup-review.md.
-    {
-        s32 tentIndex = m_objectPrototypes[BORDER_TENT].size();
-        m_disabledKeyTentColors.resize(tentIndex);
-        while (tentIndex--) {
-            m_disabledKeyTentColors[tentIndex] = false;
-            m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 5000));
-            m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 7500));
-            m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 10000));
-            m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 15000));
-            m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 20000));
-        }
+    s32 tentIndex = m_objectPrototypes[BORDER_TENT].size();
+    m_disabledKeyTentColors.resize(tentIndex);
+    while (tentIndex--) {
+        m_disabledKeyTentColors[tentIndex] = false;
+        m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 5000));
+        m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 7500));
+        m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 10000));
+        m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 15000));
+        m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 20000));
     }
 
     m_objectGenerators.push_back(new type_treasure_def(BLACK_MARKET, 0, 8000, 20));
@@ -3607,12 +3598,10 @@ static inline s32 getRmgOtherLevel(s32 level)
 static inline TRmgMapPosition getRmgRadialZonePosition(
     const TRmgMapPosition& center, s32 radius, s32 direction, s32 level)
 {
-    // Kept as is: generated maps depend on this frame; see
-    // rmg-cleanup-review.md.
-    const s32& y = static_cast<s32>(center.m_y + radius * g_rmgDirectionSines[direction]);
     return TRmgMapPosition(
         static_cast<s32>(center.m_x + radius * g_rmgDirectionCosines[direction]),
-        y, level);
+        static_cast<s32>(center.m_y + radius * g_rmgDirectionSines[direction]),
+        level);
 }
 
 // Trial placement leaves the zone at the candidate even when rejected.
@@ -3752,8 +3741,7 @@ void type_random_map_generator::filterZonePositions(
     TRmgZoneBounds bounds = {0, 0, 0, 0};
     for (s32 other = 0; other < m_zones.size(); ++other) {
         if (m_zones[other] != zone) {
-            TRmgMapPosition position;
-            position = m_zones[other]->getLevelPosition();
+            TRmgMapPosition position = m_zones[other]->getLevelPosition();
             s32 size = m_zones[other]->getTemplateSize();
             includeRmgZoneFootprint(bounds.m_minimumY, bounds.m_minimumX,
                 bounds.m_maximumY, bounds.m_maximumX, position, size);
@@ -3866,15 +3854,13 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     getInitialZoneBounds(minimumY, minimumX, maximumY, maximumX);
     s32 span = max(maximumY - minimumY, maximumX - minimumX);
     s32 size = max(m_map.m_mapWidth, m_map.m_mapHeight);
-    // The bounds minimum becomes the square's origin. Kept as is: generated
-    // maps depend on this frame; see rmg-cleanup-review.md.
-    minimumY = (minimumY - span + maximumY) / 2;
-    minimumX = (minimumX - span + maximumX) / 2;
+    s32 originY = (minimumY - span + maximumY) / 2;
+    s32 originX = (minimumX - span + maximumX) / 2;
     for (s32 zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
         TRmgMapPosition position = zone->getLevelPosition();
-        position.m_x = (position.m_x - minimumX) * size / span;
-        position.m_y = (position.m_y - minimumY) * size / span;
+        position.m_x = (position.m_x - originX) * size / span;
+        position.m_y = (position.m_y - originY) * size / span;
         zone->setLevelPosition(position);
         zone->m_scaledSize = zone->m_templateZone->m_size * size / span;
         zone->chooseTerrain();
@@ -3925,16 +3911,13 @@ static inline bool splitRmgBoundarySegment(std::vector<TPoint>& pending,
     return true;
 }
 
-// Kept a free function: generated maps depend on drawIrregularZoneBoundary's
-// frame; see rmg-cleanup-review.md.
+// As members of type_random_map and TRmgMapItem, these helpers change
+// unrelated code in game units that include rmg.h.
 static inline TPoint clampRmgBoundaryToMap(
     const TPoint& point, const type_random_map& map)
 {
-    long x = cppMax<long>(point.m_x, 0);
-    x = cppMin<long>(x, map.m_mapWidth - 1);
-    long y = cppMax<long>(point.m_y, 0);
-    y = cppMin<long>(y, map.m_mapHeight - 1);
-    return TPoint(x, y);
+    return TPoint(min(max(point.m_x, 0), map.m_mapWidth - 1),
+        min(max(point.m_y, 0), map.m_mapHeight - 1));
 }
 
 // Island maps paint surface zone terrain only on the islands.
@@ -3944,8 +3927,6 @@ static inline bool paintsRmgZoneTerrainOnLevel(
     return level == RMG_UNDERGROUND_LEVEL || waterContent != RMG_WATER_ISLANDS;
 }
 
-// Kept a free function: generated maps depend on drawIrregularZoneBoundary's
-// frame; see rmg-cleanup-review.md.
 static inline void assignRmgZoneCell(
     TRmgMapItem* item, s32 zoneIndex, b8 markForTerrain)
 {
@@ -4320,8 +4301,7 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
 {
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
     std::vector<TRmgMapPosition> pending;
-    TRmgMapPosition position;
-    position = zone->getLevelPosition();
+    TRmgMapPosition position = zone->getLevelPosition();
     if (!m_map.containsXY(position)) {
         s32 bestClearance = 0;
         TPoint best;
@@ -4895,8 +4875,7 @@ void type_random_map_generator::placeWaterZoneIslands(TRmgZone* zone)
         return;
     TRmgZoneBounds bounds = zone->m_bounds;
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
-    TRmgMapPosition position;
-    position = zone->m_levelPosition;
+    TRmgMapPosition position = zone->m_levelPosition;
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position);
@@ -5812,8 +5791,7 @@ b8 type_random_map_generator::createSubterraneanGate(
 
     std::vector<TRmgMapPosition> candidates;
     s32 bestScore = 0;
-    TRmgMapPosition position;
-    position = source->getLevelPosition();
+    TRmgMapPosition position = source->getLevelPosition();
 
     for (position.m_y = overlap.m_minimumY; position.m_y < overlap.m_maximumY; ++position.m_y) {
         for (position.m_x = overlap.m_minimumX; position.m_x < overlap.m_maximumX; ++position.m_x) {
@@ -5898,8 +5876,7 @@ b8 type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* z
     TRmgZoneBounds bounds = zone->getBounds();
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
     bounds.insetForObjectFootprint(prototype);
-    TRmgMapPosition position;
-    position = zone->getLevelPosition();
+    TRmgMapPosition position = zone->getLevelPosition();
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
             if (m_map.getMapItem(position)->m_zoneState.m_zone == zoneIndex

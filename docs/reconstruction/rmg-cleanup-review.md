@@ -178,27 +178,41 @@ The deliberate keeps are listed under frame-sensitive code below.
 
 ### Frame-sensitive code
 
-Retail `buildZoneBoundaries` reads its `testSlot` town flags uninitialized
-(see the [safety inventory](../reference/rmg-undefined-behavior.md)), so those
-bytes are whatever earlier calls left on the stack. Until 2026-10-03, source
-changes that altered VC6's frames or inlining in the generator constructor
-tree, `initializeZones` or `buildZoneBoundaries` changed generated maps. The
-source now sets the test slot's flags to retail's observed effect (always one
-draw). With it, the origin-split rewrite below matched retail on 3,000 requests.
-The keeps below can be reconsidered under that model with an oracle run;
-`buildZoneConnectionPaths` still reads residue before any zone assigns its
-seed, which was not observed. Source comments mark the following keeps only
-with a pointer here:
+Until 2026-10-03, retail's two uninitialized stack reads made frame changes
+observable. `buildZoneBoundaries`' `testSlot` town flags and
+`buildZoneConnectionPaths`' first fallback seed read whatever earlier calls
+left on the stack (see the [safety inventory](../reference/rmg-undefined-behavior.md)).
+Both reads are now explicit, so these keeps were lifted. The origin split,
+for example, previously moved towns on `m0000076` and `m0000135`.
 
-- `initializeObjectGenerators`' key-tent scope block: removing it changes
-  VC6's `push_back` inlining in that function and the constructor tree's
-  stack residue.
-- `initializeZones` reuses `minimumY`/`minimumX` as the square's origin.
-  Separate origin locals changed its frame and moved towns on maps with water
-  or two levels (caught by the output comparison below).
-- `assignRmgZoneCell` and `clampRmgBoundaryToMap` stay free functions: as a
-  `TRmgMapItem` or `type_random_map` member respectively, VC6 lays out
-  `drawIrregularZoneBoundary`, called under `buildZoneBoundaries`, differently.
+- `initializeObjectGenerators` has no key-tent scope block.
+- `initializeZones` has separate square-origin locals.
+- `getRmgRadialZonePosition` has no reference-bound `y`.
+- `getNeighborhoodBounds` and `TRmgZoneBounds::includeCell` have no staged
+  copies.
+- `type_random_map::addObject` has no mask point.
+- `getLandType()` returns `TTerrainType`.
+- `filterZonePositions`, `fillZoneArea`, `placeWaterZoneIslands`,
+  `createSubterraneanGate` and `placeObjectInZone` initialize their positions
+  at declaration.
+
+`clampRmgBoundaryToMap` now clamps in `s32`. It and `assignRmgZoneCell` stay
+free functions for a different reason. As `type_random_map` and
+`TRmgMapItem` members they change register allocation in
+`CEnterNameEdit::onKillFocus` (`singleselectionwindow`), a game unit that
+includes `rmg.h`.
+
+Four rewrites made a byte-exact or near-exact function lose its match, so
+they remain. Their current shapes are retail-evidenced:
+`TRmgMapItem::clear`'s staged copies (100% to 73.68%), `TRmgZone::getLevelPosition`'s
+staged result (`fillIslandInterior` 100% to 77.11%), `getInitialZoneBounds`'
+declared-then-assigned position (100% to 99.89%) and `TRmgZone::canConnect`'s
+staged minimum (98.57% to 91.43%).
+
+The remaining keeps listed in the passes below were not revisited. Map output
+no longer constrains them, but each still needs an oracle check for RNG,
+arithmetic, allocation and evaluation order.
+
 - A fifth pass removed temporaries that only reordered loads (the three
   adapter `setTile` bodies, reward factories, quest scores, group placement
   bounds, branch-ray steps) and result variables. It kept the staged locals in
