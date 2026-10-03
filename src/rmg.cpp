@@ -173,9 +173,18 @@ void TProgressSink::setTotal(int totalSteps)
 
 namespace {
 
-// From this index on (NW, N, NE) the neighbour directions step north.
-enum ERmgNorthernDirections {
-    RMG_FIRST_NORTHERN_DIRECTION = 5
+// Indices of g_rmgDirections, clockwise from east; y grows southward.
+enum ERmgDirection {
+    RMG_DIRECTION_EAST = 0,
+    RMG_DIRECTION_SOUTH_EAST = 1,
+    RMG_DIRECTION_SOUTH = 2,
+    RMG_DIRECTION_SOUTH_WEST = 3,
+    RMG_DIRECTION_WEST = 4,
+    RMG_DIRECTION_NORTH_WEST = 5,
+    RMG_DIRECTION_NORTH = 6,
+    RMG_DIRECTION_NORTH_EAST = 7,
+    // From here on (NW, N, NE) the directions step north.
+    RMG_FIRST_NORTHERN_DIRECTION = RMG_DIRECTION_NORTH_WEST
 };
 
 // Eight neighbour directions, clockwise from east; even entries are the
@@ -191,6 +200,37 @@ TPoint g_rmgDirections[RMG_DIRECTION_COUNT] = {
     TPoint(0, -1),
     TPoint(1, -1)
 };
+
+// Rotates by 45-degree steps, clockwise when positive; wraps around the
+// eight directions.
+static inline int turnRmgDirection(int direction, int steps)
+{
+    return (direction + steps) & (RMG_DIRECTION_COUNT - 1);
+}
+
+static inline int getRmgOppositeDirection(int direction)
+{
+    return turnRmgDirection(direction, 4);
+}
+
+static inline bool isRmgDiagonalDirection(int direction)
+{
+    return (direction & 1) != 0;
+}
+
+// SE, S or SW.
+static inline bool isRmgSouthwardDirection(int direction)
+{
+    return direction >= RMG_DIRECTION_SOUTH_EAST
+        && direction <= RMG_DIRECTION_SOUTH_WEST;
+}
+
+// Most object entrances are entered and left only through the cells beside
+// and below them; these object types also allow the three cells above.
+static inline bool isRmgEntranceOpenToNorth(int objectType)
+{
+    return g_adventureObjectTraits[objectType].m_trait1 != 0;
+}
 
 // Shipyards are three tiles wide; these offsets probe beside the left and
 // right ends of the bottom footprint row and the row below it.
@@ -285,6 +325,11 @@ static bool isRmgTemplateFieldSet(const char* value)
 {
     return value && value[0] && value[0] != ' ';
 }
+
+// rmg.txt and rand_trn.txt rows start after three header rows.
+enum ERmgSpreadsheetLayout {
+    RMG_FIRST_DATA_ROW = 3
+};
 
 } // namespace
 
@@ -558,7 +603,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
         int direction = RMG_DIRECTION_COUNT;
         if (current->isRoadEntrance()) {
             int objectType = current->getEntranceObjectType();
-            if (!g_adventureObjectTraits[objectType].m_trait1)
+            if (!isRmgEntranceOpenToNorth(objectType))
                 direction = RMG_FIRST_NORTHERN_DIRECTION;
         }
         while (direction--) {
@@ -575,7 +620,8 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
                 const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
                 if (traits.m_blocksLanding && !traits.m_trait2)
                     continue;
-                if (!traits.m_trait1 && direction > 0 && direction < 4)
+                if (!isRmgEntranceOpenToNorth(objectType)
+                    && isRmgSouthwardDirection(direction))
                     continue;
             }
             if (next->m_zoneState.m_zone != zone) {
@@ -585,7 +631,8 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZon
                 if (next->m_movement.m_zonePathCost <= nextCost)
                     continue;
                 next->m_movement.m_zonePathCost = nextCost;
-                next->m_tileData.m_connectionDirection = direction - 4;
+                next->m_tileData.m_connectionDirection =
+                    getRmgOppositeDirection(direction);
                 next->m_zoneState.m_connectionZone = zone;
             } else {
                 if (currentZone != zone)
@@ -703,7 +750,7 @@ static inline TRmgMapPosition getRmgPlacedObjectEntrance(const type_object* obje
 static inline bool allowsRmgSharedObjectEntrance(int objectType)
 {
     return g_adventureObjectTraits[objectType].m_trait2
-        && g_adventureObjectTraits[objectType].m_trait1;
+        && isRmgEntranceOpenToNorth(objectType);
 }
 
 // The object must fit and have a connected outline, and the cell below its
@@ -1170,7 +1217,7 @@ static inline bool isRmgObjectFootprintCell(
 
 static inline TPoint nextRmgOutlineProbe(const TPoint& position, int& direction)
 {
-    direction = (direction - 2) & 7;
+    direction = turnRmgDirection(direction, -2);
     TPoint offset = g_rmgDirections[direction];
     return TPoint(position.m_x + offset.m_x, position.m_y + offset.m_y);
 }
@@ -1179,7 +1226,7 @@ static inline void advanceRmgOutlineWalk(TPoint& position, int& direction)
 {
     position = position + TRmgVector(g_rmgDirections[direction].m_x,
         g_rmgDirections[direction].m_y);
-    direction = (direction - 4) & 7;
+    direction = getRmgOppositeDirection(direction);
 }
 
 VA(0x00532C80, 0x1BA)
@@ -1202,7 +1249,7 @@ void TRmgObjectPropertiesRef::buildOutline()
         return;
     position.m_y = 1;
     TPoint start = position;
-    int direction = 6;
+    int direction = RMG_DIRECTION_NORTH;
     do {
         m_outline.push_back(position);
         int attempts = 0;
@@ -1683,13 +1730,19 @@ void rmgSpellScrollObject::write(TAbstractFile* outputFile, int version)
     writeValue<char>(outputFile, 0);
 }
 
+// Witch hut skill mask: secondary skills 0-15 except 5 and 12 (Navigation
+// and Necromancy).
+enum ERmgWitchHutSkills {
+    RMG_WITCH_HUT_ALLOWED_SKILLS = 0xefdf
+};
+
 VA(0x005340C0, 0x93)
 MAC_ADDRESS(0x231c84, 0x68)
 void rmgWitchHutObject::write(TAbstractFile* outputFile, int version)
 {
     type_object::write(outputFile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-        writeValue<u32>(outputFile, 0xefdf);          // allowed skills
+        writeValue<u32>(outputFile, RMG_WITCH_HUT_ALLOWED_SKILLS);
     }
 }
 
@@ -1803,6 +1856,17 @@ type_object* type_black_box_gold_def::generate(TRmgObjectPropertiesRef* properti
     return object;
 }
 
+// Spell-trait flag of spells that every map disables unless it lists its own
+// spell settings (see the map loader in game.cpp); never a generated reward.
+enum ERmgSpellTraitFlags {
+    RMG_SPELL_DISABLED_BY_DEFAULT = 0x2000
+};
+
+static inline bool isRmgSpellDisabledByDefault(int spell)
+{
+    return (g_spellTraits[spell].m_flags & RMG_SPELL_DISABLED_BY_DEFAULT) != 0;
+}
+
 VA(0x00534520, 0x267)
 MAC_ADDRESS(0x2321ec, 0xc0)
 type_object* type_black_box_spells_def::generate(TRmgObjectPropertiesRef* properties,
@@ -1811,7 +1875,7 @@ type_object* type_black_box_spells_def::generate(TRmgObjectPropertiesRef* proper
     rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
     for (int level = m_maximumLevel; level >= m_minimumLevel; --level) {
         for (long spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-            if (!(g_spellTraits[spell].m_flags & 0x2000)
+            if (!isRmgSpellDisabledByDefault(spell)
                 && g_spellTraits[spell].m_level == level
                 && (g_spellTraits[spell].m_school & m_schoolMask))
                 object->m_spells.push_back(spell);
@@ -1995,7 +2059,7 @@ type_spell_scroll_def::type_spell_scroll_def(int newSpellLevel, int newValue)
 
 static inline bool isRmgScrollSpell(int spell, int level)
 {
-    return !(g_spellTraits[spell].m_flags & 0x2000)
+    return !isRmgSpellDisabledByDefault(spell)
         && g_spellTraits[spell].m_schoolBits
         && g_spellTraits[spell].m_level == level;
 }
@@ -2105,7 +2169,7 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
         type_object* object = m_objects[objectIndex];
         prototype = object->m_properties->m_prototype;
         TRmgMapPosition entrance = getRmgPlacedObjectEntrance(object);
-        u32 direction = g_adventureObjectTraits[prototype->getObjectType()].m_trait1
+        u32 direction = isRmgEntranceOpenToNorth(prototype->getObjectType())
             ? RMG_DIRECTION_COUNT : RMG_FIRST_NORTHERN_DIRECTION;
         while (direction--) {
             TRmgMapPosition position = entrance + g_rmgDirections[direction];
@@ -2151,10 +2215,11 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
         if (guardType == BORDER_GUARD && item->hasBorderObject())
             continue;
         item->openPath();
+        // Open the next cell outward too; diagonals fan out to three cells.
         int fanDirection;
         u32 count;
-        if (direction & 1) {
-            fanDirection = (direction - 1) & 7;
+        if (isRmgDiagonalDirection(direction)) {
+            fanDirection = turnRmgDirection(direction, -1);
             count = 3;
         } else {
             fanDirection = direction;
@@ -2170,7 +2235,7 @@ b8 TRmgTreasureGroup::addGuard(type_object* guard)
                     next->openPath();
                 }
             }
-            fanDirection = (fanDirection + 1) & 7;
+            fanDirection = turnRmgDirection(fanDirection, 1);
         }
     }
     m_guardPosition = guardPosition;
@@ -2198,7 +2263,7 @@ b8 TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
     int objectType = prototype->getObjectType();
     TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, prototype->m_triggerCell);
     TRmgVector origin(entrance.m_x, entrance.m_y);
-    if (!g_adventureObjectTraits[objectType].m_trait1) {
+    if (!isRmgEntranceOpenToNorth(objectType)) {
         for (int direction = RMG_FIRST_NORTHERN_DIRECTION; direction < RMG_DIRECTION_COUNT; ++direction) {
             TPoint nearby = g_rmgDirections[direction] + origin;
             if (m_map.getMapItem(nearby.m_x, nearby.m_y)->isRoadEntrance())
@@ -2261,12 +2326,12 @@ b8 TRmgTreasureGroup::tryAddObject(type_object* object)
         TRmgMapPosition entrance = getRmgPlacedObjectEntrance(existing);
         int endDirection;
         int firstDirection;
-        if (g_adventureObjectTraits[existingPrototype->getObjectType()].m_trait1) {
+        if (isRmgEntranceOpenToNorth(existingPrototype->getObjectType())) {
             endDirection = RMG_DIRECTION_COUNT;
-            firstDirection = 0;
+            firstDirection = RMG_DIRECTION_EAST;
         } else {
-            endDirection = 4;
-            firstDirection = 1;
+            endDirection = RMG_DIRECTION_SOUTH_WEST + 1;
+            firstDirection = RMG_DIRECTION_SOUTH_EAST;
         }
         for (int direction = endDirection; direction-- > firstDirection; ) {
             position = entrance + g_rmgDirections[direction] + trigger;
@@ -2321,7 +2386,7 @@ void TRmgTreasureGroup::traceOutline()
         return;
     --position.m_y;
     TPoint start = position;
-    int direction = 2;
+    int direction = RMG_DIRECTION_SOUTH;
     do {
         m_outline.push_back(position);
         int attempts = 0;
@@ -2454,7 +2519,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x006827F4, rmgPlacementRulesFilename, "rand_trn.txt"));
-    int row = 3;
+    int row = RMG_FIRST_DATA_ROW;
     std::vector<TAdventureObjectType> objectTypes;
     std::vector<TTerrainType> terrains;
     std::vector<int> subtypes;
@@ -2466,7 +2531,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
         if (values[0][0] == ' ' || values[0][0] == 0)
             break;
         TRmgObjectPlacementRule rule;
-        rule.m_index = row - 3;
+        rule.m_index = row - RMG_FIRST_DATA_ROW;
         objectType = H3_ENUM_DECODE(TAdventureObjectType, atoi(values[3]));
         subtype = atoi(values[4]);
         terrain = H3_ENUM_DECODE(TTerrainType, atoi(values[6]));
@@ -2482,9 +2547,9 @@ void TRmgGeneratorBase::readObjectPlacementRules()
         ++row;
     }
     int ruleCount = m_placementRules.size();
-    for (row = 3; row < ruleCount + 3; ++row) {
+    for (row = RMG_FIRST_DATA_ROW; row < ruleCount + RMG_FIRST_DATA_ROW; ++row) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
-        TRmgObjectPlacementRule& rule = m_placementRules[row - 3];
+        TRmgObjectPlacementRule& rule = m_placementRules[row - RMG_FIRST_DATA_ROW];
         readRmgPlacementScores(rule.m_adjacentScores, values, 0, ruleCount);
         readRmgPlacementScores(rule.m_blockedScores, values, ruleCount, ruleCount);
     }
@@ -2553,7 +2618,9 @@ int TRmgGeneratorBase::scoreObjectPlacement(
     std::vector<type_object*> affected;
     b8 terrainSeen[10];
     memset(terrainSeen, 0, sizeof(terrainSeen));
-    u32 marks[10][8];
+    // The 8x6 footprint plus a one-cell border; footprint cell (column, row)
+    // is marks[column + 1][row + 1].
+    u32 marks[8 + 2][6 + 2];
     memset(marks, 0, sizeof(marks));
     for (u32 row = 0; row < prototype->getHeight(); ++row) {
         int y = position.m_y - row;
@@ -2873,7 +2940,7 @@ type_random_map_generator::type_random_map_generator(
         memset(m_disabledHeroes, 0, sizeof(m_disabledHeroes));
         memset(m_objectCountByType, 0, sizeof(m_objectCountByType));
         initializeObjectGenerators();
-        for (int hero = 0; hero < 156; ++hero) {
+        for (int hero = 0; hero < sizeof(m_disabledHeroes); ++hero) {
             if (g_heroTraits[hero].m_availability.m_special)
                 m_disabledHeroes[hero] = true;
             else if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
@@ -2882,8 +2949,10 @@ type_random_map_generator::type_random_map_generator(
             } else if (!g_heroTraits[hero].m_availability.m_availableInOriginal)
                 m_disabledHeroes[hero] = true;
         }
-        initializeRmgObjectLimits(g_rmgMapObjectLimits, g_rmgMapObjectLimitOverrides, 30);
-        initializeRmgObjectLimits(g_rmgZoneObjectLimits, g_rmgZoneObjectLimitOverrides, 24);
+        initializeRmgObjectLimits(g_rmgMapObjectLimits, g_rmgMapObjectLimitOverrides,
+            sizeof(g_rmgMapObjectLimitOverrides) / sizeof(g_rmgMapObjectLimitOverrides[0]));
+        initializeRmgObjectLimits(g_rmgZoneObjectLimits, g_rmgZoneObjectLimitOverrides,
+            sizeof(g_rmgZoneObjectLimitOverrides) / sizeof(g_rmgZoneObjectLimitOverrides[0]));
         memset(m_fixedHumanPlayers, 0, sizeof(m_fixedHumanPlayers));
     }
 }
@@ -2980,8 +3049,8 @@ void type_random_map_generator::loadTemplates()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00682804, rmgTemplatesFilename, "rmg.txt"));
-    int mapSize = m_map.getWidth() * m_map.getHeight() * m_map.m_numberLevels / 1296;
-    int row = 3;
+    int mapSize = m_map.getWidth() * m_map.getHeight() * m_map.m_numberLevels / (36 * 36);
+    int row = RMG_FIRST_DATA_ROW;
     if (m_waterContent == RMG_WATER_ISLANDS)
         mapSize = max(mapSize / 2, 1);
     for (; row < sheet->getNumberOfRows();) {
@@ -3060,9 +3129,7 @@ void readRmgTemplateZones(
                 slot->m_townPlacement[RMG_TOWN_NEUTRAL_OPTION_COUNT] = atoi(values[19]);
                 slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_DENSITY] = atoi(values[20]);
                 slot->m_townPlacement[RMG_TOWN_NEUTRAL_OPTION_DENSITY] = atoi(values[21]);
-                slot->m_neutralTownsMatchZone = false;
-                if (isRmgTemplateFieldSet(values[22]))
-                    slot->m_neutralTownsMatchZone = true;
+                slot->m_neutralTownsMatchZone = isRmgTemplateFieldSet(values[22]);
                 // RoE maps have no Conflux.
                 int townCount;
                 if (mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE)
@@ -3071,19 +3138,16 @@ void readRmgTemplateZones(
                     townCount = TOWN_CONFLUX;
                     slot->m_allowedTowns[TOWN_CONFLUX] = false;
                 }
-                while (townCount--) {
-                    if (isRmgTemplateFieldSet(values[23 + townCount]))
-                        slot->m_allowedTowns[townCount] = true;
-                    else
-                        slot->m_allowedTowns[townCount] = false;
-                }
-                for (int mine = 0; mine < 7; ++mine)
-                    slot->m_mineCounts[mine] = atoi(values[32 + mine]);
-                for (int resource = 0; resource < 7; ++resource)
+                while (townCount--)
+                    slot->m_allowedTowns[townCount] =
+                        isRmgTemplateFieldSet(values[23 + townCount]);
+                for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
+                    slot->m_mineCounts[resource] = atoi(values[32 + resource]);
                     slot->m_mineDensities[resource] = atoi(values[39 + resource]);
+                }
                 slot->m_useNativeTerrain = isRmgTemplateFieldSet(values[46]);
                 b8 anyTerrain = false;
-                for (int terrain = 0; terrain < 8; ++terrain) {
+                for (int terrain = 0; terrain < eTerrainWater; ++terrain) {
                     slot->m_allowedTerrain[terrain] =
                         isRmgTemplateFieldSet(values[47 + terrain]);
                     if (slot->m_allowedTerrain[terrain])
@@ -3115,6 +3179,12 @@ void readRmgTemplateZones(
     }
 }
 
+// RoE maps lack the expansion creature types (118 and up).
+static inline int getRmgCreatureTypeCount(int mapVersion)
+{
+    return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? 145 : 118;
+}
+
 VA(0x00538B10, 0x2241)
 MAC_ADDRESS(0x2375f0, 0x4880)
 void type_random_map_generator::initializeObjectGenerators()
@@ -3122,13 +3192,10 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_treasure_def(ALTAR_OF_SACRIFICE, 0, 100, 20));
     m_objectGenerators.push_back(new type_treasure_def(ARENA, 0, 3000, 50));
 
-    {
-        int creatureCount = m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? 145 : 118;
-        for (int creature = creatureCount; creature--;) {
-            if (g_creatureTypeTraits[creature].m_level >= 0)
-                m_objectGenerators.push_back(
-                    new type_black_box_creature_def(creature));
-        }
+    for (int creature = getRmgCreatureTypeCount(m_mapVersion); creature--;) {
+        if (g_creatureTypeTraits[creature].m_level >= 0)
+            m_objectGenerators.push_back(
+                new type_black_box_creature_def(creature));
     }
 
     m_objectGenerators.push_back(
@@ -3242,8 +3309,7 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_treasure_def(SEA_CHEST, 0, 1500, 500));
 
     for (int quest = 0; quest < m_objectPrototypes[SEER].size(); ++quest) {
-        int creatureCount = m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? 145 : 118;
-        for (int creature = creatureCount; creature--;) {
+        for (int creature = getRmgCreatureTypeCount(m_mapVersion); creature--;) {
             if (g_creatureTypeTraits[creature].m_level >= 0)
                 m_objectGenerators.push_back(
                     new type_quest_creature_def(creature, quest));
@@ -3587,13 +3653,14 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     minimumY = (minimumY - span + maximumY) / 2;
     minimumX = (minimumX - span + maximumX) / 2;
     for (int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
-        TRmgMapPosition position = m_zones[zoneIndex]->getLevelPosition();
+        TRmgZone* zone = m_zones[zoneIndex];
+        TRmgMapPosition position = zone->getLevelPosition();
         position.m_x = (position.m_x - minimumX) * size / span;
         position.m_y = (position.m_y - minimumY) * size / span;
-        m_zones[zoneIndex]->setLevelPosition(position);
-        m_zones[zoneIndex]->m_scaledSize = m_zones[zoneIndex]->m_templateZone->m_size * size / span;
-        m_zones[zoneIndex]->chooseTerrain();
-        m_zones[zoneIndex]->chooseTownType(m_mapVersion >= 0);
+        zone->setLevelPosition(position);
+        zone->m_scaledSize = zone->m_templateZone->m_size * size / span;
+        zone->chooseTerrain();
+        zone->chooseTownType(m_mapVersion >= 0);
     }
 }
 
@@ -4004,6 +4071,25 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
     fillIslandInterior(zone);
 }
 
+// Scanline bookkeeping for the row above or below (rowStep -1 or 1): the
+// first unassigned cell of each span there becomes a seed, queued once the
+// span ends.
+static inline void scanRmgFillSpan(const TRmgMapItem* neighbour,
+    const TRmgMapPosition& position, int rowStep, b8& inSpan,
+    TRmgMapPosition& seed, std::vector<TRmgMapPosition>& pending)
+{
+    if (neighbour->m_zoneState.m_zone == -1) {
+        if (!inSpan) {
+            seed = position;
+            seed.m_y += rowStep;
+            inSpan = true;
+        }
+    } else if (inSpan) {
+        inSpan = false;
+        pending.push_back(seed);
+    }
+}
+
 // Four-connected scanline fill of unassigned cells. An out-of-bounds centre
 // is clipped toward the interior ring site with the greatest edge clearance.
 VA(0x0053D380, 0x551)
@@ -4057,30 +4143,12 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
         while (position.m_x < m_map.getWidth() && item->m_zoneState.m_zone == -1) {
             assignRmgZoneCell(item, zoneIndex,
                 paintsRmgZoneTerrainOnLevel(m_waterContent, position.m_z));
-            if (position.m_y > 0) {
-                if ((item - m_map.getWidth())->m_zoneState.m_zone == -1) {
-                    if (!hasUpperSpan) {
-                        upperSeed = position;
-                        --upperSeed.m_y;
-                        hasUpperSpan = true;
-                    }
-                } else if (hasUpperSpan) {
-                    hasUpperSpan = false;
-                    pending.push_back(upperSeed);
-                }
-            }
-            if (position.m_y < m_map.getHeight() - 1) {
-                if ((item + m_map.getWidth())->m_zoneState.m_zone == -1) {
-                    if (!hasLowerSpan) {
-                        lowerSeed = position;
-                        ++lowerSeed.m_y;
-                        hasLowerSpan = true;
-                    }
-                } else if (hasLowerSpan) {
-                    hasLowerSpan = false;
-                    pending.push_back(lowerSeed);
-                }
-            }
+            if (position.m_y > 0)
+                scanRmgFillSpan(item - m_map.getWidth(), position, -1,
+                    hasUpperSpan, upperSeed, pending);
+            if (position.m_y < m_map.getHeight() - 1)
+                scanRmgFillSpan(item + m_map.getWidth(), position, 1,
+                    hasLowerSpan, lowerSeed, pending);
             ++item;
             ++position.m_x;
         }
@@ -4178,10 +4246,10 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
     for (int index = originalZones; index < m_zones.size(); ++index) {
         TRmgZone* zone = m_zones[index];
         TRmgMapPosition position = zone->getLevelPosition();
-        TRmgHalfEdge* first = diagram->locate(TPoint(position.m_x, position.m_y));
+        TRmgHalfEdge* first = diagram->locate(position);
         for (int other = index + 1; other < m_zones.size(); ++other) {
             TRmgZone* destination = m_zones[other];
-            if (destination->getLevelPosition().m_z != zone->getLevelPosition().m_z)
+            if (destination->getLevelPosition().m_z != position.m_z)
                 continue;
             TRmgHalfEdge* edge = findRmgBoundaryWithZone(first, destination);
             if (!edge)
@@ -4198,10 +4266,10 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
     for (index = originalZones; index < m_zones.size(); ++index) {
         TRmgZone* zone = m_zones[index];
         TRmgMapPosition position = zone->getLevelPosition();
-        TRmgHalfEdge* first = diagram->locate(TPoint(position.m_x, position.m_y));
+        TRmgHalfEdge* first = diagram->locate(position);
         for (int other = 0; other < originalZones; ++other) {
             TRmgZone* destination = m_zones[other];
-            if (destination->getLevelPosition().m_z != zone->getLevelPosition().m_z)
+            if (destination->getLevelPosition().m_z != position.m_z)
                 continue;
             TRmgHalfEdge* edge = findRmgBoundaryWithZone(first, destination);
             if (!edge)
@@ -4237,13 +4305,11 @@ MAC_ADDRESS(0x23f924, 0x798)
 void type_random_map_generator::buildZoneBoundaries(
     TRmgTemplate* mapTemplate, int level)
 {
-    TPoint query;
     TRmgVoronoi diagram;
     for (int zone = 0; zone < m_zones.size(); ++zone) {
-        if (m_zones[zone]->getLevelPosition().m_z == level) {
-            TRmgMapPosition position = m_zones[zone]->getLevelPosition();
-            diagram.addSite(TPoint(position.m_x, position.m_y), m_zones[zone]);
-        }
+        TRmgMapPosition position = m_zones[zone]->getLevelPosition();
+        if (position.m_z == level)
+            diagram.addSite(position, m_zones[zone]);
     }
     int originalZones = m_zones.size();
     if (level == 1 || m_waterContent != RMG_WATER_NONE) {
@@ -4255,20 +4321,17 @@ void type_random_map_generator::buildZoneBoundaries(
         TRmgZone* addedZone = 0;
         for (zone = 0; zone < originalZones; ++zone) {
             TRmgZone* current = m_zones[zone];
-            if (current->getLevelPosition().m_z != level)
+            TRmgMapPosition center = current->getLevelPosition();
+            if (center.m_z != level)
                 continue;
             int radius = current->m_scaledSize;
             testSlot.m_size = radius;
-            TRmgMapPosition position = current->getLevelPosition();
+            TRmgMapPosition position = center;
             for (int direction = 0; direction < RMG_RADIAL_DIRECTION_COUNT; direction += 4) {
-                TRmgMapPosition horizontalCenter;
-                horizontalCenter = current->getLevelPosition();
                 double dx = radius * g_rmgDirectionCosines[direction];
-                position.m_x = static_cast<int>(horizontalCenter.m_x + dx * 2);
-                TRmgMapPosition verticalCenter;
-                verticalCenter = current->getLevelPosition();
+                position.m_x = static_cast<int>(center.m_x + dx * 2);
                 double dy = radius * g_rmgDirectionSines[direction];
-                position.m_y = static_cast<int>(verticalCenter.m_y + dy * 2);
+                position.m_y = static_cast<int>(center.m_y + dy * 2);
                 if (isRmgRadialSiteTooFarOffMap(position.m_x, m_map.m_mapWidth, dx)
                     || isRmgRadialSiteTooFarOffMap(position.m_y, m_map.m_mapHeight, dy))
                     continue;
@@ -4285,14 +4348,7 @@ void type_random_map_generator::buildZoneBoundaries(
                     memset(slot->m_allowedTerrain, 0, sizeof(slot->m_allowedTerrain));
                     memset(slot->m_mineCounts, 0, sizeof(slot->m_mineCounts));
                     memset(slot->m_mineDensities, 0, sizeof(slot->m_mineDensities));
-                    slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT] = 0;
-                    slot->m_townPlacement[RMG_TOWN_PLAYER_OPTION_COUNT] = 0;
-                    slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_DENSITY] = 0;
-                    slot->m_townPlacement[RMG_TOWN_PLAYER_OPTION_DENSITY] = 0;
-                    slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT] = 0;
-                    slot->m_townPlacement[RMG_TOWN_NEUTRAL_OPTION_COUNT] = 0;
-                    slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_DENSITY] = 0;
-                    slot->m_townPlacement[RMG_TOWN_NEUTRAL_OPTION_DENSITY] = 0;
+                    memset(slot->m_townPlacement, 0, sizeof(slot->m_townPlacement));
                     slot->m_monsterStrength = 0;
                     slot->m_playerIndex = -1;
                     memset(slot->m_treasure, 0, sizeof(slot->m_treasure));
@@ -4309,29 +4365,24 @@ void type_random_map_generator::buildZoneBoundaries(
                     mapTemplate->m_zones.push_back(slot);
                     m_zones.push_back(addedZone);
                 }
-                diagram.addSite(TPoint(position.m_x, position.m_y), addedZone);
+                diagram.addSite(position, addedZone);
             }
         }
     }
     diagram.buildVertices();
     for (zone = 0; zone < m_zones.size(); ++zone) {
-        if (m_zones[zone]->getLevelPosition().m_z == level) {
-            TRmgMapPosition position = m_zones[zone]->getLevelPosition();
-            query.m_y = position.m_y;
-            query.m_x = position.m_x;
-            TRmgHalfEdge* first = diagram.locate(query);
+        TRmgMapPosition position = m_zones[zone]->getLevelPosition();
+        if (position.m_z == level) {
+            TRmgHalfEdge* first = diagram.locate(position);
             traceZoneBoundary(first,
                 zone < originalZones && paintsRmgZoneTerrainOnLevel(m_waterContent, level));
         }
     }
     for (zone = 0; zone < m_zones.size(); ++zone) {
         TRmgZone* current = m_zones[zone];
-        if (current->getLevelPosition().m_z == level) {
-            TRmgMapPosition position = current->getLevelPosition();
-            query.m_y = position.m_y;
-            query.m_x = position.m_x;
-            fillZoneArea(current, diagram.locate(query));
-        }
+        TRmgMapPosition position = current->getLevelPosition();
+        if (position.m_z == level)
+            fillZoneArea(current, diagram.locate(position));
     }
     joinExtraZones(originalZones, &diagram);
 }
