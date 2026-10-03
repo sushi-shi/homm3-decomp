@@ -170,22 +170,18 @@ unsigned char CDPlayHeroes::sysMsgSessionLost(DPMSG_GENERIC* message,
     return 1;
 }
 
-// E:\gamedcs\remote.cpp:204. Only a PLAYER leaving matters - a group being
-// destroyed is ignored - and the station that left is logged through the
-// same format string HandlePlayerDrop uses before the drop notification is
-// queued for the higher-level dispatchers.
+// E:\gamedcs\remote.cpp:204. DC207 calls HandlePlayerDrop for a player,
+// then returns true; other object kinds go through the base dispatcher.
+// Retail logs at 0x552946 and constructs the same 24-byte drop message at
+// 0x55294d..0x55296c as the retained helper at 0x553580 before queueing it.
+// Mac retains that helper at 0x21100c. Keep the ordinary source call.
 VA(0x00552920, 0x216)  // anchor-string(playerDroppedLog) + dc-order-map
 DC_ADDRESS(0x11bb40, 0x20)
 unsigned char CDPlayHeroes::sysMsgDestroyPlayerOrGroup(
     DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId)
 {
     if (message->m_playerType == DPPLAYERTYPE_PLAYER) {
-        unsigned long dpid = message->m_dpId;
-        g_logFile.log(DATA_COMPGEN(0x00682a78, playerDroppedLog,
-                                "********Player dropped---->[%d]"),
-                    dpid);
-        CPlayerDropMsg msg(dpid);
-        queueMsg(&msg);
+        handlePlayerDrop(message->m_dpId);
         return 1;
     }
     return CDPlay::sysMsgDestroyPlayerOrGroup(message, toId);

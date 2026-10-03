@@ -57,19 +57,24 @@ def _universe(root: Path) -> set[str]:
     return names
 
 
-def generated_copy_assignment_owner(symbol: str) -> str | None:
-    """Recognize the exact implicit-copy ABI, not arbitrary operator= overloads."""
+def generated_copy_owner(symbol: str) -> tuple[str, str] | None:
+    """Recognize the copy kind and owner, excluding other constructor/assignment ABIs."""
     split = emitted._split(symbol)
-    if split is None or split[1] or not split[0].endswith("::operator="):
+    if split is None or split[1]:
         return None
-    owner = split[0].removesuffix("::operator=")
+    if symbol.lstrip(".").startswith("__as__") and split[0].endswith("::operator="):
+        kind, owner = "IMPLICIT_COPY_ASSIGN", split[0].removesuffix("::operator=")
+    elif symbol.lstrip(".").startswith("__ct__") and "::" in split[0]:
+        kind, owner = "IMPLICIT_COPY_CTOR", split[0].rsplit("::", 1)[0]
+    else:
+        return None
     parameters = split[2]
     if not parameters.startswith("RC"):
         return None
     parsed = emitted._qualifiers(parameters[2:])
     if parsed is None or parsed[1] or "::".join(parsed[0]) != owner:
         return None
-    return owner
+    return kind, owner
 
 
 def load(root: Path, definitions=None, claims=None) -> Inventory:
@@ -105,13 +110,12 @@ def load(root: Path, definitions=None, claims=None) -> Inventory:
     universe = _universe(root)
     generated = defaultdict(list)
     for claim in claims:
-        if claim.compgen and claim.compgen[0] == "IMPLICIT_COPY_ASSIGN":
-            generated[claim.compgen[1]].append(claim)
+        if claim.compgen and claim.compgen[0] in ("IMPLICIT_COPY_ASSIGN", "IMPLICIT_COPY_CTOR"):
+            generated[claim.compgen].append(claim)
     for symbol in universe:
-        owner = generated_copy_assignment_owner(symbol)
-        for claim in generated.get(owner, ()):
+        for claim in generated.get(generated_copy_owner(symbol), ()):
             offsets[symbol].add(claim.offset)
-            labels[symbol] = owner + "::operator="
+            labels[symbol] = emitted.demangle(symbol)
     # Referenced symbols whose own unit does not compile resolve by name.
     for symbol in universe - set(offsets):
         split = emitted._split(symbol)

@@ -147,8 +147,10 @@ double aiValueOfLuck(long luck, long change)
 // four vector<army*> copy constructors. Complete additionally copies resource
 // handles through their refcounting members. The natural implicit constructor
 // supplies the retained 0x437a00 body; do not add a second authored constructor.
+// Mac getBacklashValue expands the army copy. Its call at 0x435ac passes
+// source/destination +0x420 to the deque member copy at 0x46c1c; that callee
+// is not a retained whole-army constructor. Keep the natural member copy.
 VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, army)
-MAC_COMPGEN_ADDRESS(0x046c1c, 0x240, IMPLICIT_COPY_CTOR, army)
 
 VA(0x00435980, 0x2A)
 DC_ADDRESS(0x03c810, 0x44)
