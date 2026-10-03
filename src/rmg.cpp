@@ -4747,50 +4747,50 @@ VA(0x0053ed00, 0x29b)
 MAC_ADDRESS(0x2406bc, 0x484)
 void __fastcall generateRmgIslandMask(u8* mask, s32 width, s32 height)
 {
-    std::vector<TRmgNoiseRegion> patches;
+    std::vector<TRmgNoiseRegion> pending;
     // This noise grid uses bounds X for rows and Y for columns:
     // subdivision receives (height, width), and output uses X*width + Y.
-    TRmgNoiseRegion patch = {
+    TRmgNoiseRegion region = {
         { 0, 0, height, width }, { 0, 0, 0, 0 }, (height + width) / 4 + 1
     };
-    TRmgNoiseMidpoints edges;
-    edges.m_minYValue = 0;
-    edges.m_maxYValue = 0;
-    edges.m_minXValue = 0;
-    edges.m_maxXValue = 0;
-    subdivideRmgNoiseRegion(patches, patch, edges, patch.m_variation / 2);
-    while (patches.size()) {
-        patch = patches.back();
-        patches.pop_back();
-        if (patch.m_bounds.m_maximumY == patch.m_bounds.m_minimumY + 1
-            && patch.m_bounds.m_maximumX == patch.m_bounds.m_minimumX + 1) {
-            if (patch.m_bounds.m_minimumX < 0 || patch.m_bounds.m_minimumX >= height
-                || patch.m_bounds.m_minimumY < 0 || patch.m_bounds.m_minimumY >= width)
+    TRmgNoiseMidpoints midpoints;
+    midpoints.m_minYValue = 0;
+    midpoints.m_maxYValue = 0;
+    midpoints.m_minXValue = 0;
+    midpoints.m_maxXValue = 0;
+    subdivideRmgNoiseRegion(pending, region, midpoints, region.m_variation / 2);
+    while (pending.size()) {
+        region = pending.back();
+        pending.pop_back();
+        if (region.m_bounds.m_maximumY == region.m_bounds.m_minimumY + 1
+            && region.m_bounds.m_maximumX == region.m_bounds.m_minimumX + 1) {
+            if (region.m_bounds.m_minimumX < 0 || region.m_bounds.m_minimumX >= height
+                || region.m_bounds.m_minimumY < 0 || region.m_bounds.m_minimumY >= width)
                 continue;
-            s32 value = min(max(patch.m_corners[RMG_NOISE_MIN_X_MIN_Y], 0), 255);
-            mask[patch.m_bounds.m_minimumX * width + patch.m_bounds.m_minimumY] = value;
+            s32 value = min(max(region.m_corners[RMG_NOISE_MIN_X_MIN_Y], 0), 255);
+            mask[region.m_bounds.m_minimumX * width + region.m_bounds.m_minimumY] = value;
             continue;
         }
-        if (patch.m_bounds.m_maximumX < 0 || patch.m_bounds.m_maximumY < 0
-            || patch.m_bounds.m_minimumX >= height || patch.m_bounds.m_minimumY >= width)
+        if (region.m_bounds.m_maximumX < 0 || region.m_bounds.m_maximumY < 0
+            || region.m_bounds.m_minimumX >= height || region.m_bounds.m_minimumY >= width)
             continue;
-        const s32* corners = patch.m_corners;
-        edges.m_minXValue = (corners[RMG_NOISE_MIN_X_MAX_Y] + corners[RMG_NOISE_MIN_X_MIN_Y]) / 2;
-        edges.m_minYValue = (corners[RMG_NOISE_MAX_X_MIN_Y] + corners[RMG_NOISE_MIN_X_MIN_Y]) / 2;
-        edges.m_maxXValue = (corners[RMG_NOISE_MAX_X_MAX_Y] + corners[RMG_NOISE_MAX_X_MIN_Y]) / 2;
-        edges.m_maxYValue = (corners[RMG_NOISE_MAX_X_MAX_Y] + corners[RMG_NOISE_MIN_X_MAX_Y]) / 2;
+        const s32* corners = region.m_corners;
+        midpoints.m_minXValue = (corners[RMG_NOISE_MIN_X_MAX_Y] + corners[RMG_NOISE_MIN_X_MIN_Y]) / 2;
+        midpoints.m_minYValue = (corners[RMG_NOISE_MAX_X_MIN_Y] + corners[RMG_NOISE_MIN_X_MIN_Y]) / 2;
+        midpoints.m_maxXValue = (corners[RMG_NOISE_MAX_X_MAX_Y] + corners[RMG_NOISE_MAX_X_MIN_Y]) / 2;
+        midpoints.m_maxYValue = (corners[RMG_NOISE_MAX_X_MAX_Y] + corners[RMG_NOISE_MIN_X_MAX_Y]) / 2;
         s32 center = (corners[RMG_NOISE_MAX_X_MAX_Y] + corners[RMG_NOISE_MAX_X_MIN_Y]
             + corners[RMG_NOISE_MIN_X_MAX_Y] + corners[RMG_NOISE_MIN_X_MIN_Y]) / 4;
-        s32 range = patch.m_variation;
-        if (range > 1) {
-            edges.m_minXValue += getRmgCenteredRandomOffset(range);
-            edges.m_minYValue += getRmgCenteredRandomOffset(range);
-            edges.m_maxXValue += getRmgCenteredRandomOffset(range);
-            edges.m_maxYValue += getRmgCenteredRandomOffset(range);
-            center += getRmgCenteredRandomOffset(range);
+        s32 variation = region.m_variation;
+        if (variation > 1) {
+            midpoints.m_minXValue += getRmgCenteredRandomOffset(variation);
+            midpoints.m_minYValue += getRmgCenteredRandomOffset(variation);
+            midpoints.m_maxXValue += getRmgCenteredRandomOffset(variation);
+            midpoints.m_maxYValue += getRmgCenteredRandomOffset(variation);
+            center += getRmgCenteredRandomOffset(variation);
         }
-        patch.m_variation = (range - 1) / 2 + 1;
-        subdivideRmgNoiseRegion(patches, patch, edges, center);
+        region.m_variation = (variation - 1) / 2 + 1;
+        subdivideRmgNoiseRegion(pending, region, midpoints, center);
     }
 }
 
