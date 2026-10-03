@@ -25,6 +25,7 @@
 #include "advmgr_objects.h"
 #include "armygrp.h"
 #include "artifact.h"
+#include "creature_bank.h"
 #include "hero.h"
 #include "mapcell.h"
 #include "objnames.h"
@@ -1191,7 +1192,7 @@ void TRmgMapItem::write(TAbstractFile* outputFile)
 VA_COMPGEN(0x005329A0, 0x32, IMPLICIT_DTOR, TRmgTemplateZone)
 MAC_COMPGEN_ADDRESS(0x22f660, 0x68, IMPLICIT_DTOR, TRmgTemplateZone)
 
-// Picks a uniformly random allowed town type, or -1 when none is allowed.
+// Picks a uniformly random allowed town type, or eTownNeutral if none.
 MAC_ADDRESS(0x22f6c8, 0xb4)
 s32 TRmgTemplateZone::selectAllowedTown()
 {
@@ -1201,13 +1202,13 @@ s32 TRmgTemplateZone::selectAllowedTown()
             ++allowedTownCount;
     }
     if (!allowedTownCount)
-        return -1;
+        return eTownNeutral;
     s32 selectedIndex = rand() % allowedTownCount;
     for (town = 0; town < TOWN_TYPE_COUNT; ++town) {
         if (m_allowedTowns[town] && --selectedIndex < 0)
             return town;
     }
-    return -1;
+    return eTownNeutral;
 }
 
 VA(0x005329E0, 0xCF)
@@ -1225,18 +1226,18 @@ TRmgZone::TRmgZone(TRmgTemplateZone* newSlot)
 MAC_ADDRESS(0x22f9d8, 0xcc)
 void TRmgZone::chooseTownType(b8 expanded)
 {
-    if (m_alignment != -1) {
+    if (m_alignment != eTownNeutral) {
         m_townType2 = m_alignment;
     } else {
         s32 count = 0;
         // Retail bug: this condition is always true, so all four row
         // entries are candidates, including eTownNeutral and the padding.
         while (count < 4 &&
-            (g_rmgTerrainTownChoices[m_terrain][count] != -1 || expanded ||
+            (g_rmgTerrainTownChoices[m_terrain][count] != eTownNeutral || expanded ||
              g_rmgTerrainTownChoices[m_terrain][count] != TOWN_CONFLUX))
             ++count;
         if (count == 0)
-            m_townType2 = -1;
+            m_townType2 = eTownNeutral;
         else
             m_townType2 = g_rmgTerrainTownChoices[m_terrain][rand() % count];
     }
@@ -1253,11 +1254,11 @@ VA(0x00532AB0, 0x96)
 MAC_ADDRESS(0x22faa4, 0x130)
 void TRmgZone::chooseTerrain()
 {
-    if (m_templateZone->m_useNativeTerrain && m_alignment != -1) {
+    if (m_templateZone->m_useNativeTerrain && m_alignment != eTownNeutral) {
         m_terrain = g_rmgTownNativeTerrains[m_alignment];
     } else {
         s32 count = 0;
-        for (s32 terrain = 0; terrain < eTerrainWater; ++terrain) {
+        for (s32 terrain = eTerrainDirt; terrain < eTerrainWater; ++terrain) {
             if (isRmgZoneTerrainAllowed(*this, terrain))
                 ++count;
         }
@@ -1266,7 +1267,7 @@ void TRmgZone::chooseTerrain()
         } else {
             s32 selected = rand() % count;
             s32 terrain;
-            for (terrain = 0; terrain < eTerrainWater; ++terrain) {
+            for (terrain = eTerrainDirt; terrain < eTerrainWater; ++terrain) {
                 if (isRmgZoneTerrainAllowed(*this, terrain)) {
                     if (selected-- <= 0)
                         break;
@@ -1482,7 +1483,7 @@ rmgWitchHutObject::rmgWitchHutObject(TRmgObjectPropertiesRef* properties)
 rmgBlackBoxObject::rmgBlackBoxObject(TRmgObjectPropertiesRef* properties)
     : type_object(properties)
 {
-    m_creatureType = -1;
+    m_creatureType = CREATURE_NONE;
     m_creatureCount = 0;
     m_experience = 0;
     memset(m_resources, 0, sizeof(m_resources));
@@ -1588,10 +1589,10 @@ rmgSeerHutObject::rmgSeerHutObject(TRmgObjectPropertiesRef* properties)
     : type_object(properties)
 {
     m_experience = 0;
-    m_artifact = -1;
+    m_artifact = ARTIFACT_NONE;
     m_resourceType = GOLD;
     m_resourceCount = 0;
-    m_creatureType = -1;
+    m_creatureType = CREATURE_NONE;
     m_creatureCount = 0;
 }
 
@@ -1662,7 +1663,7 @@ void rmgBlackBoxObject::write(TAbstractFile* outputFile, s32 version)
     for (u32 spellIndex = 0; spellIndex < m_spells.size(); ++spellIndex) {
         writeValue<char>(outputFile, m_spells[spellIndex]);
     }
-    if (m_creatureType == -1) {
+    if (m_creatureType == CREATURE_NONE) {
         writeValue<char>(outputFile, 0); // creature count
     } else {
         writeValue<char>(outputFile, 1); // creature count
@@ -1753,7 +1754,7 @@ void rmgSeerHutObject::write(TAbstractFile* outputFile, s32 version)
     if (m_experience > 0) {
         writeValue<char>(outputFile, eRewardExperience);
         writeValue<s32>(outputFile, m_experience);
-    } else if (m_creatureType != -1) {
+    } else if (m_creatureType != CREATURE_NONE) {
         writeValue<char>(outputFile, eRewardCreature);
         writeRmgCreatureReward(outputFile, version, m_creatureType, m_creatureCount);
     } else {
@@ -1838,7 +1839,7 @@ MAC_ADDRESS(0x231aa0, 0x9c)
 void rmgShrineObject::write(TAbstractFile* outputFile, s32 version)
 {
     type_object::write(outputFile, version);
-    writeValue<char>(outputFile, -1); // spell
+    writeValue<char>(outputFile, SPELL_NONE);
     writeRmgReservedBytes(outputFile, 2);
     writeValue<char>(outputFile, 0); // reserved byte
 }
@@ -1854,10 +1855,11 @@ void rmgSpellScrollObject::write(TAbstractFile* outputFile, s32 version)
     writeValue<char>(outputFile, 0);
 }
 
-// Witch hut skill mask: secondary skills 0-15 except 5 and 12 (Navigation
-// and Necromancy).
+// Witch hut skill mask: the first 16 secondary skills except Navigation and
+// Necromancy.
 enum ERmgWitchHutSkills {
-    RMG_WITCH_HUT_ALLOWED_SKILLS = 0xefdf
+    RMG_WITCH_HUT_ALLOWED_SKILLS = 0xffff
+        & ~((1 << eSecSkillNavigation) | (1 << eSecSkillNecromancy))
 };
 
 VA(0x005340C0, 0x93)
@@ -1936,12 +1938,12 @@ static inline s32 adjustRmgValueForAlignment(s32 value, s32 alignmentCount, s32 
     return value;
 }
 
-// Active zones of a town alignment; none for neutral (-1).
+// Active zones of a town alignment; none for eTownNeutral.
 static inline s32 getRmgAlignedZoneCount(
     const type_random_map_generator* generator, s32 alignment)
 {
     s32 alignmentCount = 0;
-    if (alignment != -1)
+    if (alignment != eTownNeutral)
         alignmentCount = generator->m_activeZoneCountsByAlignment[alignment];
     return alignmentCount;
 }
@@ -2060,7 +2062,7 @@ type_object* type_prison_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
 {
     s32 heroIndex = generator->selectPrisonHero();
-    if (heroIndex == -1)
+    if (heroIndex == heroIdNone)
         return 0;
     return new rmgHeroObject(properties, generator,
         generator->m_nextObjectId++, heroIndex, m_experience);
@@ -2582,7 +2584,7 @@ TRmgObjectPropertiesRef::TRmgObjectPropertiesRef(TObjectType* prototype)
     m_placementRule = 0;
     m_refCount = 0;
     m_prototypeIndex = 0;
-    m_preferredTerrain = -1;
+    m_preferredTerrain = TERRAIN_NONE;
     m_prioritiesInitialized = false;
 }
 
@@ -3314,7 +3316,7 @@ void readRmgTemplateZones(
                 slot->m_useNativeTerrain =
                     isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_USE_NATIVE_TERRAIN]);
                 b8 anyTerrain = false;
-                for (s32 terrain = 0; terrain < eTerrainWater; ++terrain) {
+                for (s32 terrain = eTerrainDirt; terrain < eTerrainWater; ++terrain) {
                     slot->m_allowedTerrain[terrain] =
                         isRmgTemplateFieldSet(
                             values[RMG_TEMPLATE_COLUMN_ALLOWED_TERRAIN + terrain]);
@@ -3426,13 +3428,13 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_treasure_def(CARTOGRAPHER, 1, 10000, 20));
     m_objectGenerators.push_back(new type_treasure_def(CARTOGRAPHER, 2, 7500, 20));
     m_objectGenerators.push_back(new type_treasure_def(CLOVER_FIELD, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, 0, 3000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, 1, 2000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, 2, 2000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, 3, 5000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, 4, 1500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, 5, 3000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, 6, 9000, 100));
+    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_CYCLOPS, 3000, 100));
+    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_DWARF, 2000, 100));
+    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_GRIFFIN, 2000, 100));
+    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_IMP, 5000, 100));
+    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_MEDUSA, 1500, 100));
+    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_NAGA, 3000, 100));
+    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_DRAGONFLY, 9000, 100));
 
     s32 dwelling = RMG_DWELLING_SUBTYPE_COUNT;
     if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE)
@@ -3480,13 +3482,13 @@ void type_random_map_generator::initializeObjectGenerators()
 
     m_objectGenerators.push_back(new type_resource_lump_def(RANDOM_RESOURCE, 0, 1500, 2000));
     m_objectGenerators.push_back(new type_treasure_def(REFUGEE_CAMP, 0, 5000, 20));
-    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, 0, 1400, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, 2, 1400, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, 1, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, 3, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, 4, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, 5, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, 6, 750, 300));
+    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, WOOD, 1400, 300));
+    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, ORE, 1400, 300));
+    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, MERCURY, 2000, 300));
+    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, SULFUR, 2000, 300));
+    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, CRYSTAL, 2000, 300));
+    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, GEMS, 2000, 300));
+    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, GOLD, 750, 300));
     m_objectGenerators.push_back(new type_treasure_def(SANCTUARY, 0, 100, 50));
     m_objectGenerators.push_back(new type_scholar_def());
     m_objectGenerators.push_back(new type_treasure_def(SEA_CHEST, 0, 1500, 500));
@@ -3825,7 +3827,7 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
         if (slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT] + slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT] > 0
             && slot->m_playerIndex >= 0) {
             s32 player = m_playerIndexMap[slot->m_playerIndex + 1];
-            if (player >= 0 && m_townChoices[player] != -1)
+            if (player >= 0 && m_townChoices[player] != eTownNeutral)
                 zone->m_alignment = m_townChoices[player];
         }
         positionZone(zone, mapSize);
@@ -4766,7 +4768,7 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
     s32 height = bounds.m_maximumY - bounds.m_minimumY;
     u8* mask = new u8[width * height];
     TRmgMapPosition point;
-    s32 terrain = rand() % 6;
+    s32 terrain = rand() % eTerrainSubterranean; // dirt to rough
     {
         type_random_map map(m_map.getMapItem(0, 0, level),
             m_map.m_mapWidth, m_map.m_mapHeight);
@@ -5190,7 +5192,7 @@ type_object* type_random_map_generator::createGuard(s32 value, TRmgZone* zone)
 {
     // Indexed by town type + 1; entry zero is neutral creatures.
     b8 allowedFactions[TOWN_TYPE_COUNT + 1];
-    if (zone->m_templateZone->m_guardsMatchZone && zone->m_alignment != -1) {
+    if (zone->m_templateZone->m_guardsMatchZone && zone->m_alignment != eTownNeutral) {
         memset(allowedFactions, 0, sizeof(allowedFactions));
         allowedFactions[zone->m_alignment + 1] = true;
     } else {
@@ -6598,10 +6600,10 @@ b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     s32 alignment, s32 player, b8 hasFort, s32 spacing)
 {
     TRmgTemplateZone* slot = zone->m_templateZone;
-    if ((player == -1 && !slot->m_neutralTownsMatchZone) || alignment == -1) {
+    if ((player == -1 && !slot->m_neutralTownsMatchZone) || alignment == eTownNeutral) {
         alignment = slot->selectAllowedTown();
         // RoE maps have no Conflux.
-        if (alignment == -1)
+        if (alignment == eTownNeutral)
             alignment = rand() % (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE
                 ? TOWN_TYPE_COUNT : TOWN_CONFLUX);
     }
@@ -6653,7 +6655,7 @@ MAC_ADDRESS(0x248e00, 0x3b4)
 b8 type_random_map_generator::tryPlacePrimaryTown(
     TRmgZone* zone, s32 alignment, s32 player, b8 hasFort)
 {
-    if (alignment == -1)
+    if (alignment == eTownNeutral)
         return false;
     std::vector<TRmgMapPosition> candidates;
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
@@ -8208,7 +8210,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
                 DATA_COMPGEN(0x00682820, rmgIsHuman, " is human"));
         }
 
-        if (m_townChoices[descriptionPlayer] != -1) {
+        if (m_townChoices[descriptionPlayer] != eTownNeutral) {
             appendRmgPlayerDescription(description, descriptionPlayer,
                 DATA_COMPGEN(
                     0x0068280C, rmgTownChoiceIs, " town choice is "));
@@ -8315,7 +8317,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         }
 
         writeValue<char>(outfile, 0);
-        writeValue<char>(outfile, -1);
+        writeValue<char>(outfile, heroIdNone); // main custom hero
 
         if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
             writeValue<char>(outfile, 0);
@@ -8567,7 +8569,7 @@ s32 type_random_map_generator::selectPrisonHero()
             ++available;
     }
     if (!available)
-        return -1;
+        return heroIdNone;
 
     s32 selected = rand() % available;
     for (hero = getRmgPrisonHeroCount(m_mapVersion) - 1; hero >= 0; --hero) {
