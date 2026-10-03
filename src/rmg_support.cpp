@@ -128,15 +128,9 @@ void selectRmgLinePattern(
             flipX = neighbours[TILE_DIR_WEST];
             flipY = false;
         } else {
-            if (neighbours[TILE_DIR_SOUTH]) {
-                pattern = LINE_END_S;
-                flipX = false;
-                flipY = false;
-            } else {
-                pattern = LINE_END_S;
-                flipX = false;
-                flipY = true;
-            }
+            pattern = LINE_END_S;
+            flipX = false;
+            flipY = !neighbours[TILE_DIR_SOUTH];
         }
     } else {
         pattern = hasRmgHorizontalLineNeighbour(neighbours)
@@ -184,9 +178,7 @@ static inline b32 isRmgLinePaintingBlocked(Adapter* adapter,
     const TRmgGridPoint& point)
 {
     int terrain = adapter->getTerrain(point);
-    if (terrain == eTerrainWater || terrain == eTerrainRock)
-        return true;
-    return false;
+    return terrain == eTerrainWater || terrain == eTerrainRock;
 }
 
 VA(0x0055EDC0, 0x36)

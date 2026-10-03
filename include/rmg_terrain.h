@@ -15,6 +15,25 @@ inline TPoint operator+(const TPoint& point, const TPoint& offset)
     return result += offset;
 }
 
+// Both eight-neighbour rings (TILE_DIR_* and g_rmgDirections) alternate
+// cardinal and diagonal directions; the odd entries are the diagonals.
+inline bool isRmgDiagonalDirection(u32 direction)
+{
+    return (direction & 1) != 0;
+}
+
+// Brush strength scales each terrain's special base-frame chance, which is
+// a percentage at full strength. The generator always paints at half.
+enum ERmgBrushStrength {
+    RMG_FULL_BRUSH_STRENGTH = 8,
+    RMG_BRUSH_STRENGTH = 4
+};
+
+// Transition shape ids 0..28 (ERmgTerrainShape in src/rmg_terrain.cpp).
+enum ERmgTerrainShapeLimits {
+    RMG_TERRAIN_SHAPE_COUNT = 29
+};
+
 // One map-layer tile as read from or written to the map adapter.
 struct rmgTerrainTile {
     // Terrain, road or river type, depending on the adapter's layer.
@@ -142,7 +161,7 @@ extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
 
 // Frame ranges of the fixed table, keyed by transition and both flips.
 struct TRmgTerrainPatternTable {
-    TRmgTerrainPatternRange m_ranges[116];
+    TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT * 2 * 2];
     TRmgTerrainPatternTable();
 };
 DATA(0x006A4158)
@@ -155,7 +174,7 @@ public:
     s32 m_specialFrameChance;                   // +0x08: percentage at strength 8
     u32 m_entryCount;                           // +0x0c
     const TRmgTerrainPatternEntry* m_entries;    // +0x10
-    TRmgTerrainPatternRange m_ranges[58];        // +0x14
+    TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT * 2]; // +0x14
 
     TRmgPatternTerrainRule(b8 blendsWithOtherTerrain,
         b8 allowsSeparatedNeighbours, int specialFrameChance,
@@ -247,9 +266,9 @@ public:
         const TRmgGridPoint& point, b8* matches);
 
     void buildNeighbourKinds(const TRmgGridPoint& point, int* neighbours);
-    b8 checkFirstDiagonal(
+    b8 isOuterCornerOnDiagonalEdge(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
-    b8 checkSecondDiagonal(
+    b8 isInnerCornerOnDiagonalEdge(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
     int getSpecialFrameStrength(const TRmgGridPoint& point, int terrain);
 };

@@ -163,8 +163,9 @@ frame. Otherwise a terrain with special frames rolls `rand() % 100` against
 dirt 50, sand 70, grass 50, snow 80, swamp 80, rough 80, subterranean 60 and
 lava 80. Water and rock have no special frames. `strength` is the painter's
 strength, halved once for each same-terrain cardinal neighbour that already
-shows a special frame. The roll picks a special frame on success and a base
-frame otherwise.
+shows a special frame. The generator's brushes all paint at strength 4
+(`RMG_BRUSH_STRENGTH`), so they start at half these chances. The roll picks
+a special frame on success and a base frame otherwise.
 
 ## Painting and repair
 

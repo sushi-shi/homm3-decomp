@@ -2073,7 +2073,7 @@ the trace lists UNDER/OVER callees:
   `TRmgGridPoint::operator+=` (cost 43) inside the first neighbour pass at a
   site whose budget is 187 here; only a helper around that pass (nested
   budget below 43) would reproduce it.
-- `checkFirstDiagonal` (0x5b6ba0): retail refuses the second `getPackedCell`
+- `isOuterCornerOnDiagonalEdge` (0x5b6ba0): retail refuses the second `getPackedCell`
   (nested 148 here) while expanding the third; four more candidate sites
   after the second terrain query would do it.
 
@@ -2122,9 +2122,9 @@ point became trivially copyable. What they settle and what they leave:
 - Both diagonal checks and `paintRectangle` closed through sites, not
   costs: grid-point and TPoint coordinate accessors, the width and height
   accessors and an else-chain clamp give the first neighbour query ten to
-  twelve remaining sites so its cache read stays a call (checkFirstDiagonal
+  twelve remaining sites so its cache read stays a call (isOuterCornerOnDiagonalEdge
   89.7 -> 100 once the first point is constructed from both clamps, since
-  constructor arguments evaluate right to left; checkSecondDiagonal 70.3 ->
+  constructor arguments evaluate right to left; isInnerCornerOnDiagonalEdge 70.3 ->
   100 with one point reused through the setters and the last read spelled
   `getPackedCell(p)->getTerrain()`, whose two depth-one sites replace the
   candidate site the dropped second point took with it). A helper's cost
@@ -2133,7 +2133,7 @@ point became trivially copyable. What they settle and what they leave:
 - Store order of reference-bound arguments follows the order the argument
   temporaries are created: `clamp(value, 0, maximum)` stores the literal
   before the value, while evaluating `maximum` and then `value` into locals
-  ahead of the call stores the literal last. checkSecondDiagonal's second
+  ahead of the call stores the literal last. isInnerCornerOnDiagonalEdge's second
   query needs the latter and its first query the former.
   `paintRectangle` needs two candidate sites from its terrain test on (a
   direct field compare and the base-tile block as a helper), and that

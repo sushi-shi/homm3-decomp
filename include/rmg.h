@@ -392,16 +392,16 @@ struct TRmgTreasureRange {
 };
 
 // Template columns 14..21: player-owned and neutral town counts and
-// densities. BASIC/OPTION mirror the serialized town-option byte.
+// densities. CASTLE towns start with a fort; BASIC towns start without one.
 enum ERmgTownPlacementParameter {
     RMG_TOWN_PLAYER_BASIC_COUNT = 0,
-    RMG_TOWN_PLAYER_OPTION_COUNT = 1,
+    RMG_TOWN_PLAYER_CASTLE_COUNT = 1,
     RMG_TOWN_PLAYER_BASIC_DENSITY = 2,
-    RMG_TOWN_PLAYER_OPTION_DENSITY = 3,
+    RMG_TOWN_PLAYER_CASTLE_DENSITY = 3,
     RMG_TOWN_NEUTRAL_BASIC_COUNT = 4,
-    RMG_TOWN_NEUTRAL_OPTION_COUNT = 5,
+    RMG_TOWN_NEUTRAL_CASTLE_COUNT = 5,
     RMG_TOWN_NEUTRAL_BASIC_DENSITY = 6,
-    RMG_TOWN_NEUTRAL_OPTION_DENSITY = 7
+    RMG_TOWN_NEUTRAL_CASTLE_DENSITY = 7
 };
 
 struct TRmgTemplateZone {
@@ -762,17 +762,17 @@ public:
 };
 SIZE(rmgMonsterObject, 0x2c);
 
-// Town with its owner and town option.
+// Town with its owner and whether it starts with a fort (the H3M fort byte).
 class rmgTownObject : public type_object {
 public:
     s32 m_objectId;
     s32 m_player;
-    u8 m_townOption;
+    b8 m_hasFort;
     rmgTownObject(TRmgObjectPropertiesRef* properties, int objectId,
-        int player, u8 townOption) : type_object(properties)
+        int player, b8 hasFort) : type_object(properties)
     {
         m_player = player;
-        m_townOption = townOption;
+        m_hasFort = hasFort;
         m_objectId = objectId;
     }
     virtual void write(TAbstractFile* outputFile, int version);
@@ -1628,11 +1628,11 @@ public:
 };
 SIZE(TRmgGeneratorBase, 0xed8);
 
-// Town count/density groups by ownership and town option.
+// Town count/density groups by ownership and starting fort.
 enum ERmgTownPlacementCategory {
-    RMG_TOWN_PLAYER_OPTION,
+    RMG_TOWN_PLAYER_CASTLE,
     RMG_TOWN_PLAYER_BASIC,
-    RMG_TOWN_NEUTRAL_OPTION,
+    RMG_TOWN_NEUTRAL_CASTLE,
     RMG_TOWN_NEUTRAL_BASIC
 };
 
@@ -1695,7 +1695,7 @@ public:
         b8 startingMine, int spacing);
     void placePrimaryTown(TRmgZone* zone);
     b8 tryPlacePrimaryTown(TRmgZone* zone, int alignment,
-        int player, u8 townOption);
+        int player, b8 hasFort);
     void initializeZones(TRmgTemplate* mapTemplate);
     void positionZone(TRmgZone* zone, int mapSize);
     void appendZonePositions(TRmgZone* center, TRmgZone* zone,
@@ -1710,7 +1710,7 @@ public:
     void drawIslandBoundary(TPoint from, TPoint to, int zoneIndex, int level, int roughness);
     void placeAdditionalTowns(TRmgZone* zone);
     b8 tryPlaceAdditionalTown(TRmgZone* zone, int alignment,
-        int player, u8 townOption, int spacing);
+        int player, b8 hasFort, int spacing);
     void prepareJunctionZone(TRmgZone* zone);
     void connectJunctionEntrance(TPoint from, TPoint to, TRmgZone* zone);
     void placeZoneTreasures(TRmgZone* zone);
