@@ -1814,6 +1814,16 @@ static inline int adjustRmgValueForAlignment(int value, int alignmentCount, int 
     return value;
 }
 
+// Active zones of a town alignment; none for neutral (-1).
+static inline int getRmgAlignedZoneCount(
+    const type_random_map_generator* generator, int alignment)
+{
+    int alignmentCount = 0;
+    if (alignment != -1)
+        alignmentCount = generator->m_activeZoneCountsByAlignment[alignment];
+    return alignmentCount;
+}
+
 // Creature rewards are offered only in zones of the creature's town; the
 // value rises with that town's share of active zones.
 VA(0x00534310, 0x64)
@@ -1825,9 +1835,7 @@ int type_black_box_creature_def::getValue(
     if (alignment != zone->m_townType2)
         return -1;
     int value = g_creatureTypeTraits[m_creatureType].m_aiValue * m_creatureCount;
-    int alignmentCount = 0;
-    if (alignment != -1)
-        alignmentCount = generator->m_activeZoneCountsByAlignment[alignment];
+    int alignmentCount = getRmgAlignedZoneCount(generator, alignment);
     int zoneCount = generator->m_activeZoneCount;
     return adjustRmgValueForAlignment(value, alignmentCount, zoneCount);
 }
@@ -1910,9 +1918,7 @@ int type_map_dwelling_def::getValue(TRmgZone* zone, type_random_map_generator* g
         return -1;
 
     int value = creature.m_growthRate * creature.m_aiValue;
-    int alignmentZoneCount = 0;
-    if (creature.m_townType != -1)
-        alignmentZoneCount = generator->m_activeZoneCountsByAlignment[creature.m_townType];
+    int alignmentZoneCount = getRmgAlignedZoneCount(generator, creature.m_townType);
     value = adjustRmgValueForAlignment(value, alignmentZoneCount, generator->m_activeZoneCount);
     return value + creature.m_aiValue * alignmentZoneCount / 2;
 }
