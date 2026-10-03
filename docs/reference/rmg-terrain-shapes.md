@@ -29,12 +29,13 @@ Diagram legend (north is up, `C` is the cell):
    its neighbours draw them.
 2. Both terrains blend (dirt, grass, snow, swamp, rough, subterranean, lava):
    **no edge** for a dirt centre, otherwise **blend edge**.
-3. Anything else: **hard edge**. This covers water, rock, a blending terrain
-   beside sand or water, and dirt beside sand, water or rock.
+3. Anything else: **hard edge**. This covers water and rock centres, and a
+   blending centre beside sand, water or rock.
 
 So dirt, water and rock cells only ever see hard edges, and sand sees none.
-Neighbours beyond the map edge are clamped to the cell itself, so they have
-no edge.
+Neighbour coordinates are clamped to the map: an off-map cardinal neighbour
+is the cell itself (no edge), and an off-map diagonal repeats an on-map
+neighbour.
 
 ## Shape selection
 
@@ -175,10 +176,10 @@ lists until no repair is pending, then runs `paintTransitions`.
 A cell **needs repair** when it is a one-cell gap: both W and E, or both N
 and S, are other terrain. Water and rock also need repair when their matching
 neighbours are separated. Separation is checked on the ring of eight
-neighbours. A cardinal neighbour matches when it has the same terrain. A
-diagonal matches only when it has the same terrain and an adjoining cardinal
-also matches. The neighbours are separated when the ring holds more than one
-run of matches.
+neighbours, clamped as above. A cardinal neighbour matches when it has the
+same terrain. A diagonal matches only when it has the same terrain and an
+adjoining cardinal also matches. The neighbours are separated when the ring
+holds more than one run of matches.
 
 Repairing a cell paints the paint terrain into its neighbours:
 

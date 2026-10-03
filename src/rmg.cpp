@@ -3494,8 +3494,9 @@ void type_random_map_generator::filterZonePositions(
     }
 }
 
-// The first zone may start on either eligible level. Later zones sample
-// template neighbours, falling back to all placed zones before filtering.
+// The first zone starts at the origin, on the surface or, when eligible,
+// underground. Later zones sample template neighbours, falling back to all
+// placed zones before filtering.
 VA(0x0053B970, 0x232)
 MAC_ADDRESS(0x23ca80, 0x20c)
 void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
@@ -4389,7 +4390,7 @@ static inline void appendRmgNoiseQuadrant(
         pending.push_back(quadrant);
 }
 
-// Each nondegenerate quadrant inherits the original variation.
+// Each nondegenerate quadrant inherits the region's variation.
 VA(0x0053E9E0, 0x31E)
 MAC_ADDRESS(0x240410, 0x2ac)
 void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,

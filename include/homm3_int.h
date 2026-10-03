@@ -1,8 +1,8 @@
 #ifndef HOMM3_INT_H
 #define HOMM3_INT_H
 
-// Width-named spellings of the exact integer types they replace. Macros, not
-// typedefs: new type names shift VC6 codegen. RAD's rad.h spells u32/s32 as long.
+// Width-named spellings of the exact integer types they replace. Macros, so
+// each use expands to the original type; RAD's rad.h spells u32/s32 as long.
 #undef u8
 #undef s8
 #undef u16

@@ -1285,7 +1285,7 @@ static inline bool matchesTerrainCorner(rmgTerrainPainter& painter,
     return (firstSide || secondSide) && matchesTerrainAt(painter, x, y, terrain);
 }
 
-// Cardinal neighbours use coordinates clamped to the map edge.
+// Neighbour coordinates are clamped to the map edge.
 VA(0x005B6540, 0x2CA)
 MAC_ADDRESS(0x2582fc, 0x4f8)
 void rmgTerrainPainter::buildMatchingNeighbourMask(
