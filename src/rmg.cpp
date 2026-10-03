@@ -4417,11 +4417,12 @@ void type_random_map_generator::paintZoneTerrain()
     for (int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
         recenterZone(zone);
-        if (m_waterContent == RMG_WATER_ISLANDS && zone->getLevelPosition().m_z == 0)
+        if (m_waterContent == RMG_WATER_ISLANDS
+            && zone->getLevelPosition().m_z == RMG_SURFACE_LEVEL)
             insetIslandZone(zone);
     }
     if (m_map.getNumberLevels() > 1) {
-        type_random_map levelMap(m_map.getMapItem(0, 0, 1),
+        type_random_map levelMap(m_map.getMapItem(0, 0, RMG_UNDERGROUND_LEVEL),
             m_map.getWidth(), m_map.getHeight());
         TRmgTerrainBrush brush(&levelMap, eTerrainRock, RMG_BRUSH_STRENGTH);
         brush.paintRectangle(0, 0, m_map.getWidth(), m_map.getHeight());
@@ -4756,7 +4757,7 @@ void type_random_map_generator::markZoneBorders()
                                 needsBorder = true;
                         } else if (otherZone != zoneIndex) {
                             TRmgZoneConnection* connection = zone->m_templateZone->findConnection(otherZone);
-                            if (!connection || position.m_z == 1)
+                            if (!connection || position.m_z == RMG_UNDERGROUND_LEVEL)
                                 needsBorder = true;
                             if (connection && !connection->m_unguarded)
                                 needsBorder = true;
@@ -5935,7 +5936,7 @@ void type_random_map_generator::connectZones()
     }
 
     if (m_progress)
-        m_progress->advance(0x1900);
+        m_progress->advance(6400);
 }
 
 // Underground rock and treasure-group filler may close passable floor only
@@ -5951,7 +5952,7 @@ MAC_ADDRESS(0x246a34, 0x31c)
 void type_random_map_generator::decorateUnderground()
 {
     TRmgMapPosition scan;
-    scan.m_z = 1;
+    scan.m_z = RMG_UNDERGROUND_LEVEL;
     TRmgMapItem* item = m_map.getMapItem(0, 0, scan.m_z);
     type_random_map map(item, m_map.m_mapWidth, m_map.m_mapHeight);
     TRmgTerrainBrush brush(&map, eTerrainRock, RMG_BRUSH_STRENGTH);
@@ -5966,7 +5967,7 @@ void type_random_map_generator::decorateUnderground()
     int currentTerrain = eTerrainRock;
     for (u32 zone = 0; zone < m_zones.size(); ++zone) {
         scan = m_zones[zone]->getLevelPosition();
-        if (scan.m_z != 1)
+        if (scan.m_z != RMG_UNDERGROUND_LEVEL)
             continue;
         TRmgZoneBounds bounds = m_zones[zone]->m_bounds;
         int terrain = m_zones[zone]->m_terrain;
@@ -5976,7 +5977,7 @@ void type_random_map_generator::decorateUnderground()
         }
         for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
             for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
-                TRmgMapItem* item = m_map.getMapItem(x, y, 1);
+                TRmgMapItem* item = m_map.getMapItem(x, y, RMG_UNDERGROUND_LEVEL);
                 if (item->getLandType() == eTerrainRock
                     && item->m_zoneState.m_zone == zone
                     && (item->hasPathClearance() || item->hasObjects())) {
@@ -6356,20 +6357,30 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
         slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT], alignment, -1, false, skipPrimary);
     int totalDensity = 0;
     int densityProduct = 1;
-    int densities[4] = { slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_DENSITY], slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_DENSITY],
-        slot->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_DENSITY], slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_DENSITY] };
-    int weightedCounts[4] = { slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT], slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT],
-        slot->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_COUNT], slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT] };
-    int countSteps[4];
-    b8 finished[4];
-    initializeRmgDensityCategories(densities, 4, finished, totalDensity, densityProduct);
+    // Indexed by ERmgTownPlacementCategory.
+    const int categoryCount = RMG_TOWN_NEUTRAL_BASIC + 1;
+    int densities[categoryCount] = {
+        slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_DENSITY],
+        slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_DENSITY],
+        slot->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_DENSITY],
+        slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_DENSITY]
+    };
+    int weightedCounts[categoryCount] = {
+        slot->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT],
+        slot->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT],
+        slot->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_COUNT],
+        slot->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT]
+    };
+    int countSteps[categoryCount];
+    b8 finished[categoryCount];
+    initializeRmgDensityCategories(densities, categoryCount, finished, totalDensity, densityProduct);
     if (!totalDensity)
         return;
     int spacing = getRmgDensitySpacing(82944, totalDensity);
-    initializeRmgCategoryStrides(densities, weightedCounts, 4,
+    initializeRmgCategoryStrides(densities, weightedCounts, categoryCount,
         densityProduct, countSteps, weightedCounts);
     for (;;) {
-        int selected = selectRmgWeightedCategory(finished, weightedCounts, 4);
+        int selected = selectRmgWeightedCategory(finished, weightedCounts, categoryCount);
         if (selected == -1)
             break;
         weightedCounts[selected] += countSteps[selected];
@@ -6808,6 +6819,11 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     return definition->generate(properties[selectedIndex], this, zone);
 }
 
+// Treasure groups are assembled on a square scratch map before placement.
+enum ERmgTreasureGroupMapSize {
+    RMG_TREASURE_GROUP_MAP_SIZE = 16
+};
+
 // Adds an object centred on the group map (unsigned division).
 static inline void addRmgCenteredGroupObject(TRmgTreasureGroup* group, type_object* object)
 {
@@ -7174,7 +7190,7 @@ MAC_ADDRESS(0x24b6e8, 0x358)
 void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
 {
     TRmgTemplateZone* slot = zone->m_templateZone;
-    TRmgTreasureGroup group(16, 16);
+    TRmgTreasureGroup group(RMG_TREASURE_GROUP_MAP_SIZE, RMG_TREASURE_GROUP_MAP_SIZE);
     const int bandCount = sizeof(slot->m_treasure) / sizeof(slot->m_treasure[0]);
     // Bands with a maximum value below 100 or no density are skipped.
     int densities[bandCount];
@@ -7282,7 +7298,8 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
 
             case UNDERGROUND_GATE: {
                 // The gate's twin stands at the same cell on the other level.
-                TRmgMapPosition nextPosition(position.m_x, position.m_y, 1 - position.m_z);
+                TRmgMapPosition nextPosition(
+                    position.m_x, position.m_y, getRmgOtherLevel(position.m_z));
                 TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
                 int nextCost = currentCost + 1;
                 if (nextMapItem->m_movement.m_cost > nextCost) {
@@ -7683,8 +7700,9 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
         &mapAdapter, riverType, TRmgGridPoint(nextPosition.m_x, nextPosition.m_y));
 
     if (mapItem->m_tileData.m_blockedDirections) {
-        for (direction = 0; direction < 4; ++direction) {
-            if (mapItem->m_tileData.m_blockedDirections & (1 << direction))
+        int cardinal;
+        for (cardinal = 0; cardinal < 4; ++cardinal) {
+            if (mapItem->m_tileData.m_blockedDirections & (1 << cardinal))
                 break;
         }
 
@@ -7700,8 +7718,8 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
         };
 
         int deltaIndex = sourceIsSnow
-            ? g_snowRiverDeltaIndex[direction]
-            : g_landRiverDeltaIndex[direction];
+            ? g_snowRiverDeltaIndex[cardinal]
+            : g_landRiverDeltaIndex[cardinal];
         int landType = mapItem->getLandType();
         int prototypeIndex = 0;
         for (; prototypeIndex < m_objectPrototypes[TERRAIN_RIVER_DELTA].size();
@@ -7721,11 +7739,11 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
         addObject(
             riverDelta,
             TRmgMapPosition(
-                nextPosition.m_x + deltaOffsets[direction].m_x,
-                nextPosition.m_y + deltaOffsets[direction].m_y,
+                nextPosition.m_x + deltaOffsets[cardinal].m_x,
+                nextPosition.m_y + deltaOffsets[cardinal].m_y,
                 nextPosition.m_z));
 
-        nextPosition = nextPosition + g_rmgDirections[direction * 2];
+        nextPosition = nextPosition + g_rmgDirections[cardinal * 2];
         riverPainter.drawTo(TRmgGridPoint(nextPosition.m_x, nextPosition.m_y));
         mapItem = m_map.getMapItem(nextPosition);
         mapItem->m_tileData.m_riverTarget = true;
@@ -7913,6 +7931,11 @@ int writeString(TAbstractFile* outfile, const char* text)
 enum ERmgHeroCount {
     RMG_ROE_HERO_COUNT = 128,
     RMG_HERO_COUNT = 156
+};
+
+// Artifact ids an AB map knows: it ends before the SoD combination artifacts.
+enum ERmgArtifactCount {
+    RMG_AB_ARTIFACT_COUNT = ARTIFACT_ANGELIC_ALLIANCE
 };
 
 // Each player clause in the map description appends a separator, the player
@@ -8179,21 +8202,20 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
         writePackedBits(outfile, disabledArtifacts);
     } else if (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE) {
-        // AB maps end before the SoD combination artifacts (129 on).
-        std::bitset<129> legacyDisabledArtifacts;
+        std::bitset<RMG_AB_ARTIFACT_COUNT> legacyDisabledArtifacts;
         std::copy(
             bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 0),
-            bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 129),
-            bitset_iterator<129>(legacyDisabledArtifacts, 0));
+            bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, RMG_AB_ARTIFACT_COUNT),
+            bitset_iterator<RMG_AB_ARTIFACT_COUNT>(legacyDisabledArtifacts, 0));
 
         writePackedBits(outfile, legacyDisabledArtifacts);
     }
 
     if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
-        std::bitset<70> disabledSpells;
+        std::bitset<hero::NUM_SPELLS> disabledSpells;
         writePackedBits(outfile, disabledSpells);
 
-        std::bitset<28> disabledSkills;
+        std::bitset<kNumSecSkills> disabledSkills;
         writePackedBits(outfile, disabledSkills);
 
         for (int hero = 0; hero < RMG_HERO_COUNT; ++hero) {
@@ -8490,7 +8512,7 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
     object->m_properties = properties;
     ++properties->m_refCount;
     TRmgZone* origin = m_zones[m_map.getMapItem(object->m_position)->m_zoneState.m_zone];
-    TRmgTreasureGroup group(16, 16);
+    TRmgTreasureGroup group(RMG_TREASURE_GROUP_MAP_SIZE, RMG_TREASURE_GROUP_MAP_SIZE);
     addRmgCenteredGroupObject(&group, seerHut);
     group.preparePlacement();
     if (!placeQuestGroup(&group, origin)) {
@@ -8517,7 +8539,7 @@ b8 type_random_map_generator::placeKeyTentGuard(type_object* object, int maxValu
         return false;
     TRmgZone* origin = m_zones[m_map.getMapItem(object->m_position)->m_zoneState.m_zone];
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[BORDER_GUARD][index];
-    TRmgTreasureGroup group(16, 16);
+    TRmgTreasureGroup group(RMG_TREASURE_GROUP_MAP_SIZE, RMG_TREASURE_GROUP_MAP_SIZE);
     type_object* guard = new type_object(properties);
     setKeyTentColorDisabled(color, true);
     if (fillTreasureGroup(origin, &group, false, maxValue) && group.addGuard(guard)) {
