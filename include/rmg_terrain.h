@@ -238,7 +238,6 @@ enum TRmgTerrainGapAxis {
 class rmgTerrainPainter {
 public:
     TRmgMapInterface* m_adapter;                // +0x00
-    // Terrain type being painted.
     s32 m_paintTerrain;                               // +0x04
     // Brush strength (ERmgBrushStrength); each same-terrain cardinal
     // neighbour with a special frame halves it for a cell.

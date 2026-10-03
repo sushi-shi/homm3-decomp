@@ -1564,6 +1564,9 @@ struct TRmgZone {
     // Connection-graph distance to each original zone, or RMG_UNREACHED_COST.
     std::vector<s16> m_zoneDistances;// +0x3e4
     std::vector<TPoint> m_boundary;    // +0x3f4: clipped polygon vertices
+    // Connection entry cells in creation order: crossing cells, the row below
+    // a shipyard, gate entrances and portal positions. Junction zones join
+    // each later entrance to the open paths reached from the first.
     std::vector<TPoint> m_entrances;   // +0x404
 
     TRmgZone(TRmgTemplateZone* slot);
@@ -1708,7 +1711,6 @@ enum ERmgBranchSeedPattern {
     RMG_BRANCH_SEED_PATTERN_COUNT = 4
 };
 
-// Per-object-type placement limit.
 struct TRmgObjectLimit {
     s32 m_objectType;
     s32 m_limit;

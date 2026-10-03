@@ -1542,8 +1542,8 @@ static inline void writeRmgMapPosition(
     writeValue<char>(outputFile, position.m_z);
 }
 
-// Writes count zero bytes (at most 32). count stays a function argument: as
-// a template argument alone, every instantiation would be merged into one.
+// Writes count zero bytes (at most 32). Kept a function argument; see
+// rmg-cleanup-review.md.
 static inline void writeRmgReservedBytes(TAbstractFile* outputFile, s32 count)
 {
     char reserved[32];
