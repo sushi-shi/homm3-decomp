@@ -22,6 +22,10 @@ impl PlacementMap<'_, '_, '_> {
     ///
     /// # Errors
     /// Reports a missing terrain frame during painting or repair.
+    #[expect(
+        clippy::missing_panics_doc,
+        reason = "clipped coordinates and parsed map dimensions fit the native index domain"
+    )]
     pub fn decorate_underground(&mut self, rng: &mut RetailRng) -> Result<(), TerrainError> {
         let side = self.terrain.coverage().map().raster().dimension();
         let plane = side * side;
@@ -77,6 +81,10 @@ impl PlacementMap<'_, '_, '_> {
     ///
     /// # Errors
     /// Reports coordinates outside admitted map dimensions.
+    #[expect(
+        clippy::missing_panics_doc,
+        reason = "parsed map dimensions and allocated tile indexes fit i32"
+    )]
     pub fn mark_coastal_tiles(&mut self) -> Result<(), PlacementError> {
         let side = self.view().side;
         let plane = side * side;

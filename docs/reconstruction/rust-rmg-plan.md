@@ -107,9 +107,9 @@ gzip output and generation/replay CLI. It compiles, but no full-map Rust run has
 been performed under the implementation-first policy. This is not a parity or
 playability claim.
 
-The remaining work is **verification, debugging and publication**: audit every
-hotfix branch; reconcile boundary/water-zone replay inputs with executable
-evidence; fix the recorded treasure geometry mismatch; run the 100,000-case
+The remaining work is **verification, debugging and publication**: verify the
+source-audited hotfix behavior at runtime; reconcile boundary/water-zone replay
+inputs with executable evidence; fix the recorded treasure geometry mismatch; run the 100,000-case
 campaign; independently parse maps; verify repeated/run-order behavior; profile
 cold loading, warmed generation and output allocations; finish the ASCII/shared
 definition audit and deterministic parallelism guidance; run required Rust
@@ -145,6 +145,16 @@ retail profiles, LF/CRLF reports, and rejection of unknown versions/trailing
 input. No full suite, end-to-end map run, native comparison or corpus campaign
 was run for this implementation batch. Both reviewers finished with no further
 actionable findings after the IO fixes.
+
+The subsequent [hotfix coverage audit](rust-rmg-hotfix-coverage.md) accounts for
+every explicit C++ hotfix conditional without finding missing Rust behavior.
+An allocation source pass confirmed retained generation/obstacle/group/output
+buffers and borrowed payload iteration; it does not replace the deferred
+allocation measurements. The lint cleanup removes an infallible helper’s
+`Result`, an unused receiver and duplicate wire dispatch, and documents
+intentional narrowing and native traversal order. RMG library and CLI Clippy
+compilation passes with warnings denied (`--lib --bins`); no tests or map runs
+were executed during this audit/cleanup pass.
 
 The catalog, lazy values and payload factories remain bound by `TreasuresReady`
 and `TreasureGeneration`; do not rebuild their catalogs or reset reservations

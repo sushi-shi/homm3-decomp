@@ -149,8 +149,7 @@ impl PlacementMap<'_, '_, '_> {
             let kind = prototype.kind().index();
             if kind != raw::TERRAIN_MOUNTAIN as usize
                 && kind != raw::TERRAIN_LAKE as usize
-                && !(kind == raw::MINE as usize
-                    && prototype.subtype() == i32::try_from(raw::GEMS).unwrap())
+                && !(kind == raw::MINE as usize && prototype.subtype() == raw::GEMS)
             {
                 continue;
             }
@@ -171,6 +170,10 @@ impl PlacementMap<'_, '_, '_> {
         }
         Ok(())
     }
+    #[expect(
+        clippy::too_many_lines,
+        reason = "ordered seeds, edge draws, endpoint handling and painting follow one native route search"
+    )]
     fn create_river(
         &mut self,
         source: WorldPosition,

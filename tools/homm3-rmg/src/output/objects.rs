@@ -8,6 +8,10 @@ use crate::{
     treasure::CreatureReward,
 };
 use std::io::Write;
+#[expect(
+    clippy::too_many_lines,
+    reason = "one exhaustive payload dispatch makes every wire layout visible without allocation or extra state"
+)]
 pub(super) fn write(
     map: &GeneratedMap<'_>,
     id: ObjectId,
@@ -23,13 +27,12 @@ pub(super) fn write(
     match payload {
         ObjectPayload::Base | ObjectPayload::KeyTent(_) => Ok(()),
         ObjectPayload::Artifact | ObjectPayload::QuestArtifact(_) => out.byte(0),
-        ObjectPayload::Ownable => out.bytes(&[255, 0, 0, 0]),
+        ObjectPayload::Ownable | ObjectPayload::Shrine => out.bytes(&[255, 0, 0, 0]),
         ObjectPayload::Resource => out.zero(9),
         ObjectPayload::Scholar => {
             out.byte(255)?;
             out.zero(7)
         }
-        ObjectPayload::Shrine => out.bytes(&[255, 0, 0, 0]),
         ObjectPayload::Scroll(spell) => {
             out.bytes(&[0, spell.index() as u8])?;
             out.zero(3)
@@ -90,7 +93,9 @@ pub(super) fn write(
             out.zero(16)
         }
         ObjectPayload::Seer(seer) => {
-            let artifact = seer.artifact().map_or(-1, |a| a.index() as i32);
+            let artifact = seer
+                .artifact()
+                .map_or(-1, |a| i32::try_from(a.index()).unwrap());
             if expansion(version) {
                 out.bytes(&[raw::QUEST_ARTIFACTS as u8, 1])?;
                 out.u16(artifact as u16)?;

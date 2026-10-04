@@ -348,6 +348,10 @@ impl GenerationWorkspace {
     ///
     /// # Errors
     /// Reports a typed stage fault with the effective request and exact RNG state.
+    #[expect(
+        clippy::too_many_lines,
+        reason = "one source-ordered orchestration sequence keeps stage boundaries and RNG ownership visible"
+    )]
     pub fn generate<'run>(
         &'run mut self,
         prepared: &'run PreparedGeneration<'_>,

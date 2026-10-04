@@ -5,12 +5,16 @@ use crate::{
     generation::GeneratedMap,
     hero::HeroId,
     raw,
-    request::{MapVersion, TownChoice, Water, PLAYER_COUNT},
+    request::{MapVersion, Town, TownChoice, Water, PLAYER_COUNT},
     rng::RetailRng,
     template::ZoneRole,
 };
 use std::io::{Cursor, Write};
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "keep format gates and header field order together for comparison with the native writer"
+)]
 pub(super) fn write(
     map: &GeneratedMap<'_>,
     out: &mut Writer<'_, impl Write>,
@@ -63,7 +67,7 @@ pub(super) fn write(
         }
         // Retail SHL masks the shift count to five bits: neutral (-1) sets
         // bit31, which is then discarded by the u8/u16 on-disk field.
-        alignments[p] |= 1 << zone.alignment().map_or(31, |t| t.index());
+        alignments[p] |= 1 << zone.alignment().map_or(31, Town::index);
     }
     let mut surplus = human
         .iter()
@@ -133,12 +137,12 @@ pub(super) fn write(
         human_teams = human_teams.max(1).min(human_count);
         computer_teams = computer_teams.max(1).min(computer_count);
         let mut teams = [0; PLAYER_COUNT];
-        assign_teams(human_teams, human_count, 0, &human, &mut teams, rng)?;
+        assign_teams(human_teams, human_count, 0, human, &mut teams, rng)?;
         assign_teams(
             computer_teams,
             computer_count,
             human_teams,
-            &computer,
+            computer,
             &mut teams,
             rng,
         )?;
@@ -152,7 +156,7 @@ pub(super) fn write(
     } as usize;
     out.bits(heroes, |id| {
         !map.treasures()
-            .hero_disabled(HeroId::parse(id as i32).unwrap())
+            .hero_disabled(HeroId::parse(i32::try_from(id).unwrap()).unwrap())
     })?;
     if expansion(version) {
         out.u32(0)?;
@@ -186,7 +190,7 @@ fn assign_teams(
     count: usize,
     players: usize,
     first: usize,
-    mask: &[bool; PLAYER_COUNT],
+    mask: [bool; PLAYER_COUNT],
     teams: &mut [u8; PLAYER_COUNT],
     rng: &mut RetailRng,
 ) -> Result<(), OutputFault> {

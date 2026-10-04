@@ -12,6 +12,10 @@ use crate::{
 };
 
 impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+    #[expect(
+        clippy::too_many_lines,
+        reason = "ordered footprint, guard and entrance rejection rules share one candidate context"
+    )]
     fn group_fits(
         &self,
         group: &TreasureGroupWorkspace,

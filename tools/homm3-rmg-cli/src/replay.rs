@@ -211,7 +211,7 @@ mod tests {
             let replay = Replay {
                 seed: u32::MAX,
                 behavior,
-                request: request.clone(),
+                request,
             };
             let mut bytes = Vec::new();
             replay.write(&mut bytes).unwrap();

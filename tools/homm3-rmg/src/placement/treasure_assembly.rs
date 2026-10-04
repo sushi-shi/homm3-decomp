@@ -21,6 +21,10 @@ pub(super) enum TreasurePurpose {
     Replacement(WorldPosition),
 }
 impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+    #[expect(
+        clippy::too_many_lines,
+        reason = "selection filters, lazy valuations and draws must stay in native order"
+    )]
     pub(super) fn select_treasure(
         &mut self,
         zone: ZoneId,
@@ -236,6 +240,10 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
     ///
     /// # Errors
     /// Reports an undisposed previous group or a native selection/geometry fault.
+    #[expect(
+        clippy::missing_panics_doc,
+        reason = "the RNG draw is 15-bit and all later identities are admitted before use"
+    )]
     pub fn assemble_group(
         &mut self,
         group: &mut TreasureGroupWorkspace,

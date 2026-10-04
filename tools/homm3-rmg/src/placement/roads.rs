@@ -209,6 +209,10 @@ impl PlacementMap<'_, '_, '_> {
     /// # Errors
     /// Reports the retail empty-target underflow after its road-type draw,
     /// missing route predecessors, foreign objects/catalogs or placement faults.
+    #[expect(
+        clippy::missing_panics_doc,
+        reason = "source-derived road domain and selected catalog entries are bounded before lookup"
+    )]
     pub fn create_roads(
         &mut self,
         catalog: &PrototypeCatalog<'_>,

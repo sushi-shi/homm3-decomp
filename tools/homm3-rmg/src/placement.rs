@@ -296,6 +296,10 @@ impl From<TryReserveError> for PlacementError {
 
 /// Read-only placement flags and membership metadata for one map cell.
 #[derive(Clone, Copy, Debug)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "independent tile facts may coexist; exclusive reservation and line states already use enums"
+)]
 pub struct CellState {
     objects: Chain,
     retail_membership_storage: bool,

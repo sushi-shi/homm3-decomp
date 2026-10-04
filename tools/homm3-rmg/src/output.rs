@@ -1,8 +1,14 @@
-//! Streaming RoE, AB and SoD H3M output, continuing the generation RNG.
+//! Streaming `RoE`, AB and `SoD` H3M output, continuing the generation RNG.
 //!
 //! Compression belongs to the caller. A reusable slot vector is the only
 //! map-sized serialization scratch; tiles and objects are written by borrowing
 //! the generated map. Repeated writes start from the same final generation RNG.
+#![expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "wire fields intentionally retain native low-byte/word narrowing; domain indexes are bounded at parsing"
+)]
+
 use crate::{
     generation::GeneratedMap,
     object::ObjectKind,
@@ -192,13 +198,13 @@ impl OutputWorkspace {
             *slot = Some(count);
             count = count
                 .checked_add(1)
-                .filter(|&n| n <= i32::MAX as u32)
+                .filter(|&n| i32::try_from(n).is_ok())
                 .ok_or(OutputFault::Count)?;
         }
         out.u32(count)?;
         // Reserved slots stay separate even if these entries also own references.
         for family in [raw::RANDOM_MONSTER, raw::TERRAIN_HOLE] {
-            let kind = ObjectKind::parse(family as i32).unwrap();
+            let kind = ObjectKind::parse(i32::try_from(family).unwrap()).unwrap();
             let entry = catalog
                 .family(kind)
                 .first()
@@ -319,7 +325,7 @@ fn prototype(
     }
     for recommended in [false, true] {
         out.bits(raw::RMG_TERRAIN_COUNT as usize, |index| {
-            let t = crate::domain::Terrain::parse(index as i32).unwrap();
+            let t = crate::domain::Terrain::parse(i32::try_from(index).unwrap()).unwrap();
             if recommended {
                 p.recommends(t)
             } else {

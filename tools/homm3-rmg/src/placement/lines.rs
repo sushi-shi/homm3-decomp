@@ -101,11 +101,7 @@ impl Layer {
 }
 
 impl PlacementMap<'_, '_, '_> {
-    fn line_neighbour(
-        &self,
-        at: WorldPosition,
-        direction: usize,
-    ) -> Result<Option<WorldPosition>, PlacementError> {
+    fn line_neighbour(&self, at: WorldPosition, direction: usize) -> Option<WorldPosition> {
         // Tile classifiers start at N; movement directions start at E.
         let movement = (direction + raw::RMG_DIRECTION_NORTH as usize) % raw::DIRECTIONS.len();
         let (x, y) = raw::DIRECTIONS[movement];
@@ -117,12 +113,12 @@ impl PlacementMap<'_, '_, '_> {
             || (at.point.y == 0 && y < 0)
             || (at.point.y == last && y > 0)
         {
-            return Ok(None);
+            return None;
         }
-        Ok(Some(WorldPosition {
+        Some(WorldPosition {
             point: Point::new(at.point.x.wrapping_add(x), at.point.y.wrapping_add(y)),
             ..at
-        }))
+        })
     }
     fn set_line_frame(
         &mut self,
@@ -169,7 +165,7 @@ impl PlacementMap<'_, '_, '_> {
         };
         let mut neighbours = [false; raw::TILE_DIR_COUNT as usize];
         for (direction, matches) in neighbours.iter_mut().enumerate() {
-            if let Some(near) = self.line_neighbour(at, direction)? {
+            if let Some(near) = self.line_neighbour(at, direction) {
                 *matches = layer.kind(&self.cells[self.view().native_index(near)?]) == Some(kind);
             }
         }
@@ -284,7 +280,7 @@ impl PlacementMap<'_, '_, '_> {
         }
         self.refresh_line(layer, at, rng)?;
         for direction in 0..raw::TILE_DIR_COUNT as usize {
-            if let Some(near) = self.line_neighbour(at, direction)? {
+            if let Some(near) = self.line_neighbour(at, direction) {
                 if layer.kind(&self.cells[self.view().native_index(near)?]) == Some(layer.value()) {
                     self.refresh_line(layer, near, rng)?;
                 }

@@ -92,6 +92,12 @@ impl PlacementMap<'_, '_, '_> {
     /// # Errors
     /// Reports foreign input identities, unwritten overlap priorities, arithmetic
     /// overflow, allocation failure, or invalid prototype geometry.
+    #[expect(
+        clippy::missing_panics_doc,
+        clippy::too_many_lines,
+        clippy::needless_range_loop,
+        reason = "admitted footprint bounds make indexes safe; preserve native row-first traversal over column-major marks and first-touch scoring order"
+    )]
     pub fn score_obstacle(
         &self,
         scratch: &mut ObstacleWorkspace,
@@ -112,7 +118,7 @@ impl PlacementMap<'_, '_, '_> {
             .ok_or(PlacementError::UnknownPrototype(prototype))?;
         let rule_id = entry.rule().ok_or(PlacementError::RuleContext)?;
         let rule = rules.get(rule_id).ok_or(PlacementError::RuleContext)?;
-        let size = entry.footprint()?;
+        let footprint = entry.footprint()?;
         let side = i32::try_from(self.view().side).map_err(|_| PlacementError::Arithmetic)?;
         let mut terrain_seen = [false; raw::RMG_TERRAIN_COUNT as usize];
         // Footprint plus a one-cell border; marks[c][r] is P + (1-c, 1-r).
@@ -124,7 +130,7 @@ impl PlacementMap<'_, '_, '_> {
         //      o o o o o   r=0
         let mut marks =
             [[0_u32; raw::OBJECT_MASK_HEIGHT as usize + 2]; raw::OBJECT_MASK_WIDTH as usize + 2];
-        for row in 0..size.height() {
+        for row in 0..footprint.height() {
             let y = position
                 .point
                 .y
@@ -133,7 +139,7 @@ impl PlacementMap<'_, '_, '_> {
             if !(0..side).contains(&y) {
                 continue;
             }
-            for column in 0..size.width() {
+            for column in 0..footprint.width() {
                 let x = position
                     .point
                     .x
@@ -196,8 +202,8 @@ impl PlacementMap<'_, '_, '_> {
         if scratch.priorities[prototype.index()].is_none() {
             scratch.priorities[prototype.index()] = Some(OverlapPriorities::build(entry)?);
         }
-        for row in 0..usize::from(size.height()) + 2 {
-            for column in 0..usize::from(size.width()) + 2 {
+        for row in 0..usize::from(footprint.height()) + 2 {
+            for column in 0..usize::from(footprint.width()) + 2 {
                 let mark = marks[column][row];
                 if mark == 0 {
                     continue;
@@ -315,6 +321,10 @@ impl PlacementMap<'_, '_, '_> {
     ///
     /// # Errors
     /// Reports placement-rule, object, geometry, allocation or arithmetic faults.
+    #[expect(
+        clippy::missing_panics_doc,
+        reason = "parsed dimensions and tile indexes fit native signed coordinates"
+    )]
     pub fn decorate_obstacles(
         &mut self,
         scratch: &mut ObstacleWorkspace,
@@ -397,13 +407,13 @@ impl PlacementMap<'_, '_, '_> {
                         continue;
                     }
                     let prototype = catalog.at(kind, ordinal).unwrap();
-                    let size = entry.footprint()?;
+                    let footprint = entry.footprint()?;
                     // Put S under each blocked footprint cell. For a fully
                     // blocked 3x2 object, candidate anchors are S and each o:
                     //   S o o
                     //   o o o
-                    for row in 0..size.height() {
-                        for column in 0..size.width() {
+                    for row in 0..footprint.height() {
+                        for column in 0..footprint.width() {
                             if entry
                                 .prototype()
                                 .is_passable(MaskCell::parse(column, row).unwrap())
@@ -446,13 +456,16 @@ impl PlacementMap<'_, '_, '_> {
                 })
                 .unwrap();
             let at = selected.position;
-            let size = catalog.get(selected.prototype).unwrap().footprint()?;
+            let footprint = catalog.get(selected.prototype).unwrap().footprint()?;
             let object = objects.create(catalog, selected.prototype)?;
             // fillObstaclesFrom dispatches virtual addObject to the generator.
             self.register_object(objects, catalog, object, at)?;
             let side = i32::try_from(self.view().side).unwrap();
-            for y in (at.point.y - i32::from(size.height())).max(0)..(at.point.y + 2).min(side) {
-                for x in (at.point.x - i32::from(size.width())).max(0)..(at.point.x + 2).min(side) {
+            for y in (at.point.y - i32::from(footprint.height())).max(0)..(at.point.y + 2).min(side)
+            {
+                for x in
+                    (at.point.x - i32::from(footprint.width())).max(0)..(at.point.x + 2).min(side)
+                {
                     let nearby = WorldPosition {
                         point: Point::new(x, y),
                         level: at.level,

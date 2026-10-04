@@ -83,7 +83,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                     } else {
                         // Native reset forgets zero-valued roots without releasing
                         // their reservations or prototype references, in BOTH modes.
-                        self.retain_abandoned_group(group, objects)?;
+                        Self::retain_abandoned_group(group, objects)?;
                     }
                 }
                 if placed {
@@ -97,7 +97,6 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         Ok(())
     }
     fn retain_abandoned_group(
-        &self,
         group: &mut TreasureGroupWorkspace,
         objects: &mut ObjectArena,
     ) -> Result<(), TreasureGenerationError> {

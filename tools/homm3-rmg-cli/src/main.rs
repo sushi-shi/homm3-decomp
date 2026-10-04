@@ -232,7 +232,7 @@ fn run(files: &Files, input: &Replay) -> Result<()> {
     result
 }
 fn generate(files: &Files, input: &Replay, report: &mut impl Write) -> Result<()> {
-    let request = Request::parse(input.request.clone(), input.behavior)?;
+    let request = Request::parse(input.request, input.behavior)?;
     writeln!(report, "effective request {:?}", request.repaired_record())?;
     let mut installation = Installation::open(&files.data)?;
     // Only names/templates borrow resource bytes. Trait parsers own compact
