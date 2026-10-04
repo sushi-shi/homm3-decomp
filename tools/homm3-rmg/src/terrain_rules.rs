@@ -605,6 +605,14 @@ fn select_range(
 /// reflections before the next family, deciding which overlapping shape wins.
 #[must_use]
 pub fn classify(neighbours: &[TerrainEdge; raw::TILE_DIR_COUNT as usize]) -> TerrainTransition {
+    // With no transition edges, the shape is already known. The native painter
+    // likewise skips its pattern search for uniform terrain interiors.
+    if neighbours.iter().all(|edge| *edge == TerrainEdge::None) {
+        return TerrainTransition {
+            shape: TerrainShape::Fill,
+            reflection: Reflection::default(),
+        };
+    }
     for family in 0..10 {
         for [flip_x, flip_y] in raw::LINE_REFLECTIONS {
             let mut reflection = Reflection { flip_x, flip_y };
