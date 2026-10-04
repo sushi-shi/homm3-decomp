@@ -201,40 +201,12 @@ void TProgressSink::setTotal(s32 totalSteps)
 
 namespace {
 
-// Indices of g_rmgDirections, clockwise from east; y grows southward.
-// North is up; . is the centre cell.
-//   5 6 7
-//   4 . 0
-//   3 2 1
-enum ERmgDirection {
-    RMG_DIRECTION_EAST = 0,
-    RMG_DIRECTION_SOUTH_EAST = 1,
-    RMG_DIRECTION_SOUTH = 2,
-    RMG_DIRECTION_SOUTH_WEST = 3,
-    RMG_DIRECTION_WEST = 4,
-    RMG_DIRECTION_NORTH_WEST = 5,
-    RMG_DIRECTION_NORTH = 6,
-    RMG_DIRECTION_NORTH_EAST = 7,
-    // From here on (NW, N, NE) the directions step north.
-    RMG_FIRST_NORTHERN_DIRECTION = RMG_DIRECTION_NORTH_WEST,
-    // Cardinal c is direction c * 2; stepping by this visits E, S, W, N.
-    RMG_CARDINAL_DIRECTION_STEP = 2,
-    RMG_CARDINAL_DIRECTION_COUNT = RMG_DIRECTION_COUNT / RMG_CARDINAL_DIRECTION_STEP
-};
-
 // Eight neighbour directions, clockwise from east; even entries are the
 // four cardinal directions.
 DATA(0x0069cdc0)
-TPoint g_rmgDirections[RMG_DIRECTION_COUNT] = {
-    TPoint(1, 0),
-    TPoint(1, 1),
-    TPoint(0, 1),
-    TPoint(-1, 1),
-    TPoint(-1, 0),
-    TPoint(-1, -1),
-    TPoint(0, -1),
-    TPoint(1, -1)
-};
+TPoint g_rmgDirections[RMG_DIRECTION_COUNT] =
+#include "rmg_data/directions.inc"
+;
 
 // Rotates by 45-degree steps, clockwise when positive; wraps around the
 // eight directions.

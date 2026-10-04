@@ -531,11 +531,6 @@ void readRmgTemplateZones(
 
 s32 getRmgGuardValue(s32 value, s32 strength);
 
-// The eight neighbour directions, clockwise.
-enum ERmgDirectionLimits {
-    RMG_DIRECTION_COUNT = 8
-};
-
 TPoint operator+(TPoint point, TRmgVector offset);
 TRmgVector operator-(TPoint left, TPoint right);
 

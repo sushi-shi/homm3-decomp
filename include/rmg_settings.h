@@ -4,6 +4,32 @@
 
 #include "terrain_type.h"
 
+// The eight neighbour directions, clockwise.
+enum ERmgDirectionLimits {
+    RMG_DIRECTION_COUNT = 8
+};
+
+// Indices of g_rmgDirections, clockwise from east; y grows southward.
+// North is up; . is the centre cell.
+//   5 6 7
+//   4 . 0
+//   3 2 1
+enum ERmgDirection {
+    RMG_DIRECTION_EAST = 0,
+    RMG_DIRECTION_SOUTH_EAST = 1,
+    RMG_DIRECTION_SOUTH = 2,
+    RMG_DIRECTION_SOUTH_WEST = 3,
+    RMG_DIRECTION_WEST = 4,
+    RMG_DIRECTION_NORTH_WEST = 5,
+    RMG_DIRECTION_NORTH = 6,
+    RMG_DIRECTION_NORTH_EAST = 7,
+    // From here on (NW, N, NE) the directions step north.
+    RMG_FIRST_NORTHERN_DIRECTION = RMG_DIRECTION_NORTH_WEST,
+    // Cardinal c is direction c * 2; stepping by this visits E, S, W, N.
+    RMG_CARDINAL_DIRECTION_STEP = 2,
+    RMG_CARDINAL_DIRECTION_COUNT = RMG_DIRECTION_COUNT / RMG_CARDINAL_DIRECTION_STEP
+};
+
 // Terrain types, dirt through rock.
 enum ERmgTerrainLimits {
     RMG_TERRAIN_COUNT = eTerrainRock + 1

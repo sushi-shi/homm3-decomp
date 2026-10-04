@@ -17,6 +17,15 @@
 #include "hero_traits.h"
 #include "artifact_data.h"
 
+// Build-host point adapter: the shared initializer exports scalar offsets only.
+struct TPoint {
+    int m_x, m_y;
+    TPoint(int x, int y) : m_x(x), m_y(y) {}
+};
+static const TPoint directions[] =
+#include "rmg_data/directions.inc"
+;
+
 static const THeroTraits heroTraits[] =
 #include "rmg_data/hero_traits.inc"
 ;
@@ -224,6 +233,9 @@ void emitArray(const char* name, const T (&array)[N])
 
 int main()
 {
+    std::printf("pub const DIRECTIONS: [(i32, i32); %lu] = [", sizeof(directions)/sizeof(directions[0]));
+    for (const auto& point : directions) std::printf("(%d,%d),", point.m_x, point.m_y);
+    std::printf("];\n");
     // The availability bytes are the little-endian retail attributes word.
     // Decode the word explicitly so export does not depend on host endianness.
     std::printf("pub const HERO_AVAILABILITY: [(bool, bool, bool); %lu] = [", sizeof(heroTraits)/sizeof(heroTraits[0]));

@@ -215,6 +215,18 @@ zero-divisor faults and hotfix's absent-selection result at the correct RNG
 position. The generation owner still needs to assign the object ID and place
 the returned stack.
 
+Prototype outlines and overlap priorities now run without heap allocation.
+One reusable outline workspace holds the bounded cardinal walk; a fixed mask
+stores priorities only for cells C++ initializes. Empty bottom rows remain an
+empty outline, and invalid dimensions or a nonterminating walk are typed faults.
+The direction enum and initializer are shared with C++, including the original
+ASCII direction diagram; the outline diagram stays beside the Rust traversal.
+All 7,067 dimension-valid prepared prototypes across three formats and both
+modes match native outline order and drawn-cell priorities. The bounded walk
+also passes all 65,536 four-by-four masks, including disconnected footprints.
+Placement must still reject an empty outline before a connected-outline check;
+no placement grid or object ownership is implemented by this helper milestone.
+
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the
 pinned executable for seed 100 / 108x108 / RoE / islands and seed 17 / 144x144 /
