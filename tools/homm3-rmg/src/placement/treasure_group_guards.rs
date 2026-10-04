@@ -1,7 +1,7 @@
 //! Entrance reservations and the native guard fan on the local group map.
 use super::{
     mutation::apply_insertion,
-    registration::trigger_offset,
+    registration::{entrance_position, trigger_offset},
     treasure_groups::{local, GroupObject},
     Direction, ObjectArena, ObjectId, PathReservation, PlacementError, TreasureGroupWorkspace,
 };
@@ -19,17 +19,13 @@ impl TreasureGroupWorkspace {
         let mut last_trigger = None;
         for index in 0..self.objects.len() {
             let object = self.objects[index].object();
-            let geometry = objects
-                .get(object)
-                .ok_or(PlacementError::UnknownObject(object))?;
+            let object = objects.positioned(object)?;
             let entry = catalog
-                .get(geometry.prototype())
-                .ok_or(PlacementError::UnknownPrototype(geometry.prototype()))?;
+                .get(object.prototype())
+                .ok_or(PlacementError::UnknownPrototype(object.prototype()))?;
             last_trigger = Some(trigger_offset(entry.prototype()));
-            let entrance = objects
-                .entrance(catalog, object)?
-                .ok_or(PlacementError::PreviouslyPlaced(object))?;
-            let count = if geometry.kind().traits().enterable_from_north() {
+            let entrance = entrance_position(entry.prototype(), object.position())?;
+            let count = if object.kind().traits().enterable_from_north() {
                 raw::RMG_DIRECTION_COUNT
             } else {
                 raw::RMG_FIRST_NORTHERN_DIRECTION

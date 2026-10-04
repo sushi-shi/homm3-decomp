@@ -340,9 +340,6 @@ mod tests {
         }
         text.into_bytes()
     }
-    fn kind(value: u32) -> ObjectKind {
-        ObjectKind::parse(i32::try_from(value).unwrap()).unwrap()
-    }
 
     #[test]
     fn handles_cannot_select_rules_or_score_columns_from_another_table() {
@@ -372,8 +369,8 @@ mod tests {
         let rules = PlacementRules::parse(&bytes, Behavior::Hotfix).unwrap();
         assert_eq!(rules.source_rows(), 3);
         assert_eq!(rules.rules().len(), 2);
-        let town = rules.find(kind(raw::TOWN), 0, Terrain::Dirt).unwrap();
-        let monster = rules.find(kind(raw::MONSTER), 0, Terrain::Dirt).unwrap();
+        let town = rules.find(ObjectKind::TOWN, 0, Terrain::Dirt).unwrap();
+        let monster = rules.find(ObjectKind::MONSTER, 0, Terrain::Dirt).unwrap();
         assert_eq!(rules.get(monster).unwrap().source_row(), 2);
         assert_eq!(
             rules.neighbour_score(town, monster, NeighbourScore::Adjacent),
@@ -404,7 +401,7 @@ mod tests {
         ]);
         for behavior in [Behavior::Hotfix, Behavior::Retail(RetailProfile::default())] {
             let rules = PlacementRules::parse(&bytes, behavior).unwrap();
-            let selected = rules.find(kind(raw::TOWN), 0, Terrain::Dirt).unwrap();
+            let selected = rules.find(ObjectKind::TOWN, 0, Terrain::Dirt).unwrap();
             assert_eq!(selected.index(), 1);
             assert_eq!(
                 rules.neighbour_score(selected, selected, NeighbourScore::Adjacent),
@@ -418,7 +415,7 @@ mod tests {
         let bytes = sheet(&[vec!["short row".into()], row(raw::TOWN, 1, 2)]);
         let rules = PlacementRules::parse(&bytes, Behavior::Hotfix).unwrap();
         assert_eq!(rules.rules().len(), 1);
-        let town = rules.find(kind(raw::TOWN), 0, Terrain::Dirt).unwrap();
+        let town = rules.find(ObjectKind::TOWN, 0, Terrain::Dirt).unwrap();
         assert_eq!(
             rules.neighbour_score(town, town, NeighbourScore::Adjacent),
             Some(101)

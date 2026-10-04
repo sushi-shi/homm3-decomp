@@ -53,10 +53,6 @@ impl PlacementMap<'_, '_, '_> {
     /// # Errors
     /// Reports missing retail replay input, context/allocation/access faults or
     /// an invalid availability index after preserving earlier native mutations.
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "canonical object-kind constants are in the parsed domain"
-    )]
     pub fn place_border_guard(
         &mut self,
         mut position: WorldPosition,
@@ -70,8 +66,8 @@ impl PlacementMap<'_, '_, '_> {
         let KeyTentCursor::Value(color) = self.next_key_tent(catalog)? else {
             return Err(PlacementError::KeyTentReplayRequired);
         };
-        let tent_kind = ObjectKind::parse(i32::try_from(raw::BORDER_TENT).unwrap()).unwrap();
-        let guard_kind = ObjectKind::parse(i32::try_from(raw::BORDER_GUARD).unwrap()).unwrap();
+        let tent_kind = ObjectKind::BORDER_TENT;
+        let guard_kind = ObjectKind::BORDER_GUARD;
         let Some(tent_prototype) = catalog.first_subtype(tent_kind, color) else {
             return Ok(BorderGuardPlacement::NotPlaced);
         };

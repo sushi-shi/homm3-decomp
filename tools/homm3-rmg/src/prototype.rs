@@ -888,10 +888,6 @@ mod tests {
     fn rules() -> PlacementRules {
         PlacementRules::parse(b"header\r\nheader\r\nheader\r\n", Behavior::Hotfix).unwrap()
     }
-    fn monster() -> ObjectKind {
-        ObjectKind::parse(i32::try_from(raw::MONSTER).unwrap()).unwrap()
-    }
-
     fn creature_traits(edits: &[(usize, i32, i32, i32)]) -> crate::traits::CreatureCatalog {
         use std::fmt::Write;
         let mut text = String::new();
@@ -942,7 +938,7 @@ mod tests {
         let other = source
             .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
             .unwrap();
-        let prototype = catalog.at(monster(), 0).unwrap();
+        let prototype = catalog.at(ObjectKind::MONSTER, 0).unwrap();
         let mut first = ObjectArena::default();
         let mut second = ObjectArena::default();
         assert!(matches!(
@@ -995,7 +991,7 @@ mod tests {
         let second = source
             .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
             .unwrap();
-        let id = first.at(monster(), 0).unwrap();
+        let id = first.at(ObjectKind::MONSTER, 0).unwrap();
         assert!(second.get(id).is_none());
         let moved = first;
         assert!(moved.get(id).is_some());
@@ -1187,9 +1183,7 @@ mod tests {
         }
         assert_eq!(
             admit(&base(), Levels::Underground, Behavior::Hotfix),
-            Err(RequiredPrototypeError::Family(
-                ObjectKind::parse(i32::try_from(raw::UNDERGROUND_GATE).unwrap()).unwrap()
-            ))
+            Err(RequiredPrototypeError::Family(ObjectKind::UNDERGROUND_GATE))
         );
         let mut rows = base();
         rows.push(row("gate.def", raw::UNDERGROUND_GATE, 0));
@@ -1295,7 +1289,7 @@ mod tests {
             .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
             .unwrap();
         let rows: Vec<_> = catalog
-            .family(monster())
+            .family(ObjectKind::MONSTER)
             .iter()
             .map(|entry| entry.prototype().source_row())
             .collect();
@@ -1395,7 +1389,7 @@ mod tests {
             )
             .unwrap();
         assert_eq!(
-            retail.family(monster())[0].hotfix_admission(),
+            retail.family(ObjectKind::MONSTER)[0].hotfix_admission(),
             Err(PrototypeFault::CreatureSubtype(-1))
         );
     }
@@ -1441,16 +1435,16 @@ mod tests {
         let mut rng = RetailRng::new(1);
         let initial = rng.checkpoint();
         assert!(catalog
-            .choose(monster(), 3, Terrain::Dirt, &mut rng)
+            .choose(ObjectKind::MONSTER, 3, Terrain::Dirt, &mut rng)
             .is_none());
         assert_eq!(rng.checkpoint(), initial);
         let selected = catalog
-            .choose(monster(), 2, Terrain::Dirt, &mut rng)
+            .choose(ObjectKind::MONSTER, 2, Terrain::Dirt, &mut rng)
             .unwrap();
-        assert_eq!(Some(selected), catalog.at(monster(), 0));
+        assert_eq!(Some(selected), catalog.at(ObjectKind::MONSTER, 0));
         assert_eq!(catalog.get(selected).unwrap().prototype().subtype(), 2);
         assert_eq!(rng.checkpoint().draws, initial.draws + 1);
-        assert!(catalog.at(monster(), 1).is_none());
+        assert!(catalog.at(ObjectKind::MONSTER, 1).is_none());
     }
 
     #[test]

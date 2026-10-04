@@ -135,7 +135,7 @@ fn write_creation_probes(
                 let data = guard.map_or([-1; 4], |object| {
                     let guard = monster(objects, object);
                     assert!(objects.get(object).unwrap().position().is_none());
-                    assert!(objects.entrance(catalog, object).unwrap().is_none());
+                    assert!(objects.resolve(object).unwrap().positioned().is_none());
                     [
                         i64::from(guard.id().value()),
                         i64::from(guard.count()),

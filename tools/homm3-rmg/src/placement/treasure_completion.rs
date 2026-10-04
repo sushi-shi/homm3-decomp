@@ -44,7 +44,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                         .catalog
                         .prototypes()
                         .first_subtype(
-                            kind(raw::ARTIFACT),
+                            ObjectKind::ARTIFACT,
                             i32::try_from(artifact.index()).unwrap(),
                         )
                         .ok_or(TreasureGenerationError::MissingArtifact(artifact))?;
@@ -57,7 +57,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                         if cell.entrance.is_some()
                             && map.memberships.first(cell.objects) == Some(object)
                         {
-                            cell.entrance = Some(kind(raw::ARTIFACT));
+                            cell.entrance = Some(ObjectKind::ARTIFACT);
                         }
                     }
                     let origin = self.object_zone(object, objects)?;
@@ -78,7 +78,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                             self.ready
                                 .catalog
                                 .prototypes()
-                                .family(kind(raw::SEER))
+                                .family(ObjectKind::SEER)
                                 .len(),
                         )
                         .map_err(|_| PlacementError::Arithmetic)?;
@@ -170,7 +170,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             .ok_or(PlacementError::UnknownPrototype(geometry.prototype()))?
             .prototype()
             .subtype();
-        let Some(prototype) = catalog.first_subtype(kind(raw::BORDER_GUARD), color) else {
+        let Some(prototype) = catalog.first_subtype(ObjectKind::BORDER_GUARD, color) else {
             return Ok(false);
         };
         let origin = self.object_zone(object, objects)?;
@@ -214,7 +214,4 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             Ok(false)
         })
     }
-}
-fn kind(value: u32) -> ObjectKind {
-    ObjectKind::parse(i32::try_from(value).unwrap()).unwrap()
 }

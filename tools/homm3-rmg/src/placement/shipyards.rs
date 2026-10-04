@@ -219,7 +219,7 @@ impl PlacementMap<'_, '_, '_> {
         if source.position().level != destination.position().level {
             return Ok(false);
         }
-        let family = ObjectKind::parse(i32::try_from(raw::SHIPYARD).unwrap()).unwrap();
+        let family = ObjectKind::SHIPYARD;
         let prototype = draw_connection_prototype(catalog, family, rng)?;
         let entry = catalog.get(prototype).unwrap();
         self.connections.candidates.clear();

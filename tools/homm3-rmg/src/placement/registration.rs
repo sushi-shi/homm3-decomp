@@ -113,7 +113,7 @@ impl Registration {
             return Err(PlacementError::CatalogContext);
         }
         if self.catalog_owner.is_none() {
-            let family = ObjectKind::parse(i32::try_from(raw::BORDER_TENT).unwrap()).unwrap();
+            let family = ObjectKind::BORDER_TENT;
             let count = catalog.family(family).len();
             self.disabled_key_tents.try_reserve(count)?;
             self.disabled_key_tents.resize(count, false);

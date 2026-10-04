@@ -57,15 +57,15 @@ enum PortalPrototype {
 }
 impl PortalPrototype {
     fn select(catalog: &PrototypeCatalog<'_>, index: usize) -> Result<Self, ConnectionError> {
-        let two_way = kind(raw::LITH_TWOWAY);
+        let two_way = ObjectKind::LITH_TWOWAY;
         let count = catalog.family(two_way).len();
         if index < count {
             Ok(Self::TwoWay(indexed(catalog, two_way, index)?))
         } else {
             let index = index - count;
             // Both indexed reads precede guard scaling and object allocation.
-            let entrance = indexed(catalog, kind(raw::LITH_ONEWAY_ENTRANCE), index)?;
-            let exit = indexed(catalog, kind(raw::LITH_ONEWAY_EXIT), index)?;
+            let entrance = indexed(catalog, ObjectKind::LITH_ONEWAY_ENTRANCE, index)?;
+            let exit = indexed(catalog, ObjectKind::LITH_ONEWAY_EXIT, index)?;
             Ok(Self::OneWay { entrance, exit })
         }
     }
@@ -168,9 +168,9 @@ impl<'state, 'zones, 'tiles> DirectConnections<'state, 'zones, 'tiles> {
                 self.connecting
                     .complete_bidirectional(id, connection, reverse)?;
                 let count = catalog
-                    .family(kind(raw::LITH_TWOWAY))
+                    .family(ObjectKind::LITH_TWOWAY)
                     .len()
-                    .checked_add(catalog.family(kind(raw::LITH_ONEWAY_ENTRANCE)).len())
+                    .checked_add(catalog.family(ObjectKind::LITH_ONEWAY_ENTRANCE).len())
                     .ok_or(PlacementError::Arithmetic)?;
                 portal_index = portal_index
                     .checked_add(1)
@@ -201,7 +201,7 @@ impl PlacementMap<'_, '_, '_> {
         for index in 0..self.active_objects().len() {
             let id = self.active_objects()[index];
             let object = objects.positioned(id)?;
-            if object.kind() != kind(raw::SHIPYARD) {
+            if object.kind() != ObjectKind::SHIPYARD {
                 continue;
             }
             let position = object.position();
@@ -279,10 +279,7 @@ impl PlacementMap<'_, '_, '_> {
             return Ok(None);
         }
         self.connections.portals.append(direction, object)?;
-        let position = objects
-            .get(object)
-            .and_then(|object| object.position())
-            .expect("successful placement retains anchor");
+        let position = objects.positioned(object)?.position();
         // Native portal entrances use the anchor, not the prototype trigger.
         self.connections
             .crossing
@@ -365,10 +362,6 @@ fn indexed(
         .at(family, index)
         .ok_or(ConnectionError::MissingPortalPrototype { family, index })
 }
-fn kind(value: u32) -> ObjectKind {
-    ObjectKind::parse(i32::try_from(value).expect("source family fits i32"))
-        .expect("source family is admitted")
-}
 
 // One connection shares guard suppression across its two protected endpoints.
 // Borrowed immutable catalogs travel with that policy; no extra allocation.
@@ -448,10 +441,10 @@ mod tests {
             Ok(PortalPrototype::TwoWay(_))
         ));
         assert!(
-            matches!(PortalPrototype::select(&catalog, 1), Err(ConnectionError::MissingPortalPrototype { family, index: 0 }) if family == kind(raw::LITH_ONEWAY_EXIT))
+            matches!(PortalPrototype::select(&catalog, 1), Err(ConnectionError::MissingPortalPrototype { family, index: 0 }) if family == ObjectKind::LITH_ONEWAY_EXIT)
         );
         assert!(
-            matches!(PortalPrototype::select(&catalog, 2), Err(ConnectionError::MissingPortalPrototype { family, index: 1 }) if family == kind(raw::LITH_ONEWAY_ENTRANCE))
+            matches!(PortalPrototype::select(&catalog, 2), Err(ConnectionError::MissingPortalPrototype { family, index: 1 }) if family == ObjectKind::LITH_ONEWAY_ENTRANCE)
         );
     }
 }

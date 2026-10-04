@@ -10,6 +10,50 @@ const _: () = assert!(raw::ADVENTURE_OBJECT_TRAIT_COUNT <= u16::MAX as u32);
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ObjectKind(u16);
 impl ObjectKind {
+    /// Artifact object kind.
+    pub const ARTIFACT: Self = Self::from_source(raw::ARTIFACT);
+    /// Border guard object kind.
+    pub const BORDER_GUARD: Self = Self::from_source(raw::BORDER_GUARD);
+    /// Border tent object kind.
+    pub const BORDER_TENT: Self = Self::from_source(raw::BORDER_TENT);
+    /// Cursed ground object kind.
+    pub const CURSED_GROUND: Self = Self::from_source(raw::CURSED_GROUND);
+    /// One-way monolith entrance.
+    pub const LITH_ONEWAY_ENTRANCE: Self = Self::from_source(raw::LITH_ONEWAY_ENTRANCE);
+    /// One-way monolith exit.
+    pub const LITH_ONEWAY_EXIT: Self = Self::from_source(raw::LITH_ONEWAY_EXIT);
+    /// Two-way monolith.
+    pub const LITH_TWOWAY: Self = Self::from_source(raw::LITH_TWOWAY);
+    /// Mine object kind.
+    pub const MINE: Self = Self::from_source(raw::MINE);
+    /// Monster object kind.
+    pub const MONSTER: Self = Self::from_source(raw::MONSTER);
+    /// Random artifact object kind.
+    pub const RANDOM_ARTIFACT: Self = Self::from_source(raw::RANDOM_ARTIFACT);
+    /// Random monster object kind.
+    pub const RANDOM_MONSTER: Self = Self::from_source(raw::RANDOM_MONSTER);
+    /// Resource object kind.
+    pub const RESOURCE: Self = Self::from_source(raw::RESOURCE);
+    /// Seer object kind.
+    pub const SEER: Self = Self::from_source(raw::SEER);
+    /// Shipyard object kind.
+    pub const SHIPYARD: Self = Self::from_source(raw::SHIPYARD);
+    /// Terrain hole object kind.
+    pub const TERRAIN_HOLE: Self = Self::from_source(raw::TERRAIN_HOLE);
+    /// Terrain river delta object kind.
+    pub const TERRAIN_RIVER_DELTA: Self = Self::from_source(raw::TERRAIN_RIVER_DELTA);
+    /// Town object kind.
+    pub const TOWN: Self = Self::from_source(raw::TOWN);
+    /// Underground gate object kind.
+    pub const UNDERGROUND_GATE: Self = Self::from_source(raw::UNDERGROUND_GATE);
+
+    // Named identities come from bindgen; fail compilation if their domain changes.
+    #[expect(clippy::cast_possible_truncation, reason = "source domain fits u16")]
+    const fn from_source(value: u32) -> Self {
+        assert!(value < raw::ADVENTURE_OBJECT_TRAIT_COUNT);
+        Self(value as u16)
+    }
+
     /// Parse a raw object tag before it can index a trait or prototype table.
     #[must_use]
     #[expect(
@@ -132,7 +176,7 @@ mod tests {
 
     #[test]
     fn aliases_remain_distinct_objects_with_their_own_behavior_flags() {
-        let original = ObjectKind::parse(i32::try_from(raw::CURSED_GROUND).unwrap()).unwrap();
+        let original = ObjectKind::CURSED_GROUND;
         let alias_row = raw::OBJECT_NAME_ROWS
             .iter()
             .find(|row| row.m_nameRow == i32::try_from(original.index()).unwrap())

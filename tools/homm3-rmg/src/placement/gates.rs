@@ -23,7 +23,6 @@ use crate::{
     object::ObjectKind,
     prototype::{PreparedPrototype, PrototypeCatalog},
     raster::ZoneBounds,
-    raw,
     rng::RetailRng,
     traits::CreatureCatalog,
 };
@@ -79,7 +78,7 @@ impl PlacementMap<'_, '_, '_> {
         else {
             return Ok(false);
         };
-        let family = ObjectKind::parse(i32::try_from(raw::UNDERGROUND_GATE).unwrap()).unwrap();
+        let family = ObjectKind::UNDERGROUND_GATE;
         let prototype = draw_connection_prototype(catalog, family, rng)?;
         let entry = catalog.get(prototype).unwrap();
         self.collect_gate_candidates(source, destination, overlap, entry)?;

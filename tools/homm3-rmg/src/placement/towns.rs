@@ -274,7 +274,7 @@ impl PlacementMap<'_, '_, '_> {
         catalog: &PrototypeCatalog<'_>,
         town: Town,
     ) -> Result<PrototypeId, TownError> {
-        let kind = ObjectKind::parse(i32::try_from(raw::TOWN).unwrap()).unwrap();
+        let kind = ObjectKind::TOWN;
         catalog
             .at(kind, town.index())
             .ok_or(TownError::MissingPrototype(town))
@@ -508,7 +508,7 @@ impl PlacementMap<'_, '_, '_> {
             let mut owned = false;
             for (object, town) in self.town_payloads(objects)? {
                 if town.owner == Some(player)
-                    && objects.entrance(catalog, object)? == Some(entrance)
+                    && objects.positioned(object)?.entrance(catalog)? == entrance
                 {
                     owned = true;
                     break;

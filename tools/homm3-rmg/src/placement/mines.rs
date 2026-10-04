@@ -150,10 +150,6 @@ struct MinePrototype {
     selected: PrototypeId,
     last_scanned: PrototypeId,
 }
-fn kind(value: u32) -> ObjectKind {
-    ObjectKind::parse(i32::try_from(value).expect("canonical kind fits i32"))
-        .expect("canonical mine/resource kind is admitted")
-}
 impl MinePrototype {
     fn select(
         catalog: &PrototypeCatalog<'_>,
@@ -161,7 +157,7 @@ impl MinePrototype {
         zone: BoundaryZone,
         rng: &mut RetailRng,
     ) -> Option<Self> {
-        let family = kind(raw::MINE);
+        let family = ObjectKind::MINE;
         let entries = catalog.family(family);
         let last_scanned = catalog.at(family, entries.len().checked_sub(1)?)?;
         let matching =
@@ -379,7 +375,7 @@ impl PlacementMap<'_, '_, '_> {
         rng: &mut RetailRng,
     ) -> Result<(), PlacementError> {
         let Some(prototype) =
-            catalog.choose(kind(raw::RESOURCE), resource as i32, zone.terrain(), rng)
+            catalog.choose(ObjectKind::RESOURCE, resource as i32, zone.terrain(), rng)
         else {
             return Ok(());
         };

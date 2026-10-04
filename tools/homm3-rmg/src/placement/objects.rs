@@ -47,6 +47,20 @@ pub struct ObjectGeometry {
     position: Option<WorldPosition>,
 }
 impl ObjectGeometry {
+    fn from_prototype(
+        catalog: &PrototypeCatalog<'_>,
+        prototype: PrototypeId,
+    ) -> Result<Self, PlacementError> {
+        let entry = catalog
+            .get(prototype)
+            .ok_or(PlacementError::UnknownPrototype(prototype))?;
+        Ok(Self {
+            prototype,
+            kind: entry.prototype().kind(),
+            position: None,
+        })
+    }
+
     /// Prepared prototype supplying this object's footprint.
     #[must_use]
     pub const fn prototype(self) -> PrototypeId {
@@ -135,6 +149,17 @@ impl<'a> PositionedObject<'a> {
     #[must_use]
     pub const fn kind(self) -> ObjectKind {
         self.object.record.geometry.kind
+    }
+    /// Derive the entrance from this anchor and its current prototype.
+    ///
+    /// # Errors
+    /// Reports a foreign catalog or coordinate arithmetic overflow.
+    pub fn entrance(self, catalog: &PrototypeCatalog<'_>) -> Result<WorldPosition, PlacementError> {
+        let prototype = catalog
+            .get(self.prototype())
+            .ok_or(PlacementError::UnknownPrototype(self.prototype()))?
+            .prototype();
+        entrance_position(prototype, self.position())
     }
     /// Payload belonging to the positioned record.
     #[must_use]
@@ -263,24 +288,24 @@ impl ObjectArena {
         catalog: &PrototypeCatalog<'_>,
         prototype: PrototypeId,
     ) -> Result<ObjectId, PlacementError> {
-        Self::require_kind(catalog, prototype, raw::SHIPYARD)?;
-        self.create_record(catalog, prototype, ObjectPayload::Ownable)
+        let geometry = Self::geometry_for_kind(catalog, prototype, ObjectKind::SHIPYARD)?;
+        self.insert_record(geometry, ObjectPayload::Ownable)
     }
     pub(super) fn create_mine(
         &mut self,
         catalog: &PrototypeCatalog<'_>,
         prototype: PrototypeId,
     ) -> Result<ObjectId, PlacementError> {
-        Self::require_kind(catalog, prototype, raw::MINE)?;
-        self.create_record(catalog, prototype, ObjectPayload::Ownable)
+        let geometry = Self::geometry_for_kind(catalog, prototype, ObjectKind::MINE)?;
+        self.insert_record(geometry, ObjectPayload::Ownable)
     }
     pub(super) fn create_resource(
         &mut self,
         catalog: &PrototypeCatalog<'_>,
         prototype: PrototypeId,
     ) -> Result<ObjectId, PlacementError> {
-        Self::require_kind(catalog, prototype, raw::RESOURCE)?;
-        self.create_record(catalog, prototype, ObjectPayload::Resource)
+        let geometry = Self::geometry_for_kind(catalog, prototype, ObjectKind::RESOURCE)?;
+        self.insert_record(geometry, ObjectPayload::Resource)
     }
     pub(super) fn create_town(
         &mut self,
@@ -290,10 +315,9 @@ impl ObjectArena {
         owner: Option<Player>,
         fort: Fort,
     ) -> Result<ObjectId, PlacementError> {
-        Self::require_kind(catalog, prototype, raw::TOWN)?;
-        self.create_record(
-            catalog,
-            prototype,
+        let geometry = Self::geometry_for_kind(catalog, prototype, ObjectKind::TOWN)?;
+        self.insert_record(
+            geometry,
             ObjectPayload::Town(TownPayload::new(id, owner, fort)),
         )
     }
@@ -303,31 +327,26 @@ impl ObjectArena {
         stack: GuardStack,
         id: MapObjectId,
     ) -> Result<ObjectId, PlacementError> {
-        Self::require_kind(catalog, stack.prototype(), raw::MONSTER)?;
-        self.create_record(
-            catalog,
-            stack.prototype(),
+        let geometry = Self::geometry_for_kind(catalog, stack.prototype(), ObjectKind::MONSTER)?;
+        self.insert_record(
+            geometry,
             ObjectPayload::Monster(MonsterPayload {
                 id,
                 count: stack.count(),
             }),
         )
     }
-    fn require_kind(
+    fn geometry_for_kind(
         catalog: &PrototypeCatalog<'_>,
         prototype: PrototypeId,
-        expected: u32,
-    ) -> Result<(), PlacementError> {
-        let actual = catalog
-            .get(prototype)
-            .ok_or(PlacementError::UnknownPrototype(prototype))?
-            .prototype()
-            .kind();
-        let expected = ObjectKind::parse(i32::try_from(expected).unwrap()).unwrap();
+        expected: ObjectKind,
+    ) -> Result<ObjectGeometry, PlacementError> {
+        let geometry = ObjectGeometry::from_prototype(catalog, prototype)?;
+        let actual = geometry.kind;
         if actual != expected {
             return Err(PlacementError::PayloadKind { expected, actual });
         }
-        Ok(())
+        Ok(geometry)
     }
     // Reserve before a factory claims its native serialized ID. A failed
     // allocation must not consume that ID; a preceding hero claim is retained.
@@ -343,9 +362,13 @@ impl ObjectArena {
         prototype: PrototypeId,
         payload: ObjectPayload,
     ) -> Result<ObjectId, PlacementError> {
-        let entry = catalog
-            .get(prototype)
-            .ok_or(PlacementError::UnknownPrototype(prototype))?;
+        self.insert_record(ObjectGeometry::from_prototype(catalog, prototype)?, payload)
+    }
+    fn insert_record(
+        &mut self,
+        geometry: ObjectGeometry,
+        payload: ObjectPayload,
+    ) -> Result<ObjectId, PlacementError> {
         let owner = if let Some(owner) = self.owner {
             owner
         } else {
@@ -361,11 +384,7 @@ impl ObjectArena {
             generation,
             record: ObjectRecord {
                 ownership: Ownership::Unplaced,
-                geometry: ObjectGeometry {
-                    prototype,
-                    kind: entry.prototype().kind(),
-                    position: None,
-                },
+                geometry,
                 payload,
             },
         };
@@ -554,26 +573,6 @@ impl ObjectArena {
             }
             _ => None,
         })
-    }
-    /// Derive the current entrance from the anchor and its owning prototype.
-    /// Unplaced records have no entrance.
-    ///
-    /// # Errors
-    /// Reports foreign IDs/catalogs or unsafe native coordinate arithmetic.
-    pub fn entrance(
-        &self,
-        catalog: &PrototypeCatalog<'_>,
-        id: ObjectId,
-    ) -> Result<Option<WorldPosition>, PlacementError> {
-        let geometry = self.get(id).ok_or(PlacementError::UnknownObject(id))?;
-        let prototype = catalog
-            .get(geometry.prototype)
-            .ok_or(PlacementError::UnknownPrototype(geometry.prototype))?
-            .prototype();
-        geometry
-            .position
-            .map(|position| entrance_position(prototype, position))
-            .transpose()
     }
     pub(super) fn set_position(&mut self, id: ObjectId, position: WorldPosition) {
         assert_eq!(Some(id.owner), self.owner);

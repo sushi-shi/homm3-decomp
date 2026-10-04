@@ -56,7 +56,11 @@ pub fn snapshot(
     for (object, town) in towns.towns(objects).unwrap() {
         let geometry = objects.get(object).unwrap();
         let anchor = geometry.position().unwrap();
-        let entrance = objects.entrance(catalog, object).unwrap().unwrap();
+        let entrance = objects
+            .positioned(object)
+            .unwrap()
+            .entrance(catalog)
+            .unwrap();
         writeln!(
             actual,
             "{} {} {} {} {} {} {} {} {} {}",

@@ -80,8 +80,7 @@ fn fitting_uses_native_row_aliases_and_reads_neighbors_before_footprint_bounds()
         let entry = &catalog.entries()[0];
         assert!(group.can_fit(entry, Point::new(0, 4)).unwrap());
         // (-1,4), immediately west of the entrance, aliases (15,3).
-        group.cells[4 * SIDE - 1].entrance =
-            Some(ObjectKind::parse(i32::try_from(raw::TOWN).unwrap()).unwrap());
+        group.cells[4 * SIDE - 1].entrance = Some(ObjectKind::TOWN);
         assert!(!group.can_fit(entry, Point::new(0, 4)).unwrap());
         assert!(matches!(
             group.can_fit(entry, Point::new(-30, -30)),
@@ -98,7 +97,7 @@ fn group_ownership_rejects_copied_ids_and_other_group_disposal() {
         let mut arena = ObjectArena::default();
         let prototype = catalog
             .choose(
-                ObjectKind::parse(i32::try_from(raw::RESOURCE).unwrap()).unwrap(),
+                ObjectKind::RESOURCE,
                 0,
                 crate::domain::Terrain::Dirt,
                 &mut RetailRng::new(1),
@@ -133,14 +132,17 @@ fn group_ownership_rejects_copied_ids_and_other_group_disposal() {
 #[test]
 fn resolved_object_views_distinguish_unpositioned_retained_and_stale_records() {
     with_catalog(raw::RESOURCE, |catalog| {
-        let prototype = catalog
-            .at(
-                ObjectKind::parse(i32::try_from(raw::RESOURCE).unwrap()).unwrap(),
-                0,
-            )
-            .unwrap();
+        let prototype = catalog.at(ObjectKind::RESOURCE, 0).unwrap();
         let mut objects = ObjectArena::default();
-        let id = objects.create(catalog, prototype).unwrap();
+        assert!(matches!(
+            objects.create_shipyard(catalog, prototype),
+            Err(PlacementError::PayloadKind {
+                expected: ObjectKind::SHIPYARD,
+                actual: ObjectKind::RESOURCE
+            })
+        ));
+        assert!(objects.owner().is_none());
+        let id = objects.create_resource(catalog, prototype).unwrap();
         assert!(objects.resolve(id).unwrap().positioned().is_none());
         assert!(matches!(
             objects.positioned(id),
@@ -150,10 +152,17 @@ fn resolved_object_views_distinguish_unpositioned_retained_and_stale_records() {
         objects.set_position(id, position);
         let object = objects.positioned(id).unwrap();
         assert_eq!(object.position(), position);
+        assert_eq!(object.entrance(catalog).unwrap(), position);
+        with_catalog(raw::RESOURCE, |foreign| {
+            assert!(matches!(
+                object.entrance(foreign),
+                Err(PlacementError::UnknownPrototype(_))
+            ));
+        });
         assert_eq!(object.prototype(), prototype);
         assert!(matches!(
             object.payload(),
-            crate::placement::ObjectPayload::Base
+            crate::placement::ObjectPayload::Resource
         ));
         objects.retire(id, true).unwrap();
         assert_eq!(objects.positioned(id).unwrap().position(), position);

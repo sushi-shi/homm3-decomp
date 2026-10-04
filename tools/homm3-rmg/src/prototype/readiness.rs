@@ -131,24 +131,19 @@ impl<'a> PrototypeCatalog<'a> {
         artifacts: &ArtifactCatalog,
     ) -> Result<(), RequiredPrototypeError> {
         for kind in [
-            raw::MONSTER,
-            raw::RANDOM_MONSTER,
-            raw::TERRAIN_HOLE,
-            raw::SHIPYARD,
+            ObjectKind::MONSTER,
+            ObjectKind::RANDOM_MONSTER,
+            ObjectKind::TERRAIN_HOLE,
+            ObjectKind::SHIPYARD,
         ] {
-            let kind = known_kind(kind);
             if self.family(kind).is_empty() {
                 return Err(RequiredPrototypeError::Family(kind));
             }
         }
-        if levels == Levels::Underground
-            && self.family(known_kind(raw::UNDERGROUND_GATE)).is_empty()
-        {
-            return Err(RequiredPrototypeError::Family(known_kind(
-                raw::UNDERGROUND_GATE,
-            )));
+        if levels == Levels::Underground && self.family(ObjectKind::UNDERGROUND_GATE).is_empty() {
+            return Err(RequiredPrototypeError::Family(ObjectKind::UNDERGROUND_GATE));
         }
-        let towns = self.family(known_kind(raw::TOWN));
+        let towns = self.family(ObjectKind::TOWN);
         let town_count = usize::try_from(if self.version == MapVersion::Restoration {
             raw::TOWN_CONFLUX
         } else {
@@ -165,9 +160,9 @@ impl<'a> PrototypeCatalog<'a> {
                 return Err(RequiredPrototypeError::Town { index });
             }
         }
-        let entrances = self.family(known_kind(raw::LITH_ONEWAY_ENTRANCE));
-        let exits = self.family(known_kind(raw::LITH_ONEWAY_EXIT));
-        if (self.family(known_kind(raw::LITH_TWOWAY)).is_empty() && entrances.is_empty())
+        let entrances = self.family(ObjectKind::LITH_ONEWAY_ENTRANCE);
+        let exits = self.family(ObjectKind::LITH_ONEWAY_EXIT);
+        if (self.family(ObjectKind::LITH_TWOWAY).is_empty() && entrances.is_empty())
             || exits.len() < entrances.len()
         {
             return Err(RequiredPrototypeError::Portals);
@@ -178,21 +173,21 @@ impl<'a> PrototypeCatalog<'a> {
             }
         }
         let selectable = |family, subtype| {
-            self.family(known_kind(family))
+            self.family(family)
                 .iter()
                 .any(|entry| entry.prototype.selectable(subtype, Terrain::Dirt))
         };
-        for tent in self.family(known_kind(raw::BORDER_TENT)) {
+        for tent in self.family(ObjectKind::BORDER_TENT) {
             let subtype = tent.prototype.subtype;
-            if !selectable(raw::BORDER_GUARD, subtype) {
+            if !selectable(ObjectKind::BORDER_GUARD, subtype) {
                 return Err(RequiredPrototypeError::BorderGuard { subtype });
             }
         }
-        if !self.family(known_kind(raw::SEER)).is_empty() {
-            if !selectable(raw::RANDOM_ARTIFACT, 0) {
+        if !self.family(ObjectKind::SEER).is_empty() {
+            if !selectable(ObjectKind::RANDOM_ARTIFACT, 0) {
                 return Err(RequiredPrototypeError::RandomArtifact);
             }
-            let prototypes = self.family(known_kind(raw::ARTIFACT));
+            let prototypes = self.family(ObjectKind::ARTIFACT);
             for (id, artifact) in artifacts.entries().iter().enumerate() {
                 if artifact.quest_eligible()
                     && !prototypes
@@ -208,9 +203,4 @@ impl<'a> PrototypeCatalog<'a> {
         }
         Ok(())
     }
-}
-
-fn known_kind(value: u32) -> ObjectKind {
-    ObjectKind::parse(i32::try_from(value).expect("canonical object kind"))
-        .expect("canonical object kind")
 }

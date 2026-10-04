@@ -270,8 +270,7 @@ impl PlacementMap<'_, '_, '_> {
                 raw::RIVER_DELTA_LAND[cardinal]
             } as usize;
             let terrain = self.terrain.tiles()[inspected].terrain();
-            let family =
-                ObjectKind::parse(i32::try_from(raw::TERRAIN_RIVER_DELTA).unwrap()).unwrap();
+            let family = ObjectKind::TERRAIN_RIVER_DELTA;
             let Some((index, _)) = catalog
                 .family(family)
                 .iter()

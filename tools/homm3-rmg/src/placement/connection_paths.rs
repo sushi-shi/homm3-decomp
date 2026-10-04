@@ -254,10 +254,6 @@ impl PlacementMap<'_, '_, '_> {
     /// # Errors
     /// Reports foreign context, missing guard prototype, unsafe cell access,
     /// broken/cyclic predecessors or allocation failure.
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "canonical border guard kind is in the admitted object domain"
-    )]
     pub fn open_connection_path(
         &mut self,
         mut position: WorldPosition,
@@ -286,7 +282,7 @@ impl PlacementMap<'_, '_, '_> {
             }
             remaining -= 1;
             if let Some(color) = self.cells[index].border {
-                let kind = ObjectKind::parse(i32::try_from(raw::BORDER_GUARD).unwrap()).unwrap();
+                let kind = ObjectKind::BORDER_GUARD;
                 let prototype = catalog
                     .choose(kind, i32::from(color.value()), Terrain::Dirt, rng)
                     .ok_or(ConnectionError::MissingBorderGuard(color))?;

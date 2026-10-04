@@ -185,7 +185,7 @@ mod tests {
             Prototype {
                 source_row: 0,
                 image: 0,
-                kind: ObjectKind::parse(i32::try_from(raw::TERRAIN_HOLE).unwrap()).unwrap(),
+                kind: ObjectKind::TERRAIN_HOLE,
                 subtype: 0,
                 category: 0,
                 underlay,

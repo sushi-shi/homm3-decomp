@@ -71,13 +71,9 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             .last()
             .ok_or(PlacementError::EmptyOutline)?
             .object();
-        let last_geometry = objects
-            .get(last)
-            .ok_or(PlacementError::UnknownObject(last))?;
-        let entrance = objects
-            .entrance(catalog, last)?
-            .ok_or(PlacementError::UnknownObject(last))?;
-        let directions = if last_geometry.kind().traits().enterable_from_north() {
+        let last = objects.positioned(last)?;
+        let entrance = last.entrance(catalog)?;
+        let directions = if last.kind().traits().enterable_from_north() {
             &Direction::ALL[..]
         } else {
             &Direction::ALL[1..4]

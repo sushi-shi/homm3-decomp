@@ -320,7 +320,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                 artifact: None,
             }),
         )?;
-        let kind = ObjectKind::parse(i32::try_from(raw::RANDOM_ARTIFACT).unwrap()).unwrap();
+        let kind = ObjectKind::RANDOM_ARTIFACT;
         let prototype = self
             .ready
             .catalog()

@@ -559,7 +559,7 @@ mod tests {
         let catalog = source
             .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
             .unwrap();
-        let shipyard = ObjectKind::parse(i32::try_from(raw::SHIPYARD).unwrap()).unwrap();
+        let shipyard = ObjectKind::SHIPYARD;
         let mut rng = RetailRng::new(1);
         let mut expected = RetailRng::new(1);
         expected.draw();

@@ -241,14 +241,10 @@ impl TreasureGroupWorkspace {
         self.candidates.clear();
         for pending in &self.objects {
             let object = pending.object();
-            let geometry = objects
-                .get(object)
-                .ok_or(PlacementError::UnknownObject(object))?;
-            let entrance = objects
-                .entrance(catalog, object)?
-                .ok_or(PlacementError::UnknownObject(object))?;
+            let object = objects.positioned(object)?;
+            let entrance = object.entrance(catalog)?;
             for direction in Direction::ALL.into_iter().rev() {
-                if !geometry.kind().traits().enterable_from_north()
+                if !object.kind().traits().enterable_from_north()
                     && !matches!(
                         direction,
                         Direction::SouthWest | Direction::South | Direction::SouthEast

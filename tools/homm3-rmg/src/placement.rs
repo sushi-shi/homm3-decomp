@@ -1068,7 +1068,7 @@ mod tests {
     fn entrance_path_and_water_policies_are_independent() {
         let zone = ZoneId::new(0);
         let mut cells = [CellState::default(); 4];
-        cells[0].entrance = Some(ObjectKind::parse(i32::try_from(raw::RESOURCE).unwrap()).unwrap());
+        cells[0].entrance = Some(ObjectKind::RESOURCE);
         cells[1].reservation = PathReservation::Unreserved;
         cells[2].reservation = PathReservation::Obstacle;
         let mut terrain =

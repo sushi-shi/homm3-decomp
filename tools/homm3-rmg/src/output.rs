@@ -203,8 +203,7 @@ impl OutputWorkspace {
         }
         out.u32(count)?;
         // Reserved slots stay separate even if these entries also own references.
-        for family in [raw::RANDOM_MONSTER, raw::TERRAIN_HOLE] {
-            let kind = ObjectKind::parse(i32::try_from(family).unwrap()).unwrap();
+        for kind in [ObjectKind::RANDOM_MONSTER, ObjectKind::TERRAIN_HOLE] {
             let entry = catalog
                 .family(kind)
                 .first()
