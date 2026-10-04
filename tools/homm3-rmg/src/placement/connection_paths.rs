@@ -13,6 +13,17 @@ use crate::{
 };
 
 /// Whether opening a predecessor route also clears surrounding obstacles.
+///
+/// Around each visited route cell `P`, north up, `c` is an additional obstacle
+/// clearing candidate. Wide paths clear only candidates in the route's zone;
+/// they do not open those cells' path reservations, and border cells survive.
+///
+/// ```text
+///   Narrow   Wide
+///   . . .    c c c
+///   . P .    c P c
+///   . . .    c c c
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PathWidth {
     /// Only open cells on the route.

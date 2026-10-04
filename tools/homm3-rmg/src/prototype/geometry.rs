@@ -106,6 +106,15 @@ pub struct OverlapPriorities {
 impl OverlapPriorities {
     /// Compute the native column-first priority recurrence in fixed storage.
     ///
+    /// Visit order for a 3x2 image, north up and anchor `P` at ordinal 0:
+    /// each column runs south to north, then the walk moves one column west.
+    /// The digits are visit ordinals, not the resulting overlap priorities.
+    ///
+    /// ```text
+    ///   5 3 1
+    ///   4 2 P
+    /// ```
+    ///
     /// # Errors
     /// Returns invalid image dimensions before traversing the footprint.
     pub fn build(entry: &PreparedPrototype<'_>) -> Result<Self, PrototypeFault> {

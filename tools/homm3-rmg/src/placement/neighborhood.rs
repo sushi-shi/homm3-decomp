@@ -8,6 +8,18 @@ use crate::{
 };
 
 /// The two square neighborhoods used by native placement and path carving.
+///
+/// North is up; `C` is the centre and `o` an included cell. Both squares include
+/// their centre and diagonals, and are clipped to the current map plane.
+///
+/// ```text
+///   ThreeByThree   FiveByFive
+///     o o o        o o o o o
+///     o C o        o o o o o
+///     o o o        o o C o o
+///                  o o o o o
+///                  o o o o o
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Neighborhood {
     /// Centre and its eight immediate neighbours.
@@ -24,6 +36,10 @@ impl Neighborhood {
         .unwrap()
     }
 
+    // Visit the clipped rectangle north to south, west to east in each row.
+    // At a map's northwest corner a 3x3 patch has this order (C is first):
+    //   C 1
+    //   2 3
     pub(super) fn cells(
         self,
         center: WorldPosition,
@@ -124,6 +140,15 @@ impl PlacementMap<'_, '_, '_> {
 
     /// Open and return the cell directly south of an object's entrance.
     /// Native flat indexing can reach the next plane from the last map row.
+    ///
+    /// For an entrance at mask coordinate `(1, 1)`, `P` is the object anchor,
+    /// `T = P - (1, 1)` is its trigger, and `A = T + (0, 1)` is the approach.
+    /// This shows coordinates, not occupancy; the anchor need not be the trigger.
+    ///
+    /// ```text
+    ///   T .
+    ///   A P
+    /// ```
     ///
     /// # Errors
     /// Reports coordinate overflow or access outside the cell allocation.

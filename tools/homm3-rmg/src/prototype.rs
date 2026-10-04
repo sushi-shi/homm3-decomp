@@ -36,6 +36,15 @@ const MASK_BYTES: usize = 2 + 2 * (raw::OBJECT_MASK_CELLS as usize / u8::BITS as
 const KINDS: usize = raw::ADVENTURE_OBJECT_TRAIT_COUNT as usize;
 
 /// A coordinate inside the fixed object mask, measured west/north from its anchor.
+///
+/// For a 3x2 image, `P` is mask coordinate `(0, 0)` at the bottom-right anchor.
+/// North is up; mask coordinates increase in the opposite directions to world
+/// coordinates. A mask cell `(x, y)` maps to world position `P - (x, y)`.
+///
+/// ```text
+///   (2,1) (1,1) (0,1)
+///   (2,0) (1,0)   P
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MaskCell {
     x: u8,
@@ -269,6 +278,17 @@ impl Prototype {
         self.underlay
     }
     /// First trigger cell in anchor-relative row/column order; no sentinel.
+    ///
+    /// Search ordinals across the full 8x6 mask, north up and anchor `P` at 0:
+    /// bottom row first, east to west, then the next row north. These ordinals
+    /// are the reverse of the serialized mask bit numbers.
+    ///
+    /// ```text
+    ///   47 46 45 44 43 42 41 40
+    ///               ...
+    ///   15 14 13 12 11 10  9  8
+    ///    7  6  5  4  3  2  1  P
+    /// ```
     #[must_use]
     pub const fn entrance(&self) -> Option<MaskCell> {
         self.entrance

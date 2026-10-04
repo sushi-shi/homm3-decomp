@@ -436,6 +436,16 @@ impl PlacementView<'_> {
     // Source getMapItem performs flat signed indexing without an XY check.
     // Negative X may alias the preceding row while still addressing this allocation.
     // Keep this separate from queries whose source explicitly checks containsXY.
+    // With a four-cell row, out-of-row coordinates can name the same cell:
+    //
+    //                 x=0  1  2  3
+    //           y=0    .   .  .  A  <- also (-1, 1)
+    //           y=1    B   .  .  .
+    //                  ^
+    //                  also (4, 0)
+    //
+    // The index is (level * side + y) * side + x. A row beyond the surface
+    // can likewise reach underground; only leaving the allocation is a fault.
     fn native_index(&self, position: WorldPosition) -> Result<usize, PlacementError> {
         let side = i32::try_from(self.side).map_err(|_| PlacementError::CoordinateOverflow)?;
         let level = i32::try_from(position.level.index())
