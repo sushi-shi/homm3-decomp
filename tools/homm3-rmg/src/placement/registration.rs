@@ -239,6 +239,17 @@ impl PlacementMap<'_, '_, '_> {
         Ok(self.registration.next_key_tent)
     }
 
+    /// Read a color's reservation without changing the cursor or allocating.
+    ///
+    /// # Errors
+    /// Rejects colors not admitted against this map's current catalog.
+    pub fn key_tent_disabled(&self, color: KeyTentColor) -> Result<bool, PlacementError> {
+        if Some(color.owner) != self.registration.catalog_owner {
+            return Err(PlacementError::CatalogContext);
+        }
+        Ok(self.registration.disabled_key_tents[color.index])
+    }
+
     /// Reserve or release a tent color and rescan the first enabled color.
     ///
     /// # Errors

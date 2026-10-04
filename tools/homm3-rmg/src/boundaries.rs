@@ -187,6 +187,9 @@ pub struct BoundaryMap<'a> {
     water: Water,
 }
 impl<'a> BoundaryMap<'a> {
+    pub(crate) fn complete_connection(&mut self, index: usize) {
+        self.workspace.connections[index].connected = true;
+    }
     pub(crate) fn record_primary_town(&mut self, id: ZoneId, entrance: WorldPosition, town: Town) {
         let hotfix = self.behavior().is_hotfix();
         let zone = &mut self.workspace.zones[id.index()];

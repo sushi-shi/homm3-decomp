@@ -12,8 +12,12 @@ use crate::{
 use std::{collections::TryReserveError, error::Error, fmt};
 
 mod border_guards;
+mod guard_value;
 mod guards;
+pub use guard_value::GuardStrength;
+mod ground_connections;
 pub use border_guards::{BorderGuardCount, BorderGuardPlacement};
+pub use ground_connections::{ConnectingZones, ConnectionId};
 mod zone_objects;
 use zone_objects::ZonePlacementScratch;
 mod objects;

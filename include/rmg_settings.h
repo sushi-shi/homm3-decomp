@@ -198,6 +198,16 @@ enum ERmgBorderGuardCount {
     RMG_SHIPYARD_BORDER_GUARDS = 3
 };
 
+enum ERmgGroundCrossingLimits {
+    RMG_BORDER_CELLS_PER_CROSSING = 40,
+    RMG_MAXIMUM_CROSSING_COST = 100
+};
+
+// Weaker guards are not placed.
+enum ERmgGuardValueLimits {
+    RMG_MINIMUM_GUARD_VALUE = 2000
+};
+
 // Spell-trait flag of spells the map loader disables on every map (see
 // game.cpp); never a generated reward.
 enum ERmgSpellTraitFlags {

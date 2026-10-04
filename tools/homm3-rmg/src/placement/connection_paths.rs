@@ -84,7 +84,10 @@ pub struct RepairedWaterBorders<'state, 'zones, 'tiles> {
     paths: ConnectionPaths<'state, 'zones, 'tiles>,
     rng: RngCheckpoint,
 }
-impl RepairedWaterBorders<'_, '_, '_> {
+impl<'state, 'zones, 'tiles> RepairedWaterBorders<'state, 'zones, 'tiles> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+        &mut self.paths.islands.borders.towns.map
+    }
     /// Placement and terrain after deferred border painting.
     #[must_use]
     pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {

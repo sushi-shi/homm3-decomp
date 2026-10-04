@@ -292,13 +292,21 @@ double g_rmgDirectionSines[RMG_RADIAL_DIRECTION_COUNT] =
 // Guard value thresholds and scales by guard strength; a scale counts
 // quarters of the value above its threshold.
 DATA(0x006823f0)
-s32 g_rmgGuardThresholdLow[RMG_GUARD_STRENGTH_COUNT] = {50000, 2500, 1500, 1000, 500, 0};
+s32 g_rmgGuardThresholdLow[RMG_GUARD_STRENGTH_COUNT] =
+#include "rmg_data/guard_threshold_low.inc"
+;
 DATA(0x00682408)
-s32 g_rmgGuardThresholdHigh[RMG_GUARD_STRENGTH_COUNT] = {50000, 7500, 7500, 7500, 5000, 5000};
+s32 g_rmgGuardThresholdHigh[RMG_GUARD_STRENGTH_COUNT] =
+#include "rmg_data/guard_threshold_high.inc"
+;
 DATA(0x00682420)
-s32 g_rmgGuardScaleLow[RMG_GUARD_STRENGTH_COUNT] = {0, 2, 3, 4, 6, 6};
+s32 g_rmgGuardScaleLow[RMG_GUARD_STRENGTH_COUNT] =
+#include "rmg_data/guard_scale_low.inc"
+;
 DATA(0x00682438)
-s32 g_rmgGuardScaleHigh[RMG_GUARD_STRENGTH_COUNT] = {0, 2, 3, 4, 4, 6};
+s32 g_rmgGuardScaleHigh[RMG_GUARD_STRENGTH_COUNT] =
+#include "rmg_data/guard_scale_high.inc"
+;
 
 // Map-description names per resolved water content.
 DATA(0x00682700)
@@ -5611,11 +5619,6 @@ inline TRmgMapPosition TRmgGenerator::addObjectAtRandomCandidate(
     return position;
 }
 
-enum ERmgGroundCrossingLimits {
-    RMG_BORDER_CELLS_PER_CROSSING = 40,
-    RMG_MAXIMUM_CROSSING_COST = 100
-};
-
 // Connects land zones on one level. Opens one crossing per 40 eligible
 // border cells (rounded up), drawn without repeats from the empty ones tied
 // for the lowest zone-path cost, which must be at most 100; each gets open
@@ -7022,11 +7025,6 @@ b8 TRmgGenerator::tryPlaceMine(TRmgZone* zone,
     }
     return true;
 }
-
-// Weaker guards are not placed.
-enum ERmgGuardValueLimits {
-    RMG_MINIMUM_GUARD_VALUE = 2000
-};
 
 VA(0x00545e00, 0x5b)
 MAC_ADDRESS(0x22ce7c, 0x74)

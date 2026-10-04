@@ -26,6 +26,19 @@ static const TPoint directions[] =
 #include "rmg_data/directions.inc"
 ;
 
+static const int guardThresholdLow[RMG_GUARD_STRENGTH_COUNT] =
+#include "rmg_data/guard_threshold_low.inc"
+;
+static const int guardThresholdHigh[RMG_GUARD_STRENGTH_COUNT] =
+#include "rmg_data/guard_threshold_high.inc"
+;
+static const int guardScaleLow[RMG_GUARD_STRENGTH_COUNT] =
+#include "rmg_data/guard_scale_low.inc"
+;
+static const int guardScaleHigh[RMG_GUARD_STRENGTH_COUNT] =
+#include "rmg_data/guard_scale_high.inc"
+;
+
 static const THeroTraits heroTraits[] =
 #include "rmg_data/hero_traits.inc"
 ;
@@ -231,6 +244,14 @@ void emitArray(const char* name, const T (&array)[N])
     std::printf("];\n");
 }
 
+template <unsigned long N>
+void emitSignedArray(const char* name, const int (&array)[N])
+{
+    std::printf("pub const %s: [i32; %lu] = [", name, N);
+    for (int value : array) std::printf("%d,", value);
+    std::printf("];\n");
+}
+
 int main()
 {
     std::printf("pub const DIRECTIONS: [(i32, i32); %lu] = [", sizeof(directions)/sizeof(directions[0]));
@@ -267,6 +288,10 @@ int main()
     for (const auto& row : spellTraits) std::printf("%u,", row.m_flags);
     std::printf("];\n");
     emitTerrainRules();
+    emitSignedArray("GUARD_THRESHOLD_LOW", guardThresholdLow);
+    emitSignedArray("GUARD_THRESHOLD_HIGH", guardThresholdHigh);
+    emitSignedArray("GUARD_SCALE_LOW", guardScaleLow);
+    emitSignedArray("GUARD_SCALE_HIGH", guardScaleHigh);
     emitArray("RIVER_PATTERNS", river);
     emitArray("ROAD_PATTERNS", road);
     emitArray("NATIVE_TERRAIN", nativeTerrain);

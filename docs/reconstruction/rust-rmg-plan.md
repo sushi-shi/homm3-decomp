@@ -101,7 +101,7 @@ Completion requires the full generator in both modes.
 
 ### Remaining work, in execution order
 
-Nine substantial work packages remain; the first is partially implemented. They describe
+Nine substantial work packages remain; the first two are partially implemented. They describe
 implementation order, not equal amounts of work or a percentage estimate.
 The library cannot yet generate a complete map.
 
@@ -113,9 +113,10 @@ The library cannot yet generate a complete map.
    and individual path/obstacle/border transitions now use reusable storage.
    Tent availability follows the loaded prototype count. Retail's initial cursor
    uses named replay input or a typed fault until a native rescan initializes it.
-2. **Zone connections.** Port connection preparation and pathfinding, junctions,
-   gates/portals, border guards and key-tent reservations, including water-zone
-   border repair and mode-specific failures.
+2. **Zone connections.** Finish shipyards, gates, portals, the per-edge dispatcher
+   and dry-zone junctions. Preparation, pathfinding, water-border repair, ground
+   crossings, border guards and key-tent reservations are implemented and have
+   native checkpoint comparisons.
 3. **Mines.** Port fixed and density-driven mine placement and guards. Connect
    the existing guard selector to object creation, ownership and spatial state.
 4. **Treasures.** Port treasure definitions/values, object payload ADTs, group
@@ -492,6 +493,35 @@ cursor lookup, late reservation faults, duplicate first-match selection,
 full-color reservation and repeated failed placements reusing their arena slot.
 All 69 core tests and strict Clippy pass; both behavior and design reviews are
 clean. Full crossing/gate/shipyard/portal integration remains next.
+
+Ground crossings now preserve the frozen border scan, live direction reads,
+minimum-cost ties, fixed crossing count, singleton draws, ordered removal,
+source/destination path and entrance order, shared guard suppression and first
+reverse-edge completion. `ConnectingZones` owns checked directed-edge handles;
+its iterator permits mutation without collecting temporary IDs. This remains a
+per-edge operation: the native dispatcher must try ground, shipyard and gate for
+each edge in order. A whole-map ground pass would change generation behavior.
+
+Guard scaling uses canonical shared initializer fragments and bindgen-derived
+limits, with separately rounded threshold terms and checked native arithmetic.
+A private bounded `GuardStrength` prevents invalid table indices. Native scaling
+comparisons cover 192 cases; overflow tests retain faults even where widening
+would produce a representable final answer.
+
+Sixteen native ground captures cover both modes, ordinary and forced template
+border guards, across 454 attempts and 104 successful directed attempts. They
+agree on RNG, entrances, graph flags, objects, counts, cells, paths and final
+tent reservation vectors (520,134 checkpoint lines). Forced cases create 116
+base objects and 27 monsters; ordinary cases create 53 monsters. Workspace reuse
+also checks empty entrance state and rejects previous-stage connection handles
+before consuming RNG. All 70 core tests and strict Clippy pass. Both reviewers
+are clean; their final coverage suggestion added direct reservation snapshots.
+
+Next implement shipyard ownable payloads, shared road targets and reusable
+water-flood visitation, then gates/portals and the per-edge dispatcher. Reuse
+existing placement, guard, entrance and path helpers. Portal protection rebuilds
+paths in place without refreezing the initial border scan; retain ordered portal
+ID lists for later road routing.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

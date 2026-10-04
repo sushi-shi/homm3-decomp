@@ -19,7 +19,7 @@ use std::{
     num::NonZeroU32,
 };
 
-/// Connection preparation reached unsupported geometry or a failed allocation.
+/// Connection preparation or creation reached a native fault or failed allocation.
 #[derive(Debug)]
 pub enum ConnectionError {
     /// Cell access, coordinate arithmetic or placement state failed.
@@ -28,6 +28,17 @@ pub enum ConnectionError {
     Geometry(GeometryError),
     /// A terrain brush failed while repainting an island.
     Terrain(TerrainError),
+    /// Creature selection or placement failed while guarding a crossing.
+    Guard(super::GuardPlacementError),
+    /// A directed-record handle came from another connection stage.
+    UnknownConnection(super::ConnectionId),
+    /// Native completion marks this edge before dereferencing a missing reverse.
+    MissingReverse {
+        /// Already-completed edge's starting zone.
+        source: ZoneId,
+        /// Zone whose reverse adjacency is absent.
+        destination: ZoneId,
+    },
     /// No dirt border-guard prototype has the stored color.
     MissingBorderGuard(BorderColor),
     /// A reached positive-cost path has no predecessor or contains a cycle.
@@ -41,6 +52,19 @@ impl fmt::Display for ConnectionError {
             Self::Placement(error) => error.fmt(f),
             Self::Geometry(error) => error.fmt(f),
             Self::Terrain(error) => error.fmt(f),
+            Self::Guard(error) => error.fmt(f),
+            Self::UnknownConnection(id) => {
+                write!(f, "connection {} belongs to another stage", id.index())
+            }
+            Self::MissingReverse {
+                source,
+                destination,
+            } => write!(
+                f,
+                "connection {} to {} has no reverse record",
+                source.index(),
+                destination.index()
+            ),
             Self::MissingBorderGuard(color) => write!(
                 f,
                 "missing border-guard prototype for color {}",
@@ -61,6 +85,11 @@ impl Error for ConnectionError {}
 impl From<PlacementError> for ConnectionError {
     fn from(error: PlacementError) -> Self {
         Self::Placement(error)
+    }
+}
+impl From<super::GuardPlacementError> for ConnectionError {
+    fn from(error: super::GuardPlacementError) -> Self {
+        Self::Guard(error)
     }
 }
 impl From<GeometryError> for ConnectionError {
@@ -90,6 +119,7 @@ pub(super) struct ConnectionScratch {
     pending: Vec<Segment>,
     branches: VecDeque<Segment>,
     pub(super) candidates: Vec<WorldPosition>,
+    pub(super) crossing: super::ground_connections::CrossingState,
     pub(super) flood: Worklist<WorldPosition>,
     pub(super) noise: super::island_noise::NoiseWorkspace,
     pub(super) repairs: Vec<super::connection_paths::PaintRequest>,
@@ -99,6 +129,7 @@ impl ConnectionScratch {
         self.pending.clear();
         self.branches.clear();
         self.candidates.clear();
+        self.crossing.reset();
         self.flood.clear();
         self.noise.clear();
         self.repairs.clear();
