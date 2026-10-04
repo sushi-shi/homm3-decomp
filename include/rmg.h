@@ -72,6 +72,10 @@ public:
     s32 m_density;
 
     type_treasure_def(s32 objectType, s32 subtype, s32 value, s32 density);
+#if defined(HOMM3_RMG_HOTFIX)
+    // Factories are deleted through this base.
+    virtual ~type_treasure_def() {}
+#endif
 
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);

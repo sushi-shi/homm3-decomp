@@ -1724,6 +1724,10 @@ b8 rmgKeyTentObject::completePlacement()
     if (m_generator->placeKeyTentGuard(this, m_treasureValue * 3 / 2))
         return true;
     m_generator->replaceObjectWithTreasure(this, m_treasureValue);
+#if defined(HOMM3_RMG_HOTFIX)
+    // Removed from the map, so nothing else owns it.
+    delete this;
+#endif
     return false;
 }
 
@@ -1749,6 +1753,12 @@ b8 rmgQuestArtifactObject::completePlacement()
     }
     delete m_seerHut;
     m_seerHut = 0;
+#if defined(HOMM3_RMG_HOTFIX)
+    // Replaced by a treasure (not just short of artifacts): nothing owns it.
+    std::vector<type_object*>& objects = m_generator->m_objects;
+    if (std::find(objects.begin(), objects.end(), this) == objects.end())
+        delete this;
+#endif
     return false;
 }
 
