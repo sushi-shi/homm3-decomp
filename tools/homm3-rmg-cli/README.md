@@ -2,7 +2,7 @@
 
 The implementation connects installation resources, generation and streamed H3M
 output. Initial whole-map comparisons and independent parsing pass; broader
-corpus debugging is underway. See the implementation plan for measured coverage.
+corpus debugging is underway. See the architecture reference for compatibility limits.
 
 Build from the repository's Rust/Nix development environment:
 
@@ -66,5 +66,5 @@ Independent maps can share immutable `generation::Assets`, with one
 `GenerationWorkspace` and `OutputWorkspace` per worker. Reuse those workspaces
 for batches; keep one RNG per map and preserve serial stage/draw order.
 
-The [implementation plan](../../docs/reconstruction/rust-rmg-plan.md) records
-known discrepancies, measured allocations and ongoing comparison campaign.
+The [architecture reference](../../docs/reconstruction/rust-rmg.md) describes
+ownership, compatibility limits and the parallelism roadmap.

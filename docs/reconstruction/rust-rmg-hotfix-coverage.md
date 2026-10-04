@@ -4,8 +4,8 @@ Source audit of implementation commit `668cb01fa`, against its merged C++ base.
 Two reviewers examined every explicit `HOMM3_RMG_HOTFIX` conditional: 45 in
 `src/rmg.cpp`, five in `include/rmg.h`, and the declaration gate in
 `include/rmg_request.h`. No missing or mismatched implementation was identified.
-This establishes source coverage, not executed behavioral parity. Subsequent
-native comparisons and debugging results are recorded in the main plan.
+This establishes source coverage, not executed behavioral parity. See the
+[architecture reference](rust-rmg.md) for the compatibility contract and limits.
 
 Rust paths below are relative to `tools/homm3-rmg/src`. C++ line numbers identify
 the audited commit; operation names remain useful after source movement.
@@ -55,5 +55,5 @@ before generation and uses an exhaustive `MapVersion` match during output.
 
 The source review alone did not resolve executable differences. The corrected
 treasure geometry comparison now passes, and nonperturbing retail captures
-establish zero-versus-nonzero water-zone town flags. The [main plan](rust-rmg-plan.md)
-tracks runtime fixes and the remaining corpus work separately from this audit.
+establish zero-versus-nonzero water-zone town flags. Full corpus parity remains
+unproven; the [architecture reference](rust-rmg.md) defines verification requirements.

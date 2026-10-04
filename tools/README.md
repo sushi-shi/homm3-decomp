@@ -15,7 +15,7 @@ files, zlib, reporting, and PNG output at the edge.
 | `homm3-save` | `no_std`, no allocation, no dependencies | Parse and exhaustively consume every GM/TGM/CGM revision accepted by retail Complete |
 | `homm3-oracle` | `std` | Read files, inflate zlib/gzip, census corpora, inspect runs, and emit inspection PNGs |
 | `homm3-rmg-data` | generated plain data | Bind existing C++ RMG domains without duplicating numeric definitions |
-| `homm3-rmg` | `std`, owned reusable storage | Rust RMG implementation in progress; see the [implementation plan](../docs/reconstruction/rust-rmg-plan.md) |
+| `homm3-rmg` | `std`, owned reusable storage | Native random-map generation; see [architecture and compatibility](../docs/reconstruction/rust-rmg.md) |
 
 The libraries contain no `unsafe` code. The format codecs remain independent
 of the bindgen-derived generation definitions. Callers own all input, decode, palette,
