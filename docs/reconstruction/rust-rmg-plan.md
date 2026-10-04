@@ -202,6 +202,28 @@ byte-for-byte and in RNG (1772710812 and 3530451699). The small and large baseli
 still encounter the classified out-of-array river read. Capture evidence is in
 `build/boundary-live-review/`.
 
+The expanded hotfix campaign passed its first 1,000 requests: 987 exact maps
+and 13 matching missing-player-town rejections, including final RNG and all
+80 repaired request bytes. Eighteen fresh-process repeats agreed. The full
+100,000-request campaign continues with bounded workers; this checkpoint is
+not a completed campaign result.
+
+Saved retail corpus replays explicitly supply the harness's signed `stackWord`
+as the initial key-tent cursor. A nonperturbing capture at 0x54bfeb confirms
+generator+0xf5c (`ebp-0x590`) retains that word for both positive and negative
+values. Traced and plain map bytes and result states match the archived pinned
+executable outputs. This is a controlled-harness input, not a library default.
+Capture evidence is in `build/cursor-live-review/`.
+
+Retail sample `sample2-000232` selects shipped template `2SM2i(2)`, whose
+unassigned human zones write outside the player-slot arrays. At 0x5499e0 retail
+writes `humanSlots[-1]`; at 0x5499e5 it writes `allSlots[-1]`, which aliases
+`humanSlots[7]` and creates a phantom seat. Native success in this case depends
+on those writes. Rust preserves the selection draw and reports the specific
+`UnassignedPlayerZone` fault; hotfix excludes the candidate. The regression
+checks fault identity and draw timing. Corpus accounting keeps such native
+undefined behavior separate from exact output matches.
+
 Allocation profiling loads assets once, prepares each request separately, and
 reuses workspaces across small hotfix, XL hotfix and medium retail cases. Both
 warmed repeats of generation and output performed zero allocations/reallocations

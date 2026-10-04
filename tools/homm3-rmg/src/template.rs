@@ -52,6 +52,11 @@ impl Error for TemplateError {}
 /// A candidate retail accepts, but cannot execute safely.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RetailTemplateFault {
+    /// A starting zone writes before retail's player-slot arrays (`owner == -1`).
+    UnassignedPlayerZone {
+        /// Zero-based source row.
+        row: usize,
+    },
     /// A zone has an unsupported size or player index.
     UnusableZone {
         /// Zero-based source row.
@@ -61,6 +66,10 @@ pub enum RetailTemplateFault {
 impl fmt::Display for RetailTemplateFault {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::UnassignedPlayerZone { row } => write!(
+                f,
+                "rmg.txt row {row}: unassigned player zone writes before retail player-slot arrays"
+            ),
             Self::UnusableZone { row } => write!(f, "rmg.txt row {row}: unsupported retail zone"),
         }
     }
@@ -532,12 +541,11 @@ impl<'a> TemplateSource<'a> {
                             raw::RMG_TEMPLATE_COLUMN_KIND_COMPUTER => player_zones += 1,
                             _ => {}
                         }
-                        if let Some(zone) =
-                            parse_zone(&row, ZoneId::new(template.zones.len()), request)?
-                        {
-                            template.zones.push(zone);
-                        } else {
-                            fault.get_or_insert(RetailTemplateFault::UnusableZone { row: index });
+                        match parse_zone(&row, ZoneId::new(template.zones.len()), request)? {
+                            Ok(zone) => template.zones.push(zone),
+                            Err(reason) => {
+                                fault.get_or_insert(reason);
+                            }
                         }
                     }
                 }
@@ -609,12 +617,19 @@ fn representable(categories: impl IntoIterator<Item = Placement> + Clone) -> boo
     clippy::too_many_lines,
     reason = "one source row is parsed together before exposing a zone"
 )]
-fn parse_zone(row: &Row<'_>, id: ZoneId, request: &Request) -> Result<Option<Zone>, TemplateError> {
+// Encoding errors abort preparation; unsafe zone domains stay attached to their
+// candidate so retail consumes its selection draw before reporting the fault.
+fn parse_zone(
+    row: &Row<'_>,
+    id: ZoneId,
+    request: &Request,
+) -> Result<Result<Zone, RetailTemplateFault>, TemplateError> {
+    let unusable = RetailTemplateFault::UnusableZone { row: row.index };
     let size = u32::try_from(row.number(raw::RMG_TEMPLATE_COLUMN_SIZE)?)
         .ok()
         .and_then(NonZeroU32::new);
     let Some(size) = size else {
-        return Ok(None);
+        return Ok(Err(unusable));
     };
     let player = row.number(raw::RMG_TEMPLATE_COLUMN_PLAYER_INDEX)?;
     let owner = match player {
@@ -622,14 +637,23 @@ fn parse_zone(row: &Row<'_>, id: ZoneId, request: &Request) -> Result<Option<Zon
         value if (1..=i32::try_from(raw::RMG_PLAYER_COUNT).unwrap()).contains(&value) => {
             Some(PlayerSlot(u8::try_from(value - 1).unwrap()))
         }
-        _ => return Ok(None),
+        _ => return Ok(Err(unusable)),
     };
     let role = match (row.kind(), owner) {
         (raw::RMG_TEMPLATE_COLUMN_KIND_HUMAN, Some(slot)) => ZoneRole::Human(slot),
         (raw::RMG_TEMPLATE_COLUMN_KIND_COMPUTER, Some(slot)) => ZoneRole::Computer(slot),
         (raw::RMG_TEMPLATE_COLUMN_KIND_TREASURE, owner) => ZoneRole::Treasure(owner),
         (raw::RMG_TEMPLATE_COLUMN_KIND_JUNCTION, owner) => ZoneRole::Junction(owner),
-        _ => return Ok(None),
+        // Retail getPlayerSlots indexes both eight-byte arrays with -1 for an
+        // unassigned human zone (only allSlots for a computer zone). In generate,
+        // 0x5499e0 writes humanSlots[-1]; 0x5499e5 writes allSlots[-1], aliasing
+        // humanSlots[7]. Shipped 2SM2i(2) thus gains a phantom player slot.
+        // Native success does not make these out-of-array accesses defined.
+        _ => {
+            return Ok(Err(RetailTemplateFault::UnassignedPlayerZone {
+                row: row.index,
+            }))
+        }
     };
     let towns = [
         placement(
@@ -689,7 +713,7 @@ fn parse_zone(row: &Row<'_>, id: ZoneId, request: &Request) -> Result<Option<Zon
                 density: band.density,
             })))
     {
-        return Ok(None);
+        return Ok(Err(unusable));
     }
     let flags = |first: u32, index: usize| row.set(first + u32::try_from(index).unwrap());
     let mut allowed_towns =
@@ -717,7 +741,7 @@ fn parse_zone(row: &Row<'_>, id: ZoneId, request: &Request) -> Result<Option<Zon
         Some(b's') => ZoneMonsters::Strong,
         _ => ZoneMonsters::Average,
     };
-    Ok(Some(Zone {
+    Ok(Ok(Zone {
         id,
         source_number: row.number(raw::RMG_TEMPLATE_COLUMN_ZONE_INDEX)?,
         role,
@@ -924,6 +948,18 @@ mod tests {
             )
             .unwrap();
         assert_eq!(candidates.len(), 3);
+        let mut rng = crate::rng::RetailRng::new(1);
+        assert!(matches!(
+            crate::selection::SelectedTemplate::select(
+                &candidates[1..2],
+                &request(Behavior::Retail(RetailProfile::default())),
+                &mut rng,
+            ),
+            Err(crate::selection::SelectionError::RetailTemplate(
+                RetailTemplateFault::UnassignedPlayerZone { row: 5 }
+            ))
+        ));
+        assert_eq!(rng.draws(), 1);
         let mut candidates = candidates.into_iter();
         assert_eq!(
             candidates.next().unwrap().into_template().unwrap().name(),
@@ -931,7 +967,7 @@ mod tests {
         );
         assert!(matches!(
             candidates.next().unwrap().into_template(),
-            Err(RetailTemplateFault::UnusableZone { row: 5 })
+            Err(RetailTemplateFault::UnassignedPlayerZone { row: 5 })
         ));
         assert_eq!(
             candidates.next().unwrap().into_template().unwrap().name(),
