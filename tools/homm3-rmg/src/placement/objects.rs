@@ -24,14 +24,15 @@ impl MapObjectId {
 }
 
 /// Geometry identity, distinct from serialized town/monster IDs and prototype IDs.
-/// Valid until the owning arena is reset; moving an object does not change it.
+/// Valid until discarded or the owning arena is reset; moving preserves it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ObjectId {
     index: usize,
     owner: OwnerId,
+    generation: usize,
 }
 impl ObjectId {
-    /// Dense geometry-record index, not a serialized object counter.
+    /// Reusable record-slot index, not a serialized counter or a complete identity.
     #[must_use]
     pub const fn index(self) -> usize {
         self.index
@@ -104,12 +105,25 @@ struct ObjectRecord {
     payload: ObjectPayload,
 }
 
+#[derive(Debug)]
+enum ObjectSlot {
+    Occupied {
+        generation: usize,
+        record: ObjectRecord,
+    },
+    Vacant {
+        next: Option<usize>,
+    },
+}
+
 /// Contiguous geometry and payload records shared by temporary and world maps.
 /// Map membership never owns or copies a payload; removal retains its arena record.
 #[derive(Default, Debug)]
 pub struct ObjectArena {
-    records: Vec<ObjectRecord>,
+    records: Vec<ObjectSlot>,
     owner: Option<OwnerId>,
+    free: Option<usize>,
+    next_generation: usize,
 }
 impl ObjectArena {
     pub(super) const fn owner(&self) -> Option<OwnerId> {
@@ -119,6 +133,8 @@ impl ObjectArena {
     pub fn reset(&mut self) {
         self.records.clear();
         self.owner = None;
+        self.free = None;
+        self.next_generation = 0;
     }
     /// Allocate a stable geometry identity without allocating an individual object.
     ///
@@ -194,36 +210,77 @@ impl ObjectArena {
             self.owner = Some(owner);
             owner
         };
-        self.records.try_reserve(1)?;
-        let id = ObjectId {
-            index: self.records.len(),
-            owner,
-        };
-        self.records.push(ObjectRecord {
-            geometry: ObjectGeometry {
-                prototype,
-                kind: entry.prototype().kind(),
-                position: None,
+        let generation = self.next_generation;
+        let next_generation = generation
+            .checked_add(1)
+            .ok_or(PlacementError::IdentityExhausted)?;
+        let slot = ObjectSlot::Occupied {
+            generation,
+            record: ObjectRecord {
+                geometry: ObjectGeometry {
+                    prototype,
+                    kind: entry.prototype().kind(),
+                    position: None,
+                },
+                payload,
             },
-            payload,
-        });
-        Ok(id)
+        };
+        let index = if let Some(index) = self.free {
+            let ObjectSlot::Vacant { next } = self.records[index] else {
+                unreachable!("free list contains only vacant slots")
+            };
+            self.free = next;
+            self.records[index] = slot;
+            index
+        } else {
+            self.records.try_reserve(1)?;
+            let index = self.records.len();
+            self.records.push(slot);
+            index
+        };
+        self.next_generation = next_generation;
+        Ok(ObjectId {
+            index,
+            owner,
+            generation,
+        })
     }
-    /// Read geometry if the ID belongs to an existing record.
+    fn record(&self, id: ObjectId) -> Option<&ObjectRecord> {
+        if Some(id.owner) != self.owner {
+            return None;
+        }
+        match self.records.get(id.index)? {
+            ObjectSlot::Occupied { generation, record } if *generation == id.generation => {
+                Some(record)
+            }
+            _ => None,
+        }
+    }
+    /// Read geometry if the full ID still identifies a live record.
     #[must_use]
     pub fn get(&self, id: ObjectId) -> Option<&ObjectGeometry> {
-        (Some(id.owner) == self.owner)
-            .then(|| self.records.get(id.index))
-            .flatten()
-            .map(|record| &record.geometry)
+        self.record(id).map(|record| &record.geometry)
     }
     /// Read a typed payload using the same checked identity as its geometry.
     #[must_use]
     pub fn payload(&self, id: ObjectId) -> Option<&ObjectPayload> {
-        (Some(id.owner) == self.owner)
-            .then(|| self.records.get(id.index))
-            .flatten()
-            .map(|record| &record.payload)
+        self.record(id).map(|record| &record.payload)
+    }
+    /// Release a never-placed object after a failed placement attempt.
+    /// Reuses its slot without allowing old IDs to identify a replacement.
+    /// An object removed from a map keeps its position and cannot be discarded:
+    /// another temporary or world map may still reference it.
+    ///
+    /// # Errors
+    /// Reports a stale/foreign ID or an object that has ever been placed.
+    pub fn discard_unplaced(&mut self, id: ObjectId) -> Result<(), PlacementError> {
+        let record = self.record(id).ok_or(PlacementError::UnknownObject(id))?;
+        if record.geometry.position.is_some() {
+            return Err(PlacementError::PreviouslyPlaced(id));
+        }
+        self.records[id.index] = ObjectSlot::Vacant { next: self.free };
+        self.free = Some(id.index);
+        Ok(())
     }
     /// Derive the current entrance from the anchor and its owning prototype.
     /// Unplaced records have no entrance.
@@ -246,7 +303,12 @@ impl ObjectArena {
             .transpose()
     }
     pub(super) fn set_position(&mut self, id: ObjectId, position: WorldPosition) {
-        self.records[id.index].geometry.position = Some(position);
+        assert_eq!(Some(id.owner), self.owner);
+        let ObjectSlot::Occupied { generation, record } = &mut self.records[id.index] else {
+            unreachable!("placement checked a live object")
+        };
+        assert_eq!(*generation, id.generation);
+        record.geometry.position = Some(position);
     }
 }
 
@@ -388,7 +450,11 @@ mod tests {
     #[test]
     fn stable_membership_order_and_first_duplicate_removal_reuse_freed_slots() {
         let owner = OwnerId::new().unwrap();
-        let object = |index| ObjectId { index, owner };
+        let object = |index| ObjectId {
+            index,
+            owner,
+            generation: 0,
+        };
         let mut arena = Memberships::default();
         let mut chain = Chain::default();
         arena.reserve(3).unwrap();

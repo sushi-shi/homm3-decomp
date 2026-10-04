@@ -12,6 +12,8 @@ use crate::{
 use std::{collections::TryReserveError, error::Error, fmt};
 
 mod guards;
+mod zone_objects;
+use zone_objects::ZonePlacementScratch;
 mod objects;
 pub use guards::GuardPlacementError;
 pub use objects::{
@@ -128,6 +130,10 @@ pub enum PlacementError {
     UnknownPrototype(PrototypeId),
     /// Object ID does not belong to the supplied arena or its current generation.
     UnknownObject(ObjectId),
+    /// Zone index is outside this map.
+    UnknownZone(ZoneId),
+    /// Discarding an object that may still be shared by world or temporary maps.
+    PreviouslyPlaced(ObjectId),
     /// Retail would erase an end iterator from a cell with allocated vector storage.
     MissingMembership(ObjectId),
     /// Invalid prototype dimensions.
@@ -173,6 +179,10 @@ impl fmt::Display for PlacementError {
                 "object {} belongs to another arena generation",
                 id.index()
             ),
+            Self::UnknownZone(id) => write!(f, "zone {} does not belong to this map", id.index()),
+            Self::PreviouslyPlaced(id) => {
+                write!(f, "object {} has already been placed", id.index())
+            }
             Self::MissingMembership(id) => write!(
                 f,
                 "retail removes absent object {} from allocated cell storage",
@@ -241,6 +251,7 @@ pub struct PlacementWorkspace {
     registration: Registration,
     towns: TownState,
     connections: ConnectionScratch,
+    zone_placement: ZonePlacementScratch,
 }
 impl PlacementWorkspace {
     /// Consume painted terrain into the placement stage and reset cell state.
@@ -259,6 +270,7 @@ impl PlacementWorkspace {
         self.memberships.reset();
         self.towns.reset();
         self.connections.reset();
+        self.zone_placement.reset();
         self.registration
             .reset(terrain.coverage().map().zones().len())?;
         Ok(PlacementMap {
@@ -268,6 +280,7 @@ impl PlacementWorkspace {
             registration: &mut self.registration,
             towns: &mut self.towns,
             connections: &mut self.connections,
+            zone_placement: &mut self.zone_placement,
         })
     }
 }
@@ -280,6 +293,7 @@ pub struct PlacementMap<'state, 'zones, 'tiles> {
     registration: &'state mut Registration,
     towns: &'state mut TownState,
     connections: &'state mut ConnectionScratch,
+    zone_placement: &'state mut ZonePlacementScratch,
 }
 impl PlacementMap<'_, '_, '_> {
     /// Existing painted tiles and zone coverage, without copying either buffer.
@@ -322,9 +336,10 @@ impl PlacementMap<'_, '_, '_> {
         outline: NonEmptyOutline<'_>,
         anchor: WorldPosition,
         entrances: OutlineEntrances,
-        zone: &BoundaryZone,
+        zone: ZoneId,
         clearance: OutlineClearance,
     ) -> Result<bool, PlacementError> {
+        let zone = self.zone(zone)?;
         self.view().has_connected_outline(
             outline,
             anchor,
@@ -343,11 +358,21 @@ impl PlacementMap<'_, '_, '_> {
         &self,
         entry: &PreparedPrototype<'_>,
         anchor: WorldPosition,
-        zone: &BoundaryZone,
+        zone: ZoneId,
         outline: &mut OutlineWorkspace,
     ) -> Result<bool, PlacementError> {
+        let zone = self.zone(zone)?;
         self.view()
             .can_place(entry, anchor, zone.id(), zone.terrain(), outline)
+    }
+
+    fn zone(&self, id: ZoneId) -> Result<BoundaryZone, PlacementError> {
+        self.coverage()
+            .map()
+            .zones()
+            .get(id.index())
+            .copied()
+            .ok_or(PlacementError::UnknownZone(id))
     }
 
     /// Zone ownership remains borrowed from the boundary workspace.

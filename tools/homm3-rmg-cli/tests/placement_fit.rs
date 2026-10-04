@@ -104,7 +104,7 @@ fn snapshot(
                 let blocked = map
                     .footprint_blocked(entry, anchor, Some(zone.id()), ObstacleEntrances::Allow)
                     .unwrap();
-                let fits = match map.can_place(entry, anchor, zone, outline) {
+                let fits = match map.can_place(entry, anchor, zone.id(), outline) {
                     Ok(fits) => i32::from(fits),
                     Err(PlacementError::EmptyOutline) => -1,
                     Err(error) => panic!("row {}: {error}", entry.prototype().source_row()),

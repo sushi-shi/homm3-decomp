@@ -19,8 +19,6 @@ pub enum GuardPlacementError {
     Placement(PlacementError),
     /// A deferred retail creature-selection fault.
     Selection(GuardError),
-    /// Requested zone does not exist in this generation.
-    UnknownZone(ZoneId),
     /// Retail indexes the zone array with the unassigned sentinel.
     UnassignedCell(WorldPosition),
 }
@@ -29,7 +27,6 @@ impl fmt::Display for GuardPlacementError {
         match self {
             Self::Placement(error) => error.fmt(f),
             Self::Selection(error) => error.fmt(f),
-            Self::UnknownZone(zone) => write!(f, "guard zone {} does not exist", zone.index()),
             Self::UnassignedCell(position) => {
                 write!(f, "retail guard indexes an unassigned zone at {position:?}")
             }
@@ -64,10 +61,7 @@ impl PlacementMap<'_, '_, '_> {
     ) -> Result<Option<ObjectId>, GuardPlacementError> {
         self.prepare_object_context(objects, catalog)?;
         let map = self.coverage().map();
-        let zone = map
-            .zones()
-            .get(zone.index())
-            .ok_or(GuardPlacementError::UnknownZone(zone))?;
+        let zone = self.zone(zone)?;
         // Added water zones clear allowed factions, but retail leaves their
         // alignment-matching flag unwritten. That flag is an explicit replay input.
         let empty = [false; raw::TOWN_TYPE_COUNT as usize + 1];

@@ -106,7 +106,8 @@ implementation order, not equal amounts of work or a percentage estimate.
 The library cannot yet generate a complete map.
 
 1. **Object storage and map mutation.** Extend typed payload ownership and
-   discarded-object slot reuse for remaining kinds and transient groups.
+   reservation cleanup for remaining kinds and transient groups. Never-placed
+   records now reuse slots with generation-checked IDs.
    Neighbourhood path helpers, stable geometry IDs, ordered cell membership,
    registration/removal, global/zone type counts, entrance-distance propagation
    and individual path/obstacle/border transitions now use reusable storage.
@@ -137,8 +138,7 @@ The library cannot yet generate a complete map.
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: reusable discarded-object slots and generic
-zone placement for tents/portals, then border guards and `connectZones` crossings,
+Immediate next implementation: border guards and `connectZones` crossings,
 subterranean gates, shipyards and monolith fallback, followed by dry junctions.
 Initial connection pathfinding and water-border repair now consume `WaterIslands`
 through `ConnectionPaths` into `RepairedWaterBorders`, retaining the shared map,
@@ -447,6 +447,24 @@ allowed-monster bytes beginning at `+0x95` (`0x53e300`–`0x53e45c`). The defaul
 false matches the captured zero-fill baseline; true selects the current resolved
 alignment instead of the empty allowed-faction set. This is independent of the
 general heap fill. Broader replay-profile corpus coverage remains pending.
+
+Never-placed objects can now release their arena slots after failed placement.
+An intrusive free list reuses storage, while checked allocation generations keep
+stale handles invalid after slot reuse. Placed and removed objects retain their
+records because another map may reference them. Generic zone placement now
+scans the source footprint-inset bounds in row order, preserves singleton draws,
+and registers only a selected fitting candidate. Its reusable candidate/outline
+scratch is separate from connection candidates, so nested tent placement cannot
+overwrite an in-progress crossing search.
+
+Eight native zone-placement captures agree on 1,256 attempts (741 placements and
+515 failures), object order/coordinates, all cells/counts and RNG states (131,770
+checkpoint lines). Existing guard captures and 270,048 fit-query pairs also pass
+with slot reuse and map-local zone lookup. Regression checks reject stale handles
+after exact-slot reuse and reject discarding placed or removed objects. All 69
+core tests and strict Clippy pass. Both reviewers report no remaining findings;
+the design review caught and resolved public fit APIs accepting a foreign map's
+copied zone metadata. They now take a zone index and resolve it in the active map.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

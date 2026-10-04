@@ -886,7 +886,29 @@ mod tests {
         assert!(first.get(b).is_none());
         assert!(second.get(a).is_none());
         assert!(first.get(a).unwrap().position().is_none());
+        first.discard_unplaced(a).unwrap();
+        assert!(first.get(a).is_none());
+        assert!(first.payload(a).is_none());
+        assert!(matches!(
+            first.discard_unplaced(a),
+            Err(PlacementError::UnknownObject(_))
+        ));
+        let reused = first.create(&catalog, prototype).unwrap();
+        assert_eq!(reused.index(), a.index());
+        assert_ne!(reused, a);
+        assert!(first.get(a).is_none());
+        assert!(first.payload(a).is_none());
+        assert!(first.get(reused).is_some());
+        assert!(matches!(
+            first.discard_unplaced(a),
+            Err(PlacementError::UnknownObject(_))
+        ));
+        assert!(matches!(
+            first.discard_unplaced(b),
+            Err(PlacementError::UnknownObject(_))
+        ));
         first.reset();
+        assert!(first.get(reused).is_none());
         let replacement = first.create(&catalog, prototype).unwrap();
         assert_eq!(replacement.index(), a.index());
         assert!(first.get(a).is_none());

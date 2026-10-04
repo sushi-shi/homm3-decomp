@@ -1,22 +1,18 @@
-//! Native guard construction and placement, including payload IDs and cell state.
+//! Native generic zone placement, including failed attempts and reused object slots.
 use homm3_rmg::{
     behavior::{Behavior, RetailProfile},
     boundaries::BoundaryWorkspace,
-    domain::{Level, WorldPosition},
-    geometry::Point,
     layout::LayoutWorkspace,
-    placement::{
-        MonsterPayload, ObjectArena, ObjectId, ObjectPayload, PlacementError, PlacementMap,
-        PlacementWorkspace,
-    },
+    object::ObjectKind,
+    placement::{ObjectArena, PlacementError, PlacementMap, PlacementWorkspace},
     placement_rules::PlacementRules,
     prototype::{PrototypeCatalog, PrototypeSource},
+    raw,
     request::{default_record, Levels, MapSize, Request},
     rng::RetailRng,
     selection::{resolve_water, SelectedTemplate},
     template::TemplateSource,
     terrain::TerrainWorkspace,
-    traits::CreatureCatalog,
 };
 use homm3_rmg_cli::resources::Installation;
 use std::{
@@ -28,19 +24,14 @@ mod placement_snapshot;
 use placement_snapshot::{write_cells, write_counts};
 
 #[test]
-#[ignore = "requires HOMM3_RMG_DATA and HOMM3_RMG_ORACLE guard-objects checkpoints"]
-fn native_guard_objects_preserve_payloads_ids_cells_and_rng() {
+#[ignore = "requires HOMM3_RMG_DATA and HOMM3_RMG_ORACLE zone-objects checkpoints"]
+fn native_zone_placement_preserves_candidates_registration_and_rng() {
     let directory = PathBuf::from(std::env::var_os("HOMM3_RMG_DATA").unwrap());
     let oracle = PathBuf::from(std::env::var_os("HOMM3_RMG_ORACLE").unwrap());
     let mut installation = Installation::open(&directory).unwrap();
     let mut objects = Vec::new();
     installation.text("objects.txt", &mut objects).unwrap();
     let source = PrototypeSource::parse(&objects, |name| installation.mask(name)).unwrap();
-    let mut creature_bytes = Vec::new();
-    installation
-        .text("crtraits.txt", &mut creature_bytes)
-        .unwrap();
-    let creatures = CreatureCatalog::parse(&creature_bytes).unwrap();
     let mut bytes = Vec::new();
     installation.text("rand_trn.txt", &mut bytes).unwrap();
     let mut templates = Vec::new();
@@ -84,136 +75,118 @@ fn native_guard_objects_preserve_payloads_ids_cells_and_rng() {
             assert_eq!(map.terrain().tiles().as_ptr(), tile_address);
             let catalog = source.prepare(&rules, request.version(), behavior).unwrap();
             let mut objects = ObjectArena::default();
-            let actual = snapshot(&mut map, &mut objects, &catalog, &creatures);
+            let actual = snapshot(&mut map, &mut objects, &catalog);
             checked += compare(&oracle, mode, case, &actual);
         }
     }
-    eprintln!("checked {checked} native guard-object checkpoint lines");
+    eprintln!("checked {checked} native zone-placement checkpoint lines");
 }
 
-fn monster(objects: &ObjectArena, object: ObjectId) -> &MonsterPayload {
-    let ObjectPayload::Monster(payload) = objects.payload(object).unwrap() else {
-        panic!("expected guard payload")
-    };
-    payload
-}
-fn position(index: usize, side: usize) -> WorldPosition {
-    WorldPosition {
-        point: Point::new(
-            i32::try_from(index % side).unwrap(),
-            i32::try_from(index / side % side).unwrap(),
-        ),
-        level: if index < side * side {
-            Level::Surface
-        } else {
-            Level::Underground
-        },
-    }
-}
-fn write_creation_probes(
-    actual: &mut String,
-    map: &mut PlacementMap<'_, '_, '_>,
-    objects: &mut ObjectArena,
-    catalog: &PrototypeCatalog<'_>,
-    creatures: &CreatureCatalog,
-) {
-    for index in 0..map.coverage().map().zones().len() {
-        let zone = map.coverage().map().zones()[index].id();
-        for value in [0, 2000, 10000, 50000] {
-            for seed in [1, 42] {
-                let mut rng = RetailRng::new(seed);
-                let guard = map
-                    .create_guard(value, zone, objects, catalog, creatures, &mut rng)
-                    .unwrap();
-                let data = guard.map_or([-1; 4], |object| {
-                    let guard = monster(objects, object);
-                    assert!(objects.get(object).unwrap().position().is_none());
-                    assert!(objects.entrance(catalog, object).unwrap().is_none());
-                    [
-                        i64::from(guard.id().value()),
-                        i64::from(guard.count()),
-                        i64::from(guard.disposition()),
-                        i64::try_from(
-                            catalog
-                                .get(objects.get(object).unwrap().prototype())
-                                .unwrap()
-                                .prototype()
-                                .source_row(),
-                        )
-                        .unwrap(),
-                    ]
-                });
-                if let Some(guard) = guard {
-                    objects.discard_unplaced(guard).unwrap();
-                    assert!(objects.get(guard).is_none());
-                }
-                writeln!(
-                    actual,
-                    "{index} {value} {seed} {} {} {} {} {} {}",
-                    data[0],
-                    data[1],
-                    data[2],
-                    data[3],
-                    rng.state(),
-                    map.next_object_id()
-                )
-                .unwrap();
-            }
-        }
-    }
-    assert!(map.active_objects().is_empty());
-}
 fn snapshot(
     map: &mut PlacementMap<'_, '_, '_>,
     objects: &mut ObjectArena,
     catalog: &PrototypeCatalog<'_>,
-    creatures: &CreatureCatalog,
 ) -> String {
     let mut actual = String::new();
-    write_creation_probes(&mut actual, map, objects, catalog, creatures);
-    let side = map.coverage().map().raster().dimension();
+    let mut attempts = 0;
+    let mut failures = 0;
     for index in 0..map.coverage().map().zones().len() {
         let zone = map.coverage().map().zones()[index].id();
-        let Some(cell) = map
-            .coverage()
-            .map()
-            .raster()
-            .cells()
-            .iter()
-            .position(|cell| cell.zone == Some(zone))
-        else {
-            continue;
-        };
-        let mut rng = RetailRng::new(42);
-        let at = position(cell, side);
-        map.place_guard(10000, at, objects, catalog, creatures, &mut rng)
-            .unwrap();
-        map.place_guard(10000, at, objects, catalog, creatures, &mut rng)
-            .unwrap();
-        writeln!(
-            actual,
-            "{index} {cell} {} {} {}",
-            rng.state(),
-            map.next_object_id(),
-            map.active_objects().len()
-        )
-        .unwrap();
+        for family in [
+            raw::BORDER_TENT,
+            raw::LITH_TWOWAY,
+            raw::UNDERGROUND_GATE,
+            raw::SHIPYARD,
+        ] {
+            let kind = ObjectKind::parse(i32::try_from(family).unwrap()).unwrap();
+            let Some(prototype) = catalog.at(kind, 0) else {
+                continue;
+            };
+            for attempt in 0..2 {
+                let object = objects.create(catalog, prototype).unwrap();
+                let mut rng = RetailRng::new(42);
+                let placed = map
+                    .place_object_in_zone(object, zone, objects, catalog, &mut rng)
+                    .unwrap();
+                let geometry = objects.get(object).unwrap();
+                let coordinates = geometry.position().map_or([-1; 3], |p| {
+                    [
+                        p.point.x,
+                        p.point.y,
+                        i32::try_from(p.level.index()).unwrap(),
+                    ]
+                });
+                writeln!(
+                    actual,
+                    "{index} {family} {attempt} {} {} {} {} {} {} {} {}",
+                    catalog.get(prototype).unwrap().prototype().source_row(),
+                    i32::from(placed),
+                    coordinates[0],
+                    coordinates[1],
+                    coordinates[2],
+                    rng.state(),
+                    map.next_object_id(),
+                    map.active_objects().len()
+                )
+                .unwrap();
+                attempts += 1;
+                if placed {
+                    assert!(matches!(
+                        objects.discard_unplaced(object),
+                        Err(PlacementError::PreviouslyPlaced(_))
+                    ));
+                } else {
+                    failures += 1;
+                    assert_eq!(rng.state(), 42);
+                    objects.discard_unplaced(object).unwrap();
+                    // Reusing the exact slot must not let this handle place its replacement.
+                    let replacement = objects.create(catalog, prototype).unwrap();
+                    assert_eq!(replacement.index(), object.index());
+                    assert!(matches!(
+                        map.place_object_in_zone(object, zone, objects, catalog, &mut rng),
+                        Err(PlacementError::UnknownObject(_))
+                    ));
+                    assert_eq!(rng.state(), 42);
+                    assert!(objects.get(replacement).unwrap().position().is_none());
+                    objects.discard_unplaced(replacement).unwrap();
+                }
+            }
+        }
     }
-    writeln!(actual, "{}", map.active_objects().len()).unwrap();
-    for &object in map.active_objects() {
+    write_registered_objects(&mut actual, map, objects, catalog);
+    write_counts(&mut actual, map);
+    write_cells(&mut actual, map, |object| {
+        i32::try_from(
+            map.active_objects()
+                .iter()
+                .position(|&id| id == object)
+                .unwrap(),
+        )
+        .unwrap()
+    });
+    if let Some(&object) = map.active_objects().first() {
+        map.unregister_object(objects, catalog, object).unwrap();
         assert!(matches!(
             objects.discard_unplaced(object),
             Err(PlacementError::PreviouslyPlaced(_))
         ));
-        let guard = monster(objects, object);
+    }
+    eprintln!("zone placement: {attempts} attempts, {failures} failures");
+    actual
+}
+fn write_registered_objects(
+    actual: &mut String,
+    map: &PlacementMap<'_, '_, '_>,
+    objects: &ObjectArena,
+    catalog: &PrototypeCatalog<'_>,
+) {
+    writeln!(actual, "{}", map.active_objects().len()).unwrap();
+    for &object in map.active_objects() {
         let geometry = objects.get(object).unwrap();
         let at = geometry.position().unwrap();
         writeln!(
             actual,
-            "{} {} {} {} {} {} {}",
-            guard.id().value(),
-            guard.count(),
-            guard.disposition(),
+            "{} {} {} {}",
             catalog
                 .get(geometry.prototype())
                 .unwrap()
@@ -225,15 +198,10 @@ fn snapshot(
         )
         .unwrap();
     }
-    write_counts(&mut actual, map);
-    write_cells(&mut actual, map, |object| {
-        monster(objects, object).id().value()
-    });
-    actual
 }
 fn compare(oracle: &Path, mode: &str, case: usize, actual: &str) -> usize {
     let expected = std::fs::read_to_string(oracle.join(format!(
-        "{mode}-layout/case-{case}-candidate/guard-objects.txt"
+        "{mode}-layout/case-{case}-candidate/zone-objects.txt"
     )))
     .unwrap();
     assert_eq!(
