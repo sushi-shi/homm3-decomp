@@ -32,6 +32,7 @@ pub enum Attempts {
     Junctions,
     Mines,
     TreasurePaths,
+    TreasureValues,
 }
 impl Attempts {
     fn filename(self) -> &'static str {
@@ -43,6 +44,7 @@ impl Attempts {
             Self::Junctions => "junctions.txt",
             Self::Mines => "mines.txt",
             Self::TreasurePaths => "treasure-paths.txt",
+            Self::TreasureValues => "treasure-values.txt",
         }
     }
 }
@@ -144,7 +146,7 @@ pub fn compare_native(attempts: Attempts) {
     eprintln!("checked {checked} native connection checkpoint lines");
     if matches!(
         attempts,
-        Attempts::Junctions | Attempts::Mines | Attempts::TreasurePaths
+        Attempts::Junctions | Attempts::Mines | Attempts::TreasurePaths | Attempts::TreasureValues
     ) {
         eprintln!("prepared {junction_count} dry junction zones");
         assert!(
@@ -316,90 +318,74 @@ fn snapshot(
             .unwrap()
             .is_empty());
     }
-    if matches!(
-        attempts,
-        Attempts::Direct
-            | Attempts::BothPasses
-            | Attempts::Junctions
-            | Attempts::Mines
-            | Attempts::TreasurePaths
-    ) {
-        let direct = connecting
-            .connect_direct_zones(objects, catalog, creatures, rng)
-            .unwrap();
-        assert_eq!(direct.rng(), rng.checkpoint());
-        if matches!(
+    if matches!(attempts, Attempts::Ground | Attempts::GroundAndShipyard) {
+        run_attempts(
+            &mut actual,
+            &mut connecting,
+            objects,
+            catalog,
+            creatures,
+            rng,
             attempts,
-            Attempts::BothPasses | Attempts::Junctions | Attempts::Mines | Attempts::TreasurePaths
-        ) {
-            let placed = direct
-                .connect_remaining_zones(objects, catalog, creatures, rng)
-                .unwrap();
-            assert_eq!(placed.rng(), rng.checkpoint());
-            if matches!(
-                attempts,
-                Attempts::Junctions | Attempts::Mines | Attempts::TreasurePaths
-            ) {
-                let junctions = placed.prepare_junctions(rng).unwrap();
-                assert_eq!(junctions.rng(), rng.checkpoint());
-                if matches!(attempts, Attempts::Mines | Attempts::TreasurePaths) {
-                    let mines = junctions
-                        .place_mines(objects, catalog, creatures, rng)
-                        .unwrap();
-                    assert_eq!(mines.rng(), rng.checkpoint());
-                    if attempts == Attempts::TreasurePaths {
-                        return treasure_paths_snapshot(mines, objects, catalog, rng, colors);
-                    }
-                    return completed_snapshot(
-                        mines.map(),
-                        objects,
-                        catalog,
-                        rng,
-                        colors,
-                        attempts,
-                    );
-                }
-                return completed_snapshot(
-                    junctions.map(),
-                    objects,
-                    catalog,
-                    rng,
-                    colors,
-                    attempts,
-                );
-            }
-            return completed_snapshot(placed.map(), objects, catalog, rng, colors, attempts);
+        );
+        if attempts == Attempts::GroundAndShipyard {
+            write_water_state(&mut actual, connecting.map());
         }
+        write_snapshot(
+            &mut actual,
+            connecting.map(),
+            objects,
+            catalog,
+            colors,
+            false,
+        );
+        return actual;
+    }
+    let direct = connecting
+        .connect_direct_zones(objects, catalog, creatures, rng)
+        .unwrap();
+    assert_eq!(direct.rng(), rng.checkpoint());
+    if attempts == Attempts::Direct {
         return completed_snapshot(direct.map(), objects, catalog, rng, colors, attempts);
     }
-    run_attempts(
-        &mut actual,
-        &mut connecting,
-        objects,
-        catalog,
-        creatures,
-        rng,
-        attempts,
-    );
-    if attempts == Attempts::GroundAndShipyard {
-        write_water_state(&mut actual, connecting.map());
+    let placed = direct
+        .connect_remaining_zones(objects, catalog, creatures, rng)
+        .unwrap();
+    assert_eq!(placed.rng(), rng.checkpoint());
+    if attempts == Attempts::BothPasses {
+        return completed_snapshot(placed.map(), objects, catalog, rng, colors, attempts);
     }
-    write_snapshot(
-        &mut actual,
-        connecting.map(),
+    let junctions = placed.prepare_junctions(rng).unwrap();
+    assert_eq!(junctions.rng(), rng.checkpoint());
+    if attempts == Attempts::Junctions {
+        return completed_snapshot(junctions.map(), objects, catalog, rng, colors, attempts);
+    }
+    let mines = junctions
+        .place_mines(objects, catalog, creatures, rng)
+        .unwrap();
+    assert_eq!(mines.rng(), rng.checkpoint());
+    if attempts == Attempts::Mines {
+        return completed_snapshot(mines.map(), objects, catalog, rng, colors, attempts);
+    }
+    treasure_paths_snapshot(
+        mines,
         objects,
         catalog,
+        rng,
         colors,
-        false,
-    );
-    actual
+        creatures,
+        attempts == Attempts::TreasureValues,
+    )
 }
+
 fn treasure_paths_snapshot(
     mines: homm3_rmg::placement::MinesPlaced<'_, '_, '_>,
     objects: &mut ObjectArena,
     catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
     rng: &mut RetailRng,
     colors: &[homm3_rmg::placement::KeyTentColor],
+    creatures: &CreatureCatalog,
+    values: bool,
 ) -> String {
     let paths = mines.prepare_treasure_paths(objects, catalog, rng).unwrap();
     assert_eq!(paths.rng(), rng.checkpoint());
@@ -408,6 +394,32 @@ fn treasure_paths_snapshot(
         write!(actual, " {count}").unwrap();
     }
     actual.push('\n');
+    if values {
+        let mut workspace = homm3_rmg::treasure::TreasureWorkspace::default();
+        let definitions = workspace.prepare(catalog, creatures).unwrap();
+        let ready = paths.begin_treasures(definitions).unwrap();
+        writeln!(
+            actual,
+            "values {} {}",
+            ready.map().coverage().map().zones().len(),
+            ready.catalog().definitions().len()
+        )
+        .unwrap();
+        for zone in ready.map().coverage().map().zones() {
+            for id in ready.catalog().ids() {
+                writeln!(actual, "{}", ready.value(id, zone.id()).unwrap()).unwrap();
+            }
+        }
+        actual.push_str(&completed_snapshot(
+            ready.map(),
+            objects,
+            catalog,
+            rng,
+            colors,
+            Attempts::TreasureValues,
+        ));
+        return actual;
+    }
     actual.push_str(&completed_snapshot(
         paths.map(),
         objects,
@@ -436,7 +448,11 @@ fn completed_snapshot(
     write_water_state(&mut actual, map);
     if matches!(
         attempts,
-        Attempts::BothPasses | Attempts::Junctions | Attempts::Mines | Attempts::TreasurePaths
+        Attempts::BothPasses
+            | Attempts::Junctions
+            | Attempts::Mines
+            | Attempts::TreasurePaths
+            | Attempts::TreasureValues
     ) {
         use homm3_rmg::placement::PortalDirection;
         for (index, direction) in [PortalDirection::OneWay, PortalDirection::TwoWay]
@@ -466,7 +482,11 @@ fn completed_snapshot(
         colors,
         matches!(
             attempts,
-            Attempts::BothPasses | Attempts::Junctions | Attempts::Mines | Attempts::TreasurePaths
+            Attempts::BothPasses
+                | Attempts::Junctions
+                | Attempts::Mines
+                | Attempts::TreasurePaths
+                | Attempts::TreasureValues
         ),
     );
     actual

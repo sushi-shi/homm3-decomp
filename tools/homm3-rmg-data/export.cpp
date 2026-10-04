@@ -263,6 +263,9 @@ void emitSignedArray(const char* name, const int (&array)[N])
     std::printf("];\n");
 }
 
+static const int dwellingCreatures[] =
+#include "rmg_data/dwelling_creatures.inc"
+;
 static const int creatureRewardValues[] =
 #include "rmg_data/creature_reward_values.inc"
 ;
@@ -378,6 +381,7 @@ int main()
     for (const auto& point : portalBorderOffsets) std::printf("(%d,%d),", point.m_x, point.m_y);
     std::printf("];\n");
     emitTreasureRecipes();
+    emitSignedArray("DWELLING_CREATURES", dwellingCreatures);
     emitSignedArray("CREATURE_REWARD_VALUES", creatureRewardValues);
     emitSignedArray("KEY_TENT_REWARD_VALUES", keyTentValues);
     emitTerrainRules();

@@ -85,6 +85,19 @@ impl Registration {
         Ok(())
     }
 
+    pub(super) fn require_catalog(
+        &self,
+        catalog: &PrototypeCatalog<'_>,
+    ) -> Result<(), PlacementError> {
+        if self.catalog_owner == Some(catalog.owner()) {
+            Ok(())
+        } else {
+            Err(PlacementError::CatalogContext)
+        }
+    }
+    pub(super) const fn tent_cursor(&self) -> KeyTentCursor {
+        self.next_key_tent
+    }
     fn prepare_catalog(
         &mut self,
         catalog: &PrototypeCatalog<'_>,

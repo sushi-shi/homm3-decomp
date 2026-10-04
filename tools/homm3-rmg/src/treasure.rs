@@ -1,5 +1,6 @@
 //! Source-ordered treasure definitions prepared before generation consumes RNG.
 use crate::{
+    identity::OwnerId,
     object::ObjectKind,
     prototype::PrototypeCatalog,
     raw,
@@ -13,6 +14,8 @@ use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 pub enum TreasureError {
     /// Canonical recipe arguments do not describe an admitted definition.
     Recipe,
+    /// Process-local catalog ownership tags are exhausted.
+    IdentityExhausted,
     /// Eager creature reward construction divides by zero or overflows.
     CreatureCount(CreatureId),
     /// A family length or scalar cannot fit its native signed representation.
@@ -23,6 +26,7 @@ pub enum TreasureError {
 impl fmt::Display for TreasureError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::IdentityExhausted => f.write_str("treasure catalog identity exhausted"),
             Self::Recipe => f.write_str("unsupported canonical treasure recipe"),
             Self::CreatureCount(id) => write!(
                 f,
@@ -175,7 +179,7 @@ pub enum TreasureReward {
         value: i32,
     },
     /// Dwelling with a creature/faction-dependent value.
-    Dwelling,
+    Dwelling(CreatureId),
     /// Prison hero and experience, reserved only during generation.
     Prison {
         /// Fixed native selection value.
@@ -251,7 +255,7 @@ impl TreasureReward {
             | Self::Scroll { value, .. } => Some(value),
             Self::Scholar => Some(raw::RMG_SCHOLAR_REWARD_VALUE as i32),
             Self::WitchHut => Some(raw::RMG_WITCH_HUT_REWARD_VALUE as i32),
-            Self::Creature(_) | Self::Dwelling | Self::QuestCreature { .. } => None,
+            Self::Creature(_) | Self::Dwelling(_) | Self::QuestCreature { .. } => None,
         }
     }
     /// Source isTerrainDependent policy; faction-sensitive boxes/dwellings are false.
@@ -264,6 +268,20 @@ impl TreasureReward {
                 | Self::QuestExperience { .. }
                 | Self::QuestGold { .. }
         )
+    }
+}
+
+/// Stable identity within one prepared catalog; invalidated by preparation again.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DefinitionId {
+    index: usize,
+    owner: OwnerId,
+}
+impl DefinitionId {
+    /// Native insertion ordinal, distinct from object kind or subtype.
+    #[must_use]
+    pub const fn index(self) -> usize {
+        self.index
     }
 }
 
@@ -306,11 +324,28 @@ pub struct TreasureWorkspace {
 /// Immutable prepared definitions and their exact prototype/creature context.
 /// Does not reset map-owned tent, hero or quest reservations.
 pub struct TreasureCatalog<'workspace, 'assets, 'source> {
+    owner: OwnerId,
     definitions: &'workspace [TreasureDefinition],
     prototypes: &'assets PrototypeCatalog<'source>,
     creatures: &'assets CreatureCatalog,
 }
 impl TreasureCatalog<'_, '_, '_> {
+    /// Definition identities in native insertion order, without allocating.
+    #[must_use]
+    pub fn ids(&self) -> impl ExactSizeIterator<Item = DefinitionId> + DoubleEndedIterator + '_ {
+        (0..self.definitions.len()).map(|index| DefinitionId {
+            index,
+            owner: self.owner,
+        })
+    }
+    /// Resolve only an identity belonging to this preparation.
+    #[must_use]
+    pub fn get(&self, id: DefinitionId) -> Option<&TreasureDefinition> {
+        (id.owner == self.owner)
+            .then(|| self.definitions.get(id.index))
+            .flatten()
+    }
+
     /// Definitions in native insertion order, including repeated values.
     #[must_use]
     pub const fn definitions(&self) -> &[TreasureDefinition] {
@@ -338,11 +373,13 @@ impl TreasureWorkspace {
         prototypes: &'assets PrototypeCatalog<'source>,
         creatures: &'assets CreatureCatalog,
     ) -> Result<TreasureCatalog<'workspace, 'assets, 'source>, TreasureError> {
+        let owner = OwnerId::new().ok_or(TreasureError::IdentityExhausted)?;
         self.definitions.clear();
         for &recipe in raw::TREASURE_RECIPES {
             self.expand(recipe, prototypes, creatures)?;
         }
         Ok(TreasureCatalog {
+            owner,
             definitions: &self.definitions,
             prototypes,
             creatures,
@@ -512,11 +549,17 @@ impl TreasureWorkspace {
             raw::RMG_DWELLING_SUBTYPE_COUNT
         };
         for subtype in (0..count).rev() {
+            let index = usize::try_from(subtype).map_err(|_| TreasureError::Arithmetic)?;
+            let creature = raw::DWELLING_CREATURES
+                .get(index)
+                .copied()
+                .and_then(CreatureId::parse)
+                .ok_or(TreasureError::Recipe)?;
             self.push(
                 raw::CREATURE_GENERATOR_1,
                 i32::try_from(subtype).map_err(|_| TreasureError::Arithmetic)?,
                 raw::RMG_DWELLING_REWARD_DENSITY,
-                T::Dwelling,
+                T::Dwelling(creature),
             )?;
         }
         Ok(())

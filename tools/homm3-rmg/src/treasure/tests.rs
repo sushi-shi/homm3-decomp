@@ -90,7 +90,7 @@ fn absent_art_retains_definitions_and_repeated_preparation_reuses_storage() {
         assert_eq!(first.creature().index(), last_creature);
         let dwellings: Vec<_> = definitions
             .iter()
-            .filter(|def| matches!(def.reward(), TreasureReward::Dwelling))
+            .filter(|def| matches!(def.reward(), TreasureReward::Dwelling(_)))
             .map(|def| def.subtype())
             .collect();
         assert_eq!(dwellings.first(), Some(&last_dwelling));
@@ -174,4 +174,26 @@ fn tent_and_seer_ordinals_are_independent_of_stored_subtypes() {
     assert_eq!(quests.first().unwrap().subtype(), 0);
     assert_eq!(quests.last().unwrap().subtype(), 1);
     assert!(quests.iter().all(|def| def.density().get() == 3));
+}
+
+#[test]
+fn definition_ids_cannot_cross_catalogs_or_survive_repreparation() {
+    let source = empty_source();
+    let rules = rules();
+    let prototypes = source
+        .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
+        .unwrap();
+    let creatures = creatures(500);
+    let mut first = TreasureWorkspace::default();
+    let mut second = TreasureWorkspace::default();
+    let first_catalog = first.prepare(&prototypes, &creatures).unwrap();
+    let first_id = first_catalog.ids().next().unwrap();
+    assert!(first_catalog.get(first_id).is_some());
+    let second_catalog = second.prepare(&prototypes, &creatures).unwrap();
+    assert!(second_catalog.get(first_id).is_none());
+    let second_id = second_catalog.ids().next().unwrap();
+    assert_eq!(first_id.index(), second_id.index());
+    assert!(first_catalog.get(second_id).is_none());
+    let replacement = first.prepare(&prototypes, &creatures).unwrap();
+    assert!(replacement.get(first_id).is_none());
 }

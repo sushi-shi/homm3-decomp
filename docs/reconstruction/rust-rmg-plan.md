@@ -133,11 +133,11 @@ The library cannot yet generate a complete map.
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: the treasure definition catalog, created with assets
-before any map generation. `MinesPlaced` now consumes into `TreasurePaths` through
-primary-town faction counting and the post-mine connection rebuild. Implement the
-catalog's ordered recipes and eager creature-count constructors next, then lazy
-value/generation dispatch, typed payloads and temporary group reservations.
+Immediate next implementation: payload factories and temporary group ownership.
+The pre-generation catalog and lazy signed values are implemented. `TreasurePaths`
+consumes with its exact prepared catalog into `TreasuresReady`, which owns quest
+completion state and retains the map's tent reservations. Extend that admitted
+stage with payload generation before assembling and placing treasure groups.
 
 The next treasure work has these source-backed constraints:
 
@@ -703,12 +703,75 @@ order, approach cells, clipped neighborhood traversal, path width and native
 flat-index alias diagrams. Existing portal/shipyard/reflection diagrams remain.
 Rustdoc with warnings denied and formatting pass for these comment-only changes.
 
-Next implement lazy treasure values and payload dispatch, then transient group
-lifetime/reservations. Keep native selection gates before `getValue`, including
-the second value call after roulette selection. Creature-quest transforms still
-apply to the base -1 result; faction mismatches must skip potentially invalid
-arithmetic. Tent offers compare the raw cursor without indexing the disabled
-array. Dwelling valuation needs the canonical creature-generator subtype table.
+Lazy values now run through `TreasuresReady::value(DefinitionId, ZoneId)`. The
+consumed stage owns its exact catalog and map, preventing replacement by a catalog
+with different traits. Definition IDs carry one preparation owner and become
+invalid when reusable storage is prepared again. No value query allocates or
+consumes RNG. The dwelling-to-creature table is shared with `src/game.cpp`, and
+catalog admission turns each dwelling mapping into a `CreatureId`.
+
+Native signed policies remain explicit: creature and dwelling faction gates skip
+arithmetic; dwelling growth/AI multiplication, town adjustment and the final half
+bonus stay ordered. Seer cursor/pool gates precede creature valuation, and an
+eligible creature quest transforms the base -1 result to -1334. Tent offers compare
+only the retained raw cursor; only that branch requests missing retail replay
+input. The phase owns the native initial seer cursor, sticky low-pool flag and
+fixed used-artifact array; earlier stages cannot modify quest state. Completion
+will mutate these same fields rather than resetting them.
+
+Sixteen ordinary/forced-border fixtures compare 247,048 per-zone definition
+values and 768,456 total checkpoint lines, retaining RNG, movement, registrations,
+tent availability and existing object state. Every native capture repeats exactly;
+all 32 candidate/repeat maps remain unchanged by the value probes. All 82 core
+tests and strict Clippy pass. Both reviewers report no remaining issues. Focused
+regressions cover foreign/stale definition IDs, quest gates and -1334, lazy tent
+replay faults, and skipped dwelling overflow for a mismatching faction.
+
+Payload implementation constraints, confirmed against native source and retail:
+
+- Extend the existing `ObjectPayload` enum, keeping geometry and payload in one
+  arena record. Fixed artifact/resource/scholar/shrine/witch-hut policies remain
+  distinct. Pandora rewards use an ADT for experience/gold/creatures/spells, with
+  fixed zero defaults elsewhere and no per-definition heap objects. For spell
+  rewards, retain admitted selection criteria and bind the exact immutable spell
+  catalog through the treasure/output stage. Counting, writing and snapshots can
+  iterate the same ordered filtered view; avoid a per-object spell vector or a
+  70-entry array inside every object record. Do not accept a replacement spell
+  catalog at serialization. A shared spell pool is only necessary if completed
+  maps must later detach from their source assets.
+- Prison selection reserves a hero before allocation. Retail 0x5348dc selects,
+  0x5348f4 allocates, and 0x534902–0b consumes the object ID after successful
+  allocation. An allocation fault keeps the hero reservation but does not consume
+  an ID. Failed fits/groups explicitly release the hero before deleting its
+  object, in group order. Never rewind RNG or serialized IDs on discard; ordinary
+  object destruction must not implicitly release a reservation.
+- Spell-box generation emits descending levels and ascending spell IDs 0..69
+  without RNG. Scroll selection counts eligible spells, then draws even when
+  the count is zero; retail rand at 0x534f06 precedes the faulting idiv at
+  0x534f0c. A singleton still draws. Eligibility remains generation-time work.
+- Quest generation first creates a pending seer hut, selects random-artifact art
+  on dirt, creates the artifact wrapper owning that hut, then writes its reward.
+  Neither artifact nor seer ordinal is reserved yet. Retain the stable definition
+  ID for later replacement valuation. Missing art faults after its selection
+  point; dropping/discarding the wrapper must reclaim the pending hut.
+- Quest completion scans all artifacts ascending, sets the sticky low-pool flag
+  from the pre-selection count (<20), and returns without RNG if none remain.
+  It selects one artifact and swaps prototype properties before attempting hut
+  placement, without re-registering geometry or counts. Only successful placement
+  claims the artifact and advances the seer cursor. Failure reevaluates the
+  definition at replacement time; count-zero leaves the original artifact active.
+- Tent creation only stores its value. Completion computes value*3 before /2,
+  finds border-guard art and allocates the guard before reserving its color.
+  Failed placement discards the group before releasing the color and replacing
+  the tent. Retail's removed-object leaks need explicit observable-reference
+  handling; Rust must not leak allocations or delete an object still active.
+- A transient group owns its object identities, including pending hut children.
+  Scratch positioning means `discard_unplaced` is deliberately insufficient:
+  add an internal ordered disposal path after clearing scratch memberships.
+  `reset` only clears non-owning group state; `discard` releases reservations
+  then deletes. Nested completion needs reusable scratch separate from its outer
+  group. Pair definition/prototype candidates in one retained vector.
+
 Full map generation and serialization remain unfinished.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight

@@ -40,7 +40,7 @@ fn snapshot(definitions: &[TreasureDefinition]) -> String {
                 ],
             ),
             T::KeyTent { .. } => ("tent", [0; 3]),
-            T::Dwelling => ("dwelling", [0; 3]),
+            T::Dwelling(_) => ("dwelling", [0; 3]),
             T::Prison { experience, .. } => ("prison", [experience, 0, 0]),
             T::Resource(_) => ("resource", [0; 3]),
             T::Scholar => ("scholar", [0; 3]),
