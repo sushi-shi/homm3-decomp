@@ -502,12 +502,6 @@ b8 TRmgMap::hasConnectedOutline(
     return !blocked || foundBoundary;
 }
 
-// Radius of a square neighbourhood around a cell, clipped to the map.
-enum ERmgNeighborhoodRadius {
-    RMG_NEIGHBORHOOD_3X3 = 1,
-    RMG_NEIGHBORHOOD_5X5 = 2
-};
-
 inline void TRmgMap::getNeighborhoodBounds(TRmgZoneBounds& bounds,
     const TPoint& position, s32 radius) const
 {

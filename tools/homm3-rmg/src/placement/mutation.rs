@@ -56,12 +56,12 @@ impl CellState {
     pub const fn object_distance(&self) -> u16 {
         self.object_distance
     }
-    fn open_path(&mut self) {
+    pub(super) fn open_path(&mut self) {
         if self.border.is_none() {
             self.reservation = PathReservation::Open;
         }
     }
-    fn mark_obstacle(&mut self) {
+    pub(super) fn mark_obstacle(&mut self) {
         if self.border.is_none() {
             self.reservation = PathReservation::Obstacle;
         }
@@ -71,7 +71,7 @@ impl CellState {
             self.reservation = PathReservation::Unreserved;
         }
     }
-    fn release_path(&mut self) {
+    pub(super) fn release_path(&mut self) {
         if self.border.is_none() && self.reservation == PathReservation::Open {
             self.reservation = PathReservation::Unreserved;
         }

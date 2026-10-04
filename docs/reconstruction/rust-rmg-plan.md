@@ -105,8 +105,8 @@ Ten substantial work packages remain; the first is partially implemented. They d
 implementation order, not equal amounts of work or a percentage estimate.
 The library cannot yet generate a complete map.
 
-1. **Object storage and map mutation.** Complete typed payload ownership and
-   neighbourhood path helpers. Stable geometry IDs, ordered cell membership,
+1. **Object storage and map mutation.** Complete typed payload ownership.
+   Neighbourhood path helpers, stable geometry IDs, ordered cell membership,
    registration/removal, global/zone type counts, entrance-distance propagation
    and individual path/obstacle/border transitions now use reusable storage.
    Tent availability follows the loaded prototype count; retail's initial cursor
@@ -139,10 +139,10 @@ The library cannot yet generate a complete map.
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: finish neighbourhood/entrance-approach helpers
-(`openPathPatch`, `markObstacleFillPatch`, `releaseNeighborhoodPathClearance`,
-`openEntranceApproach`) and continue directly to
-`tryPlacePrimaryTown` and `tryPlaceAdditionalTown`. Payload lifetimes and shared
+Immediate next implementation: `tryPlacePrimaryTown` and
+`tryPlaceAdditionalTown`, retaining the selected template and fixed player
+assignment from layout in the placement context. Neighbourhood/entrance-approach
+helpers are implemented and verified. Payload lifetimes and shared
 world/treasure-group ownership must be completed before transient treasure
 objects are integrated. Keep serialized town/monster counters distinct from
 geometry IDs. Reset object and placement workspaces together. Entrance-distance
@@ -326,6 +326,16 @@ catalogs/arenas, never-placed guards, triggerless flat aliases, and typed failur
 when a valid extreme alias overflows on its next flood step. All 65 core tests
 and strict Clippy pass. These remain source-C++ comparisons, not a claim of
 complete executable parity or completed generation.
+
+The four neighbourhood helpers now preserve their distinct source policies:
+centre-first 3x3 path opening, dry/passable/non-entrance obstacle-patch release,
+unoccupied-cell clearance release at either source radius, and the southern
+entrance approach. A row-major iterator clips without allocation. Shared radius
+constants come from bindgen; flat centre/approach aliases and checked arithmetic
+retain the registration access rules. Expanded native comparison covers 17,460
+mutation snapshots (646,020 lines), including occupancy, protected borders,
+terrain and clipping through these helpers. Both reviewers found no actionable
+issues. All 66 core tests and strict Clippy pass.
 
 Review fixes now bind prototype/rule handles to their owning catalogs. Foreign
 and stale handles cannot silently select another catalog's row. Checked process

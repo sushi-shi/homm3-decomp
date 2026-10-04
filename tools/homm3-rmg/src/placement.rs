@@ -15,6 +15,8 @@ mod objects;
 pub use objects::{ObjectArena, ObjectGeometry, ObjectId};
 mod mutation;
 pub use mutation::BorderColor;
+mod neighborhood;
+pub use neighborhood::Neighborhood;
 use objects::{Chain, Memberships};
 mod registration;
 use registration::Registration;

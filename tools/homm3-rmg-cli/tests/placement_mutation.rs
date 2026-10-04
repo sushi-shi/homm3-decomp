@@ -7,8 +7,8 @@ use homm3_rmg::{
     layout::LayoutWorkspace,
     object::ObjectKind,
     placement::{
-        BorderColor, ObjectArena, ObjectId, PathReservation, PlacementError, PlacementMap,
-        PlacementWorkspace,
+        BorderColor, Neighborhood, ObjectArena, ObjectId, PathReservation, PlacementError,
+        PlacementMap, PlacementWorkspace,
     },
     placement_rules::PlacementRules,
     prototype::{PrototypeCatalog, PrototypeSource},
@@ -134,31 +134,8 @@ fn snapshot(map: &mut PlacementMap<'_, '_, '_>, catalog: &PrototypeCatalog<'_>) 
         assert!(objects.get(a).unwrap().position().is_none());
         let anchor = position(5, 5);
         let mut ever_occupied = false;
-        for phase in 0..12 {
-            match phase {
-                1 => map
-                    .insert_object(&mut objects, catalog, blocker, anchor)
-                    .unwrap(),
-                2 | 3 => map.insert_object(&mut objects, catalog, a, anchor).unwrap(),
-                4 => map
-                    .insert_object(&mut objects, catalog, b, position(0, 0))
-                    .unwrap(),
-                5 | 6 => map.erase_footprint(&objects, catalog, a).unwrap(),
-                7 => map.erase_footprint(&objects, catalog, blocker).unwrap(),
-                8 => map.erase_footprint(&objects, catalog, b).unwrap(),
-                9 => {
-                    map.clear_border(anchor).unwrap();
-                    map.mark_border(anchor, BorderColor::parse(3).unwrap())
-                        .unwrap();
-                    map.mark_border(anchor, BorderColor::parse(7).unwrap())
-                        .unwrap();
-                }
-                10 => map.clear_border(anchor).unwrap(),
-                11 => map
-                    .insert_object(&mut objects, catalog, a, position(i32::MIN, -1))
-                    .unwrap(),
-                _ => (),
-            }
+        for phase in 0..20 {
+            apply_phase(map, &mut objects, catalog, ids, phase);
             write!(actual, "{} {phase}", entry.prototype().source_row()).unwrap();
             if phase == 11 {
                 let anchor = objects.get(a).unwrap().position().unwrap();
@@ -213,5 +190,65 @@ fn write_cells(actual: &mut String, map: &PlacementMap<'_, '_, '_>, ids: [Object
             }
             actual.push('\n');
         }
+    }
+}
+
+fn apply_phase(
+    map: &mut PlacementMap<'_, '_, '_>,
+    objects: &mut ObjectArena,
+    catalog: &PrototypeCatalog<'_>,
+    [a, b, blocker]: [ObjectId; 3],
+    phase: usize,
+) {
+    let anchor = position(5, 5);
+    match phase {
+        1 => map
+            .insert_object(objects, catalog, blocker, anchor)
+            .unwrap(),
+        2 | 3 => map.insert_object(objects, catalog, a, anchor).unwrap(),
+        4 => map
+            .insert_object(objects, catalog, b, position(0, 0))
+            .unwrap(),
+        5 | 6 => map.erase_footprint(objects, catalog, a).unwrap(),
+        7 => map.erase_footprint(objects, catalog, blocker).unwrap(),
+        8 => map.erase_footprint(objects, catalog, b).unwrap(),
+        9 => {
+            map.clear_border(anchor).unwrap();
+            map.mark_border(anchor, BorderColor::parse(3).unwrap())
+                .unwrap();
+            map.mark_border(anchor, BorderColor::parse(7).unwrap())
+                .unwrap();
+        }
+        10 => map.clear_border(anchor).unwrap(),
+        11 => map
+            .insert_object(objects, catalog, a, position(i32::MIN, -1))
+            .unwrap(),
+        12 => map
+            .insert_object(objects, catalog, blocker, position(3, 3))
+            .unwrap(),
+        13 => map.open_path_patch(position(0, 0)).unwrap(),
+        14 => {
+            map.mark_border(position(4, 4), BorderColor::parse(7).unwrap())
+                .unwrap();
+            map.mark_obstacle_patch(position(3, 3)).unwrap();
+        }
+        15 => map
+            .release_neighborhood_path(position(3, 3), Neighborhood::ThreeByThree)
+            .unwrap(),
+        16 => map.open_path_patch(position(4, 4)).unwrap(),
+        17 => map
+            .release_neighborhood_path(position(2, 2), Neighborhood::FiveByFive)
+            .unwrap(),
+        18 => {
+            assert_eq!(
+                map.open_entrance_approach(position(4, 3)).unwrap(),
+                position(4, 4)
+            );
+        }
+        19 => {
+            map.erase_footprint(objects, catalog, blocker).unwrap();
+            map.clear_border(position(4, 4)).unwrap();
+        }
+        _ => (),
     }
 }

@@ -41,6 +41,12 @@ enum ERmgChamferStepCost {
     RMG_CHAMFER_DIAGONAL_COST = 3
 };
 
+// Radius of a square neighbourhood around a cell, clipped to the map.
+enum ERmgNeighborhoodRadius {
+    RMG_NEIGHBORHOOD_3X3 = 1,
+    RMG_NEIGHBORHOOD_5X5 = 2
+};
+
 // Terrain types, dirt through rock.
 enum ERmgTerrainLimits {
     RMG_TERRAIN_COUNT = eTerrainRock + 1
