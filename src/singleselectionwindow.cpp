@@ -5338,7 +5338,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
         request.m_computerTeamCount = computerTeamCount;
         request.m_waterContent = static_cast<ERmgWaterContent>(waterContent);
         request.m_monsterStrength = monsterStrength;
-        request.m_mapVersion = mapVersion;
+        request.m_mapVersion = static_cast<ERmgMapVersion>(mapVersion);
 
         for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
             CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
@@ -5346,7 +5346,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
                 player = m_players.getCompPlayerInPos(i);
             if (player->isHuman())
                 request.m_isHumanSeat[i] = 1;
-            request.m_townType[i] = player->m_townIndex;
+            request.m_townChoices[i] = static_cast<TTownType>(player->m_townIndex);
         }
 
         std::string path(DATA_COMPGEN(0x006837d4, randomMapsPrefix,

@@ -45,6 +45,12 @@
 #include "textresource.h"
 #include "town.h"
 
+// Town types a map version knows; RoE maps have no Conflux.
+static inline s32 getRmgTownTypeCount(ERmgMapVersion mapVersion)
+{
+    return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? TOWN_TYPE_COUNT : TOWN_TYPE_ROE_COUNT;
+}
+
 enum ERmgMapLevel {
     RMG_SURFACE_LEVEL = 0,
     RMG_UNDERGROUND_LEVEL = 1,
@@ -75,14 +81,14 @@ s32 g_rmgCreatureValueByLevel[TOWN_DWELLING_COUNT] = {
     5000, 7000, 9000, 12000, 16000, 21000, 27000
 };
 
-void type_object::releaseReservation() {}
-b8 type_object::completePlacement() { return true; }
+void TRmgObject::releaseReservation() {}
+b8 TRmgObject::completePlacement() { return true; }
 
-b8 type_treasure_def::isTerrainDependent() { return false; }
-b8 type_quest_creature_def::isTerrainDependent() { return true; }
-b8 type_quest_experience_def::isTerrainDependent() { return true; }
-b8 type_quest_gold_def::isTerrainDependent() { return true; }
-b8 type_key_tent_def::isTerrainDependent() { return true; }
+b8 TRmgTreasureDef::isTerrainDependent() { return false; }
+b8 TRmgQuestCreatureDef::isTerrainDependent() { return true; }
+b8 TRmgQuestExperienceDef::isTerrainDependent() { return true; }
+b8 TRmgQuestGoldDef::isTerrainDependent() { return true; }
+b8 TRmgKeyTentDef::isTerrainDependent() { return true; }
 
 // Per-type object limits for the whole map and for each zone.
 DATA(0x0069ce4c)
@@ -153,7 +159,7 @@ static const TRmgObjectLimit g_rmgZoneObjectLimitOverrides[24] = {
 // Frame i of a river sprite draws shape g_rmgRiverPatterns[i]; repeated
 // shapes are alternative frames picked at random.
 DATA(0x00641140)
-static const s32 g_rmgRiverPatterns[13] = {
+static const ERmgLinePattern g_rmgRiverPatterns[13] = {
     LINE_SE, LINE_SE, LINE_SE, LINE_SE, LINE_CROSS, LINE_ESW, LINE_ESW,
     LINE_NES, LINE_NES, LINE_NS, LINE_NS, LINE_EW, LINE_EW
 };
@@ -166,7 +172,7 @@ VA_COMPGEN(0x0055ed90, 0x0a, STATIC_DTOR, g_rmgRiverPatternTable)
 
 // The same for road sprites.
 DATA(0x006411ac)
-static const s32 g_rmgRoadPatterns[17] = {
+static const ERmgLinePattern g_rmgRoadPatterns[17] = {
     LINE_SE, LINE_SE, LINE_SE_VARIANT, LINE_SE_VARIANT, LINE_SE_VARIANT, LINE_SE_VARIANT,
     LINE_NES, LINE_NES, LINE_ESW, LINE_ESW, LINE_NS, LINE_NS, LINE_EW, LINE_EW,
     LINE_END_S, LINE_END_E, LINE_CROSS
@@ -497,7 +503,7 @@ static void setAvailableRmgHeroes(
         std::logical_not<b8>());
 }
 
-VA_COMPGEN(0x00530f80, 0x21, SCALAR_DELETING_DTOR, type_random_map)
+VA_COMPGEN(0x00530f80, 0x21, SCALAR_DELETING_DTOR, TRmgMap)
 
 VA(0x00530e90, 0x4a)
 MAC_ADDRESS(0x22cfdc, 0x50)
@@ -562,7 +568,7 @@ void TRmgMapItem::clear()
 
 VA(0x00530fb0, 0xa0)
 MAC_ADDRESS(0x22d394, 0xbc)
-type_random_map::type_random_map(s32 width, s32 height, s32 levels)
+TRmgMap::TRmgMap(s32 width, s32 height, s32 levels)
 {
     m_mapWidth = width;
     m_mapHeight = height;
@@ -575,7 +581,7 @@ VA_COMPGEN(0x00531050, 0x58, VECTOR_DELETING_DTOR, TRmgMapItem)
 
 VA(0x005310b0, 0x83)
 MAC_ADDRESS(0x22d450, 0x84)
-type_random_map::~type_random_map()
+TRmgMap::~TRmgMap()
 {
     if (m_ownsMapItems)
         delete[] m_mapItems;
@@ -583,7 +589,7 @@ type_random_map::~type_random_map()
 
 VA(0x00531140, 0x2a)
 MAC_ADDRESS(0x22d4d4, 0x60)
-void type_random_map::clear()
+void TRmgMap::clear()
 {
     TRmgMapItem* mapItem = m_mapItems;
     s32 mapItemCount = m_mapWidth * m_mapHeight * m_numberLevels;
@@ -609,7 +615,7 @@ enum ERmgOutlinePathClearance {
 
 VA(0x00531170, 0x19c)
 MAC_ADDRESS(0x22d534, 0x244)
-b8 type_random_map::hasConnectedOutline(
+b8 TRmgMap::hasConnectedOutline(
     const std::vector<TPoint>& outline, TRmgMapPosition position,
     b8 allowEntrances, TRmgZone* zone, b8 requirePathClearance)
 {
@@ -652,7 +658,7 @@ enum ERmgNeighborhoodRadius {
     RMG_NEIGHBORHOOD_5X5 = 2
 };
 
-inline void type_random_map::getNeighborhoodBounds(TRmgZoneBounds& bounds,
+inline void TRmgMap::getNeighborhoodBounds(TRmgZoneBounds& bounds,
     const TPoint& position, s32 radius) const
 {
     bounds.m_minimumY = max(position.m_y - radius, 0);
@@ -663,7 +669,7 @@ inline void type_random_map::getNeighborhoodBounds(TRmgZoneBounds& bounds,
 
 VA(0x00531310, 0x14b)
 MAC_ADDRESS(0x22d778, 0x234)
-void type_random_map::markCoastalTiles()
+void TRmgMap::markCoastalTiles()
 {
     TRmgMapPosition position;
     TRmgMapItem* item = m_mapItems;
@@ -725,7 +731,7 @@ static inline void popRmgWorkItem(TRmgMapPosition& position,
 
 // Seed a zero-cost source with no predecessor in both worklists and the
 // movement map.
-inline TRmgMapItem* type_random_map::seedMovementSearch(const TRmgMapPosition& source,
+inline TRmgMapItem* TRmgMap::seedMovementSearch(const TRmgMapPosition& source,
     std::vector<TRmgMapPosition>& positions, std::vector<s32>& costs)
 {
     positions.push_back(source);
@@ -741,7 +747,7 @@ inline TRmgMapItem* type_random_map::seedMovementSearch(const TRmgMapPosition& s
 // zone-path costs but never re-enters the seed zone or reaches a third zone.
 VA(0x00531460, 0x441)
 MAC_ADDRESS(0x22d9ac, 0x5cc)
-void type_random_map::floodConnectionCosts(TRmgMapPosition position, b8 waterZone)
+void TRmgMap::floodConnectionCosts(TRmgMapPosition position, b8 waterZone)
 {
     // Clear cells beside a zero-cost cell also cost zero; this is applied
     // after the improvement test.
@@ -828,7 +834,7 @@ enum ERmgObstacleEntrancePolicy {
 // (water-only objects must stand on water, others on land).
 VA(0x005318b0, 0x212)
 MAC_ADDRESS(0x22dfe0, 0x2a4)
-b8 type_random_map::isPlacementBlocked(
+b8 TRmgMap::isPlacementBlocked(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position,
     s32 zoneIndex, b8 rejectObstacleFill)
 {
@@ -861,7 +867,7 @@ b8 type_random_map::isPlacementBlocked(
 
 VA(0x00531ad0, 0x100)
 MAC_ADDRESS(0x22e284, 0x1d0)
-void type_random_map::openPathPatch(s32 x, s32 y, s32 level)
+void TRmgMap::openPathPatch(s32 x, s32 y, s32 level)
 {
     TRmgMapItem* item = getMapItem(x, y, level);
     item->openPath();
@@ -877,7 +883,7 @@ void type_random_map::openPathPatch(s32 x, s32 y, s32 level)
 
 VA(0x00531bd0, 0x11f)
 MAC_ADDRESS(0x22e454, 0x254)
-void type_random_map::markObstacleFillPatch(TRmgMapPosition position)
+void TRmgMap::markObstacleFillPatch(TRmgMapPosition position)
 {
     TRmgMapItem* item = getMapItem(position);
     item->markObstacleFill();
@@ -907,7 +913,7 @@ static inline TRmgMapPosition getRmgObjectTriggerPosition(
 }
 
 // Entrance cell of a placed object: its position offset by the trigger cell.
-inline TRmgMapPosition type_object::getEntrance() const
+inline TRmgMapPosition TRmgObject::getEntrance() const
 {
     return getRmgObjectTriggerPosition(getPosition(),
         m_properties->m_prototype->m_triggerCell);
@@ -924,7 +930,7 @@ static inline bool allowsRmgSharedObjectEntrance(TAdventureObjectType objectType
 // that cell is another entrance, its object must be cleared on visit.
 VA(0x00531cf0, 0x1a5)
 MAC_ADDRESS(0x22e6a8, 0x270)
-b8 type_random_map::canPlaceObject(
+b8 TRmgMap::canPlaceObject(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position, TRmgZone* zone)
 {
     TObjectType& prototype = *properties->m_prototype;
@@ -962,7 +968,7 @@ b8 type_random_map::canPlaceObject(
 // paths, other non-passable cells become object-blocked, and both record it.
 VA(0x00531ea0, 0x2e6)
 MAC_ADDRESS(0x22e918, 0x1c4)
-void type_random_map::addObject(type_object& object, TRmgMapPosition position)
+void TRmgMap::addObject(TRmgObject& object, TRmgMapPosition position)
 {
     TObjectType& prototype = *object.m_properties->m_prototype;
     object.m_position = position;
@@ -989,7 +995,7 @@ void type_random_map::addObject(type_object& object, TRmgMapPosition position)
 
 VA(0x00532190, 0x6d)
 MAC_ADDRESS(0x22eadc, 0x70)
-void type_random_map::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
+void TRmgMap::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
 {
     TRmgMapItem& item = *getMapItem(point.m_x, point.m_y);
     item.setTerrain(tile.m_terrain, tile.m_frame, tile.m_flipX, tile.m_flipY);
@@ -997,7 +1003,7 @@ void type_random_map::setTile(const TRmgGridPoint& point, const rmgTerrainTile& 
 
 VA(0x00532200, 0x3c)
 MAC_ADDRESS(0x22eb4c, 0x38)
-void type_random_map::setFrame(const TRmgGridPoint& point, s32 value)
+void TRmgMap::setFrame(const TRmgGridPoint& point, s32 value)
 {
     TRmgMapItem& item = *getMapItem(point.m_x, point.m_y);
     item.m_tile.m_terrainFrame = value;
@@ -1006,12 +1012,12 @@ void type_random_map::setFrame(const TRmgGridPoint& point, s32 value)
 VA(0x00532240, 0x15)
 MAC_ADDRESS(0x22eb84, 0x14)
 #if defined(HOMM3_TARGET_MAC)
-TRmgGridPoint type_random_map::getSize()
+TRmgGridPoint TRmgMap::getSize()
 {
     return TRmgGridPoint(m_mapWidth, m_mapHeight);
 }
 #else
-TRmgGridPoint& type_random_map::getSize(TRmgGridPoint& output)
+TRmgGridPoint& TRmgMap::getSize(TRmgGridPoint& output)
 {
     output = TRmgGridPoint(m_mapWidth, m_mapHeight);
     return output;
@@ -1020,10 +1026,10 @@ TRmgGridPoint& type_random_map::getSize(TRmgGridPoint& output)
 
 VA(0x00532260, 0x60)
 MAC_ADDRESS(0x22eb98, 0x80)
-rmgTerrainTile type_random_map::getTile(const TRmgGridPoint& point)
+TRmgTerrainTile TRmgMap::getTile(const TRmgGridPoint& point)
 {
     TRmgMapItem& item = *getMapItem(point.m_x, point.m_y);
-    rmgTerrainTile tile;
+    TRmgTerrainTile tile;
     tile.m_terrain = item.getLandType();
     tile.m_frame = item.m_tile.m_terrainFrame;
     tile.m_flipX = item.m_tileData.m_terrainFlipX;
@@ -1033,14 +1039,14 @@ rmgTerrainTile type_random_map::getTile(const TRmgGridPoint& point)
 
 VA(0x005322c0, 0x2a)
 MAC_ADDRESS(0x22ec18, 0x34)
-s32 type_random_map::getTerrain(const TRmgGridPoint& point)
+s32 TRmgMap::getTerrain(const TRmgGridPoint& point)
 {
     return getMapItem(point.m_x, point.m_y)->getLandType();
 }
 
 VA(0x005322f0, 0x2a)
 MAC_ADDRESS(0x22ec4c, 0x34)
-s32 type_random_map::getFrame(const TRmgGridPoint& point)
+s32 TRmgMap::getFrame(const TRmgGridPoint& point)
 {
     return getMapItem(point.m_x, point.m_y)->m_tile.m_terrainFrame;
 }
@@ -1056,7 +1062,7 @@ VA_COMPGEN(0x00537940, 0x23, SCALAR_DELETING_DTOR, TRmgRoadMapAdapterInterface)
 VA(0x00532360, 0x6e)
 MAC_ADDRESS(0x22ece0, 0x6c)
 void TRmgRoadMapAdapter::setTile(
-    const TRmgGridPoint& point, const rmgTerrainTile& tile)
+    const TRmgGridPoint& point, const TRmgTerrainTile& tile)
 {
     TRmgMapItem& item = *m_map->getMapItem(point.m_x, point.m_y);
     item.m_tile.m_roadType = tile.m_terrain;
@@ -1075,10 +1081,10 @@ void TRmgRoadMapAdapter::setLineType(const TRmgGridPoint& point, s32 value)
 
 VA(0x00532410, 0x62)
 MAC_ADDRESS(0x22edc4, 0xa0)
-rmgTerrainTile TRmgRoadMapAdapter::getTile(const TRmgGridPoint& point)
+TRmgTerrainTile TRmgRoadMapAdapter::getTile(const TRmgGridPoint& point)
 {
     TRmgMapItem& item = *m_map->getMapItem(point.m_x, point.m_y);
-    rmgTerrainTile tile;
+    TRmgTerrainTile tile;
     tile.m_terrain = item.m_tile.m_roadType;
     tile.m_frame = item.m_tileData.m_roadFrame;
     tile.m_flipX = item.m_tileData.m_roadFlipX;
@@ -1123,7 +1129,7 @@ VA_COMPGEN(0x005324e0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverMapAdapter)
 
 VA(0x00532520, 0x205)
 MAC_ADDRESS(0x22ef34, 0x35c)
-void TRmgRiverMapAdapter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
+void TRmgRiverMapAdapter::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
 {
     TRmgMapItem& item = *m_map->getMapItem(point.m_x, point.m_y);
     item.m_tile.m_riverType = tile.m_terrain;
@@ -1173,10 +1179,10 @@ TRmgGridPoint TRmgRiverMapAdapter::getSize()
 
 VA(0x005327c0, 0x63)
 MAC_ADDRESS(0x22f320, 0xa4)
-rmgTerrainTile TRmgRiverMapAdapter::getTile(const TRmgGridPoint& point)
+TRmgTerrainTile TRmgRiverMapAdapter::getTile(const TRmgGridPoint& point)
 {
     const TRmgMapItem& item = *m_map->getMapItem(point.m_x, point.m_y);
-    rmgTerrainTile tile;
+    TRmgTerrainTile tile;
     tile.m_terrain = item.m_tile.m_riverType;
     tile.m_frame = item.m_tile.m_riverFrame;
     tile.m_flipX = item.m_tileData.m_riverFlipX;
@@ -1467,14 +1473,14 @@ TRmgTemplateZone* TRmgTemplate::findZone(s32 zoneIndex)
     return 0;
 }
 
-TRmgMapPosition type_object::getPosition() const
+TRmgMapPosition TRmgObject::getPosition() const
 {
     return m_position;
 }
 
 VA(0x005330e0, 0x39)
 MAC_ADDRESS(0x2303ec, 0x5c)
-type_object::type_object(TRmgObjectPropertiesRef* newProperties)
+TRmgObject::TRmgObject(TRmgObjectPropertiesRef* newProperties)
 {
     m_properties = newProperties;
     ++m_properties->m_refCount;
@@ -1484,43 +1490,43 @@ type_object::type_object(TRmgObjectPropertiesRef* newProperties)
     clearPlacementMarks();
 }
 
-rmgResourceObject::rmgResourceObject(TRmgObjectPropertiesRef* properties)
-    : type_object(properties)
+TRmgResourceObject::TRmgResourceObject(TRmgObjectPropertiesRef* properties)
+    : TRmgObject(properties)
 {
 }
 
-rmgScholarObject::rmgScholarObject(TRmgObjectPropertiesRef* properties)
-    : type_object(properties)
+TRmgScholarObject::TRmgScholarObject(TRmgObjectPropertiesRef* properties)
+    : TRmgObject(properties)
 {
 }
 
-rmgShrineObject::rmgShrineObject(TRmgObjectPropertiesRef* properties)
-    : type_object(properties)
+TRmgShrineObject::TRmgShrineObject(TRmgObjectPropertiesRef* properties)
+    : TRmgObject(properties)
 {
 }
 
-rmgSpellScrollObject::rmgSpellScrollObject(TRmgObjectPropertiesRef* properties, ESpellId spell)
-    : type_object(properties), m_spell(spell)
+TRmgSpellScrollObject::TRmgSpellScrollObject(TRmgObjectPropertiesRef* properties, ESpellId spell)
+    : TRmgObject(properties), m_spell(spell)
 {
 }
 
-rmgWitchHutObject::rmgWitchHutObject(TRmgObjectPropertiesRef* properties)
-    : type_object(properties)
+TRmgWitchHutObject::TRmgWitchHutObject(TRmgObjectPropertiesRef* properties)
+    : TRmgObject(properties)
 {
 }
 
-rmgBlackBoxObject::rmgBlackBoxObject(TRmgObjectPropertiesRef* properties)
-    : type_object(properties), m_experience(0), m_creatureType(CREATURE_NONE),
+TRmgBlackBoxObject::TRmgBlackBoxObject(TRmgObjectPropertiesRef* properties)
+    : TRmgObject(properties), m_experience(0), m_creatureType(CREATURE_NONE),
       m_creatureCount(0)
 {
     memset(m_resources, 0, sizeof(m_resources));
 }
 
-VA_COMPGEN(0x00533120, 0x2d, SCALAR_DELETING_DTOR, type_object)
+VA_COMPGEN(0x00533120, 0x2d, SCALAR_DELETING_DTOR, TRmgObject)
 
 VA(0x00533150, 0x12)
 MAC_ADDRESS(0x2304a0, 0x1c)
-void type_object::clearPlacementMarks()
+void TRmgObject::clearPlacementMarks()
 {
     m_candidateCovers = false;
     m_candidateBehind = false;
@@ -1548,7 +1554,7 @@ static inline void writeRmgReservedBytes(TAbstractFile* outputFile, s32 count)
 
 VA(0x00533170, 0x79)
 MAC_ADDRESS(0x2304c8, 0xfc)
-void type_object::write(TAbstractFile* outputFile, s32 version)
+void TRmgObject::write(TAbstractFile* outputFile, ERmgMapVersion version)
 {
     writeRmgMapPosition(outputFile, m_position);
     writeValue<s32>(outputFile, m_properties->m_prototypeIndex);
@@ -1557,9 +1563,9 @@ void type_object::write(TAbstractFile* outputFile, s32 version)
 
 VA(0x005331f0, 0xfd)
 MAC_ADDRESS(0x23062c, 0x144)
-void rmgMonsterObject::write(TAbstractFile* outputFile, s32 version)
+void TRmgMonsterObject::write(TAbstractFile* outputFile, ERmgMapVersion version)
 {
-    type_object::write(outputFile, version);
+    TRmgObject::write(outputFile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         writeValue<s32>(outputFile, m_objectId);
     }
@@ -1573,9 +1579,9 @@ void rmgMonsterObject::write(TAbstractFile* outputFile, s32 version)
 
 VA(0x005332f0, 0x16a)
 MAC_ADDRESS(0x2307d8, 0x20c)
-void rmgTownObject::write(TAbstractFile* outputFile, s32 version)
+void TRmgTownObject::write(TAbstractFile* outputFile, ERmgMapVersion version)
 {
-    type_object::write(outputFile, version);
+    TRmgObject::write(outputFile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         writeValue<s32>(outputFile, m_objectId);
     }
@@ -1599,66 +1605,66 @@ void rmgTownObject::write(TAbstractFile* outputFile, s32 version)
 
 VA(0x00533460, 0xa0)
 MAC_ADDRESS(0x230a1c, 0x78)
-void rmgOwnableObject::write(TAbstractFile* outputFile, s32 version)
+void TRmgOwnableObject::write(TAbstractFile* outputFile, ERmgMapVersion version)
 {
-    type_object::write(outputFile, version);
+    TRmgObject::write(outputFile, version);
     writeValue<s8>(outputFile, -1); // player
     writeRmgReservedBytes(outputFile, 3);
 }
 
-rmgArtifactObject::rmgArtifactObject(TRmgObjectPropertiesRef* properties)
-    : type_object(properties)
+TRmgArtifactObject::TRmgArtifactObject(TRmgObjectPropertiesRef* properties)
+    : TRmgObject(properties)
 {
 }
 
-rmgSeerHutObject::rmgSeerHutObject(TRmgObjectPropertiesRef* properties)
-    : type_object(properties), m_artifact(ARTIFACT_NONE), m_experience(0),
+TRmgSeerHutObject::TRmgSeerHutObject(TRmgObjectPropertiesRef* properties)
+    : TRmgObject(properties), m_artifact(ARTIFACT_NONE), m_experience(0),
       m_resourceType(GOLD), m_resourceCount(0), m_creatureType(CREATURE_NONE),
       m_creatureCount(0)
 {
 }
 
-rmgQuestArtifactObject::rmgQuestArtifactObject(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, rmgSeerHutObject* seerHut,
-    type_treasure_def* definition)
-    : rmgArtifactObject(properties), m_generator(generator),
+TRmgQuestArtifactObject::TRmgQuestArtifactObject(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator* generator, TRmgSeerHutObject* seerHut,
+    TRmgTreasureDef* definition)
+    : TRmgArtifactObject(properties), m_generator(generator),
       m_seerHut(seerHut), m_definition(definition)
 {
 }
 
-rmgKeyTentObject::rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, s32 treasureValue)
-    : type_object(properties), m_generator(generator), m_treasureValue(treasureValue)
+TRmgKeyTentObject::TRmgKeyTentObject(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator* generator, s32 treasureValue)
+    : TRmgObject(properties), m_generator(generator), m_treasureValue(treasureValue)
 {
 }
 
 VA(0x00533500, 0x8a)
 MAC_ADDRESS(0x230acc, 0x50)
-void rmgArtifactObject::write(TAbstractFile* outputFile, s32 version)
+void TRmgArtifactObject::write(TAbstractFile* outputFile, ERmgMapVersion version)
 {
-    type_object::write(outputFile, version);
+    TRmgObject::write(outputFile, version);
     writeValue<b8>(outputFile, 0); // has custom treasure
 }
 
-VA_COMPGEN(0x00533590, 0x21, SCALAR_DELETING_DTOR, rmgOwnableObject)
+VA_COMPGEN(0x00533590, 0x21, SCALAR_DELETING_DTOR, TRmgOwnableObject)
 
 VA(0x005335c0, 0xb2)
 MAC_ADDRESS(0x230bb4, 0x78)
-void rmgResourceObject::write(TAbstractFile* outputFile, s32 version)
+void TRmgResourceObject::write(TAbstractFile* outputFile, ERmgMapVersion version)
 {
-    type_object::write(outputFile, version);
+    TRmgObject::write(outputFile, version);
     writeValue<b8>(outputFile, 0); // has custom treasure
     writeValue<s32>(outputFile, 0); // amount
     writeValue<s32>(outputFile, 0);
 }
 
-VA_COMPGEN(0x00533680, 0x21, SCALAR_DELETING_DTOR, rmgBlackBoxObject)
+VA_COMPGEN(0x00533680, 0x21, SCALAR_DELETING_DTOR, TRmgBlackBoxObject)
 
-VA_COMPGEN(0x005336b0, 0x36, IMPLICIT_DTOR, rmgBlackBoxObject)
-MAC_COMPGEN_ADDRESS(0x251488, 0x7c, IMPLICIT_DTOR, rmgBlackBoxObject)
+VA_COMPGEN(0x005336b0, 0x36, IMPLICIT_DTOR, TRmgBlackBoxObject)
+MAC_COMPGEN_ADDRESS(0x251488, 0x7c, IMPLICIT_DTOR, TRmgBlackBoxObject)
 
 static inline void writeRmgCreatureReward(
-    TAbstractFile* outputFile, s32 version, TCreatureType creature, s32 count)
+    TAbstractFile* outputFile, ERmgMapVersion version, TCreatureType creature, s32 count)
 {
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE)
         writeValue<s16>(outputFile, creature);
@@ -1669,9 +1675,9 @@ static inline void writeRmgCreatureReward(
 
 VA(0x005336f0, 0x1e0)
 MAC_ADDRESS(0x230cac, 0x32c)
-void rmgBlackBoxObject::write(TAbstractFile* outputFile, s32 version)
+void TRmgBlackBoxObject::write(TAbstractFile* outputFile, ERmgMapVersion version)
 {
-    type_object::write(outputFile, version);
+    TRmgObject::write(outputFile, version);
     writeValue<b8>(outputFile, 0); // has custom treasure
     writeValue<s32>(outputFile, m_experience);
     writeValue<s32>(outputFile, 0); // mana
@@ -1697,7 +1703,7 @@ void rmgBlackBoxObject::write(TAbstractFile* outputFile, s32 version)
 
 VA(0x005338d0, 0x0d)
 MAC_ADDRESS(0x230448, 0x58)
-type_object::~type_object()
+TRmgObject::~TRmgObject()
 {
     --m_properties->m_refCount;
 }
@@ -1705,7 +1711,7 @@ type_object::~type_object()
 // Removes the object and, if one fits, puts a treasure worth 1-1.5x its value
 // in its place.
 // removeObject keeps the object alive and its position unchanged.
-inline void type_random_map_generator::replaceObjectWithTreasure(type_object* object,
+inline void TRmgGenerator::replaceObjectWithTreasure(TRmgObject* object,
     s32 value)
 {
     TRmgMapPosition position = object->m_position;
@@ -1715,7 +1721,7 @@ inline void type_random_map_generator::replaceObjectWithTreasure(type_object* ob
     s32 actualValue;
     // Not a group's first object, no terrain-dependent treasures, no compact
     // selection.
-    type_object* replacement = createTreasureObject(
+    TRmgObject* replacement = createTreasureObject(
         zone, value, value * 3 / 2, &actualValue, false, false, false, position);
     if (replacement)
         addObject(replacement, position);
@@ -1723,7 +1729,7 @@ inline void type_random_map_generator::replaceObjectWithTreasure(type_object* ob
 
 VA(0x005338e0, 0xd4)
 MAC_ADDRESS(0x231030, 0x68)
-b8 rmgKeyTentObject::completePlacement()
+b8 TRmgKeyTentObject::completePlacement()
 {
     if (m_generator->placeKeyTentGuard(this, m_treasureValue * 3 / 2))
         return true;
@@ -1735,12 +1741,12 @@ b8 rmgKeyTentObject::completePlacement()
     return false;
 }
 
-VA_COMPGEN(0x005339c0, 0x21, SCALAR_DELETING_DTOR, rmgQuestArtifactObject)
+VA_COMPGEN(0x005339c0, 0x21, SCALAR_DELETING_DTOR, TRmgQuestArtifactObject)
 
 // Deletes the pending seer hut if it was never placed.
 VA(0x005339f0, 0x58)
 MAC_ADDRESS(0x231100, 0x9c)
-rmgQuestArtifactObject::~rmgQuestArtifactObject()
+TRmgQuestArtifactObject::~TRmgQuestArtifactObject()
 {
     delete m_seerHut;
 }
@@ -1749,7 +1755,7 @@ rmgQuestArtifactObject::~rmgQuestArtifactObject()
 // failure the hut is destroyed.
 VA(0x00533a50, 0x33)
 MAC_ADDRESS(0x2311fc, 0x78)
-b8 rmgQuestArtifactObject::completePlacement()
+b8 TRmgQuestArtifactObject::completePlacement()
 {
     if (m_generator->placeQuestArtifact(this)) {
         m_seerHut = 0;
@@ -1759,7 +1765,7 @@ b8 rmgQuestArtifactObject::completePlacement()
     m_seerHut = 0;
 #if defined(HOMM3_RMG_HOTFIX)
     // Replaced by a treasure (not just short of artifacts): nothing owns it.
-    std::vector<type_object*>& objects = m_generator->m_objects;
+    std::vector<TRmgObject*>& objects = m_generator->m_objects;
     if (std::find(objects.begin(), objects.end(), this) == objects.end())
         delete this;
 #endif
@@ -1771,9 +1777,9 @@ b8 rmgQuestArtifactObject::completePlacement()
 // artifact count, deadline and three empty texts.
 VA(0x00533a90, 0x1e0)
 MAC_ADDRESS(0x2312d0, 0x31c)
-void rmgSeerHutObject::write(TAbstractFile* outputFile, s32 version)
+void TRmgSeerHutObject::write(TAbstractFile* outputFile, ERmgMapVersion version)
 {
-    type_object::write(outputFile, version);
+    TRmgObject::write(outputFile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         writeValue<u8>(outputFile, QUEST_ARTIFACTS);
         writeValue<u8>(outputFile, 1); // artifact count
@@ -1801,26 +1807,26 @@ void rmgSeerHutObject::write(TAbstractFile* outputFile, s32 version)
 
 // The factory reserves the hero in m_disabledHeroes; releaseReservation
 // frees it again.
-rmgHeroObject::rmgHeroObject(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, s32 objectId, s32 heroIndex,
+TRmgHeroObject::TRmgHeroObject(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator* generator, s32 objectId, s32 heroIndex,
     s32 experience)
-    : type_object(properties), m_generator(generator), m_objectId(objectId),
+    : TRmgObject(properties), m_generator(generator), m_objectId(objectId),
       m_heroIndex(heroIndex), m_experience(experience)
 {
 }
 
 VA(0x00533c70, 0x0f)
 MAC_ADDRESS(0x231644, 0x18)
-void rmgHeroObject::releaseReservation()
+void TRmgHeroObject::releaseReservation()
 {
     m_generator->m_disabledHeroes[m_heroIndex] = false;
 }
 
 VA(0x00533c80, 0x1e4)
 MAC_ADDRESS(0x23165c, 0x318)
-void rmgHeroObject::write(TAbstractFile* outputFile, s32 version)
+void TRmgHeroObject::write(TAbstractFile* outputFile, ERmgMapVersion version)
 {
-    type_object::write(outputFile, version);
+    TRmgObject::write(outputFile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         writeValue<s32>(outputFile, m_objectId);
     }
@@ -1856,9 +1862,9 @@ void rmgHeroObject::write(TAbstractFile* outputFile, s32 version)
 
 VA(0x00533e70, 0xc3)
 MAC_ADDRESS(0x2319ac, 0xbc)
-void rmgScholarObject::write(TAbstractFile* outputFile, s32 version)
+void TRmgScholarObject::write(TAbstractFile* outputFile, ERmgMapVersion version)
 {
-    type_object::write(outputFile, version);
+    TRmgObject::write(outputFile, version);
     writeValue<s8>(outputFile, -1); // ScholarAwards; -1 picks one at random
     writeValue<u8>(outputFile, 0); // award value
     writeValue<s32>(outputFile, 0);
@@ -1867,9 +1873,9 @@ void rmgScholarObject::write(TAbstractFile* outputFile, s32 version)
 
 VA(0x00533f40, 0xaf)
 MAC_ADDRESS(0x231aa0, 0x9c)
-void rmgShrineObject::write(TAbstractFile* outputFile, s32 version)
+void TRmgShrineObject::write(TAbstractFile* outputFile, ERmgMapVersion version)
 {
-    type_object::write(outputFile, version);
+    TRmgObject::write(outputFile, version);
     writeValue<s8>(outputFile, SPELL_NONE);
     writeRmgReservedBytes(outputFile, 2);
     writeValue<u8>(outputFile, 0); // reserved byte
@@ -1877,9 +1883,9 @@ void rmgShrineObject::write(TAbstractFile* outputFile, s32 version)
 
 VA(0x00533ff0, 0xc2)
 MAC_ADDRESS(0x231b84, 0xc8)
-void rmgSpellScrollObject::write(TAbstractFile* outputFile, s32 version)
+void TRmgSpellScrollObject::write(TAbstractFile* outputFile, ERmgMapVersion version)
 {
-    type_object::write(outputFile, version);
+    TRmgObject::write(outputFile, version);
     writeValue<b8>(outputFile, 0); // message
     writeValue<u8>(outputFile, m_spell);
     writeRmgReservedBytes(outputFile, 2);
@@ -1895,9 +1901,9 @@ enum ERmgWitchHutSkills {
 
 VA(0x005340c0, 0x93)
 MAC_ADDRESS(0x231c84, 0x68)
-void rmgWitchHutObject::write(TAbstractFile* outputFile, s32 version)
+void TRmgWitchHutObject::write(TAbstractFile* outputFile, ERmgMapVersion version)
 {
-    type_object::write(outputFile, version);
+    TRmgObject::write(outputFile, version);
     if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         writeValue<u32>(outputFile, RMG_WITCH_HUT_ALLOWED_SKILLS);
     }
@@ -1905,8 +1911,8 @@ void rmgWitchHutObject::write(TAbstractFile* outputFile, s32 version)
 
 VA(0x00534160, 0x27)
 MAC_ADDRESS(0x231cec, 0x1c)
-type_treasure_def::type_treasure_def(
-    s32 objectType, s32 subtype, s32 value, s32 density)
+TRmgTreasureDef::TRmgTreasureDef(
+    TAdventureObjectType objectType, s32 subtype, s32 value, s32 density)
 {
     m_objectType = objectType;
     m_subtype = subtype;
@@ -1916,25 +1922,25 @@ type_treasure_def::type_treasure_def(
 
 VA(0x00534190, 0x06)
 MAC_ADDRESS(0x231d10, 0x8)
-s32 type_treasure_def::getValue(TRmgZone*, type_random_map_generator*)
+s32 TRmgTreasureDef::getValue(TRmgZone*, TRmgGenerator*)
 {
     return m_value;
 }
 
 VA(0x005341a0, 0x4d)
 MAC_ADDRESS(0x231d18, 0x50)
-type_object* type_treasure_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator*, TRmgZone*)
+TRmgObject* TRmgTreasureDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator*, TRmgZone*)
 {
-    return new type_object(properties);
+    return new TRmgObject(properties);
 }
 
 VA(0x005341f0, 0x53)
 MAC_ADDRESS(0x231dac, 0x50)
-type_object* type_artifact_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator*, TRmgZone*)
+TRmgObject* TRmgArtifactDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator*, TRmgZone*)
 {
-    return new rmgArtifactObject(properties);
+    return new TRmgArtifactObject(properties);
 }
 
 // Rounds a positive count to the nearest multiple of step, ties upward.
@@ -1945,9 +1951,9 @@ static inline s32 roundRmgCreatureCount(s32 count, s32 step)
 
 VA(0x00534250, 0xb5)
 MAC_ADDRESS(0x231dfc, 0x108)
-type_black_box_creature_def::type_black_box_creature_def(s32 creatureType)
-    : type_treasure_def(BLACK_BOX, 0, -1, 3),
-      m_creatureType(static_cast<TCreatureType>(creatureType))
+TRmgBlackBoxCreatureDef::TRmgBlackBoxCreatureDef(TCreatureType creatureType)
+    : TRmgTreasureDef(BLACK_BOX, 0, -1, 3),
+      m_creatureType(creatureType)
 {
     m_creatureCount =
         g_rmgCreatureValueByLevel[g_creatureTypeTraits[creatureType].m_level]
@@ -1971,7 +1977,7 @@ static inline s32 adjustRmgValueForAlignment(s32 value,
 }
 
 // Town zones of an alignment; none for eTownNeutral.
-inline s32 type_random_map_generator::getTownZoneCount(s32 alignment) const
+inline s32 TRmgGenerator::getTownZoneCount(TTownType alignment) const
 {
     if (alignment == eTownNeutral)
         return 0;
@@ -1987,10 +1993,10 @@ enum ERmgTreasureOffer {
 // value rises with that town's share of town zones.
 VA(0x00534310, 0x64)
 MAC_ADDRESS(0x231f04, 0x6c)
-s32 type_black_box_creature_def::getValue(
-    TRmgZone* zone, type_random_map_generator* generator)
+s32 TRmgBlackBoxCreatureDef::getValue(
+    TRmgZone* zone, TRmgGenerator* generator)
 {
-    s32 alignment = g_creatureTypeTraits[m_creatureType].m_townType;
+    TTownType alignment = static_cast<TTownType>(g_creatureTypeTraits[m_creatureType].m_townType);
     if (alignment != zone->m_creatureTownType)
         return RMG_TREASURE_NOT_OFFERED;
     s32 value = g_creatureTypeTraits[m_creatureType].m_aiValue * m_creatureCount;
@@ -2000,10 +2006,10 @@ s32 type_black_box_creature_def::getValue(
 
 VA(0x00534380, 0x85)
 MAC_ADDRESS(0x231f70, 0x6c)
-type_object* type_black_box_creature_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator*, TRmgZone*)
+TRmgObject* TRmgBlackBoxCreatureDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator*, TRmgZone*)
 {
-    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    TRmgBlackBoxObject* object = new TRmgBlackBoxObject(properties);
     object->m_creatureType = m_creatureType;
     object->m_creatureCount = m_creatureCount;
     return object;
@@ -2011,20 +2017,20 @@ type_object* type_black_box_creature_def::generate(TRmgObjectPropertiesRef* prop
 
 VA(0x00534410, 0x7f)
 MAC_ADDRESS(0x23204c, 0x64)
-type_object* type_black_box_experience_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator*, TRmgZone*)
+TRmgObject* TRmgBlackBoxExperienceDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator*, TRmgZone*)
 {
-    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    TRmgBlackBoxObject* object = new TRmgBlackBoxObject(properties);
     object->m_experience = m_experience;
     return object;
 }
 
 VA(0x00534490, 0x84)
 MAC_ADDRESS(0x232108, 0x6c)
-type_object* type_black_box_gold_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator*, TRmgZone*)
+TRmgObject* TRmgBlackBoxGoldDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator*, TRmgZone*)
 {
-    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    TRmgBlackBoxObject* object = new TRmgBlackBoxObject(properties);
     object->m_resources[GOLD] += m_gold;
     return object;
 }
@@ -2042,10 +2048,10 @@ static inline bool isRmgSpellDisabledByDefault(s32 spell)
 
 VA(0x00534520, 0x267)
 MAC_ADDRESS(0x2321ec, 0xc0)
-type_object* type_black_box_spells_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator*, TRmgZone*)
+TRmgObject* TRmgBlackBoxSpellsDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator*, TRmgZone*)
 {
-    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    TRmgBlackBoxObject* object = new TRmgBlackBoxObject(properties);
     for (s32 level = m_maximumLevel; level >= m_minimumLevel; --level) {
         for (s32 spell = SPELL_SUMMON_BOAT; spell < hero::NUM_SPELLS; ++spell) {
             if (!isRmgSpellDisabledByDefault(spell)
@@ -2059,15 +2065,15 @@ type_object* type_black_box_spells_def::generate(TRmgObjectPropertiesRef* proper
 
 VA(0x00534790, 0x53)
 MAC_ADDRESS(0x2322e4, 0x50)
-type_object* type_dwelling_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator*, TRmgZone*)
+TRmgObject* TRmgDwellingDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator*, TRmgZone*)
 {
-    return new rmgOwnableObject(properties);
+    return new TRmgOwnableObject(properties);
 }
 
 VA(0x005347f0, 0x79)
 MAC_ADDRESS(0x23237c, 0x88)
-s32 type_map_dwelling_def::getValue(TRmgZone* zone, type_random_map_generator* generator)
+s32 TRmgMapDwellingDef::getValue(TRmgZone* zone, TRmgGenerator* generator)
 {
     const TCreatureTypeTraits& creature =
         g_creatureTypeTraits[g_creatureGenerator1Types[m_subtype]];
@@ -2075,7 +2081,7 @@ s32 type_map_dwelling_def::getValue(TRmgZone* zone, type_random_map_generator* g
         return RMG_TREASURE_NOT_OFFERED;
 
     s32 value = creature.m_growthRate * creature.m_aiValue;
-    s32 alignedTownZoneCount = generator->getTownZoneCount(creature.m_townType);
+    s32 alignedTownZoneCount = generator->getTownZoneCount(static_cast<TTownType>(creature.m_townType));
     value = adjustRmgValueForAlignment(value, alignedTownZoneCount,
         generator->m_townZoneCount);
     return value + creature.m_aiValue * alignedTownZoneCount / 2;
@@ -2083,94 +2089,94 @@ s32 type_map_dwelling_def::getValue(TRmgZone* zone, type_random_map_generator* g
 
 VA(0x00534870, 0x53)
 MAC_ADDRESS(0x23243c, 0x50)
-type_object* type_resource_lump_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator*, TRmgZone*)
+TRmgObject* TRmgResourceLumpDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator*, TRmgZone*)
 {
-    return new rmgResourceObject(properties);
+    return new TRmgResourceObject(properties);
 }
 
 // Reserves a random available hero; no prison when none is left.
 VA(0x005348d0, 0x93)
 MAC_ADDRESS(0x2324e4, 0x84)
-type_object* type_prison_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, TRmgZone*)
+TRmgObject* TRmgPrisonDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator* generator, TRmgZone*)
 {
     s32 heroIndex = generator->selectPrisonHero();
     if (heroIndex == heroIdNone)
         return 0;
-    return new rmgHeroObject(properties, generator,
+    return new TRmgHeroObject(properties, generator,
         generator->m_nextObjectId++, heroIndex, m_experience);
 }
 
 VA(0x00534970, 0x53)
 MAC_ADDRESS(0x2325b0, 0x50)
-type_object* type_scholar_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator*, TRmgZone*)
+TRmgObject* TRmgScholarDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator*, TRmgZone*)
 {
-    return new rmgScholarObject(properties);
+    return new TRmgScholarObject(properties);
 }
 
 VA(0x005349d0, 0x29)
 MAC_ADDRESS(0x232600, 0x44)
-type_shrine_def::type_shrine_def(s32 objectType, s32 value)
-    : type_treasure_def(objectType, 0, value, 100)
+TRmgShrineDef::TRmgShrineDef(TAdventureObjectType objectType, s32 value)
+    : TRmgTreasureDef(objectType, 0, value, 100)
 {
 }
 
 VA(0x00534a00, 0x53)
 MAC_ADDRESS(0x232644, 0x50)
-type_object* type_shrine_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator*, TRmgZone*)
+TRmgObject* TRmgShrineDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator*, TRmgZone*)
 {
-    return new rmgShrineObject(properties);
+    return new TRmgShrineObject(properties);
 }
 
 VA(0x00534a60, 0x25)
 MAC_ADDRESS(0x232694, 0x48)
-type_witch_hut_def::type_witch_hut_def()
-    : type_treasure_def(WITCH_HUT, 0, 1500, 80)
+TRmgWitchHutDef::TRmgWitchHutDef()
+    : TRmgTreasureDef(WITCH_HUT, 0, 1500, 80)
 {
 }
 
 VA(0x00534a90, 0x53)
 MAC_ADDRESS(0x2326dc, 0x50)
-type_object* type_witch_hut_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator*, TRmgZone*)
+TRmgObject* TRmgWitchHutDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator*, TRmgZone*)
 {
-    return new rmgWitchHutObject(properties);
+    return new TRmgWitchHutObject(properties);
 }
 
-inline bool type_random_map_generator::canUseSeerHutPrototype(s32 prototypeIndex) const
+inline bool TRmgGenerator::canUseSeerHutPrototype(s32 prototypeIndex) const
 {
     return m_nextSeerHutPrototypeIndex == prototypeIndex
         && !m_questArtifactPoolLow;
 }
 
-inline rmgQuestArtifactObject* type_random_map_generator::createQuestArtifactForHut(
-    rmgSeerHutObject* seerHut, type_treasure_def* definition)
+inline TRmgQuestArtifactObject* TRmgGenerator::createQuestArtifactForHut(
+    TRmgSeerHutObject* seerHut, TRmgTreasureDef* definition)
 {
     TRmgObjectPropertiesRef* artifact = selectObjectPrototype(
         eTerrainDirt, RANDOM_ARTIFACT, 0);
-    return new rmgQuestArtifactObject(artifact, this, seerHut, definition);
+    return new TRmgQuestArtifactObject(artifact, this, seerHut, definition);
 }
 
 VA(0x00534af0, 0x9e)
 MAC_ADDRESS(0x23277c, 0x68)
-s32 type_quest_creature_def::getValue(TRmgZone* zone, type_random_map_generator* generator)
+s32 TRmgQuestCreatureDef::getValue(TRmgZone* zone, TRmgGenerator* generator)
 {
     if (!generator->canUseSeerHutPrototype(m_subtype))
         return RMG_TREASURE_NOT_OFFERED;
-    s32 value = type_black_box_creature_def::getValue(zone, generator);
+    s32 value = TRmgBlackBoxCreatureDef::getValue(zone, generator);
     return (2 * value - 4000) / 3;
 }
 
 VA(0x00534b90, 0xe7)
 MAC_ADDRESS(0x2327ec, 0xa4)
-type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, TRmgZone*)
+TRmgObject* TRmgQuestCreatureDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator* generator, TRmgZone*)
 {
-    rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
-    rmgQuestArtifactObject* object = generator->createQuestArtifactForHut(seerHut, this);
+    TRmgSeerHutObject* seerHut = new TRmgSeerHutObject(properties);
+    TRmgQuestArtifactObject* object = generator->createQuestArtifactForHut(seerHut, this);
     seerHut->m_creatureType = m_creatureType;
     seerHut->m_creatureCount = m_creatureCount;
     return object;
@@ -2180,14 +2186,14 @@ type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properti
 // enough quest artifacts remain.
 VA(0x00534c80, 0x34)
 MAC_ADDRESS(0x232900, 0x34)
-s32 type_quest_experience_def::getValue(TRmgZone*, type_random_map_generator* generator)
+s32 TRmgQuestExperienceDef::getValue(TRmgZone*, TRmgGenerator* generator)
 {
     if (!generator->canUseSeerHutPrototype(m_subtype))
         return RMG_TREASURE_NOT_OFFERED;
     return m_value;
 }
 
-s32 type_quest_gold_def::getValue(TRmgZone*, type_random_map_generator* generator)
+s32 TRmgQuestGoldDef::getValue(TRmgZone*, TRmgGenerator* generator)
 {
     if (!generator->canUseSeerHutPrototype(m_subtype))
         return RMG_TREASURE_NOT_OFFERED;
@@ -2196,22 +2202,22 @@ s32 type_quest_gold_def::getValue(TRmgZone*, type_random_map_generator* generato
 
 VA(0x00534cc0, 0xe1)
 MAC_ADDRESS(0x23293c, 0x9c)
-type_object* type_quest_experience_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, TRmgZone*)
+TRmgObject* TRmgQuestExperienceDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator* generator, TRmgZone*)
 {
-    rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
-    rmgQuestArtifactObject* object = generator->createQuestArtifactForHut(seerHut, this);
+    TRmgSeerHutObject* seerHut = new TRmgSeerHutObject(properties);
+    TRmgQuestArtifactObject* object = generator->createQuestArtifactForHut(seerHut, this);
     seerHut->m_experience = m_experience;
     return object;
 }
 
 VA(0x00534db0, 0xe8)
 MAC_ADDRESS(0x232a84, 0xa4)
-type_object* type_quest_gold_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, TRmgZone*)
+TRmgObject* TRmgQuestGoldDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator* generator, TRmgZone*)
 {
-    rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
-    rmgQuestArtifactObject* object = generator->createQuestArtifactForHut(seerHut, this);
+    TRmgSeerHutObject* seerHut = new TRmgSeerHutObject(properties);
+    TRmgQuestArtifactObject* object = generator->createQuestArtifactForHut(seerHut, this);
     seerHut->m_resourceType = GOLD;
     seerHut->m_resourceCount = m_gold;
     return object;
@@ -2219,8 +2225,8 @@ type_object* type_quest_gold_def::generate(TRmgObjectPropertiesRef* properties,
 
 VA(0x00534ea0, 0x30)
 MAC_ADDRESS(0x232b28, 0x58)
-type_spell_scroll_def::type_spell_scroll_def(s32 spellLevel, s32 value)
-    : type_treasure_def(SPELL_SCROLL, 0, value, 30)
+TRmgSpellScrollDef::TRmgSpellScrollDef(s32 spellLevel, s32 value)
+    : TRmgTreasureDef(SPELL_SCROLL, 0, value, 30)
 {
     m_spellLevel = spellLevel;
 }
@@ -2234,8 +2240,8 @@ static inline bool isRmgScrollSpell(s32 spell, s32 level)
 
 VA(0x00534ed0, 0xc3)
 MAC_ADDRESS(0x232b80, 0x108)
-type_object* type_spell_scroll_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator*, TRmgZone*)
+TRmgObject* TRmgSpellScrollDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator*, TRmgZone*)
 {
     // One random draw picks among eligible spells in spell order; at least
     // one eligible spell must exist.
@@ -2250,12 +2256,12 @@ type_object* type_spell_scroll_def::generate(TRmgObjectPropertiesRef* properties
         if (isRmgScrollSpell(spell, m_spellLevel) && selectedIndex-- <= 0)
             break;
     }
-    return new rmgSpellScrollObject(properties, static_cast<ESpellId>(spell));
+    return new TRmgSpellScrollObject(properties, static_cast<ESpellId>(spell));
 }
 
 VA(0x00534fa0, 0x21)
 MAC_ADDRESS(0x232cd4, 0x20)
-s32 type_key_tent_def::getValue(TRmgZone*, type_random_map_generator* generator)
+s32 TRmgKeyTentDef::getValue(TRmgZone*, TRmgGenerator* generator)
 {
     if (generator->m_nextKeyTentColor != m_subtype)
         return RMG_TREASURE_NOT_OFFERED;
@@ -2265,10 +2271,10 @@ s32 type_key_tent_def::getValue(TRmgZone*, type_random_map_generator* generator)
 // The tent stores its treasure value; its colour is the prototype subtype.
 VA(0x00534fd0, 0x64)
 MAC_ADDRESS(0x232cfc, 0x70)
-type_object* type_key_tent_def::generate(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, TRmgZone*)
+TRmgObject* TRmgKeyTentDef::generate(TRmgObjectPropertiesRef* properties,
+    TRmgGenerator* generator, TRmgZone*)
 {
-    return new rmgKeyTentObject(properties, generator, m_value);
+    return new TRmgKeyTentObject(properties, generator, m_value);
 }
 
 // Empties the group; its objects are owned elsewhere.
@@ -2312,7 +2318,7 @@ b8 TRmgTreasureGroup::objectsAllowEntrances() const
 }
 
 MAC_ADDRESS(0x233d78, 0xd4)
-void TRmgTreasureGroup::addObject(type_object* object, TPoint point)
+void TRmgTreasureGroup::addObject(TRmgObject* object, TPoint point)
 {
     m_objects.push_back(object);
     m_map.addObject(*object, TRmgMapPosition(point.m_x, point.m_y, RMG_SURFACE_LEVEL));
@@ -2323,14 +2329,14 @@ void TRmgTreasureGroup::addObject(type_object* object, TPoint point)
 // opens paths around it and retraces the outline.
 VA(0x00535110, 0x4ab)
 MAC_ADDRESS(0x233028, 0x6a8)
-b8 TRmgTreasureGroup::addGuard(type_object* guard)
+b8 TRmgTreasureGroup::addGuard(TRmgObject* guard)
 {
     traceOutline();
     // Retail bug: the guard position is adjusted by the trigger of the last
     // object's prototype, not the guard's. The group must hold an object.
     TObjectType* prototype;
     for (u32 objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
-        type_object* object = m_objects[objectIndex];
+        TRmgObject* object = m_objects[objectIndex];
         prototype = object->m_properties->m_prototype;
         TRmgMapPosition entrance = object->getEntrance();
         u32 direction = isRmgEntranceOpenToNorth(prototype->getObjectType())
@@ -2467,7 +2473,7 @@ b8 TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
 // is open to the north.
 VA(0x00535970, 0x240)
 MAC_ADDRESS(0x233a44, 0x2d4)
-b8 TRmgTreasureGroup::tryAddObject(type_object* object)
+b8 TRmgTreasureGroup::tryAddObject(TRmgObject* object)
 {
     TRmgObjectPropertiesRef* properties = object->m_properties;
     TObjectType* prototype = properties->m_prototype;
@@ -2479,7 +2485,7 @@ b8 TRmgTreasureGroup::tryAddObject(type_object* object)
     TPoint trigger(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
     std::vector<TRmgMapPosition> candidates;
     for (u32 index = 0; index < m_objects.size(); ++index) {
-        type_object* existing = m_objects[index];
+        TRmgObject* existing = m_objects[index];
         TRmgMapPosition entrance = existing->getEntrance();
         b8 openToNorth = isRmgEntranceOpenToNorth(
             existing->m_properties->m_prototype->getObjectType());
@@ -2560,7 +2566,7 @@ enum ERmgPrototypeLoadProgress {
 VA(0x00536070, 0xfb)
 MAC_ADDRESS(0x23422c, 0xec)
 TRmgGeneratorBase::TRmgGeneratorBase(s32 width, s32 height, s32 levels,
-    TProgressSink* progress, s32 additionalSteps, s32 version)
+    TProgressSink* progress, s32 additionalSteps, ERmgMapVersion version)
     : m_map(width, height, levels)
 {
     m_progress = progress;
@@ -2597,7 +2603,7 @@ TRmgObjectPropertiesRef::TRmgObjectPropertiesRef(TObjectType* prototype)
 }
 
 static inline bool isRmgObjectAvailableInVersion(
-    TAdventureObjectType objectType, s32 version)
+    TAdventureObjectType objectType, ERmgMapVersion version)
 {
     if (version < RMG_MAP_SHADOW_OF_DEATH && objectType >= CLOVER_FIELD_2)
         return false;
@@ -2610,6 +2616,24 @@ static inline bool isRmgObjectAvailableInVersion(
 enum ERmgMonolithSubtypeLimits {
     RMG_PRE_SOD_MONOLITH_SUBTYPE_COUNT = 3
 };
+
+// Prototype buckets and placement rules use the object's name-row alias.
+static TAdventureObjectType getRmgPrototypeFamily(TAdventureObjectType type)
+{
+    return static_cast<TAdventureObjectType>(g_adventureObjectTraits[type].m_nameRow);
+}
+
+// Shared by selection and input validation; this query consumes no randomness.
+static bool isRmgSelectablePrototype(const TObjectType& prototype,
+    s32 subtype, TTerrainType terrain)
+{
+    if (prototype.getSubtype() != subtype)
+        return false;
+    if (prototype.m_slotCategory == TObjectType::SLOT_CATEGORY_4
+        || prototype.m_slotCategory == TObjectType::SLOT_CATEGORY_5)
+        return terrain != eTerrainWater;
+    return prototype.isRecommendedTerrain(terrain) != 0;
+}
 
 #if defined(HOMM3_RMG_HOTFIX)
 // Prototypes the generator can place: the footprint fits the mask frame and
@@ -2630,9 +2654,7 @@ static bool isUsableRmgPrototype(const TObjectType& prototype)
         ++column;
     if (column == prototype.getWidth())
         return false;
-    s32 mappedType;
-    memcpy(&mappedType, &g_adventureObjectTraits[prototype.getObjectType()].m_nameRow,
-        sizeof(mappedType));
+    TAdventureObjectType mappedType = getRmgPrototypeFamily(prototype.getObjectType());
     return mappedType != MONSTER || (prototype.getSubtype() >= 0
         && prototype.getSubtype() < RMG_CREATURE_TYPE_COUNT);
 }
@@ -2659,8 +2681,7 @@ void TRmgGeneratorBase::loadObjectPrototypes()
         TRmgObjectPropertiesRef* properties =
             new TRmgObjectPropertiesRef(&m_objectsTxt.m_objectTypes[index]);
         // Aliased object types are listed under their objnames.txt row.
-        s32 mappedType;
-        memcpy(&mappedType, &g_adventureObjectTraits[type].m_nameRow, sizeof(mappedType));
+        TAdventureObjectType mappedType = getRmgPrototypeFamily(type);
         m_objectPrototypes[mappedType].push_back(properties);
     }
     // Exchange sort of the monsters by subtype, swapping prototypes. Retail
@@ -2715,23 +2736,57 @@ static s32 countRmgPlacementRuleRows(const TSpreadsheetResource* sheet)
     return row - RMG_FIRST_DATA_ROW;
 }
 
-// A rule row has an adjacent and a blocked score for every table row, and
-// its object type and terrain index the binding tables.
-static bool isValidRmgPlacementRuleRow(
-    const TSpreadsheetResource::TStringVector& values, s32 tableRows)
+#endif
+
+// Parsed rule identity stays paired with its compacted storage index. The
+// rule itself retains the original table row for score-column indexing.
+struct TRmgPlacementRuleSource {
+    TAdventureObjectType m_objectType;
+    TTerrainType m_terrain;
+    s32 m_subtype;
+    u32 m_ruleIndex;
+};
+
+struct TRmgPlacementRuleMatch {
+    TRmgObjectPlacementRule* m_rule;
+    s32 m_subtype;
+
+    TRmgPlacementRuleMatch(TRmgObjectPlacementRule* rule, s32 subtype)
+        : m_rule(rule), m_subtype(subtype) {}
+};
+
+// One binding pairs the subtype with its rule. Heap storage also avoids
+// a large table of vectors on the generation stack.
+struct TRmgPlacementTables {
+    std::vector<TRmgPlacementRuleMatch>
+        m_rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][RMG_TERRAIN_COUNT];
+};
+
+// Parse once; HOTFIX validates the row before exposing its typed identity.
+static bool tryReadRmgPlacementRuleSource(
+    const TSpreadsheetResource::TStringVector& values, s32 tableRows,
+    TRmgPlacementRuleSource& source)
 {
+#if defined(HOMM3_RMG_HOTFIX)
     if (values.size() < static_cast<u32>(RMG_PLACEMENT_COLUMN_NEIGHBOUR_SCORES + 2 * tableRows))
         return false;
     for (u32 column = 0; column < values.size(); ++column) {
         if (!values[column])
             return false;
     }
+#endif
     s32 objectType = atoi(values[RMG_PLACEMENT_COLUMN_OBJECT_TYPE]);
     s32 terrain = atoi(values[RMG_PLACEMENT_COLUMN_TERRAIN]);
-    return objectType >= NOTHING && objectType < ADVENTURE_OBJECT_TRAIT_COUNT
-        && terrain >= eTerrainDirt && terrain < RMG_TERRAIN_COUNT;
-}
+#if defined(HOMM3_RMG_HOTFIX)
+    if (objectType < NOTHING || objectType >= ADVENTURE_OBJECT_TRAIT_COUNT
+        || terrain < eTerrainDirt || terrain >= RMG_TERRAIN_COUNT)
+        return false;
 #endif
+    source.m_objectType = H3_ENUM_DECODE(TAdventureObjectType, objectType);
+    source.m_terrain = H3_ENUM_DECODE(TTerrainType, terrain);
+    source.m_subtype = atoi(values[RMG_PLACEMENT_COLUMN_SUBTYPE]);
+    return true;
+}
 
 // Reads rand_trn.txt and binds each prototype to the last rule matching its
 // object type, subtype and first recommended terrain.
@@ -2742,37 +2797,30 @@ void TRmgGeneratorBase::readObjectPlacementRules()
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x006827f4, rmgPlacementRulesFilename, "rand_trn.txt"));
     s32 row = RMG_FIRST_DATA_ROW;
-    std::vector<TAdventureObjectType> objectTypes;
-    std::vector<TTerrainType> terrains;
-    std::vector<s32> subtypes;
+    std::vector<TRmgPlacementRuleSource> sources;
 #if defined(HOMM3_RMG_HOTFIX)
     s32 tableRows = countRmgPlacementRuleRows(sheet);
+#else
+    s32 tableRows = 0;
 #endif
     while (row < sheet->getNumberOfRows()) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
 #if defined(HOMM3_RMG_HOTFIX)
         if (row == RMG_FIRST_DATA_ROW + tableRows)
             break;
-        // A malformed row binds no prototype; its score columns are ignored.
-        if (!isValidRmgPlacementRuleRow(values, tableRows)) {
-            ++row;
-            continue;
-        }
 #else
         if (values[0][0] == ' ' || values[0][0] == 0)
             break;
 #endif
+        TRmgPlacementRuleSource source;
+        if (!tryReadRmgPlacementRuleSource(values, tableRows, source)) {
+            ++row;
+            continue;
+        }
+        source.m_ruleIndex = m_placementRules.size();
+        sources.push_back(source);
         TRmgObjectPlacementRule rule;
         rule.m_index = row - RMG_FIRST_DATA_ROW;
-        TAdventureObjectType ruleObjectType =
-            H3_ENUM_DECODE(TAdventureObjectType,
-                atoi(values[RMG_PLACEMENT_COLUMN_OBJECT_TYPE]));
-        s32 ruleSubtype = atoi(values[RMG_PLACEMENT_COLUMN_SUBTYPE]);
-        TTerrainType ruleTerrain = H3_ENUM_DECODE(TTerrainType,
-            atoi(values[RMG_PLACEMENT_COLUMN_TERRAIN]));
-        objectTypes.push_back(ruleObjectType);
-        terrains.push_back(ruleTerrain);
-        subtypes.push_back(ruleSubtype);
         TTerrainType terrain;
         for (terrain = eTerrainDirt; terrain <= eTerrainWater;
              terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1))
@@ -2804,26 +2852,11 @@ void TRmgGeneratorBase::readObjectPlacementRules()
 #endif
     sheet->dispose();
 
-#if defined(HOMM3_TARGET_MAC)
-    struct TPlacementTables {
-        std::vector<TRmgObjectPlacementRule*>
-            rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][RMG_TERRAIN_COUNT];
-        std::vector<s32> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][RMG_TERRAIN_COUNT];
-    };
-    TPlacementTables* tables = new TPlacementTables;
-    std::vector<TRmgObjectPlacementRule*>
-        (&rulesByType)[ADVENTURE_OBJECT_TRAIT_COUNT][RMG_TERRAIN_COUNT] = tables->rulesByType;
-    std::vector<s32> (&subtypesByType)[ADVENTURE_OBJECT_TRAIT_COUNT][RMG_TERRAIN_COUNT] =
-        tables->subtypesByType;
-#else
-    std::vector<TRmgObjectPlacementRule*>
-        rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][RMG_TERRAIN_COUNT];
-    std::vector<s32> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][RMG_TERRAIN_COUNT];
-#endif
-    for (s32 index = 0; index < ruleCount; ++index) {
-        TRmgObjectPlacementRule* rule = &m_placementRules[index];
-        rulesByType[objectTypes[index]][terrains[index]].push_back(rule);
-        subtypesByType[objectTypes[index]][terrains[index]].push_back(subtypes[index]);
+    std::auto_ptr<TRmgPlacementTables> tables(new TRmgPlacementTables);
+    for (u32 index = 0; index < sources.size(); ++index) {
+        const TRmgPlacementRuleSource& source = sources[index];
+        tables->m_rulesByType[source.m_objectType][source.m_terrain].push_back(
+            TRmgPlacementRuleMatch(&m_placementRules[source.m_ruleIndex], source.m_subtype));
     }
     for (TAdventureObjectType objectType = NOTHING; objectType < ADVENTURE_OBJECT_TRAIT_COUNT;
          objectType = H3_ENUM_DECODE(TAdventureObjectType, objectType + 1)) {
@@ -2841,23 +2874,19 @@ void TRmgGeneratorBase::readObjectPlacementRules()
             properties->m_preferredTerrain = terrain;
             if (terrain != eTerrainRock) {
                 s32 subtype = prototype->getSubtype();
-                s32 mappedType;
-                // Aliased object types use their objnames.txt row.
-                memcpy(&mappedType, &g_adventureObjectTraits[objectType].m_nameRow,
-                       sizeof(mappedType));
-                s32 match = rulesByType[mappedType][terrain].size();
+                TAdventureObjectType mappedType = getRmgPrototypeFamily(objectType);
+                const std::vector<TRmgPlacementRuleMatch>& matches =
+                    tables->m_rulesByType[mappedType][terrain];
+                s32 match = matches.size();
                 while (match--) {
-                    if (subtypesByType[mappedType][terrain][match] == subtype)
+                    if (matches[match].m_subtype == subtype)
                         break;
                 }
                 if (match >= 0)
-                    properties->m_placementRule = rulesByType[mappedType][terrain][match];
+                    properties->m_placementRule = matches[match].m_rule;
             }
         }
     }
-#if defined(HOMM3_TARGET_MAC)
-    delete tables;
-#endif
 }
 
 // Scores a candidate position from the terrain under the object's blocked
@@ -2868,7 +2897,7 @@ s32 TRmgGeneratorBase::scoreObjectPlacement(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position)
 {
     TObjectType* prototype = properties->m_prototype;
-    std::vector<type_object*> affected;
+    std::vector<TRmgObject*> affected;
     b8 terrainSeen[RMG_TERRAIN_COUNT];
     memset(terrainSeen, 0, sizeof(terrainSeen));
     // The 8x6 footprint plus a one-cell border; footprint cell (column, row)
@@ -2880,7 +2909,7 @@ s32 TRmgGeneratorBase::scoreObjectPlacement(
     //      o # # # o  r = 2
     //      o # # P o  r = 1
     //      o o o o o  r = 0
-    u32 marks[8 + 2][6 + 2];
+    u32 marks[OBJECT_MASK_WIDTH + 2][OBJECT_MASK_HEIGHT + 2];
     memset(marks, 0, sizeof(marks));
     for (u32 row = 0; row < prototype->getHeight(); ++row) {
         s32 y = position.m_y - row;
@@ -2956,7 +2985,7 @@ s32 TRmgGeneratorBase::scoreObjectPlacement(
                 priority = properties->m_overlapPriorities[column - 1][row - 1];
             for (s32 index = 0; index < static_cast<s32>(item->m_objects.size());
                  ++index) {
-                type_object* object = item->m_objects[index];
+                TRmgObject* object = item->m_objects[index];
                 b8 wasTouched = object->isPlacementTouched();
                 if (mark & RMG_PLACEMENT_OVERLAP) {
                     object->m_properties->buildOverlapPriorities();
@@ -2981,7 +3010,7 @@ s32 TRmgGeneratorBase::scoreObjectPlacement(
     }
 
     for (u32 index = 0; index < affected.size(); ++index) {
-        type_object* object = affected[index];
+        TRmgObject* object = affected[index];
         if (object->m_blockedByCandidate) {
             if (!object->m_properties->m_placementRule)
                 score = RMG_PLACEMENT_INVALID;
@@ -3000,7 +3029,7 @@ s32 TRmgGeneratorBase::scoreObjectPlacement(
 
 VA(0x005371c0, 0x1da)
 MAC_ADDRESS(0x2358fc, 0xb8)
-void TRmgGeneratorBase::addObject(type_object* object, TRmgMapPosition position)
+void TRmgGeneratorBase::addObject(TRmgObject* object, TRmgMapPosition position)
 {
     m_map.addObject(*object, position);
     m_objects.push_back(object);
@@ -3055,7 +3084,7 @@ void TRmgGeneratorBase::fillObstaclesFrom(TRmgMapPosition start, s32 progressSte
         std::vector<TRmgObjectPropertiesRef*> candidates;
         std::vector<TRmgMapPosition> positions;
         std::vector<s32> weights;
-        std::vector<type_object*> unusedObjects;
+        std::vector<TRmgObject*> unusedObjects;
         s32 totalWeight = 0;
         for (const s32* type = g_rmgDecorationTypes;
             type < g_rmgDecorationTypes + sizeof(g_rmgDecorationTypes) / sizeof(g_rmgDecorationTypes[0]); ++type) {
@@ -3104,7 +3133,7 @@ void TRmgGeneratorBase::fillObstaclesFrom(TRmgMapPosition start, s32 progressSte
             TRmgObjectPropertiesRef* properties = candidates[index];
             TRmgMapPosition placement = positions[index];
             TObjectType* prototype = properties->m_prototype;
-            addObject(new type_object(properties), placement);
+            addObject(new TRmgObject(properties), placement);
             TRmgZoneBounds bounds;
             bounds.m_minimumX = max(placement.m_x - prototype->getWidth(), 0);
             bounds.m_minimumY = max(placement.m_y - prototype->getHeight(), 0);
@@ -3128,7 +3157,7 @@ void TRmgGeneratorBase::fillObstaclesFrom(TRmgMapPosition start, s32 progressSte
 }
 
 VA(0x005378e0, 0x27)
-TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)
+TRmgMapItem* TRmgMap::getMapItem(TRmgMapPosition point)
 {
     return &m_mapItems[(point.m_z * m_mapHeight + point.m_y) * m_mapWidth + point.m_x];
 }
@@ -3182,10 +3211,10 @@ static inline void initializeRmgObjectLimits(s32* limits,
 // Special heroes and heroes missing from the map version are never offered.
 VA(0x00537b10, 0x2a8)
 MAC_ADDRESS(0x2363e4, 0x2ec)
-type_random_map_generator::type_random_map_generator(
+TRmgGenerator::TRmgGenerator(
     s32 width, s32 height, s32 levels, s32 humanPlayers, s32 humanTeams,
     s32 computerPlayers, s32 computerTeams, ERmgWaterContent waterContent,
-    s32 monsterStrength, TProgressSink* progress, s32 mapVersion)
+    s32 monsterStrength, TProgressSink* progress, ERmgMapVersion mapVersion)
     : TRmgGeneratorBase(width, height, levels, progress,
         width * height + 326900, mapVersion)
 {
@@ -3227,11 +3256,11 @@ type_random_map_generator::type_random_map_generator(
     }
 }
 
-VA_COMPGEN(0x00537dc0, 0x21, SCALAR_DELETING_DTOR, type_random_map_generator)
+VA_COMPGEN(0x00537dc0, 0x21, SCALAR_DELETING_DTOR, TRmgGenerator)
 
 VA(0x00537df0, 0x200)
 MAC_ADDRESS(0x23685c, 0x1cc)
-type_random_map_generator::~type_random_map_generator()
+TRmgGenerator::~TRmgGenerator()
 {
     for (u32 zone = 0; zone < m_zones.size(); ++zone)
         delete m_zones[zone];
@@ -3302,7 +3331,7 @@ static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
     }
 }
 
-bool TRmgTemplate::hasPlayerSlots(s32 humanPlayers, s32 computerPlayers) const
+bool TRmgTemplate::hasPlayerZones(s32 humanPlayers, s32 computerPlayers) const
 {
     s32 playerSlots = 0;
     for (u32 slot = 0; slot < m_zones.size(); ++slot)
@@ -3314,6 +3343,49 @@ bool TRmgTemplate::hasPlayerSlots(s32 humanPlayers, s32 computerPlayers) const
         if (m_zones[slot]->m_kind == RMG_TEMPLATE_COMPUTER)
             ++playerSlots;
     return playerSlots >= humanPlayers + computerPlayers;
+}
+
+void TRmgTemplate::getPlayerSlots(b8* humanSlots, b8* allSlots) const
+{
+    std::fill(humanSlots, humanSlots + RMG_PLAYER_COUNT, false);
+    std::fill(allSlots, allSlots + RMG_PLAYER_COUNT, false);
+    for (u32 index = 0; index < m_zones.size(); ++index) {
+        const TRmgTemplateZone* zone = m_zones[index];
+        if (zone->m_kind == RMG_TEMPLATE_HUMAN)
+            humanSlots[zone->m_playerIndex] = allSlots[zone->m_playerIndex] = true;
+        else if (zone->m_kind == RMG_TEMPLATE_COMPUTER)
+            allSlots[zone->m_playerIndex] = true;
+    }
+}
+
+bool TRmgTemplate::hasPlayerSlots(s32 humanPlayers, s32 computerPlayers) const
+{
+    b8 humanSlots[RMG_PLAYER_COUNT];
+    b8 allSlots[RMG_PLAYER_COUNT];
+    getPlayerSlots(humanSlots, allSlots);
+    s32 humans = 0;
+    s32 players = 0;
+    for (s32 seat = 0; seat < RMG_PLAYER_COUNT; ++seat) {
+        humans += humanSlots[seat] != 0;
+        players += allSlots[seat] != 0;
+    }
+    return humans >= humanPlayers && players >= humanPlayers + computerPlayers;
+}
+
+void TRmgTemplateZone::getTownCategories(s32* densities, s32* counts) const
+{
+    static const ERmgTownPlacementParameter densitySlots[RMG_TOWN_CATEGORY_COUNT] = {
+        RMG_TOWN_PLAYER_CASTLE_DENSITY, RMG_TOWN_PLAYER_BASIC_DENSITY,
+        RMG_TOWN_NEUTRAL_CASTLE_DENSITY, RMG_TOWN_NEUTRAL_BASIC_DENSITY
+    };
+    static const ERmgTownPlacementParameter countSlots[RMG_TOWN_CATEGORY_COUNT] = {
+        RMG_TOWN_PLAYER_CASTLE_COUNT, RMG_TOWN_PLAYER_BASIC_COUNT,
+        RMG_TOWN_NEUTRAL_CASTLE_COUNT, RMG_TOWN_NEUTRAL_BASIC_COUNT
+    };
+    for (s32 category = 0; category < RMG_TOWN_CATEGORY_COUNT; ++category) {
+        densities[category] = m_townPlacement[densitySlots[category]];
+        counts[category] = m_townPlacement[countSlots[category]];
+    }
 }
 
 #if defined(HOMM3_RMG_HOTFIX)
@@ -3347,7 +3419,7 @@ static bool hasRepresentableRmgDensities(const s32* densities, const s32* counts
 
 // Sizes scale the layout and bound boundary roughness; player numbers are
 // 1-8, or 0 (none) outside player zones; density arithmetic stays in range.
-b8 TRmgTemplateZone::isUsable() const
+bool TRmgTemplateZone::isUsable() const
 {
     if (m_size <= 0)
         return false;
@@ -3355,63 +3427,39 @@ b8 TRmgTemplateZone::isUsable() const
         || m_kind == RMG_TEMPLATE_COMPUTER ? 0 : -1;
     if (m_playerIndex < lowestPlayer || m_playerIndex >= RMG_PLAYER_COUNT)
         return false;
-    const s32* towns = m_townPlacement;
     s32 townDensities[RMG_TOWN_CATEGORY_COUNT];
     s32 townCounts[RMG_TOWN_CATEGORY_COUNT];
-    townDensities[RMG_TOWN_PLAYER_CASTLE] = towns[RMG_TOWN_PLAYER_CASTLE_DENSITY];
-    townDensities[RMG_TOWN_PLAYER_BASIC] = towns[RMG_TOWN_PLAYER_BASIC_DENSITY];
-    townDensities[RMG_TOWN_NEUTRAL_CASTLE] = towns[RMG_TOWN_NEUTRAL_CASTLE_DENSITY];
-    townDensities[RMG_TOWN_NEUTRAL_BASIC] = towns[RMG_TOWN_NEUTRAL_BASIC_DENSITY];
-    townCounts[RMG_TOWN_PLAYER_CASTLE] = towns[RMG_TOWN_PLAYER_CASTLE_COUNT];
-    townCounts[RMG_TOWN_PLAYER_BASIC] = towns[RMG_TOWN_PLAYER_BASIC_COUNT];
-    townCounts[RMG_TOWN_NEUTRAL_CASTLE] = towns[RMG_TOWN_NEUTRAL_CASTLE_COUNT];
-    townCounts[RMG_TOWN_NEUTRAL_BASIC] = towns[RMG_TOWN_NEUTRAL_BASIC_COUNT];
+    getTownCategories(townDensities, townCounts);
     if (!hasRepresentableRmgDensities(townDensities, townCounts, RMG_TOWN_CATEGORY_COUNT))
         return false;
     if (!hasRepresentableRmgDensities(m_mineDensities, m_mineCounts, NUM_RESOURCES))
         return false;
     // placeZoneTreasures skips bands with a maximum below 100.
     s32 treasureDensities[RMG_TREASURE_BAND_COUNT];
-    s32 treasureCounts[RMG_TREASURE_BAND_COUNT] = {0, 0, 0};
+    s32 treasureCounts[RMG_TREASURE_BAND_COUNT] = {0};
     for (s32 band = 0; band < RMG_TREASURE_BAND_COUNT; ++band)
-        treasureDensities[band] = m_treasure[band].m_maximum >= 100
-            ? m_treasure[band].m_density : 0;
+        treasureDensities[band] = m_treasure[band].getEffectiveDensity();
     return hasRepresentableRmgDensities(treasureDensities, treasureCounts, RMG_TREASURE_BAND_COUNT);
 }
 
 // Templates are offered only with usable zones whose distinct player
 // numbers seat the humans, then every player.
-b8 TRmgTemplate::isUsable(s32 humanPlayers, s32 computerPlayers) const
+bool TRmgTemplate::isUsable(s32 humanPlayers, s32 computerPlayers) const
 {
     if (!m_zones.size())
         return false;
-    b8 humanSeats[RMG_PLAYER_COUNT];
-    b8 seats[RMG_PLAYER_COUNT];
-    memset(humanSeats, 0, sizeof(humanSeats));
-    memset(seats, 0, sizeof(seats));
     for (u32 index = 0; index < m_zones.size(); ++index) {
-        const TRmgTemplateZone* zone = m_zones[index];
-        if (!zone->isUsable())
+        if (!m_zones[index]->isUsable())
             return false;
-        if (zone->m_kind == RMG_TEMPLATE_HUMAN)
-            humanSeats[zone->m_playerIndex] = seats[zone->m_playerIndex] = true;
-        else if (zone->m_kind == RMG_TEMPLATE_COMPUTER)
-            seats[zone->m_playerIndex] = true;
     }
-    s32 humanSeatCount = 0;
-    s32 seatCount = 0;
-    for (s32 seat = 0; seat < RMG_PLAYER_COUNT; ++seat) {
-        humanSeatCount += humanSeats[seat] != 0;
-        seatCount += seats[seat] != 0;
-    }
-    return humanSeatCount >= humanPlayers && seatCount >= humanPlayers + computerPlayers;
+    return hasPlayerSlots(humanPlayers, computerPlayers);
 }
 #endif
 
 // Template sizes are in units of 36x36 cells.
 VA(0x00537ff0, 0x482)
 MAC_ADDRESS(0x2372ec, 0x304)
-void type_random_map_generator::loadTemplates()
+void TRmgGenerator::loadTemplates()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00682804, rmgTemplatesFilename, "rmg.txt"));
@@ -3447,11 +3495,10 @@ void type_random_map_generator::loadTemplates()
                 m_humanPlayerCount, m_computerPlayerCount, m_mapVersion);
             readRmgTemplateConnections(sheet, mapTemplate, row, endRow,
                 m_humanPlayerCount, m_computerPlayerCount);
-            accepted = mapTemplate->hasPlayerSlots(
-                m_humanPlayerCount, m_computerPlayerCount);
 #if defined(HOMM3_RMG_HOTFIX)
-            accepted = accepted
-                && mapTemplate->isUsable(m_humanPlayerCount, m_computerPlayerCount);
+            accepted = mapTemplate->isUsable(m_humanPlayerCount, m_computerPlayerCount);
+#else
+            accepted = mapTemplate->hasPlayerZones(m_humanPlayerCount, m_computerPlayerCount);
 #endif
         }
         if (!accepted) {
@@ -3471,7 +3518,7 @@ MAC_ADDRESS(0x236a28, 0x694)
 void readRmgTemplateZones(
     const TSpreadsheetResource* sheet, TRmgTemplate* mapTemplate,
     s32 firstRow, s32 endRow, s32 humanPlayers, s32 computerPlayers,
-    s32 mapVersion)
+    ERmgMapVersion mapVersion)
 {
     for (s32 row = firstRow; row < endRow; ++row) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
@@ -3522,13 +3569,9 @@ void readRmgTemplateZones(
                 templateZone->m_neutralTownsMatchZone =
                     isRmgTemplateFieldSet(values[RMG_TEMPLATE_COLUMN_NEUTRAL_TOWNS_MATCH_ZONE]);
                 // RoE maps have no Conflux.
-                s32 townCount;
-                if (mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE)
-                    townCount = TOWN_TYPE_COUNT;
-                else {
-                    townCount = TOWN_TYPE_ROE_COUNT;
+                s32 townCount = getRmgTownTypeCount(mapVersion);
+                if (mapVersion < RMG_MAP_ARMAGEDDONS_BLADE)
                     templateZone->m_allowedTowns[TOWN_CONFLUX] = false;
-                }
                 while (townCount--)
                     templateZone->m_allowedTowns[townCount] =
                         isRmgTemplateFieldSet(
@@ -3586,7 +3629,7 @@ void readRmgTemplateZones(
     }
 }
 
-static inline s32 getRmgCreatureTypeCount(s32 mapVersion)
+static inline s32 getRmgCreatureTypeCount(ERmgMapVersion mapVersion)
 {
     return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE
         ? RMG_CREATURE_TYPE_COUNT : RMG_ROE_CREATURE_TYPE_COUNT;
@@ -3600,183 +3643,183 @@ enum ERmgDwellingSubtypeCounts {
 
 VA(0x00538b10, 0x2241)
 MAC_ADDRESS(0x2375f0, 0x4880)
-void type_random_map_generator::initializeObjectGenerators()
+void TRmgGenerator::initializeObjectGenerators()
 {
-    m_objectGenerators.push_back(new type_treasure_def(ALTAR_OF_SACRIFICE, 0, 100, 20));
-    m_objectGenerators.push_back(new type_treasure_def(ARENA, 0, 3000, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(ALTAR_OF_SACRIFICE, 0, 100, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(ARENA, 0, 3000, 50));
 
     for (s32 creature = getRmgCreatureTypeCount(m_mapVersion); creature--;) {
         if (g_creatureTypeTraits[creature].m_level >= 0)
             m_objectGenerators.push_back(
-                new type_black_box_creature_def(creature));
+                new TRmgBlackBoxCreatureDef(static_cast<TCreatureType>(creature)));
     }
 
     m_objectGenerators.push_back(
-        new type_black_box_experience_def(6000, 5000));
+        new TRmgBlackBoxExperienceDef(6000, 5000));
     m_objectGenerators.push_back(
-        new type_black_box_experience_def(12000, 10000));
+        new TRmgBlackBoxExperienceDef(12000, 10000));
     m_objectGenerators.push_back(
-        new type_black_box_experience_def(18000, 15000));
+        new TRmgBlackBoxExperienceDef(18000, 15000));
     m_objectGenerators.push_back(
-        new type_black_box_experience_def(24000, 20000));
+        new TRmgBlackBoxExperienceDef(24000, 20000));
 
-    m_objectGenerators.push_back(new type_black_box_gold_def(5000, 5000));
-    m_objectGenerators.push_back(new type_black_box_gold_def(10000, 10000));
-    m_objectGenerators.push_back(new type_black_box_gold_def(15000, 15000));
-    m_objectGenerators.push_back(new type_black_box_gold_def(20000, 20000));
+    m_objectGenerators.push_back(new TRmgBlackBoxGoldDef(5000, 5000));
+    m_objectGenerators.push_back(new TRmgBlackBoxGoldDef(10000, 10000));
+    m_objectGenerators.push_back(new TRmgBlackBoxGoldDef(15000, 15000));
+    m_objectGenerators.push_back(new TRmgBlackBoxGoldDef(20000, 20000));
 
-    m_objectGenerators.push_back(new type_black_box_spells_def(5000, 1, 1, eSchoolAll));
-    m_objectGenerators.push_back(new type_black_box_spells_def(7500, 2, 2, eSchoolAll));
-    m_objectGenerators.push_back(new type_black_box_spells_def(10000, 3, 3, eSchoolAll));
-    m_objectGenerators.push_back(new type_black_box_spells_def(12500, 4, 4, eSchoolAll));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 5, 5, eSchoolAll));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, eSchoolAir));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, eSchoolFire));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, eSchoolWater));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, eSchoolEarth));
-    m_objectGenerators.push_back(new type_black_box_spells_def(30000, 1, 5, eSchoolAll));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(5000, 1, 1, eSchoolAll));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(7500, 2, 2, eSchoolAll));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(10000, 3, 3, eSchoolAll));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(12500, 4, 4, eSchoolAll));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 5, 5, eSchoolAll));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 1, 5, eSchoolAir));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 1, 5, eSchoolFire));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 1, 5, eSchoolWater));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 1, 5, eSchoolEarth));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(30000, 1, 5, eSchoolAll));
 
     s32 tentIndex = m_objectPrototypes[BORDER_TENT].size();
     m_disabledKeyTentColors.resize(tentIndex);
     while (tentIndex--) {
         m_disabledKeyTentColors[tentIndex] = false;
-        m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 5000));
-        m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 7500));
-        m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 10000));
-        m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 15000));
-        m_objectGenerators.push_back(new type_key_tent_def(tentIndex, 20000));
+        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 5000));
+        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 7500));
+        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 10000));
+        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 15000));
+        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 20000));
     }
 
-    m_objectGenerators.push_back(new type_treasure_def(BLACK_MARKET, 0, 8000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(BUOY, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CAMPFIRE, 0, 2000, 500));
-    m_objectGenerators.push_back(new type_treasure_def(CARTOGRAPHER, CARTOGRAPHER_WATER, 5000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(CARTOGRAPHER, CARTOGRAPHER_LAND, 10000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(CARTOGRAPHER, CARTOGRAPHER_UNDERGROUND, 7500, 20));
-    m_objectGenerators.push_back(new type_treasure_def(CLOVER_FIELD, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_CYCLOPS, 3000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_DWARF, 2000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_GRIFFIN, 2000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_IMP, 5000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_MEDUSA, 1500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_NAGA, 3000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(CREATURE_BANK, CREATURE_BANK_DRAGONFLY, 9000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(BLACK_MARKET, 0, 8000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(BUOY, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CAMPFIRE, 0, 2000, 500));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CARTOGRAPHER, CARTOGRAPHER_WATER, 5000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CARTOGRAPHER, CARTOGRAPHER_LAND, 10000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CARTOGRAPHER, CARTOGRAPHER_UNDERGROUND, 7500, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CLOVER_FIELD, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_CYCLOPS, 3000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_DWARF, 2000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_GRIFFIN, 2000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_IMP, 5000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_MEDUSA, 1500, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_NAGA, 3000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_DRAGONFLY, 9000, 100));
 
     s32 dwelling = RMG_DWELLING_SUBTYPE_COUNT;
     if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE)
         dwelling = RMG_ROE_DWELLING_SUBTYPE_COUNT;
     while (dwelling--)
-        m_objectGenerators.push_back(new type_map_dwelling_def(dwelling));
+        m_objectGenerators.push_back(new TRmgMapDwellingDef(dwelling));
 
-    m_objectGenerators.push_back(new type_treasure_def(DEAD_GUY, 0, 500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(DEFENSE_TOWER, 0, 1500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(DERELICT_SHIP, 0, 4000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(DRAGON_CITY, 0, 10000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(FAERIE_RING, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(FLOTSAM, 0, 500, 1000));
-    m_objectGenerators.push_back(new type_treasure_def(FOUNTAIN_OF_FORTUNE, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(FOUNTAIN_OF_YOUTH, 0, 100, 50));
-    m_objectGenerators.push_back(new type_treasure_def(GARDEN_OF_REVELATION, 0, 1500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(HILL_FORT, 0, 7000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(IDOL_OF_FORTUNE, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(LEAN_TO, 0, 500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(LIBRARY, 0, 12000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(MAGIC_SCHOOL, 0, 1000, 50));
-    m_objectGenerators.push_back(new type_treasure_def(MAGIC_SPRING, 0, 500, 50));
-    m_objectGenerators.push_back(new type_treasure_def(MAGIC_WELL, 0, 250, 100));
-    m_objectGenerators.push_back(new type_treasure_def(MERC_CAMP, 0, 1500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(MERMAID, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(MYSTICAL_GARDEN, 0, 500, 50));
-    m_objectGenerators.push_back(new type_treasure_def(OASIS, 0, 100, 50));
-    m_objectGenerators.push_back(new type_treasure_def(OBELISK, 0, 3500, 200));
-    m_objectGenerators.push_back(new type_treasure_def(OBSERVATORY, 0, 750, 100));
-    m_objectGenerators.push_back(new type_treasure_def(PILLAR_OF_FIRE, 0, 750, 100));
-    m_objectGenerators.push_back(new type_treasure_def(POWER_SCHOOL, 0, 1500, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(DEAD_GUY, 0, 500, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(DEFENSE_TOWER, 0, 1500, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(DERELICT_SHIP, 0, 4000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(DRAGON_CITY, 0, 10000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(FAERIE_RING, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(FLOTSAM, 0, 500, 1000));
+    m_objectGenerators.push_back(new TRmgTreasureDef(FOUNTAIN_OF_FORTUNE, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(FOUNTAIN_OF_YOUTH, 0, 100, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(GARDEN_OF_REVELATION, 0, 1500, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(HILL_FORT, 0, 7000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(IDOL_OF_FORTUNE, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(LEAN_TO, 0, 500, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(LIBRARY, 0, 12000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(MAGIC_SCHOOL, 0, 1000, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(MAGIC_SPRING, 0, 500, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(MAGIC_WELL, 0, 250, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(MERC_CAMP, 0, 1500, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(MERMAID, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(MYSTICAL_GARDEN, 0, 500, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(OASIS, 0, 100, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(OBELISK, 0, 3500, 200));
+    m_objectGenerators.push_back(new TRmgTreasureDef(OBSERVATORY, 0, 750, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(PILLAR_OF_FIRE, 0, 750, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(POWER_SCHOOL, 0, 1500, 100));
 
-    m_objectGenerators.push_back(new type_prison_def(2500, 0));
-    m_objectGenerators.push_back(new type_prison_def(5000, 5000));
-    m_objectGenerators.push_back(new type_prison_def(10000, 15000));
-    m_objectGenerators.push_back(new type_prison_def(20000, 90000));
-    m_objectGenerators.push_back(new type_prison_def(30000, 500000));
-    m_objectGenerators.push_back(new type_treasure_def(PYRAMID, 0, 5000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(RALLY_FLAG, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgPrisonDef(2500, 0));
+    m_objectGenerators.push_back(new TRmgPrisonDef(5000, 5000));
+    m_objectGenerators.push_back(new TRmgPrisonDef(10000, 15000));
+    m_objectGenerators.push_back(new TRmgPrisonDef(20000, 90000));
+    m_objectGenerators.push_back(new TRmgPrisonDef(30000, 500000));
+    m_objectGenerators.push_back(new TRmgTreasureDef(PYRAMID, 0, 5000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(RALLY_FLAG, 0, 100, 100));
 
-    m_objectGenerators.push_back(new type_artifact_def(RANDOM_ARTIFACT_1, 2000));
-    m_objectGenerators.push_back(new type_artifact_def(RANDOM_ARTIFACT_2, 5000));
-    m_objectGenerators.push_back(new type_artifact_def(RANDOM_ARTIFACT_3, 10000));
-    m_objectGenerators.push_back(new type_artifact_def(RANDOM_ARTIFACT_4, 20000));
+    m_objectGenerators.push_back(new TRmgArtifactDef(RANDOM_ARTIFACT_1, 2000));
+    m_objectGenerators.push_back(new TRmgArtifactDef(RANDOM_ARTIFACT_2, 5000));
+    m_objectGenerators.push_back(new TRmgArtifactDef(RANDOM_ARTIFACT_3, 10000));
+    m_objectGenerators.push_back(new TRmgArtifactDef(RANDOM_ARTIFACT_4, 20000));
 
-    m_objectGenerators.push_back(new type_resource_lump_def(RANDOM_RESOURCE, 0, 1500, 2000));
-    m_objectGenerators.push_back(new type_treasure_def(REFUGEE_CAMP, 0, 5000, 20));
-    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, WOOD, 1400, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, ORE, 1400, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, MERCURY, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, SULFUR, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, CRYSTAL, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, GEMS, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(RESOURCE, GOLD, 750, 300));
-    m_objectGenerators.push_back(new type_treasure_def(SANCTUARY, 0, 100, 50));
-    m_objectGenerators.push_back(new type_scholar_def());
-    m_objectGenerators.push_back(new type_treasure_def(SEA_CHEST, 0, 1500, 500));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RANDOM_RESOURCE, 0, 1500, 2000));
+    m_objectGenerators.push_back(new TRmgTreasureDef(REFUGEE_CAMP, 0, 5000, 20));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, WOOD, 1400, 300));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, ORE, 1400, 300));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, MERCURY, 2000, 300));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, SULFUR, 2000, 300));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, CRYSTAL, 2000, 300));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, GEMS, 2000, 300));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, GOLD, 750, 300));
+    m_objectGenerators.push_back(new TRmgTreasureDef(SANCTUARY, 0, 100, 50));
+    m_objectGenerators.push_back(new TRmgScholarDef());
+    m_objectGenerators.push_back(new TRmgTreasureDef(SEA_CHEST, 0, 1500, 500));
 
     for (s32 prototypeIndex = 0; prototypeIndex < m_objectPrototypes[SEER].size();
          ++prototypeIndex) {
         for (s32 creature = getRmgCreatureTypeCount(m_mapVersion); creature--;) {
             if (g_creatureTypeTraits[creature].m_level >= 0)
                 m_objectGenerators.push_back(
-                    new type_quest_creature_def(creature, prototypeIndex));
+                    new TRmgQuestCreatureDef(static_cast<TCreatureType>(creature), prototypeIndex));
         }
 
         m_objectGenerators.push_back(
-            new type_quest_experience_def(prototypeIndex, 2000, 5000));
+            new TRmgQuestExperienceDef(prototypeIndex, 2000, 5000));
         m_objectGenerators.push_back(
-            new type_quest_experience_def(prototypeIndex, 5333, 10000));
+            new TRmgQuestExperienceDef(prototypeIndex, 5333, 10000));
         m_objectGenerators.push_back(
-            new type_quest_experience_def(prototypeIndex, 8666, 15000));
+            new TRmgQuestExperienceDef(prototypeIndex, 8666, 15000));
         m_objectGenerators.push_back(
-            new type_quest_experience_def(prototypeIndex, 12000, 20000));
-        m_objectGenerators.push_back(new type_quest_gold_def(prototypeIndex, 2000, 5000));
-        m_objectGenerators.push_back(new type_quest_gold_def(prototypeIndex, 5333, 10000));
-        m_objectGenerators.push_back(new type_quest_gold_def(prototypeIndex, 8666, 15000));
-        m_objectGenerators.push_back(new type_quest_gold_def(prototypeIndex, 12000, 20000));
+            new TRmgQuestExperienceDef(prototypeIndex, 12000, 20000));
+        m_objectGenerators.push_back(new TRmgQuestGoldDef(prototypeIndex, 2000, 5000));
+        m_objectGenerators.push_back(new TRmgQuestGoldDef(prototypeIndex, 5333, 10000));
+        m_objectGenerators.push_back(new TRmgQuestGoldDef(prototypeIndex, 8666, 15000));
+        m_objectGenerators.push_back(new TRmgQuestGoldDef(prototypeIndex, 12000, 20000));
     }
 
-    m_objectGenerators.push_back(new type_treasure_def(SEPULCHER, 0, 1000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(SHIPWRECK, 0, 2000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(SHIPWRECK_SURVIVOR, 0, 1500, 50));
-    m_objectGenerators.push_back(new type_shrine_def(SHRINE1, 500));
-    m_objectGenerators.push_back(new type_shrine_def(SHRINE2, 2000));
-    m_objectGenerators.push_back(new type_shrine_def(SHRINE3, 3000));
-    m_objectGenerators.push_back(new type_treasure_def(SIREN, 0, 100, 20));
-    m_objectGenerators.push_back(new type_spell_scroll_def(1, 500));
-    m_objectGenerators.push_back(new type_spell_scroll_def(2, 2000));
-    m_objectGenerators.push_back(new type_spell_scroll_def(3, 3000));
-    m_objectGenerators.push_back(new type_spell_scroll_def(4, 4000));
-    m_objectGenerators.push_back(new type_spell_scroll_def(5, 5000));
-    m_objectGenerators.push_back(new type_treasure_def(STABLES, 0, 200, 40));
-    m_objectGenerators.push_back(new type_treasure_def(TAVERN, 0, 100, 20));
-    m_objectGenerators.push_back(new type_treasure_def(TEMPLE, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(THIEVES_DEN, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(TRADING_POST, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(TRAINING_GROUNDS, 0, 1500, 200));
-    m_objectGenerators.push_back(new type_treasure_def(TREASURE_CHEST, 0, 1500, 1000));
-    m_objectGenerators.push_back(new type_treasure_def(TREE_OF_KNOWLEDGE, 0, 2500, 50));
-    m_objectGenerators.push_back(new type_treasure_def(UNIVERSITY, 0, 2500, 20));
-    m_objectGenerators.push_back(new type_treasure_def(WAGON, 0, 500, 50));
-    m_objectGenerators.push_back(new type_treasure_def(WAR_MACHINE_FACTORY, 0, 1500, 50));
-    m_objectGenerators.push_back(new type_treasure_def(WAR_SCHOOL, 0, 1000, 50));
-    m_objectGenerators.push_back(new type_treasure_def(WARRIOR_TOMB, 0, 6000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(WATER_WHEEL, 0, 750, 50));
-    m_objectGenerators.push_back(new type_treasure_def(WATERING_HOLE, 0, 500, 50));
-    m_objectGenerators.push_back(new type_treasure_def(WINDMILL, 0, 2500, 150));
-    m_objectGenerators.push_back(new type_witch_hut_def());
+    m_objectGenerators.push_back(new TRmgTreasureDef(SEPULCHER, 0, 1000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(SHIPWRECK, 0, 2000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(SHIPWRECK_SURVIVOR, 0, 1500, 50));
+    m_objectGenerators.push_back(new TRmgShrineDef(SHRINE1, 500));
+    m_objectGenerators.push_back(new TRmgShrineDef(SHRINE2, 2000));
+    m_objectGenerators.push_back(new TRmgShrineDef(SHRINE3, 3000));
+    m_objectGenerators.push_back(new TRmgTreasureDef(SIREN, 0, 100, 20));
+    m_objectGenerators.push_back(new TRmgSpellScrollDef(1, 500));
+    m_objectGenerators.push_back(new TRmgSpellScrollDef(2, 2000));
+    m_objectGenerators.push_back(new TRmgSpellScrollDef(3, 3000));
+    m_objectGenerators.push_back(new TRmgSpellScrollDef(4, 4000));
+    m_objectGenerators.push_back(new TRmgSpellScrollDef(5, 5000));
+    m_objectGenerators.push_back(new TRmgTreasureDef(STABLES, 0, 200, 40));
+    m_objectGenerators.push_back(new TRmgTreasureDef(TAVERN, 0, 100, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(TEMPLE, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(THIEVES_DEN, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(TRADING_POST, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(TRAINING_GROUNDS, 0, 1500, 200));
+    m_objectGenerators.push_back(new TRmgTreasureDef(TREASURE_CHEST, 0, 1500, 1000));
+    m_objectGenerators.push_back(new TRmgTreasureDef(TREE_OF_KNOWLEDGE, 0, 2500, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(UNIVERSITY, 0, 2500, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(WAGON, 0, 500, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(WAR_MACHINE_FACTORY, 0, 1500, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(WAR_SCHOOL, 0, 1000, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(WARRIOR_TOMB, 0, 6000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(WATER_WHEEL, 0, 750, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(WATERING_HOLE, 0, 500, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(WINDMILL, 0, 2500, 150));
+    m_objectGenerators.push_back(new TRmgWitchHutDef());
 }
 
 // Player zones go underground only with Inferno, Necropolis or Dungeon
 // towns; zones on one level stay at least 80% of their combined size apart.
 VA(0x0053ad60, 0x113)
 MAC_ADDRESS(0x23be70, 0x14c)
-b8 type_random_map_generator::canPlaceZone(TRmgZone* zone)
+b8 TRmgGenerator::canPlaceZone(TRmgZone* zone)
 {
     TRmgTemplateZone* templateZone = zone->m_templateZone;
     TRmgMapPosition position = zone->getLevelPosition();
@@ -3817,7 +3860,7 @@ static inline TRmgMapPosition getRmgRadialZonePosition(
 }
 
 // Trial placement leaves the zone at the candidate even when rejected.
-inline void type_random_map_generator::appendZoneCandidate(TRmgZone* zone,
+inline void TRmgGenerator::appendZoneCandidate(TRmgZone* zone,
     const TRmgMapPosition& candidate, std::vector<TRmgMapPosition>& candidates)
 {
     zone->setLevelPosition(candidate);
@@ -3827,7 +3870,7 @@ inline void type_random_map_generator::appendZoneCandidate(TRmgZone* zone,
 
 VA(0x0053ae80, 0x36a)
 MAC_ADDRESS(0x23bfbc, 0x28c)
-void type_random_map_generator::appendZonePositions(TRmgZone* center,
+void TRmgGenerator::appendZonePositions(TRmgZone* center,
     TRmgZone* zone, std::vector<TRmgMapPosition>& candidates)
 {
     s32 radius = center->m_templateZone->m_size + zone->m_templateZone->m_size;
@@ -3852,7 +3895,7 @@ void type_random_map_generator::appendZonePositions(TRmgZone* center,
 }
 
 MAC_ADDRESS(0x23c248, 0x9c)
-s32 type_random_map_generator::countPlacedZoneConnections(TRmgZone* zone) const
+s32 TRmgGenerator::countPlacedZoneConnections(TRmgZone* zone) const
 {
     s32 connectionCount = 0;
     TRmgTemplateZone* templateZone = zone->m_templateZone;
@@ -3876,7 +3919,7 @@ static inline void includeRmgZoneFootprint(s32& minimumY, s32& minimumX,
 
 VA(0x0053b1f0, 0xfe)
 MAC_ADDRESS(0x23c2e4, 0x170)
-void type_random_map_generator::getInitialZoneBounds(s32& minimumY, s32& minimumX,
+void TRmgGenerator::getInitialZoneBounds(s32& minimumY, s32& minimumX,
     s32& maximumY, s32& maximumX) const
 {
     minimumY = 0;
@@ -3908,7 +3951,7 @@ static inline s32 getRmgCandidateMapSize(const TRmgZoneBounds& bounds,
 // enclosing square.
 VA(0x0053b2f0, 0x678)
 MAC_ADDRESS(0x23c454, 0x62c)
-void type_random_map_generator::filterZonePositions(
+void TRmgGenerator::filterZonePositions(
     TRmgZone* zone, std::vector<TRmgMapPosition>& candidates, s32 mapSize)
 {
     s32 bestConnections = 0;
@@ -3983,7 +4026,7 @@ struct TRmgZonePlacementFailure {};
 // placed zones before filtering.
 VA(0x0053b970, 0x232)
 MAC_ADDRESS(0x23ca80, 0x20c)
-void type_random_map_generator::positionZone(TRmgZone* zone, s32 mapSize)
+void TRmgGenerator::positionZone(TRmgZone* zone, s32 mapSize)
 {
     std::vector<TRmgMapPosition> candidates;
     if (m_zones.size() == 0) {
@@ -4021,7 +4064,7 @@ void type_random_map_generator::positionZone(TRmgZone* zone, s32 mapSize)
 
 VA(0x0053bbb0, 0xfd)
 MAC_ADDRESS(0x23cc8c, 0xf8)
-void type_random_map_generator::calculateZoneBounds()
+void TRmgGenerator::calculateZoneBounds()
 {
     TRmgMapItem* item = m_map.m_mapItems;
     TRmgMapPosition position;
@@ -4041,7 +4084,7 @@ void type_random_map_generator::calculateZoneBounds()
 // centred square, then picks each zone's terrain and town type.
 VA(0x0053bcb0, 0x33b)
 MAC_ADDRESS(0x23cd84, 0x458)
-void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
+void TRmgGenerator::initializeZones(TRmgTemplate* mapTemplate)
 {
     m_zones.clear();
     s32 minimumSize = 32000;
@@ -4145,10 +4188,10 @@ static inline bool splitRmgBoundarySegment(std::vector<TPoint>& pending,
     return true;
 }
 
-// As members of type_random_map and TRmgMapItem, these helpers change
+// As members of TRmgMap and TRmgMapItem, these helpers change
 // unrelated code in game units that include rmg.h.
 static inline TPoint clampRmgBoundaryToMap(
-    const TPoint& point, const type_random_map& map)
+    const TPoint& point, const TRmgMap& map)
 {
     return TPoint(min(max(point.m_x, 0), map.m_mapWidth - 1),
         min(max(point.m_y, 0), map.m_mapHeight - 1));
@@ -4173,7 +4216,7 @@ static inline void assignRmgZoneCell(
 // order are observable in generated maps.
 VA(0x0053bff0, 0x22b)
 MAC_ADDRESS(0x23d684, 0x408)
-void type_random_map_generator::drawIrregularZoneBoundary(
+void TRmgGenerator::drawIrregularZoneBoundary(
     TPoint from, TPoint to, s32 zoneIndex, s32 level, s32 roughness)
 {
     std::vector<TPoint> pending;
@@ -4196,7 +4239,7 @@ void type_random_map_generator::drawIrregularZoneBoundary(
 // The final cell receives its zone but not the terrain mark.
 VA(0x0053c220, 0x16a)
 MAC_ADDRESS(0x23da90, 0x2a4)
-void type_random_map_generator::drawStraightZoneBoundary(
+void TRmgGenerator::drawStraightZoneBoundary(
     TPoint from, TPoint to, s32 zoneIndex, s32 level)
 {
     if (from.m_x > to.m_x)
@@ -4251,7 +4294,7 @@ static inline void clipRmgBoundarySegment(const TRmgZoneBounds& bounds,
 // A shared edge is drawn only by the lower-indexed zone.
 VA(0x0053c390, 0x730)
 MAC_ADDRESS(0x23dd34, 0x614)
-void type_random_map_generator::traceZoneBoundary(
+void TRmgGenerator::traceZoneBoundary(
     TRmgHalfEdge* first, b8 irregular)
 {
     TRmgHalfEdge* edge = first;
@@ -4403,7 +4446,7 @@ static void insertRmgWorkItem(
 // range, and it only marks cells already in the zone for terrain painting.
 VA(0x0053cd30, 0x212)
 MAC_ADDRESS(0x23e348, 0x3f0)
-void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
+void TRmgGenerator::drawIslandBoundary(TPoint from, TPoint to,
     s32 zoneIndex, s32 level, s32 roughness)
 {
     std::vector<TPoint> pending;
@@ -4426,7 +4469,7 @@ void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
 // cells already marked, including the coast, stop growth.
 VA(0x0053cf50, 0x177)
 MAC_ADDRESS(0x23e738, 0x1f0)
-void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
+void TRmgGenerator::fillIslandInterior(TRmgZone* zone)
 {
     std::vector<TRmgMapPosition> pending;
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
@@ -4451,7 +4494,7 @@ void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
 
 VA(0x0053d0d0, 0xe3)
 MAC_ADDRESS(0x23e928, 0x184)
-void type_random_map_generator::recenterZone(TRmgZone* zone)
+void TRmgGenerator::recenterZone(TRmgZone* zone)
 {
     TRmgZoneBounds bounds = zone->m_bounds;
     TRmgMapPosition position = zone->getLevelPosition();
@@ -4491,7 +4534,7 @@ static inline void insetRmgIslandBoundaryPoint(
 
 VA(0x0053d1c0, 0x1b9)
 MAC_ADDRESS(0x23eaac, 0x2b0)
-void type_random_map_generator::insetIslandZone(TRmgZone* zone)
+void TRmgGenerator::insetIslandZone(TRmgZone* zone)
 {
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
     TRmgMapPosition center = zone->getLevelPosition();
@@ -4531,7 +4574,7 @@ static inline void scanRmgFillSpan(const TRmgMapItem* neighbour,
 // with no interior site nothing is filled.
 VA(0x0053d380, 0x551)
 MAC_ADDRESS(0x23ed74, 0x4a4)
-void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first)
+void TRmgGenerator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first)
 {
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
     std::vector<TRmgMapPosition> pending;
@@ -4599,7 +4642,7 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
 // distance comes from the zone's table, not the queued cost.
 VA(0x0053d8e0, 0x1ec)
 MAC_ADDRESS(0x23f218, 0x2f0)
-void type_random_map_generator::propagateZoneDistances(TRmgZone* zone)
+void TRmgGenerator::propagateZoneDistances(TRmgZone* zone)
 {
     std::vector<TRmgZone*> pending;
     std::vector<s32> costs;
@@ -4628,7 +4671,7 @@ VA_COMPGEN(0x0054c1e0, 0x1e9, VECTOR_RESIZE, Short)
 
 VA_COMPGEN(0x0054c3d0, 0x12, VECTOR_SIZE, Short)
 
-void type_random_map_generator::initializeZoneDistances(s32 originalZones)
+void TRmgGenerator::initializeZoneDistances(s32 originalZones)
 {
     for (s32 index = 0; index < m_zones.size(); ++index) {
         TRmgZone* zone = m_zones[index];
@@ -4674,7 +4717,7 @@ static inline void appendRmgExtraZoneConnection(
 // graph relaxation.
 VA(0x0053dad0, 0x57f)
 MAC_ADDRESS(0x23f518, 0x40c)
-void type_random_map_generator::joinExtraZones(s32 originalZones, TRmgVoronoi* diagram)
+void TRmgGenerator::joinExtraZones(s32 originalZones, TRmgVoronoi* diagram)
 {
     TRmgZoneBounds bounds = {0, 0, m_map.m_mapWidth, m_map.m_mapHeight};
     for (s32 index = originalZones; index < m_zones.size(); ++index) {
@@ -4736,7 +4779,7 @@ static inline bool isRmgRadialSiteTooFarOffMap(s32 coordinate, s32 extent, doubl
 // and underground boundaries.
 VA(0x0053e050, 0x64d)
 MAC_ADDRESS(0x23f924, 0x798)
-void type_random_map_generator::buildZoneBoundaries(
+void TRmgGenerator::buildZoneBoundaries(
     TRmgTemplate* mapTemplate, s32 level)
 {
     TRmgVoronoi diagram;
@@ -4845,7 +4888,7 @@ void type_random_map_generator::buildZoneBoundaries(
 
 VA(0x0053e6a0, 0x337)
 MAC_ADDRESS(0x2400bc, 0x354)
-void type_random_map_generator::paintZoneTerrain()
+void TRmgGenerator::paintZoneTerrain()
 {
     calculateZoneBounds();
     for (s32 zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
@@ -4856,7 +4899,7 @@ void type_random_map_generator::paintZoneTerrain()
             insetIslandZone(zone);
     }
     if (m_map.getNumberLevels() > 1) {
-        type_random_map levelMap(m_map.getMapItem(0, 0, RMG_UNDERGROUND_LEVEL),
+        TRmgMap levelMap(m_map.getMapItem(0, 0, RMG_UNDERGROUND_LEVEL),
             m_map.getWidth(), m_map.getHeight());
         TRmgTerrainBrush brush(&levelMap, eTerrainRock, RMG_BRUSH_STRENGTH);
         brush.paintRectangle(0, 0, m_map.getWidth(), m_map.getHeight());
@@ -4873,7 +4916,7 @@ void type_random_map_generator::paintZoneTerrain()
         TRmgZoneBounds bounds = zone->getBounds();
         TRmgMapPosition position = zone->getLevelPosition();
         if (zone->getTerrain() != eTerrainWater) {
-            type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
+            TRmgMap levelMap(m_map.getMapItem(0, 0, position.m_z),
                 m_map.getWidth(), m_map.getHeight());
             TRmgTerrainBrush brush(&levelMap, zone->getTerrain(), RMG_BRUSH_STRENGTH);
             for (s32 y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
@@ -5029,7 +5072,7 @@ void __fastcall generateRmgIslandMask(u8* mask, s32 width, s32 height)
 
 VA(0x0053efa0, 0x1f2)
 MAC_ADDRESS(0x240ba8, 0x270)
-void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& bounds, s32 level)
+void TRmgGenerator::createWaterZoneIsland(const TRmgZoneBounds& bounds, s32 level)
 {
     s32 width = bounds.m_maximumX - bounds.m_minimumX;
     s32 height = bounds.m_maximumY - bounds.m_minimumY;
@@ -5037,7 +5080,7 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
     TRmgMapPosition point;
     s32 terrain = rand() % eTerrainSubterranean; // dirt to rough
     {
-        type_random_map map(m_map.getMapItem(0, 0, level),
+        TRmgMap map(m_map.getMapItem(0, 0, level),
             m_map.m_mapWidth, m_map.m_mapHeight);
         TRmgTerrainBrush brush(&map, terrain, RMG_BRUSH_STRENGTH);
         generateRmgIslandMask(mask, width, height);
@@ -5072,7 +5115,7 @@ static inline s32 getRmgChamferStepCost(s32 direction)
 // resets connection metadata without checking terrain or objects.
 VA(0x0053f1a0, 0x2c6)
 MAC_ADDRESS(0x240ee4, 0x358)
-void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position, s32 zoneIndex)
+void TRmgGenerator::floodWaterZoneDistances(TRmgMapPosition position, s32 zoneIndex)
 {
     std::vector<TRmgMapPosition> positions;
     std::vector<s32> costs;
@@ -5112,7 +5155,7 @@ enum ERmgWaterZoneIslandLimits {
 // the candidate list after every island.
 VA(0x0053f470, 0x409)
 MAC_ADDRESS(0x24123c, 0x638)
-void type_random_map_generator::placeWaterZoneIslands(TRmgZone* zone)
+void TRmgGenerator::placeWaterZoneIslands(TRmgZone* zone)
 {
     if (zone->m_terrain != eTerrainWater)
         return;
@@ -5171,7 +5214,7 @@ void type_random_map_generator::placeWaterZoneIslands(TRmgZone* zone)
 // markZoneBorders finishes each marked cell, and repairWaterZoneBorders each
 // repaired water cell, by releasing path clearance on unoccupied cells of a
 // square around it.
-inline void type_random_map::releaseNeighborhoodPathClearance(
+inline void TRmgMap::releaseNeighborhoodPathClearance(
     const TRmgMapPosition& center, s32 radius)
 {
     TRmgZoneBounds bounds;
@@ -5191,7 +5234,7 @@ inline void type_random_map::releaseNeighborhoodPathClearance(
 // another zone, unless that zone is joined by an unguarded surface connection.
 VA(0x0053f880, 0x429)
 MAC_ADDRESS(0x241874, 0x628)
-void type_random_map_generator::markZoneBorders()
+void TRmgGenerator::markZoneBorders()
 {
     TRmgMapItem* current = m_map.m_mapItems;
     TRmgMapPosition position;
@@ -5235,7 +5278,7 @@ void type_random_map_generator::markZoneBorders()
 
 VA(0x0053fcb0, 0x5ec)
 MAC_ADDRESS(0x241e9c, 0x770)
-void type_random_map_generator::repairWaterZoneBorders()
+void TRmgGenerator::repairWaterZoneBorders()
 {
     TRmgMapItem* current = m_map.m_mapItems;
     TTerrainType terrain;
@@ -5293,7 +5336,7 @@ void type_random_map_generator::repairWaterZoneBorders()
         }
         if (positions.size()) {
             TTerrainType lastTerrain = terrains[0];
-            type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
+            TRmgMap levelMap(m_map.getMapItem(0, 0, position.m_z),
                 m_map.m_mapWidth, m_map.m_mapHeight);
             TRmgTerrainBrush brush(&levelMap, lastTerrain, RMG_BRUSH_STRENGTH);
             for (u32 paintIndex = 0; paintIndex < positions.size(); ++paintIndex) {
@@ -5315,7 +5358,7 @@ void type_random_map_generator::repairWaterZoneBorders()
 // also counted in the entrance's zone and floods entrance distances from it.
 VA(0x005402a0, 0x32a)
 MAC_ADDRESS(0x24260c, 0x434)
-void type_random_map_generator::addObject(type_object* object, TRmgMapPosition position)
+void TRmgGenerator::addObject(TRmgObject* object, TRmgMapPosition position)
 {
     TRmgGeneratorBase::addObject(object, position);
     TObjectType* prototype = object->m_properties->m_prototype;
@@ -5363,7 +5406,7 @@ enum ERmgConnectionPathWidth {
 // and reseeds the flood from itself.
 VA(0x005405d0, 0x304)
 MAC_ADDRESS(0x242a40, 0x448)
-void type_random_map_generator::buildZoneConnectionPaths()
+void TRmgGenerator::buildZoneConnectionPaths()
 {
     s32 count = m_map.m_numberLevels * m_map.m_mapHeight * m_map.m_mapWidth;
     TRmgMapItem* item = m_map.m_mapItems;
@@ -5435,7 +5478,7 @@ void type_random_map_generator::buildZoneConnectionPaths()
 
 // Widen an opened route by clearing same-zone obstacle marks around the
 // cell, keeping border-connection cells.
-inline void type_random_map::clearNearbyObstacleFill(const TPoint& center, s32 level,
+inline void TRmgMap::clearNearbyObstacleFill(const TPoint& center, s32 level,
     s32 zoneIndex)
 {
     TRmgZoneBounds bounds;
@@ -5455,7 +5498,7 @@ inline void type_random_map::clearNearbyObstacleFill(const TPoint& center, s32 l
 // same-zone cells.
 VA(0x005408e0, 0x23f)
 MAC_ADDRESS(0x242e88, 0x380)
-void type_random_map_generator::openConnectionPath(
+void TRmgGenerator::openConnectionPath(
     TRmgMapPosition position, b8 narrow)
 {
     TRmgMapItem* item = m_map.getMapItem(position);
@@ -5466,7 +5509,7 @@ void type_random_map_generator::openConnectionPath(
         if (item->m_borderConnection.m_present) {
             TRmgObjectPropertiesRef* properties = selectObjectPrototype(
                 eTerrainDirt, BORDER_GUARD, item->m_borderConnection.m_guardColor);
-            type_object* object = new type_object(properties);
+            TRmgObject* object = new TRmgObject(properties);
             item->clearBorderConnection();
             addObject(object, position);
         }
@@ -5489,7 +5532,7 @@ enum ERmgGuardPrototype {
 // size variation.
 VA(0x00540b20, 0x240)
 MAC_ADDRESS(0x243208, 0x290)
-type_object* type_random_map_generator::createGuard(s32 value, TRmgZone* zone)
+TRmgObject* TRmgGenerator::createGuard(s32 value, TRmgZone* zone)
 {
     // Indexed by town type + 1; entry zero is neutral creatures.
     b8 allowedFactions[TOWN_TYPE_COUNT + 1];
@@ -5549,12 +5592,12 @@ type_object* type_random_map_generator::createGuard(s32 value, TRmgZone* zone)
     if (countVariation > 1) {
         creatureCount = creatureCount + (rand() % countVariation - rand() % countVariation);
     }
-    return new rmgMonsterObject(properties, m_nextObjectId++, creatureCount);
+    return new TRmgMonsterObject(properties, m_nextObjectId++, creatureCount);
 }
 
 // First prototype of the requested subtype, or size() when missing.
 static inline u32 findRmgPrototypeSubtypeIndex(
-    std::vector<TRmgObjectPropertiesRef*>& prototypes, s32 subtype)
+    const std::vector<TRmgObjectPropertiesRef*>& prototypes, s32 subtype)
 {
     u32 index = 0;
     while (index < prototypes.size()
@@ -5578,7 +5621,7 @@ enum ERmgBorderGuardCount {
 
 VA(0x00540d60, 0x256)
 MAC_ADDRESS(0x24356c, 0x2b8)
-s32 type_random_map_generator::placeBorderGuard(
+s32 TRmgGenerator::placeBorderGuard(
     TRmgMapPosition position, s32 guardCount, TRmgZone* keyTentZone)
 {
     s32 color = m_nextKeyTentColor;
@@ -5593,14 +5636,14 @@ s32 type_random_map_generator::placeBorderGuard(
     if (guardPrototypeIndex == m_objectPrototypes[BORDER_GUARD].size())
         return 0;
     TRmgObjectPropertiesRef* guardProperties = m_objectPrototypes[BORDER_GUARD][guardPrototypeIndex];
-    type_object* tent = new type_object(tentProperties);
+    TRmgObject* tent = new TRmgObject(tentProperties);
     if (!placeObjectInZone(tent, keyTentZone)) {
         delete tent;
         return RMG_BORDER_GUARD_NOT_PLACED;
     }
 
     for (s32 guardIndex = 0; guardIndex < guardCount; ++guardIndex) {
-        type_object* guard = new type_object(guardProperties);
+        TRmgObject* guard = new TRmgObject(guardProperties);
         TRmgMapItem* item = m_map.getMapItem(position);
         item->clearBorderConnection();
         addObject(guard, position);
@@ -5621,7 +5664,7 @@ inline void TRmgMapItem::markEmptyBorderConnection(s32 color)
 
 VA(0x00540fc0, 0x172)
 MAC_ADDRESS(0x243824, 0x2d4)
-void type_random_map_generator::markBorderConnectionArea(
+void TRmgGenerator::markBorderConnectionArea(
     TRmgMapPosition position, s32 color)
 {
     TRmgZoneBounds bounds;
@@ -5661,7 +5704,7 @@ TRmgMapPosition& TRmgMapPosition::operator-=(const TPoint& offset)
 // Places a guard of the given value unless the cell is occupied or no
 // creature qualifies.
 MAC_ADDRESS(0x243498, 0xd4)
-void type_random_map_generator::placeGuard(s32 value, TRmgMapPosition position)
+void TRmgGenerator::placeGuard(s32 value, TRmgMapPosition position)
 {
 #if defined(HOMM3_RMG_HOTFIX)
     // No guard off the map or outside every zone.
@@ -5677,14 +5720,14 @@ void type_random_map_generator::placeGuard(s32 value, TRmgMapPosition position)
     TRmgZone* zone = m_zones[item->m_zoneState.m_zone];
     if (item->hasObjects())
         return;
-    type_object* guard = createGuard(value, zone);
+    TRmgObject* guard = createGuard(value, zone);
     if (guard)
         addObject(guard, position);
 }
 
 // A successful ground border-guard placement marks its surrounding area and
 // suppresses guards for this and all remaining crossings.
-inline void type_random_map_generator::placeGroundConnectionBorderGuard(
+inline void TRmgGenerator::placeGroundConnectionBorderGuard(
     TRmgMapPosition position, TRmgZone* keyTentZone, s32& guardValue)
 {
     s32 color = placeBorderGuard(position, RMG_SINGLE_BORDER_GUARD, keyTentZone);
@@ -5697,7 +5740,7 @@ inline void type_random_map_generator::placeGroundConnectionBorderGuard(
 // Places a border guard on the approach cell below the gate's entrance. On
 // success both gate guards are dropped and the border connection extends to
 // the empty cells either side of it.
-inline void type_random_map_generator::placeGateConnectionBorderGuard(
+inline void TRmgGenerator::placeGateConnectionBorderGuard(
     TRmgMapPosition approach, TRmgZone* keyTentZone, s32& guardValue)
 {
     s32 color = placeBorderGuard(approach, RMG_SINGLE_BORDER_GUARD, keyTentZone);
@@ -5712,7 +5755,7 @@ inline void type_random_map_generator::placeGateConnectionBorderGuard(
 }
 
 // Unguarded template connections need no guard value.
-inline s32 type_random_map_generator::getConnectionGuardValue(
+inline s32 TRmgGenerator::getConnectionGuardValue(
     const TRmgZoneConnection* connection) const
 {
     if (connection->m_unguarded)
@@ -5749,8 +5792,8 @@ static inline void addRmgLowestScoreCandidate(
 
 // Adds the object at a uniformly drawn candidate and returns that position.
 // The candidate list must be nonempty.
-inline TRmgMapPosition type_random_map_generator::addObjectAtRandomCandidate(
-    type_object* object, const std::vector<TRmgMapPosition>& candidates)
+inline TRmgMapPosition TRmgGenerator::addObjectAtRandomCandidate(
+    TRmgObject* object, const std::vector<TRmgMapPosition>& candidates)
 {
     TRmgMapPosition position = candidates[rand() % candidates.size()];
     addObject(object, position);
@@ -5768,7 +5811,7 @@ enum ERmgGroundCrossingLimits {
 // paths and entrances on both sides before its border guard or monster guard.
 VA(0x00541140, 0x63a)
 MAC_ADDRESS(0x243af8, 0x53c)
-b8 type_random_map_generator::createGroundConnection(
+b8 TRmgGenerator::createGroundConnection(
     TRmgZone* source,
     TRmgZoneConnection* connection,
     std::vector<TRmgMapItem*>* borderItems,
@@ -5849,7 +5892,7 @@ b8 type_random_map_generator::createGroundConnection(
 // visited but not expanded.
 VA(0x00541780, 0x18d)
 MAC_ADDRESS(0x244034, 0x254)
-void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
+void TRmgGenerator::floodConnectionRegion(TRmgMapPosition position)
 {
     std::vector<TRmgMapPosition> openPositions;
     openPositions.push_back(position);
@@ -5880,7 +5923,7 @@ static TRmgMapPosition getRmgShipyardWaterPosition(TRmgMapPosition shipyardPosit
 
 VA(0x00541960, 0x16c)
 MAC_ADDRESS(0x244288, 0x2f4)
-b8 type_random_map_generator::canPlaceShipyard(TRmgMapPosition position)
+b8 TRmgGenerator::canPlaceShipyard(TRmgMapPosition position)
 {
     if (position.m_y + 1 >= m_map.m_mapHeight)
         return false;
@@ -5922,7 +5965,7 @@ static TRmgMapPosition getRmgShipyardWaterPosition(TRmgMapPosition shipyardPosit
 }
 
 MAC_ADDRESS(0x24457c, 0x130)
-void type_random_map_generator::floodShipyardWater(type_object* shipyard)
+void TRmgGenerator::floodShipyardWater(TRmgObject* shipyard)
 {
     TRmgMapPosition shipyardPosition = shipyard->getPosition();
     TRmgMapPosition waterPosition;
@@ -5942,7 +5985,7 @@ void type_random_map_generator::floodShipyardWater(type_object* shipyard)
 // A successful border-guard placement clears the guard value.
 VA(0x00541ad0, 0x5b0)
 MAC_ADDRESS(0x2446ac, 0x55c)
-b8 type_random_map_generator::createShipyardConnection(
+b8 TRmgGenerator::createShipyardConnection(
     TRmgZone* source, TRmgZoneConnection* connection)
 {
     s32 sourceZone = source->m_templateZone->m_zoneIndex;
@@ -5981,7 +6024,7 @@ b8 type_random_map_generator::createShipyardConnection(
     if (candidates.size() == 0)
         return false;
 
-    rmgOwnableObject* shipyard = new rmgOwnableObject(properties);
+    TRmgOwnableObject* shipyard = new TRmgOwnableObject(properties);
     TRmgMapPosition position = addObjectAtRandomCandidate(shipyard, candidates);
 
     TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, prototype->m_triggerCell);
@@ -6016,7 +6059,7 @@ b8 type_random_map_generator::createShipyardConnection(
 }
 
 // Opens the approach cell directly below an object entrance and returns it.
-inline TRmgMapPosition type_random_map::openEntranceApproach(TRmgMapPosition entrance)
+inline TRmgMapPosition TRmgMap::openEntranceApproach(TRmgMapPosition entrance)
 {
     TRmgMapPosition approach = entrance;
     ++approach.m_y;
@@ -6026,7 +6069,7 @@ inline TRmgMapPosition type_random_map::openEntranceApproach(TRmgMapPosition ent
 
 VA(0x00542080, 0x8aa)
 MAC_ADDRESS(0x244c08, 0xa1c)
-b8 type_random_map_generator::createSubterraneanGate(
+b8 TRmgGenerator::createSubterraneanGate(
     TRmgZone* source, TRmgZoneConnection* connection)
 {
     TRmgZone* destination = m_zones[connection->m_destination->m_zoneIndex];
@@ -6085,11 +6128,11 @@ b8 type_random_map_generator::createSubterraneanGate(
         return false;
 
     TRmgMapPosition gatePosition = addObjectAtRandomCandidate(
-        new type_object(gateProperties), candidates);
+        new TRmgObject(gateProperties), candidates);
 
     TRmgMapPosition otherGatePosition(gatePosition.m_x, gatePosition.m_y,
         destination->getLevelPosition().m_z);
-    addObject(new type_object(gateProperties), otherGatePosition);
+    addObject(new TRmgObject(gateProperties), otherGatePosition);
 
     TRmgMapPosition entrance =
         getRmgObjectTriggerPosition(gatePosition, gatePrototype->m_triggerCell);
@@ -6130,7 +6173,7 @@ inline void TRmgZoneBounds::insetForObjectFootprint(const TObjectType* prototype
 // Places an object at a random fitting cell of the zone.
 VA(0x00542930, 0x1c6)
 MAC_ADDRESS(0x245624, 0x24c)
-b8 type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* zone)
+b8 TRmgGenerator::placeObjectInZone(TRmgObject* object, TRmgZone* zone)
 {
     TRmgObjectPropertiesRef* properties = object->m_properties;
     TObjectType* prototype = properties->m_prototype;
@@ -6158,7 +6201,7 @@ b8 type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* z
 // marks the cell's five side and lower neighbours as border connections.
 VA(0x00542b00, 0x1d2)
 MAC_ADDRESS(0x245870, 0x364)
-b8 type_random_map_generator::placeMonolithBorderGuard(
+b8 TRmgGenerator::placeMonolithBorderGuard(
     TRmgMapPosition position, TRmgZone* keyTentZone)
 {
     // North is up; digits are offset indices (probe order) around the
@@ -6200,15 +6243,15 @@ b8 type_random_map_generator::placeMonolithBorderGuard(
 }
 
 // Places one portal; a failed placement deletes it.
-inline type_object* type_random_map_generator::placeMonolith(
+inline TRmgObject* TRmgGenerator::placeMonolith(
     TRmgObjectPropertiesRef* properties, TRmgZone* zone, bool oneWay)
 {
-    type_object* object = new type_object(properties);
+    TRmgObject* object = new TRmgObject(properties);
     if (!placeObjectInZone(object, zone)) {
         delete object;
         return 0;
     }
-    std::vector<type_object*>& monoliths =
+    std::vector<TRmgObject*>& monoliths =
         oneWay ? m_monolithsOneWay : m_monolithsTwoWay;
     monoliths.push_back(object);
     zone->m_entrances.push_back(TPoint(object->m_position.m_x, object->m_position.m_y));
@@ -6217,7 +6260,7 @@ inline type_object* type_random_map_generator::placeMonolith(
 
 // Protects a portal with a border guard keyed to a tent in the other zone,
 // or else with a monster guard on the cell below it.
-inline void type_random_map_generator::protectMonolith(type_object* portal,
+inline void TRmgGenerator::protectMonolith(TRmgObject* portal,
     const TRmgZoneConnection* connection, TRmgZone* keyTentZone, s32& guardValue)
 {
     if (connection->m_borderGuard
@@ -6232,7 +6275,7 @@ inline void type_random_map_generator::protectMonolith(type_object* portal,
 // placement deletes only that object; subsequent endpoint attempts continue.
 VA(0x00542ce0, 0x554)
 MAC_ADDRESS(0x245bd4, 0x6e8)
-void type_random_map_generator::createMonolithConnection(
+void TRmgGenerator::createMonolithConnection(
     TRmgZone* source, TRmgZoneConnection* connection, s32 prototypeIndex)
 {
     TRmgObjectPropertiesRef* exitProperties = 0;
@@ -6251,7 +6294,7 @@ void type_random_map_generator::createMonolithConnection(
 
     // A source-side border guard also drops the destination's guard, even when
     // the destination's own border-guard placement later fails.
-    type_object* object = placeMonolith(properties, source, exitProperties != 0);
+    TRmgObject* object = placeMonolith(properties, source, exitProperties != 0);
     if (object)
         protectMonolith(object, connection, destination, guardValue);
     object = placeMonolith(properties, destination, exitProperties != 0);
@@ -6282,7 +6325,7 @@ static inline void completeRmgBidirectionalConnection(
     oppositeConnection->setConnected();
 }
 
-inline void type_random_map::clearConnectionVisits(s32 level)
+inline void TRmgMap::clearConnectionVisits(s32 level)
 {
     TRmgMapItem* item = getMapItem(TRmgMapPosition(0, 0, level));
     for (s32 remaining = getWidth() * getHeight(); remaining--; ++item)
@@ -6294,7 +6337,7 @@ inline void type_random_map::clearConnectionVisits(s32 level)
 // land zones.
 VA(0x00543240, 0x797)
 MAC_ADDRESS(0x2462bc, 0x6f4)
-void type_random_map_generator::connectZones()
+void TRmgGenerator::connectZones()
 {
     std::vector<TRmgMapItem*> borderItems;
     std::vector<TRmgMapPosition> borderPositions;
@@ -6391,7 +6434,7 @@ void type_random_map_generator::connectZones()
         m_map.clearConnectionVisits(zone->getLevelPosition().m_z);
 
         for (s32 objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
-            type_object* object = m_objects[objectIndex];
+            TRmgObject* object = m_objects[objectIndex];
             if (object->m_properties->m_prototype->getObjectType() == SHIPYARD) {
                 TRmgMapPosition shipyardPosition = object->getPosition();
                 if (m_map.getMapItem(shipyardPosition)->m_zoneState.m_zone == zoneIndex) {
@@ -6444,10 +6487,10 @@ inline bool TRmgMapItem::canBlockFloor() const
 
 VA(0x005439e0, 0x283)
 MAC_ADDRESS(0x246a34, 0x31c)
-void type_random_map_generator::decorateUnderground()
+void TRmgGenerator::decorateUnderground()
 {
     TRmgMapItem* item = m_map.getMapItem(0, 0, RMG_UNDERGROUND_LEVEL);
-    type_random_map map(item, m_map.m_mapWidth, m_map.m_mapHeight);
+    TRmgMap map(item, m_map.m_mapWidth, m_map.m_mapHeight);
     TRmgTerrainBrush brush(&map, eTerrainRock, RMG_BRUSH_STRENGTH);
     for (s32 y = 0; y < m_map.m_mapHeight; ++y) {
         for (s32 x = 0; x < m_map.m_mapWidth; ++x, ++item) {
@@ -6491,7 +6534,7 @@ void type_random_map_generator::decorateUnderground()
 // two steps ignore neighbours; the returned point precedes the obstruction.
 VA(0x00543c70, 0x1a2)
 MAC_ADDRESS(0x246d50, 0x30c)
-TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, s32 level)
+TPoint TRmgMap::traceBranchEnd(TPoint from, TPoint toward, s32 level)
 {
     s32 dx = toward.m_x - from.m_x;
     s32 dy = toward.m_y - from.m_y;
@@ -6537,7 +6580,7 @@ TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, s32 level)
     }
 }
 
-bool type_random_map_generator::contains(const TPoint& point) const
+bool TRmgGenerator::contains(const TPoint& point) const
 {
     return m_map.containsXY(point);
 }
@@ -6546,7 +6589,7 @@ bool type_random_map_generator::contains(const TPoint& point) const
 // use a FIFO queue.
 VA(0x00543e20, 0x574)
 MAC_ADDRESS(0x24705c, 0x750)
-void type_random_map_generator::carveBranchingPaths()
+void TRmgGenerator::carveBranchingPaths()
 {
     TRmgMapItem* item = m_map.m_mapItems;
     s32 remaining = m_map.getHeight() * m_map.getWidth() * m_map.m_numberLevels;
@@ -6651,7 +6694,7 @@ void type_random_map_generator::carveBranchingPaths()
 
 VA(0x005443a0, 0x2f5)
 MAC_ADDRESS(0x247800, 0x59c)
-void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
+void TRmgGenerator::connectJunctionEntrance(TPoint from, TPoint to,
     TRmgZone* zone)
 {
     std::vector<TPoint> pending;
@@ -6677,7 +6720,7 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
 
 VA(0x005446a0, 0x27e)
 MAC_ADDRESS(0x247d9c, 0x3e0)
-void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
+void TRmgGenerator::prepareJunctionZone(TRmgZone* zone)
 {
     TRmgZoneBounds bounds = zone->m_bounds;
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
@@ -6722,7 +6765,7 @@ void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
 
 VA(0x00544920, 0x124)
 MAC_ADDRESS(0x24817c, 0x1ac)
-void type_random_map_generator::prepareZoneConnections()
+void TRmgGenerator::prepareZoneConnections()
 {
     carveBranchingPaths();
     markZoneBorders();
@@ -6747,7 +6790,7 @@ void type_random_map_generator::prepareZoneConnections()
 
 VA(0x00544a50, 0x90)
 MAC_ADDRESS(0x248328, 0xf0)
-void type_random_map_generator::placePrimaryTown(TRmgZone* zone)
+void TRmgGenerator::placePrimaryTown(TRmgZone* zone)
 {
     TRmgTemplateZone* templateZone = zone->m_templateZone;
     TTownType alignment = zone->m_alignment;
@@ -6842,7 +6885,7 @@ enum ERmgObjectSpacing {
 
 // The first category with a positive count places one town fewer for the
 // primary town, even if placePrimaryTown used a later category or failed.
-inline void type_random_map_generator::placeFixedTownCategory(TRmgZone* zone, s32 count,
+inline void TRmgGenerator::placeFixedTownCategory(TRmgZone* zone, s32 count,
     TTownType alignment, s32 player, b8 hasFort, b8& skipPrimary)
 {
     if (count <= 0)
@@ -6854,7 +6897,7 @@ inline void type_random_map_generator::placeFixedTownCategory(TRmgZone* zone, s3
 
 VA(0x00544ae0, 0x2b0)
 MAC_ADDRESS(0x248418, 0x414)
-void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
+void TRmgGenerator::placeAdditionalTowns(TRmgZone* zone)
 {
     TRmgTemplateZone* templateZone = zone->m_templateZone;
     TTownType alignment = zone->m_alignment;
@@ -6871,19 +6914,10 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
     s32 totalDensity = 0;
     s32 densityProduct = 1;
     // Indexed by ERmgTownPlacementCategory.
-    const s32 categoryCount = RMG_TOWN_NEUTRAL_BASIC + 1;
-    s32 densities[categoryCount] = {
-        templateZone->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_DENSITY],
-        templateZone->m_townPlacement[RMG_TOWN_PLAYER_BASIC_DENSITY],
-        templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_DENSITY],
-        templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_DENSITY]
-    };
-    s32 weightedCounts[categoryCount] = {
-        templateZone->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT],
-        templateZone->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT],
-        templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_CASTLE_COUNT],
-        templateZone->m_townPlacement[RMG_TOWN_NEUTRAL_BASIC_COUNT]
-    };
+    const s32 categoryCount = RMG_TOWN_CATEGORY_COUNT;
+    s32 densities[categoryCount];
+    s32 weightedCounts[categoryCount];
+    templateZone->getTownCategories(densities, weightedCounts);
     s32 countSteps[categoryCount];
     b8 finished[categoryCount];
     initializeRmgDensityCategories(densities, categoryCount, finished, totalDensity, densityProduct);
@@ -6906,11 +6940,11 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
 
 // Places a town at a random candidate and returns its entrance, now a road
 // target with the cell below it opened.
-inline TRmgMapPosition type_random_map_generator::placeTownAtRandomCandidate(
+inline TRmgMapPosition TRmgGenerator::placeTownAtRandomCandidate(
     TRmgObjectPropertiesRef* properties, s32 player, b8 hasFort,
     const std::vector<TRmgMapPosition>& candidates, const TObjectType::TPoint& trigger)
 {
-    rmgTownObject* town = new rmgTownObject(properties,
+    TRmgTownObject* town = new TRmgTownObject(properties,
         m_nextObjectId++, player, hasFort);
     TRmgMapPosition position = addObjectAtRandomCandidate(town, candidates);
     TRmgMapPosition entrance = getRmgObjectTriggerPosition(position, trigger);
@@ -6924,16 +6958,15 @@ inline TRmgMapPosition type_random_map_generator::placeTownAtRandomCandidate(
 // its clipped 3x3 neighbourhood in the zone; the farthest such sites win.
 VA(0x00544d90, 0x4b7)
 MAC_ADDRESS(0x24882c, 0x5d4)
-b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
-    s32 alignment, s32 player, b8 hasFort, s32 spacing)
+b8 TRmgGenerator::tryPlaceAdditionalTown(TRmgZone* zone,
+    TTownType alignment, s32 player, b8 hasFort, s32 spacing)
 {
     TRmgTemplateZone* templateZone = zone->m_templateZone;
     if ((player == -1 && !templateZone->m_neutralTownsMatchZone) || alignment == eTownNeutral) {
         alignment = templateZone->selectAllowedTown();
         // RoE maps have no Conflux.
         if (alignment == eTownNeutral)
-            alignment = rand() % (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE
-                ? TOWN_TYPE_COUNT : TOWN_TYPE_ROE_COUNT);
+            alignment = static_cast<TTownType>(rand() % getRmgTownTypeCount(m_mapVersion));
     }
     if (!zone->m_hasPrimaryTown)
         return tryPlacePrimaryTown(zone, alignment, player, hasFort);
@@ -6980,8 +7013,8 @@ b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
 
 VA(0x00545250, 0x324)
 MAC_ADDRESS(0x248e00, 0x3b4)
-b8 type_random_map_generator::tryPlacePrimaryTown(
-    TRmgZone* zone, s32 alignment, s32 player, b8 hasFort)
+b8 TRmgGenerator::tryPlacePrimaryTown(
+    TRmgZone* zone, TTownType alignment, s32 player, b8 hasFort)
 {
     if (alignment == eTownNeutral)
         return false;
@@ -7029,7 +7062,7 @@ enum ERmgStartingMineDistance {
 
 VA(0x00545580, 0x401)
 MAC_ADDRESS(0x249214, 0x46c)
-b8 type_random_map_generator::placeMineSite(type_object* object,
+b8 TRmgGenerator::placeMineSite(TRmgObject* object,
     TRmgZone* zone, b8 startingMine, s32 spacing)
 {
     TRmgObjectPropertiesRef* properties = object->m_properties;
@@ -7103,7 +7136,7 @@ b8 type_random_map_generator::placeMineSite(type_object* object,
 // Guard value for a zone object; none in a zone without monsters. Map
 // strength shares the zone scale (2 weak, 3 normal, 4 strong), so an average
 // zone keeps the map strength that connection guards use.
-inline s32 type_random_map_generator::getZoneGuardValue(s32 value,
+inline s32 TRmgGenerator::getZoneGuardValue(s32 value,
     const TRmgZone* zone) const
 {
     ERmgZoneMonsterStrength zoneStrength =
@@ -7117,7 +7150,7 @@ inline s32 type_random_map_generator::getZoneGuardValue(s32 value,
 }
 
 // Mine guard value by resource; zero when the zone has no monsters.
-s32 type_random_map_generator::getMineGuardValue(s32 resource, const TRmgZone* zone) const
+s32 TRmgGenerator::getMineGuardValue(s32 resource, const TRmgZone* zone) const
 {
     s32 value;
     switch (resource) {
@@ -7132,7 +7165,7 @@ s32 type_random_map_generator::getMineGuardValue(s32 resource, const TRmgZone* z
 // the last scanned mine prototype, not the selected one.
 VA(0x00545990, 0x466)
 MAC_ADDRESS(0x249680, 0x5ac)
-b8 type_random_map_generator::tryPlaceMine(TRmgZone* zone,
+b8 TRmgGenerator::tryPlaceMine(TRmgZone* zone,
     s32 resource, b8 startingMine, s32 spacing)
 {
     std::vector<TRmgObjectPropertiesRef*> candidates;
@@ -7157,7 +7190,7 @@ b8 type_random_map_generator::tryPlaceMine(TRmgZone* zone,
         return false;
     u32 selected = rand() % candidates.size();
     TRmgObjectPropertiesRef* selectedProperties = candidates[selected];
-    rmgOwnableObject* mine = new rmgOwnableObject(selectedProperties);
+    TRmgOwnableObject* mine = new TRmgOwnableObject(selectedProperties);
     if (!placeMineSite(mine, zone, startingMine, spacing)) {
         delete mine;
         return false;
@@ -7181,7 +7214,7 @@ b8 type_random_map_generator::tryPlaceMine(TRmgZone* zone,
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX && placed <= 2; ++position.m_x) {
             if (rand() % 2 == 0 && m_map.canPlaceObject(resourceProperties, position, zone)) {
                 ++placed;
-                addObject(new rmgResourceObject(resourceProperties), position);
+                addObject(new TRmgResourceObject(resourceProperties), position);
             }
         }
     }
@@ -7211,7 +7244,7 @@ s32 getRmgGuardValue(s32 value, s32 strength)
 
 VA(0x00545e60, 0xfa)
 MAC_ADDRESS(0x249c8c, 0x1c4)
-void type_random_map_generator::placeExtraMines(TRmgZone* zone)
+void TRmgGenerator::placeExtraMines(TRmgZone* zone)
 {
     TRmgTemplateZone* templateZone = zone->m_templateZone;
     b8 finished[NUM_RESOURCES];
@@ -7238,7 +7271,7 @@ void type_random_map_generator::placeExtraMines(TRmgZone* zone)
 
 VA(0x00545f60, 0xd6)
 MAC_ADDRESS(0x249e50, 0x110)
-void type_random_map_generator::placeMines()
+void TRmgGenerator::placeMines()
 {
     for (u32 index = 0; index < m_zones.size(); ++index) {
         TRmgZone* zone = m_zones[index];
@@ -7262,22 +7295,15 @@ void type_random_map_generator::placeMines()
 
 VA(0x00546040, 0x141)
 MAC_ADDRESS(0x249f60, 0x194)
-TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
-    s32 terrain, s32 objectType, s32 subtype)
+TRmgObjectPropertiesRef* TRmgGenerator::selectObjectPrototype(
+    TTerrainType terrain, TAdventureObjectType objectType, s32 subtype)
 {
     std::vector<TRmgObjectPropertiesRef*> candidates;
     for (u32 index = 0; index < m_objectPrototypes[objectType].size(); ++index) {
         TRmgObjectPropertiesRef* properties = m_objectPrototypes[objectType][index];
         const TObjectType* prototype = properties->m_prototype;
-        if (prototype->getSubtype() != subtype)
+        if (!isRmgSelectablePrototype(*prototype, subtype, terrain))
             continue;
-        if (prototype->m_slotCategory == TObjectType::SLOT_CATEGORY_4
-            || prototype->m_slotCategory == TObjectType::SLOT_CATEGORY_5) {
-            if (terrain == eTerrainWater)
-                continue;
-        } else if (!prototype->isRecommendedTerrain(terrain)) {
-            continue;
-        }
         candidates.push_back(properties);
     }
     if (!candidates.size())
@@ -7285,23 +7311,30 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
     return candidates[rand() % candidates.size()];
 }
 
+struct TRmgTreasureCandidate {
+    TRmgTreasureDef* m_definition;
+    TRmgObjectPropertiesRef* m_properties;
+
+    TRmgTreasureCandidate(TRmgTreasureDef* definition, TRmgObjectPropertiesRef* properties)
+        : m_definition(definition), m_properties(properties) {}
+};
+
 // Picks a random treasure in the value range. The chosen definition's
 // value is queried again before generation.
 VA(0x00546190, 0x385)
 MAC_ADDRESS(0x24a190, 0x3f4)
-type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
+TRmgObject* TRmgGenerator::createTreasureObject(TRmgZone* zone,
     s32 minimum, s32 maximum, s32* value, b8 firstInGroup,
     b8 allowTerrainDependent, b8 compact,
     TRmgMapPosition position)
 {
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
     s32 totalWeight = 0;
-    std::vector<type_treasure_def*> candidates;
-    std::vector<TRmgObjectPropertiesRef*> candidateProperties;
+    std::vector<TRmgTreasureCandidate> candidates;
     s32 bestValuePerCell = 0;
     for (u32 index = 0; index < m_objectGenerators.size(); ++index) {
-        type_treasure_def* definition = m_objectGenerators[index];
-        s32 objectType = definition->m_objectType;
+        TRmgTreasureDef* definition = m_objectGenerators[index];
+        TAdventureObjectType objectType = definition->m_objectType;
         if (!firstInGroup && g_adventureObjectTraits[objectType].m_blocksLanding
             && !g_adventureObjectTraits[objectType].m_clearedOnVisit)
             continue;
@@ -7336,26 +7369,24 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
             if (bestValuePerCell < 3 * valuePerCell / 4) {
                 totalWeight = 0;
                 candidates.clear();
-                candidateProperties.clear();
                 bestValuePerCell = valuePerCell;
             }
         }
         totalWeight += definition->m_density;
-        candidates.push_back(definition);
-        candidateProperties.push_back(properties);
+        candidates.push_back(TRmgTreasureCandidate(definition, properties));
     }
     if (!candidates.size())
         return 0;
     s32 remainingWeight = rand() % totalWeight;
     u32 selectedIndex;
     for (selectedIndex = 0; selectedIndex < candidates.size(); ++selectedIndex) {
-        remainingWeight -= candidates[selectedIndex]->m_density;
+        remainingWeight -= candidates[selectedIndex].m_definition->m_density;
         if (remainingWeight < 0)
             break;
     }
-    type_treasure_def* definition = candidates[selectedIndex];
+    TRmgTreasureDef* definition = candidates[selectedIndex].m_definition;
     *value = definition->getValue(zone, this);
-    return definition->generate(candidateProperties[selectedIndex], this, zone);
+    return definition->generate(candidates[selectedIndex].m_properties, this, zone);
 }
 
 // Treasure groups are assembled on a square scratch map before placement.
@@ -7364,7 +7395,7 @@ enum ERmgTreasureGroupMapSize {
 };
 
 // Adds an object centred on the group map (unsigned division).
-inline void TRmgTreasureGroup::addCenteredObject(type_object* object)
+inline void TRmgTreasureGroup::addCenteredObject(TRmgObject* object)
 {
     const TObjectType* prototype = object->m_properties->m_prototype;
     addObject(object,
@@ -7372,12 +7403,12 @@ inline void TRmgTreasureGroup::addCenteredObject(type_object* object)
             (m_map.getHeight() + static_cast<u32>(prototype->getHeight())) / 2));
 }
 
-inline type_object* type_random_map_generator::createTreasureWithRetries(TRmgZone* zone,
+inline TRmgObject* TRmgGenerator::createTreasureWithRetries(TRmgZone* zone,
     s32 minimum, s32 maximum, s32* value, b8 firstInGroup, b8 compact)
 {
     for (s32 attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
         TRmgMapPosition unspecified(RMG_NO_POSITION, RMG_NO_POSITION, RMG_NO_POSITION);
-        type_object* object = createTreasureObject(zone, minimum, maximum,
+        TRmgObject* object = createTreasureObject(zone, minimum, maximum,
             value, firstInGroup, true, compact, unspecified);
         if (object)
             return object;
@@ -7389,11 +7420,11 @@ inline type_object* type_random_map_generator::createTreasureWithRetries(TRmgZon
 // release reservations before deletion.
 VA(0x00546520, 0x1b6)
 MAC_ADDRESS(0x24a584, 0x22c)
-s32 type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
+s32 TRmgGenerator::fillTreasureGroup(TRmgZone* zone,
     TRmgTreasureGroup* group, b8 compact, s32 targetValue)
 {
     s32 objectValue = 0;
-    type_object* firstObject = createTreasureWithRetries(
+    TRmgObject* firstObject = createTreasureWithRetries(
         zone, targetValue / 4, targetValue, &objectValue, true, compact);
     if (!firstObject)
         return 0;
@@ -7405,7 +7436,7 @@ s32 type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
             break;
         b8 added = false;
         for (s32 attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
-            type_object* nextObject = createTreasureWithRetries(zone,
+            TRmgObject* nextObject = createTreasureWithRetries(zone,
                 remainder / 4, 5 * remainder / 4, &objectValue, false, compact);
             if (!nextObject)
                 break;
@@ -7439,7 +7470,7 @@ inline void TRmgTreasureGroup::discard()
 // guard fit destroys the group's objects and the unaccepted guard.
 VA(0x005466e0, 0x253)
 MAC_ADDRESS(0x24a7b0, 0x110) // MAC_ABSTRACTION_FROM(tokens1:4deef3890efa,29.6117): TRmgTreasureGroup::discard shares ordered reservation release, deletion and reset across four failed-placement paths.
-b8 type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
+b8 TRmgGenerator::assembleTreasureGroup(TRmgZone* zone,
     TRmgTreasureGroup* group, b8 compact, s32 minimum, s32 maximum)
 {
     group->reset();
@@ -7449,7 +7480,7 @@ b8 type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
         return false;
     s32 guardValue = getZoneGuardValue(totalValue, zone);
     if (guardValue > 0) {
-        type_object* guard = createGuard(guardValue, zone);
+        TRmgObject* guard = createGuard(guardValue, zone);
         if (guard && !group->addGuard(guard)) {
             group->discard();
             delete guard;
@@ -7472,7 +7503,7 @@ void TRmgMapItem::setTerrain(s32 terrain, s32 frame,
 }
 
 VA(0x00546990, 0x1e)
-TRmgMapItem* type_random_map::getMapItem(s32 x, s32 y)
+TRmgMapItem* TRmgMap::getMapItem(s32 x, s32 y)
 {
     return &m_mapItems[y * m_mapWidth + x];
 }
@@ -7532,7 +7563,7 @@ VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
 
 // Group objects store local XY positions; translate them and replace Z with
 // the destination level.
-inline TRmgMapPosition type_object::getPlacedGroupPosition(
+inline TRmgMapPosition TRmgObject::getPlacedGroupPosition(
     const TRmgMapPosition& groupPosition) const
 {
     TRmgMapPosition position = getPosition();
@@ -7544,12 +7575,12 @@ inline TRmgMapPosition type_object::getPlacedGroupPosition(
 
 VA(0x005469b0, 0x2b4)
 MAC_ADDRESS(0x24a8c0, 0x44c)
-void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
+void TRmgGenerator::commitTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position)
 {
     group->m_position = position;
     for (u32 i = 0; i < group->m_objects.size(); ++i) {
-        type_object* object = group->m_objects[i];
+        TRmgObject* object = group->m_objects[i];
         addObject(object, object->getPlacedGroupPosition(position));
     }
     TRmgZoneBounds bounds;
@@ -7589,12 +7620,12 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 
 VA(0x00546c70, 0x452)
 MAC_ADDRESS(0x24ad0c, 0x6cc)
-b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
+b8 TRmgGenerator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position, TRmgZone* zone)
 {
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
     for (u32 i = 0; i < group->m_objects.size(); ++i) {
-        type_object* object = group->m_objects[i];
+        TRmgObject* object = group->m_objects[i];
         if (m_map.isPlacementBlocked(object->m_properties,
                 object->getPlacedGroupPosition(position), zoneIndex,
                 RMG_REJECT_OBSTACLE_ENTRANCES))
@@ -7616,7 +7647,7 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     s32 firstDirection = RMG_DIRECTION_EAST;
     s32 lastDirection = RMG_DIRECTION_COUNT;
     b8 waterZone = zone->m_terrain == eTerrainWater;
-    type_object* lastObject = group->m_objects.back();
+    TRmgObject* lastObject = group->m_objects.back();
     TObjectType* prototype = lastObject->m_properties->m_prototype;
     TRmgMapPosition entrance = lastObject->getEntrance();
     if (!isRmgEntranceOpenToNorth(prototype->getObjectType())) {
@@ -7671,7 +7702,7 @@ b8 type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
 //   . . # # # .
 VA(0x005470d0, 0x286)
 MAC_ADDRESS(0x24b3d8, 0x310)
-b8 type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
+b8 TRmgGenerator::placeTreasureGroup(TRmgTreasureGroup* group,
     TRmgZone* zone, s32 spacing)
 {
     s32 zoneIndex = zone->m_templateZone->m_zoneIndex;
@@ -7705,7 +7736,7 @@ b8 type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
 
 // Up to three attempts to assemble and place a group for one treasure band;
 // groups that fail placement are discarded.
-inline b8 type_random_map_generator::tryPlaceTreasureBand(TRmgZone* zone,
+inline b8 TRmgGenerator::tryPlaceTreasureBand(TRmgZone* zone,
     TRmgTreasureGroup* group, b8 compact, const TRmgTreasureRange& range, s32 spacing)
 {
     for (s32 attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
@@ -7721,17 +7752,16 @@ inline b8 type_random_map_generator::tryPlaceTreasureBand(TRmgZone* zone,
 
 VA(0x00547360, 0x460)
 MAC_ADDRESS(0x24b6e8, 0x358)
-void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
+void TRmgGenerator::placeZoneTreasures(TRmgZone* zone)
 {
     TRmgTemplateZone* templateZone = zone->m_templateZone;
     TRmgTreasureGroup group(RMG_TREASURE_GROUP_MAP_SIZE, RMG_TREASURE_GROUP_MAP_SIZE);
-    const s32 bandCount = sizeof(templateZone->m_treasure) / sizeof(templateZone->m_treasure[0]);
+    const s32 bandCount = RMG_TREASURE_BAND_COUNT;
     // Bands with a maximum value below 100 or no density are skipped.
     s32 densities[bandCount];
     for (s32 band = 0; band < bandCount; ++band) {
         const TRmgTreasureRange& range = templateZone->m_treasure[band];
-        densities[band] = range.m_maximum >= 100 && range.m_density > 0
-            ? range.m_density : 0;
+        densities[band] = range.getEffectiveDensity();
     }
     b8 finished[bandCount];
     s32 totalDensity = 0;
@@ -7743,7 +7773,7 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
         ? RMG_WATER_TREASURE_DENSITY_AREA : RMG_LAND_TREASURE_DENSITY_AREA;
     s32 spacing = getRmgDensitySpacing(densityArea, totalDensity);
     // No band has placed a treasure yet.
-    s32 weightedCounts[bandCount] = {0, 0, 0};
+    s32 weightedCounts[bandCount] = {0};
     s32 countSteps[bandCount];
     initializeRmgCategoryStrides(densities, weightedCounts, bandCount,
         densityProduct, countSteps, weightedCounts);
@@ -7791,7 +7821,7 @@ enum ERmgRoadStepCost {
 // duplicate entries. Monolith/gate transitions precede neighbour relaxation.
 VA(0x00547880, 0x7b1)
 MAC_ADDRESS(0x24bbe0, 0x7e4)
-void type_random_map_generator::buildRoadCostMap(TRmgMapPosition source)
+void TRmgGenerator::buildRoadCostMap(TRmgMapPosition source)
 {
     std::vector<TRmgMapPosition> openPositions;
     std::vector<s32> openCosts;
@@ -7807,7 +7837,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition source)
         b8 currentHasRoad = mapItem->m_tile.m_roadType != 0;
         s32 direction = RMG_DIRECTION_COUNT;
         if (mapItem->isObjectEntrance()) {
-            type_object* object = mapItem->m_objects[0];
+            TRmgObject* object = mapItem->m_objects[0];
             TObjectType* prototype = object->m_properties->m_prototype;
             TAdventureObjectType objectType = prototype->getObjectType();
             if (hasRmgRestrictedRoadApproach(objectType))
@@ -7818,11 +7848,11 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition source)
             case LITH_ONEWAY_EXIT:
             case LITH_TWOWAY: {
                 // Monoliths of the same subtype connect, in stored order.
-                const std::vector<type_object*>& destinations = objectType == LITH_TWOWAY
+                const std::vector<TRmgObject*>& destinations = objectType == LITH_TWOWAY
                     ? m_monolithsTwoWay : m_monolithsOneWay;
                 s32 subtype = prototype->getSubtype();
                 for (s32 monolith = 0; monolith < destinations.size(); ++monolith) {
-                    type_object* destination = destinations[monolith];
+                    TRmgObject* destination = destinations[monolith];
                     if (destination->m_properties->m_prototype->getSubtype() != subtype)
                         continue;
 
@@ -7892,12 +7922,12 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition source)
 // Paint same-level cardinal runs, restarting at diagonal or level transitions.
 VA(0x00548040, 0x244)
 MAC_ADDRESS(0x24c3c4, 0x2bc)
-b8 type_random_map_generator::paintRoad(TRmgMapPosition position, s32 roadType)
+b8 TRmgGenerator::paintRoad(TRmgMapPosition position, s32 roadType)
 {
     b8 painted = false;
     for (;;) {
         s32 level = position.m_z;
-        type_random_map levelMap(m_map.getMapItem(0, 0, level),
+        TRmgMap levelMap(m_map.getMapItem(0, 0, level),
             m_map.m_mapWidth, m_map.m_mapHeight);
         TRmgMapPosition previous = position;
         TRmgMapItem* existing = m_map.getMapItem(position);
@@ -7930,7 +7960,7 @@ b8 type_random_map_generator::paintRoad(TRmgMapPosition position, s32 roadType)
 }
 
 MAC_ADDRESS(0x24bb68, 0x78)
-void type_random_map_generator::resetMovementCosts()
+void TRmgGenerator::resetMovementCosts()
 {
     TRmgMapItem* mapItem = m_map.getMapItem(0, 0);
     s32 mapItemCount = m_map.m_numberLevels * m_map.m_mapHeight * m_map.m_mapWidth;
@@ -7941,7 +7971,7 @@ void type_random_map_generator::resetMovementCosts()
 }
 
 // Newly painted roads change traversal costs for subsequent targets.
-inline void type_random_map_generator::rebuildRoadCostMap(const TRmgMapPosition& source)
+inline void TRmgGenerator::rebuildRoadCostMap(const TRmgMapPosition& source)
 {
     resetMovementCosts();
     buildRoadCostMap(source);
@@ -7958,7 +7988,7 @@ enum ERmgRoadType {
 // Every road on the map uses one random road type.
 VA(0x00548290, 0x26e)
 MAC_ADDRESS(0x24c6d4, 0x1d8)
-void type_random_map_generator::createRoads()
+void TRmgGenerator::createRoads()
 {
     ERmgRoadType roadType =
         static_cast<ERmgRoadType>(rand() % RMG_ROAD_TYPE_COUNT + RMG_ROAD_DIRT);
@@ -8034,7 +8064,7 @@ inline bool TRmgMapItem::isRiverTerrain(b8 sourceIsSnow) const
 // blocked-direction flags.
 VA(0x00548500, 0x533)
 MAC_ADDRESS(0x24c8ac, 0x588)
-void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
+void TRmgGenerator::createRiverToObject(TRmgMapPosition source)
 {
     resetMovementCosts();
     std::vector<TRmgMapPosition> openPositions;
@@ -8078,7 +8108,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     if (!mapItem->hasRiver())
         return;
 #endif
-    type_random_map levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
+    TRmgMap levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
         m_map.getWidth(), m_map.getHeight());
     TRmgRiverMapAdapter mapAdapter(&levelMap);
     TRmgRiverPainter riverPainter(
@@ -8099,7 +8129,7 @@ static inline s32 getRmgOppositeCardinalBit(s32 direction)
 
 // Retail bug: this scan admits x == width, reading the next row's first cell
 // or, at the end of the map, past the cell array.
-inline bool type_random_map::isOutsideRiverCoastScan(const TRmgMapPosition& point) const
+inline bool TRmgMap::isOutsideRiverCoastScan(const TRmgMapPosition& point) const
 {
 #if defined(HOMM3_RMG_HOTFIX)
     // The coast scan stops at the right edge like the others.
@@ -8113,7 +8143,7 @@ inline bool type_random_map::isOutsideRiverCoastScan(const TRmgMapPosition& poin
 
 // The dry strip and inland approach exclude water and entrances; rock is
 // allowed.
-inline TRmgMapItem* type_random_map::getDryRiverCoastCell(const TRmgMapPosition& point)
+inline TRmgMapItem* TRmgMap::getDryRiverCoastCell(const TRmgMapPosition& point)
 {
     if (isOutsideRiverCoastScan(point))
         return 0;
@@ -8133,7 +8163,7 @@ inline TRmgMapItem* type_random_map::getDryRiverCoastCell(const TRmgMapPosition&
 //   ~ d
 VA(0x00548a40, 0x222)
 MAC_ADDRESS(0x24ce88, 0x404)
-void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, s32 direction)
+void TRmgGenerator::markRiverCoastTarget(TRmgMapPosition position, s32 direction)
 {
     TRmgMapPosition point = position + g_rmgDirections[turnRmgDirection(direction, 2)];
     TPoint step = g_rmgDirections[turnRmgDirection(direction, -2)];
@@ -8164,7 +8194,7 @@ void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, s
 
 VA(0x00548c70, 0x17d)
 MAC_ADDRESS(0x24d28c, 0x264)
-void type_random_map_generator::markRiverTargets()
+void TRmgGenerator::markRiverTargets()
 {
     TRmgMapPosition position;
     TRmgMapItem* item = m_map.m_mapItems;
@@ -8198,7 +8228,7 @@ void type_random_map_generator::markRiverTargets()
 // cells north and north-east of it.
 VA(0x00548df0, 0x99f)
 MAC_ADDRESS(0x24d4f0, 0xb00)
-void type_random_map_generator::createRiver(TRmgMapPosition source)
+void TRmgGenerator::createRiver(TRmgMapPosition source)
 {
     resetMovementCosts();
 
@@ -8262,7 +8292,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
         return;
 #endif
 
-    type_random_map levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
+    TRmgMap levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
         m_map.m_mapWidth, m_map.m_mapHeight);
     TRmgRiverMapAdapter mapAdapter(&levelMap);
     TRmgRiverPainter riverPainter(
@@ -8303,7 +8333,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
         if (prototypeIndex == m_objectPrototypes[TERRAIN_RIVER_DELTA].size())
             return;
 
-        type_object* riverDelta = new type_object(
+        TRmgObject* riverDelta = new TRmgObject(
             m_objectPrototypes[TERRAIN_RIVER_DELTA][prototypeIndex]);
         addObject(
             riverDelta,
@@ -8332,10 +8362,10 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
 
 VA(0x005497a0, 0xce)
 MAC_ADDRESS(0x24dff0, 0x18c)
-void type_random_map_generator::markRiverObjectTargets()
+void TRmgGenerator::markRiverObjectTargets()
 {
     for (u32 index = 0; index < m_objects.size(); ++index) {
-        type_object* object = m_objects[index];
+        TRmgObject* object = m_objects[index];
         TObjectType* prototype = object->m_properties->m_prototype;
         if (prototype->getObjectType() == TERRAIN_MOUNTAIN
             || prototype->getObjectType() == TERRAIN_LAKE
@@ -8361,12 +8391,12 @@ void type_random_map_generator::markRiverObjectTargets()
 
 VA(0x00549870, 0xb1)
 MAC_ADDRESS(0x24e17c, 0x118)
-void type_random_map_generator::createRivers()
+void TRmgGenerator::createRivers()
 {
     markRiverObjectTargets();
     markRiverTargets();
     for (u32 index = 0; index < m_objects.size(); ++index) {
-        type_object* object = m_objects[index];
+        TRmgObject* object = m_objects[index];
         TObjectType* prototype = object->m_properties->m_prototype;
         if (prototype->getObjectType() == WATER_WHEEL) {
             TRmgMapPosition entrance = object->getEntrance();
@@ -8380,7 +8410,7 @@ void type_random_map_generator::createRivers()
 
 #if defined(HOMM3_RMG_HOTFIX)
 // A template seat is not a playable start until a town actually fits there.
-b8 type_random_map_generator::hasPlayerTowns() const
+bool TRmgGenerator::hasPlayerTowns() const
 {
     b8 humanTowns[RMG_PLAYER_COUNT];
     b8 playerTowns[RMG_PLAYER_COUNT];
@@ -8398,12 +8428,12 @@ b8 type_random_map_generator::hasPlayerTowns() const
         if (player < 0)
             continue;
         // A neutral town must not become the player's serialized main town.
-        b8 ownsMainTown = false;
+        bool ownsMainTown = false;
         for (u32 objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
-            const type_object* object = m_objects[objectIndex];
+            const TRmgObject* object = m_objects[objectIndex];
             if (object->m_properties->m_prototype->getObjectType() != TOWN)
                 continue;
-            const rmgTownObject* town = static_cast<const rmgTownObject*>(object);
+            const TRmgTownObject* town = static_cast<const TRmgTownObject*>(object);
             TRmgMapPosition entrance = town->getEntrance();
             if (town->m_player == player && entrance == zone->m_primaryTownEntrance
                 && entrance.m_z == zone->m_primaryTownEntrance.m_z) {
@@ -8434,27 +8464,16 @@ b8 type_random_map_generator::hasPlayerTowns() const
 // and rivers.
 VA(0x00549930, 0x37b)
 MAC_ADDRESS(0x24e294, 0x41c)
-b8 type_random_map_generator::generate()
+b8 TRmgGenerator::generate()
 {
     if (!m_templates.size())
         return false;
     u32 selected = rand() % m_templates.size();
     m_templateName = m_templates[selected]->m_name;
     b8 humanSlots[RMG_PLAYER_COUNT];
-    s32 humanSlotByte;
-    MEMSET(humanSlots, 0, sizeof(humanSlots), humanSlotByte);
     b8 allSlots[RMG_PLAYER_COUNT];
-    s32 allSlotByte;
-    MEMSET(allSlots, 0, sizeof(allSlots), allSlotByte);
-    for (u32 zone = 0; zone < m_templates[selected]->m_zones.size(); ++zone) {
-        TRmgTemplateZone* templateZone = m_templates[selected]->m_zones[zone];
-        if (templateZone->m_kind == RMG_TEMPLATE_HUMAN) {
-            humanSlots[templateZone->m_playerIndex] = true;
-            allSlots[templateZone->m_playerIndex] = true;
-        } else if (templateZone->m_kind == RMG_TEMPLATE_COMPUTER) {
-            allSlots[templateZone->m_playerIndex] = true;
-        }
-    }
+    m_templates[selected]->getPlayerSlots(humanSlots, allSlots);
+    u32 zone;
     s32 mapIndex;
     MEMSET(m_playerIndexMap, -1, sizeof(m_playerIndexMap), mapIndex);
     s32 playerOrder[RMG_PLAYER_COUNT];
@@ -8579,7 +8598,7 @@ static inline void appendRmgPlayerDescription(char* description, s32 player,
 
 VA(0x00549cb0, 0xe90)
 MAC_ADDRESS(0x24e7d4, 0x11ac)
-void type_random_map_generator::writeMapHeader(TAbstractFile* outputFile)
+void TRmgGenerator::writeMapHeader(TAbstractFile* outputFile)
 {
     writeValue<s32>(outputFile, getSerializedMapVersion());
 
@@ -8912,7 +8931,7 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile*, TObjectType*);
 // passes.
 VA(0x0054abf0, 0x235)
 MAC_ADDRESS(0x24fd18, 0x350)
-b8 type_random_map_generator::writeMap(TAbstractFile* outputFile)
+b8 TRmgGenerator::writeMap(TAbstractFile* outputFile)
 {
     writeMapHeader(outputFile);
     writeValue<s32>(outputFile, 0);
@@ -8940,12 +8959,12 @@ b8 type_random_map_generator::writeMap(TAbstractFile* outputFile)
         }
     writeValue<s32>(outputFile, m_objects.size());
     for (u32 first = 0; first < m_objects.size(); ++first) {
-        type_object* object = m_objects[first];
+        TRmgObject* object = m_objects[first];
         if (g_adventureObjectTraits[object->m_properties->m_prototype->getObjectType()].m_isDecoration)
             object->write(outputFile, m_mapVersion);
     }
     for (u32 second = 0; second < m_objects.size(); ++second) {
-        type_object* object = m_objects[second];
+        TRmgObject* object = m_objects[second];
         if (!g_adventureObjectTraits[object->m_properties->m_prototype->getObjectType()].m_isDecoration)
             object->write(outputFile, m_mapVersion);
     }
@@ -8954,7 +8973,7 @@ b8 type_random_map_generator::writeMap(TAbstractFile* outputFile)
     return writeValue<s32>(outputFile, 0) == sizeof(s32);
 }
 
-enum TRmgPrototypeCellMask {
+enum ERmgPrototypeCellMask {
     RMG_PROTOTYPE_PASSABLE_CELLS,
     RMG_PROTOTYPE_TRIGGER_CELLS
 };
@@ -8967,13 +8986,13 @@ enum TRmgPrototypeCellMask {
 //   ..
 //   40 41 .. 46  P   (bit 47)
 static inline void writeRmgPrototypeCellMask(TAbstractFile* outputFile,
-    TObjectType* prototype, TRmgPrototypeCellMask kind)
+    TObjectType* prototype, ERmgPrototypeCellMask kind)
 {
-    u8 mask[6];
+    u8 mask[(OBJECT_MASK_CELLS + 7) / 8];
     memset(mask, 0, sizeof(mask));
     s32 bit = 0;
-    for (s32 y = 5; y >= 0; --y) {
-        for (s32 x = 7; x >= 0; --x) {
+    for (s32 y = OBJECT_MASK_HEIGHT - 1; y >= 0; --y) {
+        for (s32 x = OBJECT_MASK_WIDTH - 1; x >= 0; --x) {
             if (kind == RMG_PROTOTYPE_PASSABLE_CELLS
                 ? prototype->isPassableCell(x, y) : prototype->isTriggerCell(x, y))
                 mask[bit / 8] |= 1 << (bit % 8);
@@ -9003,7 +9022,7 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outputFile, TObjectType* 
 
 // Prisons draw from the RoE heroes, or in later formats from the first
 // RMG_PRISON_HERO_COUNT.
-static inline s32 getRmgPrisonHeroCount(s32 mapVersion)
+static inline s32 getRmgPrisonHeroCount(ERmgMapVersion mapVersion)
 {
     return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE
         ? RMG_PRISON_HERO_COUNT : RMG_ROE_HERO_COUNT;
@@ -9011,7 +9030,7 @@ static inline s32 getRmgPrisonHeroCount(s32 mapVersion)
 
 VA(0x0054b100, 0x71)
 MAC_ADDRESS(0x250068, 0xd4)
-s32 type_random_map_generator::selectPrisonHero()
+s32 TRmgGenerator::selectPrisonHero()
 {
     s32 available = 0;
     s32 hero;
@@ -9062,7 +9081,7 @@ enum ERmgQuestZoneScore {
 // placement score (RMG_QUEST_UNREACHED_DISTANCE when unreachable).
 VA(0x0054b180, 0x174)
 MAC_ADDRESS(0x25013c, 0x210)
-void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
+void TRmgGenerator::calculateQuestZoneDistances(TRmgZone* origin)
 {
     std::vector<TRmgZone*> pending;
     for (u32 index = 0; index < m_zones.size(); ++index)
@@ -9089,7 +9108,7 @@ void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
 // those up to 99 connections away. Excluded zones still draw a random score.
 VA(0x0054b300, 0x18b)
 MAC_ADDRESS(0x25034c, 0x23c)
-b8 type_random_map_generator::placeQuestGroup(
+b8 TRmgGenerator::placeQuestGroup(
     TRmgTreasureGroup* group, TRmgZone* origin)
 {
     std::vector<TRmgZone*> candidates;
@@ -9131,22 +9150,27 @@ enum ERmgQuestArtifactPool {
 // Treasure artifact class ('T') bit in the artifact table.
 static const s32 g_rmgQuestArtifactClass = 2;
 
-// Enabled treasure-class artifacts not yet used by a seer hut.
-static inline bool isRmgQuestArtifact(s32 artifact, const b8* usedArtifacts)
+// Trait eligibility is independent of a generator's already-used artifacts.
+static bool isRmgQuestArtifactEligible(s32 artifact)
 {
-    return !g_artifactTraits[artifact].m_disabled && !usedArtifacts[artifact]
+    return !g_artifactTraits[artifact].m_disabled
         && (g_artifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass);
+}
+
+static bool isRmgQuestArtifactAvailable(s32 artifact, const b8* usedArtifacts)
+{
+    return isRmgQuestArtifactEligible(artifact) && !usedArtifacts[artifact];
 }
 
 VA(0x0054b490, 0x42e)
 MAC_ADDRESS(0x250588, 0x360)
-b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
+b8 TRmgGenerator::placeQuestArtifact(TRmgQuestArtifactObject* object)
 {
-    rmgSeerHutObject* seerHut = object->m_seerHut;
+    TRmgSeerHutObject* seerHut = object->m_seerHut;
     s32 available = 0;
     s32 artifact;
     for (artifact = ARTIFACT_SPELLBOOK; artifact < ARTIFACT_COUNT; ++artifact) {
-        if (isRmgQuestArtifact(artifact, m_usedQuestArtifacts)) {
+        if (isRmgQuestArtifactAvailable(artifact, m_usedQuestArtifacts)) {
             ++available;
         }
     }
@@ -9156,7 +9180,7 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
         return false;
     s32 selected = rand() % available;
     for (artifact = ARTIFACT_SPELLBOOK; artifact < ARTIFACT_COUNT; ++artifact) {
-        if (isRmgQuestArtifact(artifact, m_usedQuestArtifacts) && selected-- <= 0)
+        if (isRmgQuestArtifactAvailable(artifact, m_usedQuestArtifacts) && selected-- <= 0)
             break;
     }
     seerHut->m_artifact = static_cast<TArtifact>(artifact);
@@ -9184,7 +9208,7 @@ b8 type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
 // Reserve the colour before filling the group and release it on failure.
 VA(0x0054b8c0, 0x385)
 MAC_ADDRESS(0x2508e8, 0x334)
-b8 type_random_map_generator::placeKeyTentGuard(type_object* object, s32 targetValue)
+b8 TRmgGenerator::placeKeyTentGuard(TRmgObject* object, s32 targetValue)
 {
     s32 color = object->m_properties->m_prototype->getSubtype();
     u32 index = findRmgPrototypeSubtypeIndex(
@@ -9194,7 +9218,7 @@ b8 type_random_map_generator::placeKeyTentGuard(type_object* object, s32 targetV
     TRmgZone* origin = m_zones[m_map.getMapItem(object->m_position)->m_zoneState.m_zone];
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[BORDER_GUARD][index];
     TRmgTreasureGroup group(RMG_TREASURE_GROUP_MAP_SIZE, RMG_TREASURE_GROUP_MAP_SIZE);
-    type_object* guard = new type_object(properties);
+    TRmgObject* guard = new TRmgObject(properties);
     setKeyTentColorDisabled(color, true);
     if (fillTreasureGroup(origin, &group, false, targetValue) && group.addGuard(guard)) {
         group.preparePlacement();
@@ -9212,11 +9236,11 @@ b8 type_random_map_generator::placeKeyTentGuard(type_object* object, s32 targetV
 // the iterator with null rather than end().
 VA(0x0054bc50, 0x2ae)
 MAC_ADDRESS(0x250c1c, 0x2ac)
-void type_random_map_generator::removeObject(type_object* object)
+void TRmgGenerator::removeObject(TRmgObject* object)
 {
     TObjectType* prototype = object->m_properties->m_prototype;
     TRmgMapPosition position = object->m_position;
-    std::vector<type_object*>::iterator found = std::find(m_objects.begin(), m_objects.end(), object);
+    std::vector<TRmgObject*>::iterator found = std::find(m_objects.begin(), m_objects.end(), object);
 #if defined(HOMM3_RMG_HOTFIX)
     // An object missing from a list is not erased from it.
     if (found != m_objects.end()
@@ -9246,7 +9270,7 @@ void type_random_map_generator::removeObject(type_object* object)
                 continue;
             if (isRmgObjectFootprintCell(prototype, column, row)) {
                 TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
-                std::vector<type_object*>::iterator entry = std::find(item->m_objects.begin(), item->m_objects.end(), object);
+                std::vector<TRmgObject*>::iterator entry = std::find(item->m_objects.begin(), item->m_objects.end(), object);
 #if defined(HOMM3_RMG_HOTFIX)
                 if (entry != item->m_objects.end()
 #else
@@ -9275,29 +9299,23 @@ TRandomMapRequest::TRandomMapRequest(s32 width, s32 height, s32 levels)
       m_mapVersion(RMG_MAP_SHADOW_OF_DEATH)
 {
     memset(m_isHumanSeat, 0, sizeof(m_isHumanSeat));
-    memset(m_townType, -1, sizeof(m_townType));
+    memset(m_townChoices, -1, sizeof(m_townChoices));
 }
 
-void type_random_map_generator::setHumanPlayer(s32 seat)
+void TRmgGenerator::setHumanPlayer(s32 seat)
 {
     m_fixedHumanPlayers[seat] = true;
 }
 
-void type_random_map_generator::setTownChoice(s32 seat, TTownType town)
+void TRmgGenerator::setTownChoice(s32 seat, TTownType town)
 {
     m_townChoices[seat] = town;
 }
 
 #if defined(HOMM3_RMG_HOTFIX)
-// Town types a map version knows; RoE maps have no Conflux.
-static inline s32 getRmgTownTypeCount(s32 mapVersion)
-{
-    return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? TOWN_TYPE_COUNT : TOWN_TYPE_ROE_COUNT;
-}
-
 // The request settings the lobby can produce. The generator relies on them:
 // map arithmetic, the eight player slots and the enum-indexed tables.
-b8 TRandomMapRequest::isSupported() const
+bool TRandomMapRequest::isSupported() const
 {
     if (m_width != m_height)
         return false;
@@ -9339,8 +9357,8 @@ b8 TRandomMapRequest::isSupported() const
         || m_mapVersion > RMG_MAP_SHADOW_OF_DEATH)
         return false;
     for (s32 seat = 0; seat < RMG_PLAYER_COUNT; ++seat) {
-        if (m_townType[seat] < eTownNeutral
-            || m_townType[seat] >= getRmgTownTypeCount(m_mapVersion))
+        if (m_townChoices[seat] < eTownNeutral
+            || m_townChoices[seat] >= getRmgTownTypeCount(m_mapVersion))
             return false;
     }
     return true;
@@ -9348,27 +9366,20 @@ b8 TRandomMapRequest::isSupported() const
 
 // selectObjectPrototype's filter, without its random draw.
 static bool hasRmgSelectablePrototype(
-    const std::vector<TRmgObjectPropertiesRef*>& prototypes, s32 subtype, s32 terrain)
+    const std::vector<TRmgObjectPropertiesRef*>& prototypes, s32 subtype, TTerrainType terrain)
 {
     for (u32 index = 0; index < prototypes.size(); ++index) {
         const TObjectType* prototype = prototypes[index]->m_prototype;
-        if (prototype->getSubtype() != subtype)
-            continue;
-        if (prototype->m_slotCategory == TObjectType::SLOT_CATEGORY_4
-            || prototype->m_slotCategory == TObjectType::SLOT_CATEGORY_5) {
-            if (terrain != eTerrainWater)
-                return true;
-        } else if (prototype->isRecommendedTerrain(terrain)) {
+        if (isRmgSelectablePrototype(*prototype, subtype, terrain))
             return true;
-        }
     }
     return false;
 }
 
 // The objects.txt families that generation indexes without checking.
-b8 type_random_map_generator::hasRequiredPrototypes()
+bool TRmgGenerator::hasRequiredPrototypes() const
 {
-    std::vector<TRmgObjectPropertiesRef*>* prototypes = m_objectPrototypes;
+    const std::vector<TRmgObjectPropertiesRef*>* prototypes = m_objectPrototypes;
     // Guards, writeMap's two fixed prototype slots and shipyard connections.
     if (!prototypes[MONSTER].size() || !prototypes[RANDOM_MONSTER].size()
         || !prototypes[TERRAIN_HOLE].size() || !prototypes[SHIPYARD].size())
@@ -9404,10 +9415,8 @@ b8 type_random_map_generator::hasRequiredPrototypes()
     if (prototypes[SEER].size()) {
         if (!hasRmgSelectablePrototype(prototypes[RANDOM_ARTIFACT], 0, eTerrainDirt))
             return false;
-        b8 unusedArtifacts[ARTIFACT_COUNT];
-        memset(unusedArtifacts, 0, sizeof(unusedArtifacts));
         for (s32 artifact = ARTIFACT_SPELLBOOK; artifact < ARTIFACT_COUNT; ++artifact) {
-            if (isRmgQuestArtifact(artifact, unusedArtifacts)
+            if (isRmgQuestArtifactEligible(artifact)
                 && findRmgPrototypeSubtypeIndex(prototypes[ARTIFACT], artifact)
                     == prototypes[ARTIFACT].size())
                 return false;
@@ -9419,7 +9428,7 @@ b8 type_random_map_generator::hasRequiredPrototypes()
 
 VA(0x0054bf60, 0x130)
 MAC_ADDRESS(0x251070, 0x140)
-s32 TRandomMapRequest::generateToFile(TAbstractFile* outputFile, TProgressSink* progress)
+ERandomMapResult TRandomMapRequest::generateToFile(TAbstractFile* outputFile, TProgressSink* progress)
 {
 #if defined(HOMM3_RMG_HOTFIX)
     if (!isSupported())
@@ -9434,7 +9443,7 @@ s32 TRandomMapRequest::generateToFile(TAbstractFile* outputFile, TProgressSink* 
         m_humanPlayerCount = 1;
         m_computerPlayerCount = 1;
     }
-    type_random_map_generator generator(m_width, m_height, m_levels,
+    TRmgGenerator generator(m_width, m_height, m_levels,
         m_humanPlayerCount, m_humanTeamCount, m_computerPlayerCount,
         m_computerTeamCount, m_waterContent, strength,
         progress, m_mapVersion);
@@ -9445,7 +9454,7 @@ s32 TRandomMapRequest::generateToFile(TAbstractFile* outputFile, TProgressSink* 
     for (s32 seat = 0; seat < RMG_PLAYER_COUNT; ++seat) {
         if (m_isHumanSeat[seat])
             generator.setHumanPlayer(seat);
-        generator.setTownChoice(seat, static_cast<TTownType>(m_townType[seat]));
+        generator.setTownChoice(seat, m_townChoices[seat]);
     }
     if (!generator.generate())
         return RANDOM_MAP_GENERATION_FAILED;
@@ -9456,7 +9465,7 @@ s32 TRandomMapRequest::generateToFile(TAbstractFile* outputFile, TProgressSink* 
 
 VA(0x0054c090, 0x8c)
 MAC_ADDRESS(0x2511b0, 0x98)
-s32 TRandomMapRequest::generate(const char* fileName, TProgressSink* progress)
+ERandomMapResult TRandomMapRequest::generate(const char* fileName, TProgressSink* progress)
 {
     try {
         TGzFile outputFile(fileName, "wb6");

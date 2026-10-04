@@ -524,7 +524,7 @@ choice now retains the seven-block CFG and all nine named calls; register
 homes remain different. Map loading, bitmap loading and `oldmain` retain
 existing inlining and frame residuals and are not described as closed. The
 RMG fill's only named-call mismatch is its existing pointer-vector insertion
-alias (`type_object*` versus the retail `widget*` label); its source type is
+alias (`TRmgObject*` versus the retail `widget*` label); its source type is
 kept and all eight call positions remain. The insertion body's 521 bytes
 match retail 0x54d120 after masking its two call operands; both operator
 new/delete targets also agree, confirming the folded template alias.

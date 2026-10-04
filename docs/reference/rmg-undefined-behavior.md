@@ -25,7 +25,7 @@ Hotfix maps differ from retail and are not oracle targets; each site is an
 
 ## Initial key-tent color: uninitialized stack integer
 
-- Field: `type_random_map_generator::m_nextKeyTentColor`, offset `+0xf5c`.
+- Field: `TRmgGenerator::m_nextKeyTentColor`, offset `+0xf5c`.
 - The retail constructor and object-generator initialization leave it untouched.
   `TRandomMapRequest::generateToFile` constructs the generator on the stack.
 - Retail `0x540d6d` uses this integer to select the key-tent subtype.
@@ -239,7 +239,7 @@ new crash reproduction was run for this review.
 
 ### Object removal: failed search is tested against null
 
-`type_random_map_generator::removeObject` (`0x54bc50`) searches both
+`TRmgGenerator::removeObject` (`0x54bc50`) searches both
 `m_objects` and each occupied tile's `m_objects`. Retail tests the returned
 pointer with `test ecx,ecx` at `0x54bc95` and `test edx,edx` at `0x54be6d`, then
 enters the expanded erase. It does not compare either result with the vector's
@@ -318,7 +318,7 @@ eligibility while doing source cleanup.
 ### Factory destruction: C++ lifetime risk with direct retail deallocation
 
 `m_objectGenerators` owns derived factory instances through
-`type_treasure_def*`, whose base has virtual factory methods but no virtual
+`TRmgTreasureDef*`, whose base has virtual factory methods but no virtual
 destructor. Deleting these derived objects through that base is undefined by
 C++ lifetime rules. Retail's generator destructor directly calls operator
 `delete` for each factory at `0x537df0 + 0xd0`, without virtual destructor
@@ -337,13 +337,13 @@ pointer vectors, but never destroys or deallocates it. This operation alone is
 not a leak: a caller could retain ownership. The two actual replacement callers,
 however, abandon the removed wrapper:
 
-- `rmgKeyTentObject::completePlacement` (`0x5338e0`) removes `this` at `+0x4a`,
+- `TRmgKeyTentObject::completePlacement` (`0x5338e0`) removes `this` at `+0x4a`,
   attempts to generate a replacement, and returns false without deleting the
   original key tent.
 - `placeQuestArtifact` (`0x54b490`) removes the artifact wrapper at `+0x298`
   when `placeQuestGroup` fails. Its remaining cleanup destroys the temporary
   group's containers and map, not the wrapper. On return,
-  `rmgQuestArtifactObject::completePlacement` (`0x533a50`) deletes the seer hut through
+  `TRmgQuestArtifactObject::completePlacement` (`0x533a50`) deletes the seer hut through
   the member at `+0x20` and clears that member, but does not delete itself.
 
 Retail `commitTreasureGroup` calls vtable slot `+8` at `0x546c55` and advances

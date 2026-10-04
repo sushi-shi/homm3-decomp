@@ -539,7 +539,7 @@ batches. At that checkpoint, these scores differed from the 332-entry start:
 | army copy constructor | 66.4292% | 100% |
 | advManager::drawAdvObj | 87.9441% | 87.7661% |
 | advManager::drawAdvObjShadow | 85.2335% | 85.1872% |
-| type_random_map_generator::writeMapHeader | 95.6987% | 95.7066% |
+| TRmgGenerator::writeMapHeader | 95.6987% | 95.7066% |
 
 At that pre-merge checkpoint, every other current score agreed, no identities
 were missing, and 3,729 functions were exact. The temporary army::doAttack recovery in batch seven returned
@@ -617,7 +617,7 @@ branch has nine current-score differences:
 | army copy constructor | 66.4292% | 100% |
 | army::doAttack | 98.9251% | 98.8868% |
 | game::processOnMapTowns | 80.3907% | 94.3642% |
-| type_random_map_generator::writeMapHeader | 94.1017% | 93.2864% |
+| TRmgGenerator::writeMapHeader | 94.1017% | 93.2864% |
 | GameSelectionHeadersStruct constructor | 79.2582% | 73.1483% |
 | CEnterNameEdit::onKeyPress | 100% | 99.8868% |
 | CEnterNameEdit::onKillFocus | 100% | 99.8710% |
