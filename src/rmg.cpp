@@ -21,6 +21,7 @@
 #include <time.h>
 
 #include "rmg.h"
+#include "keycolor.h"
 
 #include "abstractfile.h"
 #include "advmgr.h"
@@ -341,18 +342,6 @@ double g_rmgDirectionSines[RMG_RADIAL_DIRECTION_COUNT] = {
     1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
     0.0, -0.1951, -0.3827, -0.5556, -0.7071, -0.8315, -0.9239, -0.9807,
     -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951
-};
-
-// Keymaster's tent and border guard colours (their object subtypes).
-enum ERmgKeyColor {
-    RMG_KEY_LIGHT_BLUE = 0,
-    RMG_KEY_GREEN = 1,
-    RMG_KEY_RED = 2,
-    RMG_KEY_DARK_BLUE = 3,
-    RMG_KEY_BROWN = 4,
-    RMG_KEY_PURPLE = 5,
-    RMG_KEY_WHITE = 6,
-    RMG_KEY_BLACK = 7
 };
 
 // Guard strengths: the zone scale (ERmgZoneMonsterStrength) shifted by the
@@ -3098,7 +3087,7 @@ type_random_map_generator::type_random_map_generator(
     m_nextObjectId = 1;
 #if defined(HOMM3_RMG_HOTFIX)
     // Key tents start at the first colour, not stack residue.
-    m_nextKeyTentColor = RMG_KEY_LIGHT_BLUE;
+    m_nextKeyTentColor = KEY_LIGHT_BLUE;
 #endif
     m_questArtifactPoolLow = false;
     m_waterContent = waterContent;
