@@ -345,6 +345,11 @@ double g_rmgDirectionSines[RMG_RADIAL_DIRECTION_COUNT] = {
     -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951
 };
 
+// Restoration of Erathia's town types: all but Conflux.
+enum ERmgTownTypeCount {
+    RMG_ROE_TOWN_TYPE_COUNT = TOWN_CONFLUX
+};
+
 // Guard strengths: the zone scale (ERmgZoneMonsterStrength) shifted by the
 // map strength, from 0 up to the strongest.
 enum ERmgGuardStrengthLimits {
@@ -3520,7 +3525,7 @@ void readRmgTemplateZones(
                 if (mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE)
                     townCount = TOWN_TYPE_COUNT;
                 else {
-                    townCount = TOWN_CONFLUX;
+                    townCount = RMG_ROE_TOWN_TYPE_COUNT;
                     templateZone->m_allowedTowns[TOWN_CONFLUX] = false;
                 }
                 while (townCount--)
@@ -6911,7 +6916,7 @@ b8 type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
         // RoE maps have no Conflux.
         if (alignment == eTownNeutral)
             alignment = rand() % (m_mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE
-                ? TOWN_TYPE_COUNT : TOWN_CONFLUX);
+                ? TOWN_TYPE_COUNT : RMG_ROE_TOWN_TYPE_COUNT);
     }
     if (!zone->m_hasPrimaryTown)
         return tryPlacePrimaryTown(zone, alignment, player, hasFort);
@@ -9193,7 +9198,7 @@ void type_random_map_generator::setTownChoice(s32 seat, TTownType town)
 // Town types a map version knows; RoE maps have no Conflux.
 static inline s32 getRmgTownTypeCount(s32 mapVersion)
 {
-    return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? TOWN_TYPE_COUNT : TOWN_CONFLUX;
+    return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? TOWN_TYPE_COUNT : RMG_ROE_TOWN_TYPE_COUNT;
 }
 
 // The request settings the lobby can produce. The generator relies on them:
