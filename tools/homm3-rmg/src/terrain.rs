@@ -432,14 +432,15 @@ impl Brush<'_> {
         positive: usize,
         axis: Axis,
     ) -> Result<(), TerrainRuleError> {
-        let fill_positive = !self.needs_repair(negative)
-            && (self.needs_repair(positive)
-                || (self
-                    .gap(negative, self.terrain, axis.perpendicular())
-                    .is_some()
-                    && self
-                        .gap(positive, self.terrain, axis.perpendicular())
-                        .is_none()));
+        let fill_positive = if self.needs_repair(negative) {
+            false
+        } else if self.needs_repair(positive) {
+            true
+        } else {
+            let cross_axis = axis.perpendicular();
+            self.gap(negative, self.terrain, cross_axis).is_some()
+                && self.gap(positive, self.terrain, cross_axis).is_none()
+        };
         self.paint_point(if fill_positive { positive } else { negative })
     }
     fn repair_point(&mut self, index: usize) -> Result<(), TerrainRuleError> {
