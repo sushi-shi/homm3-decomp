@@ -13,26 +13,89 @@ use crate::{raw, rng::RetailRng};
 use std::num::NonZeroU32;
 
 /// An actual road or river shape, excluding the C++ count sentinel.
+///
+/// North is up; `C` is the line tile, `#` a connected neighbour, `.` no
+/// cardinal connection, and `?` an unspecified diagonal. Each diagram shows
+/// the canonical orientation; [`Reflection`] supplies the other orientations.
+/// These depict shapes: river tables also use straight pieces for ends and
+/// isolated tiles because they have no end frames.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u32)]
 pub enum LinePattern {
     /// Southward end, also used for an isolated road tile.
+    ///
+    /// An isolated road uses this with `flip_y = true`.
+    /// ```text
+    /// ? . ?
+    /// . C .
+    /// ? # ?
+    /// ```
     EndSouth = raw::LINE_END_S,
     /// Eastward end.
+    ///
+    /// ```text
+    /// ? . ?
+    /// . C #
+    /// ? . ?
+    /// ```
     EndEast = raw::LINE_END_E,
     /// North-south straight.
+    ///
+    /// ```text
+    /// ? # ?
+    /// . C .
+    /// ? # ?
+    /// ```
     NorthSouth = raw::LINE_NS,
     /// East-west straight.
+    ///
+    /// ```text
+    /// ? . ?
+    /// # C #
+    /// ? . ?
+    /// ```
     EastWest = raw::LINE_EW,
     /// Southeast corner.
+    ///
+    /// ```text
+    /// ? . ?
+    /// . C #
+    /// ? # ?
+    /// ```
     SouthEast = raw::LINE_SE,
     /// Southeast corner with a northeast or southwest diagonal.
+    ///
+    /// Either diagram qualifies (both diagonals may connect). Used only
+    /// when the table has variant frames; rivers use [`Self::SouthEast`].
+    /// ```text
+    /// ? . #   ? . ?
+    /// . C #   . C #
+    /// ? # ?   # # ?
+    /// ```
     SouthEastVariant = raw::LINE_SE_VARIANT,
     /// North-east-south junction.
+    ///
+    /// ```text
+    /// ? # ?
+    /// . C #
+    /// ? # ?
+    /// ```
     NorthEastSouth = raw::LINE_NES,
     /// East-south-west junction.
+    ///
+    /// ```text
+    /// ? . ?
+    /// # C #
+    /// ? # ?
+    /// ```
     EastSouthWest = raw::LINE_ESW,
     /// Four-way junction.
+    ///
+    /// ```text
+    /// ? # ?
+    /// # C #
+    /// ? # ?
+    /// ```
     Cross = raw::LINE_CROSS,
 }
 

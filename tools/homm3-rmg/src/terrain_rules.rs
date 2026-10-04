@@ -48,64 +48,249 @@ impl BrushStrength {
 }
 
 /// Valid terrain shapes, excluding the unused ID 1 and count sentinel.
+///
+/// Each diagram shows the canonical orientation before [`Reflection`]. North is
+/// up; `C` is the cell, `b` a blend edge, `h` a hard edge, `.` no edge, `?` an
+/// unspecified neighbour, and `p` an additional terrain probe.
+///
+/// These describe shape families, not complete matcher predicates: [`classify`]
+/// resolves overlapping rules in priority order and also recognizes offset
+/// corners. The diagonal variants refine an already selected corner using
+/// clamped terrain probes; the eight edge kinds alone do not select them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u32)]
 pub enum TerrainShape {
     /// No transition edges.
+    ///
+    /// ```text
+    /// . . .
+    /// . C .
+    /// . . .
+    /// ```
     Fill = raw::SHAPE_FILL,
     /// Blending north and west sides.
+    ///
+    /// ```text
+    /// ? b ?
+    /// b C ?
+    /// ? ? ?
+    /// ```
     NwCornerBlend = raw::SHAPE_N_W_BLEND,
     /// Blending west side.
+    ///
+    /// ```text
+    /// ? ? ?
+    /// b C ?
+    /// ? ? ?
+    /// ```
     WestBlend = raw::SHAPE_W_BLEND,
     /// Blending north side.
+    ///
+    /// ```text
+    /// ? b ?
+    /// ? C ?
+    /// ? ? ?
+    /// ```
     NorthBlend = raw::SHAPE_N_BLEND,
     /// Blending southeast diagonal.
+    ///
+    /// ```text
+    /// ? . ?
+    /// . C .
+    /// ? . b
+    /// ```
     SeBlend = raw::SHAPE_SE_BLEND,
     /// Blending northwest corner on a diagonal edge.
+    ///
+    /// At least one `p` (NE or SW) has the same terrain as `C`.
+    /// ```text
+    /// ? b p
+    /// b C ?
+    /// p ? ?
+    /// ```
     NwDiagonalBlend = raw::SHAPE_N_W_DIAG_BLEND,
     /// Blending southeast inner corner on a diagonal edge.
+    ///
+    /// `C` is at the top left here. At least one `p`, two cells east or
+    /// south, has terrain different from `C`.
+    /// ```text
+    /// C . p
+    /// . b ?
+    /// p ? ?
+    /// ```
     SeDiagonalBlend = raw::SHAPE_SE_DIAG_BLEND,
     /// Hard north and west sides.
+    ///
+    /// ```text
+    /// ? h ?
+    /// h C ?
+    /// ? ? ?
+    /// ```
     NwCornerHard = raw::SHAPE_N_W_HARD,
     /// Hard west side.
+    ///
+    /// ```text
+    /// ? ? ?
+    /// h C ?
+    /// ? ? ?
+    /// ```
     WestHard = raw::SHAPE_W_HARD,
     /// Hard north side.
+    ///
+    /// ```text
+    /// ? h ?
+    /// ? C ?
+    /// ? ? ?
+    /// ```
     NorthHard = raw::SHAPE_N_HARD,
     /// Hard southeast diagonal.
+    ///
+    /// ```text
+    /// ? . ?
+    /// . C .
+    /// ? . h
+    /// ```
     SeHard = raw::SHAPE_SE_HARD,
     /// Hard northwest corner on a diagonal edge.
+    ///
+    /// At least one `p` (NE or SW) has the same terrain as `C`.
+    /// ```text
+    /// ? h p
+    /// h C ?
+    /// p ? ?
+    /// ```
     NwDiagonalHard = raw::SHAPE_N_W_DIAG_HARD,
     /// Hard southeast inner corner on a diagonal edge.
+    ///
+    /// `C` is at the top left here. At least one `p`, two cells east or
+    /// south, has terrain different from `C`.
+    /// ```text
+    /// C . p
+    /// . h ?
+    /// p ? ?
+    /// ```
     SeDiagonalHard = raw::SHAPE_SE_DIAG_HARD,
     /// Opposite northwest and southeast blending diagonals.
+    ///
+    /// ```text
+    /// b . ?
+    /// . C .
+    /// ? . b
+    /// ```
     NwSeBlend = raw::SHAPE_NW_SE_BLEND,
     /// Northwest blend and southeast hard diagonals.
+    ///
+    /// ```text
+    /// b . ?
+    /// . C .
+    /// ? . h
+    /// ```
     NwBlendSeHard = raw::SHAPE_NW_BLEND_SE_HARD,
     /// Opposite northwest and southeast hard diagonals.
+    ///
+    /// ```text
+    /// h . ?
+    /// . C .
+    /// ? . h
+    /// ```
     NwSeHard = raw::SHAPE_NW_SE_HARD,
     /// East blend and southwest hard edges.
+    ///
+    /// ```text
+    /// ? ? ?
+    /// ? C b
+    /// h ? ?
+    /// ```
     EastBlendSwHard = raw::SHAPE_E_BLEND_SW_HARD,
     /// South blend and northeast hard edges.
+    ///
+    /// ```text
+    /// ? ? h
+    /// ? C ?
+    /// ? b ?
+    /// ```
     SouthBlendNeHard = raw::SHAPE_S_BLEND_NE_HARD,
     /// East blend and southeast hard edges.
+    ///
+    /// ```text
+    /// ? ? ?
+    /// ? C b
+    /// ? ? h
+    /// ```
     EastBlendSeHard = raw::SHAPE_E_BLEND_SE_HARD,
     /// South blend and southeast hard edges.
+    ///
+    /// ```text
+    /// ? ? ?
+    /// ? C ?
+    /// ? b h
+    /// ```
     SouthBlendSeHard = raw::SHAPE_S_BLEND_SE_HARD,
     /// East hard and southwest blend edges.
+    ///
+    /// Also covers a blending south side when SW is not hard.
+    /// ```text
+    /// ? ? ?
+    /// ? C h
+    /// b ? ?
+    /// ```
     EastHardSwBlend = raw::SHAPE_E_HARD_SW_BLEND,
     /// South hard and northeast blend edges.
+    ///
+    /// Also covers a blending east side when NE is not hard.
+    /// ```text
+    /// ? ? b
+    /// ? C ?
+    /// ? h ?
+    /// ```
     SouthHardNeBlend = raw::SHAPE_S_HARD_NE_BLEND,
     /// Blending northwest outer corner and southeast diagonal.
+    ///
+    /// ```text
+    /// ? b ?
+    /// b C ?
+    /// ? ? b
+    /// ```
     NwCornerSeBlend = raw::SHAPE_N_W_SE_BLEND,
     /// Hard northwest outer corner and southeast diagonal.
+    ///
+    /// ```text
+    /// ? h ?
+    /// h C ?
+    /// ? ? h
+    /// ```
     NwCornerSeHard = raw::SHAPE_N_W_SE_HARD,
     /// Blending northwest outer corner and hard southeast diagonal.
+    ///
+    /// ```text
+    /// ? b ?
+    /// b C ?
+    /// ? ? h
+    /// ```
     NwCornerBlendSeHard = raw::SHAPE_N_W_BLEND_SE_HARD,
     /// Hard northwest outer corner and blending southeast diagonal.
+    ///
+    /// ```text
+    /// ? h ?
+    /// h C ?
+    /// ? ? b
+    /// ```
     NwCornerHardSeBlend = raw::SHAPE_N_W_HARD_SE_BLEND,
     /// East/south blending sides with a hard southeast diagonal.
+    ///
+    /// ```text
+    /// ? ? ?
+    /// ? C b
+    /// ? b h
+    /// ```
     EastSouthBlendSeHard = raw::SHAPE_E_S_BLEND_SE_HARD,
     /// East/south blending sides with hard northeast/southwest diagonals.
+    ///
+    /// ```text
+    /// ? ? h
+    /// ? C b
+    /// h b ?
+    /// ```
     EastSouthBlendNeSwHard = raw::SHAPE_E_S_BLEND_NE_SW_HARD,
 }
 
