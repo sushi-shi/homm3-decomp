@@ -12,6 +12,7 @@
 use crate::{
     behavior::Behavior,
     domain::Terrain,
+    identity::OwnerId,
     object::ObjectKind,
     parse,
     placement_rules::{PlacementRuleId, PlacementRules},
@@ -473,7 +474,7 @@ impl<'a> PrototypeSource<'a> {
     /// Prepare format/mode filtering, monster exchange order, and rule bindings.
     ///
     /// # Errors
-    /// Reports retail's empty-monster sort fault or allocation failure.
+    /// Reports retail's empty-monster sort fault, allocation failure or exhausted ownership tags.
     pub fn prepare<'s>(
         &'s self,
         rules: &'s PlacementRules,
@@ -537,6 +538,7 @@ impl<'a> PrototypeSource<'a> {
             });
         }
         Ok(PrototypeCatalog {
+            owner: OwnerId::new().ok_or(CatalogError::IdentityExhausted)?,
             entries,
             offsets,
             version,
@@ -592,6 +594,8 @@ impl PreparedPrototype<'_> {
 /// Filtering/sorting failure before map generation.
 #[derive(Debug)]
 pub enum CatalogError {
+    /// Process-local ownership tags have been exhausted; no tag is reused.
+    IdentityExhausted,
     /// Retail underflows `monster_count - 1` and accesses an absent prototype.
     RetailEmptyMonsters,
     /// Storage reservation failed.
@@ -600,6 +604,7 @@ pub enum CatalogError {
 impl fmt::Display for CatalogError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::IdentityExhausted => f.write_str("catalog ownership identities exhausted"),
             Self::RetailEmptyMonsters => f.write_str("retail sorts an empty monster list"),
             Self::Allocation(error) => error.fmt(f),
         }
@@ -615,6 +620,7 @@ impl From<TryReserveError> for CatalogError {
 /// Immutable family buckets in one vector, with no per-family allocations.
 #[derive(Debug)]
 pub struct PrototypeCatalog<'a> {
+    owner: OwnerId,
     entries: Vec<PreparedPrototype<'a>>,
     offsets: [usize; KINDS + 1],
     version: MapVersion,
@@ -623,15 +629,24 @@ pub struct PrototypeCatalog<'a> {
 
 /// Identity of a prepared prototype, stable for the lifetime of its catalog.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct PrototypeId(usize);
+pub struct PrototypeId {
+    index: usize,
+    owner: OwnerId,
+}
 impl PrototypeId {
     /// Dense catalog ordinal, distinct from the source row or H3M prototype slot.
     #[must_use]
     pub const fn index(self) -> usize {
-        self.0
+        self.index
     }
 }
 impl PrototypeCatalog<'_> {
+    fn id(&self, index: usize) -> PrototypeId {
+        PrototypeId {
+            index,
+            owner: self.owner,
+        }
+    }
     /// All prepared prototypes in family/selection order.
     #[must_use]
     pub fn entries(&self) -> &[PreparedPrototype<'_>] {
@@ -645,14 +660,16 @@ impl PrototypeCatalog<'_> {
     /// Resolve a catalog identity without exposing an unchecked index.
     #[must_use]
     pub fn get(&self, id: PrototypeId) -> Option<&PreparedPrototype<'_>> {
-        self.entries.get(id.0)
+        (id.owner == self.owner)
+            .then(|| self.entries.get(id.index))
+            .flatten()
     }
     /// Direct family indexing used for towns, portals and reserved output slots.
     #[must_use]
     pub fn at(&self, family: ObjectKind, index: usize) -> Option<PrototypeId> {
         self.family(family)
             .get(index)
-            .map(|_| PrototypeId(self.offsets[family.index()] + index))
+            .map(|_| self.id(self.offsets[family.index()] + index))
     }
     /// Choose a matching prototype in source order using one draw, even for a
     /// singleton. An empty candidate set consumes none. Counting and selecting
@@ -678,7 +695,7 @@ impl PrototypeCatalog<'_> {
         )?;
         candidates
             .nth(rng.below(count) as usize)
-            .map(|(index, _)| PrototypeId(self.offsets[family.index()] + index))
+            .map(|(index, _)| self.id(self.offsets[family.index()] + index))
     }
 }
 
@@ -833,6 +850,28 @@ mod tests {
             text.push_str("\r\n");
         }
         crate::traits::CreatureCatalog::parse(text.as_bytes()).unwrap()
+    }
+
+    #[test]
+    fn handles_reject_other_catalogs_and_survive_owner_moves() {
+        let bytes = table(&[row("monster.def", raw::MONSTER, 0)]);
+        let source = PrototypeSource::parse(&bytes, |_| Ok::<_, Infallible>(Some(mask()))).unwrap();
+        let rules = rules();
+        let first = source
+            .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
+            .unwrap();
+        let second = source
+            .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
+            .unwrap();
+        let id = first.at(monster(), 0).unwrap();
+        assert!(second.get(id).is_none());
+        let moved = first;
+        assert!(moved.get(id).is_some());
+        drop(moved);
+        let replacement = source
+            .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
+            .unwrap();
+        assert!(replacement.get(id).is_none());
     }
 
     #[test]

@@ -4,12 +4,11 @@ use crate::{
     behavior::Behavior,
     domain::{Level, Terrain, WorldPosition},
     geometry::{Delaunay, GeometryError, Point, Voronoi, ZoneId},
-    layout::ZoneLayout,
+    layout::Layout,
     raster::{RasterError, RasterWorkspace, ZoneBounds, ZoneRaster},
     raw,
     request::{Request, Town, Water},
     rng::{RetailRng, RngCheckpoint},
-    template::Template,
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
@@ -284,26 +283,25 @@ impl BoundaryWorkspace {
     ///
     /// # Errors
     /// Reports arithmetic, topology, raster or reservation failures.
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "consume the completed layout token so its boundary stage cannot be repeated"
+    )]
     pub fn generate(
         &mut self,
-        template: &Template<'_>,
-        layout: &[ZoneLayout],
-        request: &Request,
-        water: Water,
+        completed: Layout<'_, '_>,
         rng: &mut RetailRng,
     ) -> Result<BoundaryMap<'_>, BoundaryError> {
+        let template = completed.template();
+        let layout = completed.zones();
+        let request = completed.request();
+        let water = completed.water();
         self.zones.clear();
         self.connections.clear();
         self.polygons.clear();
         self.level_rng.fill(None);
         self.zones.try_reserve(layout.len())?;
-        if template.zones().len() != layout.len() {
-            return Err(BoundaryError::Topology);
-        }
         for (index, zone) in layout.iter().enumerate() {
-            if zone.id().index() != index {
-                return Err(BoundaryError::Topology);
-            }
             let source = &template.zones()[index];
             self.zones.push(BoundaryZone {
                 id: zone.id(),

@@ -48,13 +48,11 @@ fn generation_stages_match_vc6_checkpoints() {
                 .unwrap();
             assert_layout(
                 &selected,
-                zones,
+                zones.zones(),
                 &rng,
                 &root.join(format!("{mode}-layout/case-{case}-candidate/layout.txt")),
             );
-            let boundary_map = boundaries
-                .generate(selected.template(), zones, &request, water, &mut rng)
-                .unwrap();
+            let boundary_map = boundaries.generate(zones, &mut rng).unwrap();
             for level in [Level::Surface, Level::Underground]
                 .into_iter()
                 .take(levels.count() as usize)

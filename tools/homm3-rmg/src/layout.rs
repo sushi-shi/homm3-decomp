@@ -7,7 +7,7 @@ use crate::{
     request::{Levels, Request, Town, TownChoice, Water},
     rng::RetailRng,
     selection::SelectedTemplate,
-    template::{Zone, ZoneRole},
+    template::{Template, Zone, ZoneRole},
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
@@ -101,6 +101,38 @@ impl ZoneLayout {
     }
 }
 
+/// Completed layout with the exact template, request and water choice used to
+/// produce it. Boundary generation consumes this token instead of admitting
+/// unrelated zone slices and preparation arguments.
+pub struct Layout<'workspace, 'context> {
+    zones: &'workspace [ZoneLayout],
+    template: &'context Template<'context>,
+    request: &'context Request,
+    water: Water,
+}
+impl Layout<'_, '_> {
+    /// Completed zone positions in source order, borrowing workspace storage.
+    #[must_use]
+    pub const fn zones(&self) -> &[ZoneLayout] {
+        self.zones
+    }
+    /// Selected template from which these zones were produced.
+    #[must_use]
+    pub const fn template(&self) -> &Template<'_> {
+        self.template
+    }
+    /// Request supplying map dimensions, planes and behavior.
+    #[must_use]
+    pub const fn request(&self) -> &Request {
+        self.request
+    }
+    /// Resolved water choice used during layout.
+    #[must_use]
+    pub const fn water(&self) -> Water {
+        self.water
+    }
+}
+
 /// Per-generation layout scratch. Capacity survives repeated calls.
 #[derive(Default, Debug)]
 pub struct LayoutWorkspace {
@@ -111,18 +143,23 @@ pub struct LayoutWorkspace {
 impl LayoutWorkspace {
     /// Position each zone, reposition every zone twice, and choose terrain.
     ///
-    /// The returned slice borrows the workspace, preventing reuse while its
-    /// layout is still in use. Scratch buffers contain no shared RNG state.
+    /// The returned stage token borrows the workspace and preparation context,
+    /// preventing reuse while its layout is still in use. Scratch buffers contain
+    /// no shared RNG state.
     ///
     /// # Errors
     /// Reports exhausted candidates, arithmetic faults, or failed reservations.
-    pub fn generate(
-        &mut self,
-        selected: &SelectedTemplate<'_>,
-        request: &Request,
+    #[expect(
+        clippy::too_many_lines,
+        reason = "the native positioning, relaxation and terrain stages retain their RNG order"
+    )]
+    pub fn generate<'workspace, 'context>(
+        &'workspace mut self,
+        selected: &SelectedTemplate<'context>,
+        request: &'context Request,
         water: Water,
         rng: &mut RetailRng,
-    ) -> Result<&[ZoneLayout], LayoutError> {
+    ) -> Result<Layout<'workspace, 'context>, LayoutError> {
         let zones = selected.template().zones();
         self.positioned.clear();
         self.completed.clear();
@@ -224,7 +261,12 @@ impl LayoutWorkspace {
                 creature_town,
             });
         }
-        Ok(&self.completed)
+        Ok(Layout {
+            zones: &self.completed,
+            template: selected.template(),
+            request,
+            water,
+        })
     }
 
     fn position(

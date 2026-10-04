@@ -291,6 +291,16 @@ All 256 circular blocking patterns and focused entrance/path/water policies
 also pass. Grid mutation, object membership and object lifetime management are
 still pending; these results cover fit queries before town placement.
 
+Review fixes now bind prototype/rule handles to their owning catalogs. Foreign
+and stale handles cannot silently select another catalog's row. Checked process
+ownership tags allocate no heap storage and never affect generation order, RNG
+or output. Completed layout also carries its exact template, request and water
+choice into boundary generation, preventing mismatched plane counts or unrelated
+zone slices from reaching terrain painting. Both fixes were independently
+re-reviewed. All 61 core unit tests, eight layout-through-terrain checkpoints,
+3,456 guard captures and 270,048 placement-fit checkpoints pass; strict Clippy
+passes. These checks retain the C++-reference scope described above.
+
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the
 pinned executable for seed 100 / 108x108 / RoE / islands and seed 17 / 144x144 /

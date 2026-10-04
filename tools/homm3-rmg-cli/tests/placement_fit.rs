@@ -61,9 +61,7 @@ fn native_footprint_and_complete_fit_queries_match_on_generated_maps() {
             let zones = layout
                 .generate(&selected, &request, water, &mut rng)
                 .unwrap();
-            let boundary_map = boundaries
-                .generate(selected.template(), zones, &request, water, &mut rng)
-                .unwrap();
+            let boundary_map = boundaries.generate(zones, &mut rng).unwrap();
             let coverage = boundary_map.prepare_terrain(&mut rng).unwrap();
             let painted = terrain.paint(coverage, &mut rng).unwrap();
             let tile_address = painted.tiles().as_ptr();

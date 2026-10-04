@@ -125,7 +125,7 @@ impl PrototypeCatalog<'_> {
         for (index, entry) in self.entries[start..end].iter().enumerate() {
             let creature = CreatureId::parse(entry.prototype.subtype)
                 .ok_or(GuardError::CreatureSubtype(entry.prototype.subtype))?;
-            prototypes[creature.index()] = Some(PrototypeId(start + index));
+            prototypes[creature.index()] = Some(self.id(start + index));
         }
         self.choose_guard(value, factions, creatures, prototypes, rng)
     }

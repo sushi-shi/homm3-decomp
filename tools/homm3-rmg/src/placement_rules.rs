@@ -1,6 +1,8 @@
 //! Parsed `rand_trn.txt` with original row identities and flat score storage.
 
-use crate::{behavior::Behavior, domain::Terrain, object::ObjectKind, parse, raw};
+use crate::{
+    behavior::Behavior, domain::Terrain, identity::OwnerId, object::ObjectKind, parse, raw,
+};
 use homm3_resource::{Field, Spreadsheet, SpreadsheetRow};
 use std::{collections::TryReserveError, error::Error, fmt};
 
@@ -9,12 +11,15 @@ const FIRST_ROW: usize = raw::RMG_FIRST_DATA_ROW as usize;
 
 /// Compacted rule identity, distinct from its original spreadsheet row.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct PlacementRuleId(usize);
+pub struct PlacementRuleId {
+    index: usize,
+    owner: OwnerId,
+}
 impl PlacementRuleId {
     /// Dense storage position, for diagnostics.
     #[must_use]
     pub const fn index(self) -> usize {
-        self.0
+        self.index
     }
 }
 
@@ -67,6 +72,8 @@ pub enum NeighbourScore {
 /// A placement table cannot safely enter the generation domain.
 #[derive(Debug)]
 pub enum PlacementRuleError {
+    /// Process-local ownership tags have been exhausted; no tag is reused.
+    IdentityExhausted,
     /// Malformed resource encoding.
     Spreadsheet(homm3_resource::Error),
     /// A numeric prefix overflows signed 32-bit conversion.
@@ -100,6 +107,7 @@ pub enum PlacementRuleError {
 impl fmt::Display for PlacementRuleError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::IdentityExhausted => f.write_str("placement rule ownership identities exhausted"),
             Self::Spreadsheet(error) => error.fmt(f),
             Self::IntegerOverflow { row, column } => write!(
                 f,
@@ -132,16 +140,24 @@ impl From<TryReserveError> for PlacementRuleError {
 /// Immutable rules and two matrices; no per-rule neighbour vectors.
 #[derive(Debug)]
 pub struct PlacementRules {
+    owner: OwnerId,
     rules: Vec<PlacementRule>,
     scores: Vec<i32>,
     columns: usize,
 }
 impl PlacementRules {
+    fn id(&self, index: usize) -> PlacementRuleId {
+        PlacementRuleId {
+            index,
+            owner: self.owner,
+        }
+    }
     /// Parse all rows up to the first blank leading field. Hotfix skips short
     /// rows and invalid identities, retaining their columns in neighbour scores.
     ///
     /// # Errors
-    /// Reports malformed text, integer overflow, retail index faults or allocation failure.
+    /// Reports malformed text, integer overflow, retail index faults, allocation failure
+    /// or exhausted ownership tags.
     pub fn parse(bytes: &[u8], behavior: Behavior) -> Result<Self, PlacementRuleError> {
         let sheet = Spreadsheet::parse(bytes).map_err(PlacementRuleError::Spreadsheet)?;
         let columns = sheet.rows().skip(FIRST_ROW).take_while(nonblank).count();
@@ -150,6 +166,7 @@ impl PlacementRules {
             .checked_add(row_scores)
             .ok_or(PlacementRuleError::Capacity)?;
         let mut result = Self {
+            owner: OwnerId::new().ok_or(PlacementRuleError::IdentityExhausted)?,
             rules: Vec::new(),
             scores: Vec::new(),
             columns,
@@ -231,7 +248,7 @@ impl PlacementRules {
         self.rules
             .iter()
             .enumerate()
-            .map(|(index, rule)| (PlacementRuleId(index), rule))
+            .map(|(index, rule)| (self.id(index), rule))
     }
     /// Matrix column count, including rejected hotfix rows.
     #[must_use]
@@ -241,7 +258,9 @@ impl PlacementRules {
     /// Rule lookup after choosing a source-derived ID.
     #[must_use]
     pub fn get(&self, rule: PlacementRuleId) -> Option<&PlacementRule> {
-        self.rules.get(rule.0)
+        (rule.owner == self.owner)
+            .then(|| self.rules.get(rule.index))
+            .flatten()
     }
     /// Bind the last matching rule. The caller supplies the prototype family.
     #[must_use]
@@ -256,7 +275,7 @@ impl PlacementRules {
             .rposition(|rule| {
                 rule.object == family && rule.subtype == subtype && rule.terrain == terrain
             })
-            .map(PlacementRuleId)
+            .map(|index| self.id(index))
     }
     /// Look up another retained rule using its original source column.
     #[must_use]
@@ -273,7 +292,7 @@ impl PlacementRules {
             NeighbourScore::Blocked => 1,
         };
         self.scores
-            .get((rule.0 * 2 + matrix) * self.columns + column)
+            .get((rule.index * 2 + matrix) * self.columns + column)
             .copied()
     }
 }
@@ -318,6 +337,26 @@ mod tests {
     }
     fn kind(value: u32) -> ObjectKind {
         ObjectKind::parse(i32::try_from(value).unwrap()).unwrap()
+    }
+
+    #[test]
+    fn handles_cannot_select_rules_or_score_columns_from_another_table() {
+        let bytes = sheet(&[row(raw::TOWN, 0, 1)]);
+        let first = PlacementRules::parse(&bytes, Behavior::Hotfix).unwrap();
+        let second = PlacementRules::parse(&bytes, Behavior::Hotfix).unwrap();
+        let a = first.iter().next().unwrap().0;
+        let b = second.iter().next().unwrap().0;
+        assert_eq!(a.index(), b.index());
+        assert!(first.get(b).is_none());
+        assert!(second.get(a).is_none());
+        assert!(first
+            .neighbour_score(a, b, NeighbourScore::Adjacent)
+            .is_none());
+        assert!(first
+            .neighbour_score(b, a, NeighbourScore::Blocked)
+            .is_none());
+        let moved = first;
+        assert_eq!(moved.get(a).unwrap().source_row(), 0);
     }
 
     #[test]
