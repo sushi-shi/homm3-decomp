@@ -136,10 +136,11 @@ The library cannot yet generate a complete map.
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: `prepareZoneConnections`, beginning with
-`carveBranchingPaths`, border marking and the movement/cost state required by
-`buildZoneConnectionPaths`. The town stage now consumes placement into
-`TownsPlaced`; retain that token when adding the connections stage. Town payloads,
+Immediate next implementation: mutable terrain painting and water-zone islands
+(noise masks and chamfer distances), followed by movement/cost propagation for
+`buildZoneConnectionPaths` and crossings. Branch carving and initial border
+reservation now consume `TownsPlaced` into `ConnectionBorders`; retain that
+token when adding the next connections stage. Town payloads,
 primary entrances, road targets and the shared serialized counter already exist.
 Complete shared world/treasure-group payload lifetimes before integrating
 transient treasure objects. Reset object and placement workspaces together.
@@ -362,6 +363,17 @@ both plane configurations and both behavior modes. All 68 core tests and strict
 Clippy pass. Both reviewers report no remaining actionable issues; their shared
 category/selection-helper cleanups are included. The native-capture scope remains
 the C++ source baseline, and full map generation/output remains unfinished.
+
+Branch carving and border preparation now preserve LIFO subdivision, FIFO
+branches, native segment orientation and draw timing, ray stopping rules, the
+first directed connection policy and sequential neighbourhood mutations. Paired
+segments and reusable buffers avoid parallel vectors and per-branch allocation.
+Shared checked geometry and centered random offsets also serve rasterization;
+source seed diagrams remain in C++ and Rust. All eight native captures agree on
+129,600 cell states, town payloads, counts, road targets and final RNG state
+(130,048 checkpoint lines). Town checkpoints still pass after sharing their
+renderer. Both reviewers found no actionable issues; all 68 core tests and
+strict Clippy pass. Water-zone islands and subsequent connection stages remain.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

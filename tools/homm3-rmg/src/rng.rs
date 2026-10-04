@@ -49,6 +49,16 @@ impl RetailRng {
         self.draw() % count.get()
     }
 
+    /// One modulo-biased draw centred on zero; even ranges are asymmetric.
+    /// A singleton still consumes its draw and returns zero.
+    #[expect(
+        clippy::missing_panics_doc,
+        reason = "a u32 range centred at floor(range/2) fits i32"
+    )]
+    pub fn centered_offset(&mut self, range: NonZeroU32) -> i32 {
+        i32::try_from(i64::from(self.below(range)) - i64::from(range.get() / 2)).unwrap()
+    }
+
     /// CRT state compared by the whole-map oracle, not the last returned draw.
     #[must_use]
     pub const fn state(&self) -> u32 {

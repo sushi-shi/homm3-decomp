@@ -1663,19 +1663,6 @@ SIZE(TRmgZone, 0x414);
 
 
 
-// Initial segment direction of a carved branching path. Each spans the map;
-// North is up and # is the segment.
-//   MAIN_DIAGONAL  VERTICAL  ANTI_DIAGONAL  HORIZONTAL
-//   # . .          . # .     . . #          . . .
-//   . # .          . # .     . # .          # # #
-//   . . #          . # .     # . .          . . .
-enum ERmgBranchSeedPattern {
-    RMG_BRANCH_SEED_MAIN_DIAGONAL = 0,
-    RMG_BRANCH_SEED_VERTICAL = 1,
-    RMG_BRANCH_SEED_ANTI_DIAGONAL = 2,
-    RMG_BRANCH_SEED_HORIZONTAL = 3,
-    RMG_BRANCH_SEED_PATTERN_COUNT = 4
-};
 
 struct TRmgObjectLimit {
     TAdventureObjectType m_objectType;

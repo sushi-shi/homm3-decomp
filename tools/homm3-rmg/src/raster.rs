@@ -346,8 +346,9 @@ impl RasterWorkspace {
         self.pending.clear();
         self.push(to)?;
         while let Some(to) = self.pending.pop() {
-            let sum = add(add(from, to)?, Point::new(1, 1))?;
-            let mut midpoint = Point::new(sum.x / 2, sum.y / 2);
+            let mut midpoint = from
+                .subdivision_midpoint(to)
+                .ok_or(RasterError::Arithmetic)?;
             if midpoint == from || midpoint == to {
                 let point = grid.bounds.clamp(from);
                 match stroke {
@@ -388,9 +389,7 @@ impl RasterWorkspace {
                     rng.draw();
                     return Err(RasterError::ZeroRoughness);
                 };
-                let displacement = i32::try_from(rng.below(count))
-                    .map_err(|_| RasterError::Arithmetic)?
-                    - i32::try_from(limit / 2).map_err(|_| RasterError::Arithmetic)?;
+                let displacement = rng.centered_offset(count);
                 midpoint = add(
                     midpoint,
                     multiply_divide(perpendicular, displacement, length)?,
@@ -731,37 +730,15 @@ fn inset_point(point: Point, center: Point) -> Result<Point, RasterError> {
 }
 
 fn add(first: Point, second: Point) -> Result<Point, RasterError> {
-    Ok(Point::new(
-        first
-            .x
-            .checked_add(second.x)
-            .ok_or(RasterError::Arithmetic)?,
-        first
-            .y
-            .checked_add(second.y)
-            .ok_or(RasterError::Arithmetic)?,
-    ))
+    first.checked_add(second).ok_or(RasterError::Arithmetic)
 }
 fn subtract(first: Point, second: Point) -> Result<Point, RasterError> {
-    Ok(Point::new(
-        first
-            .x
-            .checked_sub(second.x)
-            .ok_or(RasterError::Arithmetic)?,
-        first
-            .y
-            .checked_sub(second.y)
-            .ok_or(RasterError::Arithmetic)?,
-    ))
+    first.checked_sub(second).ok_or(RasterError::Arithmetic)
 }
 fn multiply_divide(point: Point, numerator: i32, denominator: i32) -> Result<Point, RasterError> {
-    let coordinate = |value: i32| {
-        value
-            .checked_mul(numerator)
-            .and_then(|v| v.checked_div(denominator))
-            .ok_or(RasterError::Arithmetic)
-    };
-    Ok(Point::new(coordinate(point.x)?, coordinate(point.y)?))
+    point
+        .checked_scale_ratio(numerator, denominator)
+        .ok_or(RasterError::Arithmetic)
 }
 
 #[cfg(test)]

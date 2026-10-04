@@ -119,7 +119,7 @@ impl TownState {
 
 /// Towns are placed and the hotfix player-town requirement has passed.
 pub struct TownsPlaced<'state, 'zones, 'tiles> {
-    map: PlacementMap<'state, 'zones, 'tiles>,
+    pub(super) map: PlacementMap<'state, 'zones, 'tiles>,
     rng: RngCheckpoint,
 }
 impl TownsPlaced<'_, '_, '_> {

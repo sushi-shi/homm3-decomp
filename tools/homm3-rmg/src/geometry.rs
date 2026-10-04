@@ -26,6 +26,29 @@ impl PartialOrd for Point {
 }
 
 impl Point {
+    pub(crate) fn checked_add(self, other: Self) -> Option<Self> {
+        Some(Self::new(
+            self.x.checked_add(other.x)?,
+            self.y.checked_add(other.y)?,
+        ))
+    }
+    pub(crate) fn checked_sub(self, other: Self) -> Option<Self> {
+        Some(Self::new(
+            self.x.checked_sub(other.x)?,
+            self.y.checked_sub(other.y)?,
+        ))
+    }
+    pub(crate) fn checked_scale_ratio(self, numerator: i32, denominator: i32) -> Option<Self> {
+        Some(Self::new(
+            self.x.checked_mul(numerator)?.checked_div(denominator)?,
+            self.y.checked_mul(numerator)?.checked_div(denominator)?,
+        ))
+    }
+    // Source subdivision rounds signed coordinate sums with +1 before /2.
+    pub(crate) fn subdivision_midpoint(self, other: Self) -> Option<Self> {
+        let sum = self.checked_add(other)?.checked_add(Self::new(1, 1))?;
+        Some(Self::new(sum.x / 2, sum.y / 2))
+    }
     /// Construct a signed plane point. This does not claim it is a map cell.
     #[must_use]
     pub const fn new(x: i32, y: i32) -> Self {

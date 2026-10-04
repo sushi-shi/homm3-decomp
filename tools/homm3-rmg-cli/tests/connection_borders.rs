@@ -1,4 +1,4 @@
-//! Full native town-placement state and RNG checkpoints.
+//! Native branching paths and border reservations after town placement.
 use homm3_rmg::{
     behavior::{Behavior, RetailProfile},
     boundaries::BoundaryWorkspace,
@@ -18,8 +18,8 @@ mod support;
 use support::towns::snapshot;
 
 #[test]
-#[ignore = "requires HOMM3_RMG_DATA and HOMM3_RMG_ORACLE towns checkpoints"]
-fn native_primary_and_additional_towns_preserve_payloads_cells_and_rng() {
+#[ignore = "requires HOMM3_RMG_DATA and HOMM3_RMG_ORACLE connection-borders checkpoints"]
+fn native_connection_borders_preserve_cells_and_rng() {
     let directory = PathBuf::from(std::env::var_os("HOMM3_RMG_DATA").unwrap());
     let oracle = PathBuf::from(std::env::var_os("HOMM3_RMG_ORACLE").unwrap());
     let mut installation = Installation::open(&directory).unwrap();
@@ -70,16 +70,17 @@ fn native_primary_and_additional_towns_preserve_payloads_cells_and_rng() {
             let catalog = source.prepare(&rules, request.version(), behavior).unwrap();
             let mut objects = ObjectArena::default();
             let towns = map.place_towns(&mut objects, &catalog, &mut rng).unwrap();
-            let actual = snapshot(&towns, &objects, &catalog, towns.rng());
+            let borders = towns.reserve_connection_borders(&mut rng).unwrap();
+            let actual = snapshot(borders.towns(), &objects, &catalog, borders.rng());
             eprintln!(
                 "{mode} case {case}: {} towns, RNG {}",
-                towns.towns().len(),
-                towns.rng().state
+                borders.towns().towns().len(),
+                borders.rng().state
             );
             checked += actual.lines().count();
-            let expected = std::fs::read_to_string(
-                oracle.join(format!("{mode}-layout/case-{case}-candidate/towns.txt")),
-            )
+            let expected = std::fs::read_to_string(oracle.join(format!(
+                "{mode}-layout/case-{case}-candidate/connection-borders.txt"
+            )))
             .unwrap();
             assert_eq!(
                 actual.split_whitespace().count(),
@@ -95,5 +96,5 @@ fn native_primary_and_additional_towns_preserve_payloads_cells_and_rng() {
             }
         }
     }
-    eprintln!("checked {checked} native town checkpoint lines");
+    eprintln!("checked {checked} native connection-border checkpoint lines");
 }

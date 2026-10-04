@@ -6400,7 +6400,7 @@ TPoint TRmgMap::traceBranchEnd(TPoint from, TPoint toward, s32 level)
         if (from.m_x < 1 || from.m_x >= m_mapWidth - 1
             || from.m_y < 1 || from.m_y >= m_mapHeight - 1)
             return previous;
-        if (steps > 2) {
+        if (steps > RMG_BRANCH_UNCHECKED_STEPS) {
             TRmgMapPosition nearby;
             nearby.m_z = level;
             for (nearby.m_x = from.m_x - 1; nearby.m_x <= from.m_x + 1; ++nearby.m_x) {
@@ -6485,7 +6485,7 @@ void TRmgGenerator::carveBranchingPaths()
                     pending.push_back(middle);
                     pending.push_back(middle);
                     pending.push_back(first);
-                    if (length >= 8 && contains(middle)) {
+                    if (length >= RMG_BRANCH_MINIMUM_SPLIT_LENGTH && contains(middle)) {
                         TPoint toward = middle + perpendicular;
                         branches.push(middle);
                         branches.push(toward);
@@ -6503,7 +6503,7 @@ void TRmgGenerator::carveBranchingPaths()
                 last = branches.front();
                 branches.pop();
                 last = m_map.traceBranchEnd(first, last, level);
-                if (getRmgSquaredDistance(last, first) >= 25) {
+                if (getRmgSquaredDistance(last, first) >= RMG_BRANCH_MINIMUM_SQUARED_DISTANCE) {
                     pending.push_back(last);
                     pending.push_back(first);
                 }

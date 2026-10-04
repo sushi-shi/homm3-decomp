@@ -17,7 +17,10 @@ mod mutation;
 pub use mutation::BorderColor;
 mod neighborhood;
 pub use neighborhood::Neighborhood;
+mod connections;
 mod density;
+use connections::ConnectionScratch;
+pub use connections::{ConnectionBorders, ConnectionError};
 mod towns;
 use objects::{Chain, Memberships};
 use towns::TownState;
@@ -206,6 +209,7 @@ pub struct PlacementWorkspace {
     memberships: Memberships,
     registration: Registration,
     towns: TownState,
+    connections: ConnectionScratch,
 }
 impl PlacementWorkspace {
     /// Consume painted terrain into the placement stage and reset cell state.
@@ -223,6 +227,7 @@ impl PlacementWorkspace {
         self.cells.fill(CellState::default());
         self.memberships.reset();
         self.towns.reset();
+        self.connections.reset();
         self.registration
             .reset(terrain.coverage().map().zones().len())?;
         Ok(PlacementMap {
@@ -231,6 +236,7 @@ impl PlacementWorkspace {
             memberships: &mut self.memberships,
             registration: &mut self.registration,
             towns: &mut self.towns,
+            connections: &mut self.connections,
         })
     }
 }
@@ -242,6 +248,7 @@ pub struct PlacementMap<'state, 'zones, 'tiles> {
     memberships: &'state mut Memberships,
     registration: &'state mut Registration,
     towns: &'state mut TownState,
+    connections: &'state mut ConnectionScratch,
 }
 impl PlacementMap<'_, '_, '_> {
     /// Existing painted tiles and zone coverage, without copying either buffer.
