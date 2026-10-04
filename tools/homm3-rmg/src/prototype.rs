@@ -853,6 +853,38 @@ mod tests {
     }
 
     #[test]
+    fn object_arena_rejects_foreign_and_reset_identities() {
+        use crate::placement::{ObjectArena, PlacementError};
+        let bytes = table(&[row("monster.def", raw::MONSTER, 0)]);
+        let source = PrototypeSource::parse(&bytes, |_| Ok::<_, Infallible>(Some(mask()))).unwrap();
+        let rules = rules();
+        let catalog = source
+            .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
+            .unwrap();
+        let other = source
+            .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
+            .unwrap();
+        let prototype = catalog.at(monster(), 0).unwrap();
+        let mut first = ObjectArena::default();
+        let mut second = ObjectArena::default();
+        assert!(matches!(
+            first.create(&other, prototype),
+            Err(PlacementError::UnknownPrototype(_))
+        ));
+        let a = first.create(&catalog, prototype).unwrap();
+        let b = second.create(&catalog, prototype).unwrap();
+        assert_eq!(a.index(), b.index());
+        assert!(first.get(b).is_none());
+        assert!(second.get(a).is_none());
+        assert!(first.get(a).unwrap().position().is_none());
+        first.reset();
+        let replacement = first.create(&catalog, prototype).unwrap();
+        assert_eq!(replacement.index(), a.index());
+        assert!(first.get(a).is_none());
+        assert!(first.get(replacement).is_some());
+    }
+
+    #[test]
     fn handles_reject_other_catalogs_and_survive_owner_moves() {
         let bytes = table(&[row("monster.def", raw::MONSTER, 0)]);
         let source = PrototypeSource::parse(&bytes, |_| Ok::<_, Infallible>(Some(mask()))).unwrap();

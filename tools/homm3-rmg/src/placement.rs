@@ -5,11 +5,26 @@ use crate::{
     domain::{Terrain, WorldPosition},
     geometry::{Point, ZoneId},
     object::ObjectKind,
-    prototype::{OutlineError, OutlineWorkspace, PreparedPrototype, PrototypeFault},
+    prototype::{OutlineError, OutlineWorkspace, PreparedPrototype, PrototypeFault, PrototypeId},
     raw,
     terrain::PaintedTerrain,
 };
 use std::{collections::TryReserveError, error::Error, fmt};
+
+mod objects;
+pub use objects::{ObjectArena, ObjectGeometry, ObjectId};
+mod mutation;
+pub use mutation::BorderColor;
+use objects::{Chain, Memberships};
+
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "canonical cost is checked at compile time"
+)]
+const CLEARED_DISTANCE: u16 = {
+    assert!(raw::RMG_CLEARED_CELL_COST <= u16::MAX as u32);
+    raw::RMG_CLEARED_CELL_COST as u16
+};
 
 /// Mutually exclusive path and obstacle reservations.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -67,6 +82,16 @@ pub enum ObstacleEntrances {
 /// A safe placement query cannot reproduce an undefined native access.
 #[derive(Debug)]
 pub enum PlacementError {
+    /// Process-local object ownership tags have been exhausted.
+    IdentityExhausted,
+    /// Prototype ID does not belong to the supplied catalog.
+    UnknownPrototype(PrototypeId),
+    /// Object ID does not belong to the supplied arena or its current generation.
+    UnknownObject(ObjectId),
+    /// Removal requires the anchor assigned by an earlier insertion.
+    UnplacedObject(ObjectId),
+    /// Retail would erase an end iterator from a cell with allocated vector storage.
+    MissingMembership(ObjectId),
     /// Invalid prototype dimensions.
     Prototype(PrototypeFault),
     /// Outline traversal cannot complete safely.
@@ -83,6 +108,21 @@ pub enum PlacementError {
 impl fmt::Display for PlacementError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::IdentityExhausted => f.write_str("object ownership identities exhausted"),
+            Self::UnknownPrototype(id) => {
+                write!(f, "prototype {} belongs to another catalog", id.index())
+            }
+            Self::UnknownObject(id) => write!(
+                f,
+                "object {} belongs to another arena generation",
+                id.index()
+            ),
+            Self::UnplacedObject(id) => write!(f, "object {} has no placement anchor", id.index()),
+            Self::MissingMembership(id) => write!(
+                f,
+                "retail removes absent object {} from allocated cell storage",
+                id.index()
+            ),
             Self::Prototype(error) => error.fmt(f),
             Self::Outline(error) => error.fmt(f),
             Self::EmptyOutline => f.write_str("connected placement outline is empty"),
@@ -109,8 +149,13 @@ impl From<TryReserveError> for PlacementError {
     }
 }
 
+/// Read-only placement flags and membership metadata for one map cell.
 #[derive(Clone, Copy, Debug)]
-struct CellState {
+pub struct CellState {
+    objects: Chain,
+    retail_membership_storage: bool,
+    border: Option<BorderColor>,
+    object_distance: u16,
     passable: bool,
     entrance: Option<ObjectKind>,
     reservation: PathReservation,
@@ -118,6 +163,10 @@ struct CellState {
 impl Default for CellState {
     fn default() -> Self {
         Self {
+            objects: Chain::default(),
+            retail_membership_storage: false,
+            border: None,
+            object_distance: CLEARED_DISTANCE,
             passable: true,
             entrance: None,
             reservation: PathReservation::Open,
@@ -129,6 +178,7 @@ impl Default for CellState {
 #[derive(Default, Debug)]
 pub struct PlacementWorkspace {
     cells: Vec<CellState>,
+    memberships: Memberships,
 }
 impl PlacementWorkspace {
     /// Consume painted terrain into the placement stage and reset cell state.
@@ -144,9 +194,11 @@ impl PlacementWorkspace {
             .try_reserve(count.saturating_sub(self.cells.len()))?;
         self.cells.resize(count, CellState::default());
         self.cells.fill(CellState::default());
+        self.memberships.reset();
         Ok(PlacementMap {
             terrain,
             cells: &mut self.cells,
+            memberships: &mut self.memberships,
         })
     }
 }
@@ -155,6 +207,7 @@ impl PlacementWorkspace {
 pub struct PlacementMap<'state, 'zones, 'tiles> {
     terrain: PaintedTerrain<'zones, 'tiles>,
     cells: &'state mut [CellState],
+    memberships: &'state mut Memberships,
 }
 impl PlacementMap<'_, '_, '_> {
     /// Existing painted tiles and zone coverage, without copying either buffer.

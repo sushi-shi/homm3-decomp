@@ -30,6 +30,11 @@ enum ERmgDirection {
     RMG_CARDINAL_DIRECTION_COUNT = RMG_DIRECTION_COUNT / RMG_CARDINAL_DIRECTION_STEP
 };
 
+// Width of the native border-connection colour bitfield.
+enum ERmgBorderConnectionBits {
+    RMG_BORDER_COLOR_BITS = 4
+};
+
 // Terrain types, dirt through rock.
 enum ERmgTerrainLimits {
     RMG_TERRAIN_COUNT = eTerrainRock + 1

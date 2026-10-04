@@ -722,7 +722,7 @@ struct TRmgGroundTileData {
 // Pending border-guard cell and the guard's key colour.
 struct TRmgBorderConnection {
     u32 m_present : 1;
-    u32 m_guardColor : 4;
+    u32 m_guardColor : RMG_BORDER_COLOR_BITS;
 };
 
 // One rand_trn.txt row: per-terrain scores and neighbour scores indexed by

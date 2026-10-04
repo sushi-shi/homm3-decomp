@@ -177,6 +177,11 @@ pub struct BoundaryMap<'a> {
     water: Water,
 }
 impl<'a> BoundaryMap<'a> {
+    /// Compatibility policy carried from the completed layout stage.
+    #[must_use]
+    pub const fn behavior(&self) -> Behavior {
+        self.behavior
+    }
     /// Cell ownership and terrain marks.
     #[must_use]
     #[expect(

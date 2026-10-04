@@ -101,15 +101,15 @@ Completion requires the full generator in both modes.
 
 ### Remaining work, in execution order
 
-Ten substantial work packages remain as of commit `d5707def6`. They describe
+Ten substantial work packages remain; the first is partially implemented. They describe
 implementation order, not equal amounts of work or a percentage estimate.
 The library cannot yet generate a complete map.
 
-1. **Object storage and map mutation.** Add stable object identities, typed
-   instance state, ordered cell membership in shared reusable storage, insertion
-   and removal, path/obstacle/border mutations, type counts and entrance-distance
-   propagation. Preserve native overlap behavior and removal faults. Continue
-   borrowing terrain/coverage and retain workspace capacity.
+1. **Object storage and map mutation.** Complete typed payload ownership,
+   generator registration, global/zone type counts, entrance-distance propagation
+   and neighbourhood path helpers. Stable geometry IDs, ordered cell membership,
+   insertion/removal and individual path/obstacle/border transitions are now
+   implemented with reused storage; global removal bookkeeping is still pending.
 2. **Towns.** Implement primary and additional town placement, category/density
    scheduling, candidate order, singleton RNG draws, owner/fort payloads, road
    targets and the hotfix player-town requirement.
@@ -138,17 +138,16 @@ The library cannot yet generate a complete map.
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: extend `placement.rs` with shared object/cell
-membership storage. The reference operations are `TRmgMap::addObject`,
-`TRmgGeneratorBase::addObject`, `TRmgGenerator::addObject` and `removeObject` in
-`src/rmg.cpp`, plus the path/obstacle/border helpers on `TRmgMapItem` in
-`include/rmg.h`. Keep geometry identity distinct from the serialized town/monster
-object counter: failed candidates and treasure groups have different lifetimes.
-Store membership in insertion order; entrance lookup uses the cell's first
-object, even in overlaps. Native removal keeps the object alive and clears
-entrance/passability only when its cell membership becomes empty. Once these
-operations and entrance distances are compared with native checkpoints, continue
-directly to `tryPlacePrimaryTown` and `tryPlaceAdditionalTown`.
+Immediate next implementation: generator registration and entrance-distance
+propagation in `TRmgGenerator::addObject`, followed by the global-list/count part
+of `removeObject` in `src/rmg.cpp`. Map-level insertion and cell erasure already
+exist in `placement/mutation.rs`. Keep serialized town/monster counters distinct
+from geometry IDs. Reuse the ordered worklist for the distance flood and preserve
+its pruning against existing cell distances, including cells reset by removal.
+Then finish neighbourhood/entrance-approach helpers and continue directly to
+`tryPlacePrimaryTown` and `tryPlaceAdditionalTown`. Payload lifetimes and shared
+world/treasure-group ownership must be completed before transient treasure
+objects are integrated. Reset object and placement workspaces together.
 
 ### Current implementation checkpoint
 
@@ -288,8 +287,26 @@ Across six generated maps, 270,048 footprint/fit pairs agree with source-derived
 checkpoints: 263,348 complete-fit results were executed in C++, while 6,700
 empty-outline faults were identified and skipped before the native division.
 All 256 circular blocking patterns and focused entrance/path/water policies
-also pass. Grid mutation, object membership and object lifetime management are
-still pending; these results cover fit queries before town placement.
+also pass. These results cover fit queries before town placement; mutation
+verification is described below.
+
+Map mutation now owns no per-cell vectors: cell chains preserve insertion order
+in one reusable membership arena, and removal recycles links. Geometry IDs carry
+owner tags, survive moves and become invalid after arena reset. Insertion clips
+footprints, opens triggers and preserves overlapping blocking flags; erasure
+removes only the first duplicate, retains the object/anchor and refreshes the
+first-object entrance kind. Retail's never-allocated versus emptied-vector
+removal distinction is modeled explicitly. Path/obstacle/border transitions use
+typed states and a source-derived colour width. Generator registration, type
+counts, entrance-distance flooding and object payload lifetimes remain pending.
+
+Native comparison covers 10,476 snapshots (873 first-family prototypes across
+six format/mode maps, twelve phases each), including overlaps, duplicates,
+clipping, removal and border protection. The reviewed extreme-coordinate case
+also compares the retained anchor after an entirely clipped insertion. A
+read-only design review found no regressions; the behavior review's row-clipping
+finding is fixed and independently rechecked. Targeted tests cover recycled
+link storage, foreign/stale object IDs and mode-specific absent removal.
 
 Review fixes now bind prototype/rule handles to their owning catalogs. Foreign
 and stale handles cannot silently select another catalog's row. Checked process
