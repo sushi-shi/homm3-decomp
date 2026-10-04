@@ -111,8 +111,8 @@ The library cannot yet generate a complete map.
    Neighbourhood path helpers, stable geometry IDs, ordered cell membership,
    registration/removal, global/zone type counts, entrance-distance propagation
    and individual path/obstacle/border transitions now use reusable storage.
-   Tent availability follows the loaded prototype count; retail's initial cursor
-   remains an explicit replay requirement until a native rescan initializes it.
+   Tent availability follows the loaded prototype count. Retail's initial cursor
+   uses named replay input or a typed fault until a native rescan initializes it.
 2. **Zone connections.** Port connection preparation and pathfinding, junctions,
    gates/portals, border guards and key-tent reservations, including water-zone
    border repair and mode-specific failures.
@@ -138,7 +138,7 @@ The library cannot yet generate a complete map.
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: border guards and `connectZones` crossings,
+Immediate next implementation: `connectZones` ground crossings,
 subterranean gates, shipyards and monolith fallback, followed by dry junctions.
 Initial connection pathfinding and water-border repair now consume `WaterIslands`
 through `ConnectionPaths` into `RepairedWaterBorders`, retaining the shared map,
@@ -465,6 +465,33 @@ after exact-slot reuse and reject discarding placed or removed objects. All 69
 core tests and strict Clippy pass. Both reviewers report no remaining findings;
 the design review caught and resolved public fit APIs accepting a foreign map's
 copied zone metadata. They now take a zone index and resolve it in the active map.
+
+Key-tent and border-guard placement now uses the generic zone-placement helper,
+first-subtype catalog lookup, one/three-guard row ADT and shared source constants.
+`BorderGuardPlacement` distinguishes failure, actual placement and the native
+missing-guard-art bug (reported color zero without placing or reserving objects).
+Protected 3x3 neighborhoods mark only empty cells, then clear the stored path
+predecessor even for zero-cost arrivals. Cell colors truncate at the native
+four-bit field boundary; reservation keeps the full subtype index.
+
+`KeyTentCursor` preserves the raw signed lookup value, including the exhausted
+family length. Availability admission happens only after tent/guard registration,
+so an unusual matching subtype can retain those placements before a typed index
+fault. `RetailProfile::initial_key_tent_color` is optional named replay input;
+absence faults at first use unless a rescan already wrote the cursor. The pinned
+retail constructor (`0x537b10`–`0x537db8`) leaves generator offset `+0xf5c`
+unwritten, and `placeBorderGuard` reads it at `0x540d6d`. Hotfix starts at the
+source `KEY_LIGHT_BLUE` value, now obtained through bindgen.
+
+Eight native border-guard captures agree on 314 attempts, 64 successful tent
+placements and 192 registered objects, all 129,600 cells and their border/path
+states, counts, cursor values and RNG (259,879 checkpoint lines). The 11,862
+registration checkpoints still agree. Additional synthetic-catalog regressions
+cover absent/negative/huge replay values, missing art, empty families, exhausted
+cursor lookup, late reservation faults, duplicate first-match selection,
+full-color reservation and repeated failed placements reusing their arena slot.
+All 69 core tests and strict Clippy pass; both behavior and design reviews are
+clean. Full crossing/gate/shipyard/portal integration remains next.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

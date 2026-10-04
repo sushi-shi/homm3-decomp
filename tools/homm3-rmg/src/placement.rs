@@ -11,7 +11,9 @@ use crate::{
 };
 use std::{collections::TryReserveError, error::Error, fmt};
 
+mod border_guards;
 mod guards;
+pub use border_guards::{BorderGuardCount, BorderGuardPlacement};
 mod zone_objects;
 use zone_objects::ZonePlacementScratch;
 mod objects;
@@ -40,7 +42,7 @@ use towns::TownState;
 pub use towns::{Fort, TownError, TownPayload, TownsPlaced};
 mod registration;
 use registration::Registration;
-pub use registration::{KeyTentChoice, KeyTentColor};
+pub use registration::{KeyTentColor, KeyTentCursor};
 
 #[expect(
     clippy::cast_possible_truncation,
@@ -124,6 +126,8 @@ pub enum PlacementError {
     Arithmetic,
     /// Border guard subtype does not index the native tent availability vector.
     KeyTentSubtype(i32),
+    /// Retail reads its unwritten initial key-tent cursor without replay input.
+    KeyTentReplayRequired,
     /// Process-local object ownership tags have been exhausted.
     IdentityExhausted,
     /// Prototype ID does not belong to the supplied catalog.
@@ -170,6 +174,9 @@ impl fmt::Display for PlacementError {
                 f,
                 "key-tent subtype {value} does not index availability storage"
             ),
+            Self::KeyTentReplayRequired => {
+                f.write_str("initial retail key-tent cursor requires replay input")
+            }
             Self::IdentityExhausted => f.write_str("object ownership identities exhausted"),
             Self::UnknownPrototype(id) => {
                 write!(f, "prototype {} belongs to another catalog", id.index())

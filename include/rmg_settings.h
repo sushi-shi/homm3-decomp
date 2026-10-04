@@ -185,6 +185,19 @@ enum ERmgGuardConstants {
     RMG_GUARD_DISPOSITION = 3
 };
 
+// placeBorderGuard's result when no keymaster's tent could be placed;
+// otherwise it returns the guard colour.
+enum ERmgBorderGuardPlacement {
+    RMG_BORDER_GUARD_NOT_PLACED = -1
+};
+
+// Border guards placed side by side, eastward from the given cell.
+enum ERmgBorderGuardCount {
+    RMG_SINGLE_BORDER_GUARD = 1,
+    // One per cell of the row below a three-tile shipyard.
+    RMG_SHIPYARD_BORDER_GUARDS = 3
+};
+
 // Spell-trait flag of spells the map loader disables on every map (see
 // game.cpp); never a generated reward.
 enum ERmgSpellTraitFlags {

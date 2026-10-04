@@ -680,6 +680,16 @@ impl PrototypeCatalog<'_> {
             .get(index)
             .map(|_| self.id(self.offsets[family.index()] + index))
     }
+    /// First matching subtype in native family order, without terrain filtering
+    /// or randomness. Used by key tents and border guards.
+    #[must_use]
+    pub fn first_subtype(&self, family: ObjectKind, subtype: i32) -> Option<PrototypeId> {
+        let index = self
+            .family(family)
+            .iter()
+            .position(|entry| entry.prototype().subtype() == subtype)?;
+        self.at(family, index)
+    }
     /// Choose a matching prototype in source order using one draw, even for a
     /// singleton. An empty candidate set consumes none. Counting and selecting
     /// use borrowed iterators, with no temporary candidate allocation.

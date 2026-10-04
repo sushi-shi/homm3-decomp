@@ -23,7 +23,7 @@ pub struct KeyTentColor {
     owner: OwnerId,
 }
 impl KeyTentColor {
-    /// Ordinal in the border-tent prototype family.
+    /// Availability-vector index, also used as a prototype subtype.
     #[must_use]
     pub const fn index(self) -> usize {
         self.index
@@ -32,14 +32,13 @@ impl KeyTentColor {
 
 /// Native next-color cursor, including retail's uninitialized initial value.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum KeyTentChoice {
+pub enum KeyTentCursor {
     /// Retail has not recalculated its cursor; a recorded replay input is needed.
     #[default]
     ReplayRequired,
-    /// First enabled tent color after a scan, or hotfix's initial color zero.
-    Available(KeyTentColor),
-    /// The cursor reached the end of the loaded border-tent family.
-    Exhausted,
+    /// Raw subtype used for prototype lookup. A scan may return the family
+    /// length; this does not imply that a matching prototype is absent.
+    Value(i32),
 }
 
 #[derive(Debug)]
@@ -52,7 +51,7 @@ pub(super) struct Registration {
     queue: Worklist<WorldPosition>,
     catalog_owner: Option<OwnerId>,
     disabled_key_tents: Vec<bool>,
-    next_key_tent: KeyTentChoice,
+    next_key_tent: KeyTentCursor,
 }
 impl Default for Registration {
     fn default() -> Self {
@@ -65,7 +64,7 @@ impl Default for Registration {
             queue: Worklist::default(),
             catalog_owner: None,
             disabled_key_tents: Vec::new(),
-            next_key_tent: KeyTentChoice::ReplayRequired,
+            next_key_tent: KeyTentCursor::ReplayRequired,
         }
     }
 }
@@ -82,7 +81,7 @@ impl Registration {
         self.queue.clear();
         self.catalog_owner = None;
         self.disabled_key_tents.clear();
-        self.next_key_tent = KeyTentChoice::ReplayRequired;
+        self.next_key_tent = KeyTentCursor::ReplayRequired;
         Ok(())
     }
 
@@ -106,9 +105,14 @@ impl Registration {
             self.disabled_key_tents.try_reserve(count)?;
             self.disabled_key_tents.resize(count, false);
             self.catalog_owner = Some(catalog.owner());
-            if behavior.is_hotfix() {
-                self.rescan_key_tents();
-            }
+            self.next_key_tent = match behavior {
+                Behavior::Hotfix => {
+                    KeyTentCursor::Value(i32::try_from(raw::KEY_LIGHT_BLUE).unwrap())
+                }
+                Behavior::Retail(profile) => profile
+                    .initial_key_tent_color
+                    .map_or(KeyTentCursor::ReplayRequired, KeyTentCursor::Value),
+            };
         }
         Ok(())
     }
@@ -126,16 +130,13 @@ impl Registration {
     }
 
     fn rescan_key_tents(&mut self) {
-        self.next_key_tent = self
+        let index = self
             .disabled_key_tents
             .iter()
             .position(|&disabled| !disabled)
-            .map_or(KeyTentChoice::Exhausted, |index| {
-                KeyTentChoice::Available(KeyTentColor {
-                    index,
-                    owner: self.catalog_owner.expect("catalog admitted before scan"),
-                })
-            });
+            .unwrap_or(self.disabled_key_tents.len());
+        // Parsed prototype row counts fit i32; filtering cannot enlarge them.
+        self.next_key_tent = KeyTentCursor::Value(i32::try_from(index).unwrap());
     }
 
     fn set_key_tent_disabled(
@@ -233,7 +234,7 @@ impl PlacementMap<'_, '_, '_> {
     pub fn next_key_tent(
         &mut self,
         catalog: &PrototypeCatalog<'_>,
-    ) -> Result<KeyTentChoice, PlacementError> {
+    ) -> Result<KeyTentCursor, PlacementError> {
         self.prepare_registration(catalog)?;
         Ok(self.registration.next_key_tent)
     }

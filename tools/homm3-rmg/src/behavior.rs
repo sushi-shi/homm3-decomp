@@ -32,4 +32,9 @@ pub struct RetailProfile {
     /// Uninitialized alignment-matching flag on generated water-zone templates.
     /// Explicitly independent of the general heap fill; false is the zero-fill baseline.
     pub water_guards_match_alignment: bool,
+    /// Initial unwritten key-tent cursor, independent of general stack/heap fills.
+    /// Any signed subtype is meaningful for prototype lookup; availability is
+    /// checked only when reserving a successfully placed tent. None requests a
+    /// typed fault at the first cursor read, unless a rescan initialized it first.
+    pub initial_key_tent_color: Option<i32>,
 }

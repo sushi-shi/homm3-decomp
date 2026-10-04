@@ -7,7 +7,7 @@ use homm3_rmg::{
     geometry::Point,
     layout::LayoutWorkspace,
     object::ObjectKind,
-    placement::{KeyTentChoice, ObjectArena, PlacementError, PlacementMap, PlacementWorkspace},
+    placement::{KeyTentCursor, ObjectArena, PlacementError, PlacementMap, PlacementWorkspace},
     placement_rules::PlacementRules,
     prototype::{PrototypeCatalog, PrototypeSource},
     raw,
@@ -124,9 +124,11 @@ fn position(x: i32, y: i32, level: Level) -> WorldPosition {
 fn kind(value: u32) -> ObjectKind {
     ObjectKind::parse(i32::try_from(value).unwrap()).unwrap()
 }
-fn snapshot(map: &mut PlacementMap<'_, '_, '_>, catalog: &PrototypeCatalog<'_>) -> String {
-    let mut actual = String::new();
-    let mut objects = ObjectArena::default();
+fn check_virgin_guard_release(
+    map: &mut PlacementMap<'_, '_, '_>,
+    catalog: &PrototypeCatalog<'_>,
+    objects: &mut ObjectArena,
+) -> (ObjectId, homm3_rmg::placement::KeyTentColor) {
     let guard = catalog.at(kind(raw::BORDER_GUARD), 0).unwrap();
     let virgin = objects.create(catalog, guard).unwrap();
     let color = map
@@ -134,15 +136,23 @@ fn snapshot(map: &mut PlacementMap<'_, '_, '_>, catalog: &PrototypeCatalog<'_>) 
         .unwrap();
     let choice = map.next_key_tent(catalog).unwrap();
     if map.coverage().map().behavior().is_hotfix() {
-        assert!(matches!(choice, KeyTentChoice::Available(color) if color.index() == 0));
+        assert!(matches!(choice, KeyTentCursor::Value(0)));
     } else {
-        assert_eq!(choice, KeyTentChoice::ReplayRequired);
+        assert_eq!(choice, KeyTentCursor::ReplayRequired);
     }
     map.set_key_tent_disabled(catalog, color, true).unwrap();
-    map.unregister_object(&objects, catalog, virgin).unwrap();
-    assert!(
-        matches!(map.next_key_tent(catalog).unwrap(), KeyTentChoice::Available(color) if color.index() == 0)
-    );
+    map.unregister_object(objects, catalog, virgin).unwrap();
+    assert!(matches!(
+        map.next_key_tent(catalog).unwrap(),
+        KeyTentCursor::Value(0)
+    ));
+
+    (virgin, color)
+}
+fn snapshot(map: &mut PlacementMap<'_, '_, '_>, catalog: &PrototypeCatalog<'_>) -> String {
+    let mut actual = String::new();
+    let mut objects = ObjectArena::default();
+    let (virgin, color) = check_virgin_guard_release(map, catalog, &mut objects);
 
     check_arena_binding(map, catalog, &mut objects);
 
@@ -216,13 +226,14 @@ fn snapshot(map: &mut PlacementMap<'_, '_, '_>, catalog: &PrototypeCatalog<'_>) 
     let removed = map.unregister_object(&objects, catalog, virgin);
     if map.coverage().map().behavior().is_hotfix() {
         removed.unwrap();
-        assert!(
-            matches!(map.next_key_tent(catalog).unwrap(), KeyTentChoice::Available(color) if color.index() == 0)
-        );
+        assert!(matches!(
+            map.next_key_tent(catalog).unwrap(),
+            KeyTentCursor::Value(0)
+        ));
     } else {
         assert!(matches!(removed, Err(PlacementError::NotRegistered(_))));
         assert!(
-            matches!(map.next_key_tent(catalog).unwrap(), KeyTentChoice::Available(color) if color.index() != 0)
+            matches!(map.next_key_tent(catalog).unwrap(), KeyTentCursor::Value(color) if color != 0)
         );
     }
     if map.coverage().map().raster().dimension() == 36 {
@@ -309,9 +320,8 @@ fn write_snapshot(
     phase: usize,
 ) {
     let choice = match map.next_key_tent(catalog).unwrap() {
-        KeyTentChoice::Available(color) => color.index(),
-        KeyTentChoice::Exhausted => catalog.family(kind(raw::BORDER_TENT)).len(),
-        KeyTentChoice::ReplayRequired => panic!("guard release recalculates the cursor"),
+        KeyTentCursor::Value(color) => color,
+        KeyTentCursor::ReplayRequired => panic!("guard release recalculates the cursor"),
     };
     write!(actual, "{source_row} {phase} {choice}").unwrap();
     for &object in map.active_objects() {

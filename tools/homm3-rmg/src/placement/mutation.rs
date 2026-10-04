@@ -14,6 +14,11 @@ use crate::{
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct BorderColor(u8);
 impl BorderColor {
+    /// Native bitfield assignment truncates the reported prototype subtype.
+    pub(super) fn from_subtype(subtype: i32) -> Self {
+        let mask = (1_i32 << raw::RMG_BORDER_COLOR_BITS) - 1;
+        Self(u8::try_from(subtype & mask).expect("border field fits a byte"))
+    }
     /// Admit a stored colour without truncating an external value.
     #[must_use]
     pub const fn parse(value: u8) -> Option<Self> {
@@ -76,7 +81,7 @@ impl CellState {
             self.reservation = PathReservation::Unreserved;
         }
     }
-    fn mark_border(&mut self, color: BorderColor) {
+    pub(super) fn mark_border(&mut self, color: BorderColor) {
         self.mark_obstacle();
         self.border = Some(color);
     }
