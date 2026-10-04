@@ -472,20 +472,9 @@ ERmgTerrainShape __fastcall selectTerrainTransition(
 //   W  .  E   W  .  E   E  .  W   E  .  W
 //   SW S SE   NW N NE   SE S SW   NE N NW
 DATA(0x00642c00)
-const s32 g_rmgReflectedNeighbours[2][2][TILE_DIR_COUNT] = {
-    {
-        {TILE_DIR_NORTH, TILE_DIR_NORTHEAST, TILE_DIR_EAST, TILE_DIR_SOUTHEAST,
-         TILE_DIR_SOUTH, TILE_DIR_SOUTHWEST, TILE_DIR_WEST, TILE_DIR_NORTHWEST}, // none
-        {TILE_DIR_SOUTH, TILE_DIR_SOUTHEAST, TILE_DIR_EAST, TILE_DIR_NORTHEAST,
-         TILE_DIR_NORTH, TILE_DIR_NORTHWEST, TILE_DIR_WEST, TILE_DIR_SOUTHWEST} // flipY
-    },
-    {
-        {TILE_DIR_NORTH, TILE_DIR_NORTHWEST, TILE_DIR_WEST, TILE_DIR_SOUTHWEST,
-         TILE_DIR_SOUTH, TILE_DIR_SOUTHEAST, TILE_DIR_EAST, TILE_DIR_NORTHEAST}, // flipX
-        {TILE_DIR_SOUTH, TILE_DIR_SOUTHWEST, TILE_DIR_WEST, TILE_DIR_NORTHWEST,
-         TILE_DIR_NORTH, TILE_DIR_NORTHEAST, TILE_DIR_EAST, TILE_DIR_SOUTHEAST} // both
-    }
-};
+const s32 g_rmgReflectedNeighbours[2][2][TILE_DIR_COUNT] =
+#include "rmg_data/reflected_neighbours.inc"
+;
 
 const s32* TRmgTerrainFlip::getReflectedNeighbourOrder() const
 {

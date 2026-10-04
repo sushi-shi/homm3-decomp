@@ -422,11 +422,7 @@ enum ERmgTemplateZoneKind {
     RMG_TEMPLATE_JUNCTION = 3
 };
 
-enum ERmgTreasurePlacementLimits {
-    RMG_TREASURE_ATTEMPTS = 3,
-    RMG_TREASURE_MINIMUM_REMAINDER = 1500,
-    RMG_TREASURE_MINIMUM_VALUE = 100
-};
+
 
 // A zone treasure band (unchecked template values). Added water zones use
 // 100..1000 at density 5 and 2000..6000 at density 1.
@@ -461,18 +457,7 @@ enum ERmgTownPlacementParameter {
     RMG_TOWN_PLACEMENT_PARAMETER_COUNT = 8
 };
 
-// Zone monster strength, from the template letter n, w, a or s.
-enum ERmgZoneMonsterStrength {
-    RMG_ZONE_MONSTERS_NONE = 0,
-    RMG_ZONE_MONSTERS_WEAK = 2,
-    RMG_ZONE_MONSTERS_AVERAGE = 3,
-    RMG_ZONE_MONSTERS_STRONG = 4
-};
 
-// Treasure bands per template zone in rmg.txt (low, medium and high value).
-enum ERmgTreasureBandLimits {
-    RMG_TREASURE_BAND_COUNT = 3
-};
 
 // Town count/density groups by ownership and starting fort.
 enum ERmgTownPlacementCategory {
@@ -1393,26 +1378,7 @@ public:
     virtual s32 getTerrain(const TRmgGridPoint& point);
 };
 
-// Unreflected line shapes chosen by selectRmgLinePattern; reflections supply
-// the other orientations. North is up; # is a line tile.
-//   END_S  END_E  NS     EW     SE     NES    ESW    CROSS
-//   . . .  . . .  . # .  . . .  . . .  . # .  . . .  . # .
-//   . # .  . # #  . # .  # # #  . # #  . # #  # # #  # # #
-//   . # .  . . .  . # .  . . .  . # .  . # .  . # .  . # .
-// SE_VARIANT is SE with the NE or SW diagonal also a line tile.
-// END_S also covers an isolated tile.
-enum ERmgLinePattern {
-    LINE_END_S = 0,
-    LINE_END_E = 1,
-    LINE_NS = 2,
-    LINE_EW = 3,
-    LINE_SE = 4,
-    LINE_SE_VARIANT = 5,
-    LINE_NES = 6,
-    LINE_ESW = 7,
-    LINE_CROSS = 8,
-    LINE_PATTERN_COUNT = 9
-};
+#include "rmg_line_pattern.h"
 
 // Frames of one line pattern: first frame index and frame count.
 struct TRmgLinePatternRange {

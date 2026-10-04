@@ -104,7 +104,8 @@
           "--features"
           "homm3-def/cxx-parity"
         ];
-        nativeBuildInputs = [ pkgs.clang ];
+        nativeBuildInputs = [ pkgs.clang pkgs.llvmPackages.libclang ];
+        LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
         CXX = "${pkgs.clang}/bin/clang++";
         postCheck = ''
           RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --offline
@@ -180,6 +181,7 @@
         HOMM3_DIR="$(${pkgs.runtimeShell} ${./scripts/project-root.sh} "$PWD")" || exit 1
         export HOMM3_DIR
         export HOMM3_CLANG="${pkgs.llvmPackages.clang-unwrapped}/bin/clang"
+        export LIBCLANG_PATH="${pkgs.llvmPackages.libclang.lib}/lib"
         export PYTHONDONTWRITEBYTECODE=1
         export PYTHONPATH="$HOMM3_DIR/scripts''${PYTHONPATH:+:$PYTHONPATH}"
         ${ghidraEnvHook}

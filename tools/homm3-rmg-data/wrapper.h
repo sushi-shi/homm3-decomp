@@ -1,0 +1,8 @@
+// Bind only scalar domains and the request record; never C++ object ownership.
+#include "rmg_request.h"
+#include "terrain_type.h"
+#include "artifact_type.h"
+#include "rmg_line_pattern.h"
+#include "tile_direction.h"
+#include "game_resource.h"
+#include "rmg_columns.h"

@@ -24,6 +24,7 @@
 #include <time.h>
 
 #include "rmg.h"
+#include "rmg_columns.h"
 #include "keycolor.h"
 #include "objectmask.h"
 
@@ -50,12 +51,6 @@ static inline s32 getRmgTownTypeCount(ERmgMapVersion mapVersion)
 {
     return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? TOWN_TYPE_COUNT : TOWN_TYPE_ROE_COUNT;
 }
-
-enum ERmgMapLevel {
-    RMG_SURFACE_LEVEL = 0,
-    RMG_UNDERGROUND_LEVEL = 1,
-    RMG_MAP_LEVEL_COUNT = 2
-};
 
 // Zone index of a cell outside every zone; cleared cells start here.
 enum ERmgZoneSentinel {
@@ -159,10 +154,9 @@ static const TRmgObjectLimit g_rmgZoneObjectLimitOverrides[24] = {
 // Frame i of a river sprite draws shape g_rmgRiverPatterns[i]; repeated
 // shapes are alternative frames picked at random.
 DATA(0x00641140)
-static const ERmgLinePattern g_rmgRiverPatterns[13] = {
-    LINE_SE, LINE_SE, LINE_SE, LINE_SE, LINE_CROSS, LINE_ESW, LINE_ESW,
-    LINE_NES, LINE_NES, LINE_NS, LINE_NS, LINE_EW, LINE_EW
-};
+static const ERmgLinePattern g_rmgRiverPatterns[13] =
+#include "rmg_data/river_patterns.inc"
+;
 DATA(0x0069e5d0)
 TRmgLinePatternTable g_rmgRiverPatternTable(13, g_rmgRiverPatterns);
 
@@ -172,11 +166,9 @@ VA_COMPGEN(0x0055ed90, 0x0a, STATIC_DTOR, g_rmgRiverPatternTable)
 
 // The same for road sprites.
 DATA(0x006411ac)
-static const ERmgLinePattern g_rmgRoadPatterns[17] = {
-    LINE_SE, LINE_SE, LINE_SE_VARIANT, LINE_SE_VARIANT, LINE_SE_VARIANT, LINE_SE_VARIANT,
-    LINE_NES, LINE_NES, LINE_ESW, LINE_ESW, LINE_NS, LINE_NS, LINE_EW, LINE_EW,
-    LINE_END_S, LINE_END_E, LINE_CROSS
-};
+static const ERmgLinePattern g_rmgRoadPatterns[17] =
+#include "rmg_data/road_patterns.inc"
+;
 DATA(0x0069e650)
 TRmgLinePatternTable g_rmgRoadPatternTable(17, g_rmgRoadPatterns);
 
@@ -293,9 +285,7 @@ DATA(0x006409b0)
 static const s32 g_rmgSnowRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {7, 5, 4, 6};
 
 // Candidate town types one zone terrain can list.
-enum ERmgTerrainTownChoiceLimits {
-    RMG_TERRAIN_TOWN_CHOICE_COUNT = 4
-};
+
 
 // Candidate town types for each zone terrain, dirt to water. The pick only
 // selects which creatures' dwellings and rewards the zone favours; eTownNeutral
@@ -303,35 +293,15 @@ enum ERmgTerrainTownChoiceLimits {
 // chooseCreatureTownType draws from all four entries, so the zero fill after it
 // (Castle's value) becomes a Castle candidate.
 DATA(0x00682450)
-TTownType g_rmgTerrainTownChoices[eTerrainWater + 1][RMG_TERRAIN_TOWN_CHOICE_COUNT] = {
-    {TOWN_CASTLE,     TOWN_RAMPART,    TOWN_NECROPOLIS, eTownNeutral}, // dirt
-    {TOWN_STRONGHOLD, eTownNeutral},                                   // sand
-    {TOWN_CASTLE,     TOWN_RAMPART,    eTownNeutral},                  // grass
-    {TOWN_TOWER,      eTownNeutral},                                   // snow
-    {TOWN_FORTRESS,   TOWN_NECROPOLIS, eTownNeutral},                  // swamp
-    {TOWN_STRONGHOLD, TOWN_CONFLUX,    eTownNeutral},                  // rough
-    {TOWN_DUNGEON,    TOWN_INFERNO,    TOWN_NECROPOLIS, eTownNeutral}, // subterranean
-    {TOWN_INFERNO,    eTownNeutral},                                   // lava
-    {eTownNeutral}                                                     // water
-};
+TTownType g_rmgTerrainTownChoices[eTerrainWater + 1][RMG_TERRAIN_TOWN_CHOICE_COUNT] =
+#include "rmg_data/terrain_towns.inc"
+;
 
 // Native terrain of each town alignment, used when choosing zone terrain.
 DATA(0x006408c8)
-static const TTerrainType g_rmgTownNativeTerrains[TOWN_TYPE_COUNT] = {
-    eTerrainGrass, // castle
-    eTerrainGrass, // rampart
-    eTerrainSnow,  // tower
-    eTerrainLava,  // inferno
-    eTerrainDirt,  // necropolis
-    eTerrainDirt,  // dungeon
-    eTerrainRough, // stronghold
-    eTerrainSwamp, // fortress
-    eTerrainGrass  // conflux
-};
-
-enum ERmgRadialDirectionLimits {
-    RMG_RADIAL_DIRECTION_COUNT = 32
-};
+static const TTerrainType g_rmgTownNativeTerrains[TOWN_TYPE_COUNT] =
+#include "rmg_data/native_terrain.inc"
+;
 
 // Radial directions used by the placement and boundary passes. Direction k
 // lies k * 11.25 degrees from east; y grows southward, so k turns clockwise.
@@ -340,26 +310,13 @@ enum ERmgRadialDirectionLimits {
 //   16     .     0
 //          8
 DATA(0x00682500)
-double g_rmgDirectionCosines[RMG_RADIAL_DIRECTION_COUNT] = {
-    1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
-    0.0, -0.1951, -0.3827, -0.5556, -0.7071, -0.8315, -0.9239, -0.9807,
-    -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951,
-    0.0, 0.1951, 0.3827, 0.5556, 0.7071, 0.8315, 0.9239, 0.9807
-};
+double g_rmgDirectionCosines[RMG_RADIAL_DIRECTION_COUNT] =
+#include "rmg_data/radial_cosines.inc"
+;
 DATA(0x00682600)
-double g_rmgDirectionSines[RMG_RADIAL_DIRECTION_COUNT] = {
-    0.0, 0.1951, 0.3827, 0.5556, 0.7071, 0.8315, 0.9239, 0.9807,
-    1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
-    0.0, -0.1951, -0.3827, -0.5556, -0.7071, -0.8315, -0.9239, -0.9807,
-    -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951
-};
-
-// Guard strengths: the zone scale (ERmgZoneMonsterStrength) shifted by the
-// map strength, from 0 up to the strongest.
-enum ERmgGuardStrengthLimits {
-    RMG_STRONGEST_GUARD_STRENGTH = 5,
-    RMG_GUARD_STRENGTH_COUNT = RMG_STRONGEST_GUARD_STRENGTH + 1
-};
+double g_rmgDirectionSines[RMG_RADIAL_DIRECTION_COUNT] =
+#include "rmg_data/radial_sines.inc"
+;
 
 // Guard value thresholds and scales by guard strength; a scale counts
 // quarters of the value above its threshold.
@@ -410,78 +367,6 @@ static bool isRmgTemplateFieldSet(const char* value)
     return value && value[0] && value[0] != ' ';
 }
 
-// rmg.txt and rand_trn.txt rows start after three header rows.
-enum ERmgSpreadsheetLayout {
-    RMG_FIRST_DATA_ROW = 3
-};
-
-// rmg.txt columns. A template's first row holds its name and size range;
-// any row may also hold one zone and one connection.
-enum ERmgTemplateColumn {
-    RMG_TEMPLATE_COLUMN_NAME = 0,
-    RMG_TEMPLATE_COLUMN_MINIMUM_SIZE = 1,
-    RMG_TEMPLATE_COLUMN_MAXIMUM_SIZE = 2,
-    RMG_TEMPLATE_COLUMN_ZONE_INDEX = 3,
-    RMG_TEMPLATE_COLUMN_KIND_HUMAN = 4,
-    RMG_TEMPLATE_COLUMN_KIND_COMPUTER = 5,
-    RMG_TEMPLATE_COLUMN_KIND_TREASURE = 6,
-    RMG_TEMPLATE_COLUMN_KIND_JUNCTION = 7,
-    RMG_TEMPLATE_COLUMN_SIZE = 8,
-    RMG_TEMPLATE_COLUMN_MINIMUM_HUMAN_PLAYERS = 9,
-    RMG_TEMPLATE_COLUMN_MAXIMUM_HUMAN_PLAYERS = 10,
-    RMG_TEMPLATE_COLUMN_MINIMUM_PLAYERS = 11,
-    RMG_TEMPLATE_COLUMN_MAXIMUM_PLAYERS = 12,
-    RMG_TEMPLATE_COLUMN_PLAYER_INDEX = 13,
-    RMG_TEMPLATE_COLUMN_PLAYER_BASIC_COUNT = 14,
-    RMG_TEMPLATE_COLUMN_PLAYER_CASTLE_COUNT = 15,
-    RMG_TEMPLATE_COLUMN_PLAYER_BASIC_DENSITY = 16,
-    RMG_TEMPLATE_COLUMN_PLAYER_CASTLE_DENSITY = 17,
-    RMG_TEMPLATE_COLUMN_NEUTRAL_BASIC_COUNT = 18,
-    RMG_TEMPLATE_COLUMN_NEUTRAL_CASTLE_COUNT = 19,
-    RMG_TEMPLATE_COLUMN_NEUTRAL_BASIC_DENSITY = 20,
-    RMG_TEMPLATE_COLUMN_NEUTRAL_CASTLE_DENSITY = 21,
-    RMG_TEMPLATE_COLUMN_NEUTRAL_TOWNS_MATCH_ZONE = 22,
-    RMG_TEMPLATE_COLUMN_ALLOWED_TOWNS = 23,      // one per town type
-    RMG_TEMPLATE_COLUMN_MINE_COUNTS = 32,        // one per resource
-    RMG_TEMPLATE_COLUMN_MINE_DENSITIES = 39,     // one per resource
-    RMG_TEMPLATE_COLUMN_USE_NATIVE_TERRAIN = 46,
-    RMG_TEMPLATE_COLUMN_ALLOWED_TERRAIN = 47,    // one per land terrain
-    RMG_TEMPLATE_COLUMN_MONSTER_STRENGTH = 55,
-    RMG_TEMPLATE_COLUMN_GUARDS_MATCH_ZONE = 56,
-    RMG_TEMPLATE_COLUMN_ALLOWED_MONSTERS = 57,   // neutral, then one per town type
-    // Three columns per treasure tier.
-    RMG_TEMPLATE_COLUMN_TREASURE_MINIMUM = 67,
-    RMG_TEMPLATE_COLUMN_TREASURE_MAXIMUM = 68,
-    RMG_TEMPLATE_COLUMN_TREASURE_DENSITY = 69,
-    RMG_TEMPLATE_TREASURE_COLUMN_COUNT = 3,
-    RMG_TEMPLATE_COLUMN_LAST_TREASURE_DENSITY = 75,
-    RMG_TEMPLATE_COLUMN_CONNECTION_FIRST_ZONE = 76,
-    RMG_TEMPLATE_COLUMN_CONNECTION_SECOND_ZONE = 77,
-    RMG_TEMPLATE_COLUMN_CONNECTION_VALUE = 78,
-    RMG_TEMPLATE_COLUMN_CONNECTION_UNGUARDED = 79,            // "Wide"
-    RMG_TEMPLATE_COLUMN_CONNECTION_BORDER_GUARD = 80,         // "Border Guard"
-    RMG_TEMPLATE_COLUMN_CONNECTION_MINIMUM_HUMAN_PLAYERS = 81,
-    RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_HUMAN_PLAYERS = 82,
-    RMG_TEMPLATE_COLUMN_CONNECTION_MINIMUM_PLAYERS = 83,
-    RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_PLAYERS = 84
-};
-
-// Offsets from a zone's or connection's minimum human players column.
-enum ERmgPlayerLimitColumn {
-    RMG_PLAYER_LIMIT_MAXIMUM_HUMAN_PLAYERS = 1,
-    RMG_PLAYER_LIMIT_MINIMUM_PLAYERS = 2,
-    RMG_PLAYER_LIMIT_MAXIMUM_PLAYERS = 3
-};
-
-// rand_trn.txt columns. Neighbour scores take one column per rule: all
-// adjacent scores, then all blocked scores.
-enum ERmgPlacementRuleColumn {
-    RMG_PLACEMENT_COLUMN_OBJECT_TYPE = 3,
-    RMG_PLACEMENT_COLUMN_SUBTYPE = 4,
-    RMG_PLACEMENT_COLUMN_TERRAIN = 6,
-    RMG_PLACEMENT_COLUMN_TERRAIN_SCORES = 7,     // dirt through water
-    RMG_PLACEMENT_COLUMN_NEIGHBOUR_SCORES = 16
-};
 
 } // namespace
 
