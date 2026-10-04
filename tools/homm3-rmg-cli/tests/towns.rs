@@ -73,7 +73,7 @@ fn native_primary_and_additional_towns_preserve_payloads_cells_and_rng() {
             let actual = snapshot(&towns, &objects, &catalog, towns.rng());
             eprintln!(
                 "{mode} case {case}: {} towns, RNG {}",
-                towns.towns().len(),
+                towns.towns(&objects).unwrap().count(),
                 towns.rng().state
             );
             checked += actual.lines().count();

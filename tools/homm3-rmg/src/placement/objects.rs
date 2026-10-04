@@ -1,11 +1,13 @@
 //! Stable object geometry and ordered per-cell membership, without per-cell heaps.
 
-use super::PlacementError;
+use super::{registration::entrance_position, Fort, PlacementError, TownPayload};
 use crate::{
     domain::WorldPosition,
     identity::OwnerId,
     object::ObjectKind,
-    prototype::{PrototypeCatalog, PrototypeId},
+    prototype::{GuardStack, PrototypeCatalog, PrototypeId},
+    raw,
+    selection::Player,
 };
 use std::{collections::TryReserveError, num::NonZeroUsize};
 
@@ -61,11 +63,52 @@ impl ObjectGeometry {
     }
 }
 
-/// Contiguous geometry records. Payload ownership is separate from map membership:
-/// native objects may appear in a temporary group and subsequently the world map.
+/// A monster's native serialized payload. Position and prototype live in geometry.
+#[derive(Clone, Copy, Debug)]
+pub struct MonsterPayload {
+    id: MapObjectId,
+    count: i32,
+}
+impl MonsterPayload {
+    /// Counter shared with towns and prisons, including on `RoE` maps.
+    #[must_use]
+    pub const fn id(self) -> MapObjectId {
+        self.id
+    }
+    /// Native signed quantity; its low two bytes are serialized.
+    #[must_use]
+    pub const fn count(self) -> i32 {
+        self.count
+    }
+    /// The source guard constructor's fixed disposition.
+    #[must_use]
+    pub const fn disposition(self) -> u32 {
+        raw::RMG_GUARD_DISPOSITION
+    }
+}
+
+/// Payload owned by the same arena record as an object's geometry.
+/// A base object uses only prototype and position when serialized.
+#[derive(Clone, Copy, Debug)]
+pub enum ObjectPayload {
+    /// Plain native `TRmgObject`, without additional serialized fields.
+    Base,
+    /// Player ownership and fort, with its shared native object ID.
+    Town(TownPayload),
+    /// Guard stack count, disposition and shared native object ID.
+    Monster(MonsterPayload),
+}
+#[derive(Clone, Copy, Debug)]
+struct ObjectRecord {
+    geometry: ObjectGeometry,
+    payload: ObjectPayload,
+}
+
+/// Contiguous geometry and payload records shared by temporary and world maps.
+/// Map membership never owns or copies a payload; removal retains its arena record.
 #[derive(Default, Debug)]
 pub struct ObjectArena {
-    records: Vec<ObjectGeometry>,
+    records: Vec<ObjectRecord>,
     owner: Option<OwnerId>,
 }
 impl ObjectArena {
@@ -86,6 +129,61 @@ impl ObjectArena {
         catalog: &PrototypeCatalog<'_>,
         prototype: PrototypeId,
     ) -> Result<ObjectId, PlacementError> {
+        self.create_record(catalog, prototype, ObjectPayload::Base)
+    }
+    pub(super) fn create_town(
+        &mut self,
+        catalog: &PrototypeCatalog<'_>,
+        prototype: PrototypeId,
+        id: MapObjectId,
+        owner: Option<Player>,
+        fort: Fort,
+    ) -> Result<ObjectId, PlacementError> {
+        Self::require_kind(catalog, prototype, raw::TOWN)?;
+        self.create_record(
+            catalog,
+            prototype,
+            ObjectPayload::Town(TownPayload::new(id, owner, fort)),
+        )
+    }
+    pub(super) fn create_monster(
+        &mut self,
+        catalog: &PrototypeCatalog<'_>,
+        stack: GuardStack,
+        id: MapObjectId,
+    ) -> Result<ObjectId, PlacementError> {
+        Self::require_kind(catalog, stack.prototype(), raw::MONSTER)?;
+        self.create_record(
+            catalog,
+            stack.prototype(),
+            ObjectPayload::Monster(MonsterPayload {
+                id,
+                count: stack.count(),
+            }),
+        )
+    }
+    fn require_kind(
+        catalog: &PrototypeCatalog<'_>,
+        prototype: PrototypeId,
+        expected: u32,
+    ) -> Result<(), PlacementError> {
+        let actual = catalog
+            .get(prototype)
+            .ok_or(PlacementError::UnknownPrototype(prototype))?
+            .prototype()
+            .kind();
+        let expected = ObjectKind::parse(i32::try_from(expected).unwrap()).unwrap();
+        if actual != expected {
+            return Err(PlacementError::PayloadKind { expected, actual });
+        }
+        Ok(())
+    }
+    fn create_record(
+        &mut self,
+        catalog: &PrototypeCatalog<'_>,
+        prototype: PrototypeId,
+        payload: ObjectPayload,
+    ) -> Result<ObjectId, PlacementError> {
         let entry = catalog
             .get(prototype)
             .ok_or(PlacementError::UnknownPrototype(prototype))?;
@@ -101,10 +199,13 @@ impl ObjectArena {
             index: self.records.len(),
             owner,
         };
-        self.records.push(ObjectGeometry {
-            prototype,
-            kind: entry.prototype().kind(),
-            position: None,
+        self.records.push(ObjectRecord {
+            geometry: ObjectGeometry {
+                prototype,
+                kind: entry.prototype().kind(),
+                position: None,
+            },
+            payload,
         });
         Ok(id)
     }
@@ -114,9 +215,38 @@ impl ObjectArena {
         (Some(id.owner) == self.owner)
             .then(|| self.records.get(id.index))
             .flatten()
+            .map(|record| &record.geometry)
+    }
+    /// Read a typed payload using the same checked identity as its geometry.
+    #[must_use]
+    pub fn payload(&self, id: ObjectId) -> Option<&ObjectPayload> {
+        (Some(id.owner) == self.owner)
+            .then(|| self.records.get(id.index))
+            .flatten()
+            .map(|record| &record.payload)
+    }
+    /// Derive the current entrance from the anchor and its owning prototype.
+    /// Unplaced records have no entrance.
+    ///
+    /// # Errors
+    /// Reports foreign IDs/catalogs or unsafe native coordinate arithmetic.
+    pub fn entrance(
+        &self,
+        catalog: &PrototypeCatalog<'_>,
+        id: ObjectId,
+    ) -> Result<Option<WorldPosition>, PlacementError> {
+        let geometry = self.get(id).ok_or(PlacementError::UnknownObject(id))?;
+        let prototype = catalog
+            .get(geometry.prototype)
+            .ok_or(PlacementError::UnknownPrototype(geometry.prototype))?
+            .prototype();
+        geometry
+            .position
+            .map(|position| entrance_position(prototype, position))
+            .transpose()
     }
     pub(super) fn set_position(&mut self, id: ObjectId, position: WorldPosition) {
-        self.records[id.index].position = Some(position);
+        self.records[id.index].geometry.position = Some(position);
     }
 }
 

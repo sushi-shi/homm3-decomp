@@ -2,7 +2,7 @@
 
 use super::{
     density::Density, neighborhood::Neighborhood, registration::entrance_position, MapObjectId,
-    ObjectArena, ObjectId, PlacementError, PlacementMap, PlacementView,
+    ObjectArena, ObjectId, ObjectPayload, PlacementError, PlacementMap, PlacementView,
 };
 use crate::{
     boundaries::{BoundaryZone, ZoneOrigin},
@@ -27,20 +27,16 @@ pub enum Fort {
     Present,
 }
 
-/// A town payload associated with stable geometry and its native serialized ID.
+/// A town payload stored beside its arena geometry, without cached coordinates.
 #[derive(Clone, Copy, Debug)]
-pub struct TownObject {
-    object: ObjectId,
+pub struct TownPayload {
     id: MapObjectId,
     owner: Option<Player>,
     fort: Fort,
-    entrance: WorldPosition,
 }
-impl TownObject {
-    /// Geometry and prototype identity in the shared arena.
-    #[must_use]
-    pub const fn object(self) -> ObjectId {
-        self.object
+impl TownPayload {
+    pub(super) const fn new(id: MapObjectId, owner: Option<Player>, fort: Fort) -> Self {
+        Self { id, owner, fort }
     }
     /// Counter shared with monsters and prisons, independent of arena index.
     #[must_use]
@@ -56,11 +52,6 @@ impl TownObject {
     #[must_use]
     pub const fn fort(self) -> Fort {
         self.fort
-    }
-    /// Trigger position also registered as a road target.
-    #[must_use]
-    pub const fn entrance(self) -> WorldPosition {
-        self.entrance
     }
 }
 
@@ -104,14 +95,12 @@ impl From<TryReserveError> for TownError {
 
 #[derive(Default, Debug)]
 pub(super) struct TownState {
-    records: Vec<TownObject>,
     road_targets: Vec<WorldPosition>,
     candidates: Vec<WorldPosition>,
     outline: OutlineWorkspace,
 }
 impl TownState {
     pub(super) fn reset(&mut self) {
-        self.records.clear();
         self.road_targets.clear();
         self.candidates.clear();
     }
@@ -128,10 +117,16 @@ impl TownsPlaced<'_, '_, '_> {
     pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
         &self.map
     }
-    /// Town payloads in construction order, borrowing generation storage.
-    #[must_use]
-    pub fn towns(&self) -> &[TownObject] {
-        &self.map.towns.records
+    /// Registered town identities and their borrowed payloads in native order.
+    /// Removed or merely constructed objects are excluded.
+    ///
+    /// # Errors
+    /// Reports an arena that does not own this map's memberships.
+    pub fn towns<'a>(
+        &'a self,
+        objects: &'a ObjectArena,
+    ) -> Result<impl Iterator<Item = (ObjectId, &'a TownPayload)> + 'a, PlacementError> {
+        self.map.town_payloads(objects)
     }
     /// Road targets in insertion order, without removing duplicates.
     #[must_use]
@@ -192,7 +187,7 @@ impl<'state, 'zones, 'tiles> PlacementMap<'state, 'zones, 'tiles> {
         catalog: &PrototypeCatalog<'_>,
         rng: &mut RetailRng,
     ) -> Result<TownsPlaced<'state, 'zones, 'tiles>, TownError> {
-        self.prepare_registration(catalog)?;
+        self.prepare_object_context(objects, catalog)?;
         for index in 0..self.coverage().map().zones().len() {
             let zone = self.coverage().map().zones()[index];
             let Some(rules) = self.town_rules(zone) else {
@@ -222,7 +217,9 @@ impl<'state, 'zones, 'tiles> PlacementMap<'state, 'zones, 'tiles> {
             };
             self.additional_towns(objects, catalog, zone, rules, rng)?;
         }
-        if self.coverage().map().behavior().is_hotfix() && !self.has_player_towns() {
+        if self.coverage().map().behavior().is_hotfix()
+            && !self.has_player_towns(objects, catalog)?
+        {
             return Err(TownError::MissingPlayerTowns);
         }
         Ok(TownsPlaced {
@@ -458,29 +455,41 @@ impl PlacementMap<'_, '_, '_> {
         fort: Fort,
         rng: &mut RetailRng,
     ) -> Result<WorldPosition, TownError> {
-        self.towns.records.try_reserve(1)?;
         self.towns.road_targets.try_reserve(1)?;
         let id = self.claim_object_id()?;
-        let object = objects.create(catalog, prototype)?;
+        let object = objects.create_town(catalog, prototype, id, owner, fort)?;
         let count =
             u32::try_from(self.towns.candidates.len()).map_err(|_| TownError::Arithmetic)?;
         let selected = rng.below(NonZeroU32::new(count).expect("caller found candidates")) as usize;
         let position = self.towns.candidates[selected];
         self.register_object(objects, catalog, object, position)?;
         let entrance = entrance_position(catalog.get(prototype).unwrap().prototype(), position)?;
-        self.towns.records.push(TownObject {
-            object,
-            id,
-            owner,
-            fort,
-            entrance,
-        });
         self.towns.road_targets.push(entrance);
         self.open_entrance_approach(entrance)?;
         Ok(entrance)
     }
 
-    fn has_player_towns(&self) -> bool {
+    fn town_payloads<'a>(
+        &'a self,
+        objects: &'a ObjectArena,
+    ) -> Result<impl Iterator<Item = (ObjectId, &'a TownPayload)> + 'a, PlacementError> {
+        if !self.memberships.accepts_arena(objects) {
+            return Err(PlacementError::ArenaContext);
+        }
+        Ok(self
+            .active_objects()
+            .iter()
+            .filter_map(move |&object| match objects.payload(object) {
+                Some(ObjectPayload::Town(town)) => Some((object, town)),
+                _ => None,
+            }))
+    }
+
+    fn has_player_towns(
+        &self,
+        objects: &ObjectArena,
+        catalog: &PrototypeCatalog<'_>,
+    ) -> Result<bool, PlacementError> {
         let mut humans = [false; PLAYER_COUNT];
         let mut players = [false; PLAYER_COUNT];
         let map = self.coverage().map();
@@ -496,13 +505,17 @@ impl PlacementMap<'_, '_, '_> {
             let Some(player) = map.player(slot) else {
                 continue;
             };
-            if !self
-                .towns
-                .records
-                .iter()
-                .any(|town| town.owner == Some(player) && town.entrance == entrance)
-            {
-                return false;
+            let mut owned = false;
+            for (object, town) in self.town_payloads(objects)? {
+                if town.owner == Some(player)
+                    && objects.entrance(catalog, object)? == Some(entrance)
+                {
+                    owned = true;
+                    break;
+                }
+            }
+            if !owned {
+                return Ok(false);
             }
             players[player.index()] = true;
             if matches!(role, ZoneRole::Human(_)) {
@@ -510,8 +523,8 @@ impl PlacementMap<'_, '_, '_> {
             }
         }
         let human_count = usize::from(map.request().human_players().get());
-        humans.into_iter().filter(|&yes| yes).count() >= human_count
+        Ok(humans.into_iter().filter(|&yes| yes).count() >= human_count
             && players.into_iter().filter(|&yes| yes).count()
-                >= human_count + usize::from(map.request().computer_players().get())
+                >= human_count + usize::from(map.request().computer_players().get()))
     }
 }

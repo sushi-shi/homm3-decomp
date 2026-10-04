@@ -74,7 +74,7 @@ fn native_connection_borders_preserve_cells_and_rng() {
             let actual = snapshot(borders.towns(), &objects, &catalog, borders.rng());
             eprintln!(
                 "{mode} case {case}: {} towns, RNG {}",
-                borders.towns().towns().len(),
+                borders.towns().towns(&objects).unwrap().count(),
                 borders.rng().state
             );
             checked += actual.lines().count();

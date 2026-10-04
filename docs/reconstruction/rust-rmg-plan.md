@@ -105,7 +105,8 @@ Nine substantial work packages remain; the first is partially implemented. They 
 implementation order, not equal amounts of work or a percentage estimate.
 The library cannot yet generate a complete map.
 
-1. **Object storage and map mutation.** Complete typed payload ownership.
+1. **Object storage and map mutation.** Extend typed payload ownership and
+   discarded-object slot reuse for remaining kinds and transient groups.
    Neighbourhood path helpers, stable geometry IDs, ordered cell membership,
    registration/removal, global/zone type counts, entrance-distance propagation
    and individual path/obstacle/border transitions now use reusable storage.
@@ -136,12 +137,13 @@ The library cannot yet generate a complete map.
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: `connectZones` and its guarded crossings,
+Immediate next implementation: reusable discarded-object slots and generic
+zone placement for tents/portals, then border guards and `connectZones` crossings,
 subterranean gates, shipyards and monolith fallback, followed by dry junctions.
 Initial connection pathfinding and water-border repair now consume `WaterIslands`
 through `ConnectionPaths` into `RepairedWaterBorders`, retaining the shared map,
-town payloads and terrain workspace. Town payloads,
-primary entrances, road targets and the shared serialized counter already exist.
+town payloads and terrain workspace. Primary entrances, road targets and the
+shared serialized counter already exist.
 Complete shared world/treasure-group payload lifetimes before integrating
 transient treasure objects. Reset object and placement workspaces together.
 Entrance-distance flooding preserves current-cell costs and pruning against
@@ -421,6 +423,30 @@ an earlier seed. Explicit seed-coordinate replay remains part of the final
 compatibility integration. The ordinary stage comparisons above cover defined
 source behavior; protected guard creation will also be exercised as crossings
 are integrated.
+
+The shared object arena now owns geometry and a typed base/town/monster payload
+in one record. Town placement no longer keeps a separate payload vector or a
+cached entrance; registered town views borrow arena payloads, and entrance
+coordinates are derived from current geometry and the owning prototype. Removal
+keeps the record for shared-map ownership. Guard construction connects the
+verified selector to shared serialized IDs, monster payloads and registration;
+failed selection consumes no ID, and occupied placement draws nothing. Town,
+guard and path entry points share arena/catalog admission before mutation.
+
+Eight native guard captures agree through 1,256 creation probes (546 constructed
+payloads), 91 registered guards, all 129,600 placement cells/counters/distances
+and final RNG states (131,277 checkpoint lines). The sixteen connection-path and
+water-border captures still agree after the ownership refactor. All 69 core
+tests and strict Clippy pass; both reviewers report no remaining actionable
+issues after the shared town-context admission fix.
+
+A named `water_guards_match_alignment` retail replay flag now models the otherwise
+unwritten flag on generated water-zone templates. The behavior review verified
+that the pinned executable leaves offset `+0x94` untouched while clearing the
+allowed-monster bytes beginning at `+0x95` (`0x53e300`–`0x53e45c`). The default
+false matches the captured zero-fill baseline; true selects the current resolved
+alignment instead of the empty allowed-faction set. This is independent of the
+general heap fill. Broader replay-profile corpus coverage remains pending.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

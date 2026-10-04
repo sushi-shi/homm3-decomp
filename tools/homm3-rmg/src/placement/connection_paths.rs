@@ -143,27 +143,13 @@ impl<'state, 'zones, 'tiles> ConnectionPaths<'state, 'zones, 'tiles> {
     }
 }
 impl PlacementMap<'_, '_, '_> {
-    fn admit_connection_objects(
-        &mut self,
-        objects: &ObjectArena,
-        catalog: &PrototypeCatalog<'_>,
-    ) -> Result<(), PlacementError> {
-        self.prepare_registration(catalog)?;
-        // Raw insertion binds cell membership even with no registered objects
-        // or when the footprint is entirely clipped away.
-        if !self.memberships.accepts_arena(objects) {
-            return Err(PlacementError::ArenaContext);
-        }
-        Ok(())
-    }
-
     pub(super) fn build_zone_connection_paths(
         &mut self,
         objects: &mut ObjectArena,
         catalog: &PrototypeCatalog<'_>,
         rng: &mut RetailRng,
     ) -> Result<(), ConnectionError> {
-        self.admit_connection_objects(objects, catalog)?;
+        self.prepare_object_context(objects, catalog)?;
         for cell in &mut *self.cells {
             cell.movement = Movement::unreached();
             cell.zone_distance = ZoneDistance::reset();
@@ -266,7 +252,7 @@ impl PlacementMap<'_, '_, '_> {
         catalog: &PrototypeCatalog<'_>,
         rng: &mut RetailRng,
     ) -> Result<(), ConnectionError> {
-        self.admit_connection_objects(objects, catalog)?;
+        self.prepare_object_context(objects, catalog)?;
         let mut index = self.view().native_index(position)?;
         let zone = self.coverage().map().raster().cells()[index].zone;
         if u32::from(self.cells[index].movement.cost()) >= raw::RMG_REACHED_COST_LIMIT {

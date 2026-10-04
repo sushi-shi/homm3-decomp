@@ -1,11 +1,10 @@
 //! Shared post-town placement checkpoint rendering.
+use super::placement::{write_cells, write_counts};
 use homm3_rmg::{
     domain::{Level, WorldPosition},
     geometry::Point,
-    object::ObjectKind,
-    placement::{Fort, ObjectArena, PathReservation, TownsPlaced},
+    placement::{Fort, ObjectArena, ObjectPayload, TownsPlaced},
     prototype::PrototypeCatalog,
-    raw,
     rng::RngCheckpoint,
 };
 use std::fmt::Write;
@@ -53,11 +52,11 @@ pub fn snapshot(
         )
         .unwrap();
     }
-    writeln!(actual, "{}", towns.towns().len()).unwrap();
-    for town in towns.towns() {
-        let geometry = objects.get(town.object()).unwrap();
+    writeln!(actual, "{}", towns.towns(objects).unwrap().count()).unwrap();
+    for (object, town) in towns.towns(objects).unwrap() {
+        let geometry = objects.get(object).unwrap();
         let anchor = geometry.position().unwrap();
-        let entrance = town.entrance();
+        let entrance = objects.entrance(catalog, object).unwrap().unwrap();
         writeln!(
             actual,
             "{} {} {} {} {} {} {} {} {} {}",
@@ -90,67 +89,12 @@ pub fn snapshot(
         )
         .unwrap();
     }
-    write_counts(&mut actual, towns);
-    write_cells(&mut actual, towns);
+    write_counts(&mut actual, map);
+    write_cells(&mut actual, map, |object| {
+        match objects.payload(object).unwrap() {
+            ObjectPayload::Town(town) => town.id().value(),
+            _ => panic!("town-only checkpoint contains another payload"),
+        }
+    });
     actual
-}
-fn write_counts(actual: &mut String, towns: &TownsPlaced<'_, '_, '_>) {
-    let map = towns.map();
-    let kind = |k| ObjectKind::parse(i32::try_from(k).unwrap()).unwrap();
-    for k in 0..raw::ADVENTURE_OBJECT_TRAIT_COUNT {
-        write!(actual, "{} ", map.object_count(kind(k))).unwrap();
-    }
-    actual.push('\n');
-    for zone in map.coverage().map().zones() {
-        for k in 0..raw::ADVENTURE_OBJECT_TRAIT_COUNT {
-            write!(
-                actual,
-                "{} ",
-                map.zone_object_count(zone.id(), kind(k)).unwrap()
-            )
-            .unwrap();
-        }
-        actual.push('\n');
-    }
-}
-fn write_cells(actual: &mut String, towns: &TownsPlaced<'_, '_, '_>) {
-    let map = towns.map();
-    let side = i32::try_from(map.coverage().map().raster().dimension()).unwrap();
-    for level in [Level::Surface, Level::Underground]
-        .into_iter()
-        .take(map.coverage().map().request().levels().count() as usize)
-    {
-        for y in 0..side {
-            for x in 0..side {
-                let at = position(x, y, level);
-                let cell = map.cell(at).unwrap();
-                write!(
-                    actual,
-                    "{} {} {} {} {}",
-                    u8::from(cell.passable()),
-                    cell.entrance()
-                        .map_or(-1, |kind| i32::try_from(kind.index()).unwrap()),
-                    u8::from(cell.reservation() == PathReservation::Obstacle),
-                    u8::from(cell.reservation() == PathReservation::Open),
-                    cell.object_distance()
-                )
-                .unwrap();
-                for object in map.objects_at(at).unwrap() {
-                    write!(
-                        actual,
-                        " {}",
-                        towns
-                            .towns()
-                            .iter()
-                            .find(|town| town.object() == object)
-                            .unwrap()
-                            .id()
-                            .value()
-                    )
-                    .unwrap();
-                }
-                actual.push('\n');
-            }
-        }
-    }
 }

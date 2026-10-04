@@ -80,7 +80,7 @@ fn native_water_islands_preserve_cells_and_rng() {
             write_terrain_and_distances(&mut actual, islands.map());
             eprintln!(
                 "{mode} case {case}: {} towns, RNG {}",
-                islands.towns().towns().len(),
+                islands.towns().towns(&objects).unwrap().count(),
                 islands.rng().state
             );
             checked += actual.lines().count();

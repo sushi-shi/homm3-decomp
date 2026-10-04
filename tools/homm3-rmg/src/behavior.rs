@@ -29,4 +29,7 @@ pub struct RetailProfile {
     pub stack_word: u32,
     /// Byte filling oracle allocations; zero is the default oracle profile.
     pub heap_byte: u8,
+    /// Uninitialized alignment-matching flag on generated water-zone templates.
+    /// Explicitly independent of the general heap fill; false is the zero-fill baseline.
+    pub water_guards_match_alignment: bool,
 }

@@ -11,8 +11,12 @@ use crate::{
 };
 use std::{collections::TryReserveError, error::Error, fmt};
 
+mod guards;
 mod objects;
-pub use objects::{MapObjectId, ObjectArena, ObjectGeometry, ObjectId};
+pub use guards::GuardPlacementError;
+pub use objects::{
+    MapObjectId, MonsterPayload, ObjectArena, ObjectGeometry, ObjectId, ObjectPayload,
+};
 mod mutation;
 pub use mutation::BorderColor;
 mod neighborhood;
@@ -31,7 +35,7 @@ pub use connections::{ConnectionBorders, ConnectionError};
 mod towns;
 use objects::{Chain, Memberships};
 use towns::TownState;
-pub use towns::{Fort, TownError, TownObject, TownsPlaced};
+pub use towns::{Fort, TownError, TownPayload, TownsPlaced};
 mod registration;
 use registration::Registration;
 pub use registration::{KeyTentChoice, KeyTentColor};
@@ -101,6 +105,13 @@ pub enum ObstacleEntrances {
 /// A safe placement query cannot reproduce an undefined native access.
 #[derive(Debug)]
 pub enum PlacementError {
+    /// A typed payload factory received a prototype of another object kind.
+    PayloadKind {
+        /// Kind required by the payload factory.
+        expected: ObjectKind,
+        /// Kind of the supplied prototype.
+        actual: ObjectKind,
+    },
     /// Supplied arena is not the one already bound to cell membership.
     ArenaContext,
     /// Objects are being registered with a different catalog, mode or format.
@@ -135,6 +146,12 @@ pub enum PlacementError {
 impl fmt::Display for PlacementError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::PayloadKind { expected, actual } => write!(
+                f,
+                "payload kind {} cannot use object kind {}",
+                expected.index(),
+                actual.index()
+            ),
             Self::ArenaContext => f.write_str("object arena does not own map membership"),
             Self::CatalogContext => {
                 f.write_str("object catalog does not match the registered map context")

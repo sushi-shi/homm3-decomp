@@ -153,6 +153,20 @@ impl Registration {
 }
 
 impl PlacementMap<'_, '_, '_> {
+    pub(super) fn prepare_object_context(
+        &mut self,
+        objects: &ObjectArena,
+        catalog: &PrototypeCatalog<'_>,
+    ) -> Result<(), PlacementError> {
+        self.prepare_registration(catalog)?;
+        // Raw insertion binds cell membership even with no registered objects
+        // or when the footprint is entirely clipped away.
+        if !self.memberships.accepts_arena(objects) {
+            return Err(PlacementError::ArenaContext);
+        }
+        Ok(())
+    }
+
     /// Next native payload ID, for generation diagnostics and replay checkpoints.
     #[must_use]
     pub const fn next_object_id(&self) -> i32 {
