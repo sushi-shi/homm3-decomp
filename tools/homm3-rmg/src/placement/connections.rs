@@ -517,7 +517,7 @@ impl PlacementMap<'_, '_, '_> {
         }
     }
 
-    pub(super) fn connection_object_fits(
+    pub(super) fn object_fits(
         &mut self,
         entry: &PreparedPrototype<'_>,
         position: WorldPosition,

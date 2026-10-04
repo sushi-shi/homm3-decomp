@@ -410,10 +410,8 @@ impl PlacementMap<'_, '_, '_> {
     }
 }
 
-pub(super) fn entrance_position(
-    prototype: &Prototype,
-    anchor: WorldPosition,
-) -> Result<WorldPosition, PlacementError> {
+// Native no-trigger coordinates are the mask-frame limits, not (-1,-1).
+pub(super) fn trigger_offset(prototype: &Prototype) -> Point {
     let (x, y) = prototype.entrance().map_or(
         (
             i32::try_from(raw::OBJECT_MASK_WIDTH).unwrap(),
@@ -421,6 +419,14 @@ pub(super) fn entrance_position(
         ),
         |cell| (i32::from(cell.x()), i32::from(cell.y())),
     );
+    Point::new(x, y)
+}
+
+pub(super) fn entrance_position(
+    prototype: &Prototype,
+    anchor: WorldPosition,
+) -> Result<WorldPosition, PlacementError> {
+    let Point { x, y } = trigger_offset(prototype);
     Ok(WorldPosition {
         point: Point::new(
             anchor

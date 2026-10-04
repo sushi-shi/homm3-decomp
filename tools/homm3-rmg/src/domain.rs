@@ -87,3 +87,54 @@ impl Terrain {
         self as usize
     }
 }
+
+/// The seven primary resources, excluding reward/dialog-only discriminants.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(i32)]
+pub enum Resource {
+    /// Wood.
+    Wood = raw::WOOD,
+    /// Mercury.
+    Mercury = raw::MERCURY,
+    /// Ore.
+    Ore = raw::ORE,
+    /// Sulfur.
+    Sulfur = raw::SULFUR,
+    /// Crystal.
+    Crystal = raw::CRYSTAL,
+    /// Gems.
+    Gems = raw::GEMS,
+    /// Gold.
+    Gold = raw::GOLD,
+}
+impl Resource {
+    /// Native resource iteration and cost-column order.
+    pub const ALL: [Self; raw::NUM_RESOURCES as usize] = [
+        Self::Wood,
+        Self::Mercury,
+        Self::Ore,
+        Self::Sulfur,
+        Self::Crystal,
+        Self::Gems,
+        Self::Gold,
+    ];
+    /// Admit a primary-resource discriminant.
+    #[must_use]
+    pub const fn parse(value: i32) -> Option<Self> {
+        match value {
+            raw::WOOD => Some(Self::Wood),
+            raw::MERCURY => Some(Self::Mercury),
+            raw::ORE => Some(Self::Ore),
+            raw::SULFUR => Some(Self::Sulfur),
+            raw::CRYSTAL => Some(Self::Crystal),
+            raw::GEMS => Some(Self::Gems),
+            raw::GOLD => Some(Self::Gold),
+            _ => None,
+        }
+    }
+    /// Index into a resource row.
+    #[must_use]
+    pub const fn index(self) -> usize {
+        self as usize
+    }
+}

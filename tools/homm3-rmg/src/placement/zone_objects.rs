@@ -12,7 +12,7 @@ use std::num::NonZeroU32;
 pub(super) struct ZonePlacementScratch {
     // Kept separate from connection candidates: placing a tent may occur while
     // a crossing still owns its frozen list of candidate sites.
-    candidates: Vec<WorldPosition>,
+    pub(super) candidates: Vec<WorldPosition>,
     outline: OutlineWorkspace,
 }
 impl ZonePlacementScratch {

@@ -101,7 +101,7 @@ Completion requires the full generator in both modes.
 
 ### Remaining work, in execution order
 
-Eight substantial work packages remain; the first is partially implemented. They describe
+Seven substantial work packages remain; the first is partially implemented. They describe
 implementation order, not equal amounts of work or a percentage estimate.
 The library cannot yet generate a complete map.
 
@@ -113,34 +113,33 @@ The library cannot yet generate a complete map.
    and individual path/obstacle/border transitions now use reusable storage.
    Tent availability follows the loaded prototype count. Retail's initial cursor
    uses named replay input or a typed fault until a native rescan initializes it.
-2. **Mines.** Port fixed and density-driven mine placement and guards. Connect
-   the existing guard selector to object creation, ownership and spatial state.
-3. **Treasures.** Port treasure definitions/values, object payload ADTs, group
+2. **Treasures.** Port treasure definitions/values, object payload ADTs, group
    assembly/scoring/placement, reservations and completion/replacement callbacks.
    Integrate the existing hero, artifact, spell and creature catalogs.
-4. **Decoration.** Port underground decoration, coastal marking and general
+3. **Decoration.** Port underground decoration, coastal marking and general
    obstacle placement, preserving overlap priorities and original iteration.
-5. **Roads and rivers.** Port route construction and painting around the existing
+4. **Roads and rivers.** Port route construction and painting around the existing
    line classifiers and shared pattern tables. Preserve all source diagrams.
-6. **Generation API and compatibility integration.** Connect all stages and
+5. **Generation API and compatibility integration.** Connect all stages and
    immutable asset ownership to one native entry point with reusable workspace,
    structured failures and RNG diagnostics. Audit every hotfix branch and
    reconcile the boundary/water-zone replay inputs with executable evidence.
-7. **Output and CLI.** Implement all three formats' H3M serialization, streamed
+6. **Output and CLI.** Implement all three formats' H3M serialization, streamed
    compressed output, native generation/replay commands and actionable errors.
    Normal execution must not require Wine or the retail executable.
-8. **Final verification and publication.** Run the complete 100,000-case
+7. **Final verification and publication.** Run the complete 100,000-case
     campaign; independently parse maps; verify repeated/run-order behavior;
     profile cold loading, warm generation and output allocations; audit ASCII
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: fixed and density-driven mines, their guards,
-and nearby resource piles. Preserve the native last-scanned-prototype trigger
-and width behavior. Reuse weighted density scheduling and shared guard scaling;
-add resource payloads before integrating their placement. Connection preparation
-through both dispatcher passes and dry junctions is complete and retains the
-shared terrain, object ownership, town records and RNG checkpoints.
+Immediate next implementation: treasure definition/value dispatch and typed
+payload construction, followed by temporary group ownership and reservations.
+Before treasure placement, retain the native faction-count pass over primary-town
+zones and rebuild connection paths after mines. Mines now consume
+`JunctionsPrepared` into `MinesPlaced`; fixed/density attempts, guards and nearby
+resource piles have native comparisons. The later global path rebuild is not
+folded into the mine stage.
 Complete shared world/treasure-group payload lifetimes before integrating
 transient treasure objects. Reset object and placement workspaces together.
 Entrance-distance flooding preserves current-cell costs and pruning against
@@ -606,8 +605,34 @@ than merely exercising empty dispatch. All 72 core tests and strict Clippy pass;
 both independent reviews are clean. Isolated native probes leave all 32 candidate
 and repeat whole-map outputs unchanged against the preceding connection probes.
 
-Next implement mines, nearby resources and the remaining payloads/reservations.
-Full map generation and serialization remain unfinished.
+Mines and nearby resources are implemented. A seven-value `Resource` enum uses
+bindgen discriminants; fixed mine counts precede the shared density scheduler.
+Starting placement carries its primary town entrance in a private ADT. Mine art
+selection borrows the catalog, recording selected and last-scanned prototypes
+separately. Site ranking preserves the source's sequential distance, obstacle
+and spacing updates. Candidates reuse placement storage; outline scoring uses a
+bounded stack buffer. Guard values combine admitted zone/map strength through the
+shared scaler. Mine and resource payloads claim no serialized ID; failed unplaced
+mines return their arena slots. The resource payload records native defaults.
+
+Both modes preserve the source's last-scanned mine trigger/width behavior and
+coin-before-fit resource placement (at most three piles). Canonical mine constants
+now live in the C++ settings header and reach Rust through bindgen. Shared trigger
+geometry and object-fit helpers replace repeated bodies. A review found that
+unselected retail art may have a usable signed width but unusable height: an
+`ImageDimensions` ADT now retains those extents without requiring footprint
+admission, and the strip reads width alone. Regression cases cover invalid height,
+negative width and normal dimensions.
+
+Sixteen native mine captures cover both modes with ordinary and forced-border
+fixtures: 521,358 checkpoint lines, 372 mines and 502 resource piles. RNG, object
+order/payloads, membership, counts, reservations and all retained movement/connection
+metadata agree. All 32 candidate/repeat whole-map outputs remain unchanged by the
+isolated probes. All 73 core tests and strict Clippy pass; both reviewers report no
+remaining issues after the width-only correction.
+
+Next implement treasure definitions, their payloads, and transient group lifetime
+and reservation handling. Full map generation and serialization remain unfinished.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

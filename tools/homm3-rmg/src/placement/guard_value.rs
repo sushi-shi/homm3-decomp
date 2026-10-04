@@ -51,6 +51,35 @@ impl From<MonsterStrength> for GuardStrength {
         Self(value.get())
     }
 }
+impl super::PlacementMap<'_, '_, '_> {
+    pub(super) fn zone_guard_value(
+        &self,
+        value: i32,
+        zone: crate::boundaries::BoundaryZone,
+    ) -> Result<i32, PlacementError> {
+        use crate::{boundaries::ZoneOrigin, template::ZoneMonsters};
+        let ZoneOrigin::Template(id) = zone.origin() else {
+            // Added water zones explicitly have no monsters.
+            return Ok(0);
+        };
+        let map = self.coverage().map();
+        let strength = match map.template().zones()[id.index()].monsters() {
+            ZoneMonsters::None => return Ok(0),
+            ZoneMonsters::Weak => raw::RMG_ZONE_MONSTERS_WEAK,
+            ZoneMonsters::Average => raw::RMG_ZONE_MONSTERS_AVERAGE,
+            ZoneMonsters::Strong => raw::RMG_ZONE_MONSTERS_STRONG,
+        };
+        let strength = i32::try_from(strength).map_err(|_| PlacementError::Arithmetic)?
+            + i32::from(map.request().strength().get())
+            - i32::try_from(raw::RMG_ZONE_MONSTERS_AVERAGE)
+                .map_err(|_| PlacementError::Arithmetic)?;
+        let maximum = i32::try_from(raw::RMG_STRONGEST_GUARD_STRENGTH)
+            .map_err(|_| PlacementError::Arithmetic)?;
+        GuardStrength::parse(strength.clamp(0, maximum))
+            .ok_or(PlacementError::Arithmetic)?
+            .scale(value)
+    }
+}
 fn term(value: i32, threshold: i32, scale: i32) -> Result<i32, PlacementError> {
     if value <= threshold {
         return Ok(0);

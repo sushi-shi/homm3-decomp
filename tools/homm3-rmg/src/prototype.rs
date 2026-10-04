@@ -136,10 +136,18 @@ impl fmt::Display for PrototypeFault {
 }
 impl Error for PrototypeFault {}
 
+// Keep the recorded dimensions even when they cannot describe a footprint.
+// Some native operations read just one signed extent without traversing cells.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ImageDimensions {
+    Footprint(FootprintSize),
+    Unusable { width: i8, height: i8 },
+}
+
 /// Parsed mask data, copied once per distinct image name (14 input bytes).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ImageMask {
-    size: Result<FootprintSize, PrototypeFault>,
+    size: ImageDimensions,
     draw: u64,
     shadow: u64,
 }
@@ -151,11 +159,13 @@ impl ImageMask {
     /// Reports a truncated mask header.
     pub fn parse(bytes: &[u8]) -> Result<Self, homm3_resource::Error> {
         let mask = Mask::parse(bytes.get(..MASK_BYTES).unwrap_or(bytes))?;
-        let size =
-            FootprintSize::parse(mask.width(), mask.height()).ok_or(PrototypeFault::Dimensions {
+        let size = FootprintSize::parse(mask.width(), mask.height()).map_or(
+            ImageDimensions::Unusable {
                 width: i8::from_ne_bytes([mask.width()]),
                 height: i8::from_ne_bytes([mask.height()]),
-            });
+            },
+            ImageDimensions::Footprint,
+        );
         let mut draw = 0;
         let mut shadow = 0;
         for bit in 0..raw::OBJECT_MASK_CELLS as usize {
@@ -170,10 +180,10 @@ impl ImageMask {
     }
     fn missing() -> Self {
         Self {
-            size: Err(PrototypeFault::Dimensions {
+            size: ImageDimensions::Unusable {
                 width: 0,
                 height: 0,
-            }),
+            },
             draw: 0,
             shadow: 0,
         }
@@ -183,7 +193,21 @@ impl ImageMask {
     /// # Errors
     /// Returns the signed dimensions when they do not fit the mask frame.
     pub const fn size(self) -> Result<FootprintSize, PrototypeFault> {
-        self.size
+        match self.size {
+            ImageDimensions::Footprint(size) => Ok(size),
+            ImageDimensions::Unusable { width, height } => {
+                Err(PrototypeFault::Dimensions { width, height })
+            }
+        }
+    }
+    /// Recorded signed width, without requiring a usable footprint or height.
+    /// Mine resource strips use this from an unselected prototype in retail.
+    #[must_use]
+    pub const fn signed_width(self) -> i32 {
+        match self.size {
+            ImageDimensions::Footprint(size) => size.width() as i32,
+            ImageDimensions::Unusable { width, .. } => width as i32,
+        }
     }
     /// Whether the image draws this cell.
     #[must_use]
@@ -306,7 +330,7 @@ impl Prototype {
             && i64::from(self.subtype) >= i64::from(raw::RMG_PRE_SOD_MONOLITH_SUBTYPE_COUNT))
     }
     fn footprint(&self, mask: ImageMask) -> Result<FootprintSize, PrototypeFault> {
-        let size = mask.size?;
+        let size = mask.size()?;
         if self.kind.index() == raw::TERRAIN_HOLE as usize {
             return Ok(size);
         }
@@ -821,7 +845,7 @@ mod tests {
 
     fn mask() -> ImageMask {
         ImageMask {
-            size: Ok(FootprintSize::parse(2, 2).unwrap()),
+            size: ImageDimensions::Footprint(FootprintSize::parse(2, 2).unwrap()),
             draw: (1 << 47) | (1 << 46) | (1 << 39),
             shadow: 1 << 46,
         }
@@ -869,6 +893,18 @@ mod tests {
             text.push_str("\r\n");
         }
         crate::traits::CreatureCatalog::parse(text.as_bytes()).unwrap()
+    }
+
+    #[test]
+    fn signed_width_does_not_require_a_usable_height() {
+        for (width, height, expected) in [(6, 0, 6), (255, 6, -1), (2, 2, 2)] {
+            let mut bytes = [0; 14];
+            bytes[0] = width;
+            bytes[1] = height;
+            let mask = ImageMask::parse(&bytes).unwrap();
+            assert_eq!(mask.signed_width(), expected);
+            assert_eq!(mask.size().is_ok(), width == 2 && height == 2);
+        }
     }
 
     #[test]

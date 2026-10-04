@@ -243,7 +243,7 @@ impl PlacementMap<'_, '_, '_> {
                             point: Point::new(site_x, y),
                             level: position.level,
                         };
-                        if self.connection_object_fits(entry, site, source)?
+                        if self.object_fits(entry, site, source)?
                             && self.can_place_shipyard(site)?
                         {
                             self.connections.candidates.try_reserve(1)?;

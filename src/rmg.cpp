@@ -6854,14 +6854,6 @@ b8 TRmgGenerator::tryPlacePrimaryTown(
     return true;
 }
 
-// Squared tile distances of a starting mine from the town: never within 4
-// tiles or beyond 200, and any site within 12 tiles ranks as 12.
-enum ERmgStartingMineDistance {
-    RMG_STARTING_MINE_MINIMUM_SQUARED_DISTANCE = 4 * 4,
-    RMG_STARTING_MINE_NEAR_SQUARED_DISTANCE = 12 * 12,
-    RMG_STARTING_MINE_MAXIMUM_SQUARED_DISTANCE = 200 * 200
-};
-
 VA(0x00545580, 0x401)
 MAC_ADDRESS(0x249214, 0x46c)
 b8 TRmgGenerator::placeMineSite(TRmgObject* object,
@@ -6918,8 +6910,8 @@ b8 TRmgGenerator::placeMineSite(TRmgObject* object,
                 if (nearby->isPassableLand() && nearby->hasObstacleFill())
                     ++obstacleCount;
             }
-            if (obstacleCount > 5)
-                obstacleCount = 5;
+            if (obstacleCount > RMG_MINE_MAXIMUM_OBSTACLE_SCORE)
+                obstacleCount = RMG_MINE_MAXIMUM_OBSTACLE_SCORE;
             if (obstacleCount < bestObstacleCount)
                 continue;
             if (obstacleCount > bestObstacleCount) {
@@ -6956,9 +6948,9 @@ s32 TRmgGenerator::getMineGuardValue(s32 resource, const TRmgZone* zone) const
 {
     s32 value;
     switch (resource) {
-    case WOOD: case ORE: value = 1500; break;
-    case GOLD: value = 7000; break;
-    default: value = 3500; break;
+    case WOOD: case ORE: value = RMG_BASIC_MINE_GUARD_VALUE; break;
+    case GOLD: value = RMG_GOLD_MINE_GUARD_VALUE; break;
+    default: value = RMG_RARE_MINE_GUARD_VALUE; break;
     }
     return getZoneGuardValue(value, zone);
 }
@@ -7013,7 +7005,7 @@ b8 TRmgGenerator::tryPlaceMine(TRmgZone* zone,
     bounds.m_minimumX = max(position.m_x - lastScannedPrototype->getWidth(), 0);
     bounds.m_maximumX = min(position.m_x + 2, m_map.getWidth());
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
-        for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX && placed <= 2; ++position.m_x) {
+        for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX && placed < RMG_MINE_RESOURCE_PILE_LIMIT; ++position.m_x) {
             if (rand() % 2 == 0 && m_map.canPlaceObject(resourceProperties, position, zone)) {
                 ++placed;
                 addObject(new TRmgResourceObject(resourceProperties), position);

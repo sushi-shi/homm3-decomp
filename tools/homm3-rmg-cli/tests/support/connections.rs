@@ -30,6 +30,7 @@ pub enum Attempts {
     Direct,
     BothPasses,
     Junctions,
+    Mines,
 }
 impl Attempts {
     fn filename(self) -> &'static str {
@@ -39,6 +40,7 @@ impl Attempts {
             Self::Direct => "direct-connections.txt",
             Self::BothPasses => "zone-connections.txt",
             Self::Junctions => "junctions.txt",
+            Self::Mines => "mines.txt",
         }
     }
 }
@@ -138,7 +140,7 @@ pub fn compare_native(attempts: Attempts) {
         }
     }
     eprintln!("checked {checked} native connection checkpoint lines");
-    if attempts == Attempts::Junctions {
+    if matches!(attempts, Attempts::Junctions | Attempts::Mines) {
         eprintln!("prepared {junction_count} dry junction zones");
         assert!(
             junction_count > 0,
@@ -311,20 +313,37 @@ fn snapshot(
     }
     if matches!(
         attempts,
-        Attempts::Direct | Attempts::BothPasses | Attempts::Junctions
+        Attempts::Direct | Attempts::BothPasses | Attempts::Junctions | Attempts::Mines
     ) {
         let direct = connecting
             .connect_direct_zones(objects, catalog, creatures, rng)
             .unwrap();
         assert_eq!(direct.rng(), rng.checkpoint());
-        if matches!(attempts, Attempts::BothPasses | Attempts::Junctions) {
+        if matches!(
+            attempts,
+            Attempts::BothPasses | Attempts::Junctions | Attempts::Mines
+        ) {
             let placed = direct
                 .connect_remaining_zones(objects, catalog, creatures, rng)
                 .unwrap();
             assert_eq!(placed.rng(), rng.checkpoint());
-            if attempts == Attempts::Junctions {
+            if matches!(attempts, Attempts::Junctions | Attempts::Mines) {
                 let junctions = placed.prepare_junctions(rng).unwrap();
                 assert_eq!(junctions.rng(), rng.checkpoint());
+                if attempts == Attempts::Mines {
+                    let mines = junctions
+                        .place_mines(objects, catalog, creatures, rng)
+                        .unwrap();
+                    assert_eq!(mines.rng(), rng.checkpoint());
+                    return completed_snapshot(
+                        mines.map(),
+                        objects,
+                        catalog,
+                        rng,
+                        colors,
+                        attempts,
+                    );
+                }
                 return completed_snapshot(
                     junctions.map(),
                     objects,
@@ -375,7 +394,10 @@ fn completed_snapshot(
         map.active_objects().len()
     );
     write_water_state(&mut actual, map);
-    if matches!(attempts, Attempts::BothPasses | Attempts::Junctions) {
+    if matches!(
+        attempts,
+        Attempts::BothPasses | Attempts::Junctions | Attempts::Mines
+    ) {
         use homm3_rmg::placement::PortalDirection;
         for (index, direction) in [PortalDirection::OneWay, PortalDirection::TwoWay]
             .into_iter()
@@ -402,7 +424,10 @@ fn completed_snapshot(
         objects,
         catalog,
         colors,
-        matches!(attempts, Attempts::BothPasses | Attempts::Junctions),
+        matches!(
+            attempts,
+            Attempts::BothPasses | Attempts::Junctions | Attempts::Mines
+        ),
     );
     actual
 }
@@ -498,6 +523,7 @@ fn write_objects(
         let position = geometry.position().unwrap();
         let payload = match objects.payload(id).unwrap() {
             ObjectPayload::Ownable => [3, -1, -1, -1],
+            ObjectPayload::Resource => [4, -1, 0, -1],
             ObjectPayload::Base => [0, -1, -1, -1],
             ObjectPayload::Town(town) => [
                 1,

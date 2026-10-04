@@ -158,8 +158,8 @@ impl PlacementMap<'_, '_, '_> {
                 let score = u32::from(self.cells[index].object_distance)
                     + u32::from(self.cells[other_index].object_distance);
                 if score < best
-                    || !self.connection_object_fits(entry, position, source)?
-                    || !self.connection_object_fits(entry, other, destination)?
+                    || !self.object_fits(entry, position, source)?
+                    || !self.object_fits(entry, other, destination)?
                 {
                     continue;
                 }

@@ -180,7 +180,9 @@ mod tests {
             Image {
                 name: Cow::Borrowed(b"test.def"),
                 mask: ImageMask {
-                    size: Ok(FootprintSize::parse(3, 2).unwrap()),
+                    size: super::super::ImageDimensions::Footprint(
+                        FootprintSize::parse(3, 2).unwrap(),
+                    ),
                     draw,
                     shadow: 0,
                 },
@@ -269,7 +271,8 @@ mod tests {
                 }
             }
             let (prototype, mut image) = prototype(mask, mask, false);
-            image.mask.size = Ok(FootprintSize::parse(4, 4).unwrap());
+            image.mask.size =
+                super::super::ImageDimensions::Footprint(FootprintSize::parse(4, 4).unwrap());
             let entry = prepared(&prototype, &image);
             let outline = workspace.trace(&entry).unwrap();
             assert_eq!(outline.is_empty(), bits.trailing_zeros() >= 4);

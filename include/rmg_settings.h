@@ -230,4 +230,20 @@ enum ERmgHeroCount {
     RMG_HERO_COUNT = 156
 };
 
+// Squared tile distances of a starting mine from the town: never within 4
+// tiles or beyond 200, and any site within 12 tiles ranks as 12.
+enum ERmgStartingMineDistance {
+    RMG_STARTING_MINE_MINIMUM_SQUARED_DISTANCE = 4 * 4,
+    RMG_STARTING_MINE_NEAR_SQUARED_DISTANCE = 12 * 12,
+    RMG_STARTING_MINE_MAXIMUM_SQUARED_DISTANCE = 200 * 200
+};
+
+enum ERmgMinePlacement {
+    RMG_MINE_MAXIMUM_OBSTACLE_SCORE = 5,
+    RMG_MINE_RESOURCE_PILE_LIMIT = 3,
+    RMG_BASIC_MINE_GUARD_VALUE = 1500,
+    RMG_RARE_MINE_GUARD_VALUE = 3500,
+    RMG_GOLD_MINE_GUARD_VALUE = 7000
+};
+
 #endif

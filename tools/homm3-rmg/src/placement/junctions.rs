@@ -15,7 +15,10 @@ pub struct JunctionsPrepared<'state, 'zones, 'tiles> {
     connections: ConnectionsPlaced<'state, 'zones, 'tiles>,
     rng: RngCheckpoint,
 }
-impl JunctionsPrepared<'_, '_, '_> {
+impl<'state, 'zones, 'tiles> JunctionsPrepared<'state, 'zones, 'tiles> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+        self.connections.map_mut()
+    }
     /// Current placement state, including junction paths and their cost floods.
     #[must_use]
     pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {

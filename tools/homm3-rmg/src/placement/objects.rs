@@ -96,6 +96,8 @@ pub enum ObjectPayload {
     Base,
     /// Unowned capturable object; serializes the native unowned byte and padding.
     Ownable,
+    /// Resource pile with native default amount and no custom treasure.
+    Resource,
     /// Player ownership and fort, with its shared native object ID.
     Town(TownPayload),
     /// Guard stack count, disposition and shared native object ID.
@@ -156,6 +158,22 @@ impl ObjectArena {
     ) -> Result<ObjectId, PlacementError> {
         Self::require_kind(catalog, prototype, raw::SHIPYARD)?;
         self.create_record(catalog, prototype, ObjectPayload::Ownable)
+    }
+    pub(super) fn create_mine(
+        &mut self,
+        catalog: &PrototypeCatalog<'_>,
+        prototype: PrototypeId,
+    ) -> Result<ObjectId, PlacementError> {
+        Self::require_kind(catalog, prototype, raw::MINE)?;
+        self.create_record(catalog, prototype, ObjectPayload::Ownable)
+    }
+    pub(super) fn create_resource(
+        &mut self,
+        catalog: &PrototypeCatalog<'_>,
+        prototype: PrototypeId,
+    ) -> Result<ObjectId, PlacementError> {
+        Self::require_kind(catalog, prototype, raw::RESOURCE)?;
+        self.create_record(catalog, prototype, ObjectPayload::Resource)
     }
     pub(super) fn create_town(
         &mut self,

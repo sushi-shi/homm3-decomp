@@ -30,3 +30,9 @@ fn native_both_passes_preserve_portal_lists_protection_and_rng() {
 fn native_junctions_preserve_routes_reservations_movement_and_rng() {
     connections::compare_native(connections::Attempts::Junctions);
 }
+
+#[test]
+#[ignore = "requires HOMM3_RMG_DATA and HOMM3_RMG_ORACLE mine checkpoints"]
+fn native_mines_preserve_sites_resources_guards_and_rng() {
+    connections::compare_native(connections::Attempts::Mines);
+}
