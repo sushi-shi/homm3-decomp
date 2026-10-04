@@ -1,6 +1,6 @@
 //! Native placement queries over completed terrain, before objects are added.
 use homm3_rmg::{
-    behavior::{Behavior, RetailProfile},
+    behavior::{Behavior, RetailProfile, TownMask},
     boundaries::BoundaryWorkspace,
     domain::{Level, WorldPosition},
     geometry::Point,
@@ -38,7 +38,14 @@ fn native_footprint_and_complete_fit_queries_match_on_generated_maps() {
     let mut outline = OutlineWorkspace::default();
     let mut checked = 0;
     for (mode, behavior) in [
-        ("retail", Behavior::Retail(RetailProfile::default())),
+        (
+            "retail",
+            Behavior::Retail(RetailProfile {
+                // These snapshots use authored C++ all-town water flags, not retail heap residue.
+                water_zone_towns: Some(TownMask::ALL),
+                ..RetailProfile::default()
+            }),
+        ),
         ("hotfix", Behavior::Hotfix),
     ] {
         let rules = PlacementRules::parse(&bytes, behavior).unwrap();

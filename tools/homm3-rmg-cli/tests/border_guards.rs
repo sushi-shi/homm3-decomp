@@ -1,6 +1,6 @@
 //! Native border-guard rows, key-tent cursors and protected crossing neighborhoods.
 use homm3_rmg::{
-    behavior::{Behavior, RetailProfile},
+    behavior::{Behavior, RetailProfile, TownMask},
     boundaries::BoundaryWorkspace,
     domain::{Level, WorldPosition},
     geometry::Point,
@@ -46,6 +46,8 @@ fn native_border_guards_preserve_tents_cursors_cells_and_rng() {
         (
             "retail",
             Behavior::Retail(RetailProfile {
+                // These snapshots use authored C++ all-town water flags, not retail heap residue.
+                water_zone_towns: Some(TownMask::ALL),
                 initial_key_tent_color: Some(0),
                 ..RetailProfile::default()
             }),

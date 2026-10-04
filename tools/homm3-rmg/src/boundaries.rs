@@ -1,7 +1,7 @@
 //! Voronoi boundary construction and connections for additional water zones.
 
 use crate::{
-    behavior::Behavior,
+    behavior::{Behavior, TownMask},
     domain::{Level, Terrain, WorldPosition},
     geometry::{Delaunay, GeometryError, Point, Voronoi, ZoneId},
     layout::Layout,
@@ -477,8 +477,10 @@ impl BoundaryWorkspace {
         request: &Request,
         rng: &mut RetailRng,
     ) -> Result<(), BoundaryError> {
-        // Current C++ makes retail's unused probe draw explicit; hotfix skips it.
-        // The raw stack fill does not imply that live probe bytes are still zero.
+        // Retail 0x53e149 passes unwritten stack town flags to 0x5329e0.
+        // Nonperturbing pinned-executable captures observe nonempty live masks
+        // and one draw on both levels, including initial stack fills 0 and -1.
+        // The selected probe alignment is unused; hotfix explicitly allows none.
         if !request.behavior().is_hotfix() {
             rng.draw();
         }
@@ -525,10 +527,11 @@ impl BoundaryWorkspace {
                 }
                 let owner = if level == Level::Surface {
                     let id = ZoneId::new(self.zones.len());
-                    let alignment = if request.behavior().is_hotfix() {
-                        None
-                    } else {
-                        Some(random_town(rng))
+                    let alignment = match request.behavior() {
+                        Behavior::Hotfix => None,
+                        Behavior::Retail(profile) => {
+                            select_water_town(profile.water_zone_town_mask(), rng)
+                        }
                     };
                     self.zones.try_reserve(1)?;
                     self.zones.push(BoundaryZone {
@@ -771,7 +774,66 @@ fn radial_coordinate(center: i32, half_offset: f64) -> Result<i32, BoundaryError
     #[allow(clippy::cast_possible_truncation)]
     Ok(value as i32)
 }
-fn random_town(rng: &mut RetailRng) -> Town {
-    let count = NonZeroU32::new(u32::try_from(raw::NATIVE_TERRAIN.len()).unwrap()).unwrap();
-    Town::parse(i32::try_from(rng.below(count)).unwrap()).unwrap()
+fn select_water_town(mask: TownMask, rng: &mut RetailRng) -> Option<Town> {
+    // 0x532a47 counts nonzero flags; 0x532a59 skips rand only when none are set.
+    // The heap-filled masks reaching 0x53e45c remain zero under the zero profile.
+    let count = NonZeroU32::new(mask.count())?;
+    let selected = usize::try_from(rng.below(count)).unwrap();
+    (0..raw::TOWN_TYPE_COUNT)
+        .filter(|&town| mask.bits() & (1 << town) != 0)
+        .nth(selected)
+        .map(|town| Town::parse(i32::try_from(town).unwrap()).unwrap())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn water_town_selection_preserves_empty_singleton_and_sparse_draws() {
+        let mut rng = RetailRng::new(350_484_818);
+        assert_eq!(select_water_town(TownMask::NONE, &mut rng), None);
+        assert_eq!(
+            rng.checkpoint(),
+            RngCheckpoint {
+                state: 350_484_818,
+                draws: 0
+            }
+        );
+        assert_eq!(
+            select_water_town(TownMask::parse(1 << 8).unwrap(), &mut rng),
+            Some(Town::parse(8).unwrap())
+        );
+        assert_eq!(
+            rng.checkpoint(),
+            RngCheckpoint {
+                state: 1_001_028_301,
+                draws: 1
+            }
+        );
+
+        // Captured all-town water constructors, heap fills 91 and 255.
+        let mut rng = RetailRng::new(350_484_818);
+        for town in [1, 5, 5, 5, 1, 3, 8, 4, 4, 0, 3, 0, 0, 4, 8] {
+            assert_eq!(
+                select_water_town(TownMask::ALL, &mut rng),
+                Some(Town::parse(town).unwrap())
+            );
+        }
+        assert_eq!(
+            rng.checkpoint(),
+            RngCheckpoint {
+                state: 4_030_193_355,
+                draws: 15
+            }
+        );
+        // A sparse mask selects by rank, not by reducing to the largest index.
+        let mut rng = RetailRng::new(1);
+        let sparse = TownMask::parse((1 << 2) | (1 << 7)).unwrap();
+        assert_eq!(
+            select_water_town(sparse, &mut rng),
+            Some(Town::parse(7).unwrap())
+        );
+        assert_eq!(rng.draws(), 1);
+    }
 }

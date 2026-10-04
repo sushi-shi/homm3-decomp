@@ -1,7 +1,7 @@
 //! Compare against checkpoints captured from the real VC6 generator.
 
 use homm3_rmg::{
-    behavior::{Behavior, RetailProfile},
+    behavior::{Behavior, RetailProfile, TownMask},
     boundaries::{BoundaryMap, BoundaryWorkspace, TerrainCoverage},
     domain::Level,
     layout::LayoutWorkspace,
@@ -23,7 +23,14 @@ fn generation_stages_match_vc6_checkpoints() {
     let mut boundaries = BoundaryWorkspace::default();
     let mut terrain = TerrainWorkspace::default();
     for (mode, behavior) in [
-        ("retail", Behavior::Retail(RetailProfile::default())),
+        (
+            "retail",
+            Behavior::Retail(RetailProfile {
+                // These snapshots use authored C++ all-town water flags, not retail heap residue.
+                water_zone_towns: Some(TownMask::ALL),
+                ..RetailProfile::default()
+            }),
+        ),
         ("hotfix", Behavior::Hotfix),
     ] {
         for (case, (seed, size, levels, version, water)) in [

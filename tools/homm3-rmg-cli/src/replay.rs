@@ -1,7 +1,7 @@
 //! Small versioned replay records. Keep raw request values, including repaired
 //! lobby inputs, separate from human-readable diagnostics appended after them.
 use homm3_rmg::{
-    behavior::{Behavior, RetailProfile},
+    behavior::{Behavior, RetailProfile, TownMask},
     raw,
 };
 use std::{
@@ -27,7 +27,7 @@ pub struct Replay {
 pub struct ReplayError;
 impl fmt::Display for ReplayError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("invalid RMG replay record (expected homm3-rmg-replay 1)")
+        f.write_str("invalid RMG replay record (expected homm3-rmg-replay 1 or 2)")
     }
 }
 impl Error for ReplayError {}
@@ -48,32 +48,17 @@ impl Replay {
         }
         let mut words = input.split_whitespace();
         label(&mut words, "homm3-rmg-replay")?;
-        label(&mut words, "1")?;
+        let version = match words.next() {
+            Some("1") => 1,
+            Some("2") => 2,
+            _ => return Err(ReplayError),
+        };
         label(&mut words, "seed")?;
         let seed = number(&mut words)?;
         label(&mut words, "behavior")?;
         let behavior = match words.next() {
             Some("hotfix") => Behavior::Hotfix,
-            Some("retail") => {
-                let stack_word = number(&mut words)?;
-                let heap_byte = number(&mut words)?;
-                let water_guards_match_alignment = match words.next() {
-                    Some("0") => false,
-                    Some("1") => true,
-                    _ => return Err(ReplayError),
-                };
-                let initial_key_tent_color = match words.next() {
-                    Some("none") => None,
-                    Some(n) => Some(n.parse().map_err(|_| ReplayError)?),
-                    None => return Err(ReplayError),
-                };
-                Behavior::Retail(RetailProfile {
-                    stack_word,
-                    heap_byte,
-                    water_guards_match_alignment,
-                    initial_key_tent_color,
-                })
-            }
+            Some("retail") => Behavior::Retail(retail_profile(&mut words, version)?),
             _ => return Err(ReplayError),
         };
         label(&mut words, "seats")?;
@@ -126,7 +111,7 @@ impl Replay {
     /// # Errors
     /// Returns destination IO errors.
     pub fn write(&self, out: &mut impl Write) -> io::Result<()> {
-        writeln!(out, "homm3-rmg-replay 1\nseed {}", self.seed)?;
+        writeln!(out, "homm3-rmg-replay 2\nseed {}", self.seed)?;
         match self.behavior {
             Behavior::Hotfix => writeln!(out, "behavior hotfix")?,
             Behavior::Retail(p) => {
@@ -138,7 +123,12 @@ impl Replay {
                     u8::from(p.water_guards_match_alignment)
                 )?;
                 if let Some(color) = p.initial_key_tent_color {
-                    writeln!(out, "{color}")?;
+                    write!(out, "{color} ")?;
+                } else {
+                    write!(out, "none ")?;
+                }
+                if let Some(mask) = p.water_zone_towns {
+                    writeln!(out, "{}", mask.bits())?;
                 } else {
                     writeln!(out, "none")?;
                 }
@@ -169,6 +159,41 @@ impl Replay {
             "settings {} {} {}",
             r.m_waterContent, r.m_monsterStrength, r.m_mapVersion
         )
+    }
+}
+fn retail_profile(
+    words: &mut SplitWhitespace<'_>,
+    version: u8,
+) -> Result<RetailProfile, ReplayError> {
+    let stack_word = number(words)?;
+    let heap_byte = number(words)?;
+    let water_guards_match_alignment = match words.next() {
+        Some("0") => false,
+        Some("1") => true,
+        _ => return Err(ReplayError),
+    };
+    let initial_key_tent_color = optional_number(words)?;
+    let water_zone_towns = if version == 1 {
+        // v1 followed authored C++: all towns, even with a zero heap fill.
+        Some(TownMask::ALL)
+    } else {
+        optional_number(words)?
+            .map(|bits| TownMask::parse(bits).ok_or(ReplayError))
+            .transpose()?
+    };
+    Ok(RetailProfile {
+        stack_word,
+        heap_byte,
+        water_guards_match_alignment,
+        initial_key_tent_color,
+        water_zone_towns,
+    })
+}
+fn optional_number<T: FromStr>(words: &mut SplitWhitespace<'_>) -> Result<Option<T>, ReplayError> {
+    match words.next() {
+        Some("none") => Ok(None),
+        Some(n) => n.parse().map(Some).map_err(|_| ReplayError),
+        None => Err(ReplayError),
     }
 }
 fn label(words: &mut SplitWhitespace<'_>, expected: &str) -> Result<(), ReplayError> {
@@ -206,6 +231,7 @@ mod tests {
                 heap_byte: 0xcd,
                 water_guards_match_alignment: true,
                 initial_key_tent_color: Some(-7),
+                water_zone_towns: Some(TownMask::parse(0b1_0000_0010).unwrap()),
             }),
         ] {
             let replay = Replay {
@@ -225,9 +251,49 @@ mod tests {
                 replay
             );
             assert!(
-                Replay::parse(&text.replacen("homm3-rmg-replay 1", "homm3-rmg-replay 2", 1))
+                Replay::parse(&text.replacen("homm3-rmg-replay 2", "homm3-rmg-replay 3", 1))
                     .is_err()
             );
         }
+    }
+
+    #[test]
+    fn legacy_replay_preserves_authored_water_draws_and_v2_checks_masks() {
+        let input = "homm3-rmg-replay 1\nseed 100\nbehavior retail 0 0 0 none\nseats 0 0 0 0 0 0 0 0\ntowns -1 -1 -1 -1 -1 -1 -1 -1\nshape 108 108 1\nplayers 2 2 0 8\nsettings 2 0 0\n";
+        let old = Replay::parse(input).unwrap();
+        let Behavior::Retail(profile) = old.behavior else {
+            panic!("retail replay")
+        };
+        assert_eq!(profile.water_zone_towns, Some(TownMask::ALL));
+        let mut bytes = Vec::new();
+        old.write(&mut bytes).unwrap();
+        assert_eq!(
+            Replay::parse(std::str::from_utf8(&bytes).unwrap()).unwrap(),
+            old
+        );
+
+        let v2 = input.replacen("replay 1", "replay 2", 1);
+        assert!(Replay::parse(&v2).is_err()); // The new field is required.
+        for mask in ["none", "0", "1", "256", "511"] {
+            let replay =
+                Replay::parse(&v2.replace("0 0 0 none", &format!("0 0 0 none {mask}"))).unwrap();
+            let mut bytes = Vec::new();
+            replay.write(&mut bytes).unwrap();
+            assert_eq!(
+                Replay::parse(std::str::from_utf8(&bytes).unwrap()).unwrap(),
+                replay
+            );
+        }
+        for mask in ["512", "65535", "65536", "-1"] {
+            assert!(
+                Replay::parse(&v2.replace("0 0 0 none", &format!("0 0 0 none {mask}"))).is_err()
+            );
+        }
+        assert_eq!(
+            Replay::parse(&input.replace("retail 0 0 0 none", "hotfix"))
+                .unwrap()
+                .behavior,
+            Behavior::Hotfix
+        );
     }
 }

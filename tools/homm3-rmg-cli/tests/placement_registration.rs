@@ -1,7 +1,7 @@
 //! Native generator registration, counters, tent release and full distance grids.
 use homm3_rmg::placement::ObjectId;
 use homm3_rmg::{
-    behavior::{Behavior, RetailProfile},
+    behavior::{Behavior, RetailProfile, TownMask},
     boundaries::BoundaryWorkspace,
     domain::{Level, WorldPosition},
     geometry::Point,
@@ -40,7 +40,14 @@ fn native_registration_preserves_counts_distances_and_removal_quirks() {
     let mut placement = PlacementWorkspace::default();
     let mut checked = 0;
     for (mode, behavior) in [
-        ("retail", Behavior::Retail(RetailProfile::default())),
+        (
+            "retail",
+            Behavior::Retail(RetailProfile {
+                // These snapshots use authored C++ all-town water flags, not retail heap residue.
+                water_zone_towns: Some(TownMask::ALL),
+                ..RetailProfile::default()
+            }),
+        ),
         ("hotfix", Behavior::Hotfix),
     ] {
         let rules = PlacementRules::parse(&bytes, behavior).unwrap();

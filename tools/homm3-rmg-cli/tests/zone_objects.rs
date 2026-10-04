@@ -1,6 +1,6 @@
 //! Native generic zone placement, including failed attempts and reused object slots.
 use homm3_rmg::{
-    behavior::{Behavior, RetailProfile},
+    behavior::{Behavior, RetailProfile, TownMask},
     boundaries::BoundaryWorkspace,
     layout::LayoutWorkspace,
     object::ObjectKind,
@@ -43,7 +43,14 @@ fn native_zone_placement_preserves_candidates_registration_and_rng() {
     let mut placement = PlacementWorkspace::default();
     let mut checked = 0;
     for (mode, behavior) in [
-        ("retail", Behavior::Retail(RetailProfile::default())),
+        (
+            "retail",
+            Behavior::Retail(RetailProfile {
+                // These snapshots use authored C++ all-town water flags, not retail heap residue.
+                water_zone_towns: Some(TownMask::ALL),
+                ..RetailProfile::default()
+            }),
+        ),
         ("hotfix", Behavior::Hotfix),
     ] {
         let rules = PlacementRules::parse(&bytes, behavior).unwrap();

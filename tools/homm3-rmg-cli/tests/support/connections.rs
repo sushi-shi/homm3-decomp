@@ -1,6 +1,6 @@
 //! Native ground-crossing attempts over the shared preconnection map.
 use homm3_rmg::{
-    behavior::{Behavior, RetailProfile},
+    behavior::{Behavior, RetailProfile, TownMask},
     boundaries::BoundaryWorkspace,
     domain::Terrain,
     layout::LayoutWorkspace,
@@ -97,6 +97,8 @@ pub fn compare_native(attempts: Attempts) {
         (
             "retail",
             Behavior::Retail(RetailProfile {
+                // These snapshots use authored C++ all-town water flags, not retail heap residue.
+                water_zone_towns: Some(TownMask::ALL),
                 initial_key_tent_color: Some(0),
                 ..RetailProfile::default()
             }),

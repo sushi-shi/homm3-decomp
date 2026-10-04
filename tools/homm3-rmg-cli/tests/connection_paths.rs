@@ -1,6 +1,6 @@
 //! Native connection paths and water-border repair checkpoints.
 use homm3_rmg::{
-    behavior::{Behavior, RetailProfile},
+    behavior::{Behavior, RetailProfile, TownMask},
     boundaries::BoundaryWorkspace,
     layout::LayoutWorkspace,
     placement::{ObjectArena, PlacementWorkspace},
@@ -43,7 +43,14 @@ fn native_connection_paths_and_water_borders_preserve_cells_and_rng() {
     let mut placement = PlacementWorkspace::default();
     let mut checked = 0;
     for (mode, behavior) in [
-        ("retail", Behavior::Retail(RetailProfile::default())),
+        (
+            "retail",
+            Behavior::Retail(RetailProfile {
+                // These snapshots use authored C++ all-town water flags, not retail heap residue.
+                water_zone_towns: Some(TownMask::ALL),
+                ..RetailProfile::default()
+            }),
+        ),
         ("hotfix", Behavior::Hotfix),
     ] {
         let rules = PlacementRules::parse(&bytes, behavior).unwrap();

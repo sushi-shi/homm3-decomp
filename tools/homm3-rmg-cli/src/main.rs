@@ -2,7 +2,7 @@
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use flate2::{Compression, GzBuilder};
 use homm3_rmg::{
-    behavior::{Behavior, RetailProfile},
+    behavior::{Behavior, RetailProfile, TownMask},
     generation::{Assets, GenerationWorkspace},
     output::OutputWorkspace,
     placement_rules::PlacementRules,
@@ -111,6 +111,9 @@ struct Generate {
     stack_word: u32,
     #[arg(long, default_value_t = 0)]
     heap_byte: u8,
+    /// Override water-zone allowed-town bits (0..511); omitted follows heap fill.
+    #[arg(long, value_parser = parse_town_mask)]
+    water_zone_town_mask: Option<TownMask>,
     #[arg(long)]
     water_guards_match_alignment: bool,
     /// Omit to report a typed fault on an uninitialized retail cursor read.
@@ -125,6 +128,7 @@ impl Generate {
                     || self.heap_byte != 0
                     || self.water_guards_match_alignment
                     || self.initial_key_tent_color.is_some()
+                    || self.water_zone_town_mask.is_some()
                 {
                     return Err(input_error("retail residue options require --mode retail"));
                 }
@@ -135,6 +139,7 @@ impl Generate {
                 heap_byte: self.heap_byte,
                 water_guards_match_alignment: self.water_guards_match_alignment,
                 initial_key_tent_color: self.initial_key_tent_color,
+                water_zone_towns: self.water_zone_town_mask,
             }),
         };
         let mut r = request::default_record(MapSize::Small, Levels::Surface);
@@ -175,6 +180,12 @@ impl Generate {
             request: r,
         })
     }
+}
+fn parse_town_mask(text: &str) -> std::result::Result<TownMask, String> {
+    text.parse::<u16>()
+        .ok()
+        .and_then(TownMask::parse)
+        .ok_or_else(|| format!("town mask must be in 0..={}", TownMask::ALL.bits()))
 }
 fn input_error(message: &str) -> Box<dyn Error> {
     io::Error::new(io::ErrorKind::InvalidInput, message).into()
@@ -347,5 +358,70 @@ impl Drop for Temporary {
         if let Some(path) = &self.0 {
             let _ = fs::remove_file(path);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse_generate(
+        mode: &str,
+        mask: Option<&str>,
+    ) -> std::result::Result<Generate, clap::Error> {
+        let mut args = vec![
+            "homm3-rmg",
+            "generate",
+            "--data",
+            "Data",
+            "--output",
+            "map.h3m",
+            "--seed",
+            "1",
+            "--mode",
+            mode,
+        ];
+        if let Some(mask) = mask {
+            args.extend(["--water-zone-town-mask", mask]);
+        }
+        let Command::Generate(args) = Cli::try_parse_from(args)?.command else {
+            unreachable!()
+        };
+        Ok(args)
+    }
+
+    #[test]
+    fn water_zone_mask_cli_is_checked_and_retail_only() {
+        for mask in ["0", "1", "256", "511"] {
+            let replay = parse_generate("retail", Some(mask))
+                .unwrap()
+                .input()
+                .unwrap();
+            let Behavior::Retail(profile) = replay.behavior else {
+                panic!("retail request")
+            };
+            assert_eq!(
+                profile.water_zone_towns.unwrap().bits(),
+                mask.parse::<u16>().unwrap()
+            );
+            assert!(parse_generate("hotfix", Some(mask))
+                .unwrap()
+                .input()
+                .is_err());
+        }
+        for mask in ["512", "65535", "65536", "-1"] {
+            assert!(parse_generate("retail", Some(mask)).is_err());
+        }
+        let Behavior::Retail(profile) = parse_generate("retail", None)
+            .unwrap()
+            .input()
+            .unwrap()
+            .behavior
+        else {
+            panic!("retail request")
+        };
+        assert_eq!(profile.water_zone_towns, None);
+        assert_eq!(profile.water_zone_town_mask(), TownMask::NONE);
+        assert!(parse_generate("hotfix", None).unwrap().input().is_ok());
     }
 }
