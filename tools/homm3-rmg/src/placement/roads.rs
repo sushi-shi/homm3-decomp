@@ -14,14 +14,14 @@ use std::num::NonZeroU32;
 impl PlacementMap<'_, '_, '_> {
     pub(super) fn reset_movement(&mut self) {
         for cell in self.cells.iter_mut() {
-            cell.movement = Movement::unreached();
+            cell.movement = Movement::Unreached;
         }
         self.connections.flood.clear();
     }
     pub(super) fn seed_movement(&mut self, source: WorldPosition) -> Result<usize, PlacementError> {
         self.connections.flood.seed(source)?;
         let index = self.view().native_index(source)?;
-        self.cells[index].movement = Movement::seed();
+        self.cells[index].movement = Movement::Seed;
         Ok(index)
     }
     pub(super) fn queue_movement(
@@ -163,14 +163,15 @@ impl PlacementMap<'_, '_, '_> {
             let mut previous = position;
             let mut index = self.view().native_index(position)?;
             while self.cells[index].road.kind() == Some(kind) {
-                if self.cells[index].movement.cost() == 0 {
-                    return Ok(painted);
-                }
+                let next = match self.cells[index].movement {
+                    Movement::Seed | Movement::Arrived { cost: 0, .. } => return Ok(painted),
+                    Movement::Arrived { previous, .. } => previous,
+                    Movement::Initial | Movement::Unreached => {
+                        return Err(PlacementError::MissingPredecessor(position));
+                    }
+                };
                 previous = position;
-                position = self.cells[index]
-                    .movement
-                    .previous()
-                    .ok_or(PlacementError::MissingPredecessor(position))?;
+                position = next;
                 index = self.view().native_index(position)?;
             }
             if position.level == level {
@@ -182,13 +183,13 @@ impl PlacementMap<'_, '_, '_> {
                 painted = true;
                 loop {
                     let index = self.view().native_index(position)?;
-                    if self.cells[index].movement.cost() == 0 {
-                        return Ok(painted);
-                    }
-                    position = self.cells[index]
-                        .movement
-                        .previous()
-                        .ok_or(PlacementError::MissingPredecessor(position))?;
+                    position = match self.cells[index].movement {
+                        Movement::Seed | Movement::Arrived { cost: 0, .. } => return Ok(painted),
+                        Movement::Arrived { previous, .. } => previous,
+                        Movement::Initial | Movement::Unreached => {
+                            return Err(PlacementError::MissingPredecessor(position));
+                        }
+                    };
                     if position.level != level
                         || (position.point.x != previous.point.x
                             && position.point.y != previous.point.y)

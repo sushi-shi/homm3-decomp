@@ -1,6 +1,6 @@
 //! Portal endpoints, protection and the native remaining-connection pass.
 use super::{
-    offset_position, BorderColor, BorderGuardCount, ConnectionError, DirectConnections,
+    offset_position, BorderColor, BorderGuardCount, ConnectionError, DirectConnections, Movement,
     ObjectArena, ObjectId, PathReservation, PlacementError, PlacementMap, TownsPlaced,
 };
 use crate::{
@@ -304,13 +304,14 @@ impl PlacementMap<'_, '_, '_> {
         if u32::from(cost) >= raw::RMG_REACHED_COST_LIMIT {
             return Ok(false);
         }
-        let guard_position = if cost > 0 {
-            self.cells[index]
-                .movement
-                .previous()
-                .ok_or(ConnectionError::InvalidPredecessor(position))?
-        } else {
-            self.portal_guard_fallback(position, index)?
+        let guard_position = match self.cells[index].movement {
+            Movement::Seed | Movement::Arrived { cost: 0, .. } => {
+                self.portal_guard_fallback(position, index)?
+            }
+            Movement::Arrived { previous, .. } => previous,
+            Movement::Initial | Movement::Unreached => {
+                return Err(ConnectionError::InvalidPredecessor(position));
+            }
         };
         let Some(color) = self
             .place_border_guard(

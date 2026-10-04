@@ -88,12 +88,6 @@ pub fn snapshot(
             let object = pending.object();
             generation.discard(pending, objects).unwrap();
             assert!(objects.get(object).is_none());
-            assert!(matches!(
-                generation.pandora_spells(objects, object),
-                Err(homm3_rmg::placement::TreasureGenerationError::Placement(
-                    PlacementError::UnknownObject(_)
-                ))
-            ));
             assert!(child.is_none_or(|child| objects.get(child).is_none()));
         }
         state(&mut text, "cleanup", &generation, &rng);
@@ -190,14 +184,9 @@ pub(super) fn write_reward(
                 )
                 .unwrap();
             }
-            if matches!(reward, PandoraReward::Spells(_)) {
-                write!(
-                    text,
-                    " {}",
-                    generation.pandora_spells(objects, id).unwrap().count()
-                )
-                .unwrap();
-                for spell in generation.pandora_spells(objects, id).unwrap() {
+            if let PandoraReward::Spells(spells) = reward {
+                write!(text, " {}", generation.pandora_spells(spells).count()).unwrap();
+                for spell in generation.pandora_spells(spells) {
                     write!(text, " {}", spell.index()).unwrap();
                 }
             } else {

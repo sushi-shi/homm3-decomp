@@ -41,13 +41,17 @@ prevent invalidating the viewed storage. Persistent IDs retain owner/generation
 checks because slots can be recycled. Keep catalog-dependent construction tied
 to its catalog. Parsing must preserve the native timing of
 random choices and request repairs. Failures carry stage/RNG diagnostics and
-the effective request when available.
+the effective request when available. Path walkers match `Movement` variants;
+zero-cost arrivals retain a predecessor even where walking stops. Numeric costs
+remain available for search priorities and compatibility thresholds.
 
 Generation uses an owned RNG and reusable, mostly flat storage. The object
 arena holds typed payloads shared by world placement and temporary treasure
 groups. Explicit completion/discard operations manage reservations and object
 lifetimes; discarding a failed group must not rewind RNG or object IDs. Keep
-the catalog that generated a payload bound through serialization.
+the catalog that generated a payload bound through serialization. Pandora spell
+payloads carry an admitted `SpellReward`, so expanding spells needs no definition
+lookup or repeated reward-kind check.
 
 The implementation uses `std`. Retain workspace capacity between maps and
 borrow catalogs instead of cloning them. Allocations are allowed when useful;

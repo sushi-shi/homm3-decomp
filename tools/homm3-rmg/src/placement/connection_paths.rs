@@ -165,7 +165,7 @@ impl PlacementMap<'_, '_, '_> {
     ) -> Result<(), ConnectionError> {
         self.prepare_object_context(objects, catalog)?;
         for cell in &mut *self.cells {
-            cell.movement = Movement::unreached();
+            cell.movement = Movement::Unreached;
             cell.zone_distance = ZoneDistance::reset();
         }
         // Retail retains the previous zone's seed; hotfix requires a fresh one.
@@ -273,7 +273,14 @@ impl PlacementMap<'_, '_, '_> {
             return Ok(());
         }
         let mut remaining = self.cells.len();
-        while self.cells[index].movement.cost() > 0 {
+        loop {
+            let previous = match self.cells[index].movement {
+                Movement::Seed | Movement::Arrived { cost: 0, .. } => break,
+                Movement::Arrived { previous, .. } => Ok(previous),
+                Movement::Initial | Movement::Unreached => {
+                    Err(ConnectionError::InvalidPredecessor(position))
+                }
+            };
             if remaining == 0 {
                 return Err(ConnectionError::InvalidPredecessor(position));
             }
@@ -288,10 +295,8 @@ impl PlacementMap<'_, '_, '_> {
                 self.register_object(objects, catalog, object, position)?;
             }
             self.cells[index].open_path();
-            let previous = self.cells[index]
-                .movement
-                .previous()
-                .ok_or(ConnectionError::InvalidPredecessor(position))?;
+            // Opening the cell and placing its guard precede a broken-route fault.
+            let previous = previous?;
             if width == PathWidth::Wide {
                 self.clear_nearby_obstacles(position, zone)?;
             }

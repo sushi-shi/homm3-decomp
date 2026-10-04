@@ -1,6 +1,6 @@
 //! Key tents, side-by-side border guards and protected crossing neighborhoods.
 use super::{
-    BorderColor, KeyTentColor, KeyTentCursor, Neighborhood, ObjectArena, PlacementError,
+    BorderColor, KeyTentColor, KeyTentCursor, Movement, Neighborhood, ObjectArena, PlacementError,
     PlacementMap,
 };
 use crate::{
@@ -117,7 +117,7 @@ impl PlacementMap<'_, '_, '_> {
             self.mark_empty_border(nearby, color)?;
         }
         let index = self.view().native_index(position)?;
-        if let Some(previous) = self.cells[index].movement.previous() {
+        if let Movement::Arrived { previous, .. } = self.cells[index].movement {
             if self.view().contains(previous.point) {
                 let index = self.view().native_index(previous)?;
                 self.cells[index].clear_border();

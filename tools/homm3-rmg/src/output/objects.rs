@@ -18,7 +18,6 @@ pub(super) fn write(
     slot: u32,
     out: &mut Writer<'_, impl Write>,
 ) -> Result<(), OutputFault> {
-    let id = object.id();
     let payload = *object.payload();
     let version = map.report().request().version();
     out.position(object.position())?;
@@ -145,10 +144,10 @@ pub(super) fn write(
                 })?;
             }
             out.zero(6)?; // primary skills, secondary count, artifact count
-            if matches!(reward, PandoraReward::Spells(_)) {
-                let count = map.treasures().pandora_spells(map.objects(), id)?.count();
+            if let PandoraReward::Spells(spells) = reward {
+                let count = map.treasures().pandora_spells(spells).count();
                 out.byte(u8::try_from(count).map_err(|_| OutputFault::Count)?)?;
-                for spell in map.treasures().pandora_spells(map.objects(), id)? {
+                for spell in map.treasures().pandora_spells(spells) {
                     out.byte(spell.index() as u8)?;
                 }
             } else {

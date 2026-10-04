@@ -83,7 +83,7 @@ impl PlacementMap<'_, '_, '_> {
                     if self.coverage().map().raster().cells()[index].zone == Some(zone.id())
                         && self.terrain.tiles()[index].terrain() != Terrain::Water
                     {
-                        self.cells[index].movement = Movement::unreached();
+                        self.cells[index].movement = Movement::Unreached;
                         if self.memberships.first(self.cells[index].objects).is_none() {
                             self.cells[index].mark_obstacle();
                         }
@@ -100,7 +100,7 @@ impl PlacementMap<'_, '_, '_> {
         };
         // Native explicitly writes this seed before allocating the flood queue.
         let index = self.view().native_index(first)?;
-        self.cells[index].movement = Movement::seed();
+        self.cells[index].movement = Movement::Seed;
         self.flood_connection_costs(first, false)?;
         for entrance in 1..self.zone_entrances(zone.id())?.len() {
             let from = self.zone_entrances(zone.id())?[entrance];
@@ -126,12 +126,17 @@ impl PlacementMap<'_, '_, '_> {
         // restrictions absent from native. A repeated cell cannot reach a seed.
         for _ in 0..self.cells.len() {
             let index = self.view().native_index(position)?;
-            position = self.cells[index]
-                .movement
-                .previous()
-                .ok_or(ConnectionError::InvalidPredecessor(position))?;
+            position = match self.cells[index].movement {
+                Movement::Arrived { previous, .. } => previous,
+                Movement::Initial | Movement::Unreached | Movement::Seed => {
+                    return Err(ConnectionError::InvalidPredecessor(position));
+                }
+            };
             let index = self.view().native_index(position)?;
-            if self.cells[index].movement.cost() == 0 {
+            if matches!(
+                self.cells[index].movement,
+                Movement::Seed | Movement::Arrived { cost: 0, .. }
+            ) {
                 return Ok(position);
             }
         }

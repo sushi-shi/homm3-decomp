@@ -145,49 +145,47 @@ impl CellState {
     }
 }
 
+/// Movement cost and predecessor from a map search.
+/// Zero-cost arrivals retain their predecessor but stop path opening like seeds.
 #[derive(Clone, Copy, Debug, Default)]
-enum MovementState {
+pub enum Movement {
+    /// Cell has not participated in a movement search.
     #[default]
     Initial,
+    /// Search cleared the cell but has not reached it.
     Unreached,
+    /// Search origin, with zero cost and no predecessor.
     Seed,
+    /// Search reached the cell from a predecessor, including at zero cost.
     Arrived {
+        /// Stored path cost.
         cost: u16,
+        /// Cell from which the search arrived.
         previous: WorldPosition,
     },
 }
-/// Movement cost and predecessor, constructed only by the map's searches.
-/// Zero-cost arrivals retain their predecessor but stop path opening like seeds.
-#[derive(Clone, Copy, Debug, Default)]
-pub struct Movement(MovementState);
 impl Movement {
     pub(super) fn arrived(cost: u32, previous: WorldPosition) -> Result<Self, PlacementError> {
-        Ok(Self(MovementState::Arrived {
+        Ok(Self::Arrived {
             cost: u16::try_from(cost).map_err(|_| PlacementError::Arithmetic)?,
             previous,
-        }))
+        })
     }
-    pub(super) const fn seed() -> Self {
-        Self(MovementState::Seed)
-    }
-    pub(super) const fn unreached() -> Self {
-        Self(MovementState::Unreached)
-    }
-    /// Native stored movement cost, including the two unreached sentinels.
+    /// Stored movement cost, including the two unreached sentinels.
     #[must_use]
     pub fn cost(self) -> u16 {
-        match self.0 {
-            MovementState::Initial => CLEARED_DISTANCE,
-            MovementState::Unreached => UNREACHED_DISTANCE,
-            MovementState::Seed => 0,
-            MovementState::Arrived { cost, .. } => cost,
+        match self {
+            Self::Initial => CLEARED_DISTANCE,
+            Self::Unreached => UNREACHED_DISTANCE,
+            Self::Seed => 0,
+            Self::Arrived { cost, .. } => cost,
         }
     }
-    /// Predecessor exists only after a search arrives from another cell.
+    /// Predecessor for diagnostic snapshots, including zero-cost arrivals.
     #[must_use]
     pub const fn previous(self) -> Option<WorldPosition> {
-        match self.0 {
-            MovementState::Arrived { previous, .. } => Some(previous),
+        match self {
+            Self::Arrived { previous, .. } => Some(previous),
             _ => None,
         }
     }
@@ -214,7 +212,7 @@ impl PlacementMap<'_, '_, '_> {
         self.connections.flood.clear();
         self.connections.flood.insert(seed, 0)?;
         let index = self.view().native_index(seed)?;
-        self.cells[index].movement = Movement::seed();
+        self.cells[index].movement = Movement::Seed;
         let zone = self.coverage().map().raster().cells()[index].zone;
         while let Some(position) = self.connections.flood.pop() {
             let index = self.view().native_index(position)?;
@@ -276,10 +274,7 @@ impl PlacementMap<'_, '_, '_> {
                     {
                         next_cost = 0;
                     }
-                    self.cells[index].movement = Movement(MovementState::Arrived {
-                        cost: u16::try_from(next_cost).map_err(|_| PlacementError::Arithmetic)?,
-                        previous: position,
-                    });
+                    self.cells[index].movement = Movement::arrived(next_cost, position)?;
                 } else {
                     next_cost = cost + crate::constants::RMG_CONNECTION_WATER_OR_BORDER_STEP_COST;
                     if current_zone != zone && current_zone != next_zone {

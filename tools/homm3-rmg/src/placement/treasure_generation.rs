@@ -38,8 +38,6 @@ pub enum TreasureGenerationError {
     QuestArtifactPrototype,
     /// A selected quest artifact has no loaded art.
     MissingArtifact(crate::traits::ArtifactId),
-    /// The object does not carry a Pandora spell reward.
-    SpellPayload(ObjectId),
 }
 impl fmt::Display for TreasureGenerationError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -59,9 +57,6 @@ impl fmt::Display for TreasureGenerationError {
                 write!(f, "quest artifact {} has no prototype", id.index())
             }
             Self::QuestArtifactPrototype => f.write_str("missing quest artifact prototype"),
-            Self::SpellPayload(id) => {
-                write!(f, "object {} has no Pandora spell reward", id.index())
-            }
         }
     }
 }
@@ -266,7 +261,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                 ObjectPayload::Pandora(PandoraReward::Experience(amount))
             }
             R::Gold { amount, .. } => ObjectPayload::Pandora(PandoraReward::Gold(amount)),
-            R::Spells { .. } => ObjectPayload::Pandora(PandoraReward::Spells(selected.definition)),
+            R::Spells { spells, .. } => ObjectPayload::Pandora(PandoraReward::Spells(spells)),
             R::KeyTent { value, .. } => ObjectPayload::KeyTent(value),
             R::Dwelling(_) => ObjectPayload::Ownable,
             R::Resource(_) => ObjectPayload::Resource,
@@ -429,29 +424,9 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
     /// Expand a Pandora spell payload through the generation's exact immutable
     /// catalog. Native order is descending level, then ascending spell ID.
     ///
-    /// # Errors
-    /// Rejects foreign arenas/objects or an object with another payload policy.
-    pub fn pandora_spells(
-        &self,
-        objects: &ObjectArena,
-        object: ObjectId,
-    ) -> Result<impl Iterator<Item = SpellId> + '_, TreasureGenerationError> {
-        self.require_arena(objects)?;
-        let payload = objects
-            .payload(object)
-            .ok_or(PlacementError::UnknownObject(object))?;
-        let ObjectPayload::Pandora(PandoraReward::Spells(reward)) = payload else {
-            return Err(TreasureGenerationError::SpellPayload(object));
-        };
-        let definition = self
-            .ready
-            .catalog()
-            .get(*reward)
-            .ok_or(TreasureGenerationError::Definition(*reward))?;
-        let TreasureReward::Spells { spells, .. } = definition.reward() else {
-            return Err(TreasureGenerationError::SpellPayload(object));
-        };
-        Ok(pandora_spells(self.spells, spells))
+    /// The reward already carries admitted level bounds and school bits.
+    pub fn pandora_spells(&self, reward: SpellReward) -> impl Iterator<Item = SpellId> + '_ {
+        pandora_spells(self.spells, reward)
     }
 }
 

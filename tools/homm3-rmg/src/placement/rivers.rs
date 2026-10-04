@@ -1,7 +1,7 @@
 //! River targets, randomized cardinal searches and ordered delta placement.
 use super::{
-    lines::Layer, offset_position, registration::entrance_position, Direction, ObjectArena,
-    PlacementError, PlacementMap, RiverType,
+    lines::Layer, offset_position, registration::entrance_position, Direction, Movement,
+    ObjectArena, PlacementError, PlacementMap, RiverType,
 };
 use crate::{
     domain::{Level, Terrain, WorldPosition},
@@ -301,11 +301,14 @@ impl PlacementMap<'_, '_, '_> {
             painted = end;
             inspected = self.view().native_index(end)?;
         }
-        while self.cells[inspected].movement.cost() > 0 {
-            let previous = self.cells[inspected]
-                .movement
-                .previous()
-                .ok_or(PlacementError::MissingPredecessor(painted))?;
+        loop {
+            let previous = match self.cells[inspected].movement {
+                Movement::Seed | Movement::Arrived { cost: 0, .. } => break,
+                Movement::Arrived { previous, .. } => previous,
+                Movement::Initial | Movement::Unreached => {
+                    return Err(PlacementError::MissingPredecessor(painted));
+                }
+            };
             inspected = self.view().native_index(previous)?;
             if goal == RiverGoal::Outlet {
                 self.cells[inspected].river_target = true;

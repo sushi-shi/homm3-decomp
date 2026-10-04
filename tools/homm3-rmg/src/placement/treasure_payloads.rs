@@ -3,7 +3,7 @@ use super::{MapObjectId, ObjectId};
 use crate::{
     hero::HeroId,
     traits::ArtifactId,
-    treasure::{CreatureReward, DefinitionId},
+    treasure::{CreatureReward, DefinitionId, SpellReward},
 };
 
 /// The one reward assigned by a Pandora definition; other native fields stay zero.
@@ -16,7 +16,7 @@ pub enum PandoraReward {
     /// One creature stack, retaining the native signed count.
     Creatures(CreatureReward),
     /// Ordered spells selected from this generation's immutable spell catalog.
-    Spells(DefinitionId),
+    Spells(SpellReward),
 }
 /// The one reward assigned to a pending seer hut.
 #[derive(Clone, Copy, Debug)]
