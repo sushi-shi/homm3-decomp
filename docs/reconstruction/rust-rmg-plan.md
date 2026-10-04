@@ -109,7 +109,7 @@ playability claim.
 
 The remaining work is **verification, debugging and publication**: verify the
 source-audited hotfix behavior at runtime; reconcile boundary/water-zone replay
-inputs with executable evidence; fix the recorded treasure geometry mismatch; run the 100,000-case
+inputs with executable evidence; rerun the corrected treasure geometry comparison; run the 100,000-case
 campaign; independently parse maps; verify repeated/run-order behavior; profile
 cold loading, warmed generation and output allocations; finish the ASCII/shared
 definition audit and deterministic parallelism guidance; run required Rust
@@ -797,7 +797,16 @@ was fixed before any reset or target draw.
 Before the implementation-first instruction, 87 core tests and strict Clippy
 passed for the initial geometry/ownership delta. The subsequent native geometry
 comparison reached a retail case-0 line-count mismatch (Rust 27,504; native
-27,684). This is **unresolved**, not a parity result. Native geometry captures
+27,684). Source inspection identified a snapshot-format defect: native
+`groupPrintObject` emits `unit` for payload-free objects, while the Rust geometry
+snapshot reused the factory formatter that intentionally emits no such marker.
+The saved native case has exactly 180 `unit` records; removing them gives 27,504
+lines, exactly the recorded Rust count. Geometry snapshots now emit these markers
+without changing factory snapshots or production generation. Failed comparisons
+now report the first differing line (including early EOF) and retain Rust output
+beside the capture. The earlier Rust text was not saved, so this does **not**
+establish value-by-value geometry parity; rerunning the comparison is deferred.
+Native geometry captures
 exist under ignored `build/rmg-oracle-group-geometry`; disposable probe details
 are in `build/group-README.md`. Full assembly probes are prepared but have not
 been run. New assembly/site/replacement code has compile checks only. Do not

@@ -5,8 +5,9 @@ use homm3_rmg::{
     geometry::Point,
     hero::HeroId,
     placement::{
-        KeyTentColor, KeyTentCursor, ObjectArena, ObjectId, PathReservation, PlacementError,
-        TreasureGeneration, TreasureGenerationError, TreasureGroupWorkspace, TreasuresReady,
+        KeyTentColor, KeyTentCursor, ObjectArena, ObjectId, ObjectPayload, PathReservation,
+        PlacementError, TreasureGeneration, TreasureGenerationError, TreasureGroupWorkspace,
+        TreasuresReady,
     },
     raw,
     rng::RetailRng,
@@ -190,6 +191,20 @@ fn write_object(
     .unwrap();
     text.push_str("marks 0 0 0 0 0\n");
     write_reward(text, generation, objects, object, true);
+    // Geometry's native groupPrintObject emits a marker even without extra
+    // payload fields. The separate factory checkpoint intentionally omits it.
+    if matches!(
+        objects.payload(object).unwrap(),
+        ObjectPayload::Base
+            | ObjectPayload::Artifact
+            | ObjectPayload::Ownable
+            | ObjectPayload::Resource
+            | ObjectPayload::Scholar
+            | ObjectPayload::Shrine
+            | ObjectPayload::WitchHut
+    ) {
+        text.push_str("unit\n");
+    }
 }
 fn write_group(
     text: &mut String,

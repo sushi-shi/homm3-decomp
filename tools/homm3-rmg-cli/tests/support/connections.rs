@@ -655,16 +655,28 @@ fn compare(oracle: &Path, mode: &str, case: usize, actual: &str, filename: &str)
         oracle.join(format!("{mode}-layout/case-{case}-candidate/{filename}")),
     )
     .unwrap();
-    assert_eq!(
-        actual.lines().count(),
-        expected.lines().count(),
-        "{mode} case{case} line count"
-    );
-    for (index, (a, b)) in actual.lines().zip(expected.lines()).enumerate() {
-        assert!(
-            a.split_whitespace().eq(b.split_whitespace()),
-            "{mode} case{case} line{index}:\nactual: {a}\nexpected: {b}"
-        );
+    // Compare content before lengths so an omitted marker does not hide the
+    // first useful difference. Keep Rust output beside the capture on failure.
+    let mut actual_lines = actual.lines();
+    let mut expected_lines = expected.lines();
+    let mut index = 0;
+    loop {
+        let a = actual_lines.next();
+        let b = expected_lines.next();
+        match (a, b) {
+            (None, None) => break,
+            (Some(a), Some(b)) if a.split_whitespace().eq(b.split_whitespace()) => {}
+            _ => {
+                let artifact = oracle.join(format!(
+                    "{mode}-layout/case-{case}-candidate/{filename}.rust-actual"
+                ));
+                if let Err(error) = std::fs::write(&artifact, actual) {
+                    eprintln!("could not save {}: {error}", artifact.display());
+                }
+                panic!("{mode} case{case} line{index}:\nactual: {a:?}\nexpected: {b:?}\nRust snapshot: {}", artifact.display());
+            }
+        }
+        index += 1;
     }
     eprintln!("{mode} case{case}: {} lines", actual.lines().count());
     actual.lines().count()
