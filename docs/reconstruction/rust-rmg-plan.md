@@ -106,21 +106,16 @@ requires the full generator in both modes and the verification below.
 
 The complete implementation path is now present: parsed assets -> native
 orchestration -> all generation stages -> streamed RoE/AB/SoD serialization ->
-gzip output and generation/replay CLI. It compiles, but no full-map Rust run has
-been performed under the implementation-first policy. This is not a parity or
-playability claim.
+gzip output and generation/replay CLI. End-to-end debugging is underway;
+the evidence below covers initial cases, not the complete corpus or in-game play.
 
 The implementation is published as [draft PR #134](https://github.com/sushi-shi/homm3-decomp/pull/134).
-The remaining work is **verification and debugging**: verify the
-source-audited hotfix behavior at runtime; reconcile boundary/water-zone replay
-inputs with executable evidence; rerun the corrected treasure geometry comparison; run the 100,000-case
-campaign; independently parse maps; verify repeated/run-order behavior; profile
-cold loading, warmed generation and output allocations; run required Rust
-checks and resolve review findings before marking the PR ready.
+The remaining work is **verification and debugging**: complete the 100,000-case campaign,
+resolve its divergences, and run final checks/review before marking the PR ready.
 
-Current working policy (user update): only individual unit tests and compilation
-checks are allowed. Do not start full suites, native comparisons, end-to-end
-map runs or corpus campaigns yet. Broader debugging is a later phase.
+Current working policy (user update): end-to-end debugging is now authorized.
+Start with small maps and independent parsing, diagnose divergences against the
+native captures, then expand to the comparison and allocation campaigns below.
 
 The output writer borrows map storage and uses one retained prototype-slot
 vector. It includes every live object record, fixed reserved prototypes,
@@ -142,7 +137,7 @@ Their report-path alias and CRLF replay findings were fixed. Shared description
 names, map format values, quest/reward domains and witch-hut masks come from
 canonical C++ fragments/headers rather than second Rust definitions.
 
-Current validation: both RMG crates and the CLI binary compile. Exactly one
+Initial implementation-only validation: both RMG crates and the CLI binary compiled. Exactly one
 isolated replay unit test passed, covering raw-input preservation, both modes,
 retail profiles, LF/CRLF reports, and rejection of unknown versions/trailing
 input. No full suite, end-to-end map run, native comparison or corpus campaign
@@ -163,11 +158,61 @@ A final source review restored the river-side bit, noise-corner and terrain-gap
 ASCII diagrams and replaced a duplicated terrain direction mapping with the
 canonical generated table. Its follow-up found no further documentation/data
 issues. Allocation review found no unnecessary heap allocation in successful
-warmed generation/output when retained capacities suffice; profiling remains
-deferred. The declared Rust 1.82 compiler successfully checked the RMG library,
+warmed generation/output when retained capacities suffice. The declared Rust 1.82 compiler successfully checked the RMG library,
 data crate and CLI, plus the existing oracle affected by the shared Clap
 dependency. Clap is constrained to 4.5 and the committed lockfile retains
 `clap_lex` 1.0.0; dependency updates must repeat that compiler check.
+
+### Initial end-to-end debugging results
+
+Four hotfix baseline maps cover all map sizes, both level counts and all three
+formats; every output byte and final RNG state matches the C++ reference. A
+further 32 requests from the saved campaign produced 31 exact map/RNG matches
+and one matching missing-player-town rejection (native return code 3, RNG
+1783991852). The larger campaign is a separate remaining check.
+
+The first retail runs exposed accidental reuse of hotfix prototype admission
+during obstacle placement. Scoring and river centers now require only bounded
+image dimensions. The admission result is named `hotfix_admission`, so an empty
+bottom row is not mistaken for a universal placement fault. Two C++ retail
+baselines then matched exactly. The other two stopped at the documented river
+coast read beyond the final cell. Retail allocates exactly N cells after its
+array cookie; Rust preserves valid flat aliases but reports that out-of-array
+read rather than inventing an adjacent tile.
+
+Independent H3M parsing exposed an oracle bug: native RMG omits the editor's
+124-byte trailer. The parser now accepts exact EOF after events, while rejecting
+partial or nonzero trailers. Native and Rust maps both pass. Six asset-backed
+cases also passed repeated generation, repeated writes and A/B/A workspace reuse.
+The same integration test verifies three-byte writes, failures in the header and
+trailer, unchanged generation RNG, and successful reuse after output failures.
+The corrected treasure geometry comparison matches all 453,023 checkpoint lines
+across eight retail/hotfix captures.
+
+Nonperturbing captures of retail constructors at 0x53e149 and 0x53e45c resolve
+the water-zone draw policy. Zero-filled allocated templates have nine zero town
+flags, select neutral alignment and consume no draw. Fills 91 and 255 have nine
+nonzero flags and consume one draw each. The stack probe has a nonempty live mask
+and consumes one draw even with initial stack fills zero and 0xffffffff. Traced
+and untraced maps/RNG agree. Rust now derives water-zone flags from the heap fill,
+with a checked optional `TownMask` override. Replay v2 records it; v1 explicitly
+retains the previous all-town policy. Historical C++ stage fixtures also name
+that override. The medium and XL retail baselines now match the pinned executable
+byte-for-byte and in RNG (1772710812 and 3530451699). The small and large baselines
+still encounter the classified out-of-array river read. Capture evidence is in
+`build/boundary-live-review/`.
+
+Allocation profiling loads assets once, prepares each request separately, and
+reuses workspaces across small hotfix, XL hotfix and medium retail cases. Both
+warmed repeats of generation and output performed zero allocations/reallocations
+in these samples; this is measured behavior, not a zero-allocation requirement.
+Cold asset loading peaked at 1,269,248 requested live bytes. First generation and
+output peaked at 1,395,524 / 1,430,540 bytes for small hotfix,
+7,846,212 / 8,226,372 for XL hotfix, and 8,344,516 / 8,354,188 for medium retail
+after retaining the XL capacities. These are total requested heap bytes in the
+profiling process, excluding allocator overhead, stack, RSS and transient realloc
+internals. Disposable evidence is under `build/rmg-debug-runner/` and
+`build/rust-debug/`.
 
 The catalog, lazy values and payload factories remain bound by `TreasuresReady`
 and `TreasureGeneration`; do not rebuild their catalogs or reset reservations
@@ -895,8 +940,8 @@ to treasure generation and returned before either success or error propagates.
 Before another run, old root/nested group handles and offers clear before arena
 reset. Other stage buffers retain their existing reuse policies. Both source
 reviews are clear after correcting the readiness-gate and checkpoint timing.
-Compile checks pass; the native pipeline has not been run yet and output parity
-remains unproven.
+At that implementation checkpoint, only compilation had been checked. Current
+runtime evidence is recorded under initial end-to-end debugging results above.
 
 Output reference accounting must include every live arena object, not just the
 active world list and retired records: replacement factories do not run completion,
@@ -949,25 +994,18 @@ Factory and completion constraints, confirmed against native source and retail:
   then deletes. Nested completion needs reusable scratch separate from its outer
   group. Pair definition/prototype candidates in one retained vector.
 
-Full map generation and serialization are implemented but await end-to-end debugging.
-
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the
 pinned executable for seed 100 / 108x108 / RoE / islands and seed 17 / 144x144 /
 two levels / SoD / random water (zero stack/heap replay fills). Keep these
 disagreements visible during porting; they are not evidence of Rust parity.
 
-The earlier checkpoint above predates completed orchestration, placement,
-serialization and CLI implementation. Allocation profiling, end-to-end execution
-and the full corpus campaign remain deferred; no generated-map result is claimed.
-
-The current boundary port follows the merged C++ policy of one unused retail
-town draw for the boundary probe and each added water zone. Those fields were
-uninitialized in the executable; uniform stack/heap prefill alone does not
-describe all their live values. The explicit replay policy for these particular
-fields still needs to be reconciled with captured executable observations. Other
-water-zone creature residue is represented as faction, neutral, or no matching
-faction, rather than an unchecked index.
+The port initially followed the merged C++ policy of one unused retail town draw
+for both the boundary probe and every added water zone. Subsequent nonperturbing
+captures established the conditional water-zone draw and the observed nonempty
+probe masks; the runtime policy and replay migration are documented above.
+Water-zone creature residue remains represented as faction, neutral, or no
+matching faction, rather than an unchecked index.
 
 ## Verification
 

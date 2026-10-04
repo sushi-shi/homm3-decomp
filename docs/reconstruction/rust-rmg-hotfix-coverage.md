@@ -4,8 +4,8 @@ Source audit of implementation commit `668cb01fa`, against its merged C++ base.
 Two reviewers examined every explicit `HOMM3_RMG_HOTFIX` conditional: 45 in
 `src/rmg.cpp`, five in `include/rmg.h`, and the declaration gate in
 `include/rmg_request.h`. No missing or mismatched implementation was identified.
-This establishes source coverage, not executed behavioral parity. Native
-comparisons and the corpus campaign remain deferred.
+This establishes source coverage, not executed behavioral parity. Subsequent
+native comparisons and debugging results are recorded in the main plan.
 
 Rust paths below are relative to `tools/homm3-rmg/src`. C++ line numbers identify
 the audited commit; operation names remain useful after source movement.
@@ -14,7 +14,7 @@ the audited commit; operation names remain useful after source movement.
 | --- | --- | --- |
 | `rmg.cpp:15` | Include ownership support | Rust ownership; no runtime branch |
 | `1521,1550` | Delete removed tent/quest parents, preserve active parents | `placement/treasure_completion.rs`, `ObjectArena::retire` |
-| `2408,2447` | Admit prototype dimensions, bottom footprint and creature subtype; hole exemption | `prototype.rs`, `Prototype::footprint` and catalog filtering |
+| `2408,2447` | Admit prototype dimensions, bottom footprint and creature subtype; hole exemption | `prototype.rs`, `Prototype::hotfix_admission` and catalog filtering |
 | `2459` | Empty monster-family sorting | `PrototypeSource::prepare` |
 | `2495,2571,2578` | Count placement rows through the first blank | `PlacementRules::parse` |
 | `2540,2550` | Skip incomplete and invalid placement rows | `PlacementRules::parse` |
@@ -53,7 +53,7 @@ The fallback for an unknown format in the native internal writer is unreachable
 through the hotfix public entry point. Rust rejects unknown request versions
 before generation and uses an exhaustive `MapVersion` match during output.
 
-The source review does not resolve previously recorded executable differences:
-water-zone residue/unused town draws, the treasure geometry comparison, and
-C++-versus-retail differences already observed before this port. Keep those in
-the [main plan](rust-rmg-plan.md) for the later debugging phase.
+The source review alone did not resolve executable differences. The corrected
+treasure geometry comparison now passes, and nonperturbing retail captures
+establish zero-versus-nonzero water-zone town flags. The [main plan](rust-rmg-plan.md)
+tracks runtime fixes and the remaining corpus work separately from this audit.
