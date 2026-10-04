@@ -2,10 +2,8 @@
 use homm3_rmg::{
     behavior::{Behavior, RetailProfile},
     boundaries::BoundaryWorkspace,
-    domain::{Level, WorldPosition},
-    geometry::Point,
     layout::LayoutWorkspace,
-    placement::{ObjectArena, PlacementMap, PlacementWorkspace},
+    placement::{ObjectArena, PlacementWorkspace},
     placement_rules::PlacementRules,
     prototype::PrototypeSource,
     request::{default_record, Levels, MapSize, Request},
@@ -15,9 +13,12 @@ use homm3_rmg::{
     terrain::TerrainWorkspace,
 };
 use homm3_rmg_cli::resources::Installation;
-use std::{fmt::Write, path::PathBuf};
+use std::path::PathBuf;
 mod support;
 use support::towns::snapshot;
+#[path = "support/terrain.rs"]
+mod terrain_snapshot;
+use terrain_snapshot::write_terrain_and_distances;
 
 #[test]
 #[ignore = "requires HOMM3_RMG_DATA and HOMM3_RMG_ORACLE water-islands checkpoints"]
@@ -76,7 +77,7 @@ fn native_water_islands_preserve_cells_and_rng() {
             let islands = borders.place_water_islands(&mut rng).unwrap();
             assert_eq!(islands.map().terrain().tiles().as_ptr(), tile_address);
             let mut actual = snapshot(islands.towns(), &objects, &catalog, islands.rng());
-            write_island_tiles(&mut actual, islands.map());
+            write_terrain_and_distances(&mut actual, islands.map());
             eprintln!(
                 "{mode} case {case}: {} towns, RNG {}",
                 islands.towns().towns().len(),
@@ -102,37 +103,4 @@ fn native_water_islands_preserve_cells_and_rng() {
         }
     }
     eprintln!("checked {checked} native water-island checkpoint lines");
-}
-
-fn write_island_tiles(actual: &mut String, map: &PlacementMap<'_, '_, '_>) {
-    let side = map.coverage().map().raster().dimension();
-    for (index, tile) in map.terrain().tiles().iter().enumerate() {
-        let at = WorldPosition {
-            point: Point::new(
-                i32::try_from(index % side).unwrap(),
-                i32::try_from(index / side % side).unwrap(),
-            ),
-            level: if index < side * side {
-                Level::Surface
-            } else {
-                Level::Underground
-            },
-        };
-        let distance = map.cell(at).unwrap().zone_distance();
-        let (zone, direction) = distance.connection().map_or((-1, 0), |(zone, direction)| {
-            (i32::try_from(zone.index()).unwrap(), direction.index())
-        });
-        writeln!(
-            actual,
-            "{} {} {} {} {} {} {}",
-            tile.terrain() as i32,
-            tile.frame(),
-            u8::from(tile.reflection().flip_x),
-            u8::from(tile.reflection().flip_y),
-            distance.cost(),
-            zone,
-            direction
-        )
-        .unwrap();
-    }
 }

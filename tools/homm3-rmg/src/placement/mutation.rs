@@ -66,7 +66,7 @@ impl CellState {
             self.reservation = PathReservation::Obstacle;
         }
     }
-    fn clear_obstacle(&mut self) {
+    pub(super) fn clear_obstacle(&mut self) {
         if self.border.is_none() && self.reservation == PathReservation::Obstacle {
             self.reservation = PathReservation::Unreserved;
         }
@@ -80,7 +80,7 @@ impl CellState {
         self.mark_obstacle();
         self.border = Some(color);
     }
-    fn clear_border(&mut self) {
+    pub(super) fn clear_border(&mut self) {
         self.border = None;
         self.open_path();
     }

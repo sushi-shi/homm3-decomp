@@ -1,11 +1,12 @@
 //! Branch carving and reservations preceding water islands and connection searches.
 
 use super::{
-    neighborhood::Neighborhood, PathReservation, PlacementError, PlacementMap, TownsPlaced,
+    neighborhood::Neighborhood, BorderColor, PathReservation, PlacementError, PlacementMap,
+    TownsPlaced,
 };
 use crate::{
     domain::{Level, Terrain, WorldPosition},
-    geometry::{GeometryError, Point},
+    geometry::{GeometryError, Point, ZoneId},
     raw,
     rng::{RetailRng, RngCheckpoint},
     terrain::TerrainError,
@@ -27,6 +28,12 @@ pub enum ConnectionError {
     Geometry(GeometryError),
     /// A terrain brush failed while repainting an island.
     Terrain(TerrainError),
+    /// No dirt border-guard prototype has the stored color.
+    MissingBorderGuard(BorderColor),
+    /// A reached positive-cost path has no predecessor or contains a cycle.
+    InvalidPredecessor(WorldPosition),
+    /// Retail reads uninitialized coordinates before any zone provides a seed.
+    SeedReplayRequired(ZoneId),
 }
 impl fmt::Display for ConnectionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -34,6 +41,19 @@ impl fmt::Display for ConnectionError {
             Self::Placement(error) => error.fmt(f),
             Self::Geometry(error) => error.fmt(f),
             Self::Terrain(error) => error.fmt(f),
+            Self::MissingBorderGuard(color) => write!(
+                f,
+                "missing border-guard prototype for color {}",
+                color.value()
+            ),
+            Self::SeedReplayRequired(zone) => write!(
+                f,
+                "retail connection seed for zone {} requires replay input",
+                zone.index()
+            ),
+            Self::InvalidPredecessor(position) => {
+                write!(f, "invalid connection predecessor at {position:?}")
+            }
         }
     }
 }
@@ -72,6 +92,7 @@ pub(super) struct ConnectionScratch {
     pub(super) candidates: Vec<WorldPosition>,
     pub(super) flood: Worklist<WorldPosition>,
     pub(super) noise: super::island_noise::NoiseWorkspace,
+    pub(super) repairs: Vec<super::connection_paths::PaintRequest>,
 }
 impl ConnectionScratch {
     pub(super) fn reset(&mut self) {
@@ -80,6 +101,7 @@ impl ConnectionScratch {
         self.candidates.clear();
         self.flood.clear();
         self.noise.clear();
+        self.repairs.clear();
     }
 }
 
@@ -330,7 +352,7 @@ impl PlacementMap<'_, '_, '_> {
         }
     }
 
-    fn position_at(&self, index: usize) -> WorldPosition {
+    pub(super) fn position_at(&self, index: usize) -> WorldPosition {
         let side = self.view().side;
         WorldPosition {
             point: Point::new(

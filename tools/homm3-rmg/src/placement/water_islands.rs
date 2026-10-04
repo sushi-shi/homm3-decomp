@@ -14,7 +14,7 @@ use std::num::NonZeroU32;
 
 /// Water-zone islands are painted and ready for zone connection pathfinding.
 pub struct WaterIslands<'state, 'zones, 'tiles> {
-    borders: ConnectionBorders<'state, 'zones, 'tiles>,
+    pub(super) borders: ConnectionBorders<'state, 'zones, 'tiles>,
     rng: RngCheckpoint,
 }
 impl WaterIslands<'_, '_, '_> {

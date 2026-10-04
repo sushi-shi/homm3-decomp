@@ -20,8 +20,10 @@ pub use neighborhood::Neighborhood;
 mod connections;
 mod water_islands;
 pub use water_islands::WaterIslands;
+mod connection_paths;
 mod movement;
-pub use movement::{Direction, ZoneDistance};
+pub use connection_paths::{ConnectionPaths, PathWidth, RepairedWaterBorders};
+pub use movement::{Direction, Movement, ZoneDistance};
 mod density;
 mod island_noise;
 use connections::ConnectionScratch;
@@ -99,6 +101,8 @@ pub enum ObstacleEntrances {
 /// A safe placement query cannot reproduce an undefined native access.
 #[derive(Debug)]
 pub enum PlacementError {
+    /// Supplied arena is not the one already bound to cell membership.
+    ArenaContext,
     /// Objects are being registered with a different catalog, mode or format.
     CatalogContext,
     /// Retail erases a missing global-list entry after that list allocated storage.
@@ -131,6 +135,7 @@ pub enum PlacementError {
 impl fmt::Display for PlacementError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::ArenaContext => f.write_str("object arena does not own map membership"),
             Self::CatalogContext => {
                 f.write_str("object catalog does not match the registered map context")
             }
@@ -193,6 +198,7 @@ pub struct CellState {
     entrance: Option<ObjectKind>,
     reservation: PathReservation,
     zone_distance: ZoneDistance,
+    movement: Movement,
 }
 impl Default for CellState {
     fn default() -> Self {
@@ -205,6 +211,7 @@ impl Default for CellState {
             entrance: None,
             reservation: PathReservation::Open,
             zone_distance: ZoneDistance::default(),
+            movement: Movement::default(),
         }
     }
 }

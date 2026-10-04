@@ -41,6 +41,12 @@ enum ERmgChamferStepCost {
     RMG_CHAMFER_DIAGONAL_COST = 3
 };
 
+// Movement flood costs inside a zone and onto water or across its border.
+enum ERmgConnectionStepCost {
+    RMG_CONNECTION_LAND_STEP_COST = 1,
+    RMG_CONNECTION_WATER_OR_BORDER_STEP_COST = 10
+};
+
 // Radius of a square neighbourhood around a cell, clipped to the map.
 enum ERmgNeighborhoodRadius {
     RMG_NEIGHBORHOOD_3X3 = 1,

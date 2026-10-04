@@ -614,7 +614,7 @@ void TRmgMap::floodConnectionCosts(TRmgMapPosition position, b8 waterZone)
                 direction = RMG_FIRST_NORTHERN_DIRECTION;
         }
         while (direction--) {
-            s32 nextCost = currentCost + 1;
+            s32 nextCost = currentCost + RMG_CONNECTION_LAND_STEP_COST;
             TRmgMapPosition nextPosition = currentPosition;
             nextPosition += g_rmgDirections[direction];
             if (!containsXY(nextPosition))
@@ -632,7 +632,7 @@ void TRmgMap::floodConnectionCosts(TRmgMapPosition position, b8 waterZone)
                     continue;
             }
             if (next->m_zoneState.m_zone != zone) {
-                nextCost = currentCost + 10;
+                nextCost = currentCost + RMG_CONNECTION_WATER_OR_BORDER_STEP_COST;
                 if (currentZone != zone && currentZone != next->m_zoneState.m_zone)
                     continue;
                 if (next->m_movement.m_zonePathCost <= nextCost)
@@ -645,7 +645,7 @@ void TRmgMap::floodConnectionCosts(TRmgMapPosition position, b8 waterZone)
                 if (currentZone != zone)
                     continue;
                 if (next->getLandType() == eTerrainWater)
-                    nextCost = currentCost + 10;
+                    nextCost = currentCost + RMG_CONNECTION_WATER_OR_BORDER_STEP_COST;
                 if (next->m_movement.m_cost <= nextCost)
                     continue;
                 if (!currentCost && next->hasPathClearance()

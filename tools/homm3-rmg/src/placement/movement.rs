@@ -1,8 +1,18 @@
 //! Clockwise movement directions and zone-path flood state.
-use super::{CellState, CLEARED_DISTANCE};
+use super::{CellState, PathReservation, PlacementError, PlacementMap, CLEARED_DISTANCE};
 use crate::{
+    domain::{Terrain, WorldPosition},
     geometry::{Point, ZoneId},
     raw,
+};
+
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "canonical cost is checked at compile time"
+)]
+const UNREACHED_DISTANCE: u16 = {
+    assert!(raw::RMG_UNREACHED_COST <= u16::MAX as u32);
+    raw::RMG_UNREACHED_COST as u16
 };
 
 /// Native movement order, distinct from terrain pattern directions.
@@ -43,6 +53,12 @@ impl Direction {
         Self::North,
         Self::NorthEast,
     ];
+    fn opposite(self) -> Self {
+        Self::ALL[(self.index() + Self::ALL.len() / 2) % Self::ALL.len()]
+    }
+    const fn southward(self) -> bool {
+        matches!(self, Self::SouthEast | Self::South | Self::SouthWest)
+    }
     /// Index into the source movement direction table.
     #[must_use]
     pub const fn index(self) -> usize {
@@ -66,13 +82,15 @@ impl Direction {
 #[derive(Clone, Copy, Debug)]
 pub struct ZoneDistance {
     cost: u16,
-    connection: Option<(ZoneId, Direction)>,
+    zone: Option<ZoneId>,
+    direction: Direction,
 }
 impl Default for ZoneDistance {
     fn default() -> Self {
         Self {
             cost: CLEARED_DISTANCE,
-            connection: None,
+            zone: None,
+            direction: Direction::East,
         }
     }
 }
@@ -81,8 +99,27 @@ impl ZoneDistance {
         // Source setWaterZoneDistance writes zone zero, not the absent sentinel.
         Self {
             cost,
-            connection: Some((ZoneId::new(0), direction)),
+            zone: Some(ZoneId::new(0)),
+            direction,
         }
+    }
+    pub(super) fn reset() -> Self {
+        Self {
+            cost: UNREACHED_DISTANCE,
+            ..Self::default()
+        }
+    }
+    fn from_flood(cost: u16, zone: Option<ZoneId>, direction: Direction) -> Self {
+        Self {
+            cost,
+            zone,
+            direction,
+        }
+    }
+    /// Stored direction even when a flood originated in an unassigned cell.
+    #[must_use]
+    pub const fn direction(self) -> Direction {
+        self.direction
     }
     /// Stored native distance; water spacing uses cardinal 2 / diagonal 3.
     #[must_use]
@@ -94,7 +131,10 @@ impl ZoneDistance {
     /// do not identify the flood origin or a backtracking route.
     #[must_use]
     pub const fn connection(self) -> Option<(ZoneId, Direction)> {
-        self.connection
+        match self.zone {
+            Some(zone) => Some((zone, self.direction)),
+            None => None,
+        }
     }
 }
 impl CellState {
@@ -102,5 +142,154 @@ impl CellState {
     #[must_use]
     pub const fn zone_distance(&self) -> ZoneDistance {
         self.zone_distance
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+enum MovementState {
+    #[default]
+    Initial,
+    Unreached,
+    Seed,
+    Arrived {
+        cost: u16,
+        previous: WorldPosition,
+    },
+}
+/// Movement cost and predecessor, constructed only by the map's searches.
+/// Zero-cost arrivals retain their predecessor but stop path opening like seeds.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Movement(MovementState);
+impl Movement {
+    pub(super) const fn unreached() -> Self {
+        Self(MovementState::Unreached)
+    }
+    /// Native stored movement cost, including the two unreached sentinels.
+    #[must_use]
+    pub fn cost(self) -> u16 {
+        match self.0 {
+            MovementState::Initial => CLEARED_DISTANCE,
+            MovementState::Unreached => UNREACHED_DISTANCE,
+            MovementState::Seed => 0,
+            MovementState::Arrived { cost, .. } => cost,
+        }
+    }
+    /// Predecessor exists only after a search arrives from another cell.
+    #[must_use]
+    pub const fn previous(self) -> Option<WorldPosition> {
+        match self.0 {
+            MovementState::Arrived { previous, .. } => Some(previous),
+            _ => None,
+        }
+    }
+}
+impl CellState {
+    /// Current search cost and predecessor, independent of object distance.
+    #[must_use]
+    pub const fn movement(&self) -> Movement {
+        self.movement
+    }
+}
+impl PlacementMap<'_, '_, '_> {
+    /// Flood within the seed's zone and spill into each adjacent zone.
+    /// Existing costs remain; zero-cost clearance propagates after the strict
+    /// improvement test. Equal-cost work items retain insertion order.
+    ///
+    /// # Errors
+    /// Reports native coordinate/access faults or failed queue allocation.
+    pub fn flood_connection_costs(
+        &mut self,
+        seed: WorldPosition,
+        water_zone: bool,
+    ) -> Result<(), PlacementError> {
+        self.connections.flood.clear();
+        self.connections.flood.insert(seed, 0)?;
+        let index = self.view().native_index(seed)?;
+        self.cells[index].movement = Movement(MovementState::Seed);
+        let zone = self.coverage().map().raster().cells()[index].zone;
+        while let Some(position) = self.connections.flood.pop() {
+            let index = self.view().native_index(position)?;
+            let current_zone = self.coverage().map().raster().cells()[index].zone;
+            let cost = u32::from(if current_zone == zone {
+                self.cells[index].movement.cost()
+            } else {
+                self.cells[index].zone_distance.cost()
+            });
+            let directions = if self.cells[index]
+                .entrance
+                .is_some_and(|kind| !kind.traits().enterable_from_north())
+            {
+                Direction::NorthWest.index()
+            } else {
+                Direction::ALL.len()
+            };
+            for &direction in Direction::ALL[..directions].iter().rev() {
+                let point = position
+                    .point
+                    .checked_add(direction.offset())
+                    .ok_or(PlacementError::CoordinateOverflow)?;
+                if !self.view().contains(point) {
+                    continue;
+                }
+                let next = WorldPosition {
+                    point,
+                    level: position.level,
+                };
+                let index = self.view().index(next)?;
+                let next_zone = self.coverage().map().raster().cells()[index].zone;
+                if next_zone.is_none() || !self.view().passable(index) {
+                    continue;
+                }
+                if let Some(kind) = self.cells[index].entrance {
+                    let traits = kind.traits();
+                    if (traits.blocks_landing() && !traits.cleared_on_visit())
+                        || (!traits.enterable_from_north() && direction.southward())
+                    {
+                        continue;
+                    }
+                }
+                let mut next_cost = cost + raw::RMG_CONNECTION_LAND_STEP_COST;
+                if next_zone == zone {
+                    if current_zone != zone {
+                        continue;
+                    }
+                    let water = self.terrain.tiles()[index].terrain() == Terrain::Water;
+                    if water {
+                        next_cost = cost + raw::RMG_CONNECTION_WATER_OR_BORDER_STEP_COST;
+                    }
+                    if u32::from(self.cells[index].movement.cost()) <= next_cost {
+                        continue;
+                    }
+                    if cost == 0
+                        && self.cells[index].reservation == PathReservation::Open
+                        && (!water || water_zone)
+                    {
+                        next_cost = 0;
+                    }
+                    self.cells[index].movement = Movement(MovementState::Arrived {
+                        cost: u16::try_from(next_cost).map_err(|_| PlacementError::Arithmetic)?,
+                        previous: position,
+                    });
+                } else {
+                    next_cost = cost + raw::RMG_CONNECTION_WATER_OR_BORDER_STEP_COST;
+                    if current_zone != zone && current_zone != next_zone {
+                        continue;
+                    }
+                    if u32::from(self.cells[index].zone_distance.cost()) <= next_cost {
+                        continue;
+                    }
+                    self.cells[index].zone_distance = ZoneDistance::from_flood(
+                        u16::try_from(next_cost).map_err(|_| PlacementError::Arithmetic)?,
+                        zone,
+                        direction.opposite(),
+                    );
+                }
+                self.connections.flood.insert(
+                    next,
+                    i32::try_from(next_cost).map_err(|_| PlacementError::Arithmetic)?,
+                )?;
+            }
+        }
+        Ok(())
     }
 }

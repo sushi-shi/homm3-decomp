@@ -69,6 +69,9 @@ pub struct ObjectArena {
     owner: Option<OwnerId>,
 }
 impl ObjectArena {
+    pub(super) const fn owner(&self) -> Option<OwnerId> {
+        self.owner
+    }
     /// Clear a completed generation, invalidating its IDs and retaining capacity.
     pub fn reset(&mut self) {
         self.records.clear();
@@ -151,6 +154,9 @@ impl Memberships {
         self.free = None;
         self.free_count = 0;
         self.owner = None;
+    }
+    pub(super) fn accepts_arena(&self, arena: &ObjectArena) -> bool {
+        self.owner.is_none() || self.owner == arena.owner()
     }
     pub(super) fn accepts(&self, object: ObjectId) -> bool {
         self.owner.is_none_or(|owner| owner == object.owner)

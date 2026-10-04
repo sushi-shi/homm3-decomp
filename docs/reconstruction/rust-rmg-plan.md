@@ -136,10 +136,11 @@ The library cannot yet generate a complete map.
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: movement/cost propagation for
-`buildZoneConnectionPaths`, then water-zone border repair and crossings. Water-zone
-islands now consume `ConnectionBorders` into `WaterIslands`, retaining the map,
-town payloads and reusable terrain workspace for subsequent stages. Town payloads,
+Immediate next implementation: `connectZones` and its guarded crossings,
+subterranean gates, shipyards and monolith fallback, followed by dry junctions.
+Initial connection pathfinding and water-border repair now consume `WaterIslands`
+through `ConnectionPaths` into `RepairedWaterBorders`, retaining the shared map,
+town payloads and terrain workspace. Town payloads,
 primary entrances, road targets and the shared serialized counter already exist.
 Complete shared world/treasure-group payload lifetimes before integrating
 transient treasure objects. Reset object and placement workspaces together.
@@ -393,6 +394,33 @@ strict Clippy pass. The six native registration/removal comparisons also pass
 after sharing movement-direction helpers (11,862 checkpoint lines).
 These comparisons remain against the current C++ source, not a claim of complete
 retail-executable parity or finished map generation.
+
+Connection pathfinding now has typed initial/unreached/seed/arrived movement
+state, including zero-cost arrivals with predecessors. Ordered flooding keeps
+prior costs, descending direction order, entrance restrictions and the source's
+comparison-before-zero-relaxation rule. Path opening retains its starting zone,
+excludes zero-cost endpoints and uses ordinary registration for base border guards
+without consuming a serialized payload ID. Deferred water-border painting keeps
+paired cell/terrain requests, duplicates and plane order; each consecutive terrain
+run finishes before the next, using existing brush scratch without a grid copy.
+
+Both stages agree with native captures for all eight maps: all movement costs,
+predecessors, terrain/frame/reflection, connection metadata, placement cells and
+RNG state (778,496 checkpoint lines across sixteen stage captures). Core tests
+now total 69; strict Clippy passes. Both reviewers rechecked their fixes and report
+no remaining actionable issues. A regression verifies that even a wholly clipped
+raw insertion binds arena ownership when the registered list is empty; a foreign
+arena fails before changing borders or RNG.
+
+The behavior reviewer verified one C++/retail discrepancy against the pinned
+executable: `buildZoneConnectionPaths` reads uninitialized seed locals at
+`0x540780`–`0x540789` if no earlier zone supplied a seed. The Rust port reports
+`SeedReplayRequired` after resetting costs, rather than silently copying the
+reconstructed C++ sentinel skip. Hotfix skips seedless zones; retail still reuses
+an earlier seed. Explicit seed-coordinate replay remains part of the final
+compatibility integration. The ordinary stage comparisons above cover defined
+source behavior; protected guard creation will also be exercised as crossings
+are integrated.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the
