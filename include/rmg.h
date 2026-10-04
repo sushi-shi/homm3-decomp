@@ -2030,6 +2030,7 @@ public:
     b8 placeKeyTentGuard(TRmgObject* object, s32 targetValue);
 #if defined(HOMM3_RMG_HOTFIX)
     bool hasRequiredPrototypes() const;
+    bool hasPlayerTowns() const;
 #endif
     // Change one colour's availability, then rescan for the first enabled
     // colour (size() when none remain).

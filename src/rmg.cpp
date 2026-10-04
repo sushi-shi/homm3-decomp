@@ -12,6 +12,9 @@
 #include <functional>
 #include <list>
 #include <math.h>
+#if defined(HOMM3_RMG_HOTFIX)
+#include <memory>
+#endif
 #include <queue>
 #include <set>
 #include <stdio.h>
@@ -2641,6 +2644,10 @@ static bool isUsableRmgPrototype(const TObjectType& prototype)
     if (prototype.getWidth() < 1 || prototype.getWidth() > OBJECT_MASK_WIDTH
         || prototype.getHeight() < 1 || prototype.getHeight() > OBJECT_MASK_HEIGHT)
         return false;
+    // writeMap serializes a hole in its reserved prototype slot; generation
+    // never places it or walks its outline. Shipped holes have no footprint.
+    if (prototype.getObjectType() == TERRAIN_HOLE)
+        return true;
     s32 column = 0;
     while (column < prototype.getWidth()
         && !isRmgObjectFootprintCell(&prototype, column, 0))
@@ -4009,6 +4016,11 @@ void TRmgGenerator::filterZonePositions(
     }
 }
 
+#if defined(HOMM3_RMG_HOTFIX)
+// A layout can exhaust its candidates even after template validation.
+struct TRmgZonePlacementFailure {};
+#endif
+
 // The first zone starts at the origin, on the surface or, when eligible,
 // underground. Later zones sample template neighbours, falling back to all
 // placed zones before filtering.
@@ -4040,6 +4052,10 @@ void TRmgGenerator::positionZone(TRmgZone* zone, s32 mapSize)
     }
     // Assumes a legal candidate exists; an empty set reaches rand() % 0.
     u32 count = candidates.size();
+#if defined(HOMM3_RMG_HOTFIX)
+    if (!count)
+        throw TRmgZonePlacementFailure();
+#endif
     u32 selected = rand() % count;
     TRmgMapPosition selectedPosition;
     selectedPosition = candidates[selected];
@@ -4084,6 +4100,10 @@ void TRmgGenerator::initializeZones(TRmgTemplate* mapTemplate)
     for (index = 0; index < mapTemplate->m_zones.size(); ++index) {
         TRmgTemplateZone* templateZone = mapTemplate->m_zones[index];
         TRmgZone* zone = new TRmgZone(templateZone);
+#if defined(HOMM3_RMG_HOTFIX)
+        // The generator owns the zone only after successful placement.
+        std::auto_ptr<TRmgZone> pendingZone(zone);
+#endif
         if (templateZone->m_townPlacement[RMG_TOWN_PLAYER_BASIC_COUNT]
                 + templateZone->m_townPlacement[RMG_TOWN_PLAYER_CASTLE_COUNT] > 0
             && templateZone->m_playerIndex >= 0) {
@@ -4093,6 +4113,9 @@ void TRmgGenerator::initializeZones(TRmgTemplate* mapTemplate)
         }
         positionZone(zone, mapSize);
         m_zones.push_back(zone);
+#if defined(HOMM3_RMG_HOTFIX)
+        pendingZone.release();
+#endif
     }
     for (s32 pass = 0; pass < 2; ++pass) {
         for (index = 0; index < mapTemplate->m_zones.size(); ++index)
@@ -7020,6 +7043,12 @@ b8 TRmgGenerator::tryPlacePrimaryTown(
     zone->m_primaryTownEntrance = placeTownAtRandomCandidate(properties,
         player, hasFort, candidates, prototype->m_triggerCell);
     zone->m_hasPrimaryTown = true;
+#if defined(HOMM3_RMG_HOTFIX)
+    // An additional town can supply the first town of an unaligned zone.
+    // The faction tally and map header must use its resolved town type.
+    if (zone->m_alignment == eTownNeutral)
+        zone->m_alignment = static_cast<TTownType>(alignment);
+#endif
     return true;
 }
 
@@ -8379,6 +8408,57 @@ void TRmgGenerator::createRivers()
     }
 }
 
+#if defined(HOMM3_RMG_HOTFIX)
+// A template seat is not a playable start until a town actually fits there.
+bool TRmgGenerator::hasPlayerTowns() const
+{
+    b8 humanTowns[RMG_PLAYER_COUNT];
+    b8 playerTowns[RMG_PLAYER_COUNT];
+    memset(humanTowns, 0, sizeof(humanTowns));
+    memset(playerTowns, 0, sizeof(playerTowns));
+    for (u32 index = 0; index < m_zones.size(); ++index) {
+        const TRmgZone* zone = m_zones[index];
+        const TRmgTemplateZone* templateZone = zone->m_templateZone;
+        if (!zone->m_hasPrimaryTown || templateZone->m_playerIndex < 0)
+            continue;
+        if (templateZone->m_kind != RMG_TEMPLATE_HUMAN
+            && templateZone->m_kind != RMG_TEMPLATE_COMPUTER)
+            continue;
+        s32 player = m_playerIndexMap[templateZone->m_playerIndex + 1];
+        if (player < 0)
+            continue;
+        // A neutral town must not become the player's serialized main town.
+        bool ownsMainTown = false;
+        for (u32 objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
+            const TRmgObject* object = m_objects[objectIndex];
+            if (object->m_properties->m_prototype->getObjectType() != TOWN)
+                continue;
+            const TRmgTownObject* town = static_cast<const TRmgTownObject*>(object);
+            TRmgMapPosition entrance = town->getEntrance();
+            if (town->m_player == player && entrance == zone->m_primaryTownEntrance
+                && entrance.m_z == zone->m_primaryTownEntrance.m_z) {
+                ownsMainTown = true;
+                break;
+            }
+        }
+        if (!ownsMainTown)
+            return false;
+        if (templateZone->m_kind == RMG_TEMPLATE_HUMAN)
+            humanTowns[player] = playerTowns[player] = true;
+        else if (templateZone->m_kind == RMG_TEMPLATE_COMPUTER)
+            playerTowns[player] = true;
+    }
+    s32 humans = 0;
+    s32 players = 0;
+    for (s32 player = 0; player < RMG_PLAYER_COUNT; ++player) {
+        humans += humanTowns[player] != 0;
+        players += playerTowns[player] != 0;
+    }
+    return humans >= m_humanPlayerCount
+        && players >= m_humanPlayerCount + m_computerPlayerCount;
+}
+#endif
+
 // Assigns players to template slots, lays out zones and terrain, places
 // towns, connections, mines and treasures, then decorates and adds roads
 // and rivers.
@@ -8418,7 +8498,15 @@ b8 TRmgGenerator::generate()
             ++slot;
         m_playerIndexMap[++slot] = playerOrder[orderIndex];
     }
+#if defined(HOMM3_RMG_HOTFIX)
+    try {
+        initializeZones(m_templates[selected]);
+    } catch (const TRmgZonePlacementFailure&) {
+        return false;
+    }
+#else
     initializeZones(m_templates[selected]);
+#endif
     for (s32 level = RMG_SURFACE_LEVEL; level < m_map.m_numberLevels; ++level)
         buildZoneBoundaries(m_templates[selected], level);
     paintZoneTerrain();
@@ -8426,6 +8514,10 @@ b8 TRmgGenerator::generate()
         placePrimaryTown(m_zones[zone]);
     for (zone = 0; zone < m_zones.size(); ++zone)
         placeAdditionalTowns(m_zones[zone]);
+#if defined(HOMM3_RMG_HOTFIX)
+    if (!hasPlayerTowns())
+        return false;
+#endif
     prepareZoneConnections();
     for (zone = 0; zone < m_zones.size(); ++zone)
         if (m_zones[zone]->m_templateZone->m_kind == RMG_TEMPLATE_JUNCTION
@@ -8640,6 +8732,14 @@ void TRmgGenerator::writeMapHeader(TAbstractFile* outputFile)
     }
 
     m_computerPlayerCount = m_humanPlayerCount = 0;
+#if defined(HOMM3_RMG_HOTFIX)
+    // A player with both kinds of starting zone belongs to the human team
+    // pool. The computer-only mask must agree with the counts below.
+    for (s32 teamPlayer = 0; teamPlayer < RMG_PLAYER_COUNT; ++teamPlayer) {
+        if (canBeHuman[teamPlayer])
+            canBeComputer[teamPlayer] = false;
+    }
+#endif
 
     for (s32 serializedPlayer = 0; serializedPlayer < RMG_PLAYER_COUNT;
          ++serializedPlayer) {
@@ -9235,6 +9335,13 @@ bool TRandomMapRequest::isSupported() const
         || m_humanPlayerCount > RMG_PLAYER_COUNT
         || m_computerPlayerCount > RMG_PLAYER_COUNT - m_humanPlayerCount)
         return false;
+    s32 fixedHumans = 0;
+    for (s32 player = 0; player < RMG_PLAYER_COUNT; ++player)
+        fixedHumans += m_isHumanSeat[player] != 0;
+    s32 repairedHumans = m_humanPlayerCount + m_computerPlayerCount < 2
+        ? 1 : m_humanPlayerCount;
+    if (fixedHumans > repairedHumans)
+        return false;
     // The lobby may pass more teams than players (or 0, one per player);
     // writeMapHeader clamps them to the players it writes.
     if (m_humanTeamCount < 0 || m_humanTeamCount > RMG_PLAYER_COUNT
@@ -9282,10 +9389,20 @@ bool TRmgGenerator::hasRequiredPrototypes() const
     // Towns are indexed by town type.
     if (prototypes[TOWN].size() < getRmgTownTypeCount(m_mapVersion))
         return false;
+    for (s32 town = 0; town < getRmgTownTypeCount(m_mapVersion); ++town) {
+        const TObjectType* prototype = prototypes[TOWN][town]->m_prototype;
+        if (prototype->getSubtype() != town || !prototype->m_hasTrigger)
+            return false;
+    }
     // Portals cycle through two-way monoliths, then entrance/exit pairs.
     if (!(prototypes[LITH_TWOWAY].size() + prototypes[LITH_ONEWAY_ENTRANCE].size())
         || prototypes[LITH_ONEWAY_EXIT].size() < prototypes[LITH_ONEWAY_ENTRANCE].size())
         return false;
+    for (u32 portal = 0; portal < prototypes[LITH_ONEWAY_ENTRANCE].size(); ++portal) {
+        if (prototypes[LITH_ONEWAY_ENTRANCE][portal]->m_prototype->getSubtype()
+            != prototypes[LITH_ONEWAY_EXIT][portal]->m_prototype->getSubtype())
+            return false;
+    }
     // A placed tent's border-connection cells take a guard of its colour,
     // selected on dirt.
     for (u32 tent = 0; tent < prototypes[BORDER_TENT].size(); ++tent) {
