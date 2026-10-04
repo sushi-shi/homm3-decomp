@@ -115,7 +115,7 @@ public:
 class TRmgArtifactDef : public TRmgTreasureDef {
 public:
     inline TRmgArtifactDef(TAdventureObjectType objectType, s32 value)
-        : TRmgTreasureDef(objectType, 0, value, 150)
+        : TRmgTreasureDef(objectType, 0, value, RMG_ARTIFACT_REWARD_DENSITY)
     {
     }
 
@@ -128,7 +128,7 @@ public:
     s32 m_experience;
 
     inline TRmgBlackBoxExperienceDef(s32 value, s32 experience)
-        : TRmgTreasureDef(BLACK_BOX, 0, value, 20)
+        : TRmgTreasureDef(BLACK_BOX, 0, value, RMG_EXPERIENCE_BOX_DENSITY)
     {
         this->m_experience = experience;
     }
@@ -142,7 +142,7 @@ public:
     s32 m_gold;
 
     inline TRmgBlackBoxGoldDef(s32 value, s32 gold)
-        : TRmgTreasureDef(BLACK_BOX, 0, value, 5)
+        : TRmgTreasureDef(BLACK_BOX, 0, value, RMG_GOLD_BOX_DENSITY)
     {
         this->m_gold = gold;
     }
@@ -159,7 +159,7 @@ public:
 
     inline TRmgBlackBoxSpellsDef(
         s32 value, s32 minimumLevel, s32 maximumLevel, s32 schoolMask)
-        : TRmgTreasureDef(BLACK_BOX, 0, value, 2)
+        : TRmgTreasureDef(BLACK_BOX, 0, value, RMG_SPELL_BOX_DENSITY)
     {
         this->m_minimumLevel = minimumLevel;
         this->m_maximumLevel = maximumLevel;
@@ -173,7 +173,7 @@ public:
 class TRmgKeyTentDef : public TRmgTreasureDef {
 public:
     inline TRmgKeyTentDef(s32 subtype, s32 value)
-        : TRmgTreasureDef(BORDER_TENT, subtype, value, 10)
+        : TRmgTreasureDef(BORDER_TENT, subtype, value, RMG_KEY_TENT_REWARD_DENSITY)
     {
     }
 
@@ -186,7 +186,7 @@ public:
 class TRmgDwellingDef : public TRmgTreasureDef {
 public:
     inline TRmgDwellingDef(s32 subtype)
-        : TRmgTreasureDef(CREATURE_GENERATOR_1, subtype, -1, 40)
+        : TRmgTreasureDef(CREATURE_GENERATOR_1, subtype, -1, RMG_DWELLING_REWARD_DENSITY)
     {
     }
 
@@ -221,7 +221,7 @@ public:
     s32 m_experience;
 
     inline TRmgPrisonDef(s32 value, s32 experience)
-        : TRmgTreasureDef(PRISON, 0, value, 30)
+        : TRmgTreasureDef(PRISON, 0, value, RMG_PRISON_REWARD_DENSITY)
     {
         this->m_experience = experience;
     }
@@ -233,7 +233,7 @@ public:
 class TRmgScholarDef : public TRmgTreasureDef {
 public:
     inline TRmgScholarDef()
-        : TRmgTreasureDef(SCHOLAR, 0, 1500, 100)
+        : TRmgTreasureDef(SCHOLAR, 0, RMG_SCHOLAR_REWARD_VALUE, RMG_SCHOLAR_REWARD_DENSITY)
     {
     }
 
@@ -262,7 +262,7 @@ public:
 
     inline TRmgQuestExperienceDef(
         s32 seerHutPrototypeIndex, s32 value, s32 experience)
-        : TRmgTreasureDef(SEER, seerHutPrototypeIndex, value, 10)
+        : TRmgTreasureDef(SEER, seerHutPrototypeIndex, value, RMG_QUEST_REWARD_DENSITY)
     {
         this->m_experience = experience;
     }
@@ -278,7 +278,7 @@ public:
     s32 m_gold;
 
     inline TRmgQuestGoldDef(s32 seerHutPrototypeIndex, s32 value, s32 gold)
-        : TRmgTreasureDef(SEER, seerHutPrototypeIndex, value, 10)
+        : TRmgTreasureDef(SEER, seerHutPrototypeIndex, value, RMG_QUEST_REWARD_DENSITY)
     {
         this->m_gold = gold;
     }
@@ -1843,6 +1843,10 @@ public:
     }
 
     void initializeObjectGenerators();
+    void initializeCreatureRewardGenerators();
+    void initializeKeyTentGenerators();
+    void initializeDwellingGenerators();
+    void initializeSeerHutGenerators();
     s32 selectPrisonHero();
     b8 canPlaceZone(TRmgZone* zone);
     void buildZoneBoundaries(TRmgTemplate* mapTemplate, s32 level);

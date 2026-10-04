@@ -1,28 +1,12 @@
 #ifndef HOMM3_CREATURE_BANK_H
 #define HOMM3_CREATURE_BANK_H
 
+#include "adventure_object_subtype.h"
+
 #include <string>
 #include <vector>
 
 #include "creature_bank_types.h"
-
-// Dreamcast CodeView supplies the names/order; retail's help-text selector
-// bounds the player bit, then indexes this domain through a 400-byte traits
-// record. Only the currently consumed name field is exposed.
-enum type_creature_bank_type {
-    CREATURE_BANK_CYCLOPS = 0,
-    CREATURE_BANK_DWARF,
-    CREATURE_BANK_GRIFFIN,
-    CREATURE_BANK_IMP,
-    CREATURE_BANK_MEDUSA,
-    CREATURE_BANK_NAGA,
-    CREATURE_BANK_DRAGONFLY,
-    CREATURE_BANK_SHIPWRECK,
-    CREATURE_BANK_DERELICT,
-    CREATURE_BANK_SEPULCHER,
-    CREATURE_BANK_DRAGON,
-    CREATURE_BANK_COUNT
-};
 
 // The three guard shapes initialize_creature_bank's splitter knows, named
 // because they are switch labels and the tree cases on enumerators. Retail

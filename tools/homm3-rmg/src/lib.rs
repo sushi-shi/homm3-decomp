@@ -29,5 +29,6 @@ pub mod template;
 pub mod terrain;
 pub mod terrain_rules;
 pub mod traits;
+pub mod treasure;
 
 mod worklist;

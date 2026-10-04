@@ -673,9 +673,43 @@ candidate/repeat map outputs remain unchanged by isolated probes. The 74 core
 tests and strict Clippy pass; both reviewers are clear. A focused regression
 checks the neutral alias, signed division and overflow before division.
 
-Next implement the pre-generation treasure definition catalog, its lazy value
-and payload dispatch, and transient group lifetime/reservation handling. Full map
-generation and serialization remain unfinished.
+The pre-generation treasure definition catalog is implemented. Canonical recipe
+rows, creature/tent reward tables and seer reward rows are shared `.inc` inputs;
+C++ keeps its constructors and four named expansion helpers. Constructor defaults
+come through bindgen, and cartographer/creature-bank subtype declarations have
+one lightweight header owner. The build-host exporter supplies the ordered raw
+recipe ADT; Rust admits private definition records and eagerly computes signed
+creature counts. Creature/tent/dwelling/seer expansion order matches the source,
+including version limits, missing artwork and family ordinals rather than stored
+prototype subtypes. Catalog preparation consumes no RNG or reservation state.
+
+`TreasureWorkspace` retains one contiguous vector between preparations and lends
+immutable definitions together with the exact creature/prototype catalogs. It
+allocates no individual definition objects. The no-template generation path must
+skip preparation, matching the native constructor. Later value and payload
+queries must remain lazy; this catalog does not prefilter zone offers or spells.
+
+Sixteen native constructor captures compare 12,632 complete records (kind,
+subtype, fixed/dynamic value, density and derived reward arguments). All three
+formats and both modes agree: 704 definitions for RoE, 818 for either expansion.
+The 16 candidate/repeat whole maps are unchanged against the preceding checkpoint.
+Focused regressions cover signed rounding boundaries, zero AI faults despite
+absent art, recovery after failed preparation, versioned blocks, distinct family
+ordinals and reused storage. All 78 core tests and strict Clippy pass. Both
+reviewers found no remaining catalog issues.
+
+The extended ASCII audit adds mask/world coordinates, trigger and overlap visit
+order, approach cells, clipped neighborhood traversal, path width and native
+flat-index alias diagrams. Existing portal/shipyard/reflection diagrams remain.
+Rustdoc with warnings denied and formatting pass for these comment-only changes.
+
+Next implement lazy treasure values and payload dispatch, then transient group
+lifetime/reservations. Keep native selection gates before `getValue`, including
+the second value call after roulette selection. Creature-quest transforms still
+apply to the base -1 result; faction mismatches must skip potentially invalid
+arithmetic. Tent offers compare the raw cursor without indexing the disabled
+array. Dwelling valuation needs the canonical creature-generator subtype table.
+Full map generation and serialization remain unfinished.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

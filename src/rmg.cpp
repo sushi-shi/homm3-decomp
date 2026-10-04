@@ -72,9 +72,9 @@ s32 getRmgDistance(TPoint first, TPoint second)
 }
 
 DATA(0x006824e0)
-s32 g_rmgCreatureValueByLevel[TOWN_DWELLING_COUNT] = {
-    5000, 7000, 9000, 12000, 16000, 21000, 27000
-};
+s32 g_rmgCreatureValueByLevel[TOWN_DWELLING_COUNT] =
+#include "rmg_data/creature_reward_values.inc"
+;
 
 void TRmgObject::releaseReservation() {}
 b8 TRmgObject::completePlacement() { return true; }
@@ -1801,7 +1801,7 @@ static inline s32 roundRmgCreatureCount(s32 count, s32 step)
 VA(0x00534250, 0xb5)
 MAC_ADDRESS(0x231dfc, 0x108)
 TRmgBlackBoxCreatureDef::TRmgBlackBoxCreatureDef(TCreatureType creatureType)
-    : TRmgTreasureDef(BLACK_BOX, 0, -1, 3),
+    : TRmgTreasureDef(BLACK_BOX, 0, -1, RMG_CREATURE_REWARD_DENSITY),
       m_creatureType(creatureType)
 {
     m_creatureCount =
@@ -1962,7 +1962,7 @@ TRmgObject* TRmgScholarDef::generate(TRmgObjectPropertiesRef* properties,
 VA(0x005349d0, 0x29)
 MAC_ADDRESS(0x232600, 0x44)
 TRmgShrineDef::TRmgShrineDef(TAdventureObjectType objectType, s32 value)
-    : TRmgTreasureDef(objectType, 0, value, 100)
+    : TRmgTreasureDef(objectType, 0, value, RMG_SHRINE_REWARD_DENSITY)
 {
 }
 
@@ -1977,7 +1977,7 @@ TRmgObject* TRmgShrineDef::generate(TRmgObjectPropertiesRef* properties,
 VA(0x00534a60, 0x25)
 MAC_ADDRESS(0x232694, 0x48)
 TRmgWitchHutDef::TRmgWitchHutDef()
-    : TRmgTreasureDef(WITCH_HUT, 0, 1500, 80)
+    : TRmgTreasureDef(WITCH_HUT, 0, RMG_WITCH_HUT_REWARD_VALUE, RMG_WITCH_HUT_REWARD_DENSITY)
 {
 }
 
@@ -2069,7 +2069,7 @@ TRmgObject* TRmgQuestGoldDef::generate(TRmgObjectPropertiesRef* properties,
 VA(0x00534ea0, 0x30)
 MAC_ADDRESS(0x232b28, 0x58)
 TRmgSpellScrollDef::TRmgSpellScrollDef(s32 spellLevel, s32 value)
-    : TRmgTreasureDef(SPELL_SCROLL, 0, value, 30)
+    : TRmgTreasureDef(SPELL_SCROLL, 0, value, RMG_SCROLL_REWARD_DENSITY)
 {
     m_spellLevel = spellLevel;
 }
@@ -3473,184 +3473,68 @@ static inline s32 getRmgCreatureTypeCount(ERmgMapVersion mapVersion)
         ? RMG_CREATURE_TYPE_COUNT : RMG_ROE_CREATURE_TYPE_COUNT;
 }
 
-// Creature dwelling subtypes offered as treasures (g_creatureGenerator1Types).
-enum ERmgDwellingSubtypeCounts {
-    RMG_DWELLING_SUBTYPE_COUNT = 80,
-    RMG_ROE_DWELLING_SUBTYPE_COUNT = 58
-};
-
-VA(0x00538b10, 0x2241)
-MAC_ADDRESS(0x2375f0, 0x4880)
-void TRmgGenerator::initializeObjectGenerators()
+void TRmgGenerator::initializeCreatureRewardGenerators()
 {
-    m_objectGenerators.push_back(new TRmgTreasureDef(ALTAR_OF_SACRIFICE, 0, 100, 20));
-    m_objectGenerators.push_back(new TRmgTreasureDef(ARENA, 0, 3000, 50));
-
     for (s32 creature = getRmgCreatureTypeCount(m_mapVersion); creature--;) {
         if (g_creatureTypeTraits[creature].m_level >= 0)
             m_objectGenerators.push_back(
                 new TRmgBlackBoxCreatureDef(static_cast<TCreatureType>(creature)));
     }
+}
 
-    m_objectGenerators.push_back(
-        new TRmgBlackBoxExperienceDef(6000, 5000));
-    m_objectGenerators.push_back(
-        new TRmgBlackBoxExperienceDef(12000, 10000));
-    m_objectGenerators.push_back(
-        new TRmgBlackBoxExperienceDef(18000, 15000));
-    m_objectGenerators.push_back(
-        new TRmgBlackBoxExperienceDef(24000, 20000));
-
-    m_objectGenerators.push_back(new TRmgBlackBoxGoldDef(5000, 5000));
-    m_objectGenerators.push_back(new TRmgBlackBoxGoldDef(10000, 10000));
-    m_objectGenerators.push_back(new TRmgBlackBoxGoldDef(15000, 15000));
-    m_objectGenerators.push_back(new TRmgBlackBoxGoldDef(20000, 20000));
-
-    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(5000, 1, 1, eSchoolAll));
-    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(7500, 2, 2, eSchoolAll));
-    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(10000, 3, 3, eSchoolAll));
-    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(12500, 4, 4, eSchoolAll));
-    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 5, 5, eSchoolAll));
-    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 1, 5, eSchoolAir));
-    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 1, 5, eSchoolFire));
-    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 1, 5, eSchoolWater));
-    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 1, 5, eSchoolEarth));
-    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(30000, 1, 5, eSchoolAll));
-
+void TRmgGenerator::initializeKeyTentGenerators()
+{
+    static const s32 values[] =
+#include "rmg_data/treasure_tent_values.inc"
+    ;
     s32 tentIndex = m_objectPrototypes[BORDER_TENT].size();
     m_disabledKeyTentColors.resize(tentIndex);
     while (tentIndex--) {
         m_disabledKeyTentColors[tentIndex] = false;
-        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 5000));
-        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 7500));
-        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 10000));
-        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 15000));
-        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 20000));
+        for (u32 index = 0; index < sizeof(values) / sizeof(values[0]); ++index)
+            m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, values[index]));
     }
+}
 
-    m_objectGenerators.push_back(new TRmgTreasureDef(BLACK_MARKET, 0, 8000, 20));
-    m_objectGenerators.push_back(new TRmgTreasureDef(BUOY, 0, 100, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(CAMPFIRE, 0, 2000, 500));
-    m_objectGenerators.push_back(new TRmgTreasureDef(CARTOGRAPHER, CARTOGRAPHER_WATER, 5000, 20));
-    m_objectGenerators.push_back(new TRmgTreasureDef(CARTOGRAPHER, CARTOGRAPHER_LAND, 10000, 20));
-    m_objectGenerators.push_back(new TRmgTreasureDef(CARTOGRAPHER, CARTOGRAPHER_UNDERGROUND, 7500, 20));
-    m_objectGenerators.push_back(new TRmgTreasureDef(CLOVER_FIELD, 0, 100, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_CYCLOPS, 3000, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_DWARF, 2000, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_GRIFFIN, 2000, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_IMP, 5000, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_MEDUSA, 1500, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_NAGA, 3000, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_DRAGONFLY, 9000, 100));
-
+void TRmgGenerator::initializeDwellingGenerators()
+{
     s32 dwelling = RMG_DWELLING_SUBTYPE_COUNT;
     if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE)
         dwelling = RMG_ROE_DWELLING_SUBTYPE_COUNT;
     while (dwelling--)
         m_objectGenerators.push_back(new TRmgMapDwellingDef(dwelling));
+}
 
-    m_objectGenerators.push_back(new TRmgTreasureDef(DEAD_GUY, 0, 500, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(DEFENSE_TOWER, 0, 1500, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(DERELICT_SHIP, 0, 4000, 20));
-    m_objectGenerators.push_back(new TRmgTreasureDef(DRAGON_CITY, 0, 10000, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(FAERIE_RING, 0, 100, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(FLOTSAM, 0, 500, 1000));
-    m_objectGenerators.push_back(new TRmgTreasureDef(FOUNTAIN_OF_FORTUNE, 0, 100, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(FOUNTAIN_OF_YOUTH, 0, 100, 50));
-    m_objectGenerators.push_back(new TRmgTreasureDef(GARDEN_OF_REVELATION, 0, 1500, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(HILL_FORT, 0, 7000, 20));
-    m_objectGenerators.push_back(new TRmgTreasureDef(IDOL_OF_FORTUNE, 0, 100, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(LEAN_TO, 0, 500, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(LIBRARY, 0, 12000, 20));
-    m_objectGenerators.push_back(new TRmgTreasureDef(MAGIC_SCHOOL, 0, 1000, 50));
-    m_objectGenerators.push_back(new TRmgTreasureDef(MAGIC_SPRING, 0, 500, 50));
-    m_objectGenerators.push_back(new TRmgTreasureDef(MAGIC_WELL, 0, 250, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(MERC_CAMP, 0, 1500, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(MERMAID, 0, 100, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(MYSTICAL_GARDEN, 0, 500, 50));
-    m_objectGenerators.push_back(new TRmgTreasureDef(OASIS, 0, 100, 50));
-    m_objectGenerators.push_back(new TRmgTreasureDef(OBELISK, 0, 3500, 200));
-    m_objectGenerators.push_back(new TRmgTreasureDef(OBSERVATORY, 0, 750, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(PILLAR_OF_FIRE, 0, 750, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(POWER_SCHOOL, 0, 1500, 100));
-
-    m_objectGenerators.push_back(new TRmgPrisonDef(2500, 0));
-    m_objectGenerators.push_back(new TRmgPrisonDef(5000, 5000));
-    m_objectGenerators.push_back(new TRmgPrisonDef(10000, 15000));
-    m_objectGenerators.push_back(new TRmgPrisonDef(20000, 90000));
-    m_objectGenerators.push_back(new TRmgPrisonDef(30000, 500000));
-    m_objectGenerators.push_back(new TRmgTreasureDef(PYRAMID, 0, 5000, 20));
-    m_objectGenerators.push_back(new TRmgTreasureDef(RALLY_FLAG, 0, 100, 100));
-
-    m_objectGenerators.push_back(new TRmgArtifactDef(RANDOM_ARTIFACT_1, 2000));
-    m_objectGenerators.push_back(new TRmgArtifactDef(RANDOM_ARTIFACT_2, 5000));
-    m_objectGenerators.push_back(new TRmgArtifactDef(RANDOM_ARTIFACT_3, 10000));
-    m_objectGenerators.push_back(new TRmgArtifactDef(RANDOM_ARTIFACT_4, 20000));
-
-    m_objectGenerators.push_back(new TRmgResourceLumpDef(RANDOM_RESOURCE, 0, 1500, 2000));
-    m_objectGenerators.push_back(new TRmgTreasureDef(REFUGEE_CAMP, 0, 5000, 20));
-    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, WOOD, 1400, 300));
-    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, ORE, 1400, 300));
-    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, MERCURY, 2000, 300));
-    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, SULFUR, 2000, 300));
-    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, CRYSTAL, 2000, 300));
-    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, GEMS, 2000, 300));
-    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, GOLD, 750, 300));
-    m_objectGenerators.push_back(new TRmgTreasureDef(SANCTUARY, 0, 100, 50));
-    m_objectGenerators.push_back(new TRmgScholarDef());
-    m_objectGenerators.push_back(new TRmgTreasureDef(SEA_CHEST, 0, 1500, 500));
-
-    for (s32 prototypeIndex = 0; prototypeIndex < m_objectPrototypes[SEER].size();
-         ++prototypeIndex) {
+void TRmgGenerator::initializeSeerHutGenerators()
+{
+    for (s32 prototypeIndex = 0; prototypeIndex < m_objectPrototypes[SEER].size(); ++prototypeIndex) {
         for (s32 creature = getRmgCreatureTypeCount(m_mapVersion); creature--;) {
             if (g_creatureTypeTraits[creature].m_level >= 0)
                 m_objectGenerators.push_back(
                     new TRmgQuestCreatureDef(static_cast<TCreatureType>(creature), prototypeIndex));
         }
-
-        m_objectGenerators.push_back(
-            new TRmgQuestExperienceDef(prototypeIndex, 2000, 5000));
-        m_objectGenerators.push_back(
-            new TRmgQuestExperienceDef(prototypeIndex, 5333, 10000));
-        m_objectGenerators.push_back(
-            new TRmgQuestExperienceDef(prototypeIndex, 8666, 15000));
-        m_objectGenerators.push_back(
-            new TRmgQuestExperienceDef(prototypeIndex, 12000, 20000));
-        m_objectGenerators.push_back(new TRmgQuestGoldDef(prototypeIndex, 2000, 5000));
-        m_objectGenerators.push_back(new TRmgQuestGoldDef(prototypeIndex, 5333, 10000));
-        m_objectGenerators.push_back(new TRmgQuestGoldDef(prototypeIndex, 8666, 15000));
-        m_objectGenerators.push_back(new TRmgQuestGoldDef(prototypeIndex, 12000, 20000));
+#define RMG_SEER_REWARD(Type, value, amount) \
+        m_objectGenerators.push_back(new TRmgQuest##Type##Def(prototypeIndex, value, amount));
+#include "rmg_data/treasure_seer_rewards.inc"
+#undef RMG_SEER_REWARD
     }
+}
 
-    m_objectGenerators.push_back(new TRmgTreasureDef(SEPULCHER, 0, 1000, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(SHIPWRECK, 0, 2000, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(SHIPWRECK_SURVIVOR, 0, 1500, 50));
-    m_objectGenerators.push_back(new TRmgShrineDef(SHRINE1, 500));
-    m_objectGenerators.push_back(new TRmgShrineDef(SHRINE2, 2000));
-    m_objectGenerators.push_back(new TRmgShrineDef(SHRINE3, 3000));
-    m_objectGenerators.push_back(new TRmgTreasureDef(SIREN, 0, 100, 20));
-    m_objectGenerators.push_back(new TRmgSpellScrollDef(1, 500));
-    m_objectGenerators.push_back(new TRmgSpellScrollDef(2, 2000));
-    m_objectGenerators.push_back(new TRmgSpellScrollDef(3, 3000));
-    m_objectGenerators.push_back(new TRmgSpellScrollDef(4, 4000));
-    m_objectGenerators.push_back(new TRmgSpellScrollDef(5, 5000));
-    m_objectGenerators.push_back(new TRmgTreasureDef(STABLES, 0, 200, 40));
-    m_objectGenerators.push_back(new TRmgTreasureDef(TAVERN, 0, 100, 20));
-    m_objectGenerators.push_back(new TRmgTreasureDef(TEMPLE, 0, 100, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(THIEVES_DEN, 0, 100, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(TRADING_POST, 0, 100, 100));
-    m_objectGenerators.push_back(new TRmgTreasureDef(TRAINING_GROUNDS, 0, 1500, 200));
-    m_objectGenerators.push_back(new TRmgTreasureDef(TREASURE_CHEST, 0, 1500, 1000));
-    m_objectGenerators.push_back(new TRmgTreasureDef(TREE_OF_KNOWLEDGE, 0, 2500, 50));
-    m_objectGenerators.push_back(new TRmgTreasureDef(UNIVERSITY, 0, 2500, 20));
-    m_objectGenerators.push_back(new TRmgTreasureDef(WAGON, 0, 500, 50));
-    m_objectGenerators.push_back(new TRmgTreasureDef(WAR_MACHINE_FACTORY, 0, 1500, 50));
-    m_objectGenerators.push_back(new TRmgTreasureDef(WAR_SCHOOL, 0, 1000, 50));
-    m_objectGenerators.push_back(new TRmgTreasureDef(WARRIOR_TOMB, 0, 6000, 20));
-    m_objectGenerators.push_back(new TRmgTreasureDef(WATER_WHEEL, 0, 750, 50));
-    m_objectGenerators.push_back(new TRmgTreasureDef(WATERING_HOLE, 0, 500, 50));
-    m_objectGenerators.push_back(new TRmgTreasureDef(WINDMILL, 0, 2500, 150));
-    m_objectGenerators.push_back(new TRmgWitchHutDef());
+VA(0x00538b10, 0x2241)
+MAC_ADDRESS(0x2375f0, 0x4880)
+void TRmgGenerator::initializeObjectGenerators()
+{
+#define RMG_TREASURE(Type, args) m_objectGenerators.push_back(new TRmg##Type args);
+#define RMG_CREATURE_BOXES() initializeCreatureRewardGenerators();
+#define RMG_KEY_TENTS() initializeKeyTentGenerators();
+#define RMG_MAP_DWELLINGS() initializeDwellingGenerators();
+#define RMG_SEER_QUESTS() initializeSeerHutGenerators();
+#include "rmg_data/treasure_recipes.inc"
+#undef RMG_SEER_QUESTS
+#undef RMG_MAP_DWELLINGS
+#undef RMG_KEY_TENTS
+#undef RMG_CREATURE_BOXES
+#undef RMG_TREASURE
 }
 
 // Player zones go underground only with Inferno, Necropolis or Dungeon

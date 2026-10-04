@@ -11,6 +11,10 @@
 #include "terrain_type.h"
 #include "rmg_terrain_data.h"
 #include "adventure_object_data.h"
+#include "adventure_object_type.h"
+#include "adventure_object_subtype.h"
+#include "game_resource.h"
+#include "spellschool.h"
 
 #include "creature_traits.h"
 #include "spell_traits.h"
@@ -259,6 +263,79 @@ void emitSignedArray(const char* name, const int (&array)[N])
     std::printf("];\n");
 }
 
+static const int creatureRewardValues[] =
+#include "rmg_data/creature_reward_values.inc"
+;
+static const int keyTentValues[] =
+#include "rmg_data/treasure_tent_values.inc"
+;
+// These adapters export constructor arguments, preserving their source order.
+static void emitTreasureDef(int kind, int subtype, int value, int density)
+{
+    std::printf("TreasureRecipe::Plain(%d,%d,%d,%d),", kind, subtype, value, density);
+}
+static void emitArtifactDef(int kind, int value)
+{
+    std::printf("TreasureRecipe::Artifact(%d,%d),", kind, value);
+}
+static void emitBlackBoxExperienceDef(int value, int experience)
+{
+    std::printf("TreasureRecipe::Experience(%d,%d),", value, experience);
+}
+static void emitBlackBoxGoldDef(int value, int gold)
+{
+    std::printf("TreasureRecipe::Gold(%d,%d),", value, gold);
+}
+static void emitBlackBoxSpellsDef(int value, int minimumLevel, int maximumLevel, int schoolMask)
+{
+    std::printf("TreasureRecipe::Spells(%d,%d,%d,%d),", value, minimumLevel, maximumLevel, schoolMask);
+}
+static void emitPrisonDef(int value, int experience)
+{
+    std::printf("TreasureRecipe::Prison(%d,%d),", value, experience);
+}
+static void emitResourceLumpDef(int kind, int subtype, int value, int density)
+{
+    std::printf("TreasureRecipe::Resource(%d,%d,%d,%d),", kind, subtype, value, density);
+}
+static void emitScholarDef()
+{
+    std::printf("TreasureRecipe::Scholar,");
+}
+static void emitShrineDef(int kind, int value)
+{
+    std::printf("TreasureRecipe::Shrine(%d,%d),", kind, value);
+}
+static void emitSpellScrollDef(int level, int value)
+{
+    std::printf("TreasureRecipe::Scroll(%d,%d),", level, value);
+}
+static void emitWitchHutDef()
+{
+    std::printf("TreasureRecipe::WitchHut,");
+}
+static void emitTreasureRecipes()
+{
+    std::printf("#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum TreasureRecipe { Plain(i32,i32,i32,i32), Artifact(i32,i32), Experience(i32,i32), Gold(i32,i32), Spells(i32,i32,i32,i32), Prison(i32,i32), Resource(i32,i32,i32,i32), Scholar, Shrine(i32,i32), Scroll(i32,i32), WitchHut, CreatureBoxes, KeyTents, Dwellings, Seers }\n");
+    std::printf("pub const TREASURE_RECIPES: &[TreasureRecipe] = &[");
+#define RMG_TREASURE(Type, args) emit##Type args;
+#define RMG_CREATURE_BOXES() std::printf("TreasureRecipe::CreatureBoxes,");
+#define RMG_KEY_TENTS() std::printf("TreasureRecipe::KeyTents,");
+#define RMG_MAP_DWELLINGS() std::printf("TreasureRecipe::Dwellings,");
+#define RMG_SEER_QUESTS() std::printf("TreasureRecipe::Seers,");
+#include "rmg_data/treasure_recipes.inc"
+#undef RMG_SEER_QUESTS
+#undef RMG_MAP_DWELLINGS
+#undef RMG_KEY_TENTS
+#undef RMG_CREATURE_BOXES
+#undef RMG_TREASURE
+    std::printf("];\n#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum SeerRewardRecipe { Experience(i32,i32), Gold(i32,i32) }\npub const SEER_REWARD_RECIPES: &[SeerRewardRecipe] = &[");
+#define RMG_SEER_REWARD(Type, value, amount) std::printf("SeerRewardRecipe::" #Type "(%d,%d),", value, amount);
+#include "rmg_data/treasure_seer_rewards.inc"
+#undef RMG_SEER_REWARD
+    std::printf("];\n");
+}
+
 int main()
 {
     std::printf("pub const DIRECTIONS: [(i32, i32); %lu] = [", sizeof(directions)/sizeof(directions[0]));
@@ -300,6 +377,9 @@ int main()
     std::printf("pub const PORTAL_BORDER_OFFSETS: [(i32, i32); %u] = [", RMG_PORTAL_BORDER_OFFSET_COUNT);
     for (const auto& point : portalBorderOffsets) std::printf("(%d,%d),", point.m_x, point.m_y);
     std::printf("];\n");
+    emitTreasureRecipes();
+    emitSignedArray("CREATURE_REWARD_VALUES", creatureRewardValues);
+    emitSignedArray("KEY_TENT_REWARD_VALUES", keyTentValues);
     emitTerrainRules();
     emitSignedArray("GUARD_THRESHOLD_LOW", guardThresholdLow);
     emitSignedArray("GUARD_THRESHOLD_HIGH", guardThresholdHigh);

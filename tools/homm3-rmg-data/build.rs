@@ -43,6 +43,7 @@ fn main() {
         "hero_class.h",
         "creature_type.h",
         "artifact_data.h",
+        "adventure_object_subtype.h",
     ] {
         println!("cargo:rerun-if-changed={}", include.join(header).display());
     }

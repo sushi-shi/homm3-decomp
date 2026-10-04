@@ -1,6 +1,8 @@
 #ifndef HOMM3_ADVMGR_H
 #define HOMM3_ADVMGR_H
 
+#include "adventure_object_subtype.h"
+
 #include "va.h"
 
 #include "basemgr.h"
@@ -110,14 +112,6 @@ enum WitchHutSkillEncoding {
 //        set to `1 << extra`, the levels still coming off the stream.
 // All three of the 216..218 arms append to the SAME 16-byte-element pool at
 // NewfullMap+0xc0 that the retail-only resolution pass at 0x502b60 walks.
-// The three cartographer variants, indexed by NewmapCell::objectIndex.
-// DispatchEvent's cartographer arm shows one map plane per value, matching
-// the three-wide cartographerMask/cartographerFlags arrays.
-enum ECartographerType {
-    CARTOGRAPHER_WATER = 0,
-    CARTOGRAPHER_LAND = 1,
-    CARTOGRAPHER_UNDERGROUND = 2
-};
 
 enum EAdvmgrRetailObjectType {
     BORDER_GATE = 212,
