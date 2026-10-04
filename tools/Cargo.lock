@@ -289,6 +289,7 @@ dependencies = [
  "clap",
  "flate2",
  "homm3-lod",
+ "homm3-map",
  "homm3-resource",
  "homm3-rmg",
 ]

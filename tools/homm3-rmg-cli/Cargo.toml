@@ -14,6 +14,9 @@ homm3-lod.workspace = true
 homm3-resource.workspace = true
 flate2.workspace = true
 
+[dev-dependencies]
+homm3-map.workspace = true
+
 [lints]
 workspace = true
 
