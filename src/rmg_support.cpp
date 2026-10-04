@@ -50,9 +50,9 @@ TRmgLinePatternTable::~TRmgLinePatternTable()
 // Reflections tried for corner shapes, as {flipX, flipY}: none, flipY, flipX,
 // then both.
 DATA(0x0063ff1c)
-static const b8 g_rmgLineReflections[4][2] =
-#include "rmg_data/line_reflections.inc"
-;
+static const b8 g_rmgLineReflections[4][2] = {
+    {false, false}, {false, true}, {true, false}, {true, true}
+};
 
 static inline bool hasRmgHorizontalLineNeighbour(const b8* neighbours)
 {

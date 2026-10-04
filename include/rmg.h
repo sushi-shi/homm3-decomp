@@ -1835,10 +1835,6 @@ public:
     }
 
     void initializeObjectGenerators();
-    void initializeCreatureRewardGenerators();
-    void initializeKeyTentGenerators();
-    void initializeDwellingGenerators();
-    void initializeSeerHutGenerators();
     s32 selectPrisonHero();
     b8 canPlaceZone(TRmgZone* zone);
     void buildZoneBoundaries(TRmgTemplate* mapTemplate, s32 level);

@@ -1,5 +1,6 @@
 // Build-time exporter only. Generation never links a C++ runtime.
-// The includes contain the exact same initializers the game TUs consume.
+// Extraction directives select ordinary game definitions through Clang; extract.py
+// expands them into the build directory before the host compiler runs.
 #include <cstdio>
 #include <cstdint>
 #include <cstring>
@@ -23,14 +24,14 @@
 
 // Shared description names keep the native DATA_COMPGEN annotations in C++.
 #define DATA_COMPGEN(address, name, text) text
-static const char* waterNames[] =
-#include "rmg_data/water_names.inc"
+static const char* waterNames[@count] =
+// @rmg initializer src/rmg.cpp g_rmgWaterNames
 ;
-static const char* playerNames[] =
-#include "rmg_data/player_names.inc"
+static const char* playerNames[@count] =
+// @rmg initializer src/rmg.cpp g_rmgPlayerNames
 ;
-static const char* townNames[] =
-#include "rmg_data/town_names.inc"
+static const char* townNames[@count] =
+// @rmg initializer src/rmg.cpp g_rmgTownNames
 ;
 #undef DATA_COMPGEN
 template <unsigned N>
@@ -46,23 +47,23 @@ struct TPoint {
     TPoint(int x, int y) : m_x(x), m_y(y) {}
 };
 typedef TPoint TRmgRiverDeltaOffset;
-static const int riverDeltaLand[] =
-#include "rmg_data/river_delta_land.inc"
+static const int riverDeltaLand[@count] =
+// @rmg initializer src/rmg.cpp g_rmgLandRiverDeltaIndex
 ;
-static const int riverDeltaSnow[] =
-#include "rmg_data/river_delta_snow.inc"
+static const int riverDeltaSnow[@count] =
+// @rmg initializer src/rmg.cpp g_rmgSnowRiverDeltaIndex
 ;
-static const TRmgRiverDeltaOffset riverDeltaOffsets[] =
-#include "rmg_data/river_delta_offsets.inc"
+static const TRmgRiverDeltaOffset riverDeltaOffsets[@count] =
+// @rmg initializer src/rmg.cpp TRmgGenerator::createRiver::riverDeltaOffsets
 ;
-static const int decorationTypes[] =
-#include "rmg_data/decoration_types.inc"
+static const int decorationTypes[@count] =
+// @rmg initializer src/rmg.cpp g_rmgDecorationTypes
 ;
-static const int mapObjectLimits[][2] =
-#include "rmg_data/map_object_limits.inc"
+static const int mapObjectLimits[@count][2] =
+// @rmg initializer src/rmg.cpp g_rmgMapObjectLimitOverrides
 ;
-static const int zoneObjectLimits[][2] =
-#include "rmg_data/zone_object_limits.inc"
+static const int zoneObjectLimits[@count][2] =
+// @rmg initializer src/rmg.cpp g_rmgZoneObjectLimitOverrides
 ;
 template <unsigned N>
 static void emitObjectLimits(const char* name, const int (&overrides)[N][2])
@@ -75,38 +76,38 @@ static void emitObjectLimits(const char* name, const int (&overrides)[N][2])
     std::printf("];\n");
 }
 
-static const TPoint directions[] =
-#include "rmg_data/directions.inc"
+static const TPoint directions[@count] =
+// @rmg initializer src/rmg.cpp g_rmgDirections
 ;
 
 static const TPoint portalBorderOffsets[RMG_PORTAL_BORDER_OFFSET_COUNT] =
-#include "rmg_data/portal_border_offsets.inc"
+// @rmg initializer src/rmg.cpp TRmgGenerator::placeMonolithBorderGuard::offsets
 ;
 static const TPoint shipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] =
-#include "rmg_data/shipyard_water_offsets.inc"
+// @rmg initializer src/rmg.cpp g_rmgShipyardWaterOffsets
 ;
 
 static const int guardThresholdLow[RMG_GUARD_STRENGTH_COUNT] =
-#include "rmg_data/guard_threshold_low.inc"
+// @rmg initializer src/rmg.cpp g_rmgGuardThresholdLow
 ;
 static const int guardThresholdHigh[RMG_GUARD_STRENGTH_COUNT] =
-#include "rmg_data/guard_threshold_high.inc"
+// @rmg initializer src/rmg.cpp g_rmgGuardThresholdHigh
 ;
 static const int guardScaleLow[RMG_GUARD_STRENGTH_COUNT] =
-#include "rmg_data/guard_scale_low.inc"
+// @rmg initializer src/rmg.cpp g_rmgGuardScaleLow
 ;
 static const int guardScaleHigh[RMG_GUARD_STRENGTH_COUNT] =
-#include "rmg_data/guard_scale_high.inc"
+// @rmg initializer src/rmg.cpp g_rmgGuardScaleHigh
 ;
 
-static const THeroTraits heroTraits[] =
-#include "rmg_data/hero_traits.inc"
+static const THeroTraits heroTraits[@count] =
+// @rmg initializer src/herodefs.cpp g_heroTraitsStorage
 ;
-static const int disabledArtifacts[] =
-#include "rmg_data/disabled_artifacts.inc"
+static const int disabledArtifacts[@count] =
+// @rmg initializer src/artifact.cpp g_disabledArtifacts
 ;
-static const int artifactSlotColumns[] =
-#include "rmg_data/artifact_slot_columns.inc"
+static const int artifactSlotColumns[@count] =
+// @rmg initializer src/artifact.cpp g_artifactSlotColumnBits
 ;
 
 // Build-host adapters consume the canonical factory argument lists. They
@@ -130,50 +131,50 @@ std::bitset<19> makeArtifactSlotMask(unsigned count, Indices... indices)
 {
     return makeHostMask<19>(count, indices...);
 }
-static const TCombinationArtifact artifactCombinations[] =
-#include "rmg_data/artifact_combinations.inc"
+static const TCombinationArtifact artifactCombinations[@count] =
+// @rmg initializer src/artifact.cpp g_combinationArtifactTable
 ;
-static const TArtifactSlotMask artifactSlotMasks[] =
-#include "rmg_data/artifact_slot_masks.inc"
-;
-
-static const TCreatureTypeTraits creatureTraits[] =
-#include "rmg_data/creature_traits.inc"
-;
-static const SSpellTraits spellTraits[] =
-#include "rmg_data/spell_traits.inc"
+static const TArtifactSlotMask artifactSlotMasks[@count] =
+// @rmg initializer src/artifact.cpp g_artifactSlotMasks
 ;
 
-static const TAdvObjectNameRow objectNameRows[] =
-#include "rmg_data/object_name_rows.inc"
+static const TCreatureTypeTraits creatureTraits[@count] =
+// @rmg initializer src/creaturetype.cpp g_creatureTypeTraitsStorage
 ;
-static const int objectDecorationIds[] =
-#include "rmg_data/object_decoration_ids.inc"
-;
-static const int objectClearedIds[] =
-#include "rmg_data/object_cleared_ids.inc"
-;
-static const int objectLandBlockedIds[] =
-#include "rmg_data/object_land_blocked_ids.inc"
-;
-static const int objectNorthIds[] =
-#include "rmg_data/object_north_ids.inc"
+static const SSpellTraits spellTraits[@count] =
+// @rmg initializer src/spelldefs.cpp g_spellTraitsImp
 ;
 
-static const TRmgTerrainTransitionEntry rockFrames[] =
-#include "rmg_data/rock_frames.inc"
+static const TAdvObjectNameRow objectNameRows[@count] =
+// @rmg initializer src/objnames.cpp g_adventureObjectNameRows
 ;
-static const TRmgTerrainPatternEntry g_rmgLandPatternEntries[] =
-#include "rmg_data/land_frames.inc"
+static const int objectDecorationIds[@count] =
+// @rmg initializer src/objnames.cpp g_adventureObjectDecorationIds
 ;
-static const TRmgTerrainPatternEntry g_rmgDirtPatternEntries[] =
-#include "rmg_data/dirt_frames.inc"
+static const int objectClearedIds[@count] =
+// @rmg initializer src/objnames.cpp g_adventureObjectClearedOnVisitIds
 ;
-static const TRmgTerrainPatternEntry g_rmgSandPatternEntries[] =
-#include "rmg_data/sand_frames.inc"
+static const int objectLandBlockedIds[@count] =
+// @rmg initializer src/objnames.cpp g_adventureObjectLandBlockedIds
 ;
-static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[] =
-#include "rmg_data/water_frames.inc"
+static const int objectNorthIds[@count] =
+// @rmg initializer src/objnames.cpp g_adventureObjectEnterableFromNorthIds
+;
+
+static const TRmgTerrainTransitionEntry rockFrames[@count] =
+// @rmg initializer src/rmg_terrain.cpp g_rmgTerrainPatterns
+;
+static const TRmgTerrainPatternEntry g_rmgLandPatternEntries[@count] =
+// @rmg initializer src/rmg_terrain.cpp g_rmgLandPatternEntries
+;
+static const TRmgTerrainPatternEntry g_rmgDirtPatternEntries[@count] =
+// @rmg initializer src/rmg_terrain.cpp g_rmgDirtPatternEntries
+;
+static const TRmgTerrainPatternEntry g_rmgSandPatternEntries[@count] =
+// @rmg initializer src/rmg_terrain.cpp g_rmgSandPatternEntries
+;
+static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[@count] =
+// @rmg initializer src/rmg_terrain.cpp g_rmgWaterPatternEntries
 ;
 
 // Host-only adapter for the canonical constructor argument lists.
@@ -184,35 +185,35 @@ struct RuleMetadata {
     const TRmgTerrainPatternEntry* entries;
 };
 static const RuleMetadata g_rmgDirtRule = {
-#include "rmg_data/dirt_rule.inc"
+// @rmg arguments src/rmg_terrain.cpp g_rmgDirtRule
 };
 static const RuleMetadata g_rmgSandRule = {
-#include "rmg_data/sand_rule.inc"
+// @rmg arguments src/rmg_terrain.cpp g_rmgSandRule
 };
 static const RuleMetadata g_rmgGrassRule = {
-#include "rmg_data/grass_rule.inc"
+// @rmg arguments src/rmg_terrain.cpp g_rmgGrassRule
 };
 static const RuleMetadata g_rmgSnowRule = {
-#include "rmg_data/snow_rule.inc"
+// @rmg arguments src/rmg_terrain.cpp g_rmgSnowRule
 };
 static const RuleMetadata g_rmgSwampRule = {
-#include "rmg_data/swamp_rule.inc"
+// @rmg arguments src/rmg_terrain.cpp g_rmgSwampRule
 };
 static const RuleMetadata g_rmgRoughRule = {
-#include "rmg_data/rough_rule.inc"
+// @rmg arguments src/rmg_terrain.cpp g_rmgRoughRule
 };
 static const RuleMetadata g_rmgSubterraneanRule = {
-#include "rmg_data/subterranean_rule.inc"
+// @rmg arguments src/rmg_terrain.cpp g_rmgSubterraneanRule
 };
 static const RuleMetadata g_rmgLavaRule = {
-#include "rmg_data/lava_rule.inc"
+// @rmg arguments src/rmg_terrain.cpp g_rmgLavaRule
 };
 static const RuleMetadata g_rmgWaterRule = {
-#include "rmg_data/water_rule.inc"
+// @rmg arguments src/rmg_terrain.cpp g_rmgWaterRule
 };
 static const RuleMetadata g_rmgRockRule = {};
-static const RuleMetadata* const terrainRules[] =
-#include "rmg_data/terrain_rules.inc"
+static const RuleMetadata* const terrainRules[@count] =
+// @rmg initializer src/rmg_terrain.cpp g_rmgTerrainRules
 ;
 
 template <unsigned long N>
@@ -257,29 +258,29 @@ void emitTerrainRules()
     std::printf("];\n");
 }
 
-static const ERmgLinePattern river[] =
-#include "rmg_data/river_patterns.inc"
+static const ERmgLinePattern river[@count] =
+// @rmg initializer src/rmg.cpp g_rmgRiverPatterns
 ;
-static const ERmgLinePattern road[] =
-#include "rmg_data/road_patterns.inc"
+static const ERmgLinePattern road[@count] =
+// @rmg initializer src/rmg.cpp g_rmgRoadPatterns
 ;
-static const unsigned char reflections[][2] =
-#include "rmg_data/line_reflections.inc"
+static const unsigned char reflections[@count][2] =
+// @rmg initializer src/rmg_support.cpp g_rmgLineReflections
 ;
-static const int neighbours[][2][TILE_DIR_COUNT] =
-#include "rmg_data/reflected_neighbours.inc"
+static const int neighbours[@count][2][TILE_DIR_COUNT] =
+// @rmg initializer src/rmg_terrain.cpp g_rmgReflectedNeighbours
 ;
-static const TTownType terrainTowns[][RMG_TERRAIN_TOWN_CHOICE_COUNT] =
-#include "rmg_data/terrain_towns.inc"
+static const TTownType terrainTowns[@count][RMG_TERRAIN_TOWN_CHOICE_COUNT] =
+// @rmg initializer src/rmg.cpp g_rmgTerrainTownChoices
 ;
-static const TTerrainType nativeTerrain[] =
-#include "rmg_data/native_terrain.inc"
+static const TTerrainType nativeTerrain[@count] =
+// @rmg initializer src/rmg.cpp g_rmgTownNativeTerrains
 ;
-static const double cosines[] =
-#include "rmg_data/radial_cosines.inc"
+static const double cosines[@count] =
+// @rmg initializer src/rmg.cpp g_rmgDirectionCosines
 ;
-static const double sines[] =
-#include "rmg_data/radial_sines.inc"
+static const double sines[@count] =
+// @rmg initializer src/rmg.cpp g_rmgDirectionSines
 ;
 
 template <unsigned long N>
@@ -312,14 +313,14 @@ void emitSignedArray(const char* name, const int (&array)[N])
     std::printf("];\n");
 }
 
-static const int dwellingCreatures[] =
-#include "rmg_data/dwelling_creatures.inc"
+static const int dwellingCreatures[@count] =
+// @rmg initializer src/game.cpp g_creatureGenerator1Types
 ;
-static const int creatureRewardValues[] =
-#include "rmg_data/creature_reward_values.inc"
+static const int creatureRewardValues[@count] =
+// @rmg initializer src/rmg.cpp g_rmgCreatureValueByLevel
 ;
 static const int keyTentValues[] =
-#include "rmg_data/treasure_tent_values.inc"
+// @rmg tent_values src/rmg.cpp TRmgGenerator::initializeObjectGenerators
 ;
 // These adapters export constructor arguments, preserving their source order.
 static void emitTreasureDef(int kind, int subtype, int value, int density)
@@ -370,20 +371,10 @@ static void emitTreasureRecipes()
 {
     std::printf("#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum TreasureRecipe { Plain(i32,i32,i32,i32), Artifact(i32,i32), Experience(i32,i32), Gold(i32,i32), Spells(i32,i32,i32,i32), Prison(i32,i32), Resource(i32,i32,i32,i32), Scholar, Shrine(i32,i32), Scroll(i32,i32), WitchHut, CreatureBoxes, KeyTents, Dwellings, Seers }\n");
     std::printf("pub const TREASURE_RECIPES: &[TreasureRecipe] = &[");
-#define RMG_TREASURE(Type, args) emit##Type args;
-#define RMG_CREATURE_BOXES() std::printf("TreasureRecipe::CreatureBoxes,");
-#define RMG_KEY_TENTS() std::printf("TreasureRecipe::KeyTents,");
-#define RMG_MAP_DWELLINGS() std::printf("TreasureRecipe::Dwellings,");
-#define RMG_SEER_QUESTS() std::printf("TreasureRecipe::Seers,");
-#include "rmg_data/treasure_recipes.inc"
-#undef RMG_SEER_QUESTS
-#undef RMG_MAP_DWELLINGS
-#undef RMG_KEY_TENTS
-#undef RMG_CREATURE_BOXES
-#undef RMG_TREASURE
+// @rmg recipes src/rmg.cpp TRmgGenerator::initializeObjectGenerators
     std::printf("];\n#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum SeerRewardRecipe { Experience(i32,i32), Gold(i32,i32) }\npub const SEER_REWARD_RECIPES: &[SeerRewardRecipe] = &[");
 #define RMG_SEER_REWARD(Type, value, amount) std::printf("SeerRewardRecipe::" #Type "(%d,%d),", value, amount);
-#include "rmg_data/treasure_seer_rewards.inc"
+// @rmg seer_rewards src/rmg.cpp TRmgGenerator::initializeObjectGenerators
 #undef RMG_SEER_REWARD
     std::printf("];\n");
 }

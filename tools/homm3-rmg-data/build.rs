@@ -1,5 +1,37 @@
 //! Generate the raw data boundary from the game's canonical declarations.
-use std::{env, fs, path::PathBuf, process::Command};
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+    process::{Command, Stdio},
+};
+
+fn extract_sources(manifest: &Path, output: &Path) -> PathBuf {
+    let template = manifest.join("export.cpp.in");
+    let extractor = manifest.join("extract.py");
+    for path in [&template, &extractor] {
+        println!("cargo:rerun-if-changed={}", path.display());
+    }
+    for variable in ["HOMM3_PYTHON", "MSVC_DIR", "HOMM3_TOOLCHAIN"] {
+        println!("cargo:rerun-if-env-changed={variable}");
+    }
+    let source = output.join("export.cpp");
+    let extracted = Command::new(env::var_os("HOMM3_PYTHON").unwrap_or_else(|| "python3".into()))
+        .arg(&extractor)
+        .arg(&template)
+        .arg(&source)
+        .stderr(Stdio::inherit())
+        .output()
+        .expect("run Clang source extraction (requires the repository Python/Clang environment)");
+    assert!(
+        extracted.status.success(),
+        "extract canonical RMG definitions"
+    );
+    print!(
+        "{}",
+        String::from_utf8(extracted.stdout).expect("UTF-8 Cargo dependency directives")
+    );
+    source
+}
 
 fn main() {
     let manifest = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
@@ -53,12 +85,7 @@ fn main() {
     } else {
         "export-data"
     });
-    let source = manifest.join("export.cpp");
-    println!("cargo:rerun-if-changed={}", source.display());
-    println!(
-        "cargo:rerun-if-changed={}",
-        include.join("rmg_data").display()
-    );
+    let source = extract_sources(&manifest, &output);
     let compiler = cc::Build::new()
         .cpp(true)
         .target(&host)

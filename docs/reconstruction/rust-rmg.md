@@ -4,7 +4,8 @@ The native Rust library and CLI generate RoE, AB and SoD maps in retail or
 `HOMM3_RMG_HOTFIX` mode. The behavior reference is `decomp-complete-4.0` at
 `c2e0f6ea6d9ba70dc37634b80d3a01727ac5fa02`, with the pinned retail executable
 authoritative for retail behavior. Generation runs without Wine or the game
-executable. Game/lobby integration is outside the current scope.
+executable. The future engine will use Rust in place of C++ RMG; game/lobby
+integration is outside the current scope.
 
 Whole-map debugging still has unresolved output/RNG differences; full corpus
 parity and in-game playability have not been established. See
@@ -53,12 +54,22 @@ Bindgen imports existing enums, constants and plain records, excluding C++
 methods, containers and ownership. Rust domain types use these generated values
 without introducing a second numeric definition.
 
-Canonical table initializers live in `include/rmg_data/*.inc`. Both the owning
-C++ translation unit and a build-time host exporter consume them. The exporter
-emits Rust scalar values, including exact float bits, without copying native
-struct layouts or pointers. It runs on the build host even when cross-compiling;
-generation has no runtime C++ dependency. Asset-derived traits are parsed from
-installation resources.
+Canonical initializers remain in their ordinary C++ translation units.
+`homm3-rmg-data/extract.py` uses Clang and the repository's compiler profiles to
+select named definitions, terrain-rule constructor arguments and ordered
+treasure recipes. A host exporter evaluates those expressions and emits Rust
+scalar values, including exact float bits, without copying native struct layouts
+or pointers. This runs at build time even when cross-compiling; generation has
+no runtime C++ dependency. Asset-derived traits are parsed from installation
+resources. Neither C++ source layout nor helper boundaries should serve the
+Rust exporter; adapt selectors when native reconstruction changes them.
+
+Building RMG requires the repository Python/Clang environment and configured
+VC6 headers, plus libclang and a host C++ compiler. `HOMM3_PYTHON` can select the
+Python executable. Cargo tracks parsed TU/header dependencies and extraction
+configuration. Missing or ambiguous definitions, unsupported recipes, and Clang
+errors affecting selected definitions fail the build. Errors confined to
+unrelated VC6 function bodies do not invalidate clean data definitions.
 
 Keep ASCII diagrams beside canonical tables and algorithm implementations.
 Source-specific ordering, lifetime and native-behavior evidence belongs beside

@@ -34,29 +34,50 @@ DATA(0x00660428) const TAdvObjectTraits* g_adventureObjectTraits =
 // ids; only the first carries a second column, the objnames.txt row that
 // id reads its name from.
 DATA(0x0063a6e4)
-static const TAdvObjectNameRow g_adventureObjectNameRows[] =
-#include "rmg_data/object_name_rows.inc"
-;
+static const TAdvObjectNameRow g_adventureObjectNameRows[] = {
+    {165, 114}, {166, 115}, {167, 116}, {168, 117}, {169, 118}, {170,
+    119}, {171, 120}, {172, 121}, {173, 122}, {174, 123}, {175, 124},
+    {176, 125}, {177, 126}, {178, 127}, {179, 128}, {180, 129}, {181,
+    130}, {182, 131}, {183, 132}, {184, 133}, {185, 134}, {186, 135},
+    {187, 136}, {188, 137}, {189, 138}, {190, 143}, {191, 147}, {192,
+    148}, {193, 149}, {194, 150}, {195, 151}, {196, 152}, {197, 153},
+    {198, 154}, {199, 155}, {200, 156}, {201, 157}, {202, 158}, {203,
+    159}, {204, 160}, {205, 161}, {219, 33}, {220, 53}, {221, 99}, {223,
+    21}, {230, 46}
+};
 
 DATA(0x0063a854)
-static const int g_adventureObjectDecorationIds[] =
-#include "rmg_data/object_decoration_ids.inc"
-;
+static const int g_adventureObjectDecorationIds[] = {
+    114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126,
+    127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139,
+    140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152,
+    153, 154, 155, 156, 157, 158, 159, 160, 161, 165, 166, 167, 168,
+    169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181,
+    182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194,
+    195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
+    208, 209, 210, 211
+};
 
 DATA(0x0063a9d0)
-static const int g_adventureObjectClearedOnVisitIds[] =
-#include "rmg_data/object_cleared_ids.inc"
-;
+static const int g_adventureObjectClearedOnVisitIds[] = {
+    5, 6, 9, 12, 26, 29, 34, 54, 59, 62, 65, 66, 67, 68, 69, 70, 71, 72,
+    73, 74, 75, 162, 163, 164, 76, 79, 81, 82, 86, 93, 101, 212, 214,
+    215
+};
 
 DATA(0x0063aa58)
-static const int g_adventureObjectLandBlockedIds[] =
-#include "rmg_data/object_land_blocked_ids.inc"
-;
+static const int g_adventureObjectLandBlockedIds[] = {
+    3, 5, 6, 8, 9, 11, 12, 22, 26, 29, 34, 36, 52, 54, 59, 62, 65, 66,
+    67, 68, 69, 70, 71, 72, 73, 74, 75, 162, 163, 164, 76, 79, 81, 82,
+    85, 86, 92, 93, 95, 101, 214, 215
+};
 
 DATA(0x0063ab00)
-static const int g_adventureObjectEnterableFromNorthIds[] =
-#include "rmg_data/object_north_ids.inc"
-;
+static const int g_adventureObjectEnterableFromNorthIds[] = {
+    3, 5, 6, 8, 9, 11, 12, 22, 26, 29, 33, 34, 36, 54, 59, 65, 66, 67,
+    68, 69, 70, 71, 72, 73, 74, 75, 162, 163, 164, 76, 79, 81, 82, 85,
+    86, 93, 101, 111, 212, 214, 215, 219
+};
 
 // It zeroes all 232 rows (pointing every name at the shared empty
 // literal and seeding nameRow with the row's own index), replays five

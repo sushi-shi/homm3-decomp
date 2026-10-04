@@ -72,9 +72,7 @@ s32 getRmgDistance(TPoint first, TPoint second)
 }
 
 DATA(0x006824e0)
-s32 g_rmgCreatureValueByLevel[TOWN_DWELLING_COUNT] =
-#include "rmg_data/creature_reward_values.inc"
-;
+s32 g_rmgCreatureValueByLevel[TOWN_DWELLING_COUNT] = {5000, 7000, 9000, 12000, 16000, 21000, 27000};
 
 void TRmgObject::releaseReservation() {}
 b8 TRmgObject::completePlacement() { return true; }
@@ -91,20 +89,73 @@ s32 g_rmgMapObjectLimits[ADVENTURE_OBJECT_TRAIT_COUNT];
 DATA(0x0069d1f4)
 s32 g_rmgZoneObjectLimits[ADVENTURE_OBJECT_TRAIT_COUNT];
 DATA(0x00640718)
-static const TRmgObjectLimit g_rmgMapObjectLimitOverrides[30] =
-#include "rmg_data/map_object_limits.inc"
-;
+static const TRmgObjectLimit g_rmgMapObjectLimitOverrides[30] = {
+    {EVENT,                200},
+    {BLACK_BOX,            200},
+    {OBELISK,              48},
+    {BOAT,                 64},
+    {TRAINING_GROUNDS,     32},
+    {DEFENSE_TOWER,        32},
+    {GARDEN_OF_REVELATION, 32},
+    {MERC_CAMP,            32},
+    {POWER_SCHOOL,         32},
+    {TREE_OF_KNOWLEDGE,    32},
+    {LIBRARY,              32},
+    {ARENA,                32},
+    {MAGIC_SCHOOL,         32},
+    {WAR_SCHOOL,           32},
+    {UNIVERSITY,           32},
+    {WITCH_HUT,            32},
+    {SHRINE1,              32},
+    {SHRINE2,              32},
+    {SHRINE3,              32},
+    {SIREN,                32},
+    {MYSTICAL_GARDEN,      32},
+    {WATER_WHEEL,          32},
+    {WINDMILL,             32},
+    {MAGIC_SPRING,         32},
+    {DEAD_GUY,             32},
+    {LEAN_TO,              32},
+    {WARRIOR_TOMB,         32},
+    {WAGON,                32},
+    {SEER,                 48},
+    {BLACK_MARKET,         32},
+};
 DATA(0x00640808)
-static const TRmgObjectLimit g_rmgZoneObjectLimitOverrides[24] =
-#include "rmg_data/zone_object_limits.inc"
-;
+static const TRmgObjectLimit g_rmgZoneObjectLimitOverrides[24] = {
+    {ALTAR_OF_SACRIFICE,  1},
+    {CARTOGRAPHER,        1},
+    {CLOVER_FIELD,        1},
+    {COVER_OF_DARKNESS,   1},
+    {EYE_OF_MAGI,         1},
+    {FAERIE_RING,         1},
+    {FOUNTAIN_OF_FORTUNE, 1},
+    {FOUNTAIN_OF_YOUTH,   1},
+    {HILL_FORT,           1},
+    {IDOL_OF_FORTUNE,     1},
+    {LIGHTHOUSE,          1},
+    {MAGIC_SPRING,        1},
+    {MAGIC_WELL,          1},
+    {OASIS,               1},
+    {OBSERVATORY,         1},
+    {PILLAR_OF_FIRE,      1},
+    {RALLY_FLAG,          1},
+    {SANCTUARY,           1},
+    {STABLES,             1},
+    {TEMPLE,              1},
+    {TRADING_POST,        1},
+    {WAR_MACHINE_FACTORY, 1},
+    {WATERING_HOLE,       1},
+    {WITCH_HUT,           3},
+};
 
 // Frame i of a river sprite draws shape g_rmgRiverPatterns[i]; repeated
 // shapes are alternative frames picked at random.
 DATA(0x00641140)
-static const ERmgLinePattern g_rmgRiverPatterns[13] =
-#include "rmg_data/river_patterns.inc"
-;
+static const ERmgLinePattern g_rmgRiverPatterns[13] = {
+    LINE_SE, LINE_SE, LINE_SE, LINE_SE, LINE_CROSS, LINE_ESW, LINE_ESW,
+    LINE_NES, LINE_NES, LINE_NS, LINE_NS, LINE_EW, LINE_EW
+};
 DATA(0x0069e5d0)
 TRmgLinePatternTable g_rmgRiverPatternTable(13, g_rmgRiverPatterns);
 
@@ -114,9 +165,11 @@ VA_COMPGEN(0x0055ed90, 0x0a, STATIC_DTOR, g_rmgRiverPatternTable)
 
 // The same for road sprites.
 DATA(0x006411ac)
-static const ERmgLinePattern g_rmgRoadPatterns[17] =
-#include "rmg_data/road_patterns.inc"
-;
+static const ERmgLinePattern g_rmgRoadPatterns[17] = {
+    LINE_SE, LINE_SE, LINE_SE_VARIANT, LINE_SE_VARIANT, LINE_SE_VARIANT, LINE_SE_VARIANT,
+    LINE_NES, LINE_NES, LINE_ESW, LINE_ESW, LINE_NS, LINE_NS, LINE_EW, LINE_EW,
+    LINE_END_S, LINE_END_E, LINE_CROSS
+};
 DATA(0x0069e650)
 TRmgLinePatternTable g_rmgRoadPatternTable(17, g_rmgRoadPatterns);
 
@@ -153,8 +206,21 @@ namespace {
 // four cardinal directions.
 DATA(0x0069cdc0)
 TPoint g_rmgDirections[RMG_DIRECTION_COUNT] =
-#include "rmg_data/directions.inc"
-;
+// Clockwise movement directions, starting east. North is up; digits are
+// table indices around C. Terrain-pattern directions instead start north.
+//   5 6 7
+//   4 C 0
+//   3 2 1
+{
+    TPoint(1, 0),
+    TPoint(1, 1),
+    TPoint(0, 1),
+    TPoint(-1, 1),
+    TPoint(-1, 0),
+    TPoint(-1, -1),
+    TPoint(0, -1),
+    TPoint(1, -1)
+};
 
 // Rotates by 45-degree steps, clockwise when positive; wraps around the
 // eight directions.
@@ -190,20 +256,21 @@ static inline bool isRmgEntranceOpenToNorth(TAdventureObjectType objectType)
 //   2 . . . 3
 DATA(0x0069ce00)
 TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] =
-#include "rmg_data/shipyard_water_offsets.inc"
-;
+// Shipyards are three tiles wide. North is up; digits are probe indices,
+// P is the shipyard position, # its bottom footprint row, . the row below.
+//   0 # # P 1
+//   2 . . . 3
+{
+    TPoint(-3, 0), TPoint(1, 0), TPoint(-3, 1), TPoint(1, 1)
+};
 
 // River-delta choice per coast side (east, south, west, north), for land and
 // then snow rivers: the nth (from 0) delta recommended for the end's terrain.
 DATA(0x006409a0)
-static const s32 g_rmgLandRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] =
-#include "rmg_data/river_delta_land.inc"
-;
+static const s32 g_rmgLandRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {2, 0, 3, 1};
 
 DATA(0x006409b0)
-static const s32 g_rmgSnowRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] =
-#include "rmg_data/river_delta_snow.inc"
-;
+static const s32 g_rmgSnowRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {7, 5, 4, 6};
 
 // Candidate town types one zone terrain can list.
 
@@ -213,15 +280,31 @@ static const s32 g_rmgSnowRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] =
 // chooseCreatureTownType draws from all four entries, so the zero fill after it
 // (Castle's value) becomes a Castle candidate.
 DATA(0x00682450)
-TTownType g_rmgTerrainTownChoices[eTerrainWater + 1][RMG_TERRAIN_TOWN_CHOICE_COUNT] =
-#include "rmg_data/terrain_towns.inc"
-;
+TTownType g_rmgTerrainTownChoices[eTerrainWater + 1][RMG_TERRAIN_TOWN_CHOICE_COUNT] = {
+    {TOWN_CASTLE,     TOWN_RAMPART,    TOWN_NECROPOLIS, eTownNeutral}, // dirt
+    {TOWN_STRONGHOLD, eTownNeutral},                                   // sand
+    {TOWN_CASTLE,     TOWN_RAMPART,    eTownNeutral},                  // grass
+    {TOWN_TOWER,      eTownNeutral},                                   // snow
+    {TOWN_FORTRESS,   TOWN_NECROPOLIS, eTownNeutral},                  // swamp
+    {TOWN_STRONGHOLD, TOWN_CONFLUX,    eTownNeutral},                  // rough
+    {TOWN_DUNGEON,    TOWN_INFERNO,    TOWN_NECROPOLIS, eTownNeutral}, // subterranean
+    {TOWN_INFERNO,    eTownNeutral},                                   // lava
+    {eTownNeutral}                                                     // water
+};
 
 // Native terrain of each town alignment, used when choosing zone terrain.
 DATA(0x006408c8)
-static const TTerrainType g_rmgTownNativeTerrains[TOWN_TYPE_COUNT] =
-#include "rmg_data/native_terrain.inc"
-;
+static const TTerrainType g_rmgTownNativeTerrains[TOWN_TYPE_COUNT] = {
+    eTerrainGrass, // castle
+    eTerrainGrass, // rampart
+    eTerrainSnow,  // tower
+    eTerrainLava,  // inferno
+    eTerrainDirt,  // necropolis
+    eTerrainDirt,  // dungeon
+    eTerrainRough, // stronghold
+    eTerrainSwamp, // fortress
+    eTerrainGrass  // conflux
+};
 
 // Radial directions used by the placement and boundary passes. Direction k
 // lies k * 11.25 degrees from east; y grows southward, so k turns clockwise.
@@ -230,48 +313,63 @@ static const TTerrainType g_rmgTownNativeTerrains[TOWN_TYPE_COUNT] =
 //   16     .     0
 //          8
 DATA(0x00682500)
-double g_rmgDirectionCosines[RMG_RADIAL_DIRECTION_COUNT] =
-#include "rmg_data/radial_cosines.inc"
-;
+double g_rmgDirectionCosines[RMG_RADIAL_DIRECTION_COUNT] = {
+    1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
+    0.0, -0.1951, -0.3827, -0.5556, -0.7071, -0.8315, -0.9239, -0.9807,
+    -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951,
+    0.0, 0.1951, 0.3827, 0.5556, 0.7071, 0.8315, 0.9239, 0.9807
+};
 DATA(0x00682600)
-double g_rmgDirectionSines[RMG_RADIAL_DIRECTION_COUNT] =
-#include "rmg_data/radial_sines.inc"
-;
+double g_rmgDirectionSines[RMG_RADIAL_DIRECTION_COUNT] = {
+    0.0, 0.1951, 0.3827, 0.5556, 0.7071, 0.8315, 0.9239, 0.9807,
+    1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
+    0.0, -0.1951, -0.3827, -0.5556, -0.7071, -0.8315, -0.9239, -0.9807,
+    -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951
+};
 
 // Guard value thresholds and scales by guard strength; a scale counts
 // quarters of the value above its threshold.
 DATA(0x006823f0)
-s32 g_rmgGuardThresholdLow[RMG_GUARD_STRENGTH_COUNT] =
-#include "rmg_data/guard_threshold_low.inc"
-;
+s32 g_rmgGuardThresholdLow[RMG_GUARD_STRENGTH_COUNT] = {50000, 2500, 1500, 1000, 500, 0};
 DATA(0x00682408)
-s32 g_rmgGuardThresholdHigh[RMG_GUARD_STRENGTH_COUNT] =
-#include "rmg_data/guard_threshold_high.inc"
-;
+s32 g_rmgGuardThresholdHigh[RMG_GUARD_STRENGTH_COUNT] = {50000, 7500, 7500, 7500, 5000, 5000};
 DATA(0x00682420)
-s32 g_rmgGuardScaleLow[RMG_GUARD_STRENGTH_COUNT] =
-#include "rmg_data/guard_scale_low.inc"
-;
+s32 g_rmgGuardScaleLow[RMG_GUARD_STRENGTH_COUNT] = {0, 2, 3, 4, 6, 6};
 DATA(0x00682438)
-s32 g_rmgGuardScaleHigh[RMG_GUARD_STRENGTH_COUNT] =
-#include "rmg_data/guard_scale_high.inc"
-;
+s32 g_rmgGuardScaleHigh[RMG_GUARD_STRENGTH_COUNT] = {0, 2, 3, 4, 4, 6};
 
 // Map-description names per resolved water content.
 DATA(0x00682700)
-static const char* g_rmgWaterNames[RMG_WATER_RANDOM] =
-#include "rmg_data/water_names.inc"
-;
+static const char* g_rmgWaterNames[RMG_WATER_RANDOM] = {
+    DATA_COMPGEN(0x006827ec, rmgWaterNone, "None"),
+    DATA_COMPGEN(0x006827e4, rmgWaterNormal, "normal"),
+    DATA_COMPGEN(0x006827dc, rmgWaterIslands, "islands")
+};
 
 DATA(0x0068270c)
-static const char* g_rmgPlayerNames[RMG_PLAYER_COUNT] =
-#include "rmg_data/player_names.inc"
-;
+static const char* g_rmgPlayerNames[RMG_PLAYER_COUNT] = {
+    DATA_COMPGEN(0x006827d8, rmgPlayerRed, "red"),
+    DATA_COMPGEN(0x006827d0, rmgPlayerBlue, "blue"),
+    DATA_COMPGEN(0x006827cc, rmgPlayerTan, "tan"),
+    DATA_COMPGEN(0x006827c4, rmgPlayerGreen, "green"),
+    DATA_COMPGEN(0x006827bc, rmgPlayerOrange, "orange"),
+    DATA_COMPGEN(0x006827b4, rmgPlayerPurple, "purple"),
+    DATA_COMPGEN(0x006827ac, rmgPlayerTeal, "teal"),
+    DATA_COMPGEN(0x006827a4, rmgPlayerPink, "pink")
+};
 
 DATA(0x0068272c)
-static const char* g_rmgTownNames[TOWN_TYPE_COUNT] =
-#include "rmg_data/town_names.inc"
-;
+static const char* g_rmgTownNames[TOWN_TYPE_COUNT] = {
+    DATA_COMPGEN(0x0068279c, rmgTownCastle, "castle"),
+    DATA_COMPGEN(0x00682794, rmgTownRampart, "rampart"),
+    DATA_COMPGEN(0x0068278c, rmgTownTower, "tower"),
+    DATA_COMPGEN(0x00682784, rmgTownInferno, "inferno"),
+    DATA_COMPGEN(0x00682778, rmgTownNecropolis, "necropolis"),
+    DATA_COMPGEN(0x00682770, rmgTownDungeon, "dungeon"),
+    DATA_COMPGEN(0x00682764, rmgTownStronghold, "stronghold"),
+    DATA_COMPGEN(0x00682758, rmgTownFortress, "fortress"),
+    DATA_COMPGEN(0x00682750, rmgTownConflux, "conflux")
+};
 
 static bool isRmgTemplateFieldSet(const char* value)
 {
@@ -2808,9 +2906,21 @@ void TRmgGeneratorBase::addObject(TRmgObject* object, TRmgMapPosition position)
 // Decoration (obstacle) object types, excluding holes, rivers and roads.
 // The last six are expansion types, unavailable on RoE maps.
 DATA(0x006408ec)
-static const s32 g_rmgDecorationTypes[45] =
-#include "rmg_data/decoration_types.inc"
-;
+static const s32 g_rmgDecorationTypes[45] = {
+    TERRAIN_BRUSH, TERRAIN_BUSH, TERRAIN_CACTUS, TERRAIN_CANYON,
+    TERRAIN_CRATER, TERRAIN_DEAD_VEGETATION, TERRAIN_FLOWER,
+    TERRAIN_FROZEN_LAKE, TERRAIN_HEDGE, TERRAIN_HILL, TERRAIN_KELP,
+    TERRAIN_LAKE, TERRAIN_LAVA_FLOW, TERRAIN_LAVA_LAKE, TERRAIN_MUSHROOM,
+    TERRAIN_LOG, TERRAIN_MANDRAKE, TERRAIN_MOSS, TERRAIN_MOUND,
+    TERRAIN_MOUNTAIN, TERRAIN_OAK_TREE, TERRAIN_OUTCROPPING,
+    TERRAIN_PINE_TREE, TERRAIN_PLANT, TERRAIN_ROCK, TERRAIN_SAND_DUNE,
+    TERRAIN_SAND_PIT, TERRAIN_SHRUB, TERRAIN_SKULL, TERRAIN_STALAGMITE,
+    TERRAIN_STUMP, TERRAIN_TAR_PIT, TERRAIN_TREE, TERRAIN_VINE,
+    TERRAIN_VOLCANIC_VENT, TERRAIN_VOLCANO, TERRAIN_WILLOW_TREE,
+    TERRAIN_YUCCA_TREE, TERRAIN_REEF, RMG_OBJECT_DESERT_HILLS,
+    RMG_OBJECT_DIRT_HILLS, RMG_OBJECT_GRASS_HILLS, RMG_OBJECT_ROUGH_HILLS,
+    RMG_OBJECT_SUBTERRANEAN_ROCKS, RMG_OBJECT_SWAMP_FOLIAGE
+};
 
 // Fills obstacles outward from a cell with weighted random decorations.
 VA(0x005373a0, 0x53d)
@@ -3382,68 +3492,178 @@ static inline s32 getRmgCreatureTypeCount(ERmgMapVersion mapVersion)
         ? RMG_CREATURE_TYPE_COUNT : RMG_ROE_CREATURE_TYPE_COUNT;
 }
 
-void TRmgGenerator::initializeCreatureRewardGenerators()
+VA(0x00538b10, 0x2241)
+MAC_ADDRESS(0x2375f0, 0x4880)
+void TRmgGenerator::initializeObjectGenerators()
 {
+    m_objectGenerators.push_back(new TRmgTreasureDef(ALTAR_OF_SACRIFICE, 0, 100, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(ARENA, 0, 3000, 50));
+
     for (s32 creature = getRmgCreatureTypeCount(m_mapVersion); creature--;) {
         if (g_creatureTypeTraits[creature].m_level >= 0)
             m_objectGenerators.push_back(
                 new TRmgBlackBoxCreatureDef(static_cast<TCreatureType>(creature)));
     }
-}
 
-void TRmgGenerator::initializeKeyTentGenerators()
-{
-    static const s32 values[] =
-#include "rmg_data/treasure_tent_values.inc"
-    ;
+    m_objectGenerators.push_back(
+        new TRmgBlackBoxExperienceDef(6000, 5000));
+    m_objectGenerators.push_back(
+        new TRmgBlackBoxExperienceDef(12000, 10000));
+    m_objectGenerators.push_back(
+        new TRmgBlackBoxExperienceDef(18000, 15000));
+    m_objectGenerators.push_back(
+        new TRmgBlackBoxExperienceDef(24000, 20000));
+
+    m_objectGenerators.push_back(new TRmgBlackBoxGoldDef(5000, 5000));
+    m_objectGenerators.push_back(new TRmgBlackBoxGoldDef(10000, 10000));
+    m_objectGenerators.push_back(new TRmgBlackBoxGoldDef(15000, 15000));
+    m_objectGenerators.push_back(new TRmgBlackBoxGoldDef(20000, 20000));
+
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(5000, 1, 1, eSchoolAll));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(7500, 2, 2, eSchoolAll));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(10000, 3, 3, eSchoolAll));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(12500, 4, 4, eSchoolAll));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 5, 5, eSchoolAll));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 1, 5, eSchoolAir));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 1, 5, eSchoolFire));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 1, 5, eSchoolWater));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(15000, 1, 5, eSchoolEarth));
+    m_objectGenerators.push_back(new TRmgBlackBoxSpellsDef(30000, 1, 5, eSchoolAll));
+
     s32 tentIndex = m_objectPrototypes[BORDER_TENT].size();
     m_disabledKeyTentColors.resize(tentIndex);
     while (tentIndex--) {
         m_disabledKeyTentColors[tentIndex] = false;
-        for (u32 index = 0; index < sizeof(values) / sizeof(values[0]); ++index)
-            m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, values[index]));
+        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 5000));
+        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 7500));
+        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 10000));
+        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 15000));
+        m_objectGenerators.push_back(new TRmgKeyTentDef(tentIndex, 20000));
     }
-}
 
-void TRmgGenerator::initializeDwellingGenerators()
-{
+    m_objectGenerators.push_back(new TRmgTreasureDef(BLACK_MARKET, 0, 8000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(BUOY, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CAMPFIRE, 0, 2000, 500));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CARTOGRAPHER, CARTOGRAPHER_WATER, 5000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CARTOGRAPHER, CARTOGRAPHER_LAND, 10000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CARTOGRAPHER, CARTOGRAPHER_UNDERGROUND, 7500, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CLOVER_FIELD, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_CYCLOPS, 3000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_DWARF, 2000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_GRIFFIN, 2000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_IMP, 5000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_MEDUSA, 1500, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_NAGA, 3000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(CREATURE_BANK, CREATURE_BANK_DRAGONFLY, 9000, 100));
+
     s32 dwelling = RMG_DWELLING_SUBTYPE_COUNT;
     if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE)
         dwelling = RMG_ROE_DWELLING_SUBTYPE_COUNT;
     while (dwelling--)
         m_objectGenerators.push_back(new TRmgMapDwellingDef(dwelling));
-}
 
-void TRmgGenerator::initializeSeerHutGenerators()
-{
-    for (s32 prototypeIndex = 0; prototypeIndex < m_objectPrototypes[SEER].size(); ++prototypeIndex) {
+    m_objectGenerators.push_back(new TRmgTreasureDef(DEAD_GUY, 0, 500, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(DEFENSE_TOWER, 0, 1500, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(DERELICT_SHIP, 0, 4000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(DRAGON_CITY, 0, 10000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(FAERIE_RING, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(FLOTSAM, 0, 500, 1000));
+    m_objectGenerators.push_back(new TRmgTreasureDef(FOUNTAIN_OF_FORTUNE, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(FOUNTAIN_OF_YOUTH, 0, 100, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(GARDEN_OF_REVELATION, 0, 1500, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(HILL_FORT, 0, 7000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(IDOL_OF_FORTUNE, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(LEAN_TO, 0, 500, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(LIBRARY, 0, 12000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(MAGIC_SCHOOL, 0, 1000, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(MAGIC_SPRING, 0, 500, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(MAGIC_WELL, 0, 250, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(MERC_CAMP, 0, 1500, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(MERMAID, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(MYSTICAL_GARDEN, 0, 500, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(OASIS, 0, 100, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(OBELISK, 0, 3500, 200));
+    m_objectGenerators.push_back(new TRmgTreasureDef(OBSERVATORY, 0, 750, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(PILLAR_OF_FIRE, 0, 750, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(POWER_SCHOOL, 0, 1500, 100));
+
+    m_objectGenerators.push_back(new TRmgPrisonDef(2500, 0));
+    m_objectGenerators.push_back(new TRmgPrisonDef(5000, 5000));
+    m_objectGenerators.push_back(new TRmgPrisonDef(10000, 15000));
+    m_objectGenerators.push_back(new TRmgPrisonDef(20000, 90000));
+    m_objectGenerators.push_back(new TRmgPrisonDef(30000, 500000));
+    m_objectGenerators.push_back(new TRmgTreasureDef(PYRAMID, 0, 5000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(RALLY_FLAG, 0, 100, 100));
+
+    m_objectGenerators.push_back(new TRmgArtifactDef(RANDOM_ARTIFACT_1, 2000));
+    m_objectGenerators.push_back(new TRmgArtifactDef(RANDOM_ARTIFACT_2, 5000));
+    m_objectGenerators.push_back(new TRmgArtifactDef(RANDOM_ARTIFACT_3, 10000));
+    m_objectGenerators.push_back(new TRmgArtifactDef(RANDOM_ARTIFACT_4, 20000));
+
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RANDOM_RESOURCE, 0, 1500, 2000));
+    m_objectGenerators.push_back(new TRmgTreasureDef(REFUGEE_CAMP, 0, 5000, 20));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, WOOD, 1400, 300));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, ORE, 1400, 300));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, MERCURY, 2000, 300));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, SULFUR, 2000, 300));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, CRYSTAL, 2000, 300));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, GEMS, 2000, 300));
+    m_objectGenerators.push_back(new TRmgResourceLumpDef(RESOURCE, GOLD, 750, 300));
+    m_objectGenerators.push_back(new TRmgTreasureDef(SANCTUARY, 0, 100, 50));
+    m_objectGenerators.push_back(new TRmgScholarDef());
+    m_objectGenerators.push_back(new TRmgTreasureDef(SEA_CHEST, 0, 1500, 500));
+
+    for (s32 prototypeIndex = 0; prototypeIndex < m_objectPrototypes[SEER].size();
+         ++prototypeIndex) {
         for (s32 creature = getRmgCreatureTypeCount(m_mapVersion); creature--;) {
             if (g_creatureTypeTraits[creature].m_level >= 0)
                 m_objectGenerators.push_back(
                     new TRmgQuestCreatureDef(static_cast<TCreatureType>(creature), prototypeIndex));
         }
-#define RMG_SEER_REWARD(Type, value, amount) \
-        m_objectGenerators.push_back(new TRmgQuest##Type##Def(prototypeIndex, value, amount));
-#include "rmg_data/treasure_seer_rewards.inc"
-#undef RMG_SEER_REWARD
-    }
-}
 
-VA(0x00538b10, 0x2241)
-MAC_ADDRESS(0x2375f0, 0x4880)
-void TRmgGenerator::initializeObjectGenerators()
-{
-#define RMG_TREASURE(Type, args) m_objectGenerators.push_back(new TRmg##Type args);
-#define RMG_CREATURE_BOXES() initializeCreatureRewardGenerators();
-#define RMG_KEY_TENTS() initializeKeyTentGenerators();
-#define RMG_MAP_DWELLINGS() initializeDwellingGenerators();
-#define RMG_SEER_QUESTS() initializeSeerHutGenerators();
-#include "rmg_data/treasure_recipes.inc"
-#undef RMG_SEER_QUESTS
-#undef RMG_MAP_DWELLINGS
-#undef RMG_KEY_TENTS
-#undef RMG_CREATURE_BOXES
-#undef RMG_TREASURE
+        m_objectGenerators.push_back(
+            new TRmgQuestExperienceDef(prototypeIndex, 2000, 5000));
+        m_objectGenerators.push_back(
+            new TRmgQuestExperienceDef(prototypeIndex, 5333, 10000));
+        m_objectGenerators.push_back(
+            new TRmgQuestExperienceDef(prototypeIndex, 8666, 15000));
+        m_objectGenerators.push_back(
+            new TRmgQuestExperienceDef(prototypeIndex, 12000, 20000));
+        m_objectGenerators.push_back(new TRmgQuestGoldDef(prototypeIndex, 2000, 5000));
+        m_objectGenerators.push_back(new TRmgQuestGoldDef(prototypeIndex, 5333, 10000));
+        m_objectGenerators.push_back(new TRmgQuestGoldDef(prototypeIndex, 8666, 15000));
+        m_objectGenerators.push_back(new TRmgQuestGoldDef(prototypeIndex, 12000, 20000));
+    }
+
+    m_objectGenerators.push_back(new TRmgTreasureDef(SEPULCHER, 0, 1000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(SHIPWRECK, 0, 2000, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(SHIPWRECK_SURVIVOR, 0, 1500, 50));
+    m_objectGenerators.push_back(new TRmgShrineDef(SHRINE1, 500));
+    m_objectGenerators.push_back(new TRmgShrineDef(SHRINE2, 2000));
+    m_objectGenerators.push_back(new TRmgShrineDef(SHRINE3, 3000));
+    m_objectGenerators.push_back(new TRmgTreasureDef(SIREN, 0, 100, 20));
+    m_objectGenerators.push_back(new TRmgSpellScrollDef(1, 500));
+    m_objectGenerators.push_back(new TRmgSpellScrollDef(2, 2000));
+    m_objectGenerators.push_back(new TRmgSpellScrollDef(3, 3000));
+    m_objectGenerators.push_back(new TRmgSpellScrollDef(4, 4000));
+    m_objectGenerators.push_back(new TRmgSpellScrollDef(5, 5000));
+    m_objectGenerators.push_back(new TRmgTreasureDef(STABLES, 0, 200, 40));
+    m_objectGenerators.push_back(new TRmgTreasureDef(TAVERN, 0, 100, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(TEMPLE, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(THIEVES_DEN, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(TRADING_POST, 0, 100, 100));
+    m_objectGenerators.push_back(new TRmgTreasureDef(TRAINING_GROUNDS, 0, 1500, 200));
+    m_objectGenerators.push_back(new TRmgTreasureDef(TREASURE_CHEST, 0, 1500, 1000));
+    m_objectGenerators.push_back(new TRmgTreasureDef(TREE_OF_KNOWLEDGE, 0, 2500, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(UNIVERSITY, 0, 2500, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(WAGON, 0, 500, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(WAR_MACHINE_FACTORY, 0, 1500, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(WAR_SCHOOL, 0, 1000, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(WARRIOR_TOMB, 0, 6000, 20));
+    m_objectGenerators.push_back(new TRmgTreasureDef(WATER_WHEEL, 0, 750, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(WATERING_HOLE, 0, 500, 50));
+    m_objectGenerators.push_back(new TRmgTreasureDef(WINDMILL, 0, 2500, 150));
+    m_objectGenerators.push_back(new TRmgWitchHutDef());
 }
 
 // Player zones go underground only with Inferno, Necropolis or Dungeon
@@ -5813,8 +6033,12 @@ b8 TRmgGenerator::placeMonolithBorderGuard(
     //   2 P 1
     //   4 0 3
     TPoint offsets[RMG_PORTAL_BORDER_OFFSET_COUNT] =
-#include "rmg_data/portal_border_offsets.inc"
-    ;
+// North is up; digits are offset indices (probe order) around portal P.
+//   2 P 1
+//   4 0 3
+{
+    TPoint(0, 1), TPoint(1, 0), TPoint(-1, 0), TPoint(1, 1), TPoint(-1, 1)
+};
     TRmgMapPosition guardPosition;
     const s32 probeCount = sizeof(offsets) / sizeof(offsets[0]);
     buildZoneConnectionPaths();
@@ -7855,9 +8079,12 @@ void TRmgGenerator::createRiver(TRmgMapPosition source)
 
         VA_COMPGEN(0x00549790, 0x1, STATIC_DTOR, riverDeltaOffsets)
         DATA(0x0069ce28)
-        static TRmgRiverDeltaOffset riverDeltaOffsets[RMG_CARDINAL_DIRECTION_COUNT] =
-#include "rmg_data/river_delta_offsets.inc"
-        ;
+        static TRmgRiverDeltaOffset riverDeltaOffsets[RMG_CARDINAL_DIRECTION_COUNT] = {
+    TRmgRiverDeltaOffset(4, 1),  // coast to the east
+    TRmgRiverDeltaOffset(1, 4),  // south
+    TRmgRiverDeltaOffset(-2, 1), // west
+    TRmgRiverDeltaOffset(1, -2)  // north
+};
 
         s32 deltaIndex = sourceIsSnow
             ? g_rmgSnowRiverDeltaIndex[cardinal]

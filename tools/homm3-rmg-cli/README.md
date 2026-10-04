@@ -10,6 +10,11 @@ Build from the repository's Rust/Nix development environment:
 cargo build --manifest-path tools/Cargo.toml -p homm3-rmg-cli --locked
 ```
 
+Source-data extraction uses the configured VC6 headers and repository
+Python/Clang environment; it does not run VC6 or Wine. `HOMM3_PYTHON` can select
+the Python executable with Clang bindings. A host C++ compiler evaluates the
+extracted initializers during the build. The generated binary runs independently.
+
 The committed dependency lockfile supports Rust 1.82. Recheck that compiler
 when updating dependencies: newer Clap and lexer releases require Rust 1.85.
 

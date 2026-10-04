@@ -472,9 +472,20 @@ ERmgTerrainShape __fastcall selectTerrainTransition(
 //   W  .  E   W  .  E   E  .  W   E  .  W
 //   SW S SE   NW N NE   SE S SW   NE N NW
 DATA(0x00642c00)
-const s32 g_rmgReflectedNeighbours[2][2][TILE_DIR_COUNT] =
-#include "rmg_data/reflected_neighbours.inc"
-;
+const s32 g_rmgReflectedNeighbours[2][2][TILE_DIR_COUNT] = {
+    {
+        {TILE_DIR_NORTH, TILE_DIR_NORTHEAST, TILE_DIR_EAST, TILE_DIR_SOUTHEAST,
+         TILE_DIR_SOUTH, TILE_DIR_SOUTHWEST, TILE_DIR_WEST, TILE_DIR_NORTHWEST}, // none
+        {TILE_DIR_SOUTH, TILE_DIR_SOUTHEAST, TILE_DIR_EAST, TILE_DIR_NORTHEAST,
+         TILE_DIR_NORTH, TILE_DIR_NORTHWEST, TILE_DIR_WEST, TILE_DIR_SOUTHWEST} // flipY
+    },
+    {
+        {TILE_DIR_NORTH, TILE_DIR_NORTHWEST, TILE_DIR_WEST, TILE_DIR_SOUTHWEST,
+         TILE_DIR_SOUTH, TILE_DIR_SOUTHEAST, TILE_DIR_EAST, TILE_DIR_NORTHEAST}, // flipX
+        {TILE_DIR_SOUTH, TILE_DIR_SOUTHWEST, TILE_DIR_WEST, TILE_DIR_NORTHWEST,
+         TILE_DIR_NORTH, TILE_DIR_NORTHEAST, TILE_DIR_EAST, TILE_DIR_SOUTHEAST} // both
+    }
+};
 
 const s32* TRmgTerrainFlip::getReflectedNeighbourOrder() const
 {
@@ -1549,9 +1560,29 @@ bool operator<(const TRmgCoordinatePoint<Coordinate>& left,
 // flipX, flipY, both), W 16-19 (none, flipX), N 20-23 (none, flipY),
 // SE 24-31, N_W_DIAG 32-39 and SE_DIAG 40-47.
 DATA(0x006424a8)
-const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[RMG_FIXED_TRANSITION_FRAME_COUNT] =
-#include "rmg_data/rock_frames.inc"
-;
+const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[RMG_FIXED_TRANSITION_FRAME_COUNT] = {
+    {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false},
+    {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false},
+    {SHAPE_FILL, false, false}, {SHAPE_FILL, false, false},
+    {SHAPE_N_W_HARD, false, false}, {SHAPE_N_W_HARD, false, false}, {SHAPE_N_W_HARD, true, false},
+    {SHAPE_N_W_HARD, true, false}, {SHAPE_N_W_HARD, false, true}, {SHAPE_N_W_HARD, false, true},
+    {SHAPE_N_W_HARD, true, true}, {SHAPE_N_W_HARD, true, true},
+    {SHAPE_W_HARD, false, false}, {SHAPE_W_HARD, false, false}, {SHAPE_W_HARD, true, false},
+    {SHAPE_W_HARD, true, false},
+    {SHAPE_N_HARD, false, false}, {SHAPE_N_HARD, false, false}, {SHAPE_N_HARD, false, true},
+    {SHAPE_N_HARD, false, true},
+    {SHAPE_SE_HARD, false, false}, {SHAPE_SE_HARD, false, false}, {SHAPE_SE_HARD, true, false},
+    {SHAPE_SE_HARD, true, false}, {SHAPE_SE_HARD, false, true}, {SHAPE_SE_HARD, false, true},
+    {SHAPE_SE_HARD, true, true}, {SHAPE_SE_HARD, true, true},
+    {SHAPE_N_W_DIAG_HARD, false, false}, {SHAPE_N_W_DIAG_HARD, false, false},
+    {SHAPE_N_W_DIAG_HARD, true, false}, {SHAPE_N_W_DIAG_HARD, true, false},
+    {SHAPE_N_W_DIAG_HARD, false, true}, {SHAPE_N_W_DIAG_HARD, false, true},
+    {SHAPE_N_W_DIAG_HARD, true, true}, {SHAPE_N_W_DIAG_HARD, true, true},
+    {SHAPE_SE_DIAG_HARD, false, false}, {SHAPE_SE_DIAG_HARD, false, false},
+    {SHAPE_SE_DIAG_HARD, true, false}, {SHAPE_SE_DIAG_HARD, true, false},
+    {SHAPE_SE_DIAG_HARD, false, true}, {SHAPE_SE_DIAG_HARD, false, true},
+    {SHAPE_SE_DIAG_HARD, true, true}, {SHAPE_SE_DIAG_HARD, true, true},
+};
 
 // Pattern-rule frames, as {shape, special}. Special frames are decorated
 // base (shape 0) frames drawn at the rule's chance. These frames show the
@@ -1561,35 +1592,87 @@ const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[RMG_FIXED_TRANSITION_FRAME
 // 20-39; shapes 14-22 at 40-48; base 49-56, special 57-72; shapes 23-26, 28
 // and 27 at 73-78.
 DATA(0x00642628)
-static const TRmgTerrainPatternEntry g_rmgLandPatternEntries[79] =
-#include "rmg_data/land_frames.inc"
-;
+static const TRmgTerrainPatternEntry g_rmgLandPatternEntries[79] = {
+    {SHAPE_N_W_BLEND, false}, {SHAPE_N_W_BLEND, false}, {SHAPE_N_W_BLEND, false},
+    {SHAPE_N_W_BLEND, false},
+    {SHAPE_W_BLEND, false}, {SHAPE_W_BLEND, false}, {SHAPE_W_BLEND, false}, {SHAPE_W_BLEND, false},
+    {SHAPE_N_BLEND, false}, {SHAPE_N_BLEND, false}, {SHAPE_N_BLEND, false}, {SHAPE_N_BLEND, false},
+    {SHAPE_SE_BLEND, false}, {SHAPE_SE_BLEND, false}, {SHAPE_SE_BLEND, false},
+    {SHAPE_SE_BLEND, false}, {SHAPE_N_W_DIAG_BLEND, false}, {SHAPE_N_W_DIAG_BLEND, false},
+    {SHAPE_SE_DIAG_BLEND, false}, {SHAPE_SE_DIAG_BLEND, false},
+    {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false},
+    {SHAPE_N_W_HARD, false},
+    {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false},
+    {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false},
+    {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false},
+    {SHAPE_N_W_DIAG_HARD, false}, {SHAPE_N_W_DIAG_HARD, false},
+    {SHAPE_SE_DIAG_HARD, false}, {SHAPE_SE_DIAG_HARD, false}, {SHAPE_NW_SE_BLEND, false},
+    {SHAPE_NW_BLEND_SE_HARD, false}, {SHAPE_NW_SE_HARD, false}, {SHAPE_E_BLEND_SW_HARD, false},
+    {SHAPE_S_BLEND_NE_HARD, false}, {SHAPE_E_BLEND_SE_HARD, false}, {SHAPE_S_BLEND_SE_HARD, false},
+    {SHAPE_E_HARD_SW_BLEND, false}, {SHAPE_S_HARD_NE_BLEND, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_N_W_SE_BLEND, false}, {SHAPE_N_W_SE_HARD, false}, {SHAPE_N_W_BLEND_SE_HARD, false},
+    {SHAPE_N_W_HARD_SE_BLEND, false}, {SHAPE_E_S_BLEND_NE_SW_HARD, false},
+    {SHAPE_E_S_BLEND_SE_HARD, false},
+};
 
 // Dirt: hard N_W 0-3, W 4-7, N 8-11, SE 12-15, N_W_DIAG 16-17, SE_DIAG
 // 18-19, NW_SE 20; base 21-28, special 29-44; N_W_SE 45.
 DATA(0x006428a0)
-static const TRmgTerrainPatternEntry g_rmgDirtPatternEntries[46] =
-#include "rmg_data/dirt_frames.inc"
-;
+static const TRmgTerrainPatternEntry g_rmgDirtPatternEntries[46] = {
+    {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false},
+    {SHAPE_N_W_HARD, false},
+    {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false},
+    {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false},
+    {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false},
+    {SHAPE_N_W_DIAG_HARD, false}, {SHAPE_N_W_DIAG_HARD, false},
+    {SHAPE_SE_DIAG_HARD, false}, {SHAPE_SE_DIAG_HARD, false}, {SHAPE_NW_SE_HARD, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_N_W_SE_HARD, false},
+};
 
 // Sand draws no transitions: base 0-7, special 8-23.
 DATA(0x00642a10)
-static const TRmgTerrainPatternEntry g_rmgSandPatternEntries[24] =
-#include "rmg_data/sand_frames.inc"
-;
+static const TRmgTerrainPatternEntry g_rmgSandPatternEntries[24] = {
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+    {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true}, {SHAPE_FILL, true},
+};
 
 // Water: dirt's hard frames 0-20, then base 21-32.
 DATA(0x00642ad0)
-static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] =
-#include "rmg_data/water_frames.inc"
-;
+static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] = {
+    {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false}, {SHAPE_N_W_HARD, false},
+    {SHAPE_N_W_HARD, false},
+    {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false}, {SHAPE_W_HARD, false},
+    {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false}, {SHAPE_N_HARD, false},
+    {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false}, {SHAPE_SE_HARD, false},
+    {SHAPE_N_W_DIAG_HARD, false}, {SHAPE_N_W_DIAG_HARD, false},
+    {SHAPE_SE_DIAG_HARD, false}, {SHAPE_SE_DIAG_HARD, false}, {SHAPE_NW_SE_HARD, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+    {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false}, {SHAPE_FILL, false},
+};
 
 // Rule arguments: blends with other terrain, allows separated neighbours,
 // special-frame chance (percent at full brush strength), frame count and
 // the frame list.
 DATA(0x006a48d0)
 static TRmgPatternTerrainRule g_rmgDirtRule(
-#include "rmg_data/dirt_rule.inc"
+true, true, 50, 46, g_rmgDirtPatternEntries
 );
 
 VA_COMPGEN(0x005b3b60, 0x23, STATIC_CTOR, g_rmgDirtRule)
@@ -1597,7 +1680,7 @@ VA_COMPGEN(0x005b3b60, 0x23, STATIC_CTOR, g_rmgDirtRule)
 VA_COMPGEN(0x005b3b90, 0x0a, STATIC_DTOR, g_rmgDirtRule)
 DATA(0x006a44f8)
 static TRmgPatternTerrainRule g_rmgSandRule(
-#include "rmg_data/sand_rule.inc"
+false, true, 70, 24, g_rmgSandPatternEntries
 );
 
 VA_COMPGEN(0x005b3ba0, 0x23, STATIC_CTOR, g_rmgSandRule)
@@ -1605,7 +1688,7 @@ VA_COMPGEN(0x005b3ba0, 0x23, STATIC_CTOR, g_rmgSandRule)
 VA_COMPGEN(0x005b3bd0, 0x0a, STATIC_DTOR, g_rmgSandRule)
 DATA(0x006a3d88)
 static TRmgPatternTerrainRule g_rmgGrassRule(
-#include "rmg_data/grass_rule.inc"
+true, true, 50, 79, g_rmgLandPatternEntries
 );
 
 VA_COMPGEN(0x005b3be0, 0x23, STATIC_CTOR, g_rmgGrassRule)
@@ -1613,7 +1696,7 @@ VA_COMPGEN(0x005b3be0, 0x23, STATIC_CTOR, g_rmgGrassRule)
 VA_COMPGEN(0x005b3c10, 0x0a, STATIC_DTOR, g_rmgGrassRule)
 DATA(0x006a3f70)
 static TRmgPatternTerrainRule g_rmgSnowRule(
-#include "rmg_data/snow_rule.inc"
+true, true, 80, 79, g_rmgLandPatternEntries
 );
 
 VA_COMPGEN(0x005b3c20, 0x23, STATIC_CTOR, g_rmgSnowRule)
@@ -1621,7 +1704,7 @@ VA_COMPGEN(0x005b3c20, 0x23, STATIC_CTOR, g_rmgSnowRule)
 VA_COMPGEN(0x005b3c50, 0x0a, STATIC_DTOR, g_rmgSnowRule)
 DATA(0x006a46e0)
 static TRmgPatternTerrainRule g_rmgSwampRule(
-#include "rmg_data/swamp_rule.inc"
+true, true, 80, 79, g_rmgLandPatternEntries
 );
 
 VA_COMPGEN(0x005b3c60, 0x23, STATIC_CTOR, g_rmgSwampRule)
@@ -1629,7 +1712,7 @@ VA_COMPGEN(0x005b3c60, 0x23, STATIC_CTOR, g_rmgSwampRule)
 VA_COMPGEN(0x005b3c90, 0x0a, STATIC_DTOR, g_rmgSwampRule)
 DATA(0x006a4ab8)
 static TRmgPatternTerrainRule g_rmgRoughRule(
-#include "rmg_data/rough_rule.inc"
+true, true, 80, 79, g_rmgLandPatternEntries
 );
 
 VA_COMPGEN(0x005b3ca0, 0x23, STATIC_CTOR, g_rmgRoughRule)
@@ -1637,7 +1720,7 @@ VA_COMPGEN(0x005b3ca0, 0x23, STATIC_CTOR, g_rmgRoughRule)
 VA_COMPGEN(0x005b3cd0, 0x0a, STATIC_DTOR, g_rmgRoughRule)
 DATA(0x006a5070)
 static TRmgPatternTerrainRule g_rmgSubterraneanRule(
-#include "rmg_data/subterranean_rule.inc"
+true, true, 60, 79, g_rmgLandPatternEntries
 );
 
 VA_COMPGEN(0x005b3ce0, 0x23, STATIC_CTOR, g_rmgSubterraneanRule)
@@ -1645,7 +1728,7 @@ VA_COMPGEN(0x005b3ce0, 0x23, STATIC_CTOR, g_rmgSubterraneanRule)
 VA_COMPGEN(0x005b3d10, 0x0a, STATIC_DTOR, g_rmgSubterraneanRule)
 DATA(0x006a4e88)
 static TRmgPatternTerrainRule g_rmgLavaRule(
-#include "rmg_data/lava_rule.inc"
+true, true, 80, 79, g_rmgLandPatternEntries
 );
 
 VA_COMPGEN(0x005b3d20, 0x23, STATIC_CTOR, g_rmgLavaRule)
@@ -1653,7 +1736,7 @@ VA_COMPGEN(0x005b3d20, 0x23, STATIC_CTOR, g_rmgLavaRule)
 VA_COMPGEN(0x005b3d50, 0x0a, STATIC_DTOR, g_rmgLavaRule)
 DATA(0x006a4ca0)
 static TRmgPatternTerrainRule g_rmgWaterRule(
-#include "rmg_data/water_rule.inc"
+false, false, 0, 33, g_rmgWaterPatternEntries
 );
 
 VA_COMPGEN(0x005b3d60, 0x23, STATIC_CTOR, g_rmgWaterRule)
@@ -1667,6 +1750,8 @@ VA_COMPGEN(0x005b3da0, 0x16, STATIC_CTOR, g_rmgRockRule)
 VA_COMPGEN(0x005b3dc0, 0x0a, STATIC_DTOR, g_rmgRockRule)
 
 DATA(0x00642bd8)
-TRmgTerrainRule* const g_rmgTerrainRules[RMG_TERRAIN_COUNT] =
-#include "rmg_data/terrain_rules.inc"
-;
+TRmgTerrainRule* const g_rmgTerrainRules[RMG_TERRAIN_COUNT] = {
+    &g_rmgDirtRule, &g_rmgSandRule, &g_rmgGrassRule, &g_rmgSnowRule,
+    &g_rmgSwampRule, &g_rmgRoughRule, &g_rmgSubterraneanRule,
+    &g_rmgLavaRule, &g_rmgWaterRule, &g_rmgRockRule
+};
