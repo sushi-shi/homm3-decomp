@@ -37,7 +37,7 @@ from homm3.match import status
 from homm3.vc6 import tu_state_sweep as scoring
 from homm3.vc6._unit import flags_for_unit, source_for_unit
 
-VERSION = 9
+VERSION = 10
 
 
 @dataclass(frozen=True)
@@ -75,8 +75,16 @@ def identity_symbol(name):
 
 def code_identity(payload):
     """Ignore paths, timestamps and COFF bookkeeping, not bytes/relocations."""
-    from homm3.build.canonicalize_data_symbols import CoffObject, MEM_EXECUTE, FUNCTION_TYPE
+    from homm3.build.canonicalize_data_symbols import (
+        CoffObject, MEM_EXECUTE, FUNCTION_TYPE, _definitions,
+    )
     coff = CoffObject(payload)
+    # VC6's anonymous-scope nonce can reorder named BSS allocations. A
+    # relocation still refers to the same object, not its section offset.
+    # Keep its allocation extent; code/label/section offsets remain exact.
+    bss = {row.symbol.index: ("bss", row.end - row.start)
+           for row in _definitions(coff)
+           if row.storage == "bss" and not row.symbol.name.startswith(".")}
     sections = []
     for section in coff.sections:
         if not section.characteristics & MEM_EXECUTE:
@@ -84,7 +92,7 @@ def code_identity(payload):
         names = sorted((identity_symbol(sym.name), sym.value) for sym in coff.symbols.values()
                        if sym.section == section.index and sym.typ == FUNCTION_TYPE)
         relocs = [(rel.site, rel.typ, identity_symbol(coff.symbols[rel.symbol_index].name),
-                   coff.symbols[rel.symbol_index].value)
+                   bss.get(rel.symbol_index, ("offset", coff.symbols[rel.symbol_index].value)))
                   for rel in coff.relocations if rel.section == section.index]
         sections.append((names, coff.section_bytes(section).hex(), relocs))
     return digest(json.dumps(sorted(sections)).encode())
