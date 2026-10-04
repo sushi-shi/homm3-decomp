@@ -19,3 +19,5 @@ pub mod request;
 pub mod rng;
 pub mod selection;
 pub mod template;
+pub mod terrain;
+pub mod terrain_rules;

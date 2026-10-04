@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "rmg.h"
+#include "rmg_terrain_data.h"
 
 // Adds a signed direction offset; callers convert the result to a grid point.
 inline TPoint operator+(const TPoint& point, const TPoint& offset)
@@ -21,46 +22,6 @@ inline bool isRmgDiagonalDirection(u32 direction)
 {
     return (direction & 1) != 0;
 }
-
-// Brush strength scales each terrain's special base-frame chance, which is
-// a percentage at full strength. The generator always paints at half.
-enum ERmgBrushStrength {
-    RMG_FULL_BRUSH_STRENGTH = 8,
-    RMG_BRUSH_STRENGTH = 4
-};
-
-// Transition identities; the diagrams are beside the classifier in rmg_terrain.cpp.
-enum ERmgTerrainShape {
-    SHAPE_FILL = 0,
-    SHAPE_N_W_BLEND = 2,
-    SHAPE_W_BLEND = 3,
-    SHAPE_N_BLEND = 4,
-    SHAPE_SE_BLEND = 5,
-    SHAPE_N_W_DIAG_BLEND = 6,
-    SHAPE_SE_DIAG_BLEND = 7,
-    SHAPE_N_W_HARD = 8,
-    SHAPE_W_HARD = 9,
-    SHAPE_N_HARD = 10,
-    SHAPE_SE_HARD = 11,
-    SHAPE_N_W_DIAG_HARD = 12,
-    SHAPE_SE_DIAG_HARD = 13,
-    SHAPE_NW_SE_BLEND = 14,
-    SHAPE_NW_BLEND_SE_HARD = 15,
-    SHAPE_NW_SE_HARD = 16,
-    SHAPE_E_BLEND_SW_HARD = 17,
-    SHAPE_S_BLEND_NE_HARD = 18,
-    SHAPE_E_BLEND_SE_HARD = 19,
-    SHAPE_S_BLEND_SE_HARD = 20,
-    SHAPE_E_HARD_SW_BLEND = 21,
-    SHAPE_S_HARD_NE_BLEND = 22,
-    SHAPE_N_W_SE_BLEND = 23,
-    SHAPE_N_W_SE_HARD = 24,
-    SHAPE_N_W_BLEND_SE_HARD = 25,
-    SHAPE_N_W_HARD_SE_BLEND = 26,
-    SHAPE_E_S_BLEND_SE_HARD = 27,
-    SHAPE_E_S_BLEND_NE_SW_HARD = 28,
-    RMG_TERRAIN_SHAPE_COUNT = 29
-};
 
 // One map-layer tile as read from or written to the map adapter.
 struct TRmgTerrainTile {
@@ -94,14 +55,6 @@ struct TRmgTerrainFlip {
     TRmgTerrainFlip(b8 flipX, b8 flipY) : m_flipX(flipX), m_flipY(flipY) {}
     const s32* getReflectedNeighbourOrder() const;
     s32 getIndex() const;
-};
-
-// No edge for equal terrain, a sand centre, or a dirt centre that blends with
-// its neighbour; other blending pairs blend, remaining changes are hard edges.
-enum ERmgTerrainNeighbourKind {
-    RMG_NEIGHBOUR_NO_EDGE = 0,
-    RMG_NEIGHBOUR_BLEND_EDGE = 1,
-    RMG_NEIGHBOUR_HARD_EDGE = 2
 };
 
 // Cached copy of one map tile. Only the validity bit is cleared on construction;
@@ -173,19 +126,6 @@ struct TRmgTerrainPatternRange {
     s32 selectFrame() const;
 };
 
-struct TRmgTerrainPatternEntry {
-    ERmgTerrainShape m_transition;
-    b8 m_special;
-};
-
-// Fixed transition table entry; carries flips instead of a special-frame flag.
-struct TRmgTerrainTransitionEntry {
-    ERmgTerrainShape m_transition;
-    b8 m_flipX;
-    b8 m_flipY;
-
-    bool matches(ERmgTerrainShape transition, b8 flipX, b8 flipY) const;
-};
 DATA(0x006424a8)
 extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
 

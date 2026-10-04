@@ -9,17 +9,19 @@ use homm3_rmg::{
     rng::RetailRng,
     selection::{resolve_water, SelectedTemplate},
     template::TemplateSource,
+    terrain::{PaintedTerrain, TerrainWorkspace},
 };
 use std::fmt::Write;
 
 #[test]
 #[ignore = "requires HOMM3_RMG_TEMPLATE and HOMM3_RMG_ORACLE layout checkpoint directory"]
-fn zone_layout_matches_vc6_checkpoints() {
+fn generation_stages_match_vc6_checkpoints() {
     let bytes = std::fs::read(std::env::var_os("HOMM3_RMG_TEMPLATE").unwrap()).unwrap();
     let root = std::path::PathBuf::from(std::env::var_os("HOMM3_RMG_ORACLE").unwrap());
     let source = TemplateSource::parse(&bytes).unwrap();
     let mut workspace = LayoutWorkspace::default();
     let mut boundaries = BoundaryWorkspace::default();
+    let mut terrain = TerrainWorkspace::default();
     for (mode, behavior) in [
         ("retail", Behavior::Retail(RetailProfile::default())),
         ("hotfix", Behavior::Hotfix),
@@ -76,8 +78,47 @@ fn zone_layout_matches_vc6_checkpoints() {
                 &coverage,
                 &root.join(format!("{mode}-layout/case-{case}-candidate/coverage.txt")),
             );
+            let painted = terrain.paint(coverage, &mut rng).unwrap();
+            assert_terrain(
+                &painted,
+                &root.join(format!("{mode}-layout/case-{case}-candidate/terrain.txt")),
+            );
         }
     }
+}
+
+fn assert_terrain(terrain: &PaintedTerrain<'_, '_>, expected_path: &std::path::Path) {
+    let mut checkpoint = format!("{}\n", terrain.rng().state);
+    for row in terrain
+        .tiles()
+        .chunks(terrain.coverage().map().raster().dimension())
+    {
+        for tile in row {
+            write!(
+                checkpoint,
+                "{},{},{},{} ",
+                tile.terrain() as i32,
+                tile.frame(),
+                u8::from(tile.reflection().flip_x),
+                u8::from(tile.reflection().flip_y)
+            )
+            .unwrap();
+        }
+        checkpoint.push('\n');
+    }
+    let expected = std::fs::read_to_string(expected_path)
+        .unwrap()
+        .replace("\r\n", "\n");
+    for (line, (actual, expected)) in checkpoint.lines().zip(expected.lines()).enumerate() {
+        assert_eq!(
+            actual,
+            expected,
+            "{} line {}",
+            expected_path.display(),
+            line + 1
+        );
+    }
+    assert_eq!(checkpoint.lines().count(), expected.lines().count());
 }
 
 fn assert_graph(map: &BoundaryMap<'_>, expected_path: &std::path::Path) {

@@ -6,3 +6,4 @@
 #include "tile_direction.h"
 #include "game_resource.h"
 #include "rmg_columns.h"
+#include "rmg_terrain_data.h"

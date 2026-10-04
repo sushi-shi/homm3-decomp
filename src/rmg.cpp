@@ -286,7 +286,6 @@ static const s32 g_rmgSnowRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {7, 5,
 
 // Candidate town types one zone terrain can list.
 
-
 // Candidate town types for each zone terrain, dirt to water. The pick only
 // selects which creatures' dwellings and rewards the zone favours; eTownNeutral
 // (no faction) favours neutral creatures and ends a row. Retail bug:
@@ -367,7 +366,6 @@ static bool isRmgTemplateFieldSet(const char* value)
     return value && value[0] && value[0] != ' ';
 }
 
-
 } // namespace
 
 static void __fastcall assignRmgTeams(
@@ -399,11 +397,6 @@ TRmgMapItem::TRmgMapItem()
 
 VA_COMPGEN(0x00530ee0, 0x26, IMPLICIT_DTOR, TRmgMapItem)
 MAC_COMPGEN_ADDRESS(0x22d02c, 0x84, IMPLICIT_DTOR, TRmgMapItem)
-
-// First plain (shape 0) water frame.
-enum ERmgWaterFrames {
-    RMG_WATER_BASE_FRAME = 21
-};
 
 // Resets the cell to empty water. The guard colour, connection-visited flag
 // and previous-tile Y/Z are left unchanged.

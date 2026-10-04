@@ -85,6 +85,9 @@ pub struct FrameRange {
     count: NonZeroU32,
 }
 impl FrameRange {
+    pub(crate) const fn new(first: u32, count: NonZeroU32) -> Self {
+        Self { first, count }
+    }
     /// First sprite frame for this shape.
     #[must_use]
     pub const fn first(self) -> u32 {
