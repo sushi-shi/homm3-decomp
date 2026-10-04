@@ -118,7 +118,7 @@ Eight VC6 stage checkpoints (four sizes in both modes) agree with Rust on the
 template, player assignments, zone positions/sizes, terrain/faction choices,
 clipped polygons, every boundary cell, connection adjacency order, graph
 distances, recentered bounds, island coverage and every painted terrain/frame/flip.
-Each random stage also agrees on RNG state. There are 34 focused unit tests across the two crates. The
+Each random stage also agrees on RNG state. There are 41 focused unit tests across the two crates. The
 installed-data checks require explicit local assets and are ignored by default.
 
 The boundary-to-coverage transition consumes its stage value, preventing a
@@ -142,9 +142,21 @@ identities separate from compacted rule IDs, preserves last-match binding, and
 stores neighbour matrices in one flat buffer. Short/invalid hotfix rows are
 skipped without shifting their score columns; retail reports typed indexing
 faults. Every score in all 109 installed placement rules and all 232 initialized
-object-trait rows match the C++ loader in both modes. Prototype loading and
-binding remain the next asset step; the trait check does not establish that
-the complete asset catalog is implemented.
+object-trait rows match the C++ loader in both modes.
+
+Native prototype loading parses `objects.txt`, borrows ordinary image names,
+interns mask metadata once per image, applies mode/version filtering, preserves
+the monster exchange sort and binds placement rules. Family buckets occupy one
+vector. Selection counts and visits borrowed candidates without allocating a
+temporary list. The installed source has 1,326 rows and 1,305 distinct images.
+Every prepared prototype, all four masks, trigger coordinates, terrain masks,
+ordering and rule binding match C++ for all three formats in both modes:
+retail retains 1,326/1,233/1,072 prototypes (SoD/AB/RoE), and hotfix retains
+1,209/1,194/1,033. Unusable retail candidates remain explicit deferred faults;
+hotfix filters them. An injected mask provider keeps IO and archive lookup out
+of the core; the installed comparison uses Complete's base-before-expansion
+sprite precedence. Complete asset loading still needs creature, artifact,
+spell and hero traits and the production resource-loading adapter.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the
@@ -152,7 +164,7 @@ pinned executable for seed 100 / 108x108 / RoE / islands and seed 17 / 144x144 /
 two levels / SoD / random water (zero stack/heap replay fills). Keep these
 disagreements visible during porting; they are not evidence of Rust parity.
 
-Native trait/prototype loading, placement, serialization, CLI,
+Remaining trait/resource loading, placement, serialization, CLI,
 allocation profiling and the full corpus campaign remain to be implemented and
 verified. This checkpoint cannot generate a map.
 

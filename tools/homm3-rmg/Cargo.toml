@@ -11,5 +11,9 @@ description = "Typed native Heroes III random-map generator"
 homm3-rmg-data.workspace = true
 homm3-resource.workspace = true
 
+[dev-dependencies]
+homm3-lod.workspace = true
+flate2.workspace = true
+
 [lints]
 workspace = true

@@ -13,7 +13,7 @@ fn main() {
         .header(wrapper.to_string_lossy())
         .clang_args(["-x", "c++", "-std=c++14", "-fms-extensions"])
         .clang_arg(format!("-I{}", include.display()))
-        .allowlist_type("TRandomMapRequest|TRmgTerrain(Pattern|Transition)Entry|TTownType|TTerrainType|TArtifact|ERmg.*|ERandomMapResult|EMapDimension|ETileDirection|EGameResource|TAdventureObjectType|TAdvObjectNameRow|EObjectMaskFrame")
+        .allowlist_type("TRandomMapRequest|TRmgTerrain(Pattern|Transition)Entry|TTownType|TTerrainType|TArtifact|ERmg.*|ERandomMapResult|EMapDimension|ETileDirection|EGameResource|TAdventureObjectType|TAdvObjectNameRow|EObjectMaskFrame|EObjectSlotCategory")
         .allowlist_var("RMG_.*|RANDOM_MAP_.*|TOWN_.*|ARTIFACT_.*|MAP_DIMENSION_.*|NUM_RESOURCES|SHAPE_.*|ADVENTURE_OBJECT_TRAIT_COUNT")
         .ignore_functions()
         .ignore_methods()

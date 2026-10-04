@@ -276,6 +276,8 @@ version = "0.1.0"
 name = "homm3-rmg"
 version = "0.1.0"
 dependencies = [
+ "flate2",
+ "homm3-lod",
  "homm3-resource",
  "homm3-rmg-data",
 ]

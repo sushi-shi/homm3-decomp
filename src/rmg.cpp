@@ -2490,11 +2490,6 @@ static inline bool isRmgObjectAvailableInVersion(
     return true;
 }
 
-// Monolith subtypes, per kind, that maps before Shadow of Death may use.
-enum ERmgMonolithSubtypeLimits {
-    RMG_PRE_SOD_MONOLITH_SUBTYPE_COUNT = 3
-};
-
 // Prototype buckets and placement rules use the object's name-row alias.
 static TAdventureObjectType getRmgPrototypeFamily(TAdventureObjectType type)
 {

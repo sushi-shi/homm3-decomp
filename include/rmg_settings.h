@@ -66,4 +66,19 @@ enum ERmgObjectPlacementScore {
     RMG_PLACEMENT_NO_TERRAIN_PREFERENCE = -1
 };
 
+// Monolith subtypes, per kind, that maps before Shadow of Death may use.
+enum ERmgMonolithSubtypeLimits {
+    RMG_PRE_SOD_MONOLITH_SUBTYPE_COUNT = 3
+};
+
+// Creature-type counts and guard limits. RoE maps lack the expansion creature
+// types; their guards exclude creatures from 118 but evaluate only those below
+// 117, so 117 slips through (retail bug).
+enum ERmgGuardConstants {
+    RMG_CREATURE_TYPE_COUNT = 145,
+    RMG_ROE_CREATURE_TYPE_COUNT = 118,
+    RMG_GUARD_MAXIMUM_COUNT = 100,
+    RMG_GUARD_DISPOSITION = 3
+};
+
 #endif

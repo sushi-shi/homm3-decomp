@@ -655,16 +655,6 @@ enum ERmgShipyardConstants {
     RMG_SHIPYARD_WATER_OFFSET_COUNT = 4
 };
 
-// Creature-type counts and guard limits. RoE maps lack the expansion creature
-// types; their guards exclude creatures from 118 but evaluate only those below
-// 117, so 117 slips through (retail bug).
-enum ERmgGuardConstants {
-    RMG_CREATURE_TYPE_COUNT = 145,
-    RMG_ROE_CREATURE_TYPE_COUNT = 118,
-    RMG_GUARD_MAXIMUM_COUNT = 100,
-    RMG_GUARD_DISPOSITION = 3
-};
-
 // River-delta placement offset from the river's end, per direction.
 struct TRmgRiverDeltaOffset {
     s32 m_x;

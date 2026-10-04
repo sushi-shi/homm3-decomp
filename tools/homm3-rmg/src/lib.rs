@@ -17,6 +17,7 @@ pub mod line;
 pub mod object;
 mod parse;
 pub mod placement_rules;
+pub mod prototype;
 pub mod raster;
 pub mod request;
 pub mod rng;
