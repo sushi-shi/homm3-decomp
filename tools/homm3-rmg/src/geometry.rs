@@ -435,6 +435,18 @@ pub struct BoundaryEdge {
 }
 
 impl Voronoi {
+    /// Owner retained by an inserted site. A repeated insertion keeps the first
+    /// owner, which is observable when two zones share a centre.
+    ///
+    /// # Errors
+    /// Reports a point outside the subdivision or absent from it.
+    pub fn site_zone(&self, site: Point) -> Result<Option<ZoneId>, GeometryError> {
+        let edge = self.diagram.edge(self.diagram.locate(site)?);
+        if edge.site != site {
+            return Err(GeometryError::UnlocatableSite(site));
+        }
+        Ok(edge.zone)
+    }
     /// Iterate the site's ring in original `next` order without allocating.
     ///
     /// # Errors

@@ -42,4 +42,15 @@ enum ERmgRadialDirectionLimits {
     RMG_RADIAL_DIRECTION_COUNT = 32
 };
 
+// Path costs and zone graph distances start at RMG_UNREACHED_COST. Searches
+// treat costs above RMG_REACHED_COST_LIMIT as unreached; some also reject the
+// limit itself. Clearing a cell sets its costs and object distance to
+// RMG_CLEARED_CELL_COST; removing an object resets the object distance under
+// its footprint to it.
+enum ERmgPathCostLimits {
+    RMG_REACHED_COST_LIMIT = 30000,
+    RMG_UNREACHED_COST = 32000,
+    RMG_CLEARED_CELL_COST = 32700
+};
+
 #endif

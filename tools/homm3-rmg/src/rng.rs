@@ -2,6 +2,15 @@
 
 use std::num::NonZeroU32;
 
+/// RNG diagnostics at a completed generation stage.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RngCheckpoint {
+    /// Complete CRT state, rather than the last 15-bit result.
+    pub state: u32,
+    /// Draws since the original seed.
+    pub draws: u64,
+}
+
 /// Seed and draw position of the pinned Complete CRT's `rand` stream.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RetailRng {
@@ -50,6 +59,15 @@ impl RetailRng {
     #[must_use]
     pub const fn draws(&self) -> u64 {
         self.draws
+    }
+
+    /// Record a stage without consuming a draw.
+    #[must_use]
+    pub const fn checkpoint(&self) -> RngCheckpoint {
+        RngCheckpoint {
+            state: self.state,
+            draws: self.draws,
+        }
     }
 }
 

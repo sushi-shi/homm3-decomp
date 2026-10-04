@@ -103,18 +103,27 @@ Completion requires the full generator in both modes.
 
 Implemented the source-derived data boundary, typed requests, owned retail RNG,
 template parsing/selection, player assignment, Delaunay/Voronoi geometry, line
-patterns and initial zone layout. The implementation uses `std`; template names
-borrow their resource bytes and placement reuses its candidate storage.
+patterns, initial zone layout, boundary rasterization, added water zones and
+their connection graph, recentering and island terrain coverage. The
+implementation uses `std`; template names borrow resource bytes, and layout,
+subdivision, raster, polygon and graph workspaces retain their storage.
 
 The installed `rmg.txt` passed 864 request/mode combinations. Retail retained
 252 deferred-fault candidate instances; hotfix excluded them. A retail template
 with an invalid player slot cannot be removed before selection without changing
 seeded output. It stays as an explicit candidate fault until selected.
 
-Eight VC6 layout checkpoints (four sizes in both modes) agree with Rust on the
-template, player assignments, zone positions/sizes, terrain/faction choices and
-final RNG state. There are 23 focused unit tests across the two crates. The
+Eight VC6 stage checkpoints (four sizes in both modes) agree with Rust on the
+template, player assignments, zone positions/sizes, terrain/faction choices,
+clipped polygons, every boundary cell, connection adjacency order, graph
+distances, recentered bounds and island coverage. Each random stage also agrees
+on RNG state. There are 26 focused unit tests across the two crates. The
 installed-data checks require explicit local assets and are ignored by default.
+
+The boundary-to-coverage transition consumes its stage value, preventing a
+second application of random island displacement. Retail modulo-zero faults
+retain the preceding random draw; hotfix checks an empty placement list before
+drawing and substitutes a singleton displacement range for zero roughness.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the
@@ -122,9 +131,17 @@ pinned executable for seed 100 / 108x108 / RoE / islands and seed 17 / 144x144 /
 two levels / SoD / random water (zero stack/heap replay fills). Keep these
 disagreements visible during porting; they are not evidence of Rust parity.
 
-Boundary construction, terrain painting, native trait/prototype loading,
-placement, serialization, CLI, allocation profiling and the full corpus campaign
-remain to be implemented and verified. This checkpoint cannot generate a map.
+Terrain painting, native trait/prototype loading, placement, serialization, CLI,
+allocation profiling and the full corpus campaign remain to be implemented and
+verified. This checkpoint cannot generate a map.
+
+The current boundary port follows the merged C++ policy of one unused retail
+town draw for the boundary probe and each added water zone. Those fields were
+uninitialized in the executable; uniform stack/heap prefill alone does not
+describe all their live values. The explicit replay policy for these particular
+fields still needs to be reconciled with captured executable observations. Other
+water-zone creature residue is represented as faction, neutral, or no matching
+faction, rather than an unchecked index.
 
 ## Verification
 

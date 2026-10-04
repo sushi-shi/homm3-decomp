@@ -168,13 +168,13 @@ impl LayoutWorkspace {
                     level: Level::Surface,
                 },
             };
-            self.position(&mut placed, zones, request.levels(), map_size, rng)?;
+            self.position(&mut placed, zones, request, map_size, rng)?;
             self.positioned.push(placed);
         }
         for _ in 0..2 {
             for index in 0..self.positioned.len() {
                 let mut placed = self.positioned[index];
-                self.position(&mut placed, zones, request.levels(), map_size, rng)?;
+                self.position(&mut placed, zones, request, map_size, rng)?;
                 self.positioned[index] = placed;
             }
         }
@@ -231,11 +231,12 @@ impl LayoutWorkspace {
         &mut self,
         current: &mut PositionedZone,
         zones: &[Zone],
-        levels: Levels,
+        request: &Request,
         map_size: i32,
         rng: &mut RetailRng,
     ) -> Result<(), LayoutError> {
         self.candidates.clear();
+        let levels = request.levels();
         if self.positioned.is_empty() {
             self.candidates.try_reserve(2)?;
             self.candidates.push(current.position);
@@ -271,7 +272,13 @@ impl LayoutWorkspace {
             self.filter(current, zones, levels, map_size)?;
         }
         let count = u32::try_from(self.candidates.len()).map_err(|_| LayoutError::Arithmetic)?;
-        let count = NonZeroU32::new(count).ok_or(LayoutError::NoCandidates(current.id))?;
+        let Some(count) = NonZeroU32::new(count) else {
+            // Retail calls rand before its modulo-zero fault; hotfix checks first.
+            if !request.behavior().is_hotfix() {
+                rng.draw();
+            }
+            return Err(LayoutError::NoCandidates(current.id));
+        };
         current.position = self.candidates[rng.below(count) as usize];
         Ok(())
     }
