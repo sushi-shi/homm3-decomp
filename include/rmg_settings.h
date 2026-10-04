@@ -47,6 +47,32 @@ enum ERmgNeighborhoodRadius {
     RMG_NEIGHBORHOOD_5X5 = 2
 };
 
+// Town count/density groups by ownership and starting fort.
+enum ERmgTownPlacementCategory {
+    RMG_TOWN_PLAYER_CASTLE,
+    RMG_TOWN_PLAYER_BASIC,
+    RMG_TOWN_NEUTRAL_CASTLE,
+    RMG_TOWN_NEUTRAL_BASIC,
+    RMG_TOWN_CATEGORY_COUNT
+};
+
+enum ERmgObjectCounter {
+    RMG_FIRST_OBJECT_ID = 1
+};
+
+enum ERmgTownPlacementLimit {
+    RMG_PRIMARY_TOWN_MAXIMUM_SQUARED_DISTANCE = 32000
+};
+
+// Squared entrance-distance areas per unit of density.
+enum ERmgDensityArea {
+    // 144x144 tiles, the extra-large map size: towns and extra mines.
+    RMG_TOWN_AND_MINE_DENSITY_AREA = 4 * 144 * 144,
+    // 200 and 400 tiles: treasure groups on land and in water zones.
+    RMG_LAND_TREASURE_DENSITY_AREA = 4 * 200,
+    RMG_WATER_TREASURE_DENSITY_AREA = 4 * 400
+};
+
 // Terrain types, dirt through rock.
 enum ERmgTerrainLimits {
     RMG_TERRAIN_COUNT = eTerrainRock + 1

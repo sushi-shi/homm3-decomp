@@ -6,7 +6,7 @@ use crate::{
     raw,
     request::{Levels, Request, Town, TownChoice, Water},
     rng::RetailRng,
-    selection::SelectedTemplate,
+    selection::{choose_flag, select_allowed_town, Player, SelectedTemplate},
     template::{Template, Zone, ZoneRole},
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
@@ -109,8 +109,9 @@ pub struct Layout<'workspace, 'context> {
     template: &'context Template<'context>,
     request: &'context Request,
     water: Water,
+    players: [Option<Player>; crate::request::PLAYER_COUNT],
 }
-impl Layout<'_, '_> {
+impl<'context> Layout<'_, 'context> {
     /// Completed zone positions in source order, borrowing workspace storage.
     #[must_use]
     pub const fn zones(&self) -> &[ZoneLayout] {
@@ -118,18 +119,21 @@ impl Layout<'_, '_> {
     }
     /// Selected template from which these zones were produced.
     #[must_use]
-    pub const fn template(&self) -> &Template<'_> {
+    pub const fn template(&self) -> &'context Template<'context> {
         self.template
     }
     /// Request supplying map dimensions, planes and behavior.
     #[must_use]
-    pub const fn request(&self) -> &Request {
+    pub const fn request(&self) -> &'context Request {
         self.request
     }
     /// Resolved water choice used during layout.
     #[must_use]
     pub const fn water(&self) -> Water {
         self.water
+    }
+    pub(crate) const fn players(&self) -> [Option<Player>; crate::request::PLAYER_COUNT] {
+        self.players
     }
 }
 
@@ -181,7 +185,7 @@ impl LayoutWorkspace {
         let map_size = minimum.checked_mul(side).ok_or(LayoutError::Arithmetic)? / divisor;
         for zone in zones {
             // The constructor draws before the request's fixed town overrides it.
-            let mut alignment = choose_town(zone, rng);
+            let mut alignment = select_allowed_town(zone.allowed_towns(), rng);
             let owner = match zone.role() {
                 ZoneRole::Human(slot) | ZoneRole::Computer(slot) => Some(slot),
                 ZoneRole::Treasure(owner) | ZoneRole::Junction(owner) => owner,
@@ -266,6 +270,7 @@ impl LayoutWorkspace {
             template: selected.template(),
             request,
             water,
+            players: *selected.players(),
         })
     }
 
@@ -472,21 +477,6 @@ impl LayoutWorkspace {
 fn zone_size(zone: &Zone) -> i32 {
     // Zone construction admits only a positive signed source size.
     i32::try_from(zone.size().get()).unwrap()
-}
-
-fn choose_town(zone: &Zone, rng: &mut RetailRng) -> Option<Town> {
-    choose_flag(zone.allowed_towns(), rng)
-        .and_then(|index| Town::parse(i32::try_from(index).unwrap()).ok())
-}
-
-fn choose_flag(flags: &[bool], rng: &mut RetailRng) -> Option<usize> {
-    let count = u32::try_from(flags.iter().filter(|&&set| set).count()).ok()?;
-    let selected = rng.below(NonZeroU32::new(count)?) as usize;
-    flags
-        .iter()
-        .enumerate()
-        .filter_map(|(index, &set)| set.then_some(index))
-        .nth(selected)
 }
 
 fn choose_terrain(

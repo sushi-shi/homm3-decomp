@@ -9,6 +9,8 @@ use crate::{
     raw,
     request::{MapVersion, Request, Town, Water},
     rng::{RetailRng, RngCheckpoint},
+    selection::Player,
+    template::{PlayerSlot, Template},
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
@@ -62,8 +64,14 @@ pub struct BoundaryZone {
     terrain: Terrain,
     creatures: CreaturePreference,
     bounds: Option<ZoneBounds>,
+    primary_town: Option<WorldPosition>,
 }
 impl BoundaryZone {
+    /// Entrance of the first successfully placed town, regardless of its owner.
+    #[must_use]
+    pub const fn primary_town(self) -> Option<WorldPosition> {
+        self.primary_town
+    }
     /// Dense generation identity.
     #[must_use]
     pub const fn id(self) -> ZoneId {
@@ -173,20 +181,44 @@ impl From<TryReserveError> for BoundaryError {
 /// Completed boundary stage, borrowing storage until the next generation.
 pub struct BoundaryMap<'a> {
     workspace: &'a mut BoundaryWorkspace,
-    behavior: Behavior,
-    version: MapVersion,
+    request: &'a Request,
+    template: &'a Template<'a>,
+    players: [Option<Player>; crate::request::PLAYER_COUNT],
     water: Water,
 }
 impl<'a> BoundaryMap<'a> {
+    pub(crate) fn record_primary_town(&mut self, id: ZoneId, entrance: WorldPosition, town: Town) {
+        let hotfix = self.behavior().is_hotfix();
+        let zone = &mut self.workspace.zones[id.index()];
+        zone.primary_town = Some(entrance);
+        if hotfix && zone.alignment.is_none() {
+            zone.alignment = Some(town);
+        }
+    }
     /// Compatibility policy carried from the completed layout stage.
     #[must_use]
     pub const fn behavior(&self) -> Behavior {
-        self.behavior
+        self.request.behavior()
     }
     /// Map format carried from the completed layout stage.
     #[must_use]
     pub const fn version(&self) -> MapVersion {
-        self.version
+        self.request.version()
+    }
+    /// Exact request retained from layout for later placement and output.
+    #[must_use]
+    pub const fn request(&self) -> &Request {
+        self.request
+    }
+    /// Selected source template retained from layout, without cloning its zones.
+    #[must_use]
+    pub const fn template(&self) -> &Template<'_> {
+        self.template
+    }
+    /// Original player assignment for a template seat.
+    #[must_use]
+    pub fn player(&self, slot: PlayerSlot) -> Option<Player> {
+        self.players[slot.index()]
     }
     /// Cell ownership and terrain marks.
     #[must_use]
@@ -239,8 +271,8 @@ impl<'a> BoundaryMap<'a> {
         self,
         rng: &mut RetailRng,
     ) -> Result<TerrainCoverage<'a>, BoundaryError> {
-        self.workspace
-            .prepare_coverage(self.water, self.behavior, rng)?;
+        let behavior = self.behavior();
+        self.workspace.prepare_coverage(self.water, behavior, rng)?;
         Ok(TerrainCoverage {
             boundaries: self,
             rng: rng.checkpoint(),
@@ -253,7 +285,10 @@ pub struct TerrainCoverage<'a> {
     boundaries: BoundaryMap<'a>,
     rng: RngCheckpoint,
 }
-impl TerrainCoverage<'_> {
+impl<'a> TerrainCoverage<'a> {
+    pub(crate) fn map_mut(&mut self) -> &mut BoundaryMap<'a> {
+        &mut self.boundaries
+    }
     /// Recentered zones and raster with completed island marks.
     #[must_use]
     pub const fn map(&self) -> &BoundaryMap<'_> {
@@ -298,11 +333,11 @@ impl BoundaryWorkspace {
         clippy::needless_pass_by_value,
         reason = "consume the completed layout token so its boundary stage cannot be repeated"
     )]
-    pub fn generate(
-        &mut self,
-        completed: Layout<'_, '_>,
+    pub fn generate<'a>(
+        &'a mut self,
+        completed: Layout<'_, 'a>,
         rng: &mut RetailRng,
-    ) -> Result<BoundaryMap<'_>, BoundaryError> {
+    ) -> Result<BoundaryMap<'a>, BoundaryError> {
         let template = completed.template();
         let layout = completed.zones();
         let request = completed.request();
@@ -324,6 +359,7 @@ impl BoundaryWorkspace {
                 terrain: zone.terrain(),
                 creatures: CreaturePreference::from_town(zone.creature_town()),
                 bounds: None,
+                primary_town: None,
             });
             self.connections.try_reserve(source.connections().len())?;
             for connection in source.connections() {
@@ -350,8 +386,9 @@ impl BoundaryWorkspace {
         }
         Ok(BoundaryMap {
             workspace: self,
-            behavior: request.behavior(),
-            version: request.version(),
+            request,
+            template,
+            players: completed.players(),
             water,
         })
     }
@@ -496,6 +533,7 @@ impl BoundaryWorkspace {
                         terrain: Terrain::Water,
                         creatures: CreaturePreference::water(request.behavior()),
                         bounds: None,
+                        primary_town: None,
                     });
                     Some(id)
                 } else {

@@ -12,12 +12,16 @@ use crate::{
 use std::{collections::TryReserveError, error::Error, fmt};
 
 mod objects;
-pub use objects::{ObjectArena, ObjectGeometry, ObjectId};
+pub use objects::{MapObjectId, ObjectArena, ObjectGeometry, ObjectId};
 mod mutation;
 pub use mutation::BorderColor;
 mod neighborhood;
 pub use neighborhood::Neighborhood;
+mod density;
+mod towns;
 use objects::{Chain, Memberships};
+use towns::TownState;
+pub use towns::{Fort, TownError, TownObject, TownsPlaced};
 mod registration;
 use registration::Registration;
 pub use registration::{KeyTentChoice, KeyTentColor};
@@ -125,7 +129,7 @@ impl fmt::Display for PlacementError {
             Self::NotRegistered(id) => {
                 write!(f, "retail removes absent registered object {}", id.index())
             }
-            Self::Arithmetic => f.write_str("object count or distance arithmetic overflow"),
+            Self::Arithmetic => f.write_str("placement arithmetic overflow"),
             Self::KeyTentSubtype(value) => write!(
                 f,
                 "key-tent subtype {value} does not index availability storage"
@@ -201,6 +205,7 @@ pub struct PlacementWorkspace {
     cells: Vec<CellState>,
     memberships: Memberships,
     registration: Registration,
+    towns: TownState,
 }
 impl PlacementWorkspace {
     /// Consume painted terrain into the placement stage and reset cell state.
@@ -217,6 +222,7 @@ impl PlacementWorkspace {
         self.cells.resize(count, CellState::default());
         self.cells.fill(CellState::default());
         self.memberships.reset();
+        self.towns.reset();
         self.registration
             .reset(terrain.coverage().map().zones().len())?;
         Ok(PlacementMap {
@@ -224,6 +230,7 @@ impl PlacementWorkspace {
             cells: &mut self.cells,
             memberships: &mut self.memberships,
             registration: &mut self.registration,
+            towns: &mut self.towns,
         })
     }
 }
@@ -234,6 +241,7 @@ pub struct PlacementMap<'state, 'zones, 'tiles> {
     cells: &'state mut [CellState],
     memberships: &'state mut Memberships,
     registration: &'state mut Registration,
+    towns: &'state mut TownState,
 }
 impl PlacementMap<'_, '_, '_> {
     /// Existing painted tiles and zone coverage, without copying either buffer.

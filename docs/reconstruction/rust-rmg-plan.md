@@ -101,7 +101,7 @@ Completion requires the full generator in both modes.
 
 ### Remaining work, in execution order
 
-Ten substantial work packages remain; the first is partially implemented. They describe
+Nine substantial work packages remain; the first is partially implemented. They describe
 implementation order, not equal amounts of work or a percentage estimate.
 The library cannot yet generate a complete map.
 
@@ -111,42 +111,39 @@ The library cannot yet generate a complete map.
    and individual path/obstacle/border transitions now use reusable storage.
    Tent availability follows the loaded prototype count; retail's initial cursor
    remains an explicit replay requirement until a native rescan initializes it.
-2. **Towns.** Implement primary and additional town placement, category/density
-   scheduling, candidate order, singleton RNG draws, owner/fort payloads, road
-   targets and the hotfix player-town requirement.
-3. **Zone connections.** Port connection preparation and pathfinding, junctions,
+2. **Zone connections.** Port connection preparation and pathfinding, junctions,
    gates/portals, border guards and key-tent reservations, including water-zone
    border repair and mode-specific failures.
-4. **Mines.** Port fixed and density-driven mine placement and guards. Connect
+3. **Mines.** Port fixed and density-driven mine placement and guards. Connect
    the existing guard selector to object creation, ownership and spatial state.
-5. **Treasures.** Port treasure definitions/values, object payload ADTs, group
+4. **Treasures.** Port treasure definitions/values, object payload ADTs, group
    assembly/scoring/placement, reservations and completion/replacement callbacks.
    Integrate the existing hero, artifact, spell and creature catalogs.
-6. **Decoration.** Port underground decoration, coastal marking and general
+5. **Decoration.** Port underground decoration, coastal marking and general
    obstacle placement, preserving overlap priorities and original iteration.
-7. **Roads and rivers.** Port route construction and painting around the existing
+6. **Roads and rivers.** Port route construction and painting around the existing
    line classifiers and shared pattern tables. Preserve all source diagrams.
-8. **Generation API and compatibility integration.** Connect all stages and
+7. **Generation API and compatibility integration.** Connect all stages and
    immutable asset ownership to one native entry point with reusable workspace,
    structured failures and RNG diagnostics. Audit every hotfix branch and
    reconcile the boundary/water-zone replay inputs with executable evidence.
-9. **Output and CLI.** Implement all three formats' H3M serialization, streamed
+8. **Output and CLI.** Implement all three formats' H3M serialization, streamed
    compressed output, native generation/replay commands and actionable errors.
    Normal execution must not require Wine or the retail executable.
-10. **Final verification and publication.** Run the complete 100,000-case
+9. **Final verification and publication.** Run the complete 100,000-case
     campaign; independently parse maps; verify repeated/run-order behavior;
     profile cold loading, warm generation and output allocations; audit ASCII
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: `tryPlacePrimaryTown` and
-`tryPlaceAdditionalTown`, retaining the selected template and fixed player
-assignment from layout in the placement context. Neighbourhood/entrance-approach
-helpers are implemented and verified. Payload lifetimes and shared
-world/treasure-group ownership must be completed before transient treasure
-objects are integrated. Keep serialized town/monster counters distinct from
-geometry IDs. Reset object and placement workspaces together. Entrance-distance
-flooding now preserves worklist ties, current-cell costs and pruning against
+Immediate next implementation: `prepareZoneConnections`, beginning with
+`carveBranchingPaths`, border marking and the movement/cost state required by
+`buildZoneConnectionPaths`. The town stage now consumes placement into
+`TownsPlaced`; retain that token when adding the connections stage. Town payloads,
+primary entrances, road targets and the shared serialized counter already exist.
+Complete shared world/treasure-group payload lifetimes before integrating
+transient treasure objects. Reset object and placement workspaces together.
+Entrance-distance flooding preserves current-cell costs and pruning against
 distances retained after removal.
 
 ### Current implementation checkpoint
@@ -346,6 +343,25 @@ zone slices from reaching terrain painting. Both fixes were independently
 re-reviewed. All 61 core unit tests, eight layout-through-terrain checkpoints,
 3,456 guard captures and 270,048 placement-fit checkpoints pass; strict Clippy
 passes. These checks retain the C++-reference scope described above.
+
+Town placement now covers primary, fixed additional and density-driven towns,
+with typed owner/fort payloads, a serialized ID separate from geometry identity,
+ordered road targets, primary entrances and the hotfix starting-town requirement.
+`TownsPlaced` consumes the preceding stage to prevent repeating town placement.
+The borrowed template/request and fixed player assignment now survive layout
+through boundary/terrain placement; no unrelated preparation arguments enter the
+new stage. Hotfix primary towns resolve neutral zone alignment while subsequent
+additional attempts retain their source-cached alignment. Candidate and outline
+storage is reused across all attempts. Weighted category state represents only
+finished or initialized active entries, with checked source arithmetic.
+
+All eight native town captures agree through 47 payloads and 129,600 map cells,
+including global/zone counts, primary entrances, road targets and final RNG state
+(130,048 checkpoint lines total). This spans all four sizes, all three formats,
+both plane configurations and both behavior modes. All 68 core tests and strict
+Clippy pass. Both reviewers report no remaining actionable issues; their shared
+category/selection-helper cleanups are included. The native-capture scope remains
+the C++ source baseline, and full map generation/output remains unfinished.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

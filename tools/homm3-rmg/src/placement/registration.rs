@@ -44,6 +44,7 @@ pub enum KeyTentChoice {
 
 #[derive(Debug)]
 pub(super) struct Registration {
+    next_object_id: i32,
     active: Vec<ObjectId>,
     retail_active_storage: bool,
     counts: [i32; KINDS],
@@ -56,6 +57,7 @@ pub(super) struct Registration {
 impl Default for Registration {
     fn default() -> Self {
         Self {
+            next_object_id: i32::try_from(raw::RMG_FIRST_OBJECT_ID).unwrap(),
             active: Vec::new(),
             retail_active_storage: false,
             counts: [0; KINDS],
@@ -69,6 +71,7 @@ impl Default for Registration {
 }
 impl Registration {
     pub(super) fn reset(&mut self, zones: usize) -> Result<(), PlacementError> {
+        self.next_object_id = i32::try_from(raw::RMG_FIRST_OBJECT_ID).unwrap();
         self.active.clear();
         self.retail_active_storage = false;
         self.counts.fill(0);
@@ -150,6 +153,20 @@ impl Registration {
 }
 
 impl PlacementMap<'_, '_, '_> {
+    /// Next native payload ID, for generation diagnostics and replay checkpoints.
+    #[must_use]
+    pub const fn next_object_id(&self) -> i32 {
+        self.registration.next_object_id
+    }
+    pub(super) fn claim_object_id(&mut self) -> Result<super::MapObjectId, PlacementError> {
+        let id = super::MapObjectId(self.registration.next_object_id);
+        self.registration.next_object_id = self
+            .registration
+            .next_object_id
+            .checked_add(1)
+            .ok_or(PlacementError::Arithmetic)?;
+        Ok(id)
+    }
     pub(super) fn prepare_registration(
         &mut self,
         catalog: &PrototypeCatalog<'_>,
@@ -370,7 +387,7 @@ impl PlacementMap<'_, '_, '_> {
     }
 }
 
-fn entrance_position(
+pub(super) fn entrance_position(
     prototype: &Prototype,
     anchor: WorldPosition,
 ) -> Result<WorldPosition, PlacementError> {

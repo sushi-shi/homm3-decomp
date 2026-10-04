@@ -9,7 +9,7 @@ use homm3_resource::{Field, Spreadsheet, SpreadsheetRow};
 use std::{borrow::Cow, error::Error, fmt, num::NonZeroU32};
 
 const COLUMNS: usize = raw::RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_PLAYERS as usize + 1;
-const TOWNS: usize = raw::TOWN_CONFLUX as usize + 1;
+const TOWNS: usize = raw::TOWN_TYPE_COUNT as usize;
 const RESOURCES: usize = raw::NUM_RESOURCES as usize;
 const LAND_TERRAINS: usize = raw::eTerrainWater as usize;
 const BANDS: usize = raw::RMG_TREASURE_BAND_COUNT as usize;
@@ -263,7 +263,7 @@ pub struct Zone {
     source_number: i32,
     role: ZoneRole,
     size: NonZeroU32,
-    towns: [Placement; 4],
+    towns: [Placement; raw::RMG_TOWN_CATEGORY_COUNT as usize],
     neutral_towns_match_alignment: bool,
     allowed_towns: [bool; TOWNS],
     mines: [Placement; RESOURCES],
@@ -294,7 +294,7 @@ impl Zone {
     }
     /// Player castle/basic then neutral castle/basic placement categories.
     #[must_use]
-    pub const fn towns(&self) -> &[Placement; 4] {
+    pub const fn towns(&self) -> &[Placement; raw::RMG_TOWN_CATEGORY_COUNT as usize] {
         &self.towns
     }
     /// Whether neutral towns inherit zone alignment.

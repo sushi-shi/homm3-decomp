@@ -9,6 +9,18 @@ use crate::{
 };
 use std::{collections::TryReserveError, num::NonZeroUsize};
 
+/// Native serialized object counter, shared by towns, monsters and prisons.
+/// Distinct from arena and prototype identities.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MapObjectId(pub(super) i32);
+impl MapObjectId {
+    /// Source counter value assigned when the payload is constructed.
+    #[must_use]
+    pub const fn value(self) -> i32 {
+        self.0
+    }
+}
+
 /// Geometry identity, distinct from serialized town/monster IDs and prototype IDs.
 /// Valid until the owning arena is reset; moving an object does not change it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

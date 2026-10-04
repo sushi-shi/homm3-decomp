@@ -3051,7 +3051,7 @@ TRmgGenerator::TRmgGenerator(
     : TRmgGeneratorBase(width, height, levels, progress,
         width * height + 326900, mapVersion)
 {
-    m_nextObjectId = 1;
+    m_nextObjectId = RMG_FIRST_OBJECT_ID;
 #if defined(HOMM3_RMG_HOTFIX)
     // Key tents start at the first colour, not stack residue.
     m_nextKeyTentColor = KEY_LIGHT_BLUE;
@@ -6666,15 +6666,6 @@ static inline s32 getRmgDensitySpacing(s32 densityArea, s32 density)
     return static_cast<s32>(sqrt(static_cast<double>(densityArea / density)));
 }
 
-// Squared entrance-distance areas per unit of density.
-enum ERmgDensityArea {
-    // 144x144 tiles, the extra-large map size: towns and extra mines.
-    RMG_TOWN_AND_MINE_DENSITY_AREA = 4 * 144 * 144,
-    // 200 and 400 tiles: treasure groups on land and in water zones.
-    RMG_LAND_TREASURE_DENSITY_AREA = 4 * 200,
-    RMG_WATER_TREASURE_DENSITY_AREA = 4 * 400
-};
-
 static inline void initializeRmgCategoryStrides(const s32* densities,
     const s32* counts, s32 categoryCount, s32 densityProduct,
     s32* countSteps, s32* weightedCounts)
@@ -6856,7 +6847,7 @@ b8 TRmgGenerator::tryPlacePrimaryTown(
     TRmgMapPosition center = zone->m_levelPosition;
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[TOWN][alignment];
     TObjectType* prototype = properties->m_prototype;
-    s32 bestSquaredDistance = 32000;
+    s32 bestSquaredDistance = RMG_PRIMARY_TOWN_MAXIMUM_SQUARED_DISTANCE;
     TRmgMapPosition site;
     site.m_z = center.m_z;
     TRmgZoneBounds bounds = zone->m_bounds;

@@ -446,14 +446,6 @@ enum ERmgTownPlacementParameter {
 
 
 
-// Town count/density groups by ownership and starting fort.
-enum ERmgTownPlacementCategory {
-    RMG_TOWN_PLAYER_CASTLE,
-    RMG_TOWN_PLAYER_BASIC,
-    RMG_TOWN_NEUTRAL_CASTLE,
-    RMG_TOWN_NEUTRAL_BASIC,
-    RMG_TOWN_CATEGORY_COUNT
-};
 
 struct TRmgTemplateZone {
     // Template zone number while connections are read, then the zone's index

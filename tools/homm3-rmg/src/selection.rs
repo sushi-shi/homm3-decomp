@@ -2,7 +2,7 @@
 
 use crate::{
     raw,
-    request::{Request, Water, WaterChoice, PLAYER_COUNT},
+    request::{Request, Town, Water, WaterChoice, PLAYER_COUNT},
     rng::RetailRng,
     template::{PlayerSlot, RetailTemplateFault, Template, TemplateCandidate},
 };
@@ -160,4 +160,21 @@ impl<'a> SelectedTemplate<'a> {
     pub const fn players(&self) -> &[Option<Player>; PLAYER_COUNT] {
         &self.players
     }
+}
+
+// One canonical implementation of TRmgTemplateZone::selectAllowedTown.
+pub(crate) fn select_allowed_town(
+    flags: &[bool; raw::TOWN_TYPE_COUNT as usize],
+    rng: &mut RetailRng,
+) -> Option<Town> {
+    choose_flag(flags, rng).map(|index| Town::parse(i32::try_from(index).unwrap()).unwrap())
+}
+pub(crate) fn choose_flag(flags: &[bool], rng: &mut RetailRng) -> Option<usize> {
+    let count = u32::try_from(flags.iter().filter(|&&set| set).count()).ok()?;
+    let selected = rng.below(NonZeroU32::new(count)?) as usize;
+    flags
+        .iter()
+        .enumerate()
+        .filter_map(|(index, &set)| set.then_some(index))
+        .nth(selected)
 }

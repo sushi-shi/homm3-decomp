@@ -46,7 +46,10 @@ pub struct PaintedTerrain<'zones, 'tiles> {
     tiles: &'tiles [TerrainTile],
     rng: RngCheckpoint,
 }
-impl PaintedTerrain<'_, '_> {
+impl<'zones> PaintedTerrain<'zones, '_> {
+    pub(crate) fn coverage_mut(&mut self) -> &mut TerrainCoverage<'zones> {
+        &mut self.coverage
+    }
     /// Zone state and ownership used by subsequent placement stages.
     #[must_use]
     pub const fn coverage(&self) -> &TerrainCoverage<'_> {

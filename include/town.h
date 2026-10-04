@@ -505,9 +505,6 @@ enum ETownConstants {
     // Nine town types x 44 building-id slots, byte-derived from
     // initialize_game_data's mask walks (0x160 row stride, rows 0..8,
     // building ids to 43 in the requirement tables).
-    TOWN_TYPE_COUNT = TOWN_CONFLUX + 1,
-    // Restoration of Erathia has the first eight; Conflux came later.
-    TOWN_TYPE_ROE_COUNT = TOWN_CONFLUX,
     TOWN_BUILDING_SLOTS = 44,
     // The four horde columns of a const_horde_effects row - also the
     // length of gHordeBuildings, which get_horde_effect scans.
