@@ -73,7 +73,7 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
     s32 lineType = tile.getLineType();
     b8 matches[TILE_DIR_COUNT];
     buildMatchingLineNeighbourMask(painter, point, lineType, matches);
-    TRmgLinePatternTable* table = painter->getPattern(lineType);
+    TRmgLinePatternTable* table = painter->getPatternTable(lineType);
     s32 selected;
     b8 flipX, flipY;
     selectRmgLinePattern(matches, table, selected, flipX, flipY);

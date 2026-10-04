@@ -277,10 +277,10 @@ TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
 // River-delta choice per coast side (east, south, west, north), for land and
 // then snow rivers: the nth (from 0) delta recommended for the end's terrain.
 DATA(0x006409a0)
-static const s32 g_landRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {2, 0, 3, 1};
+static const s32 g_rmgLandRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {2, 0, 3, 1};
 
 DATA(0x006409b0)
-static const s32 g_snowRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {7, 5, 4, 6};
+static const s32 g_rmgSnowRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {7, 5, 4, 6};
 
 // Candidate town types one zone terrain can list.
 enum ERmgTerrainTownChoiceLimits {
@@ -290,7 +290,7 @@ enum ERmgTerrainTownChoiceLimits {
 // Candidate town types for each zone terrain, dirt to water. The pick only
 // selects which creatures' dwellings and rewards the zone favours; eTownNeutral
 // (no faction) favours neutral creatures and ends a row. Retail bug:
-// chooseTownType draws from all four entries, so the zero fill after it
+// chooseCreatureTownType draws from all four entries, so the zero fill after it
 // (Castle's value) becomes a Castle candidate.
 DATA(0x00682450)
 TTownType g_rmgTerrainTownChoices[eTerrainWater + 1][RMG_TERRAIN_TOWN_CHOICE_COUNT] = {
@@ -517,7 +517,7 @@ MAC_ADDRESS(0x22d110, 0x15c)
 void TRmgMapItem::clear()
 {
     m_objects.clear();
-    TRmgConnectionDecoration borderConnection = m_borderConnection;
+    TRmgBorderConnection borderConnection = m_borderConnection;
     TRmgGroundTileData tileData = m_tileData;
 
     borderConnection.m_present = false;
@@ -873,7 +873,7 @@ void type_random_map::openPathPatch(s32 x, s32 y, s32 level)
 
 VA(0x00531bd0, 0x11f)
 MAC_ADDRESS(0x22e454, 0x254)
-void type_random_map::markBorderPatch(TRmgMapPosition position)
+void type_random_map::markObstacleFillPatch(TRmgMapPosition position)
 {
     TRmgMapItem* item = getMapItem(position);
     item->markObstacleFill();
@@ -1261,7 +1261,7 @@ TRmgZone::TRmgZone(TRmgTemplateZone* templateZone)
 }
 
 MAC_ADDRESS(0x22f9d8, 0xcc)
-void TRmgZone::chooseTownType(b8 expanded)
+void TRmgZone::chooseCreatureTownType(b8 expanded)
 {
     if (m_alignment != eTownNeutral) {
         m_creatureTownType = m_alignment;
@@ -2944,7 +2944,7 @@ static const s32 g_rmgDecorationTypes[45] = {
 // Fills obstacles outward from a cell with weighted random decorations.
 VA(0x005373a0, 0x53d)
 MAC_ADDRESS(0x2359b4, 0x76c)
-void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition start, s32 progressSteps)
+void TRmgGeneratorBase::fillObstaclesFrom(TRmgMapPosition start, s32 progressSteps)
 {
     std::vector<TRmgMapPosition> pending;
     pending.push_back(start);
@@ -3061,7 +3061,7 @@ void TRmgGeneratorBase::decorateMap()
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (item->hasObstacleFill()) {
                     if (item->isPassableLand())
-                        decorateMapCell(position, progressSteps);
+                        fillObstaclesFrom(position, progressSteps);
                     else if (m_progress)
                         m_progress->advance(progressSteps);
                 }
@@ -3886,7 +3886,7 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
         zone->m_scaledSize = zone->m_templateZone->m_size * size / span;
         zone->chooseTerrain();
         // True for every version.
-        zone->chooseTownType(m_mapVersion >= RMG_MAP_RESTORATION_OF_ERATHIA);
+        zone->chooseCreatureTownType(m_mapVersion >= RMG_MAP_RESTORATION_OF_ERATHIA);
     }
 }
 
@@ -4600,7 +4600,7 @@ void type_random_map_generator::buildZoneBoundaries(
                     templateZone->m_kind = RMG_TEMPLATE_JUNCTION;
                     addedZone = new TRmgZone(templateZone);
 #if defined(HOMM3_RMG_HOTFIX)
-                    // chooseTownType never runs for added zones.
+                    // chooseCreatureTownType never runs for added zones.
                     addedZone->m_creatureTownType = eTownNeutral;
 #endif
                     addedZone->m_terrain = eTerrainWater;
@@ -5350,10 +5350,10 @@ static inline u32 findRmgPrototypeSubtypeIndex(
     return index;
 }
 
-// placeBorderObject's result when no keymaster's tent could be placed;
+// placeBorderGuard's result when no keymaster's tent could be placed;
 // otherwise it returns the guard colour.
-enum ERmgBorderPlacement {
-    RMG_BORDER_NOT_PLACED = -1
+enum ERmgBorderGuardPlacement {
+    RMG_BORDER_GUARD_NOT_PLACED = -1
 };
 
 // Border guards placed side by side, eastward from the given cell.
@@ -5365,25 +5365,25 @@ enum ERmgBorderGuardCount {
 
 VA(0x00540d60, 0x256)
 MAC_ADDRESS(0x24356c, 0x2b8)
-s32 type_random_map_generator::placeBorderObject(
+s32 type_random_map_generator::placeBorderGuard(
     TRmgMapPosition position, s32 guardCount, TRmgZone* keyTentZone)
 {
     s32 color = m_nextKeyTentColor;
     u32 tentPrototypeIndex = findRmgPrototypeSubtypeIndex(m_objectPrototypes[BORDER_TENT], color);
     if (tentPrototypeIndex == m_objectPrototypes[BORDER_TENT].size())
-        return RMG_BORDER_NOT_PLACED;
+        return RMG_BORDER_GUARD_NOT_PLACED;
     TRmgObjectPropertiesRef* tentProperties = m_objectPrototypes[BORDER_TENT][tentPrototypeIndex];
 
     u32 guardPrototypeIndex = findRmgPrototypeSubtypeIndex(m_objectPrototypes[BORDER_GUARD], color);
     // Retail bug: missing guard art returns colour zero, which callers treat
-    // as success, unlike RMG_BORDER_NOT_PLACED for missing tent art.
+    // as success, unlike RMG_BORDER_GUARD_NOT_PLACED for missing tent art.
     if (guardPrototypeIndex == m_objectPrototypes[BORDER_GUARD].size())
         return 0;
     TRmgObjectPropertiesRef* guardProperties = m_objectPrototypes[BORDER_GUARD][guardPrototypeIndex];
     type_object* tent = new type_object(tentProperties);
     if (!placeObjectInZone(tent, keyTentZone)) {
         delete tent;
-        return RMG_BORDER_NOT_PLACED;
+        return RMG_BORDER_GUARD_NOT_PLACED;
     }
 
     for (s32 guardIndex = 0; guardIndex < guardCount; ++guardIndex) {
@@ -5408,7 +5408,7 @@ inline void TRmgMapItem::markEmptyBorderConnection(s32 color)
 
 VA(0x00540fc0, 0x172)
 MAC_ADDRESS(0x243824, 0x2d4)
-void type_random_map_generator::markBorderObjectArea(
+void type_random_map_generator::markBorderConnectionArea(
     TRmgMapPosition position, s32 color)
 {
     TRmgZoneBounds bounds;
@@ -5474,9 +5474,9 @@ void type_random_map_generator::placeGuard(s32 value, TRmgMapPosition position)
 inline void type_random_map_generator::placeGroundConnectionBorderGuard(
     TRmgMapPosition position, TRmgZone* keyTentZone, s32& guardValue)
 {
-    s32 color = placeBorderObject(position, RMG_SINGLE_BORDER_GUARD, keyTentZone);
+    s32 color = placeBorderGuard(position, RMG_SINGLE_BORDER_GUARD, keyTentZone);
     if (color >= 0) {
-        markBorderObjectArea(position, color);
+        markBorderConnectionArea(position, color);
         guardValue = 0;
     }
 }
@@ -5487,7 +5487,7 @@ inline void type_random_map_generator::placeGroundConnectionBorderGuard(
 inline void type_random_map_generator::placeGateConnectionBorderGuard(
     TRmgMapPosition approach, TRmgZone* keyTentZone, s32& guardValue)
 {
-    s32 color = placeBorderObject(approach, RMG_SINGLE_BORDER_GUARD, keyTentZone);
+    s32 color = placeBorderGuard(approach, RMG_SINGLE_BORDER_GUARD, keyTentZone);
     if (color >= 0) {
         guardValue = 0;
         TRmgMapPosition side = approach;
@@ -5792,7 +5792,7 @@ b8 type_random_map_generator::createShipyardConnection(
     // entrance column.
     if (connection->m_borderGuard) {
         approach.m_x = entrance.m_x - 1;
-        if (placeBorderObject(approach, RMG_SHIPYARD_BORDER_GUARDS, destination) >= 0)
+        if (placeBorderGuard(approach, RMG_SHIPYARD_BORDER_GUARDS, destination) >= 0)
             guardValue = 0;
     }
     if (guardValue > 0) {
@@ -5945,7 +5945,7 @@ b8 type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* z
 // marks the cell's five side and lower neighbours as border connections.
 VA(0x00542b00, 0x1d2)
 MAC_ADDRESS(0x245870, 0x364)
-b8 type_random_map_generator::placeMonolithBorder(
+b8 type_random_map_generator::placeMonolithBorderGuard(
     TRmgMapPosition position, TRmgZone* keyTentZone)
 {
     // North is up; digits are offset indices (probe order) around the
@@ -5978,7 +5978,7 @@ b8 type_random_map_generator::placeMonolithBorder(
             guardPosition = position + TPoint(0, 1);
         }
     }
-    s32 color = placeBorderObject(guardPosition, RMG_SINGLE_BORDER_GUARD, keyTentZone);
+    s32 color = placeBorderGuard(guardPosition, RMG_SINGLE_BORDER_GUARD, keyTentZone);
     if (color >= 0) {
         for (s32 probe = 0; probe < probeCount; ++probe)
             m_map.getMapItem(position + offsets[probe])->markBorderConnection(color);
@@ -6008,7 +6008,7 @@ inline void type_random_map_generator::protectMonolith(type_object* portal,
     const TRmgZoneConnection* connection, TRmgZone* keyTentZone, s32& guardValue)
 {
     if (connection->m_borderGuard
-        && placeMonolithBorder(portal->getPosition(), keyTentZone)) {
+        && placeMonolithBorderGuard(portal->getPosition(), keyTentZone)) {
         guardValue = 0;
     } else if (guardValue > 0) {
         placeGuard(guardValue, portal->getPosition() + TPoint(0, 1));
@@ -6430,7 +6430,7 @@ void type_random_map_generator::carveBranchingPaths()
                     item->openPath();
                 }
                 if (item->hasObstacleFill())
-                    m_map.markBorderPatch(position);
+                    m_map.markObstacleFillPatch(position);
             }
         }
     }
@@ -6521,7 +6521,7 @@ void type_random_map_generator::prepareZoneConnections()
                 if (!item->hasObstacleFill() && item->isPassableLand() && !item->isObjectEntrance()
                     && !item->hasObjects()
                     && item->m_zoneState.m_zone < 0 && item->getLandType() != eTerrainWater)
-                    m_map.markBorderPatch(position);
+                    m_map.markObstacleFillPatch(position);
             }
         }
     }
@@ -8068,8 +8068,8 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
         };
 
         s32 deltaIndex = sourceIsSnow
-            ? g_snowRiverDeltaIndex[cardinal]
-            : g_landRiverDeltaIndex[cardinal];
+            ? g_rmgSnowRiverDeltaIndex[cardinal]
+            : g_rmgLandRiverDeltaIndex[cardinal];
         s32 landType = mapItem->getLandType();
         s32 prototypeIndex;
         for (prototypeIndex = 0; prototypeIndex < m_objectPrototypes[TERRAIN_RIVER_DELTA].size();

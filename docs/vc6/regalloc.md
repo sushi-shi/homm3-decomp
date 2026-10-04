@@ -580,7 +580,7 @@ compiled by the pinned SP3 CL at the game profile (`build/p30/sibprobe*.cpp`):
    by hoisting or sinking its declaration's INITIALISER (a bare declaration
    is still inert, per section 3).
 
-   `type_random_map_generator::placeBorderObject` (0x540d60) supplies another
+   `type_random_map_generator::placeBorderGuard` (0x540d60) supplies another
    measured reuse case. Its two prototype searches and guard-placement loop
    share one index. Giving the third loop a separate `guardIndex` changes
    only the byte-vector SIB bytes at 0x540f6a and 0x540f9e; naming the vector

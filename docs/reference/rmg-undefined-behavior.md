@@ -130,7 +130,7 @@ counts in `generate` and the player alignments in `writeMapHeader` require a pri
 `createGuard` is reached only through `placeGuard` or
 `assembleTreasureGroup`. Water zones have monster strength none, so
 `getZoneGuardValue` returns 0; their connections are unguarded. These zones
-also never set `m_creatureTownType`, because `chooseTownType` runs only in
+also never set `m_creatureTownType`, because `chooseCreatureTownType` runs only in
 `initializeZones`, before they exist. `TRmgZone`'s constructor leaves
 it as allocation contents. `createTreasureObject` still reads it through
 `getValue` for creature rewards, dwellings and quest creatures. This happens for every candidate definition, before the water-terrain
@@ -400,7 +400,7 @@ valid, and helps keep a helper extraction from silently changing its behavior.
 
 Other preserved behavior defects, separate from undefined behavior:
 
-- `TRmgZone::chooseTownType` uses the disjunction
+- `TRmgZone::chooseCreatureTownType` uses the disjunction
   `choice != eTownNeutral || expanded || choice != TOWN_CONFLUX`; the two different
   inequality terms make it true for every choice. It therefore counts all four
   entries, including `eTownNeutral` and the zero padding (a Castle candidate),
@@ -413,7 +413,7 @@ Other preserved behavior defects, separate from undefined behavior:
   unused-level candidate's index is greater than zero, so a lone unused-level
   candidate at index zero leaves every candidate in place. Changing to a
   nonnegative test changes selection and subsequent RNG.
-- `placeBorderObject` returns zero if it cannot find the required guard
+- `placeBorderGuard` returns zero if it cannot find the required guard
   prototype, although zero is also a successful color and other failure paths
   return minus one. Preserve the return value pending a deliberate bug-fix pass.
 - `tryPlaceMine` uses the last scanned prototype's trigger and width for the

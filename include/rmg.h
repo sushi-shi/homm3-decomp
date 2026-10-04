@@ -738,7 +738,7 @@ struct TRmgGroundTileData {
 };
 
 // Pending border-guard cell and the guard's key colour.
-struct TRmgConnectionDecoration {
+struct TRmgBorderConnection {
     u32 m_present : 1;
     u32 m_guardColor : 4;
 };
@@ -1006,7 +1006,7 @@ struct TRmgMapItem {
     TRmgZoneCellState m_zoneState;                // +0x20
     TRmgGroundTile m_tile;                        // +0x24
     TRmgGroundTileData m_tileData;                // +0x28
-    TRmgConnectionDecoration m_borderConnection;  // +0x2c
+    TRmgBorderConnection m_borderConnection;  // +0x2c
 
     TRmgMapItem();
     void clear();
@@ -1263,7 +1263,7 @@ public:
 
     // Path-carving helpers.
     void openPathPatch(s32 x, s32 y, s32 level);
-    void markBorderPatch(TRmgMapPosition position);
+    void markObstacleFillPatch(TRmgMapPosition position);
     TPoint traceBranchEnd(TPoint from, TPoint toward, s32 level);
 
     b8 hasConnectedOutline(
@@ -1413,7 +1413,7 @@ public:
     TRmgGridPoint m_size;
 
     TRmgLinePainterInterface(const TRmgGridPoint& size);
-    virtual TRmgLinePatternTable* getPattern(s32 lineType) = 0;
+    virtual TRmgLinePatternTable* getPatternTable(s32 lineType) = 0;
     virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
     virtual void setLineType(const TRmgGridPoint& point, s32 value) = 0;
     // Nonzero prevents painting.
@@ -1462,7 +1462,7 @@ public:
     }
     virtual ~TRmgRiverLinePainter() = 0;
 
-    virtual TRmgLinePatternTable* getPattern(s32 lineType);
+    virtual TRmgLinePatternTable* getPatternTable(s32 lineType);
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setLineType(const TRmgGridPoint& point, s32 value);
@@ -1528,7 +1528,7 @@ public:
     }
     virtual ~TRmgRoadLinePainter() = 0;
 
-    virtual TRmgLinePatternTable* getPattern(s32 lineType);
+    virtual TRmgLinePatternTable* getPatternTable(s32 lineType);
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setLineType(const TRmgGridPoint& point, s32 value);
@@ -1589,7 +1589,7 @@ struct TRmgZone {
     std::vector<TPoint> m_entrances;         // +0x404
 
     TRmgZone(TRmgTemplateZone* templateZone);
-    void chooseTownType(b8 expanded);
+    void chooseCreatureTownType(b8 expanded);
     bool isTerrainAllowed(s32 terrain) const;
     void chooseTerrain();
     ~TRmgZone();
@@ -1764,7 +1764,7 @@ public:
     s32 scoreObjectPlacement(
         TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
     void decorateMap();
-    void decorateMapCell(TRmgMapPosition start, s32 progressSteps);
+    void fillObstaclesFrom(TRmgMapPosition start, s32 progressSteps);
 };
 SIZE(TRmgGeneratorBase, 0xed8);
 
@@ -1952,7 +1952,7 @@ public:
     b8 canPlaceShipyard(TRmgMapPosition position);
     b8 createSubterraneanGate(
         TRmgZone* source, TRmgZoneConnection* connection);
-    b8 placeMonolithBorder(TRmgMapPosition position, TRmgZone* keyTentZone);
+    b8 placeMonolithBorderGuard(TRmgMapPosition position, TRmgZone* keyTentZone);
     type_object* placeMonolith(
         TRmgObjectPropertiesRef* properties, TRmgZone* zone, bool oneWay);
     void protectMonolith(type_object* portal,
@@ -1970,8 +1970,8 @@ public:
     void carveBranchingPaths();
     void repairWaterZoneBorders();
     void openConnectionPath(TRmgMapPosition position, b8 narrow);
-    void markBorderObjectArea(TRmgMapPosition position, s32 color);
-    s32 placeBorderObject(
+    void markBorderConnectionArea(TRmgMapPosition position, s32 color);
+    s32 placeBorderGuard(
         TRmgMapPosition position, s32 guardCount, TRmgZone* keyTentZone);
     void placeGroundConnectionBorderGuard(TRmgMapPosition position,
         TRmgZone* keyTentZone, s32& guardValue);
@@ -2040,7 +2040,7 @@ SIZE(TRmgMovementCost, 0x04);
 SIZE(TRmgZoneCellState, 0x04);
 SIZE(TRmgGroundTile, 0x04);
 SIZE(TRmgGroundTileData, 0x04);
-SIZE(TRmgConnectionDecoration, 0x04);
+SIZE(TRmgBorderConnection, 0x04);
 SIZE(TRmgObjectPlacementRule, 0x4c);
 SIZE(TRmgObjectPropertiesRef, 0xe8);
 SIZE(type_object, 0x1c);

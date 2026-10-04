@@ -3354,7 +3354,7 @@ rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZ
 rmg	?createTreasureObject@type_random_map_generator@@QAEPAVtype_object@@PAUTRmgZone@@HHPAHEEEUTRmgMapPosition@@@Z	86.2888	86.2888	86.2888	0x146190	tokens1:a74128391e60
 rmg	?createWaterZoneIsland@type_random_map_generator@@QAEXABUTRmgZoneBounds@@H@Z	99.3392	99.3392	100.0000	0x13efa0	tokens1:486d9d83f642
 rmg	?decorateMap@TRmgGeneratorBase@@QAEXXZ	56.6855	56.6855	100.0000	0x137970	tokens1:2a87ea77fffb
-rmg	?decorateMapCell@TRmgGeneratorBase@@QAEXUTRmgMapPosition@@H@Z	69.2608	69.2608	90.8004	0x1373a0	tokens1:cc1a42d2014a
+rmg	?fillObstaclesFrom@TRmgGeneratorBase@@QAEXUTRmgMapPosition@@H@Z	69.2608	69.2608	90.8004	0x1373a0	tokens1:cc1a42d2014a
 rmg	?decorateUnderground@type_random_map_generator@@QAEXXZ	85.7248	85.7248	99.7982	0x1439e0	tokens1:ee8b17a5d5a7
 rmg	?drawIrregularZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	45.3515	45.3515	100.0000	0x13bff0	tokens1:5fe1bd670efc
 rmg	?drawIslandBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	44.9282	44.9282	100.0000	0x13cd30	tokens1:b6694148e730
@@ -3432,8 +3432,8 @@ rmg	?isPlacementBlocked@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMa
 rmg	?joinExtraZones@type_random_map_generator@@QAEXHPAVTRmgVoronoi@@@Z	41.5441	41.5441	79.6078	0x13dad0	tokens1:52b0c0c93762
 rmg	?loadObjectPrototypes@TRmgGeneratorBase@@QAEXXZ	99.7905	99.7905	100.0000	0x136200	tokens1:cf0e4308e5cb
 rmg	?loadTemplates@type_random_map_generator@@QAEXXZ	64.6564	64.6564	83.2103	0x137ff0	tokens1:d4924fdc391a
-rmg	?markBorderObjectArea@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	77.1286	77.1286	100.0000	0x140fc0	tokens1:5595380ee007
-rmg	?markBorderPatch@type_random_map@@QAEXUTRmgMapPosition@@@Z	85.0183	85.0183	100.0000	0x131bd0	tokens1:9136f946d23c
+rmg	?markBorderConnectionArea@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	77.1286	77.1286	100.0000	0x140fc0	tokens1:5595380ee007
+rmg	?markObstacleFillPatch@type_random_map@@QAEXUTRmgMapPosition@@@Z	85.0183	85.0183	100.0000	0x131bd0	tokens1:9136f946d23c
 rmg	?markCoastalTiles@type_random_map@@QAEXXZ	72.0826	72.0826	100.0000	0x131310	tokens1:a34dc595f43d
 rmg	?markRiverCoastTarget@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	45.2216	45.2216	79.7557	0x148a40	tokens1:a99f5059a46d
 rmg	?markRiverObjectTargets@type_random_map_generator@@QAEXXZ	86.2338	86.2338	100.0000	0x1497a0	tokens1:b5d409251cfb
@@ -3444,12 +3444,12 @@ rmg	?openPathPatch@type_random_map@@QAEXHHH@Z	73.5052	73.5052	100.0000	0x131ad0	
 rmg	?paintRoad@type_random_map_generator@@QAEEUTRmgMapPosition@@H@Z	60.0955	60.0955	70.4101	0x148040	tokens1:983d99dd9568
 rmg	?paintZoneTerrain@type_random_map_generator@@QAEXXZ	65.6642	65.6642	95.1679	0x13e6a0	tokens1:e3b9af93e50b
 rmg	?placeAdditionalTowns@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	62.1673	62.1673	100.0000	0x144ae0	tokens1:7530511574dd
-rmg	?placeBorderObject@type_random_map_generator@@QAEHUTRmgMapPosition@@HPAUTRmgZone@@@Z	93.0991	93.0991	100.0000	0x140d60	tokens1:eac3a59343fc
+rmg	?placeBorderGuard@type_random_map_generator@@QAEHUTRmgMapPosition@@HPAUTRmgZone@@@Z	93.0991	93.0991	100.0000	0x140d60	tokens1:eac3a59343fc
 rmg	?placeExtraMines@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	79.8586	79.8586	100.0000	0x145e60	tokens1:4345439de5f9
 rmg	?placeKeyTentGuard@type_random_map_generator@@QAEEPAVtype_object@@H@Z	66.0694	66.0694	78.1076	0x14b8c0	tokens1:c6323eefb449
 rmg	?placeMineSite@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@EH@Z	79.1753	79.1753	99.5863	0x145580	tokens1:d7227afffed1
 rmg	?placeMines@type_random_map_generator@@QAEXXZ	96.8554	96.8554	100.0000	0x145f60	tokens1:e7703552621d
-rmg	?placeMonolithBorder@type_random_map_generator@@QAEEUTRmgMapPosition@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x142b00	tokens1:f208d7087ab8
+rmg	?placeMonolithBorderGuard@type_random_map_generator@@QAEEUTRmgMapPosition@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x142b00	tokens1:f208d7087ab8
 rmg	?placeObjectInZone@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@@Z	90.2798	90.2798	99.9286	0x142930	tokens1:d101ab474bb9
 rmg	?placePrimaryTown@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x144a50	tokens1:0e6f52a97f21
 rmg	?placeQuestArtifact@type_random_map_generator@@QAEEPAVrmgQuestArtifactObject@@@Z	75.6927	75.6927	76.9776	0x14b490	tokens1:c048392134dc
@@ -3539,8 +3539,8 @@ rmg_support	?createEdge@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@UTPoint@@PAUTRmgZone@@0
 rmg_support	?detach@TRmgHalfEdge@@QAEXXZ	100.0000	100.0000	100.0000	0x1fcfa0	tokens1:b7898f24a92b
 rmg_support	?getLineType@TRmgRiverLinePainter@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x15ee30	tokens1:4b11120234f1
 rmg_support	?getLineType@TRmgRoadLinePainter@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x15f390	tokens1:59e88734be79
-rmg_support	?getPattern@TRmgRiverLinePainter@@UAEPAUTRmgLinePatternTable@@H@Z	100.0000	100.0000	100.0000	0x15edb0	tokens1:b4f5bc708684
-rmg_support	?getPattern@TRmgRoadLinePainter@@UAEPAUTRmgLinePatternTable@@H@Z	100.0000	100.0000	100.0000	0x15f320	tokens1:be1f92bedb52
+rmg_support	?getPatternTable@TRmgRiverLinePainter@@UAEPAUTRmgLinePatternTable@@H@Z	100.0000	100.0000	100.0000	0x15edb0	tokens1:b4f5bc708684
+rmg_support	?getPatternTable@TRmgRoadLinePainter@@UAEPAUTRmgLinePatternTable@@H@Z	100.0000	100.0000	100.0000	0x15f320	tokens1:be1f92bedb52
 rmg_support	?getRmgPointOrientation@@YIHUTPoint@@00@Z	100.0000	100.0000	100.0000	0x1fdae0	tokens1:205117ea15d7
 rmg_support	?getTile@TRmgRoadLinePainter@@UAEXABU?$TRmgCoordinatePoint@I@@AAUrmgTerrainTile@@@Z	62.9565	62.9565	100.0000	0x15f350	tokens1:7e1ef1ae5765
 rmg_support	?insert@?$vector@PAUTRmgHalfEdge@@V?$allocator@PAUTRmgHalfEdge@@@std@@@std@@QAEPAPAUTRmgHalfEdge@@PAPAU3@ABQAU3@@Z	100.0000	100.0000	100.0000	0x1fdd60	-

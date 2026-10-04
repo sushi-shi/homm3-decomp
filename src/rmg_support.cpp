@@ -166,7 +166,7 @@ TRmgRiverPainter::~TRmgRiverPainter()
 // All river types use the same pattern table, so the argument is ignored.
 VA(0x0055edb0, 0x08)
 MAC_ADDRESS(0x253ad8, 0x8)
-TRmgLinePatternTable* TRmgRiverLinePainter::getPattern(s32)
+TRmgLinePatternTable* TRmgRiverLinePainter::getPatternTable(s32)
 {
     return &g_rmgRiverPatternTable;
 }
@@ -228,7 +228,7 @@ VA_COMPGEN(0x0055eed0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverPainter)
 
 VA(0x0055f320, 0x08)
 MAC_ADDRESS(0x253fc0, 0x8)
-TRmgLinePatternTable* TRmgRoadLinePainter::getPattern(s32)
+TRmgLinePatternTable* TRmgRoadLinePainter::getPatternTable(s32)
 {
     return &g_rmgRoadPatternTable;
 }
