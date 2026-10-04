@@ -104,6 +104,18 @@ impl PlacementMap<'_, '_, '_> {
     /// Check the native shipyard land pad, first clear-water probe and far side.
     /// The pad uses native flat addressing; only water/far-side columns are clipped.
     ///
+    /// North is up; P is the anchor. L and P must be passable non-water cells
+    /// without entrances. Digits give the shared water-probe order:
+    /// ```text
+    ///          x offset from P
+    ///          -3 -2 -1  0 +1
+    ///   y + 0   0  L  L  P  1
+    ///   y + 1   2  L  L  L  3
+    /// ```
+    /// The first open-water probe decides the opposite non-water check: 0 or 2
+    /// checks site 1; 1 or 3 checks site 0. This check stays on P's row even when
+    /// the chosen water probe is below it; failure does not try another probe.
+    ///
     /// # Errors
     /// Reports coordinate overflow or an accessed cell outside the allocation.
     pub fn can_place_shipyard(&self, position: WorldPosition) -> Result<bool, PlacementError> {
@@ -152,9 +164,7 @@ impl PlacementMap<'_, '_, '_> {
         }
         Ok(false)
     }
-    // Water probe order (shared source table). North is up; P is the anchor.
-    //   0 # # P 1
-    //   2 . . . 3
+    // Use the shared probe order illustrated in can_place_shipyard.
     // Unlike fit checks, the first water cell seeds the flood even if not open.
     pub(super) fn flood_shipyard_water(
         &mut self,

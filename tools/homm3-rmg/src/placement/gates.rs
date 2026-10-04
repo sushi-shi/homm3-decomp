@@ -1,4 +1,16 @@
 //! Paired subterranean gates in overlapping zones on opposite levels.
+//!
+//! Project both zone bounds onto XY before scanning their intersection. Each
+//! candidate must belong to its respective zone and fit the same gate art at
+//! identical XY coordinates on both levels.
+//! ```text
+//!   source level:       P(x, y, source_z)
+//!                       |
+//!                       | same XY anchor and prototype
+//!                       |
+//!   destination level:  P(x, y, destination_z)
+//! ```
+//! Entrances likewise share XY; each approach is one cell south of its entrance.
 use super::{
     connections::draw_connection_prototype, registration::entrance_position, BorderColor,
     BorderGuardCount, ConnectingZones, ConnectionError, ConnectionId, ObjectArena, PlacementError,
