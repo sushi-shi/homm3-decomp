@@ -8382,8 +8382,10 @@ void type_random_map_generator::createRivers()
 // A template seat is not a playable start until a town actually fits there.
 b8 type_random_map_generator::hasPlayerTowns() const
 {
-    b8 humanTowns[RMG_PLAYER_COUNT] = {false};
-    b8 playerTowns[RMG_PLAYER_COUNT] = {false};
+    b8 humanTowns[RMG_PLAYER_COUNT];
+    b8 playerTowns[RMG_PLAYER_COUNT];
+    memset(humanTowns, 0, sizeof(humanTowns));
+    memset(playerTowns, 0, sizeof(playerTowns));
     for (u32 index = 0; index < m_zones.size(); ++index) {
         const TRmgZone* zone = m_zones[index];
         const TRmgTemplateZone* templateZone = zone->m_templateZone;
@@ -8396,7 +8398,7 @@ b8 type_random_map_generator::hasPlayerTowns() const
         if (player < 0)
             continue;
         // A neutral town must not become the player's serialized main town.
-        bool ownsMainTown = false;
+        b8 ownsMainTown = false;
         for (u32 objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
             const type_object* object = m_objects[objectIndex];
             if (object->m_properties->m_prototype->getObjectType() != TOWN)

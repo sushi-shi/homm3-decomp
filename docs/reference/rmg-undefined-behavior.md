@@ -361,56 +361,6 @@ reproductions. They apply when the specified replacement path is taken; an early
 `placeQuestArtifact` failure due to an empty artifact pool does not remove the
 wrapper and is not this leak. Preserve the existing lifetime behavior.
 
-## Executed input-validation regressions
-
-PR #131 (`ec579695a`) was executed with VC6 SP3/Wine using the whole-map
-oracle and installed game resources, with `HOMM3_RMG_HOTFIX` enabled.
-The following failures were reproduced, rather than inferred from unchecked
-operations. All repairs remain behind that macro.
-
-| Input | Before the repair | Repaired behavior |
-| --- | --- | --- |
-| Unmodified shipped data, default request, seed 1 | Return 3 and an empty map, twice; retail returns 0. All eight terrain-hole definitions are fully passable with no trigger, so the footprint filter deletes the mandatory serialization prototype. | Preserve the serialized-only holes; generation returns 0. |
-| Two player zones, size 10000, 36×36, no water | Integer division by zero in `positionZone`: `filterZonePositions` removes every candidate. | Return 3 without writing a map; release the pending zone. |
-| Three human zones for players 1–3 and a computer zone also for player 1; three humans, one human team | Integer division by zero in `assignRmgTeams`: player 1 occupies both masks but only the human count. | Assign that player only through the human team pool. |
-| Two player zones, no allowed town flags, two player castles each | Return 0 with active players whose faction masks are zero; the first additional town leaves the zone alignment at −1. | Record the resolved primary-town faction before indexing faction counts or writing the header. |
-| Player zones with no towns, or only one neutral castle each | Return 0 with no active players, or with both main towns owned by neutral (255). | Require the mapped players' primary towns to exist and be owned by them; otherwise return 3. |
-| One human and one computer, with two fixed-human flags | Return 0 with two human players. | Reject flags exceeding the repaired human count. |
-| Exchange Castle and Rampart rows in `objects.txt`; request Castle | Return 0 with Castle-only player masks but Rampart towns. | Validate town subtype identity at every indexed slot. |
-| Clear town trigger masks, retaining their blocked cells | Return 0 with main-town coordinates derived from the no-trigger sentinel (8,6), and inaccessible town definitions. | Require entrances on indexed town prototypes. |
-| Keep one one-way entrance of subtype 0 and one exit of subtype 1, with no two-way monoliths | Return 0 with an entrance having no matching exit in the map. Family sizes pass the old check. | Require the paired prototype indices to have equal subtypes. |
-
-Custom-template cases use seed 1, 72×72, one level, SoD, no water, strength
-0, two humans, two human teams, no computer-only players, eight computer
-teams, random town choices, no fixed-human flags, and zero stack/heap fills,
-unless the row says otherwise. The common template has two human zones,
-numbered/owned 1 and 2, size 11, human limits 1–8, total-player limits 2–8,
-one player castle, Castle allowed, dirt terrain, no monsters, and no mines
-or treasures. Join the zones with a wide, zero-value connection using the
-same player limits. Empty numeric fields mean zero. For the team case use
-four zones with owners 1,2,3,1 and a chain of wide connections; only the last
-zone is computer-only. For the portal case use five human zones, five
-requested humans, and a wide connection between every pair of zones.
-
-To reach later consumers on the unmodified PR build, the custom-data cases
-change only the eight hole definitions' passability strings to 48 zeroes;
-all other prototype edits are described in the table. This is a disposable
-fixture workaround for the first regression, not the shipped-data repair.
-Loose `objects.txt`, `rmg.txt`, and `rand_trn.txt` files in a private Data
-directory override the linked, unmodified LOD archives. Never change the
-installed assets for these checks.
-
-The repaired cases and the valid template/portal controls were run twice in
-fresh processes. Short placement-rule rows and out-of-range object types
-were also exercised. Six minimum-player/fixed-human controls verify the
-existing repair to one human and one computer, including serialized human
-counts. Existing valid template and portal controls retain
-identical map bytes, final RNG state, request state, and x87 state. Stock
-smoke requests cover all four sizes, both level counts, all three map
-versions, and every water setting. These checks do not establish an upper
-bound for unscaled layout arithmetic or prove every possible data set valid.
-One-off fixtures and executable outputs remain in ignored `build/`.
-
 ## Conditional contracts and unresolved hazards
 
 Source review leads, not reproduced retail bugs unless evidence is given
