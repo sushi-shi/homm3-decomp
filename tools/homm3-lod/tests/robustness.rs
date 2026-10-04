@@ -1,6 +1,6 @@
 //! Deterministic malformed-input coverage for the allocation-free reader.
 
-use homm3_lod::{Archive, ENTRY_SIZE, HEADER_SIZE};
+use homm3_lod::{Archive, Directory, ENTRY_SIZE, HEADER_SIZE};
 
 #[test]
 fn deterministic_byte_corpus_never_panics() {
@@ -38,6 +38,9 @@ fn every_single_byte_mutation_of_a_valid_archive_fails_closed() {
 }
 
 fn exercise(data: &[u8]) {
+    if let Ok(directory) = Directory::parse(data, u64::MAX) {
+        assert_eq!(directory.entries().count(), directory.len());
+    }
     if let Ok(archive) = Archive::parse(data) {
         for entry in archive.entries() {
             let _ = archive.payload(entry);
