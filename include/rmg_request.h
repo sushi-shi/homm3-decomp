@@ -60,6 +60,10 @@ public:
     // player counts to one when their sum is below two, even on later failure.
     s32 generate(const char* fileName, TProgressSink* progress);
     s32 generateToFile(TAbstractFile* outputFile, TProgressSink* progress);
+#if defined(HOMM3_RMG_HOTFIX)
+    // Settings the lobby can produce; the generator relies on them.
+    b8 isSupported() const;
+#endif
 };
 SIZE(TRandomMapRequest, 0x50);
 

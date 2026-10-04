@@ -505,6 +505,9 @@ struct TRmgTemplateZone {
 
     TTownType selectAllowedTown();
     TRmgZoneConnection* findConnection(s32 destinationZone);
+#if defined(HOMM3_RMG_HOTFIX)
+    b8 isUsable() const;
+#endif
 };
 SIZE(TRmgTemplateZone, 0xd4);
 
@@ -522,6 +525,9 @@ struct TRmgTemplate {
     ~TRmgTemplate();
     TRmgTemplateZone* findZone(s32 zoneIndex);
     bool hasPlayerSlots(s32 humanPlayers, s32 computerPlayers) const;
+#if defined(HOMM3_RMG_HOTFIX)
+    b8 isUsable(s32 humanPlayers, s32 computerPlayers) const;
+#endif
 };
 SIZE(TRmgTemplate, 0x38);
 
@@ -2014,6 +2020,9 @@ public:
     // Places a treasure group guarded by a same-colour border guard in another
     // zone; on success that colour stays disabled.
     b8 placeKeyTentGuard(type_object* object, s32 targetValue);
+#if defined(HOMM3_RMG_HOTFIX)
+    b8 hasRequiredPrototypes();
+#endif
     // Change one colour's availability, then rescan for the first enabled
     // colour (size() when none remain).
     void setKeyTentColorDisabled(s32 color, b8 disabled)

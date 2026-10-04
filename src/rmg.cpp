@@ -3340,15 +3340,15 @@ static bool hasRepresentableRmgDensities(const s32* densities, const s32* counts
 
 // Sizes scale the layout and bound boundary roughness; player numbers are
 // 1-8, or 0 (none) outside player zones; density arithmetic stays in range.
-static bool isUsableRmgTemplateZone(const TRmgTemplateZone& zone)
+b8 TRmgTemplateZone::isUsable() const
 {
-    if (zone.m_size <= 0)
+    if (m_size <= 0)
         return false;
-    s32 lowestPlayer = zone.m_kind == RMG_TEMPLATE_HUMAN
-        || zone.m_kind == RMG_TEMPLATE_COMPUTER ? 0 : -1;
-    if (zone.m_playerIndex < lowestPlayer || zone.m_playerIndex >= RMG_PLAYER_COUNT)
+    s32 lowestPlayer = m_kind == RMG_TEMPLATE_HUMAN
+        || m_kind == RMG_TEMPLATE_COMPUTER ? 0 : -1;
+    if (m_playerIndex < lowestPlayer || m_playerIndex >= RMG_PLAYER_COUNT)
         return false;
-    const s32* towns = zone.m_townPlacement;
+    const s32* towns = m_townPlacement;
     s32 townDensities[RMG_TOWN_CATEGORY_COUNT];
     s32 townCounts[RMG_TOWN_CATEGORY_COUNT];
     townDensities[RMG_TOWN_PLAYER_CASTLE] = towns[RMG_TOWN_PLAYER_CASTLE_DENSITY];
@@ -3361,31 +3361,30 @@ static bool isUsableRmgTemplateZone(const TRmgTemplateZone& zone)
     townCounts[RMG_TOWN_NEUTRAL_BASIC] = towns[RMG_TOWN_NEUTRAL_BASIC_COUNT];
     if (!hasRepresentableRmgDensities(townDensities, townCounts, RMG_TOWN_CATEGORY_COUNT))
         return false;
-    if (!hasRepresentableRmgDensities(zone.m_mineDensities, zone.m_mineCounts, NUM_RESOURCES))
+    if (!hasRepresentableRmgDensities(m_mineDensities, m_mineCounts, NUM_RESOURCES))
         return false;
     // placeZoneTreasures skips bands with a maximum below 100.
     s32 treasureDensities[RMG_TREASURE_BAND_COUNT];
     s32 treasureCounts[RMG_TREASURE_BAND_COUNT] = {0, 0, 0};
     for (s32 band = 0; band < RMG_TREASURE_BAND_COUNT; ++band)
-        treasureDensities[band] = zone.m_treasure[band].m_maximum >= 100
-            ? zone.m_treasure[band].m_density : 0;
+        treasureDensities[band] = m_treasure[band].m_maximum >= 100
+            ? m_treasure[band].m_density : 0;
     return hasRepresentableRmgDensities(treasureDensities, treasureCounts, RMG_TREASURE_BAND_COUNT);
 }
 
 // Templates are offered only with usable zones whose distinct player
 // numbers seat the humans, then every player.
-static bool isUsableRmgTemplate(const TRmgTemplate& mapTemplate,
-    s32 humanPlayers, s32 computerPlayers)
+b8 TRmgTemplate::isUsable(s32 humanPlayers, s32 computerPlayers) const
 {
-    if (!mapTemplate.m_zones.size())
+    if (!m_zones.size())
         return false;
     b8 humanSeats[RMG_PLAYER_COUNT];
     b8 seats[RMG_PLAYER_COUNT];
     memset(humanSeats, 0, sizeof(humanSeats));
     memset(seats, 0, sizeof(seats));
-    for (u32 index = 0; index < mapTemplate.m_zones.size(); ++index) {
-        const TRmgTemplateZone* zone = mapTemplate.m_zones[index];
-        if (!isUsableRmgTemplateZone(*zone))
+    for (u32 index = 0; index < m_zones.size(); ++index) {
+        const TRmgTemplateZone* zone = m_zones[index];
+        if (!zone->isUsable())
             return false;
         if (zone->m_kind == RMG_TEMPLATE_HUMAN)
             humanSeats[zone->m_playerIndex] = seats[zone->m_playerIndex] = true;
@@ -3444,8 +3443,8 @@ void type_random_map_generator::loadTemplates()
             accepted = mapTemplate->hasPlayerSlots(
                 m_humanPlayerCount, m_computerPlayerCount);
 #if defined(HOMM3_RMG_HOTFIX)
-            accepted = accepted && isUsableRmgTemplate(
-                *mapTemplate, m_humanPlayerCount, m_computerPlayerCount);
+            accepted = accepted
+                && mapTemplate->isUsable(m_humanPlayerCount, m_computerPlayerCount);
 #endif
         }
         if (!accepted) {
@@ -9198,11 +9197,11 @@ static inline s32 getRmgTownTypeCount(s32 mapVersion)
 
 // The request settings the lobby can produce. The generator relies on them:
 // map arithmetic, the eight player slots and the enum-indexed tables.
-static bool isSupportedRmgRequest(const TRandomMapRequest& request)
+b8 TRandomMapRequest::isSupported() const
 {
-    if (request.m_width != request.m_height)
+    if (m_width != m_height)
         return false;
-    switch (request.m_width) {
+    switch (m_width) {
     case MAP_DIMENSION_SMALL:
     case MAP_DIMENSION_MEDIUM:
     case MAP_DIMENSION_LARGE:
@@ -9211,30 +9210,30 @@ static bool isSupportedRmgRequest(const TRandomMapRequest& request)
     default:
         return false;
     }
-    if (request.m_levels < 1 || request.m_levels > RMG_MAP_LEVEL_COUNT)
+    if (m_levels < 1 || m_levels > RMG_MAP_LEVEL_COUNT)
         return false;
     // Totals below two are repaired after this check.
-    if (request.m_humanPlayerCount < 0 || request.m_computerPlayerCount < 0
-        || request.m_humanPlayerCount > RMG_PLAYER_COUNT
-        || request.m_computerPlayerCount > RMG_PLAYER_COUNT - request.m_humanPlayerCount)
+    if (m_humanPlayerCount < 0 || m_computerPlayerCount < 0
+        || m_humanPlayerCount > RMG_PLAYER_COUNT
+        || m_computerPlayerCount > RMG_PLAYER_COUNT - m_humanPlayerCount)
         return false;
     // The lobby may pass more teams than players (or 0, one per player);
     // writeMapHeader clamps them to the players it writes.
-    if (request.m_humanTeamCount < 0 || request.m_humanTeamCount > RMG_PLAYER_COUNT
-        || request.m_computerTeamCount < 0 || request.m_computerTeamCount > RMG_PLAYER_COUNT)
+    if (m_humanTeamCount < 0 || m_humanTeamCount > RMG_PLAYER_COUNT
+        || m_computerTeamCount < 0 || m_computerTeamCount > RMG_PLAYER_COUNT)
         return false;
-    if (request.m_waterContent < RMG_WATER_NONE || request.m_waterContent > RMG_WATER_RANDOM)
+    if (m_waterContent < RMG_WATER_NONE || m_waterContent > RMG_WATER_RANDOM)
         return false;
     // Strengths the entry's clamp would change are outside the lobby's range.
-    if (request.m_monsterStrength < 1 - RMG_ZONE_MONSTERS_AVERAGE
-        || request.m_monsterStrength > RMG_STRONGEST_GUARD_STRENGTH - RMG_ZONE_MONSTERS_AVERAGE)
+    if (m_monsterStrength < 1 - RMG_ZONE_MONSTERS_AVERAGE
+        || m_monsterStrength > RMG_STRONGEST_GUARD_STRENGTH - RMG_ZONE_MONSTERS_AVERAGE)
         return false;
-    if (request.m_mapVersion < RMG_MAP_RESTORATION_OF_ERATHIA
-        || request.m_mapVersion > RMG_MAP_SHADOW_OF_DEATH)
+    if (m_mapVersion < RMG_MAP_RESTORATION_OF_ERATHIA
+        || m_mapVersion > RMG_MAP_SHADOW_OF_DEATH)
         return false;
     for (s32 seat = 0; seat < RMG_PLAYER_COUNT; ++seat) {
-        if (request.m_townType[seat] < eTownNeutral
-            || request.m_townType[seat] >= getRmgTownTypeCount(request.m_mapVersion))
+        if (m_townType[seat] < eTownNeutral
+            || m_townType[seat] >= getRmgTownTypeCount(m_mapVersion))
             return false;
     }
     return true;
@@ -9260,17 +9259,17 @@ static bool hasRmgSelectablePrototype(
 }
 
 // The objects.txt families that generation indexes without checking.
-static bool hasRmgRequiredPrototypes(type_random_map_generator& generator)
+b8 type_random_map_generator::hasRequiredPrototypes()
 {
-    std::vector<TRmgObjectPropertiesRef*>* prototypes = generator.m_objectPrototypes;
+    std::vector<TRmgObjectPropertiesRef*>* prototypes = m_objectPrototypes;
     // Guards, writeMap's two fixed prototype slots and shipyard connections.
     if (!prototypes[MONSTER].size() || !prototypes[RANDOM_MONSTER].size()
         || !prototypes[TERRAIN_HOLE].size() || !prototypes[SHIPYARD].size())
         return false;
-    if (generator.m_map.m_numberLevels > 1 && !prototypes[UNDERGROUND_GATE].size())
+    if (m_map.m_numberLevels > 1 && !prototypes[UNDERGROUND_GATE].size())
         return false;
     // Towns are indexed by town type.
-    if (prototypes[TOWN].size() < getRmgTownTypeCount(generator.m_mapVersion))
+    if (prototypes[TOWN].size() < getRmgTownTypeCount(m_mapVersion))
         return false;
     // Portals cycle through two-way monoliths, then entrance/exit pairs.
     if (!(prototypes[LITH_TWOWAY].size() + prototypes[LITH_ONEWAY_ENTRANCE].size())
@@ -9306,7 +9305,7 @@ MAC_ADDRESS(0x251070, 0x140)
 s32 TRandomMapRequest::generateToFile(TAbstractFile* outputFile, TProgressSink* progress)
 {
 #if defined(HOMM3_RMG_HOTFIX)
-    if (!isSupportedRmgRequest(*this))
+    if (!isSupported())
         return RANDOM_MAP_GENERATION_FAILED;
 #endif
     s32 strength = m_monsterStrength + RMG_ZONE_MONSTERS_AVERAGE;
@@ -9323,7 +9322,7 @@ s32 TRandomMapRequest::generateToFile(TAbstractFile* outputFile, TProgressSink* 
         m_computerTeamCount, m_waterContent, strength,
         progress, m_mapVersion);
 #if defined(HOMM3_RMG_HOTFIX)
-    if (!hasRmgRequiredPrototypes(generator))
+    if (!generator.hasRequiredPrototypes())
         return RANDOM_MAP_GENERATION_FAILED;
 #endif
     for (s32 seat = 0; seat < RMG_PLAYER_COUNT; ++seat) {
