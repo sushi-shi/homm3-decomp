@@ -136,11 +136,10 @@ The library cannot yet generate a complete map.
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: mutable terrain painting and water-zone islands
-(noise masks and chamfer distances), followed by movement/cost propagation for
-`buildZoneConnectionPaths` and crossings. Branch carving and initial border
-reservation now consume `TownsPlaced` into `ConnectionBorders`; retain that
-token when adding the next connections stage. Town payloads,
+Immediate next implementation: movement/cost propagation for
+`buildZoneConnectionPaths`, then water-zone border repair and crossings. Water-zone
+islands now consume `ConnectionBorders` into `WaterIslands`, retaining the map,
+town payloads and reusable terrain workspace for subsequent stages. Town payloads,
 primary entrances, road targets and the shared serialized counter already exist.
 Complete shared world/treasure-group payload lifetimes before integrating
 transient treasure objects. Reset object and placement workspaces together.
@@ -175,8 +174,8 @@ second application of random island displacement. Retail modulo-zero faults
 retain the preceding random draw; hotfix checks an empty placement list before
 drawing and substitutes a singleton displacement range for zero roughness.
 
-Terrain painting consumes coverage and returns a borrowed tile slice. Its two
-ordered worklists are reusable bitsets, preserving the original Y/X set order
+Terrain painting consumes coverage and retains a mutable workspace borrow, with
+a read-only tile view for callers. Its two ordered worklists are reusable bitsets, preserving the original Y/X set order
 without allocating tree nodes. Neighbour checks replace the temporary edge-count
 array because terrain does not change during transition selection. Repeated
 brush tests verify unchanged tile/worklist storage and drained queues. This is
@@ -374,6 +373,26 @@ source seed diagrams remain in C++ and Rust. All eight native captures agree on
 (130,048 checkpoint lines). Town checkpoints still pass after sharing their
 renderer. Both reviewers found no actionable issues; all 68 core tests and
 strict Clippy pass. Water-zone islands and subsequent connection stages remain.
+
+Water-zone island placement now covers rectangle-wide distance initialization,
+ordered chamfer flooding, repeated candidate selection, midpoint-displacement
+noise and full-plane brush repairs. The terrain stage retains a mutable borrow
+of its existing workspace, so later painting copies no map grid and reuses both
+repair queues. Noise dimensions are admitted against the source radius cap;
+a fixed 144-byte mask and reusable subdivision/candidate/flood storage replace
+per-island allocations. Movement directions are distinct from terrain-pattern
+directions and shared by object-distance flooding. Water-spacing metadata keeps
+its native zone-zero/forward-direction meaning. Source diagrams remain in code.
+
+All eight native island captures match 129,600 terrain/frame/reflection and
+spacing-metadata records, all placement cells/towns/counts and final RNG state
+(259,648 checkpoint lines). The test verifies tile storage remains unchanged
+through repainting. Both reviewers report no remaining actionable issues; the
+metadata naming/documentation correction is included. All 68 core tests and
+strict Clippy pass. The six native registration/removal comparisons also pass
+after sharing movement-direction helpers (11,862 checkpoint lines).
+These comparisons remain against the current C++ source, not a claim of complete
+retail-executable parity or finished map generation.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

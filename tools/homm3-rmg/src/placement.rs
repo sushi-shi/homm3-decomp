@@ -18,7 +18,12 @@ pub use mutation::BorderColor;
 mod neighborhood;
 pub use neighborhood::Neighborhood;
 mod connections;
+mod water_islands;
+pub use water_islands::WaterIslands;
+mod movement;
+pub use movement::{Direction, ZoneDistance};
 mod density;
+mod island_noise;
 use connections::ConnectionScratch;
 pub use connections::{ConnectionBorders, ConnectionError};
 mod towns;
@@ -187,6 +192,7 @@ pub struct CellState {
     passable: bool,
     entrance: Option<ObjectKind>,
     reservation: PathReservation,
+    zone_distance: ZoneDistance,
 }
 impl Default for CellState {
     fn default() -> Self {
@@ -198,6 +204,7 @@ impl Default for CellState {
             passable: true,
             entrance: None,
             reservation: PathReservation::Open,
+            zone_distance: ZoneDistance::default(),
         }
     }
 }

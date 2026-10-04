@@ -4975,15 +4975,6 @@ void TRmgGenerator::floodWaterZoneDistances(TRmgMapPosition position, s32 zoneIn
     }
 }
 
-// Island radius in tiles, and the clearance (in m_zonePathCost units, 2 per
-// cardinal step) an island centre keeps from the zone edge and earlier
-// island centres.
-enum ERmgWaterZoneIslandLimits {
-    RMG_ISLAND_MINIMUM_RADIUS = 3,
-    RMG_ISLAND_MAXIMUM_RADIUS = 6,
-    RMG_ISLAND_CLEARANCE = 20
-};
-
 // Seed islands clear of the zone edge and earlier island centres, rebuilding
 // the candidate list after every island.
 VA(0x0053f470, 0x409)

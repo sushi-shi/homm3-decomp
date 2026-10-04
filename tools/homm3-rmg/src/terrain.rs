@@ -2,7 +2,7 @@
 
 use crate::{
     boundaries::TerrainCoverage,
-    domain::Terrain,
+    domain::{Level, Terrain},
     line::Reflection,
     raw,
     rng::{RetailRng, RngCheckpoint},
@@ -43,10 +43,28 @@ impl From<TryReserveError> for TerrainError {
 /// Completed terrain stage, borrowing both zone state and tile storage.
 pub struct PaintedTerrain<'zones, 'tiles> {
     coverage: TerrainCoverage<'zones>,
-    tiles: &'tiles [TerrainTile],
+    workspace: &'tiles mut TerrainWorkspace,
     rng: RngCheckpoint,
 }
 impl<'zones> PaintedTerrain<'zones, '_> {
+    // One brush spans the full plane and finishes once after this ordered batch.
+    // Callers supply admitted plane-local indices, so repairs can cross its bounds.
+    pub(crate) fn repaint(
+        &mut self,
+        level: Level,
+        terrain: Terrain,
+        indices: impl Iterator<Item = usize>,
+        rng: &mut RetailRng,
+    ) -> Result<(), TerrainError> {
+        let side = self.coverage.map().raster().dimension();
+        let start = level.index() * side * side;
+        let mut brush = self.workspace.brush(start, side, terrain, rng);
+        for index in indices {
+            brush.paint(index)?;
+        }
+        brush.finish()?;
+        Ok(())
+    }
     pub(crate) fn coverage_mut(&mut self) -> &mut TerrainCoverage<'zones> {
         &mut self.coverage
     }
@@ -57,10 +75,10 @@ impl<'zones> PaintedTerrain<'zones, '_> {
     }
     /// Tiles in X, Y, level traversal order.
     #[must_use]
-    pub const fn tiles(&self) -> &[TerrainTile] {
-        self.tiles
+    pub fn tiles(&self) -> &[TerrainTile] {
+        &self.workspace.tiles
     }
-    /// RNG checkpoint after the last terrain brush finishes.
+    /// Historical RNG checkpoint after the initial terrain stage finishes.
     #[must_use]
     pub const fn rng(&self) -> RngCheckpoint {
         self.rng
@@ -131,7 +149,7 @@ impl TerrainWorkspace {
         }
         Ok(PaintedTerrain {
             coverage,
-            tiles: &self.tiles,
+            workspace: self,
             rng: rng.checkpoint(),
         })
     }

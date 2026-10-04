@@ -8,6 +8,8 @@ use crate::{
     geometry::{GeometryError, Point},
     raw,
     rng::{RetailRng, RngCheckpoint},
+    terrain::TerrainError,
+    worklist::Worklist,
 };
 use std::{
     collections::{TryReserveError, VecDeque},
@@ -23,12 +25,15 @@ pub enum ConnectionError {
     Placement(PlacementError),
     /// A native vector length or subdivision operation failed.
     Geometry(GeometryError),
+    /// A terrain brush failed while repainting an island.
+    Terrain(TerrainError),
 }
 impl fmt::Display for ConnectionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Placement(error) => error.fmt(f),
             Self::Geometry(error) => error.fmt(f),
+            Self::Terrain(error) => error.fmt(f),
         }
     }
 }
@@ -41,6 +46,11 @@ impl From<PlacementError> for ConnectionError {
 impl From<GeometryError> for ConnectionError {
     fn from(error: GeometryError) -> Self {
         Self::Geometry(error)
+    }
+}
+impl From<TerrainError> for ConnectionError {
+    fn from(error: TerrainError) -> Self {
+        Self::Terrain(error)
     }
 }
 impl From<TryReserveError> for ConnectionError {
@@ -59,17 +69,23 @@ struct Segment {
 pub(super) struct ConnectionScratch {
     pending: Vec<Segment>,
     branches: VecDeque<Segment>,
+    pub(super) candidates: Vec<WorldPosition>,
+    pub(super) flood: Worklist<WorldPosition>,
+    pub(super) noise: super::island_noise::NoiseWorkspace,
 }
 impl ConnectionScratch {
     pub(super) fn reset(&mut self) {
         self.pending.clear();
         self.branches.clear();
+        self.candidates.clear();
+        self.flood.clear();
+        self.noise.clear();
     }
 }
 
 /// Branching paths and border reservations are ready for water-zone islands.
 pub struct ConnectionBorders<'state, 'zones, 'tiles> {
-    towns: TownsPlaced<'state, 'zones, 'tiles>,
+    pub(super) towns: TownsPlaced<'state, 'zones, 'tiles>,
     rng: RngCheckpoint,
 }
 impl ConnectionBorders<'_, '_, '_> {

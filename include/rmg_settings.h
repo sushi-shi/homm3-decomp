@@ -76,6 +76,15 @@ enum ERmgBranchLimits {
     RMG_BRANCH_UNCHECKED_STEPS = 2
 };
 
+// Island radius in tiles, and the clearance (in m_zonePathCost units, 2 per
+// cardinal step) an island centre keeps from the zone edge and earlier
+// island centres.
+enum ERmgWaterZoneIslandLimits {
+    RMG_ISLAND_MINIMUM_RADIUS = 3,
+    RMG_ISLAND_MAXIMUM_RADIUS = 6,
+    RMG_ISLAND_CLEARANCE = 20
+};
+
 enum ERmgObjectCounter {
     RMG_FIRST_OBJECT_ID = 1
 };

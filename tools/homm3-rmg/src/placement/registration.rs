@@ -1,6 +1,6 @@
 //! Generator object order, counters, tent availability and entrance-distance flood.
 
-use super::{ObjectArena, ObjectId, PlacementError, PlacementMap};
+use super::{Direction, ObjectArena, ObjectId, PlacementError, PlacementMap};
 use crate::{
     behavior::Behavior,
     domain::WorldPosition,
@@ -286,12 +286,9 @@ impl PlacementMap<'_, '_, '_> {
         while let Some(position) = self.registration.queue.pop() {
             // Use the cell's current cost, even for a stale queued entry.
             let distance = self.cells[self.view().native_index(position)?].object_distance;
-            for (direction, &(dx, dy)) in raw::DIRECTIONS.iter().enumerate() {
-                let step = if direction % 2 == 0 {
-                    raw::RMG_CHAMFER_CARDINAL_COST
-                } else {
-                    raw::RMG_CHAMFER_DIAGONAL_COST
-                };
+            for direction in Direction::ALL {
+                let Point { x: dx, y: dy } = direction.offset();
+                let step = direction.chamfer_cost();
                 let cost = u32::from(distance) + step;
                 let point = Point::new(
                     position
