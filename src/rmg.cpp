@@ -4960,29 +4960,32 @@ TPoint clipRmgBoundaryPoint(
     return clipped;
 }
 
-// The pointer-valued worklist uses the same descending search as the map
-// position overload below, but inserts the cost before the zone. Retail
-// 0x53da1b..0x53da6f expands this boundary, including a separate pointer
-// argument snapshot. Preserve the canonical overload and its source call.
-// The spelling is provisional; the Complete-only RMG has no DC compiland.
-static void insertRmgWorkItem(
-    std::vector<TRmgZone*>& zones, std::vector<int>& costs,
-    TRmgZone* zone, int cost)
+// Binary search in a cost-descending worklist. Equal costs go before older
+// entries, so popping from the back processes ties oldest first.
+static int findRmgWorkItemInsertionIndex(
+    const std::vector<int>& costs, int count, int cost)
 {
     int first = 0;
-    int last = zones.size();
-    int middle;
-    while (1) {
-        middle = (first + last) >> 1;
-        if (first >= last)
-            break;
+    int last = count;
+    while (first < last) {
+        int middle = (first + last) >> 1;
         if (cost < costs[middle])
             first = middle + 1;
         else
             last = middle;
     }
-    costs.insert(costs.begin() + middle, cost);
-    zones.insert(zones.begin() + middle, 1, zone);
+    return first;
+}
+
+// The zone worklist inserts cost before the pointer. Retail 0x53da1b..0x53da6f
+// expands this operation, including a separate pointer argument snapshot.
+static void insertRmgWorkItem(
+    std::vector<TRmgZone*>& zones, std::vector<int>& costs,
+    TRmgZone* zone, int cost)
+{
+    int insertionIndex = findRmgWorkItemInsertionIndex(costs, zones.size(), cost);
+    costs.insert(costs.begin() + insertionIndex, cost);
+    zones.insert(zones.begin() + insertionIndex, 1, zone);
 }
 
 VA(0x0053CD30, 0x212)
