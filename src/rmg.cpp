@@ -2821,35 +2821,12 @@ void TRmgGeneratorBase::addObject(TRmgObject* object, TRmgMapPosition position)
     m_objects.push_back(object);
 }
 
-// Expansion decoration object types; the shared object type enum has no
-// enumerators for them.
-enum ERmgExpansionDecorationType {
-    RMG_OBJECT_DESERT_HILLS        = 206,
-    RMG_OBJECT_DIRT_HILLS          = 207,
-    RMG_OBJECT_GRASS_HILLS         = 208,
-    RMG_OBJECT_ROUGH_HILLS         = 209,
-    RMG_OBJECT_SUBTERRANEAN_ROCKS  = 210,
-    RMG_OBJECT_SWAMP_FOLIAGE       = 211
-};
-
 // Decoration (obstacle) object types, excluding holes, rivers and roads.
 // The last six are expansion types, unavailable on RoE maps.
 DATA(0x006408ec)
-static const s32 g_rmgDecorationTypes[45] = {
-    TERRAIN_BRUSH, TERRAIN_BUSH, TERRAIN_CACTUS, TERRAIN_CANYON,
-    TERRAIN_CRATER, TERRAIN_DEAD_VEGETATION, TERRAIN_FLOWER,
-    TERRAIN_FROZEN_LAKE, TERRAIN_HEDGE, TERRAIN_HILL, TERRAIN_KELP,
-    TERRAIN_LAKE, TERRAIN_LAVA_FLOW, TERRAIN_LAVA_LAKE, TERRAIN_MUSHROOM,
-    TERRAIN_LOG, TERRAIN_MANDRAKE, TERRAIN_MOSS, TERRAIN_MOUND,
-    TERRAIN_MOUNTAIN, TERRAIN_OAK_TREE, TERRAIN_OUTCROPPING,
-    TERRAIN_PINE_TREE, TERRAIN_PLANT, TERRAIN_ROCK, TERRAIN_SAND_DUNE,
-    TERRAIN_SAND_PIT, TERRAIN_SHRUB, TERRAIN_SKULL, TERRAIN_STALAGMITE,
-    TERRAIN_STUMP, TERRAIN_TAR_PIT, TERRAIN_TREE, TERRAIN_VINE,
-    TERRAIN_VOLCANIC_VENT, TERRAIN_VOLCANO, TERRAIN_WILLOW_TREE,
-    TERRAIN_YUCCA_TREE, TERRAIN_REEF, RMG_OBJECT_DESERT_HILLS,
-    RMG_OBJECT_DIRT_HILLS, RMG_OBJECT_GRASS_HILLS, RMG_OBJECT_ROUGH_HILLS,
-    RMG_OBJECT_SUBTERRANEAN_ROCKS, RMG_OBJECT_SWAMP_FOLIAGE
-};
+static const s32 g_rmgDecorationTypes[45] =
+#include "rmg_data/decoration_types.inc"
+;
 
 // Fills obstacles outward from a cell with weighted random decorations.
 VA(0x005373a0, 0x53d)
@@ -4517,12 +4494,12 @@ void TRmgGenerator::buildZoneBoundaries(
                     templateZone->m_monsterStrength = RMG_ZONE_MONSTERS_NONE;
                     templateZone->m_playerIndex = -1;
                     memset(templateZone->m_treasure, 0, sizeof(templateZone->m_treasure));
-                    templateZone->m_treasure[0].m_density = 5;
-                    templateZone->m_treasure[0].m_maximum = 1000;
-                    templateZone->m_treasure[0].m_minimum = 100;
-                    templateZone->m_treasure[1].m_density = 1;
-                    templateZone->m_treasure[1].m_maximum = 6000;
-                    templateZone->m_treasure[1].m_minimum = 2000;
+                    templateZone->m_treasure[0].m_density = RMG_WATER_TREASURE_0_DENSITY;
+                    templateZone->m_treasure[0].m_maximum = RMG_WATER_TREASURE_0_MAXIMUM;
+                    templateZone->m_treasure[0].m_minimum = RMG_WATER_TREASURE_0_MINIMUM;
+                    templateZone->m_treasure[1].m_density = RMG_WATER_TREASURE_1_DENSITY;
+                    templateZone->m_treasure[1].m_maximum = RMG_WATER_TREASURE_1_MAXIMUM;
+                    templateZone->m_treasure[1].m_minimum = RMG_WATER_TREASURE_1_MINIMUM;
                     templateZone->m_kind = RMG_TEMPLATE_JUNCTION;
                     addedZone = new TRmgZone(templateZone);
 #if defined(HOMM3_RMG_HOTFIX)
@@ -6508,14 +6485,6 @@ static inline s32 selectRmgWeightedCategory(const b8* finished,
     }
     return selected;
 }
-
-// Spacing arguments: the minimum m_objectDistance at a placement. Fixed
-// towns and mines ignore spacing; quest groups only avoid entrance cells,
-// whose distance is zero.
-enum ERmgObjectSpacing {
-    RMG_NO_SPACING = 0,
-    RMG_QUEST_GROUP_SPACING = 1
-};
 
 // The first category with a positive count places one town fewer for the
 // primary town, even if placePrimaryTown used a later category or failed.
@@ -8686,12 +8655,6 @@ static void insertRmgWorkItem(std::vector<TRmgZone*>& zones, TRmgZone* zone)
 // origin times the scale plus a random tie-break below the scale; adjacent
 // zones instead score from RMG_QUEST_ADJACENT_ZONE_SCORE, and zones above
 // the maximum (including unreachable ones) are skipped.
-enum ERmgQuestZoneScore {
-    RMG_QUEST_UNREACHED_DISTANCE = 20000,
-    RMG_QUEST_DISTANCE_SCALE = 10,
-    RMG_QUEST_ADJACENT_ZONE_SCORE = 1000,
-    RMG_QUEST_MAXIMUM_SCORE = 2000
-};
 
 // Stores each zone's connection-graph distance from origin in its quest
 // placement score (RMG_QUEST_UNREACHED_DISTANCE when unreachable).
@@ -8757,11 +8720,6 @@ b8 TRmgGenerator::placeQuestGroup(
     }
     return false;
 }
-
-// Below this many unused quest artifacts, no more seer huts are offered.
-enum ERmgQuestArtifactPool {
-    RMG_LOW_QUEST_ARTIFACT_COUNT = 20
-};
 
 // Treasure artifact class ('T') bit in the artifact table.
 static const s32 g_rmgQuestArtifactClass = ARTIFACT_CLASS_TREASURE;

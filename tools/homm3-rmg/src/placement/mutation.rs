@@ -39,6 +39,12 @@ impl BorderColor {
 }
 
 impl CellState {
+    pub(super) fn can_block_floor(&self, terrain: crate::domain::Terrain) -> bool {
+        self.reservation != PathReservation::Open
+            && self.passable
+            && terrain != crate::domain::Terrain::Rock
+            && self.entrance.is_none()
+    }
     /// Whether no object has cleared the passability flag; rock is checked separately.
     #[must_use]
     pub const fn passable(&self) -> bool {

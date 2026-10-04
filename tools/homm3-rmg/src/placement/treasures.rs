@@ -34,10 +34,10 @@ impl From<PlacementError> for TreasureValueError {
 
 // These are native constructor states, not a precomputed artifact-eligibility
 // cache. Completion checks availability and sets the low flag at that time.
-struct QuestState {
-    next_seer: i32,
-    pool_low: bool,
-    used: [bool; raw::ARTIFACT_COUNT as usize],
+pub(super) struct QuestState {
+    pub(super) next_seer: i32,
+    pub(super) pool_low: bool,
+    pub(super) used: [bool; raw::ARTIFACT_COUNT as usize],
 }
 impl Default for QuestState {
     fn default() -> Self {
@@ -60,7 +60,7 @@ impl QuestState {
 pub struct TreasuresReady<'state, 'zones, 'tiles, 'defs, 'assets, 'source> {
     pub(super) paths: TreasurePaths<'state, 'zones, 'tiles>,
     pub(super) catalog: TreasureCatalog<'defs, 'assets, 'source>,
-    quests: QuestState,
+    pub(super) quests: QuestState,
 }
 impl<'state, 'zones, 'tiles> TreasurePaths<'state, 'zones, 'tiles> {
     /// Bind pre-generation definitions to the completed post-mine map.

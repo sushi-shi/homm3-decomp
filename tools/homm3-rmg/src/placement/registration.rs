@@ -304,10 +304,7 @@ impl PlacementMap<'_, '_, '_> {
             .get(geometry.prototype())
             .ok_or(PlacementError::UnknownPrototype(geometry.prototype()))?
             .prototype();
-        self.registration.active.try_reserve(1)?;
-        self.insert_object(objects, catalog, object, anchor)?;
-        self.registration.active.push(object);
-        self.registration.retail_active_storage = true;
+        self.add_base_object(objects, catalog, object, anchor)?;
         let count = &mut self.registration.counts[geometry.kind().index()];
         *count = count.checked_add(1).ok_or(PlacementError::Arithmetic)?;
         if prototype.entrance().is_some() {
@@ -320,6 +317,22 @@ impl PlacementMap<'_, '_, '_> {
             }
             self.flood_object_distance(entrance)?;
         }
+        Ok(())
+    }
+
+    // GeneratorBase::addObject: footprint and list membership, without the
+    // derived generator's counters, tent state or entrance-distance flood.
+    pub(super) fn add_base_object(
+        &mut self,
+        objects: &mut ObjectArena,
+        catalog: &PrototypeCatalog<'_>,
+        object: ObjectId,
+        anchor: WorldPosition,
+    ) -> Result<(), PlacementError> {
+        self.registration.active.try_reserve(1)?;
+        self.insert_object(objects, catalog, object, anchor)?;
+        self.registration.active.push(object);
+        self.registration.retail_active_storage = true;
         Ok(())
     }
 

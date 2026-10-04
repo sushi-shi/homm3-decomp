@@ -162,7 +162,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         }
         Ok(None)
     }
-    fn fill_group(
+    pub(super) fn fill_group(
         &mut self,
         group: &mut TreasureGroupWorkspace,
         zone: ZoneId,

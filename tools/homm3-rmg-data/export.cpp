@@ -26,6 +26,9 @@ struct TPoint {
     int m_x, m_y;
     TPoint(int x, int y) : m_x(x), m_y(y) {}
 };
+static const int decorationTypes[] =
+#include "rmg_data/decoration_types.inc"
+;
 static const int mapObjectLimits[][2] =
 #include "rmg_data/map_object_limits.inc"
 ;
@@ -358,6 +361,7 @@ static void emitTreasureRecipes()
 
 int main()
 {
+    emitArray("DECORATION_TYPES", decorationTypes);
     std::printf("pub const DIRECTIONS: [(i32, i32); %lu] = [", sizeof(directions)/sizeof(directions[0]));
     for (const auto& point : directions) std::printf("(%d,%d),", point.m_x, point.m_y);
     std::printf("];\n");

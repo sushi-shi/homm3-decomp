@@ -47,6 +47,21 @@ pub struct PaintedTerrain<'zones, 'tiles> {
     rng: RngCheckpoint,
 }
 impl<'zones> PaintedTerrain<'zones, '_> {
+    pub(crate) fn with_brush(
+        &mut self,
+        level: Level,
+        terrain: Terrain,
+        rng: &mut RetailRng,
+        paint: impl FnOnce(&TerrainCoverage<'_>, &mut Brush<'_>) -> Result<(), TerrainError>,
+    ) -> Result<(), TerrainError> {
+        let side = self.coverage.map().raster().dimension();
+        let mut brush = self
+            .workspace
+            .brush(level.index() * side * side, side, terrain, rng);
+        paint(&self.coverage, &mut brush)?;
+        brush.finish()?;
+        Ok(())
+    }
     // One brush spans the full plane and finishes once after this ordered batch.
     // Callers supply admitted plane-local indices, so repairs can cross its bounds.
     pub(crate) fn repaint(
@@ -56,14 +71,12 @@ impl<'zones> PaintedTerrain<'zones, '_> {
         indices: impl Iterator<Item = usize>,
         rng: &mut RetailRng,
     ) -> Result<(), TerrainError> {
-        let side = self.coverage.map().raster().dimension();
-        let start = level.index() * side * side;
-        let mut brush = self.workspace.brush(start, side, terrain, rng);
-        for index in indices {
-            brush.paint(index)?;
-        }
-        brush.finish()?;
-        Ok(())
+        self.with_brush(level, terrain, rng, |_, brush| {
+            for index in indices {
+                brush.paint(index)?;
+            }
+            Ok(())
+        })
     }
     pub(crate) fn coverage_mut(&mut self) -> &mut TerrainCoverage<'zones> {
         &mut self.coverage
@@ -231,7 +244,7 @@ impl Axis {
     }
 }
 
-struct Brush<'a> {
+pub(crate) struct Brush<'a> {
     tiles: &'a mut [TerrainTile],
     side: usize,
     terrain: Terrain,
@@ -240,6 +253,11 @@ struct Brush<'a> {
     rng: &'a mut RetailRng,
 }
 impl Brush<'_> {
+    pub(crate) fn change_terrain(&mut self, terrain: Terrain) -> Result<(), TerrainRuleError> {
+        self.finish()?;
+        self.terrain = terrain;
+        Ok(())
+    }
     fn offset(&self, index: usize, x: isize, y: isize) -> Option<usize> {
         let x = (index % self.side).checked_add_signed(x)?;
         let y = (index / self.side).checked_add_signed(y)?;
@@ -254,7 +272,7 @@ impl Brush<'_> {
             .min(self.side - 1);
         y * self.side + x
     }
-    fn terrain(&self, index: usize) -> Terrain {
+    pub(crate) fn terrain(&self, index: usize) -> Terrain {
         self.tiles[index].terrain()
     }
     fn strength(&self, index: usize, terrain: Terrain) -> BrushStrength {
@@ -279,7 +297,7 @@ impl Brush<'_> {
         )?;
         Ok(())
     }
-    fn paint(&mut self, index: usize) -> Result<(), TerrainRuleError> {
+    pub(crate) fn paint(&mut self, index: usize) -> Result<(), TerrainRuleError> {
         if self.terrain(index) == self.terrain {
             self.base(index)
         } else {

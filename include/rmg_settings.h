@@ -32,6 +32,30 @@ enum ERmgDirection {
 
 enum ERmgObjectLimit { RMG_DEFAULT_OBJECT_LIMIT = 32000 };
 
+enum ERmgQuestZoneScore {
+    RMG_QUEST_UNREACHED_DISTANCE = 20000,
+    RMG_QUEST_DISTANCE_SCALE = 10,
+    RMG_QUEST_ADJACENT_ZONE_SCORE = 1000,
+    RMG_QUEST_MAXIMUM_SCORE = 2000
+};
+// Below this many unused quest artifacts, no more seer huts are offered.
+enum ERmgQuestArtifactPool {
+    RMG_LOW_QUEST_ARTIFACT_COUNT = 20
+};
+// Spacing arguments: the minimum m_objectDistance at a placement. Fixed
+// towns and mines ignore spacing; quest groups only avoid entrance cells,
+// whose distance is zero.
+enum ERmgObjectSpacing {
+    RMG_NO_SPACING = 0,
+    RMG_QUEST_GROUP_SPACING = 1
+};
+enum ERmgWaterTreasureBands {
+    RMG_WATER_TREASURE_0_DENSITY = 5, RMG_WATER_TREASURE_0_MINIMUM = 100,
+    RMG_WATER_TREASURE_0_MAXIMUM = 1000,
+    RMG_WATER_TREASURE_1_DENSITY = 1, RMG_WATER_TREASURE_1_MINIMUM = 2000,
+    RMG_WATER_TREASURE_1_MAXIMUM = 6000
+};
+
 // Treasure groups are assembled on a square scratch map before placement.
 enum ERmgTreasureGroupMapSize {
     RMG_TREASURE_GROUP_MAP_SIZE = 16
@@ -275,6 +299,25 @@ enum ERmgTreasureDefaults {
     RMG_WITCH_HUT_REWARD_VALUE = 1500,
     RMG_WITCH_HUT_REWARD_DENSITY = 80,
     RMG_SCROLL_REWARD_DENSITY = 30
+};
+
+// Expansion obstacle families, absent from the original adventure-object enum.
+enum ERmgExpansionDecorationType {
+    RMG_OBJECT_DESERT_HILLS        = 206,
+    RMG_OBJECT_DIRT_HILLS          = 207,
+    RMG_OBJECT_GRASS_HILLS         = 208,
+    RMG_OBJECT_ROUGH_HILLS         = 209,
+    RMG_OBJECT_SUBTERRANEAN_ROCKS  = 210,
+    RMG_OBJECT_SWAMP_FOLIAGE       = 211
+};
+
+// Cell bits of scoreObjectPlacement's marks grid: ADJACENT in the 3x3 around
+// a blocked footprint cell, OVERLAP on a drawn footprint cell, BLOCKED on a
+// blocked one (overwritten there; see its retail bug).
+enum ERmgObjectPlacementMark {
+    RMG_PLACEMENT_ADJACENT = 1,
+    RMG_PLACEMENT_OVERLAP = 2,
+    RMG_PLACEMENT_BLOCKED = 4
 };
 
 #endif

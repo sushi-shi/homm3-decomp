@@ -101,49 +101,36 @@ Completion requires the full generator in both modes.
 
 ### Remaining work, in execution order
 
-Seven substantial work packages remain; the first is partially implemented. They describe
-implementation order, not equal amounts of work or a percentage estimate.
-The library cannot yet generate a complete map.
+Four substantial work packages remain. They describe implementation order,
+not equal amounts of work or a percentage estimate. Treasure world placement,
+completion/replacement and zone scheduling, plus underground/coastal/obstacle
+decoration are now implemented. The library cannot yet generate a complete map.
 
-1. **Object storage and map mutation.** Extend typed payload ownership and
-   reservation cleanup for remaining kinds and transient groups. Never-placed
-   records now reuse slots with generation-checked IDs.
-   Neighbourhood path helpers, stable geometry IDs, ordered cell membership,
-   registration/removal, global/zone type counts, entrance-distance propagation
-   and individual path/obstacle/border transitions now use reusable storage.
-   Tent availability follows the loaded prototype count. Retail's initial cursor
-   uses named replay input or a typed fault until a native rescan initializes it.
-2. **Treasures.** Port treasure definitions/values, object payload ADTs, group
-   assembly/scoring/placement, reservations and completion/replacement callbacks.
-   Integrate the existing hero, artifact, spell and creature catalogs.
-3. **Decoration.** Port underground decoration, coastal marking and general
-   obstacle placement, preserving overlap priorities and original iteration.
-4. **Roads and rivers.** Port route construction and painting around the existing
+1. **Roads and rivers.** Port route construction and painting around the existing
    line classifiers and shared pattern tables. Preserve all source diagrams.
-5. **Generation API and compatibility integration.** Connect all stages and
+2. **Generation API and compatibility integration.** Connect all stages and
    immutable asset ownership to one native entry point with reusable workspace,
    structured failures and RNG diagnostics. Audit every hotfix branch and
    reconcile the boundary/water-zone replay inputs with executable evidence.
-6. **Output and CLI.** Implement all three formats' H3M serialization, streamed
+3. **Output and CLI.** Implement all three formats' H3M serialization, streamed
    compressed output, native generation/replay commands and actionable errors.
    Normal execution must not require Wine or the retail executable.
-7. **Final verification and publication.** Run the complete 100,000-case
-    campaign; independently parse maps; verify repeated/run-order behavior;
-    profile cold loading, warm generation and output allocations; audit ASCII
-    documentation/shared definitions; finish deterministic parallelism guidance;
-    run required Rust checks and publish the new PR.
+4. **Final verification and publication.** Run the complete 100,000-case
+   campaign; independently parse maps; verify repeated/run-order behavior;
+   profile cold loading, warm generation and output allocations; audit ASCII
+   documentation/shared definitions; finish deterministic parallelism guidance;
+   run required Rust checks and publish the new PR.
 
 Current working policy (user update): finish the complete implementation before
 broad debugging. Compile checks and individual unit tests are allowed; do not run
 full suites, native comparisons or corpus campaigns until that implementation
 pass is complete. Keep pending findings here for the later debugging pass.
 
-Immediate next implementation: commit assembled groups into the world, run
-quest/tent completion and replacement lifetimes, then drive zone treasure bands.
-Selection, nested retries, guard assembly and highest-distance site selection
-are implemented. The replacement offer/removal path is present; callers still
-need their completion-specific lifetime handling. Continue through decoration,
-roads/rivers, orchestration and output/CLI before the consolidated debugging pass.
+Immediate next implementation: road/river tile state, painter integration and
+route construction. Road search includes monolith/gate transitions and must use
+existing ordered worklists; keep the retail empty-road-target fault after its
+road-type draw, while hotfix handles the empty list. Continue through native
+orchestration and output/CLI before the consolidated debugging pass.
 
 The catalog, lazy values and payload factories remain bound by `TreasuresReady`
 and `TreasureGeneration`; do not rebuild their catalogs or reset reservations
@@ -791,6 +778,31 @@ exist under ignored `build/rmg-oracle-group-geometry`; disposable probe details
 are in `build/group-README.md`. Full assembly probes are prepared but have not
 been run. New assembly/site/replacement code has compile checks only. Do not
 rerun comparisons until the deferred debugging phase.
+
+World commit now publishes all group roots in order, transfers floor flags,
+and runs quest/tent completion. Quest zones retain native distance/jitter order;
+artifact selection, child seer placement, tent guards and replacement lifetimes
+are implemented. Removed retail parents remain arena records where native
+prototype references or memberships survive. Zero-total groups retain roots,
+pending seers and reservations in both modes, without leaking Rust allocations.
+Zone treasure bands reuse one group, retaining the ordinary/compact retry order.
+
+Underground decoration shares one full-plane brush across zone repainting;
+terrain switches finish its repair work at the native points. Coastal flags are
+sticky and mark dry non-rock neighbours of water. Obstacle scoring and expansion
+use retained candidate, affected-object and pending-position vectors, with lazy
+catalog-bound overlap caches. Canonical decoration families now come from one
+shared include. Source ASCII diagrams remain beside overlap scoring and anchors.
+Both modes preserve the native overwrite of blocked-cell marks. Obstacle inserts
+use generator registration: the native base implementation calls virtual
+addObject, so decorations also update counters and entrance distances.
+
+Two source-only reviews covered completion and decoration. Findings fixed:
+zero-total group lifetime, virtual decoration registration, foreign catalog
+admission, checked overlap coordinates, and the moved enums' include guard.
+The source canBlockFloor predicate is shared with group floor transfer.
+These additions have compile checks only; no tests or comparison captures were
+run under the implementation-first policy. Behavioral parity remains unproven.
 
 Factory and completion constraints, confirmed against native source and retail:
 

@@ -722,15 +722,6 @@ struct TRmgObjectPlacementRule {
     std::vector<s32> m_blockedScores;        // +0x3c
 };
 
-// Cell bits of scoreObjectPlacement's marks grid: ADJACENT in the 3x3 around
-// a blocked footprint cell, OVERLAP on a drawn footprint cell, BLOCKED on a
-// blocked one (overwritten there; see its retail bug).
-enum ERmgObjectPlacementMark {
-    RMG_PLACEMENT_ADJACENT = 1,
-    RMG_PLACEMENT_OVERLAP = 2,
-    RMG_PLACEMENT_BLOCKED = 4
-};
-
 // Shared, reference-counted placement data for one objects.txt prototype;
 // outline and overlap priorities are built lazily.
 struct TRmgObjectPropertiesRef {

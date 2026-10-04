@@ -19,10 +19,14 @@ mod gates;
 mod junctions;
 mod mines;
 mod treasure_assembly;
+mod treasure_commit;
+mod treasure_completion;
 mod treasure_generation;
 mod treasure_group_guards;
 mod treasure_group_sites;
+mod treasure_quest_zones;
 mod treasure_replacement;
+mod treasure_zones;
 pub use treasure_assembly::TreasurePacking;
 mod treasure_group_lifetime;
 mod treasure_groups;
@@ -66,6 +70,9 @@ mod connection_paths;
 mod movement;
 pub use connection_paths::{ConnectionPaths, PathWidth, RepairedWaterBorders};
 pub use movement::{Direction, Movement, ZoneDistance};
+mod decoration;
+mod obstacles;
+pub use obstacles::ObstacleWorkspace;
 mod density;
 mod island_noise;
 use connections::ConnectionScratch;
@@ -143,6 +150,10 @@ pub enum ObstacleEntrances {
 /// A safe placement query cannot reproduce an undefined native access.
 #[derive(Debug)]
 pub enum PlacementError {
+    /// A prototype's placement rule belongs to a different rule table.
+    RuleContext,
+    /// Native overlap scoring reads a cell with no initialized priority.
+    UnwrittenOverlap(PrototypeId),
     /// A typed payload factory received a prototype of another object kind.
     PayloadKind {
         /// Kind required by the payload factory.
@@ -194,6 +205,12 @@ pub enum PlacementError {
 impl fmt::Display for PlacementError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::RuleContext => f.write_str("prototype placement rule belongs to another table"),
+            Self::UnwrittenOverlap(id) => write!(
+                f,
+                "prototype {} has no overlap priority at the accessed cell",
+                id.index()
+            ),
             Self::PayloadKind { expected, actual } => write!(
                 f,
                 "payload kind {} cannot use object kind {}",
@@ -276,6 +293,7 @@ pub struct CellState {
     zone_distance: ZoneDistance,
     movement: Movement,
     connection_visited: bool,
+    coastal: bool,
 }
 impl Default for CellState {
     fn default() -> Self {
@@ -290,6 +308,7 @@ impl Default for CellState {
             zone_distance: ZoneDistance::default(),
             movement: Movement::default(),
             connection_visited: false,
+            coastal: false,
         }
     }
 }

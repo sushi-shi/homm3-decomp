@@ -36,6 +36,8 @@ pub enum TreasureGenerationError {
     EmptyScroll,
     /// Quest artifact art was absent after its native selection point.
     QuestArtifactPrototype,
+    /// A selected quest artifact has no loaded art.
+    MissingArtifact(crate::traits::ArtifactId),
     /// The object does not carry a Pandora spell reward.
     SpellPayload(ObjectId),
 }
@@ -53,6 +55,9 @@ impl fmt::Display for TreasureGenerationError {
                 write!(f, "replacement has no zone at {position:?}")
             }
             Self::EmptyScroll => f.write_str("scroll selection divides by zero after its draw"),
+            Self::MissingArtifact(id) => {
+                write!(f, "quest artifact {} has no prototype", id.index())
+            }
             Self::QuestArtifactPrototype => f.write_str("missing quest artifact prototype"),
             Self::SpellPayload(id) => {
                 write!(f, "object {} has no Pandora spell reward", id.index())
@@ -120,6 +125,7 @@ pub struct TreasureGeneration<'state, 'zones, 'tiles, 'defs, 'assets, 'source, '
     heroes: HeroPool,
     pub(super) arena: Option<OwnerId>,
     pub(super) offers: Vec<SelectedTreasure>,
+    pub(super) nested_groups: Vec<Box<super::TreasureGroupWorkspace>>,
 }
 impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
     TreasuresReady<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
@@ -149,6 +155,7 @@ impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
             heroes,
             arena: objects.owner(),
             offers: Vec::new(),
+            nested_groups: Vec::new(),
         })
     }
 }

@@ -74,7 +74,7 @@ impl TreasureGroupWorkspace {
         }
         let point = self.outline[rng.draw() as usize % self.outline.len()];
         let touched = self.prepare_add(guard, point, objects, catalog)?;
-        self.objects.push(GroupObject::Guard(guard));
+        self.objects.push(GroupObject::Direct(guard));
         apply_insertion(
             &mut self.cells,
             &mut self.memberships,

@@ -128,6 +128,7 @@ enum Ownership {
     Unplaced,
     Group(OwnerId),
     Published,
+    Retained,
 }
 #[derive(Clone, Copy, Debug)]
 struct ObjectRecord {
@@ -408,6 +409,49 @@ impl ObjectArena {
         self.records[id.index] = ObjectSlot::Vacant { next: self.free };
         self.free = Some(id.index);
         Ok(())
+    }
+    pub(super) fn payload_mut(
+        &mut self,
+        id: ObjectId,
+    ) -> Result<&mut ObjectPayload, PlacementError> {
+        Ok(&mut self.record_mut(id)?.payload)
+    }
+    pub(super) fn swap_prototype(
+        &mut self,
+        id: ObjectId,
+        catalog: &PrototypeCatalog<'_>,
+        prototype: PrototypeId,
+    ) -> Result<(), PlacementError> {
+        let entry = catalog
+            .get(prototype)
+            .ok_or(PlacementError::UnknownPrototype(prototype))?;
+        let record = self.record_mut(id)?;
+        record.geometry.prototype = prototype;
+        record.geometry.kind = entry.prototype().kind();
+        Ok(())
+    }
+    // Completion proved that this parent is absent from the active world list.
+    // Retail keeps the entire record: old footprint membership can still refer
+    // to it after a quest prototype swap, and its prototype ref survives output.
+    pub(super) fn retire(&mut self, id: ObjectId, retain: bool) -> Result<(), PlacementError> {
+        let record = self.record_mut(id)?;
+        if retain {
+            record.ownership = Ownership::Retained;
+        } else {
+            self.records[id.index] = ObjectSlot::Vacant { next: self.free };
+            self.free = Some(id.index);
+        }
+        Ok(())
+    }
+    /// Prototype references retained by retail's removed-but-not-deleted objects.
+    /// Output includes these alongside references from active map objects.
+    pub fn retained_prototypes(&self) -> impl Iterator<Item = PrototypeId> + '_ {
+        self.records.iter().filter_map(|slot| match slot {
+            ObjectSlot::Occupied { record, .. } if record.ownership == Ownership::Retained => {
+                Some(record.geometry.prototype)
+            }
+            _ => None,
+        })
     }
     /// Derive the current entrance from the anchor and its owning prototype.
     /// Unplaced records have no entrance.

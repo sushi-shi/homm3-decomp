@@ -23,19 +23,19 @@ const OUTLINE_STATES: usize = (SIDE + 2) * (SIDE + 2) * raw::RMG_CARDINAL_DIRECT
 #[derive(Debug)]
 pub(super) enum GroupObject {
     Treasure(PendingTreasure),
-    Guard(ObjectId),
+    Direct(ObjectId),
 }
 impl GroupObject {
     pub(super) fn object(&self) -> ObjectId {
         match self {
             Self::Treasure(pending) => pending.object(),
-            Self::Guard(id) => *id,
+            Self::Direct(id) => *id,
         }
     }
     pub(super) fn pending(&self) -> Option<&PendingTreasure> {
         match self {
             Self::Treasure(pending) => Some(pending),
-            Self::Guard(_) => None,
+            Self::Direct(_) => None,
         }
     }
 }
@@ -68,6 +68,9 @@ pub struct TreasureGroupWorkspace {
     bounds: Option<ZoneBounds>,
     pub(super) guard_entrance: Option<Point>,
     pub(super) owner: Option<OwnerId>,
+    pub(super) quest_scores: Vec<i32>,
+    pub(super) quest_pending: Vec<crate::geometry::ZoneId>,
+    pub(super) quest_candidates: Vec<crate::geometry::ZoneId>,
 }
 impl Default for TreasureGroupWorkspace {
     #[expect(
@@ -85,6 +88,9 @@ impl Default for TreasureGroupWorkspace {
             bounds: None,
             guard_entrance: None,
             owner: None,
+            quest_scores: Vec::new(),
+            quest_pending: Vec::new(),
+            quest_candidates: Vec::new(),
         }
     }
 }
@@ -158,6 +164,31 @@ impl TreasureGroupWorkspace {
             }
             Err(error) => Err((error, pending)),
         }
+    }
+    pub(super) fn add_direct(
+        &mut self,
+        object: ObjectId,
+        objects: &mut ObjectArena,
+        catalog: &PrototypeCatalog<'_>,
+    ) -> Result<(), PlacementError> {
+        let geometry = objects
+            .get(object)
+            .ok_or(PlacementError::UnknownObject(object))?;
+        let entry = catalog
+            .get(geometry.prototype())
+            .ok_or(PlacementError::UnknownPrototype(geometry.prototype()))?;
+        let anchor = Self::centered(entry)?;
+        let touched = self.prepare_add(object, anchor, objects, catalog)?;
+        self.objects.push(GroupObject::Direct(object));
+        apply_insertion(
+            &mut self.cells,
+            &mut self.memberships,
+            objects,
+            object,
+            local(anchor),
+            &touched,
+        );
+        Ok(())
     }
     pub(super) fn prepare_add(
         &mut self,

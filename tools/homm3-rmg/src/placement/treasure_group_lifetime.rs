@@ -142,6 +142,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                 objects.recycle_group(pending.object(), owner)?;
             }
         }
+        group.objects.clear();
         group.reset_after_disposal();
         Ok(())
     }
