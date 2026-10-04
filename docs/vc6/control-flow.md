@@ -123,7 +123,7 @@ Their retail callers test `al`; an `int` declaration instead makes those
 callers test `eax`. Verify callers before treating an exact retained body as
 proof of its return type.
 
-Likewise, `rmgTerrainPainter::hasSeparatedNeighbours` (`0x5b6810`, prior role
+Likewise, `TRmgTerrainPainter::hasSeparatedNeighbours` (`0x5b6810`, prior role
 `HasSeparatedNeighbours`) agreed in every line of address-masked assembly at
 99.7458% while differing in three short-branch operands. Both versions contain
 two identical false-return epilogues, but the branches at `+0x20`, `+0x52`,

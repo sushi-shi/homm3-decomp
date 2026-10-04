@@ -284,7 +284,7 @@ fillStack:
 
 static int generate(TRandomMapRequest* request, OutputFile& stream, bool candidate)
 {
-    int (TRandomMapRequest::*entry)(TAbstractFile*, TProgressSink*) =
+    ERandomMapResult (TRandomMapRequest::*entry)(TAbstractFile*, TProgressSink*) =
         &TRandomMapRequest::generateToFile;
     typedef char CheckMemberPointerSize[sizeof(entry) == sizeof(unsigned long) ? 1 : -1];
     unsigned long address = candidate ? *(unsigned long*)&entry : 0x54bf60;

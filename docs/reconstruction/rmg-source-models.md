@@ -125,7 +125,7 @@ and six negative controls. No executable source is adopted.
 The remaining insertion arms provide a distinct interface lead: retail copies
 the object address into one pointer temporary at `[ebp-4]` before both STL
 operations. The authored pointer parameter binds directly from `[ebp+8]`.
-An ordinary `type_object&` parameter with `push_back(&object)` and
+An ordinary `TRmgObject&` parameter with `push_back(&object)` and
 `insert(end(), &object)` naturally supplies those pointer prvalues. The
 calibrated `probe-rmg-map-object-reference.py` used actual headers and the
 later ordinary lookup definition: both pointer controls reproduce their full
@@ -435,7 +435,7 @@ Context `16e9d78cfec1dec42637` compiles all three RMG units: four distinct
 objects and four reproduced source/object/score vectors. Under `/Ob2`, choosing
 the scalar tail changes no score. Under `/Ob1`, the position-tail control calls
 both lookups; the scalar tail correctly leaves only the initial lookup, but
-also retains `type_object` construction and adds allocation-cleanup exception
+also retains `TRmgObject` construction and adds allocation-cleanup exception
 registration absent from retail. Both retain 31 blocks against retail's 30;
 scores are 67.6030% and 72.9447%, versus 79.9698% under `/Ob2`. A 0x2c local
 reserve under `/Ob1` is not retail frame identity: it accompanies extra EH
@@ -2829,7 +2829,7 @@ Full repository gates and the 54 related regressions plus three group-fit
 tests pass. These checks validate this reconstruction, not whole-TU closure.
 
 `generate-rmg-group-commit-family.py` explored Complete's
-`type_random_map_generator::commitTreasureGroup` at `0x5469b0`. Retail proves
+`TRmgGenerator::commitTreasureGroup` at `0x5469b0`. Retail proves
 the group's saved position at +0x54, the object-position transfer, clipped
 row-major traversal, pre-write destination flag snapshots and final mutable
 virtual queries. No Dreamcast counterpart is currently mapped. The first
@@ -2879,7 +2879,7 @@ tests pass, as do all repository gates. This completes the current population
 checkpoint, not the remaining multiply match or whole-TU coverage.
 
 `generate-rmg-group-place-family.py` covered Complete's
-`type_random_map_generator::canPlaceTreasureGroup` at `0x546c70`, whose
+`TRmgGenerator::canPlaceTreasureGroup` at `0x546c70`, whose
 1106-byte retail body has no currently mapped Dreamcast counterpart. Its
 first 60 states cross five guard-position constructions, four direction
 lifetimes and three canonical neighbor-point constructions. Four successive
