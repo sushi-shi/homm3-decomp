@@ -49,17 +49,7 @@ typedef type_point TQuestPosition;
 // Retail's factory at 0x573240 switches on exactly these nine values. The
 // class mapping is independently fixed by the slot-8 constants in the nine
 // derived vtables (see the file header).
-enum EQuestType {
-    QUEST_EXPERIENCE = 1,
-    QUEST_PRIMARY_SKILLS = 2,
-    QUEST_DEFEAT_HERO = 3,
-    QUEST_DEFEAT_MONSTER = 4,
-    QUEST_ARTIFACTS = 5,
-    QUEST_CREATURES = 6,
-    QUEST_RESOURCES = 7,
-    QUEST_BE_HERO = 8,
-    QUEST_BELONG_TO_PLAYER = 9
-};
+#include "quest_type.h"
 
 // Every derived class reads its own payload at +0x40, so the base closes at
 // 0x40; nothing between the vptr and there is attested.

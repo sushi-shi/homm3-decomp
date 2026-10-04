@@ -8,6 +8,7 @@ publish.workspace = true
 description = "Native installation loading and command-line adapters for Heroes III RMG"
 
 [dependencies]
+clap.workspace = true
 homm3-rmg.workspace = true
 homm3-lod.workspace = true
 homm3-resource.workspace = true
@@ -15,3 +16,7 @@ flate2.workspace = true
 
 [lints]
 workspace = true
+
+[[bin]]
+name = "homm3-rmg"
+path = "src/main.rs"

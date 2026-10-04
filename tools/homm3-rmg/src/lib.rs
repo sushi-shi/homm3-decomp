@@ -18,6 +18,7 @@ mod identity;
 pub mod layout;
 pub mod line;
 pub mod object;
+pub mod output;
 mod parse;
 pub mod placement;
 pub mod placement_rules;

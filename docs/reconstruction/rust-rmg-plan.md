@@ -101,38 +101,56 @@ Completion requires the full generator in both modes.
 
 ### Remaining work, in execution order
 
-Two substantial work packages remain: output/CLI implementation, then the
-consolidated verification and publication pass. All generation algorithms and
-the native orchestration entry point are implemented and compile. They have not
-yet been exercised end to end under the implementation-first policy.
+The complete implementation path is now present: parsed assets -> native
+orchestration -> all generation stages -> streamed RoE/AB/SoD serialization ->
+gzip output and generation/replay CLI. It compiles, but no full-map Rust run has
+been performed under the implementation-first policy. This is not a parity or
+playability claim.
 
-1. **Output and CLI.** Implement all three formats' H3M serialization, streamed
-   compressed output, native generation/replay commands and actionable errors.
-   Connect installation resource loading to the new native API. Normal execution
-   must not require Wine or the retail executable.
-2. **Final verification and publication.** Audit every hotfix branch and reconcile
-   boundary/water-zone replay inputs with executable evidence. Run the complete
-   100,000-case campaign; independently parse maps; verify repeated/run-order
-   behavior; profile cold loading, warm generation and output allocations; audit
-   ASCII documentation/shared definitions; finish deterministic parallelism
-   guidance; run required Rust checks and publish the new PR.
+The remaining work is **verification, debugging and publication**: audit every
+hotfix branch; reconcile boundary/water-zone replay inputs with executable
+evidence; fix the recorded treasure geometry mismatch; run the 100,000-case
+campaign; independently parse maps; verify repeated/run-order behavior; profile
+cold loading, warmed generation and output allocations; finish the ASCII/shared
+definition audit and deterministic parallelism guidance; run required Rust
+checks and publish the new PR.
 
-Current working policy (user update): finish the complete implementation before
-broad debugging. Compile checks and individual unit tests are allowed; do not run
-full suites, native comparisons or corpus campaigns until that implementation
-pass is complete. Keep pending findings here for the later debugging pass.
+Current working policy (user update): only individual unit tests and compilation
+checks are allowed. Do not start full suites, native comparisons, end-to-end
+map runs or corpus campaigns yet. Broader debugging is a later phase.
 
-Immediate next implementation: H3M output, starting with header/player/team
-serialization and prototype-slot assignment, then all object payloads, map tiles
-and the trailer. Use the generated result's retained RNG to continue team draws;
-keep stream failures and serialization-stage diagnostics explicit. Then connect
-native generation/replay CLI commands. Do not begin comparison/corpus work yet.
+The output writer borrows map storage and uses one retained prototype-slot
+vector. It includes every live object record, fixed reserved prototypes,
+decoration-first ordering, native payload narrowing, player/team quirks and
+team-assignment draws. Each write starts from the final generation RNG and
+returns its own output checkpoint; repeated writes are deterministic without
+mutating the generated result. Header descriptions use a bounded stack buffer.
+
+CLI commands and options are documented in
+[`tools/homm3-rmg-cli/README.md`](../../tools/homm3-rmg-cli/README.md). Replay
+records preserve raw requests and all modeled compatibility inputs before
+resource loading. They require the same separately supplied installation assets;
+resource fingerprints are not implemented. Map output is published via a
+temporary file only after compression completes. Replay reports are published
+through a separate fresh inode to avoid truncating an aliased existing map.
+
+Source-only behavior and design reviewers checked output and CLI integration.
+Their report-path alias and CRLF replay findings were fixed. Shared description
+names, map format values, quest/reward domains and witch-hut masks come from
+canonical C++ fragments/headers rather than second Rust definitions.
+
+Current validation: both RMG crates and the CLI binary compile. Exactly one
+isolated replay unit test passed, covering raw-input preservation, both modes,
+retail profiles, LF/CRLF reports, and rejection of unknown versions/trailing
+input. No full suite, end-to-end map run, native comparison or corpus campaign
+was run for this implementation batch. Both reviewers finished with no further
+actionable findings after the IO fixes.
 
 The catalog, lazy values and payload factories remain bound by `TreasuresReady`
 and `TreasureGeneration`; do not rebuild their catalogs or reset reservations
 while constructing or completing a group.
 
-The next treasure work has these source-backed constraints:
+Implemented treasure behavior retains these source-backed constraints:
 
 - Share an ordered recipe include between native constructor expansion and the
   data exporter. Include dynamic expansion markers in place; also share constructor
@@ -899,7 +917,7 @@ Factory and completion constraints, confirmed against native source and retail:
   then deletes. Nested completion needs reusable scratch separate from its outer
   group. Pair definition/prototype candidates in one retained vector.
 
-Full map generation and serialization remain unfinished.
+Full map generation and serialization are implemented but await end-to-end debugging.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the
@@ -907,9 +925,9 @@ pinned executable for seed 100 / 108x108 / RoE / islands and seed 17 / 144x144 /
 two levels / SoD / random water (zero stack/heap replay fills). Keep these
 disagreements visible during porting; they are not evidence of Rust parity.
 
-Top-level asset/generation orchestration, placement, serialization, CLI,
-allocation profiling and the full corpus campaign remain to be implemented and
-verified. This checkpoint cannot generate a map.
+The earlier checkpoint above predates completed orchestration, placement,
+serialization and CLI implementation. Allocation profiling, end-to-end execution
+and the full corpus campaign remain deferred; no generated-map result is claimed.
 
 The current boundary port follows the merged C++ policy of one unused retail
 town draw for the boundary probe and each added water zone. Those fields were

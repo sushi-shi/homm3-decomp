@@ -443,6 +443,14 @@ impl ObjectArena {
         }
         Ok(())
     }
+    /// One reference per live record, including pending children and retained objects.
+    /// Map memberships do not contribute additional prototype references.
+    pub fn referenced_prototypes(&self) -> impl Iterator<Item = PrototypeId> + '_ {
+        self.records.iter().filter_map(|slot| match slot {
+            ObjectSlot::Occupied { record, .. } => Some(record.geometry.prototype),
+            ObjectSlot::Vacant { .. } => None,
+        })
+    }
     /// Prototype references retained by retail's removed-but-not-deleted objects.
     /// Output includes these alongside references from active map objects.
     pub fn retained_prototypes(&self) -> impl Iterator<Item = PrototypeId> + '_ {

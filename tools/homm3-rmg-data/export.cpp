@@ -21,6 +21,25 @@
 #include "hero_traits.h"
 #include "artifact_data.h"
 
+// Shared description names keep the native DATA_COMPGEN annotations in C++.
+#define DATA_COMPGEN(address, name, text) text
+static const char* waterNames[] =
+#include "rmg_data/water_names.inc"
+;
+static const char* playerNames[] =
+#include "rmg_data/player_names.inc"
+;
+static const char* townNames[] =
+#include "rmg_data/town_names.inc"
+;
+#undef DATA_COMPGEN
+template <unsigned N>
+static void emitNames(const char* name, const char* const (&values)[N]) {
+    std::printf("pub const %s: [&[u8]; %u] = [", name, N);
+    for (auto value : values) std::printf("b\"%s\",", value);
+    std::printf("];\n");
+}
+
 // Build-host point adapter: the shared initializer exports scalar offsets only.
 struct TPoint {
     int m_x, m_y;
@@ -371,6 +390,10 @@ static void emitTreasureRecipes()
 
 int main()
 {
+    emitNames("WATER_NAMES", waterNames);
+    emitNames("PLAYER_NAMES", playerNames);
+    emitNames("TOWN_NAMES", townNames);
+
     emitArray("DECORATION_TYPES", decorationTypes);
     emitArray("RIVER_DELTA_LAND", riverDeltaLand);
     emitArray("RIVER_DELTA_SNOW", riverDeltaSnow);

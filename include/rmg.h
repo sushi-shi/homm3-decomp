@@ -11,6 +11,7 @@
 #define HOMM3_RMG_H
 
 #include "va.h"
+#include "map_format_version.h"
 #include "homm3_bool.h"
 #include "homm3_int.h"
 
@@ -1819,15 +1820,15 @@ public:
     {
         switch (m_mapVersion) {
         case RMG_MAP_RESTORATION_OF_ERATHIA:
-            return 14;
+            return MAP_FORMAT_RESTORATION_OF_ERATHIA;
         case RMG_MAP_ARMAGEDDONS_BLADE:
-            return 21;
+            return MAP_FORMAT_ARMAGEDDONS_BLADE;
         case RMG_MAP_SHADOW_OF_DEATH:
-            return 28;
+            return MAP_FORMAT_SHADOW_OF_DEATH;
         }
 #if defined(HOMM3_RMG_HOTFIX)
         // Unknown request versions are written as Shadow of Death maps.
-        return 28;
+        return MAP_FORMAT_SHADOW_OF_DEATH;
 #else
         // Retail bug: another version falls off the end of this function.
 #endif

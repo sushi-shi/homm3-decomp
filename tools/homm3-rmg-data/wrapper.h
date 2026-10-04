@@ -13,3 +13,7 @@
 #include "spellschool.h"
 #include "keycolor.h"
 #include "spell_count.h"
+#include "secondaryskill.h"
+#include "quest_type.h"
+#include "seer_reward_type.h"
+#include "map_format_version.h"

@@ -218,6 +218,11 @@ impl<'a> BoundaryMap<'a> {
     pub const fn template(&self) -> &Template<'_> {
         self.template
     }
+    /// Resolved constructor water choice used in the map description.
+    #[must_use]
+    pub const fn water(&self) -> Water {
+        self.water
+    }
     /// Original player assignment for a template seat.
     #[must_use]
     pub fn player(&self, slot: PlayerSlot) -> Option<Player> {

@@ -259,36 +259,19 @@ s32 g_rmgGuardScaleHigh[RMG_GUARD_STRENGTH_COUNT] =
 
 // Map-description names per resolved water content.
 DATA(0x00682700)
-static const char* g_rmgWaterNames[RMG_WATER_RANDOM] = {
-    DATA_COMPGEN(0x006827ec, rmgWaterNone, "None"),
-    DATA_COMPGEN(0x006827e4, rmgWaterNormal, "normal"),
-    DATA_COMPGEN(0x006827dc, rmgWaterIslands, "islands")
-};
+static const char* g_rmgWaterNames[RMG_WATER_RANDOM] =
+#include "rmg_data/water_names.inc"
+;
 
 DATA(0x0068270c)
-static const char* g_rmgPlayerNames[RMG_PLAYER_COUNT] = {
-    DATA_COMPGEN(0x006827d8, rmgPlayerRed, "red"),
-    DATA_COMPGEN(0x006827d0, rmgPlayerBlue, "blue"),
-    DATA_COMPGEN(0x006827cc, rmgPlayerTan, "tan"),
-    DATA_COMPGEN(0x006827c4, rmgPlayerGreen, "green"),
-    DATA_COMPGEN(0x006827bc, rmgPlayerOrange, "orange"),
-    DATA_COMPGEN(0x006827b4, rmgPlayerPurple, "purple"),
-    DATA_COMPGEN(0x006827ac, rmgPlayerTeal, "teal"),
-    DATA_COMPGEN(0x006827a4, rmgPlayerPink, "pink")
-};
+static const char* g_rmgPlayerNames[RMG_PLAYER_COUNT] =
+#include "rmg_data/player_names.inc"
+;
 
 DATA(0x0068272c)
-static const char* g_rmgTownNames[TOWN_TYPE_COUNT] = {
-    DATA_COMPGEN(0x0068279c, rmgTownCastle, "castle"),
-    DATA_COMPGEN(0x00682794, rmgTownRampart, "rampart"),
-    DATA_COMPGEN(0x0068278c, rmgTownTower, "tower"),
-    DATA_COMPGEN(0x00682784, rmgTownInferno, "inferno"),
-    DATA_COMPGEN(0x00682778, rmgTownNecropolis, "necropolis"),
-    DATA_COMPGEN(0x00682770, rmgTownDungeon, "dungeon"),
-    DATA_COMPGEN(0x00682764, rmgTownStronghold, "stronghold"),
-    DATA_COMPGEN(0x00682758, rmgTownFortress, "fortress"),
-    DATA_COMPGEN(0x00682750, rmgTownConflux, "conflux")
-};
+static const char* g_rmgTownNames[TOWN_TYPE_COUNT] =
+#include "rmg_data/town_names.inc"
+;
 
 static bool isRmgTemplateFieldSet(const char* value)
 {
@@ -1695,10 +1678,7 @@ void TRmgSpellScrollObject::write(TAbstractFile* outputFile, ERmgMapVersion vers
 
 // Witch hut skill mask: the first 16 secondary skills except Navigation and
 // Necromancy.
-enum ERmgWitchHutSkills {
-    RMG_WITCH_HUT_ALLOWED_SKILLS = 0xffff
-        & ~((1 << eSecSkillNavigation) | (1 << eSecSkillNecromancy))
-};
+
 
 VA(0x005340c0, 0x93)
 MAC_ADDRESS(0x231c84, 0x68)
@@ -8147,7 +8127,6 @@ enum ERmgArtifactCount {
 };
 
 // The shared artifact enum has no enumerator for the Vial of Dragon Blood.
-static const s32 g_rmgArtifactVialOfDragonBlood = 127;
 
 // Each player clause in the map description appends a separator, the player
 // colour and the clause text, using unchecked strcat.
@@ -8422,7 +8401,7 @@ void TRmgGenerator::writeMapHeader(TAbstractFile* outputFile)
             g_artifactTraits[artifactIndex].m_comboType != -1;
     }
     disabledArtifacts.set(ARTIFACT_ARMAGEDDONS_BLADE);
-    disabledArtifacts.set(g_rmgArtifactVialOfDragonBlood);
+    disabledArtifacts.set(RMG_ARTIFACT_VIAL_OF_DRAGON_BLOOD);
 
     if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
         writePackedBits(outputFile, disabledArtifacts);

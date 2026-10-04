@@ -67,19 +67,7 @@ SIZE(TQuestGuard, 0x5);
 // Dreamcast names this reward domain on TSeerData. Retail's ten-way helper
 // dispatch and the three adjacent users preserve the same 0..10 values even
 // though the x86 build split the reward into its own 12-byte record.
-enum TSeerRewardType {
-    eRewardNone = 0,
-    eRewardExperience = 1,
-    eRewardMana = 2,
-    eRewardMorale = 3,
-    eRewardLuck = 4,
-    eRewardResource = 5,
-    eRewardPrimarySkill = 6,
-    eRewardSecondarySkill = 7,
-    eRewardArtifact = 8,
-    eRewardSpell = 9,
-    eRewardCreature = 10
-};
+#include "seer_reward_type.h"
 
 // Bytes +5..+0x10 of TSeerHut. The constructor initializes the common type
 // word; the remaining eight bytes are the selected reward's payload.

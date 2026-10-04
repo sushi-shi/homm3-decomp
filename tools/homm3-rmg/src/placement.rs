@@ -410,6 +410,12 @@ impl PlacementMap<'_, '_, '_> {
         Ok(())
     }
 
+    /// Flat cell state in the same plane/row/column order as terrain tiles.
+    #[must_use]
+    pub fn cells(&self) -> &[CellState] {
+        self.cells
+    }
+
     /// Existing painted tiles and zone coverage, without copying either buffer.
     #[must_use]
     pub const fn terrain(&self) -> &PaintedTerrain<'_, '_> {

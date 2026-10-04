@@ -3,6 +3,7 @@
 #define HOMM3_RMG_SETTINGS_H
 
 #include "terrain_type.h"
+#include "secondaryskill.h"
 
 // The eight neighbour directions, clockwise.
 enum ERmgDirectionLimits {
@@ -347,6 +348,15 @@ enum ERmgRiverStepCost {
     RMG_RIVER_STEP_MASK = 31,
     RMG_RIVER_MINIMUM_STEP_COST = 1,
     RMG_RIVER_ROAD_PENALTY = 30
+};
+
+// Header availability exclusions without a named artifact-domain enumerator.
+enum ERmgOutputArtifact { RMG_ARTIFACT_VIAL_OF_DRAGON_BLOOD = 127 };
+
+// First sixteen skills except Navigation and Necromancy.
+enum ERmgWitchHutSkills {
+    RMG_WITCH_HUT_ALLOWED_SKILLS = 0xffff
+        & ~((1 << eSecSkillNavigation) | (1 << eSecSkillNecromancy))
 };
 
 #endif
