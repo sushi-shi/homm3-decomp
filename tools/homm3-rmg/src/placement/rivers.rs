@@ -18,6 +18,11 @@ enum RiverGoal {
     Outlet,
 }
 
+// Bit k bars river entry through side k. North is up:
+//     3
+//   2 . 0
+//     1
+// Moving toward a cell enters through the opposite side.
 fn opposite_bit(direction: Direction) -> u8 {
     1 << (direction.opposite().index() / raw::RMG_CARDINAL_DIRECTION_STEP as usize)
 }

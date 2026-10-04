@@ -224,6 +224,11 @@ impl OrderedCells {
     }
 }
 
+// A gap cell C has other terrain x on both sides along one axis. North is up:
+//   horizontal  vertical
+//                   x
+//     x C x         C
+//                   x
 #[derive(Clone, Copy)]
 enum Axis {
     Horizontal,
@@ -562,17 +567,13 @@ impl Brush<'_> {
 }
 
 fn direction_offset(direction: usize) -> (isize, isize) {
-    match u32::try_from(direction).expect("eight directions") {
-        raw::TILE_DIR_NORTH => (0, -1),
-        raw::TILE_DIR_NORTHEAST => (1, -1),
-        raw::TILE_DIR_EAST => (1, 0),
-        raw::TILE_DIR_SOUTHEAST => (1, 1),
-        raw::TILE_DIR_SOUTH => (0, 1),
-        raw::TILE_DIR_SOUTHWEST => (-1, 1),
-        raw::TILE_DIR_WEST => (-1, 0),
-        raw::TILE_DIR_NORTHWEST => (-1, -1),
-        _ => unreachable!("eight directions"),
-    }
+    // Tile classifiers start at N; the canonical movement table starts at E.
+    let movement = (direction + raw::RMG_DIRECTION_NORTH as usize) % raw::DIRECTIONS.len();
+    let (x, y) = raw::DIRECTIONS[movement];
+    (
+        isize::try_from(x).expect("unit direction offset"),
+        isize::try_from(y).expect("unit direction offset"),
+    )
 }
 
 #[cfg(test)]

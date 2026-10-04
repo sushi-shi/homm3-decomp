@@ -7,8 +7,11 @@ not establish retail parity or playable output yet.
 Build from the repository's Rust/Nix development environment:
 
 ```sh
-cargo build --manifest-path tools/Cargo.toml -p homm3-rmg-cli
+cargo build --manifest-path tools/Cargo.toml -p homm3-rmg-cli --locked
 ```
+
+The committed dependency lockfile supports Rust 1.82. Recheck that compiler
+when updating dependencies: newer Clap and lexer releases require Rust 1.85.
 
 Generate a compressed map using a Complete installation's **Data directory**:
 

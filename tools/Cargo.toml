@@ -29,7 +29,8 @@ homm3-save = { path = "homm3-save" }
 homm3-resource = { path = "homm3-resource" }
 homm3-rmg-data = { path = "homm3-rmg-data" }
 homm3-rmg = { path = "homm3-rmg" }
-clap = { version = "4.6.4", features = ["derive"] }
+# Clap 4.6 requires Rust 1.85; keep the workspace's declared 1.82 MSRV.
+clap = { version = "~4.5.58", features = ["derive"] }
 flate2 = { version = "1.1.9", default-features = false, features = ["rust_backend"] }
 png = "0.17.16"
 

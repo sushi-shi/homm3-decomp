@@ -84,20 +84,23 @@ leaking allocations. Keep disagreements between current C++ and retail visible.
 
 ## Implementation milestones
 
-- [ ] Foundation: crates, source-derived definitions/data, typed requests,
-  owned RNG, numeric checks, and comparison support for retail and C++ hotfix.
-  Establish fresh successful hotfix baselines.
-- [ ] Assets: native resource loading, trait initialization, templates,
+- [x] Foundation implementation: crates, source-derived definitions/data, typed
+  requests, owned RNG, numeric helpers, and retail/C++ comparison support.
+- [x] Assets implementation: native resource loading, trait initialization, templates,
   prototypes and placement rules. Preserve resource precedence, original row
   indices and mode-specific filtering.
-- [ ] Generation: geometry/terrain, towns/connections/mines,
+- [x] Generation implementation: geometry/terrain, towns/connections/mines,
   treasures/decorations, and roads/rivers. Diagnose with stage and RNG
   checkpoints rather than only final output differences.
-- [ ] Delivery: all version-specific serialization, CLI generation/replay,
-  corpus comparisons, allocation measurements and documentation review.
+- [x] Output implementation: all version-specific serialization and CLI
+  generation/replay.
+- [ ] Verification and delivery: establish successful hotfix baselines, debug
+  end-to-end behavior, complete corpus comparisons and allocation measurements,
+  finish documentation review, and publish the new PR.
 
-These are intermediate review points, not alternative definitions of done.
-Completion requires the full generator in both modes.
+Implementation checkmarks record authored code, not runtime parity. These are
+intermediate review points, not alternative definitions of done. Completion
+requires the full generator in both modes and the verification below.
 
 ### Remaining work, in execution order
 
@@ -111,8 +114,7 @@ The remaining work is **verification, debugging and publication**: verify the
 source-audited hotfix behavior at runtime; reconcile boundary/water-zone replay
 inputs with executable evidence; rerun the corrected treasure geometry comparison; run the 100,000-case
 campaign; independently parse maps; verify repeated/run-order behavior; profile
-cold loading, warmed generation and output allocations; finish the ASCII/shared
-definition audit and deterministic parallelism guidance; run required Rust
+cold loading, warmed generation and output allocations; run required Rust
 checks and publish the new PR.
 
 Current working policy (user update): only individual unit tests and compilation
@@ -155,6 +157,16 @@ allocation measurements. The lint cleanup removes an infallible helper’s
 intentional narrowing and native traversal order. RMG library and CLI Clippy
 compilation passes with warnings denied (`--lib --bins`); no tests or map runs
 were executed during this audit/cleanup pass.
+
+A final source review restored the river-side bit, noise-corner and terrain-gap
+ASCII diagrams and replaced a duplicated terrain direction mapping with the
+canonical generated table. Its follow-up found no further documentation/data
+issues. Allocation review found no unnecessary heap allocation in successful
+warmed generation/output when retained capacities suffice; profiling remains
+deferred. The declared Rust 1.82 compiler successfully checked the RMG library,
+data crate and CLI, plus the existing oracle affected by the shared Clap
+dependency. Clap is constrained to 4.5 and the committed lockfile retains
+`clap_lex` 1.0.0; dependency updates must repeat that compiler check.
 
 The catalog, lazy values and payload factories remain bound by `TreasuresReady`
 and `TreasureGeneration`; do not rebuild their catalogs or reset reservations
