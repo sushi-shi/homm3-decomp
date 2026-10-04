@@ -4107,7 +4107,7 @@ static inline bool splitRmgBoundarySegment(std::vector<TPoint>& pending,
     s32 length = perpendicular.length();
     if (length > 1) {
         // Roughness must be positive; zero reaches rand() % 0.
-        s32 limit = cppMin<long>(length / lengthDivisor, roughness);
+        s32 limit = min(length / lengthDivisor, roughness);
 #if defined(HOMM3_RMG_HOTFIX)
         // A zone scaled below one cell (two on island coasts) still draws,
         // but leaves the midpoint in place.

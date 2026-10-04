@@ -500,7 +500,7 @@ struct TRmgTemplateZone {
     b8 m_guardsMatchZone;                                     // +0x94
     // Indexed by town type + 1; slot 0 is neutral.
     b8 m_allowedMonsters[TOWN_TYPE_COUNT + 1];                // +0x95
-    TRmgTreasureRange m_treasure[RMG_TREASURE_BAND_COUNT];                          // +0xa0
+    TRmgTreasureRange m_treasure[RMG_TREASURE_BAND_COUNT];    // +0xa0
     std::vector<TRmgZoneConnection> m_connections;            // +0xc4
 
     TTownType selectAllowedTown();
