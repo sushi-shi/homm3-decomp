@@ -1,8 +1,9 @@
 //! Shipyard placement and ordered water reachability for zone connections.
 use super::connections::draw_connection_prototype;
 use super::{
-    registration::entrance_position, BorderGuardCount, CellState, ConnectingZones, ConnectionError,
-    ConnectionId, Direction, ObjectArena, PathReservation, PlacementError, PlacementMap,
+    offset_position, registration::entrance_position, BorderGuardCount, CellState, ConnectingZones,
+    ConnectionError, ConnectionId, Direction, ObjectArena, PathReservation, PlacementError,
+    PlacementMap,
 };
 use crate::{
     boundaries::ZoneConnection,
@@ -80,7 +81,7 @@ impl PlacementMap<'_, '_, '_> {
                 .into_iter()
                 .step_by(raw::RMG_CARDINAL_DIRECTION_STEP as usize)
             {
-                let nearby = offset(position, direction.offset())?;
+                let nearby = offset_position(position, direction.offset())?;
                 if !self.view().contains(nearby.point) {
                     continue;
                 }
@@ -106,7 +107,7 @@ impl PlacementMap<'_, '_, '_> {
     /// # Errors
     /// Reports coordinate overflow or an accessed cell outside the allocation.
     pub fn can_place_shipyard(&self, position: WorldPosition) -> Result<bool, PlacementError> {
-        let below = offset(position, Point::new(0, 1))?;
+        let below = offset_position(position, Point::new(0, 1))?;
         let side = i32::try_from(self.view().side).map_err(|_| PlacementError::Arithmetic)?;
         if below.point.y >= side {
             return Ok(false);
@@ -131,7 +132,7 @@ impl PlacementMap<'_, '_, '_> {
             }
         }
         for (x, y) in raw::SHIPYARD_WATER_OFFSETS {
-            let water = offset(position, Point::new(x, y))?;
+            let water = offset_position(position, Point::new(x, y))?;
             if !(0..side).contains(&water.point.x) {
                 continue;
             }
@@ -139,7 +140,7 @@ impl PlacementMap<'_, '_, '_> {
             if self.terrain.tiles()[index].terrain() == Terrain::Water
                 && self.cells[index].reservation == PathReservation::Open
             {
-                let far = offset(position, Point::new(if x < 0 { 1 } else { -3 }, 0))?;
+                let far = offset_position(position, Point::new(if x < 0 { 1 } else { -3 }, 0))?;
                 if !(0..side).contains(&far.point.x) {
                     return Ok(false);
                 }
@@ -161,7 +162,7 @@ impl PlacementMap<'_, '_, '_> {
     ) -> Result<(), PlacementError> {
         let side = i32::try_from(self.view().side).map_err(|_| PlacementError::Arithmetic)?;
         for (x, y) in raw::SHIPYARD_WATER_OFFSETS {
-            let water = offset(position, Point::new(x, y))?;
+            let water = offset_position(position, Point::new(x, y))?;
             if (0..side).contains(&water.point.x)
                 && self.terrain.tiles()[self.view().native_index(water)?].terrain()
                     == Terrain::Water
@@ -179,7 +180,7 @@ impl PlacementMap<'_, '_, '_> {
         zone: ZoneId,
     ) -> Result<WorldPosition, PlacementError> {
         let size = entry.image_mask().size().map_err(PlacementError::from)?;
-        let mut approach = offset(position, Point::new(0, 1))?;
+        let mut approach = offset_position(position, Point::new(0, 1))?;
         let left = position
             .point
             .x
@@ -293,13 +294,4 @@ impl PlacementMap<'_, '_, '_> {
         }
         Ok(true)
     }
-}
-fn offset(position: WorldPosition, delta: Point) -> Result<WorldPosition, PlacementError> {
-    Ok(WorldPosition {
-        point: position
-            .point
-            .checked_add(delta)
-            .ok_or(PlacementError::CoordinateOverflow)?,
-        level: position.level,
-    })
 }

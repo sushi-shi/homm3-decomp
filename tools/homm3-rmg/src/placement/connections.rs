@@ -37,6 +37,13 @@ pub enum ConnectionError {
     UnknownConnection(super::ConnectionId),
     /// A whole-family draw attempted the native remainder with no prototypes.
     EmptyFamily(crate::object::ObjectKind),
+    /// Native portal indexing reached an absent entry before any placement.
+    MissingPortalPrototype {
+        /// Indexed two-way, one-way entrance or one-way exit family.
+        family: ObjectKind,
+        /// Family-relative native index.
+        index: usize,
+    },
     /// Native completion marks this edge before dereferencing a missing reverse.
     MissingReverse {
         /// Already-completed edge's starting zone.
@@ -60,6 +67,9 @@ impl fmt::Display for ConnectionError {
             Self::Guard(error) => error.fmt(f),
             Self::EmptyFamily(kind) => {
                 write!(f, "connection prototype family {} is empty", kind.index())
+            }
+            Self::MissingPortalPrototype { family, index } => {
+                write!(f, "portal family {} has no entry {index}", family.index())
             }
             Self::UnknownConnection(id) => {
                 write!(f, "connection {} belongs to another stage", id.index())
@@ -129,6 +139,7 @@ pub(super) struct ConnectionScratch {
     pub(super) candidates: Vec<WorldPosition>,
     pub(super) outline: crate::prototype::OutlineWorkspace,
     pub(super) water_stack: Vec<WorldPosition>,
+    pub(super) portals: super::portals::PortalState,
     pub(super) crossing: super::zone_connections::CrossingState,
     pub(super) flood: Worklist<WorldPosition>,
     pub(super) noise: super::island_noise::NoiseWorkspace,
@@ -140,6 +151,7 @@ impl ConnectionScratch {
         self.branches.clear();
         self.candidates.clear();
         self.water_stack.clear();
+        self.portals.reset();
         self.crossing.reset();
         self.flood.clear();
         self.noise.clear();

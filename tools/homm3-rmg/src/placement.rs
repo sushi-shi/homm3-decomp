@@ -16,6 +16,8 @@ mod guard_value;
 mod guards;
 pub use guard_value::GuardStrength;
 mod gates;
+mod portals;
+pub use portals::{ConnectionsPlaced, PortalDirection};
 mod ground_connections;
 mod shipyards;
 pub use border_guards::{BorderGuardCount, BorderGuardPlacement};
@@ -616,6 +618,17 @@ impl PlacementView<'_> {
             && (self.terrain[index].terrain() == Terrain::Water)
                 == (zone_terrain == Terrain::Water))
     }
+}
+
+// Native world offsets retain the current plane; callers choose flat access or clipping.
+fn offset_position(position: WorldPosition, delta: Point) -> Result<WorldPosition, PlacementError> {
+    Ok(WorldPosition {
+        point: position
+            .point
+            .checked_add(delta)
+            .ok_or(PlacementError::CoordinateOverflow)?,
+        level: position.level,
+    })
 }
 
 #[cfg(test)]

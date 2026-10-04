@@ -28,6 +28,7 @@ pub enum Attempts {
     Ground,
     GroundAndShipyard,
     Direct,
+    BothPasses,
 }
 impl Attempts {
     fn filename(self) -> &'static str {
@@ -35,6 +36,7 @@ impl Attempts {
             Self::Ground => "ground-connections.txt",
             Self::GroundAndShipyard => "shipyard-connections.txt",
             Self::Direct => "direct-connections.txt",
+            Self::BothPasses => "zone-connections.txt",
         }
     }
 }
@@ -42,8 +44,7 @@ pub fn compare_native(attempts: Attempts) {
     let directory = PathBuf::from(std::env::var_os("HOMM3_RMG_DATA").unwrap());
     let oracle = PathBuf::from(std::env::var_os("HOMM3_RMG_ORACLE").unwrap());
     let mut installation = Installation::open(&directory).unwrap();
-    let mut objects = Vec::new();
-    installation.text("objects.txt", &mut objects).unwrap();
+    let objects = read_prototypes(&mut installation);
     let source = PrototypeSource::parse(&objects, |name| installation.mask(name)).unwrap();
     let mut bytes = Vec::new();
     installation.text("rand_trn.txt", &mut bytes).unwrap();
@@ -140,6 +141,36 @@ pub fn compare_native(attempts: Attempts) {
     eprintln!("checked {checked} native connection checkpoint lines");
 }
 
+// Retype two-way rows as unused boat art in both implementations. Keep source
+// row indices and every other field, so routing must select one-way pairs.
+fn read_prototypes(installation: &mut Installation) -> Vec<u8> {
+    let mut bytes = Vec::new();
+    installation.text("objects.txt", &mut bytes).unwrap();
+    if std::env::var_os("HOMM3_RMG_FORCE_ONE_WAY").is_none() {
+        return bytes;
+    }
+    let mut result = Vec::new();
+    let two_way = homm3_rmg::raw::LITH_TWOWAY.to_string();
+    let boat = homm3_rmg::raw::BOAT.to_string();
+    for (row, line) in bytes.split(|&b| b == b'\n').enumerate() {
+        for (column, field) in line
+            .split(u8::is_ascii_whitespace)
+            .filter(|field| !field.is_empty())
+            .enumerate()
+        {
+            if column != 0 {
+                result.push(b' ');
+            }
+            if row != 0 && column == 5 && field == two_way.as_bytes() {
+                result.extend_from_slice(boat.as_bytes());
+            } else {
+                result.extend_from_slice(field);
+            }
+        }
+        result.extend_from_slice(b"\r\n");
+    }
+    result
+}
 fn read_templates(installation: &mut Installation) -> Vec<u8> {
     let mut templates = Vec::new();
     installation.text("rmg.txt", &mut templates).unwrap();
@@ -236,6 +267,12 @@ fn snapshot(
     attempts: Attempts,
 ) -> String {
     let mut actual = String::new();
+    for direction in [
+        homm3_rmg::placement::PortalDirection::OneWay,
+        homm3_rmg::placement::PortalDirection::TwoWay,
+    ] {
+        assert!(connecting.map().portals(direction).is_empty());
+    }
     for zone in connecting.map().coverage().map().zones() {
         assert!(connecting
             .map()
@@ -243,22 +280,19 @@ fn snapshot(
             .unwrap()
             .is_empty());
     }
-    if attempts == Attempts::Direct {
+    if matches!(attempts, Attempts::Direct | Attempts::BothPasses) {
         let direct = connecting
             .connect_direct_zones(objects, catalog, creatures, rng)
             .unwrap();
         assert_eq!(direct.rng(), rng.checkpoint());
-        writeln!(
-            actual,
-            "rng {} {} {}",
-            rng.state(),
-            direct.map().next_object_id(),
-            direct.map().active_objects().len()
-        )
-        .unwrap();
-        write_water_state(&mut actual, direct.map());
-        write_snapshot(&mut actual, direct.map(), objects, catalog, colors);
-        return actual;
+        if attempts == Attempts::BothPasses {
+            let placed = direct
+                .connect_remaining_zones(objects, catalog, creatures, rng)
+                .unwrap();
+            assert_eq!(placed.rng(), rng.checkpoint());
+            return completed_snapshot(placed.map(), objects, catalog, rng, colors, attempts);
+        }
+        return completed_snapshot(direct.map(), objects, catalog, rng, colors, attempts);
     }
     run_attempts(
         &mut actual,
@@ -272,7 +306,60 @@ fn snapshot(
     if attempts == Attempts::GroundAndShipyard {
         write_water_state(&mut actual, connecting.map());
     }
-    write_snapshot(&mut actual, connecting.map(), objects, catalog, colors);
+    write_snapshot(
+        &mut actual,
+        connecting.map(),
+        objects,
+        catalog,
+        colors,
+        false,
+    );
+    actual
+}
+fn completed_snapshot(
+    map: &homm3_rmg::placement::PlacementMap<'_, '_, '_>,
+    objects: &ObjectArena,
+    catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
+    rng: &RetailRng,
+    colors: &[homm3_rmg::placement::KeyTentColor],
+    attempts: Attempts,
+) -> String {
+    let mut actual = format!(
+        "rng {} {} {}\n",
+        rng.state(),
+        map.next_object_id(),
+        map.active_objects().len()
+    );
+    write_water_state(&mut actual, map);
+    if attempts == Attempts::BothPasses {
+        use homm3_rmg::placement::PortalDirection;
+        for (index, direction) in [PortalDirection::OneWay, PortalDirection::TwoWay]
+            .into_iter()
+            .enumerate()
+        {
+            write!(actual, "portals {index}").unwrap();
+            for &portal in map.portals(direction) {
+                write!(
+                    actual,
+                    " {}",
+                    map.active_objects()
+                        .iter()
+                        .position(|&id| id == portal)
+                        .unwrap()
+                )
+                .unwrap();
+            }
+            actual.push('\n');
+        }
+    }
+    write_snapshot(
+        &mut actual,
+        map,
+        objects,
+        catalog,
+        colors,
+        attempts == Attempts::BothPasses,
+    );
     actual
 }
 fn write_snapshot(
@@ -281,6 +368,7 @@ fn write_snapshot(
     objects: &ObjectArena,
     catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
     colors: &[homm3_rmg::placement::KeyTentColor],
+    include_zone_distance: bool,
 ) {
     write_tents(actual, map, colors);
     write_objects(actual, map, objects, catalog);
@@ -327,7 +415,7 @@ fn write_snapshot(
                 i32::try_from(p.level.index()).unwrap(),
             ]
         });
-        writeln!(
+        write!(
             actual,
             "{} {} {} {} {}",
             cell.movement().cost(),
@@ -337,6 +425,20 @@ fn write_snapshot(
             cell.border().map_or(-1, |c| i32::from(c.value()))
         )
         .unwrap();
+        if include_zone_distance {
+            let distance = cell.zone_distance();
+            write!(
+                actual,
+                " {} {} {}",
+                distance.cost(),
+                distance
+                    .connection()
+                    .map_or(-1, |(zone, _)| i32::try_from(zone.index()).unwrap()),
+                distance.direction().index()
+            )
+            .unwrap();
+        }
+        actual.push('\n');
     }
 }
 

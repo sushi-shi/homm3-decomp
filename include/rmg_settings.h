@@ -198,6 +198,10 @@ enum ERmgBorderGuardCount {
     RMG_SHIPYARD_BORDER_GUARDS = 3
 };
 
+enum ERmgPortalConstants {
+    RMG_PORTAL_BORDER_OFFSET_COUNT = 5
+};
+
 enum ERmgShipyardConstants {
     RMG_SHIPYARD_WATER_OFFSET_COUNT = 4
 };

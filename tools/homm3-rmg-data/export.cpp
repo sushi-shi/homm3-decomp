@@ -26,6 +26,9 @@ static const TPoint directions[] =
 #include "rmg_data/directions.inc"
 ;
 
+static const TPoint portalBorderOffsets[RMG_PORTAL_BORDER_OFFSET_COUNT] =
+#include "rmg_data/portal_border_offsets.inc"
+;
 static const TPoint shipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] =
 #include "rmg_data/shipyard_water_offsets.inc"
 ;
@@ -293,6 +296,9 @@ int main()
     std::printf("];\n");
     std::printf("pub const SHIPYARD_WATER_OFFSETS: [(i32, i32); %u] = [", RMG_SHIPYARD_WATER_OFFSET_COUNT);
     for (const auto& point : shipyardWaterOffsets) std::printf("(%d,%d),", point.m_x, point.m_y);
+    std::printf("];\n");
+    std::printf("pub const PORTAL_BORDER_OFFSETS: [(i32, i32); %u] = [", RMG_PORTAL_BORDER_OFFSET_COUNT);
+    for (const auto& point : portalBorderOffsets) std::printf("(%d,%d),", point.m_x, point.m_y);
     std::printf("];\n");
     emitTerrainRules();
     emitSignedArray("GUARD_THRESHOLD_LOW", guardThresholdLow);

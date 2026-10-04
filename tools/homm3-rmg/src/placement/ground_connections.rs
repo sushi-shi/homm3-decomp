@@ -1,6 +1,7 @@
 //! Frozen border scans and per-record land crossing attempts.
 use super::{
-    BorderGuardCount, ConnectionError, ObjectArena, PathWidth, PlacementError, PlacementMap,
+    offset_position, BorderGuardCount, ConnectionError, ObjectArena, PathWidth, PlacementError,
+    PlacementMap,
 };
 use crate::{
     boundaries::ZoneConnection,
@@ -39,13 +40,7 @@ impl PlacementMap<'_, '_, '_> {
     ) -> Result<WorldPosition, PlacementError> {
         let index = self.view().native_index(position)?;
         let offset = self.cells[index].zone_distance.direction().offset();
-        Ok(WorldPosition {
-            point: position
-                .point
-                .checked_add(offset)
-                .ok_or(PlacementError::CoordinateOverflow)?,
-            level: position.level,
-        })
+        offset_position(position, offset)
     }
     pub(super) fn create_ground_connection(
         &mut self,

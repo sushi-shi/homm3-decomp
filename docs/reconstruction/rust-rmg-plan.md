@@ -113,9 +113,8 @@ The library cannot yet generate a complete map.
    and individual path/obstacle/border transitions now use reusable storage.
    Tent availability follows the loaded prototype count. Retail's initial cursor
    uses named replay input or a typed fault until a native rescan initializes it.
-2. **Zone connections.** Finish portals, the second dispatcher pass
-   and dry-zone junctions. Preparation, pathfinding, water-border repair, ground
-   crossings, shipyards, gates, the first dispatcher pass, border guards and
+2. **Zone connections.** Finish dry-zone junction preparation. Preparation, pathfinding, water-border repair, ground
+   crossings, shipyards, gates, portals, both dispatcher passes, border guards and
    key-tent reservations are implemented and have
    native checkpoint comparisons.
 3. **Mines.** Port fixed and density-driven mine placement and guards. Connect
@@ -563,14 +562,39 @@ also preserves all sixteen complete C++ map outputs byte-for-byte. All 71 core
 tests and strict Clippy pass; both reviewers are clean after keeping the shared
 entrance vector private behind its owning module.
 
-Next implement portals, the second dispatcher pass and dry-zone junctions.
-Pass two must reflood existing shipyards in active-object order for each source
-zone. Portal indices cycle without RNG, advancing only after both completion
-writes. Failed endpoint placements discard only that object and continue; even
-all failures still complete the edge pair. Portal protection rebuilds all paths
-in place without refreezing the initial border scan. Retain separate ordered
-one-way/two-way ObjectId lists (one-way includes both entrances and exits), and
-preserve the five-neighbor ASCII diagram and occupied-cell border marking.
+Portals and the complete second dispatcher pass are implemented. A private
+prototype ADT admits either a two-way prototype or both one-way entrance/exit
+prototypes before placement. `PortalProtection` keeps shared guard suppression
+across endpoints with borrowed catalogs. Failed unplaced endpoints release their
+arena slots; successful endpoints append ordered portal IDs before the zone's
+anchor entrance. One-way exits follow both protected entrances. No serialized
+IDs or road targets are claimed for portals.
+
+Pass two skips zones without incomplete edges, then clears visits and refloods
+existing shipyards in active-object order. Shipyards precede portal fallback.
+Both directed records complete even when no portal fits; the shared prototype
+cursor advances afterward without RNG. `DirectConnections` is consumed into
+`ConnectionsPlaced`, preserving the two passes' ownership and checkpoint order.
+Portal protection rebuilds all paths in place, without refreezing border sites,
+and marks all five source offsets including occupied cells. Shared source data
+retains the ASCII diagram. A canonical checked position-offset helper replaces
+three copies across ground, shipyard and portal code.
+
+Thirty-two native full-connection captures cover retail/hotfix, ordinary/forced
+border guards, and two-way/one-way resources (1,040,600 checkpoint lines). They
+agree on RNG, portal-list order, objects, road targets, visits, entrances, graph
+state, counts, cell membership, movement/predecessors, borders, tent reservations
+and rebuilt zone-path costs, destinations and directions. Two-way cases place
+32 endpoints; one-way cases place 64 entrances/exits. The one-way fixture retypes
+only two-way art to unused boat art in both implementations before filtering,
+preserving source row IDs and avoiding production test hooks. The 16 unchanged
+resource cases leave whole native map output byte-identical after isolated
+probes. A missing-exit regression checks deferred pair admission. All 72 core
+tests and strict Clippy pass; both reviewers are clean after adding final flood
+metadata to snapshots and sharing checked coordinate offsets.
+
+Next implement dry-zone junction preparation, then mines and the remaining
+payloads/reservations. Full map generation and serialization remain unfinished.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

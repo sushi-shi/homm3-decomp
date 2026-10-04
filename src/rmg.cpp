@@ -6019,9 +6019,9 @@ b8 TRmgGenerator::placeMonolithBorderGuard(
     // portal position P.
     //   2 P 1
     //   4 0 3
-    TPoint offsets[5] = {
-        TPoint(0, 1), TPoint(1, 0), TPoint(-1, 0), TPoint(1, 1), TPoint(-1, 1)
-    };
+    TPoint offsets[RMG_PORTAL_BORDER_OFFSET_COUNT] =
+#include "rmg_data/portal_border_offsets.inc"
+    ;
     TRmgMapPosition guardPosition;
     const s32 probeCount = sizeof(offsets) / sizeof(offsets[0]);
     buildZoneConnectionPaths();
