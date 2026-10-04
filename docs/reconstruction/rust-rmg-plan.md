@@ -99,6 +99,57 @@ leaking allocations. Keep disagreements between current C++ and retail visible.
 These are intermediate review points, not alternative definitions of done.
 Completion requires the full generator in both modes.
 
+### Remaining work, in execution order
+
+Ten substantial work packages remain as of commit `d5707def6`. They describe
+implementation order, not equal amounts of work or a percentage estimate.
+The library cannot yet generate a complete map.
+
+1. **Object storage and map mutation.** Add stable object identities, typed
+   instance state, ordered cell membership in shared reusable storage, insertion
+   and removal, path/obstacle/border mutations, type counts and entrance-distance
+   propagation. Preserve native overlap behavior and removal faults. Continue
+   borrowing terrain/coverage and retain workspace capacity.
+2. **Towns.** Implement primary and additional town placement, category/density
+   scheduling, candidate order, singleton RNG draws, owner/fort payloads, road
+   targets and the hotfix player-town requirement.
+3. **Zone connections.** Port connection preparation and pathfinding, junctions,
+   gates/portals, border guards and key-tent reservations, including water-zone
+   border repair and mode-specific failures.
+4. **Mines.** Port fixed and density-driven mine placement and guards. Connect
+   the existing guard selector to object creation, ownership and spatial state.
+5. **Treasures.** Port treasure definitions/values, object payload ADTs, group
+   assembly/scoring/placement, reservations and completion/replacement callbacks.
+   Integrate the existing hero, artifact, spell and creature catalogs.
+6. **Decoration.** Port underground decoration, coastal marking and general
+   obstacle placement, preserving overlap priorities and original iteration.
+7. **Roads and rivers.** Port route construction and painting around the existing
+   line classifiers and shared pattern tables. Preserve all source diagrams.
+8. **Generation API and compatibility integration.** Connect all stages and
+   immutable asset ownership to one native entry point with reusable workspace,
+   structured failures and RNG diagnostics. Audit every hotfix branch and
+   reconcile the boundary/water-zone replay inputs with executable evidence.
+9. **Output and CLI.** Implement all three formats' H3M serialization, streamed
+   compressed output, native generation/replay commands and actionable errors.
+   Normal execution must not require Wine or the retail executable.
+10. **Final verification and publication.** Run the complete 100,000-case
+    campaign; independently parse maps; verify repeated/run-order behavior;
+    profile cold loading, warm generation and output allocations; audit ASCII
+    documentation/shared definitions; finish deterministic parallelism guidance;
+    run required Rust checks and publish the new PR.
+
+Immediate next implementation: extend `placement.rs` with shared object/cell
+membership storage. The reference operations are `TRmgMap::addObject`,
+`TRmgGeneratorBase::addObject`, `TRmgGenerator::addObject` and `removeObject` in
+`src/rmg.cpp`, plus the path/obstacle/border helpers on `TRmgMapItem` in
+`include/rmg.h`. Keep geometry identity distinct from the serialized town/monster
+object counter: failed candidates and treasure groups have different lifetimes.
+Store membership in insertion order; entrance lookup uses the cell's first
+object, even in overlaps. Native removal keeps the object alive and clears
+entrance/passability only when its cell membership becomes empty. Once these
+operations and entrance distances are compared with native checkpoints, continue
+directly to `tryPlacePrimaryTown` and `tryPlaceAdditionalTown`.
+
 ### Current implementation checkpoint
 
 Implemented the source-derived data boundary, typed requests, owned retail RNG,
