@@ -96,7 +96,7 @@ leaking allocations. Keep disagreements between current C++ and retail visible.
   generation/replay.
 - [ ] Verification and delivery: establish successful hotfix baselines, debug
   end-to-end behavior, complete corpus comparisons and allocation measurements,
-  finish documentation review, and publish the new PR.
+  finish review, and make the implementation PR ready for merge.
 
 Implementation checkmarks record authored code, not runtime parity. These are
 intermediate review points, not alternative definitions of done. Completion
@@ -110,12 +110,13 @@ gzip output and generation/replay CLI. It compiles, but no full-map Rust run has
 been performed under the implementation-first policy. This is not a parity or
 playability claim.
 
-The remaining work is **verification, debugging and publication**: verify the
+The implementation is published as [draft PR #134](https://github.com/sushi-shi/homm3-decomp/pull/134).
+The remaining work is **verification and debugging**: verify the
 source-audited hotfix behavior at runtime; reconcile boundary/water-zone replay
 inputs with executable evidence; rerun the corrected treasure geometry comparison; run the 100,000-case
 campaign; independently parse maps; verify repeated/run-order behavior; profile
 cold loading, warmed generation and output allocations; run required Rust
-checks and publish the new PR.
+checks and resolve review findings before marking the PR ready.
 
 Current working policy (user update): only individual unit tests and compilation
 checks are allowed. Do not start full suites, native comparisons, end-to-end
