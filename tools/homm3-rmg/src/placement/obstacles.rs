@@ -118,7 +118,10 @@ impl PlacementMap<'_, '_, '_> {
             .ok_or(PlacementError::UnknownPrototype(prototype))?;
         let rule_id = entry.rule().ok_or(PlacementError::RuleContext)?;
         let rule = rules.get(rule_id).ok_or(PlacementError::RuleContext)?;
-        let footprint = entry.footprint()?;
+        // Scoring reads image dimensions; it does not walk the outline.
+        // Retail includes decorations with an unoccupied bottom row, even
+        // though hotfix catalog admission excludes them.
+        let footprint = entry.image_mask().size()?;
         let side = i32::try_from(self.view().side).map_err(|_| PlacementError::Arithmetic)?;
         let mut terrain_seen = [false; raw::RMG_TERRAIN_COUNT as usize];
         // Footprint plus a one-cell border; marks[c][r] is P + (1-c, 1-r).
@@ -407,7 +410,7 @@ impl PlacementMap<'_, '_, '_> {
                         continue;
                     }
                     let prototype = catalog.at(kind, ordinal).unwrap();
-                    let footprint = entry.footprint()?;
+                    let footprint = entry.image_mask().size()?;
                     // Put S under each blocked footprint cell. For a fully
                     // blocked 3x2 object, candidate anchors are S and each o:
                     //   S o o
@@ -456,7 +459,11 @@ impl PlacementMap<'_, '_, '_> {
                 })
                 .unwrap();
             let at = selected.position;
-            let footprint = catalog.get(selected.prototype).unwrap().footprint()?;
+            let footprint = catalog
+                .get(selected.prototype)
+                .unwrap()
+                .image_mask()
+                .size()?;
             let object = objects.create(catalog, selected.prototype)?;
             // fillObstaclesFrom dispatches virtual addObject to the generator.
             self.register_object(objects, catalog, object, at)?;

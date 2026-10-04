@@ -112,7 +112,7 @@ impl FootprintSize {
     }
 }
 
-/// A known unsafe retail footprint or creature index, deferred until use.
+/// Invalid image dimensions, creature identity, or hotfix admission geometry.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PrototypeFault {
     /// Signed dimensions from the mask do not fit the fixed nonempty frame.
@@ -122,7 +122,7 @@ pub enum PrototypeFault {
         /// Signed retail height.
         height: i8,
     },
-    /// Outline tracing has no occupied cell in its starting row.
+    /// Hotfix admission requires an occupied bottom row; retail permits an empty one.
     EmptyBottomRow,
     /// Monster subtype cannot index the creature table.
     CreatureSubtype(i32),
@@ -135,7 +135,7 @@ impl fmt::Display for PrototypeFault {
                 "prototype dimensions {width}x{height} do not fit the mask frame"
             ),
             Self::EmptyBottomRow => {
-                f.write_str("prototype outline has no occupied bottom-row cell")
+                f.write_str("prototype fails hotfix admission: no occupied bottom-row cell")
             }
             Self::CreatureSubtype(subtype) => write!(
                 f,
@@ -350,7 +350,7 @@ impl Prototype {
             .any(|&monolith| monolith as usize == kind)
             && i64::from(self.subtype) >= i64::from(raw::RMG_PRE_SOD_MONOLITH_SUBTYPE_COUNT))
     }
-    fn footprint(&self, mask: ImageMask) -> Result<FootprintSize, PrototypeFault> {
+    fn hotfix_admission(&self, mask: ImageMask) -> Result<FootprintSize, PrototypeFault> {
         let size = mask.size()?;
         if self.kind.index() == raw::TERRAIN_HOLE as usize {
             return Ok(size);
@@ -533,15 +533,15 @@ impl<'a> PrototypeSource<'a> {
                 continue;
             }
             let image = &self.images[prototype.image];
-            let footprint = prototype.footprint(image.mask);
-            if behavior.is_hotfix() && footprint.is_err() {
+            let hotfix_admission = prototype.hotfix_admission(image.mask);
+            if behavior.is_hotfix() && hotfix_admission.is_err() {
                 continue;
             }
             entries.try_reserve(1)?;
             entries.push(PreparedPrototype {
                 prototype,
                 image,
-                footprint,
+                hotfix_admission,
                 preferred: None,
                 rule: None,
             });
@@ -597,7 +597,7 @@ impl<'a> PrototypeSource<'a> {
 pub struct PreparedPrototype<'a> {
     prototype: &'a Prototype,
     image: &'a Image<'a>,
-    footprint: Result<FootprintSize, PrototypeFault>,
+    hotfix_admission: Result<FootprintSize, PrototypeFault>,
     preferred: Option<Terrain>,
     rule: Option<PlacementRuleId>,
 }
@@ -617,12 +617,14 @@ impl PreparedPrototype<'_> {
     pub const fn image_mask(&self) -> ImageMask {
         self.image.mask
     }
-    /// Footprint checked before placement or outline traversal.
+    /// Footprint satisfying the hotfix catalog admission policy.
+    /// Retail operations that only read dimensions use [`ImageMask::size`];
+    /// an empty bottom row does not prevent scoring or placing decorations.
     ///
     /// # Errors
-    /// Returns a deferred retail footprint/creature fault.
-    pub const fn footprint(&self) -> Result<FootprintSize, PrototypeFault> {
-        self.footprint
+    /// Returns the reason a retained retail prototype fails hotfix admission.
+    pub const fn hotfix_admission(&self) -> Result<FootprintSize, PrototypeFault> {
+        self.hotfix_admission
     }
     /// First recommended dirt-through-water terrain, or no preference.
     #[must_use]
@@ -1356,7 +1358,7 @@ mod tests {
             .unwrap();
         assert_eq!(retail.entries().len(), 2);
         assert_eq!(
-            retail.entries()[0].footprint(),
+            retail.entries()[0].hotfix_admission(),
             Err(PrototypeFault::Dimensions {
                 width: -1,
                 height: 6
@@ -1384,7 +1386,7 @@ mod tests {
             hotfix.entries()[0].prototype().kind().index(),
             raw::TERRAIN_HOLE as usize
         );
-        assert!(hotfix.entries()[0].footprint().is_ok());
+        assert!(hotfix.entries()[0].hotfix_admission().is_ok());
         let retail = source
             .prepare(
                 &rules,
@@ -1393,7 +1395,7 @@ mod tests {
             )
             .unwrap();
         assert_eq!(
-            retail.family(monster())[0].footprint(),
+            retail.family(monster())[0].hotfix_admission(),
             Err(PrototypeFault::CreatureSubtype(-1))
         );
     }

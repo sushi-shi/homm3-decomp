@@ -162,7 +162,7 @@ impl PlacementMap<'_, '_, '_> {
             let at = if prototype.entrance().is_some() {
                 entrance_position(prototype, anchor)?
             } else {
-                let size = entry.footprint()?;
+                let size = entry.image_mask().size()?;
                 offset_position(
                     anchor,
                     Point::new(-i32::from(size.width() / 2), -i32::from(size.height() / 2)),

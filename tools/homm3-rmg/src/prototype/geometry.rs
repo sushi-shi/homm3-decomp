@@ -211,7 +211,7 @@ mod tests {
         PreparedPrototype {
             prototype,
             image,
-            footprint: prototype.footprint(image.mask),
+            hotfix_admission: prototype.hotfix_admission(image.mask),
             preferred: None,
             rule: None,
         }
