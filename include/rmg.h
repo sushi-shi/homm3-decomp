@@ -491,7 +491,7 @@ struct TRmgTemplateZone {
     TRmgTreasureRange m_treasure[3];                          // +0xa0
     std::vector<TRmgZoneConnection> m_connections;            // +0xc4
 
-    s32 selectAllowedTown();
+    TTownType selectAllowedTown();
     TRmgZoneConnection* findConnection(s32 destinationZone);
 };
 SIZE(TRmgTemplateZone, 0xd4);

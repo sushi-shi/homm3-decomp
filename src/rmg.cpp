@@ -1071,7 +1071,7 @@ MAC_COMPGEN_ADDRESS(0x22f660, 0x68, IMPLICIT_DTOR, TRmgTemplateZone)
 
 // Picks a uniformly random allowed town type, or eTownNeutral if none.
 MAC_ADDRESS(0x22f6c8, 0xb4)
-s32 TRmgTemplateZone::selectAllowedTown()
+TTownType TRmgTemplateZone::selectAllowedTown()
 {
     s32 allowedTownCount = 0;
     for (s32 town = TOWN_CASTLE; town < TOWN_TYPE_COUNT; ++town) {
@@ -1083,7 +1083,7 @@ s32 TRmgTemplateZone::selectAllowedTown()
     s32 selectedIndex = rand() % allowedTownCount;
     for (town = TOWN_CASTLE; town < TOWN_TYPE_COUNT; ++town) {
         if (m_allowedTowns[town] && --selectedIndex < 0)
-            return town;
+            return static_cast<TTownType>(town);
     }
     return eTownNeutral;
 }
@@ -1093,7 +1093,7 @@ MAC_ADDRESS(0x22f7c4, 0xc0)
 TRmgZone::TRmgZone(TRmgTemplateZone* templateZone)
 {
     m_templateZone = templateZone;
-    m_alignment = static_cast<TTownType>(templateZone->selectAllowedTown());
+    m_alignment = templateZone->selectAllowedTown();
     m_scaledSize = templateZone->m_size;
     m_bounds.resetEmpty();
     m_hasPrimaryTown = false;
