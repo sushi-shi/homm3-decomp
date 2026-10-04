@@ -551,15 +551,15 @@ static void initializeArtifactTraits(int id,
 
     const char* classCell = resource[21];
     if (classCell[0] == 'R')
-        traits.m_artifactClass = ARTIFACT_CLASS_RELIC;
+        traits.m_artifactClass = 16;
     else if (classCell[0] == 'J')
-        traits.m_artifactClass = ARTIFACT_CLASS_MAJOR;
+        traits.m_artifactClass = 8;
     else if (classCell[0] == 'N')
-        traits.m_artifactClass = ARTIFACT_CLASS_MINOR;
+        traits.m_artifactClass = 4;
     else if (classCell[0] == 'T')
-        traits.m_artifactClass = ARTIFACT_CLASS_TREASURE;
+        traits.m_artifactClass = 2;
     else
-        traits.m_artifactClass = ARTIFACT_CLASS_SPECIAL;
+        traits.m_artifactClass = 1;
 }
 
 VA_COMPGEN(0x0044D380, 0x60, BITSET_SET, Bitset19)

@@ -1,4 +1,4 @@
-//! Raw definitions generated from the canonical C++ headers.
+//! Raw definitions extracted from the canonical C++ sources.
 //!
 //! Values in this module have not been parsed into Rust generation domains.
 //! In particular, integer aliases for C enums may contain invalid values.

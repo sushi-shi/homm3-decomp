@@ -50,14 +50,16 @@ generation RNG, so repeated serialization does not mutate the generated map.
 
 ## Shared definitions and documentation
 
-Bindgen imports existing enums, constants and plain records, excluding C++
-methods, containers and ownership. Rust domain types use these generated values
-without introducing a second numeric definition.
+Clang selects existing enums and plain records from the original headers and
+translation units into a build-only header. Bindgen imports that header, excluding
+C++ methods, containers and ownership. Rust domain types use the generated values;
+native declarations do not need to move into special headers for Rust. Unnamed
+algorithm literals remain part of the Rust implementation.
 
 Canonical initializers remain in their ordinary C++ translation units.
 `homm3-rmg-data/extract.py` uses Clang and the repository's compiler profiles to
-select named definitions, terrain-rule constructor arguments and ordered
-treasure recipes. A host exporter evaluates those expressions and emits Rust
+select named definitions, constructor defaults, terrain-rule arguments and
+ordered treasure recipes. A host exporter evaluates those expressions and emits Rust
 scalar values, including exact float bits, without copying native struct layouts
 or pointers. This runs at build time even when cross-compiling; generation has
 no runtime C++ dependency. Asset-derived traits are parsed from installation
@@ -69,7 +71,9 @@ VC6 headers, plus libclang and a host C++ compiler. `HOMM3_PYTHON` can select th
 Python executable. Cargo tracks parsed TU/header dependencies and extraction
 configuration. Missing or ambiguous definitions, unsupported recipes, and Clang
 errors affecting selected definitions fail the build. Errors confined to
-unrelated VC6 function bodies do not invalidate clean data definitions.
+unrelated VC6 function bodies do not invalidate clean data definitions. Selected
+declarations must agree across TU profiles. Unsupported constructors and
+host-dependent default expressions fail extraction rather than changing data.
 
 Keep ASCII diagrams beside canonical tables and algorithm implementations.
 Source-specific ordering, lifetime and native-behavior evidence belongs beside

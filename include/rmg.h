@@ -11,7 +11,6 @@
 #define HOMM3_RMG_H
 
 #include "va.h"
-#include "map_format_version.h"
 #include "homm3_bool.h"
 #include "homm3_int.h"
 
@@ -37,6 +36,19 @@ struct TPoint;
 struct TObjectType;
 struct TRmgObjectPropertiesRef;
 class TRmgObject;
+
+// Terrain types, dirt through rock.
+enum ERmgTerrainLimits {
+    RMG_TERRAIN_COUNT = eTerrainRock + 1
+};
+
+// Hero ids a map format knows: RoE maps stop before the expansion heroes.
+// Prisons in later formats hold only the first RMG_PRISON_HERO_COUNT.
+enum ERmgHeroCount {
+    RMG_ROE_HERO_COUNT = 128,
+    RMG_PRISON_HERO_COUNT = 145,
+    RMG_HERO_COUNT = 156
+};
 
 // Progress reporting interface driven by the random-map generator.
 class TProgressSink {
@@ -116,7 +128,7 @@ public:
 class TRmgArtifactDef : public TRmgTreasureDef {
 public:
     inline TRmgArtifactDef(TAdventureObjectType objectType, s32 value)
-        : TRmgTreasureDef(objectType, 0, value, RMG_ARTIFACT_REWARD_DENSITY)
+        : TRmgTreasureDef(objectType, 0, value, 150)
     {
     }
 
@@ -129,7 +141,7 @@ public:
     s32 m_experience;
 
     inline TRmgBlackBoxExperienceDef(s32 value, s32 experience)
-        : TRmgTreasureDef(BLACK_BOX, 0, value, RMG_EXPERIENCE_BOX_DENSITY)
+        : TRmgTreasureDef(BLACK_BOX, 0, value, 20)
     {
         this->m_experience = experience;
     }
@@ -143,7 +155,7 @@ public:
     s32 m_gold;
 
     inline TRmgBlackBoxGoldDef(s32 value, s32 gold)
-        : TRmgTreasureDef(BLACK_BOX, 0, value, RMG_GOLD_BOX_DENSITY)
+        : TRmgTreasureDef(BLACK_BOX, 0, value, 5)
     {
         this->m_gold = gold;
     }
@@ -160,7 +172,7 @@ public:
 
     inline TRmgBlackBoxSpellsDef(
         s32 value, s32 minimumLevel, s32 maximumLevel, s32 schoolMask)
-        : TRmgTreasureDef(BLACK_BOX, 0, value, RMG_SPELL_BOX_DENSITY)
+        : TRmgTreasureDef(BLACK_BOX, 0, value, 2)
     {
         this->m_minimumLevel = minimumLevel;
         this->m_maximumLevel = maximumLevel;
@@ -174,7 +186,7 @@ public:
 class TRmgKeyTentDef : public TRmgTreasureDef {
 public:
     inline TRmgKeyTentDef(s32 subtype, s32 value)
-        : TRmgTreasureDef(BORDER_TENT, subtype, value, RMG_KEY_TENT_REWARD_DENSITY)
+        : TRmgTreasureDef(BORDER_TENT, subtype, value, 10)
     {
     }
 
@@ -187,7 +199,7 @@ public:
 class TRmgDwellingDef : public TRmgTreasureDef {
 public:
     inline TRmgDwellingDef(s32 subtype)
-        : TRmgTreasureDef(CREATURE_GENERATOR_1, subtype, -1, RMG_DWELLING_REWARD_DENSITY)
+        : TRmgTreasureDef(CREATURE_GENERATOR_1, subtype, -1, 40)
     {
     }
 
@@ -222,7 +234,7 @@ public:
     s32 m_experience;
 
     inline TRmgPrisonDef(s32 value, s32 experience)
-        : TRmgTreasureDef(PRISON, 0, value, RMG_PRISON_REWARD_DENSITY)
+        : TRmgTreasureDef(PRISON, 0, value, 30)
     {
         this->m_experience = experience;
     }
@@ -234,7 +246,7 @@ public:
 class TRmgScholarDef : public TRmgTreasureDef {
 public:
     inline TRmgScholarDef()
-        : TRmgTreasureDef(SCHOLAR, 0, RMG_SCHOLAR_REWARD_VALUE, RMG_SCHOLAR_REWARD_DENSITY)
+        : TRmgTreasureDef(SCHOLAR, 0, 1500, 100)
     {
     }
 
@@ -263,7 +275,7 @@ public:
 
     inline TRmgQuestExperienceDef(
         s32 seerHutPrototypeIndex, s32 value, s32 experience)
-        : TRmgTreasureDef(SEER, seerHutPrototypeIndex, value, RMG_QUEST_REWARD_DENSITY)
+        : TRmgTreasureDef(SEER, seerHutPrototypeIndex, value, 10)
     {
         this->m_experience = experience;
     }
@@ -279,7 +291,7 @@ public:
     s32 m_gold;
 
     inline TRmgQuestGoldDef(s32 seerHutPrototypeIndex, s32 value, s32 gold)
-        : TRmgTreasureDef(SEER, seerHutPrototypeIndex, value, RMG_QUEST_REWARD_DENSITY)
+        : TRmgTreasureDef(SEER, seerHutPrototypeIndex, value, 10)
     {
         this->m_gold = gold;
     }
@@ -410,7 +422,11 @@ enum ERmgTemplateZoneKind {
     RMG_TEMPLATE_JUNCTION = 3
 };
 
-
+enum ERmgTreasurePlacementLimits {
+    RMG_TREASURE_ATTEMPTS = 3,
+    RMG_TREASURE_MINIMUM_REMAINDER = 1500,
+    RMG_TREASURE_MINIMUM_VALUE = 100
+};
 
 // A zone treasure band (unchecked template values). Added water zones use
 // 100..1000 at density 5 and 2000..6000 at density 1.
@@ -445,8 +461,27 @@ enum ERmgTownPlacementParameter {
     RMG_TOWN_PLACEMENT_PARAMETER_COUNT = 8
 };
 
+// Zone monster strength, from the template letter n, w, a or s.
+enum ERmgZoneMonsterStrength {
+    RMG_ZONE_MONSTERS_NONE = 0,
+    RMG_ZONE_MONSTERS_WEAK = 2,
+    RMG_ZONE_MONSTERS_AVERAGE = 3,
+    RMG_ZONE_MONSTERS_STRONG = 4
+};
 
+// Treasure bands per template zone in rmg.txt (low, medium and high value).
+enum ERmgTreasureBandLimits {
+    RMG_TREASURE_BAND_COUNT = 3
+};
 
+// Town count/density groups by ownership and starting fort.
+enum ERmgTownPlacementCategory {
+    RMG_TOWN_PLAYER_CASTLE,
+    RMG_TOWN_PLAYER_BASIC,
+    RMG_TOWN_NEUTRAL_CASTLE,
+    RMG_TOWN_NEUTRAL_BASIC,
+    RMG_TOWN_CATEGORY_COUNT
+};
 
 struct TRmgTemplateZone {
     // Template zone number while connections are read, then the zone's index
@@ -523,6 +558,11 @@ void readRmgTemplateZones(
     ERmgMapVersion mapVersion);
 
 s32 getRmgGuardValue(s32 value, s32 strength);
+
+// The eight neighbour directions, clockwise.
+enum ERmgDirectionLimits {
+    RMG_DIRECTION_COUNT = 8
+};
 
 TPoint operator+(TPoint point, TRmgVector offset);
 TRmgVector operator-(TPoint left, TPoint right);
@@ -631,6 +671,20 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     TRmgNoiseMidpoints midpoints,
     s32 centerValue);
 
+enum ERmgShipyardConstants {
+    RMG_SHIPYARD_WATER_OFFSET_COUNT = 4
+};
+
+// Creature-type counts and guard limits. RoE maps lack the expansion creature
+// types; their guards exclude creatures from 118 but evaluate only those below
+// 117, so 117 slips through (retail bug).
+enum ERmgGuardConstants {
+    RMG_CREATURE_TYPE_COUNT = 145,
+    RMG_ROE_CREATURE_TYPE_COUNT = 118,
+    RMG_GUARD_MAXIMUM_COUNT = 100,
+    RMG_GUARD_DISPOSITION = 3
+};
+
 // River-delta placement offset from the river's end, per direction.
 struct TRmgRiverDeltaOffset {
     s32 m_x;
@@ -641,6 +695,16 @@ struct TRmgRiverDeltaOffset {
 
 class TRmgObject;
 
+// Path costs and zone graph distances start at RMG_UNREACHED_COST. Searches
+// treat costs above RMG_REACHED_COST_LIMIT as unreached; some also reject the
+// limit itself. Clearing a cell sets its costs and object distance to
+// RMG_CLEARED_CELL_COST; removing an object resets the object distance under
+// its footprint to it.
+enum ERmgPathCostLimits {
+    RMG_REACHED_COST_LIMIT = 30000,
+    RMG_UNREACHED_COST = 32000,
+    RMG_CLEARED_CELL_COST = 32700
+};
 
 struct TRmgMovementCost {
     u32 m_cost : 16;
@@ -711,7 +775,7 @@ struct TRmgGroundTileData {
 // Pending border-guard cell and the guard's key colour.
 struct TRmgBorderConnection {
     u32 m_present : 1;
-    u32 m_guardColor : RMG_BORDER_COLOR_BITS;
+    u32 m_guardColor : 4;
 };
 
 // One rand_trn.txt row: per-terrain scores and neighbour scores indexed by
@@ -721,6 +785,21 @@ struct TRmgObjectPlacementRule {
     s32 m_terrainScores[RMG_TERRAIN_COUNT];  // +0x04
     std::vector<s32> m_adjacentScores;       // +0x2c
     std::vector<s32> m_blockedScores;        // +0x3c
+};
+
+// Cell bits of scoreObjectPlacement's marks grid: ADJACENT in the 3x3 around
+// a blocked footprint cell, OVERLAP on a drawn footprint cell, BLOCKED on a
+// blocked one (overwritten there; see its retail bug).
+enum ERmgObjectPlacementMark {
+    RMG_PLACEMENT_ADJACENT = 1,
+    RMG_PLACEMENT_OVERLAP = 2,
+    RMG_PLACEMENT_BLOCKED = 4
+};
+
+enum ERmgObjectPlacementScore {
+    RMG_PLACEMENT_INVALID = -5000,
+    RMG_PLACEMENT_MINIMUM_TERRAIN_SCORE = -1000,
+    RMG_PLACEMENT_NO_TERRAIN_PREFERENCE = -1
 };
 
 // Shared, reference-counted placement data for one objects.txt prototype;
@@ -1314,7 +1393,26 @@ public:
     virtual s32 getTerrain(const TRmgGridPoint& point);
 };
 
-#include "rmg_line_pattern.h"
+// Unreflected line shapes chosen by selectRmgLinePattern; reflections supply
+// the other orientations. North is up; # is a line tile.
+//   END_S  END_E  NS     EW     SE     NES    ESW    CROSS
+//   . . .  . . .  . # .  . . .  . . .  . # .  . . .  . # .
+//   . # .  . # #  . # .  # # #  . # #  . # #  # # #  # # #
+//   . # .  . . .  . # .  . . .  . # .  . # .  . # .  . # .
+// SE_VARIANT is SE with the NE or SW diagonal also a line tile.
+// END_S also covers an isolated tile.
+enum ERmgLinePattern {
+    LINE_END_S = 0,
+    LINE_END_E = 1,
+    LINE_NS = 2,
+    LINE_EW = 3,
+    LINE_SE = 4,
+    LINE_SE_VARIANT = 5,
+    LINE_NES = 6,
+    LINE_ESW = 7,
+    LINE_CROSS = 8,
+    LINE_PATTERN_COUNT = 9
+};
 
 // Frames of one line pattern: first frame index and frame count.
 struct TRmgLinePatternRange {
@@ -1651,6 +1749,19 @@ SIZE(TRmgZone, 0x414);
 
 
 
+// Initial segment direction of a carved branching path. Each spans the map;
+// North is up and # is the segment.
+//   MAIN_DIAGONAL  VERTICAL  ANTI_DIAGONAL  HORIZONTAL
+//   # . .          . # .     . . #          . . .
+//   . # .          . # .     . # .          # # #
+//   . . #          . # .     # . .          . . .
+enum ERmgBranchSeedPattern {
+    RMG_BRANCH_SEED_MAIN_DIAGONAL = 0,
+    RMG_BRANCH_SEED_VERTICAL = 1,
+    RMG_BRANCH_SEED_ANTI_DIAGONAL = 2,
+    RMG_BRANCH_SEED_HORIZONTAL = 3,
+    RMG_BRANCH_SEED_PATTERN_COUNT = 4
+};
 
 struct TRmgObjectLimit {
     TAdventureObjectType m_objectType;
@@ -1820,15 +1931,15 @@ public:
     {
         switch (m_mapVersion) {
         case RMG_MAP_RESTORATION_OF_ERATHIA:
-            return MAP_FORMAT_RESTORATION_OF_ERATHIA;
+            return 14;
         case RMG_MAP_ARMAGEDDONS_BLADE:
-            return MAP_FORMAT_ARMAGEDDONS_BLADE;
+            return 21;
         case RMG_MAP_SHADOW_OF_DEATH:
-            return MAP_FORMAT_SHADOW_OF_DEATH;
+            return 28;
         }
 #if defined(HOMM3_RMG_HOTFIX)
         // Unknown request versions are written as Shadow of Death maps.
-        return MAP_FORMAT_SHADOW_OF_DEATH;
+        return 28;
 #else
         // Retail bug: another version falls off the end of this function.
 #endif

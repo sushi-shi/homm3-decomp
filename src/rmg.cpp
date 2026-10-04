@@ -24,7 +24,6 @@
 #include <time.h>
 
 #include "rmg.h"
-#include "rmg_columns.h"
 #include "keycolor.h"
 #include "objectmask.h"
 
@@ -52,6 +51,12 @@ static inline s32 getRmgTownTypeCount(ERmgMapVersion mapVersion)
     return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? TOWN_TYPE_COUNT : TOWN_TYPE_ROE_COUNT;
 }
 
+enum ERmgMapLevel {
+    RMG_SURFACE_LEVEL = 0,
+    RMG_UNDERGROUND_LEVEL = 1,
+    RMG_MAP_LEVEL_COUNT = 2
+};
+
 // Zone index of a cell outside every zone; cleared cells start here.
 enum ERmgZoneSentinel {
     RMG_NO_ZONE = -1
@@ -72,7 +77,9 @@ s32 getRmgDistance(TPoint first, TPoint second)
 }
 
 DATA(0x006824e0)
-s32 g_rmgCreatureValueByLevel[TOWN_DWELLING_COUNT] = {5000, 7000, 9000, 12000, 16000, 21000, 27000};
+s32 g_rmgCreatureValueByLevel[TOWN_DWELLING_COUNT] = {
+    5000, 7000, 9000, 12000, 16000, 21000, 27000
+};
 
 void TRmgObject::releaseReservation() {}
 b8 TRmgObject::completePlacement() { return true; }
@@ -202,16 +209,31 @@ void TProgressSink::setTotal(s32 totalSteps)
 
 namespace {
 
+// Indices of g_rmgDirections, clockwise from east; y grows southward.
+// North is up; . is the centre cell.
+//   5 6 7
+//   4 . 0
+//   3 2 1
+enum ERmgDirection {
+    RMG_DIRECTION_EAST = 0,
+    RMG_DIRECTION_SOUTH_EAST = 1,
+    RMG_DIRECTION_SOUTH = 2,
+    RMG_DIRECTION_SOUTH_WEST = 3,
+    RMG_DIRECTION_WEST = 4,
+    RMG_DIRECTION_NORTH_WEST = 5,
+    RMG_DIRECTION_NORTH = 6,
+    RMG_DIRECTION_NORTH_EAST = 7,
+    // From here on (NW, N, NE) the directions step north.
+    RMG_FIRST_NORTHERN_DIRECTION = RMG_DIRECTION_NORTH_WEST,
+    // Cardinal c is direction c * 2; stepping by this visits E, S, W, N.
+    RMG_CARDINAL_DIRECTION_STEP = 2,
+    RMG_CARDINAL_DIRECTION_COUNT = RMG_DIRECTION_COUNT / RMG_CARDINAL_DIRECTION_STEP
+};
+
 // Eight neighbour directions, clockwise from east; even entries are the
 // four cardinal directions.
 DATA(0x0069cdc0)
-TPoint g_rmgDirections[RMG_DIRECTION_COUNT] =
-// Clockwise movement directions, starting east. North is up; digits are
-// table indices around C. Terrain-pattern directions instead start north.
-//   5 6 7
-//   4 C 0
-//   3 2 1
-{
+TPoint g_rmgDirections[RMG_DIRECTION_COUNT] = {
     TPoint(1, 0),
     TPoint(1, 1),
     TPoint(0, 1),
@@ -255,13 +277,11 @@ static inline bool isRmgEntranceOpenToNorth(TAdventureObjectType objectType)
 //   0 # # P 1
 //   2 . . . 3
 DATA(0x0069ce00)
-TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] =
-// Shipyards are three tiles wide. North is up; digits are probe indices,
-// P is the shipyard position, # its bottom footprint row, . the row below.
-//   0 # # P 1
-//   2 . . . 3
-{
-    TPoint(-3, 0), TPoint(1, 0), TPoint(-3, 1), TPoint(1, 1)
+TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
+    TPoint(-3, 0),
+    TPoint(1, 0),
+    TPoint(-3, 1),
+    TPoint(1, 1)
 };
 
 // River-delta choice per coast side (east, south, west, north), for land and
@@ -273,6 +293,9 @@ DATA(0x006409b0)
 static const s32 g_rmgSnowRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {7, 5, 4, 6};
 
 // Candidate town types one zone terrain can list.
+enum ERmgTerrainTownChoiceLimits {
+    RMG_TERRAIN_TOWN_CHOICE_COUNT = 4
+};
 
 // Candidate town types for each zone terrain, dirt to water. The pick only
 // selects which creatures' dwellings and rewards the zone favours; eTownNeutral
@@ -306,6 +329,10 @@ static const TTerrainType g_rmgTownNativeTerrains[TOWN_TYPE_COUNT] = {
     eTerrainGrass  // conflux
 };
 
+enum ERmgRadialDirectionLimits {
+    RMG_RADIAL_DIRECTION_COUNT = 32
+};
+
 // Radial directions used by the placement and boundary passes. Direction k
 // lies k * 11.25 degrees from east; y grows southward, so k turns clockwise.
 // North is up:
@@ -325,6 +352,13 @@ double g_rmgDirectionSines[RMG_RADIAL_DIRECTION_COUNT] = {
     1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
     0.0, -0.1951, -0.3827, -0.5556, -0.7071, -0.8315, -0.9239, -0.9807,
     -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951
+};
+
+// Guard strengths: the zone scale (ERmgZoneMonsterStrength) shifted by the
+// map strength, from 0 up to the strongest.
+enum ERmgGuardStrengthLimits {
+    RMG_STRONGEST_GUARD_STRENGTH = 5,
+    RMG_GUARD_STRENGTH_COUNT = RMG_STRONGEST_GUARD_STRENGTH + 1
 };
 
 // Guard value thresholds and scales by guard strength; a scale counts
@@ -376,6 +410,79 @@ static bool isRmgTemplateFieldSet(const char* value)
     return value && value[0] && value[0] != ' ';
 }
 
+// rmg.txt and rand_trn.txt rows start after three header rows.
+enum ERmgSpreadsheetLayout {
+    RMG_FIRST_DATA_ROW = 3
+};
+
+// rmg.txt columns. A template's first row holds its name and size range;
+// any row may also hold one zone and one connection.
+enum ERmgTemplateColumn {
+    RMG_TEMPLATE_COLUMN_NAME = 0,
+    RMG_TEMPLATE_COLUMN_MINIMUM_SIZE = 1,
+    RMG_TEMPLATE_COLUMN_MAXIMUM_SIZE = 2,
+    RMG_TEMPLATE_COLUMN_ZONE_INDEX = 3,
+    RMG_TEMPLATE_COLUMN_KIND_HUMAN = 4,
+    RMG_TEMPLATE_COLUMN_KIND_COMPUTER = 5,
+    RMG_TEMPLATE_COLUMN_KIND_TREASURE = 6,
+    RMG_TEMPLATE_COLUMN_KIND_JUNCTION = 7,
+    RMG_TEMPLATE_COLUMN_SIZE = 8,
+    RMG_TEMPLATE_COLUMN_MINIMUM_HUMAN_PLAYERS = 9,
+    RMG_TEMPLATE_COLUMN_MAXIMUM_HUMAN_PLAYERS = 10,
+    RMG_TEMPLATE_COLUMN_MINIMUM_PLAYERS = 11,
+    RMG_TEMPLATE_COLUMN_MAXIMUM_PLAYERS = 12,
+    RMG_TEMPLATE_COLUMN_PLAYER_INDEX = 13,
+    RMG_TEMPLATE_COLUMN_PLAYER_BASIC_COUNT = 14,
+    RMG_TEMPLATE_COLUMN_PLAYER_CASTLE_COUNT = 15,
+    RMG_TEMPLATE_COLUMN_PLAYER_BASIC_DENSITY = 16,
+    RMG_TEMPLATE_COLUMN_PLAYER_CASTLE_DENSITY = 17,
+    RMG_TEMPLATE_COLUMN_NEUTRAL_BASIC_COUNT = 18,
+    RMG_TEMPLATE_COLUMN_NEUTRAL_CASTLE_COUNT = 19,
+    RMG_TEMPLATE_COLUMN_NEUTRAL_BASIC_DENSITY = 20,
+    RMG_TEMPLATE_COLUMN_NEUTRAL_CASTLE_DENSITY = 21,
+    RMG_TEMPLATE_COLUMN_NEUTRAL_TOWNS_MATCH_ZONE = 22,
+    RMG_TEMPLATE_COLUMN_ALLOWED_TOWNS = 23,      // one per town type
+    RMG_TEMPLATE_COLUMN_MINE_COUNTS = 32,        // one per resource
+    RMG_TEMPLATE_COLUMN_MINE_DENSITIES = 39,     // one per resource
+    RMG_TEMPLATE_COLUMN_USE_NATIVE_TERRAIN = 46,
+    RMG_TEMPLATE_COLUMN_ALLOWED_TERRAIN = 47,    // one per land terrain
+    RMG_TEMPLATE_COLUMN_MONSTER_STRENGTH = 55,
+    RMG_TEMPLATE_COLUMN_GUARDS_MATCH_ZONE = 56,
+    RMG_TEMPLATE_COLUMN_ALLOWED_MONSTERS = 57,   // neutral, then one per town type
+    // Three columns per treasure tier.
+    RMG_TEMPLATE_COLUMN_TREASURE_MINIMUM = 67,
+    RMG_TEMPLATE_COLUMN_TREASURE_MAXIMUM = 68,
+    RMG_TEMPLATE_COLUMN_TREASURE_DENSITY = 69,
+    RMG_TEMPLATE_TREASURE_COLUMN_COUNT = 3,
+    RMG_TEMPLATE_COLUMN_LAST_TREASURE_DENSITY = 75,
+    RMG_TEMPLATE_COLUMN_CONNECTION_FIRST_ZONE = 76,
+    RMG_TEMPLATE_COLUMN_CONNECTION_SECOND_ZONE = 77,
+    RMG_TEMPLATE_COLUMN_CONNECTION_VALUE = 78,
+    RMG_TEMPLATE_COLUMN_CONNECTION_UNGUARDED = 79,            // "Wide"
+    RMG_TEMPLATE_COLUMN_CONNECTION_BORDER_GUARD = 80,         // "Border Guard"
+    RMG_TEMPLATE_COLUMN_CONNECTION_MINIMUM_HUMAN_PLAYERS = 81,
+    RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_HUMAN_PLAYERS = 82,
+    RMG_TEMPLATE_COLUMN_CONNECTION_MINIMUM_PLAYERS = 83,
+    RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_PLAYERS = 84
+};
+
+// Offsets from a zone's or connection's minimum human players column.
+enum ERmgPlayerLimitColumn {
+    RMG_PLAYER_LIMIT_MAXIMUM_HUMAN_PLAYERS = 1,
+    RMG_PLAYER_LIMIT_MINIMUM_PLAYERS = 2,
+    RMG_PLAYER_LIMIT_MAXIMUM_PLAYERS = 3
+};
+
+// rand_trn.txt columns. Neighbour scores take one column per rule: all
+// adjacent scores, then all blocked scores.
+enum ERmgPlacementRuleColumn {
+    RMG_PLACEMENT_COLUMN_OBJECT_TYPE = 3,
+    RMG_PLACEMENT_COLUMN_SUBTYPE = 4,
+    RMG_PLACEMENT_COLUMN_TERRAIN = 6,
+    RMG_PLACEMENT_COLUMN_TERRAIN_SCORES = 7,     // dirt through water
+    RMG_PLACEMENT_COLUMN_NEIGHBOUR_SCORES = 16
+};
+
 } // namespace
 
 static void __fastcall assignRmgTeams(
@@ -407,6 +514,11 @@ TRmgMapItem::TRmgMapItem()
 
 VA_COMPGEN(0x00530ee0, 0x26, IMPLICIT_DTOR, TRmgMapItem)
 MAC_COMPGEN_ADDRESS(0x22d02c, 0x84, IMPLICIT_DTOR, TRmgMapItem)
+
+// First plain (shape 0) water frame.
+enum ERmgWaterFrames {
+    RMG_WATER_BASE_FRAME = 21
+};
 
 // Resets the cell to empty water. The guard colour, connection-visited flag
 // and previous-tile Y/Z are left unchanged.
@@ -540,6 +652,12 @@ b8 TRmgMap::hasConnectedOutline(
     return !blocked || foundBoundary;
 }
 
+// Radius of a square neighbourhood around a cell, clipped to the map.
+enum ERmgNeighborhoodRadius {
+    RMG_NEIGHBORHOOD_3X3 = 1,
+    RMG_NEIGHBORHOOD_5X5 = 2
+};
+
 inline void TRmgMap::getNeighborhoodBounds(TRmgZoneBounds& bounds,
     const TPoint& position, s32 radius) const
 {
@@ -652,7 +770,7 @@ void TRmgMap::floodConnectionCosts(TRmgMapPosition position, b8 waterZone)
                 direction = RMG_FIRST_NORTHERN_DIRECTION;
         }
         while (direction--) {
-            s32 nextCost = currentCost + RMG_CONNECTION_LAND_STEP_COST;
+            s32 nextCost = currentCost + 1;
             TRmgMapPosition nextPosition = currentPosition;
             nextPosition += g_rmgDirections[direction];
             if (!containsXY(nextPosition))
@@ -670,7 +788,7 @@ void TRmgMap::floodConnectionCosts(TRmgMapPosition position, b8 waterZone)
                     continue;
             }
             if (next->m_zoneState.m_zone != zone) {
-                nextCost = currentCost + RMG_CONNECTION_WATER_OR_BORDER_STEP_COST;
+                nextCost = currentCost + 10;
                 if (currentZone != zone && currentZone != next->m_zoneState.m_zone)
                     continue;
                 if (next->m_movement.m_zonePathCost <= nextCost)
@@ -683,7 +801,7 @@ void TRmgMap::floodConnectionCosts(TRmgMapPosition position, b8 waterZone)
                 if (currentZone != zone)
                     continue;
                 if (next->getLandType() == eTerrainWater)
-                    nextCost = currentCost + RMG_CONNECTION_WATER_OR_BORDER_STEP_COST;
+                    nextCost = currentCost + 10;
                 if (next->m_movement.m_cost <= nextCost)
                     continue;
                 if (!currentCost && next->hasPathClearance()
@@ -1776,7 +1894,10 @@ void TRmgSpellScrollObject::write(TAbstractFile* outputFile, ERmgMapVersion vers
 
 // Witch hut skill mask: the first 16 secondary skills except Navigation and
 // Necromancy.
-
+enum ERmgWitchHutSkills {
+    RMG_WITCH_HUT_ALLOWED_SKILLS = 0xffff
+        & ~((1 << eSecSkillNavigation) | (1 << eSecSkillNecromancy))
+};
 
 VA(0x005340c0, 0x93)
 MAC_ADDRESS(0x231c84, 0x68)
@@ -1831,7 +1952,7 @@ static inline s32 roundRmgCreatureCount(s32 count, s32 step)
 VA(0x00534250, 0xb5)
 MAC_ADDRESS(0x231dfc, 0x108)
 TRmgBlackBoxCreatureDef::TRmgBlackBoxCreatureDef(TCreatureType creatureType)
-    : TRmgTreasureDef(BLACK_BOX, 0, -1, RMG_CREATURE_REWARD_DENSITY),
+    : TRmgTreasureDef(BLACK_BOX, 0, -1, 3),
       m_creatureType(creatureType)
 {
     m_creatureCount =
@@ -1914,6 +2035,12 @@ TRmgObject* TRmgBlackBoxGoldDef::generate(TRmgObjectPropertiesRef* properties,
     return object;
 }
 
+// Spell-trait flag of spells the map loader disables on every map (see
+// game.cpp); never a generated reward.
+enum ERmgSpellTraitFlags {
+    RMG_SPELL_DISABLED_BY_DEFAULT = 0x2000
+};
+
 static inline bool isRmgSpellDisabledByDefault(s32 spell)
 {
     return (g_spellTraits[spell].m_flags & RMG_SPELL_DISABLED_BY_DEFAULT) != 0;
@@ -1992,7 +2119,7 @@ TRmgObject* TRmgScholarDef::generate(TRmgObjectPropertiesRef* properties,
 VA(0x005349d0, 0x29)
 MAC_ADDRESS(0x232600, 0x44)
 TRmgShrineDef::TRmgShrineDef(TAdventureObjectType objectType, s32 value)
-    : TRmgTreasureDef(objectType, 0, value, RMG_SHRINE_REWARD_DENSITY)
+    : TRmgTreasureDef(objectType, 0, value, 100)
 {
 }
 
@@ -2007,7 +2134,7 @@ TRmgObject* TRmgShrineDef::generate(TRmgObjectPropertiesRef* properties,
 VA(0x00534a60, 0x25)
 MAC_ADDRESS(0x232694, 0x48)
 TRmgWitchHutDef::TRmgWitchHutDef()
-    : TRmgTreasureDef(WITCH_HUT, 0, RMG_WITCH_HUT_REWARD_VALUE, RMG_WITCH_HUT_REWARD_DENSITY)
+    : TRmgTreasureDef(WITCH_HUT, 0, 1500, 80)
 {
 }
 
@@ -2099,7 +2226,7 @@ TRmgObject* TRmgQuestGoldDef::generate(TRmgObjectPropertiesRef* properties,
 VA(0x00534ea0, 0x30)
 MAC_ADDRESS(0x232b28, 0x58)
 TRmgSpellScrollDef::TRmgSpellScrollDef(s32 spellLevel, s32 value)
-    : TRmgTreasureDef(SPELL_SCROLL, 0, value, RMG_SCROLL_REWARD_DENSITY)
+    : TRmgTreasureDef(SPELL_SCROLL, 0, value, 30)
 {
     m_spellLevel = spellLevel;
 }
@@ -2484,6 +2611,11 @@ static inline bool isRmgObjectAvailableInVersion(
         return false;
     return true;
 }
+
+// Monolith subtypes, per kind, that maps before Shadow of Death may use.
+enum ERmgMonolithSubtypeLimits {
+    RMG_PRE_SOD_MONOLITH_SUBTYPE_COUNT = 3
+};
 
 // Prototype buckets and placement rules use the object's name-row alias.
 static TAdventureObjectType getRmgPrototypeFamily(TAdventureObjectType type)
@@ -2903,6 +3035,17 @@ void TRmgGeneratorBase::addObject(TRmgObject* object, TRmgMapPosition position)
     m_objects.push_back(object);
 }
 
+// Expansion decoration object types; the shared object type enum has no
+// enumerators for them.
+enum ERmgExpansionDecorationType {
+    RMG_OBJECT_DESERT_HILLS        = 206,
+    RMG_OBJECT_DIRT_HILLS          = 207,
+    RMG_OBJECT_GRASS_HILLS         = 208,
+    RMG_OBJECT_ROUGH_HILLS         = 209,
+    RMG_OBJECT_SUBTERRANEAN_ROCKS  = 210,
+    RMG_OBJECT_SWAMP_FOLIAGE       = 211
+};
+
 // Decoration (obstacle) object types, excluding holes, rivers and roads.
 // The last six are expansion types, unavailable on RoE maps.
 DATA(0x006408ec)
@@ -3060,7 +3203,7 @@ static inline void initializeRmgObjectLimits(s32* limits,
     const TRmgObjectLimit* overrides, s32 count)
 {
     for (s32 objectType = NOTHING; objectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++objectType)
-        limits[objectType] = RMG_DEFAULT_OBJECT_LIMIT;
+        limits[objectType] = 32000;
     while (count--)
         limits[overrides[count].m_objectType] = overrides[count].m_limit;
 }
@@ -3075,7 +3218,7 @@ TRmgGenerator::TRmgGenerator(
     : TRmgGeneratorBase(width, height, levels, progress,
         width * height + 326900, mapVersion)
 {
-    m_nextObjectId = RMG_FIRST_OBJECT_ID;
+    m_nextObjectId = 1;
 #if defined(HOMM3_RMG_HOTFIX)
     // Key tents start at the first colour, not stack residue.
     m_nextKeyTentColor = KEY_LIGHT_BLUE;
@@ -3491,6 +3634,12 @@ static inline s32 getRmgCreatureTypeCount(ERmgMapVersion mapVersion)
     return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE
         ? RMG_CREATURE_TYPE_COUNT : RMG_ROE_CREATURE_TYPE_COUNT;
 }
+
+// Creature dwelling subtypes offered as treasures (g_creatureGenerator1Types).
+enum ERmgDwellingSubtypeCounts {
+    RMG_DWELLING_SUBTYPE_COUNT = 80,
+    RMG_ROE_DWELLING_SUBTYPE_COUNT = 58
+};
 
 VA(0x00538b10, 0x2241)
 MAC_ADDRESS(0x2375f0, 0x4880)
@@ -4698,12 +4847,12 @@ void TRmgGenerator::buildZoneBoundaries(
                     templateZone->m_monsterStrength = RMG_ZONE_MONSTERS_NONE;
                     templateZone->m_playerIndex = -1;
                     memset(templateZone->m_treasure, 0, sizeof(templateZone->m_treasure));
-                    templateZone->m_treasure[0].m_density = RMG_WATER_TREASURE_0_DENSITY;
-                    templateZone->m_treasure[0].m_maximum = RMG_WATER_TREASURE_0_MAXIMUM;
-                    templateZone->m_treasure[0].m_minimum = RMG_WATER_TREASURE_0_MINIMUM;
-                    templateZone->m_treasure[1].m_density = RMG_WATER_TREASURE_1_DENSITY;
-                    templateZone->m_treasure[1].m_maximum = RMG_WATER_TREASURE_1_MAXIMUM;
-                    templateZone->m_treasure[1].m_minimum = RMG_WATER_TREASURE_1_MINIMUM;
+                    templateZone->m_treasure[0].m_density = 5;
+                    templateZone->m_treasure[0].m_maximum = 1000;
+                    templateZone->m_treasure[0].m_minimum = 100;
+                    templateZone->m_treasure[1].m_density = 1;
+                    templateZone->m_treasure[1].m_maximum = 6000;
+                    templateZone->m_treasure[1].m_minimum = 2000;
                     templateZone->m_kind = RMG_TEMPLATE_JUNCTION;
                     addedZone = new TRmgZone(templateZone);
 #if defined(HOMM3_RMG_HOTFIX)
@@ -4959,7 +5108,7 @@ void TRmgGenerator::createWaterZoneIsland(const TRmgZoneBounds& bounds, s32 leve
 // Chamfer distance of one step: 2 to a cardinal neighbour, 3 to a diagonal.
 static inline s32 getRmgChamferStepCost(s32 direction)
 {
-    return isRmgDiagonalDirection(direction) ? RMG_CHAMFER_DIAGONAL_COST : RMG_CHAMFER_CARDINAL_COST;
+    return isRmgDiagonalDirection(direction) ? 3 : 2;
 }
 
 // Eight-neighbour chamfer distances within one zone; a shorter distance
@@ -4992,6 +5141,15 @@ void TRmgGenerator::floodWaterZoneDistances(TRmgMapPosition position, s32 zoneIn
         }
     }
 }
+
+// Island radius in tiles, and the clearance (in m_zonePathCost units, 2 per
+// cardinal step) an island centre keeps from the zone edge and earlier
+// island centres.
+enum ERmgWaterZoneIslandLimits {
+    RMG_ISLAND_MINIMUM_RADIUS = 3,
+    RMG_ISLAND_MAXIMUM_RADIUS = 6,
+    RMG_ISLAND_CLEARANCE = 20
+};
 
 // Seed islands clear of the zone edge and earlier island centres, rebuilding
 // the candidate list after every island.
@@ -5448,6 +5606,19 @@ static inline u32 findRmgPrototypeSubtypeIndex(
     return index;
 }
 
+// placeBorderGuard's result when no keymaster's tent could be placed;
+// otherwise it returns the guard colour.
+enum ERmgBorderGuardPlacement {
+    RMG_BORDER_GUARD_NOT_PLACED = -1
+};
+
+// Border guards placed side by side, eastward from the given cell.
+enum ERmgBorderGuardCount {
+    RMG_SINGLE_BORDER_GUARD = 1,
+    // One per cell of the row below a three-tile shipyard.
+    RMG_SHIPYARD_BORDER_GUARDS = 3
+};
+
 VA(0x00540d60, 0x256)
 MAC_ADDRESS(0x24356c, 0x2b8)
 s32 TRmgGenerator::placeBorderGuard(
@@ -5628,6 +5799,11 @@ inline TRmgMapPosition TRmgGenerator::addObjectAtRandomCandidate(
     addObject(object, position);
     return position;
 }
+
+enum ERmgGroundCrossingLimits {
+    RMG_BORDER_CELLS_PER_CROSSING = 40,
+    RMG_MAXIMUM_CROSSING_COST = 100
+};
 
 // Connects land zones on one level. Opens one crossing per 40 eligible
 // border cells (rounded up), drawn without repeats from the empty ones tied
@@ -6032,13 +6208,9 @@ b8 TRmgGenerator::placeMonolithBorderGuard(
     // portal position P.
     //   2 P 1
     //   4 0 3
-    TPoint offsets[RMG_PORTAL_BORDER_OFFSET_COUNT] =
-// North is up; digits are offset indices (probe order) around portal P.
-//   2 P 1
-//   4 0 3
-{
-    TPoint(0, 1), TPoint(1, 0), TPoint(-1, 0), TPoint(1, 1), TPoint(-1, 1)
-};
+    TPoint offsets[5] = {
+        TPoint(0, 1), TPoint(1, 0), TPoint(-1, 0), TPoint(1, 1), TPoint(-1, 1)
+    };
     TRmgMapPosition guardPosition;
     const s32 probeCount = sizeof(offsets) / sizeof(offsets[0]);
     buildZoneConnectionPaths();
@@ -6395,7 +6567,7 @@ TPoint TRmgMap::traceBranchEnd(TPoint from, TPoint toward, s32 level)
         if (from.m_x < 1 || from.m_x >= m_mapWidth - 1
             || from.m_y < 1 || from.m_y >= m_mapHeight - 1)
             return previous;
-        if (steps > RMG_BRANCH_UNCHECKED_STEPS) {
+        if (steps > 2) {
             TRmgMapPosition nearby;
             nearby.m_z = level;
             for (nearby.m_x = from.m_x - 1; nearby.m_x <= from.m_x + 1; ++nearby.m_x) {
@@ -6480,7 +6652,7 @@ void TRmgGenerator::carveBranchingPaths()
                     pending.push_back(middle);
                     pending.push_back(middle);
                     pending.push_back(first);
-                    if (length >= RMG_BRANCH_MINIMUM_SPLIT_LENGTH && contains(middle)) {
+                    if (length >= 8 && contains(middle)) {
                         TPoint toward = middle + perpendicular;
                         branches.push(middle);
                         branches.push(toward);
@@ -6498,7 +6670,7 @@ void TRmgGenerator::carveBranchingPaths()
                 last = branches.front();
                 branches.pop();
                 last = m_map.traceBranchEnd(first, last, level);
-                if (getRmgSquaredDistance(last, first) >= RMG_BRANCH_MINIMUM_SQUARED_DISTANCE) {
+                if (getRmgSquaredDistance(last, first) >= 25) {
                     pending.push_back(last);
                     pending.push_back(first);
                 }
@@ -6661,6 +6833,15 @@ static inline s32 getRmgDensitySpacing(s32 densityArea, s32 density)
     return static_cast<s32>(sqrt(static_cast<double>(densityArea / density)));
 }
 
+// Squared entrance-distance areas per unit of density.
+enum ERmgDensityArea {
+    // 144x144 tiles, the extra-large map size: towns and extra mines.
+    RMG_TOWN_AND_MINE_DENSITY_AREA = 4 * 144 * 144,
+    // 200 and 400 tiles: treasure groups on land and in water zones.
+    RMG_LAND_TREASURE_DENSITY_AREA = 4 * 200,
+    RMG_WATER_TREASURE_DENSITY_AREA = 4 * 400
+};
+
 static inline void initializeRmgCategoryStrides(const s32* densities,
     const s32* counts, s32 categoryCount, s32 densityProduct,
     s32* countSteps, s32* weightedCounts)
@@ -6693,6 +6874,14 @@ static inline s32 selectRmgWeightedCategory(const b8* finished,
     }
     return selected;
 }
+
+// Spacing arguments: the minimum m_objectDistance at a placement. Fixed
+// towns and mines ignore spacing; quest groups only avoid entrance cells,
+// whose distance is zero.
+enum ERmgObjectSpacing {
+    RMG_NO_SPACING = 0,
+    RMG_QUEST_GROUP_SPACING = 1
+};
 
 // The first category with a positive count places one town fewer for the
 // primary town, even if placePrimaryTown used a later category or failed.
@@ -6834,7 +7023,7 @@ b8 TRmgGenerator::tryPlacePrimaryTown(
     TRmgMapPosition center = zone->m_levelPosition;
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[TOWN][alignment];
     TObjectType* prototype = properties->m_prototype;
-    s32 bestSquaredDistance = RMG_PRIMARY_TOWN_MAXIMUM_SQUARED_DISTANCE;
+    s32 bestSquaredDistance = 32000;
     TRmgMapPosition site;
     site.m_z = center.m_z;
     TRmgZoneBounds bounds = zone->m_bounds;
@@ -6862,6 +7051,14 @@ b8 TRmgGenerator::tryPlacePrimaryTown(
 #endif
     return true;
 }
+
+// Squared tile distances of a starting mine from the town: never within 4
+// tiles or beyond 200, and any site within 12 tiles ranks as 12.
+enum ERmgStartingMineDistance {
+    RMG_STARTING_MINE_MINIMUM_SQUARED_DISTANCE = 4 * 4,
+    RMG_STARTING_MINE_NEAR_SQUARED_DISTANCE = 12 * 12,
+    RMG_STARTING_MINE_MAXIMUM_SQUARED_DISTANCE = 200 * 200
+};
 
 VA(0x00545580, 0x401)
 MAC_ADDRESS(0x249214, 0x46c)
@@ -6919,8 +7116,8 @@ b8 TRmgGenerator::placeMineSite(TRmgObject* object,
                 if (nearby->isPassableLand() && nearby->hasObstacleFill())
                     ++obstacleCount;
             }
-            if (obstacleCount > RMG_MINE_MAXIMUM_OBSTACLE_SCORE)
-                obstacleCount = RMG_MINE_MAXIMUM_OBSTACLE_SCORE;
+            if (obstacleCount > 5)
+                obstacleCount = 5;
             if (obstacleCount < bestObstacleCount)
                 continue;
             if (obstacleCount > bestObstacleCount) {
@@ -6957,9 +7154,9 @@ s32 TRmgGenerator::getMineGuardValue(s32 resource, const TRmgZone* zone) const
 {
     s32 value;
     switch (resource) {
-    case WOOD: case ORE: value = RMG_BASIC_MINE_GUARD_VALUE; break;
-    case GOLD: value = RMG_GOLD_MINE_GUARD_VALUE; break;
-    default: value = RMG_RARE_MINE_GUARD_VALUE; break;
+    case WOOD: case ORE: value = 1500; break;
+    case GOLD: value = 7000; break;
+    default: value = 3500; break;
     }
     return getZoneGuardValue(value, zone);
 }
@@ -7014,7 +7211,7 @@ b8 TRmgGenerator::tryPlaceMine(TRmgZone* zone,
     bounds.m_minimumX = max(position.m_x - lastScannedPrototype->getWidth(), 0);
     bounds.m_maximumX = min(position.m_x + 2, m_map.getWidth());
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
-        for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX && placed < RMG_MINE_RESOURCE_PILE_LIMIT; ++position.m_x) {
+        for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX && placed <= 2; ++position.m_x) {
             if (rand() % 2 == 0 && m_map.canPlaceObject(resourceProperties, position, zone)) {
                 ++placed;
                 addObject(new TRmgResourceObject(resourceProperties), position);
@@ -7023,6 +7220,11 @@ b8 TRmgGenerator::tryPlaceMine(TRmgZone* zone,
     }
     return true;
 }
+
+// Weaker guards are not placed.
+enum ERmgGuardValueLimits {
+    RMG_MINIMUM_GUARD_VALUE = 2000
+};
 
 VA(0x00545e00, 0x5b)
 MAC_ADDRESS(0x22ce7c, 0x74)
@@ -7186,6 +7388,11 @@ TRmgObject* TRmgGenerator::createTreasureObject(TRmgZone* zone,
     *value = definition->getValue(zone, this);
     return definition->generate(candidates[selectedIndex].m_properties, this, zone);
 }
+
+// Treasure groups are assembled on a square scratch map before placement.
+enum ERmgTreasureGroupMapSize {
+    RMG_TREASURE_GROUP_MAP_SIZE = 16
+};
 
 // Adds an object centred on the group map (unsigned division).
 inline void TRmgTreasureGroup::addCenteredObject(TRmgObject* object)
@@ -7601,6 +7808,15 @@ static inline bool hasRmgRestrictedRoadApproach(TAdventureObjectType objectType)
         && !g_adventureObjectTraits[objectType].m_clearedOnVisit;
 }
 
+// Road search step costs; a diagonal step costs three times a cardinal one.
+enum ERmgRoadStepCost {
+    RMG_ROAD_MONOLITH_COST = 50,
+    RMG_ROAD_GATE_COST = 1,
+    RMG_ROAD_ALONG_ROAD_COST = 2,
+    RMG_ROAD_OFF_ROAD_COST = 20,
+    RMG_ROAD_DIAGONAL_FACTOR = 3
+};
+
 // Dijkstra-style relaxation uses the back of a descending worklist, retaining
 // duplicate entries. Monolith/gate transitions precede neighbour relaxation.
 VA(0x00547880, 0x7b1)
@@ -7761,6 +7977,14 @@ inline void TRmgGenerator::rebuildRoadCostMap(const TRmgMapPosition& source)
     buildRoadCostMap(source);
 }
 
+// Road-layer types, dirt through cobblestone; zero is no road.
+enum ERmgRoadType {
+    RMG_ROAD_DIRT = 1,
+    RMG_ROAD_GRAVEL = 2,
+    RMG_ROAD_COBBLESTONE = 3,
+    RMG_ROAD_TYPE_COUNT = RMG_ROAD_COBBLESTONE
+};
+
 // Every road on the map uses one random road type.
 VA(0x00548290, 0x26e)
 MAC_ADDRESS(0x24c6d4, 0x1d8)
@@ -7798,11 +8022,17 @@ void TRmgGenerator::createRoads()
 // when the step is later rejected.
 static inline s32 getRmgRiverStepCost(s32 currentCost, const TRmgMapItem* destination)
 {
-    s32 nextCost = currentCost + (rand() & RMG_RIVER_STEP_MASK) + RMG_RIVER_MINIMUM_STEP_COST;
+    s32 nextCost = currentCost + (rand() & 31) + 1;
     if (destination->m_tile.m_roadType)
-        nextCost += RMG_RIVER_ROAD_PENALTY;
+        nextCost += 30;
     return nextCost;
 }
+
+// River-layer line types the generator paints; zero is no river.
+enum ERmgRiverType {
+    RMG_RIVER_CLEAR = 1,
+    RMG_RIVER_ICY = 2
+};
 
 // The source terrain determines both river graphics and the snow boundary
 // restriction.
@@ -8080,11 +8310,11 @@ void TRmgGenerator::createRiver(TRmgMapPosition source)
         VA_COMPGEN(0x00549790, 0x1, STATIC_DTOR, riverDeltaOffsets)
         DATA(0x0069ce28)
         static TRmgRiverDeltaOffset riverDeltaOffsets[RMG_CARDINAL_DIRECTION_COUNT] = {
-    TRmgRiverDeltaOffset(4, 1),  // coast to the east
-    TRmgRiverDeltaOffset(1, 4),  // south
-    TRmgRiverDeltaOffset(-2, 1), // west
-    TRmgRiverDeltaOffset(1, -2)  // north
-};
+            TRmgRiverDeltaOffset(4, 1),  // coast to the east
+            TRmgRiverDeltaOffset(1, 4),  // south
+            TRmgRiverDeltaOffset(-2, 1), // west
+            TRmgRiverDeltaOffset(1, -2)  // north
+        };
 
         s32 deltaIndex = sourceIsSnow
             ? g_rmgSnowRiverDeltaIndex[cardinal]
@@ -8354,6 +8584,7 @@ enum ERmgArtifactCount {
 };
 
 // The shared artifact enum has no enumerator for the Vial of Dragon Blood.
+static const s32 g_rmgArtifactVialOfDragonBlood = 127;
 
 // Each player clause in the map description appends a separator, the player
 // colour and the clause text, using unchecked strcat.
@@ -8628,7 +8859,7 @@ void TRmgGenerator::writeMapHeader(TAbstractFile* outputFile)
             g_artifactTraits[artifactIndex].m_comboType != -1;
     }
     disabledArtifacts.set(ARTIFACT_ARMAGEDDONS_BLADE);
-    disabledArtifacts.set(RMG_ARTIFACT_VIAL_OF_DRAGON_BLOOD);
+    disabledArtifacts.set(g_rmgArtifactVialOfDragonBlood);
 
     if (m_mapVersion >= RMG_MAP_SHADOW_OF_DEATH) {
         writePackedBits(outputFile, disabledArtifacts);
@@ -8839,6 +9070,12 @@ static void insertRmgWorkItem(std::vector<TRmgZone*>& zones, TRmgZone* zone)
 // origin times the scale plus a random tie-break below the scale; adjacent
 // zones instead score from RMG_QUEST_ADJACENT_ZONE_SCORE, and zones above
 // the maximum (including unreachable ones) are skipped.
+enum ERmgQuestZoneScore {
+    RMG_QUEST_UNREACHED_DISTANCE = 20000,
+    RMG_QUEST_DISTANCE_SCALE = 10,
+    RMG_QUEST_ADJACENT_ZONE_SCORE = 1000,
+    RMG_QUEST_MAXIMUM_SCORE = 2000
+};
 
 // Stores each zone's connection-graph distance from origin in its quest
 // placement score (RMG_QUEST_UNREACHED_DISTANCE when unreachable).
@@ -8905,8 +9142,13 @@ b8 TRmgGenerator::placeQuestGroup(
     return false;
 }
 
+// Below this many unused quest artifacts, no more seer huts are offered.
+enum ERmgQuestArtifactPool {
+    RMG_LOW_QUEST_ARTIFACT_COUNT = 20
+};
+
 // Treasure artifact class ('T') bit in the artifact table.
-static const s32 g_rmgQuestArtifactClass = ARTIFACT_CLASS_TREASURE;
+static const s32 g_rmgQuestArtifactClass = 2;
 
 // Trait eligibility is independent of a generator's already-used artifacts.
 static bool isRmgQuestArtifactEligible(s32 artifact)

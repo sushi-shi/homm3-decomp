@@ -11,12 +11,4 @@ enum EObjectMaskFrame {
     OBJECT_MASK_CELLS = OBJECT_MASK_WIDTH * OBJECT_MASK_HEIGHT
 };
 
-// Slot values referenced by the RMG's footprint and selection rules.
-// Other editor categories retain their original integer identities.
-enum EObjectSlotCategory {
-    OBJECT_SLOT_CATEGORY_0 = 0,
-    OBJECT_SLOT_CATEGORY_4 = 4,
-    OBJECT_SLOT_CATEGORY_5 = 5
-};
-
 #endif

@@ -105,6 +105,11 @@ void G::run() {
             'std::printf("TreasureRecipe::Dwellings,");',
             'std::printf("TreasureRecipe::Seers,");',
         ]))
+        loop = 'for (int i = 2; i--;) m_objectGenerators.push_back(new TRmgBlackBoxCreatureDef(i));'
+        expected = expand('// @rmg recipes input.cpp G::run', source)
+        scoped = self.source(code.replace(loop, '{ int count = 2; ' + loop + ' }'))
+        self.assertEqual(expand('// @rmg recipes input.cpp G::run', scoped), expected)
+        source = self.source(code)
         self.assertEqual(expand('// @rmg tent_values input.cpp G::run', source), '{5000, 7500}')
         self.assertEqual(expand('// @rmg seer_rewards input.cpp G::run', source),
                          'RMG_SEER_REWARD(Experience, 2000, 5000)\nRMG_SEER_REWARD(Gold, 5333, 10000)')

@@ -52,7 +52,8 @@ class Sources:
         if filename not in self.units:
             path = (self.root / filename).resolve()
             tu = cx.Index.create().parse(str(path), args=[
-                *self.profiles.for_source(path), '-ferror-limit=0'])
+                *self.profiles.for_source(path), '-ferror-limit=0'],
+                options=cx.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD)
             errors = [d for d in tu.diagnostics if d.severity >= cx.Diagnostic.Error]
             # VC6 permits constructs Clang rejects in unrelated function bodies.
             # Header/file-scope errors invalidate the TU; an erroneous body must
@@ -136,12 +137,21 @@ def validate_group(loop, group):
             raise ValueError(f'{statement.location}: {group} requires unconditional direct appends')
 
 
+def statements(body):
+    """Walk unconditional lexical scopes without flattening control flow."""
+    for statement in body.get_children():
+        if statement.kind == cx.CursorKind.COMPOUND_STMT:
+            yield from statements(statement)
+        else:
+            yield statement
+
+
 def recipes(method):
     body = one((c for c in method.get_children() if c.kind == cx.CursorKind.COMPOUND_STMT),
                f'{method.location}: recipe body')
     emitted = []
     groups = []
-    for statement in body.get_children():
+    for statement in statements(body):
         calls = list(constructors(statement))
         if not calls:
             # Native setup declarations, pool resize/reset and loop counters
@@ -242,6 +252,10 @@ def main():
     generated = expand(template.read_text(), sources)
     if '// @rmg ' in generated or '[@count]' in generated:
         raise ValueError('unrecognized extraction directive')
+    from declarations import generate as declarations
+    from constants import generate as constants
+    header = declarations(sources) + constants(sources)
+    output.with_name("declarations.h").write_text(header)
     output.write_text(generated)
     sources.dependencies.update(ROOT / 'config' / name for name in ('project.toml', 'units.toml'))
     sources.dependencies.update(Path(module.__file__).resolve()

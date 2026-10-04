@@ -1671,73 +1671,55 @@ static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] = {
 // special-frame chance (percent at full brush strength), frame count and
 // the frame list.
 DATA(0x006a48d0)
-static TRmgPatternTerrainRule g_rmgDirtRule(
-true, true, 50, 46, g_rmgDirtPatternEntries
-);
+static TRmgPatternTerrainRule g_rmgDirtRule(true, true, 50, 46, g_rmgDirtPatternEntries);
 
 VA_COMPGEN(0x005b3b60, 0x23, STATIC_CTOR, g_rmgDirtRule)
 
 VA_COMPGEN(0x005b3b90, 0x0a, STATIC_DTOR, g_rmgDirtRule)
 DATA(0x006a44f8)
-static TRmgPatternTerrainRule g_rmgSandRule(
-false, true, 70, 24, g_rmgSandPatternEntries
-);
+static TRmgPatternTerrainRule g_rmgSandRule(false, true, 70, 24, g_rmgSandPatternEntries);
 
 VA_COMPGEN(0x005b3ba0, 0x23, STATIC_CTOR, g_rmgSandRule)
 
 VA_COMPGEN(0x005b3bd0, 0x0a, STATIC_DTOR, g_rmgSandRule)
 DATA(0x006a3d88)
-static TRmgPatternTerrainRule g_rmgGrassRule(
-true, true, 50, 79, g_rmgLandPatternEntries
-);
+static TRmgPatternTerrainRule g_rmgGrassRule(true, true, 50, 79, g_rmgLandPatternEntries);
 
 VA_COMPGEN(0x005b3be0, 0x23, STATIC_CTOR, g_rmgGrassRule)
 
 VA_COMPGEN(0x005b3c10, 0x0a, STATIC_DTOR, g_rmgGrassRule)
 DATA(0x006a3f70)
-static TRmgPatternTerrainRule g_rmgSnowRule(
-true, true, 80, 79, g_rmgLandPatternEntries
-);
+static TRmgPatternTerrainRule g_rmgSnowRule(true, true, 80, 79, g_rmgLandPatternEntries);
 
 VA_COMPGEN(0x005b3c20, 0x23, STATIC_CTOR, g_rmgSnowRule)
 
 VA_COMPGEN(0x005b3c50, 0x0a, STATIC_DTOR, g_rmgSnowRule)
 DATA(0x006a46e0)
-static TRmgPatternTerrainRule g_rmgSwampRule(
-true, true, 80, 79, g_rmgLandPatternEntries
-);
+static TRmgPatternTerrainRule g_rmgSwampRule(true, true, 80, 79, g_rmgLandPatternEntries);
 
 VA_COMPGEN(0x005b3c60, 0x23, STATIC_CTOR, g_rmgSwampRule)
 
 VA_COMPGEN(0x005b3c90, 0x0a, STATIC_DTOR, g_rmgSwampRule)
 DATA(0x006a4ab8)
-static TRmgPatternTerrainRule g_rmgRoughRule(
-true, true, 80, 79, g_rmgLandPatternEntries
-);
+static TRmgPatternTerrainRule g_rmgRoughRule(true, true, 80, 79, g_rmgLandPatternEntries);
 
 VA_COMPGEN(0x005b3ca0, 0x23, STATIC_CTOR, g_rmgRoughRule)
 
 VA_COMPGEN(0x005b3cd0, 0x0a, STATIC_DTOR, g_rmgRoughRule)
 DATA(0x006a5070)
-static TRmgPatternTerrainRule g_rmgSubterraneanRule(
-true, true, 60, 79, g_rmgLandPatternEntries
-);
+static TRmgPatternTerrainRule g_rmgSubterraneanRule(true, true, 60, 79, g_rmgLandPatternEntries);
 
 VA_COMPGEN(0x005b3ce0, 0x23, STATIC_CTOR, g_rmgSubterraneanRule)
 
 VA_COMPGEN(0x005b3d10, 0x0a, STATIC_DTOR, g_rmgSubterraneanRule)
 DATA(0x006a4e88)
-static TRmgPatternTerrainRule g_rmgLavaRule(
-true, true, 80, 79, g_rmgLandPatternEntries
-);
+static TRmgPatternTerrainRule g_rmgLavaRule(true, true, 80, 79, g_rmgLandPatternEntries);
 
 VA_COMPGEN(0x005b3d20, 0x23, STATIC_CTOR, g_rmgLavaRule)
 
 VA_COMPGEN(0x005b3d50, 0x0a, STATIC_DTOR, g_rmgLavaRule)
 DATA(0x006a4ca0)
-static TRmgPatternTerrainRule g_rmgWaterRule(
-false, false, 0, 33, g_rmgWaterPatternEntries
-);
+static TRmgPatternTerrainRule g_rmgWaterRule(false, false, 0, 33, g_rmgWaterPatternEntries);
 
 VA_COMPGEN(0x005b3d60, 0x23, STATIC_CTOR, g_rmgWaterRule)
 

@@ -214,9 +214,9 @@ impl PlacementMap<'_, '_, '_> {
             return Ok(false);
         };
         let base = match resource {
-            Resource::Wood | Resource::Ore => raw::RMG_BASIC_MINE_GUARD_VALUE,
-            Resource::Gold => raw::RMG_GOLD_MINE_GUARD_VALUE,
-            _ => raw::RMG_RARE_MINE_GUARD_VALUE,
+            Resource::Wood | Resource::Ore => crate::constants::RMG_BASIC_MINE_GUARD_VALUE,
+            Resource::Gold => crate::constants::RMG_GOLD_MINE_GUARD_VALUE,
+            _ => crate::constants::RMG_RARE_MINE_GUARD_VALUE,
         };
         let value = self.zone_guard_value(
             i32::try_from(base).map_err(|_| PlacementError::Arithmetic)?,
@@ -360,7 +360,7 @@ impl PlacementMap<'_, '_, '_> {
                 obstacles += 1;
             }
         }
-        let obstacles = obstacles.min(raw::RMG_MINE_MAXIMUM_OBSTACLE_SCORE);
+        let obstacles = obstacles.min(crate::constants::RMG_MINE_MAXIMUM_OBSTACLE_SCORE);
         Ok(obstacles)
     }
 
@@ -402,7 +402,7 @@ impl PlacementMap<'_, '_, '_> {
         let mut placed = 0;
         for y in minimum.y.max(0)..maximum.y.min(side) {
             for x in minimum.x.max(0)..maximum.x.min(side) {
-                if placed >= raw::RMG_MINE_RESOURCE_PILE_LIMIT {
+                if placed >= crate::constants::RMG_MINE_RESOURCE_PILE_LIMIT {
                     break;
                 }
                 let position = WorldPosition {

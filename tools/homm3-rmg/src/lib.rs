@@ -10,6 +10,7 @@ pub use homm3_rmg_data as raw;
 
 pub mod behavior;
 pub mod boundaries;
+mod constants;
 pub mod domain;
 pub mod generation;
 pub mod geometry;

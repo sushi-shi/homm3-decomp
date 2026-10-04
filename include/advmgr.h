@@ -1,8 +1,6 @@
 #ifndef HOMM3_ADVMGR_H
 #define HOMM3_ADVMGR_H
 
-#include "adventure_object_subtype.h"
-
 #include "va.h"
 
 #include "basemgr.h"
@@ -112,6 +110,14 @@ enum WitchHutSkillEncoding {
 //        set to `1 << extra`, the levels still coming off the stream.
 // All three of the 216..218 arms append to the SAME 16-byte-element pool at
 // NewfullMap+0xc0 that the retail-only resolution pass at 0x502b60 walks.
+// The three cartographer variants, indexed by NewmapCell::objectIndex.
+// DispatchEvent's cartographer arm shows one map plane per value, matching
+// the three-wide cartographerMask/cartographerFlags arrays.
+enum ECartographerType {
+    CARTOGRAPHER_WATER = 0,
+    CARTOGRAPHER_LAND = 1,
+    CARTOGRAPHER_UNDERGROUND = 2
+};
 
 enum EAdvmgrRetailObjectType {
     BORDER_GATE = 212,
@@ -270,7 +276,19 @@ enum EOverviewExit {
 // 0x41800000, 0x413d70a4 and 0x40f5c28f exactly. No attested name.
 extern float g_viewWorldScaleFloat;
 
-#include "map_dimensions.h"
+// The four square map dimensions MAP_WIDTH/MAP_HEIGHT take, named so
+// UpdateRadar's three `switch (MAP_HEIGHT)` bodies case on a domain rather
+// than on literals. The values are retail's own switch labels, decoded out
+// of the two 109-byte index tables at 0x4135e4 and 0x413714; the names are
+// HoMM3's published map sizes. advmgr.h already carried 144 as
+// ADVENTURE_XLARGE_MAP_WIDTH inside advManager's sound-extent enum - that
+// enumerator is left alone, this is the domain's own home.
+enum EMapDimension {
+    MAP_DIMENSION_SMALL = 36,
+    MAP_DIMENSION_MEDIUM = 72,
+    MAP_DIMENSION_LARGE = 108,
+    MAP_DIMENSION_EXTRA_LARGE = 144
+};
 
 // The only three values UpdateRadar tests gUnnamed68c6b8 against. Retail
 // compares the float's BIT PATTERN with integer `cmp` immediates

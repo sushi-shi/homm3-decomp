@@ -56,7 +56,7 @@ pub(super) struct Registration {
 impl Default for Registration {
     fn default() -> Self {
         Self {
-            next_object_id: i32::try_from(raw::RMG_FIRST_OBJECT_ID).unwrap(),
+            next_object_id: i32::try_from(crate::constants::RMG_FIRST_OBJECT_ID).unwrap(),
             active: Vec::new(),
             retail_active_storage: false,
             counts: [0; KINDS],
@@ -70,7 +70,7 @@ impl Default for Registration {
 }
 impl Registration {
     pub(super) fn reset(&mut self, zones: usize) -> Result<(), PlacementError> {
-        self.next_object_id = i32::try_from(raw::RMG_FIRST_OBJECT_ID).unwrap();
+        self.next_object_id = i32::try_from(crate::constants::RMG_FIRST_OBJECT_ID).unwrap();
         self.active.clear();
         self.retail_active_storage = false;
         self.counts.fill(0);

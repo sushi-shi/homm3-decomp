@@ -129,14 +129,14 @@ fn water_bands() -> [TreasureBand; raw::RMG_TREASURE_BAND_COUNT as usize] {
         density: None,
     }; raw::RMG_TREASURE_BAND_COUNT as usize];
     bands[0] = TreasureBand {
-        minimum: i32::try_from(raw::RMG_WATER_TREASURE_0_MINIMUM).unwrap(),
-        maximum: i32::try_from(raw::RMG_WATER_TREASURE_0_MAXIMUM).unwrap(),
-        density: NonZeroU32::new(raw::RMG_WATER_TREASURE_0_DENSITY),
+        minimum: i32::try_from(crate::constants::RMG_WATER_TREASURE_0_MINIMUM).unwrap(),
+        maximum: i32::try_from(crate::constants::RMG_WATER_TREASURE_0_MAXIMUM).unwrap(),
+        density: NonZeroU32::new(crate::constants::RMG_WATER_TREASURE_0_DENSITY),
     };
     bands[1] = TreasureBand {
-        minimum: i32::try_from(raw::RMG_WATER_TREASURE_1_MINIMUM).unwrap(),
-        maximum: i32::try_from(raw::RMG_WATER_TREASURE_1_MAXIMUM).unwrap(),
-        density: NonZeroU32::new(raw::RMG_WATER_TREASURE_1_DENSITY),
+        minimum: i32::try_from(crate::constants::RMG_WATER_TREASURE_1_MINIMUM).unwrap(),
+        maximum: i32::try_from(crate::constants::RMG_WATER_TREASURE_1_MAXIMUM).unwrap(),
+        density: NonZeroU32::new(crate::constants::RMG_WATER_TREASURE_1_DENSITY),
     };
     bands
 }

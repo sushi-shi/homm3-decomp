@@ -7,7 +7,13 @@
 #define HOMM3_OBJNAMES_H
 
 #include "va.h"
-#include "adventure_object_data.h"
+
+enum {
+    // The loader's own bound: it zeroes 232 rows, walks 232 text rows
+    // (`cmp edx,0x3a0` over a four-byte stride) and stops the name-copy
+    // loop at 0x69251c, which is 0x69169c + 232 * 0x10.
+    ADVENTURE_OBJECT_TRAIT_COUNT = 232
+};
 
 // 16-byte row, every offset written by the loader at 0x41b500 from the
 // object-type id tables in objnames.cpp.
@@ -27,6 +33,13 @@ struct TAdvObjectTraits {
     unsigned char m_isDecoration;        // +0x0c
 };
 SIZE(TAdvObjectTraits, 0x10);
+
+// One row of the loader's first .rdata override table: the object id and
+// the objnames.txt line its name comes from.
+struct TAdvObjectNameRow {
+    int m_objectType;
+    int m_nameRow;
+};
 
 extern TAdvObjectTraits g_adventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
 

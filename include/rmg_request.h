@@ -6,8 +6,6 @@
 #include "homm3_bool.h"
 #include "homm3_int.h"
 #include "town_type.h"
-#include "map_dimensions.h"
-#include "rmg_settings.h"
 class TAbstractFile;
 class TProgressSink;
 

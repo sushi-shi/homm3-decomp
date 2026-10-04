@@ -35,15 +35,15 @@ impl CombinationId {
 #[repr(u32)]
 pub enum ArtifactClass {
     /// Spellbook, war machine or other non-random artifact.
-    Special = raw::ARTIFACT_CLASS_SPECIAL,
+    Special = crate::constants::ARTIFACT_CLASS_SPECIAL,
     /// Treasure-class artifacts may be seer-hut quest items.
-    Treasure = raw::ARTIFACT_CLASS_TREASURE,
+    Treasure = crate::constants::ARTIFACT_CLASS_TREASURE,
     /// Minor artifact.
-    Minor = raw::ARTIFACT_CLASS_MINOR,
+    Minor = crate::constants::ARTIFACT_CLASS_MINOR,
     /// Major artifact.
-    Major = raw::ARTIFACT_CLASS_MAJOR,
+    Major = crate::constants::ARTIFACT_CLASS_MAJOR,
     /// Relic artifact.
-    Relic = raw::ARTIFACT_CLASS_RELIC,
+    Relic = crate::constants::ARTIFACT_CLASS_RELIC,
 }
 
 /// Immutable artifact properties consumed by the generator.

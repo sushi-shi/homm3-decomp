@@ -202,7 +202,16 @@ SIZE(type_university, 0x10);
 // identified by Dreamcast CodeView. Only a forward declaration is needed here.
 class CNetPlayerInfo;
 
-#include "map_format_version.h"
+enum EMapFormatVersion {
+    MAP_FORMAT_RESTORATION_OF_ERATHIA = 14,
+    // Both byte-proven by readHeroData (0x5021c0), which gates on each of
+    // them separately: `cmp esi,0x15` decides whether the hero record
+    // carries a single signed spell id or a 70-bit mask, and
+    // `cmp [gpGame+0x1f86c],0x1c` decides whether the equipped-artifact
+    // band is eighteen positions or nineteen.
+    MAP_FORMAT_ARMAGEDDONS_BLADE = 21,
+    MAP_FORMAT_SHADOW_OF_DEATH = 28
+};
 
 // Retail victory/loss records embedded in game at +0x1f89c/+0x1f8e8.
 // Only the fields reached by reconstructed consumers are exposed. The

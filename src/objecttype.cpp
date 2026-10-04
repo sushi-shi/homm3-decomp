@@ -39,7 +39,7 @@
 // Provisional role name; retail stores the two grid dimensions here.
 // The only references are TObjectTypeTable::load's default object and
 // TObjectType::setTriggerMask's no-trigger path, both in this compiland.
-DATA(0x00640278) const TObjectType::TPoint g_noTriggerCell = {OBJECT_MASK_WIDTH, OBJECT_MASK_HEIGHT};
+DATA(0x00640278) const TObjectType::TPoint g_noTriggerCell = {8, 6};
 // Retail publishes this class's whole layout at the .bss object 0x69cb80
 // that both accessors address:
 //   +0x00  a 16-byte Dinkumware _Tree - allocator byte, comparator byte,

@@ -5,22 +5,7 @@
 #include <cstdint>
 #include <cstring>
 #include <cstdlib>
-#include "rmg_line_pattern.h"
-#include "tile_direction.h"
-#include "rmg_settings.h"
-#include "town_type.h"
-#include "terrain_type.h"
-#include "rmg_terrain_data.h"
-#include "adventure_object_data.h"
-#include "adventure_object_type.h"
-#include "adventure_object_subtype.h"
-#include "game_resource.h"
-#include "spellschool.h"
-
-#include "creature_traits.h"
-#include "spell_traits.h"
-#include "hero_traits.h"
-#include "artifact_data.h"
+#include "declarations.h"
 
 // Shared description names keep the native DATA_COMPGEN annotations in C++.
 #define DATA_COMPGEN(address, name, text) text

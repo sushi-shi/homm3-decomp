@@ -245,13 +245,4 @@ enum TArtifact {
     ARTIFACT_BOW_OF_THE_SHARPSHOOTER = 0x89
 };
 
-// Class bits assigned by the artraits.txt R/J/N/T selector.
-enum EArtifactClass {
-    ARTIFACT_CLASS_SPECIAL = 1,
-    ARTIFACT_CLASS_TREASURE = 2,
-    ARTIFACT_CLASS_MINOR = 4,
-    ARTIFACT_CLASS_MAJOR = 8,
-    ARTIFACT_CLASS_RELIC = 16
-};
-
 #endif // HOMM3_ARTIFACT_TYPE_H

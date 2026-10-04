@@ -226,10 +226,10 @@ impl PlacementMap<'_, '_, '_> {
                 }
                 // Draw even for an unimproved or subsequently blocked edge.
                 let next_cost = cost
-                    + (rng.draw() & raw::RMG_RIVER_STEP_MASK)
-                    + raw::RMG_RIVER_MINIMUM_STEP_COST
+                    + (rng.draw() & crate::constants::RMG_RIVER_STEP_MASK)
+                    + crate::constants::RMG_RIVER_MINIMUM_STEP_COST
                     + if self.cells[inspected].road.kind().is_some() {
-                        raw::RMG_RIVER_ROAD_PENALTY
+                        crate::constants::RMG_RIVER_ROAD_PENALTY
                     } else {
                         0
                     };

@@ -21,11 +21,4 @@ enum TTownType {
     TOWN_CONFLUX = 0x8
 };
 
-enum ETownTypeCount {
-    // Complete has nine town types; the requirement-mask walks cover rows 0..8.
-    TOWN_TYPE_COUNT = TOWN_CONFLUX + 1,
-    // Restoration of Erathia has the first eight; Conflux came later.
-    TOWN_TYPE_ROE_COUNT = TOWN_CONFLUX
-};
-
 #endif

@@ -70,9 +70,9 @@ impl Direction {
     }
     pub(super) const fn chamfer_cost(self) -> u32 {
         if self.index() % 2 == 0 {
-            raw::RMG_CHAMFER_CARDINAL_COST
+            crate::constants::RMG_CHAMFER_CARDINAL_COST
         } else {
-            raw::RMG_CHAMFER_DIAGONAL_COST
+            crate::constants::RMG_CHAMFER_DIAGONAL_COST
         }
     }
 }
@@ -257,14 +257,15 @@ impl PlacementMap<'_, '_, '_> {
                         continue;
                     }
                 }
-                let mut next_cost = cost + raw::RMG_CONNECTION_LAND_STEP_COST;
+                let mut next_cost = cost + crate::constants::RMG_CONNECTION_LAND_STEP_COST;
                 if next_zone == zone {
                     if current_zone != zone {
                         continue;
                     }
                     let water = self.terrain.tiles()[index].terrain() == Terrain::Water;
                     if water {
-                        next_cost = cost + raw::RMG_CONNECTION_WATER_OR_BORDER_STEP_COST;
+                        next_cost =
+                            cost + crate::constants::RMG_CONNECTION_WATER_OR_BORDER_STEP_COST;
                     }
                     if u32::from(self.cells[index].movement.cost()) <= next_cost {
                         continue;
@@ -280,7 +281,7 @@ impl PlacementMap<'_, '_, '_> {
                         previous: position,
                     });
                 } else {
-                    next_cost = cost + raw::RMG_CONNECTION_WATER_OR_BORDER_STEP_COST;
+                    next_cost = cost + crate::constants::RMG_CONNECTION_WATER_OR_BORDER_STEP_COST;
                     if current_zone != zone && current_zone != next_zone {
                         continue;
                     }

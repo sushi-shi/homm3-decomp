@@ -314,7 +314,7 @@ impl PlacementMap<'_, '_, '_> {
                     from: middle,
                     to: from,
                 });
-                if i64::from(length) >= i64::from(raw::RMG_BRANCH_MINIMUM_SPLIT_LENGTH)
+                if i64::from(length) >= i64::from(crate::constants::RMG_BRANCH_MINIMUM_SPLIT_LENGTH)
                     && self.view().contains(middle)
                 {
                     let positive = middle
@@ -337,7 +337,7 @@ impl PlacementMap<'_, '_, '_> {
             while let Some(Segment { from, to }) = self.connections.branches.pop_front() {
                 let end = self.trace_branch_end(from, to, level)?;
                 if i64::from(end.squared_distance(from))
-                    >= i64::from(raw::RMG_BRANCH_MINIMUM_SQUARED_DISTANCE)
+                    >= i64::from(crate::constants::RMG_BRANCH_MINIMUM_SQUARED_DISTANCE)
                 {
                     self.connections.pending.try_reserve(1)?;
                     self.connections.pending.push(Segment {
@@ -399,7 +399,7 @@ impl PlacementMap<'_, '_, '_> {
             if from.x < 1 || from.x >= side - 1 || from.y < 1 || from.y >= side - 1 {
                 return Ok(previous);
             }
-            if steps > raw::RMG_BRANCH_UNCHECKED_STEPS {
+            if steps > crate::constants::RMG_BRANCH_UNCHECKED_STEPS {
                 // This helper scans X before Y, unlike neighborhood patches.
                 for x in from.x - 1..=from.x + 1 {
                     for y in from.y - 1..=from.y + 1 {
