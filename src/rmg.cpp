@@ -2879,7 +2879,7 @@ VA(0x00537b10, 0x2a8)
 MAC_ADDRESS(0x2363e4, 0x2ec)
 type_random_map_generator::type_random_map_generator(
     s32 width, s32 height, s32 levels, s32 humanPlayers, s32 humanTeams,
-    s32 computerPlayers, s32 computerTeams, s32 waterContent,
+    s32 computerPlayers, s32 computerTeams, ERmgWaterContent waterContent,
     s32 monsterStrength, TProgressSink* progress, s32 mapVersion)
     : TRmgGeneratorBase(width, height, levels, progress,
         width * height + 326900, mapVersion)
@@ -2890,7 +2890,7 @@ type_random_map_generator::type_random_map_generator(
     m_nextKeyTentColor = RMG_KEY_LIGHT_BLUE;
 #endif
     m_questArtifactPoolLow = false;
-    m_waterContent = static_cast<ERmgWaterContent>(waterContent);
+    m_waterContent = waterContent;
     m_monsterStrength = monsterStrength;
     m_humanPlayerCount = humanPlayers;
     m_humanTeamCount = humanTeams;

@@ -1832,7 +1832,7 @@ public:
 
     type_random_map_generator(s32 width, s32 height, s32 levels,
         s32 humanPlayers, s32 humanTeams, s32 computerPlayers, s32 computerTeams,
-        s32 waterContent, s32 monsterStrength, TProgressSink* progress, s32 mapVersion);
+        ERmgWaterContent waterContent, s32 monsterStrength, TProgressSink* progress, s32 mapVersion);
     void loadTemplates();
     void placeMines();
     void prepareZoneConnections();
