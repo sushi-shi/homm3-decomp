@@ -179,9 +179,9 @@ impl PlacementMap<'_, '_, '_> {
             }
             if position.level == level {
                 position = previous;
-                // The native painter stays bound to the level captured before
-                // skipping existing roads. The predecessor walk can cross a
-                // portal and return with `previous` still on the other level.
+                // Paint on the level where this run began. Skipping existing
+                // roads can cross portals and return to this level while
+                // `previous` still points to the other level.
                 self.paint_line_point(Layer::Road(kind), WorldPosition { level, ..position }, rng)?;
                 painted = true;
                 loop {

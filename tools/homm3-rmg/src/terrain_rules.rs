@@ -605,8 +605,7 @@ fn select_range(
 /// reflections before the next family, deciding which overlapping shape wins.
 #[must_use]
 pub fn classify(neighbours: &[TerrainEdge; raw::TILE_DIR_COUNT as usize]) -> TerrainTransition {
-    // With no transition edges, the shape is already known. The native painter
-    // likewise skips its pattern search for uniform terrain interiors.
+    // Without transition edges, no pattern search is needed: this is a fill.
     if neighbours.iter().all(|edge| *edge == TerrainEdge::None) {
         return TerrainTransition {
             shape: TerrainShape::Fill,

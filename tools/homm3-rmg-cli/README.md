@@ -74,3 +74,7 @@ for batches; keep one RNG per map and preserve serial stage/draw order.
 
 The [architecture reference](../../docs/reconstruction/rust-rmg.md) describes
 ownership, compatibility limits and the parallelism roadmap.
+
+Saved C++ reference tables support repeatable Rust checks without Wine. See
+[local reference corpus](../../docs/tooling/rmg-reference-corpus.md) for capture,
+resume, provenance and streaming comparison commands.
