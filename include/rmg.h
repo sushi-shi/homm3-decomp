@@ -3,7 +3,7 @@
 //
 // HOMM3_RMG_HOTFIX (off by default) replaces retail bugs that crash or read
 // uninitialized memory with defined behaviour; maps then differ from retail
-// only where retail was undefined. Sites: docs/todos/rmg-undefined-behavior.md.
+// only where retail was undefined.
 #ifndef HOMM3_RMG_H
 #define HOMM3_RMG_H
 

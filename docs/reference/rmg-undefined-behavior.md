@@ -17,8 +17,8 @@ defined, non-crashing alternatives at each site: unreached river targets are
 not drawn, guards are skipped on unzoned cells or when no creature is
 selectable, uninitialized town flags and the first key-tent colour get fixed
 values, and short template rows, empty road lists and long map descriptions
-are bounded. Hotfix maps differ from retail and are not oracle targets; the
-per-site list is in [the RMG UB todo](../todos/rmg-undefined-behavior.md).
+are bounded. Hotfix maps differ from retail and are not oracle targets; each
+site is an `#if defined(HOMM3_RMG_HOTFIX)` block in the source.
 
 ## Initial key-tent color: uninitialized stack integer
 
