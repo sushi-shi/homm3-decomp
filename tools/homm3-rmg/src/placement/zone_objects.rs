@@ -63,8 +63,10 @@ impl PlacementMap<'_, '_, '_> {
         let map = self.terrain.coverage().map();
         let view = PlacementView {
             side: map.raster().dimension(),
-            terrain: self.terrain.tiles(),
-            zones: map.raster().cells(),
+            surface: super::PlacementSurface::World {
+                terrain: self.terrain.tiles(),
+                zones: map.raster().cells(),
+            },
             cells: self.cells,
         };
         self.zone_placement.candidates.clear();
@@ -75,7 +77,7 @@ impl PlacementMap<'_, '_, '_> {
                     level: zone.position().level,
                 };
                 let index = view.native_index(position)?;
-                if view.zones[index].zone == Some(zone.id())
+                if view.zone(index) == Some(zone.id())
                     && view.can_place(
                         entry,
                         position,

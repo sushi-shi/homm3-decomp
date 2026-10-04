@@ -30,6 +30,13 @@ enum ERmgDirection {
     RMG_CARDINAL_DIRECTION_COUNT = RMG_DIRECTION_COUNT / RMG_CARDINAL_DIRECTION_STEP
 };
 
+enum ERmgObjectLimit { RMG_DEFAULT_OBJECT_LIMIT = 32000 };
+
+// Treasure groups are assembled on a square scratch map before placement.
+enum ERmgTreasureGroupMapSize {
+    RMG_TREASURE_GROUP_MAP_SIZE = 16
+};
+
 // Width of the native border-connection colour bitfield.
 enum ERmgBorderConnectionBits {
     RMG_BORDER_COLOR_BITS = 4

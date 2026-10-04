@@ -70,11 +70,7 @@ impl OutlineWorkspace {
         for count in 0..OUTLINE_STATES {
             self.points[count] = position;
             for _ in 0..raw::RMG_CARDINAL_DIRECTION_COUNT {
-                direction = (direction + raw::RMG_DIRECTION_COUNT as usize
-                    - raw::RMG_CARDINAL_DIRECTION_STEP as usize)
-                    % raw::RMG_DIRECTION_COUNT as usize;
-                let (dx, dy) = raw::DIRECTIONS[direction];
-                let nearby = Point::new(position.x + dx, position.y + dy);
+                let nearby = outline_probe(position, &mut direction);
                 let cell = u8::try_from(-nearby.x)
                     .ok()
                     .zip(u8::try_from(-nearby.y).ok())
@@ -84,16 +80,29 @@ impl OutlineWorkspace {
                     break;
                 }
             }
-            let (dx, dy) = raw::DIRECTIONS[direction];
-            position = Point::new(position.x + dx, position.y + dy);
-            direction = (direction + raw::RMG_DIRECTION_COUNT as usize / 2)
-                % raw::RMG_DIRECTION_COUNT as usize;
+            advance_outline(&mut position, &mut direction);
             if position == start {
                 return Ok(&self.points[..=count]);
             }
         }
         Err(OutlineError::NonTerminating)
     }
+}
+
+// The caller bounds the walk to its grid and one-cell halo, so offsets cannot
+// overflow. Headings remain cardinal and use the canonical movement table.
+pub(crate) fn outline_probe(position: Point, direction: &mut usize) -> Point {
+    *direction = (*direction + raw::RMG_DIRECTION_COUNT as usize
+        - raw::RMG_CARDINAL_DIRECTION_STEP as usize)
+        % raw::RMG_DIRECTION_COUNT as usize;
+    let (dx, dy) = raw::DIRECTIONS[*direction];
+    Point::new(position.x + dx, position.y + dy)
+}
+pub(crate) fn advance_outline(position: &mut Point, direction: &mut usize) {
+    let (dx, dy) = raw::DIRECTIONS[*direction];
+    *position = Point::new(position.x + dx, position.y + dy);
+    *direction =
+        (*direction + raw::RMG_DIRECTION_COUNT as usize / 2) % raw::RMG_DIRECTION_COUNT as usize;
 }
 
 /// Overlap order is defined only for drawn cells inside the image dimensions.

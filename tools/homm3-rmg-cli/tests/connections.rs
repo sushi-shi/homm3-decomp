@@ -54,3 +54,9 @@ fn native_treasure_values_preserve_factions_ordinals_and_rng() {
 fn native_treasure_factories_preserve_payloads_reservations_ids_and_rng() {
     connections::compare_native(connections::Attempts::TreasureFactories);
 }
+
+#[test]
+#[ignore = "requires HOMM3_RMG_DATA and HOMM3_RMG_ORACLE treasure group geometry checkpoints"]
+fn native_treasure_groups_preserve_fitting_outline_membership_and_cleanup() {
+    connections::compare_native(connections::Attempts::TreasureGroups);
+}

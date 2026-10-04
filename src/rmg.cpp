@@ -91,65 +91,13 @@ s32 g_rmgMapObjectLimits[ADVENTURE_OBJECT_TRAIT_COUNT];
 DATA(0x0069d1f4)
 s32 g_rmgZoneObjectLimits[ADVENTURE_OBJECT_TRAIT_COUNT];
 DATA(0x00640718)
-static const TRmgObjectLimit g_rmgMapObjectLimitOverrides[30] = {
-    {EVENT,                200},
-    {BLACK_BOX,            200},
-    {OBELISK,              48},
-    {BOAT,                 64},
-    {TRAINING_GROUNDS,     32},
-    {DEFENSE_TOWER,        32},
-    {GARDEN_OF_REVELATION, 32},
-    {MERC_CAMP,            32},
-    {POWER_SCHOOL,         32},
-    {TREE_OF_KNOWLEDGE,    32},
-    {LIBRARY,              32},
-    {ARENA,                32},
-    {MAGIC_SCHOOL,         32},
-    {WAR_SCHOOL,           32},
-    {UNIVERSITY,           32},
-    {WITCH_HUT,            32},
-    {SHRINE1,              32},
-    {SHRINE2,              32},
-    {SHRINE3,              32},
-    {SIREN,                32},
-    {MYSTICAL_GARDEN,      32},
-    {WATER_WHEEL,          32},
-    {WINDMILL,             32},
-    {MAGIC_SPRING,         32},
-    {DEAD_GUY,             32},
-    {LEAN_TO,              32},
-    {WARRIOR_TOMB,         32},
-    {WAGON,                32},
-    {SEER,                 48},
-    {BLACK_MARKET,         32},
-};
+static const TRmgObjectLimit g_rmgMapObjectLimitOverrides[30] =
+#include "rmg_data/map_object_limits.inc"
+;
 DATA(0x00640808)
-static const TRmgObjectLimit g_rmgZoneObjectLimitOverrides[24] = {
-    {ALTAR_OF_SACRIFICE,  1},
-    {CARTOGRAPHER,        1},
-    {CLOVER_FIELD,        1},
-    {COVER_OF_DARKNESS,   1},
-    {EYE_OF_MAGI,         1},
-    {FAERIE_RING,         1},
-    {FOUNTAIN_OF_FORTUNE, 1},
-    {FOUNTAIN_OF_YOUTH,   1},
-    {HILL_FORT,           1},
-    {IDOL_OF_FORTUNE,     1},
-    {LIGHTHOUSE,          1},
-    {MAGIC_SPRING,        1},
-    {MAGIC_WELL,          1},
-    {OASIS,               1},
-    {OBSERVATORY,         1},
-    {PILLAR_OF_FIRE,      1},
-    {RALLY_FLAG,          1},
-    {SANCTUARY,           1},
-    {STABLES,             1},
-    {TEMPLE,              1},
-    {TRADING_POST,        1},
-    {WAR_MACHINE_FACTORY, 1},
-    {WATERING_HOLE,       1},
-    {WITCH_HUT,           3},
-};
+static const TRmgObjectLimit g_rmgZoneObjectLimitOverrides[24] =
+#include "rmg_data/zone_object_limits.inc"
+;
 
 // Frame i of a river sprite draws shape g_rmgRiverPatterns[i]; repeated
 // shapes are alternative frames picked at random.
@@ -3041,7 +2989,7 @@ static inline void initializeRmgObjectLimits(s32* limits,
     const TRmgObjectLimit* overrides, s32 count)
 {
     for (s32 objectType = NOTHING; objectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++objectType)
-        limits[objectType] = 32000;
+        limits[objectType] = RMG_DEFAULT_OBJECT_LIMIT;
     while (count--)
         limits[overrides[count].m_objectType] = overrides[count].m_limit;
 }
@@ -7061,11 +7009,6 @@ TRmgObject* TRmgGenerator::createTreasureObject(TRmgZone* zone,
     *value = definition->getValue(zone, this);
     return definition->generate(candidates[selectedIndex].m_properties, this, zone);
 }
-
-// Treasure groups are assembled on a square scratch map before placement.
-enum ERmgTreasureGroupMapSize {
-    RMG_TREASURE_GROUP_MAP_SIZE = 16
-};
 
 // Adds an object centred on the group map (unsigned division).
 inline void TRmgTreasureGroup::addCenteredObject(TRmgObject* object)

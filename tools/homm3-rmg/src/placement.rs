@@ -18,7 +18,16 @@ pub use guard_value::GuardStrength;
 mod gates;
 mod junctions;
 mod mines;
+mod treasure_assembly;
 mod treasure_generation;
+mod treasure_group_guards;
+mod treasure_group_sites;
+mod treasure_replacement;
+pub use treasure_assembly::TreasurePacking;
+mod treasure_group_lifetime;
+mod treasure_groups;
+pub use treasure_group_lifetime::RejectedTreasure;
+pub use treasure_groups::TreasureGroupWorkspace;
 mod treasure_paths;
 mod treasure_payloads;
 mod treasures;
@@ -163,6 +172,8 @@ pub enum PlacementError {
     UnknownObject(ObjectId),
     /// Zone index is outside this map.
     UnknownZone(ZoneId),
+    /// A temporary group exclusively owns this record.
+    GroupOwned(ObjectId),
     /// Discarding an object that may still be shared by world or temporary maps.
     PreviouslyPlaced(ObjectId),
     /// Retail would erase an end iterator from a cell with allocated vector storage.
@@ -217,6 +228,7 @@ impl fmt::Display for PlacementError {
                 id.index()
             ),
             Self::UnknownZone(id) => write!(f, "zone {} does not belong to this map", id.index()),
+            Self::GroupOwned(id) => write!(f, "object {} is owned by a treasure group", id.index()),
             Self::PreviouslyPlaced(id) => {
                 write!(f, "object {} has already been placed", id.index())
             }
@@ -362,8 +374,10 @@ impl PlacementMap<'_, '_, '_> {
     fn view(&self) -> PlacementView<'_> {
         PlacementView {
             side: self.terrain.coverage().map().raster().dimension(),
-            terrain: self.terrain.tiles(),
-            zones: self.terrain.coverage().map().raster().cells(),
+            surface: PlacementSurface::World {
+                terrain: self.terrain.tiles(),
+                zones: self.terrain.coverage().map().raster().cells(),
+            },
             cells: self.cells,
         }
     }
@@ -441,13 +455,31 @@ impl PlacementMap<'_, '_, '_> {
 
 // A private slice view also permits focused synthetic maps in tests without
 // manufacturing completed generation-stage tokens or copying production grids.
+enum PlacementSurface<'a> {
+    World {
+        terrain: &'a [crate::terrain_rules::TerrainTile],
+        zones: &'a [crate::raster::ZoneCell],
+    },
+    Group,
+}
 struct PlacementView<'a> {
     side: usize,
-    terrain: &'a [crate::terrain_rules::TerrainTile],
-    zones: &'a [crate::raster::ZoneCell],
+    surface: PlacementSurface<'a>,
     cells: &'a [CellState],
 }
 impl PlacementView<'_> {
+    fn terrain(&self, index: usize) -> Terrain {
+        match &self.surface {
+            PlacementSurface::World { terrain, .. } => terrain[index].terrain(),
+            PlacementSurface::Group => Terrain::Dirt,
+        }
+    }
+    fn zone(&self, index: usize) -> Option<ZoneId> {
+        match &self.surface {
+            PlacementSurface::World { zones, .. } => zones[index].zone,
+            PlacementSurface::Group => None,
+        }
+    }
     // Source getMapItem performs flat signed indexing without an XY check.
     // Negative X may alias the preceding row while still addressing this allocation.
     // Keep this separate from queries whose source explicitly checks containsXY.
@@ -496,12 +528,15 @@ impl PlacementView<'_> {
         Ok(index)
     }
     fn passable(&self, index: usize) -> bool {
-        self.cells[index].passable && self.terrain[index].terrain() != Terrain::Rock
+        self.cells[index].passable && self.terrain(index) != Terrain::Rock
     }
     fn blocked(&self, index: usize, zone: Option<ZoneId>) -> bool {
-        !self.passable(index)
-            || self.cells[index].entrance.is_some()
-            || self.zones[index].zone != zone
+        !self.passable(index) || self.cells[index].entrance.is_some() || self.zone(index) != zone
+    }
+    fn clear_outline_cell(&self, index: usize) -> bool {
+        self.cells[index].entrance.is_none()
+            && self.passable(index)
+            && self.cells[index].reservation == PathReservation::Open
     }
     fn footprint_blocked(
         &self,
@@ -536,7 +571,7 @@ impl PlacementView<'_> {
             }
             if !prototype.is_passable(cell)
                 && (self.blocked(index, zone)
-                    || (self.terrain[index].terrain() == Terrain::Water) != water_only)
+                    || (self.terrain(index) == Terrain::Water) != water_only)
             {
                 return Ok(true);
             }
@@ -579,8 +614,7 @@ impl PlacementView<'_> {
                 self.blocked(index, Some(zone))
                     || (clearance == OutlineClearance::Require
                         && self.cells[index].reservation != PathReservation::Open)
-                    || (self.terrain[index].terrain() == Terrain::Water)
-                        != (zone_terrain == Terrain::Water)
+                    || (self.terrain(index) == Terrain::Water) != (zone_terrain == Terrain::Water)
             } else {
                 true
             };
@@ -642,12 +676,11 @@ impl PlacementView<'_> {
             level: anchor.level,
         })?;
         Ok(self.passable(index)
-            && self.zones[index].zone == Some(zone)
+            && self.zone(index) == Some(zone)
             && self.cells[index]
                 .entrance
                 .is_none_or(|kind| kind.traits().cleared_on_visit())
-            && (self.terrain[index].terrain() == Terrain::Water)
-                == (zone_terrain == Terrain::Water))
+            && (self.terrain(index) == Terrain::Water) == (zone_terrain == Terrain::Water))
     }
 }
 
@@ -672,8 +705,10 @@ mod tests {
         let cells = vec![CellState::default(); 36 * 36];
         let view = PlacementView {
             side: 36,
-            terrain: &[],
-            zones: &[],
+            surface: PlacementSurface::World {
+                terrain: &[],
+                zones: &[],
+            },
             cells: &cells,
         };
         let at = |x, y| WorldPosition {
@@ -752,8 +787,10 @@ mod tests {
                     let tiles = [TerrainTile::parse(terrain, 0, Reflection::default()).unwrap()];
                     let view = PlacementView {
                         side: 1,
-                        terrain: &tiles,
-                        zones: &zones,
+                        surface: PlacementSurface::World {
+                            terrain: &tiles,
+                            zones: &zones,
+                        },
                         cells: &cells,
                     };
                     let wrong_water = (terrain == Terrain::Water) != water_only;
@@ -811,8 +848,10 @@ mod tests {
             }
             let view = PlacementView {
                 side: 3,
-                terrain: &terrain,
-                zones: &zones,
+                surface: PlacementSurface::World {
+                    terrain: &terrain,
+                    zones: &zones,
+                },
                 cells: &cells,
             };
             let open_runs = (pattern & !pattern.rotate_left(1)).count_ones();
@@ -849,8 +888,10 @@ mod tests {
         }; 4];
         let view = PlacementView {
             side: 2,
-            terrain: &terrain,
-            zones: &zones,
+            surface: PlacementSurface::World {
+                terrain: &terrain,
+                zones: &zones,
+            },
             cells: &cells,
         };
         let points = [

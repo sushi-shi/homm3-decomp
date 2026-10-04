@@ -133,12 +133,21 @@ The library cannot yet generate a complete map.
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: treasure selection and temporary group ownership,
-assembly and scoring, followed by world placement/completion. The catalog, lazy
-values, payload factories and explicit unplaced-object discard are implemented.
-`TreasurePaths` consumes into `TreasuresReady`, then `TreasureGeneration` binds its
-spell/artifact resources and arena. Extend this stage; do not reset reservations
-or rebuild a catalog while constructing or completing a group.
+Current working policy (user update): finish the complete implementation before
+broad debugging. Compile checks and individual unit tests are allowed; do not run
+full suites, native comparisons or corpus campaigns until that implementation
+pass is complete. Keep pending findings here for the later debugging pass.
+
+Immediate next implementation: commit assembled groups into the world, run
+quest/tent completion and replacement lifetimes, then drive zone treasure bands.
+Selection, nested retries, guard assembly and highest-distance site selection
+are implemented. The replacement offer/removal path is present; callers still
+need their completion-specific lifetime handling. Continue through decoration,
+roads/rivers, orchestration and output/CLI before the consolidated debugging pass.
+
+The catalog, lazy values and payload factories remain bound by `TreasuresReady`
+and `TreasureGeneration`; do not rebuild their catalogs or reset reservations
+while constructing or completing a group.
 
 The next treasure work has these source-backed constraints:
 
@@ -753,8 +762,35 @@ all 16 candidate/repeat maps remain unchanged. Rust additionally holds prisons
 until exhaustion, checks the empty attempt consumes neither RNG nor ID, then
 releases them without rewinding either. Scroll regression cases cover empty,
 singleton and creature-ability-only eligibility. All 83 core tests pass; reviewers
-found no remaining factory issues; strict Clippy passes. Positioned group disposal and completion
-callbacks are still to be implemented.
+found no remaining factory issues; strict Clippy passes. Group disposal is now
+implemented; completion callbacks remain to be implemented.
+
+Temporary groups now use reusable 16x16 cell storage, retained membership,
+object, outline and candidate buffers. The scratch surface borrows common fit
+and footprint operations through a constant dirt/unassigned view. Shared cardinal
+outline helpers preserve the prototype and group walks' distinct starting rules.
+Group candidates retain duplicates, native direction order and flat row aliases.
+Arena ownership distinguishes unplaced, group-owned and published records; public
+world insertion rejects copied group-owned IDs. Explicit group disposal checks
+all ownership/children first, clears memberships and releases records in order.
+
+Selection preserves definition gates, lazy values, per-definition art draws,
+compact thresholds and weighted choice. Map/zone limits now have canonical shared
+include files. Assembly keeps nested generation/fit retries, target draw rules,
+reservation cleanup, absent-guard success and the last-treasure-trigger guard bug.
+World-site queries keep all highest-distance ties and the final singleton draw.
+The guard fan and world-origin ASCII diagrams remain beside their algorithms.
+The source-review admission-order finding (unknown zone drawing before rejection)
+was fixed before any reset or target draw.
+
+Before the implementation-first instruction, 87 core tests and strict Clippy
+passed for the initial geometry/ownership delta. The subsequent native geometry
+comparison reached a retail case-0 line-count mismatch (Rust 27,504; native
+27,684). This is **unresolved**, not a parity result. Native geometry captures
+exist under ignored `build/rmg-oracle-group-geometry`; disposable probe details
+are in `build/group-README.md`. Full assembly probes are prepared but have not
+been run. New assembly/site/replacement code has compile checks only. Do not
+rerun comparisons until the deferred debugging phase.
 
 Factory and completion constraints, confirmed against native source and retail:
 

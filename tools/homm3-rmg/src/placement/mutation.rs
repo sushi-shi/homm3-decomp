@@ -1,6 +1,9 @@
 //! Native cell transitions and clipped footprint insertion/removal.
 
-use super::{CellState, ObjectArena, ObjectId, PathReservation, PlacementError, PlacementMap};
+use super::{
+    CellState, Memberships, ObjectArena, ObjectId, PathReservation, PlacementError, PlacementMap,
+    PlacementView,
+};
 use crate::{
     domain::WorldPosition,
     geometry::Point,
@@ -97,7 +100,7 @@ struct TouchedCell {
     trigger: bool,
     first_kind: Option<ObjectKind>,
 }
-struct Footprint {
+pub(super) struct Footprint {
     cells: [TouchedCell; raw::OBJECT_MASK_CELLS as usize],
     len: usize,
 }
@@ -179,56 +182,6 @@ impl PlacementMap<'_, '_, '_> {
         Ok(())
     }
 
-    fn footprint(
-        &self,
-        entry: &PreparedPrototype<'_>,
-        anchor: WorldPosition,
-    ) -> Result<Footprint, PlacementError> {
-        let size = entry.image_mask().size()?;
-        let mut result = Footprint {
-            cells: [TouchedCell {
-                index: 0,
-                trigger: false,
-                first_kind: None,
-            }; raw::OBJECT_MASK_CELLS as usize],
-            len: 0,
-        };
-        for cell in size.cells() {
-            if !entry.prototype().occupies(cell) {
-                continue;
-            }
-            // Native code clips an entire row before evaluating any X offset.
-            let y = anchor
-                .point
-                .y
-                .checked_sub(i32::from(cell.y()))
-                .ok_or(PlacementError::CoordinateOverflow)?;
-            if !usize::try_from(y).is_ok_and(|y| y < self.view().side) {
-                continue;
-            }
-            let x = anchor
-                .point
-                .x
-                .checked_sub(i32::from(cell.x()))
-                .ok_or(PlacementError::CoordinateOverflow)?;
-            let point = Point::new(x, y);
-            if !self.view().contains(point) {
-                continue;
-            }
-            let index = self.view().index(WorldPosition {
-                point,
-                level: anchor.level,
-            })?;
-            result.cells[result.len] = TouchedCell {
-                index,
-                trigger: entry.prototype().is_trigger(cell),
-                first_kind: None,
-            };
-            result.len += 1;
-        }
-        Ok(result)
-    }
-
     /// Apply the clipped native footprint and update the object's anchor.
     /// Trigger cells open paths; other occupied cells clear passability. Both
     /// append membership in order. Generator counts and distance flooding are
@@ -245,42 +198,25 @@ impl PlacementMap<'_, '_, '_> {
         anchor: WorldPosition,
     ) -> Result<(), PlacementError> {
         self.prepare_registration(catalog)?;
-        let geometry = *objects
-            .get(object)
-            .ok_or(PlacementError::UnknownObject(object))?;
-        if !self.memberships.accepts(object) {
-            return Err(PlacementError::UnknownObject(object));
-        }
-        let entry = catalog
-            .get(geometry.prototype())
-            .ok_or(PlacementError::UnknownPrototype(geometry.prototype()))?;
-        let mut touched = self.footprint(entry, anchor)?;
-        for cell in &mut touched.cells[..touched.len] {
-            cell.first_kind = Some(
-                match self.memberships.first(self.cells[cell.index].objects) {
-                    Some(first) => objects
-                        .get(first)
-                        .ok_or(PlacementError::UnknownObject(first))?
-                        .kind(),
-                    None => geometry.kind(),
-                },
-            );
-        }
-        self.memberships.reserve(touched.len)?;
-        // Even a completely clipped footprint binds this map's object arena.
-        self.memberships.bind(object);
-        objects.set_position(object, anchor);
-        for touched in &touched.cells[..touched.len] {
-            let cell = &mut self.cells[touched.index];
-            if touched.trigger {
-                cell.entrance = touched.first_kind;
-                cell.open_path();
-            } else {
-                cell.passable = false;
-            }
-            self.memberships.append(&mut cell.objects, object);
-            cell.retail_membership_storage = true;
-        }
+        objects.require_world_insertion(object)?;
+        let touched = prepare_insertion(
+            self.view().side,
+            self.cells,
+            self.memberships,
+            objects,
+            catalog,
+            object,
+            anchor,
+        )?;
+        objects.publish(object);
+        apply_insertion(
+            self.cells,
+            self.memberships,
+            objects,
+            object,
+            anchor,
+            &touched,
+        );
         Ok(())
     }
 
@@ -313,7 +249,7 @@ impl PlacementMap<'_, '_, '_> {
         let Some(anchor) = geometry.position() else {
             return Ok(());
         };
-        let touched = self.footprint(entry, anchor)?;
+        let touched = self.view().footprint(entry, anchor)?;
         let hotfix = self.coverage().map().behavior().is_hotfix();
         for touched in &touched.cells[..touched.len] {
             let cell = &mut self.cells[touched.index];
@@ -337,5 +273,116 @@ impl PlacementMap<'_, '_, '_> {
             }
         }
         Ok(())
+    }
+}
+
+impl PlacementView<'_> {
+    pub(super) fn footprint(
+        &self,
+        entry: &PreparedPrototype<'_>,
+        anchor: WorldPosition,
+    ) -> Result<Footprint, PlacementError> {
+        let size = entry.image_mask().size()?;
+        let mut result = Footprint {
+            cells: [TouchedCell {
+                index: 0,
+                trigger: false,
+                first_kind: None,
+            }; raw::OBJECT_MASK_CELLS as usize],
+            len: 0,
+        };
+        for cell in size.cells() {
+            if !entry.prototype().occupies(cell) {
+                continue;
+            }
+            // Native code clips an entire row before evaluating any X offset.
+            let y = anchor
+                .point
+                .y
+                .checked_sub(i32::from(cell.y()))
+                .ok_or(PlacementError::CoordinateOverflow)?;
+            if !usize::try_from(y).is_ok_and(|y| y < self.side) {
+                continue;
+            }
+            let x = anchor
+                .point
+                .x
+                .checked_sub(i32::from(cell.x()))
+                .ok_or(PlacementError::CoordinateOverflow)?;
+            let point = Point::new(x, y);
+            if !self.contains(point) {
+                continue;
+            }
+            let index = self.index(WorldPosition {
+                point,
+                level: anchor.level,
+            })?;
+            result.cells[result.len] = TouchedCell {
+                index,
+                trigger: entry.prototype().is_trigger(cell),
+                first_kind: None,
+            };
+            result.len += 1;
+        }
+        Ok(result)
+    }
+}
+pub(super) fn prepare_insertion(
+    side: usize,
+    cells: &[CellState],
+    memberships: &mut Memberships,
+    objects: &ObjectArena,
+    catalog: &PrototypeCatalog<'_>,
+    object: ObjectId,
+    anchor: WorldPosition,
+) -> Result<Footprint, PlacementError> {
+    let geometry = *objects
+        .get(object)
+        .ok_or(PlacementError::UnknownObject(object))?;
+    if !memberships.accepts(object) {
+        return Err(PlacementError::UnknownObject(object));
+    }
+    let entry = catalog
+        .get(geometry.prototype())
+        .ok_or(PlacementError::UnknownPrototype(geometry.prototype()))?;
+    let view = PlacementView {
+        side,
+        surface: super::PlacementSurface::Group,
+        cells,
+    };
+    let mut touched = view.footprint(entry, anchor)?;
+    for cell in &mut touched.cells[..touched.len] {
+        cell.first_kind = Some(match memberships.first(cells[cell.index].objects) {
+            Some(first) => objects
+                .get(first)
+                .ok_or(PlacementError::UnknownObject(first))?
+                .kind(),
+            None => geometry.kind(),
+        });
+    }
+    memberships.reserve(touched.len)?;
+    Ok(touched)
+}
+pub(super) fn apply_insertion(
+    cells: &mut [CellState],
+    memberships: &mut Memberships,
+    objects: &mut ObjectArena,
+    object: ObjectId,
+    anchor: WorldPosition,
+    touched: &Footprint,
+) {
+    // Even a completely clipped footprint binds this map's object arena.
+    memberships.bind(object);
+    objects.set_position(object, anchor);
+    for touched in &touched.cells[..touched.len] {
+        let cell = &mut cells[touched.index];
+        if touched.trigger {
+            cell.entrance = touched.first_kind;
+            cell.open_path();
+        } else {
+            cell.passable = false;
+        }
+        memberships.append(&mut cell.objects, object);
+        cell.retail_membership_storage = true;
     }
 }

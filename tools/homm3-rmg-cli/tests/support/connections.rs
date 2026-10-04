@@ -23,6 +23,8 @@ use std::{
 mod placement_snapshot;
 #[path = "treasure_factories.rs"]
 mod treasure_factories;
+#[path = "treasure_groups.rs"]
+mod treasure_groups;
 use placement_snapshot::{write_cells, write_counts};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -36,6 +38,7 @@ pub enum Attempts {
     TreasurePaths,
     TreasureValues,
     TreasureFactories,
+    TreasureGroups,
 }
 impl Attempts {
     fn includes_junctions(self) -> bool {
@@ -46,6 +49,7 @@ impl Attempts {
                 | Self::TreasurePaths
                 | Self::TreasureValues
                 | Self::TreasureFactories
+                | Self::TreasureGroups
         )
     }
 
@@ -60,6 +64,7 @@ impl Attempts {
             Self::TreasurePaths => "treasure-paths.txt",
             Self::TreasureValues => "treasure-values.txt",
             Self::TreasureFactories => "treasure-factories.txt",
+            Self::TreasureGroups => "group-geometry.txt",
         }
     }
 }
@@ -400,15 +405,22 @@ fn treasure_paths_snapshot(
     actual.push('\n');
     if matches!(
         attempts,
-        Attempts::TreasureValues | Attempts::TreasureFactories
+        Attempts::TreasureValues | Attempts::TreasureFactories | Attempts::TreasureGroups
     ) {
         let mut workspace = homm3_rmg::treasure::TreasureWorkspace::default();
         let definitions = workspace.prepare(catalog, creatures).unwrap();
         let ready = paths.begin_treasures(definitions).unwrap();
-        if attempts == Attempts::TreasureFactories {
+        if matches!(
+            attempts,
+            Attempts::TreasureFactories | Attempts::TreasureGroups
+        ) {
             let unchanged =
                 completed_snapshot(ready.map(), objects, catalog, rng, colors, attempts);
-            actual.push_str(&treasure_factories::snapshot(ready, objects, rng));
+            actual.push_str(&if attempts == Attempts::TreasureGroups {
+                treasure_groups::snapshot(ready, objects, rng, colors)
+            } else {
+                treasure_factories::snapshot(ready, objects, rng)
+            });
             actual.push_str(&unchanged);
             return actual;
         }
@@ -469,6 +481,7 @@ fn completed_snapshot(
             | Attempts::TreasurePaths
             | Attempts::TreasureValues
             | Attempts::TreasureFactories
+            | Attempts::TreasureGroups
     ) {
         use homm3_rmg::placement::PortalDirection;
         for (index, direction) in [PortalDirection::OneWay, PortalDirection::TwoWay]
@@ -504,6 +517,7 @@ fn completed_snapshot(
                 | Attempts::TreasurePaths
                 | Attempts::TreasureValues
                 | Attempts::TreasureFactories
+                | Attempts::TreasureGroups
         ),
     );
     actual

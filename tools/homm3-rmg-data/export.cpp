@@ -26,6 +26,23 @@ struct TPoint {
     int m_x, m_y;
     TPoint(int x, int y) : m_x(x), m_y(y) {}
 };
+static const int mapObjectLimits[][2] =
+#include "rmg_data/map_object_limits.inc"
+;
+static const int zoneObjectLimits[][2] =
+#include "rmg_data/zone_object_limits.inc"
+;
+template <unsigned N>
+static void emitObjectLimits(const char* name, const int (&overrides)[N][2])
+{
+    int limits[ADVENTURE_OBJECT_TRAIT_COUNT];
+    for (auto& limit : limits) limit = RMG_DEFAULT_OBJECT_LIMIT;
+    for (unsigned i = N; i--;) limits[overrides[i][0]] = overrides[i][1];
+    std::printf("pub const %s: [i32; %u] = [", name, ADVENTURE_OBJECT_TRAIT_COUNT);
+    for (int limit : limits) std::printf("%d,", limit);
+    std::printf("];\n");
+}
+
 static const TPoint directions[] =
 #include "rmg_data/directions.inc"
 ;
@@ -380,6 +397,8 @@ int main()
     std::printf("pub const PORTAL_BORDER_OFFSETS: [(i32, i32); %u] = [", RMG_PORTAL_BORDER_OFFSET_COUNT);
     for (const auto& point : portalBorderOffsets) std::printf("(%d,%d),", point.m_x, point.m_y);
     std::printf("];\n");
+    emitObjectLimits("MAP_OBJECT_LIMITS", mapObjectLimits);
+    emitObjectLimits("ZONE_OBJECT_LIMITS", zoneObjectLimits);
     emitTreasureRecipes();
     emitSignedArray("DWELLING_CREATURES", dwellingCreatures);
     emitSignedArray("CREATURE_REWARD_VALUES", creatureRewardValues);

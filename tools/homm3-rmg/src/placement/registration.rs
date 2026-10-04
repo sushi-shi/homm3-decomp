@@ -252,6 +252,12 @@ impl PlacementMap<'_, '_, '_> {
         Ok(self.registration.next_key_tent)
     }
 
+    /// Stored tent cursor without initializing or replacing catalog context.
+    #[must_use]
+    pub const fn key_tent_cursor(&self) -> KeyTentCursor {
+        self.registration.tent_cursor()
+    }
+
     /// Read a color's reservation without changing the cursor or allocating.
     ///
     /// # Errors

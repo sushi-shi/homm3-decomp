@@ -104,7 +104,7 @@ pub fn snapshot(
     assert!(coverage.iter().all(|&count| count > 0));
     text
 }
-fn row(
+pub(super) fn row(
     generation: &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_>,
     prototype: homm3_rmg::prototype::PrototypeId,
 ) -> i32 {
@@ -155,6 +155,15 @@ fn write_payload(
         row(generation, geometry.prototype())
     )
     .unwrap();
+    write_reward(text, generation, objects, id, false)
+}
+pub(super) fn write_reward(
+    text: &mut String,
+    generation: &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_>,
+    objects: &ObjectArena,
+    id: ObjectId,
+    quest_position: bool,
+) -> Option<ObjectId> {
     match *objects.payload(id).unwrap() {
         ObjectPayload::Pandora(reward) => {
             let (experience, gold, creature, count) = match reward {
@@ -224,9 +233,10 @@ fn write_payload(
             };
             writeln!(
                 text,
-                "quest {} {} -1 {experience} {} {gold} {creature} {count}",
+                "quest {} {}{} -1 {experience} {} {gold} {creature} {count}",
                 payload.definition().index(),
                 row(generation, objects.get(child).unwrap().prototype()),
+                if quest_position { " -1 -1 -1" } else { "" },
                 raw::GOLD
             )
             .unwrap();
@@ -244,7 +254,7 @@ fn write_payload(
     }
     None
 }
-fn tag(reward: TreasureReward) -> usize {
+pub(super) fn tag(reward: TreasureReward) -> usize {
     match reward {
         TreasureReward::Plain(_) => 0,
         TreasureReward::Artifact(_) => 1,

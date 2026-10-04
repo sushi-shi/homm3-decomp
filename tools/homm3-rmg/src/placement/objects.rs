@@ -123,8 +123,15 @@ pub enum ObjectPayload {
     /// Guard stack count, disposition and shared native object ID.
     Monster(MonsterPayload),
 }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Ownership {
+    Unplaced,
+    Group(OwnerId),
+    Published,
+}
 #[derive(Clone, Copy, Debug)]
 struct ObjectRecord {
+    ownership: Ownership,
     geometry: ObjectGeometry,
     payload: ObjectPayload,
 }
@@ -273,6 +280,7 @@ impl ObjectArena {
         let slot = ObjectSlot::Occupied {
             generation,
             record: ObjectRecord {
+                ownership: Ownership::Unplaced,
                 geometry: ObjectGeometry {
                     prototype,
                     kind: entry.prototype().kind(),
@@ -332,7 +340,7 @@ impl ObjectArena {
     /// or child ownership requires the treasure generation cleanup path.
     pub fn discard_unplaced(&mut self, id: ObjectId) -> Result<(), PlacementError> {
         let record = self.record(id).ok_or(PlacementError::UnknownObject(id))?;
-        if record.geometry.position.is_some() {
+        if record.ownership != Ownership::Unplaced {
             return Err(PlacementError::PreviouslyPlaced(id));
         }
         if matches!(
@@ -345,9 +353,58 @@ impl ObjectArena {
     }
     pub(super) fn recycle_unplaced(&mut self, id: ObjectId) -> Result<(), PlacementError> {
         let record = self.record(id).ok_or(PlacementError::UnknownObject(id))?;
-        if record.geometry.position.is_some() {
+        if record.ownership != Ownership::Unplaced {
             return Err(PlacementError::PreviouslyPlaced(id));
         }
+        self.records[id.index] = ObjectSlot::Vacant { next: self.free };
+        self.free = Some(id.index);
+        Ok(())
+    }
+    fn record_mut(&mut self, id: ObjectId) -> Result<&mut ObjectRecord, PlacementError> {
+        self.record(id).ok_or(PlacementError::UnknownObject(id))?;
+        let ObjectSlot::Occupied { record, .. } = &mut self.records[id.index] else {
+            unreachable!("checked live record")
+        };
+        Ok(record)
+    }
+    pub(super) fn require_world_insertion(&self, id: ObjectId) -> Result<(), PlacementError> {
+        let record = self.record(id).ok_or(PlacementError::UnknownObject(id))?;
+        if matches!(record.ownership, Ownership::Group(_)) {
+            return Err(PlacementError::GroupOwned(id));
+        }
+        Ok(())
+    }
+    pub(super) fn publish(&mut self, id: ObjectId) {
+        self.record_mut(id)
+            .expect("insertion checked live record")
+            .ownership = Ownership::Published;
+    }
+    pub(super) fn claim_group(
+        &mut self,
+        id: ObjectId,
+        group: OwnerId,
+    ) -> Result<(), PlacementError> {
+        let record = self.record_mut(id)?;
+        if record.ownership != Ownership::Unplaced {
+            return Err(PlacementError::PreviouslyPlaced(id));
+        }
+        record.ownership = Ownership::Group(group);
+        Ok(())
+    }
+    pub(super) fn require_group(&self, id: ObjectId, group: OwnerId) -> Result<(), PlacementError> {
+        let record = self.record(id).ok_or(PlacementError::UnknownObject(id))?;
+        if record.ownership != Ownership::Group(group) {
+            return Err(PlacementError::PreviouslyPlaced(id));
+        }
+        Ok(())
+    }
+    // Only the owning group may call this after clearing all scratch memberships.
+    pub(super) fn recycle_group(
+        &mut self,
+        id: ObjectId,
+        group: OwnerId,
+    ) -> Result<(), PlacementError> {
+        self.require_group(id, group)?;
         self.records[id.index] = ObjectSlot::Vacant { next: self.free };
         self.free = Some(id.index);
         Ok(())

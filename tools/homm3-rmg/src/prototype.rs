@@ -27,6 +27,7 @@ use std::{borrow::Cow, collections::TryReserveError, error::Error, fmt, num::Non
 mod readiness;
 pub use readiness::{GenerationPrototypes, RequiredPrototypeError};
 mod geometry;
+pub(crate) use geometry::{advance_outline, outline_probe};
 pub use geometry::{OutlineError, OutlineWorkspace, OverlapPriorities};
 mod guard;
 pub use guard::{GuardError, GuardFactions, GuardStack};

@@ -24,6 +24,14 @@ pub enum TreasureGenerationError {
     Definition(DefinitionId),
     /// Identity, context, arithmetic, or allocation fault.
     Placement(PlacementError),
+    /// A lazy treasure valuation failed.
+    Value(super::TreasureValueError),
+    /// Guard selection failed.
+    Guard(super::GuardPlacementError),
+    /// Assembly cannot reset a group that still owns objects.
+    GroupNotEmpty,
+    /// Replacement reads an anchor with no owning map zone.
+    UnassignedReplacement(crate::domain::WorldPosition),
     /// A scroll's eligible list is empty; the native draw has already happened.
     EmptyScroll,
     /// Quest artifact art was absent after its native selection point.
@@ -36,6 +44,14 @@ impl fmt::Display for TreasureGenerationError {
         match self {
             Self::Definition(id) => write!(f, "foreign treasure definition {}", id.index()),
             Self::Placement(error) => error.fmt(f),
+            Self::Value(error) => error.fmt(f),
+            Self::Guard(error) => error.fmt(f),
+            Self::GroupNotEmpty => {
+                f.write_str("discard or commit the previous treasure group first")
+            }
+            Self::UnassignedReplacement(position) => {
+                write!(f, "replacement has no zone at {position:?}")
+            }
             Self::EmptyScroll => f.write_str("scroll selection divides by zero after its draw"),
             Self::QuestArtifactPrototype => f.write_str("missing quest artifact prototype"),
             Self::SpellPayload(id) => {
@@ -48,6 +64,17 @@ impl Error for TreasureGenerationError {}
 impl From<PlacementError> for TreasureGenerationError {
     fn from(error: PlacementError) -> Self {
         Self::Placement(error)
+    }
+}
+
+impl From<super::TreasureValueError> for TreasureGenerationError {
+    fn from(error: super::TreasureValueError) -> Self {
+        Self::Value(error)
+    }
+}
+impl From<super::GuardPlacementError> for TreasureGenerationError {
+    fn from(error: super::GuardPlacementError) -> Self {
+        Self::Guard(error)
     }
 }
 
@@ -87,11 +114,12 @@ impl PendingTreasure {
 
 /// Treasure factories bound to one map, arena, and immutable reward-resource context.
 pub struct TreasureGeneration<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards> {
-    ready: TreasuresReady<'state, 'zones, 'tiles, 'defs, 'assets, 'source>,
+    pub(super) ready: TreasuresReady<'state, 'zones, 'tiles, 'defs, 'assets, 'source>,
     spells: &'rewards SpellCatalog,
     artifacts: &'rewards ArtifactCatalog,
     heroes: HeroPool,
-    arena: Option<OwnerId>,
+    pub(super) arena: Option<OwnerId>,
+    pub(super) offers: Vec<SelectedTreasure>,
 }
 impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
     TreasuresReady<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
@@ -120,6 +148,7 @@ impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
             artifacts,
             heroes,
             arena: objects.owner(),
+            offers: Vec::new(),
         })
     }
 }
@@ -167,7 +196,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                 prototype,
             }))
     }
-    fn require_arena(&self, objects: &ObjectArena) -> Result<(), PlacementError> {
+    pub(super) fn require_arena(&self, objects: &ObjectArena) -> Result<(), PlacementError> {
         if self.arena.is_some() && self.arena != objects.owner() {
             return Err(PlacementError::ArenaContext);
         }
@@ -319,18 +348,51 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         objects: &mut ObjectArena,
     ) -> Result<(), TreasureGenerationError> {
         self.require_arena(objects)?;
-        if self.ready.catalog().get(pending.definition).is_none() {
-            return Err(TreasureGenerationError::Definition(pending.definition));
-        }
+        self.require_definition(&pending)?;
         let geometry = objects
             .get(pending.object)
             .ok_or(PlacementError::UnknownObject(pending.object))?;
         if geometry.position().is_some() {
             return Err(PlacementError::PreviouslyPlaced(pending.object).into());
         }
+        Self::check_pending_child(pending.object, objects)?;
+        self.release_payload(pending.object, objects)?;
+        objects.recycle_unplaced(pending.object)?;
+        Ok(())
+    }
+    pub(super) fn require_definition(
+        &self,
+        pending: &PendingTreasure,
+    ) -> Result<(), TreasureGenerationError> {
+        if self.ready.catalog().get(pending.definition).is_none() {
+            return Err(TreasureGenerationError::Definition(pending.definition));
+        }
+        Ok(())
+    }
+    pub(super) fn check_pending_child(
+        object: ObjectId,
+        objects: &ObjectArena,
+    ) -> Result<(), PlacementError> {
+        if let Some(ObjectPayload::QuestArtifact(quest)) = objects.payload(object) {
+            if let Some(seer) = quest.pending_seer() {
+                let geometry = objects
+                    .get(seer)
+                    .ok_or(PlacementError::UnknownObject(seer))?;
+                if geometry.position().is_some() {
+                    return Err(PlacementError::PreviouslyPlaced(seer));
+                }
+            }
+        }
+        Ok(())
+    }
+    pub(super) fn release_payload(
+        &mut self,
+        object: ObjectId,
+        objects: &mut ObjectArena,
+    ) -> Result<(), PlacementError> {
         match *objects
-            .payload(pending.object)
-            .ok_or(PlacementError::UnknownObject(pending.object))?
+            .payload(object)
+            .ok_or(PlacementError::UnknownObject(object))?
         {
             ObjectPayload::Prison(prison) => self.heroes.release_prison(prison.hero()),
             ObjectPayload::QuestArtifact(quest) => {
@@ -340,7 +402,6 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             }
             _ => {}
         }
-        objects.recycle_unplaced(pending.object)?;
         Ok(())
     }
     /// Expand a Pandora spell payload through the generation's exact immutable
