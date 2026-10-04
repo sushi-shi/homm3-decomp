@@ -89,7 +89,7 @@ def anonymous_static(identifier: str) -> str:
     file's anonymous namespace: the C name `_identifier`, as for a file
     static. (Without `static`, cl mangles the anonymous scope `?%<path>@`;
     clang mangles both as `?A0x<hash>@`.) Retail-pinned by rmg.obj's
-    g_landRiverDeltaIndex, g_rmgTownNativeTerrains and g_rmg*Names."""
+    g_rmgLandRiverDeltaIndex, g_rmgTownNativeTerrains and g_rmg*Names."""
     return "_" + identifier
 
 

@@ -1,5 +1,9 @@
 // Random-map generator declarations. Most names describe recovered roles
 // rather than original source spellings.
+//
+// HOMM3_RMG_HOTFIX (off by default) replaces retail bugs that crash or read
+// uninitialized memory with defined behaviour; maps then differ from retail
+// only where retail was undefined.
 #ifndef HOMM3_RMG_H
 #define HOMM3_RMG_H
 
@@ -68,6 +72,10 @@ public:
     s32 m_density;
 
     type_treasure_def(s32 objectType, s32 subtype, s32 value, s32 density);
+#if defined(HOMM3_RMG_HOTFIX)
+    // Factories are deleted through this base.
+    virtual ~type_treasure_def() {}
+#endif
 
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
@@ -487,7 +495,7 @@ struct TRmgTemplateZone {
     TRmgTreasureRange m_treasure[3];                          // +0xa0
     std::vector<TRmgZoneConnection> m_connections;            // +0xc4
 
-    s32 selectAllowedTown();
+    TTownType selectAllowedTown();
     TRmgZoneConnection* findConnection(s32 destinationZone);
 };
 SIZE(TRmgTemplateZone, 0xd4);
@@ -590,10 +598,8 @@ struct TRmgZoneBounds {
     {
         m_minimumX = x < m_minimumX ? x : m_minimumX;
         m_minimumY = y < m_minimumY ? y : m_minimumY;
-        s32 maximumX = x + 1;
-        s32 maximumY = y + 1;
-        m_maximumX = maximumX > m_maximumX ? maximumX : m_maximumX;
-        m_maximumY = maximumY > m_maximumY ? maximumY : m_maximumY;
+        m_maximumX = x + 1 > m_maximumX ? x + 1 : m_maximumX;
+        m_maximumY = y + 1 > m_maximumY ? y + 1 : m_maximumY;
     }
 
     void insetForObjectFootprint(const TObjectType* prototype);
@@ -732,7 +738,7 @@ struct TRmgGroundTileData {
 };
 
 // Pending border-guard cell and the guard's key colour.
-struct TRmgConnectionDecoration {
+struct TRmgBorderConnection {
     u32 m_present : 1;
     u32 m_guardColor : 4;
 };
@@ -1000,7 +1006,7 @@ struct TRmgMapItem {
     TRmgZoneCellState m_zoneState;                // +0x20
     TRmgGroundTile m_tile;                        // +0x24
     TRmgGroundTileData m_tileData;                // +0x28
-    TRmgConnectionDecoration m_borderConnection;  // +0x2c
+    TRmgBorderConnection m_borderConnection;  // +0x2c
 
     TRmgMapItem();
     void clear();
@@ -1063,9 +1069,9 @@ struct TRmgMapItem {
     {
         m_tileData.m_connectionVisited = true;
     }
-    s32 getLandType() const
+    TTerrainType getLandType() const
     {
-        return m_tile.m_landType;
+        return static_cast<TTerrainType>(m_tile.m_landType);
     }
 
     void setMovementCost(s32 cost, TRmgMapPosition previous)
@@ -1257,7 +1263,7 @@ public:
 
     // Path-carving helpers.
     void openPathPatch(s32 x, s32 y, s32 level);
-    void markBorderPatch(TRmgMapPosition position);
+    void markObstacleFillPatch(TRmgMapPosition position);
     TPoint traceBranchEnd(TPoint from, TPoint toward, s32 level);
 
     b8 hasConnectedOutline(
@@ -1407,7 +1413,7 @@ public:
     TRmgGridPoint m_size;
 
     TRmgLinePainterInterface(const TRmgGridPoint& size);
-    virtual TRmgLinePatternTable* getPattern(s32 lineType) = 0;
+    virtual TRmgLinePatternTable* getPatternTable(s32 lineType) = 0;
     virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
     virtual void setLineType(const TRmgGridPoint& point, s32 value) = 0;
     // Nonzero prevents painting.
@@ -1456,7 +1462,7 @@ public:
     }
     virtual ~TRmgRiverLinePainter() = 0;
 
-    virtual TRmgLinePatternTable* getPattern(s32 lineType);
+    virtual TRmgLinePatternTable* getPatternTable(s32 lineType);
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setLineType(const TRmgGridPoint& point, s32 value);
@@ -1522,7 +1528,7 @@ public:
     }
     virtual ~TRmgRoadLinePainter() = 0;
 
-    virtual TRmgLinePatternTable* getPattern(s32 lineType);
+    virtual TRmgLinePatternTable* getPatternTable(s32 lineType);
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setLineType(const TRmgGridPoint& point, s32 value);
@@ -1583,7 +1589,7 @@ struct TRmgZone {
     std::vector<TPoint> m_entrances;         // +0x404
 
     TRmgZone(TRmgTemplateZone* templateZone);
-    void chooseTownType(b8 expanded);
+    void chooseCreatureTownType(b8 expanded);
     bool isTerrainAllowed(s32 terrain) const;
     void chooseTerrain();
     ~TRmgZone();
@@ -1758,7 +1764,7 @@ public:
     s32 scoreObjectPlacement(
         TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
     void decorateMap();
-    void decorateMapCell(TRmgMapPosition start, s32 progressSteps);
+    void fillObstaclesFrom(TRmgMapPosition start, s32 progressSteps);
 };
 SIZE(TRmgGeneratorBase, 0xed8);
 
@@ -1792,7 +1798,8 @@ public:
     // Cycles through the seer-hut prototypes.
     s32 m_nextSeerHutPrototypeIndex;                     // +0x0f58
     // Next free keymaster tent colour. Retail bug: never initialized, so
-    // its first value is whatever was on the caller's stack.
+    // its first value is whatever was on the caller's stack (HOMM3_RMG_HOTFIX
+    // starts it at colour 0).
     s32 m_nextKeyTentColor;                              // +0x0f5c
     // Town zones (zones with a primary town), in total and per alignment.
     s32 m_townZoneCount;                                 // +0x0f60
@@ -1829,7 +1836,7 @@ public:
 
     type_random_map_generator(s32 width, s32 height, s32 levels,
         s32 humanPlayers, s32 humanTeams, s32 computerPlayers, s32 computerTeams,
-        s32 waterContent, s32 monsterStrength, TProgressSink* progress, s32 mapVersion);
+        ERmgWaterContent waterContent, s32 monsterStrength, TProgressSink* progress, s32 mapVersion);
     void loadTemplates();
     void placeMines();
     void prepareZoneConnections();
@@ -1907,6 +1914,12 @@ public:
         case RMG_MAP_SHADOW_OF_DEATH:
             return 28;
         }
+#if defined(HOMM3_RMG_HOTFIX)
+        // Unknown request versions are written as Shadow of Death maps.
+        return 28;
+#else
+        // Retail bug: another version falls off the end of this function.
+#endif
     }
 
     void initializeObjectGenerators();
@@ -1939,7 +1952,7 @@ public:
     b8 canPlaceShipyard(TRmgMapPosition position);
     b8 createSubterraneanGate(
         TRmgZone* source, TRmgZoneConnection* connection);
-    b8 placeMonolithBorder(TRmgMapPosition position, TRmgZone* keyTentZone);
+    b8 placeMonolithBorderGuard(TRmgMapPosition position, TRmgZone* keyTentZone);
     type_object* placeMonolith(
         TRmgObjectPropertiesRef* properties, TRmgZone* zone, bool oneWay);
     void protectMonolith(type_object* portal,
@@ -1957,8 +1970,8 @@ public:
     void carveBranchingPaths();
     void repairWaterZoneBorders();
     void openConnectionPath(TRmgMapPosition position, b8 narrow);
-    void markBorderObjectArea(TRmgMapPosition position, s32 color);
-    s32 placeBorderObject(
+    void markBorderConnectionArea(TRmgMapPosition position, s32 color);
+    s32 placeBorderGuard(
         TRmgMapPosition position, s32 guardCount, TRmgZone* keyTentZone);
     void placeGroundConnectionBorderGuard(TRmgMapPosition position,
         TRmgZone* keyTentZone, s32& guardValue);
@@ -2027,7 +2040,7 @@ SIZE(TRmgMovementCost, 0x04);
 SIZE(TRmgZoneCellState, 0x04);
 SIZE(TRmgGroundTile, 0x04);
 SIZE(TRmgGroundTileData, 0x04);
-SIZE(TRmgConnectionDecoration, 0x04);
+SIZE(TRmgBorderConnection, 0x04);
 SIZE(TRmgObjectPlacementRule, 0x4c);
 SIZE(TRmgObjectPropertiesRef, 0xe8);
 SIZE(type_object, 0x1c);

@@ -463,7 +463,7 @@ Retail retains 14 calls to the three-integer position constructor across eight
 RMG functions and ten calls to the position-taking map lookup across seven.
 The constructor at 0x5355c0 immediately follows the aligned end of its earliest
 retained caller, `addGuard`; lookup at 0x5378e0 similarly follows
-`decorateMapCell`. This paired placement is consistent with first-required
+`fillObstaclesFrom`. This paired placement is consistent with first-required
 header-member emission, but does not prove original source ownership. There
 are no Dreamcast RMG declarations to decide the ordinary/in-class spelling.
 
@@ -1743,7 +1743,7 @@ failure reset or the outline lookup, so no caller alternative is adopted.
 
 `generate-rmg-key-color-helper-family.py` tested a provisional ordinary color
 setter/first-free scan or scan-only member across all four repeated retail
-sites: two in this caller, one in `placeBorderObject`, one in `removeObject`.
+sites: two in this caller, one in `placeBorderGuard`, one in `removeObject`.
 This is an inferred boundary, not a recovered Dreamcast name or inline
 declaration. Sixty paired caller/helper states compile across all seven header
 consumers into sixty code identities, with ten reproduced finalists. The best

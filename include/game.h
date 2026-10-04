@@ -1126,7 +1126,7 @@ public:
     unsigned char m_artifactUsed[0x90];
     unsigned char m_artifactDisabled[0x90];
     unsigned char m_globalInfoFlags[32];
-    unsigned char m_borderTentVisitFlags[8];
+    unsigned char m_borderTentVisitFlags[8]; // per EKeyColor (keycolor.h)
     unsigned short m_cartographerMask[3];
     unsigned char m_cartographerFlags[3];
     // The three cartographerFlags bytes end at +0x4e375; retail

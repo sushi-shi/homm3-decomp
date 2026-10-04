@@ -58,6 +58,19 @@ runs. Vary the fill to exercise both zero and nonzero uninitialized flags.
 Set `heapByte` to JSON `null` to retain native allocation contents for diagnostics;
 such runs can legitimately report nonrepeatability.
 
+Two environment-gated driver probes inspect uninitialized reads without moving
+the generator's stack. `RMG_TRACE_SITE` names the `call` instruction in
+`buildZoneBoundaries` that constructs the test zone: retail `0x53e149`, or the
+candidate's first call to `TRmgZone::TRmgZone` in that function (located from
+`driver.map`). A thunk then copies 2 KiB of stack around the test slot into
+`trace.bin` for each job, without writing stack storage itself. Each record has
+four 32-bit fields (job, hit, entry stack pointer, slot address) and the window
+from slot − 0x400. `RMG_TRACE_FALLBACK=1` (retail only) logs
+`buildZoneConnectionPaths`' fallback seed reads at `0x54077d` to `fallback.bin`.
+Exception-based breakpoints and single-stepping are not usable for this. Wine
+builds exception frames on the thread stack, overwriting the residue being
+measured, and ignores data-watchpoint debug registers.
+
 These controls supply storage contents before game code uses them; no generated
 bytes or RNG draws are normalized. They do not guarantee every uninitialized read
 is controlled: intervening calls can overwrite initial stack contents. The repeat
