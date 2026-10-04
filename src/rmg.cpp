@@ -9318,7 +9318,8 @@ b8 TRandomMapRequest::isSupported() const
     s32 fixedHumans = 0;
     for (s32 player = 0; player < RMG_PLAYER_COUNT; ++player)
         fixedHumans += m_isHumanSeat[player] != 0;
-    s32 repairedHumans = max(m_humanPlayerCount, 2 - m_computerPlayerCount);
+    s32 repairedHumans = m_humanPlayerCount + m_computerPlayerCount < 2
+        ? 1 : m_humanPlayerCount;
     if (fixedHumans > repairedHumans)
         return false;
     // The lobby may pass more teams than players (or 0, one per player);

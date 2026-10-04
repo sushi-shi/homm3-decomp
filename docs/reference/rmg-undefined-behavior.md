@@ -402,7 +402,9 @@ installed assets for these checks.
 
 The repaired cases and the valid template/portal controls were run twice in
 fresh processes. Short placement-rule rows and out-of-range object types
-were also exercised. Existing valid template and portal controls retain
+were also exercised. Six minimum-player/fixed-human controls verify the
+existing repair to one human and one computer, including serialized human
+counts. Existing valid template and portal controls retain
 identical map bytes, final RNG state, request state, and x87 state. Stock
 smoke requests cover all four sizes, both level counts, all three map
 versions, and every water setting. These checks do not establish an upper
