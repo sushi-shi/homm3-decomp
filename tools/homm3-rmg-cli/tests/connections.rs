@@ -36,3 +36,9 @@ fn native_junctions_preserve_routes_reservations_movement_and_rng() {
 fn native_mines_preserve_sites_resources_guards_and_rng() {
     connections::compare_native(connections::Attempts::Mines);
 }
+
+#[test]
+#[ignore = "requires HOMM3_RMG_DATA and HOMM3_RMG_ORACLE post-mine path checkpoints"]
+fn native_treasure_paths_preserve_faction_counts_border_opening_and_rng() {
+    connections::compare_native(connections::Attempts::TreasurePaths);
+}

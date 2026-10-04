@@ -133,13 +133,38 @@ The library cannot yet generate a complete map.
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: treasure definition/value dispatch and typed
-payload construction, followed by temporary group ownership and reservations.
-Before treasure placement, retain the native faction-count pass over primary-town
-zones and rebuild connection paths after mines. Mines now consume
-`JunctionsPrepared` into `MinesPlaced`; fixed/density attempts, guards and nearby
-resource piles have native comparisons. The later global path rebuild is not
-folded into the mine stage.
+Immediate next implementation: the treasure definition catalog, created with assets
+before any map generation. `MinesPlaced` now consumes into `TreasurePaths` through
+primary-town faction counting and the post-mine connection rebuild. Implement the
+catalog's ordered recipes and eager creature-count constructors next, then lazy
+value/generation dispatch, typed payloads and temporary group reservations.
+
+The next treasure work has these source-backed constraints:
+
+- Share an ordered recipe include between native constructor expansion and the
+  data exporter. Include dynamic expansion markers in place; also share constructor
+  default weights/values and `g_rmgCreatureValueByLevel` rather than duplicating them.
+- Expand into retained contiguous definition storage. Keep prepared prototype and
+  creature catalogs borrowed so values use the traits that built reward counts.
+  Creature reward counts are signed, computed eagerly without RNG by native
+  construction; division by zero/overflow faults must not wait for offering.
+- Preserve descending eligible creature IDs, descending tent-family ordinals with
+  five adjacent values, descending version-limited dwellings, and ascending seer
+  family ordinals with descending creatures followed by experience then gold.
+  Dwellings remain defined without artwork. Tent/seer ordinals are definition
+  subtypes, not necessarily the corresponding prototype row's subtype. The seven
+  resource recipes put wood then ore before mercury; artifact recipes are four
+  fixed random classes, not an artifact-catalog expansion.
+- Keep offer evaluation lazy: first-in-group/terrain-dependent/map/zone-limit
+  filters precede value, prototype RNG and geometry/compactness. Roulette selection
+  is followed by a second value call and then generation. Quest-creature adjustment
+  applies `(2*value-4000)/3` even to the base no-offer value (-1); retain signed
+  truncation. Prison exhaustion and scroll availability remain generation-time.
+- Constructor-time tent initialization must not clear colors after border guards
+  reserve them. Separate immutable definitions from map-owned pools/cursors and
+  reservation lifetimes. Treasure payloads and temporary groups must share arena
+  ownership, including completion/replacement callbacks and failed-fit cleanup.
+
 Complete shared world/treasure-group payload lifetimes before integrating
 transient treasure objects. Reset object and placement workspaces together.
 Entrance-distance flooding preserves current-cell costs and pruning against
@@ -631,8 +656,26 @@ metadata agree. All 32 candidate/repeat whole-map outputs remain unchanged by th
 isolated probes. All 73 core tests and strict Clippy pass; both reviewers report no
 remaining issues after the width-only correction.
 
-Next implement treasure definitions, their payloads, and transient group lifetime
-and reservation handling. Full map generation and serialization remain unfinished.
+Post-mine treasure preparation is implemented as `TreasurePaths`, with a fixed
+private `TownZoneCounts` array and the shared path rebuild. Tallying uses current
+zone alignment and primary-town presence, not additional-town counts or creature
+faction. Pinned retail instructions 0x549bed–0x549c05 prove that alignment -1
+indexes the adjacent total field at +0xf60, then reloads and increments it again.
+Safe Rust explicitly counts this known alias twice without accessing outside an
+array. No replay input or speculative faction repair is needed. Reward adjustment
+retains native signed product-before-division and checked overflow.
+
+Sixteen native preparation captures compare 521,392 lines, including faction
+buckets, total, RNG and all retained map/object/connection state. The ordinary
+path rebuild changes cells in every fixture; forced-border cases create 18 more
+guard objects across four maps and consume corresponding art RNG. All 32 native
+candidate/repeat map outputs remain unchanged by isolated probes. The 74 core
+tests and strict Clippy pass; both reviewers are clear. A focused regression
+checks the neutral alias, signed division and overflow before division.
+
+Next implement the pre-generation treasure definition catalog, its lazy value
+and payload dispatch, and transient group lifetime/reservation handling. Full map
+generation and serialization remain unfinished.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

@@ -49,7 +49,10 @@ pub struct MinesPlaced<'state, 'zones, 'tiles> {
     junctions: JunctionsPrepared<'state, 'zones, 'tiles>,
     rng: RngCheckpoint,
 }
-impl MinesPlaced<'_, '_, '_> {
+impl<'state, 'zones, 'tiles> MinesPlaced<'state, 'zones, 'tiles> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+        self.junctions.map_mut()
+    }
     /// Shared placement state after the mine pass.
     #[must_use]
     pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
