@@ -9193,20 +9193,21 @@ static inline s32 getRmgTownTypeCount(s32 mapVersion)
     return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? TOWN_TYPE_COUNT : TOWN_CONFLUX;
 }
 
-// Map dimensions the lobby offers: S, M, L and XL.
-enum ERmgMapDimension {
-    RMG_MAP_DIMENSION_STEP = 36,
-    RMG_LARGEST_MAP_DIMENSION = 4 * RMG_MAP_DIMENSION_STEP
-};
-
 // The request settings the lobby can produce. The generator relies on them:
 // map arithmetic, the eight player slots and the enum-indexed tables.
 static bool isSupportedRmgRequest(const TRandomMapRequest& request)
 {
-    if (request.m_width != request.m_height || request.m_width <= 0
-        || request.m_width > RMG_LARGEST_MAP_DIMENSION
-        || request.m_width % RMG_MAP_DIMENSION_STEP)
+    if (request.m_width != request.m_height)
         return false;
+    switch (request.m_width) {
+    case MAP_DIMENSION_SMALL:
+    case MAP_DIMENSION_MEDIUM:
+    case MAP_DIMENSION_LARGE:
+    case MAP_DIMENSION_EXTRA_LARGE:
+        break;
+    default:
+        return false;
+    }
     if (request.m_levels < 1 || request.m_levels > RMG_MAP_LEVEL_COUNT)
         return false;
     // Totals below two are repaired after this check.
