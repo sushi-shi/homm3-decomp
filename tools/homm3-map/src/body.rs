@@ -5,7 +5,7 @@ use crate::{checked_count, CountField, Cursor, Error, MapString, ObjectTable, Ve
 const RETAIL_OBJECT_CLASS_COUNT: u32 = 232;
 const ARMY_SLOTS: usize = 7;
 const RESOURCE_COUNT: usize = 7;
-/// Zero-filled editor trailer after the final timed-event record.
+/// Optional zero-filled editor trailer after the final timed-event record.
 pub const MAP_TRAILING_PADDING_SIZE: usize = 124;
 
 /// A completely validated H3M body after the object-template table.
@@ -59,7 +59,14 @@ impl<'a> MapBody<'a> {
         }
         let events_end = cursor.position();
         let padding_start = cursor.position();
-        let padding = cursor.take(MAP_TRAILING_PADDING_SIZE)?;
+        // The editor writes this trailer, but TRmgGenerator::writeMap ends
+        // immediately after the event list. Only exact EOF omits the trailer;
+        // a partial trailer still indicates truncation.
+        let padding = if cursor.remaining().is_empty() {
+            cursor.take(0)?
+        } else {
+            cursor.take(MAP_TRAILING_PADDING_SIZE)?
+        };
         if let Some(index) = padding.iter().position(|&byte| byte != 0) {
             return Err(Error::NonZeroPadding {
                 offset: padding_start + index,
@@ -83,7 +90,7 @@ impl<'a> MapBody<'a> {
         })
     }
 
-    /// Number of bytes through the zero-filled editor trailer.
+    /// Number of bytes through the event list and optional editor trailer.
     #[must_use]
     pub const fn consumed(self) -> usize {
         self.consumed
@@ -121,13 +128,13 @@ impl<'a> MapBody<'a> {
         self.events
     }
 
-    /// Validated zero-filled 124-byte editor trailer.
+    /// Validated zero-filled 124-byte editor trailer, or empty for RMG output.
     #[must_use]
     pub const fn padding(self) -> &'a [u8] {
         self.padding
     }
 
-    /// Bytes after the final declared timed event.
+    /// Bytes after the final event list and optional editor trailer.
     #[must_use]
     pub const fn trailing(self) -> &'a [u8] {
         self.trailing
