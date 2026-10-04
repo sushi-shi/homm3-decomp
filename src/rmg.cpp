@@ -19,6 +19,11 @@
 #include <functional>
 #include <list>
 #include <math.h>
+#if defined(HOMM3_RMG_HOTFIX)
+#include <memory>
+#include "keycolor.h"
+#include "advmgr.h"
+#endif
 #include <queue>
 #include <set>
 #include <stdio.h>
@@ -1826,6 +1831,16 @@ TRmgMapPosition TRmgObject::getPosition() const
     return m_position;
 }
 
+#if defined(HOMM3_RMG_HOTFIX)
+TRmgMapPosition TRmgObject::getEntrance() const
+{
+    const TObjectType::TPoint& trigger = m_properties->m_prototype->m_triggerCell;
+    TRmgMapPosition position = getPosition();
+    position -= TPoint(trigger.m_x, trigger.m_y);
+    return position;
+}
+#endif
+
 VA(0x005330E0, 0x39)
 MAC_ADDRESS(0x2303ec, 0x5c)
 TRmgObject::TRmgObject(TRmgObjectPropertiesRef* newProperties)
@@ -2201,6 +2216,10 @@ unsigned char TRmgKeyTentObject::isWritable()
         zone, value, value * 3 / 2, &actualValue, 0, 0, 0, position);
     if (object)
         generator->addObject(object, position);
+#if defined(HOMM3_RMG_HOTFIX)
+    // Removed from the map, so nothing else owns it.
+    delete this;
+#endif
     return 0;
 }
 
@@ -2227,6 +2246,12 @@ unsigned char TRmgQuestArtifactObject::isWritable()
     }
     delete m_seerHut;
     m_seerHut = 0;
+#if defined(HOMM3_RMG_HOTFIX)
+    // Replaced by a treasure (not just short of artifacts): nothing owns it.
+    std::vector<TRmgObject*>& objects = m_generator->m_positions;
+    if (std::find(objects.begin(), objects.end(), this) == objects.end())
+        delete this;
+#endif
     return 0;
 }
 
@@ -3331,6 +3356,32 @@ TRmgObjectPropertiesRef::TRmgObjectPropertiesRef(TObjectType* prototype)
     m_prioritiesInitialized = 0;
 }
 
+#if defined(HOMM3_RMG_HOTFIX)
+// Prototypes the generator can place: the footprint fits the mask frame and
+// has a cell in its bottom row, where the outline starts; a monster's
+// subtype is a creature type.
+static bool isUsableRmgPrototype(const TObjectType& prototype)
+{
+    if (prototype.getWidth() < 1 || prototype.getWidth() > OBJECT_MASK_WIDTH
+        || prototype.getHeight() < 1 || prototype.getHeight() > OBJECT_MASK_HEIGHT)
+        return false;
+    // writeMap serializes a hole in its reserved prototype slot; generation
+    // never places it or walks its outline. Shipped holes have no footprint.
+    if (prototype.getObjectType() == TERRAIN_HOLE)
+        return true;
+    s32 column = 0;
+    while (column < prototype.getWidth()
+        && (prototype.isPassableCell(column, 0) && !prototype.isTriggerCell(column, 0)))
+        ++column;
+    if (column == prototype.getWidth())
+        return false;
+    s32 mappedType;
+    memcpy(&mappedType, &g_adventureObjectTraits[prototype.getObjectType()].m_nameRow, sizeof(mappedType));
+    return mappedType != MONSTER || (prototype.getSubtype() >= 0
+        && prototype.getSubtype() < RMG_CREATURE_TYPE_COUNT);
+}
+#endif
+
 VA(0x00536200, 0x1AC)
 MAC_ADDRESS(0x234440, 0x24c)
 void TRmgGeneratorBase::loadObjectPrototypes()
@@ -3348,11 +3399,19 @@ void TRmgGeneratorBase::loadObjectPrototypes()
             continue;
         if (type < 0 || type >= 232)
             continue;
+#if defined(HOMM3_RMG_HOTFIX)
+        if (!isUsableRmgPrototype(m_objectsTxt.m_objectTypes[index]))
+            continue;
+#endif
         TRmgObjectPropertiesRef* properties =
             new TRmgObjectPropertiesRef(&m_objectsTxt.m_objectTypes[index]);
         memcpy(&type, &g_adventureObjectTraits[type].m_nameRow, sizeof(type));
         m_objectPrototypes[type].push_back(properties);
     }
+#if defined(HOMM3_RMG_HOTFIX)
+    // Without monsters, generateToFile fails before generation.
+    if (m_objectPrototypes[MONSTER].size())
+#endif
     for (index = 0; index < m_objectPrototypes[54].size() - 1; ++index) {
         for (unsigned int second = index + 1; second < m_objectPrototypes[54].size(); ++second) {
             if (m_objectPrototypes[54][index]->m_prototype->getSubtype() > m_objectPrototypes[54][second]->m_prototype->getSubtype()) {
@@ -3376,6 +3435,22 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
             delete m_objectPrototypes[type][prototype];
 }
 
+#if defined(HOMM3_RMG_HOTFIX)
+// Table rows up to the first row whose first field is blank.
+static s32 countRmgPlacementRuleRows(const TSpreadsheetResource* sheet)
+{
+    s32 row = RMG_FIRST_DATA_ROW;
+    while (row < sheet->getNumberOfRows()) {
+        const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
+        if (!values.size() || !values[0] || values[0][0] == ' ' || values[0][0] == 0)
+            break;
+        ++row;
+    }
+    return row - RMG_FIRST_DATA_ROW;
+}
+
+#endif
+
 // The final lookup's temporary reverse iterator preserves the signed match
 // sentinel and last-duplicate precedence. Construct it only on the guarded
 // RHS: an empty group never forms a pointer offset. This natural iterator
@@ -3391,6 +3466,7 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
 // Restoring both domains leaves one inline decision: placement-rule push_back
 // expands single-insert into count-insert, adding one push (Windows 99.6314%
 // after folded-target refresh).
+
 VA(0x00536560, 0x5F2)
 MAC_ADDRESS(0x23486c, 0x6a0) // anchor-string rand_trn.txt; thiscall, ret 0; retail-only
 void TRmgGeneratorBase::readObjectPlacementRules()
@@ -3404,15 +3480,39 @@ void TRmgGeneratorBase::readObjectPlacementRules()
     TAdventureObjectType objectType;
     int subtype;
     TTerrainType terrain;
+#if defined(HOMM3_RMG_HOTFIX)
+    s32 tableRows = countRmgPlacementRuleRows(sheet);
+#endif
     for (; row < sheet->getNumberOfRows();) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
+#if defined(HOMM3_RMG_HOTFIX)
+        if (row == RMG_FIRST_DATA_ROW + tableRows)
+            break;
+#else
         if (values[0][0] == ' ' || values[0][0] == 0)
             break;
+#endif
+#if defined(HOMM3_RMG_HOTFIX)
+        bool usable = values.size() >= static_cast<u32>(RMG_PLACEMENT_COLUMN_NEIGHBOUR_SCORES + 2 * tableRows);
+        for (u32 column = 0; usable && column < values.size(); ++column)
+            usable = values[column] != 0;
+        if (!usable) {
+            ++row;
+            continue;
+        }
+#endif
         TRmgObjectPlacementRule rule;
         rule.m_index = row - 3;
         objectType = H3_ENUM_DECODE(TAdventureObjectType, atoi(values[3]));
         subtype = atoi(values[4]);
         terrain = H3_ENUM_DECODE(TTerrainType, atoi(values[6]));
+#if defined(HOMM3_RMG_HOTFIX)
+        if (objectType < NOTHING || objectType >= ADVENTURE_OBJECT_TRAIT_COUNT
+            || terrain < eTerrainDirt || terrain >= RMG_TERRAIN_COUNT) {
+            ++row;
+            continue;
+        }
+#endif
         objectTypes.push_back(objectType);
         terrains.push_back(terrain);
         subtypes.push_back(subtype);
@@ -3425,6 +3525,20 @@ void TRmgGeneratorBase::readObjectPlacementRules()
         ++row;
     }
     int ruleCount = m_placementRules.size();
+#if defined(HOMM3_RMG_HOTFIX)
+    // Score columns retain their source row indices, including skipped rows.
+    for (s32 ruleIndex = 0; ruleIndex < ruleCount; ++ruleIndex) {
+        TRmgObjectPlacementRule& rule = m_placementRules[ruleIndex];
+        const TSpreadsheetResource::TStringVector& values =
+            sheet->getRow(rule.m_index + RMG_FIRST_DATA_ROW);
+        rule.m_adjacentScores.resize(tableRows, 0);
+        rule.m_blockedScores.resize(tableRows, 0);
+        for (s32 index = 0; index < tableRows; ++index) {
+            rule.m_adjacentScores[index] = atoi(values[index + RMG_PLACEMENT_COLUMN_NEIGHBOUR_SCORES]);
+            rule.m_blockedScores[index] = atoi(values[index + tableRows + RMG_PLACEMENT_COLUMN_NEIGHBOUR_SCORES]);
+        }
+    }
+#else
     for (row = 3; row < ruleCount + 3; ++row) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
         TRmgObjectPlacementRule& rule = m_placementRules[row - 3];
@@ -3435,6 +3549,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
         for (index = 0; index < ruleCount; ++index)
             rule.m_blockedScores[index] = atoi(values[index + ruleCount + 16]);
     }
+#endif
     sheet->dispose();
 
 #if defined(HOMM3_TARGET_MAC)
@@ -3874,6 +3989,10 @@ TRmgGenerator::TRmgGenerator(
         width * height + 326900, mapVersion)
 {
     m_nextObjectId = 1;
+#if defined(HOMM3_RMG_HOTFIX)
+    // Key tents start at the first colour, not stack residue.
+    m_nextKeyTentColor = KEY_LIGHT_BLUE;
+#endif
     m_questArtifactPoolLow = 0;
     m_waterContent = waterContent;
     m_monsterStrength = monsterStrength;
@@ -3966,6 +4085,112 @@ static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
     }
 }
 
+#if defined(HOMM3_RMG_HOTFIX)
+void TRmgTemplate::getPlayerSlots(b8* humanSlots, b8* allSlots) const
+{
+    std::fill(humanSlots, humanSlots + RMG_PLAYER_COUNT, false);
+    std::fill(allSlots, allSlots + RMG_PLAYER_COUNT, false);
+    for (u32 index = 0; index < m_zones.size(); ++index) {
+        const TRmgTemplateZone* zone = m_zones[index];
+        if (zone->m_kind == RMG_TEMPLATE_HUMAN)
+            humanSlots[zone->m_playerIndex] = allSlots[zone->m_playerIndex] = true;
+        else if (zone->m_kind == RMG_TEMPLATE_COMPUTER)
+            allSlots[zone->m_playerIndex] = true;
+    }
+}
+
+bool TRmgTemplate::hasPlayerSlots(s32 humanPlayers, s32 computerPlayers) const
+{
+    b8 humanSlots[RMG_PLAYER_COUNT];
+    b8 allSlots[RMG_PLAYER_COUNT];
+    getPlayerSlots(humanSlots, allSlots);
+    s32 humans = 0;
+    s32 players = 0;
+    for (s32 seat = 0; seat < RMG_PLAYER_COUNT; ++seat) {
+        humans += humanSlots[seat] != 0;
+        players += allSlots[seat] != 0;
+    }
+    return humans >= humanPlayers && players >= humanPlayers + computerPlayers;
+}
+
+void TRmgTemplateZone::getTownCategories(s32* densities, s32* counts) const
+{
+    static const ERmgTownPlacementParameter densitySlots[RMG_TOWN_CATEGORY_COUNT] = {
+        RMG_TOWN_PLAYER_CASTLE_DENSITY, RMG_TOWN_PLAYER_BASIC_DENSITY,
+        RMG_TOWN_NEUTRAL_CASTLE_DENSITY, RMG_TOWN_NEUTRAL_BASIC_DENSITY
+    };
+    static const ERmgTownPlacementParameter countSlots[RMG_TOWN_CATEGORY_COUNT] = {
+        RMG_TOWN_PLAYER_CASTLE_COUNT, RMG_TOWN_PLAYER_BASIC_COUNT,
+        RMG_TOWN_NEUTRAL_CASTLE_COUNT, RMG_TOWN_NEUTRAL_BASIC_COUNT
+    };
+    for (s32 category = 0; category < RMG_TOWN_CATEGORY_COUNT; ++category) {
+        densities[category] = m_parameters0020[densitySlots[category]];
+        counts[category] = m_parameters0020[countSlots[category]];
+    }
+}
+
+// Nonpositive densities disable a category, as in retail.
+static bool hasRepresentableRmgDensities(const s32* densities, const s32* counts,
+    s32 categoryCount)
+{
+    s32 product = 1;
+    s32 category;
+    for (category = 0; category < categoryCount; ++category) {
+        if (densities[category] <= 0)
+            continue;
+        if (densities[category] > RMG_MAXIMUM_DENSITY_PRODUCT / product)
+            return false;
+        product *= densities[category];
+    }
+    s32 countLimit = RMG_MAXIMUM_DENSITY_PRODUCT / product - 1;
+    for (category = 0; category < categoryCount; ++category) {
+        if (densities[category] > 0
+            && (counts[category] < -countLimit || counts[category] > countLimit))
+            return false;
+    }
+    return true;
+}
+
+// Sizes scale the layout and bound boundary roughness; player numbers are
+// 1-8, or 0 (none) outside player zones; density arithmetic stays in range.
+bool TRmgTemplateZone::isUsable() const
+{
+    if (m_size <= 0)
+        return false;
+    s32 lowestPlayer = m_kind == RMG_TEMPLATE_HUMAN
+        || m_kind == RMG_TEMPLATE_COMPUTER ? 0 : -1;
+    if (m_playerIndex < lowestPlayer || m_playerIndex >= RMG_PLAYER_COUNT)
+        return false;
+    s32 townDensities[RMG_TOWN_CATEGORY_COUNT];
+    s32 townCounts[RMG_TOWN_CATEGORY_COUNT];
+    getTownCategories(townDensities, townCounts);
+    if (!hasRepresentableRmgDensities(townDensities, townCounts, RMG_TOWN_CATEGORY_COUNT))
+        return false;
+    if (!hasRepresentableRmgDensities(m_parameters0068, m_parameters004c, NUM_RESOURCES))
+        return false;
+    // placeZoneTreasures skips bands with a maximum below 100.
+    s32 treasureDensities[RMG_TREASURE_BAND_COUNT];
+    s32 treasureCounts[RMG_TREASURE_BAND_COUNT] = {0};
+    for (s32 band = 0; band < RMG_TREASURE_BAND_COUNT; ++band)
+        treasureDensities[band] = m_treasure[band].m_maximum >= RMG_TREASURE_MINIMUM_VALUE
+            && m_treasure[band].m_density > 0 ? m_treasure[band].m_density : 0;
+    return hasRepresentableRmgDensities(treasureDensities, treasureCounts, RMG_TREASURE_BAND_COUNT);
+}
+
+// Templates are offered only with usable zones whose distinct player
+// numbers seat the humans, then every player.
+bool TRmgTemplate::isUsable(s32 humanPlayers, s32 computerPlayers) const
+{
+    if (!m_zones.size())
+        return false;
+    for (u32 index = 0; index < m_zones.size(); ++index) {
+        if (!m_zones[index]->isUsable())
+            return false;
+    }
+    return hasPlayerSlots(humanPlayers, computerPlayers);
+}
+#endif
+
 static bool hasRmgTemplatePlayerSlots(TRmgTemplate* mapTemplate,
     int humanPlayers, int computerPlayers)
 {
@@ -4007,7 +4232,12 @@ void TRmgGenerator::loadTemplates()
         mapSize = max(mapSize / 2, 1);
     for (; row < sheet->getNumberOfRows();) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
-        if (values.size() < 2) {
+#if defined(HOMM3_RMG_HOTFIX)
+        if (values.size() <= 2)
+#else
+        if (values.size() < 2)
+#endif
+        {
             ++row;
             continue;
         }
@@ -4026,8 +4256,12 @@ void TRmgGenerator::loadTemplates()
                 m_humanPlayerCount, m_computerPlayerCount, m_mapVersion);
             readRmgTemplateConnections(sheet, mapTemplate, row, endRow,
                 m_humanPlayerCount, m_computerPlayerCount);
+#if defined(HOMM3_RMG_HOTFIX)
+            accepted = mapTemplate->isUsable(m_humanPlayerCount, m_computerPlayerCount);
+#else
             accepted = hasRmgTemplatePlayerSlots(mapTemplate,
                 m_humanPlayerCount, m_computerPlayerCount);
+#endif
         }
         if (!accepted) {
             delete mapTemplate;
@@ -4050,7 +4284,11 @@ void readRmgTemplateZones(
 {
     for (int row = firstRow; row < endRow; ++row) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
+#if defined(HOMM3_RMG_HOTFIX)
+        if (values.size() > 3 && isRmgTemplateFieldSet(values[3]) &&
+#else
         if (values.size() >= 3 && isRmgTemplateFieldSet(values[3]) &&
+#endif
             values.size() > 75) {
 
             TRmgTemplateZone* slot = new TRmgTemplateZone;
@@ -4573,6 +4811,11 @@ void TRmgGenerator::filterZonePositions(
     }
 }
 
+#if defined(HOMM3_RMG_HOTFIX)
+// A layout can exhaust its candidates even after template validation.
+struct TRmgZonePlacementFailure {};
+#endif
+
 // Complete-only zone-position selector. The first zone starts at the
 // origin on either eligible level; later zones sample template neighbors,
 // falling back to all placed zones before applying the shared filter.
@@ -4587,6 +4830,7 @@ void TRmgGenerator::filterZonePositions(
 // relocations, the unwind reference and every non-relocation byte agree.
 // Related assigned snapshots keep the boundary builder exact and preserve
 // the fill caller's established insertion/erasure boundaries.
+
 VA(0x0053B970, 0x232)
 MAC_ADDRESS(0x23ca80, 0x20c) // anchor-callee 0x53bde2/0x53be39; thiscall, ret 8
 void TRmgGenerator::positionZone(TRmgZone* zone, int mapSize)
@@ -4618,6 +4862,10 @@ void TRmgGenerator::positionZone(TRmgZone* zone, int mapSize)
         filterZonePositions(zone, candidates, mapSize);
     }
     unsigned int count = candidates.size();
+#if defined(HOMM3_RMG_HOTFIX)
+    if (!count)
+        throw TRmgZonePlacementFailure();
+#endif
     unsigned int selected = rand() % count;
     TRmgMapPosition selectedPosition;
     selectedPosition = candidates[selected];
@@ -4673,6 +4921,10 @@ void TRmgGenerator::initializeZones(TRmgTemplate* mapTemplate)
     for (slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex) {
         TRmgTemplateZone* slot = mapTemplate->m_zones[slotIndex];
         TRmgZone* zone = new TRmgZone(slot);
+#if defined(HOMM3_RMG_HOTFIX)
+        // The generator owns the zone only after successful placement.
+        std::auto_ptr<TRmgZone> pendingZone(zone);
+#endif
         if (slot->m_parameters0020[0] + slot->m_parameters0020[1] > 0
             && slot->m_playerIndex >= 0
             && m_playerIndexMap[slot->m_playerIndex + 1] >= 0
@@ -4680,6 +4932,9 @@ void TRmgGenerator::initializeZones(TRmgTemplate* mapTemplate)
             zone->m_alignment = m_townChoices[m_playerIndexMap[slot->m_playerIndex + 1]];
         positionZone(zone, mapSize);
         m_zones.push_back(zone);
+#if defined(HOMM3_RMG_HOTFIX)
+        pendingZone.release();
+#endif
     }
     for (int pass = 0; pass < 2; ++pass) {
         for (slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex)
@@ -4726,6 +4981,12 @@ void TRmgGenerator::drawIrregularZoneBoundary(
             int length = perpendicular.length();
             if (length > 1) {
                 int limit = cppMin<long>(length, roughness);
+#if defined(HOMM3_RMG_HOTFIX)
+                // A zone scaled below one cell (two on island coasts) still draws,
+                // but leaves the midpoint in place.
+                if (limit < 1)
+                    limit = 1;
+#endif
                 int displacement = rand() % limit - limit / 2;
                 perpendicular = perpendicular * displacement / length;
                 midpoint += perpendicular;
@@ -5010,6 +5271,12 @@ void TRmgGenerator::drawIslandBoundary(TPoint from, TPoint to,
             int length = perpendicular.length();
             if (length > 1) {
                 int limit = cppMin<long>(length / 2, roughness);
+#if defined(HOMM3_RMG_HOTFIX)
+                // A zone scaled below one cell (two on island coasts) still draws,
+                // but leaves the midpoint in place.
+                if (limit < 1)
+                    limit = 1;
+#endif
                 int displacement = rand() % limit - limit / 2;
                 perpendicular = perpendicular * displacement / length;
                 midpoint += perpendicular;
@@ -5465,6 +5732,10 @@ void TRmgGenerator::buildZoneBoundaries(
         testSlot.m_zoneIndex = -1;
         testSlot.m_kind = RMG_TEMPLATE_JUNCTION;
         testSlot.m_size = 0;
+#if defined(HOMM3_RMG_HOTFIX)
+        // The placement probe has no town.
+        memset(testSlot.m_allowedTowns, false, sizeof(testSlot.m_allowedTowns));
+#endif
         TRmgZone testZone(&testSlot);
         TRmgZone* addedZone = 0;
         for (zone = 0; zone < originalZones; ++zone) {
@@ -5506,6 +5777,12 @@ void TRmgGenerator::buildZoneBoundaries(
                     // Recycled heap contents therefore affect RNG consumption;
                     // the execution oracle supplies allocation contents explicitly.
                     TRmgTemplateZone* slot = new TRmgTemplateZone;
+#if defined(HOMM3_RMG_HOTFIX)
+                    memset(slot->m_allowedTowns, false, sizeof(slot->m_allowedTowns));
+                    slot->m_neutralTownsMatchZone = false;
+                    slot->m_useNativeTerrain = false;
+                    slot->m_guardsMatchZone = false;
+#endif
                     slot->m_zoneIndex = mapTemplate->m_zones.size();
                     slot->m_size = radius;
                     memset(slot->m_allowedMonsters, 0, sizeof(slot->m_allowedMonsters));
@@ -5531,6 +5808,10 @@ void TRmgGenerator::buildZoneBoundaries(
                     slot->m_treasure[1].m_minimum = 2000;
                     slot->m_kind = RMG_TEMPLATE_JUNCTION;
                     addedZone = new TRmgZone(slot);
+#if defined(HOMM3_RMG_HOTFIX)
+                    // chooseCreatureTownType never runs for added zones.
+                    addedZone->m_townType2 = eTownNeutral;
+#endif
                     addedZone->m_terrain = eTerrainWater;
                     addedZone->setLevelPosition(position);
                     mapTemplate->m_zones.push_back(slot);
@@ -6289,6 +6570,9 @@ void TRmgGenerator::buildZoneConnectionPaths()
         TRmgMapPosition seed;
         TRmgMapPosition pathPosition;
         unsigned char found = 0;
+#if defined(HOMM3_RMG_HOTFIX)
+        b8 foundSeed = false;
+#endif
         for (pathPosition.m_y = bounds.m_minimumY;
              pathPosition.m_y < bounds.m_maximumY && !found; ++pathPosition.m_y) {
             int x = bounds.m_minimumX;
@@ -6302,6 +6586,9 @@ void TRmgGenerator::buildZoneConnectionPaths()
                             seed.m_x = x;
                             seed.m_y = pathPosition.m_y;
                             seed.m_z = position.m_z;
+#if defined(HOMM3_RMG_HOTFIX)
+                            foundSeed = true;
+#endif
                             if (current->hasSubterraneanGate() && current->m_tileData.m_roadPassable
                                 && terrain != eTerrainRock) {
                                 found = 1;
@@ -6315,6 +6602,11 @@ void TRmgGenerator::buildZoneConnectionPaths()
                 } while (1);
             }
         }
+#if defined(HOMM3_RMG_HOTFIX)
+        // A zone with no eligible cell has no connection paths.
+        if (!foundSeed)
+            continue;
+#endif
         if (!found) {
             TRmgMapItem* current = m_map.getMapItem(seed);
             if (!current->m_connection.m_present) {
@@ -6454,6 +6746,13 @@ TRmgObject* TRmgGenerator::createGuard(int value, TRmgZone* zone)
         if (prototypeIndices[creature] >= 0 && --chosen < 0)
             break;
     }
+#if defined(HOMM3_RMG_HOTFIX)
+    // A rank beyond the loaded prototypes selects no guard.
+    if (creature < 0)
+        return 0;
+#else
+    // Retail bug: if the counts disagree, creature can reach -1.
+#endif
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[MONSTER][prototypeIndices[creature]];
     int aiValue = g_creatureTypeTraits[creature].m_aiValue;
     int count = (value + aiValue / 2) / aiValue;
@@ -6587,7 +6886,16 @@ TRmgMapPosition& TRmgMapPosition::operator-=(const TPoint& offset)
 MAC_ADDRESS(0x243498, 0xd4)
 void TRmgGenerator::placeGuard(int value, TRmgMapPosition position)
 {
+#if defined(HOMM3_RMG_HOTFIX)
+    if (position.m_x < 0 || position.m_x >= m_map.m_mapWidth
+        || position.m_y < 0 || position.m_y >= m_map.m_mapHeight)
+        return;
+#endif
     TRmgMapItem* item = m_map.getMapItem(position);
+#if defined(HOMM3_RMG_HOTFIX)
+    if (item->m_zoneState.m_zone == RMG_NO_ZONE)
+        return;
+#endif
     TRmgZone* zone = m_zones[item->m_zoneState.m_zone];
     if (static_cast<int>(item->m_objects.size()) > 0)
         return;
@@ -7897,6 +8205,12 @@ void TRmgGenerator::connectJunctionEntrance(TPoint from, TPoint to,
             int length = perpendicular.length();
             if (length > 1) {
                 int limit = cppMin<long>(length, roughness);
+#if defined(HOMM3_RMG_HOTFIX)
+                // A zone scaled below one cell (two on island coasts) still draws,
+                // but leaves the midpoint in place.
+                if (limit < 1)
+                    limit = 1;
+#endif
                 int displacement = rand() % limit - limit / 2;
                 perpendicular = perpendicular * displacement / length;
                 midpoint += perpendicular;
@@ -8310,6 +8624,12 @@ unsigned char TRmgGenerator::tryPlacePrimaryTown(
         item->m_tileData.m_borderObject = 0;
         item->m_tileData.m_subterraneanGate = 1;
     }
+#if defined(HOMM3_RMG_HOTFIX)
+    // An additional town can supply the first town of an unaligned zone.
+    // The faction tally and map header must use its resolved town type.
+    if (zone->m_alignment == eTownNeutral)
+        zone->m_alignment = static_cast<TTownType>(alignment);
+#endif
     return 1;
 }
 
@@ -9558,7 +9878,12 @@ MAC_ADDRESS(0x24c6d4, 0x1d8)
 void TRmgGenerator::createRoads()
 {
     int roadType = rand() % 3 + 1;
-    for (unsigned int first = 0; first < m_roadTargets.size() - 1; ++first) {
+#if defined(HOMM3_RMG_HOTFIX)
+    for (unsigned int first = 0; first + 1 < m_roadTargets.size(); ++first)
+#else
+    for (unsigned int first = 0; first < m_roadTargets.size() - 1; ++first)
+#endif
+    {
         TRmgMapPosition source = m_roadTargets[first];
         resetMovementCosts();
         buildRoadCostMap(source);
@@ -9640,8 +9965,15 @@ void TRmgGenerator::createRiverToObject(TRmgMapPosition source)
             }
         }
     }
+#if defined(HOMM3_RMG_HOTFIX)
+    // Draw only to a river cell the search reached.
+    if (!mapItem->hasRiver() || mapItem->m_movement.m_cost >= RMG_UNREACHED_COST)
+        return;
+#else
+    // Retail bug: tests the last inspected tile, as in createRiver.
     if (!mapItem->hasRiver())
         return;
+#endif
     TRmgMap levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
         m_map.getWidth(), m_map.getHeight());
     TRmgRiverMapAdapter mapAdapter(&levelMap);
@@ -9675,7 +10007,11 @@ void TRmgGenerator::markRiverCoastTarget(TRmgMapPosition position, int direction
     TRmgMapPosition point = position + g_rmgDirections[(direction + 2) & 7];
     TPoint step = g_rmgDirections[(direction - 2) & 7];
     for (int waterCount = 0; waterCount < 3; ++waterCount) {
+#if defined(HOMM3_RMG_HOTFIX)
+        if (point.m_x < 0 || point.m_x >= m_map.m_mapWidth
+#else
         if (point.m_x < 0 || point.m_x > m_map.m_mapWidth
+#endif
             || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
             return;
         if (m_map.getMapItem(point.m_x, point.m_y, point.m_z)->m_tile.m_landType != eTerrainWater)
@@ -9684,7 +10020,11 @@ void TRmgGenerator::markRiverCoastTarget(TRmgMapPosition position, int direction
     }
     point = position + g_rmgDirections[(direction + 1) & 7];
     for (int dryCount = 0; dryCount < 3; ++dryCount) {
+#if defined(HOMM3_RMG_HOTFIX)
+        if (point.m_x < 0 || point.m_x >= m_map.m_mapWidth
+#else
         if (point.m_x < 0 || point.m_x > m_map.m_mapWidth
+#endif
             || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
             return;
         TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
@@ -9696,7 +10036,11 @@ void TRmgGenerator::markRiverCoastTarget(TRmgMapPosition position, int direction
     point += g_rmgDirections[direction];
     TRmgMapItem* item;
     for (int inlandCount = 0; inlandCount < 4; ++inlandCount) {
+#if defined(HOMM3_RMG_HOTFIX)
+        if (point.m_x < 0 || point.m_x >= m_map.m_mapWidth
+#else
         if (point.m_x < 0 || point.m_x > m_map.m_mapWidth
+#endif
             || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
             return;
         item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
@@ -9835,8 +10179,15 @@ void TRmgGenerator::createRiver(TRmgMapPosition source)
         }
     }
 
+#if defined(HOMM3_RMG_HOTFIX)
+    // Draw only to a target the search reached.
+    if (!mapItem->isRiverTarget() || mapItem->m_movement.m_cost >= RMG_UNREACHED_COST)
+        return;
+#else
+    // Retail bug: tests the last inspected tile, even an unreached one.
     if (!mapItem->isRiverTarget())
         return;
+#endif
 
     mapItem->m_tileData.m_riverTarget = 1;
     position = nextPosition;
@@ -9968,6 +10319,57 @@ void TRmgGenerator::createRivers()
     }
 }
 
+#if defined(HOMM3_RMG_HOTFIX)
+// A template seat is not a playable start until a town actually fits there.
+bool TRmgGenerator::hasPlayerTowns() const
+{
+    b8 humanTowns[RMG_PLAYER_COUNT];
+    b8 playerTowns[RMG_PLAYER_COUNT];
+    memset(humanTowns, 0, sizeof(humanTowns));
+    memset(playerTowns, 0, sizeof(playerTowns));
+    for (u32 index = 0; index < m_zones.size(); ++index) {
+        const TRmgZone* zone = m_zones[index];
+        const TRmgTemplateZone* templateZone = zone->m_slot;
+        if (!zone->m_active || templateZone->m_playerIndex < 0)
+            continue;
+        if (templateZone->m_kind != RMG_TEMPLATE_HUMAN
+            && templateZone->m_kind != RMG_TEMPLATE_COMPUTER)
+            continue;
+        s32 player = m_playerIndexMap[templateZone->m_playerIndex + 1];
+        if (player < 0)
+            continue;
+        // A neutral town must not become the player's serialized main town.
+        bool ownsMainTown = false;
+        for (u32 objectIndex = 0; objectIndex < m_positions.size(); ++objectIndex) {
+            const TRmgObject* object = m_positions[objectIndex];
+            if (object->m_properties->m_prototype->getObjectType() != TOWN)
+                continue;
+            const TRmgTownObject* town = static_cast<const TRmgTownObject*>(object);
+            TRmgMapPosition entrance = town->getEntrance();
+            if (town->m_player == player && entrance == zone->m_position
+                && entrance.m_z == zone->m_position.m_z) {
+                ownsMainTown = true;
+                break;
+            }
+        }
+        if (!ownsMainTown)
+            return false;
+        if (templateZone->m_kind == RMG_TEMPLATE_HUMAN)
+            humanTowns[player] = playerTowns[player] = true;
+        else if (templateZone->m_kind == RMG_TEMPLATE_COMPUTER)
+            playerTowns[player] = true;
+    }
+    s32 humans = 0;
+    s32 players = 0;
+    for (s32 player = 0; player < RMG_PLAYER_COUNT; ++player) {
+        humans += humanTowns[player] != 0;
+        players += playerTowns[player] != 0;
+    }
+    return humans >= m_humanPlayerCount
+        && players >= m_humanPlayerCount + m_computerPlayerCount;
+}
+#endif
+
 // Retail 0x54bf60 calls this Complete-only coordinator. Preserve the player
 // ordering, separate town passes, two connection-cost passes, and final
 // coastal/decorative/road/river order. No Dreamcast counterpart exists.
@@ -9977,6 +10379,7 @@ void TRmgGenerator::createRivers()
 // pointer) recovers the selected-index lifetime across string assignment.
 // All 69 Windows CFG blocks and ordered calls now reproduce exactly. Slot
 // initialization, callbacks and canonical container helpers stay intact.
+
 VA(0x00549930, 0x37B)
 MAC_ADDRESS(0x24e294, 0x41c)
 unsigned char TRmgGenerator::generate()
@@ -10023,7 +10426,15 @@ unsigned char TRmgGenerator::generate()
             ++slot;
         m_playerIndexMap[++slot] = players[player];
     }
+#if defined(HOMM3_RMG_HOTFIX)
+    try {
+        initializeZones(m_templates[selected]);
+    } catch (const TRmgZonePlacementFailure&) {
+        return false;
+    }
+#else
     initializeZones(m_templates[selected]);
+#endif
     for (int level = 0; level < m_map.m_numberLevels; ++level)
         buildZoneBoundaries(m_templates[selected], level);
     paintZoneTerrain();
@@ -10031,6 +10442,10 @@ unsigned char TRmgGenerator::generate()
         placePrimaryTown(m_zones[zone]);
     for (zone = 0; zone < m_zones.size(); ++zone)
         placeAdditionalTowns(m_zones[zone]);
+#if defined(HOMM3_RMG_HOTFIX)
+    if (!hasPlayerTowns())
+        return false;
+#endif
     prepareZoneConnections();
     for (zone = 0; zone < m_zones.size(); ++zone)
         if (m_zones[zone]->m_slot->m_kind == RMG_TEMPLATE_JUNCTION
@@ -10130,7 +10545,15 @@ void TRmgGenerator::writeMapHeader(TAbstractFile* outfile)
 
     // Retail places description at [ebp-0x324] and mainTowns at
     // [ebp-0x130]; their 0x1f4-byte separation proves the 500-byte extent.
+#if defined(HOMM3_RMG_HOTFIX)
+    // With the name capped at 255 characters, a description fits in 1024.
+    char description[1024];
+    if (m_templateName.size() > 255)
+        m_templateName.resize(255);
+#else
+    // Retail bug: unchecked sprintf/strcat can overflow this buffer.
     char description[500];
+#endif
     sprintf(
         description,
         DATA_COMPGEN(
@@ -10254,6 +10677,14 @@ void TRmgGenerator::writeMapHeader(TAbstractFile* outfile)
     } while (reversePlayer-- != 0);
 
     m_computerPlayerCount = m_humanPlayerCount = 0;
+#if defined(HOMM3_RMG_HOTFIX)
+    // A player with both kinds of starting zone belongs to the human team
+    // pool. The computer-only mask must agree with the counts below.
+    for (s32 teamPlayer = 0; teamPlayer < RMG_PLAYER_COUNT; ++teamPlayer) {
+        if (canBeHuman[teamPlayer])
+            canBeComputer[teamPlayer] = false;
+    }
+#endif
 
     for (int serializedPlayer = 0; serializedPlayer < 8;
          ++serializedPlayer) {
@@ -10908,7 +11339,12 @@ void TRmgGenerator::removeObject(TRmgObject* object)
     TRmgMapPosition position;
     position = object->m_position;
     std::vector<TRmgObject*>::iterator found = std::find(m_positions.begin(), m_positions.end(), object);
-    if (found) {
+#if defined(HOMM3_RMG_HOTFIX)
+    if (found != m_positions.end())
+#else
+    if (found)
+#endif
+    {
         m_positions.erase(found);
         --m_objectCountByType[prototype->getObjectType()];
         TAdventureObjectType objectType = prototype->getObjectType();
@@ -10941,7 +11377,12 @@ void TRmgGenerator::removeObject(TRmgObject* object)
                 || prototype->isTriggerCell(cell.m_x, cell.m_y)) {
                 TRmgMapItem* item = m_map.getMapItem(mapPosition);
                 std::vector<TRmgObject*>::iterator entry = std::find(item->m_objects.begin(), item->m_objects.end(), object);
-                if (entry) {
+#if defined(HOMM3_RMG_HOTFIX)
+                if (entry != item->m_objects.end())
+#else
+                if (entry)
+#endif
+                {
                     item->m_objects.erase(entry);
                     if (item->m_objects.empty()) {
                         item->m_tileData.m_roadEntrance = 0;
@@ -10983,10 +11424,160 @@ void TRmgGenerator::setTownChoice(int seat, int town)
     m_townChoices[seat] = town;
 }
 
+#if defined(HOMM3_RMG_HOTFIX)
+static s32 getRmgTownTypeCount(s32 mapVersion)
+{
+    return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? TOWN_TYPE_COUNT : TOWN_TYPE_ROE_COUNT;
+}
+
+static bool isRmgSelectablePrototype(const TObjectType& prototype,
+    s32 subtype, TTerrainType terrain)
+{
+    if (prototype.getSubtype() != subtype)
+        return false;
+    if (prototype.m_slotCategory == TObjectType::SLOT_CATEGORY_4
+        || prototype.m_slotCategory == TObjectType::SLOT_CATEGORY_5)
+        return terrain != eTerrainWater;
+    return prototype.isRecommendedTerrain(terrain) != 0;
+}
+
+static inline u32 findRmgPrototypeSubtypeIndex(
+    const std::vector<TRmgObjectPropertiesRef*>& prototypes, s32 subtype)
+{
+    u32 index = 0;
+    while (index < prototypes.size()
+        && prototypes[index]->m_prototype->getSubtype() != subtype)
+        ++index;
+    return index;
+}
+
+static bool isRmgQuestArtifactEligible(s32 artifact)
+{
+    return !g_artifactTraits[artifact].m_disabled
+        && (g_artifactTraits[artifact].m_artifactClass & 2);
+}
+
+// The request settings the lobby can produce. The generator relies on them:
+// map arithmetic, the eight player slots and the enum-indexed tables.
+bool TRandomMapRequest::isSupported() const
+{
+    if (m_width != m_height)
+        return false;
+    switch (m_width) {
+    case MAP_DIMENSION_SMALL:
+    case MAP_DIMENSION_MEDIUM:
+    case MAP_DIMENSION_LARGE:
+    case MAP_DIMENSION_EXTRA_LARGE:
+        break;
+    default:
+        return false;
+    }
+    if (m_levels < 1 || m_levels > RMG_MAP_LEVEL_COUNT)
+        return false;
+    // Totals below two are repaired after this check.
+    if (m_humanPlayerCount < 0 || m_computerPlayerCount < 0
+        || m_humanPlayerCount > RMG_PLAYER_COUNT
+        || m_computerPlayerCount > RMG_PLAYER_COUNT - m_humanPlayerCount)
+        return false;
+    s32 fixedHumans = 0;
+    for (s32 player = 0; player < RMG_PLAYER_COUNT; ++player)
+        fixedHumans += m_isHumanSeat[player] != 0;
+    s32 repairedHumans = m_humanPlayerCount + m_computerPlayerCount < 2
+        ? 1 : m_humanPlayerCount;
+    if (fixedHumans > repairedHumans)
+        return false;
+    // The lobby may pass more teams than players (or 0, one per player);
+    // writeMapHeader clamps them to the players it writes.
+    if (m_humanTeamCount < 0 || m_humanTeamCount > RMG_PLAYER_COUNT
+        || m_computerTeamCount < 0 || m_computerTeamCount > RMG_PLAYER_COUNT)
+        return false;
+    if (m_waterContent < RMG_WATER_NONE || m_waterContent > RMG_WATER_RANDOM)
+        return false;
+    // Strengths the entry's clamp would change are outside the lobby's range.
+    if (m_monsterStrength < 1 - RMG_ZONE_MONSTERS_AVERAGE
+        || m_monsterStrength > RMG_STRONGEST_GUARD_STRENGTH - RMG_ZONE_MONSTERS_AVERAGE)
+        return false;
+    if (m_mapVersion < RMG_MAP_RESTORATION_OF_ERATHIA
+        || m_mapVersion > RMG_MAP_SHADOW_OF_DEATH)
+        return false;
+    for (s32 seat = 0; seat < RMG_PLAYER_COUNT; ++seat) {
+        if (m_townChoices[seat] < eTownNeutral
+            || m_townChoices[seat] >= getRmgTownTypeCount(m_mapVersion))
+            return false;
+    }
+    return true;
+}
+
+// selectObjectPrototype's filter, without its random draw.
+static bool hasRmgSelectablePrototype(
+    const std::vector<TRmgObjectPropertiesRef*>& prototypes, s32 subtype, TTerrainType terrain)
+{
+    for (u32 index = 0; index < prototypes.size(); ++index) {
+        const TObjectType* prototype = prototypes[index]->m_prototype;
+        if (isRmgSelectablePrototype(*prototype, subtype, terrain))
+            return true;
+    }
+    return false;
+}
+
+// The objects.txt families that generation indexes without checking.
+bool TRmgGenerator::hasRequiredPrototypes() const
+{
+    const std::vector<TRmgObjectPropertiesRef*>* prototypes = m_objectPrototypes;
+    // Guards, writeMap's two fixed prototype slots and shipyard connections.
+    if (!prototypes[MONSTER].size() || !prototypes[RANDOM_MONSTER].size()
+        || !prototypes[TERRAIN_HOLE].size() || !prototypes[SHIPYARD].size())
+        return false;
+    if (m_map.m_numberLevels > 1 && !prototypes[UNDERGROUND_GATE].size())
+        return false;
+    // Towns are indexed by town type.
+    if (prototypes[TOWN].size() < getRmgTownTypeCount(m_mapVersion))
+        return false;
+    for (s32 town = 0; town < getRmgTownTypeCount(m_mapVersion); ++town) {
+        const TObjectType* prototype = prototypes[TOWN][town]->m_prototype;
+        if (prototype->getSubtype() != town || !prototype->m_hasTrigger)
+            return false;
+    }
+    // Portals cycle through two-way monoliths, then entrance/exit pairs.
+    if (!(prototypes[LITH_TWOWAY].size() + prototypes[LITH_ONEWAY_ENTRANCE].size())
+        || prototypes[LITH_ONEWAY_EXIT].size() < prototypes[LITH_ONEWAY_ENTRANCE].size())
+        return false;
+    for (u32 portal = 0; portal < prototypes[LITH_ONEWAY_ENTRANCE].size(); ++portal) {
+        if (prototypes[LITH_ONEWAY_ENTRANCE][portal]->m_prototype->getSubtype()
+            != prototypes[LITH_ONEWAY_EXIT][portal]->m_prototype->getSubtype())
+            return false;
+    }
+    // A placed tent's border-connection cells take a guard of its colour,
+    // selected on dirt.
+    for (u32 tent = 0; tent < prototypes[BORDER_TENT].size(); ++tent) {
+        if (!hasRmgSelectablePrototype(prototypes[BORDER_GUARD],
+                prototypes[BORDER_TENT][tent]->m_prototype->getSubtype(), eTerrainDirt))
+            return false;
+    }
+    // Seer huts carry a random artifact, later replaced by the prototype of
+    // a quest artifact.
+    if (prototypes[SEER].size()) {
+        if (!hasRmgSelectablePrototype(prototypes[RANDOM_ARTIFACT], 0, eTerrainDirt))
+            return false;
+        for (s32 artifact = ARTIFACT_SPELLBOOK; artifact < ARTIFACT_COUNT; ++artifact) {
+            if (isRmgQuestArtifactEligible(artifact)
+                && findRmgPrototypeSubtypeIndex(prototypes[ARTIFACT], artifact)
+                    == prototypes[ARTIFACT].size())
+                return false;
+        }
+    }
+    return true;
+}
+#endif
+
 VA(0x0054BF60, 0x130)
 MAC_ADDRESS(0x251070, 0x140)
 ERandomMapResult TRandomMapRequest::generateToFile(TAbstractFile* outfile, TProgressSink* progress)
 {
+#if defined(HOMM3_RMG_HOTFIX)
+    if (!isSupported())
+        return RANDOM_MAP_GENERATION_FAILED;
+#endif
     int strength = m_monsterStrength + 3;
     if (strength < 1)
         strength = 1;
@@ -11000,6 +11591,10 @@ ERandomMapResult TRandomMapRequest::generateToFile(TAbstractFile* outfile, TProg
         m_humanPlayerCount, m_humanTeamCount, m_computerPlayerCount,
         m_computerTeamCount, m_waterContent, strength,
         static_cast<TProgressSink*>(progress), m_mapVersion);
+#if defined(HOMM3_RMG_HOTFIX)
+    if (!generator.hasRequiredPrototypes())
+        return RANDOM_MAP_GENERATION_FAILED;
+#endif
     for (int seat = 0; seat < 8; ++seat) {
         if (m_isHumanSeat[seat])
             generator.setHumanPlayer(seat);

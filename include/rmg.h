@@ -191,6 +191,10 @@ public:
     int m_density;
 
     TRmgTreasureDef(int objectType, int subtype, int value, int density);
+#if defined(HOMM3_RMG_HOTFIX)
+    // Factories are deleted through this base.
+    virtual ~TRmgTreasureDef() {}
+#endif
 
     // Shared caller 0x5464cd..0x5464de passes the selected property reference,
     // generator and zone, then consumes the result as a TRmgObject pointer.
@@ -593,7 +597,13 @@ struct TRmgTemplateZone {
     TRmgTreasureRange m_treasure[3];     // +0xa0
     std::vector<TRmgZoneConnection> m_connections; // +0xc4
 
+#if defined(HOMM3_RMG_HOTFIX)
+    void getTownCategories(s32* densities, s32* counts) const;
+#endif
     int selectAllowedTown();
+#if defined(HOMM3_RMG_HOTFIX)
+    bool isUsable() const;
+#endif
     TRmgZoneConnection* findConnection(int destinationZone);
 };
 SIZE(TRmgTemplateZone, 0xd4);
@@ -609,6 +619,13 @@ struct TRmgTemplate {
 
     ~TRmgTemplate();
     TRmgTemplateZone* findZone(int zoneIndex);
+#if defined(HOMM3_RMG_HOTFIX)
+    void getPlayerSlots(b8* humanSlots, b8* allSlots) const;
+    bool hasPlayerSlots(s32 humanPlayers, s32 computerPlayers) const;
+#endif
+#if defined(HOMM3_RMG_HOTFIX)
+    bool isUsable(s32 humanPlayers, s32 computerPlayers) const;
+#endif
 };
 SIZE(TRmgTemplate, 0x38);
 
@@ -912,6 +929,9 @@ public:
 
     TRmgObject(TRmgObjectPropertiesRef* newProperties);
     TRmgMapPosition getPosition() const;
+#if defined(HOMM3_RMG_HOTFIX)
+    TRmgMapPosition getEntrance() const;
+#endif
 
     void clearPlacementMarks();
 
@@ -2023,6 +2043,12 @@ public:
         case RMG_MAP_SHADOW_OF_DEATH:
             return 28;
         }
+#if defined(HOMM3_RMG_HOTFIX)
+        // Unknown request versions are written as Shadow of Death maps.
+        return 28;
+#else
+        // Retail bug: another version falls off the end of this function.
+#endif
     }
 
     void initializeObjectGenerators();
@@ -2102,6 +2128,10 @@ public:
     // guarded treasure group; 0x54bc50 removes the old object's map marks,
     // counts and list entry without deleting the object itself.
     unsigned char placeKeyTentGuard(TRmgObject* object, int maxValue);
+#if defined(HOMM3_RMG_HOTFIX)
+    bool hasRequiredPrototypes() const;
+    bool hasPlayerTowns() const;
+#endif
     void setHumanPlayer(int seat);
     void setTownChoice(int seat, int town);
     void removeObject(TRmgObject* object);
