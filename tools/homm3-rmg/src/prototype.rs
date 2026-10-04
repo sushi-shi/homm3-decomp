@@ -25,6 +25,8 @@ use std::{borrow::Cow, collections::TryReserveError, error::Error, fmt, num::Non
 
 mod readiness;
 pub use readiness::{GenerationPrototypes, RequiredPrototypeError};
+mod guard;
+pub use guard::{GuardError, GuardFactions, GuardStack};
 
 const MASK_BITS: u64 = (1 << raw::OBJECT_MASK_CELLS) - 1;
 const MASK_BYTES: usize = 2 + 2 * (raw::OBJECT_MASK_CELLS as usize / u8::BITS as usize);
@@ -799,6 +801,158 @@ mod tests {
     }
     fn monster() -> ObjectKind {
         ObjectKind::parse(i32::try_from(raw::MONSTER).unwrap()).unwrap()
+    }
+
+    fn creature_traits(edits: &[(usize, i32, i32, i32)]) -> crate::traits::CreatureCatalog {
+        use std::fmt::Write;
+        let mut text = String::new();
+        for row in 0..185 {
+            let (_, ai, low, high) = edits
+                .iter()
+                .find(|&&(r, _, _, _)| r == row)
+                .copied()
+                .unwrap_or((row, 0, 0, 0));
+            for column in 0..24 {
+                if column > 0 {
+                    text.push('\t');
+                }
+                let value = match column {
+                    10 => ai,
+                    21 => low,
+                    22 => high,
+                    _ => 0,
+                };
+                write!(text, "{value}").unwrap();
+            }
+            text.push_str("\r\n");
+        }
+        crate::traits::CreatureCatalog::parse(text.as_bytes()).unwrap()
+    }
+
+    #[test]
+    fn guard_missing_prototypes_fault_after_selection_only_in_retail() {
+        let bytes = table(&[row("monster.def", raw::MONSTER, 0)]);
+        let source = PrototypeSource::parse(&bytes, |_| Ok::<_, Infallible>(Some(mask()))).unwrap();
+        let rules = rules();
+        let creatures = creature_traits(&[(2, 10, 1, 1), (3, 10, 1, 1)]);
+        for behavior in [Behavior::Retail(RetailProfile::default()), Behavior::Hotfix] {
+            let catalog = source
+                .prepare(&rules, MapVersion::ShadowOfDeath, behavior)
+                .unwrap();
+            let mut rng = RetailRng::new(1);
+            let result = catalog.select_guard(
+                100,
+                GuardFactions::Allowed(&[true; 10]),
+                &creatures,
+                &mut rng,
+            );
+            assert_eq!(
+                result,
+                if behavior.is_hotfix() {
+                    Ok(None)
+                } else {
+                    Err(GuardError::MissingSelectedPrototype)
+                }
+            );
+            assert_eq!(rng.draws(), 1);
+            let end = rng.checkpoint();
+            assert_eq!(
+                catalog.select_guard(9, GuardFactions::Allowed(&[true; 10]), &creatures, &mut rng),
+                Ok(None)
+            );
+            assert_eq!(rng.checkpoint(), end);
+        }
+    }
+
+    #[test]
+    fn roe_guard_117_escapes_value_and_faction_checks_and_last_prototype_wins() {
+        let bytes = table(&[
+            row("zero.def", raw::MONSTER, 0),
+            row("first.def", raw::MONSTER, 117),
+            row("last.def", raw::MONSTER, 117),
+        ]);
+        let source = PrototypeSource::parse(&bytes, |_| Ok::<_, Infallible>(Some(mask()))).unwrap();
+        let rules = rules();
+        let creatures = creature_traits(&[(2, 10, 1, 1), (143, 20, 1000, 1000)]);
+        let factions =
+            GuardFactions::Matching(crate::request::Town::parse(raw::TOWN_CASTLE).unwrap());
+        for version in [MapVersion::Restoration, MapVersion::ArmageddonsBlade] {
+            let catalog = source.prepare(&rules, version, Behavior::Hotfix).unwrap();
+            let mut rng = RetailRng::new(1);
+            let guard = catalog
+                .select_guard(20, factions, &creatures, &mut rng)
+                .unwrap()
+                .unwrap();
+            if version == MapVersion::Restoration {
+                assert_eq!(guard.creature().index(), 117);
+                assert_eq!(guard.count(), 1);
+                assert_eq!(
+                    catalog
+                        .get(guard.prototype())
+                        .unwrap()
+                        .prototype()
+                        .source_row(),
+                    2
+                );
+            } else {
+                assert_eq!(guard.creature().index(), 0);
+                assert_eq!(guard.count(), 2);
+            }
+            assert_eq!(rng.draws(), 1);
+        }
+    }
+
+    #[test]
+    fn guard_faults_keep_rng_position_at_invalid_index_arithmetic_and_division() {
+        let rules = rules();
+        let bytes = table(&[row("bad.def", raw::MONSTER, -1)]);
+        let source = PrototypeSource::parse(&bytes, |_| Ok::<_, Infallible>(Some(mask()))).unwrap();
+        let catalog = source
+            .prepare(
+                &rules,
+                MapVersion::ShadowOfDeath,
+                Behavior::Retail(RetailProfile::default()),
+            )
+            .unwrap();
+        let mut rng = RetailRng::new(1);
+        assert_eq!(
+            catalog.select_guard(
+                0,
+                GuardFactions::Allowed(&[true; 10]),
+                &creature_traits(&[]),
+                &mut rng
+            ),
+            Err(GuardError::CreatureSubtype(-1))
+        );
+        assert_eq!(rng.draws(), 0);
+        let bytes = table(
+            &(0..14)
+                .map(|id| row("valid.def", raw::MONSTER, id))
+                .collect::<Vec<_>>(),
+        );
+        let source = PrototypeSource::parse(&bytes, |_| Ok::<_, Infallible>(Some(mask()))).unwrap();
+        let catalog = source
+            .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
+            .unwrap();
+        let factions =
+            GuardFactions::Matching(crate::request::Town::parse(raw::TOWN_CASTLE).unwrap());
+        assert!(matches!(
+            catalog.select_guard(
+                0,
+                factions,
+                &creature_traits(&[(176, 0, i32::MAX, i32::MAX)]),
+                &mut rng
+            ),
+            Err(GuardError::Arithmetic { .. })
+        ));
+        assert_eq!(rng.draws(), 0);
+        assert_eq!(
+            catalog.select_guard(0, factions, &creature_traits(&[]), &mut rng),
+            Err(GuardError::ZeroAiValue(
+                crate::traits::CreatureId::parse(0).unwrap()
+            ))
+        );
+        assert_eq!(rng.draws(), 1);
     }
 
     fn required_rows() -> Vec<String> {

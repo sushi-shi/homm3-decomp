@@ -118,7 +118,7 @@ Eight VC6 stage checkpoints (four sizes in both modes) agree with Rust on the
 template, player assignments, zone positions/sizes, terrain/faction choices,
 clipped polygons, every boundary cell, connection adjacency order, graph
 distances, recentered bounds, island coverage and every painted terrain/frame/flip.
-Each random stage also agrees on RNG state. There are 51 focused unit tests across the core/data crates,
+Each random stage also agrees on RNG state. There are 54 focused unit tests across the core/data crates,
 three installation-adapter tests and six LOD codec checks, including malformed-input corpora. The
 installed-data checks require explicit local assets and are ignored by default.
 
@@ -203,6 +203,17 @@ retail retains deferred faults. The eventual generation entry point must keep
 the constructor's random-water draw before this gate's failure, then connect
 the asset catalogs to the remaining placement and output stages. The CLI crate
 currently contains the IO adapter, not a runnable generator command.
+
+Guard selection now uses a fixed prototype-index array and returns a typed
+stack without allocating an object or candidate list. It preserves last-loaded
+prototype selection, descending creature order, the missing-prototype counting
+bug, RoE's unevaluated creature 117 and both count-variation draws. Across 3,456
+C++ captures (three formats, both modes, twelve faction policies, twelve guard
+values and four seeds), creature, original prototype row, quantity and final
+RNG state agree. Targeted tests cover invalid creature indices, arithmetic and
+zero-divisor faults and hotfix's absent-selection result at the correct RNG
+position. The generation owner still needs to assign the object ID and place
+the returned stack.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the
