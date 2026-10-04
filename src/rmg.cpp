@@ -2607,6 +2607,29 @@ enum ERmgMonolithSubtypeLimits {
     RMG_PRE_SOD_MONOLITH_SUBTYPE_COUNT = 3
 };
 
+#if defined(HOMM3_RMG_HOTFIX)
+// Prototypes the generator can place: the footprint fits the 8x6 mask and
+// has a cell in its bottom row, where the outline starts; a monster's
+// subtype is a creature type.
+static bool isUsableRmgPrototype(const TObjectType& prototype)
+{
+    if (prototype.getWidth() < 1 || prototype.getWidth() > 8
+        || prototype.getHeight() < 1 || prototype.getHeight() > 6)
+        return false;
+    s32 column = 0;
+    while (column < prototype.getWidth()
+        && !isRmgObjectFootprintCell(&prototype, column, 0))
+        ++column;
+    if (column == prototype.getWidth())
+        return false;
+    s32 mappedType;
+    memcpy(&mappedType, &g_adventureObjectTraits[prototype.getObjectType()].m_nameRow,
+        sizeof(mappedType));
+    return mappedType != MONSTER || (prototype.getSubtype() >= 0
+        && prototype.getSubtype() < RMG_CREATURE_TYPE_COUNT);
+}
+#endif
+
 VA(0x00536200, 0x1ac)
 MAC_ADDRESS(0x234440, 0x24c)
 void TRmgGeneratorBase::loadObjectPrototypes()
@@ -2621,6 +2644,10 @@ void TRmgGeneratorBase::loadObjectPrototypes()
             continue;
         if (type < 0 || type >= ADVENTURE_OBJECT_TRAIT_COUNT)
             continue;
+#if defined(HOMM3_RMG_HOTFIX)
+        if (!isUsableRmgPrototype(m_objectsTxt.m_objectTypes[index]))
+            continue;
+#endif
         TRmgObjectPropertiesRef* properties =
             new TRmgObjectPropertiesRef(&m_objectsTxt.m_objectTypes[index]);
         // Aliased object types are listed under their objnames.txt row.
@@ -2630,6 +2657,10 @@ void TRmgGeneratorBase::loadObjectPrototypes()
     }
     // Exchange sort of the monsters by subtype, swapping prototypes. Retail
     // bug: an empty monster list underflows size() - 1.
+#if defined(HOMM3_RMG_HOTFIX)
+    // Without monsters, generateToFile fails before generation.
+    if (m_objectPrototypes[MONSTER].size())
+#endif
     for (u32 first = 0; first < m_objectPrototypes[MONSTER].size() - 1; ++first) {
         for (u32 second = first + 1; second < m_objectPrototypes[MONSTER].size(); ++second) {
             if (m_objectPrototypes[MONSTER][first]->m_prototype->getSubtype() > m_objectPrototypes[MONSTER][second]->m_prototype->getSubtype()) {
@@ -2662,6 +2693,38 @@ static inline void readRmgPlacementScores(std::vector<s32>& scores,
             fields[index + precedingScores + RMG_PLACEMENT_COLUMN_NEIGHBOUR_SCORES]);
 }
 
+#if defined(HOMM3_RMG_HOTFIX)
+// Table rows up to the first row whose first field is blank.
+static s32 countRmgPlacementRuleRows(const TSpreadsheetResource* sheet)
+{
+    s32 row = RMG_FIRST_DATA_ROW;
+    while (row < sheet->getNumberOfRows()) {
+        const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
+        if (!values.size() || !values[0] || values[0][0] == ' ' || values[0][0] == 0)
+            break;
+        ++row;
+    }
+    return row - RMG_FIRST_DATA_ROW;
+}
+
+// A rule row has an adjacent and a blocked score for every table row, and
+// its object type and terrain index the binding tables.
+static bool isValidRmgPlacementRuleRow(
+    const TSpreadsheetResource::TStringVector& values, s32 tableRows)
+{
+    if (values.size() < static_cast<u32>(RMG_PLACEMENT_COLUMN_NEIGHBOUR_SCORES + 2 * tableRows))
+        return false;
+    for (u32 column = 0; column < values.size(); ++column) {
+        if (!values[column])
+            return false;
+    }
+    s32 objectType = atoi(values[RMG_PLACEMENT_COLUMN_OBJECT_TYPE]);
+    s32 terrain = atoi(values[RMG_PLACEMENT_COLUMN_TERRAIN]);
+    return objectType >= NOTHING && objectType < ADVENTURE_OBJECT_TRAIT_COUNT
+        && terrain >= eTerrainDirt && terrain < RMG_TERRAIN_COUNT;
+}
+#endif
+
 // Reads rand_trn.txt and binds each prototype to the last rule matching its
 // object type, subtype and first recommended terrain.
 VA(0x00536560, 0x5f2)
@@ -2674,10 +2737,23 @@ void TRmgGeneratorBase::readObjectPlacementRules()
     std::vector<TAdventureObjectType> objectTypes;
     std::vector<TTerrainType> terrains;
     std::vector<s32> subtypes;
+#if defined(HOMM3_RMG_HOTFIX)
+    s32 tableRows = countRmgPlacementRuleRows(sheet);
+#endif
     while (row < sheet->getNumberOfRows()) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
+#if defined(HOMM3_RMG_HOTFIX)
+        if (row == RMG_FIRST_DATA_ROW + tableRows)
+            break;
+        // A malformed row binds no prototype; its score columns are ignored.
+        if (!isValidRmgPlacementRuleRow(values, tableRows)) {
+            ++row;
+            continue;
+        }
+#else
         if (values[0][0] == ' ' || values[0][0] == 0)
             break;
+#endif
         TRmgObjectPlacementRule rule;
         rule.m_index = row - RMG_FIRST_DATA_ROW;
         TAdventureObjectType ruleObjectType =
@@ -2701,12 +2777,23 @@ void TRmgGeneratorBase::readObjectPlacementRules()
         ++row;
     }
     s32 ruleCount = m_placementRules.size();
+#if defined(HOMM3_RMG_HOTFIX)
+    // Scores are indexed by table row (m_index), skipped rows included.
+    for (s32 ruleIndex = 0; ruleIndex < ruleCount; ++ruleIndex) {
+        TRmgObjectPlacementRule& rule = m_placementRules[ruleIndex];
+        const TSpreadsheetResource::TStringVector& values =
+            sheet->getRow(rule.m_index + RMG_FIRST_DATA_ROW);
+        readRmgPlacementScores(rule.m_adjacentScores, values, 0, tableRows);
+        readRmgPlacementScores(rule.m_blockedScores, values, tableRows, tableRows);
+    }
+#else
     for (row = RMG_FIRST_DATA_ROW; row < ruleCount + RMG_FIRST_DATA_ROW; ++row) {
         const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
         TRmgObjectPlacementRule& rule = m_placementRules[row - RMG_FIRST_DATA_ROW];
         readRmgPlacementScores(rule.m_adjacentScores, values, 0, ruleCount);
         readRmgPlacementScores(rule.m_blockedScores, values, ruleCount, ruleCount);
     }
+#endif
     sheet->dispose();
 
 #if defined(HOMM3_TARGET_MAC)
@@ -3221,6 +3308,97 @@ bool TRmgTemplate::hasPlayerSlots(s32 humanPlayers, s32 computerPlayers) const
     return playerSlots >= humanPlayers + computerPlayers;
 }
 
+#if defined(HOMM3_RMG_HOTFIX)
+// Weighted placement counts reach about (count + 1) times the product of a
+// zone's enabled densities; half the s32 range leaves room for their total.
+enum ERmgDensityLimit {
+    RMG_MAXIMUM_DENSITY_PRODUCT = 0x3fffffff
+};
+
+// Nonpositive densities disable a category, as in retail.
+static bool hasRepresentableRmgDensities(const s32* densities, const s32* counts,
+    s32 categoryCount)
+{
+    s32 product = 1;
+    s32 category;
+    for (category = 0; category < categoryCount; ++category) {
+        if (densities[category] <= 0)
+            continue;
+        if (densities[category] > RMG_MAXIMUM_DENSITY_PRODUCT / product)
+            return false;
+        product *= densities[category];
+    }
+    s32 countLimit = RMG_MAXIMUM_DENSITY_PRODUCT / product - 1;
+    for (category = 0; category < categoryCount; ++category) {
+        if (densities[category] > 0
+            && (counts[category] < -countLimit || counts[category] > countLimit))
+            return false;
+    }
+    return true;
+}
+
+// Sizes scale the layout and bound boundary roughness; player numbers are
+// 1-8, or 0 (none) outside player zones; density arithmetic stays in range.
+static bool isUsableRmgTemplateZone(const TRmgTemplateZone& zone)
+{
+    if (zone.m_size <= 0)
+        return false;
+    s32 lowestPlayer = zone.m_kind == RMG_TEMPLATE_HUMAN
+        || zone.m_kind == RMG_TEMPLATE_COMPUTER ? 0 : -1;
+    if (zone.m_playerIndex < lowestPlayer || zone.m_playerIndex >= RMG_PLAYER_COUNT)
+        return false;
+    const s32* towns = zone.m_townPlacement;
+    s32 townDensities[4] = {
+        towns[RMG_TOWN_PLAYER_BASIC_DENSITY], towns[RMG_TOWN_PLAYER_CASTLE_DENSITY],
+        towns[RMG_TOWN_NEUTRAL_BASIC_DENSITY], towns[RMG_TOWN_NEUTRAL_CASTLE_DENSITY]
+    };
+    s32 townCounts[4] = {
+        towns[RMG_TOWN_PLAYER_BASIC_COUNT], towns[RMG_TOWN_PLAYER_CASTLE_COUNT],
+        towns[RMG_TOWN_NEUTRAL_BASIC_COUNT], towns[RMG_TOWN_NEUTRAL_CASTLE_COUNT]
+    };
+    if (!hasRepresentableRmgDensities(townDensities, townCounts, 4))
+        return false;
+    if (!hasRepresentableRmgDensities(zone.m_mineDensities, zone.m_mineCounts, NUM_RESOURCES))
+        return false;
+    // placeZoneTreasures skips bands with a maximum below 100.
+    s32 treasureDensities[3];
+    s32 treasureCounts[3] = {0, 0, 0};
+    for (s32 band = 0; band < 3; ++band)
+        treasureDensities[band] = zone.m_treasure[band].m_maximum >= 100
+            ? zone.m_treasure[band].m_density : 0;
+    return hasRepresentableRmgDensities(treasureDensities, treasureCounts, 3);
+}
+
+// Templates are offered only with usable zones whose distinct player
+// numbers seat the humans, then every player.
+static bool isUsableRmgTemplate(const TRmgTemplate& mapTemplate,
+    s32 humanPlayers, s32 computerPlayers)
+{
+    if (!mapTemplate.m_zones.size())
+        return false;
+    b8 humanSeats[RMG_PLAYER_COUNT];
+    b8 seats[RMG_PLAYER_COUNT];
+    memset(humanSeats, 0, sizeof(humanSeats));
+    memset(seats, 0, sizeof(seats));
+    for (u32 index = 0; index < mapTemplate.m_zones.size(); ++index) {
+        const TRmgTemplateZone* zone = mapTemplate.m_zones[index];
+        if (!isUsableRmgTemplateZone(*zone))
+            return false;
+        if (zone->m_kind == RMG_TEMPLATE_HUMAN)
+            humanSeats[zone->m_playerIndex] = seats[zone->m_playerIndex] = true;
+        else if (zone->m_kind == RMG_TEMPLATE_COMPUTER)
+            seats[zone->m_playerIndex] = true;
+    }
+    s32 humanSeatCount = 0;
+    s32 seatCount = 0;
+    for (s32 seat = 0; seat < RMG_PLAYER_COUNT; ++seat) {
+        humanSeatCount += humanSeats[seat] != 0;
+        seatCount += seats[seat] != 0;
+    }
+    return humanSeatCount >= humanPlayers && seatCount >= humanPlayers + computerPlayers;
+}
+#endif
+
 // Template sizes are in units of 36x36 cells.
 VA(0x00537ff0, 0x482)
 MAC_ADDRESS(0x2372ec, 0x304)
@@ -3262,6 +3440,10 @@ void type_random_map_generator::loadTemplates()
                 m_humanPlayerCount, m_computerPlayerCount);
             accepted = mapTemplate->hasPlayerSlots(
                 m_humanPlayerCount, m_computerPlayerCount);
+#if defined(HOMM3_RMG_HOTFIX)
+            accepted = accepted && isUsableRmgTemplate(
+                *mapTemplate, m_humanPlayerCount, m_computerPlayerCount);
+#endif
         }
         if (!accepted) {
             delete mapTemplate;
@@ -3923,6 +4105,12 @@ static inline bool splitRmgBoundarySegment(std::vector<TPoint>& pending,
     if (length > 1) {
         // Roughness must be positive; zero reaches rand() % 0.
         s32 limit = cppMin<long>(length / lengthDivisor, roughness);
+#if defined(HOMM3_RMG_HOTFIX)
+        // A zone scaled below one cell (two on island coasts) still draws,
+        // but leaves the midpoint in place.
+        if (limit < 1)
+            limit = 1;
+#endif
         s32 displacement = getRmgCenteredRandomOffset(limit);
         perpendicular = perpendicular * displacement / length;
         midpoint += perpendicular;
@@ -8998,10 +9186,125 @@ void type_random_map_generator::setTownChoice(s32 seat, TTownType town)
     m_townChoices[seat] = town;
 }
 
+#if defined(HOMM3_RMG_HOTFIX)
+// Town types a map version knows; RoE maps have no Conflux.
+static inline s32 getRmgTownTypeCount(s32 mapVersion)
+{
+    return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? TOWN_TYPE_COUNT : TOWN_CONFLUX;
+}
+
+// Map dimensions the lobby offers: S, M, L and XL.
+enum ERmgMapDimension {
+    RMG_MAP_DIMENSION_STEP = 36,
+    RMG_LARGEST_MAP_DIMENSION = 4 * RMG_MAP_DIMENSION_STEP
+};
+
+// The request settings the lobby can produce. The generator relies on them:
+// map arithmetic, the eight player slots and the enum-indexed tables.
+static bool isSupportedRmgRequest(const TRandomMapRequest& request)
+{
+    if (request.m_width != request.m_height || request.m_width <= 0
+        || request.m_width > RMG_LARGEST_MAP_DIMENSION
+        || request.m_width % RMG_MAP_DIMENSION_STEP)
+        return false;
+    if (request.m_levels < 1 || request.m_levels > RMG_MAP_LEVEL_COUNT)
+        return false;
+    // Totals below two are repaired after this check.
+    if (request.m_humanPlayerCount < 0 || request.m_computerPlayerCount < 0
+        || request.m_humanPlayerCount > RMG_PLAYER_COUNT
+        || request.m_computerPlayerCount > RMG_PLAYER_COUNT - request.m_humanPlayerCount)
+        return false;
+    // The lobby may pass more teams than players (or 0, one per player);
+    // writeMapHeader clamps them to the players it writes.
+    if (request.m_humanTeamCount < 0 || request.m_humanTeamCount > RMG_PLAYER_COUNT
+        || request.m_computerTeamCount < 0 || request.m_computerTeamCount > RMG_PLAYER_COUNT)
+        return false;
+    if (request.m_waterContent < RMG_WATER_NONE || request.m_waterContent > RMG_WATER_RANDOM)
+        return false;
+    // Strengths the entry's clamp would change are outside the lobby's range.
+    if (request.m_monsterStrength < 1 - RMG_ZONE_MONSTERS_AVERAGE
+        || request.m_monsterStrength > RMG_STRONGEST_GUARD_STRENGTH - RMG_ZONE_MONSTERS_AVERAGE)
+        return false;
+    if (request.m_mapVersion < RMG_MAP_RESTORATION_OF_ERATHIA
+        || request.m_mapVersion > RMG_MAP_SHADOW_OF_DEATH)
+        return false;
+    for (s32 seat = 0; seat < RMG_PLAYER_COUNT; ++seat) {
+        if (request.m_townType[seat] < eTownNeutral
+            || request.m_townType[seat] >= getRmgTownTypeCount(request.m_mapVersion))
+            return false;
+    }
+    return true;
+}
+
+// selectObjectPrototype's filter, without its random draw.
+static bool hasRmgSelectablePrototype(
+    const std::vector<TRmgObjectPropertiesRef*>& prototypes, s32 subtype, s32 terrain)
+{
+    for (u32 index = 0; index < prototypes.size(); ++index) {
+        const TObjectType* prototype = prototypes[index]->m_prototype;
+        if (prototype->getSubtype() != subtype)
+            continue;
+        if (prototype->m_slotCategory == TObjectType::SLOT_CATEGORY_4
+            || prototype->m_slotCategory == TObjectType::SLOT_CATEGORY_5) {
+            if (terrain != eTerrainWater)
+                return true;
+        } else if (prototype->isRecommendedTerrain(terrain)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// The objects.txt families that generation indexes without checking.
+static bool hasRmgRequiredPrototypes(type_random_map_generator& generator)
+{
+    std::vector<TRmgObjectPropertiesRef*>* prototypes = generator.m_objectPrototypes;
+    // Guards, writeMap's two fixed prototype slots and shipyard connections.
+    if (!prototypes[MONSTER].size() || !prototypes[RANDOM_MONSTER].size()
+        || !prototypes[TERRAIN_HOLE].size() || !prototypes[SHIPYARD].size())
+        return false;
+    if (generator.m_map.m_numberLevels > 1 && !prototypes[UNDERGROUND_GATE].size())
+        return false;
+    // Towns are indexed by town type.
+    if (prototypes[TOWN].size() < getRmgTownTypeCount(generator.m_mapVersion))
+        return false;
+    // Portals cycle through two-way monoliths, then entrance/exit pairs.
+    if (!(prototypes[LITH_TWOWAY].size() + prototypes[LITH_ONEWAY_ENTRANCE].size())
+        || prototypes[LITH_ONEWAY_EXIT].size() < prototypes[LITH_ONEWAY_ENTRANCE].size())
+        return false;
+    // A placed tent's border-connection cells take a guard of its colour,
+    // selected on dirt.
+    for (u32 tent = 0; tent < prototypes[BORDER_TENT].size(); ++tent) {
+        if (!hasRmgSelectablePrototype(prototypes[BORDER_GUARD],
+                prototypes[BORDER_TENT][tent]->m_prototype->getSubtype(), eTerrainDirt))
+            return false;
+    }
+    // Seer huts carry a random artifact, later replaced by the prototype of
+    // a quest artifact.
+    if (prototypes[SEER].size()) {
+        if (!hasRmgSelectablePrototype(prototypes[RANDOM_ARTIFACT], 0, eTerrainDirt))
+            return false;
+        b8 unusedArtifacts[ARTIFACT_COUNT];
+        memset(unusedArtifacts, 0, sizeof(unusedArtifacts));
+        for (s32 artifact = ARTIFACT_SPELLBOOK; artifact < ARTIFACT_COUNT; ++artifact) {
+            if (isRmgQuestArtifact(artifact, unusedArtifacts)
+                && findRmgPrototypeSubtypeIndex(prototypes[ARTIFACT], artifact)
+                    == prototypes[ARTIFACT].size())
+                return false;
+        }
+    }
+    return true;
+}
+#endif
+
 VA(0x0054bf60, 0x130)
 MAC_ADDRESS(0x251070, 0x140)
 s32 TRandomMapRequest::generateToFile(TAbstractFile* outputFile, TProgressSink* progress)
 {
+#if defined(HOMM3_RMG_HOTFIX)
+    if (!isSupportedRmgRequest(*this))
+        return RANDOM_MAP_GENERATION_FAILED;
+#endif
     s32 strength = m_monsterStrength + RMG_ZONE_MONSTERS_AVERAGE;
     if (strength < 1)
         strength = 1;
@@ -9015,6 +9318,10 @@ s32 TRandomMapRequest::generateToFile(TAbstractFile* outputFile, TProgressSink* 
         m_humanPlayerCount, m_humanTeamCount, m_computerPlayerCount,
         m_computerTeamCount, m_waterContent, strength,
         progress, m_mapVersion);
+#if defined(HOMM3_RMG_HOTFIX)
+    if (!hasRmgRequiredPrototypes(generator))
+        return RANDOM_MAP_GENERATION_FAILED;
+#endif
     for (s32 seat = 0; seat < RMG_PLAYER_COUNT; ++seat) {
         if (m_isHumanSeat[seat])
             generator.setHumanPlayer(seat);

@@ -3,7 +3,10 @@
 //
 // HOMM3_RMG_HOTFIX (off by default) replaces retail bugs that crash or read
 // uninitialized memory with defined behaviour; maps then differ from retail
-// only where retail was undefined.
+// only where retail was undefined. It also validates external input where it
+// enters the generator: the request (generateToFile), rmg.txt templates
+// (loadTemplates), objects.txt prototypes and rand_trn.txt rows, so later
+// code can rely on them. Requests outside what the lobby produces fail.
 #ifndef HOMM3_RMG_H
 #define HOMM3_RMG_H
 
