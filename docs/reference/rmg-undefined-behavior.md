@@ -361,6 +361,54 @@ reproductions. They apply when the specified replacement path is taken; an early
 `placeQuestArtifact` failure due to an empty artifact pool does not remove the
 wrapper and is not this leak. Preserve the existing lifetime behavior.
 
+## Executed input-validation regressions
+
+PR #131 (`ec579695a`) was executed with VC6 SP3/Wine using the whole-map
+oracle and installed game resources, with `HOMM3_RMG_HOTFIX` enabled.
+The following failures were reproduced, rather than inferred from unchecked
+operations. All repairs remain behind that macro.
+
+| Input | Before the repair | Repaired behavior |
+| --- | --- | --- |
+| Unmodified shipped data, default request, seed 1 | Return 3 and an empty map, twice; retail returns 0. All eight terrain-hole definitions are fully passable with no trigger, so the footprint filter deletes the mandatory serialization prototype. | Preserve the serialized-only holes; generation returns 0. |
+| Two player zones, size 10000, 36×36, no water | Integer division by zero in `positionZone`: `filterZonePositions` removes every candidate. | Return 3 without writing a map; release the pending zone. |
+| Three human zones for players 1–3 and a computer zone also for player 1; three humans, one human team | Integer division by zero in `assignRmgTeams`: player 1 occupies both masks but only the human count. | Assign that player only through the human team pool. |
+| Two player zones, no allowed town flags, two player castles each | Return 0 with active players whose faction masks are zero; the first additional town leaves the zone alignment at −1. | Record the resolved primary-town faction before indexing faction counts or writing the header. |
+| Player zones with no towns, or only one neutral castle each | Return 0 with no active players, or with both main towns owned by neutral (255). | Require the mapped players' primary towns to exist and be owned by them; otherwise return 3. |
+| One human and one computer, with two fixed-human flags | Return 0 with two human players. | Reject flags exceeding the repaired human count. |
+| Exchange Castle and Rampart rows in `objects.txt`; request Castle | Return 0 with Castle-only player masks but Rampart towns. | Validate town subtype identity at every indexed slot. |
+| Clear town trigger masks, retaining their blocked cells | Return 0 with main-town coordinates derived from the no-trigger sentinel (8,6), and inaccessible town definitions. | Require entrances on indexed town prototypes. |
+| Keep one one-way entrance of subtype 0 and one exit of subtype 1, with no two-way monoliths | Return 0 with an entrance having no matching exit in the map. Family sizes pass the old check. | Require the paired prototype indices to have equal subtypes. |
+
+Custom-template cases use seed 1, 72×72, one level, SoD, no water, strength
+0, two humans, two human teams, no computer-only players, eight computer
+teams, random town choices, no fixed-human flags, and zero stack/heap fills,
+unless the row says otherwise. The common template has two human zones,
+numbered/owned 1 and 2, size 11, human limits 1–8, total-player limits 2–8,
+one player castle, Castle allowed, dirt terrain, no monsters, and no mines
+or treasures. Join the zones with a wide, zero-value connection using the
+same player limits. Empty numeric fields mean zero. For the team case use
+four zones with owners 1,2,3,1 and a chain of wide connections; only the last
+zone is computer-only. For the portal case use five human zones, five
+requested humans, and a wide connection between every pair of zones.
+
+To reach later consumers on the unmodified PR build, the custom-data cases
+change only the eight hole definitions' passability strings to 48 zeroes;
+all other prototype edits are described in the table. This is a disposable
+fixture workaround for the first regression, not the shipped-data repair.
+Loose `objects.txt`, `rmg.txt`, and `rand_trn.txt` files in a private Data
+directory override the linked, unmodified LOD archives. Never change the
+installed assets for these checks.
+
+The repaired cases and the valid template/portal controls were run twice in
+fresh processes. Short placement-rule rows and out-of-range object types
+were also exercised. Existing valid template and portal controls retain
+identical map bytes, final RNG state, request state, and x87 state. Stock
+smoke requests cover all four sizes, both level counts, all three map
+versions, and every water setting. These checks do not establish an upper
+bound for unscaled layout arithmetic or prove every possible data set valid.
+One-off fixtures and executable outputs remain in ignored `build/`.
+
 ## Conditional contracts and unresolved hazards
 
 Source review leads, not reproduced retail bugs unless evidence is given
@@ -372,7 +420,8 @@ once where it enters the generator, so later code can rely on it:
   36/72/108/144 maps, 1–2 levels, 0–8 humans and computers with at most eight
   in total, team counts 0–8, water 0–3, monster strength −2..2 (the range the
   clamp leaves unchanged), map version 0–2, and towns −1 or a type the
-  version knows. Otherwise `RANDOM_MAP_GENERATION_FAILED`.
+  version knows. Fixed human flags cannot exceed the human count after the
+  existing repair to two total players. Otherwise `RANDOM_MAP_GENERATION_FAILED`.
 - **Template** (`loadTemplates`, after the retail filters): a template is not
   offered unless it has zones, every zone has a positive size and a player
   number 0–8 (1–8 for human/computer zones), its town, mine and treasure
@@ -382,12 +431,13 @@ once where it enters the generator, so later code can rely on it:
   column, with a null field, or with an object type or terrain outside the
   binding tables binds nothing; scores stay indexed by table row.
 - **Prototype** (`loadObjectPrototypes`): a prototype is skipped unless its
-  footprint fits 8×6 with a footprint cell in the bottom row, and a monster's
+  footprint fits 8×6 with a footprint cell in the bottom row (except the
+  serialized-only `TERRAIN_HOLE` family), and a monster's
   subtype is a creature type.
 - **Families** (`generateToFile`, after construction; otherwise
   `RANDOM_MAP_GENERATION_FAILED`): monsters, `RANDOM_MONSTER`,
-  `TERRAIN_HOLE`, shipyards, gates on two-level maps, one town per town type,
-  monoliths (with exits for every one-way entrance), a dirt-selectable border
+  `TERRAIN_HOLE`, shipyards, gates on two-level maps, a town with an entrance at each
+  town-type index, monoliths (with same-subtype exits at each one-way entrance index), a dirt-selectable border
   guard for each tent colour, and, when seer huts exist, a dirt-selectable
   random artifact and a prototype for every quest-eligible artifact.
 
@@ -406,7 +456,7 @@ entry validation bounds what they are built from.
 | `loadObjectPrototypes` | Required families exist; an empty monster list wraps `size() - 1`. Trait alias rows map to prototype-table indices. | Family check; the sort is skipped for an empty list, which then fails. Alias rows come from the built-in trait table. |
 | `buildOutline` / `hasConnectedOutline` | A bottom-row footprint cell, so the outline is nonempty before `index % outline.size()`. | Prototype check. |
 | `buildOverlapPriorities` / `scoreObjectPlacement` | Footprint fits 8×6; blocked predecessor cells are drawn; nonnull rule. | Prototype check for 8×6. Blocked but undrawn cells are not rejected (shipped `objects.txt` not verified); the only caller skips rule-less prototypes. |
-| `positionZone` / `paintZoneTerrain` | A candidate survives filtering; zones exist. | Template check ensures zones. An empty candidate set depends on the layout and is **not covered**. |
+| `positionZone` / `paintZoneTerrain` | A candidate survives filtering; zones exist. | Template check ensures zones. Empty placement candidates abort generation cleanly; a pending zone is released during unwinding. |
 | `initializeZones` | Nonzero normalization span. | Template check: positive sizes make each footprint, so the span, at least three cells. |
 | `insetIslandZone` | Nonempty boundary before `m_boundary[0]`. | Internal (Voronoi boundary). |
 | `buildZoneConnectionPaths` | A zone without a free same-zone tile reuses the last assigned seed; before any assignment retail reads stack residue. Retail stores `seed` only at `0x540731..0x54073f`; a 3,000-request probe found reused earlier-zone seeds in 53 requests and no read before the first assignment. The default source starts `seed` at `RMG_NO_POSITION` and skips such a zone, matching retail on those requests. | Existing fix: no other zone's seed is borrowed. |
@@ -418,8 +468,8 @@ entry validation bounds what they are built from.
 | `TRmgTreasureGroup` placement/guard routines | Objects keep the temporary map's padding; `addGuard` reuses the last object's prototype. | Internal. |
 | `canPlaceTreasureGroup` | Callers establish the lower bounds. | Internal. |
 | `createRoads` | At least one road target. | Existing fix. |
-| `generate` player mapping | Slots cover the players, player indices 0–7, at most eight players, valid town-zone alignments. | Request check (≤ 8 players, valid towns) and template check (player numbers, distinct seats). |
-| `assignRmgTeams` | Team and player counts fit the arrays; a positive number of nonempty teams. | `writeMapHeader` recounts players (≤ 8) and clamps teams to 1..players before calling. |
+| `generate` player mapping | Slots cover the players, player indices 0–7, at most eight players, valid town-zone alignments. | Request and template checks, followed by a check that mapped players have owned primary towns. A randomly resolved primary town also supplies an unaligned zone's faction. |
+| `assignRmgTeams` | Team and player counts fit the arrays; a positive number of nonempty teams. | `writeMapHeader` makes the human and computer-only masks disjoint, recounts players (≤ 8), and clamps teams to 1..players before calling. |
 | `placeQuestArtifact` | Every eligible artifact has a prototype; nonempty seer family for the modulus. | Family check. Seer quests exist only for seer prototypes, so the modulus runs only when the family is nonempty. |
 | `writeMap` | `RANDOM_MONSTER` and `TERRAIN_HOLE` entry zero. Only the final write result is checked. | Family check. Unlatched short writes are an output issue, not input. |
 | `TRmgLinePatternTable` / terrain pattern tables and selectors | Fixed tables are well formed. | Internal fixed tables. |
