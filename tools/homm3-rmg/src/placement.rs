@@ -16,6 +16,8 @@ mod guard_value;
 mod guards;
 pub use guard_value::GuardStrength;
 mod gates;
+mod junctions;
+pub use junctions::JunctionsPrepared;
 mod portals;
 pub use portals::{ConnectionsPlaced, PortalDirection};
 mod ground_connections;

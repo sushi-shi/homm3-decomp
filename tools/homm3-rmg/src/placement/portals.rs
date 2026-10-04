@@ -83,7 +83,10 @@ pub struct ConnectionsPlaced<'state, 'zones, 'tiles> {
     direct: DirectConnections<'state, 'zones, 'tiles>,
     rng: RngCheckpoint,
 }
-impl ConnectionsPlaced<'_, '_, '_> {
+impl<'state, 'zones, 'tiles> ConnectionsPlaced<'state, 'zones, 'tiles> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+        self.direct.connecting.map_mut()
+    }
     /// Current map and all successfully registered connection objects.
     #[must_use]
     pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {

@@ -101,7 +101,7 @@ Completion requires the full generator in both modes.
 
 ### Remaining work, in execution order
 
-Nine substantial work packages remain; the first two are partially implemented. They describe
+Eight substantial work packages remain; the first is partially implemented. They describe
 implementation order, not equal amounts of work or a percentage estimate.
 The library cannot yet generate a complete map.
 
@@ -113,38 +113,34 @@ The library cannot yet generate a complete map.
    and individual path/obstacle/border transitions now use reusable storage.
    Tent availability follows the loaded prototype count. Retail's initial cursor
    uses named replay input or a typed fault until a native rescan initializes it.
-2. **Zone connections.** Finish dry-zone junction preparation. Preparation, pathfinding, water-border repair, ground
-   crossings, shipyards, gates, portals, both dispatcher passes, border guards and
-   key-tent reservations are implemented and have
-   native checkpoint comparisons.
-3. **Mines.** Port fixed and density-driven mine placement and guards. Connect
+2. **Mines.** Port fixed and density-driven mine placement and guards. Connect
    the existing guard selector to object creation, ownership and spatial state.
-4. **Treasures.** Port treasure definitions/values, object payload ADTs, group
+3. **Treasures.** Port treasure definitions/values, object payload ADTs, group
    assembly/scoring/placement, reservations and completion/replacement callbacks.
    Integrate the existing hero, artifact, spell and creature catalogs.
-5. **Decoration.** Port underground decoration, coastal marking and general
+4. **Decoration.** Port underground decoration, coastal marking and general
    obstacle placement, preserving overlap priorities and original iteration.
-6. **Roads and rivers.** Port route construction and painting around the existing
+5. **Roads and rivers.** Port route construction and painting around the existing
    line classifiers and shared pattern tables. Preserve all source diagrams.
-7. **Generation API and compatibility integration.** Connect all stages and
+6. **Generation API and compatibility integration.** Connect all stages and
    immutable asset ownership to one native entry point with reusable workspace,
    structured failures and RNG diagnostics. Audit every hotfix branch and
    reconcile the boundary/water-zone replay inputs with executable evidence.
-8. **Output and CLI.** Implement all three formats' H3M serialization, streamed
+7. **Output and CLI.** Implement all three formats' H3M serialization, streamed
    compressed output, native generation/replay commands and actionable errors.
    Normal execution must not require Wine or the retail executable.
-9. **Final verification and publication.** Run the complete 100,000-case
+8. **Final verification and publication.** Run the complete 100,000-case
     campaign; independently parse maps; verify repeated/run-order behavior;
     profile cold loading, warm generation and output allocations; audit ASCII
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: `connectZones` ground crossings,
-subterranean gates, shipyards and monolith fallback, followed by dry junctions.
-Initial connection pathfinding and water-border repair now consume `WaterIslands`
-through `ConnectionPaths` into `RepairedWaterBorders`, retaining the shared map,
-town payloads and terrain workspace. Primary entrances, road targets and the
-shared serialized counter already exist.
+Immediate next implementation: fixed and density-driven mines, their guards,
+and nearby resource piles. Preserve the native last-scanned-prototype trigger
+and width behavior. Reuse weighted density scheduling and shared guard scaling;
+add resource payloads before integrating their placement. Connection preparation
+through both dispatcher passes and dry junctions is complete and retains the
+shared terrain, object ownership, town records and RNG checkpoints.
 Complete shared world/treasure-group payload lifetimes before integrating
 transient treasure objects. Reset object and placement workspaces together.
 Entrance-distance flooding preserves current-cell costs and pruning against
@@ -593,8 +589,25 @@ probes. A missing-exit regression checks deferred pair admission. All 72 core
 tests and strict Clippy pass; both reviewers are clean after adding final flood
 metadata to snapshots and sharing checked coordinate offsets.
 
-Next implement dry-zone junction preparation, then mines and the remaining
-payloads/reservations. Full map generation and serialization remain unfinished.
+Dry-zone junction preparation consumes `ConnectionsPlaced` into
+`JunctionsPrepared`. It resets movement only on owned non-water cells, preserving
+connection metadata and protected borders, then follows entrance predecessors
+and carves randomized routes in source order. The boundary painter and junction
+carver share one midpoint-displacement helper, retaining the signed rounding,
+full/half displacement policy and retail zero-roughness draw-before-fault.
+Entrance sequences are borrowed; the subdivision stack and flood queue reuse
+workspace capacity. Source ASCII documentation remains in place.
+
+Sixteen native junction captures cover both modes with ordinary and forced-border
+guard fixtures (520,284 checkpoint lines; 56 dry junction zones). Snapshots compare
+RNG, reservations, movement/predecessors, cross-zone flood metadata and all earlier
+connection state. Ordinary fixtures visibly carve routes in three maps rather
+than merely exercising empty dispatch. All 72 core tests and strict Clippy pass;
+both independent reviews are clean. Isolated native probes leave all 32 candidate
+and repeat whole-map outputs unchanged against the preceding connection probes.
+
+Next implement mines, nearby resources and the remaining payloads/reservations.
+Full map generation and serialization remain unfinished.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

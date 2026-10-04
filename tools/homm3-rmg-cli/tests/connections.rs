@@ -24,3 +24,9 @@ fn native_first_pass_preserves_ground_shipyard_and_gate_dispatch() {
 fn native_both_passes_preserve_portal_lists_protection_and_rng() {
     connections::compare_native(connections::Attempts::BothPasses);
 }
+
+#[test]
+#[ignore = "requires HOMM3_RMG_DATA and HOMM3_RMG_ORACLE junction checkpoints"]
+fn native_junctions_preserve_routes_reservations_movement_and_rng() {
+    connections::compare_native(connections::Attempts::Junctions);
+}

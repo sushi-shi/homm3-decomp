@@ -282,6 +282,65 @@ pub enum Stroke {
     Island,
 }
 
+/// Native boundary displacement also used by junction paths.
+#[derive(Clone, Copy, Debug)]
+pub(crate) enum BoundaryDisplacement {
+    Full,
+    Half,
+}
+
+// Returns no midpoint at a terminal segment. The caller pushes the far endpoint
+// before the midpoint, walks the near half first, and emits only terminal FROM.
+//
+//   from -------- midpoint -------- to
+//      next half       pending half
+pub(crate) fn boundary_midpoint(
+    from: Point,
+    to: Point,
+    roughness: u32,
+    displacement: BoundaryDisplacement,
+    behavior: Behavior,
+    rng: &mut RetailRng,
+) -> Result<Option<Point>, RasterError> {
+    let mut midpoint = from
+        .subdivision_midpoint(to)
+        .ok_or(RasterError::Arithmetic)?;
+    if midpoint == from || midpoint == to {
+        return Ok(None);
+    }
+    let delta = subtract(to, from)?;
+    let perpendicular = Point::new(
+        delta.y.checked_neg().ok_or(RasterError::Arithmetic)?,
+        delta.x,
+    );
+    let length = perpendicular.distance(Point::new(0, 0))?;
+    if length > 1 {
+        let divisor = if matches!(displacement, BoundaryDisplacement::Half) {
+            2
+        } else {
+            1
+        };
+        let limit =
+            (u32::try_from(length).map_err(|_| RasterError::Arithmetic)? / divisor).min(roughness);
+        let limit = if behavior.is_hotfix() {
+            limit.max(1)
+        } else {
+            limit
+        };
+        let Some(count) = NonZeroU32::new(limit) else {
+            // rand runs before retail's division by zero.
+            rng.draw();
+            return Err(RasterError::ZeroRoughness);
+        };
+        let displacement = rng.centered_offset(count);
+        midpoint = add(
+            midpoint,
+            multiply_divide(perpendicular, displacement, length)?,
+        )?;
+    }
+    Ok(Some(midpoint))
+}
+
 /// Reusable boundary/fill worklists and the most recently traced polygon.
 #[derive(Default, Debug)]
 pub struct RasterWorkspace {
@@ -359,10 +418,14 @@ impl RasterWorkspace {
         self.pending.clear();
         self.push(to)?;
         while let Some(to) = self.pending.pop() {
-            let mut midpoint = from
-                .subdivision_midpoint(to)
-                .ok_or(RasterError::Arithmetic)?;
-            if midpoint == from || midpoint == to {
+            let displacement = if matches!(stroke, Stroke::Island) {
+                BoundaryDisplacement::Half
+            } else {
+                BoundaryDisplacement::Full
+            };
+            let Some(midpoint) =
+                boundary_midpoint(from, to, roughness, displacement, behavior, rng)?
+            else {
                 let point = grid.bounds.clamp(from);
                 match stroke {
                     Stroke::Zone { paint_terrain } => {
@@ -377,37 +440,7 @@ impl RasterWorkspace {
                 }
                 from = to;
                 continue;
-            }
-            let delta = subtract(to, from)?;
-            let perpendicular = Point::new(
-                delta.y.checked_neg().ok_or(RasterError::Arithmetic)?,
-                delta.x,
-            );
-            let length = perpendicular.distance(Point::new(0, 0))?;
-            if length > 1 {
-                let divisor = if matches!(stroke, Stroke::Island) {
-                    2
-                } else {
-                    1
-                };
-                let limit = (u32::try_from(length).map_err(|_| RasterError::Arithmetic)? / divisor)
-                    .min(roughness);
-                let limit = if behavior.is_hotfix() {
-                    limit.max(1)
-                } else {
-                    limit
-                };
-                let Some(count) = NonZeroU32::new(limit) else {
-                    // rand runs before retail's division by zero.
-                    rng.draw();
-                    return Err(RasterError::ZeroRoughness);
-                };
-                let displacement = rng.centered_offset(count);
-                midpoint = add(
-                    midpoint,
-                    multiply_divide(perpendicular, displacement, length)?,
-                )?;
-            }
+            };
             self.push(to)?;
             self.push(midpoint)?;
         }

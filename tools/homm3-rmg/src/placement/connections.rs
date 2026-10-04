@@ -29,6 +29,8 @@ pub enum ConnectionError {
     Placement(PlacementError),
     /// A native vector length or subdivision operation failed.
     Geometry(GeometryError),
+    /// Junction boundary subdivision failed.
+    Raster(crate::raster::RasterError),
     /// A terrain brush failed while repainting an island.
     Terrain(TerrainError),
     /// Creature selection or placement failed while guarding a crossing.
@@ -63,6 +65,7 @@ impl fmt::Display for ConnectionError {
         match self {
             Self::Placement(error) => error.fmt(f),
             Self::Geometry(error) => error.fmt(f),
+            Self::Raster(error) => error.fmt(f),
             Self::Terrain(error) => error.fmt(f),
             Self::Guard(error) => error.fmt(f),
             Self::EmptyFamily(kind) => {
@@ -115,6 +118,11 @@ impl From<GeometryError> for ConnectionError {
         Self::Geometry(error)
     }
 }
+impl From<crate::raster::RasterError> for ConnectionError {
+    fn from(error: crate::raster::RasterError) -> Self {
+        Self::Raster(error)
+    }
+}
 impl From<TerrainError> for ConnectionError {
     fn from(error: TerrainError) -> Self {
         Self::Terrain(error)
@@ -136,6 +144,7 @@ struct Segment {
 pub(super) struct ConnectionScratch {
     pending: Vec<Segment>,
     branches: VecDeque<Segment>,
+    pub(super) junction_targets: Vec<Point>,
     pub(super) candidates: Vec<WorldPosition>,
     pub(super) outline: crate::prototype::OutlineWorkspace,
     pub(super) water_stack: Vec<WorldPosition>,
@@ -148,6 +157,7 @@ pub(super) struct ConnectionScratch {
 impl ConnectionScratch {
     pub(super) fn reset(&mut self) {
         self.pending.clear();
+        self.junction_targets.clear();
         self.branches.clear();
         self.candidates.clear();
         self.water_stack.clear();

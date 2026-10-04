@@ -161,6 +161,9 @@ enum MovementState {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Movement(MovementState);
 impl Movement {
+    pub(super) const fn seed() -> Self {
+        Self(MovementState::Seed)
+    }
     pub(super) const fn unreached() -> Self {
         Self(MovementState::Unreached)
     }
@@ -205,7 +208,7 @@ impl PlacementMap<'_, '_, '_> {
         self.connections.flood.clear();
         self.connections.flood.insert(seed, 0)?;
         let index = self.view().native_index(seed)?;
-        self.cells[index].movement = Movement(MovementState::Seed);
+        self.cells[index].movement = Movement::seed();
         let zone = self.coverage().map().raster().cells()[index].zone;
         while let Some(position) = self.connections.flood.pop() {
             let index = self.view().native_index(position)?;

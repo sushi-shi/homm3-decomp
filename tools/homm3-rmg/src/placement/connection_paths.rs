@@ -292,7 +292,7 @@ impl PlacementMap<'_, '_, '_> {
 
     // Widen an opened route by clearing same-zone obstacle marks around the
     // cell, keeping border-connection cells. This does not open clearance.
-    fn clear_nearby_obstacles(
+    pub(super) fn clear_nearby_obstacles(
         &mut self,
         center: WorldPosition,
         zone: Option<ZoneId>,

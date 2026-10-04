@@ -29,6 +29,7 @@ pub enum Attempts {
     GroundAndShipyard,
     Direct,
     BothPasses,
+    Junctions,
 }
 impl Attempts {
     fn filename(self) -> &'static str {
@@ -37,9 +38,17 @@ impl Attempts {
             Self::GroundAndShipyard => "shipyard-connections.txt",
             Self::Direct => "direct-connections.txt",
             Self::BothPasses => "zone-connections.txt",
+            Self::Junctions => "junctions.txt",
         }
     }
 }
+const CASES: [(u32, MapSize, Levels, u32, u32); 4] = [
+    (1, MapSize::Small, Levels::Surface, 2, 0),
+    (42, MapSize::Medium, Levels::Underground, 1, 1),
+    (100, MapSize::Large, Levels::Surface, 0, 2),
+    (17, MapSize::ExtraLarge, Levels::Underground, 2, 3),
+];
+
 pub fn compare_native(attempts: Attempts) {
     let directory = PathBuf::from(std::env::var_os("HOMM3_RMG_DATA").unwrap());
     let oracle = PathBuf::from(std::env::var_os("HOMM3_RMG_ORACLE").unwrap());
@@ -48,11 +57,7 @@ pub fn compare_native(attempts: Attempts) {
     let source = PrototypeSource::parse(&objects, |name| installation.mask(name)).unwrap();
     let mut bytes = Vec::new();
     installation.text("rand_trn.txt", &mut bytes).unwrap();
-    let mut creature_bytes = Vec::new();
-    installation
-        .text("crtraits.txt", &mut creature_bytes)
-        .unwrap();
-    let creatures = CreatureCatalog::parse(&creature_bytes).unwrap();
+    let creatures = read_creatures(&mut installation);
     let templates = read_templates(&mut installation);
     let templates = TemplateSource::parse(&templates).unwrap();
     let mut layout = LayoutWorkspace::default();
@@ -60,6 +65,7 @@ pub fn compare_native(attempts: Attempts) {
     let mut terrain = TerrainWorkspace::default();
     let mut placement = PlacementWorkspace::default();
     let mut checked = 0;
+    let mut junction_count = 0;
     let mut previous_id = None;
     for (mode, behavior) in [
         (
@@ -72,15 +78,7 @@ pub fn compare_native(attempts: Attempts) {
         ("hotfix", Behavior::Hotfix),
     ] {
         let rules = PlacementRules::parse(&bytes, behavior).unwrap();
-        for (case, (seed, size, levels, version, water)) in [
-            (1, MapSize::Small, Levels::Surface, 2, 0),
-            (42, MapSize::Medium, Levels::Underground, 1, 1),
-            (100, MapSize::Large, Levels::Surface, 0, 2),
-            (17, MapSize::ExtraLarge, Levels::Underground, 2, 3),
-        ]
-        .into_iter()
-        .enumerate()
-        {
+        for (case, (seed, size, levels, version, water)) in CASES.into_iter().enumerate() {
             let mut record = default_record(size, levels);
             record.m_mapVersion = version;
             record.m_waterContent = water;
@@ -126,6 +124,7 @@ pub fn compare_native(attempts: Attempts) {
                 assert_eq!(rng.checkpoint(), checkpoint);
             }
             previous_id = connecting.connection_ids().next();
+            junction_count += dry_junction_count(connecting.map());
             let actual = snapshot(
                 connecting,
                 &mut objects,
@@ -139,6 +138,36 @@ pub fn compare_native(attempts: Attempts) {
         }
     }
     eprintln!("checked {checked} native connection checkpoint lines");
+    if attempts == Attempts::Junctions {
+        eprintln!("prepared {junction_count} dry junction zones");
+        assert!(
+            junction_count > 0,
+            "fixture did not exercise dry junction zones"
+        );
+    }
+}
+
+fn read_creatures(installation: &mut Installation) -> CreatureCatalog {
+    let mut bytes = Vec::new();
+    installation.text("crtraits.txt", &mut bytes).unwrap();
+    CreatureCatalog::parse(&bytes).unwrap()
+}
+
+fn dry_junction_count(map: &homm3_rmg::placement::PlacementMap<'_, '_, '_>) -> usize {
+    let map = map.coverage().map();
+    map.zones()
+        .iter()
+        .filter(|zone| {
+            let homm3_rmg::boundaries::ZoneOrigin::Template(id) = zone.origin() else {
+                return false;
+            };
+            zone.terrain() != Terrain::Water
+                && matches!(
+                    map.template().zones()[id.index()].role(),
+                    homm3_rmg::template::ZoneRole::Junction(_)
+                )
+        })
+        .count()
 }
 
 // Retype two-way rows as unused boat art in both implementations. Keep source
@@ -280,16 +309,31 @@ fn snapshot(
             .unwrap()
             .is_empty());
     }
-    if matches!(attempts, Attempts::Direct | Attempts::BothPasses) {
+    if matches!(
+        attempts,
+        Attempts::Direct | Attempts::BothPasses | Attempts::Junctions
+    ) {
         let direct = connecting
             .connect_direct_zones(objects, catalog, creatures, rng)
             .unwrap();
         assert_eq!(direct.rng(), rng.checkpoint());
-        if attempts == Attempts::BothPasses {
+        if matches!(attempts, Attempts::BothPasses | Attempts::Junctions) {
             let placed = direct
                 .connect_remaining_zones(objects, catalog, creatures, rng)
                 .unwrap();
             assert_eq!(placed.rng(), rng.checkpoint());
+            if attempts == Attempts::Junctions {
+                let junctions = placed.prepare_junctions(rng).unwrap();
+                assert_eq!(junctions.rng(), rng.checkpoint());
+                return completed_snapshot(
+                    junctions.map(),
+                    objects,
+                    catalog,
+                    rng,
+                    colors,
+                    attempts,
+                );
+            }
             return completed_snapshot(placed.map(), objects, catalog, rng, colors, attempts);
         }
         return completed_snapshot(direct.map(), objects, catalog, rng, colors, attempts);
@@ -331,7 +375,7 @@ fn completed_snapshot(
         map.active_objects().len()
     );
     write_water_state(&mut actual, map);
-    if attempts == Attempts::BothPasses {
+    if matches!(attempts, Attempts::BothPasses | Attempts::Junctions) {
         use homm3_rmg::placement::PortalDirection;
         for (index, direction) in [PortalDirection::OneWay, PortalDirection::TwoWay]
             .into_iter()
@@ -358,7 +402,7 @@ fn completed_snapshot(
         objects,
         catalog,
         colors,
-        attempts == Attempts::BothPasses,
+        matches!(attempts, Attempts::BothPasses | Attempts::Junctions),
     );
     actual
 }
