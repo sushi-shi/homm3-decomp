@@ -146,7 +146,7 @@ impl PlacementMap<'_, '_, '_> {
     ) -> Result<(), PlacementError> {
         for ordinal in 0..self.active_objects().len() {
             let id = self.active_objects()[ordinal];
-            let object = objects.get(id).ok_or(PlacementError::UnknownObject(id))?;
+            let object = objects.positioned(id)?;
             let entry = catalog
                 .get(object.prototype())
                 .ok_or(PlacementError::UnknownPrototype(object.prototype()))?;
@@ -158,7 +158,7 @@ impl PlacementMap<'_, '_, '_> {
             {
                 continue;
             }
-            let anchor = object.position().ok_or(PlacementError::UnknownObject(id))?;
+            let anchor = object.position();
             let at = if prototype.entrance().is_some() {
                 entrance_position(prototype, anchor)?
             } else {
@@ -339,15 +339,12 @@ impl PlacementMap<'_, '_, '_> {
         let mut index = 0;
         while index < self.active_objects().len() {
             let id = self.active_objects()[index];
-            let object = objects.get(id).ok_or(PlacementError::UnknownObject(id))?;
+            let object = objects.positioned(id)?;
             let entry = catalog
                 .get(object.prototype())
                 .ok_or(PlacementError::UnknownPrototype(object.prototype()))?;
             if entry.prototype().kind().index() == raw::WATER_WHEEL as usize {
-                let entrance = entrance_position(
-                    entry.prototype(),
-                    object.position().ok_or(PlacementError::UnknownObject(id))?,
-                )?;
+                let entrance = entrance_position(entry.prototype(), object.position())?;
                 self.create_river(entrance, RiverGoal::Object, catalog, objects, rng)?;
                 self.create_river(
                     offset_position(entrance, Point::new(-2, 0))?,

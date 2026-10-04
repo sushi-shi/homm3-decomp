@@ -388,10 +388,6 @@ impl PlacementMap<'_, '_, '_> {
     /// # Errors
     /// Reports foreign objects, unsafe legacy entrance accesses, or
     /// retail end-iterator erasure. Earlier mutations remain applied on failure.
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "active IDs are inserted only after assigning their anchor; arena reset invalidates them"
-    )]
     pub fn unregister_object(
         &mut self,
         objects: &ObjectArena,
@@ -402,9 +398,10 @@ impl PlacementMap<'_, '_, '_> {
         if !self.memberships.accepts(object) {
             return Err(PlacementError::UnknownObject(object));
         }
-        let geometry = *objects
-            .get(object)
+        let resolved = objects
+            .resolve(object)
             .ok_or(PlacementError::UnknownObject(object))?;
+        let geometry = resolved.geometry();
         let prototype = catalog
             .get(geometry.prototype())
             .ok_or(PlacementError::UnknownPrototype(geometry.prototype()))?
@@ -420,7 +417,10 @@ impl PlacementMap<'_, '_, '_> {
             *count = count.checked_sub(1).ok_or(PlacementError::Arithmetic)?;
             // Source removeObject calls getEntrance even without a trigger, using
             // the legacy no-trigger cell (mask width, mask height).
-            let anchor = geometry.position().expect("registration assigns an anchor");
+            let anchor = resolved
+                .positioned()
+                .ok_or(PlacementError::UnpositionedObject(object))?
+                .position();
             let index = self
                 .view()
                 .native_index(entrance_position(prototype, anchor)?)?;

@@ -144,7 +144,7 @@ fn compare(
                 homm3_rmg::domain::Level::Underground
             },
         };
-        let movement = map.cell(at).unwrap().movement();
+        let movement = map.cell(at).unwrap().state().movement();
         let previous = movement.previous().map_or((-1, -1, -1), |position| {
             (
                 position.point.x,
@@ -228,6 +228,6 @@ fn check_empty_registered_list_admission(
         Err(ConnectionError::Placement(PlacementError::ArenaContext))
     ));
     assert_eq!(rng.checkpoint(), before);
-    assert_eq!(map.cell(position).unwrap().border(), Some(color));
+    assert_eq!(map.cell(position).unwrap().state().border(), Some(color));
     map.clear_border(position).unwrap();
 }

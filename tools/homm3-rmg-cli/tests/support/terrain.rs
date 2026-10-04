@@ -20,7 +20,7 @@ pub fn write_terrain_and_distances(actual: &mut String, map: &PlacementMap<'_, '
                 Level::Underground
             },
         };
-        let distance = map.cell(at).unwrap().zone_distance();
+        let distance = map.cell(at).unwrap().state().zone_distance();
         let (zone, _) = distance.connection().map_or((-1, 0), |(zone, direction)| {
             (i32::try_from(zone.index()).unwrap(), direction.index())
         });

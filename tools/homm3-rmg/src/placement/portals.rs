@@ -200,11 +200,11 @@ impl PlacementMap<'_, '_, '_> {
     ) -> Result<(), PlacementError> {
         for index in 0..self.active_objects().len() {
             let id = self.active_objects()[index];
-            let object = objects.get(id).ok_or(PlacementError::UnknownObject(id))?;
+            let object = objects.positioned(id)?;
             if object.kind() != kind(raw::SHIPYARD) {
                 continue;
             }
-            let position = object.position().expect("active object is placed");
+            let position = object.position();
             let index = self.view().native_index(position)?;
             if self.coverage().map().raster().cells()[index].zone == Some(zone) {
                 self.flood_shipyard_water(position)?;

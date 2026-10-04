@@ -87,17 +87,13 @@ impl PlacementMap<'_, '_, '_> {
                         };
                         for ordinal in 0..self.portals(direction).len() {
                             let destination = self.portals(direction)[ordinal];
-                            let geometry = objects
-                                .get(destination)
-                                .ok_or(PlacementError::UnknownObject(destination))?;
+                            let geometry = objects.positioned(destination)?;
                             let entry = catalog
                                 .get(geometry.prototype())
                                 .ok_or(PlacementError::UnknownPrototype(geometry.prototype()))?;
                             if entry.prototype().subtype() == prototype.prototype().subtype() {
                                 self.relax_road(
-                                    geometry
-                                        .position()
-                                        .ok_or(PlacementError::UnknownObject(destination))?,
+                                    geometry.position(),
                                     cost + raw::RMG_ROAD_MONOLITH_COST,
                                     position,
                                 )?;

@@ -27,13 +27,11 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         let catalog = self.ready.catalog.prototypes();
         let view = map.view();
         for id in group.objects() {
-            let geometry = objects.get(id).ok_or(PlacementError::UnknownObject(id))?;
-            let position = geometry
-                .position()
-                .ok_or(PlacementError::UnknownObject(id))?;
+            let object = objects.positioned(id)?;
+            let position = object.position();
             let entry = catalog
-                .get(geometry.prototype())
-                .ok_or(PlacementError::UnknownPrototype(geometry.prototype()))?;
+                .get(object.prototype())
+                .ok_or(PlacementError::UnknownPrototype(object.prototype()))?;
             if map.footprint_blocked(
                 entry,
                 offset_position(origin, position.point)?,
@@ -96,8 +94,8 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             if !view.contains(target.point) {
                 continue;
             }
-            let index = view.native_index(target)?;
-            if (view.terrain(index) == Terrain::Water) == water && view.clear_outline_cell(index) {
+            let cell = view.aliased_cell(target)?;
+            if (cell.terrain() == Terrain::Water) == water && cell.clear_outline() {
                 approach = true;
                 break;
             }

@@ -220,15 +220,21 @@ impl OutputWorkspace {
         out.count(map.map().active_objects().len())?;
         for decoration in [true, false] {
             for &id in map.map().active_objects() {
-                let object = map.objects().get(id).ok_or(OutputFault::Object(id))?;
-                if object.kind().traits().is_decoration() == decoration {
+                let object = map.objects().resolve(id).ok_or(OutputFault::Object(id))?;
+                let geometry = object.geometry();
+                if geometry.kind().traits().is_decoration() == decoration {
                     let slot = self
                         .slots
-                        .get(object.prototype().index())
+                        .get(geometry.prototype().index())
                         .copied()
                         .flatten()
-                        .ok_or(OutputFault::Prototype(object.prototype()))?;
-                    objects::write(map, id, slot, out)?;
+                        .ok_or(OutputFault::Prototype(geometry.prototype()))?;
+                    objects::write(
+                        map,
+                        object.positioned().ok_or(OutputFault::Object(id))?,
+                        slot,
+                        out,
+                    )?;
                 }
             }
         }

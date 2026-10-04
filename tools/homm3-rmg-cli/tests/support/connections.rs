@@ -569,7 +569,7 @@ fn write_snapshot(
                 homm3_rmg::domain::Level::Underground
             },
         };
-        let cell = map.cell(at).unwrap();
+        let cell = map.cell(at).unwrap().state();
         let previous = cell.movement().previous().map_or([-1; 3], |p| {
             [
                 p.point.x,
@@ -738,7 +738,7 @@ fn write_water_state(actual: &mut String, map: &homm3_rmg::placement::PlacementM
         write!(
             actual,
             " {}",
-            u8::from(map.cell(at).unwrap().connection_visited())
+            u8::from(map.cell(at).unwrap().state().connection_visited())
         )
         .unwrap();
     }

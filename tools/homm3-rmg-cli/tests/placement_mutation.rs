@@ -174,7 +174,7 @@ fn write_cells(actual: &mut String, map: &PlacementMap<'_, '_, '_>, ids: [Object
     for y in 0..6 {
         for x in 0..6 {
             let point = position(x, y);
-            let cell = map.cell(point).unwrap();
+            let cell = map.cell(point).unwrap().state();
             write!(
                 actual,
                 "{} {} {} {} {} {}",

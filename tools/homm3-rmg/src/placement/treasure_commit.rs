@@ -44,11 +44,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             objects.require_group(id, owner)?;
         }
         for id in group.objects() {
-            let anchor = objects
-                .get(id)
-                .ok_or(PlacementError::UnknownObject(id))?
-                .position()
-                .ok_or(PlacementError::UnknownObject(id))?;
+            let anchor = objects.positioned(id)?.position();
             let position = offset_position(origin, anchor.point)?;
             objects.publish(id);
             self.ready.paths.map_mut().register_object(

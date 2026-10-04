@@ -366,7 +366,10 @@ fn write_snapshot(
                 write!(
                     actual,
                     "{} ",
-                    map.cell(position(x, y, level)).unwrap().object_distance()
+                    map.cell(position(x, y, level))
+                        .unwrap()
+                        .state()
+                        .object_distance()
                 )
                 .unwrap();
             }

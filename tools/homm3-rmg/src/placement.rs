@@ -57,7 +57,8 @@ use zone_objects::ZonePlacementScratch;
 mod objects;
 pub use guards::GuardPlacementError;
 pub use objects::{
-    MapObjectId, MonsterPayload, ObjectArena, ObjectGeometry, ObjectId, ObjectPayload,
+    MapObjectId, MonsterPayload, ObjectArena, ObjectGeometry, ObjectId, ObjectPayload, ObjectRef,
+    PositionedObject,
 };
 mod mutation;
 pub use mutation::BorderColor;
@@ -189,6 +190,8 @@ pub enum PlacementError {
     UnknownPrototype(PrototypeId),
     /// Object ID does not belong to the supplied arena or its current generation.
     UnknownObject(ObjectId),
+    /// A live object has not yet been assigned a position.
+    UnpositionedObject(ObjectId),
     /// Zone index is outside this map.
     UnknownZone(ZoneId),
     /// A temporary group exclusively owns this record.
@@ -258,6 +261,9 @@ impl fmt::Display for PlacementError {
                 "object {} belongs to another arena generation",
                 id.index()
             ),
+            Self::UnpositionedObject(id) => {
+                write!(f, "object {} has no assigned position", id.index())
+            }
             Self::UnknownZone(id) => write!(f, "zone {} does not belong to this map", id.index()),
             Self::GroupOwned(id) => write!(f, "object {} is owned by a treasure group", id.index()),
             Self::PreviouslyPlaced(id) => {
@@ -426,6 +432,15 @@ impl PlacementMap<'_, '_, '_> {
         &self.terrain
     }
 
+    /// Admit an in-bounds position and borrow its cell, terrain and zone together.
+    /// The borrow prevents map mutation while the resolved cell is in use.
+    ///
+    /// # Errors
+    /// Rejects coordinates outside the map or on an absent level.
+    pub fn cell(&self, position: WorldPosition) -> Result<MapCell<'_>, PlacementError> {
+        self.view().cell(position)
+    }
+
     fn view(&self) -> PlacementView<'_> {
         PlacementView {
             side: self.terrain.coverage().map().raster().dimension(),
@@ -508,6 +523,59 @@ impl PlacementMap<'_, '_, '_> {
     }
 }
 
+/// A resolved map cell. Construction admits its coordinates once; queries then
+/// use borrowed cell state without another lookup. A cell is tied to its map
+/// borrow, so it cannot survive mutation or be used as an index into another map.
+///
+/// ```compile_fail
+/// use homm3_rmg::{domain::WorldPosition, placement::{MapCell, PlacementMap}};
+/// fn cannot_escape(map: &PlacementMap<'_, '_, '_>, at: WorldPosition) -> MapCell<'static> {
+///     map.cell(at).unwrap()
+/// }
+/// ```
+#[derive(Clone, Copy)]
+pub struct MapCell<'a> {
+    position: WorldPosition,
+    state: &'a CellState,
+    terrain: Terrain,
+    zone: Option<ZoneId>,
+}
+impl<'a> MapCell<'a> {
+    /// Canonical in-bounds position of this cell.
+    #[must_use]
+    pub const fn position(self) -> WorldPosition {
+        self.position
+    }
+    /// State borrowed from the owning map.
+    #[must_use]
+    pub const fn state(self) -> &'a CellState {
+        self.state
+    }
+    /// Painted terrain at this cell.
+    #[must_use]
+    pub const fn terrain(self) -> Terrain {
+        self.terrain
+    }
+    /// Zone assigned to this cell, if any.
+    #[must_use]
+    pub const fn zone(self) -> Option<ZoneId> {
+        self.zone
+    }
+    /// Whether both cell state and terrain allow passage.
+    #[must_use]
+    pub fn passable(self) -> bool {
+        self.state.passable && self.terrain != Terrain::Rock
+    }
+    fn blocked(self, zone: Option<ZoneId>) -> bool {
+        !self.passable() || self.state.entrance.is_some() || self.zone != zone
+    }
+    fn clear_outline(self) -> bool {
+        self.state.entrance.is_none()
+            && self.passable()
+            && self.state.reservation == PathReservation::Open
+    }
+}
+
 // A private slice view also permits focused synthetic maps in tests without
 // manufacturing completed generation-stage tokens or copying production grids.
 enum PlacementSurface<'a> {
@@ -522,7 +590,38 @@ struct PlacementView<'a> {
     surface: PlacementSurface<'a>,
     cells: &'a [CellState],
 }
-impl PlacementView<'_> {
+impl<'a> PlacementView<'a> {
+    fn cell(&self, position: WorldPosition) -> Result<MapCell<'a>, PlacementError> {
+        let index = self.index(position)?;
+        Ok(self.resolved_cell(index, position))
+    }
+    // Resolve flat aliases explicitly; coordinate calculations keep their original
+    // signed positions, while this view names the allocated cell they address.
+    fn aliased_cell(&self, position: WorldPosition) -> Result<MapCell<'a>, PlacementError> {
+        let index = self.native_index(position)?;
+        let plane = self.side * self.side;
+        let position = WorldPosition {
+            point: Point::new(
+                i32::try_from(index % self.side).map_err(|_| PlacementError::CoordinateOverflow)?,
+                i32::try_from(index / self.side % self.side)
+                    .map_err(|_| PlacementError::CoordinateOverflow)?,
+            ),
+            level: if index < plane {
+                crate::domain::Level::Surface
+            } else {
+                crate::domain::Level::Underground
+            },
+        };
+        Ok(self.resolved_cell(index, position))
+    }
+    fn resolved_cell(&self, index: usize, position: WorldPosition) -> MapCell<'a> {
+        MapCell {
+            position,
+            state: &self.cells[index],
+            terrain: self.terrain(index),
+            zone: self.zone(index),
+        }
+    }
     fn terrain(&self, index: usize) -> Terrain {
         match &self.surface {
             PlacementSurface::World { terrain, .. } => terrain[index].terrain(),
@@ -585,9 +684,6 @@ impl PlacementView<'_> {
     fn passable(&self, index: usize) -> bool {
         self.cells[index].passable && self.terrain(index) != Terrain::Rock
     }
-    fn blocked(&self, index: usize, zone: Option<ZoneId>) -> bool {
-        !self.passable(index) || self.cells[index].entrance.is_some() || self.zone(index) != zone
-    }
     fn clear_outline_cell(&self, index: usize) -> bool {
         self.cells[index].entrance.is_none()
             && self.passable(index)
@@ -610,23 +706,22 @@ impl PlacementView<'_> {
         let prototype = entry.prototype();
         let water_only = i64::from(prototype.category()) == i64::from(raw::OBJECT_SLOT_CATEGORY_0)
             && prototype.recommends(Terrain::Water);
-        for cell in size.cells() {
-            let (x, y) = (cell.x(), cell.y());
+        for mask_cell in size.cells() {
+            let (x, y) = (mask_cell.x(), mask_cell.y());
             // Bounds above prove every footprint coordinate is in range.
-            let index = self.index(WorldPosition {
+            let cell = self.cell(WorldPosition {
                 point: Point::new(anchor.point.x - i32::from(x), anchor.point.y - i32::from(y)),
                 level: anchor.level,
             })?;
-            if prototype.is_trigger(cell)
-                && (self.blocked(index, zone)
+            if prototype.is_trigger(mask_cell)
+                && (cell.blocked(zone)
                     || (obstacles == ObstacleEntrances::Reject
-                        && self.cells[index].reservation == PathReservation::Obstacle))
+                        && cell.state.reservation == PathReservation::Obstacle))
             {
                 return Ok(true);
             }
-            if !prototype.is_passable(cell)
-                && (self.blocked(index, zone)
-                    || (self.terrain(index) == Terrain::Water) != water_only)
+            if !prototype.is_passable(mask_cell)
+                && (cell.blocked(zone) || (cell.terrain() == Terrain::Water) != water_only)
             {
                 return Ok(true);
             }
@@ -659,17 +754,17 @@ impl PlacementView<'_> {
                     .ok_or(PlacementError::CoordinateOverflow)?,
             );
             blocked = if self.contains(point) {
-                let index = self.index(WorldPosition {
+                let cell = self.cell(WorldPosition {
                     point,
                     level: anchor.level,
                 })?;
-                if entrances == OutlineEntrances::Reject && self.cells[index].entrance.is_some() {
+                if entrances == OutlineEntrances::Reject && cell.state.entrance.is_some() {
                     return Ok(false);
                 }
-                self.blocked(index, Some(zone))
+                cell.blocked(Some(zone))
                     || (clearance == OutlineClearance::Require
-                        && self.cells[index].reservation != PathReservation::Open)
-                    || (self.terrain(index) == Terrain::Water) != (zone_terrain == Terrain::Water)
+                        && cell.state.reservation != PathReservation::Open)
+                    || (cell.terrain() == Terrain::Water) != (zone_terrain == Terrain::Water)
             } else {
                 true
             };
@@ -726,16 +821,17 @@ impl PlacementView<'_> {
         if usize::try_from(point.y).is_ok_and(|y| y >= self.side) {
             return Ok(false);
         }
-        let index = self.index(WorldPosition {
+        let cell = self.cell(WorldPosition {
             point,
             level: anchor.level,
         })?;
-        Ok(self.passable(index)
-            && self.zone(index) == Some(zone)
-            && self.cells[index]
+        Ok(cell.passable()
+            && cell.zone() == Some(zone)
+            && cell
+                .state
                 .entrance
                 .is_none_or(|kind| kind.traits().cleared_on_visit())
-            && (self.terrain(index) == Terrain::Water) == (zone_terrain == Terrain::Water))
+            && (cell.terrain() == Terrain::Water) == (zone_terrain == Terrain::Water))
     }
 }
 
@@ -754,6 +850,47 @@ fn offset_position(position: WorldPosition, delta: Point) -> Result<WorldPositio
 mod tests {
     use super::*;
     use crate::{domain::Level, line::Reflection, raster::ZoneCell, terrain_rules::TerrainTile};
+
+    #[test]
+    fn admitted_cells_borrow_state_and_flat_aliases_have_canonical_positions() {
+        let cells = vec![CellState::default(); 32];
+        let view = PlacementView {
+            side: 4,
+            surface: PlacementSurface::Group,
+            cells: &cells,
+        };
+        let at = |x, y, level| WorldPosition {
+            point: Point::new(x, y),
+            level,
+        };
+        let position = at(3, 0, Level::Surface);
+        let cell = view.cell(position).unwrap();
+        assert_eq!(cell.position(), position);
+        assert!(std::ptr::eq(cell.state(), std::ptr::from_ref(&cells[3])));
+        assert_eq!(cell.terrain(), Terrain::Dirt);
+        assert_eq!(cell.zone(), None);
+        assert!(view.cell(at(-1, 1, Level::Surface)).is_err());
+        assert_eq!(
+            view.aliased_cell(at(-1, 1, Level::Surface))
+                .unwrap()
+                .position(),
+            position
+        );
+        assert_eq!(
+            view.aliased_cell(at(0, 4, Level::Surface))
+                .unwrap()
+                .position(),
+            at(0, 0, Level::Underground)
+        );
+        assert!(view.cell(at(0, 4, Level::Surface)).is_err());
+        assert!(view.aliased_cell(at(0, 4, Level::Underground)).is_err());
+        let surface = PlacementView {
+            side: 4,
+            surface: PlacementSurface::Group,
+            cells: &cells[..16],
+        };
+        assert!(surface.cell(at(0, 0, Level::Underground)).is_err());
+    }
 
     #[test]
     fn native_flat_access_preserves_in_allocation_aliases_and_rejects_overflow() {

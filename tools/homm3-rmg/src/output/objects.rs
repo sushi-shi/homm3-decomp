@@ -2,7 +2,7 @@
 use super::{expansion, OutputFault, Writer};
 use crate::{
     generation::GeneratedMap,
-    placement::{Fort, ObjectId, ObjectPayload, PandoraReward, SeerReward},
+    placement::{Fort, ObjectPayload, PandoraReward, PositionedObject, SeerReward},
     raw,
     request::MapVersion,
     treasure::CreatureReward,
@@ -14,14 +14,14 @@ use std::io::Write;
 )]
 pub(super) fn write(
     map: &GeneratedMap<'_>,
-    id: ObjectId,
+    object: PositionedObject<'_>,
     slot: u32,
     out: &mut Writer<'_, impl Write>,
 ) -> Result<(), OutputFault> {
-    let geometry = map.objects().get(id).ok_or(OutputFault::Object(id))?;
-    let payload = *map.objects().payload(id).ok_or(OutputFault::Object(id))?;
+    let id = object.id();
+    let payload = *object.payload();
     let version = map.report().request().version();
-    out.position(geometry.position().ok_or(OutputFault::Object(id))?)?;
+    out.position(object.position())?;
     out.u32(slot)?;
     out.zero(5)?;
     match payload {

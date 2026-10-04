@@ -162,6 +162,7 @@ fn write_borders_and_movement(actual: &mut String, map: &PlacementMap<'_, '_, '_
                         level,
                     })
                     .unwrap();
+                let cell = cell.state();
                 let previous = cell.movement().previous().map_or([-1; 3], |p| {
                     [
                         p.point.x,
@@ -412,7 +413,7 @@ fn full_color_reservation_and_first_matching_art_survive_bitfield_truncation() {
                     point: Point::new(x, y),
                     level: position.level,
                 }) {
-                    if let Some(color) = cell.border() {
+                    if let Some(color) = cell.state().border() {
                         assert_eq!(color.value(), 0);
                         marked += 1;
                     }

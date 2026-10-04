@@ -129,3 +129,47 @@ fn group_ownership_rejects_copied_ids_and_other_group_disposal() {
         assert!(arena.recycle_unplaced(replacement).is_err());
     });
 }
+
+#[test]
+fn resolved_object_views_distinguish_unpositioned_retained_and_stale_records() {
+    with_catalog(raw::RESOURCE, |catalog| {
+        let prototype = catalog
+            .at(
+                ObjectKind::parse(i32::try_from(raw::RESOURCE).unwrap()).unwrap(),
+                0,
+            )
+            .unwrap();
+        let mut objects = ObjectArena::default();
+        let id = objects.create(catalog, prototype).unwrap();
+        assert!(objects.resolve(id).unwrap().positioned().is_none());
+        assert!(matches!(
+            objects.positioned(id),
+            Err(PlacementError::UnpositionedObject(_))
+        ));
+        let position = local(Point::new(4, 5));
+        objects.set_position(id, position);
+        let object = objects.positioned(id).unwrap();
+        assert_eq!(object.position(), position);
+        assert_eq!(object.prototype(), prototype);
+        assert!(matches!(
+            object.payload(),
+            crate::placement::ObjectPayload::Base
+        ));
+        objects.retire(id, true).unwrap();
+        assert_eq!(objects.positioned(id).unwrap().position(), position);
+        objects.retire(id, false).unwrap();
+        assert!(objects.resolve(id).is_none());
+        let replacement = objects.create(catalog, prototype).unwrap();
+        assert!(objects.resolve(replacement).is_some());
+        assert!(objects.resolve(id).is_none());
+        let mut other = ObjectArena::default();
+        let foreign = other.create(catalog, prototype).unwrap();
+        assert!(objects.resolve(foreign).is_none());
+        assert!(other.resolve(replacement).is_none());
+        objects.discard_unplaced(replacement).unwrap();
+        let reused = objects.create(catalog, prototype).unwrap();
+        assert_eq!(reused.index(), replacement.index());
+        assert!(objects.resolve(replacement).is_none());
+        assert!(objects.resolve(reused).is_some());
+    });
+}

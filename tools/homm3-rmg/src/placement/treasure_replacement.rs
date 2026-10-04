@@ -20,21 +20,17 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         rng: &mut RetailRng,
     ) -> Result<Option<ObjectId>, TreasureGenerationError> {
         self.require_arena(objects)?;
-        let position = objects
-            .get(object)
-            .ok_or(PlacementError::UnknownObject(object))?
-            .position()
-            .ok_or(PlacementError::UnknownObject(object))?;
+        let position = objects.positioned(object)?.position();
         self.ready.paths.map_mut().unregister_object(
             objects,
             self.ready.catalog.prototypes(),
             object,
         )?;
         let map = self.ready.map();
-        let index = map.view().native_index(position)?;
         let zone = map
             .view()
-            .zone(index)
+            .aliased_cell(position)?
+            .zone()
             .ok_or(TreasureGenerationError::UnassignedReplacement(position))?;
         let maximum = value.checked_mul(3).ok_or(PlacementError::Arithmetic)? / 2;
         let Some((pending, _)) = self.select_treasure(

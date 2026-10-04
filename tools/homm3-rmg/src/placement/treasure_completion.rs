@@ -129,13 +129,10 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         object: ObjectId,
         objects: &ObjectArena,
     ) -> Result<ZoneId, TreasureGenerationError> {
-        let position = objects
-            .get(object)
-            .ok_or(PlacementError::UnknownObject(object))?
-            .position()
-            .ok_or(PlacementError::UnknownObject(object))?;
+        let position = objects.positioned(object)?.position();
         let view = self.ready.map().view();
-        view.zone(view.native_index(position)?)
+        view.aliased_cell(position)?
+            .zone()
             .ok_or(TreasureGenerationError::UnassignedReplacement(position))
     }
     fn with_nested_group<T>(

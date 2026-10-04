@@ -44,7 +44,7 @@ pub fn write_cells(
         for y in 0..side {
             for x in 0..side {
                 let at = position(x, y, level);
-                let cell = map.cell(at).unwrap();
+                let cell = map.cell(at).unwrap().state();
                 write!(
                     actual,
                     "{} {} {} {} {}",

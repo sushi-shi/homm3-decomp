@@ -64,6 +64,85 @@ impl ObjectGeometry {
     }
 }
 
+/// A live object resolved once from its arena ID. The borrow keeps the record
+/// alive and unchanged while its geometry and payload are being inspected.
+///
+/// ```compile_fail
+/// use homm3_rmg::placement::{ObjectArena, ObjectId};
+/// fn cannot_reset(arena: &mut ObjectArena, id: ObjectId) {
+///     let object = arena.resolve(id).unwrap();
+///     arena.reset();
+///     let _ = object.geometry();
+/// }
+/// ```
+#[derive(Clone, Copy, Debug)]
+pub struct ObjectRef<'a> {
+    id: ObjectId,
+    record: &'a ObjectRecord,
+}
+impl<'a> ObjectRef<'a> {
+    /// Identity resolved to this borrowed record.
+    #[must_use]
+    pub const fn id(self) -> ObjectId {
+        self.id
+    }
+    /// Geometry from this resolved record.
+    #[must_use]
+    pub const fn geometry(self) -> &'a ObjectGeometry {
+        &self.record.geometry
+    }
+    /// Payload from the same record, without a second ID lookup.
+    #[must_use]
+    pub const fn payload(self) -> &'a ObjectPayload {
+        &self.record.payload
+    }
+    /// Refine a live object to one with an assigned position.
+    /// Removed objects may retain a position; this does not assert map membership.
+    #[must_use]
+    pub fn positioned(self) -> Option<PositionedObject<'a>> {
+        Some(PositionedObject {
+            object: self,
+            position: self.record.geometry.position.as_ref()?,
+        })
+    }
+}
+
+/// A live object with an assigned anchor. Its borrow prevents moving or removing
+/// the record while the view is in use. Position is always available, including
+/// for retained objects that no longer belong to an active map.
+#[derive(Clone, Copy, Debug)]
+pub struct PositionedObject<'a> {
+    object: ObjectRef<'a>,
+    position: &'a WorldPosition,
+}
+impl<'a> PositionedObject<'a> {
+    /// Identity of this positioned record.
+    #[must_use]
+    pub const fn id(self) -> ObjectId {
+        self.object.id()
+    }
+    /// Assigned anchor, without an optional-position check.
+    #[must_use]
+    pub const fn position(self) -> WorldPosition {
+        *self.position
+    }
+    /// Prepared prototype supplying this object's geometry.
+    #[must_use]
+    pub const fn prototype(self) -> PrototypeId {
+        self.object.record.geometry.prototype
+    }
+    /// Adventure-object family.
+    #[must_use]
+    pub const fn kind(self) -> ObjectKind {
+        self.object.record.geometry.kind
+    }
+    /// Payload belonging to the positioned record.
+    #[must_use]
+    pub const fn payload(self) -> &'a ObjectPayload {
+        self.object.payload()
+    }
+}
+
 /// A monster's native serialized payload. Position and prototype live in geometry.
 #[derive(Clone, Copy, Debug)]
 pub struct MonsterPayload {
@@ -321,15 +400,30 @@ impl ObjectArena {
             _ => None,
         }
     }
+    /// Resolve ownership and slot generation once, then borrow the live record.
+    #[must_use]
+    pub fn resolve(&self, id: ObjectId) -> Option<ObjectRef<'_>> {
+        self.record(id).map(|record| ObjectRef { id, record })
+    }
+    /// Resolve a live object whose anchor has already been assigned.
+    ///
+    /// # Errors
+    /// Reports a stale/foreign ID or an object without a position.
+    pub fn positioned(&self, id: ObjectId) -> Result<PositionedObject<'_>, PlacementError> {
+        self.resolve(id)
+            .ok_or(PlacementError::UnknownObject(id))?
+            .positioned()
+            .ok_or(PlacementError::UnpositionedObject(id))
+    }
     /// Read geometry if the full ID still identifies a live record.
     #[must_use]
     pub fn get(&self, id: ObjectId) -> Option<&ObjectGeometry> {
-        self.record(id).map(|record| &record.geometry)
+        self.resolve(id).map(ObjectRef::geometry)
     }
     /// Read a typed payload using the same checked identity as its geometry.
     #[must_use]
     pub fn payload(&self, id: ObjectId) -> Option<&ObjectPayload> {
-        self.record(id).map(|record| &record.payload)
+        self.resolve(id).map(ObjectRef::payload)
     }
     /// Release a never-placed object after a failed placement attempt.
     /// Reuses its slot without allowing old IDs to identify a replacement.

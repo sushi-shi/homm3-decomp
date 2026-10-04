@@ -111,13 +111,6 @@ pub(super) struct Footprint {
     len: usize,
 }
 impl PlacementMap<'_, '_, '_> {
-    /// Read a cell's placement flags without exposing mutable membership metadata.
-    ///
-    /// # Errors
-    /// Reports a coordinate or plane outside the map.
-    pub fn cell(&self, position: WorldPosition) -> Result<&CellState, PlacementError> {
-        Ok(&self.cells[self.view().index(position)?])
-    }
     /// Object identities in native insertion order, borrowing shared link storage.
     ///
     /// # Errors

@@ -31,8 +31,15 @@ belong to callers.
 
 Parse raw inputs into enums and private newtypes for bounded values, player
 slots, object IDs and coordinate domains. Optional values replace sentinels;
-stage types express which operations are available. Keep catalog-dependent
-construction tied to its catalog. Parsing must preserve the native timing of
+stage types express which operations are available. `PlacementMap::cell` admits
+coordinates into a borrowed `MapCell` containing state, terrain and zone;
+`WorldPosition` remains the signed calculation/probe type. Flat row/plane aliases
+use a separate internal resolver. `ObjectArena::resolve` checks an ID once and
+borrows its geometry and payload together; `PositionedObject` additionally
+carries an assigned anchor, including for retained objects. These local borrows
+prevent invalidating the viewed storage. Persistent IDs retain owner/generation
+checks because slots can be recycled. Keep catalog-dependent construction tied
+to its catalog. Parsing must preserve the native timing of
 random choices and request repairs. Failures carry stage/RNG diagnostics and
 the effective request when available.
 
