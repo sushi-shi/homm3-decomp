@@ -133,11 +133,12 @@ The library cannot yet generate a complete map.
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: payload factories and temporary group ownership.
-The pre-generation catalog and lazy signed values are implemented. `TreasurePaths`
-consumes with its exact prepared catalog into `TreasuresReady`, which owns quest
-completion state and retains the map's tent reservations. Extend that admitted
-stage with payload generation before assembling and placing treasure groups.
+Immediate next implementation: treasure selection and temporary group ownership,
+assembly and scoring, followed by world placement/completion. The catalog, lazy
+values, payload factories and explicit unplaced-object discard are implemented.
+`TreasurePaths` consumes into `TreasuresReady`, then `TreasureGeneration` binds its
+spell/artifact resources and arena. Extend this stage; do not reset reservations
+or rebuild a catalog while constructing or completing a group.
 
 The next treasure work has these source-backed constraints:
 
@@ -727,7 +728,35 @@ tests and strict Clippy pass. Both reviewers report no remaining issues. Focused
 regressions cover foreign/stale definition IDs, quest gates and -1334, lazy tent
 replay faults, and skipped dwelling overflow for a mismatching faction.
 
-Payload implementation constraints, confirmed against native source and retail:
+Payload factories now return non-Copy `PendingTreasure` ownership tokens.
+`SelectedTreasure` keeps a definition and art prototype together; art selection
+resolves the admitted map zone and consumes its original draw. Generation binds
+one arena, spell catalog, artifact catalog and hero pool. Foreign contexts are
+rejected before factory effects. Payload variants preserve artifact/resource,
+Pandora, prison, scroll, tent and seer writer policies; pending quest artifacts
+own their seer child and retain their definition ID for later callbacks.
+
+Generic arena discard refuses prison/quest/seer records. The generation's explicit
+unplaced discard releases a prison's hero or deletes the quest child, then recycles
+the parent without rewinding RNG or IDs. Failed quest construction reclaims its
+child. Pandora spell payloads store a bound definition ID and expand the original
+criteria against the retained spell catalog, without a spell-list allocation.
+The hero spell count has one lightweight C++ header owner consumed by bindgen;
+`hero::NUM_SPELLS` aliases it.
+
+Eight native factory fixtures cover all 17 instantiated policies in each mode/
+format combination: 6,138 generated objects and 3,438 pending seer children, across
+290,427 checkpoint lines. Captures compare chosen art, full reward payloads,
+RNG/serialized IDs, hero flags and cleanup. Native prototype reference counts
+return to their pre-probe values after each deletion. Every capture repeats and
+all 16 candidate/repeat maps remain unchanged. Rust additionally holds prisons
+until exhaustion, checks the empty attempt consumes neither RNG nor ID, then
+releases them without rewinding either. Scroll regression cases cover empty,
+singleton and creature-ability-only eligibility. All 83 core tests pass; reviewers
+found no remaining factory issues; strict Clippy passes. Positioned group disposal and completion
+callbacks are still to be implemented.
+
+Factory and completion constraints, confirmed against native source and retail:
 
 - Extend the existing `ObjectPayload` enum, keeping geometry and payload in one
   arena record. Fixed artifact/resource/scholar/shrine/witch-hut policies remain

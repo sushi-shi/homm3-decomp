@@ -67,7 +67,10 @@ pub struct TreasurePaths<'state, 'zones, 'tiles> {
     town_zones: TownZoneCounts,
     rng: RngCheckpoint,
 }
-impl TreasurePaths<'_, '_, '_> {
+impl<'state, 'zones, 'tiles> TreasurePaths<'state, 'zones, 'tiles> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+        self.mines.map_mut()
+    }
     /// Current map after opening all post-mine zone routes.
     #[must_use]
     pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {

@@ -94,6 +94,26 @@ impl MonsterPayload {
 pub enum ObjectPayload {
     /// Plain native `TRmgObject`, without additional serialized fields.
     Base,
+    /// Artifact with native default treasure fields.
+    Artifact,
+    /// Scholar choosing its award when the map is played.
+    Scholar,
+    /// Shrine with a random spell sentinel.
+    Shrine,
+    /// Witch hut with the native skill-mask policy.
+    WitchHut,
+    /// Scroll with a spell selected during generation.
+    Scroll(crate::traits::SpellId),
+    /// Pandora reward; all unrelated native fields remain zero.
+    Pandora(super::PandoraReward),
+    /// Prison hero and reservation.
+    Prison(super::PrisonPayload),
+    /// Tent whose guard completion uses this definition value.
+    KeyTent(i32),
+    /// Pending or placed seer hut reward and quest artifact.
+    Seer(super::SeerPayload),
+    /// Artifact owning an unplaced seer hut until completion.
+    QuestArtifact(super::QuestArtifactPayload),
     /// Unowned capturable object; serializes the native unowned byte and padding.
     Ownable,
     /// Resource pile with native default amount and no custom treasure.
@@ -222,7 +242,15 @@ impl ObjectArena {
         }
         Ok(())
     }
-    fn create_record(
+    // Reserve before a factory claims its native serialized ID. A failed
+    // allocation must not consume that ID; a preceding hero claim is retained.
+    pub(super) fn reserve_record(&mut self) -> Result<(), PlacementError> {
+        if self.free.is_none() {
+            self.records.try_reserve(1)?;
+        }
+        Ok(())
+    }
+    pub(super) fn create_record(
         &mut self,
         catalog: &PrototypeCatalog<'_>,
         prototype: PrototypeId,
@@ -300,8 +328,22 @@ impl ObjectArena {
     /// another temporary or world map may still reference it.
     ///
     /// # Errors
-    /// Reports a stale/foreign ID or an object that has ever been placed.
+    /// Reports a stale/foreign ID, prior placement, or a payload whose reservation
+    /// or child ownership requires the treasure generation cleanup path.
     pub fn discard_unplaced(&mut self, id: ObjectId) -> Result<(), PlacementError> {
+        let record = self.record(id).ok_or(PlacementError::UnknownObject(id))?;
+        if record.geometry.position.is_some() {
+            return Err(PlacementError::PreviouslyPlaced(id));
+        }
+        if matches!(
+            record.payload,
+            ObjectPayload::Prison(_) | ObjectPayload::QuestArtifact(_) | ObjectPayload::Seer(_)
+        ) {
+            return Err(PlacementError::TreasureCleanupRequired(id));
+        }
+        self.recycle_unplaced(id)
+    }
+    pub(super) fn recycle_unplaced(&mut self, id: ObjectId) -> Result<(), PlacementError> {
         let record = self.record(id).ok_or(PlacementError::UnknownObject(id))?;
         if record.geometry.position.is_some() {
             return Err(PlacementError::PreviouslyPlaced(id));

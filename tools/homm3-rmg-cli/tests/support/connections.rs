@@ -21,6 +21,8 @@ use std::{
 };
 #[path = "placement.rs"]
 mod placement_snapshot;
+#[path = "treasure_factories.rs"]
+mod treasure_factories;
 use placement_snapshot::{write_cells, write_counts};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -33,8 +35,20 @@ pub enum Attempts {
     Mines,
     TreasurePaths,
     TreasureValues,
+    TreasureFactories,
 }
 impl Attempts {
+    fn includes_junctions(self) -> bool {
+        matches!(
+            self,
+            Self::Junctions
+                | Self::Mines
+                | Self::TreasurePaths
+                | Self::TreasureValues
+                | Self::TreasureFactories
+        )
+    }
+
     fn filename(self) -> &'static str {
         match self {
             Self::Ground => "ground-connections.txt",
@@ -45,6 +59,7 @@ impl Attempts {
             Self::Mines => "mines.txt",
             Self::TreasurePaths => "treasure-paths.txt",
             Self::TreasureValues => "treasure-values.txt",
+            Self::TreasureFactories => "treasure-factories.txt",
         }
     }
 }
@@ -144,10 +159,7 @@ pub fn compare_native(attempts: Attempts) {
         }
     }
     eprintln!("checked {checked} native connection checkpoint lines");
-    if matches!(
-        attempts,
-        Attempts::Junctions | Attempts::Mines | Attempts::TreasurePaths | Attempts::TreasureValues
-    ) {
+    if attempts.includes_junctions() {
         eprintln!("prepared {junction_count} dry junction zones");
         assert!(
             junction_count > 0,
@@ -367,15 +379,7 @@ fn snapshot(
     if attempts == Attempts::Mines {
         return completed_snapshot(mines.map(), objects, catalog, rng, colors, attempts);
     }
-    treasure_paths_snapshot(
-        mines,
-        objects,
-        catalog,
-        rng,
-        colors,
-        creatures,
-        attempts == Attempts::TreasureValues,
-    )
+    treasure_paths_snapshot(mines, objects, catalog, rng, colors, creatures, attempts)
 }
 
 fn treasure_paths_snapshot(
@@ -385,7 +389,7 @@ fn treasure_paths_snapshot(
     rng: &mut RetailRng,
     colors: &[homm3_rmg::placement::KeyTentColor],
     creatures: &CreatureCatalog,
-    values: bool,
+    attempts: Attempts,
 ) -> String {
     let paths = mines.prepare_treasure_paths(objects, catalog, rng).unwrap();
     assert_eq!(paths.rng(), rng.checkpoint());
@@ -394,10 +398,21 @@ fn treasure_paths_snapshot(
         write!(actual, " {count}").unwrap();
     }
     actual.push('\n');
-    if values {
+    if matches!(
+        attempts,
+        Attempts::TreasureValues | Attempts::TreasureFactories
+    ) {
         let mut workspace = homm3_rmg::treasure::TreasureWorkspace::default();
         let definitions = workspace.prepare(catalog, creatures).unwrap();
         let ready = paths.begin_treasures(definitions).unwrap();
+        if attempts == Attempts::TreasureFactories {
+            let unchanged =
+                completed_snapshot(ready.map(), objects, catalog, rng, colors, attempts);
+            actual.push_str(&treasure_factories::snapshot(ready, objects, rng));
+            actual.push_str(&unchanged);
+            return actual;
+        }
+
         writeln!(
             actual,
             "values {} {}",
@@ -453,6 +468,7 @@ fn completed_snapshot(
             | Attempts::Mines
             | Attempts::TreasurePaths
             | Attempts::TreasureValues
+            | Attempts::TreasureFactories
     ) {
         use homm3_rmg::placement::PortalDirection;
         for (index, direction) in [PortalDirection::OneWay, PortalDirection::TwoWay]
@@ -487,6 +503,7 @@ fn completed_snapshot(
                 | Attempts::Mines
                 | Attempts::TreasurePaths
                 | Attempts::TreasureValues
+                | Attempts::TreasureFactories
         ),
     );
     actual
@@ -598,6 +615,7 @@ fn write_objects(
                 monster.count(),
                 i32::try_from(monster.disposition()).unwrap(),
             ],
+            other => panic!("unexpected pre-treasure payload: {other:?}"),
         };
         writeln!(
             actual,

@@ -4,6 +4,7 @@
 #include "va.h"
 #include "hero_traits.h"
 #include "hero_class.h"
+#include "spell_count.h"
 
 #include <algorithm>
 #include <string>
@@ -654,7 +655,7 @@ public:
     // byte [this+0x430] and then handles spell 0 = eSpellSummonBoat.
     // The retail x86 offsets are byte-proven here; only the names come
     // from the Dreamcast build.
-    enum { NUM_SPELLS = 70 };
+    enum { NUM_SPELLS = HERO_SPELL_COUNT };
 
 private:
        // DC SpellID::kNumSpells

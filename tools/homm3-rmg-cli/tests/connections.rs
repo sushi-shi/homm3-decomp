@@ -48,3 +48,9 @@ fn native_treasure_paths_preserve_faction_counts_border_opening_and_rng() {
 fn native_treasure_values_preserve_factions_ordinals_and_rng() {
     connections::compare_native(connections::Attempts::TreasureValues);
 }
+
+#[test]
+#[ignore = "requires HOMM3_RMG_DATA and HOMM3_RMG_ORACLE treasure factory checkpoints"]
+fn native_treasure_factories_preserve_payloads_reservations_ids_and_rng() {
+    connections::compare_native(connections::Attempts::TreasureFactories);
+}

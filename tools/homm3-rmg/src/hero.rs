@@ -49,6 +49,9 @@ impl HeroPool {
     pub fn disable(&mut self, hero: HeroId) {
         self.disabled[hero.index()] = true;
     }
+    pub(crate) fn release_prison(&mut self, hero: HeroId) {
+        self.disabled[hero.index()] = false;
+    }
     /// Select and claim a prison hero in native descending-index order.
     /// An empty pool consumes no random draw; a singleton still consumes one.
     pub fn select_prison(&mut self, rng: &mut RetailRng) -> Option<HeroId> {

@@ -18,11 +18,19 @@ pub use guard_value::GuardStrength;
 mod gates;
 mod junctions;
 mod mines;
+mod treasure_generation;
 mod treasure_paths;
+mod treasure_payloads;
 mod treasures;
 pub use junctions::JunctionsPrepared;
 pub use mines::{MineError, MinesPlaced};
+pub use treasure_generation::{
+    PendingTreasure, SelectedTreasure, TreasureGeneration, TreasureGenerationError,
+};
 pub use treasure_paths::{TownZoneCounts, TreasurePaths};
+pub use treasure_payloads::{
+    PandoraReward, PrisonPayload, QuestArtifactPayload, SeerPayload, SeerReward,
+};
 pub use treasures::{TreasureValueError, TreasuresReady};
 mod portals;
 pub use portals::{ConnectionsPlaced, PortalDirection};
@@ -137,6 +145,8 @@ pub enum PlacementError {
     ArenaContext,
     /// Objects are being registered with a different catalog, mode or format.
     CatalogContext,
+    /// This payload requires its generation-owned reservation/child cleanup.
+    TreasureCleanupRequired(ObjectId),
     /// Retail erases a missing global-list entry after that list allocated storage.
     NotRegistered(ObjectId),
     /// A signed per-type counter or path cost cannot be represented.
@@ -180,6 +190,9 @@ impl fmt::Display for PlacementError {
                 actual.index()
             ),
             Self::ArenaContext => f.write_str("object arena does not own map membership"),
+            Self::TreasureCleanupRequired(id) => {
+                write!(f, "object {} requires treasure cleanup", id.index())
+            }
             Self::CatalogContext => {
                 f.write_str("object catalog does not match the registered map context")
             }

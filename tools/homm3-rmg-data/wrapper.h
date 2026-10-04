@@ -12,3 +12,4 @@
 #include "objectmask.h"
 #include "spellschool.h"
 #include "keycolor.h"
+#include "spell_count.h"

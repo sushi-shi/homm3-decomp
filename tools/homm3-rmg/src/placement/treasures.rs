@@ -58,8 +58,8 @@ impl QuestState {
 /// Definitions keep their original creature traits; cursors and reservations
 /// belong to this map and cannot be supplied by callers during value queries.
 pub struct TreasuresReady<'state, 'zones, 'tiles, 'defs, 'assets, 'source> {
-    paths: TreasurePaths<'state, 'zones, 'tiles>,
-    catalog: TreasureCatalog<'defs, 'assets, 'source>,
+    pub(super) paths: TreasurePaths<'state, 'zones, 'tiles>,
+    pub(super) catalog: TreasureCatalog<'defs, 'assets, 'source>,
     quests: QuestState,
 }
 impl<'state, 'zones, 'tiles> TreasurePaths<'state, 'zones, 'tiles> {
