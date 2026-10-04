@@ -10,6 +10,11 @@ not live totals. Unchecked items need review; they are not necessarily defects.
 - [ ] Simplify avoidable union views: **63 union definitions**.
 - [ ] Review **31 goto statements** in **12 functions across 10 files**;
   existing dispositions are in the [goto audit](../reconstruction/goto-audit.md).
+- [ ] Spell the object mask frame with `include/objectmask.h` everywhere it
+  is still numeric: `CObjectType`'s `std::bitset<48>` masks and `getBitPos`
+  (`mapcell.h`), the RMG's `m_overlapPriorities[8][6]`, `scoreObjectPlacement`'s
+  `marks[8 + 2][6 + 2]` and the 6-byte mask writer. Verify each TU compiles
+  identically.
 - [ ] Review manual varargs.
 - [ ] Review unrelated variable reuse.
 - [ ] Review stack aggregates and unused members.

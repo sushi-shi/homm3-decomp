@@ -22,6 +22,7 @@
 
 #include "rmg.h"
 #include "keycolor.h"
+#include "objectmask.h"
 
 #include "abstractfile.h"
 #include "advmgr.h"
@@ -2608,13 +2609,13 @@ enum ERmgMonolithSubtypeLimits {
 };
 
 #if defined(HOMM3_RMG_HOTFIX)
-// Prototypes the generator can place: the footprint fits the 8x6 mask and
+// Prototypes the generator can place: the footprint fits the mask frame and
 // has a cell in its bottom row, where the outline starts; a monster's
 // subtype is a creature type.
 static bool isUsableRmgPrototype(const TObjectType& prototype)
 {
-    if (prototype.getWidth() < 1 || prototype.getWidth() > 8
-        || prototype.getHeight() < 1 || prototype.getHeight() > 6)
+    if (prototype.getWidth() < 1 || prototype.getWidth() > OBJECT_MASK_WIDTH
+        || prototype.getHeight() < 1 || prototype.getHeight() > OBJECT_MASK_HEIGHT)
         return false;
     s32 column = 0;
     while (column < prototype.getWidth()
