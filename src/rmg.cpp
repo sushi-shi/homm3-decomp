@@ -245,25 +245,22 @@ static const s32 g_landRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {2, 0, 3,
 DATA(0x006409b0)
 static const s32 g_snowRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {7, 5, 4, 6};
 
-// Unused slot after a row's eTownNeutral; zero, so it reads as Castle.
-static const TTownType RMG_UNUSED_TOWN = TOWN_CASTLE;
-
 // Candidate town types for each zone terrain, dirt to water. The pick only
 // selects which creatures' dwellings and rewards the zone favours; eTownNeutral
-// (no faction) favours neutral creatures. It was meant to end a row, but
-// chooseTownType draws from all four entries, so the padding after it is a
-// Castle candidate.
+// (no faction) favours neutral creatures and ends a row. Retail bug:
+// chooseTownType draws from all four entries, so the zero fill after it
+// (Castle's value) becomes a Castle candidate.
 DATA(0x00682450)
 TTownType g_rmgTerrainTownChoices[eTerrainWater + 1][RMG_TERRAIN_TOWN_CHOICE_COUNT] = {
-    {TOWN_CASTLE,     TOWN_RAMPART,    TOWN_NECROPOLIS, eTownNeutral},    // dirt
-    {TOWN_STRONGHOLD, eTownNeutral,    RMG_UNUSED_TOWN, RMG_UNUSED_TOWN}, // sand
-    {TOWN_CASTLE,     TOWN_RAMPART,    eTownNeutral,    RMG_UNUSED_TOWN}, // grass
-    {TOWN_TOWER,      eTownNeutral,    RMG_UNUSED_TOWN, RMG_UNUSED_TOWN}, // snow
-    {TOWN_FORTRESS,   TOWN_NECROPOLIS, eTownNeutral,    RMG_UNUSED_TOWN}, // swamp
-    {TOWN_STRONGHOLD, TOWN_CONFLUX,    eTownNeutral,    RMG_UNUSED_TOWN}, // rough
-    {TOWN_DUNGEON,    TOWN_INFERNO,    TOWN_NECROPOLIS, eTownNeutral},    // subterranean
-    {TOWN_INFERNO,    eTownNeutral,    RMG_UNUSED_TOWN, RMG_UNUSED_TOWN}, // lava
-    {eTownNeutral,    RMG_UNUSED_TOWN, RMG_UNUSED_TOWN, RMG_UNUSED_TOWN}  // water
+    {TOWN_CASTLE,     TOWN_RAMPART,    TOWN_NECROPOLIS, eTownNeutral}, // dirt
+    {TOWN_STRONGHOLD, eTownNeutral},                                   // sand
+    {TOWN_CASTLE,     TOWN_RAMPART,    eTownNeutral},                  // grass
+    {TOWN_TOWER,      eTownNeutral},                                   // snow
+    {TOWN_FORTRESS,   TOWN_NECROPOLIS, eTownNeutral},                  // swamp
+    {TOWN_STRONGHOLD, TOWN_CONFLUX,    eTownNeutral},                  // rough
+    {TOWN_DUNGEON,    TOWN_INFERNO,    TOWN_NECROPOLIS, eTownNeutral}, // subterranean
+    {TOWN_INFERNO,    eTownNeutral},                                   // lava
+    {eTownNeutral}                                                     // water
 };
 
 // Native terrain of each town alignment, used when choosing zone terrain.
