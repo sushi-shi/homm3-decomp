@@ -81,4 +81,10 @@ enum ERmgGuardConstants {
     RMG_GUARD_DISPOSITION = 3
 };
 
+// Spell-trait flag of spells the map loader disables on every map (see
+// game.cpp); never a generated reward.
+enum ERmgSpellTraitFlags {
+    RMG_SPELL_DISABLED_BY_DEFAULT = 0x2000
+};
+
 #endif

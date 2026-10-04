@@ -13,7 +13,7 @@ fn main() {
         .header(wrapper.to_string_lossy())
         .clang_args(["-x", "c++", "-std=c++14", "-fms-extensions"])
         .clang_arg(format!("-I{}", include.display()))
-        .allowlist_type("TRandomMapRequest|TRmgTerrain(Pattern|Transition)Entry|TTownType|TTerrainType|TArtifact|ERmg.*|ERandomMapResult|EMapDimension|ETileDirection|EGameResource|TAdventureObjectType|TAdvObjectNameRow|EObjectMaskFrame|EObjectSlotCategory")
+        .allowlist_type("TRandomMapRequest|TRmgTerrain(Pattern|Transition)Entry|TTownType|TTerrainType|TArtifact|ERmg.*|ERandomMapResult|EMapDimension|ETileDirection|EGameResource|TAdventureObjectType|TAdvObjectNameRow|EObjectMaskFrame|EObjectSlotCategory|TSpellSchool")
         .allowlist_var("RMG_.*|RANDOM_MAP_.*|TOWN_.*|ARTIFACT_.*|MAP_DIMENSION_.*|NUM_RESOURCES|SHAPE_.*|ADVENTURE_OBJECT_TRAIT_COUNT")
         .ignore_functions()
         .ignore_methods()
@@ -34,6 +34,14 @@ fn main() {
     // Compile and run for HOST, even when Rust itself is being cross-compiled.
     // This exports scalar values, never native struct bytes or pointer values.
     let output = PathBuf::from(env::var_os("OUT_DIR").unwrap());
+    for header in [
+        "creature_traits.h",
+        "spell_traits.h",
+        "spellschool.h",
+        "spelleffect_type.h",
+    ] {
+        println!("cargo:rerun-if-changed={}", include.join(header).display());
+    }
     let host = env::var("HOST").unwrap();
     let executable = output.join(if host.contains("windows") {
         "export-data.exe"

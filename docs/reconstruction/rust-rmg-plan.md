@@ -118,7 +118,7 @@ Eight VC6 stage checkpoints (four sizes in both modes) agree with Rust on the
 template, player assignments, zone positions/sizes, terrain/faction choices,
 clipped polygons, every boundary cell, connection adjacency order, graph
 distances, recentered bounds, island coverage and every painted terrain/frame/flip.
-Each random stage also agrees on RNG state. There are 41 focused unit tests across the two crates. The
+Each random stage also agrees on RNG state. There are 45 focused unit tests across the two crates. The
 installed-data checks require explicit local assets and are ignored by default.
 
 The boundary-to-coverage transition consumes its stage value, preventing a
@@ -155,8 +155,22 @@ retail retains 1,326/1,233/1,072 prototypes (SoD/AB/RoE), and hotfix retains
 1,209/1,194/1,033. Unusable retail candidates remain explicit deferred faults;
 hotfix filters them. An injected mask provider keeps IO and archive lookup out
 of the core; the installed comparison uses Complete's base-before-expansion
-sprite precedence. Complete asset loading still needs creature, artifact,
-spell and hero traits and the production resource-loading adapter.
+sprite precedence.
+
+Creature and spell catalogs now parse their native spreadsheet sections into
+fixed arrays without heap allocation or localized-string copies. Shared C++
+initializer fragments supply creature factions/tiers and spell flags; school
+constants come through bindgen. All 150 creature rows and 81 spell/ability rows
+agree with the executable's initialized tables in both modes. Zero AI value and
+unused tiers are explicit optional values, and parsed creature IDs also govern
+prototype eligibility. Custom signed comparison values remain intact; arithmetic
+will be checked where generation uses them. Missing rows/columns and overflowing
+integer prefixes are typed faults, including the creature loader's weak
+179-row check followed by accesses through row 184. The owning creature/spell
+C++ TUs compile with their configured VC6 profiles after sharing data.
+
+Complete asset loading still needs artifact and hero metadata and the
+production resource-loading adapter.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

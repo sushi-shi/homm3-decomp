@@ -12,6 +12,16 @@
 #include "rmg_terrain_data.h"
 #include "adventure_object_data.h"
 
+#include "creature_traits.h"
+#include "spell_traits.h"
+
+static const TCreatureTypeTraits creatureTraits[] =
+#include "rmg_data/creature_traits.inc"
+;
+static const SSpellTraits spellTraits[] =
+#include "rmg_data/spell_traits.inc"
+;
+
 static const TAdvObjectNameRow objectNameRows[] =
 #include "rmg_data/object_name_rows.inc"
 ;
@@ -181,6 +191,13 @@ int main()
     std::printf("pub const OBJECT_NAME_ROWS: [TAdvObjectNameRow; %lu] = [", sizeof(objectNameRows)/sizeof(objectNameRows[0]));
     for (const auto& row : objectNameRows)
         std::printf("TAdvObjectNameRow { m_objectType: %d, m_nameRow: %d },", row.m_objectType, row.m_nameRow);
+    std::printf("];\n");
+    std::printf("pub const CREATURE_FACTIONS_AND_LEVELS: [(i32, i32); %lu] = [", sizeof(creatureTraits)/sizeof(creatureTraits[0]));
+    for (const auto& row : creatureTraits)
+        std::printf("(%d,%d),", row.m_townType, row.m_level);
+    std::printf("];\n");
+    std::printf("pub const SPELL_FLAGS: [u32; %lu] = [", sizeof(spellTraits)/sizeof(spellTraits[0]));
+    for (const auto& row : spellTraits) std::printf("%u,", row.m_flags);
     std::printf("];\n");
     emitTerrainRules();
     emitArray("RIVER_PATTERNS", river);

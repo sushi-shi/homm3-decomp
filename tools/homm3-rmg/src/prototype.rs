@@ -18,6 +18,7 @@ use crate::{
     raw,
     request::MapVersion,
     rng::RetailRng,
+    traits::CreatureId,
 };
 use homm3_resource::{Mask, Text};
 use std::{borrow::Cow, collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
@@ -301,8 +302,7 @@ impl Prototype {
             return Err(PrototypeFault::EmptyBottomRow);
         }
         if self.kind.family().index() == raw::MONSTER as usize
-            && !u32::try_from(self.subtype)
-                .is_ok_and(|subtype| subtype < raw::RMG_CREATURE_TYPE_COUNT)
+            && CreatureId::parse(self.subtype).is_none()
         {
             return Err(PrototypeFault::CreatureSubtype(self.subtype));
         }

@@ -1913,12 +1913,6 @@ TRmgObject* TRmgBlackBoxGoldDef::generate(TRmgObjectPropertiesRef* properties,
     return object;
 }
 
-// Spell-trait flag of spells the map loader disables on every map (see
-// game.cpp); never a generated reward.
-enum ERmgSpellTraitFlags {
-    RMG_SPELL_DISABLED_BY_DEFAULT = 0x2000
-};
-
 static inline bool isRmgSpellDisabledByDefault(s32 spell)
 {
     return (g_spellTraits[spell].m_flags & RMG_SPELL_DISABLED_BY_DEFAULT) != 0;

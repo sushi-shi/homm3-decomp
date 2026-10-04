@@ -10,3 +10,4 @@
 #include "adventure_object_type.h"
 #include "adventure_object_data.h"
 #include "objectmask.h"
+#include "spellschool.h"
