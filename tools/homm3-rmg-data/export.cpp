@@ -14,6 +14,46 @@
 
 #include "creature_traits.h"
 #include "spell_traits.h"
+#include "hero_traits.h"
+#include "artifact_data.h"
+
+static const THeroTraits heroTraits[] =
+#include "rmg_data/hero_traits.inc"
+;
+static const int disabledArtifacts[] =
+#include "rmg_data/disabled_artifacts.inc"
+;
+static const int artifactSlotColumns[] =
+#include "rmg_data/artifact_slot_columns.inc"
+;
+
+// Build-host adapters consume the canonical factory argument lists. They
+// export values only; target bitset representation and allocator are irrelevant.
+template <unsigned N, class... Indices>
+std::bitset<N> makeHostMask(unsigned count, Indices... indices)
+{
+    if (count != sizeof...(indices)) std::abort();
+    std::bitset<N> result;
+    const unsigned values[] = {static_cast<unsigned>(indices)...};
+    for (unsigned index : values) result.set(index);
+    return result;
+}
+template <class... Indices>
+std::bitset<144> makeArtifactComponentMask(unsigned count, Indices... indices)
+{
+    return makeHostMask<144>(count, indices...);
+}
+template <class... Indices>
+std::bitset<19> makeArtifactSlotMask(unsigned count, Indices... indices)
+{
+    return makeHostMask<19>(count, indices...);
+}
+static const TCombinationArtifact artifactCombinations[] =
+#include "rmg_data/artifact_combinations.inc"
+;
+static const TArtifactSlotMask artifactSlotMasks[] =
+#include "rmg_data/artifact_slot_masks.inc"
+;
 
 static const TCreatureTypeTraits creatureTraits[] =
 #include "rmg_data/creature_traits.inc"
@@ -184,6 +224,21 @@ void emitArray(const char* name, const T (&array)[N])
 
 int main()
 {
+    // The availability bytes are the little-endian retail attributes word.
+    // Decode the word explicitly so export does not depend on host endianness.
+    std::printf("pub const HERO_AVAILABILITY: [(bool, bool, bool); %lu] = [", sizeof(heroTraits)/sizeof(heroTraits[0]));
+    for (const auto& row : heroTraits)
+        std::printf("(%s,%s,%s),", row.m_attributes & 0xff ? "true" : "false",
+            row.m_attributes & 0xff00 ? "true" : "false", row.m_attributes & 0xff0000 ? "true" : "false");
+    std::printf("];\n");
+    emitArray("DISABLED_ARTIFACTS", disabledArtifacts);
+    emitArray("ARTIFACT_SLOT_COLUMNS", artifactSlotColumns);
+    std::printf("pub const COMBINATION_ARTIFACTS: [u32; %lu] = [", sizeof(artifactCombinations)/sizeof(artifactCombinations[0]));
+    for (const auto& row : artifactCombinations) std::printf("%u,", static_cast<unsigned>(row.m_artifactId));
+    std::printf("];\n");
+    std::printf("pub const ARTIFACT_SLOT_MASKS: [u32; %lu] = [", sizeof(artifactSlotMasks)/sizeof(artifactSlotMasks[0]));
+    for (const auto& row : artifactSlotMasks) std::printf("%lu,", row.to_ulong());
+    std::printf("];\n");
     emitArray("OBJECT_DECORATION_IDS", objectDecorationIds);
     emitArray("OBJECT_CLEARED_IDS", objectClearedIds);
     emitArray("OBJECT_LAND_BLOCKED_IDS", objectLandBlockedIds);

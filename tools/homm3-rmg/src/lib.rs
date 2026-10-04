@@ -12,6 +12,7 @@ pub mod behavior;
 pub mod boundaries;
 pub mod domain;
 pub mod geometry;
+pub mod hero;
 pub mod layout;
 pub mod line;
 pub mod object;

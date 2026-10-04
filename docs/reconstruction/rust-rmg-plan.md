@@ -118,7 +118,7 @@ Eight VC6 stage checkpoints (four sizes in both modes) agree with Rust on the
 template, player assignments, zone positions/sizes, terrain/faction choices,
 clipped polygons, every boundary cell, connection adjacency order, graph
 distances, recentered bounds, island coverage and every painted terrain/frame/flip.
-Each random stage also agrees on RNG state. There are 45 focused unit tests across the two crates. The
+Each random stage also agrees on RNG state. There are 49 focused unit tests across the two crates. The
 installed-data checks require explicit local assets and are ignored by default.
 
 The boundary-to-coverage transition consumes its stage value, preventing a
@@ -169,8 +169,24 @@ integer prefixes are typed faults, including the creature loader's weak
 179-row check followed by accesses through row 184. The owning creature/spell
 C++ TUs compile with their configured VC6 profiles after sharing data.
 
-Complete asset loading still needs artifact and hero metadata and the
-production resource-loading adapter.
+Artifact metadata now parses into a fixed array with typed identity, class and
+combination-recipe fields. All 144 class/exclusion/combination records agree with
+the executable's initialized table. The parser rejects equipment masks for
+which the native loader's unchecked slot-class search runs off its table.
+Slot masks, column mappings, combination constructor arguments and disabled IDs
+are shared with C++; no localized artifact strings or unused prices are copied.
+
+Hero availability comes from shared canonical initializers, not hotraits.txt:
+the native spreadsheet loader changes names and starting-stack counts, which
+RMG does not use. All 156 playable availability records agree with native data.
+The per-map prison pool uses fixed flags and borrowed descending scans; full
+seed-one selection sequences through exhaustion and final RNG states match C++
+in all three formats and both modes. Empty pools consume no draw and singleton
+pools still consume one. Artifact/herodefs owning TUs compile with their VC6
+profiles after extraction of the portable definitions.
+
+Complete asset loading still needs the production resource-loading adapter
+and the hotfix required-prototype readiness check.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

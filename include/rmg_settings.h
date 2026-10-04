@@ -87,4 +87,12 @@ enum ERmgSpellTraitFlags {
     RMG_SPELL_DISABLED_BY_DEFAULT = 0x2000
 };
 
+// Hero ids a map format knows: RoE maps stop before the expansion heroes.
+// Prisons in later formats hold only the first RMG_PRISON_HERO_COUNT.
+enum ERmgHeroCount {
+    RMG_ROE_HERO_COUNT = 128,
+    RMG_PRISON_HERO_COUNT = 145,
+    RMG_HERO_COUNT = 156
+};
+
 #endif

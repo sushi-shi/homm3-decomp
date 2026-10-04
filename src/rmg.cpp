@@ -9015,7 +9015,7 @@ enum ERmgQuestArtifactPool {
 };
 
 // Treasure artifact class ('T') bit in the artifact table.
-static const s32 g_rmgQuestArtifactClass = 2;
+static const s32 g_rmgQuestArtifactClass = ARTIFACT_CLASS_TREASURE;
 
 // Trait eligibility is independent of a generator's already-used artifacts.
 static bool isRmgQuestArtifactEligible(s32 artifact)

@@ -1,0 +1,17 @@
+{
+    TArtifactSlotMask(std::bitset<19>()),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 0)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 1)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 2)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 3)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 4)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 5)),
+    TArtifactSlotMask(makeArtifactSlotMask(2, 6, 7)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 8)),
+    TArtifactSlotMask(makeArtifactSlotMask(5, 9, 10, 11, 12, 18)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 13)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 14)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 15)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 16)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 17)),
+}

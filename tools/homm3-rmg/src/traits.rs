@@ -1,4 +1,4 @@
-//! Numeric RMG views of native creature and spell resources.
+//! Numeric RMG views of native creature, spell and artifact resources.
 //!
 //! Catalogs own fixed arrays. Parsing borrows spreadsheet cells and neither
 //! copies localized strings nor allocates a vector for each row. Source-owned
@@ -9,6 +9,9 @@ use crate::{parse, raw, request::Town};
 use homm3_resource::{Field, Spreadsheet, SpreadsheetRow};
 use std::{error::Error, fmt, num::NonZeroI32};
 
+mod artifact;
+pub use artifact::{ArtifactCatalog, ArtifactClass, ArtifactId, ArtifactTraits, CombinationId};
+
 /// A native trait spreadsheet.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TraitResource {
@@ -16,6 +19,8 @@ pub enum TraitResource {
     Creatures,
     /// `sptraits.txt`.
     Spells,
+    /// `artraits.txt`.
+    Artifacts,
 }
 
 /// A trait resource cannot enter the generation domain.
@@ -51,6 +56,13 @@ pub enum TraitFault {
         /// Zero-based column.
         column: usize,
     },
+    /// No native slot class matches the artifact's marked equipment columns.
+    UnknownArtifactSlots {
+        /// Zero-based spreadsheet row.
+        row: usize,
+        /// Parsed equipment-slot bits.
+        bits: u32,
+    },
 }
 impl fmt::Display for TraitError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -63,6 +75,9 @@ impl fmt::Display for TraitError {
             }
             TraitFault::IntegerOverflow { row, column } => {
                 write!(f, "integer overflow at row {row}, column {column}")
+            }
+            TraitFault::UnknownArtifactSlots { row, bits } => {
+                write!(f, "unknown artifact slot mask {bits:#x} at row {row}")
             }
         }
     }
@@ -485,6 +500,80 @@ mod tests {
                 .unwrap_err()
                 .fault,
             TraitFault::IntegerOverflow { row: 18, column: 2 }
+        );
+    }
+
+    #[test]
+    fn artifact_classes_and_exclusions_keep_native_semantics() {
+        let data = sheet(
+            146,
+            23,
+            &[
+                (2, 21, "R"),
+                (3, 21, "J"),
+                (4, 21, "N"),
+                (5, 21, "T"),
+                (6, 21, " T"),
+                (143, 21, "T"),
+            ],
+        );
+        let catalog = ArtifactCatalog::parse(&data).unwrap();
+        assert_eq!(
+            catalog.get(ArtifactId::parse(0).unwrap()).class(),
+            ArtifactClass::Relic
+        );
+        assert_eq!(
+            catalog.get(ArtifactId::parse(1).unwrap()).class(),
+            ArtifactClass::Major
+        );
+        assert_eq!(
+            catalog.get(ArtifactId::parse(2).unwrap()).class(),
+            ArtifactClass::Minor
+        );
+        assert!(catalog.get(ArtifactId::parse(3).unwrap()).quest_eligible());
+        assert!(!catalog.get(ArtifactId::parse(4).unwrap()).quest_eligible());
+        assert!(!catalog
+            .get(ArtifactId::parse(141).unwrap())
+            .quest_eligible());
+        assert!(catalog.get(ArtifactId::parse(141).unwrap()).disabled());
+        assert_eq!(
+            catalog
+                .get(ArtifactId::parse(129).unwrap())
+                .combination()
+                .unwrap()
+                .index(),
+            0
+        );
+        assert!(ArtifactId::parse(-1).is_none());
+        assert!(ArtifactId::parse(144).is_none());
+    }
+
+    #[test]
+    fn unknown_artifact_slot_class_faults_before_native_unbounded_search() {
+        // Columns 2/3 mark two unrelated single-slot classes, not a supported pair.
+        let error =
+            ArtifactCatalog::parse(&sheet(146, 23, &[(2, 2, "x"), (2, 3, "x")])).unwrap_err();
+        assert_eq!(
+            error.fault,
+            TraitFault::UnknownArtifactSlots {
+                row: 2,
+                bits: (1 << 17) | (1 << 16)
+            }
+        );
+        assert_eq!(
+            ArtifactCatalog::parse(&sheet(145, 23, &[]))
+                .unwrap_err()
+                .fault,
+            TraitFault::MissingRow { row: 145 }
+        );
+        assert_eq!(
+            ArtifactCatalog::parse(&sheet(146, 22, &[]))
+                .unwrap_err()
+                .fault,
+            TraitFault::MissingColumn {
+                row: 2,
+                required: 23
+            }
         );
     }
 }

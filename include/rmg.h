@@ -37,14 +37,6 @@ struct TObjectType;
 struct TRmgObjectPropertiesRef;
 class TRmgObject;
 
-// Hero ids a map format knows: RoE maps stop before the expansion heroes.
-// Prisons in later formats hold only the first RMG_PRISON_HERO_COUNT.
-enum ERmgHeroCount {
-    RMG_ROE_HERO_COUNT = 128,
-    RMG_PRISON_HERO_COUNT = 145,
-    RMG_HERO_COUNT = 156
-};
-
 // Progress reporting interface driven by the random-map generator.
 class TProgressSink {
 public:

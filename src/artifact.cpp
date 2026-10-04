@@ -179,13 +179,14 @@ namespace {
 // names slot zero. The one exception is column 7, the two-handed weapon
 // class (slot 18), which sits between slots 13 and 12 in the file.
 DATA(0x0063b940)
-static const int g_artifactSlotColumnBits[19] = {
-    17, 16, 15, 14, 13, 18, 12, 11, 10, 9,
-    8, 7, 6, 5, 4, 3, 2, 1, 0
-};
+static const int g_artifactSlotColumnBits[19] =
+#include "rmg_data/artifact_slot_columns.inc"
+;
 
 DATA(0x0063b98c)
-static const int g_disabledArtifacts[3] = { 141, 142, 143 };
+static const int g_disabledArtifacts[3] =
+#include "rmg_data/disabled_artifacts.inc"
+;
 
 DATA(0x0063b998)
 static const int g_spellGivingArtifacts[9] = {
@@ -257,27 +258,9 @@ static std::bitset<144> makeArtifactComponentMask(unsigned count, ...)
 // 0x6938d8 + 24*i by a six-dword `rep movsd`, which is the record's own
 // two-argument constructor inlined plus its implicit copy.
 DATA(0x006938d8)
-const TCombinationArtifact g_combinationArtifactTable[12] = {
-    TCombinationArtifact(0x81,
-        makeArtifactComponentMask(6, 0x24, 0x21, 0x23, 0x1f, 0x20, 0x22)),
-    TCombinationArtifact(0x82, makeArtifactComponentMask(3, 0x36, 0x37, 0x38)),
-    TCombinationArtifact(0x83, makeArtifactComponentMask(3, 0x5f, 0x60, 0x5e)),
-    TCombinationArtifact(0x84,
-        makeArtifactComponentMask(4, 0x14, 0x08, 0x1a, 0x0e)),
-    TCombinationArtifact(0x85,
-        makeArtifactComponentMask(5, 0x76, 0x77, 0x78, 0x79, 0x7a)),
-    TCombinationArtifact(0x86,
-        makeArtifactComponentMask(9, 0x2c, 0x2b, 0x2a, 0x26, 0x27,
-                                  0x25, 0x2d, 0x29, 0x28)),
-    TCombinationArtifact(0x87,
-        makeArtifactComponentMask(4, 0x18, 0x0c, 0x1e, 0x12)),
-    TCombinationArtifact(0x88, makeArtifactComponentMask(2, 0x7b, 0x47)),
-    TCombinationArtifact(0x89, makeArtifactComponentMask(3, 0x3c, 0x3d, 0x3e)),
-    TCombinationArtifact(0x8a, makeArtifactComponentMask(3, 0x49, 0x4a, 0x4b)),
-    TCombinationArtifact(0x8b, makeArtifactComponentMask(3, 0x4c, 0x4e, 0x4d)),
-    TCombinationArtifact(0x8c,
-        makeArtifactComponentMask(4, 0x6f, 0x6d, 0x6e, 0x71)),
-};
+const TCombinationArtifact g_combinationArtifactTable[12] =
+#include "rmg_data/artifact_combinations.inc"
+;
 
 // The fifteen allowable-slot classes searched by the traits initializer,
 // recovered from 0x44cc00. Class 0 is empty; classes 7 and 9 are the ring
@@ -295,23 +278,9 @@ const TCombinationArtifact g_combinationArtifactTable[12] = {
 // the empty entry, and moving or removing the explicit bitset<19>
 // instantiation.
 DATA(0x00693898)
-const TArtifactSlotMask g_artifactSlotMasks[15] = {
-    TArtifactSlotMask(std::bitset<19>()),
-    TArtifactSlotMask(makeArtifactSlotMask(1, 0)),
-    TArtifactSlotMask(makeArtifactSlotMask(1, 1)),
-    TArtifactSlotMask(makeArtifactSlotMask(1, 2)),
-    TArtifactSlotMask(makeArtifactSlotMask(1, 3)),
-    TArtifactSlotMask(makeArtifactSlotMask(1, 4)),
-    TArtifactSlotMask(makeArtifactSlotMask(1, 5)),
-    TArtifactSlotMask(makeArtifactSlotMask(2, 6, 7)),
-    TArtifactSlotMask(makeArtifactSlotMask(1, 8)),
-    TArtifactSlotMask(makeArtifactSlotMask(5, 9, 10, 11, 12, 18)),
-    TArtifactSlotMask(makeArtifactSlotMask(1, 13)),
-    TArtifactSlotMask(makeArtifactSlotMask(1, 14)),
-    TArtifactSlotMask(makeArtifactSlotMask(1, 15)),
-    TArtifactSlotMask(makeArtifactSlotMask(1, 16)),
-    TArtifactSlotMask(makeArtifactSlotMask(1, 17)),
-};
+const TArtifactSlotMask g_artifactSlotMasks[15] =
+#include "rmg_data/artifact_slot_masks.inc"
+;
 
 DATA(0x00660b64)
 const TArtifactSlotTraits (&g_artifactSlotTraits)[19] = g_artifactSlotTraitsStorage;
@@ -551,15 +520,15 @@ static void initializeArtifactTraits(int id,
 
     const char* classCell = resource[21];
     if (classCell[0] == 'R')
-        traits.m_artifactClass = 16;
+        traits.m_artifactClass = ARTIFACT_CLASS_RELIC;
     else if (classCell[0] == 'J')
-        traits.m_artifactClass = 8;
+        traits.m_artifactClass = ARTIFACT_CLASS_MAJOR;
     else if (classCell[0] == 'N')
-        traits.m_artifactClass = 4;
+        traits.m_artifactClass = ARTIFACT_CLASS_MINOR;
     else if (classCell[0] == 'T')
-        traits.m_artifactClass = 2;
+        traits.m_artifactClass = ARTIFACT_CLASS_TREASURE;
     else
-        traits.m_artifactClass = 1;
+        traits.m_artifactClass = ARTIFACT_CLASS_SPECIAL;
 }
 
 VA_COMPGEN(0x0044D380, 0x60, BITSET_SET, Bitset19)
