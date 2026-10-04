@@ -105,11 +105,12 @@ Ten substantial work packages remain; the first is partially implemented. They d
 implementation order, not equal amounts of work or a percentage estimate.
 The library cannot yet generate a complete map.
 
-1. **Object storage and map mutation.** Complete typed payload ownership,
-   generator registration, global/zone type counts, entrance-distance propagation
-   and neighbourhood path helpers. Stable geometry IDs, ordered cell membership,
-   insertion/removal and individual path/obstacle/border transitions are now
-   implemented with reused storage; global removal bookkeeping is still pending.
+1. **Object storage and map mutation.** Complete typed payload ownership and
+   neighbourhood path helpers. Stable geometry IDs, ordered cell membership,
+   registration/removal, global/zone type counts, entrance-distance propagation
+   and individual path/obstacle/border transitions now use reusable storage.
+   Tent availability follows the loaded prototype count; retail's initial cursor
+   remains an explicit replay requirement until a native rescan initializes it.
 2. **Towns.** Implement primary and additional town placement, category/density
    scheduling, candidate order, singleton RNG draws, owner/fort payloads, road
    targets and the hotfix player-town requirement.
@@ -138,16 +139,15 @@ The library cannot yet generate a complete map.
     documentation/shared definitions; finish deterministic parallelism guidance;
     run required Rust checks and publish the new PR.
 
-Immediate next implementation: generator registration and entrance-distance
-propagation in `TRmgGenerator::addObject`, followed by the global-list/count part
-of `removeObject` in `src/rmg.cpp`. Map-level insertion and cell erasure already
-exist in `placement/mutation.rs`. Keep serialized town/monster counters distinct
-from geometry IDs. Reuse the ordered worklist for the distance flood and preserve
-its pruning against existing cell distances, including cells reset by removal.
-Then finish neighbourhood/entrance-approach helpers and continue directly to
+Immediate next implementation: finish neighbourhood/entrance-approach helpers
+(`openPathPatch`, `markObstacleFillPatch`, `releaseNeighborhoodPathClearance`,
+`openEntranceApproach`) and continue directly to
 `tryPlacePrimaryTown` and `tryPlaceAdditionalTown`. Payload lifetimes and shared
 world/treasure-group ownership must be completed before transient treasure
-objects are integrated. Reset object and placement workspaces together.
+objects are integrated. Keep serialized town/monster counters distinct from
+geometry IDs. Reset object and placement workspaces together. Entrance-distance
+flooding now preserves worklist ties, current-cell costs and pruning against
+distances retained after removal.
 
 ### Current implementation checkpoint
 
@@ -297,8 +297,8 @@ footprints, opens triggers and preserves overlapping blocking flags; erasure
 removes only the first duplicate, retains the object/anchor and refreshes the
 first-object entrance kind. Retail's never-allocated versus emptied-vector
 removal distinction is modeled explicitly. Path/obstacle/border transitions use
-typed states and a source-derived colour width. Generator registration, type
-counts, entrance-distance flooding and object payload lifetimes remain pending.
+typed states and a source-derived colour width. Object payload lifetimes remain
+pending; generator registration is described below.
 
 Native comparison covers 10,476 snapshots (873 first-family prototypes across
 six format/mode maps, twelve phases each), including overlaps, duplicates,
@@ -307,6 +307,25 @@ also compares the retained anchor after an entirely clipped insertion. A
 read-only design review found no regressions; the behavior review's row-clipping
 finding is fixed and independently rechecked. Targeted tests cover recycled
 link storage, foreign/stale object IDs and mode-specific absent removal.
+
+Generator registration now preserves global insertion order, duplicates, signed
+global/zone counts and ordered entrance-distance flooding with a reused queue.
+Removal retains native counter timing, triggerless entrance probes, footprint-only
+distance clearing and border-guard color release. Never-placed objects preserve
+the constructor's clipped-footprint semantics. Native flat entrance indexing
+admits aliases inside the allocation while overflow and out-of-allocation access
+become typed faults. One shared arena/catalog admission check covers direct
+footprint mutation and generator operations, including entirely clipped inserts.
+
+Across all three formats and both modes, 729 registration/removal snapshots
+agree with C++ checkpoints, including 5,668,704 distance values plus all global
+and zone counters, active object order and tent cursors. The existing 10,476
+cell-mutation snapshots still pass. Both reviewers rechecked their fixes and
+reported no remaining actionable findings. Regression checks include foreign
+catalogs/arenas, never-placed guards, triggerless flat aliases, and typed failure
+when a valid extreme alias overflows on its next flood step. All 65 core tests
+and strict Clippy pass. These remain source-C++ comparisons, not a claim of
+complete executable parity or completed generation.
 
 Review fixes now bind prototype/rule handles to their owning catalogs. Foreign
 and stale handles cannot silently select another catalog's row. Checked process

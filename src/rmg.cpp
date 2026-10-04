@@ -4947,7 +4947,7 @@ void TRmgGenerator::createWaterZoneIsland(const TRmgZoneBounds& bounds, s32 leve
 // Chamfer distance of one step: 2 to a cardinal neighbour, 3 to a diagonal.
 static inline s32 getRmgChamferStepCost(s32 direction)
 {
-    return isRmgDiagonalDirection(direction) ? 3 : 2;
+    return isRmgDiagonalDirection(direction) ? RMG_CHAMFER_DIAGONAL_COST : RMG_CHAMFER_CARDINAL_COST;
 }
 
 // Eight-neighbour chamfer distances within one zone; a shorter distance

@@ -143,6 +143,10 @@ impl Memberships {
     pub(super) fn accepts(&self, object: ObjectId) -> bool {
         self.owner.is_none_or(|owner| owner == object.owner)
     }
+    pub(super) fn bind(&mut self, object: ObjectId) {
+        debug_assert!(self.accepts(object));
+        self.owner = Some(object.owner);
+    }
     pub(super) fn reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
         self.slots
             .try_reserve(additional.saturating_sub(self.free_count))
@@ -163,8 +167,7 @@ impl Memberships {
         chain.0.map(|(head, _)| self.link(head).object)
     }
     pub(super) fn append(&mut self, chain: &mut Chain, object: ObjectId) {
-        debug_assert!(self.accepts(object));
-        self.owner = Some(object.owner);
+        self.bind(object);
         let link = Link { object, next: None };
         let id = if let Some(id) = self.free {
             let Slot::Free(next) = self.slots[id.index()] else {

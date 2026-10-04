@@ -16,6 +16,9 @@ pub use objects::{ObjectArena, ObjectGeometry, ObjectId};
 mod mutation;
 pub use mutation::BorderColor;
 use objects::{Chain, Memberships};
+mod registration;
+use registration::Registration;
+pub use registration::{KeyTentChoice, KeyTentColor};
 
 #[expect(
     clippy::cast_possible_truncation,
@@ -82,14 +85,20 @@ pub enum ObstacleEntrances {
 /// A safe placement query cannot reproduce an undefined native access.
 #[derive(Debug)]
 pub enum PlacementError {
+    /// Objects are being registered with a different catalog, mode or format.
+    CatalogContext,
+    /// Retail erases a missing global-list entry after that list allocated storage.
+    NotRegistered(ObjectId),
+    /// A signed per-type counter or path cost cannot be represented.
+    Arithmetic,
+    /// Border guard subtype does not index the native tent availability vector.
+    KeyTentSubtype(i32),
     /// Process-local object ownership tags have been exhausted.
     IdentityExhausted,
     /// Prototype ID does not belong to the supplied catalog.
     UnknownPrototype(PrototypeId),
     /// Object ID does not belong to the supplied arena or its current generation.
     UnknownObject(ObjectId),
-    /// Removal requires the anchor assigned by an earlier insertion.
-    UnplacedObject(ObjectId),
     /// Retail would erase an end iterator from a cell with allocated vector storage.
     MissingMembership(ObjectId),
     /// Invalid prototype dimensions.
@@ -108,6 +117,17 @@ pub enum PlacementError {
 impl fmt::Display for PlacementError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::CatalogContext => {
+                f.write_str("object catalog does not match the registered map context")
+            }
+            Self::NotRegistered(id) => {
+                write!(f, "retail removes absent registered object {}", id.index())
+            }
+            Self::Arithmetic => f.write_str("object count or distance arithmetic overflow"),
+            Self::KeyTentSubtype(value) => write!(
+                f,
+                "key-tent subtype {value} does not index availability storage"
+            ),
             Self::IdentityExhausted => f.write_str("object ownership identities exhausted"),
             Self::UnknownPrototype(id) => {
                 write!(f, "prototype {} belongs to another catalog", id.index())
@@ -117,7 +137,6 @@ impl fmt::Display for PlacementError {
                 "object {} belongs to another arena generation",
                 id.index()
             ),
-            Self::UnplacedObject(id) => write!(f, "object {} has no placement anchor", id.index()),
             Self::MissingMembership(id) => write!(
                 f,
                 "retail removes absent object {} from allocated cell storage",
@@ -179,6 +198,7 @@ impl Default for CellState {
 pub struct PlacementWorkspace {
     cells: Vec<CellState>,
     memberships: Memberships,
+    registration: Registration,
 }
 impl PlacementWorkspace {
     /// Consume painted terrain into the placement stage and reset cell state.
@@ -195,10 +215,13 @@ impl PlacementWorkspace {
         self.cells.resize(count, CellState::default());
         self.cells.fill(CellState::default());
         self.memberships.reset();
+        self.registration
+            .reset(terrain.coverage().map().zones().len())?;
         Ok(PlacementMap {
             terrain,
             cells: &mut self.cells,
             memberships: &mut self.memberships,
+            registration: &mut self.registration,
         })
     }
 }
@@ -208,6 +231,7 @@ pub struct PlacementMap<'state, 'zones, 'tiles> {
     terrain: PaintedTerrain<'zones, 'tiles>,
     cells: &'state mut [CellState],
     memberships: &'state mut Memberships,
+    registration: &'state mut Registration,
 }
 impl PlacementMap<'_, '_, '_> {
     /// Existing painted tiles and zone coverage, without copying either buffer.
@@ -294,6 +318,25 @@ struct PlacementView<'a> {
     cells: &'a [CellState],
 }
 impl PlacementView<'_> {
+    // Source getMapItem performs flat signed indexing without an XY check.
+    // Negative X may alias the preceding row while still addressing this allocation.
+    // Keep this separate from queries whose source explicitly checks containsXY.
+    fn native_index(&self, position: WorldPosition) -> Result<usize, PlacementError> {
+        let side = i32::try_from(self.side).map_err(|_| PlacementError::CoordinateOverflow)?;
+        let level = i32::try_from(position.level.index())
+            .map_err(|_| PlacementError::CoordinateOverflow)?;
+        let index = level
+            .checked_mul(side)
+            .and_then(|value| value.checked_add(position.point.y))
+            .and_then(|value| value.checked_mul(side))
+            .and_then(|value| value.checked_add(position.point.x))
+            .ok_or(PlacementError::CoordinateOverflow)?;
+        let index = usize::try_from(index).map_err(|_| PlacementError::OutsideMap(position))?;
+        if index >= self.cells.len() {
+            return Err(PlacementError::OutsideMap(position));
+        }
+        Ok(index)
+    }
     fn contains(&self, point: Point) -> bool {
         usize::try_from(point.x).is_ok_and(|x| x < self.side)
             && usize::try_from(point.y).is_ok_and(|y| y < self.side)
@@ -472,6 +515,39 @@ impl PlacementView<'_> {
 mod tests {
     use super::*;
     use crate::{domain::Level, line::Reflection, raster::ZoneCell, terrain_rules::TerrainTile};
+
+    #[test]
+    fn native_flat_access_preserves_in_allocation_aliases_and_rejects_overflow() {
+        let cells = vec![CellState::default(); 36 * 36];
+        let view = PlacementView {
+            side: 36,
+            terrain: &[],
+            zones: &[],
+            cells: &cells,
+        };
+        let at = |x, y| WorldPosition {
+            point: Point::new(x, y),
+            level: Level::Surface,
+        };
+        assert_eq!(view.native_index(at(-3, 4)).unwrap(), 141);
+        assert!(matches!(
+            view.index(at(-3, 4)),
+            Err(PlacementError::OutsideMap(_))
+        ));
+        assert_eq!(view.native_index(at(i32::MAX, -59_652_323)).unwrap(), 19);
+        assert!(matches!(
+            view.native_index(at(-1, 0)),
+            Err(PlacementError::OutsideMap(_))
+        ));
+        assert!(matches!(
+            view.native_index(at(0, 36)),
+            Err(PlacementError::OutsideMap(_))
+        ));
+        assert!(matches!(
+            view.native_index(at(0, i32::MAX)),
+            Err(PlacementError::CoordinateOverflow)
+        ));
+    }
 
     #[test]
     fn only_triggers_reject_obstacle_fill_and_blocked_cells_apply_water_policy() {

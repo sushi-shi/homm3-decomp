@@ -239,6 +239,7 @@ impl PlacementMap<'_, '_, '_> {
         object: ObjectId,
         anchor: WorldPosition,
     ) -> Result<(), PlacementError> {
+        self.prepare_registration(catalog)?;
         let geometry = *objects
             .get(object)
             .ok_or(PlacementError::UnknownObject(object))?;
@@ -261,6 +262,8 @@ impl PlacementMap<'_, '_, '_> {
             );
         }
         self.memberships.reserve(touched.len)?;
+        // Even a completely clipped footprint binds this map's object arena.
+        self.memberships.bind(object);
         objects.set_position(object, anchor);
         for touched in &touched.cells[..touched.len] {
             let cell = &mut self.cells[touched.index];
@@ -282,7 +285,7 @@ impl PlacementMap<'_, '_, '_> {
     /// This is the cell portion of generator removal, without global counters.
     ///
     /// # Errors
-    /// Reports foreign/unplaced objects, unsafe geometry, or retail's end-iterator
+    /// Reports foreign objects, unsafe geometry, or retail's end-iterator
     /// erase fault. Earlier cell erasures remain applied if that fault is reached.
     pub fn erase_footprint(
         &mut self,
@@ -290,18 +293,21 @@ impl PlacementMap<'_, '_, '_> {
         catalog: &PrototypeCatalog<'_>,
         object: ObjectId,
     ) -> Result<(), PlacementError> {
+        self.prepare_registration(catalog)?;
         let geometry = objects
             .get(object)
             .ok_or(PlacementError::UnknownObject(object))?;
         if !self.memberships.accepts(object) {
             return Err(PlacementError::UnknownObject(object));
         }
-        let anchor = geometry
-            .position()
-            .ok_or(PlacementError::UnplacedObject(object))?;
         let entry = catalog
             .get(geometry.prototype())
             .ok_or(PlacementError::UnknownPrototype(geometry.prototype()))?;
+        // Native construction assigns (-1,-1,-1). Every footprint row is
+        // clipped before the missing plane can be accessed.
+        let Some(anchor) = geometry.position() else {
+            return Ok(());
+        };
         let touched = self.footprint(entry, anchor)?;
         let hotfix = self.coverage().map().behavior().is_hotfix();
         for touched in &touched.cells[..touched.len] {

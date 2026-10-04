@@ -7,7 +7,7 @@ use crate::{
     layout::Layout,
     raster::{RasterError, RasterWorkspace, ZoneBounds, ZoneRaster},
     raw,
-    request::{Request, Town, Water},
+    request::{MapVersion, Request, Town, Water},
     rng::{RetailRng, RngCheckpoint},
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
@@ -174,6 +174,7 @@ impl From<TryReserveError> for BoundaryError {
 pub struct BoundaryMap<'a> {
     workspace: &'a mut BoundaryWorkspace,
     behavior: Behavior,
+    version: MapVersion,
     water: Water,
 }
 impl<'a> BoundaryMap<'a> {
@@ -181,6 +182,11 @@ impl<'a> BoundaryMap<'a> {
     #[must_use]
     pub const fn behavior(&self) -> Behavior {
         self.behavior
+    }
+    /// Map format carried from the completed layout stage.
+    #[must_use]
+    pub const fn version(&self) -> MapVersion {
+        self.version
     }
     /// Cell ownership and terrain marks.
     #[must_use]
@@ -345,6 +351,7 @@ impl BoundaryWorkspace {
         Ok(BoundaryMap {
             workspace: self,
             behavior: request.behavior(),
+            version: request.version(),
             water,
         })
     }

@@ -641,6 +641,15 @@ impl PrototypeId {
     }
 }
 impl PrototypeCatalog<'_> {
+    pub(crate) const fn owner(&self) -> OwnerId {
+        self.owner
+    }
+    pub(crate) const fn behavior(&self) -> Behavior {
+        self.behavior
+    }
+    pub(crate) const fn version(&self) -> MapVersion {
+        self.version
+    }
     fn id(&self, index: usize) -> PrototypeId {
         PrototypeId {
             index,

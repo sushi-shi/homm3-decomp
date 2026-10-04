@@ -35,6 +35,12 @@ enum ERmgBorderConnectionBits {
     RMG_BORDER_COLOR_BITS = 4
 };
 
+// Eight-neighbour chamfer metric used by generator distance floods.
+enum ERmgChamferStepCost {
+    RMG_CHAMFER_CARDINAL_COST = 2,
+    RMG_CHAMFER_DIAGONAL_COST = 3
+};
+
 // Terrain types, dirt through rock.
 enum ERmgTerrainLimits {
     RMG_TERRAIN_COUNT = eTerrainRock + 1
