@@ -2,6 +2,7 @@
 #define HOMM3_MAPCELL_H
 
 #include "va.h"
+#include "objectmask.h"
 
 #include <string>
 #include <vector>
@@ -929,7 +930,7 @@ public:
     MAC_ADDRESS(0x127c38, 0x14)
     static unsigned getBitPos(unsigned x, unsigned y)
     {
-        return 47 - y * 8 - x;
+        return OBJECT_MASK_CELLS - 1 - y * OBJECT_MASK_WIDTH - x;
     }
     // The table loader converts an existing record; no nullable source is
     // used. Const-reference ownership is inferred; DC lacks this overload.
@@ -947,12 +948,12 @@ public:
     char m_height;
     // +0x12..+0x13 is alignment before the first bitset.  Keep it implicit:
     // retail's generated assignment skips these bytes.
-    std::bitset<48> m_drawCells;
-    std::bitset<48> m_passableCells;
-    std::bitset<48> m_shadowCells;
+    std::bitset<OBJECT_MASK_CELLS> m_drawCells;
+    std::bitset<OBJECT_MASK_CELLS> m_passableCells;
+    std::bitset<OBJECT_MASK_CELLS> m_shadowCells;
     // Fourth 48-cell mask, byte-proven at +0x2c by FindTrigger. The prior
     // padding spelling incorrectly conflated it with shadowCells at +0x24.
-    std::bitset<48> m_triggerCells;
+    std::bitset<OBJECT_MASK_CELLS> m_triggerCells;
     // +0x34, FOUR bytes and unchanged in layout, but not padding: the
     // default constructor CObjectType's `resize` temporary runs calls SIX
     // sub-constructors, and the sixth targets this slot through

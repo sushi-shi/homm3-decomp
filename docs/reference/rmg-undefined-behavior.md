@@ -17,12 +17,15 @@ defined, non-crashing alternatives at each site: unreached river targets are
 not drawn, guards are skipped on unzoned cells or when no creature is
 selectable, uninitialized town flags and the first key-tent colour get fixed
 values, and short template rows, empty road lists and long map descriptions
-are bounded. Hotfix maps differ from retail and are not oracle targets; each
-site is an `#if defined(HOMM3_RMG_HOTFIX)` block in the source.
+are bounded. It also validates the request, templates, placement rules and
+object prototypes where they enter the generator (see
+[Conditional contracts](#conditional-contracts-and-unresolved-hazards)).
+Hotfix maps differ from retail and are not oracle targets; each site is an
+`#if defined(HOMM3_RMG_HOTFIX)` block in the source.
 
 ## Initial key-tent color: uninitialized stack integer
 
-- Field: `type_random_map_generator::m_nextKeyTentColor`, offset `+0xf5c`.
+- Field: `TRmgGenerator::m_nextKeyTentColor`, offset `+0xf5c`.
 - The retail constructor and object-generator initialization leave it untouched.
   `TRandomMapRequest::generateToFile` constructs the generator on the stack.
 - Retail `0x540d6d` uses this integer to select the key-tent subtype.
@@ -236,7 +239,7 @@ new crash reproduction was run for this review.
 
 ### Object removal: failed search is tested against null
 
-`type_random_map_generator::removeObject` (`0x54bc50`) searches both
+`TRmgGenerator::removeObject` (`0x54bc50`) searches both
 `m_objects` and each occupied tile's `m_objects`. Retail tests the returned
 pointer with `test ecx,ecx` at `0x54bc95` and `test edx,edx` at `0x54be6d`, then
 enters the expanded erase. It does not compare either result with the vector's
@@ -315,7 +318,7 @@ eligibility while doing source cleanup.
 ### Factory destruction: C++ lifetime risk with direct retail deallocation
 
 `m_objectGenerators` owns derived factory instances through
-`type_treasure_def*`, whose base has virtual factory methods but no virtual
+`TRmgTreasureDef*`, whose base has virtual factory methods but no virtual
 destructor. Deleting these derived objects through that base is undefined by
 C++ lifetime rules. Retail's generator destructor directly calls operator
 `delete` for each factory at `0x537df0 + 0xd0`, without virtual destructor
@@ -334,13 +337,13 @@ pointer vectors, but never destroys or deallocates it. This operation alone is
 not a leak: a caller could retain ownership. The two actual replacement callers,
 however, abandon the removed wrapper:
 
-- `rmgKeyTentObject::completePlacement` (`0x5338e0`) removes `this` at `+0x4a`,
+- `TRmgKeyTentObject::completePlacement` (`0x5338e0`) removes `this` at `+0x4a`,
   attempts to generate a replacement, and returns false without deleting the
   original key tent.
 - `placeQuestArtifact` (`0x54b490`) removes the artifact wrapper at `+0x298`
   when `placeQuestGroup` fails. Its remaining cleanup destroys the temporary
   group's containers and map, not the wrapper. On return,
-  `rmgQuestArtifactObject::completePlacement` (`0x533a50`) deletes the seer hut through
+  `TRmgQuestArtifactObject::completePlacement` (`0x533a50`) deletes the seer hut through
   the member at `+0x20` and clears that member, but does not delete itself.
 
 Retail `commitTreasureGroup` calls vtable slot `+8` at `0x546c55` and advances
@@ -360,43 +363,71 @@ wrapper and is not this leak. Preserve the existing lifetime behavior.
 
 ## Conditional contracts and unresolved hazards
 
-These source review leads are retained for later work. Unless native evidence
-is stated above, this table does **not** promote them to reproduced retail bugs.
-The prerequisite column records what must hold for the current operation to be
-valid, and helps keep a helper extraction from silently changing its behavior.
+Source review leads, not reproduced retail bugs unless evidence is given
+above. The second column is what the operation needs; the third says what
+guarantees it under `HOMM3_RMG_HOTFIX`. That build validates external input
+once where it enters the generator, so later code can rely on it:
 
-| Operation | Prerequisite / failure condition |
-| --- | --- |
-| `TRandomMapRequest::generateToFile`, map construction and lookup | Positive supported dimensions/level count; bounded player counts and enum-like request values. The request entry only clamps monster strength and repairs a total player count below two. Signed dimension products and `monsterStrength + 3` can overflow for arbitrary integers. There is no general input-validation layer in these bodies. |
-| `getSerializedMapVersion` | Version is 0, 1, or 2. Another value falls off the C++ nonvoid helper. Native header code for another value uses the then-current output argument value; no portable fallback value is established. |
-| `getMapItem`, terrain cache, line and terrain painting | Coordinates are in the map, flattened multiplication is representable, and paint rectangles fit. Lookup helpers intentionally do not clamp. `paintTransitions` additionally expects at least two rows and columns: its neighbour mask clears only one side per axis, so a one-row or one-column map reaches row or column one. |
-| `loadTemplates` | The row-size guard compares the field count with the maximum-size column itself (`size() < RMG_TEMPLATE_COLUMN_MAXIMUM_SIZE`), so a row whose last field is the minimum size passes it and still reads the maximum size. Preserve this short-row behavior alongside the zone reader's separate bounds issue. |
-| `readRmgTemplateZones` | A row ending just before the zone index column passes the initial `size() >= RMG_TEMPLATE_COLUMN_ZONE_INDEX` test and reads the zone index before the later full-row size test. Short/malformed spreadsheet behavior has not been reproduced. |
-| `readObjectPlacementRules` | Rows have the required columns, nonnull field strings, object type in the admitted trait range and terrain in 0..9. Parsed type/terrain values index local two-dimensional tables without range checks. |
-| `loadObjectPrototypes` | Required object families exist. Its monster sort uses unsigned `size() - 1`; empty monsters produce a very long outer loop even though the inner loop is empty. Trait alias rows must also map to valid prototype-table indices. |
-| `buildOutline` / `hasConnectedOutline` | A prototype has a usable bottom-row footprint and nonempty outline. The outline builder can return empty; the consumer's `index % outline.size()` has no zero-size guard. |
-| `buildOverlapPriorities` / `scoreObjectPlacement` | Prototype dimensions fit 8×6; blocked cells used as priority predecessors have initialized draw-cell priorities; caller supplies a nonnull placement rule. Priority writes occur only for draw cells. A malformed mask can make a later predecessor/object priority read uninitialized. |
-| `positionZone` / `paintZoneTerrain` | Position filtering leaves a candidate and generation supplies zones. Selection uses `% candidates.size()` and progress divides by the zone count. |
-| `initializeZones` | The normalization span is nonzero before scaling positions and boundary roughness by integer division. `calculateZoneBounds` only accumulates bounds and has no normalization division. Collapsed sites need separate reachability evidence. |
-| `insetIslandZone` | The boundary vector is nonempty before its initial `m_boundary[0]` read. Both radial divisions already check `length > 0`; a zero-length radial vector is not an unchecked divisor here. |
-| `buildZoneConnectionPaths` | Some zone before or at the first zone without a same-zone, suitable-terrain tile free of objects has one. Retail stores `seed` (`[ebp-0x30..-0x28]`) only at `0x540731..0x54073f`. A zone without such a tile therefore floods from the last assigned seed, and the source declares `seed` once per call to state that. A probe at the fallback branch (`0x54077d`) on 3,000 requests found 1,765 fallback reads in 885 requests. 1,620 used a seed from the same zone; 145 in 53 requests reused an earlier zone's, 142 of them for zones with no cells. None preceded the first assignment. In that unobserved case retail reads stack residue, which is environment-dependent and likely faults. The source initializes `seed` to `RMG_NO_POSITION` and skips such a zone; this differs only where retail is undefined. The 53 requests with a reused seed, plus `m0000076`/`m0000135`, matched retail with this handling (54 maps, one paired river fault). The real fix, not borrowing another zone's seed, is the `HOMM3_RMG_HOTFIX` branch. |
-| `connectZones` and connection graph consumers | Every referenced zone index names an existing zone, reverse connections exist when dereferenced, and selected monolith prototype families are nonempty. Newly appended extra-zone connections leave four player-limit fields uninitialized; those fields are not read by the later generator path reviewed here. |
-| `createTreasureObject` | A valued footprint contains an occupied cell, and candidate densities form a positive representable total. Occupied-cell division, density sums and the final random remainder have no general malformed-data protection. |
-| `placeAdditionalTowns`, `placeExtraMines`, `placeZoneTreasures` | Positive category densities have a representable sum and product; initial counts times their density-derived steps and subsequent count increments remain representable. These routines multiply all enabled densities before dividing by each category's density. For example, seven mine densities of 100 overflow the signed 32-bit product. This is an arithmetic contract for custom template values, not a reproduced shipped-template failure. Disabled categories' uninitialized count/step entries are protected by the `finished` short-circuit and are not read by selection. |
-| Creature/scroll factories | Creature levels index the seven-entry value table, AI value is nonzero before division, creature/town/subtype indices fit their trait tables, and the requested spell level has at least one selectable spell before the scroll factory's `rand() % count`. The built-in roster supplies these contracts; arbitrary replacement traits do not automatically satisfy them. |
-| `connectJunctionEntrance` | The selected displacement limit is positive before `rand() % limit`; nonpositive template roughness can violate this. |
-| `drawIrregularZoneBoundary` / `drawIslandBoundary` | The selected displacement limit is positive before its random remainder. The segment-length test alone does not ensure positive template roughness. |
-| `TRmgTreasureGroup` placement/guard routines | Objects and trigger neighborhoods retain the temporary map's padding. Some neighbor reads precede footprint bounds checks. `addGuard` also consumes the last iterated object's prototype after its object loop; it assumes a nonempty group and preserves that prototype choice. |
-| `canPlaceTreasureGroup` | The proposed offset respects the lower bounds established by its callers. Its final tile scan checks only the upper X/Y bounds. |
-| `createRoads` | At least one road target exists. With none, unsigned `size() - 1` wraps and the first target access is invalid. Unlike the analogous empty monster sort, this loop immediately dereferences the absent element. |
-| `generate` player mapping | Template slots cover requested players, player indices fit 0..7, and total players do not exceed eight. A scan that reaches slot eight still indexes/writes the slot and player mapping arrays. Town zones must have a valid alignment before alignment counters and serialization shifts. |
-| `assignRmgTeams` | Team/player counts fit the eight-element arrays, and a positive number of nonempty teams exists when used as a modulus. |
-| `placeQuestArtifact` | Every eligible artifact has a prototype. The search result is indexed without checking `prototypeIndex == size()`. The seer prototype family used by the subsequent modulus must be nonempty. |
-| `writeMap` | Required prototype families `RANDOM_MONSTER` and `TERRAIN_HOLE` contain entry zero. The writer checks the final reserved-word write, while most earlier write results are ignored; an earlier failed/short write is not independently latched by this routine. |
-| `TRmgLinePatternTable` / terrain pattern constructors and selectors | Fixed tables are nonempty, identifiers/frames fit their arrays, runs for a given identifier are contiguous, selected ranges have nonzero counts, and flip bytes are 0 or 1. These hold for the reviewed fixed table declarations; the API is not a validated arbitrary-table interface. |
-| Voronoi geometry / vector operators | Coordinates keep 32-bit differences, squared lengths, cross products and vector scaling representable; circumcenter triangles are noncollinear. Widening the final in-circle multiplication to 64 bits does not widen the preceding 32-bit squared sums. No overflowing supported-map case was established. |
-| `TRmgVoronoi::removeEdge` | Both half-edges belong to its owning vector; otherwise the search falls through to `erase(end())`. Topology is internally constructed, so malformed external edge pointers are not an established generation path. |
-| `TRmgVoronoi::locate` | Sites are inside the enclosing triangulation and ring topology is valid. The walk has no iteration bound or outside-domain error result. See [Voronoi provenance](rmg-voronoi-provenance.md) for hull and arithmetic limitations. |
+- **Request** (`generateToFile`, before the player-count repair): square
+  36/72/108/144 maps, 1–2 levels, 0–8 humans and computers with at most eight
+  in total, team counts 0–8, water 0–3, monster strength −2..2 (the range the
+  clamp leaves unchanged), map version 0–2, and towns −1 or a type the
+  version knows. Fixed human flags cannot exceed the human count after the
+  existing repair to two total players. Otherwise `RANDOM_MAP_GENERATION_FAILED`.
+- **Template** (`loadTemplates`, after the retail filters): a template is not
+  offered unless it has zones, every zone has a positive size and a player
+  number 0–8 (1–8 for human/computer zones), its town, mine and treasure
+  density products and weighted counts fit in half the `s32` range, and its
+  distinct player numbers seat the humans and then all players.
+- **Placement rule** (`readObjectPlacementRules`): a row lacking any score
+  column, with a null field, or with an object type or terrain outside the
+  binding tables binds nothing; scores stay indexed by table row.
+- **Prototype** (`loadObjectPrototypes`): a prototype is skipped unless its
+  footprint fits 8×6 with a footprint cell in the bottom row (except the
+  serialized-only `TERRAIN_HOLE` family), and a monster's
+  subtype is a creature type.
+- **Families** (`generateToFile`, after construction; otherwise
+  `RANDOM_MAP_GENERATION_FAILED`): monsters, `RANDOM_MONSTER`,
+  `TERRAIN_HOLE`, shipyards, gates on two-level maps, a town with an entrance at each
+  town-type index, monoliths (with same-subtype exits at each one-way entrance index), a dirt-selectable border
+  guard for each tent colour, and, when seer huts exist, a dirt-selectable
+  random artifact and a prototype for every quest-eligible artifact.
+
+Internally produced values (Voronoi topology, fixed pattern tables, treasure
+group padding, coordinates passed to `getMapItem`) take no input checks; the
+entry validation bounds what they are built from.
+
+| Operation | Prerequisite | Under `HOMM3_RMG_HOTFIX` |
+| --- | --- | --- |
+| `TRandomMapRequest::generateToFile`, map construction and lookup | Supported dimensions and levels, bounded player counts and enum values. Retail only clamps monster strength (after an overflowable `+ 3`) and repairs totals below two. | Request check. Team counts are clamped by `writeMapHeader`, so the lobby's out-of-range values stay accepted. |
+| `getSerializedMapVersion` | Version 0–2; another value falls off the nonvoid helper. | Request check. |
+| `getMapItem`, terrain cache, line and terrain painting | Coordinates in the map; `paintTransitions` needs at least two rows and columns. | Request check (dimensions ≥ 36); coordinates are internal. |
+| `loadTemplates` | The short-row guard compares with the maximum-size column itself, so a row ending at the minimum size reads past it. | Existing short-row fix; template check. |
+| `readRmgTemplateZones` | A row ending before the zone index reads it. | Existing short-row fix. |
+| `readObjectPlacementRules` | Rows have every column and nonnull fields; type and terrain index local tables unchecked. | Placement-rule check. |
+| `loadObjectPrototypes` | Required families exist; an empty monster list wraps `size() - 1`. Trait alias rows map to prototype-table indices. | Family check; the sort is skipped for an empty list, which then fails. Alias rows come from the built-in trait table. |
+| `buildOutline` / `hasConnectedOutline` | A bottom-row footprint cell, so the outline is nonempty before `index % outline.size()`. | Prototype check. |
+| `buildOverlapPriorities` / `scoreObjectPlacement` | Footprint fits 8×6; blocked predecessor cells are drawn; nonnull rule. | Prototype check for 8×6. Blocked but undrawn cells are not rejected (shipped `objects.txt` not verified); the only caller skips rule-less prototypes. |
+| `positionZone` / `paintZoneTerrain` | A candidate survives filtering; zones exist. | Template check ensures zones. Empty placement candidates abort generation cleanly; a pending zone is released during unwinding. |
+| `initializeZones` | Nonzero normalization span. | Template check: positive sizes make each footprint, so the span, at least three cells. |
+| `insetIslandZone` | Nonempty boundary before `m_boundary[0]`. | Internal (Voronoi boundary). |
+| `buildZoneConnectionPaths` | A zone without a free same-zone tile reuses the last assigned seed; before any assignment retail reads stack residue. Retail stores `seed` only at `0x540731..0x54073f`; a 3,000-request probe found reused earlier-zone seeds in 53 requests and no read before the first assignment. The default source starts `seed` at `RMG_NO_POSITION` and skips such a zone, matching retail on those requests. | Existing fix: no other zone's seed is borrowed. |
+| `connectZones` and connection graph consumers | Destinations exist, reverse connections exist, monolith families are nonempty. Appended extra-zone connections leave unread player limits uninitialized. | Retail already stores connections only between existing zones, both ways (connections to player-count-filtered zones are dropped, as shipped templates expect); family check. |
+| `createTreasureObject` | A footprint cell to divide by; a positive representable density total. | Prototype check; definition densities are built-in. |
+| `placeAdditionalTowns`, `placeExtraMines`, `placeZoneTreasures` | The enabled densities' product, their total and weighted counts stay representable (seven mine densities of 100 overflow). Disabled categories are not read. | Template check. Nonpositive densities still disable a category. |
+| Creature/scroll factories | Creature levels fit the value table, nonzero AI value, valid indices, a selectable spell per scroll level. | **Not covered**: the traits are game data loaded outside the generator; the built-in roster satisfies them. |
+| `connectJunctionEntrance`, `drawIrregularZoneBoundary`, `drawIslandBoundary` | A positive displacement limit before `rand() % limit`. | Template check (positive sizes). Roughness is the scaled size, which can still round to 0 (1 on island coasts), so `splitRmgBoundarySegment` raises a zero limit to one: one draw, no displacement. |
+| `TRmgTreasureGroup` placement/guard routines | Objects keep the temporary map's padding; `addGuard` reuses the last object's prototype. | Internal. |
+| `canPlaceTreasureGroup` | Callers establish the lower bounds. | Internal. |
+| `createRoads` | At least one road target. | Existing fix. |
+| `generate` player mapping | Slots cover the players, player indices 0–7, at most eight players, valid town-zone alignments. | Request and template checks, followed by a check that mapped players have owned primary towns. A randomly resolved primary town also supplies an unaligned zone's faction. |
+| `assignRmgTeams` | Team and player counts fit the arrays; a positive number of nonempty teams. | `writeMapHeader` makes the human and computer-only masks disjoint, recounts players (≤ 8), and clamps teams to 1..players before calling. |
+| `placeQuestArtifact` | Every eligible artifact has a prototype; nonempty seer family for the modulus. | Family check. Seer quests exist only for seer prototypes, so the modulus runs only when the family is nonempty. |
+| `writeMap` | `RANDOM_MONSTER` and `TERRAIN_HOLE` entry zero. Only the final write result is checked. | Family check. Unlatched short writes are an output issue, not input. |
+| `TRmgLinePatternTable` / terrain pattern tables and selectors | Fixed tables are well formed. | Internal fixed tables. |
+| Voronoi geometry / vector operators | 32-bit differences, squares and cross products stay representable; triangles noncollinear. | Internal; sites are scaled map positions. The unscaled layout (`canPlaceZone`, `canConnect`, radial positions) has no upper bound on template sizes: **not covered**. |
+| `TRmgVoronoi::removeEdge` | Both half-edges belong to the owner. | Internal topology. |
+| `TRmgVoronoi::locate` | Sites inside the triangulation; valid rings. See [Voronoi provenance](rmg-voronoi-provenance.md). | Internal topology. |
 
 Other preserved behavior defects, separate from undefined behavior:
 

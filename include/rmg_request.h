@@ -5,6 +5,7 @@
 #include "va.h"
 #include "homm3_bool.h"
 #include "homm3_int.h"
+#include "town_type.h"
 class TAbstractFile;
 class TProgressSink;
 
@@ -30,13 +31,19 @@ enum ERmgWaterContent {
     RMG_WATER_RANDOM = 3
 };
 
+enum ERmgMapVersion {
+    RMG_MAP_RESTORATION_OF_ERATHIA = 0,
+    RMG_MAP_ARMAGEDDONS_BLADE = 1,
+    RMG_MAP_SHADOW_OF_DEATH = 2
+};
+
 // Random-map settings chosen in the lobby and passed to the generator.
 class TRandomMapRequest {
 public:
     // Lobby human seats are 1; computer seats remain zero.
     b8 m_isHumanSeat[RMG_PLAYER_COUNT];  // +0x00
     // -1 selects a random town.
-    s32 m_townType[RMG_PLAYER_COUNT];    // +0x08
+    TTownType m_townChoices[RMG_PLAYER_COUNT]; // +0x08
     // Map size in tiles; the lobby passes its map dimension for both.
     s32 m_width;                         // +0x28
     s32 m_height;                        // +0x2c
@@ -53,13 +60,17 @@ public:
     // (3), clamped to [1, 5].
     s32 m_monsterStrength;               // +0x48
     // Map format 0/1/2, using the EGameVersion ordinals.
-    s32 m_mapVersion;                    // +0x4c
+    ERmgMapVersion m_mapVersion;         // +0x4c
 
     TRandomMapRequest(s32 width, s32 height, s32 levels);
     // The optional progress sink is borrowed. generateToFile changes both
     // player counts to one when their sum is below two, even on later failure.
-    s32 generate(const char* fileName, TProgressSink* progress);
-    s32 generateToFile(TAbstractFile* outputFile, TProgressSink* progress);
+    ERandomMapResult generate(const char* fileName, TProgressSink* progress);
+    ERandomMapResult generateToFile(TAbstractFile* outputFile, TProgressSink* progress);
+#if defined(HOMM3_RMG_HOTFIX)
+    // Settings the lobby can produce; the generator relies on them.
+    bool isSupported() const;
+#endif
 };
 SIZE(TRandomMapRequest, 0x50);
 

@@ -17,8 +17,8 @@ TRmgLinePainterInterface::TRmgLinePainterInterface(const TRmgGridPoint& size)
 
 VA(0x004f9be0, 0xb7)
 MAC_ADDRESS(0x22210c, 0x1ec)
-TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const s32* framePatterns)
-    : m_frameCount(frameCount), m_framePatterns(new s32[m_frameCount])
+TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const ERmgLinePattern* framePatterns)
+    : m_frameCount(frameCount), m_framePatterns(new ERmgLinePattern[m_frameCount])
 {
     if (!m_framePatterns)
         throw TAllocationFailure();
@@ -29,7 +29,7 @@ TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const s32* framePatte
     }
     // Expects a nonempty, unvalidated list of ids 0..8 with each id's frames
     // contiguous.
-    s32 runPattern = m_framePatterns[0];
+    ERmgLinePattern runPattern = m_framePatterns[0];
     ++m_ranges[runPattern].m_frameCount;
     for (u32 index = 1; index < m_frameCount; ++index) {
         if (m_framePatterns[index] != runPattern) {
@@ -47,29 +47,6 @@ TRmgLinePatternTable::~TRmgLinePatternTable()
     delete[] m_framePatterns;
 }
 
-// Neighbour direction order for each (flipX, flipY) reflection; the same
-// values as g_rmgReflectedNeighbours. A canonical pattern's direction d reads
-// neighbour order[d]. North is up; each grid puts order[d] at d.
-//   none      flipY     flipX     both
-//   NW N NE   SW S SE   NE N NW   SE S SW
-//   W  .  E   W  .  E   E  .  W   E  .  W
-//   SW S SE   NW N NE   SE S SW   NE N NW
-DATA(0x0063fe9c)
-static const s32 g_rmgLineReflectedNeighbours[2][2][TILE_DIR_COUNT] = {
-    {
-        {TILE_DIR_NORTH, TILE_DIR_NORTHEAST, TILE_DIR_EAST, TILE_DIR_SOUTHEAST,
-         TILE_DIR_SOUTH, TILE_DIR_SOUTHWEST, TILE_DIR_WEST, TILE_DIR_NORTHWEST}, // none
-        {TILE_DIR_SOUTH, TILE_DIR_SOUTHEAST, TILE_DIR_EAST, TILE_DIR_NORTHEAST,
-         TILE_DIR_NORTH, TILE_DIR_NORTHWEST, TILE_DIR_WEST, TILE_DIR_SOUTHWEST} // flipY
-    },
-    {
-        {TILE_DIR_NORTH, TILE_DIR_NORTHWEST, TILE_DIR_WEST, TILE_DIR_SOUTHWEST,
-         TILE_DIR_SOUTH, TILE_DIR_SOUTHEAST, TILE_DIR_EAST, TILE_DIR_NORTHEAST}, // flipX
-        {TILE_DIR_SOUTH, TILE_DIR_SOUTHWEST, TILE_DIR_WEST, TILE_DIR_NORTHWEST,
-         TILE_DIR_NORTH, TILE_DIR_NORTHEAST, TILE_DIR_EAST, TILE_DIR_SOUTHEAST} // both
-    }
-};
-
 // Reflections tried for corner shapes, as {flipX, flipY}: none, flipY, flipX,
 // then both.
 DATA(0x0063ff1c)
@@ -86,7 +63,7 @@ VA(0x004f9cb0, 0x24e)
 MAC_ADDRESS(0x222498, 0x2a4)
 void selectRmgLinePattern(
     const b8* neighbours, const TRmgLinePatternTable* table,
-    s32& pattern, b8& flipX, b8& flipY)
+    ERmgLinePattern& pattern, b8& flipX, b8& flipY)
 {
     if (neighbours[TILE_DIR_NORTH] && neighbours[TILE_DIR_EAST]
         && neighbours[TILE_DIR_SOUTH] && neighbours[TILE_DIR_WEST]) {
@@ -126,8 +103,8 @@ void selectRmgLinePattern(
     b8 hasCornerVariant = table->m_ranges[LINE_SE_VARIANT].m_frameCount > 0;
     const u32 reflectionCount = sizeof(g_rmgLineReflections) / sizeof(g_rmgLineReflections[0]);
     for (u32 reflection = 0; reflection < reflectionCount; ++reflection) {
-        const s32* order = g_rmgLineReflectedNeighbours
-            [g_rmgLineReflections[reflection][0]][g_rmgLineReflections[reflection][1]];
+        const s32* order = TRmgTerrainFlip(g_rmgLineReflections[reflection][0],
+            g_rmgLineReflections[reflection][1]).getReflectedNeighbourOrder();
         if (neighbours[order[TILE_DIR_EAST]] && neighbours[order[TILE_DIR_SOUTH]]) {
             if (hasCornerVariant && (neighbours[order[TILE_DIR_NORTHEAST]]
                 || neighbours[order[TILE_DIR_SOUTHWEST]]))
@@ -182,7 +159,7 @@ static inline b32 isRmgLinePaintingBlocked(Adapter* adapter,
 
 VA(0x0055edc0, 0x36)
 MAC_ADDRESS(0x253ae0, 0x54)
-void TRmgRiverLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
+void TRmgRiverLinePainter::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
 {
     m_adapter->setTile(point, tile);
 }
@@ -194,7 +171,7 @@ void TRmgRiverLinePainter::setLineType(const TRmgGridPoint& point, s32 value)
 }
 
 MAC_ADDRESS(0x253ba8, 0x88)
-void TRmgRiverLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
+void TRmgRiverLinePainter::getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile)
 {
     tile = m_adapter->getTile(point);
 }
@@ -234,7 +211,7 @@ TRmgLinePatternTable* TRmgRoadLinePainter::getPatternTable(s32)
 }
 
 MAC_ADDRESS(0x253fc8, 0x54)
-void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
+void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
 {
     m_adapter->setTile(point, tile);
 }
@@ -254,7 +231,7 @@ void TRmgRoadLinePainter::setLineType(const TRmgGridPoint& point, s32 value)
 
 VA(0x0055f350, 0x34)
 MAC_ADDRESS(0x254090, 0x88)
-void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
+void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile)
 {
     tile = m_adapter->getTile(point);
 }
@@ -508,10 +485,7 @@ static b8 isRmgPointOnSegment(TPoint point, TRmgHalfEdge* edge)
         || distanceToDestinationSquared > edgeLengthSquared)
         return false;
     const TPoint& origin = edge->m_sitePosition;
-    s32 deltaX = opposite.m_x - origin.m_x;
-    s32 deltaY = opposite.m_y - origin.m_y;
-    s32 lineConstant = -(deltaY * origin.m_x - deltaX * origin.m_y);
-    return deltaY * point.m_x - deltaX * point.m_y + lineConstant == 0;
+    return getRmgPointOrientation(origin, opposite, point) == 0;
 }
 
 // Incircle predicate for a counterclockwise triangle; zero (cocircular)

@@ -506,7 +506,7 @@ ordered named calls before attributing a change to the edited expression.
 
 The converse is useful too: in `tryPlaceMine` (`0x545990`), restoring
 `push_back(properties)` leaves insertion expanded but recovers the subsequent
-`type_object` constructor call (69.3906% to 71.5746%). The affected boundary
+`TRmgObject` constructor call (69.3906% to 71.5746%). The affected boundary
 need not be inside the source helper being restored.
 
 The source census ratchets end-position insertions and authored `std::_`
@@ -902,7 +902,7 @@ For the 81.2445% CreateRiver candidate, C2 reports caller `cb=1530`, initial
 budget 3060 and 128 reached tests. Each early vector destructor has
 `cb=94`; its nested `_Destroy` has `cb=49` and receives 68 or 65, so both
 empty bodies expand away. Retail retains these two calls. Later,
-`type_random_map` cleanup gives the deleting helper (`cb=97`) 91 units on
+`TRmgMap` cleanup gives the deleting helper (`cb=97`) 91 units on
 the failed-prototype path and 251 on final exit, explaining its retained
 and expanded copies. Those later boundaries already agree with retail;
 changing the caller's total cost alone can disturb them. Use the measured
@@ -934,7 +934,7 @@ alone does not settle the callers' remaining STL and map-accessor decisions.
 
 ### An exact accessor can hide a different nested call
 
-The by-value `type_random_map::GetMapItem` at 0x5378e0 retains the same
+The by-value `TRmgMap::GetMapItem` at 0x5378e0 retains the same
 39 raw bytes whether it computes the index directly or delegates to the
 three-scalar overload. The delegation leaves `RepairWaterZoneBorders`
 unchanged, but changes `CreateGroundConnection`'s first clear from expanded
@@ -1087,7 +1087,7 @@ its former declaration-only state does not explain these remaining decisions.
 
 The gated [C2 shim trace](shim.md#4-gated-inline-budget-observations) reads
 actual candidate costs and budgets from the configured terrain compile.
-For `rmgTerrainPainter::paintPoint` (prior role `TRmgTerrainPainter::PaintPoint`,
+For `TRmgTerrainPainter::paintPoint` (prior role `TRmgTerrainPainter::PaintPoint`,
 retail 0x5b4b20) at the earlier 97.0506% checkpoint, the front-end caller
 estimate is 933 and the initial budget
 is 1,866. At the first eight-neighbour terrain comparison, `getPackedCell`
@@ -1184,7 +1184,7 @@ than inferred to be compiler limitations.
 
 ### A guard-return predicate crosses the free-expansion cutoff
 
-`rmgTerrainPainter::isPaintTerrain` exposes the remaining distance-wrapper
+`TRmgTerrainPainter::isPaintTerrain` exposes the remaining distance-wrapper
 boundary through ordinary source control flow:
 
 ```cpp
@@ -1689,7 +1689,7 @@ Equivalent control-flow spellings can change a helper's inline decision
 without changing its retained machine code. In RMG's `selectPrisonHero`,
 splitting `!disabled && --selected < 0` into a nested availability test,
 decrement statement and negative test preserves its exact 113-byte body.
-It also makes `type_prison_def::generate` retain the call at `0x5348dc`,
+It also makes `TRmgPrisonDef::generate` retain the call at `0x5348dc`,
 recovering 9.0702% to 63.7193% before constructor refinement. A `continue`
 form has the same result; postdecrement and a shared-return form change
 the standalone body. Diagnose source control-flow boundaries even when

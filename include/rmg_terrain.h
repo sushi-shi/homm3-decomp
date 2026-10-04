@@ -29,26 +29,54 @@ enum ERmgBrushStrength {
     RMG_BRUSH_STRENGTH = 4
 };
 
-// Transition shape ids 0..28 (ERmgTerrainShape in src/rmg_terrain.cpp).
-enum ERmgTerrainShapeLimits {
+// Transition identities; the diagrams are beside the classifier in rmg_terrain.cpp.
+enum ERmgTerrainShape {
+    SHAPE_FILL = 0,
+    SHAPE_N_W_BLEND = 2,
+    SHAPE_W_BLEND = 3,
+    SHAPE_N_BLEND = 4,
+    SHAPE_SE_BLEND = 5,
+    SHAPE_N_W_DIAG_BLEND = 6,
+    SHAPE_SE_DIAG_BLEND = 7,
+    SHAPE_N_W_HARD = 8,
+    SHAPE_W_HARD = 9,
+    SHAPE_N_HARD = 10,
+    SHAPE_SE_HARD = 11,
+    SHAPE_N_W_DIAG_HARD = 12,
+    SHAPE_SE_DIAG_HARD = 13,
+    SHAPE_NW_SE_BLEND = 14,
+    SHAPE_NW_BLEND_SE_HARD = 15,
+    SHAPE_NW_SE_HARD = 16,
+    SHAPE_E_BLEND_SW_HARD = 17,
+    SHAPE_S_BLEND_NE_HARD = 18,
+    SHAPE_E_BLEND_SE_HARD = 19,
+    SHAPE_S_BLEND_SE_HARD = 20,
+    SHAPE_E_HARD_SW_BLEND = 21,
+    SHAPE_S_HARD_NE_BLEND = 22,
+    SHAPE_N_W_SE_BLEND = 23,
+    SHAPE_N_W_SE_HARD = 24,
+    SHAPE_N_W_BLEND_SE_HARD = 25,
+    SHAPE_N_W_HARD_SE_BLEND = 26,
+    SHAPE_E_S_BLEND_SE_HARD = 27,
+    SHAPE_E_S_BLEND_NE_SW_HARD = 28,
     RMG_TERRAIN_SHAPE_COUNT = 29
 };
 
 // One map-layer tile as read from or written to the map adapter.
-struct rmgTerrainTile {
+struct TRmgTerrainTile {
     // Terrain, road or river type, depending on the adapter's layer.
     s32 m_terrain;
     s32 m_frame;
     b8 m_flipX;
     b8 m_flipY;
 
-    rmgTerrainTile() {}
-    rmgTerrainTile(s32 newTerrain, s32 newFrame)
+    TRmgTerrainTile() {}
+    TRmgTerrainTile(s32 newTerrain, s32 newFrame)
         : m_terrain(newTerrain), m_frame(newFrame), m_flipX(false), m_flipY(false) {}
     s32 getFrame() const { return m_frame; }
     b8 getFlipX() const { return m_flipX; }
     b8 getFlipY() const { return m_flipY; }
-    rmgTerrainTile& operator=(const rmgTerrainTile& other)
+    TRmgTerrainTile& operator=(const TRmgTerrainTile& other)
     {
         m_terrain = other.m_terrain;
         m_frame = other.m_frame;
@@ -70,7 +98,7 @@ struct TRmgTerrainFlip {
 
 // No edge for equal terrain, a sand centre, or a dirt centre that blends with
 // its neighbour; other blending pairs blend, remaining changes are hard edges.
-enum TRmgTerrainNeighbourKind {
+enum ERmgTerrainNeighbourKind {
     RMG_NEIGHBOUR_NO_EDGE = 0,
     RMG_NEIGHBOUR_BLEND_EDGE = 1,
     RMG_NEIGHBOUR_HARD_EDGE = 2
@@ -91,9 +119,9 @@ struct TRmgPackedTerrainCell {
     inline s32 getFrame() const { return m_frame; }
     inline b8 getFlipX() const { return m_flipX; }
     inline b8 getFlipY() const { return m_flipY; }
-    inline rmgTerrainTile getTile() const
+    inline TRmgTerrainTile getTile() const
     {
-        rmgTerrainTile tile;
+        TRmgTerrainTile tile;
         tile.m_terrain = getTerrain();
         tile.m_frame = getFrame();
         tile.m_flipX = getFlipX();
@@ -106,7 +134,7 @@ struct TRmgPackedTerrainCell {
     inline void setFlipX(b8 value) { m_flipX = value; }
     inline void setFlipY(b8 value) { m_flipY = value; }
     // Copies the tile payload; callers mark the cell initialized.
-    inline void setTileValues(const rmgTerrainTile& tile)
+    inline void setTileValues(const TRmgTerrainTile& tile)
     {
         setTerrain(tile.m_terrain);
         setFrame(tile.m_frame);
@@ -128,10 +156,10 @@ public:
     virtual ~TRmgTerrainRule() = 0;
     virtual b8 hasSpecialBaseFrames() = 0;
     virtual b8 isSpecialFrame(s32 frame) = 0;
-    virtual s32 getTransition(s32 frame) = 0;
+    virtual ERmgTerrainShape getTransition(s32 frame) = 0;
     virtual s32 selectBaseFrame(s32 strength, s32 oldFrame) = 0;
     virtual s32 selectTransitionFrame(
-        s32 transition,
+        ERmgTerrainShape transition,
         TRmgTerrainFlip requestedFlip,
         TRmgTerrainFlip& selectedFlip,
         s32 oldFrame) = 0;
@@ -146,17 +174,17 @@ struct TRmgTerrainPatternRange {
 };
 
 struct TRmgTerrainPatternEntry {
-    s32 m_transition;
+    ERmgTerrainShape m_transition;
     b8 m_special;
 };
 
 // Fixed transition table entry; carries flips instead of a special-frame flag.
 struct TRmgTerrainTransitionEntry {
-    s32 m_transition;
+    ERmgTerrainShape m_transition;
     b8 m_flipX;
     b8 m_flipY;
 
-    bool matches(s32 transition, b8 flipX, b8 flipY) const;
+    bool matches(ERmgTerrainShape transition, b8 flipX, b8 flipY) const;
 };
 DATA(0x006424a8)
 extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
@@ -165,7 +193,7 @@ extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
 struct TRmgTerrainPatternTable {
     TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT * 2 * 2];
     TRmgTerrainPatternTable();
-    TRmgTerrainPatternRange& getRange(s32 transition, b8 flipX, b8 flipY);
+    TRmgTerrainPatternRange& getRange(ERmgTerrainShape transition, b8 flipX, b8 flipY);
 };
 DATA(0x006a4158)
 extern TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
@@ -182,14 +210,14 @@ public:
     TRmgPatternTerrainRule(b8 blendsWithOtherTerrain,
         b8 allowsSeparatedNeighbours, s32 specialFrameChance,
         u32 entryCount, const TRmgTerrainPatternEntry* entries);
-    TRmgTerrainPatternRange& getRange(s32 transition, b8 special);
+    TRmgTerrainPatternRange& getRange(ERmgTerrainShape transition, b8 special);
 
     virtual b8 hasSpecialBaseFrames();
     virtual b8 isSpecialFrame(s32 frame);
-    virtual s32 getTransition(s32 frame);
+    virtual ERmgTerrainShape getTransition(s32 frame);
     virtual s32 selectBaseFrame(s32 strength, s32 oldFrame);
     virtual s32 selectTransitionFrame(
-        s32 transition,
+        ERmgTerrainShape transition,
         TRmgTerrainFlip requestedFlip,
         TRmgTerrainFlip& selectedFlip,
         s32 oldFrame);
@@ -201,10 +229,10 @@ public:
     TRmgTableTerrainRule();
     virtual b8 hasSpecialBaseFrames();
     virtual b8 isSpecialFrame(s32 frame);
-    virtual s32 getTransition(s32 frame);
+    virtual ERmgTerrainShape getTransition(s32 frame);
     virtual s32 selectBaseFrame(s32 strength, s32 oldFrame);
     virtual s32 selectTransitionFrame(
-        s32 transition,
+        ERmgTerrainShape transition,
         TRmgTerrainFlip requestedFlip,
         TRmgTerrainFlip& selectedFlip,
         s32 oldFrame);
@@ -227,12 +255,12 @@ struct TRmgTerrainGap {
 //                   x
 //     x C x         C
 //                   x
-enum TRmgTerrainGapAxis {
+enum ERmgTerrainGapAxis {
     RMG_HORIZONTAL_GAP,
     RMG_VERTICAL_GAP
 };
 
-class rmgTerrainPainter {
+class TRmgTerrainPainter {
 public:
     TRmgMapInterface* m_adapter;                       // +0x00
     s32 m_paintTerrain;                                // +0x04
@@ -248,11 +276,11 @@ public:
     // Lazily filled tile cache, row by row: cell (x, y) is at y * width + x.
     std::vector<TRmgPackedTerrainCell> m_packedCells;  // +0x34
 
-    rmgTerrainPainter(
+    TRmgTerrainPainter(
         TRmgMapInterface* newAdapter,
         s32 terrain,
         s32 strength);
-    ~rmgTerrainPainter();
+    ~TRmgTerrainPainter();
 
     void finish();
     s32 changeTerrain(s32 terrain, s32 strength);
@@ -268,14 +296,14 @@ public:
     u32 getHeight() const;
     void paintTransitions();
     s32 selectBaseFrame(const TRmgGridPoint& point, s32 terrain, s32 oldFrame);
-    void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
+    void setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile);
     void paintBaseTile(const TRmgGridPoint& point);
     const s32& getPaintTerrain() const;
     b8 isPaintTerrain(const TRmgGridPoint& point);
 
     void paintPoint(const TRmgGridPoint& point);
     void resolveQueuedGap(const TRmgGridPoint& painted,
-        s32 offsetX, s32 offsetY, TRmgTerrainGapAxis closedAxis);
+        s32 offsetX, s32 offsetY, ERmgTerrainGapAxis closedAxis);
     void queueOtherTerrainNeighbours(const TRmgGridPoint& point);
     void queueOtherTerrainDiagonalNeighbour(
         const TRmgGridPoint& point, s32 offsetX, s32 offsetY);
@@ -283,7 +311,7 @@ public:
         const TRmgGridPoint& point, s32 offsetX, s32 offsetY);
     void repairTerrainPoint(const TRmgGridPoint& point);
     void repairTerrainGap(const TRmgGridPoint& negative,
-        const TRmgGridPoint& positive, TRmgTerrainGapAxis axis);
+        const TRmgGridPoint& positive, ERmgTerrainGapAxis axis);
     void countTerrainBoundary(const TRmgGridPoint& point, u32 direction,
         s32 terrain, std::vector<u8>& edgeCounts);
     b8 isHorizontalGap(const TRmgGridPoint& point, s32 terrain);
@@ -300,8 +328,8 @@ public:
     void buildMatchingNeighbourMask(
         const TRmgGridPoint& point, b8* matches);
 
-    s32 getTerrainNeighbourKindAt(const TRmgGridPoint& neighbour, s32 terrain);
-    void buildNeighbourKinds(const TRmgGridPoint& point, s32* neighbours);
+    ERmgTerrainNeighbourKind getTerrainNeighbourKindAt(const TRmgGridPoint& neighbour, s32 terrain);
+    void buildNeighbourKinds(const TRmgGridPoint& point, ERmgTerrainNeighbourKind* neighbours);
     bool matchesTerrainAtClampedOffset(
         const TRmgGridPoint& point, const TPoint& offset, s32 terrain);
     b8 isOuterCornerOnDiagonalEdge(
@@ -316,7 +344,7 @@ public:
 // Owns a terrain painter for repeated rectangle painting.
 class TRmgTerrainBrush {
 public:
-    std::auto_ptr<rmgTerrainPainter> m_painter;
+    std::auto_ptr<TRmgTerrainPainter> m_painter;
 
     TRmgTerrainBrush(TRmgMapInterface* map, s32 terrain, s32 strength);
     ~TRmgTerrainBrush();
@@ -326,11 +354,11 @@ public:
         u32 rectangleWidth, u32 rectangleHeight);
 };
 
-SIZE(rmgTerrainTile, 0x0c);
+SIZE(TRmgTerrainTile, 0x0c);
 SIZE(TRmgTerrainFlip, 0x02);
 SIZE(TRmgPackedTerrainCell, 0x02);
 SIZE(TRmgTerrainRule, 0x08);
-SIZE(rmgTerrainPainter, 0x44);
+SIZE(TRmgTerrainPainter, 0x44);
 SIZE(TRmgTerrainBrush, 0x08);
 
 #endif  // HOMM3_RMG_TERRAIN_H
