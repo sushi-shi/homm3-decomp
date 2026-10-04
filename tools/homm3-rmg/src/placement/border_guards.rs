@@ -114,10 +114,7 @@ impl PlacementMap<'_, '_, '_> {
     ) -> Result<(), PlacementError> {
         let color = BorderColor::from_subtype(reported_color);
         for nearby in Neighborhood::ThreeByThree.cells(position, self.view().side)? {
-            let index = self.view().index(nearby)?;
-            if self.memberships.first(self.cells[index].objects).is_none() {
-                self.cells[index].mark_border(color);
-            }
+            self.mark_empty_border(nearby, color)?;
         }
         let index = self.view().native_index(position)?;
         if let Some(previous) = self.cells[index].movement.previous() {
@@ -125,6 +122,20 @@ impl PlacementMap<'_, '_, '_> {
                 let index = self.view().native_index(previous)?;
                 self.cells[index].clear_border();
             }
+        }
+        Ok(())
+    }
+}
+
+impl PlacementMap<'_, '_, '_> {
+    pub(super) fn mark_empty_border(
+        &mut self,
+        position: WorldPosition,
+        color: BorderColor,
+    ) -> Result<(), PlacementError> {
+        let index = self.view().native_index(position)?;
+        if self.memberships.first(self.cells[index].objects).is_none() {
+            self.cells[index].mark_border(color);
         }
         Ok(())
     }

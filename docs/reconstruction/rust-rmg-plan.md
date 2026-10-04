@@ -113,9 +113,10 @@ The library cannot yet generate a complete map.
    and individual path/obstacle/border transitions now use reusable storage.
    Tent availability follows the loaded prototype count. Retail's initial cursor
    uses named replay input or a typed fault until a native rescan initializes it.
-2. **Zone connections.** Finish gates, portals, the per-edge dispatcher
+2. **Zone connections.** Finish portals, the second dispatcher pass
    and dry-zone junctions. Preparation, pathfinding, water-border repair, ground
-   crossings, shipyard attempts, border guards and key-tent reservations are implemented and have
+   crossings, shipyards, gates, the first dispatcher pass, border guards and
+   key-tent reservations are implemented and have
    native checkpoint comparisons.
 3. **Mines.** Port fixed and density-driven mine placement and guards. Connect
    the existing guard selector to object creation, ownership and spatial state.
@@ -537,11 +538,39 @@ Clippy. Both reviewers are clean after moving general helpers to shared modules
 and eliminating per-line temporary vectors from the snapshot comparator. The
 eight ordinary ground-only captures still match after the shared-state changes.
 
-Next implement gates, portals, both per-edge dispatcher passes and dry-zone
-junctions. Pass two must reflood existing shipyards in active-object order for
-each source zone. Reuse existing placement, guard, entrance and path helpers.
-Portal protection rebuilds paths in place without refreezing the initial border
-scan; retain ordered portal ID lists for later road routing.
+Subterranean gates now choose the highest combined object-distance sites that
+fit on both levels, retaining scan-order ties and singleton draws. Bounds
+intersection returns a nonempty rectangle or absence. Candidate selection
+precedes the first gate allocation, as retail does. Both base objects and both
+entrance records precede guard-value evaluation; approach openings follow it.
+Both border attempts run, either success suppresses both monster guards, and
+side marking uses empty membership plus native flat addressing. No gate road
+targets or serialized object IDs are introduced.
+
+`ConnectingZones::connect_direct_zones` now executes the complete first pass in
+native zone/adjacency order and consumes its token into `DirectConnections`.
+Each eligible edge tries ground, then shipyard, then gate, skipping a water
+destination only after the shipyard attempt. Connection identity and shared
+entrance storage now live together in the common stage module. Bidirectional
+completion writes the current edge before faulting on a missing first reverse.
+
+Sixteen native first-pass captures agree on final RNG, objects, road targets,
+visits, entrances, graph state, counts, membership, movement, borders and tent
+reservations (520,175 checkpoint lines). Ordinary cases place 86 gate objects;
+forced-border cases exercise gate-side markings and shared guard suppression.
+The test invokes the production consuming dispatcher. Native probe isolation
+also preserves all sixteen complete C++ map outputs byte-for-byte. All 71 core
+tests and strict Clippy pass; both reviewers are clean after keeping the shared
+entrance vector private behind its owning module.
+
+Next implement portals, the second dispatcher pass and dry-zone junctions.
+Pass two must reflood existing shipyards in active-object order for each source
+zone. Portal indices cycle without RNG, advancing only after both completion
+writes. Failed endpoint placements discard only that object and continue; even
+all failures still complete the edge pair. Portal protection rebuilds all paths
+in place without refreezing the initial border scan. Retain separate ordered
+one-way/two-way ObjectId lists (one-way includes both entrances and exits), and
+preserve the five-neighbor ASCII diagram and occupied-cell border marking.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

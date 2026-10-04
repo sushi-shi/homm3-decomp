@@ -27,12 +27,14 @@ use placement_snapshot::{write_cells, write_counts};
 pub enum Attempts {
     Ground,
     GroundAndShipyard,
+    Direct,
 }
 impl Attempts {
     fn filename(self) -> &'static str {
         match self {
             Self::Ground => "ground-connections.txt",
             Self::GroundAndShipyard => "shipyard-connections.txt",
+            Self::Direct => "direct-connections.txt",
         }
     }
 }
@@ -124,7 +126,7 @@ pub fn compare_native(attempts: Attempts) {
             }
             previous_id = connecting.connection_ids().next();
             let actual = snapshot(
-                &mut connecting,
+                connecting,
                 &mut objects,
                 &catalog,
                 &creatures,
@@ -225,7 +227,7 @@ fn run_attempts(
     }
 }
 fn snapshot(
-    connecting: &mut ConnectingZones<'_, '_, '_>,
+    mut connecting: ConnectingZones<'_, '_, '_>,
     objects: &mut ObjectArena,
     catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
     creatures: &CreatureCatalog,
@@ -241,9 +243,26 @@ fn snapshot(
             .unwrap()
             .is_empty());
     }
+    if attempts == Attempts::Direct {
+        let direct = connecting
+            .connect_direct_zones(objects, catalog, creatures, rng)
+            .unwrap();
+        assert_eq!(direct.rng(), rng.checkpoint());
+        writeln!(
+            actual,
+            "rng {} {} {}",
+            rng.state(),
+            direct.map().next_object_id(),
+            direct.map().active_objects().len()
+        )
+        .unwrap();
+        write_water_state(&mut actual, direct.map());
+        write_snapshot(&mut actual, direct.map(), objects, catalog, colors);
+        return actual;
+    }
     run_attempts(
         &mut actual,
-        connecting,
+        &mut connecting,
         objects,
         catalog,
         creatures,
@@ -253,9 +272,18 @@ fn snapshot(
     if attempts == Attempts::GroundAndShipyard {
         write_water_state(&mut actual, connecting.map());
     }
-    write_tents(&mut actual, connecting.map(), colors);
-    write_objects(&mut actual, connecting.map(), objects, catalog);
-    let map = connecting.map();
+    write_snapshot(&mut actual, connecting.map(), objects, catalog, colors);
+    actual
+}
+fn write_snapshot(
+    actual: &mut String,
+    map: &homm3_rmg::placement::PlacementMap<'_, '_, '_>,
+    objects: &ObjectArena,
+    catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
+    colors: &[homm3_rmg::placement::KeyTentColor],
+) {
+    write_tents(actual, map, colors);
+    write_objects(actual, map, objects, catalog);
     for zone in map.coverage().map().zones() {
         let entrances = map.zone_entrances(zone.id()).unwrap();
         write!(actual, "{}", entrances.len()).unwrap();
@@ -274,8 +302,8 @@ fn snapshot(
         }
         actual.push('\n');
     }
-    write_counts(&mut actual, map);
-    write_cells(&mut actual, map, |id| {
+    write_counts(actual, map);
+    write_cells(actual, map, |id| {
         i32::try_from(map.active_objects().iter().position(|&x| x == id).unwrap()).unwrap()
     });
     let side = map.coverage().map().raster().dimension();
@@ -310,8 +338,8 @@ fn snapshot(
         )
         .unwrap();
     }
-    actual
 }
+
 fn write_objects(
     actual: &mut String,
     map: &homm3_rmg::placement::PlacementMap<'_, '_, '_>,

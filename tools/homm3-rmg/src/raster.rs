@@ -37,6 +37,19 @@ impl ZoneBounds {
         self.maximum.x = self.maximum.x.max(point.x + 1);
         self.maximum.y = self.maximum.y.max(point.y + 1);
     }
+    /// Shared cells of two rectangles, or no overlap. The result stays nonempty.
+    #[must_use]
+    pub fn intersection(self, other: Self) -> Option<Self> {
+        let minimum = Point::new(
+            self.minimum.x.max(other.minimum.x),
+            self.minimum.y.max(other.minimum.y),
+        );
+        let maximum = Point::new(
+            self.maximum.x.min(other.maximum.x),
+            self.maximum.y.min(other.maximum.y),
+        );
+        (minimum.x < maximum.x && minimum.y < maximum.y).then_some(Self { minimum, maximum })
+    }
     /// Included top-left cell.
     #[must_use]
     pub const fn minimum(self) -> Point {

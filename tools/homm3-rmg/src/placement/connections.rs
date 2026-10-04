@@ -129,7 +129,7 @@ pub(super) struct ConnectionScratch {
     pub(super) candidates: Vec<WorldPosition>,
     pub(super) outline: crate::prototype::OutlineWorkspace,
     pub(super) water_stack: Vec<WorldPosition>,
-    pub(super) crossing: super::ground_connections::CrossingState,
+    pub(super) crossing: super::zone_connections::CrossingState,
     pub(super) flood: Worklist<WorldPosition>,
     pub(super) noise: super::island_noise::NoiseWorkspace,
     pub(super) repairs: Vec<super::connection_paths::PaintRequest>,
