@@ -461,6 +461,11 @@ enum ERmgZoneMonsterStrength {
     RMG_ZONE_MONSTERS_STRONG = 4
 };
 
+// Treasure bands per template zone in rmg.txt (low, medium and high value).
+enum ERmgTreasureBandLimits {
+    RMG_TREASURE_BAND_COUNT = 3
+};
+
 struct TRmgTemplateZone {
     // Template zone number while connections are read, then the zone's index
     // in its template; RMG_NO_ZONE for buildZoneBoundaries' test slot.
@@ -495,7 +500,7 @@ struct TRmgTemplateZone {
     b8 m_guardsMatchZone;                                     // +0x94
     // Indexed by town type + 1; slot 0 is neutral.
     b8 m_allowedMonsters[TOWN_TYPE_COUNT + 1];                // +0x95
-    TRmgTreasureRange m_treasure[3];                          // +0xa0
+    TRmgTreasureRange m_treasure[RMG_TREASURE_BAND_COUNT];                          // +0xa0
     std::vector<TRmgZoneConnection> m_connections;            // +0xc4
 
     TTownType selectAllowedTown();
@@ -1776,7 +1781,8 @@ enum ERmgTownPlacementCategory {
     RMG_TOWN_PLAYER_CASTLE,
     RMG_TOWN_PLAYER_BASIC,
     RMG_TOWN_NEUTRAL_CASTLE,
-    RMG_TOWN_NEUTRAL_BASIC
+    RMG_TOWN_NEUTRAL_BASIC,
+    RMG_TOWN_CATEGORY_COUNT
 };
 
 class type_random_map_generator : public TRmgGeneratorBase {

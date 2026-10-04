@@ -3349,25 +3349,27 @@ static bool isUsableRmgTemplateZone(const TRmgTemplateZone& zone)
     if (zone.m_playerIndex < lowestPlayer || zone.m_playerIndex >= RMG_PLAYER_COUNT)
         return false;
     const s32* towns = zone.m_townPlacement;
-    s32 townDensities[4] = {
-        towns[RMG_TOWN_PLAYER_BASIC_DENSITY], towns[RMG_TOWN_PLAYER_CASTLE_DENSITY],
-        towns[RMG_TOWN_NEUTRAL_BASIC_DENSITY], towns[RMG_TOWN_NEUTRAL_CASTLE_DENSITY]
-    };
-    s32 townCounts[4] = {
-        towns[RMG_TOWN_PLAYER_BASIC_COUNT], towns[RMG_TOWN_PLAYER_CASTLE_COUNT],
-        towns[RMG_TOWN_NEUTRAL_BASIC_COUNT], towns[RMG_TOWN_NEUTRAL_CASTLE_COUNT]
-    };
-    if (!hasRepresentableRmgDensities(townDensities, townCounts, 4))
+    s32 townDensities[RMG_TOWN_CATEGORY_COUNT];
+    s32 townCounts[RMG_TOWN_CATEGORY_COUNT];
+    townDensities[RMG_TOWN_PLAYER_CASTLE] = towns[RMG_TOWN_PLAYER_CASTLE_DENSITY];
+    townDensities[RMG_TOWN_PLAYER_BASIC] = towns[RMG_TOWN_PLAYER_BASIC_DENSITY];
+    townDensities[RMG_TOWN_NEUTRAL_CASTLE] = towns[RMG_TOWN_NEUTRAL_CASTLE_DENSITY];
+    townDensities[RMG_TOWN_NEUTRAL_BASIC] = towns[RMG_TOWN_NEUTRAL_BASIC_DENSITY];
+    townCounts[RMG_TOWN_PLAYER_CASTLE] = towns[RMG_TOWN_PLAYER_CASTLE_COUNT];
+    townCounts[RMG_TOWN_PLAYER_BASIC] = towns[RMG_TOWN_PLAYER_BASIC_COUNT];
+    townCounts[RMG_TOWN_NEUTRAL_CASTLE] = towns[RMG_TOWN_NEUTRAL_CASTLE_COUNT];
+    townCounts[RMG_TOWN_NEUTRAL_BASIC] = towns[RMG_TOWN_NEUTRAL_BASIC_COUNT];
+    if (!hasRepresentableRmgDensities(townDensities, townCounts, RMG_TOWN_CATEGORY_COUNT))
         return false;
     if (!hasRepresentableRmgDensities(zone.m_mineDensities, zone.m_mineCounts, NUM_RESOURCES))
         return false;
     // placeZoneTreasures skips bands with a maximum below 100.
-    s32 treasureDensities[3];
-    s32 treasureCounts[3] = {0, 0, 0};
-    for (s32 band = 0; band < 3; ++band)
+    s32 treasureDensities[RMG_TREASURE_BAND_COUNT];
+    s32 treasureCounts[RMG_TREASURE_BAND_COUNT] = {0, 0, 0};
+    for (s32 band = 0; band < RMG_TREASURE_BAND_COUNT; ++band)
         treasureDensities[band] = zone.m_treasure[band].m_maximum >= 100
             ? zone.m_treasure[band].m_density : 0;
-    return hasRepresentableRmgDensities(treasureDensities, treasureCounts, 3);
+    return hasRepresentableRmgDensities(treasureDensities, treasureCounts, RMG_TREASURE_BAND_COUNT);
 }
 
 // Templates are offered only with usable zones whose distinct player
@@ -3561,7 +3563,7 @@ void readRmgTemplateZones(
                 // Fortress guards, not Conflux.
                 if (mapVersion < RMG_MAP_ARMAGEDDONS_BLADE)
                     templateZone->m_allowedMonsters[TOWN_CONFLUX] = false;
-                for (s32 treasure = 0; treasure < 3; ++treasure) {
+                for (s32 treasure = 0; treasure < RMG_TREASURE_BAND_COUNT; ++treasure) {
                     templateZone->m_treasure[treasure].m_minimum =
                         atoi(values[RMG_TEMPLATE_COLUMN_TREASURE_MINIMUM
                             + RMG_TEMPLATE_TREASURE_COLUMN_COUNT * treasure]);
