@@ -10,7 +10,7 @@ std internal references	1
 cpp extern decls	0
 .cpp-local views	1
 .cpp-local enums	4
-casts to enum types	34
+casts to enum types	32
 magic case labels	0
 unnamed domain compares	0
 view preprocessor artifacts	0
