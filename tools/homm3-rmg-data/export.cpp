@@ -26,6 +26,10 @@ static const TPoint directions[] =
 #include "rmg_data/directions.inc"
 ;
 
+static const TPoint shipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] =
+#include "rmg_data/shipyard_water_offsets.inc"
+;
+
 static const int guardThresholdLow[RMG_GUARD_STRENGTH_COUNT] =
 #include "rmg_data/guard_threshold_low.inc"
 ;
@@ -286,6 +290,9 @@ int main()
     std::printf("];\n");
     std::printf("pub const SPELL_FLAGS: [u32; %lu] = [", sizeof(spellTraits)/sizeof(spellTraits[0]));
     for (const auto& row : spellTraits) std::printf("%u,", row.m_flags);
+    std::printf("];\n");
+    std::printf("pub const SHIPYARD_WATER_OFFSETS: [(i32, i32); %u] = [", RMG_SHIPYARD_WATER_OFFSET_COUNT);
+    for (const auto& point : shipyardWaterOffsets) std::printf("(%d,%d),", point.m_x, point.m_y);
     std::printf("];\n");
     emitTerrainRules();
     emitSignedArray("GUARD_THRESHOLD_LOW", guardThresholdLow);

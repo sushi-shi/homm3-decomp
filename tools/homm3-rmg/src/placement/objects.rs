@@ -94,6 +94,8 @@ impl MonsterPayload {
 pub enum ObjectPayload {
     /// Plain native `TRmgObject`, without additional serialized fields.
     Base,
+    /// Unowned capturable object; serializes the native unowned byte and padding.
+    Ownable,
     /// Player ownership and fort, with its shared native object ID.
     Town(TownPayload),
     /// Guard stack count, disposition and shared native object ID.
@@ -146,6 +148,14 @@ impl ObjectArena {
         prototype: PrototypeId,
     ) -> Result<ObjectId, PlacementError> {
         self.create_record(catalog, prototype, ObjectPayload::Base)
+    }
+    pub(super) fn create_shipyard(
+        &mut self,
+        catalog: &PrototypeCatalog<'_>,
+        prototype: PrototypeId,
+    ) -> Result<ObjectId, PlacementError> {
+        Self::require_kind(catalog, prototype, raw::SHIPYARD)?;
+        self.create_record(catalog, prototype, ObjectPayload::Ownable)
     }
     pub(super) fn create_town(
         &mut self,

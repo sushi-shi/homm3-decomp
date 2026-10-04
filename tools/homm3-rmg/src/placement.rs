@@ -16,6 +16,7 @@ mod guard_value;
 mod guards;
 pub use guard_value::GuardStrength;
 mod ground_connections;
+mod shipyards;
 pub use border_guards::{BorderGuardCount, BorderGuardPlacement};
 pub use ground_connections::{ConnectingZones, ConnectionId};
 mod zone_objects;
@@ -237,6 +238,7 @@ pub struct CellState {
     reservation: PathReservation,
     zone_distance: ZoneDistance,
     movement: Movement,
+    connection_visited: bool,
 }
 impl Default for CellState {
     fn default() -> Self {
@@ -250,6 +252,7 @@ impl Default for CellState {
             reservation: PathReservation::Open,
             zone_distance: ZoneDistance::default(),
             movement: Movement::default(),
+            connection_visited: false,
         }
     }
 }
@@ -261,6 +264,7 @@ pub struct PlacementWorkspace {
     memberships: Memberships,
     registration: Registration,
     towns: TownState,
+    road_targets: Vec<WorldPosition>,
     connections: ConnectionScratch,
     zone_placement: ZonePlacementScratch,
 }
@@ -280,6 +284,7 @@ impl PlacementWorkspace {
         self.cells.fill(CellState::default());
         self.memberships.reset();
         self.towns.reset();
+        self.road_targets.clear();
         self.connections.reset();
         self.zone_placement.reset();
         self.registration
@@ -290,6 +295,7 @@ impl PlacementWorkspace {
             memberships: &mut self.memberships,
             registration: &mut self.registration,
             towns: &mut self.towns,
+            road_targets: &mut self.road_targets,
             connections: &mut self.connections,
             zone_placement: &mut self.zone_placement,
         })
@@ -303,10 +309,25 @@ pub struct PlacementMap<'state, 'zones, 'tiles> {
     memberships: &'state mut Memberships,
     registration: &'state mut Registration,
     towns: &'state mut TownState,
+    road_targets: &'state mut Vec<WorldPosition>,
     connections: &'state mut ConnectionScratch,
     zone_placement: &'state mut ZonePlacementScratch,
 }
 impl PlacementMap<'_, '_, '_> {
+    /// Town and shipyard road targets in native insertion order, including repeats.
+    #[must_use]
+    pub fn road_targets(&self) -> &[WorldPosition] {
+        self.road_targets
+    }
+    pub(super) fn append_road_target(
+        &mut self,
+        position: WorldPosition,
+    ) -> Result<(), PlacementError> {
+        self.road_targets.try_reserve(1)?;
+        self.road_targets.push(position);
+        Ok(())
+    }
+
     /// Existing painted tiles and zone coverage, without copying either buffer.
     #[must_use]
     pub const fn terrain(&self) -> &PaintedTerrain<'_, '_> {

@@ -630,10 +630,6 @@ void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     TRmgNoiseMidpoints midpoints,
     s32 centerValue);
 
-enum ERmgShipyardConstants {
-    RMG_SHIPYARD_WATER_OFFSET_COUNT = 4
-};
-
 // River-delta placement offset from the river's end, per direction.
 struct TRmgRiverDeltaOffset {
     s32 m_x;

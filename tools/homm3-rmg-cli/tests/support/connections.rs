@@ -19,13 +19,24 @@ use std::{
     fmt::Write,
     path::{Path, PathBuf},
 };
-#[path = "support/placement.rs"]
+#[path = "placement.rs"]
 mod placement_snapshot;
 use placement_snapshot::{write_cells, write_counts};
 
-#[test]
-#[ignore = "requires HOMM3_RMG_DATA and HOMM3_RMG_ORACLE ground-connections checkpoints"]
-fn native_ground_crossings_preserve_guards_entrances_cells_and_rng() {
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Attempts {
+    Ground,
+    GroundAndShipyard,
+}
+impl Attempts {
+    fn filename(self) -> &'static str {
+        match self {
+            Self::Ground => "ground-connections.txt",
+            Self::GroundAndShipyard => "shipyard-connections.txt",
+        }
+    }
+}
+pub fn compare_native(attempts: Attempts) {
     let directory = PathBuf::from(std::env::var_os("HOMM3_RMG_DATA").unwrap());
     let oracle = PathBuf::from(std::env::var_os("HOMM3_RMG_ORACLE").unwrap());
     let mut installation = Installation::open(&directory).unwrap();
@@ -119,11 +130,12 @@ fn native_ground_crossings_preserve_guards_entrances_cells_and_rng() {
                 &creatures,
                 &mut rng,
                 &colors,
+                attempts,
             );
-            checked += compare(&oracle, mode, case, &actual);
+            checked += compare(&oracle, mode, case, &actual, attempts.filename());
         }
     }
-    eprintln!("checked {checked} native ground-crossing checkpoint lines");
+    eprintln!("checked {checked} native connection checkpoint lines");
 }
 
 fn read_templates(installation: &mut Installation) -> Vec<u8> {
@@ -164,26 +176,22 @@ fn tent_colors(
         })
         .collect()
 }
-fn snapshot(
+fn run_attempts(
+    actual: &mut String,
     connecting: &mut ConnectingZones<'_, '_, '_>,
     objects: &mut ObjectArena,
     catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
     creatures: &CreatureCatalog,
     rng: &mut RetailRng,
-    colors: &[homm3_rmg::placement::KeyTentColor],
-) -> String {
-    let mut actual = String::new();
-    for zone in connecting.map().coverage().map().zones() {
-        assert!(connecting
-            .map()
-            .zone_entrances(zone.id())
-            .unwrap()
-            .is_empty());
-    }
+    attempts: Attempts,
+) {
     for zone_index in 0..connecting.map().coverage().map().zones().len() {
         let zone = connecting.map().coverage().map().zones()[zone_index];
         if zone.terrain() == Terrain::Water {
             continue;
+        }
+        if attempts == Attempts::GroundAndShipyard {
+            connecting.clear_connection_visits(zone.id()).unwrap();
         }
         let mut link_index = 0;
         for id in connecting.connection_ids() {
@@ -196,9 +204,14 @@ fn snapshot(
             if edge.connected {
                 continue;
             }
-            let result = connecting
+            let mut result = connecting
                 .try_ground_connection(id, objects, catalog, creatures, rng)
                 .unwrap();
+            if !result && attempts == Attempts::GroundAndShipyard {
+                result = connecting
+                    .try_shipyard_connection(id, objects, catalog, creatures, rng)
+                    .unwrap();
+            }
             writeln!(
                 actual,
                 "{zone_index} {current} {} {} {} {}",
@@ -209,6 +222,36 @@ fn snapshot(
             )
             .unwrap();
         }
+    }
+}
+fn snapshot(
+    connecting: &mut ConnectingZones<'_, '_, '_>,
+    objects: &mut ObjectArena,
+    catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
+    creatures: &CreatureCatalog,
+    rng: &mut RetailRng,
+    colors: &[homm3_rmg::placement::KeyTentColor],
+    attempts: Attempts,
+) -> String {
+    let mut actual = String::new();
+    for zone in connecting.map().coverage().map().zones() {
+        assert!(connecting
+            .map()
+            .zone_entrances(zone.id())
+            .unwrap()
+            .is_empty());
+    }
+    run_attempts(
+        &mut actual,
+        connecting,
+        objects,
+        catalog,
+        creatures,
+        rng,
+        attempts,
+    );
+    if attempts == Attempts::GroundAndShipyard {
+        write_water_state(&mut actual, connecting.map());
     }
     write_tents(&mut actual, connecting.map(), colors);
     write_objects(&mut actual, connecting.map(), objects, catalog);
@@ -280,6 +323,7 @@ fn write_objects(
         let geometry = objects.get(id).unwrap();
         let position = geometry.position().unwrap();
         let payload = match objects.payload(id).unwrap() {
+            ObjectPayload::Ownable => [3, -1, -1, -1],
             ObjectPayload::Base => [0, -1, -1, -1],
             ObjectPayload::Town(town) => [
                 1,
@@ -314,21 +358,20 @@ fn write_objects(
         .unwrap();
     }
 }
-fn compare(oracle: &Path, mode: &str, case: usize, actual: &str) -> usize {
-    let expected = std::fs::read_to_string(oracle.join(format!(
-        "{mode}-layout/case-{case}-candidate/ground-connections.txt"
-    )))
+fn compare(oracle: &Path, mode: &str, case: usize, actual: &str, filename: &str) -> usize {
+    let expected = std::fs::read_to_string(
+        oracle.join(format!("{mode}-layout/case-{case}-candidate/{filename}")),
+    )
     .unwrap();
     assert_eq!(
-        actual.split_whitespace().count(),
-        expected.split_whitespace().count(),
-        "{mode} case{case} field count"
+        actual.lines().count(),
+        expected.lines().count(),
+        "{mode} case{case} line count"
     );
     for (index, (a, b)) in actual.lines().zip(expected.lines()).enumerate() {
-        assert_eq!(
-            a.split_whitespace().collect::<Vec<_>>(),
-            b.split_whitespace().collect::<Vec<_>>(),
-            "{mode} case{case} line{index}"
+        assert!(
+            a.split_whitespace().eq(b.split_whitespace()),
+            "{mode} case{case} line{index}:\nactual: {a}\nexpected: {b}"
         );
     }
     eprintln!("{mode} case{case}: {} lines", actual.lines().count());
@@ -357,4 +400,41 @@ fn with_border_guards(bytes: &[u8]) -> Vec<u8> {
         result.extend_from_slice(b"\r\n");
     }
     result
+}
+
+fn write_water_state(actual: &mut String, map: &homm3_rmg::placement::PlacementMap<'_, '_, '_>) {
+    write!(actual, "roads").unwrap();
+    for position in map.road_targets() {
+        write!(
+            actual,
+            " {} {} {}",
+            position.point.x,
+            position.point.y,
+            position.level.index()
+        )
+        .unwrap();
+    }
+    actual.push('\n');
+    write!(actual, "visits").unwrap();
+    let side = map.coverage().map().raster().dimension();
+    for index in 0..map.terrain().tiles().len() {
+        let at = homm3_rmg::domain::WorldPosition {
+            point: homm3_rmg::geometry::Point::new(
+                (index % side).try_into().unwrap(),
+                (index / side % side).try_into().unwrap(),
+            ),
+            level: if index < side * side {
+                homm3_rmg::domain::Level::Surface
+            } else {
+                homm3_rmg::domain::Level::Underground
+            },
+        };
+        write!(
+            actual,
+            " {}",
+            u8::from(map.cell(at).unwrap().connection_visited())
+        )
+        .unwrap();
+    }
+    actual.push('\n');
 }

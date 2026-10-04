@@ -113,9 +113,9 @@ The library cannot yet generate a complete map.
    and individual path/obstacle/border transitions now use reusable storage.
    Tent availability follows the loaded prototype count. Retail's initial cursor
    uses named replay input or a typed fault until a native rescan initializes it.
-2. **Zone connections.** Finish shipyards, gates, portals, the per-edge dispatcher
+2. **Zone connections.** Finish gates, portals, the per-edge dispatcher
    and dry-zone junctions. Preparation, pathfinding, water-border repair, ground
-   crossings, border guards and key-tent reservations are implemented and have
+   crossings, shipyard attempts, border guards and key-tent reservations are implemented and have
    native checkpoint comparisons.
 3. **Mines.** Port fixed and density-driven mine placement and guards. Connect
    the existing guard selector to object creation, ownership and spatial state.
@@ -517,11 +517,31 @@ also checks empty entrance state and rejects previous-stage connection handles
 before consuming RNG. All 70 core tests and strict Clippy pass. Both reviewers
 are clean; their final coverage suggestion added direct reservation snapshots.
 
-Next implement shipyard ownable payloads, shared road targets and reusable
-water-flood visitation, then gates/portals and the per-edge dispatcher. Reuse
-existing placement, guard, entrance and path helpers. Portal protection rebuilds
-paths in place without refreezing the initial border scan; retain ordered portal
-ID lists for later road routing.
+Shipyard attempts now use a distinct ownable payload without claiming serialized
+object IDs. Road targets belong to the map and are shared by towns and shipyards.
+A reused LIFO stack floods open water, marks adjoining land without expanding it,
+and retains visit state across a zone's edge attempts. Clearing resets the entire
+source level. Shoreline fitting uses the first clear-water probe, while flooding
+uses the first water probe regardless of clearance. Both retain the native
+column-only bounds checks and flat addressing. The water-offset table and its
+ASCII diagram are shared with C++ through a canonical include fragment.
+
+Sixteen native per-edge ground-then-shipyard captures agree on 454 attempts,
+264 successes, 60 shipyards, RNG, road targets, visit flags, entrances, graph
+state, objects, counts, membership, paths, borders and tent reservations
+(520,284 checkpoint lines). Eight ordinary cases contain 71 monsters; eight
+forced-border cases contain 145 base objects and 38 monsters. Original native
+whole-map outputs remain byte-identical after the isolated probes. All 70 prior
+core tests and the new empty-family RNG-fault regression pass, as does strict
+Clippy. Both reviewers are clean after moving general helpers to shared modules
+and eliminating per-line temporary vectors from the snapshot comparator. The
+eight ordinary ground-only captures still match after the shared-state changes.
+
+Next implement gates, portals, both per-edge dispatcher passes and dry-zone
+junctions. Pass two must reflood existing shipyards in active-object order for
+each source zone. Reuse existing placement, guard, entrance and path helpers.
+Portal protection rebuilds paths in place without refreezing the initial border
+scan; retain ordered portal ID lists for later road routing.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

@@ -1,7 +1,7 @@
 //! Frozen border scans and per-record land crossing attempts.
 use super::{
-    BorderGuardCount, ConnectionError, GuardStrength, ObjectArena, PathWidth, PlacementError,
-    PlacementMap, RepairedWaterBorders, TownsPlaced,
+    BorderGuardCount, ConnectionError, ObjectArena, PathWidth, PlacementError, PlacementMap,
+    RepairedWaterBorders, TownsPlaced,
 };
 use crate::{
     boundaries::ZoneConnection,
@@ -50,7 +50,11 @@ impl CrossingState {
             .resize_with(zones.max(self.entrances.len()), Vec::new);
         Ok(())
     }
-    fn append_entrance(&mut self, zone: ZoneId, point: Point) -> Result<(), PlacementError> {
+    pub(super) fn append_entrance(
+        &mut self,
+        zone: ZoneId,
+        point: Point,
+    ) -> Result<(), PlacementError> {
         let entries = &mut self.entrances[zone.index()];
         entries.try_reserve(1)?;
         entries.push(point);
@@ -88,7 +92,10 @@ impl<'state, 'zones, 'tiles> RepairedWaterBorders<'state, 'zones, 'tiles> {
         })
     }
 }
-impl ConnectingZones<'_, '_, '_> {
+impl<'state, 'zones, 'tiles> ConnectingZones<'state, 'zones, 'tiles> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+        self.repaired.map_mut()
+    }
     /// Current shared terrain, cells, objects and directed graph state.
     #[must_use]
     pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
@@ -263,12 +270,7 @@ impl PlacementMap<'_, '_, '_> {
         if self.connections.candidates.is_empty() {
             return Ok(false);
         }
-        let mut guard_value = if connection.unguarded {
-            0
-        } else {
-            GuardStrength::from(self.coverage().map().request().strength())
-                .scale(connection.value)?
-        };
+        let mut guard_value = self.connection_guard_value(connection)?;
         // Native dead path with ordinary floods, which assign crossing cost >=10.
         if best == 1 && guard_value == 0 && !connection.border_guard {
             return Ok(true);

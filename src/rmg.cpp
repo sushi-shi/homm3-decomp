@@ -241,12 +241,9 @@ static inline bool isRmgEntranceOpenToNorth(TAdventureObjectType objectType)
 //   0 # # P 1
 //   2 . . . 3
 DATA(0x0069ce00)
-TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
-    TPoint(-3, 0),
-    TPoint(1, 0),
-    TPoint(-3, 1),
-    TPoint(1, 1)
-};
+TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] =
+#include "rmg_data/shipyard_water_offsets.inc"
+;
 
 // River-delta choice per coast side (east, south, west, north), for land and
 // then snow rivers: the nth (from 0) delta recommended for the end's terrain.

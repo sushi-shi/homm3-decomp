@@ -95,13 +95,11 @@ impl From<TryReserveError> for TownError {
 
 #[derive(Default, Debug)]
 pub(super) struct TownState {
-    road_targets: Vec<WorldPosition>,
     candidates: Vec<WorldPosition>,
     outline: OutlineWorkspace,
 }
 impl TownState {
     pub(super) fn reset(&mut self) {
-        self.road_targets.clear();
         self.candidates.clear();
     }
 }
@@ -131,7 +129,7 @@ impl TownsPlaced<'_, '_, '_> {
     /// Road targets in insertion order, without removing duplicates.
     #[must_use]
     pub fn road_targets(&self) -> &[WorldPosition] {
-        &self.map.towns.road_targets
+        self.map.road_targets()
     }
     /// RNG after town placement and the starting-town check.
     #[must_use]
@@ -455,7 +453,6 @@ impl PlacementMap<'_, '_, '_> {
         fort: Fort,
         rng: &mut RetailRng,
     ) -> Result<WorldPosition, TownError> {
-        self.towns.road_targets.try_reserve(1)?;
         let id = self.claim_object_id()?;
         let object = objects.create_town(catalog, prototype, id, owner, fort)?;
         let count =
@@ -464,7 +461,7 @@ impl PlacementMap<'_, '_, '_> {
         let position = self.towns.candidates[selected];
         self.register_object(objects, catalog, object, position)?;
         let entrance = entrance_position(catalog.get(prototype).unwrap().prototype(), position)?;
-        self.towns.road_targets.push(entrance);
+        self.append_road_target(entrance)?;
         self.open_entrance_approach(entrance)?;
         Ok(entrance)
     }

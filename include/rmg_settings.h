@@ -198,6 +198,10 @@ enum ERmgBorderGuardCount {
     RMG_SHIPYARD_BORDER_GUARDS = 3
 };
 
+enum ERmgShipyardConstants {
+    RMG_SHIPYARD_WATER_OFFSET_COUNT = 4
+};
+
 enum ERmgGroundCrossingLimits {
     RMG_BORDER_CELLS_PER_CROSSING = 40,
     RMG_MAXIMUM_CROSSING_COST = 100

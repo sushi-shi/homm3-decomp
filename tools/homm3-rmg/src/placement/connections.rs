@@ -1,12 +1,15 @@
 //! Branch carving and reservations preceding water islands and connection searches.
 
 use super::{
-    neighborhood::Neighborhood, BorderColor, PathReservation, PlacementError, PlacementMap,
-    TownsPlaced,
+    neighborhood::Neighborhood, BorderColor, GuardStrength, PathReservation, PlacementError,
+    PlacementMap, PlacementView, TownsPlaced,
 };
 use crate::{
+    boundaries::{BoundaryZone, ZoneConnection},
     domain::{Level, Terrain, WorldPosition},
     geometry::{GeometryError, Point, ZoneId},
+    object::ObjectKind,
+    prototype::{PreparedPrototype, PrototypeCatalog, PrototypeId},
     raw,
     rng::{RetailRng, RngCheckpoint},
     terrain::TerrainError,
@@ -32,6 +35,8 @@ pub enum ConnectionError {
     Guard(super::GuardPlacementError),
     /// A directed-record handle came from another connection stage.
     UnknownConnection(super::ConnectionId),
+    /// A whole-family draw attempted the native remainder with no prototypes.
+    EmptyFamily(crate::object::ObjectKind),
     /// Native completion marks this edge before dereferencing a missing reverse.
     MissingReverse {
         /// Already-completed edge's starting zone.
@@ -53,6 +58,9 @@ impl fmt::Display for ConnectionError {
             Self::Geometry(error) => error.fmt(f),
             Self::Terrain(error) => error.fmt(f),
             Self::Guard(error) => error.fmt(f),
+            Self::EmptyFamily(kind) => {
+                write!(f, "connection prototype family {} is empty", kind.index())
+            }
             Self::UnknownConnection(id) => {
                 write!(f, "connection {} belongs to another stage", id.index())
             }
@@ -119,6 +127,8 @@ pub(super) struct ConnectionScratch {
     pending: Vec<Segment>,
     branches: VecDeque<Segment>,
     pub(super) candidates: Vec<WorldPosition>,
+    pub(super) outline: crate::prototype::OutlineWorkspace,
+    pub(super) water_stack: Vec<WorldPosition>,
     pub(super) crossing: super::ground_connections::CrossingState,
     pub(super) flood: Worklist<WorldPosition>,
     pub(super) noise: super::island_noise::NoiseWorkspace,
@@ -129,6 +139,7 @@ impl ConnectionScratch {
         self.pending.clear();
         self.branches.clear();
         self.candidates.clear();
+        self.water_stack.clear();
         self.crossing.reset();
         self.flood.clear();
         self.noise.clear();
@@ -452,5 +463,85 @@ impl PlacementMap<'_, '_, '_> {
             }
         }
         Ok(())
+    }
+}
+
+// Whole-family selection performs its draw before the native zero-divisor fault.
+pub(super) fn draw_connection_prototype(
+    catalog: &PrototypeCatalog<'_>,
+    family: ObjectKind,
+    rng: &mut RetailRng,
+) -> Result<PrototypeId, ConnectionError> {
+    let draw = rng.draw();
+    let count =
+        u32::try_from(catalog.family(family).len()).map_err(|_| PlacementError::Arithmetic)?;
+    let index = draw
+        .checked_rem(count)
+        .ok_or(ConnectionError::EmptyFamily(family))?;
+    Ok(catalog
+        .at(family, index as usize)
+        .expect("remainder indexes admitted family"))
+}
+
+impl PlacementMap<'_, '_, '_> {
+    pub(super) fn connection_guard_value(
+        &self,
+        connection: ZoneConnection,
+    ) -> Result<i32, PlacementError> {
+        if connection.unguarded {
+            Ok(0)
+        } else {
+            GuardStrength::from(self.coverage().map().request().strength()).scale(connection.value)
+        }
+    }
+
+    pub(super) fn connection_object_fits(
+        &mut self,
+        entry: &PreparedPrototype<'_>,
+        position: WorldPosition,
+        zone: BoundaryZone,
+    ) -> Result<bool, PlacementError> {
+        let map = self.terrain.coverage().map();
+        let view = PlacementView {
+            side: map.raster().dimension(),
+            terrain: self.terrain.tiles(),
+            zones: map.raster().cells(),
+            cells: self.cells,
+        };
+        view.can_place(
+            entry,
+            position,
+            zone.id(),
+            zone.terrain(),
+            &mut self.connections.outline,
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        behavior::Behavior, placement_rules::PlacementRules, prototype::PrototypeSource,
+        request::MapVersion,
+    };
+
+    #[test]
+    fn empty_connection_family_faults_after_its_native_draw() {
+        let source =
+            PrototypeSource::parse(b"0\r\n", |_| Ok::<_, std::convert::Infallible>(None)).unwrap();
+        let rules =
+            PlacementRules::parse(b"header\r\nheader\r\nheader\r\n", Behavior::Hotfix).unwrap();
+        let catalog = source
+            .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
+            .unwrap();
+        let shipyard = ObjectKind::parse(i32::try_from(raw::SHIPYARD).unwrap()).unwrap();
+        let mut rng = RetailRng::new(1);
+        let mut expected = RetailRng::new(1);
+        expected.draw();
+        assert!(
+            matches!(draw_connection_prototype(&catalog, shipyard, &mut rng), Err(ConnectionError::EmptyFamily(kind)) if kind == shipyard)
+        );
+        assert_eq!(rng.checkpoint(), expected.checkpoint());
     }
 }
