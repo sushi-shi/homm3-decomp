@@ -26,26 +26,27 @@ TRmgLinePainterInterface::TRmgLinePainterInterface(const TRmgGridPoint& size)
 
 VA(0x004f9be0, 0xb7)
 MAC_ADDRESS(0x22210c, 0x1ec)
-TRmgLinePatternTable::TRmgLinePatternTable(u32 patternCount, const s32* patterns)
-    : m_frameCount(patternCount), m_framePatterns(0)
+TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const s32* framePatterns)
+    : m_frameCount(frameCount), m_framePatterns(0)
 {
     s32* allocated = new s32[m_frameCount];
     m_framePatterns = allocated;
     if (!allocated)
         throw TAllocationFailure();
-    std::copy(patterns, patterns + m_frameCount, m_framePatterns);
-    for (u32 value = 0; value < 9; ++value) {
+    std::copy(framePatterns, framePatterns + m_frameCount, m_framePatterns);
+    for (u32 value = LINE_END_S; value < LINE_PATTERN_COUNT; ++value) {
         m_ranges[value].m_firstFrame = 0;
         m_ranges[value].m_frameCount = 0;
     }
-    s32 previous = m_framePatterns[0];
-    ++m_ranges[previous].m_frameCount;
+    // Each pattern occupies one contiguous frame range.
+    s32 runPattern = m_framePatterns[0];
+    ++m_ranges[runPattern].m_frameCount;
     for (u32 index = 1; index < m_frameCount; ++index) {
-        if (m_framePatterns[index] != previous) {
-            previous = m_framePatterns[index];
-            m_ranges[previous].m_firstFrame = index;
+        if (m_framePatterns[index] != runPattern) {
+            runPattern = m_framePatterns[index];
+            m_ranges[runPattern].m_firstFrame = index;
         }
-        ++m_ranges[previous].m_frameCount;
+        ++m_ranges[runPattern].m_frameCount;
     }
 }
 
@@ -62,10 +63,27 @@ TRmgLinePatternTable::~TRmgLinePatternTable()
 // This library-side copy is retained separately from the terrain selector's
 // 0x642c00 table. Retail 0x4f9df0 indexes it with the two bytes from 0x63ff1c.
 // Values and row order are read from the pinned image, not inferred rotations.
+// Neighbour direction order for each (flipX, flipY) reflection; the same
+// values as g_rmgReflectedNeighbours. A canonical pattern's direction d reads
+// neighbour order[d]. North is up; each grid puts order[d] at d.
+//   none      flipY     flipX     both
+//   NW N NE   SW S SE   NE N NW   SE S SW
+//   W  .  E   W  .  E   E  .  W   E  .  W
+//   SW S SE   NW N NE   SE S SW   NE N NW
 DATA(0x0063fe9c)
-static const s32 g_rmgLineReflectedNeighbours[2][2][8] = {
-    {{0, 1, 2, 3, 4, 5, 6, 7}, {4, 3, 2, 1, 0, 7, 6, 5}},
-    {{0, 7, 6, 5, 4, 3, 2, 1}, {4, 5, 6, 7, 0, 1, 2, 3}}
+static const s32 g_rmgLineReflectedNeighbours[2][2][TILE_DIR_COUNT] = {
+    {
+        {TILE_DIR_NORTH, TILE_DIR_NORTHEAST, TILE_DIR_EAST, TILE_DIR_SOUTHEAST,
+         TILE_DIR_SOUTH, TILE_DIR_SOUTHWEST, TILE_DIR_WEST, TILE_DIR_NORTHWEST}, // none
+        {TILE_DIR_SOUTH, TILE_DIR_SOUTHEAST, TILE_DIR_EAST, TILE_DIR_NORTHEAST,
+         TILE_DIR_NORTH, TILE_DIR_NORTHWEST, TILE_DIR_WEST, TILE_DIR_SOUTHWEST} // flipY
+    },
+    {
+        {TILE_DIR_NORTH, TILE_DIR_NORTHWEST, TILE_DIR_WEST, TILE_DIR_SOUTHWEST,
+         TILE_DIR_SOUTH, TILE_DIR_SOUTHEAST, TILE_DIR_EAST, TILE_DIR_NORTHEAST}, // flipX
+        {TILE_DIR_SOUTH, TILE_DIR_SOUTHWEST, TILE_DIR_WEST, TILE_DIR_NORTHWEST,
+         TILE_DIR_NORTH, TILE_DIR_NORTHEAST, TILE_DIR_EAST, TILE_DIR_SOUTHEAST} // both
+    }
 };
 
 DATA(0x0063ff1c)
@@ -81,20 +99,20 @@ void selectRmgLinePattern(
 {
     if (neighbours[TILE_DIR_NORTH] && neighbours[TILE_DIR_EAST]
         && neighbours[TILE_DIR_SOUTH] && neighbours[TILE_DIR_WEST]) {
-        pattern = 8;
+        pattern = LINE_CROSS;
         flipX = 0;
         flipY = 0;
         return;
     }
     if (neighbours[TILE_DIR_NORTH] && neighbours[TILE_DIR_SOUTH]) {
         if (neighbours[TILE_DIR_EAST]) {
-            pattern = 6;
+            pattern = LINE_NES;
             flipX = 0;
         } else if (neighbours[TILE_DIR_WEST]) {
-            pattern = 6;
+            pattern = LINE_NES;
             flipX = 1;
         } else {
-            pattern = 2;
+            pattern = LINE_NS;
             flipX = 0;
         }
         flipY = 0;
@@ -102,50 +120,50 @@ void selectRmgLinePattern(
     }
     if (neighbours[TILE_DIR_EAST] && neighbours[TILE_DIR_WEST]) {
         if (neighbours[TILE_DIR_SOUTH]) {
-            pattern = 7;
+            pattern = LINE_ESW;
             flipY = 0;
         } else if (neighbours[TILE_DIR_NORTH]) {
-            pattern = 7;
+            pattern = LINE_ESW;
             flipY = 1;
         } else {
-            pattern = 3;
+            pattern = LINE_EW;
             flipY = 0;
         }
         flipX = 0;
         return;
     }
-    b8 hasCornerVariant = table->m_ranges[5].m_frameCount > 0;
+    b8 hasCornerVariant = table->m_ranges[LINE_SE_VARIANT].m_frameCount > 0;
     for (u32 reflection = 0; reflection < 4; ++reflection) {
         const s32* order = g_rmgLineReflectedNeighbours
             [g_rmgLineReflections[reflection][0]][g_rmgLineReflections[reflection][1]];
-        if (neighbours[order[2]] && neighbours[order[4]]) {
-            if (hasCornerVariant && (neighbours[order[1]] || neighbours[order[5]]))
-                pattern = 5;
+        if (neighbours[order[TILE_DIR_EAST]] && neighbours[order[TILE_DIR_SOUTH]]) {
+            if (hasCornerVariant && (neighbours[order[TILE_DIR_NORTHEAST]] || neighbours[order[TILE_DIR_SOUTHWEST]]))
+                pattern = LINE_SE_VARIANT;
             else
-                pattern = 4;
+                pattern = LINE_SE;
             flipX = g_rmgLineReflections[reflection][0];
             flipY = g_rmgLineReflections[reflection][1];
             return;
         }
     }
-    if (table->m_ranges[0].m_frameCount > 0) {
+    if (table->m_ranges[LINE_END_S].m_frameCount > 0) {
         if (neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST]) {
-            pattern = 1;
+            pattern = LINE_END_E;
             flipX = neighbours[TILE_DIR_WEST];
             flipY = 0;
         } else {
             if (neighbours[TILE_DIR_SOUTH]) {
-                pattern = 0;
+                pattern = LINE_END_S;
                 flipX = 0;
                 flipY = 0;
             } else {
-                pattern = 0;
+                pattern = LINE_END_S;
                 flipX = 0;
                 flipY = 1;
             }
         }
     } else {
-        pattern = neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST] ? 3 : 2;
+        pattern = neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST] ? LINE_EW : LINE_NS;
         flipX = 0;
         flipY = 0;
     }
@@ -157,9 +175,7 @@ TRmgRiverPainter::~TRmgRiverPainter()
 {
 }
 
-// The first virtual slot returns the shared river pattern table. The argument
-// selects within that table at later painting sites and is intentionally not
-// consumed by this accessor.
+// All river types use the same pattern table, so the argument is ignored.
 VA(0x0055edb0, 0x08)
 MAC_ADDRESS(0x253ad8, 0x8)  // vtables 0x641174/0x641190; Complete-only
 TRmgLinePatternTable* TRmgRiverLinePainter::getPatternTable(s32)
@@ -190,14 +206,13 @@ void TRmgRiverLinePainter::getTile(const TRmgGridPoint& point, TRmgTerrainTile& 
     tile = snapshot;
 }
 
-// Slot 3 of all four river/road painter vtables forwards to the adapter's
-// overlay query and accepts exactly the two retained paintable values.
+// Roads and rivers cannot be painted over water or rock terrain.
 VA(0x0055ee00, 0x28)
 MAC_ADDRESS(0x253b64, 0x44)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
 s32 TRmgRiverLinePainter::isBlocked(const TRmgGridPoint& point)
 {
-    s32 overlay = m_adapter->getTerrain(point);
-    if (overlay == eTerrainWater || overlay == eTerrainRock)
+    s32 terrain = m_adapter->getTerrain(point);
+    if (terrain == eTerrainWater || terrain == eTerrainRock)
         return 1;
     return 0;
 }
@@ -243,8 +258,8 @@ void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const TRmgTerrainT
 MAC_ADDRESS(0x25404c, 0x44)
 s32 TRmgRoadLinePainter::isBlocked(const TRmgGridPoint& point)
 {
-    s32 overlay = m_adapter->getTerrain(point);
-    if (overlay == eTerrainWater || overlay == eTerrainRock)
+    s32 terrain = m_adapter->getTerrain(point);
+    if (terrain == eTerrainWater || terrain == eTerrainRock)
         return 1;
     return 0;
 }
@@ -349,6 +364,8 @@ TRmgHalfEdge::TRmgHalfEdge(
     initialize();
 }
 
+// Replacing the second pointer exchange with std::swap leaves this body exact
+// but lowers the Voronoi constructor from 100% to 83.35% through expansion.
 VA(0x005fcf60, 0x31)
 MAC_ADDRESS(0x25c184, 0x34) // anchor-callee 0x5fd308; thiscall, ret 4; Complete-only
 void TRmgHalfEdge::splice(TRmgHalfEdge* other)
@@ -514,6 +531,9 @@ TRmgHalfEdge* TRmgVoronoi::locate(TPoint point)
 
 // Provisional edge flip: retail saves both predecessors before detach,
 // transfers their opposite sites/zones, and splices into the new rings.
+// Using the opposite-site/zone and left-face accessors throughout this flip,
+// detach and addSite's closing test lowers addSite from 100% to 93.74%; the
+// other support functions remain exact. Preserve the matched helper boundaries.
 MAC_ADDRESS(0x25c204, 0xb0)
 static void flipRmgEdge(TRmgHalfEdge* edge)
 {

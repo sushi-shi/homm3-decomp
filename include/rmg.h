@@ -1466,9 +1466,9 @@ SIZE(TRmgLinePatternRange, 0x8);
 struct TRmgLinePatternTable {
     unsigned int m_frameCount;
     int* m_framePatterns;
-    TRmgLinePatternRange m_ranges[9];
+    TRmgLinePatternRange m_ranges[LINE_PATTERN_COUNT];
 
-    TRmgLinePatternTable(unsigned int patternCount, const int* patterns);
+    TRmgLinePatternTable(unsigned int frameCount, const int* framePatterns);
     ~TRmgLinePatternTable();
 };
 SIZE(TRmgLinePatternTable, 0x50);

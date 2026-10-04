@@ -200,8 +200,8 @@ public:
     virtual ~TRmgTerrainRule() = 0;
     virtual b8 hasSpecialBaseFrames() = 0;
     virtual b8 isSpecialFrame(s32 frame) = 0;
-    virtual s32 getTransition(s32 index) = 0;
-    virtual s32 selectBaseFrame(s32 value, s32 oldFrame) = 0;
+    virtual s32 getTransition(s32 frame) = 0;
+    virtual s32 selectBaseFrame(s32 strength, s32 oldFrame) = 0;
     virtual s32 selectTransitionFrame(
         s32 transition,
         TRmgTerrainFlip requestedFlip,
@@ -231,7 +231,7 @@ extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
 // The static initializer at 0x5b3a10 passes this complete global as `this`.
 // Complete-only owner spelling is provisional.
 struct TRmgTerrainPatternTable {
-    TRmgTerrainPatternRange m_ranges[116];
+    TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT * 2 * 2];
     TRmgTerrainPatternTable();
 };
 DATA(0x006a4158)
@@ -242,10 +242,10 @@ extern TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 // original Complete-only class name is unavailable.
 class TRmgPatternTerrainRule : public TRmgTerrainRule {
 public:
-    s32 m_specialFrameChance;                         // +0x08
+    s32 m_specialFrameChance;                  // +0x08: percentage at strength 8
     u32 m_entryCount;                  // +0x0c
     const TRmgTerrainPatternEntry* m_entries;   // +0x10
-    TRmgTerrainPatternRange m_ranges[58];        // +0x14
+    TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT * 2];        // +0x14
 
     TRmgPatternTerrainRule(b8 blendsWithOtherTerrain,
         b8 allowsSeparatedNeighbours, s32 specialFrameChance,
@@ -255,8 +255,8 @@ public:
     // both concrete rule vtables use the deleting wrapper at 0x5b3a50.
     virtual b8 hasSpecialBaseFrames();
     virtual b8 isSpecialFrame(s32 frame);
-    virtual s32 getTransition(s32 index);
-    virtual s32 selectBaseFrame(s32 value, s32 oldFrame);
+    virtual s32 getTransition(s32 frame);
+    virtual s32 selectBaseFrame(s32 strength, s32 oldFrame);
     virtual s32 selectTransitionFrame(
         s32 transition,
         TRmgTerrainFlip requestedFlip,
@@ -273,8 +273,8 @@ public:
     TRmgTableTerrainRule();
     virtual b8 hasSpecialBaseFrames();
     virtual b8 isSpecialFrame(s32 frame);
-    virtual s32 getTransition(s32 index);
-    virtual s32 selectBaseFrame(s32 value, s32 oldFrame);
+    virtual s32 getTransition(s32 frame);
+    virtual s32 selectBaseFrame(s32 strength, s32 oldFrame);
     virtual s32 selectTransitionFrame(
         s32 transition,
         TRmgTerrainFlip requestedFlip,
@@ -292,13 +292,6 @@ struct TRmgTerrainGap {
     u32 m_length;
 };
 
-enum TRmgTerrainTransitionCase {
-    RMG_TERRAIN_FIRST_DIAGONAL_LOW = 2,
-    RMG_TERRAIN_SECOND_DIAGONAL_LOW = 5,
-    RMG_TERRAIN_FIRST_DIAGONAL_HIGH = 8,
-    RMG_TERRAIN_SECOND_DIAGONAL_HIGH = 11
-};
-
 // Provisional role name. Allocation at 0x5b7250 proves the 0x44-byte object;
 // the constructor at 0x5b45f0 proves the field order and the two Dinkumware
 // point sets followed by the packed-cell vector.
@@ -309,14 +302,16 @@ public:
     s32 m_paintTerrain;                               // +0x04
     s32 m_transitionStrength;                         // +0x08
     TRmgGridPoint m_size;                             // +0x0c
+    // Cells of the painted terrain that may need gap repair.
     std::set<TRmgGridPoint> m_repairPoints;            // +0x14
+    // Adjacent cells of another terrain, checked after repair.
     std::set<TRmgGridPoint> m_otherTerrainPoints;          // +0x24
     std::vector<TRmgPackedTerrainCell> m_packedCells;   // +0x34
 
     TRmgTerrainPainter(
         TRmgMapInterface* newAdapter,
-        s32 newParameterA,
-        s32 newTransitionStrength);
+        s32 terrain,
+        s32 strength);
     ~TRmgTerrainPainter();
 
     void finish();

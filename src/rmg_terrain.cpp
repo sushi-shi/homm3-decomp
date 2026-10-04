@@ -68,7 +68,6 @@ void TRmgLinePainterTile::setTile(const TRmgTerrainTile& tile)
 
 // The point walker tests AL after slot 3 (0x4fa400..0x4fa405). Keep that
 // low-byte gate while preserving the retained virtual's integer-return ABI.
-// Its provisional isBlocked name is inverted here: nonzero prevents painting.
 b8 TRmgLinePainterTile::isBlocked()
 {
     return m_painter->isBlocked(m_point);
@@ -226,9 +225,9 @@ VA(0x004fa280, 0x30)
 MAC_ADDRESS(0x222c40, 0x4c) // anchor-caller 0x55ee50/0x55f3b0; thiscall ret 0xc
 TRmgLineWalker::TRmgLineWalker(
     TRmgLinePainterInterface* newPainter,
-    s32 newRiverType,
+    s32 newLineType,
     const TRmgGridPoint& start)
-    : m_painter(newPainter), m_lineType(newRiverType), m_position(start)
+    : m_painter(newPainter), m_lineType(newLineType), m_position(start)
 {
     paintPoint(m_position);
 }
@@ -324,23 +323,23 @@ TRmgPatternTerrainRule::TRmgPatternTerrainRule(
     : TRmgTerrainRule(blendsWithOtherTerrain, allowsSeparatedNeighbours),
       m_specialFrameChance(specialFrameChance), m_entryCount(entryCount), m_entries(entries)
 {
-    s32 frame = m_entries[0].m_transition;
+    s32 transition = m_entries[0].m_transition;
     b8 special = m_entries[0].m_special;
-    s32 range = frame * 2 + special;
+    s32 range = transition * 2 + special;
     ++m_ranges[range].m_frameCount;
     for (u32 index = 1; index < m_entryCount; ++index) {
         const TRmgTerrainPatternEntry& entry = m_entries[index];
-        if (entry.m_transition != frame || entry.m_special != special) {
-            frame = entry.m_transition;
+        if (entry.m_transition != transition || entry.m_special != special) {
+            transition = entry.m_transition;
             special = entry.m_special;
-            range = frame * 2 + special;
+            range = transition * 2 + special;
             m_ranges[range].m_firstFrame = index;
         }
         ++m_ranges[range].m_frameCount;
     }
 }
 
-// Vtable 0x642c98 slot 1 tests the count for pattern value 1. The constructor
+// Tests whether the special base-frame range is nonempty. The constructor
 // at 0x5b3780 builds that range at +0x1c/+0x20 from its supplied entry array.
 VA(0x005b3840, 0x0c)
 MAC_ADDRESS(0x259dac, 0x14)  // Complete-only pattern terrain rule
@@ -368,9 +367,9 @@ b8 TRmgPatternTerrainRule::isSpecialFrame(s32 frame)
 // the first dword of the requested entry through the pointer at +0x10.
 VA(0x005b3880, 0x10)
 MAC_ADDRESS(0x254cf8, 0x10)  // Complete-only pattern terrain rule
-s32 TRmgPatternTerrainRule::getTransition(s32 index)
+s32 TRmgPatternTerrainRule::getTransition(s32 frame)
 {
-    return m_entries[index].m_transition;
+    return m_entries[frame].m_transition;
 }
 
 // The base-frame selector keeps a zero-tagged old entry. Otherwise it picks
@@ -378,13 +377,13 @@ s32 TRmgPatternTerrainRule::getTransition(s32 index)
 // back to the primary range, then chooses uniformly within that range.
 VA(0x005b3890, 0x58)
 MAC_ADDRESS(0x254d08, 0xc8)
-s32 TRmgPatternTerrainRule::selectBaseFrame(s32 value, s32 oldFrame)
+s32 TRmgPatternTerrainRule::selectBaseFrame(s32 strength, s32 oldFrame)
 {
     if (oldFrame == -1 || m_entries[oldFrame].m_transition != 0) {
         TRmgTerrainPatternRange* range;
         if (m_ranges[1].m_frameCount > 0) {
             u32 chance =
-                static_cast<u32>(m_specialFrameChance * value) / 8;
+                static_cast<u32>(m_specialFrameChance * strength) / 8;
             if (static_cast<u32>(rand() % 100) < chance)
                 range = &m_ranges[1];
             else
@@ -423,19 +422,19 @@ VA(0x005b3940, 0xc5)
 MAC_ADDRESS(0x254e58, 0xe4)
 TRmgTerrainPatternTable::TRmgTerrainPatternTable()
 {
-    s32 frame = g_rmgTerrainPatterns[0].m_transition;
+    s32 transition = g_rmgTerrainPatterns[0].m_transition;
     b8 flipX = g_rmgTerrainPatterns[0].m_flipX;
     b8 flipY = g_rmgTerrainPatterns[0].m_flipY;
     TRmgTerrainPatternRange* range =
-        &m_ranges[(frame * 2 + flipX) * 2 + flipY];
+        &m_ranges[(transition * 2 + flipX) * 2 + flipY];
     ++range->m_frameCount;
     for (u32 index = 1; index < 48; ++index) {
-        if (g_rmgTerrainPatterns[index].m_transition != frame || g_rmgTerrainPatterns[index].m_flipX != flipX
+        if (g_rmgTerrainPatterns[index].m_transition != transition || g_rmgTerrainPatterns[index].m_flipX != flipX
             || g_rmgTerrainPatterns[index].m_flipY != flipY) {
-            frame = g_rmgTerrainPatterns[index].m_transition;
+            transition = g_rmgTerrainPatterns[index].m_transition;
             flipX = g_rmgTerrainPatterns[index].m_flipX;
             flipY = g_rmgTerrainPatterns[index].m_flipY;
-            range = &m_ranges[(frame * 2 + flipX) * 2 + flipY];
+            range = &m_ranges[(transition * 2 + flipX) * 2 + flipY];
             range->m_firstFrame = index;
         }
         ++range->m_frameCount;
@@ -464,9 +463,9 @@ VA_COMPGEN(0x005b3a50, 0x21, SCALAR_DELETING_DTOR, TRmgTableTerrainRule)
 
 VA(0x005b3a80, 0x11)
 MAC_ADDRESS(0x254f74, 0x10)
-s32 TRmgTableTerrainRule::getTransition(s32 index)
+s32 TRmgTableTerrainRule::getTransition(s32 frame)
 {
-    return g_rmgTerrainPatterns[index].m_transition;
+    return g_rmgTerrainPatterns[frame].m_transition;
 }
 
 VA(0x005b3aa0, 0x31)
@@ -513,9 +512,19 @@ s32 __fastcall selectTerrainTransition(
 //   W  .  E   W  .  E   E  .  W   E  .  W
 //   SW S SE   NW N NE   SE S SW   NE N NW
 DATA(0x00642c00)
-const s32 g_rmgReflectedNeighbours[2][2][8] = {
-    {{0, 1, 2, 3, 4, 5, 6, 7}, {4, 3, 2, 1, 0, 7, 6, 5}},
-    {{0, 7, 6, 5, 4, 3, 2, 1}, {4, 5, 6, 7, 0, 1, 2, 3}}
+const s32 g_rmgReflectedNeighbours[2][2][TILE_DIR_COUNT] = {
+    {
+        {TILE_DIR_NORTH, TILE_DIR_NORTHEAST, TILE_DIR_EAST, TILE_DIR_SOUTHEAST,
+         TILE_DIR_SOUTH, TILE_DIR_SOUTHWEST, TILE_DIR_WEST, TILE_DIR_NORTHWEST}, // none
+        {TILE_DIR_SOUTH, TILE_DIR_SOUTHEAST, TILE_DIR_EAST, TILE_DIR_NORTHEAST,
+         TILE_DIR_NORTH, TILE_DIR_NORTHWEST, TILE_DIR_WEST, TILE_DIR_SOUTHWEST} // flipY
+    },
+    {
+        {TILE_DIR_NORTH, TILE_DIR_NORTHWEST, TILE_DIR_WEST, TILE_DIR_SOUTHWEST,
+         TILE_DIR_SOUTH, TILE_DIR_SOUTHEAST, TILE_DIR_EAST, TILE_DIR_NORTHEAST}, // flipX
+        {TILE_DIR_SOUTH, TILE_DIR_SOUTHWEST, TILE_DIR_WEST, TILE_DIR_NORTHWEST,
+         TILE_DIR_NORTH, TILE_DIR_NORTHEAST, TILE_DIR_EAST, TILE_DIR_SOUTHEAST} // both
+    }
 };
 
 // Provisional value-return helper, auto-inlined at every selector site.
@@ -576,182 +585,182 @@ s32 __fastcall selectTerrainTransition(
     u32 i;
     for (i = 0; i < 4; ++i) {
         const s32* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            if (neighbours[order[1]] == RMG_NEIGHBOUR_HARD_EDGE &&
-                neighbours[order[5]] == RMG_NEIGHBOUR_HARD_EDGE) {
+        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            if (neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE &&
+                neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
                 *flip = flips[i];
-                return 28;
+                return SHAPE_E_S_BLEND_NE_SW_HARD;
             }
-            if (neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            if (neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
                 *flip = flips[i];
-                return 27;
-            }
-        }
-    }
-    for (i = 0; i < 4; ++i) {
-        const s32* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[0]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[6]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            if (neighbours[order[3]] != RMG_NEIGHBOUR_NO_EDGE) {
-                *flip = flips[i];
-                return neighbours[order[3]] == RMG_NEIGHBOUR_BLEND_EDGE ? 23 : 25;
-            }
-        } else if (neighbours[order[0]] == RMG_NEIGHBOUR_HARD_EDGE &&
-                   neighbours[order[6]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            if (neighbours[order[3]] != RMG_NEIGHBOUR_NO_EDGE) {
-                *flip = flips[i];
-                return neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE ? 24 : 26;
+                return SHAPE_E_S_BLEND_SE_HARD;
             }
         }
     }
     for (i = 0; i < 4; ++i) {
         const s32* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[2]] == RMG_NEIGHBOUR_HARD_EDGE &&
-            neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            if (neighbours[order[5]] != RMG_NEIGHBOUR_HARD_EDGE) {
+        if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            if (neighbours[order[TILE_DIR_SOUTHEAST]] != RMG_NEIGHBOUR_NO_EDGE) {
                 *flip = flips[i];
-                return 21;
+                return neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE ? SHAPE_N_W_SE_BLEND : SHAPE_N_W_BLEND_SE_HARD;
+            }
+        } else if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_HARD_EDGE &&
+                   neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            if (neighbours[order[TILE_DIR_SOUTHEAST]] != RMG_NEIGHBOUR_NO_EDGE) {
+                *flip = flips[i];
+                return neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE ? SHAPE_N_W_SE_HARD : SHAPE_N_W_HARD_SE_BLEND;
+            }
+        }
+    }
+    for (i = 0; i < 4; ++i) {
+        const s32* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
+        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            if (neighbours[order[TILE_DIR_SOUTHWEST]] != RMG_NEIGHBOUR_HARD_EDGE) {
+                *flip = flips[i];
+                return SHAPE_E_HARD_SW_BLEND;
             } else {
                 *flip = makeTerrainFlip(!flips[i].m_flipX, !flips[i].m_flipY);
-                return 8;
+                return SHAPE_N_W_HARD;
             }
         }
-        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[4]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            if (neighbours[order[1]] != RMG_NEIGHBOUR_HARD_EDGE) {
+        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            if (neighbours[order[TILE_DIR_NORTHEAST]] != RMG_NEIGHBOUR_HARD_EDGE) {
                 *flip = flips[i];
-                return 22;
+                return SHAPE_S_HARD_NE_BLEND;
             } else {
                 *flip = makeTerrainFlip(!flips[i].m_flipX, !flips[i].m_flipY);
-                return 8;
+                return SHAPE_N_W_HARD;
             }
         }
     }
     for (i = 0; i < 4; ++i) {
         const s32* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_BLEND_EDGE) {
             *flip = flips[i];
-            if (neighbours[order[5]] == RMG_NEIGHBOUR_HARD_EDGE)
-                return 17;
-            if (neighbours[order[1]] == RMG_NEIGHBOUR_HARD_EDGE)
-                return 18;
+            if (neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE)
+                return SHAPE_E_BLEND_SW_HARD;
+            if (neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE)
+                return SHAPE_S_BLEND_NE_HARD;
         }
     }
     for (i = 0; i < 4; ++i) {
         const s32* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[0]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[6]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+        if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
             *flip = flips[i];
-            return 2;
+            return SHAPE_N_W_BLEND;
         }
-        if (neighbours[order[0]] == RMG_NEIGHBOUR_HARD_EDGE &&
-            neighbours[order[6]] == RMG_NEIGHBOUR_HARD_EDGE) {
+        if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
             *flip = flips[i];
-            return 8;
-        }
-    }
-    for (i = 0; i < 4; ++i) {
-        const s32* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[5]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[i];
-            return 17;
-        }
-        if (neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[1]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[i];
-            return 18;
-        }
-        if (neighbours[order[2]] == RMG_NEIGHBOUR_HARD_EDGE &&
-            neighbours[order[5]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            *flip = flips[i];
-            return 21;
-        }
-        if (neighbours[order[4]] == RMG_NEIGHBOUR_HARD_EDGE &&
-            neighbours[order[1]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            *flip = flips[i];
-            return 22;
-        }
-        if ((neighbours[order[6]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-             neighbours[order[1]] == RMG_NEIGHBOUR_BLEND_EDGE) ||
-            (neighbours[order[0]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-             neighbours[order[5]] == RMG_NEIGHBOUR_BLEND_EDGE)) {
-            *flip = flips[i];
-            return 2;
-        }
-        if ((neighbours[order[6]] == RMG_NEIGHBOUR_HARD_EDGE &&
-             neighbours[order[1]] == RMG_NEIGHBOUR_HARD_EDGE) ||
-            (neighbours[order[0]] == RMG_NEIGHBOUR_HARD_EDGE &&
-             neighbours[order[5]] == RMG_NEIGHBOUR_HARD_EDGE)) {
-            *flip = flips[i];
-            return 8;
+            return SHAPE_N_W_HARD;
         }
     }
     for (i = 0; i < 4; ++i) {
         const s32* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
+        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
             *flip = flips[i];
-            return 19;
+            return SHAPE_E_BLEND_SW_HARD;
         }
-        if (neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
+        if (neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
             *flip = flips[i];
-            return 20;
+            return SHAPE_S_BLEND_NE_HARD;
         }
-    }
-    for (i = 0; i < 4; ++i) {
-        const s32* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[0]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
             *flip = flips[i];
-            return 4;
+            return SHAPE_E_HARD_SW_BLEND;
         }
-        if (neighbours[order[0]] == RMG_NEIGHBOUR_HARD_EDGE) {
+        if (neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
             *flip = flips[i];
-            return 10;
+            return SHAPE_S_HARD_NE_BLEND;
         }
-        if (neighbours[order[6]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+        if ((neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+             neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE) ||
+            (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+             neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_BLEND_EDGE)) {
             *flip = flips[i];
-            return 3;
+            return SHAPE_N_W_BLEND;
         }
-        if (neighbours[order[6]] == RMG_NEIGHBOUR_HARD_EDGE) {
+        if ((neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_HARD_EDGE &&
+             neighbours[order[TILE_DIR_NORTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) ||
+            (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_HARD_EDGE &&
+             neighbours[order[TILE_DIR_SOUTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE)) {
             *flip = flips[i];
-            return 9;
-        }
-    }
-    for (i = 0; i < 4; ++i) {
-        const s32* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[7]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[3]] == RMG_NEIGHBOUR_BLEND_EDGE) {
-            *flip = flips[i];
-            return 14;
-        }
-        if (neighbours[order[7]] == RMG_NEIGHBOUR_BLEND_EDGE &&
-            neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[i];
-            return 15;
-        }
-        if (neighbours[order[7]] == RMG_NEIGHBOUR_HARD_EDGE &&
-            neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
-            *flip = flips[i];
-            return 16;
+            return SHAPE_N_W_HARD;
         }
     }
     for (i = 0; i < 4; ++i) {
         const s32* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
-        if (neighbours[order[3]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+        if (neighbours[order[TILE_DIR_EAST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
             *flip = flips[i];
-            return 5;
+            return SHAPE_E_BLEND_SE_HARD;
         }
-        if (neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
+        if (neighbours[order[TILE_DIR_SOUTH]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
             *flip = flips[i];
-            return 11;
+            return SHAPE_S_BLEND_SE_HARD;
+        }
+    }
+    for (i = 0; i < 4; ++i) {
+        const s32* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
+        if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[i];
+            return SHAPE_N_BLEND;
+        }
+        if (neighbours[order[TILE_DIR_NORTH]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return SHAPE_N_HARD;
+        }
+        if (neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[i];
+            return SHAPE_W_BLEND;
+        }
+        if (neighbours[order[TILE_DIR_WEST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return SHAPE_W_HARD;
+        }
+    }
+    for (i = 0; i < 4; ++i) {
+        const s32* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
+        if (neighbours[order[TILE_DIR_NORTHWEST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[i];
+            return SHAPE_NW_SE_BLEND;
+        }
+        if (neighbours[order[TILE_DIR_NORTHWEST]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return SHAPE_NW_BLEND_SE_HARD;
+        }
+        if (neighbours[order[TILE_DIR_NORTHWEST]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return SHAPE_NW_SE_HARD;
+        }
+    }
+    for (i = 0; i < 4; ++i) {
+        const s32* order = g_rmgReflectedNeighbours[flips[i].m_flipX][flips[i].m_flipY];
+        if (neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[i];
+            return SHAPE_SE_BLEND;
+        }
+        if (neighbours[order[TILE_DIR_SOUTHEAST]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return SHAPE_SE_HARD;
         }
     }
     *flip = makeTerrainFlip(0, 0);
-    return 0;
+    return SHAPE_FILL;
 }
 
 // The explicit output temporary uses VC6's non-const-reference binding
@@ -1276,16 +1285,16 @@ void TRmgTerrainPainter::paintTransitions()
                 s32 transition;
                 TRmgTerrainFlip flip;
                 transition = selectTerrainTransition(neighbours, &flip);
-                if (transition == RMG_TERRAIN_FIRST_DIAGONAL_LOW) {
+                if (transition == SHAPE_N_W_BLEND) {
                     if (checkFirstDiagonal(point, flip))
                         transition = 6;
-                } else if (transition == RMG_TERRAIN_FIRST_DIAGONAL_HIGH) {
+                } else if (transition == SHAPE_N_W_HARD) {
                     if (checkFirstDiagonal(point, flip))
                         transition = 12;
-                } else if (transition == RMG_TERRAIN_SECOND_DIAGONAL_LOW) {
+                } else if (transition == SHAPE_SE_BLEND) {
                     if (checkSecondDiagonal(point, flip))
                         transition = 7;
-                } else if (transition == RMG_TERRAIN_SECOND_DIAGONAL_HIGH) {
+                } else if (transition == SHAPE_SE_HARD) {
                     if (checkSecondDiagonal(point, flip))
                         transition = 13;
                 }

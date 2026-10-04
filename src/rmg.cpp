@@ -1476,8 +1476,6 @@ void TRmgRiverMapAdapter::setLineType(const TRmgGridPoint& point, int value)
 // returning the query's reference, rather than returning the named output.
 // Value-result forwarding, cv qualification and signed-dimension conversion
 // controls do not recover that source/result ownership (37B or wrong 39B).
-// The shared value-return convenience overload owns the short output lifetime;
-// the terrain painter consumes the same helper without an artificial caller block.
 VA(0x00532790, 0x27)
 MAC_ADDRESS(0x22f2e4, 0x3c) // vtable 0x640a3c slot 3, ICF with road slot 3
 TRmgGridPoint TRmgRiverMapAdapter::getSize()
