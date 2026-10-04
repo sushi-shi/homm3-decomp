@@ -101,21 +101,20 @@ Completion requires the full generator in both modes.
 
 ### Remaining work, in execution order
 
-Four substantial work packages remain. They describe implementation order,
+Three substantial work packages remain. They describe implementation order,
 not equal amounts of work or a percentage estimate. Treasure world placement,
 completion/replacement and zone scheduling, plus underground/coastal/obstacle
-decoration are now implemented. The library cannot yet generate a complete map.
+decoration, road routing and river routing are now implemented. The library
+still needs its native orchestration entry point and output path.
 
-1. **Roads and rivers.** Port route construction and painting around the existing
-   line classifiers and shared pattern tables. Preserve all source diagrams.
-2. **Generation API and compatibility integration.** Connect all stages and
+1. **Generation API and compatibility integration.** Connect all stages and
    immutable asset ownership to one native entry point with reusable workspace,
    structured failures and RNG diagnostics. Audit every hotfix branch and
    reconcile the boundary/water-zone replay inputs with executable evidence.
-3. **Output and CLI.** Implement all three formats' H3M serialization, streamed
+2. **Output and CLI.** Implement all three formats' H3M serialization, streamed
    compressed output, native generation/replay commands and actionable errors.
    Normal execution must not require Wine or the retail executable.
-4. **Final verification and publication.** Run the complete 100,000-case
+3. **Final verification and publication.** Run the complete 100,000-case
    campaign; independently parse maps; verify repeated/run-order behavior;
    profile cold loading, warm generation and output allocations; audit ASCII
    documentation/shared definitions; finish deterministic parallelism guidance;
@@ -126,11 +125,11 @@ broad debugging. Compile checks and individual unit tests are allowed; do not ru
 full suites, native comparisons or corpus campaigns until that implementation
 pass is complete. Keep pending findings here for the later debugging pass.
 
-Immediate next implementation: road/river tile state, painter integration and
-route construction. Road search includes monolith/gate transitions and must use
-existing ordered worklists; keep the retail empty-road-target fault after its
-road-type draw, while hotfix handles the empty list. Continue through native
-orchestration and output/CLI before the consolidated debugging pass.
+Immediate next implementation: a native generation entry point tying admitted
+assets, request/replay inputs and reusable stage workspaces together. Finish the
+full stage chain through treasure placement, decoration, roads and rivers, then
+H3M output and the CLI. Keep stage/RNG diagnostics available for the later
+consolidated debugging pass; do not begin comparison/corpus work yet.
 
 The catalog, lazy values and payload factories remain bound by `TreasuresReady`
 and `TreasureGeneration`; do not rebuild their catalogs or reset reservations
@@ -803,6 +802,30 @@ admission, checked overlap coordinates, and the moved enums' include guard.
 The source canBlockFloor predicate is shared with group floor transfer.
 These additions have compile checks only; no tests or comparison captures were
 run under the implementation-first policy. Behavioral parity remains unproven.
+
+Road/river tile state and painting are implemented without per-point allocation.
+The shared line walker preserves destination-to-previous traversal, corner-cell
+painting, conditional endpoint writes and frame-retention RNG behavior. Replacing
+a line refreshes the surrounding cells in native side order, including the right
+border's penultimate-row quirk. River frame writes alone update near-river and
+nearby-target flags; setting only the line type has its narrower native effects.
+
+Road search uses the retained descending worklist, portal lists and gate twins;
+newly painted roads trigger source-ordered cost-map rebuilds. Empty retail road
+targets fault after the road-type draw, while hotfix returns without roads.
+River generation marks object/coast/border targets, preserves E/S/W/N edge draw
+order and separate last-inspected/next-position state, and places deltas from
+shared canonical art indices and offsets. Multiple initial river seeds append
+and pop newest-first; relaxed equal-cost entries remain oldest-first.
+
+The line painter preserves allocated native flat aliases without normalizing raw
+coordinates or changing the painter plane. Its neighbor mask tests edge equality,
+its walker/clear rectangle retain unsigned arithmetic, and river flag patches
+clip the raw coordinate. Out-of-allocation access and absent predecessors remain
+typed faults at the corresponding use. Hotfix coast/search guards remain distinct.
+Two source-only reviews covered roads and rivers; the identified early painter
+bounds rejection was corrected. Compile checks pass; no tests or native runs
+were performed for this implementation batch. End-to-end parity is still pending.
 
 Factory and completion constraints, confirmed against native source and retail:
 

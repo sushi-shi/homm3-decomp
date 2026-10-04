@@ -17,6 +17,13 @@ impl<T> Default for Worklist<T> {
     }
 }
 impl<T> Worklist<T> {
+    // Native seeds append; several zero-cost seeds therefore pop newest first.
+    // Relaxed entries still use oldest-equal ordered insertion below.
+    pub(crate) fn seed(&mut self, value: T) -> Result<(), TryReserveError> {
+        self.items.try_reserve(1)?;
+        self.items.push(Item { value, cost: 0 });
+        Ok(())
+    }
     pub(crate) fn clear(&mut self) {
         self.items.clear();
     }

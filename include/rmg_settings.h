@@ -320,4 +320,33 @@ enum ERmgObjectPlacementMark {
     RMG_PLACEMENT_BLOCKED = 4
 };
 
+// Road search step costs; a diagonal step costs three times a cardinal one.
+enum ERmgRoadStepCost {
+    RMG_ROAD_MONOLITH_COST = 50,
+    RMG_ROAD_GATE_COST = 1,
+    RMG_ROAD_ALONG_ROAD_COST = 2,
+    RMG_ROAD_OFF_ROAD_COST = 20,
+    RMG_ROAD_DIAGONAL_FACTOR = 3
+};
+
+// Road-layer types, dirt through cobblestone; zero is no road.
+enum ERmgRoadType {
+    RMG_ROAD_DIRT = 1,
+    RMG_ROAD_GRAVEL = 2,
+    RMG_ROAD_COBBLESTONE = 3,
+    RMG_ROAD_TYPE_COUNT = RMG_ROAD_COBBLESTONE
+};
+
+// River-layer line types the generator paints; zero is no river.
+enum ERmgRiverType {
+    RMG_RIVER_CLEAR = 1,
+    RMG_RIVER_ICY = 2
+};
+
+enum ERmgRiverStepCost {
+    RMG_RIVER_STEP_MASK = 31,
+    RMG_RIVER_MINIMUM_STEP_COST = 1,
+    RMG_RIVER_ROAD_PENALTY = 30
+};
+
 #endif

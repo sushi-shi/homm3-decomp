@@ -53,10 +53,10 @@ impl Direction {
         Self::North,
         Self::NorthEast,
     ];
-    fn opposite(self) -> Self {
+    pub(super) fn opposite(self) -> Self {
         Self::ALL[(self.index() + Self::ALL.len() / 2) % Self::ALL.len()]
     }
-    const fn southward(self) -> bool {
+    pub(super) const fn southward(self) -> bool {
         matches!(self, Self::SouthEast | Self::South | Self::SouthWest)
     }
     /// Index into the source movement direction table.
@@ -161,6 +161,12 @@ enum MovementState {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Movement(MovementState);
 impl Movement {
+    pub(super) fn arrived(cost: u32, previous: WorldPosition) -> Result<Self, PlacementError> {
+        Ok(Self(MovementState::Arrived {
+            cost: u16::try_from(cost).map_err(|_| PlacementError::Arithmetic)?,
+            previous,
+        }))
+    }
     pub(super) const fn seed() -> Self {
         Self(MovementState::Seed)
     }

@@ -26,6 +26,16 @@ struct TPoint {
     int m_x, m_y;
     TPoint(int x, int y) : m_x(x), m_y(y) {}
 };
+typedef TPoint TRmgRiverDeltaOffset;
+static const int riverDeltaLand[] =
+#include "rmg_data/river_delta_land.inc"
+;
+static const int riverDeltaSnow[] =
+#include "rmg_data/river_delta_snow.inc"
+;
+static const TRmgRiverDeltaOffset riverDeltaOffsets[] =
+#include "rmg_data/river_delta_offsets.inc"
+;
 static const int decorationTypes[] =
 #include "rmg_data/decoration_types.inc"
 ;
@@ -362,6 +372,11 @@ static void emitTreasureRecipes()
 int main()
 {
     emitArray("DECORATION_TYPES", decorationTypes);
+    emitArray("RIVER_DELTA_LAND", riverDeltaLand);
+    emitArray("RIVER_DELTA_SNOW", riverDeltaSnow);
+    std::printf("pub const RIVER_DELTA_OFFSETS: [(i32, i32); %u] = [", RMG_CARDINAL_DIRECTION_COUNT);
+    for (const auto& point : riverDeltaOffsets) std::printf("(%d,%d),", point.m_x, point.m_y);
+    std::printf("];\n");
     std::printf("pub const DIRECTIONS: [(i32, i32); %lu] = [", sizeof(directions)/sizeof(directions[0]));
     for (const auto& point : directions) std::printf("(%d,%d),", point.m_x, point.m_y);
     std::printf("];\n");

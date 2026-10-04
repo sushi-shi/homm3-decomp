@@ -196,10 +196,14 @@ TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] =
 // River-delta choice per coast side (east, south, west, north), for land and
 // then snow rivers: the nth (from 0) delta recommended for the end's terrain.
 DATA(0x006409a0)
-static const s32 g_rmgLandRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {2, 0, 3, 1};
+static const s32 g_rmgLandRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] =
+#include "rmg_data/river_delta_land.inc"
+;
 
 DATA(0x006409b0)
-static const s32 g_rmgSnowRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] = {7, 5, 4, 6};
+static const s32 g_rmgSnowRiverDeltaIndex[RMG_CARDINAL_DIRECTION_COUNT] =
+#include "rmg_data/river_delta_snow.inc"
+;
 
 // Candidate town types one zone terrain can list.
 
@@ -7393,15 +7397,6 @@ static inline bool hasRmgRestrictedRoadApproach(TAdventureObjectType objectType)
         && !g_adventureObjectTraits[objectType].m_clearedOnVisit;
 }
 
-// Road search step costs; a diagonal step costs three times a cardinal one.
-enum ERmgRoadStepCost {
-    RMG_ROAD_MONOLITH_COST = 50,
-    RMG_ROAD_GATE_COST = 1,
-    RMG_ROAD_ALONG_ROAD_COST = 2,
-    RMG_ROAD_OFF_ROAD_COST = 20,
-    RMG_ROAD_DIAGONAL_FACTOR = 3
-};
-
 // Dijkstra-style relaxation uses the back of a descending worklist, retaining
 // duplicate entries. Monolith/gate transitions precede neighbour relaxation.
 VA(0x00547880, 0x7b1)
@@ -7562,14 +7557,6 @@ inline void TRmgGenerator::rebuildRoadCostMap(const TRmgMapPosition& source)
     buildRoadCostMap(source);
 }
 
-// Road-layer types, dirt through cobblestone; zero is no road.
-enum ERmgRoadType {
-    RMG_ROAD_DIRT = 1,
-    RMG_ROAD_GRAVEL = 2,
-    RMG_ROAD_COBBLESTONE = 3,
-    RMG_ROAD_TYPE_COUNT = RMG_ROAD_COBBLESTONE
-};
-
 // Every road on the map uses one random road type.
 VA(0x00548290, 0x26e)
 MAC_ADDRESS(0x24c6d4, 0x1d8)
@@ -7607,17 +7594,11 @@ void TRmgGenerator::createRoads()
 // when the step is later rejected.
 static inline s32 getRmgRiverStepCost(s32 currentCost, const TRmgMapItem* destination)
 {
-    s32 nextCost = currentCost + (rand() & 31) + 1;
+    s32 nextCost = currentCost + (rand() & RMG_RIVER_STEP_MASK) + RMG_RIVER_MINIMUM_STEP_COST;
     if (destination->m_tile.m_roadType)
-        nextCost += 30;
+        nextCost += RMG_RIVER_ROAD_PENALTY;
     return nextCost;
 }
-
-// River-layer line types the generator paints; zero is no river.
-enum ERmgRiverType {
-    RMG_RIVER_CLEAR = 1,
-    RMG_RIVER_ICY = 2
-};
 
 // The source terrain determines both river graphics and the snow boundary
 // restriction.
@@ -7894,12 +7875,9 @@ void TRmgGenerator::createRiver(TRmgMapPosition source)
 
         VA_COMPGEN(0x00549790, 0x1, STATIC_DTOR, riverDeltaOffsets)
         DATA(0x0069ce28)
-        static TRmgRiverDeltaOffset riverDeltaOffsets[RMG_CARDINAL_DIRECTION_COUNT] = {
-            TRmgRiverDeltaOffset(4, 1),  // coast to the east
-            TRmgRiverDeltaOffset(1, 4),  // south
-            TRmgRiverDeltaOffset(-2, 1), // west
-            TRmgRiverDeltaOffset(1, -2)  // north
-        };
+        static TRmgRiverDeltaOffset riverDeltaOffsets[RMG_CARDINAL_DIRECTION_COUNT] =
+#include "rmg_data/river_delta_offsets.inc"
+        ;
 
         s32 deltaIndex = sourceIsSnow
             ? g_rmgSnowRiverDeltaIndex[cardinal]

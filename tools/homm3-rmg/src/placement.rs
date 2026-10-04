@@ -71,7 +71,11 @@ mod movement;
 pub use connection_paths::{ConnectionPaths, PathWidth, RepairedWaterBorders};
 pub use movement::{Direction, Movement, ZoneDistance};
 mod decoration;
+mod lines;
+pub use lines::{LineTile, RiverType, RoadType};
 mod obstacles;
+mod rivers;
+mod roads;
 pub use obstacles::ObstacleWorkspace;
 mod density;
 mod island_noise;
@@ -150,6 +154,10 @@ pub enum ObstacleEntrances {
 /// A safe placement query cannot reproduce an undefined native access.
 #[derive(Debug)]
 pub enum PlacementError {
+    /// Retail underflows the bound of its empty road-target loop.
+    EmptyRoadTargets,
+    /// A native route follows a predecessor that has never been written.
+    MissingPredecessor(WorldPosition),
     /// A prototype's placement rule belongs to a different rule table.
     RuleContext,
     /// Native overlap scoring reads a cell with no initialized priority.
@@ -205,6 +213,12 @@ pub enum PlacementError {
 impl fmt::Display for PlacementError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::EmptyRoadTargets => {
+                f.write_str("retail road generation indexes an empty target list")
+            }
+            Self::MissingPredecessor(position) => {
+                write!(f, "route has no predecessor at {position:?}")
+            }
             Self::RuleContext => f.write_str("prototype placement rule belongs to another table"),
             Self::UnwrittenOverlap(id) => write!(
                 f,
@@ -294,6 +308,12 @@ pub struct CellState {
     movement: Movement,
     connection_visited: bool,
     coastal: bool,
+    road: LineTile<RoadType>,
+    river: LineTile<RiverType>,
+    has_river: bool,
+    near_river: bool,
+    river_target: bool,
+    blocked_river_directions: u8,
 }
 impl Default for CellState {
     fn default() -> Self {
@@ -309,6 +329,12 @@ impl Default for CellState {
             movement: Movement::default(),
             connection_visited: false,
             coastal: false,
+            road: LineTile::default(),
+            river: LineTile::default(),
+            has_river: false,
+            near_river: false,
+            river_target: false,
+            blocked_river_directions: 0,
         }
     }
 }
