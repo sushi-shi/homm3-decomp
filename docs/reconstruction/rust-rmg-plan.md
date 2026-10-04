@@ -118,7 +118,8 @@ Eight VC6 stage checkpoints (four sizes in both modes) agree with Rust on the
 template, player assignments, zone positions/sizes, terrain/faction choices,
 clipped polygons, every boundary cell, connection adjacency order, graph
 distances, recentered bounds, island coverage and every painted terrain/frame/flip.
-Each random stage also agrees on RNG state. There are 49 focused unit tests across the two crates. The
+Each random stage also agrees on RNG state. There are 51 focused unit tests across the core/data crates,
+three installation-adapter tests and six LOD codec checks, including malformed-input corpora. The
 installed-data checks require explicit local assets and are ignored by default.
 
 The boundary-to-coverage transition consumes its stage value, preventing a
@@ -185,8 +186,23 @@ in all three formats and both modes. Empty pools consume no draw and singleton
 pools still consume one. Artifact/herodefs owning TUs compile with their VC6
 profiles after extraction of the portable definitions.
 
-Complete asset loading still needs the production resource-loading adapter
-and the hotfix required-prototype readiness check.
+The installation adapter now lives in `homm3-rmg-cli`. Its disk-backed LOD
+reader uses the shared codec's directory-only view, retaining decoded indexes
+while leaving archive payloads on disk. Text honors loose Data overrides before
+base/expansion bitmaps; masks use base/expansion sprites only. File-name lookup
+is ASCII case-insensitive and rejects ambiguous case collisions. Compressed
+input, mask output and inflater state are reused across reads. Tests cover
+resource precedence, corrupt/wrong-size streams, empty compressed members and
+buffer reuse. This is not yet the complete allocator profile.
+
+Loading the installed resources through this adapter reproduces every native
+prepared-prototype checkpoint in all three formats and both modes. Prototype
+admission consumes the catalog into a value carrying its mode, format and plane
+count. Hotfix requires the native family/town/portal/guard/quest relationships;
+retail retains deferred faults. The eventual generation entry point must keep
+the constructor's random-water draw before this gate's failure, then connect
+the asset catalogs to the remaining placement and output stages. The CLI crate
+currently contains the IO adapter, not a runnable generator command.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the
@@ -194,7 +210,7 @@ pinned executable for seed 100 / 108x108 / RoE / islands and seed 17 / 144x144 /
 two levels / SoD / random water (zero stack/heap replay fills). Keep these
 disagreements visible during porting; they are not evidence of Rust parity.
 
-Remaining trait/resource loading, placement, serialization, CLI,
+Top-level asset/generation orchestration, placement, serialization, CLI,
 allocation profiling and the full corpus campaign remain to be implemented and
 verified. This checkpoint cannot generate a map.
 

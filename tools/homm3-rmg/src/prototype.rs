@@ -23,6 +23,9 @@ use crate::{
 use homm3_resource::{Mask, Text};
 use std::{borrow::Cow, collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
+mod readiness;
+pub use readiness::{GenerationPrototypes, RequiredPrototypeError};
+
 const MASK_BITS: u64 = (1 << raw::OBJECT_MASK_CELLS) - 1;
 const MASK_BYTES: usize = 2 + 2 * (raw::OBJECT_MASK_CELLS as usize / u8::BITS as usize);
 const KINDS: usize = raw::ADVENTURE_OBJECT_TRAIT_COUNT as usize;
@@ -125,7 +128,7 @@ impl fmt::Display for PrototypeFault {
 impl Error for PrototypeFault {}
 
 /// Parsed mask data, copied once per distinct image name (14 input bytes).
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ImageMask {
     size: Result<FootprintSize, PrototypeFault>,
     draw: u64,
@@ -525,7 +528,12 @@ impl<'a> PrototypeSource<'a> {
                 )
             });
         }
-        Ok(PrototypeCatalog { entries, offsets })
+        Ok(PrototypeCatalog {
+            entries,
+            offsets,
+            version,
+            behavior,
+        })
     }
 }
 
@@ -601,6 +609,8 @@ impl From<TryReserveError> for CatalogError {
 pub struct PrototypeCatalog<'a> {
     entries: Vec<PreparedPrototype<'a>>,
     offsets: [usize; KINDS + 1],
+    version: MapVersion,
+    behavior: Behavior,
 }
 
 /// Identity of a prepared prototype, stable for the lifetime of its catalog.
@@ -789,6 +799,147 @@ mod tests {
     }
     fn monster() -> ObjectKind {
         ObjectKind::parse(i32::try_from(raw::MONSTER).unwrap()).unwrap()
+    }
+
+    fn required_rows() -> Vec<String> {
+        let mut rows = [
+            raw::MONSTER,
+            raw::RANDOM_MONSTER,
+            raw::TERRAIN_HOLE,
+            raw::SHIPYARD,
+            raw::LITH_TWOWAY,
+        ]
+        .map(|kind| row("object.def", kind, 0))
+        .to_vec();
+        rows.extend((0..=raw::TOWN_CONFLUX).map(|town| row("town.def", raw::TOWN, town)));
+        rows
+    }
+
+    #[test]
+    fn hotfix_admission_checks_relationships_while_retail_defers_faults() {
+        use crate::{request::Levels, traits::ArtifactCatalog};
+        let artifact_bytes = format!(
+            "header\r\nheader\r\n{}",
+            format!("{}\r\n", "\t".repeat(22)).repeat(raw::ARTIFACT_COUNT as usize)
+        );
+        let artifacts = ArtifactCatalog::parse(artifact_bytes.as_bytes()).unwrap();
+        let rules = rules();
+        let base = required_rows;
+        let admit = |rows: &[String], levels, behavior| {
+            let bytes = table(rows);
+            let source =
+                PrototypeSource::parse(&bytes, |_| Ok::<_, Infallible>(Some(mask()))).unwrap();
+            source
+                .prepare(&rules, MapVersion::ShadowOfDeath, behavior)
+                .unwrap()
+                .into_generation(levels, &artifacts)
+                .map(|_| ())
+        };
+        assert!(admit(&base(), Levels::Surface, Behavior::Hotfix).is_ok());
+        for (index, kind) in [
+            raw::MONSTER,
+            raw::RANDOM_MONSTER,
+            raw::TERRAIN_HOLE,
+            raw::SHIPYARD,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let mut rows = base();
+            rows.remove(index);
+            assert_eq!(
+                admit(&rows, Levels::Surface, Behavior::Hotfix),
+                Err(RequiredPrototypeError::Family(
+                    ObjectKind::parse(i32::try_from(kind).unwrap()).unwrap()
+                ))
+            );
+        }
+        assert_eq!(
+            admit(&base(), Levels::Underground, Behavior::Hotfix),
+            Err(RequiredPrototypeError::Family(
+                ObjectKind::parse(i32::try_from(raw::UNDERGROUND_GATE).unwrap()).unwrap()
+            ))
+        );
+        let mut rows = base();
+        rows.push(row("gate.def", raw::UNDERGROUND_GATE, 0));
+        assert!(admit(&rows, Levels::Underground, Behavior::Hotfix).is_ok());
+        let mut rows = base();
+        rows[5] = row("town.def", raw::TOWN, 1);
+        assert_eq!(
+            admit(&rows, Levels::Surface, Behavior::Hotfix),
+            Err(RequiredPrototypeError::Town { index: 0 })
+        );
+        let mut rows = base();
+        rows.remove(4);
+        assert_eq!(
+            admit(&rows, Levels::Surface, Behavior::Hotfix),
+            Err(RequiredPrototypeError::Portals)
+        );
+        rows.push(row("entry.def", raw::LITH_ONEWAY_ENTRANCE, 1));
+        rows.push(row("exit.def", raw::LITH_ONEWAY_EXIT, 2));
+        assert_eq!(
+            admit(&rows, Levels::Surface, Behavior::Hotfix),
+            Err(RequiredPrototypeError::PortalPair { index: 0 })
+        );
+        let mut rows = base();
+        rows.push(row("tent.def", raw::BORDER_TENT, 2));
+        assert_eq!(
+            admit(&rows, Levels::Surface, Behavior::Hotfix),
+            Err(RequiredPrototypeError::BorderGuard { subtype: 2 })
+        );
+        rows.push(row("guard.def", raw::BORDER_GUARD, 2));
+        assert!(admit(&rows, Levels::Surface, Behavior::Hotfix).is_ok());
+        rows.push(row("seer.def", raw::SEER, 0));
+        assert_eq!(
+            admit(&rows, Levels::Surface, Behavior::Hotfix),
+            Err(RequiredPrototypeError::RandomArtifact)
+        );
+        rows.push(row("random.def", raw::RANDOM_ARTIFACT, 0));
+        assert!(admit(&rows, Levels::Surface, Behavior::Hotfix).is_ok());
+        assert!(admit(
+            &[row("monster.def", raw::MONSTER, 0)],
+            Levels::Underground,
+            Behavior::Retail(RetailProfile::default())
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn hotfix_seer_admission_requires_every_eligible_quest_artifact() {
+        use crate::{request::Levels, traits::ArtifactCatalog};
+        let rules = rules();
+        let blank = format!("{}\r\n", "\t".repeat(22));
+        let artifact_bytes = format!(
+            "header\r\nheader\r\n{}",
+            blank.repeat(raw::ARTIFACT_COUNT as usize)
+        );
+        let mut rows = required_rows();
+        rows.push(row("seer.def", raw::SEER, 0));
+        rows.push(row("random.def", raw::RANDOM_ARTIFACT, 0));
+        let mut quest_bytes = artifact_bytes.as_bytes().to_vec();
+        quest_bytes.insert(b"header\r\nheader\r\n".len() + 21, b'T');
+        let quest_artifacts = ArtifactCatalog::parse(&quest_bytes).unwrap();
+        for present in [false, true] {
+            if present {
+                rows.push(row("artifact.def", raw::ARTIFACT, 0));
+            }
+            let bytes = table(&rows);
+            let source =
+                PrototypeSource::parse(&bytes, |_| Ok::<_, Infallible>(Some(mask()))).unwrap();
+            let result = source
+                .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
+                .unwrap()
+                .into_generation(Levels::Surface, &quest_artifacts)
+                .map(|_| ());
+            let expected = if present {
+                Ok(())
+            } else {
+                Err(RequiredPrototypeError::QuestArtifact(
+                    crate::traits::ArtifactId::parse(0).unwrap(),
+                ))
+            };
+            assert_eq!(result, expected);
+        }
     }
 
     #[test]

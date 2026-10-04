@@ -10,6 +10,7 @@ members = [
   "homm3-oracle",
   "homm3-rmg-data",
   "homm3-rmg",
+  "homm3-rmg-cli",
 ]
 
 [workspace.package]
@@ -34,7 +35,7 @@ png = "0.17.16"
 
 # The format libraries are no_std, allocation-free, dependency-free readers and
 # codecs. File IO, zlib inflation, reporting and PNG output belong to the
-# binary. Keeping that boundary explicit makes the Rust side a useful
+# IO adapters and binaries. Keeping that boundary explicit makes the Rust side a useful
 # independent format oracle instead of another wrapper around game code.
 # RMG uses std and reusable owned storage; it is a generator, not a codec.
 

@@ -1,0 +1,17 @@
+[package]
+name = "homm3-rmg-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Native installation loading and command-line adapters for Heroes III RMG"
+
+[dependencies]
+homm3-rmg.workspace = true
+homm3-lod.workspace = true
+homm3-resource.workspace = true
+flate2.workspace = true
+
+[lints]
+workspace = true

@@ -283,6 +283,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "homm3-rmg-cli"
+version = "0.1.0"
+dependencies = [
+ "flate2",
+ "homm3-lod",
+ "homm3-resource",
+ "homm3-rmg",
+]
+
+[[package]]
 name = "homm3-rmg-data"
 version = "0.1.0"
 dependencies = [
