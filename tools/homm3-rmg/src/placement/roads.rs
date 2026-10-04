@@ -179,7 +179,10 @@ impl PlacementMap<'_, '_, '_> {
             }
             if position.level == level {
                 position = previous;
-                self.paint_line_point(Layer::Road(kind), position, rng)?;
+                // The native painter stays bound to the level captured before
+                // skipping existing roads. The predecessor walk can cross a
+                // portal and return with `previous` still on the other level.
+                self.paint_line_point(Layer::Road(kind), WorldPosition { level, ..position }, rng)?;
                 painted = true;
                 loop {
                     let index = self.view().native_index(position)?;
@@ -196,7 +199,12 @@ impl PlacementMap<'_, '_, '_> {
                     {
                         break;
                     }
-                    self.draw_line(Layer::Road(kind), previous, position, rng)?;
+                    self.draw_line(
+                        Layer::Road(kind),
+                        WorldPosition { level, ..previous },
+                        position,
+                        rng,
+                    )?;
                     previous = position;
                 }
             }

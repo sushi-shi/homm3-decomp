@@ -7,8 +7,8 @@ authoritative for retail behavior. Generation runs without Wine or the game
 executable. The future engine will use Rust in place of C++ RMG; game/lobby
 integration is outside the current scope.
 
-Whole-map debugging still has unresolved output/RNG differences; full corpus
-parity and in-game playability have not been established. See
+The currently known whole-map output/RNG differences have been resolved. Full
+corpus parity and in-game playability have not been established. See
 [CLI usage](../../tools/homm3-rmg-cli/README.md) and the
 [hotfix coverage table](rust-rmg-hotfix-coverage.md).
 
