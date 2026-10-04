@@ -799,7 +799,7 @@ struct TRmgGroundTile {
     // both. Role-derived names; original spellings unknown.
     // Replaces unknown06.
     signed m_terrainFrame : 8;
-    signed m_riverType : 4;
+    signed m_lineType : 4;
     signed m_riverFrame : 8;
     // this at bit 26; getter 0x532447..0x532450 sign-extends four bits.
     signed m_roadType : 4;
@@ -1242,7 +1242,7 @@ public:
     virtual ~TRmgMapInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
-    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual void setFrame(const TRmgGridPoint& point, int value) = 0;
     // Slot 3 returns its explicit output reference. The adapters consume
     // that returned reference, which distinguishes this from a hidden value
     // result: together the map and both adapter bodies reproduce retail.
@@ -1253,8 +1253,8 @@ public:
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output) = 0;
 #endif
     virtual TRmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getLand(const TRmgGridPoint& point) = 0;
-    virtual int getOverlay(const TRmgGridPoint& point) = 0;
+    virtual int getTerrain(const TRmgGridPoint& point) = 0;
+    virtual int getFrame(const TRmgGridPoint& point) = 0;
 };
 
 class TRmgRiverMapAdapterInterface {
@@ -1262,11 +1262,11 @@ public:
     virtual ~TRmgRiverMapAdapterInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
-    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
     virtual TRmgGridPoint getSize() = 0;
     virtual TRmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getLand(const TRmgGridPoint& point) = 0;
-    virtual int getOverlay(const TRmgGridPoint& point) = 0;
+    virtual int getLineType(const TRmgGridPoint& point) = 0;
+    virtual int getTerrain(const TRmgGridPoint& point) = 0;
 };
 
 // The road-decoration adapter has the same seven-slot shape but a distinct
@@ -1277,11 +1277,11 @@ public:
     virtual ~TRmgRoadMapAdapterInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
-    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
     virtual TRmgGridPoint getSize() = 0;
     virtual TRmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getLand(const TRmgGridPoint& point) = 0;
-    virtual int getOverlay(const TRmgGridPoint& point) = 0;
+    virtual int getLineType(const TRmgGridPoint& point) = 0;
+    virtual int getTerrain(const TRmgGridPoint& point) = 0;
 };
 
 class TRmgMap : public TRmgMapInterface {
@@ -1330,15 +1330,15 @@ public:
 
     virtual void setTile(
         const TRmgGridPoint& point, const TRmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
+    virtual void setFrame(const TRmgGridPoint& point, int value);
 #if defined(HOMM3_TARGET_MAC)
     virtual TRmgGridPoint getSize();  // Mac 0x22eb84: hidden value result
 #else
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output);
 #endif
     virtual TRmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLand(const TRmgGridPoint& point);
-    virtual int getOverlay(const TRmgGridPoint& point);
+    virtual int getTerrain(const TRmgGridPoint& point);
+    virtual int getFrame(const TRmgGridPoint& point);
 
     void clear();
     // Retail insertion supplies pointer prvalues to both STL reference
@@ -1424,11 +1424,11 @@ public:
 
     TRmgRoadMapAdapter(TRmgMap* map) : m_map(map) {}
     virtual void setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
+    virtual void setLineType(const TRmgGridPoint& point, int value);
     virtual TRmgGridPoint getSize();
     virtual TRmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLand(const TRmgGridPoint& point);
-    virtual int getOverlay(const TRmgGridPoint& point);
+    virtual int getLineType(const TRmgGridPoint& point);
+    virtual int getTerrain(const TRmgGridPoint& point);
 };
 
 // Retail retains these support bodies outside CreateRiver while the adapter
@@ -1443,11 +1443,11 @@ public:
 
     virtual void setTile(
         const TRmgGridPoint& point, const TRmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
+    virtual void setLineType(const TRmgGridPoint& point, int value);
     virtual TRmgGridPoint getSize();
     virtual TRmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLand(const TRmgGridPoint& point);
-    virtual int getOverlay(const TRmgGridPoint& point);
+    virtual int getLineType(const TRmgGridPoint& point);
+    virtual int getTerrain(const TRmgGridPoint& point);
 };
 
 // Cinit 0x55ed70/0x55f2f0 passes a pattern count and a source int array to
@@ -1457,14 +1457,14 @@ public:
 struct TRmgLinePatternRange {
     // Role-derived names: the constructor writes index/count at an 8-byte
     // stride, not two separate nine-element arrays.
-    unsigned int m_firstIndex;
-    unsigned int m_valueCount;
+    unsigned int m_firstFrame;
+    unsigned int m_frameCount;
 };
 SIZE(TRmgLinePatternRange, 0x8);
 
 struct TRmgLinePatternTable {
-    unsigned int m_patternCount;
-    int* m_patterns;
+    unsigned int m_frameCount;
+    int* m_framePatterns;
     TRmgLinePatternRange m_ranges[9];
 
     TRmgLinePatternTable(unsigned int patternCount, const int* patterns);
@@ -1494,15 +1494,15 @@ public:
     TRmgGridPoint m_size;
 
     TRmgLinePainterInterface(const TRmgGridPoint& size);
-    virtual TRmgLinePatternTable* getPattern(int value) = 0;
+    virtual TRmgLinePatternTable* getPatternTable(int value) = 0;
     virtual void setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
-    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
-    virtual int canPaint(const TRmgGridPoint& point) = 0;
+    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
+    virtual int isBlocked(const TRmgGridPoint& point) = 0;
     virtual void getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile) = 0;
-    virtual int getLand(const TRmgGridPoint& point) = 0;
+    virtual int getLineType(const TRmgGridPoint& point) = 0;
 
     TRmgLinePainterTile at(const TRmgGridPoint& point);
-    int getNeighbourLand(const TRmgGridPoint& point, unsigned int direction);
+    int getNeighbourLineType(const TRmgGridPoint& point, unsigned int direction);
 };
 
 // The value returned at 0x4fa050 holds the painter and a copied coordinate.
@@ -1514,11 +1514,11 @@ struct TRmgLinePainterTile {
     TRmgGridPoint m_point;
 
     TRmgLinePainterTile(TRmgLinePainterInterface* painter, const TRmgGridPoint& point);
-    int getLand();
+    int getLineType();
     void getTile(TRmgTerrainTile& tile);
     void setTile(const TRmgTerrainTile& tile);
     unsigned char isBlocked();
-    void setOverlay(int value);
+    void setLineType(int value);
 };
 SIZE(TRmgLinePainterTile, 0x0c);
 
@@ -1551,16 +1551,16 @@ public:
     // still expanded in ~TRmgRiverPainter (vptr store at 0x55eda0).
     virtual ~TRmgRiverLinePainter() = 0;
 
-    virtual TRmgLinePatternTable* getPattern(int value);
+    virtual TRmgLinePatternTable* getPatternTable(int value);
     virtual void setTile(
         const TRmgGridPoint& point, const TRmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
-    virtual int canPaint(const TRmgGridPoint& point);
+    virtual void setLineType(const TRmgGridPoint& point, int value);
+    virtual int isBlocked(const TRmgGridPoint& point);
     // Slot 4's caller at 0x4f9fdd pushes output first, then point. The
     // retained wrapper 0x55f350 writes through its second explicit argument;
     // unlike the adapter, this interface does not return a tile by value.
     virtual void getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile);
-    virtual int getLand(const TRmgGridPoint& point);
+    virtual int getLineType(const TRmgGridPoint& point);
 };
 
 inline TRmgRiverLinePainter::~TRmgRiverLinePainter() {}
@@ -1592,7 +1592,7 @@ SIZE(TRmgLineWalkAxis, 0x0c);
 class TRmgLineWalker {
 public:
     TRmgLinePainterInterface* m_painter;
-    int m_riverType;
+    int m_lineType;
     TRmgGridPoint m_position;
 
     TRmgLineWalker(
@@ -1629,13 +1629,13 @@ public:
     // ??_GTRmgRoadPainter there).
     virtual ~TRmgRoadLinePainter() = 0;
 
-    virtual TRmgLinePatternTable* getPattern(int value);
+    virtual TRmgLinePatternTable* getPatternTable(int value);
     virtual void setTile(
         const TRmgGridPoint& point, const TRmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
-    virtual int canPaint(const TRmgGridPoint& point);
+    virtual void setLineType(const TRmgGridPoint& point, int value);
+    virtual int isBlocked(const TRmgGridPoint& point);
     virtual void getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile);
-    virtual int getLand(const TRmgGridPoint& point);
+    virtual int getLineType(const TRmgGridPoint& point);
 };
 
 inline TRmgRoadLinePainter::~TRmgRoadLinePainter() {}
@@ -1737,8 +1737,8 @@ struct TRmgHalfEdge {
     // Constructor clears this byte. buildVertices tests it at 0x5fdb7a,
     // writes the computed point, then sets it on three incident edges at
     // 0x5fdc7d/89/9e. +0x19..1b is natural alignment before the point.
-    unsigned char m_positionComputed;  // +0x18
-    TPoint m_position;                  // +0x1c
+    unsigned char m_vertexComputed;  // +0x18
+    TPoint m_vertex;                  // +0x1c
 
     // The 0x5fcef0 retained constructor takes two by-value point/zone
     // pairs (ret 0x18), allocating the opposite half-edge at +0x0c.
@@ -1799,15 +1799,15 @@ struct TRmgHalfEdge {
     // Voronoi vertex bookkeeping: the computed flag and the shared vertex.
     unsigned char isPositionComputed() const
     {
-        return m_positionComputed;
+        return m_vertexComputed;
     }
     void setPosition(const TPoint& position)
     {
         // A named snapshot gives buildVertices retail's final two-coordinate
         // transfer before each of its three expanded stores.
         TPoint copy = position;
-        m_position = copy;
-        m_positionComputed = 1;
+        m_vertex = copy;
+        m_vertexComputed = 1;
     }
 };
 SIZE(TRmgHalfEdge, 0x24);
@@ -1817,7 +1817,7 @@ SIZE(TRmgHalfEdge, 0x24);
 // dual vertices, then looks up an edge for each site. All names are provisional.
 class TRmgVoronoi {
 public:
-    TRmgHalfEdge* m_root;                 // +0x00
+    TRmgHalfEdge* m_startingEdge;                 // +0x00
     std::vector<TRmgHalfEdge*> m_edges;  // +0x04
 
     TRmgVoronoi();
@@ -2147,6 +2147,6 @@ SIZE(TRmgGenerator, 0x14e0);
 
 // Retail 0x6824e0 is indexed by the creature-traits level dword before
 // TRmgBlackBoxCreatureDef divides by that creature's AI value.
-DATA(0x006824E0) extern int g_rmgCreatureValueByLevel[];
+DATA(0x006824e0) extern int g_rmgCreatureValueByLevel[];
 
 #endif  // HOMM3_RMG_H

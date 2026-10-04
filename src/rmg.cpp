@@ -1261,7 +1261,7 @@ void TRmgMap::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
 // Slot 2 updates only the packed eight-bit terrain frame.
 VA(0x00532200, 0x3C)
 MAC_ADDRESS(0x22eb4c, 0x38)
-void TRmgMap::setOverlay(const TRmgGridPoint& point, int value)
+void TRmgMap::setFrame(const TRmgGridPoint& point, int value)
 {
     TRmgMapItem& item = m_mapItems[point.m_y * m_mapWidth + point.m_x];
     item.m_tile.m_terrainFrame = value;
@@ -1306,14 +1306,14 @@ TRmgTerrainTile TRmgMap::getTile(const TRmgGridPoint& point)
 // and its adjacent eight-bit terrain frame from TRmgGroundTile.
 VA(0x005322C0, 0x2A)
 MAC_ADDRESS(0x22ec18, 0x34)
-int TRmgMap::getLand(const TRmgGridPoint& point)
+int TRmgMap::getTerrain(const TRmgGridPoint& point)
 {
     return m_mapItems[point.m_y * m_mapWidth + point.m_x].m_tile.m_landType;
 }
 
 VA(0x005322F0, 0x2A)
 MAC_ADDRESS(0x22ec4c, 0x34)
-int TRmgMap::getOverlay(const TRmgGridPoint& point)
+int TRmgMap::getFrame(const TRmgGridPoint& point)
 {
     return m_mapItems[point.m_y * m_mapWidth + point.m_x]
         .m_tile.m_terrainFrame;
@@ -1346,7 +1346,7 @@ void TRmgRoadMapAdapter::setTile(
 
 VA(0x005323D0, 0x3C)
 MAC_ADDRESS(0x22ed4c, 0x3c)
-void TRmgRoadMapAdapter::setOverlay(const TRmgGridPoint& point, int value)
+void TRmgRoadMapAdapter::setLineType(const TRmgGridPoint& point, int value)
 {
     TRmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];
     item.m_tile.m_roadType = value;
@@ -1368,7 +1368,7 @@ TRmgTerrainTile TRmgRoadMapAdapter::getTile(const TRmgGridPoint& point)
 
 VA(0x00532480, 0x2D)
 MAC_ADDRESS(0x22ee64, 0x38)
-int TRmgRoadMapAdapter::getLand(const TRmgGridPoint& point)
+int TRmgRoadMapAdapter::getLineType(const TRmgGridPoint& point)
 {
     return m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]
         .m_tile.m_roadType;
@@ -1376,7 +1376,7 @@ int TRmgRoadMapAdapter::getLand(const TRmgGridPoint& point)
 
 VA(0x005324B0, 0x2D)
 MAC_ADDRESS(0x22ee9c, 0x38)
-int TRmgRoadMapAdapter::getOverlay(const TRmgGridPoint& point)
+int TRmgRoadMapAdapter::getTerrain(const TRmgGridPoint& point)
 {
     return m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]
         .m_tile.m_landType;
@@ -1461,7 +1461,7 @@ void TRmgRiverMapAdapter::setTile(const TRmgGridPoint& point, const TRmgTerrainT
 
 VA(0x00532730, 0x57)
 MAC_ADDRESS(0x22f290, 0x54) // anchor-vtable + packed-field evidence; Complete-only
-void TRmgRiverMapAdapter::setOverlay(const TRmgGridPoint& point, int value)
+void TRmgRiverMapAdapter::setLineType(const TRmgGridPoint& point, int value)
 {
     TRmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];
     item.m_tile.m_riverType = value;
@@ -1506,7 +1506,7 @@ TRmgTerrainTile TRmgRiverMapAdapter::getTile(const TRmgGridPoint& point)
 // kind and underlying land kind from the wrapped map's 0x30-byte cell array.
 VA(0x00532830, 0x2D)
 MAC_ADDRESS(0x22f3c4, 0x38)
-int TRmgRiverMapAdapter::getLand(const TRmgGridPoint& point)
+int TRmgRiverMapAdapter::getLineType(const TRmgGridPoint& point)
 {
     return m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]
         .m_tile.m_riverType;
@@ -1514,7 +1514,7 @@ int TRmgRiverMapAdapter::getLand(const TRmgGridPoint& point)
 
 VA(0x00532860, 0x2D)
 MAC_ADDRESS(0x22f3fc, 0x38)
-int TRmgRiverMapAdapter::getOverlay(const TRmgGridPoint& point)
+int TRmgRiverMapAdapter::getTerrain(const TRmgGridPoint& point)
 {
     return m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]
         .m_tile.m_landType;
