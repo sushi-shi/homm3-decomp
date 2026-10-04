@@ -227,6 +227,19 @@ also passes all 65,536 four-by-four masks, including disconnected footprints.
 Placement must still reject an empty outline before a connected-outline check;
 no placement grid or object ownership is implemented by this helper milestone.
 
+The placement stage now consumes painted terrain while borrowing the original
+tile and coverage buffers. A reusable flat cell-state buffer supports footprint
+blocking, circular outline connectivity and southern entrance-approach queries.
+Each query uses typed policies and the existing fixed outline workspace, with
+no heap allocation. A nonempty-outline type excludes modulo-by-zero internally;
+empty source outlines become explicit faults only when that check is reached.
+Across six generated maps, 270,048 footprint/fit pairs agree with source-derived
+checkpoints: 263,348 complete-fit results were executed in C++, while 6,700
+empty-outline faults were identified and skipped before the native division.
+All 256 circular blocking patterns and focused entrance/path/water policies
+also pass. Grid mutation, object membership and object lifetime management are
+still pending; these results cover fit queries before town placement.
+
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the
 pinned executable for seed 100 / 108x108 / RoE / islands and seed 17 / 144x144 /

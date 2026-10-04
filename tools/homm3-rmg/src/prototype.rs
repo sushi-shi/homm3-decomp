@@ -95,6 +95,10 @@ impl FootprintSize {
     pub const fn height(self) -> u8 {
         self.height
     }
+    /// Cells inside these admitted dimensions, in native row/column order.
+    pub fn cells(self) -> impl Iterator<Item = MaskCell> {
+        (0..self.height).flat_map(move |y| (0..self.width).map(move |x| MaskCell { x, y }))
+    }
 }
 
 /// A known unsafe retail footprint or creature index, deferred until use.
