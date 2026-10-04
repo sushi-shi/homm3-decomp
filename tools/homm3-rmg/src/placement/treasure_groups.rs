@@ -95,6 +95,12 @@ impl Default for TreasureGroupWorkspace {
     }
 }
 impl TreasureGroupWorkspace {
+    // The outer generation workspace resets its arena immediately afterwards.
+    // Old group reservations belong to the discarded run's hero/quest state.
+    pub(crate) fn reset_for_generation(&mut self) {
+        self.objects.clear();
+        self.reset_after_disposal();
+    }
     pub(super) fn view(&self) -> PlacementView<'_> {
         PlacementView {
             side: SIDE,

@@ -101,35 +101,32 @@ Completion requires the full generator in both modes.
 
 ### Remaining work, in execution order
 
-Three substantial work packages remain. They describe implementation order,
-not equal amounts of work or a percentage estimate. Treasure world placement,
-completion/replacement and zone scheduling, plus underground/coastal/obstacle
-decoration, road routing and river routing are now implemented. The library
-still needs its native orchestration entry point and output path.
+Two substantial work packages remain: output/CLI implementation, then the
+consolidated verification and publication pass. All generation algorithms and
+the native orchestration entry point are implemented and compile. They have not
+yet been exercised end to end under the implementation-first policy.
 
-1. **Generation API and compatibility integration.** Connect all stages and
-   immutable asset ownership to one native entry point with reusable workspace,
-   structured failures and RNG diagnostics. Audit every hotfix branch and
-   reconcile the boundary/water-zone replay inputs with executable evidence.
-2. **Output and CLI.** Implement all three formats' H3M serialization, streamed
+1. **Output and CLI.** Implement all three formats' H3M serialization, streamed
    compressed output, native generation/replay commands and actionable errors.
-   Normal execution must not require Wine or the retail executable.
-3. **Final verification and publication.** Run the complete 100,000-case
-   campaign; independently parse maps; verify repeated/run-order behavior;
-   profile cold loading, warm generation and output allocations; audit ASCII
-   documentation/shared definitions; finish deterministic parallelism guidance;
-   run required Rust checks and publish the new PR.
+   Connect installation resource loading to the new native API. Normal execution
+   must not require Wine or the retail executable.
+2. **Final verification and publication.** Audit every hotfix branch and reconcile
+   boundary/water-zone replay inputs with executable evidence. Run the complete
+   100,000-case campaign; independently parse maps; verify repeated/run-order
+   behavior; profile cold loading, warm generation and output allocations; audit
+   ASCII documentation/shared definitions; finish deterministic parallelism
+   guidance; run required Rust checks and publish the new PR.
 
 Current working policy (user update): finish the complete implementation before
 broad debugging. Compile checks and individual unit tests are allowed; do not run
 full suites, native comparisons or corpus campaigns until that implementation
 pass is complete. Keep pending findings here for the later debugging pass.
 
-Immediate next implementation: a native generation entry point tying admitted
-assets, request/replay inputs and reusable stage workspaces together. Finish the
-full stage chain through treasure placement, decoration, roads and rivers, then
-H3M output and the CLI. Keep stage/RNG diagnostics available for the later
-consolidated debugging pass; do not begin comparison/corpus work yet.
+Immediate next implementation: H3M output, starting with header/player/team
+serialization and prototype-slot assignment, then all object payloads, map tiles
+and the trailer. Use the generated result's retained RNG to continue team draws;
+keep stream failures and serialization-stage diagnostics explicit. Then connect
+native generation/replay CLI commands. Do not begin comparison/corpus work yet.
 
 The catalog, lazy values and payload factories remain bound by `TreasuresReady`
 and `TreasureGeneration`; do not rebuild their catalogs or reset reservations
@@ -826,6 +823,36 @@ typed faults at the corresponding use. Hotfix coast/search guards remain distinc
 Two source-only reviews covered roads and rivers; the identified early painter
 bounds rejection was corrected. Compile checks pass; no tests or native runs
 were performed for this implementation batch. End-to-end parity is still pending.
+
+The native orchestration API is implemented in `generation.rs`. `Assets` borrows
+parsed immutable resources; `Assets::prepare(request, seed)` owns request-dependent
+prototype/template preparation and its post-constructor RNG. The returned
+`PreparedGeneration` stays alive while `GenerationWorkspace::generate` returns a
+borrowed `GeneratedMap`. Every generation stage now runs through rivers without
+Wine, file IO, terrain copying or global RNG state. Resource loading and output
+remain caller work. The generated result retains arena, catalogs, reward context
+and exact RNG needed by serialization; it prevents workspace reuse while borrowed.
+
+Constructor order includes prototype filtering before water resolution/templates,
+optional eager treasure definitions, then the shared hotfix required-prototype gate
+before selection (also checked with no templates). The pipeline retains original
+hotfix starting-town rejection and all later source stage order. Failure reports
+own the effective/original request, seed, current stage and exact RNG; stage
+checkpoints clear on entry and are present only on successful completion.
+
+Outer workspaces retain treasure offers and nested group buffers. They are lent
+to treasure generation and returned before either success or error propagates.
+Before another run, old root/nested group handles and offers clear before arena
+reset. Other stage buffers retain their existing reuse policies. Both source
+reviews are clear after correcting the readiness-gate and checkpoint timing.
+Compile checks pass; the native pipeline has not been run yet and output parity
+remains unproven.
+
+Output reference accounting must include every live arena object, not just the
+active world list and retired records: replacement factories do not run completion,
+so an active replacement quest artifact can still own an unplaced seer child.
+That child's native prototype refcount participates in the serialized prototype
+list. Count each object record once, regardless of footprint membership count.
 
 Factory and completion constraints, confirmed against native source and retail:
 

@@ -140,12 +140,16 @@ impl From<TryReserveError> for PlacementRuleError {
 /// Immutable rules and two matrices; no per-rule neighbour vectors.
 #[derive(Debug)]
 pub struct PlacementRules {
+    behavior: Behavior,
     owner: OwnerId,
     rules: Vec<PlacementRule>,
     scores: Vec<i32>,
     columns: usize,
 }
 impl PlacementRules {
+    pub(crate) const fn behavior(&self) -> Behavior {
+        self.behavior
+    }
     fn id(&self, index: usize) -> PlacementRuleId {
         PlacementRuleId {
             index,
@@ -166,6 +170,7 @@ impl PlacementRules {
             .checked_add(row_scores)
             .ok_or(PlacementRuleError::Capacity)?;
         let mut result = Self {
+            behavior,
             owner: OwnerId::new().ok_or(PlacementRuleError::IdentityExhausted)?,
             rules: Vec::new(),
             scores: Vec::new(),

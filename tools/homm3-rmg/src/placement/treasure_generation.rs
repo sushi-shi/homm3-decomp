@@ -159,7 +159,22 @@ impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
         })
     }
 }
+impl<'state, 'zones, 'tiles> TreasureGeneration<'state, 'zones, 'tiles, '_, '_, '_, '_> {
+    pub(crate) fn map_mut(&mut self) -> &mut super::PlacementMap<'state, 'zones, 'tiles> {
+        self.ready.paths.map_mut()
+    }
+}
 impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+    // The outer workspace lends these buffers for treasure placement and takes
+    // them back on both success and failure; completed maps need neither buffer.
+    pub(crate) fn exchange_scratch(
+        &mut self,
+        offers: &mut Vec<SelectedTreasure>,
+        groups: &mut Vec<Box<super::TreasureGroupWorkspace>>,
+    ) {
+        std::mem::swap(&mut self.offers, offers);
+        std::mem::swap(&mut self.nested_groups, groups);
+    }
     /// The admitted map, definitions and current offer policies.
     #[must_use]
     pub const fn ready(&self) -> &TreasuresReady<'_, '_, '_, '_, '_, '_> {

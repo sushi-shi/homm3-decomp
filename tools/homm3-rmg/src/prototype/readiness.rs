@@ -107,13 +107,22 @@ impl<'a> PrototypeCatalog<'a> {
         levels: Levels,
         artifacts: &ArtifactCatalog,
     ) -> Result<GenerationPrototypes<'a>, RequiredPrototypeError> {
-        if self.behavior.is_hotfix() {
-            self.required(levels, artifacts)?;
-        }
+        self.require_generation(levels, artifacts)?;
         Ok(GenerationPrototypes {
             catalog: self,
             levels,
         })
+    }
+
+    pub(crate) fn require_generation(
+        &self,
+        levels: Levels,
+        artifacts: &ArtifactCatalog,
+    ) -> Result<(), RequiredPrototypeError> {
+        if self.behavior.is_hotfix() {
+            self.required(levels, artifacts)?;
+        }
+        Ok(())
     }
 
     fn required(
