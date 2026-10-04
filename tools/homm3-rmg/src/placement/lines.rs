@@ -187,7 +187,7 @@ impl PlacementMap<'_, '_, '_> {
         if !(range.first()..range.first() + range.count().get()).contains(&u32::from(frame))
             || reflection != selection.reflection
         {
-            let frame = u8::try_from(range.select(rng)).expect("canonical line frames fit a byte");
+            let frame = range.select(rng);
             self.set_line_frame(layer, at, frame, selection.reflection)?;
         }
         Ok(())

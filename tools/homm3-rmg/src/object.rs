@@ -85,6 +85,17 @@ impl ObjectKind {
     }
 }
 
+/// Decoration families in source selection order, admitted at compile time.
+pub(crate) const DECORATION_KINDS: [ObjectKind; raw::DECORATION_TYPES.len()] = {
+    let mut kinds = [ObjectKind(0); raw::DECORATION_TYPES.len()];
+    let mut index = 0;
+    while index < kinds.len() {
+        kinds[index] = ObjectKind::from_source(raw::DECORATION_TYPES[index]);
+        index += 1;
+    }
+    kinds
+};
+
 /// Behavior initialized from the five canonical adventure-object tables.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[expect(

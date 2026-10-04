@@ -5,6 +5,7 @@ use super::{
 };
 use crate::{
     domain::{Level, Terrain, WorldPosition},
+    object::ObjectKind,
     prototype::PrototypeCatalog,
     raw,
     rng::RetailRng,
@@ -68,8 +69,10 @@ impl PlacementMap<'_, '_, '_> {
                 if !traits.enterable_from_north() && !traits.cleared_on_visit() {
                     directions = Direction::NorthWest.index();
                 }
-                match u32::try_from(kind.index()).unwrap() {
-                    raw::LITH_ONEWAY_ENTRANCE | raw::LITH_ONEWAY_EXIT | raw::LITH_TWOWAY => {
+                match kind {
+                    ObjectKind::LITH_ONEWAY_ENTRANCE
+                    | ObjectKind::LITH_ONEWAY_EXIT
+                    | ObjectKind::LITH_TWOWAY => {
                         let object = self
                             .memberships
                             .first(current.objects)
@@ -80,7 +83,7 @@ impl PlacementMap<'_, '_, '_> {
                         let prototype = catalog
                             .get(geometry.prototype())
                             .ok_or(PlacementError::UnknownPrototype(geometry.prototype()))?;
-                        let direction = if kind.index() == raw::LITH_TWOWAY as usize {
+                        let direction = if kind == ObjectKind::LITH_TWOWAY {
                             PortalDirection::TwoWay
                         } else {
                             PortalDirection::OneWay
@@ -100,7 +103,7 @@ impl PlacementMap<'_, '_, '_> {
                             }
                         }
                     }
-                    raw::UNDERGROUND_GATE => {
+                    ObjectKind::UNDERGROUND_GATE => {
                         let level = match position.level {
                             Level::Surface => Level::Underground,
                             Level::Underground => Level::Surface,

@@ -141,20 +141,31 @@ impl LineSelection {
     }
 }
 
-/// A nonempty contiguous range of sprite frames for a shape.
+/// A nonempty contiguous range of byte-sized sprite frames for a shape.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct FrameRange {
-    first: u32,
+    first: u8,
     count: NonZeroU32,
 }
 impl FrameRange {
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "frame bounds checked before narrowing"
+    )]
     pub(crate) const fn new(first: u32, count: NonZeroU32) -> Self {
-        Self { first, count }
+        assert!(
+            first <= u8::MAX as u32 && count.get() <= u8::MAX as u32 + 1 - first,
+            "sprite frame range must fit a byte"
+        );
+        Self {
+            first: first as u8,
+            count,
+        }
     }
     /// First sprite frame for this shape.
     #[must_use]
     pub const fn first(self) -> u32 {
-        self.first
+        self.first as u32
     }
 
     /// Number of alternatives, guaranteed nonzero.
@@ -164,8 +175,12 @@ impl FrameRange {
     }
 
     /// Select a frame with one retail RNG draw, including singleton ranges.
-    pub fn select(self, rng: &mut RetailRng) -> u32 {
-        self.first + rng.below(self.count)
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "admitted range fits a frame byte"
+    )]
+    pub fn select(self, rng: &mut RetailRng) -> u8 {
+        (u32::from(self.first) + rng.below(self.count)) as u8
     }
 }
 
@@ -190,22 +205,19 @@ impl LineTable {
             let pattern = frames[index] as usize;
             assert!(pattern < ranges.len(), "unknown source line pattern");
             ranges[pattern] = Some(match ranges[pattern] {
-                None => FrameRange {
-                    first: frame_number,
-                    count: NonZeroU32::MIN,
-                },
+                None => FrameRange::new(frame_number, NonZeroU32::MIN),
                 Some(previous) => {
                     assert!(
                         index > 0 && frames[index - 1] == frames[index],
                         "source frames must be contiguous"
                     );
-                    FrameRange {
-                        first: previous.first,
-                        count: match NonZeroU32::new(previous.count.get() + 1) {
+                    FrameRange::new(
+                        previous.first(),
+                        match NonZeroU32::new(previous.count.get() + 1) {
                             Some(count) => count,
                             None => panic!("source line frame count overflow"),
                         },
-                    }
+                    )
                 }
             });
             index += 1;
@@ -291,6 +303,29 @@ impl LineTable {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn frame_ranges_preserve_byte_limits_and_singleton_draws() {
+        let mut rng = RetailRng::new(1);
+        let mut expected = rng.clone();
+        assert_eq!(FrameRange::new(255, NonZeroU32::MIN).select(&mut rng), 255);
+        expected.draw();
+        assert_eq!(rng, expected);
+        let all_frames = FrameRange::new(0, NonZeroU32::new(256).unwrap());
+        for _ in 0..4 {
+            assert_eq!(
+                u32::from(all_frames.select(&mut rng)),
+                expected.draw() % 256
+            );
+        }
+        assert_eq!(rng, expected);
+    }
+
+    #[test]
+    #[should_panic(expected = "sprite frame range must fit a byte")]
+    fn frame_ranges_reject_a_last_frame_outside_the_byte_domain() {
+        FrameRange::new(255, NonZeroU32::new(2).unwrap());
+    }
 
     #[test]
     fn every_neighbour_mask_selects_available_frames() {

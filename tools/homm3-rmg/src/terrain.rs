@@ -328,7 +328,9 @@ impl Brush<'_> {
             ] {
                 if let Some(nearby) = self.offset(index, x, y) {
                     if self.repair.contains(nearby)
-                        && !self.gap(nearby, self.terrain(nearby), axis.perpendicular())
+                        && self
+                            .gap(nearby, self.terrain(nearby), axis.perpendicular())
+                            .is_none()
                     {
                         self.repair.remove(nearby);
                         self.queue_others(nearby);
@@ -386,12 +388,12 @@ impl Brush<'_> {
             }
         }
     }
-    fn gap(&self, index: usize, terrain: Terrain, axis: Axis) -> bool {
+    fn gap(&self, index: usize, terrain: Terrain, axis: Axis) -> Option<(usize, usize)> {
         let (x, y) = axis.offset();
-        match (self.offset(index, -x, -y), self.offset(index, x, y)) {
-            (Some(a), Some(b)) => self.terrain(a) != terrain && self.terrain(b) != terrain,
-            _ => false,
-        }
+        let negative = self.offset(index, -x, -y)?;
+        let positive = self.offset(index, x, y)?;
+        (self.terrain(negative) != terrain && self.terrain(positive) != terrain)
+            .then_some((negative, positive))
     }
     fn matching(&self, index: usize) -> [bool; raw::TILE_DIR_COUNT as usize] {
         let terrain = self.terrain(index);
@@ -420,24 +422,30 @@ impl Brush<'_> {
     }
     fn needs_repair(&self, index: usize) -> bool {
         let terrain = self.terrain(index);
-        self.gap(index, terrain, Axis::Horizontal)
-            || self.gap(index, terrain, Axis::Vertical)
+        self.gap(index, terrain, Axis::Horizontal).is_some()
+            || self.gap(index, terrain, Axis::Vertical).is_some()
             || (!terrain_rules::allows_separated(terrain) && self.separated(index))
     }
-    fn repair_gap(&mut self, index: usize, axis: Axis) -> Result<(), TerrainRuleError> {
-        let (x, y) = axis.offset();
-        let negative = self.offset(index, -x, -y).expect("gap has both neighbours");
-        let positive = self.offset(index, x, y).expect("gap has both neighbours");
+    fn repair_gap(
+        &mut self,
+        negative: usize,
+        positive: usize,
+        axis: Axis,
+    ) -> Result<(), TerrainRuleError> {
         let fill_positive = !self.needs_repair(negative)
             && (self.needs_repair(positive)
-                || (self.gap(negative, self.terrain, axis.perpendicular())
-                    && !self.gap(positive, self.terrain, axis.perpendicular())));
+                || (self
+                    .gap(negative, self.terrain, axis.perpendicular())
+                    .is_some()
+                    && self
+                        .gap(positive, self.terrain, axis.perpendicular())
+                        .is_none()));
         self.paint_point(if fill_positive { positive } else { negative })
     }
     fn repair_point(&mut self, index: usize) -> Result<(), TerrainRuleError> {
         for axis in [Axis::Vertical, Axis::Horizontal] {
-            if self.gap(index, self.terrain(index), axis) {
-                self.repair_gap(index, axis)?;
+            if let Some((negative, positive)) = self.gap(index, self.terrain(index), axis) {
+                self.repair_gap(negative, positive, axis)?;
             }
         }
         if terrain_rules::allows_separated(self.terrain) || !self.separated(index) {

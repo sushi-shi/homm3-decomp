@@ -39,8 +39,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         self.offers.clear();
         let mut total_weight = 0_i32;
         let mut best_per_cell = 0_i32;
-        for definition in self.ready.catalog.ids() {
-            let def = self.ready.catalog.get(definition).expect("catalog ID");
+        for (definition, def) in self.ready.catalog.iter() {
             let kind = def.kind();
             let traits = kind.traits();
             if !matches!(purpose, TreasurePurpose::First)

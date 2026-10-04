@@ -7,7 +7,7 @@ use crate::{
     domain::{Level, WorldPosition},
     geometry::Point,
     identity::OwnerId,
-    object::ObjectKind,
+    object::DECORATION_KINDS,
     placement_rules::{NeighbourScore, PlacementRules},
     prototype::{MaskCell, OverlapPriorities, PrototypeCatalog, PrototypeId},
     raw,
@@ -241,11 +241,14 @@ impl PlacementMap<'_, '_, '_> {
                     None
                 };
                 for id in self.memberships.iter(self.cells[index].objects) {
-                    let geometry = *objects.get(id).ok_or(PlacementError::UnknownObject(id))?;
+                    let object = objects
+                        .resolve(id)
+                        .ok_or(PlacementError::UnknownObject(id))?;
                     let covers = if let Some(priority) = priority {
-                        let anchor = geometry
-                            .position()
-                            .ok_or(PlacementError::UnknownObject(id))?;
+                        let object = object
+                            .positioned()
+                            .ok_or(PlacementError::UnpositionedObject(id))?;
+                        let anchor = object.position();
                         let x = anchor
                             .point
                             .x
@@ -260,8 +263,8 @@ impl PlacementMap<'_, '_, '_> {
                             .ok()
                             .zip(u8::try_from(y).ok())
                             .and_then(|(x, y)| MaskCell::parse(x, y))
-                            .ok_or(PlacementError::UnwrittenOverlap(geometry.prototype()))?;
-                        Some(scratch.priority(catalog, geometry.prototype(), cell)? <= priority)
+                            .ok_or(PlacementError::UnwrittenOverlap(object.prototype()))?;
+                        Some(scratch.priority(catalog, object.prototype(), cell)? <= priority)
                     } else {
                         None
                     };
@@ -395,8 +398,7 @@ impl PlacementMap<'_, '_, '_> {
             let terrain = self.terrain.tiles()[index].terrain();
             scratch.candidates.clear();
             let mut total = 0_i32;
-            for kind in raw::DECORATION_TYPES {
-                let kind = ObjectKind::parse(i32::try_from(kind).unwrap()).unwrap();
+            for kind in DECORATION_KINDS {
                 for (ordinal, entry) in catalog.family(kind).iter().enumerate() {
                     let Some(rule) = entry.rule() else {
                         continue;

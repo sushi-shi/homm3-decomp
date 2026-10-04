@@ -247,7 +247,17 @@ fn description(
             Water::Normal => 1,
             Water::Islands => 2,
         };
-        write!(text, ", Random seed was {}, size {}, levels {}, humans {}, computers {}, water {}, monsters {}", i32::from_ne_bytes(map.report().seed().to_ne_bytes()), request.size().dimension(), request.levels().count(), request.human_players().get(), request.computer_players().get(), std::str::from_utf8(raw::WATER_NAMES[water]).expect("canonical ASCII water names"), request.strength().get())?;
+        write!(
+            text,
+            ", Random seed was {}, size {}, levels {}, humans {}, computers {}, water ",
+            i32::from_ne_bytes(map.report().seed().to_ne_bytes()),
+            request.size().dimension(),
+            request.levels().count(),
+            request.human_players().get(),
+            request.computer_players().get()
+        )?;
+        text.write_all(raw::WATER_NAMES[water])?;
+        write!(text, ", monsters {}", request.strength().get())?;
         text.write_all(match request.version() {
             MapVersion::Restoration => b", original map",
             MapVersion::ArmageddonsBlade => b", first expansion map",

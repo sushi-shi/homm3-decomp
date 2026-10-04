@@ -338,6 +338,14 @@ impl TreasureCatalog<'_, '_, '_> {
             owner: self.owner,
         })
     }
+    /// Resolved definitions and their identities in insertion order, without allocating.
+    #[must_use]
+    pub fn iter(
+        &self,
+    ) -> impl ExactSizeIterator<Item = (DefinitionId, &TreasureDefinition)> + DoubleEndedIterator + '_
+    {
+        self.ids().zip(self.definitions)
+    }
     /// Resolve only an identity belonging to this preparation.
     #[must_use]
     pub fn get(&self, id: DefinitionId) -> Option<&TreasureDefinition> {

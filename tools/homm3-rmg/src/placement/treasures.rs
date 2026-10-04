@@ -141,6 +141,10 @@ impl TreasuresReady<'_, '_, '_, '_, '_, '_> {
     }
 }
 
+#[expect(
+    clippy::cast_possible_wrap,
+    reason = "source reward defaults are asserted to fit i32 in treasure"
+)]
 fn reward_value(
     reward: TreasureReward,
     faction: CreaturePreference,
@@ -173,9 +177,17 @@ fn reward_value(
             KeyTentCursor::ReplayRequired => Err(PlacementError::KeyTentReplayRequired),
             KeyTentCursor::Value(cursor) => Ok(if cursor == ordinal.value() { value } else { -1 }),
         },
-        fixed => Ok(fixed
-            .fixed_value()
-            .expect("all dynamic value policies handled above")),
+        TreasureReward::Plain(value)
+        | TreasureReward::Artifact(value)
+        | TreasureReward::Resource(value)
+        | TreasureReward::Shrine(value)
+        | TreasureReward::Experience { value, .. }
+        | TreasureReward::Gold { value, .. }
+        | TreasureReward::Spells { value, .. }
+        | TreasureReward::Prison { value, .. }
+        | TreasureReward::Scroll { value, .. } => Ok(value),
+        TreasureReward::Scholar => Ok(raw::RMG_SCHOLAR_REWARD_VALUE as i32),
+        TreasureReward::WitchHut => Ok(raw::RMG_WITCH_HUT_REWARD_VALUE as i32),
     }
 }
 fn matches_faction(faction: CreaturePreference, town: Option<crate::request::Town>) -> bool {

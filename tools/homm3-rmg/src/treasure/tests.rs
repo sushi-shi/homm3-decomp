@@ -187,11 +187,18 @@ fn definition_ids_cannot_cross_catalogs_or_survive_repreparation() {
     let mut first = TreasureWorkspace::default();
     let mut second = TreasureWorkspace::default();
     let first_catalog = first.prepare(&prototypes, &creatures).unwrap();
-    let first_id = first_catalog.ids().next().unwrap();
-    assert!(first_catalog.get(first_id).is_some());
+    let (first_id, definition) = first_catalog.iter().next().unwrap();
+    assert!(std::ptr::eq(
+        first_catalog.get(first_id).unwrap(),
+        definition
+    ));
+    assert_eq!(
+        first_catalog.iter().len(),
+        first_catalog.definitions().len()
+    );
     let second_catalog = second.prepare(&prototypes, &creatures).unwrap();
     assert!(second_catalog.get(first_id).is_none());
-    let second_id = second_catalog.ids().next().unwrap();
+    let (second_id, _) = second_catalog.iter().next().unwrap();
     assert_eq!(first_id.index(), second_id.index());
     assert!(first_catalog.get(second_id).is_none());
     let replacement = first.prepare(&prototypes, &creatures).unwrap();

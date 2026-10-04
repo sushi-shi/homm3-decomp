@@ -598,7 +598,7 @@ fn select_range(
             transition,
         });
     };
-    Ok(u8::try_from(range.select(rng)).expect("source-derived frame ranges fit u8"))
+    Ok(range.select(rng))
 }
 
 /// Priority-ordered classification under four reflections. A family tries all

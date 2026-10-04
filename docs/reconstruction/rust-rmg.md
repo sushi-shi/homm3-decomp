@@ -31,8 +31,9 @@ belong to callers.
 
 Parse raw inputs into enums and private newtypes for bounded values, player
 slots, object IDs and coordinate domains. Named `ObjectKind` constants are
-checked at compile time against bindgen values. Optional values replace sentinels;
-stage types express which operations are available. `PlacementMap::cell` admits
+checked at compile time against bindgen values, including the ordered decoration
+families. Frame ranges admit byte-sized results before generation. Optional values
+replace sentinels; stage types express which operations are available. `PlacementMap::cell` admits
 coordinates into a borrowed `MapCell` containing state, terrain and zone;
 `WorldPosition` remains the signed calculation/probe type. Flat row/plane aliases
 use a separate internal resolver. `ObjectArena::resolve` checks an ID once and
@@ -46,7 +47,9 @@ to its catalog. Parsing must preserve the native timing of
 random choices and request repairs. Failures carry stage/RNG diagnostics and
 the effective request when available. Path walkers match `Movement` variants;
 zero-cost arrivals retain a predecessor even where walking stops. Numeric costs
-remain available for search priorities and compatibility thresholds.
+remain available for search priorities and compatibility thresholds. Terrain gaps
+retain their admitted neighbour indices; treasure iteration retains definitions
+alongside their IDs, and valuation matches every reward variant explicitly.
 
 Generation uses an owned RNG and reusable, mostly flat storage. The object
 arena holds typed payloads shared by world placement and temporary treasure
