@@ -7,3 +7,6 @@
 #include "game_resource.h"
 #include "rmg_columns.h"
 #include "rmg_terrain_data.h"
+#include "adventure_object_type.h"
+#include "adventure_object_data.h"
+#include "objectmask.h"

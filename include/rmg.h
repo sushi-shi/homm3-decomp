@@ -37,11 +37,6 @@ struct TObjectType;
 struct TRmgObjectPropertiesRef;
 class TRmgObject;
 
-// Terrain types, dirt through rock.
-enum ERmgTerrainLimits {
-    RMG_TERRAIN_COUNT = eTerrainRock + 1
-};
-
 // Hero ids a map format knows: RoE maps stop before the expansion heroes.
 // Prisons in later formats hold only the first RMG_PRISON_HERO_COUNT.
 enum ERmgHeroCount {
@@ -681,7 +676,6 @@ struct TRmgRiverDeltaOffset {
 class TRmgObject;
 
 
-
 struct TRmgMovementCost {
     u32 m_cost : 16;
     // Cost of reaching this cell in a flood from another zone; ranks
@@ -770,12 +764,6 @@ enum ERmgObjectPlacementMark {
     RMG_PLACEMENT_ADJACENT = 1,
     RMG_PLACEMENT_OVERLAP = 2,
     RMG_PLACEMENT_BLOCKED = 4
-};
-
-enum ERmgObjectPlacementScore {
-    RMG_PLACEMENT_INVALID = -5000,
-    RMG_PLACEMENT_MINIMUM_TERRAIN_SCORE = -1000,
-    RMG_PLACEMENT_NO_TERRAIN_PREFERENCE = -1
 };
 
 // Shared, reference-counted placement data for one objects.txt prototype;

@@ -118,7 +118,7 @@ Eight VC6 stage checkpoints (four sizes in both modes) agree with Rust on the
 template, player assignments, zone positions/sizes, terrain/faction choices,
 clipped polygons, every boundary cell, connection adjacency order, graph
 distances, recentered bounds, island coverage and every painted terrain/frame/flip.
-Each random stage also agrees on RNG state. There are 30 focused unit tests across the two crates. The
+Each random stage also agrees on RNG state. There are 34 focused unit tests across the two crates. The
 installed-data checks require explicit local assets and are ignored by default.
 
 The boundary-to-coverage transition consumes its stage value, preventing a
@@ -135,6 +135,16 @@ buffer-reuse evidence; full allocator profiling is still pending. Frame tables
 and rule parameters are shared C++ initializers exported at build time, including
 one shared land-frame table for all six land rules. Brush strength and valid
 terrain frames have private, parsed domains.
+
+Adventure-object identities and all five trait override tables now come from
+shared source definitions. The native `rand_trn.txt` parser keeps original row
+identities separate from compacted rule IDs, preserves last-match binding, and
+stores neighbour matrices in one flat buffer. Short/invalid hotfix rows are
+skipped without shifting their score columns; retail reports typed indexing
+faults. Every score in all 109 installed placement rules and all 232 initialized
+object-trait rows match the C++ loader in both modes. Prototype loading and
+binding remain the next asset step; the trait check does not establish that
+the complete asset catalog is implemented.
 
 Fresh whole-map C++ runs also succeeded and repeated exactly for those eight
 cases. Before any Rust generation, C++ retail mode already differs from the

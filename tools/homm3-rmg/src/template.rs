@@ -133,34 +133,12 @@ impl<'a> Row<'a> {
             .is_some_and(|byte| byte != 0 && byte != b' ')
     }
     fn number(&self, column: u32) -> Result<i32, TemplateError> {
-        // Match the CRT's prefix parsing, not Rust's strict whole-string parse.
-        let mut bytes = self
-            .bytes(column)
-            .skip_while(u8::is_ascii_whitespace)
-            .peekable();
-        let negative = bytes.peek() == Some(&b'-');
-        if negative || bytes.peek() == Some(&b'+') {
-            bytes.next();
-        }
-        let mut value = 0_i32;
-        for digit in bytes.take_while(u8::is_ascii_digit) {
-            let digit = i32::from(digit - b'0');
-            value = value
-                .checked_mul(10)
-                .and_then(|value| {
-                    if negative {
-                        value.checked_sub(digit)
-                    } else {
-                        value.checked_add(digit)
-                    }
-                })
-                .ok_or(TemplateError::IntegerOverflow {
-                    row: self.index,
-                    column,
-                })?;
-        }
-        Ok(value)
+        crate::parse::integer(self.bytes(column)).ok_or(TemplateError::IntegerOverflow {
+            row: self.index,
+            column,
+        })
     }
+
     fn name(&self) -> Cow<'a, [u8]> {
         let Some(field) = self.fields[raw::RMG_TEMPLATE_COLUMN_NAME as usize] else {
             return Cow::Borrowed(&[]);

@@ -2,6 +2,13 @@
 #ifndef HOMM3_RMG_SETTINGS_H
 #define HOMM3_RMG_SETTINGS_H
 
+#include "terrain_type.h"
+
+// Terrain types, dirt through rock.
+enum ERmgTerrainLimits {
+    RMG_TERRAIN_COUNT = eTerrainRock + 1
+};
+
 enum ERmgMapLevel {
     RMG_SURFACE_LEVEL = 0,
     RMG_UNDERGROUND_LEVEL = 1,
@@ -51,6 +58,12 @@ enum ERmgPathCostLimits {
     RMG_REACHED_COST_LIMIT = 30000,
     RMG_UNREACHED_COST = 32000,
     RMG_CLEARED_CELL_COST = 32700
+};
+
+enum ERmgObjectPlacementScore {
+    RMG_PLACEMENT_INVALID = -5000,
+    RMG_PLACEMENT_MINIMUM_TERRAIN_SCORE = -1000,
+    RMG_PLACEMENT_NO_TERRAIN_PREFERENCE = -1
 };
 
 #endif

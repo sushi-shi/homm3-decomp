@@ -10,6 +10,23 @@
 #include "town_type.h"
 #include "terrain_type.h"
 #include "rmg_terrain_data.h"
+#include "adventure_object_data.h"
+
+static const TAdvObjectNameRow objectNameRows[] =
+#include "rmg_data/object_name_rows.inc"
+;
+static const int objectDecorationIds[] =
+#include "rmg_data/object_decoration_ids.inc"
+;
+static const int objectClearedIds[] =
+#include "rmg_data/object_cleared_ids.inc"
+;
+static const int objectLandBlockedIds[] =
+#include "rmg_data/object_land_blocked_ids.inc"
+;
+static const int objectNorthIds[] =
+#include "rmg_data/object_north_ids.inc"
+;
 
 static const TRmgTerrainTransitionEntry rockFrames[] =
 #include "rmg_data/rock_frames.inc"
@@ -157,6 +174,14 @@ void emitArray(const char* name, const T (&array)[N])
 
 int main()
 {
+    emitArray("OBJECT_DECORATION_IDS", objectDecorationIds);
+    emitArray("OBJECT_CLEARED_IDS", objectClearedIds);
+    emitArray("OBJECT_LAND_BLOCKED_IDS", objectLandBlockedIds);
+    emitArray("OBJECT_NORTH_IDS", objectNorthIds);
+    std::printf("pub const OBJECT_NAME_ROWS: [TAdvObjectNameRow; %lu] = [", sizeof(objectNameRows)/sizeof(objectNameRows[0]));
+    for (const auto& row : objectNameRows)
+        std::printf("TAdvObjectNameRow { m_objectType: %d, m_nameRow: %d },", row.m_objectType, row.m_nameRow);
+    std::printf("];\n");
     emitTerrainRules();
     emitArray("RIVER_PATTERNS", river);
     emitArray("ROAD_PATTERNS", road);
