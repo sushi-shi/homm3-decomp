@@ -243,10 +243,10 @@ void emitTerrainRules()
     std::printf("];\n");
 }
 
-static const ERmgLinePattern river[@count] =
+static const int river[@count] =
 // @rmg initializer src/rmg.cpp g_rmgRiverPatterns
 ;
-static const ERmgLinePattern road[@count] =
+static const int road[@count] =
 // @rmg initializer src/rmg.cpp g_rmgRoadPatterns
 ;
 static const unsigned char reflections[@count][2] =
@@ -255,7 +255,7 @@ static const unsigned char reflections[@count][2] =
 static const int neighbours[@count][2][TILE_DIR_COUNT] =
 // @rmg initializer src/rmg_terrain.cpp g_rmgReflectedNeighbours
 ;
-static const TTownType terrainTowns[@count][RMG_TERRAIN_TOWN_CHOICE_COUNT] =
+static const int terrainTowns[@count][RMG_TERRAIN_TOWN_CHOICE_COUNT] =
 // @rmg initializer src/rmg.cpp g_rmgTerrainTownChoices
 ;
 static const TTerrainType nativeTerrain[@count] =

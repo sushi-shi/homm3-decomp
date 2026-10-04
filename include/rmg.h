@@ -799,7 +799,7 @@ struct TRmgGroundTile {
     // both. Role-derived names; original spellings unknown.
     // Replaces unknown06.
     signed m_terrainFrame : 8;
-    signed m_lineType : 4;
+    signed m_riverType : 4;
     signed m_riverFrame : 8;
     // this at bit 26; getter 0x532447..0x532450 sign-extends four bits.
     signed m_roadType : 4;
@@ -852,7 +852,8 @@ struct TRmgGroundTileData {
 
 struct TRmgBorderConnection {
     unsigned m_present : 1;
-    unsigned m_direction : 4;
+    // Key colour for a guarded connection; its interpretation needs m_present.
+    unsigned m_guardColor : 4;
     unsigned m_unknown05 : 27;
 };
 

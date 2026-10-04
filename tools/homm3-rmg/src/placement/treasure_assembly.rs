@@ -49,7 +49,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                 continue;
             }
             if matches!(purpose, TreasurePurpose::Replacement(_))
-                && def.reward().terrain_dependent()
+                && def.reward().requires_linked_placement()
             {
                 continue;
             }

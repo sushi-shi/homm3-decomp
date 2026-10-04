@@ -4842,9 +4842,9 @@ void TRmgGenerator::traceZoneBoundary(
     bool found = false;
     do {
         next = vertex->m_next;
-        originalFrom = vertex->m_position;
-        originalTo = next->m_position;
-        from = clipRmgBoundaryPoint(bounds, vertex->m_position, next->m_position);
+        originalFrom = vertex->m_vertex;
+        originalTo = next->m_vertex;
+        from = clipRmgBoundaryPoint(bounds, vertex->m_vertex, next->m_vertex);
         to = clipRmgBoundaryPoint(bounds, originalTo, originalFrom);
         if (bounds.contains(from) && from != to) {
             found = true;
@@ -4872,9 +4872,9 @@ void TRmgGenerator::traceZoneBoundary(
     do {
         next = vertex->m_next;
         TRmgZone* neighbour = next->m_twin->m_zone;
-        originalFrom = vertex->m_position;
-        originalTo = next->m_position;
-        from = clipRmgBoundaryPoint(bounds, vertex->m_position, next->m_position);
+        originalFrom = vertex->m_vertex;
+        originalTo = next->m_vertex;
+        from = clipRmgBoundaryPoint(bounds, vertex->m_vertex, next->m_vertex);
         to = clipRmgBoundaryPoint(bounds, originalTo, originalFrom);
         zone->m_boundary.push_back(TPoint(from));
 
@@ -4896,7 +4896,7 @@ void TRmgGenerator::traceZoneBoundary(
             from = to;
             for (;;) {
                 next = next->m_next;
-                to = clipRmgBoundaryPoint(bounds, vertex->m_position, next->m_position);
+                to = clipRmgBoundaryPoint(bounds, vertex->m_vertex, next->m_vertex);
                 if (bounds.contains(to))
                     break;
                 vertex = next;
@@ -5366,7 +5366,7 @@ void TRmgGenerator::joinExtraZones(int originalZones, TRmgVoronoi* diagram)
             } while (edge != first);
             if (edge->m_twin->m_zone != destination)
                 continue;
-            TPoint clipped = clipRmgBoundaryPoint(bounds, edge->m_position, edge->m_previous->m_position);
+            TPoint clipped = clipRmgBoundaryPoint(bounds, edge->m_vertex, edge->m_previous->m_vertex);
             if (bounds.contains(clipped)) {
                 TRmgZoneConnection connection;
                 connection.m_destination = destination->m_slot;
@@ -6341,7 +6341,7 @@ void TRmgGenerator::buildZoneConnectionPaths()
 // Complete's ground connection follows predecessor cells with positive
 // movement cost, stopping at the zero-cost seed. It does not change costs:
 // it clears border obstacles and marks the route traversable. Decoration
-// cells select a BORDER_GUARD by direction and place the ordinary object.
+// cells select a BORDER_GUARD by key colour and place the ordinary object.
 // Retail retains the first getMapItem and selectObjectPrototype calls, then
 // expands later map accesses. After virtual addObject it rechecks present.
 // The non-narrow path clears only borderObject in the clipped same-zone 3x3
@@ -6364,10 +6364,10 @@ void TRmgGenerator::openConnectionPath(
     while (item->m_movement.m_cost > 0) {
         if (item->m_connection.m_present) {
             TRmgObjectPropertiesRef* properties = selectObjectPrototype(
-                eTerrainDirt, BORDER_GUARD, item->m_connection.m_direction);
+                eTerrainDirt, BORDER_GUARD, item->m_connection.m_guardColor);
             TRmgObject* object = new TRmgObject(properties);
             item->m_connection.m_present = 0;
-            item->m_connection.m_direction = 0;
+            item->m_connection.m_guardColor = 0;
             if (!item->m_connection.m_present) {
                 item->m_tileData.m_borderObject = 0;
                 item->m_tileData.m_subterraneanGate = 1;
@@ -6496,7 +6496,7 @@ int TRmgGenerator::placeBorderObject(
         TRmgObject* guard = new TRmgObject(guardProperties);
         TRmgMapItem* item = m_map.getMapItem(position);
         item->m_connection.m_present = 0;
-        item->m_connection.m_direction = 0;
+        item->m_connection.m_guardColor = 0;
         if (!item->m_connection.m_present) {
             item->m_tileData.m_borderObject = 0;
             item->m_tileData.m_subterraneanGate = 1;
@@ -6531,7 +6531,7 @@ void TRmgGenerator::markBorderObjectArea(
                     item->m_tileData.m_subterraneanGate = 0;
                     item->m_tileData.m_borderObject = 1;
                 }
-                item->m_connection.m_direction = direction;
+                item->m_connection.m_guardColor = direction;
                 item->m_connection.m_present = 1;
             }
         }
@@ -6541,7 +6541,7 @@ void TRmgGenerator::markBorderObjectArea(
         && previous.m_y >= 0 && previous.m_y < m_map.m_mapHeight) {
         TRmgMapItem* item = m_map.getMapItem(previous);
         item->m_connection.m_present = 0;
-        item->m_connection.m_direction = 0;
+        item->m_connection.m_guardColor = 0;
         if (!item->m_connection.m_present) {
             item->m_tileData.m_borderObject = 0;
             item->m_tileData.m_subterraneanGate = 1;
@@ -7138,7 +7138,7 @@ unsigned char TRmgGenerator::createSubterraneanGate(
                     item->m_tileData.m_subterraneanGate = 0;
                     item->m_tileData.m_borderObject = 1;
                 }
-                item->m_connection.m_direction = direction;
+                item->m_connection.m_guardColor = direction;
                 item->m_connection.m_present = 1;
             }
 
@@ -7149,7 +7149,7 @@ unsigned char TRmgGenerator::createSubterraneanGate(
                     item->m_tileData.m_subterraneanGate = 0;
                     item->m_tileData.m_borderObject = 1;
                 }
-                item->m_connection.m_direction = direction;
+                item->m_connection.m_guardColor = direction;
                 item->m_connection.m_present = 1;
             }
         }
@@ -7163,7 +7163,7 @@ unsigned char TRmgGenerator::createSubterraneanGate(
                     item->m_tileData.m_subterraneanGate = 0;
                     item->m_tileData.m_borderObject = 1;
                 }
-                item->m_connection.m_direction = direction;
+                item->m_connection.m_guardColor = direction;
                 item->m_connection.m_present = 1;
             }
 
@@ -7174,7 +7174,7 @@ unsigned char TRmgGenerator::createSubterraneanGate(
                     item->m_tileData.m_subterraneanGate = 0;
                     item->m_tileData.m_borderObject = 1;
                 }
-                item->m_connection.m_direction = direction;
+                item->m_connection.m_guardColor = direction;
                 item->m_connection.m_present = 1;
             }
             return 1;
@@ -7293,7 +7293,7 @@ unsigned char TRmgGenerator::placeMonolithBorderGuard(
                 neighbor->m_tileData.m_subterraneanGate = 0;
                 neighbor->m_tileData.m_borderObject = 1;
             }
-            neighbor->m_connection.m_direction = border;
+            neighbor->m_connection.m_guardColor = border;
             neighbor->m_connection.m_present = 1;
         }
     }
@@ -10095,6 +10095,9 @@ int writeString(TAbstractFile* outfile, const char* text)
     return outfile->write(text, strlen(text));
 }
 
+// The shared artifact enum has no enumerator for the Vial of Dragon Blood.
+static const int g_rmgArtifactVialOfDragonBlood = 127;
+
 // Complete's random-map pipeline calls this routine immediately before the
 // generated terrain/object stream is emitted.  The format switch, description
 // fragments, player records, team assignment, and packed availability masks
@@ -10373,7 +10376,7 @@ void TRmgGenerator::writeMapHeader(TAbstractFile* outfile)
     // Retail 0x54a78d/0x54a790 sets bit 0 of word 4 and bit 31 of
     // word 3, relative to the bitset base at [ebp-0x64]: IDs 128 and 127.
     disabledArtifacts.set(128);
-    disabledArtifacts.set(127);
+    disabledArtifacts.set(g_rmgArtifactVialOfDragonBlood);
 
     if (m_mapVersion >= 2) {
         writePackedBits(outfile, disabledArtifacts);

@@ -48,7 +48,7 @@ class Sources:
         self.units = {}
         self.dependencies = set()
 
-    def definition(self, filename, name):
+    def translation_unit(self, filename):
         if filename not in self.units:
             path = (self.root / filename).resolve()
             tu = cx.Index.create().parse(str(path), args=[
@@ -75,6 +75,10 @@ class Sources:
                     visit(child)
             visit(tu.cursor)
             self.units[filename] = tu, definitions, bad, errors
+        return self.units[filename][0]
+
+    def definition(self, filename, name):
+        self.translation_unit(filename)
         _, definitions, bad, errors = self.units[filename]
         node = one(definitions.get(name, ()), f'{filename}: {name}')
         if any(node.extent.start.offset <= end and start <= node.extent.end.offset

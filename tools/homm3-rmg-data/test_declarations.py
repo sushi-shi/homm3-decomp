@@ -79,6 +79,16 @@ public:
         with self.assertRaisesRegex(ValueError, 'missing native declaration'):
             declarations.select('Missing')
 
+    def test_header_only_domain_needs_no_artificial_definition_anchor(self):
+        path = self.root / 'include/domain.h'
+        path.write_text('enum Kind { Value = 7 };')
+        sources = Sources(self.root, SimpleNamespace(for_source=lambda path: ['-x', 'c++']))
+        declarations = Declarations(sources)
+        declarations.index(sources.translation_unit('include/domain.h'))
+        declarations.emit(declarations.select('Kind'))
+        self.assertIn('Value = 7,', '\n'.join(declarations.output))
+        self.assertIn(path, sources.dependencies)
+
     def test_integer_macro_is_source_owned_and_unsupported_forms_fail(self):
         declarations = self.declarations('#define COUNT 7\n')
         declarations.macro('COUNT')
