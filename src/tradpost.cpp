@@ -1393,7 +1393,6 @@ void doArtifactMerchants()
 }
 
 VA(0x005e9e60, 0x38)
-DC_ADDRESS(0x188518, 0x126)
 MAC_ADDRESS(0x1f4cd8, 0x50)
 void doFreelancersGuild(hero* inHero)
 {
@@ -1405,7 +1404,10 @@ void doFreelancersGuild(hero* inHero)
     doMarket();
 }
 
+// DC DoFreelancersGuild() reads the displayed town globally. Complete
+// passes that town explicitly; the hero overload above is the map-object path.
 VA(0x005e9ea0, 0x13b)
+DC_ADDRESS(0x188518, 0x126)
 MAC_ADDRESS(0x1f4d28, 0x120)
 void doFreelancersGuild(town* currentTown)
 {
@@ -1607,7 +1609,7 @@ void doMarket()
 VA(0x005ea5d0, 0x103)
 DC_ADDRESS(0x188bd4, 0xf4)
 MAC_ADDRESS(0x1f555c, 0x194)
-void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
+void TSellArtifactWindow::updateSellArtifactWidget(message& msg, long i)
 {
     type_artifact art;
     if (i < 18) {
@@ -1622,25 +1624,25 @@ void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
     }
 
     if (art.m_artifactId == -1) {
-        msg->m_codeY = i + 0x54;
+        msg.m_codeY = i + 0x54;
     } else {
-        msg->m_codeX = 5;
-        msg->m_extra = 2;
-        broadcastMessage(*msg);
-        msg->m_codeX = 5;
-        msg->m_codeY = i + 0x54;
-        msg->m_extra = 6;
-        broadcastMessage(*msg);
-        msg->m_codeX = 4;
-        msg->m_extra = art.m_artifactId;
+        msg.m_codeX = 5;
+        msg.m_extra = 2;
+        broadcastMessage(msg);
+        msg.m_codeX = 5;
+        msg.m_codeY = i + 0x54;
+        msg.m_extra = 6;
+        broadcastMessage(msg);
+        msg.m_codeX = 4;
+        msg.m_extra = art.m_artifactId;
     }
-    broadcastMessage(*msg);
+    broadcastMessage(msg);
     if (g_selectedArtifact == i)
-        msg->m_codeX = 5;
+        msg.m_codeX = 5;
     else
-        msg->m_codeX = 6;
-    msg->m_extra = 4;
-    msg->m_codeY = i + 0x6b;
+        msg.m_codeX = 6;
+    msg.m_extra = 4;
+    msg.m_codeY = i + 0x6b;
 }
 
 // DC SetWidgetOff also clears widget::focusable after GetWidget (e.g.
@@ -1801,7 +1803,7 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 VA(0x005ea6e0, 0x862)
 DC_ADDRESS(0x188fa4, 0x602)
 MAC_ADDRESS(0x1f5ad8, 0x900)  // ordermap clean run + arity ret 4
-void TTradeResourceWindow::update(unsigned char update)
+void TTradeResourceWindow::update(bool update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
@@ -2212,7 +2214,7 @@ void TGiveResourceWindow::update(bool update)
 VA(0x005eb6a0, 0x7d9)
 DC_ADDRESS(0x189aac, 0x580)
 MAC_ADDRESS(0x1f6b6c, 0x774)  // ordermap clean run + arity ret 4
-void TBuyArtifactWindow::update(unsigned char update)
+void TBuyArtifactWindow::update(bool update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
@@ -2401,7 +2403,7 @@ void TBuyArtifactWindow::update(unsigned char update)
 VA(0x005ebe80, 0x6cb)
 DC_ADDRESS(0x18a02c, 0x522)
 MAC_ADDRESS(0x1f72e0, 0x684)
-void TSellArtifactWindow::update(unsigned char update)
+void TSellArtifactWindow::update(bool update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
@@ -2548,7 +2550,7 @@ void TSellArtifactWindow::update(unsigned char update)
                 msg.m_codeY = slot + 0x6b;
                 msg.m_extra = 6;
                 broadcastMessage(msg);
-                updateSellArtifactWidget(&msg, slot);
+                updateSellArtifactWidget(msg, slot);
                 broadcastMessage(msg);
             }
         }

@@ -31,6 +31,8 @@ class army;
 // touches only the inherited TSubWindow subobject.
 class type_combat_sub_window : public TSubWindow {
 public:
+    // Project-inferred boundary: the derived control bar creates this widget.
+    // DC 0x5708 is forward-only and does not record field access.
     // +0x34, and the base owns it: the base constructor NULLS it and the
     // family's set_rollover slot is what reads it. Only
     // TCombatControlSubWindow fills it in - with a bitmapBackedTextWidget
@@ -38,6 +40,7 @@ public:
     // proves, because push_back has to build a widget* temporary for it.
     bitmapBackedTextWidget* m_rolloverWidget;
 
+public:
     type_combat_sub_window(heroWindow* parent,
                            const char* backgroundSpriteName);
     virtual ~type_combat_sub_window();
@@ -57,12 +60,14 @@ SIZE(type_combat_sub_window, 0x38);
 // bytes are the base destructor inlined whole.
 class TCombatControlSubWindow : public type_combat_sub_window {
 public:
+    // Owned control widgets; DC 0x570f supplies no field-list access evidence.
     // The two 'ComSlide.def' arrows over the combat message log, +0x38 and
     // +0x3c; the constructor is the only body that writes either, and it
     // dims both at the end.
     type_func_button* m_logScrollUpButton;
     type_func_button* m_logScrollDownButton;
 
+public:
     TCombatControlSubWindow(heroWindow* parent);
     virtual ~TCombatControlSubWindow();
     virtual void setRollover(const char* newText);
@@ -91,6 +96,8 @@ SIZE(TCombatPlacementSubWindow, 0x3c);
 // fields at +0x34..+0x54, and the shown byte at +0x58.
 class TCombatHeroSubWindow : public TSubWindow {
 public:
+    // Project-inferred complete popup state; callers use update/show/unShow.
+    // DC 0x54c2 is only a forward declaration. Keep the retail data order.
     bitmapBorder* m_backgroundWidget;
     bitmapBorder* m_portrait;
     textWidget* m_attackText;
@@ -100,8 +107,10 @@ public:
     iconWidget* m_moraleIcon;
     iconWidget* m_luckIcon;
     textWidget* m_manaText;
+
     bool m_shown;
 
+public:
     TCombatHeroSubWindow(int x, int y, int w, int h, heroWindow* parent);
     virtual ~TCombatHeroSubWindow();
     void update(const hero& info, const hero* otherHero,
@@ -121,6 +130,8 @@ SIZE(TCombatHeroSubWindow, 0x5c);
 // byte at +0x68 for each of TCombatWindow's four panels.
 class TCombatCreatureSubWindow : public TSubWindow {
 public:
+    // Project-inferred complete popup state, including its construction mode.
+    // DC 0x571f is forward-only; no field order or padding is changed here.
     bitmapBorder* m_backgroundWidget;  // +0x34
     iconWidget* m_creatureIcon;         // +0x38, full-stat arm only
     textWidget* m_attackText;           // +0x3c, full-stat arm only
@@ -132,12 +143,15 @@ public:
     textWidget* m_countText;             // +0x54, full-stat arm only
     iconWidget* m_spellIcons[3];         // +0x58
     textWidget* m_spellText;             // +0x64
+
     bool m_shown;
+
     // Retail shown is a byte at +0x68; viewLevel is an int at +0x6c.
     // These three bytes align the integer.
     char m_paddingBeforeViewLevel[3];
     int m_viewLevel;                     // +0x6c
 
+public:
     TCombatCreatureSubWindow(int x, int y, int w, int h,
                              heroWindow* parent, int viewLevel);
 

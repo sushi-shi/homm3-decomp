@@ -16,7 +16,7 @@
 
 #include "advmgr.h"
 #include "advmgr_objects.h"
-#include "creature_bank_types.h"
+#include "creature_bank.h"
 #include "creaturetype.h"
 #include "creaturetype_fwd.h"
 #include "customcampaign.h"
@@ -452,8 +452,10 @@ public:
     unsigned char m_lastTownNameAssigned;
     unsigned char m_mapHasNotBeenSaved;
     unsigned char m_maxHeroLevel;
-    unsigned char m_numTeams;
-    signed char m_teamInfo[8];
+    // Original numTeams and teamInfo use plain char (DC 0x24ef/0x68fd).
+    // The retained Windows getTeam body sign-extends each team byte.
+    char m_numTeams;
+    char m_teamInfo[8];
     // +0x15..+0x17: alignment hole. Retail's synthesized GameSelection-
     // HeadersStruct copy ctor (0x5904f0) copies the dword at +0x11 and then
     // the dword at +0x18 with nothing between; a named pad adds a word+byte
@@ -479,6 +481,7 @@ public:
     // bitset). Modelled on NewSMapHeader instead, the map's ctor call
     // lands in game::game and shifts every construction after it.
     std::map<int, type_map_hero_info> m_heroPlayerSetups;
+
 };
 SIZE(CMapHeaderData, 0x2d0);
 SIZE(CMapHeaderData::TPlayerSlotAttributes, 0x44);
@@ -631,6 +634,7 @@ public:
     inline void setOwner(long owner);
     void updateBonus();
     void grow(int unusedArg);
+
 };
 SIZE(generator, 0x5c);
 
@@ -963,6 +967,19 @@ public:
     // resource paths.
     // Retained ordinary body: game.cpp, Windows 0x004bada0.
     bool isHuman() const;
+    // Project names for the paired control transitions used by setup and
+    // solo play. Neither operation discards the player's name or network ID;
+    // disconnecting a player is the separate clearNetInfo operation.
+    void setLocalHuman()
+    {
+        m_isHuman = 1;
+        m_isLocal = 1;
+    }
+    void setComputer()
+    {
+        m_isHuman = 0;
+        m_isLocal = 0;
+    }
     int save(TAbstractFile* outfile);
     // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
     // townManager::SwapHeroes 0x5d5150 calls it on
@@ -987,6 +1004,11 @@ public:
     void assignNetInfo(CNetPlayerInfo* netPlayerInfo);
     void getNetInfo(CNetPlayerInfo* netPlayerInfo);
     void clearNetInfo();
+    // Project-inferred complete seven-resource payment. Callers retain
+    // affordability checks and purchase/build ordering; negative costs are
+    // not clamped. Native resource storage remains public (DC 0x1c50).
+    void payResourceCost(const int* cost);
+    void payResourceCost(const long* cost);
     // 0x4b9f40 (claimed in src/game.cpp). town::can_build,
     // can_ever_build and get_buildable_mask all call it on
     // gpGame->players[town->owner] to veto a second Capitol.
@@ -1097,7 +1119,10 @@ public:
     char m_paddingAfterUltimateArtifactPresent;
     // Complete product generation at +0x1f698: init assigns gameVersion;
     // applySavedGameHeader restores SavedGameHeader::gameVersion here.
+
     int m_gameVersion;
+
+public:
     unsigned char m_isCheater;
     // DC is_tutorial: retail SaveGame (0x418160) passes this byte directly
     // to the native bool determineSuffix parameter, with no normalization.
@@ -1108,6 +1133,7 @@ public:
     SGameSetupOptions m_setup;  // +0x1f6a0
     NewSMapHeader m_mapHeader;  // +0x1f86c
     NewfullMap m_worldMap;  // +0x1fb70
+    // Before normalization (Dreamcast): player.
     playerData m_players[8];
     // +0x21610. The scenario's town pool, and it is a std::vector, not
     // a bare pointer: game::GetTownId (0x4bb870) reads _First at
@@ -1118,8 +1144,10 @@ public:
     // town::can_build reads gpGame->towns[this->id].field_02 and
     // town::Deallocate writes gpGame->towns[this->id].owner, both with
     // that same 360-byte stride.
+    // Before normalization (Dreamcast): townPool.
     std::vector<town> m_towns;
     enum { HERO_COUNT = 156 };
+    // Before normalization (Dreamcast): heroPool.
     hero m_heroes[HERO_COUNT];
     // Original game::heroAllocInfo is signed char[128] in all four DC
     // records. Complete extends the same status array to 156 heroes.
@@ -1130,6 +1158,8 @@ public:
     std::bitset<8> m_heroPoolMap[0x9c];  // +0x4dfb4
     unsigned char m_artifactUsed[0x90];
     unsigned char m_artifactDisabled[0x90];
+
+    // Before normalization (Dreamcast): InfoFlags.
     unsigned char m_globalInfoFlags[32];
     unsigned char m_borderTentVisitFlags[8]; // per EKeyColor (keycolor.h)
     unsigned short m_cartographerMask[3];
@@ -1147,9 +1177,12 @@ public:
     // +0x4e3a0 pair with a 92-byte stride, and GetHeroBoat the
     // +0x4e3bc / +0x4e3c0 pair with a 40-byte one.
     std::vector<Sign> m_signs;  // +0x4e378
+    // Before normalization (Dreamcast): minePool.
     std::vector<mine> m_mines;  // +0x4e388
     std::vector<generator> m_generators;  // +0x4e398
+    // Before normalization (Dreamcast): garrisonPool.
     std::vector<garrison> m_garrisons;  // +0x4e3a8
+    // Before normalization (Dreamcast): boatPool.
     std::vector<boat> m_boats;  // +0x4e3b8
     std::vector<type_university> m_universities;  // +0x4e3c8
     std::vector<type_creature_bank> m_creatureBanks;  // +0x4e3d8
@@ -1189,7 +1222,10 @@ public:
     // bound check. Cell types come from the wrappers: 0x2d for the
     // first array, 0x2c for the second, 0x6f for the whirlpool pool.
     // NAMES ARE PROVISIONAL - nothing attests them.
+
+    // Before normalization (Dreamcast): two_way_liths.
     std::vector<type_point> m_lithPools[8];  // +0x4e67c
+    // Before normalization (Dreamcast): lith_exits.
     std::vector<type_point> m_lithExitPools[8];  // +0x4e6fc
 
 private:
@@ -1247,8 +1283,8 @@ public:
     int getRandomNumTroops(int whichMon);
     void setupDynamicStuff(int update, int forceUpdate);  // 0x51bd50
     void setupNewOverviewType(int whichType,
-                              unsigned char update);  // 0x51e330
-    int processIconSelect(int codeY, unsigned char rightMouse);  // 0x51ee50
+                              bool update);  // 0x51e330
+    int processIconSelect(int codeY, bool rightMouse);  // 0x51ee50
     playerData* getLocalPlayer();
     int getLastHuman() const;
     int getLocalPlayerGamePos() const;  // 0x4cea20
@@ -1462,7 +1498,7 @@ public:
     // The random-object pass and the monster roll it drives. Both bodies
     // are claimed in game.cpp.
     TCreatureType getRandomMonster(int minLevel, int maxLevel);  // 0x4c92c0
-    int computeDailyGold(int player, unsigned char includeSilo);
+    int computeDailyGold(int player, bool includeSilo);
     void cancelComputerScreen();
     void makeTerrainVisible(int whichPlayer, unsigned short visMask);
     // 0x4c9990. town.obj needs this declaration for
@@ -1665,9 +1701,10 @@ private:
     void setupShipyards();
 
 public:
+    // Original DC ViewArmy public ends HH_N3@Z: both UI flags are bool.
     void viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                   const town* thisTown, int x, int y,
-                  unsigned char showDismiss, unsigned char isQuickView);
+                  bool showDismiss, bool isQuickView);
     void overview();
 
     // Original Game.h:973/974/979 separates the null and valid return paths.
@@ -1698,9 +1735,8 @@ public:
     // by name where ours spelled the general accessor:
     //   * the id is compared at CHAR width and only widened INSIDE the
     //     taken arm (`mov al,[player+0x3f] / cmp al,-1 / je / movsx eax,al`),
-    //     which is what re-reading the field in the arm produces and what
-    //     passing it through an `int` parameter cannot - the widening would
-    //     then dominate the test;
+    //     which the separate getter uses must preserve, unlike
+    //     passing the id to GetHero/GetTown before the sentinel test;
     //   * the null arm comes LAST (`je` to it, body falls through) and
     //     reuses whatever zero register is already live, i.e. the source
     //     tests `!= -1` and returns the pointer first.
@@ -1711,12 +1747,13 @@ public:
     // expands GetCurrHero with the non-null arm falling through and the
     // null arm placed after, whereas GetHero's `if (id == -1) return 0;`
     // lays the arms out the other way round. DC sizes them apart too - 68 B
-    // against GetHero's 36 - so this is a separate inline, not a forwarder.
+    // against GetHero's 36. DC retains GetCurrHeroId inside this helper,
+    // and GetCurrTownId inside GetCurrTown; keep both accessor paths.
     DC_ADDRESS(0x002ed4, 0x44)
     hero* getCurrHero()
     {
-        if (g_currentPlayer->m_currHeroId != -1)
-            return &m_heroes[g_currentPlayer->m_currHeroId];
+        if (getCurrHeroId() != -1)
+            return &m_heroes[getCurrHeroId()];
         return 0;
     }
 
@@ -1747,8 +1784,8 @@ public:
     DC_ADDRESS(0x01ff40, 0x58)
     town* getCurrTown()
     {
-        if (g_currentPlayer->m_currTownId != -1)
-            return &m_towns[g_currentPlayer->m_currTownId];
+        if (getCurrTownId() != -1)
+            return &m_towns[getCurrTownId()];
         return 0;
     }
 
@@ -1761,17 +1798,13 @@ public:
     // inline-only member: retail has no out-of-line row and
     // townManager::SetupTown 0x5c68a4 expands it in place - the towns
     // vector's _First out of +0x21614, the 360-byte stride, +0xc4 for
-    // cName and its own `_Ptr == 0 ? "" : _Ptr`. Note it does NOT go
-    // through GetTown: no `cmp id,-1` is emitted at that site.
-
-    // GATED, for the reason town::get_location's note gives: this
-    // header rides in initialize.cpp's closure, which carries the
-    // tree's include-set canary. Every consumer opens the macro for
-    // itself and re-measures.
+    // cName and its own `_Ptr == 0 ? "" : _Ptr`. DC retains the const
+    // GetTown overload, which indexes without the non-const overload's
+    // -1 sentinel check. Preserve that source call.
     DC_ADDRESS(0x169c7c, 0x1c)
     const char* getTownName(int townId) const
     {
-        return m_towns[townId].m_name.c_str();
+        return getTown(townId)->m_name.c_str();
     }
 
     // Original: game::GetMine; Game.h:1036
@@ -1792,6 +1825,8 @@ public:
     {
         return &m_boats[which];
     }
+
+    unsigned int getMineCount() const { return m_mines.size(); }
 
     // The end-turn body, game.obj's own at 0x4c6fe0. Also ORDER-MAPPED: it
     // abuts the claimed TurnOffAIMusic (0x4c6fd0, 0x10 B) exactly, and
@@ -1816,6 +1851,10 @@ public:
     NewmapCell* getCell(type_point point);
     void getLossConditionText(char* text);
     void getVictoryConditionText(char* text);
+
+    // Accessor boundary inferred from the existing property interface and
+    // external field operations; these additional names are project names.
+    int getGameVersion() const { return m_gameVersion; }
 };
 
 // The five .def-name tables game::ConvertObject (0x4c9990) rewrites a
@@ -2054,7 +2093,8 @@ inline bool game::isHumanAlly(int playerNum) const
 // Complete's retained body and ClaimTown expansion prove the creature-domain
 // semantics. The nested zero check leaves the body byte-exact while making its
 // VC6 source cost 75, so the 72-budget nested call remains out of line without
-// a pragma. Dreamcast's same-named game.h:1375 helper instead maps player ids.
+// a pragma. The creature-domain name is inferred; DC get_alignment is the
+// separate player accessor below.
 VA(0x004c6690, 0x43)
 inline int game::getAlignment(int creature) const
 {

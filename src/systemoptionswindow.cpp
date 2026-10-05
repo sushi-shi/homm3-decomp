@@ -257,7 +257,7 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     getWidget(g_config.m_binkVideo + VIDEO_QUALITY_LOW)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
 
-    updateSystemOptions(1);
+    updateSystemOptions(true);
 }
 
 VA_COMPGEN(0x005b3010, 0x21, SCALAR_DELETING_DTOR, TSystemOptionsWindow)
@@ -642,7 +642,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
 
                     if (prefsChanged)
                     {
-                        updateSystemOptions(0);
+                        updateSystemOptions(false);
                     }
                 }
                 break;
@@ -663,9 +663,11 @@ int TSystemOptionsWindow::windowHandler(message& msg)
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:667
+// Original public ?UpdateSystemOptions@TSystemOptionsWindow@@QAAX_N@Z
+// proves bool firstUpdate; the lowered CodeView byte is not a byte contract.
 DC_ADDRESS(0x160ce8, 0xa8)
 MAC_ADDRESS(0x1ad0d4, 0x12c)
-void TSystemOptionsWindow::updateSystemOptions(unsigned char firstUpdate)
+void TSystemOptionsWindow::updateSystemOptions(bool firstUpdate)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;

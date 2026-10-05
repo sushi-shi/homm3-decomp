@@ -309,10 +309,15 @@ class CNetPlayerHandlerPlayer : public CNetPlayerInfo {
 public:
     int m_heroIndex;  // +0x20
     int m_townIndex;  // +0x24
+
+public:
     int m_availableHeroesCount;  // +0x28
     int m_availableHeroes[16];  // +0x2c
     int m_startBonusIndex;  // +0x6c
+
     int m_playerPos;  // +0x70
+
+public:
     int m_color;  // +0x74
     // A byte in retail: the ctor 0x57c790 stores it with a byte mov and
     // OnUpdatePlayerPosMsg re-reads it movsx.
@@ -339,7 +344,8 @@ public:
 
     // E:\gamedcs\SingleSelectionWindow.h:122
     DC_ADDRESS(0x1475dc, 0x12)
-    unsigned char isHuman()
+    // Native IsHuman public: QAA_NXZ (DC file 0x5fdce3).
+    bool isHuman()
     {
         if (m_dpid)
             return 1;
@@ -367,14 +373,32 @@ public:
         m_playerPos = -1;
         m_heroIndex = -1;
     }
+
+    // Project operation used when a map or seat changes. Unlike
+    // resetAdvancedOptions, this retains the assigned player position.
+    void resetTownAndHero()
+    {
+        m_heroIndex = -1;
+        m_townIndex = -1;
+    }
+
+    // Accessor boundary inferred from the existing property interface and
+    // external field operations; these additional names are project names.
+    int getPlayerPos() const { return m_playerPos; }
+    void setPlayerPos(int value) { m_playerPos = value; }
+    int getHeroIndex() const { return m_heroIndex; }
 };
 SIZE(CNetPlayerHandlerPlayer, 0x7c);
 
 class CNetPlayerHandler {
 public:
     enum { MAX_PLAYERS = 8 };
+
     CNetPlayerHandlerPlayer m_humanPlayers[MAX_PLAYERS];  // +0x000
+
     CNetPlayerHandlerPlayer m_computerPlayers[MAX_PLAYERS];  // +0x3e0
+
+public:
     int m_playerPos;  // +0x7c0
     int m_playersCount;  // +0x7c4
     int m_unused;  // +0x7c8
@@ -389,13 +413,17 @@ public:
     CNetPlayerHandlerPlayer* getPlayerInPos(int pos);
     CNetPlayerHandlerPlayer* getCompPlayerInPos(int pos);
     CNetPlayerHandlerPlayer* getPlayer(unsigned long dpid);
+    // Original native publics prove _N returns for these five predicates.
     bool isFaceTaken(int face, int exclude);
-    unsigned char addNewPlayer(CNetPlayerInfo* netPlayer);
-    unsigned char playerExists(unsigned long dpid);
-    unsigned char setNextPlayer(int pos);
-    unsigned char setComputer(int pos);
+    bool addNewPlayer(CNetPlayerInfo* netPlayer);
+    bool playerExists(unsigned long dpid);
+    bool setNextPlayer(int pos);
+    bool setComputer(int pos);
     int getUnassignedPlayerPos();
-    int getPlayerCount(unsigned char assignedOnly);
+    int getPlayerCount(bool assignedOnly);
+
+    // Project-inferred complete cycle reset; same-position restoration is partial.
+    void beginPlayerCycle(int pos);
 };
 SIZE(CNetPlayerHandler, 0x7d0);
 
@@ -439,11 +467,15 @@ public:
     unsigned long m_clickTime;  // 0x60
     // DC loadMode; Complete's constructor separates load and save modes.
     unsigned char m_loadMode;  // 0x64
+    // Before normalization (Dreamcast): saveGameMode.
     unsigned char m_saveMode;  // 0x65
     // Third mode byte of the run: SortMaps (0x585050) sorts and refills
     // from TransferHeaders when it is set, HeadersA otherwise.
     // SetupScenarioOptions assigns its randomMaps argument to this byte.
+
     unsigned char m_randomMapMode;  // 0x66
+
+public:
     // The three PC mode bytes end at +0x67; textIndex starts at the
     // next dword boundary, +0x68. This byte aligns the integer.
     char m_paddingBeforeTextIndex;
@@ -543,8 +575,11 @@ public:
     // the transfer path walks it. SortMaps sorts one of the two by
     // m_randomMapMode and refills SelectionHeaders from it through the
     // mapSizeFilter.
+
     std::vector<GameSelectionHeadersStruct> m_headersA;  // 0x1030
     std::vector<GameSelectionHeadersStruct> m_transferHeaders;  // 0x1040
+
+public:
     std::vector<GameSelectionHeadersStruct> m_selectionHeaders;  // 0x1050
     // The header row of the currently selected map/save;
     // UpdatePlayerPositions reads the per-slot alignments through it.
@@ -552,6 +587,8 @@ public:
     CNetPlayerHandler m_players;  // 0x1064
 
 private:
+    // Before normalization (Dreamcast): netPlayerHandler.
+
     unsigned char m_receivedMaps;  // 0x1834 (DC receivedMaps)
 
 public:
@@ -642,6 +679,8 @@ public:
     // game context. Advanced-options open/close shows/hides this same ID;
     // the player-position renderer places town controls in that column.
     int m_townHeadingId;  // +0x189c
+
+    // Project-owned boundary for the Complete-only random-map state/controls.
     // Eight setup dwords CNewSetupInfoMsg carries behind the
     // SGameSetupOptions copy; the random-map controls read them back out.
     // Role-derived: generateRandomMap (0x5860e0) consumes these eight
@@ -659,6 +698,8 @@ public:
     button* m_filterCountDButtons[8];  // 0x192c, ids 0x13d..0x144
     button* m_filterWaterButtons[4];  // 0x194c, ids 0x146..0x149
     button* m_filterStrengthButtons[4];  // 0x195c, ids 0x14b..0x14e
+
+public:
     // Retail-only tail member (no DC counterpart - DC's roster ends at
     // netMsgHandler): the widget the TurnChat pair shows with widget 105
     // when chat is OFF and hides when it is ON, always addressed
@@ -674,7 +715,7 @@ public:
     TSingleSelectionWindow(int gameMode);
     virtual ~TSingleSelectionWindow();
     virtual void doModal(bool fadeIn);
-    void updatePlayerPositions(unsigned char updateCurPlayer);
+    void updatePlayerPositions(bool updateCurPlayer);
     virtual int windowHandler(message& msg);  // slot 9
     void onNameSlider(int newIndex);
     void onChatWindowSlider(int newIndex);
@@ -692,7 +733,12 @@ public:
     const char* getMapName(int which);
     const char* getFileName(int which);
     void drawBasicMapInfo();
-    unsigned char onGameTransmitInitMsg(CNetMsg* netMsg);
+    // Native DC public names prove _N returns for this network callback
+    // family: OnGameTransmitInitMsg, OnNewSetupInfoMsg, OnNewPlayerMsg,
+    // OnGameHeaderInfoInitMsg, OnGameHeaderInfoMsg, OnSetAsHostMsg,
+    // OnBadVersionMsg, OnMapFileNameMsg and CheckMissingHeaders. Their
+    // primitive 0x20 formal records are lowered bool storage.
+    bool onGameTransmitInitMsg(CNetMsg* netMsg);
     void updateFilterWidgets();
     void refreshFilterWidgets();
     void openRandomMapOptions();
@@ -722,7 +768,8 @@ public:
     void updateNames();
     unsigned char highlightFile(char* filename);
     void onNameClick(int pos);
-    unsigned char isVersionCompatible(const char* otherVersion);
+    // Native ?IsVersionCompatible@TSingleSelectionWindow@@QAA_NPBD@Z.
+    bool isVersionCompatible(const char* otherVersion);
     // Complete-only random-map helpers at 0x5879a0 and 0x5860e0. Their
     // provisional role names describe the byte-decoded caller contract.
     unsigned char generateRandomMap(const char* name);
@@ -730,23 +777,22 @@ public:
     void drawHeroAdvancedOption(int playerPos, unsigned char update,
                                 int position);
     void onDeleteFile();
-    unsigned char onNewSetupInfoMsg(CNetMsg* netMsg);
+    bool onNewSetupInfoMsg(CNetMsg* netMsg);
     bool assignPlayerToOpenHumanSlot(unsigned long dpid);
-    unsigned char onNewPlayerMsg(CNetMsg* netMsg);
+    bool onNewPlayerMsg(CNetMsg* netMsg);
     // DC ordinary OnPlayerDroppedMsg, line 6937; QAA_N return.
     bool onPlayerDroppedMsg(CNetMsg* netMsg);
     // DC ordinary OnNewMapHeaderInfo, source line 6968; QAA_N return.
     bool onNewMapHeaderInfo(CNetMsg* netMsg);
-    unsigned char onGameHeaderInfoInitMsg(CNetMsg* netMsg);
+    bool onGameHeaderInfoInitMsg(CNetMsg* netMsg);
     void onGameHeaderInfoInitMsgEx(CNetMsg* netMsg);
     void makeHeroFilter();
-    void sortMaps(int how, unsigned char sendSortMsg,
-                  unsigned char update);
-    unsigned char onSetAsHostMsg(CNetMsg* netMsg);
-    unsigned char onGameHeaderInfoMsg(CNetMsg* netMsg);
+    void sortMaps(int how, bool sendSortMsg, bool update);
+    bool onSetAsHostMsg(CNetMsg* netMsg);
+    bool onGameHeaderInfoMsg(CNetMsg* netMsg);
     bool onGameHeaderInfoEndMsg(CNetMsg* netMsg);
     bool onScrollMsg(CNetMsg* netMsg);
-    unsigned char onBadVersionMsg(CNetMsg* netMsg);
+    bool onBadVersionMsg(CNetMsg* netMsg);
     void setFilter(int size);
     void sendChat(unsigned long dpid, const char* chat);
     void receiveChat(unsigned long dpid, char* chat,
@@ -757,18 +803,19 @@ public:
     void onRequestHeroFaceReplyMsg(CNetMsg* netMsg,
                                    bool inPopup);
     void onPingMsg(CNetMsg* netMsg);
-    void onPingResponseMsg(CNetMsg* netMsg, unsigned char inPopup);
+    // Native ?OnPingResponseMsg@TSingleSelectionWindow@@QAAXPAVCNetMsg@@_N@Z.
+    void onPingResponseMsg(CNetMsg* netMsg, bool inPopup);
     void getHeroFace(int which, CNetPlayerHandlerPlayer* player);
     void onSetAGRMsg(CNetMsg* netMsg, bool inPopup);
     void onNewHostMsg(CNetMsg* netMsg);
     void onUpdatePlayerPosMsg(CNetMsg* netMsg);
     void checkFaces();
     // Always returns 1 (retail sets al on every exit); DC agrees.
-    unsigned char onMapFileNameMsg(CNetMsg* netMsg);
+    bool onMapFileNameMsg(CNetMsg* netMsg);
     bool onHeaderConfirmMsg(CNetMsg* netMsg);
     bool onReqHeaderConfirmMsg(CNetMsg* netMsg);
     bool onMapHeaderRequestMsg(CNetMsg* netMsg);
-    unsigned char checkMissingHeaders(unsigned long dpidHost);
+    bool checkMissingHeaders(unsigned long dpidHost);
     void turnOffScenarioOptions();
     void turnOffAdvancedOptions();
     bool onClickMsg(CNetMsg* netMsg);
@@ -813,7 +860,8 @@ public:
     // player slots from field_18A0, redraws, and broadcasts the resulting
     // setup. The role name remains provisional until its body is claimed.
     void rebuildFilteredPlayerSetup();
-    unsigned char sendPlayerPositions(unsigned long dpidTo);
+    // Native ?SendPlayerPositions@TSingleSelectionWindow@@QAA_NK@Z.
+    bool sendPlayerPositions(unsigned long dpidTo);
     unsigned char sendSetupInfo(unsigned long dpid);
     bool isHost();
     void sendPlayerFaces();

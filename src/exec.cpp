@@ -55,9 +55,9 @@ void executive::shutDownSystem()
             removeManager(thisManager);
         thisManager = nextManager;
     }
-    if (g_windowManager->m_status == baseManager::STATUS_ACTIVE)
+    if (g_windowManager->getStatus() == baseManager::STATUS_ACTIVE)
         removeManager(g_windowManager);
-    if (g_mouseManager->m_status == baseManager::STATUS_ACTIVE)
+    if (g_mouseManager->getStatus() == baseManager::STATUS_ACTIVE)
         removeManager(g_mouseManager);
     g_inputManager->close();
 }
@@ -111,7 +111,7 @@ int executive::addManager(baseManager* newManager, int newPriority)
         else
             newPriority = m_tailManager->m_priority + 1;
     }
-    if (!newManager->m_status && newManager->open(newPriority))
+    if (!newManager->getStatus() && newManager->open(newPriority))
         return 3;
     baseManager* current = m_tailManager;
     while (current && current->m_priority > newPriority)
@@ -244,7 +244,7 @@ void executive::mainLoop()
         if (!m_currentManager)
             return;
         while (m_currentManager && dispatch && !done) {
-            if (m_currentManager->m_status == 1
+            if (m_currentManager->getStatus() == 1
                     && (msg.m_id != MESSAGE_MOUSE_MOVE
                         || m_currentManager != g_windowManager)) {
                 switch (m_currentManager->main(msg)) {

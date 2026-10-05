@@ -148,7 +148,8 @@ DATA(0x0067833c) int g_deferObjDrawX = -1;
 DATA(0x00678340) int g_deferObjDrawY = -1;
 DATA(0x00691240) unsigned long g_completeDrawFpsLastTime;
 // Original DC name: gbGoSoloTest; the GoSolo combat-display gate.
-DATA(0x00691208) unsigned char g_goSoloTest;
+// Original DC public ?gbGoSoloTest@@3_NA proves this replay flag bool.
+DATA(0x00691208) bool g_goSoloTest;
 DATA(0x00699540) int g_adventureCombatActive;
 // Original DC name: giDebugLevel; InterpretCommandLine and StartLocalPlayerTurn.
 DATA(0x006989c8) int g_debugLevel;
@@ -165,7 +166,8 @@ DATA(0x006989f4) int g_drawingPuzzle;
 // Original DC name: gbBlackoutPlayer; command-line initialization and hotseat handoff.
 DATA(0x006993dc) int g_blackoutPlayer;
 // Original DC name: gbGoSolo; StartLocalPlayerTurn and StartMP3 corroborate the retail uses.
-DATA(0x00691209) unsigned char g_goSolo;
+// Original DC public ?gbGoSolo@@3_NA; Complete writers retain its 0/1 domain.
+DATA(0x00691209) bool g_goSolo;
 // Original DC name: giSoloPos; StartLocalPlayerTurn restores this player after GoSolo.
 DATA(0x0069120c) int g_soloPos;
 // Original DC name: gbLastCheaterState; StartLocalPlayerTurn shows text row 332 once.
@@ -3457,6 +3459,7 @@ void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
     }
 }
 
+// Mac b6b0..b6c0 expands the signed shrine-spell getter.
 VA(0x0040d8d0, 0x229)
 DC_ADDRESS(0x00b788, 0x1a8)
 MAC_ADDRESS(0x00b5c8, 0x1c0)
@@ -3470,7 +3473,7 @@ void setShrineHelpText(char* buffer, hero* currentHero, NewmapCell* cell, Global
     unsigned char knowsShrineType =
         g_game->getInfoFlag(type, g_netLocalGamePos);
     if (cell->playerKnowsCell(g_netLocalGamePos)) {
-        SpellID spell = static_cast<int>(cell->m_extraInfo << 9) >> 22;
+        SpellID spell = cell->getShrineSpell();
         strcat(buffer, separator1);
         char temp[500];
         sprintf(temp, g_generalText->getText(GENERAL_TEXT_SHRINE_SPELL_FORMAT),
@@ -3487,6 +3490,7 @@ void setShrineHelpText(char* buffer, hero* currentHero, NewmapCell* cell, Global
     }
 }
 
+// Mac b86c..b874 expands the signed three-bit tree-price getter.
 VA(0x0040db00, 0x1BD)
 DC_ADDRESS(0x00b930, 0x17c)
 MAC_ADDRESS(0x00b788, 0x1c0)
@@ -3501,7 +3505,7 @@ void setTreeHelpText(char* buffer, hero* currentHero, NewmapCell* cell, const ch
     int infolevel = visited;
     if (cell->playerKnowsCell(g_netLocalGamePos)) {
         strcat(buffer, separator1);
-        int price = static_cast<int>(cell->m_extraInfo << 16) >> 29;
+        int price = cell->getTreePrice();
         strcat(buffer, g_constWiseTreePriceText[price]);
     } else if (infolevel) {
         strcat(buffer, separator1);
@@ -3523,6 +3527,7 @@ void setTreeHelpText(char* buffer, hero* currentHero, NewmapCell* cell, const ch
     }
 }
 
+// Mac bdac..bdb8 expands the signed seven-bit witch-skill getter.
 VA(0x0040dcc0, 0x1E4)
 DC_ADDRESS(0x00bd84, 0x128)
 MAC_ADDRESS(0x00bd70, 0x1a4)
@@ -3536,7 +3541,7 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
         return;
 
     if (cell->playerKnowsCell(g_netLocalGamePos)) {
-        int skill = static_cast<int>(cell->m_extraInfo << 12) >> 25;
+        int skill = cell->getWitchSkill();
         strcat(buffer, separator1);
         char tempText[50];
         sprintf(tempText,
@@ -3553,6 +3558,33 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
         strcat(buffer, separator1);
         strcat(buffer, g_globalInfoFlagNames[12]);
     }
+}
+
+// Project-inferred operations shared by active and waiting hover handling.
+// Preserve the command reset, screen-cell cache and packed map-point stores.
+void advManager::beginMapHover(int x, int y)
+{
+    m_advCommand = -1;
+    m_lastHoverX = x;
+    m_lastHoverY = y;
+    m_lastMapHover.m_x = m_radarOrigin.m_x + x;
+    m_lastMapHover.m_y = m_radarOrigin.m_y + y;
+    m_lastMapHover.m_z = m_radarOrigin.m_z;
+}
+
+void advManager::processOutsideMapHover(int mouseX, int mouseY)
+{
+    if (g_mouseManager->getFrame() < HOVER_SCROLL_POINTER_FIRST
+        || g_mouseManager->getFrame() > HOVER_SCROLL_POINTER_LAST
+        || !mouseInScrollZone())
+        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    m_advWindow->processHover(mouseX, mouseY);
+}
+
+void advManager::clearRejectedHoverPath()
+{
+    g_searchArray->clearPath();
+    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 }
 
 // E:\gamedcs\advmgr.cpp:4385
@@ -3641,7 +3673,9 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
 }
 
 // DC advmgr.cpp:4514..4524 proves the private member get_garrison_cursor.
-// ProcessHover's retail GARRISON arm expands it and retains getNormalCursor.
+// ProcessHover's retail GARRISON arm expands it and its nested getNormalCursor.
+// The retained getNormalCursor call is in ANCHOR_POINT. The current candidate
+// also retains the TOWN/default join call (+0x7e3); retail expands that site.
 DC_ADDRESS(0x00f23c, 0x84)
 MAC_ADDRESS(0x00e404, 0xd4)
 type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
@@ -3725,12 +3759,7 @@ int advManager::processHover(int mouseX, int mouseY)
         int rx = mouseX / 32;
         int ry = mouseY / 32;
         if (m_lastHoverX != rx || m_lastHoverY != ry) {
-        m_advCommand = -1;
-        m_lastHoverX = rx;
-        m_lastHoverY = ry;
-        m_lastMapHover.m_x = m_radarOrigin.m_x + rx;
-        m_lastMapHover.m_y = m_radarOrigin.m_y + ry;
-        m_lastMapHover.m_z = m_radarOrigin.m_z;
+        beginMapHover(rx, ry);
 
         if (!m_lastMapHover.isValid()
             || !(getMapExtra(m_lastMapHover) & g_curPlayerBit)) {
@@ -3741,14 +3770,14 @@ int advManager::processHover(int mouseX, int mouseY)
         NewmapCell* currCell = getCell(m_lastMapHover);
         setRolloverText(currCell, rx, ry);
 
-        if (g_currentPlayer->m_currHeroId != -1
-            && g_game->getHero(g_currentPlayer->m_currHeroId)->m_z
+        if (g_game->getCurrHeroId() != -1
+            && g_game->getHero(g_game->getCurrHeroId())->m_z
                != m_lastMapHover.m_z) {
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
             return 1;
         }
 
-        if (g_currentPlayer->m_currHeroId == -1) {
+        if (g_game->getCurrHeroId() == -1) {
             if (currCell->m_type == TOWN) {
                 town* currentTown = g_game->getTown(
                     currCell->getTriggerCell()->getMapExtraInfo());
@@ -3818,25 +3847,22 @@ int advManager::processHover(int mouseX, int mouseY)
                 }
             }
 
-            g_searchArray->clearPath();
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            clearRejectedHoverPath();
             return 1;
         }
 
-        int inBoat = currHero->m_flags & 0x40000;
+        int inBoat = currHero->isOnBoat();
         if (!inBoat) {
             if (currCell->m_groundSet == eTerrainWater
                 && (currCell->m_type != HERO || !currCell->m_isTrigger)
                 && (currCell->m_type != BOAT || !currCell->m_isTrigger)
                 && (currCell->m_type != SHIPWRECK || !currCell->m_isTrigger)) {
-                g_searchArray->clearPath();
-                g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+                clearRejectedHoverPath();
                 return 1;
             }
         } else if (currCell->m_groundSet != eTerrainWater
                    && currCell->m_type != ANCHOR_POINT) {
-            g_searchArray->clearPath();
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            clearRejectedHoverPath();
             return 1;
         }
 
@@ -3918,11 +3944,7 @@ int advManager::processHover(int mouseX, int mouseY)
         }
         }
     } else {
-        if (g_mouseManager->getFrame() < HOVER_SCROLL_POINTER_FIRST
-            || g_mouseManager->getFrame() > HOVER_SCROLL_POINTER_LAST
-            || !mouseInScrollZone())
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-        m_advWindow->processHover(mouseX, mouseY);
+        processOutsideMapHover(mouseX, mouseY);
     }
     return 1;
 }
@@ -4097,13 +4119,16 @@ void advManager::updateScreen(int allowIntermediateMouse, int forceDraw)
                                   ADVENTURE_SCREEN_WIDTH,
                                   ADVENTURE_SCREEN_HEIGHT);
 
+    // Mac 0xf72c/0xf758 contains the signed predicate and elapsed delta
+    // expanded by GameTime::elapsed. Reuse the cached timestamp for both;
+    // this preserves the exact standalone retail body and all caller bytes.
     unsigned long curTime = GameTime::get();
-    if (static_cast<long>(
-            curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
+    if (GameTime::elapsed(
+            curTime, g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
         && !m_animCtrPaused) {
         ++m_animCtr;
-        unsigned long elapsedTime =
-            curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+        unsigned long elapsedTime = GameTime::elapsed(
+            curTime, g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]);
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
             max(ADVENTURE_ANIMATION_MAX_ELAPSED, elapsedTime);
     }
@@ -4126,6 +4151,7 @@ void advManager::drawAdventureMapGems()
                       g_windowManager->m_screenBitmap, 556, 508, 0, 1);
 }
 
+// Mac fc50..fc60 expands getCurrHeroId before the cursor draw guard.
 VA(0x0040f3f0, 0x47D)
 DC_ADDRESS(0x010788, 0x514)
 MAC_ADDRESS(0x00f948, 0x5e0)
@@ -4202,7 +4228,7 @@ void advManager::completeDraw(int startX, int startY, int z, bool forceDraw, boo
         }
     }
 
-    if (g_currentPlayer->m_currHeroId == -1)
+    if (g_game->getCurrHeroId() == -1)
         m_drawCursor = false;
     if (m_drawCursor)
         drawCursorAlpha();
@@ -4617,6 +4643,82 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
         currBoat->getHflip());
 }
 
+// Project-inferred rule shared by puzzle object and shadow drawing.
+// Roads, rivers, terrain holes and other object types are excluded; this is
+// narrower than the random-map decoration inventory.
+static bool isPuzzleMapObject(TAdventureObjectType type)
+{
+    switch (type) {
+    case TERRAIN_BRUSH:
+    case TERRAIN_BUSH:
+    case TERRAIN_CACTUS:
+    case TERRAIN_CANYON:
+    case TERRAIN_CRATER:
+    case TERRAIN_DEAD_VEGETATION:
+    case TERRAIN_FLOWER:
+    case TERRAIN_FROZEN_LAKE:
+    case TERRAIN_HEDGE:
+    case TERRAIN_HILL:
+    case TERRAIN_KELP:
+    case TERRAIN_LAKE:
+    case TERRAIN_LAVA_FLOW:
+    case TERRAIN_LAVA_LAKE:
+    case TERRAIN_MUSHROOM:
+    case TERRAIN_LOG:
+    case TERRAIN_MANDRAKE:
+    case TERRAIN_MOSS:
+    case TERRAIN_MOUND:
+    case TERRAIN_MOUNTAIN:
+    case TERRAIN_OAK_TREE:
+    case TERRAIN_OUTCROPPING:
+    case TERRAIN_PINE_TREE:
+    case TERRAIN_PLANT:
+    case TERRAIN_ROCK:
+    case TERRAIN_SAND_DUNE:
+    case TERRAIN_SAND_PIT:
+    case TERRAIN_SHRUB:
+    case TERRAIN_SKULL:
+    case TERRAIN_STALAGMITE:
+    case TERRAIN_STUMP:
+    case TERRAIN_TAR_PIT:
+    case TERRAIN_TREE:
+    case TERRAIN_VINE:
+    case TERRAIN_VOLCANIC_VENT:
+    case TERRAIN_VOLCANO:
+    case TERRAIN_WILLOW_TREE:
+    case TERRAIN_YUCCA_TREE:
+    case TERRAIN_REEF:
+        return true;
+    default:
+        return false;
+    }
+}
+
+// Project-inferred clipping shared by adventure layers and view-world icons.
+// Clip against x=[8,600), y=[0,544). Adventure layers add eight to the final
+// screen Y; view-world icons draw at their saved, unclipped origin. Callers
+// retain those choices, empty-area guards and layer-specific adjustments.
+// Ordinary source placement is provisional; no native inline qualifier is claimed.
+void clipAdventureTile(int& baseX, int& baseY,
+                       int& tileX, int& tileY,
+                       int& tileWidth, int& tileHeight)
+{
+    if (baseX < 8) {
+        tileX += 8 - baseX;
+        tileWidth -= 8 - baseX;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tileY -= baseY;
+        tileHeight -= -baseY;
+        baseY = 0;
+    }
+    if (baseX + tileWidth > 600)
+        tileWidth = 600 - baseX;
+    if (baseY + tileHeight > 544)
+        tileHeight = 544 - baseY;
+}
+
 // E:\gamedcs\advmgr.cpp:5941
 // DC 6010 and Mac 0x11770..0x117bc use the signed TObjectCell nibble
 // members in getBitPos; each draw arm reads them again. DC 5957/5958
@@ -4645,20 +4747,7 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     int tilew = 32;
     int tileh = 32;
 
-    if (baseX < 8) {
-        tilex += 8 - baseX;
-        tilew -= 8 - baseX;
-        baseX = 8;
-    }
-    if (baseY < 0) {
-        tiley -= baseY;
-        tileh -= -baseY;
-        baseY = 0;
-    }
-    if (baseX + tilew > 600)
-        tilew = 600 - baseX;
-    if (baseY + tileh > 544)
-        tileh = 544 - baseY;
+    clipAdventureTile(baseX, baseY, tilex, tiley, tilew, tileh);
     if (tilew <= 0 || tileh <= 0)
         return;
 
@@ -4687,57 +4776,8 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     continue;
 
                 if (g_drawingPuzzle) {
-                    switch (objType->m_objectType) {
-                    case TERRAIN_BRUSH:             break;
-                    case TERRAIN_BUSH:              break;
-                    case TERRAIN_CACTUS:            break;
-                    case TERRAIN_CANYON:            break;
-                    case TERRAIN_CRATER:            break;
-                    case TERRAIN_DEAD_VEGETATION:   break;
-                    case TERRAIN_FLOWER:            break;
-                    case TERRAIN_FROZEN_LAKE:       break;
-                    case TERRAIN_HEDGE:             break;
-                    case TERRAIN_HILL:              break;
-                    case TERRAIN_HOLE:              continue;
-                    case TERRAIN_KELP:              break;
-                    case TERRAIN_LAKE:              break;
-                    case TERRAIN_LAVA_FLOW:         break;
-                    case TERRAIN_LAVA_LAKE:         break;
-                    case TERRAIN_MUSHROOM:          break;
-                    case TERRAIN_LOG:               break;
-                    case TERRAIN_MANDRAKE:          break;
-                    case TERRAIN_MOSS:              break;
-                    case TERRAIN_MOUND:             break;
-                    case TERRAIN_MOUNTAIN:          break;
-                    case TERRAIN_OAK_TREE:          break;
-                    case TERRAIN_OUTCROPPING:       break;
-                    case TERRAIN_PINE_TREE:         break;
-                    case TERRAIN_PLANT:             break;
-                    case TERRAIN_RIVER_1:           continue;
-                    case TERRAIN_RIVER_2:           continue;
-                    case TERRAIN_RIVER_3:           continue;
-                    case TERRAIN_RIVER_4:           continue;
-                    case TERRAIN_RIVER_DELTA:       continue;
-                    case TERRAIN_ROAD_1:            continue;
-                    case TERRAIN_ROAD_2:            continue;
-                    case TERRAIN_ROAD_3:            continue;
-                    case TERRAIN_ROCK:              break;
-                    case TERRAIN_SAND_DUNE:         break;
-                    case TERRAIN_SAND_PIT:          break;
-                    case TERRAIN_SHRUB:             break;
-                    case TERRAIN_SKULL:             break;
-                    case TERRAIN_STALAGMITE:        break;
-                    case TERRAIN_STUMP:             break;
-                    case TERRAIN_TAR_PIT:           break;
-                    case TERRAIN_TREE:              break;
-                    case TERRAIN_VINE:              break;
-                    case TERRAIN_VOLCANIC_VENT:     break;
-                    case TERRAIN_VOLCANO:           break;
-                    case TERRAIN_WILLOW_TREE:       break;
-                    case TERRAIN_YUCCA_TREE:        break;
-                    case TERRAIN_REEF:              break;
-                    default:                        continue;
-                    }
+                    if (!isPuzzleMapObject(objType->m_objectType))
+                        continue;
 
                     int frame = (m_animCtr
                                  + m_fullMap->m_objects[objCell->m_objectIndex]
@@ -5058,6 +5098,8 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
     }
 }
 
+// DC bitfields 0x3e18..0x3e1b name the river/road flips at positions
+// 2..5. The native DrawTile callers extract those four one-bit fields.
 VA(0x00411b80, 0x1D7)
 DC_ADDRESS(0x013890, 0x1d4)
 MAC_ADDRESS(0x012620, 0x1cc)
@@ -5697,7 +5739,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                 if (x == heroX && y == heroY) {
                     colour = g_systemPalette->m_data[64 + currentHero->m_owner];
                 } else if (cell->m_type == HERO
-                           && (cell->m_cellFlags & 0x1000)) {
+                           && cell->m_isTrigger) {
                     colour = g_systemPalette->m_data[64 +
                         g_game->m_heroAvailability[cell->m_extraInfo]];
                 } else {
@@ -5723,13 +5765,12 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                     case TERRAIN_VOLCANO:
                     case TERRAIN_WILLOW_TREE:
                     case TERRAIN_YUCCA_TREE:
-                        if (!(cell->m_cellFlags & 0x40))
+                        if (!cell->m_passable)
                             colour = m_groundTileset[cell->m_groundSet]
                                          ->getPaletteColor(9);
                         break;
                     case TOWN:
-                        if (!(cell->m_cellFlags & 0x40)
-                            || (cell->m_cellFlags & 0x1000)) {
+                        if (!cell->m_passable || cell->m_isTrigger) {
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger) {
                                 int owner = g_game->m_towns[
@@ -5740,8 +5781,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                         break;
                     case LIGHTHOUSE:
                     case MINE:
-                        if (!(cell->m_cellFlags & 0x40)
-                            || (cell->m_cellFlags & 0x1000)) {
+                        if (!cell->m_passable || cell->m_isTrigger) {
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger) {
                                 int owner = g_game->getMine(
@@ -5752,8 +5792,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                         break;
                     case CREATURE_GENERATOR_1:
                     case CREATURE_GENERATOR_4:
-                        if (!(cell->m_cellFlags & 0x40)
-                            || (cell->m_cellFlags & 0x1000)) {
+                        if (!cell->m_passable || cell->m_isTrigger) {
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger) {
                                 int owner = g_game->m_generators[
@@ -5763,8 +5802,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                         }
                         break;
                     case GARRISON:
-                        if (!(cell->m_cellFlags & 0x40)
-                            || (cell->m_cellFlags & 0x1000)) {
+                        if (!cell->m_passable || cell->m_isTrigger) {
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger) {
                                 int owner = g_game->getGarrison(
@@ -5774,8 +5812,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                         }
                         break;
                     case SHIPYARD:
-                        if (!(cell->m_cellFlags & 0x40)
-                            || (cell->m_cellFlags & 0x1000)) {
+                        if (!cell->m_passable || cell->m_isTrigger) {
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger) {
                                 unsigned long extraInfo = trigger->getMapExtraInfo();
@@ -6011,6 +6048,9 @@ void advManager::updateRadar(bool updateFlag, bool partialUpdate,
 // call (+0x210c jmp +0x212a) while every other visit pair keeps two calls.
 // A ternary argument there gives 93.32 and at ARENA 95.64 (it only removes
 // a call retail keeps); both rejected, the if/else pairs stay (2026-09-29).
+// Mac visited-bitmap arms repeatedly extract five bits then extsh, the
+// getItemId short-return operation (e.g. 15528..15538, 15678..15688).
+// Spring 15788 and garden 15ad8..15adc expand their fullness getters.
 VA(0x004137c0, 0x25A0)
 DC_ADDRESS(0x015fdc, 0x2c50)
 MAC_ADDRESS(0x0145e8, 0x1fe0)  // linkorder
@@ -7507,6 +7547,7 @@ void advManager::mobilizeCurrHero(int inMove, bool waitingPlayer, bool drawChang
 // conjunction shipped a cost-169 body that /Ob2 expanded into doAdventureOptions,
 // doSystemOptions, screenScroll, processDeSelect, processRadarSelect and
 // deactivateCurrHero (all back to 100%).
+// Mac 17e90..17e98 expands getCurrHeroId after the current-player guard.
 VA(0x00417680, 0x1AF)
 DC_ADDRESS(0x01a520, 0x13c)
 MAC_ADDRESS(0x017e58, 0x14c)
@@ -7517,7 +7558,7 @@ void advManager::demobilizeCurrHero(bool waitingPlayer,
         return;
     if (!g_currentPlayer)
         return;
-    if (g_currentPlayer->m_currHeroId == -1)
+    if (g_game->getCurrHeroId() == -1)
         return;
     if (!m_curHeroMobile)
         return;
@@ -7840,6 +7881,15 @@ bool saveGame(bool campaignWinMode)
 // against InsertSound's 10372) - it cannot have been declared any later.
 DATA(0x0063a64c) static const int g_soundVolumes[8] = { 32, 28, 20, 10,
                                                         3,  2,  1,  0 };
+
+// Project-inferred operations from environment scans and slot replacement.
+// Playback and slot state have different lifetimes: stopping a sample does
+// not dispose its cached resource or alter the slot's priority/touched bit.
+void soundNode::reset()
+{
+    m_soundId = LOOPING_SOUND_INVALID;
+    m_priority = 0x7f;
+}
 
 VA(0x004183d0, 0x245)
 DC_ADDRESS(0x01b164, 0x3ba)
@@ -8217,6 +8267,7 @@ void advManager::insertSound(int x, int y, int z, int soundPriority,
     m_touchedSounds ^= 1 << m_soundArray[best].m_soundId;
 }
 
+// Mac 194c4..194d0 expands game::getCurrHeroId before the route guard.
 VA(0x00418dd0, 0x4DF)
 DC_ADDRESS(0x01c05c, 0x426)
 MAC_ADDRESS(0x019480, 0x3c8)
@@ -8236,7 +8287,7 @@ void advManager::showRoute(int updateScreen, int reseed, int changeButton)
 
     if (!g_currentPlayer->isLocalHuman())
         return;
-    if (g_currentPlayer->m_currHeroId == -1) {
+    if (g_game->getCurrHeroId() == -1) {
         hideRoute(updateScreen, 0, 1);
         return;
     }
@@ -8293,6 +8344,7 @@ void advManager::showRoute(int updateScreen, int reseed, int changeButton)
     }
 }
 
+// Mac 198cc..198d8 expands the same current-hero ID accessor.
 VA(0x00419300, 0x14C)
 DC_ADDRESS(0x01c484, 0xfc)
 MAC_ADDRESS(0x019848, 0x110)
@@ -8311,7 +8363,7 @@ void advManager::hideRoute(int updateScreen, int removeTarget,
     }
 
     if (removeTarget) {
-        int heroId = g_currentPlayer->m_currHeroId;
+        int heroId = g_game->getCurrHeroId();
         if (heroId != -1) {
             hero* currentHero = g_game->getCurrHero();
             currentHero->m_pathTargetX = -1;
@@ -8361,6 +8413,7 @@ void advManager::checkDimNextHeroBut()
 
 // Dreamcast advmgr.cpp:10586 calls game::GetCurrHero; retail expands
 // its null guard and hero array lookup before seedPosition.
+// Mac 19ad0..19adc expands getCurrHeroId before GetCurrHero.
 VA(0x004194a0, 0xC7)
 DC_ADDRESS(0x01c64c, 0x104)
 MAC_ADDRESS(0x019a98, 0x148)
@@ -8369,7 +8422,7 @@ void advManager::seedTo(type_point target)
     if (!g_currentPlayer->isLocalHuman())
         return;
 
-    int heroId = g_currentPlayer->m_currHeroId;
+    int heroId = g_game->getCurrHeroId();
     if (heroId == -1)
         return;
 

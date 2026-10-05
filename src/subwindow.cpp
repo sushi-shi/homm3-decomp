@@ -71,6 +71,37 @@ void TSubWindow::removeWidget(widget* killWidget)
     m_parentWindow->removeWidget(killWidget);
 }
 
+// Project-inferred registration of the already-owned widget vector. Ordinary
+// banners skip null entries; the combat popup constructors only guard the
+// flag change and still pass each entry to addWidget.
+void TSubWindow::addWidgetsToMessageStream()
+{
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+        if (*it)
+            addWidget(*it, -1);
+    }
+}
+
+// Project-inferred dynamic insertion. The placement bar guards this operation
+// itself, while the control bar retains null entries in its owned vector.
+void TSubWindow::addOwnedWidget(widget* newWidget)
+{
+    m_widgets.push_back(newWidget);
+    if (newWidget)
+        addWidget(newWidget, -1);
+}
+
+// Project-inferred terminal operations. Combat information popups only
+// delete; replaceable control/bottom-view strips unlink each item immediately
+// before deleting it. Neither operation clears the pointer vector.
+void TSubWindow::deleteWidgetObjects()
+{
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
+}
+
 VA(0x005aa4f0, 0x63)
 DC_ADDRESS(0x158ed0, 0x7c)
 MAC_ADDRESS(0x19ba74, 0xa4)
@@ -82,6 +113,9 @@ void TSubWindow::draw(unsigned char update, int lowID, int highID)
         highID = m_highId;
     m_parentWindow->drawWindow(0, lowID, highID);
     if (update) {
+        // DC 0x158f1e selects a full combat refresh for its combat-mode
+        // branch. Complete Mac 0x19ba74..0x19bb18 has only this ordinary
+        // parent-relative rectangle path, with no combat-state test.
         g_windowManager->updateScreen(
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
     }
@@ -108,9 +142,9 @@ void TSubWindow::restoreBackground()
         int drawX = m_x + m_parentWindow->m_x;
         int drawY = m_y + m_parentWindow->m_y;
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
+        // Mac 0x19bbe4..bc44 expands the Bitmap16Bit-destination Draw overload.
         m_background->draw(0, 0, m_background->getWidth(), m_background->getHeight(),
-            screen->getMap(0, 0), drawX, drawY,
-            screen->getWidth(), screen->getHeight(), screen->getPitch(), false);
+            screen, drawX, drawY, false);
         g_windowManager->updateScreen(drawX, drawY, m_width + 1, m_height);
         delete m_background;
         m_background = 0;

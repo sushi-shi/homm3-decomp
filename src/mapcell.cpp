@@ -9,6 +9,7 @@
 #include "platform.h"
 
 #include "mapcell.h"
+#include "packed_bits.h"
 
 #include "advmgr.h"
 #include "advmgr_objects.h"
@@ -20,6 +21,11 @@
 #include "newgame.h"
 #include "resourcemanager.h"
 #include "smackmgr.h"
+
+void ExtraInfoUnion::setCreatureBankEmpty(bool empty)
+{
+    m_creatureBankInfo.m_empty = empty;
+}
 
 VA(0x004fbf90, 0x61)
 DC_ADDRESS(0x0eb6a4, 0x98)
@@ -2554,8 +2560,8 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         // zero out of the if arm scores 94.95 and the whole-block rewrite
         // 94.96.
         int rawIdentifier;
-        infile->read(&rawIdentifier, sizeof(rawIdentifier));
-        identifier = LITTLE_ENDIAN_LONG(rawIdentifier);
+        rawIdentifier = readLittleEndianValue<int>(infile);
+        identifier = rawIdentifier;
     }
 
     short quantity;
@@ -2617,9 +2623,8 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
             tempMonster.m_artifact = H3_ENUM_DECODE(TArtifact, narrow);
         } else {
             short wide;
-            infile->read(&wide, sizeof(wide));
-            tempMonster.m_artifact = H3_ENUM_DECODE(TArtifact,
-                static_cast<short>(LITTLE_ENDIAN_SHORT(wide)));
+            wide = readLittleEndianValue<short>(infile);
+            tempMonster.m_artifact = H3_ENUM_DECODE(TArtifact, wide);
         }
 
         if (customIndex < 4000) {
@@ -3395,6 +3400,10 @@ static void readWitchHutData(TAbstractFile* infile, CObject* tempObject)
     }
 }
 
+// Native Mac 0x1258b4/0x1258e8 decodes the unchecked castle ID and
+// faction mask; the level-only sibling does the same at 0x1259e8/0x125a1c.
+// These map scalars use the canonical little-endian value reader, retaining
+// their ignored read counts and the conditional faction-mask acquisition.
 MAC_ADDRESS(0x125830, 0x134)
 void NewfullMap::readRandomDwellingData(TAbstractFile* infile,
                                          CObject* object)
@@ -3406,9 +3415,9 @@ void NewfullMap::readRandomDwellingData(TAbstractFile* infile,
     char padding[3];
     infile->read(padding, 3);
 
-    dwelling.m_castleId = readValue<int>(infile);
+    dwelling.m_castleId = readLittleEndianValue<int>(infile);
     if (dwelling.m_castleId == 0)
-        dwelling.m_factionMask = readValue<short>(infile);
+        dwelling.m_factionMask = readLittleEndianValue<short>(infile);
 
     dwelling.m_minLevel = readValue<char>(infile);
     dwelling.m_maxLevel = readValue<char>(infile);
@@ -3428,9 +3437,9 @@ void NewfullMap::readRandomDwellingLevelData(TAbstractFile* infile,
     char padding[3];
     infile->read(padding, 3);
 
-    dwelling.m_castleId = readValue<int>(infile);
+    dwelling.m_castleId = readLittleEndianValue<int>(infile);
     if (dwelling.m_castleId == 0)
-        dwelling.m_factionMask = readValue<short>(infile);
+        dwelling.m_factionMask = readLittleEndianValue<short>(infile);
 
     dwelling.m_minLevel = static_cast<unsigned char>(
         m_objectTypes[object->m_typeIndex].m_extra);

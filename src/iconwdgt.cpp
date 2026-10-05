@@ -67,7 +67,7 @@ MAC_ADDRESS(0x10c498, 0x7c)
 iconWidget::~iconWidget()
 {
     if (m_sprite)
-        m_sprite->dispose();
+        ResourceManager::dispose(m_sprite);
 }
 
 // E:\gamedcs\iconwdgt.cpp:119
@@ -389,7 +389,7 @@ void iconWidget::setPalette(const char* paletteName)
     TPalette16* newPalette = ResourceManager::getPalette(paletteName);
     if (newPalette) {
         m_sprite->setPalette(newPalette->m_data);
-        newPalette->dispose();
+        ResourceManager::dispose(newPalette);
     }
 }
 
@@ -409,7 +409,7 @@ MAC_ADDRESS(0x10d074, 0x5c)
 void iconWidget::setSprite(const char* newSprite)
 {
     if (m_sprite)
-        m_sprite->dispose();
+        ResourceManager::dispose(m_sprite);
     m_sprite = ResourceManager::getSprite(newSprite);
 }
 

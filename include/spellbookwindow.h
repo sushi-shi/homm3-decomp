@@ -109,7 +109,7 @@ public:
     TSpellbookWindow(const hero& h, const armyGroup* g,
                      TSpellContext context, int magicTerrain);
     virtual ~TSpellbookWindow();
-    virtual int open(int newPriority, unsigned char update);
+    virtual int open(int newPriority, bool update);
     virtual void close(unsigned char update);
 
     // E:\gamedcs\SpellbookWindow.h:222

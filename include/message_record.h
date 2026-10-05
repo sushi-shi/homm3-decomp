@@ -25,6 +25,19 @@ public:
         const char* m_extraText;
     };
     heroWindow* m_window;
+
+    // Project-inferred widget command envelope. Retain modifiers, coordinates,
+    // payload and window when converting or reusing an existing message.
+    void setWidgetCommand(int command, int widgetId);
+
+    // Project-inferred dialog protocol operations. The native message fields
+    // are public. These leave coordinates, modifiers and extra/window intact.
+    void setDialogEnd();                 // widget/end; retain codeY
+    void setDialogEnd(int result);       // widget/end with a codeY result
+    void setDialogEndCodes(int result);  // codeY/end only; retain message id
+
+    void setNoInput();        // retains mouse coordinates
+
     // DC type 0x1020 proves this overload's declaration, but no body or
     // inline source row has been recovered. Keep the declaration alone;
     // overview's zero-initialization uses the proven default constructor.

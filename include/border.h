@@ -62,6 +62,7 @@ class Bitmap816;
 // through ResourceManager::GetBitmap816).
 class bitmapBorder : public border {
 public:
+    // Before normalization (Dreamcast): borderBitmap.
     Bitmap816* m_image;
     bitmapBorder(int x, int y, int w, int h, int id,
                  const char* image, int style);
@@ -82,6 +83,7 @@ class Bitmap16Bit;
 // Dispose vcall (0x450750).
 class bitmapBorder16 : public border {
 public:
+    // Before normalization (Dreamcast): borderBitmap16.
     Bitmap16Bit* m_image;
     bitmapBorder16(int x, int y, int w, int h, int id,
                    const char* image, int style);

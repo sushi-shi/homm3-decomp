@@ -69,6 +69,10 @@ Bitmap816::Bitmap816(const char* name, const char* path,
     importPCXFile(filename, rbits, rshift, gbits, gshift, bbits, bshift);
 }
 
+// DC 0x53be4/0x53bee unlocks/releases the optional surface; Complete's
+// heap buffer needs only delete[]. DC 0x53c0e/0x53c20 deletes palette
+// pointers, whereas Mac 0x5dbf4/0x5dc00 and retail 0x44fa12/0x44fa1e
+// destroy embedded m_p24/m_p16 automatically after this body.
 VA(0x0044f9d0, 0x70)
 DC_ADDRESS(0x053ba4, 0xb8)
 MAC_ADDRESS(0x05dbb4, 0x88)
@@ -106,10 +110,13 @@ void Bitmap816::import(int w, int h, unsigned char* data,
         m_map = new unsigned char[m_dataSize];
     if (m_map)
         memcpy(m_map, data, m_dataSize);
-    // DC copies through its reference-taking palette temporary. Complete
-    // embeds the palette and uses the pointer-taking payload assignment
-    // (0x522910), which preserves this bitmap palette's resource identity.
-    m_p16 = &p16;
+    // DC 0x53d34..0x53d48 copies through a separate palette temporary and
+    // destroys it after assignment. Preserve that lifetime using Complete's
+    // pointer-taking payload-copy interfaces (0x5228e0 / 0x522910); assigning
+    // directly from p16 had lost the evidenced constructor/destructor pair.
+    // This import overload has no proven retained Complete counterpart.
+    TPalette16 palette(&p16);
+    m_p16 = &palette;
 }
 
 // Original: Bitmap816::clear; bitmap816.cpp:221
@@ -325,6 +332,6 @@ DC_ADDRESS(0x05429c, 0x64)
 MAC_ADDRESS(0x05e038, 0x4c)
 void Bitmap816::resetPalette()
 {
-    TPalette16 converted(m_p24);
+    TPalette16 converted(getPalette24());
     setPalette(converted.m_data);
 }

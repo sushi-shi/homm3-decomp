@@ -260,7 +260,7 @@ MAC_ADDRESS(0x05e83c, 0x7c)
 bitmapBorder::~bitmapBorder()
 {
     if (m_image)
-        m_image->dispose();
+        ResourceManager::dispose(m_image);
 }
 
 VA(0x004503f0, 0x55)
@@ -293,7 +293,7 @@ void bitmapBorder::setPalette(const char* paletteName)
         TPalette16* newPalette = ResourceManager::getPalette(paletteName);
         if (newPalette) {
             m_image->setPalette(newPalette->m_data);
-            newPalette->dispose();
+            ResourceManager::dispose(newPalette);
         }
     }
 }
@@ -326,7 +326,7 @@ void bitmapBorder::setImage(const char* bitmapName)
     if (m_image != 0) {
         if (strcmp(m_image->getName(), bitmapName) == 0)
             return;
-        m_image->dispose();
+        ResourceManager::dispose(m_image);
     }
     m_image = ResourceManager::getBitmap816(bitmapName);
 }
@@ -389,7 +389,7 @@ MAC_ADDRESS(0x05ec80, 0x7c)
 bitmapBorder16::~bitmapBorder16()
 {
     if (m_image)
-        m_image->dispose();
+        ResourceManager::dispose(m_image);
 }
 
 // Original: bitmapBorder16::zBufferDraw; border.cpp:415
@@ -404,9 +404,8 @@ void bitmapBorder16::draw() const
 {
     if (m_image) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-        m_image->draw(0, 0, m_width, m_height, screen->getMap(0, 0),
-            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, screen->getWidth(),
-            screen->getHeight(), screen->getPitch(), 0);
+        m_image->draw(0, 0, m_width, m_height, screen,
+            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, false);
     }
 }
 
@@ -417,8 +416,7 @@ void bitmapBorder16::draw2() const
 {
     if (m_image) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-        m_image->draw(0, 0, m_width, m_height, screen->getMap(0, 0), m_x, m_y, screen->getWidth(),
-            screen->getHeight(), screen->getPitch(), 0);
+        m_image->draw(0, 0, m_width, m_height, screen, m_x, m_y, false);
     }
 }
 
@@ -426,6 +424,7 @@ void bitmapBorder16::draw2() const
 // Complete vslot 6 at 0x63bae4 shares bitmapBorder::getRealWidth, 0x4504a0:
 // both bitmap types put Width at +0x24 after their resource base.
 DC_ADDRESS(0x054c2c, 0x20)
+MAC_ADDRESS(0x05ee04, 0x1c)
 int bitmapBorder16::getRealWidth() const
 {
     return m_image ? m_image->getWidth() : 0;
@@ -434,6 +433,7 @@ int bitmapBorder16::getRealWidth() const
 // Original: bitmapBorder16::GetRealHeight; border.cpp:436
 // Vslot 5 at 0x63bae0 similarly shares bitmapBorder::getRealHeight, 0x4504b0.
 DC_ADDRESS(0x054c4c, 0x20)
+MAC_ADDRESS(0x05ee20, 0x1c)
 int bitmapBorder16::getRealHeight() const
 {
     return m_image ? m_image->getHeight() : 0;
@@ -465,7 +465,7 @@ void bitmapBorder16::setImage(const char* bitmapName)
     if (m_image != 0) {
         if (strcmp(m_image->getName(), bitmapName) == 0)
             return;
-        m_image->dispose();
+        ResourceManager::dispose(m_image);
     }
     m_image = ResourceManager::getBitmap16(bitmapName);
 }

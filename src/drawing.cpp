@@ -503,7 +503,7 @@ void combatManager::resetLimitCreature()
 
 VA(0x00493780, 0x44)
 DC_ADDRESS(0x083e58, 0x34)
-MAC_ADDRESS(0x0a4ef0, 0x7c)
+MAC_ADDRESS(0x0a4ef0, 0x7c)  // MAC_ABSTRACTION_FROM(tokens1:a5bce575ad68,100.0000): restore DC 0x83e80's coordinate update overload; Mac expands the same bounds, but the wrapper changes width/height instruction scheduling.
 void combatManager::updateCombatArea()
 {
     if (!isQuickCombat()
@@ -803,7 +803,7 @@ void combatManager::drawBackground()
             overlay->m_fileName);
         bitmap->draw(0, 0, bitmap->getWidth(), bitmap->getHeight(), m_saveScreenPostGrid,
                      overlay->m_x, overlay->m_y, true);
-        bitmap->dispose();
+        ResourceManager::dispose(bitmap);
     }
 
     if (m_fortificationLevel > eFortificationNone && m_moatOn) {
@@ -944,7 +944,11 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 
 VA(0x00494390, 0xA7)
 DC_ADDRESS(0x084dac, 0x80)
+// DC retains ValidHex and InInvisibleColumn; Mac 0xa5e38..0xa5ebc
+// expands both, including the latter's nested bounds check.
 MAC_ADDRESS(0x0a5df4, 0x178)
+// Mac 0xa5e38..0xa5eb8 expands ValidHex followed by InInvisibleColumn:
+// the latter repeats the bounds test before rejecting columns 0 and 16.
 void combatManager::updateMouseGrid(int newMouseGridIndex,
                                     int allowDuringAction)
 {
@@ -952,11 +956,8 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
         return;
 
     std::vector<long> hexes;
-    if (newMouseGridIndex >= 0
-            && newMouseGridIndex < COMBAT_GRID_HEX_COUNT
-            && newMouseGridIndex % COMBAT_GRID_COLUMN_COUNT != 0
-            && newMouseGridIndex % COMBAT_GRID_COLUMN_COUNT
-                   != COMBAT_GRID_RIGHT_BORDER_COLUMN) {
+    if (validHex(newMouseGridIndex)
+            && !inInvisibleColumn(newMouseGridIndex)) {
         hexes.push_back(newMouseGridIndex);
     } else {
         newMouseGridIndex = -1;
@@ -1286,28 +1287,28 @@ void combatManager::drawWallAt(int hexIndex, int dx)
                     || wall == eWallSectionUpperTowerCover) {
                 TArcher* archer;
                 if (wall == eWallSectionMainBuildingCover)
-                    archer = &m_archers[0];
+                    archer = &m_archers[eArcherMainBuilding];
                 else if (wall == eWallSectionLowerTowerCover)
-                    archer = &m_archers[1];
+                    archer = &m_archers[eArcherLowerTower];
                 else
-                    archer = &m_archers[2];
+                    archer = &m_archers[eArcherUpperTower];
 
                 if (archer->m_sprite) {
                     int drawX;
                     if (!archer->m_facing) {
                         drawX = archer->m_x - archer->m_sprite->getWidth();
                         drawX += COMBAT_ARCHER_X_BIAS;
-                        if (g_creatureTypeTraits[archer->m_creatureType].m_attributes
+                        if (g_creatureTypeTraits[archer->m_type].m_attributes
                                 & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                             drawX += COMBAT_WALL_HEX_WIDTH;
-                        if (archer->m_creatureType == CREATURE_MEDUSA)
+                        if (archer->m_type == CREATURE_MEDUSA)
                             drawX -= 5;
                     } else {
                         drawX = archer->m_x - COMBAT_ARCHER_X_BIAS;
-                        if (g_creatureTypeTraits[archer->m_creatureType].m_attributes
+                        if (g_creatureTypeTraits[archer->m_type].m_attributes
                                 & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                             drawX -= COMBAT_WALL_HEX_WIDTH;
-                        if (archer->m_creatureType == CREATURE_MEDUSA)
+                        if (archer->m_type == CREATURE_MEDUSA)
                             drawX += 5;
                     }
                     int drawY = archer->m_y - COMBAT_ARCHER_Y_BIAS;
@@ -1768,7 +1769,7 @@ void combatManager::computeMaxExtent()
         }
     }
 
-    for (int archerIndex = 0; archerIndex < 3; archerIndex++) {
+    for (int archerIndex = 0; archerIndex < kNumArchers; archerIndex++) {
         if (m_archerEffect[archerIndex] && m_archers[archerIndex].m_sprite) {
             m_saveBiggestExtent = 1;
             m_computeExtentOnly = 1;
@@ -1777,17 +1778,17 @@ void combatManager::computeMaxExtent()
             if (!archer.m_facing) {
                 drawX = archer.m_x - archer.m_sprite->getWidth()
                          + COMBAT_ARCHER_X_BIAS;
-                if (g_creatureTypeTraits[archer.m_creatureType].m_attributes
+                if (g_creatureTypeTraits[archer.m_type].m_attributes
                         & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                     drawX += COMBAT_WALL_HEX_WIDTH;
-                if (archer.m_creatureType == CREATURE_MEDUSA)
+                if (archer.m_type == CREATURE_MEDUSA)
                     drawX -= 5;
             } else {
                 drawX = archer.m_x - COMBAT_ARCHER_X_BIAS;
-                if (g_creatureTypeTraits[archer.m_creatureType].m_attributes
+                if (g_creatureTypeTraits[archer.m_type].m_attributes
                         & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                     drawX -= COMBAT_WALL_HEX_WIDTH;
-                if (archer.m_creatureType == CREATURE_MEDUSA)
+                if (archer.m_type == CREATURE_MEDUSA)
                     drawX += 5;
             }
             drawArcher(archer.m_sprite, archer.m_sequence, archer.m_frame,
