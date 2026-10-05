@@ -1970,37 +1970,6 @@ int TQuestGuard::save(TAbstractFile* outfile)
     }
 }
 
-// Original: TSeerHut::SetRandomName; seerhut.cpp:139
-// DC uses one static TPickANumber(0,47). Complete read0x574610 expands
-// the same static reference interface with the revised dynamic name table:
-// construct availability, remove names used by this map, then select one.
-// Mac 0x16aee0..0x16afec uses packed vector<bool> fill and bit proxies
-// (0x131708, 0xe73b8, 0x99fb8). VC6 selects its generic byte container
-// for the same declaration, as in TPickANumber; keep the native bool type.
-DC_ADDRESS(0x12d084, 0x4c)
-inline void TSeerHut::setRandomName(TSeerHut& thisHut)
-{
-    std::vector<bool> nameAvailable(g_seerHutNameList.size());
-    unsigned int name;
-    for (name = 0; name < nameAvailable.size(); ++name)
-        nameAvailable[name] = true;
-
-    unsigned int hut;
-    for (hut = 0; hut < g_game->m_worldMap.m_seerHutList.size(); ++hut)
-        nameAvailable[g_game->m_worldMap.m_seerHutList[hut].m_nameIndex] = false;
-
-    int pick = rand()
-        % (nameAvailable.size() - g_game->m_worldMap.m_seerHutList.size());
-    unsigned int chosen;
-    for (chosen = 0; chosen < nameAvailable.size(); ++chosen) {
-        if (nameAvailable[chosen]) {
-            if (--pick < 0)
-                break;
-        }
-    }
-    thisHut.m_nameIndex = chosen;
-}
-
 VA(0x005735a0, 0xC3)
 MAC_ADDRESS(0x169b0c, 0xf0)
 int TSeerHut::getValue(hero* currentHero)
@@ -2507,11 +2476,8 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // carries NO unwind action because nothing between its construction and its
 // destruction can throw - rand() is extern "C" and nothrow under /GX.
 
-// The shared value-reader model keeps load() exact and raises read() from
-// 86.19 to 86.49%, with every other TU row unchanged. It restores the retained
-// type_quest constructor call in the legacy arm. The remaining boundaries are
-// its vector constructor (expanded) and setRandomName's vector fill (called).
-// The factory and random-name helpers remain canonical source calls.
+// The shared value-reader model keeps load() exact and restores the retained
+// type_quest constructor call in the legacy arm.
 // Mac keeps this map-quest loader as a separate body at code0+0x16aa6c,
 // immediately before TSeerHut::read. Complete expands its sole source call.
 MAC_ADDRESS(0x16aa6c, 0x7c)
@@ -2624,7 +2590,35 @@ void TSeerHut::read(TAbstractFile* infile)
 
     readValue<short>(infile);  // reserved bytes
 
-    setRandomName(*this);
+    // Original DC TSeerHut::SetRandomName (seerhut.cpp:139, dc 0x12d084) drew
+    // from one static TPickANumber(0,47). Complete replaces that body with
+    // this dynamic-name-table selection, and neither retail nor Mac
+    // 0x16aee0..0x16afec retains a call for it. VC6 places it in read itself:
+    // as a static helper (2026-10-05) the depth-2 budget expanded the legacy
+    // arm's vector constructor and called vector<bool>::_Ufill, both opposite
+    // to retail (87.52%); written here, both retail decisions follow (100%).
+    // Mac uses packed vector<bool> fill and bit proxies (0x131708, 0xe73b8,
+    // 0x99fb8); VC6 selects its generic byte container for the same
+    // declaration, as in TPickANumber, so keep the native bool type.
+    std::vector<bool> nameAvailable(g_seerHutNameList.size());
+    unsigned int name;
+    for (name = 0; name < nameAvailable.size(); ++name)
+        nameAvailable[name] = true;
+
+    unsigned int hut;
+    for (hut = 0; hut < g_game->m_worldMap.m_seerHutList.size(); ++hut)
+        nameAvailable[g_game->m_worldMap.m_seerHutList[hut].m_nameIndex] = false;
+
+    int pick = rand()
+        % (nameAvailable.size() - g_game->m_worldMap.m_seerHutList.size());
+    unsigned int chosen;
+    for (chosen = 0; chosen < nameAvailable.size(); ++chosen) {
+        if (nameAvailable[chosen]) {
+            if (--pick < 0)
+                break;
+        }
+    }
+    m_nameIndex = chosen;
 }
 
 // Complete reuses one byte scratch for every scalar read. Routing those reads

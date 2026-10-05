@@ -190,9 +190,14 @@ public:
         m_nameIndex = 0;
         m_completedByPlayer = 0;
     }
+    // DC TSeerHut::SetRandomName (seerhut.cpp:139) survives as this static
+    // member declaration. Complete defines no body: TSeerHut::read writes
+    // its revised name selection in place (see src/seerhut.cpp). Removing
+    // the declaration shifts C1 handles in its 64 includers (army::doAttack
+    // 99.9616 -> 99.9232%, armyGroup::getMoraleDescription byte movement).
+    static void setRandomName(TSeerHut& thisHut);
     // Dreamcast supplies the surviving public name/signature; retail's
     // Complete-era body replaces the monolith with the virtual quest family.
-    static void setRandomName(TSeerHut& thisHut);
     void doSeerEvent(hero* currentHero, bool humanPlayer);
     int getValue(hero* currentHero);
     void read(TAbstractFile* infile);
