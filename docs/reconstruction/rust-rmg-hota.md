@@ -95,8 +95,10 @@ because a partial implementation compiled.
 ## Current state
 
 The integration exposes HotA layout, boundaries, coverage and terrain painting
-through the shared workspaces. Full-map generation remains gated; placement and
-later stages are not yet admitted.
+through the shared workspaces, reads HotA's own archives, and provides verified
+placement building blocks (scoring policies, per-cell records, draw lists).
+Full-map generation remains gated; placement and later stages are not yet
+admitted.
 The checkpoints below record their own achieved scope and evidence in order.
 
 The integration branch is `rust-hota-rmg`, begun as the local Codex lane
@@ -821,3 +823,19 @@ Artifacts are in ignored `build/hota-draw-port/`. Like the cell records, the
 lists are verified building blocks; the HotA scorer's footprint and neighbour
 walk, registration hooks and decoration flow still need the placement
 integration.
+
+After rebasing these checkpoints onto `3fef36801`, the same 2,000-request
+Complete replay gives identical verdicts: 1,970 exact hotfix maps and 30
+matching rejections; 1,099 exact retail maps, 880 typed coast faults, 20 typed
+unassigned-player-zone faults and one native fault. Runner SHA-256:
+`bf5cd019ced6d107dcdfd5030b814da877d2f673abc44b82597a10b139f456cf`.
+
+Next work is the placement integration itself: admit HotA in
+`PlacementWorkspace` with the records and draw lists attached to registration
+and removal (with the treasure-phase and zone-guard inputs), keep a typed gate
+on each placement operation not yet ported, then assemble the HotA obstacle
+scorer and decoration flow (`0x1c6090`, `0x1c6dd0`) and the record-reading
+queries (`0x1cb260`, `0x1cb3e0`, `0x1c8070`, `0x1bcf80`, `0xc7c10`). The
+ordered connection/town/mine/road operations, treasures and object limits,
+HotA format-32 output, HD/mirror execution, whole-map native replay and game
+loading remain after that.
