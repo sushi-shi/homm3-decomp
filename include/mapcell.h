@@ -481,11 +481,13 @@ SIZE(type_lean_to_info, 4);
 // DoEventMagicSpring (0x4a3590) shares the same id lane and carries one
 // "still full" bit at 6 (`shr eax,6 / test al,1`); drinking clears it
 // alone (`and dword ptr [cell], 0xffffffbf`).
+// Original MagicSpringInfo (DC 0x2f78) uses unsigned int for id, unused
+// and full.
 struct type_magic_spring_info {
 public:
-    unsigned long m_id : 5;
-    unsigned long m_unused : 1;
-    unsigned long m_full : 1;
+    unsigned int m_id : 5;
+    unsigned int m_unused : 1;
+    unsigned int m_full : 1;
     unsigned long m_tail : 25;
 };
 SIZE(type_magic_spring_info, 4);
@@ -494,12 +496,14 @@ SIZE(type_magic_spring_info, 4);
 // four-bit resource at bits 6..9 (`shl edi,0x16 / sar edi,0x1c`) and a
 // one-bit "still full" flag at bit 10 (`shr eax,0xa / test al,1`);
 // emptying it clears that bit alone (`and ah,0xfb`).
+// Original MysticGardenInfo (DC 0x2f7b) uses unsigned int for id, unused
+// and full.
 struct type_garden_info {
 public:
-    unsigned long m_id : 5;
-    unsigned long m_unused : 1;
+    unsigned int m_id : 5;
+    unsigned int m_unused : 1;
     EGameResource m_resource : 4;
-    unsigned long m_full : 1;
+    unsigned int m_full : 1;
     unsigned long m_tail : 21;
 };
 SIZE(type_garden_info, 4);
@@ -607,12 +611,14 @@ SIZE(WagonInfo, 4);
 // stores into `and eax,0xfffeffe0 / xor eax,id / or eax,0xffc0`, a mask
 // that spares bit 5 while clearing the id lane and bit 16, and an OR
 // rather than a masked insert because the artifact is set to -1.
+// Original SkeletonInfo (DC 0x2f8b) uses unsigned int for id, unused and
+// has_treasure; Complete widens and signs the intervening artifact lane.
 struct type_skeleton_info {
 public:
-    unsigned long m_id : 5;
-    unsigned long m_unused : 1;
+    unsigned int m_id : 5;
+    unsigned int m_unused : 1;
     signed long m_artifact : 10;
-    unsigned long m_hasTreasure : 1;
+    unsigned int m_hasTreasure : 1;
     unsigned long m_tail : 15;
 };
 SIZE(type_skeleton_info, 4);
