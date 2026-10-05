@@ -99,7 +99,8 @@ through the shared workspaces. Full-map generation remains gated; placement and
 later stages are not yet admitted.
 The checkpoints below record their own achieved scope and evidence in order.
 
-The isolated integration branch is `codex/rust-hota-rmg`. The first implementation
+The integration branch is `rust-hota-rmg`, begun as the local Codex lane
+`codex/rust-hota-rmg`. The first implementation
 checkpoint adds explicit generation rules and a shared template model. The `.h3t`
 reader handles variable section widths, pack availability, map/zone/connection
 settings, legacy migration, source ordering and single-ended mirror links. Masks
@@ -687,3 +688,72 @@ maps and seven matching pre-existing coast faults. Runner SHA-256:
 `27cf0dfa7abeeac4482678101227df0cd5e24f7517ffbae2784466db44f5af61`.
 Placement state, the frame-aware scorer, installed prototype loading, later
 HotA operations, output and full-map/native/game verification remain unfinished.
+
+`HotA.lod` is now readable. Its header's reserved word holds a key; zero and
+`0x007e0213` (Complete's `H3sprite.lod`) remain named-format markers. The
+`homm3_lod::HashedDirectory` reader decodes the keyed records, whose names are
+FNV-1a hashes of the lowercase resource name (DLL lookup/read RVAs `0x170ba0`,
+`0x171e40` and `0x170e20`, hash `0x174050`); the named reader rejects such a
+header instead of misreading it. `Installation::open_with_archives` places
+explicitly ordered archives ahead of Complete's for both text and masks, so
+resource precedence is an input rather than a ruleset side effect. Only stored
+and zlib members are decoded; other codec tags fail explicitly.
+`PrototypeSource::parse_for` reads HotA's twelve-terrain object masks. Prepared
+catalogs reject placement rules of another ruleset, and asset preparation
+rejects a HotA prototype source while the pipeline is gated. This completes the
+Codex lane's uncommitted resource work.
+
+Verification: three synthetic hashed-directory tests (keyed extents, case
+folding, NUL-terminated names, named-reader rejection, payload bounds) and an
+installed-data test. Through `open_with_archives`, `HotA.lod` supplies
+`objects.txt` (1,883 rows and 1,865 distinct masks, none falling back to
+`default.msk`; 1,877 rows allow each new terrain) and HotA's `rand_trn.txt`.
+Complete's nine-bit reader rejects these rows, and a Complete placement table
+cannot prepare them.
+
+After rebasing onto `ddf0d4873`, the Complete replay runner is byte-identical
+to the pre-rebase runner (SHA-256
+`1533627251731c24831ec09c5474f9c30c3a5ed50a35b95affa895231c742b0f`). The
+first 2,000 corpus requests give 1,970 exact hotfix maps and 30 matching
+rejections. Retail gives 1,099 exact maps, 880 pre-existing typed coast
+faults, 20 pre-existing typed unassigned-player-zone faults and one native
+fault. The replay classifier now accepts the shared reader's
+`template row` wording for the last of these. No mismatches occurred.
+
+`placement::scoring` holds HotA's frame-aware scoring policies from the object
+scorer at RVA `0x1c6090`. A blocked draw cell's transition frame also counts
+the terrain of its edge art: blending shapes count Dirt, hard shapes Sand,
+mixed shapes both. A terrain in the neutral band `(-5000, -4000]` is not
+counted through such a frame, while base frames (and shape 28, the native
+switch's default arm) always count their own terrain. A counted score at or
+below -4000, or a total below -1000, rejects a multi-cell object and gives a
+single-cell object the native forbidden score -2,000,000,000; a counted
+positive score must belong to a terrain under a blocked cell. The decoration
+filter (RVA `0x1c7ea0`) requires edge terrains above -5000, moves shape 28 to
+the mixed family and requires a plain frame's own score above -4000.
+
+The same-prototype spacing scan (RVA `0x1c7c90`) covers seven cells around the
+blocked bounds, clipped to the map (RVA `0x1cac70`). It keeps the native gap
+asymmetry: west and north gaps count from the first blocked column/row, east
+and south gaps from one past the last, and a diagonal cell takes the smaller
+axis gap. Strict scoring then adds three per blocked cell less nine; a
+same-prototype object at distance `d < 8` costs `(8 - d) * 20`.
+
+These are policy building blocks. The footprint, draw-list and neighbour walks
+need HotA's per-cell draw lists and records, so `score_obstacle` and decoration
+remain Complete-only behind the placement gate.
+
+Verification: eight focused tests. A temporary host harness compiles the
+verbatim recovered helper bodies and the scorer's terrain-gate and finishing
+blocks from `hota_rmg_terrain.cpp`, then compares 40,000 generated cases:
+20,000 tallies over real Complete frames of all nine non-rock terrains (with
+decoration verdicts per cell) and 20,000 spacing/finishing cases. All agree;
+two deliberate mutations (shape 28 classification, east gap) are detected.
+Recovered source SHA-256:
+`58ef1600f2ddf38cc01b5491c4983770932aa2de27448a2948fd30308f7288e2`;
+compiled reference SHA-256:
+`6820c500dbe198a4cacf184af3062ecb954f1d7ed0714b0eb1c2756be4a65459`;
+corpus SHA-256:
+`2dc1b7f7dedbfa40f4e71d0c522fff82ad594cbed620bf2de63e8d682fb7e59e`.
+Artifacts are in ignored `build/hota-scoring-port/`. This is recovered-source
+verification, not a HotA.dll execution capture.

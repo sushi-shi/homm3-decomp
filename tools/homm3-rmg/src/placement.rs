@@ -77,6 +77,7 @@ pub use lines::{LineTile, RiverType, RoadType};
 mod obstacles;
 mod rivers;
 mod roads;
+pub mod scoring;
 pub use obstacles::ObstacleWorkspace;
 mod density;
 mod island_noise;

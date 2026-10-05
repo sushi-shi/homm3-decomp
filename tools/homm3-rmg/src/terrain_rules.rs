@@ -361,7 +361,7 @@ impl TerrainTile {
     pub fn is_special(self) -> bool {
         self.info.special
     }
-    fn shape(self) -> u32 {
+    pub(crate) fn shape(self) -> u32 {
         self.info.shape
     }
 }
