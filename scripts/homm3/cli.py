@@ -53,7 +53,7 @@ Subcommands
         labels -> model -> synth PDB -> data manifests -> vostok ->
         per-unit target objs -> normalize -> objdiff.json.
 
-  status [functions [FILTER...]|update|check [--baseline-ref REF]|merge-baseline]
+  status [functions [FILTER...]|update [--unit TU ...]|check [--baseline-ref REF]|merge-baseline]
         Scoreboard (homm3.match.status): per-unit table; `functions` shows
         cur/max/hist; `update` regenerates config/match_baseline.tsv; `check`
         classifies source-edit MAX resets against the local or a committed

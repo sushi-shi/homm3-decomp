@@ -2,6 +2,7 @@
 #define HOMM3_TOWN_H
 
 #include "va.h"
+#include "town_type.h"
 
 #include <bitset>
 #include <string>
@@ -13,26 +14,6 @@ class TownExtra;  // canonical definition in Game.h
 
 // The retail town-event building tables contain 41 entries per faction.
 enum { TOWN_EVENT_BUILDING_SLOTS = 41 };
-
-// Town/faction ids - the domain of town::type and of the creature
-// traits' townType column (armygrp's alignment switches case on it:
-// good 0-2 / evil 3-5 / neutral 6-8). NH3API terrain.hpp TTownType
-// values with its TOWN_* alias spellings; the DC TTownType enum
-// corroborates 0..7 (Conflux is Complete-era, absent from the AB-age
-// DC roster).
-enum TTownType {
-    // Dreamcast NB11 type 0x1ab5: the unassigned/neutral town sentinel.
-    eTownNeutral = -1,
-    TOWN_CASTLE = 0x0,
-    TOWN_RAMPART = 0x1,
-    TOWN_TOWER = 0x2,
-    TOWN_INFERNO = 0x3,
-    TOWN_NECROPOLIS = 0x4,
-    TOWN_DUNGEON = 0x5,
-    TOWN_STRONGHOLD = 0x6,
-    TOWN_FORTRESS = 0x7,
-    TOWN_CONFLUX = 0x8
-};
 
 // Building ids. DC LF_ENUM `type_building_id` (T_INT4, 245 enumerators:
 // these 45 canonical slots plus 200 per-town alias spellings such as
@@ -565,26 +546,8 @@ extern int g_townInitArmyChance[4];
 extern int g_townInitArmyLow[4];
 extern int g_townInitArmyHigh[4];
 
-// The h3m editor's 41-slot building column order, one row per town
-// type (retail .data 0x6888c0, nine 41-int rows): row content maps the
-// map-format event building index to this faction's engine
-// type_building_id (row 0 opens 11,12,13,7,8,9,5,16,... - town hall,
-// city hall, capitol, fort, citadel, castle, tavern, blacksmith).
-// give_event_reward translates TTownEvent::BuildBuildings through it.
-// Name INVENTED (no DC symbol); owner TU unlocated - extern only.
-// Gated: town.obj is the only consumer.
-extern int g_eventBuildingIds[9][41];
 
-// Per-town-type legal-building rollup create_requirement_masks
-// accumulates (DC public ?gTownEligibleBuildMask@@3PA_JA; retail .bss
-// 0x6976f0, nine qwords). Owner TU unlocated - extern only.
-extern __int64 g_townEligibleBuildMask[9];
 
-// Transitive building-requirement masks, one 44-slot row per town type
-// (DC public ?gHierarchyMask@@3PAY0CM@_JA; retail .bss 0x697798,
-// 0x160-stride rows to 0x6983f8). Owner TU unlocated - extern only.
-DATA(0x00697798)
-extern __int64 g_hierarchyMask[9][44];
 
 enum ETownConstants {
     // The "no dock site" sentinel CanBuildDock tests for.
@@ -592,7 +555,9 @@ enum ETownConstants {
     // Nine town types x 44 building-id slots, byte-derived from
     // initialize_game_data's mask walks (0x160 row stride, rows 0..8,
     // building ids to 43 in the requirement tables).
-    TOWN_TYPE_COUNT = 9,
+    TOWN_TYPE_COUNT = TOWN_CONFLUX + 1,
+    // Restoration of Erathia has the first eight; Conflux came later.
+    TOWN_TYPE_ROE_COUNT = TOWN_CONFLUX,
     TOWN_BUILDING_SLOTS = 44,
     // The four horde columns of a const_horde_effects row - also the
     // length of gHordeBuildings, which get_horde_effect scans.
@@ -607,6 +572,27 @@ enum ETownConstants {
     // 0..13 and stops at 14).
     TOWN_DWELLING_SLOTS = 14
 };
+
+// The h3m editor's 41-slot building column order, one row per town
+// type (retail .data 0x6888c0, nine 41-int rows): row content maps the
+// map-format event building index to this faction's engine
+// type_building_id (row 0 opens 11,12,13,7,8,9,5,16,... - town hall,
+// city hall, capitol, fort, citadel, castle, tavern, blacksmith).
+// give_event_reward translates TTownEvent::BuildBuildings through it.
+// Name INVENTED (no DC symbol); owner TU unlocated - extern only.
+// Gated: town.obj is the only consumer.
+extern int g_eventBuildingIds[TOWN_TYPE_COUNT][TOWN_EVENT_BUILDING_SLOTS];
+
+// Per-town-type legal-building rollup create_requirement_masks
+// accumulates (DC public ?gTownEligibleBuildMask@@3PA_JA; retail .bss
+// 0x6976f0, nine qwords). Owner TU unlocated - extern only.
+extern __int64 g_townEligibleBuildMask[TOWN_TYPE_COUNT];
+
+// Transitive building-requirement masks, one 44-slot row per town type
+// (DC public ?gHierarchyMask@@3PAY0CM@_JA; retail .bss 0x697798,
+// 0x160-stride rows to 0x6983f8). Owner TU unlocated - extern only.
+DATA(0x00697798)
+extern __int64 g_hierarchyMask[TOWN_TYPE_COUNT][TOWN_BUILDING_SLOTS];
 
 // One-based dwelling tier used by the retail artifact-growth helper.
 // Tier one has no corresponding growth artifact, so only the switch's

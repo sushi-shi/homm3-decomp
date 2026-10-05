@@ -5336,9 +5336,9 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
         request.m_humanTeamCount = humanTeamCount;
         request.m_computerPlayerCount = computerPlayerCount;
         request.m_computerTeamCount = computerTeamCount;
-        request.m_waterContent = waterContent;
+        request.m_waterContent = static_cast<ERmgWaterContent>(waterContent);
         request.m_monsterStrength = monsterStrength;
-        request.m_mapVersion = mapVersion;
+        request.m_mapVersion = static_cast<ERmgMapVersion>(mapVersion);
 
         for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
             CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
@@ -5346,7 +5346,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
                 player = m_players.getCompPlayerInPos(i);
             if (player->isHuman())
                 request.m_isHumanSeat[i] = 1;
-            request.m_townType[i] = player->m_townIndex;
+            request.m_townChoices[i] = static_cast<TTownType>(player->m_townIndex);
         }
 
         std::string path(DATA_COMPGEN(0x006837d4, randomMapsPrefix,
@@ -5363,15 +5363,15 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
     switch (result) {
     case RANDOM_MAP_OK:
         return 1;
-    case RANDOM_MAP_FAILED_1:
+    case RANDOM_MAP_OPEN_FAILED:
         normalDialog(g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_FILE_CREATE_ERROR), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         break;
-    case RANDOM_MAP_FAILED_2:
+    case RANDOM_MAP_WRITE_FAILED:
         normalDialog(g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_FILE_WRITE_ERROR), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         break;
-    case RANDOM_MAP_FAILED_3:
+    case RANDOM_MAP_GENERATION_FAILED:
         normalDialog(g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_GENERATION_FAILED), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         break;

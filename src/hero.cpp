@@ -1074,21 +1074,21 @@ void hero::initialize(short index)
 // clears load integer zeros through the TOC (0xf4690/0xf46b8), as MSL
 // std::fill_n does in initialize(short).
 // Use those library fills and the canonical clearSpells helper here too.
-// This recovers Windows 60.20 -> 74.69% with ordinary string assignment.
-// Remaining string::assign expansion differs from retail's retained call.
-// Explicit assign with the old cursors reached only 61.17%; sharing a single
-// function-scope int/long loop index did not improve the recovered version.
+// DC records one function-scope long i. Mac's final backpack scan uses an
+// unsigned comparison at 0xf4904, unlike the preceding signed loops; the
+// owning array's sizeof bound preserves that distinction.
 // The enum-valued backpack fill constructs each empty artifact inside the
 // loop in Mac; a preconstructed value changes that lifetime. Its equipped-slot test
 // reads the field directly, without an additional getArtifact helper call.
-// Lane A r5 trace: m_customName's assign(str, pos, n) gets 1726 / 4 = 431
-// under operator=; retail's call needs two more candidates after it or a
-// caller cost of 805 or less (1055 here). See docs/vc6/inliner.md.
+// The remaining mismatch includes string::assign expanding where retail
+// retains it. Shared/local loop indices, literal/sizeof backpack bounds,
+// assignment/assign and an unnamed/named level leave that boundary unchanged.
 VA(0x004d8b30, 0x434)
 DC_ADDRESS(0x0b6c84, 0x57e)
 MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4
 void hero::initialize(const HeroExtra* setup)
 {
+    long i;
     m_order = setup->m_objRef;
     m_x = setup->m_location.m_x;
     m_y = setup->m_location.m_y;
@@ -1116,7 +1116,7 @@ void hero::initialize(const HeroExtra* setup)
     if (setup->m_customPrimarySkills) {
         // Mac 0xf4658..0xf466c widens each signed skill byte before the
         // store, matching the existing int-valued setter's expansion.
-        for (int i = 0; i < 4; i++)
+        for (i = 0; i < 4; i++)
             setPrimarySkill(i, setup->m_primarySkills[i]);
     }
 
@@ -1124,12 +1124,12 @@ void hero::initialize(const HeroExtra* setup)
         std::fill_n(m_skillLevel, sizeof(m_skillLevel), 0);
         std::fill_n(m_skillOrder, sizeof(m_skillOrder), 0);
         m_skillCount = 0;
-        for (int i = 0; i < setup->m_numSecondarySkills; i++)
+        for (i = 0; i < setup->m_numSecondarySkills; i++)
             giveSS(setup->m_secondarySkill[i], setup->m_secondarySkillLevel[i]);
     }
 
     if (setup->m_customArmies) {
-        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             m_army.m_numTroops[i] = setup->m_numTroops[i];
             if (m_army.m_numTroops[i] > 0)
                 m_army.m_armies[i] = setup->m_armies[i];
@@ -1140,14 +1140,13 @@ void hero::initialize(const HeroExtra* setup)
 
     if (setup->m_customSpells) {
         clearSpells();
-        for (int i = 0; i < NUM_SPELLS; i++) {
+        for (i = 0; i < NUM_SPELLS; i++) {
             if (setup->m_spells.test(i))
                 addSpell(i);
         }
     }
 
     if (setup->m_customArtifacts) {
-        int i;
         for (i = 0; i < 19; i++) {
             if (m_equipped[i].m_artifactId != ARTIFACT_NONE)
                 removeArtifact(i);
@@ -1157,7 +1156,7 @@ void hero::initialize(const HeroExtra* setup)
                 equipArtifact(setup->m_artifacts[i], i);
         }
         std::fill_n(m_backpack, 64, ARTIFACT_NONE);
-        for (i = 0; i < 64; i++) {
+        for (i = 0; i < sizeof(setup->m_backpack) / sizeof(setup->m_backpack[0]); i++) {
             if (setup->m_backpack[i].m_artifactId != ARTIFACT_NONE)
                 addToBackpack(setup->m_backpack[i], -1);
         }
@@ -1182,7 +1181,9 @@ void hero::initialize(const HeroExtra* setup)
         if (g_inCampaign
             && g_game->m_campaign.m_currentCampaign == g_startLevelCampaign
             && g_game->m_campaign.m_currentMap == g_startLevelScenario) {
-            int level = g_game->m_heroes[g_startLevelHeroId].m_level
+            // Mac 0xf4998..0xf49a4 separates the hero-row address from the
+            // level load. This fixed valid ID folds getHero's null guard.
+            int level = g_game->getHero(g_startLevelHeroId)->m_level
                        + g_startLevelBonus;
             amount = getExperience(level);
         }

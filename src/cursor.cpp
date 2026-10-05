@@ -855,12 +855,12 @@ int advManager::validMove(const hero* currentHero, int direction, int withEvent,
     int stepsSouth = dirMask & 0x38;
     if (dirMask & 0x83) {
         if (srcCell->cellIsTrigger()
-                && !g_adventureObjectTraits[srcCell->getMapObject()].m_trait1)
+                && !g_adventureObjectTraits[srcCell->getMapObject()].m_enterableFromNorth)
             return 0;
     }
     if (stepsSouth) {
         if (destCell->cellIsTrigger()
-                && !g_adventureObjectTraits[destCell->getMapObject()].m_trait1)
+                && !g_adventureObjectTraits[destCell->getMapObject()].m_enterableFromNorth)
             return 0;
     }
 

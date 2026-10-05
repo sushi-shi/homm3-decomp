@@ -47,7 +47,7 @@ static const TAdvObjectNameRow g_adventureObjectNameRows[] = {
 };
 
 DATA(0x0063a854)
-static const int g_adventureObjectTrait3Ids[] = {
+static const int g_adventureObjectDecorationIds[] = {
     114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126,
     127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139,
     140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152,
@@ -59,7 +59,7 @@ static const int g_adventureObjectTrait3Ids[] = {
 };
 
 DATA(0x0063a9d0)
-static const int g_adventureObjectTrait2Ids[] = {
+static const int g_adventureObjectClearedOnVisitIds[] = {
     5, 6, 9, 12, 26, 29, 34, 54, 59, 62, 65, 66, 67, 68, 69, 70, 71, 72,
     73, 74, 75, 162, 163, 164, 76, 79, 81, 82, 86, 93, 101, 212, 214,
     215
@@ -73,7 +73,7 @@ static const int g_adventureObjectLandBlockedIds[] = {
 };
 
 DATA(0x0063ab00)
-static const int g_adventureObjectTrait1Ids[] = {
+static const int g_adventureObjectEnterableFromNorthIds[] = {
     3, 5, 6, 8, 9, 11, 12, 22, 26, 29, 33, 34, 36, 54, 59, 65, 66, 67,
     68, 69, 70, 71, 72, 73, 74, 75, 162, 163, 164, 76, 79, 81, 82, 85,
     86, 93, 101, 111, 212, 214, 215, 219
@@ -105,10 +105,10 @@ void initializeAdventureObjectNames()
     int i;
     TAdvObjectTraits* row = g_adventureObjectTraitRows;
     for (i = 0; i < ADVENTURE_OBJECT_TRAIT_COUNT; ++i, ++row) {
-        row->m_trait1 = 0;
-        row->m_trait2 = 0;
+        row->m_enterableFromNorth = 0;
+        row->m_clearedOnVisit = 0;
         row->m_blocksLanding = 0;
-        row->m_trait3 = 0;
+        row->m_isDecoration = 0;
         row->m_name = "";
         row->m_nameRow = i;
     }
@@ -118,22 +118,22 @@ void initializeAdventureObjectNames()
         g_adventureObjectTraitRows[g_adventureObjectNameRows[i].m_objectType]
             .m_nameRow = g_adventureObjectNameRows[i].m_nameRow;
     }
-    for (i = 0; i < sizeof(g_adventureObjectTrait3Ids)
-                        / sizeof(g_adventureObjectTrait3Ids[0]); ++i) {
-        g_adventureObjectTraitRows[g_adventureObjectTrait3Ids[i]].m_trait3 = 1;
+    for (i = 0; i < sizeof(g_adventureObjectDecorationIds)
+                        / sizeof(g_adventureObjectDecorationIds[0]); ++i) {
+        g_adventureObjectTraitRows[g_adventureObjectDecorationIds[i]].m_isDecoration = 1;
     }
-    for (i = 0; i < sizeof(g_adventureObjectTrait2Ids)
-                        / sizeof(g_adventureObjectTrait2Ids[0]); ++i) {
-        g_adventureObjectTraitRows[g_adventureObjectTrait2Ids[i]].m_trait2 = 1;
+    for (i = 0; i < sizeof(g_adventureObjectClearedOnVisitIds)
+                        / sizeof(g_adventureObjectClearedOnVisitIds[0]); ++i) {
+        g_adventureObjectTraitRows[g_adventureObjectClearedOnVisitIds[i]].m_clearedOnVisit = 1;
     }
     for (i = 0; i < sizeof(g_adventureObjectLandBlockedIds)
                         / sizeof(g_adventureObjectLandBlockedIds[0]); ++i) {
         g_adventureObjectTraitRows[g_adventureObjectLandBlockedIds[i]]
             .m_blocksLanding = 1;
     }
-    for (i = 0; i < sizeof(g_adventureObjectTrait1Ids)
-                        / sizeof(g_adventureObjectTrait1Ids[0]); ++i) {
-        g_adventureObjectTraitRows[g_adventureObjectTrait1Ids[i]].m_trait1 = 1;
+    for (i = 0; i < sizeof(g_adventureObjectEnterableFromNorthIds)
+                        / sizeof(g_adventureObjectEnterableFromNorthIds[0]); ++i) {
+        g_adventureObjectTraitRows[g_adventureObjectEnterableFromNorthIds[i]].m_enterableFromNorth = 1;
     }
 
     TTextResource* names = ResourceManager::getText(

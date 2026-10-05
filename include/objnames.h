@@ -15,17 +15,22 @@ enum {
     ADVENTURE_OBJECT_TRAIT_COUNT = 232
 };
 
-// 16-byte row, every offset written by the loader at 0x41b500. Only the
-// first byte has an attested role - mapcell.h names it the trigger-object
-// landing veto and cursor/findpath read byte +1 - so the remaining flags
-// keep neutral spellings.
+// 16-byte row, every offset written by the loader at 0x41b500 from the
+// object-type id tables in objnames.cpp.
 struct TAdvObjectTraits {
-    unsigned char m_blocksLanding;  // +0x00
-    unsigned char m_trait1;         // +0x01
-    unsigned char m_trait2;         // +0x02
-    const char* m_name;             // +0x04
-    int m_nameRow;                  // +0x08
-    unsigned char m_trait3;         // +0x0c
+    // Trigger-object landing veto (mapcell.h).
+    unsigned char m_blocksLanding;       // +0x00
+    // The trigger cell can be entered from and left to its north side
+    // (findpath, cursor); small objects such as pickups and monsters.
+    unsigned char m_enterableFromNorth;  // +0x01
+    // Stops blocking once visited: pickups, monsters, prisons, guards,
+    // border gates, events and heroes.
+    unsigned char m_clearedOnVisit;      // +0x02
+    const char* m_name;                  // +0x04
+    int m_nameRow;                       // +0x08
+    // Decorative obstacle (object types 114-211); drawn by View World's
+    // terrain view and written first by the random map generator.
+    unsigned char m_isDecoration;        // +0x0c
 };
 SIZE(TAdvObjectTraits, 0x10);
 

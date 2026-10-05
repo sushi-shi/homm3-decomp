@@ -619,10 +619,10 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
         }
 
         if (((1 << direction) & 0x83) && srcCell->cellIsTrigger()
-                && g_adventureObjectTraits[srcCell->getMapObject()].m_trait1 == 0)
+                && g_adventureObjectTraits[srcCell->getMapObject()].m_enterableFromNorth == 0)
             flyingRequired = 1;
         if (((1 << direction) & 0x38) && destCell->cellIsTrigger()
-                && g_adventureObjectTraits[destCell->getMapObject()].m_trait1 == 0)
+                && g_adventureObjectTraits[destCell->getMapObject()].m_enterableFromNorth == 0)
             continue;
 
         if (terrain == eTerrainWater) {

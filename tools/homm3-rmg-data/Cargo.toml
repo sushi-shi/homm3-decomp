@@ -1,0 +1,15 @@
+[package]
+name = "homm3-rmg-data"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Source-derived Heroes III random-map definitions"
+
+[build-dependencies]
+bindgen = "0.72.1"
+cc = "1.2"
+
+[lints]
+workspace = true

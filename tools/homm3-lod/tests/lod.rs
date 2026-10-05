@@ -1,6 +1,28 @@
 //! Generated LOD fixtures for stored and zlib-compressed directory members.
 
-use homm3_lod::{Archive, Error, Payload, ENTRY_SIZE, HEADER_SIZE};
+use homm3_lod::{Archive, Directory, Error, Header, Payload, ENTRY_SIZE, HEADER_SIZE};
+
+#[test]
+fn directory_view_does_not_require_resident_payloads() {
+    let data = archive_image();
+    let end = Header::parse(&data[..HEADER_SIZE]).unwrap().directory_end();
+    let directory = Directory::parse(&data[..end], data.len() as u64).unwrap();
+    let archive = Archive::parse(&data).unwrap();
+    assert_eq!(directory.version(), archive.version());
+    assert_eq!(directory.len(), archive.len());
+    assert_eq!(
+        directory.entries().collect::<Vec<_>>(),
+        archive.entries().collect::<Vec<_>>()
+    );
+    assert!(matches!(
+        Directory::parse(&data[..end], (data.len() - 1) as u64),
+        Err(Error::PayloadOutOfBounds { index: 1, .. })
+    ));
+    assert!(matches!(
+        Directory::parse(&data[..end], (end - 1) as u64),
+        Err(Error::ShortDirectory { .. })
+    ));
+}
 
 fn archive_image() -> Vec<u8> {
     let count = 2usize;

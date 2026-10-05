@@ -41,3 +41,10 @@ Then run the affected fast comparison. Regenerate README with
 authorization. Do not run routine full builds, tests or standalone validation
 checks. README's table is MAX and its footer reports CUR/MAX/HIST. Workers return
 their commits for coordinated integration and publishing.
+
+In an isolated worktree without unrelated build state, use
+`homm3 status update --unit <TU> --write-readme` (repeat `--unit` for all affected
+units). This checks the selected Ninja targets, compiler receipts and paired
+comparison provenance, preserving other ledger rows verbatim. README uses
+their banked scores and retail sizes. A scoring-policy change requires a
+complete checkpoint; a scoped update cannot migrate that policy.

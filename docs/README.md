@@ -32,6 +32,7 @@ iterate on a function.
 - [Mac matching tooling rollout and worker readiness](tooling/mac-matching-roadmap.md)
 - [Executable libraries](reference/executable-libraries.md)
 - [RMG undefined behavior](reference/rmg-undefined-behavior.md) and [Voronoi provenance](reference/rmg-voronoi-provenance.md)
+- [RMG terrain and line shapes](reference/rmg-terrain-shapes.md)
 
 ## Outstanding work
 

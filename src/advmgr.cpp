@@ -9018,7 +9018,7 @@ unsigned char advManager::findAdjacentMonster(type_point point, type_point* resu
     mapCell = m_fullMap->cell(point.m_x, point.m_y, point.m_z);
     unsigned char centerIsWater = mapCell->m_groundSet == eTerrainWater;
     if (mapCell->cellIsTrigger()
-        && !g_adventureObjectTraits[mapCell->getMapObject()].m_trait1)
+        && !g_adventureObjectTraits[mapCell->getMapObject()].m_enterableFromNorth)
         rect.top = point.m_y;
 
     for (x = rect.left; x < rect.right; ++x) {

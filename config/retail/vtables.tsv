@@ -321,83 +321,83 @@ rva	function_count	class
 0x2406f4	9	TQuickTownWindow
 # ??_7 site paired in order: 0x530e20 ??0TProgressSink@@QAE@H@Z; 0x530e40 ??_GTProgressSink@@UAEPAXI@Z (+1 more)
 0x2409c0	3	TProgressSink
-# ??_7 site paired in order: 0x530fb0 ??0type_random_map@@QAE@HHH@Z; 0x5310b0 ??1type_random_map@@UAE@XZ (+8 more)
-0x2409cc	7	type_random_map
-# ??_7 site paired in order: 0x5310b0 ??1type_random_map@@UAE@XZ; 0x5361b0 ??_GTRmgMapInterface@@UAEPAXI@Z (+7 more)
+# ??_7 site paired in order: 0x530fb0 ??0TRmgMap@@QAE@HHH@Z; 0x5310b0 ??1TRmgMap@@UAE@XZ (+8 more)
+0x2409cc	7	TRmgMap
+# ??_7 site paired in order: 0x5310b0 ??1TRmgMap@@UAE@XZ; 0x5361b0 ??_GTRmgMapInterface@@UAEPAXI@Z (+7 more)
 0x2409e8	7	TRmgMapInterface
 # retail slots 1:0x532360, 2:0x5323d0, 4:0x532410, 5:0x532480, 6:0x5324b0 are the candidate TRmgRoadMapAdapter slot functions; no other census row pairs
 0x240a04	7	TRmgRoadMapAdapter
 # ??_7 site paired in order: 0x532350 ??1TRmgRoadMapAdapterInterface@@UAE@XZ; 0x537940 ??_GTRmgRoadMapAdapterInterface@@UAEPAXI@Z
 0x240a20	7	TRmgRoadMapAdapterInterface
-# ??_7 site paired in order: 0x548500 ?createRiverToObject@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z; 0x548df0 ?createRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z
-0x240a3c	7	TRmgMapAdapter
-# ??_7 site paired in order: 0x532510 ??1TRmgMapAdapterInterface@@UAE@XZ; 0x537910 ??_GTRmgMapAdapterInterface@@UAEPAXI@Z (+2 more)
-0x240a58	7	TRmgMapAdapterInterface
-# ??_7 site paired in order: 0x5330e0 ??0type_object@@QAE@PAUTRmgObjectPropertiesRef@@@Z; 0x533120 ??_Gtype_object@@UAEPAXI@Z (+30 more)
-0x240a74	4	type_object
-# ??_7 site paired in order: 0x540b20 ?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z
-0x240a84	4	rmgMonsterObject
-# ??_7 site paired in order: 0x544d90 ?tryPlaceAdditionalTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHEH@Z; 0x545250 ?tryPlacePrimaryTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHE@Z
-0x240a94	4	rmgTownObject
-# ??_7 site paired in order: 0x534790 ?generate@type_dwelling_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z; 0x541ad0 ?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z (+1 more)
-0x240aa4	4	rmgOwnableObject
-# ??_7 site paired in order: 0x5341f0 ?generate@type_artifact_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z
-0x240ab4	4	rmgArtifactObject
-# ??_7 site paired in order: 0x534870 ?generate@type_resource_lump_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z; 0x545990 ?tryPlaceMine@type_random_map_generator@@QAEEPAUTRmgZone@@HEH@Z
-0x240ac4	4	rmgResourceObject
-# ??_7 site paired in order: 0x534380 ?generate@type_black_box_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z; 0x534410 ?generate@type_black_box_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z (+2 more)
-0x240ad4	4	rmgBlackBoxObject
-# ??_7 site paired in order: 0x534fd0 ?generate@type_key_tent_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z
-0x240ae4	4	rmgKeyTentObject
-# ??_7 site paired in order: 0x5339f0 ??1rmgQuestArtifactObject@@UAE@XZ; 0x534b90 ?generate@type_quest_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z (+2 more)
-0x240af4	4	rmgQuestArtifactObject
-# ??_7 site paired in order: 0x534b90 ?generate@type_quest_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z; 0x534cc0 ?generate@type_quest_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z (+1 more)
-0x240b04	4	rmgSeerHutObject
-# ??_7 site paired in order: 0x5348d0 ?generate@type_prison_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z
-0x240b14	4	rmgHeroObject
-# ??_7 site paired in order: 0x534970 ?generate@type_scholar_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z
-0x240b24	4	rmgScholarObject
-# ??_7 site paired in order: 0x534a00 ?generate@type_shrine_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z
-0x240b34	4	rmgShrineObject
-# ??_7 site paired in order: 0x534ed0 ?generate@type_spell_scroll_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z
-0x240b44	4	rmgSpellScrollObject
-# ??_7 site paired in order: 0x534a90 ?generate@type_witch_hut_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z
-0x240b54	4	rmgWitchHutObject
-0x240b64	3	type_treasure_def
-# retail slots 0:0x5341f0, 1:0x534190 are the candidate type_artifact_def slot functions; no other census row pairs
-0x240b70	3	type_artifact_def
-0x240b7c	3	type_black_box_creature_def
-# retail slots 0:0x534410, 1:0x534190 are the candidate type_black_box_experience_def slot functions; no other census row pairs
-0x240b88	3	type_black_box_experience_def
-# retail slots 0:0x534490, 1:0x534190 are the candidate type_black_box_gold_def slot functions; no other census row pairs
-0x240b94	3	type_black_box_gold_def
-# retail slots 0:0x534520, 1:0x534190 are the candidate type_black_box_spells_def slot functions; no other census row pairs
-0x240ba0	3	type_black_box_spells_def
-# retail slots 0:0x534790, 1:0x534190 are the candidate type_dwelling_def slot functions; no other census row pairs
-0x240bac	3	type_dwelling_def
-# retail slots 0:0x534790, 1:0x5347f0 are the candidate type_map_dwelling_def slot functions; no other census row pairs
-0x240bb8	3	type_map_dwelling_def
-# retail slots 0:0x534870, 1:0x534190 are the candidate type_resource_lump_def slot functions; no other census row pairs
-0x240bc4	3	type_resource_lump_def
-# retail slots 0:0x5348d0, 1:0x534190 are the candidate type_prison_def slot functions; no other census row pairs
-0x240bd0	3	type_prison_def
-# retail slots 0:0x534970, 1:0x534190 are the candidate type_scholar_def slot functions; no other census row pairs
-0x240bdc	3	type_scholar_def
-0x240be8	3	type_shrine_def
-0x240bf4	3	type_witch_hut_def
-# retail slots 0:0x534b90, 1:0x534af0 are the candidate type_quest_creature_def slot functions; no other census row pairs
-0x240c00	3	type_quest_creature_def
-# retail slots 0:0x534cc0, 1:0x534c80 are the candidate type_quest_experience_def slot functions; no other census row pairs
-0x240c0c	3	type_quest_experience_def
-# retail slots 0:0x534db0 are the candidate type_quest_gold_def slot functions; no other census row pairs
-0x240c18	3	type_quest_gold_def
-0x240c24	3	type_spell_scroll_def
-# retail slots 0:0x534fd0, 1:0x534fa0 are the candidate type_key_tent_def slot functions; no other census row pairs
-0x240c30	3	type_key_tent_def
+# ??_7 site paired in order: 0x548500 ?createRiverToObject@TRmgGenerator@@QAEXUTRmgMapPosition@@@Z; 0x548df0 ?createRiver@TRmgGenerator@@QAEXUTRmgMapPosition@@@Z
+0x240a3c	7	TRmgRiverMapAdapter
+# ??_7 site paired in order: 0x532510 ??1TRmgRiverMapAdapterInterface@@UAE@XZ; 0x537910 ??_GTRmgRiverMapAdapterInterface@@UAEPAXI@Z (+2 more)
+0x240a58	7	TRmgRiverMapAdapterInterface
+# ??_7 site paired in order: 0x5330e0 ??0TRmgObject@@QAE@PAUTRmgObjectPropertiesRef@@@Z; 0x533120 ??_GTRmgObject@@UAEPAXI@Z (+30 more)
+0x240a74	4	TRmgObject
+# ??_7 site paired in order: 0x540b20 ?createGuard@TRmgGenerator@@QAEPAVTRmgObject@@HPAUTRmgZone@@@Z
+0x240a84	4	TRmgMonsterObject
+# ??_7 site paired in order: 0x544d90 ?tryPlaceAdditionalTown@TRmgGenerator@@QAEEPAUTRmgZone@@HHEH@Z; 0x545250 ?tryPlacePrimaryTown@TRmgGenerator@@QAEEPAUTRmgZone@@HHE@Z
+0x240a94	4	TRmgTownObject
+# ??_7 site paired in order: 0x534790 ?generate@TRmgDwellingDef@@UAEPAVTRmgObject@@PAUTRmgObjectPropertiesRef@@PAVTRmgGenerator@@PAUTRmgZone@@@Z; 0x541ad0 ?createShipyardConnection@TRmgGenerator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z (+1 more)
+0x240aa4	4	TRmgOwnableObject
+# ??_7 site paired in order: 0x5341f0 ?generate@TRmgArtifactDef@@UAEPAVTRmgObject@@PAUTRmgObjectPropertiesRef@@PAVTRmgGenerator@@PAUTRmgZone@@@Z
+0x240ab4	4	TRmgArtifactObject
+# ??_7 site paired in order: 0x534870 ?generate@TRmgResourceLumpDef@@UAEPAVTRmgObject@@PAUTRmgObjectPropertiesRef@@PAVTRmgGenerator@@PAUTRmgZone@@@Z; 0x545990 ?tryPlaceMine@TRmgGenerator@@QAEEPAUTRmgZone@@HEH@Z
+0x240ac4	4	TRmgResourceObject
+# ??_7 site paired in order: 0x534380 ?generate@TRmgBlackBoxCreatureDef@@UAEPAVTRmgObject@@PAUTRmgObjectPropertiesRef@@PAVTRmgGenerator@@PAUTRmgZone@@@Z; 0x534410 ?generate@TRmgBlackBoxExperienceDef@@UAEPAVTRmgObject@@PAUTRmgObjectPropertiesRef@@PAVTRmgGenerator@@PAUTRmgZone@@@Z (+2 more)
+0x240ad4	4	TRmgBlackBoxObject
+# ??_7 site paired in order: 0x534fd0 ?generate@TRmgKeyTentDef@@UAEPAVTRmgObject@@PAUTRmgObjectPropertiesRef@@PAVTRmgGenerator@@PAUTRmgZone@@@Z
+0x240ae4	4	TRmgKeyTentObject
+# ??_7 site paired in order: 0x5339f0 ??1TRmgQuestArtifactObject@@UAE@XZ; 0x534b90 ?generate@TRmgQuestCreatureDef@@UAEPAVTRmgObject@@PAUTRmgObjectPropertiesRef@@PAVTRmgGenerator@@PAUTRmgZone@@@Z (+2 more)
+0x240af4	4	TRmgQuestArtifactObject
+# ??_7 site paired in order: 0x534b90 ?generate@TRmgQuestCreatureDef@@UAEPAVTRmgObject@@PAUTRmgObjectPropertiesRef@@PAVTRmgGenerator@@PAUTRmgZone@@@Z; 0x534cc0 ?generate@TRmgQuestExperienceDef@@UAEPAVTRmgObject@@PAUTRmgObjectPropertiesRef@@PAVTRmgGenerator@@PAUTRmgZone@@@Z (+1 more)
+0x240b04	4	TRmgSeerHutObject
+# ??_7 site paired in order: 0x5348d0 ?generate@TRmgPrisonDef@@UAEPAVTRmgObject@@PAUTRmgObjectPropertiesRef@@PAVTRmgGenerator@@PAUTRmgZone@@@Z
+0x240b14	4	TRmgHeroObject
+# ??_7 site paired in order: 0x534970 ?generate@TRmgScholarDef@@UAEPAVTRmgObject@@PAUTRmgObjectPropertiesRef@@PAVTRmgGenerator@@PAUTRmgZone@@@Z
+0x240b24	4	TRmgScholarObject
+# ??_7 site paired in order: 0x534a00 ?generate@TRmgShrineDef@@UAEPAVTRmgObject@@PAUTRmgObjectPropertiesRef@@PAVTRmgGenerator@@PAUTRmgZone@@@Z
+0x240b34	4	TRmgShrineObject
+# ??_7 site paired in order: 0x534ed0 ?generate@TRmgSpellScrollDef@@UAEPAVTRmgObject@@PAUTRmgObjectPropertiesRef@@PAVTRmgGenerator@@PAUTRmgZone@@@Z
+0x240b44	4	TRmgSpellScrollObject
+# ??_7 site paired in order: 0x534a90 ?generate@TRmgWitchHutDef@@UAEPAVTRmgObject@@PAUTRmgObjectPropertiesRef@@PAVTRmgGenerator@@PAUTRmgZone@@@Z
+0x240b54	4	TRmgWitchHutObject
+0x240b64	3	TRmgTreasureDef
+# retail slots 0:0x5341f0, 1:0x534190 are the candidate TRmgArtifactDef slot functions; no other census row pairs
+0x240b70	3	TRmgArtifactDef
+0x240b7c	3	TRmgBlackBoxCreatureDef
+# retail slots 0:0x534410, 1:0x534190 are the candidate TRmgBlackBoxExperienceDef slot functions; no other census row pairs
+0x240b88	3	TRmgBlackBoxExperienceDef
+# retail slots 0:0x534490, 1:0x534190 are the candidate TRmgBlackBoxGoldDef slot functions; no other census row pairs
+0x240b94	3	TRmgBlackBoxGoldDef
+# retail slots 0:0x534520, 1:0x534190 are the candidate TRmgBlackBoxSpellsDef slot functions; no other census row pairs
+0x240ba0	3	TRmgBlackBoxSpellsDef
+# retail slots 0:0x534790, 1:0x534190 are the candidate TRmgDwellingDef slot functions; no other census row pairs
+0x240bac	3	TRmgDwellingDef
+# retail slots 0:0x534790, 1:0x5347f0 are the candidate TRmgMapDwellingDef slot functions; no other census row pairs
+0x240bb8	3	TRmgMapDwellingDef
+# retail slots 0:0x534870, 1:0x534190 are the candidate TRmgResourceLumpDef slot functions; no other census row pairs
+0x240bc4	3	TRmgResourceLumpDef
+# retail slots 0:0x5348d0, 1:0x534190 are the candidate TRmgPrisonDef slot functions; no other census row pairs
+0x240bd0	3	TRmgPrisonDef
+# retail slots 0:0x534970, 1:0x534190 are the candidate TRmgScholarDef slot functions; no other census row pairs
+0x240bdc	3	TRmgScholarDef
+0x240be8	3	TRmgShrineDef
+0x240bf4	3	TRmgWitchHutDef
+# retail slots 0:0x534b90, 1:0x534af0 are the candidate TRmgQuestCreatureDef slot functions; no other census row pairs
+0x240c00	3	TRmgQuestCreatureDef
+# retail slots 0:0x534cc0, 1:0x534c80 are the candidate TRmgQuestExperienceDef slot functions; no other census row pairs
+0x240c0c	3	TRmgQuestExperienceDef
+# retail slots 0:0x534db0 are the candidate TRmgQuestGoldDef slot functions; no other census row pairs
+0x240c18	3	TRmgQuestGoldDef
+0x240c24	3	TRmgSpellScrollDef
+# retail slots 0:0x534fd0, 1:0x534fa0 are the candidate TRmgKeyTentDef slot functions; no other census row pairs
+0x240c30	3	TRmgKeyTentDef
 # ??_7 site paired in order: 0x536070 ??0TRmgGeneratorBase@@QAE@HHHPAVTProgressSink@@HH@Z; 0x5363b0 ??1TRmgGeneratorBase@@UAE@XZ
 0x240c3c	2	TRmgGeneratorBase
-# ??_7 site paired in order: 0x537b10 ??0type_random_map_generator@@QAE@HHHHHHHHHPAVTProgressSink@@H@Z; 0x537df0 ??1type_random_map_generator@@UAE@XZ
-0x240c44	2	type_random_map_generator
+# ??_7 site paired in order: 0x537b10 ??0TRmgGenerator@@QAE@HHHHHHHHHPAVTProgressSink@@H@Z; 0x537df0 ??1TRmgGenerator@@UAE@XZ
+0x240c44	2	TRmgGenerator
 # ??_7 site paired in order: 0x54e850 ??0TRecruitWindow@@QAE@HHHPAVrecruitUnit@@@Z; 0x54fb20 ??1TRecruitWindow@@UAE@XZ
 0x240c4c	9	TRecruitWindow
 # ??_7 site paired in order: 0x551350 ??0recruitUnit@@QAE@PAVarmyGroup@@EW4TCreatureType@@PAF121212@Z; 0x551460 ??0recruitUnit@@QAE@PAVhero@@W4TCreatureType@@PAF121212@Z (+1 more)
@@ -437,8 +437,8 @@ rva	function_count	class
 0x241134	3	t_stdio_file_adapter@ResourceManager
 # ??_7 site paired in order: 0x55ee50 TRmgRiverPainter ctor; 0x55eda0 ~TRmgRiverPainter.
 # Slot 6 is _purecall: the destructor is pure here (include/rmg.h).
-0x241174	7	TRmgLinePainter
-# ??_7 site paired in order: 0x55ee50 ??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z
+0x241174	7	TRmgRiverLinePainter
+# ??_7 site paired in order: 0x55ee50 ??0TRmgRiverPainter@@QAE@PAVTRmgRiverMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z
 0x241190	7	TRmgRiverPainter
 # ??_7 site paired in order: 0x55f3b0 TRmgRoadPainter ctor; 0x55f460 ~TRmgRoadPainter.
 # Slot 6 is _purecall: the destructor is pure here (include/rmg.h).

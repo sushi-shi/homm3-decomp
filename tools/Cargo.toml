@@ -8,6 +8,9 @@ members = [
   "homm3-save",
   "homm3-resource",
   "homm3-oracle",
+  "homm3-rmg-data",
+  "homm3-rmg",
+  "homm3-rmg-cli",
 ]
 
 [workspace.package]
@@ -24,14 +27,18 @@ homm3-def = { path = "homm3-def" }
 homm3-map = { path = "homm3-map" }
 homm3-save = { path = "homm3-save" }
 homm3-resource = { path = "homm3-resource" }
-clap = { version = "4.6.4", features = ["derive"] }
+homm3-rmg-data = { path = "homm3-rmg-data" }
+homm3-rmg = { path = "homm3-rmg" }
+# Clap 4.6 requires Rust 1.85; keep the workspace's declared 1.82 MSRV.
+clap = { version = "~4.5.58", features = ["derive"] }
 flate2 = { version = "1.1.9", default-features = false, features = ["rust_backend"] }
 png = "0.17.16"
 
-# The libraries are no_std, allocation-free, dependency-free readers and
+# The format libraries are no_std, allocation-free, dependency-free readers and
 # codecs. File IO, zlib inflation, reporting and PNG output belong to the
-# binary. Keeping that boundary explicit makes the Rust side a useful
+# IO adapters and binaries. Keeping that boundary explicit makes the Rust side a useful
 # independent format oracle instead of another wrapper around game code.
+# RMG uses std and reusable owned storage; it is a generator, not a codec.
 
 [workspace.lints.rust]
 missing_docs = "warn"

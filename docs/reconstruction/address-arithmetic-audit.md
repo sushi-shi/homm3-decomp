@@ -107,7 +107,7 @@ countdown and frame. Restoring the evidenced type produces the countdown
 naturally. Creature snapshots and the separate upgrade pointer preserve
 DC rows 946/949 and are independently score-neutral.
 
-`scripts/experiments/generate-horde-row-family.py` exhausts 24 ordinary
+The archived horde-row family exhausted 24 ordinary
 row-traversal/type/value-binding forms in context `5bf7482ca2df1b6da9dd`:
 24 successfully scored states, 12 distinct search identities and ten
 reproduced elites. Indexed forms score 78% with an int town index and 100%
@@ -120,7 +120,7 @@ and function locations**. All eleven retail CFG blocks and instruction rows
 agree. The three displayed data-name differences are existing unclaimed
 references, not changed scoring rules.
 
-`scripts/experiments/test-horde-row-family.py` checks the actual record
+The retired horde-row fixture checked the actual record
 declaration and function body at native `-O0` and `-O2`, with 486 cases per
 form across both pairs and all nine towns. It covers matches, misses,
 duplicate dwelling IDs, bonuses and unchanged dwelling storage; four

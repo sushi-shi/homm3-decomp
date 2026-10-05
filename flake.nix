@@ -97,18 +97,29 @@
         cargoRoot = "tools";
         buildAndTestSubdir = "tools";
         cargoLock.lockFile = ./tools/Cargo.lock;
-        cargoBuildFlags = [ "--workspace" "--all-targets" ];
+        # This package ships the resource oracle. RMG additionally needs the
+        # separately supplied VC6 headers for source extraction; build it in
+        # the configured development shell, not this SDK-free derivation.
+        cargoBuildFlags = [ "--workspace" "--all-targets"
+          "--exclude" "homm3-rmg-data" "--exclude" "homm3-rmg"
+          "--exclude" "homm3-rmg-cli" ];
         cargoTestFlags = [
           "--workspace"
           "--all-targets"
+          "--exclude" "homm3-rmg-data"
+          "--exclude" "homm3-rmg"
+          "--exclude" "homm3-rmg-cli"
           "--features"
           "homm3-def/cxx-parity"
         ];
-        nativeBuildInputs = [ pkgs.clang ];
+        nativeBuildInputs = [ pkgs.clang pkgs.llvmPackages.libclang ];
+        LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
         CXX = "${pkgs.clang}/bin/clang++";
         postCheck = ''
-          RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --offline
+          RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --offline \
+            --exclude homm3-rmg-data --exclude homm3-rmg --exclude homm3-rmg-cli
           cargo clippy --workspace --all-targets \
+            --exclude homm3-rmg-data --exclude homm3-rmg --exclude homm3-rmg-cli \
             --features homm3-def/cxx-parity --offline -- -D warnings
           cargo fmt --all -- --check
         '';
@@ -180,6 +191,7 @@
         HOMM3_DIR="$(${pkgs.runtimeShell} ${./scripts/project-root.sh} "$PWD")" || exit 1
         export HOMM3_DIR
         export HOMM3_CLANG="${pkgs.llvmPackages.clang-unwrapped}/bin/clang"
+        export LIBCLANG_PATH="${pkgs.llvmPackages.libclang.lib}/lib"
         export PYTHONDONTWRITEBYTECODE=1
         export PYTHONPATH="$HOMM3_DIR/scripts''${PYTHONPATH:+:$PYTHONPATH}"
         ${ghidraEnvHook}

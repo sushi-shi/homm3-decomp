@@ -14,8 +14,11 @@ files, zlib, reporting, and PNG output at the edge.
 | `homm3-map` | `no_std`, no allocation, no dependencies | Parse complete H3M/TUT streams and H3C campaign descriptors/maps |
 | `homm3-save` | `no_std`, no allocation, no dependencies | Parse and exhaustively consume every GM/TGM/CGM revision accepted by retail Complete |
 | `homm3-oracle` | `std` | Read files, inflate zlib/gzip, census corpora, inspect runs, and emit inspection PNGs |
+| `homm3-rmg-data` | generated plain data | Bind existing C++ RMG domains without duplicating numeric definitions |
+| `homm3-rmg` | `std`, owned reusable storage | Native random-map generation; see [architecture and compatibility](../docs/reconstruction/rust-rmg.md) |
 
-The libraries contain no `unsafe` code. Callers own all input, decode, palette,
+The libraries contain no `unsafe` code. The format codecs remain independent
+of the bindgen-derived generation definitions. Callers own all input, decode, palette,
 and destination buffers. The decoder returns structured errors for every bad
 extent, offset, dimension, packet, rectangle, and output size it recognizes.
 This keeps it useful as an oracle: it does not call the game's C++ parser or

@@ -1029,7 +1029,7 @@ void townObject::drawHotspot()
 VA(0x005c2ff0, 0x31F)
 DC_ADDRESS(0x16a2b0, 0x2ea)
 MAC_ADDRESS(0x1b9104, 0x580)  // anchor-global 0x698784 ("Town Outlines") + anchor-callee CSprite::Draw/Bitmap816::Draw
-void townObject::draw(int incFrame, unsigned char drawHotspots)
+void townObject::draw(int incFrame, bool drawHotspots)
 {
     if (m_visible) {
         town* currTown = g_townManager->m_townToView;
@@ -3465,8 +3465,10 @@ void TMageGuildWindow::setRolloverText(int codeY)
 // Both natives put the widget operation before hover; DC 4691 and 4706
 // return immediately for an invalid spell column and unchanged hover.
 // Mac 0x1c937c/0x1c93a4 preserves those early exits. The complete native
-// guard/order model improves current Windows 94.3190% to 96.8650% and
-// Mac 18.8830% to 23.6702%, with the canonical helper chain intact.
+// guard/order model improves current Windows 94.3190% to 96.8650%,
+// with the canonical helper chain intact. Repeating the manager town query
+// instead of keeping thisTown scores 94.3926% in the integrated source;
+// the unchanged and opposite-corner compiler controls reproduce both forms.
 // Remaining: getBuildingMask's expanded high word clobbers the column's
 // EDX home, causing a spill and 28 versus retail's 27 blocks. All eight
 // calls agree; retain getBuildingMask inside hasBuilding and the pre-Grail
@@ -4887,8 +4889,7 @@ void townManager::moveHeroToGarrison()
 // E:\gamedcs\townmgr.cpp:6931
 DC_ADDRESS(0x177044, 0x76)
 MAC_ADDRESS(0x1d25c4, 0xb8)
-void townManager::drawTown(int update, int incFrame,
-                     unsigned char drawHotspots)
+void townManager::drawTown(int update, int incFrame, bool drawHotspots)
 {
     if (drawHotspots)
         memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
@@ -4903,6 +4904,9 @@ void townManager::drawTown(int update, int incFrame,
         g_windowManager->updateScreen(0, 0, 800, 374);
 }
 
+// Retail 0x5d3bd0 retains doSkeletonTransformer; current VC6 expands it
+// and adds its dialog lifetime to this frame. A separate build-loop index
+// and bool spellings of the click/slot flags do not restore that boundary.
 // E:\gamedcs\townmgr.cpp:5854
 VA(0x005d3240, 0x19CF)
 DC_ADDRESS(0x175160, 0x14d2)
@@ -5511,10 +5515,11 @@ building_popup:
                 break;
             }
             case TTownScreenWindow::DIVIDE_ID: {
-                enum TCreatureType id;
-                {
-                    id = TCreatureType(m_srcStrip->m_group->m_armies[m_srcIndex]);
-                }
+                // DC line 6454 and Mac 0x1d1820 set the split mode before
+                // redrawing both strips (retail 0x5d481a).
+                m_divideStatus = 1;
+                TCreatureType id =
+                    TCreatureType(m_srcStrip->m_group->m_armies[m_srcIndex]);
                 m_garrisonStrip->draw(id);
                 m_heroStrip->draw(id);
                 break;

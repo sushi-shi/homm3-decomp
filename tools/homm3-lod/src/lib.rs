@@ -137,23 +137,19 @@ pub enum Payload<'a> {
     },
 }
 
-/// A validated archive borrowing its complete image.
-#[derive(Clone, Copy, Debug)]
-pub struct Archive<'a> {
-    data: &'a [u8],
-    directory: &'a [u8],
+/// Parsed header with a checked directory extent.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Header {
     version: u32,
     count: usize,
+    directory_end: usize,
 }
-
-impl<'a> Archive<'a> {
-    /// Parse the header and validate every directory payload extent.
+impl Header {
+    /// Parse only the fixed header, before reading the directory or payloads.
     ///
     /// # Errors
-    ///
-    /// Returns [`Error`] when the header, directory, or any member extent is
-    /// malformed.
-    pub fn parse(data: &'a [u8]) -> Result<Self, Error> {
+    /// Rejects a short header, bad signature or directory-size overflow.
+    pub fn parse(data: &[u8]) -> Result<Self, Error> {
         let header = data.get(..HEADER_SIZE).ok_or(Error::ShortHeader {
             available: data.len(),
         })?;
@@ -161,40 +157,71 @@ impl<'a> Archive<'a> {
         if &signature[..3] != b"LOD" {
             return Err(Error::BadSignature(signature));
         }
-
-        let version = word(header, 4);
         let count_word = word(header, 8);
         let count = usize::try_from(count_word).map_err(|_| Error::DirectoryOverflow {
             entries: count_word,
         })?;
-        let bytes = count
+        let directory_end = count
             .checked_mul(ENTRY_SIZE)
             .and_then(|size| HEADER_SIZE.checked_add(size))
             .ok_or(Error::DirectoryOverflow {
                 entries: count_word,
             })?;
-        let directory = data.get(HEADER_SIZE..bytes).ok_or(Error::ShortDirectory {
-            needed: bytes,
-            available: data.len(),
-        })?;
-
-        let archive = Self {
-            data,
-            directory,
-            version,
+        Ok(Self {
+            version: word(header, 4),
             count,
-        };
-        for index in 0..count {
-            let Some(entry) = archive.entry(index) else {
-                return Err(Error::DirectoryOverflow {
-                    entries: count_word,
-                });
-            };
-            archive.payload_at(index, entry)?;
-        }
-        Ok(archive)
+            directory_end,
+        })
     }
+    /// Bytes needed for the header and complete directory, excluding payloads.
+    #[must_use]
+    pub const fn directory_end(self) -> usize {
+        self.directory_end
+    }
+}
 
+/// Validated directory borrowing only header/directory bytes. Payloads can stay
+/// on disk; their extents are checked against the supplied file length.
+#[derive(Clone, Copy, Debug)]
+pub struct Directory<'a> {
+    records: &'a [u8],
+    version: u32,
+    count: usize,
+}
+impl<'a> Directory<'a> {
+    /// Parse a directory and check every stored/compressed payload extent.
+    /// Bytes beyond the directory are permitted but need not be present.
+    ///
+    /// # Errors
+    /// Rejects malformed headers, short directories and out-of-file payloads.
+    pub fn parse(data: &'a [u8], file_len: u64) -> Result<Self, Error> {
+        let header = Header::parse(data)?;
+        let available = data
+            .len()
+            .min(usize::try_from(file_len).unwrap_or(usize::MAX));
+        let directory = data
+            .get(..available)
+            .and_then(|data| data.get(HEADER_SIZE..header.directory_end))
+            .ok_or(Error::ShortDirectory {
+                needed: header.directory_end,
+                available,
+            })?;
+        let result = Self {
+            records: directory,
+            version: header.version,
+            count: header.count,
+        };
+        for (index, entry) in result.entries().enumerate() {
+            if u64::from(entry.offset) + u64::from(entry.stored_size()) > file_len {
+                return Err(Error::PayloadOutOfBounds {
+                    index,
+                    offset: entry.offset,
+                    size: entry.stored_size(),
+                });
+            }
+        }
+        Ok(result)
+    }
     /// Version dword from the archive header.
     #[must_use]
     pub const fn version(&self) -> u32 {
@@ -217,7 +244,7 @@ impl<'a> Archive<'a> {
     #[must_use]
     pub fn entry(&self, index: usize) -> Option<Entry<'a>> {
         let start = index.checked_mul(ENTRY_SIZE)?;
-        let record = self.directory.get(start..start.checked_add(ENTRY_SIZE)?)?;
+        let record = self.records.get(start..start.checked_add(ENTRY_SIZE)?)?;
         let raw_name = record.get(..NAME_SIZE)?;
         let name_end = raw_name
             .iter()
@@ -244,28 +271,72 @@ impl<'a> Archive<'a> {
     pub fn find(&self, name: &str) -> Option<Entry<'a>> {
         self.entries().find(|entry| entry.matches(name))
     }
+}
 
-    /// Borrow the stored bytes for a previously decoded entry.
+/// A validated archive borrowing its complete image.
+#[derive(Clone, Copy, Debug)]
+pub struct Archive<'a> {
+    data: &'a [u8],
+    directory: Directory<'a>,
+}
+impl<'a> Archive<'a> {
+    /// Parse the header and validate every directory payload extent.
     ///
     /// # Errors
+    /// Rejects malformed headers, directories and out-of-image payloads.
+    pub fn parse(data: &'a [u8]) -> Result<Self, Error> {
+        Ok(Self {
+            data,
+            directory: Directory::parse(data, data.len() as u64)?,
+        })
+    }
+    /// Version dword from the archive header.
+    #[must_use]
+    pub const fn version(&self) -> u32 {
+        self.directory.version()
+    }
+    /// Number of directory entries.
+    #[must_use]
+    pub const fn len(&self) -> usize {
+        self.directory.len()
+    }
+    /// Whether the directory is empty.
+    #[must_use]
+    pub const fn is_empty(&self) -> bool {
+        self.directory.is_empty()
+    }
+    /// Decode one directory record.
+    #[must_use]
+    pub fn entry(&self, index: usize) -> Option<Entry<'a>> {
+        self.directory.entry(index)
+    }
+    /// Every directory record in on-disk order.
+    #[must_use = "iterators are lazy"]
+    pub fn entries(&self) -> impl Iterator<Item = Entry<'a>> + use<'a> {
+        self.directory.entries()
+    }
+    /// Find a member by case-insensitive ASCII name.
+    #[must_use]
+    pub fn find(&self, name: &str) -> Option<Entry<'a>> {
+        self.directory.find(name)
+    }
+    /// Borrow bytes for a decoded entry, checking its extent even if it came
+    /// from another archive.
     ///
-    /// This normally cannot fail after [`Archive::parse`], but the result
-    /// keeps the safety invariant explicit for callers holding an `Entry` from
-    /// another archive.
+    /// # Errors
+    /// Reports an entry extent outside this archive.
     pub fn payload(&self, entry: Entry<'a>) -> Result<Payload<'a>, Error> {
         let index = self
             .entries()
             .position(|candidate| candidate == entry)
-            .unwrap_or(self.count);
+            .unwrap_or(self.len());
         self.payload_at(index, entry)
     }
-
     /// Find a member and borrow its stored representation.
     #[must_use]
     pub fn get(&self, name: &str) -> Option<Payload<'a>> {
         self.find(name).and_then(|entry| self.payload(entry).ok())
     }
-
     fn payload_at(&self, index: usize, entry: Entry<'a>) -> Result<Payload<'a>, Error> {
         let start = usize::try_from(entry.offset).map_err(|_| Error::PayloadOutOfBounds {
             index,

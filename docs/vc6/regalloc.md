@@ -580,7 +580,7 @@ compiled by the pinned SP3 CL at the game profile (`build/p30/sibprobe*.cpp`):
    by hoisting or sinking its declaration's INITIALISER (a bare declaration
    is still inert, per section 3).
 
-   `type_random_map_generator::placeBorderObject` (0x540d60) supplies another
+   `TRmgGenerator::placeBorderGuard` (0x540d60) supplies another
    measured reuse case. Its two prototype searches and guard-placement loop
    share one index. Giving the third loop a separate `guardIndex` changes
    only the byte-vector SIB bytes at 0x540f6a and 0x540f9e; naming the vector
@@ -866,7 +866,7 @@ still expands one level too far. The old inline_depth(1) pin around
 
 ### 6i. A named endpoint pointer changes address formation
 
-`type_random_map_generator::DrawStraightZoneBoundary` (0x53c220) reaches
+`TRmgGenerator::DrawStraightZoneBoundary` (0x53c220) reaches
 all 362 raw retail bytes with a named `TRmgMapItem* lastItem` followed by
 `lastItem->zoneState.zone = zoneIndex`. Flattening those statements into
 `map.GetMapItem(...)->zoneState.zone = zoneIndex` leaves the loop and step
@@ -927,7 +927,7 @@ equivalent for VC6's local allocation.
 ### 6h. Constructor argument order preserves dimension values
 
 The plane view in `RepairWaterZoneBorders` originally used the candidate
-signature `(type_random_map& source, int level)`. It stored width too early
+signature `(TRmgMap& source, int level)`. It stored width too early
 and differed from retail in both dimension multiplication and the subsequent
 painting loop's registers. Recovering a buffer-first signature
 `(TRmgMapItem* items, int width, int height)` and calling it with
@@ -1031,7 +1031,7 @@ declaration, inline control, or unused operation is needed. This is a measured
 source/value-lifetime model for a retail-only function, not proof of the
 original local names or lexical scope.
 
-The same lever closed `checkSecondDiagonal` (2026-09-12): its second
+The same lever closed `isInnerCornerOnDiagonalEdge` (2026-09-12): its second
 neighbour query stores the clamp's literal minimum after the value where the
 first query stores it before, and only naming the height limit and then the
 offset sum ahead of the call reproduces that order (the locals in the other
@@ -1055,7 +1055,7 @@ the 130-test label suite passes. The source declaration remains the name owner.
 
 ### 6m. Copy initialization, named return, and the base tile's lifetime
 
-The grid translation in `rmgTerrainPainter::paintPoint` (0x5b4b20) exposed
+The grid translation in `TRmgTerrainPainter::paintPoint` (0x5b4b20) exposed
 three distinct source-form effects with the comparison-return terrain predicate.
 First, construct its working point through a copied coordinate value:
 
@@ -1344,7 +1344,7 @@ variants resolve all 61 relocations in the raw verifier. These candidates
 remain outside the matching objects; see `build/rmg-width-assignment-control/`.
 
 The residual is now closed with ordinary VC6. `paintPoint` passes
-`rmgTerrainTile(m_paintTerrain, frame)` directly to `setTile`, and names the
+`TRmgTerrainTile(m_paintTerrain, frame)` directly to `setTile`, and names the
 direction-table element as `const TPoint& offset` before `point + offset`.
 It retains the ordinary guard-return terrain predicate and the compound
 grid-addition return. All 1483 retail bytes match, including 61 independently
@@ -1952,7 +1952,7 @@ No extra operation, artificial scope or compiler pin is needed.
 
 ### Attribute register priorities to actual live ranges
 
-A passive trace of `rmgTerrainPainter::repairTerrainPoint` (0x5b5440)
+A passive trace of `TRmgTerrainPainter::repairTerrainPoint` (0x5b5440)
 identifies the painter receiver as the priority-265 group assigned ESI.
 The priority-248 group assigned EDI is the final gap-painting direction
 (candidate +0x593..+0x5e3), not an early coordinate temporary. Earlier

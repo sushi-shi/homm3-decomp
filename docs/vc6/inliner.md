@@ -506,7 +506,7 @@ ordered named calls before attributing a change to the edited expression.
 
 The converse is useful too: in `tryPlaceMine` (`0x545990`), restoring
 `push_back(properties)` leaves insertion expanded but recovers the subsequent
-`type_object` constructor call (69.3906% to 71.5746%). The affected boundary
+`TRmgObject` constructor call (69.3906% to 71.5746%). The affected boundary
 need not be inside the source helper being restored.
 
 The source census ratchets end-position insertions and authored `std::_`
@@ -902,7 +902,7 @@ For the 81.2445% CreateRiver candidate, C2 reports caller `cb=1530`, initial
 budget 3060 and 128 reached tests. Each early vector destructor has
 `cb=94`; its nested `_Destroy` has `cb=49` and receives 68 or 65, so both
 empty bodies expand away. Retail retains these two calls. Later,
-`type_random_map` cleanup gives the deleting helper (`cb=97`) 91 units on
+`TRmgMap` cleanup gives the deleting helper (`cb=97`) 91 units on
 the failed-prototype path and 251 on final exit, explaining its retained
 and expanded copies. Those later boundaries already agree with retail;
 changing the caller's total cost alone can disturb them. Use the measured
@@ -934,7 +934,7 @@ alone does not settle the callers' remaining STL and map-accessor decisions.
 
 ### An exact accessor can hide a different nested call
 
-The by-value `type_random_map::GetMapItem` at 0x5378e0 retains the same
+The by-value `TRmgMap::GetMapItem` at 0x5378e0 retains the same
 39 raw bytes whether it computes the index directly or delegates to the
 three-scalar overload. The delegation leaves `RepairWaterZoneBorders`
 unchanged, but changes `CreateGroundConnection`'s first clear from expanded
@@ -1048,7 +1048,7 @@ field setters. An ordinary shared `SetTile(point, tile)` preserves that
 operation and raises `PaintPoint` from 78.4213% to 92.2405%. Flattening the
 body into its callers changes later set and gap-predicate expansions.
 
-The same callers compute transition strength before loading the base-frame
+The same callers compute special-frame strength before loading the base-frame
 rule's virtual receiver. A shared `SelectBaseFrame(point, terrain, oldFrame)`
 captures the terrain index across that call and preserves this evaluation
 order. With a named frame result and scoped neighbour points, `PaintPoint`
@@ -1087,7 +1087,7 @@ its former declaration-only state does not explain these remaining decisions.
 
 The gated [C2 shim trace](shim.md#4-gated-inline-budget-observations) reads
 actual candidate costs and budgets from the configured terrain compile.
-For `rmgTerrainPainter::paintPoint` (prior role `TRmgTerrainPainter::PaintPoint`,
+For `TRmgTerrainPainter::paintPoint` (prior role `TRmgTerrainPainter::PaintPoint`,
 retail 0x5b4b20) at the earlier 97.0506% checkpoint, the front-end caller
 estimate is 933 and the initial budget
 is 1,866. At the first eight-neighbour terrain comparison, `getPackedCell`
@@ -1184,7 +1184,7 @@ than inferred to be compiler limitations.
 
 ### A guard-return predicate crosses the free-expansion cutoff
 
-`rmgTerrainPainter::isPaintTerrain` exposes the remaining distance-wrapper
+`TRmgTerrainPainter::isPaintTerrain` exposes the remaining distance-wrapper
 boundary through ordinary source control flow:
 
 ```cpp
@@ -1689,7 +1689,7 @@ Equivalent control-flow spellings can change a helper's inline decision
 without changing its retained machine code. In RMG's `selectPrisonHero`,
 splitting `!disabled && --selected < 0` into a nested availability test,
 decrement statement and negative test preserves its exact 113-byte body.
-It also makes `type_prison_def::generate` retain the call at `0x5348dc`,
+It also makes `TRmgPrisonDef::generate` retain the call at `0x5348dc`,
 recovering 9.0702% to 63.7193% before constructor refinement. A `continue`
 form has the same result; postdecrement and a shared-return form change
 the standalone body. Diagnose source control-flow boundaries even when
@@ -2039,7 +2039,7 @@ budget, while the EH-bearing constructor budget-tests it.
 
 Byte-identical spellings carry different costs, so bracket a callee from its
 callers' retail decisions and then pick the spelling in the bracket (splice
-above; `TRmgBoundaryVertex` constructors 132..157 and 87..112). Accessors
+above; `TRmgHalfEdge` constructors 132..157 and 87..112). Accessors
 returning `TPoint` by value versus `const TPoint&` also changed addSite's
 coincidence test (both coordinates loaded before the compares) and its
 copies inside the circle test.
@@ -2054,7 +2054,7 @@ the trace lists UNDER/OVER callees:
 - `filterZonePositions` (0x53b2f0, 94.45% -> 98.85%): the first expanded
   `countPlacedZoneConnections` had a nested budget of exactly 42 with the
   connection-vector `size` at cost 42 (slack 0); reading the two later zone
-  sizes through `TRmgZone::getSize()` adds two sites, lowers it to 40, and
+  sizes through `TRmgZone::getTemplateSize()` adds two sites, lowers it to 40, and
   retail's four size calls all reappear.
 - `TRmgMapPosition::TRmgMapPosition(int, int, int)` is retained at 0x5355c0,
   directly before `canFitObject`, so it belongs in `rmg.cpp`; it lives in
@@ -2073,7 +2073,7 @@ the trace lists UNDER/OVER callees:
   `TRmgGridPoint::operator+=` (cost 43) inside the first neighbour pass at a
   site whose budget is 187 here; only a helper around that pass (nested
   budget below 43) would reproduce it.
-- `checkFirstDiagonal` (0x5b6ba0): retail refuses the second `getPackedCell`
+- `isOuterCornerOnDiagonalEdge` (0x5b6ba0): retail refuses the second `getPackedCell`
   (nested 148 here) while expanding the third; four more candidate sites
   after the second terrain query would do it.
 
@@ -2090,7 +2090,7 @@ point became trivially copyable. What they settle and what they leave:
   unindexed forms break the retained 0x5b48d0 body, and the three fill
   spellings are one object. The six callers where retail calls
   `getPackedCell` but expands `initializePackedCell` elsewhere
-  (`paintTransitions`, both diagonal checks, `getTransitionStrength`,
+  (`paintTransitions`, both diagonal checks, `getSpecialFrameStrength`,
   `paintRectangle`, `buildMatchingNeighbourMask`) therefore need their own
   site structure, not a cheaper cache pair.
 - `queueOtherTerrainNeighbours` (63.63%): retail refuses three cardinal
@@ -2122,9 +2122,9 @@ point became trivially copyable. What they settle and what they leave:
 - Both diagonal checks and `paintRectangle` closed through sites, not
   costs: grid-point and TPoint coordinate accessors, the width and height
   accessors and an else-chain clamp give the first neighbour query ten to
-  twelve remaining sites so its cache read stays a call (checkFirstDiagonal
+  twelve remaining sites so its cache read stays a call (isOuterCornerOnDiagonalEdge
   89.7 -> 100 once the first point is constructed from both clamps, since
-  constructor arguments evaluate right to left; checkSecondDiagonal 70.3 ->
+  constructor arguments evaluate right to left; isInnerCornerOnDiagonalEdge 70.3 ->
   100 with one point reused through the setters and the last read spelled
   `getPackedCell(p)->getTerrain()`, whose two depth-one sites replace the
   candidate site the dropped second point took with it). A helper's cost
@@ -2133,7 +2133,7 @@ point became trivially copyable. What they settle and what they leave:
 - Store order of reference-bound arguments follows the order the argument
   temporaries are created: `clamp(value, 0, maximum)` stores the literal
   before the value, while evaluating `maximum` and then `value` into locals
-  ahead of the call stores the literal last. checkSecondDiagonal's second
+  ahead of the call stores the literal last. isInnerCornerOnDiagonalEdge's second
   query needs the latter and its first query the former.
   `paintRectangle` needs two candidate sites from its terrain test on (a
   direct field compare and the base-tile block as a helper), and that
@@ -2194,7 +2194,7 @@ the structures the replay admits. What it found:
   and changes the flow; conversion-built temporaries give the same sites
   with a larger frame. 99.27%: the south-east fill's SIB order and cell
   base register are C2 state that no declaration order moves.
-- `getTransitionStrength` keeps two reads per arm: the frame read sits in
+- `getSpecialFrameStrength` keeps two reads per arm: the frame read sits in
   a `getFrame` sibling of `getTerrain` so its cost divides like the terrain
   read's, and each neighbour is constructed at the cell and stepped by one
   setter from the parameter's coordinate (the point's own coordinate shifts
@@ -2209,7 +2209,7 @@ the structures the replay admits. What it found:
   entry pointer anchors it at the Y-flip byte. 100%.
 - The line painter (`refreshRmgLinePoint`, `TRmgLineWalker::paintPoint`):
   the sum, conversion and factory sites of a neighbour query can only be
-  refused from a nested context, so an ordinary `getNeighbourLand` helper
+  refused from a nested context, so an ordinary `getNeighbourLineType` helper
   on the painter interface holds them; the current tile's frame and flip
   accessors give the refresh's tail the sites the helper's budget divides
   by, the proxy's initializer-list copy keeps the walker's compound add
@@ -2220,7 +2220,7 @@ the structures the replay admits. What it found:
   materializes the one-cell rectangle's two unit extents from one register
   copied into another, the painter alias and availability mask scoped to
   the first pass give retail's frame, and naming the converted sum inside
-  `getNeighbourLand` orders the neighbour proxy's stores (painter before
+  `getNeighbourLineType` orders the neighbour proxy's stores (painter before
   the coordinates). Refresh keeps its entry swap.
 - Callee IL cost as the lever (terrain `paintPoint`, 98.68 -> 100): the
   loop erase's `_Distance` wrapper had to be refused while the final
@@ -2581,3 +2581,20 @@ call and four adventure calls all target retail 0x4e3070. The kill-side body
 and every other preexisting emitted body in these three TUs are unchanged;
 the adventure TU additionally emits the retained string `_Tidy`. All 1,510
 previously scored Mac pairs remain available with unchanged scores.
+
+## Separate admission guards can recover a nested exception constructor
+
+`VictoryConditionStruct::checkForArtifactWin` (`0x5f1610`) reached 100%
+by spelling its ordinary wrong-condition, null-player and disabled-player
+rejections as separate guards. A joined short-circuit guard produced the
+same game-path instructions but left `out_of_range`'s constructor as a call
+where retail expands it and calls `logic_error` at +0x4c1.
+
+The joined form's trace gave the final `bitset::test` 153 budget units,
+its `_Xran` 95, and the nested 58-unit `out_of_range` constructor only 30.
+The separate guards supply ordinary source control flow, not dummy work.
+DC lines 32..41 distinguish the condition rejection from player admission;
+Complete Mac 0x1fd5d8..0x1fd618 also retains separate failure paths. The
+six-state guard/erase-result family reproduced the exact Windows form with
+all helper calls and the iterator assignment retained. Nine component-test
+variants alone did not resolve the exception-constructor boundary.

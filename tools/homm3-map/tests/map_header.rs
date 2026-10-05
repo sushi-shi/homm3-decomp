@@ -142,6 +142,43 @@ fn push_object_prefix(bytes: &mut Vec<u8>, type_index: u32) {
 }
 
 #[test]
+fn accepts_rmg_event_list_without_editor_trailer() {
+    // TRmgGenerator::writeMap ends with the global event count in every format.
+    let bytes = [0; 12]; // no templates, placed objects, or global events
+    for version in [
+        Version::Restoration,
+        Version::ArmageddonsBlade,
+        Version::ShadowOfDeath,
+    ] {
+        let table = ObjectTable::parse(&bytes).unwrap();
+        let body = MapBody::parse(table, version).unwrap();
+        assert!(body.padding().is_empty());
+        assert!(body.trailing().is_empty());
+        assert_eq!(body.consumed(), 4);
+        assert_eq!(body.timed_events().len(), 0);
+    }
+}
+
+#[test]
+fn validates_editor_trailer_when_present() {
+    let mut bytes = vec![0; 12 + MAP_TRAILING_PADDING_SIZE];
+    for end in 13..bytes.len() {
+        let table = ObjectTable::parse(&bytes[..end]).unwrap();
+        assert!(MapBody::parse(table, Version::ShadowOfDeath).is_err());
+    }
+    let table = ObjectTable::parse(&bytes).unwrap();
+    let body = MapBody::parse(table, Version::ShadowOfDeath).unwrap();
+    assert_eq!(body.padding().len(), MAP_TRAILING_PADDING_SIZE);
+    assert!(body.trailing().is_empty());
+    bytes[12] = 1;
+    let table = ObjectTable::parse(&bytes).unwrap();
+    assert!(matches!(
+        MapBody::parse(table, Version::ShadowOfDeath),
+        Err(homm3_map::Error::NonZeroPadding { offset: 4 })
+    ));
+}
+
+#[test]
 fn parses_complete_object_and_event_tail_with_retail_remaps() {
     let mut bytes = 3i32.to_le_bytes().to_vec();
     push_object_type(&mut bytes, 219, 0); // retail remaps Garrison II to 33
