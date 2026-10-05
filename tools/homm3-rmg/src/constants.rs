@@ -33,7 +33,7 @@ pub(crate) const RMG_BASIC_MINE_GUARD_VALUE: u32 = 1500;
 pub(crate) const RMG_RARE_MINE_GUARD_VALUE: u32 = 3500;
 pub(crate) const RMG_GOLD_MINE_GUARD_VALUE: u32 = 7000;
 
-// TRmgGenerator::createRiver search costs.
+// River search costs.
 pub(crate) const RMG_RIVER_STEP_MASK: u32 = 31;
 pub(crate) const RMG_RIVER_MINIMUM_STEP_COST: u32 = 1;
 pub(crate) const RMG_RIVER_ROAD_PENALTY: u32 = 30;

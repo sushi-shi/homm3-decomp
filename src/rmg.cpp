@@ -6656,7 +6656,7 @@ void TRmgGenerator::buildZoneConnectionPaths()
 // cells select a BORDER_GUARD by key colour and place the ordinary object.
 // Retail retains the first getMapItem and selectObjectPrototype calls, then
 // expands later map accesses. After virtual addObject it rechecks present.
-// The non-narrow path clears only borderObject in the clipped same-zone 3x3
+// The non-narrow path clears only the obstacle-fill flag in the clipped same-zone 3x3
 // neighbourhood; it must not mark all of those neighbours as route cells.
 // Residual (79.9698%): the first map lookup over-expands, the frame is 0x28
 // instead of 0x2c, and the common post-placement query adds a CFG block.
@@ -9246,7 +9246,8 @@ TRmgMapPosition TRmgObject::getPlacedGroupPosition(
 }
 
 // Group objects use local XY coordinates; committing replaces their level
-// and transfers the captured reservation flags into the destination map.
+// and applies group reservations to the destination map. Its earlier flags
+// are copied back into the group's scratch map.
 // Mac 0x24ab68..0x24abc4 expands two byte-valued land predicates: keep the
 // canonical predicates rather than their direct field-test approximations.
 // Mac 0x24aa6c..0x24aacc copies the full position and local point before

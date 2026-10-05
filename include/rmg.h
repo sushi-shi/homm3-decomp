@@ -1506,7 +1506,7 @@ public:
     virtual int getTerrain(const TRmgGridPoint& point);
 };
 
-// Cinit 0x55ed70/0x55f2f0 passes a pattern count and a source int array to
+// Cinit 0x55ed70/0x55f2f0 passes a frame count and an array of frame pattern IDs to
 // the retained constructor at 0x4f9be0. That constructor allocates the copied
 // pattern ids, then records the first index and occurrence count for each of
 // the nine pattern values.

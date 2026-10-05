@@ -39,7 +39,7 @@ static const int riverDeltaSnow[@count] =
 // @rmg initializer src/rmg.cpp g_rmgSnowRiverDeltaIndex
 ;
 static const TRmgRiverDeltaOffset riverDeltaOffsets[@count] =
-// @rmg initializer src/rmg.cpp TRmgGenerator::createRiver::riverDeltaOffsets
+// @rmg initializer src/rmg.cpp TRmgGenerator::createRiverToOutlet::riverDeltaOffsets
 ;
 static const int decorationTypes[@count] =
 // @rmg initializer src/rmg.cpp g_rmgDecorationTypes
