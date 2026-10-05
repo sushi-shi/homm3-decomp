@@ -396,7 +396,7 @@ ai_player	?hasBuilding@town@@QBE_NH_N@Z	100.0000	100.0000	100.0000	0x305a0	token
 ai_player	?hireHeroes@type_AI_player@@QAE_NXZ	100.0000	100.0000	100.0000	0x31360	tokens1:affdde797775
 ai_player	?initializeArtifactEffects@@YIXXZ	97.4602	97.4602	97.5044	0x34100	tokens1:7a8c9bae5473
 ai_player	?makeGift@type_AI_player@@IAEXJ@Z	100.0000	100.0000	100.0000	0x29110	tokens1:150eb886b156
-ai_player	?markDestinations@@YIJPAVhero@@JPAVsearchArray@@PAGW4type_search_type@@@Z	92.3482	92.3482	92.3482	0x2f570	tokens1:4c41bd9660c5
+ai_player	?markDestinations@@YIJPAVhero@@JPAVsearchArray@@PAGW4type_search_type@@@Z	92.8818	92.8818	92.8818	0x2f570	tokens1:666e9e373f85
 ai_player	?markTown@type_garrison_purchaser@@UBEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28580	tokens1:46e13fe43707
 ai_player	?markTown@type_town_threat_checker@@UBEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28570	tokens1:9d4afad7a374
 ai_player	?markTowns@type_town_threat_checker@@IAEXPAVhero@@PAVsearchArray@@@Z	100.0000	100.0000	100.0000	0x282b0	tokens1:89f6baebfcbc

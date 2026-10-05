@@ -3503,9 +3503,11 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
 // plus the friend's remaining-target cost into the friendly-distance map,
 // clipped to the patrol radius. Returns the danger under the hero's feet.
 // DC lines 3060/3078 nest get_location in get_danger_value/SeedPosition;
-// Complete expands both into separate point temporaries at entry. DC's
-// GetNumMapLevels product at line 3054 has no retained retail use, so the
-// indexed distance map keeps only its single-level stride.
+// Complete expands both into separate point temporaries at entry. DC line
+// 3053 names level_size; line 3054 calls GetNumMapLevels and multiplies by
+// it, then drops the product. Restoring that statement raises Windows
+// 92.35 -> 92.88% (the result is unused, so the indexed distance map keeps
+// its single-level stride).
 // DC reads the hero through get_location for the danger query and
 // the seed (lines 3060/3078), constructs the friend's cell point from its
 // coordinates (3102), and fills the function-scope point field by field
@@ -3521,7 +3523,10 @@ long markDestinations(hero* currentHero, long maxDistance,
                        unsigned short* friendlyDistances,
                        type_search_type searchType)
 {
-    int mapCells = g_mapWidth * g_mapHeight;
+    long levelSize = g_mapWidth * g_mapHeight;
+    // DC 3054 evaluates the whole-map cell count and discards it; the
+    // inline accessor leaves no retail code but stays in the body.
+    long mapSize = g_game->getNumMapLevels() * levelSize;
     searchArray friendlySearch;
     long movePoints = currentHero->m_movePoints;
     long heroDanger;
@@ -3574,7 +3579,7 @@ long markDestinations(hero* currentHero, long maxDistance,
              j-- != 0;) {
             pathCell* visited = friendlySearch.getVisitedCell(j);
             if (currentHero->isInPatrolRadius(visited->m_point)) {
-                int index = visited->m_point.m_z * mapCells
+                int index = visited->m_point.m_z * levelSize
                     + visited->m_point.m_y * g_mapWidth + visited->m_point.m_x;
                 unsigned short cost = visited->m_cost + extraCost;
                 if (cost < friendlyDistances[index])
