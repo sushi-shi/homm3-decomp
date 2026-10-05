@@ -543,11 +543,13 @@ DATA(0x0063be60) const combatManager::TWallTarget combatManager::s_wallTargets[8
     { 254, -1, 762, 212, TWallSection(14) }
 };
 
-// Retail static constructors 0x462610/0x462640/0x462670 establish these
-// clipping rectangles before combat. Zero-filled placeholders would hide them.
-DATA(0x00694f18) SLimitData g_combatDrawLimits(0, 0, 799, 555);
-DATA(0x00694ec8) SLimitData g_combatGridAreaLimits(58, 86, 740, 557);
-DATA(0x00694f30) SLimitData g_drawbridgeBounds(365, 211, 542, 380);
+// Original const class statics CombatAreaLimits/GridAreaLimits/DrawbridgeLimits
+// (DC cmbtmgr.cpp:80/83/86). Retail startup 0x462610/0x462640/0x462670
+// and the paired clipping/door callers identify each four-word aggregate.
+// Complete's grid starts at x=58; the older Dreamcast grid starts at x=53.
+DATA(0x00694f18) const SLimitData combatManager::s_combatAreaLimits(0, 0, 799, 555);
+DATA(0x00694ec8) const SLimitData combatManager::s_gridAreaLimits(58, 86, 740, 557);
+DATA(0x00694f30) const SLimitData combatManager::s_drawbridgeLimits(365, 211, 542, 380);
 DATA(0x00694ea8) const SLimitData combatManager::s_mainBuildingLimits(742, 160, 799, 337);
 DATA(0x00694ed8) const SLimitData combatManager::s_upperTowerLimits(564, 0, 651, 85);
 DATA(0x00694ef0) const SLimitData combatManager::s_rightHeroLimits(741, 16, 799, 127);
@@ -2741,7 +2743,7 @@ void combatManager::lowerDoor()
 
     SAMPLE2 sample = loadPlaySample(
         DATA_COMPGEN(0x0066ffb0, drawbridgeSampleName, "drawbrg.82m"));
-    m_extent = g_drawbridgeBounds;
+    m_extent = combatManager::s_drawbridgeLimits;
     for (int state = DRAWBRIDGE_UP; state >= DRAWBRIDGE_DOWN; state--) {
         m_drawbridgeState = state;
         drawFrame(1, 0, 1, 100, 1, 1);
@@ -2763,7 +2765,7 @@ void combatManager::raiseDoor()
     }
 
     SAMPLE2 sample = loadPlaySample("drawbrg.82m");
-    m_extent = g_drawbridgeBounds;
+    m_extent = combatManager::s_drawbridgeLimits;
     for (int state = DRAWBRIDGE_DOWN; state <= DRAWBRIDGE_UP; state++) {
         m_drawbridgeState = state;
         drawFrame(1, 0, 1, 100, 1, 1);
@@ -3039,7 +3041,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     int y = startY;
 
     Bitmap16Bit saved(width, height);
-    SLimitData updateArea = combatManager::s_combatAreaLimits;
+    SLimitData updateArea = heroWindowManager::s_nullLimits;
     const int missileperiod = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
 
@@ -3060,7 +3062,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                       g_windowManager->m_screenBitmap, x, y, false, true);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
         scrollTo(x, y, width, height, true, true, true);  // DC 3717
-        updateArea.clip(g_combatDrawLimits);
+        updateArea.clip(combatManager::s_combatAreaLimits);
         updateCombatArea(updateArea);
         saved.draw(0, 0, width, height,
                    g_windowManager->m_screenBitmap, x, y, false);
@@ -3147,7 +3149,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     int y = startY - height / 2;
 
     Bitmap16Bit saved(width, height);
-    SLimitData updateArea = combatManager::s_combatAreaLimits;
+    SLimitData updateArea = heroWindowManager::s_nullLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowDelay = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
@@ -3170,7 +3172,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
         scrollTo(x, y, width, height, true, true, true);  // DC 3865
         updateArea.include(SLimitData(
             x, y, x + width - 1, y + height - 1));
-        updateArea.clip(g_combatDrawLimits);
+        updateArea.clip(combatManager::s_combatAreaLimits);
         updateCombatArea(updateArea);  // DC 3874, by-value extent
         ++frame;
         if (frame >= missile->getNumFrames(0))
@@ -3285,7 +3287,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     }
 
     Bitmap16Bit saved(width, height);
-    SLimitData updateArea = combatManager::s_combatAreaLimits;
+    SLimitData updateArea = heroWindowManager::s_nullLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowdelay = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
@@ -3308,7 +3310,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                       g_windowManager->m_screenBitmap, x, y, flipped, 1);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
         scrollTo(x, y, width, height, true, true, true);  // DC 4016
-        updateArea.clip(g_combatDrawLimits);
+        updateArea.clip(combatManager::s_combatAreaLimits);
         updateCombatArea(updateArea);  // DC 4022, by-value extent
         GameTime::delayTil(nextFrameTime);
     }

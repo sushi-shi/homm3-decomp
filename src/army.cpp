@@ -1216,7 +1216,7 @@ void army::animateMissile(army* armyToAttack)
         int y = startY - height / 2;
 
         Bitmap16Bit saved(width, height);
-        SLimitData updateArea = combatManager::s_combatAreaLimits;
+        SLimitData updateArea = heroWindowManager::s_nullLimits;
         const int missileperiod = static_cast<int>(
             g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
 
@@ -1240,7 +1240,7 @@ void army::animateMissile(army* armyToAttack)
                 // DC army.cpp:1326-1327 constructs this rectangle, then calls
                 // SLimitData::Include and Clip; VC6 expands both methods.
                 updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
-                updateArea.clip(g_combatDrawLimits);
+                updateArea.clip(combatManager::s_combatAreaLimits);
                 // DC army.cpp:1335/1336 retains the by-value extent calls.
                 if (!g_combatManager->scrollTo(updateArea, true, true, true))
                     g_combatManager->updateCombatArea(updateArea);
@@ -2162,7 +2162,7 @@ bool army::walkTo(int destIndex, bool restoreFacing)
                 g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
             }
             g_combatManager->lowerDoor();
-            g_combatManager->m_extent = combatManager::s_combatAreaLimits;
+            g_combatManager->m_extent = heroWindowManager::s_nullLimits;
             initialWalk = 1;
         }
         if (g_searchArray->isMoat(static_cast<short>(nextCell))) {
@@ -4149,7 +4149,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         targetY - explosion->getHeight() / 2,
         targetX - explosion->getWidth() / 2 + explosion->getWidth() - 1,
         targetY - explosion->getHeight() / 2 + explosion->getHeight() - 1);
-    g_combatManager->m_extent.clip(g_combatDrawLimits);
+    g_combatManager->m_extent.clip(combatManager::s_combatAreaLimits);
 
     for (long frame = 0; frame < explosion->getNumFrames(0); frame++) {
         if (frame == combatManager::WALL_EXPLOSION_HIT_FRAME
@@ -4375,7 +4375,7 @@ void army::setupAnimation()
     if (g_combatManager->isQuickCombat())
         return;
     hexcell* cell = &g_combatManager->m_cells[m_gridIndex];
-    g_combatManager->m_extent = combatManager::s_combatAreaLimits;
+    g_combatManager->m_extent = heroWindowManager::s_nullLimits;
     g_combatManager->m_saveBiggestExtent = 1;
     g_combatManager->m_computeExtentOnly = 1;
     drawToBuffer(cell->m_refX, cell->m_refY, 0);
@@ -4432,7 +4432,7 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getPitch(), false);
 
-        g_combatManager->m_extent = combatManager::s_combatAreaLimits;
+        g_combatManager->m_extent = heroWindowManager::s_nullLimits;
         g_combatManager->m_saveBiggestExtent = 1;
         g_combatManager->m_computeExtentOnly = 1;
         drawToBuffer(g_combatManager->m_cells[m_gridIndex].m_refX,
@@ -5152,7 +5152,7 @@ void army::castSpell(long hex)
         break;
     }
     waitSample(SHOOT_SAMPLE);
-    g_combatManager->m_extent = combatManager::s_combatAreaLimits;
+    g_combatManager->m_extent = heroWindowManager::s_nullLimits;
     if (originalFacing != m_facing
         && !static_cast<const combatManager*>(g_combatManager)
                 ->isQuickCombat())
