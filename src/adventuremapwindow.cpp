@@ -1003,8 +1003,8 @@ void TAdventureMapWindow::doTownKnob(unsigned char up)
 VA(0x004032e0, 0x134)
 DC_ADDRESS(0x0010e4, 0x4)
 MAC_ADDRESS(0x002b44, 0x204)
-void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
-                                             unsigned char update)
+void TAdventureMapWindow::updateHeroLocators(int top, bool drawWin,
+                                             bool update)
 {
     playerData* player = g_game->getLocalPlayer();
     if (!player->isHuman())
@@ -1054,8 +1054,8 @@ void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
 VA(0x00403420, 0x131)
 DC_ADDRESS(0x0010e8, 0x4)
 MAC_ADDRESS(0x002d48, 0x208)
-void TAdventureMapWindow::updateTownLocators(int top, unsigned char drawWin,
-                                             unsigned char update)
+void TAdventureMapWindow::updateTownLocators(int top, bool drawWin,
+                                             bool update)
 {
     playerData* player = g_game->getLocalPlayer();
     if (!player->isHuman())
@@ -1105,8 +1105,8 @@ void TAdventureMapWindow::updateTownLocators(int top, unsigned char drawWin,
 VA(0x00403560, 0x23E)
 DC_ADDRESS(0x0010ec, 0x4)
 MAC_ADDRESS(0x002f50, 0x3a4)
-void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect,
-                                            unsigned char update)
+void TAdventureMapWindow::updateHeroLocator(int which, bool drawWinSect,
+                                            bool update)
 {
     playerData* player = g_game->getLocalPlayer();
 
@@ -1168,8 +1168,8 @@ void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect
 VA(0x004037a0, 0x117)
 DC_ADDRESS(0x0010f0, 0x4)
 MAC_ADDRESS(0x0032f4, 0x1ac)
-void TAdventureMapWindow::updateTownLocator(int which, unsigned char drawWinSect,
-                                            unsigned char update)
+void TAdventureMapWindow::updateTownLocator(int which, bool drawWinSect,
+                                            bool update)
 {
     playerData* player = g_game->getLocalPlayer();
     int townId = player->m_townIds[m_topTown + which];
