@@ -5744,14 +5744,17 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
         heroY = currentHero->m_y;
     }
 
-    int rowPhase = 0;
     int blockPhase = 0;
+    int rowPhase = 0;
     unsigned short* destRow;
+    unsigned short* dest;
     // DC7059..7062 bounds the full map; 7097..7117 derives the pixel
     // origin, horizontal offset and large-map phases from those bounds.
     // Mac 13a5c..13b20 folds the zero upper-left bounds but retains the
-    // offset into each row. DC7150 keeps z local to that row.
+    // offset into each row. DC keeps both drawing pointers and the cell at
+    // function scope, with z and visibility local to each row.
     int xOffset;
+    NewmapCell* cell;
     switch (g_mapHeight) {
     case MAP_DIMENSION_SMALL:
         destRow = g_windowManager->m_screenBitmap->getMap(
@@ -5779,7 +5782,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
 
     int visibilityBit = g_mapVisibilityBit;
     for (int y = firstRow; y <= lastRow; y++) {
-        unsigned short* dest = destRow + xOffset;
+        dest = destRow + xOffset;
         // The native row pointer is unsigned short*, advanced by byte pitch.
         switch (g_mapHeight) {
         case MAP_DIMENSION_SMALL:
@@ -5811,11 +5814,12 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
             break;
         }
         int z = origin.m_z;
+        bool revealed;
 
         for (int x = firstColumn; x <= lastColumn; x++) {
-            NewmapCell* cell = m_fullMap->cell(x, y, z);
+            cell = m_fullMap->cell(x, y, z);
 
-            bool revealed =
+            revealed =
                 !g_completeDrawAllCells
                 && (visibilityBit & getMapExtra(x, y, z)) && x >= 0
                 && y >= 0 && x < g_mapWidth && y < g_mapHeight;
@@ -6128,9 +6132,9 @@ void advManager::updateRadar(bool updateFlag, bool partialUpdate,
 // quest temporary's destructor expands naturally as retail does. Remaining
 // differences include GetHero arm layout, the nested cell/zCell decision,
 // and switch-tail scheduling. Compare named sites, not aggregate call counts.
-// ExtraInfoUnion's DC inheritance is represented by NewmapCell's existing
-// data/accessor surface; the audit retains that ownership gap, including
-// GetItemId. It is not evidence for a copied helper body in this caller.
+// DC8332 names GetItemId for the garden's visit bit. Mac 0x15ab4..0x15acc
+// expands its five-bit extraction and short result before the shift;
+// NewmapCell inherits the canonical ExtraInfoUnion accessor.
 // DC records text lookups throughout the quick-info arms. Preserve the
 // Complete getText helper at those sites while checking retail call shape.
 // The one call-count delta (80 vs 79) is WATERING_HOLE's visited/unvisited
@@ -6700,7 +6704,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
                     visited = (g_currentPlayer->m_mysticalGardenFlags
-                        & (1UL << (testCell->m_extraInfo & 0x1f)))
+                        & (1UL << testCell->getItemId()))
                         && !((testCell->m_extraInfo >> 10) & 1);
                     if (visited)
                         sprintf(tempText, visitFormat,
