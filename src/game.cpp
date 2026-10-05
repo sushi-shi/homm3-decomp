@@ -6844,6 +6844,8 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
 // operator== rather than the historical flattened comparison. Reversing its
 // operands or negating its difference chain is also flat: six coupled
 // helper/caller states produce two objects at72.1173%.
+// Restoring both boat-message constructors' native default-point construction
+// and field assignments is neutral in four reproduced constructor states.
 // DC 7473/7475/7481/7498 reads and writes the cell's shipyard owner directly.
 // Use its inherited union member, without a cast-through-void pointer alias;
 // this restores the native access model at the same Windows matching score.
