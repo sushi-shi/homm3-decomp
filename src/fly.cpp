@@ -193,7 +193,7 @@ int army::fly(int destIndex)
                   / static_cast<float>(ttlLoops);
     int loop;
 
-    if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()) {
+    if (!g_combatManager->isQuickCombat()) {
         m_isMoving = 1;
         playSample(PRE_WALK_SAMPLE);
         playAnimation(20, -1, 0);
@@ -245,7 +245,7 @@ int army::fly(int destIndex)
     g_combatManager->placeArmyInGrid(*this, destIndex);
     m_gridIndex = destIndex;
 
-    if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()) {
+    if (!g_combatManager->isQuickCombat()) {
         playSample(POST_WALK_SAMPLE);
         g_soundManager->stopSample(m_armySample[WALK_SAMPLE]->m_memSample.m_memSampleHandle);
         playAnimation(21, -1, 0);
