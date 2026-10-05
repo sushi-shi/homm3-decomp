@@ -2805,10 +2805,11 @@ bool combatManager::inCastle(int index)
     return index >= g_castleWallColumns[gridY(index)];
 }
 
+// Original ?LeftOfMoat@combatManager@@SA_NH@Z proves the bool result.
 VA(0x00467490, 0x22)
 DC_ADDRESS(0x061180, 0x20)
 MAC_ADDRESS(0x073644, 0x38)
-unsigned char combatManager::leftOfMoat(int index)
+bool combatManager::leftOfMoat(int index)
 {
     return index < g_moatHexes[gridY(index)];
 }
@@ -2850,10 +2851,11 @@ unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIn
     return inLineOfSight(sourceIndex, destIndex) == 0;
 }
 
+// Original ?ShotIsNotOptimal@combatManager@@QBA_NPBVarmy@@0@Z proves the bool result.
 VA(0x00467600, 0x23A)
 DC_ADDRESS(0x061284, 0x92)
 MAC_ADDRESS(0x07388c, 0x134)
-unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* defender) const
+bool combatManager::shotIsNotOptimal(const army* attacker, const army* defender) const
 {
     int side = attacker->getControllingSide();
     if (m_heroes[side]
@@ -3899,10 +3901,11 @@ unsigned char combatManager::doorCanBeLowered() const
     return 1;
 }
 
+// Original ?HexIsBlocked@combatManager@@QBA_NH@Z proves the bool result.
 VA(0x00469a10, 0x80)
 DC_ADDRESS(0x0632c4, 0x98)
 MAC_ADDRESS(0x07618c, 0x78)
-unsigned char combatManager::hexIsBlocked(int index) const
+bool combatManager::hexIsBlocked(int index) const
 {
     if (m_fortificationLevel > 0
             && (index == COMBAT_HEX_GATE || index == COMBAT_HEX_GATE_MOAT)) {
@@ -3964,10 +3967,11 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
     m_combatWindow->combatMessage(message.c_str(), 1, 0);
 }
 
+// Original ?IsInMoat@combatManager@@QAA_NHPAH@Z proves the bool result.
 VA(0x00469dc0, 0x8D)
 DC_ADDRESS(0x06351c, 0x7e)
 MAC_ADDRESS(0x0764c4, 0xd4)
-unsigned char combatManager::isInMoat(int hex, int* index)
+bool combatManager::isInMoat(int hex, int* index)
 {
     if (m_moatOn) {
         for (int row = 0; row < 11; row++) {
