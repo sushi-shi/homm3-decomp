@@ -28,19 +28,6 @@
 #include "widget.h"
 #include "winmgr.h"
 
-// DC declares CombatAreaLimits_Visible as a const SLimitData class static.
-// Retail CRT 0x602110 constructs the full 800x600 viewport; no other reviewed
-// retail reference survives to this object.
-DATA(0x006aad00) const SLimitData combatManager::s_visibleCombatAreaLimits(0, 0, 799, 599);
-
-// DC attests combatManager::CombatAreaLimits; the retail address and all four
-// dword lanes are proven by ResetLimitCreature and thirteen other readers.
-// CRT 0x602140 initializes an empty accumulation rectangle: (799,599)..(0,0).
-// Original public ?CombatAreaLimits@combatManager@@2USLimitData@@B proves
-// const class-static ownership. Construction writes its four words during
-// initialization; all reviewed subsequent users only read/copy the rectangle.
-DATA(0x006aace8) const SLimitData combatManager::s_combatAreaLimits(799, 599, 0, 0);
-
 // UpdateGrid's private "the grid bitmap has been posted" latch. It is
 // cleared when the caller says the clean battlefield was reposted and set
 // after the complete visible-grid pass. No other retail body references it.
@@ -511,7 +498,7 @@ void combatManager::resetLimitCreature()
     m_flagEffect[0] = 0;
     m_flagEffect[1] = 0;
     memset(m_archerEffect, 0, sizeof m_archerEffect);
-    m_extent = combatManager::s_combatAreaLimits;
+    m_extent = heroWindowManager::s_nullLimits;
 }
 
 VA(0x00493780, 0x44)
@@ -522,10 +509,10 @@ void combatManager::updateCombatArea()
     if (!static_cast<const combatManager*>(this)->isQuickCombat()
             && m_combatShowIt) {
         g_windowManager->updateScreen(
-            g_combatDrawLimits.m_minX,
-            g_combatDrawLimits.m_minY,
-            g_combatDrawLimits.width(),
-            g_combatDrawLimits.height());
+            combatManager::s_combatAreaLimits.m_minX,
+            combatManager::s_combatAreaLimits.m_minY,
+            combatManager::s_combatAreaLimits.width(),
+            combatManager::s_combatAreaLimits.height());
     }
 }
 
@@ -747,7 +734,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
 
             if (oldGrid) {
                 SLimitData updateLimits =
-                    combatManager::s_combatAreaLimits;
+                    heroWindowManager::s_nullLimits;
                 for (i = 0; i < COMBAT_GRID_CELLS; i++) {
                     if (m_lastDrawGridShade[i] != m_curDrawGridShade[i]
                             || m_curDrawGridShade[i]) {
@@ -755,7 +742,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
                     }
                 }
 
-                updateLimits.clip(g_combatGridAreaLimits);
+                updateLimits.clip(combatManager::s_gridAreaLimits);
 
                 m_saveScreenPreGrid->draw(
                     updateLimits.m_minX - 58,
@@ -919,7 +906,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 
     SLimitData saveExtent = m_extent;
     int saveLimitToExtent = m_limitToExtent;
-    m_extent = combatManager::s_combatAreaLimits;
+    m_extent = heroWindowManager::s_nullLimits;
     m_limitToExtent = 1;
 
     for (i = 0; i < oldHexes.size(); ++i) {
@@ -935,7 +922,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
                                   cell.m_hexUly + 51));
     }
 
-    m_extent.clip(g_combatDrawLimits);
+    m_extent.clip(combatManager::s_combatAreaLimits);
     m_saveScreenPostGrid->draw(
         m_extent.m_minX, m_extent.m_minY,
         m_extent.width(), m_extent.height(),
@@ -1198,7 +1185,7 @@ void combatManager::drawFrame(bool update,
             return;
         }
 
-        m_extent.clip(g_combatDrawLimits);
+        m_extent.clip(combatManager::s_combatAreaLimits);
         updateCombatArea(m_extent);
     }
 
@@ -1526,7 +1513,7 @@ int combatManager::drawSpellEffect(const CSprite* sprite, int frame,
 {
     SLimitData limits(x, y, x + sprite->getWidth() - 1,
                       y + sprite->getHeight() - 1);
-    limits.clip(g_combatDrawLimits);
+    limits.clip(combatManager::s_combatAreaLimits);
 
     // DC drawing.cpp:1809 calls ScrollTo before extent accumulation.
     // Complete expands the fixed-viewport helper without emitted code.
@@ -1561,7 +1548,7 @@ int combatManager::drawSpriteObject(const CSprite* sprite, int frame,
     SLimitData limits(x, y, x + sprite->getWidth() - 1,
                       y + sprite->getHeight() - 1);
 
-    limits.clip(g_combatDrawLimits);
+    limits.clip(combatManager::s_combatAreaLimits);
 
     if (m_saveBiggestExtent) {
         m_extent.include(limits);
@@ -1632,7 +1619,7 @@ int combatManager::drawWall(const Bitmap816* image, int x, int y,
 {
     SLimitData limits(dx, dy, dx + width - 1, dy + height - 1);
 
-    limits.clip(g_combatDrawLimits);
+    limits.clip(combatManager::s_combatAreaLimits);
 
     if (m_saveBiggestExtent) {
         m_extent.include(limits);
@@ -1660,7 +1647,7 @@ int combatManager::drawObject(const Bitmap816* image, int x, int y)
                       x + image->getWidth() - 1,
                       y + image->getHeight() - 1);
 
-    limits.clip(g_combatDrawLimits);
+    limits.clip(combatManager::s_combatAreaLimits);
 
     if (m_saveBiggestExtent) {
         m_extent.include(limits);
@@ -1689,7 +1676,7 @@ int combatManager::drawMoatOverlay(int index)
         s_wallTraits[m_defendingTown->m_type][WALL_TRAITS_ROW_MOAT];
     SLimitData moatExtent(cell.m_hexUlx, cell.m_hexUly + 36,
                            cell.m_hexUlx + 43, cell.m_hexUly + 41);
-    moatExtent.clip(g_combatDrawLimits);
+    moatExtent.clip(combatManager::s_combatAreaLimits);
 
     Bitmap816* image = m_combatIcons[WALL_TRAITS_ROW_MOAT][0];
     if (!image)
@@ -1809,7 +1796,7 @@ void combatManager::computeMaxExtent()
         }
     }
 
-    m_extent.clip(g_combatDrawLimits);
+    m_extent.clip(combatManager::s_combatAreaLimits);
 }
 
 VA(0x00495f50, 0x17c)
@@ -1839,7 +1826,7 @@ void combatManager::computeExtent(const CSprite* sprite, int sequence,
     limits->m_maxY = y + sprite->getCroppedY(sequence, frame)
         + sprite->getCroppedHeight(sequence, frame) - 1;
 
-    limits->clip(g_combatDrawLimits);
+    limits->clip(combatManager::s_combatAreaLimits);
     if (saveBiggestExtent)
         m_extent.include(*limits);
 }

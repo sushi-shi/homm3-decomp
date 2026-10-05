@@ -352,16 +352,17 @@ enum CombatHeroFrameType {
 
 class combatManager : public baseManager {
 public:
-    // Original DC statics: LeftHeroLimits, RightHeroLimits,
-    // MainBuildingLimits and UpperTowerLimits (GetGridIndex).
+    // Original public const statics. CombatAreaLimits_Visible has no
+    // independently identified Complete storage; ScreenLimits is owned by
+    // heroWindowManager and is not an alias for that older declaration.
+    static const SLimitData s_combatAreaLimits;
+    static const SLimitData s_visibleCombatAreaLimits;
+    static const SLimitData s_gridAreaLimits;
+    static const SLimitData s_drawbridgeLimits;
     static const SLimitData s_leftHeroLimits;
     static const SLimitData s_rightHeroLimits;
     static const SLimitData s_mainBuildingLimits;
     static const SLimitData s_upperTowerLimits;
-    // Original: CombatAreaLimits_Visible.
-    static const SLimitData s_visibleCombatAreaLimits;
-    // Original: CombatAreaLimits; public @@2USLimitData@@B proves const.
-    static const SLimitData s_combatAreaLimits;
 
     // Dreamcast drawing.cpp:666. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
@@ -1989,27 +1990,6 @@ extern const int g_combatDeployHexes[2][7];
 extern const int g_combatDeploySurroundedHexes[2][7];
 extern const int g_combatDeploySpreadSlots[7][7];
 extern const int g_combatDeployGroupedSlots[7][7];
-
-// Source aggregate copied into combatManager+0x13d38 by the constructor,
-// LowerDoor and RaiseDoor. The current DATA contract cannot express its
-// size, so the stripped target still represents interior relocations as
-// separate symbols; source keeps the retail-proven aggregate shape.
-extern SLimitData g_drawbridgeBounds;
-
-// The clip rectangle every combat-drawing pass intersects its dirty
-// region with before handing it to heroWindowManager::UpdateScreen.
-// Sixteen readers image-wide (DrawFrame twice, UpdateCombatArea,
-// ComputeMaxExtent, DrawObstacleAt, DrawWallAt, army::animate_missile
-// and all three missile animators). It is .bss seeded by the
-// initializer at 0x462610, which writes exactly {0, 0, 0x31f, 0x22b} -
-// i.e. left 0, top 0, right 799, bottom 555 - so this is the combat
-// viewport in screen coordinates, not a hex-space bound. Spelled as
-// the same four-int aggregate as the drawbridge bounds because the
-// readers take its four dwords one at a time; the reloc addend that
-// choice produces is masked (ResetLimitCreature is exact through the
-// identical aggregate copy). NAME IS A SOURCE-FACING INVENTION and
-// carries its address - no roster row, string or DC global reaches it.
-extern SLimitData g_combatDrawLimits;
 
 // Combat-background pointer tables decoded from retail .rdata. The first
 // table is indexed by town type, the second by special-terrain mode (slot

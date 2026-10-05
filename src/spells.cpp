@@ -4749,7 +4749,7 @@ void combatManager::earthquake(int level)
                     y - blast->getHeight() / 2,
                     x - blast->getWidth() / 2 + blast->getWidth() - 1,
                     y - blast->getHeight() / 2 + blast->getHeight() - 1);
-                bounds->clip(g_combatDrawLimits);
+                bounds->clip(combatManager::s_combatAreaLimits);
                 if (frame == g_earthquakeImpactFrame) {
                     damageWall(H3_ENUM_DECODE(TWallTargetId, i), counts[i]);
                 }
