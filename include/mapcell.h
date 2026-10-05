@@ -1866,9 +1866,10 @@ DC_ADDRESS(0x09c988, 0xe)
 inline bool ExtraInfoUnion::wagonIsFull() const { return m_wagonInfo.m_full; }
 
 // DC 1177..1181 writes resource, amount, full, has_artifact, visited_bits.
-// The Complete masks prove the corresponding five fields. With the shrine
-// bitset default-constructed and unpinned, RandomizeEvents retains this call
-// and the 0x4c2360 body matches exactly.
+// The Complete masks prove the corresponding five fields. Retail retains
+// this call inside randomizeWagon. The current nested budget is 96 against
+// cost 87, so VC6 expands it and omits the body; the native field-domain
+// and implicit short-argument probes do not change that decision.
 // E:\gamedcs\MapCell.h:1176
 VA(0x004c2360, 0x27)
 DC_ADDRESS(0x0bcac8, 0x74)

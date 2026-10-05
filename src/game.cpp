@@ -4275,9 +4275,8 @@ static void randomizeTomb(NewmapCell* cell)
 
 // E:\gamedcs\game.cpp:4753. The vector local and its teardown belong to the
 // inlined source helper; retail calls only the packed pyramid setter.
-// Ownership probe: the MapCell.h body at 0x4c2330 is currently fully
-// expanded here. Replacing this helper's forced-inline spelling with ordinary static
-// did not recover the retained call; the fatal header-emission gate remains.
+// The canonical ESpellId setter stays called: its cost is 49 against
+// a nested inline budget of 17 in the current ordinary helper model.
 DC_ADDRESS(0x0abfe8, 0x60)
 MAC_ADDRESS(0x0d6a2c, 0x118)
 static void randomizePyramid(NewmapCell* cell)
@@ -4374,7 +4373,9 @@ void game::randomizeUniversity(NewmapCell* cell)
 // operations as calls. DC proves the TSecondarySkill local but predates
 // Complete's mask filtering; retail's proxy-call sequence selects operator[].
 // Mac d6d98..d6dd4 expands setWitchSkill separately in the selected-skill
-// and no-available-skill branches. Keep both source calls at those boundaries.
+// and no-available-skill branches. Its positive count arm precedes the empty
+// arm (d6d4c..d6dd4); restoring that order improves randomizeEvents.
+// Keep both source calls at those boundaries.
 DC_ADDRESS(0x0ac168, 0x3a)
 MAC_ADDRESS(0x0d6c80, 0x16c)
 static void randomizeWitchHut(NewmapCell* cell)
@@ -4391,10 +4392,7 @@ static void randomizeWitchHut(NewmapCell* cell)
 
     TSecondarySkill skill;
     int count = possibleSkills.count();
-    if (count < 1) {
-        cell->setWitchSkill(eSecSkillNone);
-    }
-    else {
+    if (count > 0) {
         int choice = random(1, count);
         for (skill = eSecSkillPathfinding; skill < kNumSecSkills;
              skill = TSecondarySkill(skill + 1)) {
@@ -4402,6 +4400,9 @@ static void randomizeWitchHut(NewmapCell* cell)
                 break;
         }
         cell->setWitchSkill(skill);
+    }
+    else {
+        cell->setWitchSkill(eSecSkillNone);
     }
 }
 
