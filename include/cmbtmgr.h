@@ -1076,11 +1076,6 @@ public:
     static TWallTargetId getTargetWallIndex(int gridIndex);
     static bool inCastle(int index);
     static bool leftOfMoat(int index);
-    static void getMissileStartingPosition(int armyType, int x, int y, int facing,
-                                          int destX, int destY,
-                                          const CSprite* missile, int* startX,
-                                          int* startY, int* armyDir,
-                                          int* missileFrame);
     void damageWall(TWallTargetId targetWall, int damage);
     void highlightHex(int hex);
     void highlightHex(int x, int y);
@@ -1115,9 +1110,6 @@ public:
     unsigned char shouldLowerDoor(army* thisArmy, long hex) const;
     int experienceValueOfStack(int whichGroup);
     void makeCreaturesVanish();
-    void raiseDoor();
-    void testRaiseDoor();
-    void lowerDoor();
     bool isQuickCombat() const;
     // ?show_eagle_eye@combatManager@@AAAXHH@Z (two ints),
     // ?DoVictory@combatManager@@QAAXH@Z (one int) and
@@ -1129,13 +1121,46 @@ public:
     void doVictory(int winningGroup);
     int checkApplyBadMorale(int group, int index);
     void checkApplyGoodMorale(int group, int index);
+    // Native LF_FIELDLIST entries 146..147, 149..159 keep the effect, door,
+    // projectile and line-of-sight declarations together. Preserve the
+    // current Complete signatures and the canonical effect-marking body.
+    void spellEffect(int effect, int hex, int delay,
+                     bool leaveLastFrame);          // 0x496a10
     void spellEffect(int effect, army* targetArmy, int delay,
                      bool doWince);
+    DC_ADDRESS(0x04cc74, 0x18)
+    void markCreatureEffect(int group, int index)
+    {
+        if (m_armies[group][index].m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
+            markTowerArmy(&m_armies[group][index]);
+        else
+            m_creatureEffect[group][index] = 1;
+    }
+    void raiseDoor();
+    void testRaiseDoor();
+    void lowerDoor();
+    void shootMissile(int startX, int startY, int destX, int destY,
+                      const float* angles, const CSprite* missile);
+    void shootAnimatedMissile(int startX, int startY, int destX, int destY,
+                              int nsprites, const float* angles,
+                              const char* const* fileNames);
+    // The three missile animators. Every pointer parameter's constness
+    // is read off the DC S_PUB32 mangling rather than guessed:
+    // ?ShootMissile@combatManager@@QAAXHHHHPBMPBVCSprite@@@Z gives
+    // `const float*` (PBM) and `const CSprite*` (PBVCSprite), and
+    // ShootAnimatedMissile's PBQBD gives `const char* const*`.
+    void shootBallisticMissile(int startX, int startY, int destX, int destY,
+                               const CSprite* missile);
     bool shotIsNotOptimal(const army* attacker,
                                    const army* defender) const;
     unsigned char shotIsThroughWall(const army* shooter, int sourceIndex,
                                     int destIndex) const;
     bool inLineOfSight(int sourceIndex, int destIndex) const;
+    static void getMissileStartingPosition(int armyType, int x, int y, int facing,
+                                          int destX, int destY,
+                                          const CSprite* missile, int* startX,
+                                          int* startY, int* armyDir,
+                                          int* missileFrame);
     bool hexIsBlocked(int index) const;
     bool isInMoat(int hex, int* index);
 
@@ -1220,18 +1245,6 @@ public:
     // command.cpp:224 (0x474040) paces the frame loop and hands each frame
     // to drawing.cpp's CycleCombatScreen (0x4960d0).
     void doAnimations();
-    void shootMissile(int startX, int startY, int destX, int destY,
-                      const float* angles, const CSprite* missile);
-    void shootAnimatedMissile(int startX, int startY, int destX, int destY,
-                              int nsprites, const float* angles,
-                              const char* const* fileNames);
-    // The three missile animators. Every pointer parameter's constness
-    // is read off the DC S_PUB32 mangling rather than guessed:
-    // ?ShootMissile@combatManager@@QAAXHHHHPBMPBVCSprite@@@Z gives
-    // `const float*` (PBM) and `const CSprite*` (PBVCSprite), and
-    // ShootAnimatedMissile's PBQBD gives `const char* const*`.
-    void shootBallisticMissile(int startX, int startY, int destX, int destY,
-                               const CSprite* missile);
     void cycleCombatScreen();
     int drawCreature(const CSprite* sprite, int sequence, int frame,
                      int x, int y, struct SLimitData* limitData,
@@ -1615,8 +1628,6 @@ public:
                  int endThickness, int color, int angleDistortMin,
                  int angleDistortMax, int segmentLength,
                  int distortAlways);
-    void spellEffect(int effect, int hex, int delay,
-                     bool leaveLastFrame);          // 0x496a10
     // 0x59fde0 (68 B), the Enchanter's shot resolution army::
     // animate_missile hands its volley to instead of a missile flight
     // (three stack arguments: the launch point and the target stack).
@@ -1833,14 +1844,6 @@ public:
     DC_ADDRESS(0x027fa0, 0x34)
     TObstacle& getObstacle(int index) { return m_obstacles[index]; }
 
-    DC_ADDRESS(0x04cc74, 0x18)
-    void markCreatureEffect(int group, int index)
-    {
-        if (m_armies[group][index].m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
-            markTowerArmy(&m_armies[group][index]);
-        else
-            m_creatureEffect[group][index] = 1;
-    }
     army* findDemonicResurrectionTarget(int armyGroup, int targetIndex);
     void markAreaEffect(SpellID spell, long hex, long mastery,
                           std::vector<army*>& targets);
