@@ -2,9 +2,9 @@
 
 The pinned English GOG Complete retail generator is not a pure function of its
 seed and settings. The following uninitialized reads are present in retail and
-preserved in the recovered implementation, except the boundary test slot, whose
-observed effect is modelled explicitly below. Initializing the others in game
-source would change retail behavior; the [execution oracle](../oracles/rmg.md)
+preserved in the recovered C++ retail implementation. The Rust implementation
+models the boundary test slot's observed draw explicitly below. Initializing
+these would change retail behavior; the [execution oracle](../oracles/rmg.md)
 instead records and controls storage contents at its boundary.
 
 RMG has no Dreamcast counterpart. The evidence below is retail x86 code and
@@ -111,18 +111,28 @@ frame change exposed the hazard: splitting `initializeZones`' square origin into
 new locals (`0feba6777`) left all nine bytes zero for million-v1 `m0000076` and
 `m0000135`. The candidate skipped the draw and its maps diverged.
 
-**Source model.** `buildZoneBoundaries` now allows all nine test-slot towns
-explicitly, preserving retail's one draw without reading the stack. This costs
-VC6 match: the function moves from 72.15% to 70.46% because retail emits no
-store. With that initialization and the origin-split perturbation re-applied,
-the same 3,000 requests matched retail: 2,993 equal maps, plus 7 river-drawing
+**Current source and Rust model.** The recovered C++ `buildZoneBoundaries`
+leaves the retail test-slot town flags uninitialized, restoring the retail read.
+Its `HOMM3_RMG_HOTFIX` branch explicitly clears them, so that probe draws nothing.
+Rust's `BoundaryWorkspace::add_radial_sites` consumes one draw in retail mode
+when the radial-site pass runs (underground, or surface with water), matching
+the observed nonempty masks. It consumes no probe draw in hotfix mode. The Rust
+policy models the sampled effect; it does not expose arbitrary stack residue
+for this slot as a replay input.
+
+**Prior source experiment.** An earlier reconstruction explicitly allowed all
+nine test-slot towns, preserving the observed draw without reading the stack.
+That experiment moved the then-current VC6 match from 72.15% to 70.46% because
+retail emits no store. With that initialization and the origin-split
+perturbation re-applied, the same 3,000 requests matched retail: 2,993 equal maps,
+plus 7 river-drawing
 faults at corresponding instructions on both sides. That set includes
 `m0000076` and `m0000135`. Without the perturbation, the same 3,000 requests
 also matched. With `getLandType()` returning `TTerrainType` (which changes later
 generator frames), million-v1 requests 0..999 matched. This is sampled
 agreement. A state whose last heap call leaves that dword zero would make
-retail skip the draw; none was observed. The real fix (no towns, so no draw)
-is the `HOMM3_RMG_HOTFIX` branch. It changes generated maps.
+retail skip the draw; none was observed. The hotfix policy (no towns, so no draw)
+changes generated maps.
 
 **Added water zones.** Their heap `TRmgTemplateZone` flags remain uninitialized
 (oracle `heapByte`). The resulting `TRmgZone::m_alignment` has no consequential
@@ -142,7 +152,7 @@ not traced.
 
 ## River drawing: unchecked out-of-range coordinates
 
-After its path-search queue becomes empty, `createRiver` tests the last inspected
+After its path-search queue becomes empty, `createRiverToOutlet` tests the last inspected
 tile's river-target flag at `0x5492a7..0x5492b2`. That tile may have been rejected
 by the neighbor filters; this test does not establish that the search reached it.
 There is no separate successful-search flag or reachable-cost check. A target
@@ -150,7 +160,7 @@ whose cost remains the reset value `32000` and whose predecessor remains
 `(-1,-1,-1)` can therefore enter drawing.
 
 The sampled request below crashes reproducibly in both implementations. Retail
-`createRiver` follows that predecessor and calls the line walker at `0x5496ef` with
+`createRiverToOutlet` follows that predecessor and calls the line walker at `0x5496ef` with
 destination `(0xffffffff, 0xffffffff)`, the unsigned representation of `(-1,-1)`.
 There is no coordinate-validity check in this predecessor loop. The eventual
 fault is the unchecked tile-array read at `TRmgRiverMapAdapter::getLineType`, `0x53284f`.
@@ -161,7 +171,7 @@ crashes (`sample-02899` and `sample-02953`) reproduced this same failure, with
 unreached targets `(79,0,0)` and `(38,0,0)` respectively. Their source-to-target
 searches had no valid predecessor chain, but drawing proceeded anyway.
 
-The captured retail call chain is `createRiver` → `TRmgLineWalker::drawTo` →
+The captured retail call chain is `createRiverToOutlet` → `TRmgLineWalker::drawTo` →
 `paintPoint` → `refreshRmgLinePoint` → `TRmgRiverLinePainter::getLineType` →
 `TRmgRiverMapAdapter::getLineType`. Candidate faults at the corresponding instruction
 with the same coordinates. This is not a candidate-only reconstruction error.
@@ -233,9 +243,10 @@ retail read and missing initialization or invalid access have been established.
 ## Review classification (2026-10-01)
 
 The findings below separate instruction-established defects, C++
-reconstruction risks and conditional input contracts; none is repaired. An
-unchecked operation is not evidence that a shipped template reaches it, and no
-new crash reproduction was run for this review.
+reconstruction risks and conditional input contracts. They describe retail
+behavior; the later hotfix repairs are listed separately below. An unchecked
+operation is not evidence that a shipped template reaches it, and no new crash
+reproduction was run for this dated review.
 
 ### Object removal: failed search is tested against null
 
@@ -252,8 +263,8 @@ read/write outside the allocation rather than merely remove the wrong item.
 An empty vector retaining capacity also has nonnull `end()`. The normal caller
 contract is that the object belongs to the generator and every affected tile.
 The missing check is instruction-established; no valid-request violation of
-that membership contract was reproduced in this review. Changing the predicates
-to `!= end()` would fix retail behavior and is intentionally deferred.
+that membership contract was reproduced in this review. The hotfix predicates
+now use `!= end()`; the retail reconstruction retains the null tests.
 
 ### Map description: fixed buffer with unbounded appends
 
@@ -289,12 +300,12 @@ whole allocation it is an out-of-bounds read. The source retains this exact
 boundary. The review establishes the defective check, not that a shipped
 request necessarily reaches the allocation-end case.
 
-`createRiverToObject` (`0x548500`) also tests its last inspected tile after the
-queue empties and follows predecessors if that tile has the `m_hasRiver` flag
-(a different flag from `createRiver`'s `m_riverTarget`). Its
-source has the same missing-success-state risk as `createRiver`. The crash
-requests above establish `createRiver` specifically; they do not establish a
-second reproduced crash class in `createRiverToObject`.
+`createRiverToJoin` (`0x548500`) also tests its last inspected tile after the
+queue empties and follows predecessors if that tile has the `m_riverJoinTarget` flag
+(a different flag from `createRiverToOutlet`'s `m_riverOutletTarget`). Its
+source has the same missing-success-state risk as `createRiverToOutlet`. The crash
+requests above establish `createRiverToOutlet` specifically; they do not establish a
+second reproduced crash class in `createRiverToJoin`.
 
 ### Guard selection: counted eligibility can exceed selectable prototypes
 
@@ -399,7 +410,7 @@ entry validation bounds what they are built from.
 
 | Operation | Prerequisite | Under `HOMM3_RMG_HOTFIX` |
 | --- | --- | --- |
-| `TRandomMapRequest::generateToFile`, map construction and lookup | Supported dimensions and levels, bounded player counts and enum values. Retail only clamps monster strength (after an overflowable `+ 3`) and repairs totals below two. | Request check. Team counts are clamped by `writeMapHeader`, so the lobby's out-of-range values stay accepted. |
+| `TRandomMapRequest::generateToFile`, map construction and lookup | Supported dimensions and levels, bounded player counts and enum values. Retail only clamps monster strength (after an overflowable `+ 3`) and repairs totals below two. | Request check. Team counts within 0-8 may exceed player counts; `writeMapHeader` clamps them to the players written. |
 | `getSerializedMapVersion` | Version 0–2; another value falls off the nonvoid helper. | Request check. |
 | `getMapItem`, terrain cache, line and terrain painting | Coordinates in the map; `paintTransitions` needs at least two rows and columns. | Request check (dimensions ≥ 36); coordinates are internal. |
 | `loadTemplates` | The short-row guard compares with the maximum-size column itself, so a row ending at the minimum size reads past it. | Existing short-row fix; template check. |
@@ -411,12 +422,12 @@ entry validation bounds what they are built from.
 | `positionZone` / `paintZoneTerrain` | A candidate survives filtering; zones exist. | Template check ensures zones. Empty placement candidates abort generation cleanly; a pending zone is released during unwinding. |
 | `initializeZones` | Nonzero normalization span. | Template check: positive sizes make each footprint, so the span, at least three cells. |
 | `insetIslandZone` | Nonempty boundary before `m_boundary[0]`. | Internal (Voronoi boundary). |
-| `buildZoneConnectionPaths` | A zone without a free same-zone tile reuses the last assigned seed; before any assignment retail reads stack residue. Retail stores `seed` only at `0x540731..0x54073f`; a 3,000-request probe found reused earlier-zone seeds in 53 requests and no read before the first assignment. The default source starts `seed` at `RMG_NO_POSITION` and skips such a zone, matching retail on those requests. | Existing fix: no other zone's seed is borrowed. |
+| `buildZoneConnectionPaths` | A zone without a free same-zone tile reuses the last assigned seed; before any assignment retail reads stack residue. Retail stores `seed` only at `0x540731..0x54073f`; a 3,000-request probe found reused earlier-zone seeds in 53 requests and no read before the first assignment. The current retail reconstruction retains the uninitialized local. Rust reuses the previous seed and reports `SeedReplayRequired` if no earlier seed exists. | A zone without its own seed is skipped; no other zone's seed is borrowed. |
 | `connectZones` and connection graph consumers | Destinations exist, reverse connections exist, monolith families are nonempty. Appended extra-zone connections leave unread player limits uninitialized. | Retail already stores connections only between existing zones, both ways (connections to player-count-filtered zones are dropped, as shipped templates expect); family check. |
 | `createTreasureObject` | A footprint cell to divide by; a positive representable density total. | Prototype check; definition densities are built-in. |
 | `placeAdditionalTowns`, `placeExtraMines`, `placeZoneTreasures` | The enabled densities' product, their total and weighted counts stay representable (seven mine densities of 100 overflow). Disabled categories are not read. | Template check. Nonpositive densities still disable a category. |
 | Creature/scroll factories | Creature levels fit the value table, nonzero AI value, valid indices, a selectable spell per scroll level. | **Not covered**: the traits are game data loaded outside the generator; the built-in roster satisfies them. |
-| `connectJunctionEntrance`, `drawIrregularZoneBoundary`, `drawIslandBoundary` | A positive displacement limit before `rand() % limit`. | Template check (positive sizes). Roughness is the scaled size, which can still round to 0 (1 on island coasts), so `splitRmgBoundarySegment` raises a zero limit to one: one draw, no displacement. |
+| `connectJunctionEntrance`, `drawIrregularZoneBoundary`, `drawIslandBoundary` | A positive displacement limit before `rand() % limit`. | Template check (positive sizes). Roughness is the scaled size, which can still round to 0 (1 on island coasts), so each hotfix branch raises a zero limit to one: one draw, no displacement. |
 | `TRmgTreasureGroup` placement/guard routines | Objects keep the temporary map's padding; `addGuard` reuses the last object's prototype. | Internal. |
 | `canPlaceTreasureGroup` | Callers establish the lower bounds. | Internal. |
 | `createRoads` | At least one road target. | Existing fix. |
@@ -496,7 +507,7 @@ Several suspicious-looking expressions are supported by local invariants:
   aliasing read. Replacing it with a reinterpreted integer pointer would
   introduce a separate aliasing/alignment assumption.
 - Map clear and packed-cache construction intentionally initialize selected
-  bitfields only. Map clear preserves `m_borderConnection.m_guardColor`, unnamed
+  bitfields only. Map clear preserves `m_connection.m_guardColor`, unnamed
   bitfield remainders and `m_connectionVisited`, and sets only predecessor X to the invalid sentinel;
   later cost resets initialize full predecessors. Copying these aggregates
   includes indeterminate fields at initial construction, a C++ portability

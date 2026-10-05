@@ -68,8 +68,8 @@ pub struct RetailProfile {
     pub heap_byte: u8,
     /// Allowed-town residue on generated water-zone templates. None follows
     /// the oracle allocation fill: zero allows none, a nonzero byte allows all.
-    /// An explicit mask can replay different observed residue, including the
-    /// authored C++ policy that forces all towns even under a zero heap fill.
+    /// An explicit mask can replay different observed residue or captures from
+    /// an earlier reconstruction that enabled all towns under a zero heap fill.
     pub water_zone_towns: Option<TownMask>,
     /// Uninitialized alignment-matching flag on generated water-zone templates.
     /// Explicitly independent of the general heap fill; false is the zero-fill baseline.

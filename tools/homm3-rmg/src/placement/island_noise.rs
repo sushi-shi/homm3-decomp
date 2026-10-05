@@ -5,7 +5,8 @@ use std::num::NonZeroU32;
 
 const MAX_SIDE: usize = 2 * raw::RMG_ISLAND_MAXIMUM_RADIUS as usize;
 
-// Corner indices and edge midpoints, with X right and Y down:
+// Corner indices and edge midpoints in subdivision coordinates (X right, Y down).
+// Output transposes these axes: subdivision X is the raster row, Y the column.
 //   0     min_y    2
 //   min_x centre   max_x
 //   1     max_y    3

@@ -102,7 +102,7 @@ const CLEARED_DISTANCE: u16 = {
 /// Mutually exclusive path and obstacle reservations.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum PathReservation {
-    /// A generated path requires clearance here.
+    /// Reserved for open traversal; obstacles must leave this cell clear.
     #[default]
     Open,
     /// Obstacles may be placed, but none is requested yet.
@@ -320,9 +320,9 @@ pub struct CellState {
     coastal: bool,
     road: LineTile<RoadType>,
     river: LineTile<RiverType>,
-    has_river: bool,
+    river_join_target: bool,
     near_river: bool,
-    river_target: bool,
+    river_outlet_target: bool,
     blocked_river_directions: u8,
 }
 impl Default for CellState {
@@ -341,9 +341,9 @@ impl Default for CellState {
             coastal: false,
             road: LineTile::default(),
             river: LineTile::default(),
-            has_river: false,
+            river_join_target: false,
             near_river: false,
-            river_target: false,
+            river_outlet_target: false,
             blocked_river_directions: 0,
         }
     }
@@ -809,7 +809,7 @@ impl<'a> PlacementView<'a> {
         let Some(trigger) = entry.prototype().entrance() else {
             return Ok(true);
         };
-        // Map position of an object's trigger cell. Footprint mask cell (column, row)
+        // Approach cell immediately south of the object's trigger. Mask cell (column, row)
         // lies at position - (column, row): the mask grows west and north from the
         // object's bottom-right cell P. North is up.
         //   (2,1) (1,1) (0,1)

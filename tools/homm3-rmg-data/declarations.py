@@ -228,6 +228,8 @@ def generate(sources):
             ('src/game.cpp', 'g_creatureGenerator1Types')):
         sources.definition(filename, anchor)
         declarations.index(sources.units[filename][0])
+    # Key colours remain source-owned even when no extracted TU uses that enum.
+    declarations.index(sources.translation_unit('include/keycolor.h'))
     for name in DOMAIN_TYPES + RECORDS:
         declarations.emit(declarations.select(name))
     for name in CONSTANTS:

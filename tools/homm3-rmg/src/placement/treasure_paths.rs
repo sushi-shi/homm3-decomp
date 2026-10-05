@@ -38,7 +38,7 @@ impl TownZoneCounts {
     pub const fn by_alignment(&self) -> &[i32; raw::TOWN_TYPE_COUNT as usize] {
         &self.aligned
     }
-    /// Source getTownZoneCount: neutral alignment always reports zero.
+    /// Primary-town zones of this faction; neutral alignment reports zero.
     #[must_use]
     pub fn aligned(&self, town: Option<Town>) -> i32 {
         town.map_or(0, |town| self.aligned[town.index()])

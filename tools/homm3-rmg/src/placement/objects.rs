@@ -145,7 +145,7 @@ impl<'a> PositionedObject<'a> {
     pub const fn prototype(self) -> PrototypeId {
         self.object.record.geometry.prototype
     }
-    /// Adventure-object family.
+    /// Adventure-object kind, before prototype-family aliasing.
     #[must_use]
     pub const fn kind(self) -> ObjectKind {
         self.object.record.geometry.kind

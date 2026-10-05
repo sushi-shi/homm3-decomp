@@ -15,7 +15,7 @@ pub enum PandoraReward {
     Gold(i32),
     /// One creature stack, retaining the native signed count.
     Creatures(CreatureReward),
-    /// Ordered spells selected from this generation's immutable spell catalog.
+    /// Level and school criteria; output enumerates by descending level, then spell ID.
     Spells(SpellReward),
 }
 /// The one reward assigned to a pending seer hut.
@@ -52,7 +52,7 @@ impl PrisonPayload {
         self.experience
     }
 }
-/// Seer reward and quest artifact, assigned only during placement completion.
+/// Seer reward fixed at generation, with its quest artifact assigned at completion.
 #[derive(Clone, Copy, Debug)]
 pub struct SeerPayload {
     pub(super) reward: SeerReward,

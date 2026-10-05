@@ -467,7 +467,7 @@ impl PlacementMap<'_, '_, '_> {
                 .image_mask()
                 .size()?;
             let object = objects.create(catalog, selected.prototype)?;
-            // fillObstaclesFrom dispatches virtual addObject to the generator.
+            // Decoration updates generator counts and distances as well as cell membership.
             self.register_object(objects, catalog, object, at)?;
             let side = i32::try_from(self.view().side).unwrap();
             for y in (at.point.y - i32::from(footprint.height())).max(0)..(at.point.y + 2).min(side)

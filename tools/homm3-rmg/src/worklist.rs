@@ -1,4 +1,5 @@
-//! Reusable native priority order: lowest cost first, oldest equal cost first.
+//! Reusable native priority order: lowest cost first; relaxed equal costs are FIFO.
+//! Seeds append directly and therefore pop newest first before relaxation.
 
 use std::collections::TryReserveError;
 

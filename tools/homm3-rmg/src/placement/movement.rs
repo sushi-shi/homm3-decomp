@@ -96,7 +96,7 @@ impl Default for ZoneDistance {
 }
 impl ZoneDistance {
     pub(super) fn water(cost: u16, direction: Direction) -> Self {
-        // Source setWaterZoneDistance writes zone zero, not the absent sentinel.
+        // Water distance updates store zone zero alongside the cost and direction.
         Self {
             cost,
             zone: Some(ZoneId::new(0)),

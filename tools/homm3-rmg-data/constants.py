@@ -153,13 +153,18 @@ def generate(sources):
                     f'TObjectType::SLOT_CATEGORY_{category}')
         values[f'OBJECT_SLOT_CATEGORY_{category}'] = str(entry.enum_value)
 
-    limits = native.declaration(cx.CursorKind.FUNCTION_DECL, 'initializeRmgObjectLimits')
-    default = one((rhs for lhs, rhs in assignments(limits)
-                   if lhs.kind == cx.CursorKind.ARRAY_SUBSCRIPT_EXPR
-                   and rhs.kind == cx.CursorKind.INTEGER_LITERAL
-                   and any(n.kind == cx.CursorKind.DECL_REF_EXPR and n.spelling == 'limits'
-                           for n in lhs.walk_preorder())), 'object-limit default assignment')
-    values['RMG_DEFAULT_OBJECT_LIMIT'] = integer_expression(default)
+    constructor = native.declaration(cx.CursorKind.CONSTRUCTOR,
+                                     'TRmgGenerator::TRmgGenerator')
+    limits = {}
+    for scope in ('Zone', 'Map'):
+        name = f'g_rmg{scope}ObjectLimits'
+        default = one((rhs for lhs, rhs in assignments(constructor)
+                       if lhs.kind == cx.CursorKind.ARRAY_SUBSCRIPT_EXPR
+                       and rhs.kind == cx.CursorKind.INTEGER_LITERAL
+                       and any(n.kind == cx.CursorKind.DECL_REF_EXPR and n.spelling == name
+                               for n in lhs.walk_preorder())), f'{name}: default assignment')
+        limits[scope] = integer_expression(default)
+    values['RMG_DEFAULT_OBJECT_LIMIT'] = limits['Zone']
     vial = sources.definition('src/rmg.cpp', 'g_rmgArtifactVialOfDragonBlood')
     values['RMG_ARTIFACT_VIAL_OF_DRAGON_BLOOD'] = integer_expression(initializer(vial))
 
@@ -168,5 +173,7 @@ def generate(sources):
     rows.extend(f'    {name} = {value},' for name, value in values.items())
     rows.extend(['};',
                  f'static_assert(RMG_QUEST_REWARD_DENSITY == ({quest_gold_density}),',
-                 '              "native seer reward densities differ");'])
+                 '              "native seer reward densities differ");',
+                 f'static_assert(RMG_DEFAULT_OBJECT_LIMIT == ({limits["Map"]}),',
+                 '              "native map and zone object limits differ");'])
     return '\n'.join(rows) + '\n'

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import random
+import struct
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -10,11 +11,57 @@ from unittest.mock import patch
 from homm3.vc6.source_families import (
     Axis, Option, create_snapshot, identity_symbol, load_manifest, next_population, render,
     format_max_summary, max_summary, projected_max_scores, rank, select_elites,
-    candidate_environment, expected_control_scores,
+    candidate_environment, code_identity, expected_control_scores, search_score_inputs,
 )
 
 
+def identity_coff(*, value=0, other=8, size=16, name='object', section=2,
+                  storage=3, typ=0, site=1, relocation=6,
+                  text=b'\xa1\0\0\0\0\xc3'):
+    """A code relocation and two BSS allocations, without compiler salt."""
+    start = 20 + 2 * 40
+    reloc_offset = start + len(text)
+    symbol_offset = reloc_offset + 10
+    header = struct.pack('<HHIIIHH', 0x14c, 2, 0, symbol_offset, 3, 0, 0)
+    code = struct.pack('<8sIIIIIIHHI', b'.text', 0, 0, len(text), start,
+                       reloc_offset, 0, 1, 0, 0x60500020)
+    bss = struct.pack('<8sIIIIIIHHI', b'.bss', 0, 0, size, 0,
+                      0, 0, 0, 0, 0xc0500080)
+    symbols = b''
+    for symbol_name, offset, owner, kind, scope in (
+            ('fn', 0, 1, 0x20, 2), (name, value, section, typ, storage),
+            ('other', other, 2, 0, 3)):
+        symbols += symbol_name.encode().ljust(8, b'\0')
+        symbols += struct.pack('<IhHBB', offset, owner, kind, scope, 0)
+    return (header + code + bss + text + struct.pack('<IIH', site, 1, relocation)
+            + symbols + struct.pack('<I', 4))
+
+
 class SourceFamiliesTests(unittest.TestCase):
+    def test_code_identity_ignores_named_bss_placement_but_keeps_extent(self):
+        original = code_identity(identity_coff())
+        moved = identity_coff(value=8, other=0)
+        self.assertEqual(original, code_identity(moved))
+        self.assertNotEqual(original, code_identity(identity_coff(value=8, other=0, size=20)))
+        self.assertNotEqual(original, code_identity(identity_coff(name='changed')))
+
+    def test_code_identity_retains_bytes_addends_and_relocation_sites_and_types(self):
+        original = code_identity(identity_coff())
+        for change in ({'text': b'\xa3\0\0\0\0\xc3'},
+                       {'text': b'\xa1\x04\0\0\0\xc3'},
+                       {'site': 2}, {'relocation': 0x14}):
+            with self.subTest(change=change):
+                self.assertNotEqual(original, code_identity(identity_coff(**change)))
+
+    def test_code_identity_retains_non_object_symbol_offsets(self):
+        for target in ({'name': '.bss'}, {'storage': 6},
+                       {'section': 1, 'storage': 6},
+                       {'section': 1, 'typ': 0x20, 'storage': 2},
+                       {'section': 0, 'storage': 2}, {'section': -1}):
+            with self.subTest(target=target):
+                self.assertNotEqual(code_identity(identity_coff(value=0, **target)),
+                                    code_identity(identity_coff(value=4, **target)))
+
     def test_snapshot_carries_frozen_project_configuration(self):
         from homm3.core.project import Project
 
@@ -181,6 +228,42 @@ class SourceFamiliesTests(unittest.TestCase):
         self.assertEqual(
             expected_control_scores(report, (("u", "f"), ("u", "sibling"))),
             {"u|f": 82.4518, "u|sibling": 100.0})
+
+    def test_unchanged_control_rejects_missing_labels_instead_of_accepting_zero(self):
+        with self.assertRaisesRegex(ValueError, "missing scored functions"):
+            expected_control_scores({"units": []}, (("u", "old_name"),))
+
+    def test_search_scores_new_labels_and_preserves_renamed_checkpoint_by_rva(self):
+        from homm3.match.status import MatchRow
+
+        old = MatchRow(92, 95, 100, 123, "old")
+        previous = {("u", "old_name"): old,
+                    ("u", "removed"): MatchRow(100, 100, 100, 456, "removed")}
+        report = {"units": [{"name": "u", "functions": [
+            {"name": "new_name", "fuzzy_match_percent": 94},
+            {"name": "added", "fuzzy_match_percent": 100},
+        ]}, {"name": "other", "functions": [{"name": "irrelevant"}]}]}
+        scored, renamed = search_score_inputs(
+            report, previous, {("u", "new_name"): 123, ("u", "added"): 789}, {"u"})
+        self.assertEqual(scored, (("u", "added"), ("u", "new_name")))
+        self.assertEqual(renamed, {("u", "new_name"): old})
+        row = {"scores": expected_control_scores(report, scored)}
+        self.assertEqual(projected_max_scores(row, renamed, {("u", "new_name"): "old"}),
+                         {"u|added": 100, "u|new_name": 95})
+        self.assertEqual(projected_max_scores(row, renamed, {("u", "new_name"): "new"}),
+                         {"u|added": 100, "u|new_name": 94})
+        self.assertEqual(previous[("u", "old_name")], old)
+
+    def test_search_rejects_missing_units_and_does_not_reuse_a_labels_other_identity(self):
+        from homm3.match.status import MatchRow
+
+        report = {"units": [{"name": "u", "functions": [{"name": "f"}]}]}
+        with self.assertRaisesRegex(ValueError, "no functions"):
+            search_score_inputs(report, {}, {}, {"u", "missing"})
+        _scored, rows = search_score_inputs(
+            report, {("u", "f"): MatchRow(100, 100, 100, 1, "old")},
+            {("u", "f"): 2}, {"u"})
+        self.assertEqual(rows, {})
 
     def test_specialist_ranking_uses_projected_max(self):
         records = [

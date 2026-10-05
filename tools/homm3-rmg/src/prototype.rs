@@ -1,6 +1,6 @@
 //! Native `objects.txt` loading, shared image masks, and prepared prototypes.
 //!
-//! Object coordinates grow west and north from the bottom-right anchor P.
+//! Footprint mask coordinates grow west and north from the bottom-right anchor P.
 //! Serialized mask bits run the other way, with bit 47 at P:
 //! ```text
 //!    0  1 ..  6  7

@@ -63,7 +63,8 @@ impl<'zones> PaintedTerrain<'zones, '_> {
         Ok(())
     }
     // One brush spans the full plane and finishes once after this ordered batch.
-    // Callers supply admitted plane-local indices, so repairs can cross its bounds.
+    // Callers supply admitted plane-local indices; repairs may extend beyond
+    // the requested cells while staying on the same plane.
     pub(crate) fn repaint(
         &mut self,
         level: Level,

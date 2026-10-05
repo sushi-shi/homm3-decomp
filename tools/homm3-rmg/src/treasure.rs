@@ -187,7 +187,7 @@ pub enum TreasureReward {
         /// Experience assigned to the imprisoned hero.
         experience: i32,
     },
-    /// Resource pile with native default amount.
+    /// Resource pile with a fixed selection value and the game's default amount.
     Resource(i32),
     /// Scholar with source-default value.
     Scholar,
@@ -258,9 +258,9 @@ impl TreasureReward {
             Self::Creature(_) | Self::Dwelling(_) | Self::QuestCreature { .. } => None,
         }
     }
-    /// Source isTerrainDependent policy; faction-sensitive boxes/dwellings are false.
+    /// Whether placement also needs a linked seer hut or key guard.
     #[must_use]
-    pub const fn terrain_dependent(self) -> bool {
+    pub const fn requires_linked_placement(self) -> bool {
         matches!(
             self,
             Self::KeyTent { .. }

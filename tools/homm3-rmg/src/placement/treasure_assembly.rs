@@ -4,7 +4,7 @@ use super::{
     TreasureGenerationError, TreasureGroupWorkspace,
 };
 use crate::{domain::WorldPosition, geometry::ZoneId, raw, rng::RetailRng};
-use std::ops::RangeInclusive;
+use std::ops::{Range, RangeInclusive};
 
 /// Whether selection favors greater value per occupied footprint cell.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -49,7 +49,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                 continue;
             }
             if matches!(purpose, TreasurePurpose::Replacement(_))
-                && def.reward().terrain_dependent()
+                && def.reward().requires_linked_placement()
             {
                 continue;
             }
@@ -236,6 +236,8 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
     /// Assemble treasures and an optional guard on the reusable scratch map.
     /// A failed guard fit discards its treasures. A zero-valued group can return
     /// false while retaining objects, which still require explicit discard.
+    /// The bounds follow template bands: the upper value is excluded when it
+    /// exceeds the lower value; otherwise the upper value is used without a draw.
     ///
     /// # Errors
     /// Reports an undisposed previous group or a native selection/geometry fault.
@@ -247,7 +249,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         &mut self,
         group: &mut TreasureGroupWorkspace,
         zone: ZoneId,
-        range: RangeInclusive<i32>,
+        value_bounds: Range<i32>,
         packing: TreasurePacking,
         objects: &mut ObjectArena,
         rng: &mut RetailRng,
@@ -258,7 +260,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             return Err(TreasureGenerationError::GroupNotEmpty);
         }
         group.reset_after_disposal();
-        let (minimum, maximum) = (*range.start(), *range.end());
+        let (minimum, maximum) = (value_bounds.start, value_bounds.end);
         let target = if maximum <= minimum {
             maximum
         } else {

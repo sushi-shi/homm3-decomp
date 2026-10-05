@@ -136,7 +136,7 @@ impl<'a> Row<'a> {
             .into_iter()
             .flat_map(Field::decoded)
     }
-    fn set(&self, column: u32) -> bool {
+    fn is_set(&self, column: u32) -> bool {
         self.bytes(column)
             .next()
             .is_some_and(|byte| byte != 0 && byte != b' ')
@@ -172,7 +172,7 @@ impl<'a> Row<'a> {
         // Later kind columns override earlier ones; absence defaults to treasure.
         (raw::RMG_TEMPLATE_COLUMN_KIND_HUMAN..=raw::RMG_TEMPLATE_COLUMN_KIND_JUNCTION)
             .rev()
-            .find(|&column| self.set(column))
+            .find(|&column| self.is_set(column))
             .unwrap_or(raw::RMG_TEMPLATE_COLUMN_KIND_TREASURE)
     }
 }
@@ -326,7 +326,7 @@ impl Zone {
     pub const fn use_native_terrain(&self) -> bool {
         self.use_native_terrain
     }
-    /// Allowed land terrains; at least dirt is allowed.
+    /// Allowed land terrains; dirt is the fallback when the source allows none.
     #[must_use]
     pub const fn allowed_terrain(&self) -> &[bool; LAND_TERRAINS] {
         &self.allowed_terrain
@@ -429,7 +429,7 @@ impl<'a> TemplateSource<'a> {
         for index in first..end {
             let row = Row::new(self.rows[index], index);
             if row.count <= raw::RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_PLAYERS as usize
-                || !row.set(raw::RMG_TEMPLATE_COLUMN_CONNECTION_FIRST_ZONE)
+                || !row.is_set(raw::RMG_TEMPLATE_COLUMN_CONNECTION_FIRST_ZONE)
                 || row
                     .bytes(raw::RMG_TEMPLATE_COLUMN_CONNECTION_SECOND_ZONE)
                     .next()
@@ -457,8 +457,8 @@ impl<'a> TemplateSource<'a> {
                 let connection = Connection {
                     destination: ZoneId::new(second),
                     value: row.number(raw::RMG_TEMPLATE_COLUMN_CONNECTION_VALUE)?,
-                    unguarded: row.set(raw::RMG_TEMPLATE_COLUMN_CONNECTION_UNGUARDED),
-                    border_guard: row.set(raw::RMG_TEMPLATE_COLUMN_CONNECTION_BORDER_GUARD),
+                    unguarded: row.is_set(raw::RMG_TEMPLATE_COLUMN_CONNECTION_UNGUARDED),
+                    border_guard: row.is_set(raw::RMG_TEMPLATE_COLUMN_CONNECTION_BORDER_GUARD),
                 };
                 template.zones[first].connections.push(connection);
                 template.zones[second].connections.push(Connection {
@@ -504,7 +504,7 @@ impl<'a> TemplateSource<'a> {
             }
             let mut end = row_index + 1;
             while end < self.rows.len()
-                && !Row::new(self.rows[end], end).set(raw::RMG_TEMPLATE_COLUMN_NAME)
+                && !Row::new(self.rows[end], end).is_set(raw::RMG_TEMPLATE_COLUMN_NAME)
             {
                 end += 1;
             }
@@ -527,7 +527,7 @@ impl<'a> TemplateSource<'a> {
                         });
                     }
                     if row.count > raw::RMG_TEMPLATE_COLUMN_LAST_TREASURE_DENSITY as usize
-                        && row.set(raw::RMG_TEMPLATE_COLUMN_ZONE_INDEX)
+                        && row.is_set(raw::RMG_TEMPLATE_COLUMN_ZONE_INDEX)
                         && row.allows_players(
                             raw::RMG_TEMPLATE_COLUMN_MINIMUM_HUMAN_PLAYERS,
                             request,
@@ -715,7 +715,7 @@ fn parse_zone(
     {
         return Ok(Err(unusable));
     }
-    let flags = |first: u32, index: usize| row.set(first + u32::try_from(index).unwrap());
+    let flags = |first: u32, index: usize| row.is_set(first + u32::try_from(index).unwrap());
     let mut allowed_towns =
         std::array::from_fn(|index| flags(raw::RMG_TEMPLATE_COLUMN_ALLOWED_TOWNS, index));
     let mut allowed_monsters =
@@ -747,13 +747,13 @@ fn parse_zone(
         role,
         size,
         towns,
-        neutral_towns_match_alignment: row.set(raw::RMG_TEMPLATE_COLUMN_NEUTRAL_TOWNS_MATCH_ZONE),
+        neutral_towns_match_alignment: row.is_set(raw::RMG_TEMPLATE_COLUMN_NEUTRAL_TOWNS_MATCH_ZONE),
         allowed_towns,
         mines,
-        use_native_terrain: row.set(raw::RMG_TEMPLATE_COLUMN_USE_NATIVE_TERRAIN),
+        use_native_terrain: row.is_set(raw::RMG_TEMPLATE_COLUMN_USE_NATIVE_TERRAIN),
         allowed_terrain,
         monsters,
-        guards_match_alignment: row.set(raw::RMG_TEMPLATE_COLUMN_GUARDS_MATCH_ZONE),
+        guards_match_alignment: row.is_set(raw::RMG_TEMPLATE_COLUMN_GUARDS_MATCH_ZONE),
         allowed_monsters,
         treasure,
         connections: Vec::new(),

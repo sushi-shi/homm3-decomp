@@ -251,7 +251,8 @@ impl PlacementMap<'_, '_, '_> {
             MineSite::Ordinary { spacing } => spacing,
             MineSite::Starting { .. } => 0,
         };
-        let town_anchor = match site {
+        // The mine anchor whose entrance would coincide with the town entrance.
+        let target_anchor = match site {
             MineSite::Starting { town } => {
                 let trigger = super::registration::trigger_offset(entry.prototype());
                 Some(
@@ -282,8 +283,8 @@ impl PlacementMap<'_, '_, '_> {
                 {
                     continue;
                 }
-                if let Some(town) = town_anchor {
-                    let distance = position.point.squared_distance(town);
+                if let Some(target) = target_anchor {
+                    let distance = position.point.squared_distance(target);
                     if distance > best_distance
                         || i64::from(distance)
                             < i64::from(raw::RMG_STARTING_MINE_MINIMUM_SQUARED_DISTANCE)

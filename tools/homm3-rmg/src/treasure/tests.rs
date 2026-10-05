@@ -97,7 +97,7 @@ fn absent_art_retains_definitions_and_repeated_preparation_reuses_storage() {
         assert_eq!(dwellings.last(), Some(&0));
         assert!(!definitions
             .iter()
-            .any(|def| def.reward().terrain_dependent()));
+            .any(|def| def.reward().requires_linked_placement()));
         let address = definitions.as_ptr();
         let count = definitions.len();
         let capacity = workspace.definitions.capacity();

@@ -136,8 +136,8 @@ impl PlacementMap<'_, '_, '_> {
             Layer::River(_) => {
                 self.cells[index].river.frame = frame;
                 self.cells[index].river.reflection = reflection;
-                self.cells[index].has_river = self.cells[index].river.kind.is_some();
-                if self.cells[index].has_river {
+                self.cells[index].river_join_target = self.cells[index].river.kind.is_some();
+                if self.cells[index].river_join_target {
                     for near in Neighborhood::ThreeByThree.cells(at, self.view().side)? {
                         let index = self.view().native_index(near)?;
                         self.cells[index].near_river = true;
@@ -145,7 +145,7 @@ impl PlacementMap<'_, '_, '_> {
                     for near in Neighborhood::FiveByFive.cells(at, self.view().side)? {
                         let index = self.view().native_index(near)?;
                         if self.cells[index].river.kind.is_none() {
-                            self.cells[index].river_target = false;
+                            self.cells[index].river_outlet_target = false;
                         }
                     }
                 }
@@ -217,7 +217,7 @@ impl PlacementMap<'_, '_, '_> {
                 Layer::Road(_) => self.cells[index].road = LineTile::default(),
                 Layer::River(_) => {
                     self.cells[index].river = LineTile::default();
-                    self.cells[index].has_river = false;
+                    self.cells[index].river_join_target = false;
                 }
             }
         }
@@ -275,7 +275,7 @@ impl PlacementMap<'_, '_, '_> {
             Layer::Road(kind) => self.cells[index].road.kind = Some(kind),
             Layer::River(kind) => {
                 self.cells[index].river.kind = Some(kind);
-                self.cells[index].has_river = true;
+                self.cells[index].river_join_target = true;
             }
         }
         self.refresh_line(layer, at, rng)?;
