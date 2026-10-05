@@ -4291,7 +4291,7 @@ static void randomizePyramid(NewmapCell* cell)
             possibleSpells.push_back(i);
     }
 
-    SpellID spell = SpellID(
+    ESpellId spell = ESpellId(
         possibleSpells[random(0, possibleSpells.size() - 1)]);
     cell->setPyramid(true, spell);
     cell->clearVisitedBits();
