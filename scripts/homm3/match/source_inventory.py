@@ -164,7 +164,7 @@ def validate_dc_roster(origins, symbols):
     return errors
 
 
-def audit(root=common.HOMM3_DIR, *, modules=(), jobs=4, fresh=False, origins=None,
+def audit(root=common.HOMM3_DIR, *, modules=(), jobs=None, fresh=False, origins=None,
           require_dc_addresses=False):
     project = Project(root)
     definitions, errors, _ = ownership.collect(root, jobs, fresh)
@@ -240,7 +240,8 @@ def main(argv=None):
     parser.add_argument('--json', action='store_true')
     parser.add_argument('--tsv', type=Path, help='write the complete comparison, including matched rows')
     parser.add_argument('--fresh', action='store_true')
-    parser.add_argument('--jobs', type=int, default=4)
+    parser.add_argument('--jobs', type=int, default=None,
+                        help='parallel cold scans (default: min(8, CPUs))')
     parser.add_argument('--require-dc-addresses', action='store_true',
                         help='migration census: fail if a matched DC procedure lacks DC_ADDRESS')
     args = parser.parse_args(argv)

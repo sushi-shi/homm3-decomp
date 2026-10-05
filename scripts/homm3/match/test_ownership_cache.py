@@ -84,7 +84,7 @@ class OwnershipCacheTest(unittest.TestCase):
             self.edit("build/gen/msvc-include/sys/stat.h")
             self.assertEqual(self.collect()[1], ["src/a.cpp", "src/b.cpp"])
 
-    def test_relative_vendor_include_is_cacheable_and_invalidates_all(self):
+    def test_relative_vendor_include_is_cacheable_and_invalidates_its_consumer(self):
         header = self.root / "vendor/sdk/include/sdk.h"
         header.parent.mkdir(parents=True)
         header.write_text("// third-party declaration")
@@ -92,7 +92,43 @@ class OwnershipCacheTest(unittest.TestCase):
         first, _ = self.collect()
         self.assertEqual(self.collect(), (first, []))
         self.edit("vendor/sdk/include/sdk.h")
+        self.assertEqual(self.collect()[1], ["src/a.cpp"])
+
+    def test_header_edit_reparses_only_the_units_that_reach_it(self):
+        (self.root / "include/b_only.h").write_text("// read by b alone")
+        self.includes["src/b.cpp"] = ["include/b_only.h"]
+        first, _ = self.collect()
+        self.assertEqual(self.collect(), (first, []))
+        self.edit("include/b_only.h")
+        self.assertEqual(self.collect()[1], ["src/b.cpp"])
+        self.edit("include/header.h")  # reached by both
         self.assertEqual(self.collect()[1], ["src/a.cpp", "src/b.cpp"])
+
+    def test_header_removal_or_fragment_map_change_invalidates_all(self):
+        (self.root / "include/b_only.h").write_text("// read by b alone")
+        self.includes["src/b.cpp"] = ["include/b_only.h"]
+        self.collect()
+        self.includes["src/b.cpp"] = []
+        (self.root / "include/b_only.h").unlink()
+        self.assertEqual(self.collect()[1], ["src/a.cpp", "src/b.cpp"])
+        with patch.object(ownership, "fragment_owners",
+                          return_value={"include/header.h": ("src/a.cpp", 1)}):
+            self.assertEqual(self.collect()[1], ["src/a.cpp", "src/b.cpp"])
+            self.assertEqual(self.collect()[1], [])
+
+    def test_parallel_cold_scan_equals_serial_scan(self):
+        # Cold misses run in spawned worker processes; the result must be the
+        # serial in-process scan, in the same order.
+        (self.root / "include/header.h").write_text("#define VALUE 1\nstruct H { int h(); };\n")
+        (self.root / "src/a.cpp").write_text('#include "header.h"\nint H::h() { return VALUE; }\n')
+        (self.root / "src/b.cpp").write_text('#include "header.h"\nvoid b() {}\n')
+        self.scan.side_effect = self.real_scan
+        serial = ownership.collect(self.root, jobs=1, fresh=True)
+        parallel = ownership.collect(self.root, jobs=2, fresh=True)
+        canonical = lambda result: json.dumps(
+            [[asdict(d) for d in result[0]], result[1], result[2]], sort_keys=True)
+        self.assertEqual(canonical(serial), canonical(parallel))
+        self.assertTrue(any(d.name.endswith("h") for d in parallel[0]))
 
     def test_header_config_or_header_addition_invalidates_all(self):
         self.collect()

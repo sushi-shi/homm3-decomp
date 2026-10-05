@@ -48,8 +48,45 @@ def supported(record):
     return False
 
 
+_CANDIDATES: dict = {}
+
+
+def _objects_signature(base_dir) -> tuple:
+    """Identity of the raw objects and their content receipts, by stat."""
+    from pathlib import Path
+    signature = []
+    for path in sorted(Path(base_dir).glob('*.obj*')):
+        try:
+            stat = path.stat()
+        except OSError:
+            continue
+        signature.append((path.name, stat.st_size, stat.st_mtime_ns))
+    return tuple(signature)
+
+
 def candidates(project, base_dir, *, witnesses=None):
-    """Only raw objects with current source/compiler content receipts qualify."""
+    """Only raw objects with current source/compiler content receipts qualify.
+
+    One delink resolves the model and its exception identities several times
+    over the same objects; the scan is reused while the objects, their
+    receipts and the project root are unchanged within this process.
+    """
+    from pathlib import Path
+    key = (str(Path(project.root).resolve()), str(Path(base_dir).resolve()),
+           _objects_signature(base_dir))
+    cached = _CANDIDATES.get(key)
+    if cached is None:
+        found = {}
+        records, withheld = _candidates(project, base_dir, witnesses=found)
+        _CANDIDATES.clear()
+        cached = _CANDIDATES[key] = (records, withheld, found)
+    records, withheld, found = cached
+    if witnesses is not None:
+        witnesses.update(found)
+    return list(records), list(withheld)
+
+
+def _candidates(project, base_dir, *, witnesses=None):
     from homm3.core.cc_wrap import scan_header_deps
     by_unit = {u['unit']: u for u in project.manifest['unit']}
     records, withheld, hashes, headers = [], [], {}, {}

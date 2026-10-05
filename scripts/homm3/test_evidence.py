@@ -89,6 +89,24 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual([r.get("skipped") for r in results],
                          [None, "mac show found no claimed pair", "mac show found no claimed pair"])
 
+    def test_mac_calls_waits_for_an_up_to_date_object_or_mac_build(self):
+        sections = evidence.select_sections(["mac"], None)
+        fake = FakeCommands()
+        results = evidence.gather("0x004dbe80", sections, as_json=False, no_build=False,
+                                  mac_check=lambda va: True, entry_for=fake.entry,
+                                  mac_stale=lambda selector: "hero")
+        self.assertEqual([call[1][0] for call in fake.calls], ["show", "disasm"])
+        self.assertIn("full-TU Mac object for hero is missing or stale", results[2]["skipped"])
+        self.assertIn("--mac-build", results[2]["skipped"])
+        for stale, mac_build in ((lambda selector: None, False),
+                                 (lambda selector: "hero", True)):
+            fake = FakeCommands()
+            results = evidence.gather("0x004dbe80", sections, as_json=False, no_build=False,
+                                      mac_check=lambda va: True, entry_for=fake.entry,
+                                      mac_stale=stale, mac_build=mac_build)
+            self.assertEqual([call[1][0] for call in fake.calls], ["show", "disasm", "calls"])
+            self.assertNotIn("skipped", results[2])
+
     def test_json_and_out_directory(self):
         fake = FakeCommands({("sema", "diff"): 1})
         sections = evidence.select_sections(["show", "structure", "summary"], None)

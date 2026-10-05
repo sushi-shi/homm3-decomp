@@ -44,6 +44,25 @@ def write_tables(root: Path, functions=(), runtime=(), aliases=(), dispositions=
 
 
 class TestMacAddressScan(unittest.TestCase):
+    def test_tree_scan_cache_tracks_file_contents(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "src").mkdir()
+            (root / "include").mkdir()
+            source = root / "src/unit.cpp"
+            source.write_text("\n\nVA(0x004d8720, 0x568) MAC_ADDRESS(0x0f3fe4, 0x568)\n"
+                              "void hero::initialize(short id)\n{\n}\n")
+            first = addresses.scan(root)
+            self.assertTrue((root / "build/gen/cache/mac-address-scan.pickle").is_file())
+            with patch.object(addresses, "scan_text", side_effect=AssertionError("rescanned")):
+                self.assertEqual(addresses.scan(root), first)
+            self.assertEqual(first[0][0].line, 3)
+            source.write_text(source.read_text().replace("0x0f3fe4", "0x0f3fe8"))
+            changed = addresses.scan(root)
+            self.assertEqual(changed[0][0].offset, 0x0f3fe8)
+            claims, windows, _ = addresses.scan_text(source.read_text(), "src/unit.cpp")
+            self.assertEqual(changed[:2], (claims, windows))
+
     def test_same_line_claim_pairs_with_its_va(self):
         claims, windows, problems = scan(
             "VA(0x004d8720, 0x568) MAC_ADDRESS(0x0f3fe4, 0x568)  // dc 0x1\n"

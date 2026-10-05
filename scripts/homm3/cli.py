@@ -197,6 +197,15 @@ def cmd_delink(args) -> int:
     return run_module("homm3.build.delink", *forwarded)
 
 
+def run_status(status_args: list[str]) -> int:
+    if "update" in status_args or "--write-readme" in status_args:
+        # Banking and README regeneration rewrite the ledger and report.
+        from homm3.core import worktree_lock
+        with worktree_lock.hold(" ".join(["homm3 status", *status_args])):
+            return run_module("homm3.match.status", *status_args)
+    return run_module("homm3.match.status", *status_args)
+
+
 def cmd_sema(args) -> int:
     return run_module("homm3.sema", *args.sema_args)
 
@@ -264,7 +273,7 @@ def _dispatch(argv: list[str]) -> int:
     if argv and argv[0] == "source-inventory":
         return run_module("homm3.match.source_inventory", *argv[1:])
     if argv and argv[0] == "status":
-        return run_module("homm3.match.status", *argv[1:])
+        return run_status(argv[1:])
     if argv and argv[0] == "dreamcast":
         return run_module("homm3.analysis.dreamcast", *argv[1:])
     if argv and argv[0] == "mac":

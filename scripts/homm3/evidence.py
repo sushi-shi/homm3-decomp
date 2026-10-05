@@ -1,7 +1,7 @@
 """homm3 evidence - the AGENTS.md matching evidence pass in one command.
 
     homm3 evidence SELECTOR... [--only SECTION,...] [--skip SECTION,...]
-                   [--out DIR] [--json] [--no-build]
+                   [--out DIR] [--json] [--no-build] [--mac-build]
 
 For each selector this runs, in one process and in this order:
 
@@ -28,7 +28,9 @@ parsed corpus instead of rebuilding it per command.
 and prints only the index of files, return codes and times. `--json` runs
 the sections that support it with --json and emits one JSON document (with
 `--out`, an index whose sections name their files). `--no-build` passes
-through to `sema diff`.
+through to `sema diff`. `mac-calls` compares the unit's full-TU CodeWarrior
+object; building it takes minutes, so evidence runs it only when that
+object is already up to date, or with `--mac-build`.
 
 Exit status: 0 when every section that ran returned 0, 1 when a section
 answered with a difference (rc 1, e.g. `sema diff` disagreeing, or `dreamcast
@@ -120,6 +122,17 @@ def mac_claimed(va: int) -> bool:
     return any(claim.windows_va == va for claim in claims)
 
 
+def mac_object_stale(selector: str) -> str | None:
+    """The claimed pair's unit when its full-TU Mac object is missing or stale."""
+    from homm3.core import common
+    from homm3.mac import build, pairs
+    try:
+        unit = pairs.select_claim(common.HOMM3_DIR, selector).unit
+    except (ValueError, OSError):
+        return None  # let `mac calls` report the selector itself
+    return unit if unit and build.stale_objects({unit}) else None
+
+
 def run_captured(entry, argv: list[str], *, merge: bool) -> tuple[int, str, str]:
     """Run one command's entry point with file descriptors 1 and 2 captured.
 
@@ -162,8 +175,10 @@ def slug(selector: str) -> str:
 
 
 def gather(selector: str, sections: list[Section], *, as_json: bool, no_build: bool,
-           mac_check=None, entry_for=None) -> list[dict]:
+           mac_check=None, entry_for=None, mac_build: bool = False,
+           mac_stale=None) -> list[dict]:
     mac_check, entry_for = mac_check or mac_claimed, entry_for or _entry
+    mac_stale = mac_stale or mac_object_stale
     results, mac_skip = [], None
     va = windows_va(selector)
     if any(s.group == "mac" for s in sections) and va is not None and not mac_check(va):
@@ -181,6 +196,14 @@ def gather(selector: str, sections: list[Section], *, as_json: bool, no_build: b
             record["skipped"] = mac_skip
             results.append(record)
             continue
+        if section.name == "mac-calls" and not mac_build:
+            unit = mac_stale(selector)
+            if unit:
+                record["skipped"] = (f"the full-TU Mac object for {unit} is missing or stale "
+                                     "and takes minutes to build; rerun with --mac-build "
+                                     f"(or `homm3 mac calls {selector}`)")
+                results.append(record)
+                continue
         started = time.monotonic()
         rc, out, err = run_captured(entry_for(section.group), argv, merge=not as_json)
         record.update(rc=rc, seconds=round(time.monotonic() - started, 2))
@@ -276,6 +299,8 @@ def main(argv=None) -> int:
                         help="one JSON document; sections that support --json embed it")
     parser.add_argument("--no-build", action="store_true",
                         help="pass --no-build to sema diff (compare the last built objects)")
+    parser.add_argument("--mac-build", action="store_true",
+                        help="build a missing or stale full-TU Mac object for mac-calls")
     args = parser.parse_args(argv)
     sections = select_sections(args.only, args.skip)
     if not sections:
@@ -289,7 +314,8 @@ def main(argv=None) -> int:
         for selector in args.selectors:
             reports.append({"selector": selector,
                             "sections": gather(selector, sections, as_json=args.json,
-                                               no_build=args.no_build)})
+                                               no_build=args.no_build,
+                                               mac_build=args.mac_build)})
     if args.out:
         write_outputs(reports, args.out)
     if args.json:
