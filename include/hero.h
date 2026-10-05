@@ -923,7 +923,7 @@ public:
     // 0x4e5f30 - "this hero can still be given an order this turn".
     // Declared for playerData::NextHero, which inlines nothing of it -
     // it is a real call from game.obj.
-    unsigned char isMobile() const;
+    bool isMobile() const;
     const char* getSpecificAbilityText();
     const char* getSpecificAbilityTextShort();
     int valueOfSpell(SpellID spell) const;

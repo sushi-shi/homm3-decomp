@@ -7272,11 +7272,13 @@ static TSkillMastery getIdentifyLevel(type_point point)
 
 // Dreamcast advmgr.cpp:9088 calls Hero.h get_location before
 // get_identify_level; retail expands the point construction.
+// Original DC public HeroQuickView@advManager@@QAAXHHH_N@Z proves
+// displayDropShadow is bool.
 VA(0x00416590, 0x210)
 DC_ADDRESS(0x0194bc, 0x1b8)
 MAC_ADDRESS(0x016e24, 0x1e8)
 void advManager::heroQuickView(int heroId, int x, int y,
-                               unsigned char displayDropShadow)
+                               bool displayDropShadow)
 {
     hero* theHero = g_game->getHero(heroId);
     type_point heroPoint = theHero->getLocation();
@@ -7318,11 +7320,13 @@ const char* getBuildingName(int townType, int buildingId);
 // Restoring these together gives 99.5015%; DC 9192/9193 and retail place
 // first = 1 before calculateProduction, closing the remaining instruction
 // schedule difference at 100%. No alternate string spelling is required.
+// Original DC public TownQuickView@advManager@@QAAXHHH_N@Z likewise
+// proves displayDropShadow is bool.
 VA(0x004167a0, 0x7DB)
 DC_ADDRESS(0x019674, 0x668)
 MAC_ADDRESS(0x01700c, 0x638)  // anchor-callee
 void advManager::townQuickView(int townId, int x, int y,
-                               unsigned char displayDropShadow)
+                               bool displayDropShadow)
 {
     if (townId == -1)
         return;

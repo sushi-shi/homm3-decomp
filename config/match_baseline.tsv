@@ -20,7 +20,7 @@ adventuremapwindow	??0TAdventureMapWindow@@QAE@XZ	98.4448	98.4793	100.0000	0x151
 adventuremapwindow	??1TAdventureMapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x2b10	tokens1:500c3e80b02f
 adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ae0	-
 adventuremapwindow	?_Construct@std@@YIXPAPAVwidget@@ABQAV2@@Z	100.0000	100.0000	100.0000	0x4dc0	tokens1:84c39274980f
-adventuremapwindow	?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	100.0000	100.0000	100.0000	0x4bd0	-
+adventuremapwindow	?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	99.9495	100.0000	100.0000	0x4bd0	-
 adventuremapwindow	?_Eos@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	100.0000	100.0000	100.0000	0x4a70	tokens1:a6310959d520
 adventuremapwindow	?_Grow@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAE_NI_N@Z	100.0000	100.0000	100.0000	0x4a90	-
 adventuremapwindow	?activate@CGameChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x22b0	tokens1:757841166f10
@@ -130,7 +130,7 @@ advmgr	?handleGiftMsg@CAdvMgrNetMsgHandler@@MAEXPAVCNetMsg@@@Z	100.0000	100.0000
 advmgr	?handleGiftRequestMsg@CAdvMgrNetMsgHandler@@IAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6a20	tokens1:20627cdf3ab0
 advmgr	?handleNetMsg@CAdvMgrNetMsgHandler@@MAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x5e30	tokens1:56a68d564905
 advmgr	?hasFlag@@YI_NH@Z	100.0000	100.0000	100.0000	0xfca0	tokens1:fed515a5a129
-advmgr	?heroQuickView@advManager@@QAEXHHHE@Z	100.0000	100.0000	100.0000	0x16590	tokens1:04aed3e62f5e
+advmgr	?heroQuickView@advManager@@QAEXHHH_N@Z	100.0000	100.0000	100.0000	0x16590	tokens1:07ffee3c0629
 advmgr	?hideRoute@advManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x19300	tokens1:7dfe64e07c7b
 advmgr	?inMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0	tokens1:04f14ec0d1d7
 advmgr	?initializeCreatureGeneratorNames@@YIEXZ	100.0000	100.0000	100.0000	0x5d20	tokens1:cb71834f8313
@@ -170,7 +170,7 @@ advmgr	?setTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	100.0000	
 advmgr	?setWitchHutHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	100.0000	100.0000	0xdcc0	tokens1:0430e953a6a9
 advmgr	?showRoute@advManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x18dd0	tokens1:4826a43fd250
 advmgr	?startLocalPlayerTurn@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19e00	tokens1:24757c614ed8
-advmgr	?townQuickView@advManager@@QAEXHHHE@Z	100.0000	100.0000	100.0000	0x167a0	tokens1:5e23b07f4bc2
+advmgr	?townQuickView@advManager@@QAEXHHH_N@Z	100.0000	100.0000	100.0000	0x167a0	tokens1:fe3e7c2af0d4
 advmgr	?trimLoopingSounds@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1a1e0	tokens1:05ddd13fd8d6
 advmgr	?updBottomView@advManager@@QAEXEEE@Z	100.0000	100.0000	100.0000	0x15de0	tokens1:d493aca180de
 advmgr	?updBottomViewEnemyTurn@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x15f20	tokens1:2832a392eed8
@@ -2277,7 +2277,7 @@ hero	?initializeBallisticsTable@@YIEXZ	100.0000	100.0000	100.0000	0xd7240	tokens
 hero	?initializeHeroSpecificAbilitiesTable@@YIEXZ	100.0000	100.0000	100.0000	0xd71a0	tokens1:3b7f7700bf2e
 hero	?isInIdentifyRange@hero@@QBEEPBUtype_point@@@Z	100.0000	100.0000	100.0000	0xe5e10	tokens1:db3fb36b9669
 hero	?isInPatrolRadius@hero@@QBEEUtype_point@@@Z	100.0000	100.0000	100.0000	0xe56e0	tokens1:54ef7c96cd78
-hero	?isMobile@hero@@QBEEXZ	100.0000	100.0000	100.0000	0xe5f30	tokens1:aac7d46590e4
+hero	?isMobile@hero@@QBE_NXZ	100.0000	100.0000	100.0000	0xe5f30	tokens1:4cc32b5cb8e9
 hero	?isWieldingArtifact@hero@@QBEEH@Z	100.0000	100.0000	100.0000	0xd91f0	tokens1:e365675044f1
 hero	?load@hero@@QAEHPAVTAbstractFile@@H@Z	94.9221	94.9221	100.0000	0xd7a20	tokens1:0422d8b83edf
 hero	?load@type_obscuring_object@@QAE_NPAX@Z	100.0000	100.0000	100.0000	0xd74f0	tokens1:099207a76ebe

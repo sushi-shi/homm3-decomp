@@ -1362,9 +1362,9 @@ public:
                      bool viewHeroes, bool viewTowns);
     void quickInfo(int cellX, int cellY, int z);
     void heroQuickView(int heroId, int x, int y,
-                       unsigned char displayDropShadow);
+                       bool displayDropShadow);
     void townQuickView(int townId, int x, int y,
-                       unsigned char displayDropShadow);
+                       bool displayDropShadow);
     void monsterQuickView(const NewmapCell* cell, int cellx, int celly);
     void setTownContext(int townId, bool waitingPlayer,
                         bool update);
