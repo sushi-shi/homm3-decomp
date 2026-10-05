@@ -125,8 +125,9 @@ public:
     // itself load-bearing for ProcessDeath's inline budget (a free
     // candidate site in C2's sites-remaining divisor - measured there).
     // The DC const-this record also permits DoorCanBeLowered to call it.
+    // Original public ?HasArmy@hexcell@@QBA_NXZ proves the bool result.
     DC_ADDRESS(0x04cc68, 0xa)
-    unsigned char hasArmy() const
+    bool hasArmy() const
     {
         return m_armySide >= 0;
     }

@@ -668,7 +668,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
     // changing the original offset values. DC796 also increments hex_off
     // for a double-wide army. Keep these expressions and the canonical
     // HasArmy/GetArmy calls. The ten-byte text buffer restores the native
-    // divisor spill; the remaining comparison delta is its constant binding.
+    // divisor spill.
     // DC 0x44d0c and Mac 0x4a570 bypass coordinate assignments outside
     // placement modes 0..3. Removing the invented powX = powY = x fallback
     // raises Windows 99.1724 -> 99.5839%; the whole effect-placement tail,
