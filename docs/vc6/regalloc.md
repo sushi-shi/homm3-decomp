@@ -389,18 +389,30 @@ the high group contains the other table load and high AND. The getter's
 halves remain separate. Retail instead updates the loaded mask words,
 preserving the column without a spill.
 
-This rules out scratch-register rotation as the immediate cause. The next
-evidence boundary is wide-operation lowering and coalescing: why the table
-loads become destructive operands instead of the getter-result halves.
-The trace does not justify changing the proven getter type, flattening its
-call or inventing caller scopes. Reversing the commutative operands in
-`hasBuilding` also leaves the current handler and both retained helper-owner
+This rules out scratch-register rotation as the immediate cause. The named
+inline-result creation at `0x19d6e` proves the wide local belongs to
+`getBuildingMask`. Lowering at `0x56033` preserves source-operand order;
+the table operand already precedes the getter result at its caller
+`0x28610` and at the earlier function walker. Reversing the commutative
+operands in `hasBuilding` leaves this handler and both retained helper-owner
 units byte-identical: two states, one object identity, with unchanged-source
-and opposite-corner reproduction controls. C++ operand spelling alone does
-not change this lowering decision. All three passive traces reproduce the
-complete 401,289-byte normal-profile object outside its timestamp; the clean
-compiler shim is restored afterward. Disposable captures are under
-`build/mageguild-evidence/{global-allocation-trace,global-exclusion-trace,instruction-operands-trace}/`.
+and opposite-corner reproduction controls. Operand spelling alone does not
+change the destructive result selection.
+
+The earlier copy-substitution routine `0x70c7` actually considers the getter
+result twice. Both attempts reach `0x7234`: the proposed replacement is a
+kind-3 expression temporary, the original wide local's `+0x18` field is null,
+and the consumer is opcode `0x172` (AND), not the accepted `0x17d`. Both
+return zero at `0x713b`. A later memory-operand type gate at `0x749a` is
+therefore not this copy's observed rejection. The meaning of that null
+field and the missing original source input remain unresolved; do not turn
+this diagnostic into an unsupported getter type or lifetime change.
+
+The passive observations preserve the complete 401,289-byte normal-profile
+object outside its timestamp and restore the clean compiler shim afterward.
+Disposable captures are under `build/mageguild-evidence/`. The canonical
+getter call, its proven value-return type and the native caller scopes remain
+intact.
 
 ### 3c. Source creation order
 
