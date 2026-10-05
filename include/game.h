@@ -1119,7 +1119,9 @@ public:
     std::vector<town> m_towns;
     enum { HERO_COUNT = 156 };
     hero m_heroes[HERO_COUNT];
-    char m_heroAvailability[0x9c];  // +0x4df18
+    // Original game::heroAllocInfo is signed char[128] in all four DC
+    // records. Complete extends the same status array to 156 heroes.
+    signed char m_heroAvailability[0x9c];  // +0x4df18
     // One eight-player eligibility mask per hero. GetStartingHeroId tests
     // the caller's player position through Dinkumware bitset::test(), and
     // the hero-placement path sets the same bit through bitset::set().

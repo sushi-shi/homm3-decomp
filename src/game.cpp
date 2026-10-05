@@ -2978,7 +2978,7 @@ int game::load(TAbstractFile* infile)
             return -1;
         std::fill(m_heroAvailability + g_mapHeaderLegacyHeroCount,
                   m_heroAvailability + HERO_COUNT,
-                  static_cast<char>(hero::HERO_AVAILABILITY_TAVERN_POOL));
+                  static_cast<signed char>(hero::HERO_AVAILABILITY_TAVERN_POOL));
     }
 
     if (saved.m_version >= 31) {
@@ -3874,7 +3874,7 @@ void game::newMap(TAbstractFile* mapFile, HeroId* playerHeroFaces,
                 && m_mapHeader.m_playerSlotAttributes[facePlayer].m_generateHero) {
                 HeroId heroId = playerHeroFaces[facePlayer];
                 if (heroId != -1) {
-                    m_heroAvailability[heroId] = static_cast<char>(facePlayer);
+                    m_heroAvailability[heroId] = static_cast<signed char>(facePlayer);
                     if (g_game->m_setup.m_startingHero[facePlayer] == -1)
                         g_game->m_setup.m_startingHero[facePlayer] = heroId;
                 }
@@ -8479,7 +8479,7 @@ void game::createTownHeroes(HeroId* startingHeroIds)
 
         if (m_setup.m_startingHero[i] == -1)
             m_setup.m_startingHero[i] = heroId;
-        m_heroAvailability[heroId] = static_cast<char>(i);
+        m_heroAvailability[heroId] = static_cast<signed char>(i);
         thisTown->placeInMap(heroId, i, 1);
         thisTown->giveSpells(NULL);
 
