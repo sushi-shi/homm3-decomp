@@ -2128,11 +2128,11 @@ game	?test@?$bitset@$07@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfef0	-
 game	?test@?$bitset@$0BM@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd17d0	-
 game	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd4e50	-
 game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0	-
-game	?transmitSaveGame@game@@QAEHHH_N0@Z	97.3992	97.3992	97.4264	0xcafd0	tokens1:4fb2c98c50d2
+game	?transmitSaveGame@game@@QAEHHH_N0@Z	97.4214	97.4214	97.4264	0xcafd0	tokens1:4fb2c98c50d2
 game	?turnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	tokens1:09ac63bef778
 game	?turnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	tokens1:b9f191ddf209
 game	?updateBonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	tokens1:9bea0f215987
-game	?validateVictoryLossConditions@game@@QAEX_N@Z	94.8833	94.8833	94.8833	0xbf780	tokens1:754e131941bc
+game	?validateVictoryLossConditions@game@@QAEX_N@Z	95.4407	95.4407	95.4407	0xbf780	tokens1:5017c063fb20
 game	?viewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	83.7661	100.0000	100.0000	0xc6c50	tokens1:ad7644e5de3f
 game	?waitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	tokens1:2f41bc5ced6d
 game	__h3cg$game$bitset_ctor$Bitset28	0.0000	0.0000	100.0000	0xcf870	-

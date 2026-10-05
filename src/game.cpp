@@ -3694,26 +3694,25 @@ void game::giveTroopsToNeutralTowns()
 // disjunction rather than a nested per-campaign assignment chain. VC6
 // factors the comparisons and raises 91.1630% to 93.9000%. Direct named
 // coordinate arguments to the canonical point constructor reach 94.8833%.
-// The final valid-town path can return directly at unchanged 90.0315%.
-// Full do/for failure scopes lose to 87.4352..87.7111%, and the earlier
-// result flag gives 89.2426%; these used break as the failure-scope exit.
-// These are limits of the tested scopes, not proof of original gotos.
-// The town-loss scope uses continue for either failed team check and a
-// return for valid ownership. This removes both remaining joins at 90.0315%
-// with the full contribution and all relocation names/addends unchanged.
-// The earlier failure scopes used break and do not predict this lowering.
+// DC game.cpp:4225 evaluates the three town-loss failures in one statement;
+// Mac 0xd5a18..0xd5a84 retains the same short-circuit expression. Keep its
+// signed team loop and direct owner reads. An artificial one-iteration loop
+// with saved owner/team values lost that structure (94.8833 vs 95.4407%).
+// DC records one shared int i for the player and hero scans; moving that
+// declaration changes no function score.
 // Original public ?ValidateVictoryLossConditions@game@@QAAX_N@Z proves bool.
 VA(0x004bf780, 0x6E2)
 DC_ADDRESS(0x0aa7e0, 0x5c4)
 MAC_ADDRESS(0x0d513c, 0x960)  // order-map + whole-function identity
 void game::validateVictoryLossConditions(bool checkMapLocations)
 {
+    int i;
     signed char victoryType = m_mapHeader.m_victoryCondition.m_type;
     if (victoryType == VICTORY_CONDITION_ARTIFACT
         || victoryType == VICTORY_CONDITION_BUILD_GRAIL
         || victoryType == VICTORY_CONDITION_TRANSPORT_ARTIFACT) {
         int numLivingPlayers = 0;
-        for (int i = 0; i < 8; ++i) {
+        for (i = 0; i < 8; ++i) {
             if (!m_playerDisabled[i])
                 ++numLivingPlayers;
         }
@@ -3761,7 +3760,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
         type_point vcheroLoc(victory.m_heroX, victory.m_heroY,
                             victory.m_heroZ);
         victory.m_heroId = -1;
-        for (int i = 0; i < HERO_COUNT; ++i) {
+        for (i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
             if (vcheroLoc == poolheroLoc) {
                 int team = getTeam(m_heroes[i].m_owner);
@@ -3803,7 +3802,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
     if (loss.m_type == LOSS_CONDITION_LOSE_HERO) {
         type_point lcheroLoc(loss.m_heroX, loss.m_heroY, loss.m_heroZ);
         loss.m_heroId = -1;
-        for (int i = 0; i < HERO_COUNT; ++i) {
+        for (i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
             if (lcheroLoc == poolheroLoc) {
                 int numHumanTeams = 0;
@@ -3829,23 +3828,14 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
         town* thisTown = getTown(getTownId(
             loss.m_townX, loss.m_townY, loss.m_townZ));
         int numHumanTeams = 0;
-        int owner;
-        int townTeam;
-        for (unsigned int teamCheck = 0; teamCheck < 8; ++teamCheck) {
-            if (isHumanTeam(teamCheck))
+        for (int team = 0; team < 8; ++team) {
+            if (isHumanTeam(team))
                 ++numHumanTeams;
         }
-        do {
-            if (numHumanTeams > 1)
-                continue;
-            owner = thisTown->m_owner;
-            townTeam = getTeam(owner);
-            if (isComputerTeam(townTeam))
-                continue;
-            if (owner != -1)
-                return;
-        } while (0);
-        loss.m_type = -1;
+        if (numHumanTeams > 1
+            || isComputerTeam(getTeam(thisTown->m_owner))
+            || thisTown->m_owner == -1)
+            loss.m_type = -1;
     }
 }
 
