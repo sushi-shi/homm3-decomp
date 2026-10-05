@@ -2764,7 +2764,7 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
         return;
     currentHero->checkLevel();
 
-    int spell = cell->getPyramidSpell();
+    SpellID spell = cell->getPyramidSpell();
     char text[500];
     sprintf(text, DATA_COMPGEN(0x00677750, quotedNameFormat, "%s'%s'."),
             g_adventureEventText->getText(ADV_EVENT_TEXT_PYRAMID_SPELL_PREFIX),
