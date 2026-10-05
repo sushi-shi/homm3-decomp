@@ -1219,11 +1219,12 @@ public:
     int randomScan(signed char* whichList, int start, int length,
                    signed char scanValue);
     int getNewBoatId();  // 0x4bb170
+    // Original CreateBoat public encodes _NC: bool remote move, signed type.
     int createBoat(int x, int y, int z, int owner,
-                   unsigned char remoteMove, signed char type);  // 0x4bb250
-    int getNewHeroId(int playerPos, THeroClass excluded,
-                     unsigned char preferAlignment,
-                     THeroClass preferredClass);  // 0x4bb5e0
+                   bool remoteMove, signed char type);  // 0x4bb250
+    HeroId getNewHeroId(int playerPos, THeroClass excluded,
+                        bool preferAlignment,
+                        THeroClass preferredClass);  // 0x4bb5e0
     // Retail 0x486110, customcampaign.obj's own game member and
     // DoPreLoadCustomization's per-hero callee: the map's setup record for
     // `heroId` is copied wholesale onto a newly allocated hero of the same
@@ -1281,10 +1282,12 @@ public:
     // overrides GetStartingHeroId for human players.
     void createTownHeroes(int* startingHeroIds);
     int getAlignment(int creature) const;
+    TTownType getPlayerAlignment(int playerId) const;
     void claimShipyard(type_point location, int newPlayerOwner);  // 0x4c6a30
+    // Original ClaimTown public ends in _N0: both latches are bool.
     void claimTown(int townId, int newPlayerOwner,
-                   unsigned char isRemoteMove,
-                   unsigned char checkEndGame);  // 0x4c61e0
+                   bool isRemoteMove,
+                   bool checkEndGame);  // 0x4c61e0
     void claimMine(int mineId, int newPlayerOwner,
                    type_action_type actionType);  // 0x4c66e0
     void claimGenerator(int generatorId, int newPlayerOwner);  // 0x4c67b0
@@ -1349,7 +1352,7 @@ public:
     // when the protocol is hotseat.
     void waitForPlayer(char* text, int gamePos);  // 0x4ca840
     int transmitSaveGame(int toWho, int thisPlayerDead,
-                         unsigned char inGame, unsigned char makeOrig);
+                         bool inGame, bool makeOrig);
     // DC game.cpp:10587 names the received-save body. Retail's transmit-init
     // handlers independently prove the five arguments and 0x4cbd40 entry.
     int receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
@@ -1399,7 +1402,7 @@ private:
 
 public:
     // 0x4bf780 (dc 0xaa7e0).
-    void validateVictoryLossConditions(unsigned char checkMapLocations);
+    void validateVictoryLossConditions(bool checkMapLocations);
     void giveTroopsToNeutralTowns();
     void giveTroopsToNeutralTown(int townId);  // 0x4bf570
     void setupOrigData();
@@ -1498,8 +1501,6 @@ public:
             return 0;
         return m_mapHeader.m_teamInfo[player1] == m_mapHeader.m_teamInfo[player2];
     }
-    // 0x4c6690, and the Dreamcast's own `?get_alignment@game@@QBA?AW4
-    // TTownType@@H@Z` (game.h:1375, i.e. a header inline - which is why
     // Own the retained inline body here with the game interface. The selected
     // retail copy is in philai.obj; emission does not give that TU ownership.
     // Mac expands this version-aware wrapper before the retained global
@@ -1649,9 +1650,9 @@ int getTeam(int playerNum) const
     int getNumThievesGuilds(int whichPlayer);
 
 private:
-    unsigned char saveRecordedEvents(TAbstractFile* outfile);
-    // declarator (`?load_recorded_events@game@@AAA_NPAX@Z`, private,
-    unsigned char loadRecordedEvents(TAbstractFile* infile, int version);
+    // Original AAA_N publics prove private bool results for both helpers.
+    bool saveRecordedEvents(TAbstractFile* outfile);
+    bool loadRecordedEvents(TAbstractFile* infile, int version);
     // 0x4bcb30 (dc 0xa8144, E:\gamedcs\game.cpp:2975,
     // `?setup_shipyards@game@@AAAXXZ`). Clears all eight
     // players[i].shipyards and re-derives them by sweeping the map,
@@ -1673,6 +1674,15 @@ public:
         if (which == -1)
             return 0;
         return &m_heroes[which];
+    }
+
+    // Selection's two hero-detail owners expand an unguarded hero lookup
+    // (DC ProcessRightSelect lines 3244/3290; Mac 17a12c..17a14c and
+    // 17a308..17a328). These callers require a valid ID, unlike getHero's
+    // nullable -1 lookup. The original helper spelling is unknown.
+    hero& getHeroReference(int which)
+    {
+        return m_heroes[which];
     }
 
     // DC `game::GetCurrHero` (E:\gamedcs\Game.h:991) and
@@ -2032,7 +2042,6 @@ inline bool game::isHumanAlly(int playerNum) const
 // VC6 source cost 75, so the 72-budget nested call remains out of line without
 // a pragma. Dreamcast's same-named game.h:1375 helper instead maps player ids.
 VA(0x004c6690, 0x43)
-DC_ADDRESS(0x02000c, 0x58)
 inline int game::getAlignment(int creature) const
 {
     if (m_gameVersion == 0) {
@@ -2040,6 +2049,17 @@ inline int game::getAlignment(int creature) const
             return -1;
     }
     return g_creatureTypeTraits[creature].m_townType;
+}
+
+// Original get_alignment, game.h:1375. The public
+// ?get_alignment@game@@QBA?AW4TTownType@@H@Z proves the const member,
+// player-id parameter and town-type result. Complete's ViewPuzzle and
+// GetNewHeroId expand the same guarded setup lookup.
+DC_ADDRESS(0x02000c, 0x58)
+inline TTownType game::getPlayerAlignment(int playerId) const
+{
+    return playerId >= 0
+        ? static_cast<TTownType>(m_setup.m_alignment[playerId]) : eTownNeutral;
 }
 
 // Game.h:1380. DispatchEvent expands this cell accessor; the

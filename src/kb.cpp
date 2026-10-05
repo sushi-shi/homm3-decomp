@@ -419,8 +419,8 @@ int earlySetup()
     initMainClasses();
     unsigned char desktopOk = getDesktopInfo();
     readPrefs();
-    if (!g_config.m_mainGameFullScreen && !desktopOk) {
-        g_config.m_mainGameFullScreen = 1;
+    if (!g_config.m_windowConfig.m_fullScreen && !desktopOk) {
+        g_config.m_windowConfig.m_fullScreen = 1;
         writePrefs();
     }
     ResourceManager::setPath(

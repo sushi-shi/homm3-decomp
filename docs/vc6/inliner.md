@@ -2581,3 +2581,54 @@ call and four adventure calls all target retail 0x4e3070. The kill-side body
 and every other preexisting emitted body in these three TUs are unchanged;
 the adventure TU additionally emits the retained string `_Tidy`. All 1,510
 previously scored Mac pairs remain available with unchanged scores.
+
+## Separate admission guards can recover a nested exception constructor
+
+`VictoryConditionStruct::checkForArtifactWin` (`0x5f1610`) reached 100%
+by spelling its ordinary wrong-condition, null-player and disabled-player
+rejections as separate guards. A joined short-circuit guard produced the
+same game-path instructions but left `out_of_range`'s constructor as a call
+where retail expands it and calls `logic_error` at +0x4c1.
+
+The joined form's trace gave the final `bitset::test` 153 budget units,
+its `_Xran` 95, and the nested 58-unit `out_of_range` constructor only 30.
+The separate guards supply ordinary source control flow, not dummy work.
+DC lines 32..41 distinguish the condition rejection from player admission;
+Complete Mac 0x1fd5d8..0x1fd618 also retains separate failure paths. The
+six-state guard/erase-result family reproduced the exact Windows form with
+all helper calls and the iterator assignment retained. Nine component-test
+variants alone did not resolve the exception-constructor boundary.
+
+
+## Conditional helper results can change nested expansion
+
+`town::getCastleGrowthBonus` (`0x5bf570`) emits the same exact retained
+Windows body with early returns or a conditional result. The latter lowers
+its VC6 inline cost from 84 to 72. Inside `getGrowthRate` →
+`getAssembledLegionBonus` → `getCastleGrowthBonus`, this changes the first
+`hasBuilding` budget from 53 to 68, admitting its 62-unit body and improving
+`getGrowthRate` from 90% to 97.8947%. Both retained bonus helpers stay exact.
+DC lines 1503/1504 and Mac 0x1b4c20 support the same ordered castle/citadel
+queries and zero fallback; no helper body is pasted into its caller.
+
+The caller's remaining six instruction differences concern the final
+short-valued generator-bonus addition. Explicit narrowing, a named short
+consumer and alternative Grail return forms did not close that residual.
+The source-family controls reproduced the adopted improvement.
+
+## Packed-bit reader: distinguish depth from budget
+
+`hero::load` (0x4d7a20) retains the canonical `readPackedBits` →
+`decodePackedBits` → bit proxy assignment chain. A reproduced C2 trace gives
+the caller cost 964 and initial budget 1928. In its range-error path,
+`basic_string::assign(const char*, size_t)` reaches depth eight with budget
+319 and cost 69; the exception's string copy constructor also reaches depth
+eight with budget 474 and cost 68. Their nested copy, end-marker and cleanup
+operations exceed the default depth, rather than failing those budget tests.
+Increasing caller statement mass cannot remove that boundary.
+
+The historical 100% loader used a decoder loop pasted into `readPackedBits`
+(`0fe618767`, with the final library pairing in `d989f8297`). Restoring the
+decoder call in `ecaa9d412` left 94.9221% with the old peak retained. Keep the
+canonical chain: neither that old peak nor the trace justifies flattening a
+helper or adding an inline-depth pragma.

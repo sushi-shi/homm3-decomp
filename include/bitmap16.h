@@ -123,10 +123,11 @@ public:
     DC_ADDRESS(0x01f124, 0x22)
     unsigned short* getMap(int x, int y)
     {
-        // Bitmap16.h:151 (dc 0x1f124): pitch advances bytes, x advances
-        // unsigned-short pixels. Preserve that typed view directly.
+        // Bitmap16.h:151 (dc 0x1f124): add the byte row stride, then
+        // the pixel offset. Retail's retained body has the same order.
         return reinterpret_cast<unsigned short*>(
-            reinterpret_cast<unsigned char*>(m_map) + y * m_pitch) + x;
+            reinterpret_cast<unsigned char*>(m_map) + y * m_pitch
+            + x * sizeof(*m_map));
     }
 
     // DC Bitmap16.h:156-157 has the same one-expression pixel address:

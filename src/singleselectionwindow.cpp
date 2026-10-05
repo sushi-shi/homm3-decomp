@@ -3793,7 +3793,7 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
             int displayFace = getDisplayFace(gamePos);
             const char* faceName = getHeroName(gamePos);
             if (displayFace != -1) {
-                hero* theHero = g_game->getHero(heroId);
+                hero* theHero = &g_game->getHeroReference(heroId);
                 CHeroDlg dlg(!m_saveMode && !m_loadMode);
                 dlg.createWin(m_heroPix[displayFace], faceName,
                               m_heroSpecificAbility, heroId,
@@ -3826,7 +3826,7 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
             } else {
                 int heroId = getHeroInPos(gamePos);
                 if (heroId != -1) {
-                    hero* theHero = g_game->getHero(heroId);
+                    hero* theHero = &g_game->getHeroReference(heroId);
                     CHeroDlg dlg(!m_saveMode && !m_loadMode);
                     dlg.createWin(m_heroPix[displayFace],
                                   getHeroName(gamePos),

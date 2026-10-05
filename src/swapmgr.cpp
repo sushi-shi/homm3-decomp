@@ -1540,9 +1540,14 @@ CHeroUpdateMsg::~CHeroUpdateMsg()
 // reach 83.6259%/83.4984%, below 84.0502%. Canonical helper order is retained.
 // Fresh native-call review at 86.81%: the apparent main/$L inliner
 // differences are EH funclet labels. The remaining extra call is sprintf:
-// Complete shares the left/right experience-format tail, whereas Mac keeps
+// Complete shares the right experience/mana sprintf tail, whereas Mac keeps
 // all four experience/mana sprintf sites. Complete also shares the expired
 // return with the final ExitSwapManager tail; DC explicitly returns at 1245.
+// Mac 0x1a809c/0x1a8338 and retail preserve each level across
+// getExperience. Case-owned level snapshots recover 86.81 -> 98.33,
+// including natural shared exits, with existing interfaces unchanged.
+// Mac 0x1a7fa4 (left count) precedes 0x1a7fd8 (right icon),
+// as retail does; retain that complete guarded case order.
 VA(0x005afdf0, 0xABB)
 DC_ADDRESS(0x15d4ac, 0x986)
 MAC_ADDRESS(0x1a7954, 0xdc0)  // full retail dispatcher + DC dossier
@@ -1788,23 +1793,6 @@ int swapManager::main(message& msg)
                     }
                     break;
 
-                case kSwapRolloverRightArmy0:
-                case kSwapRolloverRightArmy1:
-                case kSwapRolloverRightArmy2:
-                case kSwapRolloverRightArmy3:
-                case kSwapRolloverRightArmy4:
-                case kSwapRolloverRightArmy5:
-                case kSwapRolloverRightArmy6:
-                    if (g_heroScreenDraggedArtifact.m_artifactId
-                        == ARTIFACT_NONE)
-                    {
-                        handleMonster(
-                            1, msg.m_codeY - kSwapRolloverRightArmy0,
-                            rightMouse, shift);
-                        sendHeroUpdate();
-                    }
-                    break;
-
                 case kSwapRolloverLeftArmyCount0:
                 case kSwapRolloverLeftArmyCount1:
                 case kSwapRolloverLeftArmyCount2:
@@ -1818,6 +1806,23 @@ int swapManager::main(message& msg)
                         handleMonster(
                             0, msg.m_codeY - kSwapRolloverLeftArmyCount0,
                                       rightMouse, shift);
+                        sendHeroUpdate();
+                    }
+                    break;
+
+                case kSwapRolloverRightArmy0:
+                case kSwapRolloverRightArmy1:
+                case kSwapRolloverRightArmy2:
+                case kSwapRolloverRightArmy3:
+                case kSwapRolloverRightArmy4:
+                case kSwapRolloverRightArmy5:
+                case kSwapRolloverRightArmy6:
+                    if (g_heroScreenDraggedArtifact.m_artifactId
+                        == ARTIFACT_NONE)
+                    {
+                        handleMonster(
+                            1, msg.m_codeY - kSwapRolloverRightArmy0,
+                            rightMouse, shift);
                         sendHeroUpdate();
                     }
                     break;
@@ -1867,9 +1872,9 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
+                        int level = m_heroes[0]->m_level;
                         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
-                                m_heroes[0]->m_level,
-                                hero::getExperience(m_heroes[0]->m_level + 1),
+                                level, hero::getExperience(level + 1),
                                 m_heroes[0]->m_experience);
                         normalDialog(
                             g_text,
@@ -1938,9 +1943,9 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
+                        int level = m_heroes[1]->m_level;
                         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
-                                m_heroes[1]->m_level,
-                                hero::getExperience(m_heroes[1]->m_level + 1),
+                                level, hero::getExperience(level + 1),
                                 m_heroes[1]->m_experience);
                         normalDialog(
                             g_text,

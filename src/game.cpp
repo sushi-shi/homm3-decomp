@@ -342,7 +342,6 @@ const int g_productionArtifactEndlessSackOfGold = 0x73;
 const int g_productionArtifactEndlessBagOfGold = 0x74;
 const int g_productionArtifactEndlessPurseOfGold = 0x75;
 const int g_productionArtifactCornucopia = 0x8c;
-const int g_productionCreatureCrystalDragon = 0x85;
 const int g_gameDifficultyEasy = 0;
 const int g_gameDifficultyExpert = 3;
 const int g_gameDifficultyImpossible = 4;
@@ -657,13 +656,8 @@ void game::calculateProduction()
 
         // Mac calculateProduction calls the mutable getArmy at 0xcac1c.
         // Windows folds both overload bodies at 0x5c1460.
-        {
-            int storage;
-            storage = g_productionCreatureCrystalDragon;
-            if (currentTown.getArmy()
-                    .getCreatureTotal(TCreatureType(storage)) > 0)
-                crystalDragonIncome[currentTown.m_owner] = 1;
-        }
+        if (currentTown.getArmy().getCreatureTotal(CREATURE_CRYSTAL_DRAGON) > 0)
+            crystalDragonIncome[currentTown.m_owner] = 1;
 
         if (currentTown.m_type == TOWN_RAMPART && m_day == 1) {
             if (currentTown.hasBuilding(EXTRA_1_ID, true))
@@ -700,12 +694,8 @@ void game::calculateProduction()
         const hero& currHero = m_heroes[i];
         if (currHero.m_owner == -1)
             continue;
-        {
-            int storage;
-            storage = g_productionCreatureCrystalDragon;
-            if (currHero.m_army.getCreatureTotal(TCreatureType(storage)) > 0)
-                crystalDragonIncome[currHero.m_owner] = 1;
-        }
+        if (currHero.m_army.getCreatureTotal(CREATURE_CRYSTAL_DRAGON) > 0)
+            crystalDragonIncome[currHero.m_owner] = 1;
         long (&production)[NUM_RESOURCES] =
             m_players[currHero.m_owner].m_ai.m_turnProductionResource;
         if (g_heroSpecificAbilities[i].m_type == eHeroAbilityResource) {
@@ -2050,7 +2040,7 @@ int game::getNewBoatId()
 VA(0x004bb250, 0x1AA)
 DC_ADDRESS(0x0a6690, 0x12c)
 MAC_ADDRESS(0x0ce070, 0x158)
-int game::createBoat(int x, int y, int z, int owner, unsigned char isRemoteMove, signed char type)
+int game::createBoat(int x, int y, int z, int owner, bool isRemoteMove, signed char type)
 {
     int id = getNewBoatId();
     if (id == -1)
@@ -2195,12 +2185,14 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 // video state, alignment and the two Conflux counts in this order. A named
 // version snapshot and a separately nested version guard are VC6-flat;
 // why-reg v2 also leaves the six scratch-register rows unchanged.
+// Original public returns THeroID and takes bool prefer_alignment (_N).
+// Complete adds player lookup and preferredClass but keeps those domains.
 VA(0x004bb5e0, 0x282)
 DC_ADDRESS(0x0a6cd4, 0x2fe)
 MAC_ADDRESS(0x0ce398, 0x78c)  // anchor-global
-int game::getNewHeroId(int playerPos, THeroClass excluded,
-                       unsigned char preferAlignment,
-                       THeroClass preferredClass)
+HeroId game::getNewHeroId(int playerPos, THeroClass excluded,
+                          bool preferAlignment,
+                          THeroClass preferredClass)
 {
     THeroClass heroClass;
     long totalCount;
@@ -2213,11 +2205,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
 
     totalCount = 0;
 
-    int alignment;
-    if (playerPos >= 0)
-        alignment = m_setup.m_alignment[playerPos];
-    else
-        alignment = -1;
+    TTownType alignment = getPlayerAlignment(playerPos);
 
     ZeroMemory(counts, sizeof(counts));
     for (heroClass = classKnight; heroClass < kNumHeroClasses;
@@ -2235,7 +2223,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     }
 
     if (totalCount == 0)
-        return -1;
+        return heroIdNone;
 
     for (heroClass = classKnight; heroClass < kNumHeroClasses;
          heroClass = THeroClass(heroClass + 1)) {
@@ -2301,7 +2289,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
             return heroId;
         }
     }
-    return -1;
+    return heroIdNone;
 }
 
 VA(0x004bb870, 0x89)
@@ -2657,11 +2645,10 @@ bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
 }
 
 // E:\gamedcs\game.cpp:2716; original save_vector / src_vector.
-// Mac stages a signed-short count before the contiguous element payload.
-// Windows writes the low half of an int count directly: this spelling is
-// exact for all three retained instances (0x4d2ac0/0x4d2b20/0x4d2b80, the
-// short+writeValue form scores 69.26/71.47), and its IL cost keeps the
-// retail call boundaries in game::save.
+// DC's count local and Mac's staged value are signed short. With direct
+// stream writes, that type preserves all retained Windows instances and
+// game::save. The earlier short+writeValue probe changed both the local and
+// the call boundary; its loss did not establish an int local in retail.
 // The guarded return reproduces both retained 96-byte writers exactly,
 // including SETAE. Direct boolean/byte-local returns instead use SBB/INC;
 // that spelling difference does not refute the DC bool/reference signature.
@@ -2674,11 +2661,10 @@ DC_ADDRESS(0x0c1e58, 0x84)
 DC_ADDRESS(0x0c1edc, 0x88)
 bool saveVector(TAbstractFile* outfile, std::vector<T>& srcVector)
 {
-    int count = srcVector.size();
-    if (outfile->write(&count, sizeof(short)) < sizeof(short))
+    short count = srcVector.size();
+    if (outfile->write(&count, sizeof(count)) < sizeof(count))
         return false;
-    if (outfile->write(&srcVector[0], static_cast<short>(count) * sizeof(T))
-        < static_cast<short>(count) * sizeof(T))
+    if (outfile->write(&srcVector[0], count * sizeof(T)) < count * sizeof(T))
         return false;
     return true;
 }
@@ -3716,10 +3702,11 @@ void game::giveTroopsToNeutralTowns()
 // return for valid ownership. This removes both remaining joins at 90.0315%
 // with the full contribution and all relocation names/addends unchanged.
 // The earlier failure scopes used break and do not predict this lowering.
+// Original public ?ValidateVictoryLossConditions@game@@QAAX_N@Z proves bool.
 VA(0x004bf780, 0x6E2)
 DC_ADDRESS(0x0aa7e0, 0x5c4)
 MAC_ADDRESS(0x0d513c, 0x960)  // order-map + whole-function identity
-void game::validateVictoryLossConditions(unsigned char checkMapLocations)
+void game::validateVictoryLossConditions(bool checkMapLocations)
 {
     signed char victoryType = m_mapHeader.m_victoryCondition.m_type;
     if (victoryType == VICTORY_CONDITION_ARTIFACT
@@ -6330,7 +6317,8 @@ int NewSMapHeader::save(TAbstractFile* outfile)
     int i;
     unsigned char ucharBuffer;
     char boolBuffer;
-    char sbyteBuffer;
+    // DC NewSMapHeader::Save records sbyte_buffer as signed char.
+    signed char sbyteBuffer;
 
     if (outfile->write(&m_version, sizeof(m_version)) < sizeof(m_version))
         return -1;
@@ -6721,7 +6709,7 @@ int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
 VA(0x004c61e0, 0x4A8)
 DC_ADDRESS(0x0b1230, 0x518)
 MAC_ADDRESS(0x0dc98c, 0x3dc)
-void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove, unsigned char checkEndGame)
+void game::claimTown(int townId, int newPlayerOwner, bool isRemoteMove, bool checkEndGame)
 {
     town* thisTown = &m_towns[townId];
     long oldOwner = thisTown->m_owner;
@@ -6859,7 +6847,9 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
 // it; int/long owner snapshots lower it. why-branch loop rotations also leave
 // the structural residual unchanged (25/29 blocks, same five call sites; the
 // vector insert target is the native folded point/pointer alias). Preserve
-// operator== rather than the historical flattened comparison.
+// operator== rather than the historical flattened comparison. Reversing its
+// operands or negating its difference chain is also flat: six coupled
+// helper/caller states produce two objects at72.1173%.
 // DC 7473/7475/7481/7498 reads and writes the cell's shipyard owner directly.
 // Use its inherited union member, without a cast-through-void pointer alias;
 // this restores the native access model at the same Windows matching score.
@@ -7051,6 +7041,8 @@ void game::turnOffAIMusic()
 // before the watch player. Together these recover Windows 89.3660 -> 99.9789
 // with all 114 CFG blocks and 167 relocations agreeing; byte scratch homes
 // remain different. All game sibling CUR and available Mac scores are flat.
+// TransmitSaveGame takes bool. Keeping makeOrig Boolean preserves retail
+// caller promotion; a byte local inserts a normalization (96.9940 vs99.9563).
 VA(0x004c6fe0, 0x947)
 DC_ADDRESS(0x0b1fd0, 0xb04)
 MAC_ADDRESS(0x0dd7dc, 0x89c)  // dc-name/order + retail caller/callee/body
@@ -7062,7 +7054,7 @@ void game::nextPlayer()
     unsigned char lastWasHuman;
     int giCurPlayerSave;
     int save;
-    unsigned char makeOrig;
+    bool makeOrig;
 
     m_mapHeader.m_victoryCondition.checkForArtifactWin();
     m_mapHeader.m_victoryCondition.checkForTotalCreatures();
@@ -7513,14 +7505,14 @@ void game::perDay()
 
 // Original: game::clear_recruits; game.cpp:8266
 // DC 8266/8290 and Mac 0xdeefc/0xdef98 place these two helpers between
-// perDay and setWeeklyRecruits. DC names the long loop index recruit and
-// the selected hero pointer old_hero.
+// perDay and setWeeklyRecruits. DC names the long loop index recruit,
+// THeroID hero_id and the selected hero pointer old_hero.
 DC_ADDRESS(0x0b3d8c, 0x74)
 MAC_ADDRESS(0x0deefc, 0x9c)
 void game::clearRecruits(int* recruits)
 {
     for (long recruit = 0; recruit < 2; ++recruit) {
-        int heroId = recruits[recruit];
+        HeroId heroId = HeroId(recruits[recruit]);
         if (heroId >= 0) {
             hero* oldHero = getHero(heroId);
             if (oldHero->m_flags & g_heroRecruitReservedFlag)
@@ -7957,11 +7949,14 @@ void game::perMonth()
 // The shared in-class dereference exposes that nested constructor to CW.
 // Native 0xdff14..0xdff6c constructs the end first, then adds CREATURE_PIXIE
 // to a zero-offset iterator; its fill loop reads a referenced false value.
-// Keep the canonical iterator addition and fill helpers. The by-value
-// addition replaces the provisional fromOffset factory, raising Windows
-// 85.54% to 85.96% with two extra inequality calls remaining. A const
-// member-copy addition reaches 84.72%; no native declaration distinguishes
-// their placement. Complete's range has no counterpart in the older DC body.
+// Keep the canonical iterator addition and fill helpers. By-value addition
+// and the symmetric const-reference comparison reproduce the native fill
+// loop, including its retained dereference and proxy assignment calls.
+// Six comparison interfaces produced six reproduced objects; the free
+// logical-OR comparison reaches 99.0237%, versus 85.9586% for the member.
+// The remaining count-to-random-bound move/decrement is a separate source
+// lead. No native declaration distinguishes free/member placement, and
+// Complete's range has no counterpart in the older DC body.
 VA(0x004c92c0, 0x202)
 DC_ADDRESS(0x0b4b58, 0x12a)
 MAC_ADDRESS(0x0dfed4, 0x398)  // MAC_ABSTRACTION_FROM(tokens1:38ec85859b6c,28.1385): native iterator addition replaces the provisional fromOffset factory; by-value temporary copies shift CW stack and register allocation.
@@ -8963,11 +8958,13 @@ void game::processOnMapHeroes()
 // Preserve this native indexing despite its unusual broadcast behavior.
 // These lifetime/receiver corrections raise Windows 92.7077 -> 97.4264;
 // all 122 CFG blocks, 101 call entries and 172 relocations now agree.
+// Original public ends HH_N0: inGame and makeOrig are bool. The related
+// isDiff Boolean-local probe is byte-flat; keep its existing byte domain.
 VA(0x004cafd0, 0xD14)
 DC_ADDRESS(0x0b7560, 0x1064)
 MAC_ADDRESS(0x0e2414, 0xd20)  // retail body + typed catch + continuation/tables
 int game::transmitSaveGame(int toWho, int thisPlayerDead,
-                           unsigned char inGame, unsigned char makeOrig)
+                           bool inGame, bool makeOrig)
 {
     CNetMsgHandlerPause netMsgHandlerPause;
     g_advManager->trimLoopingSounds(4);

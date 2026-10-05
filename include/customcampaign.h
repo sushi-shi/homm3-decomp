@@ -456,6 +456,9 @@ public:
     virtual bool slot12(const TCampaignBrief::ScenarioStruct* scenario, int value) const;
 
     std::vector<TCampaignCrossoverChoice> m_choices;
+
+private:
+    int getCrossoverSlot(const SCampaign& campaign, int which) const;
 };
 SIZE(TCampaignStartCrossoverOption, 0x14);
 

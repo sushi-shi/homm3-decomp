@@ -964,12 +964,9 @@ void TCampaignBrief::doModal()
 // every retained operation below is independently present in the x86 CFG.
 // Structural checkpoint: the flash prefix is 23/23 CFG blocks exact, and
 // retaining widget::set_visible reproduces the retail bonus-choice branch.
-// The remaining excess blocks are Dinkumware lowering inside the region
-// string assignment and NewSMapHeader construction/destruction: this build
-// expands assign/vector/tree bodies which retail retains, while expanding a
-// three-argument `text.assign(...)` spelling was a negative control (132
-// blocks, 78.07%). Keep the DC-proven operator= source fact and recover the
-// surrounding natural inline state; do not flatten or pin these boundaries.
+// Native region-text assignment is now represented. The remaining constructor/
+// destructor expansions belong to NewSMapHeader's canonical header body;
+// preserve those boundaries rather than flattening or pinning library calls.
 VA(0x0045b1e0, 0x8DB)
 DC_ADDRESS(0x05a324, 0x824)
 MAC_ADDRESS(0x0679f0, 0x838)  // DoModal address-take + full retail CFG
@@ -1038,20 +1035,14 @@ static int campaignBriefHandler(message& msg)
                 int helpID = brief->convertID2HelpID(id);
                 if (helpID >= 0) {
                     if (helpID < 100) {
-                        // Retail FuncInfo 0x64a5e0 states 0/1 (strings at
-                        // ebp-0x38/-0x48, the second nested in the first)
-                        // and Mac's 264(SP)-inside-992(SP) string chain both
-                        // prove a default-constructed text assigned from the
-                        // returned temporary (retail 0x45b46a..0x45b4a6 calls
-                        // assign(str, 0, npos) at 0x404860). That form
-                        // reproduces all ten retail EH states but falls to
-                        // 82.12%: VC6 admits the three-argument assign (cb
-                        // 307) at depth-3 budget 308 (2468 / 8 remaining),
-                        // which retail refuses, so 13 more units of earlier
-                        // spending or 7 fewer caller IL units are still
-                        // missing. Copy-initialization stays until then.
-                        std::string text =
-                            brief->m_campaign->m_scenarios[helpID]
+                        // Retail FuncInfo 0x64a5e0 and Mac 0x67ccc..0x67d5c
+                        // prove default text construction, assignment from the
+                        // returned region-description temporary, then its dtor.
+                        // Restoring that full expression improves Windows
+                        // 86.3865 -> 91.0541 in the current source context;
+                        // old 82.12% assignment probes used an earlier context.
+                        std::string text;
+                        text = brief->m_campaign->m_scenarios[helpID]
                                 ->getRegionDescription();
                         normalDialog(text.c_str(), 4, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);

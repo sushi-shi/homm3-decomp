@@ -666,11 +666,19 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
     // DC records powX/powY, numFrames, iFrameColor, ulx and hex_off as int.
     // Restoring the latter four local types is Windows byte-flat at 99.18%.
     // Delaying the step initializer until after facing selection is worse.
-    // Current 99.1724% controls: moving offset declarations ahead of step,
+    // Earlier 99.1724% controls: moving offset declarations ahead of step,
     // naming a facing snapshot, and narrowing powX/powY to the effect scope
     // are byte-flat. The residual starts with the count-box step/facing
     // scratch-register assignment, then the karma denominator's spill slot
     // and effect-coordinate register selection; branch flows remain exact.
+    // DC 0x44d0c and Mac 0x4a570 bypass coordinate assignments outside
+    // placement modes 0..3. Removing the invented powX = powY = x fallback
+    // raises Windows 99.1724 -> 99.5839%; the whole effect-placement tail,
+    // including retail's two recycled [ebp+8] default loads, now agrees.
+    // Known army-target effects use modes 0..3; other modes describe hex,
+    // projectile or tiled effects. The generic API does not enforce that
+    // domain, so malformed army-effect coordinates remain unspecified.
+    // Keep the native switch rather than inventing a fallback initialization.
     int powX;
     int powY;
     if (g_combatManager->m_battleOver != 0)
@@ -860,18 +868,6 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
                 if (m_facing == 0)
                     powX -= g_combatManager->m_powSprite->getWidth();
                 powY = midY() - g_combatManager->m_powSprite->getHeight() / 2;
-                break;
-            default:
-                // Retail reads the recycled flags slot [ebp+8] for BOTH
-                // coordinates here. Mac 0x4a570 and DC 0x44d0c bypass all
-                // coordinate assignments for modes outside 0..3. The
-                // table's modes 4/15 serve hex, projectile and tiled effects;
-                // known army-target callers use 0..3, but the generic army
-                // effect API has no placement guard. Keep the retail fallback
-                // until its source contract is resolved; the other platforms'
-                // unassigned coordinates do not establish Windows behavior.
-                powX = x;
-                powY = x;
                 break;
             }
             g_combatManager->drawSpellEffect(

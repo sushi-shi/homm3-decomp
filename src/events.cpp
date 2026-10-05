@@ -406,7 +406,7 @@ void advManager::doEvent(NewmapCell* eventCell, type_point point)
 
 // E:\gamedcs\events.cpp:5179
 // RETAIL_LOCATED(0x004aabb0, 0x239)  // anchor-global, dc 0x99bac
-void advManager::eraseObj(NewmapCell* thisCell, type_point point, unsigned char record)
+void advManager::eraseObj(NewmapCell* thisCell, type_point point, bool record)
 {
     // @stub
 }
@@ -1348,13 +1348,17 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     bool joinDialogNeeded = false;
     armyGroup newCreatures = blackBox->m_creatures;
     // The retail loop-back uses signed jl; an unsigned index emits jb.
+    // DC events.cpp:1062 (0x91a02..0x91a08) stores the creature quantity
+    // into the same procedure-local long amount at sp+0x24 used for mana;
+    // 1069/1078/1081/1086 read that carrier. Reusing it here preserves the
+    // native model and improves the full Windows caller 95.28% -> 95.62%.
     for (int p = 0; p < 7; p++) {
         int type = newCreatures.m_armies[p];
-        int count = newCreatures.m_numTroops[p];
+        amount = newCreatures.m_numTroops[p];
         if (type == CREATURE_NONE)
             continue;
         if (humanPlayer) {
-            if (count == 1)
+            if (amount == 1)
                 alternate = formatString(
                     g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_CREATURE_JOINS_FORMAT),
                     getArmyName(type, 1), currentHero->m_name);
@@ -1363,14 +1367,14 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                     g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_CREATURES_JOIN_FORMAT),
                     getArmyName(type, 2), currentHero->m_name);
             addReward(msg, alternate, rewards, RES_MONSTER,
-                       ((count & 0xffff) << 16) | (type & 0xffff));
+                       ((amount & 0xffff) << 16) | (type & 0xffff));
         }
-        if (currentHero->m_army.add(type, count, -1)) {
+        if (currentHero->m_army.add(type, amount, -1)) {
             newCreatures.dismiss(p);
         } else if (humanPlayer) {
             joinDialogNeeded = 1;
         } else {
-            aiJoinDecision(currentHero, TCreatureType(type), count);
+            aiJoinDecision(currentHero, TCreatureType(type), amount);
         }
         rewardGiven = 1;
     }
@@ -5003,7 +5007,7 @@ VA(0x004aabb0, 0x239)
 DC_ADDRESS(0x099bac, 0x1ea)
 MAC_ADDRESS(0x0b7cbc, 0x230)
 void advManager::eraseObj(NewmapCell* thisCell, type_point point,
-                          unsigned char record)
+                          bool record)
 {
     int objectIndex = thisCell->m_objectTypeIndex;
     if (objectIndex == -1)

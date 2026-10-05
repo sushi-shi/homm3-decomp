@@ -38,19 +38,14 @@ static const int g_angelicAllianceCampaign = 18;
 static const int g_angelicAllianceFirstMap = 8;
 static const int g_angelicAllianceSecondMap = 9;
 
-// Native retains the campaign base across the special artifact-vector path.
-// The shared reference restores those +2/+4 member accesses; Windows remains
-// 86.10% versus the prior86.11%, with exact siblings unchanged.
-// DC line 41 names GetTeam and IsHumanTeam directly (no is_human_ally
-// row), and the explicit team local reproduces retail's expanded
-// guarded scan: 85.91 -> 99.59 over the isHumanAlly wrapper (2026-09-29).
-// The SCampaign reference and TArtifact element type are Windows
-// byte-flat against int&/signed char& and vector<int>. Residual: the
-// bitset<144>::test range throw at the tail. `vc6 predict-inline --trace`
-// gives test 153 at depth 1, _Xran 95, and the nested out_of_range ctor
-// (cost 58) only 30, so it stays a call where retail expands it and stores
-// out_of_range's vptr after logic_error's ctor; about 28 more depth-1
-// budget is missing and no evidenced statement supplies it.
+// Keep the campaign reference, native artifact-vector lifetime, and explicit
+// GetTeam/IsHumanTeam calls (DC line 41). The ordinary path rejects the wrong
+// condition, an absent current player, and a disabled player separately.
+// With those guard scopes VC6 expands out_of_range's constructor inside
+// bitset::test while retaining logic_error, matching retail +0x4c1. Joining
+// the guards emits the same game logic but leaves out_of_range out of line.
+// Component predicate spelling and discarding erase's result did not close
+// that boundary; the complete separated-guard body matches Windows exactly.
 // Original DC public CheckForArtifactWin@@QAA_NXZ proves a bool result;
 // the dossier's primitive 0x20 display is lowered-byte metadata.
 VA(0x005f1610, 0x4FE)
@@ -105,9 +100,11 @@ bool VictoryConditionStruct::checkForArtifactWin()
         return 0;
     }
 
-    if (m_type != VICTORY_CONDITION_ARTIFACT
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+    if (m_type != VICTORY_CONDITION_ARTIFACT)
+        return 0;
+    if (!g_currentPlayer)
+        return 0;
+    if (g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
     int team = g_game->getTeam(g_netLocalGamePos);
@@ -535,47 +532,24 @@ static const int g_lossHero149 = 0x95;
 static const int g_lossHero152 = 0x98;
 static const int g_lossPortrait146 = 0x92;
 
-// In campaign mode a per-campaign table of protected heroes (and, in
-// two campaigns, carried quest artifacts) loses the game immediately;
-// outside those arms the ordinary lose-hero condition compares ids.
-// Retail's ordinary tail rejects other loss types, then returns an id
-// comparison through al. A historical unsigned-char-result probe reproduced
-// its sete al epilogue without the wider bool-to-int temporary. Together with
-// the early loss-type rejection this improves MAX 75.8636 -> 82.0170
-// (2026-09-07). The older duplicated tail was compensating for the wrong
-// result lowering; it is not source evidence.
-// Retail +0x1b0 loads the combination-artifact table before initializing the
-// loop index and keeps the components reference across hasArtifact calls.
-// Re-subscripting the global on every iteration incorrectly reloads the table.
-// DC proves the const hero parameter, but its older campaign-3-only
-// implementation writes the loss state here. Complete performs those writes
-// in the following helper; do not import the older stores or entry type guard.
-// Controls: deleting only the duplicate tail 10.6676%; early guard with byte
-// result 81.8182%; components reference alone 76.0625%; both repairs 82.0170%.
-// On the combined source, direct bool return is 80.9943%, positive type-test
-// nesting with byte result 11.2784%; loop/arm-local declarations are byte-flat.
-// An else-if after the campaign-10 hero guard, a positive map-2/3/4 guard
-// around the shared artifact checks, and initializing the byte result at entry
-// also reproduce the same bytes at 82.0170%; none repairs return placement.
-// Residual: the type guard still sits after campaign 14 instead of after the
-// entire switch; several return-1 branches share different epilogues. The
-// candidate has 17 returns versus retail's 19; the artifact call sequence
-// agrees. Earlier polarity/goto/default/case-order controls did not resolve
-// that placement. No compiler-generation conclusion follows from this gap.
-// Use the proven const loser parameter directly: hasArtifact now retains its
-// DC hero.cpp:1422 const receiver, so the old mutable h alias and const_cast
-// are unnecessary. Legacy/const-alias/direct-parameter controls preserve all
-// executable bytes and reference targets across this TU, including nineteen
-// exact siblings. Their three object identities differ only in local label
-// and temporary numbering; none repairs the return layout at 82.0170%.
-// Mac keeps one campaign base pointer and retains map across the artifact
-// checks before independently admitting maps 2..4. Keep that lifetime rather
-// than borrowing the known-map fact from an else arm. Its component loop
-// assigns the index to r28 and the component reference to r29; a loop-local
-// index reproduces those homes. The full source model raises Mac to 55.6973%
-// (previous recorded peak 51.2799%); Windows 81.15% vs 82.02% is recovery debt.
-// Original DC public CheckForDefeatedHeroLoss@@QAA_NPBVhero@@@Z proves
-// bool and const hero*. The equality result follows that bool interface.
+// Campaign rules protect specific heroes and carried quest artifacts; the
+// ordinary lose-hero condition applies after those rules. DC's older body
+// writes the loss state here; Complete delegates those writes to heroKilled.
+// Original DC public CheckForDefeatedHeroLoss@@QAA_NPBVhero@@@Z proves bool
+// and const hero*. Keep that interface and the const hasArtifact calls.
+//
+// Mac 0x1feeb0..0x1ff25c retains one campaign base and keeps the map value
+// across the artifact calls before independently admitting maps 2, 3 and 4.
+// Retail +0x187/+0x18c compares maps 3 and 4 after the map-2 arm. Explicit
+// map equalities reproduce those tests; CodeWarrior folds them into the
+// native unsigned range check at 0x1ff044. Keep the component reference and
+// loop-local index: Mac assigns them r29 and r28 respectively.
+//
+// The final explicit ID branch and constant returns reproduce all retail
+// epilogues. Returning the comparison through a bool local changes merging
+// throughout the campaign switch (17 returns instead of retail's 19).
+// This is ordinary Boolean control flow, also present in DC lines 488..491;
+// it preserves the Complete separation between checking and recording loss.
 // E:\gamedcs\victorylossconditions.cpp:463
 VA(0x005f2a40, 0x3C8)
 DC_ADDRESS(0x1906d4, 0x78)
@@ -629,7 +603,7 @@ bool LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
                     || loser->hasArtifact(ARTIFACT_SWORD_OF_HELLFIRE))
                     return 1;
             }
-            if (map >= g_map2 && map <= g_map4) {
+            if (map == g_map2 || map == g_map3 || map == g_map4) {
                 if (loser->hasArtifact(ARTIFACT_ANGELIC_ALLIANCE))
                     return 1;
                 const std::bitset<144>& components =
@@ -694,8 +668,9 @@ bool LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
     }
     if (m_type != LOSS_CONDITION_LOSE_HERO)
         return 0;
-    bool defeated = loser->m_id == m_heroId;
-    return defeated;
+    if (loser->m_id == m_heroId)
+        return 1;
+    return 0;
 }
 
 VA(0x005f2e10, 0x2F)

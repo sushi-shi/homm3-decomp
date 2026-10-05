@@ -241,7 +241,7 @@ void CSprite::drawAdvObjWithFlag(int framenum, int sx, int sy, int sw,
                                  int sh, unsigned short* dst, int dx, int dy,
                                  int dw, int dh, int dpitch,
                                  unsigned short outcolor,
-                                 unsigned char hflip) const
+                                 bool hflip) const
 {
     m_s[0]->m_f[framenum]->drawAdvObjWithFlag(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, outcolor, hflip);
@@ -307,8 +307,8 @@ DC_ADDRESS(0x072bd8, 0x8c)
 MAC_ADDRESS(0x08ac2c, 0x94)  // sequence zero + tile-shadow forwarding
 void CSprite::drawTileShadow(int framenum, int sx, int sy, int sw, int sh,
                              unsigned short* dst, int dx, int dy, int dw,
-                             int dh, int dpitch, unsigned char hflip,
-                             unsigned char vflip) const
+                             int dh, int dpitch, bool hflip,
+                             bool vflip) const
 {
     m_s[0]->m_f[framenum]->drawTileShadow(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, vflip);
@@ -319,8 +319,8 @@ DC_ADDRESS(0x072c64, 0xac)
 MAC_ADDRESS(0x08acc0, 0xe4)  // paired tile + shadow calls on one selected frame
 void CSprite::drawShroudTile(int framenum, int sx, int sy, int sw, int sh,
                              unsigned short* dst, int dx, int dy, int dw,
-                             int dh, int dpitch, unsigned char hflip,
-                             unsigned char vflip) const
+                             int dh, int dpitch, bool hflip,
+                             bool vflip) const
 {
     m_s[0]->m_f[framenum]->drawShroudTile(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, vflip);
