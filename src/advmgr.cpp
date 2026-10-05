@@ -1392,7 +1392,10 @@ bool saveGame(bool campaignWinMode);
 // The jump table preserves the source arm order, including the clockwise
 // keypad directions. DC1711..1764 places those arms before the other commands,
 // then DC1890..1928 places movement after the switch, guarded by moveDir.
-// VC6 threads the keypad breaks into that tail; no shared-body goto is needed.
+// DC1718..1722 and Mac 0x93e4..0x9520 join scrolling and direction assignment
+// before the keypad break. Other command arms also break to the final guard.
+// Together these native joins restore VC6's delayed register saves and exact
+// return sequences; separate early returns change them.
 // DC1898 constructs walkTrigger inside ValidMove's successful arm before
 // HideRoute, with no additional lifetime block. Keep GetCurrHero, HideRoute,
 // Reseed and CheckDimHero as canonical calls.
@@ -1438,71 +1441,71 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
 
         type_point eventPoint = currHero->getLocation();
         doEvent(standingOn, eventPoint);
-        return 1;
+        break;
     }
 
     case KEYCODE_KP_8:
         if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(0, 0);
-            return 1;
+        } else {
+            moveDir = 0;
         }
-        moveDir = 0;
         break;
 
     case KEYCODE_KP_9:
         if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(1, 0);
-            return 1;
+        } else {
+            moveDir = 1;
         }
-        moveDir = 1;
         break;
 
     case KEYCODE_KP_6:
         if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(2, 0);
-            return 1;
+        } else {
+            moveDir = 2;
         }
-        moveDir = 2;
         break;
 
     case KEYCODE_KP_3:
         if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(3, 0);
-            return 1;
+        } else {
+            moveDir = 3;
         }
-        moveDir = 3;
         break;
 
     case KEYCODE_KP_2:
         if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(4, 0);
-            return 1;
+        } else {
+            moveDir = 4;
         }
-        moveDir = 4;
         break;
 
     case KEYCODE_KP_1:
         if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(5, 0);
-            return 1;
+        } else {
+            moveDir = 5;
         }
-        moveDir = 5;
         break;
 
     case KEYCODE_KP_4:
         if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(6, 0);
-            return 1;
+        } else {
+            moveDir = 6;
         }
-        moveDir = 6;
         break;
 
     case KEYCODE_KP_7:
         if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(7, 0);
-            return 1;
+        } else {
+            moveDir = 7;
         }
-        moveDir = 7;
         break;
 
     case KEYCODE_D:
@@ -1511,15 +1514,15 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
         if (!g_game->getCurrHero())
             break;
         processSearch(-1, -1, -1);
-        return 1;
+        break;
 
     case KEYCODE_P:
         viewPuzzle();
-        return 1;
+        break;
 
     case KEYCODE_V:
         viewWorld(0, eMasteryNone);
-        return 1;
+        break;
 
     case KEYCODE_N:
         if (g_game->isMultiplayer())
@@ -1532,7 +1535,7 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
             break;
         exitFlag = 1;
         g_gameCommand = SYSOPT_COMMAND_101;
-        return 1;
+        break;
 
     case KEYCODE_L:
         if (g_game->isMultiplayer())
@@ -1543,7 +1546,7 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
             break;
         exitFlag = 1;
         g_gameCommand = SYSOPT_COMMAND_102;
-        return 1;
+        break;
 
     case KEYCODE_ESCAPE:
         videoPause();
@@ -1554,11 +1557,11 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
             break;
         exitFlag = 1;
         g_gameCommand = SYSOPT_COMMAND_108;
-        return 1;
+        break;
 
     case KEYCODE_S:
         saveGame(0);
-        return 1;
+        break;
 
     case KEYCODE_I:
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
@@ -1571,7 +1574,7 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
             break;
         g_gameCommand = SYSOPT_QUIT;
         exitFlag = 1;
-        return 1;
+        break;
 
     case KEYCODE_T: {
         int townId = localPlayer->nextTown();
@@ -1580,26 +1583,26 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
         if (!waitingPlayer)
             hideRoute(1, 0, 1);
         setTownContext(townId, waitingPlayer, 1);
-        return 1;
+        break;
     }
 
     case KEYCODE_ENTER:
         if (localPlayer->m_currTownId != -1) {
             m_advCommand = ADV_COMMAND_VIEW_TOWN;
             doAdvCommand(triggerPoint);
-            return 1;
+            break;
         }
         if (localPlayer->m_currHeroId == -1)
             break;
         if (m_curHeroMobile) {
             m_advCommand = ADV_COMMAND_VIEW_HERO;
             doAdvCommand(triggerPoint);
-            return 1;
+            break;
         }
         if (!waitingPlayer)
             hideRoute(1, 0, 1);
         setHeroContext(localPlayer->m_currHeroId, 0, waitingPlayer, 1);
-        return 1;
+        break;
 
     default:
         break;
