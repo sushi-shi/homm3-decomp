@@ -1053,6 +1053,8 @@ void searchArray::setMoat(const army* currentArmy)
 
 // E:\gamedcs\findpath.cpp:1136 DC 1143/1165 test the result
 // vector's own size, and retail's expansion compares it unsigned (seta).
+// DC1143 tests an ordinary army's result vector before the side==-1
+// destination check at1147; retain that branch order.
 DC_ADDRESS(0x0a0970, 0xd4)
 MAC_ADDRESS(0x0c6bd8, 0x170)
 bool searchArray::buildCombatPath(const army* currentArmy,
@@ -1060,10 +1062,10 @@ bool searchArray::buildCombatPath(const army* currentArmy,
 {
     if (!combatManager::validHex(destination))
         return 0;
-    if (currentArmy->m_side == -1) {
-        if (endHex != destination)
+    if (currentArmy->m_side != -1) {
+        if (m_result.size() == 0)
             return 0;
-    } else if (m_result.size() == 0) {
+    } else if (endHex != destination) {
         return 0;
     }
 
@@ -1083,10 +1085,8 @@ void searchArray::markEnemy(long hex, long cost)
 {
     hexcell* combatCell = &g_combatManager->m_cells[hex];
     pathCell* cell = getHex(hex);
-    if (combatCell->m_validMove) {
-        if (cell->m_cost <= cost)
-            return;
-    }
+    if (combatCell->m_validMove && cell->m_cost <= cost)
+        return;
     combatCell->m_validMove = 1;
     cell->m_cost = static_cast<unsigned short>(cost);
 }
@@ -1118,67 +1118,30 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 }
 
 // E:\gamedcs\findpath.cpp:1218
-// THE SIEGE-PRESSURE PREAMBLE is the only part of this body that is not
-// a plain Dijkstra. It fires only while a town is defending AND the
-// acting stack is computer-driven (is_computer_action, landed in
-// command.obj), and it decides whether a stack that CANNOT FIT on a hex,
-// or that is moat-slowed there, may still press the attack. Both
-// hit-point comparisons re-read the whole
-// gpCombatManager->defendingTown->type chain and re-call
-// get_total_hit_points rather than caching either - transcribed
-// faithfully. The second comparison's `siege_pressure &&` guard is
-// invisible in the bytes on the path where the first comparison has just
-// set the flag, which is exactly the retail branch layout.
-
-// Whole-TU controls (2026-09-09), see the helper/accessor family generators:
-// removing the three budget-only helpers and the duplicate mark helper
-// while restoring the real private declarations initially gave 60.0911%
-// (nested mark guard). That is incomplete source recovery, not contrary
-// evidence. Restoring Is/get_owning_side, OffsetToFront/get_spell_time,
-// ValidHex at its actual helper boundary, and const get_hex brings
-// FindCombatPath from the old 87.9780% to 90.2669%; every other tracked
-// findpath function is score-flat, including mark_teleport at 100%.
-// The compound mark guard instead of the DC nested return gives 88.6656%.
-// Omitting the geometry accessors gives 84.7692%; omitting ValidHex's
-// recovered boundary gives 74.6845%. Keep the positive helper/accessor
-// evidence through those isolated score dips.
-
-// Retail calls the 0x4b3b90 cell accessor at +0x42f, +0x481, +0x53e, +0x590,
-// within check_enemy_armies' four mark expansions, not at the found block
-// or build_combat_path's tail walk. It calls vector<pathCell*>::insert at
-// +0x672 and +0x734; source calls push_back, whose retained/expanded child
-// decision must be recovered without spelling insert in its caller.
-// Earlier artificial preamble extractions and a pinned second mark body
-// reached 87.9780%; they do not establish original source boundaries.
-
-// The current direction is the search result: both check_enemy_armies
-// successes break the six-direction scan, and direction < 6 admits the
-// shared reached-cell block. Under the restored canonical helpers this
-// removes three gotos and improves 90.2669% to 92.2920%. Direction != 6
-// reaches 92.2779%; a separate bool/byte/int found flag stays at 90.2669%.
-// is_moat(short) preserves the retail 16-bit neighbour arithmetic.
-// The six differently named call references are folded template aliases:
-// pointer copy (37 B), both empty vector destructors (3 B), and pointer
-// insertion (521 B) match the retail int/type_artifact/widget-labelled
-// bodies byte-for-byte after relocation, including their callee references.
-
-// Native caller ownership: DC best_dist/end_hex/move_cost are int;
-// move_cost is the one-step increment at a0e64/a0ea8, not pc.m_cost.
-// Retail's queue-copy block reloads this and m_queue's end before copying
-// pc; Mac c7140 similarly reloads m_queue storage through this. Remove the
-// score-derived rQueue reference and keep canonical clear/size/back/pop_back
-// on the owning member. This restores the retail copy/cost/distance blocks
-// and improves 92.2606% to 94.5290%; the retained pc lifetime is unchanged.
-// Mac c7290..c72c8 expands offsetToFront twice: hex's front is computed
-// before the adjacent front and both precede the moat tests. Preserve those
-// two canonical calls and coordinate owners rather than sharing a sideStep
-// result. This native source recovery is Windows-byte-flat at 94.5290%.
-// Remaining first structural delta is the double-wide moat/flight-cost
-// register allocation; the three differing call names are the previously
-// reviewed pointer-copy and pointer-vector insertion aliases above.
-
-// Candidate /Z7 labels are candidate-only, and aggregate call counts or
-// unclaimed synthetic labels do not prove a missing source statement.
+// The siege-pressure preamble is retail-only: defending-town computer
+// stacks compare total HP against moat damage and may press blocked cells.
+// Preserve the repeated town/type and getTotalHitPoints reads.
+//
+// DC1325..1333 and Mac c73c0..c74d8 share a successful enemy condition,
+// update the reached pathCell inside it, then break the direction loop.
+// There is no post-loop direction test. The canonical markEnemy calls use
+// the combined early-return guard recorded on DC1176..1177; completing
+// both scopes restores retail's four nested mark expansions.
+// DC1304..1307 initializes the blocked state before testing the moat.
+// Together with buildCombatPath's native branch order, these lifetimes
+// improve Windows 94.5290% to 99.2135%. The remaining instructions differ
+// in front-offset addition and moat/step-cost temporary allocation.
+//
+// DC best_dist/end_hex/move_cost are int; move_cost is the one-step
+// increment, not pc.m_cost. The function-scope pathCell lifetime and direct
+// m_queue ownership reproduce retail's copy/cost/distance blocks.
+// Mac c7290..c72c8 expands offsetToFront twice, computing the current front
+// before the adjacent front. Keep both canonical calls.
+//
+// Retail retains getHex within the four markEnemy expansions and expands
+// it in the reached-cell update and final path walk. It calls vector insert
+// through the canonical push_back calls. The three differing template names
+// are reviewed folded pointer-copy and pointer-vector-insertion aliases.
 VA(0x004b3400, 0x787)
 DC_ADDRESS(0x0a0b18, 0x43a)
 MAC_ADDRESS(0x0c6e78, 0x720)  // anchor-global
@@ -1286,9 +1249,9 @@ bool searchArray::findCombatPath(const army* currentArmy,
             if (!currentArmy->canFit(adjacent, 0, 0)
                     || (siegePressure && moat)) {
                 long enemyCost = cost;
+                unsigned char blocked = 0;
                 if (isMoat(hex))
                     enemyCost += baseSpeed;
-                unsigned char blocked = 0;
                 if (limit <= baseSpeed) {
                     if (isMoat(hex))
                         blocked = 1;
@@ -1300,14 +1263,17 @@ bool searchArray::findCombatPath(const army* currentArmy,
                 }
                 if (enemyCost <= limit && !blocked) {
                     if (checkEnemyArmies(adjacent, enemyCost, currentGroup,
-                                           destination))
+                                         destination)
+                            || (currentArmy->is(creatureDoubleWide)
+                                && checkEnemyArmies(adjacent
+                                    + currentArmy->offsetToFront(-1),
+                                    enemyCost, currentGroup, destination))) {
+                        pathCell* reached = getHex(adjacent);
+                        reached->m_point.m_x = static_cast<short>(adjacent);
+                        reached->m_direction = direction;
+                        reached->m_lastPoint = pc.m_point;
+                        m_result.push_back(reached);
                         break;
-                    if (currentArmy->is(creatureDoubleWide)) {
-                        long tail = adjacent
-                            + (currentArmy->offsetToFront(-1));
-                        if (checkEnemyArmies(tail, enemyCost,
-                                             currentGroup, destination))
-                            break;
                     }
                 }
                 if (!(currentArmy->is(creatureFlyingArmy)
@@ -1320,13 +1286,6 @@ bool searchArray::findCombatPath(const army* currentArmy,
             }
             pushCombatPoint(adjacent, direction, cost + step, flightCost,
                             limit);
-        }
-        if (direction < 6) {
-            pathCell* reached = getHex(adjacent);
-            reached->m_point.m_x = static_cast<short>(adjacent);
-            reached->m_direction = direction;
-            reached->m_lastPoint = pc.m_point;
-            m_result.push_back(reached);
         }
 
         // DC 1358/1360 read the result vector directly here as well.
