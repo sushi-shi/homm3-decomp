@@ -1063,6 +1063,17 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
     errors = inline_errors + [f'FILTER stale dc_only.tsv/dc_only_generated.tsv entry {key}'
                               for key in dc_only if key not in dc_keys]
     used_win = set()
+    # A DC_ADDRESS binds one exact DC procedure to its definition. Another
+    # definition that merely shares the normalized name cannot be that
+    # procedure; a reviewed Windows-only row may then exempt it without
+    # hiding the counterpart, which the explicit owner still binds.
+    explicit_owner = {}
+    for d in definitions:
+        if d.dc_offset:
+            for o in origins:
+                if o.offset == d.dc_offset and not o.declaration_only:
+                    explicit_owner.setdefault((o.file, o.name, o.line), set()).add(
+                        (d.file, d.offset))
     matches = []
     bindings = {}
     counts = Counter()
@@ -1200,7 +1211,10 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
                               and all(o.declaration_only and o.return_type
                                       and type_identity(o.return_type) != type_identity(d.return_type)
                                       for o in written))
-            if written and not (changed_return or different_formals):
+            owned_elsewhere = bool(written) and not d.dc_offset and all(
+                explicit_owner.get((o.file, o.name, o.line), set()) - {(d.file, d.offset)}
+                for o in written)
+            if written and not (changed_return or different_formals or owned_elsewhere):
                 errors.append(f'FILTER {where}: Windows-only exemption hides a CodeView counterpart')
             else:
                 counts['win_only'] += 1

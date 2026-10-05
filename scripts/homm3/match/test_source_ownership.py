@@ -1266,5 +1266,38 @@ class NestedLocalClassTest(unittest.TestCase):
             self.assertNotIn('Saved', board._dc_local_classes([(path, source), duplicate])[path])
 
 
+class ExplicitDcOwnerTest(unittest.TestCase):
+    """A same-named Windows function cannot be a procedure another
+    definition binds by DC_ADDRESS; only a reviewed row may exempt it."""
+
+    def setUp(self):
+        from dataclasses import replace
+        self.player = replace(definition('game::getPlayerAlignment', line=40,
+                                         signature='int (int)'), dc_offset='0x1000')
+        self.creature = definition('game::getAlignment', line=20, signature='int (int)')
+        self.origins = [origin('game::get_alignment', 'widget.h', 100)]
+        self.waiver = {(self.creature.file, self.creature.name, self.creature.signature): 'r'}
+
+    def test_unreviewed_name_collision_is_a_duplicate(self):
+        errors, _ = compare([self.creature, self.player], self.origins, {}, {})
+        self.assertTrue(any(e.startswith('DUPLICATE ') for e in errors), errors)
+
+    def test_reviewed_row_exempts_a_collision_with_an_explicit_owner(self):
+        errors, counts = compare([self.creature, self.player], self.origins, {}, self.waiver)
+        self.assertEqual(errors, [])
+        self.assertEqual(counts.get('win_only'), 1)
+
+    def test_reviewed_row_cannot_hide_an_unowned_counterpart(self):
+        from dataclasses import replace
+        player = replace(self.player, dc_offset='')
+        errors, _ = compare([self.creature, player], self.origins, {}, self.waiver)
+        self.assertTrue(any('hides a CodeView counterpart' in e for e in errors), errors)
+
+    def test_explicit_owner_cannot_waive_itself(self):
+        waiver = {(self.player.file, self.player.name, self.player.signature): 'r'}
+        errors, _ = compare([self.player], self.origins, {}, waiver)
+        self.assertTrue(any('hides a CodeView counterpart' in e for e in errors), errors)
+
+
 if __name__ == '__main__':
     unittest.main()
