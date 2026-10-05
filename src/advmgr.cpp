@@ -4564,7 +4564,7 @@ void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
         NewmapCell* heroCell = getCell(currHero->getLocation());
 
-        if (!(heroCell->m_flags0011 & 0x200)) {
+        if (!heroCell->m_isBeachBorder) {
             m_boatFrothIcons[currBoat->m_type]->drawHero(
                 currHero->getStandSequence(),
                 m_animCtr
@@ -4631,7 +4631,7 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
         NewmapCell* heroCell = getCell(currHero->getLocation());
 
-        if (!(heroCell->m_flags0011 & 0x200)) {
+        if (!heroCell->m_isBeachBorder) {
             m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
                 currHero->getStandSequence(),
                 m_animCtr
