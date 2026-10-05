@@ -117,9 +117,10 @@ public:
             && m_maxY >= limits.m_minY;
     }
 
-    // Original: SLimitData::Contains; struct.h:293
+    // Original: SLimitData::Contains; struct.h:293. Its native DC public
+    // ?Contains@SLimitData@@QBA_NHH@Z proves the bool result.
     DC_ADDRESS(0x0639ec, 0x2a)
-    unsigned char contains(int x, int y) const
+    bool contains(int x, int y) const
     {
         return m_minX <= x && x <= m_maxX
             && m_minY <= y && y <= m_maxY;

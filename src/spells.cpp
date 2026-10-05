@@ -4669,6 +4669,9 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
 // All 46 blocks agree in flow and all 25 branches agree. The remaining
 // 236 masked rows are mainly register homes/scheduling; the one reported
 // call mismatch is the already-correlated Random/SRandom retail fold.
+// DC 5215/5217/5221 loads the mastery count and initializes the drawn count
+// before clearing damage. Mac 0x199314..0x199334 retains that order, and
+// retail loads mastery before rep stosd. Restoring it raises 87.02 -> 89.14%.
 VA(0x005a7c80, 0x408)
 DC_ADDRESS(0x156ec4, 0x490)
 MAC_ADDRESS(0x1991d0, 0x688)  // order-map+arity
@@ -4698,9 +4701,9 @@ void combatManager::earthquake(int level)
         drawFrame(1, 0, 0, 0, 1, 0);
     }
 
-    memset(counts, 0, sizeof counts);
     int remaining = g_spellTraits[SPELL_EARTHQUAKE].m_masteryBonus[level];
     int drawn = 0;
+    memset(counts, 0, sizeof counts);
     while (remaining-- > 0) {
         int candidates = 0;
         for (int i = 0; i < WALL_TARGET_COUNT; i++) {

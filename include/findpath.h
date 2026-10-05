@@ -199,8 +199,10 @@ public:
     // add; movsx ecx, cx`) - which only a short parameter forces. The
     // one call whose argument is already a sign-extended 16-bit value
     // loses the movsx, exactly as it should.
+    // Original is_moat@@QBA_NF proves bool and short, respectively.
+    // Its raw-byte return and the 0/1 setters identify a bool map.
     DC_ADDRESS(0x028018, 0xa)
-    unsigned char isMoat(short hex) const { return m_isMoatSlowed[hex]; }
+    bool isMoat(short hex) const { return m_isMoatSlowed[hex]; }
 
     // E:\\gamedcs\\findpath.h:247 (). Retail folds this
     // const tiny helper into move_hero and AI_choose_destination as the
@@ -209,14 +211,14 @@ public:
     bool limitWasReached() const { return m_limitReached != 0; }
     // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
     void lowerDoor();
-    unsigned char findCombatPath(const army* currentArmy, long currentGroup,
-                                 long destination, unsigned char inPlacementPhase,
+    bool findCombatPath(const army* currentArmy, long currentGroup,
+                                 long destination, bool inPlacementPhase,
                                  long limit, long baseSpeed);  // 0x4b3400
     // 0x4b2ff0. Rebuilds the teleport-reachable combat cells, then keeps
     // enemy occupied cells marked when they border that reachable set.
     void markTeleport(const army* currentArmy, long currentGroup);
     void seedCombatPosition(const army* thisArmy, long currentGroup,
-                            long limit, unsigned char inPlacementPhase,
+                            long limit, bool inPlacementPhase,
                             long baseSpeed);
 
     // Dreamcast FindPath.h:252. MoveHero brackets its move_hero call with
@@ -311,7 +313,7 @@ private:
     // One byte per combat hex, indexed by a SIGN-EXTENDED hex
     // (`movsx edx, si; cmp byte [edx + eax], 0` in move_toward
     // 0x41f580) - a map, as the dtor's `delete` already implied.
-    unsigned char* m_isMoatSlowed;
+    bool* m_isMoatSlowed;
     // +0x6c. `long*` (not void*) from get_danger_value's `[ecx + edx*4]`
     // load - the danger map is one signed word per cell.
     long* m_dangerZones;

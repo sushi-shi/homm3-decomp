@@ -1219,8 +1219,9 @@ public:
     int randomScan(signed char* whichList, int start, int length,
                    signed char scanValue);
     int getNewBoatId();  // 0x4bb170
+    // Original CreateBoat public encodes _NC: bool remote move, signed type.
     int createBoat(int x, int y, int z, int owner,
-                   unsigned char remoteMove, signed char type);  // 0x4bb250
+                   bool remoteMove, signed char type);  // 0x4bb250
     HeroId getNewHeroId(int playerPos, THeroClass excluded,
                         bool preferAlignment,
                         THeroClass preferredClass);  // 0x4bb5e0
@@ -1283,9 +1284,10 @@ public:
     int getAlignment(int creature) const;
     TTownType getPlayerAlignment(int playerId) const;
     void claimShipyard(type_point location, int newPlayerOwner);  // 0x4c6a30
+    // Original ClaimTown public ends in _N0: both latches are bool.
     void claimTown(int townId, int newPlayerOwner,
-                   unsigned char isRemoteMove,
-                   unsigned char checkEndGame);  // 0x4c61e0
+                   bool isRemoteMove,
+                   bool checkEndGame);  // 0x4c61e0
     void claimMine(int mineId, int newPlayerOwner,
                    type_action_type actionType);  // 0x4c66e0
     void claimGenerator(int generatorId, int newPlayerOwner);  // 0x4c67b0
@@ -1672,6 +1674,15 @@ public:
         if (which == -1)
             return 0;
         return &m_heroes[which];
+    }
+
+    // Selection's two hero-detail owners expand an unguarded hero lookup
+    // (DC ProcessRightSelect lines 3244/3290; Mac 17a12c..17a14c and
+    // 17a308..17a328). These callers require a valid ID, unlike getHero's
+    // nullable -1 lookup. The original helper spelling is unknown.
+    hero& getHeroReference(int which)
+    {
+        return m_heroes[which];
     }
 
     // DC `game::GetCurrHero` (E:\gamedcs\Game.h:991) and

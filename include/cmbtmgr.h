@@ -985,7 +985,9 @@ public:
     // Placement-phase latch: FindPath/ValidPath forward it into
     // FindCombatPath's in_placement_phase and lift the speed limit
     // to 99 while it is set. Name provisional.
-    unsigned char m_creaturePlacement;  // +0x13d68
+    // Original InPlacementPhase; boolean result set by Main and forwarded
+    // directly to the original _N SeedCombatPosition/FindCombatPath flags.
+    bool m_creaturePlacement;  // +0x13d68
     // Dreamcast InPlacementPhase is a byte followed by turn_number;
     // retail preserves the three-byte integer-alignment gap at +0x13d69.
     char m_paddingBeforeTurnNumber[0x3];
@@ -1203,7 +1205,7 @@ public:
     unsigned char handleCombatPlayerDrop(unsigned long dpid, message* msg);
 
 private:
-    unsigned char isComputerAction();
+    bool isComputerAction();
 
 public:
     void updateMouseGrid(int gridIndex, std::vector<long>& hexes,
@@ -1495,7 +1497,7 @@ private:
                                long ourGroup);  // 0x4227a0
 
 public:
-    unsigned char isComputerAction(const army* currentArmy);
+    bool isComputerAction(const army* currentArmy);
     // DC publishes void(int,int,int); Complete's x86 body changes the result
     // to an unsigned-byte "pointer changed" flag. Its retail field/call graph
     // fixes the three arguments as mouse x, mouse y and combat hex.
@@ -1779,16 +1781,19 @@ public:
     // helper and its four ordered bounds. Complete widens the window to the
     // retail 800x556 combat area; ProcessCombatMsg retains the source call
     // and VC6 expands it into the four retail comparisons.
-    // DC has x/y only, no receiver: this is static.
+    // DC has x/y only, no receiver: this is static. The original public
+    // ?InCombatArea@combatManager@@SA_NHH@Z proves the bool result.
     DC_ADDRESS(0x070a2c, 0x2a)
-    static unsigned char inCombatArea(int x, int y)
+    static bool inCombatArea(int x, int y)
     {
         return x >= 0 && x < 800 && y >= 0 && y < 556;
     }
 
-    // Original: combatManager::is_in_second_phase; CmbtMgr.h:1494
+    // Original: combatManager::is_in_second_phase; CmbtMgr.h:1494.
+    // Its original ?is_in_second_phase@combatManager@@QBA_NXZ public
+    // proves bool even though CodeView lowers the result to primitive 0x20.
     DC_ADDRESS(0x027f28, 0xc)
-    unsigned char isInSecondPhase() const { return m_inSecondPhase; }
+    bool isInSecondPhase() const { return m_inSecondPhase; }
 
     // Dreamcast S_PUB32 fixes this entire inline band: GetHexIndex and GridX
     // are static int helpers, RowIsOdd is a const bool member, and
@@ -1889,7 +1894,7 @@ public:
     unsigned char unnamed464f50(const army* incumbent, const army* candidate);
     virtual int main(message& msg);
     int processCombatMsg(message& msg);
-    int processNextAction(message& msg, unsigned char automaticTurn);
+    int processNextAction(message& msg, bool automaticTurn);
     void setCombatDirections(int hex);
     // DC command.cpp:2800. Complete likewise expands its sole call, while
     // retaining the helper's source-level surrender-dialog boundary.

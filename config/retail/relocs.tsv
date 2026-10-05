@@ -24,6 +24,9 @@
 # their pinned COFF relocations (homm3 verify library-code): 95 added,
 # 153 pointer-shaped words without a relocation removed; the evidence and
 # owning member stay in reloc-evidence.tsv.
+# REVIEWED 2026-09-30: 0xfb747 is the 5 MiB free-disk-space threshold
+# in mainMenuHandler (retail 4fb746: 3d00005000), not a code pointer.
+# The GetAvailableDiskSpace result and DC 0xea640 establish the scalar use.
 site_rva	kind
 0x1050	dir32
 0x10b7	dir32
@@ -17381,7 +17384,6 @@ site_rva	kind
 0xfb700	dir32
 0xfb716	dir32
 0xfb72c	dir32
-0xfb747	dir32
 0xfb74e	dir32
 0xfb77d	dir32
 0xfb78e	dir32

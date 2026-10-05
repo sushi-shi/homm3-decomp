@@ -623,9 +623,9 @@ DC_ADDRESS(0x022b88, 0x45c)
 MAC_ADDRESS(0x01ec20, 0x4d4)
 void advManager::teleportTo(hero* who, type_point destination,
                             const char* sampleName,
-                            unsigned char isRemoteMove,
-                            unsigned char drawChanges,
-                            unsigned char isReplay)
+                            bool isRemoteMove,
+                            bool drawChanges,
+                            bool isReplay)
 {
     int oldShowIt = g_completeDrawEnabled;
     if (!drawChanges)

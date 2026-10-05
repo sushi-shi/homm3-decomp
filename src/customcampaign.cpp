@@ -1061,6 +1061,17 @@ int TCampaignStartCrossoverOption::getCount() const
     return m_choices.size();
 }
 
+// Mac 0x93878, 0x9394c and 0x93bd8 expand the same choice-to-score lookup:
+// sign-extend the scenario byte, then read that score's crossover-pool index.
+// This option-owned accessor's name and private boundary are inferred.
+// All three callers are in this TU, supporting an ordinary source body;
+// keep the existing virtual slot5 as the public option interface.
+int TCampaignStartCrossoverOption::getCrossoverSlot(
+    const SCampaign& campaign, int which) const
+{
+    return campaign.m_mapScores[m_choices[which].m_scenario].m_index;
+}
+
 // Mac code+0x93878 precedes the crossover option's virtual methods and
 // is called by getIconDefName at +0x938e0. Windows expands this pool lookup.
 MAC_ADDRESS(0x093878, 0x4c)
@@ -1068,7 +1079,7 @@ hero* TCampaignStartCrossoverOption::getFirstCrossoverHero(
     SCampaign* campaign, int which) const
 {
     std::vector<hero>& pool = campaign->getCrossoverHeroes(
-        campaign->m_mapScores[m_choices[which].m_scenario].m_index);
+        getCrossoverSlot(*campaign, which));
     return pool.size() != 0 ? &pool[0] : 0;
 }
 
@@ -1091,9 +1102,10 @@ const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
 // +0x93a58 calls CampaignHeaderStruct::loadScenario (+0x96c64), ignoring
 // its result. Complete expands both; the retained Windows loadScenario
 // body (0x488810) is exact and its expansion calls loadMapHeader.
-// Binding the campaign base once, as native +0x93950..+0x93974 does,
-// gives 75.97% in VC6 (14 blocks against retail's 19). Constructor and
-// nested inflater calls still diverge; retain both canonical source calls.
+// Sharing the choice-to-score lookup with the icon and slot5 callers restores
+// the retained loadMapHeader call and all 19 retail blocks: 75.24 -> 92.51%.
+// Remaining named differences are map/_Tree destruction and a retained
+// vector<HeroId>::_Destroy; preserve the complete canonical helper path.
 // Native +0x93a64..+0x93a8c obtains the map-name pointer before the text
 // lookup and constructs the formatted string directly in the return slot.
 // A named string result adds two CodeWarrior copies absent from that body.
@@ -1106,7 +1118,7 @@ std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
     TCampaignBrief::CampaignHeaderStruct* campaign =
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignRecord);
     SCampaign& currentCampaign = g_game->m_campaign;
-    int slot = currentCampaign.m_mapScores[m_choices[which].m_scenario].m_index;
+    int slot = getCrossoverSlot(currentCampaign, which);
     int source = currentCampaign.findLatestCrossoverScenario(slot);
 
     NewSMapHeader mapHeader;
@@ -1159,7 +1171,7 @@ MAC_ADDRESS(0x093bd8, 0x34)
 int TCampaignStartCrossoverOption::slot5(
     const TCampaignBrief::ScenarioStruct* scenario, int which) const
 {
-    return g_game->m_campaign.m_mapScores[m_choices[which].m_scenario].m_index;
+    return getCrossoverSlot(g_game->m_campaign, which);
 }
 
 VA(0x004859e0, 0x44)
@@ -3071,7 +3083,7 @@ MAC_ADDRESS(0x098cb0, 0x218)
 static void convertLegacyCampaignHero(hero& newHero,
                                       const LegacyCampaignHero& oldHero)
 {
-    newHero.m_id = oldHero.m_id;
+    newHero.m_id = static_cast<HeroId>(oldHero.m_id);
     newHero.m_owner = oldHero.m_owner;
     strcpy(newHero.m_name, oldHero.m_name);
     newHero.m_heroClass = oldHero.m_heroClass;
