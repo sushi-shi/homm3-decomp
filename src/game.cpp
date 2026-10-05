@@ -3700,6 +3700,11 @@ void game::giveTroopsToNeutralTowns()
 // with saved owner/team values lost that structure (94.8833 vs 95.4407%).
 // DC records one shared int i for the player and hero scans; moving that
 // declaration changes no function score.
+// DC 4116..4124 and 4189..4197 join each hero result at a common break;
+// 4140..4148 handles the invalid monster before the successful assignment.
+// Keep those native arms and read the condition fields directly, including
+// the victory type after the player queries. Removing its cached value and
+// the provisional aggregate aliases raises the full body to 95.5519%.
 // Original public ?ValidateVictoryLossConditions@game@@QAAX_N@Z proves bool.
 VA(0x004bf780, 0x6E2)
 DC_ADDRESS(0x0aa7e0, 0x5c4)
@@ -3707,10 +3712,9 @@ MAC_ADDRESS(0x0d513c, 0x960)  // order-map + whole-function identity
 void game::validateVictoryLossConditions(bool checkMapLocations)
 {
     int i;
-    signed char victoryType = m_mapHeader.m_victoryCondition.m_type;
-    if (victoryType == VICTORY_CONDITION_ARTIFACT
-        || victoryType == VICTORY_CONDITION_BUILD_GRAIL
-        || victoryType == VICTORY_CONDITION_TRANSPORT_ARTIFACT) {
+    if (m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_ARTIFACT
+        || m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_BUILD_GRAIL
+        || m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_TRANSPORT_ARTIFACT) {
         int numLivingPlayers = 0;
         for (i = 0; i < 8; ++i) {
             if (!m_playerDisabled[i])
@@ -3749,59 +3753,55 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
         }
     }
 
-    if (victoryType == VICTORY_CONDITION_DEFEAT_HERO)
+    if (m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_DEFEAT_HERO)
         m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
 
     if (!checkMapLocations)
         return;
 
-    VictoryConditionStruct& victory = m_mapHeader.m_victoryCondition;
-    if (victoryType == VICTORY_CONDITION_DEFEAT_HERO) {
-        type_point vcheroLoc(victory.m_heroX, victory.m_heroY,
-                            victory.m_heroZ);
-        victory.m_heroId = -1;
+    if (m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_DEFEAT_HERO) {
+        type_point vcheroLoc(m_mapHeader.m_victoryCondition.m_heroX, m_mapHeader.m_victoryCondition.m_heroY,
+                            m_mapHeader.m_victoryCondition.m_heroZ);
+        m_mapHeader.m_victoryCondition.m_heroId = -1;
         for (i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
             if (vcheroLoc == poolheroLoc) {
                 int team = getTeam(m_heroes[i].m_owner);
                 if (team >= 0 && isHumanTeam(team)) {
-                    victory.m_type = -1;
-                    break;
+                    m_mapHeader.m_victoryCondition.m_type = -1;
+                } else {
+                    m_mapHeader.m_victoryCondition.m_heroId = i;
                 }
-                victory.m_heroId = i;
                 break;
             }
         }
-        if (victory.m_heroId == -1)
-            victory.m_type = -1;
+        if (m_mapHeader.m_victoryCondition.m_heroId == -1)
+            m_mapHeader.m_victoryCondition.m_type = -1;
     }
 
-    if (victory.m_type == VICTORY_CONDITION_DEFEAT_MONSTER) {
+    if (m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_DEFEAT_MONSTER) {
         const NewmapCell* thisCell = m_worldMap.cell(
-            victory.m_monsterX, victory.m_monsterY, victory.m_monsterZ);
-        if (thisCell->m_type == MONSTER && thisCell->m_isTrigger) {
-            {
-                victory.m_creatureType = TCreatureType(thisCell->m_objectIndex);
-            }
+            m_mapHeader.m_victoryCondition.m_monsterX, m_mapHeader.m_victoryCondition.m_monsterY, m_mapHeader.m_victoryCondition.m_monsterZ);
+        if (thisCell->m_type != MONSTER || !thisCell->m_isTrigger) {
+            m_mapHeader.m_victoryCondition.m_type = -1;
+            m_mapHeader.m_victoryCondition.m_creatureType = CREATURE_NONE;
+            m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
         } else {
-            victory.m_type = -1;
-            victory.m_creatureType = CREATURE_NONE;
-            victory.m_allowNormalVictory = 1;
+            m_mapHeader.m_victoryCondition.m_creatureType = TCreatureType(thisCell->m_objectIndex);
         }
     }
 
-    if (victory.m_type == VICTORY_CONDITION_CAPTURE_TOWN) {
+    if (m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_CAPTURE_TOWN) {
         town* thisTown = getTown(getTownId(
-            victory.m_townX, victory.m_townY, victory.m_townZ));
+            m_mapHeader.m_victoryCondition.m_townX, m_mapHeader.m_victoryCondition.m_townY, m_mapHeader.m_victoryCondition.m_townZ));
         int team = getTeam(thisTown->m_owner);
         if (team >= 0 && isHumanTeam(team))
-            victory.m_type = -1;
+            m_mapHeader.m_victoryCondition.m_type = -1;
     }
 
-    LossConditionStruct& loss = m_mapHeader.m_lossCondition;
-    if (loss.m_type == LOSS_CONDITION_LOSE_HERO) {
-        type_point lcheroLoc(loss.m_heroX, loss.m_heroY, loss.m_heroZ);
-        loss.m_heroId = -1;
+    if (m_mapHeader.m_lossCondition.m_type == LOSS_CONDITION_LOSE_HERO) {
+        type_point lcheroLoc(m_mapHeader.m_lossCondition.m_heroX, m_mapHeader.m_lossCondition.m_heroY, m_mapHeader.m_lossCondition.m_heroZ);
+        m_mapHeader.m_lossCondition.m_heroId = -1;
         for (i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
             if (lcheroLoc == poolheroLoc) {
@@ -3810,23 +3810,22 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
                     if (isHumanTeam(team))
                         ++numHumanTeams;
                 }
-                if (numHumanTeams <= 1) {
-                    if (!isComputerTeam(getTeam(m_heroes[i].m_owner))) {
-                        loss.m_heroId = i;
-                        break;
-                    }
+                if (numHumanTeams > 1
+                    || isComputerTeam(getTeam(m_heroes[i].m_owner))) {
+                    m_mapHeader.m_lossCondition.m_type = -1;
+                } else {
+                    m_mapHeader.m_lossCondition.m_heroId = i;
                 }
-                loss.m_type = -1;
                 break;
             }
         }
-        if (loss.m_heroId == -1)
-            loss.m_type = -1;
+        if (m_mapHeader.m_lossCondition.m_heroId == -1)
+            m_mapHeader.m_lossCondition.m_type = -1;
     }
 
-    if (loss.m_type == LOSS_CONDITION_LOSE_TOWN) {
+    if (m_mapHeader.m_lossCondition.m_type == LOSS_CONDITION_LOSE_TOWN) {
         town* thisTown = getTown(getTownId(
-            loss.m_townX, loss.m_townY, loss.m_townZ));
+            m_mapHeader.m_lossCondition.m_townX, m_mapHeader.m_lossCondition.m_townY, m_mapHeader.m_lossCondition.m_townZ));
         int numHumanTeams = 0;
         for (int team = 0; team < 8; ++team) {
             if (isHumanTeam(team))
@@ -3835,7 +3834,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
         if (numHumanTeams > 1
             || isComputerTeam(getTeam(thisTown->m_owner))
             || thisTown->m_owner == -1)
-            loss.m_type = -1;
+            m_mapHeader.m_lossCondition.m_type = -1;
     }
 }
 
