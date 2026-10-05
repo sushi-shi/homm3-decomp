@@ -4550,7 +4550,7 @@ townmgr	?updateTownLocators@TTownScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000
 townmgr	?windowHandler@TBlacksmithWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1d1c60	tokens1:e3376b7b0de8
 townmgr	?windowHandler@TBuyBuildWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1d6810	tokens1:0fe4de870558
 townmgr	?windowHandler@TCastleWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1dcf80	tokens1:799630fef596
-townmgr	?windowHandler@TMageGuildWindow@@UAEHAAVmessage@@@Z	96.8650	96.8650	97.3926	0x1ce370	tokens1:d3bce54a86af
+townmgr	?windowHandler@TMageGuildWindow@@UAEHAAVmessage@@@Z	96.8650	96.8650	97.3926	0x1ce370	tokens1:1e286fff8601
 townmgr	?windowHandler@TShipWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1d25a0	tokens1:1cc13f22aa13
 townmgr	?windowHandler@TTavernWindow@@UAEHAAVmessage@@@Z	99.1429	99.1429	99.1936	0x1d7b30	tokens1:4ad4d024fb63
 townmgr	?windowHandler@TThievesGuildWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1c9930	tokens1:edc83f393794
