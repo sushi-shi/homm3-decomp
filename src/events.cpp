@@ -1505,8 +1505,8 @@ void advManager::doEventBoat(hero* currentHero, NewmapCell* cell)
 
     heroBoat->restoreCell();
     currentHero->m_flags |= 0x40000;
-    currentHero->m_flightLevel = -1;
-    currentHero->m_waterWalkLevel = -1;
+    currentHero->m_flightLevel = eMasteryInvalid;
+    currentHero->m_waterWalkLevel = eMasteryInvalid;
     if (!(currentHero->m_flags & 0x1000000)) {
         if (currentHero->isWieldingArtifact(0x88)) {
             int oldMaxMovePoints = currentHero->m_maxMovePoints;

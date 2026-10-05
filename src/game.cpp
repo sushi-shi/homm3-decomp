@@ -7408,9 +7408,9 @@ void game::perDay()
     for (i = 0; i < HERO_COUNT; ++i) {
         hero& currHero = m_heroes[i];
         currHero.m_flags &= 0xfffdfffeU;
-        currHero.m_disguiseLevel = -1;
-        currHero.m_flightLevel = -1;
-        currHero.m_waterWalkLevel = -1;
+        currHero.m_disguiseLevel = eMasteryInvalid;
+        currHero.m_flightLevel = eMasteryInvalid;
+        currHero.m_waterWalkLevel = eMasteryInvalid;
         currHero.m_identifyLevel = eMasteryInvalid;
         currHero.m_dWalkSpellsCast = 0;
     }

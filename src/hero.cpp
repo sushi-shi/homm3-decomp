@@ -725,9 +725,12 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     m_moraleBonus = readValue<char>(infile);
     m_luckBonus = readValue<char>(infile);
     m_backpackCount = readValue<char>(infile);
-    m_disguiseLevel = static_cast<signed char>(readValue<char>(infile));
-    m_flightLevel = static_cast<signed char>(readValue<char>(infile));
-    m_waterWalkLevel = static_cast<signed char>(readValue<char>(infile));
+    m_disguiseLevel = static_cast<TSkillMastery>(
+        static_cast<signed char>(readValue<char>(infile)));
+    m_flightLevel = static_cast<TSkillMastery>(
+        static_cast<signed char>(readValue<char>(infile)));
+    m_waterWalkLevel = static_cast<TSkillMastery>(
+        static_cast<signed char>(readValue<char>(infile)));
     m_dWalkSpellsCast = readValue<char>(infile);
     m_identifyLevel = static_cast<TSkillMastery>(
         static_cast<signed char>(readValue<char>(infile)));
@@ -6369,7 +6372,8 @@ DC_ADDRESS(0x0d5488, 0x22)
 MAC_ADDRESS(0x1069d0, 0x50)
 void hero::fly(int level)
 {
-    m_flightLevel = level;
+    // The original setter takes int; the stored field has the mastery domain.
+    m_flightLevel = static_cast<TSkillMastery>(level);
     useSpell(getManaCost(SPELL_FLY));
 }
 
@@ -6431,7 +6435,8 @@ DC_ADDRESS(0x0d55b8, 0x6)
 MAC_ADDRESS(0x106cd8, 0x8)
 void hero::walkOnWater(int level)
 {
-    m_waterWalkLevel = level;
+    // The original setter takes int; the stored field has the mastery domain.
+    m_waterWalkLevel = static_cast<TSkillMastery>(level);
 }
 
 // Complete adds the Rogue-aware identify-level getter; its original name
