@@ -706,7 +706,7 @@ static void setAvailableRmgHeroes(
         std::logical_not<unsigned char>());
 }
 
-// Vtable 0x6409cc slot 0 and the 0x14-byte concrete map layout identify this
+// Vtable 0x6409cc slot 0 and the 0x18-byte concrete map layout identify this
 // scalar deleting wrapper. Its non-deleting half destroys the owned array of
 // 0x30-byte TRmgMapItem elements before restoring the abstract map vtable.
 VA_COMPGEN(0x00530F80, 0x21, SCALAR_DELETING_DTOR, TRmgMap)
