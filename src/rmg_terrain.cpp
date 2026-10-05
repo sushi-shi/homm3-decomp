@@ -85,6 +85,16 @@ TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGrid
 {
 }
 
+// Mac retains this between the line-pattern table destructor and neighbour
+// mask helper; refreshRmgLinePoint calls it at 0x222850. Its Windows expansion
+// is local to this TU, so keep an ordinary source body visible to that caller.
+MAC_ADDRESS(0x22234c, 0x54)
+u32 TRmgLinePatternTable::selectFrame(s32 pattern)
+{
+    return m_ranges[pattern].m_firstFrame
+        + rand() % m_ranges[pattern].m_frameCount;
+}
+
 // Retail 0x4f9f00 keeps one tile proxy across neighbour queries and selects
 // a pattern/flip pair before reading the current tile. A new random frame is
 // drawn only when the pattern or flips differ. Its ordinary neighbour helper
@@ -129,8 +139,7 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
     tile.getTile(current);
     if (table->m_framePatterns[current.getFrame()] != selected
         || current.getFlipX() != flipX || current.getFlipY() != flipY) {
-        u32 frame = table->m_ranges[selected].m_firstFrame
-            + rand() % table->m_ranges[selected].m_frameCount;
+        u32 frame = table->selectFrame(selected);
         current.m_frame = frame;
         current.m_flipX = flipX;
         current.m_flipY = flipY;
@@ -156,6 +165,10 @@ TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
 // object; the proxy constructor copying the point through its fields,
 // accessors, setters or a by-value parameter never helps and the first
 // three cost the rectangle clear, 94.51%).
+// Mac 0x2223a0 also wraps the complete matching-neighbour-mask loops used
+// by refresh and the walker. Restoring that outer boundary currently retains
+// extra grid conversion/addition calls in refresh and grid-constructor/proxy
+// calls in the walker (84.8077% / 78.8527%); its source calls need joint recovery.
 s32 TRmgLinePainterInterface::getNeighbourLineType(const TRmgGridPoint& point, u32 direction)
 {
     TRmgGridPoint nearby = point + g_tileDirections[direction];

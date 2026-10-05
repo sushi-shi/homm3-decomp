@@ -1520,6 +1520,7 @@ struct TRmgLinePatternTable {
 
     TRmgLinePatternTable(unsigned int frameCount, const int* framePatterns);
     ~TRmgLinePatternTable();
+    unsigned int selectFrame(int pattern);
 };
 SIZE(TRmgLinePatternTable, 0x50);
 
