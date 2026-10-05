@@ -132,6 +132,12 @@ def _compile_staged(out, command, *, run=_run_cl):
     finally:
         staged.unlink(missing_ok=True)
 
+def _write_depfile(out, target, src, project_includes):
+    """Emit a conservative depfile so Ninja recompiles on local-header edits."""
+    deps = scan_header_deps(src, *project_includes)
+    dep_list = " ".join(d.replace(" ", "\\ ") for d in deps)
+    Path(str(out) + ".d").write_text(f"{target}: {dep_list}\n")
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True); ap.add_argument("--src", required=True)
@@ -151,11 +157,9 @@ def main():
     _prefix = os.environ.get("WINEPREFIX", "")
     if not (_prefix and Path(_prefix).is_dir()):
         os.environ["WINEPREFIX"] = str(HOMM3_DIR / "build/wineprefix")
-    ensure_wineserver()
     from homm3.core.project import Project
     project_includes = Project(HOMM3_DIR).includes
     incs = [msvc / "include", *(p for p in project_includes if p.is_dir())]
-    os.environ["INCLUDE"] = ";".join(winepath_w(p) for p in incs)
     from homm3.core import compile_receipt
     inputs = compile_receipt.snapshot([
         src, *scan_header_deps(src, *incs),
@@ -164,6 +168,17 @@ def main():
         HOMM3_DIR / 'config/units.toml', HOMM3_DIR / 'config/project.toml',
         Path(__file__), Path(compile_receipt.__file__),
     ])
+    # The receipt covers every byte that decides the object (source, scanned
+    # headers, toolchain, flags, this wrapper). When Ninja reruns an edge whose
+    # inputs only changed mtime - a fresh worktree seeded by `homm3 worktree
+    # new`, a branch switch and back - keep the verified object. Touch it so
+    # Ninja sees an output newer than its inputs, as after a real compile.
+    if compile_receipt.matches(out, inputs, flags):
+        os.utime(out)
+        _write_depfile(out, a.out, src, project_includes)
+        sys.exit(0)
+    ensure_wineserver()
+    os.environ["INCLUDE"] = ";".join(winepath_w(p) for p in incs)
     output, rc, produced = _compile_staged(
         out, lambda staged: ["wine", str(cl), *flags,
                              f"/Fo{winepath_w(staged)}", winepath_w(src)])
@@ -177,10 +192,7 @@ def main():
         compile_receipt.publish(out, inputs, flags)
     except (OSError, ValueError) as error:
         die(str(error))
-    # Emit a conservative depfile so Ninja recompiles on local-header edits.
-    deps = scan_header_deps(src, *project_includes)
-    dep_list = " ".join(d.replace(" ", "\\ ") for d in deps)
-    Path(str(out) + ".d").write_text(f"{a.out}: {dep_list}\n")
+    _write_depfile(out, a.out, src, project_includes)
     sys.exit(0)
 
 if __name__ == "__main__": main()

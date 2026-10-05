@@ -131,8 +131,10 @@
         '';
       };
 
+      # The current directory's checkout wins over an inherited HOMM3_DIR
+      # naming another checkout (scripts/project-root.sh --select).
       homm3-cli = pkgs.writeShellScriptBin "homm3" ''
-        HOMM3_DIR="$(${pkgs.runtimeShell} ${./scripts/project-root.sh} "''${HOMM3_DIR:-$PWD}")" || exit 1
+        HOMM3_DIR="$(${pkgs.runtimeShell} ${./scripts/project-root.sh} --select)" || exit 1
         export HOMM3_DIR
         export PYTHONDONTWRITEBYTECODE=1
         export PYTHONPATH="$HOMM3_DIR/scripts''${PYTHONPATH:+:$PYTHONPATH}"

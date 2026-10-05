@@ -16,15 +16,16 @@ from __future__ import annotations
 
 import datetime
 import hashlib
-import os
 import sys
 from pathlib import Path
 
+from homm3.core import root as _root
 from homm3.core.project import Project
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-HOMM3_DIR = Path(os.environ.get("HOMM3_DIR") or next(
-    (p for p in SCRIPT_DIR.parents if (p / "flake.nix").exists()), SCRIPT_DIR))
+# The current directory's checkout wins over an inherited HOMM3_DIR naming a
+# different checkout (homm3.core.root); this module's checkout is the fallback.
+HOMM3_DIR = _root.process_root(_root.code_root(__file__) or SCRIPT_DIR)
 
 # Offline annotation/provenance facts are admitted project data. Operations
 # that read executable bytes use Project.image and its parsed layout.

@@ -352,6 +352,49 @@ class CfgTest(unittest.TestCase):
 
 
 
+class MultipleSelectorTest(unittest.TestCase):
+    """`asm` and `inline-clues` take several selectors, like `show`/`lines`."""
+
+    def setUp(self):
+        self.corpus = dreamcast.Corpus(
+            functions=[_fn("0x100", "Widget::Open"), _fn("0x140", "Other::Open", "other.obj")],
+            variables=[], bridges=[], claims=[])
+
+    def _dispatch(self, argv):
+        import json
+        from unittest.mock import patch
+        out = io.StringIO()
+        with patch.object(dreamcast, "_shared_corpus", self.corpus), \
+                contextlib.redirect_stdout(out):
+            self.assertEqual(dreamcast._dispatch(argv), 0)
+        return json.loads(out.getvalue())
+
+    def test_asm_renders_every_selected_function(self):
+        from unittest.mock import patch
+        with patch.object(dreamcast.dc_lines, "load_symbols", return_value=None), \
+                patch.object(dreamcast.inputs, "read_dreamcast_exe", return_value=b""), \
+                patch.object(dreamcast.dc_asm, "build_view",
+                             side_effect=lambda row, dump, data: {"name": row["name"]}):
+            payload = self._dispatch(["asm", "Widget::Open", "dc:0x140", "Widget::Open", "--json"])
+            self.assertEqual([view["name"] for view in payload["matches"]],
+                             ["Widget::Open", "Other::Open"])
+            self.assertEqual(payload["selector"], "Widget::Open dc:0x140 Widget::Open")
+            self.assertEqual(self._dispatch(["asm", "Widget::Open", "--json"]),
+                             {"name": "Widget::Open"})
+
+    def test_inline_clues_reports_each_selected_function(self):
+        from unittest.mock import patch
+        def payload(corpus, row, detailed=False):
+            return {"name": row["name"], "groups": [{}], "foreign_source_rows": 1,
+                    "earlier_source_rows": 0}
+        with patch.object(dreamcast, "_inline_clue_payload", side_effect=payload):
+            result = self._dispatch(["inline-clues", "Widget::Open", "Other::Open", "--json"])
+        self.assertTrue(result["selected"])
+        self.assertEqual([row["name"] for row in result["functions"]],
+                         ["Widget::Open", "Other::Open"])
+        self.assertEqual(result["summary"]["functions"], 2)
+
+
 class WrongNamespaceTest(unittest.TestCase):
     def test_guessed_subcommands_name_their_home(self):
         import os

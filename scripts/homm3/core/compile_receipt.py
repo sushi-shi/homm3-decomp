@@ -44,3 +44,13 @@ def current(out, *, flags, required, hashes=None):
         return inputs
     except (OSError, ValueError, KeyError, TypeError):
         return None
+
+
+def matches(out, inputs, flags):
+    """True when ``out`` was compiled from exactly these input bytes and flags."""
+    try:
+        record = json.loads(Path(str(out) + '.inputs.json').read_text())
+        return (record['schema'] == 1 and record['flags'] == flags
+                and record['inputs'] == inputs and record['object_sha256'] == digest(out))
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
