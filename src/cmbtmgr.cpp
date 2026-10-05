@@ -2679,10 +2679,10 @@ void combatManager::makeCreaturesVanish()
             }
         }
         computeMaxExtent();
-        x = m_drawbridgeBounds.m_minX;
-        y = m_drawbridgeBounds.m_minY;
-        width = m_drawbridgeBounds.width();
-        height = m_drawbridgeBounds.height();
+        x = m_extent.m_minX;
+        y = m_extent.m_minY;
+        width = m_extent.width();
+        height = m_extent.height();
     }
 
     for (side = 0; side < 2; side++) {
@@ -2741,7 +2741,7 @@ void combatManager::lowerDoor()
 
     SAMPLE2 sample = loadPlaySample(
         DATA_COMPGEN(0x0066ffb0, drawbridgeSampleName, "drawbrg.82m"));
-    m_drawbridgeBounds = g_drawbridgeBounds;
+    m_extent = g_drawbridgeBounds;
     for (int state = DRAWBRIDGE_UP; state >= DRAWBRIDGE_DOWN; state--) {
         m_drawbridgeState = state;
         drawFrame(1, 0, 1, 100, 1, 1);
@@ -2763,7 +2763,7 @@ void combatManager::raiseDoor()
     }
 
     SAMPLE2 sample = loadPlaySample("drawbrg.82m");
-    m_drawbridgeBounds = g_drawbridgeBounds;
+    m_extent = g_drawbridgeBounds;
     for (int state = DRAWBRIDGE_DOWN; state <= DRAWBRIDGE_UP; state++) {
         m_drawbridgeState = state;
         drawFrame(1, 0, 1, 100, 1, 1);
@@ -3039,7 +3039,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     int y = startY;
 
     Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
+    SLimitData updateArea = combatManager::s_combatAreaLimits;
     const int missileperiod = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
 
@@ -3048,7 +3048,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
         unsigned long nextFrameTime = GameTime::get() + missileperiod;
         if (step != 0) {
             // Mac 0x73e24 copies a four-word rectangle temporary here.
-            updateArea = TDrawbridgeBounds(
+            updateArea = SLimitData(
                 x, y, x + width - 1, y + height - 1);
             x = startX + deltaX * step / nframes;
             y = static_cast<int>(
@@ -3147,7 +3147,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     int y = startY - height / 2;
 
     Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
+    SLimitData updateArea = combatManager::s_combatAreaLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowDelay = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
@@ -3159,7 +3159,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             saved.draw(0, 0, width, height,
                        g_windowManager->m_screenBitmap, x, y, false);
             // Mac 0x743e0 constructs and copies the four-word bounds.
-            updateArea = TDrawbridgeBounds(
+            updateArea = SLimitData(
                 x, y, x + width - 1, y + height - 1);
             x += addX;
             y += addY;
@@ -3285,7 +3285,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     }
 
     Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
+    SLimitData updateArea = combatManager::s_combatAreaLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowdelay = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
@@ -3297,7 +3297,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                        g_windowManager->m_screenBitmap, x, y, false);
             // Mac 0x749fc/0x74abc derives each rectangle from its current origin.
             // Retaining those expressions also matches the Windows loop schedule.
-            updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
+            updateArea = SLimitData(x, y, x + width - 1, y + height - 1);
             x += addX;
             y += addY;
         }
@@ -3411,80 +3411,23 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
     }
 }
 
-// E:\gamedcs\cmbtmgr.cpp:4158
-// The body is NOT a switch - `spellEffect` is only ever compared with
-// -1 and used as a twelve-byte index into akSpellEffectTraits. What it
-// is instead is eleven `for(side) for(slot)` walks over armies[2][21],
-// split by three separately inlined IsQuickCombat guards: the first
-// skips the entire animation half, the second gates the per-stack
-// samples, the third gates the wind-down loop.
-
-// Shapes worth keeping:
-//   * the frame budget is four chained maximum selects ending on
-//     `wince + attack - 1`, which retail forms with one
-//     `lea eax,[esi+edi-1]`;
-//   * `iNextFrameType = cs_wince + (Is(1u << 27))` is ARITHMETIC, not a
-//     ternary - retail emits `setne cl` straight into `add ecx,3`;
-//   * walk 4 calls MarkCreatureEffect after its extra POW-specific guards;
-//     Dreamcast records that helper boundary at cmbtmgr.cpp:4293, and the
-//     Complete inline body adds the retail-only arrow-tower switch;
-//   * the wind-down is a `for(;;)` with a bFramesChanged latch, not a
-//     counted loop - retail has no bound to test.
-
-// Two measured refinements on top of the first compile (96.1134):
-//   * army::bPowSequenceComplete is an INT, not the byte its name
-//     suggests. Retail both tests and stores it a dword wide, and
-//     retyping it is worth +0.03 (96.1134 -> 96.1439). The field note
-//     in army.h carries the bytes.
-//   * the attack-frame skip is a GOTO, not a nested if. Retail spells
-//     `cmp frameCount, attack_frames-1 / jge <play> / jmp <continue>`,
-//     i.e. it tests the POSITIVE and falls through to the continue,
-//     which the plain `if (frameCount < attack_frames - 1) continue;`
-//     emits with both arms the other way round. +0.055, and it takes
-//     the branch-shape distance from 3 to 1. Swapping the enclosing
-//     `if (attack_frames)` arms instead was measured and is much worse
-//     (94.90) - the flip is on the inner test alone.
-
-// CURRENT (96.2232%, rechecked 2026-09-01): predict-inline reports the call
-// multisets AGREE exactly (14 and 14). The DC dossier records 151 source
-// rows and the MarkCreatureEffect call at cmbtmgr.cpp:4293; restoring that
-// inline boundary is byte-neutral. The structure view is 224 versus 225
-// blocks, with the early one-block skew cascading through its alignment;
-// the source view localizes the first real divergence to the first animation
-// walk's stores and GetNumFrames lowering. The remainder is instruction/slot
-// selection rather than a missing DC helper. Negative controls on
-// 2026-08-21: DC's wince_frames-before-attack_frames declaration order
-// regresses to 96.21098; explicit clear/conditional-set of
-// bShowRangeFrames regresses to 95.7939 and flips one branch polarity; a
-// 1:0 ternary is byte-identical to the retained boolean assignment; and a
-// named bool for the special-wince bit is byte-flat, still folding retail's
-// `test/setne/add` to our `and/add`. The earlier six why-branch candidates
-// likewise measured +0 or worse.
-// The positive frameCount if/else removes play_frame while preserving all
-// 2561 compiled bytes and the 25 relocation names/addends at 96.2927%.
-// Its true arm permits the common frame body; only the false arm skips it.
-// The inverted continue guard still scores 96.2378%, so guard polarity and
-// scope matter here even though the source operations are otherwise equal.
-// Explicit range-flag arms and cs_defend/cs_wince stores preserve Is and
-// GetNumFrames while raising Windows 95.5183 -> 96.1622. Mac retains the
-// same separate stores; its range comparison compression remains different.
-// A switch and named frame snapshot do not reproduce that compression.
-// DC cmbtmgr.cpp:4158 proves TSpellEffectID; line 4389 retains the
-// by-value UpdateCombatArea helper. Keep that call and its nested accessors.
+// E:\gamedcs\cmbtmgr.cpp:4158. TSpellEffectID is a source-proven enum;
+// the walks select, advance and finish animations for armies[2][21].
 // DC4234/4236 and Mac 0x750d4..0x750f4 put the nested effect-loading guard
-// after the selection loop. DC4277 attributes the first two max calls to
-// one expression. Restoring those scopes raises Windows 95.8134 -> 97.2268%.
-// DC4337 and Mac 0x754b0..0x7553c retain one positive readiness condition
-// around frame advancement. The remaining differences are animation-walk
-// temporary slots and register allocation; all branches and calls agree.
-// DC4410/4411 and Mac 0x757b4..0x758ac retain a framesChanged-controlled
-// while loop. DC4425/4433 set the flag inside each advancing branch; keeping
-// those assignments raises Windows to 98.4695%. Both references subtract
-// frameCount before one when forming winceStartOffset. Moving that local
-// among its existing use scopes does not change the remaining bytes.
-// DC4292 keeps one marking condition; DC4321 encloses advancement in the
-// valid-next-frame arm. Those positive guards preserve the native scopes
-// and raise Windows to 98.5390%.
+// after effect selection. DC4277 keeps the first two max calls together.
+// DC4292/4293 retain the marking condition and MarkCreatureEffect helper;
+// Complete adds the arrow-tower case inside that canonical helper.
+// DC4321/4337 and Mac 0x754b0..0x7553c enclose advancement in the positive
+// next-frame/readiness guards. The references subtract frameCount before
+// one in winceStartOffset; moving this local among its use scopes is flat.
+// DC4389 retains by-value UpdateCombatArea; keep its nested rectangle
+// accessors. DC4410/4411 and Mac 0x757b4..0x758ac finish with a while loop
+// whose progress flag is set in each advancing branch (DC4425/4433).
+// These complete source scopes reach 98.5390% on Windows. All 225 blocks,
+// 134 branches, 14 calls and 25 relocations align; the 34 differing
+// instruction rows start at by-value extent lowering. Early-continue and
+// shared progress-write variants lose that alignment. Counter declaration
+// positions and wince-offset use-scope variants produce identical bytes.
 VA(0x00468990, 0xA08)
 DC_ADDRESS(0x062560, 0x856)
 MAC_ADDRESS(0x074eec, 0xb30)  // anchor-global
@@ -3642,7 +3585,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
 
             drawFrame(0, 1, 0, 100, 1, 1);
             // DC cmbtmgr.cpp:4389 retains this by-value rectangle helper.
-            updateCombatArea(m_drawbridgeBounds);
+            updateCombatArea(m_extent);
         }
     }
 

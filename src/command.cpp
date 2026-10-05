@@ -2880,9 +2880,9 @@ army* combatManager::addArmy(int side, int monType, int monQty,
         resetLimitCreature();
         markCreatureEffect(side, slot);
         computeMaxExtent();
-        g_windowManager->saveFizzleSourceX(m_drawbridgeBounds);
+        g_windowManager->saveFizzleSourceX(m_extent);
         drawFrame(0, 0, 0, 0, 1, 0);
-        g_windowManager->fizzleForwardX(m_drawbridgeBounds, 75);
+        g_windowManager->fizzleForwardX(m_extent, 75);
     }
     return newArmy;
 }
