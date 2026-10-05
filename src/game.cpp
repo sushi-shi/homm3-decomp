@@ -6625,11 +6625,10 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     do {
         int heroKey = readValue<unsigned char>(infile);
 
-        // Mac dc610 and retail compare the serialized byte to 255 before
-        // interpreting the widened portrait index's -1 sentinel.
-        int portrait = readValue<unsigned char>(infile);
-        if (static_cast<unsigned char>(portrait) == g_savedHeroNone)
-            portrait = -1;
+        // The >=30 admission makes Mac dc5f0..dc61c the modern roster's
+        // byte/sentinel decoder. This loadHeroId call is inferred from that
+        // operation; the original constant argument spelling is unproven.
+        int portrait = loadHeroId(infile, g_saveVersionCustomHeroSetups);
 
         std::string strTemp = readLengthPrefixedString(infile);
         std::bitset<8> availability =

@@ -2028,7 +2028,7 @@ game	?isLastHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xcec50	tokens1:b3ae
 game	?isLocalHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce970	tokens1:67b8f473808f
 game	?isLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80	tokens1:db51bf65075d
 game	?isMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90	tokens1:1ca4cf4a4598
-game	?load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	95.2296	95.2296	95.2296	0xc5630	tokens1:4c5fe433f1ee
+game	?load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	91.6362	91.6362	95.2296	0xc5630	tokens1:79de01d15f0d
 game	?load@SGameSetupOptions@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xbe260	tokens1:a8fa2eacd515
 game	?load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750	tokens1:844a06d629bc
 game	?load@game@@AAEHPAVTAbstractFile@@@Z	99.9956	100.0000	100.0000	0xbcda0	tokens1:9fcfccb2ab8e
@@ -2099,7 +2099,7 @@ game	?saveString@game@@SIHPAVTAbstractFile@@AAV?$basic_string@DU?$char_traits@D@
 game	?saveVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0	tokens1:64620643cde0
 game	?saveVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2b20	tokens1:87263ad46aca
 game	?saveVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc35a0	tokens1:a8a3d3eae80e
-game	?set@?$bitset@$07@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xd4cc0	-
+game	?set@?$bitset@$07@std@@QAEAAV12@I_N@Z	0.0000	100.0000	100.0000	0xd4cc0	-
 game	?set@?$bitset@$0JA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xcf9a0	-
 game	?set@?$bitset@$0JB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xcfa60	-
 game	?setCannedRumour@game@@AAEXXZ	100.0000	100.0000	100.0000	0xccf20	tokens1:2585a552f69c
@@ -2128,7 +2128,7 @@ game	?test@?$bitset@$07@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfef0	-
 game	?test@?$bitset@$0BM@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd17d0	-
 game	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd4e50	-
 game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0	-
-game	?transmitSaveGame@game@@QAEHHH_N0@Z	97.3992	97.4214	97.4264	0xcafd0	tokens1:d91b040b4f85
+game	?transmitSaveGame@game@@QAEHHH_N0@Z	97.4214	97.4214	97.4264	0xcafd0	tokens1:d91b040b4f85
 game	?turnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	tokens1:09ac63bef778
 game	?turnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	tokens1:b9f191ddf209
 game	?updateBonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	tokens1:9bea0f215987
