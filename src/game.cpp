@@ -8155,11 +8155,12 @@ void game::randomizeHeroPool()
 // Windows retail and Mac 0xe0918..0xe0928 index m_heroes without getHero's
 // -1 sentinel, so the hero is subscripted directly. Mac 0xe0a44..0xe0a5c
 // stores each artifact id before its -1 payload: the converting
-// type_artifact constructor builds both war-machine artifacts.
+// type_artifact constructor builds both war-machine artifacts. The original
+// SetRandomHeroArmies public is QAAXHH_N: only minimal is Boolean.
 VA(0x004c9730, 0x159)
 DC_ADDRESS(0x0b5094, 0x268)
 MAC_ADDRESS(0x0e0910, 0x1c4)
-void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
+void game::setRandomHeroArmies(int hero, int cheat, bool minimal)
 {
     armyGroup* currentArmy = &m_heroes[hero].m_army;
     const THeroTraits* traits = &g_heroTraits[hero];
