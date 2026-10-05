@@ -105,7 +105,7 @@ unsigned char checkAdjacentMonster(const hero* currentHero,
                     entryPoint.m_point.m_y,
                     entryPoint.m_point.m_z)
         & MAP_EXTRA_MONSTER) {
-        if (g_advManager->findAdjacentMonster(entryPoint.m_point, &monster,
+        if (g_advManager->findAdjacentMonster(entryPoint.m_point, monster,
                                               entryPoint.m_monster)) {
             if (searchType == const_AI_enemy_search)
                 return 1;
@@ -155,7 +155,7 @@ void searchArray::enterLith(const hero* currentHero,
             if (cell->m_type == cellType && cell->m_extraInfo != excluded
                 && cell->m_isTrigger) {
                 if (g_advManager->findAdjacentMonster(
-                        exitPoint, &monster, entryPoint.m_monster)) {
+                        exitPoint, monster, entryPoint.m_monster)) {
                     long value = aiValueOfEvent(currentHero, monster);
                     if (value <= -500000000)
                         return;
@@ -179,7 +179,7 @@ void searchArray::enterLith(const hero* currentHero,
         }
         monster = entryPoint.m_monster;
         if (searchType >= const_AI_search && cellType != LITH_TWOWAY)
-            g_advManager->findAdjacentMonster(exitPoint, &monster,
+            g_advManager->findAdjacentMonster(exitPoint, monster,
                                               entryPoint.m_monster);
         exitCell.m_point.m_x = exitPoint.m_x;
         exitCell.m_point.m_y = exitPoint.m_y;
@@ -762,7 +762,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
                 & MAP_EXTRA_MONSTER)
             && cell.m_point != start
             && g_advManager->findAdjacentMonster(
-                cell.m_point, &monster, cell.m_monster))
+                cell.m_point, monster, cell.m_monster))
             adjacentMonster = 1;
 
         testPossibleDirections(currentHero, cell, turnMobility,

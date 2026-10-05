@@ -8569,7 +8569,7 @@ void game::setupAdjacentMons()
         for (x = 0; x < g_mapWidth; ++x) {
             for (y = 0; y < g_mapHeight; ++y) {
                 if (g_advManager->findAdjacentMonster(
-                        type_point(x, y, z), &monster, excluded)) {
+                        type_point(x, y, z), monster, excluded)) {
                     unsigned short* extraByte = getMapExtraPtr(x, y, z);
                     *extraByte |= MAP_EXTRA_MONSTER;
                 } else {

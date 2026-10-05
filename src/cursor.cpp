@@ -758,7 +758,7 @@ void advManager::checkAdjacentMon(int* foughtBattle)
     type_point location = curr->getLocation();
     type_point monster(0xff, 0xff, 0xff);
 
-    if (findAdjacentMonster(location, &monster, monster)) {
+    if (findAdjacentMonster(location, monster, monster)) {
         stopCursor(1);
         curr->m_pathTargetY = -1;
         curr->m_pathTargetX = -1;

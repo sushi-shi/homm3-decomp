@@ -3654,7 +3654,7 @@ int netValueOfLocation(hero* currentHero, HeroDestination& destination,
     type_point monsterPos;
     if (!g_adventureObjectTraits[type].m_blocksLanding) {
         point = destination.m_point;
-        if (g_advManager->findAdjacentMonster(point, &monsterPos, point)) {
+        if (g_advManager->findAdjacentMonster(point, monsterPos, point)) {
             if (currentPathCell->m_monster != monsterPos
                 && value >= -500000000)
                 value += aiValueOfEvent(currentHero, monsterPos,
