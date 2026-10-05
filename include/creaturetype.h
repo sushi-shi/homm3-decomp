@@ -49,8 +49,7 @@ inline const char* getArmyName(int type, int count)
 DC_ADDRESS(0x0718dc, 0x20)
 inline TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr)
 {
-    return g_townDwellingCreatures[
-        townType * 2 * TOWN_DWELLING_COUNT + baseCreatureNbr];
+    return g_dwellingType[townType][baseCreatureNbr];
 }
 
 #endif  /* HOMM3_CREATURETYPE_H */

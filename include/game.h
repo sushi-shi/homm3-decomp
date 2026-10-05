@@ -1096,11 +1096,9 @@ public:
     // applySavedGameHeader restores SavedGameHeader::gameVersion here.
     int m_gameVersion;
     unsigned char m_isCheater;
-    // Byte gate town::can_build and get_buildable_mask test before the
-    // Castle-Griffin-Tower special case that drops the Blacksmith
-    // requirement; it sits four bytes past f_1f698 in the same band.
-    // Role unattested - ordinal placeholder.
-    unsigned char m_isTutorial;  // DC is_tutorial; Mac compares without sign extension.
+    // DC is_tutorial: retail SaveGame (0x418160) passes this byte directly
+    // to the native bool determineSuffix parameter, with no normalization.
+    bool m_isTutorial;
     // Dreamcast bIsCheater/is_tutorial are adjacent bytes; retail
     // places them at +0x1f69c/d before setup at +0x1f6a0. This gap aligns it.
     char m_paddingBeforeSetup[2];
@@ -1251,7 +1249,7 @@ public:
     int getLocalPlayerGamePos() const;  // 0x4cea20
     ESpellId getRandomSpell(std::bitset<5> spellLevels);  // 0x4c95a0
     ESpellId getRandomSpell(int level);
-    boat* getHeroBoat(int id, unsigned char occupied);  // 0x4ce900
+    boat* getHeroBoat(int id, bool occupied);  // 0x4ce900
     int getHeroId(type_point heroLocation);
     int getMineId(int x, int y, int z);
     int getGarrisonId(int x, int y, int z);
@@ -1635,10 +1633,11 @@ int getTeam(int playerNum) const
         }
     }
 
-    // DC-attested inline helper. Retail's shrine consumer proves the signed
-    // [0,8) player guard and the byte bitset at +0x4e344.
+    // Original DC public GetInfoFlag@game@@QBA_NW4GlobalInfoFlags@@H@Z
+    // proves bool. Retail's shrine consumer proves the signed [0,8) player
+    // guard and the byte bitset at +0x4e344.
     DC_ADDRESS(0x01fefc, 0x44)
-    unsigned char getInfoFlag(enum GlobalInfoFlags flag, const int playerNum) const
+    bool getInfoFlag(enum GlobalInfoFlags flag, const int playerNum) const
     {
         if (playerNum < 0 || playerNum >= 8)
             return 0;

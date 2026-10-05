@@ -187,10 +187,10 @@ static int getCreatureDwellingIndex(TCreatureType type)
         return -1;
 
     int creatureIndex = traits.m_level;
-    if (type == g_townDwellingCreatures[townType * 14 + creatureIndex])
+    if (type == g_dwellingType[townType][creatureIndex])
         return creatureIndex;
     creatureIndex += 7;
-    if (type == g_townDwellingCreatures[townType * 14 + creatureIndex])
+    if (type == g_dwellingType[townType][creatureIndex])
         return creatureIndex;
     return -1;
 }
@@ -222,8 +222,7 @@ TCreatureType upgradedCreatureType(TCreatureType type)
     int creatureIndex = getCreatureDwellingIndex(type);
     if (creatureIndex < 0 || creatureIndex >= 7)
         return CREATURE_NONE;
-    return g_townDwellingCreatures[
-        g_creatureTypeTraits[type].m_townType * 14 + creatureIndex + 7];
+    return g_dwellingType[g_creatureTypeTraits[type].m_townType][creatureIndex + 7];
 }
 
 VA(0x0047B220, 0x6D)
@@ -233,8 +232,7 @@ TCreatureType downgradedCreatureType(TCreatureType type)
     int creatureIndex = getCreatureDwellingIndex(type);
     if (creatureIndex < 7)
         return CREATURE_NONE;
-    return g_townDwellingCreatures[
-        g_creatureTypeTraits[type].m_townType * 14 + creatureIndex - 7];
+    return g_dwellingType[g_creatureTypeTraits[type].m_townType][creatureIndex - 7];
 }
 
 VA(0x0047b290, 0x1E9)

@@ -1375,7 +1375,7 @@ int advManager::main(message& msg)
     return result;
 }
 
-unsigned char saveGame(unsigned char campaignWinMode);
+bool saveGame(bool campaignWinMode);
 
 // The exit-command latch DoSystemOptions fills; owner TU unlocated, nearest
 // consumer declares - and that is now ProcessKeyPress below, whose N, L,
@@ -1452,6 +1452,8 @@ unsigned char saveGame(unsigned char campaignWinMode);
 // exitFlag: bool&, despite the lowered unsigned-byte debug primitive.
 // Retail forwards the same four addresses; preserve the references and
 // the const message layer.
+// DC1898 constructs the movement trigger inside ValidMove's successful
+// arm before HideRoute. It needs no separate inner lifetime block.
 VA(0x00408c40, 0xB9D)
 DC_ADDRESS(0x008b70, 0x7c0)
 MAC_ADDRESS(0x009144, 0x8ec)  // anchor-callee
@@ -1663,6 +1665,10 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
         && g_game->getCurrHeroId() != -1) {
         walker = g_game->getCurrHero();
         if (validMove(g_game->getCurrHero(), moveDir, 0, 1)) {
+            type_point walkTrigger;
+            int noMove;
+            int foughtBattle;
+
             hideRoute(1, 1, 1);
 
             g_mouseManager->hidePointer();
@@ -1670,10 +1676,6 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
             walker->m_pathTargetY = walker->m_y + g_normalDirTable[moveDir].m_y;
             walker->m_pathTargetZ = walker->m_z;
 
-            {
-            type_point walkTrigger;
-            int noMove;
-            int foughtBattle;
             peventCell = moveHero(moveDir, 1, walkTrigger, &noMove, 0,
                                    &foughtBattle, 0);
             m_advWindow->updateHeroLocator(-1, 1, 1);
@@ -1691,7 +1693,6 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
             updBottomView(1, 1, 1);
 
             checkDimHero();
-            }
         }
     }
     return 1;
@@ -2631,16 +2632,16 @@ void setWitchHutHelpText(char* buffer, hero* currentHero,
 // same way (57 arms, 17 differing) and shares five of those rows exactly -
 // PYRAMID, WAGON, WARRIOR_TOMB, WATER_WHEEL and WINDMILL are the same
 // inlined helpers, so a fix there is worth double.
-// Mac 0xd1f8..0xd218 and 0xd5c8..0xd5ec preserve the named low-five-bit
-// ids and normalized fullness predicates in the spring/garden arms. Keep
-// their existing magicSpringIsFull/gardenIsFull helpers: restoring those
-// calls with the named ids raises Windows 95.5832 -> 95.69% (185 branches,
-// retail 188), without extending any rollover string temporary lifetime.
+// Mac 0xd1f8..0xd218 and 0xd5c8..0xd5ec expand getItemId's low-five-bit
+// extraction and short result, followed by the spring/garden full-bit
+// predicates. Keep both accessor calls without extending string lifetimes.
 // SIREN/STABLES retain the whole visited-text operation inside the trigger/
 // hero guard: Mac 0xda80/0xda88 and 0xdb08/0xdb10 exit to 0xe068; retail
 // 0x40c8a4/0x40c8af and 0x40c8f5/0x40c900 exit to 0x40d13b. Guarding
 // only the assignment read uninitialized visited on those exits. Restoring
 // the native scopes also recovers 95.69 -> 96.76% Windows.
+// Restoring the native short ID accessor in both arms leaves 96.16%; keep
+// the supported helper paths while recovering the remaining branch joins.
 VA(0x0040b150, 0x229C)
 DC_ADDRESS(0x00c13c, 0x2c40)
 MAC_ADDRESS(0x00c1e8, 0x1eb4)  // anchor-global
@@ -3069,7 +3070,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = ((player->m_magicSpringFlags
-                    & (1UL << cell->m_magicSpringInfo.m_id))
+                    & (1UL << cell->getItemId()))
                     && !cell->magicSpringIsFull());
                 if (visited)
                     sprintf(tempText, visitedFormat,
@@ -3164,7 +3165,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         strcpy(g_text, g_quickViewText[MYSTICAL_GARDEN]);
         if (cell->m_isTrigger) {
             visited = ((player->m_mysticalGardenFlags
-                & (1UL << cell->m_gardenInfo.m_id))
+                & (1UL << cell->getItemId()))
                 && !cell->gardenIsFull());
             if (visited)
                 sprintf(tempText, visitedFormat,
@@ -3839,14 +3840,9 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 // dwords it prices (0x10 against our 0x8) all go together.  That is an
 // OVER-inline of a template leaf with no admissible lever: a statement pin is
 // a falling-only floor and caller-shrink would need an invented static.
-// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP - measured and
-// rejected.  The Dreamcast block names TWO `cellExtra` locals
-// (ExtraInfoUnion, sp+0x44 and sp+0x40), i.e. the trigger cell's extraInfo
-// is read once into a named union per block and both the TOWN id and the
-// SHIPYARD owner come out of it, where this body calls
-// `get_trigger_cell()->get_map_extraInfo()` at all four sites.  One
-// `ExtraInfoUnion cellExtra;` per big block scores 91.6133 and one per ARM
-// scores the same, against 91.6263 - retail re-reads.
+// The two SHIPYARD arms own distinct ExtraInfoUnion cellExtra locals
+// (DC 0xf752/0xf8c4; Mac 0xe948/0xebbc). Read their signed owner field
+// after getTriggerCell/getMapExtraInfo, preserving those helper calls.
 // DC's mouseManager::GetFrame is restored in the scroll fallback. Its
 // GetCurrHero/get_location calls at lines 4642/4645 are also restored.
 // The pair currently lowers to 88.6107% in Windows (from 92.1875% with
@@ -3916,10 +3912,11 @@ int advManager::processHover(int mouseX, int mouseY)
             }
 
             if (currCell->m_type == SHIPYARD) {
-                int owner = static_cast<int>(
-                    currCell->getTriggerCell()->getMapExtraInfo() << 24)
-                    >> 24;
-                if (g_game->onSameTeam(owner, g_netLocalGamePos)) {
+                ExtraInfoUnion cellExtra;
+                cellExtra.m_extraInfo =
+                    currCell->getTriggerCell()->getMapExtraInfo();
+                if (g_game->onSameTeam(cellExtra.m_shipyardInfo.m_owner,
+                                       g_netLocalGamePos)) {
                     g_mouseManager->setPointer(6, mouseManager::ADVENTURE_SET);
                     m_advCommand = 8;
                     return 1;
@@ -3951,10 +3948,11 @@ int advManager::processHover(int mouseX, int mouseY)
                     return 1;
                 }
             } else if (currCell->m_type == SHIPYARD) {
-                int owner = static_cast<int>(
-                    currCell->getTriggerCell()->getMapExtraInfo() << 24)
-                    >> 24;
-                if (g_game->onSameTeam(owner, g_netLocalGamePos)) {
+                ExtraInfoUnion cellExtra;
+                cellExtra.m_extraInfo =
+                    currCell->getTriggerCell()->getMapExtraInfo();
+                if (g_game->onSameTeam(cellExtra.m_shipyardInfo.m_owner,
+                                       g_netLocalGamePos)) {
                     g_mouseManager->setPointer(6, mouseManager::ADVENTURE_SET);
                     m_advCommand = 8;
                     return 1;
@@ -4811,8 +4809,9 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     unsigned char foundBoat = scanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
 
     if (thisCell->m_objects.size() > 0) {
-        // DC records int row, but retail tests the back edge unsigned (jbe).
-        for (unsigned int row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
+        // DC records int row; DC 0x12522, Mac 0x11df8 and retail all
+        // compare the layer bound unsigned.
+        for (int row = 0; row <= static_cast<unsigned>(OBJECT_DRAW_LAYER_LAST); ++row) {
             for (int numObj = 0; numObj < thisCell->m_objects.size();
                  ++numObj) {
                 NewmapCell::TObjectCell* objCell = &thisCell->m_objects[numObj];
@@ -5693,16 +5692,21 @@ NewmapCell* advManager::getCell(type_point point)
 // Retail's own inconsistency, transcribed rather than tidied: the row
 // advance uses the LIVE screenBitmap->Pitch while the writes inside a
 // pixel block use a hardcoded 0x640-byte stride.
+// Original UpdateRadar publics encode _N for all five display flags in
+// both overloads. DC 0x15edc and Mac 0x14534..0x14564 retain the bitmap
+// DrawInterface boundary at the final marker blit.
 VA(0x00412c40, 0xB41)
 DC_ADDRESS(0x014bec, 0x1390)
 MAC_ADDRESS(0x01382c, 0xd74)  // linkorder
-void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsigned char partialUpdate, unsigned char viewMines, unsigned char viewHeros, unsigned char viewTowns)
+void advManager::updateRadar(type_point origin, bool updateFlag,
+                             bool partialUpdate, bool viewMines,
+                             bool viewHeroes, bool viewTowns)
 {
-    widget* radar = m_advWindow->m_radarWidget;
-    int rectX = radar->m_x;
-    int rectY = radar->m_y;
-    int rectWidth = radar->m_width;
-    int rectHeight = radar->m_height;
+    unsigned short colour = 0;
+    int rectX = m_advWindow->m_radarWidget->m_x;
+    int rectY = m_advWindow->m_radarWidget->m_y;
+    int rectWidth = m_advWindow->m_radarWidget->m_width;
+    int rectHeight = m_advWindow->m_radarWidget->m_height;
 
     if (g_remoteOn && !g_currentPlayer->isLocalHuman()) {
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
@@ -5711,6 +5715,8 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
             return;
     }
 
+    int firstColumn = 0;
+    int firstRow = 0;
     int lastColumn = g_mapWidth - 1;
     int lastRow = g_mapHeight - 1;
     playerData* localPlayer = g_game->getLocalPlayer();
@@ -5726,98 +5732,105 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
         return;
     m_heroLogoShowing = 0;
 
-    // DC advmgr.cpp:7085 names game::GetHero for this lookup. Complete
-    // expands the accessor within the existing current-hero branch.
-    // The acting player's live hero, and its map square, so the cell loop
-    // below can paint that one square in the owner's colour.
-    // The two knobs the 2026-08-21 note banked as REJECTED (-0.69 for the
-    // explicit else arm, -0.25 for dropping the `int z = origin.z;` cache)
-    // are worth +0.60 TOGETHER, which is the non-monotone-combination rule
-    // exactly: measure the pair, not each knob. With both applied the
-    // branch polarity at the currentHero guard flips to retail's `jne`
-    // (the zero store is the FALL-THROUGH arm, so the null case is the
-    // `if` and the lookup the `else`), and the third knob - initialising
-    // `revealed` from the whole && chain instead of `= 0` plus a guarded
-    // `= 1` - gives retail's `mov al,1 / jmp / xor al,al` and takes the
-    // branch view CLEAN. 90.6495 -> 91.2477.
-    // Still rejected, re-measured here: widening `visibilityBit` to the
-    // `int` retail plainly holds at [ebp-0x44] (`and eax,0xffff / test
-    // ecx,eax` against our byte `test cl,al`) costs 0.12 with the bool
-    // initialiser in place and 0.71 without it. The rest is the
-    // callee-saved role of `this`: retail keeps it in ECX and spills to
-    // [ebp-0x8], we move it to ESI - the bounded C1 handle-state class.
+    // DC advmgr.cpp:7085 and Mac 0x139cc..0x139fc recover this nullable
+    // GetHero lookup; the helper owns the -1 sentinel check. DC's int
+    // playerBit matches the full-width retail mask test; cell_union survives in
+    // Mac's shipyard store/owner-byte load at 0x13fc0..0x13fcc. Recovering
+    // both locals together improves the match. DC7041 keeps colour at
+    // function scope; 7046..7049 read the four widget fields separately.
     int heroX = -1;
     int heroY = -1;
-    const hero* currentHero;
-    if (localPlayer->m_currHeroId == -1) {
-        currentHero = 0;
-    } else {
-        currentHero = g_game->getHero(localPlayer->m_currHeroId);
-        if (currentHero && currentHero->m_z == origin.m_z) {
-            heroX = currentHero->m_x;
-            heroY = currentHero->m_y;
-        }
+    const hero* currentHero = g_game->getHero(localPlayer->m_currHeroId);
+    if (currentHero && currentHero->m_z == origin.m_z) {
+        heroX = currentHero->m_x;
+        heroY = currentHero->m_y;
     }
 
-    int rowPhase = 0;
     int blockPhase = 0;
+    int rowPhase = 0;
     unsigned short* destRow;
-    // DC 7097..7117 names GetMap for the radar origin. Mac 13a5c..13b20
-    // and retail compute map + bytePitch*rectY + 2*rectX, with no signed
-    // divide/round path. Let the canonical accessor preserve byte pitch.
-    if (g_mapHeight == MAP_DIMENSION_SMALL
-        || g_mapHeight == MAP_DIMENSION_MEDIUM) {
-        destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
-    } else if (g_mapHeight == MAP_DIMENSION_LARGE) {
-        rowPhase = 0;
-        blockPhase = 0;
-        destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
-    } else {
-        destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
+    unsigned short* dest;
+    // DC7059..7062 bounds the full map; 7097..7117 derives the pixel
+    // origin, horizontal offset and large-map phases from those bounds.
+    // Mac 13a5c..13b20 folds the zero upper-left bounds but retains the
+    // offset into each row. DC keeps both drawing pointers and the cell at
+    // function scope, with z and visibility local to each row.
+    int xOffset;
+    NewmapCell* cell;
+    int x;
+    switch (g_mapHeight) {
+    case MAP_DIMENSION_SMALL:
+        destRow = g_windowManager->m_screenBitmap->getMap(
+            rectX, rectY + firstRow / 4);
+        xOffset = firstColumn / 4;
+        break;
+    case MAP_DIMENSION_MEDIUM:
+        destRow = g_windowManager->m_screenBitmap->getMap(
+            rectX, rectY + firstRow / 2);
+        xOffset = firstColumn / 2;
+        break;
+    case MAP_DIMENSION_LARGE:
+        destRow = g_windowManager->m_screenBitmap->getMap(
+            rectX, rectY + (firstRow * 4 + 2) / 3);
+        xOffset = (firstColumn * 4 + 2) / 3;
+        blockPhase = firstColumn % 3;
+        rowPhase = firstRow % 3;
+        break;
+    default:
+        destRow = g_windowManager->m_screenBitmap->getMap(
+            rectX, rectY + firstRow);
+        xOffset = firstColumn;
+        break;
     }
 
-    unsigned char visibilityBit = g_mapVisibilityBit;
-    for (int y = 0; y <= lastRow; y++) {
-        unsigned short* dest = destRow;
-        // Retail row advances use byte pitch; DC's radarRowStart remains
-        // unsigned short*. Use the existing byte view without doubling it.
-        Bitmap16MapPointer nextRow;
-        nextRow.m_pixels = destRow;
+    int visibilityBit = g_mapVisibilityBit;
+    for (int y = firstRow; y <= lastRow; y++) {
+        dest = destRow + xOffset;
+        // The native row pointer is unsigned short*, advanced by byte pitch.
         switch (g_mapHeight) {
         case MAP_DIMENSION_SMALL:
-            nextRow.m_bytes += 4 * g_windowManager->m_screenBitmap->getPitch();
+            destRow = reinterpret_cast<unsigned short*>(
+                reinterpret_cast<unsigned char*>(destRow)
+                + 4 * g_windowManager->m_screenBitmap->getPitch());
             break;
         case MAP_DIMENSION_MEDIUM:
-            nextRow.m_bytes += 2 * g_windowManager->m_screenBitmap->getPitch();
+            destRow = reinterpret_cast<unsigned short*>(
+                reinterpret_cast<unsigned char*>(destRow)
+                + 2 * g_windowManager->m_screenBitmap->getPitch());
             break;
         case MAP_DIMENSION_LARGE:
-            nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
-            if (++rowPhase > 2) {
+            destRow = reinterpret_cast<unsigned short*>(
+                reinterpret_cast<unsigned char*>(destRow)
+                + g_windowManager->m_screenBitmap->getPitch());
+            if (++rowPhase > 2)
                 rowPhase = 0;
-                nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
-            } else if (rowPhase == 0) {
-                nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
+            if (rowPhase == 0) {
+                destRow = reinterpret_cast<unsigned short*>(
+                    reinterpret_cast<unsigned char*>(destRow)
+                    + g_windowManager->m_screenBitmap->getPitch());
             }
             break;
         case MAP_DIMENSION_EXTRA_LARGE:
-            nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
+            destRow = reinterpret_cast<unsigned short*>(
+                reinterpret_cast<unsigned char*>(destRow)
+                + g_windowManager->m_screenBitmap->getPitch());
             break;
         }
-        destRow = nextRow.m_pixels;
+        int z = origin.m_z;
+        bool revealed;
 
-        for (int x = 0; x <= lastColumn; x++) {
-            NewmapCell* cell = m_fullMap->cell(x, y, origin.m_z);
+        for (x = firstColumn; x <= lastColumn; x++) {
+            cell = m_fullMap->cell(x, y, z);
 
-            unsigned char revealed =
+            revealed =
                 !g_completeDrawAllCells
-                && (visibilityBit & getMapExtra(x, y, origin.m_z)) && x >= 0
+                && (visibilityBit & getMapExtra(x, y, z)) && x >= 0
                 && y >= 0 && x < g_mapWidth && y < g_mapHeight;
             if (viewMines && cell->m_type == MINE)
                 revealed = 1;
-            if (viewHeros && cell->m_type == HERO)
+            if (viewHeroes && cell->m_type == HERO)
                 revealed = 1;
 
-            unsigned short colour;
             if (!(viewTowns && cell->m_type == TOWN) && !revealed) {
                 colour = 0;
             } else {
@@ -5859,10 +5872,11 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
                         if (!(cell->m_cellFlags & 0x40)
                             || (cell->m_cellFlags & 0x1000)) {
                             NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger)
-                                colour = g_systemPalette->m_data[64 +
-                                    g_game->m_towns[trigger
-                                        ->getMapExtraInfo()].m_owner];
+                            if (trigger) {
+                                int owner = g_game->m_towns[
+                                    trigger->getMapExtraInfo()].m_owner;
+                                colour = g_systemPalette->m_data[64 + owner];
+                            }
                         }
                         break;
                     case LIGHTHOUSE:
@@ -5870,10 +5884,11 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
                         if (!(cell->m_cellFlags & 0x40)
                             || (cell->m_cellFlags & 0x1000)) {
                             NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger)
-                                colour = g_systemPalette->m_data[64 +
-                                    g_game->getMine(trigger
-                                        ->getMapExtraInfo())->m_playerOwner];
+                            if (trigger) {
+                                int owner = g_game->getMine(
+                                    trigger->getMapExtraInfo())->m_playerOwner;
+                                colour = g_systemPalette->m_data[64 + owner];
+                            }
                         }
                         break;
                     case CREATURE_GENERATOR_1:
@@ -5881,30 +5896,35 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
                         if (!(cell->m_cellFlags & 0x40)
                             || (cell->m_cellFlags & 0x1000)) {
                             NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger)
-                                colour = g_systemPalette->m_data[64 +
-                                    g_game->m_generators[trigger
-                                        ->getMapExtraInfo()].getOwner()];
+                            if (trigger) {
+                                int owner = g_game->m_generators[
+                                    trigger->getMapExtraInfo()].getOwner();
+                                colour = g_systemPalette->m_data[64 + owner];
+                            }
                         }
                         break;
                     case GARRISON:
                         if (!(cell->m_cellFlags & 0x40)
                             || (cell->m_cellFlags & 0x1000)) {
                             NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger)
-                                colour = g_systemPalette->m_data[64 +
-                                    g_game->getGarrison(trigger
-                                        ->getMapExtraInfo())->m_playerOwner];
+                            if (trigger) {
+                                int owner = g_game->getGarrison(
+                                    trigger->getMapExtraInfo())->m_playerOwner;
+                                colour = g_systemPalette->m_data[64 + owner];
+                            }
                         }
                         break;
                     case SHIPYARD:
                         if (!(cell->m_cellFlags & 0x40)
                             || (cell->m_cellFlags & 0x1000)) {
                             NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger)
-                                colour = g_systemPalette->m_data[64 +
-                                    static_cast<signed char>(trigger
-                                        ->getMapExtraInfo())];
+                            if (trigger) {
+                                unsigned long extraInfo = trigger->getMapExtraInfo();
+                                ExtraInfoUnion cellExtra;
+                                cellExtra.m_extraInfo = extraInfo;
+                                int owner = cellExtra.m_shipyardInfo.m_owner;
+                                colour = g_systemPalette->m_data[64 + owner];
+                            }
                         }
                         break;
                     }
@@ -5913,7 +5933,8 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
 
             // The write side of the 4/3 stretch. The 0x640 stride is
             // retail's own hardcode; the row advance above uses the live
-            // Pitch instead.
+            // Pitch instead. DC7369..7400 and Mac 0x140a4..0x14108 retain
+            // all four large-map write/advance arms.
             switch (g_mapHeight) {
             case MAP_DIMENSION_SMALL:
                 dest[0] = colour;
@@ -5943,21 +5964,26 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
                 break;
             case MAP_DIMENSION_LARGE:
                 if (blockPhase) {
-                    dest[0] = colour;
-                    if (rowPhase)
+                    if (rowPhase) {
+                        dest[0] = colour;
                         dest += 1;
-                    else {
+                    } else {
+                        dest[0] = colour;
                         dest[0x320] = colour;
                         dest += 1;
                     }
                 } else {
-                    dest[0] = colour;
-                    dest[1] = colour;
-                    if (!rowPhase) {
+                    if (rowPhase) {
+                        dest[0] = colour;
+                        dest[1] = colour;
+                        dest += 2;
+                    } else {
+                        dest[0] = colour;
+                        dest[1] = colour;
                         dest[0x320] = colour;
                         dest[0x321] = colour;
+                        dest += 2;
                     }
-                    dest += 2;
                 }
                 if (++blockPhase > 2)
                     blockPhase = 0;
@@ -6032,31 +6058,17 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
         }
     }
 
-    int srcX;
-    if (origin.m_x < 0)
-        srcX = static_cast<long>(-scale * origin.m_x);
-    else
-        srcX = 0;
-    int srcY;
-    if (origin.m_y < 0)
-        srcY = static_cast<long>(-scale * origin.m_y);
-    else
-        srcY = 0;
+    // Retail and Mac 0x142e8..0x144cc convert the floating conditional
+    // result after its arms join, including the zero source-offset arm.
+    int srcX = origin.m_x < 0 ? -scale * origin.m_x : 0;
+    int srcY = origin.m_y < 0 ? -scale * origin.m_y : 0;
 
     CSprite* icons = m_radarIcons;
     int drawWidth = icons->getWidth() - srcX;
     int drawHeight = icons->getHeight() - srcY;
 
-    int destX;
-    if (origin.m_x < 0)
-        destX = static_cast<long>(static_cast<float>(rectX));
-    else
-        destX = static_cast<long>(rectX + origin.m_x * scale);
-    int destY;
-    if (origin.m_y < 0)
-        destY = static_cast<long>(static_cast<float>(rectY));
-    else
-        destY = static_cast<long>(rectY + origin.m_y * scale);
+    int destX = origin.m_x < 0 ? rectX : rectX + origin.m_x * scale;
+    int destY = origin.m_y < 0 ? rectY : rectY + origin.m_y * scale;
 
     if (icons->getWidth() + destX > rectX + rectWidth)
         drawWidth += rectWidth - icons->getWidth() - destX + rectX;
@@ -6069,10 +6081,8 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
 
     if (!suppressIcon)
         icons->drawInterface(radarFrame, srcX, srcY, drawWidth, drawHeight,
-                             g_windowManager->m_screenBitmap->getMap(0, 0), destX,
-                             destY, g_windowManager->m_screenBitmap->getWidth(),
-                             g_windowManager->m_screenBitmap->getHeight(),
-                             g_windowManager->m_screenBitmap->getPitch(), 0);
+                             g_windowManager->m_screenBitmap, destX, destY,
+                             false);
 
     if (updateFlag)
         g_windowManager->updateScreen(rectX, rectY, rectWidth, rectHeight);
@@ -6081,7 +6091,8 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
 VA(0x00413790, 0x27)
 DC_ADDRESS(0x015f7c, 0x5e)
 MAC_ADDRESS(0x0145a0, 0x48)
-void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpdate, unsigned char viewMines, unsigned char viewHeroes, unsigned char viewTowns)
+void advManager::updateRadar(bool updateFlag, bool partialUpdate,
+                             bool viewMines, bool viewHeroes, bool viewTowns)
 {
     updateRadar(m_radarOrigin, updateFlag, partialUpdate, viewMines,
                 viewHeroes, viewTowns);
@@ -6122,12 +6133,16 @@ void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpda
 // Complete calls the exact mine/shrine/tree/witch helpers and the distinct
 // quick-info quest/seer builders 0x572e40/0x5743e0. DC's older in-caller mine
 // and seer operations do not replace those retail-proven calls. The current
-// quest temporary's destructor expands naturally as retail does. Remaining
-// differences include GetHero arm layout, the nested cell/zCell decision,
-// and switch-tail scheduling. Compare named sites, not aggregate call counts.
-// ExtraInfoUnion's DC inheritance is represented by NewmapCell's existing
-// data/accessor surface; the audit retains that ownership gap, including
-// GetItemId. It is not evidence for a copied helper body in this caller.
+// retail quest temporary's destructor expands. With the supported spring/
+// garden accessor calls restored, our cleanup retains a nested _Tidy call
+// (93.56%). Keep those calls while recovering the lifetime/inliner context.
+// Other differences include GetHero arm layout, the nested cell/zCell
+// decision, and switch-tail scheduling. Compare named sites, not totals.
+// DC8332 names GetItemId for the garden's visit bit. Mac 0x15ab4..0x15acc
+// expands its five-bit extraction and short result before the shift.
+// Mac 0x15764..0x15788 has the same accessor followed by the spring's
+// full-bit predicate; 0x15ad8..0x15adc expands the garden predicate.
+// NewmapCell inherits these canonical ExtraInfoUnion accessors.
 // DC records text lookups throughout the quick-info arms. Preserve the
 // Complete getText helper at those sites while checking retail call shape.
 // The one call-count delta (80 vs 79) is WATERING_HOLE's visited/unvisited
@@ -6615,7 +6630,8 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = ((g_currentPlayer->m_magicSpringFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f))) && !((testCell->m_extraInfo >> 6) & 1));
+                            & (1UL << testCell->getItemId()))
+                            && !testCell->magicSpringIsFull());
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6697,8 +6713,8 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
                     visited = (g_currentPlayer->m_mysticalGardenFlags
-                        & (1UL << (testCell->m_extraInfo & 0x1f)))
-                        && !((testCell->m_extraInfo >> 10) & 1);
+                        & (1UL << testCell->getItemId()))
+                        && !testCell->gardenIsFull();
                     if (visited)
                         sprintf(tempText, visitFormat,
                                 g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -7256,11 +7272,13 @@ static TSkillMastery getIdentifyLevel(type_point point)
 
 // Dreamcast advmgr.cpp:9088 calls Hero.h get_location before
 // get_identify_level; retail expands the point construction.
+// Original DC public HeroQuickView@advManager@@QAAXHHH_N@Z proves
+// displayDropShadow is bool.
 VA(0x00416590, 0x210)
 DC_ADDRESS(0x0194bc, 0x1b8)
 MAC_ADDRESS(0x016e24, 0x1e8)
 void advManager::heroQuickView(int heroId, int x, int y,
-                               unsigned char displayDropShadow)
+                               bool displayDropShadow)
 {
     hero* theHero = g_game->getHero(heroId);
     type_point heroPoint = theHero->getLocation();
@@ -7302,11 +7320,13 @@ const char* getBuildingName(int townType, int buildingId);
 // Restoring these together gives 99.5015%; DC 9192/9193 and retail place
 // first = 1 before calculateProduction, closing the remaining instruction
 // schedule difference at 100%. No alternate string spelling is required.
+// Original DC public TownQuickView@advManager@@QAAXHHH_N@Z likewise
+// proves displayDropShadow is bool.
 VA(0x004167a0, 0x7DB)
 DC_ADDRESS(0x019674, 0x668)
 MAC_ADDRESS(0x01700c, 0x638)  // anchor-callee
 void advManager::townQuickView(int townId, int x, int y,
-                               unsigned char displayDropShadow)
+                               bool displayDropShadow)
 {
     if (townId == -1)
         return;
@@ -7886,12 +7906,13 @@ void advManager::setHeroContext(int heroId, int inMove, bool waitingPlayer, bool
     }
 }
 
+// Original DC public SaveGame@@YA_N_N@Z proves the bool result and mode.
 VA(0x00418160, 0x270)
 DC_ADDRESS(0x01ae38, 0x32a)
 MAC_ADDRESS(0x0187b4, 0x288)
-unsigned char saveGame(unsigned char campaignWinMode)
+bool saveGame(bool campaignWinMode)
 {
-    unsigned char result = 0;
+    bool result = false;
     int humanCount = 0;
     if (!campaignWinMode) {
         g_advManager->disableButtons();
@@ -9102,18 +9123,9 @@ int mapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit)
 // reused for the puzzle origin and the closing view re-centre (the
 // tail's x/y/z writes are RMW bitfield inserts into the same slot).
 
-// Residual (83.31%): pure schedule/register-homing inside the grail
-// draw block - branch shape agrees 4/4+1ret, call multiset agrees, and
-// the raw 13-arg DrawAdvObjWithFlag overload is byte-proven the right
-// spelling (the Bitmap16Bit* wrapper evaluates dx/dy before the bitmap
-// field loads and measures 75.35; the raw call measures 83.31; the
-// SetHeroContext merged y|z idiom in the tail was worth +5.1 before
-// that). What remains: retail re-loads arrowTileset per use where our
-// CL folds one load (sub eax,[edx+0x34] vs mov/sub), and the dy/dx
-// arithmetic interleaves with the bitmap pushes differently. Tried and
-// rejected: grailY-before-grailX declaration order (+0.01, copy-prop
-// eats it). why-reg finds first defs aligned - past-first-defs
-// schedule, the bounded class.
+// PuzzleDraw keeps the Bitmap16Bit-taking DrawTile wrapper recorded by
+// DC at 0x1e398. Mac's retained PuzzleDraw (0x1b6b8) expands that same
+// wrapper; VC6 expands both helpers here and reproduces retail exactly.
 // DC advmgr.cpp:11281 calls get_map_center at the closing recenter step;
 // Complete expands its fixed viewport offset.
 VA(0x0041a7f0, 0x307)
@@ -9134,9 +9146,8 @@ void advManager::viewPuzzle()
     if (g_game->m_numObelisks > 0) {
         g_windowManager->saveFizzleSourceX(8, 8, 592, 544);
         type_point centre = g_game->getPuzzleOrigin();
-        int grailY = g_game->m_ultimateArtifactY;
-        int grailX = g_game->m_ultimateArtifactX;
-        puzzleDraw(centre.m_x, centre.m_y, centre.m_z, grailX, grailY);
+        puzzleDraw(centre.m_x, centre.m_y, centre.m_z,
+                   g_game->m_ultimateArtifactX, g_game->m_ultimateArtifactY);
         g_windowManager->m_screenBitmap->colorize(8, 8, 592, 544, 0.625f,
                                                 0.0f);
         int revealed = puzzle.updatePuzzle(0);
@@ -9167,12 +9178,10 @@ void advManager::puzzleDraw(int startX, int startY, int z, int ultX, int ultY)
     completeDraw(startX, startY, z, 0, 0);
     g_drawingPuzzle = 0;
     m_arrowTileset->drawTile(
-        0, 0, 0, 32, 32, g_windowManager->m_screenBitmap->getMap(0, 0),
+        0, 0, 0, 32, 32, g_windowManager->m_screenBitmap,
         (ultX - startX) * 32 + (32 - m_arrowTileset->getWidth()) / 2,
         (ultY - startY) * 32 + (32 - m_arrowTileset->getHeight()) / 2,
-        g_windowManager->m_screenBitmap->getWidth(),
-        g_windowManager->m_screenBitmap->getHeight(),
-        g_windowManager->m_screenBitmap->getPitch(), 0, 0);
+        false, false);
 }
 
 VA(0x0041ab00, 0xF8)
@@ -9213,7 +9222,7 @@ void advManager::doAdventureOptions()
         mobilizeCurrHero(0, 0, 1);
 }
 
-unsigned char saveGame(unsigned char campaignWinMode);
+bool saveGame(bool campaignWinMode);
 
 // Original public ?DoSystemOptions@advManager@@QAA_NXZ proves bool.
 VA(0x0041ac00, 0x1AC)

@@ -3627,10 +3627,8 @@ void game::giveTroopsToNeutralTown(int townId)
     armyGroup& townArmy = currentTown->getArmy();
     TCreatureType creature;
     TCreatureType upgradedCreature;
-    TCreatureType upgradedValue = (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
-        townType * TOWN_DWELLING_SLOTS + monsterLevel];
-    creature = g_townDwellingCreatures[
-        townType * TOWN_DWELLING_SLOTS + monsterLevel];
+    TCreatureType upgradedValue = g_dwellingType[townType][monsterLevel + TOWN_DWELLING_COUNT];
+    creature = g_dwellingType[townType][monsterLevel];
     upgradedCreature = upgradedValue;
     if (townArmy.getCreatureTotal(upgradedCreature))
         creature = upgradedCreature;
@@ -6907,9 +6905,7 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
     if (thisTown && getAlignment(armyType) == thisTown->m_type) {
         int i = DWELLING_0_ID;
         for (;;) {
-            if (g_townDwellingCreatures[thisTown->m_type * 2
-                                           * TOWN_DWELLING_COUNT
-                                       + i - DWELLING_0_ID]
+            if (g_dwellingType[thisTown->m_type][i - DWELLING_0_ID]
                     == armyType
                 && thisTown->hasBuilding(town::upgradedDwellingID(i), true)) {
                 upgradeToType = upgradedCreatureType(armyType);
@@ -7869,8 +7865,7 @@ void game::perMonth()
             if (growth > 0) {
                 if (g_monthType == g_monthEffectCreature
                     && g_weekType != g_weekTypeInfernoGrail
-                    && g_townDwellingCreatures[
-                        currTown->m_type * TOWN_DWELLING_SLOTS + j]
+                    && g_dwellingType[currTown->m_type][j]
                        == g_monthTypeExtra) {
                     currTown->m_population[j] *= 2;
                 }
@@ -10334,10 +10329,11 @@ game::~game()
     clearEventRecords();
 }
 
+// Original public ?GetHeroBoat@game@@QAAPAVboat@@H_N@Z proves occupied is bool.
 VA(0x004ce900, 0x3B)
 DC_ADDRESS(0x0bbe68, 0x7c)
 MAC_ADDRESS(0x0e6ba0, 0x54)
-boat* game::getHeroBoat(int id, unsigned char occupied)
+boat* game::getHeroBoat(int id, bool occupied)
 {
     for (boat* i = m_boats.begin(); i != m_boats.end(); i++) {
         if (i->m_allocated && i->m_occupyingHero == id && i->m_occupied == occupied)

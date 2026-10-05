@@ -1348,17 +1348,16 @@ public:
     void drawAdventureMapGems();
     int moreTreesNear(type_point point);
     void viewPuzzle();
-    void updateRadar(type_point origin, unsigned char updateFlag,
-                     unsigned char partialUpdate, unsigned char viewMines,
-                     unsigned char viewHeroes, unsigned char viewTowns);
-    void updateRadar(unsigned char updateFlag,
-                     unsigned char partialUpdate, unsigned char viewMines,
-                     unsigned char viewHeroes, unsigned char viewTowns);
+    void updateRadar(type_point origin, bool updateFlag,
+                     bool partialUpdate, bool viewMines,
+                     bool viewHeroes, bool viewTowns);
+    void updateRadar(bool updateFlag, bool partialUpdate, bool viewMines,
+                     bool viewHeroes, bool viewTowns);
     void quickInfo(int cellX, int cellY, int z);
     void heroQuickView(int heroId, int x, int y,
-                       unsigned char displayDropShadow);
+                       bool displayDropShadow);
     void townQuickView(int townId, int x, int y,
-                       unsigned char displayDropShadow);
+                       bool displayDropShadow);
     void monsterQuickView(const NewmapCell* cell, int cellx, int celly);
     void setTownContext(int townId, bool waitingPlayer,
                         bool update);

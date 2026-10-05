@@ -278,14 +278,11 @@ static void upgradeCreatures(hero* currentHero, const town* currentTown)
                 DWELLING_0_UPG_ID + dwelling, true))
             continue;
 
-        TCreatureType upgrade = (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
-            currentTown->m_type * 2 * TOWN_DWELLING_COUNT + dwelling];
+        TCreatureType upgrade = g_dwellingType[currentTown->m_type][dwelling + TOWN_DWELLING_COUNT];
 
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
             if (currentHero->m_army.m_armyTypes[slot]
-                    != g_townDwellingCreatures[
-                        currentTown->m_type * 2 * TOWN_DWELLING_COUNT
-                        + dwelling])
+                    != g_dwellingType[currentTown->m_type][dwelling])
                 continue;
 
             // DC :232/:236 retains base_cost and upgrade_cost as pointers
@@ -3110,8 +3107,7 @@ long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short move
                 dwelling);
 
         if (population > 0) {
-            creature = g_townDwellingCreatures[
-                TOWN_DWELLING_SLOTS * enemyTown->m_type + dwelling];
+            creature = g_dwellingType[enemyTown->m_type][dwelling];
             getMonsterCost(creature, creatureCost);
             long profit = g_creatureTypeTraits[creature].m_aiValue
                 - aiResourceCost(player, creatureCost);

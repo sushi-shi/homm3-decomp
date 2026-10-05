@@ -489,8 +489,7 @@ void type_AI_player::calculateDemand()
                 amount += growth;
             }
             if (amount > 0) {
-                int creatureType = g_townDwellingCreatures[
-                    currentTown->m_type * 14 + dwelling];
+                int creatureType = g_dwellingType[currentTown->m_type][dwelling];
                 creatures[creatureType].m_amount += amount;
             }
         }
@@ -890,8 +889,7 @@ void type_AI_player::calculateReserve()
         short* population = currentTown->m_population;
         for (; dwelling < 14; dwelling++, population++) {
             if (*population > 0) {
-                creatureInfo.m_type = g_townDwellingCreatures[
-                    currentTown->m_type * 14 + dwelling];
+                creatureInfo.m_type = g_dwellingType[currentTown->m_type][dwelling];
                 creatureInfo.m_amount = *population;
                 creatureInfo.m_value = static_cast<short>(creatureInfo.m_amount
                     * g_creatureTypeTraits[creatureInfo.m_type].m_aiValue);
@@ -932,8 +930,7 @@ static long sumPlayerDwellings(long playerId)
         for (int dwelling = 0; dwelling < 14; ++dwelling) {
             long growth = currentTown->getGrowthRate(dwelling);
             if (growth > 0) {
-                TCreatureType creature = g_townDwellingCreatures[
-                    currentTown->m_type * 14 + dwelling];
+                TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
                 value += g_creatureTypeTraits[creature].m_aiValue * growth;
             }
         }
@@ -960,8 +957,7 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
         for (dwelling = 0; dwelling < 14; ++dwelling) {
             short growth = currentTown->getGrowthRate(dwelling);
             if (growth > 0) {
-                TCreatureType creature = g_townDwellingCreatures[
-                    currentTown->m_type * 14 + dwelling];
+                TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
                 getMonsterCost(creature, resources);
                 for (short resource = 0; resource < 7; ++resource) {
                     income[resource] -= resources[resource] * growth;
@@ -1629,8 +1625,7 @@ DC_ADDRESS(0x02f4b0, 0x96)
 MAC_ADDRESS(0x02cc84, 0x138)
 long valueOfDwelling(town* currentTown, short dwelling, unsigned char* prohibited, int* extraCost)
 {
-    TCreatureType creature = g_townDwellingCreatures[
-        currentTown->m_type * 14 + dwelling];
+    TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
     if (prohibited[creature])
         return -1;
     const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
@@ -1648,10 +1643,8 @@ MAC_ADDRESS(0x02cdbc, 0x190)
 long valueOfDwellingUpgrade(town* currentTown, short dwelling, int* extraCost)
 {
     short baseDwelling = dwelling - 7;
-    TCreatureType creature = g_townDwellingCreatures[
-        currentTown->m_type * 14 + baseDwelling];
-    TCreatureType upgraded = g_townDwellingCreatures[
-        currentTown->m_type * 14 + dwelling];
+    TCreatureType creature = g_dwellingType[currentTown->m_type][baseDwelling];
+    TCreatureType upgraded = g_dwellingType[currentTown->m_type][dwelling];
     long amount = currentTown->m_population[baseDwelling];
     if (g_game->m_day >= 5)
         amount += currentTown->getGrowthRate(baseDwelling);
@@ -1681,8 +1674,7 @@ int valueOfCastleUpgrade(town* currentTown, int* extraCost)
     if (g_game->m_day >= 5) {
         for (short dwelling = 0; dwelling < 14; ++dwelling) {
             if (currentTown->getGrowthRate(dwelling) > 0) {
-                int creature = g_townDwellingCreatures[
-                    currentTown->m_type * 14 + dwelling];
+                int creature = g_dwellingType[currentTown->m_type][dwelling];
                 const TCreatureTypeTraits* traits =
                     g_creatureTypeTraits + creature;
                 for (int i = 0; i < 7; ++i)
@@ -1881,9 +1873,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     for (int building = DWELLING_0_ID;
          building <= DWELLING_6_ID; building++) {
         if (buildMask & g_bitNumber[building]) {
-            creature = g_townDwellingCreatures[
-                currentTown->m_type * TOWN_DWELLING_SLOTS
-                + building - DWELLING_0_ID];
+            creature = g_dwellingType[currentTown->m_type][building - DWELLING_0_ID];
             traits = &g_creatureTypeTraits[creature];
             int* cost = currentTown->getBuildCostArray(
                 static_cast<type_building_id>(building));
@@ -2498,8 +2488,7 @@ void type_AI_creature_purchaser::set(town* currentTown)
     int remaining = 14;
     short* population = currentTown->m_population;
     for (; remaining; ++dwelling, ++population, --remaining) {
-        TCreatureType type = g_townDwellingCreatures[
-            currentTown->m_type * 14 + dwelling];
+        TCreatureType type = g_dwellingType[currentTown->m_type][dwelling];
         short amount = *population;
         if (amount > 0) {
             m_creatures.push_back(type_creature_source(type, population, 0));
@@ -4903,8 +4892,7 @@ long type_creature_growth_artifact::getValue(const hero* owner,
         int dwelling = m_bonus;
         if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, true))
             dwelling += TOWN_DWELLING_COUNT;
-        TCreatureType creature = g_townDwellingCreatures[
-            currentTown->m_type * TOWN_DWELLING_SLOTS + dwelling];
+        TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
         return g_creatureTypeTraits[creature].m_aiValue * m_growthBonus;
     }
 
@@ -4915,8 +4903,7 @@ long type_creature_growth_artifact::getValue(const hero* owner,
         int dwelling = m_bonus;
         if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, true))
             dwelling += TOWN_DWELLING_COUNT;
-        TCreatureType creature = g_townDwellingCreatures[
-            currentTown->m_type * TOWN_DWELLING_SLOTS + dwelling];
+        TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
         value = max(
             value, g_creatureTypeTraits[creature].m_aiValue * m_growthBonus);
     }
@@ -5085,8 +5072,7 @@ long type_statue_of_legion_artifact::getValue(
                 & g_bitNumber[DWELLING_0_UPG_ID + dwelling]) {
                 dwellingSlot += TOWN_DWELLING_COUNT;
             }
-            TCreatureType creature = g_townDwellingCreatures[
-                currentTown->m_type * TOWN_DWELLING_SLOTS + dwellingSlot];
+            TCreatureType creature = g_dwellingType[currentTown->m_type][dwellingSlot];
             long growth = g_creatureTypeTraits[creature].m_growthRate;
             growth += currentTown->getCastleGrowthBonus(creature);
             total += g_creatureTypeTraits[creature].m_aiValue * growth / 2;
