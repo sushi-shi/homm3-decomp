@@ -4607,12 +4607,6 @@ void game::matchUndergroundGates()
 // (+0x175..+0x1cf) into vector<TBlackMarket>::insert - nine calls there
 // against our eight, with the other nine sites in each object agreeing
 // exactly. Do not go looking for an eighteenth source call site.
-// Pin census, each removal measured alone against 87.0102: the five
-// creature-bank block-scope pins are NOT interchangeable - four cost
-// -0.6891 apiece but the FIRST (the CREATURE_BANK case) is BYTE-FLAT
-// across the whole TU and has been removed. The rest of this body's
-// roster costs -100 (x2, two helper rows stop existing as separate
-// symbols), -10.85, -5.13, -1.01 and -0.88.
 // DC records int new_owner; Mac 0xd7f08..0xd7f50 widens the saved byte
 // before passing it to claimShipyard. Keep that procedure local and the
 // point constructors as call-argument temporaries at the recorded push_back
@@ -4870,11 +4864,11 @@ void game::randomizeEvents()
 
                 case LEAN_TO:
                     {
-                        {
-                            resType = EGameResource(random(0, 5));
-                        }
+                        resType = EGameResource(random(0, 5));
                         resQty = static_cast<unsigned char>(random(1, 5));
-                        tempCell->setLeanTo(numLeanTo++, resQty, resType);
+                        // DC 5294 sets the record; 5295 advances its counter.
+                        tempCell->setLeanTo(numLeanTo, resQty, resType);
+                        ++numLeanTo;
                     }
                     break;
 
@@ -5098,13 +5092,9 @@ void game::randomizeEvents()
 
                 case WINDMILL:
                     {
-                        resQty = static_cast<unsigned char>(random(3, 6));
-                        {
-                            resType = EGameResource(random(1, 5));
-                        }
-                        // DC 5582..5583; retail's 0xfffe001f mask also
-                        // clears the visited-player lane, not just amount.
-                        tempCell->setWindmill(resType, resQty);
+                        // DC 5582 puts both draws in this setter expression.
+                        // Mac d80fc..d8128 narrows the amount directly to short.
+                        tempCell->setWindmill(EGameResource(random(1, 5)), random(3, 6));
                         tempCell->clearVisitedBits();
                     }
                     break;
