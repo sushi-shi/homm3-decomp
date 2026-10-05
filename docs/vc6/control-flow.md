@@ -1063,3 +1063,17 @@ The campaign-14 map admission also uses explicit equality tests for maps 2,
 The six-state map/return family and eight-state exit family passed unchanged
 and opposite-corner reproduction controls. A source-level Boolean equivalence
 does not imply equivalent VC6 return merging elsewhere in the function.
+
+## Shared switch exits can control register-save placement
+
+`advManager::processKeyPress` (0x408c40) reaches 100% from 99.0329% by
+restoring the keypad's scroll-or-direction `if/else` arms and making the other
+successful commands break to the post-switch movement guard. DC lines
+1718..1722 record the first conditional keypad join; Complete Mac
+0x93e4..0x9520 repeats it for all eight directions. The direction remains
+`-1` on other commands, so early `return 1` statements were behavior-equivalent.
+They nevertheless prevented VC6 from delaying the EBX/EDI saves until after
+the chat-focus exit and changed subsequent pop order. Restoring either group
+alone is score-flat; all four joint states emit distinct, reproduced objects,
+and only the complete native join model is exact. Identical lowered branch
+counts therefore do not establish that the source control-flow model is complete.
