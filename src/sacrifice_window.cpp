@@ -106,8 +106,10 @@ void type_artifact_offering::set(const type_artifact& artifact, TArtifactSlot sl
         m_value = 6000;
         break;
     }
-    m_value = static_cast<long>(
-        m_value * owner->getExperienceBonusFactor());
+    // DC 151 / Mac 0x155380 reload m_value after the factor call and
+    // multiply in single precision; the compound form keeps these bytes and
+    // costs 8 IL units less than an explicit cast (allArtifacts' budget).
+    m_value *= owner->getExperienceBonusFactor();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:170
@@ -796,7 +798,7 @@ void type_sacrifice_window::setArtifactMode()
     updateBackpack();
 
     updateOffering(m_currentArtifactWidget, m_currentArtifactValue,
-                    &m_holdingArtifact);
+                    m_holdingArtifact);
     m_sacrificingArtifacts = 1;
     m_emptyBackpackButton->enable(
         m_currentHero->getNumberInBackpack(1) > 0);
@@ -811,23 +813,24 @@ void type_sacrifice_window::setArtifactMode()
     updateExperience();
 }
 
+// DC update_offering (static, line 821) takes const type_artifact_offering&
+// and passes it straight to update_artifact_widget at line 822.
 VA(0x00562c70, 0x124)
 DC_ADDRESS(0x125aac, 0x90)
 MAC_ADDRESS(0x159150, 0xf8)
 void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
-                     const type_artifact_offering* offering)
+                     const type_artifact_offering& offering)
 {
-    type_artifact artifact = *offering;
-    updateArtifactWidget(artifactWidget, artifact);
+    updateArtifactWidget(artifactWidget, offering);
 
-    if (offering->m_artifactId == -1) {
+    if (offering.m_artifactId == -1) {
         artifactWidget->setHelpText(
             g_sacrificeWindowHelp[SACRIFICE_HELP_EMPTY_ARTIFACT_OFFERING].m_text,
             0, 1);
         valueWidget->setVisible(0);
         valueWidget->setHelpText(0, 0, 1);
     } else {
-        valueWidget->setText(convertWithCommas(offering->m_value).c_str());
+        valueWidget->setText(convertWithCommas(offering.m_value).c_str());
         valueWidget->setVisible(1);
         valueWidget->setHelpText(
             g_sacrificeWindowHelp[SACRIFICE_HELP_ARTIFACT_OFFERING_VALUE].m_text,
@@ -1002,7 +1005,7 @@ void type_sacrifice_window::pickUpArtifact(
         updateExperience();
     }
     updateOffering(m_currentArtifactWidget, m_currentArtifactValue,
-                    &m_holdingArtifact);
+                    m_holdingArtifact);
     g_mouseManager->setPointer(m_holdingArtifact.m_artifactId,
                                mouseManager::ARTIFACT_SET);
     updateAllSlots();
@@ -1024,7 +1027,7 @@ void type_sacrifice_window::putDownArtifact(
     }
     m_holdingArtifact.m_artifactId = ARTIFACT_NONE;
     updateOffering(m_currentArtifactWidget, m_currentArtifactValue,
-                    &m_holdingArtifact);
+                    m_holdingArtifact);
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
     updateAllSlots();
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -1150,7 +1153,7 @@ void type_sacrifice_window::updateArtifactOffering(long slot)
 {
     updateOffering(m_artifactOfferingWidgets[slot],
                     m_artifactValueWidgets[slot],
-                    &m_artifactOfferings[slot]);
+                    m_artifactOfferings[slot]);
 }
 
 VA(0x00563a80, 0x31b)
@@ -1247,10 +1250,9 @@ bool type_sacrifice_window::addArtifact(
 {
     // DC 0x12681c records the offering index as signed long.
     long i;
-    for (i = 0; i < m_artifactOfferings.size(); ++i) {
+    for (i = 0; i < m_artifactOfferings.size(); ++i)
         if (m_artifactOfferings[i].m_artifactId == ARTIFACT_NONE)
             break;
-    }
     if (i == m_artifactOfferings.size())
         return false;
 
@@ -1319,17 +1321,18 @@ int type_sacrifice_window::emptyBackpack(message& msg)
 // longer than ours by exactly the update_backpack expansion below, so the
 // two tables sit 0x6c apart.  No hero/type_sacrifice_window member is
 // involved.
-// Residual (86.78%): the first 37 semantic blocks agree. This compile expands
-// empty_backpack but keeps its nested update_backpack call, whereas retail
-// expands both. An ordinary inline hint is byte-flat; force-inlining either
-// helper improves this site to about 91.4% but regresses the exact standalone
-// empty-backpack callback (and force-inlining update_backpack also regresses
-// backpack_click), so the source-authentic call graph is retained.
-// /Ob2 arithmetic: updateBackpack (cb 145) meets 133 after emptyBackpack's
-// addArtifact; retail needs 12..84 more budget there while still rejecting
-// that addArtifact's set/updateArtifactOffering, i.e. about 12 less charged
-// cost in the slot loop's addArtifact expansion (sizes 84 + set 155 + uAO 67).
-// bool/int spellings of updateBackpack's scroll flag and index are byte-flat.
+// /Ob2 model (docs/vc6/inliner.md), z = vector<offering>::size (42), costs
+// A addArtifact, S set, U updateArtifactOffering, E emptyBackpack,
+// B updateBackpack. Retail expands updateBackpack after emptyBackpack's
+// nested addArtifact, but keeps that copy's set/U and updateBackpack's size
+// calls out of line: 0 <= 832 - 2A - S - U - E - B <= 41. backpackClick's
+// putDownArtifact must keep calling updateAllSlots, which pins B >= 145.
+// Was A164 S155 U67 E149 B145 (-12, 86.78%). Now A162 (unbraced loop body;
+// DC emptyBackpack shows loop bodies do not add a compound scope, so its
+// coincident for-loop pair does not decide braces), S147
+// (`m_value *=`), U66 (DC const-reference update_offering) => +1, 100%.
+// The other callers (setArtifactMode, the three clicks, emptyBackpack,
+// sacrifice) keep their exact decisions; set/updateOffering bytes unchanged.
 VA(0x00564340, 0x35f)
 DC_ADDRESS(0x1269ac, 0xc4)
 MAC_ADDRESS(0x15a6e0, 0x154)  // callback address-take + dc name/signature/order
