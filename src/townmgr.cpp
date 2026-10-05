@@ -1532,7 +1532,10 @@ void TTownScreenWindow::updateTownLocators()
 // The remaining comparison has 88 vs 89 blocks and a 0xdc vs 0xd4 frame.
 // The dwelling-loop register joins differ; replacing its positive scope
 // with a negative guard and continue emits identical bytes, with or
-// without the recovered bonus scope.
+// without the recovered bonus scope. Continuing the display counter in
+// the cleanup loop and combining its stores with postfix increments also
+// emit the same bytes (eight source states, one object). All 70 call/jump
+// references now agree; the remaining loop join is not an inlining gap.
 // DC names GetArmyName twice and six text lookups. Complete keeps its
 // existing getText calls; the army-name calls lift Windows to 88.50%.
 // DC places get_horde before get_legion_bonus, but Complete calls them

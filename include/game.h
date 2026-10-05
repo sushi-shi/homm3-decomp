@@ -1094,10 +1094,6 @@ public:
     // applySavedGameHeader restores SavedGameHeader::gameVersion here.
     int m_gameVersion;
     unsigned char m_isCheater;
-    // Byte gate town::can_build and get_buildable_mask test before the
-    // Castle-Griffin-Tower special case that drops the Blacksmith
-    // requirement; it sits four bytes past f_1f698 in the same band.
-    // Role unattested - ordinal placeholder.
     // DC is_tutorial: retail SaveGame (0x418160) passes this byte directly
     // to the native bool determineSuffix parameter, with no normalization.
     bool m_isTutorial;
