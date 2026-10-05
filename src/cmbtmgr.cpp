@@ -2982,16 +2982,13 @@ bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // 0x73fdc..0x74000 expands its inclusive width/height and UpdateScreen
 // call after clipping the same four-word rectangle.
 // DC 3703/3707/3725 name the bitmap Grab/Draw and const sprite Draw
-// forwarding overloads. Restoring those calls measures Windows 94.19
-// -> 91.24%; the native indexed loop measures 89.12%. It retains the
-// final Draw's nested GetMap and GetNumFrames, which retail expands.
-// The frame remains 0x8c vs retail 0x9c. Native operand-order alternatives
-// are Windows-flat; keep the canonical source operations.
-// Default construction followed by assignment of updateArea is also
-// byte-flat at 89.1219%; the observed four-word initialization alone does
-// not distinguish it from copy initialization, which remains the model.
-// Naming the previous-frame rectangle inside its existing guard leaves all
-// ballistic bytes unchanged, as does the typed-row GetMap expression.
+// forwarding overloads. The four-word NullLimits copy permits either copy
+// initialization or default construction followed by assignment. Combined
+// with the original ScrollTo arguments, the latter lets VC6 expand
+// GetNumFrames and measures 91.3063%. Its nested IsValidSeq and the final
+// Draw's GetMap still remain calls; retail expands both. The frame remains
+// 0x8c vs retail 0x9c. Naming the previous-frame rectangle inside its guard,
+// typed-row GetMap and native operand-order alternatives are byte-flat.
 VA(0x00467a00, 0x3AF)
 DC_ADDRESS(0x0614f0, 0x4b8)
 MAC_ADDRESS(0x073c44, 0x488)  // anchor-global
@@ -3020,7 +3017,8 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     int y = startY;
 
     Bitmap16Bit saved(width, height);
-    SLimitData updateArea = heroWindowManager::s_nullLimits;
+    SLimitData updateArea;
+    updateArea = heroWindowManager::s_nullLimits;
     const int missilePeriod = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
 
