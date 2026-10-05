@@ -961,7 +961,7 @@ cmbtmgr	?initializeArchers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66
 cmbtmgr	?insert@?$vector@UTObstacle@combatManager@@V?$allocator@UTObstacle@combatManager@@@std@@@std@@QAEXPAUTObstacle@combatManager@@IABU34@@Z	100.0000	100.0000	100.0000	0x6aeb0	-
 cmbtmgr	?isAdjacent@combatManager@@QBE_NHH@Z	100.0000	100.0000	100.0000	0x674c0	tokens1:db06bcded24f
 cmbtmgr	?isInMoat@combatManager@@QAE_NHPAH@Z	100.0000	100.0000	100.0000	0x69dc0	tokens1:8c9d5d0dd017
-cmbtmgr	?isQuickCombat@combatManager@@QBE_NXZ	100.0000	100.0000	100.0000	0x6a4a0	tokens1:4c1ccdf651d5
+cmbtmgr	?isQuickCombat@combatManager@@QBE_NXZ	100.0000	100.0000	100.0000	0x6a4a0	tokens1:358e67385426
 cmbtmgr	?isWinner@combatManager@@QBEEH@Z	100.0000	100.0000	100.0000	0x658b0	tokens1:e20c101d157d
 cmbtmgr	?keepAttack@combatManager@@AAEXH@Z	100.0000	100.0000	100.0000	0x65ad0	tokens1:f560884f99b8
 cmbtmgr	?learnSpellFromEagleEye@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x69fe0	tokens1:b54358309f5b
