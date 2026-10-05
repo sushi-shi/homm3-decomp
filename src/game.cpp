@@ -6625,9 +6625,11 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     do {
         int heroKey = readValue<unsigned char>(infile);
 
-        int heroId = readValue<unsigned char>(infile);
-        if (heroId == g_savedHeroNone)
-            heroId = -1;
+        // Mac dc610 and retail compare the serialized byte to 255 before
+        // interpreting the widened portrait index's -1 sentinel.
+        int portrait = readValue<unsigned char>(infile);
+        if (static_cast<unsigned char>(portrait) == g_savedHeroNone)
+            portrait = -1;
 
         std::string strTemp = readLengthPrefixedString(infile);
         std::bitset<8> availability =
@@ -6636,7 +6638,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
 
         m_heroPlayerSetups.insert(
             std::pair<const int, type_map_hero_info>(
-                heroKey, type_map_hero_info(heroId, strTemp, availability)));
+                heroKey, type_map_hero_info(portrait, strTemp, availability)));
     } while (--count != 0);
 
     return 0;
