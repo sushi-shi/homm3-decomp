@@ -28,6 +28,7 @@ iterate on a function.
 
 - [Data flow](tooling/data-flow.md), [telemetry](tooling/telemetry.md), [performance measurement](tooling/performance.md), [compiler warnings](tooling/compiler-warnings.md)
 - [Retail data coverage and linking](tooling/data-coverage.md)
+- [RMG rainbow tables](tooling/rmg-rainbow-tables.md): precomputed native RMG results for Rust checks without Wine
 - [Mac tooling implementation report and current phase](tooling/mac-matching-report.md)
 - [Mac matching tooling rollout and worker readiness](tooling/mac-matching-roadmap.md)
 - [Executable libraries](reference/executable-libraries.md)

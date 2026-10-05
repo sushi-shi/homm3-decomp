@@ -290,7 +290,7 @@ def _dispatch(argv: list[str]) -> int:
     sub.add_parser("victor", add_help=False,
                    help="execute Victor resource comparisons (homm3 victor --help)")
     sub.add_parser("rmg", add_help=False,
-                   help="execute retail/candidate whole-map comparisons (homm3 rmg --help)")
+                   help="retail/candidate whole-map comparisons and rainbow tables (homm3 rmg --help)")
 
     sub.add_parser("worktree", add_help=False,
                    help="create/remove a linked worktree ready for `build --fast` "

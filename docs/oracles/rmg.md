@@ -133,7 +133,8 @@ periodic cases and every failure were repeated in fresh processes.
 The ignored campaign artifacts and full per-case inputs are under
 `build/rmg-oracle/sampled-100000/`. These results establish agreement for the
 sampled execution states; they do not turn the behavioral oracle into byte-match
-evidence.
+evidence. Their native results seed the [RMG rainbow tables](../tooling/rmg-rainbow-tables.md),
+which extend the same request distribution for Rust checks without Wine.
 
 ## Execution boundary
 

@@ -1,4 +1,4 @@
-//! Streaming adapter for `python -m homm3.rmg.corpus check`.
+//! Streaming adapter for RMG rainbow-table checks (`homm3 rmg rainbow check`).
 //! One replay per input line; each response is an ASCII header, followed by the
 //! exact uncompressed map bytes on success. Assets and workspaces are reused.
 use homm3_rmg::{

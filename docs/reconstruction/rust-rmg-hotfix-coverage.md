@@ -55,5 +55,5 @@ before generation and uses an exhaustive `MapVersion` match during output.
 
 The source review alone did not resolve executable differences. The corrected
 treasure geometry comparison now passes, and nonperturbing retail captures
-establish zero-versus-nonzero water-zone town flags. Full corpus parity remains
+establish zero-versus-nonzero water-zone town flags. Full rainbow-table parity remains
 unproven; the [architecture reference](rust-rmg.md) defines verification requirements.

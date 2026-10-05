@@ -1,6 +1,9 @@
-"""Local, resumable native RMG reference tables; no Rust output becomes an oracle.
+"""RMG rainbow tables: resumable native reference results for Rust checks.
 
-python -m homm3.rmg.corpus --help
+Precomputed C++ outcomes let a check run only the Rust candidate; no Rust
+output ever becomes a reference. See docs/tooling/rmg-rainbow-tables.md.
+
+homm3 rmg rainbow --help   (alias: python -m homm3.rmg.corpus --help)
 """
 from __future__ import annotations
 
@@ -12,6 +15,8 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import platform
+import random
 import re
 import select
 import shutil
@@ -26,6 +31,12 @@ from .cases import FIELDS, decode_result, job_bytes, load_cases, validate_case
 SCHEMA = 1
 MODES = ('retail', 'hotfix')
 ARCHIVES = ('h3bitmap.lod', 'h3sprite.lod', 'h3ab_bmp.lod', 'h3ab_spr.lod')
+# `extend` reuses the request distribution of the imported sample2 campaign
+# (build/rmg-oracle/sample_campaign_100k.py, master seed 0x524d4732). Bump the
+# version for any change to sample_case or extension_cases: recorded
+# extensions must stay reproducible.
+SAMPLER = 'sample2-extend-v1'
+EXTEND_SEED = 0x524d4733
 
 
 def packed(value):
@@ -72,6 +83,64 @@ def replay(case, mode):
             + f" shape {case['width']} {case['height']} {case['levels']} players "
             + ' '.join(str(case[k]) for k in FIELDS[3:7]) + ' settings '
             + ' '.join(str(case[k]) for k in FIELDS[7:]) + '\n')
+
+
+def sample_case(rng, index, seed):
+    """One request with the sample2 campaign's distribution.
+
+    Map size, levels, map version, water and monster strength cycle with the
+    case index (period 480). Players, teams, seats, fixed towns, the stack
+    word and the heap byte come from ``rng`` in the original draw order. The
+    original iterated small-integer sets, whose CPython order is ascending;
+    the explicit sorts keep that order without relying on it.
+    """
+    size = (36, 72, 108, 144)[index % 4]
+    version = (index // 8) % 3
+    total = rng.randrange(2, 9)
+    humans = rng.randrange(1, total + 1)
+    computers = total - humans
+    human_seats = set(rng.sample(range(8), humans))
+    active = set(rng.sample(range(8), total)) | human_seats
+    for seat in sorted(active - human_seats)[:len(active) - total]:
+        active.remove(seat)
+    towns = [-1] * 8
+    for seat in sorted(active):
+        if rng.randrange(4) == 0:
+            towns[seat] = rng.randrange((8 if version >= 1 else 7) + 1)
+    return validate_case({
+        'name': f'sample2-{index:06d}', 'seed': seed,
+        'width': size, 'height': size, 'levels': 1 + (index // 4) % 2,
+        'mapVersion': version, 'waterContent': (index // 24) % 4,
+        'monsterStrength': (index // 96) % 5 - 2,
+        'humanPlayerCount': humans, 'computerPlayerCount': computers,
+        'humanTeamCount': rng.randrange(humans + 1),
+        'computerTeamCount': rng.randrange(computers + 1),
+        'isHumanSeat': [int(seat in human_seats) for seat in range(8)],
+        'townType': towns, 'stackWord': rng.getrandbits(32),
+        'heapByte': rng.randrange(256),
+    })
+
+
+def extension_cases(cases, count, master_seed=EXTEND_SEED):
+    """Append-only continuation of the sample2 sequence.
+
+    Each case has its own generator keyed by the master seed and its index,
+    so one extension by 2N equals two by N. A seed already used by an earlier
+    case is redrawn from the same generator, keeping seeds unique.
+    """
+    for index, case in enumerate(cases):
+        if case['name'] != f'sample2-{index:06d}':
+            raise ValueError(f'case {index} ({case["name"]}) breaks the sample2 sequence')
+    used = {case['seed'] for case in cases}
+    result = []
+    for index in range(len(cases), len(cases) + count):
+        rng = random.Random((master_seed << 32) | index)
+        seed = rng.getrandbits(32)
+        while seed in used:
+            seed = rng.getrandbits(32)
+        used.add(seed)
+        result.append(sample_case(rng, index, seed))
+    return result
 
 
 def database(root):
@@ -143,6 +212,45 @@ def manifest(root):
     if value['schema'] != SCHEMA:
         raise ValueError('unsupported corpus schema')
     return value
+
+
+def write_atomic(path, text):
+    temporary = path.with_name(path.name + '.tmp')
+    temporary.write_text(text)
+    temporary.replace(path)
+
+
+def recorded_cases(root, info):
+    path = root / 'cases.json'
+    if digest(path) != info['cases_sha256']:
+        raise ValueError('cases.json differs from manifest.json (interrupted extend?)')
+    cases = load_cases(path)
+    if len(cases) != info['cases']:
+        raise ValueError('cases.json and manifest.json disagree on the request count')
+    return cases
+
+
+def sync_requests(db, root, info):
+    """Store requests that cases.json records but the table lacks.
+
+    ``extend`` writes cases.json and the manifest before the table, so this
+    also completes an extension interrupted after its files were written.
+    """
+    count, top = db.execute('SELECT count(*), max(ordinal) FROM requests').fetchone()
+    if count != (0 if top is None else top + 1) or count > info['cases']:
+        raise ValueError('stored requests are not a prefix of manifest.json')
+    if count == info['cases']:
+        return 0
+    cases = recorded_cases(root, info)
+    if count:
+        last = db.execute('SELECT name,input_json FROM requests WHERE ordinal=?', (count - 1,)).fetchone()
+        if last != (cases[count - 1]['name'], packed(cases[count - 1])):
+            raise ValueError('stored requests differ from cases.json')
+    for i in range(count, len(cases)):
+        db.execute('INSERT INTO requests VALUES (?,?,?,?)', (i, cases[i]['name'],
+                   hashlib.sha256(job_bytes(cases[i])).hexdigest(), packed(cases[i])))
+    db.commit()
+    return len(cases) - count
 
 
 def validate_environment(root, data):
@@ -240,13 +348,50 @@ def initialize(args):
     status(args)
 
 
+def extend(args):
+    """Append deterministic sample2 requests; existing requests never change."""
+    with writer(args.out):
+        info = manifest(args.out)
+        with database(args.out) as db:
+            sync_requests(db, args.out, info)
+        old = (args.out / 'cases.json').read_text()
+        cases = recorded_cases(args.out, info)
+        first = len(cases)
+        cases += extension_cases(cases, args.count, args.seed)
+        text = packed(cases) + '\n'
+        if not (old.endswith(']\n') and text.startswith(old[:-2] + ',')):
+            raise ValueError('re-serializing cases.json would change existing requests')
+        write_atomic(args.out / 'cases.json', text)
+        info['cases'] = len(cases)
+        info['cases_sha256'] = digest(args.out / 'cases.json')
+        info.setdefault('extensions', []).append(dict(
+            sampler=SAMPLER, master_seed=args.seed, first=first, count=args.count,
+            python=platform.python_version(), cases_sha256=info['cases_sha256']))
+        write_atomic(args.out / 'manifest.json', json.dumps(info, indent=2) + '\n')
+        with database(args.out) as db:
+            sync_requests(db, args.out, info)
+    status(args)
+
+
 def status(args):
     info = manifest(args.out)
+    extensions = info.get('extensions', [])
+    segments = [dict(first=0, count=info['cases'] - sum(e['count'] for e in extensions),
+                     source='import')]
+    segments += [dict(first=e['first'], count=e['count'],
+                      source=f"{e['sampler']} seed {e['master_seed']:#x}") for e in extensions]
     with database(args.out) as db:
+        stored = db.execute('SELECT count(*) FROM requests').fetchone()[0]
         counts = {mode: dict(db.execute('SELECT outcome,count(*) FROM results WHERE mode=? '
                                        'GROUP BY outcome', (mode,))) for mode in MODES}
-    value = dict(requests_per_mode=info['cases'], modes=counts,
-                 missing={mode: info['cases'] - sum(counts[mode].values()) for mode in MODES})
+        for segment in segments:
+            done = dict(db.execute('SELECT mode,count(*) FROM results WHERE ordinal>=? AND '
+                                   'ordinal<? GROUP BY mode',
+                                   (segment['first'], segment['first'] + segment['count'])))
+            segment['missing'] = {mode: segment['count'] - done.get(mode, 0) for mode in MODES}
+    value = dict(requests_per_mode=info['cases'], stored_requests=stored, modes=counts,
+                 missing={mode: info['cases'] - sum(counts[mode].values()) for mode in MODES},
+                 segments=segments)
     print(json.dumps(value, indent=2), flush=True)
     return value
 
@@ -257,6 +402,8 @@ def capture(args):
         info = validate_environment(args.out, args.data)
         directory = args.out / args.mode
         verify_files(directory, info['sources'][args.mode]['files'])
+        with database(args.out) as db:
+            sync_requests(db, args.out, info)
         libraries = [directory / name for name in oracle.DLLS]
         run_info = dict(mode=args.mode, pid=os.getpid(), started=time.time(),
                         cpu_affinity=sorted(os.sched_getaffinity(0)),
@@ -387,7 +534,7 @@ def check(args):
         try:
             rows = db.execute('SELECT name,input_json,reference_json FROM requests JOIN results '
                               'USING(ordinal) WHERE mode=? AND ordinal>=? ORDER BY ordinal LIMIT ?',
-                              (args.mode, args.start, args.limit))
+                              (args.mode, args.start, -1 if args.limit is None else args.limit))
             for name, case, native in rows:
                 if args.name and name not in args.name:
                     continue
@@ -412,9 +559,10 @@ def check(args):
     return int(bool(counts['mismatch']))
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--out', type=Path, required=True, help='local corpus directory')
+def main(argv=None, prog=None):
+    parser = argparse.ArgumentParser(prog=prog, description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--out', type=Path, required=True, help='local rainbow-table directory')
     commands = parser.add_subparsers(dest='command', required=True)
     init = commands.add_parser('init', help='freeze oracles and import existing native references')
     init.add_argument('--retail-corpus', type=Path, required=True)
@@ -427,6 +575,10 @@ def main():
     cap.add_argument('--data', type=Path, required=True)
     cap.add_argument('--batch-size', type=int, default=32)
     cap.add_argument('--timeout', type=float, default=45)
+    grow = commands.add_parser('extend', help='append deterministic sample2 requests')
+    grow.add_argument('--count', type=int, required=True)
+    grow.add_argument('--seed', type=lambda value: int(value, 0), default=EXTEND_SEED,
+                      help=f'extension master seed (default {EXTEND_SEED:#x})')
     commands.add_parser('status')
     run = commands.add_parser('check', help='compare Rust with stored references without Wine')
     run.add_argument('--mode', choices=MODES, required=True)
@@ -434,20 +586,23 @@ def main():
     run.add_argument('--runner', type=Path, required=True)
     run.add_argument('--report', type=Path, required=True)
     run.add_argument('--start', type=int, default=0)
-    run.add_argument('--limit', type=int, default=100000)
+    run.add_argument('--limit', type=int, help='maximum stored references to check (default: all)')
     run.add_argument('--name', action='append')
     run.add_argument('--timeout', type=float, default=90)
     run.add_argument('--keep-going', action='store_true')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     args.out = args.out.resolve()
     if hasattr(args, 'data'):
         args.data = args.data.resolve()
-    for field in ('limit', 'batch_size', 'timeout'):
-        if hasattr(args, field) and getattr(args, field) <= 0:
+    for field in ('limit', 'batch_size', 'timeout', 'count'):
+        if getattr(args, field, None) is not None and getattr(args, field) <= 0:
             parser.error(f'{field} must be positive')
     if getattr(args, 'start', 0) < 0:
         parser.error('start must be nonnegative')
-    result = {'init': initialize, 'capture': capture, 'status': status, 'check': check}[args.command](args)
+    if not 0 <= getattr(args, 'seed', 0) <= 0xffffffff:
+        parser.error('seed must be a 32-bit value')
+    result = {'init': initialize, 'capture': capture, 'extend': extend, 'status': status,
+              'check': check}[args.command](args)
     return result if type(result) is int else 0
 
 
