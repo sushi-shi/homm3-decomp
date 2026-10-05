@@ -3080,8 +3080,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             heroID = g_startingHeroOverrides[owner];
             g_startingHeroOverrides[owner] = heroIdNone;
         } else {
-            heroID = g_game->getStartingHeroId(H3_ENUM_DECODE(
-                TTownType, g_game->m_setup.m_alignment[owner]),
+            heroID = g_game->getStartingHeroId(g_game->m_setup.m_alignment[owner],
                 owner, experience);
         }
     }

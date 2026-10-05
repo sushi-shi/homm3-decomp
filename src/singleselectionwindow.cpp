@@ -811,14 +811,14 @@ public:
     char m_paddingBeforeNumber[3];
     int m_number;                 // +0x18
     char m_fileName[0x40];        // +0x1c
-    int m_townTypes[8];           // +0x5c
+    TTownType m_townTypes[8];     // +0x5c; original m_townType is TTownType[8]
     FileTime m_fileTime;          // +0x7c
 
     // Complete adds the transfer-list flag at +0x14 before the DC payload.
     // E:\gamedcs\singleselectionwindow.cpp:587
     DC_ADDRESS(0x147c78, 0x74)
     CMapFileNameMsg(unsigned char flag, int number, char* fileName,
-                    int* townTypes, FileTime fileTime)
+                    TTownType* townTypes, FileTime fileTime)
         : CNetMsg(RS_MAP_FILE_NAME, sizeof(CMapFileNameMsg))
     {
         m_flag = flag;
@@ -6364,7 +6364,7 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
                     static_cast<signed char>(player->m_startBonusIndex);
                 g_game->m_setup.m_startingHero[i] = -1;
                 if (player->m_townIndex != -1)
-                    g_game->m_setup.m_alignment[i] = player->m_townIndex;
+                    g_game->m_setup.m_alignment[i] = TTownType(player->m_townIndex);
                 else if (player->isHuman())
                     g_game->m_setup.m_alignment[i] =
                         m_currentHeader->m_setup.m_alignment[i];
@@ -6959,7 +6959,7 @@ unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
 
     int monthType = g_monthType;
     int monthTypeExtra = g_monthTypeExtra;
-    int weekType = g_weekType;
+    WeekType weekType = g_weekType;
     int weekTypeExtra = g_weekTypeExtra;
 
     // Retail loads the received RMT%sRC.BIN file named in the preferences
@@ -7810,7 +7810,7 @@ unsigned char TSingleSelectionWindow::beginSavedGame()
 
     int monthType = g_monthType;
     int monthTypeExtra = g_monthTypeExtra;
-    int weekType = g_weekType;
+    WeekType weekType = g_weekType;
     int weekTypeExtra = g_weekTypeExtra;
 
     g_game->loadGame(g_game->m_setup.m_filename, 0, 0);

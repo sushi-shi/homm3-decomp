@@ -676,7 +676,8 @@ class SGameSetupOptions {
 public:
     signed char m_color[8];
     signed char m_handicap[8];
-    int m_alignment[8];
+    // Original SGameSetupOptions::alignment is TTownType[8].
+    TTownType m_alignment[8];
     signed char m_playerPos[8];
     signed char m_difficulty;
     char m_filename[251];
@@ -698,7 +699,7 @@ public:
         for (int i = 0; i < 8; ++i) {
             m_color[i] = i;
             m_handicap[i] = 0;
-            m_alignment[i] = i % 9;
+            m_alignment[i] = TTownType(i % 9);
             m_playerPos[i] = i;
             m_canFlipFromToComputer[i] = i;
             m_startingHero[i] = -1;
@@ -1832,7 +1833,16 @@ extern const char* g_townFortObjectDefs[9];
 // supplies the names; retail fixes these four dword cells and their paired
 // reset/restore use around game::LoadGame.
 extern const char* g_townCapitolObjectDefs[9];
-extern int g_weekType;
+// Original ?giWeekType@@3W4type_week_type@@A proves the enum domain.
+// Enumerator names follow the retail PerWeek and DoNewTurn cases; their
+// original spelling is unavailable. Month state and the network fields are int.
+enum WeekType {
+    weekTypeInvalid = -1,
+    weekTypeNormal = 0,
+    weekTypeCreature = 1,
+    weekTypeInfernoGrail = 2
+};
+extern WeekType g_weekType;
 extern int g_weekTypeExtra;
 extern int g_monthType;
 // Shared UI text table: attack, defense, spell power, and knowledge.
@@ -2059,7 +2069,7 @@ DC_ADDRESS(0x02000c, 0x58)
 inline TTownType game::getPlayerAlignment(int playerId) const
 {
     return playerId >= 0
-        ? static_cast<TTownType>(m_setup.m_alignment[playerId]) : eTownNeutral;
+        ? m_setup.m_alignment[playerId] : eTownNeutral;
 }
 
 // Game.h:1380. DispatchEvent expands this cell accessor; the
