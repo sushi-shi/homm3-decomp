@@ -15,7 +15,7 @@ and the pinned CodeWarrior tools.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,435 |   98.36% | this build                                     |
+| CUR   |           4,436 |   98.36% | this build                                     |
 | MAX   |           4,458 |   98.46% | best result for each function's current source |
 | HIST  |           4,507 |   98.82% | all-time peak across source revisions          |
 
@@ -23,7 +23,7 @@ MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |   123 | 3757 / 3997 (94.0%) |    98.72% |
+| `game`       |   123 | 3757 / 3997 (94.0%) |    98.73% |
 | `rmg`        |     3 |   307 / 369 (83.2%) |    95.19% |
 | `network`    |     4 |   275 / 281 (97.9%) |    99.40% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |   100.00% |
