@@ -1281,6 +1281,7 @@ public:
     // overrides GetStartingHeroId for human players.
     void createTownHeroes(int* startingHeroIds);
     int getAlignment(int creature) const;
+    TTownType getPlayerAlignment(int playerId) const;
     void claimShipyard(type_point location, int newPlayerOwner);  // 0x4c6a30
     void claimTown(int townId, int newPlayerOwner,
                    unsigned char isRemoteMove,
@@ -1498,8 +1499,6 @@ public:
             return 0;
         return m_mapHeader.m_teamInfo[player1] == m_mapHeader.m_teamInfo[player2];
     }
-    // 0x4c6690, and the Dreamcast's own `?get_alignment@game@@QBA?AW4
-    // TTownType@@H@Z` (game.h:1375, i.e. a header inline - which is why
     // Own the retained inline body here with the game interface. The selected
     // retail copy is in philai.obj; emission does not give that TU ownership.
     // Mac expands this version-aware wrapper before the retained global
@@ -2032,7 +2031,6 @@ inline bool game::isHumanAlly(int playerNum) const
 // VC6 source cost 75, so the 72-budget nested call remains out of line without
 // a pragma. Dreamcast's same-named game.h:1375 helper instead maps player ids.
 VA(0x004c6690, 0x43)
-DC_ADDRESS(0x02000c, 0x58)
 inline int game::getAlignment(int creature) const
 {
     if (m_gameVersion == 0) {
@@ -2040,6 +2038,17 @@ inline int game::getAlignment(int creature) const
             return -1;
     }
     return g_creatureTypeTraits[creature].m_townType;
+}
+
+// Original get_alignment, game.h:1375. The public
+// ?get_alignment@game@@QBA?AW4TTownType@@H@Z proves the const member,
+// player-id parameter and town-type result. Complete's ViewPuzzle and
+// GetNewHeroId expand the same guarded setup lookup.
+DC_ADDRESS(0x02000c, 0x58)
+inline TTownType game::getPlayerAlignment(int playerId) const
+{
+    return playerId >= 0
+        ? static_cast<TTownType>(m_setup.m_alignment[playerId]) : eTownNeutral;
 }
 
 // Game.h:1380. DispatchEvent expands this cell accessor; the
