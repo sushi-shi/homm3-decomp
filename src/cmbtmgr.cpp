@@ -4078,6 +4078,12 @@ void combatManager::markTowerArmy(const army* tower)
     }
 }
 
+// DC4970/4973 return the tutorial/local policy before the two player
+// references at4976; Complete Mac0x76c10..0x76c28 keeps the same order.
+// Both player addresses precede their preference reads. The early-return
+// and reference-declaration variants preserve all Windows scores. Replacing
+// the explicit true/false returns with one && result lowers this body from
+// 100% to94.0278% without improving its missile callers.
 VA(0x0046a4a0, 0x71)
 DC_ADDRESS(0x063900, 0xc4)
 MAC_ADDRESS(0x076bc8, 0xac)
@@ -4085,18 +4091,14 @@ bool combatManager::isQuickCombat() const
 {
     if (g_game->m_isTutorial)
         return false;
-    if (g_remoteOn && m_sideIsAi[0] && m_sideIsAi[1]) {
-        // DC's single line gap before the test and both retail expansions
-        // compute the two player addresses before reading either flag. This
-        // also closes Open, DamageMessage and ShootAnimatedMissile while
-        // improving both remaining missile callers.
-        const playerData& firstPlayer = g_game->m_players[m_playerIds[0]],
-            &secondPlayer = g_game->m_players[m_playerIds[1]];
-        if (firstPlayer.m_quickCombat && secondPlayer.m_quickCombat)
-            return true;
-        return false;
-    }
-    return g_config.m_quickCombat != 0;
+    if (!g_remoteOn || !m_sideIsAi[0] || !m_sideIsAi[1])
+        return g_config.m_quickCombat != 0;
+
+    const playerData& firstPlayer = g_game->m_players[m_playerIds[0]];
+    const playerData& secondPlayer = g_game->m_players[m_playerIds[1]];
+    if (firstPlayer.m_quickCombat && secondPlayer.m_quickCombat)
+        return true;
+    return false;
 }
 
 VA(0x0046a520, 0x44)
