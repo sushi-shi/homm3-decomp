@@ -82,6 +82,7 @@ from __future__ import annotations
 
 import argparse
 from bisect import bisect_right
+import contextlib
 import csv
 import json
 import re
@@ -1290,7 +1291,8 @@ def _build_parser() -> argparse.ArgumentParser:
         view.add_argument("--json", action="store_true", help="machine-readable output")
 
     asm = sub.add_parser("asm", help="breakpoint-labelled SH4 assembly / CFG")
-    asm.add_argument("selector", help="retail VA/RVA, dc:OFF, module:OFF, or name")
+    asm.add_argument("selectors", nargs="+", metavar="SELECTOR",
+                     help="retail VA/RVA, dc:OFF, module:OFF, or name; repeatable")
     asm.add_argument("--blocks", action="store_true",
                      help="show inferred CFG predecessor/successor headers")
     asm.add_argument("--no-breakpoints", action="store_true",
@@ -1327,8 +1329,8 @@ def _build_parser() -> argparse.ArgumentParser:
     inline_clues = sub.add_parser(
         "inline-clues", help="positive source-line residue of SH inline expansion")
     inline_clues.add_argument(
-        "selector", nargs="?",
-        help="optional retail VA/RVA, dc:OFF, module:OFF, or name")
+        "selectors", nargs="*", metavar="SELECTOR",
+        help="optional retail VA/RVA, dc:OFF, module:OFF, or name; repeatable")
     inline_clues.add_argument("--module", help="restrict corpus mode to module[.obj]")
     inline_clues.add_argument("--limit", type=int, default=50,
                               help="maximum corpus rows (default 50; 0 = all)")
@@ -1358,6 +1360,26 @@ def _build_parser() -> argparse.ArgumentParser:
                            help="generated tree directory (default build/dreamcast/structure)")
     structure.add_argument("--asm", action="store_true", help="include decoded SH4 instructions")
     return ap
+
+
+# One process may answer several commands over the same source tree
+# (`homm3 evidence`); `shared_corpus()` lets those dispatches reuse one index.
+_shared_corpus: "Corpus | None" = None
+
+
+@contextlib.contextmanager
+def shared_corpus():
+    """Reuse one Corpus across in-process dispatches; sources must not change."""
+    global _shared_corpus
+    previous = _shared_corpus
+    try:
+        _shared_corpus = previous or Corpus()
+    except (DreamcastError, inputs.InputError, OSError, ValueError):
+        pass  # each dispatch reports the same failure in its own output
+    try:
+        yield _shared_corpus
+    finally:
+        _shared_corpus = previous
 
 
 def _log(rc: int, argv: list[str], **metadata) -> None:
@@ -1432,7 +1454,7 @@ def _dispatch(argv: list[str]) -> int:
     try:
         _redirect(argv)
         args = parser.parse_args(argv)
-        corpus = Corpus()
+        corpus = _shared_corpus or Corpus()
         if args.command == "audit":
             from homm3.analysis import source_facts
             if sum((bool(args.selectors), bool(args.module), args.all)) != 1:
@@ -1495,7 +1517,8 @@ def _dispatch(argv: list[str]) -> int:
                     _match_banner(index, rows)
                     render_dossier(dossier)
         elif args.command == "asm":
-            rows = _matches(corpus, args.selector)
+            rows = list({corpus.key(row): row for selector in args.selectors
+                         for row in _matches(corpus, selector)}.values())
             dump = dc_lines.load_symbols()
             data = inputs.read_dreamcast_exe()
             views = []
@@ -1516,7 +1539,7 @@ def _dispatch(argv: list[str]) -> int:
                     raise DreamcastError(str(exc)) from exc
             if args.json:
                 payload = (views[0] if len(views) == 1 else
-                           {"authority": AUTHORITY, "selector": args.selector,
+                           {"authority": AUTHORITY, "selector": " ".join(args.selectors),
                             "matches": views})
                 json.dump(payload, sys.stdout, indent=2, sort_keys=True)
                 print()
@@ -1587,9 +1610,13 @@ def _dispatch(argv: list[str]) -> int:
         elif args.command == "inline-clues":
             if args.limit < 0:
                 raise DreamcastError("--limit must be >= 0")
-            if args.selector:
-                functions = [_inline_clue_payload(
-                    corpus, corpus.resolve(args.selector), detailed=True)]
+            if args.selectors:
+                selected_rows = {}
+                for selector in args.selectors:
+                    row = corpus.resolve(selector)
+                    selected_rows.setdefault(corpus.key(row), row)
+                functions = [_inline_clue_payload(corpus, row, detailed=True)
+                             for row in selected_rows.values()]
                 functions = [row for row in functions if row["groups"]]
             else:
                 module = args.module
@@ -1615,13 +1642,13 @@ def _dispatch(argv: list[str]) -> int:
                 "earlier_source_rows": sum(
                     row["earlier_source_rows"] for row in functions),
             }
-            if not args.selector and args.limit:
+            if not args.selectors and args.limit:
                 functions = functions[:args.limit]
             summary["shown"] = len(functions)
             payload = {
                 "authority": AUTHORITY,
                 "caution": INLINE_CAUTION,
-                "selected": bool(args.selector),
+                "selected": bool(args.selectors),
                 "summary": summary,
                 "functions": functions,
             }
@@ -1629,7 +1656,7 @@ def _dispatch(argv: list[str]) -> int:
                 json.dump(payload, sys.stdout, indent=2, sort_keys=True)
                 print()
             else:
-                _render_inline_clues(payload, selected=bool(args.selector))
+                _render_inline_clues(payload, selected=bool(args.selectors))
         else:
             payload = _stats(corpus)
             if args.json:

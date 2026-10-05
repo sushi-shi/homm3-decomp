@@ -71,6 +71,11 @@ the current function; do not turn the diagnostic commands below into a checklist
 Keep canonical helpers and natural C++ throughout the matching loop.
 Workers use separate worktrees and return their commits for integration; the
 coordinator regenerates the combined README and pushes to the default branch.
+Create one with `homm3 worktree new PATH -b BRANCH --from REF`: it links the
+toolchain, stages the executables and Mac SDK, and seeds retail targets and
+receipt-matching objects so `homm3 build --fast` works at once. Inside a
+worktree `homm3` uses that checkout even when `HOMM3_DIR` names another.
+Remove a clean one with `homm3 worktree remove PATH`.
 A full `homm3 build` is available when explicitly requested for a broader
 checkpoint; it is not a prerequisite for publishing a matching improvement.
 It is Windows-only (VC6 compile, retail delink, ledger, gates, README);
@@ -121,6 +126,12 @@ homm3 sema diff 0x00524dd0 --summary
 homm3 sema diff 0x00524dd0 --structure
 homm3 sema diff 0x00524dd0 --source
 ```
+
+`homm3 evidence 0x00524dd0` runs the same pass in one process, adding
+`mac show`/`disasm`/`calls` when a Mac pair is claimed. It accepts several
+selectors, `--only`/`--skip` sections or groups, `--json`, and `--out DIR` to
+write each section to its own file. `dreamcast asm` and `inline-clues` also
+take several selectors.
 
 For a paired Mac reference, inspect `homm3 mac show <Windows-VA>` and
 `homm3 mac disasm <Windows-VA>`. Compile the same ordinary source with
