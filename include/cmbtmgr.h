@@ -1066,19 +1066,16 @@ public:
     Bitmap816* m_combatCellGridBitmap;  // +0x13ff4
     Bitmap816* m_combatShadowBitmap;  // +0x13ff8
     int m_obstacleAnimationFrame;  // +0x13ffc
-    // "This slot's stack was added mid-combat and still owes a fizzle-in
-    // frame": AddArmy (0x47a100) stamps [iSide][slot] with the flattened
-    // index 20*iSide + slot for every stack that is NOT an arrow tower.
-    // Twenty slots a side, not the twenty-one `armies` carries - AddArmy
-    // only ever searches 0..19. Name is an address ordinal.
+private:
+    // Original private bCreatureEffect/bHeroEffect/bFlagEffect/bArcherEffect.
+    // Marked drawables contribute to the next limited repaint extent;
+    // ResetLimitCreature clears these flags before that set is rebuilt.
     unsigned char m_creatureEffect[2][20];  // +0x14000
     unsigned char m_heroEffect[2];  // +0x14028
     unsigned char m_flagEffect[2];  // +0x1402a
-    // The three arrow-tower latches, keyed by the tower's grid index by
-    // 0x46a460: hex 254 -> +0x1402c, hex 251 -> +0x1402d, hex 255 ->
-    // +0x1402e.
-
     unsigned char m_archerEffect[3];  // +0x1402c
+
+public:
     // Original Dreamcast auto_retreat_on (+0x136f7). Retail SetupCombat
     // enables this byte at +0x1402f; command processing asks whether to
     // retreat and records the answer here. Earlier any_action_taken

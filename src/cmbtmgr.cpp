@@ -2948,37 +2948,12 @@ bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // archaeology, which makes them far cheaper than InitNonVisualVars
 // despite being bigger.
 
-// The shared nine-phase skeleton, in order: the inlined IsQuickCombat
-// guard (byte-identical in all three) / deltas / a `steps` divide /
-// per-step motion / sprite-or-frame selection / `Bitmap16Bit backup(w,h)`
-// plus four limits seeded from the 0x6aace8 quad / DrawFrame / a frame
-// delay from gCombatSpeedFactors[combatSpeed] / the animation loop. The
-// loop body is Grab, sprite Draw, a four-way union of the sprite rect
-// into the limits, a four-way clip against the 0x694f18 quad,
-// UpdateScreen with (r-l+1, b-t+1), then DelayTil.
-
-// Where they differ: ShootBallisticMissile is the only PARABOLIC one - it
-// recomputes x and y from an `arc` term every frame instead of
-// accumulating a step - is the only one with no DrawFrame call, is the
-// only one whose backup restore sits INSIDE the loop, and uses a 100.0f
-// delay factor where the other two use 33.0f. ShootMissile is the only
-// one that does NOT cycle the sprite frame: it picks one frame from the
-// angle and holds it. ShootAnimatedMissile is the only one that owns its
-// sprite (ResourceManager::GetSprite ... Dispose).
-
-// The union+clip+UpdateScreen block is DC's SLimitData::Include +
-// ::Clip + Width()/Height(), and the same block appears in
-// army::animate_missile (0x43f2c0), combatManager::DrawFrame (0x494440)
-// and ComputeMaxExtent (0x495bf0) - so spelling it right here pays off in
-// several more bodies. Suggested order: ShootMissile first (fullest angle
-// path, simplest loop), then ShootAnimatedMissile, then the parabola.
-
-// One thing to settle before writing any of them: all four dwords of each
-// limits quad are read INDIVIDUALLY, each at displacement 0 against its
-// own symbol, so they want four separate externs rather than one struct -
-// the gCombatHexLeft694ea8 precedent in the header. And every new
-// file-scope extern on cmbtmgr.h fires the include-set wall by itself
-// (measured at gCombatSeed66d840), so all of them must be gated.
+// All three missile animators retain the shared bitmap, sprite and rectangle
+// helpers. Their dirty extents start from heroWindowManager::NullLimits and
+// are clipped to combatManager::CombatAreaLimits before UpdateCombatArea.
+// The ballistic path computes a parabola, restores its saved bitmap inside
+// the loop, and uses a 100ms speed factor. The other two use 33ms; only the
+// animated variant owns its sprite and cycles its frames.
 
 // E:\gamedcs\cmbtmgr.cpp:3640
 // RECONSTRUCTED 2026-08-20, the parabolic member of the trio. DC local
@@ -3006,10 +2981,9 @@ bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // DC 3703/3707/3725 name the bitmap Grab/Draw and const sprite Draw
 // forwarding overloads. Restoring those calls measures Windows 94.19
 // -> 91.24%; the native indexed loop measures 89.12%. It retains the
-// final Draw's nested GetMap and GetNumFrames, which retail expands
-// (14 calls vs 12). The frame remains 0x8c vs retail 0x9c. Native
-// operand-order alternatives are Windows-flat. All other available
-// cmbtmgr Mac pairs hold; keep these canonical source operations.
+// final Draw's nested GetMap and GetNumFrames, which retail expands.
+// The frame remains 0x8c vs retail 0x9c. Native operand-order alternatives
+// are Windows-flat; keep the canonical source operations.
 // Default construction followed by assignment of updateArea is also
 // byte-flat at 89.1219%; the observed four-word initialization alone does
 // not distinguish it from copy initialization, which remains the model.
@@ -3024,9 +2998,9 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
 
     const int deltaX = destX - startX;
     const int deltaY = destY - startY;
-    const int arrowtraveldist = static_cast<int>(sqrt(static_cast<double>(
+    const int arrowTravelDist = static_cast<int>(sqrt(static_cast<double>(
         deltaY * deltaY + deltaX * deltaX)));
-    const int nframes = (arrowtraveldist + 10) / 20;
+    const int nframes = (arrowTravelDist + 10) / 20;
     // The arc: half the horizontal span, spread over the flight. The
     // trajectory below subtracts flatness*(nframes - step) from deltaY,
     // so the peak deviation is nframes/4 * flatness = abs(deltaX)/2.
@@ -3042,12 +3016,12 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
 
     Bitmap16Bit saved(width, height);
     SLimitData updateArea = heroWindowManager::s_nullLimits;
-    const int missileperiod = static_cast<int>(
+    const int missilePeriod = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
 
     int frame = 0;
     for (int step = 0; step < nframes; step++) {
-        unsigned long nextFrameTime = GameTime::get() + missileperiod;
+        unsigned long nextFrameTime = GameTime::get() + missilePeriod;
         if (step != 0) {
             // Mac 0x73e24 copies a four-word rectangle temporary here.
             updateArea = SLimitData(
@@ -3289,11 +3263,11 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     Bitmap16Bit saved(width, height);
     SLimitData updateArea = heroWindowManager::s_nullLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
-    const int arrowdelay = static_cast<int>(
+    const int arrowDelay = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
 
     for (int step = 0; step < nframes; step++) {
-        unsigned long nextFrameTime = GameTime::get() + arrowdelay;
+        unsigned long nextFrameTime = GameTime::get() + arrowDelay;
         if (step != 0) {
             saved.draw(0, 0, width, height,
                        g_windowManager->m_screenBitmap, x, y, false);
