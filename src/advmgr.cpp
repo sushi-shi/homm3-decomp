@@ -1306,7 +1306,7 @@ int advManager::main(message& msg)
         }
     }
 
-    unsigned char exitFlag;
+    bool exitFlag;
     int result;
     NewmapCell* eventCell;
     type_point triggerPoint;
@@ -1448,13 +1448,14 @@ unsigned char saveGame(unsigned char campaignWinMode);
 // the current score from 87.6584%; the historical 97.61% predates these
 // helper facts. Mac shape aligns 326/571 instructions and 52/52 direct
 // call counts; this is source-shape evidence, not a Mac byte verdict.
-// DC proves const message&, unsigned char&, type_point& and
-// NewmapCell*& parameters. Retail's call supplies the same four addresses;
-// keep the source references and their const layer instead of pointer facades.
+// DC original ProcessKeyPress/ProcessDeSelect publics encode AA_N for
+// exitFlag: bool&, despite the lowered unsigned-byte debug primitive.
+// Retail forwards the same four addresses; preserve the references and
+// the const message layer.
 VA(0x00408c40, 0xB9D)
 DC_ADDRESS(0x008b70, 0x7c0)
 MAC_ADDRESS(0x009144, 0x8ec)  // anchor-callee
-int advManager::processKeyPress(const message& msg, unsigned char& exitFlag, type_point& triggerPoint, NewmapCell*& peventCell)
+int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& triggerPoint, NewmapCell*& peventCell)
 {
     if (m_advWindow->m_chatEdit->m_hasFocus)
         return 0;
@@ -1797,7 +1798,7 @@ int advManager::processSelect(const message& msg, type_point& triggerPoint, Newm
 VA(0x00409a70, 0x641)
 DC_ADDRESS(0x009a94, 0x6d4)
 MAC_ADDRESS(0x009c6c, 0x5d4)
-int advManager::processDeSelect(const message& msg, unsigned char& exitFlag, type_point& triggerPoint, NewmapCell*& peventCell)
+int advManager::processDeSelect(const message& msg, bool& exitFlag, type_point& triggerPoint, NewmapCell*& peventCell)
 {
     playerData* localPlayer = g_game->getLocalPlayer();
     bool waitingPlayer = !g_currentPlayer->isLocalHuman();
@@ -9198,10 +9199,11 @@ void advManager::doAdventureOptions()
 
 unsigned char saveGame(unsigned char campaignWinMode);
 
+// Original public ?DoSystemOptions@advManager@@QAA_NXZ proves bool.
 VA(0x0041ac00, 0x1AC)
 DC_ADDRESS(0x01e5e8, 0x284)
 MAC_ADDRESS(0x01b8c4, 0x1f0)
-unsigned char advManager::doSystemOptions()
+bool advManager::doSystemOptions()
 {
     int result = -1;
     trimLoopingSounds(4);

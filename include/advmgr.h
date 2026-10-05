@@ -973,16 +973,16 @@ public:
                            enum TCreatureType monType3, int numMons3,
                            int numGroups3);
     void doWhirlpool(class hero* who);
-    unsigned char doSystemOptions();
+    bool doSystemOptions();
     void heroLoses(class hero* who, int vanishSound);
     void insertSound(int x, int y, int z, int soundPriority, int soundsType);
     void eraseAndFizzle(NewmapCell* eventCell, type_point point,
                         int fizzleSound);
     int processSelect(const message& msg, type_point& triggerPoint,
                       NewmapCell*& peventCell);
-    int processDeSelect(const message& msg, unsigned char& exitFlag,
+    int processDeSelect(const message& msg, bool& exitFlag,
                         type_point& triggerPoint, NewmapCell*& peventCell);
-    int processKeyPress(const message& msg, unsigned char& exitFlag,
+    int processKeyPress(const message& msg, bool& exitFlag,
                         type_point& triggerPoint, NewmapCell*& peventCell);
     void processRadarSelect(const message* msg);
     void processMapSelect(const message& msg, type_point& triggerPoint,
