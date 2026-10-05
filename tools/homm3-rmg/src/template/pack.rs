@@ -2,6 +2,7 @@
 //! 0x1d54d0, 0x1d5dc0, 0x1d65e0 and 0x1d58c0 (`hota-rmg` 3a1421ef5).
 //! Both encodings produce the ordinary Template/Zone/Connection model.
 
+use super::apply_availability as availability;
 use super::{
     positive, Availability, Connection, ConnectionKind, ConnectionOptions, MapOptions, Placement,
     PlayerSlot, Request, RoadPolicy, Ruleset, Template, TemplateCandidate, TemplateError,
@@ -207,42 +208,6 @@ impl<'a> Record<'a> {
             .filter(|n| n.is_finite());
         number.ok_or_else(|| self.error(column, "floating-point overflow"))
     }
-}
-
-// Three-state scanner of RVA 0x1c0360. A sign survives intervening non-digits
-// until the first digit. Repeated signs replace it. IDs without signs are ignored.
-fn availability(text: &[u8], table: &mut [Availability]) -> Result<(), ()> {
-    let mut sign = None;
-    let mut id: Option<usize> = None;
-    for byte in text.iter().copied().chain(std::iter::once(0)) {
-        if byte.is_ascii_digit() {
-            if sign.is_some() {
-                let next = id
-                    .unwrap_or(0)
-                    .checked_mul(10)
-                    .and_then(|n| n.checked_add(usize::from(byte - b'0')))
-                    .ok_or(())?;
-                if next > i32::MAX as usize {
-                    return Err(());
-                }
-                id = Some(next);
-            }
-        } else {
-            if let Some(index) = id.take() {
-                if let Some(entry) = table.get_mut(index) {
-                    *entry = sign.unwrap();
-                }
-                sign = None;
-            }
-            match byte {
-                b'+' => sign = Some(Availability::Enabled),
-                b'-' => sign = Some(Availability::Disabled),
-                0 => break,
-                _ => {}
-            }
-        }
-    }
-    Ok(())
 }
 
 pub(super) fn settings(

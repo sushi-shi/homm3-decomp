@@ -3,7 +3,7 @@ use super::{
     ObjectArena, ObjectId, ObjectPayload, PlacementError, TreasureGeneration,
     TreasureGenerationError, TreasureGroupWorkspace, TreasurePacking,
 };
-use crate::{geometry::ZoneId, object::ObjectKind, raw, rng::RetailRng, traits::ArtifactId};
+use crate::{geometry::ZoneId, object::ObjectKind, rng::RetailRng, rules::Ruleset};
 
 impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
     pub(super) fn complete_treasure(
@@ -20,21 +20,11 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                 let Some(child) = quest.pending_seer() else {
                     return Ok(());
                 };
-                let available = (0..raw::ARTIFACT_COUNT)
-                    .filter(|&id| self.artifact_available(ArtifactId::parse(id).unwrap()))
-                    .count();
-                if available < raw::RMG_LOW_QUEST_ARTIFACT_COUNT as usize {
+                let selection = self.artifacts.select_quest(rng);
+                if selection.pool_low() {
                     self.ready.quests.pool_low = true;
                 }
-                if available == 0 {
-                    objects.recycle_unplaced(child)?;
-                } else {
-                    let selected = rng.draw() as usize % available;
-                    let artifact = (0..raw::ARTIFACT_COUNT)
-                        .map(|id| ArtifactId::parse(id).unwrap())
-                        .filter(|&id| self.artifact_available(id))
-                        .nth(selected)
-                        .unwrap();
+                if let Some(artifact) = selection.artifact {
                     let ObjectPayload::Seer(hut) = objects.payload_mut(child)? else {
                         return Err(PlacementError::TreasureCleanupRequired(child).into());
                     };
@@ -73,15 +63,18 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                         Ok(false)
                     })?;
                     if placed {
-                        self.ready.quests.used[artifact.index()] = true;
-                        let count = i32::try_from(
-                            self.ready
-                                .catalog
-                                .prototypes()
-                                .family(ObjectKind::SEER)
-                                .len(),
-                        )
-                        .map_err(|_| PlacementError::Arithmetic)?;
+                        self.artifacts.exclude(artifact);
+                        let count = match self.artifacts.catalog().ruleset() {
+                            Ruleset::HotA181 => 6,
+                            Ruleset::Complete => i32::try_from(
+                                self.ready
+                                    .catalog
+                                    .prototypes()
+                                    .family(ObjectKind::SEER)
+                                    .len(),
+                            )
+                            .map_err(|_| PlacementError::Arithmetic)?,
+                        };
                         self.ready.quests.next_seer = self
                             .ready
                             .quests
@@ -90,6 +83,8 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                             .and_then(|next| next.checked_rem(count))
                             .ok_or(PlacementError::Arithmetic)?;
                     }
+                } else {
+                    objects.recycle_unplaced(child)?;
                 }
                 let ObjectPayload::QuestArtifact(quest) = objects.payload_mut(object)? else {
                     unreachable!("completion retains parent payload")
@@ -107,12 +102,6 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             _ => {}
         }
         Ok(())
-    }
-    fn artifact_available(&self, artifact: ArtifactId) -> bool {
-        self.artifacts()
-            .get(artifact)
-            .is_some_and(|row| row.quest_eligible())
-            && !self.ready.quests.used[artifact.index()]
     }
     fn retire_removed_parent(
         &mut self,

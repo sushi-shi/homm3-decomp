@@ -177,3 +177,44 @@ fn installed_artifacts_load_new_classes_and_all_combination_memberships() {
         .unwrap()
         .quest_eligible());
 }
+
+#[test]
+#[ignore = "requires HOMM3_HOTA_DAT and HOMM3_RMG_ARTIFACTS from the pinned HotA installation"]
+fn installed_quest_pool_respects_template_combination_bans() {
+    use homm3_rmg::{
+        artifact::ArtifactPool, request::Water, rng::RetailRng, template::MapOptions,
+        traits::ArtifactCatalog,
+    };
+    let bytes = std::fs::read(std::env::var_os("HOMM3_HOTA_DAT").unwrap()).unwrap();
+    let base = std::fs::read(std::env::var_os("HOMM3_RMG_ARTIFACTS").unwrap()).unwrap();
+    let catalog = ArtifactCatalog::parse_hota181(&base, Container::parse(&bytes).unwrap()).unwrap();
+    let exhaust = |mut pool: ArtifactPool<'_>| {
+        let mut seen = Vec::new();
+        let mut rng = RetailRng::new(42);
+        while let Some(artifact) = pool.select_quest(&mut rng).artifact {
+            assert!(!seen.contains(&artifact.index()));
+            seen.push(artifact.index());
+            assert!(pool.exclude(artifact));
+        }
+        assert_eq!(rng.draws(), u64::try_from(seen.len()).unwrap());
+        seen
+    };
+    for water in [Water::None, Water::Normal, Water::Islands] {
+        let default_pool = ArtifactPool::new(&catalog, water);
+        let available = exhaust(default_pool.clone());
+        assert!(available.contains(&54)); // Amulet of the Undertaker: Cloak recipe is banned.
+        assert!(available.contains(&152)); // Expanded treasure class, no permitted combination.
+        assert!(available.contains(&153));
+        assert!(!available.contains(&37)); // Quiet Eye: Power of the Dragon Father is permitted.
+        let mut changed = default_pool;
+        changed
+            .apply_template(&MapOptions {
+                combination_artifacts: Some(b"-5 +1".to_vec()),
+                ..MapOptions::default()
+            })
+            .unwrap();
+        let available = exhaust(changed);
+        assert!(available.contains(&37));
+        assert!(!available.contains(&54));
+    }
+}

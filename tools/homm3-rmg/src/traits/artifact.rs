@@ -174,3 +174,6 @@ impl ArtifactCatalog {
         &self.entries
     }
 }
+
+#[cfg(test)]
+mod pool_tests;

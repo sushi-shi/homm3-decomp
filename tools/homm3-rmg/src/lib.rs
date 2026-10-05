@@ -8,6 +8,7 @@
 /// Source-derived raw values for callers implementing request adapters.
 pub use homm3_rmg_data as raw;
 
+pub mod artifact;
 pub mod behavior;
 pub mod boundaries;
 mod constants;

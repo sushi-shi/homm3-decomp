@@ -226,3 +226,35 @@ library Clippy pass. The eight-request Complete sample again has eight exact
 hotfix matches, five exact retail matches and three pre-existing typed coast
 faults, without unexpected differences. These are resource and compatibility
 checks; initialized HotA table snapshots and full generation parity remain open.
+
+The shared `artifact::ArtifactPool` now owns map exclusions, combination bans and
+normalized template overrides while borrowing the immutable catalog. Constructor
+bans follow water and ruleset; the selected template can override random-class,
+non-disabled artifacts. The no-allowed-artifacts fallback resets artifact 8's
+*override* and leaves its effective ban unchanged. Both pack and map settings now
+use the same native availability scanner. Invalid list input leaves the pool
+unchanged.
+
+Quest completion consumes this pool instead of a separate fixed-size used array.
+HotA counts all unbanned, enabled treasure-class artifacts toward its low-pool
+threshold, then excludes assembled artifacts and components of permitted
+combinations from selection. Selection scans upward, draws even for a singleton,
+and claims only after successful seer placement. The owning callback preserves
+the sticky low-pool flag and supports HotA's six-seer cycle. Complete retains its
+own eligibility, prototype-count cycle and header ban rules. Pool diagnostics now
+live at `TreasureGeneration::artifact_pool()` rather than on `TreasuresReady`.
+
+Verification: 117 library tests, five installed-data checks and library Clippy
+pass, and the CLI connection-test target compiles after the query API change.
+The installed checks exhaust the quest pool under all three resolved water modes
+and verify that template combination bans change component eligibility. A further
+14-request Complete replay has 14 exact hotfix matches, seven exact retail
+matches and seven pre-existing typed coast faults. Independent H3M parsing of all
+14 hotfix outputs succeeds and finds 112 seer huts, exercising successful quest
+completion in the replay sample. No unexpected replay differences occurred.
+
+Full HotA generation is still gated. Its artifact pool must be prepared before
+object-rule pruning and transferred through the complete versioned pipeline;
+current Complete generation creates its pool at the payload stage because no
+earlier Complete operation mutates those exclusions. HotA group placement,
+quest destinations, setup/output consumption and full native parity remain work.

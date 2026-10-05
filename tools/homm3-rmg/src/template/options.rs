@@ -169,3 +169,39 @@ impl Default for MapOptions {
         }
     }
 }
+
+// Three-state scanner of RVA 0x1c0360. A sign survives intervening non-digits
+// until the first digit. Repeated signs replace it. IDs without signs are ignored.
+pub(crate) fn apply_availability(text: &[u8], table: &mut [Availability]) -> Result<(), ()> {
+    let mut sign = None;
+    let mut id: Option<usize> = None;
+    for byte in text.iter().copied().chain(std::iter::once(0)) {
+        if byte.is_ascii_digit() {
+            if sign.is_some() {
+                let next = id
+                    .unwrap_or(0)
+                    .checked_mul(10)
+                    .and_then(|n| n.checked_add(usize::from(byte - b'0')))
+                    .ok_or(())?;
+                if next > i32::MAX as usize {
+                    return Err(());
+                }
+                id = Some(next);
+            }
+        } else {
+            if let Some(index) = id.take() {
+                if let Some(entry) = table.get_mut(index) {
+                    *entry = sign.unwrap();
+                }
+                sign = None;
+            }
+            match byte {
+                b'+' => sign = Some(Availability::Enabled),
+                b'-' => sign = Some(Availability::Disabled),
+                0 => break,
+                _ => {}
+            }
+        }
+    }
+    Ok(())
+}

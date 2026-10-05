@@ -4,7 +4,7 @@ use crate::{
     boundaries::CreaturePreference,
     geometry::ZoneId,
     raw,
-    traits::{ArtifactId, CreatureCatalog, CreatureId},
+    traits::{CreatureCatalog, CreatureId},
     treasure::{CreatureReward, DefinitionId, FamilyOrdinal, TreasureCatalog, TreasureReward},
 };
 use std::{error::Error, fmt};
@@ -32,21 +32,11 @@ impl From<PlacementError> for TreasureValueError {
     }
 }
 
-// These are native constructor states, not a precomputed artifact-eligibility
-// cache. Completion checks availability and sets the low flag at that time.
+// Completion updates the sticky low-pool flag and the seer-family cursor.
+#[derive(Default)]
 pub(super) struct QuestState {
     pub(super) next_seer: i32,
     pub(super) pool_low: bool,
-    pub(super) used: [bool; raw::ARTIFACT_COUNT as usize],
-}
-impl Default for QuestState {
-    fn default() -> Self {
-        Self {
-            next_seer: 0,
-            pool_low: false,
-            used: [false; raw::ARTIFACT_COUNT as usize],
-        }
-    }
 }
 impl QuestState {
     fn offers(&self, ordinal: FamilyOrdinal) -> bool {
@@ -109,16 +99,6 @@ impl TreasuresReady<'_, '_, '_, '_, '_, '_> {
     pub const fn quest_pool_low(&self) -> bool {
         self.quests.pool_low
     }
-    /// Whether successful quest completion has claimed this artifact.
-    #[must_use]
-    pub fn quest_artifact_used(&self, artifact: ArtifactId) -> bool {
-        self.quests
-            .used
-            .get(artifact.index())
-            .copied()
-            .unwrap_or(false)
-    }
-
     /// Evaluate one definition at its native lazy query point, without RNG.
     /// Callers must apply group/type-limit gates before this operation. Signed
     /// results are preserved: selection rejects every negative value, while

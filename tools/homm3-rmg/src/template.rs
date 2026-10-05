@@ -11,6 +11,7 @@ use std::{borrow::Cow, error::Error, fmt, num::NonZeroU32};
 mod options;
 mod pack;
 use crate::rules::Ruleset;
+pub(crate) use options::apply_availability;
 pub use options::{
     Availability, ConnectionKind, ConnectionOptions, MapOptions, RoadPolicy, ZoneOptions,
 };

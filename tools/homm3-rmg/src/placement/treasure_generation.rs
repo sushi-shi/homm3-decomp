@@ -4,6 +4,7 @@ use super::{
     QuestArtifactPayload, SeerPayload, SeerReward, TreasuresReady,
 };
 use crate::{
+    artifact::ArtifactPool,
     domain::Terrain,
     geometry::ZoneId,
     hero::{HeroId, HeroPool},
@@ -116,7 +117,7 @@ impl PendingTreasure {
 pub struct TreasureGeneration<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards> {
     pub(super) ready: TreasuresReady<'state, 'zones, 'tiles, 'defs, 'assets, 'source>,
     spells: &'rewards SpellCatalog,
-    artifacts: &'rewards ArtifactCatalog,
+    pub(super) artifacts: ArtifactPool<'rewards>,
     heroes: HeroPool,
     pub(super) arena: Option<OwnerId>,
     pub(super) offers: Vec<SelectedTreasure>,
@@ -147,6 +148,7 @@ impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
             .map_mut()
             .prepare_object_context(objects, self.catalog.prototypes())?;
         let heroes = HeroPool::new(self.map().coverage().map().version());
+        let artifacts = ArtifactPool::new(artifacts, self.map().coverage().map().water());
         Ok(TreasureGeneration {
             ready: self,
             spells,
@@ -182,7 +184,12 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
     /// Immutable artifact traits retained for later quest completion.
     #[must_use]
     pub const fn artifacts(&self) -> &ArtifactCatalog {
-        self.artifacts
+        self.artifacts.catalog()
+    }
+    /// Map-owned artifact exclusions and combination bans.
+    #[must_use]
+    pub const fn artifact_pool(&self) -> &ArtifactPool<'_> {
+        &self.artifacts
     }
     /// Current hero availability, including pending prison reservations.
     #[must_use]
