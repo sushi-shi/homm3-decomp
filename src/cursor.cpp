@@ -801,11 +801,12 @@ int advManager::validMoveWithEvent(hero* who, int direction)
 // normal_move_only supply the two remaining semantic parameter names.
 // All hero accessors used here now retain their recovered const contracts;
 // the retail address ABI does not require a mutable hero facade.
+// Original ValidMove@advManager@@QAAHPBVhero@@HH_N@Z: the final flag is bool.
 VA(0x00481be0, 0x2ED)
 DC_ADDRESS(0x07bee4, 0x2f4)
 MAC_ADDRESS(0x090dec, 0x3f8)
 int advManager::validMove(const hero* currentHero, int direction, int withEvent,
-                          unsigned char normalMoveOnly)
+                          bool normalMoveOnly)
 {
     int stepX = g_normalDirTable[direction].m_x;
     int srcX = currentHero->m_x;
