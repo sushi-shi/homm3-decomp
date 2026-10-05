@@ -102,6 +102,13 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(structure["text"], "sema diff 0x00524dd0 --structure\n")
         self.assertEqual(structure["stderr"], "note\n")
         self.assertEqual(evidence.overall_rc(reports), 1)
+        # Audit coverage gaps (3) and findings plus gaps (4) are answers, as
+        # is a section's 1; an audit 2 and any other section's 3 are failures.
+        for name, code, overall in (("audit", 3, 1), ("audit", 4, 1), ("audit", 2, 2),
+                                    ("summary", 3, 2), ("audit", 0, 0)):
+            with self.subTest(name=name, code=code):
+                self.assertEqual(evidence.overall_rc(
+                    [{"sections": [{"name": name, "rc": code}]}]), overall)
         with tempfile.TemporaryDirectory() as raw:
             evidence.write_outputs(reports, Path(raw))
             self.assertEqual(sorted(p.name for p in Path(raw).iterdir()), [
