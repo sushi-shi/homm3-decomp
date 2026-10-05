@@ -877,12 +877,38 @@ def unadmitted_sources(root: Path, admitted: set[str]) -> list[str]:
             and path.relative_to(root).as_posix() not in admitted]
 
 
-def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
+_WORKER_PROFILES = None
+
+
+def _scan_in_worker(job):
+    """One cache-miss scan in a worker process. Profiles are rebuilt once
+    per worker from the same root, exactly as the parent builds them."""
+    global _WORKER_PROFILES
+    unit, root_text, fragments = job
+    root = Path(root_text)
+    if _WORKER_PROFILES is None or _WORKER_PROFILES[0] != root_text:
+        from homm3.core.compiler_profile import Profiles
+        from homm3.core.project import Project
+        _WORKER_PROFILES = (root_text, Profiles(Project(root)))
+    return scan_unit(unit, root, profiles=_WORKER_PROFILES[1], fragment_map=fragments)
+
+
+def _default_jobs() -> int:
+    return max(1, min(8, os.cpu_count() or 1))
+
+
+def collect(root: Path = ROOT, jobs: int | None = None, fresh: bool = False):
     units = [u for u in manifest.units(root / 'config/units.toml')
              if u['source'].startswith('src/')]
-    # Source-only edits reparse their TU and any TU including that source.
-    # Header/config changes still invalidate every TU conservatively, including
-    # inactive includes and header additions that change include resolution.
+    # Each cached TU records every file clang reached (its own source, the
+    # headers and included sources, mirrored standard headers) with content
+    # hashes, so an edit reparses exactly the TUs that read the edited file.
+    # The shared key covers what a parse may depend on without reaching it:
+    # the tools, the clang library, project TOML settings, the mirrored
+    # standard headers, the source fragment map and the NAMES of every
+    # candidate include file. Adding, removing or renaming a header can change
+    # include resolution (inactive or __has_include paths too), so it
+    # invalidates every TU.
     admitted = {u['source'] for u in units}
     digest = hashlib.sha256(Path(__file__).read_bytes())
     digest.update(str(root.resolve()).encode())
@@ -907,11 +933,13 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
                 relative = path.relative_to(root).as_posix()
                 content[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
                 digest.update(relative.encode())
-                # Mac reference settings do not configure this Windows AST.
-                # Keep names in the shared key (new includes), and hashes in
-                # content so an explicitly included TOML still tracks changes.
-                mac_metadata = relative.startswith('config/mac/') and path.suffix.lower() == '.toml'
-                if relative not in admitted and not mac_metadata:
+                # Project settings configure every parse without being
+                # reached. Mac reference settings do not configure this
+                # Windows AST; their hashes stay in content so an explicitly
+                # included TOML still tracks changes.
+                setting = (path.suffix.lower() == '.toml'
+                           and not relative.startswith('config/mac/'))
+                if relative not in admitted and setting:
                     digest.update(content[relative].encode())
     if mirror:
         for path in sorted(mirror.rglob('*')):
@@ -923,26 +951,36 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
                     content[path.relative_to(root).as_posix()] = checksum
                 except ValueError:
                     pass  # External mirrors are covered by the shared key.
+    fragments = fragment_owners(root)
+    # Fragment attribution follows the owners' include positions, which the
+    # TU that includes the fragment need not reach.
+    digest.update(json.dumps(sorted(fragments.items())).encode())
     cache = root / 'build/source-ownership/units'
     cache.mkdir(parents=True, exist_ok=True)
     key = digest.hexdigest()
-    fragments = fragment_owners(root)
 
-    def cached_scan(unit):
+    def entry_path(source):
+        return cache / (hashlib.sha256(source.encode()).hexdigest() + '.json')
+
+    def cached(unit):
+        if fresh:
+            return None
         source = unit['source']
-        path = cache / (hashlib.sha256(source.encode()).hexdigest() + '.json')
-        if not fresh:
-            try:
-                saved = json.loads(path.read_text())
-                if (saved['key'] == key and not saved['errors']
-                        and source in saved['inputs']
-                        and all(h is not None and content.get(p) == h
-                                for p, h in saved['inputs'].items())):
-                    return ([Definition(**r) for r in saved['definitions']],
-                            saved['errors'], saved['reached'])
-            except (OSError, ValueError, KeyError, TypeError, AttributeError):
-                pass  # Disposable cache; a damaged entry must trigger a scan.
-        definitions, errors, reached = scan_unit(unit, root, profiles=profiles, fragment_map=fragments)
+        try:
+            saved = json.loads(entry_path(source).read_text())
+            if (saved['key'] == key and not saved['errors']
+                    and source in saved['inputs']
+                    and all(h is not None and content.get(p) == h
+                            for p, h in saved['inputs'].items())):
+                return ([Definition(**r) for r in saved['definitions']],
+                        saved['errors'], saved['reached'])
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            pass  # Disposable cache; a damaged entry must trigger a scan.
+        return None
+
+    def store(unit, result):
+        definitions, errors, reached = result
+        source = unit['source']
         dependencies = {os.path.normpath(p) for p in [*reached, source]}
         input_hashes = {p: content.get(p) for p in sorted(dependencies)}
         saved = dict(key=key, definitions=[asdict(d) for d in definitions],
@@ -954,20 +992,44 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
                 with tempfile.NamedTemporaryFile(mode='w', dir=cache, delete=False) as stream:
                     temporary = Path(stream.name)
                     json.dump(saved, stream)
-                os.replace(temporary, path)
+                os.replace(temporary, entry_path(source))
             finally:
                 if temporary is not None:
                     temporary.unlink(missing_ok=True)
-        return definitions, errors, reached
 
-    with ThreadPoolExecutor(max_workers=jobs) as pool:
-        results = list(pool.map(cached_scan, units))
-        reached = {p for _, _, paths in results for p in paths}
-        orphan_headers = [dict(source=p.relative_to(root).as_posix())
-                          for p in sorted((root / 'include').rglob('*'))
-                          if p.suffix.lower() in {'.h', '.hpp', '.inl'}
-                          and p.relative_to(root).as_posix() not in reached]
-        results.extend(pool.map(cached_scan, orphan_headers))
+    workers = jobs or _default_jobs()
+
+    def scan_all(batch):
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            results = list(pool.map(cached, batch))
+        misses = [i for i, result in enumerate(results) if result is None]
+        if workers > 1 and len(misses) > 1:
+            # The AST visitor is Python-bound: threads serialize on the GIL,
+            # so cold scans run in forked worker processes (fork, unlike
+            # spawn, never re-imports the caller's __main__). Results are
+            # pickled back unchanged, in the serial scan's order.
+            import multiprocessing
+            from concurrent.futures import ProcessPoolExecutor
+            jobs_in = [(batch[i], str(root), fragments) for i in misses]
+            with ProcessPoolExecutor(max_workers=min(workers, len(misses)),
+                                     mp_context=multiprocessing.get_context('fork')) as pool:
+                for i, result in zip(misses, pool.map(_scan_in_worker, jobs_in)):
+                    results[i] = result
+        else:
+            for i in misses:
+                results[i] = scan_unit(batch[i], root, profiles=profiles,
+                                       fragment_map=fragments)
+        for i in misses:
+            store(batch[i], results[i])
+        return results
+
+    results = scan_all(units)
+    reached = {p for _, _, paths in results for p in paths}
+    orphan_headers = [dict(source=p.relative_to(root).as_posix())
+                      for p in sorted((root / 'include').rglob('*'))
+                      if p.suffix.lower() in {'.h', '.hpp', '.inl'}
+                      and p.relative_to(root).as_posix() not in reached]
+    results.extend(scan_all(orphan_headers))
     unique = {}
     errors = [f'COVERAGE {relative}: source outside config/units.toml'
               for relative in unadmitted_sources(root, admitted)]
@@ -1358,7 +1420,7 @@ class AuditResult(TypedDict):
     reached: list[str]
 
 
-def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None) -> AuditResult:
+def audit(root: Path = ROOT, jobs: int | None = None, fresh: bool = False, *, origins=None) -> AuditResult:
     from homm3.retail_labels.fragments import all_claims
     from homm3.core.project import Project
     from homm3.core import inputs
@@ -1466,7 +1528,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--json', action='store_true')
     parser.add_argument('--fresh', action='store_true')
-    parser.add_argument('--jobs', type=int, default=4)
+    parser.add_argument('--jobs', type=int, default=None,
+                        help='parallel cold scans (default: min(8, CPUs))')
     args = parser.parse_args(argv)
     result = audit(jobs=args.jobs, fresh=args.fresh)
     if args.json:
