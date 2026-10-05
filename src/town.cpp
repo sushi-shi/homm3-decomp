@@ -1010,7 +1010,7 @@ void town::destroyExtraCapitol()
         int townCount = player->m_numTowns;
 
         for (int slot = 0; slot < townCount; ++slot) {
-            const char& townId = player->m_townIds[slot];
+            const signed char& townId = player->m_townIds[slot];
             if (townId != m_id) {
                 town* otherTown = g_game->getTown(townId);
                 if (otherTown->isCapitol()) {
