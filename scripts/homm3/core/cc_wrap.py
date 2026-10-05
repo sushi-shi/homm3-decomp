@@ -149,6 +149,31 @@ def winepath_w(p):
         + wine_failure_advice(result.stderr)
         + (f"\n[cc_wrap] winepath stderr:\n{detail}" if detail else
            "\n[cc_wrap] winepath printed no diagnostics."))
+def anchor_wine_prefix(env=None, *, root=None, require=False) -> str:
+    """Point WINEPREFIX at this tree's prefix unless a usable one is set.
+
+    Test the string first: Path("") is PosixPath("."), whose is_dir() is
+    True, so an ABSENT WINEPREFIX used to satisfy the guard and leave Wine
+    on the shared ~/.wine prefix instead of this worktree's. Every tool
+    that launches Wine directly uses this one anchor. With `require`, a
+    missing tree prefix stops with the fix instead of letting Wine create
+    an empty one.
+    """
+    env = os.environ if env is None else env
+    prefix = env.get("WINEPREFIX", "")
+    if prefix and Path(prefix).is_dir():
+        return prefix
+    tree = Path(root or HOMM3_DIR) / "build/wineprefix"
+    if require and not tree.is_dir():
+        raise WineUnavailable(
+            f"Wine prefix {tree} does not exist"
+            + (f" (WINEPREFIX={prefix} is not a directory)" if prefix else "")
+            + "; run `homm3 init` in this worktree, or export WINEPREFIX "
+              "to an initialised prefix.")
+    env["WINEPREFIX"] = str(tree)
+    return env["WINEPREFIX"]
+
+
 def ensure_wineserver():
     ws = shutil.which("wineserver")
     if ws: subprocess.run([ws, "-p"], check=False, stdin=subprocess.DEVNULL,
@@ -203,12 +228,7 @@ def main():
     if not src.exists(): die(f"source missing: {src}")
     out.parent.mkdir(parents=True, exist_ok=True)
     os.environ.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
-    # Same anti-stale anchor. Test the string first: Path("") is PosixPath("."),
-    # whose is_dir() is True, so an ABSENT WINEPREFIX used to satisfy this guard
-    # and leave the compile on the shared ~/.wine prefix instead of this tree's.
-    _prefix = os.environ.get("WINEPREFIX", "")
-    if not (_prefix and Path(_prefix).is_dir()):
-        os.environ["WINEPREFIX"] = str(HOMM3_DIR / "build/wineprefix")
+    anchor_wine_prefix()
     from homm3.core.project import Project
     project_includes = Project(HOMM3_DIR).includes
     incs = [msvc / "include", *(p for p in project_includes if p.is_dir())]

@@ -26,10 +26,8 @@ class WinePrefixAnchorTests(unittest.TestCase):
 
     @staticmethod
     def anchor(environ_value, root):
-        prefix = environ_value if environ_value is not None else ""
-        if not (prefix and Path(prefix).is_dir()):
-            return str(root / "build/wineprefix")
-        return prefix
+        env = {} if environ_value is None else {"WINEPREFIX": environ_value}
+        return cc_wrap.anchor_wine_prefix(env, root=root)
 
     def test_absent_prefix_is_pinned_to_the_tree(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -52,12 +50,36 @@ class WinePrefixAnchorTests(unittest.TestCase):
             other.mkdir()
             self.assertEqual(self.anchor(str(other), root), str(other))
 
-    def test_the_real_guard_matches_this_contract(self):
-        source = (Path(__file__).parent / "cc_wrap.py").read_text()
-        self.assertIn('_prefix = os.environ.get("WINEPREFIX", "")', source)
-        self.assertIn('if not (_prefix and Path(_prefix).is_dir()):', source)
-        self.assertNotIn('if not Path(os.environ.get("WINEPREFIX", "")).is_dir()',
-                         source)
+    def test_required_prefix_reports_a_missing_tree_prefix(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with self.assertRaises(cc_wrap.WineUnavailable) as caught:
+                cc_wrap.anchor_wine_prefix({}, root=root, require=True)
+            self.assertIn("homm3 init", str(caught.exception.code))
+            (root / "build/wineprefix").mkdir(parents=True)
+            env = {}
+            cc_wrap.anchor_wine_prefix(env, root=root, require=True)
+            self.assertEqual(env["WINEPREFIX"], str(root / "build/wineprefix"))
+
+    def test_vc6_tools_share_the_anchor(self):
+        # The shim and IL capture used `Path(os.environ.get("WINEPREFIX",
+        # "")).is_dir()`, true for an unset variable, so `predict-inline
+        # --trace` in a worktree ran on ~/.wine and could not find windows.h.
+        from homm3.vc6 import il
+        from homm3.vc6.shim import build
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "build/wineprefix").mkdir(parents=True)
+            for module in (build, il):
+                with self.subTest(module=module.__name__), \
+                        patch.dict(os.environ, {}, clear=False), \
+                        patch.object(module._common, "REPO", root), \
+                        patch.object(module.shutil, "which", return_value="/bin/wine"), \
+                        patch.object(cc_wrap, "ensure_wineserver"):
+                    os.environ.pop("WINEPREFIX", None)
+                    module._ensure_wine_env()
+                    self.assertEqual(os.environ["WINEPREFIX"],
+                                     str(root / "build/wineprefix"))
 
 
 class StagedObjectTests(unittest.TestCase):
