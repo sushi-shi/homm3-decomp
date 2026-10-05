@@ -2065,7 +2065,7 @@ inline int game::getAlignment(int creature) const
     return g_creatureTypeTraits[creature].m_townType;
 }
 
-// Original get_alignment, game.h:1375. The public
+// Original: game::get_alignment; game.h:1375. The public
 // ?get_alignment@game@@QBA?AW4TTownType@@H@Z proves the const member,
 // player-id parameter and town-type result. Complete's ViewPuzzle and
 // GetNewHeroId expand the same guarded setup lookup.

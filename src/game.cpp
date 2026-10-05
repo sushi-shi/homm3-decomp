@@ -7498,8 +7498,8 @@ void game::clearRecruits(HeroId recruits[2])
     }
 }
 
-// Original: static THeroID get_new_hero; game.cpp:8290. Its result and
-// hero_id loop local retain the native hero-ID domain.
+// Original: get_new_hero; game.cpp:8290. The static function's THeroID
+// result and hero_id loop local retain the native hero-ID domain.
 DC_ADDRESS(0x0b3e00, 0x5e)
 MAC_ADDRESS(0x0def98, 0x114)
 static HeroId getNewHero(THeroClass heroClass)

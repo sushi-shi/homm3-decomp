@@ -1116,14 +1116,8 @@ public:
                      bool leaveLastFrame);          // 0x496a10
     void spellEffect(int effect, army* targetArmy, int delay,
                      bool doWince);
-    DC_ADDRESS(0x04cc74, 0x18)
-    void markCreatureEffect(int group, int index)
-    {
-        if (m_armies[group][index].m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
-            markTowerArmy(&m_armies[group][index]);
-        else
-            m_creatureEffect[group][index] = 1;
-    }
+    // Declared with its field-list neighbours; its body follows the class.
+    inline void markCreatureEffect(int group, int index);
     void raiseDoor();
     void testRaiseDoor();
     void lowerDoor();
@@ -1900,6 +1894,17 @@ private:
     unsigned char processMoveThenAttack(message& msg);
 };
 SIZE(combatManager::TWallTraits, 0x24);
+
+// DC CmbtMgr.h:1555 defines this body after GetObstacle (1542), although the
+// native field list declares it beside the effect and door members above.
+DC_ADDRESS(0x04cc74, 0x18)
+inline void combatManager::markCreatureEffect(int group, int index)
+{
+    if (m_armies[group][index].m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
+        markTowerArmy(&m_armies[group][index]);
+    else
+        m_creatureEffect[group][index] = 1;
+}
 
 // Retail .bss 0x6993d0 (DC ?gpCombatManager@@3PAVcombatManager@@A).
 extern combatManager* g_combatManager;
