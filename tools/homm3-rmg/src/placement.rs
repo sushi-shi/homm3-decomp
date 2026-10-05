@@ -74,6 +74,7 @@ pub use movement::{Direction, Movement, ZoneDistance};
 mod decoration;
 mod lines;
 pub use lines::{LineTile, RiverType, RoadType};
+pub mod cell_records;
 mod obstacles;
 mod rivers;
 mod roads;

@@ -757,3 +757,40 @@ corpus SHA-256:
 `2dc1b7f7dedbfa40f4e71d0c522fff82ad594cbed620bf2de63e8d682fb7e59e`.
 Artifacts are in ignored `build/hota-scoring-port/`. This is recovered-source
 verification, not a HotA.dll execution capture.
+
+`placement::cell_records` owns HotA's 13-byte per-cell placement records. Zone
+construction's edge and reachability bytes come from the terrain post-pass;
+the registration stamp (RVA `0x1cbaf0`) and removal re-derivation (RVA
+`0x1cc160`) maintain the proximity bytes. For each in-map trigger cell, the
+stamp marks the 3x3 near-trigger box; monsters also mark near-monster and the
+5x5 monster area, and strong monsters their near-strong box and own cell.
+Outside `placeZoneTreasures` every monster is strong, and other objects (not
+resources or border guards) mark the cell below their trigger and the 3x3 band
+beneath it; an airship yard (Shipyard subtype 1) also marks its three approach
+cells and the 5x3 band. The phase and the zone-guard comparison are explicit
+`StampContext` inputs from the caller.
+
+Records keep the native flat index. The yard's unclamped `x - 1`/`x + 1`
+approach cells therefore wrap to the adjacent row (or the next plane), and the
+removal clears its strong-monster, entrance and yard bytes at the
+*prototype-local* column/row rather than at the map cell before re-deriving
+the neighbouring bytes from the entrances that remain. Accesses outside the
+whole table read zero and discard writes, as in the recovered reference;
+native code touches adjacent heap that no generator stage reads.
+
+Verification: five focused tests cover monster strength by phase, entrance
+bands, the bottom row, row and plane wrapping, and both local-clearing quirks.
+A temporary host harness compiles the verbatim recovered stamp, clipping,
+removal and neighbour-query bodies from `hota_rmg_connections.cpp` and
+`hota_rmg_treasure.cpp` (plus the record enum from `hota_rmg.h`), then replays
+6,409 random stamp/removal operations over 400 maps (3..12 cells, one or two
+planes, six random prototypes each). The complete record table matches after
+every operation; every stamped byte kind occurs, and addressing the cleared
+bytes by map cell instead produces 790 mismatches. Compiled reference SHA-256:
+`1bef268eeda0af309f9593b8c38e58f4b197e4bb5f2b7715694987cec78cecce`;
+corpus SHA-256:
+`9ae823690ea281020b913b9ac918d2f3bee1653f33fbfc64f1457511bb2fe2c0`.
+Artifacts are in ignored `build/hota-cells-port/`. The records are not yet
+attached to `PlacementWorkspace`: registration, removal and the HotA queries
+that read them (`0x1cb260`, `0x1cb3e0`, `0x1c8070`) belong to the gated
+placement integration.
