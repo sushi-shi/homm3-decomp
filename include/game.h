@@ -1219,8 +1219,9 @@ public:
     int randomScan(signed char* whichList, int start, int length,
                    signed char scanValue);
     int getNewBoatId();  // 0x4bb170
+    // Original CreateBoat public encodes _NC: bool remote move, signed type.
     int createBoat(int x, int y, int z, int owner,
-                   unsigned char remoteMove, signed char type);  // 0x4bb250
+                   bool remoteMove, signed char type);  // 0x4bb250
     int getNewHeroId(int playerPos, THeroClass excluded,
                      unsigned char preferAlignment,
                      THeroClass preferredClass);  // 0x4bb5e0
@@ -1283,9 +1284,10 @@ public:
     int getAlignment(int creature) const;
     TTownType getPlayerAlignment(int playerId) const;
     void claimShipyard(type_point location, int newPlayerOwner);  // 0x4c6a30
+    // Original ClaimTown public ends in _N0: both latches are bool.
     void claimTown(int townId, int newPlayerOwner,
-                   unsigned char isRemoteMove,
-                   unsigned char checkEndGame);  // 0x4c61e0
+                   bool isRemoteMove,
+                   bool checkEndGame);  // 0x4c61e0
     void claimMine(int mineId, int newPlayerOwner,
                    type_action_type actionType);  // 0x4c66e0
     void claimGenerator(int generatorId, int newPlayerOwner);  // 0x4c67b0

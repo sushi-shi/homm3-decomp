@@ -1751,7 +1751,7 @@ int hero::heroFn004D9CC0(int artifact)
 VA(0x004d9ec0, 0x4D3)
 DC_ADDRESS(0x0cc800, 0x380)
 MAC_ADDRESS(0x0f5d3c, 0x554)
-void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
+void hero::deallocate(bool gameLoaded, bool remoteMove)
 {
     unsigned char freedTownVisitor = 0;
     int townId = g_game->getTownId(m_x, m_y, m_z);

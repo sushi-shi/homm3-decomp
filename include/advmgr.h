@@ -987,8 +987,9 @@ public:
     void processRadarSelect(const message* msg);
     void processMapSelect(const message& msg, type_point& triggerPoint,
                           NewmapCell*& peventCell);
+    // Original EraseObj public ends in _N: the recording latch is bool.
     void eraseObj(NewmapCell* thisCell, type_point point,
-                  unsigned char record);
+                  bool record);
     void overrideBottomView(EBottomViewType view, int time);
     void hideRoute(int updateScreen, int removeTarget, int changeButton);
     void reseed(int targetX, int targetY);
@@ -1274,10 +1275,11 @@ public:
     void vwDrawSymbols(int srcX, int srcY, int z, int destX, int destY);
     bool scanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type,
                            TDrawParts (&parts)[6]);
+    // Original CompleteDraw publics encode _N for these draw latches.
     void completeDraw(int startX, int startY, int z,
-                      unsigned char forceDraw,
-                      unsigned char updateBottomView);
-    void completeDraw(unsigned char forceDraw);
+                      bool forceDraw,
+                      bool updateBottomView);
+    void completeDraw(bool forceDraw);
     void eventSound(NewmapCell* cell);
     void eventSound(int eventID, int extraInfo);
     short recruitEvent(hero* who, TCreatureType creature, short available);
@@ -1397,9 +1399,10 @@ public:
     void disguise(TSkillMastery level);
     void waterWalk(TSkillMastery level);
     void townGate(TSkillMastery level);
+    // Original TeleportTo public ends in _N33: three bool latches.
     void teleportTo(hero* who, type_point destination, const char* sampleName,
-                    unsigned char isRemoteMove, unsigned char drawChanges,
-                    unsigned char isReplay);
+                    bool isRemoteMove, bool drawChanges,
+                    bool isReplay);
     void doAdventureOptions();
     int processWaitingHover(int mouseX, int mouseY);
     int processHover(int mouseX, int mouseY);

@@ -4256,7 +4256,7 @@ void advManager::drawAdventureMapGems()
 VA(0x0040f3f0, 0x47D)
 DC_ADDRESS(0x010788, 0x514)
 MAC_ADDRESS(0x00f948, 0x5e0)
-void advManager::completeDraw(int startX, int startY, int z, unsigned char forceDraw, unsigned char updateBottomView)
+void advManager::completeDraw(int startX, int startY, int z, bool forceDraw, bool updateBottomView)
 {
     pollSound();
 
@@ -4379,7 +4379,7 @@ void advManager::completeDraw(int startX, int startY, int z, unsigned char force
 VA(0x0040f870, 0x43)
 DC_ADDRESS(0x010c9c, 0x56)
 MAC_ADDRESS(0x00ff28, 0x4c)
-void advManager::completeDraw(unsigned char forceDraw)
+void advManager::completeDraw(bool forceDraw)
 {
     completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
                  forceDraw, true);

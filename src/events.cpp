@@ -406,7 +406,7 @@ void advManager::doEvent(NewmapCell* eventCell, type_point point)
 
 // E:\gamedcs\events.cpp:5179
 // RETAIL_LOCATED(0x004aabb0, 0x239)  // anchor-global, dc 0x99bac
-void advManager::eraseObj(NewmapCell* thisCell, type_point point, unsigned char record)
+void advManager::eraseObj(NewmapCell* thisCell, type_point point, bool record)
 {
     // @stub
 }
@@ -5003,7 +5003,7 @@ VA(0x004aabb0, 0x239)
 DC_ADDRESS(0x099bac, 0x1ea)
 MAC_ADDRESS(0x0b7cbc, 0x230)
 void advManager::eraseObj(NewmapCell* thisCell, type_point point,
-                          unsigned char record)
+                          bool record)
 {
     int objectIndex = thisCell->m_objectTypeIndex;
     if (objectIndex == -1)

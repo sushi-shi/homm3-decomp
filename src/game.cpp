@@ -2050,7 +2050,7 @@ int game::getNewBoatId()
 VA(0x004bb250, 0x1AA)
 DC_ADDRESS(0x0a6690, 0x12c)
 MAC_ADDRESS(0x0ce070, 0x158)
-int game::createBoat(int x, int y, int z, int owner, unsigned char isRemoteMove, signed char type)
+int game::createBoat(int x, int y, int z, int owner, bool isRemoteMove, signed char type)
 {
     int id = getNewBoatId();
     if (id == -1)
@@ -6721,7 +6721,7 @@ int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
 VA(0x004c61e0, 0x4A8)
 DC_ADDRESS(0x0b1230, 0x518)
 MAC_ADDRESS(0x0dc98c, 0x3dc)
-void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove, unsigned char checkEndGame)
+void game::claimTown(int townId, int newPlayerOwner, bool isRemoteMove, bool checkEndGame)
 {
     town* thisTown = &m_towns[townId];
     long oldOwner = thisTown->m_owner;
