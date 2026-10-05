@@ -7,6 +7,7 @@
 //! glyph bytes, adventure-object masks, the CRLF/tab text grammars, and the
 //! IFF/XMIDI envelope handed to Miles.
 
+pub mod hdat;
 pub mod iff;
 
 use core::fmt;

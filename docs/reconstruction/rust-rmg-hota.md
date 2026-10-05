@@ -123,3 +123,26 @@ catalogs still have Complete domains; extended resources, algorithms, output and
 HD/mirror execution remain outstanding. In particular, parsing a mirror pack
 does not establish mirror generation, and the reference sample is not exhaustive
 Complete compatibility coverage.
+
+The next checkpoint adds the allocation-free `homm3_resource::hdat` reader and
+installed `treasure::ObjectRecipes` loading. The container layout was checked
+against the pinned DLL's loader at RVA `0x127030` and string reader at `0x127920`.
+The loader's version comparison accepts 2 (the earlier C++ overview's "1 or 2"
+comment is not the admission rule used here). Payloads remain opaque borrowed
+bytes, including any stale native pointer values; those bytes are never cast to
+host structures. Counts, lengths and exact file consumption are checked.
+
+Object list parsing follows RVA `0x126b30`'s delimiters, comments, NUL termination
+and CRT numeric prefixes; duplicate names replace earlier lists, string index 7
+is clamped, and incomplete trailing six-integer records are ignored. The pinned
+file has 433 records, 151 payloads, 42 additional object recipes and 13 optional
+default recipes. Installed-data checks verify these and representative land,
+water, shrine and optional reward entries. Three synthetic container tests cover
+framing (including every truncated prefix of the fixture); three RMG unit tests
+cover integer streams and native object-record selection quirks. The RMG library
+now passes 101 unit tests, and both libraries pass Clippy with warnings denied.
+
+This reader does not yet initialize the expanded creature, artifact, hero and
+terrain catalogs or consume the new recipes in generation. Those require the
+native record field interpretations and initialization patches, followed by the
+shared definition builder and placement changes. The full objective remains open.

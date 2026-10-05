@@ -1,4 +1,7 @@
 //! Source-ordered treasure definitions prepared before generation consumes RNG.
+mod data;
+pub use data::{ObjectRecipe, ObjectRecipes, RecipeDataError};
+
 use crate::{
     identity::OwnerId,
     object::ObjectKind,
