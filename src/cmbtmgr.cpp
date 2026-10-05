@@ -3477,6 +3477,11 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
 // DC4337 and Mac 0x754b0..0x7553c retain one positive readiness condition
 // around frame advancement. The remaining differences are animation-walk
 // temporary slots and register allocation; all branches and calls agree.
+// DC4410/4411 and Mac 0x757b4..0x758ac retain a framesChanged-controlled
+// while loop. DC4425/4433 set the flag inside each advancing branch; keeping
+// those assignments raises Windows to 98.4695%. Both references subtract
+// frameCount before one when forming winceStartOffset. Moving that local
+// among its existing use scopes does not change the remaining bytes.
 VA(0x00468990, 0xA08)
 DC_ADDRESS(0x062560, 0x856)
 MAC_ADDRESS(0x074eec, 0xb30)  // anchor-global
@@ -3576,7 +3581,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
             playImmEffect(g_spellEffectTraits[spellEffect].m_immName, 1);
 
         for (int frameCount = 0; frameCount < numFrames; frameCount++) {
-            const int winceStartOffset = numFrames - 1 - frameCount;
+            const int winceStartOffset = numFrames - frameCount - 1;
             for (side = 0; side < 2; side++) {
                 for (slot = 0; slot < m_numArmies[side]; slot++) {
                     army& stack = m_armies[side][slot];
@@ -3653,29 +3658,28 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
     }
 
     if (!isQuickCombat()) {
-        for (;;) {
-            int framesChanged = 0;
+        int framesChanged = 1;
+        while (framesChanged) {
+            framesChanged = 0;
             for (side = 0; side < 2; side++) {
                 for (slot = 0; slot < m_numArmies[side]; slot++) {
                     army& stack = m_armies[side][slot];
-                    if (stack.m_currFrameType == cs_wait)
-                        continue;
-                    if (stack.m_currFrameIndex
-                            < stack.m_stdIcon->getNumFrames(
-                                stack.m_currFrameType) - 1) {
-                        stack.m_currFrameIndex++;
-                    } else if (stack.m_currFrameType == cs_death) {
-                        continue;
-                    } else {
-                        stack.m_currFrameType = cs_wait;
-                        stack.m_currFrameIndex = 0;
+                    if (stack.m_currFrameType != cs_wait) {
+                        if (stack.m_currFrameIndex
+                                < stack.m_stdIcon->getNumFrames(
+                                    stack.m_currFrameType) - 1) {
+                            stack.m_currFrameIndex++;
+                            framesChanged = 1;
+                        } else if (stack.m_currFrameType != cs_death) {
+                            stack.m_currFrameType = cs_wait;
+                            stack.m_currFrameIndex = 0;
+                            framesChanged = 1;
+                        }
                     }
-                    framesChanged = 1;
                 }
             }
-            if (!framesChanged)
-                break;
-            drawFrame(1, 1, 0, 100, 1, 1);
+            if (framesChanged)
+                drawFrame(1, 1, 0, 100, 1, 1);
         }
         if (resetLimitCreature)
             this->resetLimitCreature();
