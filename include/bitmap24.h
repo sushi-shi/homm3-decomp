@@ -16,9 +16,14 @@ class Bitmap16Bit;
 class Bitmap24Bit : public resource {
 public:
     unsigned int m_dataSize;
+
+public:
     int m_imageSize;
+
     int m_width;
     int m_height;
+
+public:
     unsigned char* m_data;
 
     virtual ~Bitmap24Bit();

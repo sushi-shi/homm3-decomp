@@ -138,6 +138,12 @@ public:
     int getCurrQuals();
     void setKeyCodeType(int newType);
     void forceMouseMove();
+
+    // Project-inferred commit of the event already written at the tail.
+    void commitBufferedEvent();
+
+    void resetQueueIndices();
+    void readBufferedEvent(message& msg, bool consume);
 };
 
 // Retail .bss 0x6994e0 (DC ?gpInputManager@@3PAVinputManager@@A).

@@ -9,8 +9,8 @@
 
 class message;
 class TDialogBox;
-class VictoryConditionStruct;
-class LossConditionStruct;
+struct VictoryConditionStruct;
+struct LossConditionStruct;
 
 // Dreamcast supplies the identity, member function roster, and the source
 // order consumed by set(). Retail independently fixes the Complete layout:

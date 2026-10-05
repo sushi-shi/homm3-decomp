@@ -26,9 +26,10 @@
 // deleting destructor over Bitmap16Bit's two inherited slots.
 
 class CTextEntrySave : public Bitmap16Bit {
-public:
+private:
     unsigned char m_saved;  // Original project spelling: bSaved; retail +0x38.
 
+public:
     // E:\gamedcs\textntry.cpp:38 ()
     DC_ADDRESS(0x16370c, 0x44)
     CTextEntrySave(int w, int h) : Bitmap16Bit(w, h) { m_saved = 0; }
@@ -38,10 +39,7 @@ public:
     void save(int saveX, int saveY)
     {
         m_saved = 1;
-        grab(g_windowManager->m_screenBitmap->getMap(0, 0), saveX, saveY,
-            g_windowManager->m_screenBitmap->getWidth(),
-            g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getPitch());
+        grab(g_windowManager->m_screenBitmap, saveX, saveY);
     }
 
     // E:\gamedcs\textntry.cpp:50
@@ -112,7 +110,7 @@ MAC_ADDRESS(0x1af924, 0xa0)
 textEntryWidget::~textEntryWidget()
 {
     if (m_textBack)
-        m_textBack->dispose();
+        ResourceManager::dispose(m_textBack);
     if (m_saveBack)
         delete m_saveBack;
 }
@@ -356,8 +354,14 @@ int textEntryWidget::main(message& msg)
                     }
                 } else if (hitX >= m_x && hitY >= m_y && hitX < m_x + m_width
                     && hitY < m_y + m_height) {
-                    if (!m_hasFocus && m_parentWindow)
-                        m_parentWindow->setFocus(m_id);
+                    if (!m_hasFocus) {
+                        // DC textntry.cpp:448 proves the unused local
+                        // `message setFocus` and its default construction.
+                        // Complete can elide its side-effect-free stores.
+                        message setFocus;
+                        if (m_parentWindow)
+                            m_parentWindow->setFocus(m_id);
+                    }
                     msg.m_id = MESSAGE_WIDGET;
                     msg.m_codeX = WIDGET_SELECT;
                     msg.m_codeY = m_id;
@@ -422,11 +426,8 @@ void textEntryWidget::draw() const
             saveBackground();
         else
             m_saveBack->draw(0, 0, m_boxWidth, m_boxHeight,
-                g_windowManager->m_screenBitmap->getMap(0, 0),
-                m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
-                g_windowManager->m_screenBitmap->getWidth(),
-                g_windowManager->m_screenBitmap->getHeight(),
-                g_windowManager->m_screenBitmap->getPitch(), 0);
+                g_windowManager->m_screenBitmap,
+                m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, false);
     }
 
     if (m_type == FIELD_68_SCROLLED) {
@@ -500,7 +501,7 @@ DC_ADDRESS(0x1635dc, 0x24)
 MAC_ADDRESS(0x1b0740, 0x58)
 void textEntryWidget::setText(const char* newText)
 {
-    m_text = newText;
+    textWidget::setText(newText);
     m_cursorIndex = static_cast<unsigned short>(m_text.size());
 }
 

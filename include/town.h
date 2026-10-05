@@ -217,6 +217,7 @@ public:
     unsigned char m_threateningHeroes;
     // Faction id (armyGroup::GetLuck gates the Fountain of Fortune on
     // type == 1, Rampart).
+    // Before normalization (Dreamcast): townType.
     char m_type;
     // +5..+7, the town's map cell. can_take_town (0x428410) widens all
     // three with movzx from these bytes and packs them into a
@@ -232,11 +233,15 @@ public:
     // is the partner of +8 and not padding. dockSite therefore doubles
     // as the square's x; TOWN_DOCK_SITE_NONE (0xff) in it is the "no
     // dock square" sentinel the CanBuildDock family tests.
+    // Before normalization (Dreamcast): boatX.
     unsigned char m_dockSite;
+    // Before normalization (Dreamcast): boatY.
     unsigned char m_dockSiteY;
+    // Before normalization (Dreamcast): garrisonHero.
     int m_garrisonHeroId;
     // The hero on the town's map tile, -1 for none. HasGarrison
     // short-circuits to "defended" on this one alone.
+    // Before normalization (Dreamcast): occupyingHero.
     int m_visitingHeroId;
     // Mage guild level. SIGNED char, retyped in place 2026-08-20:
     // BuildBuilding re-reads it with movsx at both spell-count loops
@@ -277,7 +282,9 @@ public:
     // +0x44, five mage-guild rows of six spell ids. GiveSpells walks
     // rows with a 0x18 stride and pairs them with the signed counts at
     // +0xbc; five rows close exactly at that count band.
-    int m_mageGuildSpells[5][6];
+    // DC town records 0x1aa3/0x61b5/0x631f: townSpells is SpellID[5][6]
+    // (arrays 0x3f11/0x1efc, canonical signed enum 0x1b61).
+    ESpellId m_mageGuildSpells[5][6];
     signed char m_mageGuildSpellCounts[5];
     // +0xc1..+0xc3 alignment padding (retail's ??4town copies the five
     // count bytes and goes straight to the string assign).
@@ -310,7 +317,9 @@ protected:
 
 public:
     void applySpecialBuildingEffect(hero* townHero);
-    unsigned char canBuildDock() const;
+    // Original ?CanBuildDock@town@@QBA_NXZ proves bool; the DC
+    // byte primitive is lowered, as for the other building predicates.
+    bool canBuildDock() const;
 
     // DC Town.h:299 / :305 header inlines, declaration-only here
     // (?get_building_mask@town@@QBA_JXZ kept out of line by the DC
@@ -331,8 +340,10 @@ public:
     // set_bonus_display calls this header helper; retail 0x5c5b40 expands it.
     DC_ADDRESS(0x181404, 0x12)
     long getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
-    short getGoldIncome(unsigned char includeSilo) const;
-    int getHorde(long dwelling) const;
+    // Original ?get_gold_income@town@@QBAF_N@Z proves bool includeSilo.
+    short getGoldIncome(bool includeSilo) const;
+    // Original ?get_horde@town@@QBA?AW4type_building_id@@J@Z proves enum return.
+    type_building_id getHorde(long dwelling) const;
     long getHordeBonus(long dwelling) const;
     long getAssembledLegionBonus(long dwelling) const;
     // 0x5bf900. Per-tier artifact growth contributed by the two heroes
@@ -397,13 +408,16 @@ public:
     void setSummoningGenerator();
     int getPortraitFrame(bool isSmall) const;
     town();
-    unsigned char canBuild(short buildingId) const;
-    unsigned char canEverBuild(int buildingId) const;
+    // Original town publics prove _N returns for can_build, can_ever_build,
+    // buy_building, is_legal_building, is_disabled and InitializeBuildingCostsTables.
+    // Preserve retail parameter ABI: native can_ever_build used an older short.
+    bool canBuild(short buildingId) const;
+    bool canEverBuild(int buildingId) const;
     // 0x5bfe50.
     void changeGeneratorBonus(TCreatureType creature, long change);
     // 0x5be930. Installs the requested building and returns the resulting ID.
     type_building_id createBuilding(type_building_id building);
-    unsigned char buyBuilding(type_building_id building);
+    bool buyBuilding(type_building_id building);
     void destroyExtraCapitol();
     void getBuildCost(type_building_id building, int* resources) const;
     short getBuildCost(type_building_id building, EGameResource* types,
@@ -423,9 +437,9 @@ public:
     void increasePopulation(TCreatureType bonusCreature,
                              TCreatureType alternateBonus, long bonusAmount);
     void initialize(const TownExtra* townSetup);
-    unsigned char isLegalBuilding(type_building_id building) const;
+    bool isLegalBuilding(type_building_id building) const;
     void setLegalBuildings(__int64 disabledBuildings);
-    unsigned char isDisabled(type_building_id building) const;
+    bool isDisabled(type_building_id building) const;
     // Dreamcast's LF_FIELDLIST puts these immediately before update_shipyard,
     // in this order. BuildBuilding calls both, and retail inlines both into
     // that owner.
@@ -437,8 +451,8 @@ public:
     int hasGarrison();
     // 0x5bede0. DC signature; buy_building is the only claimed caller
     // and it pushes exactly these three.
-    type_building_id buildBuilding(int buildingId, unsigned char setBuiltFlag,
-                                   unsigned char applySpecialEffect);
+    type_building_id buildBuilding(int buildingId, bool setBuiltFlag,
+                                   bool applySpecialEffect);
     int load(TAbstractFile* infile, int saveVersion);
     // 0x5bd2f0 (body in town.obj, not yet reconstructed). game::Save's
     // town-pool loop is the only consumer here: it calls it on towns[i]
@@ -483,9 +497,11 @@ public:
     // 0x5be2d0. Removes this town from its owner's roster and marks
     // both this record and gpGame->towns[id] unowned.
     void deallocate();
-    void placeInMap(int heroId, long playerId, unsigned char resetFlags);
+    // Original ?PlaceInMap@town@@QAAXW4THeroID@@J_N@Z proves
+    // the bool flag; Complete retains its independently modeled int heroId.
+    void placeInMap(int heroId, long playerId, bool resetFlags);
     static void initializeHordes();
-    static unsigned char initializeBuildingCostsTables();
+    static bool initializeBuildingCostsTables();
     const char* getTypeName() const;
     TTerrainType getNativeTerrain() const;
     // The garrisoned hero steps out onto the town tile (0x5be390).

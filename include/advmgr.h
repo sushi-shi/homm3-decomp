@@ -25,6 +25,7 @@ struct ExtraInfoUnion;
 struct type_creature_bank;
 struct type_university;
 class armyGroup;
+class playerData;
 
 // adventuremapwindow.obj's shared rollover/right-click text table. Dreamcast
 // supplies the name and THelpText row type; Complete fixes its 0x6a56e0 base
@@ -221,7 +222,7 @@ DATA(0x0069873c) extern int g_overviewReturnActionExtra;
 DATA(0x00682a38) extern unsigned char g_followPlayerMode;
 extern int g_drawingPuzzle;
 extern int g_blackoutPlayer;
-extern unsigned char g_goSolo;
+extern bool g_goSolo;
 
 extern int g_soloPos;
 
@@ -382,6 +383,8 @@ struct soundNode {
 public:
     e_looping_sound_id m_soundId;
     int m_priority;
+    // Project-inferred empty/unranked state; this does not stop playback.
+    void reset();
 };
 SIZE(soundNode, 8);
 
@@ -646,7 +649,7 @@ public:
     void* m_immersion;
     TAdventureMapWindow();
     ~TAdventureMapWindow();
-    virtual int open(int zOrder, unsigned char update);
+    virtual int open(int zOrder, bool update);
     virtual void close(unsigned char update);
     virtual void vslot8(unsigned char on);
     unsigned char processRightSelect(const message* msg);
@@ -681,6 +684,8 @@ public:
     void updateButtons(unsigned char draw, unsigned char update);
 
 private:
+    void drawTownLocatorHighlight(int which, unsigned char update);
+    void showButtonImage(int id, const char* image);
     int convertID2HelpID(int id) const;
 };
 SIZE(TAdventureMapWindow, 0xa0);
@@ -822,6 +827,7 @@ public:
     int m_lastTerrain;
     // +0x5c. Both GetCell overloads dereference this NewfullMap record:
     // cellData at +0xd0 and Size at +0xd4.
+    // Before normalization (Dreamcast): map.
     NewfullMap* m_fullMap;
     // Retail tile-set rows. Dreamcast supplies the surviving names and
     // extents; the retail Draw* passes prove every offset reached here.
@@ -852,6 +858,7 @@ public:
     CSprite* m_movingObjectSprite;  // +0xe0, transient object draw override
     // +0xe4. The five-argument UpdateRadar overload forwards this packed
     // point by value as the origin argument of the six-argument overload.
+    // Before normalization (Dreamcast): map_origin.
     type_point m_radarOrigin;
     type_point m_lastMapHover;  // +0xe8
     int m_lastHoverX;  // +0xec
@@ -1421,6 +1428,10 @@ public:
     unsigned short* getRouteArrayPtr(int x, int y, int z);
 
 private:
+    // Project-inferred repeated hover transitions; native-public fields stay public.
+    void beginMapHover(int x, int y);
+    void processOutsideMapHover(int mouseX, int mouseY);
+    void clearRejectedHoverPath();
     void garrisonQuickView(int id, int x, int y);
     type_adventure_cursor getGarrisonCursor(NewmapCell* currCell);
     type_adventure_cursor getNormalCursor(NewmapCell* currCell);
@@ -1511,6 +1522,11 @@ int mapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
 void computeAdvNetControl();
 bool hasFlag(int objType);
 int getFlaggedObjectOwner(NewmapCell* thisCell);
+// Project operation shared by adventure layers and view-world icon drawing.
+// Trim source offsets/extents together with the clipped destination copies.
+void clipAdventureTile(int& baseX, int& baseY,
+                       int& tileX, int& tileY,
+                       int& tileWidth, int& tileHeight);
 // Retail-only 0x40d670. Ordinal placeholder: SetRolloverText and QuickInfo
 // prove this five-parameter /Gr help-text signature, but no surviving name.
 void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,

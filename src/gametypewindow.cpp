@@ -42,10 +42,11 @@ static const char* g_gameTypeBackgrounds[2] = {
     "newgame.pcx", "loadgame.pcx"
 };
 
+// Original ??0TGameTypeWindow@@QAA@_N@Z proves the Boolean mode formal.
 VA(0x004d54c0, 0x39B)
 DC_ADDRESS(0x0c9164, 0x32c)
 MAC_ADDRESS(0x0f0fa4, 0x590)
-TGameTypeWindow::TGameTypeWindow(unsigned char loadGameMode)
+TGameTypeWindow::TGameTypeWindow(bool loadGameMode)
     : heroWindow(0, 0, 800, 600, 0)
 {
     g_gameTypeWindow = this;

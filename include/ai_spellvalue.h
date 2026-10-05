@@ -75,8 +75,9 @@ public:
 
     // ai_spellvalue.h:84 in the Dreamcast roster - the guard
     // AI_get_spell_value applies before appraising anything.
+    // Original ?can_cast_spells@type_spellvalue@@QBA_NXZ proves bool.
     DC_ADDRESS(0x037e40, 0x8)
-    unsigned char canCastSpells() const { return m_power > 0; }
+    bool canCastSpells() const { return m_power > 0; }
 
     // DC ai_spellvalue.h:99 (philai.obj). AI_set_hero_bonuses
     // (0x527760) reads this initial pool for the well/spring valuations.

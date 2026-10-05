@@ -85,6 +85,19 @@ DATA(0x00640300) static const int g_overviewHelpIds[8] = {
     19, 20, 21, 22, 23, 24, 18, 25
 };
 
+// Project-inferred replacement operation for the overview's typed slots.
+// Bind the table itself: removeWidget calls virtual close, so the subsequent
+// delete and clear must reread a dynamic table that callback may replace.
+template <class Slots>
+static void clearOverviewWidget(Slots& slots, int index)
+{
+    if (slots[index]) {
+        g_overWin->removeWidget(slots[index]);
+        delete slots[index];
+        slots[index] = 0;
+    }
+}
+
 long getLastBackpackIndex(long heroNumber);
 void updateBackpack(int slot);
 
@@ -154,39 +167,19 @@ void game::setupDynamicStuff(int update, int forceUpdate)
     for (row = 0; row < 4; row++) {
         for (item = 0; item < 70; item++) {
             int slot = row * 70 + item;
-            if (g_textWidgetDynamic[slot]) {
-                g_overWin->removeWidget(g_textWidgetDynamic[slot]);
-                delete g_textWidgetDynamic[slot];
-                g_textWidgetDynamic[slot] = 0;
-            }
-            if (g_iconWidgetDynamic[slot]) {
-                g_overWin->removeWidget(g_iconWidgetDynamic[slot]);
-                delete g_iconWidgetDynamic[slot];
-                g_iconWidgetDynamic[slot] = 0;
-            }
-            if (g_bitmapBorderDynamic[slot]) {
-                g_overWin->removeWidget(g_bitmapBorderDynamic[slot]);
-                delete g_bitmapBorderDynamic[slot];
-                g_bitmapBorderDynamic[slot] = 0;
-            }
+            clearOverviewWidget(g_textWidgetDynamic, slot);
+            clearOverviewWidget(g_iconWidgetDynamic, slot);
+            clearOverviewWidget(g_bitmapBorderDynamic, slot);
         }
 
         for (item = 0; item < 2; item++) {
             int slot = row * 2 + item;
-            if (g_buttonDynamic[slot]) {
-                g_overWin->removeWidget(g_buttonDynamic[slot]);
-                delete g_buttonDynamic[slot];
-                g_buttonDynamic[slot] = 0;
-            }
+            clearOverviewWidget(g_buttonDynamic, slot);
         }
 
         for (item = 0; item < 3; item++) {
             int slot = row * 3 + item;
-            if (g_textButtonDynamic[slot]) {
-                g_overWin->removeWidget(g_textButtonDynamic[slot]);
-                delete g_textButtonDynamic[slot];
-                g_textButtonDynamic[slot] = 0;
-            }
+            clearOverviewWidget(g_textButtonDynamic, slot);
         }
     }
 
@@ -733,9 +726,8 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
                     if (artifact.m_artifactId == ARTIFACT_NONE) {
                         message msg;
-                        msg.m_id = MESSAGE_WIDGET;
-                        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-                        msg.m_codeY = rowWidgetId + item + 119;
+                        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS,
+                                             rowWidgetId + item + 119);
                         msg.m_extra = widget::WIDGET_DRAWN;
                         g_overWin->broadcastMessage(msg);
                     }
@@ -801,7 +793,8 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 VA(0x0051e330, 0x33A)
 DC_ADDRESS(0x1069fc, 0x31a)
 MAC_ADDRESS(0x135d54, 0x3d4)
-void game::setupNewOverviewType(int whichType, unsigned char update)
+// Original DC public SetupNewOverviewType@@QAAXH_N@Z proves bool update.
+void game::setupNewOverviewType(int whichType, bool update)
 {
     g_overviewType = whichType;
     g_overviewItemCount = g_overviewType == 0
@@ -1269,7 +1262,8 @@ static void showArtifact(hero* currHero,
 VA(0x0051ee50, 0xBD0)
 DC_ADDRESS(0x107a90, 0xa10)
 MAC_ADDRESS(0x1370fc, 0xd90)  // exhaustive body/caller identity
-int game::processIconSelect(int codeY, unsigned char rightMouse)
+// Original DC public ProcessIconSelect@@QAAHH_N@Z proves bool rightMouse.
+int game::processIconSelect(int codeY, bool rightMouse)
 {
     int slot;
     int selectedIndex;
@@ -1896,6 +1890,8 @@ TOverviewWindow::TOverviewWindow()
 
 VA_COMPGEN(0x00520d60, 0x21, SCALAR_DELETING_DTOR, TOverviewWindow)
 
+// Mac 0x139e2c..0x139e6c deletes the vector's widgets without clearing it.
+// This differs from deleteWidgets(), whose additional clear is not present.
 VA(0x00520d90, 0x9C)
 DC_ADDRESS(0x108f74, 0x68)
 MAC_ADDRESS(0x139e00, 0xe4)
@@ -1910,6 +1906,9 @@ TOverviewWindow::~TOverviewWindow()
 // Mac retains this method at code 0:139ee4 and the constructor calls it
 // eight times for mine, generator, garrison and shipyard records. Windows
 // expands the lookup and insertion in the constructor.
+// Mac reuses its initial count (r6) for the new index at 0x139f40. A named
+// saved-count hypothesis removes the second size() call but lowers the
+// constructor from 92.03 to 88.69%; native CSE also explains that reuse.
 MAC_ADDRESS(0x139ee4, 0xa0)
 void TOverviewWindow::addFlaggableItem(int itemType)
 {
@@ -2473,9 +2472,11 @@ void TOverviewWindow::setHeroArtifactPage(int row, int, int pageId)
 // from 80.10% to 83.20%; interleaving arrows by row gives 81.04%, and placing
 // the third page after the arrows gives 74.86%.
 //
-// Residual: VC6 still expands more of doFlaggableButtons and its nested
-// updateFlaggableIcon calls than retail, while later backpack expansions retain
-// a different getHero frontier. Keep the canonical helpers and source calls.
+// Fresh ordered calls identify a retained doFlaggableButtons call at +0xe6
+// where retail expands the arm (three calls versus two), and a later nested
+// getHero expansion where retail retains its call (+0x5d4). Jump-table labels
+// paired with windowHandler itself are aliases, not helper frontiers. Keep
+// the canonical helpers and source calls; raw totals cannot locate inlining.
 // Retail's flaggable jump-table order is HOME/PREVIOUS/NEXT/END/control, its
 // keyboard order is PRIOR/NEXT/HOME/END, and all page arms read overviewTop[0].
 // The mouse cache-hit return precedes the store, rollover, and second return.
@@ -2490,16 +2491,16 @@ int TOverviewWindow::windowHandler(message& msg)
         return result;
 
     int res = 0;
-    unsigned char rightMouse = 0;
+    bool rightMouse = false;
 
     if (msg.m_id == MESSAGE_WIDGET) {
         switch (msg.m_codeX) {
         case widget::WIDGET_RIGHT_SELECT:
-            rightMouse = 1;
+            rightMouse = true;
             // The source intentionally shares the ordinary-select tail.
         case widget::WIDGET_SELECT:
             if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
-                rightMouse = 1;
+                rightMouse = true;
             res = g_game->processIconSelect(msg.m_codeY, rightMouse);
             break;
 

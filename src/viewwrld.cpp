@@ -741,6 +741,9 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 // local. Measured worse: caching GetMap(0,0) in a local across the row loop
 // (unit 96.76 -> 95.77 - retail reloads it), and dropping the clamp upper
 // bounds (this body +1.36, unit -2.03).
+// Bool foundHero/foundBoat locals fed by the restored bool scan helper are
+// also byte-flat (89.05%); native local primitive 0x20 does not distinguish
+// their original spelling, and the extra nested GetMap remains.
 VA(0x005f8be0, 0x636)
 DC_ADDRESS(0x1943ec, 0x462)
 MAC_ADDRESS(0x204ea0, 0x5e4)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer)
@@ -847,6 +850,8 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
 // disjunction, the RiverSet test through the bitfield unit, the scaled origin
 // pair, the inlined clear of the scratch buffer and the DrawTile through
 // riverTileset. advmgr.cpp's full-size DrawRiver is the unscaled twin.
+// The native flip fields (DC 0x3e18..0x3e1b) feed DrawTile directly;
+// Mac 2055e4/205600 and 2058b0/2058cc extract the same river/road bits.
 VA(0x005f9220, 0x38A)
 DC_ADDRESS(0x194850, 0x17c)
 MAC_ADDRESS(0x205484, 0x2cc)  // exhaustive dc-order-map + VWCompleteDraw call order (2nd layer)
@@ -1150,6 +1155,7 @@ MAC_ADDRESS(0x2067dc, 0x2594)  // caller stack extent + vtable 0x643c54
 TViewWorldWindow::TViewWorldWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
+    ResourceManager::delSprFromCache();
     m_x = 0;
     m_y = 0;
     m_width = 800;
@@ -1324,12 +1330,13 @@ MAC_ADDRESS(0x208d70, 0xe8)
 TViewWorldWindow::~TViewWorldWindow()
 {
     delete g_memoryBuffer;
-    g_csVwIcons->dispose();
+    ResourceManager::dispose(g_csVwIcons);
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // The type_func_button click code both callbacks answer, the same 13
@@ -1357,7 +1364,7 @@ int viewWorldSurfaceHandler(message& msg)
     window->drawWindow();
     g_advManager->updateRadar(window->m_origin, 1, 1, g_viewMines, g_viewHeroes,
                               g_viewTowns);
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
     return 1;
 }
 
@@ -1378,7 +1385,7 @@ int viewWorldUndergroundHandler(message& msg)
     window->drawWindow();
     g_advManager->updateRadar(window->m_origin, 1, 1, g_viewMines, g_viewHeroes,
                               g_viewTowns);
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
     return 1;
 }
 
@@ -1439,8 +1446,7 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
     g_combatActive = 2;
     {
         TViewWorldWindow viewWorldWindow;
-        type_point mapCenter(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
-                              m_radarOrigin.m_z);
+        type_point mapCenter = getMapCenter();
 
         viewWorldWindow.init(mapCenter, 0);
         viewWorldWindow.drawWindow();
@@ -1472,7 +1478,8 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
 VA(0x005fc240, 0x274)
 DC_ADDRESS(0x195d30, 0x2ca)
 MAC_ADDRESS(0x20929c, 0x514)  // anchor-caller ViewWorld, anchor-callee UpdateRadar
-void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
+// Original init@TViewWorldWindow@@QAAXUtype_point@@_N@Z proves bool updateFlag.
+void TViewWorldWindow::init(type_point newCenter, bool updateFlag)
 {
     int i;
 
@@ -1586,7 +1593,9 @@ void advManager::vwCompleteDraw(int startX, int startY, int z, int drawwidth,
 VA(0x005fc7a0, 0x147)
 DC_ADDRESS(0x196228, 0xd4)
 MAC_ADDRESS(0x209ac0, 0x178)
-void TViewWorldWindow::updateViewWorld(message* msg)
+// Original update_view_world@TViewWorldWindow@@AAAXAAUmessage@@@Z proves
+// the private method's message reference; preserve that boundary in callers.
+void TViewWorldWindow::updateViewWorld(message& msg)
 {
     message msg2;
     int i;
@@ -1599,7 +1608,7 @@ void TViewWorldWindow::updateViewWorld(message* msg)
         broadcastMessage(msg2);
     }
     msg2.m_id = MESSAGE_WIDGET;
-    msg2.m_codeY = msg->m_codeY;
+    msg2.m_codeY = msg.m_codeY;
     msg2.m_codeX = 5;
     msg2.m_extra = 16;
     broadcastMessage(msg2);
@@ -1610,7 +1619,7 @@ void TViewWorldWindow::updateViewWorld(message* msg)
     init(center, 1);
     drawWindow();
     drawWindow(1, 0xffff0001, 0xffff);
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
 }
 
 VA(0x005fc8f0, 0x213)
@@ -1727,17 +1736,17 @@ int TViewWorldWindow::windowHandler(message& msg)
             case MAGNIFY_FAR_ID:
                 g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_FAR;
                 g_viewWorldScale = 7;
-                updateViewWorld(&msg);
+                updateViewWorld(msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case MAGNIFY_MID_ID:
                 g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_MID;
                 g_viewWorldScale = 11;
-                updateViewWorld(&msg);
+                updateViewWorld(msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case MAGNIFY_FULL_ID:
                 g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_FULL;
                 g_viewWorldScale = 16;
-                updateViewWorld(&msg);
+                updateViewWorld(msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case PUZZLE_ID:
                 g_windowManager->fadeScreen(1, 4, 0);
@@ -1749,7 +1758,7 @@ int TViewWorldWindow::windowHandler(message& msg)
                                     m_origin.m_y + g_viewHalfHeight, m_origin.m_z);
                 init(center, 0);
                 drawWindow();
-                g_windowManager->updateScreen(0, 0, 800, 600);
+                g_windowManager->updateScreen();
                 return MESSAGE_DISPATCH_CONSUME;
             case ACCEPT_ID:
                 g_windowManager->m_dialogReturn = msg.m_codeY;

@@ -16,6 +16,7 @@ class CDPlayMsg;
 class CDPlaySession;
 template<class T> class CAutoArray;
 struct DPCAPS;
+struct DPCOMPOUNDADDRESSELEMENT;
 struct DPLCONNECTION;
 struct DPNAME;
 struct DPSESSIONDESC2;
@@ -85,6 +86,23 @@ public:
     unsigned long m_addressSize;
 };
 SIZE(DPLCONNECTION, 0x28);
+
+// DirectPlay's creation notification: DC type 0x2a2a proves all nine
+// fields and the 48-byte layout. Original fields: dwType, dwPlayerType,
+// dpId, dwCurrentPlayers, lpData, dwDataSize, dpnName, dpIdParent, dwFlags.
+struct DPMSG_CREATEPLAYERORGROUP {
+public:
+    unsigned long m_type;
+    unsigned long m_playerType;
+    unsigned long m_dpId;
+    unsigned long m_currentPlayers;
+    void* m_data;
+    unsigned long m_dataSize;
+    DPNAME m_dpnName;
+    unsigned long m_dpIdParent;
+    unsigned long m_flags;
+};
+SIZE(DPMSG_CREATEPLAYERORGROUP, 0x30);
 
 // DirectPlay's player/group destruction notification. remote.obj's override
 // of the system-message slot reads only the leading discriminator and the
@@ -328,22 +346,19 @@ protected:
 };
 SIZE(CDPlayPlayer, 0x104);
 
-// The group enum trampoline's backing record: a 0x100-byte name buffer
-// followed by the DPID at +0x100 (0x104 total). AddGroupEnum news one,
-// strcpys the enumerated short name in, and stores the id. CDPlayGroup is
-// defined in dxplay.h:231, following its player-record twin.
-class CDPlayGroup {
+// DC types 0x3d83/0x5447 prove the public CDPlayPlayer base at offset zero
+// and no added fields. The constructor at 0x8be70 calls that base at
+// 0x8be7a. Retail AddGroupEnum expands the same name copy and DPID store.
+class CDPlayGroup : public CDPlayPlayer {
 public:
 
     DC_ADDRESS(0x08be70, 0x1c)
     CDPlayGroup(char* name, unsigned long dpid)
+        : CDPlayPlayer(name, dpid)
     {
-        strcpy(m_name, name);
-        m_dpid = dpid;
     }
-    char m_name[0x100];  // +0x00
-    unsigned long m_dpid;  // +0x100
 };
+SIZE(CDPlayGroup, 0x104);
 
 // The address-element records one DirectPlay SP address chunk EnumAddress splits
 // out: a 16-byte data-type GUID, an owned copy of the chunk bytes at +0x10 and
@@ -599,6 +614,9 @@ public:
     char m_caps[0x28];  // +0x04
 
 protected:
+    // Project-inferred shared replacement step; destruction only releases.
+    void releaseDirectPlay();
+
     void* m_dp;  // +0x2c
     GUID m_guid;  // +0x30
     // The DirectPlay enum trampolines are file-scope callbacks that forward to
@@ -626,6 +644,7 @@ protected:
     // 84/85/86. Retail retains the same bytes and 0x58-byte size;
     // this last byte aligns the complete object.
     char m_tailPadding;
+
 };
 SIZE(CDPlay, 0x58);
 
@@ -694,6 +713,7 @@ protected:
     // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
     virtual unsigned char addAddressEnum(
         const GUID* type, unsigned long size, const void* data);
+
 };
 SIZE(CDPlayLobby, 0x60);
 

@@ -24,15 +24,15 @@
 // helpers into the timer subtraction, status messages, and text-table loads.
 
 // THE LOCAL NAMES BELOW ARE DREAMCAST CODEVIEW, NOT INVENTION. The DC
-// build's S_REGREL32 records for this compiland name four of them and
+// build's S_REGREL32 records for this compiland identify examples and
 // give their types: TBottomViewKingdom's `town_count` (LF_ARRAY of
 // T_INT4, length 16 - so `int[4]`, which also confirms the array's
 // width) and `text` (std::string); TBottomViewTown's `town_size_name`
 // (std::string); TBottomViewResourceMessage's parameter `res` and its
 // `char str[20]`. The DC list is INCOMPLETE - TBottomViewHero's record
-// names no stack local at all although its source plainly has a
-// std::string in the army loop - so its silence is not evidence of
-// absence, only its entries are evidence of presence.
+// now records the std::string `quantity_text` in the army loop. Other
+// optimized locals can still be absent; only recorded entries provide
+// positive evidence of their declarations.
 
 // THE INCLUDE SET IS NOT THE WALL IN THIS TU - measured, not assumed.
 // The four constructors below formerly plateaued on inline-depth divergence, and
@@ -472,11 +472,19 @@ static int g_heroArmyCoords[7][2] = {
 // index is dead), a spilled difference in `[ebp-0x10]`, and the
 // one-instruction loop header the preheader `jmp`s past. Two lockstep IVs,
 // and VC6 picks the survivor itself; not a guard or return shape.
-// getNumArmies placement: DC armygrp.cpp:804 and Mac order
-// canJoin(0x58408), getNumArmies(0x58528), add(0x585a4) support its ordinary
-// owning source body. The cross-TU count expansion leaves header visibility
-// open; no explicit inline qualifier is proven. Current ordinary call gives
-// 95.87521% versus 97.7573% for the pasted count; keep the supported boundary.
+// getNumArmies remains a canonical call. Its ordinary armygrp.cpp body
+// follows the older DC owner and Mac source-order evidence; neither that
+// ordering nor 42 retained Mac calls uniquely proves Complete placement.
+// Returning the body from armygrp.h to armygrp.cpp restores eight other
+// Windows callers to exact but moves this constructor 96.9607 -> 95.8752.
+// Retail and Mac still expand its seven-slot count here. Separate original
+// Complete TUs are inferred from older DC/authored units, not proven: keep
+// this expansion as unresolved placement/TU evidence, without a visibility
+// trick or replacing the recovered call with a pasted count loop.
+// The earlier in-class trace also left the quantity string's default
+// constructor -> _Tidy(false) call (cost 152, child budget 141); those figures
+// describe that prior context rather than the ordinary-body model.
+// earlier differences include GetCurrHero arm order and skill-loop IV choice.
 VA(0x00451ab0, 0x68A)
 DC_ADDRESS(0x0558a8, 0x54c)
 MAC_ADDRESS(0x05fdd4, 0x9b4)  // anchor-vtable 0x63bb2c + advManager::UpdBottomViewHero
@@ -515,8 +523,8 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
     if (who->m_army.getNumArmies() > 0) {
         int id = 0x7db;
         for (int j = 0; j < 7; j++) {
-            int type = who->m_army.m_armies[j];
-            if (type != -1) {
+            TCreatureType type = who->m_army.m_armyTypes[j];
+            if (type != CREATURE_NONE) {
                 m_widgets.push_back(new iconWidget(g_heroArmyCoords[j][0],
                     g_heroArmyCoords[j][1], 32, 32, id++, "cprsmall.def",
                     type + 2, 0, 0, 0, 0x10));

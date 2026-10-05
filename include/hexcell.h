@@ -48,7 +48,9 @@ public:
     // Signed: get_army (0x4e7170) movsx-loads the pair and treats a
     // negative side as empty; the dead arrays hold 14 slots each and
     // get_dead_army (0x4e71b0) indexes both by the same i.
+    // Before normalization (Dreamcast): armyGroup.
     signed char m_armySide;         // +0x18
+    // Before normalization (Dreamcast): armyIndex.
     signed char m_armySlot;         // +0x19
     // Signed like the pair above: the ctor feeds all four -1 byte
     // fields from the SAME register as the int -1 (cl); an unsigned
@@ -63,7 +65,9 @@ public:
     // bytes: it scans this many entries of the three parallel dead-army
     // rows, shifts the tail down over the match, and decrements it.
     int m_bodiesInHex;             // +0x1c
+    // Before normalization (Dreamcast): deadArmyGroup.
     signed char m_deadArmySide[14]; // +0x20
+    // Before normalization (Dreamcast): deadArmyIndex.
     signed char m_deadArmySlot[14]; // +0x2e
     // A THIRD parallel dead-army row, retyped in place from pad_3c on
     // 2026-08-20: remove_corpse shifts +0x20, +0x2e and +0x3c together,
@@ -108,6 +112,9 @@ public:
     // const enemy_is_adjacent could not compile without it.
     army* getArmy() const;
     army* getDeadArmy(int i) const;
+    void clearArmy();
+    void resetArmy();
+    void resetObstacle();
 
     // DC HexCell.h:85. The Complete UpdateGrid caller expands the returned
     // four-word rectangle and SLimitData::Include into one union loop.

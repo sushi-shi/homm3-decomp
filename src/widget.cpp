@@ -10,6 +10,31 @@
 #include "window.h"
 #include "winmgr.h"
 
+// Project-inferred widget protocol operation. Keep the caller's existing
+// modifiers, mouse coordinates, payload and window, including borrowed text.
+void message::setWidgetCommand(int command, int widgetId)
+{
+    m_id = MESSAGE_WIDGET;
+    m_codeX = command;
+    m_codeY = widgetId;
+}
+
+// Project-inferred initialization operations. Neither releases owned text nor
+// removes a live widget from its window; they only initialize these fields.
+void widget::initializeLinks()
+{
+    m_parentWindow = 0;
+    m_prevWidget = 0;
+    m_nextWidget = 0;
+}
+
+void widget::initializeHelpText()
+{
+    m_rollOver = 0;
+    m_rightClick = 0;
+    m_freeText = 0;
+}
+
 VA(0x005fe340, 0x62)
 DC_ADDRESS(0x196b4c, 0x88)
 MAC_ADDRESS(0x20a504, 0x54)
@@ -21,15 +46,11 @@ widget::widget(short widgetX, short widgetY, short widgetWidth, short widgetHeig
     m_width = widgetWidth;
     m_height = widgetHeight;
     m_id = widgetId;
-    m_parentWindow = 0;
-    m_prevWidget = 0;
-    m_nextWidget = 0;
+    initializeLinks();
     m_status = WIDGET_ACTIVE | WIDGET_DRAWN;
     m_priority = -1;
     m_style = widgetStyle;
-    m_rollOver = 0;
-    m_rightClick = 0;
-    m_freeText = 0;
+    initializeHelpText();
 }
 
 VA_COMPGEN(0x005fe3b0, 0x5C, SCALAR_DELETING_DTOR, widget)
@@ -40,9 +61,7 @@ MAC_ADDRESS(0x20a558, 0x28)
 widget::widget()
     : m_sleepCount(0)
 {
-    m_rollOver = 0;
-    m_rightClick = 0;
-    m_freeText = 0;
+    initializeHelpText();
     m_status = WIDGET_ACTIVE | WIDGET_DRAWN;
 }
 
@@ -52,7 +71,7 @@ MAC_ADDRESS(0x20a580, 0x98)
 widget::~widget()
 {
     if (s_lastHoverWidget == this)
-        s_lastHoverWidget = 0;
+        clearHoverWidget();
     if (m_freeText) {
         if (m_rightClick)
             delete[] m_rightClick;
@@ -66,9 +85,7 @@ DC_ADDRESS(0x196c6c, 0x50)
 MAC_ADDRESS(0x20a618, 0x54)
 void widget::initialize(int x, int y, int w, int h, int id, int style)
 {
-    m_parentWindow = 0;
-    m_prevWidget = 0;
-    m_nextWidget = 0;
+    initializeLinks();
     m_x = x;
     m_y = y;
     m_width = w;
@@ -193,12 +210,7 @@ MAC_ADDRESS(0x20aa0c, 0x74)
 int widget::sendMessage(widget::ECommands command, int extra)
 {
     message msg;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = command;
-    msg.m_codeY = m_id;
+    msg.setWidgetCommand(command, m_id);
     msg.m_extra = extra;
     msg.m_window = m_parentWindow;
     return main(msg);
@@ -213,31 +225,36 @@ void widget::dim() const
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
 }
 
+// Project-inferred per-string replacement steps. Borrowed text is detached
+// without deletion; callers change the ownership flag only after both releases.
+void widget::releaseHelpText(char*& text)
+{
+    if (text) {
+        if (m_freeText)
+            delete[] text;
+        text = 0;
+    }
+}
+
+void widget::copyHelpText(char*& destination, const char* source)
+{
+    if (source) {
+        destination = new char[strlen(source) + 1];
+        strcpy(destination, source);
+    }
+}
+
 VA(0x005fe840, 0xE9)
 DC_ADDRESS(0x196ffc, 0xaa)
 MAC_ADDRESS(0x20aad4, 0x110)
 void widget::setHelpText(const char* text, const char* rclick, bool copyText)
 {
-    if (m_rollOver) {
-        if (m_freeText)
-            delete[] m_rollOver;
-        m_rollOver = 0;
-    }
-    if (m_rightClick) {
-        if (m_freeText)
-            delete[] m_rightClick;
-        m_rightClick = 0;
-    }
+    releaseHelpText(m_rollOver);
+    releaseHelpText(m_rightClick);
     if (copyText) {
         m_freeText = 1;
-        if (text) {
-            m_rollOver = new char[strlen(text) + 1];
-            strcpy(m_rollOver, text);
-        }
-        if (rclick) {
-            m_rightClick = new char[strlen(rclick) + 1];
-            strcpy(m_rightClick, rclick);
-        }
+        copyHelpText(m_rollOver, text);
+        copyHelpText(m_rightClick, rclick);
     } else {
         m_freeText = 0;
         m_rollOver = const_cast<char*>(text);

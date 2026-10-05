@@ -137,6 +137,10 @@ VA_COMPGEN(0x00559440, 0x6E, IMPLICIT_DTOR, map)
 VA(0x005594b0, 0x40)
 DC_ADDRESS(0x122984, 0x72)
 MAC_ADDRESS(0x1521d0, 0x40)
+// The pair's conversion constructs TCacheMapKey from getName(), retaining
+// DC 0x1229a0. Windows 0x5594b9..0x5594df expands the twelve-byte copy,
+// terminator and tree insertion. Mac instead inserts into its 16384-entry
+// hash/pointer array through 0x151ff4; that backend has no Windows tree key.
 void ResourceManager::addToCache(resource* value)
 {
     g_resourceCache.insert(std::make_pair(value->getName(), value));
@@ -456,7 +460,7 @@ static bool openArchiveResource(int archiveIndex)
 }
 
 // Mac retains the archive searches at 0:0x1522ec and 0:0x152374.
-// Resource loaders call them directly; the public pointTo* wrappers near
+// Resource loaders reuse them; the public pointTo* wrappers near
 // the end of this file remain separate calls at 0:0x154660 and 0:0x154680.
 // Both bind the selected context row (Mac 0:0x1523a0 forms base + state*0x18;
 // retail inlined bitmap searches keep a dead lea of that row, not +8).
@@ -670,6 +674,15 @@ VA_COMPGEN(0x0055a7a0, 0x21, SCALAR_DELETING_DTOR,
 VA_COMPGEN(0x0055a7d0, 0x21, SCALAR_DELETING_DTOR,
            t_lod_file_adapter)
 
+// Project-inferred saturation policy shared by loaded bitmaps and palettes.
+// Keep the pointer dereference inside the original saturation gate.
+template <class T>
+static void adjustLoadedResourceSaturation(T* value)
+{
+    if (g_graphicsSaturated)
+        value->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+}
+
 // Mac 0:0x152df8..0x152fc8 calls the retained findBitmapResource helper
 // for name and default.pcx. The same two ordinary source calls auto-inline in
 // Complete. Dreamcast names the anonymous bmpHeader local but cannot fix its
@@ -855,6 +868,15 @@ Bitmap16Bit* ResourceManager::getBitmap16(const char* name)
     return loaded;
 }
 
+// Project-inferred record read shared by the 16- and 24-bit palette loaders.
+// The callers retain their buffers and palette construction lifetimes.
+static void readPaletteRecord(TAbstractFile* stream, char (&header)[24],
+                              TRGBA (&data)[256])
+{
+    stream->read(header, sizeof(header));
+    stream->read(data, sizeof(data));
+}
+
 // Mac 0:0x153258 retains the reader immediately before loadPalette. It owns
 // the two stream reads, palette temporary, saturation and conversion; Complete
 // expands the same work in both its loose-file and archive paths. The helper
@@ -865,11 +887,9 @@ TPalette16* ResourceManager::loadPaletteData(const char* name,
 {
     char header[24];
     TRGBA paletteData[256];
-    stream->read(header, sizeof(header));
-    stream->read(paletteData, sizeof(paletteData));
+    readPaletteRecord(stream, header, paletteData);
     TPalette24 palette24(paletteData);
-    if (g_graphicsSaturated)
-        palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+    adjustLoadedResourceSaturation(&palette24);
     return new TPalette16(name, palette24,
         g_firstMaskBits, g_firstMaskShift,
         g_greenMaskBits, g_greenMaskShift,
@@ -948,12 +968,10 @@ TPalette24* ResourceManager::loadPalette24Data(const char* name,
 {
     char header[24];
     TRGBA rgba[256];
-    stream->read(header, sizeof(header));
-    stream->read(rgba, sizeof(rgba));
+    readPaletteRecord(stream, header, rgba);
 
     TPalette24* result = new TPalette24(rgba);
-    if (g_graphicsSaturated)
-        result->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+    adjustLoadedResourceSaturation(result);
     return result;
 }
 
@@ -1044,13 +1062,23 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
             result.get()->setPalette(*palette);
         }
         catch (...) {
-            palette->dispose();
+            ResourceManager::dispose(palette);
             throw;
         }
-        palette->dispose();
+        ResourceManager::dispose(palette);
     }
 
     return result.release();
+}
+
+// Project-inferred shared loose-resource operation. Preserve the unchecked
+// seek/tell/rewind sequence and the loaders' signed int size conversion.
+static int getResourceFileSize(FILE* file)
+{
+    fseek(file, 0, SEEK_END);
+    int size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    return size;
 }
 
 // Mac 0:0x1538a8..0x153944 is this named loader's archive-only port: the
@@ -1148,9 +1176,7 @@ TTextResource* ResourceManager::loadText(const char* name)
 
     if (file) {
         try {
-            fseek(file, 0, SEEK_END);
-            int fileSize = ftell(file);
-            fseek(file, 0, SEEK_SET);
+            int fileSize = getResourceFileSize(file);
 
             TTextResource* result;
             {
@@ -1217,9 +1243,7 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
 
     if (file) {
         try {
-            fseek(file, 0, SEEK_END);
-            int fileSize = ftell(file);
-            fseek(file, 0, SEEK_SET);
+            int fileSize = getResourceFileSize(file);
 
             TSpreadsheetResource* result;
             {
@@ -1401,9 +1425,7 @@ sample* ResourceManager::loadSample(const char* name)
         sample* result;
         try {
             {
-                fseek(file, 0, SEEK_END);
-                int size = ftell(file);
-                fseek(file, 0, SEEK_SET);
+                int size = getResourceFileSize(file);
                 std::auto_ptr<char> data(new char[size]);
                 fread(data.get(), size, 1, file);
                 result = new sample(name, data.get(), size, 0, 127, 1);
@@ -1500,6 +1522,11 @@ inline void addPal24(CSprite* sprite, const TPalette24* pal)
 // bytes versus the guarded do-loop; its retained helper sequence is unchanged.
 // In the integrated Windows context this probe is 88.2161% versus 88.2323%;
 // both still have 73/72 CFG blocks. Prior peaks remain historical controls.
+// Mac's DEF header/sequence/frame scalars and frame-offset array are decoded
+// after each copy (154068..98, 154118..12c, 154198..1b8, 154278..2bc,
+// 1542f8..320). The canonical endian conversions preserve Windows 88.2129%.
+// Its offset traversal is PowerPC-only: retaining an identity-conversion loop
+// on Windows adds unsupported CFG branches and scores 85.56%.
 // The earlier flattened-cache model reached 88.8564% in HIST, but lost the
 // proven shared cache-helper structure and remains only a diagnostic lead.
 VA(0x0055c7b0, 0x743)
@@ -1540,6 +1567,11 @@ CSprite* ResourceManager::getSprite(const char* name)
     SpriteDefHeader sdef;
     unsigned char* definitionPosition = fileData + sizeof(sdef);
     memcpy(&sdef, fileData, sizeof(sdef));
+    // Mac 154068..154098 decodes the copied DEF scalar header in place.
+    sdef.m_type = EResourceType(LITTLE_ENDIAN_LONG(sdef.m_type));
+    sdef.m_width = LITTLE_ENDIAN_LONG(sdef.m_width);
+    sdef.m_height = LITTLE_ENDIAN_LONG(sdef.m_height);
+    sdef.m_numSequences = LITTLE_ENDIAN_LONG(sdef.m_numSequences);
 
     CSprite* sprite = new CSprite(
         name, sdef.m_type, sdef.m_width, sdef.m_height);
@@ -1555,6 +1587,8 @@ CSprite* ResourceManager::getSprite(const char* name)
          sequenceIndex < sdef.m_numSequences;
          ++sequenceIndex, ++sequence) {
         memcpy(sequence, definitionPosition, sizeof(*sequence));
+        sequence->m_sequenceNumber = LITTLE_ENDIAN_LONG(sequence->m_sequenceNumber);
+        sequence->m_numFrames = LITTLE_ENDIAN_LONG(sequence->m_numFrames);
         definitionPosition += sizeof(*sequence);
 
         sequence->m_frameNames = new char[sequence->m_numFrames * 13];
@@ -1566,6 +1600,13 @@ CSprite* ResourceManager::getSprite(const char* name)
         memcpy(sequence->m_frameOffsets, definitionPosition,
                sequence->m_numFrames * sizeof(int));
         definitionPosition += sequence->m_numFrames * sizeof(int);
+#if defined(__POWERPC__)
+        // Mac 154198..1541b8 decodes each acquired frame offset; retail
+        // Windows has no corresponding offset traversal after its copy.
+        for (int offsetIndex = 0; offsetIndex < sequence->m_numFrames; ++offsetIndex)
+            sequence->m_frameOffsets[offsetIndex] =
+                LITTLE_ENDIAN_LONG(sequence->m_frameOffsets[offsetIndex]);
+#endif
     }
 
     for (sequenceIndex = 0;
@@ -1596,12 +1637,24 @@ CSprite* ResourceManager::getSprite(const char* name)
                 unsigned char* source =
                     fileData + sequence.m_frameOffsets[frameIndex];
                 memcpy(&croppedHeader, source, sizeof(croppedHeader));
+                croppedHeader.m_dataSize = LITTLE_ENDIAN_LONG(croppedHeader.m_dataSize);
+                croppedHeader.m_encoding = TEncodingMethod(LITTLE_ENDIAN_LONG(croppedHeader.m_encoding));
+                croppedHeader.m_width = LITTLE_ENDIAN_LONG(croppedHeader.m_width);
+                croppedHeader.m_height = LITTLE_ENDIAN_LONG(croppedHeader.m_height);
+                croppedHeader.m_croppedWidth = LITTLE_ENDIAN_LONG(croppedHeader.m_croppedWidth);
+                croppedHeader.m_croppedHeight = LITTLE_ENDIAN_LONG(croppedHeader.m_croppedHeight);
+                croppedHeader.m_croppedX = LITTLE_ENDIAN_LONG(croppedHeader.m_croppedX);
+                croppedHeader.m_croppedY = LITTLE_ENDIAN_LONG(croppedHeader.m_croppedY);
                 frameData = new unsigned char[croppedHeader.m_dataSize];
                 memcpy(frameData, source + sizeof(croppedHeader),
                        croppedHeader.m_dataSize);
             } else {
                 memcpy(&compactHeader, definitionPosition,
                        sizeof(compactHeader));
+                compactHeader.m_dataSize = LITTLE_ENDIAN_LONG(compactHeader.m_dataSize);
+                compactHeader.m_encoding = LITTLE_ENDIAN_LONG(compactHeader.m_encoding);
+                compactHeader.m_width = LITTLE_ENDIAN_LONG(compactHeader.m_width);
+                compactHeader.m_height = LITTLE_ENDIAN_LONG(compactHeader.m_height);
                 definitionPosition += sizeof(compactHeader);
                 frameData = new unsigned char[compactHeader.m_dataSize];
                 memcpy(frameData,
@@ -1654,8 +1707,7 @@ CSprite* ResourceManager::getSprite(const char* name)
     delete[] sequences;
 
     TPalette24 palette24(sdef.m_palette);
-    if (g_graphicsSaturated)
-        palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+    adjustLoadedResourceSaturation(&palette24);
 
     TPalette16 palette16(
         palette24,
@@ -1732,7 +1784,7 @@ void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
     if (source) {
         source->draw(0, 0, source->getWidth(), source->getHeight(),
                      destBmap, 0, 0, false);
-        source->dispose();
+        ResourceManager::dispose(source);
     } else {
         reportMissingTypedResource(
             DATA_COMPGEN(0x00683094, getBackdropErrorContext, "GetBackdrop"),
@@ -1835,7 +1887,11 @@ void CSprite::dispose()
                     for (int frame = 0; frame < frameCount; ++frame) {
                         CSpriteFrame* image = getFrame(sequence, frame);
                         if (image)
-                            image->dispose();
+                            // DC 0x122652 uses the resource facade in the
+                            // older free sprite-disposal function. Complete
+                            // moves this loop into the virtual override;
+                            // Mac 0x154900..0x154910 expands that facade.
+                            ResourceManager::dispose(image);
                     }
                 }
             }

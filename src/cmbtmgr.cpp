@@ -109,16 +109,16 @@ DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[18] = {
     { "CH16.DEF", 99, 58, 5 },
     { "CH17.DEF", 95, 52, 5 }
 };
-DATA(0x0063cf88) const TSiegeArcherInfo g_siegeArcherInfo[9] = {
-    { 2, { { 780, 238 }, { 648, 566 }, { 596, 80 } }, "plcbowx.def" },
-    { 18, { { 786, 240 }, { 625, 563 }, { 595, 81 } }, "pelfx.def" },
-    { 34, { { 753, 251 }, { 609, 578 }, { 600, 92 } }, "pmagex.def" },
-    { 44, { { 765, 230 }, { 623, 565 }, { 595, 80 } }, "cprgogx.def" },
-    { 64, { { 755, 365 }, { 625, 570 }, { 593, 90 } }, "PLICH.def" },
-    { 76, { { 785, 217 }, { 625, 560 }, { 596, 80 } }, "pmedusx.def" },
-    { 88, { { 785, 222 }, { 615, 557 }, { 596, 80 } }, "porchx.def" },
-    { 100, { { 795, 230 }, { 626, 575 }, { 580, 85 } }, "pplizax.def" },
-    { 127, { { 783, 225 }, { 636, 575 }, { 595, 105 } }, "cprgtix.def" }
+DATA(0x0063cf88) const combatManager::TArcherTraits combatManager::s_archerTraits[9] = {
+    { static_cast<TCreatureType>(2) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, 780, 238, 648, 566, 596, 80, "plcbowx.def" },
+    { CREATURE_WOOD_ELF, 786, 240, 625, 563, 595, 81, "pelfx.def" },
+    { CREATURE_MAGE, 753, 251, 609, 578, 600, 92, "pmagex.def" },
+    { static_cast<TCreatureType>(44) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, 765, 230, 623, 565, 595, 80, "cprgogx.def" },
+    { CREATURE_LICH, 755, 365, 625, 570, 593, 90, "PLICH.def" },
+    { CREATURE_MEDUSA, 785, 217, 625, 560, 596, 80, "pmedusx.def" },
+    { static_cast<TCreatureType>(88) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, 785, 222, 615, 557, 596, 80, "porchx.def" },
+    { static_cast<TCreatureType>(100) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, 795, 230, 626, 575, 580, 85, "pplizax.def" },
+    { CREATURE_STORM_ELEMENTAL, 783, 225, 636, 575, 595, 105, "cprgtix.def" }
 };
 DATA(0x00641e08) const TSpellEffectTraits g_spellEffectTraits[83] = {
     { "C10spW.def", "Prayer", 256 },
@@ -662,6 +662,9 @@ unsigned char combatManager::loadWallTraitsTable()
 // EH states run 0..4, one per `new`, with -1 between them - the frame
 // exists only to run operator delete if a constructor throws, since
 // there is no STL and no string anywhere in the body.
+// DC 0x5d636..0x5d664 draws GameText[727] and flushes it before loading.
+// Complete Mac 0x6e220..0x6e2d4 starts with pointer/configuration state,
+// stopAllSamples and the battle sample/fade path, without this busy-text draw.
 VA(0x00462a20, 0x83F)
 DC_ADDRESS(0x05d60c, 0x662)
 MAC_ADDRESS(0x06e220, 0x5c4)
@@ -750,7 +753,7 @@ int combatManager::open(int newPriority)
         CheckMenuItem(g_activeMenu, 0xb798, 0);
         CheckMenuItem(g_activeMenu, 0xb79c, 0);
         CheckMenuItem(g_activeMenu, 0xb79b, 0);
-        g_windowManager->updateScreen(0, 0, 800, 600);
+        g_windowManager->updateScreen();
         g_config.m_showCombatMouseHex = savedShowMouseHex;
         g_mouseManager->m_noChangePointer = 0;
         g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
@@ -1024,19 +1027,19 @@ void combatManager::loadArmies(unsigned char isSurrounded)
             m_armies[1][placed].init(CREATURE_ARROW_TOWER, numArchers,
                                    combatHero, side, placed,
                                    COMBAT_HEX_KEEP, -1);
-            m_archers[0].m_armySlot = placed;
+            m_archers[eArcherMainBuilding].m_armySlot = placed;
             placed++;
             if (m_fortificationLevel == eFortificationCastle) {
                 numArchers = (numArchers + 1) / 2;
                 m_armies[1][placed].init(CREATURE_ARROW_TOWER, numArchers,
                                        combatHero, side, placed,
                                        COMBAT_HEX_UPPER_TOWER, -1);
-                m_archers[2].m_armySlot = placed;
+                m_archers[eArcherUpperTower].m_armySlot = placed;
                 placed++;
                 m_armies[1][placed].init(CREATURE_ARROW_TOWER, numArchers,
                                        combatHero, side, placed,
                                        COMBAT_HEX_LOWER_TOWER, -1);
-                m_archers[1].m_armySlot = placed;
+                m_archers[eArcherLowerTower].m_armySlot = placed;
                 placed++;
             }
         }
@@ -1079,7 +1082,7 @@ void combatManager::checkNativeTerrain()
 VA(0x004639f0, 0x270)
 DC_ADDRESS(0x05e464, 0x22a)
 MAC_ADDRESS(0x06f0b8, 0x330)
-void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int seed, unsigned char isSurrounded)
+void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int seed, bool isSurrounded)
 {
     g_combatSeed = seed;
     sRand(x * 0x1aed3 + y * 0x28f79 + 0x13ea1);
@@ -1718,10 +1721,13 @@ unsigned char combatManager::unnamed464f50(
 VA(0x00465080, 0x2A2)
 DC_ADDRESS(0x05f518, 0x41c)
 MAC_ADDRESS(0x070b74, 0x328)
+// Mac 0x70b9c..0x70bb8 still indexes both acting side and slot after
+// testing side == 0: the canonical getCurrentArmy expansion, rather
+// than a source-level constant-side army lookup.
 bool combatManager::nextArmy(bool checkingForBadMorale)
 {
     if (m_actingSlot >= 0 && m_actingSide == 0
-        && m_armies[0][m_actingSlot].m_creatureType == CREATURE_CATAPULT) {
+        && getCurrentArmy()->m_creatureType == CREATURE_CATAPULT) {
         m_actingSide = 1;
         m_actingSlot = 0;
     }
@@ -2020,21 +2026,21 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
             m_drawbridgeState = 0;
             break;
         case WALL_TARGET_0: {
-            int slot = m_archers[2].m_armySlot;
+            int slot = m_archers[eArcherUpperTower].m_armySlot;
             m_wallLevel[17] = 0;
             m_wallFrame[17] = 0;
             m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
             break;
         }
         case WALL_TARGET_6: {
-            int slot = m_archers[1].m_armySlot;
+            int slot = m_archers[eArcherLowerTower].m_armySlot;
             m_wallLevel[16] = 0;
             m_wallFrame[16] = 0;
             m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
             break;
         }
         case WALL_TARGET_7: {
-            int slot = m_archers[0].m_armySlot;
+            int slot = m_archers[eArcherMainBuilding].m_armySlot;
             m_wallLevel[15] = 0;
             m_wallFrame[15] = 0;
             m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
@@ -2105,7 +2111,7 @@ void combatManager::keepAttack(int towerPos)
         break;
     }
     TArcher* archer = &m_archers[archerIndex];
-    const SMonFrameInfo* info = &g_monFrameInfo[archer->m_creatureType];
+    const SMonFrameInfo* info = &g_monFrameInfo[archer->m_type];
     army* target = &m_armies[0][towerPos];
 
     SAMPLE2 sample;
@@ -2124,15 +2130,15 @@ void combatManager::keepAttack(int towerPos)
             facing = 1;
         archer->m_facing = facing;
         int missileFrame;
-        getMissileStartingPosition(archer->m_creatureType, archer->m_x,
+        getMissileStartingPosition(archer->m_type, archer->m_x,
                                    archer->m_y, archer->m_facing, destX,
-                                   destY, archer->m_shadowSprite,
+                                   destY, archer->m_missile,
                                    &startX, &startY, &armyDir,
                                    &missileFrame);
         sprintf(g_text,
                 DATA_COMPGEN(0x0066ffa4, towerShotSampleFormat,
                              "%sshot.82m"),
-                g_creatureTypeTraits[archer->m_creatureType].m_samplePrefix);
+                g_creatureTypeTraits[archer->m_type].m_samplePrefix);
         sample = loadPlaySample(g_text);
 
         const int frames = info->m_attackFrames > 0
@@ -2150,7 +2156,7 @@ void combatManager::keepAttack(int towerPos)
             archer->m_frame--;
 
         shootMissile(startX, startY, destX, destY, info->m_arrowAngle,
-                     archer->m_shadowSprite);
+                     archer->m_missile);
     }
 
     // The accumulator is a DOWN-counted loop over a copy of numTroops:
@@ -2597,18 +2603,18 @@ void combatManager::initializeArchers()
     if (m_fortificationLevel < eFortificationCitadel)
         return;
 
-    const TSiegeArcherInfo& info = g_siegeArcherInfo[m_defendingTown->m_type];
+    const TArcherTraits& info = s_archerTraits[m_defendingTown->m_type];
     TArcherLoadState locals;
     locals.m_spriteName =
         g_creatureTypeTraits[info.m_creatureType].m_spriteName;
 
-    archer->m_creatureType = info.m_creatureType;
+    archer->m_type = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
     archer->m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    archer->m_shadowSprite = locals.m_sprite;
-    archer->m_x = info.m_positions[0].m_x;
-    archer->m_y = info.m_positions[0].m_y;
+    locals.m_sprite = ResourceManager::getSprite(info.m_missileName);
+    archer->m_missile = locals.m_sprite;
+    archer->m_x = info.m_mainBuildingX;
+    archer->m_y = info.m_mainBuildingY;
     archer->m_facing = 0;
     archer->m_sequence = 2;
     archer->m_frame = 0;
@@ -2616,27 +2622,27 @@ void combatManager::initializeArchers()
     if (m_fortificationLevel != eFortificationCastle)
         return;
 
-    m_archers[1].m_creatureType = info.m_creatureType;
+    m_archers[eArcherLowerTower].m_type = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    m_archers[1].m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    m_archers[1].m_shadowSprite = locals.m_sprite;
-    m_archers[1].m_x = info.m_positions[1].m_x;
-    m_archers[1].m_y = info.m_positions[1].m_y;
-    m_archers[1].m_facing = 0;
-    m_archers[1].m_sequence = 2;
-    m_archers[1].m_frame = 0;
+    m_archers[eArcherLowerTower].m_sprite = locals.m_sprite;
+    locals.m_sprite = ResourceManager::getSprite(info.m_missileName);
+    m_archers[eArcherLowerTower].m_missile = locals.m_sprite;
+    m_archers[eArcherLowerTower].m_x = info.m_lowerTowerX;
+    m_archers[eArcherLowerTower].m_y = info.m_lowerTowerY;
+    m_archers[eArcherLowerTower].m_facing = 0;
+    m_archers[eArcherLowerTower].m_sequence = 2;
+    m_archers[eArcherLowerTower].m_frame = 0;
 
-    m_archers[2].m_creatureType = info.m_creatureType;
+    m_archers[eArcherUpperTower].m_type = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    m_archers[2].m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    m_archers[2].m_shadowSprite = locals.m_sprite;
-    m_archers[2].m_x = info.m_positions[2].m_x;
-    m_archers[2].m_y = info.m_positions[2].m_y;
-    m_archers[2].m_facing = 0;
-    m_archers[2].m_sequence = 2;
-    m_archers[2].m_frame = 0;
+    m_archers[eArcherUpperTower].m_sprite = locals.m_sprite;
+    locals.m_sprite = ResourceManager::getSprite(info.m_missileName);
+    m_archers[eArcherUpperTower].m_missile = locals.m_sprite;
+    m_archers[eArcherUpperTower].m_x = info.m_upperTowerX;
+    m_archers[eArcherUpperTower].m_y = info.m_upperTowerY;
+    m_archers[eArcherUpperTower].m_facing = 0;
+    m_archers[eArcherUpperTower].m_sequence = 2;
+    m_archers[eArcherUpperTower].m_frame = 0;
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3299
@@ -3382,7 +3388,8 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
         } else {
             view->doModal();
             if (g_windowManager->m_dialogReturn == TViewArmyWindow::OK_ID) {
-                initiateSpell(thisArmy->m_faerieDragonSpell, 1);
+                initiateSpell(
+                    static_cast<ESpellId>(thisArmy->m_faerieDragonSpell), 1); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
                 if (m_nextAction == 1)
                     m_nextAction = 10;
             }
@@ -3717,10 +3724,11 @@ long combatManager::getDistance(long start, long stop)
     int sy = gridY(start);
     int tx = gridX(stop);
     int ty = gridY(stop);
-    int a = (sy + 1) / 2 - (ty + 1) / 2 - sx + tx;
-    int b = ty / 2 - sy / 2 - sx + tx;
+    // Complete Mac calls labs for both displacements (0x75d8c..0x75e00).
+    long a = (sy + 1) / 2 - (ty + 1) / 2 - sx + tx;
+    long b = ty / 2 - sy / 2 - sx + tx;
     if ((a < 0) == (b < 0))
-        return cppMax<long>(abs(a), abs(b));
+        return max(abs(a), abs(b));  // DC 0x62ed8: includes.h wrapper.
     return abs(a) + abs(b);
 }
 
@@ -4117,11 +4125,12 @@ void combatManager::markMovingArmy(army* stack)
 
 VA(0x0046a570, 0xE0)
 MAC_ADDRESS(0x076cf0, 0x15c)
-unsigned char combatManager::checkObstacleAttacks(army* thisArmy,
-                                                    unsigned char isWalking)
+// Complete manager interface is inferred: the original bool army wrapper
+// forwards its result unchanged in retail, and this body returns only 0/1.
+bool combatManager::checkObstacleAttacks(army* thisArmy, bool isWalking)
 {
-    unsigned char attacked = 0;
-    unsigned char moatAttacked = 0;
+    bool attacked = false;
+    bool moatAttacked = false;
     int hex = thisArmy->m_gridIndex;
 
     if (!m_obstacleAttackVisited[hex]) {

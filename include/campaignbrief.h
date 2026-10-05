@@ -87,6 +87,7 @@ public:
     struct ScenarioStruct {
         std::string m_name;
         int m_offset;
+
     private:
         // Stored map-data span, not inflated output size: Mac 0x97310 adds
         // this field to the underlying stream offset before loadMapHeader
@@ -94,13 +95,17 @@ public:
         // ScenarioStruct::read owns its only write; callers query the span
         // or hasMap. The original name is unknown (formerly m_inflatedSize).
         int m_mapDataSize;
+
     public:
         // Byte elements: GetAvailableScenarios (0x488f00) walks _First at
         // +0x1c with `cmp byte ptr [ebx+edx],0` on a unit stride, and the
         // prologue pointer follows at +0x3c (a Dinkumware vector<bool>
         // would push it to +0x40).
         std::vector<unsigned char> m_prerequisites;
+
         std::string m_regionDesc;
+
+    public:
         signed char m_regionColor;
         signed char m_difficulty;
         // The loader reads regionColor/difficulty as bytes at +0x38/39;
@@ -116,21 +121,25 @@ public:
         // The loader expands five retention bits into booleans at +0x44..48;
         // heroesStatus starts at +0x4c. These three bytes align the integer array.
         char m_paddingBeforeHeroesStatus[3];
+
     private:
         // Per-player crossover quotas copied from the map header. External
         // initialization uses the setter; scenario queries own the reads.
         int m_heroesStatus[8];
+
     public:
         // Copied from CMapHeaderData; native 0x941e4 uses the same enum-vector
         // cleanup. The installed MSL HeroId clear matches all 56 native bytes.
         std::vector<HeroId> m_heroPlaceholders;
         std::bitset<145> m_crossoverCreatures;
         std::bitset<144> m_crossoverArtifacts;
+
     private:
         // Owned by this scenario: read constructs it and the destructor
         // deletes it. External setup mutates the option through its API;
         // callers never replace the owned pointer. Name/visibility inferred.
         TCampaignStartOption* m_options;
+
     public:
         // Native callers repeatedly expand this pointer lookup before the
         // option's virtual operation. Header placement serves both TUs;
@@ -216,12 +225,18 @@ public:
         };
 
         EFileError m_fileError;
+
         std::string m_fileName;
+
+    public:
         int m_campaignVersion;
         int m_regionMap;
+
         std::string m_campaignName;
         std::string m_campaignDesc;
         std::vector<ScenarioStruct*> m_scenarios;
+
+    public:
         unsigned char* m_data;
         // FreeData (0x4887e0) destroys it through vtable slot 0 with the
         // deleting flag, and the two loaders hand it to ScenarioStruct.
@@ -267,6 +282,10 @@ public:
 
     private:
         void readScenario(TAbstractFile* file, int numScenarios);
+
+    public:
+        // Inferred indexed access beside the existing scenario-count query.
+        ScenarioStruct* getScenario(int index) const { return m_scenarios[index]; }
     };
 
     // Dreamcast's LF_FIELDLIST preserves this complete nested enum.  The

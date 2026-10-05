@@ -249,7 +249,7 @@ unsigned char initializeHeroTraitsTable()
         return 0;
 
     if (resource->getNumberOfRows() < 158) {
-        resource->dispose();
+        ResourceManager::dispose(resource);
         return 0;
     }
 
@@ -259,7 +259,7 @@ unsigned char initializeHeroTraitsTable()
         initializeHeroTraits(id, resource->getRow(row));
     }
 
-    resource->dispose();
+    ResourceManager::dispose(resource);
     return 1;
 }
 
@@ -275,7 +275,7 @@ bool initializeHeroClassTraitsTable()
         return 0;
 
     if (resource->getNumberOfRows() < 20) {
-        resource->dispose();
+        ResourceManager::dispose(resource);
         return 0;
     }
 
@@ -285,7 +285,7 @@ bool initializeHeroClassTraitsTable()
         initializeHeroClassTraits(id, resource->getRow(row));
     }
 
-    resource->dispose();
+    ResourceManager::dispose(resource);
     return 1;
 }
 
@@ -301,7 +301,7 @@ bool initializeSSkillTraitsTable()
         return 0;
 
     if (resource->getNumberOfRows() < 30) {
-        resource->dispose();
+        ResourceManager::dispose(resource);
         return 0;
     }
 
@@ -311,7 +311,7 @@ bool initializeSSkillTraitsTable()
         initializeSSkillTraits(id, resource->getRow(row));
     }
 
-    resource->dispose();
+    ResourceManager::dispose(resource);
     return 1;
 }
 

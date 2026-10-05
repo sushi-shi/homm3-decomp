@@ -360,7 +360,7 @@ DATA(0x006a8098)
 const char* g_newLoadSaveText[3];
 
 // These checks have empty release bodies in the DC image. The named calls
-// in initializeArrayText still preserve its source boundaries and labels;
+// in the help/array initializers preserve their source boundaries and labels;
 // the checker body itself has no recovered debug behavior.
 // Original: CheckTextResource; text.cpp:49
 DC_ADDRESS(0x160ff4, 0x4)
@@ -423,7 +423,7 @@ unsigned char initializeCampaignRegionNames()
     if (!g_campaignRegionNamesResource)
         return 0;
     for (int i = 0; i < 23; i++)
-        g_campaignRegionNames[i] = g_campaignRegionNamesResource->getRow(i + 1)[0];
+        g_campaignRegionNames[i] = g_campaignRegionNamesResource->getSpreadsheet(i + 1, 0);
     return 1;
 }
 
@@ -567,13 +567,13 @@ unsigned char initializeNeutralBuildingText()
         return 0;
     for (int i = 0; i < 19; i++) {
         if (g_neutralBuildingText->getNumberOfColumns(i) > 1)
-            g_neutralBuildingNames[i] = g_neutralBuildingText->getRow(i)[0];
+            g_neutralBuildingNames[i] = g_neutralBuildingText->getSpreadsheet(i, 0);
         else
             g_neutralBuildingNames[i] = DATA_COMPGEN(0x00691210, textEmptyText, "");
     }
     for (int j = 0; j < 28; j++) {
         if (g_neutralBuildingText->getNumberOfColumns(j) > 1)
-            g_buildingInfoNeutral[j] = g_neutralBuildingText->getRow(j)[1];
+            g_buildingInfoNeutral[j] = g_neutralBuildingText->getSpreadsheet(j, 1);
         else
             g_buildingInfoNeutral[j] = DATA_COMPGEN(0x00691210, textEmptyText, "");
     }
@@ -594,9 +594,9 @@ unsigned char initializeSpecialBuildingText()
         for (int slot = 0; slot < 11; slot++) {
             if (g_specialBuildingText->getNumberOfColumns(n) > 1) {
                 g_specialBuildingNames[faction][slot] =
-                    g_specialBuildingText->getRow(n)[0];
+                    g_specialBuildingText->getSpreadsheet(n, 0);
                 g_buildingInfoSpecial[faction][slot] =
-                    g_specialBuildingText->getRow(n)[1];
+                    g_specialBuildingText->getSpreadsheet(n, 1);
             } else {
                 g_specialBuildingNames[faction][slot] =
                     DATA_COMPGEN(0x00691210, textEmptyText, "");
@@ -622,8 +622,8 @@ unsigned char initializeDwellingText()
     for (int faction = 0; faction < 10; faction++) {
         for (int slot = 0; slot < 14; slot++) {
             if (g_dwellingText->getNumberOfColumns(n) > 0) {
-                g_dwellingNames[faction][slot] = g_dwellingText->getRow(n)[0];
-                g_dwellingInfo[faction][slot] = g_dwellingText->getRow(n)[1];
+                g_dwellingNames[faction][slot] = g_dwellingText->getSpreadsheet(n, 0);
+                g_dwellingInfo[faction][slot] = g_dwellingText->getSpreadsheet(n, 1);
             } else {
                 g_dwellingNames[faction][slot] =
                     DATA_COMPGEN(0x00691210, textEmptyText, "");
@@ -649,7 +649,7 @@ unsigned char initializeTownNameText()
     for (int faction = 0; faction < 9; faction++) {
         for (int slot = 0; slot < 16; slot++) {
             if (g_townNameText->getNumberOfColumns(n) > 0)
-                g_townNames[faction][slot] = g_townNameText->getRow(n)[0];
+                g_townNames[faction][slot] = g_townNameText->getSpreadsheet(n, 0);
             else
                 g_townNames[faction][slot] =
                     DATA_COMPGEN(0x00691210, textEmptyText, "");
@@ -799,7 +799,9 @@ unsigned char initializeTentColorText()
 }
 
 // Read each window's run of rollover/right-click text pairs in file order,
-// skipping two rows between runs.
+// skipping two rows between runs. DC 0x161b14..0x1622f0 checks each
+// section label with CheckSpreadsheetResource; the final check uses i,
+// whereas the section headers use i - 1. Its release body is empty.
 VA(0x005b98b0, 0x405)
 DC_ADDRESS(0x161ae4, 0x822)
 MAC_ADDRESS(0x1ae700, 0x830)
@@ -814,6 +816,7 @@ unsigned char initializeHelpText()
         return 0;
 
     i = 3;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Main Menu");
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -822,6 +825,7 @@ unsigned char initializeHelpText()
         g_mainMenuHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "New Game");
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -830,6 +834,7 @@ unsigned char initializeHelpText()
         g_newGameHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Single Scenario Selection");
     for (j = 0; j < 245; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -838,6 +843,7 @@ unsigned char initializeHelpText()
         g_singleSelectionHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Multiplayer Selection");
     for (j = 0; j < 25; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -846,6 +852,7 @@ unsigned char initializeHelpText()
         g_multiSelectionHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Adventure Map Window");
     for (j = 0; j < 27; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -854,6 +861,7 @@ unsigned char initializeHelpText()
         g_adventureWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "System Options");
     for (j = 0; j < 48; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -862,6 +870,7 @@ unsigned char initializeHelpText()
         g_systemOptionsHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Adventure Options");
     for (j = 0; j < 7; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -870,6 +879,7 @@ unsigned char initializeHelpText()
         g_adventureOptionsHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Combat Window");
     for (j = 0; j < 11; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -878,6 +888,7 @@ unsigned char initializeHelpText()
         g_combatWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Combat Options");
     for (j = 0; j < 39; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -886,6 +897,7 @@ unsigned char initializeHelpText()
         g_combatOptionsHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "View Army");
     for (j = 0; j < 15; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -894,6 +906,7 @@ unsigned char initializeHelpText()
         g_viewArmyHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Spell Book");
     for (j = 0; j < 11; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -902,6 +915,7 @@ unsigned char initializeHelpText()
         g_spellbookHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "CampaignBrief");
     for (j = 0; j < 62; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -910,6 +924,7 @@ unsigned char initializeHelpText()
         g_campaignBriefHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "CampaignWindow");
     for (j = 0; j < 24; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -918,6 +933,7 @@ unsigned char initializeHelpText()
         g_campaignWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Recruit");
     for (j = 0; j < 3; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -926,6 +942,7 @@ unsigned char initializeHelpText()
         g_recruitHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Multiplayer");
     for (j = 0; j < 8; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -934,6 +951,7 @@ unsigned char initializeHelpText()
         g_mpHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Sacrifice Window");
     for (j = 0; j < 20; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -942,6 +960,7 @@ unsigned char initializeHelpText()
         g_sacrificeWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Skeleton Transformer");
     for (j = 0; j < 3; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -950,6 +969,7 @@ unsigned char initializeHelpText()
         g_transformerWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Trade Window");
     for (j = 0; j < 6; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -958,6 +978,7 @@ unsigned char initializeHelpText()
         g_resourceWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Give Resource Window");
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -966,6 +987,7 @@ unsigned char initializeHelpText()
         g_giveResourceWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Buy Artifact Window");
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -974,6 +996,7 @@ unsigned char initializeHelpText()
         g_buyArtifactWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Sell Artifact Window");
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -982,6 +1005,7 @@ unsigned char initializeHelpText()
         g_sellArtifactWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "Sell Creature Window");
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -990,6 +1014,7 @@ unsigned char initializeHelpText()
         g_sellCreatureWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
+    checkSpreadsheetResource(*g_helpText, i - 1, 0, "University Window");
     for (j = 0; j < 4; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
@@ -997,6 +1022,8 @@ unsigned char initializeHelpText()
         g_universityWindowHelp[j].m_text = row[0];
         g_universityWindowHelp[j].m_rclick = row[1];
     }
+    checkSpreadsheetResource(*g_helpText, i, 0,
+        "Insert all data before this line. Do not alter or delete this line.");
     return 1;
 }
 

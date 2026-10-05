@@ -24,9 +24,12 @@
 // All four dialog non-deleting dtors fold to 0x576530 (jmp ~TDialogBox),
 // similarly bracketed by CTeamAlignmentDlg's ctor and CreateWin.
 
-// The CreateWin family is reconstructed below. CTownDlg retains the Complete
-// sprite widget and the canonical dwelling lookup; the older Dreamcast
-// popup additionally constructs a button.
+// The five DC CreateWin bodies additionally construct a 16x16 iGPCrDiv.def
+// button at (10,10): 0x12e0f0/0x12e28e/0x12e668/0x12e890/0x12ec0a.
+// Complete's Mac bodies 0x16bcb0/0x16bf54/0x16c204/0x16c63c/0x16cbcc
+// contain only the authored text/image/icon widgets; that extra button and
+// its Add are absent. Their initial virtual calls are the existing setup
+// calls (DC vtable+0x24, Mac vtable+0x2c), with the same dialog dimensions.
 #include "va.h"
 #include "includes.h"
 
@@ -136,7 +139,7 @@ int CHotspotWidget::main(message& msg)
 VA(0x00575410, 0x20)
 DC_ADDRESS(0x12dfa8, 0x48)
 MAC_ADDRESS(0x16bc5c, 0x54)
-CBonusDlg::CBonusDlg(unsigned char newGameMode)
+CBonusDlg::CBonusDlg(bool newGameMode)
     : CSingleSelPopup(0x12, newGameMode)
 {
 }
@@ -146,7 +149,7 @@ VA_COMPGEN(0x005754c0, 0x21, SCALAR_DELETING_DTOR, CBonusDlg)  // dc 0x12f304
 VA(0x005754f0, 0x254)
 DC_ADDRESS(0x12dff0, 0x1dc)
 MAC_ADDRESS(0x16bcb0, 0x2a4)
-unsigned char CBonusDlg::createWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description)
+bool CBonusDlg::createWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description)
 {
     if (!setup(300, 225, 200, 150))
         return 0;
@@ -201,7 +204,7 @@ VA_COMPGEN(0x005757b0, 0x21, SCALAR_DELETING_DTOR, CSpriteWidget)  // dc 0x12f11
 VA(0x005757e0, 0x226)
 DC_ADDRESS(0x12e1cc, 0x1d4)
 MAC_ADDRESS(0x16bf54, 0x25c)
-unsigned char CBonusDlg::createWin(const char* title, Bitmap816* image, const char* botTitle, const char* description)
+bool CBonusDlg::createWin(const char* title, Bitmap816* image, const char* botTitle, const char* description)
 {
     if (!setup(300, 225, 200, 150))
         return 0;
@@ -272,7 +275,7 @@ VA_COMPGEN(0x00575a60, 0x5, IMPLICIT_DTOR, CBitmapWidget)  // dc 0x12f2a0
 VA(0x00575a70, 0x20)
 DC_ADDRESS(0x12e3a0, 0x50)
 MAC_ADDRESS(0x16c1b0, 0x54)
-CHeroDlg::CHeroDlg(unsigned char newGameMode)
+CHeroDlg::CHeroDlg(bool newGameMode)
     : CSingleSelPopup(0x12, newGameMode)
 {
 }
@@ -280,7 +283,7 @@ CHeroDlg::CHeroDlg(unsigned char newGameMode)
 VA(0x00575a90, 0x380)
 DC_ADDRESS(0x12e3f0, 0x29e)
 MAC_ADDRESS(0x16c204, 0x3e4)
-unsigned char CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc)
+bool CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc)
 {
     char tempText[256];
 
@@ -313,7 +316,7 @@ unsigned char CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSp
 VA(0x00575e10, 0x20)
 DC_ADDRESS(0x12e690, 0x78)
 MAC_ADDRESS(0x16c5e8, 0x54)
-CTownDlg::CTownDlg(unsigned char newGameMode)
+CTownDlg::CTownDlg(bool newGameMode)
     : CSingleSelPopup(0x12, newGameMode)
 {
 }
@@ -335,7 +338,7 @@ VA_COMPGEN(0x00575e30, 0x21, SCALAR_DELETING_DTOR, CHeroDlg)  // vtbl 0x641a68/0
 VA(0x00575e60, 0x670)
 DC_ADDRESS(0x12e708, 0x3be)
 MAC_ADDRESS(0x16c63c, 0x52c)  // anchor-vtable CTownDlg::CreateWin inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0xc (3 args)
-unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
+bool CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
 {
     if (!setup(272, 140, 256, 320))
         return 0;
@@ -389,7 +392,7 @@ unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
 VA(0x005764d0, 0x53)
 DC_ADDRESS(0x12eac8, 0x5c)
 MAC_ADDRESS(0x16cb68, 0x64)
-CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode)
+CTeamAlignmentDlg::CTeamAlignmentDlg(bool newGameMode)
     : CSingleSelPopup(0x12, newGameMode)
 {
     getTeams();
@@ -412,7 +415,7 @@ VA_COMPGEN(0x00576530, 0x5, IMPLICIT_DTOR, CTeamAlignmentDlg)  // dc 0x12b038
 VA(0x00576540, 0x3e8)
 DC_ADDRESS(0x12eb24, 0x256)
 MAC_ADDRESS(0x16cbcc, 0x2b0)  // anchor-vtable
-unsigned char CTeamAlignmentDlg::createWin()
+bool CTeamAlignmentDlg::createWin()
 {
     int xStart;
     char tempText[256];
@@ -523,7 +526,8 @@ TRandomMapProgress::TRandomMapProgress(int totalSteps)
         m_window->addWidget(m_widgets[i], -1);
     g_windowManager->addWindow(m_window, -1, 1);
     updateProgressBar();
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    // Mac 0x16d840..0x16d854 expands the shared full-screen facade.
+    g_windowManager->updateScreen();
 }
 
 // Slot 0 of vtable 0x641b14.
@@ -536,13 +540,15 @@ TRandomMapProgress::~TRandomMapProgress()
     g_windowManager->removeWindow(m_window);
     delete m_window;
     if (m_barSprite)
-        m_barSprite->dispose();
+        // Mac 0x16d8cc..0x16d8e0 expands the sprite-disposal facade;
+        // the surrounding null guard belongs to this caller.
+        ResourceManager::dispose(m_barSprite);
     for (unsigned int i = 0; i < m_widgets.size(); i++)
         delete m_widgets[i];
 }
 
 VA(0x00577180, 0x17F)
-MAC_ADDRESS(0x16d988, 0x1fc)
+MAC_ADDRESS(0x16d988, 0x1fc) // MAC_ABSTRACTION_FROM(tokens1:adf3e602a908,33.7891): restore both CSprite bitmap-overload calls; native 0x16da90/0x16db18 expands the same map/width/height/pitch forwarding.
 void TRandomMapProgress::updateProgressBar()
 {
     if (!m_barSprite)
@@ -560,19 +566,15 @@ void TRandomMapProgress::updateProgressBar()
 
     for (int i = 0; i < fullRow; i++) {
         m_barSprite->draw(0, i, 0, 0, m_barSprite->getWidth(), m_barSprite->getHeight(),
-                        g_windowManager->m_screenBitmap->getMap(0, 0),
+                        g_windowManager->m_screenBitmap,
                         m_window->m_x + i * 18 + 16, m_window->m_y + 0x3c,
-                        g_windowManager->m_screenBitmap->getWidth(),
-                        g_windowManager->m_screenBitmap->getHeight(),
-                        g_windowManager->m_screenBitmap->getPitch(), 0, 0);
+                        false, false);
     }
     for (int j = 0; j < partialRow; j++) {
         m_barSprite->draw(0, j, 0, 0, m_barSprite->getWidth(), m_barSprite->getHeight(),
-                        g_windowManager->m_screenBitmap->getMap(0, 0),
+                        g_windowManager->m_screenBitmap,
                         m_window->m_x + j * 18 + 16, m_window->m_y + 0x50,
-                        g_windowManager->m_screenBitmap->getWidth(),
-                        g_windowManager->m_screenBitmap->getHeight(),
-                        g_windowManager->m_screenBitmap->getPitch(), 0, 0);
+                        false, false);
     }
 
     g_windowManager->updateScreen(m_window->m_x + 16, m_window->m_y + 0x3c, 0x120, 16);

@@ -192,8 +192,7 @@ void robAppBlit(tagRECT* combRect)
         RECT pointerRect;
         RECT sourceRect;
         if (g_mouseManager) {
-            while (g_mouseManager->m_busy)
-                ;
+            g_mouseManager->waitUntilIdle();
             IntersectRect(&pointerRect, combRect,
                           &g_mouseManager->m_savedRect);
             sourceRect = pointerRect;
@@ -1344,7 +1343,7 @@ unsigned char setFullScreenStatus(int fullScreenOn)
         return 1;
 
     unsigned char changed = ddSetFullScreenStatus(fullScreenOn);
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
     if (fullScreenOn)
         g_mouseManager->update(1);
     writePrefs();

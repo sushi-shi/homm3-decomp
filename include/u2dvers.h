@@ -11,6 +11,8 @@
 class TFileVersionInfo {
 public:
     char* m_data;
+
+public:
     TFileVersionInfo(const char* filename);
     ~TFileVersionInfo();
 

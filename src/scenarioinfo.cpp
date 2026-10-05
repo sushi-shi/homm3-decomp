@@ -498,15 +498,15 @@ DC_ADDRESS(0x12aa70, 0x8e)
 MAC_ADDRESS(0x160400, 0x114)
 CScenarioInfoDlg::~CScenarioInfoDlg()
 {
-    m_victoryIcon->dispose();
-    m_lossIcon->dispose();
-    m_townPix->dispose();
-    m_bonusSprite->dispose();
-    m_heroSpecificAbility->dispose();
+    ResourceManager::dispose(m_victoryIcon);
+    ResourceManager::dispose(m_lossIcon);
+    ResourceManager::dispose(m_townPix);
+    ResourceManager::dispose(m_bonusSprite);
+    ResourceManager::dispose(m_heroSpecificAbility);
 
     for (int i = 0; i < 8; ++i) {
-        m_panels[i]->dispose();
-        m_flags[i]->dispose();
+        ResourceManager::dispose(m_panels[i]);
+        ResourceManager::dispose(m_flags[i]);
     }
 }
 
@@ -533,24 +533,20 @@ void CScenarioInfoDlg::updateAllyEnemyFlags()
 
     for (; i < 8; ++i) {
         flag = getWidget(i + SCENARIO_INFO_ENEMY_FIRST_ID);
-        flag->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                           widget::WIDGET_CLEAR_STATUS);
+        flag->hide();
         flag = getWidget(i + SCENARIO_INFO_ALLY_FIRST_ID);
-        flag->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                           widget::WIDGET_CLEAR_STATUS);
+        flag->hide();
 
         if (g_game->m_setup.m_playerPos[i] >= 0) {
             if (g_game->onSameTeam(i, localPlayer)) {
                 flag = getWidget(nextAlly);
-                flag->sendMessage(widget::WIDGET_SET_STATUS,
-                                   widget::WIDGET_CLEAR_STATUS);
+                flag->show();
                 getWidget(nextAlly)->sendMessage(
                     widget::WIDGET_SET_ICON_FRAME, i);
                 ++nextAlly;
             } else {
                 flag = getWidget(nextEnemy);
-                flag->sendMessage(widget::WIDGET_SET_STATUS,
-                                   widget::WIDGET_CLEAR_STATUS);
+                flag->show();
                 getWidget(nextEnemy)->sendMessage(
                     widget::WIDGET_SET_ICON_FRAME, i);
                 ++nextEnemy;

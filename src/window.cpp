@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "window.h"
+#include "includes.h"
 
 #include "bitmap16.h"
 #include "kb.h"
@@ -78,7 +79,9 @@ heroWindow::~heroWindow()
 VA(0x005feae0, 0x17A)
 DC_ADDRESS(0x19721c, 0xc4)
 MAC_ADDRESS(0x20af50, 0x208)
-int heroWindow::open(int newPriority, unsigned char update)
+// The native public records update as bool; forwarding it to drawWindow
+// must not introduce an unsigned-char-to-bool normalization absent in retail.
+int heroWindow::open(int newPriority, bool update)
 {
     if (m_status & WINDOW_STATE_OPEN)
         return 3;
@@ -140,6 +143,14 @@ int heroWindow::handleMessage(message& msg)
 DC_ADDRESS(0x197320, 0x4)
 void heroWindow::handleWidgetHover(widget* current)
 {
+}
+
+// Project-inferred dynamic insertion. Ownership is recorded before opening the
+// widget; keep it in the vector even if addWidget's virtual open rejects it.
+void heroWindow::addOwnedWidget(widget* newWidget)
+{
+    m_widgets.push_back(newWidget);
+    addWidget(m_widgets.back(), -1);
 }
 
 VA(0x005fecb0, 0xA5)
@@ -308,15 +319,9 @@ widget* heroWindow::getWidget(int id)
 VA(0x005ff020, 0xDE)
 DC_ADDRESS(0x1975d8, 0xb8)
 MAC_ADDRESS(0x20b58c, 0x144)
-void heroWindow::drawWindow(unsigned char update, int lowID, int highID)
+void heroWindow::drawWindow(bool update, int lowID, int highID)
 {
     message msg;
-    msg.m_codeY = 0;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_DRAW;
     widget* current = m_headWidget;
@@ -550,15 +555,23 @@ int heroWindow::heroWindowHandler(message& msg)
     return msg.m_window->handleMessage(msg);
 }
 
-VA(0x005ff510, 0x60)
-DC_ADDRESS(0x197c8c, 0x48)
-MAC_ADDRESS(0x20bc50, 0x7c)
-void heroWindow::deleteWidgets()
+// Project-inferred common object deletion. Terminal window destructors leave
+// the pointer vector intact until its own destruction. The existing full
+// cleanup operation below additionally clears it after all deletes finish.
+void heroWindow::deleteWidgetObjects()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
+}
+
+VA(0x005ff510, 0x60)
+DC_ADDRESS(0x197c8c, 0x48)
+MAC_ADDRESS(0x20bc50, 0x7c)
+void heroWindow::deleteWidgets()
+{
+    deleteWidgetObjects();
     m_widgets.clear();
 }
 

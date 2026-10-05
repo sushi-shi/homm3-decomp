@@ -37,7 +37,7 @@ unsigned char initializeCreatureAnimationTraitsTable()
     if (!sheet)
         return 0;
     if (sheet->getNumberOfRows() < 179) {
-        sheet->dispose();
+        ResourceManager::dispose(sheet);
         return 0;
     }
     int id = 0;
@@ -113,7 +113,7 @@ unsigned char initializeCreatureAnimationTraitsTable()
         ++id;
         ++row;
     } }
-    sheet->dispose();
+    ResourceManager::dispose(sheet);
     return 1;
 }
 

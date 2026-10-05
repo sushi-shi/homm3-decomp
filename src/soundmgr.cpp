@@ -55,6 +55,28 @@ DATA(0x00684ab0) int g_soundOutputChannels = 2;
 DATA(0x0069fe80) PCMWAVEFORMAT g_soundWaveFormat;
 DATA(0x00698a28) int g_skipDigitalDriverOpen;
 
+void soundManager::setPlaybackState(int state)
+{
+    m_playSounds = state;
+}
+
+bool soundManager::isPlaybackAllowed() const
+{
+    return m_playSounds != 0 || g_goSolo;
+}
+
+// Project-inferred driver gate, independent of playback overrides.
+bool soundManager::canUseDigitalSound() const
+{
+    return !g_noSound && m_ds;
+}
+
+// Preserve the no-sound, driver and playback short-circuit order.
+bool soundManager::canPlayDigitalSound() const
+{
+    return canUseDigitalSound() && isPlaybackAllowed();
+}
+
 VA(0x005994b0, 0x210)
 DC_ADDRESS(0x14b07c, 0xf4)
 MAC_ADDRESS(0x21832c, 0x108)
@@ -279,13 +301,20 @@ int soundManager::open(int newPriority)
     return 0;
 }
 
+// Project-inferred sample-bank operation; callers own locks and stop policy.
+void soundManager::endAllSamples()
+{
+    for (int i = 0; i < m_sampleNum; ++i)
+        AIL_end_sample(m_sampleHandles[i]);
+}
+
 VA(0x00599a90, 0xF1)
 DC_ADDRESS(0x14b270, 0x34)
 MAC_ADDRESS(0x2187f4, 0xf4)
 void soundManager::close()
 {
     if (m_status == STATUS_ACTIVE) {
-        g_soundManager->m_playSounds = 1;
+        g_soundManager->setPlaybackState(1);
         g_goSolo = 0;
         videoShutDown();
 
@@ -303,8 +332,7 @@ void soundManager::close()
                 AIL_close_stream(g_mp3Stream);
                 g_mp3Stream = 0;
             }
-            for (int i = 0; i < m_sampleNum; ++i)
-                AIL_end_sample(m_sampleHandles[i]);
+            endAllSamples();
             m_samples = 0;
             AIL_serve();
             Sleep(1);
@@ -323,11 +351,7 @@ void soundManager::close()
 VA(0x00599b90, 0xAB)
 void soundManager::resumeSamples()
 {
-    if (g_noSound)
-        return;
-    if (!m_ds)
-        return;
-    if (m_playSounds == 0 && !g_goSolo)
+    if (!canPlayDigitalSound())
         return;
     EnterCriticalSection(&m_sectionSoundCall);
     for (int i = 0; i < m_sampleNum; i++)
@@ -369,16 +393,11 @@ DC_ADDRESS(0x14b2a8, 0x18)
 MAC_ADDRESS(0x2188f0, 0x78)
 void soundManager::stopAllSamples(int stopMusicToo)
 {
-    if (g_noSound)
-        return;
-    if (!m_ds)
-        return;
-    if (m_playSounds == 0 && !g_goSolo)
+    if (!canPlayDigitalSound())
         return;
     memset(g_sampleWasPlaying, 0, sizeof(g_sampleWasPlaying));
     EnterCriticalSection(&m_sectionSoundCall);
-    for (int i = 0; i < m_sampleNum; i++)
-        AIL_end_sample(m_sampleHandles[i]);
+    endAllSamples();
     LeaveCriticalSection(&m_sectionSoundCall);
     if (stopMusicToo)
         stopMP3();
@@ -389,9 +408,7 @@ DC_ADDRESS(0x14b2c0, 0x18)
 MAC_ADDRESS(0x218968, 0x50)
 void soundManager::stopSample(ds_memsample* inSample)
 {
-    if (g_noSound)
-        return;
-    if (!m_ds)
+    if (!canUseDigitalSound())
         return;
     if (!inSample)
         return;
@@ -486,11 +503,7 @@ DC_ADDRESS(0x14b42c, 0xa8)
 MAC_ADDRESS(0x218bf4, 0xcc)
 void soundManager::adjustSoundVolumes()
 {
-    if (g_noSound)
-        return;
-    if (!m_ds)
-        return;
-    if (m_playSounds == 0 && !g_goSolo)
+    if (!canPlayDigitalSound())
         return;
     for (int i = 1; i < m_sampleNum; i++) {
         ds_memsample* handle = m_sampleHandles[i];
@@ -511,7 +524,7 @@ void soundManager::adjustMusicVolumes()
 {
     if (g_noSound)
         return;
-    if (m_playSounds == 0 && !g_goSolo)
+    if (!isPlaybackAllowed())
         return;
     setMusicVolume();
 }
@@ -640,7 +653,7 @@ void launchSample(const char* sampleName, int maxTime, int channel)
         return;
     if (!g_soundManager->m_ds)
         return;
-    if (g_soundManager->m_playSounds == 0 && !g_goSolo)
+    if (!g_soundManager->isPlaybackAllowed())
         return;
     if (!g_config.m_soundVolume)
         return;
@@ -846,11 +859,7 @@ DC_ADDRESS(0x14b924, 0x50)
 MAC_ADDRESS(0x21938c, 0x344)
 void soundManager::startMP3(const char* filename, int loopCount, unsigned char stopSamples)
 {
-    if (g_noSound)
-        return;
-    if (!m_ds)
-        return;
-    if (m_playSounds == 0 && !g_goSolo)
+    if (!canPlayDigitalSound())
         return;
     if (!g_config.m_musicVolume)
         return;

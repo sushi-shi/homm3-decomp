@@ -12,6 +12,7 @@ class textWidget;
 class textEntryWidget;
 class type_combat_sub_window;
 class message;
+class Bitmap16Bit;
 
 // Eleven interleaved rollover/right-click rows at retail 0x6a6968. The
 // combat-window right-click handler consumes the same table as the combat
@@ -39,10 +40,16 @@ public:
         COMBAT_PLACEMENT_COMMAND_1_ID = 0x7802
     };
 
+    // Project-inferred owner boundary for the complete data block. DC type
+    // 0x43dc is only a forward declaration, so it supplies no access levels.
+    // Keep the retail field order; callers borrow panels through the public
+    // interface while the window owns chat, message history and panel lifetime.
     // combat_message and handle_widget_hover both follow this pointer to
     // textEntryWidget::bHasFocus at +0x6d. The constructor initially nulls
     // it; the concrete object is the combat chat editor.
+
     textEntryWidget* m_chatEdit;
+
     // DrawChatText and DrawFrame both load the same pointer at retail +0x50;
     // its DC counterpart is likewise the combat chat text widget.
     textWidget* m_chatWidget;
@@ -53,14 +60,17 @@ public:
     int m_combatMessageCount;
     int m_combatMessageStart;
     unsigned long m_combatMessageTime;
+
     type_combat_sub_window* m_controlSubWindow;
     TCombatHeroSubWindow* m_heroSubWindows[2];
     TCombatCreatureSubWindow* m_creatureSubWindows[4];
 
+public:
     virtual ~TCombatWindow();
     virtual void close(unsigned char update);
     virtual void handleWidgetHover(widget* currentWidget);
-    virtual void drawWindow(unsigned char update, int low, int high);
+    // Original DC DrawWindow@TCombatWindow@@UAAX_NHH@Z proves bool.
+    virtual void drawWindow(bool update, int low, int high);
     void clearCombatMessages();
     static int convertID2HelpID(int id);
     unsigned char processRightSelect(const message& msg);
@@ -76,6 +86,7 @@ public:
     void drawChatText(unsigned char update);
     void drawChatEdit(unsigned char update);
     void onChatActivate(unsigned char active);
+
 };
 SIZE(TCombatWindow, 0x8c);
 

@@ -46,7 +46,9 @@ public:
     CTextEntrySave* m_saveBack;  // 0x54
     unsigned short m_cursorIndex;  // 0x58, = Text.size() after every edit
     unsigned short m_maxLength;  // 0x5a, the ctor's textStringSize
+    // Before normalization (Dreamcast): textWidth.
     short m_boxWidth;  // 0x5c, the inset text box
+    // Before normalization (Dreamcast): textHeight.
     short m_boxHeight;  // 0x5e
     short m_boxX;  // 0x60
     short m_boxY;  // 0x62
@@ -73,8 +75,12 @@ public:
                                  // glTimers[0]. Nothing in the image
                                  // READS it in this class; Dreamcast
                                  // independently supplies its name.
+    // Before normalization (Dreamcast): focus.
     unsigned char m_hasFocus;  // 0x6d, stored by SetFocus 0x5bab50
+
     unsigned char m_autoDraw;  // 0x6e, gates SetFocus's redraw
+
+public:
     // Dreamcast ends the 0x70-byte editor with autoDraw at +0x6e.
     // NH3API confirms that the last byte is alignment in the PC object.
     char m_paddingAfterAutoDraw[1];
@@ -99,6 +105,7 @@ public:
 
 protected:
     virtual void saveBackground() const;  // slot 18, retail 0x5bba70
+
 };
 // No SIZE() assert: the class rides std::string, whose extent differs
 // between the VC6 arm (0x10, giving textWidget 0x50 and this 0x70) and
