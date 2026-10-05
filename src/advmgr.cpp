@@ -3169,8 +3169,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         strcpy(g_text, g_quickViewText[MYSTICAL_GARDEN]);
         if (cell->m_isTrigger) {
             visited = player->m_mysticalGardenFlags
-                    & (1UL << cell->getItemId());
-                if (visited && !cell->gardenIsFull())
+                & (1UL << cell->getItemId());
+            if (visited && !cell->gardenIsFull())
                 sprintf(tempText, visitedFormat,
                         g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
             else

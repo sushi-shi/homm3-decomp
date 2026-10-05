@@ -831,7 +831,8 @@ public:
 
 private:
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
-    unsigned char canLand() const;
+    // Original private can_land@hero@@ABA_NXZ returns bool.
+    bool canLand() const;
 
 public:
     int heroFn004E5DE0() const;
@@ -977,16 +978,18 @@ public:
     // uses checkTerrain=1; Complete expands the helper before calling canLand.
     // These are real shared header bodies, not an ai_player.obj declaration
     // view: cursor.obj proves the same nested IsWieldingArtifact boundary.
+    // Original IsFlying@hero@@QBA_N_N@Z: Boolean result and terrain flag.
     DC_ADDRESS(0x01fbdc, 0x98)
-    unsigned char isFlying(unsigned char checkTerrain) const
+    bool isFlying(bool checkTerrain) const
     {
         return !(m_flags & 0x40000)
             && (m_flightLevel != -1 || isWieldingArtifact(0x48))
             && (!checkTerrain || !canLand());
     }
 
+    // Original CanWalkOnWater@hero@@QBA_N_N@Z has the same Boolean interface.
     DC_ADDRESS(0x01fc74, 0x98)
-    unsigned char canWalkOnWater(unsigned char checkTerrain) const
+    bool canWalkOnWater(bool checkTerrain) const
     {
         return !(m_flags & 0x40000)
             && (m_waterWalkLevel != -1 || isWieldingArtifact(0x5a))
