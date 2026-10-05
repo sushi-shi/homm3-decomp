@@ -4191,7 +4191,7 @@ DC_ADDRESS(0x0abd4c, 0x5c)
 MAC_ADDRESS(0x0d66c8, 0x64)
 static void randomizeShrine(NewmapCell* cell, const int level)
 {
-    SpellID spell = cell->getShrineSpell();
+    ESpellId spell = cell->getShrineSpell();
     if (spell == -1) {
         spell = g_game->getRandomSpell(level);
         cell->m_shrineInfo.m_spell = spell;
@@ -6625,9 +6625,10 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     do {
         int heroKey = readValue<unsigned char>(infile);
 
-        int heroId = readValue<unsigned char>(infile);
-        if (heroId == g_savedHeroNone)
-            heroId = -1;
+        // The >=30 admission makes Mac dc5f0..dc61c the modern roster's
+        // byte/sentinel decoder. This loadHeroId call is inferred from that
+        // operation; the original constant argument spelling is unproven.
+        int portrait = loadHeroId(infile, g_saveVersionCustomHeroSetups);
 
         std::string strTemp = readLengthPrefixedString(infile);
         std::bitset<8> availability =
@@ -6636,7 +6637,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
 
         m_heroPlayerSetups.insert(
             std::pair<const int, type_map_hero_info>(
-                heroKey, type_map_hero_info(heroId, strTemp, availability)));
+                heroKey, type_map_hero_info(portrait, strTemp, availability)));
     } while (--count != 0);
 
     return 0;
@@ -8063,10 +8064,12 @@ TArtifact game::getRandomArtifactId(int artifactClass)
     }
 }
 
+// Original public GetRandomSpell returns the SpellID enum. Complete adds
+// the level-mask overload while retaining that spell result domain.
 VA(0x004c95a0, 0x18E)
 DC_ADDRESS(0x0b4e04, 0x19c)
 MAC_ADDRESS(0x0e0610, 0x1e4)
-SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
+ESpellId game::getRandomSpell(const std::bitset<5> spellLevels)
 {
     int availableCount = 0;
     int spell;
@@ -8091,7 +8094,7 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
             }
         }
         m_spellAllocInfo[spell] = 1;
-        return spell;
+        return ESpellId(spell);
     }
 
     ordinal = 0;
@@ -8105,13 +8108,13 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
     }
     if (ordinal > 0)
         return getRandomSpell(spellLevels);
-    return -1;
+    return SPELL_NONE;
 }
 
 // Mac 0:e07f4 constructs the level mask, sets level-1, and calls the
 // bitset overload at 0:e0610. It follows that overload in the same TU.
 MAC_ADDRESS(0x0e07f4, 0x68)
-SpellID game::getRandomSpell(int level)
+ESpellId game::getRandomSpell(int level)
 {
     std::bitset<5> spellLevels;
     spellLevels[level - 1] = true;
