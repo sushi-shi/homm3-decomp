@@ -522,7 +522,7 @@ army	?adjustDamage@army@@QBEJPAV1@J_N1JPAJ@Z	100.0000	100.0000	100.0000	0x43f40	
 army	?animateMissile@army@@AAEXPAV1@@Z	95.1085	95.1085	100.0000	0x3f2c0	tokens1:8e0acaf2fb5c
 army	?attackHex@army@@QAE_NH_N@Z	100.0000	100.0000	100.0000	0x45a60	tokens1:327c9d1b4c8c
 army	?attackWall@army@@AAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0	tokens1:22ffeab0543b
-army	?attackWall@army@@AAEXW4TWallTargetId@@J@Z	96.0460	96.0460	96.0460	0x45fd0	tokens1:efaa1f9a3e34
+army	?attackWall@army@@AAEXW4TWallTargetId@@J@Z	96.0460	96.0460	96.0460	0x45fd0	tokens1:c2127ae40336
 army	?attackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30	tokens1:5ce27f36c494
 army	?canCastResurrect@army@@QBE_NJ@Z	100.0000	100.0000	100.0000	0x473d0	tokens1:b5e4534f2782
 army	?canCastSpell@army@@QBE_NJ@Z	100.0000	100.0000	100.0000	0x476c0	tokens1:010b931d3d10
@@ -543,7 +543,7 @@ army	?computeDefenderDamageReduction@army@@QBEN_N@Z	100.0000	100.0000	100.0000	0
 army	?considerAttack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	tokens1:8c1c623cdd39
 army	?cure@army@@QAEXHHPBVhero@@@Z	100.0000	100.0000	100.0000	0x46500	tokens1:43a8e7b6a274
 army	?damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090	tokens1:770cc2dcfdf8
-army	?doAttack@army@@AAE_NPAV1@H@Z	99.9616	99.9616	100.0000	0x41610	tokens1:53aa5521c8b4
+army	?doAttack@army@@AAE_NPAV1@H@Z	99.9616	99.9616	100.0000	0x41610	tokens1:262e834616e4
 army	?doAttack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	tokens1:4d9d677d9a8f
 army	?doFireShield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	tokens1:dd679f8769cb
 army	?doMultiHeadAttack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	tokens1:da1030a81c6d
