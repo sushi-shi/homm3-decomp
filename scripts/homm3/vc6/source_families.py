@@ -31,7 +31,7 @@ import subprocess
 import sys
 import time
 
-from homm3.core import common
+from homm3.core import cc_wrap, common
 from homm3.core.project import Project
 from homm3.match import status
 from homm3.vc6 import tu_state_sweep as scoring
@@ -330,9 +330,7 @@ def candidate_environment(candidate_root):
     env = dict(os.environ, HOMM3_DIR=str(candidate_root),
                PYTHONPATH=str(common.HOMM3_DIR / "scripts"),
                MSVC_DIR=str(Project(common.HOMM3_DIR).toolchain))
-    prefix = env.get("WINEPREFIX")
-    if not prefix or not Path(prefix).is_dir():
-        env["WINEPREFIX"] = str(common.HOMM3_DIR / "build/wineprefix")
+    cc_wrap.anchor_wine_prefix(env, root=common.HOMM3_DIR)
     return env
 
 

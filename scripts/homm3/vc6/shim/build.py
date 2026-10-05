@@ -65,8 +65,7 @@ def _ensure_wine_env() -> None:
     if shutil.which("wine") is None:
         _common.die("wine not found - run inside `nix develop .#build`.")
     os.environ.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
-    if not Path(os.environ.get("WINEPREFIX", "")).is_dir():
-        os.environ["WINEPREFIX"] = str(_common.REPO / "build/wineprefix")
+    cc_wrap.anchor_wine_prefix(root=_common.REPO, require=True)
     cc_wrap.ensure_wineserver()
 
 

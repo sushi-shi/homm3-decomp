@@ -56,12 +56,16 @@ Subcommands
         labels -> model -> synth PDB -> data manifests -> vostok ->
         per-unit target objs -> normalize -> objdiff.json.
 
-  status [functions [FILTER...]|update [--unit TU ...]|check [--baseline-ref REF]|merge-baseline]
+  status [summary|functions|update|check|merge-baseline|snapshot|diff] ...
         Scoreboard (homm3.match.status): per-unit table; `functions` shows
-        cur/max/hist; `update` regenerates config/match_baseline.tsv; `check`
+        cur/max/hist (filters: --unit, --va, --below, --non-exact, --json);
+        `update` regenerates config/match_baseline.tsv; `check`
         classifies source-edit MAX resets against the local or a committed
         baseline without gating. `merge-baseline` merges concurrent score rows
-        three ways. Unrelated CUR dips are silent; HIST preserves older peaks.
+        three ways. `snapshot FILE` / `diff --against REF|FILE` compare
+        per-function CUR/MAX. Read-only views show the last measured report
+        while units have unbuilt edits, naming them. Unrelated CUR dips are
+        silent; HIST preserves older peaks. `homm3 status <cmd> --help`.
 
   sema <xref|diff|disasm|switchmap|rva|strings|data|coverage|candidates|compare> ...
         Read-only navigation over the retail image (homm3.sema): caller
@@ -193,10 +197,6 @@ def cmd_delink(args) -> int:
     return run_module("homm3.build.delink", *forwarded)
 
 
-def cmd_status(args) -> int:
-    return run_module("homm3.match.status", *args.status_args)
-
-
 def cmd_sema(args) -> int:
     return run_module("homm3.sema", *args.sema_args)
 
@@ -263,6 +263,8 @@ def _dispatch(argv: list[str]) -> int:
         return run_module("homm3.match.source_ownership", *argv[1:])
     if argv and argv[0] == "source-inventory":
         return run_module("homm3.match.source_inventory", *argv[1:])
+    if argv and argv[0] == "status":
+        return run_module("homm3.match.status", *argv[1:])
     if argv and argv[0] == "dreamcast":
         return run_module("homm3.analysis.dreamcast", *argv[1:])
     if argv and argv[0] == "mac":
@@ -360,9 +362,8 @@ def _dispatch(argv: list[str]) -> int:
     p.add_argument("inventory_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=lambda args: run_module("homm3.match.source_inventory", *args.inventory_args))
 
-    p = sub.add_parser("status", help="objdiff scoreboard + checkpoint ledger")
-    p.add_argument("status_args", nargs=argparse.REMAINDER)
-    p.set_defaults(fn=cmd_status)
+    sub.add_parser("status", add_help=False,
+                   help="objdiff scoreboard + checkpoint ledger (homm3 status --help)")
 
     p = sub.add_parser("sema", help="read-only navigation: xref / diff / "
                        "disasm / rva / strings (homm3.sema, logged)")
@@ -408,11 +409,14 @@ def main(argv: list[str] | None = None) -> int:
     # Analysis rc=1 means an answered difference. Build/init and the other
     # pipeline commands use rc=1 for failure.
     failure_rc = 2 if argv and argv[0] in {"sema", "vc6", "dreamcast", "mac", "rmg", "victor"} else 1
+    # `dreamcast audit` answers coverage gaps with 3 (gaps) or 4 (findings + gaps).
+    audit = argv[:2] == ["dreamcast", "audit"]
     return usage.run_logged(
         _dispatch, argv,
         lambda rc, **meta: usage.append(ROOT / "build/homm3_usage.log",
                                        shlex.join(["homm3", *argv]), rc, **meta),
-        failure_rc=failure_rc, scope="cli")
+        failure_rc=failure_rc, scope="cli",
+        difference_codes=(3, 4) if audit else ())
 
 
 if __name__ == "__main__":

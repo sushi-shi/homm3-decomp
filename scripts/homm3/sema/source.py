@@ -13,6 +13,8 @@ from dataclasses import dataclass
 import json
 import os
 from pathlib import Path
+import re
+import shutil
 import subprocess
 import sys
 
@@ -137,6 +139,43 @@ def _cache_payload(unit: str, source: Path, flags: list[str]) -> dict:
     }
 
 
+_COMPILER_ERROR = re.compile(r"\b(?:fatal )?error [A-Z]+\d{4}\b")
+
+
+def toolchain_problem() -> str | None:
+    """Why this shell cannot run cc_wrap at all, or None when it can."""
+    msvc = cc_wrap.msvc_dir()
+    if cc_wrap.find_ci(msvc / "bin", "cl.exe") is None:
+        return f"CL.EXE not found under {msvc}/bin"
+    if shutil.which("wine") is None:
+        return "wine is not on PATH"
+    return None
+
+
+def compile_failure(unit: str, result: subprocess.CompletedProcess) -> str:
+    """Explain a failed /Z7 compile; the first line must stand on its own.
+
+    Advise the toolchain shell only when the toolchain is really missing;
+    otherwise surface the compiler's (or Wine's) own diagnostics.
+    """
+    lines = [line for line in (result.stdout + result.stderr).strip().splitlines()
+             if line.strip()]
+    missing = toolchain_problem()
+    if missing:
+        return (f"/Z7 compile failed for {unit}: {missing}; run inside "
+                "`nix develop .#build`")
+    errors = [line.strip() for line in lines if _COMPILER_ERROR.search(line)]
+    wine = [line.strip() for line in lines if line.startswith("[cc_wrap] ERROR:")]
+    headline = (errors or wine or [f"exit status {result.returncode}"])[0]
+    detail = errors[:10] if errors else lines[-12:]
+    log = next((line.split(":", 1)[1].strip() for line in lines
+                if line.startswith("[cc_wrap] full diagnostics:")), None)
+    tail = [f"full diagnostics: {log}"] if log else []
+    return "\n".join([f"/Z7 compile failed for {unit}: {headline}",
+                      *(line for line in detail if line.strip() != headline),
+                      *tail])
+
+
 def _debug_obj(unit: str) -> tuple[Path, Path, str]:
     units = manifest.by_unit()
     definition = units.get(unit)
@@ -178,11 +217,7 @@ def _debug_obj(unit: str) -> tuple[Path, Path, str]:
             cmd, cwd=common.HOMM3_DIR, env=env,
             capture_output=True, text=True)
         if result.returncode != 0 or not obj.is_file():
-            detail = "\n".join(
-                (result.stdout + result.stderr).strip().splitlines()[-12:])
-            raise SourceError(
-                f"/Z7 compile failed for {unit}; run inside "
-                f"`nix develop .#build`{(':\n' + detail) if detail else ''}")
+            raise SourceError(compile_failure(unit, result))
         stamp.write_text(json.dumps(expected, indent=2, sort_keys=True) + "\n")
     return obj, source_path, source_rel
 

@@ -31,8 +31,9 @@ the sections that support it with --json and emits one JSON document (with
 through to `sema diff`.
 
 Exit status: 0 when every section that ran returned 0, 1 when a section
-answered with a difference (rc 1, e.g. `sema diff` disagreeing), 2 when a
-section failed.
+answered with a difference (rc 1, e.g. `sema diff` disagreeing, or `dreamcast
+audit` reporting findings or coverage gaps with 1, 3 or 4), 2 when a section
+failed.
 """
 from __future__ import annotations
 
@@ -55,6 +56,8 @@ class Section:
     group: str
     argv: tuple[str, ...]          # with "{}" standing for the selector
     json_flag: bool = False        # the command accepts --json
+    # Exit codes that answer with a difference rather than fail.
+    difference_codes: tuple[int, ...] = (1,)
 
 
 SECTIONS = (
@@ -62,7 +65,8 @@ SECTIONS = (
     Section("lines", "dreamcast", ("lines", "{}"), True),
     Section("asm", "dreamcast", ("asm", "{}", "--blocks"), True),
     Section("inline-clues", "dreamcast", ("inline-clues", "{}"), True),
-    Section("audit", "dreamcast", ("audit", "{}"), True),
+    # audit: 1 review findings, 3 coverage gaps, 4 findings and gaps.
+    Section("audit", "dreamcast", ("audit", "{}"), True, (1, 3, 4)),
     Section("summary", "sema", ("diff", "{}", "--summary"), True),
     Section("structure", "sema", ("diff", "{}", "--structure")),
     Section("source", "sema", ("diff", "{}", "--source")),
@@ -195,8 +199,17 @@ def gather(selector: str, sections: list[Section], *, as_json: bool, no_build: b
     return results
 
 
+_DIFFERENCE_CODES = {section.name: section.difference_codes for section in SECTIONS}
+
+
 def overall_rc(reports: list[dict]) -> int:
-    codes = [section.get("rc", 0) for report in reports for section in report["sections"]]
+    codes = []
+    for report in reports:
+        for section in report["sections"]:
+            code = section.get("rc", 0)
+            if code and code in _DIFFERENCE_CODES.get(section["name"], (1,)):
+                code = 1
+            codes.append(code)
     return 2 if any(code not in (0, 1) for code in codes) else (1 if 1 in codes else 0)
 
 

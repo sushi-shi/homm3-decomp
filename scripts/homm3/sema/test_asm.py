@@ -246,6 +246,18 @@ class RefreshUnitTests(unittest.TestCase):
         self.assertIn("error C2065", err.getvalue())
         self.assertIn("--no-build", err.getvalue())
 
+    def test_missing_ninja_is_a_clear_error_not_a_traceback(self):
+        import contextlib
+        import io
+
+        def no_ninja(*args, **kwargs):
+            raise FileNotFoundError(2, "No such file or directory", "ninja")
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            with self.assertRaises(SystemExit) as stop:
+                _asm.refresh_unit("philai", run=no_ninja)
+        self.assertEqual(stop.exception.code, 2)
+        self.assertIn("ninja not found on PATH", err.getvalue())
+
     def test_no_ninja_graph_means_no_refresh(self):
         build_refresh.NINJA_FILE = build_refresh.NINJA_FILE.with_name("absent.ninja")
         run = self._Run()

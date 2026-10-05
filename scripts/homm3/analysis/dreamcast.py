@@ -74,8 +74,9 @@ requires corroboration from the pinned Complete executable.
 
 rc: 0 = rendered, 1 = answered-NO (nothing in the corpus matches the
 selector, an empty `find`), 2 = error (bad selector syntax, missing corpus).
-`audit` instead returns 0 for no findings/gaps, 1 for review findings, and
-2 for coverage gaps or input errors; zero does not certify source recovery.
+`audit` instead returns 0 for no findings/gaps, 1 for review findings,
+2 for input errors or stale suppressions, 3 for coverage gaps only and 4 for
+review findings plus coverage gaps; zero does not certify source recovery.
 Every invocation appends one line to build/homm3_dreamcast.log.
 """
 from __future__ import annotations
@@ -1339,7 +1340,12 @@ def _build_parser() -> argparse.ArgumentParser:
 
     stats = sub.add_parser("stats", help="corpus and retail-bridge coverage")
     stats.add_argument("--json", action="store_true", help="machine-readable output")
-    audit = sub.add_parser("audit", help="review typed source facts against authored C++")
+    audit = sub.add_parser(
+        "audit", help="review typed source facts against authored C++",
+        epilog="exit status: 0 no findings or gaps; 1 review findings; "
+               "2 input error or stale suppressions; 3 coverage gaps only; "
+               "4 review findings and coverage gaps. 0 does not certify "
+               "source recovery.")
     audit.add_argument("selectors", nargs="*", help="retail/DC selectors, as for show")
     audit.add_argument("--module", help="review source-claimed functions in one module[.obj]")
     audit.add_argument("--all", action="store_true", help="review all source-claimed Dreamcast counterparts")
@@ -1676,7 +1682,9 @@ def _dispatch(argv: list[str]) -> int:
 def main(argv: list[str] | None = None) -> int:
     from homm3.core.usage import run_logged
     argv = list(sys.argv[1:] if argv is None else argv)
-    return run_logged(_dispatch, argv, lambda rc, **meta: _log(rc, argv, **meta))
+    # Audit coverage gaps (3, 4) are answers, not failed commands.
+    return run_logged(_dispatch, argv, lambda rc, **meta: _log(rc, argv, **meta),
+                      difference_codes=(3, 4))
 
 
 if __name__ == "__main__":

@@ -211,7 +211,10 @@ when it moved, or MISSING when the body vanished. For a specifically requested
 baseline investigation, `homm3 status check --baseline-ref REF` compares a lane
 with main; this is not a routine matching or integration step.
 `homm3 status merge-baseline` merges a conflicted ledger three ways during
-rebase; review its result before staging. The invariant is CUR <= MAX <= HIST:
+rebase; review its result before staging. Query scores with `homm3 status
+functions --unit TU --non-exact [--va ADDR] [--json]` and compare them with
+`homm3 status diff --against REF|FILE` (`status snapshot FILE` saves a
+point) instead of parsing `report.json`. The invariant is CUR <= MAX <= HIST:
 MAX is monotone for an unchanged function hash, a proven edit resets MAX to
 CUR, and HIST retains the
 all-time peak. Tooling prioritizes MAX; HIST is a lead for recovering lost peaks.

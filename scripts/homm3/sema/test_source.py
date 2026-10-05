@@ -239,5 +239,56 @@ class StatementDiffTest(unittest.TestCase):
         self.assertIn("first divergent candidate statement", rendered)
 
 
+class CompileFailureMessageTest(unittest.TestCase):
+    """Every /Z7 failure used to say "run inside `nix develop .#build`",
+    even inside that shell and for ordinary C++ errors."""
+
+    @staticmethod
+    def _result(stdout="", stderr="", rc=2):
+        import subprocess
+        return subprocess.CompletedProcess(["cc_wrap"], rc, stdout, stderr)
+
+    def test_compiler_error_is_the_headline_without_shell_advice(self):
+        result = self._result(stderr=(
+            "[cc_wrap] full diagnostics: /w/build/sema/debug/hero.compile.log\n"
+            "[cc_wrap] FAILED hero.cpp -> /w/build/sema/debug/hero.obj\n"
+            "hero.cpp\n"
+            "Z:\\w\\src\\hero.cpp(12) : error C2065: 'x' : undeclared identifier\n"))
+        with patch.object(source, "toolchain_problem", return_value=None):
+            message = source.compile_failure("hero", result)
+        first, *rest = message.splitlines()
+        self.assertEqual(first, "/Z7 compile failed for hero: Z:\\w\\src\\hero.cpp(12)"
+                                " : error C2065: 'x' : undeclared identifier")
+        self.assertNotIn("nix develop", message)
+        self.assertIn("full diagnostics: /w/build/sema/debug/hero.compile.log", rest)
+
+    def test_wine_failure_is_reported_as_such(self):
+        result = self._result(stderr="[cc_wrap] ERROR: `winepath -w /w` failed (exit 1); "
+                                     "Wine was denied access\n", rc=1)
+        with patch.object(source, "toolchain_problem", return_value=None):
+            message = source.compile_failure("hero", result)
+        self.assertIn("winepath -w /w", message.splitlines()[0])
+        self.assertNotIn("nix develop", message)
+
+    def test_missing_toolchain_still_names_the_build_shell(self):
+        with patch.object(source, "toolchain_problem",
+                          return_value="wine is not on PATH"):
+            message = source.compile_failure("hero", self._result(rc=1))
+        self.assertEqual(message, "/Z7 compile failed for hero: wine is not on "
+                                  "PATH; run inside `nix develop .#build`")
+
+    def test_toolchain_problem_detects_missing_compiler_and_wine(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            msvc = Path(tmp)
+            (msvc / "bin").mkdir()
+            with patch.object(source.cc_wrap, "msvc_dir", return_value=msvc):
+                self.assertIn("CL.EXE not found", source.toolchain_problem())
+                (msvc / "bin/CL.EXE").write_bytes(b"")
+                with patch.object(source.shutil, "which", return_value=None):
+                    self.assertEqual(source.toolchain_problem(), "wine is not on PATH")
+                with patch.object(source.shutil, "which", return_value="/bin/wine"):
+                    self.assertIsNone(source.toolchain_problem())
+
+
 if __name__ == "__main__":
     unittest.main()
