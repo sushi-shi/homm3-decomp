@@ -142,7 +142,7 @@ not traced.
 
 ## River drawing: unchecked out-of-range coordinates
 
-After its path-search queue becomes empty, `createRiver` tests the last inspected
+After its path-search queue becomes empty, `createRiverToOutlet` tests the last inspected
 tile's river-target flag at `0x5492a7..0x5492b2`. That tile may have been rejected
 by the neighbor filters; this test does not establish that the search reached it.
 There is no separate successful-search flag or reachable-cost check. A target
@@ -150,7 +150,7 @@ whose cost remains the reset value `32000` and whose predecessor remains
 `(-1,-1,-1)` can therefore enter drawing.
 
 The sampled request below crashes reproducibly in both implementations. Retail
-`createRiver` follows that predecessor and calls the line walker at `0x5496ef` with
+`createRiverToOutlet` follows that predecessor and calls the line walker at `0x5496ef` with
 destination `(0xffffffff, 0xffffffff)`, the unsigned representation of `(-1,-1)`.
 There is no coordinate-validity check in this predecessor loop. The eventual
 fault is the unchecked tile-array read at `TRmgRiverMapAdapter::getLineType`, `0x53284f`.
@@ -161,7 +161,7 @@ crashes (`sample-02899` and `sample-02953`) reproduced this same failure, with
 unreached targets `(79,0,0)` and `(38,0,0)` respectively. Their source-to-target
 searches had no valid predecessor chain, but drawing proceeded anyway.
 
-The captured retail call chain is `createRiver` → `TRmgLineWalker::drawTo` →
+The captured retail call chain is `createRiverToOutlet` → `TRmgLineWalker::drawTo` →
 `paintPoint` → `refreshRmgLinePoint` → `TRmgRiverLinePainter::getLineType` →
 `TRmgRiverMapAdapter::getLineType`. Candidate faults at the corresponding instruction
 with the same coordinates. This is not a candidate-only reconstruction error.
@@ -289,12 +289,12 @@ whole allocation it is an out-of-bounds read. The source retains this exact
 boundary. The review establishes the defective check, not that a shipped
 request necessarily reaches the allocation-end case.
 
-`createRiverToObject` (`0x548500`) also tests its last inspected tile after the
-queue empties and follows predecessors if that tile has the `m_hasRiver` flag
-(a different flag from `createRiver`'s `m_riverTarget`). Its
-source has the same missing-success-state risk as `createRiver`. The crash
-requests above establish `createRiver` specifically; they do not establish a
-second reproduced crash class in `createRiverToObject`.
+`createRiverToJoin` (`0x548500`) also tests its last inspected tile after the
+queue empties and follows predecessors if that tile has the `m_riverJoinTarget` flag
+(a different flag from `createRiverToOutlet`'s `m_riverOutletTarget`). Its
+source has the same missing-success-state risk as `createRiverToOutlet`. The crash
+requests above establish `createRiverToOutlet` specifically; they do not establish a
+second reproduced crash class in `createRiverToJoin`.
 
 ### Guard selection: counted eligibility can exceed selectable prototypes
 
