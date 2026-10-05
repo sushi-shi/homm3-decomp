@@ -342,7 +342,6 @@ const int g_productionArtifactEndlessSackOfGold = 0x73;
 const int g_productionArtifactEndlessBagOfGold = 0x74;
 const int g_productionArtifactEndlessPurseOfGold = 0x75;
 const int g_productionArtifactCornucopia = 0x8c;
-const int g_productionCreatureCrystalDragon = 0x85;
 const int g_gameDifficultyEasy = 0;
 const int g_gameDifficultyExpert = 3;
 const int g_gameDifficultyImpossible = 4;
@@ -657,13 +656,8 @@ void game::calculateProduction()
 
         // Mac calculateProduction calls the mutable getArmy at 0xcac1c.
         // Windows folds both overload bodies at 0x5c1460.
-        {
-            int storage;
-            storage = g_productionCreatureCrystalDragon;
-            if (currentTown.getArmy()
-                    .getCreatureTotal(TCreatureType(storage)) > 0)
-                crystalDragonIncome[currentTown.m_owner] = 1;
-        }
+        if (currentTown.getArmy().getCreatureTotal(CREATURE_CRYSTAL_DRAGON) > 0)
+            crystalDragonIncome[currentTown.m_owner] = 1;
 
         if (currentTown.m_type == TOWN_RAMPART && m_day == 1) {
             if (currentTown.hasBuilding(EXTRA_1_ID, true))
@@ -700,12 +694,8 @@ void game::calculateProduction()
         const hero& currHero = m_heroes[i];
         if (currHero.m_owner == -1)
             continue;
-        {
-            int storage;
-            storage = g_productionCreatureCrystalDragon;
-            if (currHero.m_army.getCreatureTotal(TCreatureType(storage)) > 0)
-                crystalDragonIncome[currHero.m_owner] = 1;
-        }
+        if (currHero.m_army.getCreatureTotal(CREATURE_CRYSTAL_DRAGON) > 0)
+            crystalDragonIncome[currHero.m_owner] = 1;
         long (&production)[NUM_RESOURCES] =
             m_players[currHero.m_owner].m_ai.m_turnProductionResource;
         if (g_heroSpecificAbilities[i].m_type == eHeroAbilityResource) {

@@ -1934,7 +1934,7 @@ game	?addGarrisonHero@playerData@@QAEEPAVtown@@@Z	100.0000	100.0000	100.0000	0xb
 game	?any@?$bitset@$0BM@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xd1810	-
 game	?applyMapHeaderAvailability@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc4e30	tokens1:9c021db57a2c
 game	?assignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0xba130	tokens1:27e5da111b66
-game	?calculateProduction@game@@QAEXXZ	98.7892	98.7892	98.7892	0xb8af0	tokens1:b2697f51730e
+game	?calculateProduction@game@@QAEXXZ	98.7892	98.7892	98.7892	0xb8af0	tokens1:15757690c240
 game	?cancelComputerScreen@game@@QAEXXZ	99.8781	100.0000	100.0000	0xca530	tokens1:be373d80d729
 game	?capacity@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcfa40	-
 game	?checkForTimeEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcd910	tokens1:b9dfb5d609a3
@@ -2128,7 +2128,7 @@ game	?test@?$bitset@$07@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfef0	-
 game	?test@?$bitset@$0BM@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd17d0	-
 game	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd4e50	-
 game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0	-
-game	?transmitSaveGame@game@@QAEHHHEE@Z	97.3992	97.4264	97.4264	0xcafd0	tokens1:53ade1a8de8c
+game	?transmitSaveGame@game@@QAEHHHEE@Z	97.4214	97.4264	97.4264	0xcafd0	tokens1:53ade1a8de8c
 game	?turnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	tokens1:09ac63bef778
 game	?turnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	tokens1:b9f191ddf209
 game	?updateBonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	tokens1:9bea0f215987
