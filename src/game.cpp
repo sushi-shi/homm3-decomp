@@ -8948,8 +8948,9 @@ void game::processOnMapHeroes()
 // Preserve this native indexing despite its unusual broadcast behavior.
 // These lifetime/receiver corrections raise Windows 92.7077 -> 97.4264;
 // all 122 CFG blocks, 101 call entries and 172 relocations now agree.
-// Original public ends HH_N0: inGame and makeOrig are bool. The related
-// isDiff Boolean-local probe is byte-flat; keep its existing byte domain.
+// Original publics prove bool inGame/makeOrig and both transfer-init flags.
+// Keep the matching isDiff Boolean state: a byte local adds normalization
+// at the canonical constructor call (96.63% versus 97.40% in isolation).
 VA(0x004cafd0, 0xD14)
 DC_ADDRESS(0x0b7560, 0x1064)
 MAC_ADDRESS(0x0e2414, 0xd20)  // retail body + typed catch + continuation/tables
@@ -8961,7 +8962,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
 
     CGameTransmitMainMsg* gameTransmitMainMsg =
         CGameTransmitMainMsg::createMsg(GAME_TRANSMIT_PAYLOAD_SIZE);
-    unsigned char isDiff = 0;
+    bool isDiff = false;
     unsigned long diffSize = 0;
     int changeSounds = g_soundManager->m_playSounds;
     g_soundManager->m_playSounds = 1;

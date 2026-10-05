@@ -316,12 +316,14 @@ public:
     unsigned char m_isDiff;
     unsigned char m_makeOrig;
 
+    // Original public ??0CGameTransmitInitMsg@@QAA@KKK_N0@Z proves
+    // Boolean inputs; CodeView lowers both parameters to its byte type.
     DC_ADDRESS(0x0bd0b4, 0x58)
     CGameTransmitInitMsg(unsigned long fileSize,
                          unsigned long fullGameCRC,
                          unsigned long thisPlayerDead,
-                         unsigned char isDiff,
-                         unsigned char makeOrig)
+                         bool isDiff,
+                         bool makeOrig)
         : CNetMsg(RS_GAME_TRANSMIT_INIT, sizeof(CGameTransmitInitMsg)),
           m_fileSize(fileSize),
           m_fullGameCrc(fullGameCRC),
