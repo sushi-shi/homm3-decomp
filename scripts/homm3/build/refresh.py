@@ -33,7 +33,12 @@ def refresh_unit(unit: str, *, run=subprocess.run) -> RefreshResult:
     target = f"build/objdiff/base/{unit}.obj"
     started = time.time()
     refresh_lock.parent.mkdir(parents=True, exist_ok=True)
-    with refresh_lock.open("w") as lock:
+    from homm3.core import worktree_lock
+    # The refresh rewrites the unit's objects and report.json: wait for any
+    # build/delink/status update in this worktree rather than racing it.
+    with worktree_lock.hold(f"homm3 sema refresh {unit}",
+                            lock=refresh_lock.with_name(worktree_lock.LOCK_NAME)), \
+            refresh_lock.open("w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         try:
             res = run(["ninja", "-f", str(ninja_file), target],

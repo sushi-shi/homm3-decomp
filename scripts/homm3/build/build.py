@@ -50,6 +50,14 @@ def _selected_units(ninja_args: list[str]) -> set[str]:
 
 def main(argv=None) -> int:
     argv = list(argv or [])
+    from homm3.core import worktree_lock
+    # One mutating homm3 command per worktree: a second build, delink or
+    # status update waits here instead of interleaving writes to build/.
+    with worktree_lock.hold(" ".join(["homm3 build", *argv])):
+        return _main(argv)
+
+
+def _main(argv: list[str]) -> int:
     fast = "--fast" in argv
     data = "--data" in argv
     ninja_args = [a for a in argv if a not in ("--fast", "--data")]

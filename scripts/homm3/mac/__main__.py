@@ -313,7 +313,11 @@ def main(argv=None) -> int:
             # A unit selection is a quick diagnostic: a partial checkpoint
             # would retire unselected rows, so only the whole set banks.
             units = set(args.units) if args.units else None
-            build.run(units, checkpoint=units is None and not args.fast)
+            from homm3.core import worktree_lock
+            label = " ".join(["homm3 mac build", *(["--fast"] if args.fast else []),
+                              *sorted(units or ())])
+            with worktree_lock.hold(label):
+                build.run(units, checkpoint=units is None and not args.fast)
             return 0
         if args.command in ("find", "xrefs", "census"):
             index = discovery.Index(_image())

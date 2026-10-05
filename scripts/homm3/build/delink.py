@@ -124,7 +124,10 @@ def main(argv=None) -> int:
                         help='refresh selected source labels (repeatable); '
                              'shared-header claims remain resolved tree-wide')
     args = parser.parse_args(argv)
-    run(args.unit)
+    from homm3.core import worktree_lock
+    label = " ".join(["homm3 delink", *(f"--unit {unit}" for unit in args.unit or [])])
+    with worktree_lock.hold(label):
+        run(args.unit)
     return 0
 
 
