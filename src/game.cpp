@@ -5974,16 +5974,16 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     }
 
     infile->read(&m_hasRandomHero, sizeof(m_hasRandomHero));
-    m_nonRandomHeroId = readHeroId(infile, mapVersion);
+    m_nonRandomHeroId = static_cast<HeroId>(readHeroId(infile, mapVersion));
     m_defaultPlaceholders = 0;
     if (m_nonRandomHeroId != -1) {
         m_nonRandomHeroCustomPortrait =
-            readHeroId(infile, mapVersion);
+            static_cast<HeroId>(readHeroId(infile, mapVersion));
         // Keep the decoded name alive through the copy into the player slot.
         std::string name = readLengthPrefixedString(infile);
         strcpy(m_nonRandomHeroCustomName, name.c_str());
     } else {
-        m_nonRandomHeroCustomPortrait = -1;
+        m_nonRandomHeroCustomPortrait = heroIdNone;
         m_nonRandomHeroCustomName[0] = 0;
     }
 
@@ -6569,15 +6569,15 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         }
 
         player->m_nonRandomHeroId =
-            loadHeroId(infile, saveVersion);
+            static_cast<HeroId>(loadHeroId(infile, saveVersion));
         if (player->m_nonRandomHeroId != -1) {
             std::string strTemp;
             player->m_nonRandomHeroCustomPortrait =
-                loadHeroId(infile, saveVersion);
+                static_cast<HeroId>(loadHeroId(infile, saveVersion));
             game::loadString(infile, strTemp);
             strcpy(player->m_nonRandomHeroCustomName, strTemp.c_str());
         } else {
-            player->m_nonRandomHeroCustomPortrait = -1;
+            player->m_nonRandomHeroCustomPortrait = heroIdNone;
             player->m_nonRandomHeroCustomName[0] = 0;
         }
     }

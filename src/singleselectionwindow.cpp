@@ -3289,7 +3289,7 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
             i < header.m_maxNumHumanPlayers;
         header.m_playerSlotAttributes[i].m_hasRandomAlignment = 1;
         header.m_playerSlotAttributes[i].m_generateHero = 1;
-        header.m_playerSlotAttributes[i].m_nonRandomHeroId = -1;
+        header.m_playerSlotAttributes[i].m_nonRandomHeroId = heroIdNone;
         if (i < header.m_numPlayers)
             header.m_playerSlotAttributes[i].m_canBeComputer = 1;
         else

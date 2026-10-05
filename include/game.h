@@ -410,8 +410,10 @@ public:
         type_point m_castleLoc;
         signed char m_hasRandomHero;
         // +0x19..+0x1b: alignment hole (0x45da70 goes +0x18 byte -> +0x1c dword).
-        int m_nonRandomHeroId;
-        int m_nonRandomHeroCustomPortrait;
+        // Original nonRandomHeroId and nonRandomHeroCustomPortrait both
+        // have domain THeroID (DC class records 0x2457 and 0x68f8).
+        HeroId m_nonRandomHeroId;
+        HeroId m_nonRandomHeroCustomPortrait;
         char m_nonRandomHeroCustomName[12];
         int m_defaultPlaceholders;
         // Hero IDs and names read from the map player slot.
@@ -429,8 +431,8 @@ public:
             m_hasRandomAlignment = 0;
             m_generateHero = 0;
             m_hasRandomHero = 0;
-            m_nonRandomHeroId = -1;
-            m_nonRandomHeroCustomPortrait = -1;
+            m_nonRandomHeroId = heroIdNone;
+            m_nonRandomHeroCustomPortrait = heroIdNone;
             m_nonRandomHeroCustomName[0] = 0;
             m_defaultPlaceholders = 0;
         }
