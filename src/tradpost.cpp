@@ -3465,7 +3465,7 @@ int TBuyArtifactWindow::windowHandler(message& msg)
             type_artifact artifact(
                 g_marketArtifacts[
                     msg.m_codeY - BUY_ARTIFACT_SLOT_0_ID]);
-            g_marketHero->viewArtifact(&artifact, 1);
+            g_marketHero->viewArtifact(artifact, 1);
             return MESSAGE_DISPATCH_CONSUME;
         }
 
@@ -3633,7 +3633,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
                 artifact = g_marketHero->getBackpack(slot);
             }
             // Mac retains one view call shared by both artifact sources.
-            g_marketHero->viewArtifact(&artifact, 1);
+            g_marketHero->viewArtifact(artifact, 1);
             break;
         }
 

@@ -157,6 +157,8 @@ public:
     }
     // CodeView LF_MFUNCTION marks every Draw-family receiver const.
     // Drawing writes through the destination/frame pointers, not this object.
+    // Retained Draw* publics encode _N for flip/alpha/transparency flags
+    // in both raw-buffer and Bitmap16Bit overloads.
     void draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
               unsigned short* dst, int dx, int dy, int dw, int dh,
               int dpitch, bool hflip, bool tblit) const;
@@ -166,7 +168,7 @@ public:
                       unsigned short outcolor) const;
     void drawCreatureAlpha(int seqnum, int framenum, int sx, int sy,
                            int sw, int sh, unsigned short* dst, int dx, int dy,
-                           int dw, int dh, int dpitch, unsigned char hflip,
+                           int dw, int dh, int dpitch, bool hflip,
                            unsigned short outcolor) const;
     void drawAdvObj(int framenum, int sx, int sy, int sw, int sh,
                     unsigned short* dst, int dx, int dy, int dw, int dh,
@@ -179,10 +181,10 @@ public:
     void drawAdvObjWithFlagAlpha(int framenum, int sx, int sy, int sw, int sh,
                                  unsigned short* dst, int dx, int dy, int dw,
                                  int dh, int dpitch, unsigned short outcolor,
-                                 unsigned char hflip) const;
+                                 bool hflip) const;
     void drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
                           unsigned short* dst, int dx, int dy, int dw,
-                          int dh, int dpitch, unsigned char hflip) const;
+                          int dh, int dpitch, bool hflip) const;
     void drawPointer(int framenum, unsigned short* dst, int dx, int dy,
                      int dw, int dh, int dpitch, bool hflip) const;
     void drawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, bool hflip) const;
@@ -206,10 +208,10 @@ public:
                         int dh, int dpitch, bool hflip) const;
     void drawHeroAlpha(int seqnum, int framenum, int sx, int sy, int sw,
                        int sh, unsigned short* dst, int dx, int dy, int dw,
-                       int dh, int dpitch, unsigned char hflip) const;
+                       int dh, int dpitch, bool hflip) const;
     void drawCombatHero(int seqnum, int framenum, int sx, int sy, int sw,
                         int sh, unsigned short* dst, int dx, int dy, int dw,
-                        int dh, int dpitch, unsigned char hflip) const;
+                        int dh, int dpitch, bool hflip) const;
     void drawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw,
                          int sh, unsigned short* dst, int dx, int dy, int dw,
                          int dh, int dpitch, bool hflip,
@@ -249,10 +251,10 @@ public:
         int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch) const;
     void drawTileScaled50(int framenum, int sx, int sy, int sw, int sh,
         unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
-        unsigned char hflip, unsigned char vflip) const;
+        bool hflip, bool vflip) const;
     void drawTileScaled25(int framenum, int sx, int sy, int sw, int sh,
         unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
-        unsigned char hflip, unsigned char vflip) const;
+        bool hflip, bool vflip) const;
     static int getSpriteType(const char* name);
     static const char* getSpriteTypeName(const int type);
     static int getNumSeqs(int type);
@@ -354,7 +356,7 @@ public:
     DC_ADDRESS(0x01f480, 0xa4)
     void drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
                           Bitmap16Bit* dst, int dx, int dy,
-                          unsigned char hflip) const
+                          bool hflip) const
     {
         drawAdvObjShadow(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                          dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
@@ -435,10 +437,12 @@ public:
     // DC 0x7a1e8 in DrawCursorAlpha expands the bitmap overload declared
     // by function type 0x17e5, loading its map/width/height/pitch and calling
     // the raw DrawHeroAlpha member. The same row recurs at three more sites.
+    // The inlined facade carries the raw overload's bool flip domain;
+    // only the latter retains an independently typed original public.
     // @dc-inline-origin: 0x17e5 0x7a1e8
     void drawHeroAlpha(int seqnum, int framenum, int sx, int sy, int sw,
                        int sh, Bitmap16Bit* dst, int dx, int dy,
-                       unsigned char hflip) const
+                       bool hflip) const
     {
         drawHeroAlpha(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                       dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
