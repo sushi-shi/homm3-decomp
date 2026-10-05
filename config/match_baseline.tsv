@@ -2193,7 +2193,7 @@ hero	?begin@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAEPAPAVwidg
 hero	?belongsToHuman@hero@@QBEEXZ	100.0000	100.0000	100.0000	0xd9050	tokens1:acfddbab0bf7
 hero	?canLand@hero@@ABEEXZ	100.0000	100.0000	100.0000	0xe5ce0	tokens1:5c77fafa377a
 hero	?canSummonBoat@hero@@QBEEXZ	100.0000	100.0000	100.0000	0xe5550	tokens1:20cee7b44e0b
-hero	?checkLevel@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda720	tokens1:9f1f0b5ba2af
+hero	?checkLevel@hero@@QAEXXZ	99.9671	100.0000	100.0000	0xda720	tokens1:9f1f0b5ba2af
 hero	?creatureTypeCount@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe2340	tokens1:028c27339605
 hero	?deallocate@hero@@QAEXEE@Z	100.0000	100.0000	100.0000	0xd9ec0	tokens1:9611a94c0088
 hero	?destroySiegeWeaponArtifact@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd9260	tokens1:e67bc24afbd7
@@ -2268,10 +2268,10 @@ hero	?heroFn004E2840@hero@@QAEEJJ@Z	100.0000	100.0000	100.0000	0xe2840	tokens1:4
 hero	?heroFn004E4EC0@hero@@QAE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xe4ec0	tokens1:9efa7c95fa78
 hero	?heroFn004E5DE0@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5de0	tokens1:4e607b289ba6
 hero	?heroFn004E6120@hero@@QBEXHPAUTCreatureTypeTraits@@@Z	100.0000	100.0000	100.0000	0xe6120	tokens1:f3b05afc1287
-hero	?heroView@@YIHHHHE@Z	100.0000	100.0000	100.0000	0xe1800	tokens1:9e0149e3d34c
+hero	?heroView@@YIHHHHE@Z	99.9702	100.0000	100.0000	0xe1800	tokens1:9e0149e3d34c
 hero	?hire@hero@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xd7890	tokens1:06b0579ceb00
 hero	?initialize@hero@@QAEXF@Z	97.3624	97.3624	97.3624	0xd8720	tokens1:fd67951950d8
-hero	?initialize@hero@@QAEXPBVHeroExtra@@@Z	74.6586	74.6586	100.0000	0xd8b30	tokens1:be956f1f6300
+hero	?initialize@hero@@QAEXPBVHeroExtra@@@Z	75.2930	75.2930	100.0000	0xd8b30	tokens1:ade17ee2e3af
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d0	tokens1:90bec856c736
 hero	?initializeBallisticsTable@@YIEXZ	100.0000	100.0000	100.0000	0xd7240	tokens1:e4f46e6af119
 hero	?initializeHeroSpecificAbilitiesTable@@YIEXZ	100.0000	100.0000	100.0000	0xd71a0	tokens1:3b7f7700bf2e
@@ -2317,7 +2317,7 @@ hero	?viewArtifact@hero@@QAEXPBUtype_artifact@@H@Z	100.0000	100.0000	100.0000	0x
 hero	?viewStat@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xd9990	tokens1:f1dd86876dfc
 hero	?visitedArena@hero@@QBE_NPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53c0	tokens1:c94a15209e04
 hero	?walkOnWater@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xe5dd0	tokens1:be6640e77d13
-hero	?windowHandler@THeroScreenWindow@@UAEHAAVmessage@@@Z	92.1185	92.1185	92.1185	0xdd2d0	tokens1:56f6a878c8dd
+hero	?windowHandler@THeroScreenWindow@@UAEHAAVmessage@@@Z	92.1154	92.1185	92.1185	0xdd2d0	tokens1:56f6a878c8dd
 herodefs	?initializeHeroClassTraitsTable@@YI_NXZ	100.0000	100.0000	100.0000	0xe6920	tokens1:2bb658a26c5a
 herodefs	?initializeHeroTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe67a0	tokens1:56946c3ebdd0
 herodefs	?initializeSSkillTraitsTable@@YI_NXZ	100.0000	100.0000	100.0000	0xe6b10	tokens1:5467fee07029
