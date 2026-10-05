@@ -2185,12 +2185,14 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 // video state, alignment and the two Conflux counts in this order. A named
 // version snapshot and a separately nested version guard are VC6-flat;
 // why-reg v2 also leaves the six scratch-register rows unchanged.
+// Original public returns THeroID and takes bool prefer_alignment (_N).
+// Complete adds player lookup and preferredClass but keeps those domains.
 VA(0x004bb5e0, 0x282)
 DC_ADDRESS(0x0a6cd4, 0x2fe)
 MAC_ADDRESS(0x0ce398, 0x78c)  // anchor-global
-int game::getNewHeroId(int playerPos, THeroClass excluded,
-                       unsigned char preferAlignment,
-                       THeroClass preferredClass)
+HeroId game::getNewHeroId(int playerPos, THeroClass excluded,
+                          bool preferAlignment,
+                          THeroClass preferredClass)
 {
     THeroClass heroClass;
     long totalCount;
@@ -2203,11 +2205,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
 
     totalCount = 0;
 
-    int alignment;
-    if (playerPos >= 0)
-        alignment = m_setup.m_alignment[playerPos];
-    else
-        alignment = -1;
+    TTownType alignment = getPlayerAlignment(playerPos);
 
     ZeroMemory(counts, sizeof(counts));
     for (heroClass = classKnight; heroClass < kNumHeroClasses;
@@ -2225,7 +2223,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     }
 
     if (totalCount == 0)
-        return -1;
+        return heroIdNone;
 
     for (heroClass = classKnight; heroClass < kNumHeroClasses;
          heroClass = THeroClass(heroClass + 1)) {
@@ -2291,7 +2289,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
             return heroId;
         }
     }
-    return -1;
+    return heroIdNone;
 }
 
 VA(0x004bb870, 0x89)
@@ -3704,10 +3702,11 @@ void game::giveTroopsToNeutralTowns()
 // return for valid ownership. This removes both remaining joins at 90.0315%
 // with the full contribution and all relocation names/addends unchanged.
 // The earlier failure scopes used break and do not predict this lowering.
+// Original public ?ValidateVictoryLossConditions@game@@QAAX_N@Z proves bool.
 VA(0x004bf780, 0x6E2)
 DC_ADDRESS(0x0aa7e0, 0x5c4)
 MAC_ADDRESS(0x0d513c, 0x960)  // order-map + whole-function identity
-void game::validateVictoryLossConditions(unsigned char checkMapLocations)
+void game::validateVictoryLossConditions(bool checkMapLocations)
 {
     signed char victoryType = m_mapHeader.m_victoryCondition.m_type;
     if (victoryType == VICTORY_CONDITION_ARTIFACT
@@ -6848,7 +6847,9 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
 // it; int/long owner snapshots lower it. why-branch loop rotations also leave
 // the structural residual unchanged (25/29 blocks, same five call sites; the
 // vector insert target is the native folded point/pointer alias). Preserve
-// operator== rather than the historical flattened comparison.
+// operator== rather than the historical flattened comparison. Reversing its
+// operands or negating its difference chain is also flat: six coupled
+// helper/caller states produce two objects at72.1173%.
 // DC 7473/7475/7481/7498 reads and writes the cell's shipyard owner directly.
 // Use its inherited union member, without a cast-through-void pointer alias;
 // this restores the native access model at the same Windows matching score.
@@ -7040,6 +7041,8 @@ void game::turnOffAIMusic()
 // before the watch player. Together these recover Windows 89.3660 -> 99.9789
 // with all 114 CFG blocks and 167 relocations agreeing; byte scratch homes
 // remain different. All game sibling CUR and available Mac scores are flat.
+// TransmitSaveGame takes bool. Keeping makeOrig Boolean preserves retail
+// caller promotion; a byte local inserts a normalization (96.9940 vs99.9563).
 VA(0x004c6fe0, 0x947)
 DC_ADDRESS(0x0b1fd0, 0xb04)
 MAC_ADDRESS(0x0dd7dc, 0x89c)  // dc-name/order + retail caller/callee/body
@@ -7051,7 +7054,7 @@ void game::nextPlayer()
     unsigned char lastWasHuman;
     int giCurPlayerSave;
     int save;
-    unsigned char makeOrig;
+    bool makeOrig;
 
     m_mapHeader.m_victoryCondition.checkForArtifactWin();
     m_mapHeader.m_victoryCondition.checkForTotalCreatures();
@@ -8955,11 +8958,13 @@ void game::processOnMapHeroes()
 // Preserve this native indexing despite its unusual broadcast behavior.
 // These lifetime/receiver corrections raise Windows 92.7077 -> 97.4264;
 // all 122 CFG blocks, 101 call entries and 172 relocations now agree.
+// Original public ends HH_N0: inGame and makeOrig are bool. The related
+// isDiff Boolean-local probe is byte-flat; keep its existing byte domain.
 VA(0x004cafd0, 0xD14)
 DC_ADDRESS(0x0b7560, 0x1064)
 MAC_ADDRESS(0x0e2414, 0xd20)  // retail body + typed catch + continuation/tables
 int game::transmitSaveGame(int toWho, int thisPlayerDead,
-                           unsigned char inGame, unsigned char makeOrig)
+                           bool inGame, bool makeOrig)
 {
     CNetMsgHandlerPause netMsgHandlerPause;
     g_advManager->trimLoopingSounds(4);
