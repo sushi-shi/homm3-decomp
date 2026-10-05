@@ -3444,7 +3444,7 @@ void TMageGuildWindow::setRolloverText(int codeY)
 
 // The mage guild page's handler. The click arm folds the page's TWO
 // widget runs onto one slot number - the frame run 10..35 and the scroll
-// run 40..65 are the same thirty spells - and then splits that slot into
+// run 40..65 are the same twenty-six spell slots - and then splits that slot into
 // a guild level and a column with one signed division by six, which
 // retail emits BEFORE it decides which of the two answers to give.
 
@@ -3474,6 +3474,9 @@ void TMageGuildWindow::setRolloverText(int codeY)
 // EDX home, causing a spill and 28 versus retail's 27 blocks. All eight
 // calls agree; retain getBuildingMask inside hasBuilding and the pre-Grail
 // division/remainder order observed at Mac 0x1c91c4..0x1c91f4.
+// DC 4686 encloses the spell locals in the valid-slot branch; retain that
+// scope. Four valid-slot/Grail branch forms reproduced 96.8650% (two TU
+// objects); the register-homing probes did not remove the helper spill.
 VA(0x005ce370, 0x1F0)
 DC_ADDRESS(0x171118, 0x1ac)
 MAC_ADDRESS(0x1c90ec, 0x2f0)  // anchor-vtable 0x6437dc slot 9 + anchor-callee(SetRolloverText 0x5ce1c0, whose sole caller this is) + arity(ret 4)
@@ -3495,30 +3498,29 @@ int TMageGuildWindow::windowHandler(message& msg)
                 slot = id - 10;
             if (id >= 40 && id < 66)
                 slot = id - 40;
-            if (slot == -1)
-                return 1;
-
-            town* thisTown = g_townManager->m_townToView;
-            int level = slot / 6;
-            int column = slot % 6;
-            if (thisTown->m_type == TOWN_CONFLUX
-                && thisTown->hasBuilding(HOLY_GRAIL_ID, true)) {
-                normalDialog(
-                    formatString(
-                        g_generalText->getText(GENERAL_TEXT_ARTIFACT_MAKES_ALL_SPELLS_AVAILABLE_FORMAT),
-                        getBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID))
-                        .c_str(),
-                    qualifier ? 4 : 1, -1, -1, -1, 0, -1, 0, -1, 0,
-                    -1, 0);
+            if (slot != -1) {
+                town* thisTown = g_townManager->m_townToView;
+                int level = slot / 6;
+                int column = slot % 6;
+                if (thisTown->m_type == TOWN_CONFLUX
+                    && thisTown->hasBuilding(HOLY_GRAIL_ID, true)) {
+                    normalDialog(
+                        formatString(
+                            g_generalText->getText(GENERAL_TEXT_ARTIFACT_MAKES_ALL_SPELLS_AVAILABLE_FORMAT),
+                            getBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID))
+                            .c_str(),
+                        qualifier ? 4 : 1, -1, -1, -1, 0, -1, 0, -1, 0,
+                        -1, 0);
+                    return 1;
+                }
+                if (column >= thisTown->m_mageGuildSpellCounts[level])
+                    return 1;
+                int spell = thisTown->m_mageGuildSpells[level][column];
+                normalDialog(g_spellTraits[spell].m_levelDescriptions[0],
+                             qualifier ? 4 : 1, -1, -1, 9, spell,
+                             -1, 0, -1, 0, -1, 0);
                 return 1;
             }
-            if (column >= thisTown->m_mageGuildSpellCounts[level])
-                return 1;
-            int spell = thisTown->m_mageGuildSpells[level][column];
-            normalDialog(g_spellTraits[spell].m_levelDescriptions[0],
-                         qualifier ? 4 : 1, -1, -1, 9, spell,
-                         -1, 0, -1, 0, -1, 0);
-            return 1;
         }
         }
         break;
