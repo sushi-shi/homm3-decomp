@@ -1799,7 +1799,7 @@ void hero::deallocate(bool gameLoaded, bool remoteMove)
     if (pos >= 0) {
         for (int i = pos; i < player->m_numHeroes - 1; i++)
             player->m_heroes[i] = player->m_heroes[i + 1];
-        player->m_heroes[player->m_numHeroes - 1] = -1;
+        player->m_heroes[player->m_numHeroes - 1] = heroIdNone;
         player->m_numHeroes--;
     }
     if (player->m_currHeroId == m_id) {
