@@ -92,14 +92,14 @@ class MatchRow:
         return self.max
 
 
-def require_fresh_comparisons() -> None:
-    """Validate every comparison input, including the raw-object stamp chain."""
+def comparison_problems(context=None) -> list[str]:
+    """Every comparison input's problems, including the raw-object stamp chain."""
     from homm3.build.normalized_freshness import freshness_problems, ValidationContext
     config = OBJDIFF_DIR / "objdiff.json"
     if not config.is_file():
-        common.die("comparison configuration missing; run `homm3 build`")
+        return ["comparison configuration missing"]
     seen = set()
-    context = ValidationContext()
+    context = context or ValidationContext()
     normalized_root = context.resolve(OBJDIFF_DIR / "normalized")
     problems = []
     for unit in json.loads(config.read_text()).get("units", []):
@@ -111,6 +111,12 @@ def require_fresh_comparisons() -> None:
                 problems.append(f"{path} is not a normalized comparison object")
             else:
                 problems.extend(freshness_problems(path, seen, context=context))
+    return problems
+
+
+def require_fresh_comparisons(context=None) -> None:
+    """Validate every comparison input, including the raw-object stamp chain."""
+    problems = comparison_problems(context)
     if problems:
         common.die("stale normalized comparison objects; run `homm3 build`:\n  "
                    + "\n  ".join(problems[:10]))
@@ -140,10 +146,13 @@ def load_report(path: Path = REPORT) -> dict:
     return json.loads(path.read_text())
 
 
-def refresh_report() -> dict:
-    """Validate comparison inputs, produce a report, then read its result."""
+def refresh_report(context=None) -> dict:
+    """Validate comparison inputs, produce a report, then read its result.
+
+    `context` may carry content hashes read since the last comparison write.
+    """
     from homm3.build.report import generate
-    require_fresh_comparisons()
+    require_fresh_comparisons(context)
     return load_report(generate(OBJDIFF_DIR))
 
 
@@ -905,6 +914,18 @@ def _md_table(rows, align):
     return out
 
 
+def _previous_byte_accountability() -> str | None:
+    try:
+        text = README_PATH.read_text()
+    except OSError:
+        return None
+    if RM_START not in text or RM_END not in text:
+        return None
+    block = text.split(RM_START, 1)[1].split(RM_END, 1)[0]
+    return next((line for line in block.splitlines()
+                 if line.startswith("**Byte accountability:**")), None)
+
+
 def write_readme(report: dict, *, data_accounting: dict | None = None,
                  checkpoint_rows: dict | None = None) -> None:
     """Splice the per-module score table between the README sentinels
@@ -1062,6 +1083,12 @@ def write_readme(report: dict, *, data_accounting: dict | None = None,
                   + dynamic_summary +
                   "[Data reports](docs/tooling/data-matching.md) separate ownership, "
                   "raw byte comparisons and verified library ranges."]
+    else:
+        # Byte accounting is opt-in (`homm3 build --data`); keep its last
+        # measured line rather than dropping it from the README.
+        previous = _previous_byte_accountability()
+        if previous:
+            block += ["", previous]
     block += ["", RM_END]
 
     text = README_PATH.read_text()

@@ -66,9 +66,11 @@ def main(argv=None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     p = sub.add_parser("sdk", help="stage or verify native CodeWarrior library headers for source comparison")
     p.add_argument("path", nargs="?", help="extracted CodeWarrior Pro 6 archive root (or HOMM3_MAC_SDK)")
-    p = sub.add_parser("build", help="score Mac pairs from the full-TU CodeWarrior objects")
+    p = sub.add_parser("build", help="score Mac pairs from the full-TU CodeWarrior objects; "
+                       "without units, also checkpoint them (separate from `homm3 build`)")
     p.add_argument("--fast", action="store_true", help="skip the Mac MAX checkpoint")
-    p.add_argument("units", nargs="*", help="unit names (normally with --fast)")
+    p.add_argument("units", nargs="*",
+                   help="score only these units' pairs (never checkpointed)")
     sub.add_parser("labels", help="list scored Mac pairs with their claimed spans and source labels")
     p = sub.add_parser("show", help="show a scored pair's Mac span, symbol and source claim")
     p.add_argument("selector", help="Windows VA, mac:section:offset, unit, or function name substring")
@@ -308,10 +310,10 @@ def main(argv=None) -> int:
                       f"0x{pair.retail_va:08x}\t{pair.unit}\t{pair.mac_symbol}\t{pair.signature}")
             return 0
         if args.command == "build":
-            if args.units and not args.fast:
-                parser.error("unit selection requires --fast")
-            build.run(set(args.units) if args.units else None,
-                      checkpoint=not args.fast)
+            # A unit selection is a quick diagnostic: a partial checkpoint
+            # would retire unselected rows, so only the whole set banks.
+            units = set(args.units) if args.units else None
+            build.run(units, checkpoint=units is None and not args.fast)
             return 0
         if args.command in ("find", "xrefs", "census"):
             index = discovery.Index(_image())

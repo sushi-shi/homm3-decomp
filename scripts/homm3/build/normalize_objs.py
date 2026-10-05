@@ -34,6 +34,9 @@ from __future__ import annotations
 
 import csv
 from collections import Counter
+import hashlib
+import os
+import pickle
 import re
 import struct
 import sys
@@ -693,6 +696,50 @@ def _icf_identical(left: FunctionBody, right: FunctionBody) -> bool:
     return masked[0] == masked[1]
 
 
+def _content_key(*parts: bytes | str | Path) -> str:
+    """Digest of literal parts and of file contents (for Path parts)."""
+    digest = hashlib.sha256()
+    for part in parts:
+        if isinstance(part, Path):
+            part = hashlib.sha256(part.read_bytes()).digest()
+        digest.update(part.encode() if isinstance(part, str) else part)
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def _cache_dir() -> Path:
+    """Content-keyed derived indexes beside the comparison tree (build/gen/cache);
+    disposable, never a freshness authority."""
+    return OBJDIFF.parent / "gen/cache"
+
+
+def _load_cache(name: str) -> dict:
+    try:
+        with open(_cache_dir() / name, "rb") as stream:
+            payload = pickle.load(stream)
+        return payload if isinstance(payload, dict) else {}
+    except (OSError, EOFError, pickle.UnpicklingError, AttributeError, ImportError, ValueError):
+        return {}
+
+
+def _store_cache(name: str, payload: dict) -> None:
+    """Atomically replace one cache file; a failed write only costs speed."""
+    try:
+        cache = _cache_dir()
+        cache.mkdir(parents=True, exist_ok=True)
+        temporary = cache / f".{name}.{os.getpid()}.tmp"
+        with open(temporary, "wb") as stream:
+            pickle.dump(payload, stream, protocol=pickle.HIGHEST_PROTOCOL)
+        os.replace(temporary, cache / name)
+    except OSError:
+        pass
+
+
+def _icf_code_key() -> str:
+    # Bodies depend only on the object bytes and these parsers.
+    return _content_key(Path(__file__), Path(canon.__file__))
+
+
 _ICF_INDEX: tuple[dict[str, FunctionBody], dict[str, FunctionBody]] | None = None
 
 
@@ -700,24 +747,44 @@ def _icf_index() -> tuple[dict[str, FunctionBody], dict[str, FunctionBody]]:
     """(candidate bodies, retail bodies) across every normalized object.
 
     A body defined differently by two objects is ambiguous and omitted.
+    Each object's bodies are cached by its content hash, so an unchanged
+    object is never reparsed; the merge itself always reads every object.
     """
     global _ICF_INDEX
     if _ICF_INDEX is None:
+        code = _icf_code_key()
+        cached = _load_cache("icf-bodies.pickle")
+        previous = cached.get("objects", {}) if cached.get("code") == code else {}
+        current: dict[str, tuple[str, dict | None]] = {}
         sides = []
         for side, pattern in (("base", "*.obj"), ("target", "*.c.obj")):
             merged: dict[str, FunctionBody | None] = {}
             root = OBJDIFF / "normalized" / side
             for obj in sorted(root.rglob(pattern)) if root.is_dir() else ():
-                try:
-                    bodies = _function_bodies(canon.CoffObject(obj.read_bytes()))
-                except ValueError:
+                data = obj.read_bytes()
+                digest = hashlib.sha256(data).hexdigest()
+                key = f"{side}/{obj.relative_to(root).as_posix()}"
+                hit = previous.get(key)
+                if hit is not None and hit[0] == digest:
+                    rows = hit[1]
+                else:
+                    try:
+                        rows = {name: (body.payload, body.sites) for name, body in
+                                _function_bodies(canon.CoffObject(data)).items()}
+                    except ValueError:
+                        rows = None
+                current[key] = (digest, rows)
+                if rows is None:
                     continue
+                bodies = {name: FunctionBody(*row) for name, row in rows.items()}
                 for name, body in bodies.items():
                     if name in merged and merged[name] != body:
                         merged[name] = None
                     else:
                         merged[name] = body
             sides.append({n: b for n, b in merged.items() if b is not None})
+        if current != previous:
+            _store_cache("icf-bodies.pickle", {"code": code, "objects": current})
         _ICF_INDEX = (sides[0], sides[1])
     return _ICF_INDEX
 
@@ -735,13 +802,22 @@ def _retail_twins():
     the one rule is reloc_pairing's (`prove_folds`)."""
     global _RETAIL_TWINS
     if _RETAIL_TWINS is None:
+        from homm3.core import inputs
+        from homm3.delink import reloc_pairing
         from homm3.delink.image import retail
-        from homm3.delink.reloc_pairing import RetailTwins
         with FUNCTIONS.open(newline="") as stream:
             rows = csv.DictReader((line for line in stream if not line.startswith("#")),
                                   delimiter="\t")
             sizes = {int(row["rva"], 0): int(row["size"], 0) for row in rows}
-        _RETAIL_TWINS = RetailTwins(retail(), sizes)
+        # The index disassembles every retail function (seconds); it depends
+        # only on the pinned image, the census and the key implementation.
+        key = _content_key(inputs.RETAIL.sha256, FUNCTIONS, Path(reloc_pairing.__file__))
+        cached = _load_cache("retail-twins.pickle")
+        index = cached.get("index") if cached.get("key") == key else None
+        _RETAIL_TWINS = reloc_pairing.RetailTwins(retail(), sizes, index)
+        if index is None:
+            _store_cache("retail-twins.pickle",
+                         {"key": key, "index": _RETAIL_TWINS.index()})
     return _RETAIL_TWINS
 
 
@@ -1573,14 +1649,27 @@ def normalize_unit(unit: str, symbol_rvas=None) -> Counter:
     return counts
 
 
-def normalize_all() -> Counter:
+def _raw_objects(side: str, units: set[str] | None) -> list[Path]:
+    root = OBJDIFF / side
+    if not root.is_dir():
+        return []
+    if units is None:
+        return sorted(root.rglob("*.obj"))
+    suffix = ".obj" if side == "base" else ".c.obj"
+    return [obj for obj in (root / f"{unit}{suffix}" for unit in sorted(units))
+            if obj.is_file()]
+
+
+def normalize_all(units: set[str] | None = None) -> Counter:
+    """Refresh comparison copies of every unit, or only of `units`.
+
+    Selected units get exactly the passes a full run gives them; unselected
+    units' copies are left as they are (callers verify their freshness).
+    """
     wrote = skipped = 0
     context = ValidationContext()
     for side in ("base", "target"):
-        root = OBJDIFF / side
-        if not root.is_dir():
-            continue
-        for obj in sorted(root.rglob("*.obj")):
+        for obj in _raw_objects(side, units):
             if _canonicalize_side(side, obj, context):
                 wrote += 1
             else:
@@ -1592,7 +1681,7 @@ def normalize_all() -> Counter:
     identities = (identity_relocations.load_identities(ADDRESS_IDENTITIES),
                   identity_relocations.load_library_names(ADDRESS_IDENTITIES))
     base_root = OBJDIFF / "base"
-    for base_obj in sorted(base_root.rglob("*.obj")):
+    for base_obj in _raw_objects("base", units):
         counts.update(_pair_unit(base_obj.relative_to(base_root), symbol_rvas, context,
                                  image_base=image_base, identities=identities))
     print(f"[build normalize_objs] {wrote} normalized, {skipped} fresh, "

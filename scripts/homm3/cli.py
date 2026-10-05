@@ -21,14 +21,17 @@ Subcommands
         config/units.toml (homm3.build.configure; ninja also re-runs it as a
         generator rule).
 
-  build [--fast] [TU ...] [-- <ninja args>]
+  build [--fast|--data] [TU ...] [-- <ninja args>]
         The final checkpoint (homm3.build.build): configure -> ninja (base objs via
         the pinned `wine cl`) -> delink and normalize comparison copies -> objdiff
         report -> overall %% line -> checkpoint-ledger refresh + observational
         dip report + fatal evidence/source gates + README score block.
+        Windows only: Classic Mac pairs are the separate `homm3 mac build`.
+        --data adds the complete byte accounting (`homm3 verify data-coverage`).
         Normally use `homm3 build --fast TU` for the inner matching loop:
-        compile the selected manifest unit, keep existing retail targets,
-        and report per-function projected MAX changes without banking them.
+        compile and normalize only the selected manifest unit, keep existing
+        retail targets, and report per-function projected MAX changes without
+        banking them.
         Run a full `homm3 build` for the final checkpoint.
 
   warnings [--compiler both|clang|msvc] [--unit TU] [--jobs N]
@@ -157,7 +160,7 @@ def cmd_build(args) -> int:
     ninja_args = args.ninja_args
     if ninja_args and ninja_args[0] == "--":
         ninja_args = ninja_args[1:]
-    extra = ["--fast"] if args.fast else []
+    extra = [flag for flag, on in (("--fast", args.fast), ("--data", args.data)) if on]
     return run_module("homm3.build.build", *extra, *(ninja_args or []))
 
 
@@ -300,6 +303,8 @@ def _dispatch(argv: list[str]) -> int:
         "build", help="compile + delink + report + evidence/source gates")
     p.add_argument("--fast", action="store_true",
                    help="inner loop: normally supply a TU; stop after the objdiff %% line")
+    p.add_argument("--data", action="store_true",
+                   help="full build: also refresh the complete byte accounting")
     p.add_argument("ninja_args", nargs=argparse.REMAINDER,
                    help="manifest TU names or Ninja targets/arguments")
     p.set_defaults(fn=cmd_build)

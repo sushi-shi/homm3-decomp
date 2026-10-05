@@ -116,10 +116,9 @@ flowchart TD
     Q --> G[Full build: gates and separate checkpoints]
 ```
 
-`homm3 build --fast <TU>` runs both target paths for admitted Mac counterparts
-in the selected unit. `homm3 build` performs the integrated checkpoint and
-source gates. No second manual compilation command is required for the normal
-matching loop.
+`homm3 build` (and `--fast <TU>`) covers Windows only. `homm3 mac build <TU>`
+scores the selected unit's Mac counterparts; `homm3 mac build` without units
+performs the Mac checkpoint. Both are occasional checks, not the inner loop.
 
 The VC6 wrapper now stages its object in the output directory and replaces
 the previous object only when the compiler produces a new one. A failed Wine

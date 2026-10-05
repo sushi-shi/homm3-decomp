@@ -92,8 +92,8 @@ their real diagnostics, not concealed by leaving that TU out of the graph.
 
 During migration, `ninja mac-objects` builds all declared shared game TUs and
 `ninja mac:<unit>` builds one. Once the shared-TU coverage gate passes, include
-Mac objects in the normal `all` graph; `homm3 build --fast <TU>` then builds
-both objects, and the full build checks all of them. The object extractor
+Mac objects in the normal `all` graph; `homm3 mac build <TU>` then builds
+that object, and `homm3 mac build` checks all of them. The object extractor
 indexes every emitted MWOB function/data hunk in each complete object,
 including ordinary and inline helpers that CodeWarrior chose to retain.
 
