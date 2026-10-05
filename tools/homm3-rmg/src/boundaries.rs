@@ -246,12 +246,8 @@ impl<'a> BoundaryMap<'a> {
     }
     /// Cell ownership and terrain marks.
     #[must_use]
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "private constructor requires an initialized raster"
-    )]
     pub fn raster(&self) -> &ZoneRaster {
-        self.workspace.grid.as_ref().unwrap()
+        &self.workspace.grid
     }
     /// Original zones followed by added water zones.
     #[must_use]
@@ -343,7 +339,8 @@ pub struct BoundaryWorkspace {
     distance_columns: usize,
     work: Vec<(ZoneId, u16)>,
     diagram: Option<Delaunay>,
-    grid: Option<ZoneRaster>,
+    // Sized by every `generate`; a fresh workspace holds an unallocated raster.
+    grid: ZoneRaster,
     raster_work: RasterWorkspace,
     level_rng: [Option<RngCheckpoint>; raw::RMG_MAP_LEVEL_COUNT as usize],
     summaries: Vec<CellSummary>,
@@ -399,11 +396,7 @@ impl BoundaryWorkspace {
                 });
             }
         }
-        if let Some(grid) = &mut self.grid {
-            grid.reset(request.size(), request.levels())?;
-        } else {
-            self.grid = Some(ZoneRaster::new(request.size(), request.levels())?);
-        }
+        self.grid.reset(request.size(), request.levels())?;
         for level in [Level::Surface, Level::Underground]
             .into_iter()
             .take(request.levels().count() as usize)
@@ -444,7 +437,7 @@ impl BoundaryWorkspace {
         self.sizes.try_reserve(self.zones.len())?;
         self.sizes
             .extend(self.zones.iter().map(|zone| zone.scaled_size));
-        let grid = self.grid.as_mut().ok_or(BoundaryError::Topology)?;
+        let grid = &mut self.grid;
         let paint = level == Level::Underground || water != Water::Islands;
         for (index, zone) in self.zones.iter().enumerate() {
             if zone.position.level != level {
@@ -599,7 +592,7 @@ impl BoundaryWorkspace {
         original_count: usize,
         diagram: &Voronoi,
     ) -> Result<(), BoundaryError> {
-        let bounds = self.grid.as_ref().ok_or(BoundaryError::Topology)?.bounds();
+        let bounds = self.grid.bounds();
         for index in original_count..self.zones.len() {
             let zone = self.zones[index];
             for other in index + 1..self.zones.len() {
@@ -698,7 +691,7 @@ impl BoundaryWorkspace {
         self.summaries.try_reserve(self.zones.len())?;
         self.summaries
             .resize(self.zones.len(), CellSummary::default());
-        let grid = self.grid.as_mut().ok_or(BoundaryError::Topology)?;
+        let grid = &mut self.grid;
         let dimension = grid.dimension();
         // One pass computes the same bounds and coordinate sums as the C++
         // per-zone scans. This work consumes no randomness and is independent

@@ -198,6 +198,17 @@ pub struct ZoneRaster {
     levels: Levels,
     cells: Vec<ZoneCell>,
 }
+/// An unallocated small surface raster; `reset` sizes it for each request.
+impl Default for ZoneRaster {
+    fn default() -> Self {
+        Self {
+            bounds: MapBounds::new(MapSize::Small),
+            layout: CellLayout::map(MapSize::Small),
+            levels: Levels::Surface,
+            cells: Vec::new(),
+        }
+    }
+}
 impl ZoneRaster {
     /// Allocate empty zone ownership for a supported map shape.
     ///

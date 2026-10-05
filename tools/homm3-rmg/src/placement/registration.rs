@@ -41,6 +41,13 @@ pub enum KeyTentCursor {
     Value(i32),
 }
 
+/// Catalog binding and the tent cursor, which exists only once bound.
+#[derive(Clone, Copy, Debug)]
+struct BoundCatalog {
+    owner: OwnerId,
+    next_key_tent: KeyTentCursor,
+}
+
 #[derive(Debug)]
 pub(super) struct Registration {
     next_object_id: i32,
@@ -49,9 +56,9 @@ pub(super) struct Registration {
     counts: [i32; KINDS],
     zone_counts: Vec<[i32; KINDS]>,
     queue: Worklist<WorldPosition>,
-    catalog_owner: Option<OwnerId>,
+    catalog: Option<BoundCatalog>,
+    // One flag per bound border-tent prototype; empty while unbound.
     disabled_key_tents: Vec<bool>,
-    next_key_tent: KeyTentCursor,
 }
 impl Default for Registration {
     fn default() -> Self {
@@ -62,9 +69,8 @@ impl Default for Registration {
             counts: [0; KINDS],
             zone_counts: Vec::new(),
             queue: Worklist::default(),
-            catalog_owner: None,
+            catalog: None,
             disabled_key_tents: Vec::new(),
-            next_key_tent: KeyTentCursor::ReplayRequired,
         }
     }
 }
@@ -79,9 +85,8 @@ impl Registration {
         self.zone_counts.resize(zones, [0; KINDS]);
         self.zone_counts.fill([0; KINDS]);
         self.queue.clear();
-        self.catalog_owner = None;
+        self.catalog = None;
         self.disabled_key_tents.clear();
-        self.next_key_tent = KeyTentCursor::ReplayRequired;
         Ok(())
     }
 
@@ -89,14 +94,20 @@ impl Registration {
         &self,
         catalog: &PrototypeCatalog<'_>,
     ) -> Result<(), PlacementError> {
-        if self.catalog_owner == Some(catalog.owner()) {
+        if self.bound_to(catalog.owner()) {
             Ok(())
         } else {
             Err(PlacementError::CatalogContext)
         }
     }
+    fn bound_to(&self, owner: OwnerId) -> bool {
+        self.catalog.is_some_and(|bound| bound.owner == owner)
+    }
     pub(super) const fn tent_cursor(&self) -> KeyTentCursor {
-        self.next_key_tent
+        match self.catalog {
+            Some(bound) => bound.next_key_tent,
+            None => KeyTentCursor::ReplayRequired,
+        }
     }
     fn prepare_catalog(
         &mut self,
@@ -107,18 +118,17 @@ impl Registration {
         if catalog.behavior() != behavior
             || catalog.version() != version
             || self
-                .catalog_owner
-                .is_some_and(|owner| owner != catalog.owner())
+                .catalog
+                .is_some_and(|bound| bound.owner != catalog.owner())
         {
             return Err(PlacementError::CatalogContext);
         }
-        if self.catalog_owner.is_none() {
+        if self.catalog.is_none() {
             let family = ObjectKind::BORDER_TENT;
             let count = catalog.family(family).len();
             self.disabled_key_tents.try_reserve(count)?;
             self.disabled_key_tents.resize(count, false);
-            self.catalog_owner = Some(catalog.owner());
-            self.next_key_tent = match behavior {
+            let next_key_tent = match behavior {
                 Behavior::Hotfix => {
                     KeyTentCursor::Value(i32::try_from(raw::KEY_LIGHT_BLUE).unwrap())
                 }
@@ -126,6 +136,10 @@ impl Registration {
                     .initial_key_tent_color
                     .map_or(KeyTentCursor::ReplayRequired, KeyTentCursor::Value),
             };
+            self.catalog = Some(BoundCatalog {
+                owner: catalog.owner(),
+                next_key_tent,
+            });
         }
         Ok(())
     }
@@ -136,20 +150,11 @@ impl Registration {
         if index >= self.disabled_key_tents.len() {
             return Err(PlacementError::KeyTentSubtype(subtype));
         }
+        let bound = self.catalog.ok_or(PlacementError::CatalogContext)?;
         Ok(KeyTentColor {
             index,
-            owner: self.catalog_owner.expect("catalog admitted before color"),
+            owner: bound.owner,
         })
-    }
-
-    fn rescan_key_tents(&mut self) {
-        let index = self
-            .disabled_key_tents
-            .iter()
-            .position(|&disabled| !disabled)
-            .unwrap_or(self.disabled_key_tents.len());
-        // Parsed prototype row counts fit i32; filtering cannot enlarge them.
-        self.next_key_tent = KeyTentCursor::Value(i32::try_from(index).unwrap());
     }
 
     fn set_key_tent_disabled(
@@ -157,11 +162,22 @@ impl Registration {
         color: KeyTentColor,
         disabled: bool,
     ) -> Result<(), PlacementError> {
-        if Some(color.owner) != self.catalog_owner {
+        let Some(bound) = self
+            .catalog
+            .as_mut()
+            .filter(|bound| bound.owner == color.owner)
+        else {
             return Err(PlacementError::CatalogContext);
-        }
+        };
         self.disabled_key_tents[color.index] = disabled;
-        self.rescan_key_tents();
+        // Rescan for the first enabled color, or the family length.
+        let index = self
+            .disabled_key_tents
+            .iter()
+            .position(|&disabled| !disabled)
+            .unwrap_or(self.disabled_key_tents.len());
+        // Parsed prototype row counts fit i32; filtering cannot enlarge them.
+        bound.next_key_tent = KeyTentCursor::Value(i32::try_from(index).unwrap());
         Ok(())
     }
 }
@@ -249,7 +265,7 @@ impl PlacementMap<'_, '_, '_> {
         catalog: &PrototypeCatalog<'_>,
     ) -> Result<KeyTentCursor, PlacementError> {
         self.prepare_registration(catalog)?;
-        Ok(self.registration.next_key_tent)
+        Ok(self.registration.tent_cursor())
     }
 
     /// Stored tent cursor without initializing or replacing catalog context.
@@ -263,7 +279,7 @@ impl PlacementMap<'_, '_, '_> {
     /// # Errors
     /// Rejects colors not admitted against this map's current catalog.
     pub fn key_tent_disabled(&self, color: KeyTentColor) -> Result<bool, PlacementError> {
-        if Some(color.owner) != self.registration.catalog_owner {
+        if !self.registration.bound_to(color.owner) {
             return Err(PlacementError::CatalogContext);
         }
         Ok(self.registration.disabled_key_tents[color.index])

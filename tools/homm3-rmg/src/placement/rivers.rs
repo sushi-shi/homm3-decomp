@@ -85,16 +85,17 @@ impl PlacementMap<'_, '_, '_> {
             }
             point = offset_position(point, step)?;
         }
+        // Four admitted inland cells; the last one is the target.
         point = offset_position(at, direction.offset())?;
-        let mut target = None;
-        for _ in 0..4 {
-            target = self.dry_coast_cell(point, hotfix)?;
-            if target.is_none() {
+        let mut inland = [0; 4];
+        for index in &mut inland {
+            let Some(cell) = self.dry_coast_cell(point, hotfix)? else {
                 return Ok(());
-            }
+            };
+            *index = cell;
             point = offset_position(point, direction.offset())?;
         }
-        let cell = &mut self.cells[target.expect("four admitted inland cells")];
+        let cell = &mut self.cells[inland[3]];
         cell.blocked_river_directions |= opposite_bit(direction);
         cell.river_outlet_target = true;
         Ok(())

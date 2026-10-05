@@ -266,10 +266,10 @@ impl PlacementMap<'_, '_, '_> {
                     } else {
                         None
                     };
-                    let touched = if let Some(index) =
+                    let index = if let Some(index) =
                         scratch.affected.iter().position(|item| item.id == id)
                     {
-                        &mut scratch.affected[index]
+                        index
                     } else {
                         scratch.affected.try_reserve(1)?;
                         scratch.affected.push(TouchedObject {
@@ -278,8 +278,9 @@ impl PlacementMap<'_, '_, '_> {
                             adjacent: false,
                             blocked: false,
                         });
-                        scratch.affected.last_mut().unwrap()
+                        scratch.affected.len() - 1
                     };
+                    let touched = &mut scratch.affected[index];
                     if let Some(covers) = covers {
                         touched.order.touch(covers);
                     }

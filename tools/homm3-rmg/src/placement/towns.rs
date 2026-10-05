@@ -388,10 +388,9 @@ impl PlacementMap<'_, '_, '_> {
     ) -> Result<bool, TownError> {
         // placeAdditionalTowns caches alignment at entry. Even if a hotfix primary
         // later resolves a neutral zone, further attempts use this original value.
-        let town = if (owner.is_none() && !rules.neutral_matches) || zone.alignment().is_none() {
-            rules.choose_town(self.coverage().map().version(), rng)
-        } else {
-            zone.alignment().unwrap()
+        let town = match zone.alignment() {
+            Some(town) if owner.is_some() || rules.neutral_matches => town,
+            _ => rules.choose_town(self.coverage().map().version(), rng),
         };
         let current = self.coverage().map().zones()[zone.id().index()];
         if current.primary_town().is_none() {
