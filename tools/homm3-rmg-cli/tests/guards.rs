@@ -4,9 +4,9 @@ use homm3_rmg::{
     behavior::{Behavior, RetailProfile},
     placement_rules::PlacementRules,
     prototype::{GuardFactions, PrototypeSource},
-    raw,
     request::{MapVersion, Town},
     rng::RetailRng,
+    template::{AllowedGuards, GuardAffinity},
     traits::CreatureCatalog,
 };
 use homm3_rmg_cli::resources::Installation;
@@ -52,14 +52,18 @@ fn guard_choices_counts_and_rng_match_cpp() {
                 let values: [i64; 7] = std::array::from_fn(|_| fields.next().unwrap());
                 assert!(fields.next().is_none());
                 let policy = usize::try_from(values[0]).unwrap();
-                let mut allowed = [policy == 0; 10];
-                if (1..11).contains(&policy) {
-                    allowed[policy - 1] = true;
-                }
-                let factions = if policy == 11 {
-                    GuardFactions::Matching(Town::parse(raw::TOWN_RAMPART).unwrap())
-                } else {
-                    GuardFactions::Allowed(&allowed)
+                // Policy 0 allows every affinity; 1..=10 allows only the
+                // affinity in that column; 11 matches Rampart alignment.
+                let factions = match policy {
+                    0 => GuardFactions::Allowed(AllowedGuards::ALL),
+                    11 => GuardFactions::Matching(Town::RAMPART),
+                    _ => {
+                        let mut allowed = AllowedGuards::NONE;
+                        if let Some(&affinity) = GuardAffinity::ALL.get(policy - 1) {
+                            allowed.insert(affinity);
+                        }
+                        GuardFactions::Allowed(allowed)
+                    }
                 };
                 let mut rng = RetailRng::new(u32::try_from(values[2]).unwrap());
                 let guard = catalog

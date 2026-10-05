@@ -20,8 +20,8 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                 let Some(child) = quest.pending_seer() else {
                     return Ok(());
                 };
-                let available = (0..raw::ARTIFACT_COUNT)
-                    .filter(|&id| self.artifact_available(ArtifactId::parse(id).unwrap()))
+                let available = ArtifactId::all()
+                    .filter(|&id| self.artifact_available(id))
                     .count();
                 if available < raw::RMG_LOW_QUEST_ARTIFACT_COUNT as usize {
                     self.ready.quests.pool_low = true;
@@ -30,11 +30,10 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                     objects.recycle_unplaced(child)?;
                 } else {
                     let selected = rng.draw() as usize % available;
-                    let artifact = (0..raw::ARTIFACT_COUNT)
-                        .map(|id| ArtifactId::parse(id).unwrap())
+                    let artifact = ArtifactId::all()
                         .filter(|&id| self.artifact_available(id))
                         .nth(selected)
-                        .unwrap();
+                        .expect("selection ranks the counted available artifacts");
                     let ObjectPayload::Seer(hut) = objects.payload_mut(child)? else {
                         return Err(PlacementError::TreasureCleanupRequired(child).into());
                     };

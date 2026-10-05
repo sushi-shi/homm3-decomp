@@ -1,6 +1,10 @@
 //! Parse the lobby record into supported generation domains.
 
-use crate::{behavior::Behavior, raw};
+use crate::{
+    behavior::Behavior,
+    domain::{Ordinal, Terrain},
+    raw,
+};
 use std::{error::Error, fmt};
 
 /// Number of player colours, obtained from the shared C++ declaration.
@@ -129,7 +133,73 @@ impl Town {
     pub const fn index(self) -> usize {
         self.0 as usize
     }
+
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    const fn known(value: raw::TTownType) -> Self {
+        assert!(raw::TOWN_CASTLE <= value && value <= raw::TOWN_CONFLUX);
+        Self(value as u8)
+    }
+
+    /// Castle.
+    pub const CASTLE: Self = Self::known(raw::TOWN_CASTLE);
+    /// Rampart.
+    pub const RAMPART: Self = Self::known(raw::TOWN_RAMPART);
+    /// Tower.
+    pub const TOWER: Self = Self::known(raw::TOWN_TOWER);
+    /// Inferno.
+    pub const INFERNO: Self = Self::known(raw::TOWN_INFERNO);
+    /// Necropolis.
+    pub const NECROPOLIS: Self = Self::known(raw::TOWN_NECROPOLIS);
+    /// Dungeon.
+    pub const DUNGEON: Self = Self::known(raw::TOWN_DUNGEON);
+    /// Stronghold.
+    pub const STRONGHOLD: Self = Self::known(raw::TOWN_STRONGHOLD);
+    /// Fortress.
+    pub const FORTRESS: Self = Self::known(raw::TOWN_FORTRESS);
+    /// Conflux, absent from `RoE` maps.
+    pub const CONFLUX: Self = Self::known(raw::TOWN_CONFLUX);
+
+    /// Every Complete-era faction in native order.
+    pub const ALL: [Self; raw::TOWN_TYPE_COUNT as usize] = [
+        Self::CASTLE,
+        Self::RAMPART,
+        Self::TOWER,
+        Self::INFERNO,
+        Self::NECROPOLIS,
+        Self::DUNGEON,
+        Self::STRONGHOLD,
+        Self::FORTRESS,
+        Self::CONFLUX,
+    ];
+
+    /// Terrain painted for a native-terrain zone of this alignment.
+    #[must_use]
+    pub const fn native_terrain(self) -> Terrain {
+        NATIVE_TERRAIN[self.index()]
+    }
 }
+impl Ordinal for Town {
+    const ALL: &'static [Self] = &Self::ALL;
+    fn index(self) -> usize {
+        Self::index(self)
+    }
+}
+
+// Source table admitted once at compile time instead of at each lookup.
+const NATIVE_TERRAIN: [Terrain; raw::TOWN_TYPE_COUNT as usize] = {
+    let mut terrain = [Terrain::Dirt; raw::TOWN_TYPE_COUNT as usize];
+    let mut town = 0;
+    while town < terrain.len() {
+        #[allow(clippy::cast_possible_wrap)] // small source terrain IDs
+        let value = raw::NATIVE_TERRAIN[town] as i32;
+        terrain[town] = match Terrain::parse(value) {
+            Some(value) => value,
+            None => panic!("native town terrain outside the terrain domain"),
+        };
+        town += 1;
+    }
+    terrain
+};
 
 /// A requested faction, before any random selection.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

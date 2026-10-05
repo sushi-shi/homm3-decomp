@@ -1,6 +1,107 @@
 //! Spatial domains shared by layout, painting and object placement.
 
-use crate::{geometry::Point, raw};
+use crate::{geometry::Point, raw, rng::RetailRng};
+use std::{fmt, marker::PhantomData, num::NonZeroU32};
+
+/// A finite domain whose values have dense native ordinals.
+///
+/// Native code stores such domains as flag arrays and recovers values from
+/// array positions; `FlagSet` keeps the element type instead.
+pub trait Ordinal: Copy + Eq + 'static {
+    /// Every value in ordinal order, so `ALL[value.index()] == value`.
+    const ALL: &'static [Self];
+    /// Dense native ordinal.
+    fn index(self) -> usize;
+}
+
+/// A native flag array over a small ordinal domain, kept as a typed bit set.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct FlagSet<T> {
+    bits: u16,
+    domain: PhantomData<T>,
+}
+impl<T: Ordinal> FlagSet<T> {
+    /// No members, so selection consumes no random draw.
+    pub const NONE: Self = Self::from_bits(0);
+    /// Every value in the domain.
+    pub const ALL: Self = {
+        assert!(T::ALL.len() < u16::BITS as usize);
+        Self::from_bits((1 << T::ALL.len()) - 1)
+    };
+
+    const fn from_bits(bits: u16) -> Self {
+        Self {
+            bits,
+            domain: PhantomData,
+        }
+    }
+    /// Admit only bits corresponding to values in the domain.
+    #[must_use]
+    pub const fn parse(bits: u16) -> Option<Self> {
+        if bits & !Self::ALL.bits == 0 {
+            Some(Self::from_bits(bits))
+        } else {
+            None
+        }
+    }
+    /// Collect members from a per-value predicate, in ordinal order.
+    pub fn from_fn(mut member: impl FnMut(T) -> bool) -> Self {
+        let mut set = Self::NONE;
+        for &value in T::ALL {
+            if member(value) {
+                set.insert(value);
+            }
+        }
+        set
+    }
+    /// Bit `value.index()` records whether that value is a member.
+    #[must_use]
+    pub const fn bits(self) -> u16 {
+        self.bits
+    }
+    /// Number of members.
+    #[must_use]
+    pub const fn count(self) -> u32 {
+        self.bits.count_ones()
+    }
+    /// Whether no value is a member.
+    #[must_use]
+    pub const fn is_empty(self) -> bool {
+        self.bits == 0
+    }
+    /// Whether this value is a member.
+    #[must_use]
+    pub fn contains(self, value: T) -> bool {
+        self.bits & (1 << value.index()) != 0
+    }
+    /// Add a member.
+    pub fn insert(&mut self, value: T) {
+        self.bits |= 1 << value.index();
+    }
+    /// Remove a member.
+    pub fn remove(&mut self, value: T) {
+        self.bits &= !(1 << value.index());
+    }
+    /// Members in ordinal order.
+    pub fn iter(self) -> impl Iterator<Item = T> {
+        T::ALL
+            .iter()
+            .copied()
+            .filter(move |&value| self.contains(value))
+    }
+    /// Native flag-array selection: count the set flags, draw `rand() % count`
+    /// and take that member in ordinal order. An empty set returns `None`
+    /// without drawing; a singleton still consumes its draw.
+    pub fn choose(self, rng: &mut RetailRng) -> Option<T> {
+        let count = NonZeroU32::new(self.count())?;
+        self.iter().nth(rng.below(count) as usize)
+    }
+}
+impl<T: Ordinal + fmt::Debug> fmt::Debug for FlagSet<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_set().entries(self.iter()).finish()
+    }
+}
 
 /// A world plane. A request separately determines whether underground exists.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -86,6 +187,85 @@ impl Terrain {
     pub const fn index(self) -> usize {
         self as usize
     }
+    /// Every terrain in table order.
+    pub const ALL: [Self; raw::RMG_TERRAIN_COUNT as usize] = [
+        Self::Dirt,
+        Self::Sand,
+        Self::Grass,
+        Self::Snow,
+        Self::Swamp,
+        Self::Rough,
+        Self::Subterranean,
+        Self::Lava,
+        Self::Water,
+        Self::Rock,
+    ];
+}
+impl Ordinal for Terrain {
+    const ALL: &'static [Self] = &Self::ALL;
+    fn index(self) -> usize {
+        Self::index(self)
+    }
+}
+
+/// A terrain a template zone may request; water and rock are never zone choices.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(i32)]
+pub enum LandTerrain {
+    /// Dirt, also the fallback when a template allows no terrain.
+    Dirt = raw::eTerrainDirt,
+    /// Sand.
+    Sand = raw::eTerrainSand,
+    /// Grass.
+    Grass = raw::eTerrainGrass,
+    /// Snow.
+    Snow = raw::eTerrainSnow,
+    /// Swamp.
+    Swamp = raw::eTerrainSwamp,
+    /// Rough.
+    Rough = raw::eTerrainRough,
+    /// Subterranean; surface zones exclude it before choosing.
+    Subterranean = raw::eTerrainSubterranean,
+    /// Lava.
+    Lava = raw::eTerrainLava,
+}
+impl LandTerrain {
+    /// Template allowed-terrain columns, in source order.
+    pub const ALL: [Self; raw::eTerrainWater as usize] = [
+        Self::Dirt,
+        Self::Sand,
+        Self::Grass,
+        Self::Snow,
+        Self::Swamp,
+        Self::Rough,
+        Self::Subterranean,
+        Self::Lava,
+    ];
+    /// The painted terrain.
+    #[must_use]
+    pub const fn terrain(self) -> Terrain {
+        match self {
+            Self::Dirt => Terrain::Dirt,
+            Self::Sand => Terrain::Sand,
+            Self::Grass => Terrain::Grass,
+            Self::Snow => Terrain::Snow,
+            Self::Swamp => Terrain::Swamp,
+            Self::Rough => Terrain::Rough,
+            Self::Subterranean => Terrain::Subterranean,
+            Self::Lava => Terrain::Lava,
+        }
+    }
+}
+impl Ordinal for LandTerrain {
+    const ALL: &'static [Self] = &Self::ALL;
+    fn index(self) -> usize {
+        self as usize
+    }
+}
+impl From<LandTerrain> for Terrain {
+    fn from(terrain: LandTerrain) -> Self {
+        terrain.terrain()
+    }
 }
 
 /// The seven primary resources, excluding reward/dialog-only discriminants.
@@ -136,5 +316,51 @@ impl Resource {
     #[must_use]
     pub const fn index(self) -> usize {
         self as usize
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn dense<T: Ordinal + fmt::Debug>() {
+        for (index, &value) in T::ALL.iter().enumerate() {
+            assert_eq!(value.index(), index, "{value:?}");
+        }
+    }
+
+    #[test]
+    fn ordinal_domains_are_dense_and_land_terrain_matches_wire_values() {
+        dense::<Terrain>();
+        dense::<LandTerrain>();
+        dense::<crate::request::Town>();
+        dense::<crate::template::GuardAffinity>();
+        for (index, town) in crate::request::Town::ALL.into_iter().enumerate() {
+            assert_eq!(
+                Ok(town),
+                crate::request::Town::parse(i32::try_from(index).unwrap())
+            );
+        }
+        for land in LandTerrain::ALL {
+            assert_eq!(land.terrain().index(), land.index());
+        }
+    }
+
+    #[test]
+    fn flag_set_selection_preserves_empty_singleton_and_rank_draws() {
+        let mut rng = RetailRng::new(1);
+        assert_eq!(FlagSet::<LandTerrain>::NONE.choose(&mut rng), None);
+        assert_eq!(rng.draws(), 0);
+        let mut set = FlagSet::NONE;
+        set.insert(LandTerrain::Snow);
+        set.insert(LandTerrain::Lava);
+        // The first seed-one draw is 41: rank 1 of two members.
+        assert_eq!(set.choose(&mut rng), Some(LandTerrain::Lava));
+        assert_eq!(rng.draws(), 1);
+        set.remove(LandTerrain::Lava);
+        assert_eq!(set.choose(&mut rng), Some(LandTerrain::Snow));
+        assert_eq!(rng.draws(), 2);
+        assert!(FlagSet::<Terrain>::parse(1 << 10).is_none());
+        assert_eq!(FlagSet::<Terrain>::ALL.count(), 10);
     }
 }

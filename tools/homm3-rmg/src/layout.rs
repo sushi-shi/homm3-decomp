@@ -1,12 +1,12 @@
 //! Zone placement, relaxation and terrain selection in serial RNG order.
 
 use crate::{
-    domain::{Level, Terrain, WorldPosition},
+    domain::{LandTerrain, Level, Terrain, WorldPosition},
     geometry::{GeometryError, Point, ZoneId},
     raw,
     request::{Levels, Request, Town, TownChoice, Water},
     rng::RetailRng,
-    selection::{choose_flag, select_allowed_town, Player, SelectedTemplate},
+    selection::{Player, SelectedTemplate},
     template::{Template, Zone, ZoneRole},
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
@@ -185,7 +185,7 @@ impl LayoutWorkspace {
         let map_size = minimum.checked_mul(side).ok_or(LayoutError::Arithmetic)? / divisor;
         for zone in zones {
             // The constructor draws before the request's fixed town overrides it.
-            let mut alignment = select_allowed_town(zone.allowed_towns(), rng);
+            let mut alignment = zone.allowed_towns().choose(rng);
             let owner = match zone.role() {
                 ZoneRole::Human(slot) | ZoneRole::Computer(slot) => Some(slot),
                 ZoneRole::Treasure(owner) | ZoneRole::Junction(owner) => owner,
@@ -486,15 +486,13 @@ fn choose_terrain(
     rng: &mut RetailRng,
 ) -> Terrain {
     let terrain = if let Some(town) = alignment.filter(|_| zone.use_native_terrain()) {
-        Terrain::parse(i32::try_from(raw::NATIVE_TERRAIN[town.index()]).unwrap()).unwrap()
+        town.native_terrain()
     } else {
-        let mut allowed = *zone.allowed_terrain();
+        let mut allowed = zone.allowed_terrain();
         if level == Level::Surface {
-            allowed[Terrain::Subterranean.index()] = false;
+            allowed.remove(LandTerrain::Subterranean);
         }
-        choose_flag(&allowed, rng).map_or(Terrain::Dirt, |index| {
-            Terrain::parse(i32::try_from(index).unwrap()).unwrap()
-        })
+        allowed.choose(rng).map_or(Terrain::Dirt, Terrain::from)
     };
     if level == Level::Underground && terrain != Terrain::Lava {
         Terrain::Subterranean
@@ -511,12 +509,9 @@ fn can_place(
     let zone = &zones[current.id.index()];
     if matches!(zone.role(), ZoneRole::Human(_) | ZoneRole::Computer(_))
         && current.position.level == Level::Underground
-        && !current.alignment.is_some_and(|town| {
-            matches!(
-                i32::try_from(town.index()).unwrap(),
-                raw::TOWN_INFERNO | raw::TOWN_NECROPOLIS | raw::TOWN_DUNGEON
-            )
-        })
+        && !current
+            .alignment
+            .is_some_and(|town| matches!(town, Town::INFERNO | Town::NECROPOLIS | Town::DUNGEON))
     {
         return Ok(false);
     }

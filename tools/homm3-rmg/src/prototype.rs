@@ -1015,7 +1015,7 @@ mod tests {
             let mut rng = RetailRng::new(1);
             let result = catalog.select_guard(
                 100,
-                GuardFactions::Allowed(&[true; 10]),
+                GuardFactions::Allowed(crate::template::AllowedGuards::ALL),
                 &creatures,
                 &mut rng,
             );
@@ -1030,7 +1030,12 @@ mod tests {
             assert_eq!(rng.draws(), 1);
             let end = rng.checkpoint();
             assert_eq!(
-                catalog.select_guard(9, GuardFactions::Allowed(&[true; 10]), &creatures, &mut rng),
+                catalog.select_guard(
+                    9,
+                    GuardFactions::Allowed(crate::template::AllowedGuards::ALL),
+                    &creatures,
+                    &mut rng
+                ),
                 Ok(None)
             );
             assert_eq!(rng.checkpoint(), end);
@@ -1047,8 +1052,7 @@ mod tests {
         let source = PrototypeSource::parse(&bytes, |_| Ok::<_, Infallible>(Some(mask()))).unwrap();
         let rules = rules();
         let creatures = creature_traits(&[(2, 10, 1, 1), (143, 20, 1000, 1000)]);
-        let factions =
-            GuardFactions::Matching(crate::request::Town::parse(raw::TOWN_CASTLE).unwrap());
+        let factions = GuardFactions::Matching(crate::request::Town::CASTLE);
         for version in [MapVersion::Restoration, MapVersion::ArmageddonsBlade] {
             let catalog = source.prepare(&rules, version, Behavior::Hotfix).unwrap();
             let mut rng = RetailRng::new(1);
@@ -1091,7 +1095,7 @@ mod tests {
         assert_eq!(
             catalog.select_guard(
                 0,
-                GuardFactions::Allowed(&[true; 10]),
+                GuardFactions::Allowed(crate::template::AllowedGuards::ALL),
                 &creature_traits(&[]),
                 &mut rng
             ),
@@ -1107,8 +1111,7 @@ mod tests {
         let catalog = source
             .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
             .unwrap();
-        let factions =
-            GuardFactions::Matching(crate::request::Town::parse(raw::TOWN_CASTLE).unwrap());
+        let factions = GuardFactions::Matching(crate::request::Town::CASTLE);
         assert!(matches!(
             catalog.select_guard(
                 0,

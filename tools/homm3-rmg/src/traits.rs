@@ -223,6 +223,11 @@ impl SpellId {
     pub const fn index(self) -> usize {
         self.0 as usize
     }
+    /// Every spell and ability in table order.
+    pub fn all() -> impl Iterator<Item = Self> {
+        const { assert!(raw::SPELL_FLAGS.len() <= 1 << u8::BITS) };
+        (0..=u8::MAX).map(Self).take(raw::SPELL_FLAGS.len())
+    }
 }
 
 /// A subset of the four magic schools; no undefined bits are admitted.
@@ -320,6 +325,10 @@ impl SpellCatalog {
     #[must_use]
     pub fn entries(&self) -> &[SpellTraits] {
         &self.0
+    }
+    /// Identified entries in native order.
+    pub fn iter(&self) -> impl Iterator<Item = (SpellId, &SpellTraits)> {
+        SpellId::all().zip(&self.0)
     }
 }
 

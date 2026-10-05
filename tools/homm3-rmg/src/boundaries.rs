@@ -12,7 +12,7 @@ use crate::{
     selection::Player,
     template::{PlayerSlot, Template},
 };
-use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
+use std::{collections::TryReserveError, error::Error, fmt};
 
 /// Which source supplies a generated zone's placement rules.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -777,12 +777,7 @@ fn radial_coordinate(center: i32, half_offset: f64) -> Result<i32, BoundaryError
 fn select_water_town(mask: TownMask, rng: &mut RetailRng) -> Option<Town> {
     // 0x532a47 counts nonzero flags; 0x532a59 skips rand only when none are set.
     // The heap-filled masks reaching 0x53e45c remain zero under the zero profile.
-    let count = NonZeroU32::new(mask.count())?;
-    let selected = usize::try_from(rng.below(count)).unwrap();
-    (0..raw::TOWN_TYPE_COUNT)
-        .filter(|&town| mask.bits() & (1 << town) != 0)
-        .nth(selected)
-        .map(|town| Town::parse(i32::try_from(town).unwrap()).unwrap())
+    mask.choose(rng)
 }
 
 #[cfg(test)]

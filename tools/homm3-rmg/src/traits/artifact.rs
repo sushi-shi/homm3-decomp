@@ -17,6 +17,12 @@ impl ArtifactId {
     pub const fn index(self) -> usize {
         self.0 as usize
     }
+    /// Every Complete-era artifact in table order.
+    pub fn all() -> impl Iterator<Item = Self> {
+        const { assert!(0 < raw::ARTIFACT_COUNT && raw::ARTIFACT_COUNT <= 1 << u8::BITS) };
+        #[allow(clippy::cast_sign_loss)]
+        (0..=u8::MAX).map(Self).take(raw::ARTIFACT_COUNT as usize)
+    }
 }
 
 /// Index of an assembled artifact's combination recipe.

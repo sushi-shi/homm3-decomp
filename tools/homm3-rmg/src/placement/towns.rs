@@ -5,6 +5,7 @@ use super::{
     ObjectArena, ObjectId, ObjectPayload, PlacementError, PlacementMap, PlacementView,
 };
 use crate::{
+    behavior::TownMask,
     boundaries::{BoundaryZone, ZoneOrigin},
     domain::WorldPosition,
     geometry::Point,
@@ -13,7 +14,7 @@ use crate::{
     raw,
     request::{MapVersion, Town, PLAYER_COUNT},
     rng::{RetailRng, RngCheckpoint},
-    selection::{select_allowed_town, Player},
+    selection::Player,
     template::{Placement, ZoneRole},
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
@@ -143,7 +144,7 @@ struct Rules {
     categories: [Placement; raw::RMG_TOWN_CATEGORY_COUNT as usize],
     owner: Option<Player>,
     neutral_matches: bool,
-    allowed: [bool; raw::TOWN_TYPE_COUNT as usize],
+    allowed: TownMask,
 }
 impl Rules {
     fn category(self, index: usize) -> (Option<Player>, Fort) {
@@ -161,13 +162,13 @@ impl Rules {
         )
     }
     fn choose_town(self, version: MapVersion, rng: &mut RetailRng) -> Town {
-        select_allowed_town(&self.allowed, rng).unwrap_or_else(|| {
-            let count = if version == MapVersion::Restoration {
-                raw::TOWN_TYPE_ROE_COUNT
-            } else {
-                raw::TOWN_TYPE_COUNT
-            };
-            Town::parse(i32::try_from(rng.below(NonZeroU32::new(count).unwrap())).unwrap()).unwrap()
+        self.allowed.choose(rng).unwrap_or_else(|| {
+            // Native draws `rand() % TOWN_TYPE[_ROE]_COUNT`; Conflux is last.
+            let mut playable = TownMask::ALL;
+            if version == MapVersion::Restoration {
+                playable.remove(Town::CONFLUX);
+            }
+            playable.choose(rng).expect("every map version has towns")
         })
     }
 }
@@ -242,7 +243,7 @@ impl PlacementMap<'_, '_, '_> {
             categories: *source.towns(),
             owner: slot.and_then(|slot| map.player(slot)),
             neutral_matches: source.neutral_towns_match_alignment(),
-            allowed: *source.allowed_towns(),
+            allowed: source.allowed_towns(),
         })
     }
 

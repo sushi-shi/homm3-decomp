@@ -4,7 +4,7 @@ use super::{
     offset_position, ObjectArena, ObjectId, PathReservation, PlacementError, PlacementMap,
 };
 use crate::{
-    domain::{Level, WorldPosition},
+    domain::{FlagSet, Level, Terrain, WorldPosition},
     geometry::Point,
     identity::OwnerId,
     object::DECORATION_KINDS,
@@ -123,7 +123,7 @@ impl PlacementMap<'_, '_, '_> {
         // though hotfix catalog admission excludes them.
         let footprint = entry.image_mask().size()?;
         let side = i32::try_from(self.view().side).map_err(|_| PlacementError::Arithmetic)?;
-        let mut terrain_seen = [false; raw::RMG_TERRAIN_COUNT as usize];
+        let mut terrain_seen = FlagSet::<Terrain>::NONE;
         // Footprint plus a one-cell border; marks[c][r] is P + (1-c, 1-r).
         // c grows west, r north. North is up; # is a drawn 3x2 footprint:
         //   c: 4 3 2 1 0
@@ -171,7 +171,7 @@ impl PlacementMap<'_, '_, '_> {
                     // Native assignment overwrites OVERLAP and BLOCKED. Consequently
                     // blocked-neighbour scores are never reached in either mode.
                     *mark = raw::RMG_PLACEMENT_ADJACENT;
-                    terrain_seen[terrain.index()] = true;
+                    terrain_seen.insert(terrain);
                     let first_row = position.point.y - (y + 1).min(side) + 1;
                     let last_row = position.point.y - (y - 2).max(0) + 1;
                     let first_column = position.point.x - (x + 1).min(side) + 1;
@@ -187,13 +187,10 @@ impl PlacementMap<'_, '_, '_> {
         }
         let mut score = 0_i32;
         let mut positive = false;
-        for (index, seen) in terrain_seen.into_iter().enumerate() {
-            if seen {
-                let terrain = crate::domain::Terrain::parse(i32::try_from(index).unwrap()).unwrap();
-                let value = rule.terrain_score(terrain);
-                score = score.checked_add(value).ok_or(PlacementError::Arithmetic)?;
-                positive |= value > 0;
-            }
+        for terrain in terrain_seen.iter() {
+            let value = rule.terrain_score(terrain);
+            score = score.checked_add(value).ok_or(PlacementError::Arithmetic)?;
+            positive |= value > 0;
         }
         if score < raw::RMG_PLACEMENT_MINIMUM_TERRAIN_SCORE {
             return Ok(score);

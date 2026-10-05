@@ -154,10 +154,11 @@ pub(super) fn write(
     } else {
         raw::RMG_ROE_HERO_COUNT
     } as usize;
-    out.bits(heroes, |id| {
-        !map.treasures()
-            .hero_disabled(HeroId::parse(i32::try_from(id).unwrap()).unwrap())
-    })?;
+    out.bits(
+        HeroId::all()
+            .take(heroes)
+            .map(|hero| !map.treasures().hero_disabled(hero)),
+    )?;
     if expansion(version) {
         out.u32(0)?;
     }
@@ -171,13 +172,16 @@ pub(super) fn write(
         } else {
             raw::ARTIFACT_ANGELIC_ALLIANCE
         } as usize;
-        out.bits(count, |id| {
-            map.treasures().artifacts().entries()[id]
-                .combination()
-                .is_some()
-                || id == raw::ARTIFACT_ARMAGEDDONS_BLADE as usize
-                || id == raw::RMG_ARTIFACT_VIAL_OF_DRAGON_BLOOD as usize
-        })?;
+        out.bits(
+            map.treasures().artifacts().entries()[..count]
+                .iter()
+                .enumerate()
+                .map(|(id, artifact)| {
+                    artifact.combination().is_some()
+                        || id == raw::ARTIFACT_ARMAGEDDONS_BLADE as usize
+                        || id == raw::RMG_ARTIFACT_VIAL_OF_DRAGON_BLOOD as usize
+                }),
+        )?;
     }
     if version == MapVersion::ShadowOfDeath {
         out.zero((raw::HERO_SPELL_COUNT as usize).div_ceil(8))?;

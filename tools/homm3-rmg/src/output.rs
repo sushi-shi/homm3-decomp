@@ -283,15 +283,13 @@ impl<W: Write> Writer<'_, W> {
             position.level.index() as u8,
         ])
     }
-    fn bits(
-        &mut self,
-        count: usize,
-        mut bit: impl FnMut(usize) -> bool,
-    ) -> Result<(), OutputFault> {
-        for first in (0..count).step_by(8) {
+    /// Pack flags LSB first; a final partial byte is zero-padded.
+    fn bits(&mut self, flags: impl IntoIterator<Item = bool>) -> Result<(), OutputFault> {
+        let mut flags = flags.into_iter().peekable();
+        while flags.peek().is_some() {
             let mut byte = 0;
-            for index in first..(first + 8).min(count) {
-                byte |= u8::from(bit(index)) << (index - first);
+            for (shift, flag) in flags.by_ref().take(8).enumerate() {
+                byte |= u8::from(flag) << shift;
             }
             self.byte(byte)?;
         }
@@ -314,7 +312,7 @@ fn prototype(
     //   ..
     //   40 41 .. 46  P
     for trigger in [false, true] {
-        out.bits(raw::OBJECT_MASK_CELLS as usize, |bit| {
+        out.bits((0..raw::OBJECT_MASK_CELLS as usize).map(|bit| {
             let cell = MaskCell::parse(
                 (raw::OBJECT_MASK_WIDTH as usize - 1 - bit % raw::OBJECT_MASK_WIDTH as usize) as u8,
                 (raw::OBJECT_MASK_HEIGHT as usize - 1 - bit / raw::OBJECT_MASK_WIDTH as usize)
@@ -326,17 +324,16 @@ fn prototype(
             } else {
                 p.is_passable(cell)
             }
-        })?;
+        }))?;
     }
     for recommended in [false, true] {
-        out.bits(raw::RMG_TERRAIN_COUNT as usize, |index| {
-            let t = crate::domain::Terrain::parse(i32::try_from(index).unwrap()).unwrap();
+        out.bits(crate::domain::Terrain::ALL.into_iter().map(|t| {
             if recommended {
                 p.recommends(t)
             } else {
                 p.allows_terrain(t)
             }
-        })?;
+        }))?;
     }
     out.count(p.kind().index())?;
     out.i32(p.subtype())?;

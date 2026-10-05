@@ -1,9 +1,11 @@
 //! Request-specific preparation of `rmg.txt` into linked, typed templates.
 
 use crate::{
+    behavior::TownMask,
+    domain::{FlagSet, LandTerrain, Ordinal},
     geometry::ZoneId,
     raw,
-    request::{MapVersion, Request, Water, PLAYER_COUNT},
+    request::{MapVersion, Request, Town, Water, PLAYER_COUNT},
 };
 use homm3_resource::{Field, Spreadsheet, SpreadsheetRow};
 use std::{borrow::Cow, error::Error, fmt, num::NonZeroU32};
@@ -11,8 +13,53 @@ use std::{borrow::Cow, error::Error, fmt, num::NonZeroU32};
 const COLUMNS: usize = raw::RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_PLAYERS as usize + 1;
 const TOWNS: usize = raw::TOWN_TYPE_COUNT as usize;
 const RESOURCES: usize = raw::NUM_RESOURCES as usize;
-const LAND_TERRAINS: usize = raw::eTerrainWater as usize;
 const BANDS: usize = raw::RMG_TREASURE_BAND_COUNT as usize;
+
+/// A guard's creature affiliation, in the template's allowed-monster column order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GuardAffinity {
+    /// Neutral creatures, the first allowed-monster column.
+    Neutral,
+    /// Creatures of one faction, in the following columns.
+    Faction(Town),
+}
+impl GuardAffinity {
+    /// Neutral first, then Castle through Conflux.
+    pub const ALL: [Self; TOWNS + 1] = {
+        let mut all = [Self::Neutral; TOWNS + 1];
+        let mut town = 0;
+        while town < TOWNS {
+            all[town + 1] = Self::Faction(Town::ALL[town]);
+            town += 1;
+        }
+        all
+    };
+    /// Affinity of a creature with an optional faction.
+    #[must_use]
+    pub fn of(town: Option<Town>) -> Self {
+        town.map_or(Self::Neutral, Self::Faction)
+    }
+}
+impl Ordinal for GuardAffinity {
+    const ALL: &'static [Self] = &Self::ALL;
+    fn index(self) -> usize {
+        match self {
+            Self::Neutral => 0,
+            Self::Faction(town) => town.index() + 1,
+        }
+    }
+}
+
+/// Guard affinities a zone admits, including the retail `RoE` quirk.
+pub type AllowedGuards = FlagSet<GuardAffinity>;
+impl AllowedGuards {
+    /// Retail bug, retained by hotfix: `RoE` filtering clears Conflux's
+    /// unshifted town ordinal in this neutral-first array. That column is
+    /// Fortress, so Fortress guards are disabled and Conflux guards remain.
+    pub fn clear_retail_roe_conflux(&mut self) {
+        self.remove(GuardAffinity::ALL[raw::TOWN_CONFLUX as usize]);
+    }
+}
 
 /// A source row cannot be interpreted safely as a template record.
 #[derive(Debug)]
@@ -274,13 +321,13 @@ pub struct Zone {
     size: NonZeroU32,
     towns: [Placement; raw::RMG_TOWN_CATEGORY_COUNT as usize],
     neutral_towns_match_alignment: bool,
-    allowed_towns: [bool; TOWNS],
+    allowed_towns: TownMask,
     mines: [Placement; RESOURCES],
     use_native_terrain: bool,
-    allowed_terrain: [bool; LAND_TERRAINS],
+    allowed_terrain: FlagSet<LandTerrain>,
     monsters: ZoneMonsters,
     guards_match_alignment: bool,
-    allowed_monsters: [bool; TOWNS + 1],
+    allowed_monsters: AllowedGuards,
     treasure: [TreasureBand; BANDS],
     connections: Vec<Connection>,
 }
@@ -313,8 +360,8 @@ impl Zone {
     }
     /// Allowed factions after version filtering.
     #[must_use]
-    pub const fn allowed_towns(&self) -> &[bool; TOWNS] {
-        &self.allowed_towns
+    pub const fn allowed_towns(&self) -> TownMask {
+        self.allowed_towns
     }
     /// Mine categories indexed by resource.
     #[must_use]
@@ -328,8 +375,8 @@ impl Zone {
     }
     /// Allowed land terrains; dirt is the fallback when the source allows none.
     #[must_use]
-    pub const fn allowed_terrain(&self) -> &[bool; LAND_TERRAINS] {
-        &self.allowed_terrain
+    pub const fn allowed_terrain(&self) -> FlagSet<LandTerrain> {
+        self.allowed_terrain
     }
     /// Template guard strength.
     #[must_use]
@@ -343,8 +390,8 @@ impl Zone {
     }
     /// Neutral then faction guard availability, including the retail `RoE` quirk.
     #[must_use]
-    pub const fn allowed_monsters(&self) -> &[bool; TOWNS + 1] {
-        &self.allowed_monsters
+    pub const fn allowed_monsters(&self) -> AllowedGuards {
+        self.allowed_monsters
     }
     /// Treasure bands in source order.
     #[must_use]
@@ -715,21 +762,28 @@ fn parse_zone(
     {
         return Ok(Err(unusable));
     }
-    let flags = |first: u32, index: usize| row.is_set(first + u32::try_from(index).unwrap());
-    let mut allowed_towns =
-        std::array::from_fn(|index| flags(raw::RMG_TEMPLATE_COLUMN_ALLOWED_TOWNS, index));
-    let mut allowed_monsters =
-        std::array::from_fn(|index| flags(raw::RMG_TEMPLATE_COLUMN_ALLOWED_MONSTERS, index));
+    let column = |first: u32, index: usize| first + u32::try_from(index).unwrap();
+    let mut allowed_towns: TownMask = FlagSet::from_fn(|town: Town| {
+        row.is_set(column(raw::RMG_TEMPLATE_COLUMN_ALLOWED_TOWNS, town.index()))
+    });
+    let mut allowed_monsters: AllowedGuards = FlagSet::from_fn(|affinity: GuardAffinity| {
+        row.is_set(column(
+            raw::RMG_TEMPLATE_COLUMN_ALLOWED_MONSTERS,
+            affinity.index(),
+        ))
+    });
     if request.version() == MapVersion::Restoration {
-        allowed_towns[raw::TOWN_CONFLUX as usize] = false;
-        // Retail bug, retained by hotfix: slots are neutral, then factions.
-        // Clearing Conflux's unshifted index therefore disables Fortress.
-        allowed_monsters[raw::TOWN_CONFLUX as usize] = false;
+        allowed_towns.remove(Town::CONFLUX);
+        allowed_monsters.clear_retail_roe_conflux();
     }
-    let mut allowed_terrain =
-        std::array::from_fn(|index| flags(raw::RMG_TEMPLATE_COLUMN_ALLOWED_TERRAIN, index));
-    if !allowed_terrain.contains(&true) {
-        allowed_terrain[raw::eTerrainDirt as usize] = true;
+    let mut allowed_terrain = FlagSet::from_fn(|terrain: LandTerrain| {
+        row.is_set(column(
+            raw::RMG_TEMPLATE_COLUMN_ALLOWED_TERRAIN,
+            terrain.index(),
+        ))
+    });
+    if allowed_terrain.is_empty() {
+        allowed_terrain.insert(LandTerrain::Dirt);
     }
     let monsters = match row
         .bytes(raw::RMG_TEMPLATE_COLUMN_MONSTER_STRENGTH)
@@ -747,7 +801,8 @@ fn parse_zone(
         role,
         size,
         towns,
-        neutral_towns_match_alignment: row.is_set(raw::RMG_TEMPLATE_COLUMN_NEUTRAL_TOWNS_MATCH_ZONE),
+        neutral_towns_match_alignment: row
+            .is_set(raw::RMG_TEMPLATE_COLUMN_NEUTRAL_TOWNS_MATCH_ZONE),
         allowed_towns,
         mines,
         use_native_terrain: row.is_set(raw::RMG_TEMPLATE_COLUMN_USE_NATIVE_TERRAIN),
@@ -925,9 +980,12 @@ mod tests {
             .into_template()
             .unwrap();
         let zone = &template.zones()[0];
-        assert!(!zone.allowed_monsters()[raw::TOWN_FORTRESS as usize + 1]);
-        assert!(zone.allowed_monsters()[raw::TOWN_CONFLUX as usize + 1]);
-        assert!(zone.allowed_terrain()[raw::eTerrainDirt as usize]);
+        let guards = zone.allowed_monsters();
+        assert!(guards.contains(GuardAffinity::Neutral));
+        assert!(!guards.contains(GuardAffinity::Faction(Town::FORTRESS)));
+        assert!(guards.contains(GuardAffinity::Faction(Town::CONFLUX)));
+        assert!(!zone.allowed_towns().contains(Town::CONFLUX));
+        assert!(zone.allowed_terrain().contains(LandTerrain::Dirt));
     }
 
     #[test]

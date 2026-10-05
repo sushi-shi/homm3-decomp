@@ -12,6 +12,13 @@ use crate::{
 };
 use std::num::NonZeroU32;
 
+// Retail draws `rand() % eTerrainSubterranean`: dirt through rough.
+#[allow(clippy::cast_sign_loss)]
+const ISLAND_TERRAINS: NonZeroU32 = match NonZeroU32::new(raw::eTerrainSubterranean as u32) {
+    Some(count) => count,
+    None => panic!("the island terrain domain must not be empty"),
+};
+
 /// Water-zone islands are painted and ready for zone connection pathfinding.
 pub struct WaterIslands<'state, 'zones, 'tiles> {
     pub(super) borders: ConnectionBorders<'state, 'zones, 'tiles>,
@@ -150,9 +157,7 @@ impl PlacementMap<'_, '_, '_> {
         let side = self.view().side;
         let x = usize::try_from(minimum.x).map_err(|_| PlacementError::Arithmetic)?;
         let y = usize::try_from(minimum.y).map_err(|_| PlacementError::Arithmetic)?;
-        let terrain =
-            rng.below(NonZeroU32::new(u32::try_from(raw::eTerrainSubterranean).unwrap()).unwrap());
-        let terrain = Terrain::parse(i32::try_from(terrain).unwrap()).unwrap();
+        let terrain = Terrain::ALL[rng.below(ISLAND_TERRAINS) as usize];
         let mask = self.connections.noise.generate(mask_size, rng)?;
         let width = mask.size().width();
         let painted = mask

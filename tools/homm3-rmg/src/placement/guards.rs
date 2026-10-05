@@ -6,8 +6,8 @@ use crate::{
     domain::WorldPosition,
     geometry::ZoneId,
     prototype::{GuardError, GuardFactions, PrototypeCatalog},
-    raw,
     rng::RetailRng,
+    template::AllowedGuards,
     traits::CreatureCatalog,
 };
 use std::{error::Error, fmt};
@@ -64,7 +64,6 @@ impl PlacementMap<'_, '_, '_> {
         let zone = self.zone(zone)?;
         // Added water zones clear allowed factions, but retail leaves their
         // alignment-matching flag unwritten. That flag is an explicit replay input.
-        let empty = [false; raw::TOWN_TYPE_COUNT as usize + 1];
         let factions = match zone.origin() {
             ZoneOrigin::Template(id) => {
                 GuardFactions::from_zone(&map.template().zones()[id.index()], zone.alignment())
@@ -73,7 +72,7 @@ impl PlacementMap<'_, '_, '_> {
                 (Behavior::Retail(profile), Some(town)) if profile.water_guards_match_alignment => {
                     GuardFactions::Matching(town)
                 }
-                _ => GuardFactions::Allowed(&empty),
+                _ => GuardFactions::Allowed(AllowedGuards::NONE),
             },
         };
         let Some(stack) = catalog.select_guard(value, factions, creatures, rng)? else {
