@@ -3829,7 +3829,7 @@ seerhut	?questType@type_belong_to_player_quest@@UAEHXZ	100.0000	100.0000	100.000
 seerhut	?questType@type_defeat_hero_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x16e3d0	tokens1:fb9b12088472
 seerhut	?questType@type_monster_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x16ebc0	tokens1:417a635cf70a
 seerhut	?read@TQuestGuard@@QAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x1734e0	tokens1:054737ea84bd
-seerhut	?read@TSeerHut@@QAEXPAVTAbstractFile@@@Z	87.5224	87.5224	94.2388	0x174610	tokens1:fc7b227adcfc
+seerhut	?read@TSeerHut@@QAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x174610	tokens1:c7d328bc6bc2
 seerhut	?save@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173520	tokens1:cdc31a722f83
 seerhut	?save@TSeerHut@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173fd0	tokens1:c67872b5021d
 seerhut	?save@type_artifact_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x1700a0	tokens1:4c62b01eeb72
