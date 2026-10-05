@@ -543,11 +543,13 @@ DATA(0x0063be60) const combatManager::TWallTarget combatManager::s_wallTargets[8
     { 254, -1, 762, 212, TWallSection(14) }
 };
 
-// Retail static constructors 0x462610/0x462640/0x462670 establish these
-// clipping rectangles before combat. Zero-filled placeholders would hide them.
-DATA(0x00694f18) SLimitData g_combatDrawLimits(0, 0, 799, 555);
-DATA(0x00694ec8) SLimitData g_combatGridAreaLimits(58, 86, 740, 557);
-DATA(0x00694f30) SLimitData g_drawbridgeBounds(365, 211, 542, 380);
+// Original const class statics CombatAreaLimits/GridAreaLimits/DrawbridgeLimits
+// (DC cmbtmgr.cpp:80/83/86). Retail startup 0x462610/0x462640/0x462670
+// and the paired clipping/door callers identify each four-word aggregate.
+// Complete's grid starts at x=58; the older Dreamcast grid starts at x=53.
+DATA(0x00694f18) const SLimitData combatManager::s_combatAreaLimits(0, 0, 799, 555);
+DATA(0x00694ec8) const SLimitData combatManager::s_gridAreaLimits(58, 86, 740, 557);
+DATA(0x00694f30) const SLimitData combatManager::s_drawbridgeLimits(365, 211, 542, 380);
 DATA(0x00694ea8) const SLimitData combatManager::s_mainBuildingLimits(742, 160, 799, 337);
 DATA(0x00694ed8) const SLimitData combatManager::s_upperTowerLimits(564, 0, 651, 85);
 DATA(0x00694ef0) const SLimitData combatManager::s_rightHeroLimits(741, 16, 799, 127);
@@ -2741,7 +2743,7 @@ void combatManager::lowerDoor()
 
     SAMPLE2 sample = loadPlaySample(
         DATA_COMPGEN(0x0066ffb0, drawbridgeSampleName, "drawbrg.82m"));
-    m_extent = g_drawbridgeBounds;
+    m_extent = combatManager::s_drawbridgeLimits;
     for (int state = DRAWBRIDGE_UP; state >= DRAWBRIDGE_DOWN; state--) {
         m_drawbridgeState = state;
         drawFrame(1, 0, 1, 100, 1, 1);
@@ -2763,7 +2765,7 @@ void combatManager::raiseDoor()
     }
 
     SAMPLE2 sample = loadPlaySample("drawbrg.82m");
-    m_extent = g_drawbridgeBounds;
+    m_extent = combatManager::s_drawbridgeLimits;
     for (int state = DRAWBRIDGE_DOWN; state <= DRAWBRIDGE_UP; state++) {
         m_drawbridgeState = state;
         drawFrame(1, 0, 1, 100, 1, 1);
@@ -2946,37 +2948,15 @@ bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // archaeology, which makes them far cheaper than InitNonVisualVars
 // despite being bigger.
 
-// The shared nine-phase skeleton, in order: the inlined IsQuickCombat
-// guard (byte-identical in all three) / deltas / a `steps` divide /
-// per-step motion / sprite-or-frame selection / `Bitmap16Bit backup(w,h)`
-// plus four limits seeded from the 0x6aace8 quad / DrawFrame / a frame
-// delay from gCombatSpeedFactors[combatSpeed] / the animation loop. The
-// loop body is Grab, sprite Draw, a four-way union of the sprite rect
-// into the limits, a four-way clip against the 0x694f18 quad,
-// UpdateScreen with (r-l+1, b-t+1), then DelayTil.
-
-// Where they differ: ShootBallisticMissile is the only PARABOLIC one - it
-// recomputes x and y from an `arc` term every frame instead of
-// accumulating a step - is the only one with no DrawFrame call, is the
-// only one whose backup restore sits INSIDE the loop, and uses a 100.0f
-// delay factor where the other two use 33.0f. ShootMissile is the only
-// one that does NOT cycle the sprite frame: it picks one frame from the
-// angle and holds it. ShootAnimatedMissile is the only one that owns its
-// sprite (ResourceManager::GetSprite ... Dispose).
-
-// The union+clip+UpdateScreen block is DC's SLimitData::Include +
-// ::Clip + Width()/Height(), and the same block appears in
-// army::animate_missile (0x43f2c0), combatManager::DrawFrame (0x494440)
-// and ComputeMaxExtent (0x495bf0) - so spelling it right here pays off in
-// several more bodies. Suggested order: ShootMissile first (fullest angle
-// path, simplest loop), then ShootAnimatedMissile, then the parabola.
-
-// One thing to settle before writing any of them: all four dwords of each
-// limits quad are read INDIVIDUALLY, each at displacement 0 against its
-// own symbol, so they want four separate externs rather than one struct -
-// the gCombatHexLeft694ea8 precedent in the header. And every new
-// file-scope extern on cmbtmgr.h fires the include-set wall by itself
-// (measured at gCombatSeed66d840), so all of them must be gated.
+// All three missile animators retain the shared bitmap, sprite and rectangle
+// helpers. Their dirty extents start from heroWindowManager::NullLimits and
+// are clipped to combatManager::CombatAreaLimits before UpdateCombatArea.
+// The ballistic path computes a parabola, restores its saved bitmap inside
+// the loop, and uses a 100ms speed factor. The other two use 33ms; only the
+// animated variant owns its sprite and cycles its frames.
+// DC 0x61926, 0x61d5c and 0x6223a pass inclusive right/bottom endpoints
+// to ScrollTo's width/height parameters. Preserve those original caller
+// expressions; Complete's fixed viewport eliminates the scrolling work.
 
 // E:\gamedcs\cmbtmgr.cpp:3640
 // RECONSTRUCTED 2026-08-20, the parabolic member of the trio. DC local
@@ -3002,15 +2982,13 @@ bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // 0x73fdc..0x74000 expands its inclusive width/height and UpdateScreen
 // call after clipping the same four-word rectangle.
 // DC 3703/3707/3725 name the bitmap Grab/Draw and const sprite Draw
-// forwarding overloads. Restoring those calls measures Windows 94.19
-// -> 91.24%; the native indexed loop measures 89.12%. It retains the
-// final Draw's nested GetMap and GetNumFrames, which retail expands
-// (14 calls vs 12). The frame remains 0x8c vs retail 0x9c. Native
-// operand-order alternatives are Windows-flat. All other available
-// cmbtmgr Mac pairs hold; keep these canonical source operations.
-// Default construction followed by assignment of updateArea is also
-// byte-flat at 89.1219%; the observed four-word initialization alone does
-// not distinguish it from copy initialization, which remains the model.
+// forwarding overloads. The four-word NullLimits copy permits either copy
+// initialization or default construction followed by assignment. Combined
+// with the original ScrollTo arguments, the latter lets VC6 expand
+// GetNumFrames and measures 91.3063%. Its nested IsValidSeq and the final
+// Draw's GetMap still remain calls; retail expands both. The frame remains
+// 0x8c vs retail 0x9c. Naming the previous-frame rectangle inside its guard,
+// typed-row GetMap and native operand-order alternatives are byte-flat.
 VA(0x00467a00, 0x3AF)
 DC_ADDRESS(0x0614f0, 0x4b8)
 MAC_ADDRESS(0x073c44, 0x488)  // anchor-global
@@ -3022,9 +3000,9 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
 
     const int deltaX = destX - startX;
     const int deltaY = destY - startY;
-    const int arrowtraveldist = static_cast<int>(sqrt(static_cast<double>(
+    const int arrowTravelDist = static_cast<int>(sqrt(static_cast<double>(
         deltaY * deltaY + deltaX * deltaX)));
-    const int nframes = (arrowtraveldist + 10) / 20;
+    const int nframes = (arrowTravelDist + 10) / 20;
     // The arc: half the horizontal span, spread over the flight. The
     // trajectory below subtracts flatness*(nframes - step) from deltaY,
     // so the peak deviation is nframes/4 * flatness = abs(deltaX)/2.
@@ -3039,13 +3017,14 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     int y = startY;
 
     Bitmap16Bit saved(width, height);
-    SLimitData updateArea = combatManager::s_combatAreaLimits;
-    const int missileperiod = static_cast<int>(
+    SLimitData updateArea;
+    updateArea = heroWindowManager::s_nullLimits;
+    const int missilePeriod = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
 
     int frame = 0;
     for (int step = 0; step < nframes; step++) {
-        unsigned long nextFrameTime = GameTime::get() + missileperiod;
+        unsigned long nextFrameTime = GameTime::get() + missilePeriod;
         if (step != 0) {
             // Mac 0x73e24 copies a four-word rectangle temporary here.
             updateArea = SLimitData(
@@ -3059,8 +3038,9 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
         missile->draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, false, true);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
-        scrollTo(x, y, width, height, true, true, true);  // DC 3717
-        updateArea.clip(g_combatDrawLimits);
+        scrollTo(x, y, x + width - 1, y + height - 1,
+                 true, true, true);  // DC 3717
+        updateArea.clip(combatManager::s_combatAreaLimits);
         updateCombatArea(updateArea);
         saved.draw(0, 0, width, height,
                    g_windowManager->m_screenBitmap, x, y, false);
@@ -3147,7 +3127,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     int y = startY - height / 2;
 
     Bitmap16Bit saved(width, height);
-    SLimitData updateArea = combatManager::s_combatAreaLimits;
+    SLimitData updateArea = heroWindowManager::s_nullLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowDelay = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
@@ -3167,10 +3147,11 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
         saved.grab(g_windowManager->m_screenBitmap, x, y);
         missile->draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, flipped, 1);
-        scrollTo(x, y, width, height, true, true, true);  // DC 3865
+        scrollTo(x, y, x + width - 1, y + height - 1,
+                 true, true, true);  // DC 3865
         updateArea.include(SLimitData(
             x, y, x + width - 1, y + height - 1));
-        updateArea.clip(g_combatDrawLimits);
+        updateArea.clip(combatManager::s_combatAreaLimits);
         updateCombatArea(updateArea);  // DC 3874, by-value extent
         ++frame;
         if (frame >= missile->getNumFrames(0))
@@ -3285,13 +3266,13 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     }
 
     Bitmap16Bit saved(width, height);
-    SLimitData updateArea = combatManager::s_combatAreaLimits;
+    SLimitData updateArea = heroWindowManager::s_nullLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
-    const int arrowdelay = static_cast<int>(
+    const int arrowDelay = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
 
     for (int step = 0; step < nframes; step++) {
-        unsigned long nextFrameTime = GameTime::get() + arrowdelay;
+        unsigned long nextFrameTime = GameTime::get() + arrowDelay;
         if (step != 0) {
             saved.draw(0, 0, width, height,
                        g_windowManager->m_screenBitmap, x, y, false);
@@ -3307,8 +3288,9 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         missile->draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, flipped, 1);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
-        scrollTo(x, y, width, height, true, true, true);  // DC 4016
-        updateArea.clip(g_combatDrawLimits);
+        scrollTo(x, y, x + width - 1, y + height - 1,
+                 true, true, true);  // DC 4016
+        updateArea.clip(combatManager::s_combatAreaLimits);
         updateCombatArea(updateArea);  // DC 4022, by-value extent
         GameTime::delayTil(nextFrameTime);
     }
@@ -4102,6 +4084,12 @@ void combatManager::markTowerArmy(const army* tower)
     }
 }
 
+// DC4970/4973 return the tutorial/local policy before the two player
+// references at4976; Complete Mac0x76c10..0x76c28 keeps the same order.
+// Both player addresses precede their preference reads. The early-return
+// and reference-declaration variants preserve all Windows scores. Replacing
+// the explicit true/false returns with one && result lowers this body from
+// 100% to94.0278% without improving its missile callers.
 VA(0x0046a4a0, 0x71)
 DC_ADDRESS(0x063900, 0xc4)
 MAC_ADDRESS(0x076bc8, 0xac)
@@ -4109,18 +4097,14 @@ bool combatManager::isQuickCombat() const
 {
     if (g_game->m_isTutorial)
         return false;
-    if (g_remoteOn && m_sideIsAi[0] && m_sideIsAi[1]) {
-        // DC's single line gap before the test and both retail expansions
-        // compute the two player addresses before reading either flag. This
-        // also closes Open, DamageMessage and ShootAnimatedMissile while
-        // improving both remaining missile callers.
-        const playerData& firstPlayer = g_game->m_players[m_playerIds[0]],
-            &secondPlayer = g_game->m_players[m_playerIds[1]];
-        if (firstPlayer.m_quickCombat && secondPlayer.m_quickCombat)
-            return true;
-        return false;
-    }
-    return g_config.m_quickCombat != 0;
+    if (!g_remoteOn || !m_sideIsAi[0] || !m_sideIsAi[1])
+        return g_config.m_quickCombat != 0;
+
+    const playerData& firstPlayer = g_game->m_players[m_playerIds[0]];
+    const playerData& secondPlayer = g_game->m_players[m_playerIds[1]];
+    if (firstPlayer.m_quickCombat && secondPlayer.m_quickCombat)
+        return true;
+    return false;
 }
 
 VA(0x0046a520, 0x44)

@@ -1677,8 +1677,8 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
     int heroId = placeholder->m_heroId;
     int owner = static_cast<signed char>(placeholder->m_owner);
     if (heroId == -1) {
-        heroId = g_game->getStartingHeroId(g_game->m_setup.m_alignment[owner],
-                                           owner, 0);
+        heroId = g_game->getStartingHeroId(
+            TTownType(g_game->m_setup.m_alignment[owner]), owner, 0);
     } else {
         g_game->rehomeCampaignHeroSetup(heroId);
     }
@@ -2189,10 +2189,10 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     g_game->m_players[position].m_isHuman = 1;
     g_game->m_players[position].m_isLocal = 1;
 
-    int playerHeroFaces[8];
+    HeroId playerHeroFaces[8];
     int i;
-    MEMSET(playerHeroFaces, -1, sizeof(playerHeroFaces), i);
-    playerHeroFaces[position] = getStartOptions()->slot7(option);
+    MEMSET(playerHeroFaces, heroIdNone, sizeof(playerHeroFaces), i);
+    playerHeroFaces[position] = HeroId(getStartOptions()->slot7(option));
     g_game->setupFirstPlayer();
 
     stream->pubseekoff(m_offset, std::ios::beg, std::ios::in);

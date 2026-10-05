@@ -118,7 +118,7 @@ DATA(0x006779b0) int g_neutralTownLevelWeights[6] = { 2, 3, 4, 5, 4, 3 };
 DATA(0x006779c8) int g_tutorialStartingResources[NUM_RESOURCES] =
     { 50, 50, 50, 50, 50, 50, 50000 };
 DATA(0x0069fbf8) int g_newMapStartingBonus[8];
-DATA(0x0069fb24) int g_startingHeroOverrides[8];
+DATA(0x0069fb24) HeroId g_startingHeroOverrides[8];
 
 // Retail scalar state; startup initial values come from the pinned image.
 DATA(0x00697294) TTextResource* g_randomTavernText;
@@ -2093,12 +2093,14 @@ int game::randomScan(signed char* whichList, int start, int length,
     return id >= start ? id : -1;
 }
 
+// The original GetStartingHeroId public returns THeroID and accepts
+// TTownType; its local heroArray is an array of the same hero-ID domain.
 VA(0x004bb400, 0x1DC)
 DC_ADDRESS(0x0a68d8, 0x3fc)
 MAC_ADDRESS(0x0ce1c8, 0x1d0)
-int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
+HeroId game::getStartingHeroId(TTownType alignment, int playerPos, int mapPosition)
 {
-    int heroArray[HERO_COUNT];
+    HeroId heroArray[HERO_COUNT];
     THeroClass heroClass1 = classKnight;
     THeroClass heroClass2 = classCleric;
 
@@ -2148,7 +2150,7 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
             && m_heroPoolMap[heroIndex][playerPos]
             && (m_heroes[heroIndex].m_heroClass == heroClass1
                 || m_heroes[heroIndex].m_heroClass == heroClass2)) {
-            heroArray[top++] = heroIndex;
+            heroArray[top++] = HeroId(heroIndex);
         }
     }
 
@@ -2156,7 +2158,7 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
         for (heroIndex = 0; heroIndex < HERO_COUNT; heroIndex++) {
             if (m_heroAvailability[heroIndex] == -1
                 && m_heroPoolMap[heroIndex][playerPos]) {
-                heroArray[top++] = heroIndex;
+                heroArray[top++] = HeroId(heroIndex);
             }
         }
     }
@@ -3843,13 +3845,14 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
 }
 
 // E:\gamedcs\game.cpp:4236
+// Original NewMap takes a THeroID pointer for playerHeroFaces.
 // DC hasHero is an unsigned byte. Mac retains separate resource-bonus
 // arms in town enumeration order; restoring that order gives VC6 EXACT.
 // The Mac comparison remains nonexact, with all helper paths retained.
 VA(0x004bfe70, 0x6A8)
 DC_ADDRESS(0x0aada4, 0xb2a)
 MAC_ADDRESS(0x0d5a9c, 0x8b4)
-void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
+void game::newMap(TAbstractFile* mapFile, HeroId* playerHeroFaces,
                   TCampaignBrief::ScenarioStruct* campaignContext, int gameVersion)
 {
     g_inSetup = 1;
@@ -3875,7 +3878,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
             // Mac retains playerData::isHuman here and in the setup loop.
             if (m_players[facePlayer].isHuman()
                 && m_mapHeader.m_playerSlotAttributes[facePlayer].m_generateHero) {
-                int heroId = playerHeroFaces[facePlayer];
+                HeroId heroId = playerHeroFaces[facePlayer];
                 if (heroId != -1) {
                     m_heroAvailability[heroId] = static_cast<char>(facePlayer);
                     if (g_game->m_setup.m_startingHero[facePlayer] == -1)
@@ -4078,7 +4081,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 VA(0x004c0520, 0x106)
 MAC_ADDRESS(0x0d6350, 0xc0)  // anchor-callers + contiguous catch funclets, retail-only
 unsigned char game::newMap(const char* mapPath, const char* mapName,
-                           int* playerHeroFaces, int gameVersion)
+                           HeroId* playerHeroFaces, int gameVersion)
 {
     try {
         strcpy(g_text, mapPath);
@@ -4272,9 +4275,8 @@ static void randomizeTomb(NewmapCell* cell)
 
 // E:\gamedcs\game.cpp:4753. The vector local and its teardown belong to the
 // inlined source helper; retail calls only the packed pyramid setter.
-// Ownership probe: the MapCell.h body at 0x4c2330 is currently fully
-// expanded here. Replacing this helper's forced-inline spelling with ordinary static
-// did not recover the retained call; the fatal header-emission gate remains.
+// The canonical ESpellId setter stays called: its cost is 49 against
+// a nested inline budget of 17 in the current ordinary helper model.
 DC_ADDRESS(0x0abfe8, 0x60)
 MAC_ADDRESS(0x0d6a2c, 0x118)
 static void randomizePyramid(NewmapCell* cell)
@@ -4371,7 +4373,9 @@ void game::randomizeUniversity(NewmapCell* cell)
 // operations as calls. DC proves the TSecondarySkill local but predates
 // Complete's mask filtering; retail's proxy-call sequence selects operator[].
 // Mac d6d98..d6dd4 expands setWitchSkill separately in the selected-skill
-// and no-available-skill branches. Keep both source calls at those boundaries.
+// and no-available-skill branches. Its positive count arm precedes the empty
+// arm (d6d4c..d6dd4); restoring that order improves randomizeEvents.
+// Keep both source calls at those boundaries.
 DC_ADDRESS(0x0ac168, 0x3a)
 MAC_ADDRESS(0x0d6c80, 0x16c)
 static void randomizeWitchHut(NewmapCell* cell)
@@ -4388,10 +4392,7 @@ static void randomizeWitchHut(NewmapCell* cell)
 
     TSecondarySkill skill;
     int count = possibleSkills.count();
-    if (count < 1) {
-        cell->setWitchSkill(eSecSkillNone);
-    }
-    else {
+    if (count > 0) {
         int choice = random(1, count);
         for (skill = eSecSkillPathfinding; skill < kNumSecSkills;
              skill = TSecondarySkill(skill + 1)) {
@@ -4399,6 +4400,9 @@ static void randomizeWitchHut(NewmapCell* cell)
                 break;
         }
         cell->setWitchSkill(skill);
+    }
+    else {
+        cell->setWitchSkill(eSecSkillNone);
     }
 }
 
@@ -6625,6 +6629,9 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         // The >=30 admission makes Mac dc5f0..dc61c the modern roster's
         // byte/sentinel decoder. This loadHeroId call is inferred from that
         // operation; the original constant argument spelling is unproven.
+        // Four HeroId reader-result/local models keep both reader bodies
+        // exact but lower this caller to 91.6362%; their result domain has
+        // no surviving native signature, so the numeric interface remains.
         int portrait = loadHeroId(infile, g_saveVersionCustomHeroSetups);
 
         std::string strTemp = readLengthPrefixedString(infile);
@@ -7497,15 +7504,21 @@ void game::perDay()
 // Original: game::clear_recruits; game.cpp:8266
 // DC 8266/8290 and Mac 0xdeefc/0xdef98 place these two helpers between
 // perDay and setWeeklyRecruits. DC names the long loop index recruit,
-// THeroID hero_id and the selected hero pointer old_hero.
+// THeroID hero_id and the selected hero pointer old_hero. Its original
+// QAW4THeroID parameter encoding agrees with a two-slot array formal;
+// all three named locals precede the native lexical blocks.
 DC_ADDRESS(0x0b3d8c, 0x74)
 MAC_ADDRESS(0x0deefc, 0x9c)
-void game::clearRecruits(HeroId* recruits)
+void game::clearRecruits(HeroId recruits[2])
 {
-    for (long recruit = 0; recruit < 2; ++recruit) {
-        HeroId heroId = recruits[recruit];
+    hero* oldHero;
+    HeroId heroId;
+    long recruit;
+
+    for (recruit = 0; recruit < 2; ++recruit) {
+        heroId = recruits[recruit];
         if (heroId >= 0) {
-            hero* oldHero = getHero(heroId);
+            oldHero = getHero(heroId);
             if (oldHero->m_flags & g_heroRecruitReservedFlag)
                 continue;
             m_heroAvailability[heroId] = -1;
@@ -7534,6 +7547,7 @@ static HeroId getNewHero(THeroClass heroClass)
 // The two-slot loop, tutorial choices and equipment/mana/army closeout identify
 // this body; DC's nullary set_recruits is the surrounding all-player operation.
 // Mac 0xdf0ac initializes the local artifact's id before its extra field.
+// The named locals precede the native lexical blocks.
 // The TArtifact constructor preserves that order in VC6; the default
 // constructor reverses the two stores in this caller.
 VA(0x004c8450, 0x248)
@@ -7542,14 +7556,17 @@ MAC_ADDRESS(0x0df0ac, 0x238)
 void game::setWeeklyRecruits(int playerPos)
 {
     playerData* player = &m_players[playerPos];
+    hero* newHero;
+    THeroClass otherClass;
     type_artifact artifact(ARTIFACT_NONE);
+    long backpackSlot;
+    HeroId heroId;
     long recruitSlot;
 
     for (recruitSlot = 0; recruitSlot < 2; ++recruitSlot) {
         if (player->m_recruits[recruitSlot] >= 0)
             continue;
 
-        THeroClass otherClass;
         if (player->m_recruits[1 - recruitSlot] < 0)
             otherClass = kNumHeroClasses;
         else
@@ -7557,7 +7574,6 @@ void game::setWeeklyRecruits(int playerPos)
             otherClass = getHero(player->m_recruits[1 - recruitSlot])->m_heroClass;
         }
 
-        HeroId heroId;
         if (m_isTutorial
             && static_cast<unsigned short>(m_week) <= 2) {
             if (m_week == 1) {
@@ -7577,8 +7593,8 @@ void game::setWeeklyRecruits(int playerPos)
             continue;
 
         m_heroAvailability[heroId] = 64;
-        hero* newHero = getHero(heroId);
-        long backpackSlot = HERO_BACKPACK_CAPACITY - 1;
+        newHero = getHero(heroId);
+        backpackSlot = HERO_BACKPACK_CAPACITY - 1;
         do {
             artifact = newHero->getBackpack(backpackSlot);
             if (artifact.m_artifactId != -1
@@ -8146,11 +8162,12 @@ void game::randomizeHeroPool()
 // Windows retail and Mac 0xe0918..0xe0928 index m_heroes without getHero's
 // -1 sentinel, so the hero is subscripted directly. Mac 0xe0a44..0xe0a5c
 // stores each artifact id before its -1 payload: the converting
-// type_artifact constructor builds both war-machine artifacts.
+// type_artifact constructor builds both war-machine artifacts. The original
+// SetRandomHeroArmies public is QAAXHH_N: only minimal is Boolean.
 VA(0x004c9730, 0x159)
 DC_ADDRESS(0x0b5094, 0x268)
 MAC_ADDRESS(0x0e0910, 0x1c4)
-void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
+void game::setRandomHeroArmies(int hero, int cheat, bool minimal)
 {
     armyGroup* currentArmy = &m_heroes[hero].m_army;
     const THeroTraits* traits = &g_heroTraits[hero];
@@ -8463,8 +8480,9 @@ void game::processRandomObjects()
 // (startingHeroIds[i] and setup.alignment[i]) at compile time, while the retail
 // structure remains 29/29 exact blocks; no legal B14 mutation remains.
 // DC line 9464 passes GetTownId directly to GetTown and records thisTown.
-// Its HeroID/index/town declaration order is retained. Mac 0xe1578..0xe1580
-// computes the bonus hero address in two stages: the canonical getHero
+// HeroID has the native THeroID domain; thisTown belongs to the town arm.
+// Mac 0xe1578..0xe1580 computes the bonus hero address in two stages:
+// the canonical getHero
 // expansion reproduces that boundary and closes Windows at 100%, with the
 // original less-than loop and all helpers preserved. Mac reaches 99.37%;
 // only its larger stack frame remains different. Do not invent frame padding.
@@ -8472,17 +8490,16 @@ void game::processRandomObjects()
 VA(0x004ca040, 0x1F1)
 DC_ADDRESS(0x0b5cdc, 0x2a2)
 MAC_ADDRESS(0x0e13f0, 0x1dc)  // linkorder
-void game::createTownHeroes(int* startingHeroIds)
+void game::createTownHeroes(HeroId* startingHeroIds)
 {
-    int heroId;
+    HeroId heroId;
     int i;
-    town* thisTown;
 
     for (i = 0; i < 8; i++) {
         if (!m_mapHeader.m_playerSlotAttributes[i].m_generateHero)
             continue;
 
-        thisTown = getTown(
+        town* thisTown = getTown(
             getTownId(m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_x,
                       m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_y,
                       m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_z));
@@ -8491,9 +8508,9 @@ void game::createTownHeroes(int* startingHeroIds)
             && startingHeroIds[i] != -1)
             heroId = startingHeroIds[i];
         else if (g_inCampaign)
-            heroId = getStartingHeroId(m_setup.m_alignment[i], i, 0);
+            heroId = getStartingHeroId(TTownType(m_setup.m_alignment[i]), i, 0);
         else
-            heroId = getStartingHeroId(m_setup.m_alignment[i], i, 0);
+            heroId = getStartingHeroId(TTownType(m_setup.m_alignment[i]), i, 0);
 
         if (m_setup.m_startingHero[i] == -1)
             m_setup.m_startingHero[i] = heroId;

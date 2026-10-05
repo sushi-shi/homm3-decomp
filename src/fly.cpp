@@ -227,7 +227,7 @@ int army::fly(int destIndex)
                            g_windowManager->m_screenBitmap->getHeight(),
                            g_windowManager->m_screenBitmap->getPitch(),
                            false);
-                g_combatManager->m_extent = combatManager::s_combatAreaLimits;
+                g_combatManager->m_extent = heroWindowManager::s_nullLimits;
                 g_combatManager->m_saveBiggestExtent = 1;
                 drawToBuffer(static_cast<int>(x), static_cast<int>(y), 0);
                 g_combatManager->m_saveBiggestExtent = 0;

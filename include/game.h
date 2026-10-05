@@ -1213,7 +1213,7 @@ public:
     std::vector<MonsterIdentifier> m_monsterIdentifiers;
     NewfullMap* getWorldMapData();
     type_point gameFn004CEF10(int identifier);
-    int getStartingHeroId(int alignment, int playerPos,
+    HeroId getStartingHeroId(TTownType alignment, int playerPos,
                           int mapPosition);  // 0x4bb400
     int scan(signed char* whichList, int start, int length);
     int randomScan(signed char* whichList, int start, int length,
@@ -1235,7 +1235,7 @@ public:
                  // DC game.cpp:10132
     type_point getPuzzleOrigin() const;  // 0x4cea70
     void setRandomHeroArmies(int heroId, int cheat,
-                             unsigned char minimal);  // 0x4c9730
+                             bool minimal);  // 0x4c9730
     TArtifact getRandomArtifactId(int artifactClass);  // 0x4c94d0
     void setupTowns();
     void checkHeroConsistency();
@@ -1278,9 +1278,9 @@ public:
     // (`?CreateTownHeroes@game@@QAAXXZ`, no arguments) does not: the body
     // ends `ret 4`, tests [ebp+8] for null once per slot and separately
     // strength-reduces it into a four-byte-stride walker it dereferences,
-    // i.e. an eight-entry int array of pre-chosen starting heroes that
+    // i.e. an eight-entry hero-ID array of pre-chosen starting heroes that
     // overrides GetStartingHeroId for human players.
-    void createTownHeroes(int* startingHeroIds);
+    void createTownHeroes(HeroId* startingHeroIds);
     int getAlignment(int creature) const;
     TTownType getPlayerAlignment(int playerId) const;
     void claimShipyard(type_point location, int newPlayerOwner);  // 0x4c6a30
@@ -1403,10 +1403,10 @@ public:
     void giveTroopsToNeutralTowns();
     void giveTroopsToNeutralTown(int townId);  // 0x4bf570
     void setupOrigData();
-    void newMap(TAbstractFile* mapFile, int* playerHeroFaces,
+    void newMap(TAbstractFile* mapFile, HeroId* playerHeroFaces,
                 TCampaignBrief::ScenarioStruct* campaignContext, int gameVersion);
     unsigned char newMap(const char* mapPath, const char* mapName,
-                         int* playerHeroFaces, int gameVersion);
+                         HeroId* playerHeroFaces, int gameVersion);
     void setupFirstPlayer();
     bool loadMap(TAbstractFile* mapFile);
     void applyMapHeaderAvailability();
@@ -1430,7 +1430,7 @@ private:
     // Original DC clear_recruits and set_weekly_recruits carry private
     // AAAX mangling. The Complete helpers are called only by game methods.
     void setWeeklyRecruits(int playerPos);
-    void clearRecruits(HeroId* recruits);
+    void clearRecruits(HeroId recruits[2]);
 
 public:
     void randomizeHeroPool();
@@ -1883,7 +1883,7 @@ extern int g_grailOwner;
 // No Dreamcast or NH3API symbol covers it, so the spelling stays ordinal on
 // gUnnamed69950c's precedent rather than inventing a role name.
 extern unsigned char g_normalVictory;
-extern int g_startingHeroOverrides[8];
+extern HeroId g_startingHeroOverrides[8];
 // Dreamcast public `iCurHourGlassPhase`; game.cpp owns the retail word and
 // philAI::DoAI advances it as computer heroes are processed.
 extern int g_curHourGlassPhase;

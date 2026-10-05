@@ -588,16 +588,17 @@ SIZE(type_pyramid_info, 4);
 // at bits 25..28 (`shl esi,3 / sar esi,0x1c`). Emptying the wagon clears
 // bit 13 alone - `and ah,0xdf` over the dword, the same one-byte
 // read-modify-write SetGardenEmpty produces at bit 10.
-// Original CodeView WagonInfo fields: resource_amount, visited_bits, full,
-// has_artifact, artifact, resource. Complete widens the artifact lane to 10 bits.
+// Original CodeView WagonInfo has six fields: resource_amount, visited_bits,
+// full, has_artifact, artifact, resource; the first four use unsigned int.
+// The linked artifact field type is unresolved, but its original getter and
+// setter both name TArtifact. Complete widens that lane from 8 to 10 bits.
 struct WagonInfo {
-    unsigned long m_resourceAmount : 5;
-    unsigned long m_visitedBits : 8;
-    unsigned long m_full : 1;
-    unsigned long m_hasArtifact : 1;
-    signed long m_artifact : 10;
+    unsigned int m_resourceAmount : 5;
+    unsigned int m_visitedBits : 8;
+    unsigned int m_full : 1;
+    unsigned int m_hasArtifact : 1;
+    TArtifact m_artifact : 10;
     EGameResource m_resource : 4;
-    unsigned long m_tail : 3;
 };
 SIZE(WagonInfo, 4);
 
@@ -1842,7 +1843,7 @@ inline short ExtraInfoUnion::getWagonAmount() const { return m_wagonInfo.m_resou
 DC_ADDRESS(0x09c964, 0xa)
 inline TArtifact ExtraInfoUnion::getWagonArtifact() const
 {
-    return TArtifact(m_wagonInfo.m_artifact);
+    return m_wagonInfo.m_artifact;
 }
 
 DC_ADDRESS(0x09c970, 0xc)
@@ -1865,9 +1866,10 @@ DC_ADDRESS(0x09c988, 0xe)
 inline bool ExtraInfoUnion::wagonIsFull() const { return m_wagonInfo.m_full; }
 
 // DC 1177..1181 writes resource, amount, full, has_artifact, visited_bits.
-// The Complete masks prove the corresponding five fields. With the shrine
-// bitset default-constructed and unpinned, RandomizeEvents retains this call
-// and the 0x4c2360 body matches exactly.
+// The Complete masks prove the corresponding five fields. Retail retains
+// this call inside randomizeWagon. The current nested budget is 96 against
+// cost 87, so VC6 expands it and omits the body; the native field-domain
+// and implicit short-argument probes do not change that decision.
 // E:\gamedcs\MapCell.h:1176
 VA(0x004c2360, 0x27)
 DC_ADDRESS(0x0bcac8, 0x74)
