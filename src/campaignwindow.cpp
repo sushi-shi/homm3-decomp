@@ -136,6 +136,8 @@ void TCampaignWindow::openPreview(int campaignIndex)
 // That is the OVER-inline class on a Dinkumware member no declarator can
 // reach, and the pin lever is out of bounds for this lane; max/hist keep the
 // 98.4726 peak the shadow bought.
+// DC 93 calls SCampaign::clear(); an inline `clear() { *this = SCampaign(); }`
+// call site measured 94.12% (2026-10-05), so the direct assignment stays.
 VA(0x0045ea40, 0x692)
 DC_ADDRESS(0x05b570, 0x790)
 MAC_ADDRESS(0x069f7c, 0xb58)  // campbkx2.pcx + vtable/global stores; Complete narrows the reset flag and adds the campaign-set slot;

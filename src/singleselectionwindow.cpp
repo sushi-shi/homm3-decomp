@@ -1323,10 +1323,11 @@ CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayer(unsigned long dpid)
     return 0;
 }
 
+// Original DC ?IsFaceTaken@CNetPlayerHandler@@QAA_NHH@Z proves bool.
 VA(0x00577d10, 0x5a)
 DC_ADDRESS(0x130828, 0x70)
 MAC_ADDRESS(0x16f168, 0xa4)
-unsigned char CNetPlayerHandler::isFaceTaken(int face, int exclude)
+bool CNetPlayerHandler::isFaceTaken(int face, int exclude)
 {
     for (int i = 0; i < MAX_PLAYERS; ++i) {
         if (i != exclude) {
@@ -7540,6 +7541,12 @@ void TSingleSelectionWindow::onNameClick(int pos)
 // CheckFaces lowers to 38 retail blocks versus 46 here.  Chaining
 // GetWidget(...)->send_message raises the local score slightly, but destroys
 // DC's line-7574 widget* b local/statement group; keep the positive DC shape.
+// Traced (2026-10-05): checkFaces expands at depth 1 (budget 682, three
+// root sites left, cb 120), giving its children 187; getPlayerInPos (75)
+// then leaves 112 for isFaceTaken (108), which expands. Retail calls
+// isFaceTaken, so its pool was below 183: a fourth cost-free root site
+// after checkFaces or a checkFaces cost of at least 134. DC's function-scope
+// i/pPlayer and braced face test give cb 119; no evidenced site was found.
 // E:\gamedcs\singleselectionwindow.cpp:7512
 VA(0x0058B790, 0x2A3)
 DC_ADDRESS(0x142028, 0x180)

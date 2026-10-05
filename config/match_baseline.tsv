@@ -396,7 +396,7 @@ ai_player	?hasBuilding@town@@QBE_NH_N@Z	100.0000	100.0000	100.0000	0x305a0	token
 ai_player	?hireHeroes@type_AI_player@@QAE_NXZ	100.0000	100.0000	100.0000	0x31360	tokens1:affdde797775
 ai_player	?initializeArtifactEffects@@YIXXZ	97.4602	97.4602	97.5044	0x34100	tokens1:7a8c9bae5473
 ai_player	?makeGift@type_AI_player@@IAEXJ@Z	100.0000	100.0000	100.0000	0x29110	tokens1:150eb886b156
-ai_player	?markDestinations@@YIJPAVhero@@JPAVsearchArray@@PAGW4type_search_type@@@Z	92.8818	92.8818	92.8818	0x2f570	tokens1:666e9e373f85
+ai_player	?markDestinations@@YIJPAVhero@@JPAVsearchArray@@PAGW4type_search_type@@@Z	92.8818	92.8818	92.8818	0x2f570	tokens1:47b61f8a4d08
 ai_player	?markTown@type_garrison_purchaser@@UBEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28580	tokens1:46e13fe43707
 ai_player	?markTown@type_town_threat_checker@@UBEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28570	tokens1:9d4afad7a374
 ai_player	?markTowns@type_town_threat_checker@@IAEXPAVhero@@PAVsearchArray@@@Z	100.0000	100.0000	100.0000	0x282b0	tokens1:89f6baebfcbc
@@ -4037,7 +4037,7 @@ singleselectionwindow	?initializeLCDescriptions@@YI_NXZ	100.0000	100.0000	100.00
 singleselectionwindow	?initializeTurnDurationText@@YI_NXZ	100.0000	100.0000	100.0000	0x177ab0	tokens1:d701b51abb47
 singleselectionwindow	?initializeVCDescriptions@@YI_NXZ	100.0000	100.0000	100.0000	0x177a50	tokens1:9f8645e1dcf2
 singleselectionwindow	?insert@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAEXPAUGameSelectionHeadersStruct@@IABU3@@Z	100.0000	100.0000	100.0000	0x18ebe0	-
-singleselectionwindow	?isFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000	100.0000	0x177d10	tokens1:76017c7d0777
+singleselectionwindow	?isFaceTaken@CNetPlayerHandler@@QAE_NHH@Z	100.0000	100.0000	100.0000	0x177d10	tokens1:87a76a6292ff
 singleselectionwindow	?isHost@TSingleSelectionWindow@@QAE_NXZ	100.0000	100.0000	100.0000	0x18adf0	tokens1:7dc84c990e8e
 singleselectionwindow	?isVersionCompatible@TSingleSelectionWindow@@QAEEPBD@Z	100.0000	100.0000	100.0000	0x189d30	tokens1:1a1cb794a64b
 singleselectionwindow	?lower_bound@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QBE?AVconst_iterator@12@ABH@Z	100.0000	100.0000	100.0000	0x18f0f0	-
@@ -4285,7 +4285,7 @@ subwindow	?addWidget@TSubWindow@@QAEXPAVwidget@@H@Z	100.0000	100.0000	100.0000	0
 subwindow	?draw@TSubWindow@@QAEXEHH@Z	100.0000	100.0000	100.0000	0x1aa4f0	tokens1:8200dd887b76
 subwindow	?initialize@TSubWindow@@QAEXHHHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1aa470	tokens1:3b99479ee9cd
 subwindow	?restoreBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa610	tokens1:4c1cb3770b35
-subwindow	?saveBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa560	tokens1:ed13dd9e7fa5
+subwindow	?saveBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa560	tokens1:4ea111f0d43d
 swapmgr	??0TSwapWindow@@QAE@PAPAVhero@@@Z	100.0000	100.0000	100.0000	0x1aaa80	tokens1:442ab1db1a13
 swapmgr	??0swapManager@@QAE@PAVhero@@0@Z	100.0000	100.0000	100.0000	0x1ae500	tokens1:b368ca6b74ad
 swapmgr	??1CHeroUpdateMsg@@QAE@XZ	100.0000	100.0000	100.0000	0x1afd70	tokens1:e188f510dde5
@@ -4538,7 +4538,7 @@ townmgr	?setRolloverText@TTavernWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d7
 townmgr	?setRolloverText@TThievesGuildWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1c9710	tokens1:bb1a351c81d5
 townmgr	?setupExtraStuff@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c33f0	tokens1:6120db6b71ee
 townmgr	?setupMage@townManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1d6ef0	tokens1:4683f38cbe85
-townmgr	?setupThievesGuild@TThievesGuildWindow@@QAEXH@Z	95.0293	95.0293	95.5153	0x1dda10	tokens1:2a91cf319b88
+townmgr	?setupThievesGuild@TThievesGuildWindow@@QAEXH@Z	95.5914	95.5914	95.5914	0x1dda10	tokens1:39b7d8316406
 townmgr	?setupTown@townManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x1c6870	tokens1:325444c41306
 townmgr	?setupWell@townManager@@QAEXPAVTCastleWindow@@@Z	100.0000	100.0000	100.0000	0x1dd390	tokens1:f0863358463a
 townmgr	?sortStats@@YIXPAJPAC@Z	100.0000	100.0000	100.0000	0x1df160	tokens1:1d69f70585ca
@@ -4768,7 +4768,7 @@ window	?processHover@CHeroWindowEx@@UAEEHH@Z	100.0000	100.0000	100.0000	0x1ff6e0
 window	?processRightSelect@CHeroWindowEx@@UAEEH@Z	100.0000	100.0000	100.0000	0x1ff790	tokens1:228f59bbd460
 window	?removeWidget@heroWindow@@QAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x1fed60	tokens1:3cf086f398a9
 window	?restoreBackground@heroWindow@@AAEXE@Z	100.0000	100.0000	100.0000	0x1ff1c0	tokens1:421732286186
-window	?saveBackground@heroWindow@@AAEHXZ	100.0000	100.0000	100.0000	0x1ff100	tokens1:3f7ec879ea51
+window	?saveBackground@heroWindow@@AAEHXZ	100.0000	100.0000	100.0000	0x1ff100	tokens1:f1189c30a01e
 window	?setFocus@heroWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ff490	tokens1:fa7b815910fe
 window	?setHelpText@CHeroWindowEx@@QAEXPAUTHelpText@@HH_N@Z	100.0000	100.0000	100.0000	0x1ff8e0	tokens1:216f5ca1c353
 window	?setWinText@@YIXPAVheroWindow@@H@Z	100.0000	100.0000	100.0000	0x1ffa30	tokens1:7de7729d9fb3
@@ -4817,15 +4817,15 @@ winmgr	?convertToHover@heroWindowManager@@QAEHAAVmessage@@@Z	100.0000	100.0000	1
 winmgr	?doDialog@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@ZH@Z	100.0000	100.0000	100.0000	0x202520	tokens1:749dcd930a7e
 winmgr	?doDialogDraw@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@Z2H@Z	100.0000	100.0000	100.0000	0x2027a0	tokens1:b1f11a38d949
 winmgr	?doQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x202a40	tokens1:3a644994fac8
-winmgr	?fadeFromBlack@heroWindowManager@@QAEXH@Z	93.2099	93.2099	93.2099	0x2032e0	tokens1:b2503be3b905
+winmgr	?fadeFromBlack@heroWindowManager@@QAEXH@Z	93.2099	93.2099	93.2099	0x2032e0	tokens1:e576942d3d69
 winmgr	?fadeScreen@heroWindowManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x202c50	tokens1:7798457daf06
-winmgr	?fadeToBlack@heroWindowManager@@QAEXHE@Z	91.1453	91.1453	91.1453	0x2030e0	tokens1:a24615a82ad2
+winmgr	?fadeToBlack@heroWindowManager@@QAEXHE@Z	91.1453	91.1453	91.1453	0x2030e0	tokens1:3a8c97104821
 winmgr	?fizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	99.9137	99.9137	99.9137	0x202dc0	tokens1:65c150028ad3
 winmgr	?main@heroWindowManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x202320	tokens1:0baa2348f7dc
 winmgr	?open@heroWindowManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x2021b0	tokens1:50317853feb2
 winmgr	?releaseFizzleSource@heroWindowManager@@QAEXXZ	100.0000	100.0000	100.0000	0x2030c0	tokens1:8308343fbc6b
 winmgr	?removeWindow@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x2024a0	tokens1:5d2e2a1a3174
-winmgr	?saveFizzleSourceX@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x202cc0	tokens1:bede0a020786
+winmgr	?saveFizzleSourceX@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x202cc0	tokens1:92d8bcc39c40
 winmgr	?updateScreen@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x202bd0	tokens1:6245b5226cd9
 zutil	@zcalloc@12	100.0000	100.0000	100.0000	0x206c70	-
 zutil	@zcfree@8	100.0000	100.0000	100.0000	0x206c90	-

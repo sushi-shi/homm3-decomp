@@ -3540,6 +3540,10 @@ long markDestinations(hero* currentHero, long maxDistance,
                                maxDistance,
                                (currentHero->m_flags >> 18) & 1, searchType,
                                movePoints, 0);
+    // DC 3090 looks up the hero's own search cell and drops the result;
+    // the inline lookup leaves no retail code (byte-flat).
+    currentSearchArray->getCell(
+        type_point(currentHero->m_x, currentHero->m_y, currentHero->m_z), 0);
 
     for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i) {
         hero* friendly = g_game->getHero(g_currentPlayer->m_heroes[i]);
