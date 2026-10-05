@@ -1783,7 +1783,7 @@ findpath	?calcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.00
 findpath	?clear@searchArray@@AAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530	tokens1:1031814f7169
 findpath	?close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500	tokens1:9bb939f46c96
 findpath	?copy@std@@YIPAUpathCell@@PAU2@00@Z	100.0000	100.0000	100.0000	0xb4270	-
-findpath	?findCombatPath@searchArray@@QAE_NPBVarmy@@JJ_NJJ@Z	94.5290	94.5290	94.5290	0xb3400	tokens1:9625ce6e60ea
+findpath	?findCombatPath@searchArray@@QAE_NPBVarmy@@JJ_NJJ@Z	100.0000	100.0000	100.0000	0xb3400	tokens1:3f5b9828b9e0
 findpath	?getHex@searchArray@@QBEPAUpathCell@@J@Z	100.0000	100.0000	100.0000	0xb3b90	tokens1:85322709815b
 findpath	?getTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	100.0000	100.0000	100.0000	0xb18c0	tokens1:2dd9716aa61e
 findpath	?getTravelTime@searchArray@@QBEJPBVarmy@@J@Z	100.0000	100.0000	100.0000	0xb3f20	tokens1:97aa7bc1ce7b
