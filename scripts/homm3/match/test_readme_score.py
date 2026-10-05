@@ -48,15 +48,16 @@ class ReadmeScoreTest(unittest.TestCase):
                 status.write_readme(report, data_accounting=accounting)
                 self.assertEqual(readme.read_text(), first)
 
-        self.assertIn("**Executable MAX: 65.00%**", first)
-        self.assertIn("_CUR / MAX / HIST: 1 / 2 / 3 exact", first)
-        self.assertIn("**Function exact MAX** — 2 / 6 current implementations "
-                      "(33.3%)", first)
+        self.assertIn("**Windows `HEROES3.EXE`: 65.00% matched (MAX)** — "
+                      "2 / 6 functions exact (33.3%)", first)
+        self.assertRegex(first, r"\| CUR\s*\|\s*1 \|")
+        self.assertRegex(first, r"\| MAX\s*\|\s*2 \|")
+        self.assertRegex(first, r"\| HIST\s*\|\s*3 \|")
         table = [[c.strip() for c in line.strip("|").split("|")]
                  for line in first.splitlines() if line.startswith("|")]
-        self.assertIn("Functions exact MAX", table[0])
-        self.assertEqual(table[2][2:], ["2 / 4 (50.0%)", "97.50%"])
-        self.assertEqual(table[3][2:], ["0 / 2 (0.0%)", "0.0%"])
+        modules = table.index(next(r for r in table if "Functions exact MAX" in r))
+        self.assertEqual(table[modules + 2][2:], ["2 / 4 (50.0%)", "97.50%"])
+        self.assertEqual(table[modules + 3][2:], ["0 / 2 (0.0%)", "0.0%"])
         self.assertTrue(first.startswith("before\n"))
         self.assertTrue(first.endswith("\nafter\n"))
         self.assertIn('1 / 2 enrolled initializer comparisons exact.', first)
@@ -89,10 +90,9 @@ class ReadmeScoreTest(unittest.TestCase):
                 status.write_readme(report)
                 text = readme.read_text()
 
-        self.assertIn("**Executable MAX: 100.00%**", text)
-        self.assertIn("_CUR / MAX / HIST: 0 / 1 / 1 exact", text)
-        self.assertIn("**Function exact MAX** — 1 / 1 current implementations",
-                      text)
+        self.assertIn("100.00% matched (MAX)** — 1 / 1 functions exact", text)
+        self.assertRegex(text, r"\| CUR\s*\|\s*0 \|")
+        self.assertRegex(text, r"\| HIST\s*\|\s*1 \|")
         self.assertRegex(text, r"\|\s*1 / 1 \(100\.0%\) \|\s*100\.00% \|")
 
 
@@ -123,9 +123,9 @@ class ReadmeScoreTest(unittest.TestCase):
                 status.write_readme(report)
                 text = readme.read_text()
 
-        self.assertIn("**Executable MAX: 75.00%**", text)
-        self.assertIn("**Function exact MAX** — 1 / 2", text)
-        self.assertIn("_CUR / MAX / HIST: 1 / 1 / 1 exact", text)
+        self.assertIn("75.00% matched (MAX)** — 1 / 2 functions exact", text)
+        self.assertRegex(text, r"\| CUR\s*\|\s*1 \|")
+        self.assertRegex(text, r"\| HIST\s*\|\s*1 \|")
         self.assertNotIn("`(unmatched)`", text)
         self.assertRegex(text, r"\|\s*1 / 2 \(50\.0%\) \|\s*75\.00% \|")
 

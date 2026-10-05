@@ -6,7 +6,7 @@ Recover C++ that reproduces Heroes III Complete's retail MSVC 6.0 object code.
 
 - Retail bytes are authoritative: **English GOG Complete 4.0 (engine 3.2)**,
   `HEROES3.EXE`, fixed base `0x00400000`. The exact size and SHA-256 are in
-  [README.md](README.md#pinned-target).
+  [README.md](README.md#pinned-executables).
 - Dreamcast's embedded debug symbols prove source facts for an older,
   cross-architecture build; x86 identities require retail proof.
 - The pinned Classic Mac PowerPC PEF is a source reference for Windows
