@@ -144,7 +144,7 @@ unsigned char combatManager::failedSiege()
     };
 
     army* currentArmy = m_armies[m_currentSide];
-    if (m_fortificationLevel == COMBAT_FORTIFICATION_NONE)
+    if (m_fortificationLevel == eFortificationNone)
         return 0;
     if (m_drawbridgeState != DRAWBRIDGE_UP)
         return 0;
@@ -488,7 +488,7 @@ unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type
 
     if (side == 1)
         return 0;
-    if (m_fortificationLevel == COMBAT_FORTIFICATION_NONE)
+    if (m_fortificationLevel == eFortificationNone)
         return 0;
 
     long count = 0;
@@ -1382,19 +1382,19 @@ unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters& data)
         }
     }
 
-    if (m_fortificationLevel >= COMBAT_FORTIFICATION_CITADEL) {
+    if (m_fortificationLevel >= eFortificationCitadel) {
         int numArchers;
         int archerLevel;
         m_defendingTown->calcNumLevelArchers(&numArchers, &archerLevel);
-        if (m_wallStrength[14] > 0)
+        if (m_wallLevel[14] > 0)
             shooterValue[1] += g_creatureTypeTraits[CREATURE_ARCHER].m_aiValue
                                 * numArchers;
-        if (m_fortificationLevel == COMBAT_FORTIFICATION_CASTLE) {
-            if (m_wallStrength[13] > 0)
+        if (m_fortificationLevel == eFortificationCastle) {
+            if (m_wallLevel[13] > 0)
                 shooterValue[1] +=
                     g_creatureTypeTraits[CREATURE_ARCHER].m_aiValue
                     * (numArchers + 1) / 2;
-            if (m_wallStrength[5] > 0)
+            if (m_wallLevel[5] > 0)
                 shooterValue[1] +=
                     g_creatureTypeTraits[CREATURE_ARCHER].m_aiValue
                     * (numArchers + 1) / 2;
@@ -1666,7 +1666,7 @@ unsigned char combatManager::shouldStayInCastle(type_AI_combat_parameters* estim
         return 0;
     { for (const long* target = g_castleWallGateTargets;
            target < (g_castleWallGateTargets + 5); target++) {
-        if (m_wallStrength[*target])
+        if (m_wallLevel[*target])
             continue;
         if (!hexIsBlocked(s_wallTargets[*target].getBlockedHex()))
             return 0;

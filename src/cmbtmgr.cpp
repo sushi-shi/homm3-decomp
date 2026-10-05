@@ -604,7 +604,7 @@ combatManager::combatManager()
     m_lastMovedArmy = 0;
     m_highlighterOn = 0;
     m_combatCommand = 0;
-    m_fortificationLevel = COMBAT_FORTIFICATION_NONE;
+    m_fortificationLevel = eFortificationNone;
     m_combatShowIt = 0;
     m_netMsgHandlerPause = 0;
 }
@@ -843,14 +843,14 @@ void combatManager::loadIcons()
                         || m_defendingTown->m_type != TOWN_STRONGHOLD
                         || wall != WALL_TRAITS_ROW_MOAT)
                         && traits[wall].m_filenames[icon] != 0)
-                    m_combatIcons[wall][icon] = ResourceManager::getBitmap816(
+                    m_wallImages[wall][icon] = ResourceManager::getBitmap816(
                         traits[wall].m_filenames[icon]);
                 else
-                    m_combatIcons[wall][icon] = 0;
+                    m_wallImages[wall][icon] = 0;
             }
         }
     } else {
-        memset(m_combatIcons, 0, sizeof(m_combatIcons));
+        memset(m_wallImages, 0, sizeof(m_wallImages));
     }
 
     for (int side = 0; side < 2; side++) {
@@ -880,8 +880,8 @@ void combatManager::freeIcons()
 {
     for (int group = 0; group < 18; ++group) {
         for (int icon = 0; icon < 5; ++icon) {
-            if (m_combatIcons[group][icon])
-                ResourceManager::dispose(m_combatIcons[group][icon]);
+            if (m_wallImages[group][icon])
+                ResourceManager::dispose(m_wallImages[group][icon]);
         }
     }
 
@@ -1017,7 +1017,7 @@ void combatManager::loadArmies(unsigned char isSurrounded)
                 placed++;
             }
         }
-        if (side == 1 && m_fortificationLevel >= COMBAT_FORTIFICATION_CITADEL) {
+        if (side == 1 && m_fortificationLevel >= eFortificationCitadel) {
             int numArchers;
             int archerLevel;
             m_defendingTown->calcNumLevelArchers(&numArchers, &archerLevel);
@@ -1026,7 +1026,7 @@ void combatManager::loadArmies(unsigned char isSurrounded)
                                    COMBAT_HEX_KEEP, -1);
             m_archers[0].m_armySlot = placed;
             placed++;
-            if (m_fortificationLevel == COMBAT_FORTIFICATION_CASTLE) {
+            if (m_fortificationLevel == eFortificationCastle) {
                 numArchers = (numArchers + 1) / 2;
                 m_armies[1][placed].init(CREATURE_ARROW_TOWER, numArchers,
                                        combatHero, side, placed,
@@ -1112,30 +1112,30 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
     }
     if (rightTown) {
         if (rightTown->hasBuilding(CASTLE_FORT_ID, false)) {
-            m_fortificationLevel = COMBAT_FORTIFICATION_FORT;
+            m_fortificationLevel = eFortificationFort;
             m_moatIsWide = 0;
             m_moatOn = 0;
         } else if (rightTown->hasBuilding(CASTLE_CITADEL_ID, false)) {
-            m_fortificationLevel = COMBAT_FORTIFICATION_CITADEL;
+            m_fortificationLevel = eFortificationCitadel;
             m_moatOn = rightTown->m_type != TOWN_TOWER
                          && (rightTown->m_type != TOWN_STRONGHOLD
                              || g_game->m_gameVersion >= 2);
             m_moatIsWide = rightTown->m_type == TOWN_FORTRESS;
         } else if (rightTown->hasBuilding(CASTLE_CASTLE_ID, false)) {
-            m_fortificationLevel = COMBAT_FORTIFICATION_CASTLE;
+            m_fortificationLevel = eFortificationCastle;
             m_moatOn = rightTown->m_type != TOWN_TOWER
                          && (rightTown->m_type != TOWN_STRONGHOLD
                              || g_game->m_gameVersion >= 2);
             m_moatIsWide = rightTown->m_type == TOWN_FORTRESS;
         } else {
-            m_fortificationLevel = COMBAT_FORTIFICATION_NONE;
+            m_fortificationLevel = eFortificationNone;
             m_moatIsWide = 0;
             m_moatOn = 0;
         }
         m_drawbridgeState = DRAWBRIDGE_UP;
         m_defendingTown = rightTown;
     } else {
-        m_fortificationLevel = COMBAT_FORTIFICATION_NONE;
+        m_fortificationLevel = eFortificationNone;
         m_moatIsWide = 0;
         m_moatOn = 0;
         m_defendingTown = 0;
@@ -2021,22 +2021,22 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
             break;
         case WALL_TARGET_0: {
             int slot = m_archers[2].m_armySlot;
-            m_wallStrength[17] = 0;
-            m_wallStanding[17] = 0;
+            m_wallLevel[17] = 0;
+            m_wallFrame[17] = 0;
             m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
             break;
         }
         case WALL_TARGET_6: {
             int slot = m_archers[1].m_armySlot;
-            m_wallStrength[16] = 0;
-            m_wallStanding[16] = 0;
+            m_wallLevel[16] = 0;
+            m_wallFrame[16] = 0;
             m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
             break;
         }
         case WALL_TARGET_7: {
             int slot = m_archers[0].m_armySlot;
-            m_wallStrength[15] = 0;
-            m_wallStanding[15] = 0;
+            m_wallLevel[15] = 0;
+            m_wallFrame[15] = 0;
             m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
             break;
         }
@@ -2044,11 +2044,11 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
     }
 
     int wallId = s_wallTargets[targetWall].m_wall;
-    m_wallStrength[wallId] = strength;
+    m_wallLevel[wallId] = strength;
     if (strength == 0)
-        m_wallStanding[wallId] = 0;
+        m_wallFrame[wallId] = 0;
     else
-        m_wallStanding[wallId] = 1;
+        m_wallFrame[wallId] = 1;
 }
 
 // E:\gamedcs\cmbtmgr.cpp:2603
@@ -2356,21 +2356,21 @@ void combatManager::setupAndLoadObstacles()
     if (m_isSurrounded)
         return;
 
-    if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE) {
+    if (m_fortificationLevel > eFortificationNone) {
         for (int wall = 0; wall < 18; wall++)
-            m_wallStrength[wall] =
+            m_wallLevel[wall] =
                 s_wallTraits[m_defendingTown->m_type][wall].m_hitpoints;
-        m_wallStrength[17] = 1;
-        m_wallStrength[16] = 1;
-        m_wallStrength[15] = 1;
+        m_wallLevel[17] = 1;
+        m_wallLevel[16] = 1;
+        m_wallLevel[15] = 1;
         int copy;
-        MEMCPY(m_wallStanding, m_wallStrength, sizeof(m_wallStanding), copy);
+        MEMCPY(m_wallFrame, m_wallLevel, sizeof(m_wallFrame), copy);
 
-        if (m_fortificationLevel == COMBAT_FORTIFICATION_CASTLE) {
-            m_wallStrength[6]++;
-            m_wallStrength[8]++;
-            m_wallStrength[10]++;
-            m_wallStrength[12]++;
+        if (m_fortificationLevel == eFortificationCastle) {
+            m_wallLevel[6]++;
+            m_wallLevel[8]++;
+            m_wallLevel[10]++;
+            m_wallLevel[12]++;
         }
 
         for (int row = 0; row < 11; row++)
@@ -2380,7 +2380,7 @@ void combatManager::setupAndLoadObstacles()
         // skipped; every other row gets one obstacle whose damage is the
         // greater of the town's own moat figure and what the defending
         // hero's Land Mine would do.
-        if (m_fortificationLevel >= COMBAT_FORTIFICATION_CITADEL
+        if (m_fortificationLevel >= eFortificationCitadel
                 && m_defendingTown->m_type == TOWN_TOWER) {
             for (int row = 0; row < 11; row++) {
                 if (row == COMBAT_GATE_ROW)
@@ -2430,7 +2430,7 @@ void combatManager::setupAndLoadObstacles()
             return;
         if (m_defendingTown->m_type != TOWN_STRONGHOLD)
             return;
-        if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
+        if (m_fortificationLevel < eFortificationCitadel)
             return;
     }
 
@@ -2446,7 +2446,7 @@ void combatManager::setupAndLoadObstacles()
     }
 
     int budget;
-    if (m_fortificationLevel >= COMBAT_FORTIFICATION_CITADEL
+    if (m_fortificationLevel >= eFortificationCitadel
             && m_defendingTown->m_type == TOWN_STRONGHOLD)
         budget = sRandom(10, 16);
     else
@@ -2459,7 +2459,7 @@ void combatManager::setupAndLoadObstacles()
     else
         terrainMask = 1 << m_terrainType;
 
-    if ((m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL
+    if ((m_fortificationLevel < eFortificationCitadel
                 || m_defendingTown->m_type != TOWN_STRONGHOLD)
             && sRandom(1, 100) <= 40)
         budget -= placeLargeObstacle(terrainMask, specialTerrainMask) / 2;
@@ -2594,7 +2594,7 @@ void combatManager::initializeArchers()
 {
     TArcher* archer = m_archers;
     memset(archer, 0, sizeof(m_archers));
-    if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
+    if (m_fortificationLevel < eFortificationCitadel)
         return;
 
     const TSiegeArcherInfo& info = g_siegeArcherInfo[m_defendingTown->m_type];
@@ -2613,7 +2613,7 @@ void combatManager::initializeArchers()
     archer->m_sequence = 2;
     archer->m_frame = 0;
 
-    if (m_fortificationLevel != COMBAT_FORTIFICATION_CASTLE)
+    if (m_fortificationLevel != eFortificationCastle)
         return;
 
     m_archers[1].m_creatureType = info.m_creatureType;
