@@ -1386,79 +1386,25 @@ bool saveGame(bool campaignWinMode);
 
 
 // E:\gamedcs\advmgr.cpp:1688
-// The adventure map's keyboard dispatcher, and the largest switch in this
-// compiland. Retail lowers it to a byte-index table at fn+0xb4c over
-// `codeX - 1` in 0..0x50 and a nineteen-target dword table at fn+0xafc, and
-// that index table IS the hotkey map. It decodes to PC scan codes:
-//   0x39 SPACE, then the keypad ring 0x48/0x49/0x4d/0x51/0x50/0x4f/0x4b/
-//   0x47, then 0x20 D, 0x19 P, 0x2f V, 0x31 N, 0x26 L, 0x01 ESC, 0x1f S,
-//   0x17 I, 0x14 T, 0x1c ENTER.
-
-// ARM ORDER IS SOURCE ORDER, and here that is a real lever rather than a
-// coincidence: this is a JUMP TABLE, so the physical layout is the source
-// layout - the exact opposite of advManager::Main's compare chain one
-// function up, whose bodies are ordered by case VALUE and carry no
-// source-order information at all. The order the table gives is the list
-// above, and the eight keypad arms come out in the engine's own
-// clockwise-from-north order: UP, PGUP, RIGHT, PGDN, DOWN, END, LEFT, HOME
-// = gStepDelta directions 0..7.
-
-// The eight keypad arms share ONE body, and it is a GOTO, not a tail
-// merge: retail keeps the whole walk block inside the first arm (UP),
-// immediately after that arm's `direction = 0`, and the other seven reach
-// it with `mov ebx,<dir>; jmp` - so each arm's own ctrl-scroll early-out
-// stays private ahead of the join.
-
-// Keep CheckDimNextHeroBut's source call despite its different retail
-// expansion decisions here and in DoAdvCommand. The SPACE lookup copies the
-// hero point at +0x185 before isValid and zCell; getCell's by-value parameter
-// owns that temporary. This Complete-only arm has no DC GetCell call anchor.
-// Its later doEvent argument is reconstructed independently from the hero.
-
-// Residual (97.61%, from 80.40; 2026-09-04): the keypad walk is NOT a
-// goto-shared tail inside the KP_8 arm. The Dreamcast dossier names
-// the local `iMoveDir` (sp+0x34) and its line table puts the eight
-// `ScreenScroll` arms in a row (1711..1761), every other arm after
-// them, and the walk body LAST at lines 1890..1928, at scope depth 1 -
-// after the switch. So each keypad arm is `if (ctrl) { ScreenScroll(n,
-// 0); return 1; } iMoveDir = n; break;` and the walk follows the switch
-// behind `iMoveDir >= 0 && !waitingPlayer && currHeroId != -1 &&
-// ValidMove(..)`, with its own late guards nested (retail jumps all
-// three to the shared return-1 and lets the `WidgetSetStatus` arm sink
-// into it). VC6's constant threading then does the rest by itself:
-// every keypad `break` knows iMoveDir and lands straight on the
-// ValidMove guard, the walk block is placed as KP_8's fall-through
-// (retail's `xor ebx,ebx` at fn+0x257), the other seven arms sink
-// after it with `mov ebx,n; jmp`, every non-keypad `break` (iMoveDir
-// == -1) threads to the one shared return-1 at the end, and the seven
-// explicit `return 1` copies give retail's 24 rets. All of the placement
-// experiments recorded before (eight bodies, two bodies, hoisting the
-// ctrl test, goto counts) were fighting this device with gotos.
-// The same `<flag> set in arms, tested once after the switch` device
-// closed townManager::Main's 41-vs-3 ret residual; look for a
-// DC-named flag/direction local before touching any goto-shared tail.
-// What is left (3 size-only blocks, 111 = 111 otherwise exact): retail
-// pushes only esi ahead of the chat-focus early return and sinks the
-// ebx/edi pushes past it (a 5-instruction `xor eax,eax` exit) where we
-// push all three in the prologue, and the SPACE arm's type_point cell
-// lookup keeps `fullMap` in a register slot where ours reloads it.
-// Current source (92.7551%) restores DC's ordinary HideRoute calls at
-// lines 1834/1855/1900, GetCurrHero at 1767/1892/1894, GetCurrHeroId at
-// 1890, and Reseed(0, 0) at 1918. Their first Windows restoration raised
-// the current score from 87.6584%; the historical 97.61% predates these
-// helper facts. Mac shape aligns 326/571 instructions and 52/52 direct
-// call counts; this is source-shape evidence, not a Mac byte verdict.
-// DC original ProcessKeyPress/ProcessDeSelect publics encode AA_N for
-// exitFlag: bool&, despite the lowered unsigned-byte debug primitive.
-// Retail forwards the same four addresses; preserve the references and
-// the const message layer.
-// DC1898 constructs the movement trigger inside ValidMove's successful
-// arm before HideRoute. It needs no separate inner lifetime block.
+// Original publics prove const message& and bool& exitFlag; the Complete
+// caller passes the same four references. The native direction initializer
+// precedes the chat-focus guard (DC1690/1692; Mac 0x9178/0x9188).
+// The jump table preserves the source arm order, including the clockwise
+// keypad directions. DC1711..1764 places those arms before the other commands,
+// then DC1890..1928 places movement after the switch, guarded by moveDir.
+// VC6 threads the keypad breaks into that tail; no shared-body goto is needed.
+// DC1898 constructs walkTrigger inside ValidMove's successful arm before
+// HideRoute, with no additional lifetime block. Keep GetCurrHero, HideRoute,
+// Reseed and CheckDimHero as canonical calls.
+// SPACE is Complete-only. Mac 0x9344..0x9380 and 0x93a0..0x93dc independently
+// reconstruct the hero location for GetCell and DoEvent. Keep both accessor
+// calls rather than reusing a point across the intervening opaque operations.
 VA(0x00408c40, 0xB9D)
 DC_ADDRESS(0x008b70, 0x7c0)
 MAC_ADDRESS(0x009144, 0x8ec)  // anchor-callee
 int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& triggerPoint, NewmapCell*& peventCell)
 {
+    int moveDir = -1;
     if (m_advWindow->m_chatEdit->m_hasFocus)
         return 0;
 
@@ -1470,7 +1416,6 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
     else
         currHero = 0;
 
-    int moveDir = -1;
     hero* walker;
 
     switch (msg.m_codeX) {
