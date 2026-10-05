@@ -66,8 +66,30 @@ pub struct BoundaryZone {
     creatures: CreaturePreference,
     bounds: Option<ZoneBounds>,
     primary_town: Option<WorldPosition>,
+    saved_center: Option<WorldPosition>,
+    max_guard_value: Option<i32>,
 }
 impl BoundaryZone {
+    /// Center before the most recent `HotA` recenter pass.
+    #[must_use]
+    pub const fn saved_center(self) -> Option<WorldPosition> {
+        self.saved_center
+    }
+    /// Terrain post-pass guard cap, absent before it runs or under Complete.
+    #[must_use]
+    pub const fn max_guard_value(self) -> Option<i32> {
+        self.max_guard_value
+    }
+    pub(crate) fn set_guard_cap(&mut self, value: i32) {
+        self.max_guard_value = Some(value);
+    }
+    pub(crate) fn include_cell(&mut self, point: Point) {
+        if let Some(bounds) = &mut self.bounds {
+            bounds.include(point);
+        } else {
+            self.bounds = Some(ZoneBounds::cell(point));
+        }
+    }
     /// Entrance of the first successfully placed town, regardless of its owner.
     #[must_use]
     pub const fn primary_town(self) -> Option<WorldPosition> {
@@ -142,8 +164,6 @@ pub struct ZoneConnection {
 /// Boundary construction cannot proceed in the supported arithmetic/topology.
 #[derive(Debug)]
 pub enum BoundaryError {
-    /// This stage requires terrain-coverage algorithms not yet integrated.
-    UnsupportedRuleset(crate::rules::Ruleset),
     /// Geometry or integer subdivision failure.
     Geometry(GeometryError),
     /// Rasterization or clipping failure.
@@ -158,9 +178,6 @@ pub enum BoundaryError {
 impl fmt::Display for BoundaryError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::UnsupportedRuleset(rules) => {
-                write!(f, "terrain coverage for {rules:?} is not implemented yet")
-            }
             Self::Geometry(error) => error.fmt(f),
             Self::Raster(error) => error.fmt(f),
             Self::Topology => f.write_str("zone layout does not correspond to the subdivision"),
@@ -196,6 +213,15 @@ pub struct BoundaryMap<'a> {
     choices: ZoneChoices,
 }
 impl<'a> BoundaryMap<'a> {
+    pub(crate) fn raster_mut(&mut self) -> &mut ZoneRaster {
+        self.workspace.grid.as_mut().expect("completed raster")
+    }
+    pub(crate) fn zones_mut(&mut self) -> &mut [BoundaryZone] {
+        &mut self.workspace.zones
+    }
+    pub(crate) fn recenter(&mut self) -> Result<(), BoundaryError> {
+        self.workspace.recenter(self.request.ruleset())
+    }
     /// Retained solver state, including any late town-query diagnostics.
     #[must_use]
     pub fn hints(&self) -> Option<&ZoneSolution> {
@@ -317,11 +343,9 @@ impl<'a> BoundaryMap<'a> {
         self,
         rng: &mut RetailRng,
     ) -> Result<TerrainCoverage<'a>, BoundaryError> {
-        if self.request.ruleset() != Ruleset::Complete {
-            return Err(BoundaryError::UnsupportedRuleset(self.request.ruleset()));
-        }
         let behavior = self.behavior();
-        self.workspace.prepare_coverage(self.water, behavior, rng)?;
+        self.workspace
+            .prepare_coverage(self.water, self.request.ruleset(), behavior, rng)?;
         Ok(TerrainCoverage {
             boundaries: self,
             rng: rng.checkpoint(),
@@ -405,6 +429,8 @@ impl BoundaryWorkspace {
                 creatures: CreaturePreference::from_town(zone.creature_town()),
                 bounds: None,
                 primary_town: None,
+                saved_center: None,
+                max_guard_value: None,
             });
             self.connections.try_reserve(source.connections().len())?;
             for connection in source.connections() {
@@ -639,6 +665,8 @@ impl BoundaryWorkspace {
                         },
                         bounds: None,
                         primary_town: None,
+                        saved_center: None,
+                        max_guard_value: None,
                     });
                     Some(id)
                 } else {
@@ -768,12 +796,7 @@ impl BoundaryWorkspace {
         Ok(())
     }
 
-    fn prepare_coverage(
-        &mut self,
-        water: Water,
-        behavior: Behavior,
-        rng: &mut RetailRng,
-    ) -> Result<(), BoundaryError> {
+    fn recenter(&mut self, rules: Ruleset) -> Result<(), BoundaryError> {
         self.summaries.clear();
         self.summaries.try_reserve(self.zones.len())?;
         self.summaries
@@ -809,13 +832,34 @@ impl BoundaryWorkspace {
             }
         }
         for (zone, summary) in self.zones.iter_mut().zip(&self.summaries) {
-            zone.bounds = summary.bounds;
+            if rules == Ruleset::HotA181 {
+                zone.saved_center = Some(zone.position);
+            }
+            // Native calculateZoneBounds never shrinks an existing rectangle.
+            if let Some(bounds) = summary.bounds {
+                zone.include_cell(bounds.minimum());
+                zone.include_cell(Point::new(bounds.maximum().x - 1, bounds.maximum().y - 1));
+            }
             if summary.count > 0 {
                 zone.position.point = Point::new(
                     summary.total.x / summary.count,
                     summary.total.y / summary.count,
                 );
             }
+        }
+        Ok(())
+    }
+
+    fn prepare_coverage(
+        &mut self,
+        water: Water,
+        rules: Ruleset,
+        behavior: Behavior,
+        rng: &mut RetailRng,
+    ) -> Result<(), BoundaryError> {
+        self.recenter(rules)?;
+        let grid = self.grid.as_mut().ok_or(BoundaryError::Topology)?;
+        for zone in &self.zones {
             if water == Water::Islands && zone.position.level == Level::Surface {
                 let polygon = self
                     .polygons

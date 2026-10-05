@@ -131,3 +131,29 @@ fn native_unsigned_probability_and_last_record_wins_are_preserved() {
     assert_eq!(catalog.ruleset(), Ruleset::HotA181);
     assert_eq!(catalog.frame_count(Terrain::Highlands), Some(124));
 }
+
+#[test]
+fn rock_frames_use_hota_neighbour_exclusion() {
+    let catalog = catalog();
+    // The fixed rock selector uses HotA neighbour exclusion too.
+    // Seven occupied variants force the remaining fill without retries.
+    let neighbours: Vec<_> = (0..7)
+        .map(|frame| {
+            catalog
+                .parse_tile(Terrain::Rock, frame, Reflection::default())
+                .unwrap()
+        })
+        .collect();
+    let mut rng = RetailRng::new(1);
+    let selected = catalog
+        .select_base(
+            Terrain::Rock,
+            BrushStrength::GENERATOR,
+            None,
+            &neighbours,
+            &mut rng,
+        )
+        .unwrap();
+    assert_eq!(selected.frame(), 7);
+    assert_eq!(rng.draws(), 1);
+}

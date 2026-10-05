@@ -1,7 +1,7 @@
 //! Shared layout admission and lifetime of the separate constraint stream.
 use homm3_rmg::{
     behavior::{Behavior, RetailProfile},
-    boundaries::{BoundaryError, BoundaryWorkspace},
+    boundaries::BoundaryWorkspace,
     domain::Terrain,
     layout::{LayoutError, LayoutWorkspace},
     request::{default_record, Levels, MapSize, Request, RequestOptions, Water},
@@ -134,11 +134,12 @@ fn layout_retains_hint_choices_and_resets_query_counters_on_workspace_reuse() {
             11
         );
         assert_eq!(rng.checkpoint(), before);
-        // Terrain coverage remains gated until its HotA algorithms are integrated.
-        assert!(matches!(
-            boundaries.prepare_terrain(&mut rng),
-            Err(BoundaryError::UnsupportedRuleset(Ruleset::HotA181))
-        ));
+        let coverage = boundaries.prepare_terrain(&mut rng).unwrap();
+        assert!(coverage
+            .map()
+            .zones()
+            .iter()
+            .all(|zone| zone.saved_center().is_some()));
         assert_eq!(rng.checkpoint(), before);
     }
 }

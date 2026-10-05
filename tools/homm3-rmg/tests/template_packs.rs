@@ -9,6 +9,8 @@ use homm3_rmg::{
     rules::Ruleset,
     selection::SelectedTemplate,
     template::{ConnectionKind, TemplateCandidate, TemplateFormat, TemplateSource, ZoneRole},
+    terrain::TerrainWorkspace,
+    terrain_rules::TerrainCatalog,
 };
 
 fn request(size: MapSize, levels: Levels, humans: i32, computers: i32) -> Request {
@@ -36,6 +38,19 @@ fn installed_packs_normalize_all_zone_and_connection_records() {
     let mut fatal_hints = 0;
     let mut layout_workspace = LayoutWorkspace::default();
     let mut boundaries = BoundaryWorkspace::default();
+    // Supplying installed frame data extends this corpus through painting.
+    let mut painter = std::env::var_os("HOMM3_HOTA_TERRAIN_PATTERNS").map(|path| {
+        let patterns = std::fs::read(path).unwrap();
+        let data = std::fs::read(std::env::var_os("HOMM3_HOTA_DAT").unwrap()).unwrap();
+        TerrainWorkspace::with_catalog(
+            TerrainCatalog::parse_hota181(
+                homm3_resource::hdat::Container::parse(&data).unwrap(),
+                &patterns,
+            )
+            .unwrap(),
+        )
+    });
+    let mut painted_maps = 0;
     let mut boundary_cells = 0;
     let mut rock_maps = 0;
     let mut layouts = 0;
@@ -163,6 +178,26 @@ fn installed_packs_normalize_all_zone_and_connection_records() {
                             boundary_cells += map.raster().cells().len();
                             rock_maps +=
                                 usize::from(map.template().options().rock_blocks.is_some());
+                            if let Some(painter) = &mut painter {
+                                let coverage = map.prepare_terrain(&mut rng).unwrap();
+                                let painted = painter.paint(coverage, &mut rng).unwrap_or_else(|e| {
+                                    panic!("{} {size:?} {levels:?} {humans}/{computers} {water:?}: {e}", path.display())
+                                });
+                                let map = painted.coverage().map();
+                                assert_eq!(painted.tiles().len(), map.raster().cells().len());
+                                assert_eq!(painted.regions().len(), painted.tiles().len());
+                                assert!(map
+                                    .zones()
+                                    .iter()
+                                    .all(|zone| zone.saved_center().is_some()
+                                        && zone.max_guard_value().is_some()));
+                                for (cell, region) in
+                                    map.raster().cells().iter().zip(painted.regions())
+                                {
+                                    assert!(cell.zone.is_none() || region.is_reachable());
+                                }
+                                painted_maps += 1;
+                            }
                             layouts += 1;
                         }
                     }
@@ -171,6 +206,10 @@ fn installed_packs_normalize_all_zone_and_connection_records() {
         }
     }
     assert_eq!(layouts, candidates);
+    if painter.is_some() {
+        assert_eq!(painted_maps, candidates);
+        eprintln!("{painted_maps} completed terrain maps using reused storage");
+    }
     assert!(terrain_counts[10] > 0 && terrain_counts[11] > 0);
     eprintln!("{layouts} completed layouts and boundaries, {boundary_cells} cells, {rock_maps} rock-block maps, terrain counts {terrain_counts:?}");
     assert!(candidates > 0);

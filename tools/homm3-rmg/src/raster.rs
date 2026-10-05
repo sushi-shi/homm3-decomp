@@ -282,6 +282,9 @@ impl ZoneRaster {
     pub fn cells(&self) -> &[ZoneCell] {
         &self.cells
     }
+    pub(crate) fn cells_mut(&mut self) -> &mut [ZoneCell] {
+        &mut self.cells
+    }
     /// Bounds shared by both planes.
     #[must_use]
     pub const fn bounds(&self) -> MapBounds {

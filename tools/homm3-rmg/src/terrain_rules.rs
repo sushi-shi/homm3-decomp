@@ -651,7 +651,7 @@ impl TerrainCatalog {
                 transition,
             });
         };
-        if self.ruleset() == Ruleset::Complete || terrain == Terrain::Rock {
+        if self.ruleset() == Ruleset::Complete {
             return Ok(range.select(rng));
         }
         // RVA 0x1f2af0: duplicates exclude one frame only. If all are taken,

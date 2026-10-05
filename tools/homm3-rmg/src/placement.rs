@@ -155,6 +155,8 @@ pub enum ObstacleEntrances {
 /// A safe placement query cannot reproduce an undefined native access.
 #[derive(Debug)]
 pub enum PlacementError {
+    /// The terrain is ready, but this version's placement rules are not integrated.
+    UnsupportedRuleset(crate::rules::Ruleset),
     /// The placement table has no score column for this terrain.
     TerrainRule(Terrain),
     /// Retail underflows the bound of its empty road-target loop.
@@ -218,6 +220,9 @@ pub enum PlacementError {
 impl fmt::Display for PlacementError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::UnsupportedRuleset(rules) => {
+                write!(f, "placement for {rules:?} is not implemented yet")
+            }
             Self::TerrainRule(terrain) => {
                 write!(f, "placement table has no {terrain:?} score column")
             }
@@ -374,6 +379,12 @@ impl PlacementWorkspace {
         &'state mut self,
         terrain: PaintedTerrain<'zones, 'tiles>,
     ) -> Result<PlacementMap<'state, 'zones, 'tiles>, PlacementError> {
+        if terrain.coverage().map().request().ruleset() != crate::rules::Ruleset::Complete {
+            return Err(PlacementError::UnsupportedRuleset(
+                terrain.coverage().map().request().ruleset(),
+            ));
+        }
+
         let count = terrain.tiles().len();
         self.cells
             .try_reserve(count.saturating_sub(self.cells.len()))?;

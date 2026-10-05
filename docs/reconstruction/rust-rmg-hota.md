@@ -94,10 +94,9 @@ because a partial implementation compiled.
 
 ## Current state
 
-The integration exposes HotA layout and boundary construction through the shared
-`LayoutWorkspace::generate_with_hints` and `BoundaryWorkspace::generate` APIs.
-Full-map generation remains gated; terrain coverage/painting and placement are
-not yet admitted.
+The integration exposes HotA layout, boundaries, coverage and terrain painting
+through the shared workspaces. Full-map generation remains gated; placement and
+later stages are not yet admitted.
 The checkpoints below record their own achieved scope and evidence in order.
 
 The isolated integration branch is `codex/rust-hota-rmg`. The first implementation
@@ -600,3 +599,48 @@ flags, discarded unreachable ownership and final bounds/recentering must be
 integrated together. Resource IO must supply the pinned pattern slice when the
 full HotA assets/CLI path is admitted. The eight native phase captures retained
 from boundary verification are the next painted-map comparison target.
+
+The shared coverage and terrain pipeline now admits HotA. It retains saved zone
+centers and growing bounds, paints with strength 1, initializes the surface to
+Dirt for no-water rock-block maps, and updates zone ownership/bounds for cells
+repaired during the zone brush flush. The post-pass follows RVA `0x1ce1c0`: guard
+caps, ordered unowned-water floods, land-border classification, reachability from
+saved centers, removal of unreachable ownership, then final bounds/recentering.
+`PaintedTerrain::regions` retains border and reachability classifications for
+placement. Other HotA tile flags belong to their later placement operations.
+The admission gate moves to `PlacementWorkspace::begin`, before state mutation;
+full generation remains gated at asset preparation.
+
+The fixed rock rule also uses HotA's least-repeated selector for both fills and
+transitions (hooks at HD `0x5b3dd6` and `0x5b3e4d`). Embedded rock reflections
+still select the frame range and leave the sprite reflection flags clear. A
+focused regression test covers neighbour exclusion for rock fills.
+
+All eight retained native DLL terrain-phase captures now match: 114 zone centers
+and bounds, 142,560 terrain/frame/reflection records, ownership and paint bits,
+and every final CRT state/draw count. This covers the previously listed Jebus,
+DRM water/islands, underground, fixed Factory/Bulwark, 8mm6a, 2sm2c, Sapphire and
+Outcast cases. The captures do not contain the extension's guard caps or region
+flag arrays; those are source-based ports, with ownership providing indirect
+coverage of reachability. The reference remains non-HD, non-mirror and at most
+144 tiles per side. Comparison report SHA-256:
+`32dbcf3c3765103563978d34ecb3fe891becc886f79ce344ad3c79952aabc305`;
+probe, phase captures and report remain in ignored `build/hota-layout-native/`.
+
+Verification: 159 library tests, four layout integration tests, two documentation
+tests, the installed-terrain test and library Clippy pass. With installed frame
+data supplied, the pack corpus now runs through painting: all 2,399 admitted
+requests across 34 packs (eight mirror packs), seven sizes, both requested plane
+settings, three water settings and four player configurations complete using
+reused workspaces. It processes 87,975,072 cells and 249 rock-block maps, with no
+hint diagnostics or deferred faults. Every retained owner is reachable and all
+zone centers/caps are initialized. This is Rust execution/invariant coverage,
+not native equivalence for the expanded-size or mirror cases.
+
+The 14-case Complete sample retains 14 exact hotfix outputs, seven exact retail
+outputs and seven matching pre-existing coast faults. Replay runner SHA-256:
+`f0559e5264fd153998e2be6078e3c96ae19a5f9868e498beeb7b41b732956f41`.
+Next work is shared placement state, expanded terrain scoring and the ordered
+HotA connection/town/mine/road operations. Whole-map generation, versioned output,
+HD/mirror completion, native whole-map replay, game loading and publication
+remain required.
