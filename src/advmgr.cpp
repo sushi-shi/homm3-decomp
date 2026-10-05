@@ -5690,10 +5690,15 @@ NewmapCell* advManager::getCell(type_point point)
 // Retail's own inconsistency, transcribed rather than tidied: the row
 // advance uses the LIVE screenBitmap->Pitch while the writes inside a
 // pixel block use a hardcoded 0x640-byte stride.
+// Original UpdateRadar publics encode _N for all five display flags in
+// both overloads. DC 0x15edc and Mac 0x14534..0x14564 retain the bitmap
+// DrawInterface boundary at the final marker blit.
 VA(0x00412c40, 0xB41)
 DC_ADDRESS(0x014bec, 0x1390)
 MAC_ADDRESS(0x01382c, 0xd74)  // linkorder
-void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsigned char partialUpdate, unsigned char viewMines, unsigned char viewHeros, unsigned char viewTowns)
+void advManager::updateRadar(type_point origin, bool updateFlag,
+                             bool partialUpdate, bool viewMines,
+                             bool viewHeroes, bool viewTowns)
 {
     widget* radar = m_advWindow->m_radarWidget;
     int rectX = radar->m_x;
@@ -5811,7 +5816,7 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
                 && y >= 0 && x < g_mapWidth && y < g_mapHeight;
             if (viewMines && cell->m_type == MINE)
                 revealed = 1;
-            if (viewHeros && cell->m_type == HERO)
+            if (viewHeroes && cell->m_type == HERO)
                 revealed = 1;
 
             unsigned short colour;
@@ -6066,10 +6071,8 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
 
     if (!suppressIcon)
         icons->drawInterface(radarFrame, srcX, srcY, drawWidth, drawHeight,
-                             g_windowManager->m_screenBitmap->getMap(0, 0), destX,
-                             destY, g_windowManager->m_screenBitmap->getWidth(),
-                             g_windowManager->m_screenBitmap->getHeight(),
-                             g_windowManager->m_screenBitmap->getPitch(), 0);
+                             g_windowManager->m_screenBitmap, destX, destY,
+                             false);
 
     if (updateFlag)
         g_windowManager->updateScreen(rectX, rectY, rectWidth, rectHeight);
@@ -6078,7 +6081,8 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
 VA(0x00413790, 0x27)
 DC_ADDRESS(0x015f7c, 0x5e)
 MAC_ADDRESS(0x0145a0, 0x48)
-void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpdate, unsigned char viewMines, unsigned char viewHeroes, unsigned char viewTowns)
+void advManager::updateRadar(bool updateFlag, bool partialUpdate,
+                             bool viewMines, bool viewHeroes, bool viewTowns)
 {
     updateRadar(m_radarOrigin, updateFlag, partialUpdate, viewMines,
                 viewHeroes, viewTowns);
