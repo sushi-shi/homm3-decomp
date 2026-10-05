@@ -15,7 +15,7 @@ use crate::{
     request::{MapVersion, PerColour, Town, PLAYER_COUNT},
     rng::{RetailRng, RngCheckpoint},
     selection::Player,
-    template::{Placement, SlotUse, ZoneRole},
+    template::{Placement, SlotUse, TownCategory, ZoneRole},
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
@@ -147,14 +147,17 @@ struct Rules {
     allowed: TownMask,
 }
 impl Rules {
-    fn category(self, index: usize) -> (Option<Player>, Fort) {
-        let player = index == raw::RMG_TOWN_PLAYER_CASTLE as usize
-            || index == raw::RMG_TOWN_PLAYER_BASIC as usize;
-        let fortified = index == raw::RMG_TOWN_PLAYER_CASTLE as usize
-            || index == raw::RMG_TOWN_NEUTRAL_CASTLE as usize;
+    const fn placement(self, category: TownCategory) -> Placement {
+        self.categories[category.index()]
+    }
+    const fn category(self, category: TownCategory) -> (Option<Player>, Fort) {
         (
-            if player { self.owner } else { None },
-            if fortified {
+            if category.is_player() {
+                self.owner
+            } else {
+                None
+            },
+            if category.has_fort() {
                 Fort::Present
             } else {
                 Fort::Absent
@@ -192,8 +195,8 @@ impl<'state, 'zones, 'tiles> PlacementMap<'state, 'zones, 'tiles> {
             let Some(rules) = self.town_rules(zone) else {
                 continue;
             };
-            for category in 0..rules.categories.len() {
-                if rules.categories[category].initial_count > 0 {
+            for category in TownCategory::ALL {
+                if rules.placement(category).initial_count > 0 {
                     let (owner, fort) = rules.category(category);
                     if self.try_primary_town(
                         objects,
@@ -340,7 +343,8 @@ impl PlacementMap<'_, '_, '_> {
         rng: &mut RetailRng,
     ) -> Result<(), TownError> {
         let mut skip_primary = true;
-        for (category, placement) in rules.categories.iter().enumerate() {
+        for category in TownCategory::ALL {
+            let placement = rules.placement(category);
             if placement.initial_count <= 0 {
                 continue;
             }
@@ -356,12 +360,12 @@ impl PlacementMap<'_, '_, '_> {
         else {
             return Ok(());
         };
-        while let Some(category) = density.next()? {
-            let (owner, fort) = rules.category(category);
+        while let Some(index) = density.next()? {
+            let (owner, fort) = rules.category(TownCategory::ALL[index]);
             if !self
                 .try_additional_town(objects, catalog, zone, rules, owner, fort, spacing, rng)?
             {
-                density.finish(category);
+                density.finish(index);
             }
         }
         Ok(())

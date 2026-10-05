@@ -220,12 +220,17 @@ impl<'a> Row<'a> {
             && self.number(first + raw::RMG_PLAYER_LIMIT_MAXIMUM_PLAYERS)? >= total)
     }
 
-    fn kind(&self) -> u32 {
+    fn kind(&self) -> ZoneKind {
         // Later kind columns override earlier ones; absence defaults to treasure.
-        (raw::RMG_TEMPLATE_COLUMN_KIND_HUMAN..=raw::RMG_TEMPLATE_COLUMN_KIND_JUNCTION)
-            .rev()
-            .find(|&column| self.is_set(column))
-            .unwrap_or(raw::RMG_TEMPLATE_COLUMN_KIND_TREASURE)
+        [
+            (raw::RMG_TEMPLATE_COLUMN_KIND_JUNCTION, ZoneKind::Junction),
+            (raw::RMG_TEMPLATE_COLUMN_KIND_TREASURE, ZoneKind::Treasure),
+            (raw::RMG_TEMPLATE_COLUMN_KIND_COMPUTER, ZoneKind::Computer),
+            (raw::RMG_TEMPLATE_COLUMN_KIND_HUMAN, ZoneKind::Human),
+        ]
+        .into_iter()
+        .find(|&(column, _)| self.is_set(column))
+        .map_or(ZoneKind::Treasure, |(_, kind)| kind)
     }
 }
 
@@ -300,6 +305,53 @@ impl ZoneRole {
             Self::Treasure(owner) | Self::Junction(owner) => owner,
         }
     }
+}
+
+/// A zone's town placement category, in template column order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u32)]
+pub enum TownCategory {
+    /// Owned by the zone's player, with a fort.
+    PlayerCastle = raw::RMG_TOWN_PLAYER_CASTLE,
+    /// Owned by the zone's player, without a fort.
+    PlayerBasic = raw::RMG_TOWN_PLAYER_BASIC,
+    /// Unowned, with a fort.
+    NeutralCastle = raw::RMG_TOWN_NEUTRAL_CASTLE,
+    /// Unowned, without a fort.
+    NeutralBasic = raw::RMG_TOWN_NEUTRAL_BASIC,
+}
+impl TownCategory {
+    /// Native category order.
+    pub const ALL: [Self; raw::RMG_TOWN_CATEGORY_COUNT as usize] = [
+        Self::PlayerCastle,
+        Self::PlayerBasic,
+        Self::NeutralCastle,
+        Self::NeutralBasic,
+    ];
+    /// Index into a zone's town placements.
+    #[must_use]
+    pub const fn index(self) -> usize {
+        self as usize
+    }
+    /// Whether the zone's player owns towns of this category.
+    #[must_use]
+    pub const fn is_player(self) -> bool {
+        matches!(self, Self::PlayerCastle | Self::PlayerBasic)
+    }
+    /// Whether towns of this category start with a fort.
+    #[must_use]
+    pub const fn has_fort(self) -> bool {
+        matches!(self, Self::PlayerCastle | Self::NeutralCastle)
+    }
+}
+
+/// A row's zone kind; later kind columns override earlier ones.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ZoneKind {
+    Human,
+    Computer,
+    Treasure,
+    Junction,
 }
 
 /// A placement category with an initial count and optional positive density.
@@ -420,10 +472,15 @@ impl Zone {
     pub const fn size(&self) -> NonZeroU32 {
         self.size
     }
-    /// Player castle/basic then neutral castle/basic placement categories.
+    /// Town placements in `TownCategory::ALL` order.
     #[must_use]
     pub const fn towns(&self) -> &[Placement; raw::RMG_TOWN_CATEGORY_COUNT as usize] {
         &self.towns
+    }
+    /// One town placement category.
+    #[must_use]
+    pub const fn town(&self, category: TownCategory) -> Placement {
+        self.towns[category.index()]
     }
     /// Whether neutral towns inherit zone alignment.
     #[must_use]
@@ -662,13 +719,16 @@ impl<'a> TemplateSource<'a> {
                             request,
                         )?
                     {
+                        // Retail admission counts player zones, including
+                        // repeated or unusable ones; hotfix counts distinct
+                        // slots of parsed zones (`Template::admits`).
                         match row.kind() {
-                            raw::RMG_TEMPLATE_COLUMN_KIND_HUMAN => {
+                            ZoneKind::Human => {
                                 human_zones += 1;
                                 player_zones += 1;
                             }
-                            raw::RMG_TEMPLATE_COLUMN_KIND_COMPUTER => player_zones += 1,
-                            _ => {}
+                            ZoneKind::Computer => player_zones += 1,
+                            ZoneKind::Treasure | ZoneKind::Junction => {}
                         }
                         match parse_zone(&row, TemplateZoneId::new(template.zones.len()), request)?
                         {
@@ -770,16 +830,16 @@ fn parse_zone(
         _ => return Ok(Err(unusable)),
     };
     let role = match (row.kind(), owner) {
-        (raw::RMG_TEMPLATE_COLUMN_KIND_HUMAN, Some(slot)) => ZoneRole::Human(slot),
-        (raw::RMG_TEMPLATE_COLUMN_KIND_COMPUTER, Some(slot)) => ZoneRole::Computer(slot),
-        (raw::RMG_TEMPLATE_COLUMN_KIND_TREASURE, owner) => ZoneRole::Treasure(owner),
-        (raw::RMG_TEMPLATE_COLUMN_KIND_JUNCTION, owner) => ZoneRole::Junction(owner),
+        (ZoneKind::Human, Some(slot)) => ZoneRole::Human(slot),
+        (ZoneKind::Computer, Some(slot)) => ZoneRole::Computer(slot),
+        (ZoneKind::Treasure, owner) => ZoneRole::Treasure(owner),
+        (ZoneKind::Junction, owner) => ZoneRole::Junction(owner),
         // Retail getPlayerSlots indexes both eight-byte arrays with -1 for an
         // unassigned human zone (only allSlots for a computer zone). In generate,
         // 0x5499e0 writes humanSlots[-1]; 0x5499e5 writes allSlots[-1], aliasing
         // humanSlots[7]. Shipped 2SM2i(2) thus gains a phantom player slot.
         // Native success does not make these out-of-array accesses defined.
-        _ => {
+        (ZoneKind::Human | ZoneKind::Computer, None) => {
             return Ok(Err(RetailTemplateFault::UnassignedPlayerZone {
                 row: row.index,
             }))
@@ -1155,5 +1215,36 @@ mod tests {
             Err(SelectionError::NoTemplates)
         ));
         assert_eq!(rng.draws(), 2);
+    }
+
+    #[test]
+    fn town_categories_follow_native_order() {
+        for (index, category) in TownCategory::ALL.into_iter().enumerate() {
+            assert_eq!(category.index(), index);
+        }
+        let player = TownCategory::ALL.map(TownCategory::is_player);
+        let fort = TownCategory::ALL.map(TownCategory::has_fort);
+        assert_eq!(player, [true, true, false, false]);
+        assert_eq!(fort, [true, false, true, false]);
+    }
+
+    #[test]
+    fn later_kind_columns_override_earlier_ones() {
+        let bytes = sheet(&[zone_row("", 1, 1)]);
+        let source = TemplateSource::parse(&bytes).unwrap();
+        let row = Row::new(source.rows[raw::RMG_FIRST_DATA_ROW as usize], 0);
+        assert_eq!(row.kind(), ZoneKind::Human);
+        let mut fields = zone_row("", 1, 1);
+        fields[raw::RMG_TEMPLATE_COLUMN_KIND_JUNCTION as usize] = "x".into();
+        let bytes = sheet(&[fields]);
+        let source = TemplateSource::parse(&bytes).unwrap();
+        let row = Row::new(source.rows[raw::RMG_FIRST_DATA_ROW as usize], 0);
+        assert_eq!(row.kind(), ZoneKind::Junction);
+        let mut fields = zone_row("", 1, 1);
+        fields[raw::RMG_TEMPLATE_COLUMN_KIND_HUMAN as usize].clear();
+        let bytes = sheet(&[fields]);
+        let source = TemplateSource::parse(&bytes).unwrap();
+        let row = Row::new(source.rows[raw::RMG_FIRST_DATA_ROW as usize], 0);
+        assert_eq!(row.kind(), ZoneKind::Treasure);
     }
 }

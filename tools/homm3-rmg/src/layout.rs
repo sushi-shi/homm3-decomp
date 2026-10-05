@@ -7,7 +7,7 @@ use crate::{
     request::{Levels, Request, Town, TownChoice, Water},
     rng::RetailRng,
     selection::{Player, SelectedTemplate},
-    template::{PerSlot, Template, TemplateZoneId, Zone, ZoneRole},
+    template::{PerSlot, Template, TemplateZoneId, TownCategory, Zone, ZoneRole},
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
@@ -188,9 +188,10 @@ impl LayoutWorkspace {
             // The constructor draws before the request's fixed town overrides it.
             let mut alignment = zone.allowed_towns().choose(rng);
             let owner = zone.role().owner();
-            let town_count = zone.towns()[0]
+            let town_count = zone
+                .town(TownCategory::PlayerCastle)
                 .initial_count
-                .checked_add(zone.towns()[1].initial_count)
+                .checked_add(zone.town(TownCategory::PlayerBasic).initial_count)
                 .ok_or(LayoutError::Arithmetic)?;
             if town_count > 0 {
                 if let Some(player) = owner.and_then(|slot| selected.player(slot)) {
