@@ -515,20 +515,14 @@ public:
         // set; DrawFrame expands the same IsVisible predicate.
         signed char m_owner;                  // +0x9
         unsigned char m_isVisible;           // +0xa
-        // Dreamcast grid_index/owner/is_visible occupy bytes 8/9/10;
-        // retail mark_firewalls reads damage at +12. This byte aligns it.
-        char m_paddingBeforeDamage[0x1];
-        // Sliced 2026-08-08 by mark_firewalls (0x4214f0), which feeds
-        // this dword straight into ModifySpellDamage as the base
-        // damage for the fire-wall spell - so it is the damage the
-        // obstacle deals, stored per obstacle when it is placed.
-        // Name provisional; no roster reaches the slot.
-        long m_spellDamage;                  // +0xc
-        // place_obstacle stamps these two on every obstacle it builds -
-        // +0x10 zero and +0x14 all-ones - alongside owner/-1 and
-        // is_visible/1. No reader is decoded, so both stay ordinals.
-        long m_duration;                      // +0x10
-        long m_dispelEffect;                      // +0x14
+        // Byte +0xb is implicit padding before the int-wide damage field.
+        // Original DC TObstacle record 0x1f16 names these damage,
+        // duration and dispel_effect; the last is TSpellEffectID.
+        // Retail mark_firewalls reads damage at +12, and spell/command
+        // readers preserve the same three int-wide slots.
+        int m_spellDamage;                   // +0xc
+        int m_duration;                      // +0x10
+        TSpellEffectID m_dispelEffect;        // +0x14
 
         // Dreamcast CodeView names this one-argument const member and fixes
         // its bool result; the retail DrawFrame expansion proves the two

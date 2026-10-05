@@ -652,77 +652,18 @@ void combatManager::unnamed59FDE0(int x, int y, army* target)
     }
 }
 
-// Source-ownership recovery, 2026-09-09: CastSpell's four obstacle appends
-// are push_back in DC spells.cpp:849/925/962/996. The Quicksand, Land Mine
-// and Fire Wall jsr targets are loaded in the preceding line group at
-// dc 0x14feaa/0x1500be/0x1502c0; Force Field names it at dc 0x150212.
-// Native vector push_back restores retail's retained count-insert calls
-// (+0x64e/+0x86c/+0x9a2/+0xae4), preserving the original record passed to
-// placeObstacle after the append. All 16 per-arm choices were measured:
-// four push_back calls recover 72.8210 -> 93.9814 (HIST was 93.3687).
-// Direct count-insert expands those bodies and loses the caller boundaries.
-// The older per-arm notes below describe their dated checkpoints.
-// Residual (92.78%, 2026-09-05, opened at 91.47): the per-arm size census
-// below is the map. Decode retail's 38-entry jump table at fn+0x2970 and
-// its 71-byte index table at fn+0x2a08, invert them onto SpellID, and
-// subtract consecutive layout offsets on both sides; the same arithmetic
-// over our own jump table gives a per-arm byte delta that localises every
-// remaining divergence to one case body.
-//   ARM ORDER IS NOT THE PROBLEM - MEASURED AND REFUTED HERE.  A standing
-//   brief said the one-sided ShowSpellMessage/DrawFrame/SpellEffect calls
-//   were a jump-table arm-order fact.  Sorting both tables by target gives
-//   the IDENTICAL arm sequence, including the shared LIGHTNING_BOLT/
-//   TITANS arm, the shared RESURRECTION/ANIMATE_DEAD and BIND/AGE arms,
-//   and the SHIELD..PARALYZE block sitting between ARMAGEDDON and STONE.
-//   Do not spend a round reordering the cases.
-// After the hero-row un-caching the prologue delta is 7 bytes (was 147).
-// What is left, in bytes of (ours - retail) per arm:
-//   FIRE_WALL +31, FORCE_FIELD +24, DESTROY_UNDEAD +21, DISPEL_HELPFUL +17
-//   DEATH_RIPPLE -27, MAGIC_ARROW -26, ACID_BREATH -20, post-switch -20,
-//   STONE -19, POISON -17, SHIELD..PARALYZE -13, BERSERK -6, BLOODLUST +6
-// Every one of those is the SAME class and it is C2's cross-jumper, not a
-// spelling: the arms' instruction streams are byte-identical and only the
-// surviving copy of a shared tail differs.  Retail keeps POISON's own
-// `SpellEffect(traits->m_effect, target, 100, N)` tail and merges BIND/AGE
-// and the SHIELD block into it (`push 0 / jmp` into POISON at +0x1781);
-// we keep DISPEL_HELPFUL's copy - the LAST in layout order - and merge all
-// three into that.  The pairing is visible in the census: POISON -17 and
-// DISPEL_HELPFUL +17 are the same seventeen bytes.  Retail runs the other
-// way round at FORCE_FIELD/FIRE_WALL, where ITS FIRE_WALL arm jumps into
-// FORCE_FIELD's ShowSpellMessage at +0x9db and we emit both.  This is the
-// merged-return / surviving-copy class docs/vc6 records for the retail CL
-// generation, and it is exactly what hero.cpp's THeroScreenWindow::
-// WindowHandler note calls "which member of the epilogue merge-set C2
-// emits in place". Tested scope-only probes did not change that pairing.
-// Named-call review: all 19 source ShowSpellMessage calls survive on Mac.
-// Windows keeps 16 sites versus retail's 17 after merging switch tails; this
-// is not expansion of the 0x999-byte helper. The Mac Bloodlust arm likewise
-// jumps to the mass arm's final DrawFrame at 0x192048. Keep those canonical
-// calls; only the finder calls are confirmed extra expansions in this family.
-// The frame is 0x80 against retail's 0x94.  The 0x14 is a SECOND TObstacle
-// stack slot: retail gives {QUICKSAND, LAND_MINE} [-0x90] and
-// {FORCE_FIELD, FIRE_WALL} [-0x5c], we coalesce all four onto [-0x8c].
-// MEASURED AND REJECTED: hoisting FIRE_WALL's `TObstacle new_wall` out of
-// its for-body to case-block scope (so the two pairs sit at different
-// scope depths) is byte-flat AND leaves the frame at 0x80 - VC6 coalesces
-// disjoint case scopes regardless of nesting depth.
-// One real lead not yet spelled: at +0x2379 retail reads
-// `[ebx + 4*ecx + 0x54bc]` - one ELEMENT of the array - where we take
-// `lea eax,[ebx+0x54bc]` and walk it as a pointer.
-// LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): two of this
-// body's TWENTY-SEVEN zero-initialised counters are `unsigned int` (the
-// affected-hex walk and the wall-segment walk).  92.7816 -> 93.3658.  Six
-// beat MAX on their own; only these two survive together.
-// Restore DC 860/936 ResourceManager::Dispose(sample*) calls. Complete Mac
-// 0x190d5c..0x190d70 and 0x190ff0..0x191004 confirms null-guarded virtual
-// disposal. Keeping the canonical sample body in its older source owner
-// leaves two extra retained calls (lane 92.43 -> 91.86%). Complete's
-// cross-TU expansion supports shared-header visibility beside its sibling
-// overloads; keep one body and distinguish inferred linkage from DC flags.
-// Header visibility restores the lane's 92.43%, with every other measured
-// Windows score and all 34 available spells/resource-manager Mac pairs held.
-// The mass Dispel/Cure this_army reference locals are DC-proven at
-// 1452/1517; restoring them holds Windows 92.43% and all 21 Mac comparisons.
+// DC spells.cpp:849/925/962/996 proves all four obstacle push_back calls;
+// their native vector expansions retain retail's count-insert boundaries.
+// Mac 0x190c58/0x190ee8/0x191074/0x1911a4 copies a complete constant
+// TObstacle before evaluating each aggregate's dynamic initializers.
+// Retail reuses [ebp-0x5c] for all four obstacles; [ebp-0x90] is the picker.
+// Do not introduce an extra obstacle lifetime to explain the frame residual.
+//
+// The ordinary findSpellTarget calls still expand where retail retains them.
+// Switch arm order is already correct; reordered cases and moving Fire Wall's
+// local out of its loop did not recover the remaining shared-tail differences.
+// Preserve ResourceManager::dispose (DC 860/936, expanded on Complete Mac)
+// and the mass Dispel/Cure army reference locals (DC 1452/1517).
 VA(0x0059fe30, 0x2A4F)
 DC_ADDRESS(0x14f7dc, 0x2366)
 MAC_ADDRESS(0x190540, 0x29f4)  // retail largest-unadmitted row
@@ -782,10 +723,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     if (validHex(targetIndex) && spellTargetsASingleArmy(spellId, mastery)) {
         // CastSpell -> find_spell_target: Dreamcast line 696
         // records the helper call and retail +0x276 retains its REL32.
-        // Without diagnostic depth pins, VC6 expands both calls while retail
-        // retains them (castSpell MAX 93.98 -> 92.47). CodeWarrior retains
-        // both calls, as does Mac retail; its empty depth reset was illegal.
-        // Recover the Windows inlining state without suppressing inlining.
+        // VC6 still expands both source calls; Complete Mac retains them.
         target = findSpellTarget(
             static_cast<ESpellId>(spellId), m_currentSide, targetIndex, 1, isMonsterSpell);
     } else {
@@ -853,8 +791,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // Keeping the expression fused into this `if` makes VC6 branch directly
     // and pulls the expanded failure helper in front of the spell switch.
     // SpellCastWorks' public _N contract supports the bool result/redirect
-    // locals. Restoring them leaves CUR 92.4343% unchanged; the source edit
-    // resets the older 93.9670% MAX. The two finder calls still expand.
+    // locals.
     bool spellWorks;
     if (isMonsterSpell == SPELL_CASTER_CREATURE || !target)
         spellWorks = 1;
@@ -869,9 +806,8 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         switch (spellId) {
     // DC 814/819/823 and 890/895/899 record the picker assignment,
     // guarded repeat, then a separate exhaustion test. Retain those two
-    // source stages: both multi-level exits become ordinary loop breaks
-    // at unchanged 93.3658%. Merely breaking the old infinite inner loop
-    // and retesting afterward lowers the pair to 92.4546%.
+    // source stages; fusing the exhaustion test into the repeat changes
+    // the native control flow.
     case SPELL_QUICKSAND: {
         const int nhexes = g_quicksandCountByMastery[mastery];
         sample* sample2b;
@@ -899,19 +835,16 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
 
             spellEffect(traits->m_effect, hex, 100, 1);
 
-            TObstacle newQuicksand;
-            newQuicksand.m_sprite =
-                ResourceManager::getSprite(s_quicksandInfo[0].m_spriteName);
-            newQuicksand.m_shape = &s_quicksandInfo[0];
-            newQuicksand.m_hex = static_cast<unsigned char>(hex);
-            newQuicksand.m_owner = static_cast<signed char>(m_currentSide);
-            // Retail folds the side flip into the address here rather than
-            // reading the named local: 0x5a19d4 loads currentSide, forms
-            // `this - currentSide` and reads [eax + 0x1329d].
-            newQuicksand.m_isVisible = m_onNativeTerrain[1 - m_currentSide];
-            newQuicksand.m_spellDamage = 0;
-            newQuicksand.m_duration = 0;
-            newQuicksand.m_dispelEffect = 0x3a;
+            TObstacle newQuicksand = {
+                ResourceManager::getSprite(s_quicksandInfo[0].m_spriteName),
+                &s_quicksandInfo[0],
+                static_cast<unsigned char>(hex),
+                static_cast<signed char>(m_currentSide),
+                m_onNativeTerrain[1 - m_currentSide],
+                0,
+                0,
+                eSpellEffectDispelQuicksand
+            };
             m_obstacles.push_back(newQuicksand);
             int obstacleSlot = m_obstacles.size() - 1;
             placeObstacle(newQuicksand, obstacleSlot, hex, hexcell::quicksand);
@@ -957,16 +890,16 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
 
             spellEffect(traits->m_effect, hex, 100, 1);
 
-            TObstacle newLandmine;
-            newLandmine.m_sprite =
-                ResourceManager::getSprite(s_landMineInfo[0].m_spriteName);
-            newLandmine.m_shape = &s_landMineInfo[0];
-            newLandmine.m_hex = static_cast<unsigned char>(hex);
-            newLandmine.m_owner = static_cast<signed char>(m_currentSide);
-            newLandmine.m_isVisible = m_onNativeTerrain[1 - m_currentSide];
-            newLandmine.m_spellDamage = damage;
-            newLandmine.m_duration = 0;
-            newLandmine.m_dispelEffect = 0x3b;
+            TObstacle newLandmine = {
+                ResourceManager::getSprite(s_landMineInfo[0].m_spriteName),
+                &s_landMineInfo[0],
+                static_cast<unsigned char>(hex),
+                static_cast<signed char>(m_currentSide),
+                m_onNativeTerrain[1 - m_currentSide],
+                damage,
+                0,
+                eSpellEffectDispelLandMine
+            };
             m_obstacles.push_back(newLandmine);
             int obstacleSlot = m_obstacles.size() - 1;
             placeObstacle(newLandmine, obstacleSlot, hex, hexcell::landMine);
@@ -984,21 +917,24 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     }
 
     case SPELL_FORCE_FIELD: {
-        spellEffect((mastery >= eMasteryAdvanced) + 0x20, targetIndex,
-                    100, 1);
+        spellEffect(mastery >= eMasteryAdvanced ? eSpellEffectForcefield3
+                                               : eSpellEffectForcefield2,
+                    targetIndex, 100, 1);
         const TObstacleInfo* shape = &s_wallObstacleInfo[0];
         if (mastery >= eMasteryAdvanced)
             shape = &s_wallObstacleInfo[1];
 
-        TObstacle newWall;
-        newWall.m_sprite = ResourceManager::getSprite(shape->m_spriteName);
-        newWall.m_shape = shape;
-        newWall.m_hex = static_cast<unsigned char>(targetIndex);
-        newWall.m_owner = static_cast<signed char>(m_currentSide);
-        newWall.m_isVisible = 1;
-        newWall.m_spellDamage = 0;
-        newWall.m_duration = 2;
-        newWall.m_dispelEffect = (mastery >= eMasteryAdvanced) + 0x3c;
+        TObstacle newWall = {
+            ResourceManager::getSprite(shape->m_spriteName),
+            shape,
+            static_cast<unsigned char>(targetIndex),
+            static_cast<signed char>(m_currentSide),
+            1,
+            0,
+            2,
+            mastery >= eMasteryAdvanced ? eSpellEffectDispelForcefield3
+                                       : eSpellEffectDispelForcefield2
+        };
         m_obstacles.push_back(newWall);
         int obstacleSlot = m_obstacles.size() - 1;
         placeObstacle(newWall, obstacleSlot, targetIndex, hexcell::stoneWall | hexcell::blocked);
@@ -1013,20 +949,22 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         for (unsigned int i = 0; i < nHexes; ++i) {
             spellEffect(traits->m_effect, targetIndex, 100, 1);
 
-            TObstacle newWall;
-            newWall.m_sprite =
-                ResourceManager::getSprite(s_wallObstacleInfo[4].m_spriteName);
-            newWall.m_shape = &s_wallObstacleInfo[4];
-            int hex = getSpellWallHex(targetIndex, i, m_currentSide);
-            newWall.m_hex = static_cast<unsigned char>(hex);
-            newWall.m_owner = static_cast<signed char>(m_currentSide);
-            newWall.m_isVisible = 1;
-            newWall.m_spellDamage = damage;
-            newWall.m_duration = 2;
-            newWall.m_dispelEffect = 0x42;
+            TObstacle newWall = {
+                ResourceManager::getSprite(s_wallObstacleInfo[4].m_spriteName),
+                &s_wallObstacleInfo[4],
+                static_cast<unsigned char>(
+                    getSpellWallHex(targetIndex, i, m_currentSide)),
+                static_cast<signed char>(m_currentSide),
+                1,
+                damage,
+                2,
+                eSpellEffectDispelFirewall1
+            };
             m_obstacles.push_back(newWall);
             int obstacleSlot = m_obstacles.size() - 1;
-            placeObstacle(newWall, obstacleSlot, hex, hexcell::fireWall);
+            // Placement rereads the stored byte after push_back:
+            // retail +0xb0a, Mac 0x191228, DC 0x1502e0.
+            placeObstacle(newWall, obstacleSlot, newWall.m_hex, hexcell::fireWall);
             drawFrame(1, 0, 0, 0, 1, 0);
         }
         showSpellMessage(isMonsterSpell, spellId, 0);
@@ -1714,8 +1652,10 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         && manaCost >= 5) {
         int manaRecovered = manaCost / 5;
         int numFamiliars = 0;
+        // Both row scans use the opposing side's count (DC line 1760,
+        // retail +0x2382), even though the army row advances separately.
         for (int side = 0; side < 2; ++side) {
-            for (int index = 0; index < m_numArmies[side]; ++index) {
+            for (int index = 0; index < m_numArmies[otherSide]; ++index) {
                 army* currentArmy = &m_armies[side][index];
                 if (currentArmy->m_creatureType == CREATURE_FAMILIAR
                     && currentArmy->getControllingSide() != m_currentSide) {
