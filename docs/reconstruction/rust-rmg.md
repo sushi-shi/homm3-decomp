@@ -8,9 +8,10 @@ executable. The future engine will use Rust in place of C++ RMG; game/lobby
 integration is outside the current scope.
 
 The currently known whole-map output/RNG differences have been resolved. Full
-corpus parity and in-game playability have not been established. See
-[CLI usage](../../tools/homm3-rmg-cli/README.md) and the
-[hotfix coverage table](rust-rmg-hotfix-coverage.md).
+rainbow-table parity and in-game playability have not been established. See
+[CLI usage](../../tools/homm3-rmg-cli/README.md), the
+[hotfix coverage table](rust-rmg-hotfix-coverage.md) and the
+[RMG rainbow tables](../tooling/rmg-rainbow-tables.md) used for Wine-free checks.
 
 ## Architecture
 
@@ -132,9 +133,9 @@ not match the game's compressor. Native RMG omits the editor-only map trailer.
 Verification compares bytes, outcomes, repaired requests and RNG against both
 retail and current C++. Cover all sizes, level counts and formats, player/team
 settings, malformed resources and short/failing writers. Independently parse
-maps, repeat cases in fresh processes, and vary workspace reuse order. Complete
-the 100,000-case campaign and resolve unexplained differences before claiming
-corpus parity. Preserve the workspace's Rust 1.82 minimum compiler version.
+maps, repeat cases in fresh processes, and vary workspace reuse order. Check
+every RMG rainbow-table entry in both modes and resolve unexplained differences
+before claiming parity. Preserve the workspace's Rust 1.82 minimum compiler version.
 
 ## Parallelism roadmap
 

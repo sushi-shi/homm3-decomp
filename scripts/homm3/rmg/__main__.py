@@ -306,8 +306,14 @@ def compare(args) -> int:
 
 
 def main(argv=None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ['rainbow']:
+        from .corpus import main as rainbow
+        return rainbow(argv[1:], prog='homm3 rmg rainbow')
     parser = argparse.ArgumentParser(prog='homm3 rmg')
     sub = parser.add_subparsers(dest='command', required=True)
+    sub.add_parser('rainbow', add_help=False,
+                   help='native reference tables for Rust checks (homm3 rmg rainbow --help)')
     command = sub.add_parser('compare', help='build and run fresh retail/candidate whole-map comparisons')
     game_default = Path(os.environ['HOMM3_GAME_DIR']) if os.environ.get('HOMM3_GAME_DIR') else None
     command.add_argument('--game-dir', type=Path, default=game_default,

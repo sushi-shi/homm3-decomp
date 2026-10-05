@@ -2,7 +2,7 @@
 
 The implementation connects installation resources, generation and streamed H3M
 output. Initial whole-map comparisons and independent parsing pass; broader
-corpus debugging is underway. See the architecture reference for compatibility limits.
+rainbow-table debugging is underway. See the architecture reference for compatibility limits.
 
 Build from the repository's Rust/Nix development environment:
 
@@ -75,6 +75,6 @@ for batches; keep one RNG per map and preserve serial stage/draw order.
 The [architecture reference](../../docs/reconstruction/rust-rmg.md) describes
 ownership, compatibility limits and the parallelism roadmap.
 
-Saved C++ reference tables support repeatable Rust checks without Wine. See
-[local reference corpus](../../docs/tooling/rmg-reference-corpus.md) for capture,
-resume, provenance and streaming comparison commands.
+Precomputed C++ results, the RMG rainbow tables, support repeatable Rust checks
+without Wine. See [RMG rainbow tables](../../docs/tooling/rmg-rainbow-tables.md)
+for capture, extension, resume, provenance and streaming comparison commands.
