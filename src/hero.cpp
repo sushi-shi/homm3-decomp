@@ -1705,16 +1705,16 @@ void hero::viewStat(int whichStat, int isQuickView)
 VA(0x004d9a00, 0x128)
 DC_ADDRESS(0x0cc75c, 0xa2)
 MAC_ADDRESS(0x0f59c8, 0x124)
-void hero::viewArtifact(const type_artifact* artifact, int isQuickView)
+void hero::viewArtifact(const type_artifact& artifact, int isQuickView)
 {
-    if (artifact->m_artifactId == ARTIFACT_SPELL_SCROLL) {
-        normalDialog(artifact->getDescription().c_str(),
+    if (artifact.m_artifactId == ARTIFACT_SPELL_SCROLL) {
+        normalDialog(artifact.getDescription().c_str(),
                      isQuickView ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                  : hero::PRIMARY_STAT_DIALOG_TYPE,
-                     -1, PRIMARY_STAT_DIALOG_Y, 9, artifact->m_extra,
+                     -1, PRIMARY_STAT_DIALOG_Y, 9, artifact.m_extra,
                      -1, 0, -1, 0, -1, 0);
     } else {
-        normalDialog(artifact->getDescription().c_str(),
+        normalDialog(artifact.getDescription().c_str(),
                      isQuickView ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                  : hero::PRIMARY_STAT_DIALOG_TYPE,
                      -1, PRIMARY_STAT_DIALOG_Y, -1, 0, -1, 0, -1, 0,
@@ -2831,9 +2831,9 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                             return;
                         }
                     }
-                    g_currentHero->viewArtifact(&oldArtifact, rightMouse);
+                    g_currentHero->viewArtifact(oldArtifact, rightMouse);
                 } else {
-                    g_currentHero->viewArtifact(&oldArtifact, rightMouse);
+                    g_currentHero->viewArtifact(oldArtifact, rightMouse);
                 }
             } else if (slot == hero::EQUIPPED_SLOT_SPELLBOOK) {
                 TSpellbookWindow spellBookWindow(
@@ -3184,21 +3184,23 @@ std::string hero::getMoraleDescription() const
         morale -= 3;
     }
 
-    if (m_skillLevel[eSecSkillLeadership] == eMasteryBasic) {
+    // Mac expands the same signed packed mastery accessor at each rung.
+    // Keep the typed helper path through the description's string inlining.
+    if (getSecondarySkill(eSecSkillLeadership) == eMasteryBasic) {
         result += g_moraleInfo[20];
         morale++;
     }
-    if (m_skillLevel[eSecSkillLeadership] == eMasteryAdvanced) {
+    if (getSecondarySkill(eSecSkillLeadership) == eMasteryAdvanced) {
         result += g_moraleInfo[21];
         morale += 2;
     }
-    if (m_skillLevel[eSecSkillLeadership] == eMasteryExpert) {
+    if (getSecondarySkill(eSecSkillLeadership) == eMasteryExpert) {
         result += g_moraleInfo[22];
         morale += 3;
     }
 
     if (m_owner >= 0) {
-        playerData& player = g_game->m_players[m_owner];
+        playerData& player = *getPlayer();
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             // Dreamcast hero.cpp:2989 names town::HasBuilding here. Retail
@@ -3320,21 +3322,22 @@ std::string hero::getLuckDescription() const
         luck++;
     }
 
-    if (m_skillLevel[eSecSkillLuck] == eMasteryBasic) {
+    // Mac likewise expands the canonical mastery read for these luck rungs.
+    if (getSecondarySkill(eSecSkillLuck) == eMasteryBasic) {
         result += g_luckInfo[15];
         luck++;
     }
-    if (m_skillLevel[eSecSkillLuck] == eMasteryAdvanced) {
+    if (getSecondarySkill(eSecSkillLuck) == eMasteryAdvanced) {
         result += g_luckInfo[16];
         luck += 2;
     }
-    if (m_skillLevel[eSecSkillLuck] == eMasteryExpert) {
+    if (getSecondarySkill(eSecSkillLuck) == eMasteryExpert) {
         result += g_luckInfo[17];
         luck += 3;
     }
 
     if (m_owner >= 0) {
-        playerData& player = g_game->m_players[m_owner];
+        playerData& player = *getPlayer();
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             // Dreamcast hero.cpp:3149 names town::HasBuilding here.
@@ -3382,7 +3385,7 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
             return;
 
         if (rightMouse) {
-            g_currentHero->viewArtifact(&oldArtifact, rightMouse);
+            g_currentHero->viewArtifact(oldArtifact, rightMouse);
             return;
         }
 
@@ -3589,7 +3592,7 @@ int THeroScreenWindow::exitDialog(message& msg)
 // after show_hero_skills (75.41 -> 69.34), which is what proves the
 // placement is a separate knob from the merge.
 // Two facts that any candidate explanation has to carry: retail's frame is
-// 0x14c against our 0x144 (two named locals we do not have), and retail
+// 0x14c against our 0x144 (the size alone cannot prove missing locals), and retail
 // homes `right_mouse` in the DEAD `msg` parameter slot [ebp+8] while we
 // spend a numbered local on it - both consistent with the frame being
 // allocated after a different set of blocks survived.
@@ -3605,6 +3608,13 @@ int THeroScreenWindow::exitDialog(message& msg)
 // move: it is still the last block, at fn+0x1291.  So the `else` is not the
 // construct that puts retail's join early, and no source bracketing tried so
 // far reaches C2's choice of surviving copy.
+// Current control (85.96526%): the Complete skill popup is instruction-exact
+// modulo shifted addresses, including both signed getSecondarySkill reads
+// on opposite sides of strcpy. A TSecondarySkill local instead of the two
+// argument casts is byte-flat. Fresh C2 tracing admits handleArtifactClick
+// but rejects its nested combination predicate at budget 17 versus cb 120;
+// updateAllSlots/updateSlot also has a reciprocal nested frontier. These are
+// additional residuals, not evidence of missing locals or a new inline pin.
 VA(0x004dd2d0, 0x143E)
 DC_ADDRESS(0x0cf54c, 0xc38)
 MAC_ADDRESS(0x0f96b0, 0xf40)  // anchor-bracket + absent-callees
@@ -3944,17 +3954,17 @@ int THeroScreenWindow::windowHandler(message& msg)
             if (nth >= g_currentHero->m_skillCount)
                 break;
             int skill = g_currentHero->getNthSS(nth);
-            // Both reads index the byte array directly: the typed
-            // getSecondarySkill facade widens through TSkillMastery and
-            // scores 88.09% against this form's 92.07%.
+            // Mac 0xfa524/0xfa58c expands the signed packed mastery
+            // accessor. GetNthSS's native public returns int; decode that
+            // skill ID at the typed accessor boundary.
             strcpy(g_text,
                    g_sSkillTraits[skill]
-                       .m_levelNames[g_currentHero->m_skillLevel[skill] - 1]);
+                       .m_levelNames[g_currentHero->getSecondarySkill(TSecondarySkill(skill)) - 1]);
             normalDialog(g_text,
                          rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                      : hero::PRIMARY_STAT_DIALOG_TYPE,
                          -1, -1, 0x14,
-                         3 * skill + g_currentHero->m_skillLevel[skill] + 2,
+                         3 * skill + g_currentHero->getSecondarySkill(TSecondarySkill(skill)) + 2,
                          -1, 0, -1, 0, -1, 0);
             break;
         }
@@ -5132,15 +5142,17 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
 // liftable block and no DC-named helper has no dose to give.
 VA(0x004e2840, 0x1B5)
 MAC_ADDRESS(0x1034d8, 0x124)  // retail-only, hero member, ret 8; size absorbs the
+// Mac 0x1034d8..0x103da8 expands the canonical reference readers before
+// copying/testing records. Keep that read boundary; mutations stay owned here.
 unsigned char hero::heroFn004E2840(long artifact, long slot)
 {
     if (!artifactAllowedInSlot(TArtifact(artifact), TArtifactSlot(slot)))
         return 0;
 
-    if (m_equipped[slot].m_artifactId == ARTIFACT_NONE)
+    if (getArtifact(TArtifactSlot(slot)).m_artifactId == ARTIFACT_NONE)
         return heroFn004E2550(artifact, slot);
 
-    type_artifact displaced = m_equipped[slot];
+    type_artifact displaced = getArtifact(TArtifactSlot(slot));
     removeArtifact(slot);
     unsigned char accepted;
     try {
@@ -5600,7 +5612,7 @@ int hero::getLuck(const hero* otherHero, bool onCursedGround,
         luck++;
 
     if (m_owner >= 0) {
-        playerData& player = g_game->m_players[m_owner];
+        playerData& player = *getPlayer();
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true) &&
@@ -6053,7 +6065,7 @@ int hero::getMobility(bool seaMovement) const
     if (m_owner >= 0 && m_owner < 6 && !g_game->isHuman(m_owner) &&
         g_game->m_setup.m_difficulty > 2) {
         mobility += 75;
-        if (g_game->m_players[m_owner].m_personality == AI_PERSONALITY_AGGRESSIVE)
+        if (getPlayer()->m_personality == AI_PERSONALITY_AGGRESSIVE)
             mobility += 50;
     }
     return mobility;

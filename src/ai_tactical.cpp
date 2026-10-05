@@ -315,7 +315,7 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
                 continue;
             if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
-            unsigned char ranged = ourArmy->canShoot(0);
+            bool ranged = ourArmy->canShoot(0);
             long attack = ourArmy->getAttackModifier(0, ranged);
             long defense = ourArmy->getDefenseModifier();
             if (first || m_lowestAttack > attack)
@@ -325,17 +325,20 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
             first = 0;
         }
     }
-    m_friendlyCombatValue = combat->getTotalCombatValue(this->m_ourGroup, m_lowestAttack,
+    // Mac 0x3d71c's total-value calls expand the existing ai_tactical.h
+    // group getters (+0x20/+0x24); preserve the same canonical access path
+    // in the ranged/retaliation gates above.
+    m_friendlyCombatValue = combat->getTotalCombatValue(getGroup(), m_lowestAttack,
                                                m_lowestDefense, 1);
-    m_awakeFriendlyValue = combat->getTotalCombatValue(this->m_ourGroup, m_lowestAttack,
+    m_awakeFriendlyValue = combat->getTotalCombatValue(getGroup(), m_lowestAttack,
                                                     m_lowestDefense, 0);
-    m_enemyCombatValue = combat->getTotalCombatValue(m_enemyGroup, m_lowestAttack,
+    m_enemyCombatValue = combat->getTotalCombatValue(getEnemyGroup(), m_lowestAttack,
                                                  m_lowestDefense, 1);
-    m_awakeEnemyValue = combat->getTotalCombatValue(m_enemyGroup, m_lowestAttack,
+    m_awakeEnemyValue = combat->getTotalCombatValue(getEnemyGroup(), m_lowestAttack,
                                                       m_lowestDefense, 0);
     if (m_friendlyCombatValue * 2 < m_enemyCombatValue
             && (g_game->m_setup.m_difficulty > 0
-                || g_combatManager->m_sideIsAi[this->m_ourGroup]))
+                || g_combatManager->m_sideIsAi[getGroup()]))
         m_killsOnly = 1;
     long high = m_awakeFriendlyValue;
     long low = m_awakeEnemyValue;
