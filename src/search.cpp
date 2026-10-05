@@ -249,7 +249,9 @@ void searchArray::boardBoat(const hero* currentHero, pathCell& cell)
 // A town with a visiting hero cannot receive. Retail's min temporaries put
 // gates first, and its destination loop loads each town ID once.
 // DC records const pathCell&; restoring the reference keeps Windows bytes
-// unchanged. The remaining extra slot belongs to the location return value.
+// unchanged. DC lines 352-354 copy the destination town's x/y/z into the
+// new cell's point field by field rather than through town::getLocation;
+// that removes the location return slot and makes the body exact.
 VA(0x0056a850, 0x27E)
 DC_ADDRESS(0x12b988, 0x240)
 MAC_ADDRESS(0x16202c, 0x35c)  // exhaustive search.obj order-map
@@ -302,7 +304,9 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
                 continue;
             newCell.m_barrierValue -= aiResourceCost(player, cost);
         }
-        newCell.m_point = otherTown->getLocation();
+        newCell.m_point.m_x = otherTown->m_mapX;
+        newCell.m_point.m_y = otherTown->m_mapY;
+        newCell.m_point.m_z = otherTown->m_mapZ;
         newCell.m_castleGate = 1;
         pushPoint(currentPathCell, newCell, 0, 0, limit,
                   newCell.m_barrierValue + barrierValue, newCell.m_monster,

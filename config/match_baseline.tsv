@@ -3717,7 +3717,7 @@ search	?checkTownPortal@searchArray@@AAEXPBVhero@@ABUpathCell@@J@Z	100.0000	100.
 search	?enterGate@searchArray@@AAEXABUpathCell@@PBVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x16a730	tokens1:3ce047f1c84f
 search	?enterHostileTrigger@searchArray@@AAEEPBVhero@@AAUpathCell@@@Z	100.0000	100.0000	100.0000	0x16aad0	tokens1:ac22b5b09c2d
 search	?enterLith@searchArray@@AAEXPBVhero@@ABV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@JJAAUpathCell@@JW4type_search_type@@@Z	100.0000	100.0000	100.0000	0x16a400	tokens1:af889ba89671
-search	?enterTown@searchArray@@AAEXPBVhero@@JABUpathCell@@JW4type_search_type@@@Z	92.5194	92.5194	100.0000	0x16a850	tokens1:599c6f83f8ff
+search	?enterTown@searchArray@@AAEXPBVhero@@JABUpathCell@@JW4type_search_type@@@Z	100.0000	100.0000	100.0000	0x16a850	tokens1:cbbe267d82d1
 search	?enterTrigger@searchArray@@AAEEPBVhero@@AAUpathCell@@JW4type_search_type@@@Z	99.9697	99.9697	99.9697	0x16ab40	tokens1:ea12924a16fd
 search	?erase@?$vector@PAUpathCell@@V?$allocator@PAUpathCell@@@std@@@std@@QAEPAPAUpathCell@@PAPAU3@0@Z	100.0000	100.0000	100.0000	0x16bd30	-
 search	?seedPosition@searchArray@@QAEXPAVhero@@Utype_point@@1HEW4type_search_type@@HE@Z	96.3378	96.3378	96.3378	0x16b440	tokens1:0c799558a3ba
