@@ -288,7 +288,7 @@ public:
     DC_ADDRESS(0x01f234, 0x32)
     int isValidSeq(int seqnum) const
     {
-        return seqnum < m_numSequences && m_validSeqMask[seqnum] != 0;
+        return seqnum < m_numSequences && m_validSeqMask[seqnum];
     }
 
     VA(0x004f0050, 0x47)  // COMDAT owner (kb.obj emits ?Draw@CSprite@@QBEXHHHHHHPAVBitmap16Bit@@HHEE@Z), body in csprite.h
