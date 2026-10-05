@@ -62,7 +62,7 @@ class ReadmeUniverseTest(unittest.TestCase):
             self.assertEqual(rows['`codec`'][0:2], ['1', '1 / 1 (100.0%)'])
             self.assertEqual(rows['`victor`'][0:2], ['1', '1 / 1 (100.0%)'])
             self.assertEqual(rows['`zlib-1.1.3`'][0:2], ['1', '1 / 1 (100.0%)'])
-            self.assertIn('6 / 6 current implementations', text)
+            self.assertIn('6 / 6 functions exact', text)
             self.assertEqual(text.count(kept), 1)
 
 

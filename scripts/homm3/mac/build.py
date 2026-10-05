@@ -242,11 +242,10 @@ def write_readme(results: list[Result]) -> None:
     exact = sum(row.exact for row in results)
     scored = sum(row.matching_bytes for row in results)
     total = sum(row.compared_bytes or max(row.size, row.candidate_size) for row in results)
-    replacement = (f"{begin}\n\n**Lightly optimized Classic Mac PowerPC reference (last full checkpoint):** "
-                   f"{exact} / {len(results)} scored functions exact; "
-                   f"{100 * scored / total if total else 0:.2f}% of {total:,} compared bytes match. "
-                   "Scored functions are source claims whose full-TU body links; "
-                   "this is coverage, not the whole Mac game.\n\n"
+    replacement = (f"{begin}\n\n**Mac reference `Heroes_III_raw.pef`: "
+                   f"{100 * scored / total if total else 0:.2f}% matched** — "
+                   f"{exact:,} / {len(results):,} paired functions exact, "
+                   f"over {total:,} compared bytes (last `homm3 mac build` checkpoint).\n\n"
                    f"{end}")
     first = current.index(begin)
     last = current.index(end, first) + len(end)
