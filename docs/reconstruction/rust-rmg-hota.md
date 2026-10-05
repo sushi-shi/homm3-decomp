@@ -375,3 +375,45 @@ This validates shared selection compatibility and the hint adapter, not the full
 HotA generator. Layout still rejects HotA while its positioning/terrain changes
 and consumption of solved hints are unfinished; placement, output and HD state
 remain part of the open objective.
+
+The shared positioning pass now delegates its versioned policies to
+`layout::positioning`: HotA's aggregate-size/sparseness estimate, 4/5 bounding
+radii, size-squared centroid and source-ordered origin adjustments, weighted
+connection preferences, omission of teleport/random links from candidate
+seeding, explicit level placement and the final repulsion filter. Circle radii,
+overlap checks and scaled zone sizes still use the full template size. Mirror
+requests use constructor-local planes for these policies. Complete retains its
+original policies and RNG consumption. The first surface candidate still
+bypasses `canPlaceZone`, including an explicit underground-placement restriction,
+as in the composed native body.
+
+The DLL's connection jump table at RVA `0x1d51c8` confirms that teleport/random
+links decrement the count before retail's increment (net zero). Normalization
+RVA `0x1be611` retains both accumulated coordinate low DWORDs when wrapped square
+weights sum to zero; the recovered C++ approximation instead resets them. Rust
+follows the instructions, with a dedicated cancellation case. Arithmetic keeps
+the evidenced 32-bit products before widening and the 64-bit accumulators;
+unrepresentable floating conversions remain explicit layout faults.
+
+Verification: 149 library tests and library Clippy pass. Seven focused tests
+cover the policy differences, source-order clipping, integer overflow widths,
+repulsion tolerance and the native first-candidate quirk. A temporary harness
+compiled the recovered C++ spacing, origin and repulsion bodies and compared
+10,000 generated cases with Rust; all four outputs per case matched. This tests
+those calculations, not the whole positioning pass or a new DLL execution.
+Input corpus SHA-256:
+`988a87db9da612c8d023f7d1d67e0c3da192e6b26e1caf6dea0d9451d7b57c52`.
+Reference source SHA-256:
+`dc2e9bdcb1a01cd9e53f67a3968bbb654c0d804223ab641f3ab30e357a1e16ef`.
+Temporary inputs and harnesses are in ignored `build/hota-layout-port/`.
+The Complete sample remains 14 exact hotfix maps, seven exact retail maps and
+seven matching pre-existing coast faults. Runner SHA-256:
+`6825b8586cab0a978713a117d7081ebd43e5a9aa0bb9e30468269d367d17dd05`.
+
+HotA layout admission remains gated: initial/late town-query state, solved
+terrain/faction consumption and the expanded terrain domain must be connected
+before returning a usable layout. The new positioning policies are exercised
+directly in tests; they do not yet establish HotA generation through the public
+layout API. Boundaries, painting, placement, output and HD/mirror execution remain
+in the full objective. The next integration step is to connect hints and terrain
+selection while preserving a clear admission boundary for unfinished later stages.
