@@ -2615,3 +2615,20 @@ The caller's remaining six instruction differences concern the final
 short-valued generator-bonus addition. Explicit narrowing, a named short
 consumer and alternative Grail return forms did not close that residual.
 The source-family controls reproduced the adopted improvement.
+
+## Packed-bit reader: distinguish depth from budget
+
+`hero::load` (0x4d7a20) retains the canonical `readPackedBits` →
+`decodePackedBits` → bit proxy assignment chain. A reproduced C2 trace gives
+the caller cost 964 and initial budget 1928. In its range-error path,
+`basic_string::assign(const char*, size_t)` reaches depth eight with budget
+319 and cost 69; the exception's string copy constructor also reaches depth
+eight with budget 474 and cost 68. Their nested copy, end-marker and cleanup
+operations exceed the default depth, rather than failing those budget tests.
+Increasing caller statement mass cannot remove that boundary.
+
+The historical 100% loader used a decoder loop pasted into `readPackedBits`
+(`0fe618767`, with the final library pairing in `d989f8297`). Restoring the
+decoder call in `ecaa9d412` left 94.9221% with the old peak retained. Keep the
+canonical chain: neither that old peak nor the trace justifies flattening a
+helper or adding an inline-depth pragma.

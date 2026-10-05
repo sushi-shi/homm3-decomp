@@ -3083,7 +3083,7 @@ MAC_ADDRESS(0x098cb0, 0x218)
 static void convertLegacyCampaignHero(hero& newHero,
                                       const LegacyCampaignHero& oldHero)
 {
-    newHero.m_id = oldHero.m_id;
+    newHero.m_id = static_cast<HeroId>(oldHero.m_id);
     newHero.m_owner = oldHero.m_owner;
     strcpy(newHero.m_name, oldHero.m_name);
     newHero.m_heroClass = oldHero.m_heroClass;

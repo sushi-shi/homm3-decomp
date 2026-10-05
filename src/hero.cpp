@@ -700,6 +700,11 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
 // expansions need separate inliner evidence; they are not register-only.
 // Typed scalar readers preserve every on-disk width while shortening the
 // staging lifetimes, bringing the same body to 94.93%.
+// The historical exact result flattened decodePackedBits into its reader.
+// With the canonical helper chain retained, the exception path still keeps
+// nested string copy/end/cleanup calls that retail expands (94.9221%). C2's
+// reproduced trace reaches string assign/copy construction at depth eight;
+// those callees' nested operations exceed the default expansion depth.
 VA(0x004d7a20, 0x69F)
 DC_ADDRESS(0x0caf98, 0x700)
 MAC_ADDRESS(0x0f2ab4, 0xa04)  // linkorder
@@ -726,7 +731,7 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     m_dWalkSpellsCast = readValue<char>(infile);
     m_visionsPower = static_cast<signed char>(readValue<char>(infile));
     // Both retails zero-extend the serialized id (Windows 0x4d7bc1, Mac 0xf2d18).
-    m_id = readValue<unsigned char>(infile);
+    m_id = static_cast<HeroId>(readValue<unsigned char>(infile));
     m_heroClass = static_cast<signed char>(readValue<char>(infile));
     m_portrait = readValue<unsigned char>(infile);
     m_patrolX = readValue<unsigned char>(infile);
@@ -920,7 +925,7 @@ DC_ADDRESS(0x0cbdb8, 0xc8)
 MAC_ADDRESS(0x0f3e2c, 0x1b8)  // anchor-bracket
 hero::hero()
 {
-    m_id = -1;
+    m_id = heroIdNone;
     m_owner = -1;
     m_x = 0;
     m_y = 0;
@@ -980,7 +985,7 @@ void hero::initialize(short index)
 
     m_patrolY = kPatrolNone;
     m_patrolX = kPatrolNone;
-    m_id = index;
+    m_id = static_cast<HeroId>(index);
     m_portrait = static_cast<unsigned char>(index);
     m_sex = initialSex;
     m_townSpecialGrantedMask.reset();
@@ -1094,7 +1099,7 @@ void hero::initialize(const HeroExtra* setup)
     m_y = setup->m_location.m_y;
     m_z = setup->m_location.m_z;
     m_owner = setup->m_owner;
-    m_id = setup->m_id;
+    m_id = static_cast<HeroId>(setup->m_id);
     m_heroClass = g_heroTraits[setup->m_id].m_heroClass;
 
     m_patrolRadius = setup->m_patrolRadius;
