@@ -38,7 +38,7 @@ pub struct WorldPosition {
     pub level: Level,
 }
 
-/// Complete-era terrain values, excluding unchecked wire discriminants.
+/// Known terrain values, excluding unchecked wire discriminants.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(i32)]
 pub enum Terrain {
@@ -62,11 +62,20 @@ pub enum Terrain {
     Water = raw::eTerrainWater,
     /// Impassable underground rock.
     Rock = raw::eTerrainRock,
+    /// Highlands, introduced by `HotA`.
+    Highlands = 10,
+    /// Wasteland, introduced by `HotA`.
+    Wasteland = 11,
 }
 impl Terrain {
-    /// Parse a terrain discriminant without admitting unknown values.
+    /// Parse a Complete terrain discriminant.
     #[must_use]
     pub const fn parse(value: i32) -> Option<Self> {
+        Self::parse_for(value, crate::rules::Ruleset::Complete)
+    }
+    /// Parse a terrain discriminant admitted by the selected release.
+    #[must_use]
+    pub const fn parse_for(value: i32, rules: crate::rules::Ruleset) -> Option<Self> {
         match value {
             raw::eTerrainDirt => Some(Self::Dirt),
             raw::eTerrainSand => Some(Self::Sand),
@@ -78,6 +87,8 @@ impl Terrain {
             raw::eTerrainLava => Some(Self::Lava),
             raw::eTerrainWater => Some(Self::Water),
             raw::eTerrainRock => Some(Self::Rock),
+            10 if matches!(rules, crate::rules::Ruleset::HotA181) => Some(Self::Highlands),
+            11 if matches!(rules, crate::rules::Ruleset::HotA181) => Some(Self::Wasteland),
             _ => None,
         }
     }

@@ -53,10 +53,11 @@ impl PlacementRule {
     pub const fn terrain(&self) -> Terrain {
         self.terrain
     }
-    /// Score for the terrain under a blocked footprint cell.
+    /// Score for the terrain under a blocked footprint cell; absent when this
+    /// rule table does not contain that terrain's score column.
     #[must_use]
-    pub const fn terrain_score(&self, terrain: Terrain) -> i32 {
-        self.terrain_scores[terrain.index()]
+    pub fn terrain_score(&self, terrain: Terrain) -> Option<i32> {
+        self.terrain_scores.get(terrain.index()).copied()
     }
 }
 
@@ -380,10 +381,21 @@ mod tests {
             rules.neighbour_score(monster, town, NeighbourScore::Blocked),
             Some(1200)
         );
-        assert_eq!(rules.get(town).unwrap().terrain_score(Terrain::Water), 9);
+        assert_eq!(
+            rules.get(town).unwrap().terrain_score(Terrain::Water),
+            Some(9)
+        );
         assert_eq!(
             rules.get(town).unwrap().terrain_score(Terrain::Rock),
-            raw::RMG_PLACEMENT_INVALID
+            Some(raw::RMG_PLACEMENT_INVALID)
+        );
+        assert_eq!(
+            rules.get(town).unwrap().terrain_score(Terrain::Highlands),
+            None
+        );
+        assert_eq!(
+            rules.get(town).unwrap().terrain_score(Terrain::Wasteland),
+            None
         );
         assert!(matches!(
             PlacementRules::parse(&bytes, Behavior::Retail(RetailProfile::default())),

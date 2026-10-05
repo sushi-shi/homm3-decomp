@@ -171,7 +171,9 @@ impl PlacementMap<'_, '_, '_> {
                     // Native assignment overwrites OVERLAP and BLOCKED. Consequently
                     // blocked-neighbour scores are never reached in either mode.
                     *mark = raw::RMG_PLACEMENT_ADJACENT;
-                    terrain_seen[terrain.index()] = true;
+                    *terrain_seen
+                        .get_mut(terrain.index())
+                        .ok_or(PlacementError::TerrainRule(terrain))? = true;
                     let first_row = position.point.y - (y + 1).min(side) + 1;
                     let last_row = position.point.y - (y - 2).max(0) + 1;
                     let first_column = position.point.x - (x + 1).min(side) + 1;
@@ -190,7 +192,9 @@ impl PlacementMap<'_, '_, '_> {
         for (index, seen) in terrain_seen.into_iter().enumerate() {
             if seen {
                 let terrain = crate::domain::Terrain::parse(i32::try_from(index).unwrap()).unwrap();
-                let value = rule.terrain_score(terrain);
+                let value = rule
+                    .terrain_score(terrain)
+                    .ok_or(PlacementError::TerrainRule(terrain))?;
                 score = score.checked_add(value).ok_or(PlacementError::Arithmetic)?;
                 positive |= value > 0;
             }
@@ -407,6 +411,7 @@ impl PlacementMap<'_, '_, '_> {
                         .get(rule)
                         .ok_or(PlacementError::RuleContext)?
                         .terrain_score(terrain)
+                        .ok_or(PlacementError::TerrainRule(terrain))?
                         <= raw::RMG_PLACEMENT_INVALID
                     {
                         continue;

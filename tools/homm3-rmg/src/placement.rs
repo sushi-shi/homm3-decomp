@@ -155,6 +155,8 @@ pub enum ObstacleEntrances {
 /// A safe placement query cannot reproduce an undefined native access.
 #[derive(Debug)]
 pub enum PlacementError {
+    /// The placement table has no score column for this terrain.
+    TerrainRule(Terrain),
     /// Retail underflows the bound of its empty road-target loop.
     EmptyRoadTargets,
     /// A native route follows a predecessor that has never been written.
@@ -216,6 +218,9 @@ pub enum PlacementError {
 impl fmt::Display for PlacementError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::TerrainRule(terrain) => {
+                write!(f, "placement table has no {terrain:?} score column")
+            }
             Self::EmptyRoadTargets => {
                 f.write_str("retail road generation indexes an empty target list")
             }

@@ -2,7 +2,7 @@
 
 use homm3_rmg::{
     behavior::{Behavior, RetailProfile},
-    layout::hints::ZoneSolution,
+    layout::{hints::ZoneSolution, LayoutWorkspace},
     request::{default_record, Levels, MapSize, Request, RequestOptions, Water},
     rng::RetailRng,
     rules::Ruleset,
@@ -33,6 +33,9 @@ fn installed_packs_normalize_all_zone_and_connection_records() {
     let mut mirrors = 0;
     let mut hint_diagnostics = 0;
     let mut fatal_hints = 0;
+    let mut layout_workspace = LayoutWorkspace::default();
+    let mut layouts = 0;
+    let mut terrain_counts = [0_usize; 12];
     for path in &paths {
         let bytes = std::fs::read(path).unwrap();
         let source = TemplateSource::parse(&bytes).unwrap();
@@ -124,12 +127,29 @@ fn installed_packs_normalize_all_zone_and_connection_records() {
                                 hints.diagnostics()
                             );
                             assert_eq!(rng.checkpoint(), before);
+                            let layout = layout_workspace.generate_with_hints(
+                                &selected, &request, water, 42, &mut rng,
+                                |read| Some(if read.steps == 0 { 0 } else { 100_000_001 }),
+                            ).unwrap_or_else(|e| panic!("{} {size:?} {levels:?} {humans}/{computers} {water:?}: {e}", path.display()));
+                            assert_eq!(layout.zones().len(), selected.template().zones().len());
+                            assert!(layout.hints().unwrap().diagnostics().is_empty());
+                            for zone in layout.zones() {
+                                terrain_counts[zone.terrain().index()] += 1;
+                                assert!(
+                                    zone.position().level.index()
+                                        < request.constructor_parameters().levels.count() as usize
+                                );
+                            }
+                            layouts += 1;
                         }
                     }
                 }
             }
         }
     }
+    assert_eq!(layouts, candidates);
+    assert!(terrain_counts[10] > 0 && terrain_counts[11] > 0);
+    eprintln!("{layouts} completed layouts, terrain counts {terrain_counts:?}");
     assert!(candidates > 0);
     assert!(mirrors > 0);
     eprintln!("{} installed packs, {mirrors} mirror packs, {candidates} prepared candidates, {deferred} deferred native faults",paths.len());

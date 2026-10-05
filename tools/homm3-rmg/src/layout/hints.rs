@@ -18,7 +18,19 @@ use std::{error::Error, fmt};
 /// Native town-to-land-terrain mapping in solver order. The final two terrain
 /// indices mean Highlands and Wasteland, not the map's Water and Rock.
 /// Pinned DLL RVA 0x20c280.
-pub const NATIVE_TERRAIN: [u8; 12] = [2, 2, 3, 7, 0, 0, 5, 4, 8, 4, 9, 3];
+pub const NATIVE_TERRAIN: [u8; 12] = {
+    let mut terrains = [0; 12];
+    let mut town = 0;
+    while town < terrains.len() {
+        let Some(terrain) = crate::rules::Ruleset::HotA181.native_terrain(town) else {
+            panic!("every admitted town must have a native terrain");
+        };
+        let index = terrain as u8;
+        terrains[town] = if index < 8 { index } else { index - 2 };
+        town += 1;
+    }
+    terrains
+};
 
 /// One town variable belonging to a particular problem.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

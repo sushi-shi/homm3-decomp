@@ -332,6 +332,7 @@ impl TerrainTile {
         frame: u8,
         reflection: Reflection,
     ) -> Result<Self, TerrainRuleError> {
+        require_frames(terrain)?;
         if usize::from(frame) >= frame_count(terrain) {
             return Err(TerrainRuleError::Frame { terrain, frame });
         }
@@ -379,6 +380,8 @@ impl TerrainTile {
 /// Invalid external frame or unsupported terrain/shape combination.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TerrainRuleError {
+    /// The terrain is known, but its installed frame data is not loaded.
+    UnavailableTerrain(Terrain),
     /// A frame cannot belong to this terrain.
     Frame {
         /// Supplied terrain.
@@ -397,6 +400,9 @@ pub enum TerrainRuleError {
 impl fmt::Display for TerrainRuleError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::UnavailableTerrain(terrain) => {
+                write!(f, "frame data for {terrain:?} is not loaded")
+            }
             Self::Frame { terrain, frame } => {
                 write!(f, "frame {frame} is outside {terrain:?}'s table")
             }
@@ -464,6 +470,13 @@ const fn frame_count_index(index: usize) -> usize {
         raw::TerrainRuleData::Fixed => raw::ROCK_FRAMES.len(),
     }
 }
+fn require_frames(terrain: Terrain) -> Result<(), TerrainRuleError> {
+    if terrain.index() >= raw::TERRAIN_RULES.len() {
+        Err(TerrainRuleError::UnavailableTerrain(terrain))
+    } else {
+        Ok(())
+    }
+}
 const fn frame_count(terrain: Terrain) -> usize {
     frame_count_index(terrain.index())
 }
@@ -471,6 +484,10 @@ const fn frame_count(terrain: Terrain) -> usize {
 /// Whether this terrain permits disconnected matching neighbour runs.
 #[must_use]
 pub fn allows_separated(terrain: Terrain) -> bool {
+    // DLL RVA 0x1f20c0 constructs both new rules with separated=1, blends=1.
+    if matches!(terrain, Terrain::Highlands | Terrain::Wasteland) {
+        return true;
+    }
     matches!(
         raw::TERRAIN_RULES[terrain.index()],
         raw::TerrainRuleData::Pattern {
@@ -480,6 +497,9 @@ pub fn allows_separated(terrain: Terrain) -> bool {
     )
 }
 fn blends(terrain: Terrain) -> bool {
+    if matches!(terrain, Terrain::Highlands | Terrain::Wasteland) {
+        return true;
+    }
     matches!(
         raw::TERRAIN_RULES[terrain.index()],
         raw::TerrainRuleData::Pattern { blends: true, .. }
@@ -512,6 +532,7 @@ pub fn select_base(
     old: Option<TerrainTile>,
     rng: &mut RetailRng,
 ) -> Result<TerrainTile, TerrainRuleError> {
+    require_frames(terrain)?;
     if let Some(tile) =
         old.filter(|tile| tile.terrain == terrain && tile.shape() == raw::SHAPE_FILL)
     {
@@ -549,6 +570,7 @@ pub fn select_transition(
     old: Option<TerrainTile>,
     rng: &mut RetailRng,
 ) -> Result<TerrainTile, TerrainRuleError> {
+    require_frames(terrain)?;
     let fixed = matches!(
         raw::TERRAIN_RULES[terrain.index()],
         raw::TerrainRuleData::Fixed
@@ -867,5 +889,48 @@ mod tests {
             Err(TerrainRuleError::MissingRange { .. })
         ));
         assert_eq!(rng.checkpoint().draws, checkpoint.draws + 1);
+    }
+}
+
+#[cfg(test)]
+mod expanded_domain_tests {
+    use super::*;
+    use crate::rules::Ruleset;
+
+    #[test]
+    fn expanded_terrain_identity_does_not_admit_unloaded_frame_tables() {
+        for terrain in [Terrain::Highlands, Terrain::Wasteland] {
+            assert_eq!(Terrain::parse(terrain as i32), None);
+            assert_eq!(
+                Terrain::parse_for(terrain as i32, Ruleset::HotA181),
+                Some(terrain)
+            );
+            assert!(allows_separated(terrain));
+            assert_eq!(neighbour_kind(terrain, Terrain::Grass), TerrainEdge::Blend);
+            let mut rng = RetailRng::new(1);
+            assert_eq!(
+                TerrainTile::parse(terrain, 0, Reflection::default()),
+                Err(TerrainRuleError::UnavailableTerrain(terrain))
+            );
+            assert_eq!(
+                select_base(terrain, BrushStrength::GENERATOR, None, &mut rng),
+                Err(TerrainRuleError::UnavailableTerrain(terrain))
+            );
+            assert_eq!(
+                select_transition(
+                    terrain,
+                    TerrainTransition {
+                        shape: TerrainShape::Fill,
+                        reflection: Reflection::default()
+                    },
+                    None,
+                    &mut rng
+                ),
+                Err(TerrainRuleError::UnavailableTerrain(terrain))
+            );
+            assert_eq!(rng.draws(), 0);
+        }
+        assert_eq!(Terrain::parse_for(-1, Ruleset::HotA181), None);
+        assert_eq!(Terrain::parse_for(12, Ruleset::HotA181), None);
     }
 }

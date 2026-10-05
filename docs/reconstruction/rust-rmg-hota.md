@@ -94,6 +94,11 @@ because a partial implementation compiled.
 
 ## Current state
 
+The integration now exposes HotA's completed layout stage through the shared
+`LayoutWorkspace::generate_with_hints` API. Full-map generation remains gated;
+the next unfinished stage is boundaries, followed by painting and placement.
+The checkpoints below record their own achieved scope and evidence in order.
+
 The isolated integration branch is `codex/rust-hota-rmg`. The first implementation
 checkpoint adds explicit generation rules and a shared template model. The `.h3t`
 reader handles variable section widths, pack availability, map/zone/connection
@@ -417,3 +422,71 @@ directly in tests; they do not yet establish HotA generation through the public
 layout API. Boundaries, painting, placement, output and HD/mirror execution remain
 in the full objective. The next integration step is to connect hints and terrain
 selection while preserving a clear admission boundary for unfinished later stages.
+
+The layout stage now consumes solved town, terrain and faction hints through the
+same positioning/normalization pass as Complete. `generate_with_hints` takes the
+original seed and explicit solver-clock observations; it never reseeds or draws
+from the advanced CRT stream during hint solving. The layout token owns its
+solver and per-template-zone town query counters. Constructor queries and later
+`select_zone_town` queries follow RVA `0x1c2550`'s player/neutral instance order,
+including no query/count increment when the slot allows no town. Reusing the
+workspace starts fresh per-map query state. Fixed request overrides use compacted
+mirror town choices, and mirror layout uses constructor-local planes.
+
+The shared terrain domain now admits Highlands and Wasteland under explicit
+version admission. Solver and layout native-terrain mapping share the canonical
+Complete table with HotA's four overrides. Terrain choice skips the retail draw
+loops, maps solver land IDs past water/rock and preserves underground substitution.
+Creature preference applies forced neutrality, then explicit faction hints,
+then alignment; unaligned zones use the patched sentinel-bounded terrain table,
+a separate 1-in-4 neutral draw and the subsequent ordinary modulo draw (even for
+a singleton). Layout's admitted map-version ordinals all satisfy the native
+`m_mapVersion >= 0` argument to this scan.
+
+Boundary admission now rejects HotA layouts before mutating workspace or RNG,
+rather than applying unfinished Complete algorithms. Highland/Wasteland frame
+selection similarly reports unloaded data before indexing Complete's tables.
+Their blending/separated-neighbour properties follow the native rule constructor.
+Placement score lookup returns an absent score column explicitly; it cannot index
+beyond a Complete rule with an expanded terrain ID. These are temporary admission
+boundaries, not exclusions from the full objective.
+
+Verification: 151 library tests, four layout integration tests, two documentation
+tests and library Clippy pass. Both installed-pack checks pass; all 2,399 candidates
+now complete layout, including eight mirror packs and all seven sizes, both
+requested plane counts and three water modes. The matrix includes 1,556 Highland
+and 1,282 Wasteland zones, no layout failures and no hint diagnostics. Focused
+tests cover retained late-query state, workspace reuse, missing-clock admission,
+mirror town compaction, native/underground terrain choice, faction precedence,
+neutral/singleton draw counts and safe expanded-terrain admission.
+
+Six fresh **HotA.dll execution captures**, using the pinned module and the archived
+reference-only route of the native oracle driver, match Rust on all 54 original
+template zones: index, scaled XY/plane/radius, alignment, terrain and creature
+faction. Compared cases are Jebus Cross 108 seeds 1 and 7 (the latter fixes Factory
+and Bulwark), Default Random Map 36 underground/water seed 42 and 72 islands seed
+17, 8mm6a 144 underground/water seed 5, and 2sm2c(2) 72 surface seed 10. Fields
+come from the native `zones` phase, comparing only the initial template-zone
+prefix; extra boundary-created zones are not part of this layout comparison.
+The final layout CRT states also match the trace immediately before boundary
+random calls. These captures run without HD and do not verify mirror execution
+or extended-size native parity. A 2sm2c 72 underground request produced no native
+zone phase because its template was not admitted and is not counted as a match.
+
+Artifacts are under ignored `build/hota-layout-native/`, with a minimal Rust stage
+probe, job records, phase/trace captures, comparison output and the sandbox replay
+script. The reference host uses read-only game inputs, temporary prefix/Data
+overlays and disabled networking. DLL SHA-256 is the pinned value above; archived
+oracle driver SHA-256:
+`f61a8bc97f3c74319ef84d1ed24f1c9218e633d530fcbe9eb5136001702a9c34`.
+Comparison report SHA-256:
+`82b5998f51057bd1dce1589dfdc0317f09993e6001854806c963ef3cb06951e7`.
+
+The Complete sample remains 14 exact hotfix maps, seven exact retail maps and
+seven matching pre-existing coast faults. Runner SHA-256:
+`54190a898b06a94df4d36acef4753f3e65875ae445f5e31d04b32649edb45a74`.
+No full HotA map has yet been generated or serialized by Rust. Next is boundary
+construction (irregular-edge limits, rock blocks, water zones and islands), then
+installed terrain-frame data and painting hooks. Town-query state must continue
+through those stages to later placement; serialization, HD/mirror completion,
+whole-map replay and game loading remain required.

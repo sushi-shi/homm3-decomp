@@ -1,6 +1,6 @@
 //! Versioned generation rules, distinct from map encoding and bug-fix policy.
 
-use crate::raw;
+use crate::{domain::Terrain, raw};
 
 /// Native generation rules to reproduce. A ruleset describes algorithm choices;
 /// immutable catalogs separately hold the actual game data.
@@ -15,6 +15,29 @@ pub enum Ruleset {
 }
 
 impl Ruleset {
+    // HotA registrar RVA 0x1b8420 copies Complete's native terrain table,
+    // then patches Conflux, Cove, Factory and Bulwark. Both layout and the
+    // hint solver derive from this one table mapping.
+    #[expect(
+        clippy::cast_possible_wrap,
+        reason = "canonical terrain ordinals are 0..9"
+    )]
+    pub(crate) const fn native_terrain(self, town: usize) -> Option<Terrain> {
+        if town >= self.town_count() {
+            return None;
+        }
+        if matches!(self, Self::HotA181) {
+            match town {
+                8 => return Some(Terrain::Highlands),
+                9 => return Some(Terrain::Swamp),
+                10 => return Some(Terrain::Wasteland),
+                11 => return Some(Terrain::Snow),
+                _ => {}
+            }
+        }
+        Terrain::parse(raw::NATIVE_TERRAIN[town] as i32)
+    }
+
     /// Artifact trait slots, including unused and assembled artifacts.
     #[must_use]
     pub const fn artifact_count(self) -> usize {

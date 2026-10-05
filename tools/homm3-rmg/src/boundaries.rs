@@ -139,6 +139,8 @@ pub struct ZoneConnection {
 /// Boundary construction cannot proceed in the supported arithmetic/topology.
 #[derive(Debug)]
 pub enum BoundaryError {
+    /// This layout requires boundary algorithms not yet integrated.
+    UnsupportedRuleset(crate::rules::Ruleset),
     /// Geometry or integer subdivision failure.
     Geometry(GeometryError),
     /// Rasterization or clipping failure.
@@ -153,6 +155,9 @@ pub enum BoundaryError {
 impl fmt::Display for BoundaryError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::UnsupportedRuleset(rules) => {
+                write!(f, "boundaries for {rules:?} are not implemented yet")
+            }
             Self::Geometry(error) => error.fmt(f),
             Self::Raster(error) => error.fmt(f),
             Self::Topology => f.write_str("zone layout does not correspond to the subdivision"),
@@ -347,6 +352,9 @@ impl BoundaryWorkspace {
         rng: &mut RetailRng,
     ) -> Result<BoundaryMap<'a>, BoundaryError> {
         let template = completed.template();
+        if template.ruleset() != crate::rules::Ruleset::Complete {
+            return Err(BoundaryError::UnsupportedRuleset(template.ruleset()));
+        }
         let layout = completed.zones();
         let request = completed.request();
         let water = completed.water();

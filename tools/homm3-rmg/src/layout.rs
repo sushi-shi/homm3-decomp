@@ -6,15 +6,17 @@ use crate::{
     raw,
     request::{Levels, Request, Town, TownChoice, Water},
     rng::RetailRng,
-    selection::{choose_flag, select_allowed_town, Player, SelectedTemplate},
+    rules::Ruleset,
+    selection::{choose_flag, Player, SelectedTemplate},
     template::{Template, Zone, ZoneRole},
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
+mod choices;
 pub mod hints;
 mod positioning;
 
-use positioning::Positioning;
+use self::{choices::ZoneChoices, positioning::Positioning};
 
 const CREATURE_TOWN_CHOICES: NonZeroU32 = match NonZeroU32::new(raw::RMG_TERRAIN_TOWN_CHOICE_COUNT)
 {
@@ -25,8 +27,16 @@ const CREATURE_TOWN_CHOICES: NonZeroU32 = match NonZeroU32::new(raw::RMG_TERRAIN
 /// A placement failure or an unsupported arithmetic domain.
 #[derive(Debug)]
 pub enum LayoutError {
-    /// A prepared template requires a generation implementation not yet available.
-    UnsupportedRuleset(crate::rules::Ruleset),
+    /// The selected ruleset needs a seed and hint-clock input.
+    HintsRequired,
+    /// Template and request use different generation rules.
+    RulesetMismatch,
+    /// Hint setup or a late town query encountered an unsupported native access.
+    Hints(hints::ZoneFault),
+    /// Request generation choices cannot be represented.
+    Request(crate::request::InputError),
+    /// The requested zone does not exist in the completed layout.
+    UnknownZone(ZoneId),
     /// Hotfix rejects this layout; retail would draw modulo zero.
     NoCandidates(ZoneId),
     /// An intermediate cannot be represented by the original signed arithmetic.
@@ -39,9 +49,13 @@ pub enum LayoutError {
 impl fmt::Display for LayoutError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::UnsupportedRuleset(ruleset) => {
-                write!(f, "generation for {ruleset:?} is not implemented yet")
+            Self::HintsRequired => {
+                f.write_str("layout requires an original seed and hint-clock input")
             }
+            Self::RulesetMismatch => f.write_str("layout request and template use different rules"),
+            Self::Hints(error) => error.fmt(f),
+            Self::Request(error) => error.fmt(f),
+            Self::UnknownZone(zone) => write!(f, "layout has no zone {}", zone.index()),
             Self::NoCandidates(zone) => write!(f, "zone {} has no legal positions", zone.index()),
             Self::Arithmetic => f.write_str("unsupported zone-layout arithmetic"),
             Self::Geometry(error) => error.fmt(f),
@@ -50,6 +64,11 @@ impl fmt::Display for LayoutError {
     }
 }
 impl Error for LayoutError {}
+impl From<hints::ZoneFault> for LayoutError {
+    fn from(value: hints::ZoneFault) -> Self {
+        Self::Hints(value)
+    }
+}
 impl From<GeometryError> for LayoutError {
     fn from(value: GeometryError) -> Self {
         Self::Geometry(value)
@@ -120,6 +139,7 @@ pub struct Layout<'workspace, 'context> {
     request: &'context Request,
     water: Water,
     players: [Option<Player>; crate::request::PLAYER_COUNT],
+    choices: ZoneChoices,
 }
 impl<'context> Layout<'_, 'context> {
     /// Completed zone positions in source order, borrowing workspace storage.
@@ -141,6 +161,29 @@ impl<'context> Layout<'_, 'context> {
     #[must_use]
     pub const fn water(&self) -> Water {
         self.water
+    }
+    /// Solved hints and any native diagnostics, including late town queries.
+    #[must_use]
+    pub fn hints(&self) -> Option<&hints::ZoneSolution> {
+        self.choices.hints()
+    }
+
+    /// Select another town from a source zone, retaining the constructor's
+    /// per-zone query count and independent hint RNG. This does not place it.
+    ///
+    /// # Errors
+    /// Reports an unknown zone or a fault in native hint/query arithmetic.
+    pub fn select_zone_town(
+        &mut self,
+        zone: ZoneId,
+        rng: &mut RetailRng,
+    ) -> Result<Option<Town>, LayoutError> {
+        let zone = self
+            .template
+            .zones()
+            .get(zone.index())
+            .ok_or(LayoutError::UnknownZone(zone))?;
+        self.choices.town(zone, rng)
     }
     pub(crate) const fn players(&self) -> [Option<Player>; crate::request::PLAYER_COUNT] {
         self.players
@@ -170,11 +213,53 @@ impl LayoutWorkspace {
         water: Water,
         rng: &mut RetailRng,
     ) -> Result<Layout<'workspace, 'context>, LayoutError> {
-        if selected.template().ruleset() != crate::rules::Ruleset::Complete {
-            return Err(LayoutError::UnsupportedRuleset(
-                selected.template().ruleset(),
-            ));
+        if selected.template().ruleset() != Ruleset::Complete {
+            return Err(LayoutError::HintsRequired);
         }
+        self.generate_inner(selected, request, water, rng, ZoneChoices::Complete)
+    }
+
+    /// Solve this template's hints from the original map seed, then run the
+    /// shared positioning and terrain stages. The returned layout owns late
+    /// town-query state. Complete uses its ordinary path and never reads clock.
+    ///
+    /// Clock observations are FILETIME ticks requested by the hint solver;
+    /// missing observations are errors, and native diagnostics stay in the
+    /// returned layout. The seed is independent of the advanced CRT stream.
+    ///
+    /// # Errors
+    /// Reports incompatible rules, hint faults or ordinary layout failures.
+    pub fn generate_with_hints<'workspace, 'context>(
+        &'workspace mut self,
+        selected: &SelectedTemplate<'context>,
+        request: &'context Request,
+        water: Water,
+        seed: u32,
+        rng: &mut RetailRng,
+        clock: impl FnMut(hints::ClockRead) -> Option<i64>,
+    ) -> Result<Layout<'workspace, 'context>, LayoutError> {
+        if selected.template().ruleset() != request.ruleset() {
+            return Err(LayoutError::RulesetMismatch);
+        }
+        let choices = match selected.template().ruleset() {
+            Ruleset::Complete => ZoneChoices::Complete,
+            Ruleset::HotA181 => ZoneChoices::from_selected(selected, request, seed, clock)?,
+        };
+        self.generate_inner(selected, request, water, rng, choices)
+    }
+
+    fn generate_inner<'workspace, 'context>(
+        &'workspace mut self,
+        selected: &SelectedTemplate<'context>,
+        request: &'context Request,
+        water: Water,
+        rng: &mut RetailRng,
+        mut choices: ZoneChoices,
+    ) -> Result<Layout<'workspace, 'context>, LayoutError> {
+        if selected.template().ruleset() != request.ruleset() {
+            return Err(LayoutError::RulesetMismatch);
+        }
+        let towns = request.generation_towns().map_err(LayoutError::Request)?;
         let zones = selected.template().zones();
         self.positioned.clear();
         self.completed.clear();
@@ -184,8 +269,9 @@ impl LayoutWorkspace {
             i32::try_from(request.size().dimension()).map_err(|_| LayoutError::Arithmetic)?;
         let positioning = Positioning::new(selected.template(), request, water)?;
         for zone in zones {
-            // The constructor draws before the request's fixed town overrides it.
-            let mut alignment = select_allowed_town(zone.allowed_towns(), rng);
+            // Complete draws before the request override; constrained layouts
+            // query the independent hint stream instead.
+            let mut alignment = choices.town(zone, rng)?;
             let owner = match zone.role() {
                 ZoneRole::Human(slot) | ZoneRole::Computer(slot) => Some(slot),
                 ZoneRole::Treasure(owner) | ZoneRole::Junction(owner) => owner,
@@ -196,7 +282,7 @@ impl LayoutWorkspace {
                 .ok_or(LayoutError::Arithmetic)?;
             if town_count > 0 {
                 if let Some(player) = owner.and_then(|slot| selected.player(slot)) {
-                    if let TownChoice::Fixed(town) = request.towns()[player.index()] {
+                    if let TownChoice::Fixed(town) = towns[player.index()] {
                         alignment = Some(town);
                     }
                 }
@@ -249,13 +335,8 @@ impl LayoutWorkspace {
             );
             let scaled_size = u32::try_from(scale(zone_size(zone), 0, side, span)?)
                 .map_err(|_| LayoutError::Arithmetic)?;
-            let terrain = choose_terrain(zone, placed.alignment, position.level, rng);
-            let creature_town = placed.alignment.or_else(|| {
-                // Retail's condition always offers four entries, including the
-                // neutral sentinel and implicit Castle-valued zero padding.
-                let choice = rng.below(CREATURE_TOWN_CHOICES);
-                Town::parse(raw::TERRAIN_TOWNS[terrain.index()][choice as usize]).ok()
-            });
+            let terrain = choices.terrain(zone, placed.alignment, position.level, rng);
+            let creature_town = choices.creature_town(zone, placed.alignment, terrain, rng);
             self.completed.push(ZoneLayout {
                 id: placed.id,
                 position,
@@ -271,6 +352,7 @@ impl LayoutWorkspace {
             request,
             water,
             players: *selected.players(),
+            choices,
         })
     }
 
