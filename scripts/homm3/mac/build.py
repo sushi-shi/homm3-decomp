@@ -101,6 +101,17 @@ def objects(units: set[str] | None = None, root: Path = ROOT) -> None:
                             + (completed.stdout + completed.stderr)[-6000:])
 
 
+def stale_objects(units: set[str], root: Path = ROOT) -> set[str]:
+    """Units whose full-TU object `objects` would (re)build, by a Ninja dry run."""
+    stale = set()
+    for unit in sorted(units):
+        completed = subprocess.run(["ninja", "-C", str(root), "-n", f"mac:{unit}"],
+                                   capture_output=True, text=True, errors="replace")
+        if completed.returncode or "no work to do" not in completed.stdout:
+            stale.add(unit)
+    return stale
+
+
 def linked_pair(pair: pairs.Pair, pef: PEF, destinations, listings: Listings) -> tuple[LinkedCode, CodeHunk]:
     hunks, data_hunks = listings.get(pair.unit)
     hunk = hunks.get(pair.mac_symbol)
