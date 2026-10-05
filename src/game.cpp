@@ -4225,10 +4225,9 @@ DC_ADDRESS(0x0abe30, 0x5e)
 MAC_ADDRESS(0x0d6844, 0x60)
 static void randomizeWiseTree(short id, NewmapCell* cell)
 {
-    cell->m_extraInfo = (cell->m_extraInfo & 0xffffffe0) | (id & 0x1f);
+    cell->m_treeInfo.m_id = id;
     cell->clearVisitedBits();
-    int price = random(0, 2);
-    cell->m_extraInfo = (cell->m_extraInfo & 0xffff1fff) | ((price & 7) << 13);
+    cell->m_treeInfo.m_price = WiseTreePrices(random(0, 2));
 }
 
 // E:\gamedcs\game.cpp:4691.
