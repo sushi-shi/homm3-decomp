@@ -577,7 +577,7 @@ unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
     if (isWalking)
         currentArmy->stopSample(army::TSampleID(0));
 
-    long base = obstacle->m_spellDamage;
+    long base = obstacle->m_damage;
     long damage = modifySpellDamage(base, SPELL_LAND_MINE,
                                     m_heroes[obstacle->m_owner],
                                     currentArmy->getController(),
@@ -625,7 +625,7 @@ unsigned char combatManager::checkFireWall(long hex, army* currentArmy,
     if (isWalking)
         currentArmy->stopSample(army::TSampleID(0));
 
-    long base = obstacle->m_spellDamage;
+    long base = obstacle->m_damage;
     long damage = modifySpellDamage(base, SPELL_FIRE_WALL,
                                     m_heroes[obstacle->m_owner],
                                     currentArmy->getController(),

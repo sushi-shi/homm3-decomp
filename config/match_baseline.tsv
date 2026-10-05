@@ -230,7 +230,7 @@ ai	?hasRangedAdvantage@combatManager@@AAEEAAUtype_AI_combat_parameters@@@Z	100.0
 ai	?insert@?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@QAEXPAPAVarmy@@IABQAV3@@Z	100.0000	100.0000	100.0000	0x23130	-
 ai	?isIncapacitated@army@@QBE_NXZ	100.0000	100.0000	100.0000	0x1f380	tokens1:d3fd9fab7cc6
 ai	?markEnemyAttacks@combatManager@@ABEXPBVarmy@@PAJAAJABUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20260	tokens1:7e713581c808
-ai	?markFirewalls@combatManager@@AAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x214f0	tokens1:c2e8fd431e7b
+ai	?markFirewalls@combatManager@@AAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x214f0	tokens1:87a7226dcf6f
 ai	?markFriendlyArmies@combatManager@@ABEXPBVarmy@@PAJJABUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1fb60	tokens1:135ff2306da1
 ai	?markMoat@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x21590	tokens1:709f13d04482
 ai	?markMultiheadedEnemy@combatManager@@ABEXPBVarmy@@0PAJJPAVsearchArray@@ABUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1fd60	tokens1:9ba01af7f491
@@ -979,7 +979,7 @@ cmbtmgr	?open@combatManager@@UAEHH@Z	99.9822	100.0000	100.0000	0x62a20	tokens1:2
 cmbtmgr	?placeAllObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66a70	tokens1:68ef87a45bc4
 cmbtmgr	?placeArmyInGrid@combatManager@@QAEXABVarmy@@H@Z	99.7727	99.7727	100.0000	0x687c0	tokens1:9511cfd81a57
 cmbtmgr	?placeLargeObstacle@combatManager@@QAEHII@Z	100.0000	100.0000	100.0000	0x668a0	tokens1:270d600e050d
-cmbtmgr	?placeObstacle@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x66010	tokens1:f695cb0017b3
+cmbtmgr	?placeObstacle@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x66010	tokens1:61bcadb3f2ff
 cmbtmgr	?placeObstacle@combatManager@@QAEXABUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0	tokens1:08bb8ffb86af
 cmbtmgr	?powEffect@combatManager@@QAEXW4TSpellEffectID@@H@Z	95.8134	95.8134	96.2963	0x68990	tokens1:97af6d142af6
 cmbtmgr	?raiseSkeletons@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x69f20	tokens1:7c42b2a81edb
@@ -988,7 +988,7 @@ cmbtmgr	?removeObstacle@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x66b3
 cmbtmgr	?resetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0	tokens1:67f4e025aa86
 cmbtmgr	?setNextArmy@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x65330	tokens1:5445ad35d717
 cmbtmgr	?setupAdjacencyArray@combatManager@@AAEXXZ	100.0000	100.0000	100.0000	0x640a0	tokens1:c5ebe3df5946
-cmbtmgr	?setupAndLoadObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66290	tokens1:3316c760afd4
+cmbtmgr	?setupAndLoadObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66290	tokens1:9885deb0a118
 cmbtmgr	?setupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	100.0000	100.0000	100.0000	0x639f0	tokens1:d06a7f6403d2
 cmbtmgr	?shootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	94.6967	94.6967	100.0000	0x67db0	tokens1:07beea86813e
 cmbtmgr	?shootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	89.1219	89.1219	100.0000	0x67a00	tokens1:d31a24eca37f
@@ -4220,8 +4220,8 @@ spells	?areaEffect@combatManager@@QAEXJHJJ@Z	100.0000	100.0000	100.0000	0x1a4970
 spells	?armageddon@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1a4bc0	tokens1:36a0231e3a8d
 spells	?castSpell@combatManager@@QAEXHHHHW4TSkillMastery@@J@Z	93.7711	93.7711	94.1057	0x19fe30	tokens1:22853ae12a4c
 spells	?chainLightning@combatManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x1a6360	tokens1:b964bc7e2b10
-spells	?checkFireWall@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fcd0	tokens1:11e7980418ea
-spells	?checkLandmine@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fb40	tokens1:8ab373d10325
+spells	?checkFireWall@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fcd0	tokens1:179efef27da2
+spells	?checkLandmine@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fb40	tokens1:d7be3a832e70
 spells	?clearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0	tokens1:38f028d7fbcf
 spells	?computeSpellDamage@combatManager@@QBEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890	tokens1:0cea538b6f73
 spells	?demonicResurrection@combatManager@@QAEXPBVarmy@@PAV2@@Z	97.2740	97.2740	100.0000	0x1a7390	tokens1:efc3df953409

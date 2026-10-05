@@ -520,7 +520,7 @@ public:
         // duration and dispel_effect; the last is TSpellEffectID.
         // Retail mark_firewalls reads damage at +12, and spell/command
         // readers preserve the same three int-wide slots.
-        int m_spellDamage;                   // +0xc
+        int m_damage;                        // +0xc
         int m_duration;                      // +0x10
         TSpellEffectID m_dispelEffect;        // +0x14
 

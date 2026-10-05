@@ -2308,7 +2308,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             obstacle.m_hex = static_cast<unsigned char>(hex);
             obstacle.m_owner = -1;
             obstacle.m_isVisible = 1;
-            obstacle.m_spellDamage = 0;
+            obstacle.m_damage = 0;
             obstacle.m_duration = 0;
             obstacle.m_dispelEffect = eSpellEffectNone;
             m_obstacles.push_back(obstacle);
@@ -2415,7 +2415,7 @@ void combatManager::setupAndLoadObstacles()
                 newLandmine.m_hex = static_cast<unsigned char>(hex);
                 newLandmine.m_owner = 1;
                 newLandmine.m_isVisible = 0;
-                newLandmine.m_spellDamage = damage;
+                newLandmine.m_damage = damage;
                 newLandmine.m_duration = 0;
                 newLandmine.m_dispelEffect = eSpellEffectDispelLandMine;
                 m_obstacles.push_back(newLandmine);

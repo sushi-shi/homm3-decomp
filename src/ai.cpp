@@ -1692,7 +1692,7 @@ void combatManager::markFirewalls(const army* currentArmy, long* enemyAttacks, t
         if ((m_cells[i].m_attributes & hexcell::fireWall) == 0)
             continue;
         TObstacle* obstacle = &getObstacle(m_cells[i].m_obstacleIndex);
-        long base = obstacle->m_spellDamage;
+        long base = obstacle->m_damage;
         long damage = modifySpellDamage(base, SPELL_FIRE_WALL,
                                         m_heroes[obstacle->m_owner],
                                         m_heroes[estimate->getGroup()],
