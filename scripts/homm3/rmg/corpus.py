@@ -366,7 +366,8 @@ def verdict(case, native, rust, mode):
         return 'matching-rejection'
     if mode == 'retail':
         if rust['stage'] == 'Selection' and re.search(
-            r'rmg.txt row (323|329): unassigned player zone writes before retail player-slot arrays',
+            r'(rmg\.txt|template) row (323|329): unassigned player zone writes before '
+            r'(retail|native) player-slot arrays',
             rust['message']):
             return 'typed-unassigned-player-zone'
         match = re.search(r'x: (-?\d+), y: (-?\d+).*level: (Surface|Underground)', rust['message'])
