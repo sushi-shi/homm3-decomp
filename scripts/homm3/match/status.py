@@ -202,6 +202,10 @@ def require_built_sources(units: set[str] | None = None) -> None:
                    "updating current scores:\n" + output[-3000:])
 
 
+UNBUILT = "unbuilt changes"
+STALE_COMPARISON = "stale comparison objects"
+
+
 @dataclass
 class ReportView:
     """The scores a read-only view shows, and which units they lag behind."""
@@ -223,7 +227,7 @@ def read_report_view() -> ReportView:
         note = "Ninja could not check build freshness:\n" + output[-1500:]
     units, other = pending_units(output)
     for unit in units:
-        stale[unit] = "unbuilt source edit"
+        stale[unit] = UNBUILT
     if other:
         note = (note + "\n" if note else "") + "other pending build edges: " + \
             ", ".join(sorted(set(other))[:8])
@@ -231,7 +235,7 @@ def read_report_view() -> ReportView:
     problems = comparison_problems_by_unit(context)
     for unit in problems:
         if unit is not None:
-            stale.setdefault(unit, "stale comparison object")
+            stale.setdefault(unit, STALE_COMPARISON)
     if not stale and not problems and not returncode:
         return ReportView(refresh_report(context), {}, note)
     if not REPORT.is_file():
@@ -253,13 +257,15 @@ def warn_stale(view: ReportView) -> None:
     print(f"[status] WARNING: showing the last measured report "
           f"({REPORT.relative_to(common.HOMM3_DIR)}, {when}).", file=out)
     if view.stale:
-        names = sorted(view.stale)
-        shown = ", ".join(f"{u} ({view.stale[u]})" for u in names[:_LISTED_UNITS])
-        more = f" and {len(names) - _LISTED_UNITS} more" if len(names) > _LISTED_UNITS else ""
-        print(f"[status]   {len(names)} unit(s) lag their source: {shown}{more}.",
-              file=out)
+        for reason in sorted(set(view.stale.values())):
+            names = sorted(u for u, why in view.stale.items() if why == reason)
+            shown = ", ".join(names[:_LISTED_UNITS])
+            more = (f" and {len(names) - _LISTED_UNITS} more"
+                    if len(names) > _LISTED_UNITS else "")
+            print(f"[status]   {len(names)} unit(s) with {reason}: {shown}{more}.",
+                  file=out)
         print(f"[status]   Their rows (marked *) are stale; refresh them with "
-              f"{fast_build_advice(names)}.", file=out)
+              f"{fast_build_advice(view.stale)}.", file=out)
     if view.note:
         print(f"[status]   {view.note}", file=out)
 

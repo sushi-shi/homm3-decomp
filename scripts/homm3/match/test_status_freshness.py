@@ -116,8 +116,8 @@ class FreshnessTest(unittest.TestCase):
                 self.assertEqual(status.main(argv), 0)
                 report.assert_not_called()
                 if command:
-                    self.assertEqual(summary.call_args.args[1], {"hero": "unbuilt source edit"})
-                self.assertIn("hero (unbuilt source edit)", stderr.getvalue())
+                    self.assertEqual(summary.call_args.args[1], {"hero": "unbuilt changes"})
+                self.assertIn("1 unit(s) with unbuilt changes: hero.", stderr.getvalue())
                 self.assertIn("homm3 build --fast hero", stderr.getvalue())
 
     @unittest.skipUnless(shutil.which("ninja"), "requires Ninja")

@@ -59,14 +59,14 @@ class FunctionQueryTest(unittest.TestCase):
 
     def test_json_rows_carry_scores_addresses_and_staleness(self):
         rows = json.loads(self.run_functions("--va", "0x524dd0", "--json",
-                                             stale={"hero": "unbuilt source edit"}))
+                                             stale={"hero": "unbuilt changes"}))
         self.assertEqual(rows, [{"unit": "hero", "function": "?move@@",
                                  "va": "0x00524dd0", "rva": "0x124dd0",
                                  "cur": 80.0, "max": 90.0, "hist": 95.0,
                                  "stale": True}])
 
     def test_text_marks_stale_rows(self):
-        text = self.run_functions("--unit", "hero", stale={"hero": "unbuilt source edit"})
+        text = self.run_functions("--unit", "hero", stale={"hero": "unbuilt changes"})
         self.assertIn("hero / ?move@@ *", text)
         self.assertIn("  90.00%    80.00%    95.00%  0x124dd0", text)
 
