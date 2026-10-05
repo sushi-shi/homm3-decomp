@@ -787,12 +787,12 @@ void town::removeGarrisonHero()
 // adventure-view latches only when the hidden hero was both current and
 // locally owned. Dreamcast splits the exchange over lines 1115-1117; the
 // precise source spelling is unknown because no temporary survives CodeView.
-// Retail requires `std::swap`'s reference boundary: a natural temporary plus
+// std::swap's reference boundary reproduces retail's reloads: a temporary plus
 // two assignments makes VC6 retain the already-loaded ids and falls to
 // 88.92481%. The coherent base-first CMCHideHero constructor leaves only its
-// caller-specific zero/id store schedule unmatched (97.77444%); reversing the
-// shared constructor closes this caller but contradicts netmsg.h:717-718 and
-// breaks exact playerData::add_garrison_hero, so that old 100% remains history.
+// caller-specific zero/id store schedule unmatched (97.77444%). The old exact
+// form flattened CMapChange construction into the derived constructor;
+// retain the native base-constructor boundary instead.
 VA(0x005be450, 0x1AC)
 DC_ADDRESS(0x166864, 0xea)
 MAC_ADDRESS(0x1b3910, 0x1ac)  // anchor-global
@@ -802,6 +802,8 @@ MAC_ADDRESS(0x1b3910, 0x1ac)  // anchor-global
 // Removing the receiver alias (implicit/explicit this) or copy-initializing
 // the message adds no gain: four states, three reproduced objects, best
 // 97.7744%. The CFG matches; the constructor scratch-register schedule differs.
+// Base-first member initialization and body assignment also emit one object
+// across town/game; neither the line table nor codegen distinguishes them.
 void town::swapHeroes()
 {
     town* currentTown = this;
