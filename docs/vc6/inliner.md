@@ -1951,7 +1951,7 @@ candidate site to C2's divisor even when it expands to nothing new:
   retained `vector::_Destroy` call (94.33% -> 99.94%).
 - Passing a local `SLimitData` by value to `updateCombatArea` moved
   retail's register allocation in the missile animators (99.98% -> 95.14%),
-  while the same call on `m_drawbridgeBounds` raised `army::attackWall`
+  while the same call on `m_extent` raised `army::attackWall`
   (89.90% -> 90.91%). Measure each site; a by-value temporary is a real
   codegen fact, not budget noise.
 

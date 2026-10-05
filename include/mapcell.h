@@ -1209,9 +1209,9 @@ public:
     }
     TAdventureObjectType getSpecialTerrain() const;
     // Implicit destructor; CodeView dc 0xf4bdc compgenx.
-    const unsigned char hasTriggerableEvent() const;
+    const bool hasTriggerableEvent() const;
     int getMagicTerrainType();
-    unsigned char isDiggable() const;
+    bool isDiggable() const;
     TAdventureObjectType getMapObject() const;
     unsigned long getMapExtraInfo() const;
     unsigned char cellIsTrigger() const;

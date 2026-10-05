@@ -27,6 +27,12 @@ DATA(0x006aad20) int g_dialogNestCount;
 // Only the unclaimed release screenshot helper uses this counter.
 static int g_currScreenShot;
 
+// Original ScreenLimits/NullLimits, DC winmgr.cpp:54/56. Retail startup
+// 0x602110/0x602140 constructs these immediately before the manager ctor.
+// NullLimits is the empty accumulator copied by combat drawing callers.
+DATA(0x006aad00) const SLimitData heroWindowManager::s_screenLimits(0, 0, 799, 599);
+DATA(0x006aace8) const SLimitData heroWindowManager::s_nullLimits(799, 599, 0, 0);
+
 VA(0x00602170, 0x38)
 DC_ADDRESS(0x19a7ec, 0x54)
 MAC_ADDRESS(0x20d13c, 0x6c)

@@ -7570,7 +7570,7 @@ void game::setWeeklyRecruits(int playerPos)
             otherClass = kNumHeroClasses;
         else
         {
-            otherClass = THeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
+            otherClass = getHero(player->m_recruits[1 - recruitSlot])->m_heroClass;
         }
 
         if (m_isTutorial
@@ -7614,7 +7614,7 @@ void game::replaceRecruit(int playerPos, long recruitSlot)
     playerData* player = &m_players[playerPos];
     if (player->m_recruits[1 - recruitSlot] != -1)
     {
-        otherClass = THeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
+        otherClass = getHero(player->m_recruits[1 - recruitSlot])->m_heroClass;
     }
 
     HeroId heroId = getNewHeroId(playerPos, otherClass, 0, kNumHeroClasses);

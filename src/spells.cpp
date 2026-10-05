@@ -1512,15 +1512,15 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             m_computeExtentOnly = 0;
             m_saveBiggestExtent = 0;
             g_windowManager->saveFizzleSourceX(
-                m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-                m_drawbridgeBounds.width(),
-                m_drawbridgeBounds.height());
+                m_extent.m_minX, m_extent.m_minY,
+                m_extent.width(),
+                m_extent.height());
             removeObstacle(obstacleIndex);
             drawFrame(0, 0, 0, 0, 1, 0);
             g_windowManager->fizzleForwardX(
-                m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-                m_drawbridgeBounds.width(),
-                m_drawbridgeBounds.height(),
+                m_extent.m_minX, m_extent.m_minY,
+                m_extent.width(),
+                m_extent.height(),
                 replacementEffect);
         } else {
             removeObstacle(obstacleIndex);
@@ -4743,13 +4743,13 @@ void combatManager::earthquake(int level)
                     continue;
                 long x = s_wallTargets[i].m_hitX;
                 long y = s_wallTargets[i].m_hitY;
-                TDrawbridgeBounds* bounds = &m_drawbridgeBounds;
-                *bounds = TDrawbridgeBounds(
+                SLimitData* bounds = &m_extent;
+                *bounds = SLimitData(
                     x - blast->getWidth() / 2,
                     y - blast->getHeight() / 2,
                     x - blast->getWidth() / 2 + blast->getWidth() - 1,
                     y - blast->getHeight() / 2 + blast->getHeight() - 1);
-                bounds->clip(g_combatDrawLimits);
+                bounds->clip(combatManager::s_combatAreaLimits);
                 if (frame == g_earthquakeImpactFrame) {
                     damageWall(H3_ENUM_DECODE(TWallTargetId, i), counts[i]);
                 }

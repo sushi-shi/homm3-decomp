@@ -28,19 +28,6 @@
 #include "widget.h"
 #include "winmgr.h"
 
-// DC declares CombatAreaLimits_Visible as a const SLimitData class static.
-// Retail CRT 0x602110 constructs the full 800x600 viewport; no other reviewed
-// retail reference survives to this object.
-DATA(0x006aad00) const SLimitData combatManager::s_visibleCombatAreaLimits(0, 0, 799, 599);
-
-// DC attests combatManager::CombatAreaLimits; the retail address and all four
-// dword lanes are proven by ResetLimitCreature and thirteen other readers.
-// CRT 0x602140 initializes an empty accumulation rectangle: (799,599)..(0,0).
-// Original public ?CombatAreaLimits@combatManager@@2USLimitData@@B proves
-// const class-static ownership. Construction writes its four words during
-// initialization; all reviewed subsequent users only read/copy the rectangle.
-DATA(0x006aace8) const SLimitData combatManager::s_combatAreaLimits(799, 599, 0, 0);
-
 // UpdateGrid's private "the grid bitmap has been posted" latch. It is
 // cleared when the caller says the clean battlefield was reposted and set
 // after the complete visible-grid pass. No other retail body references it.
@@ -511,7 +498,7 @@ void combatManager::resetLimitCreature()
     m_flagEffect[0] = 0;
     m_flagEffect[1] = 0;
     memset(m_archerEffect, 0, sizeof m_archerEffect);
-    m_drawbridgeBounds = combatManager::s_combatAreaLimits;
+    m_extent = heroWindowManager::s_nullLimits;
 }
 
 VA(0x00493780, 0x44)
@@ -522,10 +509,10 @@ void combatManager::updateCombatArea()
     if (!static_cast<const combatManager*>(this)->isQuickCombat()
             && m_combatShowIt) {
         g_windowManager->updateScreen(
-            g_combatDrawLimits.m_minX,
-            g_combatDrawLimits.m_minY,
-            g_combatDrawLimits.width(),
-            g_combatDrawLimits.height());
+            combatManager::s_combatAreaLimits.m_minX,
+            combatManager::s_combatAreaLimits.m_minY,
+            combatManager::s_combatAreaLimits.width(),
+            combatManager::s_combatAreaLimits.height());
     }
 }
 
@@ -747,7 +734,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
 
             if (oldGrid) {
                 SLimitData updateLimits =
-                    combatManager::s_combatAreaLimits;
+                    heroWindowManager::s_nullLimits;
                 for (i = 0; i < COMBAT_GRID_CELLS; i++) {
                     if (m_lastDrawGridShade[i] != m_curDrawGridShade[i]
                             || m_curDrawGridShade[i]) {
@@ -755,7 +742,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
                     }
                 }
 
-                updateLimits.clip(g_combatGridAreaLimits);
+                updateLimits.clip(combatManager::s_gridAreaLimits);
 
                 m_saveScreenPreGrid->draw(
                     updateLimits.m_minX - 58,
@@ -917,34 +904,34 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
                            m_combatShadowBitmap, 0, 0);
     }
 
-    SLimitData saveExtent = m_drawbridgeBounds;
+    SLimitData saveExtent = m_extent;
     int saveLimitToExtent = m_limitToExtent;
-    m_drawbridgeBounds = combatManager::s_combatAreaLimits;
+    m_extent = heroWindowManager::s_nullLimits;
     m_limitToExtent = 1;
 
     for (i = 0; i < oldHexes.size(); ++i) {
         const hexcell& cell = m_cells[oldHexes[i]];
-        m_drawbridgeBounds.include(SLimitData(cell.m_hexUlx, cell.m_hexUly,
+        m_extent.include(SLimitData(cell.m_hexUlx, cell.m_hexUly,
                                   cell.m_hexUlx + 44,
                                   cell.m_hexUly + 51));
     }
     for (i = 0; i < hexes.size(); ++i) {
         const hexcell& cell = m_cells[hexes[i]];
-        m_drawbridgeBounds.include(SLimitData(cell.m_hexUlx, cell.m_hexUly,
+        m_extent.include(SLimitData(cell.m_hexUlx, cell.m_hexUly,
                                   cell.m_hexUlx + 44,
                                   cell.m_hexUly + 51));
     }
 
-    m_drawbridgeBounds.clip(g_combatDrawLimits);
+    m_extent.clip(combatManager::s_combatAreaLimits);
     m_saveScreenPostGrid->draw(
-        m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-        m_drawbridgeBounds.width(), m_drawbridgeBounds.height(),
+        m_extent.m_minX, m_extent.m_minY,
+        m_extent.width(), m_extent.height(),
         g_windowManager->m_screenBitmap,
-        m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY, false);
+        m_extent.m_minX, m_extent.m_minY, false);
     drawFrame(0, 0, 0, 0, 1, 0);
-    updateCombatArea(m_drawbridgeBounds);
+    updateCombatArea(m_extent);
 
-    m_drawbridgeBounds = saveExtent;
+    m_extent = saveExtent;
     m_limitToExtent = saveLimitToExtent;
     lastMouseGridIndex = newMouseGridIndex;
 
@@ -1056,10 +1043,10 @@ void combatManager::drawFrame(bool update,
         if (m_backgroundDrawn) {
             if (limitCreatureEffect || limitDraw || m_limitToExtent) {
                 m_saveScreenPostGrid->draw(
-                    m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-                    m_drawbridgeBounds.width(), m_drawbridgeBounds.height(),
+                    m_extent.m_minX, m_extent.m_minY,
+                    m_extent.width(), m_extent.height(),
                     g_windowManager->m_screenBitmap,
-                    m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY, false);
+                    m_extent.m_minX, m_extent.m_minY, false);
             } else {
                 m_saveScreenPostGrid->draw(0, 0, 800, 556,
                                  g_windowManager->m_screenBitmap,
@@ -1198,8 +1185,8 @@ void combatManager::drawFrame(bool update,
             return;
         }
 
-        m_drawbridgeBounds.clip(g_combatDrawLimits);
-        updateCombatArea(m_drawbridgeBounds);
+        m_extent.clip(combatManager::s_combatAreaLimits);
+        updateCombatArea(m_extent);
     }
 
     if (limitCreatureEffect || limitDraw)
@@ -1417,7 +1404,7 @@ int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame,
     }
 
     if (m_limitToExtent) {
-        if (!limits->intersects(m_drawbridgeBounds))
+        if (!limits->intersects(m_extent))
             return 0;
     }
 
@@ -1450,7 +1437,7 @@ int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame,
     }
 
     if (m_limitToExtent) {
-        if (!limits->intersects(m_drawbridgeBounds))
+        if (!limits->intersects(m_extent))
             return 0;
     }
 
@@ -1476,7 +1463,7 @@ int combatManager::drawCreatureAlpha(const CSprite* sprite, int sequence,
             return 0;
     }
     if (m_limitToExtent) {
-        if (!limits->intersects(m_drawbridgeBounds))
+        if (!limits->intersects(m_extent))
             return 0;
     }
     sprite->drawCreatureAlpha(sequence, frame, 0, 0,
@@ -1505,7 +1492,7 @@ int combatManager::drawCombatHero(const CSprite* sprite, int sequence,
     }
 
     if (m_limitToExtent) {
-        if (!limits->intersects(m_drawbridgeBounds))
+        if (!limits->intersects(m_extent))
             return 0;
     }
 
@@ -1526,21 +1513,21 @@ int combatManager::drawSpellEffect(const CSprite* sprite, int frame,
 {
     SLimitData limits(x, y, x + sprite->getWidth() - 1,
                       y + sprite->getHeight() - 1);
-    limits.clip(g_combatDrawLimits);
+    limits.clip(combatManager::s_combatAreaLimits);
 
     // DC drawing.cpp:1809 calls ScrollTo before extent accumulation.
     // Complete expands the fixed-viewport helper without emitted code.
     scrollTo(limits, true, true, true);
 
     if (m_saveBiggestExtent) {
-        m_drawbridgeBounds.include(limits);
+        m_extent.include(limits);
     }
 
     if (m_computeExtentOnly)
         return 0;
 
     if (m_limitToExtent) {
-        if (!limits.intersects(m_drawbridgeBounds))
+        if (!limits.intersects(m_extent))
             return 0;
     }
 
@@ -1561,17 +1548,17 @@ int combatManager::drawSpriteObject(const CSprite* sprite, int frame,
     SLimitData limits(x, y, x + sprite->getWidth() - 1,
                       y + sprite->getHeight() - 1);
 
-    limits.clip(g_combatDrawLimits);
+    limits.clip(combatManager::s_combatAreaLimits);
 
     if (m_saveBiggestExtent) {
-        m_drawbridgeBounds.include(limits);
+        m_extent.include(limits);
     }
 
     if (m_computeExtentOnly)
         return 0;
 
     if (m_limitToExtent) {
-        if (!limits.intersects(m_drawbridgeBounds))
+        if (!limits.intersects(m_extent))
             return 0;
     }
 
@@ -1632,17 +1619,17 @@ int combatManager::drawWall(const Bitmap816* image, int x, int y,
 {
     SLimitData limits(dx, dy, dx + width - 1, dy + height - 1);
 
-    limits.clip(g_combatDrawLimits);
+    limits.clip(combatManager::s_combatAreaLimits);
 
     if (m_saveBiggestExtent) {
-        m_drawbridgeBounds.include(limits);
+        m_extent.include(limits);
     }
 
     if (m_computeExtentOnly)
         return 0;
 
     if (m_limitToExtent) {
-        if (!limits.intersects(m_drawbridgeBounds))
+        if (!limits.intersects(m_extent))
             return 0;
     }
 
@@ -1660,17 +1647,17 @@ int combatManager::drawObject(const Bitmap816* image, int x, int y)
                       x + image->getWidth() - 1,
                       y + image->getHeight() - 1);
 
-    limits.clip(g_combatDrawLimits);
+    limits.clip(combatManager::s_combatAreaLimits);
 
     if (m_saveBiggestExtent) {
-        m_drawbridgeBounds.include(limits);
+        m_extent.include(limits);
     }
 
     if (m_computeExtentOnly)
         return 0;
 
     if (m_limitToExtent) {
-        if (!limits.intersects(m_drawbridgeBounds))
+        if (!limits.intersects(m_extent))
             return 0;
     }
 
@@ -1689,7 +1676,7 @@ int combatManager::drawMoatOverlay(int index)
         s_wallTraits[m_defendingTown->m_type][WALL_TRAITS_ROW_MOAT];
     SLimitData moatExtent(cell.m_hexUlx, cell.m_hexUly + 36,
                            cell.m_hexUlx + 43, cell.m_hexUly + 41);
-    moatExtent.clip(g_combatDrawLimits);
+    moatExtent.clip(combatManager::s_combatAreaLimits);
 
     Bitmap816* image = m_combatIcons[WALL_TRAITS_ROW_MOAT][0];
     if (!image)
@@ -1704,10 +1691,10 @@ int combatManager::drawMoatOverlay(int index)
         return 0;
 
     if (m_saveBiggestExtent)
-        m_drawbridgeBounds.include(moatExtent);
+        m_extent.include(moatExtent);
     if (m_computeExtentOnly)
         return 0;
-    if (m_limitToExtent && !moatExtent.intersects(m_drawbridgeBounds))
+    if (m_limitToExtent && !moatExtent.intersects(m_extent))
         return 0;
 
     int sourceX;
@@ -1809,7 +1796,7 @@ void combatManager::computeMaxExtent()
         }
     }
 
-    m_drawbridgeBounds.clip(g_combatDrawLimits);
+    m_extent.clip(combatManager::s_combatAreaLimits);
 }
 
 VA(0x00495f50, 0x17c)
@@ -1839,9 +1826,9 @@ void combatManager::computeExtent(const CSprite* sprite, int sequence,
     limits->m_maxY = y + sprite->getCroppedY(sequence, frame)
         + sprite->getCroppedHeight(sequence, frame) - 1;
 
-    limits->clip(g_combatDrawLimits);
+    limits->clip(combatManager::s_combatAreaLimits);
     if (saveBiggestExtent)
-        m_drawbridgeBounds.include(*limits);
+        m_extent.include(*limits);
 }
 
 VA(0x004960d0, 0x76a)

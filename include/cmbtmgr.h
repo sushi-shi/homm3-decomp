@@ -29,13 +29,6 @@ struct type_AI_combat_parameters;
 struct tagPOINT;
 struct type_artifact;
 
-// Four inclusive drawing bounds copied as one value before a drawbridge
-// animation. Drawing.cpp's decoded readers prove the same min/max layout as
-// SLimitData. Keep the concrete source type consumer-scoped so the other VC6
-// units retain their already measured type-handle state.
-typedef SLimitData TDrawbridgeBounds;
-SIZE(TDrawbridgeBounds, 0x10);
-
 // Polymorphic objects owned by combatManager at offsets where Close only
 // proves scalar deletion. Their concrete roles remain unattested.
 class CCombatOwnedObject {
@@ -359,26 +352,26 @@ enum CombatHeroFrameType {
 
 class combatManager : public baseManager {
 public:
-    // Original DC statics: LeftHeroLimits, RightHeroLimits,
-    // MainBuildingLimits and UpperTowerLimits (GetGridIndex).
+    // Original public const statics. CombatAreaLimits_Visible has no
+    // independently identified Complete storage; ScreenLimits is owned by
+    // heroWindowManager and is not an alias for that older declaration.
+    static const SLimitData s_combatAreaLimits;
+    static const SLimitData s_visibleCombatAreaLimits;
+    static const SLimitData s_gridAreaLimits;
+    static const SLimitData s_drawbridgeLimits;
     static const SLimitData s_leftHeroLimits;
     static const SLimitData s_rightHeroLimits;
     static const SLimitData s_mainBuildingLimits;
     static const SLimitData s_upperTowerLimits;
-    // Original: CombatAreaLimits_Visible.
-    static const SLimitData s_visibleCombatAreaLimits;
-    // Original: CombatAreaLimits; public @@2USLimitData@@B proves const.
-    static const SLimitData s_combatAreaLimits;
 
     // Dreamcast drawing.cpp:666. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
     // Complete Windows and Mac fold the fixed-viewport facade in army.cpp;
     // that cross-TU expansion supports header visibility of this delegation.
-    // Older DC owns the scrolling facade in drawing.cpp.
+    // Older DC owns the scrolling facade in drawing.cpp; its original
+    // ?ScrollTo@combatManager@@QAA_NHH_N00@Z proves bool for result/flags.
     DC_ADDRESS(0x0841d4, 0x52)
-    unsigned char scrollTo(int x, int y, unsigned char draw,
-                           unsigned char doscrollX,
-                           unsigned char doscrollY)
+    bool scrollTo(int x, int y, bool draw, bool doscrollX, bool doscrollY)
     {
         return scrollTo(SLimitData(x, y, x + 1, y + 1), draw,
                         doscrollX, doscrollY);
@@ -961,10 +954,10 @@ public:
     char m_paddingBeforeLimitToExtent[0x3];
     int m_limitToExtent;  // +0x13d30
     int m_computeExtentOnly;  // +0x13d34
-    // Four-dword drawing bounds copied from 0x694f30..0x694f3c before
-    // every drawbridge animation. The role of each coordinate awaits a
-    // decoded drawing reader, so the member stays an ordinal array.
-    TDrawbridgeBounds m_drawbridgeBounds;  // +0x13d38
+    // Original: Extent (SLimitData), public in DC combatManager records.
+    // The inclusive drawing extent is also replaced with the fixed bounds
+    // at 0x694f30 before a drawbridge animation.
+    SLimitData m_extent;  // +0x13d38
     // Set to 3 by InitNonVisualVars, out of the same register as
     // field_5418. Ordinal.
     int m_winner;  // +0x13d48
@@ -1202,7 +1195,9 @@ public:
     int updateGrid(int postGridIsClean, int setupGrid);
     void drawBackground();
     void updateCombatArea();  // 0x493780
-    unsigned char handleCombatPlayerDrop(unsigned long dpid, message* msg);
+    // Original HandleCombatPlayerDrop returns bool and takes message&;
+    // native public: ?HandleCombatPlayerDrop@combatManager@@QAA_NKAAUmessage@@@Z.
+    bool handleCombatPlayerDrop(unsigned long dpid, message& msg);
 
 private:
     bool isComputerAction();
@@ -1296,10 +1291,12 @@ public:
     int getSpellWallHex(int baseIndex, int rowOffset, int side);
     void checkChangeSelector();  // 0x477ac0
     void checkChangeHighlighter(int currentIndex);  // 0x478040
-    void turnOffSelector(unsigned char drawIt);
-    void turnOffHighlighter(unsigned char restore);  // 0x477e10
+    // Original TurnOffSelector/TurnOffHighlighter publics use _N flags.
+    void turnOffSelector(bool drawIt);
+    void turnOffHighlighter(bool drawIt);  // 0x477e10
+    // Native ?SetCombatGrid@combatManager@@QAAXHHH_N@Z: draw flag is bool.
     void setCombatGrid(int showEntireGrid, int showMouseHex, int gridLevel,
-                       unsigned char drawNow);  // 0x479fc0
+                       bool drawNow);  // 0x479fc0
     // 0x46a520 (68 B), army::simple_move's second call: it zeroes a
     // 187-byte per-hex row at this + 0x14031 with a `rep stosd` of 46
     // dwords plus a word plus a byte - the cell count exactly - and
@@ -1466,7 +1463,9 @@ public:
     // command.obj's leaf (0x4763f0, claimed in src/command.cpp); ai.cpp
     // and findpath.cpp are both located callers and both reach it
     // through gpCombatManager with (army::combatSide, hex).
-    unsigned char isOutsidePlacementBoundry(int group, int index);
+    // Original is_outside_placement_boundry has a bool result:
+    // ?is_outside_placement_boundry@combatManager@@QAA_NHH@Z.
+    bool isOutsidePlacementBoundry(int group, int index);
 
 private:
     bool automateCatapult();  // 0x473c00
@@ -1991,27 +1990,6 @@ extern const int g_combatDeployHexes[2][7];
 extern const int g_combatDeploySurroundedHexes[2][7];
 extern const int g_combatDeploySpreadSlots[7][7];
 extern const int g_combatDeployGroupedSlots[7][7];
-
-// Source aggregate copied into combatManager+0x13d38 by the constructor,
-// LowerDoor and RaiseDoor. The current DATA contract cannot express its
-// size, so the stripped target still represents interior relocations as
-// separate symbols; source keeps the retail-proven aggregate shape.
-extern TDrawbridgeBounds g_drawbridgeBounds;
-
-// The clip rectangle every combat-drawing pass intersects its dirty
-// region with before handing it to heroWindowManager::UpdateScreen.
-// Sixteen readers image-wide (DrawFrame twice, UpdateCombatArea,
-// ComputeMaxExtent, DrawObstacleAt, DrawWallAt, army::animate_missile
-// and all three missile animators). It is .bss seeded by the
-// initializer at 0x462610, which writes exactly {0, 0, 0x31f, 0x22b} -
-// i.e. left 0, top 0, right 799, bottom 555 - so this is the combat
-// viewport in screen coordinates, not a hex-space bound. Spelled as
-// the same four-int aggregate as the drawbridge bounds because the
-// readers take its four dwords one at a time; the reloc addend that
-// choice produces is masked (ResetLimitCreature is exact through the
-// identical aggregate copy). NAME IS A SOURCE-FACING INVENTION and
-// carries its address - no roster row, string or DC global reaches it.
-extern TDrawbridgeBounds g_combatDrawLimits;
 
 // Combat-background pointer tables decoded from retail .rdata. The first
 // table is indexed by town type, the second by special-terrain mode (slot

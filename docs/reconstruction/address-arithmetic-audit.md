@@ -83,7 +83,7 @@ collateral. The relevant source comments retain the specific evidence.
 
 | Site | Replacement and evidence | CUR before → after |
 | --- | --- | --- |
-| `combatManager::resetLimitCreature`, `0x493710` | Seven raw offset accesses become the existing effect members and `m_drawbridgeBounds`; remove the five-offset enum. DC drawing.cpp:468–478 and retail member offsets agree. | 100 → 100 |
+| `combatManager::resetLimitCreature`, `0x493710` | Seven raw offset accesses become the existing effect members and `m_extent`; remove the five-offset enum. DC drawing.cpp:468–478 and retail member offsets agree. | 100 → 100 |
 | `checkShipyardSquare`, `0x5c0c90` | Remove `cellFlagsWord` and its fabricated `unsigned short*` index 6; use the existing `m_cellFlags` union member at +0xc. No new union or layout. | 100 → 100 |
 | `getUpgradeCost`, `0x54e750`; `getMonsterCost`, `0x54e7c0` | Use `g_creatureTypeTraits[creature].m_cost`. The canonical 116-byte record owns the seven costs at +0x20. | 100 → 100, both |
 | AI war-factory, town-entry and siege purchase, `0x524fc0`, `0x5253d0`, `0x525ca0` | Use the same canonical cost member in the original helpers/callers. Together with recruitment, remove seven raw record accesses, `g_creatureRecords`, and the two dword-stride constants. | 100 → 100, all three |

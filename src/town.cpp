@@ -645,18 +645,15 @@ void town::initializeHordes()
     }
 }
 
-// Dreamcast town.cpp:968 calls get_army before HasCreatures; Mac retains
-// getArmy and retail expands the ordinary town helper here.
+// Dreamcast town.cpp:968 and Mac retain the short-circuit get_army /
+// HasCreatures expression. Original HasGarrison QAAHXZ proves an int result;
+// retail expands getArmy and calls the bool predicate.
 VA(0x005bdfe0, 0x4E)
 DC_ADDRESS(0x16654c, 0x54)
 MAC_ADDRESS(0x1b3414, 0x4c)
 int town::hasGarrison()
 {
-    if (m_visitingHeroId < 0) {
-        if (!getArmy().hasCreatures())
-            return 0;
-    }
-    return 1;
+    return m_visitingHeroId >= 0 || getArmy().hasCreatures();
 }
 
 VA(0x005be030, 0x1D3)

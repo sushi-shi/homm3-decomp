@@ -3086,7 +3086,7 @@ static void convertLegacyCampaignHero(hero& newHero,
     newHero.m_id = static_cast<HeroId>(oldHero.m_id);
     newHero.m_owner = oldHero.m_owner;
     strcpy(newHero.m_name, oldHero.m_name);
-    newHero.m_heroClass = oldHero.m_heroClass;
+    newHero.m_heroClass = static_cast<THeroClass>(oldHero.m_heroClass);
     newHero.m_portrait = oldHero.m_portrait;
     newHero.m_lastMagicSchoolLevel = oldHero.m_lastMagicSchoolLevel;
     newHero.m_experience = oldHero.m_experience;
