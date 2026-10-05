@@ -1665,13 +1665,15 @@ public:
                   unsigned char showDismiss, unsigned char isQuickView);
     void overview();
 
+    // Original Game.h:973/974/979 separates the null and valid return paths.
     VA(0x004317d0, 0x26)  // hd-crossbuild + exact body/callers x15
     DC_ADDRESS(0x002eb0, 0x24)
     hero* getHero(int which)
     {
         if (which == -1)
             return 0;
-        return &m_heroes[which];
+        else
+            return &m_heroes[which];
     }
 
     // Selection's two hero-detail owners expand an unguarded hero lookup
