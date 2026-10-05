@@ -2506,7 +2506,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     setHelpText(g_singleSelectionHelp + 4, 104, 345, 0);
     for (i = 0; i < 8; ++i) {
         g_newMapStartingBonus[i] = 3;
-        g_startingHeroOverrides[i] = -1;
+        g_startingHeroOverrides[i] = heroIdNone;
     }
 
     if (m_saveMode) {
@@ -7884,7 +7884,7 @@ bool TSingleSelectionWindow::beginNewGame()
         CNetPlayerHandlerPlayer* player = &m_players.m_humanPlayers[i];
         if (player->m_playerPos != -1 && player->m_heroIndex != -1)
             g_startingHeroOverrides[player->m_playerPos] =
-                player->m_availableHeroes[player->m_heroIndex];
+                HeroId(player->m_availableHeroes[player->m_heroIndex]);
     }
     g_game->newMap(g_game->m_setup.m_path, g_mapName, g_startingHeroOverrides,
                    gameVersionClass);
