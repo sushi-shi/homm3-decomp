@@ -212,28 +212,28 @@ int army::fly(int destIndex)
         for (loop = 0; loop < ttlLoops; loop++) {
             for (m_currFrameIndex = 0; m_currFrameIndex < numFlapFrames;
                     m_currFrameIndex++) {
-                SLimitData ttlExtent = g_combatManager->m_drawbridgeBounds;
+                SLimitData ttlExtent = g_combatManager->m_extent;
                 x += stepX / static_cast<float>(numFlapFrames);
                 y += stepY / static_cast<float>(numFlapFrames);
                 g_combatManager->m_saveScreenPostGrid->draw(
-                           g_combatManager->m_drawbridgeBounds.m_minX,
-                           g_combatManager->m_drawbridgeBounds.m_minY,
-                           g_combatManager->m_drawbridgeBounds.width(),
-                           g_combatManager->m_drawbridgeBounds.height(),
+                           g_combatManager->m_extent.m_minX,
+                           g_combatManager->m_extent.m_minY,
+                           g_combatManager->m_extent.width(),
+                           g_combatManager->m_extent.height(),
                            g_windowManager->m_screenBitmap->getMap(0, 0),
-                           g_combatManager->m_drawbridgeBounds.m_minX,
-                           g_combatManager->m_drawbridgeBounds.m_minY,
+                           g_combatManager->m_extent.m_minX,
+                           g_combatManager->m_extent.m_minY,
                            g_windowManager->m_screenBitmap->getWidth(),
                            g_windowManager->m_screenBitmap->getHeight(),
                            g_windowManager->m_screenBitmap->getPitch(),
                            false);
-                g_combatManager->m_drawbridgeBounds = combatManager::s_combatAreaLimits;
+                g_combatManager->m_extent = combatManager::s_combatAreaLimits;
                 g_combatManager->m_saveBiggestExtent = 1;
                 drawToBuffer(static_cast<int>(x), static_cast<int>(y), 0);
                 g_combatManager->m_saveBiggestExtent = 0;
                 bool scrolled = g_combatManager->scrollTo(
-                    g_combatManager->m_drawbridgeBounds, true, true, true);
-                ttlExtent.include(g_combatManager->m_drawbridgeBounds);
+                    g_combatManager->m_extent, true, true, true);
+                ttlExtent.include(g_combatManager->m_extent);
                 GameTime::delayTil(g_timers[0]);
                 g_timers[0] = GameTime::nextFrameTime(g_timers[0], flyPeriod);
                 if (!scrolled)
