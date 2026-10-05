@@ -1185,12 +1185,12 @@ void playerData::init()
     m_numTowns = 0;
     m_deathCountDown = -1;
     m_extraPuzzlePieces = 0;
-    m_recruits[0] = -1;
-    m_recruits[1] = -1;
+    m_recruits[0] = heroIdNone;
+    m_recruits[1] = heroIdNone;
     m_personality = 0;
     memset(&m_ai, 0, sizeof(m_ai));
     int heroIndex;
-    MEMSET(m_heroes, -1, sizeof(m_heroes), heroIndex);
+    MEMSET(m_heroes, heroIdNone, sizeof(m_heroes), heroIndex);
     memset(m_townIds, 0xff, sizeof(m_townIds));
     m_isLocal = 0;
     m_isHuman = 0;
@@ -1248,7 +1248,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
 
     for (i = found; i < m_numHeroes - 1; ++i)
         m_heroes[i] = m_heroes[i + 1];
-    m_heroes[m_numHeroes - 1] = -1;
+    m_heroes[m_numHeroes - 1] = heroIdNone;
 
     if (m_currHeroId == ourHero->m_id) {
         m_currHeroId = -1;
@@ -1370,11 +1370,11 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 
     int i;
     for (i = 0; i < 8; i++) {
-        m_heroes[i] = loadHeroId(infile, saveVersion);
+        m_heroes[i] = static_cast<HeroId>(loadHeroId(infile, saveVersion));
     }
 
     for (i = 0; i < 2; i++) {
-        m_recruits[i] = loadHeroId(infile, saveVersion);
+        m_recruits[i] = static_cast<HeroId>(loadHeroId(infile, saveVersion));
     }
 
     unsigned char flag;
@@ -2749,6 +2749,96 @@ bool type_creature_bank::save(void* output)
     return saveVector(outfile, m_artifacts);
 }
 
+// Retail 4bc0e0..4bc750 and Mac cf490..cfc34 order the snapshot
+// constructor, reset, save and load before game::load. Keep the ordinary
+// definitions in that cluster; selection retains the constructor call.
+// Moving the cluster does not change any current Windows function score.
+// E:\gamedcs\Game.h:1301
+VA(0x004bc0e0, 0x251)
+DC_ADDRESS(0x0bceb4, 0x4c)
+MAC_ADDRESS(0x0cf490, 0x260)
+SavedGameHeader::SavedGameHeader()
+{
+    memset(m_id, 0, sizeof(m_id));
+    strcpy(m_id, "H3SVG");
+    m_version = 42;
+}
+
+// Complete retains calls to these ordinary members in game::save.
+// Dreamcast attributes their older definitions to Game.h; the Mac
+// build also retains both calls.
+// E:\gamedcs\Game.h:1312
+VA(0x004bc350, 0x271)
+DC_ADDRESS(0x0bcf00, 0x6c)
+MAC_ADDRESS(0x0cf6f0, 0x330)  // anchor-caller (game::Save) + layout
+void SavedGameHeader::reset()
+{
+    if (g_inCampaign)
+        strcpy(m_id, "H3SVC");
+    else
+        strcpy(m_id, "H3SVG");
+
+    m_version = 42;
+    m_gameVersion = g_game->m_gameVersion;
+
+    m_campaign = g_game->m_campaign;
+
+    m_mapHeader = g_game->m_mapHeader;
+
+    m_currentPlayer = g_netLocalGamePos;
+    m_mapSetup = g_game->m_setup;
+    m_campaignGame = g_inCampaign;
+    m_fileName = g_game->m_saveFileName;
+    m_difficultyRating = g_game->m_difficultyRating;
+    m_numDeadPlayers = g_game->m_numDeadPlayers;
+    memcpy(m_deadPlayer, g_game->m_playerDisabled, sizeof(m_deadPlayer));
+
+    int* human = m_humanPlayer;
+    for (int i = 0; i < 8; ++i)
+        *human++ = g_game->m_players[i].isHuman();
+}
+
+// Complete serializes the expanded snapshot through its abstract stream.
+// Mac stages each scalar separately before its stream write.
+// E:\gamedcs\Game.h:1325
+VA(0x004bc5d0, 0x17A)
+DC_ADDRESS(0x0bcf6c, 0x78)
+MAC_ADDRESS(0x0cfa20, 0x214)  // anchor-layout + game::Save caller
+int SavedGameHeader::save(TAbstractFile* outfile)
+{
+    char fileNameBuffer[0x15f];
+    char compatibilityBuffer[32];
+
+    outfile->write(m_id, sizeof(m_id));
+
+    writeValue<int>(outfile, m_version);
+    writeValue<int>(outfile, m_gameVersion);
+
+    if (outfile->write(compatibilityBuffer, sizeof(compatibilityBuffer)) <
+        sizeof(compatibilityBuffer))
+        return -1;
+
+    if (m_mapHeader.save(outfile) < 0)
+        return -1;
+    if (m_mapSetup.save(outfile) < 0)
+        return -1;
+
+    writeValue<short>(outfile, m_campaignGame);
+    if (m_campaignGame)
+        m_campaign.save(outfile);
+
+    strcpy(fileNameBuffer, m_fileName.c_str());
+    outfile->write(fileNameBuffer, sizeof(fileNameBuffer));
+
+    writeValue<short>(outfile, m_difficultyRating);
+    writeValue<char>(outfile, m_numDeadPlayers);
+    outfile->write(m_deadPlayer, sizeof(m_deadPlayer));
+    outfile->write(m_humanPlayer, sizeof(m_humanPlayer));
+    writeValue<int>(outfile, m_currentPlayer);
+
+    return 0;
+}
+
 // Complete reading belongs to SavedGameHeader::load. The caller tests
 // its result before restoring any game state and retains the snapshot for
 // later version tests. This ordinary application phase owns the demonstrated
@@ -2776,20 +2866,6 @@ void applySavedGameHeader(const SavedGameHeader& saved)
            sizeof(g_game->m_playerDisabled));
     g_netLocalGamePos = saved.m_currentPlayer;
     memcpy(g_wasHuman, saved.m_humanPlayer, sizeof(saved.m_humanPlayer));
-}
-
-// Complete places the save-header constructor before its owning game calls.
-// Those calls expand it; the selection TU retains the constructor call.
-// Mac places it before the save-header reset/save/load and game::load cluster.
-// E:\gamedcs\Game.h:1301
-VA(0x004bc0e0, 0x251)
-DC_ADDRESS(0x0bceb4, 0x4c)
-MAC_ADDRESS(0x0cf490, 0x260)
-SavedGameHeader::SavedGameHeader()
-{
-    memset(m_id, 0, sizeof(m_id));
-    strcpy(m_id, "H3SVG");
-    m_version = 42;
 }
 
 // Original: game::Load; game.cpp:3026 Complete loads a
@@ -3348,85 +3424,13 @@ int game::save(TAbstractFile* outfile)
     return 0;
 }
 
-// Complete retains calls to these ordinary members in game::save.
-// Dreamcast attributes their older definitions to Game.h; the Mac
-// build also retains both calls.
-// E:\gamedcs\Game.h:1312
-VA(0x004bc350, 0x271)
-DC_ADDRESS(0x0bcf00, 0x6c)
-MAC_ADDRESS(0x0cf6f0, 0x330)  // anchor-caller (game::Save) + layout
-void SavedGameHeader::reset()
-{
-    if (g_inCampaign)
-        strcpy(m_id, "H3SVC");
-    else
-        strcpy(m_id, "H3SVG");
-
-    m_version = 42;
-    m_gameVersion = g_game->m_gameVersion;
-
-    m_campaign = g_game->m_campaign;
-
-    m_mapHeader = g_game->m_mapHeader;
-
-    m_currentPlayer = g_netLocalGamePos;
-    m_mapSetup = g_game->m_setup;
-    m_campaignGame = g_inCampaign;
-    m_fileName = g_game->m_saveFileName;
-    m_difficultyRating = g_game->m_difficultyRating;
-    m_numDeadPlayers = g_game->m_numDeadPlayers;
-    memcpy(m_deadPlayer, g_game->m_playerDisabled, sizeof(m_deadPlayer));
-
-    int* human = m_humanPlayer;
-    for (int i = 0; i < 8; ++i)
-        *human++ = g_game->m_players[i].isHuman();
-}
-
-// Complete serializes the expanded snapshot through its abstract stream.
-// Mac stages each scalar separately before its stream write.
-// E:\gamedcs\Game.h:1325
-VA(0x004bc5d0, 0x17A)
-DC_ADDRESS(0x0bcf6c, 0x78)
-MAC_ADDRESS(0x0cfa20, 0x214)  // anchor-layout + game::Save caller
-int SavedGameHeader::save(TAbstractFile* outfile)
-{
-    char fileNameBuffer[0x15f];
-    char compatibilityBuffer[32];
-
-    outfile->write(m_id, sizeof(m_id));
-
-    writeValue<int>(outfile, m_version);
-    writeValue<int>(outfile, m_gameVersion);
-
-    if (outfile->write(compatibilityBuffer, sizeof(compatibilityBuffer)) <
-        sizeof(compatibilityBuffer))
-        return -1;
-
-    if (m_mapHeader.save(outfile) < 0)
-        return -1;
-    if (m_mapSetup.save(outfile) < 0)
-        return -1;
-
-    writeValue<short>(outfile, m_campaignGame);
-    if (m_campaignGame)
-        m_campaign.save(outfile);
-
-    strcpy(fileNameBuffer, m_fileName.c_str());
-    outfile->write(fileNameBuffer, sizeof(fileNameBuffer));
-
-    writeValue<short>(outfile, m_difficultyRating);
-    writeValue<char>(outfile, m_numDeadPlayers);
-    outfile->write(m_deadPlayer, sizeof(m_deadPlayer));
-    outfile->write(m_humanPlayer, sizeof(m_humanPlayer));
-    writeValue<int>(outfile, m_currentPlayer);
-
-    return 0;
-}
-
+// Original public ?SaveGame@game@@QAA_NPBD_N111@Z proves the Boolean
+// result and all four flag parameters, despite byte-lowered debug types.
 VA(0x004beea0, 0x2F6)
 DC_ADDRESS(0x0a99d0, 0x4b8)
 MAC_ADDRESS(0x0d44fc, 0x2e8)
-unsigned char game::saveGame(const char* filename, unsigned char determineSuffix, unsigned char campaignWinMode, unsigned char compressIt, unsigned char xferFile)
+bool game::saveGame(const char* filename, bool determineSuffix,
+                    bool campaignWinMode, bool compressIt, bool xferFile)
 {
     char nameNoExtension[351] = {0};
     char saveName[351] = {0};
@@ -3623,10 +3627,8 @@ void game::giveTroopsToNeutralTown(int townId)
     armyGroup& townArmy = currentTown->getArmy();
     TCreatureType creature;
     TCreatureType upgradedCreature;
-    TCreatureType upgradedValue = (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
-        townType * TOWN_DWELLING_SLOTS + monsterLevel];
-    creature = g_townDwellingCreatures[
-        townType * TOWN_DWELLING_SLOTS + monsterLevel];
+    TCreatureType upgradedValue = g_dwellingType[townType][monsterLevel + TOWN_DWELLING_COUNT];
+    creature = g_dwellingType[townType][monsterLevel];
     upgradedCreature = upgradedValue;
     if (townArmy.getCreatureTotal(upgradedCreature))
         creature = upgradedCreature;
@@ -4187,7 +4189,7 @@ DC_ADDRESS(0x0abd4c, 0x5c)
 MAC_ADDRESS(0x0d66c8, 0x64)
 static void randomizeShrine(NewmapCell* cell, const int level)
 {
-    SpellID spell = cell->getShrineSpell();
+    ESpellId spell = cell->getShrineSpell();
     if (spell == -1) {
         spell = g_game->getRandomSpell(level);
         cell->m_shrineInfo.m_spell = spell;
@@ -4221,10 +4223,9 @@ DC_ADDRESS(0x0abe30, 0x5e)
 MAC_ADDRESS(0x0d6844, 0x60)
 static void randomizeWiseTree(short id, NewmapCell* cell)
 {
-    cell->m_extraInfo = (cell->m_extraInfo & 0xffffffe0) | (id & 0x1f);
+    cell->m_treeInfo.m_id = id;
     cell->clearVisitedBits();
-    int price = random(0, 2);
-    cell->m_extraInfo = (cell->m_extraInfo & 0xffff1fff) | ((price & 7) << 13);
+    cell->m_treeInfo.m_price = WiseTreePrices(random(0, 2));
 }
 
 // E:\gamedcs\game.cpp:4691.
@@ -4287,7 +4288,7 @@ static void randomizePyramid(NewmapCell* cell)
             possibleSpells.push_back(i);
     }
 
-    SpellID spell = SpellID(
+    ESpellId spell = ESpellId(
         possibleSpells[random(0, possibleSpells.size() - 1)]);
     cell->setPyramid(true, spell);
     cell->clearVisitedBits();
@@ -5971,16 +5972,16 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     }
 
     infile->read(&m_hasRandomHero, sizeof(m_hasRandomHero));
-    m_nonRandomHeroId = readHeroId(infile, mapVersion);
+    m_nonRandomHeroId = static_cast<HeroId>(readHeroId(infile, mapVersion));
     m_defaultPlaceholders = 0;
     if (m_nonRandomHeroId != -1) {
         m_nonRandomHeroCustomPortrait =
-            readHeroId(infile, mapVersion);
+            static_cast<HeroId>(readHeroId(infile, mapVersion));
         // Keep the decoded name alive through the copy into the player slot.
         std::string name = readLengthPrefixedString(infile);
         strcpy(m_nonRandomHeroCustomName, name.c_str());
     } else {
-        m_nonRandomHeroCustomPortrait = -1;
+        m_nonRandomHeroCustomPortrait = heroIdNone;
         m_nonRandomHeroCustomName[0] = 0;
     }
 
@@ -6219,10 +6220,10 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
             do {
                 int heroKey = readValue<unsigned char>(infile);
 
-                unsigned char savedHeroId = readValue<unsigned char>(infile);
-                int heroId = savedHeroId;
-                if (savedHeroId == g_savedHeroNone)
-                    heroId = -1;
+                // The admitted format is now SoD. Mac db424..db44c
+                // expands readHeroId's modern byte/sentinel operation;
+                // the constant argument is inferred from this admission.
+                int portrait = readHeroId(infile, MAP_FORMAT_SHADOW_OF_DEATH);
 
                 std::string heroName = readLengthPrefixedString(infile);
                 std::bitset<8> availability = readPackedBits<8>(infile);
@@ -6230,7 +6231,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                 m_heroPlayerSetups.insert(
                     std::pair<const int, type_map_hero_info>(
                         heroKey,
-                        type_map_hero_info(heroId, heroName, availability)));
+                        type_map_hero_info(portrait, heroName, availability)));
             } while (--count != 0);
         }
     }
@@ -6566,15 +6567,15 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         }
 
         player->m_nonRandomHeroId =
-            loadHeroId(infile, saveVersion);
+            static_cast<HeroId>(loadHeroId(infile, saveVersion));
         if (player->m_nonRandomHeroId != -1) {
             std::string strTemp;
             player->m_nonRandomHeroCustomPortrait =
-                loadHeroId(infile, saveVersion);
+                static_cast<HeroId>(loadHeroId(infile, saveVersion));
             game::loadString(infile, strTemp);
             strcpy(player->m_nonRandomHeroCustomName, strTemp.c_str());
         } else {
-            player->m_nonRandomHeroCustomPortrait = -1;
+            player->m_nonRandomHeroCustomPortrait = heroIdNone;
             player->m_nonRandomHeroCustomName[0] = 0;
         }
     }
@@ -6621,9 +6622,10 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     do {
         int heroKey = readValue<unsigned char>(infile);
 
-        int heroId = readValue<unsigned char>(infile);
-        if (heroId == g_savedHeroNone)
-            heroId = -1;
+        // The >=30 admission makes Mac dc5f0..dc61c the modern roster's
+        // byte/sentinel decoder. This loadHeroId call is inferred from that
+        // operation; the original constant argument spelling is unproven.
+        int portrait = loadHeroId(infile, g_saveVersionCustomHeroSetups);
 
         std::string strTemp = readLengthPrefixedString(infile);
         std::bitset<8> availability =
@@ -6632,7 +6634,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
 
         m_heroPlayerSetups.insert(
             std::pair<const int, type_map_hero_info>(
-                heroKey, type_map_hero_info(heroId, strTemp, availability)));
+                heroKey, type_map_hero_info(portrait, strTemp, availability)));
     } while (--count != 0);
 
     return 0;
@@ -6903,9 +6905,7 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
     if (thisTown && getAlignment(armyType) == thisTown->m_type) {
         int i = DWELLING_0_ID;
         for (;;) {
-            if (g_townDwellingCreatures[thisTown->m_type * 2
-                                           * TOWN_DWELLING_COUNT
-                                       + i - DWELLING_0_ID]
+            if (g_dwellingType[thisTown->m_type][i - DWELLING_0_ID]
                     == armyType
                 && thisTown->hasBuilding(town::upgradedDwellingID(i), true)) {
                 upgradeToType = upgradedCreatureType(armyType);
@@ -7497,30 +7497,37 @@ void game::perDay()
 // Original: game::clear_recruits; game.cpp:8266
 // DC 8266/8290 and Mac 0xdeefc/0xdef98 place these two helpers between
 // perDay and setWeeklyRecruits. DC names the long loop index recruit,
-// THeroID hero_id and the selected hero pointer old_hero.
+// THeroID hero_id and the selected hero pointer old_hero. Its original
+// QAW4THeroID parameter encoding agrees with a two-slot array formal;
+// all three named locals precede the native lexical blocks.
 DC_ADDRESS(0x0b3d8c, 0x74)
 MAC_ADDRESS(0x0deefc, 0x9c)
-void game::clearRecruits(int* recruits)
+void game::clearRecruits(HeroId recruits[2])
 {
-    for (long recruit = 0; recruit < 2; ++recruit) {
-        HeroId heroId = HeroId(recruits[recruit]);
+    hero* oldHero;
+    HeroId heroId;
+    long recruit;
+
+    for (recruit = 0; recruit < 2; ++recruit) {
+        heroId = recruits[recruit];
         if (heroId >= 0) {
-            hero* oldHero = getHero(heroId);
+            oldHero = getHero(heroId);
             if (oldHero->m_flags & g_heroRecruitReservedFlag)
                 continue;
             m_heroAvailability[heroId] = -1;
-            recruits[recruit] = -1;
+            recruits[recruit] = heroIdNone;
         }
     }
 }
 
-// Original: get_new_hero; game.cpp:8290
+// Original: static THeroID get_new_hero; game.cpp:8290. Its result and
+// hero_id loop local retain the native hero-ID domain.
 DC_ADDRESS(0x0b3e00, 0x5e)
 MAC_ADDRESS(0x0def98, 0x114)
-int getNewHero(THeroClass heroClass)
+static HeroId getNewHero(THeroClass heroClass)
 {
-    int heroId = 0;
-    for (; heroId < game::HERO_COUNT; ++heroId) {
+    HeroId heroId = HeroId(0);
+    for (; heroId < game::HERO_COUNT; heroId = HeroId(heroId + 1)) {
         if (g_game->getHero(heroId)->m_heroClass == heroClass
             && g_game->m_heroAvailability[heroId] == -1)
             return heroId;
@@ -7533,6 +7540,7 @@ int getNewHero(THeroClass heroClass)
 // The two-slot loop, tutorial choices and equipment/mana/army closeout identify
 // this body; DC's nullary set_recruits is the surrounding all-player operation.
 // Mac 0xdf0ac initializes the local artifact's id before its extra field.
+// The named locals precede the native lexical blocks.
 // The TArtifact constructor preserves that order in VC6; the default
 // constructor reverses the two stores in this caller.
 VA(0x004c8450, 0x248)
@@ -7541,22 +7549,24 @@ MAC_ADDRESS(0x0df0ac, 0x238)
 void game::setWeeklyRecruits(int playerPos)
 {
     playerData* player = &m_players[playerPos];
+    hero* newHero;
+    THeroClass otherClass;
     type_artifact artifact(ARTIFACT_NONE);
-    int recruitSlot;
+    long backpackSlot;
+    HeroId heroId;
+    long recruitSlot;
 
     for (recruitSlot = 0; recruitSlot < 2; ++recruitSlot) {
         if (player->m_recruits[recruitSlot] >= 0)
             continue;
 
-        THeroClass otherClass;
         if (player->m_recruits[1 - recruitSlot] < 0)
             otherClass = kNumHeroClasses;
         else
         {
-            otherClass = THeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
+            otherClass = getHero(player->m_recruits[1 - recruitSlot])->m_heroClass;
         }
 
-        int heroId;
         if (m_isTutorial
             && static_cast<unsigned short>(m_week) <= 2) {
             if (m_week == 1) {
@@ -7576,8 +7586,8 @@ void game::setWeeklyRecruits(int playerPos)
             continue;
 
         m_heroAvailability[heroId] = 64;
-        hero* newHero = getHero(heroId);
-        int backpackSlot = HERO_BACKPACK_CAPACITY - 1;
+        newHero = getHero(heroId);
+        backpackSlot = HERO_BACKPACK_CAPACITY - 1;
         do {
             artifact = newHero->getBackpack(backpackSlot);
             if (artifact.m_artifactId != -1
@@ -7598,10 +7608,10 @@ void game::replaceRecruit(int playerPos, long recruitSlot)
     playerData* player = &m_players[playerPos];
     if (player->m_recruits[1 - recruitSlot] != -1)
     {
-        otherClass = THeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
+        otherClass = getHero(player->m_recruits[1 - recruitSlot])->m_heroClass;
     }
 
-    int heroId = getNewHeroId(playerPos, otherClass, 0, kNumHeroClasses);
+    HeroId heroId = getNewHeroId(playerPos, otherClass, 0, kNumHeroClasses);
     player->m_recruits[recruitSlot] = heroId;
     if (heroId != -1) {
         m_heroAvailability[heroId] = 64;
@@ -7864,8 +7874,7 @@ void game::perMonth()
             if (growth > 0) {
                 if (g_monthType == g_monthEffectCreature
                     && g_weekType != g_weekTypeInfernoGrail
-                    && g_townDwellingCreatures[
-                        currTown->m_type * TOWN_DWELLING_SLOTS + j]
+                    && g_dwellingType[currTown->m_type][j]
                        == g_monthTypeExtra) {
                     currTown->m_population[j] *= 2;
                 }
@@ -8059,10 +8068,12 @@ TArtifact game::getRandomArtifactId(int artifactClass)
     }
 }
 
+// Original public GetRandomSpell returns the SpellID enum. Complete adds
+// the level-mask overload while retaining that spell result domain.
 VA(0x004c95a0, 0x18E)
 DC_ADDRESS(0x0b4e04, 0x19c)
 MAC_ADDRESS(0x0e0610, 0x1e4)
-SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
+ESpellId game::getRandomSpell(const std::bitset<5> spellLevels)
 {
     int availableCount = 0;
     int spell;
@@ -8087,7 +8098,7 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
             }
         }
         m_spellAllocInfo[spell] = 1;
-        return spell;
+        return ESpellId(spell);
     }
 
     ordinal = 0;
@@ -8101,13 +8112,13 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
     }
     if (ordinal > 0)
         return getRandomSpell(spellLevels);
-    return -1;
+    return SPELL_NONE;
 }
 
 // Mac 0:e07f4 constructs the level mask, sets level-1, and calls the
 // bitset overload at 0:e0610. It follows that overload in the same TU.
 MAC_ADDRESS(0x0e07f4, 0x68)
-SpellID game::getRandomSpell(int level)
+ESpellId game::getRandomSpell(int level)
 {
     std::bitset<5> spellLevels;
     spellLevels[level - 1] = true;
@@ -10327,10 +10338,11 @@ game::~game()
     clearEventRecords();
 }
 
+// Original public ?GetHeroBoat@game@@QAAPAVboat@@H_N@Z proves occupied is bool.
 VA(0x004ce900, 0x3B)
 DC_ADDRESS(0x0bbe68, 0x7c)
 MAC_ADDRESS(0x0e6ba0, 0x54)
-boat* game::getHeroBoat(int id, unsigned char occupied)
+boat* game::getHeroBoat(int id, bool occupied)
 {
     for (boat* i = m_boats.begin(); i != m_boats.end(); i++) {
         if (i->m_allocated && i->m_occupyingHero == id && i->m_occupied == occupied)

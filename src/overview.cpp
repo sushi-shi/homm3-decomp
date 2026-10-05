@@ -394,8 +394,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                             DWELLING_0_UPG_ID + item, true))
                         lookup = item + TOWN_DWELLING_COUNT;
 
-                    creature = g_townDwellingCreatures[
-                        currTown->m_type * TOWN_DWELLING_SLOTS + lookup];
+                    creature = g_dwellingType[currTown->m_type][lookup];
                     g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
                         offsetToMon * 37 + 78, row * 116 + 102,
                         32, 32, rowWidgetId + lookup + 69,
@@ -2256,9 +2255,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 12:
             case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 13:
                 sprintf(g_text, g_heroScreen[1],
-                        getArmyName(g_townDwellingCreatures[
-                            currTown->m_type * TOWN_DWELLING_SLOTS + codeY
-                            - OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID], 1));
+                        getArmyName(g_dwellingType[currTown->m_type][codeY - OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID], 1));
                 break;
 
             case OVERVIEW_TOWN_RECRUIT_FIRST_ID:
@@ -2276,9 +2273,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 12:
             case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 13:
                 sprintf(g_text, g_heroScreen[1],
-                        getArmyName(g_townDwellingCreatures[
-                            currTown->m_type * TOWN_DWELLING_SLOTS + codeY
-                            - OVERVIEW_TOWN_RECRUIT_FIRST_ID], 1));
+                        getArmyName(g_dwellingType[currTown->m_type][codeY - OVERVIEW_TOWN_RECRUIT_FIRST_ID], 1));
                 break;
 
             case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID:
@@ -2296,10 +2291,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 12:
             case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 13:
                 sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT),
-                        getArmyName(g_townDwellingCreatures[
-                            currTown->m_type * TOWN_DWELLING_SLOTS
-                            + codeY
-                            - OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID], 1));
+                        getArmyName(g_dwellingType[currTown->m_type][codeY - OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID], 1));
                 break;
 
             case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID:
@@ -2317,10 +2309,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 12:
             case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 13:
                 sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT),
-                        getArmyName(g_townDwellingCreatures[
-                            currTown->m_type * TOWN_DWELLING_SLOTS
-                            + codeY
-                            - OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID], 1));
+                        getArmyName(g_dwellingType[currTown->m_type][codeY - OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID], 1));
                 break;
 
             case OVERVIEW_TOWN_SUMMONING_GROWTH_ICON_ID:

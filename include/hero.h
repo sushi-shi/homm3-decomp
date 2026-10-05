@@ -425,9 +425,10 @@ public:
     // +0x23. HeroFn_004D8B30 copies exactly thirteen bytes of the setup
     // record's name here; SetRolloverText passes this band to sprintf.
     char m_name[13];
-    // +0x30. DrawHeroPart indexes the eighteen-entry cursorIcons sprite row
-    // directly with this dword; the surviving roster names the domain.
-    int m_heroClass;
+    // Original hero_class is THeroClass in all four complete DC hero records
+    // (0x1a6e/0x4d63/0x6311/0x71dc). Retail keeps the same dword at +0x30
+    // and adds the two Conflux classes to its cursor and traits tables.
+    THeroClass m_heroClass;
     // +0x34. The current-hero gate in HeroFn_004D8FB0 compares this byte
     // directly against portrait id 156. Dreamcast independently places its
     // `portrait` byte at the same offset.
@@ -831,7 +832,8 @@ public:
 
 private:
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
-    unsigned char canLand() const;
+    // Original private can_land@hero@@ABA_NXZ returns bool.
+    bool canLand() const;
 
 public:
     int heroFn004E5DE0() const;
@@ -923,7 +925,7 @@ public:
     // 0x4e5f30 - "this hero can still be given an order this turn".
     // Declared for playerData::NextHero, which inlines nothing of it -
     // it is a real call from game.obj.
-    unsigned char isMobile() const;
+    bool isMobile() const;
     const char* getSpecificAbilityText();
     const char* getSpecificAbilityTextShort();
     int valueOfSpell(SpellID spell) const;
@@ -977,16 +979,18 @@ public:
     // uses checkTerrain=1; Complete expands the helper before calling canLand.
     // These are real shared header bodies, not an ai_player.obj declaration
     // view: cursor.obj proves the same nested IsWieldingArtifact boundary.
+    // Original IsFlying@hero@@QBA_N_N@Z: Boolean result and terrain flag.
     DC_ADDRESS(0x01fbdc, 0x98)
-    unsigned char isFlying(unsigned char checkTerrain) const
+    bool isFlying(bool checkTerrain) const
     {
         return !(m_flags & 0x40000)
             && (m_flightLevel != -1 || isWieldingArtifact(0x48))
             && (!checkTerrain || !canLand());
     }
 
+    // Original CanWalkOnWater@hero@@QBA_N_N@Z has the same Boolean interface.
     DC_ADDRESS(0x01fc74, 0x98)
-    unsigned char canWalkOnWater(unsigned char checkTerrain) const
+    bool canWalkOnWater(bool checkTerrain) const
     {
         return !(m_flags & 0x40000)
             && (m_waterWalkLevel != -1 || isWieldingArtifact(0x5a))

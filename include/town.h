@@ -609,19 +609,11 @@ extern const char* g_townTypeNames[10];
 // (no DC symbol covers this table); owner TU unlocated.
 extern int g_siloIncome[9][NUM_RESOURCES];
 
-// Retail .data 0x6747b4 - immediately after the akCreatureTypeTraits
-// reference cell - nine 14-long rows giving each town's creature per
-// dwelling slot: the first seven are the base dwellings, the last
-// seven their upgrades (row 0 reads 0,2,4,6,8,10,12 / 1,3,5,7,9,11,13,
-// exactly Castle's ladder). Declared FLAT, not [9][14], because
-// initialize_hordes' index arithmetic adds the row base to the slot
-// BEFORE scaling (`[4*(esi+slot) + table]`, one reloc, no second base
-// register) - a two-dimensional subscript compiles to the three-term
-// form instead. Name INVENTED (no DC symbol); owner TU unlocated.
+// Original gDwellingType: DC public ?gDwellingType@@3PAY0O@W4TCreatureType@@A
+// proves fourteen-entry rows. Retail has nine towns, with seven base dwelling
+// creatures followed by their seven upgrades in each row.
 DATA(0x006747b4)
-extern TCreatureType g_townDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
-// Biased view of the upgraded half of the same first town row. Retail
-// GiveTroopsToNeutralTown carries a distinct relocation to this address.
+extern TCreatureType g_dwellingType[TOWN_TYPE_COUNT][TOWN_DWELLING_SLOTS];
 
 // Retail .data 0x6782a4: ordinary spell counts for guild levels one
 // through five. initialize_spells generates one extra candidate per row so

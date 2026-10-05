@@ -1141,8 +1141,7 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
     m_inTownMainScreen = inInTownMainScreen;
     m_type = RECRUIT_SOURCE_TOWN;
     m_thisHero = 0;
-    m_monsterType = g_townDwellingCreatures[newTown->m_type * TOWN_DWELLING_SLOTS
-                                         + newDwellingIndex];
+    m_monsterType = g_dwellingType[newTown->m_type][newDwellingIndex];
     m_numAvail = &newTown->m_population[newDwellingIndex];
     m_currArmyGroup = &newTown->getArmy();
     m_currArmyGroupIsTownGarrison = 1;
@@ -1157,8 +1156,7 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
     m_available[2] = 0;
     m_available[3] = 0;
     if (newDwellingIndex >= TOWN_DWELLING_COUNT) {
-        m_monType2 = g_townDwellingCreatures[newTown->m_type * TOWN_DWELLING_SLOTS
-                                          + newDwellingIndex - TOWN_DWELLING_COUNT];
+        m_monType2 = g_dwellingType[newTown->m_type][newDwellingIndex - TOWN_DWELLING_COUNT];
         m_available[1] = m_numAvail;
     }
     g_timers[0] = GameTime::get() + 100;
@@ -1195,8 +1193,7 @@ MAC_ADDRESS(0x150b70, 0x48)
 void quickViewRecruit(town* newTown, int newDwellingIndex)
 {
     quickViewRecruit(
-        g_townDwellingCreatures[newTown->m_type * TOWN_DWELLING_SLOTS
-                               + newDwellingIndex],
+        g_dwellingType[newTown->m_type][newDwellingIndex],
         &newTown->m_population[newDwellingIndex]);
 }
 

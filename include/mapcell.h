@@ -632,17 +632,24 @@ public:
 };
 SIZE(MapArtifactInfo, 4);
 
-// DoEventTreeOfKnowledge (0x4a6710) shares the corpse's five-bit id lane -
-// it reads it through the same GetItemId, as the Dreamcast line table
-// says at events.cpp:3454 - and adds a SIGNED three-bit price selector at
-// bits 13..15 (`shl eax,0x10 / sar eax,0x1d`).
-struct type_tree_info {
-public:
-    unsigned long m_unused : 13;
-    signed long m_price : 3;
-    unsigned long m_tail : 16;
+// Original DC WiseTreePrices enum and WiseTreeInfo (LF_STRUCTURE 0x2f94).
+// The id and visit fields occupy bits 0..4 and 5..12; RandomizeWiseTree
+// writes them before the signed three-bit price at 13..15 (DC 4682..4684,
+// Mac d685c..d688c). DoEventTreeOfKnowledge reads the same id through
+// GetItemId and sign-extends the price in retail at 0x4a6710.
+enum WiseTreePrices {
+    const_tree_wants_nothing = 0,
+    const_tree_wants_gold,
+    const_tree_wants_gems,
+    const_tree_price_count
 };
-SIZE(type_tree_info, 4);
+
+struct WiseTreeInfo {
+    unsigned int m_id : 5;
+    unsigned int m_visitedBits : 8;
+    WiseTreePrices m_price : 3;
+};
+SIZE(WiseTreeInfo, 4);
 
 // DC type 0x2d41: unused:5, visited_bits:8, index:12, empty:1,
 // all unsigned int. RandomizeEvents 5121..5123 clears visits, writes the
@@ -717,7 +724,7 @@ public:
         type_pyramid_info m_pyramidInfo;
         WagonInfo m_wagonInfo;
         type_skeleton_info m_skeletonInfo;
-        type_tree_info m_treeInfo;
+        WiseTreeInfo m_treeInfo;
         ShrineInfo m_shrineInfo;
         type_creature_bank_info m_creatureBankInfo;
         CustomResourceInfo m_customResourceInfo;
@@ -746,27 +753,27 @@ public:
     short getItemId() const;
     bool playerKnowsCell(short player) const;
     void setCellVisited(short player);
-    unsigned char gardenIsFull() const;
+    bool gardenIsFull() const;
     enum EGameResource getGardenResource() const;
     void fillGarden(EGameResource resource);
     void setGarden(short id, EGameResource resource);
     void setGardenEmpty();
-    int getPyramidSpell() const;
+    ESpellId getPyramidSpell() const;
     bool pyramidIsGuarded() const;
     short getLeanToAmount() const;
     EGameResource getLeanToResource() const;
     void setLeanTo(short id, short amount, int resource);
-    unsigned char magicSpringIsFull() const;
-    void fillMagicSpring(unsigned char full);
-    void setMagicSpring(short id, unsigned char full);
-    void setPyramid(bool guards, int newSpell);
+    bool magicSpringIsFull() const;
+    void fillMagicSpring(bool full);
+    void setMagicSpring(short id, bool full);
+    void setPyramid(bool guards, ESpellId newSpell);
     ScholarAwards getScholarAward() const;
     TPrimarySkill getScholarPrimarySkill() const;
     TSecondarySkill getScholarSecondarySkill() const;
     SpellID getScholarSpell() const;
     void setScholar(ScholarAwards award, TPrimarySkill primary,
                     TSecondarySkill secondary, SpellID spell);
-    SpellID getShrineSpell() const;
+    ESpellId getShrineSpell() const;
     TArtifact getTreasureArtifact() const;
     short getTreasureSize() const;
     bool treasureIsArtifact() const;
@@ -775,7 +782,7 @@ public:
     void setSkeleton(int id, bool hasTreasure, short artifact);
     int getSeaChestReward() const;
     TArtifact getSeaChestArtifact() const;
-    int getTreePrice() const;
+    WiseTreePrices getTreePrice() const;
     type_university* getUniversity() const;
     void emptyWagon();
     short getWagonAmount() const;
@@ -1202,9 +1209,9 @@ public:
     }
     TAdventureObjectType getSpecialTerrain() const;
     // Implicit destructor; CodeView dc 0xf4bdc compgenx.
-    const unsigned char hasTriggerableEvent() const;
+    const bool hasTriggerableEvent() const;
     int getMagicTerrainType();
-    unsigned char isDiggable() const;
+    bool isDiggable() const;
     TAdventureObjectType getMapObject() const;
     unsigned long getMapExtraInfo() const;
     unsigned char cellIsTrigger() const;
@@ -1641,15 +1648,14 @@ inline EGameResource ExtraInfoUnion::getLeanToResource() const
     return EGameResource(m_leanToInfo.m_resource);
 }
 
-// The magic-spring pair (MapCell.h:1002/1007). The setter takes the
-// new state rather than clearing unconditionally, which is what the
-// DC decoration `void (unsigned char)` says and what makes the
-// drink-it write a plain bit clear at the one site that passes 0.
+// Original DC publics MagicSpringIsFull@ExtraInfoUnion@@QBA_NXZ and
+// FillMagicSpring@ExtraInfoUnion@@QAAX_N@Z prove the Boolean interfaces.
+// MapCell.h:1002/1007 reads or assigns the single full bit.
 DC_ADDRESS(0x09c820, 0xa)
-inline unsigned char ExtraInfoUnion::magicSpringIsFull() const { return m_magicSpringInfo.m_full; }
+inline bool ExtraInfoUnion::magicSpringIsFull() const { return m_magicSpringInfo.m_full; }
 
 DC_ADDRESS(0x09c82c, 0x14)
-inline void ExtraInfoUnion::fillMagicSpring(unsigned char full) { m_magicSpringInfo.m_full = full; }
+inline void ExtraInfoUnion::fillMagicSpring(bool full) { m_magicSpringInfo.m_full = full; }
 
 // DC MapCell.h:1012..1015 records the resource store followed by the full
 // flag store, and game::PerWeek calls this canonical helper.
@@ -1660,12 +1666,10 @@ inline void ExtraInfoUnion::fillGarden(enum EGameResource resource)
     m_gardenInfo.m_full = 1;
 }
 
-// The mystical-garden trio (MapCell.h:1018/1023/1035). GardenIsFull
-// is `unsigned char () const` and its `(value >> 10) & 1` shape is
-// what retail inlines; a direct bitfield test would fold to a byte
-// `test` on cell+1 instead.
+// Original DC public GardenIsFull@ExtraInfoUnion@@QBA_NXZ proves bool.
+// Mac quickInfo 0x15ad8..0x15adc expands this same full-bit predicate.
 DC_ADDRESS(0x09c840, 0xa)
-inline unsigned char ExtraInfoUnion::gardenIsFull() const { return m_gardenInfo.m_full; }
+inline bool ExtraInfoUnion::gardenIsFull() const { return m_gardenInfo.m_full; }
 
 DC_ADDRESS(0x09c84c, 0xc)
 inline enum EGameResource ExtraInfoUnion::getGardenResource() const
@@ -1685,9 +1689,10 @@ inline void ExtraInfoUnion::setGarden(short id, EGameResource resource)
 DC_ADDRESS(0x09c858, 0xc)
 inline void ExtraInfoUnion::setGardenEmpty() { m_gardenInfo.m_full = 0; }
 
-// Original SetMagicSpring, MapCell.h:1040..1043.
+// Original SetMagicSpring, MapCell.h:1040..1043. The native public
+// ?SetMagicSpring@ExtraInfoUnion@@QAAXF_N@Z proves the Boolean flag.
 DC_ADDRESS(0x0bca04, 0x48)
-inline void ExtraInfoUnion::setMagicSpring(short id, unsigned char full)
+inline void ExtraInfoUnion::setMagicSpring(short id, bool full)
 {
     m_magicSpringInfo.m_id = id;
     m_magicSpringInfo.m_full = full;
@@ -1695,8 +1700,10 @@ inline void ExtraInfoUnion::setMagicSpring(short id, unsigned char full)
 
 // DC MapCell.h:1046/1051. do_event_pyramid
 // (0x4a4230) proves the signed spell lane and bit-zero guarded flag.
+// Native get_pyramid_spell/set_pyramid publics both name the SpellID enum;
+// ESpellId is that domain here, unlike the legacy int alias SpellID.
 DC_ADDRESS(0x09c864, 0xa)
-inline int ExtraInfoUnion::getPyramidSpell() const { return m_pyramidInfo.m_spell; }
+inline ESpellId ExtraInfoUnion::getPyramidSpell() const { return ESpellId(m_pyramidInfo.m_spell); }
 
 DC_ADDRESS(0x09c870, 0x6)
 inline bool ExtraInfoUnion::pyramidIsGuarded() const { return m_pyramidInfo.m_guarded; }
@@ -1704,7 +1711,7 @@ inline bool ExtraInfoUnion::pyramidIsGuarded() const { return m_pyramidInfo.m_gu
 // E:\gamedcs\MapCell.h:1056
 VA(0x004c2330, 0x27)
 DC_ADDRESS(0x09c878, 0x20)
-inline void ExtraInfoUnion::setPyramid(bool guards, int newSpell)
+inline void ExtraInfoUnion::setPyramid(bool guards, ESpellId newSpell)
 {
     m_pyramidInfo.m_guarded = guards;
     m_pyramidInfo.m_spell = newSpell;
@@ -1790,10 +1797,12 @@ inline TArtifact ExtraInfoUnion::getSeaChestArtifact() const
     return TArtifact(m_seaChestInfo.m_artifact);
 }
 
+// Original public GetShrineSpell returns the SpellID enum (W4SpellID),
+// represented here by ESpellId rather than the legacy integer alias.
 DC_ADDRESS(0x01fa94, 0x14)
-inline SpellID ExtraInfoUnion::getShrineSpell() const
+inline ESpellId ExtraInfoUnion::getShrineSpell() const
 {
-    return m_shrineInfo.m_spell;
+    return ESpellId(m_shrineInfo.m_spell);
 }
 
 // The artifact is signed; the gold amount is truncated to a short after
@@ -1810,11 +1819,13 @@ inline short ExtraInfoUnion::getTreasureSize() const { return m_treasureInfo.m_g
 DC_ADDRESS(0x09c948, 0x8)
 inline bool ExtraInfoUnion::treasureIsArtifact() const { return m_treasureInfo.m_hasArtifact; }
 
-// `?GetTreePrice@ExtraInfoUnion@@QBA?AW4WiseTreePrices@@XZ`, named by
-// the Dreamcast line table over DoEventTreeOfKnowledge (dc 0x964c4)
-// and spelled `int` until WiseTreePrices (advmgr.h) is visible here.
+// Original public ?GetTreePrice@ExtraInfoUnion@@QBA?AW4WiseTreePrices@@XZ
+// fixes the enum result used by the event and AI consumers.
 DC_ADDRESS(0x01faa8, 0x12)
-inline int ExtraInfoUnion::getTreePrice() const { return m_treeInfo.m_price; }
+inline WiseTreePrices ExtraInfoUnion::getTreePrice() const
+{
+    return WiseTreePrices(m_treeInfo.m_price);
+}
 
 DC_ADDRESS(0x09c950, 0xc)
 inline void ExtraInfoUnion::emptyWagon() { m_wagonInfo.m_full = 0; }

@@ -44,12 +44,12 @@ DATA(0x0068290c) const char* g_creatureBackgroundNames[10] = {
 DATA(0x00693878)
 static TSplitWindow* g_splitWindow;
 
-// Runtime-loaded combat-stat description lines. Their storage addresses and
-// uses are retail-proven here; the text-resource loader owns the definitions.
+// Original DC HasCreatures public QBA_NXZ proves bool; CodeView displays
+// the lowered unsigned-byte primitive. Retail returns the predicate in AL.
 VA(0x004496a0, 0x16)
 DC_ADDRESS(0x04dae4, 0x22)
 MAC_ADDRESS(0x056454, 0x94)
-unsigned char armyGroup::hasCreatures() const
+bool armyGroup::hasCreatures() const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] != CREATURE_NONE)

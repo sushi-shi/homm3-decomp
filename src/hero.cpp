@@ -732,7 +732,8 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     m_visionsPower = static_cast<signed char>(readValue<char>(infile));
     // Both retails zero-extend the serialized id (Windows 0x4d7bc1, Mac 0xf2d18).
     m_id = static_cast<HeroId>(readValue<unsigned char>(infile));
-    m_heroClass = static_cast<signed char>(readValue<char>(infile));
+    m_heroClass = static_cast<THeroClass>(
+        static_cast<signed char>(readValue<char>(infile)));
     m_portrait = readValue<unsigned char>(infile);
     m_patrolX = readValue<unsigned char>(infile);
     m_patrolY = readValue<unsigned char>(infile);
@@ -929,7 +930,7 @@ hero::hero()
     m_owner = -1;
     m_x = 0;
     m_y = 0;
-    m_heroClass = 0;
+    m_heroClass = classKnight;
     m_portrait = 0;
     m_name[0] = 0;
 
@@ -1801,7 +1802,7 @@ void hero::deallocate(bool gameLoaded, bool remoteMove)
     if (pos >= 0) {
         for (int i = pos; i < player->m_numHeroes - 1; i++)
             player->m_heroes[i] = player->m_heroes[i + 1];
-        player->m_heroes[player->m_numHeroes - 1] = -1;
+        player->m_heroes[player->m_numHeroes - 1] = heroIdNone;
         player->m_numHeroes--;
     }
     if (player->m_currHeroId == m_id) {
@@ -2910,6 +2911,9 @@ MAC_ADDRESS(0x0f83ec, 0xc8)
 // Explicit success/failure returns make giveArtifact exact but lower this
 // retained body from 100% to 87.19%; keep the direct none() conversion.
 // An explicit nonzero result and an empty-slot continue guard are byte-flat.
+// Mac reloads the equipped ID after its sentinel test. Repeating that member
+// expression here keeps this body exact but does not recover the caller's
+// proxy/set boundary; giveArtifact changes from 95.9069% to 95.3968%.
 unsigned char hero::heroFn004DBE80(int combination)
 {
     std::bitset<144> missingComponents =
@@ -5383,11 +5387,13 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // Windows body and make VC6 retain `bitset<144>::any` in this expanded caller.
 // Mac's placed-result join and repeated trait lookup after owner checks then
 // yield a 752-byte candidate (retail 752) with all 17 named calls aligned.
-// Current Windows giveArtifact is 95.36%, 39/39 CFG blocks with only the
-// first bitset<12> bounds-failure block longer (24 vs 15 instructions): its
-// string/EH callees still take a different inlining path. Mac is 93.8830%,
-// with entry register assignment the first difference. Prompt copy and
-// destructor call order already agree on Mac; retain their source lifetime.
+// Current Windows giveArtifact is 95.9069%, with 42 versus 39 CFG blocks.
+// The expanded combination scan retains proxy assignment instead of set;
+// getPlayer repeats its owner guard and isHuman remains a separate call.
+// Moving player acquisition before the scan falls to 85.0445%. A header
+// isHuman body reaches 96.5547%, but removes its retained game body and
+// expands town::buyBuilding's retained call: visibility remains unresolved.
+// Prompt copy and destructor order agree on Mac; retain their lifetime.
 // Original public ?GiveArtifact@hero@@QAAXABUtype_artifact@@H_N@Z proves
 // the artifact reference independently of the older return/flag contracts.
 // Complete and Mac unconditionally forward that record to EquipArtifact
@@ -6405,7 +6411,7 @@ long hero::getHitPointBonus(int creatureType) const
 VA(0x004e5ce0, 0xE7)
 DC_ADDRESS(0x0d5548, 0x70)
 MAC_ADDRESS(0x106b98, 0x140)
-unsigned char hero::canLand() const
+bool hero::canLand() const
 {
     NewmapCell* cell = g_game->getCell(getLocation());
     if ((cell->m_groundSet == eTerrainWater)
@@ -6463,10 +6469,11 @@ unsigned char hero::isInIdentifyRange(const type_point* location) const
 
 // Dreamcast hero.cpp:6407/6414/6418 calls get_location and the typed
 // get_secondary_skill accessor. Both header helpers expand in retail.
+// Original DC public IsMobile@hero@@QBA_NXZ proves the bool result.
 VA(0x004e5f30, 0xBF)
 DC_ADDRESS(0x0d5644, 0xca)
 MAC_ADDRESS(0x106e6c, 0x12c)
-unsigned char hero::isMobile() const
+bool hero::isMobile() const
 {
     NewmapCell* cell = g_advManager->getCell(getLocation());
     int cost;

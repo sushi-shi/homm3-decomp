@@ -75,13 +75,6 @@ enum GlobalInfoFlags {
     MaxInfoFlags = 32
 };
 
-enum WiseTreePrices {
-    const_tree_wants_nothing = 0,
-    const_tree_wants_gold,
-    const_tree_wants_gems,
-    const_tree_price_count
-};
-
 enum WitchHutSkillEncoding {
     WitchHutNoSkillMask = 0x000fe000
 };
@@ -1362,9 +1355,9 @@ public:
                      bool viewHeroes, bool viewTowns);
     void quickInfo(int cellX, int cellY, int z);
     void heroQuickView(int heroId, int x, int y,
-                       unsigned char displayDropShadow);
+                       bool displayDropShadow);
     void townQuickView(int townId, int x, int y,
-                       unsigned char displayDropShadow);
+                       bool displayDropShadow);
     void monsterQuickView(const NewmapCell* cell, int cellx, int celly);
     void setTownContext(int townId, bool waitingPlayer,
                         bool update);
@@ -1441,7 +1434,7 @@ private:
 public:
     void animateMove(class hero* curr, int direction, int xInc, int yInc);
     int validMove(const class hero* currentHero, int direction, int withEvent,
-                  unsigned char normalMoveOnly);
+                  bool normalMoveOnly);
     int validMoveWithEvent(class hero* who, int direction);
     // The two out-of-compiland members DoAdvCommand reaches, DECLARED
     // and not defined here - each is defined in its own TU and a call

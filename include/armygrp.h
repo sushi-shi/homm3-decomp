@@ -771,7 +771,7 @@ public:
     void splitArmy(int srcIndex, armyGroup* ag, int destIndex,
                    unsigned char inSrcRestricted,
                    unsigned char inDestRestricted);
-    unsigned char hasCreatures() const;
+    bool hasCreatures() const;
     TTerrainType getNativeTerrain() const;
     // Original DC GetLuck/GetMorale publics end in _N3@Z: both the
     // cursed-ground and apply-limits flags are bool, despite CodeView's

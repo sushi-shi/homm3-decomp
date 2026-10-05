@@ -410,8 +410,10 @@ public:
         type_point m_castleLoc;
         signed char m_hasRandomHero;
         // +0x19..+0x1b: alignment hole (0x45da70 goes +0x18 byte -> +0x1c dword).
-        int m_nonRandomHeroId;
-        int m_nonRandomHeroCustomPortrait;
+        // Original nonRandomHeroId and nonRandomHeroCustomPortrait both
+        // have domain THeroID (DC class records 0x2457 and 0x68f8).
+        HeroId m_nonRandomHeroId;
+        HeroId m_nonRandomHeroCustomPortrait;
         char m_nonRandomHeroCustomName[12];
         int m_defaultPlaceholders;
         // Hero IDs and names read from the map player slot.
@@ -429,8 +431,8 @@ public:
             m_hasRandomAlignment = 0;
             m_generateHero = 0;
             m_hasRandomHero = 0;
-            m_nonRandomHeroId = -1;
-            m_nonRandomHeroCustomPortrait = -1;
+            m_nonRandomHeroId = heroIdNone;
+            m_nonRandomHeroCustomPortrait = heroIdNone;
             m_nonRandomHeroCustomName[0] = 0;
             m_defaultPlaceholders = 0;
         }
@@ -878,13 +880,13 @@ public:
     // +0x08. Extent from the DC repack (DC heroes 4..36 == 32 B) and
     // then PROVEN from retail: playerData::Init (0x4b9e20) fills it
     // with `lea edi,[this+8] / mov ecx,8 / rep stosd` of -1.
-    int m_heroes[8];
+    // Original heroes/recruits use THeroID (DC playerData 0x1c50).
+    HeroId m_heroes[8];
     // +0x28, the two heroes the player's taverns are currently
     // offering. DC type 0x35C7 is 8 bytes; retail reads them as DWORDS
     // - hero::hire (0x4d7890) scans `[player + 0x28 + 4*i]` for the
-    // hero's own id with a stride of 4 - so the row is two ints, not
-    // eight bytes.
-    int m_recruits[2];
+    // hero's own id with a stride of 4: two four-byte HeroId values.
+    HeroId m_recruits[2];
     unsigned char m_startingNumHeroes;  // +0x30
     int m_personality;  // +0x34
 #pragma pack(push, 1)
@@ -1094,11 +1096,9 @@ public:
     // applySavedGameHeader restores SavedGameHeader::gameVersion here.
     int m_gameVersion;
     unsigned char m_isCheater;
-    // Byte gate town::can_build and get_buildable_mask test before the
-    // Castle-Griffin-Tower special case that drops the Blacksmith
-    // requirement; it sits four bytes past f_1f698 in the same band.
-    // Role unattested - ordinal placeholder.
-    unsigned char m_isTutorial;  // DC is_tutorial; Mac compares without sign extension.
+    // DC is_tutorial: retail SaveGame (0x418160) passes this byte directly
+    // to the native bool determineSuffix parameter, with no normalization.
+    bool m_isTutorial;
     // Dreamcast bIsCheater/is_tutorial are adjacent bytes; retail
     // places them at +0x1f69c/d before setup at +0x1f6a0. This gap aligns it.
     char m_paddingBeforeSetup[2];
@@ -1247,9 +1247,9 @@ public:
     playerData* getLocalPlayer();
     int getLastHuman() const;
     int getLocalPlayerGamePos() const;  // 0x4cea20
-    SpellID getRandomSpell(std::bitset<5> spellLevels);  // 0x4c95a0
-    SpellID getRandomSpell(int level);
-    boat* getHeroBoat(int id, unsigned char occupied);  // 0x4ce900
+    ESpellId getRandomSpell(std::bitset<5> spellLevels);  // 0x4c95a0
+    ESpellId getRandomSpell(int level);
+    boat* getHeroBoat(int id, bool occupied);  // 0x4ce900
     int getHeroId(type_point heroLocation);
     int getMineId(int x, int y, int z);
     int getGarrisonId(int x, int y, int z);
@@ -1382,11 +1382,8 @@ private:
 
 public:
     int loadGame(const char* filename, int isOrigData, int isQuickLoad);
-    unsigned char saveGame(const char* filename,
-                           unsigned char determineSuffix,
-                           unsigned char campaignWinMode,
-                           unsigned char compressIt,
-                           unsigned char xferFile);
+    bool saveGame(const char* filename, bool determineSuffix,
+                  bool campaignWinMode, bool compressIt, bool xferFile);
 
 private:
     int load(TAbstractFile* infile);  // 0x4bcda0
@@ -1433,7 +1430,7 @@ private:
     // Original DC clear_recruits and set_weekly_recruits carry private
     // AAAX mangling. The Complete helpers are called only by game methods.
     void setWeeklyRecruits(int playerPos);
-    void clearRecruits(int* recruits);
+    void clearRecruits(HeroId recruits[2]);
 
 public:
     void randomizeHeroPool();
@@ -1636,10 +1633,11 @@ int getTeam(int playerNum) const
         }
     }
 
-    // DC-attested inline helper. Retail's shrine consumer proves the signed
-    // [0,8) player guard and the byte bitset at +0x4e344.
+    // Original DC public GetInfoFlag@game@@QBA_NW4GlobalInfoFlags@@H@Z
+    // proves bool. Retail's shrine consumer proves the signed [0,8) player
+    // guard and the byte bitset at +0x4e344.
     DC_ADDRESS(0x01fefc, 0x44)
-    unsigned char getInfoFlag(enum GlobalInfoFlags flag, const int playerNum) const
+    bool getInfoFlag(enum GlobalInfoFlags flag, const int playerNum) const
     {
         if (playerNum < 0 || playerNum >= 8)
             return 0;

@@ -2701,7 +2701,8 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
     prisoner->m_owner = currentHero->m_owner;
     g_game->m_heroAvailability[heroID] = currentHero->m_owner;
     g_game->m_heroPoolMap[heroID][currentHero->m_owner] = 1;
-    g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] = heroID;
+    g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] =
+        static_cast<HeroId>(heroID);
     ++g_currentPlayer->m_numHeroes;
     prisoner->m_x = point.m_x;
     prisoner->m_y = point.m_y;
@@ -2764,7 +2765,7 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
         return;
     currentHero->checkLevel();
 
-    int spell = cell->getPyramidSpell();
+    ESpellId spell = cell->getPyramidSpell();
     char text[500];
     sprintf(text, DATA_COMPGEN(0x00677750, quotedNameFormat, "%s'%s'."),
             g_adventureEventText->getText(ADV_EVENT_TEXT_PYRAMID_SPELL_PREFIX),
@@ -3134,7 +3135,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
                                const char* prompt, GlobalInfoFlags type,
                                bool humanPlayer)
 {
-    SpellID spell = cell->getShrineSpell();
+    ESpellId spell = cell->getShrineSpell();
     std::string result;
 
     if (humanPlayer)
