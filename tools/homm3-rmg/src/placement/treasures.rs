@@ -111,8 +111,12 @@ impl TreasuresReady<'_, '_, '_, '_, '_, '_> {
     }
     /// Whether successful quest completion has claimed this artifact.
     #[must_use]
-    pub const fn quest_artifact_used(&self, artifact: ArtifactId) -> bool {
-        self.quests.used[artifact.index()]
+    pub fn quest_artifact_used(&self, artifact: ArtifactId) -> bool {
+        self.quests
+            .used
+            .get(artifact.index())
+            .copied()
+            .unwrap_or(false)
     }
 
     /// Evaluate one definition at its native lazy query point, without RNG.

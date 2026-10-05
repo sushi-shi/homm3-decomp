@@ -265,11 +265,10 @@ impl<'a> Assets<'a> {
     ) -> Result<PreparedGeneration<'a>, GenerationFailure> {
         let mut rng = RetailRng::new(seed);
         let mut report = GenerationReport::new(request, seed);
-        if self.creatures.ruleset() != crate::rules::Ruleset::Complete {
-            return Err(report.fail(
-                GenerationFault::UnsupportedRuleset(self.creatures.ruleset()),
-                &rng,
-            ));
+        for rules in [self.creatures.ruleset(), self.artifacts.ruleset()] {
+            if rules != crate::rules::Ruleset::Complete {
+                return Err(report.fail(GenerationFault::UnsupportedRuleset(rules), &rng));
+            }
         }
         if self.placement.behavior().is_hotfix() != report.request.behavior().is_hotfix() {
             return Err(report.fail(GenerationFault::BehaviorMismatch, &rng));

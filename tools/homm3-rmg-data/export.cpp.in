@@ -394,6 +394,13 @@ int main()
     std::printf("pub const COMBINATION_ARTIFACTS: [u32; %lu] = [", sizeof(artifactCombinations)/sizeof(artifactCombinations[0]));
     for (const auto& row : artifactCombinations) std::printf("%u,", static_cast<unsigned>(row.m_artifactId));
     std::printf("];\n");
+    std::printf("pub const ARTIFACT_COMPONENTS: [[bool; 144]; %lu] = [", sizeof(artifactCombinations)/sizeof(artifactCombinations[0]));
+    for (const auto& row : artifactCombinations) {
+        std::printf("[");
+        for (unsigned id = 0; id < 144; ++id) std::printf("%s,", row.m_components.test(id) ? "true" : "false");
+        std::printf("],");
+    }
+    std::printf("];\n");
     std::printf("pub const ARTIFACT_SLOT_MASKS: [u32; %lu] = [", sizeof(artifactSlotMasks)/sizeof(artifactSlotMasks[0]));
     for (const auto& row : artifactSlotMasks) std::printf("%lu,", row.to_ulong());
     std::printf("];\n");

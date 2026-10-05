@@ -195,7 +195,8 @@ impl<'a> PrototypeCatalog<'a> {
                         .any(|entry| usize::try_from(entry.prototype.subtype) == Ok(id))
                 {
                     return Err(RequiredPrototypeError::QuestArtifact(
-                        ArtifactId::parse(i32::try_from(id).expect("artifact table count"))
+                        artifacts
+                            .id(i32::try_from(id).expect("artifact table count"))
                             .expect("artifact table identity"),
                     ));
                 }

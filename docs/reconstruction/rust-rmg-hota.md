@@ -201,3 +201,28 @@ These tests cover catalog loading and standalone hero selection, not a native
 initialized-table snapshot or end-to-end HotA generation. The main generation
 pipeline still initializes a Complete pool; request, setup, definition limits and
 expanded hero output must be connected when those HotA stages are integrated.
+
+Artifact catalogs now own versioned storage and checked identities for all 166
+HotA slots. Base combination component masks are extracted from the canonical C++
+recipes. The installed reader applies `artNNN` numeric strings (field 8, clamped)
+and the last `artsinfo0` metadata record. Native RVA `0x108220`, hooked at HD
+`0x44cd01`, initializes slots 144 onward, ignores changes to 144/145, and applies
+partial numeric records before the ordinary recipe-to-trait membership pass.
+RVA `0x1058e0` extends the 12 base recipes to 16, changes assembled IDs, and ORs
+component bits; repeated recipes accumulate components and the final ordinal
+owns a component shared by multiple recipes. Out-of-range component bits are
+ignored as in native code; unsafe recipe/root indices fail Rust admission.
+
+The installed base `artraits.txt` from `HotA_lng.lod` has SHA-256
+`6ba3f838ea45400d0949b53a9cb02b000001eafe1b452c64429d6f879e29ca90`.
+Tests check the added combination recipes, new classes, reserved slots, partial
+writes, duplicate records and invalid input. The Complete pipeline and its lower
+level treasure-generation boundary reject expanded artifact catalogs until the
+per-map bans and quest changes are integrated. Merely parsing the catalog does
+not implement the HotA combination-sensitive quest filter or output bitmaps.
+
+At this artifact checkpoint, 113 library tests, four installed-data checks and
+library Clippy pass. The eight-request Complete sample again has eight exact
+hotfix matches, five exact retail matches and three pre-existing typed coast
+faults, without unexpected differences. These are resource and compatibility
+checks; initialized HotA table snapshots and full generation parity remain open.

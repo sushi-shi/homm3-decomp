@@ -129,7 +129,8 @@ impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
     /// No RNG is consumed; hero availability starts at the native constructor state.
     ///
     /// # Errors
-    /// Rejects a foreign arena or prototype context before creating reservations.
+    /// Rejects a foreign arena, unsupported artifact rules or prototype context
+    /// before creating reservations.
     pub fn begin_generation<'rewards>(
         mut self,
         objects: &ObjectArena,
@@ -139,6 +140,9 @@ impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
         TreasureGeneration<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
         PlacementError,
     > {
+        if artifacts.ruleset() != crate::rules::Ruleset::Complete {
+            return Err(PlacementError::CatalogContext);
+        }
         self.paths
             .map_mut()
             .prepare_object_context(objects, self.catalog.prototypes())?;

@@ -11,7 +11,9 @@ use std::{error::Error, fmt, num::NonZeroI32};
 
 mod artifact;
 mod creature_data;
-pub use artifact::{ArtifactCatalog, ArtifactClass, ArtifactId, ArtifactTraits, CombinationId};
+pub use artifact::{
+    ArtifactCatalog, ArtifactClass, ArtifactDataError, ArtifactId, ArtifactTraits, CombinationId,
+};
 pub use creature_data::{CreatureDataError, CreatureDataFault};
 
 /// A native trait spreadsheet.
@@ -546,26 +548,37 @@ mod tests {
         );
         let catalog = ArtifactCatalog::parse(&data).unwrap();
         assert_eq!(
-            catalog.get(ArtifactId::parse(0).unwrap()).class(),
+            catalog.get(ArtifactId::parse(0).unwrap()).unwrap().class(),
             ArtifactClass::Relic
         );
         assert_eq!(
-            catalog.get(ArtifactId::parse(1).unwrap()).class(),
+            catalog.get(ArtifactId::parse(1).unwrap()).unwrap().class(),
             ArtifactClass::Major
         );
         assert_eq!(
-            catalog.get(ArtifactId::parse(2).unwrap()).class(),
+            catalog.get(ArtifactId::parse(2).unwrap()).unwrap().class(),
             ArtifactClass::Minor
         );
-        assert!(catalog.get(ArtifactId::parse(3).unwrap()).quest_eligible());
-        assert!(!catalog.get(ArtifactId::parse(4).unwrap()).quest_eligible());
+        assert!(catalog
+            .get(ArtifactId::parse(3).unwrap())
+            .unwrap()
+            .quest_eligible());
+        assert!(!catalog
+            .get(ArtifactId::parse(4).unwrap())
+            .unwrap()
+            .quest_eligible());
         assert!(!catalog
             .get(ArtifactId::parse(141).unwrap())
+            .unwrap()
             .quest_eligible());
-        assert!(catalog.get(ArtifactId::parse(141).unwrap()).disabled());
+        assert!(catalog
+            .get(ArtifactId::parse(141).unwrap())
+            .unwrap()
+            .disabled());
         assert_eq!(
             catalog
                 .get(ArtifactId::parse(129).unwrap())
+                .unwrap()
                 .combination()
                 .unwrap()
                 .index(),

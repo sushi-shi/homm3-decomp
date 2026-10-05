@@ -15,6 +15,23 @@ pub enum Ruleset {
 }
 
 impl Ruleset {
+    /// Artifact trait slots, including unused and assembled artifacts.
+    #[must_use]
+    pub const fn artifact_count(self) -> usize {
+        match self {
+            Self::Complete => raw::ARTIFACT_COUNT as usize,
+            Self::HotA181 => 166,
+        }
+    }
+    /// Combination recipes in the pinned catalog.
+    #[must_use]
+    pub const fn combination_count(self) -> usize {
+        match self {
+            Self::Complete => raw::COMBINATION_ARTIFACTS.len(),
+            Self::HotA181 => 16,
+        }
+    }
+
     /// Hero classes in the versioned catalog.
     #[must_use]
     pub const fn hero_class_count(self) -> usize {

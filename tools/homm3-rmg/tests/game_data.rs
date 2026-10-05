@@ -137,3 +137,43 @@ fn installed_heroes_have_expanded_classes_and_water_replacements() {
         assert_eq!(pool.prison_limit(), Some(64));
     }
 }
+
+#[test]
+#[ignore = "requires HOMM3_HOTA_DAT and HOMM3_RMG_ARTIFACTS from the pinned HotA installation"]
+fn installed_artifacts_load_new_classes_and_all_combination_memberships() {
+    use homm3_rmg::traits::{ArtifactCatalog, ArtifactClass};
+    let bytes = std::fs::read(std::env::var_os("HOMM3_HOTA_DAT").unwrap()).unwrap();
+    let base = std::fs::read(std::env::var_os("HOMM3_RMG_ARTIFACTS").unwrap()).unwrap();
+    let catalog = ArtifactCatalog::parse_hota181(&base, Container::parse(&bytes).unwrap()).unwrap();
+    assert_eq!(catalog.ruleset(), Ruleset::HotA181);
+    assert_eq!(catalog.entries().len(), 166);
+    for (id, combo) in [(141, 12), (142, 13), (160, 14), (143, 15)] {
+        let row = catalog.get(catalog.id(id).unwrap()).unwrap();
+        assert_eq!(row.combination().unwrap().index(), combo);
+        assert!(!row.disabled());
+    }
+    for (id, combo) in [(66, 12), (57, 13), (115, 14), (10, 15)] {
+        assert_eq!(
+            catalog
+                .get(catalog.id(id).unwrap())
+                .unwrap()
+                .component_of()
+                .unwrap()
+                .index(),
+            combo
+        );
+    }
+    for id in [144, 145] {
+        let row = catalog.get(catalog.id(id).unwrap()).unwrap();
+        assert_eq!(row.class(), ArtifactClass::Unused);
+        assert!(row.disabled());
+        assert!(row.combination().is_none());
+    }
+    let last = catalog.get(catalog.id(165).unwrap()).unwrap();
+    assert_eq!(last.class(), ArtifactClass::Relic);
+    assert!(!last.disabled());
+    assert!(catalog
+        .get(catalog.id(152).unwrap())
+        .unwrap()
+        .quest_eligible());
+}

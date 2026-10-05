@@ -109,7 +109,10 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         Ok(())
     }
     fn artifact_available(&self, artifact: ArtifactId) -> bool {
-        self.artifacts().get(artifact).quest_eligible() && !self.ready.quests.used[artifact.index()]
+        self.artifacts()
+            .get(artifact)
+            .is_some_and(|row| row.quest_eligible())
+            && !self.ready.quests.used[artifact.index()]
     }
     fn retire_removed_parent(
         &mut self,

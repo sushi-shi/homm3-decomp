@@ -1,5 +1,10 @@
 //! Artifact metadata used for quest eligibility and map availability.
 
+use crate::rules::Ruleset;
+
+mod data;
+pub use data::ArtifactDataError;
+
 use super::{parse_rows, prefix, raw, TraitError, TraitFault, TraitResource};
 
 /// Artifact identity, excluding the no-artifact sentinel.
@@ -34,6 +39,8 @@ impl CombinationId {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u32)]
 pub enum ArtifactClass {
+    /// An initialized but unused expansion slot.
+    Unused = 0,
     /// Spellbook, war machine or other non-random artifact.
     Special = crate::constants::ARTIFACT_CLASS_SPECIAL,
     /// Treasure-class artifacts may be seer-hut quest items.
@@ -52,6 +59,7 @@ pub struct ArtifactTraits {
     class: ArtifactClass,
     disabled: bool,
     combination: Option<CombinationId>,
+    component_of: Option<CombinationId>,
 }
 impl ArtifactTraits {
     /// R/J/N/T classification from the spreadsheet.
@@ -69,6 +77,11 @@ impl ArtifactTraits {
     pub const fn combination(self) -> Option<CombinationId> {
         self.combination
     }
+    /// Combination recipe this artifact supplies as a component.
+    #[must_use]
+    pub const fn component_of(self) -> Option<CombinationId> {
+        self.component_of
+    }
     /// Trait eligibility before a generator checks its already-used pool.
     #[must_use]
     pub fn quest_eligible(self) -> bool {
@@ -76,9 +89,12 @@ impl ArtifactTraits {
     }
 }
 
-/// Fixed artifact table; parsing does not copy names, descriptions or prices.
+/// Versioned artifact table; parsing does not copy names, descriptions or prices.
 #[derive(Clone, Debug)]
-pub struct ArtifactCatalog([ArtifactTraits; raw::ARTIFACT_COUNT as usize]);
+pub struct ArtifactCatalog {
+    entries: Box<[ArtifactTraits]>,
+    rules: Ruleset,
+}
 impl ArtifactCatalog {
     /// Parse the rows consumed by the native artifact loader.
     ///
@@ -89,7 +105,7 @@ impl ArtifactCatalog {
     /// # Errors
     /// Rejects malformed text, missing indexed cells and unknown slot masks.
     pub fn parse(bytes: &[u8]) -> Result<Self, TraitError> {
-        parse_rows(
+        let entries: [ArtifactTraits; raw::ARTIFACT_COUNT as usize] = parse_rows(
             bytes,
             TraitResource::Artifacts,
             |id| id + 2,
@@ -124,19 +140,37 @@ impl ArtifactCatalog {
                         .iter()
                         .any(|&artifact| artifact as usize == id),
                     combination,
+                    component_of: raw::ARTIFACT_COMPONENTS
+                        .iter()
+                        .rposition(|row| row[id])
+                        .map(CombinationId),
                 })
             },
-        )
-        .map(Self)
+        )?;
+        Ok(Self {
+            entries: Box::new(entries),
+            rules: Ruleset::Complete,
+        })
     }
-    /// Lookup with a parsed artifact ID.
+    /// Admit an artifact identity against this catalog.
     #[must_use]
-    pub const fn get(&self, id: ArtifactId) -> &ArtifactTraits {
-        &self.0[id.index()]
+    pub fn id(&self, value: i32) -> Option<ArtifactId> {
+        let id = u8::try_from(value).ok()?;
+        (usize::from(id) < self.entries.len()).then_some(ArtifactId(id))
+    }
+    /// Catalog's native generation rules.
+    #[must_use]
+    pub const fn ruleset(&self) -> Ruleset {
+        self.rules
+    }
+    /// Checked lookup, including identities obtained from another ruleset.
+    #[must_use]
+    pub fn get(&self, id: ArtifactId) -> Option<&ArtifactTraits> {
+        self.entries.get(id.index())
     }
     /// Native order, preserving deterministic eligibility scans.
     #[must_use]
     pub fn entries(&self) -> &[ArtifactTraits] {
-        &self.0
+        &self.entries
     }
 }
