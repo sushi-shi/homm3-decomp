@@ -732,7 +732,8 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     m_visionsPower = static_cast<signed char>(readValue<char>(infile));
     // Both retails zero-extend the serialized id (Windows 0x4d7bc1, Mac 0xf2d18).
     m_id = static_cast<HeroId>(readValue<unsigned char>(infile));
-    m_heroClass = static_cast<signed char>(readValue<char>(infile));
+    m_heroClass = static_cast<THeroClass>(
+        static_cast<signed char>(readValue<char>(infile)));
     m_portrait = readValue<unsigned char>(infile);
     m_patrolX = readValue<unsigned char>(infile);
     m_patrolY = readValue<unsigned char>(infile);
@@ -929,7 +930,7 @@ hero::hero()
     m_owner = -1;
     m_x = 0;
     m_y = 0;
-    m_heroClass = 0;
+    m_heroClass = classKnight;
     m_portrait = 0;
     m_name[0] = 0;
 
