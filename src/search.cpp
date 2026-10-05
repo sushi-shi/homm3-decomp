@@ -586,10 +586,8 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
     TSkillMastery pathfinding =
         currentHero->getSecondarySkill(eSecSkillPathfinding);
     m_thisTurnsMovement = curTempMobility;
-    // Complete snapshots the underlying byte directly (`mov dl,[hero+6]`).
-    // Dreamcast's older source calls is_on_map here, but its bool facade
-    // normalizes the value; the retail load is direct evidence for this
-    // later-revision spelling.
+    // Complete snapshots the validity byte directly (`mov dl,[hero+6]`).
+    // The native bool accessor returns its bool field without normalization.
     unsigned char wasOnMap = currentHero->isOnMap();
     currentHero->restoreCell();
 

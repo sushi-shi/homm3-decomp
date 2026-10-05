@@ -108,7 +108,8 @@ public:
     short m_z;  // +0x04 (DC mapZ)
 
 private:
-    unsigned char m_valid;  // +0x06
+    // Native bool accessors return these bytes directly, without conversion.
+    bool m_valid;  // +0x06
     type_point m_obscuredLocation;  // +0x07
 
 public:
@@ -116,7 +117,7 @@ public:
     TAdventureObjectType m_obscuredType;  // +0x0c (DC type)
 
 private:
-    unsigned char m_wasTrigger;  // +0x10
+    bool m_wasTrigger;  // +0x10
 
 public:
     char m_paddingBeforeExtraInfo[3];
@@ -147,7 +148,8 @@ public:
     // retail folds it into unblock_lith before temporarily restoring the
     // hero's underlying map cell.
     DC_ADDRESS(0x01fb1c, 0x10)
-    unsigned char isOnMap() const { return m_valid; }
+    // Original public: is_on_map@type_obscuring_object@@QBA_NXZ.
+    bool isOnMap() const { return m_valid; }
 
     // E:\gamedcs\Hero.h:150. Dreamcast retains an out-of-line copy, while
     // retail expands the validity test at every admitted Windows caller.
@@ -172,14 +174,16 @@ public:
     // folds it to the same three field tests; keep the call in source so
     // an exact lowering cannot erase the attested source shape again.
     DC_ADDRESS(0x0d58cc, 0x2a)
-    unsigned char obscuresTown() const
+    // Original public: obscures_town@type_obscuring_object@@QBA_NXZ.
+    bool obscuresTown() const
     {
         return m_valid && m_wasTrigger && m_obscuredType == TOWN;
     }
 
     // Original: type_obscuring_object::get_obscured_trigger; Hero.h:167
     DC_ADDRESS(0x0f4abc, 0x32)
-    unsigned char getObscuredTrigger() const { return m_valid && m_wasTrigger; }
+    // Original public: get_obscured_trigger@type_obscuring_object@@QBA_NXZ.
+    bool getObscuredTrigger() const { return m_valid && m_wasTrigger; }
     void restoreCell();
     bool save(void* outfile);
 

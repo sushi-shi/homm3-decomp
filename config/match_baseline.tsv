@@ -73,7 +73,7 @@ advmgr	??4hero@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x6480	-
 advmgr	??_GCAdvMgrNetMsgHandler@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x77b0	-
 advmgr	??_GCAdvPopup@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1b0e0	-
 advmgr	?_Tidy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEX_N@Z	100.0000	100.0000	100.0000	0x40f0	-
-advmgr	?_Xran@?$bitset@$0DA@@std@@ABEXXZ	99.9296	100.0000	100.0000	0x1b410	-
+advmgr	?_Xran@?$bitset@$0DA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x1b410	-
 advmgr	?advmgrFn0040D670@@YIXPADPAVNewmapCell@@JPBDE@Z	100.0000	100.0000	100.0000	0xd670	tokens1:ba7e418e9671
 advmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z	100.0000	100.0000	100.0000	0x1b250	-
 advmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@PBDI@Z	100.0000	100.0000	100.0000	0x1b340	-
@@ -136,7 +136,7 @@ advmgr	?inMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0	tokens1
 advmgr	?initializeCreatureGeneratorNames@@YIEXZ	100.0000	100.0000	100.0000	0x5d20	tokens1:cb71834f8313
 advmgr	?initializeExtraInfoText@@YIEXZ	100.0000	100.0000	100.0000	0x5d80	tokens1:a297b159fef7
 advmgr	?insertSound@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x18c10	tokens1:fb7f56c659d1
-advmgr	?loadRemote@advManager@@QAEXE@Z	99.8333	100.0000	100.0000	0x1a100	tokens1:35f39f26a6bf
+advmgr	?loadRemote@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x1a100	tokens1:35f39f26a6bf
 advmgr	?main@advManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x87b0	tokens1:1fee27f09c55
 advmgr	?mapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750	tokens1:ba344610793b
 advmgr	?mobilizeCurrHero@advManager@@QAEXH_N0@Z	100.0000	100.0000	100.0000	0x175e0	tokens1:a96541beffde
@@ -292,7 +292,7 @@ ai_player	??0type_creature_source@@QAE@W4TCreatureType@@PAF_N@Z	100.0000	100.000
 ai_player	??1?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x34650	-
 ai_player	??1type_AI_creature_purchaser@@QAE@XZ	100.0000	100.0000	100.0000	0x286e0	-
 ai_player	??1type_artifact_effect@@UAE@XZ	100.0000	100.0000	100.0000	0x32500	tokens1:9c92bdc00fa5
-ai_player	??8type_point@@QBE_NABU0@@Z	100.0000	100.0000	100.0000	0x2ec20	tokens1:c27e240572a6
+ai_player	??8type_point@@QBE_NABU0@@Z	0.0000	100.0000	100.0000	0x2ec20	tokens1:c27e240572a6
 ai_player	??_F?$vector@PAVtype_artifact_effect@@V?$allocator@PAVtype_artifact_effect@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x324b0	-
 ai_player	??_Gtype_artifact_effect@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x324d0	-
 ai_player	??_Gtype_combat_artifact@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x33080	-
@@ -317,7 +317,7 @@ ai_player	?aiArrangeArmy@@YIXAAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d8e0
 ai_player	?aiArrangeArmyForCombat@@YIXPAVhero@@PBV1@ABVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2db20	tokens1:6e5b88463b94
 ai_player	?aiAttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	87.7018	87.7018	87.7018	0x2fee0	tokens1:6f18fdd126dc
 ai_player	?aiBuildShip@@YIXPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x30f80	tokens1:ecd84a2fe231
-ai_player	?aiChooseDestination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	81.7151	81.7151	84.6518	0x2e0b0	tokens1:5e455327a6ba
+ai_player	?aiChooseDestination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	77.8319	81.7151	84.6518	0x2e0b0	tokens1:5e455327a6ba
 ai_player	?aiConsolidateArmy@@YIXAAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d870	tokens1:5217661c00bf
 ai_player	?aiEquipArtifacts@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x33b40	tokens1:507b627b5176
 ai_player	?aiGetEquipValue@@YIJUtype_artifact@@PBVhero@@E@Z	100.0000	100.0000	100.0000	0x339e0	tokens1:1cfb3363c6e6
@@ -2530,7 +2530,7 @@ mapcell	?_Ufill@?$vector@VTSeerHut@@V?$allocator@VTSeerHut@@@std@@@std@@IAEXPAVT
 mapcell	?calcCellExtra@NewfullMap@@AAEXPAVNewmapCell@@E@Z	100.0000	100.0000	100.0000	0x105610	tokens1:64518d41a4db
 mapcell	?calculateCellExtra@NewfullMap@@QAEXPAVNewmapCell@@E@Z	100.0000	100.0000	100.0000	0x105a10	tokens1:ac6af14a8d5c
 mapcell	?capacity@?$vector@USecondarySkillData@@V?$allocator@USecondarySkillData@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x10ad90	-
-mapcell	?cellIsTrigger@NewmapCell@@QBEEXZ	100.0000	100.0000	100.0000	0xfcc80	tokens1:1e042f848e8e
+mapcell	?cellIsTrigger@NewmapCell@@QBE_NXZ	100.0000	100.0000	100.0000	0xfcc80	tokens1:fca32e09a0fb
 mapcell	?clear@?$vector@PAVCMapObjectData@@V?$allocator@PAVCMapObjectData@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x8b4a0	-
 mapcell	?copy@std@@YIPAUSecondarySkillData@@PAU2@00@Z	100.0000	100.0000	100.0000	0x10adb0	-
 mapcell	?copy@std@@YIPAUtype_creature_bank@@PAU2@00@Z	100.0000	100.0000	100.0000	0x109620	-
@@ -2610,7 +2610,7 @@ mapcell	?readScholarData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.00
 mapcell	?readSignData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101270	tokens1:abcb8e413b4f
 mapcell	?readSpellScrollData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xff2f0	tokens1:aaa388572d8d
 mapcell	?readTimedEventList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc000	tokens1:1e58943831fe
-mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	89.8415	89.8415	97.7852	0x1019f0	tokens1:ad0101a25fca
+mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	89.8341	89.8415	97.7852	0x1019f0	tokens1:ad0101a25fca
 mapcell	?readTreasureData@NewfullMap@@QAEHPAVTAbstractFile@@PAVTreasureData@@@Z	100.0000	100.0000	100.0000	0xfee50	tokens1:cf09cc74c67c
 mapcell	?rebuildObjectTypeIndex@NewfullMap@@QAEXXZ	99.8854	99.8854	99.8854	0x1042c0	tokens1:526a3cdef2cc
 mapcell	?resize@?$vector@VTSeerHut@@V?$allocator@VTSeerHut@@@std@@@std@@QAEXIABVTSeerHut@@@Z	100.0000	100.0000	100.0000	0x106390	-
@@ -2631,7 +2631,7 @@ mapcell	?setObjectType@NewfullMap@@QAEXPAVCObject@@HHH@Z	100.0000	100.0000	100.0
 mapcell	?size@?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x1062a0	-
 mapcell	?size@?$vector@VTQuestGuard@@V?$allocator@VTQuestGuard@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x1066e0	-
 mapcell	?size@?$vector@VTSeerHut@@V?$allocator@VTSeerHut@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x1066b0	-
-mapcell	?soDTransformRandomDwellings@NewfullMap@@QAEXXZ	100.0000	100.0000	100.0000	0x102b60	tokens1:4b1974922bbb
+mapcell	?soDTransformRandomDwellings@NewfullMap@@QAEXXZ	99.9777	100.0000	100.0000	0x102b60	tokens1:4b1974922bbb
 mapcell	?stampObject@NewfullMap@@QAEXPAVNewmapCell@@PAUTObjectCell@2@@Z	100.0000	100.0000	100.0000	0x105230	tokens1:e8b6572ce3fd
 mapcell	?upgradeCellExtraInfo@@YIXPAVNewmapCell@@H@Z	96.2635	96.2635	96.2635	0xfe6c0	tokens1:0f54e653d187
 mapcell	__h3cg$mapcell$static_dtor$g_invalidPlacementList	100.0000	100.0000	100.0000	0x104290	-
