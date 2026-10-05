@@ -49,9 +49,14 @@ public:
         return *this;
     }
 
-    bool operator!=(const bitset_iterator& other) const
+    // Mac getRandomMonster 0xdffa0 compares owner before position. A
+    // symmetric comparison preserves that operation and lets VC6 expand it
+    // inside std::fill, as retail does, while retaining operator*'s call.
+    // Free-function placement is inferred; no native declaration survives.
+    friend bool operator!=(const bitset_iterator& left,
+                           const bitset_iterator& right)
     {
-        return m_bits != other.m_bits || m_position != other.m_position;
+        return left.m_bits != right.m_bits || left.m_position != right.m_position;
     }
 
 private:
