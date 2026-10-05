@@ -300,25 +300,15 @@ protected:
     // DC town records generator_bonus as long[14] (at +0x10c there).
     long m_generatorBonus[14];
 
+    // DC town records prove these protected __int64 fields, originally
+    // populationMask, full_building_mask and legal_buildings. Retail reads
+    // each as two dwords. They hold installed buildings, installed plus
+    // included buildings, and the town's legal buildings, respectively.
+    __int64 m_populationMask;
+    __int64 m_fullBuildingMask;
+    __int64 m_legalBuildings;
+
 public:
-    // Three 64-bit building bitfields, all read as pairs of dwords by
-    // retail's __int64 lowering (the DC's own set_mask/
-    // get_buildable_mask signatures are __int64 too; the DC build
-    // spells them std::bitset<70,unsigned long>, which retail did not):
-    //   built     - get_castle_growth_bonus' fort/citadel/castle tests
-    //               and get_gold_income's hall tests; ctor seeds it
-    //               with bitNumber[HALL_VILLAGE_ID];
-    //   active    - what can_build/can_ever_build/get_buildable_mask
-    //               test requirement masks against, and where
-    //               get_gold_income finds the Grail; ctor copies built
-    //               into it;
-    //   available - the legal-building mask is_legal_building tests
-    //               (can_build and can_ever_build inline that test as
-    //               their first gate).
-    // Names provisional.
-    __int64 m_built;
-    __int64 m_active;
-    __int64 m_available;
     void applySpecialBuildingEffect(hero* townHero);
     unsigned char canBuildDock() const;
 
@@ -332,9 +322,9 @@ public:
     // create_artifact_widgets 100.0 -> 99.59, a cross-jump/reload
     // quirk in a textWidget arm; count restored, the row returns).
     // DC Town.h:299/300 returns full_building_mask (+0x150 in DC).
-    // Retail's +0x158 band is m_active; getBuildableMask expands this read.
+    // Retail's +0x158 band is m_fullBuildingMask; getBuildableMask expands this read.
     DC_ADDRESS(0x037f50, 0x12)
-    __int64 getBuildingMask() const { return m_active; }
+    __int64 getBuildingMask() const { return m_fullBuildingMask; }
     long getCastleGrowthBonus(TCreatureType creature) const;
 
     // DC Town.h:305-306 returns generatorBonus[dwelling].
@@ -376,14 +366,14 @@ public:
     {
         if (checkIncluded)
             return (getBuildingMask() & g_bitNumber[buildingId]) != 0;
-        return (m_built & g_bitNumber[buildingId]) != 0;
+        return (m_populationMask & g_bitNumber[buildingId]) != 0;
     }
 
     // Original: town::set_mask; Town.h:331
     DC_ADDRESS(0x168dfc, 0x28)
     void setMask(__int64 newMask)
     {
-        m_built = newMask;
+        m_populationMask = newMask;
         updateFullBuildingMask();
     }
 
@@ -644,7 +634,7 @@ extern signed char g_mageGuildBaseSpellCounts[5];
 // const_horde_effects column. Name INVENTED (no DC symbol); the four
 // values are read from the pinned image. Retyped in place 2026-08-20
 // (int -> type_building_id, an identical 4-byte load): create_building
-// assigns a row entry back into its type_building_id argument, which
+// assigns a row entry to its type_building_id result, which
 // the enum element type carries without a cast, while every int reader
 // (get_horde's return, the bitNumber indexes) narrows implicitly.
 extern const type_building_id g_hordeBuildings[4];
