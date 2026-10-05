@@ -260,7 +260,7 @@ void combatManager::doAnimations()
     if (GameTime::isPast(g_timers[0])) {
         pollSound();
         long interval = static_cast<long>(
-            g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
+            combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 100.0f);
         g_timers[0] =
             GameTime::nextFrameTime(g_timers[0], interval);
     }

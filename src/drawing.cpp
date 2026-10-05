@@ -1176,7 +1176,7 @@ void combatManager::drawFrame(bool update,
             g_timers[0],
             static_cast<long>(
                 delay
-                * g_combatSpeedFactors[g_config.m_combatSpeed]));
+                * combatManager::s_combatSpeedMod[g_config.m_combatSpeed]));
     }
 
     if (update) {

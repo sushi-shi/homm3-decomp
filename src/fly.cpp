@@ -206,7 +206,7 @@ int army::fly(int destIndex)
         float y = static_cast<float>(startY);
         const int flyPeriod = static_cast<long>(
             static_cast<float>(m_monFrameInfo.m_walkCycleTime)
-            * g_combatSpeedFactors[g_config.m_combatSpeed]
+            * combatManager::s_combatSpeedMod[g_config.m_combatSpeed]
             / static_cast<float>(numFlapFrames));
 
         for (loop = 0; loop < ttlLoops; loop++) {

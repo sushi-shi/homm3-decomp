@@ -55,7 +55,7 @@
 #include "winmgr.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x0063cf7c) const float g_combatSpeedFactors[3] = { 1.0f, 0.6299999952316284f, 0.4000000059604645f };
+DATA(0x0063cf7c) const float combatManager::s_combatSpeedMod[3] = { 1.0f, 0.6299999952316284f, 0.4000000059604645f };
 DATA(0x0063bd00) const unsigned char g_castleWallColumns[11] = { 12, 29, 45, 62, 78, 96, 112, 130, 147, 165, 182 };
 // Retail follows the wall-column table with the eleven column-1 hexes (one
 // per grid row, stride 17) at 0x63bd0c. No retail instruction or datum
@@ -2707,7 +2707,7 @@ void combatManager::makeCreaturesVanish()
         g_windowManager->fizzleForwardX(
             x, y, width, height,
             static_cast<int>(
-                g_combatSpeedFactors[g_config.m_combatSpeed] * 150.0f));
+                combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 150.0f));
     }
 }
 
@@ -3020,7 +3020,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     SLimitData updateArea;
     updateArea = heroWindowManager::s_nullLimits;
     const int missilePeriod = static_cast<int>(
-        g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
+        combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 100.0f);
 
     int frame = 0;
     for (int step = 0; step < nframes; step++) {
@@ -3130,7 +3130,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     SLimitData updateArea = heroWindowManager::s_nullLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowDelay = static_cast<int>(
-        g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
+        combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 33.0f);
 
     int frame = 0;
     for (int step = 0; step < nframes; step++) {
@@ -3269,7 +3269,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     SLimitData updateArea = heroWindowManager::s_nullLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowDelay = static_cast<int>(
-        g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
+        combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 33.0f);
 
     for (int step = 0; step < nframes; step++) {
         unsigned long nextFrameTime = GameTime::get() + arrowDelay;
