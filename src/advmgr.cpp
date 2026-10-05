@@ -6128,9 +6128,9 @@ void advManager::updateRadar(bool updateFlag, bool partialUpdate,
 // quest temporary's destructor expands naturally as retail does. Remaining
 // differences include GetHero arm layout, the nested cell/zCell decision,
 // and switch-tail scheduling. Compare named sites, not aggregate call counts.
-// ExtraInfoUnion's DC inheritance is represented by NewmapCell's existing
-// data/accessor surface; the audit retains that ownership gap, including
-// GetItemId. It is not evidence for a copied helper body in this caller.
+// DC8332 names GetItemId for the garden's visit bit. Mac 0x15ab4..0x15acc
+// expands its five-bit extraction and short result before the shift;
+// NewmapCell inherits the canonical ExtraInfoUnion accessor.
 // DC records text lookups throughout the quick-info arms. Preserve the
 // Complete getText helper at those sites while checking retail call shape.
 // The one call-count delta (80 vs 79) is WATERING_HOLE's visited/unvisited
@@ -6700,7 +6700,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
                     visited = (g_currentPlayer->m_mysticalGardenFlags
-                        & (1UL << (testCell->m_extraInfo & 0x1f)))
+                        & (1UL << testCell->getItemId()))
                         && !((testCell->m_extraInfo >> 10) & 1);
                     if (visited)
                         sprintf(tempText, visitFormat,
