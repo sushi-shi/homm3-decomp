@@ -7423,7 +7423,7 @@ void game::perDay()
         currHero.m_disguiseLevel = -1;
         currHero.m_flightLevel = -1;
         currHero.m_waterWalkLevel = -1;
-        currHero.m_visionsPower = -1;
+        currHero.m_identifyLevel = eMasteryInvalid;
         currHero.m_dWalkSpellsCast = 0;
     }
 

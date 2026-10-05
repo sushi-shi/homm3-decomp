@@ -729,7 +729,8 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     m_flightLevel = static_cast<signed char>(readValue<char>(infile));
     m_waterWalkLevel = static_cast<signed char>(readValue<char>(infile));
     m_dWalkSpellsCast = readValue<char>(infile);
-    m_visionsPower = static_cast<signed char>(readValue<char>(infile));
+    m_identifyLevel = static_cast<TSkillMastery>(
+        static_cast<signed char>(readValue<char>(infile)));
     // Both retails zero-extend the serialized id (Windows 0x4d7bc1, Mac 0xf2d18).
     m_id = static_cast<HeroId>(readValue<unsigned char>(infile));
     m_heroClass = static_cast<THeroClass>(
@@ -835,7 +836,7 @@ int hero::save(TAbstractFile* outfile)
     writeValue(outfile, static_cast<char>(m_flightLevel));
     writeValue(outfile, static_cast<char>(m_waterWalkLevel));
     writeValue(outfile, static_cast<char>(m_dWalkSpellsCast));
-    writeValue(outfile, static_cast<char>(m_visionsPower));
+    writeValue(outfile, static_cast<char>(m_identifyLevel));
     writeValue(outfile, static_cast<char>(m_id));
     writeValue(outfile, static_cast<char>(m_heroClass));
     writeValue(outfile, static_cast<unsigned char>(m_portrait));
@@ -1033,7 +1034,7 @@ void hero::initialize(short index)
     m_waterWalkLevel = eMasteryInvalid;
     m_disguiseLevel = eMasteryInvalid;
     m_dWalkSpellsCast = 0;
-    m_visionsPower = eMasteryInvalid;
+    m_identifyLevel = eMasteryInvalid;
     m_hasCustomName = 0;
     m_customName = "";
     m_isSleeping = 0;
@@ -6433,27 +6434,32 @@ void hero::walkOnWater(int level)
     m_waterWalkLevel = level;
 }
 
+// Complete adds the Rogue-aware identify-level getter; its original name
+// is unknown. Mac 0x106ce0 retains the creature-total call and expert floor.
 VA(0x004e5de0, 0x2D)
 MAC_ADDRESS(0x106ce0, 0x54)
-int hero::heroFn004E5DE0() const
+TSkillMastery hero::getIdentifyLevel() const
 {
-    if (m_visionsPower < 3 && m_army.getCreatureTotal(CREATURE_ROGUE) != 0)
-        return 3;
-    return m_visionsPower;
+    if (m_identifyLevel < eMasteryExpert
+        && m_army.getCreatureTotal(CREATURE_ROGUE) != 0)
+        return eMasteryExpert;
+    return m_identifyLevel;
 }
 
+// Original IsInIdentifyRange@hero@@QBA_NABUtype_point@@@Z proves the
+// Boolean result and const point reference; Complete retains that interface.
 VA(0x004e5e10, 0x11C)
 DC_ADDRESS(0x0d55c0, 0x82)
 MAC_ADDRESS(0x106d34, 0x138)
-unsigned char hero::isInIdentifyRange(const type_point* location) const
+bool hero::isInIdentifyRange(const type_point& location) const
 {
-    int identifyLevel = heroFn004E5DE0();
+    TSkillMastery identifyLevel = getIdentifyLevel();
     int range = g_spellTraits[SPELL_VISIONS].m_masteryBonus[identifyLevel]
         * getPrimarySkill(2);
     if (range < 3)
         range = 3;
 
-    if (m_z == location->m_z) {
+    if (m_z == location.m_z) {
         // Constructor form, not default-then-assign: it merges the y|z
         // bitfield unit into one clear-then-or (98.6813 -> 100.0000).
         type_point heroLocation(m_x, m_y, m_z);
@@ -6461,10 +6467,10 @@ unsigned char hero::isInIdentifyRange(const type_point* location) const
         // Dreamcast hero.cpp:6395 passes location as the DistanceSquared
         // receiver and the constructed hero point as its argument. Retail
         // expands that same x/y-only call.
-        if (location->distanceSquared(heroLocation) < range * range)
-            return 1;
+        if (location.distanceSquared(heroLocation) < range * range)
+            return true;
     }
-    return 0;
+    return false;
 }
 
 // Dreamcast hero.cpp:6407/6414/6418 calls get_location and the typed
