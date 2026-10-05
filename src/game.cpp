@@ -2749,6 +2749,96 @@ bool type_creature_bank::save(void* output)
     return saveVector(outfile, m_artifacts);
 }
 
+// Retail 4bc0e0..4bc750 and Mac cf490..cfc34 order the snapshot
+// constructor, reset, save and load before game::load. Keep the ordinary
+// definitions in that cluster; selection retains the constructor call.
+// Moving the cluster does not change any current Windows function score.
+// E:\gamedcs\Game.h:1301
+VA(0x004bc0e0, 0x251)
+DC_ADDRESS(0x0bceb4, 0x4c)
+MAC_ADDRESS(0x0cf490, 0x260)
+SavedGameHeader::SavedGameHeader()
+{
+    memset(m_id, 0, sizeof(m_id));
+    strcpy(m_id, "H3SVG");
+    m_version = 42;
+}
+
+// Complete retains calls to these ordinary members in game::save.
+// Dreamcast attributes their older definitions to Game.h; the Mac
+// build also retains both calls.
+// E:\gamedcs\Game.h:1312
+VA(0x004bc350, 0x271)
+DC_ADDRESS(0x0bcf00, 0x6c)
+MAC_ADDRESS(0x0cf6f0, 0x330)  // anchor-caller (game::Save) + layout
+void SavedGameHeader::reset()
+{
+    if (g_inCampaign)
+        strcpy(m_id, "H3SVC");
+    else
+        strcpy(m_id, "H3SVG");
+
+    m_version = 42;
+    m_gameVersion = g_game->m_gameVersion;
+
+    m_campaign = g_game->m_campaign;
+
+    m_mapHeader = g_game->m_mapHeader;
+
+    m_currentPlayer = g_netLocalGamePos;
+    m_mapSetup = g_game->m_setup;
+    m_campaignGame = g_inCampaign;
+    m_fileName = g_game->m_saveFileName;
+    m_difficultyRating = g_game->m_difficultyRating;
+    m_numDeadPlayers = g_game->m_numDeadPlayers;
+    memcpy(m_deadPlayer, g_game->m_playerDisabled, sizeof(m_deadPlayer));
+
+    int* human = m_humanPlayer;
+    for (int i = 0; i < 8; ++i)
+        *human++ = g_game->m_players[i].isHuman();
+}
+
+// Complete serializes the expanded snapshot through its abstract stream.
+// Mac stages each scalar separately before its stream write.
+// E:\gamedcs\Game.h:1325
+VA(0x004bc5d0, 0x17A)
+DC_ADDRESS(0x0bcf6c, 0x78)
+MAC_ADDRESS(0x0cfa20, 0x214)  // anchor-layout + game::Save caller
+int SavedGameHeader::save(TAbstractFile* outfile)
+{
+    char fileNameBuffer[0x15f];
+    char compatibilityBuffer[32];
+
+    outfile->write(m_id, sizeof(m_id));
+
+    writeValue<int>(outfile, m_version);
+    writeValue<int>(outfile, m_gameVersion);
+
+    if (outfile->write(compatibilityBuffer, sizeof(compatibilityBuffer)) <
+        sizeof(compatibilityBuffer))
+        return -1;
+
+    if (m_mapHeader.save(outfile) < 0)
+        return -1;
+    if (m_mapSetup.save(outfile) < 0)
+        return -1;
+
+    writeValue<short>(outfile, m_campaignGame);
+    if (m_campaignGame)
+        m_campaign.save(outfile);
+
+    strcpy(fileNameBuffer, m_fileName.c_str());
+    outfile->write(fileNameBuffer, sizeof(fileNameBuffer));
+
+    writeValue<short>(outfile, m_difficultyRating);
+    writeValue<char>(outfile, m_numDeadPlayers);
+    outfile->write(m_deadPlayer, sizeof(m_deadPlayer));
+    outfile->write(m_humanPlayer, sizeof(m_humanPlayer));
+    writeValue<int>(outfile, m_currentPlayer);
+
+    return 0;
+}
+
 // Complete reading belongs to SavedGameHeader::load. The caller tests
 // its result before restoring any game state and retains the snapshot for
 // later version tests. This ordinary application phase owns the demonstrated
@@ -2776,20 +2866,6 @@ void applySavedGameHeader(const SavedGameHeader& saved)
            sizeof(g_game->m_playerDisabled));
     g_netLocalGamePos = saved.m_currentPlayer;
     memcpy(g_wasHuman, saved.m_humanPlayer, sizeof(saved.m_humanPlayer));
-}
-
-// Complete places the save-header constructor before its owning game calls.
-// Those calls expand it; the selection TU retains the constructor call.
-// Mac places it before the save-header reset/save/load and game::load cluster.
-// E:\gamedcs\Game.h:1301
-VA(0x004bc0e0, 0x251)
-DC_ADDRESS(0x0bceb4, 0x4c)
-MAC_ADDRESS(0x0cf490, 0x260)
-SavedGameHeader::SavedGameHeader()
-{
-    memset(m_id, 0, sizeof(m_id));
-    strcpy(m_id, "H3SVG");
-    m_version = 42;
 }
 
 // Original: game::Load; game.cpp:3026 Complete loads a
@@ -3344,81 +3420,6 @@ int game::save(TAbstractFile* outfile)
     // recovered caller mass now selects that cleanup naturally.
     if (!saveRecordedEvents(outfile))
         return -1;
-
-    return 0;
-}
-
-// Complete retains calls to these ordinary members in game::save.
-// Dreamcast attributes their older definitions to Game.h; the Mac
-// build also retains both calls.
-// E:\gamedcs\Game.h:1312
-VA(0x004bc350, 0x271)
-DC_ADDRESS(0x0bcf00, 0x6c)
-MAC_ADDRESS(0x0cf6f0, 0x330)  // anchor-caller (game::Save) + layout
-void SavedGameHeader::reset()
-{
-    if (g_inCampaign)
-        strcpy(m_id, "H3SVC");
-    else
-        strcpy(m_id, "H3SVG");
-
-    m_version = 42;
-    m_gameVersion = g_game->m_gameVersion;
-
-    m_campaign = g_game->m_campaign;
-
-    m_mapHeader = g_game->m_mapHeader;
-
-    m_currentPlayer = g_netLocalGamePos;
-    m_mapSetup = g_game->m_setup;
-    m_campaignGame = g_inCampaign;
-    m_fileName = g_game->m_saveFileName;
-    m_difficultyRating = g_game->m_difficultyRating;
-    m_numDeadPlayers = g_game->m_numDeadPlayers;
-    memcpy(m_deadPlayer, g_game->m_playerDisabled, sizeof(m_deadPlayer));
-
-    int* human = m_humanPlayer;
-    for (int i = 0; i < 8; ++i)
-        *human++ = g_game->m_players[i].isHuman();
-}
-
-// Complete serializes the expanded snapshot through its abstract stream.
-// Mac stages each scalar separately before its stream write.
-// E:\gamedcs\Game.h:1325
-VA(0x004bc5d0, 0x17A)
-DC_ADDRESS(0x0bcf6c, 0x78)
-MAC_ADDRESS(0x0cfa20, 0x214)  // anchor-layout + game::Save caller
-int SavedGameHeader::save(TAbstractFile* outfile)
-{
-    char fileNameBuffer[0x15f];
-    char compatibilityBuffer[32];
-
-    outfile->write(m_id, sizeof(m_id));
-
-    writeValue<int>(outfile, m_version);
-    writeValue<int>(outfile, m_gameVersion);
-
-    if (outfile->write(compatibilityBuffer, sizeof(compatibilityBuffer)) <
-        sizeof(compatibilityBuffer))
-        return -1;
-
-    if (m_mapHeader.save(outfile) < 0)
-        return -1;
-    if (m_mapSetup.save(outfile) < 0)
-        return -1;
-
-    writeValue<short>(outfile, m_campaignGame);
-    if (m_campaignGame)
-        m_campaign.save(outfile);
-
-    strcpy(fileNameBuffer, m_fileName.c_str());
-    outfile->write(fileNameBuffer, sizeof(fileNameBuffer));
-
-    writeValue<short>(outfile, m_difficultyRating);
-    writeValue<char>(outfile, m_numDeadPlayers);
-    outfile->write(m_deadPlayer, sizeof(m_deadPlayer));
-    outfile->write(m_humanPlayer, sizeof(m_humanPlayer));
-    writeValue<int>(outfile, m_currentPlayer);
 
     return 0;
 }
