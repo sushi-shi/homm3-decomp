@@ -119,10 +119,6 @@ def _invocations(masked: str, head: re.Pattern, raw: str):
     return macro_invocations(masked, head, raw)
 
 
-def _line_of(text: str, offset: int) -> int:
-    return text.count("\n", 0, offset) + 1
-
-
 def _follower(masked: str, after: int) -> int | None:
     """Offset of the first code line after `after`, skipping blank/comment
     lines and other Mac annotation lines."""
@@ -178,6 +174,11 @@ def _declarator_label(declaration: str) -> str:
 def scan_text(raw: str, path: str) -> tuple[list[Claim], list[WindowsClaim], list[str]]:
     """Mac and Windows function claims of one file, and their defects."""
     masked = _mask(raw)
+    newlines = [match.start() for match in re.finditer("\n", raw)]
+
+    def line_of(offset: int) -> int:
+        # 1-based line of `offset`: the newlines before it, by bisection.
+        return bisect_left(newlines, offset) + 1
     problems: list[str] = []
     windows: list[tuple[int, int, WindowsClaim]] = []   # (start, end, claim)
     owned_definitions: dict[int | None, int] = {}         # declarator -> its VA
@@ -197,7 +198,7 @@ def scan_text(raw: str, path: str) -> tuple[list[Claim], list[WindowsClaim], lis
             if not compgen:
                 owned_definitions[_follower(masked, end)] = va
             windows.append((start, end, WindowsClaim(
-                path, _line_of(raw, start), va, size,
+                path, line_of(start), va, size,
                 (args[2], args[3]) if compgen else None, label)))
     by_end = {end: claim for _start, end, claim in windows}
     windows_ends = sorted(by_end)
@@ -207,7 +208,7 @@ def scan_text(raw: str, path: str) -> tuple[list[Claim], list[WindowsClaim], lis
     for head, compgen in ((MAC_HEAD_RE, False), (MAC_COMPGEN_HEAD_RE, True)):
         macro = "MAC_COMPGEN_ADDRESS" if compgen else "MAC_ADDRESS"
         for start, end, args, _ in _invocations(masked, head, raw):
-            where = f"{path}:{_line_of(raw, start)}"
+            where = f"{path}:{line_of(start)}"
             if masked[masked.rfind("\n", 0, start) + 1:start].lstrip().startswith("#"):
                 continue  # the macro's own definition, or a directive mentioning it
             if end is None:
@@ -257,11 +258,11 @@ def scan_text(raw: str, path: str) -> tuple[list[Claim], list[WindowsClaim], lis
                     problems.append(f"{where}: MAC_COMPGEN_ADDRESS {args[2]}/{args[3]} disagrees "
                                     f"with VA_COMPGEN {partner.compgen[0]}/{partner.compgen[1]}")
                     continue
-                claims.append(Claim(path, _line_of(raw, start), offset, size, partner.va,
+                claims.append(Claim(path, line_of(start), offset, size, partner.va,
                                     partner.compgen, partner.label, start))
                 continue
             if compgen:
-                claims.append(Claim(path, _line_of(raw, start), offset, size, None,
+                claims.append(Claim(path, line_of(start), offset, size, None,
                                     (args[2], args[3]), "", start))
                 continue
             follower = _follower(masked, end)
@@ -284,7 +285,7 @@ def scan_text(raw: str, path: str) -> tuple[list[Claim], list[WindowsClaim], lis
                 problems.append(f"{where}: MAC_ADDRESS claims functions only; the following "
                                 "declaration is not a function")
                 continue
-            claims.append(Claim(path, _line_of(raw, start), offset, size, None, None, label,
+            claims.append(Claim(path, line_of(start), offset, size, None, None, label,
                                 follower, parameters))
     claims.sort(key=lambda claim: claim.anchor)
     paired = {claim.windows_va: claim for claim in claims if claim.windows_va is not None}
@@ -302,16 +303,44 @@ def source_paths(root: Path) -> list[Path]:
     return paths
 
 
+_SCAN_CACHE = "mac-address-scan.pickle"
+
+
+def _scan_code_key() -> str:
+    """The implementation of scan_text: this module and the lexical masker."""
+    from homm3.core.content_cache import content_key
+    from homm3.retail_labels import source as label_source
+    return content_key(Path(__file__), Path(label_source.__file__))
+
+
 def scan(root: Path) -> tuple[list[Claim], list[WindowsClaim], list[str]]:
+    """Every source claim. Per-file results are cached by file content (and
+    the scanner's own source) under build/gen/cache; claims are frozen, so
+    a cached file yields exactly the claims a rescan would."""
+    import hashlib
+    from homm3.core import content_cache
+    code = _scan_code_key()
+    saved = content_cache.load(_SCAN_CACHE, root)
+    previous = saved.get("files", {}) if saved.get("code") == code else {}
+    current = {}
     claims, windows, problems = [], [], []
     for path in source_paths(root):
         raw = path.read_text(errors="replace")
         if "MAC_" not in raw and "VA" not in raw:
             continue
-        found, retail, defects = scan_text(raw, path.relative_to(root).as_posix())
+        relative = path.relative_to(root).as_posix()
+        digest = hashlib.sha256(raw.encode("utf-8", "surrogatepass")).hexdigest()
+        hit = previous.get(relative)
+        if hit is not None and hit[0] == digest:
+            found, retail, defects = hit[1]
+        else:
+            found, retail, defects = scan_text(raw, relative)
+        current[relative] = (digest, (found, retail, defects))
         claims += found
         windows += retail
         problems += defects
+    if current != previous:
+        content_cache.store(_SCAN_CACHE, {"code": code, "files": current}, root)
     return claims, windows, problems + claim_problems(claims)
 
 

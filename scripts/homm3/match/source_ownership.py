@@ -9,7 +9,6 @@ from __future__ import annotations
 import argparse
 from bisect import bisect_left
 from collections import Counter, defaultdict
-from concurrent.futures import ThreadPoolExecutor
 import csv
 from dataclasses import asdict, dataclass, replace
 import hashlib
@@ -1000,8 +999,8 @@ def collect(root: Path = ROOT, jobs: int | None = None, fresh: bool = False):
     workers = jobs or _default_jobs()
 
     def scan_all(batch):
-        with ThreadPoolExecutor(max_workers=workers) as pool:
-            results = list(pool.map(cached, batch))
+        # Cache reads are JSON decoding: GIL-bound, so threads only contend.
+        results = [cached(unit) for unit in batch]
         misses = [i for i, result in enumerate(results) if result is None]
         if workers > 1 and len(misses) > 1:
             # The AST visitor is Python-bound: threads serialize on the GIL,
