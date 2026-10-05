@@ -1047,3 +1047,19 @@ direct `reinterpret_cast<int>(g_text)` makes the caller 100%. The owning ABI
 is 32-bit, so this is an explicit admission of one necessary integer-carrier
 cast in the cleanliness baseline. Do not introduce a wrapper or a temporary
 object to conceal that conversion from the source-quality metric.
+
+## A final Boolean branch can determine earlier return merging
+
+`LossConditionStruct::checkForDefeatedHeroLoss` (`0x5f2a40`) reaches 100%
+with an explicit final hero-ID test and constant true/false returns. Returning
+the same equality through a `bool` local leaves 17 return blocks versus
+retail's 19, places the ordinary loss-type guard midway through the campaign
+switch, and scores 82.0170%. The final source branch preserves the proven bool
+interface; DC lines 488..491 independently show an explicit ID branch in the
+older implementation. No caller helper or inlining suppression is needed.
+
+The campaign-14 map admission also uses explicit equality tests for maps 2,
+3 and 4, matching retail's remaining compares after the map-2 artifact arm.
+The six-state map/return family and eight-state exit family passed unchanged
+and opposite-corner reproduction controls. A source-level Boolean equivalence
+does not imply equivalent VC6 return merging elsewhere in the function.
