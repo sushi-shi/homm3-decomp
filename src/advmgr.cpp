@@ -3824,14 +3824,9 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 // dwords it prices (0x10 against our 0x8) all go together.  That is an
 // OVER-inline of a template leaf with no admissible lever: a statement pin is
 // a falling-only floor and caller-shrink would need an invented static.
-// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP - measured and
-// rejected.  The Dreamcast block names TWO `cellExtra` locals
-// (ExtraInfoUnion, sp+0x44 and sp+0x40), i.e. the trigger cell's extraInfo
-// is read once into a named union per block and both the TOWN id and the
-// SHIPYARD owner come out of it, where this body calls
-// `get_trigger_cell()->get_map_extraInfo()` at all four sites.  One
-// `ExtraInfoUnion cellExtra;` per big block scores 91.6133 and one per ARM
-// scores the same, against 91.6263 - retail re-reads.
+// The two SHIPYARD arms own distinct ExtraInfoUnion cellExtra locals
+// (DC 0xf752/0xf8c4; Mac 0xe948/0xebbc). Read their signed owner field
+// after getTriggerCell/getMapExtraInfo, preserving those helper calls.
 // DC's mouseManager::GetFrame is restored in the scroll fallback. Its
 // GetCurrHero/get_location calls at lines 4642/4645 are also restored.
 // The pair currently lowers to 88.6107% in Windows (from 92.1875% with
@@ -3901,10 +3896,11 @@ int advManager::processHover(int mouseX, int mouseY)
             }
 
             if (currCell->m_type == SHIPYARD) {
-                int owner = static_cast<int>(
-                    currCell->getTriggerCell()->getMapExtraInfo() << 24)
-                    >> 24;
-                if (g_game->onSameTeam(owner, g_netLocalGamePos)) {
+                ExtraInfoUnion cellExtra;
+                cellExtra.m_extraInfo =
+                    currCell->getTriggerCell()->getMapExtraInfo();
+                if (g_game->onSameTeam(cellExtra.m_shipyardInfo.m_owner,
+                                       g_netLocalGamePos)) {
                     g_mouseManager->setPointer(6, mouseManager::ADVENTURE_SET);
                     m_advCommand = 8;
                     return 1;
@@ -3936,10 +3932,11 @@ int advManager::processHover(int mouseX, int mouseY)
                     return 1;
                 }
             } else if (currCell->m_type == SHIPYARD) {
-                int owner = static_cast<int>(
-                    currCell->getTriggerCell()->getMapExtraInfo() << 24)
-                    >> 24;
-                if (g_game->onSameTeam(owner, g_netLocalGamePos)) {
+                ExtraInfoUnion cellExtra;
+                cellExtra.m_extraInfo =
+                    currCell->getTriggerCell()->getMapExtraInfo();
+                if (g_game->onSameTeam(cellExtra.m_shipyardInfo.m_owner,
+                                       g_netLocalGamePos)) {
                     g_mouseManager->setPointer(6, mouseManager::ADVENTURE_SET);
                     m_advCommand = 8;
                     return 1;
