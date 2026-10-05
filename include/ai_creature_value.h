@@ -17,6 +17,7 @@ public:
     short m_amount;
 
     DC_ADDRESS(0x037e28, 0xa)
+    MAC_ADDRESS(0x03c048, 0x20)
     bool operator<(const type_creature_value& arg) const
     {
         return m_value < arg.m_value;

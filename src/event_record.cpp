@@ -48,7 +48,7 @@ VA_COMPGEN(0x0049a5b0, 0x23, SCALAR_DELETING_DTOR, type_event_record)
 VA(0x0049a5e0, 0x1D)
 DC_ADDRESS(0x08c678, 0x1e)
 MAC_ADDRESS(0x0befc0, 0x48)
-unsigned char type_event_record::load(TAbstractFile* infile, int version)
+bool type_event_record::load(TAbstractFile* infile, int version)
 {
     return infile->read(&m_playerId, 1) == 1;
 }
@@ -56,7 +56,7 @@ unsigned char type_event_record::load(TAbstractFile* infile, int version)
 VA(0x0049a600, 0x1D)
 DC_ADDRESS(0x08c698, 0x1e)
 MAC_ADDRESS(0x0bf008, 0x48)
-unsigned char type_event_record::save(TAbstractFile* outfile)
+bool type_event_record::save(TAbstractFile* outfile)
 {
     return outfile->write(&m_playerId, 1) == 1;
 }
@@ -82,7 +82,7 @@ static void setPlayer(char newPlayer)
 // Retail base vtable slot4 folds to the empty ret4 body at0x485d80.
 DC_ADDRESS(0x08c708, 0x4)
 MAC_ADDRESS(0x0bf0f8, 0x4)
-void type_event_record::replay(unsigned char draw)
+void type_event_record::replay(bool draw)
 {
 }
 
@@ -141,7 +141,7 @@ type_event_record_type type_record_move_hero::getType() const
 VA(0x0049a690, 0xB1)
 DC_ADDRESS(0x08c7ec, 0xce)
 MAC_ADDRESS(0x0bf1f8, 0x148)
-unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
+bool type_record_move_hero::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
@@ -153,28 +153,28 @@ unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
         return 0;
     if (infile->read(&m_source, sizeof(m_source)) != sizeof(m_source))
         return 0;
-    unsigned char ok = infile->read(&m_destination, sizeof(m_destination)) == sizeof(m_destination);
+    bool ok = infile->read(&m_destination, sizeof(m_destination)) == sizeof(m_destination);
     return ok;
 }
 
 VA(0x0049a750, 0x63)
 DC_ADDRESS(0x08c8bc, 0x60)
 MAC_ADDRESS(0x0bf340, 0xe4)
-unsigned char type_record_move_hero::save(TAbstractFile* outfile)
+bool type_record_move_hero::save(TAbstractFile* outfile)
 {
     int heroId = m_currentHero->m_id;
     type_event_record::save(outfile);
     outfile->write(&heroId, sizeof(heroId));
     outfile->write(&m_direction, 1);
     outfile->write(&m_source, sizeof(m_source));
-    unsigned char ok = outfile->write(&m_destination, sizeof(m_destination)) == sizeof(m_destination);
+    bool ok = outfile->write(&m_destination, sizeof(m_destination)) == sizeof(m_destination);
     return ok;
 }
 
 VA(0x0049a7c0, 0x144)
 DC_ADDRESS(0x08c91c, 0xce)
 MAC_ADDRESS(0x0bf424, 0x15c)
-void type_record_move_hero::replay(unsigned char draw)
+void type_record_move_hero::replay(bool draw)
 {
     setPlayer(m_playerId);
 
@@ -246,7 +246,7 @@ type_event_record_type type_record_teleport::getType() const
 VA(0x0049a9c0, 0x7B)
 DC_ADDRESS(0x08caf0, 0x3c)
 MAC_ADDRESS(0x0bf718, 0x60)
-void type_record_teleport::replay(unsigned char draw)
+void type_record_teleport::replay(bool draw)
 {
     setPlayer(m_playerId);
 
@@ -288,7 +288,7 @@ type_event_record* type_record_claim_mine::create()
 VA(0x0049aa70, 0x71)
 DC_ADDRESS(0x08cbb4, 0x66)
 MAC_ADDRESS(0x0bf840, 0xec)
-unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
+bool type_record_claim_mine::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
@@ -296,26 +296,26 @@ unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
         return 0;
     if (infile->read(&m_oldOwner, 1) != 1)
         return 0;
-    unsigned char ok = infile->read(&m_newOwner, 1) == 1;
+    bool ok = infile->read(&m_newOwner, 1) == 1;
     return ok;
 }
 
 VA(0x0049aaf0, 0x4A)
 DC_ADDRESS(0x08cc1c, 0x4e)
 MAC_ADDRESS(0x0bf92c, 0xbc)
-unsigned char type_record_claim_mine::save(TAbstractFile* outfile)
+bool type_record_claim_mine::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
     outfile->write(&m_id, sizeof(m_id));
     outfile->write(&m_oldOwner, 1);
-    unsigned char ok = outfile->write(&m_newOwner, 1) == 1;
+    bool ok = outfile->write(&m_newOwner, 1) == 1;
     return ok;
 }
 
 VA(0x0049ab40, 0x74)
 DC_ADDRESS(0x08cc6c, 0x6c)
 MAC_ADDRESS(0x0bf9e8, 0xc4)
-void type_record_claim_mine::replay(unsigned char draw)
+void type_record_claim_mine::replay(bool draw)
 {
     g_game->claimMine(m_id, m_newOwner, const_recorded_action);
     if (draw) {
@@ -384,7 +384,7 @@ type_event_record* type_record_claim_town::create()
 VA(0x0049ac20, 0x7E)
 DC_ADDRESS(0x08cdd8, 0x70)
 MAC_ADDRESS(0x0bfc0c, 0xac)
-void type_record_claim_town::replay(unsigned char draw)
+void type_record_claim_town::replay(bool draw)
 {
     g_game->m_towns[m_id].m_owner = m_newOwner;
     if (draw) {
@@ -444,7 +444,7 @@ type_event_record_type type_record_hide_boat::getType() const
 VA(0x0049ad00, 0xE7)
 DC_ADDRESS(0x08cedc, 0x4e)
 MAC_ADDRESS(0x0bfdb0, 0x1c0)
-unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
+bool type_record_hide_boat::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
@@ -472,7 +472,7 @@ unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
 VA(0x0049adf0, 0x8A)
 DC_ADDRESS(0x08cf2c, 0x36)
 MAC_ADDRESS(0x0bff70, 0x11c)
-unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
+bool type_record_hide_boat::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
     if (outfile->write(&m_currentBoat->m_id, 1) != 1)
@@ -489,7 +489,7 @@ unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
 VA(0x0049ae80, 0x44)
 DC_ADDRESS(0x08cf64, 0x2e)
 MAC_ADDRESS(0x0c008c, 0x78)
-void type_record_hide_boat::replay(unsigned char draw)
+void type_record_hide_boat::replay(bool draw)
 {
     m_currentBoat->m_occupied = m_occupied;
     m_currentBoat->m_occupyingHero = m_occupyingHero;
@@ -544,13 +544,13 @@ type_event_record_type type_record_show_boat::getType() const
 VA(0x0049af40, 0x51)
 DC_ADDRESS(0x08d070, 0xa0)
 MAC_ADDRESS(0x0c0294, 0xa8)
-unsigned char type_record_show_boat::load(TAbstractFile* infile, int version)
+bool type_record_show_boat::load(TAbstractFile* infile, int version)
 {
     if (!type_record_hide_boat::load(infile, version))
         return 0;
     if (infile->read(&m_location, sizeof(m_location)) != sizeof(m_location))
         return 0;
-    unsigned char ok = infile->read(&m_previousLocation, sizeof(m_previousLocation))
+    bool ok = infile->read(&m_previousLocation, sizeof(m_previousLocation))
                        == sizeof(m_previousLocation);
     return ok;
 }
@@ -558,11 +558,11 @@ unsigned char type_record_show_boat::load(TAbstractFile* infile, int version)
 VA(0x0049afa0, 0x9F)
 DC_ADDRESS(0x08d110, 0x3a)
 MAC_ADDRESS(0x0c033c, 0x88)
-unsigned char type_record_show_boat::save(TAbstractFile* outfile)
+bool type_record_show_boat::save(TAbstractFile* outfile)
 {
     type_record_hide_boat::save(outfile);
     outfile->write(&m_location, sizeof(m_location));
-    unsigned char ok = outfile->write(&m_previousLocation, sizeof(m_previousLocation))
+    bool ok = outfile->write(&m_previousLocation, sizeof(m_previousLocation))
                        == sizeof(m_previousLocation);
     return ok;
 }
@@ -570,7 +570,7 @@ unsigned char type_record_show_boat::save(TAbstractFile* outfile)
 VA(0x0049b040, 0xB5)
 DC_ADDRESS(0x08d14c, 0x8a)
 MAC_ADDRESS(0x0c03c4, 0xf8)
-void type_record_show_boat::replay(unsigned char draw)
+void type_record_show_boat::replay(bool draw)
 {
     m_currentBoat->m_occupied = m_occupied;
     m_currentBoat->m_x = m_location.m_x;
@@ -633,7 +633,7 @@ type_event_record_type type_record_erase::getType() const
 VA(0x0049b190, 0x8B)
 DC_ADDRESS(0x08d2bc, 0x7a)
 MAC_ADDRESS(0x0c05f8, 0x118)
-unsigned char type_record_erase::load(TAbstractFile* infile, int version)
+bool type_record_erase::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
@@ -643,27 +643,27 @@ unsigned char type_record_erase::load(TAbstractFile* infile, int version)
         return 0;
     if (infile->read(&m_extraInfo, sizeof(m_extraInfo)) != sizeof(m_extraInfo))
         return 0;
-    unsigned char ok = infile->read(&m_objectIndex, sizeof(m_objectIndex)) == sizeof(m_objectIndex);
+    bool ok = infile->read(&m_objectIndex, sizeof(m_objectIndex)) == sizeof(m_objectIndex);
     return ok;
 }
 
 VA(0x0049b220, 0x57)
 DC_ADDRESS(0x08d338, 0x90)
 MAC_ADDRESS(0x0c0710, 0xd8)
-unsigned char type_record_erase::save(TAbstractFile* outfile)
+bool type_record_erase::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
     outfile->write(&m_location, sizeof(m_location));
     outfile->write(&m_objectId, sizeof(m_objectId));
     outfile->write(&m_extraInfo, sizeof(m_extraInfo));
-    unsigned char ok = outfile->write(&m_objectIndex, sizeof(m_objectIndex)) == sizeof(m_objectIndex);
+    bool ok = outfile->write(&m_objectIndex, sizeof(m_objectIndex)) == sizeof(m_objectIndex);
     return ok;
 }
 
 VA(0x0049b280, 0xEA)
 DC_ADDRESS(0x08d3c8, 0xa4)
 MAC_ADDRESS(0x0c07e8, 0x144)
-void type_record_erase::replay(unsigned char draw)
+void type_record_erase::replay(bool draw)
 {
     NewmapCell* cell = g_game->getCell(m_location);
     g_advManager->mobilizeCurrHero(1, 0, draw);
@@ -719,7 +719,7 @@ type_event_record* type_record_hide_hero::create()
 VA(0x0049b430, 0xC8)
 DC_ADDRESS(0x08d52c, 0x72)
 MAC_ADDRESS(0x0c0aac, 0x150)
-unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
+bool type_record_hide_hero::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
@@ -743,7 +743,7 @@ unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
 VA(0x0049b500, 0x61)
 DC_ADDRESS(0x08d5a0, 0x4e)
 MAC_ADDRESS(0x0c0bfc, 0xdc)
-unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
+bool type_record_hide_hero::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
     outfile->write(&m_currentHero->m_id, sizeof(m_currentHero->m_id));
@@ -751,14 +751,14 @@ unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
     unsigned char packed = m_prevOwner;
     if (m_townGarrison)
         packed |= 0x40;
-    unsigned char ok = outfile->write(&packed, 1) == 1;
+    bool ok = outfile->write(&packed, 1) == 1;
     return ok;
 }
 
 VA(0x0049b570, 0x102)
 DC_ADDRESS(0x08d5f0, 0x96)
 MAC_ADDRESS(0x0c0cd8, 0x130)
-void type_record_hide_hero::replay(unsigned char draw)
+void type_record_hide_hero::replay(bool draw)
 {
     setPlayer(m_playerId);
 
@@ -827,7 +827,7 @@ type_event_record_type type_record_show_hero::getType() const
 VA(0x0049b6d0, 0x85)
 DC_ADDRESS(0x08d7ec, 0x72)
 MAC_ADDRESS(0x0c0fbc, 0x100)
-unsigned char type_record_show_hero::load(TAbstractFile* infile, int version)
+bool type_record_show_hero::load(TAbstractFile* infile, int version)
 {
     if (!type_record_hide_hero::load(infile, version))
         return 0;
@@ -837,27 +837,27 @@ unsigned char type_record_show_hero::load(TAbstractFile* infile, int version)
         return 0;
     if (infile->read(&m_onBoat, 1) != 1)
         return 0;
-    unsigned char ok = infile->read(&m_previousBoat, 1) == 1;
+    bool ok = infile->read(&m_previousBoat, 1) == 1;
     return ok;
 }
 
 VA(0x0049b760, 0x95)
 DC_ADDRESS(0x08d860, 0x52)
 MAC_ADDRESS(0x0c10bc, 0xc0)
-unsigned char type_record_show_hero::save(TAbstractFile* outfile)
+bool type_record_show_hero::save(TAbstractFile* outfile)
 {
     type_record_hide_hero::save(outfile);
     outfile->write(&m_location, sizeof(m_location));
     outfile->write(&m_previousLocation, sizeof(m_previousLocation));
     outfile->write(&m_onBoat, 1);
-    unsigned char ok = outfile->write(&m_previousBoat, 1) == 1;
+    bool ok = outfile->write(&m_previousBoat, 1) == 1;
     return ok;
 }
 
 VA(0x0049b800, 0x15E)
 DC_ADDRESS(0x08d8b4, 0x140)
 MAC_ADDRESS(0x0c117c, 0x178)
-void type_record_show_hero::replay(unsigned char draw)
+void type_record_show_hero::replay(bool draw)
 {
     setPlayer(m_playerId);
 
@@ -929,28 +929,28 @@ type_event_record_type type_record_player_death::getType() const
 VA(0x0049ba40, 0x3D)
 DC_ADDRESS(0x08daec, 0x3e)
 MAC_ADDRESS(0x0c1424, 0x94)
-unsigned char type_record_player_death::load(TAbstractFile* infile, int version)
+bool type_record_player_death::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
-    unsigned char ok = infile->read(&m_extra, 1) == 1;
+    bool ok = infile->read(&m_extra, 1) == 1;
     return ok;
 }
 
 VA(0x0049ba80, 0x30)
 DC_ADDRESS(0x08db2c, 0x68)
 MAC_ADDRESS(0x0c14b8, 0x84)
-unsigned char type_record_player_death::save(TAbstractFile* outfile)
+bool type_record_player_death::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
-    unsigned char ok = outfile->write(&m_extra, 1) == 1;
+    bool ok = outfile->write(&m_extra, 1) == 1;
     return ok;
 }
 
 VA(0x0049bab0, 0x11A)
 DC_ADDRESS(0x08db94, 0x8a)
 MAC_ADDRESS(0x0c153c, 0xf4)
-void type_record_player_death::replay(unsigned char draw)
+void type_record_player_death::replay(bool draw)
 {
     if (draw) {
         std::string text;
@@ -1001,7 +1001,7 @@ type_event_record_type type_record_shroud::getType() const
 VA(0x0049bc90, 0x151)
 DC_ADDRESS(0x08dcd8, 0xb0)
 MAC_ADDRESS(0x0c16e0, 0xf4)
-unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
+bool type_record_shroud::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
         return 0;
@@ -1025,7 +1025,7 @@ unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
 VA(0x0049bdf0, 0x66)
 DC_ADDRESS(0x08dd88, 0x62)
 MAC_ADDRESS(0x0c17d4, 0xcc)
-unsigned char type_record_shroud::save(TAbstractFile* outfile)
+bool type_record_shroud::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
     short count = m_changes.size();
@@ -1059,7 +1059,7 @@ void type_record_shroud::addChange(int x, int y, int z,
 VA(0x0049be60, 0xBA)
 DC_ADDRESS(0x08de70, 0xf0)
 MAC_ADDRESS(0x0c1900, 0xe4)
-void type_record_shroud::replay(unsigned char draw)
+void type_record_shroud::replay(bool draw)
 {
     unsigned char changed = 0;
     int i = m_changes.size();
@@ -1374,7 +1374,8 @@ void game::playRecordedEvents()
     g_config.m_blackoutComputer = 0;
 
     for (int j = 0; j < size; ++j) {
-        unsigned char draw = !interrupted
+        // Boolean carrier for the independently proven virtual replay(bool).
+        bool draw = !interrupted
             && m_eventRecords[j]->getPlayerId() != savedPlayer;
         m_eventRecords[j]->replay(draw);
 

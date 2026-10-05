@@ -771,7 +771,7 @@ DC_ADDRESS(0x125c34, 0x2a)
 MAC_ADDRESS(0x15938c, 0x7c)
 void type_sacrifice_window::updateAllSlots()
 {
-    long slotCount = g_game->m_gameVersion >= 2 ? 19 : 18;
+    long slotCount = g_game->getGameVersion() >= 2 ? 19 : 18;
     for (long slot = 0; slot < slotCount; ++slot)
         updateSlot(slot);
 }
@@ -933,6 +933,23 @@ void type_sacrifice_window::updateCreatureOffering(
             creature.m_offeringSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
         }
     }
+}
+
+// Project-inferred display operations shared by creature-mode initialization
+// and completed sacrifice. Preserve the native update helper and the
+// source-frame-before-offering-frame hide order; no native identity claimed.
+void type_sacrifice_window::updateUnselectedCreatureOffering(
+    type_creature_offering& creature)
+{
+    updateCreatureOffering(creature);
+    creature.m_sourceSelectionFrame->setVisible(0);
+    creature.m_offeringSelectionFrame->setVisible(0);
+}
+
+void type_sacrifice_window::clearCurrentCreature()
+{
+    m_currentCreature.m_group = -1;
+    updateCreatureOffering(m_currentCreature);
 }
 
 VA(0x00563150, 0x141)
@@ -1378,13 +1395,10 @@ int type_sacrifice_window::sacrifice(message& msg)
                 if (army->m_numTroops[group] <= 0)
                     army->dismiss(group);
                 window->m_creatureOfferings[group].m_amount = 0;
-                window->updateCreatureOffering(
+                window->updateUnselectedCreatureOffering(
                     window->m_creatureOfferings[group]);
-                window->m_creatureOfferings[group].m_sourceSelectionFrame->setVisible(0);
-                window->m_creatureOfferings[group].m_offeringSelectionFrame->setVisible(0);
             }
-            window->m_currentCreature.m_group = -1;
-            window->updateCreatureOffering(window->m_currentCreature);
+            window->clearCurrentCreature();
             window->m_creatureNameWidget->setVisible(0);
             window->m_allCreaturesButton->enable(
                 army->getCreatureTotal() > 1);
@@ -1813,6 +1827,15 @@ type_transformer_slot::type_transformer_slot(
 // 0x5654f0 - so neither row is an /OPT:ICF fold.
 VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 
+// Project helper for the selection pair only. In creatureClick the old
+// indices remain live through both updates, after the border was hidden;
+// unselect() therefore cannot replace the entire intervening sequence.
+void type_skeleton_window::clearCreatureSelection()
+{
+    m_selectedGroup = -1;
+    m_selectedIndex = -1;
+}
+
 // DC proves push_back; its text subscripts forward to getText. At 98.3508%,
 // the final rollover append's growth path retains an extra vector::size.
 // Removing the vector alias or binding its pointer argument locally does
@@ -1827,8 +1850,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     m_selectedCreatures.initialize();
     m_armies[0] = newArmy;
     m_armies[1] = &m_selectedCreatures;
-    m_selectedGroup = -1;
-    m_selectedIndex = -1;
+    clearCreatureSelection();
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 600, 485, widgetId++, "SkTrnBk.pcx", 0x800);
@@ -1907,7 +1929,8 @@ type_skeleton_window::~type_skeleton_window()
 {
     for (unsigned int i = 0; i < m_deathSamples.size(); i++) {
         g_soundManager->stopSample(m_deathSamples[i]->m_memSample.m_memSampleHandle);
-        m_deathSamples[i]->dispose();
+        // The preceding dereference and Complete release are unguarded.
+        ResourceManager::dispose(static_cast<resource*>(m_deathSamples[i]));
     }
     deleteWidgets();
 }
@@ -1921,8 +1944,7 @@ void type_skeleton_window::unselect()
     if (m_selectedGroup < 0)
         return;
     m_selectBorder[m_selectedGroup][m_selectedIndex]->setVisible(0);
-    m_selectedGroup = -1;
-    m_selectedIndex = -1;
+    clearCreatureSelection();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2157
@@ -2077,12 +2099,13 @@ int type_skeleton_window::windowHandler(message& msg)
 // Original: type_skeleton_window::ExitDialog; source line 2293
 // Retail vtable 0x641694 slot 14 points to 0x5f1180, the identical body claimed
 // by type_university_window::exitDialog. Both classes own this override.
+// Mac retains the skeleton-window override between windowHandler and
+// handleWidgetHover; descriptor data +0x7c28 selects this 44-byte body.
 DC_ADDRESS(0x128080, 0x16)
+MAC_ADDRESS(0x15cc44, 0x2c)
 int type_skeleton_window::exitDialog(message& msg)
 {
-    msg.m_id = MESSAGE_WIDGET;
-    g_windowManager->m_dialogReturn = 0;
-    msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+    g_windowManager->finishDialog(msg, 0);
     return MESSAGE_DISPATCH_FORWARD;
 }
 

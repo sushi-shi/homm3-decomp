@@ -314,7 +314,9 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
 
     unsigned char upgradeAllValid = 0;
     unsigned char allUpgraded = 1;
-    memset(m_totalCost, 0, sizeof m_totalCost);
+    // Mac 0x10948c/0x109504 clear the two seven-resource arrays through
+    // bzero. Use the platform clear operation for both retained calls.
+    ZeroMemory(m_totalCost, sizeof m_totalCost);
 
     // Retail carries `id` itself as the loop's induction variable and
     // recovers `i` for the test (`inc edi / mov [ebp-8],edi /
@@ -331,7 +333,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
         s.m_count = currHero->m_army.m_numTroops[i];
         s.m_level = g_creatureTypeTraits[s.m_type].m_level;
         sprintf(s.m_countText, "%d", s.m_count);
-        memset(s.m_cost, 0, sizeof s.m_cost);
+        ZeroMemory(s.m_cost, sizeof s.m_cost);
 
         // Mac expands game::isBaseCreature here (0:0x109528), in the
         // state check (0x10989c), and in upgradeSlot (0x109c70).

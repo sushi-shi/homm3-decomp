@@ -25,6 +25,7 @@
 #include "message.h"
 #include "misc.h"
 #include "mousemgr.h"
+#include "platform.h"
 #include "quickherowindow.h"
 #include "quicktownwindow.h"
 #include "recruit.h"
@@ -909,7 +910,7 @@ public:
     DC_ADDRESS(0x181418, 0x50)
     CTownNetMsgHandler(TResourceDisplay* display)
     {
-        m_resourceDisplay = display;
+        setResourceDisplay(display);
     }
 
     // Four bytes on the Dreamcast and no retail row of its own, so it
@@ -980,11 +981,12 @@ MAC_ADDRESS(0x1b8f54, 0xcc)
 townObject::~townObject()
 {
     delete m_objBorder;
-    m_objIcon->dispose();
+    ResourceManager::dispose(m_objIcon);
     if (m_objOutline)
-        m_objOutline->dispose();
+        ResourceManager::dispose(m_objOutline);
     if (m_objHotspot)
-        m_objHotspot->dispose();
+        ResourceManager::dispose(m_objHotspot);
+    ResourceManager::delSprFromCache();
 }
 
 // Original: townObject::DrawOutline; townmgr.cpp:1913
@@ -1101,14 +1103,33 @@ void townObject::draw(int incFrame, bool drawHotspots)
     }
 }
 
+// Project-inferred shared cache transition. The town screen supplies its
+// z-buffer-resolved ID; the fort page supplies the dispatched widget ID.
+// Save both values whenever either changes, before calling rollover code.
+// Ordinary owner-TU placement is provisional, without a native helper claim.
+bool townManager::updateHover(int widgetId, int qualifier)
+{
+    if (m_lastHover == widgetId && m_lastQualifier == qualifier)
+        return false;
+    m_lastHover = widgetId;
+    m_lastQualifier = qualifier;
+    return true;
+}
+
+void townManager::invalidateHover()
+{
+    m_lastHover = -1;
+}
+
 // The manager constructor, and with it the whole class layout. It is
 // the only body in the compiland that calls baseManager's constructor
 // and the only one that stores vtable 0x643720, whose three slots -
 // 0x5c63c0 Open, 0x5c71b0 Close, 0x5d3240 Main - are the three pure
 // slots baseManager introduces. Every member below +0x38 is written
 // here exactly once, which is what fixes the layout: two arrays cleared
-// by inline memset (seven object slots at +0x40, forty-four strip slots
-// at +0x5c), the -1 sentinels, and the two file-scope words.
+// by expanded zero fills (seven creature sprites at +0x40, forty-four
+// town objects at +0x5c), the -1 sentinels, and the two file-scope words.
+// Mac 0x1b9718/0x1b9724 retains the 28/176-byte clear calls.
 VA(0x005c3310, 0xDF)
 DC_ADDRESS(0x16a59c, 0xa8)
 MAC_ADDRESS(0x1b9684, 0x154)
@@ -1126,8 +1147,8 @@ townManager::townManager()
     m_netMsgHandler = 0;
     m_netMsgHandlerSave = 0;
     m_panorama = 0;
-    memset(m_monPix, 0, sizeof(m_monPix));
-    memset(m_townObjects, 0, sizeof(m_townObjects));
+    ZeroMemory(m_monPix, sizeof(m_monPix));
+    ZeroMemory(m_townObjects, sizeof(m_townObjects));
     m_townObjectCount = 0;
     m_loadedTownType = -1;
     m_townWindow = 0;
@@ -1198,7 +1219,7 @@ TTownScreenWindow::TTownScreenWindow()
         m_topTown = 0;
 
     m_zBuffer = new unsigned short[m_height * m_width];
-    memset(m_zBuffer, 0, m_height * m_width * 2);
+    ZeroMemory(m_zBuffer, m_height * m_width * 2);
 
     m_widgets.reserve(96);
 
@@ -1711,6 +1732,9 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
     }
 }
 
+// DC 0x16b734..0x16b768 draws GameText[727] and stops samples before
+// opening. Complete Mac 0x1be258..0x1be26c starts directly with input flush,
+// mouse-thread setup, hero consistency and polling; no busy-text draw remains.
 VA(0x005c63c0, 0x2E1)
 DC_ADDRESS(0x16b718, 0x2ca)
 MAC_ADDRESS(0x1be22c, 0x2f4)
@@ -1735,8 +1759,8 @@ int townManager::open(int newPriority)
     g_tavernWindow = 0;
     m_netMsgHandler = 0;
     m_netMsgHandlerSave = 0;
-    memset(m_monPix, 0, sizeof(m_monPix));
-    memset(m_townObjects, 0, sizeof(m_townObjects));
+    ZeroMemory(m_monPix, sizeof(m_monPix));
+    ZeroMemory(m_townObjects, sizeof(m_townObjects));
     m_currIndex = -1;
     m_srcIndex = -1;
     m_destIndex = -1;
@@ -1895,7 +1919,7 @@ void townManager::updateTownInfo()
 // E:\gamedcs\townmgr.cpp:2526
 DC_ADDRESS(0x16b030, 0x52)
 MAC_ADDRESS(0x1bd774, 0x90)
-void TTownScreenWindow::doTownKnob(unsigned char up)
+void TTownScreenWindow::doTownKnob(bool up)
 {
     playerData* player = g_game->getLocalPlayer();
     if (up) {
@@ -1928,20 +1952,21 @@ void TTownScreenWindow::bonusRightClick(long id)
 }
 
 // Original: townManager::ChangeTown; townmgr.cpp:2833
-// DC first evicts the console sprite cache. Complete owns ordinary cached
-// resources and has no Sp_loaded/cache-reload path; its four expanded calls
-// begin at StartMouseThread and retain the setup/message/stop sequence.
+// DC 0x16b9f2 first evicts the console sprite cache. Keep that call at
+// entry, as in open/unloadTown; the desktop helper is empty, so Mac
+// 0x1be53c and the Windows expansions start with StartMouseThread.
 DC_ADDRESS(0x16b9e4, 0xac)
 MAC_ADDRESS(0x1be520, 0xac)
-void townManager::changeTown(unsigned char fade)
+void townManager::changeTown(bool fade)
 {
+    ResourceManager::delSprFromCache();
     startMouseThread();
     setupExtraStuff();
     setupTown(fade);
     message msg;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeY = -1;
-    setCommandAndText(&msg);
+    setCommandAndText(msg);
     stopMouseThread();
 }
 
@@ -1956,10 +1981,13 @@ void townManager::changeTown(unsigned char fade)
 // Complete reverses DC's StartMP3/UpdateTownLocators order. Retail becomes
 // exact when loadedTownType is recorded before the three strip pointers;
 // that source order lets VC6 schedule the shared -2 and dwelling cursor early.
+// DC 0x16bca8..0x16bcd2 draws GameText[727] before testing loadedTownType.
+// Complete Mac 0x1bea60..0x1bea88 goes directly from the conditional window
+// redraw to that test and unloadTown; the extra busy-text operation is absent.
 VA(0x005c6870, 0x59F)
 DC_ADDRESS(0x16bba4, 0x540)
 MAC_ADDRESS(0x1be888, 0x738)  // anchor-caller(Open 0x5c63c0 + Main) + anchor-callee(UnloadTown/NewStrips/RedrawTownScreen) + anchor-string %sBack.pcx
-void townManager::setupTown(unsigned char fade)
+void townManager::setupTown(bool fade)
 {
     message msg;
     int objToLoad;
@@ -2100,7 +2128,7 @@ void townManager::setupTown(unsigned char fade)
 // its empty arm draws no group at all.
 VA(0x005c6e10, 0x29B)
 DC_ADDRESS(0x16c0e4, 0x1f4)
-MAC_ADDRESS(0x1befc0, 0x308)
+MAC_ADDRESS(0x1befc0, 0x308)  // MAC_ABSTRACTION_FROM(tokens1:dfa462667662,13.7887): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 void townManager::newStrips()
 {
     if (m_townToView->m_garrisonHeroId != -1) {
@@ -2187,6 +2215,11 @@ void townManager::unloadTown()
 // left here is the two windows the manager owns, the fade back to the
 // adventure map, and the network arm that hands the dialog pump's
 // helper back before dropping the popup it was driving.
+// DC additionally stops all samples and draws GameText[727] before unload,
+// then calls SwitchAmbientMusic with the adventure terrain track. Complete
+// Mac 0x1bf404..0x1bf51c starts with unloadTown and uses fadeScreen between
+// window disposal and network restoration; none of those three DC operations
+// remains in the retained Complete close body.
 VA(0x005c71b0, 0x9C)
 DC_ADDRESS(0x16c3e8, 0x130)
 MAC_ADDRESS(0x1bf404, 0x11c)
@@ -2273,32 +2306,41 @@ void townManager::setHeroCommand()
     strcpy(m_statusText, g_townCommand[9]);
 }
 
+// DC 0x16c752/0x16c7f0/0x16c826/0x16c868/0x16c8b8/0x16c908/0x16c910
+// retain the seven GetArmyName calls. Mac 0x1bf860..0x1bfba4 expands
+// their range guards and singular/plural selections in these same arms.
 VA(0x005c7400, 0x391)
 DC_ADDRESS(0x16c6a8, 0x296)
 MAC_ADDRESS(0x1bf77c, 0x454)
+// Mac 0x1bf860..0x1bf884 and six sibling arms expand GetArmyName:
+// 0..0x96 guard, empty fallback, and the singular/plural trait columns.
+// Keep those operations on the canonical header helper. VC6 now expands
+// the ordinary getNumArmies call that retail retains at +0x21: all seven
+// name helpers expand, and all other calls agree. This caller's C2 cost is
+// 710 (budget 1420); the recovered helper path measures 88.3501% versus
+// the old flattened caller's 100%. Preserve both canonical boundaries.
+// DC 3275/3277 places command initialization before native unsigned-char
+// restricted. Direct GetArmyName arguments follow DC 3297..3375. This source
+// family remains 88.3501%; a temporary depth-zero army-count arm reproduces
+// 100%, proving that getNumArmies admission is the sole remaining boundary.
 void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 {
-    char flag = 0;
     m_command = -1;
+    unsigned char restricted = 0;
     if (m_srcStrip->m_group->getNumArmies() == 1) {
         if (m_townToView) {
             if (m_srcStrip == m_heroStrip || m_townToView->m_garrisonHeroId != -1) {
                 if (m_destStrip != m_srcStrip)
-                    flag = 1;
+                    restricted = 1;
             }
         } else if (m_srcStrip == m_heroStrip && m_destStrip != m_srcStrip) {
-            flag = 1;
+            restricted = 1;
         }
     }
 
     if (m_srcStrip == m_destStrip && m_srcIndex == m_destIndex) {
         int id = m_srcStrip->m_group->m_armies[m_srcIndex];
-        const char* name;
-        if (id >= 0 && id <= 150)
-            name = g_creatureTypeTraits[id].m_pluralName;
-        else
-            name = "";
-        sprintf(m_statusText, g_townCommand[4], name);
+        sprintf(m_statusText, g_townCommand[4], getArmyName(id, 2));
         m_command = 1;
         return;
     }
@@ -2313,52 +2355,36 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
     int selId = m_srcStrip->m_group->m_armies[m_srcIndex];
     if (anchorId == selId && selOwner == m_destStrip->m_owner) {
         if (splitEnabled) {
-            const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_name;
-            else
-                name = "";
-            sprintf(m_statusText, g_townCommand[0], name);
+            sprintf(m_statusText, g_townCommand[0],
+                    getArmyName(selId, 1));
             m_command = 5;
             return;
         }
-        if (flag) {
+        if (restricted) {
             strcpy(m_statusText, g_townCommand[1]);
             return;
         }
-        const char* name;
-        if (selId >= 0 && selId <= 150)
-            name = g_creatureTypeTraits[selId].m_name;
-        else
-            name = "";
-        sprintf(m_statusText, g_townCommand[2], name);
+        sprintf(m_statusText, g_townCommand[2],
+                getArmyName(selId, 1));
         m_command = 2;
         return;
     }
 
     if (splitEnabled) {
         if (anchorId == -1) {
-            const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_name;
-            else
-                name = "";
-            sprintf(m_statusText, g_townCommand[3], name);
+            sprintf(m_statusText, g_townCommand[3],
+                    getArmyName(selId, 1));
             m_command = 5;
             return;
         }
     } else {
         if (anchorId == -1) {
-            if (flag) {
+            if (restricted) {
                 strcpy(m_statusText, g_townCommand[5]);
                 return;
             }
-            const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_pluralName;
-            else
-                name = "";
-            sprintf(m_statusText, g_townCommand[6], name);
+            sprintf(m_statusText, g_townCommand[6],
+                    getArmyName(selId, 2));
             m_command = 3;
             return;
         }
@@ -2368,17 +2394,8 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
         selectArmy(m_destStrip, m_destIndex, joinDialog);
         return;
     }
-    const char* nameAnchor;
-    if (anchorId >= 0 && anchorId <= 150)
-        nameAnchor = g_creatureTypeTraits[anchorId].m_pluralName;
-    else
-        nameAnchor = "";
-    const char* nameSel;
-    if (selId >= 0 && selId <= 150)
-        nameSel = g_creatureTypeTraits[selId].m_pluralName;
-    else
-        nameSel = "";
-    sprintf(m_statusText, g_townCommand[7], nameSel, nameAnchor);
+    sprintf(m_statusText, g_townCommand[7],
+            getArmyName(selId, 2), getArmyName(anchorId, 2));
     m_command = 3;
 }
 
@@ -2401,16 +2418,21 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 // Residual: town-id array address reassociation; four sum orders and named
 // slot/top or pointer-index forms did not improve it. Naming the selected
 // town id before getTownName is also byte-flat. Helpers stay canonical.
+// Original public ?SetCommandAndText@townManager@@QAAXAAUmessage@@@Z
+// proves message&. Both native and Complete pass one address; this ordinary
+// member is not a pointer-based callback or a virtual interface. Restoring
+// the reference leaves this full VC6 body and both caller bodies byte-flat;
+// the 99.9775% residual remains only the two town-ID address rows.
 // E:\gamedcs\townmgr.cpp:3383
 VA(0x005c77a0, 0x8DD)
 DC_ADDRESS(0x16c940, 0x572)
-MAC_ADDRESS(0x1bfbd0, 0x9e0)  // order-map + anchor-callee(SetHeroCommand 0x5c7250) + arity(ret 4, message*)
-void townManager::setCommandAndText(message* msg)
+MAC_ADDRESS(0x1bfbd0, 0x9e0)  // order-map + anchor-callee(SetHeroCommand 0x5c7250) + arity(ret 4, message&)
+void townManager::setCommandAndText(message& msg)
 {
-    int code = msg->m_codeY;
+    int code = msg.m_codeY;
     if (code >= 0 && code <= DWELLING_6_UPG_ID
         && (code = static_cast<TTownScreenWindow*>(m_townWindow)
-                       ->m_zBuffer[msg->m_mouseY * 800 + msg->m_mouseX] - 1) >= 0
+                       ->m_zBuffer[msg.m_mouseY * 800 + msg.m_mouseX] - 1) >= 0
         && code <= DWELLING_6_UPG_ID) {
         g_outlinedTownObjectId = code;
         playImmEffect(DATA_COMPGEN(0x0068c210, guiPopEffectName, "GuiPop"), 1);
@@ -2503,7 +2525,7 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::TOWN_GARRISON_4_SELECTOR_ID:
     case TTownScreenWindow::TOWN_GARRISON_5_SELECTOR_ID:
     case TTownScreenWindow::TOWN_GARRISON_6_SELECTOR_ID: {
-        int shift = msg->m_qualifier & 3;
+        int shift = msg.m_qualifier & 3;
         int slot = code - TTownScreenWindow::TOWN_GARRISON_0_SELECTOR_ID;
         armyCommand(m_garrisonStrip, slot, shift, 0);
         break;
@@ -2535,7 +2557,7 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::HERO_ARMY_4_SELECTOR_ID:
     case TTownScreenWindow::HERO_ARMY_5_SELECTOR_ID:
     case TTownScreenWindow::HERO_ARMY_6_SELECTOR_ID: {
-        int shift = msg->m_qualifier & 3;
+        int shift = msg.m_qualifier & 3;
         int slot = code - TTownScreenWindow::HERO_ARMY_0_SELECTOR_ID;
         armyCommand(m_heroStrip, slot, shift, 0);
         break;
@@ -2865,6 +2887,7 @@ TThievesGuildWindow::~TThievesGuildWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // Eight player columns shared by the guild builder, rollover and click handler.
@@ -3262,6 +3285,7 @@ THallWindow::~THallWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 VA(0x005cc980, 0x179F)
@@ -3396,6 +3420,7 @@ TMageGuildWindow::~TMageGuildWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // The mage guild page's rollover line. The page lays its thirty spell
@@ -3610,8 +3635,7 @@ void townManager::handleMageGuildClick()
     createPopupBank(m_hallWindow);
 
     m_hallWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
-                                  WINDOW_SCREEN_HEIGHT);
+    g_windowManager->updateScreen();
     m_hallWindow->doModal(0);
 
     if (m_netMsgHandler)
@@ -3799,6 +3823,7 @@ type_garrison_base_window::~type_garrison_base_window()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // The garrison dialog's status line, and the town page's command with
@@ -4252,6 +4277,7 @@ TBlacksmithWindow::~TBlacksmithWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 VA(0x005d1aa0, 0xB3)
@@ -4487,6 +4513,7 @@ TShipWindow::~TShipWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // Original: TShipWindow::SetRightClickText; townmgr.cpp:5461
@@ -4598,8 +4625,7 @@ void townManager::doHall()
     createPopupBank(m_hallWindow);
 
     m_hallWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
-                                  WINDOW_SCREEN_HEIGHT);
+    g_windowManager->updateScreen();
     m_hallWindow->doModal(0);
 
     delete m_hallWindow;
@@ -4754,6 +4780,8 @@ void townManager::doUniversity()
 // strips have their current slot parked at -2, both live strips redraw
 // with nothing divided out, and the four selection members go back to
 // their idle values before the status widget is dimmed.
+// DC 0x174d90 polls sound once more after RedrawTownScreen. Both desktop
+// bodies return immediately after redraw (Windows 0x5d30ac, Mac 0x1cfe20).
 VA(0x005d2f90, 0x132)
 DC_ADDRESS(0x174d1c, 0x84)
 MAC_ADDRESS(0x1cfd64, 0xd4)
@@ -4868,10 +4896,11 @@ int exitTownManager(message& msg)
     return 2;
 }
 
-// E:\gamedcs\townmgr.cpp:6792
-DC_ADDRESS(0x176bf0, 0x108)
+// Original: townManager::SwapHeroes, townmgr.cpp:6778.
+// Mac 0x1d20a8 calls town::swapHeroes (0x1b3910).
+DC_ADDRESS(0x176b88, 0x66)
 MAC_ADDRESS(0x1d207c, 0x74)
-void townManager::moveHeroToGarrison()
+void townManager::swapHeroes()
 {
     if (!g_currentPlayer->isLocalHuman())
         return;
@@ -4897,8 +4926,8 @@ MAC_ADDRESS(0x1d25c4, 0xb8)
 void townManager::drawTown(int update, int incFrame, bool drawHotspots)
 {
     if (drawHotspots)
-        memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
-               WINDOW_SCREEN_WIDTH * WINDOW_SCREEN_HEIGHT * 2);
+        ZeroMemory(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer,
+                   WINDOW_SCREEN_WIDTH * WINDOW_SCREEN_HEIGHT * 2);
     m_panorama->draw2();
     pollSound();
     for (int i = 0; i < m_townObjectCount; i++) {
@@ -4919,7 +4948,7 @@ void townManager::drawTown(int update, int incFrame, bool drawHotspots)
 // E:\gamedcs\townmgr.cpp:5854
 VA(0x005d3240, 0x19CF)
 DC_ADDRESS(0x175160, 0x14d2)
-MAC_ADDRESS(0x1d00c0, 0x19e4)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*)
+MAC_ADDRESS(0x1d00c0, 0x19e4)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message&)
 int townManager::main(message& msg)
 {
     int exitFlag = 0;
@@ -5501,7 +5530,7 @@ building_popup:
                     }
                 } else {
                     doCommand(m_command, 0, 0);
-                    setCommandAndText(&msg);
+                    setCommandAndText(msg);
                 }
                 break;
             }
@@ -5553,7 +5582,7 @@ building_popup:
         if (hover != m_lastHover || msg.m_qualifier != m_lastQualifier) {
             m_lastHover = hover;
             m_lastQualifier = msg.m_qualifier;
-            setCommandAndText(&msg);
+            setCommandAndText(msg);
         }
         break;
     }
@@ -5598,6 +5627,9 @@ building_popup:
     return 1;
 }
 
+// DC 0x176718 sends the strip-selection status through the town window.
+// Mac 0x1d1b84/0x1d1ba0 uses the window-manager broadcast instead, retaining
+// the same clear/set-status commands and widget 154.
 VA(0x005d4c10, 0x53C)
 DC_ADDRESS(0x176634, 0x552)
 MAC_ADDRESS(0x1d1aa4, 0x5d8)
@@ -5687,8 +5719,7 @@ void townManager::doCommand(int inCommand, unsigned char isGarrison,
             g_advManager->redrawAdvScreen(0, 0);
             garrisonWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW,
                                        WINDOW_ALL_WIDGETS_HIGH);
-            g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
-                                          WINDOW_SCREEN_HEIGHT);
+            g_windowManager->updateScreen();
         } else if (!m_srcStrip->m_pos) {
             heroView(m_townToView->m_garrisonHeroId, 1, 0, 0);
         } else {
@@ -5710,9 +5741,9 @@ void townManager::doCommand(int inCommand, unsigned char isGarrison,
         }
         break;
 
-    case TOWN_COMMAND_SWAP_HEROES:
+    case TOWN_COMMAND_MOVE_HERO_TO_GARRISON:
         if (g_currentPlayer->isLocalHuman()) {
-            swapHeroes();
+            moveHeroToGarrison();
             resetStrips();
         }
         break;
@@ -5724,9 +5755,9 @@ void townManager::doCommand(int inCommand, unsigned char isGarrison,
         }
         break;
 
-    case TOWN_COMMAND_MOVE_HERO_TO_GARRISON:
+    case TOWN_COMMAND_SWAP_HEROES:
         if (g_currentPlayer->isLocalHuman()) {
-            moveHeroToGarrison();
+            swapHeroes();
             resetStrips();
         }
         break;
@@ -5741,9 +5772,9 @@ void townManager::doCommand(int inCommand, unsigned char isGarrison,
 // moved, both troop strips are invalid, so they are dropped and NewStrips
 // rebuilds them around the new arrangement.
 VA(0x005d5150, 0xC2)
-DC_ADDRESS(0x176b88, 0x66)
+DC_ADDRESS(0x176bf0, 0x108)
 MAC_ADDRESS(0x1d20f0, 0x108)
-void townManager::swapHeroes()
+void townManager::moveHeroToGarrison()
 {
     playerData* player = &g_game->m_players[m_townToView->m_owner];
 
@@ -5811,7 +5842,7 @@ void townManager::moveHeroFromGarrison()
 // it), the town's info row, and one full-screen flush.
 VA(0x005d5410, 0x11C)
 DC_ADDRESS(0x176eb0, 0x72)
-MAC_ADDRESS(0x1d23cc, 0x14c)
+MAC_ADDRESS(0x1d23cc, 0x14c)  // MAC_ABSTRACTION_FROM(tokens1:09500412f306,25.3012): restore the full-screen updateScreen facade expanded at Mac 0x1d24e4..0x1d24fc; the canonical call changes the PPC frame.
 void townManager::redrawTownScreen()
 {
     drawTown(0, 1, 1);
@@ -5841,8 +5872,7 @@ void townManager::redrawTownScreen()
     updateTownInfo();
     m_townWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW,
                            WINDOW_ALL_WIDGETS_HIGH);
-    g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
-                                  WINDOW_SCREEN_HEIGHT);
+    g_windowManager->updateScreen();
 }
 
 // Clear both hovered troop selections; -2 means no slot is selected.
@@ -5936,6 +5966,7 @@ TBuyBuildWindow::~TBuyBuildWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // The buy-a-building transaction: put up TBuyBuildWindow, price the
@@ -6458,7 +6489,7 @@ void townManager::buildObj(int buildingId)
 // its own spell.
 VA(0x005d6ef0, 0x1BD)
 DC_ADDRESS(0x179e74, 0x1a8)
-MAC_ADDRESS(0x1d43c4, 0x2bc)
+MAC_ADDRESS(0x1d43c4, 0x2bc)  // MAC_ABSTRACTION_FROM(tokens1:4683f38cbe85,16.7143): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 void townManager::setupMage(heroWindow* mageWin)
 {
     message msg;
@@ -6584,8 +6615,12 @@ TTavernWindow::~TTavernWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
+// DC broadcasts the rollover text and draws widgets 13..14 with update=1.
+// Windows 0x5d7b13/0x5d7b20 and Mac 0x1d5834/0x1d5854 instead call
+// the text widget directly, then draw the same range with update=0.
 VA(0x005d7920, 0x20A)
 DC_ADDRESS(0x17a7a0, 0x288)
 MAC_ADDRESS(0x1d5600, 0x270)
@@ -6779,8 +6814,9 @@ int TTavernWindow::windowHandler(message& msg)
 VA(0x005d7e20, 0x42)
 DC_ADDRESS(0x17ad3c, 0x3a)
 MAC_ADDRESS(0x1d5c14, 0x84)
-int TTavernWindow::open(int zOrder, unsigned char update)
+int TTavernWindow::open(int zOrder, bool update)
 {
+    ResourceManager::delSprFromCache();
     videoOpen(6, 0x110, 0x68, 0, 0, 1, 1, 1);
     int result = heroWindow::open(zOrder, update);
     if (result)
@@ -6977,8 +7013,8 @@ void townManager::doTownTavern()
 // Dreamcast calls MoveHero (dc 0x17b428) and ChangeTown (dc 0x16b9e4).
 // Keep those ordinary members and their source calls; their retail expansions
 // do not establish different declarations or authorize pasted caller bodies.
-// ChangeTown's del_Spr_from_Cache operation is Dreamcast-only: retail's
-// corresponding redraw sequence omits it.
+// ChangeTown retains del_Spr_from_Cache through the canonical cache helper;
+// its desktop body is empty, so retail's redraw sequence emits no cache call.
 // Earlier flattened-caller probes reached 98.61%. Naming the selected town
 // before the guard erased GetTown's null arm (97.51%); reading dialogReturn
 // twice retained a redundant load (98.13%). Those results describe the old
@@ -7059,8 +7095,9 @@ TCastleWindow::TCastleWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
     ResourceManager::delSprFromCache();  // DC townmgr.cpp:8256
-    // Conventional release expansion of VERIFY(Widgets.size() == 0).
-    static_cast<void>(m_widgets.size() == 0);
+    // DC 8257 initializes the removed scroll_offset (+0x58), not a size
+    // check. Mac 0x1d66b8..0x1d66d4 goes from base/vtable setup to reserve.
+    // Removing the formerly assumed release VERIFY is byte-flat at 95.6830%.
     m_widgets.reserve(156);
 
     if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
@@ -7541,12 +7578,7 @@ TCastleWindow::TCastleWindow()
     exitButton->setHotkey(1);
     m_widgets.push_back(exitButton);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    heroWindow::addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x005dcb50, 0x21, SCALAR_DELETING_DTOR, TCastleWindow)
@@ -7560,6 +7592,7 @@ TCastleWindow::~TCastleWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // ---------------------------------------------------------------------

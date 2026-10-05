@@ -181,12 +181,8 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
       m_enemyGroup(g),
       m_onMagicPlains(magicTerrain)
 {
-    // DC181 calls del_Spr_from_Cache, a sprite-cache sweep with LOD
-    // file-map and cached-frame operations (resourcemanager.cpp:2280..2350).
-    // Complete has neither that work nor a call here: after the derived
-    // vptr store at +0x4d it reads h's id directly. The canonical ordinary
-    // helper belongs to resourcemanager.cpp, so retaining its external
-    // call cannot reproduce this PC prologue by cross-TU auto-inlining.
+    // DC181 names the cache hook; its Complete body is empty.
+    ResourceManager::delSprFromCache();
 
     if (h.m_id != g_lastSpellbookHeroId) {
         s_lastPage = -1;
@@ -392,12 +388,13 @@ TSpellbookWindow::~TSpellbookWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 VA(0x0059c970, 0x1B)
 DC_ADDRESS(0x14c8d4, 0x1a)
 MAC_ADDRESS(0x18c584, 0x34)
-int TSpellbookWindow::open(int newPriority, unsigned char update)
+int TSpellbookWindow::open(int newPriority, bool update)
 {
     return heroWindow::open(newPriority, update) ? 3 : 0;
 }
@@ -599,6 +596,11 @@ DATA(0x00641db8) static const int g_tabToSchool[] = {0, 3, 1, 2, 4};
 // lookup pools are required because their addends affect the function bytes.
 // Failed controls: dialogReturn-before-id changed the shared exit tail;
 // early return on a rollover cache hit changed the lifetime/return paths.
+// DC 0x14d242..0x14d25e redraws the whole book on mouse movement when
+// gpCombatManager+52 equals 1. Complete 0x59d6c4 instead enters the cached
+// rollover path, drawing only widget 249 at 0x59daa1 and updating its
+// rectangle at 0x59dac8; Mac 0x18d660..0x18d800 does the same. Preserve
+// this later rollover behavior rather than adding the older full redraw.
 VA(0x0059d040, 0xBA0)
 DC_ADDRESS(0x14cecc, 0x3c2)
 MAC_ADDRESS(0x18cdb8, 0xaa0)  // anchor-callee: calls GotoPage/get_spell_description/GetManaCost/SetIconFrame, msg jump-table, ret 4; absorbs inlined DisplayNewSchool+convertID2HelpID;

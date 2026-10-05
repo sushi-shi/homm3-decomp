@@ -234,17 +234,21 @@ static void createIncludedMasks()
 VA(0x004ebc50, 0x99)
 DC_ADDRESS(0x0dc4a4, 0x90)
 MAC_ADDRESS(0x10d828, 0xc4)
+// DC 579 tests the list entry; 581 advances the list before the two mask
+// updates attributed to 582/583. Mac 10d87c/10d880 likewise loads and
+// advances before both updates. Keep the consumed entry local to the loop
+// body. This source-order recovery is Windows-flat in initializeGameData
+// (90.1389%); its remaining indexed-address materialization is separate.
 static void createRequirementMasks(const int* townBuildings, __int64* requirements, __int64& legalBuildings)
 {
     legalBuildings = 0;
     do {
         int building = *townBuildings++;
-        int required;
         legalBuildings |= g_bitNumber[building];
         requirements[building] = 0;
-        while ((required = *townBuildings) >= 0) {
+        while (*townBuildings >= 0) {
+            int required = *townBuildings++;
             requirements[building] |= g_bitNumber[required];
-            ++townBuildings;
             requirements[building] |= requirements[required];
         }
     } while (*++townBuildings >= 0);

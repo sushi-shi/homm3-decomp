@@ -41,6 +41,7 @@ public:
     TSwapWindow(hero** heroes);
     virtual ~TSwapWindow();
     void updateArrows();
+
 };
 SIZE(TSwapWindow, 0x64);
 
@@ -234,7 +235,10 @@ class swapManager : public baseManager {
 public:
     TSwapWindow* m_parent;     // +0x38
     Bitmap816* m_border;       // +0x3c
+
     hero* m_heroes[2];         // +0x40 / +0x44
+
+public:
     // Two-stage army selection. swapMons 0x5b0da0 indexes the source and
     // destination heroes and their respective army slots with these four
     // words, then combines or swaps the stacks. Role-derived names.
@@ -260,13 +264,14 @@ public:
     CNetMsgHandler* m_netMsgHandler;
 
     swapManager(hero* leftHero, hero* rightHero);
+public:
     void reset();
     virtual int open(int newPriority);  // baseManager vtable slot 0
     virtual void close();               // slot 1
     virtual int main(message& msg);     // slot 2
     int drawSwapWin();
     inline bool isLeftHero();
-    inline unsigned char isRightHero();
+    inline bool isRightHero();
     inline hero* getOtherHero();
     hero* getOurHero();
     void drawSelector();
@@ -279,12 +284,13 @@ public:
     void updateAllSlots();
     void updateBackpackItem(int hero, int i);
     void updateBackpack(int hero);
-    void handleMonster(int hero, int monster, int rightMouse,
-                       unsigned char shift);
-    void handleArtifactClick(long side, long id,
-                               unsigned char rightClick);
-    void handleBackpackClick(long side, long id,
-                               unsigned char rightClick);
+private:
+    // Original AAAXHHH_N / AAAXJJ_N publics prove private Boolean flags.
+    void handleMonster(int hero, int monster, int rightMouse, bool shift);
+    void handleArtifactClick(long side, long id, bool rightClick);
+    void handleBackpackClick(long side, long id, bool rightClick);
+
+public:
     void swapMons();
     void viewMon();
     void setRolloverText(int codeY);

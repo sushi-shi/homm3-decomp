@@ -31,8 +31,7 @@ VA(0x005ffb20, 0x14)
 DC_ADDRESS(0x198434, 0x34)
 File::File()
 {
-    m_file = NULL;
-    m_open = FALSE;
+    init();
 }
 
 VA(0x005ffb40, 0x15)
@@ -89,10 +88,7 @@ VA(0x005ffbc0, 0x84)
 DC_ADDRESS(0x198568, 0x4e)
 unsigned char File::open(const char* filename, FileMode mode)
 {
-    if (m_file) {
-        CloseHandle(m_file);
-        m_file = NULL;
-    }
+    File::close();
 
     if (exists(filename)) {
         m_file = CreateFileA(filename, mode, FILE_SHARE_READ, NULL, OPEN_EXISTING,
@@ -135,34 +131,34 @@ unsigned long File::read(void* data, unsigned long dBytes)
     return ReadFile(m_file, data, dBytes, &dBytesRead, NULL) ? dBytesRead : 0;
 }
 
-VA(0x005ffcb0, 0x16)
-DC_ADDRESS(0x198610, 0x20)
-unsigned long File::seekEnd()
+// Project-inferred operation shared by the single-position virtual wrappers.
+unsigned long File::seekFrom(int distance, unsigned long origin)
 {
     if (!m_file)
         return 0;
 
-    return SetFilePointer(m_file, 0, NULL, FILE_END);
+    return SetFilePointer(m_file, distance, NULL, origin);
+}
+
+VA(0x005ffcb0, 0x16)
+DC_ADDRESS(0x198610, 0x20)
+unsigned long File::seekEnd()
+{
+    return seekFrom(0, FILE_END);
 }
 
 VA(0x005ffcd0, 0x16)
 DC_ADDRESS(0x198630, 0x20)
 unsigned long File::seekBegin()
 {
-    if (!m_file)
-        return 0;
-
-    return SetFilePointer(m_file, 0, NULL, FILE_BEGIN);
+    return seekFrom(0, FILE_BEGIN);
 }
 
 VA(0x005ffcf0, 0x21)
 DC_ADDRESS(0x198650, 0x1e)
 unsigned long File::seekCur(int seekAmt)
 {
-    if (!m_file)
-        return 0;
-
-    return SetFilePointer(m_file, seekAmt, NULL, FILE_CURRENT);
+    return seekFrom(seekAmt, FILE_CURRENT);
 }
 
 VA(0x005ffd20, 0x4E)
@@ -183,10 +179,7 @@ VA(0x005ffd70, 0x16)
 DC_ADDRESS(0x1986e4, 0x20)
 unsigned long File::getPosition()
 {
-    if (!m_file)
-        return 0;
-
-    return SetFilePointer(m_file, 0, NULL, FILE_CURRENT);
+    return seekFrom(0, FILE_CURRENT);
 }
 
 VA(0x005ffd90, 0x32)

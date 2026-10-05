@@ -151,9 +151,9 @@ enum ETownCommand {
     TOWN_COMMAND_SWAP_ARMY = 3,
     TOWN_COMMAND_VIEW_HERO = 4,
     TOWN_COMMAND_SPLIT_ARMY = 5,
-    TOWN_COMMAND_SWAP_HEROES = 7,
+    TOWN_COMMAND_MOVE_HERO_TO_GARRISON = 7,
     TOWN_COMMAND_MOVE_HERO_FROM_GARRISON = 8,
-    TOWN_COMMAND_MOVE_HERO_TO_GARRISON = 9
+    TOWN_COMMAND_SWAP_HEROES = 9
 };
 
 // The panorama's four per-town-type tables, all in townmgr.obj's own
@@ -346,7 +346,8 @@ public:
     TTownScreenWindow();
     virtual ~TTownScreenWindow();
     void updateTownLocators();
-    void doTownKnob(unsigned char up);
+    // Original DC public ?DoTownKnob@TTownScreenWindow@@QAAX_N@Z proves bool up.
+    void doTownKnob(bool up);
     void bonusRightClick(long id);
     // Retail 0x5c5b40 (dc 0x16ad04). The faction-bonus panel of the
     // page's bottom row. townManager::UpdateTownInfo 0x5c66d0 is its
@@ -407,6 +408,7 @@ public:
     // Retail 0x5c9710 (dc 0x16e2f4). The page's rollover line.
     void setRolloverText(int codeY);
     virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5c9930
+
 };
 
 // The town hall page: one background per town type over a grid of
@@ -643,7 +645,7 @@ public:
     TTavernWindow(int x2, int y2);
     virtual ~TTavernWindow();
     void setRolloverText(int id);
-    virtual int open(int zOrder, unsigned char update);  // slot 1
+    virtual int open(int zOrder, bool update);  // slot 1
     virtual void close(unsigned char update);            // slot 2
     virtual int windowHandler(message& msg) OVERRIDE;    // slot 9, 0x5d7b30
 };
@@ -758,6 +760,11 @@ extern const char* g_townTypeNames[10];
 class townManager : public baseManager {
 public:
 
+    // Project-inferred hover cache operations; ID-only invalidation retains
+    // the modifier cache used by the town screen and fort page.
+    bool updateHover(int widgetId, int qualifier);
+    void invalidateHover();
+
     // Original: townManager::SetTown; TownMgr.h:686
     // town::view0x5be210 expands the assignment to Complete's +0x38 field.
     DC_ADDRESS(0x168e24, 0x6)
@@ -781,6 +788,7 @@ public:
         return s_townNativeTerrains[type + 1];
     }
 
+    // Before normalization (Dreamcast): currTown.
     town* m_townToView;  // +0x38
     // +0x3c: the panorama background, a bitmapBorder16 -
     // UpdateTownInfo builds it with `new bitmapBorder16(0, 0, 800,
@@ -846,6 +854,7 @@ public:
     // shift, less the four bytes retail dropped with townMenu). The
     // fort page's WindowHandler 0x5dcf80 is the reader: it refreshes
     // the rollover line only when the pair actually changes.
+    // Native field list 0x719f proves both cache fields public.
     int m_lastHover;  // +0x194  ctor -1
     int m_lastQualifier;  // +0x198  ctor -1
     // Dreamcast command at +0x1a8 maps to PC +0x19c; Main and the
@@ -912,7 +921,7 @@ public:
     // at +0x1c4/+0x1c8.
     unsigned char m_currentDwellingIdOff[7];
     void resetStrips();
-    void setCommandAndText(message* msg);
+    void setCommandAndText(message& msg);
     void showText();
     void setArmyCommand(int splitEnabled, unsigned char joinDialog);
     void doCommand(int inCommand, unsigned char isGarrison,
@@ -942,13 +951,12 @@ public:
 
     townManager();
     void unloadTown();
-    // Retail 0x5c6870 (dc 0x16bba4) and 0x5c77a0 (dc 0x16c940). Neither
-    // is reconstructed; both are declared for DoTownGate below, which
-    // expands townManager::ChangeTown inline and so has to name them.
-    // Same gate, same measured reason, as SetupExtraStuff above.
-    void setupTown(unsigned char fade);
+    // Original publics SetupTown/ChangeTown are QAAX_N@Z, independently
+    // proving bool fade despite the lowered byte record. Complete retains
+    // the same Boolean domain; setupTown owns the full retail 0x5c6870 body.
+    void setupTown(bool fade);
     void setupExtraStuff();
-    void changeTown(unsigned char fade);
+    void changeTown(bool fade);
     void createPopupBank(heroWindow* parent);
     void doPortalOfSummoning();
 

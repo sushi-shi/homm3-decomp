@@ -36,10 +36,16 @@ public:
     virtual void draw() const;
     void setText(const char* text);
     void refresh(int knobRange);
+
     const char* m_fontFilename;
+
     std::vector<std::string> m_textLines;
+
     std::vector<textWidget*> m_lineImages;
+
     type_text_slider* m_textSlider;
+
+public:
     Bitmap16Bit* m_background;
 };
 SIZE(type_text_scroller, 0x5c);

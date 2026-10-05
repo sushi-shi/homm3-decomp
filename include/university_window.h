@@ -24,12 +24,13 @@ public:
     unsigned char m_click;       // +0x48
     TSecondarySkill m_skill;     // +0x4c
 
+public:
     type_university_skill_button(long x, long y, long width, long height,
                                  long newId, const char* image,
                                  TSecondarySkill newSkill);
     virtual bool handleClick(bool downClick,
                                        bool rightClick);
-    void setSkill(TSecondarySkill newSkill, unsigned char newClick);
+    void setSkill(TSecondarySkill newSkill, bool newClick);
 };
 SIZE(type_university_skill_button, 0x50);
 

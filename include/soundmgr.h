@@ -125,7 +125,11 @@ public:
     // +80 with MOVSX byte and later restores it through switchAmbientMusic.
     // Keep the retail signed-byte width: NH3API's int32 declaration differs.
     signed char m_currentTerrainMusic;
+
+    // PC playback gate; retain its raw int value across temporary overrides.
     int m_playSounds;
+
+public:
     int m_changeSounds;
     unsigned char m_mp3Playing;
     CRITICAL_SECTION m_sectionSoundCall;
@@ -174,6 +178,14 @@ public:
     void setMusicVolume();                              // 0x5994b0
     int convertVolume(int volumeValue, int volumeType);  // 0x5996c0
     void threadStopMP3();                               // 0x59b080
+
+    void setPlaybackState(int state);
+    bool isPlaybackAllowed() const;
+
+    // Project-inferred gates for paths that require the digital driver.
+    bool canUseDigitalSound() const;
+    bool canPlayDigitalSound() const;
+    void endAllSamples();
 };
 
 // Retail .bss 0x699290: non-zero suppresses every sound path (a
@@ -182,12 +194,9 @@ extern int g_noSound;
 
 extern short g_ailDriverState[14];
 
-// Retail .data 0x691209, a byte that is zero in the image. Read only as
-// the second half of the sound-is-on guard `field_84 || gbUnk691209`
-// (AdjustMusicVolumes, ResumeSamples, StopAllSamples, PauseSamples,
-// MemorySample). Ordinal placeholder - the role is proven, the NAME is
-// unattested by any source.
-extern unsigned char g_goSolo;
+// Retail .data 0x691209; original DC public ?gbGoSolo@@3_NA. Sound paths
+// use this solo-mode flag as the second half of their sound-is-on guard.
+extern bool g_goSolo;
 
 // Retail-only gate around Open's digital-driver initialization; descriptive
 // name from its only read. Original name and producer are not recovered.

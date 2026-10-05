@@ -95,8 +95,8 @@ DC_ADDRESS(0x149ba4, 0x46)
 MAC_ADDRESS(0x189428, 0x88)
 slider::~slider()
 {
-    m_sliderBitmap->dispose();
-    m_sliderSprite->dispose();
+    ResourceManager::dispose(m_sliderBitmap);
+    ResourceManager::dispose(m_sliderSprite);
 }
 
 VA(0x005961E0, 0x4C)

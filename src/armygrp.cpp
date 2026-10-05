@@ -673,14 +673,14 @@ unsigned char armyGroup::isMember(TCreatureType monType) const
     return 0;
 }
 
-// Naming the creature once preserves getAlignment and recovers Windows
+// Naming the creature once preserves getCreatureAlignment and recovers Windows
 // 67.8644 -> 100. Mac reuses that same creature load through the census.
 // Its ten byte stores reload a reference-bound integer zero: counted
 // std::fill_n reproduces this leaf body (99.7368%) while remaining Windows
 // exact. The older DC body calls memset instead. Pointer-range std::fill
 // keeps an eight-byte unrolled runtime loop; int versus sizeof count is flat.
 // The sole Mac residual is the fallback array's SP-0x10 versus SP-0x14 home;
-// do not pad the array or remove getAlignment to chase that displacement.
+// do not pad the array or remove getCreatureAlignment to chase that displacement.
 VA(0x0044abb0, 0x97)
 DC_ADDRESS(0x04ebf0, 0xa6)
 MAC_ADDRESS(0x05828c, 0x17c)
@@ -710,7 +710,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
 
 // Original: armyGroup::GetHomogeneityMoraleAdjust; armygrp.cpp:748
 // Complete getMorale additionally groups allied alignments before applying
-// this adjustment, so that path keeps its explicit alignment census.
+// this adjustment, through getMoraleAlignmentCount's shared census.
 DC_ADDRESS(0x04ec98, 0x16)
 int armyGroup::getHomogeneityMoraleAdjust() const
 {
@@ -742,6 +742,12 @@ long armyGroup::getAIValue() const
     return value;
 }
 
+// Original: armyGroup::GetNumArmies; armygrp.cpp:804.
+// The older DC body belongs to armygrp.cpp; Mac places its body after
+// getAIValue and before add, with 42 retained game-call sites. Body order
+// alone does not exclude a retained header copy. The ordinary source body
+// restores eight Windows callers to exact; Complete's hero bottom-view
+// count still expands, so its original TU/placement remains unresolved.
 VA(0x0044acc0, 0x14)
 DC_ADDRESS(0x04ed28, 0x24)
 MAC_ADDRESS(0x058528, 0x7c)
@@ -816,8 +822,7 @@ void armyGroup::damageGroup(float casualtyRate)
                 --casualties;
             m_numTroops[slot] -= casualties;
             if (m_numTroops[slot] <= 0 || casualtyRate >= 1.0) {
-                m_numTroops[slot] = 0;
-                m_armies[slot] = CREATURE_NONE;
+                dismiss(slot);
             }
             first = 0;
         } else {
@@ -878,7 +883,7 @@ const char* armyGroup::getArmySizeName(int howMany, int nameSet)
 
 VA(0x0044ae60, 0x29A)
 DC_ADDRESS(0x04f078, 0xe8)
-MAC_ADDRESS(0x058944, 0x21c)
+MAC_ADDRESS(0x058944, 0x21c)  // MAC_ABSTRACTION_FROM(tokens1:d9fa6c33b77e,90.7407): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
                          const hero* otherHero, const armyGroup* otherGroup,
                          bool onCursedGround,
@@ -1258,7 +1263,7 @@ std::string armyGroup::getMoraleDescription(
 
     // Complete terrain arms: mutate the incoming morale home, then subtract
     // currentMorale at the tail, as proved by retail 0x44b960.
-    // Mac 0x5983c and 0x59910 expand getAlignment separately in each arm.
+    // Mac 0x5983c and 0x59910 expand getCreatureAlignment separately in each arm.
     {
         if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
             switch (g_game->getAlignment(creature)) {
@@ -1476,7 +1481,7 @@ std::string armyGroup::getLuckDescription(
 
     // Complete adds the clover-field luck bonus before applying enemy-group
     // modifiers. Dreamcast has only the cursed-ground terrain parameter.
-    // Mac 0x59f68 expands getAlignment before the town switch.
+    // Mac 0x59f68 expands getCreatureAlignment before the town switch.
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
         // Nine town values routed to NAMED exits, the recipe GetArmyMorale
         // (0x44b100) already carries: retail lowers this arm through a

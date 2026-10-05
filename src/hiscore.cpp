@@ -675,8 +675,8 @@ DC_ADDRESS(0x0d8424, 0x76)
 MAC_ADDRESS(0x10b74c, 0xd4)
 THighScoreWindow::~THighScoreWindow()
 {
-    m_hiScoreBack[1]->dispose();
-    m_hiScoreBack[0]->dispose();
+    ResourceManager::dispose(m_hiScoreBack[1]);
+    ResourceManager::dispose(m_hiScoreBack[0]);
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;

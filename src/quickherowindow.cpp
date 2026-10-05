@@ -38,6 +38,10 @@ DATA(0x00682378) static int g_armyPos[7][2] = {
 // calls, and widget push_back operations. Complete replaces quantity_text's
 // 100-byte sprintf buffer with an owning ostrstream; the per-arm textWidget
 // constructions and freeze(false) follow retail's EH lifetimes.
+// Mac also uses a stack buffer: decimal formatting at 0x14b1c8/0x14b1e8,
+// suffix append at 0x14b1f4 and size-name copy at 0x14b2e4. Complete's
+// retained stream insertions at 0x52f1db/0x52f1ff/0x52f205/0x52f295
+// establish the different Windows implementation.
 
 // Residual (94.1662%): the first source difference is reserve's temporary
 // stack home (-0x18 versus -0x14); primary-stat addressing and register roles
@@ -106,13 +110,15 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
     }
 
     if (viewLevel >= ViewSome && thisHero->m_army.getNumArmies() > 0) {
-        int disguiseCreature = CREATURE_NONE;
+        TCreatureType disguiseCreature = CREATURE_NONE;
         if (thisHero->m_disguiseLevel != TQuickHeroWindow::DisguiseInvalid &&
             thisHero->m_disguiseLevel <= TQuickHeroWindow::DisguiseAdvanced) {
-            const int* currentArmy = thisHero->m_army.m_armies;
+            // Native armyGroup record 0x1a9d owns TCreatureType[7]
+            // (array 0x1bf7); both disguise and display scans read that view.
+            const TCreatureType* currentArmy = thisHero->m_army.m_armyTypes;
             for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
                  ++slot, ++currentArmy) {
-                int creature = *currentArmy;
+                TCreatureType creature = *currentArmy;
                 // Retail compares the slot ordinal, not the creature loaded just
                 // above.  Preserve that byte-proven source-level wart.
                 if (slot != CREATURE_NONE &&
@@ -134,7 +140,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
                     (disguiseCreature == CREATURE_NONE ||
                      g_creatureTypeTraits[creature].m_aiValue >
                          g_creatureTypeTraits[disguiseCreature].m_aiValue))
-                    disguiseCreature = creature;
+                    disguiseCreature = static_cast<TCreatureType>(creature); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
             }
         }
 
@@ -144,7 +150,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
         // out of the neighboring numTroops member.
         int displaySlot = 0;
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-            int creature = thisHero->m_army.m_armies[slot];
+            TCreatureType creature = thisHero->m_army.m_armyTypes[slot];
             if (creature == CREATURE_NONE)
                 continue;
             if (disguiseCreature != CREATURE_NONE)

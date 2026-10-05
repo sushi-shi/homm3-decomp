@@ -62,6 +62,7 @@ public:
     // no-trigger sentinel. imageInfo's TPoint stays uninitialized there,
     // which is why it has no initializer here either.
     TObjectType();
+
 private:
     // The image and mask setters own these values and their invariants.
     int m_imageNumber;
@@ -78,10 +79,14 @@ public:
 private:
     unsigned char m_isUnderlay;
 public:
+
     unsigned char m_hasTrigger;
+
     TPoint m_triggerCell;
 private:
+
     TImageInfo m_imageInfo;
+
 public:
     // The image-name registry lookup reads this record's image number;
     // lazy registry/empty-string initialization does not modify the record.
@@ -155,6 +160,12 @@ public:
     TObjectType& setSubtype(int subtype);
     TObjectType& setSlotCategory(int category);
     TObjectType& setUnderlay(bool underlay);
+
+    // Accessor boundary inferred from the existing property interface and
+    // external field operations; these additional names are project names.
+    int getSlotCategory() const { return m_slotCategory; }
+    const TPoint& getTriggerCell() const { return m_triggerCell; }
+    unsigned int getRecommendedTerrainCount() const { return m_recommendedTerrainMask.count(); }
 };
 SIZE(TObjectType, 0x4c);
 

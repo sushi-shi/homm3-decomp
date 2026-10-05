@@ -60,7 +60,8 @@ public:
                                 int& winX, int& winY,
                                 int& winWidth, int& winHeight);  // slot 12
     virtual int handleMessage(message& msg);  // slot 3
-    virtual void drawWindow(unsigned char update, int lowID,
+    // Original DC DrawWindow@CAnimatedDlg@@UAAX_NHH@Z proves bool.
+    virtual void drawWindow(bool update, int lowID,
                             int highID);  // slot 5
     void tickAnimation();
     void drawSprite();

@@ -18,6 +18,7 @@
 class BlackBoxData;
 struct type_creature_bank;
 struct type_university;
+struct tagRECT;
 
 class CObject;
 
@@ -755,6 +756,7 @@ public:
     enum EGameResource getArtifactResourceCost() const;
     BlackBoxData* getBlackBox() const;
     type_creature_bank& getCreatureBank() const;
+    void setCreatureBankEmpty(bool empty);
     void clearVisitedBits();
     short getCustomIndex() const;
     short getItemId() const;
@@ -897,6 +899,7 @@ public:
     int read(TAbstractFile* infile, int saveVersion);
     int save(TAbstractFile* outfile);
     int load(TAbstractFile* infile, int saveVersion);
+
 };
 SIZE(TTimedEvent, 0x34);
 
@@ -1005,6 +1008,7 @@ public:
     unsigned char m_y;
     unsigned char m_z;
     unsigned char m_paddingBeforeTypeId;
+    // Before normalization (Dreamcast): TypeID.
     unsigned short m_typeIndex;
     unsigned char m_animationOffset;
     unsigned char m_paddingAfterFrameOffset;

@@ -285,7 +285,7 @@ struct type_AI_puzzle_tile {
 
     type_AI_puzzle_tile();
     type_AI_puzzle_tile(NewmapCell* cell, type_point point);
-    unsigned char operator==(const type_AI_puzzle_tile& arg) const;
+    bool operator==(const type_AI_puzzle_tile& arg) const;
 };
 SIZE(type_AI_puzzle_tile, 0x10);
 
@@ -345,9 +345,11 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 // the two four-bit offsets together, `test cl,0x1f` for terrain, `test
 // ecx,0x1fe0` for river and road together, and `test dl,1` for diggable.
 // has_grail and visible are deliberately NOT compared.
+// Native DC ??8type_AI_puzzle_tile@@QBA_NABU0@@Z proves const bool return;
+// restoring that interface preserves Windows matchPuzzle 95.1081%.
 DC_ADDRESS(0x1156bc, 0xc0)
 MAC_ADDRESS(0x147d08, 0x178)
-unsigned char type_AI_puzzle_tile::operator==(
+bool type_AI_puzzle_tile::operator==(
     const type_AI_puzzle_tile& arg) const
 {
     return m_objectType == arg.m_objectType

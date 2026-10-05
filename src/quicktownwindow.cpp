@@ -1,5 +1,3 @@
-// DC's retained HasBuilding callee (r11) serves all seven hall, silo and
-// fort tests. Keep every source call and the ordinary canonical town body.
 #include "text.h"
 #include "va.h"
 #include "includes.h"
@@ -31,31 +29,14 @@ DATA(0x006823b8) static int g_quickTownArmyPositions[7][2] = {
 };
 
 // E:\gamedcs\quicktownwindow.cpp:39
-// Residual (98.8368%): all 36 branches and the single return agree, and what
-// is left is SEVEN BYTES, all inside the silo resource scan - see the note on
-// that loop. Every other instruction in the body now matches retail; the
-// remaining unified-diff rows are branch displacements and relocation
-// addends, neither of which is scored.
-// Superseded verdicts - they were measured against the 96.31 spelling and are
-// WRONG at the landed one: "evaluating the name accessor directly at the call
-// site 95.50%" is now +0.39 (see the name widget below) and "a named c_str
-// local 93.71". Still true: an EGameResource loop induction variable changes
-// nothing, and inline_depth(1) is byte-identical.
-// FIXED 2026-08-14, 96.3088 -> 98.4193, EXACTLY the titrated ceiling: the /Ob2
-// budget divisor solved in mainmenu.cpp. This constructor wanted FOUR more
-// inline-candidate call sites (xx_nop ladder: k=0 96.3088, k=4/5/6 all
-// 98.4193) and takes them the same way mainmenu and quickherowindow do - the
-// LAST FOUR widget insertions respelled from `push_back(x)` to
-// `insert(end(), x)`, which is two candidate sites instead of one, behind a
-// `std::vector<widget*>*` local. The local is what makes the pair byte-neutral:
-// the same four conversions naming `Widgets` directly are 94.9930, while the
-// local on its own is byte-flat at 96.3088. Position obeys the placement law
-// recorded in systemoptionswindow (extra sites only bite when they sit after
-// the widget list's last push_back): any four or more of the LATE insertions
-// reach the plateau, converting all ten is 89.6790. Also measured: the
-// systemoptionswindow registration guard is a real +2 here (97.6509) and nests
-// to +4 (98.2053) but never reaches the ceiling, and guard + two inserts is
-// 98.3983.
+// DC 0x117fda loads HasBuilding into r11 for all seven hall, silo and
+// fort tests. The capitol test is represented by isCapitol's nested call.
+// Earlier inliner probes replaced late push_back calls with insert/end
+// through a vector pointer (96.3088 -> 98.4193); those spellings were
+// superseded by the canonical helper calls below. An enum loop variable
+// and inline_depth(1) were score-flat. Named bonus objects retain the
+// allocation result's retail stack home; nesting every allocation in
+// push_back or naming unrelated early widgets was worse.
 VA(0x00530120, 0x67D)
 DC_ADDRESS(0x117e48, 0x570)
 MAC_ADDRESS(0x14be1c, 0xa90)  // townqvbk/itpt literals + town helpers
@@ -207,6 +188,10 @@ TQuickTownWindow::~TQuickTownWindow()
 }
 
 // Retail +0x1de and +0x272 push "tiny.fnt" (0x660cb4) for the quantities.
+// Mac 0x14cccc/0x14ccec formats decimal quantities into a stack buffer;
+// 0x14ccf8 appends "k" and 0x14cdd8 copies getArmySizeName's result.
+// Complete instead retains ostrstream integer/string insertion at
+// 0x530af9/0x530b1d/0x530b23/0x530bb2, including its owning lifetime.
 VA(0x00530990, 0x303)
 DC_ADDRESS(0x118564, 0x22e)
 MAC_ADDRESS(0x14cb8c, 0x340)

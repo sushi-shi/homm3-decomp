@@ -47,6 +47,7 @@ class File {
 public:
     // Dreamcast m_hFile: void* (HANDLE), retail +4. The zero-handle
     // guards in winfile.cpp reuse EAX without an integer alias.
+    // Before normalization (Dreamcast): m_hFile.
     void* m_file;
 
     File();
@@ -81,11 +82,13 @@ protected:
     void updateError(char* errorText);  // dc 0x1984d8, no retail body
 
 private:
+    // Project-inferred shared operation; does not dispatch through seek().
+    unsigned long seekFrom(int distance, unsigned long origin);
 
     // E:\gamedcs\winfile.h:90-92 - the one header-defined method (the
     // DC winfile.obj contributor segment 0x198864-0x19886f is
     // attributed to winfile.h). No retail body; the retail ctor
-    // writes the members directly.
+    // expands these member initializations.
     DC_ADDRESS(0x198864, 0xc)
     void init()
     {

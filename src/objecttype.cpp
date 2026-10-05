@@ -62,8 +62,16 @@ DATA(0x00640278) const TObjectType::TPoint g_noTriggerCell = {8, 6};
 class TObjectImageNameTable {
 public:
     typedef std::map<std::string, int> TNameIndex;
+
+private:
     TNameIndex m_nameIndex;
+
     std::vector<TNameIndex::iterator> m_rows;
+
+public:
+    // Project names for indexed borrowing beside the retained getIndex helper.
+    unsigned int getCount() const { return m_rows.size(); }
+    const std::string& getName(int index) const { return m_rows[index]->first; }
 
     // Provisional name and boundary inferred from retail setImageName:
     // its first rows.size() expands, but this insertion path calls size,
@@ -176,25 +184,25 @@ VA(0x005141B0, 0x6E)
 MAC_ADDRESS(0x223910, 0x74)
 unsigned char TNativeTerrainObjectFilter::accepts(const TObjectType* objectType) const
 {
-    if (objectType->m_slotCategory != 0)
+    if (objectType->getSlotCategory() != 0)
         return 0;
     return objectType->isRecommendedTerrain(m_terrain)
-        && objectType->m_recommendedTerrainMask.count() <= 3;
+        && objectType->getRecommendedTerrainCount() <= 3;
 }
 
 VA(0x00514220, 0x3D)
 MAC_ADDRESS(0x223984, 0x4c)
 unsigned char TAnyTerrainObjectFilter::accepts(const TObjectType* objectType) const
 {
-    return objectType->m_slotCategory == 0
-        && objectType->m_recommendedTerrainMask.count() > 3;
+    return objectType->getSlotCategory() == 0
+        && objectType->getRecommendedTerrainCount() > 3;
 }
 
 VA(0x00514260, 0x19)
 MAC_ADDRESS(0x2239d0, 0x18)
 unsigned char TSlotCategoryObjectFilter::accepts(const TObjectType* objectType) const
 {
-    return objectType->m_slotCategory == m_slotCategory;
+    return objectType->getSlotCategory() == m_slotCategory;
 }
 
 VA(0x005142A0, 0x15)
@@ -423,7 +431,7 @@ TObjectType& TObjectType::setImageName(
     TPoint emptySize = { 0, 0 };
     TObjectImageNameTable& imageNames = getObjectImageNames();
 
-    unsigned int oldCount = imageNames.m_rows.size();
+    unsigned int oldCount = imageNames.getCount();
     m_imageNumber = imageNames.getIndex(name);
 
     std::vector<TImageInfo>& imageCache = getObjectImageCache();
@@ -490,8 +498,8 @@ TObjectType::getImageName() const
     static std::string emptyImageName;
     TObjectImageNameTable& imageNames = getObjectImageNames();
 
-    if (m_imageNumber < imageNames.m_rows.size())
-        return imageNames.m_rows[m_imageNumber]->first;
+    if (m_imageNumber < imageNames.getCount())
+        return imageNames.getName(m_imageNumber);
     return emptyImageName;
 }
 
@@ -570,6 +578,11 @@ TObjectType& TObjectType::setUnderlay(bool underlay)
     return *this;
 }
 
+// Mac 0x2240d4/0x2240f0/0x22410c/0x224128/0x224144 calls
+// istream::ignore(1, EOF) between the string/bitset extractions. MSL's
+// bitset extractor reads istreambuf_iterator directly without a sentry;
+// VC6's BITSET constructs a sentry and skips that whitespace itself.
+// The Windows body is byte-exact with the chained extractions below.
 VA(0x00514b80, 0x1F7)
 MAC_ADDRESS(0x224078, 0x1ac)
 std::istream& operator>>(std::istream& is, TObjectType& objectType)

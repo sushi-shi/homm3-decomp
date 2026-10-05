@@ -3,6 +3,7 @@
 
 #include "combatwindow.h"
 
+#include "bitmap16.h"
 #include "border.h"
 #include "cmbtmgr.h"
 #include "combatcontrolsubwindow.h"
@@ -480,8 +481,7 @@ void TCombatWindow::endPlacementPhase()
     }
     m_controlSubWindow = new TCombatControlSubWindow(this);
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    g_windowManager->updateScreen(
-        0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
+    g_windowManager->updateScreen();
 }
 
 VA(0x00473290, 0x52)
@@ -518,7 +518,7 @@ void TCombatWindow::drawChatEdit(unsigned char update)
 VA(0x004732f0, 0x59)
 DC_ADDRESS(0x06a3c0, 0x28)
 MAC_ADDRESS(0x0813b0, 0x44)
-void TCombatWindow::drawWindow(unsigned char update, int low, int high)
+void TCombatWindow::drawWindow(bool update, int low, int high)
 {
     heroWindow::drawWindow(update, low, high);
     drawChatEdit(update);

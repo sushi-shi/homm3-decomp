@@ -92,6 +92,7 @@ public:
     typedef CampaignScenarioInfo MapScore;
     unsigned char m_isCheater;
     unsigned char m_secretActive;
+    // Before normalization (Dreamcast): iCurMap.
     signed char m_currentMap;
     // The alignment gaps after currentMap, crossoverArrayIndex and
     // campaignCompleted are deliberately IMPLICIT. Retail's generated
@@ -110,11 +111,13 @@ public:
     std::string m_campaignFilename;
     std::string getCampaignFileName() const;
     unsigned char m_campaignCompleted[21];
+
 private:
     // +0x3c / +0x4c: the carry-over hero pools and the artifact pools
     // (proved by the two out-of-line operator=/destructor pairs above).
     std::vector<std::vector<hero> > m_carryOverHeroes;
     std::vector<std::vector<type_artifact> > m_carryoverArtifact;
+
 public:
     // Native 0x93878/0x98ae4 expands these indexed pool lookups. Campaign
     // methods own the outer vectors; scenario handoff accesses one pool.
@@ -129,7 +132,10 @@ public:
     {
         return m_carryoverArtifact[pool];
     }
+
     std::vector<MapScore> m_mapScores;
+
+public:
     // +0x6c, the fourth assignable sub-object. Its operator= is the
     // four-byte-element vector::operator= at 0x50ac00 and its teardown is
     // INLINE in the same constructor - _Destroy over [_First, _Last),
@@ -175,10 +181,17 @@ public:
     {
         return &m_mapScores[m_currentMap];
     }
+
 private:
     // Final serialized field of load; operates solely on this campaign's
     // assigned-hero list. Member ownership and name are inferred.
     void readAssignedHeroes(TAbstractFile* infile, int count);
+
+public:
+    // Accessor boundary inferred from the existing property interface and
+    // external field operations; these additional names are project names.
+    MapScore& getScenarioInfo(int index) { return m_mapScores[index]; }
+    const MapScore& getScenarioInfo(int index) const { return m_mapScores[index]; }
 };
 SIZE(SCampaign, 0x7c);
 
@@ -230,6 +243,7 @@ public:
     virtual void read(TAbstractFile* file);
 
     int m_hero;
+
     int m_spell;
 };
 
@@ -255,8 +269,11 @@ public:
     virtual void read(TAbstractFile* file);
 
     int m_hero;
+
     int m_creature;
+
     int m_count;
+
 };
 
 // Building: the only bonus whose Read fills ONE field (0x4845f0 reads a
@@ -287,6 +304,7 @@ public:
     virtual void read(TAbstractFile* file);
 
     int m_hero;
+
     int m_artifact;
 };
 
@@ -304,7 +322,9 @@ public:
     virtual void read(TAbstractFile* file);
 
     int m_hero;
+
     char m_skills[4];
+
 };
 
 // Secondary skill: a signed word hero id, then the skill and its mastery
@@ -319,6 +339,7 @@ public:
     virtual void read(TAbstractFile* file);
 
     int m_hero;
+
     int m_skill;
     int m_level;
 };
@@ -336,7 +357,9 @@ public:
     virtual void read(TAbstractFile* file);
 
     int m_resource;
+
     int m_amount;
+
 };
 
 // The start-bonus type byte the list reader at 0x485190 switches on, in

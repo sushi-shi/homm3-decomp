@@ -29,8 +29,12 @@ private:
     unsigned char* m_map;  // +0x30
 
 public:
+    // Before normalization (Dreamcast): Palette.
     TPalette16 m_p16;
+    // Before normalization (Dreamcast): Palette24.
     TPalette24 m_p24;
+
+public:
     Bitmap816(int w, int h);
     Bitmap816(const char* name, int w, int h, unsigned char* data,
               TPalette16* palette16, int dataSize);

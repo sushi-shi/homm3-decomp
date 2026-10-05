@@ -129,7 +129,7 @@ unsigned char initializeSpellTraitsTable()
         return 0;
 
     if (resource->getNumberOfRows() < 92) {
-        resource->dispose();
+        ResourceManager::dispose(resource);
         return 0;
     }
 
@@ -154,7 +154,7 @@ unsigned char initializeSpellTraitsTable()
         ++row;
     }
 
-    resource->dispose();
+    ResourceManager::dispose(resource);
     return 1;
 }
 
@@ -180,9 +180,20 @@ public:
     DC_ADDRESS(0x14e7b0, 0x4)
     char* get() const { return m_string; }
 
+    // Project-inferred allocation/copy used to initialize owned table text.
+    void copyText(const char* source);
+
 private:
     char* m_string;
 };
+
+// Keep the native Set/Get operations and store ownership before copying.
+// Like the existing initialization sequence, this does not release an old value.
+void TAutoStrPtr::copyText(const char* source)
+{
+    set(new char[strlen(source) + 1]);
+    strcpy(get(), source);
+}
 
 }
 

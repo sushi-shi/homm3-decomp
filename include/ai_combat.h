@@ -86,6 +86,7 @@ public:
     long takeDamage(long damage);
 
     DC_ADDRESS(0x02c698, 0xa)
+    MAC_ADDRESS(0x02a760, 0x20)
     bool operator<(const type_monster_data& arg) const
     {
         return m_value < arg.m_value;
@@ -258,7 +259,7 @@ inline hero* type_AI_combat_data::getHero() const
     return m_currentHero;
 }
 
-unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
+bool aiQuickCombat(hero* attackingHero, hero* defendingHero,
                               armyGroup& defendingArmy, town* defendingTown,
                               NewmapCell* cell);
 void aiAutoCombat(hero* attackingHero, hero* defendingHero,

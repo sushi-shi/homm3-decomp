@@ -63,6 +63,7 @@ public:
     // second, which is why screenBitmap lands at 0x40 here and 68
     // there. Byte-proven: DoDialog stores -1 into it right before
     // AddWindow, exactly where the buka twin writes m_lastHoverId.
+    // Native heroWindowManager field list 0x1893 proves lastHover public.
     int m_lastHover;
     Bitmap16Bit* m_screenBitmap;
     // Original public const statics: ScreenLimits and NullLimits.
@@ -85,16 +86,31 @@ public:
     virtual void close();
     virtual int main(message& msg);
     void addWindow(heroWindow* newWindow, int newPriority,
-                   unsigned char update);
+                   bool update);
     void removeWindow(heroWindow* killWindow);
     int broadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra);
     int doDialog(heroWindow* dialogWindow, TDialogHandler dialogFunction,
                  int fadeIn);
     int doDialogDraw(heroWindow* dialogWindow, TDialogHandler dialogFunction,
                      TDialogHandler dialogDrawFunction, int fadeIn);
+    // Project-inferred callback completion: save the manager result, then
+    // emit the conventional widget/end message with codeY END_DIALOG.
+    // The caller still returns MESSAGE_DISPATCH_FORWARD and owns cleanup.
+    void finishDialog(message& msg, int result);
     void doQuickView(heroWindow* window);
     void sleepAllWindows(unsigned char sleep);
-    void updateScreen();
+    // Original: heroWindowManager::UpdateScreen; DC winmgr.cpp:844.
+    // Complete uses one 800x600 client surface instead of DC's translated
+    // combat viewport. Mac 0x209c08..0x209c20 (viewwrld) and
+    // 0x1d24e4..0x1d24fc (townmgr), and Windows 0x5fc8c6..0x5fc8da /
+    // 0x5d550d..0x5d5521 expand this forwarding operation across TUs.
+    // The in-class Complete definition is inferred from that visibility;
+    // the older DC source defined the helper out of line.
+    DC_ADDRESS(0x19b1f0, 0x3e)
+    void updateScreen()
+    {
+        updateScreen(0, 0, 800, 600);
+    }
     void updateScreen(int x, int y, int w, int h);
     void screenShot();
     void saveFizzleSource(int startX, int startY, int width, int height);
@@ -145,6 +161,10 @@ public:
     // field_4C through the virtual slot-0 tail and nulls it.
     void releaseFizzleSource();
     int convertToHover(message& msg);
+    // Project-inferred hover-cache operations. Dispatch remains in callers;
+    // updateHover reports a change and saves the new ID before rollover work.
+    bool updateHover(int widgetId);
+    void invalidateHover();
     void fadeToBlack(int speed, unsigned char expectFadein);
     void fadeFromBlack(int speed);
 

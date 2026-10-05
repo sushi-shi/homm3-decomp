@@ -34,7 +34,7 @@ public:
 
     enum { NWIDGETS = 9 };
 
-    TGameTypeWindow(unsigned char loadGameMode);
+    TGameTypeWindow(bool loadGameMode);
     virtual ~TGameTypeWindow();
     void doModal();
 

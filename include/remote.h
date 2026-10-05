@@ -29,7 +29,7 @@ public:
     char m_names[MAX_PLAYERS][PLAYER_NAME_SIZE];
 
     DC_ADDRESS(0x101da8, 0x1c)
-    CHotSeatMan() : m_playerCount(0) {}
+    CHotSeatMan() { clear(); }
 
     DC_ADDRESS(0x101dc4, 0x6)
     void clear() { m_playerCount = 0; }
@@ -176,7 +176,10 @@ public:
     // The final three bytes align the record; retail uses the same stride.
         char m_paddingAfterIsSystem[3];
 
+        // Mac's array-construction callback clears bytes +0/+0x84 and
+        // the deadline at +0x80; its descriptor is at data +0x8918.
         DC_ADDRESS(0x11f7d0, 0xe)
+        MAC_ADDRESS(0x212118, 0x14)
         CChatStr()
         {
             m_text[0] = 0;
@@ -266,6 +269,7 @@ protected:
     void killOldChat();
     void updateNewChat();
     void updateWidgetText(int numLines, textWidget* widget);
+
 };
 SIZE(CChatManager::CChatStr, 0x88);
 SIZE(CChatManager, 0x44);
@@ -399,9 +403,11 @@ class CTurnDuration {
 public:
     CTurnDuration();
     void addTime(unsigned long howMuch);
-    unsigned char isOn();
-    unsigned char isExpired();
-    unsigned char isClose(unsigned long howClose);
+    // Original IsOn/IsExpired/IsClose publics encode _N bool returns;
+    // byte primitive records describe the lowered representation.
+    bool isOn();
+    bool isExpired();
+    bool isClose(unsigned long howClose);
     void start();
     void clear();
     void setDuration(unsigned long ms);
@@ -433,7 +439,8 @@ extern unsigned char g_weMoved;
 // Dreamcast supplies the class and member names.
 class CHourGlass {
 public:
-    CHourGlass(unsigned char thread);
+    // Native constructor public: QAA@_N@Z (DC file 0x610863).
+    CHourGlass(bool thread);
     ~CHourGlass();
     void start();
     void stop();

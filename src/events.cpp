@@ -923,10 +923,9 @@ TreasureData* advManager::getTreasureData(NewmapCell* cell) const
 // CheckLevel; the guarded copy keeps FizzleCenter as a call and the
 // plain one folds it, exactly as DoCustomSpellScroll's pair does.
 // Dreamcast places treasure on line 657 and artifactId on line 659.
-// Keeping that order and using the direct index expression in the canonical
-// getTreasureData helper reproduces retail's interleaved pool/cell loads.
-// Both this caller and doCustomSpellScroll are exact; a named helper index
-// preserves its retained body but changes these caller expansions.
+// Keep the source getCustomIndex call inside getTreasureData. The older
+// direct-expression control was exact here and in doCustomSpellScroll,
+// but omitted the DC-proven boundary retained as an expansion on Mac.
 // Negative control: spelling DC's unsigned-char human_player literally changes
 // the x86 decorated identity; retail's `_N` suffix proves this parameter is bool.
 // Splitting artifactId's declaration from its accessor assignment is byte-flat.
@@ -1353,7 +1352,9 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     // 1069/1078/1081/1086 read that carrier. Reusing it here preserves the
     // native model and improves the full Windows caller 95.28% -> 95.62%.
     for (int p = 0; p < 7; p++) {
-        int type = newCreatures.m_armies[p];
+        // Read the native creature enum view and pass it directly to the
+        // typed AI boundary; legacy Add/GetArmyName accept its int value.
+        TCreatureType type = newCreatures.m_armyTypes[p];
         amount = newCreatures.m_numTroops[p];
         if (type == CREATURE_NONE)
             continue;
@@ -1374,7 +1375,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         } else if (humanPlayer) {
             joinDialogNeeded = 1;
         } else {
-            aiJoinDecision(currentHero, TCreatureType(type), amount);
+            aiJoinDecision(currentHero, type, amount);
         }
         rewardGiven = 1;
     }
@@ -2591,7 +2592,7 @@ void advManager::doEventMysticalGarden(hero* currentHero, ExtraInfoUnion* cell,
 {
     // Retail records the visit before the empty-garden branch; Dreamcast's
     // getItemId call follows GiveResource on the reward path instead.
-    short id = cell->m_gardenInfo.m_id;
+    short id = cell->getItemId();
     EGameResource resource = cell->getGardenResource();
     g_currentPlayer->m_mysticalGardenFlags |= 1 << id;
 
@@ -2770,7 +2771,7 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
     sprintf(text, DATA_COMPGEN(0x00677750, quotedNameFormat, "%s'%s'."),
             g_adventureEventText->getText(ADV_EVENT_TEXT_PYRAMID_SPELL_PREFIX),
             g_spellTraits[spell].m_name);
-    cell->setPyramid(0, spell);
+    cell->setPyramid(0, ESpellId(spell));
 
     if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         if (humanPlayer) {
@@ -3835,7 +3836,7 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
     return true;
 }
 
-// The Armageddon's Blade content switch is shared with getAlignment. The
+// The Armageddon's Blade content switch is shared with getCreatureAlignment. The
 // upgrade path below still tests base elementals separately because the four
 // base elementals have no upgrade in the older game version.
 VA(0x004a75c0, 0xFD)
@@ -3922,7 +3923,9 @@ void advManager::doWanderingMonsterResult(NewmapCell* cell,
     short forceModifier = getForceModifier(strengthRatio);
 
     if (!g_game->m_setup.m_difficulty && humanPlayer) {
-        int cappedDiplomacy = cppMin(diplomacy + 1, 3);
+        // DC 0x97466 retains min(int,int); Mac 0xb46f4..0xb4720
+        // expands its value-argument copies and reference selection.
+        int cappedDiplomacy = min(diplomacy + 1, 3);
         diplomacy = cappedDiplomacy;
     }
 
@@ -5534,7 +5537,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
     for (int m = 0; m <= 6; m++)
         who->giveResource(m, bank.m_resources[m]);
 
-    cell->m_extraInfo |= 0x2000000;
+    cell->setCreatureBankEmpty(true);
     who->checkLevel();
     return 1;
 }
@@ -5852,10 +5855,10 @@ DC_ADDRESS(0x09b670, 0x118)
 MAC_ADDRESS(0x0ba368, 0x134)
 void advManager::doAIEvent(NewmapCell* cell, hero* currentHero, type_point point)
 {
-    if (point.m_x == currentHero->m_pathTargetX
-        && point.m_y == currentHero->m_pathTargetY
-        && point.m_z == currentHero->m_pathTargetZ)
-        currentHero->m_pathTargetX = currentHero->m_pathTargetY = -1;
+    if (point.m_x == currentHero->getTargetX()
+        && point.m_y == currentHero->getTargetY()
+        && point.m_z == currentHero->getTargetZ())
+        currentHero->clearTarget();
 
     currentHero->m_movePoints = max(--currentHero->m_movePoints, 0);
     dispatchEvent(currentHero, cell, point, 0);
@@ -6066,8 +6069,7 @@ inline CTurnDurationPause::CTurnDurationPause()
 {
     g_turnDuration.pause();
     if (g_goSolo) {
-        g_game->m_players[g_soloPos].m_isLocal = 1;
-        g_game->m_players[g_soloPos].m_isHuman = 1;
+        g_game->m_players[g_soloPos].setLocalHuman();
     }
 }
 

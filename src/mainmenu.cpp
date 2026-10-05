@@ -130,6 +130,10 @@ void TMainMenu::doModal()
 // or naming either std::string creates the wrong live ranges/stack slots.
 // The hover call also really passes Y then X here - retail loads +0x10 first,
 // pushes it, then loads/pushes +0x14 as findWidget's first stack argument.
+// Mac's specific-edition CD arm precedes its direct generic warning. Swapping
+// the Complete formatted arms to that order does not recover the shared
+// retail result slot: 93.47%, still 68/65 blocks and an extra cleanup call.
+// Mac's platform-specific generic arm therefore does not prove Windows order.
 VA(0x004fb710, 0x484)
 DC_ADDRESS(0x0ea618, 0x398)
 MAC_ADDRESS(0x11ccd0, 0x574)  // admitted row includes the jump table/padding; decoded body ends at +0x46d

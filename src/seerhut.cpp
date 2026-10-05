@@ -109,7 +109,7 @@ std::string formatString(const char* format, ...);
 VA(0x0056c3e0, 0x183)
 DC_ADDRESS(0x12cd28, 0x35c)
 MAC_ADDRESS(0x2545ec, 0x124)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
-unsigned char initializeSeerHutText()
+bool initializeSeerHutText()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00683214, seerHutSpreadsheetName, "seerhut.txt"));
@@ -727,18 +727,14 @@ type_monster_quest::type_monster_quest(bool flags)
     m_position.m_x = (m_monsterId = m_defeatedBy = -1);
 }
 
-// Explicit invalid-range branches reproduce all 84 Mac bytes; the ternary
-// materializes an extra boolean or reverses the two arms. Windows stays exact.
+// Mac 0x165b8c..0x165bb4 and 0x165c48..0x165c74 expand GetArmyName
+// with a plural count: the same 0..150 guard and creature-name lookup.
+// Keep the canonical helper in both quest text operations.
 VA(0x0056ea30, 0xF9)
 MAC_ADDRESS(0x165b7c, 0x54)
 std::string type_monster_quest::getRequirementText()
 {
-    const char* name;
-    if (m_monsterId < 0 || m_monsterId > 0x96)
-        name = "";
-    else
-        name = g_creatureTypeTraits[m_monsterId].m_pluralName;
-    return name;
+    return getArmyName(m_monsterId, 2);
 }
 
 VA(0x0056eb30, 0x90)
@@ -747,9 +743,7 @@ std::string type_monster_quest::getQuestDescription()
 {
     return formatString(
         questTexts().m_text3.c_str(),
-        m_monsterId >= 0 && m_monsterId <= 0x96
-            ? g_creatureTypeTraits[m_monsterId].m_pluralName
-            : "");
+        getArmyName(m_monsterId, 2));
 }
 
 VA(0x0056ebc0, 0x06)
@@ -2071,7 +2065,7 @@ void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
 
         if (humanPlayer) {
             normalDialog(m_quest->getCompletionText().c_str(),
-                         2, -1, -1, getRewardType(),
+                         2, -1, -1, m_reward.getRewardType(),
                          m_reward.getRewardExtra(currentHero),
                          -1, 0, -1, 0, -1, 0);
 
@@ -2130,15 +2124,22 @@ void TSeerHut::doCompletionDialog(
     }
 }
 
-// Dreamcast seerhut.cpp:414 records this as a separate,
-// no-local switch helper called first by DoCompletionDialog. Retail's inlined
-// copy preserves the ten reward arms and Complete's shifted skill pictures.
+// Dreamcast owns this older private boundary on the hut. Complete moves the
+// operation to its separate reward object, as it does for GetRewardExtra.
 // Original: TSeerHut::GetRewardType; seerhut.cpp:414
 DC_ADDRESS(0x12d758, 0x90)
-MAC_ADDRESS(0x16a4c4, 0xc4)
 int TSeerHut::getRewardType()
 {
-    switch (m_reward.m_rewardType) {
+    return m_reward.getRewardType();
+}
+
+// Mac DoSeerEvent 0x169e08 passes hut+5, the same reward receiver used by
+// GetRewardExtra. This body reads type+0 and payload+4; its position directly
+// after GetRewardExtra supports an ordinary reward-owned source definition.
+MAC_ADDRESS(0x16a4c4, 0xc4)
+int TSeerReward::getRewardType()
+{
+    switch (m_rewardType) {
     case eRewardExperience:
         return 0x11;
     case eRewardMana:
@@ -2148,9 +2149,9 @@ int TSeerHut::getRewardType()
     case eRewardLuck:
         return 0x0b;
     case eRewardResource:
-        return m_reward.m_value.m_resource.m_resourceType;
+        return m_value.m_resource.m_resourceType;
     case eRewardPrimarySkill:
-        switch (m_reward.m_value.m_primarySkill.m_skillType) {
+        switch (m_value.m_primarySkill.m_skillType) {
         case TSeerReward::ePriSkillAttack:
             return 0x1f;
         case TSeerReward::ePriSkillDefense:
@@ -2415,6 +2416,10 @@ int TSeerHut::save(TAbstractFile* outfile)
     }
 }
 
+// Mac 0x16a768..0x16a790 expands the signed name index, name-list lookup
+// and string-data access owned by getName (DC SeerHut.h:121). The same
+// expansion appears at 0x16a830..0x16a854 and in the quick-info twin.
+// Preserve that canonical boundary in all three text callers.
 VA(0x00574070, 0x138)
 MAC_ADDRESS(0x16a6c4, 0x108)  // UpdateQuestLocator caller; HD twin 0x574440
 std::string TSeerHut::getSeerLogText()
@@ -2424,13 +2429,15 @@ std::string TSeerHut::getSeerLogText()
     return formatString(
         logFormat.c_str(),
         m_quest->getRequirementText().c_str(),
-        g_seerHutNameList[m_nameIndex].c_str());
+        getName());
 }
 
 // The TQuestGuard pair's TSeerHut twin, and it splits CROSSWISE: 0x5741b0
 // takes " " and is SetRolloverText's, 0x5743e0 takes "\n\n" and is
 // QuickInfo's. 556 B each and, again, byte-identical apart from that one
 // separator relocation.
+// Mac 0x16a828..0x16a854 / 0x16a978..0x16a9a4 expands GetName in these
+// builders; DC's older adventure callers retain that helper directly.
 VA(0x005741b0, 0x22C)
 MAC_ADDRESS(0x16a7cc, 0x150)
 std::string TSeerHut::seerHutFn005741B0(int player) const
@@ -2441,7 +2448,7 @@ std::string TSeerHut::seerHutFn005741B0(int player) const
     std::string text;
     text = formatString(
         g_generalText->getText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
-        g_seerHutNameList[m_nameIndex].c_str());
+        getName());
 
     if (m_quest) {
         text += DATA_COMPGEN(0x00660330, seerHutRolloverSeparator, " ");
@@ -2461,7 +2468,7 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
     std::string text;
     text = formatString(
         g_generalText->getText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
-        g_seerHutNameList[m_nameIndex].c_str());
+        getName());
 
     if (m_quest) {
         text += DATA_COMPGEN(0x006603b0, seerHutQuickInfoSeparator, "\n\n");

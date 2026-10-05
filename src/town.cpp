@@ -16,6 +16,7 @@
 #include "kb.h"
 #include "mapcell.h"
 #include "misc.h"
+#include "packed_bits.h"
 #include "philai.h"
 #include "resourcemanager.h"
 #include "terrain.h"
@@ -872,7 +873,8 @@ void town::initializeSpells(const TownExtra* townSetup)
                     totalWeight +=
                         g_spellTraits[spell].m_townProbability[m_type];
                     if (townSetup->m_fixedSpells[spell]) {
-                        m_mageGuildSpells[level - 1][slot] = spell;
+                        m_mageGuildSpells[level - 1][slot] =
+                            static_cast<ESpellId>(spell); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
                         prohibited[spell] = true;
                         break;
                     }
@@ -882,7 +884,7 @@ void town::initializeSpells(const TownExtra* townSetup)
             if (spell < hero::NUM_SPELLS)
                 continue;
             if (totalWeight == 0) {
-                m_mageGuildSpells[level - 1][slot] = -1;
+                m_mageGuildSpells[level - 1][slot] = SPELL_NONE;
                 continue;
             }
             int roll = random(1, totalWeight);
@@ -894,7 +896,8 @@ void town::initializeSpells(const TownExtra* townSetup)
                         break;
                 }
             }
-            m_mageGuildSpells[level - 1][slot] = spell;
+            m_mageGuildSpells[level - 1][slot] =
+                static_cast<ESpellId>(spell); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
             prohibited[spell] = true;
         }
     }
@@ -1046,16 +1049,15 @@ MAC_ADDRESS(0x1b43ac, 0x420)  // anchor-global
 // Reversing both hasBuilding membership operands is also byte-identical
 // in town and its retained ai_player body.
 type_building_id town::buildBuilding(int buildingId,
-                                     unsigned char setBuiltFlag,
-                                     unsigned char applySpecialEffect)
+                                     bool setBuiltFlag,
+                                     bool applySpecialEffect)
 {
     type_building_id built;
     unsigned char hadFort = isCastle();
     unsigned char hadCapitol = isCapitol();
-    // The parameter is int - DC-attested (`...QAA?AW4type_building_id@@
-    // HEE@Z`) and required by the townmgr call sites - while
-    // create_building's domain is the enum; the conversion is the
-    // boundary between retail's own two spellings of the id.
+    // Original ?BuildBuilding@town@@QAA?AW4type_building_id@@H_N0@Z
+    // proves int buildingId and both bool flags; the dossier lowers _N to
+    // unsigned char. create_building retains its separate enum domain.
     built = createBuilding(type_building_id(buildingId));
 
     if (setBuiltFlag && buildingId != DOCK_WITH_BOAT_ID) {
@@ -1134,7 +1136,7 @@ void town::updateShipyard()
 VA(0x005bf3c0, 0x11E)
 DC_ADDRESS(0x167274, 0x102)
 MAC_ADDRESS(0x1b4948, 0x224)
-unsigned char town::buyBuilding(type_building_id building)
+bool town::buyBuilding(type_building_id building)
 {
     if (m_owner < 0)
         return 0;
@@ -1160,7 +1162,7 @@ unsigned char town::buyBuilding(type_building_id building)
 VA(0x005bf4e0, 0xC)
 DC_ADDRESS(0x167378, 0xe)
 MAC_ADDRESS(0x1b4b6c, 0x14)
-unsigned char town::canBuildDock() const
+bool town::canBuildDock() const
 {
     return m_dockSite != TOWN_DOCK_SITE_NONE;
 }
@@ -1201,7 +1203,7 @@ long town::getCastleGrowthBonus(TCreatureType creature) const
 VA(0x005bf600, 0xC6)
 DC_ADDRESS(0x167458, 0x7c)
 MAC_ADDRESS(0x1b4cac, 0x130)
-short town::getGoldIncome(unsigned char includeSilo) const
+short town::getGoldIncome(bool includeSilo) const
 {
     short income = 500;
     if (hasBuilding(HALL_TOWN_ID, false))
@@ -1222,7 +1224,7 @@ short town::getGoldIncome(unsigned char includeSilo) const
 VA(0x005bf6d0, 0x97)
 DC_ADDRESS(0x1674d4, 0x70)
 MAC_ADDRESS(0x1b4ddc, 0x14c)
-int town::getHorde(long dwelling) const
+type_building_id town::getHorde(long dwelling) const
 {
     if (!hasBuilding(DWELLING_0_ID + dwelling, true))
         return MAX_BUILDING_TYPE;
@@ -1784,7 +1786,7 @@ void town::updateFullBuildingMask()
 VA(0x005c0d20, 0x13D)
 DC_ADDRESS(0x168504, 0x158)
 MAC_ADDRESS(0x1b67f8, 0x19c)  // anchor-global
-unsigned char town::canBuild(short buildingId) const
+bool town::canBuild(short buildingId) const
 {
     if (!g_game->townAlreadyBuiltOn(m_id)) {
         if (isLegalBuilding(type_building_id(buildingId))) {
@@ -1813,7 +1815,7 @@ DC_ADDRESS(0x16865c, 0xb6)
 MAC_ADDRESS(0x1b6994, 0xf8)
 // Complete reads the full dword parameter and its exact symbol encodes int;
 // Dreamcast's older interface records short building_id.
-unsigned char town::canEverBuild(int buildingId) const
+bool town::canEverBuild(int buildingId) const
 {
     if (isLegalBuilding(type_building_id(buildingId))) {
         if (buildingId == DOCK_ID)
@@ -1922,7 +1924,7 @@ int* town::getSiloIncome() const
 VA(0x005c12a0, 0x39)
 DC_ADDRESS(0x1689ec, 0x22)
 MAC_ADDRESS(0x1b6de0, 0x40)
-unsigned char town::isLegalBuilding(type_building_id building) const
+bool town::isLegalBuilding(type_building_id building) const
 {
     return (g_bitNumber[building] & m_legalBuildings) != 0;
 }
@@ -1937,7 +1939,7 @@ void town::setLegalBuildings(__int64 disabledBuildings)
 
 // Original: town::is_disabled; town.cpp:2300
 DC_ADDRESS(0x168a50, 0x48)
-unsigned char town::isDisabled(type_building_id building) const
+bool town::isDisabled(type_building_id building) const
 {
     if (isLegalBuilding(building))
         return 0;
@@ -1971,7 +1973,7 @@ void town::hire(hero* newHero, long playerId)
 VA(0x005c13b0, 0x83)
 DC_ADDRESS(0x168b54, 0x4c)
 MAC_ADDRESS(0x1b6f1c, 0x88)
-void town::placeInMap(int heroId, long playerId, unsigned char resetFlags)
+void town::placeInMap(int heroId, long playerId, bool resetFlags)
 {
     hero* newHero = g_game->getHero(heroId);
     newHero->placeInMap(playerId, getLocation(), resetFlags);
@@ -2063,7 +2065,7 @@ int town::s_dwellingCosts[9][14][NUM_RESOURCES];
 VA(0x005c14c0, 0x1F6)
 DC_ADDRESS(0x168c3c, 0x112)
 MAC_ADDRESS(0x1b708c, 0x158)
-unsigned char town::initializeBuildingCostsTables()
+bool town::initializeBuildingCostsTables()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00688fb4, townBuildingSpreadsheetName, "building.txt"));

@@ -210,7 +210,7 @@ CAdventurMapChatEdit::CAdventurMapChatEdit(
 
 VA(0x00401400, 0xC5)
 MAC_ADDRESS(0x00026c, 0x20)
-int TAdventureMapWindow::open(int zOrder, unsigned char update)
+int TAdventureMapWindow::open(int zOrder, bool update)
 {
     // Mac's override at 0:0x26c only forwards to heroWindow::open;
     // the immersion mouse-effect lifetime belongs to Windows.
@@ -1000,6 +1000,13 @@ void TAdventureMapWindow::doTownKnob(unsigned char up)
     updateTownLocators(-1, 1, 1);
 }
 
+void TAdventureMapWindow::drawTownLocatorHighlight(int which, unsigned char update)
+{
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+                     TOWN_0_ID + which, 1);
+    drawWindow(update, TOWN_0_ID + which, TOWN_0_ID + which);
+}
+
 VA(0x004032e0, 0x134)
 DC_ADDRESS(0x0010e4, 0x4)
 MAC_ADDRESS(0x002b44, 0x204)
@@ -1048,7 +1055,7 @@ void TAdventureMapWindow::updateHeroLocators(int top, bool drawWin,
     }
 
     if (update)
-        g_windowManager->updateScreen(0, 0, 800, 600);
+        g_windowManager->updateScreen();
 }
 
 VA(0x00403420, 0x131)
@@ -1099,7 +1106,7 @@ void TAdventureMapWindow::updateTownLocators(int top, bool drawWin,
     }
 
     if (update)
-        g_windowManager->updateScreen(0, 0, 800, 600);
+        g_windowManager->updateScreen();
 }
 
 // Pass the visibility predicate directly to setVisible. An inferred int
@@ -1190,9 +1197,7 @@ void TAdventureMapWindow::updateTownLocator(int which, bool drawWinSect,
         drawWindow(0, TOWN_0_ID + which, TOWN_0_ID + which);
         if (which < player->m_numTowns && !g_completeDrawAllCells
             && townId == player->m_currTownId) {
-            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
-                             TOWN_0_ID + which, 1);
-            drawWindow(0, TOWN_0_ID + which, TOWN_0_ID + which);
+            drawTownLocatorHighlight(which, 0);
         }
         if (update)
             g_windowManager->updateScreen(0x2eb, 32 * which + 0xd4, 0x30, 0x20);
@@ -1318,6 +1323,18 @@ static const int g_aiSleepHotkeys[2] = { 44, 17 };
 DATA(0x0065f238)
 static const char* g_aszSleepIcons[2] = { "iam005.def", "iam011.def" };
 
+// Project-inferred shared button refresh. Resolve the local player after the
+// image message, as both callers did; keep all four widget dispatch stages.
+void TAdventureMapWindow::showButtonImage(int id, const char* image)
+{
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
+                     id, reinterpret_cast<int>(image));
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
+                     id, g_game->getLocalPlayerGamePos());
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_DRAW, id, 0);
+    widgetSetStatus(id, widget::WIDGET_UPDATE);
+}
+
 VA(0x00403c40, 0x78)
 DC_ADDRESS(0x001188, 0x4)
 MAC_ADDRESS(0x0039d8, 0xcc)
@@ -1328,13 +1345,7 @@ unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
     DATA(0x0065f234) static int previousLevel = -1;
     if (level != previousLevel) {
         previousLevel = level;
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
-            ELEVATION_TOGGLE_ID, reinterpret_cast<int>(g_aszElevationIcons[level]));
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
-            ELEVATION_TOGGLE_ID, g_game->getLocalPlayerGamePos());
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_DRAW,
-            ELEVATION_TOGGLE_ID, 0);
-        widgetSetStatus(ELEVATION_TOGGLE_ID, widget::WIDGET_UPDATE);
+        showButtonImage(ELEVATION_TOGGLE_ID, g_aszElevationIcons[level]);
         return 1;
     }
     return 0;

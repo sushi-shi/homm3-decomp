@@ -8,6 +8,15 @@
 #include "hero.h"
 #include "palette.h"
 
+// DC's const draw/accessor bodies first test *Sp_loaded (object +0x20)
+// and call SpriteDataReload at 0x73bf4 when zero. That routine reads DEF
+// data, rebuilds sequences/frames and palettes, then sets the loaded flag.
+// Complete instead loads them in ResourceManager::getSprite; its +0x20
+// field is the owned palette. Mac 0x8a72c/0x8a76c/0x8a818 and retail
+// 0x47bcc0/0x47bcf0/0x47bd60 have no reload guard. The DC-only alpha and
+// scaled wrappers below preserve their frame calls with this Complete
+// ownership model, without inventing a reload operation on the palette.
+
 // CSprite vtable 0x63d6b0 slot 0. Defining the virtual destructor below
 // naturally emits this wrapper before the importing constructor.
 VA_COMPGEN(0x0047b8f0, 0x21, SCALAR_DELETING_DTOR, CSprite)

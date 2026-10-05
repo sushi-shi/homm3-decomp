@@ -182,7 +182,7 @@ void mouseManager::close()
         m_systemPointerIsOn = 1;
     }
     if (m_sprite)
-        m_sprite->dispose();
+        ResourceManager::dispose(m_sprite);
     m_sprite = 0;
 }
 
@@ -210,6 +210,15 @@ int mouseManager::main(message& msg)
     return 0;
 }
 
+// Project-inferred cleanup shared by the negative/unchanged-frame exits.
+// The caller still owns its lock; successful updates enable before drawing.
+void mouseManager::finishPointerWithoutRedraw()
+{
+    m_busy--;
+    enable();
+    g_mouseSetPointerBusy = 0;
+}
+
 VA(0x0050cca0, 0xE0)
 DC_ADDRESS(0x0feb1c, 0x136)
 MAC_ADDRESS(0x216fc0, 0x160)
@@ -233,15 +242,11 @@ void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
         m_frame = -1;
     }
     if (newFrame < 0) {
-        m_busy--;
-        enable();
-        g_mouseSetPointerBusy = 0;
+        finishPointerWithoutRedraw();
         return;
     }
     if (newFrame == m_frame) {
-        m_busy--;
-        enable();
-        g_mouseSetPointerBusy = 0;
+        finishPointerWithoutRedraw();
         return;
     }
     loadFrame(m_set == SPELL_SET ? 0 : newFrame);
@@ -249,6 +254,14 @@ void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
     update(1);
     m_busy--;
     g_mouseSetPointerBusy = 0;
+}
+
+static void setLocalMouseRect(RECT& local, const RECT& bounds)
+{
+    local.left = 0;
+    local.top = 0;
+    local.right = bounds.right - bounds.left;
+    local.bottom = bounds.bottom - bounds.top;
 }
 
 // E:\gamedcs\mousemgr.cpp:526
@@ -469,8 +482,8 @@ void mouseManager::saveAndDraw(
     const RECT& dstRect, int x, int y)
 {
     if (!IsRectEmpty(&dstRect)) {
-        RECT saveRect = {0, 0, dstRect.right - dstRect.left,
-                         dstRect.bottom - dstRect.top};
+        RECT saveRect;
+        setLocalMouseRect(saveRect, dstRect);
         RECT sourceRect = saveRect;
         OffsetRect(&sourceRect, dstRect.left - x, dstRect.top - y);
         ddBlit(saveSurface, saveRect, dstSurface, dstRect, DDBLT_WAIT);
@@ -489,10 +502,7 @@ void mouseManager::restoreUnderlying(
 {
     if (!IsRectEmpty(&dstRect)) {
         RECT sourceRect;
-        sourceRect.left = 0;
-        sourceRect.top = 0;
-        sourceRect.right = dstRect.right - dstRect.left;
-        sourceRect.bottom = dstRect.bottom - dstRect.top;
+        setLocalMouseRect(sourceRect, dstRect);
         ddBlit(surface, dstRect, g_ddsMouseSaveSurface, sourceRect,
             DDBLT_WAIT);
     }
@@ -620,8 +630,7 @@ void mouseManager::loadFrame(int newFrame)
             surfaceDesc.lPitch,
             static_cast<unsigned short*>(surfaceDesc.lpSurface));
         CSprite* sprite = m_sprite;
-        sprite->drawPointer(newFrame, bitmap.getMap(0, 0), 0, 0,
-            bitmap.getWidth(), bitmap.getHeight(), bitmap.getPitch(), 0);
+        sprite->drawPointer(newFrame, &bitmap, 0, 0, false);
         g_ddsMouseSurface->Unlock(0);
         m_frame = newFrame;
     }

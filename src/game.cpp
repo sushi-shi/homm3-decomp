@@ -1150,6 +1150,30 @@ int game::saveObeliskPool(TAbstractFile* outfile)
     return 0;
 }
 
+// Project-inferred full-row payment shared by quests, building and
+// creature/engine purchases. Costs are int rows in quests/traits/buildings
+// and long rows from GetUpgradeCost. Keep their types and one subtraction loop without copying
+// or reinterpreting either row. Each read remains immediately before its
+// matching debit, including zero and negative entries.
+template <class Cost>
+static void subtractResourceCost(long* resources, const Cost* cost)
+{
+    for (int resource = 0; resource < NUM_RESOURCES; ++resource)
+        resources[resource] -= cost[resource];
+}
+
+// Ordinary owner-TU placement is provisional; these interfaces and the
+// implementation template do not claim original native helper identities.
+void playerData::payResourceCost(const int* cost)
+{
+    subtractResourceCost(m_resources, cost);
+}
+
+void playerData::payResourceCost(const long* cost)
+{
+    subtractResourceCost(m_resources, cost);
+}
+
 VA(0x004b9df0, 0x2D)
 DC_ADDRESS(0x0a4cc8, 0x90)
 MAC_ADDRESS(0x0cc2a0, 0x5c)
@@ -2348,7 +2372,9 @@ int __fastcall game::loadString(TAbstractFile* infile, std::string& s)
     int count;
     short length;
 
-    count = infile->read(&length, sizeof(length));
+    // Mac 0xcec70 checks the scalar count before decoding the short at
+    // 0xcec84; the canonical reader preserves that caller slot and guard.
+    count = readLittleEndianValue(infile, length);
     if (count < sizeof(length))
         return -1;
 
@@ -4202,6 +4228,8 @@ static void randomizeShrine(NewmapCell* cell, const int level)
 
 // E:\gamedcs\game.cpp:4654
 // RandomizeEvents expands this ordinary static helper.
+// Braced/nested branches and separate scalar declarations produce the same
+// VC6 object; they do not restore its retained resource-setter call.
 DC_ADDRESS(0x0abda8, 0x86)
 MAC_ADDRESS(0x0d672c, 0x118)
 static void randomizeWagon(NewmapCell* cell)
@@ -6877,9 +6905,11 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
 VA(0x004c6c50, 0x2EB)
 DC_ADDRESS(0x0b1c8c, 0x28e)
 MAC_ADDRESS(0x0dd324, 0x3e8)
+// Original DC public ?ViewArmy@game@@QAAXAAVarmyGroup@@HPBVhero@@PBVtown@@HH_N3@Z
+// proves both flag parameters are bool despite lowered byte CodeView records.
 void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                     const town* thisTown, int x, int y,
-                    unsigned char showDismiss, unsigned char isQuickView)
+                    bool showDismiss, bool isQuickView)
 {
     TCreatureType armyType = group.m_armyTypes[iarmy];
     const int numTroops = group.m_numTroops[iarmy];
@@ -7215,7 +7245,9 @@ void game::nextPlayer()
 VA(0x004c7930, 0x266)
 DC_ADDRESS(0x0b2ad4, 0x55c)
 MAC_ADDRESS(0x0de078, 0x308)
-int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
+// Original DC public ?ComputeDailyGold@game@@QAAHH_N@Z proves bool includeSilo;
+// the byte primitive in its lowered debug parameter record is not source uchar.
+int game::computeDailyGold(int whichPlayer, bool includeSilo)
 {
     const playerData& p = m_players[whichPlayer];
     int gold = 0;
@@ -8945,6 +8977,7 @@ void game::processOnMapHeroes()
 VA(0x004cafd0, 0xD14)
 DC_ADDRESS(0x0b7560, 0x1064)
 MAC_ADDRESS(0x0e2414, 0xd20)  // retail body + typed catch + continuation/tables
+// Original DC public ?TransmitSaveGame@game@@QAAHHH_N0@Z proves both bool flags.
 int game::transmitSaveGame(int toWho, int thisPlayerDead,
                            bool inGame, bool makeOrig)
 {
@@ -10497,10 +10530,11 @@ MAC_COMPGEN_ADDRESS(0x0f0ef8, 0x74, IMPLICIT_DTOR, TPickRandomTownName)
 VA_COMPGEN(0x004cbcf0, 0x4B, IMPLICIT_DTOR, CGameTransferDlg)
 MAC_COMPGEN_ADDRESS(0x0e3134, 0x7c, IMPLICIT_DTOR, CGameTransferDlg)
 
-// InitNewGame's exception path retains Dinkumware's string-taking
-// std::logic_error constructor. The late STL anchor emits the identical named
-// public until that large caller is reconstructed.
-VA_COMPGEN(0x004c3090, 0x162, CLASS_CTOR, logic_error)
+// Retail takes the string argument directly at 0x4c30c3 before copying it
+// into this+0xc. The copy constructor at 0x4044e0 first skips the argument's
+// exception base (argument+0xc); it must not inherit this address if changes
+// to helper expansion stop emitting the string-taking constructor here.
+VA_COMPGEN(0x004c3090, 0x162, CLASS_NONCOPY_CTOR, logic_error)
 
 VA_COMPGEN(0x004cef80, 0x12, BITSET_SUBSCRIPT, Bitset145)
 

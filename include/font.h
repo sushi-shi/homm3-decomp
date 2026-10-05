@@ -120,6 +120,8 @@ public:
     // at 0x125c that the size query adds to it. DC has no such member -
     // its port left the resource size query on a different slot shape.
     int m_dataSize;
+
+public:
     font();
     font(const char* name, const TFontSpec& fontspec, int dsize,
          unsigned char* d);  // retail 0x4b5070
@@ -151,6 +153,7 @@ public:
     // name and the three-parameter shape only.
     void fillLinesVector(const char* str, int boxWidth,
                          std::vector<std::string>& result);
+
 private:
     // Original GetColor, font.cpp:56; ordinary member.
     int getColor(font::TColor colorScheme, bool highlighted);

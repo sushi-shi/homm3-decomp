@@ -46,6 +46,21 @@ static const int g_combatActionAttackWall = 9;
 static const int g_combatActionCastCreatureSpell = 10;
 static const int g_combatActionFirstAid = 11;
 
+// Project-inferred action operations shared by UI, automation and AI.
+// A targeted order retains the secondary spell target. Complete tuple writes
+// also occur when receiving an action or restoring a simulation snapshot.
+void combatManager::prepareAction(int action, int extra)
+{
+    m_nextAction = action;
+    m_nextActionExtra = extra;
+}
+
+void combatManager::setTargetAction(int action, int extra, int targetHex)
+{
+    prepareAction(action, extra);
+    m_nextActionGridIndex = targetHex;
+}
+
 // E:\gamedcs\command.cpp:63
 // Dreamcast CodeView names this private nullary member and its two static
 // TWallTargetId arrays. Retail fixes the Complete-build fourth tower target,
@@ -89,6 +104,11 @@ static const int g_combatActionFirstAid = 11;
 // first-aid (416B), wall predicate (80B), and main (1456B) bytes unchanged.
 // Catapult therefore retains its 98.6842% residual; renamed call/data symbols
 // require target rebinding before scoring these source interfaces.
+// The wall scans use ordinary loop bodies. Their extra enclosing scopes
+// survived 2bb943d19f's replacement of provisional loop-local indices with
+// the shared native index; no declaration remains in either outer scope.
+// Removing that scaffolding leaves Windows at 98.6842%, with 59 aligned
+// blocks, four calls and all 22 relocations unchanged.
 VA(0x00473c00, 0x29F)
 DC_ADDRESS(0x06af98, 0x194)
 MAC_ADDRESS(0x081d04, 0x3f8)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map
@@ -133,24 +153,22 @@ bool combatManager::automateCatapult()
 
     long index;
     count = 0;
-    { for (index = 0; index < 4; index++) {
-            if (getWallStrength(walls[index]) > 0)
-                count++;
-        }
+    for (index = 0; index < 4; index++) {
+        if (getWallStrength(walls[index]) > 0)
+            count++;
     }
 
     if (count > 0 && (skill == 0 || count == static_cast<long>(sizeof(walls) / sizeof(walls[0])))) {
         long weakest = 100;
         count = 0;
-        { for (index = 0; index < 4; index++) {
-                long strength = getWallStrength(walls[index]);
-                if (strength <= 0 || strength > weakest)
-                    continue;
-                if (strength < weakest)
-                    count = 0;
-                count++;
-                weakest = strength;
-            }
+        for (index = 0; index < 4; index++) {
+            long strength = getWallStrength(walls[index]);
+            if (strength <= 0 || strength > weakest)
+                continue;
+            if (strength < weakest)
+                count = 0;
+            count++;
+            weakest = strength;
         }
 
         // Dreamcast and Mac retain sRandom here. Complete binds its
@@ -185,9 +203,7 @@ bool combatManager::automateCatapult()
 
 
 issueCatapultOrder:
-    m_nextAction = 9;
-    m_nextActionGridIndex = s_wallTargets[target].m_targetHex;
-    m_nextActionExtra = -1;
+    setTargetAction(9, -1, s_wallTargets[target].m_targetHex);
     return 1;
 }
 
@@ -447,8 +463,7 @@ void combatManager::setCombatDirections(int hex)
     currentArmy = getCurrentArmy();
     oldSide = currentArmy->m_side;
     oldSlot = currentArmy->m_slot;
-    currentArmy->m_side = -1;
-    currentArmy->m_slot = -1;
+    currentArmy->clearAttackTarget();
 
     g_searchArray->seedCombatPosition(currentArmy, m_currentSide,
                                      currentArmy->getSpeed(), 0, -1);
@@ -549,8 +564,7 @@ void combatManager::setCombatDirections(int hex)
         }
     }
 
-    currentArmy->m_side = oldSide;
-    currentArmy->m_slot = oldSlot;
+    currentArmy->setAttackTarget(oldSide, oldSlot);
 }
 
 VA_COMPGEN(0x0047a670, 0x11, TREE_BEGIN, int_set)
@@ -916,7 +930,7 @@ int combatManager::processCombatMsg(message& msg)
                                  1, -1, -1, -1, 0,
                                  -1, 0, -1, 0, -1, 0);
                 } else {
-                    initiateSpell(viewSpells(), 0);
+                    initiateSpell(static_cast<ESpellId>(viewSpells()), 0); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
                     resetMouse();
                 }
                 break;
@@ -1148,7 +1162,8 @@ int combatManager::processCombatMsg(message& msg)
                 army* currentArmy = getCurrentArmy();
                 if (currentArmy->m_creatureType == CREATURE_FAERIE_DRAGON
                         && currentArmy->m_monInfo.m_hasSpell) {
-                    initiateSpell(currentArmy->m_faerieDragonSpell, 1);
+                    initiateSpell(
+                        static_cast<ESpellId>(currentArmy->m_faerieDragonSpell), 1); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
                     if (m_nextAction == 1)
                         m_nextAction = 10;
                 }
@@ -1687,7 +1702,7 @@ void combatManager::doCommand(int command)
             m_combatWindow->m_creatureSubWindows[2]->unShow();
             m_combatWindow->m_creatureSubWindows[3]->unShow();
             g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
-            initiateSpell(spell, 0);
+            initiateSpell(static_cast<ESpellId>(spell), 0); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
             resetMouse();
         }
         break;
@@ -1922,9 +1937,12 @@ void combatManager::doVictory(int winningGroup)
     g_mouseManager->m_noChangePointer = 0;
     g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
     g_mouseManager->showPointer(false);
+    // DC command.cpp:2710 follows ShowPointer with this header helper;
+    // Complete shares the pointer restoration before its result branches.
+    g_mouseManager->enable();
     if (!isQuickCombat()) {
         g_windowManager->m_screenBitmap->darken(0, 0, 800, 600);
-        g_windowManager->updateScreen(0, 0, 800, 600);
+        g_windowManager->updateScreen();
     }
 
     int dialogtimeout = 15000;
@@ -2257,7 +2275,7 @@ void combatManager::checkGetAIMove()
 // E:\gamedcs\command.cpp:3131
 VA(0x004782d0, 0x5B5)
 DC_ADDRESS(0x06f198, 0x45c)
-MAC_ADDRESS(0x08674c, 0x5ac)  // exhaustive command order-map + body
+MAC_ADDRESS(0x08674c, 0x5ac)  // exhaustive command order-map + body MAC_ABSTRACTION_FROM(tokens1:839c88458f96,27.4105): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 void combatManager::getControl()
 {
     m_lastCellIndex = -1;
@@ -2506,6 +2524,8 @@ void combatManager::processFirstAid(army* currentArmy)
 // The residual is its nested expansion decision, not a different string.
 // DC3625's extra FullUpdate in the surrender-error arm is absent in retail.
 // Mac and Windows both retain testRaiseDoor in this caller (retail 0x4672e0).
+// Original DC public ?ProcessNextAction@combatManager@@QAAHAAUmessage@@_N@Z
+// proves bool automaticTurn despite the lowered byte CodeView primitive.
 VA(0x00478d80, 0x1054)
 DC_ADDRESS(0x06f984, 0x82a)
 MAC_ADDRESS(0x0871d0, 0xb3c)  // anchor-callee exhaustive + single-fn gap

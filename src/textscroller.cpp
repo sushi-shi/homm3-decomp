@@ -101,7 +101,9 @@ type_text_scroller::type_text_scroller(const char* text, int x, int y,
         this, this->m_x + m_width - 16, this->m_y, 16, m_height, -1,
         max(1, m_textLines.size() - m_lineImages.size() + 1),
         graphics, m_lineImages.size(), 1);
-    textFont->dispose();
+    // Mac 0x25b424 and retail 0x5ba297 expand the same resource-disposal
+    // wrapper used by setText below; the resource overload has no null guard.
+    ResourceManager::dispose(textFont);
 }
 
 // The scalar deleting destructor, slot 0 of vtable 0x642d0c.
@@ -152,11 +154,8 @@ int type_text_scroller::main(message& msg)
         case WIDGET_DRAW:
             if (!m_background) {
                 m_background = new Bitmap16Bit(m_width, m_height);
-                m_background->grab(g_windowManager->m_screenBitmap->getMap(0, 0),
-                                 m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
-                                 g_windowManager->m_screenBitmap->getWidth(),
-                                 g_windowManager->m_screenBitmap->getHeight(),
-                                 g_windowManager->m_screenBitmap->getPitch());
+                m_background->grab(g_windowManager->m_screenBitmap,
+                    m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y);
             }
             break;
         case WIDGET_SET_STATUS:
@@ -180,11 +179,9 @@ MAC_ADDRESS(0x25b7b8, 0x120)
 void type_text_scroller::refresh(int firstLine)
 {
     m_background->draw(0, 0, m_width - 16, m_height,
-                     g_windowManager->m_screenBitmap->getMap(0, 0),
+                     g_windowManager->m_screenBitmap,
                      m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
-                     g_windowManager->m_screenBitmap->getWidth(),
-                     g_windowManager->m_screenBitmap->getHeight(),
-                     g_windowManager->m_screenBitmap->getPitch(), false);
+                     false);
 
     for (unsigned int i = 0; i < m_lineImages.size(); i++) {
         textWidget* lineWidget = m_lineImages[i];

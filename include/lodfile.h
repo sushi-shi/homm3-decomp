@@ -71,7 +71,7 @@ public:
     char* getErrorString(int lodError);
     void sort();
     void clear();
-    unsigned char pointAt(const char* itemName);
+    bool pointAt(const char* itemName);
     int read(void* dest, int numBytes);
     LODEntry* getItemIndex(const char* itemName);
     int open(const char* filename, int flags);

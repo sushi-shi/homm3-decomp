@@ -3,6 +3,7 @@
 #define HOMM3_RESOURCEPTR_H
 
 #include "va.h"
+#include "resourcemanager.h"
 
 class TTextResource;
 
@@ -27,14 +28,14 @@ public:
     ~TResourcePtr()
     {
         if (m_owns && m_ptr)
-            m_ptr->dispose();
+            ResourceManager::dispose(m_ptr);
     }
 
     DC_ADDRESS(0x05b2b8, 0x4)
     T* get() const { return m_ptr; }
 
     DC_ADDRESS(0x05b2bc, 0x18)
-    T* operator->() const { return m_ptr; }
+    T* operator->() const { return get(); }
 
 private:
     mutable unsigned char m_owns;

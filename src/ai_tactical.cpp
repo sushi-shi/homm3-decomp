@@ -198,7 +198,7 @@ void type_AI_combat_parameters::simulateAttack(const army& currentArmy, long& ou
     if (ourHits == 0 || enemyHits <= 0 || ranged)
         return;
     if (enemy.canRetaliate(currentArmy)
-            && (g_game->m_setup.m_difficulty > 0 || g_combatManager->m_sideIsAi[m_ourGroup])) {
+            && (g_game->m_setup.m_difficulty > 0 || g_combatManager->m_sideIsAi[getGroup()])) {
         simulateSingleAttack(enemy, enemyHits, currentArmy, ourHits, 0, 0);
         if (ourHits == 0 || enemyHits == 0)
             return;
@@ -252,7 +252,7 @@ MAC_ADDRESS(0x03d3fc, 0x1dc)
 long type_AI_combat_parameters::getRangedAttackValue(const army& currentArmy, const army& enemy) const
 {
     long value = getSimpleAttackEffect(currentArmy, enemy, 1, 0);
-    if (!g_game->m_setup.m_difficulty && !g_combatManager->m_sideIsAi[m_ourGroup])
+    if (!g_game->m_setup.m_difficulty && !g_combatManager->m_sideIsAi[getGroup()])
         return value;
     if (enemy.isIncapacitated())
         return value / 10;
@@ -353,6 +353,15 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
     } else {
         m_roundsLeft = 1;
     }
+}
+
+// Project-inferred shared restoration priority for creature and hero spells.
+// Keep each caller's base valuation and rejection rules outside this operation.
+long type_AI_combat_parameters::getRestorationPriorityValue(long value) const
+{
+    if (m_awakeFriendlyValue > m_awakeEnemyValue && m_roundsLeft <= 1)
+        value += value;
+    return value;
 }
 
 // DC ai_tactical.cpp:497 and Mac 0:0x3da40 retain AI_get_attack_damage;
@@ -479,8 +488,8 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
         if (cell->m_flightCost > 0)
             continue;
         turns = getAttackTime(cell);
-        if (m_bestHex >= 0) {
-            if (m_bestAttackTime < turns)
+        if (getBestHex() >= 0) {
+            if (getAttackTime() < turns)
                 continue;
         }
         checked = 0;
@@ -519,11 +528,13 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
             threat = min(m_enemyAttackArray[otherHex], threat);
         }
         value += threat;
-        if (m_bestHex >= 0 && turns == m_bestAttackTime) {
-            if (value < m_bestValue)
+        // Mac expands the ai_tactical.h:471..482 result getters at these
+        // best-hex/time/value reads. Keep their canonical caller boundaries.
+        if (getBestHex() >= 0 && turns == getAttackTime()) {
+            if (value < getHexValue())
                 continue;
-            if (value == m_bestValue) {
-                const pathCell* bestCell = m_searchData->getHex(m_bestHex);
+            if (value == getHexValue()) {
+                const pathCell* bestCell = m_searchData->getHex(getBestHex());
                 long difference = cell->m_cost - bestCell->m_cost;
                 if ((m_attackArmy->m_creatureType == CREATURE_CAVALIER
                             || m_attackArmy->m_creatureType == CREATURE_CHAMPION)
@@ -634,7 +645,7 @@ unsigned char type_AI_attack_hex_chooser::findAttackHex()
                 checkAdjacentHexes(second, 0, 3);
         }
     }
-    return combatManager::validHex(m_bestHex);
+    return combatManager::validHex(getBestHex());
 }
 
 // E:\gamedcs\ai_tactical.cpp:744 -  No retail slot: both
@@ -642,7 +653,9 @@ unsigned char type_AI_attack_hex_chooser::findAttackHex()
 // stores), so /OPT:REF dropped the out-of-line copy.
 DC_ADDRESS(0x03d524, 0x48)
 MAC_ADDRESS(0x03e210, 0x1c)
-type_enchant_data::type_enchant_data(SpellID newSpell, TSkillMastery newMastery, long newPower, long newDuration)
+// Original DC ??0type_enchant_data@@QAA@W4SpellID@@W4TSkillMastery@@JJ@Z
+// agrees with the native enum field contract.
+type_enchant_data::type_enchant_data(ESpellId newSpell, TSkillMastery newMastery, long newPower, long newDuration)
 {
     m_spell = newSpell;
     m_mastery = newMastery;
@@ -661,11 +674,9 @@ long type_enchant_data::getMasteryValue() const
     return g_spellTraits[m_spell].m_masteryBonus[m_mastery];
 }
 
-VA(0x00436950, 0x23)
-DC_ADDRESS(0x03d584, 0x2a)
-MAC_ADDRESS(0x03e254, 0x58)
-type_spell_choice::type_spell_choice()
-    : type_enchant_data(-1, eMasteryNone, 0, 0)
+// Project-inferred shared constructor stores. Target interpretation belongs
+// to the consumer: tactical hexes and simulated-combat vector indices differ.
+void type_spell_choice::initializeSelection()
 {
     m_value = 0;
     m_target = -1;
@@ -673,16 +684,23 @@ type_spell_choice::type_spell_choice()
     m_castNow = 0;
 }
 
+VA(0x00436950, 0x23)
+DC_ADDRESS(0x03d584, 0x2a)
+MAC_ADDRESS(0x03e254, 0x58)
+type_spell_choice::type_spell_choice()
+    : type_enchant_data(SPELL_NONE, eMasteryNone, 0, 0)
+{
+    initializeSelection();
+}
+
 VA(0x00436980, 0x35)
 DC_ADDRESS(0x03d5b0, 0x2a)
 MAC_ADDRESS(0x03e2ac, 0x48)
-type_spell_choice::type_spell_choice(SpellID newSpell, TSkillMastery newMastery, long newPower, long newDuration)
+// Original DC ??0type_spell_choice@@QAA@W4SpellID@@W4TSkillMastery@@JJ@Z.
+type_spell_choice::type_spell_choice(ESpellId newSpell, TSkillMastery newMastery, long newPower, long newDuration)
     : type_enchant_data(newSpell, newMastery, newPower, newDuration)
 {
-    m_value = 0;
-    m_target = -1;
-    m_secondTargetHex = -1;
-    m_castNow = 0;
+    initializeSelection();
 }
 
 // Original: type_AI_spellcaster::initialize; ai_tactical.cpp:779
@@ -794,7 +812,7 @@ unsigned char type_AI_spellcaster::isLastAction() const
 
 VA(0x00436c60, 0x1C4)
 DC_ADDRESS(0x03d838, 0x132)
-MAC_ADDRESS(0x03e600, 0x1d4)
+MAC_ADDRESS(0x03e600, 0x1d4) // MAC_ABSTRACTION_FROM(tokens1:aa0e7a89ae41,95.7265): isIncapacitated now reads durations through getSpellTime; native Mac 0x3e738 expands spell slots 62/70/74.
 unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
 {
     if (m_estimate.m_killsOnly)
@@ -826,7 +844,7 @@ unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
 
 VA(0x00436e30, 0x125)
 DC_ADDRESS(0x03d96c, 0x110)
-MAC_ADDRESS(0x03e7d4, 0x234)
+MAC_ADDRESS(0x03e7d4, 0x234) // MAC_ABSTRACTION_FROM(tokens1:8acf25749253,18.4397): isIncapacitated now reads durations through getSpellTime; native Mac 0x3e930 expands spell slots 62/70/74.
 long type_AI_spellcaster::getDamageValue(SpellID spell, long baseDamage, const hero* targetHero, const army* target) const
 {
     if (target->is(creatureImmobilized) || target->m_creatureType == CREATURE_ARROW_TOWER)
@@ -1747,6 +1765,7 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
     bool ranged = ourArmy->canShoot(0);
     long ourHits = ourArmy->getTotalHitPoints(0);
     armyGroup* group = g_combatManager->m_armyGroups[m_enemySide];
+    TSkillMastery mastery;  // DC records enemy_mastery at procedure scope.
     for (long i = 0; i < hero::NUM_SPELLS; i++) {
         if ((school & g_spellTraits[i].m_schoolBits) == 0)
             continue;
@@ -1760,7 +1779,7 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
             continue;
         if (!g_combatManager->validSpellTargetArmy(i, m_enemySide, ourArmy, 1, 0))
             continue;
-        TSkillMastery mastery = m_enemyHero->getSpellLevel(i, g_combatManager->m_magicTerrain);
+        mastery = m_enemyHero->getSpellLevel(i, g_combatManager->m_magicTerrain);
         long manaCost = m_enemyHero->getManaCost(
             i, group, g_combatManager->m_magicTerrain);
         if (manaCost > m_enemyHero->m_mana)
@@ -1868,7 +1887,8 @@ long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpe
         TEnchantValue valueOf = getEnchantmentFunction(spell);
         if (valueOf == 0)
             continue;
-        type_enchant_data caster(spell, currentArmy->getSpellLevel(spell),
+        type_enchant_data caster(static_cast<ESpellId>(spell), /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                                 currentArmy->getSpellLevel(spell),
                                  duration, duration);
         caster.m_checkResistance = 0;
         currentArmy->cancelIndividualSpell(spell);
@@ -1976,7 +1996,9 @@ long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchan
     if (m_winLikely)
         return 0;
     long bonus = g_spellTraits[SPELL_COUNTERSTRIKE].m_masteryBonus[caster.m_mastery];
-    long extra = cppMin(m_meleeEnemies[ourArmy->m_bitIndex].m_count - mult, bonus);
+    // DC 0x40692 retains min; Mac 0x43848..0x43878 selects the two
+    // homed operands before overwriting the bonus/extra stack slot.
+    long extra = min(m_meleeEnemies[ourArmy->m_bitIndex].m_count - mult, bonus);
     if (extra <= 0)
         return 0;
     const army* target = m_meleeEnemies[ourArmy->m_bitIndex].m_enemy;
@@ -2203,7 +2225,7 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice& choice, long gr
 // direct loop bound in isLastAction closes the remaining stack-slot difference.
 VA(0x0043aa60, 0x235)
 DC_ADDRESS(0x040ec0, 0x15c)
-MAC_ADDRESS(0x044410, 0x218)  // anchor-callee
+MAC_ADDRESS(0x044410, 0x218)  // anchor-callee // MAC_ABSTRACTION_FROM(tokens1:d3c7e499796f,32.4627): isIncapacitated now reads durations through getSpellTime; native Mac 0x44568 expands spell slots 62/70/74.
 void type_AI_spellcaster::considerTeleport(type_spell_choice& choice) const
 {
     unsigned char moved = 0;
@@ -2242,6 +2264,15 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice& choice) const
         for (long group = 0; group < 2; group++)
             g_combatManager->findAITargets(group, 0, 0, &m_estimate, 0);
     }
+}
+
+// Project-inferred shared restoration timing. Preserve this short-circuit
+// order and the existing isLastAction helper, including its own current-army read.
+bool type_AI_spellcaster::shouldRestoreNow(const army* restoredArmy) const
+{
+    return restoredArmy == g_combatManager->getCurrentArmy()
+        || m_winLikely
+        || isLastAction();
 }
 
 // E:\gamedcs\ai_tactical.cpp:2608
@@ -2283,13 +2314,13 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice& choice) const
             continue;
         long hex = ourArmy->m_gridIndex;
         if (g_combatManager->findResurrectionTarget(
-                static_cast<ESpellId>(choice.m_spell), m_side, hex, 0)
+                choice.m_spell, m_side, hex, 0)
                 != ourArmy) {
             if (!ourArmy->is(creatureDoubleWide))
                 continue;
             hex = ourArmy->getSecondGridIndex();
             if (g_combatManager->findResurrectionTarget(
-                    static_cast<ESpellId>(choice.m_spell), m_side, hex, 0)
+                    choice.m_spell, m_side, hex, 0)
                     != ourArmy)
                 continue;
         }
@@ -2314,16 +2345,12 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice& choice) const
                                             m_estimate.m_lowestDefense,
                                             ourArmy->canShoot(0), 0)
             * healable);
-        if (m_estimate.m_awakeFriendlyValue > m_estimate.m_awakeEnemyValue && m_estimate.m_roundsLeft <= 1)
-            value += value;
+        value = m_estimate.getRestorationPriorityValue(value);
         if (value <= choice.m_value)
             continue;
         choice.m_value = value;
         choice.m_target = hex;
-        choice.m_castNow =
-            ourArmy == g_combatManager->getCurrentArmy()
-            || m_winLikely
-            || isLastAction();
+        choice.m_castNow = shouldRestoreNow(ourArmy);
     }
 }
 
@@ -2407,14 +2434,14 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice) const
 
         long candidateTargetHex = candidateHealedArmy->m_gridIndex;
         army* target = g_combatManager->findResurrectionTarget(
-            static_cast<ESpellId>(choice.m_spell), m_side, candidateTargetHex, 0);
+            choice.m_spell, m_side, candidateTargetHex, 0);
 
         if (target != candidateHealedArmy) {
             if (!candidateHealedArmy->is(creatureDoubleWide))
                 continue;
             candidateTargetHex = candidateHealedArmy->getSecondGridIndex();
             target = g_combatManager->findResurrectionTarget(
-                static_cast<ESpellId>(choice.m_spell), m_side, candidateTargetHex, 0);
+                choice.m_spell, m_side, candidateTargetHex, 0);
             if (target != candidateHealedArmy)
                 continue;
         }
@@ -2608,7 +2635,7 @@ type_AI_spellcaster::TEnchantValue type_AI_spellcaster::getEnchantmentFunction(S
 // minimum is for.
 VA(0x0043b8f0, 0x224)
 DC_ADDRESS(0x041c30, 0x22c)
-MAC_ADDRESS(0x045674, 0x330)
+MAC_ADDRESS(0x045674, 0x330) // MAC_ABSTRACTION_FROM(tokens1:ef626e7189f7,20.2206): isIncapacitated now reads durations through getSpellTime; native Mac 0x45858 expands spell slots 62/70/74.
 void type_AI_spellcaster::considerEarthquake(type_spell_choice& choice) const
 {
     if (m_side == 1)
@@ -2758,7 +2785,7 @@ void type_AI_spellcaster::considerSpell(type_spell_choice& choice) const
 // Mac's zeroing entry is bzero; the Windows/DC spelling remains memset.
 VA(0x0043bf20, 0x119)
 DC_ADDRESS(0x0420ac, 0xc4)
-MAC_ADDRESS(0x045c80, 0x190)  // anchor-global
+MAC_ADDRESS(0x045c80, 0x190)  // anchor-global // MAC_ABSTRACTION_FROM(tokens1:153aae567bb6,36.0000): isIncapacitated now reads durations through getSpellTime; native Mac 0x45cc4 expands spell slots 62/70/74.
 void type_AI_spellcaster::setMeleeEnemies()
 {
     const army* ourArmy = &g_combatManager->m_armies[m_side][0];
@@ -2898,7 +2925,8 @@ long type_AI_spellcaster::getCaliphValue(const army* target) const
         count++;
         TEnchantValue valueOf = getEnchantmentFunction(spell);
         if (valueOf != 0) {
-            type_spell_choice choice(spell, mastery, 6, 6);
+            type_spell_choice choice(static_cast<ESpellId>(spell), /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                                      mastery, 6, 6);
             if (spellTargetsASingleArmy(spell, mastery)) {
                 total += (this->*valueOf)(target, choice);
             } else {
@@ -2922,7 +2950,8 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
                                    g_combatManager->m_magicTerrain))
         mastery = eMasteryExpert;
 
-    type_spell_choice choice(spell, mastery, power, power);
+    type_spell_choice choice(static_cast<ESpellId>(spell), /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                              mastery, power, power);
     army* target = g_combatManager->m_cells[hex].getArmy();
     long baseDamage;
     switch (spell) {
@@ -3066,7 +3095,8 @@ bool type_AI_spellcaster::castSpell(bool retreating)
             if (spell != SPELL_RESURRECTION && spell != SPELL_ANIMATE_DEAD)
                 continue;
         }
-        type_spell_choice choice(spell, mastery, power, duration);
+        type_spell_choice choice(static_cast<ESpellId>(spell), /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                                  mastery, power, duration);
         considerSpell(choice);
         if (choice.m_value <= 0)
             continue;
@@ -3079,7 +3109,7 @@ bool type_AI_spellcaster::castSpell(bool retreating)
         if (choice.m_value > best.m_value)
             best = choice;
     }
-    if (best.m_spell != -1) {
+    if (best.m_spell != SPELL_NONE) {
         if (best.m_castNow || retreating) {
             g_combatManager->m_nextAction = 1;
             g_combatManager->m_nextActionExtra = best.m_spell;

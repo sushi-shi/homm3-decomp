@@ -44,22 +44,34 @@ public:
     };
     int m_noChangePointer;
     RECT m_savedRect;
+
     EPointerSet m_set;
     int m_frame;
+
+public:
     CSprite* m_sprite;
     int m_imageX;
     int m_imageY;
+
     int m_disableCount;
+
+public:
     // Byte, not int: CheckUpdate (0x50d680) reads it with `mov al,
     // byte ptr [esi+0x64]; test al,al` and stores 0/1 as byte writes.
     unsigned char m_systemPointerIsOn;
+
     int m_hideCount;
+
+public:
     // Original DC CurrentX/CurrentY were at +0x3c/+0x40; PC update stores
     // GetCursorPos/ScreenToClient results here, then subtracts the hotspot
     // to produce ImageX/ImageY. The members moved within the PC layout.
     int m_currentX;
     int m_currentY;
+
     int m_busy;
+
+public:
     CRITICAL_SECTION m_sectionMouse;
     mouseManager();
     //   3 ??_GmouseManager 0x50cbc0, with ~mouseManager inlined into it.
@@ -129,6 +141,13 @@ public:
 
 private:
     void loadFrame(int newFrame);
+    // Project-inferred cleanup for SetPointer's two no-redraw exits.
+    void finishPointerWithoutRedraw();
+
+public:
+    // Accessor boundary inferred from the existing property interface and
+    // external field operations; these additional names are project names.
+    void waitUntilIdle() const { while (isBusy()) {} }
 };
 
 // Retail .bss 0x699260 (DC ?gpMouseManager@@3PAVmouseManager@@A).

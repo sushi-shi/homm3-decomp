@@ -51,14 +51,20 @@ public:
     type_event_record();
     virtual ~type_event_record();
     virtual type_event_record_type getType() const = 0;
-    virtual unsigned char load(TAbstractFile* infile, int version);
-    virtual unsigned char save(TAbstractFile* outfile);
-    virtual void replay(unsigned char draw);
+    // Original load/save UAA_NPAX publics prove bool results. Complete
+    // retains the TAbstractFile stream abstraction and added load version.
+    // Derived ok locals infer bool from binary I/O comparisons, not debug byte width.
+    virtual bool load(TAbstractFile* infile, int version);
+    virtual bool save(TAbstractFile* outfile);
+    // Original replay publics for this base and all eleven overrides are
+    // UAAX_N: the draw formal is bool, independently of lowered byte records.
+    virtual void replay(bool draw);
     virtual void undo();
 
     // E:\gamedcs\event_record.h:64
     DC_ADDRESS(0x08ec5c, 0x4)
     char getPlayerId() const { return m_playerId; }
+
     signed char m_playerId;  // +0x04
 };
 
@@ -71,9 +77,9 @@ class type_record_move_hero : public type_event_record {
 public:
     static type_event_record* create();
     virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
-    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual bool load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual bool save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(bool draw) OVERRIDE;
     virtual void undo() OVERRIDE;
     // Retail's record_move (0x49cd50) expands this: the hero, its CURRENT
     // facing byte snapshotted into restore_flag, the step direction, the
@@ -105,7 +111,7 @@ public:
 
     static type_event_record* create();
     virtual type_event_record_type getType() const OVERRIDE;
-    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual void replay(bool draw) OVERRIDE;
 };
 
 // Retail serializes these four fields in address order except that the two
@@ -115,9 +121,9 @@ class type_record_claim_mine : public type_event_record {
 public:
     static type_event_record* create();
     virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
-    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual bool load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual bool save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(bool draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 
     type_record_claim_mine(long id, char newOwner);
@@ -141,7 +147,7 @@ public:
 
     static type_event_record* create();
     virtual type_event_record_type getType() const OVERRIDE;
-    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual void replay(bool draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 };
 
@@ -154,9 +160,9 @@ class type_record_hide_boat : public type_event_record {
 public:
     static type_event_record* create();
     virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
-    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual bool load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual bool save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(bool draw) OVERRIDE;
     virtual void undo() OVERRIDE;
     // The +0xc/+0x10 pair is the state replay installs and comes from the
     // caller; the +0xd/+0x14 pair is the boat's CURRENT state, snapshotted
@@ -187,9 +193,9 @@ class type_record_show_boat : public type_record_hide_boat {
 public:
     static type_event_record* create();
     virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
-    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual bool load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual bool save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(bool draw) OVERRIDE;
     virtual void undo() OVERRIDE;
     type_record_show_boat(boat* currentBoat, type_point location);
 
@@ -207,9 +213,9 @@ class type_record_erase : public type_event_record {
 public:
     static type_event_record* create();
     virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
-    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual bool load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual bool save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(bool draw) OVERRIDE;
     virtual void undo() OVERRIDE;
     type_record_erase(type_point location, long objectId,
                       unsigned long extraInfo, long objectIndex);
@@ -230,9 +236,9 @@ class type_record_hide_hero : public type_event_record {
 public:
     static type_event_record* create();
     virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
-    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual bool load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual bool save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(bool draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 
     type_record_hide_hero(hero* who, char newOwner,
@@ -254,9 +260,9 @@ class type_record_show_hero : public type_record_hide_hero {
 public:
     static type_event_record* create();
     virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
-    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual bool load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual bool save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(bool draw) OVERRIDE;
     virtual void undo() OVERRIDE;
     type_record_show_hero(hero* who, char newOwner, type_point location,
                           unsigned char onBoat);
@@ -274,9 +280,9 @@ class type_record_player_death : public type_event_record {
 public:
     static type_event_record* create();
     virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
-    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual bool load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual bool save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(bool draw) OVERRIDE;
 
     DC_ADDRESS(0x08f1d0, 0x3c)
     type_record_player_death() {}
@@ -299,9 +305,9 @@ public:
     static type_event_record* create();
 
     virtual type_event_record_type getType() const OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
-    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual bool load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual bool save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(bool draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 
     // E:\gamedcs\event_record.cpp:978 () and event_record.h:319

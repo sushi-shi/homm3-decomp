@@ -23,16 +23,9 @@ struct spell_level_order {
 // recruit.cpp's own +0x1b0 note records the same trade).
 void doEventGarrison(hero* inHero, garrison* thisGarrison);
 
-// Retail .data 0x691208, the byte directly ahead of gUnnamed691209 (the
-// "gosolo" handed-to-AI byte advmgr.h declares and documents). DoCombat's
-// fast-path guard reads the two TOGETHER - `gUnnamed691209 &&
-// gUnnamed691208` gates the quick-combat shortcut off - so this is the
-// pair's second arm, plausibly "a replay/sub-battle is being watched".
-// Name ordinal. Declared HERE rather than beside its sibling because
-// advmgr.h rides in ~40 closures and events.h in two; DoCombat is the
-// first consumer, so events.h holds the claim until the producer is
-// decoded (the iCombatControlNetPos / command.h precedent).
-extern unsigned char g_goSoloTest;
+// Retail .data 0x691208; original DC public ?gbGoSoloTest@@3_NA.
+// DoCombat uses both GoSolo flags to select the replay path.
+extern bool g_goSoloTest;
 
 // DoCombat's two AI callees, declared HERE on the DoEventGarrison
 // precedent above: their owning headers cannot enter events.cpp's
@@ -67,7 +60,7 @@ public:
     ~CTurnDurationPause();
 };
 
-unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
+bool aiQuickCombat(hero* attackingHero, hero* defendingHero,
                               armyGroup& defendingArmy, town* defendingTown,
                               NewmapCell* cell);
 // Original: AI_arrange_army_for_combat; ai_player.cpp:2952, dc 0x3285c.

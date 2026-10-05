@@ -11,6 +11,7 @@
 #include "artifact.h"
 #include "herospec.h"
 #include "mapcell.h"
+#include "primaryskill.h"
 #include "spellschool.h"
 
 // hero.obj's four primary-stat descriptions.  Dreamcast supplies the name
@@ -103,8 +104,11 @@ enum EHeroBackpackLimit {
 // +0x07, one byte earlier than the naturally aligned Dreamcast build.
 struct type_obscuring_object {
 public:
+    // Before normalization (Dreamcast): mapX.
     short m_x;  // +0x00 (DC mapX)
+    // Before normalization (Dreamcast): mapY.
     short m_y;  // +0x02 (DC mapY)
+    // Before normalization (Dreamcast): mapZ.
     short m_z;  // +0x04 (DC mapZ)
 
 private:
@@ -168,6 +172,9 @@ public:
     {
         return type_point(m_x, m_y, m_z);
     }
+    // Project-inferred coordinate update only; callers own cell restoration.
+    // Native mapX/mapY/mapZ are public short members in Dreamcast CodeView.
+    void setLocation(const type_point& point);
     bool load(void* infile);
 
     // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
@@ -253,6 +260,7 @@ SIZE(boat, 0x28);
 
 struct type_artifact {
 public:
+    // Before normalization (Dreamcast): type.
     TArtifact m_artifactId;
     int m_extra;
 
@@ -425,6 +433,7 @@ public:
     // Owning player. SIGNED char: town::View widens it with
     // `movsx edx, byte [gpGame + 1170*id + 0x21642]` before comparing
     // it against the acting-player id. Name provisional.
+    // Before normalization (Dreamcast): playerOwner.
     signed char m_owner;  // +0x22
     // +0x23. HeroFn_004D8B30 copies exactly thirteen bytes of the setup
     // record's name here; SetRolloverText passes this band to sprintf.
@@ -441,7 +450,9 @@ public:
     // two leading coordinates are dwords - their four-byte spacing
     // proves the stored type, and BuildPath's own load widths are
     // narrowed only by the destination bitfields.
+    // Before normalization (Dreamcast): targetX.
     int m_pathTargetX;  // +0x35
+    // Before normalization (Dreamcast): targetY.
     int m_pathTargetY;  // +0x39
     // +0x3d..+0x42, three SHORTS - narrowed 2026-08-20 out of the old
     // `int pathTargetZ; char pad_041[2];` by hero::save (0x4d80c0),
@@ -454,6 +465,7 @@ public:
     // searchArray::BuildPath (0x56a0d0) takes `mov dl, byte [eax+0x3d]`
     // on BOTH sides because type_point's z is a four-bit bitfield.
     // The two trailing shorts have no other reader; ORDINAL PLACEHOLDERS.
+    // Before normalization (Dreamcast): targetZ.
     short m_pathTargetZ;  // +0x3d
     // +0x3f, DC-attested (`hero,66,T_SHORT,last_magic_school_level`,
     // retail +0x3f under the same -5 repack). hero::CheckLevel writes the
@@ -502,6 +514,7 @@ public:
     // the <= 0 arm with `jg`, and divides it by 100 with the signed
     // 0x51eb851f reciprocal - an unsigned field would use the unsigned
     // magic instead. Name provisional.
+    // Before normalization (Dreamcast): currMobility.
     int m_movePoints;  // +0x4d
     int m_experience;  // +0x51 (DC name; retail packed)
     // +0x55, a SHORT the five specialty factor getters (0x4e42b0,
@@ -557,13 +570,16 @@ public:
     // walking from 0xad) - exactly armyGroup's 56-byte layout, and
     // AI_approximate_strength (0x427657) hands `hero + 0x91` straight
     // to armyGroup::get_AI_value as a this pointer.
+    // Before normalization (Dreamcast): heroArmy.
     armyGroup m_army;
+    // Before normalization (Dreamcast): SSLevel.
     signed char m_skillLevel[28];  // +0xc9
     // Acquisition-order band, 28 entries at +0xe5, read UNSIGNED
     // (TakeSS's renumbering sweep compares with `jbe`, not `jle`).
     // GetNthSS scans it for order iWhich+1 and returns the slot index;
     // GiveSS writes skillCount+1 into the newly-learned slot and TakeSS
     // decrements every entry above the vacated one before zeroing it.
+    // Before normalization (Dreamcast): SSOrder.
     unsigned char m_skillOrder[28];  // +0xe5
     // Number of secondary skills known. A full DWORD: GiveSS's cap test
     // is `cmp dword [this+0x101],8` and both trio bodies increment /
@@ -573,9 +589,8 @@ public:
     // +0x105, the hero's flag word. Read as a full DWORD and tested
     // bitwise: hero::GetMobility() (0x4e4d90) hands bit 18 (0x40000)
     // to the sea-movement overload, and hero::can_land (0x4e5ce0)
-    // tests the same 0x40000 for "aboard a boat". Name provisional -
-    // no DC symbol covers the word; the extent and the read are
-    // byte-proven.
+    // tests the same 0x40000 for "aboard a boat". Before normalization
+    // (Dreamcast): flags, explicitly public in the native type record.
     unsigned int m_flags;  // +0x105
     float m_turnExperienceToRvRatio;  // +0x109 (DC name)
     signed char m_dWalkSpellsCast;  // +0x10d (DC name)
@@ -620,6 +635,7 @@ public:
     // One byte per artifact slot class. remove_artifact decrements the
     // component's class after dismantling a combination artifact, except
     // for the first component occupying the assembled artifact's class.
+    // Project-inferred private boundary: UI asks whether a slot is reserved.
     unsigned char m_artifactSlotCounts[15];  // +0x1c5
 
 private:
@@ -634,6 +650,8 @@ public:
     // Per-hero sex copied from THeroTraits during initialize. The retail
     // build added this four-byte field ahead of the custom-name state.
     int m_sex;  // +0x3d5 (DC trait name)
+
+public:
     unsigned char m_hasCustomName;  // +0x3d9
     // Dinkumware std::string object, not merely its internal +4 pointer.
     // hero::initialize assigns the shared empty string through the normal
@@ -683,6 +701,8 @@ public:
     // widens it to double and uses it as the attacking side's combat
     // modifier. The role remains provisional, so keep the ordinal name.
     float m_aggression;
+
+public:
     // 0x4d85f0, retail's own default constructor. The base and the four
     // members that carry constructors run first (type_obscuring_object,
     // army, TownSpecialGrantedMask, equipped/backpack, customName), then
@@ -725,8 +745,8 @@ public:
                     static_cast<unsigned char>(0));
     }
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
-    long getEquippedArtifacts(unsigned char countWarMachines) const;
-    long getNumberInBackpack(unsigned char countWarMachines) const;
+    long getEquippedArtifacts(bool countWarMachines) const;
+    long getNumberInBackpack(bool countWarMachines) const;
     // 0x4d9330 - sets both per-spell byte tables for one spell.
     void addSpell(int whichSpell);
 
@@ -804,6 +824,11 @@ public:
     long getNavigationFactor() const;
     int getMobility(bool seaMovement) const;
     int getMobility() const;
+    // Project-inferred complete refresh and paired reward operations.
+    // Native maxMobility/currMobility remain public.
+    void refreshMovement();
+    // Project-inferred boat-state interface; the native flag word is public.
+    bool isOnBoat() const;
     // 0x4e5960 - the four primary skills, each clamped to 0..99, with
     // slots 2 and 3 floored at 1.
     short getPrimarySkillTotal() const;
@@ -812,6 +837,10 @@ public:
     void fly(int level);
     // 0x4e5dd0 - one-argument setter for waterWalkLevel.
     void walkOnWater(int level);
+    // Project-inferred resets. Boarding retains non-movement spells and the
+    // Dimension Door count; day rollover/initialization reset all five lanes.
+    void clearMovementSpells();
+    void resetAdventureSpells();
     // 0x4e5e10 - tests whether a packed map point is inside Visions range.
     bool isInIdentifyRange(const type_point& location) const;
 
@@ -874,6 +903,8 @@ public:
     // 0x004d92d0 - spends mana and refreshes the local adventure hero
     // locators while that manager is active.
     void useSpell(int cost);
+    // Project-inferred resource operations; native mana remains public.
+    void resetManaToMaximum();
     // 0x004d7890 - consumes this hero from one player's tavern offers,
     // charges the standard gold cost and places the hero on the map.
     void hire(int playerId, type_point point);
@@ -900,10 +931,11 @@ public:
     // (?VisitedArena@hero@@QBA_NPBVNewmapCell@@@Z) gives the const and
     bool visitedArena(const NewmapCell* cell) const;
     void setVisitedArena(const NewmapCell* cell);
+    bool hasArenaVisit(unsigned long visitMask) const;
     unsigned char isWieldingArtifact(int whichArtifact) const;
     // 0x004e2dd0 - the by-id overload: finds the artifact in the
     // backpack first, then in the equipped slots, and unequips it.
-    unsigned char removeArtifact(TArtifact artifact);
+    bool removeArtifact(TArtifact artifact);
     // 0x004e23d0 - drains another hero's equipped slots and backpack
     // into this hero's backpack.
     void transferArtifacts(hero* src);
@@ -1157,6 +1189,27 @@ public:
         return type_point(m_pathTargetX, m_pathTargetY, m_pathTargetZ);
     }
 
+    // Project property operations for the stored route target. Keep the
+    // full-width X/Y view for sentinel comparisons and temporary save/restore;
+    // getTarget() is the existing packed map-point view.
+    int getTargetX() const { return m_pathTargetX; }
+    int getTargetY() const { return m_pathTargetY; }
+    short getTargetZ() const { return m_pathTargetZ; }
+    void setTarget(int x, int y, int z)
+    {
+        m_pathTargetX = x;
+        m_pathTargetY = y;
+        m_pathTargetZ = z;
+    }
+    void setTarget(type_point point)
+    {
+        setTarget(point.m_x, point.m_y, point.m_z);
+    }
+    void clearTarget()
+    {
+        m_pathTargetX = m_pathTargetY = -1;
+    }
+
     // DC hero.h:991 and the class signature record the const
     // long-returning duration accessor used by AI reward valuation.
     DC_ADDRESS(0x037dc4, 0x8)
@@ -1254,9 +1307,10 @@ public:
     // ORDINAL PLACEHOLDER.
     void heroFn004DC100(long slot);
     boat* findSummonableBoat() const;
-    void placeInMap(int playerId, type_point point, unsigned char resetFlags);
+    void placeInMap(int playerId, type_point point, bool resetFlags);
     int load(TAbstractFile* infile, int saveVersion);
     int save(TAbstractFile* outfile);
+
 };
 // sizeof(hero) == 1170 (0x492), byte-proven THREE independent ways:
 //   - the save walk at 0x4be841 runs `lea edi,[gpGame+0x21620]` and

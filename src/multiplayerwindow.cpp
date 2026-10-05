@@ -136,10 +136,11 @@ DATA(0x00681628) static unsigned char g_sessionKeepAlive = 1;
 // Different constructor expansion in CMPInputDlg and CHotSeatDlg does not
 // establish different base classes; keep the common base and its real calls.
 class CMPEdit : public textEntryWidget {
-public:
+private:
     CMPEdit* m_nextEdit;   // +0x70
     CMPEdit* m_prevEdit;   // +0x74
 
+public:
     CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
             const char* fontName, font::TColor color, unsigned justification,
             const char* backgroundIcon, int backgroundFrame, int id,
@@ -750,7 +751,7 @@ void TMultiPlayerWindow::checkSessions()
 // material: VC6 leaves the nested member InitRemote call out of line, exactly
 // as retail does.
 DC_ADDRESS(0x100ed0, 0xc2)
-unsigned char TMultiPlayerWindow::onModemHost()
+bool TMultiPlayerWindow::onModemHost()
 {
     if (!initRemote(g_mpNetProtocol, 0, 0)) {
         normalDialog(g_generalText->getText(GENERAL_TEXT_MODEM_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
@@ -776,7 +777,7 @@ unsigned char TMultiPlayerWindow::onModemHost()
 // contain the complete inlined bodies, including Complete's expanded IPX
 // session setup and the later widget-status API.
 DC_ADDRESS(0x1018ec, 0x7e)
-inline unsigned char TMultiPlayerWindow::onIPX()
+inline bool TMultiPlayerWindow::onIPX()
 {
     g_mpNetProtocol = MP_IPX;
     if (::initRemote(MP_IPX, m_playerName->getText()) &&
@@ -802,7 +803,7 @@ inline unsigned char TMultiPlayerWindow::onIPX()
 
 DC_ADDRESS(0x101c4c, 0x56)
 MAC_ADDRESS(0x21c67c, 0x94)
-inline unsigned char TMultiPlayerWindow::onModem()
+inline bool TMultiPlayerWindow::onModem()
 {
     g_mpNetProtocol = MP_MODEM;
     m_hostJoinScreen = 1;
@@ -975,7 +976,7 @@ int TMultiPlayerWindow::windowHandler(message& msg)
 
 VA(0x0050fa10, 0x9F)
 DC_ADDRESS(0x100ca0, 0x6a)
-unsigned char TMultiPlayerWindow::joinSession(CDPlaySession* session, const char* password)
+bool TMultiPlayerWindow::joinSession(CDPlaySession* session, const char* password)
 {
     if (!g_dPlay->joinSession(&session->m_guidInstance,
                              const_cast<char*>(password)))
@@ -1001,7 +1002,7 @@ unsigned char TMultiPlayerWindow::joinSession(CDPlaySession* session, const char
 VA(0x0050fab0, 0x106)
 DC_ADDRESS(0x100d0c, 0x10a)
 MAC_ADDRESS(0x21b18c, 0x7c)
-unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* password)
+bool TMultiPlayerWindow::hostSession(const char* sessName, const char* password)
 {
     char fullName[256];
     sprintf(fullName,
@@ -1035,7 +1036,7 @@ unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* 
 
 VA(0x0050fbc0, 0x86)
 DC_ADDRESS(0x100e18, 0x7a)
-unsigned char TMultiPlayerWindow::initRemote(eNetGameType netGameType, const char* extra, _DPCOMPORTADDRESS* comportInfo)
+bool TMultiPlayerWindow::initRemote(eNetGameType netGameType, const char* extra, _DPCOMPORTADDRESS* comportInfo)
 {
     DPCAPS dpCaps;
 
@@ -1054,7 +1055,7 @@ unsigned char TMultiPlayerWindow::initRemote(eNetGameType netGameType, const cha
 
 // E:\gamedcs\multiplayerwindow.cpp:2043
 DC_ADDRESS(0x101ca4, 0x56)
-inline unsigned char TMultiPlayerWindow::onDirect()
+inline bool TMultiPlayerWindow::onDirect()
 {
     g_mpNetProtocol = MP_SERIAL;
     m_hostJoinScreen = 1;
@@ -1069,7 +1070,7 @@ inline unsigned char TMultiPlayerWindow::onDirect()
 
 VA(0x0050fc50, 0x14F)
 DC_ADDRESS(0x100f94, 0xc4)
-unsigned char TMultiPlayerWindow::onDirectHost()
+bool TMultiPlayerWindow::onDirectHost()
 {
     if (!initRemote(MP_SERIAL, 0, 0)) {
         normalDialog(g_generalText->getText(GENERAL_TEXT_SERIAL_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
@@ -1098,7 +1099,7 @@ unsigned char TMultiPlayerWindow::onDirectHost()
 VA(0x0050fda0, 0x2B7)
 DC_ADDRESS(0x101058, 0x15e)
 MAC_ADDRESS(0x21b208, 0x4fc)
-unsigned char TMultiPlayerWindow::onHost()
+bool TMultiPlayerWindow::onHost()
 {
     if (g_mpNetProtocol == MP_MODEM)
         return onModemHost();
@@ -1249,7 +1250,7 @@ VA_COMPGEN(0x005109e0, 0x21, SCALAR_DELETING_DTOR, CMPInputDlg)
 
 VA(0x00510a10, 0x298)
 DC_ADDRESS(0x1011b8, 0x1bc)
-unsigned char TMultiPlayerWindow::onModemJoin()
+bool TMultiPlayerWindow::onModemJoin()
 {
     if (!initRemote(MP_MODEM, 0, 0)) {
         if (g_dPlay->getLastError() != g_dplayErrorUserCancel)
@@ -1292,7 +1293,7 @@ unsigned char TMultiPlayerWindow::onModemJoin()
 
 VA(0x00510cb0, 0x282)
 DC_ADDRESS(0x101374, 0x19c)
-unsigned char TMultiPlayerWindow::onDirectJoin()
+bool TMultiPlayerWindow::onDirectJoin()
 {
     if (!initRemote(MP_SERIAL, 0, 0)) {
         normalDialog(g_generalText->getText(GENERAL_TEXT_SERIAL_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
@@ -1339,7 +1340,7 @@ unsigned char TMultiPlayerWindow::onDirectJoin()
 VA(0x00510f40, 0x380)
 DC_ADDRESS(0x101510, 0x26e)
 MAC_ADDRESS(0x21c398, 0x50)
-unsigned char TMultiPlayerWindow::onJoin()
+bool TMultiPlayerWindow::onJoin()
 {
     if (g_mpNetProtocol == MP_MODEM)
         return onModemJoin();
@@ -1432,7 +1433,7 @@ unsigned char getIPAddress(char* ipAddress)
 VA(0x005113f0, 0x263)
 DC_ADDRESS(0x101784, 0x166)
 MAC_ADDRESS(0x21c4a8, 0x1d4)
-unsigned char TMultiPlayerWindow::onTCP()
+bool TMultiPlayerWindow::onTCP()
 {
     char ipAddress[80];
 
@@ -1481,7 +1482,9 @@ unsigned char TMultiPlayerWindow::onTCP()
 // calls plus JoinSession, InitRemote, CAutoArray::Destroy and CHourGlass.
 VA(0x00511660, 0x666)  // caller slot + complete TCP search flow
 DC_ADDRESS(0x10196c, 0x294)
-unsigned char TMultiPlayerWindow::onSearch()
+// Native OnSearch public QAA_NXZ (DC file 0x5aceb7); protocol and
+// session helpers likewise return bool, including forwarded Host/Join arms.
+bool TMultiPlayerWindow::onSearch()
 {
     // Current 89.766%, banked MAX 91.324%: all 13 retail branch tests are
     // present, but C1 feeds
@@ -1545,7 +1548,7 @@ unsigned char TMultiPlayerWindow::onSearch()
 VA(0x00511d40, 0xD1)
 DC_ADDRESS(0x101c00, 0x4a)
 MAC_ADDRESS(0x21c710, 0x55c)
-unsigned char TMultiPlayerWindow::onHotSeat()
+bool TMultiPlayerWindow::onHotSeat()
 {
     CHotSeatDlg dlg;
     dlg.doModal(0);

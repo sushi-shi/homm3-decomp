@@ -72,7 +72,7 @@ DC_ADDRESS(0x164d24, 0x44)
 MAC_ADDRESS(0x1b1550, 0x80)
 textWidget::~textWidget()
 {
-    m_font->dispose();
+    ResourceManager::dispose(m_font);
 }
 
 // Original: textWidget::initialize; textwdgt.cpp:102

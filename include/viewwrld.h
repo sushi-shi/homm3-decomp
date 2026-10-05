@@ -61,7 +61,7 @@ private:
 public:
     TViewWorldWindow();
     virtual ~TViewWorldWindow();
-    void init(type_point newCenter, unsigned char updateFlag);
+    void init(type_point newCenter, bool updateFlag);
     using CAdvPopup::drawWindow;
     void drawWindow();
     virtual int windowHandler(message& msg);
@@ -69,7 +69,7 @@ public:
 private:
     int convertID2HelpID(int id) const;
     void updateRadar(int mrx, int mry, float radarDivisor);
-    void updateViewWorld(message* msg);
+    void updateViewWorld(message& msg);
 };
 SIZE(TViewWorldWindow, 0x78);
 

@@ -46,14 +46,18 @@ public:
 // members - so the record ends at +0x14 and derives.
 struct type_enchant_data {
 public:
-    SpellID m_spell;  // +0x00
+    // Native LF_STRUCT 0x599a/0x6839 types spell as LF_ENUM SpellID
+    // 0x1b61 (signed int), not a legacy integer selector.
+    // Constructors retain that domain; legacy ordinal scans and integer
+    // interfaces convert explicitly at their construction boundary.
+    ESpellId m_spell;  // +0x00
     TSkillMastery m_mastery;  // +0x04
     long m_power;  // +0x08
     long m_duration;  // +0x0c
     // Both ctors seed it to 1; no located consumer reads it yet.
     unsigned char m_checkResistance;  // +0x10
 
-    type_enchant_data(SpellID newSpell, TSkillMastery newMastery,
+    type_enchant_data(ESpellId newSpell, TSkillMastery newMastery,
                       long newPower, long newDuration);
     long getMasteryValue() const;
 };
@@ -75,8 +79,11 @@ public:
     unsigned char m_castNow;  // +0x20 (0)
 
     type_spell_choice();
-    type_spell_choice(SpellID newSpell, TSkillMastery newMastery,
+    type_spell_choice(ESpellId newSpell, TSkillMastery newMastery,
                       long newPower, long newDuration);
+
+    // Project-inferred constructor operation; retains the enchantment prefix.
+    void initializeSelection();
 };
 SIZE(type_spell_choice, 0x24);
 
@@ -109,10 +116,15 @@ public:
     // Original Dreamcast type_AI_combat_parameters::rounds_left; retail field role agrees.
     long m_roundsLeft;  // +0x1c  1..7, from the 0x63b798 ladder
     // Original Dreamcast type_AI_combat_parameters::our_group; retail field role agrees.
+
     long m_ourGroup;  // +0x20
     // Original Dreamcast type_AI_combat_parameters::enemy_group; retail field role agrees.
     long m_enemyGroup;  // +0x24
+
+public:
     type_AI_combat_parameters(const combatManager* combat, long side);
+    // Project-inferred shared priority adjustment for restoring troops.
+    long getRestorationPriorityValue(long value) const;
     long getExchangeEffect(const army& currentArmy, const army& enemy,
                              long distance) const;
 
@@ -166,6 +178,8 @@ protected:
 
 public:
     long m_bestAttackTime;  // +0x24
+
+public:
     const type_AI_combat_parameters* m_data;  // +0x28
 
     type_AI_attack_hex_chooser(const army* attacker, const army* defender,
@@ -394,6 +408,9 @@ protected:
     void addEnemy(type_AI_enemy_data& sum, const army* ourArmy,
                   const army* enemy, bool ranged);
     unsigned char spellsNotRequired() const;
+
+    // Project-inferred timing rule shared by Resurrection and Sacrifice.
+    bool shouldRestoreNow(const army* restoredArmy) const;
 };
 SIZE(type_AI_spellcaster, 0x410);
 

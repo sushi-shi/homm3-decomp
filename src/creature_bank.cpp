@@ -82,9 +82,9 @@ unsigned char initializeCreatureBankTraits()
         DATA_COMPGEN(0x006703a8, creatureBankSpreadsheetName, "crbanks.txt"));
     if (!sheet)
         return 0;
-    // Complete and Mac dispose directly; Dreamcast called ResourceManager::Dispose.
+    // DC retains ResourceManager::Dispose; Complete expands the wrapper.
     if (sheet->getNumberOfRows() < 13) {
-        sheet->dispose();
+        ResourceManager::dispose(sheet);
         return 0;
     }
 
@@ -136,7 +136,7 @@ unsigned char initializeCreatureBankTraits()
 
     }
 
-    sheet->dispose();
+    ResourceManager::dispose(sheet);
     return 1;
 }
 

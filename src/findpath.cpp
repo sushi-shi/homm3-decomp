@@ -524,12 +524,15 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 // Mac's extra getSpecialTerrain calls are nested in getSpellLevel(spell),
 // not missing caller operations; its Nomad predicate follows the terrain
 // read and uses the retained canonical getCreatureTotal(CREATURE_NOMAD).
+// Original TestPossibleDirections public at DC file 0x5e7d0b encodes
+// adjacent_monster as _N. Preserve the private bool interface and the
+// caller's 0/1 latch, which retail forwards without normalization.
 VA(0x004b2300, 0xA94)
 DC_ADDRESS(0x09f718, 0xbb0)
 MAC_ADDRESS(0x0c552c, 0xf80)  // anchor-callee
 void searchArray::testPossibleDirections(const hero* currentHero, pathCell& source,
                                          long turnMobility, long maxMobility,
-                                         unsigned char adjacentMonster,
+                                         bool adjacentMonster,
                                          type_point monsterLocation,
                                          TSkillMastery pathfinding,
                                          type_search_type searchType,

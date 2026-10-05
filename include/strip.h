@@ -53,7 +53,7 @@ public:
     strip(int inX, int inY, int inPos, int newIcons, int newIconFrame,
           long newOwner, hero* newHero, armyGroup* groupToDraw, int firstId,
           unsigned char update, heroWindow* inWin);
-    // Declared, deliberately NOT defined - not here and not in strip.cpp.
+    // Defined out of line in strip.cpp, keeping its body hidden from callers.
     // Retail's `delete strip` calls a real out-of-line body before
     // operator delete: townManager::UnloadTown 0x5c70b0 and ::SwapHeroes
     // 0x5d5150 both emit `mov ecx,<p> / call 0x5bc690 / push <p> / call

@@ -81,7 +81,7 @@ public:
     // DC ai_player.h:278 (dc 0x37df8, ?...@@QBANW4EGameResource@@@Z);
     // inlined into type_income_artifact::get_value, whose by-value double
     // return temp at [ebp-8] is what the retail bytes home under /Op.
-    long getResourceValue(int* resources) const;
+    long getResourceValue(int* const resources) const;
 
     DC_ADDRESS(0x037df8, 0xe)
     double getResourceValue(enum EGameResource resource) const
@@ -113,13 +113,13 @@ protected:
     void calculateReserve();  // 0x429ad0
     bool canTradeResources(const int* cost, int* supply,
                              std::vector<long>& tradeQty);
-    bool checkTradeSupply(const int* cost, long number, int* supply,
+    bool checkTradeSupply(const int* const cost, long number, int* const supply,
                             std::vector<long>& tradeQty);
     void doResourceTrade(int* supply);
     long getTotalValue(long basicValue, int* cost);  // 0x42a150
     // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
     // pass purchase_buildings drives).
-    unsigned char purchaseBuilding(unsigned char* prohibitedCreatures);
+    bool purchaseBuilding(bool* prohibitedCreatures);
     // DC ?purchase_buildings@type_AI_player@@IAAXXZ: ordinary protected
     // helper; the prohibited-creature array belongs to its body.
     void purchaseBuildings();
@@ -219,16 +219,18 @@ protected:
 
 public:
     void doPurchase(armyGroup* newArmy, short newMorale,
-                     armyGroup* newAdjacentArmy, long* newFunds,
+                     armyGroup* newAdjacentArmy, long* const newFunds,
                      bool allowTrade,
                      unsigned char newHasAngelicAlliance);
     long getPurchaseValue(const armyGroup* newArmy, short newMorale,
                             const armyGroup* newAdjacentArmy,
-                            const long* newFunds,
+                            const long* const newFunds,
                             unsigned char newHasAngelicAlliance);
 
     DC_ADDRESS(0x037e20, 0x6)
-    void setSubtractMode(unsigned char arg) { m_subtractCostMode = arg; }
+    // Original DC ?set_subtract_mode@type_AI_creature_purchaser@@QAAX_N@Z
+    // proves the bool argument independently of the lowered byte record.
+    void setSubtractMode(bool arg) { m_subtractCostMode = arg; }
 };
 SIZE(type_AI_creature_purchaser, 0x3c);
 
@@ -263,12 +265,12 @@ int netValueOfLocation(hero* currentHero, HeroDestination& destination,
 int aiChooseDestination(hero* currentHero, long maxDistance,
                           HeroDestination& bestPoint,
                           long& bestRawValue,
-                          unsigned char allowSpells,
-                          unsigned char exploreMode);
+                          bool allowSpells,
+                          bool exploreMode);
 
 unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown);
 long findMagusHutValue(long playerId, unsigned char exploreMode);
-void fillProhibitedArray(playerData* player, unsigned char* prohibited);
+void fillProhibitedArray(playerData* player, bool* prohibited);
 
 extern const char* g_resourceNames[8];
 extern char g_aiResourceWarningFormat[];

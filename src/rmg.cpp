@@ -836,10 +836,10 @@ unsigned char TRmgMap::hasConnectedOutline(
             if (!allowEntrances && item->isObjectEntrance())
                 return 0;
             blocked = !item->m_tileData.m_passable
-                || item->m_tile.m_landType == eTerrainRock || item->isObjectEntrance();
+                || item->getLandType() == eTerrainRock || item->isObjectEntrance();
             if (requirePathClearance && !item->hasPathClearance())
                 blocked = 1;
-            if ((item->m_tile.m_landType == eTerrainWater) != waterZone)
+            if ((item->getLandType() == eTerrainWater) != waterZone)
                 blocked = 1;
             if (item->m_zoneState.m_zone != zoneIndex)
                 blocked = 1;
@@ -864,7 +864,7 @@ void TRmgMap::markCoastalTiles()
     for (position.m_z = 0; position.m_z < m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_mapWidth; ++position.m_x, ++item) {
-                if (item->m_tile.m_landType == eTerrainWater) {
+                if (item->getLandType() == eTerrainWater) {
                     TRmgZoneBounds bounds;
                     bounds.m_minimumX = max(position.m_x - 1, 0);
                     bounds.m_minimumY = max(position.m_y - 1, 0);
@@ -873,8 +873,8 @@ void TRmgMap::markCoastalTiles()
                     for (int nearY = bounds.m_minimumY; nearY < bounds.m_maximumY; ++nearY) {
                         for (int nearX = bounds.m_minimumX; nearX < bounds.m_maximumX; ++nearX) {
                             TRmgMapItem* neighbor = getMapItem(nearX, nearY, position.m_z);
-                            if (neighbor->m_tile.m_landType != eTerrainWater
-                                && neighbor->m_tile.m_landType != eTerrainRock)
+                            if (neighbor->getLandType() != eTerrainWater
+                                && neighbor->getLandType() != eTerrainRock)
                                 neighbor->m_tileData.m_coastal = 1;
                         }
                     }
@@ -951,10 +951,7 @@ void TRmgMap::floodConnectionCosts(TRmgMapPosition position, unsigned char water
     int zone = seed->m_zoneState.m_zone;
     positions.push_back(position);
     costs.push_back(0);
-    seed->m_movement.m_cost = 0;
-    seed->m_previousTile.m_x = -1;
-    seed->m_previousTile.m_y = -1;
-    seed->m_previousTile.m_z = -1;
+    seed->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
     while (positions.size()) {
         TRmgMapPosition currentPosition = positions.back();
         int queuedCost = costs.back();
@@ -979,7 +976,7 @@ void TRmgMap::floodConnectionCosts(TRmgMapPosition position, unsigned char water
                 continue;
             TRmgMapItem* next = getMapItem(nextPosition);
             if (next->m_zoneState.m_zone < 0 || !next->m_tileData.m_passable
-                || next->m_tile.m_landType == eTerrainRock)
+                || next->getLandType() == eTerrainRock)
                 continue;
             if (next->isObjectEntrance()) {
                 int objectType = next->m_objects[0]->m_properties->m_prototype->getObjectType();
@@ -1001,12 +998,12 @@ void TRmgMap::floodConnectionCosts(TRmgMapPosition position, unsigned char water
             } else {
                 if (currentZone != zone)
                     continue;
-                if (next->m_tile.m_landType == eTerrainWater)
+                if (next->getLandType() == eTerrainWater)
                     nextCost = currentCost + 10;
                 if (next->m_movement.m_cost <= nextCost)
                     continue;
                 if (!currentCost && next->hasPathClearance()
-                    && (next->m_tile.m_landType != eTerrainWater || waterZone))
+                    && (next->getLandType() != eTerrainWater || waterZone))
                     nextCost = 0;
                 next->setMovementCost(nextCost, currentPosition);
             }
@@ -1070,7 +1067,7 @@ unsigned char TRmgMap::isPlacementBlocked(
                 if (!item->isPassable()
                     || item->isObjectEntrance() || item->m_zoneState.m_zone != zoneIndex)
                     return 1;
-                if (item->m_tile.m_landType == eTerrainWater) {
+                if (item->getLandType() == eTerrainWater) {
                     if (prototype.m_slotCategory != TObjectType::SLOT_CATEGORY_0
                         || !prototype.m_recommendedTerrainMask.test(eTerrainWater))
                         return 1;
@@ -1127,8 +1124,8 @@ void TRmgMap::markObstacleFillPatch(TRmgMapPosition position)
         for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
             TRmgMapItem* nearby = getMapItem(column, row, position.m_z);
             if (!nearby->isObjectEntrance() && nearby->m_tileData.m_passable
-                && nearby->m_tile.m_landType != eTerrainRock
-                && nearby->m_tile.m_landType != eTerrainWater
+                && nearby->getLandType() != eTerrainRock
+                && nearby->getLandType() != eTerrainWater
                 && !nearby->m_connection.m_present)
                 nearby->m_tileData.m_pathClearance = 0;
         }
@@ -1182,7 +1179,7 @@ unsigned char TRmgMap::canPlaceObject(
         if (!g_adventureObjectTraits[entranceType].m_clearedOnVisit)
             return 0;
     }
-    unsigned char result = (item->m_tile.m_landType == eTerrainWater) == (zone->m_terrain == eTerrainWater);
+    unsigned char result = (item->getLandType() == eTerrainWater) == (zone->m_terrain == eTerrainWater);
     return result;
 }
 
@@ -1245,15 +1242,12 @@ VA(0x00532190, 0x6D)
 MAC_ADDRESS(0x22eadc, 0x70)
 void TRmgMap::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
 {
-    TRmgMapItem& item = m_mapItems[point.m_y * m_mapWidth + point.m_x];
+    TRmgMapItem& item = *getMapItem(point.m_x, point.m_y);
     unsigned char flipY = tile.m_flipY;
     unsigned char flipX = tile.m_flipX;
     int frame = tile.m_frame;
     int terrain = tile.m_terrain;
-    item.m_tile.m_landType = terrain;
-    item.m_tile.m_terrainFrame = frame;
-    item.m_tileData.m_terrainFlipX = flipX;
-    item.m_tileData.m_terrainFlipY = flipY;
+    item.setTerrain(terrain, frame, flipX, flipY);
 }
 
 // Slot 2 updates only the packed eight-bit terrain frame.
@@ -1261,7 +1255,7 @@ VA(0x00532200, 0x3C)
 MAC_ADDRESS(0x22eb4c, 0x38)
 void TRmgMap::setFrame(const TRmgGridPoint& point, int value)
 {
-    TRmgMapItem& item = m_mapItems[point.m_y * m_mapWidth + point.m_x];
+    TRmgMapItem& item = *getMapItem(point.m_x, point.m_y);
     item.m_tile.m_terrainFrame = value;
 }
 
@@ -1290,9 +1284,9 @@ VA(0x00532260, 0x60)
 MAC_ADDRESS(0x22eb98, 0x80)
 TRmgTerrainTile TRmgMap::getTile(const TRmgGridPoint& point)
 {
-    TRmgMapItem& item = m_mapItems[point.m_y * m_mapWidth + point.m_x];
+    TRmgMapItem& item = *getMapItem(point.m_x, point.m_y);
     TRmgTerrainTile tile;
-    tile.m_terrain = item.m_tile.m_landType;
+    tile.m_terrain = item.getLandType();
     tile.m_frame = item.m_tile.m_terrainFrame;
     tile.m_flipX = item.m_tileData.m_terrainFlipX;
     tile.m_flipY = item.m_tileData.m_terrainFlipY;
@@ -1306,15 +1300,14 @@ VA(0x005322C0, 0x2A)
 MAC_ADDRESS(0x22ec18, 0x34)
 int TRmgMap::getTerrain(const TRmgGridPoint& point)
 {
-    return m_mapItems[point.m_y * m_mapWidth + point.m_x].m_tile.m_landType;
+    return getMapItem(point.m_x, point.m_y)->getLandType();
 }
 
 VA(0x005322F0, 0x2A)
 MAC_ADDRESS(0x22ec4c, 0x34)
 int TRmgMap::getFrame(const TRmgGridPoint& point)
 {
-    return m_mapItems[point.m_y * m_mapWidth + point.m_x]
-        .m_tile.m_terrainFrame;
+    return getMapItem(point.m_x, point.m_y)->m_tile.m_terrainFrame;
 }
 
 VA(0x00532350, 0x07)
@@ -1330,8 +1323,7 @@ MAC_ADDRESS(0x22ece0, 0x6c)
 void TRmgRoadMapAdapter::setTile(
     const TRmgGridPoint& point, const TRmgTerrainTile& tile)
 {
-    TRmgMapItem& item = m_map->m_mapItems[
-        point.m_y * m_map->m_mapWidth + point.m_x];
+    TRmgMapItem& item = *m_map->getMapItem(point.m_x, point.m_y);
     unsigned char flipY = tile.m_flipY;
     int frame = tile.m_frame;
     unsigned char flipX = tile.m_flipX;
@@ -1346,7 +1338,7 @@ VA(0x005323D0, 0x3C)
 MAC_ADDRESS(0x22ed4c, 0x3c)
 void TRmgRoadMapAdapter::setLineType(const TRmgGridPoint& point, int value)
 {
-    TRmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];
+    TRmgMapItem& item = *m_map->getMapItem(point.m_x, point.m_y);
     item.m_tile.m_roadType = value;
 }
 
@@ -1354,8 +1346,7 @@ VA(0x00532410, 0x62)
 MAC_ADDRESS(0x22edc4, 0xa0)
 TRmgTerrainTile TRmgRoadMapAdapter::getTile(const TRmgGridPoint& point)
 {
-    TRmgMapItem& item = m_map->m_mapItems[
-        point.m_y * m_map->m_mapWidth + point.m_x];
+    TRmgMapItem& item = *m_map->getMapItem(point.m_x, point.m_y);
     TRmgTerrainTile tile;
     tile.m_terrain = item.m_tile.m_roadType;
     tile.m_frame = item.m_tileData.m_roadFrame;
@@ -1368,16 +1359,14 @@ VA(0x00532480, 0x2D)
 MAC_ADDRESS(0x22ee64, 0x38)
 int TRmgRoadMapAdapter::getLineType(const TRmgGridPoint& point)
 {
-    return m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]
-        .m_tile.m_roadType;
+    return m_map->getMapItem(point.m_x, point.m_y)->m_tile.m_roadType;
 }
 
 VA(0x005324B0, 0x2D)
 MAC_ADDRESS(0x22ee9c, 0x38)
 int TRmgRoadMapAdapter::getTerrain(const TRmgGridPoint& point)
 {
-    return m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]
-        .m_tile.m_landType;
+    return m_map->getMapItem(point.m_x, point.m_y)->getLandType();
 }
 
 // The two concrete adapter vtables share retail 0x532790. Keep both source
@@ -1414,7 +1403,7 @@ VA(0x00532520, 0x205)
 MAC_ADDRESS(0x22ef34, 0x35c)
 void TRmgRiverMapAdapter::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
 {
-    TRmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];
+    TRmgMapItem& item = *m_map->getMapItem(point.m_x, point.m_y);
     unsigned char flipX = tile.m_flipX;
     int riverType = tile.m_terrain;
     unsigned char flipY = tile.m_flipY;
@@ -1434,7 +1423,7 @@ void TRmgRiverMapAdapter::setTile(const TRmgGridPoint& point, const TRmgTerrainT
             bounds.m_maximumY = min(static_cast<int>(point.m_y) + 2, m_map->m_mapHeight);
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
                 for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
-                    TRmgMapItem& neighbour = m_map->m_mapItems[y * m_map->m_mapWidth + x];
+                    TRmgMapItem& neighbour = *m_map->getMapItem(x, y);
                     neighbour.m_tileData.m_nearRiver = 1;
                 }
             }
@@ -1447,7 +1436,7 @@ void TRmgRiverMapAdapter::setTile(const TRmgGridPoint& point, const TRmgTerrainT
             bounds.m_maximumY = min(static_cast<int>(point.m_y) + 3, m_map->m_mapHeight);
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
                 for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
-                    TRmgMapItem& neighbour = m_map->m_mapItems[y * m_map->m_mapWidth + x];
+                    TRmgMapItem& neighbour = *m_map->getMapItem(x, y);
                     if (neighbour.m_tile.m_riverType == 0) {
                         neighbour.m_tileData.m_riverOutletTarget = 0;
                     }
@@ -1461,7 +1450,7 @@ VA(0x00532730, 0x57)
 MAC_ADDRESS(0x22f290, 0x54) // anchor-vtable + packed-field evidence; Complete-only
 void TRmgRiverMapAdapter::setLineType(const TRmgGridPoint& point, int value)
 {
-    TRmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];
+    TRmgMapItem& item = *m_map->getMapItem(point.m_x, point.m_y);
     item.m_tile.m_riverType = value;
     unsigned char present = value != 0;
     item.m_tileData.m_riverJoinTarget = present;
@@ -1489,7 +1478,7 @@ VA(0x005327C0, 0x63)
 MAC_ADDRESS(0x22f320, 0xa4) // anchor-vtable + packed-field evidence; Complete-only
 TRmgTerrainTile TRmgRiverMapAdapter::getTile(const TRmgGridPoint& point)
 {
-    const TRmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];
+    const TRmgMapItem& item = *m_map->getMapItem(point.m_x, point.m_y);
     TRmgTerrainTile tile;
     tile.m_terrain = item.m_tile.m_riverType;
     tile.m_frame = item.m_tile.m_riverFrame;
@@ -1504,16 +1493,14 @@ VA(0x00532830, 0x2D)
 MAC_ADDRESS(0x22f3c4, 0x38)
 int TRmgRiverMapAdapter::getLineType(const TRmgGridPoint& point)
 {
-    return m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]
-        .m_tile.m_riverType;
+    return m_map->getMapItem(point.m_x, point.m_y)->m_tile.m_riverType;
 }
 
 VA(0x00532860, 0x2D)
 MAC_ADDRESS(0x22f3fc, 0x38)
 int TRmgRiverMapAdapter::getTerrain(const TRmgGridPoint& point)
 {
-    return m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]
-        .m_tile.m_landType;
+    return m_map->getMapItem(point.m_x, point.m_y)->getLandType();
 }
 
 VA(0x00532890, 0x104)
@@ -3696,7 +3683,7 @@ int TRmgGeneratorBase::scoreObjectPlacement(
             if (!prototype->isPassableCell(column, row)) {
                 marks[column + 1][row + 1] |= RMG_PLACEMENT_BLOCKED;
                 TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
-                if (!prototype->m_terrainMask[item->m_tile.m_landType])
+                if (!prototype->m_terrainMask[item->getLandType()])
                     return RMG_PLACEMENT_INVALID;
                 if (item->hasPathClearance())
                     return RMG_PLACEMENT_INVALID;
@@ -3704,7 +3691,7 @@ int TRmgGeneratorBase::scoreObjectPlacement(
                 // Retail 0x536d34 overwrites the complete mark with one
                 // before marking the surrounding area; retain that store.
                 marks[column + 1][row + 1] = RMG_PLACEMENT_ADJACENT;
-                terrainSeen[item->m_tile.m_landType] = 1;
+                terrainSeen[item->getLandType()] = 1;
                 int firstRow = position.m_y - min(y + 1, m_map.m_mapHeight) + 1;
                 int lastRow = position.m_y - max(y - 2, 0) + 1;
                 int firstColumn = position.m_x - min(x + 1, m_map.m_mapWidth) + 1;
@@ -3747,7 +3734,7 @@ int TRmgGeneratorBase::scoreObjectPlacement(
             if (!mark)
                 continue;
             TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
-            if (item->m_tileData.m_passable && item->m_tile.m_landType != eTerrainRock)
+            if (item->m_tileData.m_passable && item->getLandType() != eTerrainRock)
                 continue;
             int priority;
             if (mark & RMG_PLACEMENT_OVERLAP)
@@ -3945,7 +3932,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
 VA(0x005378E0, 0x27)
 TRmgMapItem* TRmgMap::getMapItem(TRmgMapPosition point)
 {
-    return m_mapItems + ((point.m_z * m_mapHeight + point.m_y) * m_mapWidth + point.m_x);
+    return &m_mapItems[(point.m_z * m_mapHeight + point.m_y) * m_mapWidth + point.m_x];
 }
 
 // Retail 0x549c91 calls this base-prefix pass after coastal marking.
@@ -3994,7 +3981,7 @@ void TRmgGeneratorBase::decorateMap()
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (!item->hasPathClearance() && item->m_tileData.m_passable
-                    && item->m_tile.m_landType != eTerrainRock && !item->m_connection.m_present) {
+                    && item->getLandType() != eTerrainRock && !item->m_connection.m_present) {
                     item->m_tileData.m_obstacleFill = 0;
                     item->m_tileData.m_pathClearance = 1;
                 }
@@ -6109,7 +6096,7 @@ void TRmgGenerator::createWaterZoneIsland(const TRmgZoneBounds& bounds, int leve
     for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
         for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
             TRmgMapItem* item = m_map.getMapItem(point);
-            if (item->m_tile.m_landType != eTerrainWater && !item->m_connection.m_present) {
+            if (item->getLandType() != eTerrainWater && !item->m_connection.m_present) {
                 item->m_tileData.m_pathClearance = 0;
                 item->m_tileData.m_obstacleFill = 1;
             }
@@ -6283,7 +6270,7 @@ void TRmgGenerator::expandObstacleClearance()
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++current) {
                 int zoneIndex = current->m_zoneState.m_zone;
-                if (zoneIndex < 0 || current->m_tile.m_landType == eTerrainWater)
+                if (zoneIndex < 0 || current->getLandType() == eTerrainWater)
                     continue;
                 TRmgZoneBounds bounds;
                 {
@@ -6300,7 +6287,7 @@ void TRmgGenerator::expandObstacleClearance()
                         TRmgMapItem* item = m_map.getMapItem(nearby);
                         int otherZone = item->m_zoneState.m_zone;
                         if (otherZone < 0) {
-                            if (item->m_tile.m_landType == eTerrainWater)
+                            if (item->getLandType() == eTerrainWater)
                                 found = 1;
                         } else if (otherZone != zoneIndex) {
                             TRmgZoneConnection* connection = zone->m_templateZone->findConnection(otherZone);
@@ -6326,7 +6313,7 @@ void TRmgGenerator::expandObstacleClearance()
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
-                        if (item->m_tile.m_landType != eTerrainWater
+                        if (item->getLandType() != eTerrainWater
                             && static_cast<int>(item->m_objects.size()) <= 0
                             && !item->m_connection.m_present) {
                             item->m_tileData.m_pathClearance = 0;
@@ -6375,7 +6362,7 @@ void TRmgGenerator::repairWaterZoneBorders()
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++current) {
                 int zoneIndex = current->m_zoneState.m_zone;
-                if (zoneIndex < 0 || current->m_tile.m_landType != eTerrainWater)
+                if (zoneIndex < 0 || current->getLandType() != eTerrainWater)
                     continue;
                 int destinationZone = current->m_zoneState.m_connectionZone;
                 if (destinationZone < 0)
@@ -6401,11 +6388,11 @@ void TRmgGenerator::repairWaterZoneBorders()
                     if (nearby.m_x < bounds.m_maximumX) {
                         do {
                             TRmgMapItem* item = m_map.getMapItem(nearby);
-                            if (item->m_tile.m_landType != eTerrainWater
-                                && item->m_tile.m_landType != eTerrainRock
+                            if (item->getLandType() != eTerrainWater
+                                && item->getLandType() != eTerrainRock
                                 && !item->hasObstacleFill()
                                 && item->m_tileData.m_passable) {
-                                terrain = H3_ENUM_DECODE(TTerrainType, item->m_tile.m_landType);
+                                terrain = H3_ENUM_DECODE(TTerrainType, item->getLandType());
                                 found = 1;
                                 break;
                             }
@@ -6435,7 +6422,7 @@ void TRmgGenerator::repairWaterZoneBorders()
                             item->m_tileData.m_pathClearance = 0;
                             item->m_tileData.m_obstacleFill = 1;
                         }
-                        if (item->m_tile.m_landType == eTerrainWater) {
+                        if (item->getLandType() == eTerrainWater) {
                             positions.push_back(nearby);
                             terrains.push_back(terrain);
                         }
@@ -6627,7 +6614,7 @@ void TRmgGenerator::buildZoneConnectionPaths()
                 do {
                     TRmgMapItem* current = m_map.getMapItem(x, pathPosition.m_y, position.m_z);
                     if (current->m_zoneState.m_zone == zoneIndex) {
-                        unsigned terrain = current->m_tile.m_landType;
+                        unsigned terrain = current->getLandType();
                         if ((terrain != eTerrainWater || zone->m_terrain == terrain)
                             && static_cast<int>(current->m_objects.size()) <= 0) {
                             seed.m_x = x;
@@ -6668,8 +6655,8 @@ void TRmgGenerator::buildZoneConnectionPaths()
                 TRmgMapItem* current = m_map.getMapItem(pathPosition);
                 if (current->m_zoneState.m_zone == zoneIndex
                     && current->hasPathClearance() && current->m_tileData.m_passable
-                    && current->m_tile.m_landType != eTerrainRock && current->m_movement.m_cost
-                    && current->m_tile.m_landType != eTerrainWater) {
+                    && current->getLandType() != eTerrainRock && current->m_movement.m_cost
+                    && current->getLandType() != eTerrainWater) {
                     openConnectionPath(pathPosition, 0);
                     m_map.floodConnectionCosts(pathPosition, zone->m_terrain == eTerrainWater);
                 }
@@ -7133,11 +7120,11 @@ unsigned char TRmgGenerator::canPlaceShipyard(TRmgMapPosition position)
     for (nearby.m_y = position.m_y; nearby.m_y <= position.m_y + 1; ++nearby.m_y) {
         for (nearby.m_x = position.m_x - 2; nearby.m_x <= position.m_x; ++nearby.m_x) {
             TRmgMapItem* item = m_map.getMapItem(nearby);
-            if (item->m_tile.m_landType == eTerrainWater)
+            if (item->getLandType() == eTerrainWater)
                 return 0;
             unsigned char entrance = item->m_tileData.m_objectEntrance;
             if (entrance || !item->m_tileData.m_passable
-                || item->m_tile.m_landType == eTerrainRock)
+                || item->getLandType() == eTerrainRock)
                 return 0;
         }
     }
@@ -7147,7 +7134,7 @@ unsigned char TRmgGenerator::canPlaceShipyard(TRmgMapPosition position)
         if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth)
             continue;
         TRmgMapItem* item = m_map.getMapItem(nearby);
-        int terrain = item->m_tile.m_landType;
+        int terrain = item->getLandType();
         if (terrain == eTerrainWater && item->hasPathClearance())
             break;
     }
@@ -7160,7 +7147,7 @@ unsigned char TRmgGenerator::canPlaceShipyard(TRmgMapPosition position)
         nearby.m_x -= 3;
     if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth)
         return 0;
-    int terrain = m_map.getMapItem(nearby)->m_tile.m_landType;
+    int terrain = m_map.getMapItem(nearby)->getLandType();
     return terrain != eTerrainWater;
 }
 
@@ -7285,7 +7272,7 @@ unsigned char TRmgGenerator::createShipyardConnection(
                     unsigned char visited = item->m_tileData.m_connectionVisited;
                     if (visited)
                         return 1;
-                    if (item->m_tile.m_landType != eTerrainWater) {
+                    if (item->getLandType() != eTerrainWater) {
                         nearby = position;
                         if (nearby.m_y + 1 < m_map.m_mapHeight) {
                             for (nearby.m_x = position.m_x;
@@ -8001,7 +7988,7 @@ void TRmgGenerator::decorateUnderground()
         for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
             for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
                 TRmgMapItem* item = m_map.getMapItem(x, y, 1);
-                if (item->m_tile.m_landType == eTerrainRock
+                if (item->getLandType() == eTerrainRock
                     && item->m_zoneState.m_zone == zone
                     && (item->hasPathClearance() || item->m_objects.size())) {
                     if (terrain != currentTerrain) {
@@ -8376,9 +8363,9 @@ void TRmgGenerator::prepareZoneConnections()
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (!item->hasObstacleFill() && item->m_tileData.m_passable
-                    && item->m_tile.m_landType != eTerrainRock && !item->isObjectEntrance()
+                    && item->getLandType() != eTerrainRock && !item->isObjectEntrance()
                     && static_cast<int>(item->m_objects.size()) <= 0
-                    && item->m_zoneState.m_zone < 0 && item->m_tile.m_landType != eTerrainWater)
+                    && item->m_zoneState.m_zone < 0 && item->getLandType() != eTerrainWater)
                     m_map.markObstacleFillPatch(position);
             }
         }
@@ -8745,7 +8732,7 @@ unsigned char TRmgGenerator::placeMineSite(TRmgObject* object,
                 if (x < 0 || x >= m_map.m_mapWidth || y < 0 || y >= m_map.m_mapHeight || y > position.m_y)
                     continue;
                 TRmgMapItem* nearby = m_map.getMapItem(x, y, position.m_z);
-                if (nearby->m_tileData.m_passable && nearby->m_tile.m_landType != eTerrainRock
+                if (nearby->m_tileData.m_passable && nearby->getLandType() != eTerrainRock
                     && nearby->hasObstacleFill())
                     ++obstacleFillCount;
             }
@@ -9191,7 +9178,7 @@ void TRmgMapItem::setTerrain(int terrain, int frame,
 VA(0x00546990, 0x1E) // anchor-callee reset expansions; Complete-only helper
 TRmgMapItem* TRmgMap::getMapItem(int x, int y)
 {
-    return m_mapItems + y * m_mapWidth + x;
+    return &m_mapItems[y * m_mapWidth + x];
 }
 
 VA_COMPGEN(0x00404200, 0x209, VECTOR_INSERT, Int)
@@ -9433,7 +9420,7 @@ unsigned char TRmgGenerator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
             || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
             continue;
         TRmgMapItem* destination = m_map.getMapItem(point.m_x, point.m_y, position.m_z);
-        if ((destination->m_tile.m_landType == eTerrainWater) == waterZone
+        if ((destination->getLandType() == eTerrainWater) == waterZone
             && destination->isPassable()
             && !destination->isObjectEntrance() && destination->hasPathClearance())
             break;
@@ -9624,10 +9611,10 @@ void TRmgGenerator::buildRoadCostMap(TRmgMapPosition position)
     openCosts.push_back(0);
 
     TRmgMapItem* mapItem = m_map.getMapItem(position);
-    mapItem->m_movement.m_cost = 0;
-    mapItem->m_previousTile.m_x = -1;
-    mapItem->m_previousTile.m_y = -1;
-    mapItem->m_previousTile.m_z = -1;
+    // Mac 0x24bcf8..0x24bd50 constructs the invalid predecessor, copies it
+    // to a separate parameter home, then stores cost and coordinates. Keep
+    // the same by-value setter used by the relaxation arms (89.7416 -> 90.91971%).
+    mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
 
     while (openPositions.size()) {
         position = openPositions.back();
@@ -9716,9 +9703,9 @@ void TRmgGenerator::buildRoadCostMap(TRmgMapPosition position)
                 continue;
 
             TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
-            if (nextMapItem->m_tile.m_landType == eTerrainWater
+            if (nextMapItem->getLandType() == eTerrainWater
                 || !nextMapItem->m_tileData.m_passable
-                || nextMapItem->m_tile.m_landType == eTerrainRock)
+                || nextMapItem->getLandType() == eTerrainRock)
                 continue;
 
             unsigned char nextObjectEntrance =
@@ -9972,7 +9959,7 @@ void TRmgGenerator::markRiverCoastTarget(TRmgMapPosition position, int direction
 #endif
             || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
             return;
-        if (m_map.getMapItem(point.m_x, point.m_y, point.m_z)->m_tile.m_landType != eTerrainWater)
+        if (m_map.getMapItem(point.m_x, point.m_y, point.m_z)->getLandType() != eTerrainWater)
             return;
         point += step;
     }
@@ -9986,7 +9973,7 @@ void TRmgGenerator::markRiverCoastTarget(TRmgMapPosition position, int direction
             || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
             return;
         TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
-        if (item->m_tile.m_landType == eTerrainWater || item->isObjectEntrance())
+        if (item->getLandType() == eTerrainWater || item->isObjectEntrance())
             return;
         point += step;
     }
@@ -10002,7 +9989,7 @@ void TRmgGenerator::markRiverCoastTarget(TRmgMapPosition position, int direction
             || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
             return;
         item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
-        if (item->m_tile.m_landType == eTerrainWater || item->isObjectEntrance())
+        if (item->getLandType() == eTerrainWater || item->isObjectEntrance())
             return;
         point += g_rmgDirections[direction];
     }
@@ -10019,7 +10006,7 @@ void TRmgGenerator::markRiverOutletTargets()
     for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
-                if (item->m_tile.m_landType == eTerrainWater) {
+                if (item->getLandType() == eTerrainWater) {
                     for (int direction = 0; direction < 8; direction += 2)
                         markRiverCoastTarget(position, direction);
                 }

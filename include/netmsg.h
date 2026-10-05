@@ -438,6 +438,7 @@ SIZE(CGameTransmitEndMsg, 0x28);
 
 class CChatMsg : public CNetMsg {
 public:
+    // Before normalization (Dreamcast): m_sMsg.
     char m_text[128];
 
     DC_ADDRESS(0x11f64c, 0x44)
@@ -649,10 +650,15 @@ public:
     // Retail has NO out-of-line body: advManager::TeleportTo (0x41d930) is
     // the only constructor site in the image and expands it, sharing the
     // CNetMsg base's zero register with the `gCompleteDrawEnabled = 0` store
-    // above it. Same member-initialiser shape as CMCMoveHero's next door.
+    // above it. DC 0x2318a calls type_point's default constructor before
+    // the id/point assignments; keep that lifetime even though it is empty.
     DC_ADDRESS(0x023170, 0x54)
     CMCTeleportHero(int id, type_point location)
-        : CMapChange(RS_TELEPORT_HERO, 0x1c), m_heroId(id), m_point(location) {}
+        : CMapChange(RS_TELEPORT_HERO, 0x1c)
+    {
+        m_heroId = id;
+        m_point = location;
+    }
 };
 SIZE(CMCTeleportHero, 0x1c);
 
@@ -758,10 +764,14 @@ class CMCEraseObject : public CMapChange {
 public:
     type_point m_point;
 
+    // DC 0x9cbe6 calls the empty default point constructor, then copies
+    // the location in the body. Copy initialization lost that source call.
     DC_ADDRESS(0x09cbd0, 0x4c)
     CMCEraseObject(type_point location)
-        : CMapChange(RS_ERASE_OBJECT, sizeof(CMCEraseObject)),
-          m_point(location) {}
+        : CMapChange(RS_ERASE_OBJECT, sizeof(CMCEraseObject))
+    {
+        m_point = location;
+    }
 };
 SIZE(CMCEraseObject, 0x18);
 
@@ -774,12 +784,13 @@ public:
     int m_heroId;
     type_point m_point;
 
+    // DC 0xd597e default-constructs m_point before id/location assignment.
     DC_ADDRESS(0x0d5964, 0x54)
     CMCDeadHero(int id, type_point location)
-        : CMapChange(RS_DEAD_HERO, sizeof(CMCDeadHero)),
-          m_heroId(id),
-          m_point(location)
+        : CMapChange(RS_DEAD_HERO, sizeof(CMCDeadHero))
     {
+        m_heroId = id;
+        m_point = location;
     }
 };
 SIZE(CMCDeadHero, 0x1c);
@@ -790,11 +801,14 @@ public:
     type_point m_point;
     int m_playerPos;
 
+    // DC 0x9cc3a constructs m_point before the id/location/player stores.
     DC_ADDRESS(0x09cc1c, 0x5c)
     CMCRecruitHero(int id, type_point location, int player)
-        : CMapChange(RS_RECRUIT_HERO, sizeof(CMCRecruitHero)),
-          m_heroId(id), m_point(location), m_playerPos(player)
+        : CMapChange(RS_RECRUIT_HERO, sizeof(CMCRecruitHero))
     {
+        m_heroId = id;
+        m_point = location;
+        m_playerPos = player;
     }
 };
 SIZE(CMCRecruitHero, 0x20);
@@ -848,10 +862,16 @@ public:
     int m_playerPos;
     int m_range;
 
+    // DC 0x9cc96/0x9ccf2 call the empty default point constructor in
+    // both visibility messages, then assign point/player/range in that order.
     DC_ADDRESS(0x09cc78, 0x5c)
     CSetVisibilityMsg(type_point point, int playerPos, int range)
-        : CNetMsg(RS_SET_VISIBILITY, sizeof(CSetVisibilityMsg)),
-          m_point(point), m_playerPos(playerPos), m_range(range) {}
+        : CNetMsg(RS_SET_VISIBILITY, sizeof(CSetVisibilityMsg))
+    {
+        m_point = point;
+        m_playerPos = playerPos;
+        m_range = range;
+    }
 };
 SIZE(CSetVisibilityMsg, 0x20);
 
@@ -869,8 +889,12 @@ public:
 
     DC_ADDRESS(0x09ccd4, 0x5c)
     CResetVisibilityMsg(type_point point, int playerPos, int range)
-        : CNetMsg(RS_RESET_VISIBILITY, sizeof(CResetVisibilityMsg)),
-          m_point(point), m_playerPos(playerPos), m_range(range) {}
+        : CNetMsg(RS_RESET_VISIBILITY, sizeof(CResetVisibilityMsg))
+    {
+        m_point = point;
+        m_playerPos = playerPos;
+        m_range = range;
+    }
 };
 SIZE(CResetVisibilityMsg, 0x20);
 

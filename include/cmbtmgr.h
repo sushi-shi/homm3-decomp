@@ -22,6 +22,7 @@ class heroWindow;
 class iconWidget;
 class textWidget;
 class TCombatWindow;
+class TPickANumber;
 class NewmapCell;
 class searchArray;
 class town;
@@ -240,24 +241,6 @@ enum ECombatGateHex {
     COMBAT_HEX_GATE_MOAT = 0x5f,
     COMBAT_HEX_GATE = 0x60
 };
-
-// One faction row in the siege-archer table at 0x63cf88. Retail indexes
-// nine 0x20-byte rows by town::type, then uses the three coordinate pairs
-// for the keep, lower tower and upper tower respectively.
-struct TSiegeArcherPosition {
-public:
-    int m_x;
-    int m_y;
-};
-
-struct TSiegeArcherInfo {
-public:
-    int m_creatureType;
-    TSiegeArcherPosition m_positions[3];
-    const char* m_shadowSpriteName;
-};
-
-extern const TSiegeArcherInfo g_siegeArcherInfo[9];
 
 // Two additional TTerrainType values needed only by combat terrain
 // selection. Kept out of armygrp.h's include-sensitive enum: adding
@@ -551,15 +534,36 @@ public:
     // both through four-byte resource handles, as in army: 0x462920 clears
     // +4/+8 and 0x462930 releases them in reverse order with EH cleanup.
     struct TArcher {
-        int m_creatureType;             // +0x0
+        TCreatureType m_type;           // +0x0; original TArcher::type
         TResourceHandle<CSprite> m_sprite;          // +0x4
-        TResourceHandle<CSprite> m_shadowSprite;    // +0x8
+        TResourceHandle<CSprite> m_missile;    // +0x8
         int m_x;                        // +0xc
         int m_y;                        // +0x10
         int m_facing;                 // +0x14
         int m_sequence;                 // +0x18
         int m_frame;                 // +0x1c
         int m_armySlot;                 // +0x20
+    };
+    // Original nested TArcherID (DC 0x431f), in the same order used by
+    // the retail three-row archer array.
+    enum TArcherID {
+        eArcherMainBuilding = 0,
+        eArcherLowerTower = 1,
+        eArcherUpperTower = 2,
+        kNumArchers = 3
+    };
+    // Original TArcherTraits (DC 0x4321): CreatureType, MainBuildingX/Y,
+    // LowerTowerX/Y, UpperTowerX/Y and MissileName. Complete retains its
+    // flat 0x20-byte row and adds the ninth faction at 0x63cf88.
+    struct TArcherTraits {
+        TCreatureType m_creatureType;
+        int m_mainBuildingX;
+        int m_mainBuildingY;
+        int m_lowerTowerX;
+        int m_lowerTowerY;
+        int m_upperTowerX;
+        int m_upperTowerY;
+        const char* m_missileName;
     };
     // InitializeArchers' two simultaneously live resource locals. Keeping
     // them as one record preserves retail VC6's [-8]/[-4] stack ordering.
@@ -585,6 +589,8 @@ public:
     // ORDINALS: no DC layout exists for combatManager at all (the
     // Dreamcast dump carries no fieldlist for it) and no string or
     // roster entry reaches either slot.
+    // Project-inferred boundary for the pending-action protocol. Original
+    // field access is unknown; preserve the four existing slots in place.
     int m_nextAction;  // +0x3c
     // The order's FIRST hex slot. berserk_attack (0x4222c0) writes the
     // acting stack's own gridIndex here when the target is already
@@ -600,6 +606,7 @@ public:
     // choice's own field_18 here, all three behind field_3c = 1.
     // Address ordinal for the same reason its neighbours are.
     int m_nextActionGridIndex2;  // +0x48
+public:
     // Two 187-byte per-hex rows, both cleared by Open (0x462a20) with
     // `mov ecx,0x2e / xor eax,eax / rep stosd / stosw / stosb` - 0x2e
     // dwords plus a word plus a byte is exactly COMBAT_GRID_CELLS, and
@@ -614,6 +621,7 @@ public:
     char m_paddingBeforeCells[0x2];
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
+    // Before normalization (Dreamcast): cell.
     hexcell m_cells[187];  // +0x1c4, ends 0x5394
     // PlaceAllObstacles shifts one by this dword while field_53c0 is -1;
     // it is the current combat terrain selector for the catalogue mask.
@@ -728,6 +736,7 @@ public:
     // writer and the chain-lightning writer both use it.
     // Original ShowMassSpell's AAY11BE@_N parameter proves bool [2][20];
     // every source caller supplies this member, whose stores are 0 or 1.
+    // Before normalization (Dreamcast): ArmyEffected.
     bool m_effected[2][20];  // +0x547c
     // Per-side "this side is played by the computer" latch: ai_tactical
     // crosses it with gpGame's own AI flag before scaling a shooter's
@@ -836,7 +845,9 @@ public:
     // should_attack_now (0x436c60) forms armies[actingSide][actingSlot]
     // with the flattened index actingSide*21 + actingSlot and then
     // excludes that stack from both of its censuses. Names provisional.
+    // Before normalization (Dreamcast): currArmyGroup.
     int m_actingSide;  // +0x132b8
+    // Before normalization (Dreamcast): currArmyIndex.
     int m_actingSlot;  // +0x132bc
     // The side whose stack is acting: get_hex_attack_value (0x436180)
     // rejects a neighbour whose combatSide equals it. Name provisional.
@@ -919,6 +930,8 @@ public:
     // the walk steps the byte arrays by 20 and the army index by 21 in
     // the same loop, and ResetLimitCreature memsets exactly 2x20 at
     // +0x14000.
+    // Original: bCreatureVanish. DC combatManager 0x1ed7 / field list
+    // 0x4429 explicitly makes this array and bSomeCreaturesVanish public.
     unsigned char m_creatureIsDead[2][20];  // +0x13438
     // Sliced in place off PowEffect, which zeroes it beside field_13438
     // and then asks it, after the death sweep, whether MakeCreaturesVanish
@@ -993,7 +1006,10 @@ public:
     char m_paddingBeforeArchers[0x1];
 
 private:
-    TArcher m_archers[3];  // +0x13d78; armySlot at +0x20
+    // Original ArcherTraits public ?ArcherTraits@combatManager@@0QBUTArcherTraits@1@B
+    // independently proves this private static const table owner.
+    static const TArcherTraits s_archerTraits[9];
+    TArcher m_archers[kNumArchers];  // +0x13d78; armySlot at +0x20
 
 public:
     // "Move order is reversed for this combat": find_move_order
@@ -1007,6 +1023,8 @@ public:
     // tower defenders. DamageWall reads one selected slot when the
     // corresponding target falls and marks that stack removed.
     unsigned char m_inSecondPhase;  // +0x13de4
+
+public:
     // Dreamcast in_second_phase is a byte followed by OriginalAttackSkill;
     // retail preserves this three-byte alignment gap before the stat snapshot.
     char m_paddingBeforeOriginalAttackSkill[0x3];
@@ -1083,18 +1101,15 @@ public:
     void placeArmyInGrid(const army& a, int hex);
     // Retail 0x59ec50 extends Dreamcast's one-argument spells.cpp:176
     // routine with the creature-cast selector passed by command.cpp.
-    void initiateSpell(SpellID spellToCast, int creatureSpell);
+    void initiateSpell(ESpellId spellToCast, int creatureSpell);
     unsigned char placeObstacle(int obstacleId);
     void markMovingArmy(army* stack);  // 0x46a520
-    unsigned char checkObstacleAttacks(army* thisArmy,
-                                         unsigned char isWalking);
+    bool checkObstacleAttacks(army* thisArmy, bool isWalking);
     void lootDeadHero(int side,
                       std::vector<type_artifact>& lootedArtifacts);
     void calculateGainedExperience(int side, int* experienceGained);
-    unsigned char checkFireWall(long hex, army* currentArmy,
-                                  unsigned char isWalking);
-    unsigned char checkLandmine(long hex, army* currentArmy,
-                                 unsigned char isWalking);
+    bool checkFireWall(long hex, army* currentArmy, bool isWalking);
+    bool checkLandmine(long hex, army* currentArmy, bool isWalking);
     unsigned char shouldLowerDoor(army* thisArmy, long hex) const;
     int experienceValueOfStack(int whichGroup);
     void makeCreaturesVanish();
@@ -1291,15 +1306,6 @@ public:
     // this declaration alone already costs GetCommand 92.5714 ->
     // 92.5357 unconditionally (include-set class, bisected), so it is
     // scoped to army.cpp and the field waits for the same lane.
-    // 0x465ad0 (0x443), already carved and carcassed in cmbtmgr.cpp.
-    // army::range_attack (0x440160) short-circuits into it for an ARROW
-    // TOWER, passing that stack's indexToAttack as the tower position -
-    // a thiscall on gpCombatManager with one stack argument, which is
-    // the arity the DC row's single TArcherID parameter says. THE
-    // PARAMETER TYPE IS THE ONE DIVERGENCE: the DC prototype takes
-    // combatManager::TArcherID, an enum this header does not model yet,
-    // so the declaration takes the int retail actually pushes and the
-    // enum waits for the lane that reconstructs the body.
     // Complete adds the arrow-tower early return in army::rangeAttack
     // (0x440160), directly calling KeepAttack (0x465ad0). DC lacks that
     // arm but records KeepAttack private. This narrow friendship is a
@@ -1308,15 +1314,9 @@ public:
     friend void army::rangeAttack();
 
 private:
-    // 0x465ad0 (0x443), already carved and carcassed in cmbtmgr.cpp.
-    // army::range_attack (0x440160) short-circuits into it for an ARROW
-    // TOWER, passing that stack's indexToAttack as the tower position -
-    // a thiscall on gpCombatManager with one stack argument, which is
-    // the arity the DC row's single TArcherID parameter says. THE
-    // PARAMETER TYPE IS THE ONE DIVERGENCE: the DC prototype takes
-    // combatManager::TArcherID, an enum this header does not model yet,
-    // so the declaration takes the int retail actually pushes and the
-    // enum waits for the lane that reconstructs the body.
+    // Dreamcast KeepAttack takes TArcherID. Complete instead receives the
+    // victim's army slot: retail scales its argument by sizeof(army), while
+    // the current army's grid index selects the actual archer.
     void keepAttack(int towerPos);  // 0x465ad0
 
 public:
@@ -1332,8 +1332,7 @@ public:
                              int averageDamage);
     void unnamed4693a0(int side);  // 0x4693a0
     void checkRebirth();  // 0x469440
-    unsigned char canCastSpells(long side,
-                                  unsigned char heroSpell) const;  // 0x41f890
+    bool canCastSpells(long side, bool heroSpell) const;  // 0x41f890
     long computeFireShieldDamage(long damage, const army* attacker,
                                     const army* target,
                                     long targetHits) const;
@@ -1344,7 +1343,7 @@ public:
     void findMoveOrder(std::vector<army*>* result);
     long getTotalCombatValue(long side, long lowestAttack,
                                 long lowestDefense,
-                                unsigned char includeCripples) const;
+                                bool includeCripples) const;
     CSprite* loadSpellEffect(int effect);  // 0x5a92f0
 
 private:
@@ -1369,11 +1368,11 @@ private:
     unsigned char chooseCreatureSpell(const army* currentArmy,
                                         long& bestValue,
                                         type_AI_combat_parameters& estimate);  // 0x420d20
-    unsigned char chooseMeleeTarget(const army* currentArmy,
-                                      unsigned char teleport,
-                                      long* actionValue,
-                                      type_AI_combat_parameters* estimate);  // 0x421680
-    unsigned char chooseResurrectAction(
+    bool chooseMeleeTarget(const army* currentArmy,
+                           bool teleport,
+                           long& actionValue,
+                           type_AI_combat_parameters& estimate);  // 0x421680
+    bool chooseResurrectAction(
         const army* currentArmy, long& bestValue,
         type_AI_combat_parameters& estimate);  // 0x421000
     long chooseShooterTarget(const army* currentArmy,
@@ -1451,6 +1450,11 @@ public:
 
 private:
     bool automateCatapult();  // 0x473c00
+    // Project-inferred action preparation retains both target hexes until
+    // the UI picker or a complete order supplies them.
+    void prepareAction(int action, int extra);
+    // Targeted command tuple; secondary spell target survives.
+    void setTargetAction(int action, int extra, int targetHex);
     unsigned char attemptShooterDefense(
         const army* currentArmy, searchArray* currentSearchArray,
         const type_AI_combat_parameters* estimate);  // 0x420760
@@ -1571,7 +1575,7 @@ public:
     // `effected` for. It rolls SpellCastWorkChance separately per stack
     // on both sides and records which ones took the spell.
     void setMassSpellInfluence(const hero* castingHero, SpellID spell,
-                               long level, long power,
+                               TSkillMastery level, long power,
                                long castingSide,
                                long creatureSpell);  // 0x5a66d0
     // 0x5a4970, the spells.obj body every AREA damage spell runs
@@ -1631,11 +1635,11 @@ public:
                 int segmentLength, int drawsPerSegment,
                 int distortAlways, int delay,
                 int flashLighten);  // 0x5a5c20
-    void displayFailureReason(SpellID spell, const char* msg,
+    void displayFailureReason(ESpellId spell, const char* msg,
                                 long hex);  // 0x5a2c60
 
 private:
-    std::string getFailureReason(SpellID spell, const char* msg,
+    std::string getFailureReason(ESpellId spell, const char* msg,
                                    long hex);  // 0x5a2880
 
 public:
@@ -1690,6 +1694,7 @@ private:
     army* findSpellTarget(ESpellId spell, long side, long hex,
                           bool firstTarget,
                           long creatureSpell);  // 0x5a3950
+    void showResurrectionMessage(const army* target, long raised);
 
 public:
     // WHO cast the spell ShowSpellMessage is about to announce. The DC
@@ -1841,12 +1846,12 @@ public:
     void markBerserkAreaEffect(long hex, long mastery,
                                   std::vector<army*>& targets);
     // DC ?SetupCombat@combatManager@@QAAXUtype_point@@PAVhero@@PAVarmyGroup@@
-    // JPAVtown@@12HHH_N@Z - the S_PUB32 run types every parameter. The
+    // JPAVtown@@12HHH_N@Z - the S_PUB32 run proves the final flag bool.
     void setupCombat(type_point point, hero* leftHero,
                      armyGroup* leftArmyGroup, long rightPlayer,
                      town* rightTown, hero* rightHero,
                      armyGroup* rightArmyGroup, int x, int y, int seed,
-                     unsigned char isSurrounded);
+                     bool isSurrounded);
     // Original public ?NextArmy@combatManager@@QAA_N_N@Z: bool result/flag.
     bool nextArmy(bool checkingForBadMorale);
     void setNextArmy(int group, int index);

@@ -136,22 +136,23 @@ public:
 
     TMultiPlayerWindow();
     virtual ~TMultiPlayerWindow();
-    unsigned char initRemote(eNetGameType netGameType, const char* extra,
+    // Original DC publics use QAA_N for the complete protocol/session result chain.
+    bool initRemote(eNetGameType netGameType, const char* extra,
                              _DPCOMPORTADDRESS* comportInfo);
-    unsigned char joinSession(CDPlaySession* session, const char* password);
-    unsigned char hostSession(const char* sessName, const char* password);
-    unsigned char onJoin();
-    unsigned char onHost();
-    unsigned char onIPX();
-    unsigned char onTCP();
-    unsigned char onSearch();
-    unsigned char onHotSeat();
-    unsigned char onModem();
-    unsigned char onDirect();
-    unsigned char onModemJoin();
-    unsigned char onModemHost();
-    unsigned char onDirectHost();
-    unsigned char onDirectJoin();
+    bool joinSession(CDPlaySession* session, const char* password);
+    bool hostSession(const char* sessName, const char* password);
+    bool onJoin();
+    bool onHost();
+    bool onIPX();
+    bool onTCP();
+    bool onSearch();
+    bool onHotSeat();
+    bool onModem();
+    bool onDirect();
+    bool onModemJoin();
+    bool onModemHost();
+    bool onDirectHost();
+    bool onDirectJoin();
     void update();
     void goSessionList();
     void goMainMenu();

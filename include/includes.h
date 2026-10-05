@@ -78,7 +78,10 @@ protected:
 
 public:
     int m_numbersLeft;
+
     std::vector<bool> m_available;
+
+public:
     TPickANumber(int lowBound, int high);
 
     // Original: TPickANumber::IsAvailable; includes.h:166
