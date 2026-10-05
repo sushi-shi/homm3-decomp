@@ -4630,83 +4630,10 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
         currBoat->getHflip());
 }
 
-// Project-inferred rule shared by puzzle object and shadow drawing.
-// Roads, rivers, terrain holes and other object types are excluded; this is
-// narrower than the random-map decoration inventory.
-static bool isPuzzleMapObject(TAdventureObjectType type)
-{
-    switch (type) {
-    case TERRAIN_BRUSH:
-    case TERRAIN_BUSH:
-    case TERRAIN_CACTUS:
-    case TERRAIN_CANYON:
-    case TERRAIN_CRATER:
-    case TERRAIN_DEAD_VEGETATION:
-    case TERRAIN_FLOWER:
-    case TERRAIN_FROZEN_LAKE:
-    case TERRAIN_HEDGE:
-    case TERRAIN_HILL:
-    case TERRAIN_KELP:
-    case TERRAIN_LAKE:
-    case TERRAIN_LAVA_FLOW:
-    case TERRAIN_LAVA_LAKE:
-    case TERRAIN_MUSHROOM:
-    case TERRAIN_LOG:
-    case TERRAIN_MANDRAKE:
-    case TERRAIN_MOSS:
-    case TERRAIN_MOUND:
-    case TERRAIN_MOUNTAIN:
-    case TERRAIN_OAK_TREE:
-    case TERRAIN_OUTCROPPING:
-    case TERRAIN_PINE_TREE:
-    case TERRAIN_PLANT:
-    case TERRAIN_ROCK:
-    case TERRAIN_SAND_DUNE:
-    case TERRAIN_SAND_PIT:
-    case TERRAIN_SHRUB:
-    case TERRAIN_SKULL:
-    case TERRAIN_STALAGMITE:
-    case TERRAIN_STUMP:
-    case TERRAIN_TAR_PIT:
-    case TERRAIN_TREE:
-    case TERRAIN_VINE:
-    case TERRAIN_VOLCANIC_VENT:
-    case TERRAIN_VOLCANO:
-    case TERRAIN_WILLOW_TREE:
-    case TERRAIN_YUCCA_TREE:
-    case TERRAIN_REEF:
-        return true;
-    default:
-        return false;
-    }
-}
-
-// Project-inferred clipping shared by adventure layers and view-world icons.
-// Clip against x=[8,600), y=[0,544). Adventure layers add eight to the final
-// screen Y; view-world icons draw at their saved, unclipped origin. Callers
-// retain those choices, empty-area guards and layer-specific adjustments.
-// Ordinary source placement is provisional; no native inline qualifier is claimed.
-void clipAdventureTile(int& baseX, int& baseY,
-                       int& tileX, int& tileY,
-                       int& tileWidth, int& tileHeight)
-{
-    if (baseX < 8) {
-        tileX += 8 - baseX;
-        tileWidth -= 8 - baseX;
-        baseX = 8;
-    }
-    if (baseY < 0) {
-        tileY -= baseY;
-        tileHeight -= -baseY;
-        baseY = 0;
-    }
-    if (baseX + tileWidth > 600)
-        tileWidth = 600 - baseX;
-    if (baseY + tileHeight > 544)
-        tileHeight = 544 - baseY;
-}
-
 // E:\gamedcs\advmgr.cpp:5941
+// DC 5955-5977 clip the tile in place and DC 6012-6064 select puzzle objects
+// with an inline switch; Mac 0x11598 calls neither former project helper
+// (clipAdventureTile/isPuzzleMapObject). Byte-neutral at 98.62%.
 // DC 6010 and Mac 0x11770..0x117bc use the signed TObjectCell nibble
 // members in getBitPos; each draw arm reads them again. DC 5957/5958
 // and 5965/5966 preserve the clipping updates. DC has no cell/map receiver
@@ -4734,7 +4661,20 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     int tilew = 32;
     int tileh = 32;
 
-    clipAdventureTile(baseX, baseY, tilex, tiley, tilew, tileh);
+    if (baseX < 8) {
+        tilex += 8 - baseX;
+        tilew -= 8 - baseX;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley -= baseY;
+        tileh -= -baseY;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
     if (tilew <= 0 || tileh <= 0)
         return;
 
@@ -4763,19 +4703,57 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     continue;
 
                 if (g_drawingPuzzle) {
-                    if (!isPuzzleMapObject(objType->m_objectType))
-                        continue;
-
-                    int frame = (m_animCtr
-                                 + m_fullMap->m_objects[objCell->m_objectIndex]
-                                       .m_animationOffset)
-                                % sprite->getNumFrames(0);
-                    sprite->drawAdvObj(
-                        frame,
-                        tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
-                        tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
-                        tilew, tileh, g_windowManager->m_screenBitmap,
-                        baseX, baseY + 8, false);
+                    switch (objType->m_objectType) {
+                    case TERRAIN_BRUSH:
+                    case TERRAIN_BUSH:
+                    case TERRAIN_CACTUS:
+                    case TERRAIN_CANYON:
+                    case TERRAIN_CRATER:
+                    case TERRAIN_DEAD_VEGETATION:
+                    case TERRAIN_FLOWER:
+                    case TERRAIN_FROZEN_LAKE:
+                    case TERRAIN_HEDGE:
+                    case TERRAIN_HILL:
+                    case TERRAIN_KELP:
+                    case TERRAIN_LAKE:
+                    case TERRAIN_LAVA_FLOW:
+                    case TERRAIN_LAVA_LAKE:
+                    case TERRAIN_MUSHROOM:
+                    case TERRAIN_LOG:
+                    case TERRAIN_MANDRAKE:
+                    case TERRAIN_MOSS:
+                    case TERRAIN_MOUND:
+                    case TERRAIN_MOUNTAIN:
+                    case TERRAIN_OAK_TREE:
+                    case TERRAIN_OUTCROPPING:
+                    case TERRAIN_PINE_TREE:
+                    case TERRAIN_PLANT:
+                    case TERRAIN_ROCK:
+                    case TERRAIN_SAND_DUNE:
+                    case TERRAIN_SAND_PIT:
+                    case TERRAIN_SHRUB:
+                    case TERRAIN_SKULL:
+                    case TERRAIN_STALAGMITE:
+                    case TERRAIN_STUMP:
+                    case TERRAIN_TAR_PIT:
+                    case TERRAIN_TREE:
+                    case TERRAIN_VINE:
+                    case TERRAIN_VOLCANIC_VENT:
+                    case TERRAIN_VOLCANO:
+                    case TERRAIN_WILLOW_TREE:
+                    case TERRAIN_YUCCA_TREE:
+                    case TERRAIN_REEF:
+                        sprite->drawAdvObj(
+                            (m_animCtr
+                             + m_fullMap->m_objects[objCell->m_objectIndex]
+                                   .m_animationOffset)
+                                % sprite->getNumFrames(0),
+                            tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
+                            tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
+                            tilew, tileh, g_windowManager->m_screenBitmap,
+                            baseX, baseY + 8, false);
+                        break;
+                    }
                 } else {
                     // DC line 6067 and Mac's call to 0+0x103cc retain
                     // hasFlag here; VC6 expands it without changing bytes.
