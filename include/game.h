@@ -1832,7 +1832,16 @@ extern const char* g_townFortObjectDefs[9];
 // supplies the names; retail fixes these four dword cells and their paired
 // reset/restore use around game::LoadGame.
 extern const char* g_townCapitolObjectDefs[9];
-extern int g_weekType;
+// Original ?giWeekType@@3W4type_week_type@@A proves the enum domain.
+// Enumerator names follow the retail PerWeek and DoNewTurn cases; their
+// original spelling is unavailable. Month state and the network fields are int.
+enum WeekType {
+    weekTypeInvalid = -1,
+    weekTypeNormal = 0,
+    weekTypeCreature = 1,
+    weekTypeInfernoGrail = 2
+};
+extern WeekType g_weekType;
 extern int g_weekTypeExtra;
 extern int g_monthType;
 // Shared UI text table: attack, defense, spell power, and knowledge.

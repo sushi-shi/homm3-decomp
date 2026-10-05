@@ -6959,7 +6959,7 @@ unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
 
     int monthType = g_monthType;
     int monthTypeExtra = g_monthTypeExtra;
-    int weekType = g_weekType;
+    WeekType weekType = g_weekType;
     int weekTypeExtra = g_weekTypeExtra;
 
     // Retail loads the received RMT%sRC.BIN file named in the preferences
@@ -7810,7 +7810,7 @@ unsigned char TSingleSelectionWindow::beginSavedGame()
 
     int monthType = g_monthType;
     int monthTypeExtra = g_monthTypeExtra;
-    int weekType = g_weekType;
+    WeekType weekType = g_weekType;
     int weekTypeExtra = g_weekTypeExtra;
 
     g_game->loadGame(g_game->m_setup.m_filename, 0, 0);

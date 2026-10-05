@@ -8885,7 +8885,7 @@ void advManager::loadRemote(unsigned char makeOrig)
 
     int monthType = g_monthType;
     int monthTypeExtra = g_monthTypeExtra;
-    int weekType = g_weekType;
+    WeekType weekType = g_weekType;
     int weekTypeExtra = g_weekTypeExtra;
 
     g_game->loadGame(g_config.m_rcFile, 0, 1);
