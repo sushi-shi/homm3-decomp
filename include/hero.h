@@ -837,10 +837,6 @@ public:
     void fly(int level);
     // 0x4e5dd0 - one-argument setter for waterWalkLevel.
     void walkOnWater(int level);
-    // Project-inferred resets. Boarding retains non-movement spells and the
-    // Dimension Door count; day rollover/initialization reset all five lanes.
-    void clearMovementSpells();
-    void resetAdventureSpells();
     // 0x4e5e10 - tests whether a packed map point is inside Visions range.
     bool isInIdentifyRange(const type_point& location) const;
 
@@ -1189,26 +1185,6 @@ public:
         return type_point(m_pathTargetX, m_pathTargetY, m_pathTargetZ);
     }
 
-    // Project property operations for the stored route target. Keep the
-    // full-width X/Y view for sentinel comparisons and temporary save/restore;
-    // getTarget() is the existing packed map-point view.
-    int getTargetX() const { return m_pathTargetX; }
-    int getTargetY() const { return m_pathTargetY; }
-    short getTargetZ() const { return m_pathTargetZ; }
-    void setTarget(int x, int y, int z)
-    {
-        m_pathTargetX = x;
-        m_pathTargetY = y;
-        m_pathTargetZ = z;
-    }
-    void setTarget(type_point point)
-    {
-        setTarget(point.m_x, point.m_y, point.m_z);
-    }
-    void clearTarget()
-    {
-        m_pathTargetX = m_pathTargetY = -1;
-    }
 
     // DC hero.h:991 and the class signature record the const
     // long-returning duration accessor used by AI reward valuation.

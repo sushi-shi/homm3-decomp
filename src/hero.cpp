@@ -1034,14 +1034,18 @@ void hero::initialize(short index)
 
     m_equipped[16].m_artifactId = ARTIFACT_CATAPULT;
     MEMSET(m_army.m_armies, CREATURE_NONE, sizeof(m_army.m_armies), i);
-    clearTarget();
+    m_pathTargetX = m_pathTargetY = -1;
     m_level = 1;
 
-    resetManaToMaximum();
+    m_mana = static_cast<short>(getMaxMana());
 
     m_maxMovePoints = 0;
     m_movePoints = 0;
-    resetAdventureSpells();
+    m_flightLevel = eMasteryInvalid;
+    m_waterWalkLevel = eMasteryInvalid;
+    m_disguiseLevel = eMasteryInvalid;
+    m_dWalkSpellsCast = 0;
+    m_identifyLevel = eMasteryInvalid;
     m_hasCustomName = 0;
     m_customName = "";
     m_isSleeping = 0;
@@ -6478,22 +6482,6 @@ bool hero::canLand() const
     if (cell->m_isTrigger && g_adventureObjectTraits[cell->m_type].m_blocksLanding)
         return 0;
     return 1;
-}
-
-// Project-inferred reset shared by boarding and the complete daily reset.
-// Calling fly(-1) would charge mana; these are spell-state invalidations.
-void hero::clearMovementSpells()
-{
-    m_flightLevel = eMasteryInvalid;
-    walkOnWater(eMasteryInvalid);
-}
-
-void hero::resetAdventureSpells()
-{
-    clearMovementSpells();
-    m_disguiseLevel = eMasteryInvalid;
-    m_dWalkSpellsCast = 0;
-    m_identifyLevel = eMasteryInvalid;
 }
 
 VA(0x004e5dd0, 0x10)
