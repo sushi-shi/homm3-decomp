@@ -841,11 +841,13 @@ MAC_ADDRESS(0x0a581c, 0x5d8)
 // DC's offset_used[19] has procedure scope (record 12712), alongside
 // SaveExtent and both recorded int locals; no enclosing array block occurs
 // in the lexical records. Keep that lifetime and the ordinary rectangle
-// member calls. Removing the block and provisional extent/global aliases
-// is VC6 byte-flat at 96.3415%. The remaining named difference is the
-// retained UpdateCombatArea call where retail expands UpdateScreen.
-// Passing the bounds directly or naming a short-lived copy/width/height
-// inside the canonical helper did not recover that expansion.
+// member calls. VC6 reaches 96.3415%; UpdateCombatArea already expands
+// through the matching UpdateScreen call. The first instruction difference
+// is the by-value extent's copy/register lowering; named bounds and local
+// width/height copies did not improve it. The remaining call-label difference
+// is vector<long>::_Destroy versus vector<type_artifact>::_Destroy: both
+// emitted bodies are ret 8 (retail 0x404140). Keep the DC-proven vector<long>
+// and canonical clear(), without selecting a library-internal substitute.
 void combatManager::updateMouseGrid(int newMouseGridIndex,
                                     std::vector<long>& hexes,
                                     unsigned char forceUpdate)

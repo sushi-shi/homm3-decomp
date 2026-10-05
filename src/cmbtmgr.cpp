@@ -2966,12 +2966,10 @@ bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // which agrees: a ballistic missile is never mirrored, and it needs no
 // angle search or DrawFrame at all - the trajectory is arithmetic.
 
-// DC's variable list turned out to be a MATCHING LEVER here, not just a
-// naming source. ARROW_TRAVEL_DIST is listed for this body and for
-// neither of the other two, and that asymmetry is real: naming the
-// pre-division distance is worth 79.99 -> 81.72 here, while the same
-// edit costs ShootMissile 91.74 -> 90.43. Where DC names a local, name
-// it; where DC does not, fold it.
+// DC positively records ARROW_TRAVEL_DIST: preserve that named distance
+// before deriving the flight-frame count. The other two missile routines
+// have different recorded locals; missing debug rows alone do not prove
+// that an expression was unnamed in the original source.
 
 // DC 3697 multiplies deltaX by step; 3698 computes nframes - step.
 // Mac 0x73df8 also subtracts step, while its horizontal product is
