@@ -1102,6 +1102,8 @@ void TAdventureMapWindow::updateTownLocators(int top, bool drawWin,
         g_windowManager->updateScreen(0, 0, 800, 600);
 }
 
+// Pass the visibility predicate directly to setVisible. An inferred int
+// local widens retail's byte test even though the predicate is Boolean.
 VA(0x00403560, 0x23E)
 DC_ADDRESS(0x0010ec, 0x4)
 MAC_ADDRESS(0x002f50, 0x3a4)
@@ -1146,9 +1148,9 @@ void TAdventureMapWindow::updateHeroLocator(int which, bool drawWinSect,
         widgetClearStatus(HERO_MANA_0_ID + which, widget::WIDGET_ACTIVE);
     }
 
-    int isCurrentHero = heroId != -1 && !g_completeDrawAllCells
-                        && heroId == player->m_currHeroId;
-    m_heroLocators[which]->setVisible(isCurrentHero);
+    m_heroLocators[which]->setVisible(
+        heroId != -1 && !g_completeDrawAllCells
+        && heroId == player->m_currHeroId);
 
     if (drawWinSect) {
         drawWindow(0, HERO_0_ID + which, HERO_0_ID + which);
