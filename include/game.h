@@ -891,7 +891,9 @@ public:
     unsigned char m_startingNumHeroes;  // +0x30
     int m_personality;  // +0x34
 #pragma pack(push, 1)
-    char m_extraPuzzlePieces;  // +0x38
+    // Original extraPuzzlePieces, iDeathCountDown, numTowns, currTown and
+    // towns all use signed char in the three native playerData records.
+    signed char m_extraPuzzlePieces;  // +0x38
     // +0x39. A type_point by DC type; see the alignment note above.
     // playerData::Init settles both the offset and the BIT layout:
     // `or word [this+0x39], 0x3ff` then `or word [this+0x3b], 0x3fff`
@@ -900,9 +902,9 @@ public:
     // ODD base - which is the alignment finding above, from the other
     // side.
     type_point m_puzzleGuess;
-    char m_deathCountDown;  // +0x3d
-    char m_numTowns;  // +0x3e
-    char m_currTownId;  // +0x3f (advManager::DeactivateCurrTown stores -1)
+    signed char m_deathCountDown;  // +0x3d
+    signed char m_numTowns;  // +0x3e
+    signed char m_currTownId;  // +0x3f (advManager::DeactivateCurrTown stores -1)
 #pragma pack(pop)
     // 0x48 entries, now PROVEN three ways: "nothing addresses
     // +0x40..+0x88" from the retail side; the DC repack lands
@@ -910,7 +912,7 @@ public:
     // 72 == 0x48 bytes); and playerData::Init (0x4b9e20) clears the row
     // with `lea edi,[this+0x40] / mov ecx,0x12 / rep stosd` - eighteen
     // dwords, i.e. exactly 72 bytes.
-    char m_townIds[0x48];  // +0x40
+    signed char m_townIds[0x48];  // +0x40
     unsigned char m_placementHelpEnabled;  // +0x88
     // +0x8c. DC `std::vector<type_point> shipyards` - twelve bytes of
     // STLport there, sixteen of Dinkumware here, which is exactly the
