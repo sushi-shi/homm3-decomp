@@ -8263,10 +8263,13 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
             }
             if (bestHero) {
                 g_heroWidgetMap[column] = bestHero->m_id;
+                // DC 9413/9414 re-fetch the hero by the recorded id before
+                // reading its portrait; retail expands that getHero here.
+                hero* portraitHero = g_game->getHero(g_heroWidgetMap[column]);
                 m_widgets.push_back(new bitmapBorder(
                     66 * column + 0x104, 0x168, 0x30, 0x20,
                     column + HERO_P0,
-                    g_heroTraits[bestHero->m_portrait].m_smallPortraitName,
+                    g_heroTraits[portraitHero->m_portrait].m_smallPortraitName,
                     0x800));
                 addWidget(m_widgets.back(), -1);
             }

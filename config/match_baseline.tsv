@@ -4538,7 +4538,7 @@ townmgr	?setRolloverText@TTavernWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d7
 townmgr	?setRolloverText@TThievesGuildWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1c9710	tokens1:bb1a351c81d5
 townmgr	?setupExtraStuff@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c33f0	tokens1:6120db6b71ee
 townmgr	?setupMage@townManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1d6ef0	tokens1:4683f38cbe85
-townmgr	?setupThievesGuild@TThievesGuildWindow@@QAEXH@Z	95.0293	95.0293	95.5153	0x1dda10	tokens1:2a91cf319b88
+townmgr	?setupThievesGuild@TThievesGuildWindow@@QAEXH@Z	95.5914	95.5914	95.5914	0x1dda10	tokens1:39b7d8316406
 townmgr	?setupTown@townManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x1c6870	tokens1:325444c41306
 townmgr	?setupWell@townManager@@QAEXPAVTCastleWindow@@@Z	100.0000	100.0000	100.0000	0x1dd390	tokens1:f0863358463a
 townmgr	?sortStats@@YIXPAJPAC@Z	100.0000	100.0000	100.0000	0x1df160	tokens1:1d69f70585ca
