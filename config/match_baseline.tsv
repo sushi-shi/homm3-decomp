@@ -981,7 +981,7 @@ cmbtmgr	?placeArmyInGrid@combatManager@@QAEXABVarmy@@H@Z	99.7727	99.7727	100.000
 cmbtmgr	?placeLargeObstacle@combatManager@@QAEHII@Z	100.0000	100.0000	100.0000	0x668a0	tokens1:270d600e050d
 cmbtmgr	?placeObstacle@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x66010	tokens1:61bcadb3f2ff
 cmbtmgr	?placeObstacle@combatManager@@QAEXABUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0	tokens1:08bb8ffb86af
-cmbtmgr	?powEffect@combatManager@@QAEXW4TSpellEffectID@@H@Z	95.8134	95.8134	96.2963	0x68990	tokens1:b9269194137f
+cmbtmgr	?powEffect@combatManager@@QAEXW4TSpellEffectID@@H@Z	97.2268	97.2268	97.2268	0x68990	tokens1:40cd410e70a8
 cmbtmgr	?raiseSkeletons@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x69f20	tokens1:7c42b2a81edb
 cmbtmgr	?removeArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100.0000	0x68730	tokens1:57afa9bc8dca
 cmbtmgr	?removeObstacle@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x66b30	tokens1:f41f0da4a94e
