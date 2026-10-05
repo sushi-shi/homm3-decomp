@@ -95,8 +95,60 @@ def msvc_dir(root=HOMM3_DIR):
     candidates.extend(root / path for path in locations or ["build/toolchain/msvc"])
     return next((path for path in candidates
                  if find_ci(path / "bin", "cl.exe")), candidates[0])
+class WineUnavailable(SystemExit):
+    """Wine could not translate a path, so no Wine tool can run here.
+
+    A SystemExit carrying the explanation: every entry point (ninja's cc_wrap
+    rule, `homm3 sema/vc6`, the linker) stops with the message and a non-zero
+    status instead of a traceback, while a caller that can do without Wine
+    may still catch it.
+    """
+
+    def __init__(self, message: str):
+        super().__init__(f"[cc_wrap] ERROR: {message}")
+        self.message = message
+
+
+def wine_failure_advice(stderr: str) -> str:
+    """One actionable explanation for a failed Wine helper launch."""
+    prefix = os.environ.get("WINEPREFIX") or "(unset; ~/.wine)"
+    lower = stderr.lower()
+    if any(s in lower for s in ("operation not permitted", "permission denied",
+                                "read-only file system")):
+        cause = ("Wine was denied access: wineserver must create its socket "
+                 "under /tmp and write the prefix. A sandboxed shell blocks "
+                 "this; rerun the command outside the sandbox (or with "
+                 "escalated permissions).")
+    elif "not owned by you" in lower:
+        cause = ("the Wine prefix belongs to another user; point WINEPREFIX "
+                 "at a prefix you own or run `homm3 init --force`.")
+    elif any(s in lower for s in ("could not load", "failed to initialize",
+                                  "wine: could not", "wineboot")):
+        cause = ("the Wine prefix is not initialised or is damaged; run "
+                 "`homm3 init --force` to recreate build/wineprefix.")
+    else:
+        cause = ("check that the Wine prefix exists and is writable, and "
+                 "stop a stale server with `wineserver -k` before retrying.")
+    return f"{cause} WINEPREFIX={prefix}"
+
+
 def winepath_w(p):
-    return subprocess.check_output(["winepath", "-w", str(p)], text=True, stderr=subprocess.DEVNULL).strip()
+    """Translate a Linux path for Wine, or stop with an actionable error."""
+    try:
+        result = subprocess.run(["winepath", "-w", str(p)], text=True,
+                                stdin=subprocess.DEVNULL, capture_output=True)
+    except FileNotFoundError:
+        raise WineUnavailable("winepath not found on PATH - run inside "
+                              "`nix develop .#build`.") from None
+    translated = result.stdout.strip()
+    if result.returncode == 0 and translated:
+        return translated
+    detail = "\n".join(result.stderr.strip().splitlines()[-12:])
+    raise WineUnavailable(
+        f"`winepath -w {p}` failed (exit {result.returncode}); "
+        + wine_failure_advice(result.stderr)
+        + (f"\n[cc_wrap] winepath stderr:\n{detail}" if detail else
+           "\n[cc_wrap] winepath printed no diagnostics."))
 def ensure_wineserver():
     ws = shutil.which("wineserver")
     if ws: subprocess.run([ws, "-p"], check=False, stdin=subprocess.DEVNULL,

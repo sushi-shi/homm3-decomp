@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
+from homm3.core import cc_wrap
 from homm3.core.cc_wrap import _compile_staged
 
 
@@ -103,6 +107,70 @@ class StagedObjectTests(unittest.TestCase):
                 ("compiler error", 1, False))
             self.assertEqual(out.read_bytes(), b"previous")
             self.assertEqual(list(Path(tmp).glob(".*.tmp.obj")), [])
+
+
+def _fake_tool(directory: Path, name: str, body: str) -> None:
+    tool = directory / name
+    tool.write_text("#!/bin/sh\n" + body)
+    tool.chmod(0o755)
+
+
+class WinepathFailureTests(unittest.TestCase):
+    """A failed `winepath -w` used to surface as a raw CalledProcessError
+    traceback with Wine's own explanation discarded (stderr=DEVNULL)."""
+
+    def test_failure_reports_stderr_and_advice(self):
+        failed = subprocess.CompletedProcess(
+            ["winepath"], 1, stdout="",
+            stderr="wineserver: bind /tmp/.wine-1000: Operation not permitted\n")
+        with patch.object(cc_wrap.subprocess, "run", return_value=failed), \
+                patch.dict(os.environ, {"WINEPREFIX": "/x/build/wineprefix"}):
+            with self.assertRaises(cc_wrap.WineUnavailable) as caught:
+                cc_wrap.winepath_w("/x/src/a.cpp")
+        message = str(caught.exception.code)
+        self.assertIn("Operation not permitted", message)
+        self.assertIn("sandbox", message)
+        self.assertIn("WINEPREFIX=/x/build/wineprefix", message)
+        self.assertIsInstance(caught.exception, SystemExit)
+
+    def test_missing_winepath_names_the_toolchain_shell(self):
+        with patch.object(cc_wrap.subprocess, "run", side_effect=FileNotFoundError):
+            with self.assertRaises(cc_wrap.WineUnavailable) as caught:
+                cc_wrap.winepath_w("/x")
+        self.assertIn("nix develop .#build", str(caught.exception.code))
+
+    def test_success_returns_the_translated_path(self):
+        ok = subprocess.CompletedProcess(["winepath"], 0, stdout="Z:\\x\n",
+                                         stderr="fixme: noise\n")
+        with patch.object(cc_wrap.subprocess, "run", return_value=ok):
+            self.assertEqual(cc_wrap.winepath_w("/x"), "Z:\\x")
+
+    def test_compiler_wrapper_exits_without_a_traceback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            bin_dir = root / "bin"
+            bin_dir.mkdir()
+            _fake_tool(bin_dir, "wine", "exit 0\n")
+            _fake_tool(bin_dir, "wineserver", "exit 0\n")
+            _fake_tool(bin_dir, "winepath",
+                       "echo 'wineserver: bind: Operation not permitted' >&2\nexit 1\n")
+            msvc = root / "msvc"
+            (msvc / "bin").mkdir(parents=True)
+            (msvc / "bin/CL.EXE").write_bytes(b"")
+            src = root / "a.cpp"
+            src.write_text("int a;\n")
+            scripts = Path(__file__).resolve().parents[2]
+            env = dict(os.environ, PATH=f"{bin_dir}:{os.environ.get('PATH', '')}",
+                       MSVC_DIR=str(msvc), WINEPREFIX=str(root),
+                       PYTHONPATH=str(scripts))
+            result = subprocess.run(
+                [sys.executable, "-m", "homm3.core.cc_wrap", "--out",
+                 str(root / "a.obj"), "--src", str(src), "--", "/c"],
+                env=env, capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertIn("Operation not permitted", result.stderr)
+        self.assertIn("winepath -w", result.stderr)
 
 
 if __name__ == "__main__":
