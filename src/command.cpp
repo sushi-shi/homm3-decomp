@@ -1342,17 +1342,21 @@ bool combatManager::isOutsidePlacementBoundry(int group, int index)
         < m_placementBoundaryDepth * 2 + 15;
 }
 
-// A positive/zero return ladder changes the retained Windows helper
-// from 100% to 88.97% and its catapult expansion to 91.17%; DC line1947
-// and Mac's branchless final result support the single comparison return.
+// DC command.cpp:1941 selects the two castle-only targets; 1943/1944
+// checks their fortification level inside that guard. This nested source
+// form preserves the exact retained helper and all Windows caller scores.
+// Keep the final comparison return (DC cmp/pl/movt; Mac 0x8451c..0x8452c):
+// a positive/zero return ladder lowers this helper to 88.97% and its
+// catapult expansion to 91.17%.
 VA(0x00476440, 0x50)
 DC_ADDRESS(0x06d548, 0x42)
 MAC_ADDRESS(0x0844b0, 0x84)
 bool combatManager::validWallTarget(TWallTargetId wall)
 {
-    if ((wall == WALL_TARGET_0 || wall == WALL_TARGET_6)
-        && m_fortificationLevel < COMBAT_FORTIFICATION_CASTLE)
-        return 0;
+    if (wall == WALL_TARGET_0 || wall == WALL_TARGET_6) {
+        if (m_fortificationLevel < COMBAT_FORTIFICATION_CASTLE)
+            return 0;
+    }
     if (wall == WALL_TARGET_7
         && m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
         return 0;
