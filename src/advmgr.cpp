@@ -3737,12 +3737,14 @@ type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
     return getNormalCursor(currCell);
 }
 
+// The native shipwreck condition below is retained. Removing the previously
+// inferred VERIFY is byte-score-flat across this TU; the two-line DC gap
+// alone does not establish a release assertion.
 VA(0x0040e280, 0xD3)
 DC_ADDRESS(0x00f2c0, 0xe8)
 MAC_ADDRESS(0x00e4d8, 0x110)
 type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 {
-    HOMM3_RELEASE_VERIFY(currCell != 0);
     if ((getMapExtra(m_lastMapHover) & MAP_EXTRA_MONSTER)
         && (!currCell->m_isTrigger
             || !g_adventureObjectTraits[currCell->m_type].m_blocksLanding)) {
@@ -3767,6 +3769,8 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 }
 
 // E:\gamedcs\advmgr.cpp:4556
+// Visibility uses the acting-player mask (retail 0x69ccc4, DC giCurPlayerBit),
+// not the separately owned viewing-player mask at 0x69ccbc.
 // Native source reads the current-hero id at each use; a cached local breaks
 // retail's shared DWORD tests. Keep GetHero for the level guard (DC line 4595)
 // and GetCurrHero/getLocation for the current-hero branch (4642/4645).
@@ -3775,8 +3779,7 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 // The no-hero/current-hero split is if/else. Cursor exits remain at their
 // source sites: VC6 merges them into retail's shared tails. The same-hover
 // path returns without calling the window's ProcessHover. The off-map tail
-// uses OR between both frame bounds and !MouseInScrollZone; the waiting-hover
-// counterpart deliberately uses its different AND form.
+// uses OR between both frame bounds and !MouseInScrollZone.
 //
 // The path block keeps turns, mouseOffset and the cursor enum ahead of its
 // visited guard. Turn scaling follows advCommand=1; the unvisited branch sets
@@ -3812,7 +3815,7 @@ int advManager::processHover(int mouseX, int mouseY)
         m_lastMapHover.m_z = m_radarOrigin.m_z;
 
         if (!m_lastMapHover.isValid()
-            || !(getMapExtra(m_lastMapHover) & g_mapVisibilityBit)) {
+            || !(getMapExtra(m_lastMapHover) & g_curPlayerBit)) {
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
             return 1;
         }
