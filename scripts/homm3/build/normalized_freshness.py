@@ -46,26 +46,30 @@ class ValidationContext:
     """One operation's reads; writers forget changed outputs.
 
     Never retain this across commands, delinking or external input changes.
+    Keys are path strings: hashing pathlib objects dominated tree-wide checks.
     """
     def __init__(self):
         self.hashes = {}
         self.paths = {}
 
     def resolve(self, path: Path) -> Path:
-        if path not in self.paths:
-            resolved = path.resolve()
-            self.paths[path] = resolved
-            self.paths[resolved] = resolved
-        return self.paths[path]
+        key = os.fspath(path)
+        resolved = self.paths.get(key)
+        if resolved is None:
+            # Path.resolve() (non-strict) is os.path.realpath.
+            real = os.path.realpath(key)
+            resolved = self.paths.get(real) or Path(real)
+            self.paths[key] = self.paths[real] = resolved
+        return resolved
 
     def digest(self, path: Path) -> str:
-        path = self.resolve(path)
-        if path not in self.hashes:
-            self.hashes[path] = _sha256(path)
-        return self.hashes[path]
+        key = os.fspath(self.resolve(path))
+        if key not in self.hashes:
+            self.hashes[key] = _sha256(Path(key))
+        return self.hashes[key]
 
     def forget(self, path: Path):
-        self.hashes.pop(self.resolve(path), None)
+        self.hashes.pop(os.fspath(self.resolve(path)), None)
 
 
 def _sha256(path: Path) -> str:
@@ -83,6 +87,8 @@ def implementation_inputs() -> dict[str, Path]:
     to listed files invalidate existing stamps automatically; bump STAMP_SCHEMA
     when the stamp format or validation contract changes.
     """
+    if _IMPLEMENTATION_INPUTS:
+        return dict(_IMPLEMENTATION_INPUTS)
     directory = Path(__file__).parent
     paths = {"tool:" + name: directory / name for name in (
         "normalized_freshness.py", "normalize_objs.py", "canonicalize_data_symbols.py",
@@ -91,7 +97,11 @@ def implementation_inputs() -> dict[str, Path]:
         paths["tool:core/" + name] = directory.parent / "core" / name
     for name in ("compare/canonicalize.py", "core/msvc_names.py"):
         paths["tool:" + name] = directory.parent / name
-    return paths
+    _IMPLEMENTATION_INPUTS.update(paths)
+    return dict(paths)
+
+
+_IMPLEMENTATION_INPUTS: dict[str, Path] = {}
 
 
 def stamp_path(output: Path) -> Path:
@@ -185,17 +195,22 @@ def freshness_problems(output: Path, _seen: set | None = None, *,
     if 'sidecar_sha256' in payload and (not sidecar.is_file()
             or context.digest(sidecar) != payload['sidecar_sha256']):
         problems.append(f'{output} is stale: symbol sidecar changed; run `homm3 build`')
+    # String path operations: this runs for every object on each report.
+    parent = os.fspath(stamp.parent)
+
+    def located(reference: str) -> Path:
+        return context.resolve(os.path.join(parent, reference))
+
     for role, required in {**(required_inputs or {}), **implementation_inputs()}.items():
         record = records.get(role)
         if record is None:
             problems.append("%s stamp lacks required %s input" % (output, role))
-        elif context.resolve(stamp.parent / record.get("path", "")) != context.resolve(required):
+        elif os.fspath(located(record.get("path", ""))) != os.fspath(context.resolve(required)):
             problems.append("%s stamp has a different %s input path" % (output, role))
     for role, record in sorted(records.items()):
-        input_path = Path(record.get("path", ""))
-        if not input_path.is_absolute():
-            input_path = context.resolve(stamp.parent / input_path)
-        if not input_path.is_file():
+        reference = record.get("path", "")
+        input_path = Path(reference) if os.path.isabs(reference) else located(reference)
+        if not os.path.isfile(input_path):
             problems.append("%s input %s is missing: %s" % (output, role, input_path))
             continue
         if context.digest(input_path) != record.get("sha256"):
@@ -203,6 +218,6 @@ def freshness_problems(output: Path, _seen: set | None = None, *,
                 "%s is stale: %s input changed (%s); run `homm3 build`" %
                 (output, role, input_path))
             continue
-        if stamp_path(input_path).is_file():
+        if os.path.isfile(os.fspath(input_path) + STAMP_SUFFIX):
             problems.extend(freshness_problems(input_path, seen, context=context))
     return problems

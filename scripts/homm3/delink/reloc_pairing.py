@@ -666,9 +666,20 @@ def prove_folds(pairings: list[Pairing], *, name_at: Callable[[int], str | None]
 class RetailTwins:
     """Retail functions with byte-identical bodies and call targets."""
 
-    def __init__(self, img, sizes: dict[int, int]):
+    def __init__(self, img, sizes: dict[int, int],
+                 index: dict[bytes, list[int]] | None = None):
         self.img, self.sizes = img, sizes
-        self._index: dict[bytes, list[int]] | None = None
+        self._index = index
+
+    def index(self) -> dict[bytes, list[int]]:
+        """Function key -> retail starts; built once over every sized function."""
+        if self._index is None:
+            index: dict[bytes, list[int]] = defaultdict(list)
+            for start, size in self.sizes.items():
+                if size:
+                    index[self.key(start)].append(start)
+            self._index = dict(index)
+        return self._index
 
     def key(self, rva: int) -> bytes:
         from capstone import Cs, CS_ARCH_X86, CS_MODE_32
@@ -681,13 +692,7 @@ class RetailTwins:
         return bytes(body)
 
     def __call__(self, rva: int) -> list[int]:
-        if self._index is None:
-            index: dict[bytes, list[int]] = defaultdict(list)
-            for start, size in self.sizes.items():
-                if size:
-                    index[self.key(start)].append(start)
-            self._index = index
-        return [other for other in self._index.get(self.key(rva), ()) if other != rva]
+        return [other for other in self.index().get(self.key(rva), ()) if other != rva]
 
 
 PAIRINGS_HEADER = ["owner_rva", "symbol", "kind", "verdict", "reason", "votes",

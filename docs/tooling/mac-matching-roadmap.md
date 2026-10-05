@@ -12,19 +12,20 @@ unit's full-TU object (`build/mac/obj/<unit>.o`) emits. `homm3.mac.emitted`
 joins the claim to that hunk by qualified name, telling overloads apart by
 their mangled parameters, including when only one same-named symbol exists.
 Unsupported parameter types and platform-specific signature differences stay
-unscored until the join can verify their identity. `homm3 mac build` (run by `homm3 build`) links the
+unscored until the join can verify their identity. `homm3 mac build`
+(separate from the Windows-only `homm3 build`) links the
 hunk at the claimed address and compares it with the pinned PEF; the Mac
 CUR/MAX/HIST ledger `config/mac/match_baseline.tsv` is keyed by the VA, and a
 VA not scored in a checkpoint keeps its previous row. MAX follows the
 definition's own token fingerprint, as in the Windows ledger.
-The full checkpoint also records whether each pair scored. The next full
-build fails if an available pair becomes unavailable or its Mac CUR falls
+The Mac checkpoint also records whether each pair scored. The next Mac
+checkpoint fails if an available pair becomes unavailable or its Mac CUR falls
 below the preceding CUR. Historical unavailable rows are retained but are
 not mistaken for new losses. A reviewed move to a higher-level canonical
 helper can carry a one-checkpoint exception on its `MAC_ADDRESS` line:
 `// MAC_ABSTRACTION_FROM(tokens1:<old-hash>,<old-cur>): <specific reason>`.
 The hash and score must match the preceding ledger; a later drop needs new
-evidence. Fast builds remain diagnostic and do not update this checkpoint.
+evidence. Unit-selected Mac builds remain diagnostic and do not update this checkpoint.
 
 Call targets resolve from the same join: every symbol a full-TU object emits
 or references names the claim of the one definition it mangles, plus the
@@ -52,7 +53,7 @@ its emitted body. This keeps the pinned Mac evidence available while a TU is
 unbuildable; unsupported joins never become approximate byte verdicts.
 
 ```sh
-homm3 mac build --fast <unit>          # score one unit's pairs (full build: all, with checkpoint)
+homm3 mac build <unit>                 # score one unit's pairs (no units: all, with checkpoint)
 homm3 mac show <Windows-VA>            # claimed span and source, even without a candidate
 homm3 mac diff <Windows-VA>            # linked candidate vs retail, instruction by instruction
 homm3 mac shape <Windows-VA>           # relocation-masked comparison; works before references resolve
@@ -74,7 +75,7 @@ They can cross functions or contain inline data, and do not admit boundaries.
    proven single-function spans to `config/mac/functions.tsv`.
 2. Write `MAC_ADDRESS(0x0f3fe4, 0x568)` on its own line after the Windows
    `VA(0x004d8720, 0x568)` and any `DC_ADDRESS` claims. Run `homm3 mac parity`.
-3. Run `homm3 build --fast <unit>`, then `homm3 mac diff <Windows-VA>`. If the
+3. Run `homm3 mac build <unit>`, then `homm3 mac diff <Windows-VA>`. If the
    pair is unavailable, `build/mac/report.json` names the unresolved callee or
    TOC datum; add the reviewed runtime label or data binding below.
 

@@ -43,6 +43,7 @@ class BuildModeTest(unittest.TestCase):
             ("delink", delink, "run", 0),
             ("normalize", normalize_objs, "normalize_all", 0),
             ("report", status, "refresh_report", {}),
+            ("stale_check", status, "comparison_problems", []),
             ("fingerprints", status, "source_hash_pair", ({}, {})),
             ("fast_max", status, "fast_max_movements", None),
             ("mac", mac_build, "run", []),
@@ -67,19 +68,29 @@ class BuildModeTest(unittest.TestCase):
     def test_full_build_refreshes_existing_targets_before_checkpoint(self):
         self.assertEqual(build.main([]), 0)
         self.assertEqual(self.events, ["configure", "compile", "delink", "report",
-                                      "fingerprints", "mac", "history", "check", "checkpoint", "link", "banked", "claims",
-                                      "single_view", "origins", "ownership", "inventory", "cleanliness", "data_accounting", "readme"])
+                                      "fingerprints", "history", "check", "checkpoint", "link", "banked", "claims",
+                                      "single_view", "origins", "ownership", "inventory", "cleanliness", "readme"])
         self.mocks["compile"].assert_called_once_with("ninja")
         self.mocks["normalize"].assert_not_called()  # delink already normalizes
-        self.assertEqual(self.preflight.call_count, 3)
-        self.mocks["mac"].assert_called_once_with(None, checkpoint=True)
+        self.assertEqual(self.preflight.call_count, 2)  # Windows + Dreamcast only
+        self.mocks["mac"].assert_not_called()  # Mac is `homm3 mac build` only
+        self.mocks["fingerprints"].assert_called_once_with(only_units=None)
+        self.mocks["data_accounting"].assert_not_called()
+        self.mocks["readme"].assert_called_once_with({}, data_accounting=None)
         self.mocks["origins"].assert_called_once_with(include_declarations=True)
         self.mocks["ownership"].assert_called_once_with(origins=[])
         self.mocks["cleanliness"].assert_called_once_with(write=True, dc_origins=[])
 
+    def test_data_opt_in_refreshes_byte_accounting_before_readme(self):
+        self.assertEqual(build.main(["--data"]), 0)
+        self.assertEqual(self.events[-2:], ["data_accounting", "readme"])
+        self.mocks["compile"].assert_called_once_with("ninja")
+        self.mocks["readme"].assert_called_once_with(
+            {}, data_accounting={"totals": {"file": {}}, "initializers": []})
+
     def test_link_failure_fails_checkpoint_but_keeps_evidence_gates(self):
         self.mocks['link'].side_effect = lambda: 1
-        self.assertEqual(build.main([]), 1)
+        self.assertEqual(build.main(["--data"]), 1)
         self.mocks['claims'].assert_called_once()
         self.mocks['data_accounting'].assert_called_once()
         self.mocks['readme'].assert_called_once()
@@ -87,7 +98,7 @@ class BuildModeTest(unittest.TestCase):
 
     def test_unavailable_byte_accounting_fails_without_hiding_other_gates(self):
         self.mocks['data_accounting'].side_effect = ValueError('invalid extent')
-        self.assertEqual(build.main([]), 1)
+        self.assertEqual(build.main(["--data"]), 1)
         self.mocks['claims'].assert_called_once()
         self.mocks['readme'].assert_called_once_with({}, data_accounting=None)
 
@@ -135,32 +146,38 @@ class BuildModeTest(unittest.TestCase):
         self.mocks['inventory'].assert_called_once_with(origins=[])
         self.mocks['cleanliness'].assert_called_once_with(write=False, dc_origins=[])
         self.assertIn('SOURCE-INVENTORY', self.stderr.getvalue())
+        self.assertIn('FAILED gates (details above): source_inventory (1 finding(s))',
+                      self.stderr.getvalue())
 
     def test_fast_build_preserves_targets_and_skips_checkpoint(self):
         self.assertEqual(build.main(["--fast", "cursor"]), 0)
-        self.assertEqual(self.events, ["configure", "compile", "normalize", "configure", "report", "fingerprints", "mac", "fast_max"])
+        self.assertEqual(self.events, ["configure", "compile", "normalize", "stale_check",
+                                       "configure", "report", "fingerprints", "fast_max"])
         self.mocks["compile"].assert_called_once_with("ninja", "cursor")
         self.assertEqual(self.target.read_bytes(), b"existing retail target")
         self.mocks["delink"].assert_not_called()
         self.mocks["checkpoint"].assert_not_called()
         self.mocks["link"].assert_not_called()
         self.preflight.assert_not_called()
-        self.mocks["mac"].assert_called_once_with({"cursor"}, checkpoint=False)
+        self.mocks["mac"].assert_not_called()
+        # Only the selected unit is normalized and fingerprinted.
+        self.mocks["normalize"].assert_called_once_with({"cursor"})
+        self.mocks["fingerprints"].assert_called_once_with(only_units={"cursor"})
         self.mocks["fast_max"].assert_called_once_with({}, {"cursor"}, ({}, {}))
 
-    def test_mac_tool_error_preserves_windows_gates_and_fails(self):
-        self.mocks["mac"].side_effect = ValueError("unresolved Mac relocation")
-        self.assertEqual(build.main([]), 1)
-        self.mocks["checkpoint"].assert_called_once()
-        self.mocks["ownership"].assert_called_once()
-        self.mocks["readme"].assert_called_once()
-        self.mocks["cleanliness"].assert_called_once_with(write=False, dc_origins=[])
+    def test_fast_build_renormalizes_everything_when_another_unit_is_stale(self):
+        self.mocks["stale_check"].side_effect = lambda context: ["hero.obj is stale"]
+        self.assertEqual(build.main(["--fast", "cursor"]), 0)
+        self.assertEqual([c.args for c in self.mocks["normalize"].call_args_list],
+                         [({"cursor"},), ()])
+        self.mocks["report"].assert_called_once_with(None)
 
-    def test_mac_score_difference_is_observational(self):
-        self.mocks["mac"].side_effect = None
-        self.mocks["mac"].return_value = [{"exact": False, "score": 95.0}]
-        self.assertEqual(build.main(["--fast", "hero"]), 0)
-        self.mocks["mac"].assert_called_once_with({"hero"}, checkpoint=False)
+    def test_fast_build_without_a_unit_keeps_the_complete_pass(self):
+        self.assertEqual(build.main(["--fast"]), 0)
+        self.mocks["normalize"].assert_called_once_with(None)
+        self.mocks["stale_check"].assert_not_called()
+        self.mocks["fingerprints"].assert_called_once_with(only_units=None)
+        self.mocks["fast_max"].assert_called_once_with({}, None, ({}, {}))
 
     def test_fast_build_cannot_silently_bootstrap_a_delink(self):
         self.target.unlink()

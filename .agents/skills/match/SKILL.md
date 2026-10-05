@@ -18,9 +18,9 @@ changing cwd alone does not select the worktree. Keep build outputs separate
 between workers and do not edit inputs another worker is compiling.
 
 Start from the existing retail targets and checkpoint. Use `homm3 build --fast <TU>` for
-routine iterations: it compiles and compares the selected Windows TU and
-admitted Mac counterparts, then reports per-function projected MAX movement
-without banking the ledger. After source, header, profile, claim or merge
+routine iterations: it compiles and compares the selected Windows TU, then
+reports per-function projected MAX movement without banking the ledger. Check
+Mac counterparts occasionally with `homm3 mac build <TU>`. After source, header, profile, claim or merge
 changes, refresh the affected TU before reusing its score. Inspect a failing
 command's actual cause and repair only the inputs needed for that build.
 Routine matching needs no full build, tests or standalone validation checks.

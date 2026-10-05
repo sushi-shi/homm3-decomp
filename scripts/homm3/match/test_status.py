@@ -43,7 +43,9 @@ class ReadmeUniverseTest(unittest.TestCase):
         summary = ({r: 'target' for r in rvas.values()}, {}, {'target': (6, 60)})
         with tempfile.TemporaryDirectory() as tmp:
             readme = Path(tmp) / 'README.md'
-            readme.write_text(status.RM_START + '\n' + status.RM_END + '\n')
+            # Byte accounting is opt-in; without it the last measured line stays.
+            kept = '**Byte accountability:** 7 file bytes unclaimed.'
+            readme.write_text(status.RM_START + '\n' + kept + '\n' + status.RM_END + '\n')
             with mock.patch.object(status, 'README_PATH', readme), \
                  mock.patch.object(status, 'load_baseline', return_value={}), \
                  mock.patch.object(status, 'source_hash_pair', return_value=({}, {})), \
@@ -61,6 +63,7 @@ class ReadmeUniverseTest(unittest.TestCase):
             self.assertEqual(rows['`victor`'][0:2], ['1', '1 / 1 (100.0%)'])
             self.assertEqual(rows['`zlib-1.1.3`'][0:2], ['1', '1 / 1 (100.0%)'])
             self.assertIn('6 / 6 current implementations', text)
+            self.assertEqual(text.count(kept), 1)
 
 
 class UpdateRowsTest(unittest.TestCase):
@@ -127,6 +130,17 @@ class UpdateRowsTest(unittest.TestCase):
         self.assertNotIn("dip [", text)
         self.assertNotIn("hero:", text)
         write.assert_not_called()
+        # `homm3 build --fast cursor` fingerprints only cursor; even an
+        # unselected unit's edit cannot change the selected projection.
+        scoped = {key: value for key, value in hashes.items() if key[0] == "cursor"}
+        hashes[("hero", "other")] = "edited"
+        for pair in ((hashes, {}), (scoped, {})):
+            again = io.StringIO()
+            with mock.patch.object(status, "load_baseline", return_value=rows), \
+                    mock.patch.object(status, "function_rvas", return_value=rvas), \
+                    contextlib.redirect_stdout(again):
+                status.fast_max_movements(report, {"cursor", "empty"}, pair)
+            self.assertEqual(again.getvalue(), text)
 
     def test_unscoped_fast_loop_suppresses_unchanged_unit_rows(self):
         key = ("unit", "held")

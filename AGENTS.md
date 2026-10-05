@@ -58,8 +58,8 @@ Use `homm3 build --fast <TU>` (for example, `homm3 build --fast cursor`) for the
 inner loop. Normally supply the active TU so shared-header edits rebuild only
 that TU during iteration. It reports the selected TU's per-function projected
 MAX movements without banking them; unchanged-source CUR dips stay silent.
-That TU's Mac pairs are scored from its full-TU CodeWarrior object in the
-same loop.
+Mac pairs are not part of `homm3 build`; check them occasionally with
+`homm3 mac build <TU>` (see below).
 
 For ordinary matching, improve the current Windows game function using native
 evidence, run the targeted build, regenerate README with
@@ -73,6 +73,8 @@ Workers use separate worktrees and return their commits for integration; the
 coordinator regenerates the combined README and pushes to the default branch.
 A full `homm3 build` is available when explicitly requested for a broader
 checkpoint; it is not a prerequisite for publishing a matching improvement.
+It is Windows-only (VC6 compile, retail delink, ledger, gates, README);
+`--data` adds byte accounting.
 
 When an interface recovery changes a compared symbol name, compile its owning
 TU and refresh targets with `homm3 delink --unit <TU>`; repeat `--unit` for
@@ -137,14 +139,17 @@ Mac linking inventories are not a required work queue.
 `homm3 mac calls <Windows-VA>` compares call sites and ordered targets.
 Indirect calls through the reviewed Mac glue remain explicitly unknown;
 equal aggregate counts do not prove a matching helper/inlining decision.
-The full build gates every currently scored Mac pair against its preceding
-Mac CUR and refuses loss of a previously available comparison. Preserve Mac
+Mac scoring is a separate, occasional check outside `homm3 build`:
+`homm3 mac build <TU>` scores that TU's pairs from its full-TU CodeWarrior
+object without checkpointing. `homm3 mac build` without units gates every
+currently scored Mac pair against its preceding Mac CUR, refuses loss of a
+previously available comparison, and banks the Mac ledger. Preserve Mac
 score while matching Windows. A proven move to a higher-level canonical helper
 may lower Mac temporarily; document that one checkpoint on the function's
 `MAC_ADDRESS` line with
 `// MAC_ABSTRACTION_FROM(tokens1:<old-hash>,<old-cur>): <specific reason>`.
 The old hash and score must match the preceding ledger, so this cannot waive
-later regressions. Fast builds report scores without checkpointing.
+later regressions. Unit-selected Mac builds report scores without checkpointing.
 A pair is a source `MAC_ADDRESS` claim whose body the unit's full-TU
 CodeWarrior object (`ninja mac:<unit>`) emits; `homm3 mac build` scores it.
 Follow the [Mac tooling guide](docs/tooling/mac-matching-roadmap.md) to add

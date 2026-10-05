@@ -7,7 +7,7 @@ annotations. It replaces the separate byte-accounting approach proposed in #73.
 ## Workflow
 
 ```sh
-homm3 build                         # compile, delink, compare, checkpoint, README
+homm3 build --data                  # Windows build + checkpoint, README, byte accounting
 homm3 compare                       # compare existing objects; no compilation or checkpoint
 homm3 compare --reference previous-report.json
 homm3 verify data-coverage --all-bytes
@@ -581,7 +581,8 @@ reviewed files and reruns the accounting otherwise. `--retire` deletes each
 fully superseded row and rewrites a partially superseded one as its
 uncovered remainder with the same evidence.
 
-Every full build rewrites the proposal file with the gaps the generators
+Every byte accounting (`homm3 build --data` or `homm3 verify data-coverage`)
+rewrites the proposal file with the gaps the generators
 would still credit; `data_coverage.json["padding"]` holds the proposals and
 the reviewed rows per proof class.
 

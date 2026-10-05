@@ -19,11 +19,15 @@ from homm3.build.normalized_freshness import stamp_path, write_stamp
 class NormalizeUnitTest(unittest.TestCase):
     def setUp(self):
         self.enterContext(patch.object(normalize_objs, "retail_image_base", return_value=0x400000))
+        # Process-wide indexes must not leak between fixtures.
+        self.enterContext(patch.object(normalize_objs, "_ICF_INDEX", None))
+        self.enterContext(patch.object(normalize_objs, "_RETAIL_TWINS", None))
         self.dir = tempfile.TemporaryDirectory()
         root = Path(self.dir.name)
         self.enterContext(patch.object(normalize_objs, 'DATA_MANIFEST', root / 'data.tsv'))
         self.enterContext(patch.object(normalize_objs, "FUNCLETS", root / "funclets.tsv"))
         self.enterContext(patch.object(normalize_objs, "FUNCTIONS", root / "functions.tsv"))
+        (root / "functions.tsv").write_text("rva\tsize\n")
         self.objdiff = root / "objdiff"
         (self.objdiff / "base").mkdir(parents=True)
         (self.objdiff / "target").mkdir(parents=True)
@@ -65,6 +69,52 @@ class NormalizeUnitTest(unittest.TestCase):
         tree = self._normalized()
         for key, data in alone.items():
             self.assertEqual(tree[key], data, key)
+
+    def test_scoped_tree_pass_matches_the_complete_pass(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            counts = normalize_objs.normalize_all({"probe"})
+        self.assertEqual(counts["wrote"], 2)
+        scoped = self._normalized()
+        self.assertFalse((self.objdiff / "normalized/base/lonely.obj").exists())
+        shutil.rmtree(self.objdiff / "normalized")
+        normalize_objs._ICF_INDEX = None
+        with contextlib.redirect_stdout(io.StringIO()):
+            normalize_objs.normalize_all()
+        tree = self._normalized()
+        self.assertIn("normalized/base/lonely.obj", tree)
+        for key, data in scoped.items():
+            self.assertEqual(tree[key], data, key)
+
+    def test_icf_index_cache_reuses_only_unchanged_objects(self):
+        normalize_objs.normalize_unit("probe")
+        cold = normalize_objs._icf_index()
+        self.assertTrue((self.objdiff.parent / "gen/cache/icf-bodies.pickle").is_file())
+        normalize_objs._ICF_INDEX = None
+        with patch.object(normalize_objs.canon, "CoffObject",
+                          side_effect=AssertionError("unchanged object reparsed")):
+            self.assertEqual(normalize_objs._icf_index(), cold)
+        normalize_objs._ICF_INDEX = None
+        changed = self.objdiff / "normalized/base/probe.obj"
+        changed.write_bytes(changed.read_bytes() + b"\0")
+        parse = normalize_objs.canon.CoffObject
+        with patch.object(normalize_objs.canon, "CoffObject", wraps=parse) as parsed:
+            normalize_objs._icf_index()
+            parsed.assert_called_once()
+
+    def test_retail_twin_index_cache_is_keyed_by_the_census(self):
+        from types import SimpleNamespace
+        image = SimpleNamespace(pe=SimpleNamespace(read=lambda rva, size: b"\xc3" * size))
+        normalize_objs.FUNCTIONS.write_text("rva\tsize\n0x1000\t1\n0x1010\t1\n")
+        with patch("homm3.delink.image.retail", return_value=image):
+            first = normalize_objs._retail_twins()
+            self.assertEqual(first(0x1000), [0x1010])
+            normalize_objs._RETAIL_TWINS = None
+            cached = normalize_objs._retail_twins()
+            self.assertEqual(cached._index, first.index())
+            normalize_objs._RETAIL_TWINS = None
+            normalize_objs.FUNCTIONS.write_text("rva\tsize\n0x1000\t1\n")
+            rebuilt = normalize_objs._retail_twins()
+            self.assertEqual(rebuilt(0x1000), [])
 
     def test_changed_funclet_inventory_invalidates_both_paired_stamps(self):
         normalize_objs.FUNCLETS.write_text("rva\tparent_rva\tstate\n")
