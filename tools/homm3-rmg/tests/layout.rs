@@ -273,7 +273,7 @@ fn assert_layout(
         rng.state()
     )
     .unwrap();
-    for player in selected.players() {
+    for (_, player) in selected.players().iter() {
         write!(
             checkpoint,
             "{} ",

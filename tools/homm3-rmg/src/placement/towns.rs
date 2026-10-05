@@ -12,10 +12,10 @@ use crate::{
     object::ObjectKind,
     prototype::{OutlineWorkspace, PreparedPrototype, PrototypeCatalog, PrototypeRef},
     raw,
-    request::{MapVersion, Town, PLAYER_COUNT},
+    request::{MapVersion, PerColour, Town, PLAYER_COUNT},
     rng::{RetailRng, RngCheckpoint},
     selection::Player,
-    template::{Placement, ZoneRole},
+    template::{Placement, SlotUse, ZoneRole},
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
@@ -484,8 +484,7 @@ impl PlacementMap<'_, '_, '_> {
         objects: &ObjectArena,
         catalog: &PrototypeCatalog<'_>,
     ) -> Result<bool, PlacementError> {
-        let mut humans = [false; PLAYER_COUNT];
-        let mut players = [false; PLAYER_COUNT];
+        let mut seated = PerColour::new([None; PLAYER_COUNT]);
         let map = self.coverage().map();
         for zone in map.zones() {
             let (Some(entrance), Some(rules)) = (zone.primary_town(), map.template_zone(zone))
@@ -510,14 +509,19 @@ impl PlacementMap<'_, '_, '_> {
             if !owned {
                 return Ok(false);
             }
-            players[player.index()] = true;
             if matches!(rules.role(), ZoneRole::Human(_)) {
-                humans[player.index()] = true;
+                seated[player] = Some(SlotUse::Human);
+            } else {
+                seated[player].get_or_insert(SlotUse::Computer);
             }
         }
         let human_count = usize::from(map.request().human_players().get());
-        Ok(humans.into_iter().filter(|&yes| yes).count() >= human_count
-            && players.into_iter().filter(|&yes| yes).count()
-                >= human_count + usize::from(map.request().computer_players().get()))
+        let humans = seated
+            .iter()
+            .filter(|(_, use_)| **use_ == Some(SlotUse::Human))
+            .count();
+        let players = seated.iter().filter(|(_, use_)| use_.is_some()).count();
+        Ok(humans >= human_count
+            && players >= human_count + usize::from(map.request().computer_players().get()))
     }
 }

@@ -7,7 +7,13 @@ use crate::{
     request::{MapVersion, Request, Town, Water, PLAYER_COUNT},
 };
 use homm3_resource::{Field, Spreadsheet, SpreadsheetRow};
-use std::{borrow::Cow, error::Error, fmt, num::NonZeroU32};
+use std::{
+    borrow::Cow,
+    error::Error,
+    fmt,
+    num::NonZeroU32,
+    ops::{Index, IndexMut},
+};
 
 const COLUMNS: usize = raw::RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_PLAYERS as usize + 1;
 const TOWNS: usize = raw::TOWN_TYPE_COUNT as usize;
@@ -232,6 +238,45 @@ impl PlayerSlot {
     pub const fn index(self) -> usize {
         self.0 as usize
     }
+    /// Every template slot in order.
+    pub fn all() -> impl DoubleEndedIterator<Item = Self> + ExactSizeIterator + Clone {
+        const { assert!(PLAYER_COUNT <= u8::MAX as usize) };
+        (0..=u8::MAX).map(Self).take(PLAYER_COUNT)
+    }
+}
+
+/// One value per template player slot, indexed by `PlayerSlot`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PerSlot<T>([T; PLAYER_COUNT]);
+impl<T> PerSlot<T> {
+    /// Values in slot order.
+    pub const fn new(values: [T; PLAYER_COUNT]) -> Self {
+        Self(values)
+    }
+    /// Values with their slots, in slot order.
+    pub fn iter(&self) -> impl DoubleEndedIterator<Item = (PlayerSlot, &T)> {
+        PlayerSlot::all().zip(&self.0)
+    }
+}
+impl<T> Index<PlayerSlot> for PerSlot<T> {
+    type Output = T;
+    fn index(&self, slot: PlayerSlot) -> &T {
+        &self.0[slot.index()]
+    }
+}
+impl<T> IndexMut<PlayerSlot> for PerSlot<T> {
+    fn index_mut(&mut self, slot: PlayerSlot) -> &mut T {
+        &mut self.0[slot.index()]
+    }
+}
+
+/// The most capable starting zone a template offers for one player slot.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SlotUse {
+    /// At least one human-capable starting zone.
+    Human,
+    /// Only computer starting zones.
+    Computer,
 }
 
 /// Player zones require a player slot; other zones may have no owner.
@@ -458,28 +503,30 @@ impl Template<'_> {
         &self.zones[id.index()]
     }
 
-    /// Distinct human/all slots, used later by player assignment.
+    /// Distinct player slots with their most capable starting zone, used
+    /// later by player assignment.
     #[must_use]
-    pub fn player_slots(&self) -> ([bool; PLAYER_COUNT], [bool; PLAYER_COUNT]) {
-        let mut humans = [false; PLAYER_COUNT];
-        let mut all = [false; PLAYER_COUNT];
+    pub fn player_slots(&self) -> PerSlot<Option<SlotUse>> {
+        let mut slots = PerSlot::new([None; PLAYER_COUNT]);
         for zone in &self.zones {
             match zone.role {
-                ZoneRole::Human(slot) => {
-                    humans[slot.index()] = true;
-                    all[slot.index()] = true;
+                ZoneRole::Human(slot) => slots[slot] = Some(SlotUse::Human),
+                ZoneRole::Computer(slot) => {
+                    slots[slot].get_or_insert(SlotUse::Computer);
                 }
-                ZoneRole::Computer(slot) => all[slot.index()] = true,
                 _ => {}
             }
         }
-        (humans, all)
+        slots
     }
 
     fn admits(&self, request: &Request) -> bool {
-        let (humans, all) = self.player_slots();
-        let humans = humans.into_iter().filter(|&b| b).count();
-        let all = all.into_iter().filter(|&b| b).count();
+        let slots = self.player_slots();
+        let all = slots.iter().filter(|(_, use_)| use_.is_some()).count();
+        let humans = slots
+            .iter()
+            .filter(|(_, use_)| **use_ == Some(SlotUse::Human))
+            .count();
         humans >= usize::from(request.human_players().get())
             && all >= usize::from(request.human_players().get() + request.computer_players().get())
     }
@@ -1090,8 +1137,8 @@ mod tests {
         let candidates = source.prepare(&request, Water::None).unwrap();
         let mut rng = RetailRng::new(1);
         let selected = SelectedTemplate::select(&candidates, &request, &mut rng).unwrap();
-        assert_eq!(selected.players()[2].unwrap().index(), 5);
-        assert_eq!(selected.players()[6].unwrap().index(), 0);
+        assert_eq!(selected.players()[PlayerSlot(2)].unwrap().index(), 5);
+        assert_eq!(selected.players()[PlayerSlot(6)].unwrap().index(), 0);
         assert_eq!(rng.draws(), 1);
 
         let bytes = sheet(&[zone_row("repeated", 1, 3), zone_row("", 2, 3)]);

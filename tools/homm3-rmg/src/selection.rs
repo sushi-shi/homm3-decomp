@@ -1,10 +1,11 @@
 //! Ordered template selection and player-to-template assignment.
 
+pub use crate::request::Player;
 use crate::{
     raw,
     request::{Request, Water, WaterChoice, PLAYER_COUNT},
     rng::RetailRng,
-    template::{PlayerSlot, RetailTemplateFault, Template, TemplateCandidate},
+    template::{PerSlot, PlayerSlot, RetailTemplateFault, SlotUse, Template, TemplateCandidate},
 };
 use std::{error::Error, fmt, num::NonZeroU32};
 
@@ -12,17 +13,6 @@ const WATER_CHOICES: NonZeroU32 = match NonZeroU32::new(raw::RMG_WATER_RANDOM) {
     Some(count) => count,
     None => panic!("the source water domain must not be empty"),
 };
-
-/// A playable colour, distinct from a template's player slot.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Player(u8);
-impl Player {
-    /// Index into request colour arrays.
-    #[must_use]
-    pub const fn index(self) -> usize {
-        self.0 as usize
-    }
-}
 
 /// Failure to select and seat the requested players.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -67,7 +57,7 @@ pub fn resolve_water(choice: WaterChoice, rng: &mut RetailRng) -> Water {
 #[derive(Debug)]
 pub struct SelectedTemplate<'a> {
     template: &'a Template<'a>,
-    players: [Option<Player>; PLAYER_COUNT],
+    players: PerSlot<Option<Player>>,
     source_index: usize,
 }
 impl<'a> SelectedTemplate<'a> {
@@ -95,36 +85,35 @@ impl<'a> SelectedTemplate<'a> {
                 return Err(SelectionError::RetailTemplate(*fault))
             }
         };
-        let (humans, mut available) = template.player_slots();
-        let mut player_order = [Player(0); PLAYER_COUNT];
-        let mut order = 0;
-        for fixed in [true, false] {
-            for (index, &is_fixed) in (0_u8..).zip(request.human_seats()) {
-                if is_fixed == fixed {
-                    player_order[order] = Player(index);
-                    order += 1;
-                }
-            }
-        }
-        let mut players = [None; PLAYER_COUNT];
-        let mut human_slots = humans
+        let slots = template.player_slots();
+        let seats = request.human_seats();
+        let colours = |human: bool| {
+            seats
+                .iter()
+                .filter(move |&(_, &seat)| seat == human)
+                .map(|(player, _)| player)
+        };
+        let mut player_order = colours(true).chain(colours(false));
+        let mut players = PerSlot::new([None; PLAYER_COUNT]);
+        let mut human_slots = slots
             .iter()
-            .enumerate()
-            .filter_map(|(slot, &used)| used.then_some(slot));
-        let human_count = usize::from(request.human_players().get());
-        let total = human_count + usize::from(request.computer_players().get());
-        for &player in &player_order[..human_count] {
+            .filter(|(_, use_)| **use_ == Some(SlotUse::Human))
+            .map(|(slot, _)| slot);
+        let humans = usize::from(request.human_players().get());
+        let computers = usize::from(request.computer_players().get());
+        for player in player_order.by_ref().take(humans) {
             let slot = human_slots
                 .next()
                 .ok_or(SelectionError::InsufficientSlots)?;
             players[slot] = Some(player);
-            available[slot] = false;
         }
-        let mut computer_slots = available
+        // Unused human-capable slots remain available to computer players.
+        let seated_humans = players;
+        let mut computer_slots = slots
             .iter()
-            .enumerate()
-            .filter_map(|(slot, &used)| used.then_some(slot));
-        for &player in &player_order[human_count..total] {
+            .filter(|&(slot, use_)| use_.is_some() && seated_humans[slot].is_none())
+            .map(|(slot, _)| slot);
+        for player in player_order.take(computers) {
             let slot = computer_slots
                 .next()
                 .ok_or(SelectionError::InsufficientSlots)?;
@@ -152,12 +141,12 @@ impl<'a> SelectedTemplate<'a> {
     /// Player assigned to a template slot, or no owner for an unused slot.
     #[must_use]
     pub fn player(&self, slot: PlayerSlot) -> Option<Player> {
-        self.players[slot.index()]
+        self.players[slot]
     }
 
     /// Complete assignment in template slot order.
     #[must_use]
-    pub const fn players(&self) -> &[Option<Player>; PLAYER_COUNT] {
+    pub const fn players(&self) -> &PerSlot<Option<Player>> {
         &self.players
     }
 }

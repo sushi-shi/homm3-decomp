@@ -7,7 +7,7 @@ use crate::{
     request::{Levels, Request, Town, TownChoice, Water},
     rng::RetailRng,
     selection::{Player, SelectedTemplate},
-    template::{Template, TemplateZoneId, Zone, ZoneRole},
+    template::{PerSlot, Template, TemplateZoneId, Zone, ZoneRole},
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
@@ -109,7 +109,7 @@ pub struct Layout<'workspace, 'context> {
     template: &'context Template<'context>,
     request: &'context Request,
     water: Water,
-    players: [Option<Player>; crate::request::PLAYER_COUNT],
+    players: PerSlot<Option<Player>>,
 }
 impl<'context> Layout<'_, 'context> {
     /// Completed zone positions in source order, borrowing workspace storage.
@@ -132,7 +132,7 @@ impl<'context> Layout<'_, 'context> {
     pub const fn water(&self) -> Water {
         self.water
     }
-    pub(crate) const fn players(&self) -> [Option<Player>; crate::request::PLAYER_COUNT] {
+    pub(crate) const fn players(&self) -> PerSlot<Option<Player>> {
         self.players
     }
 }
@@ -194,7 +194,7 @@ impl LayoutWorkspace {
                 .ok_or(LayoutError::Arithmetic)?;
             if town_count > 0 {
                 if let Some(player) = owner.and_then(|slot| selected.player(slot)) {
-                    if let TownChoice::Fixed(town) = request.towns()[player.index()] {
+                    if let TownChoice::Fixed(town) = request.towns()[player] {
                         alignment = Some(town);
                     }
                 }

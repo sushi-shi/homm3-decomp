@@ -10,7 +10,7 @@ use crate::{
     request::{MapVersion, Request, Town, Water},
     rng::{RetailRng, RngCheckpoint},
     selection::Player,
-    template::{PlayerSlot, Template, TemplateZoneId, Zone},
+    template::{PerSlot, PlayerSlot, Template, TemplateZoneId, Zone},
 };
 use std::{collections::TryReserveError, error::Error, fmt};
 
@@ -191,7 +191,7 @@ pub struct BoundaryMap<'a> {
     workspace: &'a mut BoundaryWorkspace,
     request: &'a Request,
     template: &'a Template<'a>,
-    players: [Option<Player>; crate::request::PLAYER_COUNT],
+    players: PerSlot<Option<Player>>,
     water: Water,
 }
 impl<'a> BoundaryMap<'a> {
@@ -242,7 +242,7 @@ impl<'a> BoundaryMap<'a> {
     /// Original player assignment for a template seat.
     #[must_use]
     pub fn player(&self, slot: PlayerSlot) -> Option<Player> {
-        self.players[slot.index()]
+        self.players[slot]
     }
     /// Cell ownership and terrain marks.
     #[must_use]
