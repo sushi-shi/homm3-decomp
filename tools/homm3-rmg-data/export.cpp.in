@@ -386,6 +386,9 @@ int main()
         std::printf("(%s,%s,%s),", row.m_attributes & 0xff ? "true" : "false",
             row.m_attributes & 0xff00 ? "true" : "false", row.m_attributes & 0xff0000 ? "true" : "false");
     std::printf("];\n");
+    std::printf("pub const HERO_CLASSES: [i32; %lu] = [", sizeof(heroTraits)/sizeof(heroTraits[0]));
+    for (const auto& row : heroTraits) std::printf("%d,", static_cast<int>(row.m_heroClass));
+    std::printf("];\n");
     emitArray("DISABLED_ARTIFACTS", disabledArtifacts);
     emitArray("ARTIFACT_SLOT_COLUMNS", artifactSlotColumns);
     std::printf("pub const COMBINATION_ARTIFACTS: [u32; %lu] = [", sizeof(artifactCombinations)/sizeof(artifactCombinations[0]));

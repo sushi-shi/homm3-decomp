@@ -176,3 +176,28 @@ selection is exercised with retained prototype inputs; versioned prototype
 admission, monster disposition/output, archive precedence, other catalogs,
 and full generation parity remain outstanding. No initialized native-table or
 end-to-end HotA parity is claimed from these resource and algorithm tests.
+
+The shared hero catalog now admits all 215 heroes and 24 classes. Complete class
+IDs are extracted from the canonical C++ initializer alongside availability;
+HDAT `heroNNN` records overlay those fields (DLL RVA `0x16aafa`, 92-byte records),
+followed by the final availability writes at `0x16b536..0x16b568`. Expanded IDs
+cannot index a Complete catalog, and missing rows, short payloads or invalid
+classes fail catalog admission.
+
+`HeroPool` implements constructor water substitutions, pack availability overrides,
+per-class counts and the initial `max(enabled - 48 - 10 * players, 0)` prison cap.
+Starting-hero claims stay separate from the counts, as in the native request hook.
+Prison selection follows the shared ruleset: Complete descends through its legacy
+range and draws for singletons; HotA scans all heroes in ascending order, reserves
+the last two enabled heroes per class, excludes starting heroes and skips singleton
+RNG draws. A rejected prison restores its hero and class count. The cap is exposed
+for the forthcoming shared definition builder; selection itself does not apply it.
+
+All 110 library tests, three installed-data checks and library Clippy pass. The
+installed HotA default hero pool has eight heroes per class under each water mode.
+An eight-request Complete replay after the pool change has eight exact hotfix
+matches, five exact retail matches and three pre-existing typed coast faults.
+These tests cover catalog loading and standalone hero selection, not a native
+initialized-table snapshot or end-to-end HotA generation. The main generation
+pipeline still initializes a Complete pool; request, setup, definition limits and
+expanded hero output must be connected when those HotA stages are integrated.

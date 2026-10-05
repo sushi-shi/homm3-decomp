@@ -88,3 +88,52 @@ fn installed_object_recipes_match_recovered_native_lists() {
         }
     );
 }
+
+#[test]
+#[ignore = "requires HOMM3_HOTA_DAT pointing to the pinned HotA 1.8.1 data file"]
+fn installed_heroes_have_expanded_classes_and_water_replacements() {
+    use homm3_rmg::{
+        hero::{HeroCatalog, HeroPool},
+        request::{MapVersion, Water},
+    };
+    let bytes = std::fs::read(std::env::var_os("HOMM3_HOTA_DAT").unwrap()).unwrap();
+    let catalog = HeroCatalog::parse_hota181(Container::parse(&bytes).unwrap()).unwrap();
+    assert_eq!(catalog.entries().len(), 215);
+    assert_eq!(catalog.ruleset(), Ruleset::HotA181);
+    for (id, class) in [
+        (156, 18),
+        (171, 19),
+        (179, 20),
+        (194, 21),
+        (198, 22),
+        (214, 23),
+    ] {
+        let hero = catalog.get(catalog.id(id).unwrap()).unwrap();
+        assert_eq!(hero.class().index(), class);
+        assert!(hero.available(MapVersion::ShadowOfDeath));
+    }
+    for id in [20, 71, 144, 159, 172, 195, 210] {
+        assert!(!catalog
+            .get(catalog.id(id).unwrap())
+            .unwrap()
+            .available(MapVersion::ShadowOfDeath));
+    }
+    for water in [Water::None, Water::Normal, Water::Islands] {
+        let pool =
+            HeroPool::prepare(&catalog, MapVersion::ShadowOfDeath, water, &[], 8, &[]).unwrap();
+        for id in [3, 122, 174, 214] {
+            assert_eq!(
+                pool.is_disabled(catalog.id(id).unwrap()),
+                water == Water::None
+            );
+        }
+        for id in [175, 176, 159, 210] {
+            assert_eq!(
+                pool.is_disabled(catalog.id(id).unwrap()),
+                water != Water::None
+            );
+        }
+        assert_eq!(pool.remaining_by_class(), &[8; 24]);
+        assert_eq!(pool.prison_limit(), Some(64));
+    }
+}

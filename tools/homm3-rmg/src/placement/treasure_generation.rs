@@ -182,7 +182,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
     }
     /// Current hero availability, including pending prison reservations.
     #[must_use]
-    pub const fn hero_disabled(&self, hero: HeroId) -> bool {
+    pub fn hero_disabled(&self, hero: HeroId) -> bool {
         self.heroes.is_disabled(hero)
     }
 

@@ -15,6 +15,11 @@ pub enum Ruleset {
 }
 
 impl Ruleset {
+    /// Hero classes in the versioned catalog.
+    #[must_use]
+    pub const fn hero_class_count(self) -> usize {
+        self.town_count() * 2
+    }
     /// Creature trait rows, including war machines and unused entries.
     #[must_use]
     pub const fn creature_count(self) -> usize {
