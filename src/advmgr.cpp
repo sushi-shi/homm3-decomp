@@ -2082,6 +2082,8 @@ void advManager::processRadarSelect(const message* msg)
 // All ordinary callee identities agree; the VIEW_HERO dispatch stays split.
 // DC advmgr.cpp:2434 proves const message&, type_point&, NewmapCell*&.
 // Retail passes the same three addresses; its body requires each referent.
+// Both dispatch-local object codes are DC int locals (temp), even though
+// the cell field belongs to the adventure-object enum domain.
 VA(0x0040a5d0, 0x606)
 DC_ADDRESS(0x00a88c, 0x6ae)
 MAC_ADDRESS(0x00a7dc, 0x648)  // anchor-callee
@@ -2111,7 +2113,7 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
             return;
         }
 
-        TAdventureObjectType objType;
+        int objType;
         int objIndex;
         if (g_currentPlayer == player
             && m_lastHoverX == HERO_VIEW_TILE_X
@@ -2180,7 +2182,7 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
     }
 
     int myPos = g_game->getLocalPlayerGamePos();
-    TAdventureObjectType clickedType = cell->m_type;
+    int clickedType = cell->m_type;
     int clickedIndex = cell->m_extraInfo;
 
     if (clickedType == HERO) {

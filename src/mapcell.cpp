@@ -404,10 +404,11 @@ unsigned char NewmapCell::cellIsTrigger() const
     return m_isTrigger;
 }
 
+// Original DC public is_diggable@NewmapCell@@QBA_NXZ proves bool.
 VA(0x004fccf0, 0xD0)
 DC_ADDRESS(0x0ec254, 0xd0)
 MAC_ADDRESS(0x11e514, 0xe4)
-unsigned char NewmapCell::isDiggable() const
+bool NewmapCell::isDiggable() const
 {
     if (m_groundSet == eTerrainWater || m_groundSet == eTerrainRock)
         return 0;
@@ -428,10 +429,11 @@ unsigned char NewmapCell::isDiggable() const
 }
 
 // DC 0xec354/0xec396 test giCurPlayerBit; retail reads 0x69ccc4.
+// Original public HasTriggerableEvent@NewmapCell@@QBA?B_NXZ returns const bool.
 VA(0x004fcdc0, 0x58)
 DC_ADDRESS(0x0ec324, 0x8e)
 MAC_ADDRESS(0x11e5f8, 0xb4)
-const unsigned char NewmapCell::hasTriggerableEvent() const
+const bool NewmapCell::hasTriggerableEvent() const
 {
     if (m_type == EVENT) {
         if (g_currentPlayer->isLocalHuman()
