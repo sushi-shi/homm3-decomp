@@ -1,7 +1,7 @@
 //! Roads follow retained predecessor trees, rebuilding when painted costs change.
 use super::{
-    lines::Layer, offset_position, Direction, Movement, ObjectArena, PlacementError, PlacementMap,
-    PortalDirection, RoadType,
+    lines::Layer, offset_position, Direction, Movement, ObjectArena, ObstaclesPlaced,
+    PlacementError, PlacementMap, PortalDirection, RoadType, TreasureGeneration,
 };
 use crate::{
     domain::{Level, Terrain, WorldPosition},
@@ -11,6 +11,40 @@ use crate::{
     rng::RetailRng,
 };
 use std::num::NonZeroU32;
+
+/// One road type joins the stored town and shipyard targets.
+pub(crate) struct RoadsCreated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards> {
+    obstacles: ObstaclesPlaced<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+}
+impl<'state, 'zones, 'tiles> RoadsCreated<'state, 'zones, 'tiles, '_, '_, '_, '_> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+        self.obstacles.map_mut()
+    }
+    pub(super) const fn generation(&self) -> &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+        self.obstacles.generation()
+    }
+}
+impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
+    ObstaclesPlaced<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
+{
+    /// Draw the road type and build roads once, over the decorated map.
+    ///
+    /// # Errors
+    /// Reports the retail empty-target underflow after its road-type draw,
+    /// missing route predecessors, foreign objects/catalogs or placement faults.
+    pub(crate) fn create_roads(
+        mut self,
+        catalog: &PrototypeCatalog<'_>,
+        objects: &ObjectArena,
+        rng: &mut RetailRng,
+    ) -> Result<
+        RoadsCreated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+        PlacementError,
+    > {
+        self.map_mut().create_roads(catalog, objects, rng)?;
+        Ok(RoadsCreated { obstacles: self })
+    }
+}
 
 impl PlacementMap<'_, '_, '_> {
     pub(super) fn reset_movement(&mut self) {
@@ -217,11 +251,9 @@ impl PlacementMap<'_, '_, '_> {
     /// # Errors
     /// Reports the retail empty-target underflow after its road-type draw,
     /// missing route predecessors, foreign objects/catalogs or placement faults.
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "source-derived road domain and selected catalog entries are bounded before lookup"
-    )]
-    pub fn create_roads(
+    // Cannot panic: the source-derived road domain and selected catalog
+    // entries are bounded before lookup.
+    fn create_roads(
         &mut self,
         catalog: &PrototypeCatalog<'_>,
         objects: &ObjectArena,

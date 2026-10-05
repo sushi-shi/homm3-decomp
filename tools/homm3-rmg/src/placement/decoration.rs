@@ -1,11 +1,76 @@
 //! Final terrain decoration operates directly on existing tile and cell buffers.
 
-use super::{CellState, Neighborhood, PathReservation, PlacementError, PlacementMap};
+use super::{
+    CellState, Neighborhood, PathReservation, PlacementError, PlacementMap, TreasureGeneration,
+    TreasuresPlaced,
+};
 use crate::{
     domain::{Level, Terrain, WorldPosition},
     rng::RetailRng,
     terrain::TerrainError,
 };
+
+/// Unused underground floor is rock and occupied zone floor is restored.
+pub(crate) struct UndergroundDecorated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards> {
+    treasures: TreasuresPlaced<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+}
+impl<'state, 'zones, 'tiles> UndergroundDecorated<'state, 'zones, 'tiles, '_, '_, '_, '_> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+        self.treasures.map_mut()
+    }
+    pub(super) const fn generation(&self) -> &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+        self.treasures.generation()
+    }
+}
+impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
+    TreasuresPlaced<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
+{
+    /// Fill unused underground floor with rock after all treasures are placed.
+    ///
+    /// # Errors
+    /// Reports a missing terrain frame during painting or repair.
+    pub(crate) fn decorate_underground(
+        mut self,
+        rng: &mut RetailRng,
+    ) -> Result<
+        UndergroundDecorated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+        TerrainError,
+    > {
+        self.map_mut().decorate_underground(rng)?;
+        Ok(UndergroundDecorated { treasures: self })
+    }
+}
+
+/// Dry neighbours of water are marked coastal in both planes.
+pub(crate) struct CoastsMarked<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards> {
+    underground: UndergroundDecorated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+}
+impl<'state, 'zones, 'tiles> CoastsMarked<'state, 'zones, 'tiles, '_, '_, '_, '_> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+        self.underground.map_mut()
+    }
+    pub(super) const fn generation(&self) -> &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+        self.underground.generation()
+    }
+}
+impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
+    UndergroundDecorated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
+{
+    /// Mark coasts once, after underground decoration has settled the terrain.
+    /// No RNG is consumed.
+    ///
+    /// # Errors
+    /// Reports coordinates outside admitted map dimensions.
+    pub(crate) fn mark_coastal_tiles(
+        mut self,
+    ) -> Result<
+        CoastsMarked<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+        PlacementError,
+    > {
+        self.map_mut().mark_coastal_tiles()?;
+        Ok(CoastsMarked { underground: self })
+    }
+}
 
 impl CellState {
     /// Land beside water, including diagonal neighbours; rock is never coastal.
@@ -21,11 +86,8 @@ impl PlacementMap<'_, '_, '_> {
     ///
     /// # Errors
     /// Reports a missing terrain frame during painting or repair.
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "zone bounds enclose cells of the zone raster"
-    )]
-    pub fn decorate_underground(&mut self, rng: &mut RetailRng) -> Result<(), TerrainError> {
+    // Cannot panic: zone bounds enclose cells of the zone raster.
+    fn decorate_underground(&mut self, rng: &mut RetailRng) -> Result<(), TerrainError> {
         let layout = self.terrain.coverage().map().raster().layout();
         let plane = layout.plane();
         if self.cells.len() == plane {
@@ -79,7 +141,7 @@ impl PlacementMap<'_, '_, '_> {
     ///
     /// # Errors
     /// Reports coordinates outside admitted map dimensions.
-    pub fn mark_coastal_tiles(&mut self) -> Result<(), PlacementError> {
+    fn mark_coastal_tiles(&mut self) -> Result<(), PlacementError> {
         let layout = self.terrain.coverage().map().raster().layout();
         let (side, plane) = (layout.side(), layout.plane());
         for level in [Level::Surface, Level::Underground] {

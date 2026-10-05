@@ -1,7 +1,7 @@
 //! River targets, randomized cardinal searches and ordered delta placement.
 use super::{
     lines::Layer, offset_position, registration::entrance_position, Direction, Movement,
-    ObjectArena, PlacementError, PlacementMap, RiverType,
+    ObjectArena, PlacementError, PlacementMap, RiverType, RoadsCreated, TreasureGeneration,
 };
 use crate::{
     domain::{Level, Terrain, WorldPosition},
@@ -27,6 +27,38 @@ enum RiverGoal {
 // Moving toward a cell enters through the opposite side.
 fn opposite_bit(direction: Direction) -> u8 {
     1 << (direction.opposite().index() / raw::RMG_CARDINAL_DIRECTION_STEP as usize)
+}
+
+/// Water-wheel rivers and deltas are placed: the final generation stage.
+pub(crate) struct RiversCreated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards> {
+    roads: RoadsCreated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+}
+impl RiversCreated<'_, '_, '_, '_, '_, '_, '_> {
+    /// Completed map and the payload context needed for serialization.
+    pub(crate) const fn generation(&self) -> &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+        self.roads.generation()
+    }
+}
+impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
+    RoadsCreated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
+{
+    /// Route rivers once, after roads have been painted.
+    ///
+    /// # Errors
+    /// Reports native coast overreads, unwritten route predecessors, foreign
+    /// context, invalid geometry, arithmetic or allocation faults.
+    pub(crate) fn create_rivers(
+        mut self,
+        catalog: &PrototypeCatalog<'_>,
+        objects: &mut ObjectArena,
+        rng: &mut RetailRng,
+    ) -> Result<
+        RiversCreated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+        PlacementError,
+    > {
+        self.map_mut().create_rivers(catalog, objects, rng)?;
+        Ok(RiversCreated { roads: self })
+    }
 }
 
 impl PlacementMap<'_, '_, '_> {
@@ -326,7 +358,7 @@ impl PlacementMap<'_, '_, '_> {
     /// # Errors
     /// Reports native coast overreads, unwritten route predecessors, foreign
     /// context, invalid geometry, arithmetic or allocation faults.
-    pub fn create_rivers(
+    fn create_rivers(
         &mut self,
         catalog: &PrototypeCatalog<'_>,
         objects: &mut ObjectArena,

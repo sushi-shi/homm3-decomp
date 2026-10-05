@@ -1,7 +1,7 @@
 //! Weighted zone bands reuse one group; completion uses its separate scratch pool.
 use super::{
-    density::Density, ObjectArena, PlacementError, TreasureGeneration, TreasureGenerationError,
-    TreasureGroupWorkspace, TreasurePacking,
+    density::Density, ObjectArena, PlacementError, PlacementMap, SelectedTreasure,
+    TreasureGeneration, TreasureGenerationError, TreasureGroupWorkspace, TreasurePacking,
 };
 use crate::{
     domain::Terrain,
@@ -11,13 +11,49 @@ use crate::{
     template::{Placement, TreasureBand},
 };
 use std::num::NonZeroU32;
-impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+
+/// Every zone's treasure bands are placed; final decoration follows.
+pub(crate) struct TreasuresPlaced<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards> {
+    generation: TreasureGeneration<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+}
+impl<'state, 'zones, 'tiles> TreasuresPlaced<'state, 'zones, 'tiles, '_, '_, '_, '_> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+        self.generation.map_mut()
+    }
+    /// Payload context retained for serialization.
+    pub(super) const fn generation(&self) -> &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+        &self.generation
+    }
+}
+impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
+    TreasureGeneration<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
+{
     /// Place all zones' treasure bands in stored map order, including water zones.
-    /// Connections are not rebuilt between zones.
+    /// Connections are not rebuilt between zones. The workspace lends its offer
+    /// and nested-group buffers and takes them back on both success and failure.
     ///
     /// # Errors
     /// Reports native arithmetic, selection, placement and completion faults.
-    pub fn place_all_treasures(
+    pub(crate) fn place_all_treasures(
+        mut self,
+        group: &mut TreasureGroupWorkspace,
+        offers: &mut Vec<SelectedTreasure>,
+        nested_groups: &mut Vec<Box<TreasureGroupWorkspace>>,
+        objects: &mut ObjectArena,
+        rng: &mut RetailRng,
+    ) -> Result<
+        TreasuresPlaced<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+        TreasureGenerationError,
+    > {
+        self.exchange_scratch(offers, nested_groups);
+        let placed = self.place_treasures_in_zone_order(group, objects, rng);
+        self.exchange_scratch(offers, nested_groups);
+        placed?;
+        Ok(TreasuresPlaced { generation: self })
+    }
+}
+impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+    fn place_treasures_in_zone_order(
         &mut self,
         group: &mut TreasureGroupWorkspace,
         objects: &mut ObjectArena,

@@ -1,7 +1,8 @@
 //! Weighted obstacle filling with reusable candidates and lazy overlap priorities.
 
 use super::{
-    offset_position, ObjectArena, ObjectId, PathReservation, PlacementError, PlacementMap,
+    offset_position, CoastsMarked, ObjectArena, ObjectId, PathReservation, PlacementError,
+    PlacementMap, TreasureGeneration,
 };
 use crate::{
     domain::{FlagSet, Terrain, WorldPosition},
@@ -82,6 +83,42 @@ impl ObstacleWorkspace {
             .unwrap()
             .get(cell)
             .ok_or(PlacementError::UnwrittenOverlap(id))
+    }
+}
+
+/// Obstacle reservations are filled and the remaining passable floor is open.
+pub(crate) struct ObstaclesPlaced<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards> {
+    coasts: CoastsMarked<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+}
+impl<'state, 'zones, 'tiles> ObstaclesPlaced<'state, 'zones, 'tiles, '_, '_, '_, '_> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+        self.coasts.map_mut()
+    }
+    pub(super) const fn generation(&self) -> &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+        self.coasts.generation()
+    }
+}
+impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
+    CoastsMarked<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
+{
+    /// Fill obstacle reservations once, after coasts are known.
+    ///
+    /// # Errors
+    /// Reports placement-rule, object, geometry, allocation or arithmetic faults.
+    pub(crate) fn decorate_obstacles(
+        mut self,
+        scratch: &mut ObstacleWorkspace,
+        catalog: &PrototypeCatalog<'_>,
+        rules: &PlacementRules,
+        objects: &mut ObjectArena,
+        rng: &mut RetailRng,
+    ) -> Result<
+        ObstaclesPlaced<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+        PlacementError,
+    > {
+        self.map_mut()
+            .decorate_obstacles(scratch, catalog, rules, objects, rng)?;
+        Ok(ObstaclesPlaced { coasts: self })
     }
 }
 
@@ -324,7 +361,7 @@ impl PlacementMap<'_, '_, '_> {
     ///
     /// # Errors
     /// Reports placement-rule, object, geometry, allocation or arithmetic faults.
-    pub fn decorate_obstacles(
+    fn decorate_obstacles(
         &mut self,
         scratch: &mut ObstacleWorkspace,
         catalog: &PrototypeCatalog<'_>,

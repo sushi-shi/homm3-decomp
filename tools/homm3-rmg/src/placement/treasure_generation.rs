@@ -155,14 +155,14 @@ impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
     }
 }
 impl<'state, 'zones, 'tiles> TreasureGeneration<'state, 'zones, 'tiles, '_, '_, '_, '_> {
-    pub(crate) fn map_mut(&mut self) -> &mut super::PlacementMap<'state, 'zones, 'tiles> {
+    pub(super) fn map_mut(&mut self) -> &mut super::PlacementMap<'state, 'zones, 'tiles> {
         self.ready.paths.map_mut()
     }
 }
 impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
-    // The outer workspace lends these buffers for treasure placement and takes
-    // them back on both success and failure; completed maps need neither buffer.
-    pub(crate) fn exchange_scratch(
+    // Treasure placement borrows the outer workspace's buffers and returns them
+    // on both success and failure; completed maps need neither buffer.
+    pub(super) fn exchange_scratch(
         &mut self,
         offers: &mut Vec<SelectedTreasure>,
         groups: &mut Vec<Box<super::TreasureGroupWorkspace>>,
