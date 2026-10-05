@@ -1834,6 +1834,11 @@ affected TUs also agrees with the pinned controls. The gaps do not recover
 assertion text, and these results do not license inserting arbitrary void
 expressions or asserting optional inputs.
 
+The `getNormalCursor` hypothesis was subsequently retired: recovering its
+native shipwreck trigger check leaves the invariant deletion score-flat across
+advmgr. The condition is positive DC/Mac evidence; the line gap alone never
+proved VERIFY. See the linked audit for the reproduced control.
+
 Do not conflate release-elided code with preprocessing it out entirely.
 `HOMM3_RELEASE_VERIFY` retains the real expression as a void evaluation for
 VC6, whose optimization emits no code here. A macro that discards its argument

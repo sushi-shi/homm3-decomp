@@ -150,7 +150,7 @@ unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
 // and everything else goes through convertID2HelpID into the SECOND
 // dword of the same 0x6a56e4 record row (0x6a56e0).
 // RETAIL_LOCATED(0x00403010, 0x20A)  // anchor-global, dc 0xed8
-unsigned char TAdventureMapWindow::processHover(int hx, int hy)
+bool TAdventureMapWindow::processHover(int hx, int hy)
 {
     // @stub
 }
@@ -855,14 +855,15 @@ unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
     }
 }
 
+// Original ProcessHover@TAdventureMapWindow@@QAA_NHH@Z proves bool.
 VA(0x00403010, 0x20A)
 DC_ADDRESS(0x000ed8, 0x204)
 MAC_ADDRESS(0x002720, 0x2ec)
-unsigned char TAdventureMapWindow::processHover(int hx, int hy)
+bool TAdventureMapWindow::processHover(int hx, int hy)
 {
     playerData* player = g_game->getLocalPlayer();
     if (m_chatEdit->m_hasFocus)
-        return 1;
+        return true;
 
     int hoverID = findWidget(hx, hy);
     if (hoverID != g_lastAdventureHover) {
@@ -964,7 +965,7 @@ generic_help:
             m_y + m_rolloverTextWidget->m_y, m_rolloverTextWidget->m_width,
             m_rolloverTextWidget->m_height);
     }
-    return 1;
+    return true;
 }
 
 VA(0x00403220, 0x59)
