@@ -3,12 +3,13 @@
 use homm3_map::{MapBody, MapHeader, ObjectTable, Terrain, WorldPrefix};
 use homm3_rmg::{
     behavior::{Behavior, RetailProfile},
-    generation::{Assets, GenerationWorkspace, PreparedGeneration, Stage},
+    generation::{Assets, GenerationFault, GenerationWorkspace, PreparedGeneration, Stage},
     output::{OutputFault, OutputStage, OutputWorkspace},
     placement_rules::PlacementRules,
     prototype::PrototypeSource,
-    request::{default_record, Levels, MapSize, Request},
+    request::{default_record, Levels, MapSize, Request, RequestOptions},
     rng::RngCheckpoint,
+    rules::Ruleset,
     template::TemplateSource,
     traits::{ArtifactCatalog, CreatureCatalog, SpellCatalog},
 };
@@ -77,6 +78,67 @@ fn prepare(assets: Assets<'_>, case: usize, behavior: Behavior) -> PreparedGener
     assets
         .prepare(Request::parse(record, behavior).unwrap(), seed)
         .unwrap()
+}
+
+#[test]
+fn hota_inputs_cannot_silently_generate_with_complete_assets() {
+    let Some(data) = std::env::var_os("HOMM3_RMG_DATA") else {
+        eprintln!("skipping asset-backed admission: set HOMM3_RMG_DATA");
+        return;
+    };
+    with_assets(&PathBuf::from(data), |_, retail| {
+        let record = default_record(MapSize::Giant, Levels::Underground);
+        let request = Request::parse_with_options(
+            record,
+            RETAIL,
+            RequestOptions {
+                ruleset: Ruleset::HotA181,
+                ..RequestOptions::default()
+            },
+        )
+        .unwrap();
+        let Err(failure) = retail.prepare(request, 42) else {
+            panic!("unsupported HotA pipeline admitted request")
+        };
+        assert!(matches!(
+            failure.fault,
+            GenerationFault::UnsupportedRuleset(Ruleset::HotA181)
+        ));
+        assert_eq!(failure.report.stage(), Stage::Assets);
+        assert_eq!(
+            failure.report.rng(),
+            RngCheckpoint {
+                state: 42,
+                draws: 0
+            }
+        );
+        assert_eq!(failure.report.request().repaired_record(), record);
+
+        let rules =
+            PlacementRules::parse_for(b"header\r\nheader\r\nheader\r\n", RETAIL, Ruleset::HotA181)
+                .unwrap();
+        let assets = Assets {
+            placement: &rules,
+            ..retail
+        };
+        let request =
+            Request::parse(default_record(MapSize::Small, Levels::Surface), RETAIL).unwrap();
+        let Err(failure) = assets.prepare(request, 42) else {
+            panic!("Complete generation admitted HotA placement rules")
+        };
+        assert!(matches!(
+            failure.fault,
+            GenerationFault::UnsupportedRuleset(Ruleset::HotA181)
+        ));
+        assert_eq!(failure.report.stage(), Stage::Assets);
+        assert_eq!(
+            failure.report.rng(),
+            RngCheckpoint {
+                state: 42,
+                draws: 0
+            }
+        );
+    });
 }
 
 fn parse_map(bytes: &[u8]) {

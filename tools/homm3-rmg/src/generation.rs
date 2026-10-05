@@ -193,6 +193,8 @@ impl Error for GenerationFailure {
 /// Failures from parsed-resource admission and generation algorithms.
 #[derive(Debug)]
 pub enum GenerationFault {
+    /// The request or a catalog uses rules not yet supported by this pipeline.
+    UnsupportedRuleset(crate::rules::Ruleset),
     /// Rules were prepared under the other behavior mode.
     BehaviorMismatch,
     /// Prototype preparation failed.
@@ -228,6 +230,7 @@ macro_rules! fault_conversions {
         impl fmt::Display for GenerationFault {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 match self { Self::BehaviorMismatch => f.write_str("placement rules use another behavior mode"),
+                    Self::UnsupportedRuleset(rules) => write!(f, "generation does not yet support {rules:?} rules"),
                     $(Self::$variant(error) => error.fmt(f)),* }
             }
         }
@@ -262,6 +265,17 @@ impl<'a> Assets<'a> {
     ) -> Result<PreparedGeneration<'a>, GenerationFailure> {
         let mut rng = RetailRng::new(seed);
         let mut report = GenerationReport::new(request, seed);
+        for rules in [
+            report.request.ruleset(),
+            self.creatures.ruleset(),
+            self.artifacts.ruleset(),
+            self.placement.ruleset(),
+            self.prototypes.ruleset(),
+        ] {
+            if rules != crate::rules::Ruleset::Complete {
+                return Err(report.fail(GenerationFault::UnsupportedRuleset(rules), &rng));
+            }
+        }
         if self.placement.behavior().is_hotfix() != report.request.behavior().is_hotfix() {
             return Err(report.fail(GenerationFault::BehaviorMismatch, &rng));
         }

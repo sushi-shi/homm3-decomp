@@ -46,7 +46,7 @@ fn installed_templates_cover_supported_requests() {
                                 for zone in template.zones() {
                                     for connection in zone.connections() {
                                         assert!(
-                                            connection.destination().index()
+                                            connection.destination().unwrap().index()
                                                 < template.zones().len()
                                         );
                                     }

@@ -10,6 +10,7 @@ description = "Typed native Heroes III random-map generator"
 [dependencies]
 homm3-rmg-data.workspace = true
 homm3-resource.workspace = true
+regex = { version = "1.13.1", default-features = false, features = ["std", "perf"] }
 
 [dev-dependencies]
 homm3-lod.workspace = true

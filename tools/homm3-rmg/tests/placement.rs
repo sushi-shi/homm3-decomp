@@ -35,7 +35,7 @@ fn installed_rules_and_object_traits_match_the_native_loader() {
             .unwrap();
             for index in 0..raw::RMG_TERRAIN_COUNT {
                 let terrain = Terrain::parse(i32::try_from(index).unwrap()).unwrap();
-                write!(actual, " {}", rule.terrain_score(terrain)).unwrap();
+                write!(actual, " {}", rule.terrain_score(terrain).unwrap()).unwrap();
             }
             actual.push_str(" | ");
             for kind in [NeighbourScore::Adjacent, NeighbourScore::Blocked] {

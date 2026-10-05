@@ -386,10 +386,20 @@ int main()
         std::printf("(%s,%s,%s),", row.m_attributes & 0xff ? "true" : "false",
             row.m_attributes & 0xff00 ? "true" : "false", row.m_attributes & 0xff0000 ? "true" : "false");
     std::printf("];\n");
+    std::printf("pub const HERO_CLASSES: [i32; %lu] = [", sizeof(heroTraits)/sizeof(heroTraits[0]));
+    for (const auto& row : heroTraits) std::printf("%d,", static_cast<int>(row.m_heroClass));
+    std::printf("];\n");
     emitArray("DISABLED_ARTIFACTS", disabledArtifacts);
     emitArray("ARTIFACT_SLOT_COLUMNS", artifactSlotColumns);
     std::printf("pub const COMBINATION_ARTIFACTS: [u32; %lu] = [", sizeof(artifactCombinations)/sizeof(artifactCombinations[0]));
     for (const auto& row : artifactCombinations) std::printf("%u,", static_cast<unsigned>(row.m_artifactId));
+    std::printf("];\n");
+    std::printf("pub const ARTIFACT_COMPONENTS: [[bool; 144]; %lu] = [", sizeof(artifactCombinations)/sizeof(artifactCombinations[0]));
+    for (const auto& row : artifactCombinations) {
+        std::printf("[");
+        for (unsigned id = 0; id < 144; ++id) std::printf("%s,", row.m_components.test(id) ? "true" : "false");
+        std::printf("],");
+    }
     std::printf("];\n");
     std::printf("pub const ARTIFACT_SLOT_MASKS: [u32; %lu] = [", sizeof(artifactSlotMasks)/sizeof(artifactSlotMasks[0]));
     for (const auto& row : artifactSlotMasks) std::printf("%lu,", row.to_ulong());

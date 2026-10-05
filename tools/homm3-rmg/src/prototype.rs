@@ -19,6 +19,7 @@ use crate::{
     raw,
     request::MapVersion,
     rng::RetailRng,
+    rules::Ruleset,
     traits::CreatureId,
 };
 use homm3_resource::{Mask, Text};
@@ -404,6 +405,7 @@ impl<E> From<TryReserveError> for PrototypeLoadError<E> {
 /// Object rows and interned image metadata, independent of mode and map format.
 #[derive(Debug)]
 pub struct PrototypeSource<'a> {
+    ruleset: Ruleset,
     images: Vec<Image<'a>>,
     rows: Vec<Prototype>,
 }
@@ -416,8 +418,24 @@ impl<'a> PrototypeSource<'a> {
     /// Reports malformed rows, mask-provider errors or allocation failure.
     pub fn parse<E>(
         bytes: &'a [u8],
+        mask: impl FnMut(&[u8]) -> Result<Option<ImageMask>, E>,
+    ) -> Result<Self, PrototypeLoadError<E>> {
+        Self::parse_for(bytes, Ruleset::Complete, mask)
+    }
+    /// Read versioned object rows. Complete reads nine terrain bits; `HotA`
+    /// reads its full twelve-terrain domain, including the Rock bit.
+    ///
+    /// # Errors
+    /// Reports malformed rows, mask-provider errors or allocation failure.
+    pub fn parse_for<E>(
+        bytes: &'a [u8],
+        ruleset: Ruleset,
         mut mask: impl FnMut(&[u8]) -> Result<Option<ImageMask>, E>,
     ) -> Result<Self, PrototypeLoadError<E>> {
+        let terrain_bits = match ruleset {
+            Ruleset::Complete => raw::eTerrainWater as u32 + 1,
+            Ruleset::HotA181 => 12,
+        };
         let text = Text::parse(bytes).map_err(PrototypeLoadError::Text)?;
         let mut lines = text.lines();
         let count = lines
@@ -430,6 +448,7 @@ impl<'a> PrototypeSource<'a> {
                 field: "row count",
             })?;
         let mut source = Self {
+            ruleset,
             images: Vec::new(),
             rows: Vec::new(),
         };
@@ -442,11 +461,10 @@ impl<'a> PrototypeSource<'a> {
             let name = row.name()?;
             let passable = row.bits(raw::OBJECT_MASK_CELLS, "passable mask")?;
             let trigger = row.bits(raw::OBJECT_MASK_CELLS, "trigger mask")?;
-            let terrain = u16::try_from(row.bits(raw::eTerrainWater as u32 + 1, "terrain mask")?)
+            let terrain = u16::try_from(row.bits(terrain_bits, "terrain mask")?)
                 .map_err(|_| row.error("terrain mask"))?;
-            let recommended =
-                u16::try_from(row.bits(raw::eTerrainWater as u32 + 1, "recommended mask")?)
-                    .map_err(|_| row.error("recommended mask"))?;
+            let recommended = u16::try_from(row.bits(terrain_bits, "recommended mask")?)
+                .map_err(|_| row.error("recommended mask"))?;
             let kind = row.integer("object type")?;
             let subtype = row.integer("subtype")?;
             let category = row.integer("slot category")?;
@@ -506,6 +524,11 @@ impl<'a> PrototypeSource<'a> {
         }
         Ok(source)
     }
+    /// Resource format and terrain domain used when reading these rows.
+    #[must_use]
+    pub const fn ruleset(&self) -> Ruleset {
+        self.ruleset
+    }
     /// Rows with bounded object identities, in original order.
     #[must_use]
     pub fn rows(&self) -> &[Prototype] {
@@ -526,6 +549,12 @@ impl<'a> PrototypeSource<'a> {
         version: MapVersion,
         behavior: Behavior,
     ) -> Result<PrototypeCatalog<'s>, CatalogError> {
+        if self.ruleset != rules.ruleset() {
+            return Err(CatalogError::RulesetMismatch {
+                source: self.ruleset,
+                rules: rules.ruleset(),
+            });
+        }
         let mut entries = Vec::new();
         let mut offsets = [0; KINDS + 1];
         for prototype in &self.rows {
@@ -571,15 +600,25 @@ impl<'a> PrototypeSource<'a> {
             }
         }
         for entry in &mut entries {
-            entry.preferred = (raw::eTerrainDirt..raw::eTerrainRock)
-                .filter_map(Terrain::parse)
-                .find(|&terrain| entry.prototype.recommends(terrain));
+            let terrain_count = match rules.ruleset() {
+                crate::rules::Ruleset::Complete => raw::eTerrainRock as usize,
+                crate::rules::Ruleset::HotA181 => rules.ruleset().terrain_count(),
+            };
+            entry.preferred = (0..terrain_count)
+                .filter_map(|index| {
+                    i32::try_from(index)
+                        .ok()
+                        .and_then(|value| Terrain::parse_for(value, rules.ruleset()))
+                })
+                .find(|&terrain| entry.prototype.recommends(terrain))
+                .filter(|&terrain| terrain != Terrain::Rock);
             entry.rule = entry.preferred.and_then(|terrain| {
-                rules.find(
-                    entry.prototype.kind.family().family(),
-                    entry.prototype.subtype,
-                    terrain,
-                )
+                let bucket = entry.prototype.kind.family();
+                let rule_type = match rules.ruleset() {
+                    crate::rules::Ruleset::Complete => bucket.family(),
+                    crate::rules::Ruleset::HotA181 => bucket,
+                };
+                rules.find(rule_type, entry.prototype.subtype, terrain)
             });
         }
         Ok(PrototypeCatalog {
@@ -588,6 +627,7 @@ impl<'a> PrototypeSource<'a> {
             offsets,
             version,
             behavior,
+            ruleset: rules.ruleset(),
         })
     }
 }
@@ -626,12 +666,13 @@ impl PreparedPrototype<'_> {
     pub const fn hotfix_admission(&self) -> Result<FootprintSize, PrototypeFault> {
         self.hotfix_admission
     }
-    /// First recommended dirt-through-water terrain, or no preference.
+    /// First recommended terrain admitted by the rule catalog, or no preference.
+    /// A first rock bit suppresses binding, including later terrain bits.
     #[must_use]
     pub const fn preferred(&self) -> Option<Terrain> {
         self.preferred
     }
-    /// Last matching placement rule.
+    /// Placement rule chosen by the catalog's versioned binding order.
     #[must_use]
     pub const fn rule(&self) -> Option<PlacementRuleId> {
         self.rule
@@ -641,6 +682,13 @@ impl PreparedPrototype<'_> {
 /// Filtering/sorting failure before map generation.
 #[derive(Debug)]
 pub enum CatalogError {
+    /// Object masks and placement rules belong to different generation versions.
+    RulesetMismatch {
+        /// Object resource version.
+        source: Ruleset,
+        /// Placement table version.
+        rules: Ruleset,
+    },
     /// Process-local ownership tags have been exhausted; no tag is reused.
     IdentityExhausted,
     /// Retail underflows `monster_count - 1` and accesses an absent prototype.
@@ -651,6 +699,10 @@ pub enum CatalogError {
 impl fmt::Display for CatalogError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::RulesetMismatch { source, rules } => write!(
+                f,
+                "prototype source {source:?} does not match placement rules {rules:?}"
+            ),
             Self::IdentityExhausted => f.write_str("catalog ownership identities exhausted"),
             Self::RetailEmptyMonsters => f.write_str("retail sorts an empty monster list"),
             Self::Allocation(error) => error.fmt(f),
@@ -672,6 +724,7 @@ pub struct PrototypeCatalog<'a> {
     offsets: [usize; KINDS + 1],
     version: MapVersion,
     behavior: Behavior,
+    ruleset: crate::rules::Ruleset,
 }
 
 /// Identity of a prepared prototype, stable for the lifetime of its catalog.
@@ -688,6 +741,11 @@ impl PrototypeId {
     }
 }
 impl PrototypeCatalog<'_> {
+    /// Generation rules used for preferred terrain and placement-rule binding.
+    #[must_use]
+    pub const fn ruleset(&self) -> crate::rules::Ruleset {
+        self.ruleset
+    }
     pub(crate) const fn owner(&self) -> OwnerId {
         self.owner
     }
@@ -912,6 +970,58 @@ mod tests {
             text.push_str("\r\n");
         }
         crate::traits::CreatureCatalog::parse(text.as_bytes()).unwrap()
+    }
+
+    #[test]
+    fn hota_binding_scans_expanded_masks_and_rock_stops_the_search() {
+        use crate::rules::Ruleset;
+        let bytes = table(&[format!(
+            "monster.def {:048b} {:048b} {:012b} {:012b} {} 0 0 0",
+            0_u64,
+            1_u64 << 47,
+            (1 << 10) | (1 << 11),
+            (1 << 10) | (1 << 11),
+            raw::MONSTER
+        )]);
+        let mut source = PrototypeSource::parse_for(&bytes, Ruleset::HotA181, |_| {
+            Ok::<_, Infallible>(Some(mask()))
+        })
+        .unwrap();
+        assert!(source.rows()[0].allows_terrain(Terrain::Wasteland));
+        assert!(matches!(
+            source.prepare(&rules(), MapVersion::ShadowOfDeath, Behavior::Hotfix),
+            Err(CatalogError::RulesetMismatch { .. })
+        ));
+        let mut rows = vec![vec!["0".to_owned(); 22]; 2];
+        for (index, row) in rows.iter_mut().enumerate() {
+            row[0] = "rule".into();
+            row[3] = raw::MONSTER.to_string();
+            row[6] = "10".into();
+            row[16] = (100 + index).to_string();
+        }
+        let rule_bytes = format!(
+            "header\r\nheader\r\nheader\r\n{}\r\n",
+            rows.iter()
+                .map(|row| row.join("\t"))
+                .collect::<Vec<_>>()
+                .join("\r\n")
+        );
+        let rules =
+            PlacementRules::parse_for(rule_bytes.as_bytes(), Behavior::Hotfix, Ruleset::HotA181)
+                .unwrap();
+        let catalog = source
+            .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
+            .unwrap();
+        let entry = &catalog.entries()[0];
+        assert_eq!(entry.preferred(), Some(Terrain::Highlands));
+        assert_eq!(entry.rule().unwrap().index(), 0);
+        drop(catalog);
+        source.rows[0].recommended |= 1 << 9;
+        let catalog = source
+            .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
+            .unwrap();
+        assert_eq!(catalog.entries()[0].preferred(), None);
+        assert_eq!(catalog.entries()[0].rule(), None);
     }
 
     #[test]

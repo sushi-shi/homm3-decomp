@@ -1,11 +1,15 @@
 //! Clipping and rasterization of zone polygons and island coasts.
 
+mod shape;
+use shape::BoundaryShape;
+
 use crate::{
     behavior::Behavior,
     domain::Level,
     geometry::{BoundaryEdge, GeometryError, Point, ZoneId},
     request::{Levels, MapSize, Water},
     rng::RetailRng,
+    rules::Ruleset,
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
@@ -75,6 +79,8 @@ pub enum RasterError {
     UnclosedRing,
     /// Retail attempts a random draw with nonpositive displacement range.
     ZeroRoughness,
+    /// The versioned irregular boundary requires its two Voronoi sites.
+    MissingShape,
     /// A distance calculation failed.
     Geometry(GeometryError),
     /// Scratch or cell storage could not be reserved.
@@ -90,6 +96,7 @@ impl fmt::Display for RasterError {
             Self::MissingVertex => f.write_str("zone boundary has no Voronoi vertex"),
             Self::UnclosedRing => f.write_str("clipped zone boundary does not close"),
             Self::ZeroRoughness => f.write_str("retail draws with zero boundary roughness"),
+            Self::MissingShape => f.write_str("irregular boundary requires its Voronoi shape"),
             Self::Geometry(error) => error.fmt(f),
             Self::Allocation(error) => error.fmt(f),
         }
@@ -143,6 +150,33 @@ impl MapBounds {
     /// # Errors
     /// Reports overflow or undefined signed division in clipping arithmetic.
     pub fn clip(self, point: Point, toward: Point) -> Result<Point, RasterError> {
+        self.clip_for(point, toward, Ruleset::Complete)
+    }
+    /// Clip with the selected version's segment-rejection rule.
+    ///
+    /// # Errors
+    /// Reports unsupported clipping arithmetic.
+    pub fn clip_for(
+        self,
+        point: Point,
+        toward: Point,
+        rules: Ruleset,
+    ) -> Result<Point, RasterError> {
+        let clipped = self.clip_original(point, toward)?;
+        // HotA RVA 0x1cb120: reject intersections beyond both original ends.
+        if rules == Ruleset::HotA181
+            && !self.contains(point)
+            && !self.contains(toward)
+            && (clipped.x < point.x.min(toward.x)
+                || clipped.x > point.x.max(toward.x)
+                || clipped.y < point.y.min(toward.y)
+                || clipped.y > point.y.max(toward.y))
+        {
+            return Ok(point);
+        }
+        Ok(clipped)
+    }
+    fn clip_original(self, point: Point, toward: Point) -> Result<Point, RasterError> {
         if self.contains(point) {
             return Ok(point);
         }
@@ -190,6 +224,7 @@ impl MapBounds {
 pub struct ZoneRaster {
     bounds: MapBounds,
     levels: Levels,
+    rules: Ruleset,
     cells: Vec<ZoneCell>,
 }
 impl ZoneRaster {
@@ -198,12 +233,20 @@ impl ZoneRaster {
     /// # Errors
     /// Reports a failed reservation.
     pub fn new(size: MapSize, levels: Levels) -> Result<Self, RasterError> {
+        Self::new_for(size, levels, Ruleset::Complete)
+    }
+    /// Allocate ownership using a versioned boundary policy.
+    ///
+    /// # Errors
+    /// Reports a failed reservation.
+    pub fn new_for(size: MapSize, levels: Levels, rules: Ruleset) -> Result<Self, RasterError> {
         let mut grid = Self {
+            rules,
             bounds: MapBounds::new(size),
             levels,
             cells: Vec::new(),
         };
-        grid.reset(size, levels)?;
+        grid.reset_for(size, levels, rules)?;
         Ok(grid)
     }
     /// Clear ownership and resize only when the requested shape needs it.
@@ -211,6 +254,18 @@ impl ZoneRaster {
     /// # Errors
     /// Reports a failed reservation.
     pub fn reset(&mut self, size: MapSize, levels: Levels) -> Result<(), RasterError> {
+        self.reset_for(size, levels, Ruleset::Complete)
+    }
+    /// Clear ownership and select the boundary policy for the next map.
+    ///
+    /// # Errors
+    /// Reports a failed reservation.
+    pub fn reset_for(
+        &mut self,
+        size: MapSize,
+        levels: Levels,
+        rules: Ruleset,
+    ) -> Result<(), RasterError> {
         let dimension = size.dimension() as usize;
         let count = dimension * dimension * levels.count() as usize;
         self.cells
@@ -219,12 +274,16 @@ impl ZoneRaster {
         self.cells.fill(ZoneCell::default());
         self.bounds = MapBounds::new(size);
         self.levels = levels;
+        self.rules = rules;
         Ok(())
     }
     /// Raster cells in wire traversal order, with no row allocations.
     #[must_use]
     pub fn cells(&self) -> &[ZoneCell] {
         &self.cells
+    }
+    pub(crate) fn cells_mut(&mut self) -> &mut [ZoneCell] {
+        &mut self.cells
     }
     /// Bounds shared by both planes.
     #[must_use]
@@ -349,8 +408,9 @@ pub struct RasterWorkspace {
     polygon: Vec<Point>,
 }
 impl RasterWorkspace {
-    /// Bresenham line with half-major initial error. The last cell receives its
-    /// zone but retains its existing terrain-paint flag.
+    /// Bresenham line with half-major initial error. Complete overwrites final
+    /// ownership without painting it; `HotA` preserves owned endpoints and
+    /// paints the final cell even when it belongs to another zone.
     ///
     /// # Errors
     /// Reports coordinates outside the map or unsupported arithmetic.
@@ -382,8 +442,13 @@ impl RasterWorkspace {
         };
         let diagonal = Point::new(1, step_y);
         let mut error = major / 2;
+        let mut first = true;
         while from != to {
-            grid.assign(from, level, zone, paint)?;
+            // HotA RVA 0x1cb570 preserves an already-owned first cell.
+            if grid.rules == Ruleset::Complete || !first || grid.cell(from, level)?.zone.is_none() {
+                grid.assign(from, level, zone, paint)?;
+            }
+            first = false;
             error += minor;
             if error < major {
                 from = add(from, axial)?;
@@ -392,18 +457,50 @@ impl RasterWorkspace {
                 from = add(from, diagonal)?;
             }
         }
-        grid.assign(to, level, zone, false)
+        if grid.rules == Ruleset::HotA181 {
+            // RVA 0x1cb5b0/0x1cb550: preserve final ownership but mark terrain.
+            let cell = grid.cell(to, level)?;
+            cell.zone.get_or_insert(zone);
+            cell.paint_terrain |= paint;
+            Ok(())
+        } else {
+            grid.assign(to, level, zone, false)
+        }
     }
 
     /// Depth-first midpoint displacement, preserving draw order and rounding.
+    /// For `HotA` zone strokes use [`Self::trace`], which supplies the two sites
+    /// needed to constrain displacement. Island strokes do not need those sites.
     ///
     /// # Errors
-    /// Reports invalid arithmetic, retail zero roughness, or reservation failure.
+    /// Reports a missing shape, invalid arithmetic, retail zero roughness,
+    /// or reservation failure.
     #[expect(
         clippy::too_many_arguments,
         reason = "one boundary stroke carries geometry, ownership and RNG policy"
     )]
     pub fn irregular(
+        &mut self,
+        grid: &mut ZoneRaster,
+        from: Point,
+        to: Point,
+        zone: ZoneId,
+        level: Level,
+        roughness: u32,
+        stroke: Stroke,
+        behavior: Behavior,
+        rng: &mut RetailRng,
+    ) -> Result<(), RasterError> {
+        self.irregular_inner(
+            grid, from, to, zone, level, roughness, stroke, behavior, None, rng,
+        )
+    }
+
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "one stroke plus its optional edge-local displacement limits"
+    )]
+    fn irregular_inner(
         &mut self,
         grid: &mut ZoneRaster,
         mut from: Point,
@@ -413,8 +510,24 @@ impl RasterWorkspace {
         roughness: u32,
         stroke: Stroke,
         behavior: Behavior,
+        shape: Option<BoundaryShape>,
         rng: &mut RetailRng,
     ) -> Result<(), RasterError> {
+        let constrained = grid.rules == Ruleset::HotA181 && matches!(stroke, Stroke::Zone { .. });
+        if constrained && shape.is_none() {
+            return Err(RasterError::MissingShape);
+        }
+        if constrained {
+            // RVA 0x1cb500: claim the unclamped end before subdivision.
+            let cell = grid.cell(to, level)?;
+            if cell.zone.is_none() {
+                cell.zone = Some(zone);
+                if let Stroke::Zone { paint_terrain } = stroke {
+                    cell.paint_terrain |= paint_terrain;
+                }
+            }
+        }
+        let mut first = true;
         self.pending.clear();
         self.push(to)?;
         while let Some(to) = self.pending.pop() {
@@ -423,13 +536,20 @@ impl RasterWorkspace {
             } else {
                 BoundaryDisplacement::Full
             };
-            let Some(midpoint) =
+            let midpoint = if let Some(shape) = shape {
+                shape.midpoint(from, to, roughness, rng)?
+            } else {
                 boundary_midpoint(from, to, roughness, displacement, behavior, rng)?
-            else {
+            };
+            let Some(midpoint) = midpoint else {
                 let point = grid.bounds.clamp(from);
                 match stroke {
                     Stroke::Zone { paint_terrain } => {
-                        grid.assign(point, level, zone, paint_terrain)?;
+                        // RVA 0x1cb4c0: preserve only the first terminal cell.
+                        if !constrained || !first || grid.cell(point, level)?.zone.is_none() {
+                            grid.assign(point, level, zone, paint_terrain)?;
+                        }
+                        first = false;
                     }
                     Stroke::Island => {
                         let cell = grid.cell(point, level)?;
@@ -468,6 +588,7 @@ impl RasterWorkspace {
     /// Reports missing vertices, an invalid clipped ring, arithmetic or storage failure.
     #[expect(
         clippy::too_many_arguments,
+        clippy::too_many_lines,
         reason = "tracing combines an immutable diagram with one mutable raster"
     )]
     pub fn trace(
@@ -503,8 +624,8 @@ impl RasterWorkspace {
         for index in 0..self.ring.len() {
             let original_from = self.vertex(index)?;
             let original_to = self.vertex(next(index))?;
-            let from = bounds.clip(original_from, original_to)?;
-            let to = bounds.clip(original_to, original_from)?;
+            let from = bounds.clip_for(original_from, original_to, grid.rules)?;
+            let to = bounds.clip_for(original_to, original_from, grid.rules)?;
             if bounds.contains(from) && from != to {
                 start = Some(index);
                 break;
@@ -528,8 +649,8 @@ impl RasterWorkspace {
             let neighbour = self.ring[next].opposite_zone;
             let original_from = self.vertex(edge)?;
             let original_to = self.vertex(next)?;
-            let mut from = bounds.clip(original_from, original_to)?;
-            let mut to = bounds.clip(original_to, original_from)?;
+            let mut from = bounds.clip_for(original_from, original_to, grid.rules)?;
+            let mut to = bounds.clip_for(original_to, original_from, grid.rules)?;
             self.polygon_point(from)?;
             if neighbour.is_none_or(|other| other > zone) {
                 let roughness = *sizes.get(zone.index()).ok_or(RasterError::UnclosedRing)?;
@@ -539,7 +660,17 @@ impl RasterWorkspace {
                     roughness
                 };
                 if irregular {
-                    self.irregular(
+                    let shape = if grid.rules == Ruleset::HotA181 {
+                        Some(BoundaryShape::new(
+                            from,
+                            to,
+                            self.ring[next].site,
+                            self.ring[next].opposite_site,
+                        )?)
+                    } else {
+                        None
+                    };
+                    self.irregular_inner(
                         grid,
                         from,
                         to,
@@ -550,6 +681,7 @@ impl RasterWorkspace {
                             paint_terrain: paint,
                         },
                         behavior,
+                        shape,
                         rng,
                     )?;
                 } else {
@@ -562,7 +694,7 @@ impl RasterWorkspace {
                 let mut found = false;
                 for _ in 0..self.ring.len() {
                     next = (next + 1) % self.ring.len();
-                    to = bounds.clip(self.vertex(edge)?, self.vertex(next)?)?;
+                    to = bounds.clip_for(self.vertex(edge)?, self.vertex(next)?, grid.rules)?;
                     if bounds.contains(to) {
                         found = true;
                         break;
@@ -595,8 +727,18 @@ impl RasterWorkspace {
         // North is up:  upperLeft -> upperRight
         //                   ^             v
         //               lowerLeft <- lowerRight
-        for _ in 0..4 {
-            if from.x == to.x || from.y == to.y {
+        for pass in 0..4 {
+            let same_edge = |a: i32, b: i32| a == b && (a == 0 || a == last);
+            let finished = if grid.rules == Ruleset::HotA181 {
+                (if pass == 0 {
+                    same_edge(from.x, to.x)
+                } else {
+                    from.x == to.x
+                }) || same_edge(from.y, to.y)
+            } else {
+                from.x == to.x || from.y == to.y
+            };
+            if finished {
                 Self::straight(grid, from, to, zone, level, mark_terrain)?;
                 self.polygon_point(from)?;
                 return Ok(());
@@ -652,7 +794,7 @@ impl RasterWorkspace {
             let Some(best) = best else {
                 return Ok(());
             };
-            position = grid.bounds.clip(position, best)?;
+            position = grid.bounds.clip_for(position, best, grid.rules)?;
         }
         self.pending.clear();
         self.push(position)?;
@@ -791,6 +933,111 @@ fn multiply_divide(point: Point, numerator: i32, denominator: i32) -> Result<Poi
 mod tests {
     use super::*;
     use crate::behavior::RetailProfile;
+
+    #[test]
+    fn versioned_boundaries_preserve_owned_endpoints_with_distinct_paint_rules() {
+        let mut grid =
+            ZoneRaster::new_for(MapSize::Small, Levels::Surface, Ruleset::HotA181).unwrap();
+        let own = ZoneId::new(0);
+        let other = ZoneId::new(1);
+        let from = Point::new(3, 3);
+        let to = Point::new(3, 7);
+        let level = Level::Surface;
+        let mut work = RasterWorkspace::default();
+        for straight in [true, false] {
+            grid.reset_for(MapSize::Small, Levels::Surface, Ruleset::HotA181)
+                .unwrap();
+            grid.assign(from, level, other, false).unwrap();
+            grid.assign(to, level, other, false).unwrap();
+            if straight {
+                RasterWorkspace::straight(&mut grid, from, to, own, level, true).unwrap();
+            } else {
+                let mut rng = RetailRng::new(1);
+                let shape =
+                    BoundaryShape::new(from, to, Point::new(0, 5), Point::new(6, 5)).unwrap();
+                work.irregular_inner(
+                    &mut grid,
+                    from,
+                    to,
+                    own,
+                    level,
+                    0,
+                    Stroke::Zone {
+                        paint_terrain: true,
+                    },
+                    Behavior::Retail(RetailProfile::default()),
+                    Some(shape),
+                    &mut rng,
+                )
+                .unwrap();
+                assert_eq!(rng.draws(), 0);
+            }
+            assert_eq!(
+                *grid.cell(from, level).unwrap(),
+                ZoneCell {
+                    zone: Some(other),
+                    paint_terrain: false
+                }
+            );
+            assert_eq!(
+                *grid.cell(to, level).unwrap(),
+                ZoneCell {
+                    zone: Some(other),
+                    paint_terrain: straight
+                }
+            );
+            for y in 4..7 {
+                assert_eq!(
+                    *grid.cell(Point::new(3, y), level).unwrap(),
+                    ZoneCell {
+                        zone: Some(own),
+                        paint_terrain: true
+                    }
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn segment_clipping_and_corner_walk_do_not_cross_the_map_interior() {
+        let bounds = MapBounds::new(MapSize::Small);
+        let from = Point::new(-3, 2);
+        let to = Point::new(-1, 2);
+        assert_eq!(bounds.clip(from, to).unwrap(), Point::new(0, 2));
+        assert_eq!(bounds.clip_for(from, to, Ruleset::HotA181).unwrap(), from);
+        assert_eq!(
+            bounds
+                .clip_for(from, Point::new(40, 2), Ruleset::HotA181)
+                .unwrap(),
+            Point::new(0, 2)
+        );
+        let mut grid =
+            ZoneRaster::new_for(MapSize::Small, Levels::Surface, Ruleset::HotA181).unwrap();
+        let mut work = RasterWorkspace::default();
+        work.border(
+            &mut grid,
+            Point::new(10, 0),
+            Point::new(10, 35),
+            ZoneId::new(0),
+            Level::Surface,
+            true,
+        )
+        .unwrap();
+        assert_eq!(
+            work.polygon,
+            [Point::new(10, 0), Point::new(35, 0), Point::new(35, 35)]
+        );
+        assert!(grid
+            .cell(Point::new(10, 17), Level::Surface)
+            .unwrap()
+            .zone
+            .is_none());
+        assert!(
+            grid.cell(Point::new(35, 17), Level::Surface)
+                .unwrap()
+                .paint_terrain
+        );
+    }
 
     #[test]
     fn straight_boundary_marks_all_but_final_cell_and_never_clears_a_mark() {

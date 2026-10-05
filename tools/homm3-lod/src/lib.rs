@@ -8,6 +8,9 @@
 //! packed members expose their zlib stream and advertised output size so a
 //! `std` caller can choose how to inflate them.
 
+mod hashed;
+pub use hashed::{resource_name_hash, HashedDirectory, HashedEntry};
+
 use core::fmt;
 
 /// Bytes in the fixed LOD header.
@@ -25,6 +28,8 @@ pub enum Error {
     ShortHeader { available: usize },
     /// The first three bytes are not `LOD`.
     BadSignature([u8; 4]),
+    /// Named and hashed directory readers cannot interpret each other's records.
+    DirectoryEncoding,
     /// The directory size overflowed the host address space.
     DirectoryOverflow { entries: u32 },
     /// The declared directory does not fit.
@@ -40,6 +45,7 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
+            Self::DirectoryEncoding => f.write_str("LOD directory encoding does not match reader"),
             Self::ShortHeader { available } => {
                 write!(f, "LOD header needs {HEADER_SIZE} bytes, found {available}")
             }
@@ -141,6 +147,7 @@ pub enum Payload<'a> {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Header {
     version: u32,
+    key: u32,
     count: usize,
     directory_end: usize,
 }
@@ -169,9 +176,20 @@ impl Header {
             })?;
         Ok(Self {
             version: word(header, 4),
+            key: word(header, 12),
             count,
             directory_end,
         })
+    }
+    /// Key for `HotA`'s hashed directory, or `None` for the named format.
+    /// Native treats both zero and `0x007e0213` as named-format markers.
+    #[must_use]
+    pub const fn hashed_key(self) -> Option<u32> {
+        if self.key == 0 || self.key == 0x007e_0213 {
+            None
+        } else {
+            Some(self.key)
+        }
     }
     /// Bytes needed for the header and complete directory, excluding payloads.
     #[must_use]
@@ -196,6 +214,9 @@ impl<'a> Directory<'a> {
     /// Rejects malformed headers, short directories and out-of-file payloads.
     pub fn parse(data: &'a [u8], file_len: u64) -> Result<Self, Error> {
         let header = Header::parse(data)?;
+        if header.hashed_key().is_some() {
+            return Err(Error::DirectoryEncoding);
+        }
         let available = data
             .len()
             .min(usize::try_from(file_len).unwrap_or(usize::MAX));

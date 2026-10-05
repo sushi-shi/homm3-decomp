@@ -74,9 +74,12 @@ pub use movement::{Direction, Movement, ZoneDistance};
 mod decoration;
 mod lines;
 pub use lines::{LineTile, RiverType, RoadType};
+pub mod cell_records;
+pub mod draw_lists;
 mod obstacles;
 mod rivers;
 mod roads;
+pub mod scoring;
 pub use obstacles::ObstacleWorkspace;
 mod density;
 mod island_noise;
@@ -155,6 +158,10 @@ pub enum ObstacleEntrances {
 /// A safe placement query cannot reproduce an undefined native access.
 #[derive(Debug)]
 pub enum PlacementError {
+    /// The terrain is ready, but this version's placement rules are not integrated.
+    UnsupportedRuleset(crate::rules::Ruleset),
+    /// The placement table has no score column for this terrain.
+    TerrainRule(Terrain),
     /// Retail underflows the bound of its empty road-target loop.
     EmptyRoadTargets,
     /// A native route follows a predecessor that has never been written.
@@ -216,6 +223,12 @@ pub enum PlacementError {
 impl fmt::Display for PlacementError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::UnsupportedRuleset(rules) => {
+                write!(f, "placement for {rules:?} is not implemented yet")
+            }
+            Self::TerrainRule(terrain) => {
+                write!(f, "placement table has no {terrain:?} score column")
+            }
             Self::EmptyRoadTargets => {
                 f.write_str("retail road generation indexes an empty target list")
             }
@@ -369,6 +382,12 @@ impl PlacementWorkspace {
         &'state mut self,
         terrain: PaintedTerrain<'zones, 'tiles>,
     ) -> Result<PlacementMap<'state, 'zones, 'tiles>, PlacementError> {
+        if terrain.coverage().map().request().ruleset() != crate::rules::Ruleset::Complete {
+            return Err(PlacementError::UnsupportedRuleset(
+                terrain.coverage().map().request().ruleset(),
+            ));
+        }
+
         let count = terrain.tiles().len();
         self.cells
             .try_reserve(count.saturating_sub(self.cells.len()))?;

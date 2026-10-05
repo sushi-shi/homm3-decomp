@@ -4,13 +4,14 @@ use crate::{
     behavior::{Behavior, TownMask},
     domain::{Level, Terrain, WorldPosition},
     geometry::{Delaunay, GeometryError, Point, Voronoi, ZoneId},
-    layout::Layout,
+    layout::{choices::ZoneChoices, hints::ZoneSolution, Layout, LayoutError},
     raster::{RasterError, RasterWorkspace, ZoneBounds, ZoneRaster},
     raw,
     request::{MapVersion, Request, Town, Water},
     rng::{RetailRng, RngCheckpoint},
+    rules::Ruleset,
     selection::Player,
-    template::{PlayerSlot, Template},
+    template::{ConnectionOptions, PlayerSlot, Template},
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
@@ -65,8 +66,30 @@ pub struct BoundaryZone {
     creatures: CreaturePreference,
     bounds: Option<ZoneBounds>,
     primary_town: Option<WorldPosition>,
+    saved_center: Option<WorldPosition>,
+    max_guard_value: Option<i32>,
 }
 impl BoundaryZone {
+    /// Center before the most recent `HotA` recenter pass.
+    #[must_use]
+    pub const fn saved_center(self) -> Option<WorldPosition> {
+        self.saved_center
+    }
+    /// Terrain post-pass guard cap, absent before it runs or under Complete.
+    #[must_use]
+    pub const fn max_guard_value(self) -> Option<i32> {
+        self.max_guard_value
+    }
+    pub(crate) fn set_guard_cap(&mut self, value: i32) {
+        self.max_guard_value = Some(value);
+    }
+    pub(crate) fn include_cell(&mut self, point: Point) {
+        if let Some(bounds) = &mut self.bounds {
+            bounds.include(point);
+        } else {
+            self.bounds = Some(ZoneBounds::cell(point));
+        }
+    }
     /// Entrance of the first successfully placed town, regardless of its owner.
     #[must_use]
     pub const fn primary_town(self) -> Option<WorldPosition> {
@@ -134,6 +157,8 @@ pub struct ZoneConnection {
     pub border_guard: bool,
     /// Added water-to-water connections begin complete; others are pending.
     pub connected: bool,
+    /// Extended connection policies retained from the selected template.
+    pub options: ConnectionOptions,
 }
 
 /// Boundary construction cannot proceed in the supported arithmetic/topology.
@@ -185,8 +210,47 @@ pub struct BoundaryMap<'a> {
     template: &'a Template<'a>,
     players: [Option<Player>; crate::request::PLAYER_COUNT],
     water: Water,
+    choices: ZoneChoices,
 }
 impl<'a> BoundaryMap<'a> {
+    pub(crate) fn raster_mut(&mut self) -> &mut ZoneRaster {
+        self.workspace.grid.as_mut().expect("completed raster")
+    }
+    pub(crate) fn zones_mut(&mut self) -> &mut [BoundaryZone] {
+        &mut self.workspace.zones
+    }
+    pub(crate) fn recenter(&mut self) -> Result<(), BoundaryError> {
+        self.workspace.recenter(self.request.ruleset())
+    }
+    /// Retained solver state, including any late town-query diagnostics.
+    #[must_use]
+    pub fn hints(&self) -> Option<&ZoneSolution> {
+        self.choices.hints()
+    }
+
+    /// Select a town while preserving the layout's per-zone query history.
+    /// Generated water zones allow no towns and consume no random draw.
+    ///
+    /// # Errors
+    /// Reports an unknown zone or hint-query arithmetic fault.
+    pub fn select_zone_town(
+        &mut self,
+        id: ZoneId,
+        rng: &mut RetailRng,
+    ) -> Result<Option<Town>, LayoutError> {
+        let zone = self
+            .workspace
+            .zones
+            .get(id.index())
+            .ok_or(LayoutError::UnknownZone(id))?;
+        match zone.origin {
+            ZoneOrigin::Template(source) => self
+                .choices
+                .town(&self.template.zones()[source.index()], rng),
+            ZoneOrigin::Water => Ok(None),
+        }
+    }
+
     pub(crate) fn complete_connection(&mut self, index: usize) {
         self.workspace.connections[index].connected = true;
     }
@@ -280,7 +344,8 @@ impl<'a> BoundaryMap<'a> {
         rng: &mut RetailRng,
     ) -> Result<TerrainCoverage<'a>, BoundaryError> {
         let behavior = self.behavior();
-        self.workspace.prepare_coverage(self.water, behavior, rng)?;
+        self.workspace
+            .prepare_coverage(self.water, self.request.ruleset(), behavior, rng)?;
         Ok(TerrainCoverage {
             boundaries: self,
             rng: rng.checkpoint(),
@@ -337,10 +402,6 @@ impl BoundaryWorkspace {
     ///
     /// # Errors
     /// Reports arithmetic, topology, raster or reservation failures.
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "consume the completed layout token so its boundary stage cannot be repeated"
-    )]
     pub fn generate<'a>(
         &'a mut self,
         completed: Layout<'_, 'a>,
@@ -368,29 +429,40 @@ impl BoundaryWorkspace {
                 creatures: CreaturePreference::from_town(zone.creature_town()),
                 bounds: None,
                 primary_town: None,
+                saved_center: None,
+                max_guard_value: None,
             });
             self.connections.try_reserve(source.connections().len())?;
             for connection in source.connections() {
+                let Some(destination) = connection.destination() else {
+                    continue;
+                };
                 self.connections.push(ZoneConnection {
                     source: zone.id(),
-                    destination: connection.destination(),
+                    destination,
                     value: connection.value(),
                     unguarded: connection.unguarded(),
                     border_guard: connection.border_guard(),
                     connected: false,
+                    options: connection.options(),
                 });
             }
         }
+        let levels = request.constructor_parameters().levels;
         if let Some(grid) = &mut self.grid {
-            grid.reset(request.size(), request.levels())?;
+            grid.reset_for(request.size(), levels, request.ruleset())?;
         } else {
-            self.grid = Some(ZoneRaster::new(request.size(), request.levels())?);
+            self.grid = Some(ZoneRaster::new_for(
+                request.size(),
+                levels,
+                request.ruleset(),
+            )?);
         }
         for level in [Level::Surface, Level::Underground]
             .into_iter()
-            .take(request.levels().count() as usize)
+            .take(levels.count() as usize)
         {
-            self.build_level(level, request, water, rng)?;
+            self.build_level(level, request, template, water, rng)?;
         }
         Ok(BoundaryMap {
             workspace: self,
@@ -398,6 +470,7 @@ impl BoundaryWorkspace {
             template,
             players: completed.players(),
             water,
+            choices: completed.into_choices(),
         })
     }
 
@@ -405,12 +478,13 @@ impl BoundaryWorkspace {
         &mut self,
         level: Level,
         request: &Request,
+        template: &Template<'_>,
         water: Water,
         rng: &mut RetailRng,
     ) -> Result<(), BoundaryError> {
         let mut diagram = match self.diagram.take() {
-            Some(diagram) => diagram,
-            None => Delaunay::new()?,
+            Some(diagram) => diagram.reset_for(request.ruleset())?,
+            None => Delaunay::new_for(request.ruleset())?,
         };
         for zone in &self.zones {
             if zone.position.level == level {
@@ -418,8 +492,21 @@ impl BoundaryWorkspace {
             }
         }
         let original_count = self.zones.len();
-        if level == Level::Underground || water != Water::None {
-            self.add_radial_sites(&mut diagram, original_count, level, request, rng)?;
+        let rock_blocks = if request.ruleset() == Ruleset::HotA181 {
+            template.options().rock_blocks
+        } else {
+            None
+        };
+        if level == Level::Underground || water != Water::None || rock_blocks.is_some() {
+            self.add_radial_sites(
+                &mut diagram,
+                original_count,
+                level,
+                request,
+                water,
+                rock_blocks,
+                rng,
+            )?;
         }
         let diagram = diagram.finish()?;
         self.sizes.clear();
@@ -463,25 +550,32 @@ impl BoundaryWorkspace {
                 )?;
             }
         }
-        self.join_extra_zones(original_count, &diagram)?;
+        self.join_extra_zones(original_count, &diagram, request.ruleset())?;
         self.level_rng[level.index()] = Some(rng.checkpoint());
         self.diagram = Some(diagram.recycle()?);
         Ok(())
     }
 
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "radial placement depends on plane, water, rock policy and replay state"
+    )]
     fn add_radial_sites(
         &mut self,
         diagram: &mut Delaunay,
         original_count: usize,
         level: Level,
         request: &Request,
+        water: Water,
+        rock_blocks: Option<f64>,
         rng: &mut RetailRng,
     ) -> Result<(), BoundaryError> {
         // Retail 0x53e149 passes unwritten stack town flags to 0x5329e0.
         // Nonperturbing pinned-executable captures observe nonempty live masks
         // and one draw on both levels, including initial stack fills 0 and -1.
         // The selected probe alignment is unused; hotfix explicitly allows none.
-        if !request.behavior().is_hotfix() {
+        // HotA's fresh extension explicitly clears the allowed-town table.
+        if request.ruleset() == Ruleset::Complete && !request.behavior().is_hotfix() {
             rng.draw();
         }
         let extent =
@@ -491,7 +585,29 @@ impl BoundaryWorkspace {
             if current.position.level != level {
                 continue;
             }
-            let radius = current.scaled_size;
+            let mut radius = current.scaled_size;
+            let mut test_size = radius;
+            // RVA 0x1bd080: the rock probe differs from the site's radial reach.
+            if request.ruleset() == Ruleset::HotA181
+                && (level == Level::Underground || (rock_blocks.is_some() && water == Water::None))
+            {
+                test_size = if let Some(factor) = rock_blocks {
+                    let value = (f64::from(radius) * factor).trunc();
+                    if !value.is_finite() || value < 0.0 || value > f64::from(i32::MAX) {
+                        return Err(BoundaryError::Arithmetic);
+                    }
+                    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+                    {
+                        value as u32
+                    }
+                } else {
+                    radius.checked_mul(4).ok_or(BoundaryError::Arithmetic)?
+                };
+                radius = radius
+                    .checked_add(test_size)
+                    .ok_or(BoundaryError::Arithmetic)?
+                    / 2;
+            }
             for direction in (0..raw::RADIAL_COSINE_BITS.len()).step_by(4) {
                 let x_offset =
                     f64::from(radius) * f64::from_bits(raw::RADIAL_COSINE_BITS[direction]);
@@ -510,7 +626,7 @@ impl BoundaryWorkspace {
                     }
                     let distance = point.distance(other.position.point)?;
                     let combined = i32::try_from(
-                        radius
+                        test_size
                             .checked_add(other.template_size)
                             .ok_or(BoundaryError::Arithmetic)?,
                     )
@@ -525,11 +641,11 @@ impl BoundaryWorkspace {
                 if !allowed {
                     continue;
                 }
-                let owner = if level == Level::Surface {
+                let owner = if level == Level::Surface && water != Water::None {
                     let id = ZoneId::new(self.zones.len());
-                    let alignment = match request.behavior() {
-                        Behavior::Hotfix => None,
-                        Behavior::Retail(profile) => {
+                    let alignment = match (request.ruleset(), request.behavior()) {
+                        (Ruleset::HotA181, _) | (_, Behavior::Hotfix) => None,
+                        (Ruleset::Complete, Behavior::Retail(profile)) => {
                             select_water_town(profile.water_zone_town_mask(), rng)
                         }
                     };
@@ -542,9 +658,15 @@ impl BoundaryWorkspace {
                         scaled_size: radius,
                         alignment,
                         terrain: Terrain::Water,
-                        creatures: CreaturePreference::water(request.behavior()),
+                        creatures: if request.ruleset() == Ruleset::HotA181 {
+                            CreaturePreference::Neutral
+                        } else {
+                            CreaturePreference::water(request.behavior())
+                        },
                         bounds: None,
                         primary_town: None,
+                        saved_center: None,
+                        max_guard_value: None,
                     });
                     Some(id)
                 } else {
@@ -571,6 +693,7 @@ impl BoundaryWorkspace {
                 unguarded: true,
                 border_guard: false,
                 connected,
+                options: ConnectionOptions::default(),
             });
         }
         Ok(())
@@ -580,6 +703,7 @@ impl BoundaryWorkspace {
         &mut self,
         original_count: usize,
         diagram: &Voronoi,
+        rules: Ruleset,
     ) -> Result<(), BoundaryError> {
         let bounds = self.grid.as_ref().ok_or(BoundaryError::Topology)?.bounds();
         for index in original_count..self.zones.len() {
@@ -592,7 +716,7 @@ impl BoundaryWorkspace {
                 if let Some((point, previous)) =
                     boundary_with(diagram, zone.position.point, destination.id)?
                 {
-                    if bounds.contains(bounds.clip(point, previous)?) {
+                    if bounds.contains(bounds.clip_for(point, previous, rules)?) {
                         self.add_connection(zone.id, destination.id, true)?;
                     }
                 }
@@ -614,7 +738,7 @@ impl BoundaryWorkspace {
             self.distances[index * original_count + index] = 0;
         }
         for index in 0..original_count {
-            self.propagate(ZoneId::new(index))?;
+            self.propagate(ZoneId::new(index), rules)?;
         }
         for index in original_count..self.zones.len() {
             let zone = self.zones[index];
@@ -632,14 +756,14 @@ impl BoundaryWorkspace {
                 });
                 if !shortens {
                     self.add_connection(zone.id, destination.id, false)?;
-                    self.propagate(destination.id)?;
+                    self.propagate(destination.id, rules)?;
                 }
             }
         }
         Ok(())
     }
 
-    fn propagate(&mut self, start: ZoneId) -> Result<(), BoundaryError> {
+    fn propagate(&mut self, start: ZoneId, rules: Ruleset) -> Result<(), BoundaryError> {
         let columns = self.distance_columns;
         for column in 0..columns {
             self.work.clear();
@@ -648,7 +772,9 @@ impl BoundaryWorkspace {
             while let Some((current, _)) = self.work.pop() {
                 let distance = self.distances[current.index() * columns + column] + 1;
                 for connection in &self.connections {
-                    if connection.source != current {
+                    if connection.source != current
+                        || (rules == Ruleset::HotA181 && connection.options.fictive)
+                    {
                         continue;
                     }
                     let target = connection.destination;
@@ -670,12 +796,7 @@ impl BoundaryWorkspace {
         Ok(())
     }
 
-    fn prepare_coverage(
-        &mut self,
-        water: Water,
-        behavior: Behavior,
-        rng: &mut RetailRng,
-    ) -> Result<(), BoundaryError> {
+    fn recenter(&mut self, rules: Ruleset) -> Result<(), BoundaryError> {
         self.summaries.clear();
         self.summaries.try_reserve(self.zones.len())?;
         self.summaries
@@ -711,13 +832,34 @@ impl BoundaryWorkspace {
             }
         }
         for (zone, summary) in self.zones.iter_mut().zip(&self.summaries) {
-            zone.bounds = summary.bounds;
+            if rules == Ruleset::HotA181 {
+                zone.saved_center = Some(zone.position);
+            }
+            // Native calculateZoneBounds never shrinks an existing rectangle.
+            if let Some(bounds) = summary.bounds {
+                zone.include_cell(bounds.minimum());
+                zone.include_cell(Point::new(bounds.maximum().x - 1, bounds.maximum().y - 1));
+            }
             if summary.count > 0 {
                 zone.position.point = Point::new(
                     summary.total.x / summary.count,
                     summary.total.y / summary.count,
                 );
             }
+        }
+        Ok(())
+    }
+
+    fn prepare_coverage(
+        &mut self,
+        water: Water,
+        rules: Ruleset,
+        behavior: Behavior,
+        rng: &mut RetailRng,
+    ) -> Result<(), BoundaryError> {
+        self.recenter(rules)?;
+        let grid = self.grid.as_mut().ok_or(BoundaryError::Topology)?;
+        for zone in &self.zones {
             if water == Water::Islands && zone.position.level == Level::Surface {
                 let polygon = self
                     .polygons
@@ -788,6 +930,28 @@ fn select_water_town(mask: TownMask, rng: &mut RetailRng) -> Option<Town> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn fictive_links_stay_in_the_graph_but_do_not_propagate_hota_distances() {
+        for (rules, expected) in [(Ruleset::Complete, 2), (Ruleset::HotA181, 32000)] {
+            let mut workspace = BoundaryWorkspace {
+                distance_columns: 1,
+                distances: vec![0, 32000, 32000],
+                ..BoundaryWorkspace::default()
+            };
+            workspace
+                .add_connection(ZoneId::new(0), ZoneId::new(1), false)
+                .unwrap();
+            workspace
+                .add_connection(ZoneId::new(1), ZoneId::new(2), false)
+                .unwrap();
+            workspace.connections[2].options.fictive = true;
+            workspace.connections[3].options.fictive = true;
+            workspace.propagate(ZoneId::new(0), rules).unwrap();
+            assert_eq!(workspace.distances, [0, 1, expected]);
+            assert_eq!(workspace.connections.len(), 4);
+        }
+    }
 
     #[test]
     fn water_town_selection_preserves_empty_singleton_and_sparse_draws() {

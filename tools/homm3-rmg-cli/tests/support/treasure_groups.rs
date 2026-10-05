@@ -306,7 +306,10 @@ fn state(
     text.push(' ');
     for artifact in 0..raw::ARTIFACT_COUNT {
         text.push(
-            if ready.quest_artifact_used(ArtifactId::parse(artifact).unwrap()) {
+            if generation
+                .artifact_pool()
+                .is_excluded(ArtifactId::parse(artifact).unwrap())
+            {
                 '1'
             } else {
                 '0'

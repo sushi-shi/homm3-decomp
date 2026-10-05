@@ -103,8 +103,10 @@ impl Registration {
         catalog: &PrototypeCatalog<'_>,
         behavior: Behavior,
         version: MapVersion,
+        ruleset: crate::rules::Ruleset,
     ) -> Result<(), PlacementError> {
-        if catalog.behavior() != behavior
+        if catalog.ruleset() != ruleset
+            || catalog.behavior() != behavior
             || catalog.version() != version
             || self
                 .catalog_owner
@@ -203,6 +205,7 @@ impl PlacementMap<'_, '_, '_> {
             catalog,
             self.coverage().map().behavior(),
             self.coverage().map().version(),
+            self.coverage().map().request().ruleset(),
         )
     }
 
