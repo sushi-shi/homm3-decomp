@@ -78,6 +78,16 @@ Subcommands
         assembly and CFG blocks, explicitly qualified retail correlations,
         and generated C++/JSON reference trees (structure).
 
+  evidence SELECTOR... [--only|--skip SECTION,...] [--json] [--out DIR]
+        The AGENTS.md evidence pass in one process: dreamcast show / lines /
+        asm --blocks / inline-clues / audit, sema diff --summary / --structure
+        / --source, and mac show / disasm / calls when a Mac pair is claimed.
+
+  worktree <new PATH [-b BRANCH] [--from REF]|remove PATH>
+        Create a linked worktree with the toolchain, inputs, Mac SDK and
+        seeded comparison state so `homm3 build --fast TU` works at once;
+        remove a clean one and stop its Wine server.
+
   mac <labels|show|disasm|diff|build> ...
         Navigate and byte-compare admitted Classic Mac PowerPC counterparts.
 
@@ -265,6 +275,10 @@ def _dispatch(argv: list[str]) -> int:
         return cmd_link(argparse.Namespace(link_args=argv[1:]))
     if argv and argv[0] == "rmg":
         return run_module("homm3.rmg", *argv[1:])
+    if argv and argv[0] == "worktree":
+        return run_module("homm3.worktree", *argv[1:])
+    if argv and argv[0] == "evidence":
+        return run_module("homm3.evidence", *argv[1:])
 
     ap = argparse.ArgumentParser(
         prog="homm3", description=__doc__,
@@ -275,6 +289,12 @@ def _dispatch(argv: list[str]) -> int:
                    help="execute Victor resource comparisons (homm3 victor --help)")
     sub.add_parser("rmg", add_help=False,
                    help="execute retail/candidate whole-map comparisons (homm3 rmg --help)")
+
+    sub.add_parser("worktree", add_help=False,
+                   help="create/remove a linked worktree ready for `build --fast` "
+                        "(homm3 worktree --help)")
+    sub.add_parser("evidence", add_help=False,
+                   help="one-shot matching evidence pass for selectors (homm3 evidence --help)")
 
     p = sub.add_parser("init", help="one-time local setup (executables, symbols, toolchain)")
     p.add_argument("--exe", metavar="PATH",
