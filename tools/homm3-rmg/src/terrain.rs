@@ -122,7 +122,8 @@ impl TerrainWorkspace {
         rng: &mut RetailRng,
     ) -> Result<PaintedTerrain<'zones, 'tiles>, TerrainError> {
         let map = coverage.map();
-        let side = map.raster().dimension();
+        let layout = map.raster().layout();
+        let side = layout.side();
         let plane = side * side;
         let count = map.raster().cells().len();
         let initial = TerrainTile::parse(
@@ -148,14 +149,13 @@ impl TerrainWorkspace {
             let start = zone.position().level.index() * plane;
             let mut brush = self.brush(start, side, zone.terrain(), rng);
             if let Some(bounds) = zone.bounds() {
-                for y in bounds.minimum().y..bounds.maximum().y {
-                    for x in bounds.minimum().x..bounds.maximum().x {
-                        let index =
-                            usize::try_from(y).unwrap() * side + usize::try_from(x).unwrap();
-                        let cell = map.raster().cells()[start + index];
-                        if cell.zone == Some(zone.id()) && cell.paint_terrain {
-                            brush.paint(index)?;
-                        }
+                for point in bounds.points() {
+                    let index = layout
+                        .plane_index(point)
+                        .expect("zone bounds enclose map cells");
+                    let cell = map.raster().cells()[start + index];
+                    if cell.zone == Some(zone.id()) && cell.paint_terrain {
+                        brush.paint(index)?;
                     }
                 }
             }

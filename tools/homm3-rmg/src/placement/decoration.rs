@@ -3,7 +3,6 @@
 use super::{CellState, Neighborhood, PathReservation, PlacementError, PlacementMap};
 use crate::{
     domain::{Level, Terrain, WorldPosition},
-    geometry::Point,
     rng::RetailRng,
     terrain::TerrainError,
 };
@@ -24,11 +23,11 @@ impl PlacementMap<'_, '_, '_> {
     /// Reports a missing terrain frame during painting or repair.
     #[expect(
         clippy::missing_panics_doc,
-        reason = "clipped coordinates and parsed map dimensions fit the native index domain"
+        reason = "zone bounds enclose cells of the zone raster"
     )]
     pub fn decorate_underground(&mut self, rng: &mut RetailRng) -> Result<(), TerrainError> {
-        let side = self.terrain.coverage().map().raster().dimension();
-        let plane = side * side;
+        let layout = self.terrain.coverage().map().raster().layout();
+        let plane = layout.plane();
         if self.cells.len() == plane {
             return Ok(());
         }
@@ -52,22 +51,21 @@ impl PlacementMap<'_, '_, '_> {
                         current = terrain;
                     }
                     if let Some(bounds) = zone.bounds() {
-                        for y in bounds.minimum().y..bounds.maximum().y {
-                            for x in bounds.minimum().x..bounds.maximum().x {
-                                let index = usize::try_from(y).unwrap() * side
-                                    + usize::try_from(x).unwrap();
-                                if brush.terrain(index) == Terrain::Rock
-                                    && coverage.map().raster().cells()[plane + index].zone
-                                        == Some(zone.id())
-                                    && (cells[index].reservation == PathReservation::Open
-                                        || memberships.first(cells[index].objects).is_some())
-                                {
-                                    if terrain != current {
-                                        brush.change_terrain(terrain)?;
-                                        current = terrain;
-                                    }
-                                    brush.paint(index)?;
+                        for point in bounds.points() {
+                            let index = layout
+                                .plane_index(point)
+                                .expect("zone bounds enclose map cells");
+                            if brush.terrain(index) == Terrain::Rock
+                                && coverage.map().raster().cells()[plane + index].zone
+                                    == Some(zone.id())
+                                && (cells[index].reservation == PathReservation::Open
+                                    || memberships.first(cells[index].objects).is_some())
+                            {
+                                if terrain != current {
+                                    brush.change_terrain(terrain)?;
+                                    current = terrain;
                                 }
+                                brush.paint(index)?;
                             }
                         }
                     }
@@ -81,13 +79,9 @@ impl PlacementMap<'_, '_, '_> {
     ///
     /// # Errors
     /// Reports coordinates outside admitted map dimensions.
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "parsed map dimensions and allocated tile indexes fit i32"
-    )]
     pub fn mark_coastal_tiles(&mut self) -> Result<(), PlacementError> {
-        let side = self.view().side;
-        let plane = side * side;
+        let layout = self.terrain.coverage().map().raster().layout();
+        let (side, plane) = (layout.side(), layout.plane());
         for level in [Level::Surface, Level::Underground] {
             let start = level.index() * plane;
             if start >= self.cells.len() {
@@ -98,10 +92,7 @@ impl PlacementMap<'_, '_, '_> {
                     continue;
                 }
                 let center = WorldPosition {
-                    point: Point::new(
-                        i32::try_from(index % side).unwrap(),
-                        i32::try_from(index / side).unwrap(),
-                    ),
+                    point: layout.point(index),
                     level,
                 };
                 for position in Neighborhood::ThreeByThree.cells(center, side)? {

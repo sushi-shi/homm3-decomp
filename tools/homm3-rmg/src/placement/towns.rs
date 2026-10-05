@@ -251,7 +251,7 @@ impl PlacementMap<'_, '_, '_> {
     ) -> Result<bool, TownError> {
         let map = self.terrain.coverage().map();
         let view = PlacementView {
-            side: map.raster().dimension(),
+            layout: map.raster().layout(),
             surface: super::PlacementSurface::World {
                 terrain: self.terrain.tiles(),
                 zones: map.raster().cells(),
@@ -421,7 +421,7 @@ impl PlacementMap<'_, '_, '_> {
                     continue;
                 }
                 let mut valid = true;
-                for nearby in Neighborhood::ThreeByThree.cells(entrance, self.view().side)? {
+                for nearby in Neighborhood::ThreeByThree.cells(entrance, self.view().side())? {
                     let index = self.view().index(nearby)?;
                     if self.coverage().map().raster().cells()[index].zone != Some(zone.id()) {
                         valid = false;

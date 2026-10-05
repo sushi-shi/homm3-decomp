@@ -309,7 +309,7 @@ impl PlacementMap<'_, '_, '_> {
         center: WorldPosition,
         zone: Option<ZoneId>,
     ) -> Result<(), PlacementError> {
-        for position in Neighborhood::ThreeByThree.cells(center, self.view().side)? {
+        for position in Neighborhood::ThreeByThree.cells(center, self.view().side())? {
             let index = self.view().index(position)?;
             if self.coverage().map().raster().cells()[index].zone == zone {
                 self.cells[index].clear_obstacle();
@@ -319,7 +319,7 @@ impl PlacementMap<'_, '_, '_> {
     }
 
     fn repair_water_zone_borders(&mut self, rng: &mut RetailRng) -> Result<(), ConnectionError> {
-        let plane = self.view().side * self.view().side;
+        let plane = self.view().side() * self.view().side();
         for level in [Level::Surface, Level::Underground]
             .into_iter()
             .take(self.coverage().map().request().levels().count() as usize)
@@ -338,7 +338,7 @@ impl PlacementMap<'_, '_, '_> {
                 };
                 let position = self.position_at(index);
                 let mut land = None;
-                for nearby in Neighborhood::ThreeByThree.cells(position, self.view().side)? {
+                for nearby in Neighborhood::ThreeByThree.cells(position, self.view().side())? {
                     let index = self.view().index(nearby)?;
                     let terrain = self.terrain.tiles()[index].terrain();
                     if terrain != Terrain::Water
@@ -361,7 +361,7 @@ impl PlacementMap<'_, '_, '_> {
                 {
                     continue;
                 }
-                for nearby in Neighborhood::ThreeByThree.cells(position, self.view().side)? {
+                for nearby in Neighborhood::ThreeByThree.cells(position, self.view().side())? {
                     let index = self.view().index(nearby)?;
                     self.cells[index].mark_obstacle();
                     if self.terrain.tiles()[index].terrain() == Terrain::Water {

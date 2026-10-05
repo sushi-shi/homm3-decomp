@@ -371,8 +371,7 @@ impl PlacementMap<'_, '_, '_> {
         };
         let entry = prototype.entry();
         let width = last_mine.image_mask().signed_width();
-        let side =
-            i32::try_from(self.view().side).map_err(|_| PlacementError::CoordinateOverflow)?;
+        let side = self.view().signed_side();
         // North is up. P is the mine anchor; w is the LAST scanned art's width.
         // The clipped row below spans x=P.x-w through P.x+1 (inclusive).
         //   ... mine ... P

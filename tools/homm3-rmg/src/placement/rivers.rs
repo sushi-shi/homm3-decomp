@@ -31,7 +31,7 @@ fn opposite_bit(direction: Direction) -> u8 {
 
 impl PlacementMap<'_, '_, '_> {
     fn coast_cell(&self, at: WorldPosition, hotfix: bool) -> Result<Option<usize>, PlacementError> {
-        let side = i32::try_from(self.view().side).unwrap();
+        let side = self.view().signed_side();
         // Retail admits x == side, aliasing the next row or plane if allocated.
         if at.point.x < 0
             || at.point.x > side
@@ -100,28 +100,27 @@ impl PlacementMap<'_, '_, '_> {
         Ok(())
     }
     fn mark_river_outlet_targets(&mut self, hotfix: bool) -> Result<(), PlacementError> {
-        let side = self.view().side;
-        let plane = side * side;
+        let layout = self.view().layout;
+        let (side, plane) = (layout.side(), layout.plane());
         for level in [Level::Surface, Level::Underground] {
             let start = level.index() * plane;
             if start >= self.cells.len() {
                 break;
             }
-            for y in 0..side {
-                for x in 0..side {
-                    if self.terrain.tiles()[start + y * side + x].terrain() != Terrain::Water {
-                        continue;
-                    }
-                    let at = WorldPosition {
-                        point: Point::new(i32::try_from(x).unwrap(), i32::try_from(y).unwrap()),
-                        level,
-                    };
-                    for direction in Direction::ALL
-                        .into_iter()
-                        .step_by(raw::RMG_CARDINAL_DIRECTION_STEP as usize)
-                    {
-                        self.mark_coast_target(at, direction, hotfix)?;
-                    }
+            // Row-major: Y outer, X inner.
+            for index in 0..plane {
+                if self.terrain.tiles()[start + index].terrain() != Terrain::Water {
+                    continue;
+                }
+                let at = WorldPosition {
+                    point: layout.point(index),
+                    level,
+                };
+                for direction in Direction::ALL
+                    .into_iter()
+                    .step_by(raw::RMG_CARDINAL_DIRECTION_STEP as usize)
+                {
+                    self.mark_coast_target(at, direction, hotfix)?;
                 }
             }
         }

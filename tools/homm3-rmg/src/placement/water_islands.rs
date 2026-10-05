@@ -77,7 +77,7 @@ impl PlacementMap<'_, '_, '_> {
         let level = zone.position().level;
         let minimum = bounds.minimum();
         let maximum = bounds.maximum();
-        let side = i32::try_from(self.view().side).map_err(|_| PlacementError::Arithmetic)?;
+        let side = self.view().signed_side();
         let unreached = u16::try_from(raw::RMG_UNREACHED_COST).unwrap();
         // The source resets the entire rectangle, including cells of other zones.
         for y in minimum.y..maximum.y {
@@ -154,7 +154,7 @@ impl PlacementMap<'_, '_, '_> {
         rng: &mut RetailRng,
     ) -> Result<(), ConnectionError> {
         let mask_size = MaskSize::parse(maximum.x - minimum.x, maximum.y - minimum.y)?;
-        let side = self.view().side;
+        let side = self.view().side();
         let x = usize::try_from(minimum.x).map_err(|_| PlacementError::Arithmetic)?;
         let y = usize::try_from(minimum.y).map_err(|_| PlacementError::Arithmetic)?;
         let terrain = Terrain::ALL[rng.below(ISLAND_TERRAINS) as usize];

@@ -109,7 +109,7 @@ impl PlacementMap<'_, '_, '_> {
         reported_color: i32,
     ) -> Result<(), PlacementError> {
         let color = BorderColor::from_subtype(reported_color);
-        for nearby in Neighborhood::ThreeByThree.cells(position, self.view().side)? {
+        for nearby in Neighborhood::ThreeByThree.cells(position, self.view().side())? {
             self.mark_empty_border(nearby, color)?;
         }
         let index = self.view().native_index(position)?;

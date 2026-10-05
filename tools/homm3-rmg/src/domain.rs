@@ -139,6 +139,67 @@ pub struct WorldPosition {
     pub level: Level,
 }
 
+/// Flat cell order shared by map and group grids: `(level * side + y) * side + x`.
+///
+/// The one place that converts between flat indices and signed coordinates;
+/// supported sides fit a byte, so every conversion is exact.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct CellLayout {
+    side: u8,
+}
+impl CellLayout {
+    pub(crate) const fn new(side: u8) -> Self {
+        Self { side }
+    }
+    #[allow(clippy::cast_possible_truncation)] // asserted below
+    pub(crate) const fn map(size: crate::request::MapSize) -> Self {
+        const { assert!(raw::MAP_DIMENSION_EXTRA_LARGE <= u8::MAX as u32) };
+        Self::new(size.dimension() as u8)
+    }
+    /// Cells per row.
+    pub(crate) const fn side(self) -> usize {
+        self.side as usize
+    }
+    /// Cells per row, for signed coordinate arithmetic.
+    pub(crate) fn signed_side(self) -> i32 {
+        i32::from(self.side)
+    }
+    /// Cells per plane.
+    pub(crate) const fn plane(self) -> usize {
+        self.side() * self.side()
+    }
+    /// Index of a point inside one square plane, or none outside it.
+    pub(crate) fn plane_index(self, point: Point) -> Option<usize> {
+        let x = usize::try_from(point.x).ok().filter(|&x| x < self.side())?;
+        let y = usize::try_from(point.y).ok().filter(|&y| y < self.side())?;
+        Some(y * self.side() + x)
+    }
+    /// Index of an in-square position on its plane, or none outside the square.
+    pub(crate) fn index(self, position: WorldPosition) -> Option<usize> {
+        Some(position.level.index() * self.plane() + self.plane_index(position.point)?)
+    }
+    /// Plane coordinates of a flat index.
+    #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
+    pub(crate) const fn point(self, index: usize) -> Point {
+        // Both remainders are below `side`, which fits a byte.
+        Point::new(
+            (index % self.side()) as i32,
+            (index / self.side() % self.side()) as i32,
+        )
+    }
+    /// Position of a flat index; any index past the first plane is underground.
+    pub(crate) const fn position(self, index: usize) -> WorldPosition {
+        WorldPosition {
+            point: self.point(index),
+            level: if index < self.plane() {
+                Level::Surface
+            } else {
+                Level::Underground
+            },
+        }
+    }
+}
+
 /// Complete-era terrain values, excluding unchecked wire discriminants.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(i32)]
@@ -343,6 +404,27 @@ mod tests {
         }
         for land in LandTerrain::ALL {
             assert_eq!(land.terrain().index(), land.index());
+        }
+    }
+
+    #[test]
+    fn cell_layout_round_trips_both_planes() {
+        let layout = CellLayout::new(3);
+        for index in 0..2 * layout.plane() {
+            let position = layout.position(index);
+            assert_eq!(layout.index(position), Some(index));
+            assert_eq!(
+                position.level,
+                if index < 9 {
+                    Level::Surface
+                } else {
+                    Level::Underground
+                }
+            );
+        }
+        assert_eq!(layout.point(5), Point::new(2, 1));
+        for outside in [Point::new(-1, 0), Point::new(3, 0), Point::new(0, 3)] {
+            assert_eq!(layout.plane_index(outside), None);
         }
     }
 

@@ -2,7 +2,7 @@
 
 use crate::{
     behavior::Behavior,
-    domain::Level,
+    domain::{CellLayout, Level, WorldPosition},
     geometry::{BoundaryEdge, GeometryError, Point, ZoneId},
     request::{Levels, MapSize, Water},
     rng::RetailRng,
@@ -59,6 +59,11 @@ impl ZoneBounds {
     #[must_use]
     pub const fn maximum(self) -> Point {
         self.maximum
+    }
+    /// Enclosed points in native row-major order: Y outer, X inner.
+    pub fn points(self) -> impl Iterator<Item = Point> {
+        (self.minimum.y..self.maximum.y)
+            .flat_map(move |y| (self.minimum.x..self.maximum.x).map(move |x| Point::new(x, y)))
     }
 }
 
@@ -189,6 +194,7 @@ impl MapBounds {
 #[derive(Debug)]
 pub struct ZoneRaster {
     bounds: MapBounds,
+    layout: CellLayout,
     levels: Levels,
     cells: Vec<ZoneCell>,
 }
@@ -200,6 +206,7 @@ impl ZoneRaster {
     pub fn new(size: MapSize, levels: Levels) -> Result<Self, RasterError> {
         let mut grid = Self {
             bounds: MapBounds::new(size),
+            layout: CellLayout::map(size),
             levels,
             cells: Vec::new(),
         };
@@ -218,6 +225,7 @@ impl ZoneRaster {
         self.cells.resize(count, ZoneCell::default());
         self.cells.fill(ZoneCell::default());
         self.bounds = MapBounds::new(size);
+        self.layout = CellLayout::map(size);
         self.levels = levels;
         Ok(())
     }
@@ -233,24 +241,19 @@ impl ZoneRaster {
     }
     /// Cells per row on each plane.
     #[must_use]
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "private bounds always have a supported positive dimension"
-    )]
-    pub fn dimension(&self) -> usize {
-        usize::try_from(self.bounds.side).unwrap()
+    pub const fn dimension(&self) -> usize {
+        self.layout.side()
+    }
+    pub(crate) const fn layout(&self) -> CellLayout {
+        self.layout
     }
     fn index(&self, point: Point, level: Level) -> Result<usize, RasterError> {
-        if !self.bounds.contains(point)
-            || (level == Level::Underground && self.levels == Levels::Surface)
-        {
+        if level == Level::Underground && self.levels == Levels::Surface {
             return Err(RasterError::OutsideMap(point, level));
         }
-        let side = usize::try_from(self.bounds.side).unwrap();
-        Ok(
-            (level.index() * side + usize::try_from(point.y).unwrap()) * side
-                + usize::try_from(point.x).unwrap(),
-        )
+        self.layout
+            .index(WorldPosition { point, level })
+            .ok_or(RasterError::OutsideMap(point, level))
     }
     fn cell(&mut self, point: Point, level: Level) -> Result<&mut ZoneCell, RasterError> {
         let index = self.index(point, level)?;

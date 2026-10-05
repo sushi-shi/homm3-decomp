@@ -4,7 +4,7 @@ use super::{
     offset_position, ObjectArena, ObjectId, PathReservation, PlacementError, PlacementMap,
 };
 use crate::{
-    domain::{FlagSet, Level, Terrain, WorldPosition},
+    domain::{FlagSet, Terrain, WorldPosition},
     geometry::Point,
     identity::OwnerId,
     object::DECORATION_KINDS,
@@ -122,7 +122,7 @@ impl PlacementMap<'_, '_, '_> {
         // Retail includes decorations with an unoccupied bottom row, even
         // though hotfix catalog admission excludes them.
         let footprint = entry.image_mask().size()?;
-        let side = i32::try_from(self.view().side).map_err(|_| PlacementError::Arithmetic)?;
+        let side = self.view().signed_side();
         let mut terrain_seen = FlagSet::<Terrain>::NONE;
         // Footprint plus a one-cell border; marks[c][r] is P + (1-c, 1-r).
         // c grows west, r north. North is up; # is a drawn 3x2 footprint:
@@ -324,10 +324,6 @@ impl PlacementMap<'_, '_, '_> {
     ///
     /// # Errors
     /// Reports placement-rule, object, geometry, allocation or arithmetic faults.
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "parsed dimensions and tile indexes fit native signed coordinates"
-    )]
     pub fn decorate_obstacles(
         &mut self,
         scratch: &mut ObstacleWorkspace,
@@ -345,25 +341,13 @@ impl PlacementMap<'_, '_, '_> {
         }
         self.prepare_object_context(objects, catalog)?;
         scratch.prepare(catalog)?;
-        let side = self.view().side;
-        let plane = side * side;
         for index in 0..self.cells.len() {
             if self.cells[index].reservation != PathReservation::Obstacle
                 || !self.view().passable(index)
             {
                 continue;
             }
-            let position = WorldPosition {
-                point: Point::new(
-                    i32::try_from(index % side).unwrap(),
-                    i32::try_from(index % plane / side).unwrap(),
-                ),
-                level: if index < plane {
-                    Level::Surface
-                } else {
-                    Level::Underground
-                },
-            };
+            let position = self.view().layout.position(index);
             self.fill_obstacles(scratch, catalog, rules, objects, position, rng)?;
         }
         for index in 0..self.cells.len() {
@@ -466,7 +450,7 @@ impl PlacementMap<'_, '_, '_> {
             let object = objects.create(catalog, selected.prototype)?;
             // Decoration updates generator counts and distances as well as cell membership.
             self.register_object(objects, catalog, object, at)?;
-            let side = i32::try_from(self.view().side).unwrap();
+            let side = self.view().signed_side();
             for y in (at.point.y - i32::from(footprint.height())).max(0)..(at.point.y + 2).min(side)
             {
                 for x in

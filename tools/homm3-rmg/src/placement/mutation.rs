@@ -5,7 +5,7 @@ use super::{
     PlacementView,
 };
 use crate::{
-    domain::WorldPosition,
+    domain::{CellLayout, WorldPosition},
     geometry::Point,
     object::ObjectKind,
     prototype::{PreparedPrototype, PrototypeCatalog},
@@ -199,7 +199,7 @@ impl PlacementMap<'_, '_, '_> {
         self.prepare_registration(catalog)?;
         objects.require_world_insertion(object)?;
         let touched = prepare_insertion(
-            self.view().side,
+            self.view().layout,
             self.cells,
             self.memberships,
             objects,
@@ -300,7 +300,7 @@ impl PlacementView<'_> {
                 .y
                 .checked_sub(i32::from(cell.y()))
                 .ok_or(PlacementError::CoordinateOverflow)?;
-            if !usize::try_from(y).is_ok_and(|y| y < self.side) {
+            if !usize::try_from(y).is_ok_and(|y| y < self.side()) {
                 continue;
             }
             let x = anchor
@@ -327,7 +327,7 @@ impl PlacementView<'_> {
     }
 }
 pub(super) fn prepare_insertion(
-    side: usize,
+    layout: CellLayout,
     cells: &[CellState],
     memberships: &mut Memberships,
     objects: &ObjectArena,
@@ -345,7 +345,7 @@ pub(super) fn prepare_insertion(
         .get(geometry.prototype())
         .ok_or(PlacementError::UnknownPrototype(geometry.prototype()))?;
     let view = PlacementView {
-        side,
+        layout,
         surface: super::PlacementSurface::Group,
         cells,
     };
