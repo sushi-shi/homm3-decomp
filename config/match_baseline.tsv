@@ -981,7 +981,7 @@ cmbtmgr	?placeArmyInGrid@combatManager@@QAEXABVarmy@@H@Z	99.7727	99.7727	100.000
 cmbtmgr	?placeLargeObstacle@combatManager@@QAEHII@Z	100.0000	100.0000	100.0000	0x668a0	tokens1:270d600e050d
 cmbtmgr	?placeObstacle@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x66010	tokens1:61bcadb3f2ff
 cmbtmgr	?placeObstacle@combatManager@@QAEXABUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0	tokens1:08bb8ffb86af
-cmbtmgr	?powEffect@combatManager@@QAEXW4TSpellEffectID@@H@Z	95.8134	95.8134	96.2963	0x68990	tokens1:97af6d142af6
+cmbtmgr	?powEffect@combatManager@@QAEXW4TSpellEffectID@@H@Z	95.8134	95.8134	96.2963	0x68990	tokens1:b9269194137f
 cmbtmgr	?raiseSkeletons@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x69f20	tokens1:7c42b2a81edb
 cmbtmgr	?removeArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100.0000	0x68730	tokens1:57afa9bc8dca
 cmbtmgr	?removeObstacle@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x66b30	tokens1:f41f0da4a94e
@@ -1004,7 +1004,7 @@ cmbtmgr	?unnamed4693a0@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x693a0
 cmbtmgr	?unnamed469e50@combatManager@@QAEEHPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x69e50	tokens1:7e4a37db8e27
 cmbtmgr	?updateArmyGroup@combatManager@@AAEXH@Z	100.0000	100.0000	100.0000	0x641f0	tokens1:c0ccf7c1a214
 cmbtmgr	?updateArmyLuckAndMorale@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x69750	tokens1:276f42ce2e10
-cmbtmgr	?viewArmy@combatManager@@QAEXPAVarmy@@H@Z	99.9457	100.0000	100.0000	0x68860	tokens1:2ebd9f6ee999
+cmbtmgr	?viewArmy@combatManager@@QAEXPAVarmy@@H@Z	100.0000	100.0000	100.0000	0x68860	tokens1:2ebd9f6ee999
 combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x6bc30	tokens1:09ed43303132
 combatcontrolsubwindow	??0TCombatCreatureSubWindow@@QAE@HHHHPAVheroWindow@@H@Z	100.0000	100.0000	100.0000	0x6ceb0	tokens1:f6a1cb14f779
 combatcontrolsubwindow	??0TCombatHeroSubWindow@@QAE@HHHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x6c370	tokens1:1f14f37f7007

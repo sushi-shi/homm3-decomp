@@ -3474,6 +3474,10 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
 // 99.96%. All 116 available Mac pairs in the three affected units hold.
 // The remaining animation-walk slot/register differences remain open;
 // a lower Windows score does not refute these retained source operations.
+// DC 0x6298a..0x62a0c attributes the complete readiness predicate to
+// cmbtmgr.cpp:4337; Mac 0x754b0..0x7553c has the same short-circuit paths.
+// Keep one positive condition around frame advancement instead of an empty
+// threshold arm. This scope recovery preserves the Windows 95.8134% body.
 VA(0x00468990, 0xA08)
 DC_ADDRESS(0x062560, 0x856)
 MAC_ADDRESS(0x074eec, 0xb30)  // anchor-global
@@ -3590,48 +3594,38 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                     }
                     if (stack.m_nextFrameType == -1)
                         continue;
-                    if (stack.m_powSequenceComplete)
-                        continue;
-
-                    if (!stack.m_showAttackFrames
-                            && winceStartOffset
-                                > stack.m_remainingFramesToPlay) {
-                        if (attackFrames) {
-                            if (frameCount >= attackFrames - 1) {
-                                // The attack threshold permits this frame.
-                            } else {
-                                continue;
+                    if (!stack.m_powSequenceComplete
+                            && (stack.m_showAttackFrames
+                            || winceStartOffset <= stack.m_remainingFramesToPlay
+                            || (attackFrames && frameCount >= attackFrames - 1)
+                            || (!attackFrames
+                                && (stack.m_currFrameType != cs_wince
+                                    || stack.m_currFrameIndex
+                                        < stack.m_stdIcon->getNumFrames(
+                                            stack.m_currFrameType) - 1)))) {
+                        if (stack.m_currFrameType != stack.m_nextFrameType) {
+                            if (!isQuickCombat()) {
+                                if (stack.m_showAttackFrames)
+                                    stack.playSample(army::ATTACK_SAMPLE);
+                                else if (stack.m_nextFrameType == cs_wince)
+                                    stack.playSample(army::WINCE_SAMPLE);
+                                else if (stack.m_nextFrameType == cs_death)
+                                    stack.playSample(army::DIE_SAMPLE);
+                                else if (stack.m_nextFrameType == cs_defend)
+                                    stack.playSample(army::DEFEND_SAMPLE);
                             }
-                        } else if (stack.m_currFrameType == cs_wince
-                                && stack.m_currFrameIndex
-                                    >= stack.m_stdIcon->getNumFrames(
-                                        stack.m_currFrameType) - 1) {
-                            continue;
+                            stack.m_currFrameType = stack.m_nextFrameType;
+                            stack.m_currFrameIndex = 0;
+                        } else if (stack.m_currFrameIndex
+                                < stack.m_stdIcon->getNumFrames(
+                                    stack.m_currFrameType) - 1) {
+                            stack.m_currFrameIndex++;
+                        } else if (stack.m_currFrameType != cs_wait
+                                && stack.m_currFrameType != cs_death) {
+                            stack.m_currFrameType = cs_wait;
+                            stack.m_currFrameIndex = 0;
+                            stack.m_powSequenceComplete = 1;
                         }
-                    }
-
-                    if (stack.m_currFrameType != stack.m_nextFrameType) {
-                        if (!isQuickCombat()) {
-                            if (stack.m_showAttackFrames)
-                                stack.playSample(army::ATTACK_SAMPLE);
-                            else if (stack.m_nextFrameType == cs_wince)
-                                stack.playSample(army::WINCE_SAMPLE);
-                            else if (stack.m_nextFrameType == cs_death)
-                                stack.playSample(army::DIE_SAMPLE);
-                            else if (stack.m_nextFrameType == cs_defend)
-                                stack.playSample(army::DEFEND_SAMPLE);
-                        }
-                        stack.m_currFrameType = stack.m_nextFrameType;
-                        stack.m_currFrameIndex = 0;
-                    } else if (stack.m_currFrameIndex
-                            < stack.m_stdIcon->getNumFrames(
-                                stack.m_currFrameType) - 1) {
-                        stack.m_currFrameIndex++;
-                    } else if (stack.m_currFrameType != cs_wait
-                            && stack.m_currFrameType != cs_death) {
-                        stack.m_currFrameType = cs_wait;
-                        stack.m_currFrameIndex = 0;
-                        stack.m_powSequenceComplete = 1;
                     }
                 }
             }
