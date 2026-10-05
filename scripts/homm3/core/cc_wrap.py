@@ -184,8 +184,11 @@ def anchor_wine_prefix(env=None, *, root=None, require=False) -> str:
 
 
 def ensure_wineserver():
+    # Keep the server across back-to-back compiles, but let an idle one exit
+    # after 60 s: a bare -p never exits and leaves servers for every old
+    # worktree holding memory.
     ws = shutil.which("wineserver")
-    if ws: subprocess.run([ws, "-p"], check=False, stdin=subprocess.DEVNULL,
+    if ws: subprocess.run([ws, "-p60"], check=False, stdin=subprocess.DEVNULL,
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def _run_cl(cmd, out):
