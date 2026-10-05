@@ -94,10 +94,8 @@ void TSubWindow::saveBackground()
 {
     m_background = new Bitmap16Bit(m_width, m_height);
     pollSound();
-    Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-    m_background->grab(screen->getMap(0, 0),
-        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
-        screen->getWidth(), screen->getHeight(), screen->getPitch());
+    m_background->grab(g_windowManager->m_screenBitmap,
+        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y);
     pollSound();
 }
 

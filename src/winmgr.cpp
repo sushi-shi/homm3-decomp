@@ -607,11 +607,8 @@ void heroWindowManager::saveFizzleSourceX(int startX, int startY, int width,
         if (width > 0 && height > 0) {
             delete m_bmpFizzleSource;
             m_bmpFizzleSource = new Bitmap16Bit(width, height);
-            m_bmpFizzleSource->grab(g_windowManager->m_screenBitmap->getMap(0, 0),
-                           startX, startY,
-                           g_windowManager->m_screenBitmap->getWidth(),
-                           g_windowManager->m_screenBitmap->getHeight(),
-                           g_windowManager->m_screenBitmap->getPitch());
+            m_bmpFizzleSource->grab(g_windowManager->m_screenBitmap,
+                                    startX, startY);
         }
     }
 }
@@ -1004,8 +1001,7 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
     const unsigned int blueMask2 = (Bitmap16Bit::s_blueMask << 16) | Bitmap16Bit::s_blueMask;
     const int fadePeriod = 50;
     Bitmap16Bit bmpFadeSource(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
-    bmpFadeSource.grab(m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
-        m_screenBitmap->getHeight(), m_screenBitmap->getPitch());
+    bmpFadeSource.grab(m_screenBitmap, 0, 0);
 
     // DC winmgr.cpp:1793 calls mouseManager::Disable after Grab. That
     // recovered header helper only reads the disable count, so VC6 elides
@@ -1080,8 +1076,7 @@ void heroWindowManager::fadeFromBlack(int speed)
     const unsigned int maskBlue = (Bitmap16Bit::s_blueMask << 16) | Bitmap16Bit::s_blueMask;
     const int fadePeriod = 50;
     Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
-    fadeFrom.grab(m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
-        m_screenBitmap->getHeight(), m_screenBitmap->getPitch());
+    fadeFrom.grab(m_screenBitmap, 0, 0);
 
     for (int shift = 2; shift > 0; shift--) {
         unsigned long deadline = GameTime::get() + fadePeriod;
