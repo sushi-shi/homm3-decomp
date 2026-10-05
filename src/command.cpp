@@ -373,7 +373,7 @@ int combatManager::main(message& msg)
 
             case RS_PLAYER_DROPPED:
                 if (handleCombatPlayerDrop(
-                        static_cast<CPlayerDropMsg*>(netMsg)->m_dpid, &msg)) {
+                        static_cast<CPlayerDropMsg*>(netMsg)->m_dpid, msg)) {
                     killMsg.setMessage(0);
                     m_netMsgHandlerPause->setAbortPopupMsg(netMsg);
                     return MESSAGE_DISPATCH_FORWARD;
@@ -1333,7 +1333,7 @@ int combatManager::checkWin(message* msg)
 VA(0x004763f0, 0x4D)
 DC_ADDRESS(0x06d508, 0x3e)
 MAC_ADDRESS(0x084418, 0x98)
-unsigned char combatManager::isOutsidePlacementBoundry(int group, int index)
+bool combatManager::isOutsidePlacementBoundry(int group, int index)
 {
     if (group == 0)
         return gridX(index)
@@ -2034,7 +2034,7 @@ void combatManager::checkChangeSelector()
 VA(0x00477b60, 0xB6)
 DC_ADDRESS(0x06eb18, 0xa4)
 MAC_ADDRESS(0x085e38, 0xf0)
-void combatManager::turnOffSelector(unsigned char drawIt)
+void combatManager::turnOffSelector(bool drawIt)
 {
     if (!m_lastMovedArmy)
         return;
@@ -2102,7 +2102,7 @@ void combatManager::checkChangeHighlighter(int currentIndex)
 VA(0x00477e10, 0xC2)
 DC_ADDRESS(0x06ed18, 0xa4)
 MAC_ADDRESS(0x086180, 0xfc)
-void combatManager::turnOffHighlighter(unsigned char drawIt)
+void combatManager::turnOffHighlighter(bool drawIt)
 {
     if (!m_highlighterOn)
         return;
@@ -2810,7 +2810,7 @@ MAC_ADDRESS(0x087f58, 0xec)
 void combatManager::setCombatGrid(int combatShowEntireGrid,
                                   int combatShowMouseHex,
                                   int combatGridLevel,
-                                  unsigned char drawItNow)
+                                  bool drawItNow)
 {
     if (g_config.m_showCombatGrid == combatShowEntireGrid
             && g_config.m_showCombatMouseHex == combatShowMouseHex
@@ -2831,9 +2831,8 @@ void combatManager::setCombatGrid(int combatShowEntireGrid,
     writePrefs();
 }
 
-// THE FIZZLE TAIL. combatManager::drawbridgeBounds is not
-// drawbridge-only: ComputeMaxExtent refreshes the same four dwords and
-// AddArmy hands them to the window manager as (left, top,
+// THE FIZZLE TAIL. ComputeMaxExtent refreshes m_extent and
+// AddArmy hands it to the window manager as (left, top,
 // right-left+1, bottom-top+1) - which is what fixes their roles as a
 // left/top/right/bottom rectangle. The save/redraw/fizzle triple around
 // DrawFrame(0,0,0,0,1,0) is what makes a mid-combat summon appear.
@@ -2933,8 +2932,7 @@ void combatManager::viewCastleBallista(int isQuickInfo)
 VA(0x0047a500, 0x164)
 DC_ADDRESS(0x070820, 0xfe)
 MAC_ADDRESS(0x0885a4, 0x16c)
-unsigned char combatManager::handleCombatPlayerDrop(unsigned long dpid,
-                                                      message* msg)
+bool combatManager::handleCombatPlayerDrop(unsigned long dpid, message& msg)
 {
     int gamePos = g_game->getGamePosFromDPID(dpid);
     if (gamePos == -1)
@@ -2949,8 +2947,8 @@ unsigned char combatManager::handleCombatPlayerDrop(unsigned long dpid,
         normalDialogTimeOut(
             g_generalText->getText(GENERAL_TEXT_COMBAT_LOCAL_PLAYER_DROPPED),
             1, 15000, -1, -1, -1, 0, -1, 0, -1, -1, 0);
-        msg->m_id = 0x4000;
-        msg->m_codeX = 1;
+        msg.m_id = 0x4000;
+        msg.m_codeX = 1;
         return 1;
     }
 
@@ -2959,6 +2957,6 @@ unsigned char combatManager::handleCombatPlayerDrop(unsigned long dpid,
         1, 15000, -1, -1, -1, 0, -1, 0, -1, -1, 0);
     m_sideRetreated[1] = 1;
     resetCycleTimers();
-    checkWin(msg);
+    checkWin(&msg);
     return 1;
 }
