@@ -2930,6 +2930,11 @@ unsigned char aiChooseResourceOrExperience(const hero* currentHero,
 }
 
 // Keep the address claim in retail order; the definition follows DC source order.
+// Traced /Ob2 (2026-10-06): caller cb 1911 (budget 3822) runs the 61 value-of
+// helpers sequentially; valueOfMagicSchool (cb 111) still sees 226 and
+// valueOfPowerSchool (cb 45) sees 63, so both expand where retail calls them.
+// Retail's sequence needs about 130 less budget by then (e.g. a caller cost
+// some 65 units lower) with every earlier decision unchanged.
 VA(0x00528040, 0x1648)
 MAC_ADDRESS(0x146134, 0xa58)  // anchor-callee + DC statement shape
 long aiValueOfEvent(const hero* currentHero, type_point point,
