@@ -134,12 +134,21 @@ def wine_failure_advice(stderr: str) -> str:
 
 def winepath_w(p):
     """Translate a Linux path for Wine, or stop with an actionable error."""
-    try:
-        result = subprocess.run(["winepath", "-w", str(p)], text=True,
-                                stdin=subprocess.DEVNULL, capture_output=True)
-    except FileNotFoundError:
-        raise WineUnavailable("winepath not found on PATH - run inside "
-                              "`nix develop .#build`.") from None
+    # Files, not pipes: a Wine launch can start wineserver or prefix
+    # services that inherit the output handles and outlive winepath, and
+    # reading a pipe to EOF would then block for as long as they run.
+    with tempfile.TemporaryFile("w+") as out, tempfile.TemporaryFile("w+") as err:
+        try:
+            returncode = subprocess.run(["winepath", "-w", str(p)],
+                                        stdin=subprocess.DEVNULL, stdout=out,
+                                        stderr=err).returncode
+        except FileNotFoundError:
+            raise WineUnavailable("winepath not found on PATH - run inside "
+                                  "`nix develop .#build`.") from None
+        out.seek(0)
+        err.seek(0)
+        result = subprocess.CompletedProcess(["winepath"], returncode,
+                                             out.read(), err.read())
     translated = result.stdout.strip()
     if result.returncode == 0 and translated:
         return translated

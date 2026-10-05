@@ -141,14 +141,20 @@ class WinepathFailureTests(unittest.TestCase):
     """A failed `winepath -w` used to surface as a raw CalledProcessError
     traceback with Wine's own explanation discarded (stderr=DEVNULL)."""
 
+    def winepath(self, body: str):
+        """Run cc_wrap.winepath_w against a fake `winepath` on PATH."""
+        tmp = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        _fake_tool(tmp, "winepath", body)
+        self.enterContext(patch.dict(os.environ, {
+            "PATH": f"{tmp}:{os.environ.get('PATH', '')}",
+            "WINEPREFIX": "/x/build/wineprefix"}))
+        return lambda path: cc_wrap.winepath_w(path)
+
     def test_failure_reports_stderr_and_advice(self):
-        failed = subprocess.CompletedProcess(
-            ["winepath"], 1, stdout="",
-            stderr="wineserver: bind /tmp/.wine-1000: Operation not permitted\n")
-        with patch.object(cc_wrap.subprocess, "run", return_value=failed), \
-                patch.dict(os.environ, {"WINEPREFIX": "/x/build/wineprefix"}):
-            with self.assertRaises(cc_wrap.WineUnavailable) as caught:
-                cc_wrap.winepath_w("/x/src/a.cpp")
+        translate = self.winepath(
+            "echo 'wineserver: bind /tmp/.wine-1000: Operation not permitted' >&2\nexit 1\n")
+        with self.assertRaises(cc_wrap.WineUnavailable) as caught:
+            translate("/x/src/a.cpp")
         message = str(caught.exception.code)
         self.assertIn("Operation not permitted", message)
         self.assertIn("sandbox", message)
@@ -162,10 +168,17 @@ class WinepathFailureTests(unittest.TestCase):
         self.assertIn("nix develop .#build", str(caught.exception.code))
 
     def test_success_returns_the_translated_path(self):
-        ok = subprocess.CompletedProcess(["winepath"], 0, stdout="Z:\\x\n",
-                                         stderr="fixme: noise\n")
-        with patch.object(cc_wrap.subprocess, "run", return_value=ok):
-            self.assertEqual(cc_wrap.winepath_w("/x"), "Z:\\x")
+        translate = self.winepath("echo 'fixme: noise' >&2\necho 'Z:\\x'\n")
+        self.assertEqual(translate("/x"), "Z:\\x")
+
+    def test_a_lingering_wine_service_does_not_block_translation(self):
+        # Wine may start wineserver/prefix services that inherit the output
+        # handles; reading pipes to EOF would wait for them to exit.
+        import time
+        translate = self.winepath("sleep 20 &\necho 'Z:\\x'\n")
+        started = time.monotonic()
+        self.assertEqual(translate("/x"), "Z:\\x")
+        self.assertLess(time.monotonic() - started, 10)
 
     def test_compiler_wrapper_exits_without_a_traceback(self):
         with tempfile.TemporaryDirectory() as tmp:
