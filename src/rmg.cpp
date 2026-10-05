@@ -2207,7 +2207,7 @@ MAC_ADDRESS(0x250ec8, 0x118)
 static void replaceRmgObjectWithTreasure(TRmgGenerator* generator,
     TRmgObject* object, int value)
 {
-    TRmgMapPosition position = object->m_position;
+    TRmgMapPosition position = object->getPosition();
     generator->removeObject(object);
     TRmgZone* zone = generator->m_zones[
         generator->m_map.getMapItem(position)->m_zoneState.m_zone];
@@ -8961,7 +8961,7 @@ TRmgObjectPropertiesRef* TRmgGenerator::selectObjectPrototype(
 // caller is that RMG selector. Keep the ordinary source helper and canonical
 // passability/trigger queries; the original helper spelling is unknown.
 MAC_ADDRESS(0x24a0f4, 0x9c)
-static int countRmgObjectFootprintCells(const TObjectType* prototype)
+static int countRmgOccupiedCells(const TObjectType* prototype)
 {
     int occupied = 0;
     for (unsigned int x = 0; x < prototype->getWidth(); ++x) {
@@ -9014,7 +9014,7 @@ TRmgObject* TRmgGenerator::createTreasureObject(TRmgZone* zone,
         if (position.m_x >= 0 && m_map.isPlacementBlocked(candidate, position, zoneIndex, 1))
             continue;
         if (compact) {
-            int valuePerCell = objectValue / countRmgObjectFootprintCells(candidate->m_prototype);
+            int valuePerCell = objectValue / countRmgOccupiedCells(candidate->m_prototype);
             if (valuePerCell < 3 * bestValuePerCell / 4)
                 continue;
             if (bestValuePerCell < 3 * valuePerCell / 4) {
