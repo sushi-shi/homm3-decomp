@@ -690,6 +690,21 @@ def audit(corpus, row: dict, *, dump=None, data=None, type_table=None, candidate
     return output
 
 
+# `dreamcast audit` exit codes. Coverage gaps used to share 2 with real
+# errors, so every gap read as a failed command.
+AUDIT_CLEAN, AUDIT_FINDINGS, AUDIT_ERROR, AUDIT_GAPS, AUDIT_FINDINGS_AND_GAPS = range(5)
+
+
+def audit_exit_code(findings: int, gaps: int, stale_suppressions: int) -> int:
+    """0 clean, 1 review findings, 2 error (input, or stale suppressions to
+    remove), 3 coverage gaps only, 4 review findings and coverage gaps."""
+    if stale_suppressions:
+        return AUDIT_ERROR
+    if gaps:
+        return AUDIT_FINDINGS_AND_GAPS if findings else AUDIT_GAPS
+    return AUDIT_FINDINGS if findings else AUDIT_CLEAN
+
+
 def run(corpus, rows: list[dict], *, as_json: bool = False,
         suppression_path: Path | None = None) -> int:
     from homm3.analysis import dc_lines
@@ -739,4 +754,4 @@ def run(corpus, rows: list[dict], *, as_json: bool = False,
               f"{total_suppressed} suppressed finding(s), {total_gaps} coverage gap(s)")
         for module, dc_offset, finding_id in stale_suppressions:
             print(f"  STALE SUPPRESSION: {module} dc:{dc_offset:#x} {finding_id}")
-    return 2 if total_gaps or stale_suppressions else 1 if total_findings else 0
+    return audit_exit_code(total_findings, total_gaps, len(stale_suppressions))

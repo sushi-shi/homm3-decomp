@@ -408,11 +408,14 @@ def main(argv: list[str] | None = None) -> int:
     # Analysis rc=1 means an answered difference. Build/init and the other
     # pipeline commands use rc=1 for failure.
     failure_rc = 2 if argv and argv[0] in {"sema", "vc6", "dreamcast", "mac", "rmg", "victor"} else 1
+    # `dreamcast audit` answers coverage gaps with 3 (gaps) or 4 (findings + gaps).
+    audit = argv[:2] == ["dreamcast", "audit"]
     return usage.run_logged(
         _dispatch, argv,
         lambda rc, **meta: usage.append(ROOT / "build/homm3_usage.log",
                                        shlex.join(["homm3", *argv]), rc, **meta),
-        failure_rc=failure_rc, scope="cli")
+        failure_rc=failure_rc, scope="cli",
+        difference_codes=(3, 4) if audit else ())
 
 
 if __name__ == "__main__":

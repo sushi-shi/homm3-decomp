@@ -330,8 +330,9 @@ malformed rows are rejected. JSON exposes the retained review metadata as
 `suppression_confidence` and `suppression_reason`.
 
 Exit status is **0** for no unsuppressed findings, gaps or stale suppressions,
-**1** for review findings, and **2** for coverage gaps, stale suppressions or an
-input error. Zero describes only the checked facts; it does not certify complete
+**1** for review findings, **2** for stale suppressions or an input error, **3**
+for coverage gaps alone and **4** for review findings plus coverage gaps.
+Zero describes only the checked facts; it does not certify complete
 source recovery. Whole-corpus review can take time because each selected
 definition is parsed under its owning profile.
 

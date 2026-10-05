@@ -337,13 +337,26 @@ class CommandTest(unittest.TestCase):
                 facts.load_suppressions(path)
 
     def test_exit_codes_do_not_hide_gaps_or_findings(self):
-        for findings, gaps, code in (([], [], 0), ([{}], [], 1), ([], ["parse failure"], 2)):
+        # Gaps used to exit 2, indistinguishable from input errors.
+        for findings, gaps, code in (([], [], 0), ([{}], [], 1), ([], ["parse failure"], 3),
+                                     ([{}], ["parse failure"], 4)):
             row = {"findings": findings, "coverage_gaps": gaps}
             with patch("homm3.analysis.dc_lines.load_symbols"), patch("homm3.core.inputs.read_dreamcast_exe"), \
                  patch("homm3.core.nb11_types.Types.from_symbols"), patch.object(facts, "audit", return_value=row), \
                  contextlib.redirect_stdout(io.StringIO()) as out:
                 self.assertEqual(facts.run(None, [{}], as_json=True), code)
             self.assertEqual(json.loads(out.getvalue())["summary"]["coverage_gaps"], len(gaps))
+        self.assertEqual(facts.audit_exit_code(1, 1, 1), 2)
+
+    def test_coverage_gaps_are_logged_as_answers_not_failures(self):
+        from homm3.core import usage
+        for rc, outcome in ((3, "difference"), (4, "difference"), (2, "error")):
+            records = []
+            with self.subTest(rc=rc), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(usage.run_logged(
+                    lambda argv: rc, [], lambda code, **meta: records.append(meta),
+                    difference_codes=(3, 4)), rc)
+            self.assertEqual(records[0]["outcome"], outcome)
 
 
 if __name__ == "__main__":

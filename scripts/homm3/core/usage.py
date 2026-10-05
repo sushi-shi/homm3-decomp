@@ -89,7 +89,8 @@ def classify_error(text):
     return "command.failed"
 
 
-def run_logged(dispatch, argv, log, *, failure_rc=2, scope="module"):
+def run_logged(dispatch, argv, log, *, failure_rc=2, scope="module",
+               difference_codes=()):
     started = time.monotonic()
     started_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
     event_id = str(uuid.uuid4())
@@ -112,7 +113,8 @@ def run_logged(dispatch, argv, log, *, failure_rc=2, scope="module"):
         raise SystemExit(rc) from None
     finally:
         _ACTIVE_EVENT.reset(token)
-        failed = rc < 0 or rc >= failure_rc or error is not None
+        failed = (rc < 0 or (rc >= failure_rc and rc not in difference_codes)
+                  or error is not None)
         # VC6 writes errors to stdout. Preserve both bounded tails, without
         # storing routine successful command output (which can be enormous).
         diagnostic = "\n".join(t for t in (stderr.tail.strip(), stdout.tail.strip()) if t)
@@ -124,7 +126,8 @@ def run_logged(dispatch, argv, log, *, failure_rc=2, scope="module"):
                 started_at=started_at,
                 duration_seconds=round(time.monotonic() - started, 6),
                 error=error, error_category=category,
-                outcome="error" if failed else "difference" if rc == 1 else "success")
+                outcome="error" if failed else "difference"
+                if rc == 1 or rc in difference_codes else "success")
         except Exception:
             pass
 
