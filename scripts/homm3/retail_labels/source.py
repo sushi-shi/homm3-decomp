@@ -2893,6 +2893,9 @@ def run(only_units: list[str] | None = None,
     from homm3.core.compiler_profile import Profiles
     from homm3.core.project import Project
     data_profiles = Profiles(Project(common.HOMM3_DIR))
+    # Reparse stale declaration caches in processes first; enrich then reads them.
+    data_labels.prime([path for path in todo if data_labels.data_rows(rows_by_unit[path.stem])],
+                      data_profiles)
     with ThreadPoolExecutor(max_workers=jobs or min(8, os.cpu_count() or 4)) as pool:
         data_errors = list(pool.map(
             lambda path: data_labels.enrich(path, rows_by_unit[path.stem], data_profiles), todo))

@@ -52,13 +52,16 @@ def _error_bodies(tu, path, diagnostics):
     return bad
 
 
-def _declarations(path: Path, profiles, *, bodies=False):
+def _declarations(path: Path, profiles, *, bodies=False, reached=None):
     import clang.cindex as cx
 
     path = path.resolve()
     tu = cx.Index.create().parse(
         str(path), args=[*profiles.for_source(path), '-ferror-limit=0'],
         options=0 if bodies else cx.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
+    if reached is not None:
+        # Every file this parse read, so its cache entry tracks exactly them.
+        reached.update(inclusion.include.name for inclusion in tu.get_includes())
     diagnostics = [d for d in tu.diagnostics if d.severity >= cx.Diagnostic.Error]
     errors = [str(d) for d in diagnostics]
     bad_bodies = _error_bodies(tu, path, diagnostics) if bodies else None
@@ -114,27 +117,32 @@ def _declarations(path: Path, profiles, *, bodies=False):
     return facts, errors
 
 
-def _uncached_declarations(path: Path, profiles):
-    facts, errors = _declarations(path, profiles)
+def _uncached_declarations(path: Path, profiles, reached=None):
+    facts, errors = _declarations(path, profiles, reached=reached)
     if errors:
         return facts, errors
     requested = {int(m[1], 16) - profiles.project.image.image_base
                  for m in re.finditer(r'\bDATA\s*\(\s*(0x[0-9a-fA-F]+)\s*\)',
                                       path.read_text())}
     if requested - facts.keys():
-        local, local_errors = _declarations(path, profiles, bodies=True)
+        local, local_errors = _declarations(path, profiles, bodies=True, reached=reached)
         facts.update(local)
         errors.extend(local_errors)
     return facts, errors
 
 
+def data_rows(rows):
+    """The fragment rows `enrich` attaches declaration facts to."""
+    return [r for r in rows if r['kind'] == 'data' and r['channel'] == 'src-DATA']
+
+
 def enrich(path, rows, profiles):
     """Attach typed facts to the existing source fragment, without a ledger."""
-    data_rows = [r for r in rows if r['kind'] == 'data' and r['channel'] == 'src-DATA']
-    if not data_rows:
+    data_rows_ = data_rows(rows)
+    if not data_rows_:
         return []
     facts, errors = declarations(path, profiles)
-    for row in data_rows:
+    for row in data_rows_:
         fact = facts.get(row['rva'])
         if fact is None:
             errors.append(f'{path.name}: DATA({row["rva"]:#x}) has no typed declaration')
@@ -145,38 +153,121 @@ def enrich(path, rows, profiles):
     return errors
 
 
-def declarations(path: Path, profiles):
-    """Cache a parse by source, header, profile and implementation contents.
+def _content_hash(profiles, file: str) -> str | None:
+    """Command-scoped content hash of one dependency (None when unreadable)."""
+    hashes = getattr(profiles, '_data_dependency_hashes', None)
+    if hashes is None:
+        hashes = profiles._data_dependency_hashes = {}
+    if file not in hashes:
+        try:
+            hashes[file] = hashlib.sha256(Path(file).read_bytes()).hexdigest()
+        except OSError:
+            hashes[file] = None
+    return hashes[file]
 
-    Profiles is command-scoped, so its shared header digest is safe to reuse
-    between that command's concurrent TU parses. Errors are cached too.
-    """
+
+def _shared_fingerprint(profiles) -> str:
     root = profiles.project.root
     shared = getattr(profiles, '_data_fingerprint', None)
     if shared is None:
         digest = hashlib.sha256(Path(__file__).read_bytes() + Path(msvc_names.__file__).read_bytes())
-        paths = [root / 'config/units.toml']
+        digest.update(b'dependency-scoped\0')
+        units = root / 'config/units.toml'
+        if units.is_file():
+            digest.update(str(units.relative_to(root)).encode())
+            digest.update(units.read_bytes())
         for directory in ('include', 'vendor', 'build/gen/msvc-include'):
-            paths.extend(sorted(p for p in (root / directory).rglob('*') if p.is_file()))
-        for file in paths:
-            if file.is_file():
+            for file in sorted(p for p in (root / directory).rglob('*') if p.is_file()):
                 digest.update(str(file.relative_to(root)).encode())
-                digest.update(file.read_bytes())
+                if directory.startswith('build/'):
+                    digest.update(file.read_bytes())
         shared = digest.hexdigest()
         profiles._data_fingerprint = shared
-    fingerprint = hashlib.sha256((shared + repr(profiles.for_source(path))).encode()
+    return shared
+
+
+def _lookup(path: Path, profiles):
+    """(cache file, fingerprint, cached (facts, errors) or None)."""
+    fingerprint = hashlib.sha256((_shared_fingerprint(profiles)
+                                  + repr(profiles.for_source(path))).encode()
                                  + path.read_bytes()).hexdigest()
-    cache = root / 'build/cache/data-declarations' / (path.stem + '.json')
+    cache = profiles.project.root / 'build/cache/data-declarations' / (path.stem + '.json')
     try:
         saved = json.loads(cache.read_text())
-        if saved['fingerprint'] == fingerprint:
-            return {int(k): v for k, v in saved['facts'].items()}, saved['errors']
-    except (OSError, ValueError, KeyError):
+        if (saved['fingerprint'] == fingerprint
+                and all(digest is not None and _content_hash(profiles, file) == digest
+                        for file, digest in saved['dependencies'].items())):
+            return cache, fingerprint, ({int(k): v for k, v in saved['facts'].items()},
+                                        saved['errors'])
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
         pass
-    facts, errors = _uncached_declarations(path, profiles)
+    return cache, fingerprint, None
+
+
+def _store(cache: Path, fingerprint: str, profiles, reached, facts, errors) -> None:
+    dependencies = {file: _content_hash(profiles, file) for file in sorted(reached)}
     cache.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(mode='w', dir=cache.parent, delete=False) as f:
-        json.dump(dict(fingerprint=fingerprint, facts=facts, errors=errors), f)
+        json.dump(dict(fingerprint=fingerprint, dependencies=dependencies,
+                       facts=facts, errors=errors), f)
         temporary = f.name
     os.replace(temporary, cache)
+
+
+def declarations(path: Path, profiles):
+    """Cache a parse by source, profile, implementation and dependency contents.
+
+    Each entry records the content of every file its parse read, so a header
+    edit reparses only the TUs that include it. The shared key holds the
+    implementation, units.toml, the mirrored standard headers and the NAMES
+    of all project/vendor headers: adding or removing one can change include
+    resolution, so it reparses every TU. Profiles is command-scoped, so its
+    shared digest and dependency hashes are safe to reuse between that
+    command's concurrent TU parses. Errors are cached too.
+    """
+    cache, fingerprint, hit = _lookup(path, profiles)
+    if hit is not None:
+        return hit
+    reached = set()
+    facts, errors = _uncached_declarations(path, profiles, reached)
+    _store(cache, fingerprint, profiles, reached, facts, errors)
     return facts, errors
+
+
+_PRIME_PROFILES = None
+
+
+def _prime_one(path_text: str):
+    reached = set()
+    facts, errors = _uncached_declarations(Path(path_text), _PRIME_PROFILES, reached)
+    return facts, errors, sorted(reached)
+
+
+def prime(paths, profiles, jobs: int | None = None) -> int:
+    """Parse the stale entries among `paths` in forked worker processes.
+
+    The cursor walk is Python-bound, so concurrent threads serialize on the
+    GIL. Workers inherit these profiles and the parent writes exactly the
+    entries `declarations` would. Returns the number of entries refreshed.
+    """
+    global _PRIME_PROFILES
+    stale = []
+    for path in paths:
+        cache, fingerprint, hit = _lookup(path, profiles)
+        if hit is None:
+            stale.append((path, cache, fingerprint))
+    workers = min(jobs or min(8, os.cpu_count() or 1), len(stale))
+    if workers < 2:
+        return 0  # a single parse gains nothing from a worker
+    import multiprocessing
+    from concurrent.futures import ProcessPoolExecutor
+    _PRIME_PROFILES = profiles
+    try:
+        with ProcessPoolExecutor(max_workers=workers,
+                                 mp_context=multiprocessing.get_context('fork')) as pool:
+            parsed = list(pool.map(_prime_one, [str(path) for path, _c, _f in stale]))
+    finally:
+        _PRIME_PROFILES = None
+    for (_path, cache, fingerprint), (facts, errors, reached) in zip(stale, parsed):
+        _store(cache, fingerprint, profiles, reached, facts, errors)
+    return len(stale)

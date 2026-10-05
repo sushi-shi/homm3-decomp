@@ -52,6 +52,38 @@ class InputAdapterTests(unittest.TestCase):
                 self.assertEqual(data.declarations(source, profiles), answer)
                 self.assertEqual(parse.call_count, 2)
 
+    def test_type_cache_reparses_only_consumers_of_an_edited_header(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'include').mkdir()
+            used = root / 'include/used.h'; used.write_text('int x;')
+            other = root / 'include/other.h'; other.write_text('int y;')
+            source = root / 'sample.cpp'; source.write_text('#include "used.h"')
+            answer = ({123: {'size': 4}}, [])
+
+            def parse(_path, _profiles, reached=None):
+                reached.add(str(used))
+                return answer
+
+            def run():
+                # A fresh command: profiles memoize content hashes per command.
+                profiles = SimpleNamespace(project=SimpleNamespace(root=root),
+                                           for_source=lambda _path: ['-m32'])
+                return data.declarations(source, profiles)
+            with patch.object(data, '_uncached_declarations', side_effect=parse) as parsed:
+                self.assertEqual(run(), answer)
+                self.assertEqual(run(), answer)
+                self.assertEqual(parsed.call_count, 1)
+                other.write_text('int y2;')  # not read by this TU
+                self.assertEqual(run(), answer)
+                self.assertEqual(parsed.call_count, 1)
+                used.write_text('int x2;')
+                self.assertEqual(run(), answer)
+                self.assertEqual(parsed.call_count, 2)
+                (root / 'include/added.h').write_text('')  # may change resolution
+                self.assertEqual(run(), answer)
+                self.assertEqual(parsed.call_count, 3)
+
 
 def literal_object(name, payload, raw=True, section='.data'):
     """A candidate COFF holding one `??_C@` COMDAT at offset 0."""
