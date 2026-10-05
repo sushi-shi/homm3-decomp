@@ -60,9 +60,11 @@ class ProjectFlowTest(unittest.TestCase):
         from homm3.retail_labels import fragments
         project = self.executable(self.root, fixture(), 0x10000)
         project.fragments.mkdir(parents=True)
+        row = dict.fromkeys(fragments.HEADER, '')
+        row.update(rva='0x1000', size='0x10', name='probe', kind='func',
+                   channel='src-VA', raw='probe', dtor='0')
         (project.fragments / 'probe.tsv').write_text(
-            '\t'.join(fragments.HEADER) + '\n'
-            '0x1000\t0x10\tprobe\tfunc\tsrc-VA\tprobe\t0\t\t\n')
+            '\t'.join(fragments.HEADER) + '\n' + '\t'.join(row.values()) + '\n')
         with patch.object(ownership, 'collect', return_value=([], [], [])), \
                 patch.object(ownership, 'read_filter', return_value=({}, [])), \
                 patch.object(ownership, 'claim_identity', return_value=[]) as identity, \

@@ -53,6 +53,18 @@ def read_verified(executable: Executable, path: Path) -> bytes:
     return data
 
 
+def is_staged(executable: Executable) -> bool:
+    """Cheap availability test (no hashing) for tests that need a real input:
+    an explicit environment path or an initialized staged copy exists."""
+    return bool(os.environ.get(executable.env_var)) or executable.destination.is_file()
+
+
+def requires_staged(executable: Executable) -> str:
+    """unittest skip reason naming the missing input and how to provide it."""
+    return (f"requires the staged {executable.name}; set ${executable.env_var} "
+            f"or run `homm3 init {executable.option} /absolute/path/to/EXE`")
+
+
 def stage_executable(executable: Executable, source: str | Path | None = None) -> Path:
     """CLI path > environment path > verified staged copy; no implicit fallbacks.
 

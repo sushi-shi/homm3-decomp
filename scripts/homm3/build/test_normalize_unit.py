@@ -14,6 +14,10 @@ from pathlib import Path
 from homm3.build import normalize_objs
 from homm3.build.test_equivalent_relocation_normalization import _base, _target
 from homm3.build.normalized_freshness import stamp_path, write_stamp
+from homm3.core import inputs
+
+_needs_retail = unittest.skipUnless(inputs.is_staged(inputs.RETAIL),
+                                    inputs.requires_staged(inputs.RETAIL))
 
 
 class NormalizeUnitTest(unittest.TestCase):
@@ -55,6 +59,7 @@ class NormalizeUnitTest(unittest.TestCase):
                 out[str(path.relative_to(self.objdiff))] = path.read_bytes()
         return out
 
+    @_needs_retail
     def test_unit_alone_matches_the_tree_wide_pass(self):
         counts = normalize_objs.normalize_unit("probe")
         self.assertEqual(counts["wrote"], 2)
@@ -70,6 +75,7 @@ class NormalizeUnitTest(unittest.TestCase):
         for key, data in alone.items():
             self.assertEqual(tree[key], data, key)
 
+    @_needs_retail
     def test_scoped_tree_pass_matches_the_complete_pass(self):
         with contextlib.redirect_stdout(io.StringIO()):
             counts = normalize_objs.normalize_all({"probe"})
@@ -85,6 +91,7 @@ class NormalizeUnitTest(unittest.TestCase):
         for key, data in scoped.items():
             self.assertEqual(tree[key], data, key)
 
+    @_needs_retail
     def test_icf_index_cache_reuses_only_unchanged_objects(self):
         normalize_objs.normalize_unit("probe")
         cold = normalize_objs._icf_index()
@@ -116,6 +123,7 @@ class NormalizeUnitTest(unittest.TestCase):
             rebuilt = normalize_objs._retail_twins()
             self.assertEqual(rebuilt(0x1000), [])
 
+    @_needs_retail
     def test_changed_funclet_inventory_invalidates_both_paired_stamps(self):
         normalize_objs.FUNCLETS.write_text("rva\tparent_rva\tstate\n")
         normalize_objs.FUNCTIONS.write_text("rva\tsize\n")
@@ -139,6 +147,7 @@ class NormalizeUnitTest(unittest.TestCase):
     def test_unknown_unit_is_a_no_op(self):
         self.assertEqual(normalize_objs.normalize_unit("nothing")["wrote"], 0)
 
+    @_needs_retail
     def test_unchanged_pair_skips_coff_parsing_and_manifest_loading(self):
         normalize_objs.normalize_unit("probe")
         paths = list((self.objdiff / "normalized").rglob("*"))
@@ -148,6 +157,7 @@ class NormalizeUnitTest(unittest.TestCase):
             self.assertEqual(dict(normalize_objs.normalize_unit("probe")), {})
         self.assertEqual(mtimes, {p: p.stat().st_mtime_ns for p in mtimes})
 
+    @_needs_retail
     def test_same_timestamp_rebuild_and_corruption_match_forced_normalization(self):
         normalize_objs.normalize_unit('probe')
         raw = self.objdiff / 'base/probe.obj'
@@ -164,6 +174,7 @@ class NormalizeUnitTest(unittest.TestCase):
         normalize_objs.normalize_unit('probe')
         self.assertEqual(refreshed, self._normalized())
 
+    @_needs_retail
     def test_project_input_change_invalidates_comparison_copies(self):
         root = self.objdiff.parent
         (root / 'config').mkdir()
@@ -177,6 +188,7 @@ class NormalizeUnitTest(unittest.TestCase):
                 normalize_objs.normalize_unit('probe')
                 paired.assert_called_once()
 
+    @_needs_retail
     def test_each_paired_input_change_still_runs_transforms(self):
         normalize_objs.normalize_unit("probe")
         inputs = (self.objdiff / "base/probe.obj", self.objdiff / "target/probe.c.obj",
@@ -200,6 +212,7 @@ class NormalizeUnitTest(unittest.TestCase):
             normalize_objs.normalize_unit("probe")
             paired.assert_called_once()
 
+    @_needs_retail
     def test_missing_or_raw_only_stamp_cannot_skip_pairing(self):
         transform = normalize_objs._retain_matching_target_padding
         for side, name in (("base", "probe.obj"), ("target", "probe.c.obj")):
@@ -215,6 +228,7 @@ class NormalizeUnitTest(unittest.TestCase):
                         normalize_objs.normalize_unit("probe")
                         paired.assert_called_once()
 
+    @_needs_retail
     def test_changed_input_path_cannot_reuse_same_content_stamp(self):
         normalize_objs.normalize_unit("probe")
         replacement = normalize_objs.SYMBOL_NAMES.with_name("replacement.csv")

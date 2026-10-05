@@ -11,6 +11,7 @@ import unittest
 from unittest.mock import patch
 
 from homm3.build import link
+from homm3.core import inputs
 
 
 class WorktreePathsTest(unittest.TestCase):
@@ -133,6 +134,8 @@ class WorktreePathsTest(unittest.TestCase):
                 env=env, cwd=scripts, capture_output=True, text=True, check=True)
             self.assertEqual(result.stdout.strip(), raw)
 
+    # link.main reads the retail image for its base and entry point.
+    @unittest.skipUnless(inputs.is_staged(inputs.RETAIL), inputs.requires_staged(inputs.RETAIL))
     def test_link_quotes_output_map_objects_and_libraries(self):
         with tempfile.TemporaryDirectory(prefix="homm3 link ") as raw:
             root = Path(raw)
