@@ -1098,7 +1098,9 @@ public:
     // Castle-Griffin-Tower special case that drops the Blacksmith
     // requirement; it sits four bytes past f_1f698 in the same band.
     // Role unattested - ordinal placeholder.
-    unsigned char m_isTutorial;  // DC is_tutorial; Mac compares without sign extension.
+    // DC is_tutorial: retail SaveGame (0x418160) passes this byte directly
+    // to the native bool determineSuffix parameter, with no normalization.
+    bool m_isTutorial;
     // Dreamcast bIsCheater/is_tutorial are adjacent bytes; retail
     // places them at +0x1f69c/d before setup at +0x1f6a0. This gap aligns it.
     char m_paddingBeforeSetup[2];
