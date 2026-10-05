@@ -2613,7 +2613,7 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice& choice) const
         return;
     if (m_winLikely)
         return;
-    if (g_combatManager->m_fortificationLevel == COMBAT_FORTIFICATION_NONE)
+    if (g_combatManager->m_fortificationLevel == eFortificationNone)
         return;
     long lowest = 0x7fff;
     long total = 0;

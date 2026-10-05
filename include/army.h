@@ -750,18 +750,20 @@ public:
     void loadResources();
     void resetRound();
     void endWalk();
-    void walk(int direction, unsigned char endWalk,
-              unsigned char initialWalk);
-    unsigned char walkTo(int destIndex, unsigned char restoreFacing);
+    // Original Walk@@QAAXH_N0 and WalkTo@@QAA_NH_N publics prove
+    // bool flags/results. FlyTo/TeleportTo retain int results (QAAHH_N).
+    void walk(int direction, bool endWalk, bool initialWalk);
+    bool walkTo(int destIndex, bool restoreFacing);
     int fly(int destIndex);
-    int flyTo(int destIndex, unsigned char restoreFacing);
+    int flyTo(int destIndex, bool restoreFacing);
     int teleport(int destIndex);
-    int teleportTo(int destIndex, unsigned char restoreFacing);
+    int teleportTo(int destIndex, bool restoreFacing);
     long adjustDamage(army* enemy, long baseDamage, bool isShot,
                        bool simulated, long distance,
                        long* fireDamage) const;
     void adjustHitpoints();
-    unsigned char attackHex(int hex, unsigned char restoreFacing);
+    // Original attack_hex@@QAA_NH_N; the facing restoration is boolean.
+    bool attackHex(int hex, bool restoreFacing);
 private:
     // Original public ?do_attack@army@@AAA_NPAV1@H@Z: private bool.
     // Keep this overload in its attested LF_FIELDLIST position.
@@ -780,7 +782,8 @@ private:
 public:
     void rangeAttack();
     void attackWall(int targetGridIndex);
-    void turn(unsigned char animateTurn);
+    // Original Turn@@QAAX_N.
+    void turn(bool animateTurn);
     bool needToTurn(int direction) const;
     bool canCastResurrect(long hex) const;
     bool canCastResurrect() const;
@@ -803,7 +806,7 @@ public:
     void clearAIValues();
     void considerAttack(const army* enemy, long value,
                          long attackDistance);
-    unsigned char enemyIsAdjacent(const army* excluded) const;
+    bool enemyIsAdjacent(const army* excluded) const;
     unsigned getAttackMask(int currIndex, int criteria,
                            int literalTargetIndex) const;
     long getAdjustedAttack(const army* enemy,
@@ -848,11 +851,12 @@ public:
                                  const army* excluded) const;
     long getValidCaliphSpells(const army* target) const;
     int getBestDirection(int start, int target, int direction);
-    unsigned char isAdjacent(const army& otherArmy) const;
-    unsigned char isAdjacent(int hex) const;
-    unsigned char isEnemy(const army* arg) const;
+    bool isAdjacent(const army& otherArmy) const;
+    bool isAdjacent(int hex) const;
+    bool isEnemy(const army* arg) const;
     bool isInAura() const;
-    unsigned char moveTo(int hex, unsigned char restoreFacing);
+    // Original move_to@@QAA_NH_N.
+    bool moveTo(int hex, bool restoreFacing);
     void newTurn();
     void setAIExpectedDamage(long arg);
     int findPath(int fpTargetCellIndex, int maxMoves,
@@ -863,8 +867,8 @@ public:
                     int literalIndex, int* testCellIndex) const;
     void resetPath();
     unsigned char validPath(int destIndex, unsigned char literalTest);
-    unsigned char validFlight(int destIndex,
-                              unsigned char literalTest) const;
+    // Original ValidFlight@@QBA_NH_N.
+    bool validFlight(int destIndex, bool literalTest) const;
     int validRange(int destIndex);
     inline long damageEnemy(army* enemy, int* damageOut, int* killed,
                             bool isShot);
@@ -966,7 +970,8 @@ private:
     bool findFlyerAttackCell(int start, int target) const;
     bool findFlyerAttackCell(int target) const;
     bool leavesNoBody() const;
-    unsigned char simpleMove(int hex, unsigned char restoreFacing);
+    // Original simple_move@@AAA_NH_N: private, bool result and flag.
+    bool simpleMove(int hex, bool restoreFacing);
     double computeKarma() const;
 
     // LF_FIELDLIST entries 237..249. The established source aliases preserve

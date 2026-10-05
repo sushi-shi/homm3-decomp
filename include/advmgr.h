@@ -75,13 +75,6 @@ enum GlobalInfoFlags {
     MaxInfoFlags = 32
 };
 
-enum WiseTreePrices {
-    const_tree_wants_nothing = 0,
-    const_tree_wants_gold,
-    const_tree_wants_gems,
-    const_tree_price_count
-};
-
 enum WitchHutSkillEncoding {
     WitchHutNoSkillMask = 0x000fe000
 };
@@ -657,17 +650,14 @@ public:
     virtual void close(unsigned char update);
     virtual void vslot8(unsigned char on);
     unsigned char processRightSelect(const message* msg);
-    unsigned char processHover(int hx, int hy);
+    bool processHover(int hx, int hy);
     void doHeroKnob(unsigned char up);
     void doTownKnob(unsigned char up);
-    void updateHeroLocators(int top, unsigned char drawWin,
-                            unsigned char update);
-    void updateTownLocators(int top, unsigned char drawWin,
-                            unsigned char update);
-    void updateHeroLocator(int which, unsigned char drawWinSect,
-                           unsigned char update);
-    void updateTownLocator(int which, unsigned char drawWinSect,
-                           unsigned char update);
+    // Original locator publics encode H_N0: index and two Boolean flags.
+    void updateHeroLocators(int top, bool drawWin, bool update);
+    void updateTownLocators(int top, bool drawWin, bool update);
+    void updateHeroLocator(int which, bool drawWinSect, bool update);
+    void updateTownLocator(int which, bool drawWinSect, bool update);
     void highlightLocators(unsigned char update);
     void updateSpellButton(const class hero* thisHero);
     void updateSleepButton(const class hero* thisHero);
@@ -973,22 +963,23 @@ public:
                            enum TCreatureType monType3, int numMons3,
                            int numGroups3);
     void doWhirlpool(class hero* who);
-    unsigned char doSystemOptions();
+    bool doSystemOptions();
     void heroLoses(class hero* who, int vanishSound);
     void insertSound(int x, int y, int z, int soundPriority, int soundsType);
     void eraseAndFizzle(NewmapCell* eventCell, type_point point,
                         int fizzleSound);
     int processSelect(const message& msg, type_point& triggerPoint,
                       NewmapCell*& peventCell);
-    int processDeSelect(const message& msg, unsigned char& exitFlag,
+    int processDeSelect(const message& msg, bool& exitFlag,
                         type_point& triggerPoint, NewmapCell*& peventCell);
-    int processKeyPress(const message& msg, unsigned char& exitFlag,
+    int processKeyPress(const message& msg, bool& exitFlag,
                         type_point& triggerPoint, NewmapCell*& peventCell);
     void processRadarSelect(const message* msg);
     void processMapSelect(const message& msg, type_point& triggerPoint,
                           NewmapCell*& peventCell);
+    // Original EraseObj public ends in _N: the recording latch is bool.
     void eraseObj(NewmapCell* thisCell, type_point point,
-                  unsigned char record);
+                  bool record);
     void overrideBottomView(EBottomViewType view, int time);
     void hideRoute(int updateScreen, int removeTarget, int changeButton);
     void reseed(int targetX, int targetY);
@@ -1274,10 +1265,11 @@ public:
     void vwDrawSymbols(int srcX, int srcY, int z, int destX, int destY);
     bool scanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type,
                            TDrawParts (&parts)[6]);
+    // Original CompleteDraw publics encode _N for these draw latches.
     void completeDraw(int startX, int startY, int z,
-                      unsigned char forceDraw,
-                      unsigned char updateBottomView);
-    void completeDraw(unsigned char forceDraw);
+                      bool forceDraw,
+                      bool updateBottomView);
+    void completeDraw(bool forceDraw);
     void eventSound(NewmapCell* cell);
     void eventSound(int eventID, int extraInfo);
     short recruitEvent(hero* who, TCreatureType creature, short available);
@@ -1353,17 +1345,16 @@ public:
     void drawAdventureMapGems();
     int moreTreesNear(type_point point);
     void viewPuzzle();
-    void updateRadar(type_point origin, unsigned char updateFlag,
-                     unsigned char partialUpdate, unsigned char viewMines,
-                     unsigned char viewHeroes, unsigned char viewTowns);
-    void updateRadar(unsigned char updateFlag,
-                     unsigned char partialUpdate, unsigned char viewMines,
-                     unsigned char viewHeroes, unsigned char viewTowns);
+    void updateRadar(type_point origin, bool updateFlag,
+                     bool partialUpdate, bool viewMines,
+                     bool viewHeroes, bool viewTowns);
+    void updateRadar(bool updateFlag, bool partialUpdate, bool viewMines,
+                     bool viewHeroes, bool viewTowns);
     void quickInfo(int cellX, int cellY, int z);
     void heroQuickView(int heroId, int x, int y,
-                       unsigned char displayDropShadow);
+                       bool displayDropShadow);
     void townQuickView(int townId, int x, int y,
-                       unsigned char displayDropShadow);
+                       bool displayDropShadow);
     void monsterQuickView(const NewmapCell* cell, int cellx, int celly);
     void setTownContext(int townId, bool waitingPlayer,
                         bool update);
@@ -1397,9 +1388,10 @@ public:
     void disguise(TSkillMastery level);
     void waterWalk(TSkillMastery level);
     void townGate(TSkillMastery level);
+    // Original TeleportTo public ends in _N33: three bool latches.
     void teleportTo(hero* who, type_point destination, const char* sampleName,
-                    unsigned char isRemoteMove, unsigned char drawChanges,
-                    unsigned char isReplay);
+                    bool isRemoteMove, bool drawChanges,
+                    bool isReplay);
     void doAdventureOptions();
     int processWaitingHover(int mouseX, int mouseY);
     int processHover(int mouseX, int mouseY);
@@ -1439,7 +1431,7 @@ private:
 public:
     void animateMove(class hero* curr, int direction, int xInc, int yInc);
     int validMove(const class hero* currentHero, int direction, int withEvent,
-                  unsigned char normalMoveOnly);
+                  bool normalMoveOnly);
     int validMoveWithEvent(class hero* who, int direction);
     // The two out-of-compiland members DoAdvCommand reaches, DECLARED
     // and not defined here - each is defined in its own TU and a call

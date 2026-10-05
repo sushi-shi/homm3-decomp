@@ -367,6 +367,53 @@ Its 800 bytes including padding hash to
 `6455c63fd9654a29164f437b046f79695dbbfe16fac31218d43edc97f897499d`;
 the paired traces are in `storage-class-trace/{debug,late-counter-debug}/`.
 
+#### Destructive operands can constrain wide getter results (2026-10-05)
+
+The mage-guild handler (`0x005ce370`, 96.8650%) distinguishes operand
+selection from register preference. Its nested `getBuildingMask` result
+splits into two kind-4 locals. The local binding walk at `0x323c8` already
+receives them in EDI/EDX; the nearby EAX/EDX expression pair belongs to the
+preceding division, not the getter's return ABI.
+
+Global assignment and operand-rewrite hooks at `0x24754` and `0x32526`
+identify these live ranges. The mask-low group permits EDX/EDI, with costs
+400/0, so chooses EDI. Mask-high permits only EDX. The column's earlier
+assignment also chooses EDX, with cost -1. The linked candidate nodes contain
+`{base, next, bits}`; all three relevant sets occupy one base-zero node.
+
+A passive hook at `0x248c2`, the call to set removal `0x19ff`, attributes
+those exclusions. The low AND-result group removes EAX from both mask
+halves; the high AND-result group removes EDI from mask-high. Rewritten
+operands show the low group contains the table load, low AND and final OR;
+the high group contains the other table load and high AND. The getter's
+halves remain separate. Retail instead updates the loaded mask words,
+preserving the column without a spill.
+
+This rules out scratch-register rotation as the immediate cause. The named
+inline-result creation at `0x19d6e` proves the wide local belongs to
+`getBuildingMask`. Lowering at `0x56033` preserves source-operand order;
+the table operand already precedes the getter result at its caller
+`0x28610` and at the earlier function walker. Reversing the commutative
+operands in `hasBuilding` leaves this handler and both retained helper-owner
+units byte-identical: two states, one object identity, with unchanged-source
+and opposite-corner reproduction controls. Operand spelling alone does not
+change the destructive result selection.
+
+The earlier copy-substitution routine `0x70c7` actually considers the getter
+result twice. Both attempts reach `0x7234`: the proposed replacement is a
+kind-3 expression temporary, the original wide local's `+0x18` field is null,
+and the consumer is opcode `0x172` (AND), not the accepted `0x17d`. Both
+return zero at `0x713b`. A later memory-operand type gate at `0x749a` is
+therefore not this copy's observed rejection. The meaning of that null
+field and the missing original source input remain unresolved; do not turn
+this diagnostic into an unsupported getter type or lifetime change.
+
+The passive observations preserve the complete 401,289-byte normal-profile
+object outside its timestamp and restore the clean compiler shim afterward.
+Disposable captures are under `build/mageguild-evidence/`. The canonical
+getter call, its proven value-return type and the native caller scopes remain
+intact.
+
 ### 3c. Source creation order
 
 **"Creation order" means the FIRST ASSIGNMENT, not the declaration**

@@ -138,11 +138,12 @@ enum EGameTransmitLimits {
 
 class CNetMsg {
 public:
+    // DC class records retain the enum subtype and unsigned wire fields.
     int m_from;
-    int m_dpidFrom;
-    int m_subType;
+    unsigned long m_dpidFrom;
+    eRS_Messages m_subType;
     unsigned long m_size;
-    int m_uncompressedSize;
+    unsigned long m_uncompressedSize; // Original: m_UncompressedSize.
 
     VA(0x004f2930, 0x23)  // anchor-callee + exact body, retail-only slot
     DC_ADDRESS(0x02018c, 0x2a)
@@ -155,9 +156,10 @@ public:
         m_uncompressedSize = 0;
     }
 
-    // Original: CNetMsg::IsCompressed; netmsg.h:179
+    // Original: CNetMsg::IsCompressed; netmsg.h:179. The native public
+    // ?IsCompressed@CNetMsg@@QAA_NXZ proves bool despite lowered CV 0x20.
     DC_ADDRESS(0x11f5f4, 0x16)
-    unsigned char isCompressed()
+    bool isCompressed()
     {
         return m_uncompressedSize && m_uncompressedSize != m_size;
     }
@@ -316,12 +318,14 @@ public:
     unsigned char m_isDiff;
     unsigned char m_makeOrig;
 
+    // Original public ??0CGameTransmitInitMsg@@QAA@KKK_N0@Z proves
+    // Boolean inputs; CodeView lowers both parameters to its byte type.
     DC_ADDRESS(0x0bd0b4, 0x58)
     CGameTransmitInitMsg(unsigned long fileSize,
                          unsigned long fullGameCRC,
                          unsigned long thisPlayerDead,
-                         unsigned char isDiff,
-                         unsigned char makeOrig)
+                         bool isDiff,
+                         bool makeOrig)
         : CNetMsg(RS_GAME_TRANSMIT_INIT, sizeof(CGameTransmitInitMsg)),
           m_fileSize(fileSize),
           m_fullGameCrc(fullGameCRC),
@@ -719,10 +723,14 @@ public:
     type_point m_point;
     int m_playerPos;
 
+    // DC netmsg.h:633 default-constructs the point before the two assignments.
     DC_ADDRESS(0x0bd2c8, 0x6c)
-    CMCClaimShipYard(type_point location, int player)
-        : CMapChange(RS_CLAIM_SHIPYARD, sizeof(CMCClaimShipYard)),
-          m_point(location), m_playerPos(player) {}
+    CMCClaimShipYard(type_point point, int playerPos)
+        : CMapChange(RS_CLAIM_SHIPYARD, sizeof(CMCClaimShipYard))
+    {
+        m_point = point;
+        m_playerPos = playerPos;
+    }
 };
 
 class CMCBuildBoat : public CMapChange {
@@ -730,10 +738,14 @@ public:
     type_point m_point;
     int m_playerPos;
 
+    // DC netmsg.h:649 likewise default-constructs the point before assignment.
     DC_ADDRESS(0x0bd334, 0x6c)
-    CMCBuildBoat(type_point location, int player)
-        : CMapChange(RS_BUILD_BOAT, sizeof(CMCBuildBoat)),
-          m_point(location), m_playerPos(player) {}
+    CMCBuildBoat(type_point point, int playerPos)
+        : CMapChange(RS_BUILD_BOAT, sizeof(CMCBuildBoat))
+    {
+        m_point = point;
+        m_playerPos = playerPos;
+    }
 };
 
 // Dreamcast CodeView names the class, its single `m_point` member at +0x14
@@ -808,14 +820,10 @@ class CMCHideHero : public CMapChange {
 public:
     int m_heroId;
 
-    // Dreamcast netmsg.h:717-718 proves the CMapChange construction boundary
-    // is followed by a distinct heroId assignment statement. Retail lowers
-    // this coherently in add_garrison_hero. Retail SwapHeroes schedules the
-    // same store early with the id in ECX; the present coherent caller instead
-    // assigns it EAX and zeros through ECX. That compiler-state residual cannot
-    // justify reversing the attested source order.
-    // Raw CodeView names the T_INT4 parameter `heroId`; the member-shadowing
-    // body assignment is the distinct netmsg.h:718 statement.
+    // DC netmsg.h:717-718 calls CMapChange before storing the hero ID;
+    // CodeView records the int parameter heroId. The line attribution does
+    // not distinguish a member initializer from a body assignment. Both
+    // base-first forms emit identical Windows code in game and town.
     DC_ADDRESS(0x0bd3a0, 0x30)
     CMCHideHero(int heroId)
         : CMapChange(RS_HIDE_HERO, sizeof(CMCHideHero))

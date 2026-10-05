@@ -406,7 +406,7 @@ void advManager::doEvent(NewmapCell* eventCell, type_point point)
 
 // E:\gamedcs\events.cpp:5179
 // RETAIL_LOCATED(0x004aabb0, 0x239)  // anchor-global, dc 0x99bac
-void advManager::eraseObj(NewmapCell* thisCell, type_point point, unsigned char record)
+void advManager::eraseObj(NewmapCell* thisCell, type_point point, bool record)
 {
     // @stub
 }
@@ -1505,8 +1505,8 @@ void advManager::doEventBoat(hero* currentHero, NewmapCell* cell)
 
     heroBoat->restoreCell();
     currentHero->m_flags |= 0x40000;
-    currentHero->m_flightLevel = -1;
-    currentHero->m_waterWalkLevel = -1;
+    currentHero->m_flightLevel = eMasteryInvalid;
+    currentHero->m_waterWalkLevel = eMasteryInvalid;
     if (!(currentHero->m_flags & 0x1000000)) {
         if (currentHero->isWieldingArtifact(0x88)) {
             int oldMaxMovePoints = currentHero->m_maxMovePoints;
@@ -2701,7 +2701,8 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
     prisoner->m_owner = currentHero->m_owner;
     g_game->m_heroAvailability[heroID] = currentHero->m_owner;
     g_game->m_heroPoolMap[heroID][currentHero->m_owner] = 1;
-    g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] = heroID;
+    g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] =
+        static_cast<HeroId>(heroID);
     ++g_currentPlayer->m_numHeroes;
     prisoner->m_x = point.m_x;
     prisoner->m_y = point.m_y;
@@ -2764,7 +2765,7 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
         return;
     currentHero->checkLevel();
 
-    int spell = cell->getPyramidSpell();
+    ESpellId spell = cell->getPyramidSpell();
     char text[500];
     sprintf(text, DATA_COMPGEN(0x00677750, quotedNameFormat, "%s'%s'."),
             g_adventureEventText->getText(ADV_EVENT_TEXT_PYRAMID_SPELL_PREFIX),
@@ -3134,7 +3135,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
                                const char* prompt, GlobalInfoFlags type,
                                bool humanPlayer)
 {
-    SpellID spell = cell->getShrineSpell();
+    ESpellId spell = cell->getShrineSpell();
     std::string result;
 
     if (humanPlayer)
@@ -5007,7 +5008,7 @@ VA(0x004aabb0, 0x239)
 DC_ADDRESS(0x099bac, 0x1ea)
 MAC_ADDRESS(0x0b7cbc, 0x230)
 void advManager::eraseObj(NewmapCell* thisCell, type_point point,
-                          unsigned char record)
+                          bool record)
 {
     int objectIndex = thisCell->m_objectTypeIndex;
     if (objectIndex == -1)

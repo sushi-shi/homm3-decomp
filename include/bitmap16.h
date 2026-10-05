@@ -123,18 +123,21 @@ public:
     DC_ADDRESS(0x01f124, 0x22)
     unsigned short* getMap(int x, int y)
     {
-        // Bitmap16.h:151 (dc 0x1f124): pitch advances bytes, x advances
-        // unsigned-short pixels. Preserve that typed view directly.
+        // Bitmap16.h:151 (dc 0x1f124): add the byte row stride, then
+        // the pixel offset. Retail's retained body has the same order.
         return reinterpret_cast<unsigned short*>(
-            reinterpret_cast<unsigned char*>(m_map) + y * m_pitch) + x;
+            reinterpret_cast<unsigned char*>(m_map) + y * m_pitch
+            + x * sizeof(*m_map));
     }
 
+    // DC Bitmap16.h:156-157 has the same one-expression pixel address:
+    // y advances bytes by pitch; x advances unsigned-short pixels.
     DC_ADDRESS(0x04ca7c, 0x10)
     const unsigned short* getMap(int x, int y) const
     {
-        return static_cast<const unsigned short*>(static_cast<const void*>(
-            static_cast<const unsigned char*>(static_cast<const void*>(m_map))
-            + y * m_pitch)) + x;
+        return reinterpret_cast<const unsigned short*>(
+            reinterpret_cast<const unsigned char*>(m_map) + y * m_pitch
+            + x * sizeof(*m_map));
     }
 
     VA(0x004f0010, 0x3B)  // COMDAT owner + anchor-callee the 0x44e2b0 raw Draw, body in bitmap16.h

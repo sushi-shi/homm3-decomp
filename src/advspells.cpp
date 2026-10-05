@@ -544,7 +544,7 @@ void advManager::identify(TSkillMastery level)
 {
     hero* who = g_game->getCurrHero();
     SAMPLE2 sample = loadPlaySample(g_spellTraits[SPELL_VISIONS].m_sample);
-    who->m_visionsPower = level;
+    who->m_identifyLevel = level;
     if (g_game->isLocalHuman(who->m_owner)) {
         normalDialog(g_generalText->getText(GENERAL_TEXT_VISIONS_CAST),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -623,9 +623,9 @@ DC_ADDRESS(0x022b88, 0x45c)
 MAC_ADDRESS(0x01ec20, 0x4d4)
 void advManager::teleportTo(hero* who, type_point destination,
                             const char* sampleName,
-                            unsigned char isRemoteMove,
-                            unsigned char drawChanges,
-                            unsigned char isReplay)
+                            bool isRemoteMove,
+                            bool drawChanges,
+                            bool isReplay)
 {
     int oldShowIt = g_completeDrawEnabled;
     if (!drawChanges)

@@ -899,7 +899,7 @@ const int g_campaignOrdinalLast = 20;
 // and ShowCongrats is defined further down this file; both are declared
 // locally for the same reason.
 void waitForReadyToPlayMsg();
-unsigned char saveGame(unsigned char campaignWinMode);
+bool saveGame(bool campaignWinMode);
 void showCongrats(int hsType);
 
 static int doNewGame();
@@ -1235,7 +1235,8 @@ int oldmain()
                         & g_game->m_mapHeader.m_playerSlotAttributes[j]
                               .m_legalAlignments) {
                         g_game->m_setup.m_alignment[j] = alignment[j];
-                        g_startingHeroOverrides[j] = g_game->m_setup.m_startingHero[j];
+                        g_startingHeroOverrides[j] =
+                            HeroId(g_game->m_setup.m_startingHero[j]);
                     }
                     strcpy(g_game->m_players[j].m_name, playerSave[j].m_name);
                     g_game->m_players[j].m_isLocal = playerSave[j].m_isLocal;

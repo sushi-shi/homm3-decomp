@@ -388,10 +388,11 @@ unsigned long NewmapCell::getMapExtraInfo() const
     return m_extraInfo;
 }
 
+// Original public: cell_is_trigger@NewmapCell@@QBA_NXZ.
 VA(0x004fcc80, 0x65)
 DC_ADDRESS(0x0ec1c8, 0x8c)
 MAC_ADDRESS(0x11e454, 0xc0)
-unsigned char NewmapCell::cellIsTrigger() const
+bool NewmapCell::cellIsTrigger() const
 {
     if (m_type == HERO) {
         hero* obscurer = g_game->getHero(m_extraInfo);
@@ -404,10 +405,11 @@ unsigned char NewmapCell::cellIsTrigger() const
     return m_isTrigger;
 }
 
+// Original DC public is_diggable@NewmapCell@@QBA_NXZ proves bool.
 VA(0x004fccf0, 0xD0)
 DC_ADDRESS(0x0ec254, 0xd0)
 MAC_ADDRESS(0x11e514, 0xe4)
-unsigned char NewmapCell::isDiggable() const
+bool NewmapCell::isDiggable() const
 {
     if (m_groundSet == eTerrainWater || m_groundSet == eTerrainRock)
         return 0;
@@ -428,10 +430,11 @@ unsigned char NewmapCell::isDiggable() const
 }
 
 // DC 0xec354/0xec396 test giCurPlayerBit; retail reads 0x69ccc4.
+// Original public HasTriggerableEvent@NewmapCell@@QBA?B_NXZ returns const bool.
 VA(0x004fcdc0, 0x58)
 DC_ADDRESS(0x0ec324, 0x8e)
 MAC_ADDRESS(0x11e5f8, 0xb4)
-const unsigned char NewmapCell::hasTriggerableEvent() const
+const bool NewmapCell::hasTriggerableEvent() const
 {
     if (m_type == EVENT) {
         if (g_currentPlayer->isLocalHuman()
@@ -3075,13 +3078,11 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     // the custom-name flag and is not a player index.
     if (heroID == -1) {
         if (g_startingHeroOverrides[owner] != -1) {
-            heroID = H3_ENUM_DECODE(HeroId, g_startingHeroOverrides[owner]);
-            g_startingHeroOverrides[owner] = -1;
+            heroID = g_startingHeroOverrides[owner];
+            g_startingHeroOverrides[owner] = heroIdNone;
         } else {
-            heroID = H3_ENUM_DECODE(HeroId,
-                g_game->getStartingHeroId(H3_ENUM_DECODE(
-                    TTownType, g_game->m_setup.m_alignment[owner]),
-                    owner, experience));
+            heroID = g_game->getStartingHeroId(g_game->m_setup.m_alignment[owner],
+                owner, experience);
         }
     }
     if (g_game->m_setup.m_startingHero[owner] == -1)
@@ -3324,9 +3325,7 @@ void NewfullMap::soDTransformRandomDwellings()
             alignment = pickAlignment(dwelling.m_factionMask, 0);
         }
 
-        TCreatureType creature = g_townDwellingCreatures[
-            alignment * 2 * TOWN_DWELLING_COUNT
-            + random(dwelling.m_minLevel, dwelling.m_maxLevel)];
+        TCreatureType creature = g_dwellingType[alignment][random(dwelling.m_minLevel, dwelling.m_maxLevel)];
 
         int generatorType;
         if (creature == CREATURE_STONE_GOLEM) {

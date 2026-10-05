@@ -150,7 +150,7 @@ unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
 // and everything else goes through convertID2HelpID into the SECOND
 // dword of the same 0x6a56e4 record row (0x6a56e0).
 // RETAIL_LOCATED(0x00403010, 0x20A)  // anchor-global, dc 0xed8
-unsigned char TAdventureMapWindow::processHover(int hx, int hy)
+bool TAdventureMapWindow::processHover(int hx, int hy)
 {
     // @stub
 }
@@ -855,14 +855,15 @@ unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
     }
 }
 
+// Original ProcessHover@TAdventureMapWindow@@QAA_NHH@Z proves bool.
 VA(0x00403010, 0x20A)
 DC_ADDRESS(0x000ed8, 0x204)
 MAC_ADDRESS(0x002720, 0x2ec)
-unsigned char TAdventureMapWindow::processHover(int hx, int hy)
+bool TAdventureMapWindow::processHover(int hx, int hy)
 {
     playerData* player = g_game->getLocalPlayer();
     if (m_chatEdit->m_hasFocus)
-        return 1;
+        return true;
 
     int hoverID = findWidget(hx, hy);
     if (hoverID != g_lastAdventureHover) {
@@ -964,7 +965,7 @@ generic_help:
             m_y + m_rolloverTextWidget->m_y, m_rolloverTextWidget->m_width,
             m_rolloverTextWidget->m_height);
     }
-    return 1;
+    return true;
 }
 
 VA(0x00403220, 0x59)
@@ -1002,8 +1003,8 @@ void TAdventureMapWindow::doTownKnob(unsigned char up)
 VA(0x004032e0, 0x134)
 DC_ADDRESS(0x0010e4, 0x4)
 MAC_ADDRESS(0x002b44, 0x204)
-void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
-                                             unsigned char update)
+void TAdventureMapWindow::updateHeroLocators(int top, bool drawWin,
+                                             bool update)
 {
     playerData* player = g_game->getLocalPlayer();
     if (!player->isHuman())
@@ -1053,8 +1054,8 @@ void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
 VA(0x00403420, 0x131)
 DC_ADDRESS(0x0010e8, 0x4)
 MAC_ADDRESS(0x002d48, 0x208)
-void TAdventureMapWindow::updateTownLocators(int top, unsigned char drawWin,
-                                             unsigned char update)
+void TAdventureMapWindow::updateTownLocators(int top, bool drawWin,
+                                             bool update)
 {
     playerData* player = g_game->getLocalPlayer();
     if (!player->isHuman())
@@ -1101,11 +1102,13 @@ void TAdventureMapWindow::updateTownLocators(int top, unsigned char drawWin,
         g_windowManager->updateScreen(0, 0, 800, 600);
 }
 
+// Pass the visibility predicate directly to setVisible. An inferred int
+// local widens retail's byte test even though the predicate is Boolean.
 VA(0x00403560, 0x23E)
 DC_ADDRESS(0x0010ec, 0x4)
 MAC_ADDRESS(0x002f50, 0x3a4)
-void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect,
-                                            unsigned char update)
+void TAdventureMapWindow::updateHeroLocator(int which, bool drawWinSect,
+                                            bool update)
 {
     playerData* player = g_game->getLocalPlayer();
 
@@ -1145,9 +1148,9 @@ void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect
         widgetClearStatus(HERO_MANA_0_ID + which, widget::WIDGET_ACTIVE);
     }
 
-    int isCurrentHero = heroId != -1 && !g_completeDrawAllCells
-                        && heroId == player->m_currHeroId;
-    m_heroLocators[which]->setVisible(isCurrentHero);
+    m_heroLocators[which]->setVisible(
+        heroId != -1 && !g_completeDrawAllCells
+        && heroId == player->m_currHeroId);
 
     if (drawWinSect) {
         drawWindow(0, HERO_0_ID + which, HERO_0_ID + which);
@@ -1167,8 +1170,8 @@ void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect
 VA(0x004037a0, 0x117)
 DC_ADDRESS(0x0010f0, 0x4)
 MAC_ADDRESS(0x0032f4, 0x1ac)
-void TAdventureMapWindow::updateTownLocator(int which, unsigned char drawWinSect,
-                                            unsigned char update)
+void TAdventureMapWindow::updateTownLocator(int which, bool drawWinSect,
+                                            bool update)
 {
     playerData* player = g_game->getLocalPlayer();
     int townId = player->m_townIds[m_topTown + which];

@@ -29,20 +29,6 @@ struct type_AI_combat_parameters;
 struct tagPOINT;
 struct type_artifact;
 
-// Four inclusive drawing bounds copied as one value before a drawbridge
-// animation. Drawing.cpp's decoded readers prove the same min/max layout as
-// SLimitData. Keep the concrete source type consumer-scoped so the other VC6
-// units retain their already measured type-handle state.
-typedef SLimitData TDrawbridgeBounds;
-SIZE(TDrawbridgeBounds, 0x10);
-
-// Polymorphic objects owned by combatManager at offsets where Close only
-// proves scalar deletion. Their concrete roles remain unattested.
-class CCombatOwnedObject {
-public:
-    virtual ~CCombatOwnedObject();
-};
-
 // One segment of an animated lightning bolt. THE DREAMCAST DUMP HAS NO
 // MEMBER EVIDENCE FOR THIS TYPE AT ALL - members.csv carries zero rows
 // and the NAME comes only from the three spells.cpp prototypes that take
@@ -225,14 +211,13 @@ enum EDrawbridgeState {
     DRAWBRIDGE_UP = 0x3
 };
 
-// The defending town's wall tier. InitializeArchers proves that a Citadel
-// installs the keep archer and a Castle installs the two tower archers too;
-// the other combat readers only distinguish an absent wall from any tier.
-enum ECombatFortification {
-    COMBAT_FORTIFICATION_NONE = 0,
-    COMBAT_FORTIFICATION_FORT = 1,
-    COMBAT_FORTIFICATION_CITADEL = 2,
-    COMBAT_FORTIFICATION_CASTLE = 3
+// Original TFortificationLevel (DC type 0x42e1). InitializeArchers confirms
+// the same tiers: Citadel installs the keep; Castle adds the two towers.
+enum TFortificationLevel {
+    eFortificationNone = 0,
+    eFortificationFort = 1,
+    eFortificationCitadel = 2,
+    eFortificationCastle = 3
 };
 
 // Row 5's three special columns of the 11x17 combat grid, named from
@@ -359,26 +344,30 @@ enum CombatHeroFrameType {
 
 class combatManager : public baseManager {
 public:
-    // Original DC statics: LeftHeroLimits, RightHeroLimits,
-    // MainBuildingLimits and UpperTowerLimits (GetGridIndex).
+    // Original public CombatSpeedMod[3] (DC ?CombatSpeedMod@combatManager@@2QBMB).
+    // Complete stores the three animation-speed factors at 0x63cf7c.
+    static const float s_combatSpeedMod[3];
+
+    // Original public const statics. CombatAreaLimits_Visible has no
+    // independently identified Complete storage; ScreenLimits is owned by
+    // heroWindowManager and is not an alias for that older declaration.
+    static const SLimitData s_combatAreaLimits;
+    static const SLimitData s_visibleCombatAreaLimits;
+    static const SLimitData s_gridAreaLimits;
+    static const SLimitData s_drawbridgeLimits;
     static const SLimitData s_leftHeroLimits;
     static const SLimitData s_rightHeroLimits;
     static const SLimitData s_mainBuildingLimits;
     static const SLimitData s_upperTowerLimits;
-    // Original: CombatAreaLimits_Visible.
-    static const SLimitData s_visibleCombatAreaLimits;
-    // Original: CombatAreaLimits; public @@2USLimitData@@B proves const.
-    static const SLimitData s_combatAreaLimits;
 
     // Dreamcast drawing.cpp:666. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
     // Complete Windows and Mac fold the fixed-viewport facade in army.cpp;
     // that cross-TU expansion supports header visibility of this delegation.
-    // Older DC owns the scrolling facade in drawing.cpp.
+    // Older DC owns the scrolling facade in drawing.cpp; its original
+    // ?ScrollTo@combatManager@@QAA_NHH_N00@Z proves bool for result/flags.
     DC_ADDRESS(0x0841d4, 0x52)
-    unsigned char scrollTo(int x, int y, unsigned char draw,
-                           unsigned char doscrollX,
-                           unsigned char doscrollY)
+    bool scrollTo(int x, int y, bool draw, bool doscrollX, bool doscrollY)
     {
         return scrollTo(SLimitData(x, y, x + 1, y + 1), draw,
                         doscrollX, doscrollY);
@@ -582,10 +571,8 @@ public:
     // (0x5994b0) independently reads its status member at +0x34 while
     // combat music is active; the retail ctor's baseManager call and
     // combatManager vptr store prove the inheritance directly.
-    // A CNetMsgHandlerPause, not a CCombatOwnedObject (retyped in place
-    // 2026-08-20, a rename): Open (0x462a20) assigns
-    // `new CNetMsgHandlerPause()` here off an operator new(0x10), which
-    // is SIZE(CNetMsgHandlerPause, 0x10) exactly, and Close deletes it.
+    // Open (0x462a20) constructs this CNetMsgHandlerPause with its native
+    // 0x10-byte size; Close deletes it.
     CNetMsgHandlerPause* m_netMsgHandlerPause;
     // The pending AI order, written as a (code, hex) pair. move_toward
     // (0x41f580) sets the code to 2 the moment a path exists, raises it
@@ -653,11 +640,8 @@ public:
     // Dreamcast bMoatOn/moatIsWide are bytes at +0x53b8/9 before
     // the saved-screen pointer at +0x53bc; retail shifts this run by -0x10.
     char m_paddingBeforeSaveScreenPreGrid[0x2];
-    // A Bitmap16Bit, not a CCombatOwnedObject (retyped in place
-    // 2026-08-20, a rename): Open constructs all THREE of these with
-    // Bitmap16Bit::Bitmap16Bit(w, h) at 0x44df70 off an
-    // `operator new(0x38)`, which is sizeof(Bitmap16Bit), and field_53b0
-    // between them was already spelled that way.
+    // Open constructs all three saved-screen buffers through the native
+    // Bitmap16Bit(w, h) constructor (0x44df70), allocating 0x38 bytes each.
     Bitmap16Bit* m_saveScreenPreGrid;
     // RETYPED 2026-08-13: army::Fly (0x4b4a40) calls Bitmap16Bit::Draw
     // on this slot once per animation frame, blitting the clean
@@ -902,11 +886,9 @@ public:
     CSprite* m_powSprite;  // +0x132e8
     int m_powSpellEffect;  // +0x132ec
     int m_powFrameIndex;  // +0x132f0
-    // "This combat is fought over a walled town": HexIsBlocked
-    // (0x469a10) only consults the gate hexes while it is positive and
-    // should_lower_door (0x467130) while it is non-zero. Name pending
-    // a writer.
-    ECombatFortification m_fortificationLevel;  // +0x132f4
+    // Original public fortificationLevel. HexIsBlocked and door routing
+    // use the same tier that selects the defending town's wall targets.
+    TFortificationLevel m_fortificationLevel;  // +0x132f4
     // Cleared by InitNonVisualVars at full width. Ordinal.
     int m_battleOver;  // +0x132f8
     TCombatWindow* m_combatWindow;  // +0x132fc
@@ -961,10 +943,10 @@ public:
     char m_paddingBeforeLimitToExtent[0x3];
     int m_limitToExtent;  // +0x13d30
     int m_computeExtentOnly;  // +0x13d34
-    // Four-dword drawing bounds copied from 0x694f30..0x694f3c before
-    // every drawbridge animation. The role of each coordinate awaits a
-    // decoded drawing reader, so the member stays an ordinal array.
-    TDrawbridgeBounds m_drawbridgeBounds;  // +0x13d38
+    // Original: Extent (SLimitData), public in DC combatManager records.
+    // The inclusive drawing extent is also replaced with the fixed bounds
+    // at 0x694f30 before a drawbridge animation.
+    SLimitData m_extent;  // +0x13d38
     // Set to 3 by InitNonVisualVars, out of the same register as
     // field_5418. Ordinal.
     int m_winner;  // +0x13d48
@@ -985,7 +967,9 @@ public:
     // Placement-phase latch: FindPath/ValidPath forward it into
     // FindCombatPath's in_placement_phase and lift the speed limit
     // to 99 while it is set. Name provisional.
-    unsigned char m_creaturePlacement;  // +0x13d68
+    // Original InPlacementPhase; boolean result set by Main and forwarded
+    // directly to the original _N SeedCombatPosition/FindCombatPath flags.
+    bool m_creaturePlacement;  // +0x13d68
     // Dreamcast InPlacementPhase is a byte followed by turn_number;
     // retail preserves the three-byte integer-alignment gap at +0x13d69.
     char m_paddingBeforeTurnNumber[0x3];
@@ -1035,34 +1019,17 @@ public:
     int m_originalDefenseSkill;  // +0x13dec
     int m_originalPowerSkill;  // +0x13df0
     int m_originalMana;  // +0x13df4
-    Bitmap816* m_combatIcons[18][5];  // +0x13df8
-    // Per-wall-segment hit points, indexed by TWallTargetId. Sliced
-    // 2026-08-08 by should_stay_in_castle (0x4213f0), which reads
-    // `[this + 4*id + 0x13f60]` for each of the five wall ids and
-    // treats a ZERO as "this segment is down". Fifteen entries because
-    // wallTargets' own `wall` column runs 5..14 and the largest id the
-    // located reader passes is 12; only 6, 8, 9, 10 and 12 are
-    // retail-proven. The DC roster attests the accessor
-    // (combatManager::get_wall_strength, cmbtmgr.h:1473, dc 0x27edc),
-    // not the field, so the name is the accessor's.
-    // EIGHTEEN, not fifteen plus a separate three (merged 2026-08-20).
-    // SetupAndLoadObstacles (0x466290) settles the extent outright: it
-    // fills this band with ONE 18-iteration loop out of
-    // akWallTraits[defendingTown->type][i].hitpoints, then stores 1
-    // into slots 15, 16 and 17, then copies all eighteen into
-    // wallStanding with a second 18-iteration loop whose source is
-    // exactly dst - 0x48. A 15+3 split cannot express either loop.
-    // The three tail slots are the two arrow towers and the keep - what
-    // DamageWall's targets 7, 6 and 0 clear - so the old field_13f9c /
-    // field_13fe4 rows were the same array seen through their one
-    // decoded writer, and DamageWall now spells them wallStrength[17]
-    // / [16] / [15] at byte-identical offsets.
-    int m_wallStrength[18];  // +0x13f60
-    // One dword per wall id (5..14 used): 1 while strength remains, 0 when
-    // the segment reaches zero. Same 18 extent, same reason.
-    int m_wallStanding[18];  // +0x13fa8
-
 private:
+    // Original private wallImages / wallLevel / wall_frame arrays (DC
+    // combatManager type 0x1ed7). Complete preserves their 18-row extents
+    // at +0x13df8 / +0x13f60 / +0x13fa8. SetupAndLoadObstacles fills the
+    // whole level array; the last three rows are the arrow towers/keep.
+    // DrawWall indexes the image table by wall_frame; DamageWall switches
+    // that frame between the standing and destroyed art.
+    Bitmap816* m_wallImages[18][5];  // +0x13df8
+    int m_wallLevel[18];            // +0x13f60
+    int m_wallFrame[18];            // +0x13fa8
+
     // The battle's packed adventure-map coordinate. GetBackgroundName
     // passes it by value to advManager::MoreTreesNear.
     type_point m_mapPoint;  // +0x13ff0
@@ -1071,19 +1038,16 @@ public:
     Bitmap816* m_combatCellGridBitmap;  // +0x13ff4
     Bitmap816* m_combatShadowBitmap;  // +0x13ff8
     int m_obstacleAnimationFrame;  // +0x13ffc
-    // "This slot's stack was added mid-combat and still owes a fizzle-in
-    // frame": AddArmy (0x47a100) stamps [iSide][slot] with the flattened
-    // index 20*iSide + slot for every stack that is NOT an arrow tower.
-    // Twenty slots a side, not the twenty-one `armies` carries - AddArmy
-    // only ever searches 0..19. Name is an address ordinal.
+private:
+    // Original private bCreatureEffect/bHeroEffect/bFlagEffect/bArcherEffect.
+    // Marked drawables contribute to the next limited repaint extent;
+    // ResetLimitCreature clears these flags before that set is rebuilt.
     unsigned char m_creatureEffect[2][20];  // +0x14000
     unsigned char m_heroEffect[2];  // +0x14028
     unsigned char m_flagEffect[2];  // +0x1402a
-    // The three arrow-tower latches, keyed by the tower's grid index by
-    // 0x46a460: hex 254 -> +0x1402c, hex 251 -> +0x1402d, hex 255 ->
-    // +0x1402e.
-
     unsigned char m_archerEffect[3];  // +0x1402c
+
+public:
     // Original Dreamcast auto_retreat_on (+0x136f7). Retail SetupCombat
     // enables this byte at +0x1402f; command processing asks whether to
     // retreat and records the answer here. Earlier any_action_taken
@@ -1098,13 +1062,8 @@ public:
     void resetHitByCreature();
     // DC LF_MFUNCTION records have no this type: these are static helpers.
     static TWallTargetId getTargetWallIndex(int gridIndex);
-    static unsigned char inCastle(int index);
-    static unsigned char leftOfMoat(int index);
-    static void getMissileStartingPosition(int armyType, int x, int y, int facing,
-                                          int destX, int destY,
-                                          const CSprite* missile, int* startX,
-                                          int* startY, int* armyDir,
-                                          int* missileFrame);
+    static bool inCastle(int index);
+    static bool leftOfMoat(int index);
     void damageWall(TWallTargetId targetWall, int damage);
     void highlightHex(int hex);
     void highlightHex(int x, int y);
@@ -1116,9 +1075,9 @@ public:
     // play before it lands the DamageWall - the wall visibly breaks
     // mid-animation, not on the last frame.
     enum { WALL_EXPLOSION_HIT_FRAME = 0x5 };
-    unsigned char enemyIsAdjacent(const army* currentArmy, int gridIndex,
-                                    const army* excluded) const;
-    unsigned char isAdjacent(int first, int second) const;
+    bool enemyIsAdjacent(const army* currentArmy, int gridIndex,
+                         const army* excluded) const;
+    bool isAdjacent(int first, int second) const;
     void viewArmy(army* thisArmy, int isQuickView);
     void removeArmyFromGrid(const army& a);
     void placeArmyInGrid(const army& a, int hex);
@@ -1139,9 +1098,6 @@ public:
     unsigned char shouldLowerDoor(army* thisArmy, long hex) const;
     int experienceValueOfStack(int whichGroup);
     void makeCreaturesVanish();
-    void raiseDoor();
-    void testRaiseDoor();
-    void lowerDoor();
     bool isQuickCombat() const;
     // ?show_eagle_eye@combatManager@@AAAXHH@Z (two ints),
     // ?DoVictory@combatManager@@QAAXH@Z (one int) and
@@ -1153,15 +1109,48 @@ public:
     void doVictory(int winningGroup);
     int checkApplyBadMorale(int group, int index);
     void checkApplyGoodMorale(int group, int index);
+    // Native LF_FIELDLIST entries 146..147, 149..159 keep the effect, door,
+    // projectile and line-of-sight declarations together. Preserve the
+    // current Complete signatures and the canonical effect-marking body.
+    void spellEffect(int effect, int hex, int delay,
+                     bool leaveLastFrame);          // 0x496a10
     void spellEffect(int effect, army* targetArmy, int delay,
                      bool doWince);
-    unsigned char shotIsNotOptimal(const army* attacker,
+    DC_ADDRESS(0x04cc74, 0x18)
+    void markCreatureEffect(int group, int index)
+    {
+        if (m_armies[group][index].m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
+            markTowerArmy(&m_armies[group][index]);
+        else
+            m_creatureEffect[group][index] = 1;
+    }
+    void raiseDoor();
+    void testRaiseDoor();
+    void lowerDoor();
+    void shootMissile(int startX, int startY, int destX, int destY,
+                      const float* angles, const CSprite* missile);
+    void shootAnimatedMissile(int startX, int startY, int destX, int destY,
+                              int nsprites, const float* angles,
+                              const char* const* fileNames);
+    // The three missile animators. Every pointer parameter's constness
+    // is read off the DC S_PUB32 mangling rather than guessed:
+    // ?ShootMissile@combatManager@@QAAXHHHHPBMPBVCSprite@@@Z gives
+    // `const float*` (PBM) and `const CSprite*` (PBVCSprite), and
+    // ShootAnimatedMissile's PBQBD gives `const char* const*`.
+    void shootBallisticMissile(int startX, int startY, int destX, int destY,
+                               const CSprite* missile);
+    bool shotIsNotOptimal(const army* attacker,
                                    const army* defender) const;
     unsigned char shotIsThroughWall(const army* shooter, int sourceIndex,
                                     int destIndex) const;
-    unsigned char inLineOfSight(int sourceIndex, int destIndex) const;
-    unsigned char hexIsBlocked(int index) const;
-    unsigned char isInMoat(int hex, int* index);
+    bool inLineOfSight(int sourceIndex, int destIndex) const;
+    static void getMissileStartingPosition(int armyType, int x, int y, int facing,
+                                          int destX, int destY,
+                                          const CSprite* missile, int* startX,
+                                          int* startY, int* armyDir,
+                                          int* missileFrame);
+    bool hexIsBlocked(int index) const;
+    bool isInMoat(int hex, int* index);
 
 private:
     void loadIcons();
@@ -1200,10 +1189,12 @@ public:
     int updateGrid(int postGridIsClean, int setupGrid);
     void drawBackground();
     void updateCombatArea();  // 0x493780
-    unsigned char handleCombatPlayerDrop(unsigned long dpid, message* msg);
+    // Original HandleCombatPlayerDrop returns bool and takes message&;
+    // native public: ?HandleCombatPlayerDrop@combatManager@@QAA_NKAAUmessage@@@Z.
+    bool handleCombatPlayerDrop(unsigned long dpid, message& msg);
 
 private:
-    unsigned char isComputerAction();
+    bool isComputerAction();
 
 public:
     void updateMouseGrid(int gridIndex, std::vector<long>& hexes,
@@ -1242,18 +1233,6 @@ public:
     // command.cpp:224 (0x474040) paces the frame loop and hands each frame
     // to drawing.cpp's CycleCombatScreen (0x4960d0).
     void doAnimations();
-    void shootMissile(int startX, int startY, int destX, int destY,
-                      const float* angles, const CSprite* missile);
-    void shootAnimatedMissile(int startX, int startY, int destX, int destY,
-                              int nsprites, const float* angles,
-                              const char* const* fileNames);
-    // The three missile animators. Every pointer parameter's constness
-    // is read off the DC S_PUB32 mangling rather than guessed:
-    // ?ShootMissile@combatManager@@QAAXHHHHPBMPBVCSprite@@@Z gives
-    // `const float*` (PBM) and `const CSprite*` (PBVCSprite), and
-    // ShootAnimatedMissile's PBQBD gives `const char* const*`.
-    void shootBallisticMissile(int startX, int startY, int destX, int destY,
-                               const CSprite* missile);
     void cycleCombatScreen();
     int drawCreature(const CSprite* sprite, int sequence, int frame,
                      int x, int y, struct SLimitData* limitData,
@@ -1294,10 +1273,12 @@ public:
     int getSpellWallHex(int baseIndex, int rowOffset, int side);
     void checkChangeSelector();  // 0x477ac0
     void checkChangeHighlighter(int currentIndex);  // 0x478040
-    void turnOffSelector(unsigned char drawIt);
-    void turnOffHighlighter(unsigned char restore);  // 0x477e10
+    // Original TurnOffSelector/TurnOffHighlighter publics use _N flags.
+    void turnOffSelector(bool drawIt);
+    void turnOffHighlighter(bool drawIt);  // 0x477e10
+    // Native ?SetCombatGrid@combatManager@@QAAXHHH_N@Z: draw flag is bool.
     void setCombatGrid(int showEntireGrid, int showMouseHex, int gridLevel,
-                       unsigned char drawNow);  // 0x479fc0
+                       bool drawNow);  // 0x479fc0
     // 0x46a520 (68 B), army::simple_move's second call: it zeroes a
     // 187-byte per-hex row at this + 0x14031 with a `rep stosd` of 46
     // dwords plus a word plus a byte - the cell count exactly - and
@@ -1464,7 +1445,9 @@ public:
     // command.obj's leaf (0x4763f0, claimed in src/command.cpp); ai.cpp
     // and findpath.cpp are both located callers and both reach it
     // through gpCombatManager with (army::combatSide, hex).
-    unsigned char isOutsidePlacementBoundry(int group, int index);
+    // Original is_outside_placement_boundry has a bool result:
+    // ?is_outside_placement_boundry@combatManager@@QAA_NHH@Z.
+    bool isOutsidePlacementBoundry(int group, int index);
 
 private:
     bool automateCatapult();  // 0x473c00
@@ -1495,7 +1478,7 @@ private:
                                long ourGroup);  // 0x4227a0
 
 public:
-    unsigned char isComputerAction(const army* currentArmy);
+    bool isComputerAction(const army* currentArmy);
     // DC publishes void(int,int,int); Complete's x86 body changes the result
     // to an unsigned-byte "pointer changed" flag. Its retail field/call graph
     // fixes the three arguments as mouse x, mouse y and combat hex.
@@ -1633,8 +1616,6 @@ public:
                  int endThickness, int color, int angleDistortMin,
                  int angleDistortMax, int segmentLength,
                  int distortAlways);
-    void spellEffect(int effect, int hex, int delay,
-                     bool leaveLastFrame);          // 0x496a10
     // 0x59fde0 (68 B), the Enchanter's shot resolution army::
     // animate_missile hands its volley to instead of a missile flight
     // (three stack arguments: the launch point and the target stack).
@@ -1759,7 +1740,7 @@ public:
     DC_ADDRESS(0x027edc, 0x20)
     long getWallStrength(TWallTargetId target) const
     {
-        return m_wallStrength[s_wallTargets[target].m_wall];
+        return m_wallLevel[s_wallTargets[target].m_wall];
     }
 
     // DC header inline (cmbtmgr.h:1478); the DC xref graph
@@ -1779,16 +1760,19 @@ public:
     // helper and its four ordered bounds. Complete widens the window to the
     // retail 800x556 combat area; ProcessCombatMsg retains the source call
     // and VC6 expands it into the four retail comparisons.
-    // DC has x/y only, no receiver: this is static.
+    // DC has x/y only, no receiver: this is static. The original public
+    // ?InCombatArea@combatManager@@SA_NHH@Z proves the bool result.
     DC_ADDRESS(0x070a2c, 0x2a)
-    static unsigned char inCombatArea(int x, int y)
+    static bool inCombatArea(int x, int y)
     {
         return x >= 0 && x < 800 && y >= 0 && y < 556;
     }
 
-    // Original: combatManager::is_in_second_phase; CmbtMgr.h:1494
+    // Original: combatManager::is_in_second_phase; CmbtMgr.h:1494.
+    // Its original ?is_in_second_phase@combatManager@@QBA_NXZ public
+    // proves bool even though CodeView lowers the result to primitive 0x20.
     DC_ADDRESS(0x027f28, 0xc)
-    unsigned char isInSecondPhase() const { return m_inSecondPhase; }
+    bool isInSecondPhase() const { return m_inSecondPhase; }
 
     // Dreamcast S_PUB32 fixes this entire inline band: GetHexIndex and GridX
     // are static int helpers, RowIsOdd is a const bool member, and
@@ -1848,14 +1832,6 @@ public:
     DC_ADDRESS(0x027fa0, 0x34)
     TObstacle& getObstacle(int index) { return m_obstacles[index]; }
 
-    DC_ADDRESS(0x04cc74, 0x18)
-    void markCreatureEffect(int group, int index)
-    {
-        if (m_armies[group][index].m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
-            markTowerArmy(&m_armies[group][index]);
-        else
-            m_creatureEffect[group][index] = 1;
-    }
     army* findDemonicResurrectionTarget(int armyGroup, int targetIndex);
     void markAreaEffect(SpellID spell, long hex, long mastery,
                           std::vector<army*>& targets);
@@ -1889,7 +1865,7 @@ public:
     unsigned char unnamed464f50(const army* incumbent, const army* candidate);
     virtual int main(message& msg);
     int processCombatMsg(message& msg);
-    int processNextAction(message& msg, unsigned char automaticTurn);
+    int processNextAction(message& msg, bool automaticTurn);
     void setCombatDirections(int hex);
     // DC command.cpp:2800. Complete likewise expands its sole call, while
     // retaining the helper's source-level surrender-dialog boundary.
@@ -1986,27 +1962,6 @@ extern const int g_combatDeployHexes[2][7];
 extern const int g_combatDeploySurroundedHexes[2][7];
 extern const int g_combatDeploySpreadSlots[7][7];
 extern const int g_combatDeployGroupedSlots[7][7];
-
-// Source aggregate copied into combatManager+0x13d38 by the constructor,
-// LowerDoor and RaiseDoor. The current DATA contract cannot express its
-// size, so the stripped target still represents interior relocations as
-// separate symbols; source keeps the retail-proven aggregate shape.
-extern TDrawbridgeBounds g_drawbridgeBounds;
-
-// The clip rectangle every combat-drawing pass intersects its dirty
-// region with before handing it to heroWindowManager::UpdateScreen.
-// Sixteen readers image-wide (DrawFrame twice, UpdateCombatArea,
-// ComputeMaxExtent, DrawObstacleAt, DrawWallAt, army::animate_missile
-// and all three missile animators). It is .bss seeded by the
-// initializer at 0x462610, which writes exactly {0, 0, 0x31f, 0x22b} -
-// i.e. left 0, top 0, right 799, bottom 555 - so this is the combat
-// viewport in screen coordinates, not a hex-space bound. Spelled as
-// the same four-int aggregate as the drawbridge bounds because the
-// readers take its four dwords one at a time; the reloc addend that
-// choice produces is masked (ResetLimitCreature is exact through the
-// identical aggregate copy). NAME IS A SOURCE-FACING INVENTION and
-// carries its address - no roster row, string or DC global reaches it.
-extern TDrawbridgeBounds g_combatDrawLimits;
 
 // Combat-background pointer tables decoded from retail .rdata. The first
 // table is indexed by town type, the second by special-terrain mode (slot

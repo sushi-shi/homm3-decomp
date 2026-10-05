@@ -85,7 +85,7 @@ bool army::findFlyerAttackCell(int target) const
 VA(0x004b46c0, 0x2F9)
 DC_ADDRESS(0x0a1430, 0xe4)
 MAC_ADDRESS(0x0c8070, 0x14c)
-unsigned char army::validFlight(int destIndex, unsigned char literalTest) const
+bool army::validFlight(int destIndex, bool literalTest) const
 {
     if (!combatManager::validHex(destIndex))
         return 0;
@@ -112,7 +112,7 @@ unsigned char army::validFlight(int destIndex, unsigned char literalTest) const
 VA(0x004b49c0, 0x76)
 DC_ADDRESS(0x0a1514, 0x7c)
 MAC_ADDRESS(0x0c81bc, 0xe4)
-int army::flyTo(int destIndex, unsigned char restoreFacing)
+int army::flyTo(int destIndex, bool restoreFacing)
 {
     if (combatManager::validHex(destIndex)) {
         int oldFacing = m_facing;
@@ -193,7 +193,7 @@ int army::fly(int destIndex)
                   / static_cast<float>(ttlLoops);
     int loop;
 
-    if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()) {
+    if (!g_combatManager->isQuickCombat()) {
         m_isMoving = 1;
         playSample(PRE_WALK_SAMPLE);
         playAnimation(20, -1, 0);
@@ -206,34 +206,34 @@ int army::fly(int destIndex)
         float y = static_cast<float>(startY);
         const int flyPeriod = static_cast<long>(
             static_cast<float>(m_monFrameInfo.m_walkCycleTime)
-            * g_combatSpeedFactors[g_config.m_combatSpeed]
+            * combatManager::s_combatSpeedMod[g_config.m_combatSpeed]
             / static_cast<float>(numFlapFrames));
 
         for (loop = 0; loop < ttlLoops; loop++) {
             for (m_currFrameIndex = 0; m_currFrameIndex < numFlapFrames;
                     m_currFrameIndex++) {
-                SLimitData ttlExtent = g_combatManager->m_drawbridgeBounds;
+                SLimitData ttlExtent = g_combatManager->m_extent;
                 x += stepX / static_cast<float>(numFlapFrames);
                 y += stepY / static_cast<float>(numFlapFrames);
                 g_combatManager->m_saveScreenPostGrid->draw(
-                           g_combatManager->m_drawbridgeBounds.m_minX,
-                           g_combatManager->m_drawbridgeBounds.m_minY,
-                           g_combatManager->m_drawbridgeBounds.width(),
-                           g_combatManager->m_drawbridgeBounds.height(),
+                           g_combatManager->m_extent.m_minX,
+                           g_combatManager->m_extent.m_minY,
+                           g_combatManager->m_extent.width(),
+                           g_combatManager->m_extent.height(),
                            g_windowManager->m_screenBitmap->getMap(0, 0),
-                           g_combatManager->m_drawbridgeBounds.m_minX,
-                           g_combatManager->m_drawbridgeBounds.m_minY,
+                           g_combatManager->m_extent.m_minX,
+                           g_combatManager->m_extent.m_minY,
                            g_windowManager->m_screenBitmap->getWidth(),
                            g_windowManager->m_screenBitmap->getHeight(),
                            g_windowManager->m_screenBitmap->getPitch(),
                            false);
-                g_combatManager->m_drawbridgeBounds = combatManager::s_combatAreaLimits;
+                g_combatManager->m_extent = heroWindowManager::s_nullLimits;
                 g_combatManager->m_saveBiggestExtent = 1;
                 drawToBuffer(static_cast<int>(x), static_cast<int>(y), 0);
                 g_combatManager->m_saveBiggestExtent = 0;
                 bool scrolled = g_combatManager->scrollTo(
-                    g_combatManager->m_drawbridgeBounds, true, true, true);
-                ttlExtent.include(g_combatManager->m_drawbridgeBounds);
+                    g_combatManager->m_extent, true, true, true);
+                ttlExtent.include(g_combatManager->m_extent);
                 GameTime::delayTil(g_timers[0]);
                 g_timers[0] = GameTime::nextFrameTime(g_timers[0], flyPeriod);
                 if (!scrolled)
@@ -245,7 +245,7 @@ int army::fly(int destIndex)
     g_combatManager->placeArmyInGrid(*this, destIndex);
     m_gridIndex = destIndex;
 
-    if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()) {
+    if (!g_combatManager->isQuickCombat()) {
         playSample(POST_WALK_SAMPLE);
         g_soundManager->stopSample(m_armySample[WALK_SAMPLE]->m_memSample.m_memSampleHandle);
         playAnimation(21, -1, 0);
@@ -260,7 +260,7 @@ int army::fly(int destIndex)
 VA(0x004b4e90, 0x76)
 DC_ADDRESS(0x0a19a0, 0xdc)
 MAC_ADDRESS(0x0c887c, 0xe4)
-int army::teleportTo(int destIndex, unsigned char restoreFacing)
+int army::teleportTo(int destIndex, bool restoreFacing)
 {
     if (combatManager::validHex(destIndex)) {
         int oldFacing = m_facing;

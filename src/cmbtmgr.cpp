@@ -55,7 +55,7 @@
 #include "winmgr.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x0063cf7c) const float g_combatSpeedFactors[3] = { 1.0f, 0.6299999952316284f, 0.4000000059604645f };
+DATA(0x0063cf7c) const float combatManager::s_combatSpeedMod[3] = { 1.0f, 0.6299999952316284f, 0.4000000059604645f };
 DATA(0x0063bd00) const unsigned char g_castleWallColumns[11] = { 12, 29, 45, 62, 78, 96, 112, 130, 147, 165, 182 };
 // Retail follows the wall-column table with the eleven column-1 hexes (one
 // per grid row, stride 17) at 0x63bd0c. No retail instruction or datum
@@ -543,11 +543,13 @@ DATA(0x0063be60) const combatManager::TWallTarget combatManager::s_wallTargets[8
     { 254, -1, 762, 212, TWallSection(14) }
 };
 
-// Retail static constructors 0x462610/0x462640/0x462670 establish these
-// clipping rectangles before combat. Zero-filled placeholders would hide them.
-DATA(0x00694f18) SLimitData g_combatDrawLimits(0, 0, 799, 555);
-DATA(0x00694ec8) SLimitData g_combatGridAreaLimits(58, 86, 740, 557);
-DATA(0x00694f30) SLimitData g_drawbridgeBounds(365, 211, 542, 380);
+// Original const class statics CombatAreaLimits/GridAreaLimits/DrawbridgeLimits
+// (DC cmbtmgr.cpp:80/83/86). Retail startup 0x462610/0x462640/0x462670
+// and the paired clipping/door callers identify each four-word aggregate.
+// Complete's grid starts at x=58; the older Dreamcast grid starts at x=53.
+DATA(0x00694f18) const SLimitData combatManager::s_combatAreaLimits(0, 0, 799, 555);
+DATA(0x00694ec8) const SLimitData combatManager::s_gridAreaLimits(58, 86, 740, 557);
+DATA(0x00694f30) const SLimitData combatManager::s_drawbridgeLimits(365, 211, 542, 380);
 DATA(0x00694ea8) const SLimitData combatManager::s_mainBuildingLimits(742, 160, 799, 337);
 DATA(0x00694ed8) const SLimitData combatManager::s_upperTowerLimits(564, 0, 651, 85);
 DATA(0x00694ef0) const SLimitData combatManager::s_rightHeroLimits(741, 16, 799, 127);
@@ -602,7 +604,7 @@ combatManager::combatManager()
     m_lastMovedArmy = 0;
     m_highlighterOn = 0;
     m_combatCommand = 0;
-    m_fortificationLevel = COMBAT_FORTIFICATION_NONE;
+    m_fortificationLevel = eFortificationNone;
     m_combatShowIt = 0;
     m_netMsgHandlerPause = 0;
 }
@@ -841,14 +843,14 @@ void combatManager::loadIcons()
                         || m_defendingTown->m_type != TOWN_STRONGHOLD
                         || wall != WALL_TRAITS_ROW_MOAT)
                         && traits[wall].m_filenames[icon] != 0)
-                    m_combatIcons[wall][icon] = ResourceManager::getBitmap816(
+                    m_wallImages[wall][icon] = ResourceManager::getBitmap816(
                         traits[wall].m_filenames[icon]);
                 else
-                    m_combatIcons[wall][icon] = 0;
+                    m_wallImages[wall][icon] = 0;
             }
         }
     } else {
-        memset(m_combatIcons, 0, sizeof(m_combatIcons));
+        memset(m_wallImages, 0, sizeof(m_wallImages));
     }
 
     for (int side = 0; side < 2; side++) {
@@ -878,8 +880,8 @@ void combatManager::freeIcons()
 {
     for (int group = 0; group < 18; ++group) {
         for (int icon = 0; icon < 5; ++icon) {
-            if (m_combatIcons[group][icon])
-                ResourceManager::dispose(m_combatIcons[group][icon]);
+            if (m_wallImages[group][icon])
+                ResourceManager::dispose(m_wallImages[group][icon]);
         }
     }
 
@@ -1015,7 +1017,7 @@ void combatManager::loadArmies(unsigned char isSurrounded)
                 placed++;
             }
         }
-        if (side == 1 && m_fortificationLevel >= COMBAT_FORTIFICATION_CITADEL) {
+        if (side == 1 && m_fortificationLevel >= eFortificationCitadel) {
             int numArchers;
             int archerLevel;
             m_defendingTown->calcNumLevelArchers(&numArchers, &archerLevel);
@@ -1024,7 +1026,7 @@ void combatManager::loadArmies(unsigned char isSurrounded)
                                    COMBAT_HEX_KEEP, -1);
             m_archers[0].m_armySlot = placed;
             placed++;
-            if (m_fortificationLevel == COMBAT_FORTIFICATION_CASTLE) {
+            if (m_fortificationLevel == eFortificationCastle) {
                 numArchers = (numArchers + 1) / 2;
                 m_armies[1][placed].init(CREATURE_ARROW_TOWER, numArchers,
                                        combatHero, side, placed,
@@ -1110,30 +1112,30 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
     }
     if (rightTown) {
         if (rightTown->hasBuilding(CASTLE_FORT_ID, false)) {
-            m_fortificationLevel = COMBAT_FORTIFICATION_FORT;
+            m_fortificationLevel = eFortificationFort;
             m_moatIsWide = 0;
             m_moatOn = 0;
         } else if (rightTown->hasBuilding(CASTLE_CITADEL_ID, false)) {
-            m_fortificationLevel = COMBAT_FORTIFICATION_CITADEL;
+            m_fortificationLevel = eFortificationCitadel;
             m_moatOn = rightTown->m_type != TOWN_TOWER
                          && (rightTown->m_type != TOWN_STRONGHOLD
                              || g_game->m_gameVersion >= 2);
             m_moatIsWide = rightTown->m_type == TOWN_FORTRESS;
         } else if (rightTown->hasBuilding(CASTLE_CASTLE_ID, false)) {
-            m_fortificationLevel = COMBAT_FORTIFICATION_CASTLE;
+            m_fortificationLevel = eFortificationCastle;
             m_moatOn = rightTown->m_type != TOWN_TOWER
                          && (rightTown->m_type != TOWN_STRONGHOLD
                              || g_game->m_gameVersion >= 2);
             m_moatIsWide = rightTown->m_type == TOWN_FORTRESS;
         } else {
-            m_fortificationLevel = COMBAT_FORTIFICATION_NONE;
+            m_fortificationLevel = eFortificationNone;
             m_moatIsWide = 0;
             m_moatOn = 0;
         }
         m_drawbridgeState = DRAWBRIDGE_UP;
         m_defendingTown = rightTown;
     } else {
-        m_fortificationLevel = COMBAT_FORTIFICATION_NONE;
+        m_fortificationLevel = eFortificationNone;
         m_moatIsWide = 0;
         m_moatOn = 0;
         m_defendingTown = 0;
@@ -2019,22 +2021,22 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
             break;
         case WALL_TARGET_0: {
             int slot = m_archers[2].m_armySlot;
-            m_wallStrength[17] = 0;
-            m_wallStanding[17] = 0;
+            m_wallLevel[17] = 0;
+            m_wallFrame[17] = 0;
             m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
             break;
         }
         case WALL_TARGET_6: {
             int slot = m_archers[1].m_armySlot;
-            m_wallStrength[16] = 0;
-            m_wallStanding[16] = 0;
+            m_wallLevel[16] = 0;
+            m_wallFrame[16] = 0;
             m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
             break;
         }
         case WALL_TARGET_7: {
             int slot = m_archers[0].m_armySlot;
-            m_wallStrength[15] = 0;
-            m_wallStanding[15] = 0;
+            m_wallLevel[15] = 0;
+            m_wallFrame[15] = 0;
             m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
             break;
         }
@@ -2042,11 +2044,11 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
     }
 
     int wallId = s_wallTargets[targetWall].m_wall;
-    m_wallStrength[wallId] = strength;
+    m_wallLevel[wallId] = strength;
     if (strength == 0)
-        m_wallStanding[wallId] = 0;
+        m_wallFrame[wallId] = 0;
     else
-        m_wallStanding[wallId] = 1;
+        m_wallFrame[wallId] = 1;
 }
 
 // E:\gamedcs\cmbtmgr.cpp:2603
@@ -2354,21 +2356,21 @@ void combatManager::setupAndLoadObstacles()
     if (m_isSurrounded)
         return;
 
-    if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE) {
+    if (m_fortificationLevel > eFortificationNone) {
         for (int wall = 0; wall < 18; wall++)
-            m_wallStrength[wall] =
+            m_wallLevel[wall] =
                 s_wallTraits[m_defendingTown->m_type][wall].m_hitpoints;
-        m_wallStrength[17] = 1;
-        m_wallStrength[16] = 1;
-        m_wallStrength[15] = 1;
+        m_wallLevel[17] = 1;
+        m_wallLevel[16] = 1;
+        m_wallLevel[15] = 1;
         int copy;
-        MEMCPY(m_wallStanding, m_wallStrength, sizeof(m_wallStanding), copy);
+        MEMCPY(m_wallFrame, m_wallLevel, sizeof(m_wallFrame), copy);
 
-        if (m_fortificationLevel == COMBAT_FORTIFICATION_CASTLE) {
-            m_wallStrength[6]++;
-            m_wallStrength[8]++;
-            m_wallStrength[10]++;
-            m_wallStrength[12]++;
+        if (m_fortificationLevel == eFortificationCastle) {
+            m_wallLevel[6]++;
+            m_wallLevel[8]++;
+            m_wallLevel[10]++;
+            m_wallLevel[12]++;
         }
 
         for (int row = 0; row < 11; row++)
@@ -2378,7 +2380,7 @@ void combatManager::setupAndLoadObstacles()
         // skipped; every other row gets one obstacle whose damage is the
         // greater of the town's own moat figure and what the defending
         // hero's Land Mine would do.
-        if (m_fortificationLevel >= COMBAT_FORTIFICATION_CITADEL
+        if (m_fortificationLevel >= eFortificationCitadel
                 && m_defendingTown->m_type == TOWN_TOWER) {
             for (int row = 0; row < 11; row++) {
                 if (row == COMBAT_GATE_ROW)
@@ -2428,7 +2430,7 @@ void combatManager::setupAndLoadObstacles()
             return;
         if (m_defendingTown->m_type != TOWN_STRONGHOLD)
             return;
-        if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
+        if (m_fortificationLevel < eFortificationCitadel)
             return;
     }
 
@@ -2444,7 +2446,7 @@ void combatManager::setupAndLoadObstacles()
     }
 
     int budget;
-    if (m_fortificationLevel >= COMBAT_FORTIFICATION_CITADEL
+    if (m_fortificationLevel >= eFortificationCitadel
             && m_defendingTown->m_type == TOWN_STRONGHOLD)
         budget = sRandom(10, 16);
     else
@@ -2457,7 +2459,7 @@ void combatManager::setupAndLoadObstacles()
     else
         terrainMask = 1 << m_terrainType;
 
-    if ((m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL
+    if ((m_fortificationLevel < eFortificationCitadel
                 || m_defendingTown->m_type != TOWN_STRONGHOLD)
             && sRandom(1, 100) <= 40)
         budget -= placeLargeObstacle(terrainMask, specialTerrainMask) / 2;
@@ -2592,7 +2594,7 @@ void combatManager::initializeArchers()
 {
     TArcher* archer = m_archers;
     memset(archer, 0, sizeof(m_archers));
-    if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
+    if (m_fortificationLevel < eFortificationCitadel)
         return;
 
     const TSiegeArcherInfo& info = g_siegeArcherInfo[m_defendingTown->m_type];
@@ -2611,7 +2613,7 @@ void combatManager::initializeArchers()
     archer->m_sequence = 2;
     archer->m_frame = 0;
 
-    if (m_fortificationLevel != COMBAT_FORTIFICATION_CASTLE)
+    if (m_fortificationLevel != eFortificationCastle)
         return;
 
     m_archers[1].m_creatureType = info.m_creatureType;
@@ -2679,10 +2681,10 @@ void combatManager::makeCreaturesVanish()
             }
         }
         computeMaxExtent();
-        x = m_drawbridgeBounds.m_minX;
-        y = m_drawbridgeBounds.m_minY;
-        width = m_drawbridgeBounds.width();
-        height = m_drawbridgeBounds.height();
+        x = m_extent.m_minX;
+        y = m_extent.m_minY;
+        width = m_extent.width();
+        height = m_extent.height();
     }
 
     for (side = 0; side < 2; side++) {
@@ -2705,7 +2707,7 @@ void combatManager::makeCreaturesVanish()
         g_windowManager->fizzleForwardX(
             x, y, width, height,
             static_cast<int>(
-                g_combatSpeedFactors[g_config.m_combatSpeed] * 150.0f));
+                combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 150.0f));
     }
 }
 
@@ -2741,7 +2743,7 @@ void combatManager::lowerDoor()
 
     SAMPLE2 sample = loadPlaySample(
         DATA_COMPGEN(0x0066ffb0, drawbridgeSampleName, "drawbrg.82m"));
-    m_drawbridgeBounds = g_drawbridgeBounds;
+    m_extent = combatManager::s_drawbridgeLimits;
     for (int state = DRAWBRIDGE_UP; state >= DRAWBRIDGE_DOWN; state--) {
         m_drawbridgeState = state;
         drawFrame(1, 0, 1, 100, 1, 1);
@@ -2763,7 +2765,7 @@ void combatManager::raiseDoor()
     }
 
     SAMPLE2 sample = loadPlaySample("drawbrg.82m");
-    m_drawbridgeBounds = g_drawbridgeBounds;
+    m_extent = combatManager::s_drawbridgeLimits;
     for (int state = DRAWBRIDGE_DOWN; state <= DRAWBRIDGE_UP; state++) {
         m_drawbridgeState = state;
         drawFrame(1, 0, 1, 100, 1, 1);
@@ -2796,26 +2798,29 @@ void combatManager::testRaiseDoor()
     raiseDoor();
 }
 
+// Original ?InCastle@combatManager@@SA_NH@Z proves the bool result.
 VA(0x00467460, 0x22)
 DC_ADDRESS(0x061160, 0x20)
 MAC_ADDRESS(0x073610, 0x34)
-unsigned char combatManager::inCastle(int index)
+bool combatManager::inCastle(int index)
 {
     return index >= g_castleWallColumns[gridY(index)];
 }
 
+// Original ?LeftOfMoat@combatManager@@SA_NH@Z proves the bool result.
 VA(0x00467490, 0x22)
 DC_ADDRESS(0x061180, 0x20)
 MAC_ADDRESS(0x073644, 0x38)
-unsigned char combatManager::leftOfMoat(int index)
+bool combatManager::leftOfMoat(int index)
 {
     return index < g_moatHexes[gridY(index)];
 }
 
+// Original ?is_adjacent@combatManager@@QBA_NHH@Z proves the bool result.
 VA(0x004674c0, 0x4C)
 DC_ADDRESS(0x0611a0, 0x84)
 MAC_ADDRESS(0x07367c, 0xfc)
-unsigned char combatManager::isAdjacent(int first, int second) const
+bool combatManager::isAdjacent(int first, int second) const
 {
     if (validHex(first) && validHex(second)) {
         for (int i = 0; i < 6; i++) {
@@ -2848,10 +2853,11 @@ unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIn
     return inLineOfSight(sourceIndex, destIndex) == 0;
 }
 
+// Original ?ShotIsNotOptimal@combatManager@@QBA_NPBVarmy@@0@Z proves the bool result.
 VA(0x00467600, 0x23A)
 DC_ADDRESS(0x061284, 0x92)
 MAC_ADDRESS(0x07388c, 0x134)
-unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* defender) const
+bool combatManager::shotIsNotOptimal(const army* attacker, const army* defender) const
 {
     int side = attacker->getControllingSide();
     if (m_heroes[side]
@@ -2875,10 +2881,11 @@ unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* 
     return getDistance(source, dest) > 10;
 }
 
+// Original ?InLineOfSight@combatManager@@QBA_NHH@Z proves the bool result.
 VA(0x00467840, 0x1B6)
 DC_ADDRESS(0x061318, 0x1d8)
 MAC_ADDRESS(0x0739c0, 0x284)
-unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
+bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 {
     if (!m_fortificationLevel)
         return 1;
@@ -2941,37 +2948,15 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // archaeology, which makes them far cheaper than InitNonVisualVars
 // despite being bigger.
 
-// The shared nine-phase skeleton, in order: the inlined IsQuickCombat
-// guard (byte-identical in all three) / deltas / a `steps` divide /
-// per-step motion / sprite-or-frame selection / `Bitmap16Bit backup(w,h)`
-// plus four limits seeded from the 0x6aace8 quad / DrawFrame / a frame
-// delay from gCombatSpeedFactors[combatSpeed] / the animation loop. The
-// loop body is Grab, sprite Draw, a four-way union of the sprite rect
-// into the limits, a four-way clip against the 0x694f18 quad,
-// UpdateScreen with (r-l+1, b-t+1), then DelayTil.
-
-// Where they differ: ShootBallisticMissile is the only PARABOLIC one - it
-// recomputes x and y from an `arc` term every frame instead of
-// accumulating a step - is the only one with no DrawFrame call, is the
-// only one whose backup restore sits INSIDE the loop, and uses a 100.0f
-// delay factor where the other two use 33.0f. ShootMissile is the only
-// one that does NOT cycle the sprite frame: it picks one frame from the
-// angle and holds it. ShootAnimatedMissile is the only one that owns its
-// sprite (ResourceManager::GetSprite ... Dispose).
-
-// The union+clip+UpdateScreen block is DC's SLimitData::Include +
-// ::Clip + Width()/Height(), and the same block appears in
-// army::animate_missile (0x43f2c0), combatManager::DrawFrame (0x494440)
-// and ComputeMaxExtent (0x495bf0) - so spelling it right here pays off in
-// several more bodies. Suggested order: ShootMissile first (fullest angle
-// path, simplest loop), then ShootAnimatedMissile, then the parabola.
-
-// One thing to settle before writing any of them: all four dwords of each
-// limits quad are read INDIVIDUALLY, each at displacement 0 against its
-// own symbol, so they want four separate externs rather than one struct -
-// the gCombatHexLeft694ea8 precedent in the header. And every new
-// file-scope extern on cmbtmgr.h fires the include-set wall by itself
-// (measured at gCombatSeed66d840), so all of them must be gated.
+// All three missile animators retain the shared bitmap, sprite and rectangle
+// helpers. Their dirty extents start from heroWindowManager::NullLimits and
+// are clipped to combatManager::CombatAreaLimits before UpdateCombatArea.
+// The ballistic path computes a parabola, restores its saved bitmap inside
+// the loop, and uses a 100ms speed factor. The other two use 33ms; only the
+// animated variant owns its sprite and cycles its frames.
+// DC 0x61926, 0x61d5c and 0x6223a pass inclusive right/bottom endpoints
+// to ScrollTo's width/height parameters. Preserve those original caller
+// expressions; Complete's fixed viewport eliminates the scrolling work.
 
 // E:\gamedcs\cmbtmgr.cpp:3640
 // RECONSTRUCTED 2026-08-20, the parabolic member of the trio. DC local
@@ -2981,12 +2966,10 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // which agrees: a ballistic missile is never mirrored, and it needs no
 // angle search or DrawFrame at all - the trajectory is arithmetic.
 
-// DC's variable list turned out to be a MATCHING LEVER here, not just a
-// naming source. ARROW_TRAVEL_DIST is listed for this body and for
-// neither of the other two, and that asymmetry is real: naming the
-// pre-division distance is worth 79.99 -> 81.72 here, while the same
-// edit costs ShootMissile 91.74 -> 90.43. Where DC names a local, name
-// it; where DC does not, fold it.
+// DC positively records ARROW_TRAVEL_DIST: preserve that named distance
+// before deriving the flight-frame count. The other two missile routines
+// have different recorded locals; missing debug rows alone do not prove
+// that an expression was unnamed in the original source.
 
 // DC 3697 multiplies deltaX by step; 3698 computes nframes - step.
 // Mac 0x73df8 also subtracts step, while its horizontal product is
@@ -2997,15 +2980,13 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // 0x73fdc..0x74000 expands its inclusive width/height and UpdateScreen
 // call after clipping the same four-word rectangle.
 // DC 3703/3707/3725 name the bitmap Grab/Draw and const sprite Draw
-// forwarding overloads. Restoring those calls measures Windows 94.19
-// -> 91.24%; the native indexed loop measures 89.12%. It retains the
-// final Draw's nested GetMap and GetNumFrames, which retail expands
-// (14 calls vs 12). The frame remains 0x8c vs retail 0x9c. Native
-// operand-order alternatives are Windows-flat. All other available
-// cmbtmgr Mac pairs hold; keep these canonical source operations.
-// Default construction followed by assignment of updateArea is also
-// byte-flat at 89.1219%; the observed four-word initialization alone does
-// not distinguish it from copy initialization, which remains the model.
+// forwarding overloads. The four-word NullLimits copy permits either copy
+// initialization or default construction followed by assignment. Combined
+// with the original ScrollTo arguments, the latter lets VC6 expand
+// GetNumFrames and measures 91.3063%. Its nested IsValidSeq and the final
+// Draw's GetMap still remain calls; retail expands both. The frame remains
+// 0x8c vs retail 0x9c. Naming the previous-frame rectangle inside its guard,
+// typed-row GetMap and native operand-order alternatives are byte-flat.
 VA(0x00467a00, 0x3AF)
 DC_ADDRESS(0x0614f0, 0x4b8)
 MAC_ADDRESS(0x073c44, 0x488)  // anchor-global
@@ -3017,9 +2998,9 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
 
     const int deltaX = destX - startX;
     const int deltaY = destY - startY;
-    const int arrowtraveldist = static_cast<int>(sqrt(static_cast<double>(
+    const int arrowTravelDist = static_cast<int>(sqrt(static_cast<double>(
         deltaY * deltaY + deltaX * deltaX)));
-    const int nframes = (arrowtraveldist + 10) / 20;
+    const int nframes = (arrowTravelDist + 10) / 20;
     // The arc: half the horizontal span, spread over the flight. The
     // trajectory below subtracts flatness*(nframes - step) from deltaY,
     // so the peak deviation is nframes/4 * flatness = abs(deltaX)/2.
@@ -3034,16 +3015,17 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     int y = startY;
 
     Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
-    const int missileperiod = static_cast<int>(
-        g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
+    SLimitData updateArea;
+    updateArea = heroWindowManager::s_nullLimits;
+    const int missilePeriod = static_cast<int>(
+        combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 100.0f);
 
     int frame = 0;
     for (int step = 0; step < nframes; step++) {
-        unsigned long nextFrameTime = GameTime::get() + missileperiod;
+        unsigned long nextFrameTime = GameTime::get() + missilePeriod;
         if (step != 0) {
             // Mac 0x73e24 copies a four-word rectangle temporary here.
-            updateArea = TDrawbridgeBounds(
+            updateArea = SLimitData(
                 x, y, x + width - 1, y + height - 1);
             x = startX + deltaX * step / nframes;
             y = static_cast<int>(
@@ -3054,8 +3036,9 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
         missile->draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, false, true);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
-        scrollTo(x, y, width, height, true, true, true);  // DC 3717
-        updateArea.clip(g_combatDrawLimits);
+        scrollTo(x, y, x + width - 1, y + height - 1,
+                 true, true, true);  // DC 3717
+        updateArea.clip(combatManager::s_combatAreaLimits);
         updateCombatArea(updateArea);
         saved.draw(0, 0, width, height,
                    g_windowManager->m_screenBitmap, x, y, false);
@@ -3074,6 +3057,11 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
 // 29 branches and 17 named calls align. The first residual is Include's
 // lowering at +0x333, with rectangle scratch/stack differences following.
 // The canonical bitmap, sprite, rectangle and resource calls stay intact.
+// DC 3794/3796 and Mac 0x7428c..0x742ac separate the count guard
+// from the inner angle break; unordered angles continue that loop.
+// The inner-break restoration is VC6 byte-identical. Eight rectangle
+// constructor/conditional-assignment combinations do not improve the
+// helper-preserving model; retain the ordinary member initializer/if form.
 VA(0x00467db0, 0x46A)
 DC_ADDRESS(0x0619a8, 0x4b8)
 MAC_ADDRESS(0x0740cc, 0x588)
@@ -3119,10 +3107,11 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             degrees = atan(static_cast<double>(deltaY) / -deltaX)
                       * 57.2957763671875;
         angle = static_cast<float>(degrees);
-        int index = 1;
-        while (index < nsprites
-                && (angles[index - 1] + angles[index]) / 2.0f >= angle)
-            ++index;
+        int index;
+        for (index = 1; index < nsprites; ++index) {
+            if ((angles[index - 1] + angles[index]) / 2.0f < angle)
+                break;
+        }
         if (index < nsprites)
             spriteIndex = index - 1;
         else
@@ -3136,10 +3125,10 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     int y = startY - height / 2;
 
     Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
+    SLimitData updateArea = heroWindowManager::s_nullLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowDelay = static_cast<int>(
-        g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
+        combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 33.0f);
 
     int frame = 0;
     for (int step = 0; step < nframes; step++) {
@@ -3148,7 +3137,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             saved.draw(0, 0, width, height,
                        g_windowManager->m_screenBitmap, x, y, false);
             // Mac 0x743e0 constructs and copies the four-word bounds.
-            updateArea = TDrawbridgeBounds(
+            updateArea = SLimitData(
                 x, y, x + width - 1, y + height - 1);
             x += addX;
             y += addY;
@@ -3156,10 +3145,11 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
         saved.grab(g_windowManager->m_screenBitmap, x, y);
         missile->draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, flipped, 1);
-        scrollTo(x, y, width, height, true, true, true);  // DC 3865
+        scrollTo(x, y, x + width - 1, y + height - 1,
+                 true, true, true);  // DC 3865
         updateArea.include(SLimitData(
             x, y, x + width - 1, y + height - 1));
-        updateArea.clip(g_combatDrawLimits);
+        updateArea.clip(combatManager::s_combatAreaLimits);
         updateCombatArea(updateArea);  // DC 3874, by-value extent
         ++frame;
         if (frame >= missile->getNumFrames(0))
@@ -3274,19 +3264,19 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     }
 
     Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
+    SLimitData updateArea = heroWindowManager::s_nullLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
-    const int arrowdelay = static_cast<int>(
-        g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
+    const int arrowDelay = static_cast<int>(
+        combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 33.0f);
 
     for (int step = 0; step < nframes; step++) {
-        unsigned long nextFrameTime = GameTime::get() + arrowdelay;
+        unsigned long nextFrameTime = GameTime::get() + arrowDelay;
         if (step != 0) {
             saved.draw(0, 0, width, height,
                        g_windowManager->m_screenBitmap, x, y, false);
             // Mac 0x749fc/0x74abc derives each rectangle from its current origin.
             // Retaining those expressions also matches the Windows loop schedule.
-            updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
+            updateArea = SLimitData(x, y, x + width - 1, y + height - 1);
             x += addX;
             y += addY;
         }
@@ -3296,8 +3286,9 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         missile->draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, flipped, 1);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
-        scrollTo(x, y, width, height, true, true, true);  // DC 4016
-        updateArea.clip(g_combatDrawLimits);
+        scrollTo(x, y, x + width - 1, y + height - 1,
+                 true, true, true);  // DC 4016
+        updateArea.clip(combatManager::s_combatAreaLimits);
         updateCombatArea(updateArea);  // DC 4022, by-value extent
         GameTime::delayTil(nextFrameTime);
     }
@@ -3400,74 +3391,23 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
     }
 }
 
-// E:\gamedcs\cmbtmgr.cpp:4158
-// The body is NOT a switch - `spellEffect` is only ever compared with
-// -1 and used as a twelve-byte index into akSpellEffectTraits. What it
-// is instead is eleven `for(side) for(slot)` walks over armies[2][21],
-// split by three separately inlined IsQuickCombat guards: the first
-// skips the entire animation half, the second gates the per-stack
-// samples, the third gates the wind-down loop.
-
-// Shapes worth keeping:
-//   * the frame budget is four chained maximum selects ending on
-//     `wince + attack - 1`, which retail forms with one
-//     `lea eax,[esi+edi-1]`;
-//   * `iNextFrameType = cs_wince + (Is(1u << 27))` is ARITHMETIC, not a
-//     ternary - retail emits `setne cl` straight into `add ecx,3`;
-//   * walk 4 calls MarkCreatureEffect after its extra POW-specific guards;
-//     Dreamcast records that helper boundary at cmbtmgr.cpp:4293, and the
-//     Complete inline body adds the retail-only arrow-tower switch;
-//   * the wind-down is a `for(;;)` with a bFramesChanged latch, not a
-//     counted loop - retail has no bound to test.
-
-// Two measured refinements on top of the first compile (96.1134):
-//   * army::bPowSequenceComplete is an INT, not the byte its name
-//     suggests. Retail both tests and stores it a dword wide, and
-//     retyping it is worth +0.03 (96.1134 -> 96.1439). The field note
-//     in army.h carries the bytes.
-//   * the attack-frame skip is a GOTO, not a nested if. Retail spells
-//     `cmp frameCount, attack_frames-1 / jge <play> / jmp <continue>`,
-//     i.e. it tests the POSITIVE and falls through to the continue,
-//     which the plain `if (frameCount < attack_frames - 1) continue;`
-//     emits with both arms the other way round. +0.055, and it takes
-//     the branch-shape distance from 3 to 1. Swapping the enclosing
-//     `if (attack_frames)` arms instead was measured and is much worse
-//     (94.90) - the flip is on the inner test alone.
-
-// CURRENT (96.2232%, rechecked 2026-09-01): predict-inline reports the call
-// multisets AGREE exactly (14 and 14). The DC dossier records 151 source
-// rows and the MarkCreatureEffect call at cmbtmgr.cpp:4293; restoring that
-// inline boundary is byte-neutral. The structure view is 224 versus 225
-// blocks, with the early one-block skew cascading through its alignment;
-// the source view localizes the first real divergence to the first animation
-// walk's stores and GetNumFrames lowering. The remainder is instruction/slot
-// selection rather than a missing DC helper. Negative controls on
-// 2026-08-21: DC's wince_frames-before-attack_frames declaration order
-// regresses to 96.21098; explicit clear/conditional-set of
-// bShowRangeFrames regresses to 95.7939 and flips one branch polarity; a
-// 1:0 ternary is byte-identical to the retained boolean assignment; and a
-// named bool for the special-wince bit is byte-flat, still folding retail's
-// `test/setne/add` to our `and/add`. The earlier six why-branch candidates
-// likewise measured +0 or worse.
-// The positive frameCount if/else removes play_frame while preserving all
-// 2561 compiled bytes and the 25 relocation names/addends at 96.2927%.
-// Its true arm permits the common frame body; only the false arm skips it.
-// The inverted continue guard still scores 96.2378%, so guard polarity and
-// scope matter here even though the source operations are otherwise equal.
-// Explicit range-flag arms and cs_defend/cs_wince stores preserve Is and
-// GetNumFrames while raising Windows 95.5183 -> 96.1622. Mac retains the
-// same separate stores; its range comparison compression remains different.
-// A switch and named frame snapshot do not reproduce that compression.
-// DC cmbtmgr.cpp:4158 proves the global TSpellEffectID parameter, and
-// row 4389 retains UpdateCombatArea(bounds). Restore both source facts;
-// the formerly direct updateScreen call was an inlined helper substitute.
-// The enum's NB11 record 0x1f15 supplies the effect-domain caller values;
-// negative sentinel, lightning dust, landmine and poison now use that enum.
-// Focused VC6 comparison after refreshing the renamed target: 95.81%
-// versus the direct-call 96.16%; doAttack collateral is 99.92% versus
-// 99.96%. All 116 available Mac pairs in the three affected units hold.
-// The remaining animation-walk slot/register differences remain open;
-// a lower Windows score does not refute these retained source operations.
+// E:\gamedcs\cmbtmgr.cpp:4158. TSpellEffectID is a source-proven enum;
+// the walks select, advance and finish animations for armies[2][21].
+// DC4234/4236 and Mac 0x750d4..0x750f4 put the nested effect-loading guard
+// after effect selection. DC4277 keeps the first two max calls together.
+// DC4292/4293 retain the marking condition and MarkCreatureEffect helper;
+// Complete adds the arrow-tower case inside that canonical helper.
+// DC4321/4337 and Mac 0x754b0..0x7553c enclose advancement in the positive
+// next-frame/readiness guards. The references subtract frameCount before
+// one in winceStartOffset; moving this local among its use scopes is flat.
+// DC4389 retains by-value UpdateCombatArea; keep its nested rectangle
+// accessors. DC4410/4411 and Mac 0x757b4..0x758ac finish with a while loop
+// whose progress flag is set in each advancing branch (DC4425/4433).
+// These complete source scopes reach 98.5390% on Windows. All 225 blocks,
+// 134 branches, 14 calls and 25 relocations align; the 34 differing
+// instruction rows start at by-value extent lowering. Early-continue and
+// shared progress-write variants lose that alignment. Counter declaration
+// positions and wince-offset use-scope variants produce identical bytes.
 VA(0x00468990, 0xA08)
 DC_ADDRESS(0x062560, 0x856)
 MAC_ADDRESS(0x074eec, 0xb30)  // anchor-global
@@ -3517,7 +3457,9 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                     }
                 }
             }
-            if (showSomePowEffect && !loadSpellEffect(spellEffect))
+        }
+        if (showSomePowEffect) {
+            if (!loadSpellEffect(spellEffect))
                 showSomePowEffect = 0;
         }
 
@@ -3542,8 +3484,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                         stack.m_stdIcon->getNumFrames(cs_wince));
             }
         }
-        numFrames = max(numFrames, winceFrames);
-        numFrames = max(numFrames, attackFrames);
+        numFrames = max(max(numFrames, winceFrames), attackFrames);
         numFrames = max(numFrames, winceFrames + attackFrames - 1);
 
         if (resetLimitCreature)
@@ -3552,12 +3493,10 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
         for (side = 0; side < 2; side++) {
             for (slot = 0; slot < m_numArmies[side]; slot++) {
                 army& stack = m_armies[side][slot];
-                if (stack.is(creatureImmobilized))
-                    continue;
-                if (!stack.m_someUnitsDamaged && !stack.m_showAttackFrames
-                        && !stack.m_showRangeFrames)
-                    continue;
-                markCreatureEffect(side, slot);
+                if (!stack.is(creatureImmobilized)
+                        && (stack.m_someUnitsDamaged || stack.m_showAttackFrames
+                            || stack.m_showRangeFrames))
+                    markCreatureEffect(side, slot);
             }
         }
 
@@ -3566,7 +3505,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
             playImmEffect(g_spellEffectTraits[spellEffect].m_immName, 1);
 
         for (int frameCount = 0; frameCount < numFrames; frameCount++) {
-            const int winceStartOffset = numFrames - 1 - frameCount;
+            const int winceStartOffset = numFrames - frameCount - 1;
             for (side = 0; side < 2; side++) {
                 for (slot = 0; slot < m_numArmies[side]; slot++) {
                     army& stack = m_armies[side][slot];
@@ -3582,50 +3521,40 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                             stack.m_currFrameIndex = 0;
                         }
                     }
-                    if (stack.m_nextFrameType == -1)
-                        continue;
-                    if (stack.m_powSequenceComplete)
-                        continue;
-
-                    if (!stack.m_showAttackFrames
-                            && winceStartOffset
-                                > stack.m_remainingFramesToPlay) {
-                        if (attackFrames) {
-                            if (frameCount >= attackFrames - 1) {
-                                // The attack threshold permits this frame.
-                            } else {
-                                continue;
-                            }
-                        } else if (stack.m_currFrameType == cs_wince
-                                && stack.m_currFrameIndex
-                                    >= stack.m_stdIcon->getNumFrames(
+                    if (stack.m_nextFrameType != -1) {
+                        if (!stack.m_powSequenceComplete
+                                && (stack.m_showAttackFrames
+                                || winceStartOffset <= stack.m_remainingFramesToPlay
+                                || (attackFrames && frameCount >= attackFrames - 1)
+                                || (!attackFrames
+                                    && (stack.m_currFrameType != cs_wince
+                                        || stack.m_currFrameIndex
+                                            < stack.m_stdIcon->getNumFrames(
+                                                stack.m_currFrameType) - 1)))) {
+                            if (stack.m_currFrameType != stack.m_nextFrameType) {
+                                if (!isQuickCombat()) {
+                                    if (stack.m_showAttackFrames)
+                                        stack.playSample(army::ATTACK_SAMPLE);
+                                    else if (stack.m_nextFrameType == cs_wince)
+                                        stack.playSample(army::WINCE_SAMPLE);
+                                    else if (stack.m_nextFrameType == cs_death)
+                                        stack.playSample(army::DIE_SAMPLE);
+                                    else if (stack.m_nextFrameType == cs_defend)
+                                        stack.playSample(army::DEFEND_SAMPLE);
+                                }
+                                stack.m_currFrameType = stack.m_nextFrameType;
+                                stack.m_currFrameIndex = 0;
+                            } else if (stack.m_currFrameIndex
+                                    < stack.m_stdIcon->getNumFrames(
                                         stack.m_currFrameType) - 1) {
-                            continue;
+                                stack.m_currFrameIndex++;
+                            } else if (stack.m_currFrameType != cs_wait
+                                    && stack.m_currFrameType != cs_death) {
+                                stack.m_currFrameType = cs_wait;
+                                stack.m_currFrameIndex = 0;
+                                stack.m_powSequenceComplete = 1;
+                            }
                         }
-                    }
-
-                    if (stack.m_currFrameType != stack.m_nextFrameType) {
-                        if (!isQuickCombat()) {
-                            if (stack.m_showAttackFrames)
-                                stack.playSample(army::ATTACK_SAMPLE);
-                            else if (stack.m_nextFrameType == cs_wince)
-                                stack.playSample(army::WINCE_SAMPLE);
-                            else if (stack.m_nextFrameType == cs_death)
-                                stack.playSample(army::DIE_SAMPLE);
-                            else if (stack.m_nextFrameType == cs_defend)
-                                stack.playSample(army::DEFEND_SAMPLE);
-                        }
-                        stack.m_currFrameType = stack.m_nextFrameType;
-                        stack.m_currFrameIndex = 0;
-                    } else if (stack.m_currFrameIndex
-                            < stack.m_stdIcon->getNumFrames(
-                                stack.m_currFrameType) - 1) {
-                        stack.m_currFrameIndex++;
-                    } else if (stack.m_currFrameType != cs_wait
-                            && stack.m_currFrameType != cs_death) {
-                        stack.m_currFrameType = cs_wait;
-                        stack.m_currFrameIndex = 0;
-                        stack.m_powSequenceComplete = 1;
                     }
                 }
             }
@@ -3636,7 +3565,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
 
             drawFrame(0, 1, 0, 100, 1, 1);
             // DC cmbtmgr.cpp:4389 retains this by-value rectangle helper.
-            updateCombatArea(m_drawbridgeBounds);
+            updateCombatArea(m_extent);
         }
     }
 
@@ -3653,29 +3582,28 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
     }
 
     if (!isQuickCombat()) {
-        for (;;) {
-            int framesChanged = 0;
+        int framesChanged = 1;
+        while (framesChanged) {
+            framesChanged = 0;
             for (side = 0; side < 2; side++) {
                 for (slot = 0; slot < m_numArmies[side]; slot++) {
                     army& stack = m_armies[side][slot];
-                    if (stack.m_currFrameType == cs_wait)
-                        continue;
-                    if (stack.m_currFrameIndex
-                            < stack.m_stdIcon->getNumFrames(
-                                stack.m_currFrameType) - 1) {
-                        stack.m_currFrameIndex++;
-                    } else if (stack.m_currFrameType == cs_death) {
-                        continue;
-                    } else {
-                        stack.m_currFrameType = cs_wait;
-                        stack.m_currFrameIndex = 0;
+                    if (stack.m_currFrameType != cs_wait) {
+                        if (stack.m_currFrameIndex
+                                < stack.m_stdIcon->getNumFrames(
+                                    stack.m_currFrameType) - 1) {
+                            stack.m_currFrameIndex++;
+                            framesChanged = 1;
+                        } else if (stack.m_currFrameType != cs_death) {
+                            stack.m_currFrameType = cs_wait;
+                            stack.m_currFrameIndex = 0;
+                            framesChanged = 1;
+                        }
                     }
-                    framesChanged = 1;
                 }
             }
-            if (!framesChanged)
-                break;
-            drawFrame(1, 1, 0, 100, 1, 1);
+            if (framesChanged)
+                drawFrame(1, 1, 0, 100, 1, 1);
         }
         if (resetLimitCreature)
             this->resetLimitCreature();
@@ -3761,11 +3689,12 @@ void combatManager::checkRebirth()
     }
 }
 
+// Original ?enemy_is_adjacent@combatManager@@QBA_NPBVarmy@@H0@Z proves the bool result.
 VA(0x00469600, 0x6E)
 DC_ADDRESS(0x062db8, 0x94)
 MAC_ADDRESS(0x075c3c, 0x9c)
-unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
-                                               const army* excluded) const
+bool combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
+                                     const army* excluded) const
 {
     for (int i = 0; i < 6; i++) {
         int hex = m_adjacentCells[gridIndex][i];
@@ -3900,10 +3829,11 @@ unsigned char combatManager::doorCanBeLowered() const
     return 1;
 }
 
+// Original ?HexIsBlocked@combatManager@@QBA_NH@Z proves the bool result.
 VA(0x00469a10, 0x80)
 DC_ADDRESS(0x0632c4, 0x98)
 MAC_ADDRESS(0x07618c, 0x78)
-unsigned char combatManager::hexIsBlocked(int index) const
+bool combatManager::hexIsBlocked(int index) const
 {
     if (m_fortificationLevel > 0
             && (index == COMBAT_HEX_GATE || index == COMBAT_HEX_GATE_MOAT)) {
@@ -3965,10 +3895,11 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
     m_combatWindow->combatMessage(message.c_str(), 1, 0);
 }
 
+// Original ?IsInMoat@combatManager@@QAA_NHPAH@Z proves the bool result.
 VA(0x00469dc0, 0x8D)
 DC_ADDRESS(0x06351c, 0x7e)
 MAC_ADDRESS(0x0764c4, 0xd4)
-unsigned char combatManager::isInMoat(int hex, int* index)
+bool combatManager::isInMoat(int hex, int* index)
 {
     if (m_moatOn) {
         for (int row = 0; row < 11; row++) {
@@ -4151,6 +4082,12 @@ void combatManager::markTowerArmy(const army* tower)
     }
 }
 
+// DC4970/4973 return the tutorial/local policy before the two player
+// references at4976; Complete Mac0x76c10..0x76c28 keeps the same order.
+// Both player addresses precede their preference reads. The early-return
+// and reference-declaration variants preserve all Windows scores. Replacing
+// the explicit true/false returns with one && result lowers this body from
+// 100% to94.0278% without improving its missile callers.
 VA(0x0046a4a0, 0x71)
 DC_ADDRESS(0x063900, 0xc4)
 MAC_ADDRESS(0x076bc8, 0xac)
@@ -4158,18 +4095,14 @@ bool combatManager::isQuickCombat() const
 {
     if (g_game->m_isTutorial)
         return false;
-    if (g_remoteOn && m_sideIsAi[0] && m_sideIsAi[1]) {
-        // DC's single line gap before the test and both retail expansions
-        // compute the two player addresses before reading either flag. This
-        // also closes Open, DamageMessage and ShootAnimatedMissile while
-        // improving both remaining missile callers.
-        const playerData& firstPlayer = g_game->m_players[m_playerIds[0]],
-            &secondPlayer = g_game->m_players[m_playerIds[1]];
-        if (firstPlayer.m_quickCombat && secondPlayer.m_quickCombat)
-            return true;
-        return false;
-    }
-    return g_config.m_quickCombat != 0;
+    if (!g_remoteOn || !m_sideIsAi[0] || !m_sideIsAi[1])
+        return g_config.m_quickCombat != 0;
+
+    const playerData& firstPlayer = g_game->m_players[m_playerIds[0]];
+    const playerData& secondPlayer = g_game->m_players[m_playerIds[1]];
+    if (firstPlayer.m_quickCombat && secondPlayer.m_quickCombat)
+        return true;
+    return false;
 }
 
 VA(0x0046a520, 0x44)

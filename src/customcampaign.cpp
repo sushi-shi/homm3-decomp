@@ -1677,8 +1677,8 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
     int heroId = placeholder->m_heroId;
     int owner = static_cast<signed char>(placeholder->m_owner);
     if (heroId == -1) {
-        heroId = g_game->getStartingHeroId(g_game->m_setup.m_alignment[owner],
-                                           owner, 0);
+        heroId = g_game->getStartingHeroId(
+            g_game->m_setup.m_alignment[owner], owner, 0);
     } else {
         g_game->rehomeCampaignHeroSetup(heroId);
     }
@@ -2189,10 +2189,10 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     g_game->m_players[position].m_isHuman = 1;
     g_game->m_players[position].m_isLocal = 1;
 
-    int playerHeroFaces[8];
+    HeroId playerHeroFaces[8];
     int i;
-    MEMSET(playerHeroFaces, -1, sizeof(playerHeroFaces), i);
-    playerHeroFaces[position] = getStartOptions()->slot7(option);
+    MEMSET(playerHeroFaces, heroIdNone, sizeof(playerHeroFaces), i);
+    playerHeroFaces[position] = HeroId(getStartOptions()->slot7(option));
     g_game->setupFirstPlayer();
 
     stream->pubseekoff(m_offset, std::ios::beg, std::ios::in);
@@ -3083,10 +3083,10 @@ MAC_ADDRESS(0x098cb0, 0x218)
 static void convertLegacyCampaignHero(hero& newHero,
                                       const LegacyCampaignHero& oldHero)
 {
-    newHero.m_id = oldHero.m_id;
+    newHero.m_id = static_cast<HeroId>(oldHero.m_id);
     newHero.m_owner = oldHero.m_owner;
     strcpy(newHero.m_name, oldHero.m_name);
-    newHero.m_heroClass = oldHero.m_heroClass;
+    newHero.m_heroClass = static_cast<THeroClass>(oldHero.m_heroClass);
     newHero.m_portrait = oldHero.m_portrait;
     newHero.m_lastMagicSchoolLevel = oldHero.m_lastMagicSchoolLevel;
     newHero.m_experience = oldHero.m_experience;

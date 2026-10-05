@@ -661,7 +661,7 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
 
     player->m_heroes[player->m_numHeroes] = m_id;
     ++player->m_numHeroes;
-    g_game->m_heroAvailability[m_id] = static_cast<char>(playerId);
+    g_game->m_heroAvailability[m_id] = static_cast<signed char>(playerId);
     g_game->m_heroPoolMap[m_id][playerId] = true;
 
     m_owner = static_cast<signed char>(playerId);
@@ -700,6 +700,11 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
 // expansions need separate inliner evidence; they are not register-only.
 // Typed scalar readers preserve every on-disk width while shortening the
 // staging lifetimes, bringing the same body to 94.93%.
+// The historical exact result flattened decodePackedBits into its reader.
+// With the canonical helper chain retained, the exception path still keeps
+// nested string copy/end/cleanup calls that retail expands (94.9221%). C2's
+// reproduced trace reaches string assign/copy construction at depth eight;
+// those callees' nested operations exceed the default expansion depth.
 VA(0x004d7a20, 0x69F)
 DC_ADDRESS(0x0caf98, 0x700)
 MAC_ADDRESS(0x0f2ab4, 0xa04)  // linkorder
@@ -720,14 +725,19 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     m_moraleBonus = readValue<char>(infile);
     m_luckBonus = readValue<char>(infile);
     m_backpackCount = readValue<char>(infile);
-    m_disguiseLevel = static_cast<signed char>(readValue<char>(infile));
-    m_flightLevel = static_cast<signed char>(readValue<char>(infile));
-    m_waterWalkLevel = static_cast<signed char>(readValue<char>(infile));
+    m_disguiseLevel = static_cast<TSkillMastery>(
+        static_cast<signed char>(readValue<char>(infile)));
+    m_flightLevel = static_cast<TSkillMastery>(
+        static_cast<signed char>(readValue<char>(infile)));
+    m_waterWalkLevel = static_cast<TSkillMastery>(
+        static_cast<signed char>(readValue<char>(infile)));
     m_dWalkSpellsCast = readValue<char>(infile);
-    m_visionsPower = static_cast<signed char>(readValue<char>(infile));
+    m_identifyLevel = static_cast<TSkillMastery>(
+        static_cast<signed char>(readValue<char>(infile)));
     // Both retails zero-extend the serialized id (Windows 0x4d7bc1, Mac 0xf2d18).
-    m_id = readValue<unsigned char>(infile);
-    m_heroClass = static_cast<signed char>(readValue<char>(infile));
+    m_id = static_cast<HeroId>(readValue<unsigned char>(infile));
+    m_heroClass = static_cast<THeroClass>(
+        static_cast<signed char>(readValue<char>(infile)));
     m_portrait = readValue<unsigned char>(infile);
     m_patrolX = readValue<unsigned char>(infile);
     m_patrolY = readValue<unsigned char>(infile);
@@ -829,7 +839,7 @@ int hero::save(TAbstractFile* outfile)
     writeValue(outfile, static_cast<char>(m_flightLevel));
     writeValue(outfile, static_cast<char>(m_waterWalkLevel));
     writeValue(outfile, static_cast<char>(m_dWalkSpellsCast));
-    writeValue(outfile, static_cast<char>(m_visionsPower));
+    writeValue(outfile, static_cast<char>(m_identifyLevel));
     writeValue(outfile, static_cast<char>(m_id));
     writeValue(outfile, static_cast<char>(m_heroClass));
     writeValue(outfile, static_cast<unsigned char>(m_portrait));
@@ -920,11 +930,11 @@ DC_ADDRESS(0x0cbdb8, 0xc8)
 MAC_ADDRESS(0x0f3e2c, 0x1b8)  // anchor-bracket
 hero::hero()
 {
-    m_id = -1;
+    m_id = heroIdNone;
     m_owner = -1;
     m_x = 0;
     m_y = 0;
-    m_heroClass = 0;
+    m_heroClass = classKnight;
     m_portrait = 0;
     m_name[0] = 0;
 
@@ -980,7 +990,7 @@ void hero::initialize(short index)
 
     m_patrolY = kPatrolNone;
     m_patrolX = kPatrolNone;
-    m_id = index;
+    m_id = static_cast<HeroId>(index);
     m_portrait = static_cast<unsigned char>(index);
     m_sex = initialSex;
     m_townSpecialGrantedMask.reset();
@@ -1027,7 +1037,7 @@ void hero::initialize(short index)
     m_waterWalkLevel = eMasteryInvalid;
     m_disguiseLevel = eMasteryInvalid;
     m_dWalkSpellsCast = 0;
-    m_visionsPower = eMasteryInvalid;
+    m_identifyLevel = eMasteryInvalid;
     m_hasCustomName = 0;
     m_customName = "";
     m_isSleeping = 0;
@@ -1083,6 +1093,8 @@ void hero::initialize(short index)
 // The remaining mismatch includes string::assign expanding where retail
 // retains it. Shared/local loop indices, literal/sizeof backpack bounds,
 // assignment/assign and an unnamed/named level leave that boundary unchanged.
+// A reproduced VC6 trace admits assign's 307-byte body with 346 bytes left
+// in its inline budget. An array-derived unsigned fill count also leaves it inlined.
 VA(0x004d8b30, 0x434)
 DC_ADDRESS(0x0b6c84, 0x57e)
 MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4
@@ -1094,7 +1106,7 @@ void hero::initialize(const HeroExtra* setup)
     m_y = setup->m_location.m_y;
     m_z = setup->m_location.m_z;
     m_owner = setup->m_owner;
-    m_id = setup->m_id;
+    m_id = static_cast<HeroId>(setup->m_id);
     m_heroClass = g_heroTraits[setup->m_id].m_heroClass;
 
     m_patrolRadius = setup->m_patrolRadius;
@@ -1753,7 +1765,7 @@ int hero::heroFn004D9CC0(int artifact)
 VA(0x004d9ec0, 0x4D3)
 DC_ADDRESS(0x0cc800, 0x380)
 MAC_ADDRESS(0x0f5d3c, 0x554)
-void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
+void hero::deallocate(bool gameLoaded, bool remoteMove)
 {
     unsigned char freedTownVisitor = 0;
     int townId = g_game->getTownId(m_x, m_y, m_z);
@@ -1794,7 +1806,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
     if (pos >= 0) {
         for (int i = pos; i < player->m_numHeroes - 1; i++)
             player->m_heroes[i] = player->m_heroes[i + 1];
-        player->m_heroes[player->m_numHeroes - 1] = -1;
+        player->m_heroes[player->m_numHeroes - 1] = heroIdNone;
         player->m_numHeroes--;
     }
     if (player->m_currHeroId == m_id) {
@@ -2903,6 +2915,9 @@ MAC_ADDRESS(0x0f83ec, 0xc8)
 // Explicit success/failure returns make giveArtifact exact but lower this
 // retained body from 100% to 87.19%; keep the direct none() conversion.
 // An explicit nonzero result and an empty-slot continue guard are byte-flat.
+// Mac reloads the equipped ID after its sentinel test. Repeating that member
+// expression here keeps this body exact but does not recover the caller's
+// proxy/set boundary; giveArtifact changes from 95.9069% to 95.3968%.
 unsigned char hero::heroFn004DBE80(int combination)
 {
     std::bitset<144> missingComponents =
@@ -5376,11 +5391,13 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // Windows body and make VC6 retain `bitset<144>::any` in this expanded caller.
 // Mac's placed-result join and repeated trait lookup after owner checks then
 // yield a 752-byte candidate (retail 752) with all 17 named calls aligned.
-// Current Windows giveArtifact is 95.36%, 39/39 CFG blocks with only the
-// first bitset<12> bounds-failure block longer (24 vs 15 instructions): its
-// string/EH callees still take a different inlining path. Mac is 93.8830%,
-// with entry register assignment the first difference. Prompt copy and
-// destructor call order already agree on Mac; retain their source lifetime.
+// Current Windows giveArtifact is 95.9069%, with 42 versus 39 CFG blocks.
+// The expanded combination scan retains proxy assignment instead of set;
+// getPlayer repeats its owner guard and isHuman remains a separate call.
+// Moving player acquisition before the scan falls to 85.0445%. A header
+// isHuman body reaches 96.5547%, but removes its retained game body and
+// expands town::buyBuilding's retained call: visibility remains unresolved.
+// Prompt copy and destructor order agree on Mac; retain their lifetime.
 // Original public ?GiveArtifact@hero@@QAAXABUtype_artifact@@H_N@Z proves
 // the artifact reference independently of the older return/flag contracts.
 // Complete and Mac unconditionally forward that record to EquipArtifact
@@ -5388,6 +5405,8 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // a placement result and uses its two byte flags for assembly announcements
 // and victory checking. DC instead names int bCheckEnd and bool equip_it;
 // retain the desktop result and flag behavior while restoring the reference.
+// With both placement helpers returning bool, a bool placed local still
+// lowers Windows 95.9069% to 95.3968%; it does not close the caller's residual.
 VA(0x004e3070, 0x339)
 DC_ADDRESS(0x0d3de4, 0x5c)
 MAC_ADDRESS(0x103da8, 0x2f0)  // anchor-global
@@ -5456,9 +5475,8 @@ int hero::giveRandomArtifact()
     return artifact.m_artifactId;
 }
 
-// Complete VC6 and Dreamcast both declare showCapWindow as unsigned char.
-// The stripped Mac executable contains no giveExperience symbol; a candidate
-// mangled name does not establish a different source parameter type.
+// Original DC public ?GiveExperience@hero@@QAAHHH_N@Z proves the final
+// parameter is bool; CodeView's lowered unsigned-byte record alone does not.
 // Both experience helpers expand here. Initializing getExperience's total
 // before its increment fixes the cap-result lifetime; getLevel's single
 // level counter (Mac 0xf6394..0xf63c0) closes the Windows caller to 100%.
@@ -5466,7 +5484,7 @@ VA(0x004e33b0, 0x24A)
 DC_ADDRESS(0x0d3e88, 0x130)
 MAC_ADDRESS(0x104098, 0x18c)
 int hero::giveExperience(int howMuch, int checkForLevelUp,
-                         unsigned char showCapWindow)
+                         bool showCapWindow)
 {
     int entryLevel = m_level;
     if (g_game->m_mapHeader.m_maxHeroLevel > 0) {
@@ -5949,7 +5967,8 @@ float hero::getFirstAidFactor() const
 VA(0x004e4990, 0x3F6)
 DC_ADDRESS(0x0d4b50, 0x210)
 MAC_ADDRESS(0x105898, 0x348)
-int hero::getMobility(unsigned char seaMovement) const
+// Original ?GetMobility@hero@@QBAH_N@Z proves the Boolean movement mode.
+int hero::getMobility(bool seaMovement) const
 {
     if (m_flags & 0x1000000)
         return 1000000;
@@ -6353,7 +6372,8 @@ DC_ADDRESS(0x0d5488, 0x22)
 MAC_ADDRESS(0x1069d0, 0x50)
 void hero::fly(int level)
 {
-    m_flightLevel = level;
+    // The original setter takes int; the stored field has the mastery domain.
+    m_flightLevel = static_cast<TSkillMastery>(level);
     useSpell(getManaCost(SPELL_FLY));
 }
 
@@ -6396,7 +6416,7 @@ long hero::getHitPointBonus(int creatureType) const
 VA(0x004e5ce0, 0xE7)
 DC_ADDRESS(0x0d5548, 0x70)
 MAC_ADDRESS(0x106b98, 0x140)
-unsigned char hero::canLand() const
+bool hero::canLand() const
 {
     NewmapCell* cell = g_game->getCell(getLocation());
     if ((cell->m_groundSet == eTerrainWater)
@@ -6415,30 +6435,36 @@ DC_ADDRESS(0x0d55b8, 0x6)
 MAC_ADDRESS(0x106cd8, 0x8)
 void hero::walkOnWater(int level)
 {
-    m_waterWalkLevel = level;
+    // The original setter takes int; the stored field has the mastery domain.
+    m_waterWalkLevel = static_cast<TSkillMastery>(level);
 }
 
+// Complete adds the Rogue-aware identify-level getter; its original name
+// is unknown. Mac 0x106ce0 retains the creature-total call and expert floor.
 VA(0x004e5de0, 0x2D)
 MAC_ADDRESS(0x106ce0, 0x54)
-int hero::heroFn004E5DE0() const
+TSkillMastery hero::getIdentifyLevel() const
 {
-    if (m_visionsPower < 3 && m_army.getCreatureTotal(CREATURE_ROGUE) != 0)
-        return 3;
-    return m_visionsPower;
+    if (m_identifyLevel < eMasteryExpert
+        && m_army.getCreatureTotal(CREATURE_ROGUE) != 0)
+        return eMasteryExpert;
+    return m_identifyLevel;
 }
 
+// Original IsInIdentifyRange@hero@@QBA_NABUtype_point@@@Z proves the
+// Boolean result and const point reference; Complete retains that interface.
 VA(0x004e5e10, 0x11C)
 DC_ADDRESS(0x0d55c0, 0x82)
 MAC_ADDRESS(0x106d34, 0x138)
-unsigned char hero::isInIdentifyRange(const type_point* location) const
+bool hero::isInIdentifyRange(const type_point& location) const
 {
-    int identifyLevel = heroFn004E5DE0();
+    TSkillMastery identifyLevel = getIdentifyLevel();
     int range = g_spellTraits[SPELL_VISIONS].m_masteryBonus[identifyLevel]
         * getPrimarySkill(2);
     if (range < 3)
         range = 3;
 
-    if (m_z == location->m_z) {
+    if (m_z == location.m_z) {
         // Constructor form, not default-then-assign: it merges the y|z
         // bitfield unit into one clear-then-or (98.6813 -> 100.0000).
         type_point heroLocation(m_x, m_y, m_z);
@@ -6446,18 +6472,19 @@ unsigned char hero::isInIdentifyRange(const type_point* location) const
         // Dreamcast hero.cpp:6395 passes location as the DistanceSquared
         // receiver and the constructed hero point as its argument. Retail
         // expands that same x/y-only call.
-        if (location->distanceSquared(heroLocation) < range * range)
-            return 1;
+        if (location.distanceSquared(heroLocation) < range * range)
+            return true;
     }
-    return 0;
+    return false;
 }
 
 // Dreamcast hero.cpp:6407/6414/6418 calls get_location and the typed
 // get_secondary_skill accessor. Both header helpers expand in retail.
+// Original DC public IsMobile@hero@@QBA_NXZ proves the bool result.
 VA(0x004e5f30, 0xBF)
 DC_ADDRESS(0x0d5644, 0xca)
 MAC_ADDRESS(0x106e6c, 0x12c)
-unsigned char hero::isMobile() const
+bool hero::isMobile() const
 {
     NewmapCell* cell = g_advManager->getCell(getLocation());
     int cost;

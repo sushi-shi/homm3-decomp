@@ -278,14 +278,11 @@ static void upgradeCreatures(hero* currentHero, const town* currentTown)
                 DWELLING_0_UPG_ID + dwelling, true))
             continue;
 
-        TCreatureType upgrade = (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
-            currentTown->m_type * 2 * TOWN_DWELLING_COUNT + dwelling];
+        TCreatureType upgrade = g_dwellingType[currentTown->m_type][dwelling + TOWN_DWELLING_COUNT];
 
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
             if (currentHero->m_army.m_armyTypes[slot]
-                    != g_townDwellingCreatures[
-                        currentTown->m_type * 2 * TOWN_DWELLING_COUNT
-                        + dwelling])
+                    != g_dwellingType[currentTown->m_type][dwelling])
                 continue;
 
             // DC :232/:236 retains base_cost and upgrade_cost as pointers
@@ -3110,8 +3107,7 @@ long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short move
                 dwelling);
 
         if (population > 0) {
-            creature = g_townDwellingCreatures[
-                TOWN_DWELLING_SLOTS * enemyTown->m_type + dwelling];
+            creature = g_dwellingType[enemyTown->m_type][dwelling];
             getMonsterCost(creature, creatureCost);
             long profit = g_creatureTypeTraits[creature].m_aiValue
                 - aiResourceCost(player, creatureCost);
@@ -3729,24 +3725,18 @@ int valueOfTreasure(const hero* currentHero)
 // experience, once per hero per tree, less the tree's price - free, 2,000
 // gold or 10 gems when this player has already learned which, or the
 // three-way expected price (capped at two thirds of the level's worth)
-// when he has not.  Extern for emission while the TREE arm is a stub.
-// type_tree_info::price's domain, named the way PYRAMID_SPELL_LEVEL is:
-// TU-local consts rather than a header enum - three enumerators in
-// advmgr.h cross the include-set wall (recruitUnit::Update 90.84 ->
-// 88.24, measured 2026-08-27, the bitmap16 narrowing precedent), and
-// philai.h is itself in game.h's closure.
-const int g_treePriceGold = 1;
-const int g_treePriceGems = 2;
+// when he has not. DC marks ValueOfTree static; retail and Mac each
+// retain only the same-TU AI_value_of_event caller.
+// DC philai.cpp:3341 explicitly calls GetItemId; Mac 145b60..145b70
+// expands its unsigned five-bit read and short result. Use the inherited
+// helpers directly, with the shared WiseTreePrices domain for the switch.
 
 VA(0x0052b5a0, 0x161)
 DC_ADDRESS(0x1130cc, 0x258)
 MAC_ADDRESS(0x145b40, 0x20c)
-int valueOfTree(const hero* currentHero, NewmapCell* cell)
+static int valueOfTree(const hero* currentHero, NewmapCell* cell)
 {
-    ExtraInfoUnion* info =
-        static_cast<ExtraInfoUnion*>(static_cast<void*>(cell));
-    if (currentHero->m_treeOfKnowledgeFlags
-            & (1 << (static_cast<unsigned char>(cell->m_extraInfo) & 0x1f)))
+    if (currentHero->m_treeOfKnowledgeFlags & (1 << cell->getItemId()))
         return 0;
 
     int increment = currentHero->getExperienceIncrement();
@@ -3755,13 +3745,13 @@ int valueOfTree(const hero* currentHero, NewmapCell* cell)
         * currentHero->m_turnExperienceToRvRatio);
 
     if (cell->playerKnowsCell(currentHero->m_owner)) {
-        switch (info->getTreePrice()) {
-        case g_treePriceGold:
+        switch (cell->getTreePrice()) {
+        case const_tree_wants_gold:
             if (g_currentPlayer->m_resources[GOLD] < 2000)
                 return 0;
             return static_cast<int>(levelValue
                 - player->m_ai.m_resourceValue[GOLD] * 2000.0);
-        case g_treePriceGems:
+        case const_tree_wants_gems:
             if (g_currentPlayer->m_resources[GEMS] < 10)
                 return 0;
             return static_cast<int>(levelValue

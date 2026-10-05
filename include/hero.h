@@ -108,7 +108,8 @@ public:
     short m_z;  // +0x04 (DC mapZ)
 
 private:
-    unsigned char m_valid;  // +0x06
+    // Native bool accessors return these bytes directly, without conversion.
+    bool m_valid;  // +0x06
     type_point m_obscuredLocation;  // +0x07
 
 public:
@@ -116,7 +117,7 @@ public:
     TAdventureObjectType m_obscuredType;  // +0x0c (DC type)
 
 private:
-    unsigned char m_wasTrigger;  // +0x10
+    bool m_wasTrigger;  // +0x10
 
 public:
     char m_paddingBeforeExtraInfo[3];
@@ -147,7 +148,8 @@ public:
     // retail folds it into unblock_lith before temporarily restoring the
     // hero's underlying map cell.
     DC_ADDRESS(0x01fb1c, 0x10)
-    unsigned char isOnMap() const { return m_valid; }
+    // Original public: is_on_map@type_obscuring_object@@QBA_NXZ.
+    bool isOnMap() const { return m_valid; }
 
     // E:\gamedcs\Hero.h:150. Dreamcast retains an out-of-line copy, while
     // retail expands the validity test at every admitted Windows caller.
@@ -172,14 +174,16 @@ public:
     // folds it to the same three field tests; keep the call in source so
     // an exact lowering cannot erase the attested source shape again.
     DC_ADDRESS(0x0d58cc, 0x2a)
-    unsigned char obscuresTown() const
+    // Original public: obscures_town@type_obscuring_object@@QBA_NXZ.
+    bool obscuresTown() const
     {
         return m_valid && m_wasTrigger && m_obscuredType == TOWN;
     }
 
     // Original: type_obscuring_object::get_obscured_trigger; Hero.h:167
     DC_ADDRESS(0x0f4abc, 0x32)
-    unsigned char getObscuredTrigger() const { return m_valid && m_wasTrigger; }
+    // Original public: get_obscured_trigger@type_obscuring_object@@QBA_NXZ.
+    bool getObscuredTrigger() const { return m_valid && m_wasTrigger; }
     void restoreCell();
     bool save(void* outfile);
 
@@ -405,12 +409,10 @@ public:
     // AI_auto_combat (0x4275a6/0x4275b6) writes the simulated mana back
     // with 16-bit stores.
     short m_mana;  // +0x18
-    // The hero's own id - the index of this record in gpGame->heroes.
-    // Byte-proven a full DWORD by town.obj: town::remove_garrison_hero
-    // (0x5be407) and town::SwapHeroes both read `mov edx,[hero+0x1a]`
-    // and feed it straight back into the 1170-stride heroes index, and
-    // town::View (0x5be3fa) pushes it to advManager::SetHeroContext.
-    int m_id;  // +0x1a
+    // Original hero::id is public THeroID in four DC class records
+    // (0x1a6e/0x4d63/0x6311/0x71dc). The enum's underlying int and the
+    // Windows town callers' dword loads agree with this packed offset.
+    HeroId m_id;  // +0x1a
     // +0x1e. HeroFn_004D8B30 copies the setup record's +0x08 dword
     // straight in here, which is the only retail body that touches these
     // four bytes at all - hence a full DWORD and hence a member rather
@@ -427,9 +429,10 @@ public:
     // +0x23. HeroFn_004D8B30 copies exactly thirteen bytes of the setup
     // record's name here; SetRolloverText passes this band to sprintf.
     char m_name[13];
-    // +0x30. DrawHeroPart indexes the eighteen-entry cursorIcons sprite row
-    // directly with this dword; the surviving roster names the domain.
-    int m_heroClass;
+    // Original hero_class is THeroClass in all four complete DC hero records
+    // (0x1a6e/0x4d63/0x6311/0x71dc). Retail keeps the same dword at +0x30
+    // and adds the two Conflux classes to its cursor and traits tables.
+    THeroClass m_heroClass;
     // +0x34. The current-hero gate in HeroFn_004D8FB0 compares this byte
     // directly against portrait id 156. Dreamcast independently places its
     // `portrait` byte at the same offset.
@@ -576,30 +579,13 @@ public:
     unsigned int m_flags;  // +0x105
     float m_turnExperienceToRvRatio;  // +0x109 (DC name)
     signed char m_dWalkSpellsCast;  // +0x10d (DC name)
-    // +0x10e. TQuickHeroWindow reads the full mastery value to decide
-    // whether an enemy army is shown normally, as copies of its strongest
-    // stack, or as the strongest creature of the owner's alignment. The
-    // Dreamcast roster independently names the corresponding dword
-    // `disguiseLevel`; retail's later flight/water-walk pair fixes the
-    // four-byte extent from the other side.
-    int m_disguiseLevel;
-    // +0x112, the FLIGHT level - the twin of waterWalkLevel below and
-    // the other half of the movement-override pair hero::IsMobile
-    // (0x4e5f30) loads together. Sliced 2026-08-08 out of the old
-    // pad_109 by findpath's GetTerrainCost (0x4b18c0), which reads
-    // +0x112 and +0x116 back to back as the two mastery levels it
-    // forwards to CalcTerrainCost's `flying` and `water_walking`
-    // slots, raises EITHER to eMasteryExpert when the matching
-    // artifact is worn, and drives BOTH to -1 while the boat bit
-    // (flags & 0x40000) is set. Name from the role; the sibling's
-    // comment already called this slot an ordinal placeholder.
-    int m_flightLevel;  // +0x112
-    // +0x116, the water-walking level. Byte-proven by
-    // hero::WalkOnWater (0x4e5dd0), whose entire body is
-    // `mov [ecx+0x116], arg`, and by hero::IsMobile (0x4e5f30), which
-    // loads +0x116 and +0x112 together as the movement-override pair.
-    // Name from the writer; ordinal placeholder for the sibling.
-    int m_waterWalkLevel;  // +0x116
+    // Original public disguiseLevel, flightLevel and waterWalkLevel are
+    // TSkillMastery in all four DC hero records (0x1a6e/0x4d63/0x6311/0x71dc).
+    // Complete retains their dword widths at these shifted offsets. Disguise
+    // controls the enemy-army view; flight/water-walking feed movement costs.
+    TSkillMastery m_disguiseLevel;  // +0x10e
+    TSkillMastery m_flightLevel;  // +0x112
+    TSkillMastery m_waterWalkLevel;  // +0x116
     // Two one-byte battle temporaries. hero::ApplyBattleWinTemps
     // (0x4da510) opens by zeroing both from one `xor al,al`, storing
     // +0x11b BEFORE +0x11a, and then clears twenty-two `flags` bits -
@@ -622,12 +608,10 @@ public:
     // Packed retail counterpart of DC's std::bitset<48> member. Its reset
     // writes the two backing dwords at +0x121/+0x125.
     std::bitset<48> m_townSpecialGrantedMask;  // +0x121 (DC name)
-    // +0x129, a dword compared against 3 - the secondary-skill
-    // mastery domain. hero::HeroFn_004E5DE0 (0x4e5de0) returns it
-    // unless it is below 3 and the hero's army holds creature 0x8f,
-    // and hero::IsInIdentifyRange (0x4e5e10) opens with the same
-    // block inlined. Name unattested - ORDINAL PLACEHOLDER.
-    int m_visionsPower;  // +0x129
+    // Original public identifyLevel is TSkillMastery in all four DC hero
+    // records (0x1a6e/0x4d63/0x6311/0x71dc). Complete retains the dword
+    // at +0x129; its getter also grants expert identification to Rogues.
+    TSkillMastery m_identifyLevel;  // +0x129
 
 private:
     type_artifact m_equipped[19];
@@ -751,7 +735,8 @@ private:
     void updateSpellList();
 
 public:
-    void deallocate(unsigned char gameLoaded, unsigned char remoteMove);
+    // Original ?Deallocate@hero@@QAAX_N0@Z proves both bool parameters.
+    void deallocate(bool gameLoaded, bool remoteMove);
     // 0x4d9b30, `ret 4` with `this` UNUSED - retail never reads ECX.
     // The hero screen's yes/no prompt for taking a combination artifact
     // apart: it builds `<artifact description>\n\n<general text 734>`
@@ -817,7 +802,7 @@ public:
     // 0x4e5550 - checks spell access, mana, boat reachability and pool space.
     unsigned char canSummonBoat() const;
     long getNavigationFactor() const;
-    int getMobility(unsigned char seaMovement) const;
+    int getMobility(bool seaMovement) const;
     int getMobility() const;
     // 0x4e5960 - the four primary skills, each clamped to 0..99, with
     // slots 2 and 3 floored at 1.
@@ -828,14 +813,15 @@ public:
     // 0x4e5dd0 - one-argument setter for waterWalkLevel.
     void walkOnWater(int level);
     // 0x4e5e10 - tests whether a packed map point is inside Visions range.
-    unsigned char isInIdentifyRange(const type_point* location) const;
+    bool isInIdentifyRange(const type_point& location) const;
 
 private:
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
-    unsigned char canLand() const;
+    // Original private can_land@hero@@ABA_NXZ returns bool.
+    bool canLand() const;
 
 public:
-    int heroFn004E5DE0() const;
+    TSkillMastery getIdentifyLevel() const;
     void heroFn004E6120(int creatureType,
                          TCreatureTypeTraits* traits) const;
     // 0x4d9050 / 0x4e56b0, the two owner-record accessors; both open
@@ -924,7 +910,7 @@ public:
     // 0x4e5f30 - "this hero can still be given an order this turn".
     // Declared for playerData::NextHero, which inlines nothing of it -
     // it is a real call from game.obj.
-    unsigned char isMobile() const;
+    bool isMobile() const;
     const char* getSpecificAbilityText();
     const char* getSpecificAbilityTextShort();
     int valueOfSpell(SpellID spell) const;
@@ -942,7 +928,7 @@ public:
     int soDGetSeerSkillValue(int skill, int level);
     int getSpellDurationBonus() const;
     int giveExperience(int howMuch, int checkForLevelUp,
-                       unsigned char showCapWindow);
+                       bool showCapWindow);
     int giveRandomArtifact();
     void resetArtifacts();
     void giveResource(int whichRes, int howMuch);
@@ -978,19 +964,21 @@ public:
     // uses checkTerrain=1; Complete expands the helper before calling canLand.
     // These are real shared header bodies, not an ai_player.obj declaration
     // view: cursor.obj proves the same nested IsWieldingArtifact boundary.
+    // Original IsFlying@hero@@QBA_N_N@Z: Boolean result and terrain flag.
     DC_ADDRESS(0x01fbdc, 0x98)
-    unsigned char isFlying(unsigned char checkTerrain) const
+    bool isFlying(bool checkTerrain) const
     {
         return !(m_flags & 0x40000)
-            && (m_flightLevel != -1 || isWieldingArtifact(0x48))
+            && (m_flightLevel != eMasteryInvalid || isWieldingArtifact(0x48))
             && (!checkTerrain || !canLand());
     }
 
+    // Original CanWalkOnWater@hero@@QBA_N_N@Z has the same Boolean interface.
     DC_ADDRESS(0x01fc74, 0x98)
-    unsigned char canWalkOnWater(unsigned char checkTerrain) const
+    bool canWalkOnWater(bool checkTerrain) const
     {
         return !(m_flags & 0x40000)
-            && (m_waterWalkLevel != -1 || isWieldingArtifact(0x5a))
+            && (m_waterWalkLevel != eMasteryInvalid || isWieldingArtifact(0x5a))
             && (!checkTerrain || !canLand());
     }
 

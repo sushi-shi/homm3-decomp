@@ -123,23 +123,26 @@ DATA(0x0066cd98) __int64 g_bitNumber[64] = {
 };
 DATA(0x006976f0) __int64 g_townEligibleBuildMask[9];
 DATA(0x00697798) __int64 g_hierarchyMask[9][44];
-DATA(0x006747b4) TCreatureType g_townDwellingCreatures[126] = {
-    TCreatureType(0), TCreatureType(2), TCreatureType(4), TCreatureType(6), TCreatureType(8), TCreatureType(10), TCreatureType(12), TCreatureType(1),
-    TCreatureType(3), TCreatureType(5), TCreatureType(7), TCreatureType(9), TCreatureType(11), TCreatureType(13), TCreatureType(14), TCreatureType(16),
-    TCreatureType(18), TCreatureType(20), TCreatureType(22), TCreatureType(24), TCreatureType(26), TCreatureType(15), TCreatureType(17), TCreatureType(19),
-    TCreatureType(21), TCreatureType(23), TCreatureType(25), TCreatureType(27), TCreatureType(28), TCreatureType(30), TCreatureType(32), TCreatureType(34),
-    TCreatureType(36), TCreatureType(38), TCreatureType(40), TCreatureType(29), TCreatureType(31), TCreatureType(33), TCreatureType(35), TCreatureType(37),
-    TCreatureType(39), TCreatureType(41), TCreatureType(42), TCreatureType(44), TCreatureType(46), TCreatureType(48), TCreatureType(50), TCreatureType(52),
-    TCreatureType(54), TCreatureType(43), TCreatureType(45), TCreatureType(47), TCreatureType(49), TCreatureType(51), TCreatureType(53), TCreatureType(55),
-    TCreatureType(56), TCreatureType(58), TCreatureType(60), TCreatureType(62), TCreatureType(64), TCreatureType(66), TCreatureType(68), TCreatureType(57),
-    TCreatureType(59), TCreatureType(61), TCreatureType(63), TCreatureType(65), TCreatureType(67), TCreatureType(69), TCreatureType(70), TCreatureType(72),
-    TCreatureType(74), TCreatureType(76), TCreatureType(78), TCreatureType(80), TCreatureType(82), TCreatureType(71), TCreatureType(73), TCreatureType(75),
-    TCreatureType(77), TCreatureType(79), TCreatureType(81), TCreatureType(83), TCreatureType(84), TCreatureType(86), TCreatureType(88), TCreatureType(90),
-    TCreatureType(92), TCreatureType(94), TCreatureType(96), TCreatureType(85), TCreatureType(87), TCreatureType(89), TCreatureType(91), TCreatureType(93),
-    TCreatureType(95), TCreatureType(97), TCreatureType(98), TCreatureType(100), TCreatureType(104), TCreatureType(106), TCreatureType(102), TCreatureType(108),
-    TCreatureType(110), TCreatureType(99), TCreatureType(101), TCreatureType(105), TCreatureType(107), TCreatureType(103), TCreatureType(109), TCreatureType(111),
-    TCreatureType(118), TCreatureType(112), TCreatureType(115), TCreatureType(114), TCreatureType(113), TCreatureType(120), TCreatureType(130), TCreatureType(119),
-    TCreatureType(127), TCreatureType(123), TCreatureType(129), TCreatureType(125), TCreatureType(121), TCreatureType(131)
+// Original gDwellingType has fourteen entries per town; Complete adds Conflux.
+DATA(0x006747b4) TCreatureType g_dwellingType[TOWN_TYPE_COUNT][TOWN_DWELLING_SLOTS] = {
+    { TCreatureType(0), TCreatureType(2), TCreatureType(4), TCreatureType(6), TCreatureType(8), TCreatureType(10), TCreatureType(12),
+      TCreatureType(1), TCreatureType(3), TCreatureType(5), TCreatureType(7), TCreatureType(9), TCreatureType(11), TCreatureType(13) },
+    { TCreatureType(14), TCreatureType(16), TCreatureType(18), TCreatureType(20), TCreatureType(22), TCreatureType(24), TCreatureType(26),
+      TCreatureType(15), TCreatureType(17), TCreatureType(19), TCreatureType(21), TCreatureType(23), TCreatureType(25), TCreatureType(27) },
+    { TCreatureType(28), TCreatureType(30), TCreatureType(32), TCreatureType(34), TCreatureType(36), TCreatureType(38), TCreatureType(40),
+      TCreatureType(29), TCreatureType(31), TCreatureType(33), TCreatureType(35), TCreatureType(37), TCreatureType(39), TCreatureType(41) },
+    { TCreatureType(42), TCreatureType(44), TCreatureType(46), TCreatureType(48), TCreatureType(50), TCreatureType(52), TCreatureType(54),
+      TCreatureType(43), TCreatureType(45), TCreatureType(47), TCreatureType(49), TCreatureType(51), TCreatureType(53), TCreatureType(55) },
+    { TCreatureType(56), TCreatureType(58), TCreatureType(60), TCreatureType(62), TCreatureType(64), TCreatureType(66), TCreatureType(68),
+      TCreatureType(57), TCreatureType(59), TCreatureType(61), TCreatureType(63), TCreatureType(65), TCreatureType(67), TCreatureType(69) },
+    { TCreatureType(70), TCreatureType(72), TCreatureType(74), TCreatureType(76), TCreatureType(78), TCreatureType(80), TCreatureType(82),
+      TCreatureType(71), TCreatureType(73), TCreatureType(75), TCreatureType(77), TCreatureType(79), TCreatureType(81), TCreatureType(83) },
+    { TCreatureType(84), TCreatureType(86), TCreatureType(88), TCreatureType(90), TCreatureType(92), TCreatureType(94), TCreatureType(96),
+      TCreatureType(85), TCreatureType(87), TCreatureType(89), TCreatureType(91), TCreatureType(93), TCreatureType(95), TCreatureType(97) },
+    { TCreatureType(98), TCreatureType(100), TCreatureType(104), TCreatureType(106), TCreatureType(102), TCreatureType(108), TCreatureType(110),
+      TCreatureType(99), TCreatureType(101), TCreatureType(105), TCreatureType(107), TCreatureType(103), TCreatureType(109), TCreatureType(111) },
+    { TCreatureType(118), TCreatureType(112), TCreatureType(115), TCreatureType(114), TCreatureType(113), TCreatureType(120), TCreatureType(130),
+      TCreatureType(119), TCreatureType(127), TCreatureType(123), TCreatureType(129), TCreatureType(125), TCreatureType(121), TCreatureType(131) }
 };
 DATA(0x00642e20) const type_building_id g_hordeBuildings[4] = { type_building_id(18), type_building_id(19), type_building_id(24), type_building_id(25) };
 DATA(0x006887a0) type_horde_effect town::s_constHordeEffects[9][4] = {
@@ -201,17 +204,17 @@ const int g_townNameFixedLength = 13;
 // the bitset<70>, and a packed byte that splits three ways.
 // Retail reuses dead parameter homes for the byte-read buffer and town-name
 // length. Separating the address-taken length buffer from its decoded short
-// reaches 99.9718% in VC6; only the former buffer's home remains different.
-// Moving that buffer among the outer declarations or widening it to int/long
-// does not close the residual. The value-reader variant retains an extra Mac
-// call. Earlier local-order/width searches peaked at 98.1694%; hoisting the
-// name assignment across the version arms fell to 88.68%.
-// 2026-09-29 (lane A r4): the residual is a scope fact. Ending the stored
-// buffer's scope before `m_name = g_text` lets VC6 pack it into saveVersion's
-// dead home and reaches 100% (braced block, diagnostic only - not adopted).
-// The value helper readLittleEndianValue<unsigned short> gives that scope but
-// drops caller cb 988 -> 978; /Ob2 budget 1956 then leaves _Grow's max_size
-// 39 < 41 and keeps it out of line (97.32%). Retail's caller is >= 986 cb.
+// reaches 99.9718%; four stack-offset differences remain. Local reordering
+// and wider buffer types do not close them. An artificial scope that ends
+// before name assignment reaches 100%, but has no supported source purpose.
+// Both the existing readLittleEndianValue<unsigned short> call and a reader
+// owning one scalar through readValue(infile, value) reproduce 97.3173%:
+// the short buffer lifetime fits, but _Grow's max_size remains out of line.
+// Short/int/unsigned decoded lengths without redundant masks are byte-flat.
+// The combined reader models were measured across all five consumer units.
+// Mac 0x1b1f70..0x1b2010 shows scalar read/byte swap, payload read/NUL and
+// ordinary string assignment in each version arm; it supplies no distinct
+// string wrapper to justify another lifetime or inline-budget boundary.
 // DC locals: char_buffer, uchar_buffer, and inBuf[70].
 VA(0x005bcd60, 0x586)
 DC_ADDRESS(0x165628, 0x360)
@@ -286,11 +289,11 @@ int town::load(TAbstractFile* infile, int saveVersion)
     if (infile->read(m_mageGuildSpellCounts, sizeof(m_mageGuildSpellCounts))
         < sizeof(m_mageGuildSpellCounts))
         return -1;
-    if (infile->read(&m_built, sizeof(m_built)) < sizeof(m_built))
+    if (infile->read(&m_populationMask, sizeof(m_populationMask)) < sizeof(m_populationMask))
         return -1;
-    if (infile->read(&m_active, sizeof(m_active)) < sizeof(m_active))
+    if (infile->read(&m_fullBuildingMask, sizeof(m_fullBuildingMask)) < sizeof(m_fullBuildingMask))
         return -1;
-    if (infile->read(&m_available, sizeof(m_available)) < sizeof(m_available))
+    if (infile->read(&m_legalBuildings, sizeof(m_legalBuildings)) < sizeof(m_legalBuildings))
         return -1;
     if (infile->read(m_mageGuildSpells, sizeof(m_mageGuildSpells))
         < sizeof(m_mageGuildSpells))
@@ -413,11 +416,11 @@ int town::save(TAbstractFile* outfile)
     if (outfile->write(m_mageGuildSpellCounts, sizeof(m_mageGuildSpellCounts))
         < sizeof(m_mageGuildSpellCounts))
         return -1;
-    if (outfile->write(&m_built, sizeof(m_built)) < sizeof(m_built))
+    if (outfile->write(&m_populationMask, sizeof(m_populationMask)) < sizeof(m_populationMask))
         return -1;
-    if (outfile->write(&m_active, sizeof(m_active)) < sizeof(m_active))
+    if (outfile->write(&m_fullBuildingMask, sizeof(m_fullBuildingMask)) < sizeof(m_fullBuildingMask))
         return -1;
-    if (outfile->write(&m_available, sizeof(m_available)) < sizeof(m_available))
+    if (outfile->write(&m_legalBuildings, sizeof(m_legalBuildings)) < sizeof(m_legalBuildings))
         return -1;
     if (outfile->write(m_mageGuildSpells, sizeof(m_mageGuildSpells))
         < sizeof(m_mageGuildSpells))
@@ -603,8 +606,8 @@ town::town()
     m_mapY = 0;
     m_mapZ = 0;
     m_visitingHeroId = -1;
-    m_built = g_bitNumber[HALL_VILLAGE_ID];
-    m_active = m_built;
+    m_populationMask = g_bitNumber[HALL_VILLAGE_ID];
+    m_fullBuildingMask = m_populationMask;
     m_mageLevel = 0;
     m_owner = -1;
     m_garrisonHeroId = -1;
@@ -620,7 +623,6 @@ DC_ADDRESS(0x1664b0, 0x9c)
 MAC_ADDRESS(0x1b3358, 0xbc)
 void town::initializeHordes()
 {
-    int creatureBase = 0;
     for (short townType = 0; townType < TOWN_TYPE_COUNT; townType++) {
         for (short entry = 0; entry < 4; entry += 2) {
             type_horde_effect* effect = &s_constHordeEffects[townType][entry];
@@ -628,34 +630,30 @@ void town::initializeHordes()
             type_horde_effect* upgrade = effect + 1;
             short slot;
             for (slot = 0; slot <= TOWN_DWELLING_COUNT; slot++) {
-                if (creature == g_townDwellingCreatures[creatureBase + slot])
+                if (creature == g_dwellingType[townType][slot])
                     break;
             }
             if (slot <= TOWN_DWELLING_COUNT) {
                 effect->m_dwelling = slot;
                 slot += TOWN_DWELLING_COUNT;
-                upgrade->m_creature = g_townDwellingCreatures[creatureBase + slot];
+                upgrade->m_creature = g_dwellingType[townType][slot];
                 upgrade->m_dwelling = slot;
                 const short* bonus = &effect->m_bonus;
                 upgrade->m_bonus = *bonus;
             }
         }
-        creatureBase += 2 * TOWN_DWELLING_COUNT;
     }
 }
 
-// Dreamcast town.cpp:968 calls get_army before HasCreatures; Mac retains
-// getArmy and retail expands the ordinary town helper here.
+// Dreamcast town.cpp:968 and Mac retain the short-circuit get_army /
+// HasCreatures expression. Original HasGarrison QAAHXZ proves an int result;
+// retail expands getArmy and calls the bool predicate.
 VA(0x005bdfe0, 0x4E)
 DC_ADDRESS(0x16654c, 0x54)
 MAC_ADDRESS(0x1b3414, 0x4c)
 int town::hasGarrison()
 {
-    if (m_visitingHeroId < 0) {
-        if (!getArmy().hasCreatures())
-            return 0;
-    }
-    return 1;
+    return m_visitingHeroId >= 0 || getArmy().hasCreatures();
 }
 
 VA(0x005be030, 0x1D3)
@@ -787,12 +785,12 @@ void town::removeGarrisonHero()
 // adventure-view latches only when the hidden hero was both current and
 // locally owned. Dreamcast splits the exchange over lines 1115-1117; the
 // precise source spelling is unknown because no temporary survives CodeView.
-// Retail requires `std::swap`'s reference boundary: a natural temporary plus
+// std::swap's reference boundary reproduces retail's reloads: a temporary plus
 // two assignments makes VC6 retain the already-loaded ids and falls to
 // 88.92481%. The coherent base-first CMCHideHero constructor leaves only its
-// caller-specific zero/id store schedule unmatched (97.77444%); reversing the
-// shared constructor closes this caller but contradicts netmsg.h:717-718 and
-// breaks exact playerData::add_garrison_hero, so that old 100% remains history.
+// caller-specific zero/id store schedule unmatched (97.77444%). The old exact
+// form flattened CMapChange construction into the derived constructor;
+// retain the native base-constructor boundary instead.
 VA(0x005be450, 0x1AC)
 DC_ADDRESS(0x166864, 0xea)
 MAC_ADDRESS(0x1b3910, 0x1ac)  // anchor-global
@@ -802,6 +800,8 @@ MAC_ADDRESS(0x1b3910, 0x1ac)  // anchor-global
 // Removing the receiver alias (implicit/explicit this) or copy-initializing
 // the message adds no gain: four states, three reproduced objects, best
 // 97.7744%. The CFG matches; the constructor scratch-register schedule differs.
+// Base-first member initialization and body assignment also emit one object
+// across town/game; neither the line table nor codegen distinguishes them.
 void town::swapHeroes()
 {
     town* currentTown = this;
@@ -820,7 +820,7 @@ void town::swapHeroes()
     for (int i = rosterIndex; i < g_currentPlayer->m_numHeroes - 1; ++i)
         g_currentPlayer->m_heroes[i] = g_currentPlayer->m_heroes[i + 1];
     --g_currentPlayer->m_numHeroes;
-    g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] = -1;
+    g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] = heroIdNone;
 
     if (g_currentPlayer->m_currHeroId == visitingHero->m_id) {
         g_currentPlayer->m_currHeroId = -1;
@@ -930,12 +930,12 @@ void town::setSpellsAvailable()
 }
 
 // E:\gamedcs\town.cpp:1226
-// Native review at 85.95%: DC types and helper calls agree. Reusing the
-// named short dwelling for both population paths is byte-flat under VC6
-// (two source states, reproduced). Retail's four recursive calls all target
-// this body (+0x2da/+0x2ec/+0x2fe/+0x310); shifted relocation pairing can
-// misreport them as unclaimed indirect calls. The remaining loop difference
-// holds building in the parameter slot and walks the horde table by address.
+// Keep the requested building separate from the installed result: upgrading
+// a horde changes the result, while population and later building checks
+// still use the request. Retail keeps the request in EDX and the result in
+// its dead parameter slot; Mac uses r4/r31 (0x1b3e50, 0x1b3fb0, 0x1b4074).
+// DC likewise copies r12 to r9 at 0x166c46. Restoring these two values
+// reproduces the full Windows body, including its four recursive calls.
 VA(0x005be930, 0x330)
 DC_ADDRESS(0x166c08, 0x2ce)
 MAC_ADDRESS(0x1b3e3c, 0x3a0)  // body (built-mask OR) + order-map
@@ -943,35 +943,35 @@ type_building_id town::createBuilding(type_building_id building)
 {
     // Dreamcast CodeView names this short local `dwelling`.
     short dwelling;
-    m_built |= g_bitNumber[building];
-    m_built &= ~s_includedBuildings[m_type][building];
+    type_building_id built = building;
+    m_populationMask |= g_bitNumber[building];
+    m_populationMask &= ~s_includedBuildings[m_type][building];
 
     for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
         dwelling = s_constHordeEffects[m_type][slot].m_dwelling;
         if (building == g_hordeBuildings[slot]) {
-            m_built &= ~g_bitNumber[DWELLING_0_ID + dwelling];
+            m_populationMask &= ~g_bitNumber[DWELLING_0_ID + dwelling];
             if (dwelling < TOWN_DWELLING_COUNT
                 && hasBuilding(DWELLING_0_UPG_ID + dwelling, false)) {
-                m_built &= ~g_bitNumber[building];
-                m_built &= ~g_bitNumber[DWELLING_0_UPG_ID + dwelling];
-                building = g_hordeBuildings[slot + 1];
-                m_built |= g_bitNumber[building];
+                m_populationMask &= ~g_bitNumber[building];
+                m_populationMask &= ~g_bitNumber[DWELLING_0_UPG_ID + dwelling];
+                built = g_hordeBuildings[slot + 1];
+                m_populationMask |= g_bitNumber[built];
             }
         }
         if (hasBuilding(g_hordeBuildings[slot], false)) {
             if (building == DWELLING_0_UPG_ID + dwelling) {
-                m_built &= ~g_bitNumber[building];
-                m_built &= ~g_bitNumber[g_hordeBuildings[slot]];
-                building = g_hordeBuildings[slot + 1];
-                m_built |= g_bitNumber[building];
+                m_populationMask &= ~g_bitNumber[building];
+                m_populationMask &= ~g_bitNumber[g_hordeBuildings[slot]];
+                built = g_hordeBuildings[slot + 1];
+                m_populationMask |= g_bitNumber[built];
             }
         }
     }
 
     if (building >= DWELLING_0_ID && building <= DWELLING_6_ID) {
         short slot = building - DWELLING_0_ID;
-        m_population[slot] = g_creatureTypeTraits[g_townDwellingCreatures[
-            m_type * (2 * TOWN_DWELLING_COUNT) + slot]].m_growthRate;
+        m_population[slot] = g_creatureTypeTraits[g_dwellingType[m_type][slot]].m_growthRate;
     }
     if (building >= DWELLING_0_UPG_ID && building <= DWELLING_6_UPG_ID) {
         short slot = building - DWELLING_0_UPG_ID;
@@ -997,7 +997,7 @@ type_building_id town::createBuilding(type_building_id building)
             break;
         }
     }
-    return building;
+    return built;
 }
 
 VA(0x005bec60, 0x173)
@@ -1010,13 +1010,13 @@ void town::destroyExtraCapitol()
         int townCount = player->m_numTowns;
 
         for (int slot = 0; slot < townCount; ++slot) {
-            const char& townId = player->m_townIds[slot];
+            const signed char& townId = player->m_townIds[slot];
             if (townId != m_id) {
                 town* otherTown = g_game->getTown(townId);
                 if (otherTown->isCapitol()) {
-                    m_built &= ~g_bitNumber[HALL_CAPITOL_ID];
-                    m_built |= g_bitNumber[HALL_CITY_ID];
-                    m_active &= ~g_bitNumber[HALL_CAPITOL_ID];
+                    m_populationMask &= ~g_bitNumber[HALL_CAPITOL_ID];
+                    m_populationMask |= g_bitNumber[HALL_CITY_ID];
+                    m_fullBuildingMask &= ~g_bitNumber[HALL_CAPITOL_ID];
 
                     NewmapCell* cell =
                         g_game->m_worldMap.cell(m_mapX, m_mapY, m_mapZ);
@@ -1038,9 +1038,13 @@ void checkEndGame(int forceWin);
 VA(0x005bede0, 0x427)
 DC_ADDRESS(0x166fc8, 0x202)
 MAC_ADDRESS(0x1b43ac, 0x420)  // anchor-global
-// Moving the result declaration after the fort/capitol snapshots and
-// grouping the special-effect guards did not recover the retained hasBuilding
-// call (six VC6 combinations, three objects). Keep the canonical helpers.
+// All 72 blocks and 18 retained calls agree; the 99.5794% residual is twelve
+// instruction rows in updateFullBuildingMask's expanded low/high-word loads.
+// Eight bool/byte snapshot and initialized/assigned result forms emit one
+// identical object. The register model agrees at every first definition;
+// retain the canonical helper while investigating its later allocation.
+// Reversing both hasBuilding membership operands is also byte-identical
+// in town and its retained ai_player body.
 type_building_id town::buildBuilding(int buildingId,
                                      unsigned char setBuiltFlag,
                                      unsigned char applySpecialEffect)
@@ -1117,7 +1121,7 @@ void town::updateShipyard()
         if (!cell->m_isTrigger
             || (cell->m_type != BOAT && cell->m_type != HERO)) {
             if (hasBuilding(DOCK_WITH_BOAT_ID, false)) {
-                m_built &= ~g_bitNumber[DOCK_WITH_BOAT_ID];
+                m_populationMask &= ~g_bitNumber[DOCK_WITH_BOAT_ID];
                 updateFullBuildingMask();
             }
         } else if (!(hasBuilding(DOCK_WITH_BOAT_ID, true))) {
@@ -1178,16 +1182,18 @@ void town::calcNumLevelArchers(int* numArchers, int* archerLevel)
     *numArchers = level;
 }
 
+// DC 1503/1504 and Mac 0x1b4c20 preserve castle, citadel, then zero.
+// A conditional result keeps the retained body exact while allowing the
+// nested hasBuilding expansion in getGrowthRate (VC6 cost 72 versus 84).
 VA(0x005bf570, 0x86)
 DC_ADDRESS(0x1673dc, 0x7c)
 MAC_ADDRESS(0x1b4c20, 0x8c)
 long town::getCastleGrowthBonus(TCreatureType creature) const
 {
-    if (hasBuilding(CASTLE_CASTLE_ID, false))
-        return g_creatureTypeTraits[creature].m_growthRate;
-    if (hasBuilding(CASTLE_CITADEL_ID, false))
-        return g_creatureTypeTraits[creature].m_growthRate / 2;
-    return 0;
+    return hasBuilding(CASTLE_CASTLE_ID, false)
+        ? g_creatureTypeTraits[creature].m_growthRate
+        : hasBuilding(CASTLE_CITADEL_ID, false)
+            ? g_creatureTypeTraits[creature].m_growthRate / 2 : 0;
 }
 
 // Dreamcast town.cpp:1517 names HasBuilding for the first hall check;
@@ -1256,8 +1262,7 @@ long town::getAssembledLegionBonus(long dwelling) const
 {
     long bonus = 0;
     if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
-        TCreatureType creature = g_townDwellingCreatures[
-            m_type * (2 * TOWN_DWELLING_COUNT) + dwelling];
+        TCreatureType creature = g_dwellingType[m_type][dwelling];
         long growth = g_creatureTypeTraits[creature].m_growthRate;
         bonus = getCastleGrowthBonus(creature);
         bonus += growth;
@@ -1326,20 +1331,22 @@ long town::getLegionBonus(long dwelling) const
     return bonus;
 }
 
-// The Mac PEF calls its assembled-Legion helper at 0:0x1b5060 here;
-// CodeWarrior preserves that boundary. Windows expands the same helper
-// before its retained getLegionBonus call. The assembled getter only reads
-// town state, so its const qualifier is inferred from this proven const caller
-// (DC get_growth_rate; Mac call at 0:0x1b54f8). No original getter signature
-// survives; the old generated Windows label did not prove a non-const API.
-// The connected const declaration/direct call reproduces the same VC6 bytes
-// for both bodies; getGrowthRate remains 90% with the helper boundary intact.
-// The restored call shifts VC6's hasBuilding inlining: one additional call
-// remains in this candidate. Keep the source helper boundary while that
-// compiler decision is investigated. Accumulating the castle contribution
-// in the helper's growth local is byte-flat for both this caller and its
-// exact retained helper. An early-return sum lowers them to 80.97/85.18%;
-// explicit short conversion of getGeneratorBonus is also byte-flat.
+// Complete applies castle growth before Legion bonuses (retail +0x69,
+// Mac 0x1b54dc..0x1b5508); DC's older 1663/1669 order is different.
+// Keep the canonical castle, assembled-Legion and individual-Legion calls.
+// The assembled getter's const qualifier is inferred from this const caller;
+// both retained bonus helpers remain exact with that connected interface.
+//
+// The conditional return in getCastleGrowthBonus reduces its VC6 cost from
+// 84 to 72. Its nested hasBuilding then receives 68 instead of 53 budget
+// units, enough for the 62-unit body: getGrowthRate reaches 97.8947%.
+// All 28 blocks and three retained calls agree. The six residual instruction
+// rows are the generator-bonus load width and associated operand scheduling.
+// Twelve promoted/narrow/named bonus consumers and eight Grail return forms
+// do not close that tail; the register model finds no transposed local pair.
+// Thirty-six caller/assembled-helper lifetime forms alone also gave no gain.
+// Nine consistent short-contribution forms and the DC-proven long generator
+// storage likewise leave the tail unchanged; retain the recovered field type.
 VA(0x005bfb60, 0x266)
 DC_ADDRESS(0x167748, 0xfe)
 MAC_ADDRESS(0x1b5414, 0x1fc)
@@ -1352,8 +1359,7 @@ short town::getGrowthRate(short dwelling) const
         && hasBuilding(DWELLING_0_UPG_ID + dwellingIndex, true))
         return 0;
 
-    TCreatureType creature = g_townDwellingCreatures[
-        m_type * TOWN_DWELLING_SLOTS + dwellingIndex];
+    TCreatureType creature = g_dwellingType[m_type][dwellingIndex];
     short growth = g_creatureTypeTraits[creature].m_growthRate;
     growth += getCastleGrowthBonus(creature);
 
@@ -1387,7 +1393,7 @@ void town::increasePopulation(TCreatureType bonusCreature,
         short growth = getGrowthRate(dwelling);
         if (growth > 0) {
             TCreatureType creature =
-                g_townDwellingCreatures[TOWN_DWELLING_SLOTS * m_type + dwelling];
+                g_dwellingType[m_type][dwelling];
             if (creature == bonusCreature || creature == alternateBonus)
                 growth += bonusAmount;
             if (m_owner == -1)
@@ -1404,7 +1410,7 @@ void town::changeGeneratorBonus(TCreatureType creature, long change)
 {
     int slot;
     for (slot = 0; slot < TOWN_DWELLING_SLOTS; slot++) {
-        if (g_townDwellingCreatures[TOWN_DWELLING_SLOTS * m_type + slot]
+        if (g_dwellingType[m_type][slot]
             == creature)
             break;
     }
@@ -1560,17 +1566,14 @@ void town::giveEventReward(const TTownEvent& thisEvent)
                 reward.m_resource = 0x15;
                 reward.m_qualifier = (thisEvent.m_generatorBonuses[i] << 16)
                     | static_cast<unsigned short>(
-                          g_townDwellingCreatures[
-                              m_type * (2 * TOWN_DWELLING_COUNT)
-                              + i + TOWN_DWELLING_COUNT]);
+                          g_dwellingType[m_type][i + TOWN_DWELLING_COUNT]);
                 rewards.push_back(reward);
             } else if (hasBuilding(DWELLING_0_ID + i, true)) {
                 m_population[i] += thisEvent.m_generatorBonuses[i];
                 reward.m_resource = 0x15;
                 reward.m_qualifier = (thisEvent.m_generatorBonuses[i] << 16)
                     | static_cast<unsigned short>(
-                          g_townDwellingCreatures[
-                              m_type * (2 * TOWN_DWELLING_COUNT) + i]);
+                          g_dwellingType[m_type][i]);
                 rewards.push_back(reward);
             }
         }
@@ -1686,8 +1689,7 @@ static void initializeArmy(town* currentTown, const TownExtra* townSetup)
                     int tier = (-2 - troop) / 2;
                     if (troop & 1)
                         tier += TOWN_DWELLING_COUNT;
-                    troop = g_townDwellingCreatures[
-                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
+                    troop = g_dwellingType[currentTown->m_type][tier];
                 }
                 currentTown->getArmy().m_armies[slot] = troop;
             } else {
@@ -1702,8 +1704,7 @@ static void initializeArmy(town* currentTown, const TownExtra* townSetup)
         if (currentTown->m_owner < 0) {
             for (int tier = 0; tier < 4; tier++) {
                 if (random(1, 100) <= g_townInitArmyChance[tier]) {
-                    int creature = g_townDwellingCreatures[
-                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
+                    int creature = g_dwellingType[currentTown->m_type][tier];
                     currentTown->getArmy().add(creature,
                         random(g_townInitArmyLow[tier], g_townInitArmyHigh[tier]),
                         -1);
@@ -1768,10 +1769,10 @@ DC_ADDRESS(0x168494, 0x6e)
 MAC_ADDRESS(0x1b66f4, 0x104)
 void town::updateFullBuildingMask()
 {
-    m_active = m_built;
+    m_fullBuildingMask = m_populationMask;
     for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
         if (hasBuilding(i, false))
-            m_active |= s_includedBuildings[m_type][i];
+            m_fullBuildingMask |= s_includedBuildings[m_type][i];
     }
 }
 
@@ -1820,7 +1821,7 @@ unsigned char town::canEverBuild(int buildingId) const
         if (!(buildingId == HALL_CAPITOL_ID
               && g_game->m_players[m_owner].hasCapitol())) {
             __int64 requirements = g_hierarchyMask[m_type][buildingId];
-            if (((getBuildingMask() | m_available) & requirements) == requirements)
+            if (((getBuildingMask() | m_legalBuildings) & requirements) == requirements)
                 return 1;
         }
     }
@@ -1848,7 +1849,7 @@ __int64 town::getBuildableMask() const
             && (activeMask & requirements) == requirements)
             mask |= g_bitNumber[building];
     }
-    mask &= m_available;
+    mask &= m_legalBuildings;
     if (!canBuildDock())
         mask &= ~g_bitNumber[DOCK_ID];
     if (g_game->m_players[m_owner].hasCapitol())
@@ -1923,7 +1924,7 @@ DC_ADDRESS(0x1689ec, 0x22)
 MAC_ADDRESS(0x1b6de0, 0x40)
 unsigned char town::isLegalBuilding(type_building_id building) const
 {
-    return (g_bitNumber[building] & m_available) != 0;
+    return (g_bitNumber[building] & m_legalBuildings) != 0;
 }
 
 // Original: town::set_legal_buildings; town.cpp:2291
@@ -1931,7 +1932,7 @@ DC_ADDRESS(0x168a10, 0x3e)
 MAC_ADDRESS(0x1b6e20, 0x38)
 void town::setLegalBuildings(__int64 disabledBuildings)
 {
-    m_available = g_townEligibleBuildMask[m_type] & ~disabledBuildings;
+    m_legalBuildings = g_townEligibleBuildMask[m_type] & ~disabledBuildings;
 }
 
 // Original: town::is_disabled; town.cpp:2300

@@ -155,7 +155,8 @@ public:
     virtual void processHover();  // slot 7
     virtual void dim() const;  // slot 8
     virtual void enable(unsigned char on);  // slot 9
-    void setHelpText(const char* text, const char* rclick, unsigned char copyText);
+    // Original set_help_text@@QAAXPBD0_N proves Boolean text ownership.
+    void setHelpText(const char* text, const char* rclick, bool copyText);
     int sendMessage(widget::ECommands command, int extra);
 
     VA(0x00404df0, 0x1)
@@ -217,7 +218,8 @@ public:
 
     VA(0x005629b0, 0x22)  // hd-crossbuild; Widget.h:263
     DC_ADDRESS(0x056df8, 0x28)
-    void setVisible(unsigned char arg)
+    // Original set_visible@@QAAX_N proves the Boolean visibility argument.
+    void setVisible(bool arg)
     {
         if (arg)
             sendMessage(WIDGET_SET_STATUS, WIDGET_DRAWN);

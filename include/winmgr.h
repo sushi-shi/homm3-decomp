@@ -65,6 +65,9 @@ public:
     // AddWindow, exactly where the buka twin writes m_lastHoverId.
     int m_lastHover;
     Bitmap16Bit* m_screenBitmap;
+    // Original public const statics: ScreenLimits and NullLimits.
+    static const SLimitData s_screenLimits;
+    static const SLimitData s_nullLimits;
     int m_colorCyclingOn;
     unsigned char m_isWaitingForFadeIn;
     // NH3API confirms three alignment bytes between the PC fade-in

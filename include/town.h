@@ -297,27 +297,18 @@ public:
     armyGroup m_garrison;
 
 protected:
-    int m_generatorBonus[14];
+    // DC town records generator_bonus as long[14] (at +0x10c there).
+    long m_generatorBonus[14];
+
+    // DC town records prove these protected __int64 fields, originally
+    // populationMask, full_building_mask and legal_buildings. Retail reads
+    // each as two dwords. They hold installed buildings, installed plus
+    // included buildings, and the town's legal buildings, respectively.
+    __int64 m_populationMask;
+    __int64 m_fullBuildingMask;
+    __int64 m_legalBuildings;
 
 public:
-    // Three 64-bit building bitfields, all read as pairs of dwords by
-    // retail's __int64 lowering (the DC's own set_mask/
-    // get_buildable_mask signatures are __int64 too; the DC build
-    // spells them std::bitset<70,unsigned long>, which retail did not):
-    //   built     - get_castle_growth_bonus' fort/citadel/castle tests
-    //               and get_gold_income's hall tests; ctor seeds it
-    //               with bitNumber[HALL_VILLAGE_ID];
-    //   active    - what can_build/can_ever_build/get_buildable_mask
-    //               test requirement masks against, and where
-    //               get_gold_income finds the Grail; ctor copies built
-    //               into it;
-    //   available - the legal-building mask is_legal_building tests
-    //               (can_build and can_ever_build inline that test as
-    //               their first gate).
-    // Names provisional.
-    __int64 m_built;
-    __int64 m_active;
-    __int64 m_available;
     void applySpecialBuildingEffect(hero* townHero);
     unsigned char canBuildDock() const;
 
@@ -331,9 +322,9 @@ public:
     // create_artifact_widgets 100.0 -> 99.59, a cross-jump/reload
     // quirk in a textWidget arm; count restored, the row returns).
     // DC Town.h:299/300 returns full_building_mask (+0x150 in DC).
-    // Retail's +0x158 band is m_active; getBuildableMask expands this read.
+    // Retail's +0x158 band is m_fullBuildingMask; getBuildableMask expands this read.
     DC_ADDRESS(0x037f50, 0x12)
-    __int64 getBuildingMask() const { return m_active; }
+    __int64 getBuildingMask() const { return m_fullBuildingMask; }
     long getCastleGrowthBonus(TCreatureType creature) const;
 
     // DC Town.h:305-306 returns generatorBonus[dwelling].
@@ -375,14 +366,14 @@ public:
     {
         if (checkIncluded)
             return (getBuildingMask() & g_bitNumber[buildingId]) != 0;
-        return (m_built & g_bitNumber[buildingId]) != 0;
+        return (m_populationMask & g_bitNumber[buildingId]) != 0;
     }
 
     // Original: town::set_mask; Town.h:331
     DC_ADDRESS(0x168dfc, 0x28)
     void setMask(__int64 newMask)
     {
-        m_built = newMask;
+        m_populationMask = newMask;
         updateFullBuildingMask();
     }
 
@@ -410,8 +401,7 @@ public:
     unsigned char canEverBuild(int buildingId) const;
     // 0x5bfe50.
     void changeGeneratorBonus(TCreatureType creature, long change);
-    // 0x5be930. Declared for update_shipyard's direct call; the body is
-    // still outside the admitted surface.
+    // 0x5be930. Installs the requested building and returns the resulting ID.
     type_building_id createBuilding(type_building_id building);
     unsigned char buyBuilding(type_building_id building);
     void destroyExtraCapitol();
@@ -619,19 +609,11 @@ extern const char* g_townTypeNames[10];
 // (no DC symbol covers this table); owner TU unlocated.
 extern int g_siloIncome[9][NUM_RESOURCES];
 
-// Retail .data 0x6747b4 - immediately after the akCreatureTypeTraits
-// reference cell - nine 14-long rows giving each town's creature per
-// dwelling slot: the first seven are the base dwellings, the last
-// seven their upgrades (row 0 reads 0,2,4,6,8,10,12 / 1,3,5,7,9,11,13,
-// exactly Castle's ladder). Declared FLAT, not [9][14], because
-// initialize_hordes' index arithmetic adds the row base to the slot
-// BEFORE scaling (`[4*(esi+slot) + table]`, one reloc, no second base
-// register) - a two-dimensional subscript compiles to the three-term
-// form instead. Name INVENTED (no DC symbol); owner TU unlocated.
+// Original gDwellingType: DC public ?gDwellingType@@3PAY0O@W4TCreatureType@@A
+// proves fourteen-entry rows. Retail has nine towns, with seven base dwelling
+// creatures followed by their seven upgrades in each row.
 DATA(0x006747b4)
-extern TCreatureType g_townDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
-// Biased view of the upgraded half of the same first town row. Retail
-// GiveTroopsToNeutralTown carries a distinct relocation to this address.
+extern TCreatureType g_dwellingType[TOWN_TYPE_COUNT][TOWN_DWELLING_SLOTS];
 
 // Retail .data 0x6782a4: ordinary spell counts for guild levels one
 // through five. initialize_spells generates one extra candidate per row so
@@ -644,7 +626,7 @@ extern signed char g_mageGuildBaseSpellCounts[5];
 // const_horde_effects column. Name INVENTED (no DC symbol); the four
 // values are read from the pinned image. Retyped in place 2026-08-20
 // (int -> type_building_id, an identical 4-byte load): create_building
-// assigns a row entry back into its type_building_id argument, which
+// assigns a row entry to its type_building_id result, which
 // the enum element type carries without a cast, while every int reader
 // (get_horde's return, the bitNumber indexes) narrows implicitly.
 extern const type_building_id g_hordeBuildings[4];

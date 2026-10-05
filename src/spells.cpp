@@ -590,13 +590,13 @@ unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
 
     SAMPLE2 sample;
 
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         sample = loadPlaySample(
             DATA_COMPGEN(0x00688410, landMineSoundName, "landkill.wav"));
         currentArmy->m_showPowEffect = 1;
     }
     powEffect(eSpellEffectLandMineExplosion, 1);
-    if (!static_cast<const combatManager*>(this)->isQuickCombat())
+    if (!isQuickCombat())
         waitEndSample(sample, -1);
 
     if (currentArmy->m_numTroops > 0 && isWalking)
@@ -646,7 +646,7 @@ VA(0x0059fde0, 0x44)
 MAC_ADDRESS(0x1904c8, 0x78)
 void combatManager::unnamed59FDE0(int x, int y, army* target)
 {
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         shootAnimatedMissile(x, y, target->midX(), target->midY(), 5,
                              g_magicArrowAngles, g_magicArrowSprites);
     }
@@ -712,7 +712,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         castingHero->useSpell(manaCost);
         m_spellsCast[m_currentSide] = 1;
         if (g_game->isHuman(m_playerIds[m_currentSide]) && !m_debugNoSpellLimit
-            && !static_cast<const combatManager*>(this)->isQuickCombat())
+            && !isQuickCombat())
             m_combatWindow->widgetSetStatus(0x7d8, 0x4008);
     }
 
@@ -765,7 +765,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         }
     } else {
         army* caster = getCurrentArmy();
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+        if (!isQuickCombat()) {
             castX = caster->midX();
             castY = caster->midY();
         }
@@ -800,7 +800,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                      isMonsterSpell);
 
     if (spellWorks) {
-        if (!static_cast<const combatManager*>(this)->isQuickCombat())
+        if (!isQuickCombat())
             launchSample(traits->m_sample, -1, 3);
 
         switch (spellId) {
@@ -811,7 +811,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     case SPELL_QUICKSAND: {
         const int nhexes = g_quicksandCountByMastery[mastery];
         sample* sample2b;
-        if (!static_cast<const combatManager*>(this)->isQuickCombat())
+        if (!isQuickCombat())
             sample2b = ResourceManager::getSample(
                 DATA_COMPGEN(0x006884a0, quicksandSampleName,
                              "Quiksand.wav"));
@@ -830,7 +830,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 break;
 
             ds_memsample* placeSample;
-            if (!static_cast<const combatManager*>(this)->isQuickCombat())
+            if (!isQuickCombat())
                 placeSample = g_soundManager->memorySample(sample2b);
 
             spellEffect(traits->m_effect, hex, 100, 1);
@@ -850,13 +850,13 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             placeObstacle(newQuicksand, obstacleSlot, hex, hexcell::quicksand);
             drawFrame(1, 0, 0, 0, 1, 0);
 
-            if (!static_cast<const combatManager*>(this)->isQuickCombat())
+            if (!isQuickCombat())
                 g_soundManager->waitSample(placeSample, -1);
         }
         showSpellMessage(isMonsterSpell, spellId, 0);
         // DC 860/936 names ResourceManager::Dispose. Complete Mac
         // 0x190d64/0x190ff8 expands its null-guarded virtual disposal.
-        if (!static_cast<const combatManager*>(this)->isQuickCombat())
+        if (!isQuickCombat())
             ResourceManager::dispose(sample2b);
         break;
     }
@@ -866,7 +866,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         const int damage = computeSpellDamage(SPELL_LAND_MINE, monsterPower,
                                               mastery, 0, 0, 0, 0);
         sample* sample2b;
-        if (!static_cast<const combatManager*>(this)->isQuickCombat())
+        if (!isQuickCombat())
             sample2b = ResourceManager::getSample(
                 DATA_COMPGEN(0x00688490, landMineSampleName,
                              "landmine.wav"));
@@ -885,7 +885,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 break;
 
             ds_memsample* placeSample;
-            if (!static_cast<const combatManager*>(this)->isQuickCombat())
+            if (!isQuickCombat())
                 placeSample = g_soundManager->memorySample(sample2b);
 
             spellEffect(traits->m_effect, hex, 100, 1);
@@ -905,13 +905,13 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             placeObstacle(newLandmine, obstacleSlot, hex, hexcell::landMine);
             drawFrame(1, 0, 0, 0, 1, 0);
 
-            if (!static_cast<const combatManager*>(this)->isQuickCombat())
+            if (!isQuickCombat())
                 g_soundManager->waitSample(placeSample, -1);
         }
         showSpellMessage(isMonsterSpell, spellId, 0);
         // DC 860/936 names ResourceManager::Dispose. Complete Mac
         // 0x190d64/0x190ff8 expands its null-guarded virtual disposal.
-        if (!static_cast<const combatManager*>(this)->isQuickCombat())
+        if (!isQuickCombat())
             ResourceManager::dispose(sample2b);
         break;
     }
@@ -992,7 +992,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     }
 
     case SPELL_ICE_BOLT: {
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+        if (!isQuickCombat()) {
             shootAnimatedMissile(castX, castY, target->midX(), target->midY(),
                                  5, g_iceBoltAngles, g_iceBoltSprites);
         }
@@ -1001,14 +1001,14 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                         target, 1);
         int deaths = target->damage(damage);
         SAMPLE2 iceraySample;
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+        if (!isQuickCombat()) {
             iceraySample = loadPlaySample(
                 DATA_COMPGEN(0x00688480, iceRaySampleName,
                              "IceRayEx.wav"));
             target->m_showPowEffect = 1;
         }
         powEffect(traits->m_effect, 1);
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+        if (!isQuickCombat()) {
             damageMessage(traits->m_name, 1, damage, target, deaths);
             waitEndSample(iceraySample, -1);
         }
@@ -1097,7 +1097,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 }
             }
         }
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+        if (!isQuickCombat()) {
             if (!multipleVictims && anyEffects) {
                 sprintf(g_text, g_generalText->getText(GENERAL_TEXT_DEATH_RIPPLE_DAMAGE_FORMAT), damage);
             } else {
@@ -1140,7 +1140,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         }
         if (anyEffects)
             showMassSpell(m_effected, traits->m_effect, 1);
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+        if (!isQuickCombat()) {
             if (!multipleVictims && anyEffects) {
                 sprintf(g_text, g_generalText->getText(GENERAL_TEXT_DESTROY_UNDEAD_DAMAGE_FORMAT), traits->m_name,
                         damage);
@@ -1212,7 +1212,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         target->setSpellInfluence(spellId, monsterPower, mastery,
                                   castingHero);
         showSpellMessage(isMonsterSpell, spellId, target);
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+        if (!isQuickCombat()) {
             target->m_monInfo.m_attributes |= creatureGreyColoring;
             resetLimitCreature();
             markCreatureEffect(target->getOwningSide(), target->m_bitIndex);
@@ -1231,7 +1231,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             target->setSpellInfluence(spellId, monsterPower, mastery,
                                       castingHero);
             showSpellMessage(isMonsterSpell, spellId, target);
-            if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+            if (!isQuickCombat()) {
                 target->m_monInfo.m_attributes |= creatureRedColoring;
                 resetLimitCreature();
                 markCreatureEffect(target->getOwningSide(), target->m_bitIndex);
@@ -1256,7 +1256,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                   monsterPower, m_currentSide,
                                   isMonsterSpell);
             showSpellMessage(isMonsterSpell, spellId, 0);
-            if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+            if (!isQuickCombat()) {
                 resetLimitCreature();
                 {
                     for (int side = 0; side < 2; ++side) {
@@ -1450,7 +1450,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // combat message guard. Retail fixes the defense arithmetic and the
     // one-entry projectile tables.
     case SPELL_DISRUPTING_RAY: {
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+        if (!isQuickCombat()) {
             shootAnimatedMissile(castX, castY, target->midX(),
                                  target->midY(), 1,
                                  g_disruptingRayAngles,
@@ -1468,7 +1468,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         spellEffect(traits->m_effect, target, 100, 0);
         target->setSpellInfluence(spellId, monsterPower, mastery,
                                   castingHero);
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+        if (!isQuickCombat()) {
             sprintf(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_DISRUPTING_RAY_FORMAT),
                     previousSkill - target->m_monInfo.m_defenseSkill);
             m_combatWindow->combatMessage(g_text, 1, 0);
@@ -1512,15 +1512,15 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             m_computeExtentOnly = 0;
             m_saveBiggestExtent = 0;
             g_windowManager->saveFizzleSourceX(
-                m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-                m_drawbridgeBounds.width(),
-                m_drawbridgeBounds.height());
+                m_extent.m_minX, m_extent.m_minY,
+                m_extent.width(),
+                m_extent.height());
             removeObstacle(obstacleIndex);
             drawFrame(0, 0, 0, 0, 1, 0);
             g_windowManager->fizzleForwardX(
-                m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-                m_drawbridgeBounds.width(),
-                m_drawbridgeBounds.height(),
+                m_extent.m_minX, m_extent.m_minY,
+                m_extent.width(),
+                m_extent.height(),
                 replacementEffect);
         } else {
             removeObstacle(obstacleIndex);
@@ -1587,7 +1587,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         if (target->m_monInfo.m_defenseSkill < 0)
             target->m_monInfo.m_defenseSkill = 0;
         spellEffect(traits->m_effect, target, 100, 0);
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+        if (!isQuickCombat()) {
             int reduction = previousSkill - target->m_monInfo.m_defenseSkill;
             sprintf(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_DISRUPTING_RAY_FORMAT), reduction);
             m_combatWindow->combatMessage(
@@ -1666,7 +1666,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
 
         if (numFamiliars > 0) {
             otherHero->m_mana += manaRecovered;
-            if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+            if (!isQuickCombat()) {
                 std::string msg;
                 if (numFamiliars == 1) {
                     msg = formatString(g_generalText->getText(GENERAL_TEXT_MANA_ABSORBED_ONE_FORMAT),
@@ -3008,7 +3008,7 @@ void combatManager::armageddon(int level, int power)
         } }
     } }
 
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         loadSpellEffect(spellTraits.m_effect);
         int maxFrames;
         if (m_powSprite)
@@ -3119,7 +3119,7 @@ void combatManager::armageddon(int level, int power)
     if (m_someCreaturesVanish)
         makeCreaturesVanish();
     if (damageDone
-        && !static_cast<const combatManager*>(this)->isQuickCombat()) {
+        && !isQuickCombat()) {
         long totalDamage = computeSpellDamage(
             SPELL_ARMAGEDDON, power, level, 0, 0, 0, 0);
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_COMBAT_ARMAGEDDON_DAMAGE_FORMAT], totalDamage);
@@ -3491,7 +3491,7 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
                            int segmentLength, int drawsPerSegment,
                            int distortAlways, int delay, int flashLighten)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return;
 
     if (handleResets)
@@ -3524,7 +3524,7 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
 
     delay = static_cast<long>(
         static_cast<float>(delay)
-        * g_combatSpeedFactors[g_config.m_combatSpeed]);
+        * combatManager::s_combatSpeedMod[g_config.m_combatSpeed]);
     unsigned long delayTil = GameTime::get() + delay;
     int maxBolt = 1;
 
@@ -3811,7 +3811,7 @@ void combatManager::chainLightning(int index, int level, int power)
     { for (int i = 0; i < g_chainLightningTargets[level]; i++) {
         if (validHex(index)) {
             army* target = m_cells[index].getArmy();
-            if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+            if (!isQuickCombat()) {
                 if (i == 0) {
                     spellEffect(37, target, 0, 0);
                     curX = target->midX();
@@ -3833,7 +3833,7 @@ void combatManager::chainLightning(int index, int level, int power)
                     curX = destX;
                     curY = destY;
                     GameTime::delay(static_cast<long>(
-                        g_combatSpeedFactors[g_config.m_combatSpeed]
+                        combatManager::s_combatSpeedMod[g_config.m_combatSpeed]
                         * 100.0f));
                     drawFrame(1, 0, 0, 0, 1, 0);
                 }
@@ -3978,7 +3978,7 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
                                   int spellEffect, bool showWince)
 {
     int frames;
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         loadSpellEffect(spellEffect);
         if (m_powSprite)
             frames = m_powSprite->getNumFrames(cs_walk);
@@ -4243,7 +4243,7 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
         lowerDoor();
     }
     int count = g_spellTraits[spell].m_masteryBonus[level] * spellPower;
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         m_combatWindow->combatMessage(
             formatString((*g_generalText)[GENERAL_TEXT_SUMMON_CREATURES_FORMAT],
                           m_heroes[m_currentSide]->m_name, count,
@@ -4404,7 +4404,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
     if (targetArmy->m_facing != 1 - targetArmy->getOwningSide())
         targetArmy->turn(0);
 
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         long raised = targetArmy->m_numTroops - oldCount;
         if (raised != 1)
             sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
@@ -4477,7 +4477,7 @@ DC_ADDRESS(0x156aec, 0xa8)
 MAC_ADDRESS(0x198b78, 0x144)
 inline void combatManager::showSpellCastFailure(army* targetArmy, int spellId)
 {
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
             0x00688440, magicResistanceSampleName, "MagicRes.wav"));
         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_MAGIC_RESISTANCE_FORMAT),
@@ -4550,7 +4550,7 @@ long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
                                      targetArmy->m_creatureType);
         damage = modifySpellDamageForSpells(damage, spellType, targetArmy);
         if (printResult && damage != baseDamage
-            && !static_cast<const combatManager*>(this)->isQuickCombat()) {
+            && !isQuickCombat()) {
             std::string message;
             long delta = damage - baseDamage;
             if (delta < 0) {
@@ -4679,11 +4679,11 @@ void combatManager::earthquake(int level)
 {
     // DC records damage[8] at procedure scope; initialization follows the shake.
     int counts[WALL_TARGET_COUNT];
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         g_mouseManager->hidePointer();
         m_saveScreenPostGrid->grab(g_windowManager->m_screenBitmap, 0, 0);
         const int shakeDelay = static_cast<int>(
-            g_combatSpeedFactors[g_config.m_combatSpeed] * 15.0f);
+            combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 15.0f);
         int pass = 3;
         do {
             for (int step = 0; step < 15; step++) {
@@ -4730,9 +4730,9 @@ void combatManager::earthquake(int level)
     }
 
     if (drawn != 0
-        && !static_cast<const combatManager*>(this)->isQuickCombat()) {
+        && !isQuickCombat()) {
         const int frameDelay = static_cast<int>(
-            g_combatSpeedFactors[g_config.m_combatSpeed] * 15.0f);
+            combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 15.0f);
         CSprite* blast = ResourceManager::getSprite("SGEXPL.DEF");
         launchSample("WallHit.82m", -1, 3);
         for (int frame = 0; frame < blast->getNumFrames(0); frame++) {
@@ -4743,13 +4743,13 @@ void combatManager::earthquake(int level)
                     continue;
                 long x = s_wallTargets[i].m_hitX;
                 long y = s_wallTargets[i].m_hitY;
-                TDrawbridgeBounds* bounds = &m_drawbridgeBounds;
-                *bounds = TDrawbridgeBounds(
+                SLimitData* bounds = &m_extent;
+                *bounds = SLimitData(
                     x - blast->getWidth() / 2,
                     y - blast->getHeight() / 2,
                     x - blast->getWidth() / 2 + blast->getWidth() - 1,
                     y - blast->getHeight() / 2 + blast->getHeight() - 1);
-                bounds->clip(g_combatDrawLimits);
+                bounds->clip(combatManager::s_combatAreaLimits);
                 if (frame == g_earthquakeImpactFrame) {
                     damageWall(H3_ENUM_DECODE(TWallTargetId, i), counts[i]);
                 }
@@ -4944,7 +4944,7 @@ MAC_ADDRESS(0x199e58, 0x384)
 void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
                                        bool firstTarget)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return;
 
     hexcell* cell = &m_cells[targetIndex];
@@ -5055,7 +5055,7 @@ MAC_ADDRESS(0x19a1dc, 0x7f0)  // order-map+arity
 void combatManager::showSpellMessage(int isMonsterSpell, SpellID spellId,
                                      army* targetArmy)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return;
 
     const char* targetName;
