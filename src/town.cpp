@@ -1342,6 +1342,8 @@ long town::getLegionBonus(long dwelling) const
 // Twelve promoted/narrow/named bonus consumers and eight Grail return forms
 // do not close that tail; the register model finds no transposed local pair.
 // Thirty-six caller/assembled-helper lifetime forms alone also gave no gain.
+// Nine consistent short-contribution forms and the DC-proven long generator
+// storage likewise leave the tail unchanged; retain the recovered field type.
 VA(0x005bfb60, 0x266)
 DC_ADDRESS(0x167748, 0xfe)
 MAC_ADDRESS(0x1b5414, 0x1fc)
