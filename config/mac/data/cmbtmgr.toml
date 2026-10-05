@@ -1,6 +1,7 @@
 [[data]]
 retail_va = 0x00694f18
 source = "src/cmbtmgr.cpp"
+mac_symbol = "s_combatAreaLimits__13combatManager"
 same_tu_definition = true
 same_tu_external = true
 same_tu_constructed = true
