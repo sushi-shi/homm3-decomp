@@ -146,7 +146,7 @@ advmgr	?open@advManager@@UAEHH@Z	99.9420	99.9420	99.9601	0x6fd0	tokens1:0c1cba76
 advmgr	?overrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.0000	100.0000	0x15d60	tokens1:05e1918bf47f
 advmgr	?popupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80	tokens1:50da26cf1f75
 advmgr	?processDeSelect@advManager@@QAEHABVmessage@@AA_NAAUtype_point@@AAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70	tokens1:fea1cd75ec63
-advmgr	?processHover@advManager@@QAEHHH@Z	91.4219	91.4219	93.1810	0xe360	tokens1:fec93f1694c5
+advmgr	?processHover@advManager@@QAEHHH@Z	98.9583	98.9583	98.9583	0xe360	tokens1:c71ee01f6eb7
 advmgr	?processKeyPress@advManager@@QAEHABVmessage@@AA_NAAUtype_point@@AAPAVNewmapCell@@@Z	99.6533	100.0000	100.0000	0x8c40	tokens1:a1cf69e40158
 advmgr	?processMapSelect@advManager@@QAEXABVmessage@@AAUtype_point@@AAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xa5d0	tokens1:b3c4d5f26b31
 advmgr	?processRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0	tokens1:bf1ff69c2bf0
