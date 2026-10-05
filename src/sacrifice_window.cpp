@@ -1325,6 +1325,11 @@ int type_sacrifice_window::emptyBackpack(message& msg)
 // helper improves this site to about 91.4% but regresses the exact standalone
 // empty-backpack callback (and force-inlining update_backpack also regresses
 // backpack_click), so the source-authentic call graph is retained.
+// /Ob2 arithmetic: updateBackpack (cb 145) meets 133 after emptyBackpack's
+// addArtifact; retail needs 12..84 more budget there while still rejecting
+// that addArtifact's set/updateArtifactOffering, i.e. about 12 less charged
+// cost in the slot loop's addArtifact expansion (sizes 84 + set 155 + uAO 67).
+// bool/int spellings of updateBackpack's scroll flag and index are byte-flat.
 VA(0x00564340, 0x35f)
 DC_ADDRESS(0x1269ac, 0xc4)
 MAC_ADDRESS(0x15a6e0, 0x154)  // callback address-take + dc name/signature/order

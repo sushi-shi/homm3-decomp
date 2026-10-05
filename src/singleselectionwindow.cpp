@@ -3780,6 +3780,13 @@ void TSingleSelectionWindow::turnOffFilterOptions()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3219
+// DC has no function-scope position: nbr is local to the hero load path
+// (3236), gamePos to the town arm (3316), and the hero-player and bonus paths
+// spell `id - first` at each use. DC 3414..3417 tests sprite == -1 after the
+// bonus switch, which retail's threaded constant-sprite arms confirm.
+// Together 88.89 -> 92.65%. Unnaming the DC-proven nbr/gamePos locals scores
+// 93.46/higher but contradicts those positive records; the rest is the
+// id/position callee-saved role swap (retail keeps id in EDI).
 VA(0x005822d0, 0x868)
 DC_ADDRESS(0x1371fc, 0xb2c)
 MAC_ADDRESS(0x17a05c, 0x844)  // anchor-vtable TSingleSelectionWindow vtbl 0x241cac slot11 (ProcessRightSelect override; cf sibling THeroScreenWindow slot11 ProcessRightSelect@CHeroWindowEx)
@@ -3790,7 +3797,6 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
     if (id >= SSW_FILE_ROW_FIRST && id <= SSW_FILE_ROW_LAST)
         return 1;
 
-    int nbr = id - SSW_HERO_DETAIL_FIRST;
     switch (id) {
     case SSW_HERO_DETAIL_FIRST:
     case SSW_HERO_DETAIL_FIRST + 1:
@@ -3800,11 +3806,11 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
     case SSW_HERO_DETAIL_FIRST + 5:
     case SSW_HERO_DETAIL_FIRST + 6:
     case SSW_HERO_DETAIL_LAST: {
-        int gamePos = nbr;
         if (m_loadMode) {
-            int heroId = g_game->m_setup.m_startingHero[gamePos];
-            int displayFace = getDisplayFace(gamePos);
-            const char* faceName = getHeroName(gamePos);
+            int nbr = id - SSW_HERO_DETAIL_FIRST;
+            int heroId = g_game->m_setup.m_startingHero[nbr];
+            int displayFace = getDisplayFace(nbr);
+            const char* faceName = getHeroName(nbr);
             if (displayFace != -1) {
                 hero* theHero = &g_game->getHeroReference(heroId);
                 CHeroDlg dlg(!m_saveMode && !m_loadMode);
@@ -3816,20 +3822,21 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
             }
         } else {
             CNetPlayerHandlerPlayer* player =
-                m_players.getPlayerInPos(gamePos);
+                m_players.getPlayerInPos(id - SSW_HERO_DETAIL_FIRST);
             if (!player)
-                player = m_players.getCompPlayerInPos(gamePos);
+                player = m_players.getCompPlayerInPos(id - SSW_HERO_DETAIL_FIRST);
             if (!player)
                 break;
 
-            unsigned char noHero =
-                player->m_heroIndex == -1
-                && !hasRandomHero(gamePos)
-                && !hasNonRandomHero(gamePos);
+            unsigned char noHero = 0;
+            if (player->m_heroIndex == -1
+                && !hasRandomHero(id - SSW_HERO_DETAIL_FIRST)
+                && !hasNonRandomHero(id - SSW_HERO_DETAIL_FIRST))
+                noHero = 1;
             if (noHero)
                 break;
 
-            int displayFace = getDisplayFace(gamePos);
+            int displayFace = getDisplayFace(id - SSW_HERO_DETAIL_FIRST);
             if (player->m_heroIndex == -1 && displayFace == -1) {
                 CBonusDlg dlg(!m_saveMode && !m_loadMode);
                 dlg.createWin((*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_HERO_CAPTION], m_randomHeroBmp,
@@ -3837,13 +3844,13 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
                               (*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_HERO_DESCRIPTION]);
                 dlg.doModal(0);
             } else {
-                int heroId = getHeroInPos(gamePos);
-                if (heroId != -1) {
-                    hero* theHero = &g_game->getHeroReference(heroId);
+                int heroNbr = getHeroInPos(id - SSW_HERO_DETAIL_FIRST);
+                if (heroNbr != -1) {
+                    hero* theHero = &g_game->getHeroReference(heroNbr);
                     CHeroDlg dlg(!m_saveMode && !m_loadMode);
                     dlg.createWin(m_heroPix[displayFace],
-                                  getHeroName(gamePos),
-                                  m_heroSpecificAbility, heroId,
+                                  getHeroName(id - SSW_HERO_DETAIL_FIRST),
+                                  m_heroSpecificAbility, heroNbr,
                                   theHero->getSpecificAbilityTextShort(),
                                   theHero->heroFn004D8F70());
                     dlg.doModal(0);
@@ -3864,8 +3871,7 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
     case SSW_TOWN_DETAIL_FIRST + 5:
     case SSW_TOWN_DETAIL_FIRST + 6:
     case SSW_TOWN_DETAIL_LAST: {
-        int gamePos =
-            nbr - (SSW_TOWN_DETAIL_FIRST - SSW_HERO_DETAIL_FIRST);
+        int gamePos = id - SSW_TOWN_DETAIL_FIRST;
         int townType;
         if (m_loadMode)
             townType = g_game->m_setup.m_alignment[gamePos];
@@ -3900,27 +3906,25 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
     case SSW_BONUS_DETAIL_FIRST + 6:
     case SSW_BONUS_DETAIL_LAST: {
         CBonusDlg dlg(!m_saveMode && !m_loadMode);
-        int gamePos =
-            nbr - (SSW_BONUS_DETAIL_FIRST - SSW_HERO_DETAIL_FIRST);
-        int bonus;
-        int townType;
-        const char* header = "";
-        const char* desc = "";
         int sprite = 9;
+        const char* header = "";
         const char* bonusEx = "";
+        const char* desc = "";
+        int bonus = NEW_MAP_BONUS_RANDOM;
+        int townType = 0;
 
         if (m_loadMode) {
-            bonus = g_game->m_setup.m_startingBonus[gamePos];
-            townType = g_game->m_setup.m_alignment[gamePos];
+            bonus = g_game->m_setup.m_startingBonus[id - SSW_BONUS_DETAIL_FIRST];
+            townType = g_game->m_setup.m_alignment[id - SSW_BONUS_DETAIL_FIRST];
         } else {
             CNetPlayerHandlerPlayer* player =
-                m_players.getPlayerInPos(gamePos);
+                m_players.getPlayerInPos(id - SSW_BONUS_DETAIL_FIRST);
             if (!player)
-                player = m_players.getCompPlayerInPos(gamePos);
+                player = m_players.getCompPlayerInPos(id - SSW_BONUS_DETAIL_FIRST);
             if (!player)
                 break;
             bonus = player->m_startBonusIndex;
-            townType = getDisplayTown(gamePos);
+            townType = getDisplayTown(id - SSW_BONUS_DETAIL_FIRST);
         }
 
         switch (bonus) {
@@ -3941,14 +3945,17 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
                 sprite = TOWN_INFERNO;
             bonusEx = getResourceBonusCaption(townType);
             desc = getResourceBonusDescription(townType);
-            if (sprite == -1)
-                sprite = 0;
             break;
         case NEW_MAP_BONUS_RANDOM:
             header = (*g_generalText)[GENERAL_TEXT_RANDOM_BONUS];
             sprite = 10;
             desc = (*g_generalText)[GENERAL_TEXT_STARTING_RANDOM_BONUS_DESCRIPTION];
             break;
+        }
+
+        // DC 3414..3417 tests the selected sprite after the bonus switch.
+        if (sprite == -1) {
+            sprite = 0;
         }
 
         dlg.createWin(header, m_resource, sprite, bonusEx, desc);
@@ -4262,6 +4269,14 @@ void TSingleSelectionWindow::updateGameVars()
     if (g_selectionCampaignMode)
         g_game->m_setup.m_turnDuration = 10;
 
+    // Retail inlines less of applyHeaderToGame than this model: both random-
+    // arm string assigns and the selected arm's _Eos stay calls. Spelling
+    // assignData's base copy as `CMapHeaderData::operator=(*data)` raises this
+    // to 82.86% (selected arm exact) but perturbs string COMDATs in TUs that
+    // never call assignData (seerhut, adventuremapwindow), so it is rejected.
+    // Retail and Mac evaluate the loaded row once for both copies; one
+    // `loaded` reference spells that CSE but gives the random arm still more
+    // budget (74.82%).
     if (m_loadMode) {
         // SetText can run widget code; retail resolves this row afterwards.
         memcpy(g_game->m_playerDisabled,

@@ -4067,7 +4067,7 @@ singleselectionwindow	?onUpdatePlayerPosMsg@TSingleSelectionWindow@@QAEXPAVCNetM
 singleselectionwindow	?onWidgetDeselect@TSingleSelectionWindow@@QAEHPAVmessage@@PAEE@Z	100.0000	100.0000	100.0000	0x1865b0	tokens1:f25a39faeb17
 singleselectionwindow	?playerDropped@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189480	tokens1:3a0068339df2
 singleselectionwindow	?processMouse@@YGIPAX@Z	100.0000	100.0000	100.0000	0x177740	tokens1:87a8e8da6103
-singleselectionwindow	?processRightSelect@TSingleSelectionWindow@@EAEEH@Z	88.7149	88.8933	88.9695	0x1822d0	tokens1:5a760f6d73f4
+singleselectionwindow	?processRightSelect@TSingleSelectionWindow@@EAEEH@Z	92.6494	92.6494	92.6494	0x1822d0	tokens1:ff8942d2065b
 singleselectionwindow	?read@CGameHeaderInfoMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177880	tokens1:2133655fd639
 singleselectionwindow	?read@CNewMapHeaderInfoMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177a10	tokens1:da9d90f3b76b
 singleselectionwindow	?rebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	97.6865	97.6865	97.6979	0x180430	tokens1:8ae675245525
