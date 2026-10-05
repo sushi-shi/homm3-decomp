@@ -5756,16 +5756,23 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
     unsigned short* destRow;
     // DC 7097..7117 names GetMap for the radar origin. Mac 13a5c..13b20
     // and retail compute map + bytePitch*rectY + 2*rectX, with no signed
-    // divide/round path. Let the canonical accessor preserve byte pitch.
-    if (g_mapHeight == MAP_DIMENSION_SMALL
-        || g_mapHeight == MAP_DIMENSION_MEDIUM) {
+    // divide/round path. The separate small/medium cases survive in both
+    // native references. DC7150 also keeps z local to each radar row.
+    switch (g_mapHeight) {
+    case MAP_DIMENSION_SMALL:
         destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
-    } else if (g_mapHeight == MAP_DIMENSION_LARGE) {
+        break;
+    case MAP_DIMENSION_MEDIUM:
+        destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
+        break;
+    case MAP_DIMENSION_LARGE:
         rowPhase = 0;
         blockPhase = 0;
         destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
-    } else {
+        break;
+    default:
         destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
+        break;
     }
 
     int visibilityBit = g_mapVisibilityBit;
@@ -5796,13 +5803,14 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
             break;
         }
         destRow = nextRow.m_pixels;
+        int z = origin.m_z;
 
         for (int x = 0; x <= lastColumn; x++) {
-            NewmapCell* cell = m_fullMap->cell(x, y, origin.m_z);
+            NewmapCell* cell = m_fullMap->cell(x, y, z);
 
-            unsigned char revealed =
+            bool revealed =
                 !g_completeDrawAllCells
-                && (visibilityBit & getMapExtra(x, y, origin.m_z)) && x >= 0
+                && (visibilityBit & getMapExtra(x, y, z)) && x >= 0
                 && y >= 0 && x < g_mapWidth && y < g_mapHeight;
             if (viewMines && cell->m_type == MINE)
                 revealed = 1;
@@ -5851,10 +5859,11 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                         if (!(cell->m_cellFlags & 0x40)
                             || (cell->m_cellFlags & 0x1000)) {
                             NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger)
-                                colour = g_systemPalette->m_data[64 +
-                                    g_game->m_towns[trigger
-                                        ->getMapExtraInfo()].m_owner];
+                            if (trigger) {
+                                int owner = g_game->m_towns[
+                                    trigger->getMapExtraInfo()].m_owner;
+                                colour = g_systemPalette->m_data[64 + owner];
+                            }
                         }
                         break;
                     case LIGHTHOUSE:
@@ -5862,10 +5871,11 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                         if (!(cell->m_cellFlags & 0x40)
                             || (cell->m_cellFlags & 0x1000)) {
                             NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger)
-                                colour = g_systemPalette->m_data[64 +
-                                    g_game->getMine(trigger
-                                        ->getMapExtraInfo())->m_playerOwner];
+                            if (trigger) {
+                                int owner = g_game->getMine(
+                                    trigger->getMapExtraInfo())->m_playerOwner;
+                                colour = g_systemPalette->m_data[64 + owner];
+                            }
                         }
                         break;
                     case CREATURE_GENERATOR_1:
@@ -5873,20 +5883,22 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                         if (!(cell->m_cellFlags & 0x40)
                             || (cell->m_cellFlags & 0x1000)) {
                             NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger)
-                                colour = g_systemPalette->m_data[64 +
-                                    g_game->m_generators[trigger
-                                        ->getMapExtraInfo()].getOwner()];
+                            if (trigger) {
+                                int owner = g_game->m_generators[
+                                    trigger->getMapExtraInfo()].getOwner();
+                                colour = g_systemPalette->m_data[64 + owner];
+                            }
                         }
                         break;
                     case GARRISON:
                         if (!(cell->m_cellFlags & 0x40)
                             || (cell->m_cellFlags & 0x1000)) {
                             NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger)
-                                colour = g_systemPalette->m_data[64 +
-                                    g_game->getGarrison(trigger
-                                        ->getMapExtraInfo())->m_playerOwner];
+                            if (trigger) {
+                                int owner = g_game->getGarrison(
+                                    trigger->getMapExtraInfo())->m_playerOwner;
+                                colour = g_systemPalette->m_data[64 + owner];
+                            }
                         }
                         break;
                     case SHIPYARD:
@@ -5896,8 +5908,8 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                             if (trigger) {
                                 ExtraInfoUnion cellExtra;
                                 cellExtra.m_extraInfo = trigger->getMapExtraInfo();
-                                colour = g_systemPalette->m_data[64 +
-                                    cellExtra.m_shipyardInfo.m_owner];
+                                int owner = cellExtra.m_shipyardInfo.m_owner;
+                                colour = g_systemPalette->m_data[64 + owner];
                             }
                         }
                         break;
