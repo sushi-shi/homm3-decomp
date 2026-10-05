@@ -3423,10 +3423,13 @@ int SavedGameHeader::save(TAbstractFile* outfile)
     return 0;
 }
 
+// Original public ?SaveGame@game@@QAA_NPBD_N111@Z proves the Boolean
+// result and all four flag parameters, despite byte-lowered debug types.
 VA(0x004beea0, 0x2F6)
 DC_ADDRESS(0x0a99d0, 0x4b8)
 MAC_ADDRESS(0x0d44fc, 0x2e8)
-unsigned char game::saveGame(const char* filename, unsigned char determineSuffix, unsigned char campaignWinMode, unsigned char compressIt, unsigned char xferFile)
+bool game::saveGame(const char* filename, bool determineSuffix,
+                    bool campaignWinMode, bool compressIt, bool xferFile)
 {
     char nameNoExtension[351] = {0};
     char saveName[351] = {0};
