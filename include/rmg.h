@@ -1766,6 +1766,7 @@ struct TRmgZone {
     }
     TRmgMapPosition getLevelPosition() const;
     void setLevelPosition(TRmgMapPosition position);
+    TRmgMapPosition getPrimaryTownEntrance() const;
     // Template slot radius; the position filter reads it through this
     // accessor, which is what makes its first counting pass call size().
     int getSize() const

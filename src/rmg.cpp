@@ -1682,6 +1682,17 @@ TRmgMapPosition TRmgZone::getLevelPosition() const
     return result;
 }
 
+// Mac WriteMapHeader copies the primary-town coordinate through a separate
+// value at 0x24ebbc and 0x24ec20 before assigning each player entrance.
+// This is a value query; mine placement instead consumes the entrance XY
+// components directly (Mac 0x2492a4/0x2492b0). An assigned local result
+// shifts the writer's stack homes and lowers its match to 94.9640%; keep
+// the direct member result for these whole-value reads.
+TRmgMapPosition TRmgZone::getPrimaryTownEntrance() const
+{
+    return m_primaryTownEntrance;
+}
+
 // Candidate placement loads all three coordinates before writing the zone,
 // consistent with passing the coordinate value through an ordinary setter.
 void TRmgZone::setLevelPosition(TRmgMapPosition position)
@@ -10262,14 +10273,15 @@ bool TRmgGenerator::hasPlayerTowns() const
             continue;
         // A neutral town must not become the player's serialized main town.
         bool ownsMainTown = false;
+        TRmgMapPosition primaryTownEntrance = zone->getPrimaryTownEntrance();
         for (u32 objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
             const TRmgObject* object = m_objects[objectIndex];
             if (object->m_properties->m_prototype->getObjectType() != TOWN)
                 continue;
             const TRmgTownObject* town = static_cast<const TRmgTownObject*>(object);
             TRmgMapPosition entrance = town->getEntrance();
-            if (town->m_player == player && entrance == zone->m_primaryTownEntrance
-                && entrance.m_z == zone->m_primaryTownEntrance.m_z) {
+            if (town->m_player == player && entrance == primaryTownEntrance
+                && entrance.m_z == primaryTownEntrance.m_z) {
                 ownsMainTown = true;
                 break;
             }
@@ -10563,8 +10575,8 @@ void TRmgGenerator::writeMapHeader(TAbstractFile* outfile)
     int generatedHumanTowns = 0;
     for (unsigned int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
-        TRmgTemplateZone* slot = zone->m_templateZone;
-        int player = slot->m_playerIndex;
+        TRmgTemplateZone* templateZone = zone->m_templateZone;
+        int player = templateZone->m_playerIndex;
         if (player < 0)
             continue;
 
@@ -10572,15 +10584,17 @@ void TRmgGenerator::writeMapHeader(TAbstractFile* outfile)
         if (player < 0 || !zone->m_hasPrimaryTown)
             continue;
 
-        if (slot->m_kind == 0 && !canBeHuman[player]) {
+        if (templateZone->m_kind == RMG_TEMPLATE_HUMAN
+            && !canBeHuman[player]) {
             ++generatedHumanTowns;
             canBeHuman[player] = 1;
-            mainTowns[player] = zone->m_primaryTownEntrance;
+            mainTowns[player] = zone->getPrimaryTownEntrance();
         }
 
-        if (slot->m_kind == 1 && !canBeComputer[player]) {
+        if (templateZone->m_kind == RMG_TEMPLATE_COMPUTER
+            && !canBeComputer[player]) {
             canBeComputer[player] = 1;
-            mainTowns[player] = zone->m_primaryTownEntrance;
+            mainTowns[player] = zone->getPrimaryTownEntrance();
         }
 
         legalAlignments[player] |= 1 << zone->m_alignment;
