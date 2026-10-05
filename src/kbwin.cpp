@@ -87,7 +87,7 @@ static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
         if (!RegisterClassA(&appClass))
             return 0;
     }
-    if (g_config.m_mainGameFullScreen) {
+    if (g_config.m_windowConfig.m_fullScreen) {
         windowStyle = WS_POPUP | WS_VISIBLE;
         windowExStyle = WS_EX_TOPMOST;
     } else {
@@ -97,11 +97,11 @@ static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
     windowRect.top = windowRect.left = 0;
     windowRect.right = 800;
     windowRect.bottom = 600;
-    AdjustWindowRect(&windowRect, windowStyle, g_config.m_mainGameFullScreen == 0);
+    AdjustWindowRect(&windowRect, windowStyle, g_config.m_windowConfig.m_fullScreen == 0);
     g_hwndApp = CreateWindowExA(windowExStyle, g_appName, g_title, windowStyle,
-        g_config.m_mainGameX, g_config.m_mainGameY,
+        g_config.m_windowConfig.m_x, g_config.m_windowConfig.m_y,
         windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
-        0, g_config.m_mainGameFullScreen ? 0 : g_dfltMenu, instance, 0);
+        0, g_config.m_windowConfig.m_fullScreen ? 0 : g_dfltMenu, instance, 0);
     if (!g_hwndApp)
         return 0;
     initGraphics();
@@ -137,10 +137,10 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
             g_appWindowStyle = GetWindowLongA(g_hwndApp, GWL_STYLE);
             if (!(g_appWindowStyle & (WS_MINIMIZE | WS_MAXIMIZE)) && !g_closingApp) {
                 immMouseWindowMoved();
-                if (!g_config.m_mainGameFullScreen) {
+                if (!g_config.m_windowConfig.m_fullScreen) {
                     GetWindowRect(window, &g_rcAppWindow);
-                    g_config.m_mainGameX = g_rcAppWindow.left;
-                    g_config.m_mainGameY = g_rcAppWindow.top;
+                    g_config.m_windowConfig.m_x = g_rcAppWindow.left;
+                    g_config.m_windowConfig.m_y = g_rcAppWindow.top;
                     writePrefs();
                 }
             }
@@ -273,14 +273,14 @@ LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
             g_mouseManager->showSystemCursor(0);
             break;
         case KBWIN_MENU_HELP:
-            if (g_config.m_mainGameFullScreen)
+            if (g_config.m_windowConfig.m_fullScreen)
                 SetForegroundWindow(GetDesktopWindow());
             WinHelpA(g_hwndApp,
                 DATA_COMPGEN(0x0067fa20, appCommandHelpFile, ".\\HEROES3.HLP"),
                 HELP_FINDER, 0);
             break;
         case KBWIN_MENU_FULLSCREEN:
-            if (!setFullScreenStatus(1 - g_config.m_mainGameFullScreen))
+            if (!setFullScreenStatus(1 - g_config.m_windowConfig.m_fullScreen))
                 normalDialog(
                     DATA_COMPGEN(0x0067f9b8, appCommandColorModeText,
                         "This game runs in 65536 color mode. You must switch the desktop to this mode before playing the game."),
@@ -327,7 +327,7 @@ void kbChangeMenu(HMENU newMenu)
     else
         g_currMenu = newMenu;
     g_activeMenu = newMenu;
-    if (!g_config.m_mainGameFullScreen) {
+    if (!g_config.m_windowConfig.m_fullScreen) {
         if (newMenu) {
             SetMenu(g_hwndApp, newMenu);
             DrawMenuBar(g_hwndApp);

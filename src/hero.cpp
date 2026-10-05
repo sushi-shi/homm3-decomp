@@ -700,6 +700,11 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
 // expansions need separate inliner evidence; they are not register-only.
 // Typed scalar readers preserve every on-disk width while shortening the
 // staging lifetimes, bringing the same body to 94.93%.
+// The historical exact result flattened decodePackedBits into its reader.
+// With the canonical helper chain retained, the exception path still keeps
+// nested string copy/end/cleanup calls that retail expands (94.9221%). C2's
+// reproduced trace reaches string assign/copy construction at depth eight;
+// those callees' nested operations exceed the default expansion depth.
 VA(0x004d7a20, 0x69F)
 DC_ADDRESS(0x0caf98, 0x700)
 MAC_ADDRESS(0x0f2ab4, 0xa04)  // linkorder
@@ -726,7 +731,7 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     m_dWalkSpellsCast = readValue<char>(infile);
     m_visionsPower = static_cast<signed char>(readValue<char>(infile));
     // Both retails zero-extend the serialized id (Windows 0x4d7bc1, Mac 0xf2d18).
-    m_id = readValue<unsigned char>(infile);
+    m_id = static_cast<HeroId>(readValue<unsigned char>(infile));
     m_heroClass = static_cast<signed char>(readValue<char>(infile));
     m_portrait = readValue<unsigned char>(infile);
     m_patrolX = readValue<unsigned char>(infile);
@@ -920,7 +925,7 @@ DC_ADDRESS(0x0cbdb8, 0xc8)
 MAC_ADDRESS(0x0f3e2c, 0x1b8)  // anchor-bracket
 hero::hero()
 {
-    m_id = -1;
+    m_id = heroIdNone;
     m_owner = -1;
     m_x = 0;
     m_y = 0;
@@ -980,7 +985,7 @@ void hero::initialize(short index)
 
     m_patrolY = kPatrolNone;
     m_patrolX = kPatrolNone;
-    m_id = index;
+    m_id = static_cast<HeroId>(index);
     m_portrait = static_cast<unsigned char>(index);
     m_sex = initialSex;
     m_townSpecialGrantedMask.reset();
@@ -1094,7 +1099,7 @@ void hero::initialize(const HeroExtra* setup)
     m_y = setup->m_location.m_y;
     m_z = setup->m_location.m_z;
     m_owner = setup->m_owner;
-    m_id = setup->m_id;
+    m_id = static_cast<HeroId>(setup->m_id);
     m_heroClass = g_heroTraits[setup->m_id].m_heroClass;
 
     m_patrolRadius = setup->m_patrolRadius;
@@ -1722,9 +1727,10 @@ int hero::heroFn004D9B30(int artifact)
 // into the stack type_artifact - and `assembled` is computed FIRST even
 // though the record is used first (94.17 against 85.75 for the other
 // order, and 93.66 for the semantically wrong `record(assembled, -1)`).
-// Residual (94.2%): prologue instruction SCHEDULING only - the same
-// instructions, permuted around the two pushes - plus the unwind-table
-// addend in the frame push, which is a relocation and not a state count.
+// Mac 0xf5c38..0xf5c40 constructs the component record solely for the
+// description query; no later operation uses it. Keeping that record as the
+// temporary receiver instead of a named local recovers the retail prologue
+// schedule and all 27 blocks, ten calls and relocations: 94.17 -> 100%.
 VA(0x004d9cc0, 0x200)
 MAC_ADDRESS(0x0f5bf0, 0x14c)  // retail body + settled arity; old DC bracket retired
 int hero::heroFn004D9CC0(int artifact)
@@ -1732,9 +1738,10 @@ int hero::heroFn004D9CC0(int artifact)
     int assembled =
         g_combinationArtifacts[g_artifactTraits[artifact].m_targetCombo]
             .m_artifactId;
-    // Complete's combination prompt receives an integer id; its record constructor retains the older DC TArtifact API.
-    type_artifact record(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
-    std::string text = record.getDescription();
+    // Complete's prompt ID crosses the canonical DC-typed record boundary.
+    std::string text =
+        type_artifact(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
+            .getDescription();
     text += "\n\n";
     // Mac retail retains the text vector's indexer call here.
     text += formatString((*g_generalText)[GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT],
@@ -2984,19 +2991,25 @@ void hero::heroFn004DC070(long slot)
 // is flat at 97.4237%. Binding the combination bitset instead gives 83.2994%;
 // repeating the global player lookup gives 72.5198%. Neither recovers the
 // entry register choices or first bitset-write scheduling.
+// Native comboType ownership and the second canonical artifact lookup
+// recover all 25 retail blocks and nine calls: 97.4068 -> 100%.
 VA(0x004dc100, 0x217)
 MAC_ADDRESS(0x0f86ec, 0x1e0)  // retail-only, hero member, ret 4
 void hero::heroFn004DC100(long slot)
 {
     playerData& player = g_game->m_players[m_owner];
-    int artifactId = m_equipped[slot].m_artifactId;
+    // Mac 0xf8734 owns comboType through its proxy write, then
+    // 0xf8770..0xf8780 repeats the canonical equipped-record lookup.
+    int comboType =
+        g_artifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_comboType;
 
-    if (g_artifactTraits[artifactId].m_comboType != -1) {
-        player.m_assembledCombinations[g_artifactTraits[artifactId].m_comboType] = true;
+    if (comboType != -1) {
+        player.m_assembledCombinations[comboType] = true;
         return;
     }
 
-    int targetCombo = g_artifactTraits[artifactId].m_targetCombo;
+    int targetCombo =
+        g_artifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_targetCombo;
     if (targetCombo == -1)
         return;
     if (player.m_assembledCombinations[targetCombo])
@@ -5395,7 +5408,7 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
                 g_artifactTraits[artifact.m_artifactId].m_targetCombo;
             if (targetCombo != -1 && m_owner >= 0 && m_owner < 8) {
                 if (heroFn004DBE80(targetCombo)) {
-                    playerData& player = g_game->m_players[m_owner];
+                    playerData& player = *getPlayer();
                     if (announce) {
                         if (m_owner == g_game->getLocalPlayerGamePos() &&
                             !player.m_assembledCombinations[targetCombo]) {
@@ -5409,9 +5422,9 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
                             if (g_windowManager->m_dialogReturn ==
                                 DIALOG_RETURN_ACCEPT)
                                 heroFn004DBF30(targetCombo, -1);
-                        } else if (!player.m_isHuman) {
-                            // Retail reads the byte; playerData::isHuman is
-                            // an out-of-line game.cpp body (called: 94.67%).
+                        } else if (!player.isHuman()) {
+                            // Mac 0x103f74 expands the canonical human-query byte body.
+                            // Keep its helper and the guarded owner lookup.
                             heroFn004DBF30(targetCombo, -1);
                         }
                     }

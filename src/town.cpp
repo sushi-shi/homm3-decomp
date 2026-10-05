@@ -286,11 +286,11 @@ int town::load(TAbstractFile* infile, int saveVersion)
     if (infile->read(m_mageGuildSpellCounts, sizeof(m_mageGuildSpellCounts))
         < sizeof(m_mageGuildSpellCounts))
         return -1;
-    if (infile->read(&m_built, sizeof(m_built)) < sizeof(m_built))
+    if (infile->read(&m_populationMask, sizeof(m_populationMask)) < sizeof(m_populationMask))
         return -1;
-    if (infile->read(&m_active, sizeof(m_active)) < sizeof(m_active))
+    if (infile->read(&m_fullBuildingMask, sizeof(m_fullBuildingMask)) < sizeof(m_fullBuildingMask))
         return -1;
-    if (infile->read(&m_available, sizeof(m_available)) < sizeof(m_available))
+    if (infile->read(&m_legalBuildings, sizeof(m_legalBuildings)) < sizeof(m_legalBuildings))
         return -1;
     if (infile->read(m_mageGuildSpells, sizeof(m_mageGuildSpells))
         < sizeof(m_mageGuildSpells))
@@ -413,11 +413,11 @@ int town::save(TAbstractFile* outfile)
     if (outfile->write(m_mageGuildSpellCounts, sizeof(m_mageGuildSpellCounts))
         < sizeof(m_mageGuildSpellCounts))
         return -1;
-    if (outfile->write(&m_built, sizeof(m_built)) < sizeof(m_built))
+    if (outfile->write(&m_populationMask, sizeof(m_populationMask)) < sizeof(m_populationMask))
         return -1;
-    if (outfile->write(&m_active, sizeof(m_active)) < sizeof(m_active))
+    if (outfile->write(&m_fullBuildingMask, sizeof(m_fullBuildingMask)) < sizeof(m_fullBuildingMask))
         return -1;
-    if (outfile->write(&m_available, sizeof(m_available)) < sizeof(m_available))
+    if (outfile->write(&m_legalBuildings, sizeof(m_legalBuildings)) < sizeof(m_legalBuildings))
         return -1;
     if (outfile->write(m_mageGuildSpells, sizeof(m_mageGuildSpells))
         < sizeof(m_mageGuildSpells))
@@ -603,8 +603,8 @@ town::town()
     m_mapY = 0;
     m_mapZ = 0;
     m_visitingHeroId = -1;
-    m_built = g_bitNumber[HALL_VILLAGE_ID];
-    m_active = m_built;
+    m_populationMask = g_bitNumber[HALL_VILLAGE_ID];
+    m_fullBuildingMask = m_populationMask;
     m_mageLevel = 0;
     m_owner = -1;
     m_garrisonHeroId = -1;
@@ -787,12 +787,12 @@ void town::removeGarrisonHero()
 // adventure-view latches only when the hidden hero was both current and
 // locally owned. Dreamcast splits the exchange over lines 1115-1117; the
 // precise source spelling is unknown because no temporary survives CodeView.
-// Retail requires `std::swap`'s reference boundary: a natural temporary plus
+// std::swap's reference boundary reproduces retail's reloads: a temporary plus
 // two assignments makes VC6 retain the already-loaded ids and falls to
 // 88.92481%. The coherent base-first CMCHideHero constructor leaves only its
-// caller-specific zero/id store schedule unmatched (97.77444%); reversing the
-// shared constructor closes this caller but contradicts netmsg.h:717-718 and
-// breaks exact playerData::add_garrison_hero, so that old 100% remains history.
+// caller-specific zero/id store schedule unmatched (97.77444%). The old exact
+// form flattened CMapChange construction into the derived constructor;
+// retain the native base-constructor boundary instead.
 VA(0x005be450, 0x1AC)
 DC_ADDRESS(0x166864, 0xea)
 MAC_ADDRESS(0x1b3910, 0x1ac)  // anchor-global
@@ -802,6 +802,8 @@ MAC_ADDRESS(0x1b3910, 0x1ac)  // anchor-global
 // Removing the receiver alias (implicit/explicit this) or copy-initializing
 // the message adds no gain: four states, three reproduced objects, best
 // 97.7744%. The CFG matches; the constructor scratch-register schedule differs.
+// Base-first member initialization and body assignment also emit one object
+// across town/game; neither the line table nor codegen distinguishes them.
 void town::swapHeroes()
 {
     town* currentTown = this;
@@ -930,12 +932,12 @@ void town::setSpellsAvailable()
 }
 
 // E:\gamedcs\town.cpp:1226
-// Native review at 85.95%: DC types and helper calls agree. Reusing the
-// named short dwelling for both population paths is byte-flat under VC6
-// (two source states, reproduced). Retail's four recursive calls all target
-// this body (+0x2da/+0x2ec/+0x2fe/+0x310); shifted relocation pairing can
-// misreport them as unclaimed indirect calls. The remaining loop difference
-// holds building in the parameter slot and walks the horde table by address.
+// Keep the requested building separate from the installed result: upgrading
+// a horde changes the result, while population and later building checks
+// still use the request. Retail keeps the request in EDX and the result in
+// its dead parameter slot; Mac uses r4/r31 (0x1b3e50, 0x1b3fb0, 0x1b4074).
+// DC likewise copies r12 to r9 at 0x166c46. Restoring these two values
+// reproduces the full Windows body, including its four recursive calls.
 VA(0x005be930, 0x330)
 DC_ADDRESS(0x166c08, 0x2ce)
 MAC_ADDRESS(0x1b3e3c, 0x3a0)  // body (built-mask OR) + order-map
@@ -943,27 +945,28 @@ type_building_id town::createBuilding(type_building_id building)
 {
     // Dreamcast CodeView names this short local `dwelling`.
     short dwelling;
-    m_built |= g_bitNumber[building];
-    m_built &= ~s_includedBuildings[m_type][building];
+    type_building_id built = building;
+    m_populationMask |= g_bitNumber[building];
+    m_populationMask &= ~s_includedBuildings[m_type][building];
 
     for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
         dwelling = s_constHordeEffects[m_type][slot].m_dwelling;
         if (building == g_hordeBuildings[slot]) {
-            m_built &= ~g_bitNumber[DWELLING_0_ID + dwelling];
+            m_populationMask &= ~g_bitNumber[DWELLING_0_ID + dwelling];
             if (dwelling < TOWN_DWELLING_COUNT
                 && hasBuilding(DWELLING_0_UPG_ID + dwelling, false)) {
-                m_built &= ~g_bitNumber[building];
-                m_built &= ~g_bitNumber[DWELLING_0_UPG_ID + dwelling];
-                building = g_hordeBuildings[slot + 1];
-                m_built |= g_bitNumber[building];
+                m_populationMask &= ~g_bitNumber[building];
+                m_populationMask &= ~g_bitNumber[DWELLING_0_UPG_ID + dwelling];
+                built = g_hordeBuildings[slot + 1];
+                m_populationMask |= g_bitNumber[built];
             }
         }
         if (hasBuilding(g_hordeBuildings[slot], false)) {
             if (building == DWELLING_0_UPG_ID + dwelling) {
-                m_built &= ~g_bitNumber[building];
-                m_built &= ~g_bitNumber[g_hordeBuildings[slot]];
-                building = g_hordeBuildings[slot + 1];
-                m_built |= g_bitNumber[building];
+                m_populationMask &= ~g_bitNumber[building];
+                m_populationMask &= ~g_bitNumber[g_hordeBuildings[slot]];
+                built = g_hordeBuildings[slot + 1];
+                m_populationMask |= g_bitNumber[built];
             }
         }
     }
@@ -997,7 +1000,7 @@ type_building_id town::createBuilding(type_building_id building)
             break;
         }
     }
-    return building;
+    return built;
 }
 
 VA(0x005bec60, 0x173)
@@ -1014,9 +1017,9 @@ void town::destroyExtraCapitol()
             if (townId != m_id) {
                 town* otherTown = g_game->getTown(townId);
                 if (otherTown->isCapitol()) {
-                    m_built &= ~g_bitNumber[HALL_CAPITOL_ID];
-                    m_built |= g_bitNumber[HALL_CITY_ID];
-                    m_active &= ~g_bitNumber[HALL_CAPITOL_ID];
+                    m_populationMask &= ~g_bitNumber[HALL_CAPITOL_ID];
+                    m_populationMask |= g_bitNumber[HALL_CITY_ID];
+                    m_fullBuildingMask &= ~g_bitNumber[HALL_CAPITOL_ID];
 
                     NewmapCell* cell =
                         g_game->m_worldMap.cell(m_mapX, m_mapY, m_mapZ);
@@ -1038,9 +1041,13 @@ void checkEndGame(int forceWin);
 VA(0x005bede0, 0x427)
 DC_ADDRESS(0x166fc8, 0x202)
 MAC_ADDRESS(0x1b43ac, 0x420)  // anchor-global
-// Moving the result declaration after the fort/capitol snapshots and
-// grouping the special-effect guards did not recover the retained hasBuilding
-// call (six VC6 combinations, three objects). Keep the canonical helpers.
+// All 72 blocks and 18 retained calls agree; the 99.5794% residual is twelve
+// instruction rows in updateFullBuildingMask's expanded low/high-word loads.
+// Eight bool/byte snapshot and initialized/assigned result forms emit one
+// identical object. The register model agrees at every first definition;
+// retain the canonical helper while investigating its later allocation.
+// Reversing both hasBuilding membership operands is also byte-identical
+// in town and its retained ai_player body.
 type_building_id town::buildBuilding(int buildingId,
                                      unsigned char setBuiltFlag,
                                      unsigned char applySpecialEffect)
@@ -1117,7 +1124,7 @@ void town::updateShipyard()
         if (!cell->m_isTrigger
             || (cell->m_type != BOAT && cell->m_type != HERO)) {
             if (hasBuilding(DOCK_WITH_BOAT_ID, false)) {
-                m_built &= ~g_bitNumber[DOCK_WITH_BOAT_ID];
+                m_populationMask &= ~g_bitNumber[DOCK_WITH_BOAT_ID];
                 updateFullBuildingMask();
             }
         } else if (!(hasBuilding(DOCK_WITH_BOAT_ID, true))) {
@@ -1178,16 +1185,18 @@ void town::calcNumLevelArchers(int* numArchers, int* archerLevel)
     *numArchers = level;
 }
 
+// DC 1503/1504 and Mac 0x1b4c20 preserve castle, citadel, then zero.
+// A conditional result keeps the retained body exact while allowing the
+// nested hasBuilding expansion in getGrowthRate (VC6 cost 72 versus 84).
 VA(0x005bf570, 0x86)
 DC_ADDRESS(0x1673dc, 0x7c)
 MAC_ADDRESS(0x1b4c20, 0x8c)
 long town::getCastleGrowthBonus(TCreatureType creature) const
 {
-    if (hasBuilding(CASTLE_CASTLE_ID, false))
-        return g_creatureTypeTraits[creature].m_growthRate;
-    if (hasBuilding(CASTLE_CITADEL_ID, false))
-        return g_creatureTypeTraits[creature].m_growthRate / 2;
-    return 0;
+    return hasBuilding(CASTLE_CASTLE_ID, false)
+        ? g_creatureTypeTraits[creature].m_growthRate
+        : hasBuilding(CASTLE_CITADEL_ID, false)
+            ? g_creatureTypeTraits[creature].m_growthRate / 2 : 0;
 }
 
 // Dreamcast town.cpp:1517 names HasBuilding for the first hall check;
@@ -1326,20 +1335,22 @@ long town::getLegionBonus(long dwelling) const
     return bonus;
 }
 
-// The Mac PEF calls its assembled-Legion helper at 0:0x1b5060 here;
-// CodeWarrior preserves that boundary. Windows expands the same helper
-// before its retained getLegionBonus call. The assembled getter only reads
-// town state, so its const qualifier is inferred from this proven const caller
-// (DC get_growth_rate; Mac call at 0:0x1b54f8). No original getter signature
-// survives; the old generated Windows label did not prove a non-const API.
-// The connected const declaration/direct call reproduces the same VC6 bytes
-// for both bodies; getGrowthRate remains 90% with the helper boundary intact.
-// The restored call shifts VC6's hasBuilding inlining: one additional call
-// remains in this candidate. Keep the source helper boundary while that
-// compiler decision is investigated. Accumulating the castle contribution
-// in the helper's growth local is byte-flat for both this caller and its
-// exact retained helper. An early-return sum lowers them to 80.97/85.18%;
-// explicit short conversion of getGeneratorBonus is also byte-flat.
+// Complete applies castle growth before Legion bonuses (retail +0x69,
+// Mac 0x1b54dc..0x1b5508); DC's older 1663/1669 order is different.
+// Keep the canonical castle, assembled-Legion and individual-Legion calls.
+// The assembled getter's const qualifier is inferred from this const caller;
+// both retained bonus helpers remain exact with that connected interface.
+//
+// The conditional return in getCastleGrowthBonus reduces its VC6 cost from
+// 84 to 72. Its nested hasBuilding then receives 68 instead of 53 budget
+// units, enough for the 62-unit body: getGrowthRate reaches 97.8947%.
+// All 28 blocks and three retained calls agree. The six residual instruction
+// rows are the generator-bonus load width and associated operand scheduling.
+// Twelve promoted/narrow/named bonus consumers and eight Grail return forms
+// do not close that tail; the register model finds no transposed local pair.
+// Thirty-six caller/assembled-helper lifetime forms alone also gave no gain.
+// Nine consistent short-contribution forms and the DC-proven long generator
+// storage likewise leave the tail unchanged; retain the recovered field type.
 VA(0x005bfb60, 0x266)
 DC_ADDRESS(0x167748, 0xfe)
 MAC_ADDRESS(0x1b5414, 0x1fc)
@@ -1768,10 +1779,10 @@ DC_ADDRESS(0x168494, 0x6e)
 MAC_ADDRESS(0x1b66f4, 0x104)
 void town::updateFullBuildingMask()
 {
-    m_active = m_built;
+    m_fullBuildingMask = m_populationMask;
     for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
         if (hasBuilding(i, false))
-            m_active |= s_includedBuildings[m_type][i];
+            m_fullBuildingMask |= s_includedBuildings[m_type][i];
     }
 }
 
@@ -1820,7 +1831,7 @@ unsigned char town::canEverBuild(int buildingId) const
         if (!(buildingId == HALL_CAPITOL_ID
               && g_game->m_players[m_owner].hasCapitol())) {
             __int64 requirements = g_hierarchyMask[m_type][buildingId];
-            if (((getBuildingMask() | m_available) & requirements) == requirements)
+            if (((getBuildingMask() | m_legalBuildings) & requirements) == requirements)
                 return 1;
         }
     }
@@ -1848,7 +1859,7 @@ __int64 town::getBuildableMask() const
             && (activeMask & requirements) == requirements)
             mask |= g_bitNumber[building];
     }
-    mask &= m_available;
+    mask &= m_legalBuildings;
     if (!canBuildDock())
         mask &= ~g_bitNumber[DOCK_ID];
     if (g_game->m_players[m_owner].hasCapitol())
@@ -1923,7 +1934,7 @@ DC_ADDRESS(0x1689ec, 0x22)
 MAC_ADDRESS(0x1b6de0, 0x40)
 unsigned char town::isLegalBuilding(type_building_id building) const
 {
-    return (g_bitNumber[building] & m_available) != 0;
+    return (g_bitNumber[building] & m_legalBuildings) != 0;
 }
 
 // Original: town::set_legal_buildings; town.cpp:2291
@@ -1931,7 +1942,7 @@ DC_ADDRESS(0x168a10, 0x3e)
 MAC_ADDRESS(0x1b6e20, 0x38)
 void town::setLegalBuildings(__int64 disabledBuildings)
 {
-    m_available = g_townEligibleBuildMask[m_type] & ~disabledBuildings;
+    m_legalBuildings = g_townEligibleBuildMask[m_type] & ~disabledBuildings;
 }
 
 // Original: town::is_disabled; town.cpp:2300

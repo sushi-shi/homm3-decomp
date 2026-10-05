@@ -1222,9 +1222,9 @@ public:
     // Original CreateBoat public encodes _NC: bool remote move, signed type.
     int createBoat(int x, int y, int z, int owner,
                    bool remoteMove, signed char type);  // 0x4bb250
-    int getNewHeroId(int playerPos, THeroClass excluded,
-                     unsigned char preferAlignment,
-                     THeroClass preferredClass);  // 0x4bb5e0
+    HeroId getNewHeroId(int playerPos, THeroClass excluded,
+                        bool preferAlignment,
+                        THeroClass preferredClass);  // 0x4bb5e0
     // Retail 0x486110, customcampaign.obj's own game member and
     // DoPreLoadCustomization's per-hero callee: the map's setup record for
     // `heroId` is copied wholesale onto a newly allocated hero of the same
@@ -1352,7 +1352,7 @@ public:
     // when the protocol is hotseat.
     void waitForPlayer(char* text, int gamePos);  // 0x4ca840
     int transmitSaveGame(int toWho, int thisPlayerDead,
-                         unsigned char inGame, unsigned char makeOrig);
+                         bool inGame, bool makeOrig);
     // DC game.cpp:10587 names the received-save body. Retail's transmit-init
     // handlers independently prove the five arguments and 0x4cbd40 entry.
     int receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
@@ -1402,7 +1402,7 @@ private:
 
 public:
     // 0x4bf780 (dc 0xaa7e0).
-    void validateVictoryLossConditions(unsigned char checkMapLocations);
+    void validateVictoryLossConditions(bool checkMapLocations);
     void giveTroopsToNeutralTowns();
     void giveTroopsToNeutralTown(int townId);  // 0x4bf570
     void setupOrigData();
@@ -1650,9 +1650,9 @@ int getTeam(int playerNum) const
     int getNumThievesGuilds(int whichPlayer);
 
 private:
-    unsigned char saveRecordedEvents(TAbstractFile* outfile);
-    // declarator (`?load_recorded_events@game@@AAA_NPAX@Z`, private,
-    unsigned char loadRecordedEvents(TAbstractFile* infile, int version);
+    // Original AAA_N publics prove private bool results for both helpers.
+    bool saveRecordedEvents(TAbstractFile* outfile);
+    bool loadRecordedEvents(TAbstractFile* infile, int version);
     // 0x4bcb30 (dc 0xa8144, E:\gamedcs\game.cpp:2975,
     // `?setup_shipyards@game@@AAAXXZ`). Clears all eight
     // players[i].shipyards and re-derives them by sweeping the map,
@@ -1674,6 +1674,15 @@ public:
         if (which == -1)
             return 0;
         return &m_heroes[which];
+    }
+
+    // Selection's two hero-detail owners expand an unguarded hero lookup
+    // (DC ProcessRightSelect lines 3244/3290; Mac 17a12c..17a14c and
+    // 17a308..17a328). These callers require a valid ID, unlike getHero's
+    // nullable -1 lookup. The original helper spelling is unknown.
+    hero& getHeroReference(int which)
+    {
+        return m_heroes[which];
     }
 
     // DC `game::GetCurrHero` (E:\gamedcs\Game.h:991) and

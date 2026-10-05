@@ -1519,10 +1519,12 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 4:
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 5:
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 6: {
+                // Mac 0x137a28 and retail compute this before the hero query.
+                int armySlot = codeY - 5;
                 hero* garrison = g_game->getHero(currTown->m_garrisonHeroId);
                 g_game->viewArmy(
                     currTown->getArmy(),
-                    codeY - 5, 0, currTown, 119, 20,
+                    armySlot, 0, currTown, 119, 20,
                     !garrison || garrison->m_army.getNumArmies() > 1,
                     rightMouse);
                 if (!rightMouse)
@@ -1544,13 +1546,16 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             case OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID + 3:
             case OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID + 4:
             case OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID + 5:
-            case OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID + 6:
+            case OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID + 6: {
+                // Mac 0x137acc likewise computes the slot before GetHero.
+                int armySlot = codeY - 54;
                 g_game->viewArmy(
                     g_game->getHero(currTown->m_visitingHeroId)->m_army,
-                    codeY - 54, 0, currTown, 119, 20, 1, rightMouse);
+                    armySlot, 0, currTown, 119, 20, 1, rightMouse);
                 if (!rightMouse)
                     setupDynamicStuff(1, 1);
                 break;
+            }
 
             case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID:
             case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 1:
@@ -1669,8 +1674,11 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
         }
     }
 
-    // Residual (94.73%): the 118-block CFG, 56 branches and emitted call
-    // sequence agree; the first delta is register allocation in the initial
+    // Native early town-army slot ownership raises 94.70% to 94.81%;
+    // retain the direct dismissal predicate. A bool carrier introduces a
+    // byte stack home and a different join (93.17%), unlike retail EAX 0/1.
+    // Residual: the 118-block CFG and 56 branches agree; the first delta is
+    // register allocation in the initial
     // overview-row calculation. Declaration-order sweeps were flat or worse.
     // Mutating iSlot scored higher only by adding a retail-absent block and
     // four NormalDialog calls; a scoped pointer-bit union scored 94.22%.
@@ -1740,11 +1748,14 @@ TOverviewWindow::TOverviewWindow()
         m_widgets.push_back(new iconWidget(
             739, i * 57 + 47, 50, 50, i + 40, "FlagPort.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-        m_flaggableCountWidgets.push_back(new textWidget(
+        // Both appends reuse the allocation result: Mac 1385fc/138670,
+        // retail [-0x24]. The second vector does not read the first back.
+        textWidget* countWidget = new textWidget(
             739, i * 57 + 81, 50, 16, "",
             "smalfont.fnt", font::PRIMARY, -1,
-            font::RIGHT_JUSTIFIED, 0, 8));
-        m_widgets.push_back(m_flaggableCountWidgets.back());
+            font::RIGHT_JUSTIFIED, 0, 8);
+        m_flaggableCountWidgets.push_back(countWidget);
+        m_widgets.push_back(countWidget);
     }
 
     // SEVEN resource icons, not six (found 2026-09-05 by the tree-wide

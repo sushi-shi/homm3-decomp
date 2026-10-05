@@ -705,7 +705,8 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 VA(0x00474ba0, 0x4A)
 DC_ADDRESS(0x06bebc, 0x1b4)
 MAC_ADDRESS(0x082ebc, 0x64)  // anchor-callee IsQuickCombat + current-army forwarding
-unsigned char combatManager::isComputerAction()
+// Original is_computer_action@@AAA_NXZ proves a private bool predicate.
+bool combatManager::isComputerAction()
 {
     if (isQuickCombat())
         return 1;
@@ -753,7 +754,9 @@ unsigned char combatManager::isComputerAction()
 // Use the controlling player, which can change when a stack is hypnotized.
 VA(0x00474bf0, 0x188)
 MAC_ADDRESS(0x082f20, 0x28c)  // anchor-global + retained nullary caller, retail-only overload
-unsigned char combatManager::isComputerAction(const army* currentArmy)
+// The retained wrapper forwards this worker directly without normalization;
+// Complete preserves the bool result domain in the extracted policy worker.
+bool combatManager::isComputerAction(const army* currentArmy)
 {
     if (isQuickCombat())
         return 1;
@@ -2507,7 +2510,8 @@ void combatManager::processFirstAid(army* currentArmy)
 VA(0x00478d80, 0x1054)
 DC_ADDRESS(0x06f984, 0x82a)
 MAC_ADDRESS(0x0871d0, 0xb3c)  // anchor-callee exhaustive + single-fn gap
-int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
+// Original ProcessNextAction@@QAAHAAUmessage@@_N proves automaticTurn bool.
+int combatManager::processNextAction(message& msg, bool automaticTurn)
 {
     if (!isQuickCombat()) {
         m_combatWindow->clearCombatMessages();

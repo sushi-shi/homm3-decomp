@@ -138,11 +138,12 @@ enum EGameTransmitLimits {
 
 class CNetMsg {
 public:
+    // DC class records retain the enum subtype and unsigned wire fields.
     int m_from;
-    int m_dpidFrom;
-    int m_subType;
+    unsigned long m_dpidFrom;
+    eRS_Messages m_subType;
     unsigned long m_size;
-    int m_uncompressedSize;
+    unsigned long m_uncompressedSize; // Original: m_UncompressedSize.
 
     VA(0x004f2930, 0x23)  // anchor-callee + exact body, retail-only slot
     DC_ADDRESS(0x02018c, 0x2a)
@@ -155,9 +156,10 @@ public:
         m_uncompressedSize = 0;
     }
 
-    // Original: CNetMsg::IsCompressed; netmsg.h:179
+    // Original: CNetMsg::IsCompressed; netmsg.h:179. The native public
+    // ?IsCompressed@CNetMsg@@QAA_NXZ proves bool despite lowered CV 0x20.
     DC_ADDRESS(0x11f5f4, 0x16)
-    unsigned char isCompressed()
+    bool isCompressed()
     {
         return m_uncompressedSize && m_uncompressedSize != m_size;
     }
@@ -808,14 +810,10 @@ class CMCHideHero : public CMapChange {
 public:
     int m_heroId;
 
-    // Dreamcast netmsg.h:717-718 proves the CMapChange construction boundary
-    // is followed by a distinct heroId assignment statement. Retail lowers
-    // this coherently in add_garrison_hero. Retail SwapHeroes schedules the
-    // same store early with the id in ECX; the present coherent caller instead
-    // assigns it EAX and zeros through ECX. That compiler-state residual cannot
-    // justify reversing the attested source order.
-    // Raw CodeView names the T_INT4 parameter `heroId`; the member-shadowing
-    // body assignment is the distinct netmsg.h:718 statement.
+    // DC netmsg.h:717-718 calls CMapChange before storing the hero ID;
+    // CodeView records the int parameter heroId. The line attribution does
+    // not distinguish a member initializer from a body assignment. Both
+    // base-first forms emit identical Windows code in game and town.
     DC_ADDRESS(0x0bd3a0, 0x30)
     CMCHideHero(int heroId)
         : CMapChange(RS_HIDE_HERO, sizeof(CMCHideHero))

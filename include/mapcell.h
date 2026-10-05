@@ -784,7 +784,7 @@ public:
     bool wagonHasArtifact() const;
     bool wagonIsFull() const;
     void setWagon(EGameResource resource, short amount);
-    void setWagon(int artifact);
+    void setWagon(TArtifact artifact);
     void emptyTomb();
     TArtifact getTombArtifact() const;
     unsigned char tombIsFull() const;
@@ -1867,10 +1867,11 @@ inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
 // Mac randomizeWagon 0xd67f4..0xd6820 expands the same four field stores.
 // These named stores retain the exact 0x4c2390 body; the packed-mask
 // spelling made VC6 expand every use and omit the standalone helper.
+// Original public ?SetWagon@ExtraInfoUnion@@QAAXW4TArtifact@@@Z fixes the domain.
 // E:\gamedcs\MapCell.h:1185
 VA(0x004c2390, 0x21)
 DC_ADDRESS(0x0bcb3c, 0x58)
-inline void ExtraInfoUnion::setWagon(int artifact)
+inline void ExtraInfoUnion::setWagon(TArtifact artifact)
 {
     m_wagonInfo.m_artifact = artifact;
     m_wagonInfo.m_full = 1;

@@ -15,6 +15,16 @@
 // address misc.obj touches lands inside it - which is what makes them
 // MEMBERS and not neighbours.
 
+// Original DC windowConfig (type 0x3ee5), embedded as configStruct::wc.
+// Its four int fields own the main-game window's menu, position and mode.
+struct windowConfig {
+    int m_showMenu;
+    int m_x;
+    int m_y;
+    int m_fullScreen;
+};
+SIZE(windowConfig, 16);
+
 struct configStruct {
     // Original DC member: int walkSpeed[2]. Index 0 is "Computer Walk
     // Speed" and 1 is "Walk Speed"; animateMove indexes it with the local
@@ -39,10 +49,7 @@ struct configStruct {
     int m_combatBallista;           // +0x48  "Combat Ballista"
     int m_combatFirstAidTent;       // +0x4c  "Combat First Aid Tent"
     int m_binkVideo;                // +0x50  "Bink Video"
-    int m_mainGameShowMenu;         // +0x54  "Main Game Show Menu"
-    int m_mainGameX;                // +0x58  "Main Game X"
-    int m_mainGameY;                // +0x5c  "Main Game Y"
-    int m_mainGameFullScreen;       // +0x60  "Main Game Full Screen"
+    windowConfig m_windowConfig;    // +0x54  original wc; four ints through +0x60
     int m_showCombatGrid;           // +0x64  "Show Combat Grid"
     int m_showCombatMouseHex;       // +0x68  "Show Combat Mouse Hex"
     int m_combatShadeLevel;         // +0x6c  "Combat Shade Level"
@@ -50,7 +57,8 @@ struct configStruct {
     char m_dosDigitalDriver[13];    // +0x74
     char m_dosMidiDriver[13];       // +0x81
     char m_dontTryRedbook;          // +0x8e
-    unsigned char m_firstInstall;      // +0x8f  boolean checked/defaulted here
+    // DC configStruct::bFirstInstall (+0x8f) is primitive 0x70, plain char.
+    char m_firstInstall;            // +0x8f  masked to one bit by checkConfigFile
     char m_name[4];                 // +0x90  "Unique System ID"
     int m_combatSpeed;              // +0x94  "Combat Speed"
     char m_rcFile[13];              // +0x98  "RMT%sRC.BIN" destination

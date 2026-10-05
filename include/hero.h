@@ -405,12 +405,10 @@ public:
     // AI_auto_combat (0x4275a6/0x4275b6) writes the simulated mana back
     // with 16-bit stores.
     short m_mana;  // +0x18
-    // The hero's own id - the index of this record in gpGame->heroes.
-    // Byte-proven a full DWORD by town.obj: town::remove_garrison_hero
-    // (0x5be407) and town::SwapHeroes both read `mov edx,[hero+0x1a]`
-    // and feed it straight back into the 1170-stride heroes index, and
-    // town::View (0x5be3fa) pushes it to advManager::SetHeroContext.
-    int m_id;  // +0x1a
+    // Original hero::id is public THeroID in four DC class records
+    // (0x1a6e/0x4d63/0x6311/0x71dc). The enum's underlying int and the
+    // Windows town callers' dword loads agree with this packed offset.
+    HeroId m_id;  // +0x1a
     // +0x1e. HeroFn_004D8B30 copies the setup record's +0x08 dword
     // straight in here, which is the only retail body that touches these
     // four bytes at all - hence a full DWORD and hence a member rather

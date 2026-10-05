@@ -666,11 +666,19 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
     // DC records powX/powY, numFrames, iFrameColor, ulx and hex_off as int.
     // Restoring the latter four local types is Windows byte-flat at 99.18%.
     // Delaying the step initializer until after facing selection is worse.
-    // Current 99.1724% controls: moving offset declarations ahead of step,
+    // Earlier 99.1724% controls: moving offset declarations ahead of step,
     // naming a facing snapshot, and narrowing powX/powY to the effect scope
     // are byte-flat. The residual starts with the count-box step/facing
     // scratch-register assignment, then the karma denominator's spill slot
     // and effect-coordinate register selection; branch flows remain exact.
+    // DC 0x44d0c and Mac 0x4a570 bypass coordinate assignments outside
+    // placement modes 0..3. Removing the invented powX = powY = x fallback
+    // raises Windows 99.1724 -> 99.5839%; the whole effect-placement tail,
+    // including retail's two recycled [ebp+8] default loads, now agrees.
+    // Known army-target effects use modes 0..3; other modes describe hex,
+    // projectile or tiled effects. The generic API does not enforce that
+    // domain, so malformed army-effect coordinates remain unspecified.
+    // Keep the native switch rather than inventing a fallback initialization.
     int powX;
     int powY;
     if (g_combatManager->m_battleOver != 0)
@@ -860,18 +868,6 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
                 if (m_facing == 0)
                     powX -= g_combatManager->m_powSprite->getWidth();
                 powY = midY() - g_combatManager->m_powSprite->getHeight() / 2;
-                break;
-            default:
-                // Retail reads the recycled flags slot [ebp+8] for BOTH
-                // coordinates here. Mac 0x4a570 and DC 0x44d0c bypass all
-                // coordinate assignments for modes outside 0..3. The
-                // table's modes 4/15 serve hex, projectile and tiled effects;
-                // known army-target callers use 0..3, but the generic army
-                // effect API has no placement guard. Keep the retail fallback
-                // until its source contract is resolved; the other platforms'
-                // unassigned coordinates do not establish Windows behavior.
-                powX = x;
-                powY = x;
                 break;
             }
             g_combatManager->drawSpellEffect(
@@ -1134,34 +1130,16 @@ void army::walk(int direction, unsigned char endWalk,
         this->endWalk();
 }
 
-// E:\gamedcs\army.cpp:1171
-// One missile, from muzzle flash to impact: aim at the target stack's
-// hex (the two-hex center shift), play the ranged pose the
-// GetMissileStartingPosition search picks, then fly it - the Enchanter
-// resolves through spells.obj's 0x59fde0 instead, the Is(1u << 11) shooters
-// throw a DoBolt lightning (Arch Mage green, the eye/psychic family
-// violet), and everyone else gets the pixel flight ShootBallisticMissile
-// also uses: a Bitmap16Bit backing store grabbed and restored per step,
-// the update rect seeded from gCombatAreaLimits, clamped to
-// gCombatDrawLimits694f18, stepped dx/nframes at a
-// gCombatSpeedFactors-scaled 33ms beat. The /GX frame covers `saved`.
-// DC lines 1258/1259 read sprite width/height before the frame count at 1262.
-// Both Windows and Mac use (distance + 20) / 40 (signed multiply-high
-// 0x66666667 followed by a shift of 4), not the earlier /20 reconstruction.
-// DC line 1322 calls the Bitmap16Bit overload of CSprite::Draw; its ordinary
-// wrapper reproduces Windows' argument expansion. These three corrections
-// reach Windows 100% while retaining all bitmap and rectangle helpers.
-// The saved bitmap's Draw/Grab wrappers (DC1303/1317 and the final restore)
-// also retain Windows 100%; keep their accessors nested in those helpers.
-// Mac 0x4b008 expands the owning-side load before MarkCreatureEffect's
-// army/byte-row strides, as in doAttack and attackWall. Restore the same
-// canonical GetOwningSide call. With the native bool predicates, Windows
-// measures 95.1424 -> 95.1277%; the accessor alone moves Mac 31.8986 ->
-// 31.5448%. Removing the outer flight guard is Windows-flat but lowers
-// Mac to 30.4038%; that separate loop probe is not retained. All other
-// available army pairs hold. Both rectangle updates already expand to
-// UpdateScreen; the remaining instructions and internal switch reference
-// differ despite all 52 block flows and 25 branches agreeing.
+// E:\gamedcs\army.cpp:1171. DC1258/1259 reads sprite dimensions before
+// computing the flight-frame count. Windows and Mac use (distance + 20)/40.
+// The DC1252..1348 projectile scope owns its saved bitmap and update bounds;
+// Mac0x4afa0 likewise joins the Enchanter, ray and projectile arms at exit.
+// Keep the corresponding if/else branches and the bitmap/sprite wrappers
+// (DC1303/1317/1322), rectangle Include/Clip and by-value update helpers.
+// Mac0x4b008 also expands getOwningSide before markCreatureEffect.
+// Residual95.1085%: all52 block flows and25 branches agree; rectangle/target
+// scratch placement and the internal switch reference still differ.
+// Nine const-pixel-address/mode-scope combinations preserve that score.
 VA(0x0043f2c0, 0x63B)
 DC_ADDRESS(0x0453c8, 0x4d8)
 MAC_ADDRESS(0x04afa0, 0x68c)  // MAC_ABSTRACTION_FROM(tokens1:1b8626a2ce74,31.8986): restore canonical getOwningSide before markCreatureEffect instead of a direct owning-side field load.
@@ -1207,9 +1185,7 @@ void army::animateMissile(army* armyToAttack)
 
     if (m_creatureType == ARMY_CREATURE_ENCHANTER) {
         g_combatManager->unnamed59FDE0(startX, startY, armyToAttack);
-        return;
-    }
-    if (is(creatureShootsRay)) {
+    } else if (is(creatureShootsRay)) {
         GameTime::delay(static_cast<long>(
             g_combatSpeedFactors[g_config.m_combatSpeed] * 115.0f));
         long color;
@@ -1231,59 +1207,58 @@ void army::animateMissile(army* armyToAttack)
                                 5, 4, color, 0, 0,
                                 arrowtraveldist / 15 + 15, 1, 0, 10,
                                 0);
-        return;
-    }
-
-    int width = m_missileIcon->getWidth();
-    int height = m_missileIcon->getHeight();
-
-    int nframes = (arrowtraveldist + 20) / 40;
-    int stepX;
-    int stepY;
-    if (nframes > 0) {
-        stepX = deltaX / nframes;
-        stepY = deltaY / nframes;
     } else {
-        stepX = deltaX;
-        stepY = deltaY;
-    }
-    int x = startX - width / 2;
-    int y = startY - height / 2;
+        int width = m_missileIcon->getWidth();
+        int height = m_missileIcon->getHeight();
 
-    Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
-    const int missileperiod = static_cast<int>(
-        g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
-
-    long frame = 0;
-    if (nframes > 0) {
-        for (; frame < nframes; frame++) {
-            unsigned long nextFrameTime =
-                GameTime::get() + missileperiod;
-            if (frame != 0) {
-                saved.draw(0, 0, width, height,
-                           g_windowManager->m_screenBitmap, x, y, false);
-                // Mac 0x4b3f4 constructs and copies the rectangle value.
-                updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
-                x += stepX;
-                y += stepY;
-            }
-            saved.grab(g_windowManager->m_screenBitmap, x, y);
-            m_missileIcon->draw(0, missileFrame, 0, 0, width, height,
-                              g_windowManager->m_screenBitmap, x, y,
-                              targetX < startX, 1);
-            // DC army.cpp:1326-1327 constructs this rectangle, then calls
-            // SLimitData::Include and Clip; VC6 expands both methods.
-            updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
-            updateArea.clip(g_combatDrawLimits);
-            // DC army.cpp:1335/1336 retains the by-value extent calls.
-            if (!g_combatManager->scrollTo(updateArea, true, true, true))
-                g_combatManager->updateCombatArea(updateArea);
-            GameTime::delayTil(nextFrameTime);
+        int nframes = (arrowtraveldist + 20) / 40;
+        int stepX;
+        int stepY;
+        if (nframes > 0) {
+            stepX = deltaX / nframes;
+            stepY = deltaY / nframes;
+        } else {
+            stepX = deltaX;
+            stepY = deltaY;
         }
+        int x = startX - width / 2;
+        int y = startY - height / 2;
+
+        Bitmap16Bit saved(width, height);
+        TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
+        const int missileperiod = static_cast<int>(
+            g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
+
+        long frame = 0;
+        if (nframes > 0) {
+            for (; frame < nframes; frame++) {
+                unsigned long nextFrameTime =
+                    GameTime::get() + missileperiod;
+                if (frame != 0) {
+                    saved.draw(0, 0, width, height,
+                               g_windowManager->m_screenBitmap, x, y, false);
+                    // Mac 0x4b3f4 constructs and copies the rectangle value.
+                    updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
+                    x += stepX;
+                    y += stepY;
+                }
+                saved.grab(g_windowManager->m_screenBitmap, x, y);
+                m_missileIcon->draw(0, missileFrame, 0, 0, width, height,
+                                  g_windowManager->m_screenBitmap, x, y,
+                                  targetX < startX, 1);
+                // DC army.cpp:1326-1327 constructs this rectangle, then calls
+                // SLimitData::Include and Clip; VC6 expands both methods.
+                updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
+                updateArea.clip(g_combatDrawLimits);
+                // DC army.cpp:1335/1336 retains the by-value extent calls.
+                if (!g_combatManager->scrollTo(updateArea, true, true, true))
+                    g_combatManager->updateCombatArea(updateArea);
+                GameTime::delayTil(nextFrameTime);
+            }
+        }
+        saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap, x, y, false);
+        g_combatManager->updateCombatArea(x, y, width, height);  // DC army.cpp:1348
     }
-    saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap, x, y, false);
-    g_combatManager->updateCombatArea(x, y, width, height);  // DC army.cpp:1348
 }
 
 // E:\gamedcs\army.cpp:1356
@@ -2970,41 +2945,16 @@ double army::computeDefenderDamageReduction(bool isShooting) const
     return reduction;
 }
 
-// RETAIL-ONLY: UNNAMED in the DC dump, the HD name map and IDA alike, and
-// its two callers are both in ai_tactical - get_attack_skill_value
-// (0x437800) and get_defense_skill_value (0x438910), each asking what a
-// hypothetical stack of ours would do to a target. Four stack arguments
-// (ret 0x10); it runs compute_attacker_bonus, then
-// ComputeAttackerDamageReduction, then the defender's own shield /
-// petrify / hero-defense-factor chain, and floors the answer at 1. It is
-// NOT DamageEnemy: that row takes (army*, int*, int*, bool) on the DC
-// roster and calls ComputeBaseDamage / adjust_damage / Damage, none of
-// which appear here. Name declared in army.h as a bootstrap invention.
-
-// THE DEFENDER'S WHOLE CHAIN IS ComputeDefenderDamageReduction INLINED,
-// which is what identifies the tail: the +0x208/+0x4bc and
-// +0x204/+0x4b8 shield pair, the +0x2b0 petrify halving and the
-// heroes[get_controlling_side()] defense factor arrive here in exactly
-// that body's order, including its inlined `1 - combatSide` hypnotize
-// flip. Retail keeps an out-of-line copy at 0x443d90 and expands it
-// here - /Ob2 on a same-TU body defined above the call site.
-
-// The attacker's two reductions are NOT symmetric, and the byte order
-// says why: ComputeAttackerDamageReduction is CALLED and multiplies
-// `reduction * amount` (the double is the left operand, the int is
-// filed into a temp and multiplied in), while the defender's inlined
-// factor multiplies `amount * factor` the other way round. Both
-// orientations are transcribed as retail has them.
-
-// `amount` is assigned back into its own parameter slot [ebp+0xc]
-// three times over, so the source updates the parameter rather than
-// introducing locals.
-// A 17-state original-damage capture family (two emitted objects) also
-// does not improve 98.5227%: int/long captures, const qualifiers, block
-// lifetimes and return-then-add all leave the add-register choice unresolved.
-// The natural `amount += attackerBonus(...) + defenderBonus(...)` grouping
-// also compiles to the same 98.5227% Windows body. Mac still retains the
-// defender-bonus call; keep both canonical calls while resolving allocation.
+// Complete-only damage estimate used by the two ai_tactical skill-value
+// helpers. Its original name is unknown; the DC DamageEnemy interface and
+// helper sequence describe a different operation.
+// Mac 0x4fdd0..0x4fde4 keeps the attacker-adjusted result separate while
+// passing the original amount to computeDefenderDamageBonuses. That result
+// continues through both reductions and the minimum-one clamp. VC6 reuses
+// the dead amount parameter's stack slot for this distinct value; the stores
+// alone do not prove assignments to the source parameter. This lifetime
+// model reproduces all 257 Windows bytes while retaining both bonus calls.
+// The two reduction products keep their evidenced operand orientation.
 VA(0x00443e30, 0x101)
 MAC_ADDRESS(0x04fd8c, 0xf4)  // anchor-callee (ai_tactical's two skill-value
                        // functions) + arity ret 0x10, retail-only slot
@@ -3016,29 +2966,16 @@ long army::getEstimatedDamage(const army* target, long amount,
 {
     if (!target)
         return 0;
-    // Residual (98.5227%): ONE instruction pair. Retail accumulates
-    // INTO the call's return register (`add eax, ecx` /
-    // `mov [amount], eax`); our C2 loads `amount` into ECX and
-    // accumulates the other way (`add ecx, eax` / `mov [amount], ecx`).
-    // Everything else in the body is byte-identical and the remaining
-    // diff rows are reloc names on unclaimed rows. VC6 CANONICALISES
-    // this add, so the written operand order does not reach it - tried
-    // and rejected: `amount += compute_attacker_bonus(...)` (identical
-    // bytes) and a named `long bonus` local, which is strictly worse
-    // (it sinks the add past the ComputeAttackerDamageReduction call
-    // and spills the bonus to a stack slot first).
-    // Mac retains this defender-bonus call; VC6 expands its zero return.
-    amount = computeAttackerBonus(amount, ranged, const_cast<army*>(target),
-                                    0, distance)
-             + amount
-             + target->computeDefenderDamageBonuses(amount);
-    amount = static_cast<long>(
-        computeAttackerDamageReduction(target, ranged) * amount);
-    amount = static_cast<long>(
-        amount * target->computeDefenderDamageReduction(ranged));
-    if (amount <= 0)
-        amount = 1;
-    return amount;
+    long damage = amount + computeAttackerBonus(
+        amount, ranged, const_cast<army*>(target), 0, distance);
+    damage += target->computeDefenderDamageBonuses(amount);
+    damage = static_cast<long>(
+        computeAttackerDamageReduction(target, ranged) * damage);
+    damage = static_cast<long>(
+        damage * target->computeDefenderDamageReduction(ranged));
+    if (damage <= 0)
+        damage = 1;
+    return damage;
 }
 
 VA(0x00443f40, 0x14F)
