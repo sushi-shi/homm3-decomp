@@ -9,7 +9,7 @@ use crate::{
     hero::{HeroId, HeroPool},
     identity::OwnerId,
     object::ObjectKind,
-    prototype::PrototypeId,
+    prototype::{PrototypeId, PrototypeRef},
     raw,
     rng::RetailRng,
     traits::{ArtifactCatalog, SpellCatalog, SpellId},
@@ -210,7 +210,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             .choose(def.kind(), def.subtype(), terrain, rng)
             .map(|prototype| SelectedTreasure {
                 definition,
-                prototype,
+                prototype: prototype.id(),
             }))
     }
     pub(super) fn require_arena(&self, objects: &ObjectArena) -> Result<(), PlacementError> {
@@ -325,7 +325,8 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             .ready
             .catalog()
             .prototypes()
-            .choose(kind, 0, Terrain::Dirt, rng);
+            .choose(kind, 0, Terrain::Dirt, rng)
+            .map(PrototypeRef::id);
         let result = match prototype {
             Some(prototype) => self
                 .create(
@@ -437,16 +438,14 @@ fn pandora_spells(
     let (minimum, maximum) = reward.levels();
     (minimum..=maximum).rev().flat_map(move |level| {
         spells
-            .entries()
             .iter()
             .take(raw::HERO_SPELL_COUNT as usize)
-            .enumerate()
             .filter(move |(_, traits)| {
                 !traits.disabled_by_default()
                     && traits.level() == level
                     && traits.schools().intersects(reward.schools())
             })
-            .map(|(index, _)| SpellId::parse(i32::try_from(index).unwrap()).unwrap())
+            .map(|(id, _)| id)
     })
 }
 fn select_scroll(
@@ -456,10 +455,8 @@ fn select_scroll(
 ) -> Result<SpellId, TreasureGenerationError> {
     let eligible = || {
         spells
-            .entries()
             .iter()
             .take(raw::HERO_SPELL_COUNT as usize)
-            .enumerate()
             .filter(|(_, traits)| {
                 !traits.disabled_by_default()
                     && traits.schools().bits() != 0
@@ -471,10 +468,10 @@ fn select_scroll(
     if count == 0 {
         return Err(TreasureGenerationError::EmptyScroll);
     }
-    let (index, _) = eligible()
+    let (id, _) = eligible()
         .nth(draw as usize % count)
         .expect("eligible count and selection use identical immutable traits");
-    Ok(SpellId::parse(i32::try_from(index).unwrap()).unwrap())
+    Ok(id)
 }
 
 #[cfg(test)]

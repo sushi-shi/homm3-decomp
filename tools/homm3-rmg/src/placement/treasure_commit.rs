@@ -71,7 +71,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         origin: WorldPosition,
     ) -> Result<(), PlacementError> {
         let map = self.ready.paths.map_mut();
-        let side = i32::try_from(map.view().side).map_err(|_| PlacementError::Arithmetic)?;
+        let side = map.view().signed_side();
         let group_side = i32::try_from(raw::RMG_TREASURE_GROUP_MAP_SIZE).unwrap();
         let minimum = Point::new(
             origin

@@ -5,7 +5,7 @@ use super::{
     PendingTreasure, PlacementError, PlacementSurface, PlacementView,
 };
 use crate::{
-    domain::{Level, WorldPosition},
+    domain::{CellLayout, Level, WorldPosition},
     geometry::Point,
     identity::OwnerId,
     prototype::{
@@ -16,8 +16,13 @@ use crate::{
     rng::RetailRng,
 };
 
-const SIDE: usize = raw::RMG_TREASURE_GROUP_MAP_SIZE as usize;
-const CELLS: usize = SIDE * SIDE;
+#[allow(clippy::cast_possible_truncation)] // asserted below
+const LAYOUT: CellLayout = {
+    assert!(raw::RMG_TREASURE_GROUP_MAP_SIZE <= u8::MAX as u32);
+    CellLayout::new(raw::RMG_TREASURE_GROUP_MAP_SIZE as u8)
+};
+const SIDE: usize = LAYOUT.side();
+const CELLS: usize = LAYOUT.plane();
 const OUTLINE_STATES: usize = (SIDE + 2) * (SIDE + 2) * raw::RMG_CARDINAL_DIRECTION_COUNT as usize;
 
 #[derive(Debug)]
@@ -103,7 +108,7 @@ impl TreasureGroupWorkspace {
     }
     pub(super) fn view(&self) -> PlacementView<'_> {
         PlacementView {
-            side: SIDE,
+            layout: LAYOUT,
             surface: PlacementSurface::Group,
             cells: &self.cells,
         }
@@ -205,7 +210,7 @@ impl TreasureGroupWorkspace {
     ) -> Result<super::mutation::Footprint, PlacementError> {
         self.objects.try_reserve(1)?;
         let touched = prepare_insertion(
-            SIDE,
+            LAYOUT,
             &self.cells,
             &mut self.memberships,
             objects,
@@ -225,8 +230,8 @@ impl TreasureGroupWorkspace {
         let size = entry.image_mask().size()?;
         // Both addends are admitted small unsigned dimensions.
         Ok(Point::new(
-            (i32::try_from(SIDE).unwrap() + i32::from(size.width())) / 2,
-            (i32::try_from(SIDE).unwrap() + i32::from(size.height())) / 2,
+            (LAYOUT.signed_side() + i32::from(size.width())) / 2,
+            (LAYOUT.signed_side() + i32::from(size.height())) / 2,
         ))
     }
     pub(super) fn choose_fit(
@@ -259,8 +264,8 @@ impl TreasureGroupWorkspace {
                     .ok_or(PlacementError::CoordinateOverflow)?;
                 if candidate.x >= i32::from(size.width()) + 2
                     && candidate.y >= i32::from(size.height()) + 2
-                    && candidate.x < i32::try_from(SIDE).unwrap() - 3
-                    && candidate.y < i32::try_from(SIDE).unwrap() - 3
+                    && candidate.x < LAYOUT.signed_side() - 3
+                    && candidate.y < LAYOUT.signed_side() - 3
                     && self.can_fit(entry, candidate)?
                 {
                     self.candidates.try_reserve(1)?;
@@ -342,10 +347,7 @@ impl TreasureGroupWorkspace {
         self.bounds = None;
         for index in 0..CELLS {
             if !self.clear_outline_cell(index) {
-                let point = Point::new(
-                    i32::try_from(index % SIDE).unwrap(),
-                    i32::try_from(index / SIDE).unwrap(),
-                );
+                let point = LAYOUT.point(index);
                 match &mut self.bounds {
                     Some(bounds) => bounds.include(point),
                     bounds => *bounds = Some(ZoneBounds::cell(point)),
@@ -362,10 +364,8 @@ impl TreasureGroupWorkspace {
         };
         // Signed points admit the one-cell halo. Start immediately north of the
         // first occupied/reserved cell; unlike prototype outlines this is row-first.
-        let start = Point::new(
-            i32::try_from(index % SIDE).unwrap(),
-            i32::try_from(index / SIDE).unwrap() - 1,
-        );
+        let first = LAYOUT.point(index);
+        let start = Point::new(first.x, first.y - 1);
         let mut position = start;
         let mut direction = raw::RMG_DIRECTION_SOUTH as usize;
         for _ in 0..OUTLINE_STATES {

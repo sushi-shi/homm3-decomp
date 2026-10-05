@@ -3,7 +3,10 @@ use super::{
     ObjectArena, ObjectId, ObjectPayload, PlacementError, TreasureGeneration,
     TreasureGenerationError, TreasureGroupWorkspace, TreasurePacking,
 };
-use crate::{geometry::ZoneId, object::ObjectKind, raw, rng::RetailRng, traits::ArtifactId};
+use crate::{
+    geometry::ZoneId, object::ObjectKind, prototype::PrototypeRef, raw, rng::RetailRng,
+    traits::ArtifactId,
+};
 
 impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
     pub(super) fn complete_treasure(
@@ -20,8 +23,8 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                 let Some(child) = quest.pending_seer() else {
                     return Ok(());
                 };
-                let available = (0..raw::ARTIFACT_COUNT)
-                    .filter(|&id| self.artifact_available(ArtifactId::parse(id).unwrap()))
+                let available = ArtifactId::all()
+                    .filter(|&id| self.artifact_available(id))
                     .count();
                 if available < raw::RMG_LOW_QUEST_ARTIFACT_COUNT as usize {
                     self.ready.quests.pool_low = true;
@@ -30,11 +33,10 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                     objects.recycle_unplaced(child)?;
                 } else {
                     let selected = rng.draw() as usize % available;
-                    let artifact = (0..raw::ARTIFACT_COUNT)
-                        .map(|id| ArtifactId::parse(id).unwrap())
+                    let artifact = ArtifactId::all()
                         .filter(|&id| self.artifact_available(id))
                         .nth(selected)
-                        .unwrap();
+                        .expect("selection ranks the counted available artifacts");
                     let ObjectPayload::Seer(hut) = objects.payload_mut(child)? else {
                         return Err(PlacementError::TreasureCleanupRequired(child).into());
                     };
@@ -48,7 +50,11 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                             i32::try_from(artifact.index()).unwrap(),
                         )
                         .ok_or(TreasureGenerationError::MissingArtifact(artifact))?;
-                    objects.swap_prototype(object, self.ready.catalog.prototypes(), prototype)?;
+                    objects.swap_prototype(
+                        object,
+                        self.ready.catalog.prototypes(),
+                        prototype.id(),
+                    )?;
                     // Entrance type is cached in Rust, while native reads it from
                     // the first member's current prototype. Refresh only that cache;
                     // keep the old footprint, counts and distance state untouched.
@@ -170,7 +176,10 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             .ok_or(PlacementError::UnknownPrototype(geometry.prototype()))?
             .prototype()
             .subtype();
-        let Some(prototype) = catalog.first_subtype(ObjectKind::BORDER_GUARD, color) else {
+        let Some(prototype) = catalog
+            .first_subtype(ObjectKind::BORDER_GUARD, color)
+            .map(PrototypeRef::id)
+        else {
             return Ok(false);
         };
         let origin = self.object_zone(object, objects)?;

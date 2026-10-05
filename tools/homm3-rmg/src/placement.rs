@@ -2,7 +2,7 @@
 
 use crate::{
     boundaries::{BoundaryZone, TerrainCoverage},
-    domain::{Terrain, WorldPosition},
+    domain::{CellLayout, Terrain, WorldPosition},
     geometry::{Point, ZoneId},
     object::ObjectKind,
     prototype::{OutlineError, OutlineWorkspace, PreparedPrototype, PrototypeFault, PrototypeId},
@@ -443,7 +443,7 @@ impl PlacementMap<'_, '_, '_> {
 
     fn view(&self) -> PlacementView<'_> {
         PlacementView {
-            side: self.terrain.coverage().map().raster().dimension(),
+            layout: self.terrain.coverage().map().raster().layout(),
             surface: PlacementSurface::World {
                 terrain: self.terrain.tiles(),
                 zones: self.terrain.coverage().map().raster().cells(),
@@ -586,11 +586,17 @@ enum PlacementSurface<'a> {
     Group,
 }
 struct PlacementView<'a> {
-    side: usize,
+    layout: CellLayout,
     surface: PlacementSurface<'a>,
     cells: &'a [CellState],
 }
 impl<'a> PlacementView<'a> {
+    const fn side(&self) -> usize {
+        self.layout.side()
+    }
+    fn signed_side(&self) -> i32 {
+        self.layout.signed_side()
+    }
     fn cell(&self, position: WorldPosition) -> Result<MapCell<'a>, PlacementError> {
         let index = self.index(position)?;
         Ok(self.resolved_cell(index, position))
@@ -599,20 +605,7 @@ impl<'a> PlacementView<'a> {
     // signed positions, while this view names the allocated cell they address.
     fn aliased_cell(&self, position: WorldPosition) -> Result<MapCell<'a>, PlacementError> {
         let index = self.native_index(position)?;
-        let plane = self.side * self.side;
-        let position = WorldPosition {
-            point: Point::new(
-                i32::try_from(index % self.side).map_err(|_| PlacementError::CoordinateOverflow)?,
-                i32::try_from(index / self.side % self.side)
-                    .map_err(|_| PlacementError::CoordinateOverflow)?,
-            ),
-            level: if index < plane {
-                crate::domain::Level::Surface
-            } else {
-                crate::domain::Level::Underground
-            },
-        };
-        Ok(self.resolved_cell(index, position))
+        Ok(self.resolved_cell(index, self.layout.position(index)))
     }
     fn resolved_cell(&self, index: usize, position: WorldPosition) -> MapCell<'a> {
         MapCell {
@@ -648,7 +641,7 @@ impl<'a> PlacementView<'a> {
     // The index is (level * side + y) * side + x. A row beyond the surface
     // can likewise reach underground; only leaving the allocation is a fault.
     fn native_index(&self, position: WorldPosition) -> Result<usize, PlacementError> {
-        let side = i32::try_from(self.side).map_err(|_| PlacementError::CoordinateOverflow)?;
+        let side = self.signed_side();
         let level = i32::try_from(position.level.index())
             .map_err(|_| PlacementError::CoordinateOverflow)?;
         let index = level
@@ -664,22 +657,13 @@ impl<'a> PlacementView<'a> {
         Ok(index)
     }
     fn contains(&self, point: Point) -> bool {
-        usize::try_from(point.x).is_ok_and(|x| x < self.side)
-            && usize::try_from(point.y).is_ok_and(|y| y < self.side)
+        self.layout.plane_index(point).is_some()
     }
     fn index(&self, position: WorldPosition) -> Result<usize, PlacementError> {
-        if !self.contains(position.point) {
-            return Err(PlacementError::OutsideMap(position));
-        }
-        let x =
-            usize::try_from(position.point.x).map_err(|_| PlacementError::OutsideMap(position))?;
-        let y =
-            usize::try_from(position.point.y).map_err(|_| PlacementError::OutsideMap(position))?;
-        let index = (position.level.index() * self.side + y) * self.side + x;
-        if index >= self.cells.len() {
-            return Err(PlacementError::OutsideMap(position));
-        }
-        Ok(index)
+        self.layout
+            .index(position)
+            .filter(|&index| index < self.cells.len())
+            .ok_or(PlacementError::OutsideMap(position))
     }
     fn passable(&self, index: usize) -> bool {
         self.cells[index].passable && self.terrain(index) != Terrain::Rock
@@ -818,7 +802,7 @@ impl<'a> PlacementView<'a> {
             anchor.point.x - i32::from(trigger.x()),
             anchor.point.y - i32::from(trigger.y()) + 1,
         );
-        if usize::try_from(point.y).is_ok_and(|y| y >= self.side) {
+        if usize::try_from(point.y).is_ok_and(|y| y >= self.side()) {
             return Ok(false);
         }
         let cell = self.cell(WorldPosition {
@@ -855,7 +839,7 @@ mod tests {
     fn admitted_cells_borrow_state_and_flat_aliases_have_canonical_positions() {
         let cells = vec![CellState::default(); 32];
         let view = PlacementView {
-            side: 4,
+            layout: CellLayout::new(4),
             surface: PlacementSurface::Group,
             cells: &cells,
         };
@@ -885,7 +869,7 @@ mod tests {
         assert!(view.cell(at(0, 4, Level::Surface)).is_err());
         assert!(view.aliased_cell(at(0, 4, Level::Underground)).is_err());
         let surface = PlacementView {
-            side: 4,
+            layout: CellLayout::new(4),
             surface: PlacementSurface::Group,
             cells: &cells[..16],
         };
@@ -896,7 +880,7 @@ mod tests {
     fn native_flat_access_preserves_in_allocation_aliases_and_rejects_overflow() {
         let cells = vec![CellState::default(); 36 * 36];
         let view = PlacementView {
-            side: 36,
+            layout: CellLayout::new(36),
             surface: PlacementSurface::World {
                 terrain: &[],
                 zones: &[],
@@ -978,7 +962,7 @@ mod tests {
                 for terrain in [Terrain::Grass, Terrain::Water] {
                     let tiles = [TerrainTile::parse(terrain, 0, Reflection::default()).unwrap()];
                     let view = PlacementView {
-                        side: 1,
+                        layout: CellLayout::new(1),
                         surface: PlacementSurface::World {
                             terrain: &tiles,
                             zones: &zones,
@@ -1039,7 +1023,7 @@ mod tests {
                 cells[index].passable = pattern & (1 << bit) == 0;
             }
             let view = PlacementView {
-                side: 3,
+                layout: CellLayout::new(3),
                 surface: PlacementSurface::World {
                     terrain: &terrain,
                     zones: &zones,
@@ -1079,7 +1063,7 @@ mod tests {
             paint_terrain: true,
         }; 4];
         let view = PlacementView {
-            side: 2,
+            layout: CellLayout::new(2),
             surface: PlacementSurface::World {
                 terrain: &terrain,
                 zones: &zones,

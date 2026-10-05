@@ -62,7 +62,7 @@ impl ConnectingZones<'_, '_, '_> {
 }
 impl PlacementMap<'_, '_, '_> {
     fn clear_connection_visits(&mut self, level: Level) {
-        let side = self.view().side;
+        let side = self.view().side();
         let start = level.index() * side * side;
         for cell in &mut self.cells[start..start + side * side] {
             cell.connection_visited = false;
@@ -120,7 +120,7 @@ impl PlacementMap<'_, '_, '_> {
     /// Reports coordinate overflow or an accessed cell outside the allocation.
     pub fn can_place_shipyard(&self, position: WorldPosition) -> Result<bool, PlacementError> {
         let below = offset_position(position, Point::new(0, 1))?;
-        let side = i32::try_from(self.view().side).map_err(|_| PlacementError::Arithmetic)?;
+        let side = self.view().signed_side();
         if below.point.y >= side {
             return Ok(false);
         }
@@ -170,7 +170,7 @@ impl PlacementMap<'_, '_, '_> {
         &mut self,
         position: WorldPosition,
     ) -> Result<(), PlacementError> {
-        let side = i32::try_from(self.view().side).map_err(|_| PlacementError::Arithmetic)?;
+        let side = self.view().signed_side();
         for (x, y) in raw::SHIPYARD_WATER_OFFSETS {
             let water = offset_position(position, Point::new(x, y))?;
             if (0..side).contains(&water.point.x)
@@ -221,7 +221,7 @@ impl PlacementMap<'_, '_, '_> {
         }
         let family = ObjectKind::SHIPYARD;
         let prototype = draw_connection_prototype(catalog, family, rng)?;
-        let entry = catalog.get(prototype).unwrap();
+        let entry = prototype.entry();
         self.connections.candidates.clear();
         let Some(bounds) = source.bounds() else {
             return Ok(false);
@@ -246,7 +246,7 @@ impl PlacementMap<'_, '_, '_> {
                     return Ok(true);
                 }
                 if self.terrain.tiles()[index].terrain() != Terrain::Water
-                    && usize::try_from(y + 1).is_ok_and(|row| row < self.view().side)
+                    && usize::try_from(y + 1).is_ok_and(|row| row < self.view().side())
                 {
                     for site_x in x..=x + 2 {
                         let site = WorldPosition {
@@ -269,7 +269,7 @@ impl PlacementMap<'_, '_, '_> {
         ) else {
             return Ok(false);
         };
-        let object = objects.create_shipyard(catalog, prototype)?;
+        let object = objects.create_shipyard(catalog, prototype.id())?;
         let position = self.connections.candidates[rng.below(count) as usize];
         self.register_object(objects, catalog, object, position)?;
         let entrance = entrance_position(entry.prototype(), position)?;

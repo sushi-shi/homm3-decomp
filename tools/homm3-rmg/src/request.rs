@@ -1,10 +1,67 @@
 //! Parse the lobby record into supported generation domains.
 
-use crate::{behavior::Behavior, raw};
-use std::{error::Error, fmt};
+use crate::{
+    behavior::Behavior,
+    domain::{Ordinal, Terrain},
+    raw,
+};
+use std::{
+    error::Error,
+    fmt,
+    ops::{Index, IndexMut},
+};
 
 /// Number of player colours, obtained from the shared C++ declaration.
 pub const PLAYER_COUNT: usize = raw::RMG_PLAYER_COUNT as usize;
+
+/// A playable colour, distinct from a template's player slot.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Player(u8);
+impl Player {
+    /// Index into request colour arrays.
+    #[must_use]
+    pub const fn index(self) -> usize {
+        self.0 as usize
+    }
+    /// Every colour in lobby order.
+    pub fn all() -> impl DoubleEndedIterator<Item = Self> + ExactSizeIterator + Clone {
+        const { assert!(PLAYER_COUNT <= u8::MAX as usize) };
+        (0..=u8::MAX).map(Self).take(PLAYER_COUNT)
+    }
+}
+
+/// One value per player colour, indexed by `Player` rather than a bare index.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PerColour<T>([T; PLAYER_COUNT]);
+impl<T> PerColour<T> {
+    /// Values in lobby colour order.
+    pub const fn new(values: [T; PLAYER_COUNT]) -> Self {
+        Self(values)
+    }
+    /// Values in lobby colour order, for serialization.
+    pub const fn values(&self) -> &[T; PLAYER_COUNT] {
+        &self.0
+    }
+    /// Values with their colours, in lobby order.
+    pub fn iter(&self) -> impl DoubleEndedIterator<Item = (Player, &T)> {
+        Player::all().zip(&self.0)
+    }
+    /// Apply a function to each colour's value.
+    pub fn map<U>(self, f: impl FnMut(T) -> U) -> PerColour<U> {
+        PerColour(self.0.map(f))
+    }
+}
+impl<T> Index<Player> for PerColour<T> {
+    type Output = T;
+    fn index(&self, player: Player) -> &T {
+        &self.0[player.index()]
+    }
+}
+impl<T> IndexMut<Player> for PerColour<T> {
+    fn index_mut(&mut self, player: Player) -> &mut T {
+        &mut self.0[player.index()]
+    }
+}
 
 /// An input field that cannot produce a supported typed request.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -129,7 +186,73 @@ impl Town {
     pub const fn index(self) -> usize {
         self.0 as usize
     }
+
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    const fn known(value: raw::TTownType) -> Self {
+        assert!(raw::TOWN_CASTLE <= value && value <= raw::TOWN_CONFLUX);
+        Self(value as u8)
+    }
+
+    /// Castle.
+    pub const CASTLE: Self = Self::known(raw::TOWN_CASTLE);
+    /// Rampart.
+    pub const RAMPART: Self = Self::known(raw::TOWN_RAMPART);
+    /// Tower.
+    pub const TOWER: Self = Self::known(raw::TOWN_TOWER);
+    /// Inferno.
+    pub const INFERNO: Self = Self::known(raw::TOWN_INFERNO);
+    /// Necropolis.
+    pub const NECROPOLIS: Self = Self::known(raw::TOWN_NECROPOLIS);
+    /// Dungeon.
+    pub const DUNGEON: Self = Self::known(raw::TOWN_DUNGEON);
+    /// Stronghold.
+    pub const STRONGHOLD: Self = Self::known(raw::TOWN_STRONGHOLD);
+    /// Fortress.
+    pub const FORTRESS: Self = Self::known(raw::TOWN_FORTRESS);
+    /// Conflux, absent from `RoE` maps.
+    pub const CONFLUX: Self = Self::known(raw::TOWN_CONFLUX);
+
+    /// Every Complete-era faction in native order.
+    pub const ALL: [Self; raw::TOWN_TYPE_COUNT as usize] = [
+        Self::CASTLE,
+        Self::RAMPART,
+        Self::TOWER,
+        Self::INFERNO,
+        Self::NECROPOLIS,
+        Self::DUNGEON,
+        Self::STRONGHOLD,
+        Self::FORTRESS,
+        Self::CONFLUX,
+    ];
+
+    /// Terrain painted for a native-terrain zone of this alignment.
+    #[must_use]
+    pub const fn native_terrain(self) -> Terrain {
+        NATIVE_TERRAIN[self.index()]
+    }
 }
+impl Ordinal for Town {
+    const ALL: &'static [Self] = &Self::ALL;
+    fn index(self) -> usize {
+        Self::index(self)
+    }
+}
+
+// Source table admitted once at compile time instead of at each lookup.
+const NATIVE_TERRAIN: [Terrain; raw::TOWN_TYPE_COUNT as usize] = {
+    let mut terrain = [Terrain::Dirt; raw::TOWN_TYPE_COUNT as usize];
+    let mut town = 0;
+    while town < terrain.len() {
+        #[allow(clippy::cast_possible_wrap)] // small source terrain IDs
+        let value = raw::NATIVE_TERRAIN[town] as i32;
+        terrain[town] = match Terrain::parse(value) {
+            Some(value) => value,
+            None => panic!("native town terrain outside the terrain domain"),
+        };
+        town += 1;
+    }
+    terrain
+};
 
 /// A requested faction, before any random selection.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -206,8 +329,8 @@ pub struct Request {
     computer_players: PlayerCount,
     human_teams: PlayerCount,
     computer_teams: PlayerCount,
-    human_seats: [bool; PLAYER_COUNT],
-    towns: [TownChoice; PLAYER_COUNT],
+    human_seats: PerColour<bool>,
+    towns: PerColour<TownChoice>,
     water: WaterChoice,
     strength: MonsterStrength,
 }
@@ -293,8 +416,8 @@ impl Request {
             computer_players,
             human_teams,
             computer_teams,
-            human_seats,
-            towns,
+            human_seats: PerColour::new(human_seats),
+            towns: PerColour::new(towns),
             water,
             strength,
         })
@@ -357,12 +480,12 @@ impl Request {
     }
     /// Player colours that must be assigned human-capable slots.
     #[must_use]
-    pub const fn human_seats(&self) -> &[bool; PLAYER_COUNT] {
+    pub const fn human_seats(&self) -> &PerColour<bool> {
         &self.human_seats
     }
     /// Requested factions, without drawing random choices.
     #[must_use]
-    pub const fn towns(&self) -> &[TownChoice; PLAYER_COUNT] {
+    pub const fn towns(&self) -> &PerColour<TownChoice> {
         &self.towns
     }
     /// Requested water, without drawing random choices.

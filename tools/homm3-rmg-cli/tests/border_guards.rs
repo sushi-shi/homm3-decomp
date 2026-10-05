@@ -401,7 +401,7 @@ fn full_color_reservation_and_first_matching_art_survive_bitfield_truncation() {
         let guard_kind = ObjectKind::parse(i32::try_from(raw::BORDER_GUARD).unwrap()).unwrap();
         assert_eq!(
             objects.get(map.active_objects()[1]).unwrap().prototype(),
-            catalog.at(guard_kind, 0).unwrap()
+            catalog.at(guard_kind, 0).unwrap().id()
         );
         let position = map.coverage().map().zones()[0].position();
         map.mark_border_connection_area(position, result.reported_color().unwrap())
@@ -439,7 +439,7 @@ fn failing_to_fit_a_tent_releases_its_slot_without_rng_or_reservation() {
     use homm3_rmg::{object::ObjectKind, placement::BorderGuardPlacement, raw};
     with_palette(Behavior::Hotfix, &[0], &[0], |map, objects, catalog| {
         let guard_kind = ObjectKind::parse(i32::try_from(raw::BORDER_GUARD).unwrap()).unwrap();
-        let prototype = catalog.at(guard_kind, 0).unwrap();
+        let prototype = catalog.at(guard_kind, 0).unwrap().id();
         let blocker = objects.create(catalog, prototype).unwrap();
         let side = i32::try_from(map.coverage().map().raster().dimension()).unwrap();
         // A trigger in every cell leaves no connected outline or southern approach.

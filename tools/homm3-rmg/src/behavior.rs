@@ -1,41 +1,10 @@
 //! Explicit generation behavior; no process-wide compile-time switch.
 
-use crate::{raw, request::Town};
+use crate::{domain::FlagSet, request::Town};
 
 /// Allowed town factions, in native faction order; a zero mask allows none.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct TownMask(u16);
-impl TownMask {
-    /// No town factions, so selection consumes no random draw.
-    pub const NONE: Self = Self(0);
-    /// Every Complete-era faction.
-    pub const ALL: Self = Self((1 << raw::TOWN_TYPE_COUNT) - 1);
-
-    /// Admit only bits corresponding to known town factions.
-    #[must_use]
-    pub const fn parse(bits: u16) -> Option<Self> {
-        if bits & !Self::ALL.0 == 0 {
-            Some(Self(bits))
-        } else {
-            None
-        }
-    }
-    /// Bit `town.index()` records whether that faction is allowed.
-    #[must_use]
-    pub const fn bits(self) -> u16 {
-        self.0
-    }
-    /// Number of allowed factions.
-    #[must_use]
-    pub const fn count(self) -> u32 {
-        self.0.count_ones()
-    }
-    /// Whether this faction is allowed.
-    #[must_use]
-    pub const fn contains(self, town: Town) -> bool {
-        self.0 & (1 << town.index()) != 0
-    }
-}
+/// Template zones and generated water zones share this one representation.
+pub type TownMask = FlagSet<Town>;
 
 /// Selected semantics for a complete generation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

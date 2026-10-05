@@ -9,7 +9,7 @@ use homm3_rmg::{
     object::ObjectKind,
     placement::{KeyTentCursor, ObjectArena, PlacementError, PlacementMap, PlacementWorkspace},
     placement_rules::PlacementRules,
-    prototype::{PrototypeCatalog, PrototypeSource},
+    prototype::{PrototypeCatalog, PrototypeRef, PrototypeSource},
     raw,
     request::{default_record, Levels, MapSize, Request},
     rng::RetailRng,
@@ -83,7 +83,7 @@ fn native_registration_preserves_counts_distances_and_removal_quirks() {
             let foreign_id = foreign_objects
                 .create(
                     &foreign_catalog,
-                    foreign_catalog.at(kind(raw::MONSTER), 0).unwrap(),
+                    foreign_catalog.at(kind(raw::MONSTER), 0).unwrap().id(),
                 )
                 .unwrap();
             assert!(matches!(
@@ -136,7 +136,7 @@ fn check_virgin_guard_release(
     catalog: &PrototypeCatalog<'_>,
     objects: &mut ObjectArena,
 ) -> (ObjectId, homm3_rmg::placement::KeyTentColor) {
-    let guard = catalog.at(kind(raw::BORDER_GUARD), 0).unwrap();
+    let guard = catalog.at(kind(raw::BORDER_GUARD), 0).unwrap().id();
     let virgin = objects.create(catalog, guard).unwrap();
     let color = map
         .key_tent_color(catalog, catalog.get(guard).unwrap().prototype().subtype())
@@ -176,7 +176,7 @@ fn snapshot(map: &mut PlacementMap<'_, '_, '_>, catalog: &PrototypeCatalog<'_>) 
         {
             continue;
         }
-        let Some(prototype) = catalog.at(kind(family), 0) else {
+        let Some(prototype) = catalog.at(kind(family), 0).map(PrototypeRef::id) else {
             continue;
         };
         let entry = catalog.get(prototype).unwrap();
@@ -263,7 +263,7 @@ fn check_extreme_entrance(
                 continue;
             }
             let object = objects
-                .create(catalog, catalog.at(kind(family), index).unwrap())
+                .create(catalog, catalog.at(kind(family), index).unwrap().id())
                 .unwrap();
             // Flat indexing aliases cell19; the following east step overflows.
             let anchor = position(
@@ -286,7 +286,7 @@ fn check_arena_binding(
     catalog: &PrototypeCatalog<'_>,
     objects: &mut ObjectArena,
 ) {
-    let guard = catalog.at(kind(raw::BORDER_GUARD), 0).unwrap();
+    let guard = catalog.at(kind(raw::BORDER_GUARD), 0).unwrap().id();
     // A wholly clipped raw insertion still binds the same arena used by registration.
     let clipped = objects.create(catalog, guard).unwrap();
     map.insert_object(

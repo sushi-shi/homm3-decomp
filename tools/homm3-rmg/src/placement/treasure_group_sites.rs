@@ -43,7 +43,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         }
         if let Some(entrance) = group.guard_entrance {
             let guard = offset_position(origin, entrance)?;
-            let side = i32::try_from(view.side).map_err(|_| PlacementError::Arithmetic)?;
+            let side = view.signed_side();
             if guard.point.x < 1
                 || guard.point.x >= side - 1
                 || guard.point.y < 1
@@ -138,7 +138,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                 let target = offset_position(origin, point)?;
                 // Source checks only upper XY bounds at this point; preserve flat
                 // aliases when either coordinate is negative.
-                let side = i32::try_from(view.side).map_err(|_| PlacementError::Arithmetic)?;
+                let side = view.signed_side();
                 if target.point.x < side
                     && target.point.y < side
                     && map.cells[view.native_index(target)?].entrance.is_some()

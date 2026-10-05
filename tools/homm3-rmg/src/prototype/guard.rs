@@ -5,27 +5,26 @@ use crate::{
     raw,
     request::{MapVersion, Town},
     rng::RetailRng,
-    template::Zone,
+    template::{AllowedGuards, GuardAffinity, Zone},
     traits::{CreatureCatalog, CreatureId},
 };
 use std::{error::Error, fmt, num::NonZeroU32};
 
 const CREATURES: usize = raw::RMG_CREATURE_TYPE_COUNT as usize;
-const FACTIONS: usize = raw::TOWN_CONFLUX as usize + 2;
 
 /// Guard affiliations after applying the zone-alignment override.
 #[derive(Clone, Copy, Debug)]
-pub enum GuardFactions<'a> {
+pub enum GuardFactions {
     /// Only creatures of this town; neutral creatures are excluded.
     Matching(Town),
-    /// Template order: neutral first, then Castle through Conflux.
-    Allowed(&'a [bool; FACTIONS]),
+    /// The template's allowed neutral and faction affinities.
+    Allowed(AllowedGuards),
 }
-impl<'a> GuardFactions<'a> {
+impl GuardFactions {
     /// Resolve the template's alignment-matching flag. A neutral alignment
     /// retains the template's allowed factions even when the flag is set.
     #[must_use]
-    pub fn from_zone(zone: &'a Zone, alignment: Option<Town>) -> Self {
+    pub fn from_zone(zone: &Zone, alignment: Option<Town>) -> Self {
         match (zone.guards_match_alignment(), alignment) {
             (true, Some(town)) => Self::Matching(town),
             _ => Self::Allowed(zone.allowed_monsters()),
@@ -34,7 +33,7 @@ impl<'a> GuardFactions<'a> {
     fn allows(self, town: Option<Town>) -> bool {
         match self {
             Self::Matching(wanted) => town == Some(wanted),
-            Self::Allowed(allowed) => allowed[town.map_or(0, |town| town.index() + 1)],
+            Self::Allowed(allowed) => allowed.contains(GuardAffinity::of(town)),
         }
     }
 }
@@ -115,7 +114,7 @@ impl PrototypeCatalog<'_> {
     pub fn select_guard(
         &self,
         value: i32,
-        factions: GuardFactions<'_>,
+        factions: GuardFactions,
         creatures: &CreatureCatalog,
         rng: &mut RetailRng,
     ) -> Result<Option<GuardStack>, GuardError> {
@@ -133,7 +132,7 @@ impl PrototypeCatalog<'_> {
     fn choose_guard(
         &self,
         value: i32,
-        factions: GuardFactions<'_>,
+        factions: GuardFactions,
         creatures: &CreatureCatalog,
         mut prototypes: [Option<PrototypeId>; CREATURES],
         rng: &mut RetailRng,

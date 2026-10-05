@@ -18,6 +18,11 @@ impl HeroId {
     pub const fn index(self) -> usize {
         self.0 as usize
     }
+    /// Every generator hero in table order.
+    pub fn all() -> impl Iterator<Item = Self> {
+        const { assert!(raw::RMG_HERO_COUNT <= 1 << u8::BITS) };
+        (0..=u8::MAX).map(Self).take(raw::RMG_HERO_COUNT as usize)
+    }
     /// Availability before generated heroes are removed from the pool.
     #[must_use]
     pub const fn available(self, version: MapVersion) -> bool {

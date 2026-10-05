@@ -186,14 +186,10 @@ fn dry_junction_count(map: &homm3_rmg::placement::PlacementMap<'_, '_, '_>) -> u
     map.zones()
         .iter()
         .filter(|zone| {
-            let homm3_rmg::boundaries::ZoneOrigin::Template(id) = zone.origin() else {
-                return false;
-            };
             zone.terrain() != Terrain::Water
-                && matches!(
-                    map.template().zones()[id.index()].role(),
-                    homm3_rmg::template::ZoneRole::Junction(_)
-                )
+                && map.template_zone(zone).is_some_and(|rules| {
+                    matches!(rules.role(), homm3_rmg::template::ZoneRole::Junction(_))
+                })
         })
         .count()
 }

@@ -3,10 +3,7 @@ use super::{
     ObjectArena, PlacementError, TreasureGeneration, TreasureGenerationError,
     TreasureGroupWorkspace,
 };
-use crate::{
-    boundaries::ZoneOrigin, domain::Terrain, geometry::ZoneId, raw, rng::RetailRng,
-    template::ZoneRole,
-};
+use crate::{domain::Terrain, geometry::ZoneId, raw, rng::RetailRng, template::ZoneRole};
 impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
     pub(super) fn place_quest_group(
         &mut self,
@@ -70,13 +67,9 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         }
         group.quest_candidates.clear();
         for zone in map.zones() {
-            let junction = match zone.origin() {
-                ZoneOrigin::Template(id) => matches!(
-                    map.template().zones()[id.index()].role(),
-                    ZoneRole::Junction(_)
-                ),
-                ZoneOrigin::Water => false,
-            };
+            let junction = map
+                .template_zone(zone)
+                .is_some_and(|rules| matches!(rules.role(), ZoneRole::Junction(_)));
             let score = group.quest_scores[zone.id().index()];
             if zone.id() == origin
                 || junction

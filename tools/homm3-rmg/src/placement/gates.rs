@@ -80,7 +80,7 @@ impl PlacementMap<'_, '_, '_> {
         };
         let family = ObjectKind::UNDERGROUND_GATE;
         let prototype = draw_connection_prototype(catalog, family, rng)?;
-        let entry = catalog.get(prototype).unwrap();
+        let entry = prototype.entry();
         self.collect_gate_candidates(source, destination, overlap, entry)?;
         let Some(count) = NonZeroU32::new(
             u32::try_from(self.connections.candidates.len())
@@ -91,13 +91,13 @@ impl PlacementMap<'_, '_, '_> {
         // Retail 0x542387 draws and loads the candidate before allocation at
         // 0x5423ad, despite the authored new-expression argument to the helper.
         let position = self.connections.candidates[rng.below(count) as usize];
-        let object = objects.create(catalog, prototype)?;
+        let object = objects.create(catalog, prototype.id())?;
         self.register_object(objects, catalog, object, position)?;
         let other = WorldPosition {
             level: destination.position().level,
             ..position
         };
-        let other_object = objects.create(catalog, prototype)?;
+        let other_object = objects.create(catalog, prototype.id())?;
         self.register_object(objects, catalog, other_object, other)?;
         let entrance = entrance_position(entry.prototype(), position)?;
         let other_entrance = WorldPosition {

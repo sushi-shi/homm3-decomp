@@ -11,7 +11,7 @@ use homm3_rmg::{
         PlacementMap, PlacementWorkspace,
     },
     placement_rules::PlacementRules,
-    prototype::{PrototypeCatalog, PrototypeSource},
+    prototype::{PrototypeCatalog, PrototypeRef, PrototypeSource},
     raw,
     request::{default_record, Levels, MapSize, Request},
     rng::RetailRng,
@@ -121,10 +121,10 @@ fn snapshot(map: &mut PlacementMap<'_, '_, '_>, catalog: &PrototypeCatalog<'_>) 
     let mut actual = String::new();
     let mut objects = ObjectArena::default();
     let monster = ObjectKind::parse(i32::try_from(raw::MONSTER).unwrap()).unwrap();
-    let blocker_prototype = catalog.at(monster, 0).unwrap();
+    let blocker_prototype = catalog.at(monster, 0).unwrap().id();
     for family in 0..raw::ADVENTURE_OBJECT_TRAIT_COUNT {
         let kind = ObjectKind::parse(i32::try_from(family).unwrap()).unwrap();
-        let Some(prototype) = catalog.at(kind, 0) else {
+        let Some(prototype) = catalog.at(kind, 0).map(PrototypeRef::id) else {
             continue;
         };
         let entry = catalog.get(prototype).unwrap();

@@ -62,7 +62,7 @@ impl PlacementMap<'_, '_, '_> {
         );
         let map = self.terrain.coverage().map();
         let view = PlacementView {
-            side: map.raster().dimension(),
+            layout: map.raster().layout(),
             surface: super::PlacementSurface::World {
                 terrain: self.terrain.tiles(),
                 zones: map.raster().cells(),

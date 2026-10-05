@@ -4,7 +4,6 @@ use super::{
     TreasureGroupWorkspace, TreasurePacking,
 };
 use crate::{
-    boundaries::ZoneOrigin,
     domain::Terrain,
     geometry::ZoneId,
     raw,
@@ -38,11 +37,9 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         rng: &mut RetailRng,
     ) -> Result<(), TreasureGenerationError> {
         let zone = self.ready.map().zone(zone)?;
-        let bands = match zone.origin() {
-            ZoneOrigin::Template(id) => {
-                *self.ready.map().coverage().map().template().zones()[id.index()].treasure()
-            }
-            ZoneOrigin::Water => water_bands(),
+        let bands = match self.ready.map().coverage().map().template_zone(&zone) {
+            Some(rules) => *rules.treasure(),
+            None => water_bands(),
         };
         let placements = bands.map(|band| Placement {
             initial_count: 0,

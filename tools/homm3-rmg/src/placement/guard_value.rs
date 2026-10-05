@@ -57,13 +57,13 @@ impl super::PlacementMap<'_, '_, '_> {
         value: i32,
         zone: crate::boundaries::BoundaryZone,
     ) -> Result<i32, PlacementError> {
-        use crate::{boundaries::ZoneOrigin, template::ZoneMonsters};
-        let ZoneOrigin::Template(id) = zone.origin() else {
+        use crate::template::ZoneMonsters;
+        let map = self.coverage().map();
+        let Some(rules) = map.template_zone(&zone) else {
             // Added water zones explicitly have no monsters.
             return Ok(0);
         };
-        let map = self.coverage().map();
-        let strength = match map.template().zones()[id.index()].monsters() {
+        let strength = match rules.monsters() {
             ZoneMonsters::None => return Ok(0),
             ZoneMonsters::Weak => raw::RMG_ZONE_MONSTERS_WEAK,
             ZoneMonsters::Average => raw::RMG_ZONE_MONSTERS_AVERAGE,

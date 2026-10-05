@@ -4,7 +4,7 @@ use super::{
     offset_position, ObjectArena, ObjectId, PathReservation, PlacementError, PlacementMap,
 };
 use crate::{
-    domain::{Level, WorldPosition},
+    domain::{FlagSet, Terrain, WorldPosition},
     geometry::Point,
     identity::OwnerId,
     object::DECORATION_KINDS,
@@ -122,8 +122,8 @@ impl PlacementMap<'_, '_, '_> {
         // Retail includes decorations with an unoccupied bottom row, even
         // though hotfix catalog admission excludes them.
         let footprint = entry.image_mask().size()?;
-        let side = i32::try_from(self.view().side).map_err(|_| PlacementError::Arithmetic)?;
-        let mut terrain_seen = [false; raw::RMG_TERRAIN_COUNT as usize];
+        let side = self.view().signed_side();
+        let mut terrain_seen = FlagSet::<Terrain>::NONE;
         // Footprint plus a one-cell border; marks[c][r] is P + (1-c, 1-r).
         // c grows west, r north. North is up; # is a drawn 3x2 footprint:
         //   c: 4 3 2 1 0
@@ -171,7 +171,7 @@ impl PlacementMap<'_, '_, '_> {
                     // Native assignment overwrites OVERLAP and BLOCKED. Consequently
                     // blocked-neighbour scores are never reached in either mode.
                     *mark = raw::RMG_PLACEMENT_ADJACENT;
-                    terrain_seen[terrain.index()] = true;
+                    terrain_seen.insert(terrain);
                     let first_row = position.point.y - (y + 1).min(side) + 1;
                     let last_row = position.point.y - (y - 2).max(0) + 1;
                     let first_column = position.point.x - (x + 1).min(side) + 1;
@@ -187,13 +187,10 @@ impl PlacementMap<'_, '_, '_> {
         }
         let mut score = 0_i32;
         let mut positive = false;
-        for (index, seen) in terrain_seen.into_iter().enumerate() {
-            if seen {
-                let terrain = crate::domain::Terrain::parse(i32::try_from(index).unwrap()).unwrap();
-                let value = rule.terrain_score(terrain);
-                score = score.checked_add(value).ok_or(PlacementError::Arithmetic)?;
-                positive |= value > 0;
-            }
+        for terrain in terrain_seen.iter() {
+            let value = rule.terrain_score(terrain);
+            score = score.checked_add(value).ok_or(PlacementError::Arithmetic)?;
+            positive |= value > 0;
         }
         if score < raw::RMG_PLACEMENT_MINIMUM_TERRAIN_SCORE {
             return Ok(score);
@@ -327,10 +324,6 @@ impl PlacementMap<'_, '_, '_> {
     ///
     /// # Errors
     /// Reports placement-rule, object, geometry, allocation or arithmetic faults.
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "parsed dimensions and tile indexes fit native signed coordinates"
-    )]
     pub fn decorate_obstacles(
         &mut self,
         scratch: &mut ObstacleWorkspace,
@@ -348,25 +341,13 @@ impl PlacementMap<'_, '_, '_> {
         }
         self.prepare_object_context(objects, catalog)?;
         scratch.prepare(catalog)?;
-        let side = self.view().side;
-        let plane = side * side;
         for index in 0..self.cells.len() {
             if self.cells[index].reservation != PathReservation::Obstacle
                 || !self.view().passable(index)
             {
                 continue;
             }
-            let position = WorldPosition {
-                point: Point::new(
-                    i32::try_from(index % side).unwrap(),
-                    i32::try_from(index % plane / side).unwrap(),
-                ),
-                level: if index < plane {
-                    Level::Surface
-                } else {
-                    Level::Underground
-                },
-            };
+            let position = self.view().layout.position(index);
             self.fill_obstacles(scratch, catalog, rules, objects, position, rng)?;
         }
         for index in 0..self.cells.len() {
@@ -399,7 +380,8 @@ impl PlacementMap<'_, '_, '_> {
             scratch.candidates.clear();
             let mut total = 0_i32;
             for kind in DECORATION_KINDS {
-                for (ordinal, entry) in catalog.family(kind).iter().enumerate() {
+                for member in catalog.members(kind) {
+                    let (prototype, entry) = (member.id(), member.entry());
                     let Some(rule) = entry.rule() else {
                         continue;
                     };
@@ -411,7 +393,6 @@ impl PlacementMap<'_, '_, '_> {
                     {
                         continue;
                     }
-                    let prototype = catalog.at(kind, ordinal).unwrap();
                     let footprint = entry.image_mask().size()?;
                     // Put S under each blocked footprint cell. For a fully
                     // blocked 3x2 object, candidate anchors are S and each o:
@@ -469,7 +450,7 @@ impl PlacementMap<'_, '_, '_> {
             let object = objects.create(catalog, selected.prototype)?;
             // Decoration updates generator counts and distances as well as cell membership.
             self.register_object(objects, catalog, object, at)?;
-            let side = i32::try_from(self.view().side).unwrap();
+            let side = self.view().signed_side();
             for y in (at.point.y - i32::from(footprint.height())).max(0)..(at.point.y + 2).min(side)
             {
                 for x in

@@ -687,6 +687,27 @@ impl PrototypeId {
         self.index
     }
 }
+
+/// A prototype resolved in its catalog: its identity together with the
+/// borrowed entry, so selection results need no second fallible lookup.
+#[derive(Clone, Copy, Debug)]
+pub struct PrototypeRef<'c> {
+    id: PrototypeId,
+    entry: &'c PreparedPrototype<'c>,
+}
+impl<'c> PrototypeRef<'c> {
+    /// Persistent identity, for object creation and storage across mutation.
+    #[must_use]
+    pub const fn id(self) -> PrototypeId {
+        self.id
+    }
+    /// The prepared catalog entry.
+    #[must_use]
+    pub const fn entry(self) -> &'c PreparedPrototype<'c> {
+        self.entry
+    }
+}
+
 impl PrototypeCatalog<'_> {
     pub(crate) const fn owner(&self) -> OwnerId {
         self.owner
@@ -720,22 +741,32 @@ impl PrototypeCatalog<'_> {
             .then(|| self.entries.get(id.index))
             .flatten()
     }
+    /// One family's entries with their identities, in native family order.
+    #[must_use]
+    pub fn members(
+        &self,
+        family: ObjectKind,
+    ) -> impl DoubleEndedIterator<Item = PrototypeRef<'_>> + ExactSizeIterator + Clone {
+        let first = self.offsets[family.index()];
+        self.family(family)
+            .iter()
+            .enumerate()
+            .map(move |(index, entry)| PrototypeRef {
+                id: self.id(first + index),
+                entry,
+            })
+    }
     /// Direct family indexing used for towns, portals and reserved output slots.
     #[must_use]
-    pub fn at(&self, family: ObjectKind, index: usize) -> Option<PrototypeId> {
-        self.family(family)
-            .get(index)
-            .map(|_| self.id(self.offsets[family.index()] + index))
+    pub fn at(&self, family: ObjectKind, index: usize) -> Option<PrototypeRef<'_>> {
+        self.members(family).nth(index)
     }
     /// First matching subtype in native family order, without terrain filtering
     /// or randomness. Used by key tents and border guards.
     #[must_use]
-    pub fn first_subtype(&self, family: ObjectKind, subtype: i32) -> Option<PrototypeId> {
-        let index = self
-            .family(family)
-            .iter()
-            .position(|entry| entry.prototype().subtype() == subtype)?;
-        self.at(family, index)
+    pub fn first_subtype(&self, family: ObjectKind, subtype: i32) -> Option<PrototypeRef<'_>> {
+        self.members(family)
+            .find(|member| member.entry.prototype().subtype() == subtype)
     }
     /// Choose a matching prototype in source order using one draw, even for a
     /// singleton. An empty candidate set consumes none. Counting and selecting
@@ -750,18 +781,14 @@ impl PrototypeCatalog<'_> {
         subtype: i32,
         terrain: Terrain,
         rng: &mut RetailRng,
-    ) -> Option<PrototypeId> {
+    ) -> Option<PrototypeRef<'_>> {
         let mut candidates = self
-            .family(family)
-            .iter()
-            .enumerate()
-            .filter(|(_, entry)| entry.prototype.selectable(subtype, terrain));
+            .members(family)
+            .filter(|member| member.entry.prototype.selectable(subtype, terrain));
         let count = NonZeroU32::new(
             u32::try_from(candidates.clone().count()).expect("source row count fits i32"),
         )?;
-        candidates
-            .nth(rng.below(count) as usize)
-            .map(|(index, _)| self.id(self.offsets[family.index()] + index))
+        candidates.nth(rng.below(count) as usize)
     }
 }
 
@@ -938,7 +965,7 @@ mod tests {
         let other = source
             .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
             .unwrap();
-        let prototype = catalog.at(ObjectKind::MONSTER, 0).unwrap();
+        let prototype = catalog.at(ObjectKind::MONSTER, 0).unwrap().id();
         let mut first = ObjectArena::default();
         let mut second = ObjectArena::default();
         assert!(matches!(
@@ -991,7 +1018,7 @@ mod tests {
         let second = source
             .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
             .unwrap();
-        let id = first.at(ObjectKind::MONSTER, 0).unwrap();
+        let id = first.at(ObjectKind::MONSTER, 0).unwrap().id();
         assert!(second.get(id).is_none());
         let moved = first;
         assert!(moved.get(id).is_some());
@@ -1015,7 +1042,7 @@ mod tests {
             let mut rng = RetailRng::new(1);
             let result = catalog.select_guard(
                 100,
-                GuardFactions::Allowed(&[true; 10]),
+                GuardFactions::Allowed(crate::template::AllowedGuards::ALL),
                 &creatures,
                 &mut rng,
             );
@@ -1030,7 +1057,12 @@ mod tests {
             assert_eq!(rng.draws(), 1);
             let end = rng.checkpoint();
             assert_eq!(
-                catalog.select_guard(9, GuardFactions::Allowed(&[true; 10]), &creatures, &mut rng),
+                catalog.select_guard(
+                    9,
+                    GuardFactions::Allowed(crate::template::AllowedGuards::ALL),
+                    &creatures,
+                    &mut rng
+                ),
                 Ok(None)
             );
             assert_eq!(rng.checkpoint(), end);
@@ -1047,8 +1079,7 @@ mod tests {
         let source = PrototypeSource::parse(&bytes, |_| Ok::<_, Infallible>(Some(mask()))).unwrap();
         let rules = rules();
         let creatures = creature_traits(&[(2, 10, 1, 1), (143, 20, 1000, 1000)]);
-        let factions =
-            GuardFactions::Matching(crate::request::Town::parse(raw::TOWN_CASTLE).unwrap());
+        let factions = GuardFactions::Matching(crate::request::Town::CASTLE);
         for version in [MapVersion::Restoration, MapVersion::ArmageddonsBlade] {
             let catalog = source.prepare(&rules, version, Behavior::Hotfix).unwrap();
             let mut rng = RetailRng::new(1);
@@ -1091,7 +1122,7 @@ mod tests {
         assert_eq!(
             catalog.select_guard(
                 0,
-                GuardFactions::Allowed(&[true; 10]),
+                GuardFactions::Allowed(crate::template::AllowedGuards::ALL),
                 &creature_traits(&[]),
                 &mut rng
             ),
@@ -1107,8 +1138,7 @@ mod tests {
         let catalog = source
             .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
             .unwrap();
-        let factions =
-            GuardFactions::Matching(crate::request::Town::parse(raw::TOWN_CASTLE).unwrap());
+        let factions = GuardFactions::Matching(crate::request::Town::CASTLE);
         assert!(matches!(
             catalog.select_guard(
                 0,
@@ -1441,8 +1471,15 @@ mod tests {
         let selected = catalog
             .choose(ObjectKind::MONSTER, 2, Terrain::Dirt, &mut rng)
             .unwrap();
-        assert_eq!(Some(selected), catalog.at(ObjectKind::MONSTER, 0));
-        assert_eq!(catalog.get(selected).unwrap().prototype().subtype(), 2);
+        assert_eq!(
+            Some(selected.id()),
+            catalog.at(ObjectKind::MONSTER, 0).map(PrototypeRef::id)
+        );
+        assert_eq!(selected.entry().prototype().subtype(), 2);
+        assert!(std::ptr::eq(
+            selected.entry(),
+            catalog.get(selected.id()).unwrap()
+        ));
         assert_eq!(rng.checkpoint().draws, initial.draws + 1);
         assert!(catalog.at(ObjectKind::MONSTER, 1).is_none());
     }

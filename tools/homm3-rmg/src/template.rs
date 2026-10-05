@@ -1,18 +1,70 @@
 //! Request-specific preparation of `rmg.txt` into linked, typed templates.
 
 use crate::{
-    geometry::ZoneId,
+    behavior::TownMask,
+    domain::{FlagSet, LandTerrain, Ordinal},
     raw,
-    request::{MapVersion, Request, Water, PLAYER_COUNT},
+    request::{MapVersion, Request, Town, Water, PLAYER_COUNT},
 };
 use homm3_resource::{Field, Spreadsheet, SpreadsheetRow};
-use std::{borrow::Cow, error::Error, fmt, num::NonZeroU32};
+use std::{
+    borrow::Cow,
+    error::Error,
+    fmt,
+    num::NonZeroU32,
+    ops::{Index, IndexMut},
+};
 
 const COLUMNS: usize = raw::RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_PLAYERS as usize + 1;
 const TOWNS: usize = raw::TOWN_TYPE_COUNT as usize;
 const RESOURCES: usize = raw::NUM_RESOURCES as usize;
-const LAND_TERRAINS: usize = raw::eTerrainWater as usize;
 const BANDS: usize = raw::RMG_TREASURE_BAND_COUNT as usize;
+
+/// A guard's creature affiliation, in the template's allowed-monster column order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GuardAffinity {
+    /// Neutral creatures, the first allowed-monster column.
+    Neutral,
+    /// Creatures of one faction, in the following columns.
+    Faction(Town),
+}
+impl GuardAffinity {
+    /// Neutral first, then Castle through Conflux.
+    pub const ALL: [Self; TOWNS + 1] = {
+        let mut all = [Self::Neutral; TOWNS + 1];
+        let mut town = 0;
+        while town < TOWNS {
+            all[town + 1] = Self::Faction(Town::ALL[town]);
+            town += 1;
+        }
+        all
+    };
+    /// Affinity of a creature with an optional faction.
+    #[must_use]
+    pub fn of(town: Option<Town>) -> Self {
+        town.map_or(Self::Neutral, Self::Faction)
+    }
+}
+impl Ordinal for GuardAffinity {
+    const ALL: &'static [Self] = &Self::ALL;
+    fn index(self) -> usize {
+        match self {
+            Self::Neutral => 0,
+            Self::Faction(town) => town.index() + 1,
+        }
+    }
+}
+
+/// Guard affinities a zone admits, including the retail `RoE` quirk.
+pub type AllowedGuards = FlagSet<GuardAffinity>;
+impl AllowedGuards {
+    /// Retail bug, retained by hotfix: `RoE` filtering clears Conflux's
+    /// unshifted town ordinal in this neutral-first array. That column is
+    /// Fortress, so Fortress guards are disabled and Conflux guards remain.
+    pub fn clear_retail_roe_conflux(&mut self) {
+        self.remove(GuardAffinity::ALL[raw::TOWN_CONFLUX as usize]);
+    }
+}
 
 /// A source row cannot be interpreted safely as a template record.
 #[derive(Debug)]
@@ -168,12 +220,17 @@ impl<'a> Row<'a> {
             && self.number(first + raw::RMG_PLAYER_LIMIT_MAXIMUM_PLAYERS)? >= total)
     }
 
-    fn kind(&self) -> u32 {
+    fn kind(&self) -> ZoneKind {
         // Later kind columns override earlier ones; absence defaults to treasure.
-        (raw::RMG_TEMPLATE_COLUMN_KIND_HUMAN..=raw::RMG_TEMPLATE_COLUMN_KIND_JUNCTION)
-            .rev()
-            .find(|&column| self.is_set(column))
-            .unwrap_or(raw::RMG_TEMPLATE_COLUMN_KIND_TREASURE)
+        [
+            (raw::RMG_TEMPLATE_COLUMN_KIND_JUNCTION, ZoneKind::Junction),
+            (raw::RMG_TEMPLATE_COLUMN_KIND_TREASURE, ZoneKind::Treasure),
+            (raw::RMG_TEMPLATE_COLUMN_KIND_COMPUTER, ZoneKind::Computer),
+            (raw::RMG_TEMPLATE_COLUMN_KIND_HUMAN, ZoneKind::Human),
+        ]
+        .into_iter()
+        .find(|&(column, _)| self.is_set(column))
+        .map_or(ZoneKind::Treasure, |(_, kind)| kind)
     }
 }
 
@@ -186,6 +243,45 @@ impl PlayerSlot {
     pub const fn index(self) -> usize {
         self.0 as usize
     }
+    /// Every template slot in order.
+    pub fn all() -> impl DoubleEndedIterator<Item = Self> + ExactSizeIterator + Clone {
+        const { assert!(PLAYER_COUNT <= u8::MAX as usize) };
+        (0..=u8::MAX).map(Self).take(PLAYER_COUNT)
+    }
+}
+
+/// One value per template player slot, indexed by `PlayerSlot`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PerSlot<T>([T; PLAYER_COUNT]);
+impl<T> PerSlot<T> {
+    /// Values in slot order.
+    pub const fn new(values: [T; PLAYER_COUNT]) -> Self {
+        Self(values)
+    }
+    /// Values with their slots, in slot order.
+    pub fn iter(&self) -> impl DoubleEndedIterator<Item = (PlayerSlot, &T)> {
+        PlayerSlot::all().zip(&self.0)
+    }
+}
+impl<T> Index<PlayerSlot> for PerSlot<T> {
+    type Output = T;
+    fn index(&self, slot: PlayerSlot) -> &T {
+        &self.0[slot.index()]
+    }
+}
+impl<T> IndexMut<PlayerSlot> for PerSlot<T> {
+    fn index_mut(&mut self, slot: PlayerSlot) -> &mut T {
+        &mut self.0[slot.index()]
+    }
+}
+
+/// The most capable starting zone a template offers for one player slot.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SlotUse {
+    /// At least one human-capable starting zone.
+    Human,
+    /// Only computer starting zones.
+    Computer,
 }
 
 /// Player zones require a player slot; other zones may have no owner.
@@ -199,6 +295,63 @@ pub enum ZoneRole {
     Treasure(Option<PlayerSlot>),
     /// Junction region and its optional owner.
     Junction(Option<PlayerSlot>),
+}
+impl ZoneRole {
+    /// The owning player slot, required for player zones.
+    #[must_use]
+    pub const fn owner(self) -> Option<PlayerSlot> {
+        match self {
+            Self::Human(slot) | Self::Computer(slot) => Some(slot),
+            Self::Treasure(owner) | Self::Junction(owner) => owner,
+        }
+    }
+}
+
+/// A zone's town placement category, in template column order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u32)]
+pub enum TownCategory {
+    /// Owned by the zone's player, with a fort.
+    PlayerCastle = raw::RMG_TOWN_PLAYER_CASTLE,
+    /// Owned by the zone's player, without a fort.
+    PlayerBasic = raw::RMG_TOWN_PLAYER_BASIC,
+    /// Unowned, with a fort.
+    NeutralCastle = raw::RMG_TOWN_NEUTRAL_CASTLE,
+    /// Unowned, without a fort.
+    NeutralBasic = raw::RMG_TOWN_NEUTRAL_BASIC,
+}
+impl TownCategory {
+    /// Native category order.
+    pub const ALL: [Self; raw::RMG_TOWN_CATEGORY_COUNT as usize] = [
+        Self::PlayerCastle,
+        Self::PlayerBasic,
+        Self::NeutralCastle,
+        Self::NeutralBasic,
+    ];
+    /// Index into a zone's town placements.
+    #[must_use]
+    pub const fn index(self) -> usize {
+        self as usize
+    }
+    /// Whether the zone's player owns towns of this category.
+    #[must_use]
+    pub const fn is_player(self) -> bool {
+        matches!(self, Self::PlayerCastle | Self::PlayerBasic)
+    }
+    /// Whether towns of this category start with a fort.
+    #[must_use]
+    pub const fn has_fort(self) -> bool {
+        matches!(self, Self::PlayerCastle | Self::NeutralCastle)
+    }
+}
+
+/// A row's zone kind; later kind columns override earlier ones.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ZoneKind {
+    Human,
+    Computer,
+    Treasure,
+    Junction,
 }
 
 /// A placement category with an initial count and optional positive density.
@@ -234,10 +387,28 @@ pub enum ZoneMonsters {
     Strong,
 }
 
+/// A zone's position in its prepared template's filtered row order.
+///
+/// Distinct from a generated map's `ZoneId`, which also covers appended
+/// water zones; template zones occupy that space's first slots.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct TemplateZoneId(usize);
+impl TemplateZoneId {
+    /// Index into the owning template's zones.
+    #[must_use]
+    pub const fn index(self) -> usize {
+        self.0
+    }
+
+    const fn new(index: usize) -> Self {
+        Self(index)
+    }
+}
+
 /// A connection already resolved to a zone in its owning template.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Connection {
-    destination: ZoneId,
+    destination: TemplateZoneId,
     value: i32,
     unguarded: bool,
     border_guard: bool,
@@ -245,7 +416,7 @@ pub struct Connection {
 impl Connection {
     /// Connected zone in this prepared template.
     #[must_use]
-    pub const fn destination(self) -> ZoneId {
+    pub const fn destination(self) -> TemplateZoneId {
         self.destination
     }
     /// Unscaled guard value.
@@ -268,19 +439,19 @@ impl Connection {
 /// A parsed, request-filtered zone. Construction resolves its required domains.
 #[derive(Debug)]
 pub struct Zone {
-    id: ZoneId,
+    id: TemplateZoneId,
     source_number: i32,
     role: ZoneRole,
     size: NonZeroU32,
     towns: [Placement; raw::RMG_TOWN_CATEGORY_COUNT as usize],
     neutral_towns_match_alignment: bool,
-    allowed_towns: [bool; TOWNS],
+    allowed_towns: TownMask,
     mines: [Placement; RESOURCES],
     use_native_terrain: bool,
-    allowed_terrain: [bool; LAND_TERRAINS],
+    allowed_terrain: FlagSet<LandTerrain>,
     monsters: ZoneMonsters,
     guards_match_alignment: bool,
-    allowed_monsters: [bool; TOWNS + 1],
+    allowed_monsters: AllowedGuards,
     treasure: [TreasureBand; BANDS],
     connections: Vec<Connection>,
 }
@@ -288,7 +459,7 @@ pub struct Zone {
 impl Zone {
     /// Dense identity in the owning template.
     #[must_use]
-    pub const fn id(&self) -> ZoneId {
+    pub const fn id(&self) -> TemplateZoneId {
         self.id
     }
     /// Template role with any required player slot.
@@ -301,10 +472,15 @@ impl Zone {
     pub const fn size(&self) -> NonZeroU32 {
         self.size
     }
-    /// Player castle/basic then neutral castle/basic placement categories.
+    /// Town placements in `TownCategory::ALL` order.
     #[must_use]
     pub const fn towns(&self) -> &[Placement; raw::RMG_TOWN_CATEGORY_COUNT as usize] {
         &self.towns
+    }
+    /// One town placement category.
+    #[must_use]
+    pub const fn town(&self, category: TownCategory) -> Placement {
+        self.towns[category.index()]
     }
     /// Whether neutral towns inherit zone alignment.
     #[must_use]
@@ -313,8 +489,8 @@ impl Zone {
     }
     /// Allowed factions after version filtering.
     #[must_use]
-    pub const fn allowed_towns(&self) -> &[bool; TOWNS] {
-        &self.allowed_towns
+    pub const fn allowed_towns(&self) -> TownMask {
+        self.allowed_towns
     }
     /// Mine categories indexed by resource.
     #[must_use]
@@ -328,8 +504,8 @@ impl Zone {
     }
     /// Allowed land terrains; dirt is the fallback when the source allows none.
     #[must_use]
-    pub const fn allowed_terrain(&self) -> &[bool; LAND_TERRAINS] {
-        &self.allowed_terrain
+    pub const fn allowed_terrain(&self) -> FlagSet<LandTerrain> {
+        self.allowed_terrain
     }
     /// Template guard strength.
     #[must_use]
@@ -343,8 +519,8 @@ impl Zone {
     }
     /// Neutral then faction guard availability, including the retail `RoE` quirk.
     #[must_use]
-    pub const fn allowed_monsters(&self) -> &[bool; TOWNS + 1] {
-        &self.allowed_monsters
+    pub const fn allowed_monsters(&self) -> AllowedGuards {
+        self.allowed_monsters
     }
     /// Treasure bands in source order.
     #[must_use]
@@ -375,29 +551,39 @@ impl Template<'_> {
     pub fn zones(&self) -> &[Zone] {
         &self.zones
     }
-
-    /// Distinct human/all slots, used later by player assignment.
+    /// The zone this template assigned an identity.
+    ///
+    /// # Panics
+    /// Only for an identity from a different template.
     #[must_use]
-    pub fn player_slots(&self) -> ([bool; PLAYER_COUNT], [bool; PLAYER_COUNT]) {
-        let mut humans = [false; PLAYER_COUNT];
-        let mut all = [false; PLAYER_COUNT];
+    pub fn zone(&self, id: TemplateZoneId) -> &Zone {
+        &self.zones[id.index()]
+    }
+
+    /// Distinct player slots with their most capable starting zone, used
+    /// later by player assignment.
+    #[must_use]
+    pub fn player_slots(&self) -> PerSlot<Option<SlotUse>> {
+        let mut slots = PerSlot::new([None; PLAYER_COUNT]);
         for zone in &self.zones {
             match zone.role {
-                ZoneRole::Human(slot) => {
-                    humans[slot.index()] = true;
-                    all[slot.index()] = true;
+                ZoneRole::Human(slot) => slots[slot] = Some(SlotUse::Human),
+                ZoneRole::Computer(slot) => {
+                    slots[slot].get_or_insert(SlotUse::Computer);
                 }
-                ZoneRole::Computer(slot) => all[slot.index()] = true,
                 _ => {}
             }
         }
-        (humans, all)
+        slots
     }
 
     fn admits(&self, request: &Request) -> bool {
-        let (humans, all) = self.player_slots();
-        let humans = humans.into_iter().filter(|&b| b).count();
-        let all = all.into_iter().filter(|&b| b).count();
+        let slots = self.player_slots();
+        let all = slots.iter().filter(|(_, use_)| use_.is_some()).count();
+        let humans = slots
+            .iter()
+            .filter(|(_, use_)| **use_ == Some(SlotUse::Human))
+            .count();
         humans >= usize::from(request.human_players().get())
             && all >= usize::from(request.human_players().get() + request.computer_players().get())
     }
@@ -455,14 +641,14 @@ impl<'a> TemplateSource<'a> {
                     continue;
                 }
                 let connection = Connection {
-                    destination: ZoneId::new(second),
+                    destination: TemplateZoneId::new(second),
                     value: row.number(raw::RMG_TEMPLATE_COLUMN_CONNECTION_VALUE)?,
                     unguarded: row.is_set(raw::RMG_TEMPLATE_COLUMN_CONNECTION_UNGUARDED),
                     border_guard: row.is_set(raw::RMG_TEMPLATE_COLUMN_CONNECTION_BORDER_GUARD),
                 };
                 template.zones[first].connections.push(connection);
                 template.zones[second].connections.push(Connection {
-                    destination: ZoneId::new(first),
+                    destination: TemplateZoneId::new(first),
                     ..connection
                 });
             }
@@ -533,15 +719,19 @@ impl<'a> TemplateSource<'a> {
                             request,
                         )?
                     {
+                        // Retail admission counts player zones, including
+                        // repeated or unusable ones; hotfix counts distinct
+                        // slots of parsed zones (`Template::admits`).
                         match row.kind() {
-                            raw::RMG_TEMPLATE_COLUMN_KIND_HUMAN => {
+                            ZoneKind::Human => {
                                 human_zones += 1;
                                 player_zones += 1;
                             }
-                            raw::RMG_TEMPLATE_COLUMN_KIND_COMPUTER => player_zones += 1,
-                            _ => {}
+                            ZoneKind::Computer => player_zones += 1,
+                            ZoneKind::Treasure | ZoneKind::Junction => {}
                         }
-                        match parse_zone(&row, ZoneId::new(template.zones.len()), request)? {
+                        match parse_zone(&row, TemplateZoneId::new(template.zones.len()), request)?
+                        {
                             Ok(zone) => template.zones.push(zone),
                             Err(reason) => {
                                 fault.get_or_insert(reason);
@@ -621,7 +811,7 @@ fn representable(categories: impl IntoIterator<Item = Placement> + Clone) -> boo
 // candidate so retail consumes its selection draw before reporting the fault.
 fn parse_zone(
     row: &Row<'_>,
-    id: ZoneId,
+    id: TemplateZoneId,
     request: &Request,
 ) -> Result<Result<Zone, RetailTemplateFault>, TemplateError> {
     let unusable = RetailTemplateFault::UnusableZone { row: row.index };
@@ -640,16 +830,16 @@ fn parse_zone(
         _ => return Ok(Err(unusable)),
     };
     let role = match (row.kind(), owner) {
-        (raw::RMG_TEMPLATE_COLUMN_KIND_HUMAN, Some(slot)) => ZoneRole::Human(slot),
-        (raw::RMG_TEMPLATE_COLUMN_KIND_COMPUTER, Some(slot)) => ZoneRole::Computer(slot),
-        (raw::RMG_TEMPLATE_COLUMN_KIND_TREASURE, owner) => ZoneRole::Treasure(owner),
-        (raw::RMG_TEMPLATE_COLUMN_KIND_JUNCTION, owner) => ZoneRole::Junction(owner),
+        (ZoneKind::Human, Some(slot)) => ZoneRole::Human(slot),
+        (ZoneKind::Computer, Some(slot)) => ZoneRole::Computer(slot),
+        (ZoneKind::Treasure, owner) => ZoneRole::Treasure(owner),
+        (ZoneKind::Junction, owner) => ZoneRole::Junction(owner),
         // Retail getPlayerSlots indexes both eight-byte arrays with -1 for an
         // unassigned human zone (only allSlots for a computer zone). In generate,
         // 0x5499e0 writes humanSlots[-1]; 0x5499e5 writes allSlots[-1], aliasing
         // humanSlots[7]. Shipped 2SM2i(2) thus gains a phantom player slot.
         // Native success does not make these out-of-array accesses defined.
-        _ => {
+        (ZoneKind::Human | ZoneKind::Computer, None) => {
             return Ok(Err(RetailTemplateFault::UnassignedPlayerZone {
                 row: row.index,
             }))
@@ -715,21 +905,28 @@ fn parse_zone(
     {
         return Ok(Err(unusable));
     }
-    let flags = |first: u32, index: usize| row.is_set(first + u32::try_from(index).unwrap());
-    let mut allowed_towns =
-        std::array::from_fn(|index| flags(raw::RMG_TEMPLATE_COLUMN_ALLOWED_TOWNS, index));
-    let mut allowed_monsters =
-        std::array::from_fn(|index| flags(raw::RMG_TEMPLATE_COLUMN_ALLOWED_MONSTERS, index));
+    let column = |first: u32, index: usize| first + u32::try_from(index).unwrap();
+    let mut allowed_towns: TownMask = FlagSet::from_fn(|town: Town| {
+        row.is_set(column(raw::RMG_TEMPLATE_COLUMN_ALLOWED_TOWNS, town.index()))
+    });
+    let mut allowed_monsters: AllowedGuards = FlagSet::from_fn(|affinity: GuardAffinity| {
+        row.is_set(column(
+            raw::RMG_TEMPLATE_COLUMN_ALLOWED_MONSTERS,
+            affinity.index(),
+        ))
+    });
     if request.version() == MapVersion::Restoration {
-        allowed_towns[raw::TOWN_CONFLUX as usize] = false;
-        // Retail bug, retained by hotfix: slots are neutral, then factions.
-        // Clearing Conflux's unshifted index therefore disables Fortress.
-        allowed_monsters[raw::TOWN_CONFLUX as usize] = false;
+        allowed_towns.remove(Town::CONFLUX);
+        allowed_monsters.clear_retail_roe_conflux();
     }
-    let mut allowed_terrain =
-        std::array::from_fn(|index| flags(raw::RMG_TEMPLATE_COLUMN_ALLOWED_TERRAIN, index));
-    if !allowed_terrain.contains(&true) {
-        allowed_terrain[raw::eTerrainDirt as usize] = true;
+    let mut allowed_terrain = FlagSet::from_fn(|terrain: LandTerrain| {
+        row.is_set(column(
+            raw::RMG_TEMPLATE_COLUMN_ALLOWED_TERRAIN,
+            terrain.index(),
+        ))
+    });
+    if allowed_terrain.is_empty() {
+        allowed_terrain.insert(LandTerrain::Dirt);
     }
     let monsters = match row
         .bytes(raw::RMG_TEMPLATE_COLUMN_MONSTER_STRENGTH)
@@ -747,7 +944,8 @@ fn parse_zone(
         role,
         size,
         towns,
-        neutral_towns_match_alignment: row.is_set(raw::RMG_TEMPLATE_COLUMN_NEUTRAL_TOWNS_MATCH_ZONE),
+        neutral_towns_match_alignment: row
+            .is_set(raw::RMG_TEMPLATE_COLUMN_NEUTRAL_TOWNS_MATCH_ZONE),
         allowed_towns,
         mines,
         use_native_terrain: row.is_set(raw::RMG_TEMPLATE_COLUMN_USE_NATIVE_TERRAIN),
@@ -925,9 +1123,12 @@ mod tests {
             .into_template()
             .unwrap();
         let zone = &template.zones()[0];
-        assert!(!zone.allowed_monsters()[raw::TOWN_FORTRESS as usize + 1]);
-        assert!(zone.allowed_monsters()[raw::TOWN_CONFLUX as usize + 1]);
-        assert!(zone.allowed_terrain()[raw::eTerrainDirt as usize]);
+        let guards = zone.allowed_monsters();
+        assert!(guards.contains(GuardAffinity::Neutral));
+        assert!(!guards.contains(GuardAffinity::Faction(Town::FORTRESS)));
+        assert!(guards.contains(GuardAffinity::Faction(Town::CONFLUX)));
+        assert!(!zone.allowed_towns().contains(Town::CONFLUX));
+        assert!(zone.allowed_terrain().contains(LandTerrain::Dirt));
     }
 
     #[test]
@@ -996,8 +1197,8 @@ mod tests {
         let candidates = source.prepare(&request, Water::None).unwrap();
         let mut rng = RetailRng::new(1);
         let selected = SelectedTemplate::select(&candidates, &request, &mut rng).unwrap();
-        assert_eq!(selected.players()[2].unwrap().index(), 5);
-        assert_eq!(selected.players()[6].unwrap().index(), 0);
+        assert_eq!(selected.players()[PlayerSlot(2)].unwrap().index(), 5);
+        assert_eq!(selected.players()[PlayerSlot(6)].unwrap().index(), 0);
         assert_eq!(rng.draws(), 1);
 
         let bytes = sheet(&[zone_row("repeated", 1, 3), zone_row("", 2, 3)]);
@@ -1014,5 +1215,36 @@ mod tests {
             Err(SelectionError::NoTemplates)
         ));
         assert_eq!(rng.draws(), 2);
+    }
+
+    #[test]
+    fn town_categories_follow_native_order() {
+        for (index, category) in TownCategory::ALL.into_iter().enumerate() {
+            assert_eq!(category.index(), index);
+        }
+        let player = TownCategory::ALL.map(TownCategory::is_player);
+        let fort = TownCategory::ALL.map(TownCategory::has_fort);
+        assert_eq!(player, [true, true, false, false]);
+        assert_eq!(fort, [true, false, true, false]);
+    }
+
+    #[test]
+    fn later_kind_columns_override_earlier_ones() {
+        let bytes = sheet(&[zone_row("", 1, 1)]);
+        let source = TemplateSource::parse(&bytes).unwrap();
+        let row = Row::new(source.rows[raw::RMG_FIRST_DATA_ROW as usize], 0);
+        assert_eq!(row.kind(), ZoneKind::Human);
+        let mut fields = zone_row("", 1, 1);
+        fields[raw::RMG_TEMPLATE_COLUMN_KIND_JUNCTION as usize] = "x".into();
+        let bytes = sheet(&[fields]);
+        let source = TemplateSource::parse(&bytes).unwrap();
+        let row = Row::new(source.rows[raw::RMG_FIRST_DATA_ROW as usize], 0);
+        assert_eq!(row.kind(), ZoneKind::Junction);
+        let mut fields = zone_row("", 1, 1);
+        fields[raw::RMG_TEMPLATE_COLUMN_KIND_HUMAN as usize].clear();
+        let bytes = sheet(&[fields]);
+        let source = TemplateSource::parse(&bytes).unwrap();
+        let row = Row::new(source.rows[raw::RMG_FIRST_DATA_ROW as usize], 0);
+        assert_eq!(row.kind(), ZoneKind::Treasure);
     }
 }

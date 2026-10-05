@@ -4,11 +4,11 @@ use super::{
     ObjectArena, ObjectId, PathReservation, PlacementError, PlacementMap, TownsPlaced,
 };
 use crate::{
-    boundaries::{BoundaryZone, ZoneOrigin},
+    boundaries::BoundaryZone,
     domain::{Resource, WorldPosition},
     geometry::Point,
     object::ObjectKind,
-    prototype::{OutlineWorkspace, PreparedPrototype, PrototypeCatalog, PrototypeId},
+    prototype::{OutlineWorkspace, PreparedPrototype, PrototypeCatalog, PrototypeRef},
     raw,
     rng::{RetailRng, RngCheckpoint},
     template::ZoneRole,
@@ -84,11 +84,10 @@ impl<'state, 'zones, 'tiles> JunctionsPrepared<'state, 'zones, 'tiles> {
         self.map_mut().prepare_object_context(objects, catalog)?;
         for index in 0..self.map().coverage().map().zones().len() {
             let zone = self.map().coverage().map().zones()[index];
-            let ZoneOrigin::Template(id) = zone.origin() else {
+            let Some(rules) = self.map().coverage().map().template_zone(&zone) else {
                 // Added water zones have zero mine counts and densities.
                 continue;
             };
-            let rules = &self.map().coverage().map().template().zones()[id.index()];
             let placements = *rules.mines();
             let starting_town =
                 if matches!(rules.role(), ZoneRole::Human(_) | ZoneRole::Computer(_)) {
@@ -146,37 +145,31 @@ enum MineSite {
 
 // Native uses last_scanned for the post-placement entrance and strip geometry,
 // even when the randomly selected art differs. Both modes retain this behavior.
-struct MinePrototype {
-    selected: PrototypeId,
-    last_scanned: PrototypeId,
+struct MinePrototype<'c> {
+    selected: PrototypeRef<'c>,
+    last_scanned: PrototypeRef<'c>,
 }
-impl MinePrototype {
+impl<'c> MinePrototype<'c> {
     fn select(
-        catalog: &PrototypeCatalog<'_>,
+        catalog: &'c PrototypeCatalog<'_>,
         resource: Resource,
         zone: BoundaryZone,
         rng: &mut RetailRng,
     ) -> Option<Self> {
-        let family = ObjectKind::MINE;
-        let entries = catalog.family(family);
-        let last_scanned = catalog.at(family, entries.len().checked_sub(1)?)?;
+        let members = catalog.members(ObjectKind::MINE);
+        let last_scanned = members.clone().next_back()?;
         let matching =
-            |entry: &&PreparedPrototype<'_>| entry.prototype().subtype() == resource as i32;
-        let recommended = entries
-            .iter()
-            .filter(matching)
-            .filter(|entry| entry.prototype().recommends(zone.terrain()))
-            .count();
-        let mut candidates = entries.iter().enumerate().filter(|(_, entry)| {
-            entry.prototype().subtype() == resource as i32
-                && (recommended == 0 || entry.prototype().recommends(zone.terrain()))
-        });
+            |member: &PrototypeRef<'_>| member.entry().prototype().subtype() == resource as i32;
+        let recommends =
+            |member: &PrototypeRef<'_>| member.entry().prototype().recommends(zone.terrain());
+        let recommended = members.clone().filter(matching).filter(recommends).count();
+        let mut candidates =
+            members.filter(|member| matching(member) && (recommended == 0 || recommends(member)));
         let count = NonZeroU32::new(
             u32::try_from(candidates.clone().count()).expect("parsed family length fits i32"),
         )?;
-        let (index, _) = candidates.nth(rng.below(count) as usize)?;
         Some(Self {
-            selected: catalog.at(family, index)?,
+            selected: candidates.nth(rng.below(count) as usize)?,
             last_scanned,
         })
     }
@@ -199,10 +192,8 @@ impl PlacementMap<'_, '_, '_> {
         let Some(prototypes) = MinePrototype::select(catalog, resource, zone, rng) else {
             return Ok(false);
         };
-        let object = objects.create_mine(catalog, prototypes.selected)?;
-        let entry = catalog
-            .get(prototypes.selected)
-            .expect("selected from catalog");
+        let object = objects.create_mine(catalog, prototypes.selected.id())?;
+        let entry = prototypes.selected.entry();
         let Some(position) =
             self.place_mine_site(object, entry, zone, site, objects, catalog, rng)?
         else {
@@ -218,9 +209,7 @@ impl PlacementMap<'_, '_, '_> {
             i32::try_from(base).map_err(|_| PlacementError::Arithmetic)?,
             zone,
         )?;
-        let last = catalog
-            .get(prototypes.last_scanned)
-            .expect("selected from catalog");
+        let last = prototypes.last_scanned.entry();
         let entrance = entrance_position(last.prototype(), position)?;
         let approach = self.open_entrance_approach(entrance)?;
         if value > 0 {
@@ -380,10 +369,9 @@ impl PlacementMap<'_, '_, '_> {
         else {
             return Ok(());
         };
-        let entry = catalog.get(prototype).expect("selected from catalog");
+        let entry = prototype.entry();
         let width = last_mine.image_mask().signed_width();
-        let side =
-            i32::try_from(self.view().side).map_err(|_| PlacementError::CoordinateOverflow)?;
+        let side = self.view().signed_side();
         // North is up. P is the mine anchor; w is the LAST scanned art's width.
         // The clipped row below spans x=P.x-w through P.x+1 (inclusive).
         //   ... mine ... P
@@ -408,7 +396,7 @@ impl PlacementMap<'_, '_, '_> {
                 };
                 if rng.draw() % 2 == 0 && self.object_fits(entry, position, zone)? {
                     placed += 1;
-                    let object = objects.create_resource(catalog, prototype)?;
+                    let object = objects.create_resource(catalog, prototype.id())?;
                     self.register_object(objects, catalog, object, position)?;
                 }
             }

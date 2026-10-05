@@ -92,7 +92,7 @@ impl PlacementMap<'_, '_, '_> {
     pub fn open_path_patch(&mut self, center: WorldPosition) -> Result<(), PlacementError> {
         let index = self.view().native_index(center)?;
         self.cells[index].open_path();
-        for position in Neighborhood::ThreeByThree.cells(center, self.view().side)? {
+        for position in Neighborhood::ThreeByThree.cells(center, self.view().side())? {
             let index = self.view().index(position)?;
             self.cells[index].open_path();
         }
@@ -107,7 +107,7 @@ impl PlacementMap<'_, '_, '_> {
     pub fn mark_obstacle_patch(&mut self, center: WorldPosition) -> Result<(), PlacementError> {
         let index = self.view().native_index(center)?;
         self.cells[index].mark_obstacle();
-        for position in Neighborhood::ThreeByThree.cells(center, self.view().side)? {
+        for position in Neighborhood::ThreeByThree.cells(center, self.view().side())? {
             let index = self.view().index(position)?;
             if self.cells[index].entrance.is_none()
                 && self.view().passable(index)
@@ -129,7 +129,7 @@ impl PlacementMap<'_, '_, '_> {
         center: WorldPosition,
         neighborhood: Neighborhood,
     ) -> Result<(), PlacementError> {
-        for position in neighborhood.cells(center, self.view().side)? {
+        for position in neighborhood.cells(center, self.view().side())? {
             let index = self.view().index(position)?;
             if self.memberships.first(self.cells[index].objects).is_none() {
                 self.cells[index].release_path();

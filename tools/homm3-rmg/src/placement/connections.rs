@@ -9,7 +9,7 @@ use crate::{
     domain::{Level, Terrain, WorldPosition},
     geometry::{GeometryError, Point, ZoneId},
     object::ObjectKind,
-    prototype::{PreparedPrototype, PrototypeCatalog, PrototypeId},
+    prototype::{PreparedPrototype, PrototypeCatalog, PrototypeRef},
     raw,
     rng::{RetailRng, RngCheckpoint},
     terrain::TerrainError,
@@ -220,8 +220,7 @@ impl PlacementMap<'_, '_, '_> {
                 cell.open_path();
             }
         }
-        let side =
-            i32::try_from(self.view().side).map_err(|_| PlacementError::CoordinateOverflow)?;
+        let side = self.view().signed_side();
         for level in [Level::Surface, Level::Underground]
             .into_iter()
             .take(self.coverage().map().request().levels().count() as usize)
@@ -377,8 +376,7 @@ impl PlacementMap<'_, '_, '_> {
         } else {
             (dy, dx, Point::new(0, diagonal.y))
         };
-        let side =
-            i32::try_from(self.view().side).map_err(|_| PlacementError::CoordinateOverflow)?;
+        let side = self.view().signed_side();
         let mut error = major / 2;
         let mut steps = 0_u32;
         loop {
@@ -417,18 +415,7 @@ impl PlacementMap<'_, '_, '_> {
     }
 
     pub(super) fn position_at(&self, index: usize) -> WorldPosition {
-        let side = self.view().side;
-        WorldPosition {
-            point: Point::new(
-                i32::try_from(index % side).unwrap(),
-                i32::try_from(index / side % side).unwrap(),
-            ),
-            level: if index / (side * side) == 0 {
-                Level::Surface
-            } else {
-                Level::Underground
-            },
-        }
+        self.view().layout.position(index)
     }
 
     fn mark_zone_borders(&mut self) -> Result<(), ConnectionError> {
@@ -441,7 +428,7 @@ impl PlacementMap<'_, '_, '_> {
             }
             let position = self.position_at(index);
             let mut needs_border = false;
-            for nearby in Neighborhood::ThreeByThree.cells(position, self.view().side)? {
+            for nearby in Neighborhood::ThreeByThree.cells(position, self.view().side())? {
                 let index = self.view().index(nearby)?;
                 match self.coverage().map().raster().cells()[index].zone {
                     None => needs_border |= self.terrain.tiles()[index].terrain() == Terrain::Water,
@@ -489,11 +476,11 @@ impl PlacementMap<'_, '_, '_> {
 }
 
 // Whole-family selection performs its draw before the native zero-divisor fault.
-pub(super) fn draw_connection_prototype(
-    catalog: &PrototypeCatalog<'_>,
+pub(super) fn draw_connection_prototype<'c>(
+    catalog: &'c PrototypeCatalog<'_>,
     family: ObjectKind,
     rng: &mut RetailRng,
-) -> Result<PrototypeId, ConnectionError> {
+) -> Result<PrototypeRef<'c>, ConnectionError> {
     let draw = rng.draw();
     let count =
         u32::try_from(catalog.family(family).len()).map_err(|_| PlacementError::Arithmetic)?;
@@ -525,7 +512,7 @@ impl PlacementMap<'_, '_, '_> {
     ) -> Result<bool, PlacementError> {
         let map = self.terrain.coverage().map();
         let view = PlacementView {
-            side: map.raster().dimension(),
+            layout: map.raster().layout(),
             surface: super::PlacementSurface::World {
                 terrain: self.terrain.tiles(),
                 zones: map.raster().cells(),

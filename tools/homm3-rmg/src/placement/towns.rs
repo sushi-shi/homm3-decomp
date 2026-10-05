@@ -5,16 +5,17 @@ use super::{
     ObjectArena, ObjectId, ObjectPayload, PlacementError, PlacementMap, PlacementView,
 };
 use crate::{
-    boundaries::{BoundaryZone, ZoneOrigin},
+    behavior::TownMask,
+    boundaries::BoundaryZone,
     domain::WorldPosition,
     geometry::Point,
     object::ObjectKind,
-    prototype::{OutlineWorkspace, PreparedPrototype, PrototypeCatalog, PrototypeId},
+    prototype::{OutlineWorkspace, PreparedPrototype, PrototypeCatalog, PrototypeRef},
     raw,
-    request::{MapVersion, Town, PLAYER_COUNT},
+    request::{MapVersion, PerColour, Town, PLAYER_COUNT},
     rng::{RetailRng, RngCheckpoint},
-    selection::{select_allowed_town, Player},
-    template::{Placement, ZoneRole},
+    selection::Player,
+    template::{Placement, SlotUse, TownCategory, ZoneRole},
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
@@ -143,17 +144,20 @@ struct Rules {
     categories: [Placement; raw::RMG_TOWN_CATEGORY_COUNT as usize],
     owner: Option<Player>,
     neutral_matches: bool,
-    allowed: [bool; raw::TOWN_TYPE_COUNT as usize],
+    allowed: TownMask,
 }
 impl Rules {
-    fn category(self, index: usize) -> (Option<Player>, Fort) {
-        let player = index == raw::RMG_TOWN_PLAYER_CASTLE as usize
-            || index == raw::RMG_TOWN_PLAYER_BASIC as usize;
-        let fortified = index == raw::RMG_TOWN_PLAYER_CASTLE as usize
-            || index == raw::RMG_TOWN_NEUTRAL_CASTLE as usize;
+    const fn placement(self, category: TownCategory) -> Placement {
+        self.categories[category.index()]
+    }
+    const fn category(self, category: TownCategory) -> (Option<Player>, Fort) {
         (
-            if player { self.owner } else { None },
-            if fortified {
+            if category.is_player() {
+                self.owner
+            } else {
+                None
+            },
+            if category.has_fort() {
                 Fort::Present
             } else {
                 Fort::Absent
@@ -161,13 +165,13 @@ impl Rules {
         )
     }
     fn choose_town(self, version: MapVersion, rng: &mut RetailRng) -> Town {
-        select_allowed_town(&self.allowed, rng).unwrap_or_else(|| {
-            let count = if version == MapVersion::Restoration {
-                raw::TOWN_TYPE_ROE_COUNT
-            } else {
-                raw::TOWN_TYPE_COUNT
-            };
-            Town::parse(i32::try_from(rng.below(NonZeroU32::new(count).unwrap())).unwrap()).unwrap()
+        self.allowed.choose(rng).unwrap_or_else(|| {
+            // Native draws `rand() % TOWN_TYPE[_ROE]_COUNT`; Conflux is last.
+            let mut playable = TownMask::ALL;
+            if version == MapVersion::Restoration {
+                playable.remove(Town::CONFLUX);
+            }
+            playable.choose(rng).expect("every map version has towns")
         })
     }
 }
@@ -191,8 +195,8 @@ impl<'state, 'zones, 'tiles> PlacementMap<'state, 'zones, 'tiles> {
             let Some(rules) = self.town_rules(zone) else {
                 continue;
             };
-            for category in 0..rules.categories.len() {
-                if rules.categories[category].initial_count > 0 {
+            for category in TownCategory::ALL {
+                if rules.placement(category).initial_count > 0 {
                     let (owner, fort) = rules.category(category);
                     if self.try_primary_town(
                         objects,
@@ -229,20 +233,13 @@ impl<'state, 'zones, 'tiles> PlacementMap<'state, 'zones, 'tiles> {
 
 impl PlacementMap<'_, '_, '_> {
     fn town_rules(&self, zone: BoundaryZone) -> Option<Rules> {
-        let ZoneOrigin::Template(id) = zone.origin() else {
-            return None;
-        };
         let map = self.coverage().map();
-        let source = &map.template().zones()[id.index()];
-        let slot = match source.role() {
-            ZoneRole::Human(slot) | ZoneRole::Computer(slot) => Some(slot),
-            ZoneRole::Treasure(slot) | ZoneRole::Junction(slot) => slot,
-        };
+        let source = map.template_zone(&zone)?;
         Some(Rules {
             categories: *source.towns(),
-            owner: slot.and_then(|slot| map.player(slot)),
+            owner: source.role().owner().and_then(|slot| map.player(slot)),
             neutral_matches: source.neutral_towns_match_alignment(),
-            allowed: *source.allowed_towns(),
+            allowed: source.allowed_towns(),
         })
     }
 
@@ -254,7 +251,7 @@ impl PlacementMap<'_, '_, '_> {
     ) -> Result<bool, TownError> {
         let map = self.terrain.coverage().map();
         let view = PlacementView {
-            side: map.raster().dimension(),
+            layout: map.raster().layout(),
             surface: super::PlacementSurface::World {
                 terrain: self.terrain.tiles(),
                 zones: map.raster().cells(),
@@ -270,10 +267,10 @@ impl PlacementMap<'_, '_, '_> {
         )?)
     }
 
-    fn town_prototype(
-        catalog: &PrototypeCatalog<'_>,
+    fn town_prototype<'c>(
+        catalog: &'c PrototypeCatalog<'_>,
         town: Town,
-    ) -> Result<PrototypeId, TownError> {
+    ) -> Result<PrototypeRef<'c>, TownError> {
         let kind = ObjectKind::TOWN;
         catalog
             .at(kind, town.index())
@@ -298,7 +295,7 @@ impl PlacementMap<'_, '_, '_> {
             return Ok(false);
         };
         let prototype = Self::town_prototype(catalog, town)?;
-        let entry = catalog.get(prototype).unwrap();
+        let entry = prototype.entry();
         self.towns.candidates.clear();
         let Some(bounds) = zone.bounds() else {
             return Ok(false);
@@ -346,7 +343,8 @@ impl PlacementMap<'_, '_, '_> {
         rng: &mut RetailRng,
     ) -> Result<(), TownError> {
         let mut skip_primary = true;
-        for (category, placement) in rules.categories.iter().enumerate() {
+        for category in TownCategory::ALL {
+            let placement = rules.placement(category);
             if placement.initial_count <= 0 {
                 continue;
             }
@@ -362,12 +360,12 @@ impl PlacementMap<'_, '_, '_> {
         else {
             return Ok(());
         };
-        while let Some(category) = density.next()? {
-            let (owner, fort) = rules.category(category);
+        while let Some(index) = density.next()? {
+            let (owner, fort) = rules.category(TownCategory::ALL[index]);
             if !self
                 .try_additional_town(objects, catalog, zone, rules, owner, fort, spacing, rng)?
             {
-                density.finish(category);
+                density.finish(index);
             }
         }
         Ok(())
@@ -400,7 +398,7 @@ impl PlacementMap<'_, '_, '_> {
             return self.try_primary_town(objects, catalog, current, Some(town), owner, fort, rng);
         }
         let prototype = Self::town_prototype(catalog, town)?;
-        let entry = catalog.get(prototype).unwrap();
+        let entry = prototype.entry();
         let size = entry.image_mask().size().map_err(PlacementError::from)?;
         let Some(bounds) = zone.bounds() else {
             return Ok(false);
@@ -423,7 +421,7 @@ impl PlacementMap<'_, '_, '_> {
                     continue;
                 }
                 let mut valid = true;
-                for nearby in Neighborhood::ThreeByThree.cells(entrance, self.view().side)? {
+                for nearby in Neighborhood::ThreeByThree.cells(entrance, self.view().side())? {
                     let index = self.view().index(nearby)?;
                     if self.coverage().map().raster().cells()[index].zone != Some(zone.id()) {
                         valid = false;
@@ -451,19 +449,19 @@ impl PlacementMap<'_, '_, '_> {
         &mut self,
         objects: &mut ObjectArena,
         catalog: &PrototypeCatalog<'_>,
-        prototype: PrototypeId,
+        prototype: PrototypeRef<'_>,
         owner: Option<Player>,
         fort: Fort,
         rng: &mut RetailRng,
     ) -> Result<WorldPosition, TownError> {
         let id = self.claim_object_id()?;
-        let object = objects.create_town(catalog, prototype, id, owner, fort)?;
+        let object = objects.create_town(catalog, prototype.id(), id, owner, fort)?;
         let count =
             u32::try_from(self.towns.candidates.len()).map_err(|_| TownError::Arithmetic)?;
         let selected = rng.below(NonZeroU32::new(count).expect("caller found candidates")) as usize;
         let position = self.towns.candidates[selected];
         self.register_object(objects, catalog, object, position)?;
-        let entrance = entrance_position(catalog.get(prototype).unwrap().prototype(), position)?;
+        let entrance = entrance_position(prototype.entry().prototype(), position)?;
         self.append_road_target(entrance)?;
         self.open_entrance_approach(entrance)?;
         Ok(entrance)
@@ -490,16 +488,14 @@ impl PlacementMap<'_, '_, '_> {
         objects: &ObjectArena,
         catalog: &PrototypeCatalog<'_>,
     ) -> Result<bool, PlacementError> {
-        let mut humans = [false; PLAYER_COUNT];
-        let mut players = [false; PLAYER_COUNT];
+        let mut seated = PerColour::new([None; PLAYER_COUNT]);
         let map = self.coverage().map();
         for zone in map.zones() {
-            let (Some(entrance), ZoneOrigin::Template(id)) = (zone.primary_town(), zone.origin())
+            let (Some(entrance), Some(rules)) = (zone.primary_town(), map.template_zone(zone))
             else {
                 continue;
             };
-            let role = map.template().zones()[id.index()].role();
-            let (ZoneRole::Human(slot) | ZoneRole::Computer(slot)) = role else {
+            let (ZoneRole::Human(slot) | ZoneRole::Computer(slot)) = rules.role() else {
                 continue;
             };
             let Some(player) = map.player(slot) else {
@@ -517,14 +513,19 @@ impl PlacementMap<'_, '_, '_> {
             if !owned {
                 return Ok(false);
             }
-            players[player.index()] = true;
-            if matches!(role, ZoneRole::Human(_)) {
-                humans[player.index()] = true;
+            if matches!(rules.role(), ZoneRole::Human(_)) {
+                seated[player] = Some(SlotUse::Human);
+            } else {
+                seated[player].get_or_insert(SlotUse::Computer);
             }
         }
         let human_count = usize::from(map.request().human_players().get());
-        Ok(humans.into_iter().filter(|&yes| yes).count() >= human_count
-            && players.into_iter().filter(|&yes| yes).count()
-                >= human_count + usize::from(map.request().computer_players().get()))
+        let humans = seated
+            .iter()
+            .filter(|(_, use_)| **use_ == Some(SlotUse::Human))
+            .count();
+        let players = seated.iter().filter(|(_, use_)| use_.is_some()).count();
+        Ok(humans >= human_count
+            && players >= human_count + usize::from(map.request().computer_players().get()))
     }
 }

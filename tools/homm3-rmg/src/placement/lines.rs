@@ -107,7 +107,7 @@ impl PlacementMap<'_, '_, '_> {
         let (x, y) = raw::DIRECTIONS[movement];
         // Native masking tests equality with the four edges, not general
         // containment. Raw river endpoints may alias another allocated row.
-        let last = i32::try_from(self.view().side - 1).unwrap();
+        let last = self.view().signed_side() - 1;
         if (at.point.x == 0 && x < 0)
             || (at.point.x == last && x > 0)
             || (at.point.y == 0 && y < 0)
@@ -138,11 +138,11 @@ impl PlacementMap<'_, '_, '_> {
                 self.cells[index].river.reflection = reflection;
                 self.cells[index].river_join_target = self.cells[index].river.kind.is_some();
                 if self.cells[index].river_join_target {
-                    for near in Neighborhood::ThreeByThree.cells(at, self.view().side)? {
+                    for near in Neighborhood::ThreeByThree.cells(at, self.view().side())? {
                         let index = self.view().native_index(near)?;
                         self.cells[index].near_river = true;
                     }
-                    for near in Neighborhood::FiveByFive.cells(at, self.view().side)? {
+                    for near in Neighborhood::FiveByFive.cells(at, self.view().side())? {
                         let index = self.view().native_index(near)?;
                         if self.cells[index].river.kind.is_none() {
                             self.cells[index].river_outlet_target = false;
@@ -208,7 +208,7 @@ impl PlacementMap<'_, '_, '_> {
         // later interprets their bits as signed flat offsets.
         let x = u32::from_ne_bytes(at.point.x.to_ne_bytes());
         let y = u32::from_ne_bytes(at.point.y.to_ne_bytes());
-        let side = u32::try_from(self.view().side).unwrap();
+        let side = self.view().signed_side().unsigned_abs();
         let first = y.saturating_sub(1);
         let south = y.wrapping_add(1);
         let east = x.wrapping_add(1);
