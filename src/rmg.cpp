@@ -2199,23 +2199,32 @@ TRmgObject::~TRmgObject()
     --m_properties->m_refCount;
 }
 
+// Mac 0x250ec8 snapshots position before removing the object, then fills
+// its cell with treasure worth between value and 1.5 * value. The retained
+// callers are the key-tent fallback (0x23107c) and quest fallback (0x250824).
+// Both Windows callers expand it, so keep one visible ordinary source body.
+MAC_ADDRESS(0x250ec8, 0x118)
+static void replaceRmgObjectWithTreasure(TRmgGenerator* generator,
+    TRmgObject* object, int value)
+{
+    TRmgMapPosition position = object->m_position;
+    generator->removeObject(object);
+    TRmgZone* zone = generator->m_zones[
+        generator->m_map.getMapItem(position)->m_zoneState.m_zone];
+    int actualValue;
+    TRmgObject* replacement = generator->createTreasureObject(
+        zone, value, value * 3 / 2, &actualValue, 0, 0, 0, position);
+    if (replacement)
+        generator->addObject(replacement, position);
+}
+
 VA(0x005338E0, 0xD4)
 MAC_ADDRESS(0x231030, 0x68)
 unsigned char TRmgKeyTentObject::isWritable()
 {
     if (m_generator->placeKeyTentGuard(this, m_value * 3 / 2))
         return 1;
-    TRmgGenerator* generator = m_generator;
-    int value = m_value;
-    TRmgMapPosition position = m_position;
-    generator->removeObject(this);
-    TRmgZone* zone = generator->m_zones[
-        generator->m_map.getMapItem(position)->m_zoneState.m_zone];
-    int actualValue;
-    TRmgObject* object = generator->createTreasureObject(
-        zone, value, value * 3 / 2, &actualValue, 0, 0, 0, position);
-    if (object)
-        generator->addObject(object, position);
+    replaceRmgObjectWithTreasure(m_generator, this, m_value);
 #if defined(HOMM3_RMG_HOTFIX)
     // Removed from the map, so nothing else owns it.
     delete this;
@@ -3784,6 +3793,16 @@ void TRmgGeneratorBase::addObject(TRmgObject* object, TRmgMapPosition position)
     m_positions.push_back(object);
 }
 
+// Complete-only object types are unavailable in earlier map formats.
+static bool isRmgObjectAvailableInVersion(int objectType, int version)
+{
+    if (version < RMG_MAP_SHADOW_OF_DEATH && objectType >= CLOVER_FIELD_2)
+        return false;
+    if (version < RMG_MAP_ARMAGEDDONS_BLADE && objectType >= MAX_EVENT_TYPE)
+        return false;
+    return true;
+}
+
 // Map-decoration caller 0x537a59 passes a position value and progress share.
 // The body uses base fields and virtual object insertion; ownership/name provisional.
 // Pinned retail 0x6408ec..0x64099f: decoration type ordinals, excluding
@@ -3804,13 +3823,9 @@ static const int g_rmgDecorationTypes[45] = {
     TERRAIN_YUCCA_TREE, TERRAIN_REEF, 206, 207, 208, 209, 210, 211
 };
 
-// Retail-only reconstruction, 82.1859%: weighted decoration placement and
-// the neighboring-cell worklist. No Dreamcast counterpart is admitted.
-// Remaining boundary differences: retail retains the initial single insert,
-// worklist erase and first by-value getMapItem; VC6 expands them here.
-// The three candidate-vector appends also expand into count insertion.
-// Explicit insert(end(), value) versus push_back for those three appends
-// is byte-neutral. Keep the canonical STL/accessor bodies and source calls.
+// Weighted decoration placement maintains a neighboring-cell worklist.
+// Mac 0x23603c..0x236084 expands the byte-valued land predicate before
+// clearing the obstacle-fill mark. Keep those shared cell operations.
 // Candidate anchors put the start cell S under each blocked
 // footprint cell in turn. For a fully blocked 3x2 object they
 // are S and each o; North is up:
@@ -3830,7 +3845,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
         TRmgMapItem* item = m_map.getMapItem(position);
         if (!item->isPassableLand())
             continue;
-        int terrain = item->m_tile.m_landType;
+        int terrain = item->getLandType();
         std::vector<TRmgObjectPropertiesRef*> candidates;
         std::vector<TRmgMapPosition> positions;
         std::vector<int> weights;
@@ -3848,9 +3863,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
                 if (!properties->m_placementRule
                     || properties->m_placementRule->m_terrainScores[terrain] <= RMG_PLACEMENT_INVALID)
                     continue;
-                if (m_mapVersion < RMG_MAP_SHADOW_OF_DEATH && prototype->getObjectType() >= CLOVER_FIELD_2)
-                    continue;
-                if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE && prototype->getObjectType() >= MAX_EVENT_TYPE)
+                if (!isRmgObjectAvailableInVersion(prototype->getObjectType(), m_mapVersion))
                     continue;
                 TRmgZoneBounds bounds;
                 bounds.m_minimumX = position.m_x;
@@ -3900,10 +3913,8 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
                 for (candidatePosition.m_x = bounds.m_minimumX;
                     candidatePosition.m_x < bounds.m_maximumX; ++candidatePosition.m_x) {
                     TRmgMapItem* nearby = m_map.getMapItem(candidatePosition);
-                    if (nearby->hasBorderObject() && nearby->m_tileData.m_roadPassable
-                        && nearby->m_tile.m_landType != eTerrainRock) {
-                        if (!nearby->m_connection.m_present)
-                            nearby->m_tileData.m_borderObject = 0;
+                    if (nearby->hasBorderObject() && nearby->isPassableLand()) {
+                        nearby->clearObstacleFill();
                         pending.push_back(candidatePosition);
                     }
                 }
@@ -8267,23 +8278,8 @@ void TRmgGenerator::connectJunctionEntrance(TPoint from, TPoint to,
 // each reachable entrance back to a zero-cost cell before carving its path.
 // Retail retains both floodConnectionCosts calls and the separate point-pair
 // helper. Complete-only names describe the roles rather than source symbols.
-// Residual 66.4512% after explicit (-1,-1,-1) predecessor initialization.
-// The default position constructor is empty; using it as a sentinel left
-// coordinates uninitialized and scored 60.3628%. A guarded do-loop control
-// was byte-neutral. Preserve the reset helper while resolving local homes.
-// Coordinate-lifetime families recover 77.5209%: default/field-built entrance,
-// predecessor and next-flood values remove three constructor calls absent
-// from retail, while the captured position also carries the reset scan.
-// Four 60-state batches test construction, bindings, entrance copies and
-// predecessor/cost snapshots without exceeding that peak. The selected first
-// child changes no sibling score and retains exactly the two floods and one
-// connection call. Its 0x24 frame versus retail's 0x34, register homes and
-// remaining scan/join layout still differ; this is not a frame-size fix.
-// Sixty scan-ownership/loop/reset-scope forms produce sixteen objects without
-// improving it. A ten-parent map-receiver/bounds-copy frontier reaches
-// 77.7209% (thirty objects), but still destructively adds to ESI at the seed
-// instead of retail's separate LEA receiver, and retains the same frame and
-// extra scan block. No receiver or loop form is adopted on that score alone.
+// The seed's predecessor is the explicit (-1,-1,-1) sentinel. Mac
+// 0x247fb0..0x248014 copies that value before storing the zero movement cost.
 VA(0x005446A0, 0x27E)
 MAC_ADDRESS(0x247d9c, 0x3e0)
 void TRmgGenerator::prepareJunctionZone(TRmgZone* zone)
@@ -8296,17 +8292,14 @@ void TRmgGenerator::prepareJunctionZone(TRmgZone* zone)
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, level);
             if (item->m_zoneState.m_zone == zoneIndex
-                && item->m_tile.m_landType != eTerrainWater) {
+                && item->getLandType() != eTerrainWater) {
                 TRmgMapPosition previous;
                 previous.m_x = -1;
                 previous.m_y = -1;
                 previous.m_z = -1;
                 item->resetMovement(previous);
-                if (static_cast<int>(item->m_objects.size()) <= 0
-                    && !item->m_connection.m_present) {
-                    item->m_tileData.m_subterraneanGate = 0;
-                    item->m_tileData.m_borderObject = 1;
-                }
+                if (static_cast<int>(item->m_objects.size()) <= 0)
+                    item->markObstacleFill();
             }
         }
     }
@@ -8317,10 +8310,7 @@ void TRmgGenerator::prepareJunctionZone(TRmgZone* zone)
     first.m_y = zone->m_entrances[0].m_y;
     first.m_z = level;
     TRmgMapItem* item = m_map.getMapItem(first.m_x, first.m_y, first.m_z);
-    item->m_movement.m_cost = 0;
-    item->m_previousTile.m_x = -1;
-    item->m_previousTile.m_y = -1;
-    item->m_previousTile.m_z = -1;
+    item->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
     m_map.floodConnectionCosts(first, 0);
     for (int entrance = 1; entrance < static_cast<int>(zone->m_entrances.size()); ++entrance) {
         TPoint from = zone->m_entrances[entrance];
@@ -8967,31 +8957,29 @@ TRmgObjectPropertiesRef* TRmgGenerator::selectObjectPrototype(
     return candidates[rand() % candidates.size()];
 }
 
+// Mac 0x24a0f4 immediately precedes createTreasureObject; its only direct
+// caller is that RMG selector. Keep the ordinary source helper and canonical
+// passability/trigger queries; the original helper spelling is unknown.
+MAC_ADDRESS(0x24a0f4, 0x9c)
+static int countRmgObjectFootprintCells(const TObjectType* prototype)
+{
+    int occupied = 0;
+    for (unsigned int x = 0; x < prototype->getWidth(); ++x) {
+        for (unsigned int y = 0; y < prototype->getHeight(); ++y) {
+            if (!prototype->isPassableCell(x, y) || prototype->isTriggerCell(x, y))
+                ++occupied;
+        }
+    }
+    return occupied;
+}
+
 // Weighted treasure selection returns a newly generated object and writes
 // its value through argument four. Retail tests primary at +0x18, permits
 // isTerrainDependent definitions through +0x1c, and enables value-per-cell
 // filtering through +0x20. The final three dwords are an optional position.
 // Complete-only provisional role names; ret 0x28 proves the full argument ABI.
-// Partial 81.69%: retail retains the passability bitset::test and both
-// vector::erase bodies; VC6 expands test to _Xran and erase to copy/_Destroy.
-// Mask subscripts preserve the range-error helper boundary; two direct test
-// calls expand exception construction (66.40%). Explicit erase ranges give
-// 76.56%; keeping only passability as .test gives 70.53%. Reusing objectValue
-// for its compact value-per-cell quotient is byte-neutral. Keep the two
-// candidate vectors, canonical operations and virtual value/factory calls.
-// Two 60-state families (110 distinct sources, 86 code identities) retain
-// 81.6894%. Mask/erase interfaces and footprint bindings, followed by ten
-// reproduced parents' scan/type/footprint scopes, normalized-value locals
-// and generator references, do not restore the retained helper calls.
-// Public count insert expands both vectors and grows a representative body
-// to 0x66d versus retail's 0x385; it is not a missing-symbol/tool failure.
-// Further proxy/container/reset and whole-filter-control families retain
-// this peak and never restore passability test. resize(0) retains both erases
-// but adds size calls and conditional skips absent from retail. Truth-only
-// bool/byte flag models leave this body identical; compact-bool instead
-// changes the caller's conversion. See the complete source-family evidence.
-// The joint ordinary zone objectCount(int)->int& control also leaves this
-// caller's complete instruction/EH/call stream unchanged; no accessor adopted.
+// Mac 0x24a350 calls the footprint counter, then compares a separate
+// value-per-cell quotient. Keep the shared mask queries inside that helper.
 VA(0x00546190, 0x385)
 MAC_ADDRESS(0x24a190, 0x3f4) // anchor-callee 0x546572/0x546663; thiscall, ret 0x28
 TRmgObject* TRmgGenerator::createTreasureObject(TRmgZone* zone,
@@ -9026,23 +9014,14 @@ TRmgObject* TRmgGenerator::createTreasureObject(TRmgZone* zone,
         if (position.m_x >= 0 && m_map.isPlacementBlocked(candidate, position, zoneIndex, 1))
             continue;
         if (compact) {
-            TObjectType* prototype = candidate->m_prototype;
-            int occupied = 0;
-            for (unsigned int x = 0; x < prototype->getWidth(); ++x) {
-                for (unsigned int y = 0; y < prototype->getHeight(); ++y) {
-                    if (!prototype->isPassableCell(x, y)
-                        || prototype->isTriggerCell(x, y))
-                        ++occupied;
-                }
-            }
-            objectValue /= occupied;
-            if (objectValue < 3 * bestValuePerCell / 4)
+            int valuePerCell = objectValue / countRmgObjectFootprintCells(candidate->m_prototype);
+            if (valuePerCell < 3 * bestValuePerCell / 4)
                 continue;
-            if (bestValuePerCell < 3 * objectValue / 4) {
+            if (bestValuePerCell < 3 * valuePerCell / 4) {
                 totalWeight = 0;
                 candidates.clear();
                 properties.clear();
-                bestValuePerCell = objectValue;
+                bestValuePerCell = valuePerCell;
             }
         }
         totalWeight += definition->m_density;
@@ -11132,20 +11111,9 @@ static const int g_rmgQuestArtifactClass = 2;
 // and generator masks fix ownership and selection semantics. Failure
 // substitutes ordinary treasure; success reserves the artifact and advances
 // the seer-hut prototype cursor. Complete-only, original spelling unknown.
-// Residual (72.6899%): the inline three-coordinate outline accessor and
-// named base-object pointer raise 59.7318% to 71.1899%; scoped eligibility
-// statements reach this peak (either scope alone is flat). The group vector
-// construction/destruction and failure-path map accessor still expand
-// differently. The writable caller remains exact; all controls change only
-// this worker among other RMG functions.
-// Mac 0x2507c4/0x2507dc retains TRmgTreasureGroup::addObject and
-// markPlacementOutline calls; both stay (71.41% with the bodies pasted in,
-// 64.41% through the helpers). The group map's extents come through its
-// inline getWidth()/getHeight() accessors, like the prototype's: two more
-// depth-1 candidates after the group constructor split its /Ob2 budget
-// (1379 - 161) / 13, so the second member-vector constructor stays a call
-// as in retail (76.44%). Still open: retail also calls the failure path's
-// getMapItem and the success group's TRmgObject* vector destructor.
+// Mac 0x2507c4..0x2507dc retains addObject and all three outline operations.
+// On failure, 0x250824 delegates removal and treasure replacement to the
+// same helper used by the key-tent fallback.
 VA(0x0054B490, 0x42E)
 MAC_ADDRESS(0x250588, 0x360) // anchor-caller + artifact/group/generator fields; retail-only
 unsigned char TRmgGenerator::placeQuestArtifact(TRmgQuestArtifactObject* object)
@@ -11194,14 +11162,7 @@ unsigned char TRmgGenerator::placeQuestArtifact(TRmgQuestArtifactObject* object)
     group.markPlacementOutline();
     if (!placeQuestGroup(&group, origin)) {
         int value = object->m_definition->getValue(origin, this);
-        TRmgMapPosition originalPosition = object->m_position;
-        removeObject(object);
-        TRmgZone* zone = m_zones[m_map.getMapItem(originalPosition)->m_zoneState.m_zone];
-        int actualValue;
-        TRmgObject* replacement = createTreasureObject(zone, value, value * 3 / 2,
-            &actualValue, 0, 0, 0, originalPosition);
-        if (replacement)
-            addObject(replacement, originalPosition);
+        replaceRmgObjectWithTreasure(this, object, value);
         return 0;
     }
     m_usedQuestArtifacts[artifact] = 1;
