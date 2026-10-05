@@ -196,19 +196,19 @@ impl LineTable {
     /// River tiles extend isolated/end tiles with a straight shape.
     pub const RIVER: Self = Self::build(&raw::RIVER_PATTERNS);
 
-    const fn build(frames: &[u32]) -> Self {
+    const fn build(frame_patterns: &[u32]) -> Self {
         let mut ranges: [Option<FrameRange>; raw::LINE_PATTERN_COUNT as usize] =
             [None; raw::LINE_PATTERN_COUNT as usize];
         let mut index = 0;
         let mut frame_number = 0;
-        while index < frames.len() {
-            let pattern = frames[index] as usize;
+        while index < frame_patterns.len() {
+            let pattern = frame_patterns[index] as usize;
             assert!(pattern < ranges.len(), "unknown source line pattern");
             ranges[pattern] = Some(match ranges[pattern] {
                 None => FrameRange::new(frame_number, NonZeroU32::MIN),
                 Some(previous) => {
                     assert!(
-                        index > 0 && frames[index - 1] == frames[index],
+                        index > 0 && frame_patterns[index - 1] == frame_patterns[index],
                         "source frames must be contiguous"
                     );
                     FrameRange::new(
@@ -363,7 +363,7 @@ mod tests {
 
     #[test]
     fn frame_ranges_reconstruct_source_arrays() {
-        for (frames, table) in [
+        for (frame_patterns, table) in [
             (raw::ROAD_PATTERNS.as_slice(), LineTable::ROAD),
             (raw::RIVER_PATTERNS.as_slice(), LineTable::RIVER),
         ] {
@@ -371,9 +371,9 @@ mod tests {
                 if let Some(range) = range {
                     let first = range.first as usize;
                     let end = first + range.count.get() as usize;
-                    assert!(frames[first..end]
+                    assert!(frame_patterns[first..end]
                         .iter()
-                        .all(|&frame| frame as usize == pattern));
+                        .all(|&frame_pattern| frame_pattern as usize == pattern));
                 }
             }
         }

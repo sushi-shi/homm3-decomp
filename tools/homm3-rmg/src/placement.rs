@@ -102,7 +102,7 @@ const CLEARED_DISTANCE: u16 = {
 /// Mutually exclusive path and obstacle reservations.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum PathReservation {
-    /// A generated path requires clearance here.
+    /// Reserved for open traversal; obstacles must leave this cell clear.
     #[default]
     Open,
     /// Obstacles may be placed, but none is requested yet.
