@@ -5395,6 +5395,8 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // a placement result and uses its two byte flags for assembly announcements
 // and victory checking. DC instead names int bCheckEnd and bool equip_it;
 // retain the desktop result and flag behavior while restoring the reference.
+// With both placement helpers returning bool, a bool placed local still
+// lowers Windows 95.9069% to 95.3968%; it does not close the caller's residual.
 VA(0x004e3070, 0x339)
 DC_ADDRESS(0x0d3de4, 0x5c)
 MAC_ADDRESS(0x103da8, 0x2f0)  // anchor-global
