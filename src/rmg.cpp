@@ -1060,14 +1060,14 @@ unsigned char TRmgMap::isPlacementBlocked(
             TRmgGridPoint maskPoint(x, y);
             TRmgMapItem* item = getMapItem(nearby);
             if (prototype.isTriggerCell(maskPoint.m_x, maskPoint.m_y)) {
-                if (!item->isPassableLand()
+                if (!item->isPassable()
                     || item->isObjectEntrance() || item->m_zoneState.m_zone != zoneIndex)
                     return 1;
                 if (rejectObstacleFill && item->hasObstacleFill())
                     return 1;
             }
             if (!prototype.isPassableCell(maskPoint.m_x, maskPoint.m_y)) {
-                if (!item->isPassableLand()
+                if (!item->isPassable()
                     || item->isObjectEntrance() || item->m_zoneState.m_zone != zoneIndex)
                     return 1;
                 if (item->m_tile.m_landType == eTerrainWater) {
@@ -1171,7 +1171,7 @@ unsigned char TRmgMap::canPlaceObject(
     if (entrance.m_y >= m_mapHeight)
         return 0;
     TRmgMapItem* item = getMapItem(entrance);
-    if (!item->isPassableLand())
+    if (!item->isPassable())
         return 0;
     if (item->m_zoneState.m_zone < 0)
         return 0;
@@ -2989,7 +2989,7 @@ void TRmgTreasureGroup::addObject(TRmgObject* object, TPoint point)
 // homes and nested container expansion remain; keep the helper boundaries.
 // Native 0x233234/0x23333c/0x2334a0/0x2335e0 uses the surface
 // lookup overload. Its three materialized land predicates and copied point
-// sums at 0x233458/0x23356c use the shared isPassableLand and operator+.
+// sums at 0x233458/0x23356c use the shared isPassable and operator+.
 // Restoring these calls keeps the group insertion helper and reaches
 // 88.2086%; the remaining vector expansion and coordinate homes differ.
 // Open the next cell outward too; diagonals fan out to three cells.
@@ -3019,7 +3019,7 @@ unsigned char TRmgTreasureGroup::addGuard(TRmgObject* guard)
         while (direction--) {
             TRmgMapPosition position = entrance + g_rmgDirections[direction];
             TRmgMapItem* item = m_map.getMapItem(position);
-            if (item->isObjectEntrance() || !item->isPassableLand())
+            if (item->isObjectEntrance() || !item->isPassable())
                 continue;
             if (!item->m_connection.m_present) {
                 item->m_tileData.m_pathClearance = 0;
@@ -3028,7 +3028,7 @@ unsigned char TRmgTreasureGroup::addGuard(TRmgObject* guard)
             for (int x = position.m_x - 1; x <= position.m_x + 1; ++x) {
                 for (int y = position.m_y - 1; y <= position.m_y + 1; ++y) {
                     TRmgMapItem* nearby = m_map.getMapItem(x, y);
-                    if (nearby->isPassableLand()
+                    if (nearby->isPassable()
                         && !nearby->isObjectEntrance() && !nearby->m_connection.m_present)
                         nearby->m_tileData.m_pathClearance = 0;
                 }
@@ -3058,7 +3058,7 @@ unsigned char TRmgTreasureGroup::addGuard(TRmgObject* guard)
         TPoint point = g_rmgDirections[direction]
             + TRmgVector(guardPosition.m_x, guardPosition.m_y);
         TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y);
-        if (!item->isPassableLand())
+        if (!item->isPassable())
             continue;
         if (guardType == BORDER_GUARD && item->hasObstacleFill())
             continue;
@@ -3082,7 +3082,7 @@ unsigned char TRmgTreasureGroup::addGuard(TRmgObject* guard)
                 && nearby.m_y >= 0 && nearby.m_y < m_map.m_mapHeight) {
                 TRmgMapItem* next = m_map.getMapItem(nearby.m_x, nearby.m_y);
                 if (!next->hasObstacleFill() && !next->hasPathClearance()
-                    && next->isPassableLand() && !next->m_connection.m_present) {
+                    && next->isPassable() && !next->m_connection.m_present) {
                     next->m_tileData.m_obstacleFill = 0;
                     next->m_tileData.m_pathClearance = 1;
                 }
@@ -3190,7 +3190,7 @@ placementFailure:
         for (direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
             TPoint nearby = g_rmgDirections[direction] + origin;
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
-            if (!item->isObjectEntrance() && item->isPassableLand()
+            if (!item->isObjectEntrance() && item->isPassable()
                 && !item->hasObstacleFill())
                 break;
         }
@@ -3271,7 +3271,7 @@ void TRmgTreasureGroup::updateBounds()
     TRmgMapItem* item = m_map.m_mapItems;
     for (int y = 0; y < m_map.m_mapHeight; ++y) {
         for (int x = 0; x < m_map.m_mapWidth; ++x, ++item) {
-            if (!item->isPassableLand()
+            if (!item->isPassable()
                 || item->isObjectEntrance() || !item->hasPathClearance()) {
                 m_bounds.m_minimumX = min(m_bounds.m_minimumX, x);
                 m_bounds.m_maximumX = max(m_bounds.m_maximumX, x + 1);
@@ -3310,7 +3310,7 @@ void TRmgTreasureGroup::traceOutline()
     for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
         for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y);
-            if (item->isObjectEntrance() || !item->isPassableLand() || !item->hasPathClearance())
+            if (item->isObjectEntrance() || !item->isPassable() || !item->hasPathClearance())
                 break;
         }
         if (position.m_x < m_map.m_mapWidth)
@@ -3332,7 +3332,7 @@ void TRmgTreasureGroup::traceOutline()
                 || nearby.m_y < 0 || nearby.m_y >= m_map.m_mapHeight)
                 break;
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
-            if (!item->isObjectEntrance() && item->isPassableLand() && item->hasPathClearance())
+            if (!item->isObjectEntrance() && item->isPassable() && item->hasPathClearance())
                 break;
         } while (++attempts < 4);
         position = position + TRmgVector(g_rmgDirections[direction].m_x, g_rmgDirections[direction].m_y);
@@ -3847,7 +3847,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
         if (m_progress)
             m_progress->advance(progressSteps);
         TRmgMapItem* item = m_map.getMapItem(position);
-        if (!item->isPassableLand())
+        if (!item->isPassable())
             continue;
         int terrain = item->getLandType();
         std::vector<TRmgObjectPropertiesRef*> candidates;
@@ -3917,7 +3917,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
                 for (candidatePosition.m_x = bounds.m_minimumX;
                     candidatePosition.m_x < bounds.m_maximumX; ++candidatePosition.m_x) {
                     TRmgMapItem* nearby = m_map.getMapItem(candidatePosition);
-                    if (nearby->hasObstacleFill() && nearby->isPassableLand()) {
+                    if (nearby->hasObstacleFill() && nearby->isPassable()) {
                         nearby->clearObstacleFill();
                         pending.push_back(candidatePosition);
                     }
@@ -3940,7 +3940,7 @@ TRmgMapItem* TRmgMap::getMapItem(TRmgMapPosition point)
 // Keep the canonical tile-field names: bits 26/27 and 25 are observed here,
 // regardless of their additional roles in zone connection and road routing.
 // One shared position value preserves all three scans and avoids an extra
-// position constructor. The ordinary isPassableLand predicate recovers the
+// position constructor. The ordinary isPassable predicate recovers the
 // progress/placement branch layout and all 409 retail bytes. Member/free and
 // positive/negative predicate controls all reproduce the same exact caller.
 // In-caller field tests stay at 91.1321%; flattened dispatch and a named
@@ -3967,7 +3967,7 @@ void TRmgGeneratorBase::decorateMap()
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (item->hasObstacleFill()) {
-                    if (!item->isPassableLand()) {
+                    if (!item->isPassable()) {
                         if (m_progress)
                             m_progress->advance(progressSteps);
                         continue;
@@ -7781,7 +7781,7 @@ void TRmgGenerator::connectZones()
                     continue;
 
                 if (mapItem->getLandType() == eTerrainWater
-                    || !mapItem->isPassableLand())
+                    || !mapItem->isPassable())
                     continue;
 
                 int direction = mapItem->m_tileData.m_connectionDirection;
@@ -7928,7 +7928,7 @@ void TRmgGenerator::connectZones()
 // A floor cell may be blocked outside paths and object entrances.
 bool TRmgMapItem::canBlockFloor() const
 {
-    return !hasPathClearance() && isPassableLand() && !isObjectEntrance();
+    return !hasPathClearance() && isPassable() && !isObjectEntrance();
 }
 
 // Underground-only terrain pass retained by generation at 0x549c82.
@@ -9285,7 +9285,7 @@ void TRmgGenerator::commitTreasureGroup(TRmgTreasureGroup* group,
             TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
             if (destination->getLandType() != eTerrainWater
                 && source->canBlockFloor()
-                && destination->isPassableLand() && !destination->isObjectEntrance()) {
+                && destination->isPassable() && !destination->isObjectEntrance()) {
                 destination->releasePathClearance();
                 if (source->hasObstacleFill())
                     destination->markObstacleFill();
@@ -9399,7 +9399,7 @@ unsigned char TRmgGenerator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     for (direction = firstDirection; direction < lastDirection; ++direction) {
         TPoint point = g_rmgDirections[direction] + TRmgVector(entrance.m_x, entrance.m_y);
         TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
-        if (!source->hasPathClearance() || !source->isPassableLand() || source->isObjectEntrance()
+        if (!source->hasPathClearance() || !source->isPassable() || source->isObjectEntrance()
             || !source->isPlacementOutline())
             continue;
         point.m_x += position.m_x;
@@ -9409,7 +9409,7 @@ unsigned char TRmgGenerator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
             continue;
         TRmgMapItem* destination = m_map.getMapItem(point.m_x, point.m_y, position.m_z);
         if ((destination->m_tile.m_landType == eTerrainWater) == waterZone
-            && destination->isPassableLand()
+            && destination->isPassable()
             && !destination->isObjectEntrance() && destination->hasPathClearance())
             break;
     }

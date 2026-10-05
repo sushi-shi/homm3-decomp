@@ -1204,7 +1204,8 @@ struct TRmgMapItem {
     // ordinary source-defined control retains calls; direct field tests
     // omit its Boolean result. This class body reproduces that predicate
     // shape; its seven-unit Windows control loses no exact functions.
-    unsigned char isPassableLand() const
+    // Water remains passable here; callers apply their own water policy.
+    unsigned char isPassable() const
     {
         return m_tileData.m_passable && getLandType() != eTerrainRock;
     }
