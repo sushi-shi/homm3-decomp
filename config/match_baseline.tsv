@@ -4666,7 +4666,7 @@ victorylossconditions	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@
 victorylossconditions	?appliesToPlayer@VictoryConditionStruct@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1f15a0	tokens1:e3386a8c7960
 victorylossconditions	?checkForArtifactTransportWin@VictoryConditionStruct@@QAEEPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2860	tokens1:c690b871c2f0
 victorylossconditions	?checkForArtifactWin@VictoryConditionStruct@@QAE_NXZ	99.7464	99.7464	100.0000	0x1f1610	tokens1:5b008f10cdfd
-victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAE_NPBVhero@@@Z	82.0170	82.0170	82.0170	0x1f2a40	tokens1:ba80873c6887
+victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAE_NPBVhero@@@Z	100.0000	100.0000	100.0000	0x1f2a40	tokens1:dd9c57baf4df
 victorylossconditions	?checkForDefeatedMonsterWin@VictoryConditionStruct@@QAE_NPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2390	tokens1:78696b1d4c80
 victorylossconditions	?checkForDefeatedTownLoss@LossConditionStruct@@QAE_NHPBVtown@@@Z	99.8429	99.8429	100.0000	0x1f2e40	tokens1:29fd9af0ebce
 victorylossconditions	?checkForFlaggedGeneratorWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2600	tokens1:1f9a93765f5b

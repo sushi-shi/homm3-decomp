@@ -548,11 +548,11 @@ static const int g_lossPortrait146 = 0x92;
 // native unsigned range check at 0x1ff044. Keep the component reference and
 // loop-local index: Mac assigns them r29 and r28 respectively.
 //
-// Residual: VC6 puts the loss-type guard after campaign 14 and shares
-// different return epilogues (17 versus retail's 19). Named bool versus a
-// direct comparison, nested switch versus explicit map tests, and earlier
-// polarity/default/case-order probes did not recover that layout. The
-// retained call sequence agrees; this is not a missing artifact helper.
+// The final explicit ID branch and constant returns reproduce all retail
+// epilogues. Returning the comparison through a bool local changes merging
+// throughout the campaign switch (17 returns instead of retail's 19).
+// This is ordinary Boolean control flow, also present in DC lines 488..491;
+// it preserves the Complete separation between checking and recording loss.
 // E:\gamedcs\victorylossconditions.cpp:463
 VA(0x005f2a40, 0x3C8)
 DC_ADDRESS(0x1906d4, 0x78)
@@ -671,8 +671,9 @@ bool LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
     }
     if (m_type != LOSS_CONDITION_LOSE_HERO)
         return 0;
-    bool defeated = loser->m_id == m_heroId;
-    return defeated;
+    if (loser->m_id == m_heroId)
+        return 1;
+    return 0;
 }
 
 VA(0x005f2e10, 0x2F)
