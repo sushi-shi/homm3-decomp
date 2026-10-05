@@ -371,9 +371,12 @@ impl BoundaryWorkspace {
             });
             self.connections.try_reserve(source.connections().len())?;
             for connection in source.connections() {
+                let Some(destination) = connection.destination() else {
+                    continue;
+                };
                 self.connections.push(ZoneConnection {
                     source: zone.id(),
-                    destination: connection.destination(),
+                    destination,
                     value: connection.value(),
                     unguarded: connection.unguarded(),
                     border_guard: connection.border_guard(),

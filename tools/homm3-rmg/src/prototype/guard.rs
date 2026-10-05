@@ -11,15 +11,14 @@ use crate::{
 use std::{error::Error, fmt, num::NonZeroU32};
 
 const CREATURES: usize = raw::RMG_CREATURE_TYPE_COUNT as usize;
-const FACTIONS: usize = raw::TOWN_CONFLUX as usize + 2;
 
 /// Guard affiliations after applying the zone-alignment override.
 #[derive(Clone, Copy, Debug)]
 pub enum GuardFactions<'a> {
     /// Only creatures of this town; neutral creatures are excluded.
     Matching(Town),
-    /// Template order: neutral first, then Castle through Conflux.
-    Allowed(&'a [bool; FACTIONS]),
+    /// Template order: neutral first, then the catalog's town factions.
+    Allowed(&'a [bool]),
 }
 impl<'a> GuardFactions<'a> {
     /// Resolve the template's alignment-matching flag. A neutral alignment
@@ -34,7 +33,10 @@ impl<'a> GuardFactions<'a> {
     fn allows(self, town: Option<Town>) -> bool {
         match self {
             Self::Matching(wanted) => town == Some(wanted),
-            Self::Allowed(allowed) => allowed[town.map_or(0, |town| town.index() + 1)],
+            Self::Allowed(allowed) => allowed
+                .get(town.map_or(0, |town| town.index() + 1))
+                .copied()
+                .unwrap_or(false),
         }
     }
 }

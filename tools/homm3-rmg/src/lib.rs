@@ -27,6 +27,7 @@ pub mod prototype;
 pub mod raster;
 pub mod request;
 pub mod rng;
+pub mod rules;
 pub mod selection;
 pub mod template;
 pub mod terrain;

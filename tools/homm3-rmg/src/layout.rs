@@ -20,6 +20,8 @@ const CREATURE_TOWN_CHOICES: NonZeroU32 = match NonZeroU32::new(raw::RMG_TERRAIN
 /// A placement failure or an unsupported arithmetic domain.
 #[derive(Debug)]
 pub enum LayoutError {
+    /// A prepared template requires a generation implementation not yet available.
+    UnsupportedRuleset(crate::rules::Ruleset),
     /// Hotfix rejects this layout; retail would draw modulo zero.
     NoCandidates(ZoneId),
     /// An intermediate cannot be represented by the original signed arithmetic.
@@ -32,6 +34,9 @@ pub enum LayoutError {
 impl fmt::Display for LayoutError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::UnsupportedRuleset(ruleset) => {
+                write!(f, "generation for {ruleset:?} is not implemented yet")
+            }
             Self::NoCandidates(zone) => write!(f, "zone {} has no legal positions", zone.index()),
             Self::Arithmetic => f.write_str("unsupported zone-layout arithmetic"),
             Self::Geometry(error) => error.fmt(f),
@@ -164,6 +169,11 @@ impl LayoutWorkspace {
         water: Water,
         rng: &mut RetailRng,
     ) -> Result<Layout<'workspace, 'context>, LayoutError> {
+        if selected.template().ruleset() != crate::rules::Ruleset::Complete {
+            return Err(LayoutError::UnsupportedRuleset(
+                selected.template().ruleset(),
+            ));
+        }
         let zones = selected.template().zones();
         self.positioned.clear();
         self.completed.clear();
@@ -296,7 +306,10 @@ impl LayoutWorkspace {
             }
         } else {
             for connection in zones[current.id.index()].connections() {
-                let destination = connection.destination().index();
+                let Some(destination) = connection.destination() else {
+                    continue;
+                };
+                let destination = destination.index();
                 if destination < self.positioned.len() {
                     let center = if destination == current.id.index() {
                         *current
@@ -422,7 +435,9 @@ impl LayoutWorkspace {
             };
             let mut count = 0;
             for connection in zones[current.id.index()].connections() {
-                let id = connection.destination();
+                let Some(id) = connection.destination() else {
+                    continue;
+                };
                 if let Some(&other) = self.positioned.get(id.index()) {
                     let other = if id == current.id { trial } else { other };
                     if can_connect(trial, other, zones)? {
@@ -488,7 +503,7 @@ fn choose_terrain(
     let terrain = if let Some(town) = alignment.filter(|_| zone.use_native_terrain()) {
         Terrain::parse(i32::try_from(raw::NATIVE_TERRAIN[town.index()]).unwrap()).unwrap()
     } else {
-        let mut allowed = *zone.allowed_terrain();
+        let mut allowed = zone.allowed_terrain().to_vec();
         if level == Level::Surface {
             allowed[Terrain::Subterranean.index()] = false;
         }

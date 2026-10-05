@@ -4,7 +4,7 @@ use crate::{
     raw,
     request::{Request, Town, Water, WaterChoice, PLAYER_COUNT},
     rng::RetailRng,
-    template::{PlayerSlot, RetailTemplateFault, Template, TemplateCandidate},
+    template::{PlayerSlot, Template, TemplateCandidate, TemplateFault},
 };
 use std::{error::Error, fmt, num::NonZeroU32};
 
@@ -31,8 +31,8 @@ pub enum SelectionError {
     NoTemplates,
     /// Candidate count exceeds the original 32-bit selection domain.
     TooManyTemplates,
-    /// A selected retail candidate cannot be executed safely.
-    RetailTemplate(RetailTemplateFault),
+    /// A selected native candidate cannot be executed safely.
+    Template(TemplateFault),
     /// Retail counts repeated player zones but then runs out of distinct slots.
     InsufficientSlots,
 }
@@ -41,7 +41,7 @@ impl fmt::Display for SelectionError {
         match self {
             Self::NoTemplates => f.write_str("no eligible random-map templates"),
             Self::TooManyTemplates => f.write_str("template count exceeds 32-bit selection domain"),
-            Self::RetailTemplate(fault) => fault.fmt(f),
+            Self::Template(fault) => fault.fmt(f),
             Self::InsufficientSlots => {
                 f.write_str("selected template has too few distinct player slots")
             }
@@ -77,7 +77,7 @@ impl<'a> SelectedTemplate<'a> {
     /// other colours. Human slots are assigned before computer-only slots.
     ///
     /// # Errors
-    /// Reports no candidates, an unsupported selected retail candidate, or
+    /// Reports no candidates, an unsupported selected native candidate, or
     /// insufficient distinct player slots. A selected fault still consumes
     /// the selection draw.
     pub fn select(
@@ -91,8 +91,8 @@ impl<'a> SelectedTemplate<'a> {
         let source_index = rng.below(count) as usize;
         let template = match &candidates[source_index] {
             TemplateCandidate::Ready(template) => template,
-            TemplateCandidate::RetailFault { fault, .. } => {
-                return Err(SelectionError::RetailTemplate(*fault))
+            TemplateCandidate::NativeFault { fault, .. } => {
+                return Err(SelectionError::Template(*fault))
             }
         };
         let (humans, mut available) = template.player_slots();
@@ -163,10 +163,7 @@ impl<'a> SelectedTemplate<'a> {
 }
 
 // One canonical implementation of TRmgTemplateZone::selectAllowedTown.
-pub(crate) fn select_allowed_town(
-    flags: &[bool; raw::TOWN_TYPE_COUNT as usize],
-    rng: &mut RetailRng,
-) -> Option<Town> {
+pub(crate) fn select_allowed_town(flags: &[bool], rng: &mut RetailRng) -> Option<Town> {
     choose_flag(flags, rng).map(|index| Town::parse(i32::try_from(index).unwrap()).unwrap())
 }
 pub(crate) fn choose_flag(flags: &[bool], rng: &mut RetailRng) -> Option<usize> {

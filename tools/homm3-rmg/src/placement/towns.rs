@@ -138,15 +138,15 @@ impl TownsPlaced<'_, '_, '_> {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 struct Rules {
     categories: [Placement; raw::RMG_TOWN_CATEGORY_COUNT as usize],
     owner: Option<Player>,
     neutral_matches: bool,
-    allowed: [bool; raw::TOWN_TYPE_COUNT as usize],
+    allowed: Box<[bool]>,
 }
 impl Rules {
-    fn category(self, index: usize) -> (Option<Player>, Fort) {
+    fn category(&self, index: usize) -> (Option<Player>, Fort) {
         let player = index == raw::RMG_TOWN_PLAYER_CASTLE as usize
             || index == raw::RMG_TOWN_PLAYER_BASIC as usize;
         let fortified = index == raw::RMG_TOWN_PLAYER_CASTLE as usize
@@ -160,7 +160,7 @@ impl Rules {
             },
         )
     }
-    fn choose_town(self, version: MapVersion, rng: &mut RetailRng) -> Town {
+    fn choose_town(&self, version: MapVersion, rng: &mut RetailRng) -> Town {
         select_allowed_town(&self.allowed, rng).unwrap_or_else(|| {
             let count = if version == MapVersion::Restoration {
                 raw::TOWN_TYPE_ROE_COUNT
@@ -213,7 +213,7 @@ impl<'state, 'zones, 'tiles> PlacementMap<'state, 'zones, 'tiles> {
             let Some(rules) = self.town_rules(zone) else {
                 continue;
             };
-            self.additional_towns(objects, catalog, zone, rules, rng)?;
+            self.additional_towns(objects, catalog, zone, &rules, rng)?;
         }
         if self.coverage().map().behavior().is_hotfix()
             && !self.has_player_towns(objects, catalog)?
@@ -242,7 +242,7 @@ impl PlacementMap<'_, '_, '_> {
             categories: *source.towns(),
             owner: slot.and_then(|slot| map.player(slot)),
             neutral_matches: source.neutral_towns_match_alignment(),
-            allowed: *source.allowed_towns(),
+            allowed: source.allowed_towns().into(),
         })
     }
 
@@ -342,7 +342,7 @@ impl PlacementMap<'_, '_, '_> {
         objects: &mut ObjectArena,
         catalog: &PrototypeCatalog<'_>,
         zone: BoundaryZone,
-        rules: Rules,
+        rules: &Rules,
         rng: &mut RetailRng,
     ) -> Result<(), TownError> {
         let mut skip_primary = true;
@@ -382,7 +382,7 @@ impl PlacementMap<'_, '_, '_> {
         objects: &mut ObjectArena,
         catalog: &PrototypeCatalog<'_>,
         zone: BoundaryZone,
-        rules: Rules,
+        rules: &Rules,
         owner: Option<Player>,
         fort: Fort,
         spacing: i32,

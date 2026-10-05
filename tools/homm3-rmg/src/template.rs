@@ -1,4 +1,4 @@
-//! Request-specific preparation of `rmg.txt` into linked, typed templates.
+//! Request-specific preparation of `rmg.txt` and `.h3t` packs into shared templates.
 
 use crate::{
     geometry::ZoneId,
@@ -7,6 +7,14 @@ use crate::{
 };
 use homm3_resource::{Field, Spreadsheet, SpreadsheetRow};
 use std::{borrow::Cow, error::Error, fmt, num::NonZeroU32};
+
+mod options;
+mod pack;
+use crate::rules::Ruleset;
+pub use options::{
+    Availability, ConnectionKind, ConnectionOptions, MapOptions, RoadPolicy, ZoneOptions,
+};
+pub use pack::{PackSettings, TemplateFormat};
 
 const COLUMNS: usize = raw::RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_PLAYERS as usize + 1;
 const TOWNS: usize = raw::TOWN_TYPE_COUNT as usize;
@@ -17,6 +25,17 @@ const BANDS: usize = raw::RMG_TREASURE_BAND_COUNT as usize;
 /// A source row cannot be interpreted safely as a template record.
 #[derive(Debug)]
 pub enum TemplateError {
+    /// This encoding requires extended generation rules.
+    FormatMismatch,
+    /// Malformed pack header, numeric value or record domain.
+    Pack {
+        /// Zero-based source row.
+        row: usize,
+        /// Zero-based source column.
+        column: usize,
+        /// Rejected field or relationship.
+        reason: &'static str,
+    },
     /// The underlying spreadsheet encoding is malformed.
     Spreadsheet(homm3_resource::Error),
     /// An integer field exceeds the signed 32-bit domain of retail `atoi`.
@@ -37,6 +56,12 @@ pub enum TemplateError {
 impl fmt::Display for TemplateError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::FormatMismatch => f.write_str("a template pack requires HotA generation rules"),
+            Self::Pack {
+                row,
+                column,
+                reason,
+            } => write!(f, "template row {row}, column {column}: {reason}"),
             Self::Spreadsheet(error) => error.fmt(f),
             Self::IntegerOverflow { row, column } => {
                 write!(f, "rmg.txt row {row}, column {column}: integer overflow")
@@ -49,9 +74,9 @@ impl fmt::Display for TemplateError {
 }
 impl Error for TemplateError {}
 
-/// A candidate retail accepts, but cannot execute safely.
+/// A candidate the native reader accepts, but cannot execute safely.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum RetailTemplateFault {
+pub enum TemplateFault {
     /// A starting zone writes before retail's player-slot arrays (`owner == -1`).
     UnassignedPlayerZone {
         /// Zero-based source row.
@@ -63,20 +88,20 @@ pub enum RetailTemplateFault {
         row: usize,
     },
 }
-impl fmt::Display for RetailTemplateFault {
+impl fmt::Display for TemplateFault {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::UnassignedPlayerZone { row } => write!(
                 f,
-                "rmg.txt row {row}: unassigned player zone writes before retail player-slot arrays"
+                "template row {row}: unassigned player zone writes before native player-slot arrays"
             ),
-            Self::UnusableZone { row } => write!(f, "rmg.txt row {row}: unsupported retail zone"),
+            Self::UnusableZone { row } => write!(f, "template row {row}: unsupported native zone"),
         }
     }
 }
-impl Error for RetailTemplateFault {}
+impl Error for TemplateFault {}
 
-/// A selectable candidate, including retail's potentially faulting templates.
+/// A selectable candidate, including native readers' potentially faulting templates.
 ///
 /// Faults remain in source order and occupy a selection slot. Removing them
 /// would change the modulo divisor and every later seeded template choice.
@@ -84,12 +109,12 @@ impl Error for RetailTemplateFault {}
 pub enum TemplateCandidate<'a> {
     /// A template whose zone domains have been resolved.
     Ready(Template<'a>),
-    /// Retail accepts this candidate; report its fault only when selected.
-    RetailFault {
+    /// The native reader accepts this candidate; report its fault only when selected.
+    NativeFault {
         /// Original resource name.
         name: Cow<'a, [u8]>,
         /// Failure encountered when resolving the zone domains.
-        fault: RetailTemplateFault,
+        fault: TemplateFault,
     },
 }
 impl<'a> TemplateCandidate<'a> {
@@ -98,18 +123,18 @@ impl<'a> TemplateCandidate<'a> {
     pub fn name(&self) -> &[u8] {
         match self {
             Self::Ready(template) => template.name(),
-            Self::RetailFault { name, .. } => name,
+            Self::NativeFault { name, .. } => name,
         }
     }
 
     /// Resolve the selected candidate without another allocation.
     ///
     /// # Errors
-    /// Reports the selected candidate's modeled retail fault.
-    pub fn into_template(self) -> Result<Template<'a>, RetailTemplateFault> {
+    /// Reports the selected candidate's modeled native fault.
+    pub fn into_template(self) -> Result<Template<'a>, TemplateFault> {
         match self {
             Self::Ready(template) => Ok(template),
-            Self::RetailFault { fault, .. } => Err(fault),
+            Self::NativeFault { fault, .. } => Err(fault),
         }
     }
 }
@@ -234,18 +259,24 @@ pub enum ZoneMonsters {
     Strong,
 }
 
-/// A connection already resolved to a zone in its owning template.
+/// A connection resolved within its owning template, or a one-sided mirror link.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Connection {
-    destination: ZoneId,
+    destination: Option<ZoneId>,
     value: i32,
     unguarded: bool,
     border_guard: bool,
+    options: ConnectionOptions,
 }
 impl Connection {
-    /// Connected zone in this prepared template.
+    /// Road, mechanism and layout policies for this connection.
     #[must_use]
-    pub const fn destination(self) -> ZoneId {
+    pub const fn options(self) -> ConnectionOptions {
+        self.options
+    }
+    /// Connected zone, or no endpoint for a one-sided mirror connection.
+    #[must_use]
+    pub const fn destination(self) -> Option<ZoneId> {
         self.destination
     }
     /// Unscaled guard value.
@@ -274,18 +305,24 @@ pub struct Zone {
     size: NonZeroU32,
     towns: [Placement; raw::RMG_TOWN_CATEGORY_COUNT as usize],
     neutral_towns_match_alignment: bool,
-    allowed_towns: [bool; TOWNS],
+    allowed_towns: Box<[bool]>,
     mines: [Placement; RESOURCES],
     use_native_terrain: bool,
-    allowed_terrain: [bool; LAND_TERRAINS],
+    allowed_terrain: Box<[bool]>,
     monsters: ZoneMonsters,
     guards_match_alignment: bool,
-    allowed_monsters: [bool; TOWNS + 1],
+    allowed_monsters: Box<[bool]>,
     treasure: [TreasureBand; BANDS],
     connections: Vec<Connection>,
+    options: ZoneOptions,
 }
 
 impl Zone {
+    /// Zone placement, object, creature and hint policies.
+    #[must_use]
+    pub const fn options(&self) -> &ZoneOptions {
+        &self.options
+    }
     /// Dense identity in the owning template.
     #[must_use]
     pub const fn id(&self) -> ZoneId {
@@ -313,7 +350,7 @@ impl Zone {
     }
     /// Allowed factions after version filtering.
     #[must_use]
-    pub const fn allowed_towns(&self) -> &[bool; TOWNS] {
+    pub fn allowed_towns(&self) -> &[bool] {
         &self.allowed_towns
     }
     /// Mine categories indexed by resource.
@@ -326,9 +363,11 @@ impl Zone {
     pub const fn use_native_terrain(&self) -> bool {
         self.use_native_terrain
     }
-    /// Allowed land terrains; dirt is the fallback when the source allows none.
+    /// Terrain permissions in catalog order. Pack masks include explicit false
+    /// entries for water/rock; legacy Complete masks contain only land entries.
+    /// Dirt is the fallback when the source allows no terrain.
     #[must_use]
-    pub const fn allowed_terrain(&self) -> &[bool; LAND_TERRAINS] {
+    pub fn allowed_terrain(&self) -> &[bool] {
         &self.allowed_terrain
     }
     /// Template guard strength.
@@ -343,7 +382,7 @@ impl Zone {
     }
     /// Neutral then faction guard availability, including the retail `RoE` quirk.
     #[must_use]
-    pub const fn allowed_monsters(&self) -> &[bool; TOWNS + 1] {
+    pub fn allowed_monsters(&self) -> &[bool] {
         &self.allowed_monsters
     }
     /// Treasure bands in source order.
@@ -351,7 +390,7 @@ impl Zone {
     pub const fn treasure(&self) -> &[TreasureBand; BANDS] {
         &self.treasure
     }
-    /// Bidirectional connections, retaining source insertion order.
+    /// Connections in source insertion order, including one-sided mirror links.
     #[must_use]
     pub fn connections(&self) -> &[Connection] {
         &self.connections
@@ -363,8 +402,20 @@ impl Zone {
 pub struct Template<'a> {
     name: Cow<'a, [u8]>,
     zones: Vec<Zone>,
+    options: MapOptions,
+    ruleset: Ruleset,
 }
 impl Template<'_> {
+    /// Rules required to interpret this template's generation properties.
+    #[must_use]
+    pub const fn ruleset(&self) -> Ruleset {
+        self.ruleset
+    }
+    /// Map-wide restrictions and generation options.
+    #[must_use]
+    pub const fn options(&self) -> &MapOptions {
+        &self.options
+    }
     /// Original byte name; resource text need not be UTF-8.
     #[must_use]
     pub fn name(&self) -> &[u8] {
@@ -406,6 +457,7 @@ impl Template<'_> {
 /// Borrowed source rows, indexed once for repeated request preparation.
 pub struct TemplateSource<'a> {
     rows: Vec<SpreadsheetRow<'a>>,
+    format: TemplateFormat,
 }
 impl<'a> TemplateSource<'a> {
     /// Parse spreadsheet encoding without resolving player filters or randomness.
@@ -414,9 +466,49 @@ impl<'a> TemplateSource<'a> {
     /// Reports malformed text encoding.
     pub fn parse(bytes: &'a [u8]) -> Result<Self, TemplateError> {
         let sheet = Spreadsheet::parse(bytes).map_err(TemplateError::Spreadsheet)?;
-        Ok(Self {
-            rows: sheet.rows().collect(),
-        })
+        let rows: Vec<_> = sheet.rows().collect();
+        let format = if rows
+            .first()
+            .and_then(|row| row.cells().next())
+            .and_then(|cell| cell.decoded().next())
+            .is_some_and(|b| b.eq_ignore_ascii_case(&b'p'))
+        {
+            TemplateFormat::Pack
+        } else {
+            TemplateFormat::Legacy
+        };
+        Ok(Self { rows, format })
+    }
+
+    /// Detected spreadsheet encoding; legacy input can also be read under `HotA` rules.
+    #[must_use]
+    pub const fn format(&self) -> TemplateFormat {
+        self.format
+    }
+
+    /// Read pack-wide settings without making random choices.
+    ///
+    /// # Errors
+    /// Reports invalid pack field counts or numeric values.
+    pub fn pack_settings(&self, ruleset: Ruleset) -> Result<PackSettings, TemplateError> {
+        pack::settings(self, ruleset).map(|(_, settings)| settings)
+    }
+
+    /// Normalize either encoding under the requested native rules.
+    ///
+    /// # Errors
+    /// Reports malformed fields and unsupported zone domains. This prepares
+    /// templates only; generation must separately support the selected ruleset.
+    pub fn prepare_for(
+        &self,
+        request: &Request,
+        water: Water,
+        ruleset: Ruleset,
+    ) -> Result<Vec<TemplateCandidate<'a>>, TemplateError> {
+        match ruleset {
+            Ruleset::Complete => self.prepare(request, water),
+            Ruleset::HotA181 => pack::prepare(self, request, water, ruleset),
+        }
     }
 
     fn append_connections(
@@ -455,14 +547,15 @@ impl<'a> TemplateSource<'a> {
                     continue;
                 }
                 let connection = Connection {
-                    destination: ZoneId::new(second),
+                    destination: Some(ZoneId::new(second)),
                     value: row.number(raw::RMG_TEMPLATE_COLUMN_CONNECTION_VALUE)?,
                     unguarded: row.is_set(raw::RMG_TEMPLATE_COLUMN_CONNECTION_UNGUARDED),
                     border_guard: row.is_set(raw::RMG_TEMPLATE_COLUMN_CONNECTION_BORDER_GUARD),
+                    options: ConnectionOptions::default(),
                 };
                 template.zones[first].connections.push(connection);
                 template.zones[second].connections.push(Connection {
-                    destination: ZoneId::new(first),
+                    destination: Some(ZoneId::new(first)),
                     ..connection
                 });
             }
@@ -480,6 +573,9 @@ impl<'a> TemplateSource<'a> {
         request: &Request,
         water: Water,
     ) -> Result<Vec<TemplateCandidate<'a>>, TemplateError> {
+        if self.format == TemplateFormat::Pack {
+            return Err(TemplateError::FormatMismatch);
+        }
         let mut templates = Vec::new();
         let dimension = request.size().dimension();
         let unit = raw::MAP_DIMENSION_SMALL;
@@ -514,6 +610,8 @@ impl<'a> TemplateSource<'a> {
                 let mut template = Template {
                     name: first.name(),
                     zones: Vec::new(),
+                    options: MapOptions::default(),
+                    ruleset: Ruleset::Complete,
                 };
                 let mut fault = None;
                 let mut human_zones = 0;
@@ -560,7 +658,7 @@ impl<'a> TemplateSource<'a> {
                 };
                 if admitted {
                     if let Some(fault) = fault {
-                        templates.push(TemplateCandidate::RetailFault {
+                        templates.push(TemplateCandidate::NativeFault {
                             name: template.name,
                             fault,
                         });
@@ -623,8 +721,8 @@ fn parse_zone(
     row: &Row<'_>,
     id: ZoneId,
     request: &Request,
-) -> Result<Result<Zone, RetailTemplateFault>, TemplateError> {
-    let unusable = RetailTemplateFault::UnusableZone { row: row.index };
+) -> Result<Result<Zone, TemplateFault>, TemplateError> {
+    let unusable = TemplateFault::UnusableZone { row: row.index };
     let size = u32::try_from(row.number(raw::RMG_TEMPLATE_COLUMN_SIZE)?)
         .ok()
         .and_then(NonZeroU32::new);
@@ -649,11 +747,7 @@ fn parse_zone(
         // 0x5499e0 writes humanSlots[-1]; 0x5499e5 writes allSlots[-1], aliasing
         // humanSlots[7]. Shipped 2SM2i(2) thus gains a phantom player slot.
         // Native success does not make these out-of-array accesses defined.
-        _ => {
-            return Ok(Err(RetailTemplateFault::UnassignedPlayerZone {
-                row: row.index,
-            }))
-        }
+        _ => return Ok(Err(TemplateFault::UnassignedPlayerZone { row: row.index })),
     };
     let towns = [
         placement(
@@ -716,9 +810,9 @@ fn parse_zone(
         return Ok(Err(unusable));
     }
     let flags = |first: u32, index: usize| row.is_set(first + u32::try_from(index).unwrap());
-    let mut allowed_towns =
+    let mut allowed_towns: [bool; TOWNS] =
         std::array::from_fn(|index| flags(raw::RMG_TEMPLATE_COLUMN_ALLOWED_TOWNS, index));
-    let mut allowed_monsters =
+    let mut allowed_monsters: [bool; TOWNS + 1] =
         std::array::from_fn(|index| flags(raw::RMG_TEMPLATE_COLUMN_ALLOWED_MONSTERS, index));
     if request.version() == MapVersion::Restoration {
         allowed_towns[raw::TOWN_CONFLUX as usize] = false;
@@ -726,7 +820,7 @@ fn parse_zone(
         // Clearing Conflux's unshifted index therefore disables Fortress.
         allowed_monsters[raw::TOWN_CONFLUX as usize] = false;
     }
-    let mut allowed_terrain =
+    let mut allowed_terrain: [bool; LAND_TERRAINS] =
         std::array::from_fn(|index| flags(raw::RMG_TEMPLATE_COLUMN_ALLOWED_TERRAIN, index));
     if !allowed_terrain.contains(&true) {
         allowed_terrain[raw::eTerrainDirt as usize] = true;
@@ -747,16 +841,18 @@ fn parse_zone(
         role,
         size,
         towns,
-        neutral_towns_match_alignment: row.is_set(raw::RMG_TEMPLATE_COLUMN_NEUTRAL_TOWNS_MATCH_ZONE),
-        allowed_towns,
+        neutral_towns_match_alignment: row
+            .is_set(raw::RMG_TEMPLATE_COLUMN_NEUTRAL_TOWNS_MATCH_ZONE),
+        allowed_towns: allowed_towns.into(),
         mines,
         use_native_terrain: row.is_set(raw::RMG_TEMPLATE_COLUMN_USE_NATIVE_TERRAIN),
-        allowed_terrain,
+        allowed_terrain: allowed_terrain.into(),
         monsters,
         guards_match_alignment: row.is_set(raw::RMG_TEMPLATE_COLUMN_GUARDS_MATCH_ZONE),
-        allowed_monsters,
+        allowed_monsters: allowed_monsters.into(),
         treasure,
         connections: Vec::new(),
+        options: ZoneOptions::default(),
     }))
 }
 
@@ -819,11 +915,17 @@ mod tests {
             .into_template()
             .unwrap();
         assert_eq!(
-            template.zones()[0].connections()[0].destination().index(),
+            template.zones()[0].connections()[0]
+                .destination()
+                .unwrap()
+                .index(),
             1
         );
         assert_eq!(
-            template.zones()[1].connections()[0].destination().index(),
+            template.zones()[1].connections()[0]
+                .destination()
+                .unwrap()
+                .index(),
             0
         );
         assert!(matches!(template.name, Cow::Borrowed(_)));
@@ -955,8 +1057,8 @@ mod tests {
                 &request(Behavior::Retail(RetailProfile::default())),
                 &mut rng,
             ),
-            Err(crate::selection::SelectionError::RetailTemplate(
-                RetailTemplateFault::UnassignedPlayerZone { row: 5 }
+            Err(crate::selection::SelectionError::Template(
+                TemplateFault::UnassignedPlayerZone { row: 5 }
             ))
         ));
         assert_eq!(rng.draws(), 1);
@@ -967,7 +1069,7 @@ mod tests {
         );
         assert!(matches!(
             candidates.next().unwrap().into_template(),
-            Err(RetailTemplateFault::UnassignedPlayerZone { row: 5 })
+            Err(TemplateFault::UnassignedPlayerZone { row: 5 })
         ));
         assert_eq!(
             candidates.next().unwrap().into_template().unwrap().name(),
