@@ -3729,7 +3729,8 @@ int valueOfTreasure(const hero* currentHero)
 // experience, once per hero per tree, less the tree's price - free, 2,000
 // gold or 10 gems when this player has already learned which, or the
 // three-way expected price (capped at two thirds of the level's worth)
-// when he has not.  Extern for emission while the TREE arm is a stub.
+// when he has not. DC marks ValueOfTree static; retail and Mac each
+// retain only the same-TU AI_value_of_event caller.
 // DC philai.cpp:3341 explicitly calls GetItemId; Mac 145b60..145b70
 // expands its unsigned five-bit read and short result. Use the inherited
 // helpers directly, with the shared WiseTreePrices domain for the switch.
@@ -3737,7 +3738,7 @@ int valueOfTreasure(const hero* currentHero)
 VA(0x0052b5a0, 0x161)
 DC_ADDRESS(0x1130cc, 0x258)
 MAC_ADDRESS(0x145b40, 0x20c)
-int valueOfTree(const hero* currentHero, NewmapCell* cell)
+static int valueOfTree(const hero* currentHero, NewmapCell* cell)
 {
     if (currentHero->m_treeOfKnowledgeFlags & (1 << cell->getItemId()))
         return 0;
