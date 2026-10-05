@@ -3121,13 +3121,14 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
 // fixes the packed spell as the signed ten-bit lane at bits 13..22.  The
 // three refusal tails are advevent.txt rows 174 (already known), 131 (no
 // spellbook), and 130 (insufficient Wisdom).
-// [2026-08-27] Residual (89.67%): retail's SetInfoFlag expansion here
-// CALLS game::GetTeam for the initial team lookup, where game.h's inline
-// reads mapHeader.teamInfo[playerNum] directly (its own note records the
-// direct read, and DispatchEvent's arms depend on it). Reconciling would
-// be a shared-header change risking every SetInfoFlag consumer. The
-// remainder is human_player homing (retail reloads the stack byte) and an
-// esi/edi swap.
+// Residual (89.65%): retail's SetInfoFlag expansion here CALLS the nested
+// game::getTeam. Traced /Ob2 (2026-10-05): caller cb 482 sits on the 1000
+// floor; setInfoFlag (cb 115) reaches depth 1 with budget 956 and 18 root
+// candidates left, so its child pool is 841/18 = 46, exactly getTeam's cb.
+// Retail's call needs one more cost-free root candidate between setInfoFlag
+// and the wisdom arm's +=, or 14 more budget spent before setInfoFlag.
+// Neither the DC nor the Mac call stream shows such a candidate, and the
+// remaining differences are register homing around that call.
 VA(0x004a5610, 0x346)
 DC_ADDRESS(0x0957fc, 0x236)
 MAC_ADDRESS(0x0b1f74, 0x3fc)  // DC identity + unique call/CFG stream

@@ -6693,6 +6693,15 @@ unsigned char TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost
 // The native comparison currently retains SGameSetupOptions assignments
 // that retail expands, and splits the file-adapter destructor over two exits.
 // Those helper/lifetime frontiers remain explicit; no exact Mac claim is made.
+// Two release VERIFYs on the received row index once stood before `sel =
+// temp`; the stub DC body offers no line evidence for them, and their five
+// size() expansions (cb 42 each) starved the root budget so both request
+// constructors and the temp destructor stayed calls (85.86%). Without them
+// the third assignment is still refused (budget 238 < cb 257) and the tail
+// expands as retail does (90.52%). Residual: retail calls CNetMsg's
+// constructor inside BOTH request expansions; traced pools are 185/3 = 61
+// and 81/1 against its cb 59, so retail spent 23..81 more root budget before
+// `sel = temp` (or has one more cost-free root after the last request).
 VA(0x00589710, 0x40F)
 DC_ADDRESS(0x140664, 0xa)
 MAC_ADDRESS(0x180c24, 0x668)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg
@@ -6732,17 +6741,6 @@ unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
                 m_headersA[mapFileNameMsg->m_number] = temp;
             GameSelectionHeadersStruct& sel =
                 m_selectionHeaders[mapFileNameMsg->m_number];
-            // Both init handlers size the active source list and its display
-            // mirror together; a received row must address that shared range.
-            HOMM3_RELEASE_VERIFY(mapFileNameMsg->m_number >= 0
-                && static_cast<unsigned int>(mapFileNameMsg->m_number)
-                    < (mapFileNameMsg->m_flag
-                           ? m_transferHeaders.size()
-                           : m_headersA.size()));
-            HOMM3_RELEASE_VERIFY(
-                (mapFileNameMsg->m_flag
-                     ? m_transferHeaders.size()
-                     : m_headersA.size()) == m_selectionHeaders.size());
             sel = temp;
         } else {
             CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
