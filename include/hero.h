@@ -816,7 +816,7 @@ public:
     // 0x4e5550 - checks spell access, mana, boat reachability and pool space.
     unsigned char canSummonBoat() const;
     long getNavigationFactor() const;
-    int getMobility(unsigned char seaMovement) const;
+    int getMobility(bool seaMovement) const;
     int getMobility() const;
     // 0x4e5960 - the four primary skills, each clamped to 0..99, with
     // slots 2 and 3 floored at 1.
@@ -941,7 +941,7 @@ public:
     int soDGetSeerSkillValue(int skill, int level);
     int getSpellDurationBonus() const;
     int giveExperience(int howMuch, int checkForLevelUp,
-                       unsigned char showCapWindow);
+                       bool showCapWindow);
     int giveRandomArtifact();
     void resetArtifacts();
     void giveResource(int whichRes, int howMuch);

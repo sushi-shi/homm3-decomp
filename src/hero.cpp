@@ -1088,6 +1088,8 @@ void hero::initialize(short index)
 // The remaining mismatch includes string::assign expanding where retail
 // retains it. Shared/local loop indices, literal/sizeof backpack bounds,
 // assignment/assign and an unnamed/named level leave that boundary unchanged.
+// A reproduced VC6 trace admits assign's 307-byte body with 346 bytes left
+// in its inline budget. An array-derived unsigned fill count also leaves it inlined.
 VA(0x004d8b30, 0x434)
 DC_ADDRESS(0x0b6c84, 0x57e)
 MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4
@@ -5393,6 +5395,8 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // a placement result and uses its two byte flags for assembly announcements
 // and victory checking. DC instead names int bCheckEnd and bool equip_it;
 // retain the desktop result and flag behavior while restoring the reference.
+// With both placement helpers returning bool, a bool placed local still
+// lowers Windows 95.9069% to 95.3968%; it does not close the caller's residual.
 VA(0x004e3070, 0x339)
 DC_ADDRESS(0x0d3de4, 0x5c)
 MAC_ADDRESS(0x103da8, 0x2f0)  // anchor-global
@@ -5461,9 +5465,8 @@ int hero::giveRandomArtifact()
     return artifact.m_artifactId;
 }
 
-// Complete VC6 and Dreamcast both declare showCapWindow as unsigned char.
-// The stripped Mac executable contains no giveExperience symbol; a candidate
-// mangled name does not establish a different source parameter type.
+// Original DC public ?GiveExperience@hero@@QAAHHH_N@Z proves the final
+// parameter is bool; CodeView's lowered unsigned-byte record alone does not.
 // Both experience helpers expand here. Initializing getExperience's total
 // before its increment fixes the cap-result lifetime; getLevel's single
 // level counter (Mac 0xf6394..0xf63c0) closes the Windows caller to 100%.
@@ -5471,7 +5474,7 @@ VA(0x004e33b0, 0x24A)
 DC_ADDRESS(0x0d3e88, 0x130)
 MAC_ADDRESS(0x104098, 0x18c)
 int hero::giveExperience(int howMuch, int checkForLevelUp,
-                         unsigned char showCapWindow)
+                         bool showCapWindow)
 {
     int entryLevel = m_level;
     if (g_game->m_mapHeader.m_maxHeroLevel > 0) {
@@ -5954,7 +5957,8 @@ float hero::getFirstAidFactor() const
 VA(0x004e4990, 0x3F6)
 DC_ADDRESS(0x0d4b50, 0x210)
 MAC_ADDRESS(0x105898, 0x348)
-int hero::getMobility(unsigned char seaMovement) const
+// Original ?GetMobility@hero@@QBAH_N@Z proves the Boolean movement mode.
+int hero::getMobility(bool seaMovement) const
 {
     if (m_flags & 0x1000000)
         return 1000000;
