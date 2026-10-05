@@ -45,10 +45,10 @@
 // this file had no reader for until now.
 DATA(0x0068c6bc) int g_viewWorldScale = 11;
 DATA(0x006aab68)
-static unsigned char g_viewMines;
+static bool g_viewMines;
 DATA(0x006aab78) bool g_vwTerrains;
 DATA(0x006aab79)
-static unsigned char g_viewResources;
+static bool g_viewResources;
 // The half-extents init derives from the two viewable dimensions and the
 // three view-world readers below consume. Only viewwrld.obj references
 // either address (four dir32 sites each: init writes both, and
@@ -61,19 +61,19 @@ DATA(0x006aab80)
 static int g_viewHalfWidth;
 DATA(0x006aab84) int g_scaleLine[32];
 DATA(0x006aac08)
-static unsigned char g_viewArtifacts;
+static bool g_viewArtifacts;
 // Original DC name: eVWLevel. Unreferenced by retail and Dreamcast code; the
 // Dreamcast public sits between iVWArtifacts and iVWTowns at the same offsets
 // as these two retail flags.
 DATA(0x006aac10) TSkillMastery g_vwLevel;
 DATA(0x006aac14)
-static unsigned char g_viewTowns;
+static bool g_viewTowns;
 DATA(0x006aac18) int g_vwCenterOffsetW;
 DATA(0x006aac1c) int g_vwCenterOffsetH;
 DATA(0x006aac20) CSprite* g_csVwIcons;
 DATA(0x006aac28) Bitmap16Bit* g_memoryBuffer;
 DATA(0x006aac30)
-static unsigned char g_viewHeroes;
+static bool g_viewHeroes;
 
 // E:\gamedcs\viewwrld.cpp:100
 // The magic-number float-to-int conversion. Retail emits NO body for it:
@@ -873,8 +873,8 @@ void advManager::vwDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 
     m_riverTileset[thisCell->m_riverSet]->drawTile(
         thisCell->m_riverIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
-        (thisCell->m_flags0011 >> 2) & 1,
-        (thisCell->m_flags0011 >> 3) & 1);
+        thisCell->m_riverFlippedHorizontal,
+        thisCell->m_riverFlippedVertical);
 
     vwScaleToScreenBuffer(baseX, baseY + 8);
 }
@@ -885,14 +885,10 @@ void advManager::vwDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 // unit), the tileset array and the two flip bits (4 and 5 instead of 2 and
 // 3). Retail's identical instruction stream either side of those four
 // differences is what pairs the two.
-// Residual (98.2455%, MAX 99.5374%): all 45 blocks, 31 branches, seven calls
-// and 281 instructions align; the 14 unpaired masked slots are scratch-order
-// choices in the two expanded scaler row latches. The twice-used sourcePixel
-// pointer remains the source-true spelling that established MAX. Reversing
-// `mwidth * g_scaleLine[y]` independently in the clipped and unclipped
-// helpers is byte-flat, while why-reg's six guided local/declaration probes
-// are all worse. Keep the canonical shared helpers and their exact retained
-// clipped body rather than forcing this caller's register assignment.
+// Residual (99.5374%): four register/operand differences remain in the
+// clipped scaler's row latch. Reading the buffer before calculating its
+// offset recovers the native instruction order; reversing the multiplication
+// operands is byte-flat. Keep the canonical shared scaler and pixel accessors.
 VA(0x005f95b0, 0x38B)
 DC_ADDRESS(0x1949cc, 0x17c)
 MAC_ADDRESS(0x205750, 0x2cc)  // exhaustive dc-order-map + VWCompleteDraw call order (3rd layer)
@@ -919,8 +915,8 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 
     m_roadTileset[thisCell->m_roadSet]->drawTile(
         thisCell->m_roadIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
-        (thisCell->m_flags0011 >> 4) & 1,
-        (thisCell->m_flags0011 >> 5) & 1);
+        thisCell->m_roadFlippedHorizontal,
+        thisCell->m_roadFlippedVertical);
 
     vwScaleToScreenBuffer(baseX, baseY + 8);
 }

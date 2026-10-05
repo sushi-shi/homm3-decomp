@@ -3969,10 +3969,12 @@ int advManager::processHover(int mouseX, int mouseY)
         }
 
         seedTo(m_lastMapHover);
-        pathCell* currentPathCell = g_searchArray->getCell(m_lastMapHover, 0);
+        // DC locals path_cell/new_cursor retain const cell access and the
+        // cursor enum. Apply turn offsets only when selecting the frame.
+        const pathCell* currentPathCell = g_searchArray->getCell(m_lastMapHover, 0);
         int turns;
         int mouseOffset = 0;
-        int newCursor;
+        type_adventure_cursor newCursor;
         if (currentPathCell->m_visited) {
             if (currentPathCell->m_cost <= currHero->m_movePoints) {
                 turns = 0;
@@ -3988,29 +3990,29 @@ int advManager::processHover(int mouseX, int mouseY)
             switch (currCell->m_type) {
             case BOAT:
                 if (m_cursorType != CURSOR_TYPE_8) {
-                    newCursor = 6;
+                    newCursor = ADV_BOAT_POINTER;
                     m_advCommand = 1;
                 } else {
-                    newCursor = 0;
+                    newCursor = ADV_ARROW_POINTER;
                     m_advCommand = -1;
                 }
                 break;
             case ANCHOR_POINT:
                 if (m_cursorType == CURSOR_TYPE_8)
-                    newCursor = 7;
+                    newCursor = ADV_ANCHOR_POINTER;
                 else
                     newCursor = getNormalCursor(currCell);
                 break;
             case MONSTER:
-                newCursor = 5;
+                newCursor = ADV_SWORD_POINTER;
                 break;
             case HERO: {
                 hero* mapHero = g_game->getHero(currCell->m_extraInfo);
                 if (g_game->onSameTeam(mapHero->m_owner, g_netLocalGamePos)) {
-                    newCursor = 8;
+                    newCursor = ADV_EXCHANGE_POINTER;
                     m_advCommand = 1;
                 } else {
-                    newCursor = 5;
+                    newCursor = ADV_SWORD_POINTER;
                 }
                 break;
             }
@@ -4022,7 +4024,7 @@ int advManager::processHover(int mouseX, int mouseY)
                 if (currCell->m_isTrigger
                     && !g_game->onSameTeam(currentTown->m_owner, g_netLocalGamePos)
                     && currentTown->hasGarrison())
-                    newCursor = 5;
+                    newCursor = ADV_SWORD_POINTER;
                 else
                     newCursor = getNormalCursor(currCell);
                 break;
@@ -4032,15 +4034,14 @@ int advManager::processHover(int mouseX, int mouseY)
                 break;
             }
         } else {
-            newCursor = 0;
+            newCursor = ADV_ARROW_POINTER;
         }
 
-        newCursor += (m_cursorType == CURSOR_TYPE_8
-                       && newCursor == ADV_BOAT_EVENT_POINTER)
-                          ? turns
-                          : mouseOffset;
-        g_mouseManager->setPointer(newCursor,
-                                   mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(
+            newCursor + ((m_cursorType == CURSOR_TYPE_8
+                          && newCursor == ADV_BOAT_EVENT_POINTER)
+                         ? turns : mouseOffset),
+            mouseManager::ADVENTURE_SET);
         return 1;
         }
         }
@@ -5223,8 +5224,8 @@ void advManager::drawRiver(int srcX, int srcY, int z, int destX, int destY)
     m_riverTileset[thisCell->m_riverSet]->drawTile(
         thisCell->m_riverIndex, tilex, tiley, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8,
-        (thisCell->m_flags0011 >> 2) & 1,
-        (thisCell->m_flags0011 >> 3) & 1);
+        thisCell->m_riverFlippedHorizontal,
+        thisCell->m_riverFlippedVertical);
 }
 
 VA(0x00411d60, 0x1EC)
@@ -5268,8 +5269,8 @@ void advManager::drawRoad(int srcX, int srcY, int z, int destX, int destY)
     m_roadTileset[thisCell->m_roadSet]->drawTile(
         thisCell->m_roadIndex, tilex, tiley, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8,
-        (thisCell->m_flags0011 >> 4) & 1,
-        (thisCell->m_flags0011 >> 5) & 1);
+        thisCell->m_roadFlippedHorizontal,
+        thisCell->m_roadFlippedVertical);
 }
 
 VA(0x00411f50, 0x15F)
