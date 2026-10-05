@@ -367,11 +367,10 @@ public:
     // five-argument overload to center the Magog effect before animating it.
     // Complete Windows and Mac fold the fixed-viewport facade in army.cpp;
     // that cross-TU expansion supports header visibility of this delegation.
-    // Older DC owns the scrolling facade in drawing.cpp.
+    // Older DC owns the scrolling facade in drawing.cpp; its original
+    // ?ScrollTo@combatManager@@QAA_NHH_N00@Z proves bool for result/flags.
     DC_ADDRESS(0x0841d4, 0x52)
-    unsigned char scrollTo(int x, int y, unsigned char draw,
-                           unsigned char doscrollX,
-                           unsigned char doscrollY)
+    bool scrollTo(int x, int y, bool draw, bool doscrollX, bool doscrollY)
     {
         return scrollTo(SLimitData(x, y, x + 1, y + 1), draw,
                         doscrollX, doscrollY);
@@ -1195,7 +1194,9 @@ public:
     int updateGrid(int postGridIsClean, int setupGrid);
     void drawBackground();
     void updateCombatArea();  // 0x493780
-    unsigned char handleCombatPlayerDrop(unsigned long dpid, message* msg);
+    // Original HandleCombatPlayerDrop returns bool and takes message&;
+    // native public: ?HandleCombatPlayerDrop@combatManager@@QAA_NKAAUmessage@@@Z.
+    bool handleCombatPlayerDrop(unsigned long dpid, message& msg);
 
 private:
     bool isComputerAction();
@@ -1289,10 +1290,12 @@ public:
     int getSpellWallHex(int baseIndex, int rowOffset, int side);
     void checkChangeSelector();  // 0x477ac0
     void checkChangeHighlighter(int currentIndex);  // 0x478040
-    void turnOffSelector(unsigned char drawIt);
-    void turnOffHighlighter(unsigned char restore);  // 0x477e10
+    // Original TurnOffSelector/TurnOffHighlighter publics use _N flags.
+    void turnOffSelector(bool drawIt);
+    void turnOffHighlighter(bool drawIt);  // 0x477e10
+    // Native ?SetCombatGrid@combatManager@@QAAXHHH_N@Z: draw flag is bool.
     void setCombatGrid(int showEntireGrid, int showMouseHex, int gridLevel,
-                       unsigned char drawNow);  // 0x479fc0
+                       bool drawNow);  // 0x479fc0
     // 0x46a520 (68 B), army::simple_move's second call: it zeroes a
     // 187-byte per-hex row at this + 0x14031 with a `rep stosd` of 46
     // dwords plus a word plus a byte - the cell count exactly - and
@@ -1459,7 +1462,9 @@ public:
     // command.obj's leaf (0x4763f0, claimed in src/command.cpp); ai.cpp
     // and findpath.cpp are both located callers and both reach it
     // through gpCombatManager with (army::combatSide, hex).
-    unsigned char isOutsidePlacementBoundry(int group, int index);
+    // Original is_outside_placement_boundry has a bool result:
+    // ?is_outside_placement_boundry@combatManager@@QAA_NHH@Z.
+    bool isOutsidePlacementBoundry(int group, int index);
 
 private:
     bool automateCatapult();  // 0x473c00
