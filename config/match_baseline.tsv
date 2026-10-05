@@ -2080,7 +2080,7 @@ game	?perWeek@game@@QAEXXZ	94.1200	94.1200	99.8370	0xc8780	tokens1:61936550d458
 game	?processOnMapHeroes@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcae10	tokens1:c7c5111c9b3c
 game	?processOnMapTowns@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcaa70	tokens1:753faa84817b
 game	?processRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0	tokens1:5315678f9f97
-game	?randomizeEvents@game@@QAEXXZ	89.5810	89.5810	89.6121	0xc0cc0	tokens1:0820ed66d73c
+game	?randomizeEvents@game@@QAEXXZ	90.7129	90.7129	90.7129	0xc0cc0	tokens1:4e39b7692d92
 game	?randomizeHolyGrail@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0870	tokens1:2e45d059a363
 game	?randomizeUniversity@game@@AAEXPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xc06f0	tokens1:c24257370ff1
 game	?read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	94.0918	94.0918	95.2598	0xc4390	tokens1:6bc7c2ab5741
