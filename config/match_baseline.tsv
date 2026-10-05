@@ -942,7 +942,7 @@ cmbtmgr	?combatSystemOptions@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x
 cmbtmgr	?damageMessage@combatManager@@QAEXPBDJJPBVarmy@@J@Z	100.0000	100.0000	100.0000	0x69a90	tokens1:f774def25ff6
 cmbtmgr	?damageWall@combatManager@@QAEXW4TWallTargetId@@H@Z	100.0000	100.0000	100.0000	0x65990	tokens1:5e80667fa93b
 cmbtmgr	?determineCombatTerrain@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x643b0	tokens1:fee1e12bc7f8
-cmbtmgr	?enemyIsAdjacent@combatManager@@QBEEPBVarmy@@H0@Z	99.8913	100.0000	100.0000	0x69600	tokens1:8b789840c61f
+cmbtmgr	?enemyIsAdjacent@combatManager@@QBEEPBVarmy@@H0@Z	100.0000	100.0000	100.0000	0x69600	tokens1:8b789840c61f
 cmbtmgr	?erase@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AViterator@12@V312@0@Z	100.0000	100.0000	100.0000	0x6a740	-
 cmbtmgr	?erase@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AViterator@12@V312@@Z	100.0000	100.0000	100.0000	0x6a870	-
 cmbtmgr	?freeArmies@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x639e0	tokens1:3121e32b6f63
@@ -990,7 +990,7 @@ cmbtmgr	?setNextArmy@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x65330	
 cmbtmgr	?setupAdjacencyArray@combatManager@@AAEXXZ	100.0000	100.0000	100.0000	0x640a0	tokens1:c5ebe3df5946
 cmbtmgr	?setupAndLoadObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66290	tokens1:9885deb0a118
 cmbtmgr	?setupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	100.0000	100.0000	100.0000	0x639f0	tokens1:d06a7f6403d2
-cmbtmgr	?shootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	94.6967	94.6967	100.0000	0x67db0	tokens1:07beea86813e
+cmbtmgr	?shootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	94.6967	94.6967	100.0000	0x67db0	tokens1:beb9bff7ac18
 cmbtmgr	?shootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	89.1219	89.1219	100.0000	0x67a00	tokens1:d31a24eca37f
 cmbtmgr	?shootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	96.5625	96.5625	100.0000	0x68220	tokens1:ab0179b7bad1
 cmbtmgr	?shotIsNotOptimal@combatManager@@QBEEPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x67600	tokens1:84bb1e66fa9a

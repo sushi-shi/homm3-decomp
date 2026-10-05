@@ -3074,6 +3074,11 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
 // 29 branches and 17 named calls align. The first residual is Include's
 // lowering at +0x333, with rectangle scratch/stack differences following.
 // The canonical bitmap, sprite, rectangle and resource calls stay intact.
+// DC 3794/3796 and Mac 0x7428c..0x742ac separate the count guard
+// from the inner angle break; unordered angles continue that loop.
+// The inner-break restoration is VC6 byte-identical. Eight rectangle
+// constructor/conditional-assignment combinations do not improve the
+// helper-preserving model; retain the ordinary member initializer/if form.
 VA(0x00467db0, 0x46A)
 DC_ADDRESS(0x0619a8, 0x4b8)
 MAC_ADDRESS(0x0740cc, 0x588)
@@ -3119,10 +3124,11 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             degrees = atan(static_cast<double>(deltaY) / -deltaX)
                       * 57.2957763671875;
         angle = static_cast<float>(degrees);
-        int index = 1;
-        while (index < nsprites
-                && (angles[index - 1] + angles[index]) / 2.0f >= angle)
-            ++index;
+        int index;
+        for (index = 1; index < nsprites; ++index) {
+            if ((angles[index - 1] + angles[index]) / 2.0f < angle)
+                break;
+        }
         if (index < nsprites)
             spriteIndex = index - 1;
         else
