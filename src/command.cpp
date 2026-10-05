@@ -407,33 +407,20 @@ process_action:
     return result;
 }
 
-// E:\gamedcs\command.cpp:475
-// Build the twelve legal approach records around the selected target hex.
-// Dreamcast proves the local names and the two header-inline army helpers;
-// retail fixes the Complete grid layout, validation order and tie-breaking.
-// Residual: 90.8771%, with all 39 branches and the return agreeing; VC6 keeps
-// `this` in EDI instead of EBX, adding one reload block (60 vs 59). 64 D1 and
-// 256 D2 ordinary-source trees were exhausted. Dreamcast lines 519 and 532
-// retain OffsetToFront calls. Restoring those canonical header-inline calls
-// is byte-flat under VC6; the third facing adjustment has no such attribution.
-// Native 0x8285c/0x82864 saves the prior side/slot in r23/r22. Declaring
-// these before the loop locals reproduces the full native prefix; an int
-// clear-loop index reproduces its initial eight-store unroll without the
-// spurious entry guard. Both controls are VC6 byte-flat (90.8259%).
-// Rotating attack/index/group declarations is flat on Windows but worsens
-// native bindings; keep the proven local types and their supported roles.
-// Guard both validity results together: VC6 rises 90.8259 -> 91.3686%;
-// either guard alone falls to 87.28/87.23%. Mac moves 40.9468 -> 38.2601%,
-// so the combined declaration/flag-lifetime model remains open. All CanFit,
-// IsMoat, OffsetToFront, NeedToTurn and swap calls stay canonical.
-// Nesting firstHex assignment in ValidHex is Windows-flat and moves Mac
-// 38.2601 -> 38.0912%; keep the separate assignment and canonical check.
-// DC command.cpp:562 swaps the validity flags through dc0x70c5c. Its
-// original S_PUB32 ?swap@std@@YAXAA_N0@Z proves bool& arguments; CodeView
-// renders the lowered bool locals as unsigned char. Preserve that bool
-// domain and the canonical swap rather than treating byte width as uchar.
-// Targeted VC6 comparison is byte-flat at 91.3686%; the type recovery does
-// not resolve the existing declaration/control-flow residual.
+// E:\gamedcs\command.cpp:475. Build twelve legal approach records around
+// the target hex. Keep the canonical CanFit, IsMoat, OffsetToFront,
+// NeedToTurn and swap calls. DC562's ?swap@std@@YAXAA_N0@Z public proves
+// bool validity flags despite their lowered CodeView byte records.
+// DC573-578 selects one valid candidate by clearing a flag before DC580's
+// final writes; Mac0x82bac..0x82be0 preserves that same state transition.
+// Recovering these statements from the combined selection condition is
+// Windows-flat at 91.3686%. The rectangle-independent residual is validity
+// materialization, local/register allocation and NeedToTurn's range guard.
+// A <=2/equality spelling of NeedToTurn raises this caller to 92.4744%,
+// but alters the exact walk, attackHex, doAttack(int), and getAttackDirection
+// callers. Retain its native >=3/inequality expression. A controlled 16-state
+// helper/validity family also rejects direct flag initialization and ternary
+// helper bodies; none improves this caller while preserving those callers.
 VA(0x00474690, 0x36B)
 DC_ADDRESS(0x06b66c, 0x410)
 MAC_ADDRESS(0x082810, 0x4a0)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map
@@ -522,11 +509,16 @@ void combatManager::setCombatDirections(int hex)
         }
 
         targetGroup = targetIndex >= 2 && targetIndex <= 3 ? 13 : 14;
-        if (firstIsValid && (!secondIsValid
-                || (attackAngle != COMBAT_ATTACK_ANGLE_5
-                    && attackAngle != COMBAT_ATTACK_ANGLE_6
-                    && attackAngle != COMBAT_ATTACK_ANGLE_0
-                    && attackAngle != COMBAT_ATTACK_ANGLE_11))) {
+        if (firstIsValid && secondIsValid) {
+            if (attackAngle == COMBAT_ATTACK_ANGLE_5
+                    || attackAngle == COMBAT_ATTACK_ANGLE_6
+                    || attackAngle == COMBAT_ATTACK_ANGLE_0
+                    || attackAngle == COMBAT_ATTACK_ANGLE_11)
+                firstIsValid = false;
+            else
+                secondIsValid = false;
+        }
+        if (firstIsValid) {
             m_combatDirections[1][attackAngle] = firstHex;
         } else {
             m_combatDirections[1][attackAngle] = secondHex;

@@ -85,7 +85,7 @@ bool army::findFlyerAttackCell(int target) const
 VA(0x004b46c0, 0x2F9)
 DC_ADDRESS(0x0a1430, 0xe4)
 MAC_ADDRESS(0x0c8070, 0x14c)
-unsigned char army::validFlight(int destIndex, unsigned char literalTest) const
+bool army::validFlight(int destIndex, bool literalTest) const
 {
     if (!combatManager::validHex(destIndex))
         return 0;
@@ -112,7 +112,7 @@ unsigned char army::validFlight(int destIndex, unsigned char literalTest) const
 VA(0x004b49c0, 0x76)
 DC_ADDRESS(0x0a1514, 0x7c)
 MAC_ADDRESS(0x0c81bc, 0xe4)
-int army::flyTo(int destIndex, unsigned char restoreFacing)
+int army::flyTo(int destIndex, bool restoreFacing)
 {
     if (combatManager::validHex(destIndex)) {
         int oldFacing = m_facing;
@@ -260,7 +260,7 @@ int army::fly(int destIndex)
 VA(0x004b4e90, 0x76)
 DC_ADDRESS(0x0a19a0, 0xdc)
 MAC_ADDRESS(0x0c887c, 0xe4)
-int army::teleportTo(int destIndex, unsigned char restoreFacing)
+int army::teleportTo(int destIndex, bool restoreFacing)
 {
     if (combatManager::validHex(destIndex)) {
         int oldFacing = m_facing;
