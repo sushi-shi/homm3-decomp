@@ -1178,16 +1178,18 @@ void town::calcNumLevelArchers(int* numArchers, int* archerLevel)
     *numArchers = level;
 }
 
+// DC 1503/1504 and Mac 0x1b4c20 preserve castle, citadel, then zero.
+// A conditional result keeps the retained body exact while allowing the
+// nested hasBuilding expansion in getGrowthRate (VC6 cost 72 versus 84).
 VA(0x005bf570, 0x86)
 DC_ADDRESS(0x1673dc, 0x7c)
 MAC_ADDRESS(0x1b4c20, 0x8c)
 long town::getCastleGrowthBonus(TCreatureType creature) const
 {
-    if (hasBuilding(CASTLE_CASTLE_ID, false))
-        return g_creatureTypeTraits[creature].m_growthRate;
-    if (hasBuilding(CASTLE_CITADEL_ID, false))
-        return g_creatureTypeTraits[creature].m_growthRate / 2;
-    return 0;
+    return hasBuilding(CASTLE_CASTLE_ID, false)
+        ? g_creatureTypeTraits[creature].m_growthRate
+        : hasBuilding(CASTLE_CITADEL_ID, false)
+            ? g_creatureTypeTraits[creature].m_growthRate / 2 : 0;
 }
 
 // Dreamcast town.cpp:1517 names HasBuilding for the first hall check;
@@ -1326,20 +1328,20 @@ long town::getLegionBonus(long dwelling) const
     return bonus;
 }
 
-// The Mac PEF calls its assembled-Legion helper at 0:0x1b5060 here;
-// CodeWarrior preserves that boundary. Windows expands the same helper
-// before its retained getLegionBonus call. The assembled getter only reads
-// town state, so its const qualifier is inferred from this proven const caller
-// (DC get_growth_rate; Mac call at 0:0x1b54f8). No original getter signature
-// survives; the old generated Windows label did not prove a non-const API.
-// The connected const declaration/direct call reproduces the same VC6 bytes
-// for both bodies; getGrowthRate remains 90% with the helper boundary intact.
-// The restored call shifts VC6's hasBuilding inlining: one additional call
-// remains in this candidate. Keep the source helper boundary while that
-// compiler decision is investigated. Accumulating the castle contribution
-// in the helper's growth local is byte-flat for both this caller and its
-// exact retained helper. An early-return sum lowers them to 80.97/85.18%;
-// explicit short conversion of getGeneratorBonus is also byte-flat.
+// Complete applies castle growth before Legion bonuses (retail +0x69,
+// Mac 0x1b54dc..0x1b5508); DC's older 1663/1669 order is different.
+// Keep the canonical castle, assembled-Legion and individual-Legion calls.
+// The assembled getter's const qualifier is inferred from this const caller;
+// both retained bonus helpers remain exact with that connected interface.
+//
+// The conditional return in getCastleGrowthBonus reduces its VC6 cost from
+// 84 to 72. Its nested hasBuilding then receives 68 instead of 53 budget
+// units, enough for the 62-unit body: getGrowthRate reaches 97.8947%.
+// All 28 blocks and three retained calls agree. The six residual instruction
+// rows are the generator-bonus load width and associated operand scheduling.
+// Twelve promoted/narrow/named bonus consumers and eight Grail return forms
+// do not close that tail; the register model finds no transposed local pair.
+// Thirty-six caller/assembled-helper lifetime forms alone also gave no gain.
 VA(0x005bfb60, 0x266)
 DC_ADDRESS(0x167748, 0xfe)
 MAC_ADDRESS(0x1b5414, 0x1fc)

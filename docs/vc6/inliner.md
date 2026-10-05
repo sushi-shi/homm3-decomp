@@ -2598,3 +2598,20 @@ Complete Mac 0x1fd5d8..0x1fd618 also retains separate failure paths. The
 six-state guard/erase-result family reproduced the exact Windows form with
 all helper calls and the iterator assignment retained. Nine component-test
 variants alone did not resolve the exception-constructor boundary.
+
+
+## Conditional helper results can change nested expansion
+
+`town::getCastleGrowthBonus` (`0x5bf570`) emits the same exact retained
+Windows body with early returns or a conditional result. The latter lowers
+its VC6 inline cost from 84 to 72. Inside `getGrowthRate` →
+`getAssembledLegionBonus` → `getCastleGrowthBonus`, this changes the first
+`hasBuilding` budget from 53 to 68, admitting its 62-unit body and improving
+`getGrowthRate` from 90% to 97.8947%. Both retained bonus helpers stay exact.
+DC lines 1503/1504 and Mac 0x1b4c20 support the same ordered castle/citadel
+queries and zero fallback; no helper body is pasted into its caller.
+
+The caller's remaining six instruction differences concern the final
+short-valued generator-bonus addition. Explicit narrowing, a named short
+consumer and alternative Grail return forms did not close that residual.
+The source-family controls reproduced the adopted improvement.
