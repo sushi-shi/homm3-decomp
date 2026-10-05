@@ -225,9 +225,10 @@ class ScopedAccountingTest(unittest.TestCase):
                     {"name": "untouched", "size": 999999, "fuzzy_match_percent": 100}]}]},
                     checkpoint_rows=rows)
             text = readme.read_text()
-            self.assertIn("Executable MAX: 84.00%", text)
-            self.assertIn("60.00% / 84.00% / 100.00% weighted fuzzy", text)
-            self.assertIn("only selected units were refreshed", text)
+            self.assertIn("84.00% matched (MAX)", text)
+            self.assertRegex(text, r"\| CUR +\| +1 \| +60\.00% \| each unit's last measured checkpoint")
+            self.assertRegex(text, r"\| MAX +\| +1 \| +84\.00% \|")
+            self.assertRegex(text, r"\| HIST +\| +2 \| +100\.00% \|")
 
     def test_ninja_checks_only_selected_targets_and_still_rejects_pending_edge(self):
         result = subprocess.CompletedProcess([], 0, "", "")
