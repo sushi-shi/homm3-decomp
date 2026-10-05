@@ -1961,8 +1961,7 @@ bool army::doAttack(army* armyToAttack, int direction)
     g_combatManager->computeMaxExtent();
     m_showAttackFrames = 1;
     if (m_creatureType != CREATURE_HYDRA && m_creatureType != CREATURE_CHAOS_HYDRA
-        && !static_cast<const combatManager*>(g_combatManager)
-                ->isQuickCombat()) {
+        && !g_combatManager->isQuickCombat()) {
         if (direction == COMBAT_DIRECTION_WIDE_UPPER
             || direction == COMBAT_DIRECTION_5
             || direction == COMBAT_DIRECTION_0) {
@@ -4012,7 +4011,8 @@ void army::attackWall(TWallTargetId wall,
 // straight pair iMissileOffset[2]/[3], the aimed shot re-reads
 // [2*pose]/[2*pose+1] with the chosen pose.
 
-// DC's destX, destY and numFrames are const int; startY is plain int.
+// DC names destX/destY/numFrames as const int and startY as int;
+// sample2b, shoot_sample and hit_sample name the resource/sample lifetimes.
 // The abs-of-dx branch precedes dy's declaration. Both sample-name
 // ternaries load the miss operand before conditionally choosing the hit.
 // Cached-coordinate and scoped-bounds probes reached 91.46%; adding a
@@ -4042,8 +4042,8 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         return;
     }
 
-    const int targetX = combatManager::s_wallTargets[wall].m_hitX;
-    const int targetY = combatManager::s_wallTargets[wall].m_hitY;
+    const int destX = combatManager::s_wallTargets[wall].m_hitX;
+    const int destY = combatManager::s_wallTargets[wall].m_hitY;
 
     long startX;
     if (m_facing == 1)
@@ -4058,10 +4058,10 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     // dy is declared AFTER the abs: startY has to stay live across the
     // branch, which is what keeps retail from folding it into the
     // subtraction (the jns/jge polarity at +0xbb is the same artifact).
-    long dx = targetX - startX;
+    long dx = destX - startX;
     if (dx < 0)
         dx = -dx;
-    long dy = targetY - startY;
+    long dy = destY - startY;
     float angle;
     if (dx == 0) {
         angle = (dy > 0) ? -90 : 90;
@@ -4091,7 +4091,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     startY = g_combatManager->m_cells[m_gridIndex].m_refY
              + m_monFrameInfo.m_missileOffset[2 * pose + 1];
 
-    sample* wallSample = ResourceManager::getSample(
+    sample* sample2b = ResourceManager::getSample(
         levelsDestroyed == 0 ? DATA_COMPGEN(0x00660a84, wallMissSampleName,
                                             "WallMiss.82m")
                              : DATA_COMPGEN(0x00660a78, wallHitSampleName,
@@ -4099,22 +4099,22 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     g_combatManager->resetLimitCreature();
     g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
     g_combatManager->computeMaxExtent();
-    ds_memsample* shootMemSample =
+    ds_memsample* shootSample =
         g_soundManager->memorySample(m_armySample[SHOOT_SAMPLE]);
 
-    const int frames = m_monFrameInfo.m_attackFrames <= 0
+    const int numFrames = m_monFrameInfo.m_attackFrames <= 0
                            ? m_stdIcon->getNumFrames(m_currFrameType)
                            : m_monFrameInfo.m_attackFrames;
-    long delay = m_monFrameInfo.m_attackStartCycleTime / frames;
-    for (m_currFrameIndex = 0; m_currFrameIndex < frames; m_currFrameIndex++) {
+    long delay = m_monFrameInfo.m_attackStartCycleTime / numFrames;
+    for (m_currFrameIndex = 0; m_currFrameIndex < numFrames; m_currFrameIndex++) {
         g_combatManager->drawFrame(1, 1, 0, delay, 1, 1);
     }
 
     m_currFrameType = cs_wait;
     m_currFrameIndex = 0;
-    g_combatManager->shootBallisticMissile(startX, startY, targetX, targetY,
+    g_combatManager->shootBallisticMissile(startX, startY, destX, destY,
                                            m_missileIcon);
-    ds_memsample* wallMemSample = g_soundManager->memorySample(wallSample);
+    ds_memsample* hitSample = g_soundManager->memorySample(sample2b);
 
     CSprite* explosion = ResourceManager::getSprite(
         levelsDestroyed == 0
@@ -4124,10 +4124,10 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     // while forming the constructor arguments. Mac 0x52348..0x523b0
     // expands them and copies the four-word temporary into the bounds.
     g_combatManager->m_extent = SLimitData(
-        targetX - explosion->getWidth() / 2,
-        targetY - explosion->getHeight() / 2,
-        targetX - explosion->getWidth() / 2 + explosion->getWidth() - 1,
-        targetY - explosion->getHeight() / 2 + explosion->getHeight() - 1);
+        destX - explosion->getWidth() / 2,
+        destY - explosion->getHeight() / 2,
+        destX - explosion->getWidth() / 2 + explosion->getWidth() - 1,
+        destY - explosion->getHeight() / 2 + explosion->getHeight() - 1);
     g_combatManager->m_extent.clip(combatManager::s_combatAreaLimits);
 
     for (long frame = 0; frame < explosion->getNumFrames(0); frame++) {
@@ -4139,8 +4139,8 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
                         g_combatManager->m_extent.width(),
                         g_combatManager->m_extent.height(),
                         g_windowManager->m_screenBitmap,
-                        targetX - explosion->getWidth() / 2,
-                        targetY - explosion->getHeight() / 2, 0, 1);
+                        destX - explosion->getWidth() / 2,
+                        destY - explosion->getHeight() / 2, 0, 1);
         // DC army.cpp:4719/4720: the fixed-viewport scroll and area update.
         if (!g_combatManager->scrollTo(g_combatManager->m_extent,
                                        true, true, true))
@@ -4149,10 +4149,10 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     }
     ResourceManager::dispose(explosion);
     g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
-    g_soundManager->waitSample(shootMemSample, -1);
-    g_soundManager->waitSample(wallMemSample, -1);
-    if (wallSample)
-        ResourceManager::dispose(wallSample);
+    g_soundManager->waitSample(shootSample, -1);
+    g_soundManager->waitSample(hitSample, -1);
+    if (sample2b)
+        ResourceManager::dispose(sample2b);
     cancelSpellType(ARMY_CANCEL_SPELLS_AFTER_ATTACK);
 }
 
