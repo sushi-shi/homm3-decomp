@@ -393,7 +393,7 @@ This rules out scratch-register rotation as the immediate cause. The next
 evidence boundary is wide-operation lowering and coalescing: why the table
 loads become destructive operands instead of the getter-result halves.
 The trace does not justify changing the proven getter type, flattening its
-call or inventing caller scopes. All three global traces reproduce the
+call or inventing caller scopes. All three passive traces reproduce the
 complete 401,289-byte normal-profile object outside its timestamp; the clean
 compiler shim is restored afterward. Disposable captures are under
 `build/mageguild-evidence/{global-allocation-trace,global-exclusion-trace,instruction-operands-trace}/`.
