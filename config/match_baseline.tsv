@@ -549,7 +549,7 @@ army	?doFireShield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	tokens1:dd67
 army	?doMultiHeadAttack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	tokens1:da1030a81c6d
 army	?doPostAttack@army@@AAEXPAV1@HHH@Z	100.0000	100.0000	100.0000	0x40bc0	tokens1:0fbb32b31c6c
 army	?drawToBuffer@army@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x3e140	tokens1:f079ab6da673
-army	?enemyIsAdjacent@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x429f0	tokens1:de82859f063c
+army	?enemyIsAdjacent@army@@QBE_NPBV1@@Z	100.0000	100.0000	100.0000	0x429f0	tokens1:bacf616c2981
 army	?erase@?$deque@HV?$allocator@H@std@@@std@@QAE?AViterator@12@V312@0@Z	100.0000	100.0000	100.0000	0x48db0	-
 army	?erase@?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@QAEPAPAVarmy@@PAPAV3@@Z	100.0000	100.0000	100.0000	0x48d30	-
 army	?eraseItem@@YIXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x3ea00	tokens1:0f3b6ff6f562
@@ -583,8 +583,8 @@ army	?goBerserk@army@@QAEXXZ	100.0000	100.0000	100.0000	0x456d0	tokens1:9c9cb0a0
 army	?init@army@@QAEXHHPBVhero@@HHHH@Z	100.0000	100.0000	100.0000	0x3d8b0	tokens1:c2dbe8434e40
 army	?initClean@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3d5c0	tokens1:6acaeb2c4b06
 army	?initialize@army@@QAEXW4TCreatureType@@JPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x3d730	tokens1:4b04166de677
-army	?isAdjacent@army@@QBEEH@Z	100.0000	100.0000	100.0000	0x466c0	tokens1:2bceb9939791
-army	?isEnemy@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x42880	tokens1:ce56654217ff
+army	?isAdjacent@army@@QBE_NH@Z	100.0000	100.0000	100.0000	0x466c0	tokens1:71915754ca14
+army	?isEnemy@army@@QBE_NPBV1@@Z	100.0000	100.0000	100.0000	0x42880	tokens1:4dc99595588b
 army	?isValidCaliphSpell@@YI_NHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x47eb0	tokens1:fb69feec286b
 army	?loadResources@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3d9f0	tokens1:3638ce77740b
 army	?midX@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46660	tokens1:150314eaf7b9
@@ -942,7 +942,7 @@ cmbtmgr	?combatSystemOptions@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x
 cmbtmgr	?damageMessage@combatManager@@QAEXPBDJJPBVarmy@@J@Z	100.0000	100.0000	100.0000	0x69a90	tokens1:f774def25ff6
 cmbtmgr	?damageWall@combatManager@@QAEXW4TWallTargetId@@H@Z	100.0000	100.0000	100.0000	0x65990	tokens1:5e80667fa93b
 cmbtmgr	?determineCombatTerrain@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x643b0	tokens1:fee1e12bc7f8
-cmbtmgr	?enemyIsAdjacent@combatManager@@QBEEPBVarmy@@H0@Z	100.0000	100.0000	100.0000	0x69600	tokens1:8b789840c61f
+cmbtmgr	?enemyIsAdjacent@combatManager@@QBE_NPBVarmy@@H0@Z	100.0000	100.0000	100.0000	0x69600	tokens1:426404f07648
 cmbtmgr	?erase@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AViterator@12@V312@0@Z	100.0000	100.0000	100.0000	0x6a740	-
 cmbtmgr	?erase@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AViterator@12@V312@@Z	100.0000	100.0000	100.0000	0x6a870	-
 cmbtmgr	?freeArmies@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x639e0	tokens1:3121e32b6f63
@@ -954,12 +954,12 @@ cmbtmgr	?getGridIndex@combatManager@@QBEHHH@Z	100.0000	100.0000	100.0000	0x647a0
 cmbtmgr	?getMissileStartingPosition@combatManager@@SIXHHHHHHPBVCSprite@@PAH111@Z	100.0000	100.0000	100.0000	0x69880	tokens1:3598af864bd8
 cmbtmgr	?getTargetWallIndex@combatManager@@SI?AW4TWallTargetId@@H@Z	100.0000	100.0000	100.0000	0x65970	tokens1:665e81405d84
 cmbtmgr	?hexIsBlocked@combatManager@@QBEEH@Z	100.0000	100.0000	100.0000	0x69a10	tokens1:04ccabc70acb
-cmbtmgr	?inCastle@combatManager@@SIEH@Z	100.0000	100.0000	100.0000	0x67460	tokens1:f7d8a9410e22
-cmbtmgr	?inLineOfSight@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x67840	tokens1:cdc82d85110f
+cmbtmgr	?inCastle@combatManager@@SI_NH@Z	100.0000	100.0000	100.0000	0x67460	tokens1:2675e9e7abec
+cmbtmgr	?inLineOfSight@combatManager@@QBE_NHH@Z	100.0000	100.0000	100.0000	0x67840	tokens1:abe346df598c
 cmbtmgr	?initNonVisualVars@combatManager@@QAEXXZ	99.9631	99.9631	99.9631	0x63c60	tokens1:ef0f2ca11576
 cmbtmgr	?initializeArchers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66c50	tokens1:e77736141cba
 cmbtmgr	?insert@?$vector@UTObstacle@combatManager@@V?$allocator@UTObstacle@combatManager@@@std@@@std@@QAEXPAUTObstacle@combatManager@@IABU34@@Z	100.0000	100.0000	100.0000	0x6aeb0	-
-cmbtmgr	?isAdjacent@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x674c0	tokens1:3902353cd6cf
+cmbtmgr	?isAdjacent@combatManager@@QBE_NHH@Z	100.0000	100.0000	100.0000	0x674c0	tokens1:db06bcded24f
 cmbtmgr	?isInMoat@combatManager@@QAEEHPAH@Z	100.0000	100.0000	100.0000	0x69dc0	tokens1:1f8c8af3456a
 cmbtmgr	?isQuickCombat@combatManager@@QBE_NXZ	100.0000	100.0000	100.0000	0x6a4a0	tokens1:4c1ccdf651d5
 cmbtmgr	?isWinner@combatManager@@QBEEH@Z	100.0000	100.0000	100.0000	0x658b0	tokens1:e20c101d157d
@@ -1071,7 +1071,7 @@ combatwindow	?updateScreen@CCombatChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x
 command	??1CMessageKill@@QAE@XZ	100.0000	100.0000	100.0000	0x74680	tokens1:1e43c4d7801d
 command	?addArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	0x7a100	tokens1:0b9ef2f38038
 command	?autoResolveCombat@combatManager@@AAEXXZ	100.0000	100.0000	100.0000	0x76200	tokens1:0a3da0fcf1ac
-command	?automateCatapult@combatManager@@AAE_NXZ	98.6842	98.6842	99.8804	0x73c00	tokens1:05ff7b4b130f
+command	?automateCatapult@combatManager@@AAE_NXZ	98.6842	98.6842	99.8804	0x73c00	tokens1:6a833bea7da8
 command	?automateFirstAidTent@combatManager@@AAE_NXZ	100.0000	100.0000	100.0000	0x73ea0	tokens1:81b7d5197c98
 command	?begin@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AViterator@12@XZ	100.0000	100.0000	100.0000	0x7a670	-
 command	?checkChangeHighlighter@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77c20	tokens1:490eda737c91
@@ -2888,8 +2888,8 @@ path	?getAdjacentHex@army@@QBEJJJ@Z	100.0000	100.0000	100.0000	0x123df0	tokens1:
 path	?getAttackMask@army@@QBEIHHH@Z	100.0000	100.0000	100.0000	0x123b20	tokens1:41c1c95988c6
 path	?oppositeDirection@@YIHH@Z	100.0000	100.0000	100.0000	0x123ec0	tokens1:0519e938fdd9
 path	?validAttack@army@@QBEHHHHHPAH@Z	100.0000	100.0000	100.0000	0x123bb0	tokens1:73ab80804ade
-path	army_findPath	0.0000	100.0000	100.0000	0x1239d0	tokens1:b52cccee720c
-path	army_validPath	0.0000	100.0000	100.0000	0x123a70	tokens1:a8b52612aa0e
+path	?findPath@army@@QAEHHHEE@Z	100.0000	100.0000	100.0000	0x1239d0	tokens1:b52cccee720c
+path	?validPath@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x123a70	tokens1:a8b52612aa0e
 philai	??0philAI@@QAE@XZ	100.0000	100.0000	100.0000	0x124360	tokens1:085d04a2805b
 philai	??0type_spellvalue@@QAE@PBVhero@@@Z	100.0000	100.0000	100.0000	0x126d40	tokens1:c56570165a05
 philai	?_Unguarded_insert@std@@YIXPAUtype_creature_value@@U2@U?$greater@Utype_creature_value@@@1@@Z	100.0000	100.0000	100.0000	0x12bd50	-

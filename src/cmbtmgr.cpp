@@ -2796,10 +2796,11 @@ void combatManager::testRaiseDoor()
     raiseDoor();
 }
 
+// Original ?InCastle@combatManager@@SA_NH@Z proves the bool result.
 VA(0x00467460, 0x22)
 DC_ADDRESS(0x061160, 0x20)
 MAC_ADDRESS(0x073610, 0x34)
-unsigned char combatManager::inCastle(int index)
+bool combatManager::inCastle(int index)
 {
     return index >= g_castleWallColumns[gridY(index)];
 }
@@ -2812,10 +2813,11 @@ unsigned char combatManager::leftOfMoat(int index)
     return index < g_moatHexes[gridY(index)];
 }
 
+// Original ?is_adjacent@combatManager@@QBA_NHH@Z proves the bool result.
 VA(0x004674c0, 0x4C)
 DC_ADDRESS(0x0611a0, 0x84)
 MAC_ADDRESS(0x07367c, 0xfc)
-unsigned char combatManager::isAdjacent(int first, int second) const
+bool combatManager::isAdjacent(int first, int second) const
 {
     if (validHex(first) && validHex(second)) {
         for (int i = 0; i < 6; i++) {
@@ -2875,10 +2877,11 @@ unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* 
     return getDistance(source, dest) > 10;
 }
 
+// Original ?InLineOfSight@combatManager@@QBA_NHH@Z proves the bool result.
 VA(0x00467840, 0x1B6)
 DC_ADDRESS(0x061318, 0x1d8)
 MAC_ADDRESS(0x0739c0, 0x284)
-unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
+bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 {
     if (!m_fortificationLevel)
         return 1;
@@ -3761,11 +3764,12 @@ void combatManager::checkRebirth()
     }
 }
 
+// Original ?enemy_is_adjacent@combatManager@@QBA_NPBVarmy@@H0@Z proves the bool result.
 VA(0x00469600, 0x6E)
 DC_ADDRESS(0x062db8, 0x94)
 MAC_ADDRESS(0x075c3c, 0x9c)
-unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
-                                               const army* excluded) const
+bool combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
+                                     const army* excluded) const
 {
     for (int i = 0; i < 6; i++) {
         int hex = m_adjacentCells[gridIndex][i];

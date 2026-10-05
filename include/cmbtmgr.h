@@ -1100,7 +1100,7 @@ public:
     void resetHitByCreature();
     // DC LF_MFUNCTION records have no this type: these are static helpers.
     static TWallTargetId getTargetWallIndex(int gridIndex);
-    static unsigned char inCastle(int index);
+    static bool inCastle(int index);
     static unsigned char leftOfMoat(int index);
     static void getMissileStartingPosition(int armyType, int x, int y, int facing,
                                           int destX, int destY,
@@ -1118,9 +1118,9 @@ public:
     // play before it lands the DamageWall - the wall visibly breaks
     // mid-animation, not on the last frame.
     enum { WALL_EXPLOSION_HIT_FRAME = 0x5 };
-    unsigned char enemyIsAdjacent(const army* currentArmy, int gridIndex,
-                                    const army* excluded) const;
-    unsigned char isAdjacent(int first, int second) const;
+    bool enemyIsAdjacent(const army* currentArmy, int gridIndex,
+                         const army* excluded) const;
+    bool isAdjacent(int first, int second) const;
     void viewArmy(army* thisArmy, int isQuickView);
     void removeArmyFromGrid(const army& a);
     void placeArmyInGrid(const army& a, int hex);
@@ -1161,7 +1161,7 @@ public:
                                    const army* defender) const;
     unsigned char shotIsThroughWall(const army* shooter, int sourceIndex,
                                     int destIndex) const;
-    unsigned char inLineOfSight(int sourceIndex, int destIndex) const;
+    bool inLineOfSight(int sourceIndex, int destIndex) const;
     unsigned char hexIsBlocked(int index) const;
     unsigned char isInMoat(int hex, int* index);
 
