@@ -46,6 +46,72 @@ class WorktreePathsTest(unittest.TestCase):
             self.assertIn('no project root', result.stderr)
             self.assertEqual(list(Path(raw).iterdir()), [])
 
+    @staticmethod
+    def _fake_checkout(root: Path) -> Path:
+        (root / 'src').mkdir(parents=True)
+        (root / 'scripts/homm3').mkdir(parents=True)
+        (root / 'config').mkdir()
+        for name in ('flake.nix', 'config/project.toml', 'config/units.toml'):
+            (root / name).touch()
+        return root.resolve()
+
+    def test_wrapper_prefers_current_checkout_over_inherited_homm3_dir(self):
+        resolver = Path(__file__).resolve().parents[2] / 'project-root.sh'
+        with tempfile.TemporaryDirectory(prefix='homm3 select ') as raw:
+            main = self._fake_checkout(Path(raw) / 'main')
+            lane = self._fake_checkout(Path(raw) / 'lane')
+            outside = Path(raw) / 'outside'
+            outside.mkdir()
+
+            def select(cwd, **env):
+                environ = {k: v for k, v in os.environ.items()
+                           if k not in ('HOMM3_DIR', 'HOMM3_DIR_FORCE')}
+                environ.update(env)
+                return subprocess.run(['sh', str(resolver), '--select'], cwd=cwd,
+                                      env=environ, capture_output=True, text=True)
+
+            result = select(lane / 'src', HOMM3_DIR=str(main))
+            self.assertEqual((result.returncode, result.stdout.strip()), (0, str(lane)))
+            self.assertIn('HOMM3_DIR_FORCE=1', result.stderr)
+            result = select(lane / 'src', HOMM3_DIR=str(main), HOMM3_DIR_FORCE='1')
+            self.assertEqual((result.stdout.strip(), result.stderr), (str(main), ''))
+            result = select(lane, HOMM3_DIR=str(lane / 'src'))
+            self.assertEqual((result.stdout.strip(), result.stderr), (str(lane), ''))
+            result = select(lane / 'src')
+            self.assertEqual((result.stdout.strip(), result.stderr), (str(lane), ''))
+            result = select(outside, HOMM3_DIR=str(main / 'src'))
+            self.assertEqual((result.stdout.strip(), result.stderr), (str(main), ''))
+            result = select(outside)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('no project root', result.stderr)
+
+    def test_python_root_policy_matches_wrapper(self):
+        from homm3.core import root
+        with tempfile.TemporaryDirectory(prefix='homm3 select ') as raw:
+            main = self._fake_checkout(Path(raw) / 'main')
+            lane = self._fake_checkout(Path(raw) / 'lane')
+            fixture = Path(raw) / 'fixture'
+            fixture.mkdir()
+            fallback = Path(raw) / 'code'
+            self.assertEqual(root.project_root(lane / 'src'), lane)
+            selected, warning = root.select({'HOMM3_DIR': str(main)}, lane / 'src', fallback)
+            self.assertEqual(selected, lane)
+            self.assertIn(str(lane), warning)
+            self.assertEqual(root.select({'HOMM3_DIR': str(main), 'HOMM3_DIR_FORCE': '1'},
+                                         lane, fallback), (main, None))
+            self.assertEqual(root.select({'HOMM3_DIR': str(lane)}, lane / 'src', fallback),
+                             (lane, None))
+            self.assertEqual(root.select({}, lane / 'src', fallback), (lane, None))
+            self.assertEqual(root.select({}, fixture, fallback), (fallback, None))
+            self.assertEqual(root.select({'HOMM3_DIR': str(main)}, fixture, fallback),
+                             (main, None))
+            # Test fixtures that are not checkouts remain explicit roots.
+            self.assertEqual(root.select({'HOMM3_DIR': str(fixture)}, lane, fallback),
+                             (fixture, None))
+            selected, warning = root.select({'HOMM3_DIR': str(Path(raw) / 'gone')}, lane, fallback)
+            self.assertEqual(selected, lane)
+            self.assertIn('does not exist', warning)
+
     def test_configure_and_compiler_honor_requested_worktree(self):
         scripts = Path(__file__).resolve().parents[2]
         with tempfile.TemporaryDirectory(prefix="homm3 root ") as raw:

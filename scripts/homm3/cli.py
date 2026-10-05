@@ -104,10 +104,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path(os.environ.get("HOMM3_DIR",
-                           next((p for p in Path(__file__).resolve().parents
-                                 if (p / "flake.nix").exists()),
-                                Path(__file__).resolve().parents[2])))
+from homm3.core import root as _root
+
+ROOT = _root.process_root(_root.code_root(__file__) or Path(__file__).resolve().parents[2])
 
 def log(msg: str) -> None:
     print(f"[homm3] {msg}", flush=True)
