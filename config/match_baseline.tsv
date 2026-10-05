@@ -2109,7 +2109,7 @@ game	?setRandomHeroArmies@game@@QAEXHHE@Z	100.0000	100.0000	100.0000	0xc9730	tok
 game	?setSpecialRumour@game@@AAEXXZ	100.0000	100.0000	100.0000	0xcd170	tokens1:1c86d3cc9654
 game	?setWagon@ExtraInfoUnion@@QAEXW4EGameResource@@F@Z	0.0000	0.0000	100.0000	0xc2360	tokens1:13ba2fd57e1d
 game	?setWagon@ExtraInfoUnion@@QAEXW4TArtifact@@@Z	100.0000	100.0000	100.0000	0xc2390	tokens1:ddb3375e58f8
-game	?setWeeklyRecruits@game@@AAEXH@Z	100.0000	100.0000	100.0000	0xc8450	tokens1:a811af997716
+game	?setWeeklyRecruits@game@@AAEXH@Z	100.0000	100.0000	100.0000	0xc8450	tokens1:7001a49e9f9b
 game	?setWitchSkill@ExtraInfoUnion@@QAEXW4TSecondarySkill@@@Z	100.0000	100.0000	100.0000	0xc23c0	tokens1:7987507f1271
 game	?setupAdjacentMons@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca410	tokens1:92dd2fe848ff
 game	?setupFirstPlayer@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0630	tokens1:6bcf0742be36
