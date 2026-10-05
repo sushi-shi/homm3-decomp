@@ -15,7 +15,7 @@ enum ENewGameDialogCommand {
 
 long getAlignmentCount(int legalAlignments);
 TTownType pickAlignment(int legalAlignments,
-                         unsigned char getFirstAvail);
+                         bool getFirstAvail);
 
 // Complete keeps these ordinary definitions in singleselectionwindow.cpp,
 // where the advanced-options handler expands the nine-town loops.

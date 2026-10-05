@@ -8496,9 +8496,9 @@ void game::createTownHeroes(HeroId* startingHeroIds)
             && startingHeroIds[i] != -1)
             heroId = startingHeroIds[i];
         else if (g_inCampaign)
-            heroId = getStartingHeroId(TTownType(m_setup.m_alignment[i]), i, 0);
+            heroId = getStartingHeroId(m_setup.m_alignment[i], i, 0);
         else
-            heroId = getStartingHeroId(TTownType(m_setup.m_alignment[i]), i, 0);
+            heroId = getStartingHeroId(m_setup.m_alignment[i], i, 0);
 
         if (m_setup.m_startingHero[i] == -1)
             m_setup.m_startingHero[i] = heroId;

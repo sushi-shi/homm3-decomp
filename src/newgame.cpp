@@ -29,10 +29,12 @@ long getAlignmentCount(int legalAlignments)
     return count;
 }
 
+// Original pick_alignment has a bool getFirstAvail parameter (_N).
+// Complete widens the original byte mask to cover all nine town types.
 VA(0x005132d0, 0x50)
 DC_ADDRESS(0x1034b4, 0x48)
 MAC_ADDRESS(0x13221c, 0x184)
-TTownType pickAlignment(int legalAlignments, unsigned char getFirstAvail)
+TTownType pickAlignment(int legalAlignments, bool getFirstAvail)
 {
     long count = getAlignmentCount(legalAlignments);
     int which = 1;
@@ -99,7 +101,7 @@ void game::initNewGame(int difficulty, int version,
     for (slot = 0; slot < 8; slot++) {
         if (!this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman && !this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeComputer) {
             m_setup.m_handicap[slot] = -1;
-            m_setup.m_alignment[slot] = -1;
+            m_setup.m_alignment[slot] = eTownNeutral;
             m_setup.m_playerPos[slot] = -1;
             m_setup.m_canFlipFromToComputer[slot] = -1;
         } else {
