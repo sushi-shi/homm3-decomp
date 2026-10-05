@@ -2910,6 +2910,9 @@ MAC_ADDRESS(0x0f83ec, 0xc8)
 // Explicit success/failure returns make giveArtifact exact but lower this
 // retained body from 100% to 87.19%; keep the direct none() conversion.
 // An explicit nonzero result and an empty-slot continue guard are byte-flat.
+// Mac reloads the equipped ID after its sentinel test. Repeating that member
+// expression here keeps this body exact but does not recover the caller's
+// proxy/set boundary; giveArtifact changes from 95.9069% to 95.3968%.
 unsigned char hero::heroFn004DBE80(int combination)
 {
     std::bitset<144> missingComponents =
@@ -5383,11 +5386,13 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // Windows body and make VC6 retain `bitset<144>::any` in this expanded caller.
 // Mac's placed-result join and repeated trait lookup after owner checks then
 // yield a 752-byte candidate (retail 752) with all 17 named calls aligned.
-// Current Windows giveArtifact is 95.36%, 39/39 CFG blocks with only the
-// first bitset<12> bounds-failure block longer (24 vs 15 instructions): its
-// string/EH callees still take a different inlining path. Mac is 93.8830%,
-// with entry register assignment the first difference. Prompt copy and
-// destructor call order already agree on Mac; retain their source lifetime.
+// Current Windows giveArtifact is 95.9069%, with 42 versus 39 CFG blocks.
+// The expanded combination scan retains proxy assignment instead of set;
+// getPlayer repeats its owner guard and isHuman remains a separate call.
+// Moving player acquisition before the scan falls to 85.0445%. A header
+// isHuman body reaches 96.5547%, but removes its retained game body and
+// expands town::buyBuilding's retained call: visibility remains unresolved.
+// Prompt copy and destructor order agree on Mac; retain their lifetime.
 // Original public ?GiveArtifact@hero@@QAAXABUtype_artifact@@H_N@Z proves
 // the artifact reference independently of the older return/flag contracts.
 // Complete and Mac unconditionally forward that record to EquipArtifact
