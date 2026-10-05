@@ -2581,3 +2581,20 @@ call and four adventure calls all target retail 0x4e3070. The kill-side body
 and every other preexisting emitted body in these three TUs are unchanged;
 the adventure TU additionally emits the retained string `_Tidy`. All 1,510
 previously scored Mac pairs remain available with unchanged scores.
+
+## Separate admission guards can recover a nested exception constructor
+
+`VictoryConditionStruct::checkForArtifactWin` (`0x5f1610`) reached 100%
+by spelling its ordinary wrong-condition, null-player and disabled-player
+rejections as separate guards. A joined short-circuit guard produced the
+same game-path instructions but left `out_of_range`'s constructor as a call
+where retail expands it and calls `logic_error` at +0x4c1.
+
+The joined form's trace gave the final `bitset::test` 153 budget units,
+its `_Xran` 95, and the nested 58-unit `out_of_range` constructor only 30.
+The separate guards supply ordinary source control flow, not dummy work.
+DC lines 32..41 distinguish the condition rejection from player admission;
+Complete Mac 0x1fd5d8..0x1fd618 also retains separate failure paths. The
+six-state guard/erase-result family reproduced the exact Windows form with
+all helper calls and the iterator assignment retained. Nine component-test
+variants alone did not resolve the exception-constructor boundary.

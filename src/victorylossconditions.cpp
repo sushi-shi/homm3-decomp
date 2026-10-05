@@ -38,19 +38,14 @@ static const int g_angelicAllianceCampaign = 18;
 static const int g_angelicAllianceFirstMap = 8;
 static const int g_angelicAllianceSecondMap = 9;
 
-// Native retains the campaign base across the special artifact-vector path.
-// The shared reference restores those +2/+4 member accesses; Windows remains
-// 86.10% versus the prior86.11%, with exact siblings unchanged.
-// DC line 41 names GetTeam and IsHumanTeam directly (no is_human_ally
-// row), and the explicit team local reproduces retail's expanded
-// guarded scan: 85.91 -> 99.59 over the isHumanAlly wrapper (2026-09-29).
-// The SCampaign reference and TArtifact element type are Windows
-// byte-flat against int&/signed char& and vector<int>. Residual: the
-// bitset<144>::test range throw at the tail. `vc6 predict-inline --trace`
-// gives test 153 at depth 1, _Xran 95, and the nested out_of_range ctor
-// (cost 58) only 30, so it stays a call where retail expands it and stores
-// out_of_range's vptr after logic_error's ctor; about 28 more depth-1
-// budget is missing and no evidenced statement supplies it.
+// Keep the campaign reference, native artifact-vector lifetime, and explicit
+// GetTeam/IsHumanTeam calls (DC line 41). The ordinary path rejects the wrong
+// condition, an absent current player, and a disabled player separately.
+// With those guard scopes VC6 expands out_of_range's constructor inside
+// bitset::test while retaining logic_error, matching retail +0x4c1. Joining
+// the guards emits the same game logic but leaves out_of_range out of line.
+// Component predicate spelling and discarding erase's result did not close
+// that boundary; the complete separated-guard body matches Windows exactly.
 // Original DC public CheckForArtifactWin@@QAA_NXZ proves a bool result;
 // the dossier's primitive 0x20 display is lowered-byte metadata.
 VA(0x005f1610, 0x4FE)
@@ -105,9 +100,11 @@ bool VictoryConditionStruct::checkForArtifactWin()
         return 0;
     }
 
-    if (m_type != VICTORY_CONDITION_ARTIFACT
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+    if (m_type != VICTORY_CONDITION_ARTIFACT)
+        return 0;
+    if (!g_currentPlayer)
+        return 0;
+    if (g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
     int team = g_game->getTeam(g_netLocalGamePos);
