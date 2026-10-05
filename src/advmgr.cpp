@@ -1452,6 +1452,8 @@ bool saveGame(bool campaignWinMode);
 // exitFlag: bool&, despite the lowered unsigned-byte debug primitive.
 // Retail forwards the same four addresses; preserve the references and
 // the const message layer.
+// DC1898 constructs the movement trigger inside ValidMove's successful
+// arm before HideRoute. It needs no separate inner lifetime block.
 VA(0x00408c40, 0xB9D)
 DC_ADDRESS(0x008b70, 0x7c0)
 MAC_ADDRESS(0x009144, 0x8ec)  // anchor-callee
@@ -1663,6 +1665,10 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
         && g_game->getCurrHeroId() != -1) {
         walker = g_game->getCurrHero();
         if (validMove(g_game->getCurrHero(), moveDir, 0, 1)) {
+            type_point walkTrigger;
+            int noMove;
+            int foughtBattle;
+
             hideRoute(1, 1, 1);
 
             g_mouseManager->hidePointer();
@@ -1670,10 +1676,6 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
             walker->m_pathTargetY = walker->m_y + g_normalDirTable[moveDir].m_y;
             walker->m_pathTargetZ = walker->m_z;
 
-            {
-            type_point walkTrigger;
-            int noMove;
-            int foughtBattle;
             peventCell = moveHero(moveDir, 1, walkTrigger, &noMove, 0,
                                    &foughtBattle, 0);
             m_advWindow->updateHeroLocator(-1, 1, 1);
@@ -1691,7 +1693,6 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
             updBottomView(1, 1, 1);
 
             checkDimHero();
-            }
         }
     }
     return 1;
@@ -2631,16 +2632,16 @@ void setWitchHutHelpText(char* buffer, hero* currentHero,
 // same way (57 arms, 17 differing) and shares five of those rows exactly -
 // PYRAMID, WAGON, WARRIOR_TOMB, WATER_WHEEL and WINDMILL are the same
 // inlined helpers, so a fix there is worth double.
-// Mac 0xd1f8..0xd218 and 0xd5c8..0xd5ec preserve the named low-five-bit
-// ids and normalized fullness predicates in the spring/garden arms. Keep
-// their existing magicSpringIsFull/gardenIsFull helpers: restoring those
-// calls with the named ids raises Windows 95.5832 -> 95.69% (185 branches,
-// retail 188), without extending any rollover string temporary lifetime.
+// Mac 0xd1f8..0xd218 and 0xd5c8..0xd5ec expand getItemId's low-five-bit
+// extraction and short result, followed by the spring/garden full-bit
+// predicates. Keep both accessor calls without extending string lifetimes.
 // SIREN/STABLES retain the whole visited-text operation inside the trigger/
 // hero guard: Mac 0xda80/0xda88 and 0xdb08/0xdb10 exit to 0xe068; retail
 // 0x40c8a4/0x40c8af and 0x40c8f5/0x40c900 exit to 0x40d13b. Guarding
 // only the assignment read uninitialized visited on those exits. Restoring
 // the native scopes also recovers 95.69 -> 96.76% Windows.
+// Restoring the native short ID accessor in both arms leaves 96.16%; keep
+// the supported helper paths while recovering the remaining branch joins.
 VA(0x0040b150, 0x229C)
 DC_ADDRESS(0x00c13c, 0x2c40)
 MAC_ADDRESS(0x00c1e8, 0x1eb4)  // anchor-global
@@ -3069,7 +3070,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = ((player->m_magicSpringFlags
-                    & (1UL << cell->m_magicSpringInfo.m_id))
+                    & (1UL << cell->getItemId()))
                     && !cell->magicSpringIsFull());
                 if (visited)
                     sprintf(tempText, visitedFormat,
@@ -3164,7 +3165,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         strcpy(g_text, g_quickViewText[MYSTICAL_GARDEN]);
         if (cell->m_isTrigger) {
             visited = ((player->m_mysticalGardenFlags
-                & (1UL << cell->m_gardenInfo.m_id))
+                & (1UL << cell->getItemId()))
                 && !cell->gardenIsFull());
             if (visited)
                 sprintf(tempText, visitedFormat,
@@ -4808,8 +4809,9 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     unsigned char foundBoat = scanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
 
     if (thisCell->m_objects.size() > 0) {
-        // DC records int row, but retail tests the back edge unsigned (jbe).
-        for (unsigned int row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
+        // DC records int row; DC 0x12522, Mac 0x11df8 and retail all
+        // compare the layer bound unsigned.
+        for (int row = 0; row <= static_cast<unsigned>(OBJECT_DRAW_LAYER_LAST); ++row) {
             for (int numObj = 0; numObj < thisCell->m_objects.size();
                  ++numObj) {
                 NewmapCell::TObjectCell* objCell = &thisCell->m_objects[numObj];
@@ -5755,6 +5757,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
     // function scope, with z and visibility local to each row.
     int xOffset;
     NewmapCell* cell;
+    int x;
     switch (g_mapHeight) {
     case MAP_DIMENSION_SMALL:
         destRow = g_windowManager->m_screenBitmap->getMap(
@@ -5816,7 +5819,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
         int z = origin.m_z;
         bool revealed;
 
-        for (int x = firstColumn; x <= lastColumn; x++) {
+        for (x = firstColumn; x <= lastColumn; x++) {
             cell = m_fullMap->cell(x, y, z);
 
             revealed =
@@ -5916,8 +5919,9 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                             || (cell->m_cellFlags & 0x1000)) {
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger) {
+                                unsigned long extraInfo = trigger->getMapExtraInfo();
                                 ExtraInfoUnion cellExtra;
-                                cellExtra.m_extraInfo = trigger->getMapExtraInfo();
+                                cellExtra.m_extraInfo = extraInfo;
                                 int owner = cellExtra.m_shipyardInfo.m_owner;
                                 colour = g_systemPalette->m_data[64 + owner];
                             }
@@ -6129,12 +6133,16 @@ void advManager::updateRadar(bool updateFlag, bool partialUpdate,
 // Complete calls the exact mine/shrine/tree/witch helpers and the distinct
 // quick-info quest/seer builders 0x572e40/0x5743e0. DC's older in-caller mine
 // and seer operations do not replace those retail-proven calls. The current
-// quest temporary's destructor expands naturally as retail does. Remaining
-// differences include GetHero arm layout, the nested cell/zCell decision,
-// and switch-tail scheduling. Compare named sites, not aggregate call counts.
+// retail quest temporary's destructor expands. With the supported spring/
+// garden accessor calls restored, our cleanup retains a nested _Tidy call
+// (93.56%). Keep those calls while recovering the lifetime/inliner context.
+// Other differences include GetHero arm layout, the nested cell/zCell
+// decision, and switch-tail scheduling. Compare named sites, not totals.
 // DC8332 names GetItemId for the garden's visit bit. Mac 0x15ab4..0x15acc
-// expands its five-bit extraction and short result before the shift;
-// NewmapCell inherits the canonical ExtraInfoUnion accessor.
+// expands its five-bit extraction and short result before the shift.
+// Mac 0x15764..0x15788 has the same accessor followed by the spring's
+// full-bit predicate; 0x15ad8..0x15adc expands the garden predicate.
+// NewmapCell inherits these canonical ExtraInfoUnion accessors.
 // DC records text lookups throughout the quick-info arms. Preserve the
 // Complete getText helper at those sites while checking retail call shape.
 // The one call-count delta (80 vs 79) is WATERING_HOLE's visited/unvisited
@@ -6622,7 +6630,8 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = ((g_currentPlayer->m_magicSpringFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f))) && !((testCell->m_extraInfo >> 6) & 1));
+                            & (1UL << testCell->getItemId()))
+                            && !testCell->magicSpringIsFull());
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6705,7 +6714,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 if (testCell->m_isTrigger) {
                     visited = (g_currentPlayer->m_mysticalGardenFlags
                         & (1UL << testCell->getItemId()))
-                        && !((testCell->m_extraInfo >> 10) & 1);
+                        && !testCell->gardenIsFull();
                     if (visited)
                         sprintf(tempText, visitFormat,
                                 g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));

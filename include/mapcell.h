@@ -746,7 +746,7 @@ public:
     short getItemId() const;
     bool playerKnowsCell(short player) const;
     void setCellVisited(short player);
-    unsigned char gardenIsFull() const;
+    bool gardenIsFull() const;
     enum EGameResource getGardenResource() const;
     void fillGarden(EGameResource resource);
     void setGarden(short id, EGameResource resource);
@@ -756,8 +756,8 @@ public:
     short getLeanToAmount() const;
     EGameResource getLeanToResource() const;
     void setLeanTo(short id, short amount, int resource);
-    unsigned char magicSpringIsFull() const;
-    void fillMagicSpring(unsigned char full);
+    bool magicSpringIsFull() const;
+    void fillMagicSpring(bool full);
     void setMagicSpring(short id, bool full);
     void setPyramid(bool guards, ESpellId newSpell);
     ScholarAwards getScholarAward() const;
@@ -1641,15 +1641,14 @@ inline EGameResource ExtraInfoUnion::getLeanToResource() const
     return EGameResource(m_leanToInfo.m_resource);
 }
 
-// The magic-spring pair (MapCell.h:1002/1007). The setter takes the
-// new state rather than clearing unconditionally, which is what the
-// DC decoration `void (unsigned char)` says and what makes the
-// drink-it write a plain bit clear at the one site that passes 0.
+// Original DC publics MagicSpringIsFull@ExtraInfoUnion@@QBA_NXZ and
+// FillMagicSpring@ExtraInfoUnion@@QAAX_N@Z prove the Boolean interfaces.
+// MapCell.h:1002/1007 reads or assigns the single full bit.
 DC_ADDRESS(0x09c820, 0xa)
-inline unsigned char ExtraInfoUnion::magicSpringIsFull() const { return m_magicSpringInfo.m_full; }
+inline bool ExtraInfoUnion::magicSpringIsFull() const { return m_magicSpringInfo.m_full; }
 
 DC_ADDRESS(0x09c82c, 0x14)
-inline void ExtraInfoUnion::fillMagicSpring(unsigned char full) { m_magicSpringInfo.m_full = full; }
+inline void ExtraInfoUnion::fillMagicSpring(bool full) { m_magicSpringInfo.m_full = full; }
 
 // DC MapCell.h:1012..1015 records the resource store followed by the full
 // flag store, and game::PerWeek calls this canonical helper.
@@ -1660,12 +1659,10 @@ inline void ExtraInfoUnion::fillGarden(enum EGameResource resource)
     m_gardenInfo.m_full = 1;
 }
 
-// The mystical-garden trio (MapCell.h:1018/1023/1035). GardenIsFull
-// is `unsigned char () const` and its `(value >> 10) & 1` shape is
-// what retail inlines; a direct bitfield test would fold to a byte
-// `test` on cell+1 instead.
+// Original DC public GardenIsFull@ExtraInfoUnion@@QBA_NXZ proves bool.
+// Mac quickInfo 0x15ad8..0x15adc expands this same full-bit predicate.
 DC_ADDRESS(0x09c840, 0xa)
-inline unsigned char ExtraInfoUnion::gardenIsFull() const { return m_gardenInfo.m_full; }
+inline bool ExtraInfoUnion::gardenIsFull() const { return m_gardenInfo.m_full; }
 
 DC_ADDRESS(0x09c84c, 0xc)
 inline enum EGameResource ExtraInfoUnion::getGardenResource() const
