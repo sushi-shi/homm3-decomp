@@ -120,7 +120,7 @@ advmgr	?getCloudLookup@advManager@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xf8c0	t
 advmgr	?getCreatureBank@ExtraInfoUnion@@QBEAAUtype_creature_bank@@XZ	100.0000	100.0000	100.0000	0x5df0	tokens1:b9263dda21a8
 advmgr	?getCreatureBankHelpText@@YIXPADPAVNewmapCell@@W4type_creature_bank_type@@JPBDE@Z	100.0000	100.0000	100.0000	0xd3f0	tokens1:87687a8f4e12
 advmgr	?getFlaggedObjectOwner@@YIHPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xfd20	tokens1:8cb9c56010c5
-advmgr	?getNormalCursor@advManager@@AAE?AW4type_adventure_cursor@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe280	tokens1:0dd991cbce4a
+advmgr	?getNormalCursor@advManager@@AAE?AW4type_adventure_cursor@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe280	tokens1:5018043890bf
 advmgr	?getRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010	tokens1:f6d2f7ddaa95
 advmgr	?getSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	100.0000	100.0000	100.0000	0x18620	tokens1:13ee36693597
 advmgr	?getTriggerCell@type_cell_adjuster@@QAEPAVNewmapCell@@PAV2@HH@Z	100.0000	100.0000	100.0000	0xafb0	tokens1:9c7343c8f261
