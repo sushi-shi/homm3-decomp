@@ -3705,6 +3705,9 @@ void game::giveTroopsToNeutralTowns()
 // Keep those native arms and read the condition fields directly, including
 // the victory type after the player queries. Removing its cached value and
 // the provisional aggregate aliases raises the full body to 95.5519%.
+// The defeat-hero test intentionally passes the owner directly to IsHumanTeam:
+// DC4116 and Mac d5534..d5594 compare that owner with teamInfo[player]. Retail
+// +0x1eb..+0x246 does the same; inserting GetTeam changes the native behavior.
 // Original public ?ValidateVictoryLossConditions@game@@QAAX_N@Z proves bool.
 VA(0x004bf780, 0x6E2)
 DC_ADDRESS(0x0aa7e0, 0x5c4)
@@ -3766,8 +3769,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
         for (i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
             if (vcheroLoc == poolheroLoc) {
-                int team = getTeam(m_heroes[i].m_owner);
-                if (team >= 0 && isHumanTeam(team)) {
+                if (isHumanTeam(m_heroes[i].m_owner)) {
                     m_mapHeader.m_victoryCondition.m_type = -1;
                 } else {
                     m_mapHeader.m_victoryCondition.m_heroId = i;
