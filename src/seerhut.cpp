@@ -2512,6 +2512,15 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // type_quest constructor call in the legacy arm. The remaining boundaries are
 // its vector constructor (expanded) and setRandomName's vector fill (called).
 // The factory and random-name helpers remain canonical source calls.
+// Helper-boundary probes (2026-10-06, live C2 trace): the legacy arm's
+// vector<TArtifact> ctor is decided before setRandomName is reached, from
+// read's own depth-1 frame alone: nested budget (2*cb(read) - 131) / sites
+// left = (1248 - 131) / 21 = 53 >= its cb 51, so it expands; retail calls
+// it. Any single setRandomName call (inline, in-class or forceinline) leaves
+// 21 sites; one extra free site still gives 51 (cb 628). The ordinary
+// out-of-class member is not an /Ob2 candidate (called; 68.61%). Retail's
+// call needs about 23 depth-1 sites, which the selection's own container
+// operations supply when they are written in read (#149: 32 sites, 100%).
 // Mac keeps this map-quest loader as a separate body at code0+0x16aa6c,
 // immediately before TSeerHut::read. Complete expands its sole source call.
 MAC_ADDRESS(0x16aa6c, 0x7c)
