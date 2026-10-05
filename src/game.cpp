@@ -123,7 +123,7 @@ DATA(0x0069fb24) HeroId g_startingHeroOverrides[8];
 // Retail scalar state; startup initial values come from the pinned image.
 DATA(0x00697294) TTextResource* g_randomTavernText;
 DATA(0x0069774c) bool g_inCampaign;
-DATA(0x00697750) int g_weekType;
+DATA(0x00697750) WeekType g_weekType;
 DATA(0x006983fc) int g_weekTypeExtra;
 // DC PerMonth stores the effect to giMonthType and the creature to
 // giMonthTypeExtra; retail perMonth writes the effect to 0x698834.
@@ -213,17 +213,11 @@ DATA(0x0063e678) static const char g_monType[12] = {
 // of applying the ordinary Mysticism increment.
 const int g_artifactWizardsWellId = 0x8a;
 
-// Calendar-period values written by PerWeek. The ordinary creature week is
-// followed by the Inferno Grail's forced Imp week.
-const int g_weekTypeNormal = 0;
-const int g_weekTypeCreature = 1;
-const int g_weekTypeInfernoGrail = 2;
+// Calendar roll bounds and growth amounts used by PerWeek.
 const int g_weekNameLast = 14;
 const int g_weeksPerMonth = 4;
 const int g_specialWeekRollMax = 4;
 const int g_creatureWeekGrowthBonus = 5;
-const int g_creatureImpId = 0x2a;
-const int g_creatureFamiliarId = 0x2b;
 const int g_monthEffectNormal = 0;
 const int g_monthEffectCreature = 1;
 const int g_monthEffectPlague = 2;
@@ -3516,7 +3510,7 @@ void game::setupOrigData()
     m_difficultyRating = 1;
     g_monthType = 0;
     g_monthTypeExtra = 0;
-    g_weekType = 0;
+    g_weekType = weekTypeNormal;
     g_weekTypeExtra = 0;
     m_isCheater = 0;
 
@@ -7686,13 +7680,13 @@ void game::perWeek()
     bonusCreature = CREATURE_NONE;
     alternateBonus = CREATURE_NONE;
 
-    g_weekType = g_weekTypeNormal;
+    g_weekType = weekTypeNormal;
     g_weekTypeExtra = random(0, g_weekNameLast);
     bonusAmount = g_creatureWeekGrowthBonus;
 
     if (m_week != g_weeksPerMonth
         && random(1, g_specialWeekRollMax) == 1) {
-        g_weekType = g_weekTypeCreature;
+        g_weekType = weekTypeCreature;
         // Mac 0xdf54c starts the creature census here; the older DC body
         // initializes i at entry. Both paths overwrite i before later uses.
         i = 0;
@@ -7720,23 +7714,17 @@ void game::perWeek()
             }
         }
         g_weekTypeExtra = align;
-        {
-            bonusCreature = TCreatureType(align);
-        }
+        bonusCreature = TCreatureType(align);
     }
 
     for (i = 0; i < m_towns.size(); ++i) {
         if (m_towns[i].m_type == TOWN_INFERNO
             && m_towns[i].hasBuilding(HOLY_GRAIL_ID, false)) {
-            g_weekType = g_weekTypeInfernoGrail;
-            {
-                bonusCreature = TCreatureType(g_creatureImpId);
-            }
-            {
-                alternateBonus = TCreatureType(g_creatureFamiliarId);
-            }
-            bonusAmount = g_creatureTypeTraits[g_creatureImpId].m_growthRate;
-            g_weekTypeExtra = g_creatureImpId;
+            g_weekType = weekTypeInfernoGrail;
+            bonusCreature = CREATURE_IMP;
+            alternateBonus = CREATURE_FAMILIAR;
+            bonusAmount = g_creatureTypeTraits[CREATURE_IMP].m_growthRate;
+            g_weekTypeExtra = CREATURE_IMP;
             break;
         }
     }
@@ -7859,9 +7847,9 @@ void game::perMonth()
 
     ++m_month;
     int monthRoll = random(1, g_monthRollMax);
-    if (g_weekType == g_weekTypeInfernoGrail) {
+    if (g_weekType == weekTypeInfernoGrail) {
         g_monthType = g_monthEffectCreature;
-        g_monthTypeExtra = g_creatureImpId;
+        g_monthTypeExtra = CREATURE_IMP;
     } else if (monthRoll > g_monthNormalRollMax && !m_isTutorial) {
         if (monthRoll <= g_monthCreatureRollMax) {
             g_monthType = g_monthEffectCreature;
@@ -7880,7 +7868,7 @@ void game::perMonth()
             growth = currTown->getGrowthRate(j);
             if (growth > 0) {
                 if (g_monthType == g_monthEffectCreature
-                    && g_weekType != g_weekTypeInfernoGrail
+                    && g_weekType != weekTypeInfernoGrail
                     && g_dwellingType[currTown->m_type][j]
                        == g_monthTypeExtra) {
                     currTown->m_population[j] *= 2;
@@ -9475,7 +9463,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
 
                 g_monthType = receivedMsg->m_monthType;
                 g_monthTypeExtra = receivedMsg->m_monthTypeExtra;
-                g_weekType = receivedMsg->m_weekType;
+                g_weekType = WeekType(receivedMsg->m_weekType);
                 g_weekTypeExtra = receivedMsg->m_weekTypeExtra;
                 diffSize = receivedMsg->m_diffSize;
 
@@ -9689,7 +9677,7 @@ void game::doNewTurn()
         turnOffAIMusic();
         return;
     }
-    if (g_weekType == -1)
+    if (g_weekType == weekTypeInvalid)
         return;
 
     if (m_week == 1)
@@ -9699,7 +9687,7 @@ void game::doNewTurn()
         strcpy(sample, DATA_COMPGEN(0x006780cc, newWeekTurnSample,
                                     "newweek.wav"));
 
-    if (m_week == 1 && g_weekType == g_weekTypeNormal) {
+    if (m_week == 1 && g_weekType == weekTypeNormal) {
         if (g_monthType == g_monthEffectNormal) {
             sprintf(g_text, g_newTurn[2], g_monthNames[g_monthTypeExtra]);
         } else if (g_monthType == g_monthEffectCreature) {
@@ -9712,22 +9700,22 @@ void game::doNewTurn()
         }
     } else {
         switch (g_weekType) {
-        case g_weekTypeNormal:
+        case weekTypeNormal:
             sprintf(g_text, g_newTurn[5], g_weekNames[g_weekTypeExtra]);
             break;
 
-        case g_weekTypeCreature:
+        case weekTypeCreature:
             strcpy(temp, getArmyName(g_weekTypeExtra, 1));
             sprintf(g_text, g_newTurn[6], temp, temp);
             break;
 
-        case g_weekTypeInfernoGrail:
+        case weekTypeInfernoGrail:
             sprintf(g_text, g_newTurn[7],
-                    g_creatureTypeTraits[g_creatureImpId].m_name,
-                    g_creatureTypeTraits[g_creatureImpId].m_name,
-                    g_creatureTypeTraits[g_creatureImpId].m_growthRate,
-                    g_creatureTypeTraits[g_creatureFamiliarId].m_name,
-                    g_creatureTypeTraits[g_creatureImpId].m_growthRate);
+                    g_creatureTypeTraits[CREATURE_IMP].m_name,
+                    g_creatureTypeTraits[CREATURE_IMP].m_name,
+                    g_creatureTypeTraits[CREATURE_IMP].m_growthRate,
+                    g_creatureTypeTraits[CREATURE_FAMILIAR].m_name,
+                    g_creatureTypeTraits[CREATURE_IMP].m_growthRate);
             break;
         }
     }
