@@ -5744,14 +5744,17 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
         heroY = currentHero->m_y;
     }
 
-    int rowPhase = 0;
     int blockPhase = 0;
+    int rowPhase = 0;
     unsigned short* destRow;
+    unsigned short* dest;
     // DC7059..7062 bounds the full map; 7097..7117 derives the pixel
     // origin, horizontal offset and large-map phases from those bounds.
     // Mac 13a5c..13b20 folds the zero upper-left bounds but retains the
-    // offset into each row. DC7150 keeps z local to that row.
+    // offset into each row. DC keeps both drawing pointers and the cell at
+    // function scope, with z and visibility local to each row.
     int xOffset;
+    NewmapCell* cell;
     switch (g_mapHeight) {
     case MAP_DIMENSION_SMALL:
         destRow = g_windowManager->m_screenBitmap->getMap(
@@ -5779,7 +5782,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
 
     int visibilityBit = g_mapVisibilityBit;
     for (int y = firstRow; y <= lastRow; y++) {
-        unsigned short* dest = destRow + xOffset;
+        dest = destRow + xOffset;
         // The native row pointer is unsigned short*, advanced by byte pitch.
         switch (g_mapHeight) {
         case MAP_DIMENSION_SMALL:
@@ -5811,11 +5814,12 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
             break;
         }
         int z = origin.m_z;
+        bool revealed;
 
         for (int x = firstColumn; x <= lastColumn; x++) {
-            NewmapCell* cell = m_fullMap->cell(x, y, z);
+            cell = m_fullMap->cell(x, y, z);
 
-            bool revealed =
+            revealed =
                 !g_completeDrawAllCells
                 && (visibilityBit & getMapExtra(x, y, z)) && x >= 0
                 && y >= 0 && x < g_mapWidth && y < g_mapHeight;

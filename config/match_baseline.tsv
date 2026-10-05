@@ -181,7 +181,7 @@ advmgr	?updBottomViewNewTurn@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x15
 advmgr	?updBottomViewResMsg@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x16160	tokens1:bf043bf12df7
 advmgr	?updBottomViewTown@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x164f0	tokens1:0c7f45b4b817
 advmgr	?updateRadar@advManager@@QAEX_N0000@Z	100.0000	100.0000	100.0000	0x13790	tokens1:be2c81edf71c
-advmgr	?updateRadar@advManager@@QAEXUtype_point@@_N1111@Z	97.6239	97.6239	97.6239	0x12c40	tokens1:e0be9cf3bc35
+advmgr	?updateRadar@advManager@@QAEXUtype_point@@_N1111@Z	97.6248	97.6248	97.6248	0x12c40	tokens1:15d6f42f6c3d
 advmgr	?updateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270	tokens1:e97a1d8db3b7
 advmgr	?viewPuzzle@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a7f0	tokens1:bf69743069a0
 advmgr	?what@logic_error@std@@UBEPBDXZ	100.0000	100.0000	100.0000	0x1bc00	-
@@ -1975,7 +1975,7 @@ game	?getAlignment@game@@QBEHH@Z	100.0000	100.0000	100.0000	0xc6690	tokens1:8744
 game	?getBoatsBuilt@game@@QAEHXZ	100.0000	100.0000	100.0000	0xccdd0	tokens1:c2136237c10a
 game	?getGamePosFromDPID@game@@QBEHK@Z	100.0000	100.0000	100.0000	0xcec20	tokens1:7e0fafdca0ef
 game	?getGeneratorId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb900	tokens1:56fc49217cec
-game	?getHeroBoat@game@@QAEPAVboat@@HE@Z	100.0000	100.0000	100.0000	0xce900	tokens1:b02633dcfde7
+game	?getHeroBoat@game@@QAEPAVboat@@H_N@Z	100.0000	100.0000	100.0000	0xce900	tokens1:b36fee3e0922
 game	?getLocalPlayer@game@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xce9b0	tokens1:52d210152b70
 game	?getLocalPlayerGamePos@game@@QBEHXZ	100.0000	100.0000	100.0000	0xcea20	tokens1:d2e8c94f6e83
 game	?getName@playerData@@QAEPADXZ	100.0000	100.0000	100.0000	0xbadb0	tokens1:385eb3668338
