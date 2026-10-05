@@ -21,10 +21,6 @@ pub(super) enum TreasurePurpose {
     Replacement(WorldPosition),
 }
 impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
-    #[expect(
-        clippy::too_many_lines,
-        reason = "selection filters, lazy valuations and draws must stay in native order"
-    )]
     pub(super) fn select_treasure(
         &mut self,
         zone: ZoneId,
@@ -37,7 +33,6 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         self.require_arena(objects)?;
         self.ready.map().zone(zone)?;
         self.offers.clear();
-        let mut total_weight = 0_i32;
         let mut best_per_cell = 0_i32;
         for (definition, def) in self.ready.catalog.iter() {
             let kind = def.kind();
@@ -111,41 +106,19 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                     continue;
                 }
                 if best_per_cell < per_cell.checked_mul(3).ok_or(PlacementError::Arithmetic)? / 4 {
-                    total_weight = 0;
                     self.offers.clear();
                     best_per_cell = per_cell;
                 }
             }
-            let density =
-                i32::try_from(def.density().get()).map_err(|_| PlacementError::Arithmetic)?;
-            total_weight = total_weight
-                .checked_add(density)
-                .ok_or(PlacementError::Arithmetic)?;
-            self.offers.try_reserve(1).map_err(PlacementError::from)?;
-            self.offers.push(selected);
+            self.offers.push(selected, def.density())?;
         }
-        if self.offers.is_empty() {
+        let Some(&selected) = self.offers.choose(rng) else {
             return Ok(None);
-        }
-        let mut remaining = i32::try_from(rng.draw()).unwrap() % total_weight;
-        for &selected in &self.offers {
-            remaining -= i32::try_from(
-                self.ready
-                    .catalog
-                    .get(selected.definition())
-                    .unwrap()
-                    .density()
-                    .get(),
-            )
-            .unwrap();
-            if remaining < 0 {
-                let value = self.ready.value(selected.definition(), zone)?;
-                return Ok(self
-                    .generate(selected, objects, rng)?
-                    .map(|pending| (pending, value)));
-            }
-        }
-        unreachable!("positive weights cover the roulette draw")
+        };
+        let value = self.ready.value(selected.definition(), zone)?;
+        Ok(self
+            .generate(selected, objects, rng)?
+            .map(|pending| (pending, value)))
     }
     fn treasure_with_retries(
         &mut self,
@@ -241,10 +214,6 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
     ///
     /// # Errors
     /// Reports an undisposed previous group or a native selection/geometry fault.
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "the RNG draw is 15-bit and all later identities are admitted before use"
-    )]
     pub fn assemble_group(
         &mut self,
         group: &mut TreasureGroupWorkspace,
@@ -267,7 +236,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             let count = maximum
                 .checked_sub(minimum)
                 .ok_or(PlacementError::Arithmetic)?;
-            (i32::try_from(rng.draw()).unwrap() % count)
+            (rng.signed_draw() % count)
                 .checked_add(minimum)
                 .ok_or(PlacementError::Arithmetic)?
         };

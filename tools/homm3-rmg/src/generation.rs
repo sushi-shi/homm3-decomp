@@ -310,7 +310,7 @@ pub struct GenerationWorkspace {
     treasures: TreasureWorkspace,
     group: TreasureGroupWorkspace,
     obstacles: ObstacleWorkspace,
-    offers: Vec<SelectedTreasure>,
+    offers: crate::placement::Roulette<SelectedTreasure>,
     nested_groups: Vec<Box<TreasureGroupWorkspace>>,
 }
 /// Complete generation, borrowing its buffers and immutable source context.

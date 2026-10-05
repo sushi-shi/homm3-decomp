@@ -140,6 +140,46 @@ struct Segment {
     from: Point,
     to: Point,
 }
+
+/// Initial branch segment, drawn as `rand() % RMG_BRANCH_SEED_PATTERN_COUNT`.
+/// North is up and # is the segment:
+///
+/// ```text
+///   MainDiagonal  Vertical  AntiDiagonal  Horizontal
+///   # . .         . # .     . . #         . . .
+///   . # .         . # .     . # .         # # #
+///   . . #         . # .     # . .         . . .
+/// ```
+#[derive(Clone, Copy, Debug)]
+enum BranchSeed {
+    MainDiagonal,
+    Vertical,
+    AntiDiagonal,
+    Horizontal,
+}
+impl BranchSeed {
+    const ALL: [Self; raw::RMG_BRANCH_SEED_PATTERN_COUNT as usize] = [
+        Self::MainDiagonal,
+        Self::Vertical,
+        Self::AntiDiagonal,
+        Self::Horizontal,
+    ];
+    const fn segment(self, side: i32) -> Segment {
+        let (from, to) = match self {
+            Self::MainDiagonal => (Point::new(0, 0), Point::new(side - 1, side - 1)),
+            Self::Vertical => (Point::new(side / 2, 0), Point::new(side / 2, side - 1)),
+            Self::AntiDiagonal => (Point::new(side - 1, 0), Point::new(0, side - 1)),
+            Self::Horizontal => (Point::new(0, side / 2), Point::new(side - 1, side / 2)),
+        };
+        Segment { from, to }
+    }
+}
+const _: () = assert!(
+    raw::RMG_BRANCH_SEED_MAIN_DIAGONAL == 0
+        && raw::RMG_BRANCH_SEED_VERTICAL == 1
+        && raw::RMG_BRANCH_SEED_ANTI_DIAGONAL == 2
+        && raw::RMG_BRANCH_SEED_HORIZONTAL == 3
+);
 #[derive(Default, Debug)]
 pub(super) struct ConnectionScratch {
     pending: Vec<Segment>,
@@ -226,31 +266,7 @@ impl PlacementMap<'_, '_, '_> {
             .take(self.coverage().map().request().levels().count() as usize)
         {
             self.connections.reset();
-            let count = NonZeroU32::new(raw::RMG_BRANCH_SEED_PATTERN_COUNT).unwrap();
-            // Initial segment direction. North is up and # is the segment.
-            //   MAIN_DIAGONAL  VERTICAL  ANTI_DIAGONAL  HORIZONTAL
-            //   # . .          . # .     . . #          . . .
-            //   . # .          . # .     . # .          # # #
-            //   . . #          . # .     # . .          . . .
-            let segment = match rng.below(count) {
-                raw::RMG_BRANCH_SEED_MAIN_DIAGONAL => Segment {
-                    from: Point::new(0, 0),
-                    to: Point::new(side - 1, side - 1),
-                },
-                raw::RMG_BRANCH_SEED_VERTICAL => Segment {
-                    from: Point::new(side / 2, 0),
-                    to: Point::new(side / 2, side - 1),
-                },
-                raw::RMG_BRANCH_SEED_ANTI_DIAGONAL => Segment {
-                    from: Point::new(side - 1, 0),
-                    to: Point::new(0, side - 1),
-                },
-                raw::RMG_BRANCH_SEED_HORIZONTAL => Segment {
-                    from: Point::new(0, side / 2),
-                    to: Point::new(side - 1, side / 2),
-                },
-                _ => unreachable!("source seed patterns cover the drawn domain"),
-            };
+            let segment = rng.pick(&BranchSeed::ALL).segment(side);
             self.connections.pending.try_reserve(1)?;
             self.connections.pending.push(segment);
             self.carve_plane(level, rng)?;

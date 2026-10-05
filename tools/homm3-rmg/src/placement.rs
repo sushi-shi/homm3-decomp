@@ -76,6 +76,8 @@ mod lines;
 pub use lines::{LineTile, RiverType, RoadType};
 mod obstacles;
 mod rivers;
+mod roulette;
+pub(crate) use roulette::Roulette;
 mod roads;
 pub use obstacles::ObstacleWorkspace;
 mod density;

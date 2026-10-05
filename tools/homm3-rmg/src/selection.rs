@@ -9,10 +9,11 @@ use crate::{
 };
 use std::{error::Error, fmt, num::NonZeroU32};
 
-const WATER_CHOICES: NonZeroU32 = match NonZeroU32::new(raw::RMG_WATER_RANDOM) {
-    Some(count) => count,
-    None => panic!("the source water domain must not be empty"),
-};
+// Retail draws `rand() % RMG_WATER_RANDOM` and uses it as the water setting.
+const RANDOM_WATER: [Water; raw::RMG_WATER_RANDOM as usize] =
+    [Water::None, Water::Normal, Water::Islands];
+const _: () =
+    assert!(raw::RMG_WATER_NONE == 0 && raw::RMG_WATER_NORMAL == 1 && raw::RMG_WATER_ISLANDS == 2);
 
 /// Failure to select and seat the requested players.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -45,11 +46,7 @@ impl Error for SelectionError {}
 pub fn resolve_water(choice: WaterChoice, rng: &mut RetailRng) -> Water {
     match choice {
         WaterChoice::Fixed(water) => water,
-        WaterChoice::Random => match rng.below(WATER_CHOICES) {
-            raw::RMG_WATER_NONE => Water::None,
-            raw::RMG_WATER_NORMAL => Water::Normal,
-            _ => Water::Islands,
-        },
+        WaterChoice::Random => rng.pick(&RANDOM_WATER),
     }
 }
 

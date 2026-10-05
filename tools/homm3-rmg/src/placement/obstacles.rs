@@ -9,7 +9,7 @@ use crate::{
     identity::OwnerId,
     object::DECORATION_KINDS,
     placement_rules::{NeighbourScore, PlacementRules},
-    prototype::{MaskCell, OverlapPriorities, PrototypeCatalog, PrototypeId},
+    prototype::{FootprintSize, MaskCell, OverlapPriorities, PrototypeCatalog, PrototypeId},
     raw,
     rng::RetailRng,
 };
@@ -38,10 +38,11 @@ struct TouchedObject {
     adjacent: bool,
     blocked: bool,
 }
+#[derive(Clone, Copy, Debug)]
 struct Candidate {
     prototype: PrototypeId,
     position: WorldPosition,
-    weight: i32,
+    footprint: FootprintSize,
 }
 
 /// Scratch storage retained across candidates, obstacle clusters, and maps.
@@ -51,7 +52,7 @@ pub struct ObstacleWorkspace {
     catalog: Option<OwnerId>,
     priorities: Vec<Option<OverlapPriorities>>,
     affected: Vec<TouchedObject>,
-    candidates: Vec<Candidate>,
+    candidates: super::Roulette<Candidate>,
     pending: Vec<WorldPosition>,
 }
 impl ObstacleWorkspace {
@@ -378,7 +379,6 @@ impl PlacementMap<'_, '_, '_> {
             }
             let terrain = self.terrain.tiles()[index].terrain();
             scratch.candidates.clear();
-            let mut total = 0_i32;
             for kind in DECORATION_KINDS {
                 for member in catalog.members(kind) {
                     let (prototype, entry) = (member.id(), member.entry());
@@ -398,55 +398,32 @@ impl PlacementMap<'_, '_, '_> {
                     // blocked 3x2 object, candidate anchors are S and each o:
                     //   S o o
                     //   o o o
-                    for row in 0..footprint.height() {
-                        for column in 0..footprint.width() {
-                            if entry
-                                .prototype()
-                                .is_passable(MaskCell::parse(column, row).unwrap())
-                            {
-                                continue;
-                            }
-                            let at = offset_position(
-                                position,
-                                Point::new(i32::from(column), i32::from(row)),
-                            )?;
-                            let weight = self
-                                .score_obstacle(scratch, catalog, rules, objects, prototype, at)?;
-                            if weight > 0 {
-                                total = total
-                                    .checked_add(weight)
-                                    .ok_or(PlacementError::Arithmetic)?;
-                                scratch.candidates.try_reserve(1)?;
-                                scratch.candidates.push(Candidate {
-                                    prototype,
-                                    position: at,
-                                    weight,
-                                });
-                            }
+                    for cell in footprint.cells() {
+                        if entry.prototype().is_passable(cell) {
+                            continue;
+                        }
+                        let at = offset_position(
+                            position,
+                            Point::new(i32::from(cell.x()), i32::from(cell.y())),
+                        )?;
+                        let weight =
+                            self.score_obstacle(scratch, catalog, rules, objects, prototype, at)?;
+                        // Nonpositive scores are not candidates.
+                        if let Some(weight) = u32::try_from(weight).ok().and_then(NonZeroU32::new) {
+                            let candidate = Candidate {
+                                prototype,
+                                position: at,
+                                footprint,
+                            };
+                            scratch.candidates.push(candidate, weight)?;
                         }
                     }
                 }
             }
-            let Some(total) =
-                NonZeroU32::new(u32::try_from(total).map_err(|_| PlacementError::Arithmetic)?)
-            else {
+            let Some(&selected) = scratch.candidates.choose(rng) else {
                 continue;
             };
-            let mut choice = i32::try_from(rng.below(total)).unwrap();
-            let selected = scratch
-                .candidates
-                .iter()
-                .find(|candidate| {
-                    choice -= candidate.weight;
-                    choice < 0
-                })
-                .unwrap();
-            let at = selected.position;
-            let footprint = catalog
-                .get(selected.prototype)
-                .unwrap()
-                .image_mask()
-                .size()?;
+            let (at, footprint) = (selected.position, selected.footprint);
             let object = objects.create(catalog, selected.prototype)?;
             // Decoration updates generator counts and distances as well as cell membership.
             self.register_object(objects, catalog, object, at)?;

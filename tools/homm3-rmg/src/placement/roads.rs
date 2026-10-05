@@ -10,7 +10,14 @@ use crate::{
     raw,
     rng::RetailRng,
 };
-use std::num::NonZeroU32;
+
+// Retail draws `rand() % RMG_ROAD_TYPE_COUNT + RMG_ROAD_DIRT`.
+const ROAD_TYPES: [RoadType; raw::RMG_ROAD_TYPE_COUNT as usize] =
+    [RoadType::Dirt, RoadType::Gravel, RoadType::Cobblestone];
+const _: () = assert!(
+    raw::RMG_ROAD_GRAVEL == raw::RMG_ROAD_DIRT + 1
+        && raw::RMG_ROAD_COBBLESTONE == raw::RMG_ROAD_DIRT + 2
+);
 
 impl PlacementMap<'_, '_, '_> {
     pub(super) fn reset_movement(&mut self) {
@@ -217,10 +224,6 @@ impl PlacementMap<'_, '_, '_> {
     /// # Errors
     /// Reports the retail empty-target underflow after its road-type draw,
     /// missing route predecessors, foreign objects/catalogs or placement faults.
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "source-derived road domain and selected catalog entries are bounded before lookup"
-    )]
     pub fn create_roads(
         &mut self,
         catalog: &PrototypeCatalog<'_>,
@@ -228,14 +231,7 @@ impl PlacementMap<'_, '_, '_> {
         rng: &mut RetailRng,
     ) -> Result<(), PlacementError> {
         self.prepare_object_context(objects, catalog)?;
-        let value =
-            rng.below(NonZeroU32::new(raw::RMG_ROAD_TYPE_COUNT).unwrap()) + raw::RMG_ROAD_DIRT;
-        let kind = match value {
-            raw::RMG_ROAD_DIRT => RoadType::Dirt,
-            raw::RMG_ROAD_GRAVEL => RoadType::Gravel,
-            raw::RMG_ROAD_COBBLESTONE => RoadType::Cobblestone,
-            _ => unreachable!("canonical road type range"),
-        };
+        let kind = rng.pick(&ROAD_TYPES);
         if self.road_targets.is_empty() && !catalog.behavior().is_hotfix() {
             return Err(PlacementError::EmptyRoadTargets);
         }

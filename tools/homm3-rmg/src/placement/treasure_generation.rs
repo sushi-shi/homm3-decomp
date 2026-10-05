@@ -119,7 +119,7 @@ pub struct TreasureGeneration<'state, 'zones, 'tiles, 'defs, 'assets, 'source, '
     artifacts: &'rewards ArtifactCatalog,
     heroes: HeroPool,
     pub(super) arena: Option<OwnerId>,
-    pub(super) offers: Vec<SelectedTreasure>,
+    pub(super) offers: super::Roulette<SelectedTreasure>,
     pub(super) nested_groups: Vec<Box<super::TreasureGroupWorkspace>>,
 }
 impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
@@ -149,7 +149,7 @@ impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
             artifacts,
             heroes,
             arena: objects.owner(),
-            offers: Vec::new(),
+            offers: super::Roulette::default(),
             nested_groups: Vec::new(),
         })
     }
@@ -164,7 +164,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
     // them back on both success and failure; completed maps need neither buffer.
     pub(crate) fn exchange_scratch(
         &mut self,
-        offers: &mut Vec<SelectedTreasure>,
+        offers: &mut super::Roulette<SelectedTreasure>,
         groups: &mut Vec<Box<super::TreasureGroupWorkspace>>,
     ) {
         std::mem::swap(&mut self.offers, offers);

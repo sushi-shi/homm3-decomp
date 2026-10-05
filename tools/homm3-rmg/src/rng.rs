@@ -33,12 +33,23 @@ impl RetailRng {
     /// Retail 0x617e64 multiplies by 0x343fd, 0x617e6a adds 0x269ec3,
     /// and 0x617e75..0x617e78 extracts `(state >> 16) & 0x7fff`.
     pub fn draw(&mut self) -> u32 {
+        u32::from(self.draw15())
+    }
+
+    fn draw15(&mut self) -> u16 {
         self.state = self
             .state
             .wrapping_mul(0x0003_43fd)
             .wrapping_add(0x0026_9ec3);
         self.draws += 1;
-        (self.state >> 16) & 0x7fff
+        #[allow(clippy::cast_possible_truncation)] // masked to 15 bits
+        let value = ((self.state >> 16) & 0x7fff) as u16;
+        value
+    }
+
+    /// The draw as CRT `rand()` returns it: a signed `int` in `0..=0x7fff`.
+    pub fn signed_draw(&mut self) -> i32 {
+        i32::from(self.draw15())
     }
 
     /// Retail's biased `rand() % count`, always consuming exactly one draw.
@@ -47,6 +58,29 @@ impl RetailRng {
     /// rejection sampling changes every subsequent generation decision.
     pub fn below(&mut self, count: NonZeroU32) -> u32 {
         self.draw() % count.get()
+    }
+
+    /// [`Self::below`] as a signed value; the remainder never exceeds the draw.
+    pub fn signed_below(&mut self, count: NonZeroU32) -> i32 {
+        let draw = self.draw15();
+        // `draw % count <= draw`, so it fits the draw's 15 bits.
+        #[allow(clippy::cast_possible_truncation)]
+        let value = (u32::from(draw) % count.get()) as u16;
+        i32::from(value)
+    }
+
+    /// Retail's `rand() % N` indexing a fixed, ordered native domain. Callers
+    /// order `items` by the native ordinal, so no out-of-domain arm is needed.
+    pub fn pick<T: Copy, const N: usize>(&mut self, items: &[T; N]) -> T {
+        #[allow(clippy::cast_possible_truncation)] // asserted to fit
+        let count = const {
+            assert!(N <= u32::MAX as usize, "a 32-bit draw domain");
+            match NonZeroU32::new(N as u32) {
+                Some(count) => count,
+                None => panic!("a nonempty draw domain"),
+            }
+        };
+        items[self.below(count) as usize]
     }
 
     /// One modulo-biased draw centred on zero; even ranges are asymmetric.

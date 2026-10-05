@@ -202,8 +202,8 @@ impl PrototypeCatalog<'_> {
             .and_then(NonZeroU32::new)
             .filter(|value| value.get() > 1)
         {
-            let first = i32::try_from(rng.below(variation)).expect("CRT draw fits i32");
-            let second = i32::try_from(rng.below(variation)).expect("CRT draw fits i32");
+            let first = rng.signed_below(variation);
+            let second = rng.signed_below(variation);
             count = arithmetic(
                 count.checked_add(first - second),
                 creature,
