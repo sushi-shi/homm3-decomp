@@ -81,6 +81,27 @@ class UpdateRowsTest(unittest.TestCase):
         self.assertNotIn(("unit", "flat_name"), rows)
         self.assertEqual(stats["migrated"], 1)
 
+    def test_lost_row_identity_cannot_lower_banked_peaks(self):
+        key = ("rmg", "canPlaceTreasureGroup")
+        previous = {key: MatchRow(96.95, 96.95, 97.5, 0x100, "same")}
+        # A stale RVA map makes the label claim another body: update_rows
+        # starts a new row, which alone would lower MAX and HIST.
+        rows, _ = update_rows({key: 81.10}, previous, {key: 0x200}, {key: "same"})
+        self.assertEqual(rows[key].hist, 81.10)
+        kept, losses = status.guard_peaks(previous, rows)
+        self.assertEqual((kept[key].cur, kept[key].max, kept[key].hist), (81.10, 96.95, 97.5))
+        self.assertEqual(len(losses), 1)
+        self.assertIn("RVA 0x100 -> 0x200", losses[0])
+        allowed, _ = status.guard_peaks(previous, rows, allow_loss=True)
+        self.assertEqual(allowed[key], rows[key])
+        # An edited source may reset MAX; its HIST still never drops.
+        rows, _ = update_rows({key: 81.10}, previous, {key: 0x200}, {key: "edited"})
+        kept, losses = status.guard_peaks(previous, rows)
+        self.assertEqual((kept[key].max, kept[key].hist), (81.10, 97.5))
+        # A legitimate source reset loses nothing.
+        rows, _ = update_rows({key: 81.10}, previous, {key: 0x100}, {key: "edited"})
+        self.assertEqual(status.guard_peaks(previous, rows)[1], [])
+
     def test_same_source_dip_never_lowers_max_or_history(self):
         key = ("unit", "function")
         old = {key: MatchRow(98.0, 98.0, 99.0, 0x5678, "same")}

@@ -87,7 +87,7 @@ def measure(config: dict) -> dict:
 
 
 def merge_rows(report: dict, previous: dict, units: set[str], hashes: dict,
-               legacy: dict, rvas: dict) -> tuple[dict, dict]:
+               legacy: dict, rvas: dict, *, allow_loss: bool = False) -> tuple[dict, dict]:
     selected = {k: v for k, v in previous.items() if k[0] in units}
     untouched = {k: v for k, v in previous.items() if k[0] not in units}
     current = status.fn_fuzzy(report)
@@ -101,6 +101,8 @@ def merge_rows(report: dict, previous: dict, units: set[str], hashes: dict,
         common.die("selected report lost banked retail bodies: " + ", ".join(k[1] for k in missing[:10]))
     selected = status.migrate_source_hashes(selected, hashes, legacy)
     updated, stats = status.update_rows(current, selected, rvas, hashes)
+    updated, losses = status.guard_peaks(selected, updated, allow_loss=allow_loss)
+    status.report_peak_losses(losses, allowed=allow_loss)
     return {**untouched, **updated}, stats
 
 
@@ -149,7 +151,7 @@ def ledger_text(original: str, rows: dict, units: set[str]) -> str:
     return "".join(lines)
 
 
-def update(units: set[str], *, readme: bool = False) -> int:
+def update(units: set[str], *, readme: bool = False, allow_loss: bool = False) -> int:
     with status.BASELINE.open(newline="") as stream:
         original = stream.read()
     if f"# score_policy={status.SCORE_POLICY}" not in original.splitlines():
@@ -160,7 +162,7 @@ def update(units: set[str], *, readme: bool = False) -> int:
     report = measure(config)
     hashes, legacy = status.source_hash_pair(only_units=units)
     rows, stats = merge_rows(report, status.parse_baseline(original), units,
-                             hashes, legacy, status.function_rvas())
+                             hashes, legacy, status.function_rvas(), allow_loss=allow_loss)
     # No input changes during objdiff/source scanning may slip into a receipt.
     require_fresh(project, specs, config)
     with status.BASELINE.open(newline="") as stream:

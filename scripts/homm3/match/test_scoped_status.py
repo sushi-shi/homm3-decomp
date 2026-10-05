@@ -244,7 +244,7 @@ class ScopedAccountingTest(unittest.TestCase):
         self.assertEqual(status.main(["check", "--unit", "unit"]), 2)
         with patch.object(scoped, "update", return_value=0) as update:
             self.assertEqual(status.main(["update", "--unit", "unit", "--unit", "other", "--write-readme"]), 0)
-            update.assert_called_once_with({"unit", "other"}, readme=True)
+            update.assert_called_once_with({"unit", "other"}, readme=True, allow_loss=False)
 
 
 if __name__ == "__main__":

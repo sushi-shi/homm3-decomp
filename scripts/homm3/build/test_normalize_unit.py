@@ -92,6 +92,19 @@ class NormalizeUnitTest(unittest.TestCase):
             self.assertEqual(tree[key], data, key)
 
     @_needs_retail
+    def test_rewritten_object_invalidates_the_process_icf_index(self):
+        # probe and lonely define the same external body; a header-only
+        # change recompiles lonely with a different one.
+        with contextlib.redirect_stdout(io.StringIO()):
+            normalize_objs.normalize_all({"probe"})
+        self.assertIn("probe", normalize_objs._icf_index()[0])
+        (self.objdiff / "base" / "lonely.obj").write_bytes(_base(literal=0x00401024))
+        with contextlib.redirect_stdout(io.StringIO()):
+            normalize_objs.normalize_all()
+        # The complete pass rewrote lonely, so the memo from the scoped pass
+        # is gone and the rebuilt index sees the now-ambiguous body.
+        self.assertNotIn("probe", normalize_objs._icf_index()[0])
+
     def test_icf_index_cache_reuses_only_unchanged_objects(self):
         normalize_objs.normalize_unit("probe")
         cold = normalize_objs._icf_index()

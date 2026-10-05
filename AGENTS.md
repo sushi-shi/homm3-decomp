@@ -72,8 +72,9 @@ Keep canonical helpers and natural C++ throughout the matching loop.
 Workers use separate worktrees and return their commits for integration; the
 coordinator regenerates the combined README and pushes to the default branch.
 Create one with `homm3 worktree new PATH -b BRANCH --from REF`: it links the
-toolchain, stages the executables and Mac SDK, and seeds retail targets and
-receipt-matching objects so `homm3 build --fast` works at once. Inside a
+toolchain, stages the executables and Mac SDK, adopts receipt-matching
+objects and delinks the new tree's own claims, so `homm3 build --fast`
+equals a full build at once. Inside a
 worktree `homm3` uses that checkout even when `HOMM3_DIR` names another.
 Remove a clean one with `homm3 worktree remove PATH`.
 A full `homm3 build` is available when explicitly requested for a broader

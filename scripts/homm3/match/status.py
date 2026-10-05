@@ -889,8 +889,51 @@ def update_rows(current: dict, previous: dict, rvas: dict,
     return rows, stats
 
 
+def guard_peaks(previous: dict, rows: dict, *,
+                allow_loss: bool = False) -> tuple[dict, list[str]]:
+    """Keep every banked peak an update would lose; return (rows, losses).
+
+    `update_rows` never lowers HIST, nor MAX under an unchanged source hash.
+    A lower row therefore means the update lost the banked row's identity -
+    a stale RVA map or label join - not a measurement. Unless `allow_loss`,
+    such a row keeps its banked MAX (same source) and HIST.
+    """
+    kept, losses = dict(rows), []
+    for key, old in previous.items():
+        new = rows.get(key)
+        if new is None:
+            continue
+        same_source = old.src_hash is not None and new.src_hash == old.src_hash
+        lost_max = same_source and new.max < old.max - 1e-9
+        lost_hist = new.hist < old.hist - 1e-9
+        if not (lost_max or lost_hist):
+            continue
+        moved = (f"; RVA {old.rva:#x} -> {new.rva:#x}" if None not in (old.rva, new.rva)
+                 and old.rva != new.rva else "")
+        losses.append(f"{key[0]} {key[1]}: MAX {old.max:.2f} -> {new.max:.2f}, "
+                      f"HIST {old.hist:.2f} -> {new.hist:.2f}"
+                      + ("" if same_source else " (source edited)") + moved)
+        if not allow_loss:
+            maximum = max(new.max, old.max) if same_source else new.max
+            kept[key] = MatchRow(new.cur, maximum, max(new.hist, old.hist, maximum),
+                                 new.rva, new.src_hash)
+    return kept, losses
+
+
+def report_peak_losses(losses: list[str], *, allowed: bool) -> None:
+    if not losses:
+        return
+    verb = "LOWERED (--allow-ledger-loss)" if allowed else "kept their banked peaks"
+    print(f"[status] WARNING: {len(losses)} row(s) would lose a banked peak and {verb}; "
+          "check build/gen freshness (run `homm3 delink`) before banking:", file=sys.stderr)
+    for line in losses[:20]:
+        print(f"[status]   {line}", file=sys.stderr)
+    if len(losses) > 20:
+        print(f"[status]   ... {len(losses) - 20} more", file=sys.stderr)
+
+
 def cmd_update(report: dict, *, fingerprint_pair: tuple[dict, dict] | None = None,
-               history_patch: str | None = None) -> int:
+               history_patch: str | None = None, allow_loss: bool = False) -> int:
     require_built_sources()
     require_fresh_comparisons()
     banked = load_baseline()
@@ -903,6 +946,8 @@ def cmd_update(report: dict, *, fingerprint_pair: tuple[dict, dict] | None = Non
     previous = migrate_source_hashes(previous, hashes, legacy)
     rows, stats = update_rows(
         fn_fuzzy(report), previous, function_rvas(), hashes)
+    rows, losses = guard_peaks(previous, rows, allow_loss=allow_loss)
+    report_peak_losses(losses, allowed=allow_loss)
     write_baseline(rows)
     print("[status] baseline: "
           f"{stats['added']} added, {stats['migrated']} migrated, "
@@ -1302,6 +1347,9 @@ def build_parser():
                         "edits, because it writes the ledger.")
     up.add_argument("--unit", action="append", metavar="TU",
                     help="checkpoint only these freshly built units (repeatable)")
+    up.add_argument("--allow-ledger-loss", action="store_true",
+                    help="bank rows even when they lower HIST, or MAX under an "
+                         "unchanged source hash (normally kept, with a warning)")
 
     ck = sub.add_parser("check", parents=[shared],
                         help="classify source-edit MAX drops before banking",
@@ -1361,9 +1409,10 @@ def main(argv=None) -> int:
     if command == "merge-baseline":
         from homm3.match import merge_baseline
         return merge_baseline.main(args.revisions)
+    allow_loss = getattr(args, "allow_ledger_loss", False)
     if command == "update" and args.unit:
         from homm3.match.scoped_status import update
-        return update(set(args.unit), readme=readme)
+        return update(set(args.unit), readme=readme, allow_loss=allow_loss)
 
     if command in ("update", "check") or readme:
         # These bank, write or judge against current source hashes: they
@@ -1381,7 +1430,7 @@ def main(argv=None) -> int:
     if command == "summary":
         return cmd_summary(report, stale)
     if command == "update":
-        return cmd_update(report)
+        return cmd_update(report, allow_loss=allow_loss)
     if command == "check":
         return cmd_check(report, baseline_ref=args.baseline_ref)
     from homm3.match import score_views
