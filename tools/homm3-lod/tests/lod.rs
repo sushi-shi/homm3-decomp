@@ -1,6 +1,9 @@
 //! Generated LOD fixtures for stored and zlib-compressed directory members.
 
-use homm3_lod::{Archive, Directory, Error, Header, Payload, ENTRY_SIZE, HEADER_SIZE};
+use homm3_lod::{
+    resource_name_hash, Archive, Directory, Error, HashedDirectory, HashedEntry, Header, Payload,
+    ENTRY_SIZE, HEADER_SIZE,
+};
 
 #[test]
 fn directory_view_does_not_require_resident_payloads() {
@@ -98,4 +101,91 @@ fn directory_must_fit() {
         Archive::parse(&data),
         Err(Error::ShortDirectory { .. })
     ));
+}
+
+#[test]
+fn resource_name_hash_folds_case_and_stops_at_nul() {
+    // FNV-1a reference values for the lowercase names.
+    assert_eq!(resource_name_hash(b""), 0x811c_9dc5);
+    assert_eq!(resource_name_hash(b"a"), 0xe40c_292c);
+    assert_eq!(
+        resource_name_hash(b"OBJECTS.TXT"),
+        resource_name_hash(b"objects.txt")
+    );
+    assert_eq!(
+        resource_name_hash(b"objects.txt\0junk"),
+        resource_name_hash(b"objects.txt")
+    );
+}
+
+fn hashed_image(key: u32) -> Vec<u8> {
+    let payload_at = HEADER_SIZE + 2 * ENTRY_SIZE;
+    let mut data = vec![0u8; payload_at];
+    data[..4].copy_from_slice(b"LOD\0");
+    data[4..8].copy_from_slice(&200u32.to_le_bytes());
+    data[8..12].copy_from_slice(&2u32.to_le_bytes());
+    data[12..16].copy_from_slice(&key.to_le_bytes());
+    let records = [
+        (b"objects.txt".as_slice(), payload_at, 4, 0, 0xee),
+        (b"rand_trn.txt".as_slice(), payload_at + 4, 9, 3, 3),
+    ];
+    for (index, (name, offset, size, compressed, codec)) in records.into_iter().enumerate() {
+        let at = HEADER_SIZE + index * ENTRY_SIZE;
+        let offset = u32::try_from(offset).unwrap();
+        data[at..at + 4].copy_from_slice(&resource_name_hash(name).to_le_bytes());
+        data[at + 4..at + 8].copy_from_slice(&(offset ^ key).to_le_bytes());
+        data[at + 8..at + 12].copy_from_slice(&(size ^ key).to_le_bytes());
+        data[at + 12..at + 16].copy_from_slice(&(compressed ^ key).to_le_bytes());
+        data[at + 16] = codec;
+    }
+    data.extend_from_slice(b"TEXTzip");
+    data
+}
+
+#[test]
+fn hashed_directory_decodes_keyed_extents_and_rejects_the_named_reader() {
+    let key = 0xb5a4_d744;
+    let data = hashed_image(key);
+    let header = Header::parse(&data).unwrap();
+    assert_eq!(header.hashed_key(), Some(key));
+    assert!(matches!(
+        Directory::parse(&data, data.len() as u64),
+        Err(Error::DirectoryEncoding)
+    ));
+    let directory = HashedDirectory::parse(&data, data.len() as u64).unwrap();
+    assert_eq!(directory.len(), 2);
+    let stored = directory.find(b"OBJECTS.TXT").unwrap();
+    assert_eq!(
+        stored,
+        HashedEntry {
+            name_hash: resource_name_hash(b"objects.txt"),
+            offset: u32::try_from(HEADER_SIZE + 2 * ENTRY_SIZE).unwrap(),
+            size: 4,
+            compressed_size: 0,
+            codec: 0xee,
+        }
+    );
+    assert_eq!(stored.stored_size(), 4);
+    let packed = directory.find(b"rand_trn.txt").unwrap();
+    assert_eq!((packed.size, packed.stored_size(), packed.codec), (9, 3, 3));
+    assert!(packed.matches(b"RAND_TRN.TXT"));
+    assert!(directory.find(b"rmg.txt").is_none());
+    assert!(matches!(
+        HashedDirectory::parse(&data, data.len() as u64 - 1),
+        Err(Error::PayloadOutOfBounds { index: 1, .. })
+    ));
+}
+
+#[test]
+fn named_format_markers_are_not_hashed_keys() {
+    let mut data = archive_image();
+    for marker in [0_u32, 0x007e_0213] {
+        data[12..16].copy_from_slice(&marker.to_le_bytes());
+        assert_eq!(Header::parse(&data).unwrap().hashed_key(), None);
+        assert!(Archive::parse(&data).is_ok());
+        assert!(matches!(
+            HashedDirectory::parse(&data, data.len() as u64),
+            Err(Error::DirectoryEncoding)
+        ));
+    }
 }

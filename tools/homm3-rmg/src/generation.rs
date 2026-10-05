@@ -270,6 +270,7 @@ impl<'a> Assets<'a> {
             self.creatures.ruleset(),
             self.artifacts.ruleset(),
             self.placement.ruleset(),
+            self.prototypes.ruleset(),
         ] {
             if rules != crate::rules::Ruleset::Complete {
                 return Err(report.fail(GenerationFault::UnsupportedRuleset(rules), &rng));

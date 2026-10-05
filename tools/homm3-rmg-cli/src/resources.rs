@@ -5,7 +5,7 @@
 //! in resourcemanager.cpp, irrespective of the output map's format.
 
 use flate2::{Decompress, DecompressError, FlushDecompress, Status};
-use homm3_lod::{Directory, Entry, Header, HEADER_SIZE, NAME_SIZE};
+use homm3_lod::{Directory, Entry, HashedDirectory, HashedEntry, Header, HEADER_SIZE, NAME_SIZE};
 use homm3_rmg::prototype::ImageMask;
 use std::{
     collections::TryReserveError,
@@ -49,6 +49,8 @@ pub enum ResourceFault {
     AmbiguousName,
     /// A required text resource was not found.
     Missing,
+    /// The archive names a codec this loader does not yet implement.
+    Codec(u8),
     /// The mask header is shorter than the required native record.
     Mask(homm3_resource::Error),
 }
@@ -64,6 +66,7 @@ impl fmt::Display for ResourceError {
             ResourceFault::Length { expected, actual } => write!(f, "incomplete zlib stream or length mismatch (expected {expected}, produced {actual})"),
             ResourceFault::Size => f.write_str("resource exceeds addressable storage"),
             ResourceFault::AmbiguousName => f.write_str("ambiguous case-insensitive file name"),
+            ResourceFault::Codec(codec) => write!(f, "unsupported LOD compression codec {codec}"),
             ResourceFault::Missing => f.write_str("required resource not found"),
         }
     }
@@ -88,8 +91,15 @@ impl From<TryReserveError> for ResourceFault {
 /// Owned lookup metadata decoded by the shared format reader. Directory bytes
 /// are dropped after indexing; archive payloads remain on disk.
 #[derive(Clone, Copy, Debug)]
+enum IndexedName {
+    Text([u8; NAME_SIZE]),
+    Hash(u32),
+}
+
+#[derive(Clone, Copy, Debug)]
 struct IndexedEntry {
-    name: [u8; NAME_SIZE],
+    name: IndexedName,
+    codec: u8,
     offset: u32,
     size: u32,
     compressed_size: u32,
@@ -99,15 +109,30 @@ impl IndexedEntry {
         let mut name = [0; NAME_SIZE];
         name[..entry.name.len()].copy_from_slice(entry.name);
         Self {
-            name,
+            name: IndexedName::Text(name),
+            codec: 3,
+            offset: entry.offset,
+            size: entry.size,
+            compressed_size: entry.compressed_size,
+        }
+    }
+    fn from_hashed(entry: HashedEntry) -> Self {
+        Self {
+            name: IndexedName::Hash(entry.name_hash),
+            codec: entry.codec,
             offset: entry.offset,
             size: entry.size,
             compressed_size: entry.compressed_size,
         }
     }
     fn matches(self, name: &[u8]) -> bool {
-        let end = self.name.iter().position(|&b| b == 0).unwrap_or(NAME_SIZE);
-        self.name[..end].eq_ignore_ascii_case(name)
+        match self.name {
+            IndexedName::Text(text) => {
+                let end = text.iter().position(|&b| b == 0).unwrap_or(NAME_SIZE);
+                text[..end].eq_ignore_ascii_case(name)
+            }
+            IndexedName::Hash(hash) => hash == homm3_lod::resource_name_hash(name),
+        }
     }
 }
 
@@ -134,10 +159,16 @@ impl DiskArchive {
             resize(&mut bytes, header.directory_end())?;
             bytes[..HEADER_SIZE].copy_from_slice(&header_bytes);
             file.read_exact(&mut bytes[HEADER_SIZE..])?;
-            let directory = Directory::parse(&bytes, file_len)?;
             let mut entries = Vec::new();
-            entries.try_reserve_exact(directory.len())?;
-            entries.extend(directory.entries().map(IndexedEntry::from_entry));
+            if header.hashed_key().is_some() {
+                let directory = HashedDirectory::parse(&bytes, file_len)?;
+                entries.try_reserve_exact(directory.len())?;
+                entries.extend(directory.entries().map(IndexedEntry::from_hashed));
+            } else {
+                let directory = Directory::parse(&bytes, file_len)?;
+                entries.try_reserve_exact(directory.len())?;
+                entries.extend(directory.entries().map(IndexedEntry::from_entry));
+            }
             Ok((file, entries))
         };
         let (file, entries) = load().map_err(|fault| ResourceError {
@@ -173,6 +204,9 @@ impl DiskArchive {
             if entry.compressed_size == 0 {
                 self.file.read_exact(output)?;
             } else {
+                if entry.codec != 3 {
+                    return Err(ResourceFault::Codec(entry.codec));
+                }
                 resize(
                     &mut scratch.compressed,
                     usize::try_from(entry.compressed_size).map_err(|_| ResourceFault::Size)?,
@@ -218,6 +252,7 @@ struct InflateWorkspace {
 /// by RMG are read; mask output and zlib state are reused across all image names.
 pub struct Installation {
     files: Vec<PathBuf>,
+    overrides: Vec<DiskArchive>,
     bitmaps: [Option<DiskArchive>; 2],
     sprites: [Option<DiskArchive>; 2],
     inflate: InflateWorkspace,
@@ -230,6 +265,29 @@ impl Installation {
     /// # Errors
     /// Reports directory/file errors, ambiguous case-folded names and malformed archives.
     pub fn open(data_directory: &Path) -> Result<Self, ResourceError> {
+        Self::open_with_archives(data_directory, &[])
+    }
+    /// Add explicitly ordered resource archives ahead of Complete's archives.
+    /// Both text and masks consult them in slice order; loose text still wins.
+    /// Accepts named LODs and `HotA`'s hashed LODs with stored/zlib payloads.
+    /// This supplies resource precedence explicitly, without selecting game rules.
+    ///
+    /// # Errors
+    /// Reports missing extra archives, file errors and invalid directories.
+    pub fn open_with_archives(
+        data_directory: &Path,
+        archives: &[PathBuf],
+    ) -> Result<Self, ResourceError> {
+        let mut overrides = Vec::new();
+        overrides
+            .try_reserve(archives.len())
+            .map_err(|error| ResourceError {
+                path: data_directory.into(),
+                fault: ResourceFault::Allocation(error),
+            })?;
+        for path in archives {
+            overrides.push(DiskArchive::open(path)?);
+        }
         let scan = || -> Result<Vec<PathBuf>, ResourceFault> {
             fs::read_dir(data_directory)?
                 .map(|entry| entry.map(|entry| entry.path()))
@@ -247,6 +305,7 @@ impl Installation {
         let sprites = [archive(b"h3sprite.lod")?, archive(b"h3ab_spr.lod")?];
         Ok(Self {
             files,
+            overrides,
             bitmaps,
             sprites,
             inflate: InflateWorkspace {
@@ -276,7 +335,11 @@ impl Installation {
                 fault,
             });
         }
-        for archive in self.bitmaps.iter_mut().flatten() {
+        for archive in self
+            .overrides
+            .iter_mut()
+            .chain(self.bitmaps.iter_mut().flatten())
+        {
             if archive.read(name.as_bytes(), output, &mut self.inflate)? {
                 return Ok(());
             }
@@ -293,7 +356,11 @@ impl Installation {
     /// # Errors
     /// Reports file/decompression errors or a truncated mask header.
     pub fn mask(&mut self, name: &[u8]) -> Result<Option<ImageMask>, ResourceError> {
-        for archive in self.sprites.iter_mut().flatten() {
+        for archive in self
+            .overrides
+            .iter_mut()
+            .chain(self.sprites.iter_mut().flatten())
+        {
             if archive.read(name, &mut self.mask_bytes, &mut self.inflate)? {
                 return ImageMask::parse(&self.mask_bytes)
                     .map(Some)
