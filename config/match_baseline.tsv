@@ -4037,7 +4037,7 @@ singleselectionwindow	?initializeLCDescriptions@@YI_NXZ	100.0000	100.0000	100.00
 singleselectionwindow	?initializeTurnDurationText@@YI_NXZ	100.0000	100.0000	100.0000	0x177ab0	tokens1:d701b51abb47
 singleselectionwindow	?initializeVCDescriptions@@YI_NXZ	100.0000	100.0000	100.0000	0x177a50	tokens1:9f8645e1dcf2
 singleselectionwindow	?insert@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAEXPAUGameSelectionHeadersStruct@@IABU3@@Z	100.0000	100.0000	100.0000	0x18ebe0	-
-singleselectionwindow	?isFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000	100.0000	0x177d10	tokens1:76017c7d0777
+singleselectionwindow	?isFaceTaken@CNetPlayerHandler@@QAE_NHH@Z	100.0000	100.0000	100.0000	0x177d10	tokens1:87a76a6292ff
 singleselectionwindow	?isHost@TSingleSelectionWindow@@QAE_NXZ	100.0000	100.0000	100.0000	0x18adf0	tokens1:7dc84c990e8e
 singleselectionwindow	?isVersionCompatible@TSingleSelectionWindow@@QAEEPBD@Z	100.0000	100.0000	100.0000	0x189d30	tokens1:1a1cb794a64b
 singleselectionwindow	?lower_bound@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QBE?AVconst_iterator@12@ABH@Z	100.0000	100.0000	100.0000	0x18f0f0	-

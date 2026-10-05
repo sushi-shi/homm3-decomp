@@ -389,7 +389,7 @@ public:
     CNetPlayerHandlerPlayer* getPlayerInPos(int pos);
     CNetPlayerHandlerPlayer* getCompPlayerInPos(int pos);
     CNetPlayerHandlerPlayer* getPlayer(unsigned long dpid);
-    unsigned char isFaceTaken(int face, int exclude);
+    bool isFaceTaken(int face, int exclude);
     unsigned char addNewPlayer(CNetPlayerInfo* netPlayer);
     unsigned char playerExists(unsigned long dpid);
     unsigned char setNextPlayer(int pos);
