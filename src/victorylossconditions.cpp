@@ -15,7 +15,7 @@ int VictoryConditionStruct::appliesToPlayer(long playerId) const
         int team = g_game->getTeam(playerId);
         if (team >= 0) {
             int player = 0;
-            signed char* teams = g_game->m_mapHeader.m_teamInfo;
+            char* teams = g_game->m_mapHeader.m_teamInfo;
             for (; player < 8; ++player) {
                 if (teams[player] == team
                     && g_game->isHuman(player))

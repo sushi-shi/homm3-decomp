@@ -452,8 +452,10 @@ public:
     unsigned char m_lastTownNameAssigned;
     unsigned char m_mapHasNotBeenSaved;
     unsigned char m_maxHeroLevel;
-    unsigned char m_numTeams;
-    signed char m_teamInfo[8];
+    // Original numTeams and teamInfo use plain char (DC 0x24ef/0x68fd).
+    // The retained Windows getTeam body sign-extends each team byte.
+    char m_numTeams;
+    char m_teamInfo[8];
     // +0x15..+0x17: alignment hole. Retail's synthesized GameSelection-
     // HeadersStruct copy ctor (0x5904f0) copies the dword at +0x11 and then
     // the dword at +0x18 with nothing between; a named pad adds a word+byte
