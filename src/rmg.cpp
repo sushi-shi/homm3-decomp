@@ -3113,6 +3113,9 @@ unsigned char TRmgTreasureGroup::addGuard(TRmgObject* guard)
 // their natural inlining state remains work. RMG is absent from Dreamcast;
 // original source-file ownership is still an inference under review. Generated
 // link-order tables and a synthetic PDB cannot independently establish it.
+// Retail retains this call through operator+ in addGuard, the river and the
+// treasure-group callers. Defining operator+ before this body is
+// byte-identical, so that boundary is not a source-order effect here.
 VA(0x005355C0, 0x1A)
 TRmgMapPosition::TRmgMapPosition(int newX, int newY, int newZ)
     : TPoint(newX, newY), m_z(newZ)
@@ -3931,9 +3934,14 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
     }
 }
 
-// Flatten the level, row and column into one cell index. The scalar overload
-// delegates here. A direct index return preserves all 39 retained bytes and
-// restores repairWaterZoneBorders to 100%; a named index blocks that expansion.
+// Flatten the level, row and column into one cell index. A direct index
+// return preserves all 39 retained bytes and restores repairWaterZoneBorders
+// to 100%; a named index blocks that expansion. The inline three-coordinate
+// overload computes the same index itself: delegating it through a position
+// temporary (2026-09-20) nests a constructor and this body under each caller,
+// and the deeper /Ob2 budget then keeps this call out of line where retail
+// expands it (decorateUnderground 86.48%, removeObject 91.21%,
+// canPlaceTreasureGroup 81.10%). Direct indexing gives 99.01/100/96.95%.
 VA(0x005378E0, 0x27)
 TRmgMapItem* TRmgMap::getMapItem(TRmgMapPosition point)
 {
@@ -7957,6 +7965,10 @@ bool TRmgMapItem::canBlockFloor() const
 // preserve the real brush/map scopes and predicates. No inline pin is used.
 // Borrowed-constructor value/reference arguments and plain dimension arrays
 // do not close the entry schedule; retain the existing value contract.
+// With direct three-coordinate indexing in TRmgMap::getMapItem this body
+// measures 99.0138%: the borrowed-map dimension loads and the inner lookup's
+// height+y operand order differ. Passing an explicit TRmgMapPosition to that
+// inner lookup is byte-identical.
 VA(0x005439E0, 0x283)
 MAC_ADDRESS(0x246a34, 0x31c)
 void TRmgGenerator::decorateUnderground()
@@ -9357,9 +9369,11 @@ void TRmgGenerator::commitTreasureGroup(TRmgTreasureGroup* group,
 // direct-site budget 2404). Position-plus-guard-point reaches 96.9476% but
 // still expands it; restoring the call must precede the old stack-home work.
 // Mac 0x24b0c8/0x24b1cc likewise preserves two land-predicate results.
-// Restore the same shared calls and surface-map queries here; Windows
-// currently falls 96.8953% to 81.0773%. Byte/bool result types and seven
-// ordinary predicate return forms do not recover the caller lowering.
+// Restore the same shared calls and surface-map queries here. They first
+// fell 96.8953% to 81.0773% while the three-coordinate lookup delegated
+// through a position temporary; direct indexing restores 96.9476%.
+// Byte/bool result types and seven ordinary predicate return forms do not
+// recover the caller lowering.
 // Native 0x24ae00..0x24ae58 translates the copied position by the guard point;
 // preserve that canonical addition as well (byte-flat with these predicates).
 VA(0x00546C70, 0x452)
