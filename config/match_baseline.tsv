@@ -48,7 +48,7 @@ adventuremapwindow	?setBottomView@TAdventureMapWindow@@QAEXPAVtype_bottom_view_w
 adventuremapwindow	?setElevationToggleImage@TAdventureMapWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x3c40	tokens1:edb144510aa7
 adventuremapwindow	?setSleepImage@TAdventureMapWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x3cc0	tokens1:2efa07eaa296
 adventuremapwindow	?updateButtons@TAdventureMapWindow@@QAEXEE@Z	100.0000	100.0000	100.0000	0x3f60	tokens1:91cdd2220c34
-adventuremapwindow	?updateHeroLocator@TAdventureMapWindow@@QAEXH_N0@Z	99.9495	99.9495	100.0000	0x3560	tokens1:69d232e94fa5
+adventuremapwindow	?updateHeroLocator@TAdventureMapWindow@@QAEXH_N0@Z	100.0000	100.0000	100.0000	0x3560	tokens1:22ef58e28e63
 adventuremapwindow	?updateHeroLocators@TAdventureMapWindow@@QAEXH_N0@Z	100.0000	100.0000	100.0000	0x32e0	tokens1:d5d53ee36d2d
 adventuremapwindow	?updateQuestLogButton@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x39b0	tokens1:283a696f3572
 adventuremapwindow	?updateResourceDisplay@TAdventureMapWindow@@QAEX_N0@Z	100.0000	100.0000	100.0000	0x3f00	tokens1:bb5c71f335c5
