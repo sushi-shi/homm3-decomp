@@ -3477,6 +3477,8 @@ void TMageGuildWindow::setRolloverText(int codeY)
 // DC 4686 encloses the spell locals in the valid-slot branch; retain that
 // scope. Four valid-slot/Grail branch forms reproduced 96.8650% (two TU
 // objects); the register-homing probes did not remove the helper spill.
+// Reversing hasBuilding's commutative mask operands also emits identical
+// code in this current caller and both retained helper-owner units.
 VA(0x005ce370, 0x1F0)
 DC_ADDRESS(0x171118, 0x1ac)
 MAC_ADDRESS(0x1c90ec, 0x2f0)  // anchor-vtable 0x6437dc slot 9 + anchor-callee(SetRolloverText 0x5ce1c0, whose sole caller this is) + arity(ret 4)

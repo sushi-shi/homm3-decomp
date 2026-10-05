@@ -393,7 +393,11 @@ This rules out scratch-register rotation as the immediate cause. The next
 evidence boundary is wide-operation lowering and coalescing: why the table
 loads become destructive operands instead of the getter-result halves.
 The trace does not justify changing the proven getter type, flattening its
-call or inventing caller scopes. All three passive traces reproduce the
+call or inventing caller scopes. Reversing the commutative operands in
+`hasBuilding` also leaves the current handler and both retained helper-owner
+units byte-identical: two states, one object identity, with unchanged-source
+and opposite-corner reproduction controls. C++ operand spelling alone does
+not change this lowering decision. All three passive traces reproduce the
 complete 401,289-byte normal-profile object outside its timestamp; the clean
 compiler shim is restored afterward. Disposable captures are under
 `build/mageguild-evidence/{global-allocation-trace,global-exclusion-trace,instruction-operands-trace}/`.
