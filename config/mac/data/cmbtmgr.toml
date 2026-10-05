@@ -66,6 +66,7 @@ evidence = "Mac shootMissile and shootAnimatedMissile load binary32 0.5 directly
 
 [[data]]
 retail_va = 0x0063cf7c
+mac_symbol = "s_combatSpeedMod__13combatManager"
 source = "src/cmbtmgr.cpp"
 mac_section = 0
 mac_offset = 0x2a40a0

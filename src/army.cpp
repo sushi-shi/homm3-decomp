@@ -1178,7 +1178,7 @@ void army::animateMissile(army* armyToAttack)
         g_combatManager->unnamed59FDE0(startX, startY, armyToAttack);
     } else if (is(creatureShootsRay)) {
         GameTime::delay(static_cast<long>(
-            g_combatSpeedFactors[g_config.m_combatSpeed] * 115.0f));
+            combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 115.0f));
         long color;
         switch (m_creatureType) {
         case CREATURE_ARCH_MAGE:
@@ -1218,7 +1218,7 @@ void army::animateMissile(army* armyToAttack)
         Bitmap16Bit saved(width, height);
         SLimitData updateArea = heroWindowManager::s_nullLimits;
         const int missileperiod = static_cast<int>(
-            g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
+            combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 33.0f);
 
         long frame = 0;
         if (nframes > 0) {
@@ -2064,7 +2064,7 @@ void army::doAttack(int direction)
     if (armyToAttack->m_numTroops > 0
         && armyToAttack->canRetaliate(*this) && !killed) {
         GameTime::delay(static_cast<int>(
-            g_combatSpeedFactors[g_config.m_combatSpeed] * 150.0f));
+            combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 150.0f));
         g_combatManager->m_currentSide = 1 - g_combatManager->m_currentSide;
         armyToAttack->doAttack(this, counterDirection);
         g_combatManager->m_currentSide = 1 - g_combatManager->m_currentSide;
@@ -2075,7 +2075,7 @@ void army::doAttack(int direction)
     if (is(creatureTwoAttacks) && armyToAttack->m_numTroops > 0 && !is(creatureShootingArmy)
         && !isIncapacitated() && m_numTroops > 0) {
         GameTime::delay(static_cast<int>(
-            g_combatSpeedFactors[g_config.m_combatSpeed] * 150.0f));
+            combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 150.0f));
         doAttack(armyToAttack, direction);
     }
     if (!armyToAttack->is(creatureImmobilized)) {
@@ -4412,11 +4412,11 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
     if (sequence == 0)
         frameDelay = static_cast<int>(
             static_cast<float>(m_monFrameInfo.m_walkCycleTime)
-            * g_combatSpeedFactors[g_config.m_combatSpeed]
+            * combatManager::s_combatSpeedMod[g_config.m_combatSpeed]
             / static_cast<float>(m_stdIcon->getNumFrames(0)));
     else
         frameDelay = static_cast<int>(
-            g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
+            combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 100.0f);
 
     SLimitData bounds = g_combatManager->m_extent;
     for (m_currFrameIndex = startFrame;

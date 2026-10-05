@@ -30,14 +30,4 @@ enum ECombatGridDimensions {
     COMBAT_GRID_HEX_COUNT = 187
 };
 
-// The three combat animation speed multipliers at .rdata 0x63cf7c -
-// 1.0f, 0.63f and 0.4f exactly - indexed by gUnnamed698758.combatSpeed.
-// Read at eighteen sites image-wide (config/retail/reloc-evidence.tsv)
-// and NOT owned by drawing.obj: no admitted TU defines it yet, so this
-// is a reader-side declaration parked in the nearest combat-drawing
-// header, the way winmgr.h carries DoDialog's three unowned dialog
-// globals. The NAME is a source-facing invention; the address, extent
-// and contents are read straight from the hash-verified image.
-extern const float g_combatSpeedFactors[3];
-
 #endif  /* HOMM3_DRAWING_H */

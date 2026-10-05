@@ -352,6 +352,10 @@ enum CombatHeroFrameType {
 
 class combatManager : public baseManager {
 public:
+    // Original public CombatSpeedMod[3] (DC ?CombatSpeedMod@combatManager@@2QBMB).
+    // Complete stores the three animation-speed factors at 0x63cf7c.
+    static const float s_combatSpeedMod[3];
+
     // Original public const statics. CombatAreaLimits_Visible has no
     // independently identified Complete storage; ScreenLimits is owned by
     // heroWindowManager and is not an alias for that older declaration.

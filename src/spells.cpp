@@ -3524,7 +3524,7 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
 
     delay = static_cast<long>(
         static_cast<float>(delay)
-        * g_combatSpeedFactors[g_config.m_combatSpeed]);
+        * combatManager::s_combatSpeedMod[g_config.m_combatSpeed]);
     unsigned long delayTil = GameTime::get() + delay;
     int maxBolt = 1;
 
@@ -3833,7 +3833,7 @@ void combatManager::chainLightning(int index, int level, int power)
                     curX = destX;
                     curY = destY;
                     GameTime::delay(static_cast<long>(
-                        g_combatSpeedFactors[g_config.m_combatSpeed]
+                        combatManager::s_combatSpeedMod[g_config.m_combatSpeed]
                         * 100.0f));
                     drawFrame(1, 0, 0, 0, 1, 0);
                 }
@@ -4683,7 +4683,7 @@ void combatManager::earthquake(int level)
         g_mouseManager->hidePointer();
         m_saveScreenPostGrid->grab(g_windowManager->m_screenBitmap, 0, 0);
         const int shakeDelay = static_cast<int>(
-            g_combatSpeedFactors[g_config.m_combatSpeed] * 15.0f);
+            combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 15.0f);
         int pass = 3;
         do {
             for (int step = 0; step < 15; step++) {
@@ -4732,7 +4732,7 @@ void combatManager::earthquake(int level)
     if (drawn != 0
         && !static_cast<const combatManager*>(this)->isQuickCombat()) {
         const int frameDelay = static_cast<int>(
-            g_combatSpeedFactors[g_config.m_combatSpeed] * 15.0f);
+            combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 15.0f);
         CSprite* blast = ResourceManager::getSprite("SGEXPL.DEF");
         launchSample("WallHit.82m", -1, 3);
         for (int frame = 0; frame < blast->getNumFrames(0); frame++) {
