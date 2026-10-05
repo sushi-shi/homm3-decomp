@@ -2043,47 +2043,18 @@ void advManager::processRadarSelect(const message* msg)
 }
 
 // E:\gamedcs\advmgr.cpp:2434
-// The map widget's own click handler, split down the middle by the right
-// mouse button: a right click is a quick view of whatever the cursor is
-// over, a left click either retargets the current hero's path or selects
-// the object under the pointer.
-
-// DC line 2460 passes the named point snapshot to GetCell; retail copies
-// that snapshot before the helper's isValid check. Later movement operations
-// reload m_lastMapHover after opaque calls. Preserve both phases and the
-// canonical getCell(point) boundary without an artificial caller scope.
-
-// The LEFT-click object dispatch below is an IF-CHAIN and not a switch, and
-// that is a byte fact rather than a taste call: retail compares HERO(34),
-// TOWN(98), SHIPYARD(87) in SOURCE order, where a switch makes VC6 sort the
-// three compares ascending and relocate the whole hero arm past the town
-// arm. 77.76 -> 90.90 on that one edit.
-
-// Restoring GetCell alone measured 87.5712%; restoring the retail-proven
-// live-member reads as well measured 84.9222%. DC line 2438 and retail call
-// #1 both retain GetLocalPlayer for a playerData* local; DC lines 2478/2481
-// and 2602 name GetCurrHeroId and GetTown. Restoring these calls brings the
-// current body to 89.6774%. Cell/register homes and the duplicated
-// VIEW_HERO dispatch remain different. Historical explicit-goto models changed
-// the wrong CFG (88.463%);
-// hoisting the DC locals alone was byte-flat in that older context.
-// DC 2450/2452/2456 and Mac 0xa8ec..0xa900 preserve the visibility
-// test and separate 1/0 assignments before GetCell. Restoring that phase
-// raises Windows 89.6679 -> 90.2941 with no other advmgr score movement.
-// The native pc local is const pathCell* const; the hero arm also records
-// a byte-lowered waiting local. A bool predicate carrier at the restored
-// bool context boundary, with the pointer's proven cv layers, raises this
-// to 94.3548%. All ordinary call targets agree; DoAdvCommand remains split.
-// DC 2519/2520 initializes curr/mobile, 2521 caches thisPlayer, and
-// 2523/2525 guards then rereads its hero id before GetHero; 2529 tests
-// curr outside that guard. Mac 0xaa64..0xaaa8 preserves the same operation.
-// This complete receiver/initialization phase raises 94.3548 -> 95.4839%;
-// retail and candidate now both retain the nested GetHero sentinel branch.
-// All ordinary callee identities agree; the VIEW_HERO dispatch stays split.
-// DC advmgr.cpp:2434 proves const message&, type_point&, NewmapCell*&.
-// Retail passes the same three addresses; its body requires each referent.
-// Both dispatch-local object codes are DC int locals (temp), even though
-// the cell field belongs to the adventure-object enum domain.
+// DC proves const message&, type_point&, NewmapCell*&, the const pathCell* const
+// local, and int object-dispatch locals. Complete passes the same referents.
+// Line 2460 passes a named point snapshot to GetCell; later movement operations
+// reread m_lastMapHover after opaque calls. Preserve both phases.
+// DC 2450..2456 and Mac 0xa8ec..0xa900 retain separate visibility assignments.
+// DC 2519..2529 and Mac 0xaa64..0xaaa8 initialize curr/mobile, then guard and
+// reread the current hero id before GetHero, testing curr outside that guard.
+// DC 2534..2557 scopes the current-hero command and path handling as if/else.
+// Keeping that else places Complete's shared command return correctly; an
+// early return in the first arm duplicates its VIEW_HERO dispatch under VC6.
+// The later HERO/TOWN/SHIPYARD dispatch is an if-chain: retail preserves that
+// source order, while a switch sorts the comparisons and moves the hero arm.
 VA(0x0040a5d0, 0x606)
 DC_ADDRESS(0x00a88c, 0x6ae)
 MAC_ADDRESS(0x00a7dc, 0x648)  // anchor-callee
@@ -2159,25 +2130,24 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
         if (currHero->m_x == m_lastMapHover.m_x && currHero->m_y == m_lastMapHover.m_y) {
             m_advCommand = ADV_COMMAND_VIEW_HERO;
             doAdvCommand(triggerPoint);
-            return;
-        }
-
-        const pathCell* const pathAt =
-            g_searchArray->getCell(m_lastMapHover, 0);
-        if (g_currentPlayer->isLocalHuman() && pathAt && pathAt->m_visited) {
-            if (!heroMobile
-                || (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS)
-                || (g_config.m_showRoute
-                    && (currHero->m_pathTargetX != m_lastMapHover.m_x
-                        || currHero->m_pathTargetY != m_lastMapHover.m_y))) {
-                currHero->m_pathTargetX = m_lastMapHover.m_x;
-                currHero->m_pathTargetY = m_lastMapHover.m_y;
-                currHero->m_pathTargetZ = m_lastMapHover.m_z;
-                showRoute(1, 1, 1);
-                return;
+        } else {
+            const pathCell* const pathAt =
+                g_searchArray->getCell(m_lastMapHover, 0);
+            if (g_currentPlayer->isLocalHuman() && pathAt && pathAt->m_visited) {
+                if (!heroMobile
+                    || (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS)
+                    || (g_config.m_showRoute
+                        && (currHero->m_pathTargetX != m_lastMapHover.m_x
+                            || currHero->m_pathTargetY != m_lastMapHover.m_y))) {
+                    currHero->m_pathTargetX = m_lastMapHover.m_x;
+                    currHero->m_pathTargetY = m_lastMapHover.m_y;
+                    currHero->m_pathTargetZ = m_lastMapHover.m_z;
+                    showRoute(1, 1, 1);
+                    return;
+                }
             }
+            peventCell = doAdvCommand(triggerPoint);
         }
-        peventCell = doAdvCommand(triggerPoint);
         return;
     }
 
