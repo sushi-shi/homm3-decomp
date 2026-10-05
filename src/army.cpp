@@ -1130,34 +1130,16 @@ void army::walk(int direction, unsigned char endWalk,
         this->endWalk();
 }
 
-// E:\gamedcs\army.cpp:1171
-// One missile, from muzzle flash to impact: aim at the target stack's
-// hex (the two-hex center shift), play the ranged pose the
-// GetMissileStartingPosition search picks, then fly it - the Enchanter
-// resolves through spells.obj's 0x59fde0 instead, the Is(1u << 11) shooters
-// throw a DoBolt lightning (Arch Mage green, the eye/psychic family
-// violet), and everyone else gets the pixel flight ShootBallisticMissile
-// also uses: a Bitmap16Bit backing store grabbed and restored per step,
-// the update rect seeded from gCombatAreaLimits, clamped to
-// gCombatDrawLimits694f18, stepped dx/nframes at a
-// gCombatSpeedFactors-scaled 33ms beat. The /GX frame covers `saved`.
-// DC lines 1258/1259 read sprite width/height before the frame count at 1262.
-// Both Windows and Mac use (distance + 20) / 40 (signed multiply-high
-// 0x66666667 followed by a shift of 4), not the earlier /20 reconstruction.
-// DC line 1322 calls the Bitmap16Bit overload of CSprite::Draw; its ordinary
-// wrapper reproduces Windows' argument expansion. These three corrections
-// reach Windows 100% while retaining all bitmap and rectangle helpers.
-// The saved bitmap's Draw/Grab wrappers (DC1303/1317 and the final restore)
-// also retain Windows 100%; keep their accessors nested in those helpers.
-// Mac 0x4b008 expands the owning-side load before MarkCreatureEffect's
-// army/byte-row strides, as in doAttack and attackWall. Restore the same
-// canonical GetOwningSide call. With the native bool predicates, Windows
-// measures 95.1424 -> 95.1277%; the accessor alone moves Mac 31.8986 ->
-// 31.5448%. Removing the outer flight guard is Windows-flat but lowers
-// Mac to 30.4038%; that separate loop probe is not retained. All other
-// available army pairs hold. Both rectangle updates already expand to
-// UpdateScreen; the remaining instructions and internal switch reference
-// differ despite all 52 block flows and 25 branches agreeing.
+// E:\gamedcs\army.cpp:1171. DC1258/1259 reads sprite dimensions before
+// computing the flight-frame count. Windows and Mac use (distance + 20)/40.
+// The DC1252..1348 projectile scope owns its saved bitmap and update bounds;
+// Mac0x4afa0 likewise joins the Enchanter, ray and projectile arms at exit.
+// Keep the corresponding if/else branches and the bitmap/sprite wrappers
+// (DC1303/1317/1322), rectangle Include/Clip and by-value update helpers.
+// Mac0x4b008 also expands getOwningSide before markCreatureEffect.
+// Residual95.1085%: all52 block flows and25 branches agree; rectangle/target
+// scratch placement and the internal switch reference still differ.
+// Nine const-pixel-address/mode-scope combinations preserve that score.
 VA(0x0043f2c0, 0x63B)
 DC_ADDRESS(0x0453c8, 0x4d8)
 MAC_ADDRESS(0x04afa0, 0x68c)  // MAC_ABSTRACTION_FROM(tokens1:1b8626a2ce74,31.8986): restore canonical getOwningSide before markCreatureEffect instead of a direct owning-side field load.
@@ -1203,9 +1185,7 @@ void army::animateMissile(army* armyToAttack)
 
     if (m_creatureType == ARMY_CREATURE_ENCHANTER) {
         g_combatManager->unnamed59FDE0(startX, startY, armyToAttack);
-        return;
-    }
-    if (is(creatureShootsRay)) {
+    } else if (is(creatureShootsRay)) {
         GameTime::delay(static_cast<long>(
             g_combatSpeedFactors[g_config.m_combatSpeed] * 115.0f));
         long color;
@@ -1227,59 +1207,58 @@ void army::animateMissile(army* armyToAttack)
                                 5, 4, color, 0, 0,
                                 arrowtraveldist / 15 + 15, 1, 0, 10,
                                 0);
-        return;
-    }
-
-    int width = m_missileIcon->getWidth();
-    int height = m_missileIcon->getHeight();
-
-    int nframes = (arrowtraveldist + 20) / 40;
-    int stepX;
-    int stepY;
-    if (nframes > 0) {
-        stepX = deltaX / nframes;
-        stepY = deltaY / nframes;
     } else {
-        stepX = deltaX;
-        stepY = deltaY;
-    }
-    int x = startX - width / 2;
-    int y = startY - height / 2;
+        int width = m_missileIcon->getWidth();
+        int height = m_missileIcon->getHeight();
 
-    Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
-    const int missileperiod = static_cast<int>(
-        g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
-
-    long frame = 0;
-    if (nframes > 0) {
-        for (; frame < nframes; frame++) {
-            unsigned long nextFrameTime =
-                GameTime::get() + missileperiod;
-            if (frame != 0) {
-                saved.draw(0, 0, width, height,
-                           g_windowManager->m_screenBitmap, x, y, false);
-                // Mac 0x4b3f4 constructs and copies the rectangle value.
-                updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
-                x += stepX;
-                y += stepY;
-            }
-            saved.grab(g_windowManager->m_screenBitmap, x, y);
-            m_missileIcon->draw(0, missileFrame, 0, 0, width, height,
-                              g_windowManager->m_screenBitmap, x, y,
-                              targetX < startX, 1);
-            // DC army.cpp:1326-1327 constructs this rectangle, then calls
-            // SLimitData::Include and Clip; VC6 expands both methods.
-            updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
-            updateArea.clip(g_combatDrawLimits);
-            // DC army.cpp:1335/1336 retains the by-value extent calls.
-            if (!g_combatManager->scrollTo(updateArea, true, true, true))
-                g_combatManager->updateCombatArea(updateArea);
-            GameTime::delayTil(nextFrameTime);
+        int nframes = (arrowtraveldist + 20) / 40;
+        int stepX;
+        int stepY;
+        if (nframes > 0) {
+            stepX = deltaX / nframes;
+            stepY = deltaY / nframes;
+        } else {
+            stepX = deltaX;
+            stepY = deltaY;
         }
+        int x = startX - width / 2;
+        int y = startY - height / 2;
+
+        Bitmap16Bit saved(width, height);
+        TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
+        const int missileperiod = static_cast<int>(
+            g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
+
+        long frame = 0;
+        if (nframes > 0) {
+            for (; frame < nframes; frame++) {
+                unsigned long nextFrameTime =
+                    GameTime::get() + missileperiod;
+                if (frame != 0) {
+                    saved.draw(0, 0, width, height,
+                               g_windowManager->m_screenBitmap, x, y, false);
+                    // Mac 0x4b3f4 constructs and copies the rectangle value.
+                    updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
+                    x += stepX;
+                    y += stepY;
+                }
+                saved.grab(g_windowManager->m_screenBitmap, x, y);
+                m_missileIcon->draw(0, missileFrame, 0, 0, width, height,
+                                  g_windowManager->m_screenBitmap, x, y,
+                                  targetX < startX, 1);
+                // DC army.cpp:1326-1327 constructs this rectangle, then calls
+                // SLimitData::Include and Clip; VC6 expands both methods.
+                updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
+                updateArea.clip(g_combatDrawLimits);
+                // DC army.cpp:1335/1336 retains the by-value extent calls.
+                if (!g_combatManager->scrollTo(updateArea, true, true, true))
+                    g_combatManager->updateCombatArea(updateArea);
+                GameTime::delayTil(nextFrameTime);
+            }
+        }
+        saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap, x, y, false);
+        g_combatManager->updateCombatArea(x, y, width, height);  // DC army.cpp:1348
     }
-    saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap, x, y, false);
-    g_combatManager->updateCombatArea(x, y, width, height);  // DC army.cpp:1348
 }
 
 // E:\gamedcs\army.cpp:1356
