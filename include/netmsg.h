@@ -723,10 +723,14 @@ public:
     type_point m_point;
     int m_playerPos;
 
+    // DC netmsg.h:633 default-constructs the point before the two assignments.
     DC_ADDRESS(0x0bd2c8, 0x6c)
-    CMCClaimShipYard(type_point location, int player)
-        : CMapChange(RS_CLAIM_SHIPYARD, sizeof(CMCClaimShipYard)),
-          m_point(location), m_playerPos(player) {}
+    CMCClaimShipYard(type_point point, int playerPos)
+        : CMapChange(RS_CLAIM_SHIPYARD, sizeof(CMCClaimShipYard))
+    {
+        m_point = point;
+        m_playerPos = playerPos;
+    }
 };
 
 class CMCBuildBoat : public CMapChange {
@@ -734,10 +738,14 @@ public:
     type_point m_point;
     int m_playerPos;
 
+    // DC netmsg.h:649 likewise default-constructs the point before assignment.
     DC_ADDRESS(0x0bd334, 0x6c)
-    CMCBuildBoat(type_point location, int player)
-        : CMapChange(RS_BUILD_BOAT, sizeof(CMCBuildBoat)),
-          m_point(location), m_playerPos(player) {}
+    CMCBuildBoat(type_point point, int playerPos)
+        : CMapChange(RS_BUILD_BOAT, sizeof(CMCBuildBoat))
+    {
+        m_point = point;
+        m_playerPos = playerPos;
+    }
 };
 
 // Dreamcast CodeView names the class, its single `m_point` member at +0x14

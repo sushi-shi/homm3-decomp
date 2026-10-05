@@ -367,6 +367,37 @@ Its 800 bytes including padding hash to
 `6455c63fd9654a29164f437b046f79695dbbfe16fac31218d43edc97f897499d`;
 the paired traces are in `storage-class-trace/{debug,late-counter-debug}/`.
 
+#### Destructive operands can constrain wide getter results (2026-10-05)
+
+The mage-guild handler (`0x005ce370`, 96.8650%) distinguishes operand
+selection from register preference. Its nested `getBuildingMask` result
+splits into two kind-4 locals. The local binding walk at `0x323c8` already
+receives them in EDI/EDX; the nearby EAX/EDX expression pair belongs to the
+preceding division, not the getter's return ABI.
+
+Global assignment and operand-rewrite hooks at `0x24754` and `0x32526`
+identify these live ranges. The mask-low group permits EDX/EDI, with costs
+400/0, so chooses EDI. Mask-high permits only EDX. The column's earlier
+assignment also chooses EDX, with cost -1. The linked candidate nodes contain
+`{base, next, bits}`; all three relevant sets occupy one base-zero node.
+
+A passive hook at `0x248c2`, the call to set removal `0x19ff`, attributes
+those exclusions. The low AND-result group removes EAX from both mask
+halves; the high AND-result group removes EDI from mask-high. Rewritten
+operands show the low group contains the table load, low AND and final OR;
+the high group contains the other table load and high AND. The getter's
+halves remain separate. Retail instead updates the loaded mask words,
+preserving the column without a spill.
+
+This rules out scratch-register rotation as the immediate cause. The next
+evidence boundary is wide-operation lowering and coalescing: why the table
+loads become destructive operands instead of the getter-result halves.
+The trace does not justify changing the proven getter type, flattening its
+call or inventing caller scopes. All three passive traces reproduce the
+complete 401,289-byte normal-profile object outside its timestamp; the clean
+compiler shim is restored afterward. Disposable captures are under
+`build/mageguild-evidence/{global-allocation-trace,global-exclusion-trace,instruction-operands-trace}/`.
+
 ### 3c. Source creation order
 
 **"Creation order" means the FIRST ASSIGNMENT, not the declaration**

@@ -481,11 +481,13 @@ SIZE(type_lean_to_info, 4);
 // DoEventMagicSpring (0x4a3590) shares the same id lane and carries one
 // "still full" bit at 6 (`shr eax,6 / test al,1`); drinking clears it
 // alone (`and dword ptr [cell], 0xffffffbf`).
+// Original MagicSpringInfo (DC 0x2f78) uses unsigned int for id, unused
+// and full.
 struct type_magic_spring_info {
 public:
-    unsigned long m_id : 5;
-    unsigned long m_unused : 1;
-    unsigned long m_full : 1;
+    unsigned int m_id : 5;
+    unsigned int m_unused : 1;
+    unsigned int m_full : 1;
     unsigned long m_tail : 25;
 };
 SIZE(type_magic_spring_info, 4);
@@ -494,12 +496,14 @@ SIZE(type_magic_spring_info, 4);
 // four-bit resource at bits 6..9 (`shl edi,0x16 / sar edi,0x1c`) and a
 // one-bit "still full" flag at bit 10 (`shr eax,0xa / test al,1`);
 // emptying it clears that bit alone (`and ah,0xfb`).
+// Original MysticGardenInfo (DC 0x2f7b) uses unsigned int for id, unused
+// and full.
 struct type_garden_info {
 public:
-    unsigned long m_id : 5;
-    unsigned long m_unused : 1;
+    unsigned int m_id : 5;
+    unsigned int m_unused : 1;
     EGameResource m_resource : 4;
-    unsigned long m_full : 1;
+    unsigned int m_full : 1;
     unsigned long m_tail : 21;
 };
 SIZE(type_garden_info, 4);
@@ -584,16 +588,17 @@ SIZE(type_pyramid_info, 4);
 // at bits 25..28 (`shl esi,3 / sar esi,0x1c`). Emptying the wagon clears
 // bit 13 alone - `and ah,0xdf` over the dword, the same one-byte
 // read-modify-write SetGardenEmpty produces at bit 10.
-// Original CodeView WagonInfo fields: resource_amount, visited_bits, full,
-// has_artifact, artifact, resource. Complete widens the artifact lane to 10 bits.
+// Original CodeView WagonInfo has six fields: resource_amount, visited_bits,
+// full, has_artifact, artifact, resource; the first four use unsigned int.
+// The linked artifact field type is unresolved, but its original getter and
+// setter both name TArtifact. Complete widens that lane from 8 to 10 bits.
 struct WagonInfo {
-    unsigned long m_resourceAmount : 5;
-    unsigned long m_visitedBits : 8;
-    unsigned long m_full : 1;
-    unsigned long m_hasArtifact : 1;
-    signed long m_artifact : 10;
+    unsigned int m_resourceAmount : 5;
+    unsigned int m_visitedBits : 8;
+    unsigned int m_full : 1;
+    unsigned int m_hasArtifact : 1;
+    TArtifact m_artifact : 10;
     EGameResource m_resource : 4;
-    unsigned long m_tail : 3;
 };
 SIZE(WagonInfo, 4);
 
@@ -607,12 +612,14 @@ SIZE(WagonInfo, 4);
 // stores into `and eax,0xfffeffe0 / xor eax,id / or eax,0xffc0`, a mask
 // that spares bit 5 while clearing the id lane and bit 16, and an OR
 // rather than a masked insert because the artifact is set to -1.
+// Original SkeletonInfo (DC 0x2f8b) uses unsigned int for id, unused and
+// has_treasure; Complete widens and signs the intervening artifact lane.
 struct type_skeleton_info {
 public:
-    unsigned long m_id : 5;
-    unsigned long m_unused : 1;
+    unsigned int m_id : 5;
+    unsigned int m_unused : 1;
     signed long m_artifact : 10;
-    unsigned long m_hasTreasure : 1;
+    unsigned int m_hasTreasure : 1;
     unsigned long m_tail : 15;
 };
 SIZE(type_skeleton_info, 4);
@@ -1836,7 +1843,7 @@ inline short ExtraInfoUnion::getWagonAmount() const { return m_wagonInfo.m_resou
 DC_ADDRESS(0x09c964, 0xa)
 inline TArtifact ExtraInfoUnion::getWagonArtifact() const
 {
-    return TArtifact(m_wagonInfo.m_artifact);
+    return m_wagonInfo.m_artifact;
 }
 
 DC_ADDRESS(0x09c970, 0xc)
@@ -1859,9 +1866,10 @@ DC_ADDRESS(0x09c988, 0xe)
 inline bool ExtraInfoUnion::wagonIsFull() const { return m_wagonInfo.m_full; }
 
 // DC 1177..1181 writes resource, amount, full, has_artifact, visited_bits.
-// The Complete masks prove the corresponding five fields. With the shrine
-// bitset default-constructed and unpinned, RandomizeEvents retains this call
-// and the 0x4c2360 body matches exactly.
+// The Complete masks prove the corresponding five fields. Retail retains
+// this call inside randomizeWagon. The current nested budget is 96 against
+// cost 87, so VC6 expands it and omits the body; the native field-domain
+// and implicit short-argument probes do not change that decision.
 // E:\gamedcs\MapCell.h:1176
 VA(0x004c2360, 0x27)
 DC_ADDRESS(0x0bcac8, 0x74)

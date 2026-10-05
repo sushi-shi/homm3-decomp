@@ -3737,12 +3737,14 @@ type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
     return getNormalCursor(currCell);
 }
 
+// The native shipwreck condition below is retained. Removing the previously
+// inferred VERIFY is byte-score-flat across this TU; the two-line DC gap
+// alone does not establish a release assertion.
 VA(0x0040e280, 0xD3)
 DC_ADDRESS(0x00f2c0, 0xe8)
 MAC_ADDRESS(0x00e4d8, 0x110)
 type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 {
-    HOMM3_RELEASE_VERIFY(currCell != 0);
     if ((getMapExtra(m_lastMapHover) & MAP_EXTRA_MONSTER)
         && (!currCell->m_isTrigger
             || !g_adventureObjectTraits[currCell->m_type].m_blocksLanding)) {
@@ -3758,105 +3760,41 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
     if (currCell->m_isTrigger) {
         if (currCell->m_groundSet != eTerrainWater)
             return ADV_EVENT_POINTER;
-        if (currCell->m_type == SHIPWRECK)
+        // Both DC line 4548 and Mac 0xe5b0 recheck the trigger here;
+        // VC6 removes the redundant test after the enclosing condition.
+        if (currCell->m_type == SHIPWRECK && currCell->m_isTrigger)
             return ADV_EVENT_POINTER;
     }
     return ADV_WALK_POINTER;
 }
 
 // E:\gamedcs\advmgr.cpp:4556
-// RETAIL-RECONSTRUCTED 2026-08-09 (74.7787%). Retail proves the complete
-// local-human, visibility, ownership, path reachability/turn count, object
-// cursor dispatch and scroll-zone control flow. The rollover call receives
-// map-cell coordinates, not screen pixels. The current-hero path constructs
-// and compares the same packed type_point as retail. Residual codegen
-// differences are concentrated in the Dinkumware result-vector erase
-// expansion and merged exit layout.
-
-// THE `currHeroId` LOCAL WAS THE WALL, NOT THE ACCESSOR (74.7786 ->
-// 78.8021, 2026-08-15). dc line 4601 tests
-// `gpCurrentPlayer->currHeroId == -1` against the FIELD - there is no
-// local anywhere in its 125-line table - and retail agrees at byte level:
-// it loads gpCurrentPlayer once, reads `[edx+4]` as a DWORD into ECX and
-// then spends that one register on all three `cmp ecx,-1` tests (the
-// z-check's `!= -1`, GetHero's own, and the no-hero block's). Our copy
-// into an `int currHeroId` broke that chain. Reading the field at each
-// use restores it.
-
-// AND THE DC's OWN ACCESSOR IS REFUSED HERE, which is the asymmetry rule
-// biting the other way. dc line 4642 is a call to
-// `game::GetCurrHero`, but landing it measures 74.7786 against 78.8021
-// for `GetHero(gpCurrentPlayer->currHeroId)` - a 4.02-point loss, with
-// and without the local. Retail's bytes say why: GetCurrHero re-reads the
-// id inside its taken arm and compares it at CHAR width (that re-read is
-// exactly what made it right in TBottomViewTown/TBottomViewHero), where
-// this body's three tests share ONE dword already in a register. The DC
-// is an older revision; retail's bytes outrank it.
-
-// 79.7982 -> 83.5000 (2026-08-21): the cursor-type switch was in enum
-// value order, but retail's physical arm order puts HERO before GARRISON.
-// Moving that source block is semantic-order neutral and cuts why-branch's
-// distance 117 -> 105; moving it back is the inverse regression. The
-// post-edit CFG census now agrees at 91 conditional branches and 8 returns
-// (764 instructions / 134 blocks against retail's 770 / 137).
-
-// The DC local roster was checked at the same time. Sharing its one cTown
-// local across both town arms, widening currCell to that block, and grouping
-// `iTurns, iMouseOffset, currHero, new_cursor, path_cell` at the current-hero
-// block head are all byte-flat, separately and together, so the narrower
-// x86-winning scopes remain below.
-
-// Residual (91.00%, from 83.50; 2026-09-05): the exits are INLINE, not
-// goto-shared. The Dreamcast line table spells every cursor exit as
-// `SetPointer(n, ADVENTURE_SET); advCommand = m; return 1;` at its own
-// site, and retail's layout is what VC6's cross-jumper makes of that:
-// the copy with a fall-through predecessor survives (the hero-location
-// SetPointer(2), the hero-mode shipyard SetPointer(6), the clear_path
-// SetPointer(0)) and the earlier no-hero sites jump to it, where the
-// old labels put every shared block at the end with no fall-through
-// at all. Two semantic corrections rode along, both retail-proven: the
-// same-hover path returns 1 WITHOUT the window ProcessHover (retail
-// `je` lands on the epilogue after that call), and the off-map tail is
-// `frame < FIRST || frame > LAST || !MouseInScrollZone()` (retail's
-// `jl`/`jg` both reach the SetPointer(0) call; ProcessWaitingHover's
-// tail is the other way round and keeps its `&&` form). The hero id
-// split is if/else, the path-cursor block hoists `iTurns` /
-// `iMouseOffset = 0` / `new_cursor` ahead of the visited test, computes
-// `iMouseOffset = iTurns * 6` right after `advCommand = 1` (retail
-// stores it to [ebp+0xc] before the switch), takes `else new_cursor =
-// 0` (retail's `xor eax,eax` after the arms - which is what stops the
-// default arm from falling into the join and lets ANCHOR_POINT's
-// get_normal_cursor copy survive), and orders the arms as the DC does:
-// BOAT, ANCHOR_POINT, MONSTER, HERO, GARRISON, TOWN, default. GetCell,
-// get_garrison_cursor and MouseInScrollZone are the DC's call sites.
-// Restore getCell(m_lastMapHover): DC line 4590 calls it and retail creates
-// its four-byte parameter copy before the second validity check. The canonical
-// call improves 88.1654% to 93.1810%; the nested clearPath cleanup remains an
-// independent inline decision. The following older probes describe that leaf.
-// Residual (91.6263%), LOCALISED 2026-09-06 and it is ONE inline decision.
-// The call streams carry exactly one retail-only entry - the ICF-folded
-// `vector<pathCell>::_Destroy` at fn+0x596 - and it sits inside the third
-// `gpSearchArray->clear_path()` (findpath.h's `result.erase(begin(), end())`).
-// Retail expands the erase there and CALLS the empty `_Destroy(_S, _Last)`
-// before writing `_Last = _S`; we expand the erase AND the (trivial) _Destroy,
-// so the call, its one branch (91 retail against our 90) and the two frame
-// dwords it prices (0x10 against our 0x8) all go together.  That is an
-// OVER-inline of a template leaf with no admissible lever: a statement pin is
-// a falling-only floor and caller-shrink would need an invented static.
+// Visibility uses the acting-player mask (retail 0x69ccc4, DC giCurPlayerBit),
+// not the separately owned viewing-player mask at 0x69ccbc.
+// Native source reads the current-hero id at each use; a cached local breaks
+// retail's shared DWORD tests. Keep GetHero for the level guard (DC line 4595)
+// and GetCurrHero/getLocation for the current-hero branch (4642/4645).
+// GetCell(m_lastMapHover) owns the parameter copy and second validity check.
+//
+// The no-hero/current-hero split is if/else. Cursor exits remain at their
+// source sites: VC6 merges them into retail's shared tails. The same-hover
+// path returns without calling the window's ProcessHover. The off-map tail
+// uses OR between both frame bounds and !MouseInScrollZone.
+//
+// The path block keeps turns, mouseOffset and the cursor enum ahead of its
+// visited guard. Turn scaling follows advCommand=1; the unvisited branch sets
+// the arrow explicitly. Preserve BOAT/ANCHOR/MONSTER/HERO/GARRISON/TOWN source
+// arm order and the canonical getNormalCursor/getGarrisonCursor calls.
 // The two SHIPYARD arms own distinct ExtraInfoUnion cellExtra locals
-// (DC 0xf752/0xf8c4; Mac 0xe948/0xebbc). Read their signed owner field
-// after getTriggerCell/getMapExtraInfo, preserving those helper calls.
-// DC's mouseManager::GetFrame is restored in the scroll fallback. Its
-// GetCurrHero/get_location calls at lines 4642/4645 are also restored.
-// The pair currently lowers to 88.6107% in Windows (from 92.1875% with
-// direct field reads); each helper was isolated and both together beat the
-// GetCurrHero-only 85.8737%; /MT leaves the score unchanged. The Mac shape
-// aligns 435/677 instructions with both calls, versus 433/677 when the
-// latter helper is omitted. Keep the
-// source-backed helper boundaries through this compiler-state score dip.
-// DC 4595 reads the level-change guard's hero through GetHero(player's
-// current id), not GetCurrHero; restoring it gives 87.38 -> 88.60. Mac
-// calls getCurrHero there (a platform difference).
+// (DC 0xf752/0xf8c4; Mac 0xe948/0xebbc), with the signed owner read after
+// getTriggerCell/getMapExtraInfo. The path cell is const in the native locals.
+//
+// Current residual: retail and candidate both retain the third clearPath's
+// vector cleanup, but the TOWN/default normal-cursor tail is still expanded
+// differently. Native pointer/enum/union recovery and nullable getHero branches
+// are retained. Ten branch/address forms of searchArray::getCell were flat
+// across its owner and callers; point temporary/initialization variants and
+// shared town/local declaration scopes did not recover the remaining homes.
 VA(0x0040e360, 0x918)
 DC_ADDRESS(0x00f3a8, 0x9c4)
 MAC_ADDRESS(0x00e5e8, 0xa94)  // anchor-callee
@@ -3877,7 +3815,7 @@ int advManager::processHover(int mouseX, int mouseY)
         m_lastMapHover.m_z = m_radarOrigin.m_z;
 
         if (!m_lastMapHover.isValid()
-            || !(getMapExtra(m_lastMapHover) & g_mapVisibilityBit)) {
+            || !(getMapExtra(m_lastMapHover) & g_curPlayerBit)) {
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
             return 1;
         }
@@ -7257,20 +7195,22 @@ unsigned char advManager::updBottomViewTown(unsigned char forceUpdate)
 // E:\gamedcs\advmgr.cpp:9063
 // DC carries this free helper out of line (0x9C bytes); retail's
 // /Ob2 inlines the static into every quick-view caller and drops the body.
+// Native get_identify_level records TSkillMastery result, const playerData&,
+// long i and hero* const this_hero; keep those domains through the getter.
 DC_ADDRESS(0x019420, 0x9c)
 MAC_ADDRESS(0x016d58, 0xcc)
 static TSkillMastery getIdentifyLevel(type_point point)
 {
-    int identifyLevel = eMasteryInvalid;
-    playerData* player = &g_game->m_players[g_curWatchPlayer];
+    TSkillMastery result = eMasteryInvalid;
+    const playerData& player = g_game->m_players[g_curWatchPlayer];
 
-    for (int i = 0; i < player->m_numHeroes; i++) {
-        hero* currentHero = g_game->getHero(player->m_heroes[i]);
-        if (currentHero->heroFn004E5DE0() > identifyLevel
-            && currentHero->isInIdentifyRange(&point))
-            identifyLevel = currentHero->heroFn004E5DE0();
+    for (long i = 0; i < player.m_numHeroes; i++) {
+        hero* const thisHero = g_game->getHero(player.m_heroes[i]);
+        if (thisHero->getIdentifyLevel() > result
+            && thisHero->isInIdentifyRange(point))
+            result = thisHero->getIdentifyLevel();
     }
-    return (TSkillMastery)identifyLevel;
+    return result;
 }
 
 // Dreamcast advmgr.cpp:9088 calls Hero.h get_location before
@@ -7499,14 +7439,14 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
     bool showDetails = false;
     hero* const currHero = g_game->getHero(localPlayer->m_currHeroId);
     if (currHero) {
-        unsigned char inIdentifyRange;
+        bool inIdentifyRange;
         {
             type_point point(m_radarOrigin.m_x + cellx, m_radarOrigin.m_y + celly,
                              m_radarOrigin.m_z);
-            inIdentifyRange = currHero->isInIdentifyRange(&point);
+            inIdentifyRange = currHero->isInIdentifyRange(point);
         }
         if ((inIdentifyRange
-             && currHero->heroFn004E5DE0() != eMasteryInvalid)
+             && currHero->getIdentifyLevel() != eMasteryInvalid)
             || m_debugViewAll) {
             int like = getLikeModifier(currHero, type);
             const int diplomacy = currHero->getSecondarySkill(eSecSkillDiplomacy);
@@ -8883,7 +8823,7 @@ void advManager::loadRemote(unsigned char makeOrig)
 
     int monthType = g_monthType;
     int monthTypeExtra = g_monthTypeExtra;
-    int weekType = g_weekType;
+    WeekType weekType = g_weekType;
     int weekTypeExtra = g_weekTypeExtra;
 
     g_game->loadGame(g_config.m_rcFile, 0, 1);

@@ -118,12 +118,12 @@ DATA(0x006779b0) int g_neutralTownLevelWeights[6] = { 2, 3, 4, 5, 4, 3 };
 DATA(0x006779c8) int g_tutorialStartingResources[NUM_RESOURCES] =
     { 50, 50, 50, 50, 50, 50, 50000 };
 DATA(0x0069fbf8) int g_newMapStartingBonus[8];
-DATA(0x0069fb24) int g_startingHeroOverrides[8];
+DATA(0x0069fb24) HeroId g_startingHeroOverrides[8];
 
 // Retail scalar state; startup initial values come from the pinned image.
 DATA(0x00697294) TTextResource* g_randomTavernText;
 DATA(0x0069774c) bool g_inCampaign;
-DATA(0x00697750) int g_weekType;
+DATA(0x00697750) WeekType g_weekType;
 DATA(0x006983fc) int g_weekTypeExtra;
 // DC PerMonth stores the effect to giMonthType and the creature to
 // giMonthTypeExtra; retail perMonth writes the effect to 0x698834.
@@ -213,17 +213,11 @@ DATA(0x0063e678) static const char g_monType[12] = {
 // of applying the ordinary Mysticism increment.
 const int g_artifactWizardsWellId = 0x8a;
 
-// Calendar-period values written by PerWeek. The ordinary creature week is
-// followed by the Inferno Grail's forced Imp week.
-const int g_weekTypeNormal = 0;
-const int g_weekTypeCreature = 1;
-const int g_weekTypeInfernoGrail = 2;
+// Calendar roll bounds and growth amounts used by PerWeek.
 const int g_weekNameLast = 14;
 const int g_weeksPerMonth = 4;
 const int g_specialWeekRollMax = 4;
 const int g_creatureWeekGrowthBonus = 5;
-const int g_creatureImpId = 0x2a;
-const int g_creatureFamiliarId = 0x2b;
 const int g_monthEffectNormal = 0;
 const int g_monthEffectCreature = 1;
 const int g_monthEffectPlague = 2;
@@ -2093,12 +2087,14 @@ int game::randomScan(signed char* whichList, int start, int length,
     return id >= start ? id : -1;
 }
 
+// The original GetStartingHeroId public returns THeroID and accepts
+// TTownType; its local heroArray is an array of the same hero-ID domain.
 VA(0x004bb400, 0x1DC)
 DC_ADDRESS(0x0a68d8, 0x3fc)
 MAC_ADDRESS(0x0ce1c8, 0x1d0)
-int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
+HeroId game::getStartingHeroId(TTownType alignment, int playerPos, int mapPosition)
 {
-    int heroArray[HERO_COUNT];
+    HeroId heroArray[HERO_COUNT];
     THeroClass heroClass1 = classKnight;
     THeroClass heroClass2 = classCleric;
 
@@ -2148,7 +2144,7 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
             && m_heroPoolMap[heroIndex][playerPos]
             && (m_heroes[heroIndex].m_heroClass == heroClass1
                 || m_heroes[heroIndex].m_heroClass == heroClass2)) {
-            heroArray[top++] = heroIndex;
+            heroArray[top++] = HeroId(heroIndex);
         }
     }
 
@@ -2156,7 +2152,7 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
         for (heroIndex = 0; heroIndex < HERO_COUNT; heroIndex++) {
             if (m_heroAvailability[heroIndex] == -1
                 && m_heroPoolMap[heroIndex][playerPos]) {
-                heroArray[top++] = heroIndex;
+                heroArray[top++] = HeroId(heroIndex);
             }
         }
     }
@@ -3514,7 +3510,7 @@ void game::setupOrigData()
     m_difficultyRating = 1;
     g_monthType = 0;
     g_monthTypeExtra = 0;
-    g_weekType = 0;
+    g_weekType = weekTypeNormal;
     g_weekTypeExtra = 0;
     m_isCheater = 0;
 
@@ -3843,13 +3839,14 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
 }
 
 // E:\gamedcs\game.cpp:4236
+// Original NewMap takes a THeroID pointer for playerHeroFaces.
 // DC hasHero is an unsigned byte. Mac retains separate resource-bonus
 // arms in town enumeration order; restoring that order gives VC6 EXACT.
 // The Mac comparison remains nonexact, with all helper paths retained.
 VA(0x004bfe70, 0x6A8)
 DC_ADDRESS(0x0aada4, 0xb2a)
 MAC_ADDRESS(0x0d5a9c, 0x8b4)
-void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
+void game::newMap(TAbstractFile* mapFile, HeroId* playerHeroFaces,
                   TCampaignBrief::ScenarioStruct* campaignContext, int gameVersion)
 {
     g_inSetup = 1;
@@ -3875,7 +3872,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
             // Mac retains playerData::isHuman here and in the setup loop.
             if (m_players[facePlayer].isHuman()
                 && m_mapHeader.m_playerSlotAttributes[facePlayer].m_generateHero) {
-                int heroId = playerHeroFaces[facePlayer];
+                HeroId heroId = playerHeroFaces[facePlayer];
                 if (heroId != -1) {
                     m_heroAvailability[heroId] = static_cast<char>(facePlayer);
                     if (g_game->m_setup.m_startingHero[facePlayer] == -1)
@@ -4078,7 +4075,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 VA(0x004c0520, 0x106)
 MAC_ADDRESS(0x0d6350, 0xc0)  // anchor-callers + contiguous catch funclets, retail-only
 unsigned char game::newMap(const char* mapPath, const char* mapName,
-                           int* playerHeroFaces, int gameVersion)
+                           HeroId* playerHeroFaces, int gameVersion)
 {
     try {
         strcpy(g_text, mapPath);
@@ -4272,9 +4269,8 @@ static void randomizeTomb(NewmapCell* cell)
 
 // E:\gamedcs\game.cpp:4753. The vector local and its teardown belong to the
 // inlined source helper; retail calls only the packed pyramid setter.
-// Ownership probe: the MapCell.h body at 0x4c2330 is currently fully
-// expanded here. Replacing this helper's forced-inline spelling with ordinary static
-// did not recover the retained call; the fatal header-emission gate remains.
+// The canonical ESpellId setter stays called: its cost is 49 against
+// a nested inline budget of 17 in the current ordinary helper model.
 DC_ADDRESS(0x0abfe8, 0x60)
 MAC_ADDRESS(0x0d6a2c, 0x118)
 static void randomizePyramid(NewmapCell* cell)
@@ -4371,7 +4367,9 @@ void game::randomizeUniversity(NewmapCell* cell)
 // operations as calls. DC proves the TSecondarySkill local but predates
 // Complete's mask filtering; retail's proxy-call sequence selects operator[].
 // Mac d6d98..d6dd4 expands setWitchSkill separately in the selected-skill
-// and no-available-skill branches. Keep both source calls at those boundaries.
+// and no-available-skill branches. Its positive count arm precedes the empty
+// arm (d6d4c..d6dd4); restoring that order improves randomizeEvents.
+// Keep both source calls at those boundaries.
 DC_ADDRESS(0x0ac168, 0x3a)
 MAC_ADDRESS(0x0d6c80, 0x16c)
 static void randomizeWitchHut(NewmapCell* cell)
@@ -4388,10 +4386,7 @@ static void randomizeWitchHut(NewmapCell* cell)
 
     TSecondarySkill skill;
     int count = possibleSkills.count();
-    if (count < 1) {
-        cell->setWitchSkill(eSecSkillNone);
-    }
-    else {
+    if (count > 0) {
         int choice = random(1, count);
         for (skill = eSecSkillPathfinding; skill < kNumSecSkills;
              skill = TSecondarySkill(skill + 1)) {
@@ -4399,6 +4394,9 @@ static void randomizeWitchHut(NewmapCell* cell)
                 break;
         }
         cell->setWitchSkill(skill);
+    }
+    else {
+        cell->setWitchSkill(eSecSkillNone);
     }
 }
 
@@ -4609,12 +4607,6 @@ void game::matchUndergroundGates()
 // (+0x175..+0x1cf) into vector<TBlackMarket>::insert - nine calls there
 // against our eight, with the other nine sites in each object agreeing
 // exactly. Do not go looking for an eighteenth source call site.
-// Pin census, each removal measured alone against 87.0102: the five
-// creature-bank block-scope pins are NOT interchangeable - four cost
-// -0.6891 apiece but the FIRST (the CREATURE_BANK case) is BYTE-FLAT
-// across the whole TU and has been removed. The rest of this body's
-// roster costs -100 (x2, two helper rows stop existing as separate
-// symbols), -10.85, -5.13, -1.01 and -0.88.
 // DC records int new_owner; Mac 0xd7f08..0xd7f50 widens the saved byte
 // before passing it to claimShipyard. Keep that procedure local and the
 // point constructors as call-argument temporaries at the recorded push_back
@@ -4872,11 +4864,11 @@ void game::randomizeEvents()
 
                 case LEAN_TO:
                     {
-                        {
-                            resType = EGameResource(random(0, 5));
-                        }
+                        resType = EGameResource(random(0, 5));
                         resQty = static_cast<unsigned char>(random(1, 5));
-                        tempCell->setLeanTo(numLeanTo++, resQty, resType);
+                        // DC 5294 sets the record; 5295 advances its counter.
+                        tempCell->setLeanTo(numLeanTo, resQty, resType);
+                        ++numLeanTo;
                     }
                     break;
 
@@ -5100,13 +5092,9 @@ void game::randomizeEvents()
 
                 case WINDMILL:
                     {
-                        resQty = static_cast<unsigned char>(random(3, 6));
-                        {
-                            resType = EGameResource(random(1, 5));
-                        }
-                        // DC 5582..5583; retail's 0xfffe001f mask also
-                        // clears the visited-player lane, not just amount.
-                        tempCell->setWindmill(resType, resQty);
+                        // DC 5582 puts both draws in this setter expression.
+                        // Mac d80fc..d8128 narrows the amount directly to short.
+                        tempCell->setWindmill(EGameResource(random(1, 5)), random(3, 6));
                         tempCell->clearVisitedBits();
                     }
                     break;
@@ -6625,6 +6613,9 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         // The >=30 admission makes Mac dc5f0..dc61c the modern roster's
         // byte/sentinel decoder. This loadHeroId call is inferred from that
         // operation; the original constant argument spelling is unproven.
+        // Four HeroId reader-result/local models keep both reader bodies
+        // exact but lower this caller to 91.6362%; their result domain has
+        // no surviving native signature, so the numeric interface remains.
         int portrait = loadHeroId(infile, g_saveVersionCustomHeroSetups);
 
         std::string strTemp = readLengthPrefixedString(infile);
@@ -6827,25 +6818,13 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
                       newPlayerOwner, 3, 0);
 }
 
-// DC game.cpp:7462 calls NewfullMap::cell(int, int, int) with the three
-// location fields (byte-neutral against cell(type_point)), and DC 7484 calls
-// type_point::operator== for the shipyard search; Mac 0xdd1bc..0xdd224
-// expands the operator's Boolean chain. Keep it (72.12%; three field tests
-// reach 99.97%). Retail spills `this` into a 0x2c frame; while/for loops,
-// either operand order, this->getHero and the getCell wrapper reach at
-// most 73.04%.
-// Four bounded source families (28 states, eight reproduced objects) preserve
-// the recorded acquisition order/names at 72.1173%. Moving player/index scope,
-// using a CMC argument temporary, and naming the point comparison do not improve
-// it; int/long owner snapshots lower it. why-branch loop rotations also leave
-// the structural residual unchanged (25/29 blocks, same five call sites; the
-// vector insert target is the native folded point/pointer alias). Preserve
-// operator== rather than the historical flattened comparison. Reversing its
-// operands or negating its difference chain is also flat: six coupled
-// helper/caller states produce two objects at72.1173%.
-// DC 7473/7475/7481/7498 reads and writes the cell's shipyard owner directly.
-// Use its inherited union member, without a cast-through-void pointer alias;
-// this restores the native access model at the same Windows matching score.
+// DC game.cpp:7462 calls cell(int, int, int), and 7484 calls the point
+// comparison also expanded at Mac 0xdd1bc..0xdd224. Line 7499 constructs
+// and sends the message in one statement, with no named message local.
+// Its argument temporary and the native constructor's default-point/body-
+// assignment sequence together reproduce retail; either change alone leaves
+// the old frame/inlining mismatch. Keep both canonical helper boundaries.
+// DC 7473/7475/7481/7498 accesses the inherited shipyard-owner member directly.
 VA(0x004c6a30, 0x21F)
 DC_ADDRESS(0x0b1a50, 0x23c)
 MAC_ADDRESS(0x0dd08c, 0x298)
@@ -6881,8 +6860,7 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
         }
 
         cell->m_shipyardInfo.m_owner = newPlayerOwner;
-        CMCClaimShipYard change(location, newPlayerOwner);
-        sendMapChange(&change);
+        sendMapChange(&CMCClaimShipYard(location, newPlayerOwner));
     }
 
     if (thisHero) {
@@ -7420,10 +7398,10 @@ void game::perDay()
     for (i = 0; i < HERO_COUNT; ++i) {
         hero& currHero = m_heroes[i];
         currHero.m_flags &= 0xfffdfffeU;
-        currHero.m_disguiseLevel = -1;
-        currHero.m_flightLevel = -1;
-        currHero.m_waterWalkLevel = -1;
-        currHero.m_visionsPower = -1;
+        currHero.m_disguiseLevel = eMasteryInvalid;
+        currHero.m_flightLevel = eMasteryInvalid;
+        currHero.m_waterWalkLevel = eMasteryInvalid;
+        currHero.m_identifyLevel = eMasteryInvalid;
         currHero.m_dWalkSpellsCast = 0;
     }
 
@@ -7679,13 +7657,13 @@ void game::perWeek()
     bonusCreature = CREATURE_NONE;
     alternateBonus = CREATURE_NONE;
 
-    g_weekType = g_weekTypeNormal;
+    g_weekType = weekTypeNormal;
     g_weekTypeExtra = random(0, g_weekNameLast);
     bonusAmount = g_creatureWeekGrowthBonus;
 
     if (m_week != g_weeksPerMonth
         && random(1, g_specialWeekRollMax) == 1) {
-        g_weekType = g_weekTypeCreature;
+        g_weekType = weekTypeCreature;
         // Mac 0xdf54c starts the creature census here; the older DC body
         // initializes i at entry. Both paths overwrite i before later uses.
         i = 0;
@@ -7713,23 +7691,17 @@ void game::perWeek()
             }
         }
         g_weekTypeExtra = align;
-        {
-            bonusCreature = TCreatureType(align);
-        }
+        bonusCreature = TCreatureType(align);
     }
 
     for (i = 0; i < m_towns.size(); ++i) {
         if (m_towns[i].m_type == TOWN_INFERNO
             && m_towns[i].hasBuilding(HOLY_GRAIL_ID, false)) {
-            g_weekType = g_weekTypeInfernoGrail;
-            {
-                bonusCreature = TCreatureType(g_creatureImpId);
-            }
-            {
-                alternateBonus = TCreatureType(g_creatureFamiliarId);
-            }
-            bonusAmount = g_creatureTypeTraits[g_creatureImpId].m_growthRate;
-            g_weekTypeExtra = g_creatureImpId;
+            g_weekType = weekTypeInfernoGrail;
+            bonusCreature = CREATURE_IMP;
+            alternateBonus = CREATURE_FAMILIAR;
+            bonusAmount = g_creatureTypeTraits[CREATURE_IMP].m_growthRate;
+            g_weekTypeExtra = CREATURE_IMP;
             break;
         }
     }
@@ -7852,9 +7824,9 @@ void game::perMonth()
 
     ++m_month;
     int monthRoll = random(1, g_monthRollMax);
-    if (g_weekType == g_weekTypeInfernoGrail) {
+    if (g_weekType == weekTypeInfernoGrail) {
         g_monthType = g_monthEffectCreature;
-        g_monthTypeExtra = g_creatureImpId;
+        g_monthTypeExtra = CREATURE_IMP;
     } else if (monthRoll > g_monthNormalRollMax && !m_isTutorial) {
         if (monthRoll <= g_monthCreatureRollMax) {
             g_monthType = g_monthEffectCreature;
@@ -7873,7 +7845,7 @@ void game::perMonth()
             growth = currTown->getGrowthRate(j);
             if (growth > 0) {
                 if (g_monthType == g_monthEffectCreature
-                    && g_weekType != g_weekTypeInfernoGrail
+                    && g_weekType != weekTypeInfernoGrail
                     && g_dwellingType[currTown->m_type][j]
                        == g_monthTypeExtra) {
                     currTown->m_population[j] *= 2;
@@ -8155,11 +8127,12 @@ void game::randomizeHeroPool()
 // Windows retail and Mac 0xe0918..0xe0928 index m_heroes without getHero's
 // -1 sentinel, so the hero is subscripted directly. Mac 0xe0a44..0xe0a5c
 // stores each artifact id before its -1 payload: the converting
-// type_artifact constructor builds both war-machine artifacts.
+// type_artifact constructor builds both war-machine artifacts. The original
+// SetRandomHeroArmies public is QAAXHH_N: only minimal is Boolean.
 VA(0x004c9730, 0x159)
 DC_ADDRESS(0x0b5094, 0x268)
 MAC_ADDRESS(0x0e0910, 0x1c4)
-void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
+void game::setRandomHeroArmies(int hero, int cheat, bool minimal)
 {
     armyGroup* currentArmy = &m_heroes[hero].m_army;
     const THeroTraits* traits = &g_heroTraits[hero];
@@ -8472,8 +8445,9 @@ void game::processRandomObjects()
 // (startingHeroIds[i] and setup.alignment[i]) at compile time, while the retail
 // structure remains 29/29 exact blocks; no legal B14 mutation remains.
 // DC line 9464 passes GetTownId directly to GetTown and records thisTown.
-// Its HeroID/index/town declaration order is retained. Mac 0xe1578..0xe1580
-// computes the bonus hero address in two stages: the canonical getHero
+// HeroID has the native THeroID domain; thisTown belongs to the town arm.
+// Mac 0xe1578..0xe1580 computes the bonus hero address in two stages:
+// the canonical getHero
 // expansion reproduces that boundary and closes Windows at 100%, with the
 // original less-than loop and all helpers preserved. Mac reaches 99.37%;
 // only its larger stack frame remains different. Do not invent frame padding.
@@ -8481,17 +8455,16 @@ void game::processRandomObjects()
 VA(0x004ca040, 0x1F1)
 DC_ADDRESS(0x0b5cdc, 0x2a2)
 MAC_ADDRESS(0x0e13f0, 0x1dc)  // linkorder
-void game::createTownHeroes(int* startingHeroIds)
+void game::createTownHeroes(HeroId* startingHeroIds)
 {
-    int heroId;
+    HeroId heroId;
     int i;
-    town* thisTown;
 
     for (i = 0; i < 8; i++) {
         if (!m_mapHeader.m_playerSlotAttributes[i].m_generateHero)
             continue;
 
-        thisTown = getTown(
+        town* thisTown = getTown(
             getTownId(m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_x,
                       m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_y,
                       m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_z));
@@ -9467,7 +9440,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
 
                 g_monthType = receivedMsg->m_monthType;
                 g_monthTypeExtra = receivedMsg->m_monthTypeExtra;
-                g_weekType = receivedMsg->m_weekType;
+                g_weekType = WeekType(receivedMsg->m_weekType);
                 g_weekTypeExtra = receivedMsg->m_weekTypeExtra;
                 diffSize = receivedMsg->m_diffSize;
 
@@ -9681,7 +9654,7 @@ void game::doNewTurn()
         turnOffAIMusic();
         return;
     }
-    if (g_weekType == -1)
+    if (g_weekType == weekTypeInvalid)
         return;
 
     if (m_week == 1)
@@ -9691,7 +9664,7 @@ void game::doNewTurn()
         strcpy(sample, DATA_COMPGEN(0x006780cc, newWeekTurnSample,
                                     "newweek.wav"));
 
-    if (m_week == 1 && g_weekType == g_weekTypeNormal) {
+    if (m_week == 1 && g_weekType == weekTypeNormal) {
         if (g_monthType == g_monthEffectNormal) {
             sprintf(g_text, g_newTurn[2], g_monthNames[g_monthTypeExtra]);
         } else if (g_monthType == g_monthEffectCreature) {
@@ -9704,22 +9677,22 @@ void game::doNewTurn()
         }
     } else {
         switch (g_weekType) {
-        case g_weekTypeNormal:
+        case weekTypeNormal:
             sprintf(g_text, g_newTurn[5], g_weekNames[g_weekTypeExtra]);
             break;
 
-        case g_weekTypeCreature:
+        case weekTypeCreature:
             strcpy(temp, getArmyName(g_weekTypeExtra, 1));
             sprintf(g_text, g_newTurn[6], temp, temp);
             break;
 
-        case g_weekTypeInfernoGrail:
+        case weekTypeInfernoGrail:
             sprintf(g_text, g_newTurn[7],
-                    g_creatureTypeTraits[g_creatureImpId].m_name,
-                    g_creatureTypeTraits[g_creatureImpId].m_name,
-                    g_creatureTypeTraits[g_creatureImpId].m_growthRate,
-                    g_creatureTypeTraits[g_creatureFamiliarId].m_name,
-                    g_creatureTypeTraits[g_creatureImpId].m_growthRate);
+                    g_creatureTypeTraits[CREATURE_IMP].m_name,
+                    g_creatureTypeTraits[CREATURE_IMP].m_name,
+                    g_creatureTypeTraits[CREATURE_IMP].m_growthRate,
+                    g_creatureTypeTraits[CREATURE_FAMILIAR].m_name,
+                    g_creatureTypeTraits[CREATURE_IMP].m_growthRate);
             break;
         }
     }

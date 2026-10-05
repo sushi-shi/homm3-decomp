@@ -575,30 +575,13 @@ public:
     unsigned int m_flags;  // +0x105
     float m_turnExperienceToRvRatio;  // +0x109 (DC name)
     signed char m_dWalkSpellsCast;  // +0x10d (DC name)
-    // +0x10e. TQuickHeroWindow reads the full mastery value to decide
-    // whether an enemy army is shown normally, as copies of its strongest
-    // stack, or as the strongest creature of the owner's alignment. The
-    // Dreamcast roster independently names the corresponding dword
-    // `disguiseLevel`; retail's later flight/water-walk pair fixes the
-    // four-byte extent from the other side.
-    int m_disguiseLevel;
-    // +0x112, the FLIGHT level - the twin of waterWalkLevel below and
-    // the other half of the movement-override pair hero::IsMobile
-    // (0x4e5f30) loads together. Sliced 2026-08-08 out of the old
-    // pad_109 by findpath's GetTerrainCost (0x4b18c0), which reads
-    // +0x112 and +0x116 back to back as the two mastery levels it
-    // forwards to CalcTerrainCost's `flying` and `water_walking`
-    // slots, raises EITHER to eMasteryExpert when the matching
-    // artifact is worn, and drives BOTH to -1 while the boat bit
-    // (flags & 0x40000) is set. Name from the role; the sibling's
-    // comment already called this slot an ordinal placeholder.
-    int m_flightLevel;  // +0x112
-    // +0x116, the water-walking level. Byte-proven by
-    // hero::WalkOnWater (0x4e5dd0), whose entire body is
-    // `mov [ecx+0x116], arg`, and by hero::IsMobile (0x4e5f30), which
-    // loads +0x116 and +0x112 together as the movement-override pair.
-    // Name from the writer; ordinal placeholder for the sibling.
-    int m_waterWalkLevel;  // +0x116
+    // Original public disguiseLevel, flightLevel and waterWalkLevel are
+    // TSkillMastery in all four DC hero records (0x1a6e/0x4d63/0x6311/0x71dc).
+    // Complete retains their dword widths at these shifted offsets. Disguise
+    // controls the enemy-army view; flight/water-walking feed movement costs.
+    TSkillMastery m_disguiseLevel;  // +0x10e
+    TSkillMastery m_flightLevel;  // +0x112
+    TSkillMastery m_waterWalkLevel;  // +0x116
     // Two one-byte battle temporaries. hero::ApplyBattleWinTemps
     // (0x4da510) opens by zeroing both from one `xor al,al`, storing
     // +0x11b BEFORE +0x11a, and then clears twenty-two `flags` bits -
@@ -621,12 +604,10 @@ public:
     // Packed retail counterpart of DC's std::bitset<48> member. Its reset
     // writes the two backing dwords at +0x121/+0x125.
     std::bitset<48> m_townSpecialGrantedMask;  // +0x121 (DC name)
-    // +0x129, a dword compared against 3 - the secondary-skill
-    // mastery domain. hero::HeroFn_004E5DE0 (0x4e5de0) returns it
-    // unless it is below 3 and the hero's army holds creature 0x8f,
-    // and hero::IsInIdentifyRange (0x4e5e10) opens with the same
-    // block inlined. Name unattested - ORDINAL PLACEHOLDER.
-    int m_visionsPower;  // +0x129
+    // Original public identifyLevel is TSkillMastery in all four DC hero
+    // records (0x1a6e/0x4d63/0x6311/0x71dc). Complete retains the dword
+    // at +0x129; its getter also grants expert identification to Rogues.
+    TSkillMastery m_identifyLevel;  // +0x129
 
 private:
     type_artifact m_equipped[19];
@@ -828,7 +809,7 @@ public:
     // 0x4e5dd0 - one-argument setter for waterWalkLevel.
     void walkOnWater(int level);
     // 0x4e5e10 - tests whether a packed map point is inside Visions range.
-    unsigned char isInIdentifyRange(const type_point* location) const;
+    bool isInIdentifyRange(const type_point& location) const;
 
 private:
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
@@ -836,7 +817,7 @@ private:
     bool canLand() const;
 
 public:
-    int heroFn004E5DE0() const;
+    TSkillMastery getIdentifyLevel() const;
     void heroFn004E6120(int creatureType,
                          TCreatureTypeTraits* traits) const;
     // 0x4d9050 / 0x4e56b0, the two owner-record accessors; both open
@@ -984,7 +965,7 @@ public:
     bool isFlying(bool checkTerrain) const
     {
         return !(m_flags & 0x40000)
-            && (m_flightLevel != -1 || isWieldingArtifact(0x48))
+            && (m_flightLevel != eMasteryInvalid || isWieldingArtifact(0x48))
             && (!checkTerrain || !canLand());
     }
 
@@ -993,7 +974,7 @@ public:
     bool canWalkOnWater(bool checkTerrain) const
     {
         return !(m_flags & 0x40000)
-            && (m_waterWalkLevel != -1 || isWieldingArtifact(0x5a))
+            && (m_waterWalkLevel != eMasteryInvalid || isWieldingArtifact(0x5a))
             && (!checkTerrain || !canLand());
     }
 

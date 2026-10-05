@@ -3077,13 +3077,11 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     // the custom-name flag and is not a player index.
     if (heroID == -1) {
         if (g_startingHeroOverrides[owner] != -1) {
-            heroID = H3_ENUM_DECODE(HeroId, g_startingHeroOverrides[owner]);
-            g_startingHeroOverrides[owner] = -1;
+            heroID = g_startingHeroOverrides[owner];
+            g_startingHeroOverrides[owner] = heroIdNone;
         } else {
-            heroID = H3_ENUM_DECODE(HeroId,
-                g_game->getStartingHeroId(H3_ENUM_DECODE(
-                    TTownType, g_game->m_setup.m_alignment[owner]),
-                    owner, experience));
+            heroID = g_game->getStartingHeroId(g_game->m_setup.m_alignment[owner],
+                owner, experience);
         }
     }
     if (g_game->m_setup.m_startingHero[owner] == -1)

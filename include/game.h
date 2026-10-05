@@ -676,7 +676,8 @@ class SGameSetupOptions {
 public:
     signed char m_color[8];
     signed char m_handicap[8];
-    int m_alignment[8];
+    // Original SGameSetupOptions::alignment is TTownType[8].
+    TTownType m_alignment[8];
     signed char m_playerPos[8];
     signed char m_difficulty;
     char m_filename[251];
@@ -698,7 +699,7 @@ public:
         for (int i = 0; i < 8; ++i) {
             m_color[i] = i;
             m_handicap[i] = 0;
-            m_alignment[i] = i % 9;
+            m_alignment[i] = TTownType(i % 9);
             m_playerPos[i] = i;
             m_canFlipFromToComputer[i] = i;
             m_startingHero[i] = -1;
@@ -1213,7 +1214,7 @@ public:
     std::vector<MonsterIdentifier> m_monsterIdentifiers;
     NewfullMap* getWorldMapData();
     type_point gameFn004CEF10(int identifier);
-    int getStartingHeroId(int alignment, int playerPos,
+    HeroId getStartingHeroId(TTownType alignment, int playerPos,
                           int mapPosition);  // 0x4bb400
     int scan(signed char* whichList, int start, int length);
     int randomScan(signed char* whichList, int start, int length,
@@ -1235,7 +1236,7 @@ public:
                  // DC game.cpp:10132
     type_point getPuzzleOrigin() const;  // 0x4cea70
     void setRandomHeroArmies(int heroId, int cheat,
-                             unsigned char minimal);  // 0x4c9730
+                             bool minimal);  // 0x4c9730
     TArtifact getRandomArtifactId(int artifactClass);  // 0x4c94d0
     void setupTowns();
     void checkHeroConsistency();
@@ -1278,9 +1279,9 @@ public:
     // (`?CreateTownHeroes@game@@QAAXXZ`, no arguments) does not: the body
     // ends `ret 4`, tests [ebp+8] for null once per slot and separately
     // strength-reduces it into a four-byte-stride walker it dereferences,
-    // i.e. an eight-entry int array of pre-chosen starting heroes that
+    // i.e. an eight-entry hero-ID array of pre-chosen starting heroes that
     // overrides GetStartingHeroId for human players.
-    void createTownHeroes(int* startingHeroIds);
+    void createTownHeroes(HeroId* startingHeroIds);
     int getAlignment(int creature) const;
     TTownType getPlayerAlignment(int playerId) const;
     void claimShipyard(type_point location, int newPlayerOwner);  // 0x4c6a30
@@ -1403,10 +1404,10 @@ public:
     void giveTroopsToNeutralTowns();
     void giveTroopsToNeutralTown(int townId);  // 0x4bf570
     void setupOrigData();
-    void newMap(TAbstractFile* mapFile, int* playerHeroFaces,
+    void newMap(TAbstractFile* mapFile, HeroId* playerHeroFaces,
                 TCampaignBrief::ScenarioStruct* campaignContext, int gameVersion);
     unsigned char newMap(const char* mapPath, const char* mapName,
-                         int* playerHeroFaces, int gameVersion);
+                         HeroId* playerHeroFaces, int gameVersion);
     void setupFirstPlayer();
     bool loadMap(TAbstractFile* mapFile);
     void applyMapHeaderAvailability();
@@ -1665,13 +1666,15 @@ public:
                   unsigned char showDismiss, unsigned char isQuickView);
     void overview();
 
+    // Original Game.h:973/974/979 separates the null and valid return paths.
     VA(0x004317d0, 0x26)  // hd-crossbuild + exact body/callers x15
     DC_ADDRESS(0x002eb0, 0x24)
     hero* getHero(int which)
     {
         if (which == -1)
             return 0;
-        return &m_heroes[which];
+        else
+            return &m_heroes[which];
     }
 
     // Selection's two hero-detail owners expand an unguarded hero lookup
@@ -1830,7 +1833,16 @@ extern const char* g_townFortObjectDefs[9];
 // supplies the names; retail fixes these four dword cells and their paired
 // reset/restore use around game::LoadGame.
 extern const char* g_townCapitolObjectDefs[9];
-extern int g_weekType;
+// Original ?giWeekType@@3W4type_week_type@@A proves the enum domain.
+// Enumerator names follow the retail PerWeek and DoNewTurn cases; their
+// original spelling is unavailable. Month state and the network fields are int.
+enum WeekType {
+    weekTypeInvalid = -1,
+    weekTypeNormal = 0,
+    weekTypeCreature = 1,
+    weekTypeInfernoGrail = 2
+};
+extern WeekType g_weekType;
 extern int g_weekTypeExtra;
 extern int g_monthType;
 // Shared UI text table: attack, defense, spell power, and knowledge.
@@ -1881,7 +1893,7 @@ extern int g_grailOwner;
 // No Dreamcast or NH3API symbol covers it, so the spelling stays ordinal on
 // gUnnamed69950c's precedent rather than inventing a role name.
 extern unsigned char g_normalVictory;
-extern int g_startingHeroOverrides[8];
+extern HeroId g_startingHeroOverrides[8];
 // Dreamcast public `iCurHourGlassPhase`; game.cpp owns the retail word and
 // philAI::DoAI advances it as computer heroes are processed.
 extern int g_curHourGlassPhase;
@@ -2057,7 +2069,7 @@ DC_ADDRESS(0x02000c, 0x58)
 inline TTownType game::getPlayerAlignment(int playerId) const
 {
     return playerId >= 0
-        ? static_cast<TTownType>(m_setup.m_alignment[playerId]) : eTownNeutral;
+        ? m_setup.m_alignment[playerId] : eTownNeutral;
 }
 
 // Game.h:1380. DispatchEvent expands this cell accessor; the

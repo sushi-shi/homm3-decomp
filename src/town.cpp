@@ -204,17 +204,17 @@ const int g_townNameFixedLength = 13;
 // the bitset<70>, and a packed byte that splits three ways.
 // Retail reuses dead parameter homes for the byte-read buffer and town-name
 // length. Separating the address-taken length buffer from its decoded short
-// reaches 99.9718% in VC6; only the former buffer's home remains different.
-// Moving that buffer among the outer declarations or widening it to int/long
-// does not close the residual. The value-reader variant retains an extra Mac
-// call. Earlier local-order/width searches peaked at 98.1694%; hoisting the
-// name assignment across the version arms fell to 88.68%.
-// 2026-09-29 (lane A r4): the residual is a scope fact. Ending the stored
-// buffer's scope before `m_name = g_text` lets VC6 pack it into saveVersion's
-// dead home and reaches 100% (braced block, diagnostic only - not adopted).
-// The value helper readLittleEndianValue<unsigned short> gives that scope but
-// drops caller cb 988 -> 978; /Ob2 budget 1956 then leaves _Grow's max_size
-// 39 < 41 and keeps it out of line (97.32%). Retail's caller is >= 986 cb.
+// reaches 99.9718%; four stack-offset differences remain. Local reordering
+// and wider buffer types do not close them. An artificial scope that ends
+// before name assignment reaches 100%, but has no supported source purpose.
+// Both the existing readLittleEndianValue<unsigned short> call and a reader
+// owning one scalar through readValue(infile, value) reproduce 97.3173%:
+// the short buffer lifetime fits, but _Grow's max_size remains out of line.
+// Short/int/unsigned decoded lengths without redundant masks are byte-flat.
+// The combined reader models were measured across all five consumer units.
+// Mac 0x1b1f70..0x1b2010 shows scalar read/byte swap, payload read/NUL and
+// ordinary string assignment in each version arm; it supplies no distinct
+// string wrapper to justify another lifetime or inline-budget boundary.
 // DC locals: char_buffer, uchar_buffer, and inBuf[70].
 VA(0x005bcd60, 0x586)
 DC_ADDRESS(0x165628, 0x360)

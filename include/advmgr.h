@@ -650,17 +650,14 @@ public:
     virtual void close(unsigned char update);
     virtual void vslot8(unsigned char on);
     unsigned char processRightSelect(const message* msg);
-    unsigned char processHover(int hx, int hy);
+    bool processHover(int hx, int hy);
     void doHeroKnob(unsigned char up);
     void doTownKnob(unsigned char up);
-    void updateHeroLocators(int top, unsigned char drawWin,
-                            unsigned char update);
-    void updateTownLocators(int top, unsigned char drawWin,
-                            unsigned char update);
-    void updateHeroLocator(int which, unsigned char drawWinSect,
-                           unsigned char update);
-    void updateTownLocator(int which, unsigned char drawWinSect,
-                           unsigned char update);
+    // Original locator publics encode H_N0: index and two Boolean flags.
+    void updateHeroLocators(int top, bool drawWin, bool update);
+    void updateTownLocators(int top, bool drawWin, bool update);
+    void updateHeroLocator(int which, bool drawWinSect, bool update);
+    void updateTownLocator(int which, bool drawWinSect, bool update);
     void highlightLocators(unsigned char update);
     void updateSpellButton(const class hero* thisHero);
     void updateSleepButton(const class hero* thisHero);
