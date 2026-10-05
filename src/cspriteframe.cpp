@@ -2323,8 +2323,8 @@ MAC_ADDRESS(0x08d758, 0x7a0)  // anchor-callee (CSprite::DrawTileShadow/DrawShro
 void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
                                   int dh, int dpitch, TPalette16& pal,
-                                  unsigned char hflip,
-                                  unsigned char vflip) const
+                                  bool hflip,
+                                  bool vflip) const
 {
     static const unsigned char opaqueRunCode = 7;
 

@@ -153,7 +153,7 @@ public:
 
     DC_ADDRESS(0x074198, 0x64)
     void drawAdvObjWithFlag(int sx, int sy, int sw, int sh, unsigned short* dst,
-                 int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned short flagcolor, unsigned char hflip) const
+                 int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned short flagcolor, bool hflip) const
     {
         drawAdvObjImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, flagcolor);
     }
@@ -175,8 +175,8 @@ public:
                   unsigned char vflip) const;
     void drawTileShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
                         int dx, int dy, int dw, int dh, int dpitch,
-                        TPalette16& pal, unsigned char hflip,
-                        unsigned char vflip) const;
+                        TPalette16& pal, bool hflip,
+                        bool vflip) const;
 
     DC_ADDRESS(0x074258, 0x60)
     void drawHero(int sx, int sy, int sw, int sh, unsigned short* dst,
@@ -216,12 +216,13 @@ public:
     }
 
     // Original: CSpriteFrame::DrawShroudTile; CSpriteFrame.h:192
+    // The original public ends in _N2: both flip parameters are bool.
     // Its palette/frame parameter lifetimes span both retained retail calls.
     DC_ADDRESS(0x0743dc, 0xa8)
     void drawShroudTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                         int dx, int dy, int dw, int dh, int dpitch,
-                        TPalette16& pal, unsigned char hflip,
-                        unsigned char vflip) const
+                        TPalette16& pal, bool hflip,
+                        bool vflip) const
     {
         drawTile(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, vflip);
         drawTileShadow(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
