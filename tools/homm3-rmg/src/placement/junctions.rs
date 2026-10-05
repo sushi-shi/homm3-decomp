@@ -1,7 +1,7 @@
 //! Dry junction routes share the boundary splitter and reusable flood storage.
 use super::{ConnectionError, ConnectionsPlaced, Movement, PlacementMap, TownsPlaced};
 use crate::{
-    boundaries::{BoundaryZone, ZoneOrigin},
+    boundaries::BoundaryZone,
     domain::{Terrain, WorldPosition},
     geometry::Point,
     raster::{boundary_midpoint, BoundaryDisplacement, MapBounds},
@@ -48,15 +48,10 @@ impl<'state, 'zones, 'tiles> ConnectionsPlaced<'state, 'zones, 'tiles> {
     ) -> Result<JunctionsPrepared<'state, 'zones, 'tiles>, ConnectionError> {
         for index in 0..self.map().coverage().map().zones().len() {
             let zone = self.map().coverage().map().zones()[index];
-            let ZoneOrigin::Template(id) = zone.origin() else {
+            let Some(rules) = self.map().coverage().map().template_zone(&zone) else {
                 continue;
             };
-            if zone.terrain() != Terrain::Water
-                && matches!(
-                    self.map().coverage().map().template().zones()[id.index()].role(),
-                    ZoneRole::Junction(_)
-                )
-            {
+            if zone.terrain() != Terrain::Water && matches!(rules.role(), ZoneRole::Junction(_)) {
                 self.map_mut().prepare_junction_zone(zone, rng)?;
             }
         }

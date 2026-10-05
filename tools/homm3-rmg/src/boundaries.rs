@@ -10,15 +10,23 @@ use crate::{
     request::{MapVersion, Request, Town, Water},
     rng::{RetailRng, RngCheckpoint},
     selection::Player,
-    template::{PlayerSlot, Template},
+    template::{PlayerSlot, Template, TemplateZoneId, Zone},
 };
 use std::{collections::TryReserveError, error::Error, fmt};
+
+/// Generated zones keep each template zone's identity: template zones occupy
+/// the first generated slots in template order, before appended water zones.
+impl From<TemplateZoneId> for ZoneId {
+    fn from(id: TemplateZoneId) -> Self {
+        Self::new(id.index())
+    }
+}
 
 /// Which source supplies a generated zone's placement rules.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ZoneOrigin {
     /// The original, filtered template zone.
-    Template(ZoneId),
+    Template(TemplateZoneId),
     /// A radial water zone; its size is the parent zone's scaled radius.
     Water,
 }
@@ -218,6 +226,14 @@ impl<'a> BoundaryMap<'a> {
     pub const fn template(&self) -> &Template<'_> {
         self.template
     }
+    /// Template rules of a generated zone; water zones have none.
+    #[must_use]
+    pub fn template_zone(&self, zone: &BoundaryZone) -> Option<&Zone> {
+        match zone.origin {
+            ZoneOrigin::Template(id) => Some(self.template.zone(id)),
+            ZoneOrigin::Water => None,
+        }
+    }
     /// Resolved constructor water choice used in the map description.
     #[must_use]
     pub const fn water(&self) -> Water {
@@ -355,10 +371,12 @@ impl BoundaryWorkspace {
         self.polygons.clear();
         self.level_rng.fill(None);
         self.zones.try_reserve(layout.len())?;
-        for (index, zone) in layout.iter().enumerate() {
-            let source = &template.zones()[index];
+        // Template zones take the first generated identities, in template
+        // order; radial water zones are appended after them per level.
+        for zone in layout {
+            let source = template.zone(zone.id());
             self.zones.push(BoundaryZone {
-                id: zone.id(),
+                id: ZoneId::from(zone.id()),
                 origin: ZoneOrigin::Template(zone.id()),
                 position: zone.position(),
                 template_size: source.size().get(),
@@ -372,8 +390,8 @@ impl BoundaryWorkspace {
             self.connections.try_reserve(source.connections().len())?;
             for connection in source.connections() {
                 self.connections.push(ZoneConnection {
-                    source: zone.id(),
-                    destination: connection.destination(),
+                    source: ZoneId::from(zone.id()),
+                    destination: ZoneId::from(connection.destination()),
                     value: connection.value(),
                     unguarded: connection.unguarded(),
                     border_guard: connection.border_guard(),

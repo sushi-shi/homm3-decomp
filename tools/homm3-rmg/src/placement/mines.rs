@@ -4,7 +4,7 @@ use super::{
     ObjectArena, ObjectId, PathReservation, PlacementError, PlacementMap, TownsPlaced,
 };
 use crate::{
-    boundaries::{BoundaryZone, ZoneOrigin},
+    boundaries::BoundaryZone,
     domain::{Resource, WorldPosition},
     geometry::Point,
     object::ObjectKind,
@@ -84,11 +84,10 @@ impl<'state, 'zones, 'tiles> JunctionsPrepared<'state, 'zones, 'tiles> {
         self.map_mut().prepare_object_context(objects, catalog)?;
         for index in 0..self.map().coverage().map().zones().len() {
             let zone = self.map().coverage().map().zones()[index];
-            let ZoneOrigin::Template(id) = zone.origin() else {
+            let Some(rules) = self.map().coverage().map().template_zone(&zone) else {
                 // Added water zones have zero mine counts and densities.
                 continue;
             };
-            let rules = &self.map().coverage().map().template().zones()[id.index()];
             let placements = *rules.mines();
             let starting_town =
                 if matches!(rules.role(), ZoneRole::Human(_) | ZoneRole::Computer(_)) {

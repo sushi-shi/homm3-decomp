@@ -3,7 +3,6 @@
 use crate::{
     behavior::TownMask,
     domain::{FlagSet, LandTerrain, Ordinal},
-    geometry::ZoneId,
     raw,
     request::{MapVersion, Request, Town, Water, PLAYER_COUNT},
 };
@@ -247,6 +246,16 @@ pub enum ZoneRole {
     /// Junction region and its optional owner.
     Junction(Option<PlayerSlot>),
 }
+impl ZoneRole {
+    /// The owning player slot, required for player zones.
+    #[must_use]
+    pub const fn owner(self) -> Option<PlayerSlot> {
+        match self {
+            Self::Human(slot) | Self::Computer(slot) => Some(slot),
+            Self::Treasure(owner) | Self::Junction(owner) => owner,
+        }
+    }
+}
 
 /// A placement category with an initial count and optional positive density.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -281,10 +290,28 @@ pub enum ZoneMonsters {
     Strong,
 }
 
+/// A zone's position in its prepared template's filtered row order.
+///
+/// Distinct from a generated map's `ZoneId`, which also covers appended
+/// water zones; template zones occupy that space's first slots.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct TemplateZoneId(usize);
+impl TemplateZoneId {
+    /// Index into the owning template's zones.
+    #[must_use]
+    pub const fn index(self) -> usize {
+        self.0
+    }
+
+    const fn new(index: usize) -> Self {
+        Self(index)
+    }
+}
+
 /// A connection already resolved to a zone in its owning template.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Connection {
-    destination: ZoneId,
+    destination: TemplateZoneId,
     value: i32,
     unguarded: bool,
     border_guard: bool,
@@ -292,7 +319,7 @@ pub struct Connection {
 impl Connection {
     /// Connected zone in this prepared template.
     #[must_use]
-    pub const fn destination(self) -> ZoneId {
+    pub const fn destination(self) -> TemplateZoneId {
         self.destination
     }
     /// Unscaled guard value.
@@ -315,7 +342,7 @@ impl Connection {
 /// A parsed, request-filtered zone. Construction resolves its required domains.
 #[derive(Debug)]
 pub struct Zone {
-    id: ZoneId,
+    id: TemplateZoneId,
     source_number: i32,
     role: ZoneRole,
     size: NonZeroU32,
@@ -335,7 +362,7 @@ pub struct Zone {
 impl Zone {
     /// Dense identity in the owning template.
     #[must_use]
-    pub const fn id(&self) -> ZoneId {
+    pub const fn id(&self) -> TemplateZoneId {
         self.id
     }
     /// Template role with any required player slot.
@@ -422,6 +449,14 @@ impl Template<'_> {
     pub fn zones(&self) -> &[Zone] {
         &self.zones
     }
+    /// The zone this template assigned an identity.
+    ///
+    /// # Panics
+    /// Only for an identity from a different template.
+    #[must_use]
+    pub fn zone(&self, id: TemplateZoneId) -> &Zone {
+        &self.zones[id.index()]
+    }
 
     /// Distinct human/all slots, used later by player assignment.
     #[must_use]
@@ -502,14 +537,14 @@ impl<'a> TemplateSource<'a> {
                     continue;
                 }
                 let connection = Connection {
-                    destination: ZoneId::new(second),
+                    destination: TemplateZoneId::new(second),
                     value: row.number(raw::RMG_TEMPLATE_COLUMN_CONNECTION_VALUE)?,
                     unguarded: row.is_set(raw::RMG_TEMPLATE_COLUMN_CONNECTION_UNGUARDED),
                     border_guard: row.is_set(raw::RMG_TEMPLATE_COLUMN_CONNECTION_BORDER_GUARD),
                 };
                 template.zones[first].connections.push(connection);
                 template.zones[second].connections.push(Connection {
-                    destination: ZoneId::new(first),
+                    destination: TemplateZoneId::new(first),
                     ..connection
                 });
             }
@@ -588,7 +623,8 @@ impl<'a> TemplateSource<'a> {
                             raw::RMG_TEMPLATE_COLUMN_KIND_COMPUTER => player_zones += 1,
                             _ => {}
                         }
-                        match parse_zone(&row, ZoneId::new(template.zones.len()), request)? {
+                        match parse_zone(&row, TemplateZoneId::new(template.zones.len()), request)?
+                        {
                             Ok(zone) => template.zones.push(zone),
                             Err(reason) => {
                                 fault.get_or_insert(reason);
@@ -668,7 +704,7 @@ fn representable(categories: impl IntoIterator<Item = Placement> + Clone) -> boo
 // candidate so retail consumes its selection draw before reporting the fault.
 fn parse_zone(
     row: &Row<'_>,
-    id: ZoneId,
+    id: TemplateZoneId,
     request: &Request,
 ) -> Result<Result<Zone, RetailTemplateFault>, TemplateError> {
     let unusable = RetailTemplateFault::UnusableZone { row: row.index };

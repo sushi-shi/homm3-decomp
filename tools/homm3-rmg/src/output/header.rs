@@ -1,13 +1,12 @@
 //! Native header and team assignment, including format-specific defaults.
 use super::{expansion, OutputFault, Writer};
 use crate::{
-    boundaries::ZoneOrigin,
     generation::GeneratedMap,
     hero::HeroId,
     raw,
     request::{MapVersion, Town, TownChoice, Water, PLAYER_COUNT},
     rng::RetailRng,
-    template::ZoneRole,
+    template::{Zone, ZoneRole},
 };
 use std::io::{Cursor, Write};
 
@@ -42,15 +41,10 @@ pub(super) fn write(
     let mut alignments = [0_u32; PLAYER_COUNT];
     let mut towns = [None; PLAYER_COUNT];
     for zone in boundary.zones() {
-        let ZoneOrigin::Template(id) = zone.origin() else {
+        let Some(role) = boundary.template_zone(zone).map(Zone::role) else {
             continue;
         };
-        let role = boundary.template().zones()[id.index()].role();
-        let slot = match role {
-            ZoneRole::Human(s) | ZoneRole::Computer(s) => Some(s),
-            ZoneRole::Treasure(s) | ZoneRole::Junction(s) => s,
-        };
-        let Some(player) = slot.and_then(|s| boundary.player(s)) else {
+        let Some(player) = role.owner().and_then(|s| boundary.player(s)) else {
             continue;
         };
         let Some(town) = zone.primary_town() else {

@@ -2,7 +2,6 @@
 use super::{ObjectArena, ObjectId, PlacementError, PlacementMap};
 use crate::{
     behavior::Behavior,
-    boundaries::ZoneOrigin,
     domain::WorldPosition,
     geometry::ZoneId,
     prototype::{GuardError, GuardFactions, PrototypeCatalog},
@@ -64,11 +63,9 @@ impl PlacementMap<'_, '_, '_> {
         let zone = self.zone(zone)?;
         // Added water zones clear allowed factions, but retail leaves their
         // alignment-matching flag unwritten. That flag is an explicit replay input.
-        let factions = match zone.origin() {
-            ZoneOrigin::Template(id) => {
-                GuardFactions::from_zone(&map.template().zones()[id.index()], zone.alignment())
-            }
-            ZoneOrigin::Water => match (map.behavior(), zone.alignment()) {
+        let factions = match map.template_zone(&zone) {
+            Some(rules) => GuardFactions::from_zone(rules, zone.alignment()),
+            None => match (map.behavior(), zone.alignment()) {
                 (Behavior::Retail(profile), Some(town)) if profile.water_guards_match_alignment => {
                     GuardFactions::Matching(town)
                 }

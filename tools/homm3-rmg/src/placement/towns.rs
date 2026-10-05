@@ -6,7 +6,7 @@ use super::{
 };
 use crate::{
     behavior::TownMask,
-    boundaries::{BoundaryZone, ZoneOrigin},
+    boundaries::BoundaryZone,
     domain::WorldPosition,
     geometry::Point,
     object::ObjectKind,
@@ -230,18 +230,11 @@ impl<'state, 'zones, 'tiles> PlacementMap<'state, 'zones, 'tiles> {
 
 impl PlacementMap<'_, '_, '_> {
     fn town_rules(&self, zone: BoundaryZone) -> Option<Rules> {
-        let ZoneOrigin::Template(id) = zone.origin() else {
-            return None;
-        };
         let map = self.coverage().map();
-        let source = &map.template().zones()[id.index()];
-        let slot = match source.role() {
-            ZoneRole::Human(slot) | ZoneRole::Computer(slot) => Some(slot),
-            ZoneRole::Treasure(slot) | ZoneRole::Junction(slot) => slot,
-        };
+        let source = map.template_zone(&zone)?;
         Some(Rules {
             categories: *source.towns(),
-            owner: slot.and_then(|slot| map.player(slot)),
+            owner: source.role().owner().and_then(|slot| map.player(slot)),
             neutral_matches: source.neutral_towns_match_alignment(),
             allowed: source.allowed_towns(),
         })
@@ -495,12 +488,11 @@ impl PlacementMap<'_, '_, '_> {
         let mut players = [false; PLAYER_COUNT];
         let map = self.coverage().map();
         for zone in map.zones() {
-            let (Some(entrance), ZoneOrigin::Template(id)) = (zone.primary_town(), zone.origin())
+            let (Some(entrance), Some(rules)) = (zone.primary_town(), map.template_zone(zone))
             else {
                 continue;
             };
-            let role = map.template().zones()[id.index()].role();
-            let (ZoneRole::Human(slot) | ZoneRole::Computer(slot)) = role else {
+            let (ZoneRole::Human(slot) | ZoneRole::Computer(slot)) = rules.role() else {
                 continue;
             };
             let Some(player) = map.player(slot) else {
@@ -519,7 +511,7 @@ impl PlacementMap<'_, '_, '_> {
                 return Ok(false);
             }
             players[player.index()] = true;
-            if matches!(role, ZoneRole::Human(_)) {
+            if matches!(rules.role(), ZoneRole::Human(_)) {
                 humans[player.index()] = true;
             }
         }

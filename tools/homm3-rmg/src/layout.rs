@@ -2,12 +2,12 @@
 
 use crate::{
     domain::{LandTerrain, Level, Terrain, WorldPosition},
-    geometry::{GeometryError, Point, ZoneId},
+    geometry::{GeometryError, Point},
     raw,
     request::{Levels, Request, Town, TownChoice, Water},
     rng::RetailRng,
     selection::{Player, SelectedTemplate},
-    template::{Template, Zone, ZoneRole},
+    template::{Template, TemplateZoneId, Zone, ZoneRole},
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
@@ -21,7 +21,7 @@ const CREATURE_TOWN_CHOICES: NonZeroU32 = match NonZeroU32::new(raw::RMG_TERRAIN
 #[derive(Debug)]
 pub enum LayoutError {
     /// Hotfix rejects this layout; retail would draw modulo zero.
-    NoCandidates(ZoneId),
+    NoCandidates(TemplateZoneId),
     /// An intermediate cannot be represented by the original signed arithmetic.
     Arithmetic,
     /// A distance calculation could not be represented.
@@ -53,7 +53,7 @@ impl From<TryReserveError> for LayoutError {
 
 #[derive(Clone, Copy, Debug)]
 struct PositionedZone {
-    id: ZoneId,
+    id: TemplateZoneId,
     position: WorldPosition,
     alignment: Option<Town>,
 }
@@ -61,7 +61,7 @@ struct PositionedZone {
 /// A completed zone layout. Zero scaled size remains a defined retail case.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ZoneLayout {
-    id: ZoneId,
+    id: TemplateZoneId,
     position: WorldPosition,
     scaled_size: u32,
     alignment: Option<Town>,
@@ -71,7 +71,7 @@ pub struct ZoneLayout {
 impl ZoneLayout {
     /// Owning template zone.
     #[must_use]
-    pub const fn id(self) -> ZoneId {
+    pub const fn id(self) -> TemplateZoneId {
         self.id
     }
     /// Scaled zone centre and plane.
@@ -164,7 +164,8 @@ impl LayoutWorkspace {
         water: Water,
         rng: &mut RetailRng,
     ) -> Result<Layout<'workspace, 'context>, LayoutError> {
-        let zones = selected.template().zones();
+        let template = selected.template();
+        let zones = template.zones();
         self.positioned.clear();
         self.completed.clear();
         self.positioned.try_reserve(zones.len())?;
@@ -186,10 +187,7 @@ impl LayoutWorkspace {
         for zone in zones {
             // The constructor draws before the request's fixed town overrides it.
             let mut alignment = zone.allowed_towns().choose(rng);
-            let owner = match zone.role() {
-                ZoneRole::Human(slot) | ZoneRole::Computer(slot) => Some(slot),
-                ZoneRole::Treasure(owner) | ZoneRole::Junction(owner) => owner,
-            };
+            let owner = zone.role().owner();
             let town_count = zone.towns()[0]
                 .initial_count
                 .checked_add(zone.towns()[1].initial_count)
@@ -209,19 +207,19 @@ impl LayoutWorkspace {
                     level: Level::Surface,
                 },
             };
-            self.position(&mut placed, zones, request, map_size, rng)?;
+            self.position(&mut placed, template, request, map_size, rng)?;
             self.positioned.push(placed);
         }
         for _ in 0..2 {
             for index in 0..self.positioned.len() {
                 let mut placed = self.positioned[index];
-                self.position(&mut placed, zones, request, map_size, rng)?;
+                self.position(&mut placed, template, request, map_size, rng)?;
                 self.positioned[index] = placed;
             }
         }
         let mut bounds = Bounds::default();
         for placed in &self.positioned {
-            bounds.include(placed.position.point, zone_size(&zones[placed.id.index()]))?;
+            bounds.include(placed.position.point, zone_size(template.zone(placed.id)))?;
         }
         let span = bounds.span()?;
         let origin = Point::new(
@@ -241,7 +239,7 @@ impl LayoutWorkspace {
                 / 2,
         );
         for placed in &self.positioned {
-            let zone = &zones[placed.id.index()];
+            let zone = template.zone(placed.id);
             let mut position = placed.position;
             position.point = Point::new(
                 scale(position.point.x, origin.x, side, span)?,
@@ -277,7 +275,7 @@ impl LayoutWorkspace {
     fn position(
         &mut self,
         current: &mut PositionedZone,
-        zones: &[Zone],
+        template: &Template<'_>,
         request: &Request,
         map_size: i32,
         rng: &mut RetailRng,
@@ -292,10 +290,12 @@ impl LayoutWorkspace {
                     level: Level::Underground,
                     ..current.position
                 };
-                self.append(current, position, zones)?;
+                self.append(current, position, template)?;
             }
         } else {
-            for connection in zones[current.id.index()].connections() {
+            // Zones are positioned in template order, so `positioned[i]` is
+            // template zone i; later zones are not yet positioned.
+            for connection in template.zone(current.id).connections() {
                 let destination = connection.destination().index();
                 if destination < self.positioned.len() {
                     let center = if destination == current.id.index() {
@@ -303,7 +303,7 @@ impl LayoutWorkspace {
                     } else {
                         self.positioned[destination]
                     };
-                    self.append_around(center, current, zones, levels)?;
+                    self.append_around(center, current, template, levels)?;
                 }
             }
             if self.candidates.is_empty() {
@@ -313,10 +313,10 @@ impl LayoutWorkspace {
                     } else {
                         self.positioned[index]
                     };
-                    self.append_around(center, current, zones, levels)?;
+                    self.append_around(center, current, template, levels)?;
                 }
             }
-            self.filter(current, zones, levels, map_size)?;
+            self.filter(current, template, levels, map_size)?;
         }
         let count = u32::try_from(self.candidates.len()).map_err(|_| LayoutError::Arithmetic)?;
         let Some(count) = NonZeroU32::new(count) else {
@@ -334,11 +334,11 @@ impl LayoutWorkspace {
         &mut self,
         current: &mut PositionedZone,
         position: WorldPosition,
-        zones: &[Zone],
+        template: &Template<'_>,
     ) -> Result<(), LayoutError> {
         // Rejected trials also move the zone. A later self-connection observes it.
         current.position = position;
-        if can_place(*current, &self.positioned, zones)? {
+        if can_place(*current, &self.positioned, template)? {
             self.candidates.try_reserve(1)?;
             self.candidates.push(position);
         }
@@ -349,22 +349,22 @@ impl LayoutWorkspace {
         &mut self,
         center: PositionedZone,
         current: &mut PositionedZone,
-        zones: &[Zone],
+        template: &Template<'_>,
         levels: Levels,
     ) -> Result<(), LayoutError> {
-        let center_size = zone_size(&zones[center.id.index()]);
-        let current_size = zone_size(&zones[current.id.index()]);
+        let center_size = zone_size(template.zone(center.id));
+        let current_size = zone_size(template.zone(current.id));
         let radius = center_size
             .checked_add(current_size)
             .ok_or(LayoutError::Arithmetic)?;
-        self.append_circle(center.position, current, radius, zones)?;
+        self.append_circle(center.position, current, radius, template)?;
         if levels == Levels::Underground {
             let other = WorldPosition {
                 level: center.position.level.other(),
                 ..center.position
             };
-            self.append(current, other, zones)?;
-            self.append_circle(other, current, center_size.max(current_size), zones)?;
+            self.append(current, other, template)?;
+            self.append_circle(other, current, center_size.max(current_size), template)?;
         }
         Ok(())
     }
@@ -374,7 +374,7 @@ impl LayoutWorkspace {
         center: WorldPosition,
         current: &mut PositionedZone,
         radius: i32,
-        zones: &[Zone],
+        template: &Template<'_>,
     ) -> Result<(), LayoutError> {
         // k * 11.25 degrees clockwise; north is up, Y grows south.
         //         24
@@ -385,7 +385,7 @@ impl LayoutWorkspace {
                 radial(center.point.x, radius, x)?,
                 radial(center.point.y, radius, y)?,
             );
-            self.append(current, WorldPosition { point, ..center }, zones)?;
+            self.append(current, WorldPosition { point, ..center }, template)?;
         }
         Ok(())
     }
@@ -393,7 +393,7 @@ impl LayoutWorkspace {
     fn filter(
         &mut self,
         current: &PositionedZone,
-        zones: &[Zone],
+        template: &Template<'_>,
         levels: Levels,
         map_size: i32,
     ) -> Result<(), LayoutError> {
@@ -421,11 +421,11 @@ impl LayoutWorkspace {
                 ..*current
             };
             let mut count = 0;
-            for connection in zones[current.id.index()].connections() {
+            for connection in template.zone(current.id).connections() {
                 let id = connection.destination();
                 if let Some(&other) = self.positioned.get(id.index()) {
                     let other = if id == current.id { trial } else { other };
-                    if can_connect(trial, other, zones)? {
+                    if can_connect(trial, other, template)? {
                         count += 1;
                     }
                 }
@@ -449,12 +449,12 @@ impl LayoutWorkspace {
         let mut bounds = Bounds::default();
         for other in &self.positioned {
             if other.id != current.id {
-                bounds.include(other.position.point, zone_size(&zones[other.id.index()]))?;
+                bounds.include(other.position.point, zone_size(template.zone(other.id)))?;
             }
         }
         let candidate_size = |position: WorldPosition| -> Result<i32, LayoutError> {
             let mut candidate = bounds;
-            candidate.include(position.point, zone_size(&zones[current.id.index()]))?;
+            candidate.include(position.point, zone_size(template.zone(current.id)))?;
             Ok(map_size.max(candidate.span()?))
         };
         let mut best_size = 32000;
@@ -504,9 +504,9 @@ fn choose_terrain(
 fn can_place(
     current: PositionedZone,
     placed: &[PositionedZone],
-    zones: &[Zone],
+    template: &Template<'_>,
 ) -> Result<bool, LayoutError> {
-    let zone = &zones[current.id.index()];
+    let zone = template.zone(current.id);
     if matches!(zone.role(), ZoneRole::Human(_) | ZoneRole::Computer(_))
         && current.position.level == Level::Underground
         && !current
@@ -521,7 +521,7 @@ fn can_place(
         }
         let distance = current.position.point.distance(other.position.point)?;
         let combined = zone_size(zone)
-            .checked_add(zone_size(&zones[other.id.index()]))
+            .checked_add(zone_size(template.zone(other.id)))
             .ok_or(LayoutError::Arithmetic)?;
         if distance.checked_mul(10).ok_or(LayoutError::Arithmetic)?
             < combined.checked_mul(8).ok_or(LayoutError::Arithmetic)?
@@ -535,11 +535,11 @@ fn can_place(
 fn can_connect(
     first: PositionedZone,
     second: PositionedZone,
-    zones: &[Zone],
+    template: &Template<'_>,
 ) -> Result<bool, LayoutError> {
     let distance = first.position.point.distance(second.position.point)?;
-    let first_size = zone_size(&zones[first.id.index()]);
-    let second_size = zone_size(&zones[second.id.index()]);
+    let first_size = zone_size(template.zone(first.id));
+    let second_size = zone_size(template.zone(second.id));
     let combined = first_size
         .checked_add(second_size)
         .ok_or(LayoutError::Arithmetic)?;
