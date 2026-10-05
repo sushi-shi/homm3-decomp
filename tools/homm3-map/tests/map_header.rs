@@ -11,6 +11,10 @@ fn push_string(bytes: &mut Vec<u8>, value: &[u8]) {
 }
 
 fn sod_header() -> Vec<u8> {
+    sod_header_with_conditions(&[0xff], &[0xff])
+}
+
+fn sod_header_with_conditions(victory: &[u8], loss: &[u8]) -> Vec<u8> {
     let mut bytes = Vec::new();
     bytes.extend_from_slice(&(Version::ShadowOfDeath as i32).to_le_bytes());
     bytes.push(1);
@@ -25,7 +29,9 @@ fn sod_header() -> Vec<u8> {
         bytes.extend_from_slice(&[1, 0, 1, 0xff, 0]);
         bytes.extend_from_slice(&0i32.to_le_bytes());
     }
-    bytes.extend_from_slice(&[0xff, 0xff, 0]);
+    bytes.extend_from_slice(victory);
+    bytes.extend_from_slice(loss);
+    bytes.push(0);
     bytes.extend_from_slice(&[0xaa; COMPLETE_HERO_BYTES]);
     bytes.extend_from_slice(&0i32.to_le_bytes());
     bytes.push(0);
@@ -46,6 +52,24 @@ fn parses_complete_map_header_and_preserves_world() {
     assert_eq!(header.players[0].retained_hero_count, 0);
     assert_eq!(header.available_heroes, &[0xaa; COMPLETE_HERO_BYTES]);
     assert_eq!(header.world(), b"WORLD");
+}
+
+#[test]
+fn conditions_parse_known_payloads_and_reject_unknown_kinds() {
+    // Flag dwellings: no payload. Time expires: a two-byte day count.
+    let bytes = sod_header_with_conditions(&[8, 1, 0], &[2, 7, 0]);
+    let header = MapHeader::parse(&bytes).unwrap();
+    assert_eq!(header.world(), b"WORLD");
+    let unknown_victory = sod_header_with_conditions(&[13, 1, 0], &[0xff]);
+    assert!(matches!(
+        MapHeader::parse(&unknown_victory),
+        Err(homm3_map::Error::BadVictoryCondition { value: 13, .. })
+    ));
+    let unknown_loss = sod_header_with_conditions(&[0xff], &[3]);
+    assert!(matches!(
+        MapHeader::parse(&unknown_loss),
+        Err(homm3_map::Error::BadLossCondition { value: 3, .. })
+    ));
 }
 
 #[test]

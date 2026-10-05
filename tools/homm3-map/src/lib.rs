@@ -83,6 +83,14 @@ pub enum Error {
         offset: usize,
         value: u8,
     },
+    BadVictoryCondition {
+        offset: usize,
+        value: u8,
+    },
+    BadLossCondition {
+        offset: usize,
+        value: u8,
+    },
     NonZeroPadding {
         offset: usize,
     },
@@ -154,6 +162,12 @@ impl fmt::Display for Error {
             }
             Self::BadSeerReward { offset, value } => {
                 write!(f, "map seer reward type {value} at {offset:#x} is invalid")
+            }
+            Self::BadVictoryCondition { offset, value } => {
+                write!(f, "map victory condition {value} at {offset:#x} is invalid")
+            }
+            Self::BadLossCondition { offset, value } => {
+                write!(f, "map loss condition {value} at {offset:#x} is invalid")
             }
             Self::NonZeroPadding { offset } => {
                 write!(f, "map reserved padding at {offset:#x} is nonzero")
@@ -806,6 +820,7 @@ fn parse_player<'a>(cursor: &mut Cursor<'a>, version: Version) -> Result<PlayerS
 }
 
 fn parse_victory<'a>(cursor: &mut Cursor<'a>, version: Version) -> Result<Victory<'a>, Error> {
+    let kind_offset = cursor.position();
     let kind = cursor.u8()?;
     if kind == 0xff {
         return Ok(Victory {
@@ -823,7 +838,13 @@ fn parse_victory<'a>(cursor: &mut Cursor<'a>, version: Version) -> Result<Victor
         2 | 3 => 5,
         4..=7 => 3,
         10 | 12 => 4,
-        _ => 0,
+        8 | 9 | 11 => 0,
+        _ => {
+            return Err(Error::BadVictoryCondition {
+                offset: kind_offset,
+                value: kind,
+            })
+        }
     };
     let payload = cursor.take(payload_size)?;
     Ok(Victory {
@@ -835,11 +856,18 @@ fn parse_victory<'a>(cursor: &mut Cursor<'a>, version: Version) -> Result<Victor
 }
 
 fn parse_loss<'a>(cursor: &mut Cursor<'a>) -> Result<Loss<'a>, Error> {
+    let kind_offset = cursor.position();
     let kind = cursor.u8()?;
     let payload_size = match kind {
         0 | 1 => 3,
         2 => 2,
-        _ => 0,
+        0xff => 0,
+        _ => {
+            return Err(Error::BadLossCondition {
+                offset: kind_offset,
+                value: kind,
+            })
+        }
     };
     Ok(Loss {
         kind,
