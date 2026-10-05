@@ -5732,22 +5732,12 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
     // expands the accessor within the existing current-hero branch.
     // The acting player's live hero, and its map square, so the cell loop
     // below can paint that one square in the owner's colour.
-    // The two knobs the 2026-08-21 note banked as REJECTED (-0.69 for the
-    // explicit else arm, -0.25 for dropping the `int z = origin.z;` cache)
-    // are worth +0.60 TOGETHER, which is the non-monotone-combination rule
-    // exactly: measure the pair, not each knob. With both applied the
-    // branch polarity at the currentHero guard flips to retail's `jne`
-    // (the zero store is the FALL-THROUGH arm, so the null case is the
-    // `if` and the lookup the `else`), and the third knob - initialising
-    // `revealed` from the whole && chain instead of `= 0` plus a guarded
-    // `= 1` - gives retail's `mov al,1 / jmp / xor al,al` and takes the
-    // branch view CLEAN. 90.6495 -> 91.2477.
-    // Still rejected, re-measured here: widening `visibilityBit` to the
-    // `int` retail plainly holds at [ebp-0x44] (`and eax,0xffff / test
-    // ecx,eax` against our byte `test cl,al`) costs 0.12 with the bool
-    // initialiser in place and 0.71 without it. The rest is the
-    // callee-saved role of `this`: retail keeps it in ECX and spills to
-    // [ebp-0x8], we move it to ESI - the bounded C1 handle-state class.
+    // The explicit null/lookup arms and the whole revealed predicate
+    // recover the retail guard polarity. DC's playerBit is int, matching
+    // the full-width retail mask test; its cell_union also survives in
+    // Mac's shipyard store/owner-byte load at 0x13fc0..0x13fcc. Recovering
+    // both locals together improves the match. The remaining receiver
+    // allocation differs: retail keeps this in ECX, this build uses ESI.
     int heroX = -1;
     int heroY = -1;
     const hero* currentHero;
@@ -5778,7 +5768,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
         destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
     }
 
-    unsigned char visibilityBit = g_mapVisibilityBit;
+    int visibilityBit = g_mapVisibilityBit;
     for (int y = 0; y <= lastRow; y++) {
         unsigned short* dest = destRow;
         // Retail row advances use byte pitch; DC's radarRowStart remains
@@ -5903,10 +5893,12 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                         if (!(cell->m_cellFlags & 0x40)
                             || (cell->m_cellFlags & 0x1000)) {
                             NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger)
+                            if (trigger) {
+                                ExtraInfoUnion cellExtra;
+                                cellExtra.m_extraInfo = trigger->getMapExtraInfo();
                                 colour = g_systemPalette->m_data[64 +
-                                    static_cast<signed char>(trigger
-                                        ->getMapExtraInfo())];
+                                    cellExtra.m_shipyardInfo.m_owner];
+                            }
                         }
                         break;
                     }
