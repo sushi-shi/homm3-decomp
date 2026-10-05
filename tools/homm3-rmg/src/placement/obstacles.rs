@@ -55,7 +55,7 @@ pub struct ObstacleWorkspace {
     pending: Vec<WorldPosition>,
 }
 impl ObstacleWorkspace {
-    fn prepare(&mut self, catalog: &PrototypeCatalog<'_>) -> Result<(), PlacementError> {
+    pub(super) fn prepare(&mut self, catalog: &PrototypeCatalog<'_>) -> Result<(), PlacementError> {
         if self.catalog != Some(catalog.owner()) {
             self.priorities.clear();
             self.priorities.try_reserve(catalog.entries().len())?;
@@ -65,7 +65,7 @@ impl ObstacleWorkspace {
         }
         Ok(())
     }
-    fn priority(
+    pub(super) fn priority(
         &mut self,
         catalog: &PrototypeCatalog<'_>,
         id: PrototypeId,

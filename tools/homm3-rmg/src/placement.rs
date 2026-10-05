@@ -75,6 +75,7 @@ mod decoration;
 mod lines;
 pub use lines::{LineTile, RiverType, RoadType};
 pub mod cell_records;
+pub mod draw_lists;
 mod obstacles;
 mod rivers;
 mod roads;

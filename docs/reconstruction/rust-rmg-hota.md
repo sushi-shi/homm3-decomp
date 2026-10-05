@@ -794,3 +794,30 @@ Artifacts are in ignored `build/hota-cells-port/`. The records are not yet
 attached to `PlacementWorkspace`: registration, removal and the HotA queries
 that read them (`0x1cb260`, `0x1cb3e0`, `0x1c8070`) belong to the gated
 placement integration.
+
+`placement::draw_lists` owns HotA's per-cell draw lists: every registered
+object is appended to each in-map cell its draw mask covers (RVA `0x1c6ce0`),
+and removal erases its first occurrence from those cells (RVA `0x1c7890`).
+The lists share the placement link arena used by cell memberships, so cells
+own no separate heap storage. `consistent_draw_order` ports RVA `0x1c79d0`:
+an existing object is behind a candidate when its overlap priority at the
+shared cell is higher, or equal while only the candidate is a decoration;
+otherwise the candidate covers it, and one object both behind and covered
+rejects the candidate. Overlap priorities reuse the obstacle workspace's
+lazily built, catalog-owned cache.
+
+Verification: three focused tests cover list order, duplicate removal,
+clipping, an absent plane, an opposite-order conflict and the decoration tie
+rule. A temporary host harness compiles the verbatim recovered draw-list and
+draw-order bodies with the retail `buildOverlapPriorities` body, then runs
+500 maps of random prototypes (dimensions, draw, passability, underlay and
+kind) through 12,206 stamp/removal/check operations. Every list state and all
+5,026 checks (215 conflicts) match; disabling the decoration tie rule produces
+32 mismatches. Compiled reference SHA-256:
+`427b56378e1e7ba5760e254c63db62c1f909ea6352e4912b70d7973a04e67808`;
+corpus SHA-256:
+`50c8dda8dcd08f26dac3d7d9dedf34e98c7c45e9ecea4c680cd5ea8df8eff855`.
+Artifacts are in ignored `build/hota-draw-port/`. Like the cell records, the
+lists are verified building blocks; the HotA scorer's footprint and neighbour
+walk, registration hooks and decoration flow still need the placement
+integration.
