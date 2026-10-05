@@ -11,6 +11,8 @@ use crate::{
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
+pub mod hints;
+
 const CREATURE_TOWN_CHOICES: NonZeroU32 = match NonZeroU32::new(raw::RMG_TERRAIN_TOWN_CHOICE_COUNT)
 {
     Some(count) => count,

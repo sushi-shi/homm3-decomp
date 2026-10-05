@@ -297,3 +297,40 @@ Complete pipeline. The 14-request Complete reference sample again yields 14 exac
 hotfix matches, seven exact retail matches and seven pre-existing typed coast
 faults, with no unexpected differences. Runner SHA-256:
 `237aa756753aa5e2521af295965c63162ad5a811df6f59d79dac9cb39e98799c`.
+
+The layout subsystem now owns the town/terrain constraint engine in
+`layout::hints`. Its graph preserves native town-link duplicates, unique terrain
+links, the first-town-only rule when merging through a terrain, domain
+intersection order, connected-component order and degree/ID search ordering.
+The backjumping search retains failed-component assignments and continues into
+later components. Contradictions found during graph construction still reach
+the seed/search operations; earlier admission contradictions do not. Handles
+carry problem ownership, and all mutable graph and random state belongs to the
+individual solve.
+
+The engine uses the solver's independent MT19937 stream and the pinned MSVC
+forward shuffle, rather than consuming the ordinary CRT stream. Its clock is an
+explicit input: component entry and every 500,000 iterations request signed
+100-nanosecond observations, with the native strict `elapsed > 10 seconds` test.
+Missing observations produce a typed fault; timeout produces the native
+diagnostic and preserves subsequent component work. The solution retains the MT
+state for the forthcoming late density-town selector.
+
+Verification: 133 library tests and library Clippy pass, including the new constraint/RNG tests.
+MT output was checked against `std::mt19937` across two refill boundaries. A
+temporary comparison harness compiled the recovered C++ constraint implementation
+from `hota-rmg` and compared 8,200 graphs against Rust, including large independent
+components, contradictions and unsatisfiable searches. Diagnostic kinds/order,
+town/terrain assignments and the next MT word match in every case. A separately
+clock-controlled C++ case checks the complete assignment and MT position at the
+500,000-step timeout. Input corpus SHA-256:
+`68eb8439e3a6a01670c7f7efa20ce18bf7397640219d83e0b597ffa4a5aaeceb`.
+Reference source SHA-256:
+`3f99e036c5affbf5922002e9c1691e40f6f865c9daeb344e3ff45c0c56f0cb19`.
+Temporary harnesses and inputs remain under ignored `build/hota-hint-port/`.
+
+These are comparisons with the recovered C++ implementation, not new execution
+captures from HotA.dll. Template hint token parsing, condition application,
+zone-level diagnostics, late town selection and layout consumption remain to
+be connected. The full HotA pipeline gate remains in place; this engine does not
+establish end-to-end generation parity.
