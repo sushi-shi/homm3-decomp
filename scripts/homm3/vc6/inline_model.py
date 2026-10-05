@@ -33,7 +33,7 @@ from collections import Counter
 from pathlib import Path
 
 from homm3.sema import _asm
-from homm3.vc6 import _common, _unit, reg_model
+from homm3.vc6 import _common, _solver, _unit, reg_model
 
 # a REL32 reloc names a call / tail-jump target; DIR32 is data - exclude it.
 _REL32 = re.compile(r"IMAGE_REL_I386_REL32\s+(\S+)")
@@ -448,10 +448,7 @@ def run_predict(args) -> int:
             trace_source = (src if manifest_src and manifest_src.resolve() == src
                             else base_obj.with_suffix(".cpp"))
         else:
-            flags = ["/c", *reg_model.GAME_FLAGS, "/FAs"]
-            include_dir = reg_model._wine_dir(src.parent)
-            if include_dir:
-                flags.append(f"/I{include_dir}")
+            flags = _solver.standalone_flags(reg_model._wine_dir(src.parent))
             trace_source = src
         try:
             trace = inline_trace.capture(trace_source, flags, base_sym, base_obj)

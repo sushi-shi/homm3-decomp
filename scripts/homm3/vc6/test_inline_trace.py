@@ -117,3 +117,42 @@ class LiveInlineTraceTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class StandaloneTraceFlagsTests(unittest.TestCase):
+    """`predict-inline --trace` on a source outside every manifest unit.
+
+    The trace branch used to read `reg_model.GAME_FLAGS`, which does not
+    exist, so every standalone trace died with an AttributeError.
+    """
+
+    def test_standalone_trace_uses_the_standalone_compile_flags(self):
+        import argparse
+        from homm3.vc6 import _selection, _solver, inline_model, reg_model
+
+        class Stop(Exception):
+            pass
+
+        seen = {}
+
+        def capture(source, flags, symbol, obj):
+            seen.update(source=source, flags=flags, symbol=symbol)
+            raise Stop
+
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / 'scratch.cpp'
+            src.write_text('void f() {}\n')
+            args = argparse.Namespace(src=str(src), fn='f', trace=True)
+            with patch.object(_selection, 'prepare'), \
+                    patch.object(_selection, 'reference_unit', return_value=None), \
+                    patch.object(reg_model, '_compile_tu',
+                                 return_value=(Path(tmp) / 'scratch.obj', '')), \
+                    patch.object(reg_model, '_wine_dir', return_value='Z:\\scratch'), \
+                    patch.object(reg_model, '_fn_text', return_value=('', '?f@@YAXXZ')), \
+                    patch.object(inline_trace, 'capture', side_effect=capture), \
+                    self.assertRaises(Stop):
+                inline_model.run_predict(args)
+        self.assertEqual(seen['flags'], _solver.standalone_flags('Z:\\scratch'))
+        self.assertEqual(seen['flags'][:2], ['/c', '/O2'])
+        self.assertIn('/IZ:\\scratch', seen['flags'])
+        self.assertEqual(seen['symbol'], '?f@@YAXXZ')

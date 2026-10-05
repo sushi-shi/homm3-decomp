@@ -15,15 +15,25 @@ GAME_FLAGS = ["/O2", "/Ob2", "/Oy-", "/Op", "/MT", "/Gr", "/GX", "/GR-",
               "/D_WINDOWS"]
 
 
+def standalone_flags(include_dir: str | None = None) -> list[str]:
+    """Compiler flags for a source outside any manifest unit.
+
+    One list serves both the standalone compile and the inline trace, so
+    the traced compile is the same compile the solver measures.
+    """
+    flags = ["/c", *GAME_FLAGS]
+    if include_dir:
+        flags.append(f"/I{include_dir}")
+    flags.append("/FAs")
+    return flags
+
+
 def _compile_tu(src: Path, outdir: Path, include_dir: str | None = None):
     """cc_wrap one TU with the game profile + /FAs; (obj|None, error-tail).
     The .asm listing lands beside the obj for human reading."""
     outdir.mkdir(parents=True, exist_ok=True)
     obj = outdir / (src.stem + ".obj")
-    flags = ["/c", *GAME_FLAGS]
-    if include_dir:
-        flags.append(f"/I{include_dir}")
-    flags.append("/FAs")
+    flags = standalone_flags(include_dir)
     cmd = [sys.executable, "-m", "homm3.core.cc_wrap",
            "--out", str(obj), "--src", str(src), "--", *flags]
     proc = subprocess.run(cmd, capture_output=True, text=True)
