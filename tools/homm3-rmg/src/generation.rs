@@ -2,7 +2,7 @@
 //!
 //! Prepare a request once, then generate while borrowing that prepared context
 //! and a workspace. Independent workspaces and RNGs may share the same assets;
-//! no stage uses process-global state or per-zone random streams.
+//! generation decisions use one run-local RNG and do not depend on global state.
 
 use crate::{
     boundaries::{BoundaryError, BoundaryWorkspace},

@@ -4,7 +4,7 @@ use super::{
     TreasureGenerationError, TreasureGroupWorkspace,
 };
 use crate::{domain::WorldPosition, geometry::ZoneId, raw, rng::RetailRng};
-use std::ops::RangeInclusive;
+use std::ops::{Range, RangeInclusive};
 
 /// Whether selection favors greater value per occupied footprint cell.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -249,7 +249,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         &mut self,
         group: &mut TreasureGroupWorkspace,
         zone: ZoneId,
-        value_bounds: RangeInclusive<i32>,
+        value_bounds: Range<i32>,
         packing: TreasurePacking,
         objects: &mut ObjectArena,
         rng: &mut RetailRng,
@@ -260,7 +260,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             return Err(TreasureGenerationError::GroupNotEmpty);
         }
         group.reset_after_disposal();
-        let (minimum, maximum) = (*value_bounds.start(), *value_bounds.end());
+        let (minimum, maximum) = (value_bounds.start, value_bounds.end);
         let target = if maximum <= minimum {
             maximum
         } else {

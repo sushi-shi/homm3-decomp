@@ -141,7 +141,7 @@ impl OverlapPriorities {
                     if prototype.is_passable(cell) {
                         if x > 0 && !prototype.is_passable(MaskCell { x: x - 1, y }) {
                             // Passability extends outside the draw mask. A blocked
-                            // left cell is therefore drawn and already initialized.
+                            // cell in the preceding column is therefore drawn and initialized.
                             priority = result.values[MaskCell { x: x - 1, y }.bit() as usize];
                         } else {
                             priority += 1;

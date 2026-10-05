@@ -14,7 +14,9 @@ use crate::{
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum RiverGoal {
-    Object,
+    /// Join an existing river or a marked mountain, lake or gem-mine cell.
+    Join,
+    /// Reach a coast, map edge or route already connected to an outlet.
     Outlet,
 }
 
@@ -94,10 +96,10 @@ impl PlacementMap<'_, '_, '_> {
         }
         let cell = &mut self.cells[target.expect("four admitted inland cells")];
         cell.blocked_river_directions |= opposite_bit(direction);
-        cell.river_target = true;
+        cell.river_outlet_target = true;
         Ok(())
     }
-    fn mark_river_targets(&mut self, hotfix: bool) -> Result<(), PlacementError> {
+    fn mark_river_outlet_targets(&mut self, hotfix: bool) -> Result<(), PlacementError> {
         let side = self.view().side;
         let plane = side * side;
         for level in [Level::Surface, Level::Underground] {
@@ -129,12 +131,12 @@ impl PlacementMap<'_, '_, '_> {
                 break;
             }
             for y in 0..side {
-                self.cells[start + y * side].river_target = true;
-                self.cells[start + y * side + side - 1].river_target = true;
+                self.cells[start + y * side].river_outlet_target = true;
+                self.cells[start + y * side + side - 1].river_outlet_target = true;
             }
             for x in 0..side {
-                self.cells[start + x].river_target = true;
-                self.cells[start + (side - 1) * side + x].river_target = true;
+                self.cells[start + x].river_outlet_target = true;
+                self.cells[start + (side - 1) * side + x].river_outlet_target = true;
             }
         }
         Ok(())
@@ -170,7 +172,7 @@ impl PlacementMap<'_, '_, '_> {
             };
             if self.view().contains(at.point) {
                 let index = self.view().index(at)?;
-                self.cells[index].has_river = true;
+                self.cells[index].river_join_target = true;
             }
         }
         Ok(())
@@ -295,7 +297,7 @@ impl PlacementMap<'_, '_, '_> {
             )?;
             self.draw_line(Layer::River(kind), painted, mouth, rng)?;
             let index = self.view().native_index(mouth)?;
-            self.cells[index].river_target = true;
+            self.cells[index].river_outlet_target = true;
             self.draw_line(Layer::River(kind), mouth, end, rng)?;
             painted = end;
             inspected = self.view().native_index(end)?;
@@ -310,7 +312,7 @@ impl PlacementMap<'_, '_, '_> {
             };
             inspected = self.view().native_index(previous)?;
             if goal == RiverGoal::Outlet {
-                self.cells[inspected].river_target = true;
+                self.cells[inspected].river_outlet_target = true;
             }
             self.draw_line(Layer::River(kind), painted, previous, rng)?;
             painted = previous;
@@ -319,8 +321,8 @@ impl PlacementMap<'_, '_, '_> {
     }
     fn river_goal(&self, index: usize, goal: RiverGoal) -> bool {
         match goal {
-            RiverGoal::Object => self.cells[index].has_river,
-            RiverGoal::Outlet => self.cells[index].river_target,
+            RiverGoal::Join => self.cells[index].river_join_target,
+            RiverGoal::Outlet => self.cells[index].river_outlet_target,
         }
     }
     /// Mark natural targets and coasts, then route rivers for each water wheel.
@@ -337,7 +339,7 @@ impl PlacementMap<'_, '_, '_> {
     ) -> Result<(), PlacementError> {
         self.prepare_object_context(objects, catalog)?;
         self.mark_river_objects(catalog, objects)?;
-        self.mark_river_targets(catalog.behavior().is_hotfix())?;
+        self.mark_river_outlet_targets(catalog.behavior().is_hotfix())?;
         let mut index = 0;
         while index < self.active_objects().len() {
             let id = self.active_objects()[index];
@@ -347,7 +349,7 @@ impl PlacementMap<'_, '_, '_> {
                 .ok_or(PlacementError::UnknownPrototype(object.prototype()))?;
             if entry.prototype().kind().index() == raw::WATER_WHEEL as usize {
                 let entrance = entrance_position(entry.prototype(), object.position())?;
-                self.create_river(entrance, RiverGoal::Object, catalog, objects, rng)?;
+                self.create_river(entrance, RiverGoal::Join, catalog, objects, rng)?;
                 self.create_river(
                     offset_position(entrance, Point::new(-2, 0))?,
                     RiverGoal::Outlet,

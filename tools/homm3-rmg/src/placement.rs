@@ -320,9 +320,9 @@ pub struct CellState {
     coastal: bool,
     road: LineTile<RoadType>,
     river: LineTile<RiverType>,
-    has_river: bool,
+    river_join_target: bool,
     near_river: bool,
-    river_target: bool,
+    river_outlet_target: bool,
     blocked_river_directions: u8,
 }
 impl Default for CellState {
@@ -341,9 +341,9 @@ impl Default for CellState {
             coastal: false,
             road: LineTile::default(),
             river: LineTile::default(),
-            has_river: false,
+            river_join_target: false,
             near_river: false,
-            river_target: false,
+            river_outlet_target: false,
             blocked_river_directions: 0,
         }
     }

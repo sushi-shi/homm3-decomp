@@ -70,7 +70,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                     if self.assemble_group(
                         group,
                         zone.id(),
-                        bands[index].minimum..=bands[index].maximum,
+                        bands[index].minimum..bands[index].maximum,
                         packing,
                         objects,
                         rng,
