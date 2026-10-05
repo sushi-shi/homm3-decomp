@@ -1521,6 +1521,12 @@ def _canonicalize_side(side: str, obj: Path, context=None) -> bool:
     out.write_bytes(result.data)
     sidecar.write_bytes(canon.sidecar_bytes(result.rows))
     write_stamp(out, stamp_inputs, context=context)
+    # The ICF index reads every normalized object and is not part of any
+    # stamp: a later pair must never use one built before this rewrite (a
+    # scoped pass followed by the complete fallback, or a header-only change
+    # in another unit). Rebuilding it is cheap: bodies are content-cached.
+    global _ICF_INDEX
+    _ICF_INDEX = None
     return True
 
 

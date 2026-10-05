@@ -25,12 +25,13 @@ symlink, executable staging, Mac SDK copy, a full build before `--fast`):
 5. Run `ninja objects` in the new tree. Seeded objects are adopted by
    cc_wrap's receipt check without invoking Wine, so Ninja records its own
    log and header dependencies; objects no checkout could supply compile.
-   Then refresh normalized comparison copies.
-
-What `new` cannot prove: retail targets are delinked from the seed's source
-claims. When the new branch names functions differently (an interface
-recovery, a new VA claim) run `homm3 delink --unit TU` for those owners, as
-for any interface change. A full `homm3 build` remains the checkpoint.
+6. Run `homm3 delink` in the new tree (about two minutes): retail targets,
+   build/gen labels and normalized copies then describe the new tree's own
+   source claims, so `homm3 build --fast TU` equals a full build. The seed's
+   targets and build/gen carry the seed's claims from its last delink, which
+   can be arbitrarily old; `--no-delink` keeps them (scores of renamed or
+   re-claimed functions are then not comparable, and `homm3 status update`
+   must not bank them).
 
 `remove` refuses a worktree with uncommitted or untracked changes, stops its
 Wine server, and runs `git worktree remove`; `--delete-branch` then deletes
@@ -397,18 +398,25 @@ def cmd_new(args) -> int:
     if _homm3(tree, "configure"):
         raise WorktreeError("configure failed in the new worktree")
     if args.no_objects:
-        log("skipped `ninja objects`; the first build adopts or compiles them")
+        log("skipped `ninja objects` and the delink; run a full `homm3 build` there "
+            "before `--fast` (the seeded targets carry the seed's claims)")
         return 0
     if _run_in(tree, "ninja", "-k", "0", "objects"):
         log("WARNING: some units failed to compile; `homm3 build --fast` needs every "
             "base object - fix them in the new tree")
     phase("ninja objects")
-    if _run_in(tree, sys.executable, "-m", "homm3.build.normalize_objs") or \
-            _homm3(tree, "configure"):
-        log("WARNING: normalizing comparison copies failed; run `homm3 build` there")
-    phase("normalized comparison copies")
-    log(f"retail targets carry {seed.name}'s claim names from its {state['delinked']} delink; "
-        "after an interface or VA-claim difference run `homm3 delink --unit TU`")
+    if args.no_delink:
+        if _run_in(tree, sys.executable, "-m", "homm3.build.normalize_objs") or \
+                _homm3(tree, "configure"):
+            log("WARNING: normalizing comparison copies failed; run `homm3 build` there")
+        phase("normalized comparison copies")
+        log(f"WARNING: retail targets carry {seed.name}'s claim names from its "
+            f"{state['delinked']} delink; run `homm3 delink` there before trusting "
+            "or banking scores")
+    elif _homm3(tree, "delink"):
+        log("WARNING: delinking failed; run `homm3 build` there before `--fast`")
+    else:
+        phase("delinked retail targets from this tree's claims")
     log(f"ready: cd {tree} && homm3 build --fast <TU>")
     return 0
 
@@ -461,7 +469,10 @@ def main(argv=None) -> int:
     new.add_argument("--no-seed", action="store_true",
                      help="only stage inputs; the first full `homm3 build` creates targets")
     new.add_argument("--no-objects", action="store_true",
-                     help="seed, but leave `ninja objects` to the first build")
+                     help="seed, but leave `ninja objects` and the delink to the first build")
+    new.add_argument("--no-delink", action="store_true",
+                     help="keep the seed's retail targets and build/gen instead of "
+                          "delinking this tree's claims (faster; scores may differ)")
     new.set_defaults(fn=cmd_new)
     remove = sub.add_parser("remove", help="remove a clean worktree and stop its Wine server")
     remove.add_argument("path")
