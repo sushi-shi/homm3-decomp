@@ -82,7 +82,7 @@ void searchArray::init()
     m_validRectangle.bottom = g_mapHeight;
     m_cellData = new pathCell[g_game->getNumMapLevels() * g_mapHeight
             * g_mapWidth * 2];
-    m_isMoatSlowed = new unsigned char[187];
+    m_isMoatSlowed = new bool[187];
 }
 
 VA(0x004b1500, 0x2F)
@@ -882,7 +882,8 @@ unsigned char searchArray::validMoveAdjacent(const army* currentArmy,
 VA(0x004b2da0, 0x24B)
 DC_ADDRESS(0x0a03fc, 0x232)
 MAC_ADDRESS(0x0c64ac, 0x2c0)  // anchor-global
-void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, long limit, unsigned char inPlacementPhase, long baseSpeed)
+// Original SeedCombatPosition@@QAAXPBVarmy@@JJ_NJ: placement is bool.
+void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, long limit, bool inPlacementPhase, long baseSpeed)
 {
     if (m_cellData == 0)
         init();
@@ -1166,9 +1167,10 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 VA(0x004b3400, 0x787)
 DC_ADDRESS(0x0a0b18, 0x43a)
 MAC_ADDRESS(0x0c6e78, 0x720)  // anchor-global
-unsigned char searchArray::findCombatPath(const army* currentArmy,
+// Original FindCombatPath@@QAA_NPBVarmy@@JJ_NJJ proves bool result/placement.
+bool searchArray::findCombatPath(const army* currentArmy,
                                           long currentGroup, long destination,
-                                          unsigned char inPlacementPhase,
+                                          bool inPlacementPhase,
                                           long limit, long baseSpeed)
 {
     if (currentArmy == 0)

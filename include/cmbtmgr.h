@@ -985,7 +985,9 @@ public:
     // Placement-phase latch: FindPath/ValidPath forward it into
     // FindCombatPath's in_placement_phase and lift the speed limit
     // to 99 while it is set. Name provisional.
-    unsigned char m_creaturePlacement;  // +0x13d68
+    // Original InPlacementPhase; boolean result set by Main and forwarded
+    // directly to the original _N SeedCombatPosition/FindCombatPath flags.
+    bool m_creaturePlacement;  // +0x13d68
     // Dreamcast InPlacementPhase is a byte followed by turn_number;
     // retail preserves the three-byte integer-alignment gap at +0x13d69.
     char m_paddingBeforeTurnNumber[0x3];
@@ -1203,7 +1205,7 @@ public:
     unsigned char handleCombatPlayerDrop(unsigned long dpid, message* msg);
 
 private:
-    unsigned char isComputerAction();
+    bool isComputerAction();
 
 public:
     void updateMouseGrid(int gridIndex, std::vector<long>& hexes,
@@ -1495,7 +1497,7 @@ private:
                                long ourGroup);  // 0x4227a0
 
 public:
-    unsigned char isComputerAction(const army* currentArmy);
+    bool isComputerAction(const army* currentArmy);
     // DC publishes void(int,int,int); Complete's x86 body changes the result
     // to an unsigned-byte "pointer changed" flag. Its retail field/call graph
     // fixes the three arguments as mouse x, mouse y and combat hex.
@@ -1889,7 +1891,7 @@ public:
     unsigned char unnamed464f50(const army* incumbent, const army* candidate);
     virtual int main(message& msg);
     int processCombatMsg(message& msg);
-    int processNextAction(message& msg, unsigned char automaticTurn);
+    int processNextAction(message& msg, bool automaticTurn);
     void setCombatDirections(int hex);
     // DC command.cpp:2800. Complete likewise expands its sole call, while
     // retaining the helper's source-level surrender-dialog boundary.
