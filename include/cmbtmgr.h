@@ -218,14 +218,13 @@ enum EDrawbridgeState {
     DRAWBRIDGE_UP = 0x3
 };
 
-// The defending town's wall tier. InitializeArchers proves that a Citadel
-// installs the keep archer and a Castle installs the two tower archers too;
-// the other combat readers only distinguish an absent wall from any tier.
-enum ECombatFortification {
-    COMBAT_FORTIFICATION_NONE = 0,
-    COMBAT_FORTIFICATION_FORT = 1,
-    COMBAT_FORTIFICATION_CITADEL = 2,
-    COMBAT_FORTIFICATION_CASTLE = 3
+// Original TFortificationLevel (DC type 0x42e1). InitializeArchers confirms
+// the same tiers: Citadel installs the keep; Castle adds the two towers.
+enum TFortificationLevel {
+    eFortificationNone = 0,
+    eFortificationFort = 1,
+    eFortificationCitadel = 2,
+    eFortificationCastle = 3
 };
 
 // Row 5's three special columns of the 11x17 combat grid, named from
@@ -899,11 +898,9 @@ public:
     CSprite* m_powSprite;  // +0x132e8
     int m_powSpellEffect;  // +0x132ec
     int m_powFrameIndex;  // +0x132f0
-    // "This combat is fought over a walled town": HexIsBlocked
-    // (0x469a10) only consults the gate hexes while it is positive and
-    // should_lower_door (0x467130) while it is non-zero. Name pending
-    // a writer.
-    ECombatFortification m_fortificationLevel;  // +0x132f4
+    // Original public fortificationLevel. HexIsBlocked and door routing
+    // use the same tier that selects the defending town's wall targets.
+    TFortificationLevel m_fortificationLevel;  // +0x132f4
     // Cleared by InitNonVisualVars at full width. Ordinal.
     int m_battleOver;  // +0x132f8
     TCombatWindow* m_combatWindow;  // +0x132fc
@@ -1034,34 +1031,17 @@ public:
     int m_originalDefenseSkill;  // +0x13dec
     int m_originalPowerSkill;  // +0x13df0
     int m_originalMana;  // +0x13df4
-    Bitmap816* m_combatIcons[18][5];  // +0x13df8
-    // Per-wall-segment hit points, indexed by TWallTargetId. Sliced
-    // 2026-08-08 by should_stay_in_castle (0x4213f0), which reads
-    // `[this + 4*id + 0x13f60]` for each of the five wall ids and
-    // treats a ZERO as "this segment is down". Fifteen entries because
-    // wallTargets' own `wall` column runs 5..14 and the largest id the
-    // located reader passes is 12; only 6, 8, 9, 10 and 12 are
-    // retail-proven. The DC roster attests the accessor
-    // (combatManager::get_wall_strength, cmbtmgr.h:1473, dc 0x27edc),
-    // not the field, so the name is the accessor's.
-    // EIGHTEEN, not fifteen plus a separate three (merged 2026-08-20).
-    // SetupAndLoadObstacles (0x466290) settles the extent outright: it
-    // fills this band with ONE 18-iteration loop out of
-    // akWallTraits[defendingTown->type][i].hitpoints, then stores 1
-    // into slots 15, 16 and 17, then copies all eighteen into
-    // wallStanding with a second 18-iteration loop whose source is
-    // exactly dst - 0x48. A 15+3 split cannot express either loop.
-    // The three tail slots are the two arrow towers and the keep - what
-    // DamageWall's targets 7, 6 and 0 clear - so the old field_13f9c /
-    // field_13fe4 rows were the same array seen through their one
-    // decoded writer, and DamageWall now spells them wallStrength[17]
-    // / [16] / [15] at byte-identical offsets.
-    int m_wallStrength[18];  // +0x13f60
-    // One dword per wall id (5..14 used): 1 while strength remains, 0 when
-    // the segment reaches zero. Same 18 extent, same reason.
-    int m_wallStanding[18];  // +0x13fa8
-
 private:
+    // Original private wallImages / wallLevel / wall_frame arrays (DC
+    // combatManager type 0x1ed7). Complete preserves their 18-row extents
+    // at +0x13df8 / +0x13f60 / +0x13fa8. SetupAndLoadObstacles fills the
+    // whole level array; the last three rows are the arrow towers/keep.
+    // DrawWall indexes the image table by wall_frame; DamageWall switches
+    // that frame between the standing and destroyed art.
+    Bitmap816* m_wallImages[18][5];  // +0x13df8
+    int m_wallLevel[18];            // +0x13f60
+    int m_wallFrame[18];            // +0x13fa8
+
     // The battle's packed adventure-map coordinate. GetBackgroundName
     // passes it by value to advManager::MoreTreesNear.
     type_point m_mapPoint;  // +0x13ff0
@@ -1761,7 +1741,7 @@ public:
     DC_ADDRESS(0x027edc, 0x20)
     long getWallStrength(TWallTargetId target) const
     {
-        return m_wallStrength[s_wallTargets[target].m_wall];
+        return m_wallLevel[s_wallTargets[target].m_wall];
     }
 
     // DC header inline (cmbtmgr.h:1478); the DC xref graph

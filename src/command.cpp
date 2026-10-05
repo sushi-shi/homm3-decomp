@@ -102,7 +102,7 @@ bool combatManager::automateCatapult()
     if (currentArmy->m_creatureType != CREATURE_CATAPULT)
         return 0;
 
-    if (m_fortificationLevel == COMBAT_FORTIFICATION_NONE) {
+    if (m_fortificationLevel == eFortificationNone) {
         m_nextAction = AI_ORDER_NONE;
         return 1;
     }
@@ -1354,11 +1354,11 @@ MAC_ADDRESS(0x0844b0, 0x84)
 bool combatManager::validWallTarget(TWallTargetId wall)
 {
     if (wall == WALL_TARGET_0 || wall == WALL_TARGET_6) {
-        if (m_fortificationLevel < COMBAT_FORTIFICATION_CASTLE)
+        if (m_fortificationLevel < eFortificationCastle)
             return 0;
     }
     if (wall == WALL_TARGET_7
-        && m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
+        && m_fortificationLevel < eFortificationCitadel)
         return 0;
     return getWallStrength(wall) > 0;
 }
@@ -1456,7 +1456,7 @@ int combatManager::getCommand(int newIndex)
 
     army* currentArmy = getCurrentArmy();
 
-    if (m_fortificationLevel >= COMBAT_FORTIFICATION_CASTLE
+    if (m_fortificationLevel >= eFortificationCastle
             && newIndex == COMBAT_HEX_UPPER_TOWER) {
         if (currentArmy->is(creatureCatapult) && m_currentSide == 0
                 && !m_creaturePlacement
@@ -1468,7 +1468,7 @@ int combatManager::getCommand(int newIndex)
         return COMBAT_COMMAND_VIEW_TOWERS;
     }
 
-    if (m_fortificationLevel >= COMBAT_FORTIFICATION_CITADEL
+    if (m_fortificationLevel >= eFortificationCitadel
             && newIndex == COMBAT_HEX_KEEP) {
         if (currentArmy->is(creatureCatapult) && m_currentSide == 0
                 && !m_creaturePlacement
@@ -1532,7 +1532,7 @@ int combatManager::getCommand(int newIndex)
     }
 
     if (currentArmy->is(creatureCatapult)
-            && m_fortificationLevel > COMBAT_FORTIFICATION_NONE
+            && m_fortificationLevel > eFortificationNone
             && m_currentSide == 0
             && !m_creaturePlacement) {
         // The counter is TWallTargetId-typed rather than a long with a
@@ -1568,7 +1568,7 @@ int combatManager::getCommand(int newIndex)
     }
 
     if (newIndex == s_wallTargets[WALL_TARGET_6].m_targetHex
-            && m_fortificationLevel == COMBAT_FORTIFICATION_CASTLE)
+            && m_fortificationLevel == eFortificationCastle)
         return COMBAT_COMMAND_VIEW_TOWERS;
     return COMBAT_COMMAND_NONE;
 }
@@ -1618,7 +1618,7 @@ int combatManager::rightClick(int newIndex)
         resetMouse();
         return 0;
     }
-    if (m_fortificationLevel == COMBAT_FORTIFICATION_CASTLE
+    if (m_fortificationLevel == eFortificationCastle
         && (newIndex == s_wallTargets[0].m_targetHex
             || newIndex == s_wallTargets[6].m_targetHex))
         viewCastleBallista(1);
@@ -2137,7 +2137,7 @@ void combatManager::turnOffHighlighter(bool drawIt)
 MAC_ADDRESS(0x08627c, 0x10c)
 inline bool combatManager::automateTower()
 {
-    if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
+    if (m_fortificationLevel < eFortificationCitadel)
         return 0;
 
     army* currentArmy = getCurrentArmy();
@@ -2157,7 +2157,7 @@ inline bool combatManager::automateTower()
         break;
     }
 
-    if (m_wallStrength[wall] == 0) {
+    if (m_wallLevel[wall] == 0) {
         currentArmy->m_monInfo.m_attributes |= creatureImmobilized;
         m_nextAction = 12;
         return 1;
@@ -2896,7 +2896,7 @@ MAC_ADDRESS(0x088334, 0xe0)
 std::string combatManager::getTowerString(TWallSection wall, long archers,
                                              long skill) const
 {
-    if (m_wallStrength[wall] <= 0) {
+    if (m_wallLevel[wall] <= 0) {
         return formatString(
             g_generalText->getText(GENERAL_TEXT_COMBAT_WALL_DESTROYED_FORMAT),
             s_wallTraits[m_defendingTown->m_type][wall].m_name);
@@ -2913,7 +2913,7 @@ DC_ADDRESS(0x070714, 0x10a)
 MAC_ADDRESS(0x088414, 0x190)
 void combatManager::viewCastleBallista(int isQuickInfo)
 {
-    if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
+    if (m_fortificationLevel < eFortificationCitadel)
         return;
 
     std::string msg;
@@ -2922,7 +2922,7 @@ void combatManager::viewCastleBallista(int isQuickInfo)
     m_defendingTown->calcNumLevelArchers(&numArchers, &skill);
     msg = getTowerString(eWallSectionMainBuilding,
                            numArchers, skill);
-    if (m_fortificationLevel >= COMBAT_FORTIFICATION_CASTLE) {
+    if (m_fortificationLevel >= eFortificationCastle) {
         msg += getTowerString(eWallSectionUpperTower,
                                 (numArchers + 1) / 2, skill);
         msg += getTowerString(eWallSectionLowerTower,

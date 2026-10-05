@@ -806,10 +806,10 @@ void combatManager::drawBackground()
         bitmap->dispose();
     }
 
-    if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE && m_moatOn) {
+    if (m_fortificationLevel > eFortificationNone && m_moatOn) {
         TWallTraits* traits =
             &s_wallTraits[m_defendingTown->m_type][WALL_TRAITS_ROW_MOAT];
-        Bitmap816* bitmap = m_combatIcons[WALL_TRAITS_ROW_MOAT][0];
+        Bitmap816* bitmap = m_wallImages[WALL_TRAITS_ROW_MOAT][0];
         if (bitmap) {
             bitmap->draw(
                 0, 0, bitmap->getWidth(), bitmap->getHeight(), m_saveScreenPostGrid,
@@ -818,7 +818,7 @@ void combatManager::drawBackground()
 
         traits = &s_wallTraits[m_defendingTown->m_type]
                               [WALL_TRAITS_ROW_MOAT + 1];
-        bitmap = m_combatIcons[WALL_TRAITS_ROW_MOAT + 1][0];
+        bitmap = m_wallImages[WALL_TRAITS_ROW_MOAT + 1][0];
         if (bitmap) {
             bitmap->draw(
                 0, 0, bitmap->getWidth(), bitmap->getHeight(), m_saveScreenPostGrid,
@@ -1078,10 +1078,10 @@ void combatManager::drawFrame(bool update,
         }
     }
 
-    if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE) {
+    if (m_fortificationLevel > eFortificationNone) {
         const TWallTraits& traits =
             s_wallTraits[m_defendingTown->m_type][eWallSectionBackWall];
-        drawObject(m_combatIcons[eWallSectionBackWall][0],
+        drawObject(m_wallImages[eWallSectionBackWall][0],
                    traits.m_x, traits.m_y);
     }
 
@@ -1102,23 +1102,23 @@ void combatManager::drawFrame(bool update,
                        &m_cmbtHeroLimitData[1], 1);
     }
 
-    if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE)
+    if (m_fortificationLevel > eFortificationNone)
         drawWallAt(255, 1);
 
     for (row = 0; row < 11; row++) {
-        if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE
+        if (m_fortificationLevel > eFortificationNone
                 && row == COMBAT_GATE_ROW
                 && m_drawbridgeState != DRAWBRIDGE_UP) {
             const TWallTraits& traits =
                 s_wallTraits[m_defendingTown->m_type][eWallSectionDoor];
-            drawObject(m_combatIcons[eWallSectionDoor][m_drawbridgeState],
+            drawObject(m_wallImages[eWallSectionDoor][m_drawbridgeState],
                        traits.m_x, traits.m_y);
         }
 
         int xStart;
         int xChange;
         int xStop;
-        if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE && row >= 6) {
+        if (m_fortificationLevel > eFortificationNone && row >= 6) {
             xStart = COMBAT_GRID_LAST_COLUMN;
             xStop = -1;
             xChange = -1;
@@ -1134,7 +1134,7 @@ void combatManager::drawFrame(bool update,
                     column += xChange) {
                 const int hexIndex = getHexIndex(column, row);
 
-                if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE
+                if (m_fortificationLevel > eFortificationNone
                         && priority == COMBAT_DRAW_PRIORITY_WALL) {
                     drawWallAt(hexIndex, xChange);
                 } else if (priority == COMBAT_DRAW_PRIORITY_CORPSE) {
@@ -1148,21 +1148,21 @@ void combatManager::drawFrame(bool update,
             }
         }
 
-        if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE
+        if (m_fortificationLevel > eFortificationNone
                 && row == COMBAT_GATE_ROW
                 && m_drawbridgeState == DRAWBRIDGE_DOWN
-                && m_combatIcons[eWallSectionDoorRope][1]) {
+                && m_wallImages[eWallSectionDoorRope][1]) {
             const TWallTraits& traits =
                 s_wallTraits[m_defendingTown->m_type][eWallSectionDoorRope];
-            drawObject(m_combatIcons[eWallSectionDoorRope][1],
+            drawObject(m_wallImages[eWallSectionDoorRope][1],
                        traits.m_x, traits.m_y);
         }
         pollSound();
     }
 
-    if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE) {
+    if (m_fortificationLevel > eFortificationNone) {
         drawWallAt(200, -1);
-        if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE)
+        if (m_fortificationLevel > eFortificationNone)
             drawWallAt(251, -1);
     }
 
@@ -1225,7 +1225,7 @@ void combatManager::drawWallAt(int hexIndex, int dx)
     for (int wall = eWallSectionDoor; wall < kNumWallSections; wall++) {
         const TWallTraits& traits = wtTable[wall];
         int wallHex = traits.m_hex;
-        Bitmap816* image = m_combatIcons[wall][m_wallStanding[wall]];
+        Bitmap816* image = m_wallImages[wall][m_wallFrame[wall]];
         if (wallHex == -1 || !image)
             continue;
 
@@ -1678,7 +1678,7 @@ int combatManager::drawMoatOverlay(int index)
                            cell.m_hexUlx + 43, cell.m_hexUly + 41);
     moatExtent.clip(combatManager::s_combatAreaLimits);
 
-    Bitmap816* image = m_combatIcons[WALL_TRAITS_ROW_MOAT][0];
+    Bitmap816* image = m_wallImages[WALL_TRAITS_ROW_MOAT][0];
     if (!image)
         return 0;
 
