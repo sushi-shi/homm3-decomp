@@ -2657,11 +2657,10 @@ bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
 }
 
 // E:\gamedcs\game.cpp:2716; original save_vector / src_vector.
-// Mac stages a signed-short count before the contiguous element payload.
-// Windows writes the low half of an int count directly: this spelling is
-// exact for all three retained instances (0x4d2ac0/0x4d2b20/0x4d2b80, the
-// short+writeValue form scores 69.26/71.47), and its IL cost keeps the
-// retail call boundaries in game::save.
+// DC's count local and Mac's staged value are signed short. With direct
+// stream writes, that type preserves all retained Windows instances and
+// game::save. The earlier short+writeValue probe changed both the local and
+// the call boundary; its loss did not establish an int local in retail.
 // The guarded return reproduces both retained 96-byte writers exactly,
 // including SETAE. Direct boolean/byte-local returns instead use SBB/INC;
 // that spelling difference does not refute the DC bool/reference signature.
@@ -2674,11 +2673,10 @@ DC_ADDRESS(0x0c1e58, 0x84)
 DC_ADDRESS(0x0c1edc, 0x88)
 bool saveVector(TAbstractFile* outfile, std::vector<T>& srcVector)
 {
-    int count = srcVector.size();
-    if (outfile->write(&count, sizeof(short)) < sizeof(short))
+    short count = srcVector.size();
+    if (outfile->write(&count, sizeof(count)) < sizeof(count))
         return false;
-    if (outfile->write(&srcVector[0], static_cast<short>(count) * sizeof(T))
-        < static_cast<short>(count) * sizeof(T))
+    if (outfile->write(&srcVector[0], count * sizeof(T)) < count * sizeof(T))
         return false;
     return true;
 }
