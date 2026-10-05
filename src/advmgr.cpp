@@ -9087,18 +9087,9 @@ int mapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit)
 // reused for the puzzle origin and the closing view re-centre (the
 // tail's x/y/z writes are RMW bitfield inserts into the same slot).
 
-// Residual (83.31%): pure schedule/register-homing inside the grail
-// draw block - branch shape agrees 4/4+1ret, call multiset agrees, and
-// the raw 13-arg DrawAdvObjWithFlag overload is byte-proven the right
-// spelling (the Bitmap16Bit* wrapper evaluates dx/dy before the bitmap
-// field loads and measures 75.35; the raw call measures 83.31; the
-// SetHeroContext merged y|z idiom in the tail was worth +5.1 before
-// that). What remains: retail re-loads arrowTileset per use where our
-// CL folds one load (sub eax,[edx+0x34] vs mov/sub), and the dy/dx
-// arithmetic interleaves with the bitmap pushes differently. Tried and
-// rejected: grailY-before-grailX declaration order (+0.01, copy-prop
-// eats it). why-reg finds first defs aligned - past-first-defs
-// schedule, the bounded class.
+// PuzzleDraw keeps the Bitmap16Bit-taking DrawTile wrapper recorded by
+// DC at 0x1e398. Mac's retained PuzzleDraw (0x1b6b8) expands that same
+// wrapper; VC6 expands both helpers here and reproduces retail exactly.
 // DC advmgr.cpp:11281 calls get_map_center at the closing recenter step;
 // Complete expands its fixed viewport offset.
 VA(0x0041a7f0, 0x307)
@@ -9119,9 +9110,8 @@ void advManager::viewPuzzle()
     if (g_game->m_numObelisks > 0) {
         g_windowManager->saveFizzleSourceX(8, 8, 592, 544);
         type_point centre = g_game->getPuzzleOrigin();
-        int grailY = g_game->m_ultimateArtifactY;
-        int grailX = g_game->m_ultimateArtifactX;
-        puzzleDraw(centre.m_x, centre.m_y, centre.m_z, grailX, grailY);
+        puzzleDraw(centre.m_x, centre.m_y, centre.m_z,
+                   g_game->m_ultimateArtifactX, g_game->m_ultimateArtifactY);
         g_windowManager->m_screenBitmap->colorize(8, 8, 592, 544, 0.625f,
                                                 0.0f);
         int revealed = puzzle.updatePuzzle(0);
@@ -9152,12 +9142,10 @@ void advManager::puzzleDraw(int startX, int startY, int z, int ultX, int ultY)
     completeDraw(startX, startY, z, 0, 0);
     g_drawingPuzzle = 0;
     m_arrowTileset->drawTile(
-        0, 0, 0, 32, 32, g_windowManager->m_screenBitmap->getMap(0, 0),
+        0, 0, 0, 32, 32, g_windowManager->m_screenBitmap,
         (ultX - startX) * 32 + (32 - m_arrowTileset->getWidth()) / 2,
         (ultY - startY) * 32 + (32 - m_arrowTileset->getHeight()) / 2,
-        g_windowManager->m_screenBitmap->getWidth(),
-        g_windowManager->m_screenBitmap->getHeight(),
-        g_windowManager->m_screenBitmap->getPitch(), 0, 0);
+        false, false);
 }
 
 VA(0x0041ab00, 0xF8)
