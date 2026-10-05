@@ -3134,7 +3134,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
                                const char* prompt, GlobalInfoFlags type,
                                bool humanPlayer)
 {
-    SpellID spell = cell->getShrineSpell();
+    ESpellId spell = cell->getShrineSpell();
     std::string result;
 
     if (humanPlayer)

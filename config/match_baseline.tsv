@@ -1699,7 +1699,7 @@ events	?doEventResource@advManager@@AAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@
 events	?doEventScholar@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4dc0	tokens1:13eeaf7a3a4a
 events	?doEventSeaChest@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa5030	tokens1:27752de9a551
 events	?doEventShipyard@advManager@@AAEXPAVNewmapCell@@Utype_point@@E@Z	90.8885	90.8885	91.9303	0x9e2e0	tokens1:ed4ca4a05061
-events	?doEventShrine@advManager@@AAEXPAVhero@@PAVNewmapCell@@PBDW4GlobalInfoFlags@@_N@Z	89.6531	89.6531	89.6701	0xa5610	tokens1:4ecda292904c
+events	?doEventShrine@advManager@@AAEXPAVhero@@PAVNewmapCell@@PBDW4GlobalInfoFlags@@_N@Z	89.6531	89.6531	89.6701	0xa5610	tokens1:17d7989a39f7
 events	?doEventSiren@advManager@@AAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa5980	tokens1:45039b2a385d
 events	?doEventSkeleton@advManager@@AAEXPAVhero@@PAUExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa5480	tokens1:86c7059c633e
 events	?doEventSpellScroll@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa5ea0	tokens1:f8d9a00e7e5e
@@ -1990,7 +1990,7 @@ game	?getRandomLith@game@@QBEEABV?$vector@Utype_point@@V?$allocator@Utype_point@
 game	?getRandomLith@game@@QBEEJJAAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddf0	tokens1:b820b496cb6c
 game	?getRandomLithExit@game@@QBEEJAAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0	tokens1:66aad5f580c1
 game	?getRandomMonster@game@@QAE?AW4TCreatureType@@HH@Z	99.0237	99.0237	99.0237	0xc92c0	tokens1:a3b8e13d6c07
-game	?getRandomSpell@game@@QAEHV?$bitset@$04@std@@@Z	100.0000	100.0000	100.0000	0xc95a0	tokens1:92d6b83898ad
+game	?getRandomSpell@game@@QAE?AW4ESpellId@@V?$bitset@$04@std@@@Z	100.0000	100.0000	100.0000	0xc95a0	tokens1:3bc7f51a2988
 game	?getRandomWhirlpool@game@@QBEEJAAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20	tokens1:93afd59e5fdc
 game	?getStartingHeroId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb400	tokens1:cf79e7378aab
 game	?getTownId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb870	tokens1:b84a2e928939
