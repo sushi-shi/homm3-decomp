@@ -1118,8 +1118,8 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 }
 
 // E:\gamedcs\findpath.cpp:1218
-// The siege-pressure preamble is retail-only: defending-town computer
-// stacks compare total HP against moat damage and may press blocked cells.
+// The siege-pressure preamble is absent from the older DC body. Defending-
+// town computer stacks compare HP with moat damage and may press blocked cells.
 // Preserve the repeated town/type and getTotalHitPoints reads.
 //
 // DC1325..1333 and Mac c73c0..c74d8 share a successful enemy condition,
@@ -1128,9 +1128,9 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 // the combined early-return guard recorded on DC1176..1177; completing
 // both scopes restores retail's four nested mark expansions.
 // DC1304..1307 initializes the blocked state before testing the moat.
-// Together with buildCombatPath's native branch order, these lifetimes
-// improve Windows 94.5290% to 99.2135%. The remaining instructions differ
-// in front-offset addition and moat/step-cost temporary allocation.
+// DC1304/1313/1355 read pc's cost and current point directly. Retaining
+// those component reads preserves the sign extension through isMoat and
+// the front-offset expansion rather than narrowing a cached long again.
 //
 // DC best_dist/end_hex/move_cost are int; move_cost is the one-step
 // increment, not pc.m_cost. The function-scope pathCell lifetime and direct
@@ -1234,7 +1234,7 @@ bool searchArray::findCombatPath(const army* currentArmy,
             if (!currentArmy->is(creatureDoubleWide)) {
                 moat = isMoat(adjacent);
             } else {
-                long front = hex + currentArmy->offsetToFront(-1);
+                long front = pc.m_point.m_x + currentArmy->offsetToFront(-1);
                 long tail = adjacent + currentArmy->offsetToFront(-1);
                 if (isMoat(adjacent) && adjacent != front)
                     moat = 1;
@@ -1248,12 +1248,12 @@ bool searchArray::findCombatPath(const army* currentArmy,
 
             if (!currentArmy->canFit(adjacent, 0, 0)
                     || (siegePressure && moat)) {
-                long enemyCost = cost;
+                long enemyCost = pc.m_cost;
                 unsigned char blocked = 0;
-                if (isMoat(hex))
+                if (isMoat(pc.m_point.m_x))
                     enemyCost += baseSpeed;
                 if (limit <= baseSpeed) {
-                    if (isMoat(hex))
+                    if (isMoat(pc.m_point.m_x))
                         blocked = 1;
                     if (currentArmy->is(creatureDoubleWide)
                             && isMoat(static_cast<short>(
@@ -1284,7 +1284,7 @@ bool searchArray::findCombatPath(const army* currentArmy,
                 if (flightCost >= currentArmy->getSpeed())
                     continue;
             }
-            pushCombatPoint(adjacent, direction, cost + step, flightCost,
+            pushCombatPoint(adjacent, direction, pc.m_cost + step, flightCost,
                             limit);
         }
 
