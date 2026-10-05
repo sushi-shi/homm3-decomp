@@ -85,19 +85,6 @@ DATA(0x00640300) static const int g_overviewHelpIds[8] = {
     19, 20, 21, 22, 23, 24, 18, 25
 };
 
-// Project-inferred replacement operation for the overview's typed slots.
-// Bind the table itself: removeWidget calls virtual close, so the subsequent
-// delete and clear must reread a dynamic table that callback may replace.
-template <class Slots>
-static void clearOverviewWidget(Slots& slots, int index)
-{
-    if (slots[index]) {
-        g_overWin->removeWidget(slots[index]);
-        delete slots[index];
-        slots[index] = 0;
-    }
-}
-
 long getLastBackpackIndex(long heroNumber);
 void updateBackpack(int slot);
 
@@ -123,6 +110,11 @@ void updateBackpack(int slot);
 // also used by other callers. Preserve that canonical helper while
 // recovering the caller structure that controls VC6's branch layout.
 // E:\gamedcs\overview.cpp:220
+// DC 239-279 clear the five dynamic widget tables in place (RemoveWidget,
+// delete, zero) and DC 1081-1084 fill the artifact-slot message fields
+// directly; Mac 0x133448 retains neither the former clearOverviewWidget nor
+// message::setWidgetCommand call. Source-model correction: 92.67 -> 92.11%
+// (the clears alone are 92.57%); the call census now matches retail 197/197.
 // DC records `iOffsetToSS` at sp+0x54 in the hero-row scope. Its
 // pixel offset is recovered below as item * 36 + 433 (DC 0x1061f2).
 // Restoring this native local is VC6 score-flat at 91.9700%.
@@ -166,20 +158,39 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
     for (row = 0; row < 4; row++) {
         for (item = 0; item < 70; item++) {
-            int slot = row * 70 + item;
-            clearOverviewWidget(g_textWidgetDynamic, slot);
-            clearOverviewWidget(g_iconWidgetDynamic, slot);
-            clearOverviewWidget(g_bitmapBorderDynamic, slot);
+            if (g_textWidgetDynamic[row * 70 + item]) {
+                g_overWin->removeWidget(g_textWidgetDynamic[row * 70 + item]);
+                delete g_textWidgetDynamic[row * 70 + item];
+                g_textWidgetDynamic[row * 70 + item] = 0;
+            }
+
+            if (g_iconWidgetDynamic[row * 70 + item]) {
+                g_overWin->removeWidget(g_iconWidgetDynamic[row * 70 + item]);
+                delete g_iconWidgetDynamic[row * 70 + item];
+                g_iconWidgetDynamic[row * 70 + item] = 0;
+            }
+
+            if (g_bitmapBorderDynamic[row * 70 + item]) {
+                g_overWin->removeWidget(g_bitmapBorderDynamic[row * 70 + item]);
+                delete g_bitmapBorderDynamic[row * 70 + item];
+                g_bitmapBorderDynamic[row * 70 + item] = 0;
+            }
         }
 
         for (item = 0; item < 2; item++) {
-            int slot = row * 2 + item;
-            clearOverviewWidget(g_buttonDynamic, slot);
+            if (g_buttonDynamic[row * 2 + item]) {
+                g_overWin->removeWidget(g_buttonDynamic[row * 2 + item]);
+                delete g_buttonDynamic[row * 2 + item];
+                g_buttonDynamic[row * 2 + item] = 0;
+            }
         }
 
         for (item = 0; item < 3; item++) {
-            int slot = row * 3 + item;
-            clearOverviewWidget(g_textButtonDynamic, slot);
+            if (g_textButtonDynamic[row * 3 + item]) {
+                g_overWin->removeWidget(g_textButtonDynamic[row * 3 + item]);
+                delete g_textButtonDynamic[row * 3 + item];
+                g_textButtonDynamic[row * 3 + item] = 0;
+            }
         }
     }
 
@@ -726,8 +737,9 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
                     if (artifact.m_artifactId == ARTIFACT_NONE) {
                         message msg;
-                        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS,
-                                             rowWidgetId + item + 119);
+                        msg.m_id = MESSAGE_WIDGET;
+                        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+                        msg.m_codeY = rowWidgetId + item + 119;
                         msg.m_extra = widget::WIDGET_DRAWN;
                         g_overWin->broadcastMessage(msg);
                     }
