@@ -132,7 +132,8 @@ public:
     // arity evidence: thiscall plus two pushed 1s.
     void drawOutline();
     void drawHotspot();
-    void draw(int incFrame, unsigned char drawHotspots);
+    // DC public ?Draw@townObject@@QAAXH_N@Z proves the bool parameter.
+    void draw(int incFrame, bool drawHotspots);
 };
 SIZE(townObject, 0x30);
 
@@ -896,7 +897,8 @@ public:
     void moveHero(town* fromTown, town* toTown);
     void updateTownInfo();
     void moveHeroFromGarrison();
-    void drawTown(int update, int incFrame, unsigned char drawHotspots);
+    // DC public ?DrawTown@townManager@@QAAXHH_N@Z; NB11 lowers bool to a byte.
+    void drawTown(int update, int incFrame, bool drawHotspots);
     void newStrips();
     void armyCommand(strip* whichStrip, int i, int shift, unsigned char joinDialog);
     void swapHeroes();
