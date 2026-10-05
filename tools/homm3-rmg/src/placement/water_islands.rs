@@ -78,7 +78,7 @@ impl PlacementMap<'_, '_, '_> {
         let minimum = bounds.minimum();
         let maximum = bounds.maximum();
         let side = self.view().signed_side();
-        let unreached = u16::try_from(raw::RMG_UNREACHED_COST).unwrap();
+        let unreached = const { crate::constants::narrow_u16(raw::RMG_UNREACHED_COST) };
         // The source resets the entire rectangle, including cells of other zones.
         for y in minimum.y..maximum.y {
             for x in minimum.x..maximum.x {

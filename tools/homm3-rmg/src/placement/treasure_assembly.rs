@@ -166,7 +166,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             let remainder = target
                 .checked_sub(total)
                 .ok_or(PlacementError::Arithmetic)?;
-            if remainder < i32::try_from(raw::RMG_TREASURE_MINIMUM_REMAINDER).unwrap()
+            if remainder < const { crate::constants::signed(raw::RMG_TREASURE_MINIMUM_REMAINDER) }
                 && remainder < total / 2
             {
                 break;

@@ -128,7 +128,7 @@ impl TerrainWorkspace {
         let count = map.raster().cells().len();
         let initial = TerrainTile::parse(
             Terrain::Water,
-            u8::try_from(raw::RMG_WATER_BASE_FRAME).expect("canonical water frame fits u8"),
+            const { crate::constants::narrow_u8(raw::RMG_WATER_BASE_FRAME) },
             Reflection::default(),
         )?;
         self.tiles
@@ -633,7 +633,7 @@ mod tests {
     fn successive_brushes_reuse_storage_and_finish_with_empty_worklists() {
         let initial = TerrainTile::parse(
             Terrain::Water,
-            u8::try_from(raw::RMG_WATER_BASE_FRAME).unwrap(),
+            const { crate::constants::narrow_u8(raw::RMG_WATER_BASE_FRAME) },
             Reflection::default(),
         )
         .unwrap();

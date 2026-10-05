@@ -20,10 +20,6 @@ impl GuardStrength {
     /// # Errors
     /// Reports signed overflow at the native subtraction, product or sum, even
     /// when widening the expression would give an otherwise representable result.
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "canonical minimum guard value fits i32"
-    )]
     pub fn scale(self, value: i32) -> Result<i32, PlacementError> {
         let index = usize::from(self.0);
         let low = term(
@@ -38,7 +34,7 @@ impl GuardStrength {
         )?;
         let result = low.checked_add(high).ok_or(PlacementError::Arithmetic)?;
         Ok(
-            if result < i32::try_from(raw::RMG_MINIMUM_GUARD_VALUE).unwrap() {
+            if result < const { crate::constants::signed(raw::RMG_MINIMUM_GUARD_VALUE) } {
                 0
             } else {
                 result

@@ -3,6 +3,25 @@
 //! Keep named native enums and extracted constructor defaults in `raw`; these
 //! constants name otherwise literal policies in the corresponding C++ bodies.
 
+// Narrow unsigned source constants into the signed or byte domains the native
+// code uses. Call inside `const { .. }`, so an out-of-range constant fails the
+// build rather than panicking at run time.
+#[allow(clippy::cast_possible_wrap)]
+pub(crate) const fn signed(value: u32) -> i32 {
+    assert!(value <= i32::MAX.unsigned_abs(), "constant fits i32");
+    value as i32
+}
+#[allow(clippy::cast_possible_truncation)]
+pub(crate) const fn narrow_u16(value: u32) -> u16 {
+    assert!(value <= u16::MAX as u32, "constant fits u16");
+    value as u16
+}
+#[allow(clippy::cast_possible_truncation)]
+pub(crate) const fn narrow_u8(value: u32) -> u8 {
+    assert!(value <= u8::MAX as u32, "constant fits u8");
+    value as u8
+}
+
 // TRmgGenerator::buildZoneBoundaries water-zone treasure assignments.
 pub(crate) const RMG_WATER_TREASURE_0_DENSITY: u32 = 5;
 pub(crate) const RMG_WATER_TREASURE_0_MINIMUM: u32 = 100;

@@ -2,7 +2,7 @@
 
 use crate::{
     behavior::Behavior,
-    domain::{Ordinal, Terrain},
+    domain::{Level, Ordinal, Terrain},
     raw,
 };
 use std::{
@@ -140,6 +140,14 @@ impl Levels {
             Self::Surface => 1,
             Self::Underground => raw::RMG_MAP_LEVEL_COUNT,
         }
+    }
+    /// Present planes, surface first.
+    pub fn iter(self) -> impl Iterator<Item = Level> {
+        let planes: &[Level] = match self {
+            Self::Surface => &[Level::Surface],
+            Self::Underground => &[Level::Surface, Level::Underground],
+        };
+        planes.iter().copied()
     }
 }
 
@@ -381,8 +389,8 @@ impl Request {
             raw::RMG_WATER_RANDOM => WaterChoice::Random,
             other => return Err(invalid("water choice", other)),
         };
-        let average = i32::try_from(raw::RMG_ZONE_MONSTERS_AVERAGE).unwrap();
-        let strongest = i32::try_from(raw::RMG_STRONGEST_GUARD_STRENGTH).unwrap();
+        let average = const { crate::constants::signed(raw::RMG_ZONE_MONSTERS_AVERAGE) };
+        let strongest = const { crate::constants::signed(raw::RMG_STRONGEST_GUARD_STRENGTH) };
         let shifted_strength = original
             .m_monsterStrength
             .checked_add(average)

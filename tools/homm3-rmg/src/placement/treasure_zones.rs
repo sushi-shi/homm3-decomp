@@ -43,7 +43,9 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         };
         let placements = bands.map(|band| Placement {
             initial_count: 0,
-            density: if band.maximum < i32::try_from(raw::RMG_TREASURE_MINIMUM_VALUE).unwrap() {
+            density: if band.maximum
+                < const { crate::constants::signed(raw::RMG_TREASURE_MINIMUM_VALUE) }
+            {
                 None
             } else {
                 band.density

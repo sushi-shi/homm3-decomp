@@ -261,10 +261,7 @@ impl PlacementMap<'_, '_, '_> {
             }
         }
         let side = self.view().signed_side();
-        for level in [Level::Surface, Level::Underground]
-            .into_iter()
-            .take(self.coverage().map().request().levels().count() as usize)
-        {
+        for level in self.coverage().map().request().levels().iter() {
             self.connections.reset();
             let segment = rng.pick(&BranchSeed::ALL).segment(side);
             self.connections.pending.try_reserve(1)?;

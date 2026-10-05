@@ -4,7 +4,7 @@ use super::{
     PlacementMap, TownsPlaced, WaterIslands, ZoneDistance,
 };
 use crate::{
-    domain::{Level, Terrain, WorldPosition},
+    domain::{Terrain, WorldPosition},
     geometry::{Point, ZoneId},
     object::ObjectKind,
     prototype::PrototypeCatalog,
@@ -320,10 +320,7 @@ impl PlacementMap<'_, '_, '_> {
 
     fn repair_water_zone_borders(&mut self, rng: &mut RetailRng) -> Result<(), ConnectionError> {
         let plane = self.view().side() * self.view().side();
-        for level in [Level::Surface, Level::Underground]
-            .into_iter()
-            .take(self.coverage().map().request().levels().count() as usize)
-        {
+        for level in self.coverage().map().request().levels().iter() {
             self.connections.repairs.clear();
             let start = level.index() * plane;
             for index in start..start + plane {
@@ -397,6 +394,7 @@ impl PlacementMap<'_, '_, '_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::domain::Level;
     #[test]
     fn seedless_retail_requires_replay_then_reuses_the_previous_zone_seed() {
         let zone = ZoneId::new(0);

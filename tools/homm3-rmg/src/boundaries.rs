@@ -397,10 +397,7 @@ impl BoundaryWorkspace {
             }
         }
         self.grid.reset(request.size(), request.levels())?;
-        for level in [Level::Surface, Level::Underground]
-            .into_iter()
-            .take(request.levels().count() as usize)
-        {
+        for level in request.levels().iter() {
             self.build_level(level, request, water, rng)?;
         }
         Ok(BoundaryMap {

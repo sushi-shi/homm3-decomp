@@ -300,8 +300,9 @@ impl PlacementMap<'_, '_, '_> {
         let Some(bounds) = zone.bounds() else {
             return Ok(false);
         };
-        let mut best =
-            i32::try_from(crate::constants::RMG_PRIMARY_TOWN_MAXIMUM_SQUARED_DISTANCE).unwrap();
+        let mut best = const {
+            crate::constants::signed(crate::constants::RMG_PRIMARY_TOWN_MAXIMUM_SQUARED_DISTANCE)
+        };
         for y in bounds.minimum().y..bounds.maximum().y {
             for x in bounds.minimum().x..bounds.maximum().x {
                 let position = WorldPosition {
@@ -355,8 +356,8 @@ impl PlacementMap<'_, '_, '_> {
             skip_primary = false;
         }
         let mut density = Density::new(&rules.categories)?;
-        let Some(spacing) =
-            density.spacing(i32::try_from(raw::RMG_TOWN_AND_MINE_DENSITY_AREA).unwrap())
+        let Some(spacing) = density
+            .spacing(const { crate::constants::signed(raw::RMG_TOWN_AND_MINE_DENSITY_AREA) })
         else {
             return Ok(());
         };

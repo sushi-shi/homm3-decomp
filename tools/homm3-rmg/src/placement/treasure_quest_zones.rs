@@ -22,7 +22,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         group.quest_scores.resize(count, 0);
         group
             .quest_scores
-            .fill(i32::try_from(raw::RMG_QUEST_UNREACHED_DISTANCE).unwrap());
+            .fill(const { crate::constants::signed(raw::RMG_QUEST_UNREACHED_DISTANCE) });
         group.quest_scores[origin.index()] = 0;
         group.quest_pending.clear();
         group
@@ -55,10 +55,10 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
         }
         for score in &mut group.quest_scores {
             let base = if *score == 1 {
-                i32::try_from(raw::RMG_QUEST_ADJACENT_ZONE_SCORE).unwrap()
+                const { crate::constants::signed(raw::RMG_QUEST_ADJACENT_ZONE_SCORE) }
             } else {
                 score
-                    .checked_mul(i32::try_from(raw::RMG_QUEST_DISTANCE_SCALE).unwrap())
+                    .checked_mul(const { crate::constants::signed(raw::RMG_QUEST_DISTANCE_SCALE) })
                     .ok_or(PlacementError::Arithmetic)?
             };
             *score = base
@@ -74,7 +74,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             if zone.id() == origin
                 || junction
                 || zone.terrain() == Terrain::Water
-                || score > i32::try_from(raw::RMG_QUEST_MAXIMUM_SCORE).unwrap()
+                || score > const { crate::constants::signed(raw::RMG_QUEST_MAXIMUM_SCORE) }
             {
                 continue;
             }
@@ -91,7 +91,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             if self.place_group(
                 group,
                 group.quest_candidates[index],
-                i32::try_from(raw::RMG_QUEST_GROUP_SPACING).unwrap(),
+                const { crate::constants::signed(raw::RMG_QUEST_GROUP_SPACING) },
                 objects,
                 rng,
             )? {

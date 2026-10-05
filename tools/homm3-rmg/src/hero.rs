@@ -96,7 +96,7 @@ mod tests {
     #[test]
     fn singleton_draws_once_then_empty_pool_keeps_the_rng() {
         let mut pool = HeroPool::new(MapVersion::ShadowOfDeath);
-        for value in 1..i32::try_from(raw::RMG_HERO_COUNT).unwrap() {
+        for value in 1..const { crate::constants::signed(raw::RMG_HERO_COUNT) } {
             pool.disable(HeroId::parse(value).unwrap());
         }
         let mut rng = RetailRng::new(1);

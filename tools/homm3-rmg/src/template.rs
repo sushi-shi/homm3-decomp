@@ -824,7 +824,9 @@ fn parse_zone(
     let player = row.number(raw::RMG_TEMPLATE_COLUMN_PLAYER_INDEX)?;
     let owner = match player {
         0 => None,
-        value if (1..=i32::try_from(raw::RMG_PLAYER_COUNT).unwrap()).contains(&value) => {
+        value
+            if (1..=const { crate::constants::signed(raw::RMG_PLAYER_COUNT) }).contains(&value) =>
+        {
             Some(PlayerSlot(u8::try_from(value - 1).unwrap()))
         }
         _ => return Ok(Err(unusable)),
