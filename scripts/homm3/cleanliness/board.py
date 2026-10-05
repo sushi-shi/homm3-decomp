@@ -11,7 +11,7 @@ visible instead of being blessed. `board --update` is the one deliberate
 way to move a floor - lower by fixing the tree, higher only as an
 explicit, reviewed act.
 
-The rows (all ratcheted; floors start at the tree's current counts):
+The rows (ratcheted unless noted; floors start at the tree's current counts):
 
   C-style casts       BANNED at floor 0 (gruntz cast-metric-policy):
                       every cast is a named C++ cast. Shapes:
@@ -85,6 +85,30 @@ The rows (all ratcheted; floors start at the tree's current counts):
                       conditionals: the Mac compiler command line defines it,
                       while a source-local #define or
                       #undef remains a counted scaffold. Ratchets to zero.
+                      Sanctioned feature switches (below) are likewise
+                      exempt only in conditionals.
+  sanctioned feature  NOT ratcheted; reported on its own row. A reviewed,
+  switches            user-approved opt-in build flag that selects
+                      deliberate non-retail behavior for the whole build
+                      (never a per-TU view of a recovered fact). Matching
+                      builds leave it undefined, so the retail arm is the
+                      one compiled and scored. The only member is
+                      HOMM3_RMG_HOTFIX (defined, non-crashing alternatives
+                      to retail RMG undefined behavior; see
+                      docs/reference/rmg-undefined-behavior.md). Its
+                      conditional sites are counted so the surface stays
+                      visible; a source #define/#undef of it is still a
+                      per-TU scaffold, and any other HOMM3_ name in the
+                      same directive still counts there. Admitting another
+                      switch is a reviewed edit of
+                      _SANCTIONED_FEATURE_SWITCHES.
+  sanctioned feature  NOT ratcheted; the .cpp-local views twin. A class
+  local classes       compiled only in a sanctioned switch's own arm
+                      (`#if defined(X)`/`#ifdef X`, or the #else of
+                      `#if !defined(X)`/`#ifndef X`) has no retail or
+                      CodeView owner to restore, so it is reported here
+                      instead. Compound conditions and #elif arms remain
+                      ordinary .cpp-local views.
 
 Every invocation self-tests first: each metric's embedded positive
 samples must be detected and its negatives must count zero, so the gate
@@ -196,12 +220,67 @@ _CPP_LOCAL_ENUM = re.compile(
 def _cpp_local_view_sites(code: str, ctx) -> list:
     """A source-proven local class is not a per-TU reconstruction view."""
     allowed = ctx.get("dc_local_classes", frozenset()) if isinstance(ctx, dict) else frozenset()
+    feature_only = _feature_arm_spans(code)
     out = []
     for match in _CPP_LOCAL_DEF.finditer(code):
         name = match.group('name').rsplit('::', 1)[-1]
-        if name not in allowed:
+        if name not in allowed and not _within(match.start(), feature_only):
             out.append(match.start())
     return out
+
+
+def _feature_local_class_sites(code: str, _ctx) -> list:
+    """A class that exists only in a sanctioned feature arm has no retail or
+    CodeView owner to restore; report it instead of ratcheting it."""
+    feature_only = _feature_arm_spans(code)
+    return [match.start() for match in _CPP_LOCAL_DEF.finditer(code)
+            if _within(match.start(), feature_only)]
+
+
+def _within(offset: int, spans) -> bool:
+    return any(start <= offset < end for start, end in spans)
+
+
+def _feature_arm_spans(code: str) -> list:
+    """[start, end) spans compiled ONLY when a sanctioned feature switch is
+    defined: the `#if defined(X)` / `#ifdef X` arm, or the `#else` arm of
+    `#if !defined(X)` / `#ifndef X`. Any compound condition, and every
+    `#elif` arm, stays ordinary source."""
+    spans = []
+    stack = []  # [polarity, open hotfix-arm start or None]
+    for directive in _PP_LOGICAL.finditer(code):
+        text = " ".join(directive.group().replace("\\\n", " ").split())
+        keyword = re.match(r"#\s*(\w+)", text)
+        keyword = keyword.group(1) if keyword else ""
+        if keyword in ("if", "ifdef", "ifndef"):
+            polarity = _feature_polarity(text)
+            stack.append([polarity, directive.end() if polarity == 1 else None])
+        elif not stack:
+            continue
+        elif keyword in ("elif", "else", "endif"):
+            frame = stack[-1]
+            if frame[1] is not None:
+                spans.append((frame[1], directive.start()))
+                frame[1] = None
+            if keyword == "else" and frame[0] == -1:
+                frame[1] = directive.end()
+            if keyword == "elif":
+                frame[0] = None
+            if keyword == "endif":
+                stack.pop()
+    return spans
+
+
+def _feature_polarity(text: str):
+    for name in _SANCTIONED_FEATURE_SWITCHES:
+        quoted = re.escape(name)
+        if re.fullmatch(r"#\s*(?:ifdef\s+" + quoted + r"|if\s+defined\s*\(?\s*"
+                        + quoted + r"\s*\)?)", text):
+            return 1
+        if re.fullmatch(r"#\s*(?:ifndef\s+" + quoted + r"|if\s+!\s*defined\s*\(?\s*"
+                        + quoted + r"\s*\)?)", text):
+            return -1
+    return None
 
 
 def _cpp_local_enum_sites(code: str, ctx) -> list:
@@ -385,6 +464,11 @@ _ANNOTATION_CONDITIONAL = re.compile(r"^[ \t]*\#[ \t]*(?:if|ifdef|elif)\b")
 # is still debt and must fail the zero floor.
 _MAC_TARGET_SWITCH = "HOMM3" + "_TARGET_MAC"
 _TARGET_CONDITIONAL = re.compile(r"^[ \t]*\#[ \t]*(?:if|ifdef|ifndef|elif)\b")
+# Reviewed whole-build feature switches (see the module docstring). Each
+# selects deliberate, documented non-retail behavior for every TU at once,
+# so a conditional on one is a feature fork, not a per-TU reconstruction
+# view. The build command line defines them; a source #define/#undef is debt.
+_SANCTIONED_FEATURE_SWITCHES = frozenset({"HOMM3" + "_RMG_HOTFIX"})
 
 
 def _legit_pp_names(sources) -> frozenset:
@@ -414,11 +498,27 @@ def _scaffold_preprocessor_sites(code: str, ctx) -> list:
                 continue
             if name == _MAC_TARGET_SWITCH and _TARGET_CONDITIONAL.match(text):
                 continue
+            if (name in _SANCTIONED_FEATURE_SWITCHES
+                    and _TARGET_CONDITIONAL.match(text)):
+                continue
             if (ctx.get("path") == VA_HEADER
                     and name == _OWNERSHIP_ANNOTATION_SWITCH
                     and _ANNOTATION_CONDITIONAL.match(text)):
                 continue
             out.append(directive.start() + match.start())
+    return out
+
+def _feature_switch_sites(code: str, _ctx) -> list:
+    """Conditional uses of a sanctioned feature switch: exactly the sites
+    the scaffold row exempts, reported on their own unratcheted row."""
+    out = []
+    for directive in _PP_LOGICAL.finditer(code):
+        text = directive.group()
+        if not _TARGET_CONDITIONAL.match(text):
+            continue
+        out.extend(directive.start() + match.start()
+                   for match in _SCAFFOLD_IDENT.finditer(text)
+                   if match.group() in _SANCTIONED_FEATURE_SWITCHES)
     return out
 
 # The enum-cast row needs the tree's declared enum NAMES (collected in a
@@ -506,10 +606,19 @@ METRICS = (
      "consumer, then delete the object-like `#define HOMM3_X` and its "
      "#if/#ifdef/#else fork; never add a new per-TU guard, and reconcile "
      "two arms to the one shape retail bytes + the DC dump prove"),
+    ("sanctioned feature switches", _feature_switch_sites, False,
+     "informational only: conditionals on a reviewed whole-build feature "
+     "switch; not ratcheted"),
+    ("sanctioned feature local classes", _feature_local_class_sites, True,
+     "informational only: .cpp classes compiled only under a reviewed "
+     "whole-build feature switch; not ratcheted"),
 )
 
-# All rows ratchet: floors only move down (raises are explicit --update).
-RATCHET = {label for label, _, _, _ in METRICS}
+# Reported, never ratcheted: a reviewed feature's surface may grow with it.
+REPORTED_ONLY = frozenset({"sanctioned feature switches",
+                           "sanctioned feature local classes"})
+# Every other row ratchets: floors only move down (raises are explicit --update).
+RATCHET = {label for label, _, _, _ in METRICS} - REPORTED_ONLY
 _FIX = {label: fix for label, _, _, fix in METRICS}
 
 
@@ -786,6 +895,7 @@ _SCAFFOLD_ERROR = _SCAFFOLD_PREFIX + "SAMPLE_ERROR"
 _SCAFFOLD_VERIFY = _SCAFFOLD_PREFIX + "SAMPLE_VERIFY"
 _SCAFFOLD_RELEASE_VERIFY = _SCAFFOLD_PREFIX + "RELEASE_VERIFY"
 _SCAFFOLD_MAC_TARGET = _SCAFFOLD_PREFIX + "TARGET_MAC"
+_SCAFFOLD_RMG_HOTFIX = _SCAFFOLD_PREFIX + "RMG_HOTFIX"
 _SAMPLES["per-TU preprocessor scaffolds"] = (
     ("#define " + _SCAFFOLD_DECLS,
      "#undef " + _SCAFFOLD_DECLS,
@@ -797,7 +907,11 @@ _SAMPLES["per-TU preprocessor scaffolds"] = (
      "#if !defined(" + _SCAFFOLD_INLINE + ")",
      "  # define " + _SCAFFOLD_DECLS + " 1",
      "#define " + _SCAFFOLD_MAC_TARGET + " 1",
-     "#undef " + _SCAFFOLD_MAC_TARGET),
+     "#undef " + _SCAFFOLD_MAC_TARGET,
+     "#define " + _SCAFFOLD_RMG_HOTFIX,
+     "#undef " + _SCAFFOLD_RMG_HOTFIX,
+     "#if defined(" + _SCAFFOLD_RMG_HOTFIX + ") || defined("
+     + _SCAFFOLD_DECLS + ")"),
     ("#ifn" + "def " + _SCAFFOLD_PREFIX + "SAMPLE_H\n#define "
      + _SCAFFOLD_PREFIX + "SAMPLE_H",
      "#define " + _SCAFFOLD_ERROR + "(code) (0x88770000UL + (code))\n"
@@ -812,8 +926,41 @@ _SAMPLES["per-TU preprocessor scaffolds"] = (
      "#ifdef " + _SCAFFOLD_MAC_TARGET,
      "#ifndef " + _SCAFFOLD_MAC_TARGET,
      "#elif defined(" + _SCAFFOLD_MAC_TARGET + ")",
+     "#if defined(" + _SCAFFOLD_RMG_HOTFIX + ")",
+     "#if !defined(" + _SCAFFOLD_RMG_HOTFIX + ")",
+     "#ifdef " + _SCAFFOLD_RMG_HOTFIX,
+     "#ifndef " + _SCAFFOLD_RMG_HOTFIX,
+     "#elif defined(" + _SCAFFOLD_RMG_HOTFIX + ")",
      "int " + _SCAFFOLD_DECLS + " = 1;",
      "// #define " + _SCAFFOLD_PREFIX + "COMMENT_DECLS"))
+
+_SAMPLES["sanctioned feature switches"] = (
+    ("#if defined(" + _SCAFFOLD_RMG_HOTFIX + ")",
+     "#ifdef " + _SCAFFOLD_RMG_HOTFIX,
+     "#ifndef " + _SCAFFOLD_RMG_HOTFIX,
+     "#elif !defined(" + _SCAFFOLD_RMG_HOTFIX + ")"),
+    ("#define " + _SCAFFOLD_RMG_HOTFIX,
+     "#undef " + _SCAFFOLD_RMG_HOTFIX,
+     "#if defined(" + _SCAFFOLD_DECLS + ")",
+     "#if defined(" + _SCAFFOLD_MAC_TARGET + ")",
+     "// #if defined(" + _SCAFFOLD_RMG_HOTFIX + ")",
+     "int " + _SCAFFOLD_RMG_HOTFIX + "_SITES = 1;"))
+_FEATURE_ONLY_CLASS = (
+    "#if defined(" + _SCAFFOLD_RMG_HOTFIX + ")\nstruct TFailure {};\n#endif",
+    "#ifdef " + _SCAFFOLD_RMG_HOTFIX + "\nstruct TFailure {};\n#endif",
+    "#ifndef " + _SCAFFOLD_RMG_HOTFIX + "\nint a;\n#else\nstruct TFailure {};\n#endif",
+    "#if defined(" + _SCAFFOLD_RMG_HOTFIX + ")\n#if 1\n#endif\nstruct TFailure {};\n#endif")
+_RETAIL_ARM_CLASS = (
+    "#if defined(" + _SCAFFOLD_RMG_HOTFIX + ")\nint a;\n#else\nstruct TView {};\n#endif",
+    "#if !defined(" + _SCAFFOLD_RMG_HOTFIX + ")\nstruct TView {};\n#endif",
+    "#if defined(" + _SCAFFOLD_RMG_HOTFIX + ") || defined(" + _SCAFFOLD_DECLS
+    + ")\nstruct TView {};\n#endif",
+    "#if defined(" + _SCAFFOLD_RMG_HOTFIX + ")\nint a;\n#elif 1\nstruct TView {};\n#endif",
+    "#if defined(" + _SCAFFOLD_RMG_HOTFIX + ")\nint a;\n#endif\nstruct TView {};",
+    "#if defined(" + _SCAFFOLD_MAC_TARGET + ")\nstruct TView {};\n#endif")
+_SAMPLES["sanctioned feature local classes"] = (_FEATURE_ONLY_CLASS, _RETAIL_ARM_CLASS)
+_SAMPLES[".cpp-local views"] = (_SAMPLES[".cpp-local views"][0] + _RETAIL_ARM_CLASS,
+                                _SAMPLES[".cpp-local views"][1] + _FEATURE_ONLY_CLASS)
 
 # Exact-count samples: a positive only proves `>= 1`, which is how the
 # continuation-line blindness above survived - the joined sample still
@@ -832,7 +979,12 @@ _MULTI_SAMPLES = {
         ("#if defined(" + _SCAFFOLD_DECLS + ") \\\n    || 0\nint "
          + _SCAFFOLD_LAYOUT + ";", 1),
         ("#define " + _SCAFFOLD_INLINE + " \\\n    1\n#define "
-         + _SCAFFOLD_DECLS, 2)),
+         + _SCAFFOLD_DECLS, 2),
+        ("#if defined(" + _SCAFFOLD_RMG_HOTFIX + ") \\\n    || defined("
+         + _SCAFFOLD_DECLS + ")", 1)),
+    "sanctioned feature switches": (
+        ("#if defined(" + _SCAFFOLD_RMG_HOTFIX + ") \\\n    && !defined("
+         + _SCAFFOLD_RMG_HOTFIX + ")", 2),),
 }
 
 

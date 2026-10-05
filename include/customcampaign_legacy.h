@@ -14,10 +14,10 @@
 #pragma pack(push, 1)
 struct LegacyCampaignHero : public type_obscuring_object {
     short m_mana;                              // +0x018
-    int m_id;                                  // +0x01a
+    HeroId m_id;                               // +0x01a, DC THeroID id
     signed char m_owner;                       // +0x01e
     char m_name[13];                           // +0x01f
-    int m_heroClass;                           // +0x02c
+    THeroClass m_heroClass;                    // +0x02c, DC THeroClass hero_class
     unsigned char m_portrait;                  // +0x030
     int m_targetX; // +0x031
     int m_targetY; // +0x035
