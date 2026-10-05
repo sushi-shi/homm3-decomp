@@ -19,44 +19,48 @@
 
 // E:\gamedcs\search.cpp:32
 // Native 0x1616a4 and 0x1616bc clear the point-mismatch and unvisited paths
-// independently, agreeing with DC's separate 71/79 source groups. Preserve
-// both guards and their clearPath calls. Flying is Boolean state passed to
-// the Boolean getCell parameter; a byte local adds a non-retail normalization.
-// These source repairs recover 76.50 -> 79.57%. The remaining mismatch is
-// vector::erase expansion inside clearPath, not a reason to flatten it.
-// Earlier result-reference and 24 local-order probes did not recover retail's
-// retained vector base; four current initialization phases give three objects.
+// independently, agreeing with DC's separate 71/79 source groups. Flying is
+// Boolean state passed to the Boolean getCell parameter; a byte local adds a
+// non-retail normalization.
+// DC lines 32/36 construct both points with type_point(short,short,short)
+// from the hero's coordinates, not through getLocation/getTarget, and lines
+// 42/96 call vector::clear directly (search.cpp rows, not FindPath.h's
+// ClearPath). Those spellings set retail's /Ob2 frontier: the entry and
+// unvisited clears expand erase while the other arms call it. The direct
+// points raise 79.52 to 98.76%; initializing flying before the previous-cost
+// local makes it exact. Routing the clears through clearPath() gives 85.35%.
 VA(0x0056a0d0, 0x282)
 DC_ADDRESS(0x12b2e0, 0x110)
 MAC_ADDRESS(0x161498, 0x41c)  // anchor-global
 int searchArray::buildPath(const hero* currentHero, long limit)
 {
-    type_point source = currentHero->getLocation();
-    type_point dest = currentHero->getTarget();
+    type_point source(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    type_point dest(currentHero->m_pathTargetX, currentHero->m_pathTargetY,
+                    currentHero->m_pathTargetZ);
     pathCell* currentPathCell;
-    int previousCost = 0x30d400;
-    clearPath();
     bool flying = false;
+    int previousCost = 0x30d400;
+    m_result.clear();
 
     while (dest != source) {
         if (!dest.isValid()) {
-            clearPath();
+            m_result.clear();
             break;
         }
 
         currentPathCell = getCell(dest, flying);
         if (currentPathCell->m_adjustedCost > previousCost) {
-            clearPath();
+            m_result.clear();
             break;
         }
         previousCost = currentPathCell->m_adjustedCost;
 
         if (currentPathCell->m_point != dest) {
-            clearPath();
+            m_result.clear();
             break;
         }
         if (!currentPathCell->m_visited) {
-            clearPath();
+            m_result.clear();
             break;
         }
 
@@ -64,7 +68,7 @@ int searchArray::buildPath(const hero* currentHero, long limit)
             m_result.push_back(currentPathCell);
 
         if (currentPathCell->m_lastPoint == dest) {
-            clearPath();
+            m_result.clear();
             break;
         }
 
@@ -105,7 +109,7 @@ unsigned char checkAdjacentMonster(const hero* currentHero,
                     entryPoint.m_point.m_y,
                     entryPoint.m_point.m_z)
         & MAP_EXTRA_MONSTER) {
-        if (g_advManager->findAdjacentMonster(entryPoint.m_point, &monster,
+        if (g_advManager->findAdjacentMonster(entryPoint.m_point, monster,
                                               entryPoint.m_monster)) {
             if (searchType == const_AI_enemy_search)
                 return 1;
@@ -155,7 +159,7 @@ void searchArray::enterLith(const hero* currentHero,
             if (cell->m_type == cellType && cell->m_extraInfo != excluded
                 && cell->m_isTrigger) {
                 if (g_advManager->findAdjacentMonster(
-                        exitPoint, &monster, entryPoint.m_monster)) {
+                        exitPoint, monster, entryPoint.m_monster)) {
                     long value = aiValueOfEvent(currentHero, monster);
                     if (value <= -500000000)
                         return;
@@ -179,7 +183,7 @@ void searchArray::enterLith(const hero* currentHero,
         }
         monster = entryPoint.m_monster;
         if (searchType >= const_AI_search && cellType != LITH_TWOWAY)
-            g_advManager->findAdjacentMonster(exitPoint, &monster,
+            g_advManager->findAdjacentMonster(exitPoint, monster,
                                               entryPoint.m_monster);
         exitCell.m_point.m_x = exitPoint.m_x;
         exitCell.m_point.m_y = exitPoint.m_y;
@@ -245,7 +249,9 @@ void searchArray::boardBoat(const hero* currentHero, pathCell& cell)
 // A town with a visiting hero cannot receive. Retail's min temporaries put
 // gates first, and its destination loop loads each town ID once.
 // DC records const pathCell&; restoring the reference keeps Windows bytes
-// unchanged. The remaining extra slot belongs to the location return value.
+// unchanged. DC lines 352-354 copy the destination town's x/y/z into the
+// new cell's point field by field rather than through town::getLocation;
+// that removes the location return slot and makes the body exact.
 VA(0x0056a850, 0x27E)
 DC_ADDRESS(0x12b988, 0x240)
 MAC_ADDRESS(0x16202c, 0x35c)  // exhaustive search.obj order-map
@@ -298,7 +304,9 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
                 continue;
             newCell.m_barrierValue -= aiResourceCost(player, cost);
         }
-        newCell.m_point = otherTown->getLocation();
+        newCell.m_point.m_x = otherTown->m_mapX;
+        newCell.m_point.m_y = otherTown->m_mapY;
+        newCell.m_point.m_z = otherTown->m_mapZ;
         newCell.m_castleGate = 1;
         pushPoint(currentPathCell, newCell, 0, 0, limit,
                   newCell.m_barrierValue + barrierValue, newCell.m_monster,
@@ -762,7 +770,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
                 & MAP_EXTRA_MONSTER)
             && cell.m_point != start
             && g_advManager->findAdjacentMonster(
-                cell.m_point, &monster, cell.m_monster))
+                cell.m_point, monster, cell.m_monster))
             adjacentMonster = 1;
 
         testPossibleDirections(currentHero, cell, turnMobility,

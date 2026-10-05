@@ -3707,6 +3707,10 @@ void game::giveTroopsToNeutralTowns()
 // DC4116 and Mac d5534..d5594 compare that owner with teamInfo[player]. Retail
 // +0x1eb..+0x246 does the same; inserting GetTeam changes the native behavior.
 // Original public ?ValidateVictoryLossConditions@game@@QAAX_N@Z proves bool.
+// DC constructs each pool hero's point with type_point(short,short,short)
+// from its coordinates (no get_location call): 96.28 -> 98.16%. Residual:
+// the lose-hero arm swaps the lchero/poolhero stack slots that the
+// defeat-hero arm assigns like retail; a separate team declaration is flat.
 VA(0x004bf780, 0x6E2)
 DC_ADDRESS(0x0aa7e0, 0x5c4)
 MAC_ADDRESS(0x0d513c, 0x960)  // order-map + whole-function identity
@@ -3765,7 +3769,8 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
                             m_mapHeader.m_victoryCondition.m_heroZ);
         m_mapHeader.m_victoryCondition.m_heroId = -1;
         for (i = 0; i < HERO_COUNT; ++i) {
-            type_point poolheroLoc = m_heroes[i].getLocation();
+            type_point poolheroLoc(m_heroes[i].m_x, m_heroes[i].m_y,
+                                   m_heroes[i].m_z);
             if (vcheroLoc == poolheroLoc) {
                 if (isHumanTeam(m_heroes[i].m_owner)) {
                     m_mapHeader.m_victoryCondition.m_type = -1;
@@ -3803,7 +3808,8 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
         type_point lcheroLoc(m_mapHeader.m_lossCondition.m_heroX, m_mapHeader.m_lossCondition.m_heroY, m_mapHeader.m_lossCondition.m_heroZ);
         m_mapHeader.m_lossCondition.m_heroId = -1;
         for (i = 0; i < HERO_COUNT; ++i) {
-            type_point poolheroLoc = m_heroes[i].getLocation();
+            type_point poolheroLoc(m_heroes[i].m_x, m_heroes[i].m_y,
+                                   m_heroes[i].m_z);
             if (lcheroLoc == poolheroLoc) {
                 int numHumanTeams = 0;
                 for (int team = 0; team < 8; ++team) {
@@ -8569,7 +8575,7 @@ void game::setupAdjacentMons()
         for (x = 0; x < g_mapWidth; ++x) {
             for (y = 0; y < g_mapHeight; ++y) {
                 if (g_advManager->findAdjacentMonster(
-                        type_point(x, y, z), &monster, excluded)) {
+                        type_point(x, y, z), monster, excluded)) {
                     unsigned short* extraByte = getMapExtraPtr(x, y, z);
                     *extraByte |= MAP_EXTRA_MONSTER;
                 } else {

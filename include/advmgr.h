@@ -1403,8 +1403,8 @@ public:
     void forceNewHover();
     void screenScroll(int dir, int changeMouse);
     void checkScreenScroll();
-    unsigned char findAdjacentMonster(type_point point, type_point* result,
-                                      type_point excluded);
+    bool findAdjacentMonster(type_point point, type_point& result,
+                             type_point excluded);
     void loadRemote(unsigned char makeOrig);
     void startLocalPlayerTurn();
     int getCloudLookup(int srcX, int srcY, int z);

@@ -8880,10 +8880,12 @@ void advManager::enableButtons()
                                widget::WIDGET_ACTIVE);
 }
 
+// Original DC ?FindAdjacentMonster@advManager@@QAA_NUtype_point@@AAU2@0@Z
+// proves the bool result and the type_point& result parameter.
 VA(0x0041a460, 0x1FB)
 DC_ADDRESS(0x01dc24, 0x1be)
 MAC_ADDRESS(0x01aed0, 0x300)
-unsigned char advManager::findAdjacentMonster(type_point point, type_point* result, type_point excluded)
+bool advManager::findAdjacentMonster(type_point point, type_point& result, type_point excluded)
 {
     RECT rect;
     int x;
@@ -8912,9 +8914,9 @@ unsigned char advManager::findAdjacentMonster(type_point point, type_point* resu
                 && (mapCell->m_groundSet == eTerrainWater) == centerIsWater
                 && (x != excluded.m_x || y != excluded.m_y
                     || point.m_z != excluded.m_z)) {
-                result->m_x = x;
-                result->m_y = y;
-                result->m_z = point.m_z;
+                result.m_x = x;
+                result.m_y = y;
+                result.m_z = point.m_z;
                 return 1;
             }
         }
