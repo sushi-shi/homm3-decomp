@@ -621,12 +621,10 @@ public:
     // Packed retail counterpart of DC's std::bitset<48> member. Its reset
     // writes the two backing dwords at +0x121/+0x125.
     std::bitset<48> m_townSpecialGrantedMask;  // +0x121 (DC name)
-    // +0x129, a dword compared against 3 - the secondary-skill
-    // mastery domain. hero::HeroFn_004E5DE0 (0x4e5de0) returns it
-    // unless it is below 3 and the hero's army holds creature 0x8f,
-    // and hero::IsInIdentifyRange (0x4e5e10) opens with the same
-    // block inlined. Name unattested - ORDINAL PLACEHOLDER.
-    int m_visionsPower;  // +0x129
+    // Original public identifyLevel is TSkillMastery in all four DC hero
+    // records (0x1a6e/0x4d63/0x6311/0x71dc). Complete retains the dword
+    // at +0x129; its getter also grants expert identification to Rogues.
+    TSkillMastery m_identifyLevel;  // +0x129
 
 private:
     type_artifact m_equipped[19];
@@ -828,7 +826,7 @@ public:
     // 0x4e5dd0 - one-argument setter for waterWalkLevel.
     void walkOnWater(int level);
     // 0x4e5e10 - tests whether a packed map point is inside Visions range.
-    unsigned char isInIdentifyRange(const type_point* location) const;
+    bool isInIdentifyRange(const type_point& location) const;
 
 private:
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
@@ -836,7 +834,7 @@ private:
     bool canLand() const;
 
 public:
-    int heroFn004E5DE0() const;
+    TSkillMastery getIdentifyLevel() const;
     void heroFn004E6120(int creatureType,
                          TCreatureTypeTraits* traits) const;
     // 0x4d9050 / 0x4e56b0, the two owner-record accessors; both open

@@ -7257,20 +7257,22 @@ unsigned char advManager::updBottomViewTown(unsigned char forceUpdate)
 // E:\gamedcs\advmgr.cpp:9063
 // DC carries this free helper out of line (0x9C bytes); retail's
 // /Ob2 inlines the static into every quick-view caller and drops the body.
+// Native get_identify_level records TSkillMastery result, const playerData&,
+// long i and hero* const this_hero; keep those domains through the getter.
 DC_ADDRESS(0x019420, 0x9c)
 MAC_ADDRESS(0x016d58, 0xcc)
 static TSkillMastery getIdentifyLevel(type_point point)
 {
-    int identifyLevel = eMasteryInvalid;
-    playerData* player = &g_game->m_players[g_curWatchPlayer];
+    TSkillMastery result = eMasteryInvalid;
+    const playerData& player = g_game->m_players[g_curWatchPlayer];
 
-    for (int i = 0; i < player->m_numHeroes; i++) {
-        hero* currentHero = g_game->getHero(player->m_heroes[i]);
-        if (currentHero->heroFn004E5DE0() > identifyLevel
-            && currentHero->isInIdentifyRange(&point))
-            identifyLevel = currentHero->heroFn004E5DE0();
+    for (long i = 0; i < player.m_numHeroes; i++) {
+        hero* const thisHero = g_game->getHero(player.m_heroes[i]);
+        if (thisHero->getIdentifyLevel() > result
+            && thisHero->isInIdentifyRange(point))
+            result = thisHero->getIdentifyLevel();
     }
-    return (TSkillMastery)identifyLevel;
+    return result;
 }
 
 // Dreamcast advmgr.cpp:9088 calls Hero.h get_location before
@@ -7499,14 +7501,14 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
     bool showDetails = false;
     hero* const currHero = g_game->getHero(localPlayer->m_currHeroId);
     if (currHero) {
-        unsigned char inIdentifyRange;
+        bool inIdentifyRange;
         {
             type_point point(m_radarOrigin.m_x + cellx, m_radarOrigin.m_y + celly,
                              m_radarOrigin.m_z);
-            inIdentifyRange = currHero->isInIdentifyRange(&point);
+            inIdentifyRange = currHero->isInIdentifyRange(point);
         }
         if ((inIdentifyRange
-             && currHero->heroFn004E5DE0() != eMasteryInvalid)
+             && currHero->getIdentifyLevel() != eMasteryInvalid)
             || m_debugViewAll) {
             int like = getLikeModifier(currHero, type);
             const int diplomacy = currHero->getSecondarySkill(eSecSkillDiplomacy);
