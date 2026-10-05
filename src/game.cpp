@@ -4196,6 +4196,8 @@ static void randomizeShrine(NewmapCell* cell, const int level)
 
 // E:\gamedcs\game.cpp:4654
 // RandomizeEvents expands this ordinary static helper.
+// Braced/nested branches and separate scalar declarations produce the same
+// VC6 object; they do not restore its retained resource-setter call.
 DC_ADDRESS(0x0abda8, 0x86)
 MAC_ADDRESS(0x0d672c, 0x118)
 static void randomizeWagon(NewmapCell* cell)
