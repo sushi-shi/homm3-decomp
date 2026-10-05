@@ -1410,7 +1410,7 @@ public:
     TRmgMapItem* getMapItem(int x, int y);
     inline TRmgMapItem* getMapItem(int x, int y, int z)
     {
-        return getMapItem(TRmgMapPosition(x, y, z));
+        return m_mapItems + (z * m_mapHeight + y) * m_mapWidth + x;
     }
     TRmgMapItem* getMapItem(TRmgMapPosition point);
 

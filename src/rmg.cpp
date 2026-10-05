@@ -3931,9 +3931,14 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
     }
 }
 
-// Flatten the level, row and column into one cell index. The scalar overload
-// delegates here. A direct index return preserves all 39 retained bytes and
-// restores repairWaterZoneBorders to 100%; a named index blocks that expansion.
+// Flatten the level, row and column into one cell index. A direct index
+// return preserves all 39 retained bytes and restores repairWaterZoneBorders
+// to 100%; a named index blocks that expansion. The inline three-coordinate
+// overload computes the same index itself: delegating it through a position
+// temporary (2026-09-20) nests a constructor and this body under each caller,
+// and the deeper /Ob2 budget then keeps this call out of line where retail
+// expands it (decorateUnderground 86.48%, removeObject 91.21%,
+// canPlaceTreasureGroup 81.10%). Direct indexing gives 99.01/100/96.95%.
 VA(0x005378E0, 0x27)
 TRmgMapItem* TRmgMap::getMapItem(TRmgMapPosition point)
 {
