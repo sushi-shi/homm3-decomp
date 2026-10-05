@@ -751,7 +751,8 @@ private:
     void updateSpellList();
 
 public:
-    void deallocate(unsigned char gameLoaded, unsigned char remoteMove);
+    // Original ?Deallocate@hero@@QAAX_N0@Z proves both bool parameters.
+    void deallocate(bool gameLoaded, bool remoteMove);
     // 0x4d9b30, `ret 4` with `this` UNUSED - retail never reads ECX.
     // The hero screen's yes/no prompt for taking a combination artifact
     // apart: it builds `<artifact description>\n\n<general text 734>`

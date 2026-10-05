@@ -171,10 +171,11 @@ public:
     void drawAdvObj(int framenum, int sx, int sy, int sw, int sh,
                     unsigned short* dst, int dx, int dy, int dw, int dh,
                     int dpitch, bool hflip) const;
+    // Original DrawAdvObjWithFlag public encodes G_N: color then bool flip.
     void drawAdvObjWithFlag(int framenum, int sx, int sy, int sw, int sh,
                             unsigned short* dst, int dx, int dy, int dw,
                             int dh, int dpitch, unsigned short outcolor,
-                            unsigned char hflip) const;
+                            bool hflip) const;
     void drawAdvObjWithFlagAlpha(int framenum, int sx, int sy, int sw, int sh,
                                  unsigned short* dst, int dx, int dy, int dw,
                                  int dh, int dpitch, unsigned short outcolor,
@@ -188,14 +189,15 @@ public:
     void drawTile(int framenum, int sx, int sy, int sw, int sh,
                   unsigned short* dst, int dx, int dy, int dw, int dh,
                   int dpitch, bool hflip, bool vflip) const;
+    // Both TileShadow/ShroudTile overload publics encode _N for both flips.
     void drawTileShadow(int framenum, int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
-                        int dpitch, unsigned char hflip,
-                        unsigned char vflip) const;
+                        int dpitch, bool hflip,
+                        bool vflip) const;
     void drawShroudTile(int framenum, int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
-                        int dpitch, unsigned char hflip,
-                        unsigned char vflip) const;
+                        int dpitch, bool hflip,
+                        bool vflip) const;
     void drawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
                   unsigned short* dst, int dx, int dy, int dw, int dh,
                   int dpitch, bool hflip) const;
@@ -334,7 +336,7 @@ public:
     DC_ADDRESS(0x01f3c8, 0xb8)
     void drawAdvObjWithFlag(int framenum, int sx, int sy, int sw, int sh,
                             Bitmap16Bit* dst, int dx, int dy,
-                            unsigned short outcolor, unsigned char hflip) const
+                            unsigned short outcolor, bool hflip) const
     {
         drawAdvObjWithFlag(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                            dst->getWidth(), dst->getHeight(), dst->getPitch(), outcolor,
@@ -384,7 +386,7 @@ public:
     DC_ADDRESS(0x01f680, 0xb8)
     void drawTileShadow(int framenum, int sx, int sy, int sw, int sh,
                         Bitmap16Bit* dst, int dx, int dy,
-                        unsigned char hflip, unsigned char vflip) const
+                        bool hflip, bool vflip) const
     {
         drawTileShadow(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                        dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip, vflip);
@@ -393,7 +395,7 @@ public:
     DC_ADDRESS(0x01f738, 0xb8)
     void drawShroudTile(int framenum, int sx, int sy, int sw, int sh,
                         Bitmap16Bit* dst, int dx, int dy,
-                        unsigned char hflip, unsigned char vflip) const
+                        bool hflip, bool vflip) const
     {
         drawShroudTile(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                        dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip, vflip);

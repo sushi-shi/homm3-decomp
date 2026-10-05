@@ -208,11 +208,10 @@ inline void vwClipScaleToScreenBuffer(int destX, int destY)
                 ++screenBuffer;
             }
         }
-        // Keep the row offset before the buffer lookup, as in the expanded
-        // river, road and object-shadow callers.
-        int sourceLine = mwidth * g_scaleLine[y];
-        sourceBufferLineStart =
-            g_memoryBuffer->getMap(0, 0) + sourceLine;
+        // The retained call in the river/road expansions precedes the
+        // row-offset calculation; keep that evaluation order explicit.
+        sourceBufferLineStart = g_memoryBuffer->getMap(0, 0);
+        sourceBufferLineStart += mwidth * g_scaleLine[y];
         screenBufferLineStart += swidth;
     }
 }
@@ -271,7 +270,7 @@ void advManager::vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int 
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
         NewmapCell* heroCell = getCell(currHero->getLocation());
 
-        if (!(heroCell->m_flags0011 & 0x200)) {
+        if (!heroCell->m_isBeachBorder) {
             m_boatFrothIcons[currBoat->m_type]->drawHero(
                 currHero->getStandSequence(),
                 m_animCtr
@@ -333,7 +332,7 @@ void advManager::vwDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
         NewmapCell* heroCell = getCell(currHero->getLocation());
 
-        if (!(heroCell->m_flags0011 & 0x200)) {
+        if (!heroCell->m_isBeachBorder) {
             m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
                 currHero->getStandSequence(),
                 m_animCtr
@@ -391,7 +390,7 @@ void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int 
     int boatCellX = part / 3;
     NewmapCell* boatCell = getCell(currBoat->getLocation());
 
-    if (!(boatCell->m_flags0011 & 0x200)) {
+    if (!boatCell->m_isBeachBorder) {
         m_boatFrothIcons[currBoat->m_type]->drawHero(
             currBoat->getStandSequence(),
             m_animCtr
@@ -421,7 +420,7 @@ void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX
     int boatCellX = part / 3;
     NewmapCell* boatCell = getCell(currBoat->getLocation());
 
-    if (!(boatCell->m_flags0011 & 0x200)) {
+    if (!boatCell->m_isBeachBorder) {
         m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
             currBoat->getStandSequence(),
             m_animCtr
