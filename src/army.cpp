@@ -2414,10 +2414,11 @@ long army::getAverageDamage(const army& enemy, bool rangedAttack, long amount, b
     return damage;
 }
 
+// Original ?is_enemy@army@@QBA_NPBV1@@Z proves the bool result.
 VA(0x00442880, 0x68)
 DC_ADDRESS(0x047bcc, 0x38)
 MAC_ADDRESS(0x04e7d0, 0x70)
-unsigned char army::isEnemy(const army* arg) const
+bool army::isEnemy(const army* arg) const
 {
     if (!arg)
         return 0;
@@ -2454,10 +2455,11 @@ bool army::canShoot(const army* excluded) const
            && (m_spellInfluence[61] == 0 || m_forgetfulnessLevel < 2);
 }
 
+// Original ?enemy_is_adjacent@army@@QBA_NPBV1@@Z proves the bool result.
 VA(0x004429f0, 0x5C)
 DC_ADDRESS(0x047c74, 0x80)
 MAC_ADDRESS(0x04e958, 0x94)
-unsigned char army::enemyIsAdjacent(const army* excluded) const
+bool army::enemyIsAdjacent(const army* excluded) const
 {
     if (g_combatManager->enemyIsAdjacent(this, m_gridIndex, excluded))
         return 1;
@@ -4291,10 +4293,11 @@ int army::getSecondGridIndex() const
     return m_gridIndex + offsetToFront(-1);
 }
 
+// Original is_adjacent publics QBA_NH and QBA_NABV1 prove bool results.
 VA(0x004466c0, 0x5A)
 DC_ADDRESS(0x04b398, 0x4e)
 MAC_ADDRESS(0x0528ac, 0x8c)
-unsigned char army::isAdjacent(int hex) const
+bool army::isAdjacent(int hex) const
 {
     if (g_combatManager->isAdjacent(m_gridIndex, hex))
         return 1;
@@ -4307,7 +4310,7 @@ unsigned char army::isAdjacent(int hex) const
 
 // Original: army::is_adjacent; army.cpp:4864
 DC_ADDRESS(0x04b3e8, 0x3e)
-unsigned char army::isAdjacent(const army& otherArmy) const
+bool army::isAdjacent(const army& otherArmy) const
 {
     if (isAdjacent(otherArmy.m_gridIndex))
         return 1;

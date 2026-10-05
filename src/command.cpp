@@ -71,6 +71,7 @@ static const int g_combatActionFirstAid = 11;
 // forms are neutral, as are two single-pass selection scopes. Copying the
 // final order stores and return into the keep arm scores 95.9569%. Preserve
 // the named calls and their conditional random draw.
+// DC100/102 keeps the manual-control and mastery guards nested.
 // Mac 0x81dc4..0x81df8 rejects manual positive-skill control first, then
 // tests the keep independently. Restoring that early guard raises Windows
 // 92.18% to 98.68% while preserving validWallTarget and every other helper.
@@ -121,8 +122,10 @@ bool combatManager::automateCatapult()
     hero* controller = currentArmy->getController();
     TSkillMastery skill = controller->getSecondarySkill(
         eSecSkillSiegeBallistics);
-    if (!isComputerAction() && skill > 0)
-        return 0;
+    if (!isComputerAction()) {
+        if (skill > 0)
+            return 0;
+    }
     if (skill > 0 && validWallTarget(WALL_TARGET_3)) {
         target = WALL_TARGET_3;
         goto issueCatapultOrder;

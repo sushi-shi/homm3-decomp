@@ -2796,10 +2796,11 @@ void combatManager::testRaiseDoor()
     raiseDoor();
 }
 
+// Original ?InCastle@combatManager@@SA_NH@Z proves the bool result.
 VA(0x00467460, 0x22)
 DC_ADDRESS(0x061160, 0x20)
 MAC_ADDRESS(0x073610, 0x34)
-unsigned char combatManager::inCastle(int index)
+bool combatManager::inCastle(int index)
 {
     return index >= g_castleWallColumns[gridY(index)];
 }
@@ -2812,10 +2813,11 @@ unsigned char combatManager::leftOfMoat(int index)
     return index < g_moatHexes[gridY(index)];
 }
 
+// Original ?is_adjacent@combatManager@@QBA_NHH@Z proves the bool result.
 VA(0x004674c0, 0x4C)
 DC_ADDRESS(0x0611a0, 0x84)
 MAC_ADDRESS(0x07367c, 0xfc)
-unsigned char combatManager::isAdjacent(int first, int second) const
+bool combatManager::isAdjacent(int first, int second) const
 {
     if (validHex(first) && validHex(second)) {
         for (int i = 0; i < 6; i++) {
@@ -2875,10 +2877,11 @@ unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* 
     return getDistance(source, dest) > 10;
 }
 
+// Original ?InLineOfSight@combatManager@@QBA_NHH@Z proves the bool result.
 VA(0x00467840, 0x1B6)
 DC_ADDRESS(0x061318, 0x1d8)
 MAC_ADDRESS(0x0739c0, 0x284)
-unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
+bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 {
     if (!m_fortificationLevel)
         return 1;
@@ -3464,20 +3467,14 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
 // GetNumFrames while raising Windows 95.5183 -> 96.1622. Mac retains the
 // same separate stores; its range comparison compression remains different.
 // A switch and named frame snapshot do not reproduce that compression.
-// DC cmbtmgr.cpp:4158 proves the global TSpellEffectID parameter, and
-// row 4389 retains UpdateCombatArea(bounds). Restore both source facts;
-// the formerly direct updateScreen call was an inlined helper substitute.
-// The enum's NB11 record 0x1f15 supplies the effect-domain caller values;
-// negative sentinel, lightning dust, landmine and poison now use that enum.
-// Focused VC6 comparison after refreshing the renamed target: 95.81%
-// versus the direct-call 96.16%; doAttack collateral is 99.92% versus
-// 99.96%. All 116 available Mac pairs in the three affected units hold.
-// The remaining animation-walk slot/register differences remain open;
-// a lower Windows score does not refute these retained source operations.
-// DC 0x6298a..0x62a0c attributes the complete readiness predicate to
-// cmbtmgr.cpp:4337; Mac 0x754b0..0x7553c has the same short-circuit paths.
-// Keep one positive condition around frame advancement instead of an empty
-// threshold arm. This scope recovery preserves the Windows 95.8134% body.
+// DC cmbtmgr.cpp:4158 proves TSpellEffectID; line 4389 retains the
+// by-value UpdateCombatArea helper. Keep that call and its nested accessors.
+// DC4234/4236 and Mac 0x750d4..0x750f4 put the nested effect-loading guard
+// after the selection loop. DC4277 attributes the first two max calls to
+// one expression. Restoring those scopes raises Windows 95.8134 -> 97.2268%.
+// DC4337 and Mac 0x754b0..0x7553c retain one positive readiness condition
+// around frame advancement. The remaining differences are animation-walk
+// temporary slots and register allocation; all branches and calls agree.
 VA(0x00468990, 0xA08)
 DC_ADDRESS(0x062560, 0x856)
 MAC_ADDRESS(0x074eec, 0xb30)  // anchor-global
@@ -3527,7 +3524,9 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                     }
                 }
             }
-            if (showSomePowEffect && !loadSpellEffect(spellEffect))
+        }
+        if (showSomePowEffect) {
+            if (!loadSpellEffect(spellEffect))
                 showSomePowEffect = 0;
         }
 
@@ -3552,8 +3551,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                         stack.m_stdIcon->getNumFrames(cs_wince));
             }
         }
-        numFrames = max(numFrames, winceFrames);
-        numFrames = max(numFrames, attackFrames);
+        numFrames = max(max(numFrames, winceFrames), attackFrames);
         numFrames = max(numFrames, winceFrames + attackFrames - 1);
 
         if (resetLimitCreature)
@@ -3761,11 +3759,12 @@ void combatManager::checkRebirth()
     }
 }
 
+// Original ?enemy_is_adjacent@combatManager@@QBA_NPBVarmy@@H0@Z proves the bool result.
 VA(0x00469600, 0x6E)
 DC_ADDRESS(0x062db8, 0x94)
 MAC_ADDRESS(0x075c3c, 0x9c)
-unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
-                                               const army* excluded) const
+bool combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
+                                     const army* excluded) const
 {
     for (int i = 0; i < 6; i++) {
         int hex = m_adjacentCells[gridIndex][i];
