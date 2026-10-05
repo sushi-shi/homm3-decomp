@@ -111,12 +111,12 @@ public:
 protected:
     bool buildMarkets(int* supply);
     void calculateReserve();  // 0x429ad0
-    bool canTradeResources(const int* cost, int* supply,
+    bool canTradeResources(const int* const cost, int* const supply,
                              std::vector<long>& tradeQty);
     bool checkTradeSupply(const int* const cost, long number, int* const supply,
                             std::vector<long>& tradeQty);
     void doResourceTrade(int* supply);
-    long getTotalValue(long basicValue, int* cost);  // 0x42a150
+    long getTotalValue(long basicValue, int* const cost);  // 0x42a150
     // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
     // pass purchase_buildings drives).
     bool purchaseBuilding(bool* prohibitedCreatures);

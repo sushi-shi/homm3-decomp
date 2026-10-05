@@ -9872,7 +9872,7 @@ void TRmgGenerator::createRiverToJoin(TRmgMapPosition source)
     mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
     unsigned char sourceIsSnow;
     int riverType;
-    if (mapItem->m_tile.m_landType == eTerrainSnow) {
+    if (mapItem->getLandType() == eTerrainSnow) {
         sourceIsSnow = 1;
         riverType = 2;
     } else {
@@ -9893,9 +9893,9 @@ void TRmgGenerator::createRiverToJoin(TRmgMapPosition source)
                 || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.getHeight())
                 continue;
             mapItem = m_map.getMapItem(nextPosition);
-            if (mapItem->m_tile.m_landType == eTerrainWater
-                || mapItem->m_tile.m_landType == eTerrainRock
-                || (mapItem->m_tile.m_landType == eTerrainSnow) != sourceIsSnow)
+            if (mapItem->getLandType() == eTerrainWater
+                || mapItem->getLandType() == eTerrainRock
+                || (mapItem->getLandType() == eTerrainSnow) != sourceIsSnow)
                 continue;
             int nextCost = positionCost + (rand() & 31) + 1;
             if (mapItem->m_tile.m_roadType)
@@ -10049,12 +10049,11 @@ void TRmgGenerator::createRiverToOutlet(TRmgMapPosition source)
     openPositions.push_back(source);
     openCosts.push_back(0);
     mapItem = m_map.getMapItem(source);
-    mapItem->m_movement.m_cost = 0;
-    mapItem->m_previousTile = emptyPosition;
+    mapItem->setMovementCost(0, emptyPosition);
 
     unsigned char sourceIsSnow;
     int riverType;
-    if (mapItem->m_tile.m_landType == eTerrainSnow) {
+    if (mapItem->getLandType() == eTerrainSnow) {
         sourceIsSnow = 1;
         riverType = 2;
     } else {
@@ -10066,15 +10065,13 @@ void TRmgGenerator::createRiverToOutlet(TRmgMapPosition source)
     openPositions.push_back(source);
     openCosts.push_back(0);
     mapItem = m_map.getMapItem(source);
-    mapItem->m_movement.m_cost = 0;
-    mapItem->m_previousTile = emptyPosition;
+    mapItem->setMovementCost(0, emptyPosition);
 
     ++source.m_x;
     openPositions.push_back(source);
     openCosts.push_back(0);
     mapItem = m_map.getMapItem(source);
-    mapItem->m_movement.m_cost = 0;
-    mapItem->m_previousTile = emptyPosition;
+    mapItem->setMovementCost(0, emptyPosition);
 
     TRmgMapPosition position;
     TRmgMapPosition nextPosition;
@@ -10095,10 +10092,10 @@ void TRmgGenerator::createRiverToOutlet(TRmgMapPosition source)
                 continue;
 
             mapItem = m_map.getMapItem(nextPosition);
-            if (mapItem->m_tile.m_landType == eTerrainWater
-                || mapItem->m_tile.m_landType == eTerrainRock
+            if (mapItem->getLandType() == eTerrainWater
+                || mapItem->getLandType() == eTerrainRock
                 || mapItem->isNearRiver()
-                || (mapItem->m_tile.m_landType == eTerrainSnow) != sourceIsSnow)
+                || (mapItem->getLandType() == eTerrainSnow) != sourceIsSnow)
                 continue;
 
             int nextCost = positionCost + (rand() & 31) + 1;
@@ -10167,7 +10164,7 @@ void TRmgGenerator::createRiverToOutlet(TRmgMapPosition source)
         int deltaIndex = sourceIsSnow
             ? g_rmgSnowRiverDeltaIndex[direction]
             : g_rmgLandRiverDeltaIndex[direction];
-        int landType = mapItem->m_tile.m_landType;
+        int landType = mapItem->getLandType();
         int prototypeIndex = 0;
         for (; prototypeIndex < m_objectPrototypes[TERRAIN_RIVER_DELTA].size();
              ++prototypeIndex) {

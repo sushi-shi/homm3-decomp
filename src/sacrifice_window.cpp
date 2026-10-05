@@ -1043,7 +1043,7 @@ void type_sacrifice_window::artifactClick(
             return;
 
         if (rightClick) {
-            m_currentHero->viewArtifact(&oldArtifact, rightClick);
+            m_currentHero->viewArtifact(oldArtifact, rightClick);
             return;
         }
 
@@ -1117,7 +1117,7 @@ void type_sacrifice_window::backpackClick(
         if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
             if (rightClick) {
                 m_currentHero->viewArtifact(
-                    &oldArtifact, rightClick);
+                    oldArtifact, rightClick);
             } else {
                 m_currentHero->removeBackpackArtifact(slot);
                 updateBackpack();
@@ -1165,7 +1165,7 @@ void type_sacrifice_window::offeringClick(
         if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
             if (rightClick) {
                 m_currentHero->viewArtifact(
-                    &oldArtifact, rightClick);
+                    oldArtifact, rightClick);
             } else {
                 m_artifactOfferings[slot].m_artifactId = ARTIFACT_NONE;
                 updateArtifactOffering(slot);

@@ -1008,8 +1008,8 @@ public:
                  armyGroup* leftArmyGroup, long rightPlayer,
                  class town* rightTown, class hero* rightHero,
                  armyGroup* rightArmyGroup, int seed,
-                 unsigned char finishHeroes,
-                 unsigned char alternateLayout);
+                 bool finishHeroes,
+                 bool alternateLayout);
     int doNetCombat(class CNetMsg* netMsg);
     void sendHeroTownData(type_point point, hero* leftHero,
                           armyGroup* leftArmyGroup, long rightPlayer,

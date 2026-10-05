@@ -422,18 +422,14 @@ float type_AI_player::getAttackBonus(short player)
 // seven doubles are mirrored into playerData before the six-resource
 // running total is divided by five.
 
-// Residual (97.4340%): the algorithm, calls, loops, floating-point flow,
-// and persistent fields agree. Two levers closed the old 86.38 plateau
-// (2026-08-20): the top-three cost loop copies its creature record BY VALUE
-// (retail's three-dword copy with spilled value/amount reads `type` once,
-// precomputes the traits row, strength-reduces both walks and counts DOWN
-// `mov edx,7 / dec/jne`; the const-reference re-read `type` per iteration
-// and pinned an indexed up-count, +7.03), and the /Ob2 numerator device
-// below the average loop (+4.03, see its comment). Remaining delta:
-// ECX/EDX and EBX/EDI transpositions in the trading-value loop and the
-// amount-word read (`movsx esi, cx` from the register copy vs our
-// `movsx esi, word ptr [ecx+8]` from the source) - register-homing family;
-// the creation-order probes measured against it are in the device note.
+// Keep the top-three creature copy by value: retail's three-dword copy
+// reads the type once and uses a seven-resource decrementing cost walk;
+// Mac 0x2b7f8..0x2b874 independently preserves that copy and loop guards.
+// With the canonical resource getter, the current residual is an outer
+// std::_Sort expansion: VC6 retains it, while retail expands it and keeps
+// its two recursive calls. The refreshed trace gives the nested _Sort
+// cost 172 against budget 164. Aggregate call counts mislabel this as
+// over-inlining; preserve the named recursive frontier and getter path.
 VA(0x00428740, 0x68E)
 DC_ADDRESS(0x02e188, 0x64e)
 MAC_ADDRESS(0x02b43c, 0x704)  // linkorder
@@ -561,7 +557,8 @@ void type_AI_player::calculateDemand()
     int averageValue = 0;
     int averageResource;
     for (averageResource = 0; averageResource < 6; averageResource++)
-        averageValue += m_resourceValue[averageResource];
+        averageValue += getResourceValue(
+            static_cast<EGameResource>(averageResource)); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
     player->m_ai.m_averageResourceValue = averageValue / 5;
 }
 
@@ -1015,7 +1012,9 @@ void fillProhibitedArray(playerData* player, bool* prohibited)
 VA(0x0042a150, 0x157)
 DC_ADDRESS(0x0301c4, 0x11c)
 MAC_ADDRESS(0x02df5c, 0x13c)
-long type_AI_player::getTotalValue(long basicValue, int* cost)
+// Original DC public ?get_total_value@type_AI_player@@IAAJJQAH@Z
+// records a const pointer parameter (the pointed-to costs remain mutable).
+long type_AI_player::getTotalValue(long basicValue, int* const cost)
 {
     playerData* player = &g_game->m_players[m_team];
     unsigned char tradeNeeded = 0;
@@ -1134,7 +1133,9 @@ void type_AI_player::tradeResources(const int* cost, long number)
 VA(0x0042a580, 0x5BE)
 DC_ADDRESS(0x0305b4, 0x41e)
 MAC_ADDRESS(0x02e580, 0x424)  // retail link order + arity
-bool type_AI_player::canTradeResources(const int* cost, int* supply,
+// Original DC public IAA_NQBH QAH... proves the same const pointer
+// contract as checkTradeSupply; do not infer it from authored labels.
+bool type_AI_player::canTradeResources(const int* const cost, int* const supply,
                                          std::vector<long>& tradeQty)
 {
     // DC records long markets/market_value/on_hand, double efficiency and
