@@ -929,6 +929,7 @@ public:
 
     TRmgObject(TRmgObjectPropertiesRef* newProperties);
     TRmgMapPosition getPosition() const;
+    TRmgMapPosition getPlacedGroupPosition(const TRmgMapPosition& groupPosition) const;
 #if defined(HOMM3_RMG_HOTFIX)
     TRmgMapPosition getEntrance() const;
 #endif
@@ -1210,6 +1211,34 @@ struct TRmgMapItem {
         return m_tileData.m_borderObject;
     }
 
+    bool canBlockFloor() const;
+
+    // Border connections protect their cells from changes to path reservations.
+    void openPath()
+    {
+        if (!m_connection.m_present) {
+            m_tileData.m_borderObject = 0;
+            m_tileData.m_subterraneanGate = 1;
+        }
+    }
+    void markObstacleFill()
+    {
+        if (!m_connection.m_present) {
+            m_tileData.m_subterraneanGate = 0;
+            m_tileData.m_borderObject = 1;
+        }
+    }
+    void clearObstacleFill()
+    {
+        if (!m_connection.m_present)
+            m_tileData.m_borderObject = 0;
+    }
+    void releasePathClearance()
+    {
+        if (!m_connection.m_present)
+            m_tileData.m_subterraneanGate = 0;
+    }
+
     // Group fit 0x546ed5 shifts bit 23 and tests the byte result.
     unsigned char isPlacementOutline() const
     {
@@ -1424,6 +1453,7 @@ struct TRmgTreasureGroup {
         reset();
     }
     void reset();
+    void discard();
     void markPlacementOutline();
     unsigned char addGuard(TRmgObject* guard);
     unsigned char canFitObject(TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
@@ -2104,7 +2134,7 @@ public:
     TRmgObject* createGuard(int value, TRmgZone* zone);
     unsigned char placeObjectInZone(TRmgObject* object, TRmgZone* zone);
     void placeGuard(int value, TRmgMapPosition position);
-    int getMineGuardValue(int resource, const TRmgZone* zone) const;
+    int getZoneGuardValue(const TRmgZone* zone, int value) const;
     // Complete-only prototype/subtype/terrain filter at retail 0x546040.
     TRmgObjectPropertiesRef* selectObjectPrototype(
         int terrain, int objectType, int subtype);

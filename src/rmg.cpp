@@ -2904,15 +2904,26 @@ void TRmgTreasureGroup::reset()
     m_map.clear();
     m_hasGuard = 0;
     m_ready = 0;
-    TRmgMap& map = m_map;
-    TRmgMapItem* item = map.getMapItem(0, 0);
-    int width = map.m_mapWidth;
-    int height = map.m_mapHeight;
+    TRmgMapItem* item = m_map.getMapItem(0, 0);
+    int width = m_map.m_mapWidth;
+    int height = m_map.m_mapHeight;
     int count = width * height;
     while (count--) {
         item->setTerrain(eTerrainDirt, 0, 0, 0);
         ++item;
     }
+}
+
+// Mac 0x232f18 follows reset and precedes outline finalization. Its live
+// object loop releases each reservation, reloads the object, then deletes it.
+MAC_ADDRESS(0x232f18, 0xac)
+void TRmgTreasureGroup::discard()
+{
+    for (unsigned int index = 0; index < m_objects.size(); ++index) {
+        m_objects[index]->unknownOperation();
+        delete m_objects[index];
+    }
+    reset();
 }
 
 // Native 0x232fc4 marks the group ready and flags every surface-outline cell.
@@ -7897,6 +7908,12 @@ void TRmgGenerator::connectZones()
         m_progress->advance(0x1900);
 }
 
+// A floor cell may be blocked outside paths and object entrances.
+bool TRmgMapItem::canBlockFloor() const
+{
+    return !hasSubterraneanGate() && isPassableLand() && !isRoadEntrance();
+}
+
 // Underground-only terrain pass retained by generation at 0x549c82.
 // One borrowed level-one map and one brush span both scans. The first scan
 // closes unused floor with rock; the second restores each zone's terrain at
@@ -7924,8 +7941,7 @@ void TRmgGenerator::decorateUnderground()
     TRmgTerrainBrush brush(&map, eTerrainRock, 4);
     for (scan.m_y = 0; scan.m_y < m_map.m_mapHeight; ++scan.m_y) {
         for (scan.m_x = 0; scan.m_x < m_map.m_mapWidth; ++scan.m_x, ++item) {
-            if (!item->hasSubterraneanGate() && item->m_tileData.m_roadPassable
-                && item->m_tile.m_landType != eTerrainRock && !item->isRoadEntrance())
+            if (item->canBlockFloor())
                 brush.paintRectangle(scan.m_x, scan.m_y, 1, 1);
         }
     }
@@ -8633,6 +8649,20 @@ unsigned char TRmgGenerator::tryPlacePrimaryTown(
     return 1;
 }
 
+// Mac 0x2491b4 precedes mine placement and is called by group assembly.
+// A monster-free zone has no guard; other zones shift the map's strength.
+MAC_ADDRESS(0x2491b4, 0x60)
+int TRmgGenerator::getZoneGuardValue(const TRmgZone* zone, int value) const
+{
+    int strength = zone->m_slot->m_monsterStrength;
+    if (!strength)
+        return 0;
+    strength += m_monsterStrength - 3;
+    if (strength > 5) strength = 5;
+    if (strength < 0) strength = 0;
+    return getRmgGuardValue(value, strength);
+}
+
 // Site selector called at 0x545aee. Complete-only names are provisional.
 // Partial 99.5863%: clear() restores all three candidate-reset boundaries;
 // canonical town translation, an outline-point snapshot and a named unsigned
@@ -8722,56 +8752,14 @@ unsigned char TRmgGenerator::placeMineSite(TRmgObject* object,
     return 1;
 }
 
-// Complete-only mine valuation: resource price, local enablement and combined
-// difficulty precede the retained scalar curve at retail 0x545b76. This ordinary
-// member is a provisional source boundary/name, not a recovered DC declaration.
-// Keeping the whole mine calculation together reproduces that retained call
-// without changing treasure valuation's different source path.
-int TRmgGenerator::getMineGuardValue(int resource, const TRmgZone* zone) const
-{
-    int value;
-    switch (resource) {
-    case WOOD: case ORE: value = 1500; break;
-    case GOLD: value = 7000; break;
-    default: value = 3500; break;
-    }
-    int localStrength = zone->m_slot->m_monsterStrength;
-    if (!localStrength)
-        return 0;
-    int strength = localStrength + m_monsterStrength - 3;
-    if (strength > 5) strength = 5;
-    else if (strength < 0) strength = 0;
-    return getRmgGuardValue(value, strength);
-}
-
-// Retail +0x388 selects the MINE prototype vector. The caller supplies
-// zone/resource/starting flag/spacing; names are role-derived.
-// Keep prototype as the last scanned prototype: retail stores it at
-// 0x5459f5/0x545a5d and reloads the same local at 0x545b7e/0x545ca9,
-// without replacing it after random selection. Its trigger/width quirk is real.
-// The prototype's non-const terrain query uses VC6's bitset reference proxy
-// and retains the checked test at 0x545a01. All 52 retained helper bytes match.
-// A const query retains only _Xran; an explicit first insert is byte-neutral.
-// Keep the canonical object-position and guard-placement calls; expanding
-// placeGuard duplicates the same zone/occupancy/create/add sequence.
-// The mine valuation operation retains the scalar getRmgGuardValue call and
-// upper-bound-first clamp. A named selection index restores the post-rand
-// array reload. A separate resourceProperties local recovers the resource
-// strip's register lifetime: its address never reaches vector insertion.
-// At 99.4005%, all 71 retail blocks have the same instruction counts and
-// control flow. Dimension queries restore the first single-insert; a value
-// snapshot of the trigger restores retail's 1-minus-trigger/add sequence.
-// The frame is still 0x38 versus retail's 0x44: 30 stack operands differ by
-// twelve bytes. The terrain-test PUSH/LEA order and strength LEA operands
-// remain reversed. Initialization/assignment and named position-return copies
-// are neutral; constructing a fresh return value or using the primary scalar
-// map overload changes calls that retail does not make.
-// A byte-identical passive C2 trace shows entrance and position sharing one
-// twelve-byte stack home. Scalar strip loops keep the smaller frame; copying
-// the origin per cell reaches 0x44 but adds spills/copies absent from retail.
-// A shared zone-value wrapper lowers treasure assembly MAX; keep the complete
-// mine valuation operation. Separating the scan pointers loses the retail
-// shared lifetime; only the later resource prototype owns a fresh local.
+// Retail bug: the entrance and resource strip use the trigger and width of
+// the last scanned prototype, not the randomly selected mine prototype.
+// Keep the trigger's value snapshot and the separate resourceProperties local.
+// Mac 0x2498f8..0x24993c selects the resource value, then calls the shared
+// zone-strength helper. The path reservation is the canonical openPath call.
+// That complete source model retains retail's first single-element vector
+// insertion; duplicating the path stores instead expands count-insertion.
+// Mac's retained vector::reserve call proves push_back in both scans.
 VA(0x00545990, 0x466)
 MAC_ADDRESS(0x249680, 0x5ac)
 unsigned char TRmgGenerator::tryPlaceMine(TRmgZone* zone,
@@ -8804,16 +8792,19 @@ unsigned char TRmgGenerator::tryPlaceMine(TRmgZone* zone,
         delete mine;
         return 0;
     }
-    int guardValue = getMineGuardValue(resource, zone);
+    int value;
+    switch (resource) {
+    case WOOD: case ORE: value = 1500; break;
+    case GOLD: value = 7000; break;
+    default: value = 3500; break;
+    }
+    int guardValue = getZoneGuardValue(zone, value);
     TRmgMapPosition entrance = mine->getPosition();
     TObjectType::TPoint trigger = prototype->m_triggerCell;
     entrance.m_x -= trigger.m_x;
     entrance.m_y += 1 - trigger.m_y;
     TRmgMapItem* item = m_map.getMapItem(entrance);
-    if (!item->m_connection.m_present) {
-        item->m_tileData.m_borderObject = 0;
-        item->m_tileData.m_subterraneanGate = 1;
-    }
+    item->openPath();
     if (guardValue > 0)
         placeGuard(guardValue, entrance);
     int placed = 0;
@@ -9170,22 +9161,13 @@ unsigned char TRmgGenerator::assembleTreasureGroup(TRmgZone* zone,
     int totalValue = fillTreasureGroup(zone, group, alternate, value);
     if (!totalValue)
         return 0;
-    if (zone->m_slot->m_monsterStrength) {
-        int strength = zone->m_slot->m_monsterStrength + m_monsterStrength - 3;
-        if (strength > 5) strength = 5;
-        else if (strength < 0) strength = 0;
-        int guardValue = getRmgGuardValue(totalValue, strength);
-        if (guardValue > 0) {
-            TRmgObject* guard = createGuard(guardValue, zone);
-            if (guard && !group->addGuard(guard)) {
-                for (unsigned i = 0; i < group->m_objects.size(); ++i) {
-                    group->m_objects[i]->unknownOperation();
-                    delete group->m_objects[i];
-                }
-                group->reset();
-                delete guard;
-                return 0;
-            }
+    int guardValue = getZoneGuardValue(zone, totalValue);
+    if (guardValue > 0) {
+        TRmgObject* guard = createGuard(guardValue, zone);
+        if (guard && !group->addGuard(guard)) {
+            group->discard();
+            delete guard;
+            return 0;
         }
     }
     group->traceOutline();
@@ -9281,36 +9263,23 @@ VA_COMPGEN(0x005093c0, 0x25, STD_COPY, Int)
 
 VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
 
-// Group placement transfers its contents at a chosen three-coordinate
-// offset. The retained routine updates object positions and map-cell state.
-// Starting body reconstructed on decomp-complete-4.0 in 938b3d5d; checked
-// against retail's 692 bytes before the local source-family population.
-// Residual (99.9141%): all 45 blocks, branches and three calls agree. Of 120
-// scored states, border-before-gate snapshots restore the outer-loop reload;
-// only width/y operands at +0x16a/+0x16d differ (four raw operand bytes).
-// Tried: point/scalar/per-row scans, five destination-position construction
-// forms, four snapshot/query orders, source-map pointer/reference bindings
-// and coordinate copies. None exceeds this body; all 324 other RMG scores
-// hold. The 420-form native oracle checks clipped/aliased maps, old snapshots,
-// live object-vector bounds and mutable virtual queries; wrong policies fail.
-// Preserve the canonical lookups and retained position constructor. The
-// multiply alone does not justify flattening or moving either helper.
-// That peak predates exposing the ordinary position constructor in this TU.
-// Current 93.3047% expands the constructor retained at retail +0x132. Calling
-// the canonical position-plus-point operation reaches 93.3242%, still without
-// that call; the older four-byte residual is not the current stopping point.
-// Canonical-accessor control: 60 row/index lifetime, arithmetic-operand and
-// result-binding forms produce 11 distinct objects, with ten reproduced
-// retained candidates. Every form keeps this same four-byte mismatch.
-// All seven header-consuming TUs were scored; only other rmg.cpp callers
-// moved. No accessor change was adopted: this family supplies no positive
-// evidence for a different helper body at the mismatching expansion.
-// Mac 0x24ab68..0x24abc4 expands two byte-valued land predicates.
-// Direct field-test controls omit those Boolean results; the class-defined
-// shared predicate reproduces them. Windows currently falls 93.3047% to
-// 75.6328%; keep both helper calls while recovering the surrounding lowering.
-// Native 0x24aa6c..0x24aacc copies the full position and local point before
-// translating them; retain the shared position-plus-point operation.
+// Group objects have local XY coordinates; placement replaces the level.
+TRmgMapPosition TRmgObject::getPlacedGroupPosition(
+    const TRmgMapPosition& groupPosition) const
+{
+    TRmgMapPosition position = getPosition();
+    position.m_x += groupPosition.m_x;
+    position.m_y += groupPosition.m_y;
+    position.m_z = groupPosition.m_z;
+    return position;
+}
+
+// Group objects use local XY coordinates; committing replaces their level
+// and transfers the captured reservation flags into the destination map.
+// Mac 0x24ab68..0x24abc4 expands two byte-valued land predicates: keep the
+// canonical predicates rather than their direct field-test approximations.
+// Mac 0x24aa6c..0x24aacc copies the full position and local point before
+// translation. Keep the shared position-plus-point operation and live bounds.
 VA(0x005469B0, 0x2B4)
 MAC_ADDRESS(0x24a8c0, 0x44c) // anchor-callee 0x547330; thiscall, ret 0x10
 void TRmgGenerator::commitTreasureGroup(TRmgTreasureGroup* group,
@@ -9319,11 +9288,7 @@ void TRmgGenerator::commitTreasureGroup(TRmgTreasureGroup* group,
     group->m_position = position;
     for (unsigned int i = 0; i < group->m_objects.size(); ++i) {
         TRmgObject* object = group->m_objects[i];
-        TRmgMapPosition objectPosition = object->getPosition();
-        objectPosition.m_x += position.m_x;
-        objectPosition.m_y += position.m_y;
-        objectPosition.m_z = position.m_z;
-        addObject(object, objectPosition);
+        addObject(object, object->getPlacedGroupPosition(position));
     }
     TRmgZoneBounds bounds;
     bounds.m_minimumX = max(0, -position.m_x);
@@ -9337,26 +9302,22 @@ void TRmgGenerator::commitTreasureGroup(TRmgTreasureGroup* group,
             unsigned char border = destination->hasBorderObject();
             unsigned char gate = destination->hasSubterraneanGate();
             TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
-            if (destination->m_tile.m_landType != eTerrainWater
-                && !source->hasSubterraneanGate() && source->isPassableLand() && !source->isRoadEntrance()
+            if (destination->getLandType() != eTerrainWater
+                && source->canBlockFloor()
                 && destination->isPassableLand() && !destination->isRoadEntrance()) {
-                if (!destination->m_connection.m_present)
-                    destination->m_tileData.m_subterraneanGate = 0;
-                if (source->hasBorderObject() && !destination->m_connection.m_present) {
-                    destination->m_tileData.m_subterraneanGate = 0;
-                    destination->m_tileData.m_borderObject = 1;
-                }
+                destination->releasePathClearance();
+                if (source->hasBorderObject())
+                    destination->markObstacleFill();
             }
-            if (!source->m_connection.m_present) {
-                source->m_tileData.m_borderObject = border;
-                if (border)
-                    source->m_tileData.m_subterraneanGate = 0;
-            }
-            if (!source->m_connection.m_present) {
-                source->m_tileData.m_subterraneanGate = gate;
-                if (gate)
-                    source->m_tileData.m_borderObject = 0;
-            }
+            // Copy the destination's earlier marks back to the group map.
+            if (border)
+                source->markObstacleFill();
+            else
+                source->clearObstacleFill();
+            if (gate)
+                source->openPath();
+            else
+                source->releasePathClearance();
         }
     }
     for (unsigned int objectIndex = 0; objectIndex < group->m_objects.size(); ++objectIndex)
@@ -9419,11 +9380,8 @@ unsigned char TRmgGenerator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     int zoneIndex = zone->m_slot->m_zoneIndex;
     for (unsigned int i = 0; i < group->m_objects.size(); ++i) {
         TRmgObject* object = group->m_objects[i];
-        workingPosition = object->getPosition();
+        workingPosition = object->getPlacedGroupPosition(position);
         TRmgObjectPropertiesRef* properties = object->m_properties;
-        workingPosition.m_x += position.m_x;
-        workingPosition.m_y += position.m_y;
-        workingPosition.m_z = position.m_z;
         if (m_map.isPlacementBlocked(properties, workingPosition, zoneIndex, 1))
             return 0;
     }
@@ -9612,11 +9570,7 @@ void TRmgGenerator::placeZoneTreasures(TRmgZone* zone)
             if (assembleTreasureGroup(zone, &group, 0, range.m_minimum, range.m_maximum)) {
                 if (placeTreasureGroup(&group, zone, spacing))
                     break;
-                for (int object = 0; object < group.m_objects.size(); ++object) {
-                    group.m_objects[object]->unknownOperation();
-                    delete group.m_objects[object];
-                }
-                group.reset();
+                group.discard();
             }
         }
         if (attempt < RMG_TREASURE_ATTEMPTS)
@@ -9625,11 +9579,7 @@ void TRmgGenerator::placeZoneTreasures(TRmgZone* zone)
             if (assembleTreasureGroup(zone, &group, 1, range.m_minimum, range.m_maximum)) {
                 if (placeTreasureGroup(&group, zone, spacing))
                     break;
-                for (int object = 0; object < group.m_objects.size(); ++object) {
-                    group.m_objects[object]->unknownOperation();
-                    delete group.m_objects[object];
-                }
-                group.reset();
+                group.discard();
             }
         }
         if (attempt == RMG_TREASURE_ATTEMPTS)
@@ -11310,11 +11260,7 @@ unsigned char TRmgGenerator::placeKeyTentGuard(TRmgObject* object, int maxValue)
     } else {
         delete guard;
     }
-    for (unsigned int i = 0; i < group.m_objects.size(); ++i) {
-        group.m_objects[i]->unknownOperation();
-        delete group.m_objects[i];
-    }
-    group.reset();
+    group.discard();
     m_disabledKeyTents[color] = 0;
     m_nextKeyTentColor = 0;
     while (m_nextKeyTentColor < m_disabledKeyTents.size()
