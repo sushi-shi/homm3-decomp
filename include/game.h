@@ -676,7 +676,8 @@ class SGameSetupOptions {
 public:
     signed char m_color[8];
     signed char m_handicap[8];
-    int m_alignment[8];
+    // Original SGameSetupOptions::alignment is TTownType[8].
+    TTownType m_alignment[8];
     signed char m_playerPos[8];
     signed char m_difficulty;
     char m_filename[251];
@@ -698,7 +699,7 @@ public:
         for (int i = 0; i < 8; ++i) {
             m_color[i] = i;
             m_handicap[i] = 0;
-            m_alignment[i] = i % 9;
+            m_alignment[i] = TTownType(i % 9);
             m_playerPos[i] = i;
             m_canFlipFromToComputer[i] = i;
             m_startingHero[i] = -1;
@@ -2068,7 +2069,7 @@ DC_ADDRESS(0x02000c, 0x58)
 inline TTownType game::getPlayerAlignment(int playerId) const
 {
     return playerId >= 0
-        ? static_cast<TTownType>(m_setup.m_alignment[playerId]) : eTownNeutral;
+        ? m_setup.m_alignment[playerId] : eTownNeutral;
 }
 
 // Game.h:1380. DispatchEvent expands this cell accessor; the
