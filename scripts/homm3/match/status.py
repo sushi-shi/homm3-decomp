@@ -5,8 +5,11 @@
                          never printed by the build tail - gruntz doctrine)
   homm3 status functions [FILTER]
                          per-function current / max / historical scores
-  homm3 status update    refresh current scores; MAX is the high-water for the
-                         current source hash, HIST is the all-time high
+  homm3 status update [--unit TU ...]
+                         refresh current scores; MAX is the high-water for the
+                         current source hash, HIST is the all-time high.
+                         Repeated --unit checkpoints only freshly built units;
+                         peers retain their last banked evidence.
   homm3 status check [--baseline-ref REF]
                          classify source-edit MAX drops before banking;
                          unrelated CUR movement is silent and scores remain
@@ -113,7 +116,7 @@ def require_fresh_comparisons() -> None:
                    + "\n  ".join(problems[:10]))
 
 
-def require_built_sources() -> None:
+def require_built_sources(units: set[str] | None = None) -> None:
     """Never bank old object scores under the edited source's new hash.
 
     Ask Ninja about its real command/dependency graph without building anything.
@@ -122,7 +125,8 @@ def require_built_sources() -> None:
     # NINJA_STATUS is emitted for each scheduled edge, including in dry-run
     # mode. Use our own marker, not Ninja's human/translated no-work message.
     marker = "[homm3 pending build edge] "
-    result = subprocess.run(["ninja", "-n", "objects"], cwd=common.HOMM3_DIR,
+    targets = sorted(units) if units else ["objects"]
+    result = subprocess.run(["ninja", "-n", *targets], cwd=common.HOMM3_DIR,
                             env=dict(os.environ, NINJA_STATUS=marker),
                             capture_output=True, text=True)
     if result.returncode or marker in result.stdout:
@@ -360,11 +364,11 @@ def source_hashes(*, legacy: bool = False, source_root: Path | None = None,
             _source_definitions(source_root=source_root, only_units=only_units)}
 
 
-def source_hash_pair() -> tuple[dict, dict]:
+def source_hash_pair(*, only_units: set[str] | None = None) -> tuple[dict, dict]:
     """Current and migration hashes from one source scan; never persisted."""
     from homm3.core.cpp_tokens import fingerprint
     current, legacy = {}, {}
-    for key, definition in _source_definitions():
+    for key, definition in _source_definitions(only_units=only_units):
         current[key] = fingerprint(definition)
         legacy[key] = _legacy_hash(definition)
     return current, legacy
@@ -901,7 +905,8 @@ def _md_table(rows, align):
     return out
 
 
-def write_readme(report: dict, *, data_accounting: dict | None = None) -> None:
+def write_readme(report: dict, *, data_accounting: dict | None = None,
+                 checkpoint_rows: dict | None = None) -> None:
     """Splice the per-module score table between the README sentinels
     using projected current-implementation MAX and retained HIST."""
     from homm3.build.configure import load_manifest
@@ -909,9 +914,29 @@ def write_readme(report: dict, *, data_accounting: dict | None = None) -> None:
     unit_module = {u["unit"]: u.get("module", module_of(u["source"])) for u in units}
     # Numerators and denominator must use the same retail universe.
     from homm3.match import universe
-    category, _sizes, tally = universe.summary()
-    maxima = projected_rows(report)
-    rvas = function_rvas()
+    category, sizes, tally = universe.summary()
+    if checkpoint_rows is None:
+        maxima = projected_rows(report)
+        rvas = function_rvas()
+    else:
+        # A scoped checkpoint must never project stale unselected objects or
+        # fingerprint their current source. Their last banked rows own scores;
+        # the admitted retail inventory owns every displayed byte weight.
+        maxima = checkpoint_rows
+        rvas = {key: row.rva for key, row in maxima.items()}
+        functions = {}
+        seen = set()
+        for (unit, name), row in sorted(maxima.items()):
+            if category.get(row.rva) not in ("target", "zlib"):
+                continue
+            if row.rva in seen:
+                raise ValueError(f"duplicate checkpoint retail RVA {row.rva:#x}")
+            seen.add(row.rva)
+            functions.setdefault(unit, []).append({
+                "name": name, "size": sizes[row.rva],
+                "fuzzy_match_percent": row.cur or 0.0})
+        report = {"units": [{"name": unit, "functions": fns}
+                            for unit, fns in functions.items()]}
     maxima_by_rva = {}
     for row in maxima.values():
         if row.rva is not None:
@@ -984,9 +1009,12 @@ def write_readme(report: dict, *, data_accounting: dict | None = None) -> None:
     pct_max = 100.0 * matched_max / denominator if denominator else 0.0
     def weighted(value: float) -> float:
         return 100.0 * value / unfiltered_bytes if unfiltered_bytes else 0.0
+    current_note = ("CUR is this build" if checkpoint_rows is None else
+                    "CUR is each unit's last measured checkpoint; only selected units were refreshed")
+    source_note = ("current source" if checkpoint_rows is None else "banked source implementation")
     block = [RM_START, "",
              "_Generated by `homm3 build`; scores in the table are MAX, "
-             "the best result for each function's current source under strict relocation/data checks._", "",
+             f"the best result for each function's {source_note} under strict relocation/data checks._", "",
              f"**Executable MAX: {exe_pct:.2f}%** — weighted by function size "
              f"across {unfiltered_bytes:,} bytes of code included in matching.",
              "",
@@ -996,7 +1024,7 @@ def write_readme(report: dict, *, data_accounting: dict | None = None) -> None:
              f"{matched_hist:,} exact; {weighted(current_bytes):.2f}% / "
              f"{weighted(matched_bytes):.2f}% / "
              f"{weighted(historical_bytes):.2f}% weighted fuzzy. "
-             "CUR is this build; HIST retains peaks from earlier source "
+             f"{current_note}; HIST retains peaks from earlier source "
              "implementations and scoring policies. Unchanged-source CUR dips do not lower MAX._", ""]
     block += _md_table(rows, "lrrr")
 
@@ -1059,6 +1087,14 @@ def main(argv=None) -> int:
     if argv and argv[0] == "merge-baseline":
         from homm3.match import merge_baseline
         return merge_baseline.main(argv[1:])
+    units = set()
+    while "--unit" in argv:
+        at = argv.index("--unit")
+        if at + 1 >= len(argv) or argv[at + 1].startswith("--"):
+            print("--unit requires a manifest unit name", file=sys.stderr)
+            return 2
+        units.add(argv[at + 1])
+        del argv[at:at + 2]
     baseline_ref = None
     if "--baseline-ref" in argv:
         at = argv.index("--baseline-ref")
@@ -1088,6 +1124,12 @@ def main(argv=None) -> int:
     if baseline_ref and command != "check":
         print("[status] --baseline-ref applies only to check", file=sys.stderr)
         return 2
+    if units:
+        if command != "update" or len(argv) != 1:
+            print("--unit applies only to status update", file=sys.stderr)
+            return 2
+        from homm3.match.scoped_status import update
+        return update(units, readme=readme)
     require_built_sources()
     report = refresh_report()
     if readme:
