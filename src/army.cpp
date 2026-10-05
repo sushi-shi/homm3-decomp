@@ -131,7 +131,7 @@ DC_ADDRESS(0x043830, 0x3a)
 MAC_ADDRESS(0x048ec4, 0x68)
 void army::playSample(army::TSampleID id)
 {
-    if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()
+    if (!g_combatManager->isQuickCombat()
         && m_armySample[id]) {
         g_soundManager->memorySample(m_armySample[id]);
     }
@@ -142,7 +142,7 @@ DC_ADDRESS(0x04386c, 0x3c)
 MAC_ADDRESS(0x048f2c, 0x6c)
 void army::stopSample(army::TSampleID id)
 {
-    if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()
+    if (!g_combatManager->isQuickCombat()
         && m_armySample[id]) {
         g_soundManager->stopSample(m_armySample[id]->m_memSample.m_memSampleHandle);
     }
@@ -227,8 +227,7 @@ DC_ADDRESS(0x0438a8, 0x3e)
 MAC_ADDRESS(0x048f98, 0x70)
 inline void army::waitSample(army::TSampleID which)
 {
-    if (!static_cast<const combatManager*>(g_combatManager)
-            ->isQuickCombat()
+    if (!g_combatManager->isQuickCombat()
         && m_armySample[which]) {
         g_soundManager->waitSample(m_armySample[which]->m_memSample.m_memSampleHandle, -1);
     }
@@ -317,8 +316,7 @@ DC_ADDRESS(0x043e80, 0x3ca)
 MAC_ADDRESS(0x04941c, 0x774)
 void army::loadResources()
 {
-    if (static_cast<const combatManager*>(g_combatManager)
-            ->isQuickCombat())
+    if (g_combatManager->isQuickCombat())
         return;
 
     memcpy(m_monFrameInfo.m_missileOffset, &g_monFrameInfo[m_creatureType],
@@ -681,8 +679,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
     int powY;
     if (g_combatManager->m_battleOver != 0)
         return;
-    if (static_cast<const combatManager*>(g_combatManager)
-            ->isQuickCombat())
+    if (g_combatManager->isQuickCombat())
         return;
 
     y += m_ySpecialMod;
@@ -1136,8 +1133,7 @@ DC_ADDRESS(0x0453c8, 0x4d8)
 MAC_ADDRESS(0x04afa0, 0x68c)  // MAC_ABSTRACTION_FROM(tokens1:1b8626a2ce74,31.8986): restore canonical getOwningSide before markCreatureEffect instead of a direct owning-side field load.
 void army::animateMissile(army* armyToAttack)
 {
-    if (static_cast<const combatManager*>(g_combatManager)
-            ->isQuickCombat())
+    if (g_combatManager->isQuickCombat())
         return;
 
     int targetX = armyToAttack->midX();
@@ -1288,8 +1284,7 @@ void army::rangeAttack(army* armyToAttack)
     if (m_creatureType == CREATURE_MAGOG) {
         long effect = g_spellTraits[SPELL_FIREBALL].m_effect;
         if (effect != -1
-            && !static_cast<const combatManager*>(g_combatManager)
-                    ->isQuickCombat()) {
+            && !g_combatManager->isQuickCombat()) {
             launchSample(g_spellTraits[SPELL_FIREBALL].m_sample, -1, 3);
             CSprite* spr =
                 ResourceManager::getSprite(g_spellEffectTraits[effect]
@@ -1354,8 +1349,7 @@ void army::rangeAttack(army* armyToAttack)
                || m_creatureType == CREATURE_POWER_LICH) {
         long effect = g_spellTraits[SPELL_DEATH_CLOUD].m_effect;
         if (effect != -1
-            && !static_cast<const combatManager*>(g_combatManager)
-                    ->isQuickCombat()) {
+            && !g_combatManager->isQuickCombat()) {
             launchSample(g_spellTraits[SPELL_DEATH_CLOUD].m_sample, -1,
                           3);
             CSprite* spr =
@@ -1418,8 +1412,7 @@ void army::rangeAttack(army* armyToAttack)
         g_combatManager->powEffect(eSpellEffectNone, 0);
         g_combatManager->damageMessage(getName(), m_numTroops, damage,
                                         armyToAttack, killed);
-        if (static_cast<const combatManager*>(g_combatManager)
-                ->isQuickCombat())
+        if (g_combatManager->isQuickCombat())
             return;
         waitSample(SHOOT_SAMPLE);
     }
@@ -1747,8 +1740,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                         text += formatString(g_generalText->getText(GENERAL_TEXT_LIFE_DRAIN_RAISE_MANY_SUFFIX_FORMAT),
                                               deadVampires);
                 }
-                if (!static_cast<const combatManager*>(g_combatManager)
-                         ->isQuickCombat()) {
+                if (!g_combatManager->isQuickCombat()) {
                     g_combatManager->m_combatWindow->combatMessage(
                         text.c_str(), 1, 0);
                     SAMPLE2 sample = loadPlaySample(
@@ -1784,8 +1776,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                                          target->getName(dead),
                                          getName());
                 SAMPLE2 sample;
-                if (!static_cast<const combatManager*>(g_combatManager)
-                         ->isQuickCombat()) {
+                if (!g_combatManager->isQuickCombat()) {
                     g_combatManager->m_combatWindow->combatMessage(
                         text.c_str(), 1, 0);
                     sample = loadPlaySample(
@@ -1794,8 +1785,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                 }
                 target->damage(damage);
                 g_combatManager->powEffect(eSpellEffectNone, 1);
-                if (!static_cast<const combatManager*>(g_combatManager)
-                         ->isQuickCombat())
+                if (!g_combatManager->isQuickCombat())
                     waitEndSample(sample, -1);
             }
         }
@@ -1813,9 +1803,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                 if (damage > 0) {
                     std::string text;
                     SAMPLE2 sample;
-                    if (!static_cast<const combatManager*>(
-                             g_combatManager)
-                             ->isQuickCombat()) {
+                    if (!g_combatManager->isQuickCombat()) {
                         text = formatString(
                             g_generalText->getText(GENERAL_TEXT_LIGHTNING_STRIKE_FORMAT),
                             target->getName());
@@ -1833,9 +1821,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                         damage, target, killed);
                     target->m_showPowEffect = 1;
                     g_combatManager->powEffect(eSpellEffectLightningDust, 1);
-                    if (!static_cast<const combatManager*>(
-                             g_combatManager)
-                             ->isQuickCombat())
+                    if (!g_combatManager->isQuickCombat())
                         waitEndSample(sample, -1);
                 }
             }
@@ -1869,8 +1855,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
             if (damage > 0) {
                 std::string text;
                 SAMPLE2 sample;
-                if (!static_cast<const combatManager*>(g_combatManager)
-                         ->isQuickCombat())
+                if (!g_combatManager->isQuickCombat())
                     sample = loadPlaySample(
                         g_spellTraits[SPELL_ACID_BREATH_DEFENSE]
                             .m_sample);
@@ -1878,8 +1863,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                 g_combatManager->damageMessage(
                     g_spellTraits[SPELL_ACID_BREATH_DEFENSE].m_name, 1,
                     damage, target, killed);
-                if (!static_cast<const combatManager*>(g_combatManager)
-                         ->isQuickCombat()) {
+                if (!g_combatManager->isQuickCombat()) {
                     g_combatManager->spellEffect(81, target, 100, 0);
                     waitEndSample(sample, -1);
                 }
@@ -2222,8 +2206,7 @@ inline void army::checkLuck()
         // Mac 0x4e084 calls sRandom; Windows folds its body with random.
         if (sRandom(1, 24) <= min(m_luck, 3)) {
             m_luckStatus = 1;
-            if (!static_cast<const combatManager*>(g_combatManager)
-                     ->isQuickCombat()) {
+            if (!g_combatManager->isQuickCombat()) {
                 launchSample(DATA_COMPGEN(0x00660a20, goodLuckSampleName,
                                            "goodluck.82m"),
                               -1, 3);
@@ -2747,8 +2730,7 @@ int army::computeAttackerBonus(int baseDamage, bool isShooting,
         if (hates) {
             bonus += baseDamage / 2;
             if (announce) {
-                if (!static_cast<const combatManager*>(g_combatManager)
-                         ->isQuickCombat()) {
+                if (!g_combatManager->isQuickCombat()) {
                     std::string text;
                     if (m_numTroops == 1)
                         text = formatString(
@@ -2817,8 +2799,7 @@ int army::computeAttackerDamageBonuses(int baseDamage,
         if (!simulateOnly
             && sRandom(1, 100) <= g_artilleryDoubleChances[mastery]) {
             result += baseDamage;
-            if (!static_cast<const combatManager*>(g_combatManager)
-                     ->isQuickCombat()) {
+            if (!g_combatManager->isQuickCombat()) {
                 std::string text;
                 const char* creatureName;
                 creatureName = getName();
@@ -2834,8 +2815,7 @@ int army::computeAttackerDamageBonuses(int baseDamage,
     case CREATURE_DREAD_KNIGHT:
         if (!simulateOnly && sRandom(1, 100) <= 20) {
             result += baseDamage;
-            if (!static_cast<const combatManager*>(g_combatManager)
-                     ->isQuickCombat()) {
+            if (!g_combatManager->isQuickCombat()) {
                 std::string text;
                 if (m_numTroops == 1)
                     text = formatString((*g_generalText)[GENERAL_TEXT_DOUBLE_DAMAGE_ONE_FORMAT],
@@ -4057,8 +4037,7 @@ DC_ADDRESS(0x04aacc, 0x5a4)
 MAC_ADDRESS(0x051fa4, 0x64c)  // anchor-callee
 void army::attackWall(TWallTargetId wall, long levelsDestroyed)
 {
-    if (static_cast<const combatManager*>(g_combatManager)
-            ->isQuickCombat()) {
+    if (g_combatManager->isQuickCombat()) {
         g_combatManager->damageWall(wall, levelsDestroyed);
         return;
     }
@@ -4558,8 +4537,7 @@ void army::newTurn()
             long heal = m_topCreatureDamage;
             long amount = heal > 50 ? 50 : heal;
             m_topCreatureDamage = heal - amount;
-            if (!static_cast<const combatManager*>(g_combatManager)
-                     ->isQuickCombat()) {
+            if (!g_combatManager->isQuickCombat()) {
                 SAMPLE2 sample = loadPlaySample(
                     DATA_COMPGEN(0x00660a94, regenerSampleName,
                                  "Regener.wav"));
@@ -4713,8 +4691,7 @@ void army::faerieDragonSpell()
         }
     }
 
-    if (static_cast<const combatManager*>(g_combatManager)
-            ->isQuickCombat())
+    if (g_combatManager->isQuickCombat())
         return;
     if (g_combatManager->m_sideIsAi[getControllingSide()]) {
         const char* fmt =
@@ -5040,8 +5017,7 @@ unsigned char army::unnamed447fe0()
             break;
     }
 
-    if (!static_cast<const combatManager*>(g_combatManager)
-             ->isQuickCombat()) {
+    if (!g_combatManager->isQuickCombat()) {
         long side = getControllingSide();
         army* stack = g_combatManager->m_armies[side];
         for (long i = 0; i < g_combatManager->m_numArmies[side]; i++, stack++) {
@@ -5065,8 +5041,7 @@ MAC_ADDRESS(0x0548f4, 0x4f0)
 void army::castSpell(long hex)
 {
     long originalFacing = m_facing;
-    if (!static_cast<const combatManager*>(g_combatManager)
-             ->isQuickCombat()) {
+    if (!g_combatManager->isQuickCombat()) {
         long targetX = g_combatManager->m_cells[hex].m_refX;
         long targetY = g_combatManager->m_cells[hex].m_refY;
         long myX = midX();
@@ -5154,8 +5129,7 @@ void army::castSpell(long hex)
     waitSample(SHOOT_SAMPLE);
     g_combatManager->m_extent = heroWindowManager::s_nullLimits;
     if (originalFacing != m_facing
-        && !static_cast<const combatManager*>(g_combatManager)
-                ->isQuickCombat())
+        && !g_combatManager->isQuickCombat())
         turn(1);
 }
 

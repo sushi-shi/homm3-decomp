@@ -346,7 +346,7 @@ MAC_ADDRESS(0x0a46a8, 0x7c4)  // retail CFG/calls + DC source shape
 void combatManager::combatMessage(int command)
 {
     if (!m_combatShowIt
-            || static_cast<const combatManager*>(this)->isQuickCombat())
+            || isQuickCombat())
         return;
 
     army* currentArmy = getCurrentArmy();
@@ -506,7 +506,7 @@ DC_ADDRESS(0x083e58, 0x34)
 MAC_ADDRESS(0x0a4ef0, 0x7c)
 void combatManager::updateCombatArea()
 {
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()
+    if (!isQuickCombat()
             && m_combatShowIt) {
         g_windowManager->updateScreen(
             combatManager::s_combatAreaLimits.m_minX,
@@ -789,7 +789,7 @@ DC_ADDRESS(0x0847dc, 0x1e8)
 MAC_ADDRESS(0x0a55ec, 0x230)
 void combatManager::drawBackground()
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return;
     if (m_backgroundDrawn)
         return;
@@ -859,7 +859,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
     static std::vector<long> oldHexes;
 
     if (m_battleOver
-            || static_cast<const combatManager*>(this)->isQuickCombat()
+            || isQuickCombat()
             || !g_config.m_showCombatMouseHex)
         return;
     if (newMouseGridIndex == lastMouseGridIndex && !forceUpdate)
@@ -1014,7 +1014,7 @@ void combatManager::drawFrame(bool update,
                               bool doDelayTil)
 {
     if (m_battleOver
-            || static_cast<const combatManager*>(this)->isQuickCombat()
+            || isQuickCombat()
             || !m_combatShowIt)
         return;
 
@@ -2016,7 +2016,7 @@ MAC_ADDRESS(0x0a8c94, 0x29c)
 void combatManager::spellEffect(int effect, army* targetArmy, int delay,
                                 bool doWince)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return;
     if (effect == -1)
         return;
@@ -2067,7 +2067,7 @@ MAC_ADDRESS(0x0a8f30, 0x278)
 void combatManager::spellEffect(int effect, int hex, int delay,
                                 bool leaveLastFrame)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return;
     if (effect == -1)
         return;
