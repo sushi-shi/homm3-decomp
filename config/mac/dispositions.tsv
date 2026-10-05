@@ -2,3 +2,4 @@
 # without a MAC_ADDRESS. identity is a `homm3 mac parity` identity;
 # disposition is inlined_only, mac_only, windows_only, folded, platform_rewritten.
 identity	disposition	evidence
+compgen:0x00437a00	inlined_only	The implicit army copy expands memberwise inside Mac getBacklashValue (0x4329c), including four vector copies and the deque member copy at call 0x435ac. That call passes receiver/source +0x420 to library body 0x46c1c, which is not a retained army constructor. Preserve the natural implicit copy and the Windows retained constructor at 0x437a00.
