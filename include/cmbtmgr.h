@@ -1781,16 +1781,19 @@ public:
     // helper and its four ordered bounds. Complete widens the window to the
     // retail 800x556 combat area; ProcessCombatMsg retains the source call
     // and VC6 expands it into the four retail comparisons.
-    // DC has x/y only, no receiver: this is static.
+    // DC has x/y only, no receiver: this is static. The original public
+    // ?InCombatArea@combatManager@@SA_NHH@Z proves the bool result.
     DC_ADDRESS(0x070a2c, 0x2a)
-    static unsigned char inCombatArea(int x, int y)
+    static bool inCombatArea(int x, int y)
     {
         return x >= 0 && x < 800 && y >= 0 && y < 556;
     }
 
-    // Original: combatManager::is_in_second_phase; CmbtMgr.h:1494
+    // Original: combatManager::is_in_second_phase; CmbtMgr.h:1494.
+    // Its original ?is_in_second_phase@combatManager@@QBA_NXZ public
+    // proves bool even though CodeView lowers the result to primitive 0x20.
     DC_ADDRESS(0x027f28, 0xc)
-    unsigned char isInSecondPhase() const { return m_inSecondPhase; }
+    bool isInSecondPhase() const { return m_inSecondPhase; }
 
     // Dreamcast S_PUB32 fixes this entire inline band: GetHexIndex and GridX
     // are static int helpers, RowIsOdd is a const bool member, and

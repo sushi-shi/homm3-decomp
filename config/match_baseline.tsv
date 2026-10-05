@@ -1082,7 +1082,7 @@ command	?checkWin@combatManager@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0
 command	?doAnimations@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x74040	tokens1:fecee6b610df
 command	?doCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0	tokens1:36ea453e717e
 command	?doVictory@combatManager@@QAEXH@Z	99.9756	100.0000	100.0000	0x77470	tokens1:610c46d73b7f
-command	?getCommand@combatManager@@QAEHH@Z	99.9888	100.0000	100.0000	0x76490	tokens1:a4ddfaff7c52
+command	?getCommand@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x76490	tokens1:a4ddfaff7c52
 command	?getControl@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x782d0	tokens1:839c88458f96
 command	?getSurrenderCost@combatManager@@AAEJXZ	100.0000	100.0000	100.0000	0x77a00	tokens1:d2b55bc0ec87
 command	?getTowerString@combatManager@@ABE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TWallSection@1@JJ@Z	100.0000	100.0000	100.0000	0x7a2d0	tokens1:a462065bc26d
@@ -1789,10 +1789,10 @@ findpath	?seedCombatPosition@searchArray@@QAEXPBVarmy@@JJ_NJ@Z	100.0000	100.0000
 findpath	?setMoat@searchArray@@AAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0xb3290	tokens1:78d9d29aad2c
 findpath	?testPossibleDirections@searchArray@@AAEXPBVhero@@AAUpathCell@@JJEUtype_point@@W4TSkillMastery@@W4type_search_type@@W4TTerrainType@@@Z	99.1967	99.2022	99.2022	0xb2300	tokens1:ec680e8e7879
 fly	?fly@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4a40	tokens1:e21ceecfd727
-fly	army_flyTo	0.0000	100.0000	100.0000	0xb49c0	tokens1:d2f0a09622ae
+fly	?flyTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb49c0	tokens1:d2f0a09622ae
 fly	?teleport@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4f10	tokens1:88d5d62860bb
-fly	army_teleportTo	0.0000	100.0000	100.0000	0xb4e90	tokens1:b59dcfa99ac6
-fly	army_validFlight	0.0000	100.0000	100.0000	0xb46c0	tokens1:2b9479055b70
+fly	?teleportTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb4e90	tokens1:b59dcfa99ac6
+fly	?validFlight@army@@QBEEHE@Z	100.0000	100.0000	100.0000	0xb46c0	tokens1:2b9479055b70
 font	??0font@@QAE@PBDABUTFontSpec@0@HPAE@Z	100.0000	100.0000	100.0000	0xb5070	tokens1:42bb77495e29
 font	??1font@@UAE@XZ	100.0000	100.0000	100.0000	0xb5110	tokens1:b863e5aeb8a7
 font	??_Gfont@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb5040	-
@@ -4218,7 +4218,7 @@ spells	?ableToSummonElemental@combatManager@@QAEEHJ@Z	100.0000	100.0000	100.0000
 spells	?addBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5a90	tokens1:540828a1b0f6
 spells	?areaEffect@combatManager@@QAEXJHJJ@Z	100.0000	100.0000	100.0000	0x1a4970	tokens1:cc820fecaa79
 spells	?armageddon@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1a4bc0	tokens1:36a0231e3a8d
-spells	?castSpell@combatManager@@QAEXHHHHW4TSkillMastery@@J@Z	93.7711	93.7711	94.1057	0x19fe30	tokens1:22853ae12a4c
+spells	?castSpell@combatManager@@QAEXHHHHW4TSkillMastery@@J@Z	93.7782	93.7782	94.1057	0x19fe30	tokens1:22853ae12a4c
 spells	?chainLightning@combatManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x1a6360	tokens1:b964bc7e2b10
 spells	?checkFireWall@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fcd0	tokens1:179efef27da2
 spells	?checkLandmine@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fb40	tokens1:d7be3a832e70
@@ -4258,8 +4258,8 @@ spells	?modifySpellDamage@combatManager@@QBEJJHPBVhero@@0PBVarmy@@E@Z	100.0000	1
 spells	?modifySpellDamageForSpells@combatManager@@QBEJJHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x1a7bb0	tokens1:ee1d500e3dec
 spells	?removeCorpse@combatManager@@QAEXAAVhexcell@@JJ@Z	100.0000	100.0000	100.0000	0x1a7320	tokens1:bce2a644841e
 spells	?resetBoltAngle@combatManager@@QAEXPAUSBolt@@@Z	98.5146	98.5146	98.5146	0x1a5260	tokens1:42833e30fc11
-spells	?resurrect@combatManager@@QAEXPAVarmy@@J_N@Z	96.7654	96.7846	96.7846	0x1a7560	tokens1:382a0de7f89c
-spells	?setMassSpellInfluence@combatManager@@QAEXPBVhero@@HJJJJ@Z	99.9383	100.0000	100.0000	0x1a66d0	tokens1:5732a289a1ad
+spells	?resurrect@combatManager@@QAEXPAVarmy@@J_N@Z	96.7846	96.7846	96.7846	0x1a7560	tokens1:382a0de7f89c
+spells	?setMassSpellInfluence@combatManager@@QAEXPBVhero@@HJJJJ@Z	100.0000	100.0000	100.0000	0x1a66d0	tokens1:5732a289a1ad
 spells	?showMassSpell@combatManager@@QAEXAAY11BE@_NH_N@Z	96.3708	96.3708	96.3708	0x1a67c0	tokens1:1c14d60b20cd
 spells	?showSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	98.7576	98.7576	100.0000	0x1a8950	tokens1:478c6031c182
 spells	?spellCastWorkChance@combatManager@@QBEMHJPBVarmy@@_N1J@Z	100.0000	100.0000	100.0000	0x1a8090	tokens1:27b5d528dd5f
