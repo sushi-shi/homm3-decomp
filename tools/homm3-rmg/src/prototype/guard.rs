@@ -10,7 +10,7 @@ use crate::{
 };
 use std::{error::Error, fmt, num::NonZeroU32};
 
-const CREATURES: usize = raw::RMG_CREATURE_TYPE_COUNT as usize;
+const MAX_CREATURES: usize = crate::rules::Ruleset::HotA181.creature_count();
 
 /// Guard affiliations after applying the zone-alignment override.
 #[derive(Clone, Copy, Debug)]
@@ -121,11 +121,17 @@ impl PrototypeCatalog<'_> {
         creatures: &CreatureCatalog,
         rng: &mut RetailRng,
     ) -> Result<Option<GuardStack>, GuardError> {
-        let mut prototypes = [None; CREATURES];
+        let count = match creatures.ruleset() {
+            crate::rules::Ruleset::Complete => raw::RMG_CREATURE_TYPE_COUNT as usize,
+            crate::rules::Ruleset::HotA181 => creatures.entries().len(),
+        };
+        let mut storage = [None; MAX_CREATURES];
+        let prototypes = &mut storage[..count];
         let start = self.offsets[raw::MONSTER as usize];
         let end = self.offsets[raw::MONSTER as usize + 1];
         for (index, entry) in self.entries[start..end].iter().enumerate() {
-            let creature = CreatureId::parse(entry.prototype.subtype)
+            let creature = creatures
+                .id(entry.prototype.subtype)
                 .ok_or(GuardError::CreatureSubtype(entry.prototype.subtype))?;
             prototypes[creature.index()] = Some(self.id(start + index));
         }
@@ -137,20 +143,26 @@ impl PrototypeCatalog<'_> {
         value: i32,
         factions: GuardFactions<'_>,
         creatures: &CreatureCatalog,
-        mut prototypes: [Option<PrototypeId>; CREATURES],
+        prototypes: &mut [Option<PrototypeId>],
         rng: &mut RetailRng,
     ) -> Result<Option<GuardStack>, GuardError> {
         let evaluated = if self.version == MapVersion::Restoration {
-            prototypes[raw::RMG_ROE_CREATURE_TYPE_COUNT as usize..].fill(None);
+            // The native HotA frame relocation keeps the 27-entry exclusion,
+            // but leaves eligibility's upper bound at 116. Larger catalogs can
+            // therefore retain unfiltered candidates in 117..count-28.
+            let excluded = prototypes.len() - 27;
+            prototypes[excluded..].fill(None);
             // 117 stays in the selection array, but is not evaluated or counted.
             raw::RMG_ROE_CREATURE_TYPE_COUNT as usize - 1
         } else {
-            CREATURES
+            prototypes.len()
         };
         let mut eligible = 0;
         for index in (0..evaluated).rev() {
-            let creature = creature_at(index);
-            let traits = *creatures.get(creature);
+            let creature = creature_at(index, creatures);
+            let traits = *creatures.get(creature).ok_or(GuardError::CreatureSubtype(
+                i32::try_from(creature.index()).expect("creature ID fits i32"),
+            ))?;
             let ai = traits.ai_value().map_or(0, std::num::NonZeroI32::get);
             let (low, high) = traits.wandering_counts();
             let minimum = arithmetic(high.checked_add(low), creature, "wandering count sum")? / 2;
@@ -168,6 +180,9 @@ impl PrototypeCatalog<'_> {
                     )?
                 && traits.tier().is_some()
                 && factions.allows(traits.town())
+                // HotA DLL RVA 0x1bca30: count only creatures with a prototype.
+                && (creatures.ruleset() == crate::rules::Ruleset::Complete
+                    || prototypes[index].is_some())
             {
                 eligible += 1;
             } else {
@@ -179,7 +194,8 @@ impl PrototypeCatalog<'_> {
         };
         let rank = rng.below(eligible) as usize;
         let Some((index, prototype)) = prototypes
-            .into_iter()
+            .iter()
+            .copied()
             .enumerate()
             .rev()
             .filter_map(|(index, prototype)| prototype.map(|prototype| (index, prototype)))
@@ -191,9 +207,12 @@ impl PrototypeCatalog<'_> {
                 Err(GuardError::MissingSelectedPrototype)
             };
         };
-        let creature = creature_at(index);
+        let creature = creature_at(index, creatures);
         let ai = creatures
             .get(creature)
+            .ok_or(GuardError::CreatureSubtype(
+                i32::try_from(creature.index()).expect("creature ID fits i32"),
+            ))?
             .ai_value()
             .ok_or(GuardError::ZeroAiValue(creature))?
             .get();
@@ -221,8 +240,9 @@ impl PrototypeCatalog<'_> {
     }
 }
 
-fn creature_at(index: usize) -> CreatureId {
-    CreatureId::parse(i32::try_from(index).expect("creature table index"))
+fn creature_at(index: usize, creatures: &CreatureCatalog) -> CreatureId {
+    creatures
+        .id(i32::try_from(index).expect("creature table index"))
         .expect("creature table identity")
 }
 fn arithmetic(

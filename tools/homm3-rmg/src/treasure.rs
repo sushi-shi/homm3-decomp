@@ -15,6 +15,8 @@ use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 /// Definition construction cannot perform the native arithmetic or reserve storage.
 #[derive(Debug)]
 pub enum TreasureError {
+    /// The definition builder does not yet implement this catalog's rules.
+    UnsupportedRuleset(crate::rules::Ruleset),
     /// Canonical recipe arguments do not describe an admitted definition.
     Recipe,
     /// Process-local catalog ownership tags are exhausted.
@@ -29,6 +31,9 @@ pub enum TreasureError {
 impl fmt::Display for TreasureError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::UnsupportedRuleset(rules) => {
+                write!(f, "treasure definitions do not yet support {rules:?}")
+            }
             Self::IdentityExhausted => f.write_str("treasure catalog identity exhausted"),
             Self::Recipe => f.write_str("unsupported canonical treasure recipe"),
             Self::CreatureCount(id) => write!(
@@ -73,7 +78,7 @@ pub struct CreatureReward {
 }
 impl CreatureReward {
     fn new(creature: CreatureId, traits: &CreatureCatalog) -> Result<Self, TreasureError> {
-        let entry = traits.get(creature);
+        let entry = traits.get(creature).ok_or(TreasureError::Recipe)?;
         let tier = entry.tier().ok_or(TreasureError::Recipe)?;
         let count = raw::CREATURE_REWARD_VALUES[tier.index()]
             .checked_div(
@@ -384,6 +389,9 @@ impl TreasureWorkspace {
         prototypes: &'assets PrototypeCatalog<'source>,
         creatures: &'assets CreatureCatalog,
     ) -> Result<TreasureCatalog<'workspace, 'assets, 'source>, TreasureError> {
+        if creatures.ruleset() != crate::rules::Ruleset::Complete {
+            return Err(TreasureError::UnsupportedRuleset(creatures.ruleset()));
+        }
         let owner = OwnerId::new().ok_or(TreasureError::IdentityExhausted)?;
         self.definitions.clear();
         for &recipe in raw::TREASURE_RECIPES {
@@ -434,7 +442,12 @@ impl TreasureWorkspace {
             let id =
                 CreatureId::parse(i32::try_from(index).map_err(|_| TreasureError::Arithmetic)?)
                     .ok_or(TreasureError::Recipe)?;
-            if creatures.get(id).tier().is_none() {
+            if creatures
+                .get(id)
+                .ok_or(TreasureError::Recipe)?
+                .tier()
+                .is_none()
+            {
                 continue;
             }
             let reward = CreatureReward::new(id, creatures)?;

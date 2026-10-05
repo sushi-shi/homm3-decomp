@@ -2,6 +2,33 @@
 
 use homm3_resource::hdat::Container;
 use homm3_rmg::treasure::{ObjectRecipe, ObjectRecipes};
+use homm3_rmg::{rules::Ruleset, traits::CreatureCatalog};
+
+#[test]
+#[ignore = "requires HOMM3_HOTA_DAT and HOMM3_RMG_CREATURES from the pinned HotA installation"]
+fn installed_creature_catalog_loads_expanded_factions_and_native_numeric_fields() {
+    let bytes = std::fs::read(std::env::var_os("HOMM3_HOTA_DAT").unwrap()).unwrap();
+    let base = std::fs::read(std::env::var_os("HOMM3_RMG_CREATURES").unwrap()).unwrap();
+    let catalog = CreatureCatalog::parse_hota181(&base, Container::parse(&bytes).unwrap()).unwrap();
+    assert_eq!(catalog.ruleset(), Ruleset::HotA181);
+    assert_eq!(catalog.entries().len(), 200);
+    for (id, faction, tier, ai, growth, wandering) in [
+        (151, 9, 2, 602, 7, (12, 20)),
+        (185, 10, 6, 6433, 1, (3, 8)),
+        (199, 11, 6, 6694, 1, (3, 8)),
+    ] {
+        let row = catalog.get(catalog.id(id).unwrap()).unwrap();
+        assert_eq!(row.town().unwrap().index(), faction);
+        assert_eq!(row.tier().unwrap().index(), tier);
+        assert_eq!(row.ai_value().unwrap().get(), ai);
+        assert_eq!(row.growth(), growth);
+        assert_eq!(row.wandering_counts(), wandering);
+    }
+    assert_eq!(catalog.entries()[138].town().unwrap().index(), 10);
+    assert!(catalog.entries()[152].tier().is_none());
+    assert!(catalog.entries()[167].town().is_none());
+    assert!(catalog.id(200).is_none());
+}
 
 #[test]
 #[ignore = "requires HOMM3_HOTA_DAT pointing to the pinned HotA 1.8.1 data file"]

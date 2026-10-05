@@ -116,7 +116,11 @@ impl Town {
     /// # Errors
     /// Rejects the neutral sentinel and values outside the known town domain.
     pub fn parse(value: i32) -> Result<Self, InputError> {
-        if !(raw::TOWN_CASTLE..=raw::TOWN_CONFLUX).contains(&value) {
+        Self::parse_for(value, crate::rules::Ruleset::Complete)
+    }
+
+    pub(crate) fn parse_for(value: i32, rules: crate::rules::Ruleset) -> Result<Self, InputError> {
+        if !usize::try_from(value).is_ok_and(|id| id < rules.town_count()) {
             return Err(invalid("town", value));
         }
         Ok(Self(

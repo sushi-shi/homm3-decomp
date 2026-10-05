@@ -142,7 +142,37 @@ framing (including every truncated prefix of the fixture); three RMG unit tests
 cover integer streams and native object-record selection quirks. The RMG library
 now passes 101 unit tests, and both libraries pass Clippy with warnings denied.
 
-This reader does not yet initialize the expanded creature, artifact, hero and
-terrain catalogs or consume the new recipes in generation. Those require the
+At that checkpoint the reader did not initialize the expanded creature, artifact,
+hero and terrain catalogs or consume the new recipes in generation. Those require the
 native record field interpretations and initialization patches, followed by the
 shared definition builder and placement changes. The full objective remains open.
+
+The creature catalog now uses shared contiguous storage with checked ID lookup,
+and loads all 200 pinned rows from the installation's `crtraits.txt` plus HDAT
+`monstNNN` payloads. DLL RVA `0x16a39f` copies each 116-byte native record; only
+town, tier, AI value, growth and wandering-count fields enter Rust. Final native
+writes at `0x16b5df..0x16b633` adjust tiers 123/125/129 and assign creature 138 to
+Factory. The base spreadsheet comes from `HotA_lng.lod` (SHA-256
+`ca8f3a15ddde8264a97e712a78906a4555df6a0799e9bc2d3f09452440bdf3c5` for its
+uncompressed `crtraits.txt`). Missing expanded rows and invalid field domains
+fail admission rather than leaving uninitialized catalog entries.
+
+Shared guard selection now uses that catalog's creature count and requires
+existing monster prototypes under HotA rules (RVA `0x1bca30`). It retains the
+RoE 27-slot exclusion and unchanged 116 eligibility upper bound, including the
+resulting unfiltered expanded candidates. Tests cover duplicate prototype
+selection, missing prototypes, no-draw failure, count variation and that RoE
+quirk. All 104 library tests and Clippy pass; the installed-data test checks all
+rows are admitted and representative Cove/Factory/Bulwark fields.
+
+A further 14-request Complete corpus sample after these catalog/guard changes
+has 14 exact hotfix matches, seven exact retail matches and seven pre-existing
+typed coast faults, with no unexpected differences. It covers all three map
+formats, both levels, original dimensions and no-water/water/island inputs.
+
+The Complete pipeline and definition builder explicitly reject an expanded
+catalog until their remaining HotA stages are integrated. Standalone guard
+selection is exercised with retained prototype inputs; versioned prototype
+admission, monster disposition/output, archive precedence, other catalogs,
+and full generation parity remain outstanding. No initialized native-table or
+end-to-end HotA parity is claimed from these resource and algorithm tests.

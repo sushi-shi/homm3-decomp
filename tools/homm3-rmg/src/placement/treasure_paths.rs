@@ -20,7 +20,13 @@ impl TownZoneCounts {
         // immediately before the nine faction buckets at +0xf64. The subsequent
         // increment reloads total. Preserve this contained alias without indexing
         // outside an array: a neutral primary-town zone contributes twice.
-        let bucket = alignment.map_or(&mut self.total, |town| &mut self.aligned[town.index()]);
+        let bucket = match alignment {
+            Some(town) => self
+                .aligned
+                .get_mut(town.index())
+                .ok_or(PlacementError::CatalogContext)?,
+            None => &mut self.total,
+        };
         *bucket = bucket.checked_add(1).ok_or(PlacementError::Arithmetic)?;
         self.total = self
             .total
@@ -38,10 +44,11 @@ impl TownZoneCounts {
     pub const fn by_alignment(&self) -> &[i32; raw::TOWN_TYPE_COUNT as usize] {
         &self.aligned
     }
-    /// Primary-town zones of this faction; neutral alignment reports zero.
+    /// Primary-town zones of this faction; neutral or unrepresented factions report zero.
     #[must_use]
     pub fn aligned(&self, town: Option<Town>) -> i32 {
-        town.map_or(0, |town| self.aligned[town.index()])
+        town.and_then(|town| self.aligned.get(town.index()).copied())
+            .unwrap_or(0)
     }
     /// Raise a reward value by the share of primary-town zones of its faction.
     ///

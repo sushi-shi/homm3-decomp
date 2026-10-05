@@ -15,6 +15,15 @@ pub enum Ruleset {
 }
 
 impl Ruleset {
+    /// Creature trait rows, including war machines and unused entries.
+    #[must_use]
+    pub const fn creature_count(self) -> usize {
+        match self {
+            Self::Complete => raw::CREATURE_FACTIONS_AND_LEVELS.len(),
+            // Pinned initialization count, DLL VA 0x1064672c.
+            Self::HotA181 => 200,
+        }
+    }
     /// Town domain expected from the installed catalog for this release.
     #[must_use]
     pub const fn town_count(self) -> usize {

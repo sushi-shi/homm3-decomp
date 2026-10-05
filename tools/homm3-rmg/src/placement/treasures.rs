@@ -203,7 +203,9 @@ fn creature_value(
     creatures: &CreatureCatalog,
     towns: &TownZoneCounts,
 ) -> Result<i32, PlacementError> {
-    let creature = creatures.get(reward.creature());
+    let creature = creatures
+        .get(reward.creature())
+        .ok_or(PlacementError::CatalogContext)?;
     if !matches_faction(faction, creature.town()) {
         return Ok(-1);
     }
@@ -220,7 +222,7 @@ fn dwelling_value(
     creatures: &CreatureCatalog,
     towns: &TownZoneCounts,
 ) -> Result<i32, PlacementError> {
-    let creature = creatures.get(id);
+    let creature = creatures.get(id).ok_or(PlacementError::CatalogContext)?;
     if !matches_faction(faction, creature.town()) {
         return Ok(-1);
     }

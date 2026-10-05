@@ -1,16 +1,18 @@
 //! Numeric RMG views of native creature, spell and artifact resources.
 //!
-//! Catalogs own fixed arrays. Parsing borrows spreadsheet cells and neither
+//! Catalogs own contiguous tables. Parsing borrows spreadsheet cells and neither
 //! copies localized strings nor allocates a vector for each row. Source-owned
 //! initializers supply faction/level and spell flags; resources supply the
 //! numeric fields overwritten by the native loaders.
 
-use crate::{parse, raw, request::Town};
+use crate::{parse, raw, request::Town, rules::Ruleset};
 use homm3_resource::{Field, Spreadsheet, SpreadsheetRow};
 use std::{error::Error, fmt, num::NonZeroI32};
 
 mod artifact;
+mod creature_data;
 pub use artifact::{ArtifactCatalog, ArtifactClass, ArtifactId, ArtifactTraits, CombinationId};
+pub use creature_data::{CreatureDataError, CreatureDataFault};
 
 /// A native trait spreadsheet.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -84,7 +86,8 @@ impl fmt::Display for TraitError {
 }
 impl Error for TraitError {}
 
-/// A creature subtype available to the generator, excluding war machines.
+/// A creature subtype admitted by a catalog. Complete's standalone parser
+/// excludes war machines; versioned catalog admission follows its own domain.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CreatureId(u8);
 impl CreatureId {
@@ -154,7 +157,10 @@ impl CreatureTraits {
 
 /// All native creature rows, including the trailing war-machine records.
 #[derive(Clone, Debug)]
-pub struct CreatureCatalog([CreatureTraits; raw::CREATURE_FACTIONS_AND_LEVELS.len()]);
+pub struct CreatureCatalog {
+    entries: Box<[CreatureTraits]>,
+    rules: Ruleset,
+}
 impl CreatureCatalog {
     /// Parse the native section layout, retaining only RMG numeric fields.
     ///
@@ -165,7 +171,7 @@ impl CreatureCatalog {
     /// If compiled-in C++ metadata contains an unknown faction or creature tier.
     /// Resource bytes do not control these fields.
     pub fn parse(bytes: &[u8]) -> Result<Self, TraitError> {
-        parse_rows(
+        let entries: [CreatureTraits; raw::CREATURE_FACTIONS_AND_LEVELS.len()] = parse_rows(
             bytes,
             TraitResource::Creatures,
             creature_row,
@@ -193,18 +199,36 @@ impl CreatureCatalog {
                     wandering_high: number(&fields, row_index, 22)?,
                 })
             },
-        )
-        .map(Self)
+        )?;
+        Ok(Self {
+            entries: entries.into(),
+            rules: Ruleset::Complete,
+        })
     }
-    /// Lookup with a previously parsed RMG creature subtype.
+    /// Rules used to initialize this catalog.
     #[must_use]
-    pub const fn get(&self, id: CreatureId) -> &CreatureTraits {
-        &self.0[id.index()]
+    pub const fn ruleset(&self) -> Ruleset {
+        self.rules
+    }
+    /// Admit a subtype against this catalog's generation domain.
+    #[must_use]
+    pub fn id(&self, value: i32) -> Option<CreatureId> {
+        let value = u8::try_from(value).ok()?;
+        let limit = match self.rules {
+            Ruleset::Complete => raw::RMG_CREATURE_TYPE_COUNT as usize,
+            Ruleset::HotA181 => self.entries.len(),
+        };
+        (usize::from(value) < limit).then_some(CreatureId(value))
+    }
+    /// Checked lookup; an ID admitted by a larger catalog need not exist here.
+    #[must_use]
+    pub fn get(&self, id: CreatureId) -> Option<&CreatureTraits> {
+        self.entries.get(id.index())
     }
     /// Native table order, including the final war machines, for diagnostics.
     #[must_use]
     pub fn entries(&self) -> &[CreatureTraits] {
-        &self.0
+        &self.entries
     }
 }
 
@@ -420,16 +444,19 @@ mod tests {
             ],
         );
         let catalog = CreatureCatalog::parse(&data).unwrap();
-        let first = catalog.get(CreatureId::parse(0).unwrap());
+        let first = catalog.get(CreatureId::parse(0).unwrap()).unwrap();
         assert_eq!(first.town().unwrap().index(), 0);
         assert_eq!(first.tier().unwrap().index(), 0);
         assert_eq!(first.ai_value().unwrap().get(), 42);
         assert_eq!(first.growth(), -3);
         assert_eq!(first.wandering_counts(), (9, 4));
-        let unused = catalog.get(CreatureId::parse(122).unwrap());
+        let unused = catalog.get(CreatureId::parse(122).unwrap()).unwrap();
         assert_eq!(unused.tier(), None);
         assert_eq!(unused.ai_value(), None);
-        assert_eq!(catalog.get(CreatureId::parse(139).unwrap()).town(), None);
+        assert_eq!(
+            catalog.get(CreatureId::parse(139).unwrap()).unwrap().town(),
+            None
+        );
         assert!(CreatureId::parse(-1).is_none());
         assert!(CreatureId::parse(145).is_none());
     }
