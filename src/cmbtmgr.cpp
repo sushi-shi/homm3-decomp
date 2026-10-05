@@ -2954,6 +2954,9 @@ bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // The ballistic path computes a parabola, restores its saved bitmap inside
 // the loop, and uses a 100ms speed factor. The other two use 33ms; only the
 // animated variant owns its sprite and cycles its frames.
+// DC 0x61926, 0x61d5c and 0x6223a pass inclusive right/bottom endpoints
+// to ScrollTo's width/height parameters. Preserve those original caller
+// expressions; Complete's fixed viewport eliminates the scrolling work.
 
 // E:\gamedcs\cmbtmgr.cpp:3640
 // RECONSTRUCTED 2026-08-20, the parabolic member of the trio. DC local
@@ -2987,6 +2990,8 @@ bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // Default construction followed by assignment of updateArea is also
 // byte-flat at 89.1219%; the observed four-word initialization alone does
 // not distinguish it from copy initialization, which remains the model.
+// Naming the previous-frame rectangle inside its existing guard leaves all
+// ballistic bytes unchanged, as does the typed-row GetMap expression.
 VA(0x00467a00, 0x3AF)
 DC_ADDRESS(0x0614f0, 0x4b8)
 MAC_ADDRESS(0x073c44, 0x488)  // anchor-global
@@ -3035,7 +3040,8 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
         missile->draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, false, true);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
-        scrollTo(x, y, width, height, true, true, true);  // DC 3717
+        scrollTo(x, y, x + width - 1, y + height - 1,
+                 true, true, true);  // DC 3717
         updateArea.clip(combatManager::s_combatAreaLimits);
         updateCombatArea(updateArea);
         saved.draw(0, 0, width, height,
@@ -3143,7 +3149,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
         saved.grab(g_windowManager->m_screenBitmap, x, y);
         missile->draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, flipped, 1);
-        scrollTo(x, y, width, height, true, true, true);  // DC 3865
+        scrollTo(x, y, x + width - 1, y + height - 1,
+                 true, true, true);  // DC 3865
         updateArea.include(SLimitData(
             x, y, x + width - 1, y + height - 1));
         updateArea.clip(combatManager::s_combatAreaLimits);
@@ -3283,7 +3290,8 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         missile->draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, flipped, 1);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
-        scrollTo(x, y, width, height, true, true, true);  // DC 4016
+        scrollTo(x, y, x + width - 1, y + height - 1,
+                 true, true, true);  // DC 4016
         updateArea.clip(combatManager::s_combatAreaLimits);
         updateCombatArea(updateArea);  // DC 4022, by-value extent
         GameTime::delayTil(nextFrameTime);
