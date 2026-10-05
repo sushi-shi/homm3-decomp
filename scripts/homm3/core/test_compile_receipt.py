@@ -27,6 +27,22 @@ class CompileReceiptTests(unittest.TestCase):
             src.write_text('source'); obj.write_bytes(b'changed object')
             self.assertIsNone(receipt.current(obj, flags=['/O2'], required=[src]))
 
+    def test_matches_requires_identical_inputs_flags_and_object(self):
+        with TemporaryDirectory() as tmp:
+            src, header, obj = Path(tmp, 'a.cpp'), Path(tmp, 'a.h'), Path(tmp, 'a.obj')
+            src.write_text('source'); header.write_text('header'); obj.write_bytes(b'object')
+            inputs = receipt.snapshot([src, header])
+            self.assertFalse(receipt.matches(obj, inputs, ['/O2']))  # no receipt yet
+            receipt.publish(obj, inputs, ['/O2'])
+            os.utime(src, ns=(1, 1))  # timestamps alone never decide
+            self.assertTrue(receipt.matches(obj, receipt.snapshot([src, header]), ['/O2']))
+            self.assertFalse(receipt.matches(obj, inputs, ['/O1']))
+            self.assertFalse(receipt.matches(obj, receipt.snapshot([src]), ['/O2']))
+            header.write_text('edited')
+            self.assertFalse(receipt.matches(obj, receipt.snapshot([src, header]), ['/O2']))
+            header.write_text('header'); obj.write_bytes(b'tampered')
+            self.assertFalse(receipt.matches(obj, inputs, ['/O2']))
+
     def test_dependency_scan_reaches_original_uppercase_sdk(self):
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
