@@ -511,7 +511,7 @@ void combatManager::resetLimitCreature()
     m_flagEffect[0] = 0;
     m_flagEffect[1] = 0;
     memset(m_archerEffect, 0, sizeof m_archerEffect);
-    m_drawbridgeBounds = combatManager::s_combatAreaLimits;
+    m_extent = combatManager::s_combatAreaLimits;
 }
 
 VA(0x00493780, 0x44)
@@ -917,34 +917,34 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
                            m_combatShadowBitmap, 0, 0);
     }
 
-    SLimitData saveExtent = m_drawbridgeBounds;
+    SLimitData saveExtent = m_extent;
     int saveLimitToExtent = m_limitToExtent;
-    m_drawbridgeBounds = combatManager::s_combatAreaLimits;
+    m_extent = combatManager::s_combatAreaLimits;
     m_limitToExtent = 1;
 
     for (i = 0; i < oldHexes.size(); ++i) {
         const hexcell& cell = m_cells[oldHexes[i]];
-        m_drawbridgeBounds.include(SLimitData(cell.m_hexUlx, cell.m_hexUly,
+        m_extent.include(SLimitData(cell.m_hexUlx, cell.m_hexUly,
                                   cell.m_hexUlx + 44,
                                   cell.m_hexUly + 51));
     }
     for (i = 0; i < hexes.size(); ++i) {
         const hexcell& cell = m_cells[hexes[i]];
-        m_drawbridgeBounds.include(SLimitData(cell.m_hexUlx, cell.m_hexUly,
+        m_extent.include(SLimitData(cell.m_hexUlx, cell.m_hexUly,
                                   cell.m_hexUlx + 44,
                                   cell.m_hexUly + 51));
     }
 
-    m_drawbridgeBounds.clip(g_combatDrawLimits);
+    m_extent.clip(g_combatDrawLimits);
     m_saveScreenPostGrid->draw(
-        m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-        m_drawbridgeBounds.width(), m_drawbridgeBounds.height(),
+        m_extent.m_minX, m_extent.m_minY,
+        m_extent.width(), m_extent.height(),
         g_windowManager->m_screenBitmap,
-        m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY, false);
+        m_extent.m_minX, m_extent.m_minY, false);
     drawFrame(0, 0, 0, 0, 1, 0);
-    updateCombatArea(m_drawbridgeBounds);
+    updateCombatArea(m_extent);
 
-    m_drawbridgeBounds = saveExtent;
+    m_extent = saveExtent;
     m_limitToExtent = saveLimitToExtent;
     lastMouseGridIndex = newMouseGridIndex;
 
@@ -1056,10 +1056,10 @@ void combatManager::drawFrame(bool update,
         if (m_backgroundDrawn) {
             if (limitCreatureEffect || limitDraw || m_limitToExtent) {
                 m_saveScreenPostGrid->draw(
-                    m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-                    m_drawbridgeBounds.width(), m_drawbridgeBounds.height(),
+                    m_extent.m_minX, m_extent.m_minY,
+                    m_extent.width(), m_extent.height(),
                     g_windowManager->m_screenBitmap,
-                    m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY, false);
+                    m_extent.m_minX, m_extent.m_minY, false);
             } else {
                 m_saveScreenPostGrid->draw(0, 0, 800, 556,
                                  g_windowManager->m_screenBitmap,
@@ -1198,8 +1198,8 @@ void combatManager::drawFrame(bool update,
             return;
         }
 
-        m_drawbridgeBounds.clip(g_combatDrawLimits);
-        updateCombatArea(m_drawbridgeBounds);
+        m_extent.clip(g_combatDrawLimits);
+        updateCombatArea(m_extent);
     }
 
     if (limitCreatureEffect || limitDraw)
@@ -1417,7 +1417,7 @@ int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame,
     }
 
     if (m_limitToExtent) {
-        if (!limits->intersects(m_drawbridgeBounds))
+        if (!limits->intersects(m_extent))
             return 0;
     }
 
@@ -1450,7 +1450,7 @@ int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame,
     }
 
     if (m_limitToExtent) {
-        if (!limits->intersects(m_drawbridgeBounds))
+        if (!limits->intersects(m_extent))
             return 0;
     }
 
@@ -1476,7 +1476,7 @@ int combatManager::drawCreatureAlpha(const CSprite* sprite, int sequence,
             return 0;
     }
     if (m_limitToExtent) {
-        if (!limits->intersects(m_drawbridgeBounds))
+        if (!limits->intersects(m_extent))
             return 0;
     }
     sprite->drawCreatureAlpha(sequence, frame, 0, 0,
@@ -1505,7 +1505,7 @@ int combatManager::drawCombatHero(const CSprite* sprite, int sequence,
     }
 
     if (m_limitToExtent) {
-        if (!limits->intersects(m_drawbridgeBounds))
+        if (!limits->intersects(m_extent))
             return 0;
     }
 
@@ -1533,14 +1533,14 @@ int combatManager::drawSpellEffect(const CSprite* sprite, int frame,
     scrollTo(limits, true, true, true);
 
     if (m_saveBiggestExtent) {
-        m_drawbridgeBounds.include(limits);
+        m_extent.include(limits);
     }
 
     if (m_computeExtentOnly)
         return 0;
 
     if (m_limitToExtent) {
-        if (!limits.intersects(m_drawbridgeBounds))
+        if (!limits.intersects(m_extent))
             return 0;
     }
 
@@ -1564,14 +1564,14 @@ int combatManager::drawSpriteObject(const CSprite* sprite, int frame,
     limits.clip(g_combatDrawLimits);
 
     if (m_saveBiggestExtent) {
-        m_drawbridgeBounds.include(limits);
+        m_extent.include(limits);
     }
 
     if (m_computeExtentOnly)
         return 0;
 
     if (m_limitToExtent) {
-        if (!limits.intersects(m_drawbridgeBounds))
+        if (!limits.intersects(m_extent))
             return 0;
     }
 
@@ -1635,14 +1635,14 @@ int combatManager::drawWall(const Bitmap816* image, int x, int y,
     limits.clip(g_combatDrawLimits);
 
     if (m_saveBiggestExtent) {
-        m_drawbridgeBounds.include(limits);
+        m_extent.include(limits);
     }
 
     if (m_computeExtentOnly)
         return 0;
 
     if (m_limitToExtent) {
-        if (!limits.intersects(m_drawbridgeBounds))
+        if (!limits.intersects(m_extent))
             return 0;
     }
 
@@ -1663,14 +1663,14 @@ int combatManager::drawObject(const Bitmap816* image, int x, int y)
     limits.clip(g_combatDrawLimits);
 
     if (m_saveBiggestExtent) {
-        m_drawbridgeBounds.include(limits);
+        m_extent.include(limits);
     }
 
     if (m_computeExtentOnly)
         return 0;
 
     if (m_limitToExtent) {
-        if (!limits.intersects(m_drawbridgeBounds))
+        if (!limits.intersects(m_extent))
             return 0;
     }
 
@@ -1704,10 +1704,10 @@ int combatManager::drawMoatOverlay(int index)
         return 0;
 
     if (m_saveBiggestExtent)
-        m_drawbridgeBounds.include(moatExtent);
+        m_extent.include(moatExtent);
     if (m_computeExtentOnly)
         return 0;
-    if (m_limitToExtent && !moatExtent.intersects(m_drawbridgeBounds))
+    if (m_limitToExtent && !moatExtent.intersects(m_extent))
         return 0;
 
     int sourceX;
@@ -1809,7 +1809,7 @@ void combatManager::computeMaxExtent()
         }
     }
 
-    m_drawbridgeBounds.clip(g_combatDrawLimits);
+    m_extent.clip(g_combatDrawLimits);
 }
 
 VA(0x00495f50, 0x17c)
@@ -1841,7 +1841,7 @@ void combatManager::computeExtent(const CSprite* sprite, int sequence,
 
     limits->clip(g_combatDrawLimits);
     if (saveBiggestExtent)
-        m_drawbridgeBounds.include(*limits);
+        m_extent.include(*limits);
 }
 
 VA(0x004960d0, 0x76a)

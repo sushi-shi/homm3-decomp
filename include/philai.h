@@ -105,7 +105,6 @@ int valueOfStables(const hero* currentHero, long& moveCost);
 long valueOfTown(const hero* currentHero, int x, int y, int z,
                    short moveCost);
 int valueOfTreasure(const hero* currentHero);
-int valueOfTree(const hero* currentHero, NewmapCell* cell);
 int valueOfWagon(NewmapCell* cell, long playerId);
 long valueOfWarFactory(const hero* currentHero, long moveCost);
 int valueOfWarSchool(const hero* currentHero, NewmapCell* cell);

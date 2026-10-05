@@ -1185,12 +1185,12 @@ void playerData::init()
     m_numTowns = 0;
     m_deathCountDown = -1;
     m_extraPuzzlePieces = 0;
-    m_recruits[0] = -1;
-    m_recruits[1] = -1;
+    m_recruits[0] = heroIdNone;
+    m_recruits[1] = heroIdNone;
     m_personality = 0;
     memset(&m_ai, 0, sizeof(m_ai));
     int heroIndex;
-    MEMSET(m_heroes, -1, sizeof(m_heroes), heroIndex);
+    MEMSET(m_heroes, heroIdNone, sizeof(m_heroes), heroIndex);
     memset(m_townIds, 0xff, sizeof(m_townIds));
     m_isLocal = 0;
     m_isHuman = 0;
@@ -1248,7 +1248,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
 
     for (i = found; i < m_numHeroes - 1; ++i)
         m_heroes[i] = m_heroes[i + 1];
-    m_heroes[m_numHeroes - 1] = -1;
+    m_heroes[m_numHeroes - 1] = heroIdNone;
 
     if (m_currHeroId == ourHero->m_id) {
         m_currHeroId = -1;
@@ -1370,11 +1370,11 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 
     int i;
     for (i = 0; i < 8; i++) {
-        m_heroes[i] = loadHeroId(infile, saveVersion);
+        m_heroes[i] = static_cast<HeroId>(loadHeroId(infile, saveVersion));
     }
 
     for (i = 0; i < 2; i++) {
-        m_recruits[i] = loadHeroId(infile, saveVersion);
+        m_recruits[i] = static_cast<HeroId>(loadHeroId(infile, saveVersion));
     }
 
     unsigned char flag;
@@ -3627,10 +3627,8 @@ void game::giveTroopsToNeutralTown(int townId)
     armyGroup& townArmy = currentTown->getArmy();
     TCreatureType creature;
     TCreatureType upgradedCreature;
-    TCreatureType upgradedValue = (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
-        townType * TOWN_DWELLING_SLOTS + monsterLevel];
-    creature = g_townDwellingCreatures[
-        townType * TOWN_DWELLING_SLOTS + monsterLevel];
+    TCreatureType upgradedValue = g_dwellingType[townType][monsterLevel + TOWN_DWELLING_COUNT];
+    creature = g_dwellingType[townType][monsterLevel];
     upgradedCreature = upgradedValue;
     if (townArmy.getCreatureTotal(upgradedCreature))
         creature = upgradedCreature;
@@ -4191,7 +4189,7 @@ DC_ADDRESS(0x0abd4c, 0x5c)
 MAC_ADDRESS(0x0d66c8, 0x64)
 static void randomizeShrine(NewmapCell* cell, const int level)
 {
-    SpellID spell = cell->getShrineSpell();
+    ESpellId spell = cell->getShrineSpell();
     if (spell == -1) {
         spell = g_game->getRandomSpell(level);
         cell->m_shrineInfo.m_spell = spell;
@@ -4225,10 +4223,9 @@ DC_ADDRESS(0x0abe30, 0x5e)
 MAC_ADDRESS(0x0d6844, 0x60)
 static void randomizeWiseTree(short id, NewmapCell* cell)
 {
-    cell->m_extraInfo = (cell->m_extraInfo & 0xffffffe0) | (id & 0x1f);
+    cell->m_treeInfo.m_id = id;
     cell->clearVisitedBits();
-    int price = random(0, 2);
-    cell->m_extraInfo = (cell->m_extraInfo & 0xffff1fff) | ((price & 7) << 13);
+    cell->m_treeInfo.m_price = WiseTreePrices(random(0, 2));
 }
 
 // E:\gamedcs\game.cpp:4691.
@@ -5975,16 +5972,16 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     }
 
     infile->read(&m_hasRandomHero, sizeof(m_hasRandomHero));
-    m_nonRandomHeroId = readHeroId(infile, mapVersion);
+    m_nonRandomHeroId = static_cast<HeroId>(readHeroId(infile, mapVersion));
     m_defaultPlaceholders = 0;
     if (m_nonRandomHeroId != -1) {
         m_nonRandomHeroCustomPortrait =
-            readHeroId(infile, mapVersion);
+            static_cast<HeroId>(readHeroId(infile, mapVersion));
         // Keep the decoded name alive through the copy into the player slot.
         std::string name = readLengthPrefixedString(infile);
         strcpy(m_nonRandomHeroCustomName, name.c_str());
     } else {
-        m_nonRandomHeroCustomPortrait = -1;
+        m_nonRandomHeroCustomPortrait = heroIdNone;
         m_nonRandomHeroCustomName[0] = 0;
     }
 
@@ -6223,10 +6220,10 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
             do {
                 int heroKey = readValue<unsigned char>(infile);
 
-                unsigned char savedHeroId = readValue<unsigned char>(infile);
-                int heroId = savedHeroId;
-                if (savedHeroId == g_savedHeroNone)
-                    heroId = -1;
+                // The admitted format is now SoD. Mac db424..db44c
+                // expands readHeroId's modern byte/sentinel operation;
+                // the constant argument is inferred from this admission.
+                int portrait = readHeroId(infile, MAP_FORMAT_SHADOW_OF_DEATH);
 
                 std::string heroName = readLengthPrefixedString(infile);
                 std::bitset<8> availability = readPackedBits<8>(infile);
@@ -6234,7 +6231,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                 m_heroPlayerSetups.insert(
                     std::pair<const int, type_map_hero_info>(
                         heroKey,
-                        type_map_hero_info(heroId, heroName, availability)));
+                        type_map_hero_info(portrait, heroName, availability)));
             } while (--count != 0);
         }
     }
@@ -6570,15 +6567,15 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         }
 
         player->m_nonRandomHeroId =
-            loadHeroId(infile, saveVersion);
+            static_cast<HeroId>(loadHeroId(infile, saveVersion));
         if (player->m_nonRandomHeroId != -1) {
             std::string strTemp;
             player->m_nonRandomHeroCustomPortrait =
-                loadHeroId(infile, saveVersion);
+                static_cast<HeroId>(loadHeroId(infile, saveVersion));
             game::loadString(infile, strTemp);
             strcpy(player->m_nonRandomHeroCustomName, strTemp.c_str());
         } else {
-            player->m_nonRandomHeroCustomPortrait = -1;
+            player->m_nonRandomHeroCustomPortrait = heroIdNone;
             player->m_nonRandomHeroCustomName[0] = 0;
         }
     }
@@ -6625,9 +6622,10 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     do {
         int heroKey = readValue<unsigned char>(infile);
 
-        int heroId = readValue<unsigned char>(infile);
-        if (heroId == g_savedHeroNone)
-            heroId = -1;
+        // The >=30 admission makes Mac dc5f0..dc61c the modern roster's
+        // byte/sentinel decoder. This loadHeroId call is inferred from that
+        // operation; the original constant argument spelling is unproven.
+        int portrait = loadHeroId(infile, g_saveVersionCustomHeroSetups);
 
         std::string strTemp = readLengthPrefixedString(infile);
         std::bitset<8> availability =
@@ -6636,7 +6634,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
 
         m_heroPlayerSetups.insert(
             std::pair<const int, type_map_hero_info>(
-                heroKey, type_map_hero_info(heroId, strTemp, availability)));
+                heroKey, type_map_hero_info(portrait, strTemp, availability)));
     } while (--count != 0);
 
     return 0;
@@ -6907,9 +6905,7 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
     if (thisTown && getAlignment(armyType) == thisTown->m_type) {
         int i = DWELLING_0_ID;
         for (;;) {
-            if (g_townDwellingCreatures[thisTown->m_type * 2
-                                           * TOWN_DWELLING_COUNT
-                                       + i - DWELLING_0_ID]
+            if (g_dwellingType[thisTown->m_type][i - DWELLING_0_ID]
                     == armyType
                 && thisTown->hasBuilding(town::upgradedDwellingID(i), true)) {
                 upgradeToType = upgradedCreatureType(armyType);
@@ -7504,27 +7500,28 @@ void game::perDay()
 // THeroID hero_id and the selected hero pointer old_hero.
 DC_ADDRESS(0x0b3d8c, 0x74)
 MAC_ADDRESS(0x0deefc, 0x9c)
-void game::clearRecruits(int* recruits)
+void game::clearRecruits(HeroId* recruits)
 {
     for (long recruit = 0; recruit < 2; ++recruit) {
-        HeroId heroId = HeroId(recruits[recruit]);
+        HeroId heroId = recruits[recruit];
         if (heroId >= 0) {
             hero* oldHero = getHero(heroId);
             if (oldHero->m_flags & g_heroRecruitReservedFlag)
                 continue;
             m_heroAvailability[heroId] = -1;
-            recruits[recruit] = -1;
+            recruits[recruit] = heroIdNone;
         }
     }
 }
 
-// Original: get_new_hero; game.cpp:8290
+// Original: static THeroID get_new_hero; game.cpp:8290. Its result and
+// hero_id loop local retain the native hero-ID domain.
 DC_ADDRESS(0x0b3e00, 0x5e)
 MAC_ADDRESS(0x0def98, 0x114)
-int getNewHero(THeroClass heroClass)
+static HeroId getNewHero(THeroClass heroClass)
 {
-    int heroId = 0;
-    for (; heroId < game::HERO_COUNT; ++heroId) {
+    HeroId heroId = HeroId(0);
+    for (; heroId < game::HERO_COUNT; heroId = HeroId(heroId + 1)) {
         if (g_game->getHero(heroId)->m_heroClass == heroClass
             && g_game->m_heroAvailability[heroId] == -1)
             return heroId;
@@ -7546,7 +7543,7 @@ void game::setWeeklyRecruits(int playerPos)
 {
     playerData* player = &m_players[playerPos];
     type_artifact artifact(ARTIFACT_NONE);
-    int recruitSlot;
+    long recruitSlot;
 
     for (recruitSlot = 0; recruitSlot < 2; ++recruitSlot) {
         if (player->m_recruits[recruitSlot] >= 0)
@@ -7557,10 +7554,10 @@ void game::setWeeklyRecruits(int playerPos)
             otherClass = kNumHeroClasses;
         else
         {
-            otherClass = THeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
+            otherClass = getHero(player->m_recruits[1 - recruitSlot])->m_heroClass;
         }
 
-        int heroId;
+        HeroId heroId;
         if (m_isTutorial
             && static_cast<unsigned short>(m_week) <= 2) {
             if (m_week == 1) {
@@ -7581,7 +7578,7 @@ void game::setWeeklyRecruits(int playerPos)
 
         m_heroAvailability[heroId] = 64;
         hero* newHero = getHero(heroId);
-        int backpackSlot = HERO_BACKPACK_CAPACITY - 1;
+        long backpackSlot = HERO_BACKPACK_CAPACITY - 1;
         do {
             artifact = newHero->getBackpack(backpackSlot);
             if (artifact.m_artifactId != -1
@@ -7602,10 +7599,10 @@ void game::replaceRecruit(int playerPos, long recruitSlot)
     playerData* player = &m_players[playerPos];
     if (player->m_recruits[1 - recruitSlot] != -1)
     {
-        otherClass = THeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
+        otherClass = getHero(player->m_recruits[1 - recruitSlot])->m_heroClass;
     }
 
-    int heroId = getNewHeroId(playerPos, otherClass, 0, kNumHeroClasses);
+    HeroId heroId = getNewHeroId(playerPos, otherClass, 0, kNumHeroClasses);
     player->m_recruits[recruitSlot] = heroId;
     if (heroId != -1) {
         m_heroAvailability[heroId] = 64;
@@ -7868,8 +7865,7 @@ void game::perMonth()
             if (growth > 0) {
                 if (g_monthType == g_monthEffectCreature
                     && g_weekType != g_weekTypeInfernoGrail
-                    && g_townDwellingCreatures[
-                        currTown->m_type * TOWN_DWELLING_SLOTS + j]
+                    && g_dwellingType[currTown->m_type][j]
                        == g_monthTypeExtra) {
                     currTown->m_population[j] *= 2;
                 }
@@ -8063,10 +8059,12 @@ TArtifact game::getRandomArtifactId(int artifactClass)
     }
 }
 
+// Original public GetRandomSpell returns the SpellID enum. Complete adds
+// the level-mask overload while retaining that spell result domain.
 VA(0x004c95a0, 0x18E)
 DC_ADDRESS(0x0b4e04, 0x19c)
 MAC_ADDRESS(0x0e0610, 0x1e4)
-SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
+ESpellId game::getRandomSpell(const std::bitset<5> spellLevels)
 {
     int availableCount = 0;
     int spell;
@@ -8091,7 +8089,7 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
             }
         }
         m_spellAllocInfo[spell] = 1;
-        return spell;
+        return ESpellId(spell);
     }
 
     ordinal = 0;
@@ -8105,13 +8103,13 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
     }
     if (ordinal > 0)
         return getRandomSpell(spellLevels);
-    return -1;
+    return SPELL_NONE;
 }
 
 // Mac 0:e07f4 constructs the level mask, sets level-1, and calls the
 // bitset overload at 0:e0610. It follows that overload in the same TU.
 MAC_ADDRESS(0x0e07f4, 0x68)
-SpellID game::getRandomSpell(int level)
+ESpellId game::getRandomSpell(int level)
 {
     std::bitset<5> spellLevels;
     spellLevels[level - 1] = true;

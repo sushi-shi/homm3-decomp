@@ -1216,7 +1216,7 @@ void army::animateMissile(army* armyToAttack)
         int y = startY - height / 2;
 
         Bitmap16Bit saved(width, height);
-        TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
+        SLimitData updateArea = combatManager::s_combatAreaLimits;
         const int missileperiod = static_cast<int>(
             g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
 
@@ -1229,7 +1229,7 @@ void army::animateMissile(army* armyToAttack)
                     saved.draw(0, 0, width, height,
                                g_windowManager->m_screenBitmap, x, y, false);
                     // Mac 0x4b3f4 constructs and copies the rectangle value.
-                    updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
+                    updateArea = SLimitData(x, y, x + width - 1, y + height - 1);
                     x += stepX;
                     y += stepY;
                 }
@@ -2162,7 +2162,7 @@ bool army::walkTo(int destIndex, bool restoreFacing)
                 g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
             }
             g_combatManager->lowerDoor();
-            g_combatManager->m_drawbridgeBounds = combatManager::s_combatAreaLimits;
+            g_combatManager->m_extent = combatManager::s_combatAreaLimits;
             initialWalk = 1;
         }
         if (g_searchArray->isMoat(static_cast<short>(nextCell))) {
@@ -2414,10 +2414,11 @@ long army::getAverageDamage(const army& enemy, bool rangedAttack, long amount, b
     return damage;
 }
 
+// Original ?is_enemy@army@@QBA_NPBV1@@Z proves the bool result.
 VA(0x00442880, 0x68)
 DC_ADDRESS(0x047bcc, 0x38)
 MAC_ADDRESS(0x04e7d0, 0x70)
-unsigned char army::isEnemy(const army* arg) const
+bool army::isEnemy(const army* arg) const
 {
     if (!arg)
         return 0;
@@ -2454,10 +2455,11 @@ bool army::canShoot(const army* excluded) const
            && (m_spellInfluence[61] == 0 || m_forgetfulnessLevel < 2);
 }
 
+// Original ?enemy_is_adjacent@army@@QBA_NPBV1@@Z proves the bool result.
 VA(0x004429f0, 0x5C)
 DC_ADDRESS(0x047c74, 0x80)
 MAC_ADDRESS(0x04e958, 0x94)
-unsigned char army::enemyIsAdjacent(const army* excluded) const
+bool army::enemyIsAdjacent(const army* excluded) const
 {
     if (g_combatManager->enemyIsAdjacent(this, m_gridIndex, excluded))
         return 1;
@@ -4142,12 +4144,12 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     // DC army.cpp:4699 calls each sprite dimension getter three times
     // while forming the constructor arguments. Mac 0x52348..0x523b0
     // expands them and copies the four-word temporary into the bounds.
-    g_combatManager->m_drawbridgeBounds = TDrawbridgeBounds(
+    g_combatManager->m_extent = SLimitData(
         targetX - explosion->getWidth() / 2,
         targetY - explosion->getHeight() / 2,
         targetX - explosion->getWidth() / 2 + explosion->getWidth() - 1,
         targetY - explosion->getHeight() / 2 + explosion->getHeight() - 1);
-    g_combatManager->m_drawbridgeBounds.clip(g_combatDrawLimits);
+    g_combatManager->m_extent.clip(g_combatDrawLimits);
 
     for (long frame = 0; frame < explosion->getNumFrames(0); frame++) {
         if (frame == combatManager::WALL_EXPLOSION_HIT_FRAME
@@ -4155,16 +4157,16 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
             g_combatManager->damageWall(wall, levelsDestroyed);
         g_combatManager->drawFrame(0, 0, 1, 100, 0, 1);
         explosion->draw(0, frame, 0, 0,
-                        g_combatManager->m_drawbridgeBounds.width(),
-                        g_combatManager->m_drawbridgeBounds.height(),
+                        g_combatManager->m_extent.width(),
+                        g_combatManager->m_extent.height(),
                         g_windowManager->m_screenBitmap,
                         targetX - explosion->getWidth() / 2,
                         targetY - explosion->getHeight() / 2, 0, 1);
         // DC army.cpp:4719/4720: the fixed-viewport scroll and area update.
-        if (!g_combatManager->scrollTo(g_combatManager->m_drawbridgeBounds,
+        if (!g_combatManager->scrollTo(g_combatManager->m_extent,
                                        true, true, true))
             g_combatManager->updateCombatArea(
-                g_combatManager->m_drawbridgeBounds);
+                g_combatManager->m_extent);
     }
     ResourceManager::dispose(explosion);
     g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
@@ -4291,10 +4293,11 @@ int army::getSecondGridIndex() const
     return m_gridIndex + offsetToFront(-1);
 }
 
+// Original is_adjacent publics QBA_NH and QBA_NABV1 prove bool results.
 VA(0x004466c0, 0x5A)
 DC_ADDRESS(0x04b398, 0x4e)
 MAC_ADDRESS(0x0528ac, 0x8c)
-unsigned char army::isAdjacent(int hex) const
+bool army::isAdjacent(int hex) const
 {
     if (g_combatManager->isAdjacent(m_gridIndex, hex))
         return 1;
@@ -4307,7 +4310,7 @@ unsigned char army::isAdjacent(int hex) const
 
 // Original: army::is_adjacent; army.cpp:4864
 DC_ADDRESS(0x04b3e8, 0x3e)
-unsigned char army::isAdjacent(const army& otherArmy) const
+bool army::isAdjacent(const army& otherArmy) const
 {
     if (isAdjacent(otherArmy.m_gridIndex))
         return 1;
@@ -4372,7 +4375,7 @@ void army::setupAnimation()
     if (g_combatManager->isQuickCombat())
         return;
     hexcell* cell = &g_combatManager->m_cells[m_gridIndex];
-    g_combatManager->m_drawbridgeBounds = combatManager::s_combatAreaLimits;
+    g_combatManager->m_extent = combatManager::s_combatAreaLimits;
     g_combatManager->m_saveBiggestExtent = 1;
     g_combatManager->m_computeExtentOnly = 1;
     drawToBuffer(cell->m_refX, cell->m_refY, 0);
@@ -4415,10 +4418,10 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
         frameDelay = static_cast<int>(
             g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
 
-    TDrawbridgeBounds bounds = g_combatManager->m_drawbridgeBounds;
+    SLimitData bounds = g_combatManager->m_extent;
     for (m_currFrameIndex = startFrame;
          m_currFrameIndex < nframes + startFrame; m_currFrameIndex++) {
-        TDrawbridgeBounds frame = bounds;
+        SLimitData frame = bounds;
         g_combatManager->m_saveScreenPostGrid->draw(
             frame.m_minX, frame.m_minY,
             frame.width(),
@@ -4429,7 +4432,7 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getPitch(), false);
 
-        g_combatManager->m_drawbridgeBounds = combatManager::s_combatAreaLimits;
+        g_combatManager->m_extent = combatManager::s_combatAreaLimits;
         g_combatManager->m_saveBiggestExtent = 1;
         g_combatManager->m_computeExtentOnly = 1;
         drawToBuffer(g_combatManager->m_cells[m_gridIndex].m_refX,
@@ -4437,11 +4440,11 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
         g_combatManager->m_computeExtentOnly = 0;
         g_combatManager->m_saveBiggestExtent = 0;
 
-        g_combatManager->m_drawbridgeBounds.m_minX -= 17;
-        g_combatManager->m_drawbridgeBounds.m_maxX += 17;
-        bounds = g_combatManager->m_drawbridgeBounds;
+        g_combatManager->m_extent.m_minX -= 17;
+        g_combatManager->m_extent.m_maxX += 17;
+        bounds = g_combatManager->m_extent;
         frame.include(bounds);
-        g_combatManager->m_drawbridgeBounds = frame;
+        g_combatManager->m_extent = frame;
 
         g_combatManager->m_limitToExtent = 1;
         g_combatManager->drawFrame(0, 0, 0, 0, 0, 0);
@@ -5149,7 +5152,7 @@ void army::castSpell(long hex)
         break;
     }
     waitSample(SHOOT_SAMPLE);
-    g_combatManager->m_drawbridgeBounds = combatManager::s_combatAreaLimits;
+    g_combatManager->m_extent = combatManager::s_combatAreaLimits;
     if (originalFacing != m_facing
         && !static_cast<const combatManager*>(g_combatManager)
                 ->isQuickCombat())

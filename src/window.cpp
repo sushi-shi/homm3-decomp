@@ -718,7 +718,7 @@ VA(0x005ff8e0, 0x75)
 DC_ADDRESS(0x197f50, 0x88)
 MAC_ADDRESS(0x20c1a8, 0x7c)
 void CHeroWindowEx::setHelpText(THelpText* helpText, int start, int stop,
-                                unsigned char copyText)
+                                bool copyText)
 {
     for (int i = start; i < stop; i++) {
         widget* current = getWidget(i);

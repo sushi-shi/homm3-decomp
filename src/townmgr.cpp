@@ -1532,7 +1532,12 @@ void TTownScreenWindow::updateTownLocators()
 // The remaining comparison has 88 vs 89 blocks and a 0xdc vs 0xd4 frame.
 // The dwelling-loop register joins differ; replacing its positive scope
 // with a negative guard and continue emits identical bytes, with or
-// without the recovered bonus scope.
+// without the recovered bonus scope. Continuing the display counter in
+// the cleanup loop and combining its stores with postfix increments also
+// emit the same bytes (eight source states, one object). All 70 call/jump
+// references now agree; the remaining loop join is not an inlining gap.
+// Selecting the dwelling with a conditional expression or explicit else
+// does not recover that join (four states, three objects; best unchanged).
 // DC names GetArmyName twice and six text lookups. Complete keeps its
 // existing getText calls; the army-name calls lift Windows to 88.50%.
 // DC places get_horde before get_legion_bonus, but Complete calls them
@@ -1558,8 +1563,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
             if (currTown->hasBuilding(DWELLING_0_UPG_ID + i, true))
                 slot = i + TOWN_DWELLING_COUNT;
 
-            creature = g_townDwellingCreatures[
-                currTown->m_type * (2 * TOWN_DWELLING_COUNT) + slot];
+            creature = g_dwellingType[currTown->m_type][slot];
             long growth = g_creatureTypeTraits[creature].m_growthRate;
             offsetToMon = currTown->getGrowthRate(slot) - growth;
             const char* name = getArmyName(creature, 1);
@@ -2078,10 +2082,7 @@ void townManager::setupTown(unsigned char fade)
         else
             m_currentDwellingIdOff[slot] = slot;
         m_monPix[slot] = ResourceManager::getSprite(
-            g_creatureTypeTraits[g_townDwellingCreatures
-                                     [m_townToView->m_type * 2
-                                          * TOWN_DWELLING_COUNT
-                                      + m_currentDwellingIdOff[slot]]]
+            g_creatureTypeTraits[g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[slot]]]
                 .m_spriteName);
     }
 
@@ -2457,17 +2458,13 @@ void townManager::setCommandAndText(message* msg)
         break;
     case HORDE_ID:
     case HORDE_UPG_ID: {
-        TCreatureType creature = g_townDwellingCreatures[
-            m_townToView->m_type * TOWN_DWELLING_SLOTS
-            + g_hordeDwellingSlot[m_townToView->m_type][code - HORDE_ID]];
+        TCreatureType creature = g_dwellingType[m_townToView->m_type][g_hordeDwellingSlot[m_townToView->m_type][code - HORDE_ID]];
         sprintf(m_statusText, g_townCommand[21], getArmyName(creature, 2));
         break;
     }
     case HORDE_2_ID:
     case HORDE_2_UPG_ID: {
-        TCreatureType creature = g_townDwellingCreatures[
-            m_townToView->m_type * TOWN_DWELLING_SLOTS
-            + g_horde2DwellingSlot[m_townToView->m_type][code - HORDE_2_ID]];
+        TCreatureType creature = g_dwellingType[m_townToView->m_type][g_horde2DwellingSlot[m_townToView->m_type][code - HORDE_2_ID]];
         sprintf(m_statusText, g_townCommand[21], getArmyName(creature, 2));
         break;
     }
@@ -2568,8 +2565,7 @@ void townManager::setCommandAndText(message* msg)
     case DWELLING_4_UPG_ID:
     case DWELLING_5_UPG_ID:
     case DWELLING_6_UPG_ID: {
-        TCreatureType creature = g_townDwellingCreatures[
-            m_townToView->m_type * TOWN_DWELLING_SLOTS + code - DWELLING_0_ID];
+        TCreatureType creature = g_dwellingType[m_townToView->m_type][code - DWELLING_0_ID];
         sprintf(m_statusText, g_townCommand[21], getArmyName(creature, 2));
         break;
     }
@@ -7194,40 +7190,26 @@ TCastleWindow::TCastleWindow()
     }
 
     m_spriteWidget[0] = new iconWidget(169, 26, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
-                         g_townManager->m_currentDwellingIdOff[0]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[0]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[1] = new iconWidget(563, 26, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
-                         g_townManager->m_currentDwellingIdOff[1]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[1]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[2] = new iconWidget(169, 159, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
-                         g_townManager->m_currentDwellingIdOff[2]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[2]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[3] = new iconWidget(563, 159, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
-                         g_townManager->m_currentDwellingIdOff[3]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[3]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[4] = new iconWidget(169, 292, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
-                         g_townManager->m_currentDwellingIdOff[4]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[4]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[5] = new iconWidget(563, 292, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
-                         g_townManager->m_currentDwellingIdOff[5]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[5]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     if (m_use8) {
         m_spriteWidget[6] = new iconWidget(169, 425, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
-                         g_townManager->m_currentDwellingIdOff[6]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[6]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
         m_spriteWidget[7] = new iconWidget(563, 425, 99, 119, -1,
                                      g_creatureTypeTraits[
@@ -7236,9 +7218,7 @@ TCastleWindow::TCastleWindow()
         m_widgets.push_back(m_spriteWidget[7]);
     } else {
         m_spriteWidget[6] = new iconWidget(365, 425, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
-                         g_townManager->m_currentDwellingIdOff[6]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[6]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     }
 
@@ -7711,9 +7691,7 @@ void TCastleWindow::setRolloverText(message& msg)
         int dwelling = g_townManager->m_currentDwellingIdOff[code - 0x11];
         if (g_townManager->m_townToView->hasBuilding(DWELLING_0_ID + dwelling, true)) {
             sprintf(g_text, "%s %s", (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
-                    getArmyName(g_townDwellingCreatures[
-                        g_townManager->m_townToView->m_type
-                        * TOWN_DWELLING_SLOTS + dwelling], 2));
+                    getArmyName(g_dwellingType[g_townManager->m_townToView->m_type][dwelling], 2));
         } else {
             strcpy(g_text, "");
         }
@@ -8021,8 +7999,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         }
         msg.m_codeY = i + 0x19;
         TCreatureType rowCreature =
-            g_townDwellingCreatures[m_townToView->m_type * TOWN_DWELLING_SLOTS
-                                   + m_currentDwellingIdOff[i]];
+            g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[i]];
         const char* creatureName;
         if (rowCreature >= 0 && rowCreature <= 150)
             creatureName = g_creatureTypeTraits[rowCreature].m_pluralName;
@@ -8055,9 +8032,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
 
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         TCreatureTypeTraits monInfo =
-            g_creatureTypeTraits[g_townDwellingCreatures[
-                m_townToView->m_type * TOWN_DWELLING_SLOTS
-                + m_currentDwellingIdOff[i]]];
+            g_creatureTypeTraits[g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[i]]];
         sprintf(g_text, "%d", monInfo.m_attackSkill);
         textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,

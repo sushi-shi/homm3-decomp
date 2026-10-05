@@ -3326,9 +3326,7 @@ void NewfullMap::soDTransformRandomDwellings()
             alignment = pickAlignment(dwelling.m_factionMask, 0);
         }
 
-        TCreatureType creature = g_townDwellingCreatures[
-            alignment * 2 * TOWN_DWELLING_COUNT
-            + random(dwelling.m_minLevel, dwelling.m_maxLevel)];
+        TCreatureType creature = g_dwellingType[alignment][random(dwelling.m_minLevel, dwelling.m_maxLevel)];
 
         int generatorType;
         if (creature == CREATURE_STONE_GOLEM) {

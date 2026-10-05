@@ -425,9 +425,10 @@ public:
     // +0x23. HeroFn_004D8B30 copies exactly thirteen bytes of the setup
     // record's name here; SetRolloverText passes this band to sprintf.
     char m_name[13];
-    // +0x30. DrawHeroPart indexes the eighteen-entry cursorIcons sprite row
-    // directly with this dword; the surviving roster names the domain.
-    int m_heroClass;
+    // Original hero_class is THeroClass in all four complete DC hero records
+    // (0x1a6e/0x4d63/0x6311/0x71dc). Retail keeps the same dword at +0x30
+    // and adds the two Conflux classes to its cursor and traits tables.
+    THeroClass m_heroClass;
     // +0x34. The current-hero gate in HeroFn_004D8FB0 compares this byte
     // directly against portrait id 156. Dreamcast independently places its
     // `portrait` byte at the same offset.

@@ -806,7 +806,7 @@ public:
     void clearAIValues();
     void considerAttack(const army* enemy, long value,
                          long attackDistance);
-    unsigned char enemyIsAdjacent(const army* excluded) const;
+    bool enemyIsAdjacent(const army* excluded) const;
     unsigned getAttackMask(int currIndex, int criteria,
                            int literalTargetIndex) const;
     long getAdjustedAttack(const army* enemy,
@@ -851,9 +851,9 @@ public:
                                  const army* excluded) const;
     long getValidCaliphSpells(const army* target) const;
     int getBestDirection(int start, int target, int direction);
-    unsigned char isAdjacent(const army& otherArmy) const;
-    unsigned char isAdjacent(int hex) const;
-    unsigned char isEnemy(const army* arg) const;
+    bool isAdjacent(const army& otherArmy) const;
+    bool isAdjacent(int hex) const;
+    bool isEnemy(const army* arg) const;
     bool isInAura() const;
     // Original move_to@@QAA_NH_N.
     bool moveTo(int hex, bool restoreFacing);

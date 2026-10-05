@@ -2679,10 +2679,10 @@ void combatManager::makeCreaturesVanish()
             }
         }
         computeMaxExtent();
-        x = m_drawbridgeBounds.m_minX;
-        y = m_drawbridgeBounds.m_minY;
-        width = m_drawbridgeBounds.width();
-        height = m_drawbridgeBounds.height();
+        x = m_extent.m_minX;
+        y = m_extent.m_minY;
+        width = m_extent.width();
+        height = m_extent.height();
     }
 
     for (side = 0; side < 2; side++) {
@@ -2741,7 +2741,7 @@ void combatManager::lowerDoor()
 
     SAMPLE2 sample = loadPlaySample(
         DATA_COMPGEN(0x0066ffb0, drawbridgeSampleName, "drawbrg.82m"));
-    m_drawbridgeBounds = g_drawbridgeBounds;
+    m_extent = g_drawbridgeBounds;
     for (int state = DRAWBRIDGE_UP; state >= DRAWBRIDGE_DOWN; state--) {
         m_drawbridgeState = state;
         drawFrame(1, 0, 1, 100, 1, 1);
@@ -2763,7 +2763,7 @@ void combatManager::raiseDoor()
     }
 
     SAMPLE2 sample = loadPlaySample("drawbrg.82m");
-    m_drawbridgeBounds = g_drawbridgeBounds;
+    m_extent = g_drawbridgeBounds;
     for (int state = DRAWBRIDGE_DOWN; state <= DRAWBRIDGE_UP; state++) {
         m_drawbridgeState = state;
         drawFrame(1, 0, 1, 100, 1, 1);
@@ -2796,26 +2796,29 @@ void combatManager::testRaiseDoor()
     raiseDoor();
 }
 
+// Original ?InCastle@combatManager@@SA_NH@Z proves the bool result.
 VA(0x00467460, 0x22)
 DC_ADDRESS(0x061160, 0x20)
 MAC_ADDRESS(0x073610, 0x34)
-unsigned char combatManager::inCastle(int index)
+bool combatManager::inCastle(int index)
 {
     return index >= g_castleWallColumns[gridY(index)];
 }
 
+// Original ?LeftOfMoat@combatManager@@SA_NH@Z proves the bool result.
 VA(0x00467490, 0x22)
 DC_ADDRESS(0x061180, 0x20)
 MAC_ADDRESS(0x073644, 0x38)
-unsigned char combatManager::leftOfMoat(int index)
+bool combatManager::leftOfMoat(int index)
 {
     return index < g_moatHexes[gridY(index)];
 }
 
+// Original ?is_adjacent@combatManager@@QBA_NHH@Z proves the bool result.
 VA(0x004674c0, 0x4C)
 DC_ADDRESS(0x0611a0, 0x84)
 MAC_ADDRESS(0x07367c, 0xfc)
-unsigned char combatManager::isAdjacent(int first, int second) const
+bool combatManager::isAdjacent(int first, int second) const
 {
     if (validHex(first) && validHex(second)) {
         for (int i = 0; i < 6; i++) {
@@ -2848,10 +2851,11 @@ unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIn
     return inLineOfSight(sourceIndex, destIndex) == 0;
 }
 
+// Original ?ShotIsNotOptimal@combatManager@@QBA_NPBVarmy@@0@Z proves the bool result.
 VA(0x00467600, 0x23A)
 DC_ADDRESS(0x061284, 0x92)
 MAC_ADDRESS(0x07388c, 0x134)
-unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* defender) const
+bool combatManager::shotIsNotOptimal(const army* attacker, const army* defender) const
 {
     int side = attacker->getControllingSide();
     if (m_heroes[side]
@@ -2875,10 +2879,11 @@ unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* 
     return getDistance(source, dest) > 10;
 }
 
+// Original ?InLineOfSight@combatManager@@QBA_NHH@Z proves the bool result.
 VA(0x00467840, 0x1B6)
 DC_ADDRESS(0x061318, 0x1d8)
 MAC_ADDRESS(0x0739c0, 0x284)
-unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
+bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 {
     if (!m_fortificationLevel)
         return 1;
@@ -3034,7 +3039,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     int y = startY;
 
     Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
+    SLimitData updateArea = combatManager::s_combatAreaLimits;
     const int missileperiod = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
 
@@ -3043,7 +3048,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
         unsigned long nextFrameTime = GameTime::get() + missileperiod;
         if (step != 0) {
             // Mac 0x73e24 copies a four-word rectangle temporary here.
-            updateArea = TDrawbridgeBounds(
+            updateArea = SLimitData(
                 x, y, x + width - 1, y + height - 1);
             x = startX + deltaX * step / nframes;
             y = static_cast<int>(
@@ -3142,7 +3147,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     int y = startY - height / 2;
 
     Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
+    SLimitData updateArea = combatManager::s_combatAreaLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowDelay = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
@@ -3154,7 +3159,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             saved.draw(0, 0, width, height,
                        g_windowManager->m_screenBitmap, x, y, false);
             // Mac 0x743e0 constructs and copies the four-word bounds.
-            updateArea = TDrawbridgeBounds(
+            updateArea = SLimitData(
                 x, y, x + width - 1, y + height - 1);
             x += addX;
             y += addY;
@@ -3280,7 +3285,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     }
 
     Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
+    SLimitData updateArea = combatManager::s_combatAreaLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowdelay = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
@@ -3292,7 +3297,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                        g_windowManager->m_screenBitmap, x, y, false);
             // Mac 0x749fc/0x74abc derives each rectangle from its current origin.
             // Retaining those expressions also matches the Windows loop schedule.
-            updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
+            updateArea = SLimitData(x, y, x + width - 1, y + height - 1);
             x += addX;
             y += addY;
         }
@@ -3406,78 +3411,23 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
     }
 }
 
-// E:\gamedcs\cmbtmgr.cpp:4158
-// The body is NOT a switch - `spellEffect` is only ever compared with
-// -1 and used as a twelve-byte index into akSpellEffectTraits. What it
-// is instead is eleven `for(side) for(slot)` walks over armies[2][21],
-// split by three separately inlined IsQuickCombat guards: the first
-// skips the entire animation half, the second gates the per-stack
-// samples, the third gates the wind-down loop.
-
-// Shapes worth keeping:
-//   * the frame budget is four chained maximum selects ending on
-//     `wince + attack - 1`, which retail forms with one
-//     `lea eax,[esi+edi-1]`;
-//   * `iNextFrameType = cs_wince + (Is(1u << 27))` is ARITHMETIC, not a
-//     ternary - retail emits `setne cl` straight into `add ecx,3`;
-//   * walk 4 calls MarkCreatureEffect after its extra POW-specific guards;
-//     Dreamcast records that helper boundary at cmbtmgr.cpp:4293, and the
-//     Complete inline body adds the retail-only arrow-tower switch;
-//   * the wind-down is a `for(;;)` with a bFramesChanged latch, not a
-//     counted loop - retail has no bound to test.
-
-// Two measured refinements on top of the first compile (96.1134):
-//   * army::bPowSequenceComplete is an INT, not the byte its name
-//     suggests. Retail both tests and stores it a dword wide, and
-//     retyping it is worth +0.03 (96.1134 -> 96.1439). The field note
-//     in army.h carries the bytes.
-//   * the attack-frame skip is a GOTO, not a nested if. Retail spells
-//     `cmp frameCount, attack_frames-1 / jge <play> / jmp <continue>`,
-//     i.e. it tests the POSITIVE and falls through to the continue,
-//     which the plain `if (frameCount < attack_frames - 1) continue;`
-//     emits with both arms the other way round. +0.055, and it takes
-//     the branch-shape distance from 3 to 1. Swapping the enclosing
-//     `if (attack_frames)` arms instead was measured and is much worse
-//     (94.90) - the flip is on the inner test alone.
-
-// CURRENT (96.2232%, rechecked 2026-09-01): predict-inline reports the call
-// multisets AGREE exactly (14 and 14). The DC dossier records 151 source
-// rows and the MarkCreatureEffect call at cmbtmgr.cpp:4293; restoring that
-// inline boundary is byte-neutral. The structure view is 224 versus 225
-// blocks, with the early one-block skew cascading through its alignment;
-// the source view localizes the first real divergence to the first animation
-// walk's stores and GetNumFrames lowering. The remainder is instruction/slot
-// selection rather than a missing DC helper. Negative controls on
-// 2026-08-21: DC's wince_frames-before-attack_frames declaration order
-// regresses to 96.21098; explicit clear/conditional-set of
-// bShowRangeFrames regresses to 95.7939 and flips one branch polarity; a
-// 1:0 ternary is byte-identical to the retained boolean assignment; and a
-// named bool for the special-wince bit is byte-flat, still folding retail's
-// `test/setne/add` to our `and/add`. The earlier six why-branch candidates
-// likewise measured +0 or worse.
-// The positive frameCount if/else removes play_frame while preserving all
-// 2561 compiled bytes and the 25 relocation names/addends at 96.2927%.
-// Its true arm permits the common frame body; only the false arm skips it.
-// The inverted continue guard still scores 96.2378%, so guard polarity and
-// scope matter here even though the source operations are otherwise equal.
-// Explicit range-flag arms and cs_defend/cs_wince stores preserve Is and
-// GetNumFrames while raising Windows 95.5183 -> 96.1622. Mac retains the
-// same separate stores; its range comparison compression remains different.
-// A switch and named frame snapshot do not reproduce that compression.
-// DC cmbtmgr.cpp:4158 proves the global TSpellEffectID parameter, and
-// row 4389 retains UpdateCombatArea(bounds). Restore both source facts;
-// the formerly direct updateScreen call was an inlined helper substitute.
-// The enum's NB11 record 0x1f15 supplies the effect-domain caller values;
-// negative sentinel, lightning dust, landmine and poison now use that enum.
-// Focused VC6 comparison after refreshing the renamed target: 95.81%
-// versus the direct-call 96.16%; doAttack collateral is 99.92% versus
-// 99.96%. All 116 available Mac pairs in the three affected units hold.
-// The remaining animation-walk slot/register differences remain open;
-// a lower Windows score does not refute these retained source operations.
-// DC 0x6298a..0x62a0c attributes the complete readiness predicate to
-// cmbtmgr.cpp:4337; Mac 0x754b0..0x7553c has the same short-circuit paths.
-// Keep one positive condition around frame advancement instead of an empty
-// threshold arm. This scope recovery preserves the Windows 95.8134% body.
+// E:\gamedcs\cmbtmgr.cpp:4158. TSpellEffectID is a source-proven enum;
+// the walks select, advance and finish animations for armies[2][21].
+// DC4234/4236 and Mac 0x750d4..0x750f4 put the nested effect-loading guard
+// after effect selection. DC4277 keeps the first two max calls together.
+// DC4292/4293 retain the marking condition and MarkCreatureEffect helper;
+// Complete adds the arrow-tower case inside that canonical helper.
+// DC4321/4337 and Mac 0x754b0..0x7553c enclose advancement in the positive
+// next-frame/readiness guards. The references subtract frameCount before
+// one in winceStartOffset; moving this local among its use scopes is flat.
+// DC4389 retains by-value UpdateCombatArea; keep its nested rectangle
+// accessors. DC4410/4411 and Mac 0x757b4..0x758ac finish with a while loop
+// whose progress flag is set in each advancing branch (DC4425/4433).
+// These complete source scopes reach 98.5390% on Windows. All 225 blocks,
+// 134 branches, 14 calls and 25 relocations align; the 34 differing
+// instruction rows start at by-value extent lowering. Early-continue and
+// shared progress-write variants lose that alignment. Counter declaration
+// positions and wince-offset use-scope variants produce identical bytes.
 VA(0x00468990, 0xA08)
 DC_ADDRESS(0x062560, 0x856)
 MAC_ADDRESS(0x074eec, 0xb30)  // anchor-global
@@ -3527,7 +3477,9 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                     }
                 }
             }
-            if (showSomePowEffect && !loadSpellEffect(spellEffect))
+        }
+        if (showSomePowEffect) {
+            if (!loadSpellEffect(spellEffect))
                 showSomePowEffect = 0;
         }
 
@@ -3552,8 +3504,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                         stack.m_stdIcon->getNumFrames(cs_wince));
             }
         }
-        numFrames = max(numFrames, winceFrames);
-        numFrames = max(numFrames, attackFrames);
+        numFrames = max(max(numFrames, winceFrames), attackFrames);
         numFrames = max(numFrames, winceFrames + attackFrames - 1);
 
         if (resetLimitCreature)
@@ -3562,12 +3513,10 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
         for (side = 0; side < 2; side++) {
             for (slot = 0; slot < m_numArmies[side]; slot++) {
                 army& stack = m_armies[side][slot];
-                if (stack.is(creatureImmobilized))
-                    continue;
-                if (!stack.m_someUnitsDamaged && !stack.m_showAttackFrames
-                        && !stack.m_showRangeFrames)
-                    continue;
-                markCreatureEffect(side, slot);
+                if (!stack.is(creatureImmobilized)
+                        && (stack.m_someUnitsDamaged || stack.m_showAttackFrames
+                            || stack.m_showRangeFrames))
+                    markCreatureEffect(side, slot);
             }
         }
 
@@ -3576,7 +3525,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
             playImmEffect(g_spellEffectTraits[spellEffect].m_immName, 1);
 
         for (int frameCount = 0; frameCount < numFrames; frameCount++) {
-            const int winceStartOffset = numFrames - 1 - frameCount;
+            const int winceStartOffset = numFrames - frameCount - 1;
             for (side = 0; side < 2; side++) {
                 for (slot = 0; slot < m_numArmies[side]; slot++) {
                     army& stack = m_armies[side][slot];
@@ -3592,39 +3541,39 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                             stack.m_currFrameIndex = 0;
                         }
                     }
-                    if (stack.m_nextFrameType == -1)
-                        continue;
-                    if (!stack.m_powSequenceComplete
-                            && (stack.m_showAttackFrames
-                            || winceStartOffset <= stack.m_remainingFramesToPlay
-                            || (attackFrames && frameCount >= attackFrames - 1)
-                            || (!attackFrames
-                                && (stack.m_currFrameType != cs_wince
-                                    || stack.m_currFrameIndex
-                                        < stack.m_stdIcon->getNumFrames(
-                                            stack.m_currFrameType) - 1)))) {
-                        if (stack.m_currFrameType != stack.m_nextFrameType) {
-                            if (!isQuickCombat()) {
-                                if (stack.m_showAttackFrames)
-                                    stack.playSample(army::ATTACK_SAMPLE);
-                                else if (stack.m_nextFrameType == cs_wince)
-                                    stack.playSample(army::WINCE_SAMPLE);
-                                else if (stack.m_nextFrameType == cs_death)
-                                    stack.playSample(army::DIE_SAMPLE);
-                                else if (stack.m_nextFrameType == cs_defend)
-                                    stack.playSample(army::DEFEND_SAMPLE);
+                    if (stack.m_nextFrameType != -1) {
+                        if (!stack.m_powSequenceComplete
+                                && (stack.m_showAttackFrames
+                                || winceStartOffset <= stack.m_remainingFramesToPlay
+                                || (attackFrames && frameCount >= attackFrames - 1)
+                                || (!attackFrames
+                                    && (stack.m_currFrameType != cs_wince
+                                        || stack.m_currFrameIndex
+                                            < stack.m_stdIcon->getNumFrames(
+                                                stack.m_currFrameType) - 1)))) {
+                            if (stack.m_currFrameType != stack.m_nextFrameType) {
+                                if (!isQuickCombat()) {
+                                    if (stack.m_showAttackFrames)
+                                        stack.playSample(army::ATTACK_SAMPLE);
+                                    else if (stack.m_nextFrameType == cs_wince)
+                                        stack.playSample(army::WINCE_SAMPLE);
+                                    else if (stack.m_nextFrameType == cs_death)
+                                        stack.playSample(army::DIE_SAMPLE);
+                                    else if (stack.m_nextFrameType == cs_defend)
+                                        stack.playSample(army::DEFEND_SAMPLE);
+                                }
+                                stack.m_currFrameType = stack.m_nextFrameType;
+                                stack.m_currFrameIndex = 0;
+                            } else if (stack.m_currFrameIndex
+                                    < stack.m_stdIcon->getNumFrames(
+                                        stack.m_currFrameType) - 1) {
+                                stack.m_currFrameIndex++;
+                            } else if (stack.m_currFrameType != cs_wait
+                                    && stack.m_currFrameType != cs_death) {
+                                stack.m_currFrameType = cs_wait;
+                                stack.m_currFrameIndex = 0;
+                                stack.m_powSequenceComplete = 1;
                             }
-                            stack.m_currFrameType = stack.m_nextFrameType;
-                            stack.m_currFrameIndex = 0;
-                        } else if (stack.m_currFrameIndex
-                                < stack.m_stdIcon->getNumFrames(
-                                    stack.m_currFrameType) - 1) {
-                            stack.m_currFrameIndex++;
-                        } else if (stack.m_currFrameType != cs_wait
-                                && stack.m_currFrameType != cs_death) {
-                            stack.m_currFrameType = cs_wait;
-                            stack.m_currFrameIndex = 0;
-                            stack.m_powSequenceComplete = 1;
                         }
                     }
                 }
@@ -3636,7 +3585,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
 
             drawFrame(0, 1, 0, 100, 1, 1);
             // DC cmbtmgr.cpp:4389 retains this by-value rectangle helper.
-            updateCombatArea(m_drawbridgeBounds);
+            updateCombatArea(m_extent);
         }
     }
 
@@ -3653,29 +3602,28 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
     }
 
     if (!isQuickCombat()) {
-        for (;;) {
-            int framesChanged = 0;
+        int framesChanged = 1;
+        while (framesChanged) {
+            framesChanged = 0;
             for (side = 0; side < 2; side++) {
                 for (slot = 0; slot < m_numArmies[side]; slot++) {
                     army& stack = m_armies[side][slot];
-                    if (stack.m_currFrameType == cs_wait)
-                        continue;
-                    if (stack.m_currFrameIndex
-                            < stack.m_stdIcon->getNumFrames(
-                                stack.m_currFrameType) - 1) {
-                        stack.m_currFrameIndex++;
-                    } else if (stack.m_currFrameType == cs_death) {
-                        continue;
-                    } else {
-                        stack.m_currFrameType = cs_wait;
-                        stack.m_currFrameIndex = 0;
+                    if (stack.m_currFrameType != cs_wait) {
+                        if (stack.m_currFrameIndex
+                                < stack.m_stdIcon->getNumFrames(
+                                    stack.m_currFrameType) - 1) {
+                            stack.m_currFrameIndex++;
+                            framesChanged = 1;
+                        } else if (stack.m_currFrameType != cs_death) {
+                            stack.m_currFrameType = cs_wait;
+                            stack.m_currFrameIndex = 0;
+                            framesChanged = 1;
+                        }
                     }
-                    framesChanged = 1;
                 }
             }
-            if (!framesChanged)
-                break;
-            drawFrame(1, 1, 0, 100, 1, 1);
+            if (framesChanged)
+                drawFrame(1, 1, 0, 100, 1, 1);
         }
         if (resetLimitCreature)
             this->resetLimitCreature();
@@ -3761,11 +3709,12 @@ void combatManager::checkRebirth()
     }
 }
 
+// Original ?enemy_is_adjacent@combatManager@@QBA_NPBVarmy@@H0@Z proves the bool result.
 VA(0x00469600, 0x6E)
 DC_ADDRESS(0x062db8, 0x94)
 MAC_ADDRESS(0x075c3c, 0x9c)
-unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
-                                               const army* excluded) const
+bool combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
+                                     const army* excluded) const
 {
     for (int i = 0; i < 6; i++) {
         int hex = m_adjacentCells[gridIndex][i];
@@ -3900,10 +3849,11 @@ unsigned char combatManager::doorCanBeLowered() const
     return 1;
 }
 
+// Original ?HexIsBlocked@combatManager@@QBA_NH@Z proves the bool result.
 VA(0x00469a10, 0x80)
 DC_ADDRESS(0x0632c4, 0x98)
 MAC_ADDRESS(0x07618c, 0x78)
-unsigned char combatManager::hexIsBlocked(int index) const
+bool combatManager::hexIsBlocked(int index) const
 {
     if (m_fortificationLevel > 0
             && (index == COMBAT_HEX_GATE || index == COMBAT_HEX_GATE_MOAT)) {
@@ -3965,10 +3915,11 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
     m_combatWindow->combatMessage(message.c_str(), 1, 0);
 }
 
+// Original ?IsInMoat@combatManager@@QAA_NHPAH@Z proves the bool result.
 VA(0x00469dc0, 0x8D)
 DC_ADDRESS(0x06351c, 0x7e)
 MAC_ADDRESS(0x0764c4, 0xd4)
-unsigned char combatManager::isInMoat(int hex, int* index)
+bool combatManager::isInMoat(int hex, int* index)
 {
     if (m_moatOn) {
         for (int row = 0; row < 11; row++) {

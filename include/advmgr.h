@@ -75,13 +75,6 @@ enum GlobalInfoFlags {
     MaxInfoFlags = 32
 };
 
-enum WiseTreePrices {
-    const_tree_wants_nothing = 0,
-    const_tree_wants_gold,
-    const_tree_wants_gems,
-    const_tree_price_count
-};
-
 enum WitchHutSkillEncoding {
     WitchHutNoSkillMask = 0x000fe000
 };

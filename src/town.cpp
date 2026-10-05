@@ -123,23 +123,26 @@ DATA(0x0066cd98) __int64 g_bitNumber[64] = {
 };
 DATA(0x006976f0) __int64 g_townEligibleBuildMask[9];
 DATA(0x00697798) __int64 g_hierarchyMask[9][44];
-DATA(0x006747b4) TCreatureType g_townDwellingCreatures[126] = {
-    TCreatureType(0), TCreatureType(2), TCreatureType(4), TCreatureType(6), TCreatureType(8), TCreatureType(10), TCreatureType(12), TCreatureType(1),
-    TCreatureType(3), TCreatureType(5), TCreatureType(7), TCreatureType(9), TCreatureType(11), TCreatureType(13), TCreatureType(14), TCreatureType(16),
-    TCreatureType(18), TCreatureType(20), TCreatureType(22), TCreatureType(24), TCreatureType(26), TCreatureType(15), TCreatureType(17), TCreatureType(19),
-    TCreatureType(21), TCreatureType(23), TCreatureType(25), TCreatureType(27), TCreatureType(28), TCreatureType(30), TCreatureType(32), TCreatureType(34),
-    TCreatureType(36), TCreatureType(38), TCreatureType(40), TCreatureType(29), TCreatureType(31), TCreatureType(33), TCreatureType(35), TCreatureType(37),
-    TCreatureType(39), TCreatureType(41), TCreatureType(42), TCreatureType(44), TCreatureType(46), TCreatureType(48), TCreatureType(50), TCreatureType(52),
-    TCreatureType(54), TCreatureType(43), TCreatureType(45), TCreatureType(47), TCreatureType(49), TCreatureType(51), TCreatureType(53), TCreatureType(55),
-    TCreatureType(56), TCreatureType(58), TCreatureType(60), TCreatureType(62), TCreatureType(64), TCreatureType(66), TCreatureType(68), TCreatureType(57),
-    TCreatureType(59), TCreatureType(61), TCreatureType(63), TCreatureType(65), TCreatureType(67), TCreatureType(69), TCreatureType(70), TCreatureType(72),
-    TCreatureType(74), TCreatureType(76), TCreatureType(78), TCreatureType(80), TCreatureType(82), TCreatureType(71), TCreatureType(73), TCreatureType(75),
-    TCreatureType(77), TCreatureType(79), TCreatureType(81), TCreatureType(83), TCreatureType(84), TCreatureType(86), TCreatureType(88), TCreatureType(90),
-    TCreatureType(92), TCreatureType(94), TCreatureType(96), TCreatureType(85), TCreatureType(87), TCreatureType(89), TCreatureType(91), TCreatureType(93),
-    TCreatureType(95), TCreatureType(97), TCreatureType(98), TCreatureType(100), TCreatureType(104), TCreatureType(106), TCreatureType(102), TCreatureType(108),
-    TCreatureType(110), TCreatureType(99), TCreatureType(101), TCreatureType(105), TCreatureType(107), TCreatureType(103), TCreatureType(109), TCreatureType(111),
-    TCreatureType(118), TCreatureType(112), TCreatureType(115), TCreatureType(114), TCreatureType(113), TCreatureType(120), TCreatureType(130), TCreatureType(119),
-    TCreatureType(127), TCreatureType(123), TCreatureType(129), TCreatureType(125), TCreatureType(121), TCreatureType(131)
+// Original gDwellingType has fourteen entries per town; Complete adds Conflux.
+DATA(0x006747b4) TCreatureType g_dwellingType[TOWN_TYPE_COUNT][TOWN_DWELLING_SLOTS] = {
+    { TCreatureType(0), TCreatureType(2), TCreatureType(4), TCreatureType(6), TCreatureType(8), TCreatureType(10), TCreatureType(12),
+      TCreatureType(1), TCreatureType(3), TCreatureType(5), TCreatureType(7), TCreatureType(9), TCreatureType(11), TCreatureType(13) },
+    { TCreatureType(14), TCreatureType(16), TCreatureType(18), TCreatureType(20), TCreatureType(22), TCreatureType(24), TCreatureType(26),
+      TCreatureType(15), TCreatureType(17), TCreatureType(19), TCreatureType(21), TCreatureType(23), TCreatureType(25), TCreatureType(27) },
+    { TCreatureType(28), TCreatureType(30), TCreatureType(32), TCreatureType(34), TCreatureType(36), TCreatureType(38), TCreatureType(40),
+      TCreatureType(29), TCreatureType(31), TCreatureType(33), TCreatureType(35), TCreatureType(37), TCreatureType(39), TCreatureType(41) },
+    { TCreatureType(42), TCreatureType(44), TCreatureType(46), TCreatureType(48), TCreatureType(50), TCreatureType(52), TCreatureType(54),
+      TCreatureType(43), TCreatureType(45), TCreatureType(47), TCreatureType(49), TCreatureType(51), TCreatureType(53), TCreatureType(55) },
+    { TCreatureType(56), TCreatureType(58), TCreatureType(60), TCreatureType(62), TCreatureType(64), TCreatureType(66), TCreatureType(68),
+      TCreatureType(57), TCreatureType(59), TCreatureType(61), TCreatureType(63), TCreatureType(65), TCreatureType(67), TCreatureType(69) },
+    { TCreatureType(70), TCreatureType(72), TCreatureType(74), TCreatureType(76), TCreatureType(78), TCreatureType(80), TCreatureType(82),
+      TCreatureType(71), TCreatureType(73), TCreatureType(75), TCreatureType(77), TCreatureType(79), TCreatureType(81), TCreatureType(83) },
+    { TCreatureType(84), TCreatureType(86), TCreatureType(88), TCreatureType(90), TCreatureType(92), TCreatureType(94), TCreatureType(96),
+      TCreatureType(85), TCreatureType(87), TCreatureType(89), TCreatureType(91), TCreatureType(93), TCreatureType(95), TCreatureType(97) },
+    { TCreatureType(98), TCreatureType(100), TCreatureType(104), TCreatureType(106), TCreatureType(102), TCreatureType(108), TCreatureType(110),
+      TCreatureType(99), TCreatureType(101), TCreatureType(105), TCreatureType(107), TCreatureType(103), TCreatureType(109), TCreatureType(111) },
+    { TCreatureType(118), TCreatureType(112), TCreatureType(115), TCreatureType(114), TCreatureType(113), TCreatureType(120), TCreatureType(130),
+      TCreatureType(119), TCreatureType(127), TCreatureType(123), TCreatureType(129), TCreatureType(125), TCreatureType(121), TCreatureType(131) }
 };
 DATA(0x00642e20) const type_building_id g_hordeBuildings[4] = { type_building_id(18), type_building_id(19), type_building_id(24), type_building_id(25) };
 DATA(0x006887a0) type_horde_effect town::s_constHordeEffects[9][4] = {
@@ -620,7 +623,6 @@ DC_ADDRESS(0x1664b0, 0x9c)
 MAC_ADDRESS(0x1b3358, 0xbc)
 void town::initializeHordes()
 {
-    int creatureBase = 0;
     for (short townType = 0; townType < TOWN_TYPE_COUNT; townType++) {
         for (short entry = 0; entry < 4; entry += 2) {
             type_horde_effect* effect = &s_constHordeEffects[townType][entry];
@@ -628,34 +630,30 @@ void town::initializeHordes()
             type_horde_effect* upgrade = effect + 1;
             short slot;
             for (slot = 0; slot <= TOWN_DWELLING_COUNT; slot++) {
-                if (creature == g_townDwellingCreatures[creatureBase + slot])
+                if (creature == g_dwellingType[townType][slot])
                     break;
             }
             if (slot <= TOWN_DWELLING_COUNT) {
                 effect->m_dwelling = slot;
                 slot += TOWN_DWELLING_COUNT;
-                upgrade->m_creature = g_townDwellingCreatures[creatureBase + slot];
+                upgrade->m_creature = g_dwellingType[townType][slot];
                 upgrade->m_dwelling = slot;
                 const short* bonus = &effect->m_bonus;
                 upgrade->m_bonus = *bonus;
             }
         }
-        creatureBase += 2 * TOWN_DWELLING_COUNT;
     }
 }
 
-// Dreamcast town.cpp:968 calls get_army before HasCreatures; Mac retains
-// getArmy and retail expands the ordinary town helper here.
+// Dreamcast town.cpp:968 and Mac retain the short-circuit get_army /
+// HasCreatures expression. Original HasGarrison QAAHXZ proves an int result;
+// retail expands getArmy and calls the bool predicate.
 VA(0x005bdfe0, 0x4E)
 DC_ADDRESS(0x16654c, 0x54)
 MAC_ADDRESS(0x1b3414, 0x4c)
 int town::hasGarrison()
 {
-    if (m_visitingHeroId < 0) {
-        if (!getArmy().hasCreatures())
-            return 0;
-    }
-    return 1;
+    return m_visitingHeroId >= 0 || getArmy().hasCreatures();
 }
 
 VA(0x005be030, 0x1D3)
@@ -822,7 +820,7 @@ void town::swapHeroes()
     for (int i = rosterIndex; i < g_currentPlayer->m_numHeroes - 1; ++i)
         g_currentPlayer->m_heroes[i] = g_currentPlayer->m_heroes[i + 1];
     --g_currentPlayer->m_numHeroes;
-    g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] = -1;
+    g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] = heroIdNone;
 
     if (g_currentPlayer->m_currHeroId == visitingHero->m_id) {
         g_currentPlayer->m_currHeroId = -1;
@@ -973,8 +971,7 @@ type_building_id town::createBuilding(type_building_id building)
 
     if (building >= DWELLING_0_ID && building <= DWELLING_6_ID) {
         short slot = building - DWELLING_0_ID;
-        m_population[slot] = g_creatureTypeTraits[g_townDwellingCreatures[
-            m_type * (2 * TOWN_DWELLING_COUNT) + slot]].m_growthRate;
+        m_population[slot] = g_creatureTypeTraits[g_dwellingType[m_type][slot]].m_growthRate;
     }
     if (building >= DWELLING_0_UPG_ID && building <= DWELLING_6_UPG_ID) {
         short slot = building - DWELLING_0_UPG_ID;
@@ -1265,8 +1262,7 @@ long town::getAssembledLegionBonus(long dwelling) const
 {
     long bonus = 0;
     if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
-        TCreatureType creature = g_townDwellingCreatures[
-            m_type * (2 * TOWN_DWELLING_COUNT) + dwelling];
+        TCreatureType creature = g_dwellingType[m_type][dwelling];
         long growth = g_creatureTypeTraits[creature].m_growthRate;
         bonus = getCastleGrowthBonus(creature);
         bonus += growth;
@@ -1363,8 +1359,7 @@ short town::getGrowthRate(short dwelling) const
         && hasBuilding(DWELLING_0_UPG_ID + dwellingIndex, true))
         return 0;
 
-    TCreatureType creature = g_townDwellingCreatures[
-        m_type * TOWN_DWELLING_SLOTS + dwellingIndex];
+    TCreatureType creature = g_dwellingType[m_type][dwellingIndex];
     short growth = g_creatureTypeTraits[creature].m_growthRate;
     growth += getCastleGrowthBonus(creature);
 
@@ -1398,7 +1393,7 @@ void town::increasePopulation(TCreatureType bonusCreature,
         short growth = getGrowthRate(dwelling);
         if (growth > 0) {
             TCreatureType creature =
-                g_townDwellingCreatures[TOWN_DWELLING_SLOTS * m_type + dwelling];
+                g_dwellingType[m_type][dwelling];
             if (creature == bonusCreature || creature == alternateBonus)
                 growth += bonusAmount;
             if (m_owner == -1)
@@ -1415,7 +1410,7 @@ void town::changeGeneratorBonus(TCreatureType creature, long change)
 {
     int slot;
     for (slot = 0; slot < TOWN_DWELLING_SLOTS; slot++) {
-        if (g_townDwellingCreatures[TOWN_DWELLING_SLOTS * m_type + slot]
+        if (g_dwellingType[m_type][slot]
             == creature)
             break;
     }
@@ -1571,17 +1566,14 @@ void town::giveEventReward(const TTownEvent& thisEvent)
                 reward.m_resource = 0x15;
                 reward.m_qualifier = (thisEvent.m_generatorBonuses[i] << 16)
                     | static_cast<unsigned short>(
-                          g_townDwellingCreatures[
-                              m_type * (2 * TOWN_DWELLING_COUNT)
-                              + i + TOWN_DWELLING_COUNT]);
+                          g_dwellingType[m_type][i + TOWN_DWELLING_COUNT]);
                 rewards.push_back(reward);
             } else if (hasBuilding(DWELLING_0_ID + i, true)) {
                 m_population[i] += thisEvent.m_generatorBonuses[i];
                 reward.m_resource = 0x15;
                 reward.m_qualifier = (thisEvent.m_generatorBonuses[i] << 16)
                     | static_cast<unsigned short>(
-                          g_townDwellingCreatures[
-                              m_type * (2 * TOWN_DWELLING_COUNT) + i]);
+                          g_dwellingType[m_type][i]);
                 rewards.push_back(reward);
             }
         }
@@ -1697,8 +1689,7 @@ static void initializeArmy(town* currentTown, const TownExtra* townSetup)
                     int tier = (-2 - troop) / 2;
                     if (troop & 1)
                         tier += TOWN_DWELLING_COUNT;
-                    troop = g_townDwellingCreatures[
-                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
+                    troop = g_dwellingType[currentTown->m_type][tier];
                 }
                 currentTown->getArmy().m_armies[slot] = troop;
             } else {
@@ -1713,8 +1704,7 @@ static void initializeArmy(town* currentTown, const TownExtra* townSetup)
         if (currentTown->m_owner < 0) {
             for (int tier = 0; tier < 4; tier++) {
                 if (random(1, 100) <= g_townInitArmyChance[tier]) {
-                    int creature = g_townDwellingCreatures[
-                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
+                    int creature = g_dwellingType[currentTown->m_type][tier];
                     currentTown->getArmy().add(creature,
                         random(g_townInitArmyLow[tier], g_townInitArmyHigh[tier]),
                         -1);

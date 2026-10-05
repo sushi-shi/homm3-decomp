@@ -29,13 +29,6 @@ struct type_AI_combat_parameters;
 struct tagPOINT;
 struct type_artifact;
 
-// Four inclusive drawing bounds copied as one value before a drawbridge
-// animation. Drawing.cpp's decoded readers prove the same min/max layout as
-// SLimitData. Keep the concrete source type consumer-scoped so the other VC6
-// units retain their already measured type-handle state.
-typedef SLimitData TDrawbridgeBounds;
-SIZE(TDrawbridgeBounds, 0x10);
-
 // Polymorphic objects owned by combatManager at offsets where Close only
 // proves scalar deletion. Their concrete roles remain unattested.
 class CCombatOwnedObject {
@@ -961,10 +954,10 @@ public:
     char m_paddingBeforeLimitToExtent[0x3];
     int m_limitToExtent;  // +0x13d30
     int m_computeExtentOnly;  // +0x13d34
-    // Four-dword drawing bounds copied from 0x694f30..0x694f3c before
-    // every drawbridge animation. The role of each coordinate awaits a
-    // decoded drawing reader, so the member stays an ordinal array.
-    TDrawbridgeBounds m_drawbridgeBounds;  // +0x13d38
+    // Original: Extent (SLimitData), public in DC combatManager records.
+    // The inclusive drawing extent is also replaced with the fixed bounds
+    // at 0x694f30 before a drawbridge animation.
+    SLimitData m_extent;  // +0x13d38
     // Set to 3 by InitNonVisualVars, out of the same register as
     // field_5418. Ordinal.
     int m_winner;  // +0x13d48
@@ -1100,8 +1093,8 @@ public:
     void resetHitByCreature();
     // DC LF_MFUNCTION records have no this type: these are static helpers.
     static TWallTargetId getTargetWallIndex(int gridIndex);
-    static unsigned char inCastle(int index);
-    static unsigned char leftOfMoat(int index);
+    static bool inCastle(int index);
+    static bool leftOfMoat(int index);
     static void getMissileStartingPosition(int armyType, int x, int y, int facing,
                                           int destX, int destY,
                                           const CSprite* missile, int* startX,
@@ -1118,9 +1111,9 @@ public:
     // play before it lands the DamageWall - the wall visibly breaks
     // mid-animation, not on the last frame.
     enum { WALL_EXPLOSION_HIT_FRAME = 0x5 };
-    unsigned char enemyIsAdjacent(const army* currentArmy, int gridIndex,
-                                    const army* excluded) const;
-    unsigned char isAdjacent(int first, int second) const;
+    bool enemyIsAdjacent(const army* currentArmy, int gridIndex,
+                         const army* excluded) const;
+    bool isAdjacent(int first, int second) const;
     void viewArmy(army* thisArmy, int isQuickView);
     void removeArmyFromGrid(const army& a);
     void placeArmyInGrid(const army& a, int hex);
@@ -1157,13 +1150,13 @@ public:
     void checkApplyGoodMorale(int group, int index);
     void spellEffect(int effect, army* targetArmy, int delay,
                      bool doWince);
-    unsigned char shotIsNotOptimal(const army* attacker,
+    bool shotIsNotOptimal(const army* attacker,
                                    const army* defender) const;
     unsigned char shotIsThroughWall(const army* shooter, int sourceIndex,
                                     int destIndex) const;
-    unsigned char inLineOfSight(int sourceIndex, int destIndex) const;
-    unsigned char hexIsBlocked(int index) const;
-    unsigned char isInMoat(int hex, int* index);
+    bool inLineOfSight(int sourceIndex, int destIndex) const;
+    bool hexIsBlocked(int index) const;
+    bool isInMoat(int hex, int* index);
 
 private:
     void loadIcons();
@@ -1996,7 +1989,7 @@ extern const int g_combatDeployGroupedSlots[7][7];
 // LowerDoor and RaiseDoor. The current DATA contract cannot express its
 // size, so the stripped target still represents interior relocations as
 // separate symbols; source keeps the retail-proven aggregate shape.
-extern TDrawbridgeBounds g_drawbridgeBounds;
+extern SLimitData g_drawbridgeBounds;
 
 // The clip rectangle every combat-drawing pass intersects its dirty
 // region with before handing it to heroWindowManager::UpdateScreen.
@@ -2011,7 +2004,7 @@ extern TDrawbridgeBounds g_drawbridgeBounds;
 // choice produces is masked (ResetLimitCreature is exact through the
 // identical aggregate copy). NAME IS A SOURCE-FACING INVENTION and
 // carries its address - no roster row, string or DC global reaches it.
-extern TDrawbridgeBounds g_combatDrawLimits;
+extern SLimitData g_combatDrawLimits;
 
 // Combat-background pointer tables decoded from retail .rdata. The first
 // table is indexed by town type, the second by special-terrain mode (slot
