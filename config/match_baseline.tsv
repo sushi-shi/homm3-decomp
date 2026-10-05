@@ -3711,7 +3711,7 @@ scenarioinfo	?draw@CScenarioPlayerInfoWidget@@UBEXXZ	100.0000	100.0000	100.0000	
 scenarioinfo	?onWidgetDeselect@CScenarioInfoDlg@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0x1698a0	tokens1:4cedd2efb747
 scenarioinfo	?processRightSelect@CScenarioInfoDlg@@UAEEH@Z	100.0000	100.0000	100.0000	0x1699c0	tokens1:830454589573
 scenarioinfo	?updateAllyEnemyFlags@CScenarioInfoDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x1698c0	tokens1:4d0a2cbc897e
-search	?buildPath@searchArray@@QAEHPBVhero@@J@Z	79.5190	79.5190	86.3333	0x16a0d0	tokens1:d8a892395a8a
+search	?buildPath@searchArray@@QAEHPBVhero@@J@Z	100.0000	100.0000	100.0000	0x16a0d0	tokens1:c822a5aec2b3
 search	?checkAdjacentMonster@@YIEPBVhero@@AAUpathCell@@W4type_search_type@@@Z	93.2615	93.2615	93.2615	0x16a360	tokens1:91f621b5ee2e
 search	?checkTownPortal@searchArray@@AAEXPBVhero@@ABUpathCell@@J@Z	100.0000	100.0000	100.0000	0x16b050	tokens1:fc88d23859f7
 search	?enterGate@searchArray@@AAEXABUpathCell@@PBVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x16a730	tokens1:3ce047f1c84f

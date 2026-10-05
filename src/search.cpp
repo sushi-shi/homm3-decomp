@@ -19,44 +19,48 @@
 
 // E:\gamedcs\search.cpp:32
 // Native 0x1616a4 and 0x1616bc clear the point-mismatch and unvisited paths
-// independently, agreeing with DC's separate 71/79 source groups. Preserve
-// both guards and their clearPath calls. Flying is Boolean state passed to
-// the Boolean getCell parameter; a byte local adds a non-retail normalization.
-// These source repairs recover 76.50 -> 79.57%. The remaining mismatch is
-// vector::erase expansion inside clearPath, not a reason to flatten it.
-// Earlier result-reference and 24 local-order probes did not recover retail's
-// retained vector base; four current initialization phases give three objects.
+// independently, agreeing with DC's separate 71/79 source groups. Flying is
+// Boolean state passed to the Boolean getCell parameter; a byte local adds a
+// non-retail normalization.
+// DC lines 32/36 construct both points with type_point(short,short,short)
+// from the hero's coordinates, not through getLocation/getTarget, and lines
+// 42/96 call vector::clear directly (search.cpp rows, not FindPath.h's
+// ClearPath). Those spellings set retail's /Ob2 frontier: the entry and
+// unvisited clears expand erase while the other arms call it. The direct
+// points raise 79.52 to 98.76%; initializing flying before the previous-cost
+// local makes it exact. Routing the clears through clearPath() gives 85.35%.
 VA(0x0056a0d0, 0x282)
 DC_ADDRESS(0x12b2e0, 0x110)
 MAC_ADDRESS(0x161498, 0x41c)  // anchor-global
 int searchArray::buildPath(const hero* currentHero, long limit)
 {
-    type_point source = currentHero->getLocation();
-    type_point dest = currentHero->getTarget();
+    type_point source(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    type_point dest(currentHero->m_pathTargetX, currentHero->m_pathTargetY,
+                    currentHero->m_pathTargetZ);
     pathCell* currentPathCell;
-    int previousCost = 0x30d400;
-    clearPath();
     bool flying = false;
+    int previousCost = 0x30d400;
+    m_result.clear();
 
     while (dest != source) {
         if (!dest.isValid()) {
-            clearPath();
+            m_result.clear();
             break;
         }
 
         currentPathCell = getCell(dest, flying);
         if (currentPathCell->m_adjustedCost > previousCost) {
-            clearPath();
+            m_result.clear();
             break;
         }
         previousCost = currentPathCell->m_adjustedCost;
 
         if (currentPathCell->m_point != dest) {
-            clearPath();
+            m_result.clear();
             break;
         }
         if (!currentPathCell->m_visited) {
-            clearPath();
+            m_result.clear();
             break;
         }
 
@@ -64,7 +68,7 @@ int searchArray::buildPath(const hero* currentHero, long limit)
             m_result.push_back(currentPathCell);
 
         if (currentPathCell->m_lastPoint == dest) {
-            clearPath();
+            m_result.clear();
             break;
         }
 
