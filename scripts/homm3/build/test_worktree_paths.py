@@ -140,8 +140,9 @@ class WorktreePathsTest(unittest.TestCase):
                                     ("output file.exe", "output file.map", "input file.obj", "import file.lib")]
             obj.touch()
             lib.touch()
-            def run_wine(cmd, cwd, produced):
-                produced.touch()
+            def run_wine(cmd, cwd):
+                # link.main checks the output itself; the mock links it.
+                out.touch()
                 return "", 0
             def windows(path):
                 return "Z:" + str(path).replace("/", "\\")
