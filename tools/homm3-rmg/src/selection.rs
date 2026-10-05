@@ -111,8 +111,9 @@ impl<'a> SelectedTemplate<'a> {
             .iter()
             .enumerate()
             .filter_map(|(slot, &used)| used.then_some(slot));
-        let human_count = usize::from(request.human_players().get());
-        let total = human_count + usize::from(request.computer_players().get());
+        let parameters = request.constructor_parameters();
+        let human_count = usize::from(parameters.human_players.get());
+        let total = human_count + usize::from(parameters.computer_players.get());
         for &player in &player_order[..human_count] {
             let slot = human_slots
                 .next()

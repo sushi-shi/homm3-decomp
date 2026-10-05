@@ -2,8 +2,11 @@
 
 use homm3_rmg::{
     behavior::{Behavior, RetailProfile},
+    layout::hints::ZoneSolution,
     request::{default_record, Levels, MapSize, Request, RequestOptions, Water},
+    rng::RetailRng,
     rules::Ruleset,
+    selection::SelectedTemplate,
     template::{ConnectionKind, TemplateCandidate, TemplateFormat, TemplateSource, ZoneRole},
 };
 
@@ -28,6 +31,8 @@ fn installed_packs_normalize_all_zone_and_connection_records() {
     let mut candidates = 0;
     let mut deferred = 0;
     let mut mirrors = 0;
+    let mut hint_diagnostics = 0;
+    let mut fatal_hints = 0;
     for path in &paths {
         let bytes = std::fs::read(path).unwrap();
         let source = TemplateSource::parse(&bytes).unwrap();
@@ -77,6 +82,48 @@ fn installed_packs_normalize_all_zone_and_connection_records() {
                                     }
                                 }
                             }
+                            let one = [TemplateCandidate::Ready(template)];
+                            let mut rng = RetailRng::new(42);
+                            let selected =
+                                SelectedTemplate::select(&one, &request, &mut rng).unwrap();
+                            let before = rng.checkpoint();
+                            let mut hints =
+                                ZoneSolution::from_selected(&selected, &request, 42, |read| {
+                                    Some(if read.steps == 0 { 0 } else { 100_000_001 })
+                                })
+                                .unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+                            hint_diagnostics += hints.diagnostics().len();
+                            fatal_hints += usize::from(hints.diagnostics().iter().any(|d| d.fatal));
+                            if !hints.diagnostics().iter().any(|d| d.fatal) {
+                                for zone in selected.template().zones() {
+                                    let initial = zone.towns()[2].initial_count
+                                        + zone.towns()[3].initial_count;
+                                    if zone.towns()[0].initial_count + zone.towns()[1].initial_count
+                                        > 0
+                                    {
+                                        assert!(hints
+                                            .town(zone.source_number(), -1)
+                                            .unwrap()
+                                            .is_some());
+                                    }
+                                    for instance in 0..initial {
+                                        assert!(hints
+                                            .town(zone.source_number(), instance)
+                                            .unwrap()
+                                            .is_some());
+                                    }
+                                    if zone.towns()[3].density.is_some() {
+                                        hints.town(zone.source_number(), initial.max(0)).unwrap();
+                                    }
+                                }
+                            }
+                            assert!(
+                                hints.diagnostics().is_empty(),
+                                "{}: {:?}",
+                                path.display(),
+                                hints.diagnostics()
+                            );
+                            assert_eq!(rng.checkpoint(), before);
                         }
                     }
                 }
@@ -86,6 +133,7 @@ fn installed_packs_normalize_all_zone_and_connection_records() {
     assert!(candidates > 0);
     assert!(mirrors > 0);
     eprintln!("{} installed packs, {mirrors} mirror packs, {candidates} prepared candidates, {deferred} deferred native faults",paths.len());
+    eprintln!("hint solves: {hint_diagnostics} diagnostics, {fatal_hints} fatal results");
 }
 
 #[test]

@@ -319,6 +319,11 @@ pub struct Zone {
 }
 
 impl Zone {
+    /// Original template zone number used by connections and hint references.
+    #[must_use]
+    pub const fn source_number(&self) -> i32 {
+        self.source_number
+    }
     /// Zone placement, object, creature and hint policies.
     #[must_use]
     pub const fn options(&self) -> &ZoneOptions {

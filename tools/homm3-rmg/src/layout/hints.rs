@@ -6,6 +6,9 @@
 
 mod random;
 mod search;
+mod tokens;
+mod zones;
+pub use zones::{Diagnostic, DiagnosticKind, ZoneFault, ZoneInput, ZoneSolution};
 #[cfg(test)]
 mod tests;
 
@@ -324,25 +327,9 @@ impl Problem {
         seed: u32,
         mut clock: impl FnMut(ClockRead) -> Option<i64>,
     ) -> Result<Solution, Fault> {
-        for i in 0..self.towns.len() {
-            if !self.towns[i].domain.contains(&true) {
-                let id = self.town_id(i);
-                unique(&mut self.issues, Issue::EmptyTown(id));
-            }
-        }
-        for i in 0..self.terrains.len() {
-            if !self.terrains[i].domain.contains(&true) {
-                let id = self.terrain_id(i);
-                unique(&mut self.issues, Issue::EmptyTerrain(id));
-            }
-        }
+        self.check_domains();
         if !self.issues.is_empty() {
-            return Ok(Solution {
-                towns: self.towns.iter().map(|t| t.fixed).collect(),
-                terrains: vec![None; self.terrains.len()],
-                problem: self,
-                random: None,
-            });
+            return Ok(self.unsolved());
         }
         let mut graph = search::Graph::build(&mut self);
         let mut random = random::Random::new(seed);
@@ -366,6 +353,29 @@ impl Problem {
             solution.problem.issues.push(Issue::SolutionCheckFailed);
         }
         Ok(solution)
+    }
+
+    fn check_domains(&mut self) {
+        for i in 0..self.towns.len() {
+            if !self.towns[i].domain.contains(&true) {
+                let id = self.town_id(i);
+                unique(&mut self.issues, Issue::EmptyTown(id));
+            }
+        }
+        for i in 0..self.terrains.len() {
+            if !self.terrains[i].domain.contains(&true) {
+                let id = self.terrain_id(i);
+                unique(&mut self.issues, Issue::EmptyTerrain(id));
+            }
+        }
+    }
+    fn unsolved(self) -> Solution {
+        Solution {
+            towns: self.towns.iter().map(|t| t.fixed).collect(),
+            terrains: vec![None; self.terrains.len()],
+            problem: self,
+            random: None,
+        }
     }
 }
 

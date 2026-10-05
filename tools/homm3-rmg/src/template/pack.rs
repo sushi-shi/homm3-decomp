@@ -771,12 +771,15 @@ mod tests {
             }
             first[127] = "1".into();
             first[128] = "-1".into();
+            first[40] = "1".into(); // One player castle.
             let bytes = sheet(&[first]);
             let source = TemplateSource::parse(&bytes).unwrap();
             for levels in [Levels::Surface, Levels::Underground] {
                 for mirror in [false, true] {
+                    let mut record = default_record(MapSize::Large, levels);
+                    record.m_townChoices[0] = 11;
                     let request = Request::parse_with_options(
-                        default_record(MapSize::Large, levels),
+                        record,
                         Behavior::Retail(RetailProfile::default()),
                         RequestOptions {
                             ruleset: Ruleset::HotA181,
@@ -795,6 +798,24 @@ mod tests {
                         assert_eq!(template.zones().len(), 1);
                         assert_eq!(template.zones()[0].connections().len(), 1);
                         assert_eq!(template.zones()[0].connections()[0].destination(), None);
+                        let mut rng = crate::rng::RetailRng::new(42);
+                        let selected = crate::selection::SelectedTemplate::select(
+                            &candidates,
+                            &request,
+                            &mut rng,
+                        )
+                        .unwrap();
+                        let before = rng.checkpoint();
+                        let mut hints = crate::layout::hints::ZoneSolution::from_selected(
+                            &selected,
+                            &request,
+                            42,
+                            |_| Some(0),
+                        )
+                        .unwrap();
+                        assert!(hints.diagnostics().is_empty());
+                        assert_eq!(hints.town(1, -1).unwrap(), Some(11));
+                        assert_eq!(rng.checkpoint(), before);
                     }
                 }
             }

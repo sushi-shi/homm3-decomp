@@ -323,3 +323,230 @@ fn contradiction_found_during_merging_still_seeds_and_searches() {
     assert_eq!(solution.terrain(terrain).unwrap(), Some(2));
     assert_eq!(solution.draws(), Some(1));
 }
+
+#[test]
+fn hint_capture_precedence_and_integer_exceptions_are_preserved() {
+    use super::tokens::{Condition, Rule, Who};
+    let mut diagnostics = Vec::new();
+    let mut rules = Vec::new();
+    tokens::parse(
+        7,
+        [b"1ds20_p  ndx_n", b"s10x", b"unknown"],
+        &mut diagnostics,
+        &mut rules,
+    )
+    .unwrap();
+    assert!(diagnostics.is_empty());
+    assert_eq!(
+        rules,
+        [
+            Rule {
+                own: 7,
+                condition: Condition::Towns {
+                    zone: 20,
+                    who: Who::Index(1),
+                    target: Who::Player,
+                    relation: Relation::Same
+                }
+            },
+            Rule {
+                own: 7,
+                condition: Condition::Towns {
+                    zone: 7,
+                    who: Who::Neutral,
+                    target: Who::Neutral,
+                    relation: Relation::Different
+                }
+            },
+            Rule {
+                own: 7,
+                condition: Condition::Terrain {
+                    zone: 10,
+                    relation: Relation::Same
+                }
+            },
+        ]
+    );
+    for text in [b"s2147483648".as_slice(), b"words20_p"] {
+        assert!(matches!(
+            tokens::parse(7, [text, b"", b""], &mut Vec::new(), &mut Vec::new()),
+            Err(ZoneFault::Integer(_))
+        ));
+    }
+    assert!(matches!(
+        tokens::parse(7, [b"", b"sxx", b""], &mut Vec::new(), &mut Vec::new()),
+        Err(ZoneFault::Integer(_))
+    ));
+    let mut errors = Vec::new();
+    tokens::parse(
+        7,
+        [b"bad\tbad\r", b"?", b"bad"],
+        &mut errors,
+        &mut Vec::new(),
+    )
+    .unwrap();
+    assert_eq!(errors.len(), 2);
+    assert_eq!(errors[0].text, b"bad\tbad\r");
+    assert_eq!(errors[1].text, b"?");
+}
+
+#[test]
+fn faction_mask_extension_uses_native_base_town_test() {
+    let mask = tokens::town_set(b"1101011");
+    assert_eq!(
+        mask,
+        [true, true, false, true, false, true, true, true, true, true, true, true]
+    );
+    assert_eq!(
+        tokens::town_set(b"11010110"),
+        [true, true, false, true, false, true, true, false, true, true, true, true]
+    );
+    assert_eq!(
+        tokens::town_set(b"110101100000"),
+        [true, true, false, true, false, true, true, false, false, false, false, false]
+    );
+    assert_eq!(tokens::town_set(b"a"), domain(&[0]));
+}
+
+#[test]
+fn neutral_restrictions_precede_other_tokens_and_keep_fixed_player_towns() {
+    let mut zone = ZoneInput::new(7);
+    zone.player_town = true;
+    zone.chosen_town = Some(0);
+    zone.neutral_towns = 2;
+    zone.town_hint = b"1i0 pi0 ni0".to_vec();
+    let mut result =
+        ZoneSolution::solve(vec![zone], 99, |_| panic!("fatal before seeding")).unwrap();
+    assert_eq!(
+        result
+            .diagnostics()
+            .iter()
+            .map(|d| (d.kind, d.values))
+            .collect::<Vec<_>>(),
+        [
+            (DiagnosticKind::NoTownType, [0, 7, 0, 0]),
+            (DiagnosticKind::NoTownType, [1, 7, 0, 0]),
+        ]
+    );
+    assert_eq!(result.town(7, -1).unwrap(), Some(0));
+    assert_eq!(result.town(7, 0).unwrap(), None);
+    assert_eq!(result.draws(), None);
+}
+
+#[test]
+fn self_relations_have_native_severity_and_faction_tokens_can_be_ignored() {
+    let mut zone = ZoneInput::new(7);
+    zone.town_hint = b"s7 psx_p".to_vec();
+    zone.terrain_hint = b"sx dx".to_vec();
+    zone.faction_hint = b"s7 d7 ignored".to_vec();
+    let result = ZoneSolution::solve(vec![zone], 0, |_| panic!("fatal before search")).unwrap();
+    assert_eq!(
+        result
+            .diagnostics()
+            .iter()
+            .map(|d| (d.kind, d.fatal))
+            .collect::<Vec<_>>(),
+        [
+            (DiagnosticKind::PatternTargetsItself, false),
+            (DiagnosticKind::TownRelatedToItself, false),
+            (DiagnosticKind::TerrainRelatedToItself, false),
+            (DiagnosticKind::TerrainRelatedToItself, true),
+            (DiagnosticKind::FactionRelatedToItself, false),
+            (DiagnosticKind::FactionRelatedToItself, true),
+        ]
+    );
+}
+
+#[test]
+fn native_terrain_override_and_late_empty_domain_keep_distinct_results() {
+    let mut zone = ZoneInput::new(10);
+    zone.towns.fill(false);
+    zone.terrains.fill(false);
+    zone.native_terrain = true;
+    let mut result = ZoneSolution::solve(vec![zone], 42, |_| Some(0)).unwrap();
+    assert!(result.diagnostics().is_empty());
+    assert!(result.terrain(10).is_some());
+    assert_eq!(result.draws(), Some(9));
+    assert_eq!(result.town(10, 0).unwrap(), Some(0));
+    assert_eq!(result.town(10, 0).unwrap(), None);
+    assert_eq!(result.draws(), Some(9));
+}
+
+#[test]
+fn density_towns_reapply_restrictions_and_singletons_do_not_draw() {
+    let mut zone = ZoneInput::new(1);
+    zone.player_town = true;
+    zone.chosen_town = Some(0);
+    zone.density_towns = true;
+    zone.town_hint = b"ni010000000000 ndx_p".to_vec();
+    let mut result = ZoneSolution::solve(vec![zone], 123, |_| Some(0)).unwrap();
+    assert_eq!(result.diagnostics()[0].kind, DiagnosticKind::DensityTown);
+    let before = result.draws();
+    assert_eq!(result.town(1, 0).unwrap(), Some(1));
+    assert_eq!(result.town(1, 1).unwrap(), Some(1));
+    assert_eq!(result.town(1, -1).unwrap(), Some(0));
+    assert_eq!(result.draws(), before);
+}
+
+#[test]
+fn unresolved_different_town_is_a_native_bounds_fault() {
+    let mut broken = ZoneInput::new(1);
+    broken.player_town = true;
+    broken.towns.fill(false);
+    let mut density = ZoneInput::new(2);
+    density.density_towns = true;
+    density.town_hint = b"nd1_p".to_vec();
+    let mut result = ZoneSolution::solve(vec![broken, density], 123, |_| None).unwrap();
+    assert_eq!(result.draws(), None);
+    assert_eq!(
+        result.town(2, 0),
+        Err(ZoneFault::UnsetDifferentTown {
+            zone: 1,
+            instance: -1
+        })
+    );
+}
+
+#[test]
+fn late_towns_after_failed_setup_use_seed_zero() {
+    let mut broken = ZoneInput::new(1);
+    broken.player_town = true;
+    broken.towns.fill(false);
+    let healthy = ZoneInput::new(2);
+    let mut first =
+        ZoneSolution::solve(vec![broken.clone(), healthy.clone()], 123, |_| None).unwrap();
+    let mut second = ZoneSolution::solve(vec![broken, healthy], 999, |_| None).unwrap();
+    assert_eq!(first.draws(), None);
+    assert_eq!(first.town(2, 0).unwrap(), second.town(2, 0).unwrap());
+    assert_eq!(first.draws(), Some(11));
+    assert_eq!(first.town(2, 1).unwrap(), second.town(2, 1).unwrap());
+    assert_eq!(first.draws(), Some(22));
+}
+
+#[test]
+fn forced_neutral_diagnostics_follow_dll_pair_sort_order() {
+    let mut a = ZoneInput::new(90);
+    a.neutral_creatures = true;
+    a.faction_hint = b"d7 d1".to_vec();
+    let mut b = ZoneInput::new(7);
+    b.neutral_creatures = true;
+    b.faction_hint = b"d90".to_vec();
+    let mut c = ZoneInput::new(1);
+    c.neutral_creatures = true;
+    let result = ZoneSolution::solve(vec![a, b, c], 0, |_| panic!("fatal before search")).unwrap();
+    assert_eq!(
+        result
+            .diagnostics()
+            .iter()
+            .map(|d| (d.kind, d.values))
+            .collect::<Vec<_>>(),
+        [
+            (DiagnosticKind::ViolatesNeutralFaction, [7, 7, 0, 0]),
+            (DiagnosticKind::ViolatesNeutralFaction, [7, 90, 0, 0]),
+            (DiagnosticKind::ViolatesNeutralFaction, [90, 1, 0, 0]),
+            (DiagnosticKind::ViolatesNeutralFaction, [90, 7, 0, 0]),
+            (DiagnosticKind::ViolatesNeutralFaction, [90, 90, 0, 0]),
+        ]
+    );
+    assert_eq!(result.faction(7), -1);
+}

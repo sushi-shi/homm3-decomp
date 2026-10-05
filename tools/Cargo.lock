@@ -280,6 +280,7 @@ dependencies = [
  "homm3-lod",
  "homm3-resource",
  "homm3-rmg-data",
+ "regex",
 ]
 
 [[package]]

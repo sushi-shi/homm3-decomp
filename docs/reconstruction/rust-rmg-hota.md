@@ -330,7 +330,48 @@ Reference source SHA-256:
 Temporary harnesses and inputs remain under ignored `build/hota-hint-port/`.
 
 These are comparisons with the recovered C++ implementation, not new execution
-captures from HotA.dll. Template hint token parsing, condition application,
-zone-level diagnostics, late town selection and layout consumption remain to
-be connected. The full HotA pipeline gate remains in place; this engine does not
-establish end-to-end generation parity.
+captures from HotA.dll. At that checkpoint, template hint token parsing,
+condition application, zone-level diagnostics, late town selection and layout
+consumption remained to be connected. The full HotA pipeline gate remains in
+place; the constraint engine alone does not establish generation parity.
+
+`ZoneSolution` now connects the shared selected-template model to the constraint
+engine. It preserves source zone numbers, the native player/neutral town counts,
+land-terrain index mapping and fixed player choices. Mirror player assignment
+uses the constructor-local counts, and hint setup sees the compacted generation
+town choices. Town, terrain and faction tokens use the native ordered patterns
+over bytes, including space-only splitting, numeric prefix captures and silently
+ignored unknown faction tokens. The cached `regex` dependency supports Rust 1.65,
+within this workspace's 1.82 MSRV; no external process runs during hint solving.
+
+The adapter applies neutral-town restrictions before other conditions, creates
+faction pseudo-towns in source order, retains native fatal/nonfatal diagnostics
+and applies the same-type/native-terrain/forced-neutral zone settings before
+search. Late town queries retain the solver RNG and reapply conditions, preserving
+fixed and already-resolved towns. They also preserve the empty-domain quirk
+(return zero once without recording that value) and lazy seed-zero behavior
+after an earlier failed solve. An unresolved different-town constraint produces
+a typed bounds fault instead of writing before the native domain array.
+
+Verification: 142 library tests and library Clippy pass. Both installed-pack
+checks pass, including all 2,399 candidates across the seven-size matrix, eight
+mirror packs and initial/density-town queries, with no diagnostics and no change
+to the ordinary CRT stream. A 2,500-case full-zone comparison against the recovered
+C++ covers parsing, initial assignments, late queries and the next MT word. Of
+these, 1,540 exercise defined solver outcomes, 695 reproduce numeric conversion
+exceptions, and 265 stop at the explicitly modeled native bounds fault. No
+unexpected differences remain. The temporary C++ harness uses `std::stoi` for
+the DLL's throwing conversion, replacing the reconstruction's acknowledged
+`strtol` fallback. Thirteen cases differ only in forced-neutral diagnostic order:
+Rust follows the DLL's pair sort, confirmed at RVA `0x1fb3be` calling `0x1f8100`,
+while the recovered C++ reports those pairs in traversal order. Dedicated tests
+cover these distinctions. Input corpus SHA-256:
+`1feb182d062d28d1746ca30318afc1069ee5a3f88e31cb6291f48b03438c79d1`.
+
+The Complete reference sample remains unchanged: 14 exact hotfix matches, seven
+exact retail matches and seven pre-existing typed coast faults. Runner SHA-256:
+`a66c595d62421c53e999b9ade4f408c08f27be29f6f713d073b948ec89b30102`.
+This validates shared selection compatibility and the hint adapter, not the full
+HotA generator. Layout still rejects HotA while its positioning/terrain changes
+and consumption of solved hints are unfinished; placement, output and HD state
+remain part of the open objective.
