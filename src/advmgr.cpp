@@ -1416,8 +1416,6 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
     else
         currHero = 0;
 
-    hero* walker;
-
     switch (msg.m_codeX) {
     case KEYCODE_SPACE: {
         if (!currHero)
@@ -1608,7 +1606,9 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
     }
     if (moveDir >= 0 && !waitingPlayer
         && g_game->getCurrHeroId() != -1) {
-        walker = g_game->getCurrHero();
+        // DC1892 records a const pointer in this movement scope. Complete
+        // also writes the path target, so its pointee must remain mutable.
+        hero* const walker = g_game->getCurrHero();
         if (validMove(g_game->getCurrHero(), moveDir, 0, 1)) {
             type_point walkTrigger;
             int noMove;
