@@ -7497,15 +7497,21 @@ void game::perDay()
 // Original: game::clear_recruits; game.cpp:8266
 // DC 8266/8290 and Mac 0xdeefc/0xdef98 place these two helpers between
 // perDay and setWeeklyRecruits. DC names the long loop index recruit,
-// THeroID hero_id and the selected hero pointer old_hero.
+// THeroID hero_id and the selected hero pointer old_hero. Its original
+// QAW4THeroID parameter encoding agrees with a two-slot array formal;
+// all three named locals precede the native lexical blocks.
 DC_ADDRESS(0x0b3d8c, 0x74)
 MAC_ADDRESS(0x0deefc, 0x9c)
-void game::clearRecruits(HeroId* recruits)
+void game::clearRecruits(HeroId recruits[2])
 {
-    for (long recruit = 0; recruit < 2; ++recruit) {
-        HeroId heroId = recruits[recruit];
+    hero* oldHero;
+    HeroId heroId;
+    long recruit;
+
+    for (recruit = 0; recruit < 2; ++recruit) {
+        heroId = recruits[recruit];
         if (heroId >= 0) {
-            hero* oldHero = getHero(heroId);
+            oldHero = getHero(heroId);
             if (oldHero->m_flags & g_heroRecruitReservedFlag)
                 continue;
             m_heroAvailability[heroId] = -1;
@@ -7534,6 +7540,7 @@ static HeroId getNewHero(THeroClass heroClass)
 // The two-slot loop, tutorial choices and equipment/mana/army closeout identify
 // this body; DC's nullary set_recruits is the surrounding all-player operation.
 // Mac 0xdf0ac initializes the local artifact's id before its extra field.
+// The named locals precede the native lexical blocks.
 // The TArtifact constructor preserves that order in VC6; the default
 // constructor reverses the two stores in this caller.
 VA(0x004c8450, 0x248)
@@ -7542,14 +7549,17 @@ MAC_ADDRESS(0x0df0ac, 0x238)
 void game::setWeeklyRecruits(int playerPos)
 {
     playerData* player = &m_players[playerPos];
+    hero* newHero;
+    THeroClass otherClass;
     type_artifact artifact(ARTIFACT_NONE);
+    long backpackSlot;
+    HeroId heroId;
     long recruitSlot;
 
     for (recruitSlot = 0; recruitSlot < 2; ++recruitSlot) {
         if (player->m_recruits[recruitSlot] >= 0)
             continue;
 
-        THeroClass otherClass;
         if (player->m_recruits[1 - recruitSlot] < 0)
             otherClass = kNumHeroClasses;
         else
@@ -7557,7 +7567,6 @@ void game::setWeeklyRecruits(int playerPos)
             otherClass = getHero(player->m_recruits[1 - recruitSlot])->m_heroClass;
         }
 
-        HeroId heroId;
         if (m_isTutorial
             && static_cast<unsigned short>(m_week) <= 2) {
             if (m_week == 1) {
@@ -7577,8 +7586,8 @@ void game::setWeeklyRecruits(int playerPos)
             continue;
 
         m_heroAvailability[heroId] = 64;
-        hero* newHero = getHero(heroId);
-        long backpackSlot = HERO_BACKPACK_CAPACITY - 1;
+        newHero = getHero(heroId);
+        backpackSlot = HERO_BACKPACK_CAPACITY - 1;
         do {
             artifact = newHero->getBackpack(backpackSlot);
             if (artifact.m_artifactId != -1
