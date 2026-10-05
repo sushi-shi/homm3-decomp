@@ -3560,33 +3560,6 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
     }
 }
 
-// Project-inferred operations shared by active and waiting hover handling.
-// Preserve the command reset, screen-cell cache and packed map-point stores.
-void advManager::beginMapHover(int x, int y)
-{
-    m_advCommand = -1;
-    m_lastHoverX = x;
-    m_lastHoverY = y;
-    m_lastMapHover.m_x = m_radarOrigin.m_x + x;
-    m_lastMapHover.m_y = m_radarOrigin.m_y + y;
-    m_lastMapHover.m_z = m_radarOrigin.m_z;
-}
-
-void advManager::processOutsideMapHover(int mouseX, int mouseY)
-{
-    if (g_mouseManager->getFrame() < HOVER_SCROLL_POINTER_FIRST
-        || g_mouseManager->getFrame() > HOVER_SCROLL_POINTER_LAST
-        || !mouseInScrollZone())
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-    m_advWindow->processHover(mouseX, mouseY);
-}
-
-void advManager::clearRejectedHoverPath()
-{
-    g_searchArray->clearPath();
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-}
-
 // E:\gamedcs\advmgr.cpp:4385
 // DC records mouseManager::GetFrame in the scroll-zone fallback. Calling its
 // shared inline getter changes VC6's inliner decision at the earlier GetCell:
@@ -3741,12 +3714,15 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 // (DC 0xf752/0xf8c4; Mac 0xe948/0xebbc), with the signed owner read after
 // getTriggerCell/getMapExtraInfo. The path cell is const in the native locals.
 //
-// Current residual: retail and candidate both retain the third clearPath's
-// vector cleanup, but the TOWN/default normal-cursor tail is still expanded
-// differently. Native pointer/enum/union recovery and nullable getHero branches
-// are retained. Ten branch/address forms of searchArray::getCell were flat
-// across its owner and callers; point temporary/initialization variants and
-// shared town/local declaration scopes did not recover the remaining homes.
+// DC/Mac shape (2026-10-06): DC ProcessHover and Mac 0xe5e8 write the hover
+// reset, both clear_path+SetPointer exits and the off-map frame/scroll tail
+// in place; the former beginMapHover/clearRejectedHoverPath/
+// processOutsideMapHover helpers had no native counterpart and are gone.
+// DC 4595/4601 read gpCurPlayer->currHeroId directly (no GetCurrHeroId),
+// 4696/4708 test the hero's boat flag in two separate guards (no inBoat
+// local), and 4771 tests !OnSameTeam first in the HERO cursor arm.
+// Together: 84.96 (helpers removed) -> 98.96%. Residual: operand order in one
+// onSameTeam teamInfo load and the getLocation/== packing in the hero branch.
 VA(0x0040e360, 0x918)
 DC_ADDRESS(0x00f3a8, 0x9c4)
 MAC_ADDRESS(0x00e5e8, 0xa94)  // anchor-callee
@@ -3759,7 +3735,12 @@ int advManager::processHover(int mouseX, int mouseY)
         int rx = mouseX / 32;
         int ry = mouseY / 32;
         if (m_lastHoverX != rx || m_lastHoverY != ry) {
-        beginMapHover(rx, ry);
+        m_advCommand = -1;
+        m_lastHoverX = rx;
+        m_lastHoverY = ry;
+        m_lastMapHover.m_x = m_radarOrigin.m_x + rx;
+        m_lastMapHover.m_y = m_radarOrigin.m_y + ry;
+        m_lastMapHover.m_z = m_radarOrigin.m_z;
 
         if (!m_lastMapHover.isValid()
             || !(getMapExtra(m_lastMapHover) & g_curPlayerBit)) {
@@ -3770,14 +3751,14 @@ int advManager::processHover(int mouseX, int mouseY)
         NewmapCell* currCell = getCell(m_lastMapHover);
         setRolloverText(currCell, rx, ry);
 
-        if (g_game->getCurrHeroId() != -1
-            && g_game->getHero(g_game->getCurrHeroId())->m_z
+        if (g_currentPlayer->m_currHeroId != -1
+            && g_game->getHero(g_currentPlayer->m_currHeroId)->m_z
                != m_lastMapHover.m_z) {
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
             return 1;
         }
 
-        if (g_game->getCurrHeroId() == -1) {
+        if (g_currentPlayer->m_currHeroId == -1) {
             if (currCell->m_type == TOWN) {
                 town* currentTown = g_game->getTown(
                     currCell->getTriggerCell()->getMapExtraInfo());
@@ -3816,9 +3797,7 @@ int advManager::processHover(int mouseX, int mouseY)
         } else {
 
         hero* currHero = g_game->getCurrHero();
-        type_point heroPoint;
-        heroPoint = currHero->getLocation();
-        if (heroPoint == m_lastMapHover) {
+        if (currHero->getLocation() == m_lastMapHover) {
             g_mouseManager->setPointer(2, mouseManager::ADVENTURE_SET);
             m_advCommand = 2;
             return 1;
@@ -3847,22 +3826,26 @@ int advManager::processHover(int mouseX, int mouseY)
                 }
             }
 
-            clearRejectedHoverPath();
+            g_searchArray->clearPath();
+            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
             return 1;
         }
 
-        int inBoat = currHero->isOnBoat();
-        if (!inBoat) {
-            if (currCell->m_groundSet == eTerrainWater
-                && (currCell->m_type != HERO || !currCell->m_isTrigger)
-                && (currCell->m_type != BOAT || !currCell->m_isTrigger)
-                && (currCell->m_type != SHIPWRECK || !currCell->m_isTrigger)) {
-                clearRejectedHoverPath();
-                return 1;
-            }
-        } else if (currCell->m_groundSet != eTerrainWater
-                   && currCell->m_type != ANCHOR_POINT) {
-            clearRejectedHoverPath();
+        if (!(currHero->m_flags & 0x40000)
+            && currCell->m_groundSet == eTerrainWater
+            && (currCell->m_type != HERO || !currCell->m_isTrigger)
+            && (currCell->m_type != BOAT || !currCell->m_isTrigger)
+            && (currCell->m_type != SHIPWRECK || !currCell->m_isTrigger)) {
+            g_searchArray->clearPath();
+            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            return 1;
+        }
+
+        if ((currHero->m_flags & 0x40000)
+            && currCell->m_groundSet != eTerrainWater
+            && currCell->m_type != ANCHOR_POINT) {
+            g_searchArray->clearPath();
+            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
             return 1;
         }
 
@@ -3906,11 +3889,11 @@ int advManager::processHover(int mouseX, int mouseY)
                 break;
             case HERO: {
                 hero* mapHero = g_game->getHero(currCell->m_extraInfo);
-                if (g_game->onSameTeam(mapHero->m_owner, g_netLocalGamePos)) {
+                if (!g_game->onSameTeam(mapHero->m_owner, g_netLocalGamePos)) {
+                    newCursor = ADV_SWORD_POINTER;
+                } else {
                     newCursor = ADV_EXCHANGE_POINTER;
                     m_advCommand = 1;
-                } else {
-                    newCursor = ADV_SWORD_POINTER;
                 }
                 break;
             }
@@ -3944,7 +3927,11 @@ int advManager::processHover(int mouseX, int mouseY)
         }
         }
     } else {
-        processOutsideMapHover(mouseX, mouseY);
+        if (g_mouseManager->getFrame() < HOVER_SCROLL_POINTER_FIRST
+            || g_mouseManager->getFrame() > HOVER_SCROLL_POINTER_LAST
+            || !mouseInScrollZone())
+            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        m_advWindow->processHover(mouseX, mouseY);
     }
     return 1;
 }
