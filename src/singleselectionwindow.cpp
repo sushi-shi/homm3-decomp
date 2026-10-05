@@ -3283,7 +3283,7 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
             static_cast<unsigned char>(m_randomMapOptions[2] + m_randomMapOptions[4]);
 
     for (int i = 0; i < 8; ++i) {
-        header.m_teamInfo[i] = static_cast<signed char>(i);
+        header.m_teamInfo[i] = static_cast<char>(i);
         header.m_playerSlotAttributes[i].m_legalAlignments = 0x1ff;
         header.m_playerSlotAttributes[i].m_canBeHuman =
             i < header.m_maxNumHumanPlayers;
