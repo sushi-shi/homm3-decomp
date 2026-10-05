@@ -2557,7 +2557,7 @@ mapcell	?getMapObject@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	100.0000	100.0
 mapcell	?getObjectTypePtr@CObject@@QBEPAVCObjectType@@XZ	100.0000	100.0000	100.0000	0xfec10	tokens1:f88edff63446
 mapcell	?getSpecialTerrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xfce20	tokens1:8eabf957eb85
 mapcell	?getTriggerCell@NewmapCell@@QAEPAV1@XZ	100.0000	100.0000	100.0000	0xfcaa0	tokens1:726522405f1d
-mapcell	?hasTriggerableEvent@NewmapCell@@QBE?BEXZ	100.0000	100.0000	100.0000	0xfcdc0	tokens1:57f71aa5c4cc
+mapcell	?hasTriggerableEvent@NewmapCell@@QBE?B_NXZ	100.0000	100.0000	100.0000	0xfcdc0	tokens1:b6cb4157a11b
 mapcell	?init@NewfullMap@@AAEXHE@Z	100.0000	100.0000	100.0000	0xfd4f0	tokens1:745346b33bd0
 mapcell	?insert@?$vector@URandomDwellingData@@V?$allocator@URandomDwellingData@@@std@@@std@@QAEXPAURandomDwellingData@@IABU3@@Z	100.0000	100.0000	100.0000	0x1089e0	-
 mapcell	?insert@?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@@std@@QAEXPAVBlackBoxData@@IABV3@@Z	100.0000	100.0000	100.0000	0x107150	-

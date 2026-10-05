@@ -429,10 +429,11 @@ bool NewmapCell::isDiggable() const
 }
 
 // DC 0xec354/0xec396 test giCurPlayerBit; retail reads 0x69ccc4.
+// Original public HasTriggerableEvent@NewmapCell@@QBA?B_NXZ returns const bool.
 VA(0x004fcdc0, 0x58)
 DC_ADDRESS(0x0ec324, 0x8e)
 MAC_ADDRESS(0x11e5f8, 0xb4)
-const unsigned char NewmapCell::hasTriggerableEvent() const
+const bool NewmapCell::hasTriggerableEvent() const
 {
     if (m_type == EVENT) {
         if (g_currentPlayer->isLocalHuman()
