@@ -5700,11 +5700,11 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                              bool partialUpdate, bool viewMines,
                              bool viewHeroes, bool viewTowns)
 {
-    widget* radar = m_advWindow->m_radarWidget;
-    int rectX = radar->m_x;
-    int rectY = radar->m_y;
-    int rectWidth = radar->m_width;
-    int rectHeight = radar->m_height;
+    unsigned short colour = 0;
+    int rectX = m_advWindow->m_radarWidget->m_x;
+    int rectY = m_advWindow->m_radarWidget->m_y;
+    int rectWidth = m_advWindow->m_radarWidget->m_width;
+    int rectHeight = m_advWindow->m_radarWidget->m_height;
 
     if (g_remoteOn && !g_currentPlayer->isLocalHuman()) {
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
@@ -5713,6 +5713,8 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
             return;
     }
 
+    int firstColumn = 0;
+    int firstRow = 0;
     int lastColumn = g_mapWidth - 1;
     int lastRow = g_mapHeight - 1;
     playerData* localPlayer = g_game->getLocalPlayer();
@@ -5728,84 +5730,89 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
         return;
     m_heroLogoShowing = 0;
 
-    // DC advmgr.cpp:7085 names game::GetHero for this lookup. Complete
-    // expands the accessor within the existing current-hero branch.
-    // The acting player's live hero, and its map square, so the cell loop
-    // below can paint that one square in the owner's colour.
-    // The explicit null/lookup arms and the whole revealed predicate
-    // recover the retail guard polarity. DC's playerBit is int, matching
-    // the full-width retail mask test; its cell_union also survives in
+    // DC advmgr.cpp:7085 and Mac 0x139cc..0x139fc recover this nullable
+    // GetHero lookup; the helper owns the -1 sentinel check. DC's int
+    // playerBit matches the full-width retail mask test; cell_union survives in
     // Mac's shipyard store/owner-byte load at 0x13fc0..0x13fcc. Recovering
-    // both locals together improves the match. The remaining receiver
-    // allocation differs: retail keeps this in ECX, this build uses ESI.
+    // both locals together improves the match. DC7041 keeps colour at
+    // function scope; 7046..7049 read the four widget fields separately.
     int heroX = -1;
     int heroY = -1;
-    const hero* currentHero;
-    if (localPlayer->m_currHeroId == -1) {
-        currentHero = 0;
-    } else {
-        currentHero = g_game->getHero(localPlayer->m_currHeroId);
-        if (currentHero && currentHero->m_z == origin.m_z) {
-            heroX = currentHero->m_x;
-            heroY = currentHero->m_y;
-        }
+    const hero* currentHero = g_game->getHero(localPlayer->m_currHeroId);
+    if (currentHero && currentHero->m_z == origin.m_z) {
+        heroX = currentHero->m_x;
+        heroY = currentHero->m_y;
     }
 
     int rowPhase = 0;
     int blockPhase = 0;
     unsigned short* destRow;
-    // DC 7097..7117 names GetMap for the radar origin. Mac 13a5c..13b20
-    // and retail compute map + bytePitch*rectY + 2*rectX, with no signed
-    // divide/round path. The separate small/medium cases survive in both
-    // native references. DC7150 also keeps z local to each radar row.
+    // DC7059..7062 bounds the full map; 7097..7117 derives the pixel
+    // origin, horizontal offset and large-map phases from those bounds.
+    // Mac 13a5c..13b20 folds the zero upper-left bounds but retains the
+    // offset into each row. DC7150 keeps z local to that row.
+    int xOffset;
     switch (g_mapHeight) {
     case MAP_DIMENSION_SMALL:
-        destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
+        destRow = g_windowManager->m_screenBitmap->getMap(
+            rectX, rectY + firstRow / 4);
+        xOffset = firstColumn / 4;
         break;
     case MAP_DIMENSION_MEDIUM:
-        destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
+        destRow = g_windowManager->m_screenBitmap->getMap(
+            rectX, rectY + firstRow / 2);
+        xOffset = firstColumn / 2;
         break;
     case MAP_DIMENSION_LARGE:
-        rowPhase = 0;
-        blockPhase = 0;
-        destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
+        destRow = g_windowManager->m_screenBitmap->getMap(
+            rectX, rectY + (firstRow * 4 + 2) / 3);
+        xOffset = (firstColumn * 4 + 2) / 3;
+        blockPhase = firstColumn % 3;
+        rowPhase = firstRow % 3;
         break;
     default:
-        destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
+        destRow = g_windowManager->m_screenBitmap->getMap(
+            rectX, rectY + firstRow);
+        xOffset = firstColumn;
         break;
     }
 
     int visibilityBit = g_mapVisibilityBit;
-    for (int y = 0; y <= lastRow; y++) {
-        unsigned short* dest = destRow;
-        // Retail row advances use byte pitch; DC's radarRowStart remains
-        // unsigned short*. Use the existing byte view without doubling it.
-        Bitmap16MapPointer nextRow;
-        nextRow.m_pixels = destRow;
+    for (int y = firstRow; y <= lastRow; y++) {
+        unsigned short* dest = destRow + xOffset;
+        // The native row pointer is unsigned short*, advanced by byte pitch.
         switch (g_mapHeight) {
         case MAP_DIMENSION_SMALL:
-            nextRow.m_bytes += 4 * g_windowManager->m_screenBitmap->getPitch();
+            destRow = reinterpret_cast<unsigned short*>(
+                reinterpret_cast<unsigned char*>(destRow)
+                + 4 * g_windowManager->m_screenBitmap->getPitch());
             break;
         case MAP_DIMENSION_MEDIUM:
-            nextRow.m_bytes += 2 * g_windowManager->m_screenBitmap->getPitch();
+            destRow = reinterpret_cast<unsigned short*>(
+                reinterpret_cast<unsigned char*>(destRow)
+                + 2 * g_windowManager->m_screenBitmap->getPitch());
             break;
         case MAP_DIMENSION_LARGE:
-            nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
-            if (++rowPhase > 2) {
+            destRow = reinterpret_cast<unsigned short*>(
+                reinterpret_cast<unsigned char*>(destRow)
+                + g_windowManager->m_screenBitmap->getPitch());
+            if (++rowPhase > 2)
                 rowPhase = 0;
-                nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
-            } else if (rowPhase == 0) {
-                nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
+            if (rowPhase == 0) {
+                destRow = reinterpret_cast<unsigned short*>(
+                    reinterpret_cast<unsigned char*>(destRow)
+                    + g_windowManager->m_screenBitmap->getPitch());
             }
             break;
         case MAP_DIMENSION_EXTRA_LARGE:
-            nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
+            destRow = reinterpret_cast<unsigned short*>(
+                reinterpret_cast<unsigned char*>(destRow)
+                + g_windowManager->m_screenBitmap->getPitch());
             break;
         }
-        destRow = nextRow.m_pixels;
         int z = origin.m_z;
 
-        for (int x = 0; x <= lastColumn; x++) {
+        for (int x = firstColumn; x <= lastColumn; x++) {
             NewmapCell* cell = m_fullMap->cell(x, y, z);
 
             bool revealed =
@@ -5817,7 +5824,6 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
             if (viewHeroes && cell->m_type == HERO)
                 revealed = 1;
 
-            unsigned short colour;
             if (!(viewTowns && cell->m_type == TOWN) && !revealed) {
                 colour = 0;
             } else {
@@ -5919,7 +5925,8 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
 
             // The write side of the 4/3 stretch. The 0x640 stride is
             // retail's own hardcode; the row advance above uses the live
-            // Pitch instead.
+            // Pitch instead. DC7369..7400 and Mac 0x140a4..0x14108 retain
+            // all four large-map write/advance arms.
             switch (g_mapHeight) {
             case MAP_DIMENSION_SMALL:
                 dest[0] = colour;
@@ -5949,21 +5956,26 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                 break;
             case MAP_DIMENSION_LARGE:
                 if (blockPhase) {
-                    dest[0] = colour;
-                    if (rowPhase)
+                    if (rowPhase) {
+                        dest[0] = colour;
                         dest += 1;
-                    else {
+                    } else {
+                        dest[0] = colour;
                         dest[0x320] = colour;
                         dest += 1;
                     }
                 } else {
-                    dest[0] = colour;
-                    dest[1] = colour;
-                    if (!rowPhase) {
+                    if (rowPhase) {
+                        dest[0] = colour;
+                        dest[1] = colour;
+                        dest += 2;
+                    } else {
+                        dest[0] = colour;
+                        dest[1] = colour;
                         dest[0x320] = colour;
                         dest[0x321] = colour;
+                        dest += 2;
                     }
-                    dest += 2;
                 }
                 if (++blockPhase > 2)
                     blockPhase = 0;
@@ -6038,31 +6050,17 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
         }
     }
 
-    int srcX;
-    if (origin.m_x < 0)
-        srcX = static_cast<long>(-scale * origin.m_x);
-    else
-        srcX = 0;
-    int srcY;
-    if (origin.m_y < 0)
-        srcY = static_cast<long>(-scale * origin.m_y);
-    else
-        srcY = 0;
+    // Retail and Mac 0x142e8..0x144cc convert the floating conditional
+    // result after its arms join, including the zero source-offset arm.
+    int srcX = origin.m_x < 0 ? -scale * origin.m_x : 0;
+    int srcY = origin.m_y < 0 ? -scale * origin.m_y : 0;
 
     CSprite* icons = m_radarIcons;
     int drawWidth = icons->getWidth() - srcX;
     int drawHeight = icons->getHeight() - srcY;
 
-    int destX;
-    if (origin.m_x < 0)
-        destX = static_cast<long>(static_cast<float>(rectX));
-    else
-        destX = static_cast<long>(rectX + origin.m_x * scale);
-    int destY;
-    if (origin.m_y < 0)
-        destY = static_cast<long>(static_cast<float>(rectY));
-    else
-        destY = static_cast<long>(rectY + origin.m_y * scale);
+    int destX = origin.m_x < 0 ? rectX : rectX + origin.m_x * scale;
+    int destY = origin.m_y < 0 ? rectY : rectY + origin.m_y * scale;
 
     if (icons->getWidth() + destX > rectX + rectWidth)
         drawWidth += rectWidth - icons->getWidth() - destX + rectX;
