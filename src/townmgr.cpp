@@ -4912,6 +4912,10 @@ void townManager::drawTown(int update, int incFrame, bool drawHotspots)
 // Retail 0x5d3bd0 retains doSkeletonTransformer; current VC6 expands it
 // and adds its dialog lifetime to this frame. A separate build-loop index
 // and bool spellings of the click/slot flags do not restore that boundary.
+// Traced (2026-10-05): it is a depth-1 site (budget 8377, cb 165), so only
+// a callee IL cost above C1's 175 save limit can keep it out of line. DC's
+// braced second if (scopes at 0x174d60) adds just 2 (cb 167); no other
+// evidenced spelling of its byte-exact body was found.
 // E:\gamedcs\townmgr.cpp:5854
 VA(0x005d3240, 0x19CF)
 DC_ADDRESS(0x175160, 0x14d2)
