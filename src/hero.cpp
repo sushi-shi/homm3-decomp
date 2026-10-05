@@ -6468,10 +6468,11 @@ unsigned char hero::isInIdentifyRange(const type_point* location) const
 
 // Dreamcast hero.cpp:6407/6414/6418 calls get_location and the typed
 // get_secondary_skill accessor. Both header helpers expand in retail.
+// Original DC public IsMobile@hero@@QBA_NXZ proves the bool result.
 VA(0x004e5f30, 0xBF)
 DC_ADDRESS(0x0d5644, 0xca)
 MAC_ADDRESS(0x106e6c, 0x12c)
-unsigned char hero::isMobile() const
+bool hero::isMobile() const
 {
     NewmapCell* cell = g_advManager->getCell(getLocation());
     int cost;
