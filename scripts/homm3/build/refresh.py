@@ -35,8 +35,13 @@ def refresh_unit(unit: str, *, run=subprocess.run) -> RefreshResult:
     refresh_lock.parent.mkdir(parents=True, exist_ok=True)
     with refresh_lock.open("w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        res = run(["ninja", "-f", str(ninja_file), target],
-                  cwd=root, capture_output=True, text=True)
+        try:
+            res = run(["ninja", "-f", str(ninja_file), target],
+                      cwd=root, capture_output=True, text=True)
+        except FileNotFoundError:
+            raise RuntimeError(f"{unit} candidate refresh failed: ninja not found "
+                               "on PATH; run inside `nix develop .#build` (or "
+                               "through the `homm3` wrapper)") from None
         if res.returncode != 0:
             tail = "\n".join((res.stdout + res.stderr).strip().splitlines()[-25:])
             from homm3.core.usage import classify_error
