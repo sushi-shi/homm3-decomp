@@ -6828,27 +6828,13 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
                       newPlayerOwner, 3, 0);
 }
 
-// DC game.cpp:7462 calls NewfullMap::cell(int, int, int) with the three
-// location fields (byte-neutral against cell(type_point)), and DC 7484 calls
-// type_point::operator== for the shipyard search; Mac 0xdd1bc..0xdd224
-// expands the operator's Boolean chain. Keep it (72.12%; three field tests
-// reach 99.97%). Retail spills `this` into a 0x2c frame; while/for loops,
-// either operand order, this->getHero and the getCell wrapper reach at
-// most 73.04%.
-// Four bounded source families (28 states, eight reproduced objects) preserve
-// the recorded acquisition order/names at 72.1173%. Moving player/index scope,
-// using a CMC argument temporary, and naming the point comparison do not improve
-// it; int/long owner snapshots lower it. why-branch loop rotations also leave
-// the structural residual unchanged (25/29 blocks, same five call sites; the
-// vector insert target is the native folded point/pointer alias). Preserve
-// operator== rather than the historical flattened comparison. Reversing its
-// operands or negating its difference chain is also flat: six coupled
-// helper/caller states produce two objects at72.1173%.
-// Restoring both boat-message constructors' native default-point construction
-// and field assignments is neutral in four reproduced constructor states.
-// DC 7473/7475/7481/7498 reads and writes the cell's shipyard owner directly.
-// Use its inherited union member, without a cast-through-void pointer alias;
-// this restores the native access model at the same Windows matching score.
+// DC game.cpp:7462 calls cell(int, int, int), and 7484 calls the point
+// comparison also expanded at Mac 0xdd1bc..0xdd224. Line 7499 constructs
+// and sends the message in one statement, with no named message local.
+// Its argument temporary and the native constructor's default-point/body-
+// assignment sequence together reproduce retail; either change alone leaves
+// the old frame/inlining mismatch. Keep both canonical helper boundaries.
+// DC 7473/7475/7481/7498 accesses the inherited shipyard-owner member directly.
 VA(0x004c6a30, 0x21F)
 DC_ADDRESS(0x0b1a50, 0x23c)
 MAC_ADDRESS(0x0dd08c, 0x298)
@@ -6884,8 +6870,7 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
         }
 
         cell->m_shipyardInfo.m_owner = newPlayerOwner;
-        CMCClaimShipYard change(location, newPlayerOwner);
-        sendMapChange(&change);
+        sendMapChange(&CMCClaimShipYard(location, newPlayerOwner));
     }
 
     if (thisHero) {
