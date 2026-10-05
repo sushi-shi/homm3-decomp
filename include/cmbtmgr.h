@@ -29,13 +29,6 @@ struct type_AI_combat_parameters;
 struct tagPOINT;
 struct type_artifact;
 
-// Polymorphic objects owned by combatManager at offsets where Close only
-// proves scalar deletion. Their concrete roles remain unattested.
-class CCombatOwnedObject {
-public:
-    virtual ~CCombatOwnedObject();
-};
-
 // One segment of an animated lightning bolt. THE DREAMCAST DUMP HAS NO
 // MEMBER EVIDENCE FOR THIS TYPE AT ALL - members.csv carries zero rows
 // and the NAME comes only from the three spells.cpp prototypes that take
@@ -578,10 +571,8 @@ public:
     // (0x5994b0) independently reads its status member at +0x34 while
     // combat music is active; the retail ctor's baseManager call and
     // combatManager vptr store prove the inheritance directly.
-    // A CNetMsgHandlerPause, not a CCombatOwnedObject (retyped in place
-    // 2026-08-20, a rename): Open (0x462a20) assigns
-    // `new CNetMsgHandlerPause()` here off an operator new(0x10), which
-    // is SIZE(CNetMsgHandlerPause, 0x10) exactly, and Close deletes it.
+    // Open (0x462a20) constructs this CNetMsgHandlerPause with its native
+    // 0x10-byte size; Close deletes it.
     CNetMsgHandlerPause* m_netMsgHandlerPause;
     // The pending AI order, written as a (code, hex) pair. move_toward
     // (0x41f580) sets the code to 2 the moment a path exists, raises it
@@ -649,11 +640,8 @@ public:
     // Dreamcast bMoatOn/moatIsWide are bytes at +0x53b8/9 before
     // the saved-screen pointer at +0x53bc; retail shifts this run by -0x10.
     char m_paddingBeforeSaveScreenPreGrid[0x2];
-    // A Bitmap16Bit, not a CCombatOwnedObject (retyped in place
-    // 2026-08-20, a rename): Open constructs all THREE of these with
-    // Bitmap16Bit::Bitmap16Bit(w, h) at 0x44df70 off an
-    // `operator new(0x38)`, which is sizeof(Bitmap16Bit), and field_53b0
-    // between them was already spelled that way.
+    // Open constructs all three saved-screen buffers through the native
+    // Bitmap16Bit(w, h) constructor (0x44df70), allocating 0x38 bytes each.
     Bitmap16Bit* m_saveScreenPreGrid;
     // RETYPED 2026-08-13: army::Fly (0x4b4a40) calls Bitmap16Bit::Draw
     // on this slot once per animation frame, blitting the clean
