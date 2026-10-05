@@ -926,6 +926,38 @@ def _previous_byte_accountability() -> str | None:
                  if line.startswith("**Byte accountability:**")), None)
 
 
+def checkpoint_body_rows(rows: dict, current_rvas=None) -> dict:
+    """One banked row per retail body for a scoped README checkpoint.
+
+    A ledger can carry an old label beside its renamed successor at the same
+    RVA (an unselected unit is not re-checkpointed, and older merges kept
+    retired labels). The label the build currently assigns to that RVA owns
+    the body; a full or that unit's scoped `status update` retires the rest.
+    Live names are read only to settle such a duplicate.
+    """
+    by_rva = {}
+    for key, row in rows.items():
+        if row.rva is not None:
+            by_rva.setdefault(row.rva, []).append(key)
+    out = {key: row for key, row in rows.items() if row.rva is None}
+    for rva, keys in by_rva.items():
+        if len(keys) > 1:
+            if current_rvas is None:
+                current_rvas = function_rvas()
+            current = [key for key in keys if current_rvas.get(key) == rva]
+            if len(current) != 1:
+                labels = ", ".join(f"{u} {f}" for u, f in sorted(keys))
+                units = " ".join(f"--unit {u}" for u in sorted({u for u, _f in keys}))
+                common.die(f"retail RVA {rva:#x} has several banked labels "
+                           f"({labels}) and the build names "
+                           f"{'none' if not current else 'several'} of them; "
+                           f"build those units, then run "
+                           f"`homm3 status update {units}`")
+            keys = current
+        out[keys[0]] = rows[keys[0]]
+    return out
+
+
 def write_readme(report: dict, *, data_accounting: dict | None = None,
                  checkpoint_rows: dict | None = None) -> None:
     """Splice the per-module score table between the README sentinels
@@ -943,16 +975,12 @@ def write_readme(report: dict, *, data_accounting: dict | None = None,
         # A scoped checkpoint must never project stale unselected objects or
         # fingerprint their current source. Their last banked rows own scores;
         # the admitted retail inventory owns every displayed byte weight.
-        maxima = checkpoint_rows
+        maxima = checkpoint_body_rows(checkpoint_rows)
         rvas = {key: row.rva for key, row in maxima.items()}
         functions = {}
-        seen = set()
         for (unit, name), row in sorted(maxima.items()):
             if category.get(row.rva) not in ("target", "zlib"):
                 continue
-            if row.rva in seen:
-                raise ValueError(f"duplicate checkpoint retail RVA {row.rva:#x}")
-            seen.add(row.rva)
             functions.setdefault(unit, []).append({
                 "name": name, "size": sizes[row.rva],
                 "fuzzy_match_percent": row.cur or 0.0})
