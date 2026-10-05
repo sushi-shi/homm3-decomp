@@ -930,12 +930,12 @@ void town::setSpellsAvailable()
 }
 
 // E:\gamedcs\town.cpp:1226
-// Native review at 85.95%: DC types and helper calls agree. Reusing the
-// named short dwelling for both population paths is byte-flat under VC6
-// (two source states, reproduced). Retail's four recursive calls all target
-// this body (+0x2da/+0x2ec/+0x2fe/+0x310); shifted relocation pairing can
-// misreport them as unclaimed indirect calls. The remaining loop difference
-// holds building in the parameter slot and walks the horde table by address.
+// Keep the requested building separate from the installed result: upgrading
+// a horde changes the result, while population and later building checks
+// still use the request. Retail keeps the request in EDX and the result in
+// its dead parameter slot; Mac uses r4/r31 (0x1b3e50, 0x1b3fb0, 0x1b4074).
+// DC likewise copies r12 to r9 at 0x166c46. Restoring these two values
+// reproduces the full Windows body, including its four recursive calls.
 VA(0x005be930, 0x330)
 DC_ADDRESS(0x166c08, 0x2ce)
 MAC_ADDRESS(0x1b3e3c, 0x3a0)  // body (built-mask OR) + order-map
@@ -943,6 +943,7 @@ type_building_id town::createBuilding(type_building_id building)
 {
     // Dreamcast CodeView names this short local `dwelling`.
     short dwelling;
+    type_building_id built = building;
     m_built |= g_bitNumber[building];
     m_built &= ~s_includedBuildings[m_type][building];
 
@@ -954,16 +955,16 @@ type_building_id town::createBuilding(type_building_id building)
                 && hasBuilding(DWELLING_0_UPG_ID + dwelling, false)) {
                 m_built &= ~g_bitNumber[building];
                 m_built &= ~g_bitNumber[DWELLING_0_UPG_ID + dwelling];
-                building = g_hordeBuildings[slot + 1];
-                m_built |= g_bitNumber[building];
+                built = g_hordeBuildings[slot + 1];
+                m_built |= g_bitNumber[built];
             }
         }
         if (hasBuilding(g_hordeBuildings[slot], false)) {
             if (building == DWELLING_0_UPG_ID + dwelling) {
                 m_built &= ~g_bitNumber[building];
                 m_built &= ~g_bitNumber[g_hordeBuildings[slot]];
-                building = g_hordeBuildings[slot + 1];
-                m_built |= g_bitNumber[building];
+                built = g_hordeBuildings[slot + 1];
+                m_built |= g_bitNumber[built];
             }
         }
     }
@@ -997,7 +998,7 @@ type_building_id town::createBuilding(type_building_id building)
             break;
         }
     }
-    return building;
+    return built;
 }
 
 VA(0x005bec60, 0x173)
@@ -1038,9 +1039,11 @@ void checkEndGame(int forceWin);
 VA(0x005bede0, 0x427)
 DC_ADDRESS(0x166fc8, 0x202)
 MAC_ADDRESS(0x1b43ac, 0x420)  // anchor-global
-// Moving the result declaration after the fort/capitol snapshots and
-// grouping the special-effect guards did not recover the retained hasBuilding
-// call (six VC6 combinations, three objects). Keep the canonical helpers.
+// All 72 blocks and 18 retained calls agree; the 99.5794% residual is twelve
+// instruction rows in updateFullBuildingMask's expanded low/high-word loads.
+// Eight bool/byte snapshot and initialized/assigned result forms emit one
+// identical object. The register model agrees at every first definition;
+// retain the canonical helper while investigating its later allocation.
 type_building_id town::buildBuilding(int buildingId,
                                      unsigned char setBuiltFlag,
                                      unsigned char applySpecialEffect)

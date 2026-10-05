@@ -411,8 +411,7 @@ public:
     unsigned char canEverBuild(int buildingId) const;
     // 0x5bfe50.
     void changeGeneratorBonus(TCreatureType creature, long change);
-    // 0x5be930. Declared for update_shipyard's direct call; the body is
-    // still outside the admitted surface.
+    // 0x5be930. Installs the requested building and returns the resulting ID.
     type_building_id createBuilding(type_building_id building);
     unsigned char buyBuilding(type_building_id building);
     void destroyExtraCapitol();

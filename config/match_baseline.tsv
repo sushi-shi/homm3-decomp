@@ -4397,7 +4397,7 @@ town	?canBuildDock@town@@QBEEXZ	100.0000	100.0000	100.0000	0x1bf4e0	tokens1:3f5e
 town	?canEverBuild@town@@QBEEH@Z	100.0000	100.0000	100.0000	0x1c0e60	tokens1:7747ac2807b9
 town	?changeGeneratorBonus@town@@QAEXW4TCreatureType@@J@Z	100.0000	100.0000	100.0000	0x1bfe50	tokens1:e1614c770094
 town	?checkShipyardSquare@@YIEPAVtown@@JJ@Z	100.0000	100.0000	100.0000	0x1c0c90	tokens1:e18f7a839a02
-town	?createBuilding@town@@QAE?AW4type_building_id@@W42@@Z	85.9541	85.9541	85.9771	0x1be930	tokens1:7f9504f5649d
+town	?createBuilding@town@@QAE?AW4type_building_id@@W42@@Z	100.0000	100.0000	100.0000	0x1be930	tokens1:ce0db295d1fa
 town	?deallocate@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be2d0	tokens1:c0a608c4957c
 town	?destroyExtraCapitol@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bec60	tokens1:d93e571f21f6
 town	?getArmy@town@@QBEABVarmyGroup@@XZ	100.0000	100.0000	100.0000	0x1c1460	tokens1:7131c97d843a
